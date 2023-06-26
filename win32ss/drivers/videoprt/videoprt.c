@@ -317,7 +317,7 @@ IntVideoPortCreateAdapterDeviceObject(
 
     IntSetupDeviceSettingsKey(DeviceExtension);
 
-    /* Remove the initailizing flag */
+    /* Remove the initializing flag */
     (*DeviceObject)->Flags &= ~DO_DEVICE_INITIALIZING;
 
     /* Set up the VIDEO/DEVICEMAP registry keys */
@@ -343,6 +343,71 @@ Failure:
     return Status;
 }
 
+/**
+ * @brief
+ * A PIO_QUERY_DEVICE_ROUTINE callback for IoQueryDeviceDescription()
+ * to return success when an enumerated bus has been found.
+ **/
+static NTSTATUS
+NTAPI
+IntVideoPortEnumBusCallback(
+    _In_ PVOID Context,
+    _In_ PUNICODE_STRING PathName,
+    _In_ INTERFACE_TYPE BusType,
+    _In_ ULONG BusNumber,
+    _In_ PKEY_VALUE_FULL_INFORMATION* BusInformation,
+    _In_ CONFIGURATION_TYPE ControllerType,
+    _In_ ULONG ControllerNumber,
+    _In_ PKEY_VALUE_FULL_INFORMATION* ControllerInformation,
+    _In_ CONFIGURATION_TYPE PeripheralType,
+    _In_ ULONG PeripheralNumber,
+    _In_ PKEY_VALUE_FULL_INFORMATION* PeripheralInformation)
+{
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(PathName);
+    UNREFERENCED_PARAMETER(BusType);
+    UNREFERENCED_PARAMETER(BusNumber);
+    UNREFERENCED_PARAMETER(BusInformation);
+    UNREFERENCED_PARAMETER(ControllerType);
+    UNREFERENCED_PARAMETER(ControllerNumber);
+    UNREFERENCED_PARAMETER(ControllerInformation);
+    UNREFERENCED_PARAMETER(PeripheralType);
+    UNREFERENCED_PARAMETER(PeripheralNumber);
+    UNREFERENCED_PARAMETER(PeripheralInformation);
+
+    /* The bus has been found */
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Enumerates all supported buses on the system.
+ **/
+static NTSTATUS
+IntVideoPortEnumBuses(
+    _In_ INTERFACE_TYPE AdapterInterfaceType,
+    _Inout_ PULONG BusNumber)
+{
+    // TODO: Forward-compatibility with Windows 7+:
+    // In case AdapterInterfaceType == PCIBus, check for the
+    // \Registry\HARDWARE\DESCRIPTION\System\VideoAdapterBusses
+    // key (created by pci.sys) that enumerates the PCI buses that
+    // are known to have video display adapters on them.
+    // This is a handy shortcut for videoprt, that would otherwise
+    // have to enumerate all the PCI buses (PCI_MAX_BRIDGE_NUMBER)
+    // to locate any video adapter.
+    // Otherwise, fall back to the usual method done below.
+
+    /* Find the next bus of the given type */
+    return IoQueryDeviceDescription(&AdapterInterfaceType,
+                                    BusNumber,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    IntVideoPortEnumBusCallback,
+                                    NULL);
+}
 
 NTSTATUS
 NTAPI
@@ -401,12 +466,23 @@ IntVideoPortFindAdapter(
 
     if (LegacyDetection)
     {
-        ULONG BusNumber, MaxBuses;
+        ULONG BusNumber;
 
-        MaxBuses = DeviceExtension->AdapterInterfaceType == PCIBus ? PCI_MAX_BRIDGE_NUMBER : 1;
+        /* Suppose first we may not find any suitable device */
+        vpStatus = ERROR_DEV_NOT_EXIST; // ERROR_NO_MORE_DEVICES;
 
-        for (BusNumber = 0; BusNumber < MaxBuses; BusNumber++)
+        /* Enumerate all buses of the given type, call HwFindAdapter for each
+         * to find whether a video adapter is recognized there. Stop when an
+         * adapter has been found. */
+        for (BusNumber = 0;
+             (BusNumber < MAXULONG) &&
+             NT_SUCCESS(IntVideoPortEnumBuses(DeviceExtension->AdapterInterfaceType,
+                                              &BusNumber));
+             ++BusNumber)
         {
+            DPRINT("Bus Type %lu, Number %lu\n",
+                   DeviceExtension->AdapterInterfaceType, BusNumber);
+
             DeviceExtension->SystemIoBusNumber =
                 ConfigInfo.SystemIoBusNumber = BusNumber;
 
@@ -414,6 +490,7 @@ IntVideoPortFindAdapter(
                           DriverExtension->InitializationData.HwDeviceExtensionSize);
 
             /* FIXME: Need to figure out what string to pass as param 3. */
+            // FIXME: Handle the 'Again' parameter for legacy detection.
             vpStatus = DriverExtension->InitializationData.HwFindAdapter(
                          &DeviceExtension->MiniPortDeviceExtension,
                          DriverExtension->HwContext,
@@ -700,10 +777,10 @@ VideoPortInitialize(
 
     switch (HwInitializationData->HwInitDataSize)
     {
-            /*
-             * NT4 drivers are special case, because we must use legacy method
-             * of detection instead of the Plug & Play one.
-             */
+        /*
+         * NT4 drivers are special case, because we must use legacy method
+         * of detection instead of the Plug & Play one.
+         */
         case SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA:
             INFO_(VIDEOPRT, "We were loaded by a Windows NT miniport driver.\n");
             break;

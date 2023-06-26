@@ -41,12 +41,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_YES "Da"
-    IDS_NO  "Nu"
-END
-
-STRINGTABLE
-BEGIN
     IDS_BCAST "Difuzare"
     IDS_P2P "Egal la egal"
     IDS_MIXED "Mixtă"

@@ -41,12 +41,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_YES "Yes"
-    IDS_NO  "No"
-END
-
-STRINGTABLE
-BEGIN
     IDS_BCAST "廣播"
     IDS_P2P "點對點"
     IDS_MIXED "混合"

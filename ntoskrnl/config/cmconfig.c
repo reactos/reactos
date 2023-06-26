@@ -209,7 +209,8 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
 {
     PCONFIGURATION_COMPONENT Component;
     USHORT DeviceIndexTable[MaximumType + 1] = {0};
-    ULONG Interface = InterfaceType, Bus = BusNumber, i;
+    INTERFACE_TYPE Interface = InterfaceType;
+    ULONG Bus = BusNumber, i;
     NTSTATUS Status;
     HANDLE NewHandle;
 
@@ -279,7 +280,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                 /* Unknown */
                 default:
                 {
-                    Interface = -1;
+                    Interface = InterfaceTypeUndefined;
                     Bus = CmpUnknownBusCount++;
                     break;
                 }
@@ -401,7 +402,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Setup the configuration tree */
         Status = CmpSetupConfigurationTree(LoaderBlock->ConfigurationRoot,
                                            KeyHandle,
-                                           -1,
+                                           InterfaceTypeUndefined,
                                            -1);
     }
     else

@@ -9,24 +9,22 @@
 
 #include <hal.h>
 
-#define NDEBUG
-#include <debug.h>
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
-static VOID
-DECLSPEC_NORETURN
-NTAPI
+#ifndef _MINIHAL_
+static DECLSPEC_NORETURN
+VOID
 HalpFreezeSystem(VOID)
 {
-    HaliHaltSystem();
-
-    while (TRUE)
-        NOTHING;
+    /* Disable interrupts and halt the CPU */
+    _disable();
+    __halt();
+    UNREACHABLE;
 }
+#endif
 
+DECLSPEC_NORETURN
 VOID
-NTAPI
 HalpReboot(VOID)
 {
     /* Disable interrupts */
@@ -42,10 +40,12 @@ HalpReboot(VOID)
 
     /* Halt the CPU */
     __halt();
+    UNREACHABLE;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+#ifndef _MINIHAL_
 VOID
 NTAPI
 HalReturnToFirmware(
@@ -53,23 +53,30 @@ HalReturnToFirmware(
 {
     switch (Action)
     {
+        /* All recognized actions */
+        case HalHaltRoutine:
         case HalPowerDownRoutine:
             HalpFreezeSystem();
 
-        case HalHaltRoutine:
+        case HalRestartRoutine:
         case HalRebootRoutine:
-#ifndef _MINIHAL_
+        {
             /* Acquire the display */
             InbvAcquireDisplayOwnership();
-#endif
 
             /* Call the internal reboot function */
             HalpReboot();
+        }
 
         /* Anything else */
         default:
+        {
             /* Print message and break */
             DbgPrint("HalReturnToFirmware called!\n");
             DbgBreakPoint();
+        }
     }
 }
+#endif // _MINIHAL_
+
+/* EOF */

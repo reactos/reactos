@@ -103,42 +103,66 @@ HalpLookupHandler(IN PARRAY Array,
     return Handler;
 }
 
+/**
+ * @brief   Handler for buses without configuration space.
+ **/
 ULONG
 NTAPI
-HalpNoBusData(IN PBUS_HANDLER BusHandler,
-              IN PBUS_HANDLER RootHandler,
-              IN ULONG SlotNumber,
-              IN PVOID Buffer,
-              IN ULONG Offset,
-              IN ULONG Length)
+HalpNoBusData(
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG SlotNumber,
+    _In_ PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length)
 {
-    /* Not implemented */
-    DPRINT1("STUB GetSetBusData\n");
+    DPRINT1("STUB GetSetBusData(Bus %x:%x.%x)\n",
+            BusHandler->InterfaceType,
+            BusHandler->ConfigurationType,
+            BusHandler->BusNumber);
+
+    /* Just return a dummy value */
     return 0;
 }
 
+/**
+ * @brief   Handler for buses without configuration space.
+ **/
 NTSTATUS
 NTAPI
-HalpNoAdjustResourceList(IN PBUS_HANDLER BusHandler,
-                         IN PBUS_HANDLER RootHandler,
-                         IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *pResourceList)
+HalpNoAdjustResourceList(
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _Inout_ PIO_RESOURCE_REQUIREMENTS_LIST* pResourceList)
 {
-    DPRINT1("STUB Adjustment\n");
+    DPRINT1("STUB Adjustment(Bus %x:%x.%x)\n",
+            BusHandler->InterfaceType,
+            BusHandler->ConfigurationType,
+            BusHandler->BusNumber);
+
     return STATUS_UNSUCCESSFUL;
 }
 
+/**
+ * @brief   Handler for buses without configuration space.
+ **/
 NTSTATUS
 NTAPI
-HalpNoAssignSlotResources(IN PBUS_HANDLER BusHandler,
-                          IN PBUS_HANDLER RootHandler,
-                          IN PUNICODE_STRING RegistryPath,
-                          IN PUNICODE_STRING DriverClassName OPTIONAL,
-                          IN PDRIVER_OBJECT DriverObject,
-                          IN PDEVICE_OBJECT DeviceObject OPTIONAL,
-                          IN ULONG SlotNumber,
-                          IN OUT PCM_RESOURCE_LIST *AllocatedResources)
+HalpNoAssignSlotResources(
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ PUNICODE_STRING RegistryPath,
+    _In_opt_ PUNICODE_STRING DriverClassName,
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_opt_ PDEVICE_OBJECT DeviceObject,
+    _In_ ULONG SlotNumber,
+    _Inout_ PCM_RESOURCE_LIST* AllocatedResources)
 {
-    DPRINT1("STUB Assignment\n");
+    DPRINT1("STUB Assignment(Bus %x:%x.%x)\n",
+            BusHandler->InterfaceType,
+            BusHandler->ConfigurationType,
+            BusHandler->BusNumber);
+
     return STATUS_NOT_SUPPORTED;
 }
 

@@ -15,14 +15,13 @@
 
 #include "halxbox.h"
 
-#define NDEBUG
-#include <debug.h>
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
-NTAPI
-SMBusWriteByte(UCHAR Address, UCHAR Register, UCHAR Data)
+static VOID
+SMBusWriteByte(
+    _In_ UCHAR Address,
+    _In_ UCHAR Register,
+    _In_ UCHAR Data)
 {
     INT Retries = 50;
 
@@ -63,35 +62,47 @@ SMBusWriteByte(UCHAR Address, UCHAR Register, UCHAR Data)
     }
 }
 
+static DECLSPEC_NORETURN
 VOID
-DECLSPEC_NORETURN
-NTAPI
-HalpXboxPowerAction(IN UCHAR Action)
+HalpXboxPowerAction(
+    _In_ UCHAR Action)
 {
+    /* Disable interrupts */
+    _disable();
+
+    /* Send the command */
     SMBusWriteByte(SMB_DEVICE_SMC_PIC16LC, SMC_REG_POWER, Action);
 
     /* Halt the CPU */
     __halt();
+    UNREACHABLE;
+}
 
-    while (TRUE); /* 'noreturn' function */
+DECLSPEC_NORETURN
+VOID
+HalpReboot(VOID)
+{
+    HalpXboxPowerAction(SMC_REG_POWER_RESET);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+#ifndef _MINIHAL_
 /*
  * @implemented
  */
 VOID
 NTAPI
-HalReturnToFirmware(IN FIRMWARE_REENTRY Action)
+HalReturnToFirmware(
+    _In_ FIRMWARE_REENTRY Action)
 {
     /* Check what kind of action this is */
     switch (Action)
     {
-        /* All recognized actions */
+        /* All recognized actions: call the internal power function */
+        case HalHaltRoutine:
         case HalPowerDownRoutine:
         {
-            /* Call the internal power function */
             HalpXboxPowerAction(SMC_REG_POWER_SHUTDOWN);
         }
         case HalRestartRoutine:
@@ -102,6 +113,7 @@ HalReturnToFirmware(IN FIRMWARE_REENTRY Action)
         {
             HalpXboxPowerAction(SMC_REG_POWER_RESET);
         }
+
         /* Anything else */
         default:
         {
@@ -111,5 +123,6 @@ HalReturnToFirmware(IN FIRMWARE_REENTRY Action)
         }
     }
 }
+#endif // _MINIHAL_
 
 /* EOF */
