@@ -410,33 +410,31 @@ CLEANUP:
 
 static
 VOID
-PrintNodeType(UINT NodeType)
+PrintNodeType(
+    _In_ UINT NodeType)
 {
-    ConResPrintf(StdOut, IDS_NODETYPE);
-
     switch (NodeType)
     {
         case 1:
-            ConResPrintf(StdOut, IDS_BCAST);
+            ConResPrintf(StdOut, IDS_NODETYPEBCAST);
             break;
 
         case 2:
-            ConResPrintf(StdOut, IDS_P2P);
+            ConResPrintf(StdOut, IDS_NODETYPEP2P);
             break;
 
         case 4:
-            ConResPrintf(StdOut, IDS_MIXED);
+            ConResPrintf(StdOut, IDS_NODETYPEMIXED);
             break;
 
         case 8:
-            ConResPrintf(StdOut, IDS_HYBRID);
+            ConResPrintf(StdOut, IDS_NODETYPEHYBRID);
             break;
 
         default :
-            ConResPrintf(StdOut, IDS_UNKNOWN);
+            ConResPrintf(StdOut, IDS_NODETYPEUNKNOWN);
             break;
     }
-    printf("\n");
 }
 
 static

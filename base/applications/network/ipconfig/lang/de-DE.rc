@@ -14,7 +14,11 @@ BEGIN
     IDS_HEADER "\nReactOS-IP-Konfiguration\n\n"
     IDS_HOSTNAME            "\tHostname. . . . . . . . . . . . . : %hs\n"
     IDS_PRIMARYDNSSUFFIX    "\tPrimäres DNS-Suffix . . . . . . . : %hs\n"
-    IDS_NODETYPE            "\tKnotentyp . . . . . . . . . . . . : "
+    IDS_NODETYPEBCAST       "\tKnotentyp . . . . . . . . . . . . : Broadcast\n"
+    IDS_NODETYPEP2P         "\tKnotentyp . . . . . . . . . . . . : Peer-to-Peer\n"
+    IDS_NODETYPEMIXED       "\tKnotentyp . . . . . . . . . . . . : Gemischt\n"
+    IDS_NODETYPEHYBRID      "\tKnotentyp . . . . . . . . . . . . : Hybrid\n"
+    IDS_NODETYPEUNKNOWN     "\tKnotentyp . . . . . . . . . . . . : Unbekannt\n"
     IDS_IPROUTINGNO         "\tIP-Routing aktiviert. . . . . . . : Nein\n"
     IDS_IPROUTINGYES        "\tIP-Routing aktiviert. . . . . . . : Ja\n"
     IDS_WINSPROXYNO         "\tWINS-Proxy aktiviert. . . . . . . : Nein\n"
@@ -38,15 +42,6 @@ BEGIN
     IDS_SECONDARYWINSSERVER "\tSekundärer WINS-Server. . . . . . : %hs\n"
     IDS_LEASEOBTAINED       "\tLease erhalten. . . . . . . . . . : %s\n"
     IDS_LEASEEXPIRES        "\tLease läuft ab. . . . . . . . . . : %s\n"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_BCAST "Broadcast"
-    IDS_P2P "Peer-to-Peer"
-    IDS_MIXED "Gemischt"
-    IDS_HYBRID "Hybrid"
-    IDS_UNKNOWN "Unbekannt"
 END
 
 STRINGTABLE

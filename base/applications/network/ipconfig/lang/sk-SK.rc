@@ -12,7 +12,11 @@ BEGIN
     IDS_HEADER "\nReactOS IP Configuration\n\n"
     IDS_HOSTNAME            "\tHost Name . . . . . . . . . . . . : %hs\n"
     IDS_PRIMARYDNSSUFFIX    "\tPrimary DNS Suffix. . . . . . . . : %hs\n"
-    IDS_NODETYPE            "\tNode Type . . . . . . . . . . . . : "
+    IDS_NODETYPEBCAST       "\tNode Type . . . . . . . . . . . . : Vysielací\n"
+    IDS_NODETYPEP2P         "\tNode Type . . . . . . . . . . . . : Rovný s rovným\n"
+    IDS_NODETYPEMIXED       "\tNode Type . . . . . . . . . . . . : Zmiešaný\n"
+    IDS_NODETYPEHYBRID      "\tNode Type . . . . . . . . . . . . : Hybridný\n"
+    IDS_NODETYPEUNKNOWN     "\tNode Type . . . . . . . . . . . . : Neznámy\n"
     IDS_IPROUTINGNO         "\tIP Routing Enabled. . . . . . . . : No\n"
     IDS_IPROUTINGYES        "\tIP Routing Enabled. . . . . . . . : Yes\n"
     IDS_WINSPROXYNO         "\tWINS Proxy enabled. . . . . . . . : No\n"
@@ -36,15 +40,6 @@ BEGIN
     IDS_SECONDARYWINSSERVER "\tSecondary WINS Server . . . . . . : %hs\n"
     IDS_LEASEOBTAINED       "\tLease Obtained. . . . . . . . . . : %s\n"
     IDS_LEASEEXPIRES        "\tLease Expires . . . . . . . . . . : %s\n"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_BCAST "Vysielací"
-    IDS_P2P "Rovný s rovným"
-    IDS_MIXED "Zmiešaný"
-    IDS_HYBRID "Hybridný"
-    IDS_UNKNOWN "Neznámy"
 END
 
 STRINGTABLE
