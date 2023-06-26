@@ -1101,6 +1101,19 @@ HRESULT CInternetToolbar::ToggleBandVisibility(int BandID)
     else
         bandInfo.fStyle |= RBBS_HIDDEN;
 
+    if (BandID == ITBBID_TOOLSBAND)
+    {
+        int BtnCount = ::SendMessage(fToolbarWindow, TB_BUTTONCOUNT, 0, 0);
+
+        for (int idx = 0; idx < BtnCount; idx++)
+        {
+            TBBUTTONINFO BtnInfo = {sizeof(TBBUTTONINFO), TBIF_BYINDEX | TBIF_STATE};
+            ::SendMessage(fToolbarWindow, TB_GETBUTTONINFO, idx, (LPARAM)&BtnInfo);
+            BtnInfo.fsState = bandInfo.fStyle & RBBS_HIDDEN ? BtnInfo.fsState | TBSTATE_HIDDEN : BtnInfo.fsState & ~TBSTATE_HIDDEN;
+            ::SendMessage(fToolbarWindow, TB_SETBUTTONINFO, idx, (LPARAM)&BtnInfo);
+        }
+    }
+
     SendMessage(fMainReBar, RB_SETBANDINFOW, index, (LPARAM)&bandInfo);
 
     ReserveBorderSpace(0);
