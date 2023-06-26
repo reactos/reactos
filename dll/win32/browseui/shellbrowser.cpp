@@ -3667,11 +3667,11 @@ LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND
     
     DWORD dwStatusBarVisible = fStatusBarVisible;
     SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
-                         L"StatusBarOther",
-                         REG_DWORD,
-                         &dwStatusBarVisible,
-                         sizeof(dwStatusBarVisible),
-                         SHREGSET_FORCE_HKCU);
+                     L"StatusBarOther",
+                     REG_DWORD,
+                     &dwStatusBarVisible,
+                     sizeof(dwStatusBarVisible),
+                     SHREGSET_FORCE_HKCU);
     
     return 0;
 }
