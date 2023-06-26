@@ -10,10 +10,14 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_HEADER "\nConfigurația IP ReactOS IP\n\n"
+    IDS_HEADER "\nConfigurația IP a ReactOS\n\n"
     IDS_HOSTNAME            "\tNumele gazdei . . . . . . . . . . : %hs\n"
     IDS_PRIMARYDNSSUFFIX    "\tSufixul primar DNS. . . . . . . . : %hs\n"
-    IDS_NODETYPE            "\tTipul nodului . . . . . . . . . . : "
+    IDS_NODETYPE            "\tTipul nodului . . . . . . . . . . : Difuzare\n"
+    IDS_NODETYPEP2P         "\tTipul nodului . . . . . . . . . . : Egal la egal\n"    
+    IDS_NODETYPEMIXED       "\tTipul nodului . . . . . . . . . . : Mixtă\n"
+    IDS_NODETYPEHYBRID      "\tTipul nodului . . . . . . . . . . : Hibridă\n"
+    IDS_NODETYPEUNKNOWN     "\tTipul nodului . . . . . . . . . . : necunoscută\n"    
     IDS_IPROUTINGNO         "\tRutarea IP activată . . . . . . . : Nu\n"
     IDS_IPROUTINGYES        "\tRutarea IP activată . . . . . . . : Da\n"
     IDS_WINSPROXYNO         "\tProxy-ul WINS activat . . . . . . : Nu\n"
@@ -41,16 +45,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BCAST "Difuzare"
-    IDS_P2P "Egal la egal"
-    IDS_MIXED "Mixtă"
-    IDS_HYBRID "Hibridă"
-    IDS_UNKNOWN "necunoscută"
-END
-
-STRINGTABLE
-BEGIN
     IDS_UNKNOWNADAPTER "Adaptor necunoscut: %ls\n"
+    IDS_OTHER "\nAlt tip de adaptor: %ls\n"
+    IDS_ETH "\nAdaptor Ethernet: %ls\n"
+    IDS_TOKEN "\nAdaptor Token Ring: %ls\n"
+    IDS_FDDI "\nAdaptor FDDI: %ls\n"
+    IDS_PPP "\nAdaptor PPP: %ls\n"
+    IDS_LOOP "\nAdaptor Loopback: %ls\n"
+    IDS_SLIP "\nAdaptor SLIP: %ls\n"
+    IDS_WIFI "\nAdaptor de rețea fără fir: %ls\n"
+    IDS_UNKNOWNADAPTER "\nAdaptor necunoscut: %ls\n"
     IDS_OTHER "\nAlt tip de adaptor: %ls\n"
     IDS_ETH "\nAdaptor Ethernet: %ls\n"
     IDS_TOKEN "\nAdaptor Token Ring: %ls\n"

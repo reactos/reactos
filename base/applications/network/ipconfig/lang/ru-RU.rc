@@ -13,7 +13,11 @@ BEGIN
     IDS_HEADER "\nНастройка протокола IP для ReactOS\n\n"
     IDS_HOSTNAME            "\tИмя компьютера  . . . . . . . . . : %hs\n"
     IDS_PRIMARYDNSSUFFIX    "\tОсновной DNS-суффикс  . . . . . . : %hs\n"
-    IDS_NODETYPE            "\tТип узла. . . . . . . . . . . . . : "
+    IDS_NODETYPEBCAST       "\tТип узла. . . . . . . . . . . . . : Широковещательный\n"
+    IDS_NODETYPEP2P         "\tТип узла. . . . . . . . . . . . . : Одноранговый\n"
+    IDS_NODETYPEMIXED       "\tТип узла. . . . . . . . . . . . . : Смешанный\n"
+    IDS_NODETYPEHYBRID      "\tТип узла. . . . . . . . . . . . . : Гибридный\n"
+    IDS_NODETYPEUNKNOWN     "\tТип узла. . . . . . . . . . . . . : неизвестный\n"
     IDS_IPROUTINGNO         "\tIP-маршрутизация включена . . . . : нет\n"
     IDS_IPROUTINGYES        "\tIP-маршрутизация включена . . . . : да\n"
     IDS_WINSPROXYNO         "\tWINS-прокси включён . . . . . . . : нет\n"
@@ -37,15 +41,6 @@ BEGIN
     IDS_SECONDARYWINSSERVER "\tДополнительный WINS-сервер. . . . : %hs\n"
     IDS_LEASEOBTAINED       "\tАренда получена . . . . . . . . . : %s\n"
     IDS_LEASEEXPIRES        "\tАренда истекает . . . . . . . . . : %s\n"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_BCAST "Широковещательный"
-    IDS_P2P "Одноранговый"
-    IDS_MIXED "Смешанный"
-    IDS_HYBRID "Гибридный"
-    IDS_UNKNOWN "неизвестный"
 END
 
 STRINGTABLE

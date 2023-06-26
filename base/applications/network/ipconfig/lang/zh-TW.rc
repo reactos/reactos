@@ -13,7 +13,11 @@ BEGIN
     IDS_HEADER "\nReactOS IP Configuration\n\n"
     IDS_HOSTNAME            "\tHost Name . . . . . . . . . . . . : %hs\n"
     IDS_PRIMARYDNSSUFFIX    "\tPrimary DNS Suffix. . . . . . . . : %hs\n"
-    IDS_NODETYPE            "\tNode Type . . . . . . . . . . . . : "
+    IDS_NODETYPEBCAST       "\tNode Type . . . . . . . . . . . . : 廣播\n"
+    IDS_NODETYPEP2P         "\tNode Type . . . . . . . . . . . . : 點對點\n"
+    IDS_NODETYPEMIXED       "\tNode Type . . . . . . . . . . . . : 混合\n"
+    IDS_NODETYPEHYBRID      "\tNode Type . . . . . . . . . . . . : 混合\n"
+    IDS_NODETYPEUNKNOWN     "\tNode Type . . . . . . . . . . . . : 不明\n"
     IDS_IPROUTINGNO         "\tIP Routing Enabled. . . . . . . . : No\n"
     IDS_IPROUTINGYES        "\tIP Routing Enabled. . . . . . . . : Yes\n"
     IDS_WINSPROXYNO         "\tWINS Proxy enabled. . . . . . . . : No\n"
@@ -37,15 +41,6 @@ BEGIN
     IDS_SECONDARYWINSSERVER "\tSecondary WINS Server . . . . . . : %hs\n"
     IDS_LEASEOBTAINED       "\tLease Obtained. . . . . . . . . . : %s\n"
     IDS_LEASEEXPIRES        "\tLease Expires . . . . . . . . . . : %s\n"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_BCAST "廣播"
-    IDS_P2P "點對點"
-    IDS_MIXED "混合"
-    IDS_HYBRID "混合"
-    IDS_UNKNOWN "不明"
 END
 
 STRINGTABLE
