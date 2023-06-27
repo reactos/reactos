@@ -21,7 +21,7 @@ BEGIN
     IDS_ERROR_NOCLASS "Nie udało się zainicjować klasy window."
     IDS_ERROR_ISINSTALLED "Ta czcionka jest już zainstalowana!" 
     IDS_ERROR_FONTCPY "Nie można skopiować pliku czcionki!"
-    IDS_ERROR_OPENKEY "Nie można otworzyć pliku czcionki!"
+    IDS_ERROR_OPENKEY "Nie można otworzyć klucza czcionek!"
     IDS_ERROR_REGISTER "Nie można zarejestrować nowej czcionki!"
     IDS_SUCCESS "Sukces"
     IDS_COMPLETED "Instalacja czcionki zakończona."
