@@ -948,7 +948,10 @@ DisplayDnsRecord(
                 break;
 
             case DNS_TYPE_MX:
-                ConResPrintf(StdOut, IDS_DNSTYPEMX);
+                ConResPrintf(StdOut, IDS_DNSTYPEMX,
+                             pThisRecord->Data.MX.pNameExchange,
+                             pThisRecord->Data.MX.wPreference,
+                             pThisRecord->Data.MX.Pad);
                 break;
 
             case DNS_TYPE_AAAA:
@@ -962,10 +965,14 @@ DisplayDnsRecord(
                 break;
 
             case DNS_TYPE_SRV:
-                ConResPrintf(StdOut, IDS_DNSTYPESRV);
+                ConResPrintf(StdOut, IDS_DNSTYPESRV,
+                             pThisRecord->Data.SRV.pNameTarget,
+                             pThisRecord->Data.SRV.wPriority,
+                             pThisRecord->Data.SRV.wWeight,
+                             pThisRecord->Data.SRV.wPort);
                 break;
         }
-        _tprintf(_T("\n\n"));
+        ConPuts(StdOut, L"\n\n");
 
         pThisRecord = pNextRecord;
     }
@@ -994,10 +1001,10 @@ DisplayDns(VOID)
     {
         pNextEntry = pThisEntry->pNext;
 
-        if (pThisEntry->wType1 != 0)
+        if (pThisEntry->wType1 != DNS_TYPE_ZERO)
             DisplayDnsRecord(pThisEntry->pszName, pThisEntry->wType1);
 
-        if (pThisEntry->wType2 != 0)
+        if (pThisEntry->wType2 != DNS_TYPE_ZERO)
             DisplayDnsRecord(pThisEntry->pszName, pThisEntry->wType2);
 
         if (pThisEntry->pszName)
