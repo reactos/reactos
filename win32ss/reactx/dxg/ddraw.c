@@ -223,8 +223,8 @@ intDdCreateDirectDrawLocal(HDEV hDev)
 
     /* initialize DIRECTDRAW_LOCAL */
     peDdL->peDirectDrawLocal_prev = peDdGl->peDirectDrawLocalList;
-    peDdL->hCreatorProcess = PsGetCurrentThreadProcessId();
-    peDdL->Process = PsGetCurrentProcess();
+    peDdL->hProcess = PsGetCurrentThreadProcessId();
+    peDdL->hCreatorProcess = PsGetCurrentProcess();
 
     // link DirectDrawGlobal and DirectDrawLocal
     peDdGl->peDirectDrawLocalList = peDdL;

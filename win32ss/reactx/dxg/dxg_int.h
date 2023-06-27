@@ -22,6 +22,7 @@
 #include <initguid.h>
 #include <ddrawi.h>
 #include <ntgdityp.h>
+#include <ntgdihdl.h>
 #include <psfuncs.h>
 
 DEFINE_GUID(GUID_NTCallbacks,             0x6fe9ecde, 0xdf89, 0x11d1, 0x9d, 0xb0, 0x00, 0x60, 0x08, 0x27, 0x71, 0xba);
@@ -189,6 +190,7 @@ extern VOID *gpDummyPage;
 extern PEPROCESS gpepSession;
 extern PLARGE_INTEGER gpLockShortDelay;
 extern DXENG_FUNCTIONS gpEngFuncs;
+extern ULONG64 DxgUserProbeAddress;
 
 /* Driver list export functions */
 DWORD NTAPI DxDxgGenericThunk(ULONG_PTR ulIndex, ULONG_PTR ulHandle, SIZE_T *pdwSizeOfPtr1, PVOID pvPtr1, SIZE_T *pdwSizeOfPtr2, PVOID pvPtr2);
@@ -208,6 +210,11 @@ DWORD NTAPI DxDdLock(HANDLE hSurface, PDD_LOCKDATA puLockData, HDC hdcClip);
 DWORD NTAPI DxDdUnlock(HANDLE hSurface, PDD_UNLOCKDATA puUnlockData);
 HANDLE NTAPI DxDdCreateSurfaceObject(HANDLE hDirectDrawLocal, HANDLE hSurface, PDD_SURFACE_LOCAL puSurfaceLocal, PDD_SURFACE_MORE puSurfaceMore, PDD_SURFACE_GLOBAL puSurfaceGlobal, BOOL bComplete);
 
+/* D3d Internal Functions */
+DWORD NTAPI DxD3dContextDestroy(LPD3DNTHAL_CONTEXTDESTROYDATA lpD3dHalCDD);
+
+/* D3d Helper Functions */
+DWORD NTAPI D3dDeleteHandle(HANDLE DdHandle, DWORD dwTextureContext, BOOL *bStatus, DWORD *dwRval);
 
 /* Internal functions */
 BOOL FASTCALL VerifyObjectOwner(PDD_ENTRY pEntry);
@@ -215,6 +222,9 @@ BOOL FASTCALL DdHmgCreate(VOID);
 BOOL FASTCALL DdHmgDestroy(VOID);
 PVOID FASTCALL DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned);
 HANDLE FASTCALL DdHmgAlloc(ULONG objSize, CHAR objType, BOOLEAN objLock);
+VOID FASTCALL DdHmgFree(HANDLE DdHandle);
+VOID FASTCALL DdHmgAcquireHmgrSemaphore();
+VOID FASTCALL DdHmgReleaseHmgrSemaphore();
 PEDD_SURFACE NTAPI intDdCreateNewSurfaceObject(PEDD_DIRECTDRAW_LOCAL peDdL, HANDLE hDirectDrawLocal, 
                                                PDD_SURFACE_GLOBAL pDdSurfGlob, PDD_SURFACE_LOCAL pDdSurfLoc, PDD_SURFACE_MORE pDdSurfMore);
 

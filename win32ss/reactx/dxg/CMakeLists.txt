@@ -13,6 +13,7 @@ list(APPEND SOURCE
     dxg_int.h)
 
 include_directories(
+    ${REACTOS_SOURCE_DIR}/lib/pseh/include
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 add_library(dxg MODULE
@@ -21,6 +22,7 @@ add_library(dxg MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/dxg.def)
 
 set_module_type(dxg kernelmodedriver)
-add_importlibs(dxg dxgthk ntoskrnl)
+target_link_libraries(dxg ${PSEH_LIB})
+add_importlibs(dxg dxgthk ntoskrnl msvcrt kernel32 ntdll)
 add_pch(dxg dxg_int.h SOURCE)
 add_cd_file(TARGET dxg DESTINATION reactos/system32/drivers FOR all)

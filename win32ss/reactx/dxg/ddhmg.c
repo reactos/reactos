@@ -422,3 +422,17 @@ DdHmgFree(HANDLE DdHandle)
 
     EngReleaseSemaphore(ghsemHmgr);
 }
+
+VOID 
+FASTCALL
+DdHmgAcquireHmgrSemaphore()
+{
+  EngAcquireSemaphore(ghsemHmgr);
+}
+
+VOID
+FASTCALL
+DdHmgReleaseHmgrSemaphore()
+{
+  EngReleaseSemaphore(ghsemHmgr);
+}
