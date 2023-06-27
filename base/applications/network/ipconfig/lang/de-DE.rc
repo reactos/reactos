@@ -74,10 +74,10 @@ BEGIN
     IDS_DNSTYPECNAME         "\tCNAME-Eintrag . . . . : %ls\n"
     IDS_DNSTYPESOA           "\tSOA-Eintrag . . . . . : \n"
     IDS_DNSTYPEPTR           "\tPTR-Eintrag . . . . . : %ls\n"
-    IDS_DNSTYPEMX            "\tMX-Eintrag. . . . . . : \n"
+    IDS_DNSTYPEMX            "\tMX-Eintrag. . . . . . : %ls\n\t                        %hu\n\t                        %hu\n"
     IDS_DNSTYPEAAAA          "\tAAAA-Eintrag. . . . . : %ls\n"
     IDS_DNSTYPEATMA          "\tATMA-Eintrag. . . . . : \n"
-    IDS_DNSTYPESRV           "\tSRV-Eintrag . . . . . : \n"
+    IDS_DNSTYPESRV           "\tSRV-Eintrag . . . . . : %ls\n\t                        %hu\n\t                        %hu\n\t                        %hu\n"
 END
 
 STRINGTABLE

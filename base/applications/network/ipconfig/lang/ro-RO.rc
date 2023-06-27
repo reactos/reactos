@@ -73,10 +73,10 @@ BEGIN
     IDS_DNSTYPECNAME         "\tÎnregistrarea CNAME . . : %ls\n"
     IDS_DNSTYPESOA           "\tÎnregistrarea SOA . . . : \n"
     IDS_DNSTYPEPTR           "\tÎnregistrarea PTR . . . : %ls\n"
-    IDS_DNSTYPEMX            "\tÎnregistrarea MX. . . . : \n"
+    IDS_DNSTYPEMX            "\tÎnregistrarea MX. . . . : %ls\n\t                        %hu\n\t                        %hu\n"
     IDS_DNSTYPEAAAA          "\tÎnregistrarea AAAA. . . : %ls\n"
     IDS_DNSTYPEATMA          "\tÎnregistrarea ATMA. . . : \n"
-    IDS_DNSTYPESRV           "\tÎnregistrarea SRV . . . : \n"
+    IDS_DNSTYPESRV           "\tÎnregistrarea SRV . . . : %ls\n\t                        %hu\n\t                        %hu\n\t                        %hu\n"
 END
 
 STRINGTABLE

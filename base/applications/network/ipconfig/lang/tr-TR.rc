@@ -73,10 +73,10 @@ BEGIN
     IDS_DNSTYPECNAME         "\tCNAME Record. . . . . : %ls\n"
     IDS_DNSTYPESOA           "\tSOA Record. . . . . . : \n"
     IDS_DNSTYPEPTR           "\tPTR Record. . . . . . : %ls\n"
-    IDS_DNSTYPEMX            "\tMX Record . . . . . . : \n"
+    IDS_DNSTYPEMX            "\tMX Record . . . . . . : %ls\n\t                        %hu\n\t                        %hu\n"
     IDS_DNSTYPEAAAA          "\tAAAA Record . . . . . : %ls\n"
     IDS_DNSTYPEATMA          "\tATMA Record . . . . . : \n"
-    IDS_DNSTYPESRV           "\tSRV Record. . . . . . : \n"
+    IDS_DNSTYPESRV           "\tSRV Record. . . . . . : %ls\n\t                        %hu\n\t                        %hu\n\t                        %hu\n"
 END
 
 STRINGTABLE
