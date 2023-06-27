@@ -2,7 +2,7 @@
  * PROJECT:    PAINT for ReactOS
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Keep track of palette data, notify listeners
- * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>
+ * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
  */
 
 #pragma once
