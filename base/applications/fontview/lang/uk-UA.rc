@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS Font Viewer
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/fontview/lang/uk-UA.rc
- * PURPOSE:    Ukraianian Language File for fontview
- * TRANSLATOR: Artem Reznikov
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2011 Igor Paliychuk <mansonigor@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT

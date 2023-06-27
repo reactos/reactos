@@ -1,9 +1,9 @@
 /*
- *    Translated by Caemyr - Olaf Siejka (Feb, 2008; Jul, 2012)
- *    Use ReactOS forum PM or IRC to contact me
- *    https://reactos.org
- *    IRC: irc.freenode.net #reactos-pl;
- *    UTF-8 conversion by Caemyr (May, 2011)
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2008-2012 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2017-2018 Adam Słaboń <asaillen456esx@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
