@@ -1,4 +1,10 @@
-/* Spanish language file by Javier Remacha <2007-09-21> and Ismael Ferreras Morezuelas <2014-11-07> */
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish resource file
+ * TRANSLATORS: Copyright 2007 Javier Remacha <remialdo@gmail.com>
+ *              Copyright 2014 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 

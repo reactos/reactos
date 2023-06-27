@@ -1,6 +1,8 @@
-/* TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR: 31-07-2007
- * UPDATED   : 21-07-2012
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATOR:  Copyright 2007-2012 Mário Kačmár <kario@szm.sk>
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT

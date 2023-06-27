@@ -1,11 +1,10 @@
 /*
- * PROJECT:    ReactOS FontView
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/fontview/lang/zh-CN.rc
- * PURPOSE:    Chinese (Simplified) Language File for FontView
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
- *             Li Keqing <auroracloud4096@gmail.com>
- *             Luke Luo <njlyf2011@hotmail.com>
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2009 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2017 Li Keqing <auroracloud4096@gmail.com>
+ *              Copyright 2018-2022 Luke Luo <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED

@@ -1,4 +1,9 @@
-/* Malay translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Malay resource file
+ * TRANSLATOR:  Copyright 2015 Henry Tang Ih <henrytang2@hotmail.com>
+ */
 
 LANGUAGE LANG_MALAY, SUBLANG_DEFAULT
 

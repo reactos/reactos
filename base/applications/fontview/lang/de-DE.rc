@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2007 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2010 Sven Knurr (tux.) <forenkrams@tuxproject.de>
+ *              Copyright 2023 Hilmar Preuße <hille42@web.de>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE

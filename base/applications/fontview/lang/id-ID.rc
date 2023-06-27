@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Indonesian resource file
+ * TRANSLATOR:  Copyright 2019 Mas Ahmad Muhammad <m.charly81@gmail.com>
+ */
+
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
