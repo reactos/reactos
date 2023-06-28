@@ -940,7 +940,15 @@ DisplayDnsRecord(
                 break;
 
             case DNS_TYPE_SOA:
-                ConResPrintf(StdOut, IDS_DNSTYPESOA);
+                ConResPrintf(StdOut, IDS_DNSTYPESOA1,
+                             pThisRecord->Data.SOA.pNamePrimaryServer,
+                             pThisRecord->Data.SOA.pNameAdministrator,
+                             pThisRecord->Data.SOA.dwSerialNo);
+                ConResPrintf(StdOut, IDS_DNSTYPESOA2,
+                             pThisRecord->Data.SOA.dwRefresh,
+                             pThisRecord->Data.SOA.dwRetry,
+                             pThisRecord->Data.SOA.dwExpire,
+                             pThisRecord->Data.SOA.dwDefaultTtl);
                 break;
 
             case DNS_TYPE_PTR:

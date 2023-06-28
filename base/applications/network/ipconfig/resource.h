@@ -57,11 +57,12 @@
 #define IDS_DNSTYPEA             170
 #define IDS_DNSTYPENS            171
 #define IDS_DNSTYPECNAME         172
-#define IDS_DNSTYPESOA           173
-#define IDS_DNSTYPEPTR           174
-#define IDS_DNSTYPEMX            175
-#define IDS_DNSTYPEAAAA          176
-#define IDS_DNSTYPEATMA          177
-#define IDS_DNSTYPESRV           178
+#define IDS_DNSTYPESOA1          173
+#define IDS_DNSTYPESOA2          174
+#define IDS_DNSTYPEPTR           175
+#define IDS_DNSTYPEMX            176
+#define IDS_DNSTYPEAAAA          177
+#define IDS_DNSTYPEATMA          178
+#define IDS_DNSTYPESRV           179
 
 #define IDS_USAGE 180
