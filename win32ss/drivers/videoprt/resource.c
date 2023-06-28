@@ -617,6 +617,8 @@ VideoPortUnmapMemory(
  * - NO_ERROR if the resources have been successfully claimed or released.
  * - ERROR_INVALID_PARAMETER if an error or a conflict occurred.
  * - ERROR_DEV_NOT_EXIST if the device is not found.
+ * - ERROR_MORE_DATA if there exist more device access ranges available
+ *     than what is specified by @p NumAccessRanges.
  * - ERROR_NOT_ENOUGH_MEMORY if there is not enough memory available.
  **/
 VP_STATUS
@@ -767,7 +769,7 @@ VideoPortGetAccessRanges(
             if (NumAccessRanges < LegacyAccessRangeCount)
             {
                 ERR_(VIDEOPRT, "Too many legacy access ranges found\n");
-                return ERROR_NOT_ENOUGH_MEMORY;
+                return ERROR_NOT_ENOUGH_MEMORY; // ERROR_MORE_DATA;
             }
 
             RtlCopyMemory(AccessRanges, LegacyAccessRanges, LegacyAccessRangeCount * sizeof(VIDEO_ACCESS_RANGE));
@@ -837,7 +839,7 @@ VideoPortGetAccessRanges(
             AssignedCount >= NumAccessRanges)
         {
             ERR_(VIDEOPRT, "Too many access ranges found\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
+            return ERROR_MORE_DATA;
         }
         else if (Descriptor->Type == CmResourceTypeMemory)
         {
@@ -878,6 +880,7 @@ VideoPortGetAccessRanges(
             else
                 DeviceExtension->InterruptShared = FALSE;
         }
+        // else if (Descriptor->Type == CmResourceTypeDma) // TODO!
         else
         {
             ASSERT(FALSE);
