@@ -263,5 +263,5 @@ BEGIN
     IDS_UNDERLINE "Podkreślenie"
     IDS_VERTICAL "Pionowe"
     IDS_PRINTRES "%d x %d piksel/cm"
-    IDS_CANTPASTE "Nie można wkleić ze schowka. Format danych jest nieprawidłowy lub nie obsługiwany."
+    IDS_CANTPASTE "Nie można wkleić ze schowka. Format danych jest nieprawidłowy lub nieobsługiwany."
 END
