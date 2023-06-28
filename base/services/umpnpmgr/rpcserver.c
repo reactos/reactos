@@ -428,9 +428,11 @@ static
 CONFIGRET
 OpenConfigurationKey(
     _In_ LPCWSTR pszDeviceID,
+    _In_ DWORD ulLogConfType,
     _Out_ PHKEY phKey)
 {
     WCHAR szKeyName[MAX_PATH];
+    PCWSTR pszSubKeyName;
     HKEY hInstanceKey;
     DWORD dwError;
 
@@ -447,9 +449,26 @@ OpenConfigurationKey(
     if (dwError != ERROR_SUCCESS)
         return CR_INVALID_DEVINST;
 
+    switch (ulLogConfType)
+    {
+        case BOOT_LOG_CONF:
+        case BASIC_LOG_CONF:
+            pszSubKeyName = L"LogConf";
+            break;
+
+        case ALLOC_LOG_CONF:
+        case FILTERED_LOG_CONF:
+            pszSubKeyName = L"Control";
+            break;
+
+        default:
+            DPRINT1("Unsupported configuration type!\n");
+            return CR_FAILURE;
+    }
+
     /* Create or open the LogConf key */
     dwError = RegCreateKeyExW(hInstanceKey,
-                              L"LogConf",
+                              pszSubKeyName,
                               0,
                               NULL,
                               REG_OPTION_NON_VOLATILE,
@@ -4197,6 +4216,7 @@ PNP_GetFirstLogConf(
         return CR_INVALID_DEVINST;
 
     ret = OpenConfigurationKey(pDeviceID,
+                               ulLogConfType,
                                &hConfigKey);
     if (ret != CR_SUCCESS)
     {
@@ -4297,6 +4317,7 @@ PNP_GetNextLogConf(
         return CR_INVALID_DEVINST;
 
     ret = OpenConfigurationKey(pDeviceID,
+                               ulLogConfType,
                                &hConfigKey);
     if (ret != CR_SUCCESS)
     {
@@ -4445,6 +4466,7 @@ PNP_GetNextResDes(
         return CR_INVALID_DEVINST;
 
     ret = OpenConfigurationKey(pDeviceID,
+                               ulLogConfType,
                                &hConfigKey);
     if (ret != CR_SUCCESS)
     {
