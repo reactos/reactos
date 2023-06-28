@@ -4,6 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -12,18 +13,18 @@ STRINGTABLE
 BEGIN
     IDS_INSTALL "Inst&alează"
     IDS_PRINT "I&mprimă"
-    IDS_STRING "Turubinele eoliene generează câțiva MJ (câțiva kW•h) în exces, acoperind și necesarul familiei. QY 1234567890"
-    IDS_OPEN "Deschidere font…"
+    IDS_STRING "Turbinele eoliene generează câțiva MJ (câțiva kW•h) în exces, acoperind și necesarul familiei. QY 1234567890"
+    IDS_OPEN "Deschiderea fontului…"
     IDS_ERROR "Eroare"
     IDS_ERROR_NOMEM "Nu e destulă memorie pentru a încheia operația."
     IDS_ERROR_NOFONT "Fișierul «%1» este un fișier font deteriorat."
     IDS_ERROR_NOCLASS "Clasa de ferestre nu a putut fi inițializată."
-    IDS_ERROR_ISINSTALLED "This font is already installed!" 
-    IDS_ERROR_FONTCPY "Failed to copy the font file!"
-    IDS_ERROR_OPENKEY "Failed to open the fonts registry key!"
-    IDS_ERROR_REGISTER "Failed to register the new font!"
-    IDS_SUCCESS "Success"
-    IDS_COMPLETED "Font installation completed."
+    IDS_ERROR_ISINSTALLED "Acest font este deja instalat!" 
+    IDS_ERROR_FONTCPY "Nu a putut fi copiat acest fișier de font!"
+    IDS_ERROR_OPENKEY "Nu a putut fi deschisă această cheie de regiștrii a fonturilor!"
+    IDS_ERROR_REGISTER "Nu a putut fi înregistrat noul font!"
+    IDS_SUCCESS "Succes"
+    IDS_COMPLETED "Instalarea fontului completă."
     IDS_FILTER_LIST "Toate fonturile recunoscute (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Fișiere de tip Font (*.fon;*.fnt)\0*.fon;*.fnt\0\
 Fonturi de tip TrueType (*.ttf)\0*.ttf\0\
