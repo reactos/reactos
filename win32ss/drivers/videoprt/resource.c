@@ -576,20 +576,61 @@ VideoPortUnmapMemory(
    return NO_ERROR;
 }
 
-/*
- * @implemented
- */
-
-VP_STATUS NTAPI
+/**
+ * @brief
+ * Retrieves bus-relative (mainly PCI) hardware resources access ranges
+ * and, if possible, claims these resources for the caller.
+ *
+ * @param[in]   HwDeviceExtension
+ * The miniport device extension.
+ *
+ * @param[in]   NumRequestedResources
+ * The number of hardware resources in the @p RequestedResources array.
+ *
+ * @param[in]   RequestedResources
+ * An optional array of IO_RESOURCE_DESCRIPTOR elements describing hardware
+ * resources the miniport requires.
+ *
+ * @param[in]   NumAccessRanges
+ * The number of ranges in the @p AccessRanges array the miniport expects
+ * to retrieve.
+ *
+ * @param[out]  AccessRanges
+ * A pointer to an array of hardware resource ranges VideoPortGetAccessRanges
+ * fills with bus-relative device memory ACCESS_RANGE's for the adapter.
+ *
+ * @param[in]   VendorId
+ * For a PCI device, points to a USHORT-type value that identifies
+ * the PCI manufacturer of the adapter. Otherwise, should be NULL.
+ *
+ * @param[in]   DeviceId
+ * For a PCI device, points to a USHORT-type value that identifies
+ * a particular PCI adapter model, assigned by the manufacturer.
+ * Otherwise, should be NULL.
+ *
+ * @param[out]  Slot
+ * Points to a ULONG value that receives the logical slot / location of
+ * the adapter (bus-dependent). For a PCI adapter, @p Slot points to a
+ * @p PCI_SLOT_NUMBER structure that locates the adapter on the PCI bus.
+ *
+ * @return
+ * - NO_ERROR if the resources have been successfully claimed or released.
+ * - ERROR_INVALID_PARAMETER if an error or a conflict occurred.
+ * - ERROR_DEV_NOT_EXIST if the device is not found.
+ * - ERROR_NOT_ENOUGH_MEMORY if there is not enough memory available.
+ **/
+VP_STATUS
+NTAPI
 VideoPortGetAccessRanges(
-   IN PVOID HwDeviceExtension,
-   IN ULONG NumRequestedResources,
-   IN PIO_RESOURCE_DESCRIPTOR RequestedResources OPTIONAL,
-   IN ULONG NumAccessRanges,
-   IN PVIDEO_ACCESS_RANGE AccessRanges,
-   IN PVOID VendorId,
-   IN PVOID DeviceId,
-   OUT PULONG Slot)
+    _In_ PVOID HwDeviceExtension,
+    _In_opt_ ULONG NumRequestedResources,
+    _In_reads_opt_(NumRequestedResources)
+        PIO_RESOURCE_DESCRIPTOR RequestedResources,
+    _In_ ULONG NumAccessRanges,
+    _Out_writes_(NumAccessRanges) PVIDEO_ACCESS_RANGE AccessRanges,
+    _In_ PVOID VendorId,
+    _In_ PVOID DeviceId,
+    _Out_ PULONG Slot)
 {
     PCI_SLOT_NUMBER PciSlotNumber;
     ULONG DeviceNumber;
@@ -612,7 +653,8 @@ VideoPortGetAccessRanges(
     PIO_RESOURCE_REQUIREMENTS_LIST ResReqList;
     BOOLEAN DeviceAndVendorFound = FALSE;
 
-    TRACE_(VIDEOPRT, "VideoPortGetAccessRanges(%d, %p, %d, %p)\n", NumRequestedResources, RequestedResources, NumAccessRanges, AccessRanges);
+    TRACE_(VIDEOPRT, "VideoPortGetAccessRanges(%d, %p, %d, %p)\n",
+        NumRequestedResources, RequestedResources, NumAccessRanges, AccessRanges);
 
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
     DriverObject = DeviceExtension->DriverObject;
@@ -632,9 +674,9 @@ VideoPortGetAccessRanges(
                                                DeviceExtension->SystemIoBusNumber,
                                                PciSlotNumber.u.AsULONG,
                                                &Config,
-                                               sizeof(PCI_COMMON_CONFIG));
+                                               sizeof(Config));
 
-                if (ReturnedLength != sizeof(PCI_COMMON_CONFIG))
+                if (ReturnedLength != sizeof(Config))
                 {
                     return ERROR_NOT_ENOUGH_MEMORY;
                 }
@@ -668,9 +710,11 @@ VideoPortGetAccessRanges(
                                                        DeviceExtension->SystemIoBusNumber,
                                                        PciSlotNumber.u.AsULONG,
                                                        &Config,
-                                                       sizeof(PCI_COMMON_CONFIG));
+                                                       sizeof(Config));
+
                         INFO_(VIDEOPRT, "- Length of data: %x\n", ReturnedLength);
-                        if (ReturnedLength == sizeof(PCI_COMMON_CONFIG))
+
+                        if (ReturnedLength == sizeof(Config))
                         {
                             INFO_(VIDEOPRT, "- Slot 0x%02x (Device %d Function %d) VendorId 0x%04x "
                                   "DeviceId 0x%04x\n",
@@ -688,7 +732,8 @@ VideoPortGetAccessRanges(
                             }
                         }
                     }
-                    if (DeviceAndVendorFound) break;
+                    if (DeviceAndVendorFound)
+                        break;
                 }
                 if (FunctionNumber == PCI_MAX_FUNCTION)
                 {
@@ -705,7 +750,6 @@ VideoPortGetAccessRanges(
                                             DeviceExtension->SystemIoBusNumber,
                                             PciSlotNumber.u.AsULONG,
                                             &AllocatedResources);
-
             if (!NT_SUCCESS(Status))
             {
                 WARN_(VIDEOPRT, "HalAssignSlotResources failed with status %x.\n",Status);
@@ -734,7 +778,8 @@ VideoPortGetAccessRanges(
     {
         ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) + (NumRequestedResources - 1) * sizeof(IO_RESOURCE_DESCRIPTOR);
         ResReqList = ExAllocatePool(NonPagedPool, ListSize);
-        if (!ResReqList) return ERROR_NOT_ENOUGH_MEMORY;
+        if (!ResReqList)
+            return ERROR_NOT_ENOUGH_MEMORY;
 
         ResReqList->ListSize = ListSize;
         ResReqList->InterfaceType = DeviceExtension->AdapterInterfaceType;
@@ -775,12 +820,14 @@ VideoPortGetAccessRanges(
     FullList = AllocatedResources->List;
     ASSERT(AllocatedResources->Count == 1);
     INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n",
-          FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
+          FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber,
+          FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
 
     ASSERT(FullList->InterfaceType == PCIBus);
     ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
     ASSERT(1 == FullList->PartialResourceList.Version);
     ASSERT(1 == FullList->PartialResourceList.Revision);
+
     for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
          Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
          Descriptor++)
@@ -801,7 +848,7 @@ VideoPortGetAccessRanges(
             AccessRanges[AssignedCount].RangeInIoSpace = 0;
             AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
             AccessRanges[AssignedCount].RangeShareable =
-            (Descriptor->ShareDisposition == CmResourceShareShared);
+                (Descriptor->ShareDisposition == CmResourceShareShared);
             AccessRanges[AssignedCount].RangePassive = 0;
             AssignedCount++;
         }
@@ -814,7 +861,7 @@ VideoPortGetAccessRanges(
             AccessRanges[AssignedCount].RangeInIoSpace = 1;
             AccessRanges[AssignedCount].RangeVisible = 0; /* FIXME: Just guessing */
             AccessRanges[AssignedCount].RangeShareable =
-            (Descriptor->ShareDisposition == CmResourceShareShared);
+                (Descriptor->ShareDisposition == CmResourceShareShared);
             AccessRanges[AssignedCount].RangePassive = 0;
             if (Descriptor->Flags & CM_RESOURCE_PORT_10_BIT_DECODE)
                 AccessRanges[AssignedCount].RangePassive |= VIDEO_RANGE_10_BIT_DECODE;
@@ -857,8 +904,9 @@ VideoPortGetAccessRanges(
  * Specify NULL to release the hardware resources held by the miniport.
  *
  * @return
- * NO_ERROR if the resources have been successfully claimed or released.
- * ERROR_INVALID_PARAMETER if an error or a conflict occurred.
+ * - NO_ERROR if the resources have been successfully claimed or released.
+ * - ERROR_INVALID_PARAMETER if an error or a conflict occurred.
+ * - ERROR_NOT_ENOUGH_MEMORY if there is not enough memory available.
  **/
 VP_STATUS
 NTAPI
