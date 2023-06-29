@@ -72,7 +72,8 @@ public:
         status = GetCommon().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
 
         // get the resolution
-        GetResolution((Gdiplus::GpImage*)pBitmap, pxDpi, pyDpi);
+        if (pxDpi && pyDpi)
+            GetResolution((Gdiplus::GpImage*)pBitmap, pxDpi, pyDpi);
 
         // delete GpBitmap
         GetCommon().DisposeImage(pBitmap);

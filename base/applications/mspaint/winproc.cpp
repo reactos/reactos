@@ -187,10 +187,9 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     }
 
     toolsModel.SetActiveTool(TOOL_RECTSEL);
-
-    imageModel.PushImageForUndo();
     selectionModel.InsertFromHBITMAP(bitmap, 0, 0);
     selectionModel.m_bShow = TRUE;
+
     imageModel.NotifyImageChanged();
 }
 
