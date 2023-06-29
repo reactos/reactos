@@ -53,3 +53,8 @@ BOOL zoomTo(int newZoom, int mouseX, int mouseY);
 BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1);
 void updateStartAndLast(LONG x, LONG y);
 void updateLast(LONG x, LONG y);
+
+void ShowError(INT stringID, ...);
+BOOL SetFileInfo(LPCWSTR FileName, BOOL isAFile);
+BOOL SetBitmapAndInfo(HBITMAP hBitmap, LPCWSTR lpFileName, BOOL isAFile);
+BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName);

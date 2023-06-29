@@ -8,11 +8,6 @@
 
 #pragma once
 
-void ShowError(INT stringID, ...);
-BOOL SetFileInfo(LPCWSTR FileName, BOOL isAFile);
-BOOL SetBitmapAndInfo(HBITMAP hBitmap, LPCWSTR lpFileName, BOOL isAFile);
-BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName);
-
 class CMainWindow : public CWindowImpl<CMainWindow>
 {
 public:
