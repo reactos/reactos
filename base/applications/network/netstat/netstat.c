@@ -98,6 +98,10 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         // UNIMPLEMENTED.
                         ConPuts(StdErr, L"'b' option is FIXME (Accepted option though unimplemented feature).\n");
                         bDoShowProcName = TRUE;
+
+                        // 2k3sp2 and XPSP3: -b does imply -o (superior)
+                        // Win7 and 8.1: -b and -o were decoupled (inferior)
+                        bDoShowProcessId = TRUE;
                         break;
                     case L'e':
                         bDoShowEthStats = TRUE;
