@@ -368,7 +368,7 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
         isBMP = TRUE;
     }
 
-    UINT uEnabled = ENABLED_IF(g_isAFile && isBMP && g_fileSize != 0);
+    UINT uEnabled = ENABLED_IF(g_isAFile && isBMP && g_fileSize > 0);
     EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERPLANE,     uEnabled);
     EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERCENTERED,  uEnabled);
     EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERSTRETCHED, uEnabled);

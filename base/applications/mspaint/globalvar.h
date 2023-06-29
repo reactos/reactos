@@ -41,7 +41,7 @@ extern PaletteModel paletteModel;
 extern HWND g_hStatusBar;
 extern float g_xDpi;
 extern float g_yDpi;
-extern INT g_fileSize;
+extern DWORD g_fileSize;
 extern SYSTEMTIME g_fileTime;
 
 extern CFullscreenWindow fullscreenWindow;

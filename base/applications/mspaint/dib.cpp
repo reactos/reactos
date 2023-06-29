@@ -8,7 +8,7 @@
 #include "precomp.h"
 #include <math.h>
 
-INT g_fileSize = 0;
+DWORD g_fileSize = 0;
 float g_xDpi = 96;
 float g_yDpi = 96;
 SYSTEMTIME g_fileTime;
