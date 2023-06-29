@@ -4237,7 +4237,7 @@ PNP_GetFirstLogConf(
         goto done;
     }
 
-    DPRINT("Data size %lu\n", ulDataSize);
+    DPRINT1("Data size %lu\n", ulDataSize);
     if (ulDataSize == 0 || lpData == NULL)
     {
         DPRINT1("No config data available!\n");
@@ -4248,21 +4248,15 @@ PNP_GetFirstLogConf(
     /* Get the first tag */
     if (RegDataType == REG_RESOURCE_LIST)
     {
-        DPRINT("REG_RESOURCE_LIST\n");
+        DPRINT("REG_RESOURCE_LIST->Count %lu\n", ((PCM_RESOURCE_LIST)lpData)->Count);
 
-        DPRINT("ResourceList->Count %lu\n", ((PCM_RESOURCE_LIST)lpData)->Count);
+        /* Indicate that we reached the end of the list */
         if (((PCM_RESOURCE_LIST)lpData)->Count == 0)
         {
             DPRINT1("No resource descriptors!\n");
             ret = CR_NO_MORE_LOG_CONF;
             goto done;
         }
-
-        DPRINT("lpData %p\n", lpData);
-        DPRINT("&List[0] %p\n", &(((PCM_RESOURCE_LIST)lpData)->List[0]));
-
-        *pulLogConfTag = (DWORD)((DWORD_PTR)&(((PCM_RESOURCE_LIST)lpData)->List[0]) - (DWORD_PTR)lpData);
-        DPRINT("Offset (Tag): 0x%08lx\n", *pulLogConfTag);
     }
     else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
     {
@@ -4347,13 +4341,24 @@ PNP_GetNextLogConf(
         goto done;
     }
 
-    /* FIXME: Get the next tag */
+    /* Check if the next entry is available */
     if (RegDataType == REG_RESOURCE_LIST)
     {
-        DPRINT1("FIXME: REG_RESOURCE_LIST\n");
-        /* FIXME */
-        ret = CR_NO_MORE_LOG_CONF;
-        goto done;
+        DPRINT("REG_RESOURCE_LIST->Count %lu\n", ((PCM_RESOURCE_LIST)lpData)->Count);
+
+        /* Fail, if we are beyond the end of the list */
+        if (ulCurrentTag >= ((PCM_RESOURCE_LIST)lpData)->Count)
+        {
+            ret = CR_INVALID_LOG_CONF;
+            goto done;
+        }
+
+        /* Indicate that we reached the end of the list */
+        if (ulCurrentTag == ((PCM_RESOURCE_LIST)lpData)->Count - 1)
+        {
+            ret = CR_NO_MORE_LOG_CONF;
+            goto done;
+        }
     }
     else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
     {
@@ -4362,6 +4367,9 @@ PNP_GetNextLogConf(
         ret = CR_NO_MORE_LOG_CONF;
         goto done;
     }
+
+    /* Return the next tag value */
+    *pulNextTag = ulCurrentTag + 1;
 
 done:
     if (lpData != NULL)
