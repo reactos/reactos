@@ -368,10 +368,10 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
         isBMP = TRUE;
     }
 
-    UINT uEnabled = ENABLED_IF(g_isAFile && isBMP && g_fileSize > 0);
-    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERPLANE,     uEnabled);
-    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERCENTERED,  uEnabled);
-    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERSTRETCHED, uEnabled);
+    UINT uWallpaperEnabled = ENABLED_IF(g_isAFile && isBMP && g_fileSize > 0);
+    ::EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERPLANE,     uWallpaperEnabled);
+    ::EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERCENTERED,  uWallpaperEnabled);
+    ::EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERSTRETCHED, uWallpaperEnabled);
 
     for (INT iItem = 0; iItem < MAX_RECENT_FILES; ++iItem)
         RemoveMenu(hPopupMenu, IDM_FILE1 + iItem, MF_BYCOMMAND);
