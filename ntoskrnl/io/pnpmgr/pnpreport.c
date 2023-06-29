@@ -223,7 +223,7 @@ IoReportDetectedDevice(
     }
 
     /* We use the caller's PDO if they supplied one */
-    UNICODE_STRING instancePath;
+    UNICODE_STRING instancePath = {0};
     if (DeviceObject && *DeviceObject)
     {
         Pdo = *DeviceObject;
@@ -231,7 +231,7 @@ IoReportDetectedDevice(
     else
     {
         /* Create the PDO */
-        Status = PnpRootCreateDevice(&ServiceName, NULL, &Pdo, &instancePath);
+        Status = PnpRootCreateDevice(&ServiceName, &Pdo, &instancePath);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("PnpRootCreateDevice() failed (Status 0x%08lx)\n", Status);
@@ -247,7 +247,8 @@ IoReportDetectedDevice(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Status = RtlDuplicateUnicodeString(0, &instancePath, &DeviceNode->InstancePath);
+    // The string comes from PnpRootCreateDevice, so it can be used right away
+    DeviceNode->InstancePath = instancePath;
 
     /* Open a handle to the instance path key */
     Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceKey);
