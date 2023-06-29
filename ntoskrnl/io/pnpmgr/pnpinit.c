@@ -448,18 +448,11 @@ IopInitializePlugPlayServices(VOID)
     RtlZeroMemory(PnpBusTypeGuidList, sizeof(IO_BUS_TYPE_GUID_LIST));
     ExInitializeFastMutex(&PnpBusTypeGuidList->Lock);
 
-    /* Initialize PnP root relations (this is a syncronous operation) */
+    /* Initialize PnP root relations (this is a synchronous operation) */
     PiQueueDeviceAction(Pdo, PiActionEnumRootDevices, NULL, NULL);
-
-    /* Launch the firmware mapper */
-    Status = IopUpdateRootKey();
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Close the handle to the control set */
     NtClose(KeyHandle);
-
-    /* Initialize PnP root relations (this is a syncronous operation) */
-    PiQueueDeviceAction(Pdo, PiActionEnumRootDevices, NULL, NULL);
 
     /* We made it */
     return STATUS_SUCCESS;

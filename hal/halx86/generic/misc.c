@@ -51,54 +51,6 @@ HalpReportSerialNumber(VOID)
     }
 }
 
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
-HalpMarkAcpiHal(VOID)
-{
-    NTSTATUS Status;
-    UNICODE_STRING KeyString;
-    HANDLE KeyHandle;
-    HANDLE Handle;
-    ULONG Value = HalDisableFirmwareMapper ? 1 : 0;
-
-    /* Open the control set key */
-    RtlInitUnicodeString(&KeyString,
-                         L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET");
-    Status = HalpOpenRegistryKey(&Handle, 0, &KeyString, KEY_ALL_ACCESS, FALSE);
-    if (NT_SUCCESS(Status))
-    {
-        /* Open the PNP key */
-        RtlInitUnicodeString(&KeyString, L"Control\\Pnp");
-        Status = HalpOpenRegistryKey(&KeyHandle,
-                                     Handle,
-                                     &KeyString,
-                                     KEY_ALL_ACCESS,
-                                     TRUE);
-        /* Close root key */
-        ZwClose(Handle);
-
-        /* Check if PNP BIOS key exists */
-        if (NT_SUCCESS(Status))
-        {
-            /* Set the disable value to false -- we need the mapper */
-            RtlInitUnicodeString(&KeyString, L"DisableFirmwareMapper");
-            Status = ZwSetValueKey(KeyHandle,
-                                   &KeyString,
-                                   0,
-                                   REG_DWORD,
-                                   &Value,
-                                   sizeof(Value));
-
-            /* Close subkey */
-            ZwClose(KeyHandle);
-        }
-    }
-
-    /* Return status */
-    return Status;
-}
-
 NTSTATUS
 NTAPI
 HalpOpenRegistryKey(IN PHANDLE KeyHandle,

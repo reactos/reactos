@@ -15,7 +15,6 @@
 /* GLOBALS ********************************************************************/
 
 /* This determines the HAL type */
-BOOLEAN HalDisableFirmwareMapper = FALSE;
 #if defined(SARCH_XBOX)
 PWCHAR HalName = L"Xbox HAL";
 #elif defined(SARCH_PC98)

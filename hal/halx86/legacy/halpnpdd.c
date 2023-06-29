@@ -422,6 +422,11 @@ HalpCreatePdoDeviceObject(
     return status;
 }
 
+CODE_SEG("INIT")
+VOID
+HalpParseArcMap(
+    _In_ PDEVICE_OBJECT halDevice);
+
 static
 CODE_SEG("INIT")
 NTSTATUS
@@ -433,6 +438,8 @@ HalpDriverEntry(
     NTSTATUS status;
     PDEVICE_OBJECT halRootPdo = NULL, halRootFdo, tempDevice;
     PFDO_EXTENSION fdoExtension;
+
+    DPRINT("HAL Driver Entry\n");
 
     HalpDriverObject = DriverObject;
 
@@ -518,6 +525,9 @@ HalpDriverEntry(
         pciResourceList,
         sizeof(*pciResourceList),
         halRootFdo);
+
+    // Parse the ARC tree and add more PDOs
+    HalpParseArcMap(halRootFdo);
 
     return status;
 }

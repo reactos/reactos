@@ -457,13 +457,6 @@ HalpReportSerialNumber(
 );
 
 CODE_SEG("INIT")
-NTSTATUS
-NTAPI
-HalpMarkAcpiHal(
-    VOID
-);
-
-CODE_SEG("INIT")
 VOID
 NTAPI
 HalpBuildAddressMap(
@@ -583,7 +576,6 @@ extern LARGE_INTEGER HalpPerfCounter;
 
 extern KAFFINITY HalpActiveProcessors;
 
-extern BOOLEAN HalDisableFirmwareMapper;
 extern PWCHAR HalName;
 
 extern KAFFINITY HalpDefaultInterruptAffinity;

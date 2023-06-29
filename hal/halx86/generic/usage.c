@@ -531,9 +531,6 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
         TranslatedFull = (PCM_FULL_RESOURCE_DESCRIPTOR)CurrentTranslated;
     }
 
-    /* Mark this is an ACPI system, if it is */
-    HalpMarkAcpiHal();
-
     /* Tell the kernel about all this */
     IoReportHalResourceUsage(HalName,
                              RawList,

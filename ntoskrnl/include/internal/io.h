@@ -719,13 +719,6 @@ IopCreateDeviceKeyPath(
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
-IopUpdateRootKey(
-    VOID
-);
-
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
 PiInitCacheGroupInformation(
     VOID
 );
