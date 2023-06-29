@@ -11,8 +11,7 @@ HBITMAP CreateDIBWithProperties(int width, int height);
 HBITMAP CreateMonoBitmap(int width, int height, BOOL bWhite);
 HBITMAP CreateColorDIB(int width, int height, COLORREF rgb);
 HBITMAP CachedBufferDIB(HBITMAP hbm, int minimalWidth, int minimalHeight);
-HBITMAP LoadDIBFromFile(LPCWSTR lpFileName, float *pxDpi = NULL, float *pyDpi = NULL,
-                        BOOL *pbIsAFile = NULL);
+HBITMAP LoadDIBFromFile(LPCWSTR lpFileName, float *pxDpi = NULL, float *pyDpi = NULL);
 BOOL SaveDIBToFile(HBITMAP hBitmap, LPCWSTR FileName, float xDpi, float yDpi,
                    const CLSID *pclsid = &GUID_NULL);
 

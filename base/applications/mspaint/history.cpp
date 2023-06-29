@@ -159,9 +159,9 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
 
 BOOL ImageModel::LoadImage(LPCWSTR lpFileName)
 {
-    BOOL isAFile;
-    HBITMAP hBitmap = LoadDIBFromFile(lpFileName, &g_xDpi, &g_yDpi, &isAFile);
-    if (!hBitmap || !SetBitmapAndInfo(hBitmap, lpFileName, isAFile))
+    HBITMAP hBitmap = LoadDIBFromFile(lpFileName, &g_xDpi, &g_yDpi);
+    if (hBitmap == NULL ||
+        !SetBitmapAndInfo(hBitmap, lpFileName, TRUE))
     {
         ShowError(IDS_LOADERRORTEXT, lpFileName);
         return FALSE;

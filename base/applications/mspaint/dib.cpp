@@ -151,11 +151,8 @@ BOOL SaveDIBToFile(HBITMAP hBitmap, LPCWSTR FileName, float xDpi, float yDpi, co
     return SUCCEEDED(hr);
 }
 
-HBITMAP LoadDIBFromFile(LPCWSTR lpFileName, float *pxDpi, float *pyDpi, BOOL *pbIsAFile)
+HBITMAP LoadDIBFromFile(LPCWSTR lpFileName, float *pxDpi, float *pyDpi)
 {
-    if (pbIsAFile)
-        *pbIsAFile = FALSE;
-
     // find the file
     WIN32_FIND_DATAW find;
     HANDLE hFind = ::FindFirstFileW(lpFileName, &find);
@@ -169,8 +166,6 @@ HBITMAP LoadDIBFromFile(LPCWSTR lpFileName, float *pxDpi, float *pyDpi, BOOL *pb
             *pxDpi = 96;
         if (pyDpi)
             *pyDpi = 96;
-        if (pbIsAFile)
-            *pbIsAFile = TRUE;
         return CreateColorDIB(registrySettings.BMPWidth, registrySettings.BMPHeight, WHITE);
     }
 
@@ -179,9 +174,6 @@ HBITMAP LoadDIBFromFile(LPCWSTR lpFileName, float *pxDpi, float *pyDpi, BOOL *pb
     HRESULT hr = img.LoadDx(lpFileName, pxDpi, pyDpi);
     if (FAILED(hr))
         return NULL;
-
-    if (pbIsAFile)
-        *pbIsAFile = TRUE;
 
     return img.Detach();
 }
