@@ -1045,7 +1045,7 @@ FxDmaScatterGatherTransaction::StageTransfer(
                                         m_CurrentFragmentOffset,
                                         (ULONG) m_CurrentFragmentLength,
 #pragma prefast(suppress: __WARNING_CLASS_MISMATCH_NONE, "This warning requires a wrapper class for the DRIVER_LIST_CONTROL type.")
-                                        _AdapterListControl,
+                                        (PDRIVER_LIST_CONTROL)_AdapterListControl,
                                         this,
                                         m_LookasideBuffer,
                                         (ULONG) m_AdapterInfo->PreallocatedSGListSize);
@@ -1056,7 +1056,7 @@ FxDmaScatterGatherTransaction::StageTransfer(
                                       m_CurrentFragmentOffset,
                                       (ULONG) m_CurrentFragmentLength,
 #pragma prefast(suppress: __WARNING_CLASS_MISMATCH_NONE, "This warning requires a wrapper class for the DRIVER_LIST_CONTROL type.")
-                                      _AdapterListControl,
+                                      (PDRIVER_LIST_CONTROL)_AdapterListControl,
                                       this);
     }
 
@@ -1800,8 +1800,13 @@ FxDmaPacketTransaction::StageTransfer(
     PSCATTER_GATHER_LIST sgList;
 
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
+#ifndef __REACTOS__
     UCHAR_MEMORY_ALIGNED sgListBuffer[sizeof(SCATTER_GATHER_LIST)
                             + sizeof(SCATTER_GATHER_ELEMENT)];
+#else
+    UCHAR sgListBuffer[sizeof(SCATTER_GATHER_LIST)
+                            + sizeof(SCATTER_GATHER_ELEMENT)];
+#endif
     WDFDMATRANSACTION dmaTransaction;
 
     KIRQL oldIrql;
@@ -2001,8 +2006,10 @@ FxDmaPacketTransaction::StageTransfer(
         // We can use a shared one in that case because we won't be mapping
         // multiple system DMA requests concurrently (HAL doesn't allow it)
         //
-        FxDmaEnabler* enabler = GetDmaEnabler();
+        FxDmaEnabler* enabler;
         size_t sgListSize;
+        
+        enabler = GetDmaEnabler();
 
         if (enabler->IsBusMaster()) {
             sgList = (PSCATTER_GATHER_LIST)sgListBuffer;

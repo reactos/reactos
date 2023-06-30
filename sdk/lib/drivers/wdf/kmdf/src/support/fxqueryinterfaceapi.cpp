@@ -26,6 +26,7 @@ Revision History:
 
 extern "C" {
 // #include "FxQueryInterfaceAPI.tmh"
+#define RtlSizeTToULong RtlULongPtrToULong
 }
 
 //

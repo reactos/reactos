@@ -25,6 +25,7 @@ Revision History:
 
 extern "C" {
 // #include "FxDmaEnabler.tmh"
+#define RtlSizeTToULong RtlULongPtrToULong
 }
 
 FxDmaEnabler::FxDmaEnabler(
@@ -122,8 +123,9 @@ FxDmaEnabler::Initialize(
     NTSTATUS   status;
     DEVICE_DESCRIPTION deviceDescription;
     PFX_DRIVER_GLOBALS pFxDriverGlobals = GetDriverGlobals();
+#ifndef __REACTOS__
     ULONG mapRegistersAllocated;
-
+#endif
     RtlZeroMemory(&deviceDescription, sizeof(DEVICE_DESCRIPTION));
 
     //
@@ -422,9 +424,9 @@ FxDmaEnabler::Initialize(
     // adapter later will fail cleanly.
     //
     m_PDO = m_DeviceBase->GetPhysicalDevice();
-
+#ifndef __REACTOS__
     mapRegistersAllocated = 0;
-
+#endif
     //
     // If this device is a bus-master then configure the profile
     // right now, since we don't need to wait for PrepareHardware

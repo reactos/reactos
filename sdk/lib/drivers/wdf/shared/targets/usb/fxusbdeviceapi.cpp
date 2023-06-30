@@ -22,7 +22,9 @@ Revision History:
 #include "fxusbpch.hpp"
 
 extern "C" {
+#if defined(EVENT_TRACING)
 #include "FxUsbDeviceAPI.tmh"
+#endif
 }
 
 //
@@ -137,6 +139,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -186,6 +189,7 @@ __checkReturn
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceCreateWithParameters)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -251,6 +255,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceRetrieveInformation)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -291,6 +296,7 @@ WDFEXPORT(WdfUsbTargetDeviceRetrieveInformation)(
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceGetDeviceDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -326,6 +332,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceRetrieveConfigDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -364,6 +371,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceQueryString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -421,6 +429,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceAllocAndQueryString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -517,6 +526,7 @@ WDFEXPORT(WdfUsbTargetDeviceAllocAndQueryString)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceFormatRequestForString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -641,6 +651,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceSelectConfig)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -906,6 +917,7 @@ WDFEXPORT(WdfUsbTargetDeviceSelectConfig)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 UCHAR
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceGetNumInterfaces)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -929,6 +941,7 @@ WDFEXPORT(WdfUsbTargetDeviceGetNumInterfaces)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 USBD_CONFIGURATION_HANDLE
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceWdmGetConfigurationHandle)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -951,6 +964,7 @@ WDFEXPORT(WdfUsbTargetDeviceWdmGetConfigurationHandle)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceSendControlTransferSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1078,6 +1092,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceFormatRequestForControlTransfer)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1188,6 +1203,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceResetPortSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1222,6 +1238,7 @@ __checkReturn
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceCreateIsochUrb)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1304,6 +1321,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFUSBINTERFACE
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceGetInterface)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1357,6 +1375,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceQueryUsbCapability)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

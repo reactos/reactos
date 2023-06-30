@@ -33,10 +33,12 @@ extern "C" {
 //
 // Global triage Info for dbgeng and 0x9F work
 //
+#ifndef __REACTOS__
 extern WDF_TRIAGE_INFO g_WdfTriageInfo;
-
+#endif
 
 VOID
+STDCALL
 WDFEXPORT(WdfVerifierDbgBreakPoint)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals
@@ -75,6 +77,7 @@ Return Value:
 
 
 VOID
+STDCALL
 WDFEXPORT(WdfVerifierKeBugCheck)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -146,6 +149,7 @@ Return Value:
 }
 
 VOID
+STDCALL
 WDFEXPORT(WdfCxVerifierKeBugCheck)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -238,6 +242,7 @@ Return Value:
 
 
 PVOID
+STDCALL
 WDFEXPORT(WdfGetTriageInfo)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals

@@ -43,14 +43,14 @@ list(APPEND SOURCE_SHARED
     shared/core/fxtimerapi.cpp
     shared/core/fxworkitem.cpp
     shared/core/fxworkitemapi.cpp
-    # shared/core/verifierapi.cpp
+    shared/core/verifierapi.cpp
     shared/irphandlers/default/fxdefaultirphandler.cpp
     shared/irphandlers/general/fxpkggeneral.cpp
     shared/irphandlers/io/fxioqueue.cpp
     shared/irphandlers/io/fxioqueueapi.cpp
     shared/irphandlers/io/fxpkgio.cpp
     shared/irphandlers/package/fxpackage.cpp
-    # shared/irphandlers/pnp/devicepwrreqstatemachine.cpp
+    shared/irphandlers/pnp/devicepwrreqstatemachine.cpp
     shared/irphandlers/pnp/eventqueue.cpp
     shared/irphandlers/pnp/fdopower.cpp
     shared/irphandlers/pnp/fxinterruptapi.cpp
@@ -103,13 +103,13 @@ list(APPEND SOURCE_SHARED
     shared/targets/general/fxiotargetapi.cpp
     shared/targets/general/fxiotargetremote.cpp
     shared/targets/general/fxiotargetself.cpp
-    # shared/targets/usb/fxusbdevice.cpp
-    # shared/targets/usb/fxusbdeviceapi.cpp
-    # shared/targets/usb/fxusbinterface.cpp
-    # shared/targets/usb/fxusbinterfaceapi.cpp
-    # shared/targets/usb/fxusbpipe.cpp
-    # shared/targets/usb/fxusbpipeapi.cpp
-    # shared/targets/usb/usbutil.cpp
+    shared/targets/usb/fxusbdevice.cpp
+    shared/targets/usb/fxusbdeviceapi.cpp
+    shared/targets/usb/fxusbinterface.cpp
+    shared/targets/usb/fxusbinterfaceapi.cpp
+    shared/targets/usb/fxusbpipe.cpp
+    shared/targets/usb/fxusbpipeapi.cpp
+    shared/targets/usb/usbutil.cpp
     )
 
 list(APPEND SOURCE_KM
@@ -122,18 +122,18 @@ list(APPEND SOURCE_KM
     kmdf/src/core/fxdpcapi.cpp
     kmdf/src/core/fxsystemthread.cpp
     kmdf/src/core/tracing.cpp
-    # kmdf/src/dma/base/fxcommonbuffer.cpp # requires DMA stuff
-    # kmdf/src/dma/base/fxcommonbufferapi.cpp # requires DMA stuff
-    # kmdf/src/dma/base/fxdmaenabler.cpp
-    # kmdf/src/dma/base/fxdmaenablerapi.cpp
-    # kmdf/src/dma/base/fxdmatransaction.cpp
-    # kmdf/src/dma/base/fxdmatransactionapi.cpp
+    kmdf/src/dma/base/fxcommonbuffer.cpp # requires DMA stuff
+    kmdf/src/dma/base/fxcommonbufferapi.cpp # requires DMA stuff
+    kmdf/src/dma/base/fxdmaenabler.cpp
+    kmdf/src/dma/base/fxdmaenablerapi.cpp
+    kmdf/src/dma/base/fxdmatransaction.cpp
+    kmdf/src/dma/base/fxdmatransactionapi.cpp
     kmdf/src/dynamic/version/version.cpp
     kmdf/src/fxtosharedinterface/fxobject/fxobjectinfokm.cpp
-    # kmdf/src/irphandlers/wmi/fxwmiapi.cpp
-    # kmdf/src/irphandlers/wmi/fxwmiinstance.cpp
-    # kmdf/src/irphandlers/wmi/fxwmiirphandler.cpp
-    # kmdf/src/irphandlers/wmi/fxwmiprovider.cpp
+    kmdf/src/irphandlers/wmi/fxwmiapi.cpp
+    kmdf/src/irphandlers/wmi/fxwmiinstance.cpp
+    kmdf/src/irphandlers/wmi/fxwmiirphandler.cpp
+    kmdf/src/irphandlers/wmi/fxwmiprovider.cpp
     kmdf/src/librarycommon/fxlibrarycommon.cpp
     kmdf/src/support/fxqueryinterface.cpp
     kmdf/src/support/fxqueryinterfaceapi.cpp
@@ -160,7 +160,7 @@ list(APPEND SOURCE_KM
     shared/irphandlers/pnp/km/pnpstatemachinekm.cpp
     shared/irphandlers/pnp/km/powerpolicystatemachinekm.cpp
     shared/irphandlers/pnp/km/powerstatemachinekm.cpp # stubs
-    # shared/irphandlers/pnp/km/poxinterfacekm.cpp
+    shared/irphandlers/pnp/km/poxinterfacekm.cpp
     shared/irphandlers/pnp/km/supportkm.cpp
     shared/object/km/fxobjectkm.cpp
     shared/object/km/globalskm.cpp
@@ -178,6 +178,10 @@ list(APPEND SOURCE_KM
     shared/targets/general/km/fxiotargetapikm.cpp
     shared/targets/general/km/fxiotargetkm.cpp
     shared/targets/general/km/fxiotargetremotekm.cpp
+    # usb
+    shared/targets/usb/km/fxusbdeviceapikm.cpp
+    shared/targets/usb/km/fxusbdevicekm.cpp
+    shared/targets/usb/km/fxusbpipekm.cpp
     reactos_special.cpp
     )
 
@@ -211,11 +215,11 @@ target_include_directories(wdf01000
         shared/irphandlers/pnp/km # pnpprivkm.hpp
     )
 
-target_link_libraries(wdf01000 aux_klib ntoskrnl_vista ${PSEH_LIB})
+target_link_libraries(wdf01000 aux_klib usbdex ntoskrnl_vista ${PSEH_LIB})
 add_importlibs(wdf01000 wdfldr ntoskrnl hal)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(wdf01000
         PRIVATE -Wno-write-strings -Wno-unknown-pragmas -Wno-switch
-        PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder -Wno-invalid-offsetof -Wno-delete-non-virtual-dtor>)
+        PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder -Wno-invalid-offsetof -Wno-delete-non-virtual-dtor -Wno-class-memaccess>)
 endif()
