@@ -46,14 +46,10 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFCOLLECTIONGETITEM                                  pfnWdfCollectionGetItem;
     PFN_WDFCOLLECTIONGETFIRSTITEM                             pfnWdfCollectionGetFirstItem;
     PFN_WDFCOLLECTIONGETLASTITEM                              pfnWdfCollectionGetLastItem;
-    // PFN_WDFCOMMONBUFFERCREATE                                 pfnWdfCommonBufferCreate;
-    // PFN_WDFCOMMONBUFFERGETALIGNEDVIRTUALADDRESS               pfnWdfCommonBufferGetAlignedVirtualAddress;
-    // PFN_WDFCOMMONBUFFERGETALIGNEDLOGICALADDRESS               pfnWdfCommonBufferGetAlignedLogicalAddress;
-    // PFN_WDFCOMMONBUFFERGETLENGTH                              pfnWdfCommonBufferGetLength;
-    PFN_ROSWDFUNIMPLEMENTED                                 pfnWdfCommonBufferCreate;
-    PFN_ROSWDFUNIMPLEMENTED               pfnWdfCommonBufferGetAlignedVirtualAddress;
-    PFN_ROSWDFUNIMPLEMENTED               pfnWdfCommonBufferGetAlignedLogicalAddress;
-    PFN_ROSWDFUNIMPLEMENTED                              pfnWdfCommonBufferGetLength;
+    PFN_WDFCOMMONBUFFERCREATE                                 pfnWdfCommonBufferCreate;
+    PFN_WDFCOMMONBUFFERGETALIGNEDVIRTUALADDRESS               pfnWdfCommonBufferGetAlignedVirtualAddress;
+    PFN_WDFCOMMONBUFFERGETALIGNEDLOGICALADDRESS               pfnWdfCommonBufferGetAlignedLogicalAddress;
+    PFN_WDFCOMMONBUFFERGETLENGTH                              pfnWdfCommonBufferGetLength;
 
     PFN_WDFCONTROLDEVICEINITALLOCATE                          pfnWdfControlDeviceInitAllocate;
     PFN_WDFCONTROLDEVICEINITSETSHUTDOWNNOTIFICATION           pfnWdfControlDeviceInitSetShutdownNotification;
@@ -124,40 +120,23 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFDEVICEENQUEUEREQUEST                               pfnWdfDeviceEnqueueRequest;
     PFN_WDFDEVICEGETDEFAULTQUEUE                              pfnWdfDeviceGetDefaultQueue;
     PFN_WDFDEVICECONFIGUREREQUESTDISPATCHING                  pfnWdfDeviceConfigureRequestDispatching;
-    // PFN_WDFDMAENABLERCREATE                                   pfnWdfDmaEnablerCreate;
-    // PFN_WDFDMAENABLERGETMAXIMUMLENGTH                         pfnWdfDmaEnablerGetMaximumLength;
-    // PFN_WDFDMAENABLERGETMAXIMUMSCATTERGATHERELEMENTS          pfnWdfDmaEnablerGetMaximumScatterGatherElements;
-    // PFN_WDFDMAENABLERSETMAXIMUMSCATTERGATHERELEMENTS          pfnWdfDmaEnablerSetMaximumScatterGatherElements;
-    // PFN_WDFDMATRANSACTIONCREATE                               pfnWdfDmaTransactionCreate;
-    // PFN_WDFDMATRANSACTIONINITIALIZE                           pfnWdfDmaTransactionInitialize;
-    // PFN_WDFDMATRANSACTIONINITIALIZEUSINGREQUEST               pfnWdfDmaTransactionInitializeUsingRequest;
-    // PFN_WDFDMATRANSACTIONEXECUTE                              pfnWdfDmaTransactionExecute;
-    // PFN_WDFDMATRANSACTIONRELEASE                              pfnWdfDmaTransactionRelease;
-    // PFN_WDFDMATRANSACTIONDMACOMPLETED                         pfnWdfDmaTransactionDmaCompleted;
-    // PFN_WDFDMATRANSACTIONDMACOMPLETEDWITHLENGTH               pfnWdfDmaTransactionDmaCompletedWithLength;
-    // PFN_WDFDMATRANSACTIONDMACOMPLETEDFINAL                    pfnWdfDmaTransactionDmaCompletedFinal;
-    // PFN_WDFDMATRANSACTIONGETBYTESTRANSFERRED                  pfnWdfDmaTransactionGetBytesTransferred;
-    // PFN_WDFDMATRANSACTIONSETMAXIMUMLENGTH                     pfnWdfDmaTransactionSetMaximumLength;
-    // PFN_WDFDMATRANSACTIONGETREQUEST                           pfnWdfDmaTransactionGetRequest;
-    // PFN_WDFDMATRANSACTIONGETCURRENTDMATRANSFERLENGTH          pfnWdfDmaTransactionGetCurrentDmaTransferLength;
-    // PFN_WDFDMATRANSACTIONGETDEVICE                            pfnWdfDmaTransactionGetDevice;
-    PFN_ROSWDFUNIMPLEMENTED                                   pfnWdfDmaEnablerCreate;
-    PFN_ROSWDFUNIMPLEMENTED                         pfnWdfDmaEnablerGetMaximumLength;
-    PFN_ROSWDFUNIMPLEMENTED          pfnWdfDmaEnablerGetMaximumScatterGatherElements;
-    PFN_ROSWDFUNIMPLEMENTED          pfnWdfDmaEnablerSetMaximumScatterGatherElements;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfDmaTransactionCreate;
-    PFN_ROSWDFUNIMPLEMENTED                           pfnWdfDmaTransactionInitialize;
-    PFN_ROSWDFUNIMPLEMENTED               pfnWdfDmaTransactionInitializeUsingRequest;
-    PFN_ROSWDFUNIMPLEMENTED                              pfnWdfDmaTransactionExecute;
-    PFN_ROSWDFUNIMPLEMENTED                              pfnWdfDmaTransactionRelease;
-    PFN_ROSWDFUNIMPLEMENTED                         pfnWdfDmaTransactionDmaCompleted;
-    PFN_ROSWDFUNIMPLEMENTED               pfnWdfDmaTransactionDmaCompletedWithLength;
-    PFN_ROSWDFUNIMPLEMENTED                    pfnWdfDmaTransactionDmaCompletedFinal;
-    PFN_ROSWDFUNIMPLEMENTED                  pfnWdfDmaTransactionGetBytesTransferred;
-    PFN_ROSWDFUNIMPLEMENTED                     pfnWdfDmaTransactionSetMaximumLength;
-    PFN_ROSWDFUNIMPLEMENTED                           pfnWdfDmaTransactionGetRequest;
-    PFN_ROSWDFUNIMPLEMENTED          pfnWdfDmaTransactionGetCurrentDmaTransferLength;
-    PFN_ROSWDFUNIMPLEMENTED                            pfnWdfDmaTransactionGetDevice;
+    PFN_WDFDMAENABLERCREATE                                   pfnWdfDmaEnablerCreate;
+    PFN_WDFDMAENABLERGETMAXIMUMLENGTH                         pfnWdfDmaEnablerGetMaximumLength;
+    PFN_WDFDMAENABLERGETMAXIMUMSCATTERGATHERELEMENTS          pfnWdfDmaEnablerGetMaximumScatterGatherElements;
+    PFN_WDFDMAENABLERSETMAXIMUMSCATTERGATHERELEMENTS          pfnWdfDmaEnablerSetMaximumScatterGatherElements;
+    PFN_WDFDMATRANSACTIONCREATE                               pfnWdfDmaTransactionCreate;
+    PFN_WDFDMATRANSACTIONINITIALIZE                           pfnWdfDmaTransactionInitialize;
+    PFN_WDFDMATRANSACTIONINITIALIZEUSINGREQUEST               pfnWdfDmaTransactionInitializeUsingRequest;
+    PFN_WDFDMATRANSACTIONEXECUTE                              pfnWdfDmaTransactionExecute;
+    PFN_WDFDMATRANSACTIONRELEASE                              pfnWdfDmaTransactionRelease;
+    PFN_WDFDMATRANSACTIONDMACOMPLETED                         pfnWdfDmaTransactionDmaCompleted;
+    PFN_WDFDMATRANSACTIONDMACOMPLETEDWITHLENGTH               pfnWdfDmaTransactionDmaCompletedWithLength;
+    PFN_WDFDMATRANSACTIONDMACOMPLETEDFINAL                    pfnWdfDmaTransactionDmaCompletedFinal;
+    PFN_WDFDMATRANSACTIONGETBYTESTRANSFERRED                  pfnWdfDmaTransactionGetBytesTransferred;
+    PFN_WDFDMATRANSACTIONSETMAXIMUMLENGTH                     pfnWdfDmaTransactionSetMaximumLength;
+    PFN_WDFDMATRANSACTIONGETREQUEST                           pfnWdfDmaTransactionGetRequest;
+    PFN_WDFDMATRANSACTIONGETCURRENTDMATRANSFERLENGTH          pfnWdfDmaTransactionGetCurrentDmaTransferLength;
+    PFN_WDFDMATRANSACTIONGETDEVICE                            pfnWdfDmaTransactionGetDevice;
 
     PFN_WDFDPCCREATE                                          pfnWdfDpcCreate;
     PFN_WDFDPCENQUEUE                                         pfnWdfDpcEnqueue;
@@ -370,133 +349,72 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFTIMERSTART                                         pfnWdfTimerStart;
     PFN_WDFTIMERSTOP                                          pfnWdfTimerStop;
     PFN_WDFTIMERGETPARENTOBJECT                               pfnWdfTimerGetParentObject;
-    // PFN_WDFUSBTARGETDEVICECREATE                              pfnWdfUsbTargetDeviceCreate;
-    // PFN_WDFUSBTARGETDEVICERETRIEVEINFORMATION                 pfnWdfUsbTargetDeviceRetrieveInformation;
-    // PFN_WDFUSBTARGETDEVICEGETDEVICEDESCRIPTOR                 pfnWdfUsbTargetDeviceGetDeviceDescriptor;
-    // PFN_WDFUSBTARGETDEVICERETRIEVECONFIGDESCRIPTOR            pfnWdfUsbTargetDeviceRetrieveConfigDescriptor;
-    // PFN_WDFUSBTARGETDEVICEQUERYSTRING                         pfnWdfUsbTargetDeviceQueryString;
-    // PFN_WDFUSBTARGETDEVICEALLOCANDQUERYSTRING                 pfnWdfUsbTargetDeviceAllocAndQueryString;
-    // PFN_WDFUSBTARGETDEVICEFORMATREQUESTFORSTRING              pfnWdfUsbTargetDeviceFormatRequestForString;
-    // PFN_WDFUSBTARGETDEVICEGETNUMINTERFACES                    pfnWdfUsbTargetDeviceGetNumInterfaces;
-    // PFN_WDFUSBTARGETDEVICESELECTCONFIG                        pfnWdfUsbTargetDeviceSelectConfig;
-    // PFN_WDFUSBTARGETDEVICEWDMGETCONFIGURATIONHANDLE           pfnWdfUsbTargetDeviceWdmGetConfigurationHandle;
-    // PFN_WDFUSBTARGETDEVICERETRIEVECURRENTFRAMENUMBER          pfnWdfUsbTargetDeviceRetrieveCurrentFrameNumber;
-    // PFN_WDFUSBTARGETDEVICESENDCONTROLTRANSFERSYNCHRONOUSLY    pfnWdfUsbTargetDeviceSendControlTransferSynchronously;
-    // PFN_WDFUSBTARGETDEVICEFORMATREQUESTFORCONTROLTRANSFER     pfnWdfUsbTargetDeviceFormatRequestForControlTransfer;
-    // PFN_WDFUSBTARGETDEVICEISCONNECTEDSYNCHRONOUS              pfnWdfUsbTargetDeviceIsConnectedSynchronous;
-    // PFN_WDFUSBTARGETDEVICERESETPORTSYNCHRONOUSLY              pfnWdfUsbTargetDeviceResetPortSynchronously;
-    // PFN_WDFUSBTARGETDEVICECYCLEPORTSYNCHRONOUSLY              pfnWdfUsbTargetDeviceCyclePortSynchronously;
-    // PFN_WDFUSBTARGETDEVICEFORMATREQUESTFORCYCLEPORT           pfnWdfUsbTargetDeviceFormatRequestForCyclePort;
-    // PFN_WDFUSBTARGETDEVICESENDURBSYNCHRONOUSLY                pfnWdfUsbTargetDeviceSendUrbSynchronously;
-    // PFN_WDFUSBTARGETDEVICEFORMATREQUESTFORURB                 pfnWdfUsbTargetDeviceFormatRequestForUrb;
-    // PFN_WDFUSBTARGETPIPEGETINFORMATION                        pfnWdfUsbTargetPipeGetInformation;
-    // PFN_WDFUSBTARGETPIPEISINENDPOINT                          pfnWdfUsbTargetPipeIsInEndpoint;
-    // PFN_WDFUSBTARGETPIPEISOUTENDPOINT                         pfnWdfUsbTargetPipeIsOutEndpoint;
-    // PFN_WDFUSBTARGETPIPEGETTYPE                               pfnWdfUsbTargetPipeGetType;
-    // PFN_WDFUSBTARGETPIPESETNOMAXIMUMPACKETSIZECHECK           pfnWdfUsbTargetPipeSetNoMaximumPacketSizeCheck;
-    // PFN_WDFUSBTARGETPIPEWRITESYNCHRONOUSLY                    pfnWdfUsbTargetPipeWriteSynchronously;
-    // PFN_WDFUSBTARGETPIPEFORMATREQUESTFORWRITE                 pfnWdfUsbTargetPipeFormatRequestForWrite;
-    // PFN_WDFUSBTARGETPIPEREADSYNCHRONOUSLY                     pfnWdfUsbTargetPipeReadSynchronously;
-    // PFN_WDFUSBTARGETPIPEFORMATREQUESTFORREAD                  pfnWdfUsbTargetPipeFormatRequestForRead;
-    // PFN_WDFUSBTARGETPIPECONFIGCONTINUOUSREADER                pfnWdfUsbTargetPipeConfigContinuousReader;
-    // PFN_WDFUSBTARGETPIPEABORTSYNCHRONOUSLY                    pfnWdfUsbTargetPipeAbortSynchronously;
-    // PFN_WDFUSBTARGETPIPEFORMATREQUESTFORABORT                 pfnWdfUsbTargetPipeFormatRequestForAbort;
-    // PFN_WDFUSBTARGETPIPERESETSYNCHRONOUSLY                    pfnWdfUsbTargetPipeResetSynchronously;
-    // PFN_WDFUSBTARGETPIPEFORMATREQUESTFORRESET                 pfnWdfUsbTargetPipeFormatRequestForReset;
-    // PFN_WDFUSBTARGETPIPESENDURBSYNCHRONOUSLY                  pfnWdfUsbTargetPipeSendUrbSynchronously;
-    // PFN_WDFUSBTARGETPIPEFORMATREQUESTFORURB                   pfnWdfUsbTargetPipeFormatRequestForUrb;
-    // PFN_WDFUSBINTERFACEGETINTERFACENUMBER                     pfnWdfUsbInterfaceGetInterfaceNumber;
-    // PFN_WDFUSBINTERFACEGETNUMENDPOINTS                        pfnWdfUsbInterfaceGetNumEndpoints;
-    // PFN_WDFUSBINTERFACEGETDESCRIPTOR                          pfnWdfUsbInterfaceGetDescriptor;
-    // PFN_WDFUSBINTERFACESELECTSETTING                          pfnWdfUsbInterfaceSelectSetting;
-    // PFN_WDFUSBINTERFACEGETENDPOINTINFORMATION                 pfnWdfUsbInterfaceGetEndpointInformation;
-    // PFN_WDFUSBTARGETDEVICEGETINTERFACE                        pfnWdfUsbTargetDeviceGetInterface;
-    // PFN_WDFUSBINTERFACEGETCONFIGUREDSETTINGINDEX              pfnWdfUsbInterfaceGetConfiguredSettingIndex;
-    // PFN_WDFUSBINTERFACEGETNUMCONFIGUREDPIPES                  pfnWdfUsbInterfaceGetNumConfiguredPipes;
-    // PFN_WDFUSBINTERFACEGETCONFIGUREDPIPE                      pfnWdfUsbInterfaceGetConfiguredPipe;
-    // PFN_WDFUSBTARGETPIPEWDMGETPIPEHANDLE                      pfnWdfUsbTargetPipeWdmGetPipeHandle;
-    // PFN_WDFVERIFIERDBGBREAKPOINT                              pfnWdfVerifierDbgBreakPoint;
-    // PFN_WDFVERIFIERKEBUGCHECK                                 pfnWdfVerifierKeBugCheck;
-    // PFN_WDFWMIPROVIDERCREATE                                  pfnWdfWmiProviderCreate;
-    // PFN_WDFWMIPROVIDERGETDEVICE                               pfnWdfWmiProviderGetDevice;
-    // PFN_WDFWMIPROVIDERISENABLED                               pfnWdfWmiProviderIsEnabled;
-    // PFN_WDFWMIPROVIDERGETTRACINGHANDLE                        pfnWdfWmiProviderGetTracingHandle;
-    // PFN_WDFWMIINSTANCECREATE                                  pfnWdfWmiInstanceCreate;
-    // PFN_WDFWMIINSTANCEREGISTER                                pfnWdfWmiInstanceRegister;
-    // PFN_WDFWMIINSTANCEDEREGISTER                              pfnWdfWmiInstanceDeregister;
-    // PFN_WDFWMIINSTANCEGETDEVICE                               pfnWdfWmiInstanceGetDevice;
-    // PFN_WDFWMIINSTANCEGETPROVIDER                             pfnWdfWmiInstanceGetProvider;
-    // PFN_WDFWMIINSTANCEFIREEVENT                               pfnWdfWmiInstanceFireEvent;
-    PFN_ROSWDFUNIMPLEMENTED                              pfnWdfUsbTargetDeviceCreate;
-    PFN_ROSWDFUNIMPLEMENTED                 pfnWdfUsbTargetDeviceRetrieveInformation;
-    PFN_ROSWDFUNIMPLEMENTED                 pfnWdfUsbTargetDeviceGetDeviceDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED            pfnWdfUsbTargetDeviceRetrieveConfigDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED                         pfnWdfUsbTargetDeviceQueryString;
-    PFN_ROSWDFUNIMPLEMENTED                 pfnWdfUsbTargetDeviceAllocAndQueryString;
-    PFN_ROSWDFUNIMPLEMENTED              pfnWdfUsbTargetDeviceFormatRequestForString;
-    PFN_ROSWDFUNIMPLEMENTED                    pfnWdfUsbTargetDeviceGetNumInterfaces;
-    PFN_ROSWDFUNIMPLEMENTED                        pfnWdfUsbTargetDeviceSelectConfig;
-    PFN_ROSWDFUNIMPLEMENTED           pfnWdfUsbTargetDeviceWdmGetConfigurationHandle;
-    PFN_ROSWDFUNIMPLEMENTED          pfnWdfUsbTargetDeviceRetrieveCurrentFrameNumber;
-    PFN_ROSWDFUNIMPLEMENTED    pfnWdfUsbTargetDeviceSendControlTransferSynchronously;
-    PFN_ROSWDFUNIMPLEMENTED     pfnWdfUsbTargetDeviceFormatRequestForControlTransfer;
-    PFN_ROSWDFUNIMPLEMENTED              pfnWdfUsbTargetDeviceIsConnectedSynchronous;
-    PFN_ROSWDFUNIMPLEMENTED              pfnWdfUsbTargetDeviceResetPortSynchronously;
-    PFN_ROSWDFUNIMPLEMENTED              pfnWdfUsbTargetDeviceCyclePortSynchronously;
-    PFN_ROSWDFUNIMPLEMENTED           pfnWdfUsbTargetDeviceFormatRequestForCyclePort;
-    PFN_ROSWDFUNIMPLEMENTED                pfnWdfUsbTargetDeviceSendUrbSynchronously;
-    PFN_ROSWDFUNIMPLEMENTED                 pfnWdfUsbTargetDeviceFormatRequestForUrb;
-    PFN_ROSWDFUNIMPLEMENTED                        pfnWdfUsbTargetPipeGetInformation;
-    PFN_ROSWDFUNIMPLEMENTED                          pfnWdfUsbTargetPipeIsInEndpoint;
-    PFN_ROSWDFUNIMPLEMENTED                         pfnWdfUsbTargetPipeIsOutEndpoint;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfUsbTargetPipeGetType;
-    PFN_ROSWDFUNIMPLEMENTED           pfnWdfUsbTargetPipeSetNoMaximumPacketSizeCheck;
-    PFN_ROSWDFUNIMPLEMENTED                    pfnWdfUsbTargetPipeWriteSynchronously;
-    PFN_ROSWDFUNIMPLEMENTED                 pfnWdfUsbTargetPipeFormatRequestForWrite;
-    PFN_ROSWDFUNIMPLEMENTED                     pfnWdfUsbTargetPipeReadSynchronously;
-    PFN_ROSWDFUNIMPLEMENTED                  pfnWdfUsbTargetPipeFormatRequestForRead;
-    PFN_ROSWDFUNIMPLEMENTED                pfnWdfUsbTargetPipeConfigContinuousReader;
-    PFN_ROSWDFUNIMPLEMENTED                    pfnWdfUsbTargetPipeAbortSynchronously;
-    PFN_ROSWDFUNIMPLEMENTED                 pfnWdfUsbTargetPipeFormatRequestForAbort;
-    PFN_ROSWDFUNIMPLEMENTED                    pfnWdfUsbTargetPipeResetSynchronously;
-    PFN_ROSWDFUNIMPLEMENTED                 pfnWdfUsbTargetPipeFormatRequestForReset;
-    PFN_ROSWDFUNIMPLEMENTED                  pfnWdfUsbTargetPipeSendUrbSynchronously;
-    PFN_ROSWDFUNIMPLEMENTED                   pfnWdfUsbTargetPipeFormatRequestForUrb;
-    PFN_ROSWDFUNIMPLEMENTED                     pfnWdfUsbInterfaceGetInterfaceNumber;
-    PFN_ROSWDFUNIMPLEMENTED                        pfnWdfUsbInterfaceGetNumEndpoints;
-    PFN_ROSWDFUNIMPLEMENTED                          pfnWdfUsbInterfaceGetDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED                          pfnWdfUsbInterfaceSelectSetting;
-    PFN_ROSWDFUNIMPLEMENTED                 pfnWdfUsbInterfaceGetEndpointInformation;
-    PFN_ROSWDFUNIMPLEMENTED                        pfnWdfUsbTargetDeviceGetInterface;
-    PFN_ROSWDFUNIMPLEMENTED              pfnWdfUsbInterfaceGetConfiguredSettingIndex;
-    PFN_ROSWDFUNIMPLEMENTED                  pfnWdfUsbInterfaceGetNumConfiguredPipes;
-    PFN_ROSWDFUNIMPLEMENTED                      pfnWdfUsbInterfaceGetConfiguredPipe;
-    PFN_ROSWDFUNIMPLEMENTED                      pfnWdfUsbTargetPipeWdmGetPipeHandle;
-    PFN_ROSWDFUNIMPLEMENTED                              pfnWdfVerifierDbgBreakPoint;
-    PFN_ROSWDFUNIMPLEMENTED                                 pfnWdfVerifierKeBugCheck;
-    PFN_ROSWDFUNIMPLEMENTED                                  pfnWdfWmiProviderCreate;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfWmiProviderGetDevice;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfWmiProviderIsEnabled;
-    PFN_ROSWDFUNIMPLEMENTED                        pfnWdfWmiProviderGetTracingHandle;
-    PFN_ROSWDFUNIMPLEMENTED                                  pfnWdfWmiInstanceCreate;
-    PFN_ROSWDFUNIMPLEMENTED                                pfnWdfWmiInstanceRegister;
-    PFN_ROSWDFUNIMPLEMENTED                              pfnWdfWmiInstanceDeregister;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfWmiInstanceGetDevice;
-    PFN_ROSWDFUNIMPLEMENTED                             pfnWdfWmiInstanceGetProvider;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfWmiInstanceFireEvent;
+    PFN_WDFUSBTARGETDEVICECREATE                              pfnWdfUsbTargetDeviceCreate;
+    PFN_WDFUSBTARGETDEVICERETRIEVEINFORMATION                 pfnWdfUsbTargetDeviceRetrieveInformation;
+    PFN_WDFUSBTARGETDEVICEGETDEVICEDESCRIPTOR                 pfnWdfUsbTargetDeviceGetDeviceDescriptor;
+    PFN_WDFUSBTARGETDEVICERETRIEVECONFIGDESCRIPTOR            pfnWdfUsbTargetDeviceRetrieveConfigDescriptor;
+    PFN_WDFUSBTARGETDEVICEQUERYSTRING                         pfnWdfUsbTargetDeviceQueryString;
+    PFN_WDFUSBTARGETDEVICEALLOCANDQUERYSTRING                 pfnWdfUsbTargetDeviceAllocAndQueryString;
+    PFN_WDFUSBTARGETDEVICEFORMATREQUESTFORSTRING              pfnWdfUsbTargetDeviceFormatRequestForString;
+    PFN_WDFUSBTARGETDEVICEGETNUMINTERFACES                    pfnWdfUsbTargetDeviceGetNumInterfaces;
+    PFN_WDFUSBTARGETDEVICESELECTCONFIG                        pfnWdfUsbTargetDeviceSelectConfig;
+    PFN_WDFUSBTARGETDEVICEWDMGETCONFIGURATIONHANDLE           pfnWdfUsbTargetDeviceWdmGetConfigurationHandle;
+    PFN_WDFUSBTARGETDEVICERETRIEVECURRENTFRAMENUMBER          pfnWdfUsbTargetDeviceRetrieveCurrentFrameNumber;
+    PFN_WDFUSBTARGETDEVICESENDCONTROLTRANSFERSYNCHRONOUSLY    pfnWdfUsbTargetDeviceSendControlTransferSynchronously;
+    PFN_WDFUSBTARGETDEVICEFORMATREQUESTFORCONTROLTRANSFER     pfnWdfUsbTargetDeviceFormatRequestForControlTransfer;
+    PFN_WDFUSBTARGETDEVICEISCONNECTEDSYNCHRONOUS              pfnWdfUsbTargetDeviceIsConnectedSynchronous;
+    PFN_WDFUSBTARGETDEVICERESETPORTSYNCHRONOUSLY              pfnWdfUsbTargetDeviceResetPortSynchronously;
+    PFN_WDFUSBTARGETDEVICECYCLEPORTSYNCHRONOUSLY              pfnWdfUsbTargetDeviceCyclePortSynchronously;
+    PFN_WDFUSBTARGETDEVICEFORMATREQUESTFORCYCLEPORT           pfnWdfUsbTargetDeviceFormatRequestForCyclePort;
+    PFN_WDFUSBTARGETDEVICESENDURBSYNCHRONOUSLY                pfnWdfUsbTargetDeviceSendUrbSynchronously;
+    PFN_WDFUSBTARGETDEVICEFORMATREQUESTFORURB                 pfnWdfUsbTargetDeviceFormatRequestForUrb;
+    PFN_WDFUSBTARGETPIPEGETINFORMATION                        pfnWdfUsbTargetPipeGetInformation;
+    PFN_WDFUSBTARGETPIPEISINENDPOINT                          pfnWdfUsbTargetPipeIsInEndpoint;
+    PFN_WDFUSBTARGETPIPEISOUTENDPOINT                         pfnWdfUsbTargetPipeIsOutEndpoint;
+    PFN_WDFUSBTARGETPIPEGETTYPE                               pfnWdfUsbTargetPipeGetType;
+    PFN_WDFUSBTARGETPIPESETNOMAXIMUMPACKETSIZECHECK           pfnWdfUsbTargetPipeSetNoMaximumPacketSizeCheck;
+    PFN_WDFUSBTARGETPIPEWRITESYNCHRONOUSLY                    pfnWdfUsbTargetPipeWriteSynchronously;
+    PFN_WDFUSBTARGETPIPEFORMATREQUESTFORWRITE                 pfnWdfUsbTargetPipeFormatRequestForWrite;
+    PFN_WDFUSBTARGETPIPEREADSYNCHRONOUSLY                     pfnWdfUsbTargetPipeReadSynchronously;
+    PFN_WDFUSBTARGETPIPEFORMATREQUESTFORREAD                  pfnWdfUsbTargetPipeFormatRequestForRead;
+    PFN_WDFUSBTARGETPIPECONFIGCONTINUOUSREADER                pfnWdfUsbTargetPipeConfigContinuousReader;
+    PFN_WDFUSBTARGETPIPEABORTSYNCHRONOUSLY                    pfnWdfUsbTargetPipeAbortSynchronously;
+    PFN_WDFUSBTARGETPIPEFORMATREQUESTFORABORT                 pfnWdfUsbTargetPipeFormatRequestForAbort;
+    PFN_WDFUSBTARGETPIPERESETSYNCHRONOUSLY                    pfnWdfUsbTargetPipeResetSynchronously;
+    PFN_WDFUSBTARGETPIPEFORMATREQUESTFORRESET                 pfnWdfUsbTargetPipeFormatRequestForReset;
+    PFN_WDFUSBTARGETPIPESENDURBSYNCHRONOUSLY                  pfnWdfUsbTargetPipeSendUrbSynchronously;
+    PFN_WDFUSBTARGETPIPEFORMATREQUESTFORURB                   pfnWdfUsbTargetPipeFormatRequestForUrb;
+    PFN_WDFUSBINTERFACEGETINTERFACENUMBER                     pfnWdfUsbInterfaceGetInterfaceNumber;
+    PFN_WDFUSBINTERFACEGETNUMENDPOINTS                        pfnWdfUsbInterfaceGetNumEndpoints;
+    PFN_WDFUSBINTERFACEGETDESCRIPTOR                          pfnWdfUsbInterfaceGetDescriptor;
+    PFN_WDFUSBINTERFACESELECTSETTING                          pfnWdfUsbInterfaceSelectSetting;
+    PFN_WDFUSBINTERFACEGETENDPOINTINFORMATION                 pfnWdfUsbInterfaceGetEndpointInformation;
+    PFN_WDFUSBTARGETDEVICEGETINTERFACE                        pfnWdfUsbTargetDeviceGetInterface;
+    PFN_WDFUSBINTERFACEGETCONFIGUREDSETTINGINDEX              pfnWdfUsbInterfaceGetConfiguredSettingIndex;
+    PFN_WDFUSBINTERFACEGETNUMCONFIGUREDPIPES                  pfnWdfUsbInterfaceGetNumConfiguredPipes;
+    PFN_WDFUSBINTERFACEGETCONFIGUREDPIPE                      pfnWdfUsbInterfaceGetConfiguredPipe;
+    PFN_WDFUSBTARGETPIPEWDMGETPIPEHANDLE                      pfnWdfUsbTargetPipeWdmGetPipeHandle;
+    PFN_WDFVERIFIERDBGBREAKPOINT                              pfnWdfVerifierDbgBreakPoint;
+    PFN_WDFVERIFIERKEBUGCHECK                                 pfnWdfVerifierKeBugCheck;
+    PFN_WDFWMIPROVIDERCREATE                                  pfnWdfWmiProviderCreate;
+    PFN_WDFWMIPROVIDERGETDEVICE                               pfnWdfWmiProviderGetDevice;
+    PFN_WDFWMIPROVIDERISENABLED                               pfnWdfWmiProviderIsEnabled;
+    PFN_WDFWMIPROVIDERGETTRACINGHANDLE                        pfnWdfWmiProviderGetTracingHandle;
+    PFN_WDFWMIINSTANCECREATE                                  pfnWdfWmiInstanceCreate;
+    PFN_WDFWMIINSTANCEREGISTER                                pfnWdfWmiInstanceRegister;
+    PFN_WDFWMIINSTANCEDEREGISTER                              pfnWdfWmiInstanceDeregister;
+    PFN_WDFWMIINSTANCEGETDEVICE                               pfnWdfWmiInstanceGetDevice;
+    PFN_WDFWMIINSTANCEGETPROVIDER                             pfnWdfWmiInstanceGetProvider;
+    PFN_WDFWMIINSTANCEFIREEVENT                               pfnWdfWmiInstanceFireEvent;
 
     PFN_WDFWORKITEMCREATE                                     pfnWdfWorkItemCreate;
     PFN_WDFWORKITEMENQUEUE                                    pfnWdfWorkItemEnqueue;
     PFN_WDFWORKITEMGETPARENTOBJECT                            pfnWdfWorkItemGetParentObject;
     PFN_WDFWORKITEMFLUSH                                      pfnWdfWorkItemFlush;
-    // PFN_WDFCOMMONBUFFERCREATEWITHCONFIG                       pfnWdfCommonBufferCreateWithConfig;
-    // PFN_WDFDMAENABLERGETFRAGMENTLENGTH                        pfnWdfDmaEnablerGetFragmentLength;
-    // PFN_WDFDMAENABLERWDMGETDMAADAPTER                         pfnWdfDmaEnablerWdmGetDmaAdapter;
-    // PFN_WDFUSBINTERFACEGETNUMSETTINGS                         pfnWdfUsbInterfaceGetNumSettings;
-    PFN_ROSWDFUNIMPLEMENTED                       pfnWdfCommonBufferCreateWithConfig;
-    PFN_ROSWDFUNIMPLEMENTED                        pfnWdfDmaEnablerGetFragmentLength;
-    PFN_ROSWDFUNIMPLEMENTED                         pfnWdfDmaEnablerWdmGetDmaAdapter;
-    PFN_ROSWDFUNIMPLEMENTED                         pfnWdfUsbInterfaceGetNumSettings;
+    PFN_WDFCOMMONBUFFERCREATEWITHCONFIG                       pfnWdfCommonBufferCreateWithConfig;
+    PFN_WDFDMAENABLERGETFRAGMENTLENGTH                        pfnWdfDmaEnablerGetFragmentLength;
+    PFN_WDFDMAENABLERWDMGETDMAADAPTER                         pfnWdfDmaEnablerWdmGetDmaAdapter;
+    PFN_WDFUSBINTERFACEGETNUMSETTINGS                         pfnWdfUsbInterfaceGetNumSettings;
 
     PFN_WDFDEVICEREMOVEDEPENDENTUSAGEDEVICEOBJECT             pfnWdfDeviceRemoveDependentUsageDeviceObject;
     PFN_WDFDEVICEGETSYSTEMPOWERACTION                         pfnWdfDeviceGetSystemPowerAction;
@@ -516,54 +434,36 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFDEVICEWDMDISPATCHIRPTOIOQUEUE                      pfnWdfDeviceWdmDispatchIrpToIoQueue;
     PFN_WDFDEVICEINITSETREMOVELOCKOPTIONS                     pfnWdfDeviceInitSetRemoveLockOptions;
     PFN_WDFDEVICECONFIGUREWDMIRPDISPATCHCALLBACK              pfnWdfDeviceConfigureWdmIrpDispatchCallback;
-    // PFN_WDFDMAENABLERCONFIGURESYSTEMPROFILE                   pfnWdfDmaEnablerConfigureSystemProfile;
-    // PFN_WDFDMATRANSACTIONINITIALIZEUSINGOFFSET                pfnWdfDmaTransactionInitializeUsingOffset;
-    // PFN_WDFDMATRANSACTIONGETTRANSFERINFO                      pfnWdfDmaTransactionGetTransferInfo;
-    // PFN_WDFDMATRANSACTIONSETCHANNELCONFIGURATIONCALLBACK      pfnWdfDmaTransactionSetChannelConfigurationCallback;
-    // PFN_WDFDMATRANSACTIONSETTRANSFERCOMPLETECALLBACK          pfnWdfDmaTransactionSetTransferCompleteCallback;
-    // PFN_WDFDMATRANSACTIONSETIMMEDIATEEXECUTION                pfnWdfDmaTransactionSetImmediateExecution;
-    // PFN_WDFDMATRANSACTIONALLOCATERESOURCES                    pfnWdfDmaTransactionAllocateResources;
-    // PFN_WDFDMATRANSACTIONSETDEVICEADDRESSOFFSET               pfnWdfDmaTransactionSetDeviceAddressOffset;
-    // PFN_WDFDMATRANSACTIONFREERESOURCES                        pfnWdfDmaTransactionFreeResources;
-    // PFN_WDFDMATRANSACTIONCANCEL                               pfnWdfDmaTransactionCancel;
-    // PFN_WDFDMATRANSACTIONWDMGETTRANSFERCONTEXT                pfnWdfDmaTransactionWdmGetTransferContext;
-    PFN_ROSWDFUNIMPLEMENTED                   pfnWdfDmaEnablerConfigureSystemProfile;
-    PFN_ROSWDFUNIMPLEMENTED                pfnWdfDmaTransactionInitializeUsingOffset;
-    PFN_ROSWDFUNIMPLEMENTED                      pfnWdfDmaTransactionGetTransferInfo;
-    PFN_ROSWDFUNIMPLEMENTED      pfnWdfDmaTransactionSetChannelConfigurationCallback;
-    PFN_ROSWDFUNIMPLEMENTED          pfnWdfDmaTransactionSetTransferCompleteCallback;
-    PFN_ROSWDFUNIMPLEMENTED                pfnWdfDmaTransactionSetImmediateExecution;
-    PFN_ROSWDFUNIMPLEMENTED                    pfnWdfDmaTransactionAllocateResources;
-    PFN_ROSWDFUNIMPLEMENTED               pfnWdfDmaTransactionSetDeviceAddressOffset;
-    PFN_ROSWDFUNIMPLEMENTED                        pfnWdfDmaTransactionFreeResources;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfDmaTransactionCancel;
-    PFN_ROSWDFUNIMPLEMENTED                pfnWdfDmaTransactionWdmGetTransferContext;
+    PFN_WDFDMAENABLERCONFIGURESYSTEMPROFILE                   pfnWdfDmaEnablerConfigureSystemProfile;
+    PFN_WDFDMATRANSACTIONINITIALIZEUSINGOFFSET                pfnWdfDmaTransactionInitializeUsingOffset;
+    PFN_WDFDMATRANSACTIONGETTRANSFERINFO                      pfnWdfDmaTransactionGetTransferInfo;
+    PFN_WDFDMATRANSACTIONSETCHANNELCONFIGURATIONCALLBACK      pfnWdfDmaTransactionSetChannelConfigurationCallback;
+    PFN_WDFDMATRANSACTIONSETTRANSFERCOMPLETECALLBACK          pfnWdfDmaTransactionSetTransferCompleteCallback;
+    PFN_WDFDMATRANSACTIONSETIMMEDIATEEXECUTION                pfnWdfDmaTransactionSetImmediateExecution;
+    PFN_WDFDMATRANSACTIONALLOCATERESOURCES                    pfnWdfDmaTransactionAllocateResources;
+    PFN_WDFDMATRANSACTIONSETDEVICEADDRESSOFFSET               pfnWdfDmaTransactionSetDeviceAddressOffset;
+    PFN_WDFDMATRANSACTIONFREERESOURCES                        pfnWdfDmaTransactionFreeResources;
+    PFN_WDFDMATRANSACTIONCANCEL                               pfnWdfDmaTransactionCancel;
+    PFN_WDFDMATRANSACTIONWDMGETTRANSFERCONTEXT                pfnWdfDmaTransactionWdmGetTransferContext;
 
     PFN_WDFINTERRUPTQUEUEWORKITEMFORISR                       pfnWdfInterruptQueueWorkItemForIsr;
     PFN_WDFINTERRUPTTRYTOACQUIRELOCK                          pfnWdfInterruptTryToAcquireLock;
     PFN_WDFIOQUEUESTOPANDPURGE                                pfnWdfIoQueueStopAndPurge;
     PFN_WDFIOQUEUESTOPANDPURGESYNCHRONOUSLY                   pfnWdfIoQueueStopAndPurgeSynchronously;
     PFN_WDFIOTARGETPURGE                                      pfnWdfIoTargetPurge;
-    // PFN_WDFUSBTARGETDEVICECREATEWITHPARAMETERS                pfnWdfUsbTargetDeviceCreateWithParameters;
-    // PFN_WDFUSBTARGETDEVICEQUERYUSBCAPABILITY                  pfnWdfUsbTargetDeviceQueryUsbCapability;
-    // PFN_WDFUSBTARGETDEVICECREATEURB                           pfnWdfUsbTargetDeviceCreateUrb;
-    // PFN_WDFUSBTARGETDEVICECREATEISOCHURB                      pfnWdfUsbTargetDeviceCreateIsochUrb;
-    PFN_ROSWDFUNIMPLEMENTED                pfnWdfUsbTargetDeviceCreateWithParameters;
-    PFN_ROSWDFUNIMPLEMENTED                  pfnWdfUsbTargetDeviceQueryUsbCapability;
-    PFN_ROSWDFUNIMPLEMENTED                           pfnWdfUsbTargetDeviceCreateUrb;
-    PFN_ROSWDFUNIMPLEMENTED                      pfnWdfUsbTargetDeviceCreateIsochUrb;
+    PFN_WDFUSBTARGETDEVICECREATEWITHPARAMETERS                pfnWdfUsbTargetDeviceCreateWithParameters;
+    PFN_WDFUSBTARGETDEVICEQUERYUSBCAPABILITY                  pfnWdfUsbTargetDeviceQueryUsbCapability;
+    PFN_WDFUSBTARGETDEVICECREATEURB                           pfnWdfUsbTargetDeviceCreateUrb;
+    PFN_WDFUSBTARGETDEVICECREATEISOCHURB                      pfnWdfUsbTargetDeviceCreateIsochUrb;
 
     PFN_WDFDEVICEWDMASSIGNPOWERFRAMEWORKSETTINGS              pfnWdfDeviceWdmAssignPowerFrameworkSettings;
-    // PFN_WDFDMATRANSACTIONSTOPSYSTEMTRANSFER                   pfnWdfDmaTransactionStopSystemTransfer;
-    // PFN_WDFCXVERIFIERKEBUGCHECK                               pfnWdfCxVerifierKeBugCheck;
-    PFN_ROSWDFUNIMPLEMENTED                   pfnWdfDmaTransactionStopSystemTransfer;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfCxVerifierKeBugCheck;
+    PFN_WDFDMATRANSACTIONSTOPSYSTEMTRANSFER                   pfnWdfDmaTransactionStopSystemTransfer;
+    PFN_WDFCXVERIFIERKEBUGCHECK                               pfnWdfCxVerifierKeBugCheck;
 
     PFN_WDFINTERRUPTREPORTACTIVE                              pfnWdfInterruptReportActive;
     PFN_WDFINTERRUPTREPORTINACTIVE                            pfnWdfInterruptReportInactive;
     PFN_WDFDEVICEINITSETRELEASEHARDWAREORDERONFAILURE         pfnWdfDeviceInitSetReleaseHardwareOrderOnFailure;
-    // PFN_WDFGETTRIAGEINFO                                      pfnWdfGetTriageInfo;
-    PFN_ROSWDFUNIMPLEMENTED                                      pfnWdfGetTriageInfo;
+    PFN_WDFGETTRIAGEINFO                                      pfnWdfGetTriageInfo;
 
     PFN_WDFDEVICEINITSETIOTYPEEX                              pfnWdfDeviceInitSetIoTypeEx;
     PFN_WDFDEVICEQUERYPROPERTYEX                              pfnWdfDeviceQueryPropertyEx;
@@ -7072,14 +6972,10 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfCollectionGetItem),
         WDFEXPORT(WdfCollectionGetFirstItem),
         WDFEXPORT(WdfCollectionGetLastItem),
-        // WDFEXPORT(WdfCommonBufferCreate),
-        // WDFEXPORT(WdfCommonBufferGetAlignedVirtualAddress),
-        // WDFEXPORT(WdfCommonBufferGetAlignedLogicalAddress),
-        // WDFEXPORT(WdfCommonBufferGetLength),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
+        WDFEXPORT(WdfCommonBufferCreate),
+        WDFEXPORT(WdfCommonBufferGetAlignedVirtualAddress),
+        WDFEXPORT(WdfCommonBufferGetAlignedLogicalAddress),
+        WDFEXPORT(WdfCommonBufferGetLength),
 
         WDFEXPORT(WdfControlDeviceInitAllocate),
         WDFEXPORT(WdfControlDeviceInitSetShutdownNotification),
@@ -7150,40 +7046,23 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfDeviceEnqueueRequest),
         WDFEXPORT(WdfDeviceGetDefaultQueue),
         WDFEXPORT(WdfDeviceConfigureRequestDispatching),
-        // WDFEXPORT(WdfDmaEnablerCreate),
-        // WDFEXPORT(WdfDmaEnablerGetMaximumLength),
-        // WDFEXPORT(WdfDmaEnablerGetMaximumScatterGatherElements),
-        // WDFEXPORT(WdfDmaEnablerSetMaximumScatterGatherElements),
-        // WDFEXPORT(WdfDmaTransactionCreate),
-        // WDFEXPORT(WdfDmaTransactionInitialize),
-        // WDFEXPORT(WdfDmaTransactionInitializeUsingRequest),
-        // WDFEXPORT(WdfDmaTransactionExecute),
-        // WDFEXPORT(WdfDmaTransactionRelease),
-        // WDFEXPORT(WdfDmaTransactionDmaCompleted),
-        // WDFEXPORT(WdfDmaTransactionDmaCompletedWithLength),
-        // WDFEXPORT(WdfDmaTransactionDmaCompletedFinal),
-        // WDFEXPORT(WdfDmaTransactionGetBytesTransferred),
-        // WDFEXPORT(WdfDmaTransactionSetMaximumLength),
-        // WDFEXPORT(WdfDmaTransactionGetRequest),
-        // WDFEXPORT(WdfDmaTransactionGetCurrentDmaTransferLength),
-        // WDFEXPORT(WdfDmaTransactionGetDevice),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
+        WDFEXPORT(WdfDmaEnablerCreate),
+        WDFEXPORT(WdfDmaEnablerGetMaximumLength),
+        WDFEXPORT(WdfDmaEnablerGetMaximumScatterGatherElements),
+        WDFEXPORT(WdfDmaEnablerSetMaximumScatterGatherElements),
+        WDFEXPORT(WdfDmaTransactionCreate),
+        WDFEXPORT(WdfDmaTransactionInitialize),
+        WDFEXPORT(WdfDmaTransactionInitializeUsingRequest),
+        WDFEXPORT(WdfDmaTransactionExecute),
+        WDFEXPORT(WdfDmaTransactionRelease),
+        WDFEXPORT(WdfDmaTransactionDmaCompleted),
+        WDFEXPORT(WdfDmaTransactionDmaCompletedWithLength),
+        WDFEXPORT(WdfDmaTransactionDmaCompletedFinal),
+        WDFEXPORT(WdfDmaTransactionGetBytesTransferred),
+        WDFEXPORT(WdfDmaTransactionSetMaximumLength),
+        WDFEXPORT(WdfDmaTransactionGetRequest),
+        WDFEXPORT(WdfDmaTransactionGetCurrentDmaTransferLength),
+        WDFEXPORT(WdfDmaTransactionGetDevice),
 
         WDFEXPORT(WdfDpcCreate),
         WDFEXPORT(WdfDpcEnqueue),
@@ -7396,133 +7275,73 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfTimerStart),
         WDFEXPORT(WdfTimerStop),
         WDFEXPORT(WdfTimerGetParentObject),
-        // WDFEXPORT(WdfUsbTargetDeviceCreate),
-        // WDFEXPORT(WdfUsbTargetDeviceRetrieveInformation),
-        // WDFEXPORT(WdfUsbTargetDeviceGetDeviceDescriptor),
-        // WDFEXPORT(WdfUsbTargetDeviceRetrieveConfigDescriptor),
-        // WDFEXPORT(WdfUsbTargetDeviceQueryString),
-        // WDFEXPORT(WdfUsbTargetDeviceAllocAndQueryString),
-        // WDFEXPORT(WdfUsbTargetDeviceFormatRequestForString),
-        // WDFEXPORT(WdfUsbTargetDeviceGetNumInterfaces),
-        // WDFEXPORT(WdfUsbTargetDeviceSelectConfig),
-        // WDFEXPORT(WdfUsbTargetDeviceWdmGetConfigurationHandle),
-        // WDFEXPORT(WdfUsbTargetDeviceRetrieveCurrentFrameNumber),
-        // WDFEXPORT(WdfUsbTargetDeviceSendControlTransferSynchronously),
-        // WDFEXPORT(WdfUsbTargetDeviceFormatRequestForControlTransfer),
-        // WDFEXPORT(WdfUsbTargetDeviceIsConnectedSynchronous),
-        // WDFEXPORT(WdfUsbTargetDeviceResetPortSynchronously),
-        // WDFEXPORT(WdfUsbTargetDeviceCyclePortSynchronously),
-        // WDFEXPORT(WdfUsbTargetDeviceFormatRequestForCyclePort),
-        // WDFEXPORT(WdfUsbTargetDeviceSendUrbSynchronously),
-        // WDFEXPORT(WdfUsbTargetDeviceFormatRequestForUrb),
-        // WDFEXPORT(WdfUsbTargetPipeGetInformation),
-        // WDFEXPORT(WdfUsbTargetPipeIsInEndpoint),
-        // WDFEXPORT(WdfUsbTargetPipeIsOutEndpoint),
-        // WDFEXPORT(WdfUsbTargetPipeGetType),
-        // WDFEXPORT(WdfUsbTargetPipeSetNoMaximumPacketSizeCheck),
-        // WDFEXPORT(WdfUsbTargetPipeWriteSynchronously),
-        // WDFEXPORT(WdfUsbTargetPipeFormatRequestForWrite),
-        // WDFEXPORT(WdfUsbTargetPipeReadSynchronously),
-        // WDFEXPORT(WdfUsbTargetPipeFormatRequestForRead),
-        // WDFEXPORT(WdfUsbTargetPipeConfigContinuousReader),
-        // WDFEXPORT(WdfUsbTargetPipeAbortSynchronously),
-        // WDFEXPORT(WdfUsbTargetPipeFormatRequestForAbort),
-        // WDFEXPORT(WdfUsbTargetPipeResetSynchronously),
-        // WDFEXPORT(WdfUsbTargetPipeFormatRequestForReset),
-        // WDFEXPORT(WdfUsbTargetPipeSendUrbSynchronously),
-        // WDFEXPORT(WdfUsbTargetPipeFormatRequestForUrb),
-        // WDFEXPORT(WdfUsbInterfaceGetInterfaceNumber),
-        // WDFEXPORT(WdfUsbInterfaceGetNumEndpoints),
-        // WDFEXPORT(WdfUsbInterfaceGetDescriptor),
-        // WDFEXPORT(WdfUsbInterfaceSelectSetting),
-        // WDFEXPORT(WdfUsbInterfaceGetEndpointInformation),
-        // WDFEXPORT(WdfUsbTargetDeviceGetInterface),
-        // WDFEXPORT(WdfUsbInterfaceGetConfiguredSettingIndex),
-        // WDFEXPORT(WdfUsbInterfaceGetNumConfiguredPipes),
-        // WDFEXPORT(WdfUsbInterfaceGetConfiguredPipe),
-        // WDFEXPORT(WdfUsbTargetPipeWdmGetPipeHandle),
-        // WDFEXPORT(WdfVerifierDbgBreakPoint),
-        // WDFEXPORT(WdfVerifierKeBugCheck),
-        // WDFEXPORT(WdfWmiProviderCreate),
-        // WDFEXPORT(WdfWmiProviderGetDevice),
-        // WDFEXPORT(WdfWmiProviderIsEnabled),
-        // WDFEXPORT(WdfWmiProviderGetTracingHandle),
-        // WDFEXPORT(WdfWmiInstanceCreate),
-        // WDFEXPORT(WdfWmiInstanceRegister),
-        // WDFEXPORT(WdfWmiInstanceDeregister),
-        // WDFEXPORT(WdfWmiInstanceGetDevice),
-        // WDFEXPORT(WdfWmiInstanceGetProvider),
-        // WDFEXPORT(WdfWmiInstanceFireEvent),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
+        WDFEXPORT(WdfUsbTargetDeviceCreate),
+        WDFEXPORT(WdfUsbTargetDeviceRetrieveInformation),
+        WDFEXPORT(WdfUsbTargetDeviceGetDeviceDescriptor),
+        WDFEXPORT(WdfUsbTargetDeviceRetrieveConfigDescriptor),
+        WDFEXPORT(WdfUsbTargetDeviceQueryString),
+        WDFEXPORT(WdfUsbTargetDeviceAllocAndQueryString),
+        WDFEXPORT(WdfUsbTargetDeviceFormatRequestForString),
+        WDFEXPORT(WdfUsbTargetDeviceGetNumInterfaces),
+        WDFEXPORT(WdfUsbTargetDeviceSelectConfig),
+        WDFEXPORT(WdfUsbTargetDeviceWdmGetConfigurationHandle),
+        WDFEXPORT(WdfUsbTargetDeviceRetrieveCurrentFrameNumber),
+        WDFEXPORT(WdfUsbTargetDeviceSendControlTransferSynchronously),
+        WDFEXPORT(WdfUsbTargetDeviceFormatRequestForControlTransfer),
+        WDFEXPORT(WdfUsbTargetDeviceIsConnectedSynchronous),
+        WDFEXPORT(WdfUsbTargetDeviceResetPortSynchronously),
+        WDFEXPORT(WdfUsbTargetDeviceCyclePortSynchronously),
+        WDFEXPORT(WdfUsbTargetDeviceFormatRequestForCyclePort),
+        WDFEXPORT(WdfUsbTargetDeviceSendUrbSynchronously),
+        WDFEXPORT(WdfUsbTargetDeviceFormatRequestForUrb),
+        WDFEXPORT(WdfUsbTargetPipeGetInformation),
+        WDFEXPORT(WdfUsbTargetPipeIsInEndpoint),
+        WDFEXPORT(WdfUsbTargetPipeIsOutEndpoint),
+        WDFEXPORT(WdfUsbTargetPipeGetType),
+        WDFEXPORT(WdfUsbTargetPipeSetNoMaximumPacketSizeCheck),
+        WDFEXPORT(WdfUsbTargetPipeWriteSynchronously),
+        WDFEXPORT(WdfUsbTargetPipeFormatRequestForWrite),
+        WDFEXPORT(WdfUsbTargetPipeReadSynchronously),
+        WDFEXPORT(WdfUsbTargetPipeFormatRequestForRead),
+        WDFEXPORT(WdfUsbTargetPipeConfigContinuousReader),
+        WDFEXPORT(WdfUsbTargetPipeAbortSynchronously),
+        WDFEXPORT(WdfUsbTargetPipeFormatRequestForAbort),
+        WDFEXPORT(WdfUsbTargetPipeResetSynchronously),
+        WDFEXPORT(WdfUsbTargetPipeFormatRequestForReset),
+        WDFEXPORT(WdfUsbTargetPipeSendUrbSynchronously),
+        WDFEXPORT(WdfUsbTargetPipeFormatRequestForUrb),
+        WDFEXPORT(WdfUsbInterfaceGetInterfaceNumber),
+        WDFEXPORT(WdfUsbInterfaceGetNumEndpoints),
+        WDFEXPORT(WdfUsbInterfaceGetDescriptor),
+        WDFEXPORT(WdfUsbInterfaceSelectSetting),
+        WDFEXPORT(WdfUsbInterfaceGetEndpointInformation),
+        WDFEXPORT(WdfUsbTargetDeviceGetInterface),
+        WDFEXPORT(WdfUsbInterfaceGetConfiguredSettingIndex),
+        WDFEXPORT(WdfUsbInterfaceGetNumConfiguredPipes),
+        WDFEXPORT(WdfUsbInterfaceGetConfiguredPipe),
+        WDFEXPORT(WdfUsbTargetPipeWdmGetPipeHandle),
+        WDFEXPORT(WdfVerifierDbgBreakPoint),
+        WDFEXPORT(WdfVerifierKeBugCheck),
+        
+        WDFEXPORT(WdfWmiProviderCreate),
+        WDFEXPORT(WdfWmiProviderGetDevice),
+        WDFEXPORT(WdfWmiProviderIsEnabled),
+        WDFEXPORT(WdfWmiProviderGetTracingHandle),
+        WDFEXPORT(WdfWmiInstanceCreate),
+        WDFEXPORT(WdfWmiInstanceRegister),
+        WDFEXPORT(WdfWmiInstanceDeregister),
+        WDFEXPORT(WdfWmiInstanceGetDevice),
+        WDFEXPORT(WdfWmiInstanceGetProvider),
+        WDFEXPORT(WdfWmiInstanceFireEvent),
 
         WDFEXPORT(WdfWorkItemCreate),
         WDFEXPORT(WdfWorkItemEnqueue),
         WDFEXPORT(WdfWorkItemGetParentObject),
         WDFEXPORT(WdfWorkItemFlush),
-        // WDFEXPORT(WdfCommonBufferCreateWithConfig),
-        // WDFEXPORT(WdfDmaEnablerGetFragmentLength),
-        // WDFEXPORT(WdfDmaEnablerWdmGetDmaAdapter),
-        // WDFEXPORT(WdfUsbInterfaceGetNumSettings),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
+        WDFEXPORT(WdfCommonBufferCreateWithConfig),
+        WDFEXPORT(WdfDmaEnablerGetFragmentLength),
+        WDFEXPORT(WdfDmaEnablerWdmGetDmaAdapter),
+        WDFEXPORT(WdfUsbInterfaceGetNumSettings),
 
         WDFEXPORT(WdfDeviceRemoveDependentUsageDeviceObject),
         WDFEXPORT(WdfDeviceGetSystemPowerAction),
@@ -7542,54 +7361,36 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue),
         WDFEXPORT(WdfDeviceInitSetRemoveLockOptions),
         WDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback),
-        // WDFEXPORT(WdfDmaEnablerConfigureSystemProfile),
-        // WDFEXPORT(WdfDmaTransactionInitializeUsingOffset),
-        // WDFEXPORT(WdfDmaTransactionGetTransferInfo),
-        // WDFEXPORT(WdfDmaTransactionSetChannelConfigurationCallback),
-        // WDFEXPORT(WdfDmaTransactionSetTransferCompleteCallback),
-        // WDFEXPORT(WdfDmaTransactionSetImmediateExecution),
-        // WDFEXPORT(WdfDmaTransactionAllocateResources),
-        // WDFEXPORT(WdfDmaTransactionSetDeviceAddressOffset),
-        // WDFEXPORT(WdfDmaTransactionFreeResources),
-        // WDFEXPORT(WdfDmaTransactionCancel),
-        // WDFEXPORT(WdfDmaTransactionWdmGetTransferContext),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
+        WDFEXPORT(WdfDmaEnablerConfigureSystemProfile),
+        WDFEXPORT(WdfDmaTransactionInitializeUsingOffset),
+        WDFEXPORT(WdfDmaTransactionGetTransferInfo),
+        WDFEXPORT(WdfDmaTransactionSetChannelConfigurationCallback),
+        WDFEXPORT(WdfDmaTransactionSetTransferCompleteCallback),
+        WDFEXPORT(WdfDmaTransactionSetImmediateExecution),
+        WDFEXPORT(WdfDmaTransactionAllocateResources),
+        WDFEXPORT(WdfDmaTransactionSetDeviceAddressOffset),
+        WDFEXPORT(WdfDmaTransactionFreeResources),
+        WDFEXPORT(WdfDmaTransactionCancel),
+        WDFEXPORT(WdfDmaTransactionWdmGetTransferContext),
 
         WDFEXPORT(WdfInterruptQueueWorkItemForIsr),
         WDFEXPORT(WdfInterruptTryToAcquireLock),
         WDFEXPORT(WdfIoQueueStopAndPurge),
         WDFEXPORT(WdfIoQueueStopAndPurgeSynchronously),
         WDFEXPORT(WdfIoTargetPurge),
-        // WDFEXPORT(WdfUsbTargetDeviceCreateWithParameters),
-        // WDFEXPORT(WdfUsbTargetDeviceQueryUsbCapability),
-        // WDFEXPORT(WdfUsbTargetDeviceCreateUrb),
-        // WDFEXPORT(WdfUsbTargetDeviceCreateIsochUrb),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
+        WDFEXPORT(WdfUsbTargetDeviceCreateWithParameters),
+        WDFEXPORT(WdfUsbTargetDeviceQueryUsbCapability),
+        WDFEXPORT(WdfUsbTargetDeviceCreateUrb),
+        WDFEXPORT(WdfUsbTargetDeviceCreateIsochUrb),
 
         WDFEXPORT(WdfDeviceWdmAssignPowerFrameworkSettings),
-        // WDFEXPORT(WdfDmaTransactionStopSystemTransfer),
-        // WDFEXPORT(WdfCxVerifierKeBugCheck),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
+        WDFEXPORT(WdfDmaTransactionStopSystemTransfer),
+        WDFEXPORT(WdfCxVerifierKeBugCheck),
 
         WDFEXPORT(WdfInterruptReportActive),
         WDFEXPORT(WdfInterruptReportInactive),
         WDFEXPORT(WdfDeviceInitSetReleaseHardwareOrderOnFailure),
-        // WDFEXPORT(WdfGetTriageInfo),
-        WdfApiNotImplemented,
+        WDFEXPORT(WdfGetTriageInfo),
 
         WDFEXPORT(WdfDeviceInitSetIoTypeEx),
         WDFEXPORT(WdfDeviceQueryPropertyEx),
