@@ -459,6 +459,12 @@ ULONG
 NTAPI
 KiGetFeatureBits(VOID);
 
+#if DBG
+CODE_SEG("INIT")
+VOID
+KiReportCpuFeatures(VOID);
+#endif
+
 VOID
 NTAPI
 KiThreadStartup(VOID);

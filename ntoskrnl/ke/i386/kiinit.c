@@ -480,6 +480,12 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* Save CPU state */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
 
+#if DBG
+    /* Print applied kernel features/policies and boot CPU features */
+    if (Number == 0)
+        KiReportCpuFeatures();
+#endif
+
     /* Get cache line information for this CPU */
     KiGetCacheInformation();
 

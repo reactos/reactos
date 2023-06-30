@@ -380,11 +380,6 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & X86_FEATURE_SSE)     FeatureBits |= KF_XMMI;
     if (CpuFeatures & X86_FEATURE_SSE2)    FeatureBits |= KF_XMMI64;
 
-    if (CpuFeatures & X86_FEATURE_PAE)
-    {
-        DPRINT1("Support PAE\n");
-    }
-
     /* Check if the CPU has hyper-threading */
     if (CpuFeatures & X86_FEATURE_HT)
     {
@@ -430,34 +425,59 @@ KiGetFeatureBits(VOID)
         }
     }
 
-#define print_supported(kf_value) ((FeatureBits & kf_value) ? #kf_value : "")
-    DPRINT1("Supported CPU features : %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
-    print_supported(KF_V86_VIS),
-    print_supported(KF_RDTSC),
-    print_supported(KF_CR4),
-    print_supported(KF_CMOV),
-    print_supported(KF_GLOBAL_PAGE),
-    print_supported(KF_LARGE_PAGE),
-    print_supported(KF_MTRR),
-    print_supported(KF_CMPXCHG8B),
-    print_supported(KF_MMX),
-    print_supported(KF_WORKING_PTE),
-    print_supported(KF_PAT),
-    print_supported(KF_FXSR),
-    print_supported(KF_FAST_SYSCALL),
-    print_supported(KF_XMMI),
-    print_supported(KF_3DNOW),
-    print_supported(KF_AMDK6MTRR),
-    print_supported(KF_XMMI64),
-    print_supported(KF_DTS),
-    print_supported(KF_NX_BIT),
-    print_supported(KF_NX_DISABLED),
-    print_supported(KF_NX_ENABLED));
-#undef print_supported
-
     /* Return the Feature Bits */
     return FeatureBits;
 }
+
+#if DBG
+CODE_SEG("INIT")
+VOID
+KiReportCpuFeatures(VOID)
+{
+    ULONG CpuFeatures = 0;
+    CPU_INFO CpuInfo;
+
+    if (KiGetCpuVendor())
+    {
+        KiCpuId(&CpuInfo, 1);
+        CpuFeatures = CpuInfo.Edx;
+    }
+
+    DPRINT1("Supported CPU features: ");
+
+#define print_kf_bit(kf_value) if (KeFeatureBits & kf_value) DbgPrint(#kf_value " ")
+    print_kf_bit(KF_V86_VIS);
+    print_kf_bit(KF_RDTSC);
+    print_kf_bit(KF_CR4);
+    print_kf_bit(KF_CMOV);
+    print_kf_bit(KF_GLOBAL_PAGE);
+    print_kf_bit(KF_LARGE_PAGE);
+    print_kf_bit(KF_MTRR);
+    print_kf_bit(KF_CMPXCHG8B);
+    print_kf_bit(KF_MMX);
+    print_kf_bit(KF_WORKING_PTE);
+    print_kf_bit(KF_PAT);
+    print_kf_bit(KF_FXSR);
+    print_kf_bit(KF_FAST_SYSCALL);
+    print_kf_bit(KF_XMMI);
+    print_kf_bit(KF_3DNOW);
+    print_kf_bit(KF_AMDK6MTRR);
+    print_kf_bit(KF_XMMI64);
+    print_kf_bit(KF_DTS);
+    print_kf_bit(KF_NX_BIT);
+    print_kf_bit(KF_NX_DISABLED);
+    print_kf_bit(KF_NX_ENABLED);
+#undef print_kf_bit
+
+#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(#cpu_flag " ")
+    print_cf(X86_FEATURE_PAE);
+    print_cf(X86_FEATURE_APIC);
+    print_cf(X86_FEATURE_HT);
+#undef print_cf
+
+    DbgPrint("\n");
+}
+#endif // DBG
 
 CODE_SEG("INIT")
 VOID
