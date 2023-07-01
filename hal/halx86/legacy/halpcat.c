@@ -35,7 +35,7 @@ NTAPI
 HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* There is no ACPI on these HALs */
-    return STATUS_NO_SUCH_DEVICE;
+    return STATUS_SUCCESS;
 }
 
 CODE_SEG("INIT")

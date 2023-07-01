@@ -72,6 +72,7 @@ HalInitSystem(IN ULONG BootPhase,
               IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
+    NTSTATUS Status;
 
     /* Check the boot phase */
     if (BootPhase == 0)
@@ -97,7 +98,11 @@ HalInitSystem(IN ULONG BootPhase,
         }
 
         /* Initialize ACPI */
-        HalpSetupAcpiPhase0(LoaderBlock);
+        Status = HalpSetupAcpiPhase0(LoaderBlock);
+        if (!NT_SUCCESS(Status))
+        {
+            KeBugCheckEx(ACPI_BIOS_ERROR, Status, 0, 0, 0);
+        }
 
         /* Initialize the PICs */
         HalpInitializePICs(TRUE);
