@@ -14,7 +14,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Criteriu &automat", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "Aliniază la &grilă", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -35,7 +35,7 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Criteriu &automat", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "Aliniază la &grilă", FCIDM_SHVIEW_ALIGNTOGRID
         END
         MENUITEM "Împ&rospătează", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -501,11 +501,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
-    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&Schimbă utilizatorul", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Deautentifică", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "A&nulează", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "Deautentificare", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
-    CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "Schimbă utilizatorul", IDC_SWITCH_USER_STATIC, 11, 70, 82, 11
     CTEXT "Deautentifică", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
@@ -726,17 +726,17 @@ BEGIN
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-CAPTION "Problem with Shortcut"
+CAPTION "Problemă cu scurtătura"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
-    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+    LTEXT "Elementul '%s' la care această scurtătură face referire a fost schimbată sau mutată, așa că scurtătura nu va mai funcționa corect.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Cea mai apropiată potrivire, bazată pe nume, tip, mărime și dată:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Vreți să reparați scurtătura pentru a atinge ținta sau doar vreți să o ștergeți?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Repar-o", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Șterge-o", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Anulează", IDCANCEL, 185, 120, 60, 15
 END
 
 STRINGTABLE
