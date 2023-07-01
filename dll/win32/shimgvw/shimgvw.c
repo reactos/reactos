@@ -526,7 +526,7 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
     LoadStringW(hInstance, IDS_APPTITLE, szResStr, _countof(szResStr));
 
     pchFileTitle = PathFindFileNameW(node->FileName);
-    if (pchFileTitle && wcsicmp(pchFileTitle, L"")) 
+    if (pchFileTitle && *pchFileTitle) 
     {
         StringCbPrintfW(szTitleBuf, sizeof(szTitleBuf),
                         L"%ls%ls%ls", szResStr, L" - ", pchFileTitle);
