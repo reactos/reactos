@@ -507,7 +507,7 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
 {
     WCHAR szTitleBuf[800];
     WCHAR szResStr[512];
-    LPWSTR pchFileTitle = NULL;
+    LPWSTR pchFileTitle;
 
     if (image)
     {
@@ -526,7 +526,7 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
     LoadStringW(hInstance, IDS_APPTITLE, szResStr, _countof(szResStr));
 
     pchFileTitle = PathFindFileNameW(node->FileName);
-    if (pchFileTitle != NULL && wcsicmp(pchFileTitle, L"")) 
+    if (pchFileTitle && wcsicmp(pchFileTitle, L"")) 
     {
         StringCbPrintfW(szTitleBuf, sizeof(szTitleBuf),
                         L"%ls%ls%ls", szResStr, L" - ", pchFileTitle);
