@@ -927,9 +927,14 @@ FlushDns(VOID)
     ConResPrintf(StdOut, IDS_HEADER);
 
     if (DnsFlushResolverCache())
-        _tprintf(_T("The DNS Resolver Cache has been deleted.\n"));
+    {
+        ConResPrintf(StdOut, IDS_DNSFLUSHSUCCESS);
+    }
     else
+    {
+        ConResPrintf(StdOut, IDS_DNSFLUSHERROR);
         DoFormatMessage(GetLastError());
+    }
 }
 
 VOID
@@ -965,11 +970,11 @@ DisplayDnsRecord(
     {
         if (Status == DNS_ERROR_RCODE_NAME_ERROR)
         {
-            _tprintf(_T("\tName does not exist\n\n"));
+            ConResPrintf(StdOut, IDS_DNSNONAME);
         }
         else if (Status == DNS_INFO_NO_RECORDS)
         {
-            _tprintf(_T("\tNo records of type %s\n\n"), GetRecordTypeName(wType));
+            ConResPrintf(StdOut, IDS_DNSNORECORD, GetRecordTypeName(wType));
         }
         return;
     }

@@ -83,6 +83,14 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_DNSNORECORD         "\tKeine Einträge vom Typ %ls\n\n"
+    IDS_DNSNONAME           "\tName existiert nicht.\n\n"
+    IDS_DNSFLUSHERROR       "Der DNS-Auflösungscache konnte nicht geleert werden: "
+    IDS_DNSFLUSHSUCCESS     "Der DNS-Auflösungscache wurde geleert.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_USAGE
     "\nSyntax:\n\
         ipconfig [/? | /all | /renew [Adapter] | /release [Adapter] |\n\

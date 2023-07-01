@@ -60,6 +60,14 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_DNSNORECORD         "\tNo records of type %ls\n\n"
+    IDS_DNSNONAME           "\tName does not exist.\n\n"
+    IDS_DNSFLUSHERROR       "Could not flush the DNS Resolver Cache: "
+    IDS_DNSFLUSHSUCCESS     "Successfully flushed the DNS Resolver Cache.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_DNSNAME              "\t%ls\n"
     IDS_DNSLINE              "\t----------------------------------------\n"
     IDS_DNSRECORDNAME        "\tNazwa rekordu . . . . : %ls\n"

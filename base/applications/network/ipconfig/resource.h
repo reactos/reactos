@@ -65,4 +65,9 @@
 #define IDS_DNSTYPEATMA          178
 #define IDS_DNSTYPESRV           179
 
-#define IDS_USAGE 180
+#define IDS_USAGE                180
+
+#define IDS_DNSNORECORD          200
+#define IDS_DNSNONAME            201
+#define IDS_DNSFLUSHERROR        202
+#define IDS_DNSFLUSHSUCCESS      203
