@@ -82,10 +82,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DNSNORECORD         "\tNo records of type %ls\n\n"
-    IDS_DNSNONAME           "\tName does not exist.\n\n"
-    IDS_DNSFLUSHERROR       "Could not flush the DNS Resolver Cache: "
-    IDS_DNSFLUSHSUCCESS     "Successfully flushed the DNS Resolver Cache.\n"
+    IDS_DNSNORECORD         "\tНет записей типа %ls\n\n"
+    IDS_DNSNONAME           "\tИмя не существует.\n\n"
+    IDS_DNSFLUSHERROR       "Не удается очистить кэш распознавателя DNS: "
+    IDS_DNSFLUSHSUCCESS     "Успешно сброшен кэш распознавателя DNS.\n"
 END
 
 STRINGTABLE
