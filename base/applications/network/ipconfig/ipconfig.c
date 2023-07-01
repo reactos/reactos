@@ -8,7 +8,6 @@
  * TODO:
  * fix renew / release
  * implement registerdns, showclassid, setclassid
- * allow globbing on adapter names
  */
 
 #define WIN32_NO_STATUS
@@ -225,7 +224,7 @@ VOID
 GetAdapterFriendlyName(
     _In_ LPSTR lpClass,
     _In_ DWORD cchFriendlyNameLength,
-    _Out_ PWSTR pszFriendlyName)
+    _Out_ LPWSTR pszFriendlyName)
 {
     HKEY hKey = NULL;
     CHAR Path[256];
@@ -243,6 +242,49 @@ GetAdapterFriendlyName(
     sprintf(Path, "%s%s%s", PrePath, lpClass, PostPath);
 
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+                      Path,
+                      0,
+                      KEY_READ,
+                      &hKey) == ERROR_SUCCESS)
+    {
+        dwDataSize = cchFriendlyNameLength * sizeof(WCHAR);
+        RegQueryValueExW(hKey,
+                         L"Name",
+                         NULL,
+                         &dwType,
+                         (PBYTE)pszFriendlyName,
+                         &dwDataSize);
+    }
+
+    if (hKey != NULL)
+        RegCloseKey(hKey);
+}
+
+VOID
+GetInterfaceFriendlyName(
+    _In_ LPWSTR lpDeviceName,
+    _In_ DWORD cchFriendlyNameLength,
+    _Out_ LPWSTR pszFriendlyName)
+{
+    HKEY hKey = NULL;
+    WCHAR Path[256];
+    LPWSTR PrePath  = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
+    LPWSTR PostPath = L"\\Connection";
+    LPWSTR DevicePrefix = L"\\DEVICE\\TCPIP_";
+    DWORD PathSize;
+    DWORD dwType;
+    DWORD dwDataSize;
+
+    DWORD dwPrefixLength = wcslen(DevicePrefix);
+
+    /* don't overflow the buffer */
+    PathSize = wcslen(PrePath) + wcslen(lpDeviceName) - dwPrefixLength + wcslen(PostPath) + 1;
+    if (PathSize >= 255)
+        return;
+
+    swprintf(Path, L"%s%s%s", PrePath, &lpDeviceName[dwPrefixLength], PostPath);
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       Path,
                       0,
                       KEY_READ,
@@ -716,129 +758,167 @@ done:
         HeapFree(ProcessHeap, 0, pAdapterInfo);
 }
 
-VOID Release(LPTSTR Index)
+static
+BOOL
+MatchWildcard(
+    _In_ PWSTR pszExpression,
+    _In_ PWSTR pszName)
 {
-    IP_ADAPTER_INDEX_MAP AdapterInfo;
-    DWORD ret;
-    DWORD i;
+    WCHAR *pCharE, *pCharN, charE, charN;
 
-    /* if interface is not given, query GetInterfaceInfo */
-    if (Index == NULL)
+    if (pszExpression == NULL)
+        return TRUE;
+
+    if (pszName == NULL)
+        return FALSE;
+
+    pCharE = pszExpression;
+    pCharN = pszName;
+    while (*pCharE != UNICODE_NULL)
     {
-        PIP_INTERFACE_INFO pInfo = NULL;
-        ULONG ulOutBufLen = 0;
+        charE = towlower(*pCharE);
+        charN = towlower(*pCharN);
 
-        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
+        if (charE == L'*')
         {
-            pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
-            if (pInfo == NULL)
-                return;
-
-            if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR )
-            {
-                for (i = 0; i < pInfo->NumAdapters; i++)
-                {
-                    CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
-                    _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
-
-                    /* Call IpReleaseAddress to release the IP address on the specified adapter. */
-                    if ((ret = IpReleaseAddress(&AdapterInfo)) != NO_ERROR)
-                    {
-                        _tprintf(_T("\nAn error occured while releasing interface %ls : \n"), AdapterInfo.Name);
-                        DoFormatMessage(ret);
-                    }
-                }
-
-                HeapFree(ProcessHeap, 0, pInfo);
-            }
+            if (*(pCharE + 1) != charN)
+                pCharN++;
             else
-            {
-                DoFormatMessage(0);
-                HeapFree(ProcessHeap, 0, pInfo);
-                return;
-            }
+                pCharE++;
+        }
+        else if (charE == L'?')
+        {
+            pCharE++;
+            pCharN++;
+        }
+        else if (charE == charN)
+        {
+            pCharE++;
+            pCharN++;
         }
         else
         {
-            DoFormatMessage(0);
-            return;
+            return FALSE;
         }
     }
-    else
-    {
-        ;
-        /* FIXME:
-         * we need to be able to release connections by name with support for globbing
-         * i.e. ipconfig /release Eth* will release all cards starting with Eth...
-         *      ipconfig /release *con* will release all cards with 'con' in their name
-         */
-    }
+
+    return TRUE;
 }
 
-VOID Renew(LPTSTR Index)
+VOID
+Release(
+    LPWSTR pszAdapterName)
 {
     IP_ADAPTER_INDEX_MAP AdapterInfo;
-    DWORD i;
+    DWORD i, ret;
+    PIP_INTERFACE_INFO pInfo = NULL;
+    ULONG ulOutBufLen = 0;
+    WCHAR szFriendlyName[MAX_PATH];
 
-    /* if interface is not given, query GetInterfaceInfo */
-    if (Index == NULL)
+    ConResPrintf(StdOut, IDS_HEADER);
+
+    if (GetInterfaceInfo(pInfo, &ulOutBufLen) != ERROR_INSUFFICIENT_BUFFER)
     {
-        PIP_INTERFACE_INFO pInfo;
-        ULONG ulOutBufLen = 0;
+        _tprintf(_T("\nGetInterfaceInfo failed : "));
+        DoFormatMessage(0);
+        return;
+    }
 
-        pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, sizeof(IP_INTERFACE_INFO));
-        if (pInfo == NULL)
-        {
-            _tprintf(_T("memory allocation error"));
-            return;
-        }
+    pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
+    if (pInfo == NULL)
+    {
+        _tprintf(_T("memory allocation error"));
+        return;
+    }
 
-        /* Make an initial call to GetInterfaceInfo to get
-         * the necessary size into the ulOutBufLen variable */
-        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
+    if (GetInterfaceInfo(pInfo, &ulOutBufLen) != NO_ERROR)
+    {
+        _tprintf(_T("\nGetInterfaceInfo failed : "));
+        DoFormatMessage(0);
+        goto done;
+    }
+
+    for (i = 0; i < pInfo->NumAdapters; i++)
+    {
+        GetInterfaceFriendlyName(pInfo->Adapter[i].Name, MAX_PATH, szFriendlyName);
+
+        if ((pszAdapterName == NULL) || MatchWildcard(pszAdapterName, szFriendlyName))
         {
-            HeapFree(ProcessHeap, 0, pInfo);
-            pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
-            if (pInfo == NULL)
+            /* TODO: Check for enabled DHCP and connected medium */
+
+            CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
+            _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
+
+            /* Call IpReleaseAddress to release the IP address on the specified adapter. */
+            ret = IpReleaseAddress(&AdapterInfo);
+            if (ret != NO_ERROR)
             {
-                _tprintf(_T("memory allocation error"));
-                return;
+                _tprintf(_T("\nAn error occured while releasing interface %ls : \n"), szFriendlyName);
+                DoFormatMessage(ret);
             }
         }
+    }
 
-        /* Make a second call to GetInterfaceInfo to get the actual data we want */
-        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR)
+done:
+    HeapFree(ProcessHeap, 0, pInfo);
+}
+
+VOID
+Renew(
+    LPWSTR pszAdapterName)
+{
+    IP_ADAPTER_INDEX_MAP AdapterInfo;
+    DWORD i, ret;
+    PIP_INTERFACE_INFO pInfo = NULL;
+    ULONG ulOutBufLen = 0;
+    WCHAR szFriendlyName[MAX_PATH];
+
+    ConResPrintf(StdOut, IDS_HEADER);
+
+    if (GetInterfaceInfo(pInfo, &ulOutBufLen) != ERROR_INSUFFICIENT_BUFFER)
+    {
+        _tprintf(_T("\nGetInterfaceInfo failed : "));
+        DoFormatMessage(0);
+        return;
+    }
+
+    pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
+    if (pInfo == NULL)
+    {
+        _tprintf(_T("memory allocation error"));
+        return;
+    }
+
+    /* Make a second call to GetInterfaceInfo to get the actual data we want */
+    if (GetInterfaceInfo(pInfo, &ulOutBufLen) != NO_ERROR)
+    {
+        _tprintf(_T("\nGetInterfaceInfo failed : "));
+        DoFormatMessage(0);
+        goto done;
+    }
+
+    for (i = 0; i < pInfo->NumAdapters; i++)
+    {
+        GetInterfaceFriendlyName(pInfo->Adapter[i].Name, MAX_PATH, szFriendlyName);
+
+        if ((pszAdapterName == NULL) || MatchWildcard(pszAdapterName, szFriendlyName))
         {
-            for (i = 0; i < pInfo->NumAdapters; i++)
-            {
-                CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
-                _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
+            /* TODO: Check for enabled DHCP and connected medium */
 
-                /* Call IpRenewAddress to renew the IP address on the specified adapter. */
-                if (IpRenewAddress(&AdapterInfo) != NO_ERROR)
-                {
-                    _tprintf(_T("\nAn error occured while renew interface %s : "), _T("*name*"));
-                    DoFormatMessage(0);
-                }
+            CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
+
+            /* Call IpRenewAddress to renew the IP address on the specified adapter. */
+            ret = IpRenewAddress(&AdapterInfo);
+            if (ret != NO_ERROR)
+            {
+                _tprintf(_T("\nAn error occured while renew interface %ls : "), szFriendlyName);
+                DoFormatMessage(ret);
             }
         }
-        else
-        {
-            _tprintf(_T("\nGetInterfaceInfo failed : "));
-            DoFormatMessage(0);
-        }
+    }
 
-        HeapFree(ProcessHeap, 0, pInfo);
-    }
-    else
-    {
-        ;
-        /* FIXME:
-         * we need to be able to renew connections by name with support for globbing
-         * i.e. ipconfig /renew Eth* will renew all cards starting with Eth...
-         *      ipconfig /renew *con* will renew all cards with 'con' in their name
-         */
-    }
+done:
+    HeapFree(ProcessHeap, 0, pInfo);
 }
 
 VOID
@@ -1112,10 +1192,9 @@ int wmain(int argc, wchar_t *argv[])
             break;
         case 3: /* Process all the options that can have 1 parameter */
             if (DoRelease)
-                _tprintf(_T("\nSorry /release [adapter] is not implemented yet\n"));
-                //Release(argv[2]);
+                Release(argv[2]);
             else if (DoRenew)
-                _tprintf(_T("\nSorry /renew [adapter] is not implemented yet\n"));
+                Renew(argv[2]);
             else if (DoShowclassid)
                 _tprintf(_T("\nSorry /showclassid adapter is not implemented yet\n"));
             else if (DoSetclassid)
