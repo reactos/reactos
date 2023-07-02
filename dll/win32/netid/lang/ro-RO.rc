@@ -1,8 +1,8 @@
 /*
  * FILE:          dll/win32/netid/lang/ro-RO.rc
  *                ReactOS Project (https://reactos.org)
- * TRANSLATORS:   Ștefan Fulea (stefan dot fulea at mail dot com)
- *                Andrei Miloiu (miloiuandrei@gmail.com)
+ * TRANSLATORS:   Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *                Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -86,7 +86,7 @@ BEGIN
     1029 "Noul nume de calculator ""%1"" e un număr. Numele nu poate fi un număr."
     1030 "Noul nume „%1” conține caractere nepermise. Caracterele nepermise sunt ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / și ?"
     1031 "Primul domeniu al numelui de domeniu ""%1"" este un număr. Primul domeniu nu poate fi un număr."
-    1032 "Numele de domeniu ""%1"" conține caractere ce nu sunt permise. Numele standard de DNS names pot conține litere (a-z, A-Z), numere (0-9), și cratime, dar nu spații. Punctele (.) sunt folosite la domeniile separate. De exemplu: domeniu-1.reactos.org."
+    1032 "Numele de domeniu ""%1"" conține caractere ce nu sunt permise. Numele standard de DNS pot conține litere (a-z, A-Z), numere (0-9), și cratime, dar nu spații. Punctele (.) sunt folosite la domeniile separate. De exemplu: domeniu-1.reactos.org."
     3210 "&Detalii >>"
     3220 "<< &Detalii"
     4000 "Informație"
