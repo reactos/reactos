@@ -216,3 +216,5 @@ VOID CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, const B
 
 void
 LibTCPDumpPcb(PVOID SocketContext);
+
+NTSTATUS TCPGetSocketStatus(PCONNECTION_ENDPOINT Connection, PULONG State);

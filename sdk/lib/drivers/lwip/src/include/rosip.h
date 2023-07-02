@@ -25,7 +25,7 @@ struct lwip_callback_msg
 {
     /* Synchronization */
     KEVENT Event;
-    
+
     /* Input */
     union {
         struct {
@@ -60,7 +60,7 @@ struct lwip_callback_msg
             int Callback;
         } Close;
     } Input;
-    
+
     /* Output */
     union {
         struct {
@@ -110,6 +110,7 @@ err_t       LibTCPGetPeerName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t 
 err_t       LibTCPGetHostName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port);
 void        LibTCPAccept(PTCP_PCB pcb, struct tcp_pcb *listen_pcb, void *arg);
 void        LibTCPSetNoDelay(PTCP_PCB pcb, BOOLEAN Set);
+void        LibTCPGetSocketStatus(PTCP_PCB pcb, PULONG State);
 
 /* IP functions */
 void LibIPInsertPacket(void *ifarg, const void *const data, const u32_t size);

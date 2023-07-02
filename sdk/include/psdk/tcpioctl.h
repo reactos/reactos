@@ -51,6 +51,10 @@
 #define IP_MIB_ARPTABLE_ENTRY_ID        0x101
 #define IP_MIB_ADDRTABLE_ENTRY_ID       0x102
 #define IP_INTFC_INFO_ID                0x103
+/* Non public TOIID used to query modules info */
+#ifdef __REACTOS__
+#define IP_SPECIFIC_MODULE_ENTRY_ID     0x110
+#endif
 #define MAX_PHYSADDR_SIZE               8
 
 /* Address Object Options */

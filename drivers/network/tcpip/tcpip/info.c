@@ -83,7 +83,6 @@ PVOID GetContext(TDIEntityID ID)
     if (i == EntityCount)
     {
         TcpipReleaseSpinLock(&EntityListLock, OldIrql);
-        DbgPrint("WARNING: Unable to get context for %d %d\n", ID.tei_entity, ID.tei_instance);
         return NULL;
     }
 
@@ -260,14 +259,24 @@ TDI_STATUS InfoTdiQueryInformationEx(
                      return TDI_INVALID_PARAMETER;
 
               case IP_MIB_ADDRTABLE_ENTRY_ID:
-                 if (ID->toi_entity.tei_entity != CL_NL_ENTITY && 
-                     ID->toi_entity.tei_entity != CO_NL_ENTITY)
-                     return TDI_INVALID_PARAMETER;
-
                  if (ID->toi_type != INFO_TYPE_PROVIDER)
                      return TDI_INVALID_PARAMETER;
 
-                 return InfoTdiQueryGetAddrTable(ID->toi_entity, Buffer, BufferSize);
+                 if (ID->toi_entity.tei_entity == CL_NL_ENTITY ||
+                     ID->toi_entity.tei_entity == CO_NL_ENTITY)
+                    return InfoTdiQueryGetAddrTable(ID->toi_entity, Buffer, BufferSize);
+                else if (ID->toi_entity.tei_entity == CO_TL_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetConnectionTcpTable(EntityListContext, Buffer, BufferSize, TRUE);
+                     else
+                         return TDI_INVALID_PARAMETER;
+                else if (ID->toi_entity.tei_entity == CL_TL_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetConnectionUdpTable(EntityListContext, Buffer, BufferSize, TRUE);
+                     else
+                         return TDI_INVALID_PARAMETER;
+                else
+                    return TDI_INVALID_PARAMETER;
 
               case IP_MIB_ARPTABLE_ENTRY_ID:
                  if (ID->toi_type != INFO_TYPE_PROVIDER)
@@ -283,6 +292,16 @@ TDI_STATUS InfoTdiQueryInformationEx(
                           ID->toi_entity.tei_entity == CL_NL_ENTITY)
                      if ((EntityListContext = GetContext(ID->toi_entity)))
                          return InfoTdiQueryGetRouteTable(EntityListContext, Buffer, BufferSize);
+                     else
+                         return TDI_INVALID_PARAMETER;
+                 else if (ID->toi_entity.tei_entity == CO_TL_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetConnectionTcpTable(EntityListContext, Buffer, BufferSize, FALSE);
+                     else
+                         return TDI_INVALID_PARAMETER;
+                 else if (ID->toi_entity.tei_entity == CL_TL_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetConnectionUdpTable(EntityListContext, Buffer, BufferSize, FALSE);
                      else
                          return TDI_INVALID_PARAMETER;
                  else
@@ -371,13 +390,11 @@ TDI_STATUS InfoTdiSetInformationEx
                     }
                 }
                 default:
-                    DbgPrint("TCPIP: IOCTL_TCP_SET_INFORMATION_EX - Unrecognized information type for INFO_CLASS_PROTOCOL: %#x.\n", ID->toi_type);
                     return TDI_INVALID_PARAMETER;
             }
             break;
         }
         default:
-            DbgPrint("TCPIP: IOCTL_TCP_SET_INFORMATION_EX - Unrecognized information class %#x.\n", ID->toi_class);
             return TDI_INVALID_REQUEST;
     }
 }
