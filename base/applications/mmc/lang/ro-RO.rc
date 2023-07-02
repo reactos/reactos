@@ -35,7 +35,7 @@ BEGIN
     END
     POPUP "&Ferestre"
     BEGIN
-        MENUITEM "List[", IDM_WINDOWS_LIST
+        MENUITEM "Listă", IDM_WINDOWS_LIST
     END
     POPUP "Aj&utor"
     BEGIN
