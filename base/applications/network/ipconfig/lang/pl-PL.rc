@@ -47,15 +47,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "\nNieznana karta: %ls\n"
-    IDS_OTHER "\nInna karta: %ls\n"
-    IDS_ETH "\nKarta Ethernet: %ls\n"
-    IDS_TOKEN "\nKarta Token Ring: %ls\n"
-    IDS_FDDI "\nKarta FDDI: %ls\n"
-    IDS_PPP "\nKarta PPP: %ls\n"
-    IDS_LOOP "\nKarta sprzężenia zwrotnego: %ls\n"
-    IDS_SLIP "\nKarta SLIP: %ls\n"
-    IDS_WIFI "\nKarta bezprzewodowej sieci LAN: %ls\n"
+    IDS_UNKNOWNADAPTER "\nNieznana karta: %ls\n\n"
+    IDS_OTHER "\nInna karta: %ls\n\n"
+    IDS_ETH "\nKarta Ethernet: %ls\n\n"
+    IDS_TOKEN "\nKarta Token Ring: %ls\n\n"
+    IDS_FDDI "\nKarta FDDI: %ls\n\n"
+    IDS_PPP "\nKarta PPP: %ls\n\n"
+    IDS_LOOP "\nKarta sprzężenia zwrotnego: %ls\n\n"
+    IDS_SLIP "\nKarta SLIP: %ls\n\n"
+    IDS_WIFI "\nKarta bezprzewodowej sieci LAN: %ls\n\n"
 END
 
 STRINGTABLE
@@ -64,6 +64,10 @@ BEGIN
     IDS_DNSNONAME           "\tName does not exist.\n\n"
     IDS_DNSFLUSHERROR       "Could not flush the DNS Resolver Cache: "
     IDS_DNSFLUSHSUCCESS     "Successfully flushed the DNS Resolver Cache.\n"
+    IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
+    IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
+    IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
+    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
 END
 
 STRINGTABLE

@@ -45,15 +45,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "\nAdaptor necunoscut: %ls\n"
-    IDS_OTHER "\nAlt tip de adaptor: %ls\n"
-    IDS_ETH "\nAdaptor Ethernet: %ls\n"
-    IDS_TOKEN "\nAdaptor Token Ring: %ls\n"
-    IDS_FDDI "\nAdaptor FDDI: %ls\n"
-    IDS_PPP "\nAdaptor PPP: %ls\n"
-    IDS_LOOP "\nAdaptor Loopback: %ls\n"
-    IDS_SLIP "\nAdaptor SLIP: %ls\n"
-    IDS_WIFI "\nAdaptor de rețea fără fir: %ls\n"
+    IDS_UNKNOWNADAPTER "\nAdaptor necunoscut: %ls\n\n"
+    IDS_OTHER "\nAlt tip de adaptor: %ls\n\n"
+    IDS_ETH "\nAdaptor Ethernet: %ls\n\n"
+    IDS_TOKEN "\nAdaptor Token Ring: %ls\n\n"
+    IDS_FDDI "\nAdaptor FDDI: %ls\n\n"
+    IDS_PPP "\nAdaptor PPP: %ls\n\n"
+    IDS_LOOP "\nAdaptor Loopback: %ls\n\n"
+    IDS_SLIP "\nAdaptor SLIP: %ls\n\n"
+    IDS_WIFI "\nAdaptor de rețea fără fir: %ls\n\n"
 END
 
 STRINGTABLE
@@ -86,6 +86,10 @@ BEGIN
     IDS_DNSNONAME           "\tName does not exist.\n\n"
     IDS_DNSFLUSHERROR       "Could not flush the DNS Resolver Cache: "
     IDS_DNSFLUSHSUCCESS     "Successfully flushed the DNS Resolver Cache.\n"
+    IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
+    IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
+    IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
+    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
 END
 
 STRINGTABLE

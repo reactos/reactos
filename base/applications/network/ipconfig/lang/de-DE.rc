@@ -46,15 +46,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "\nUnbekannter Adapter: %ls\n"
-    IDS_OTHER "\nAnderer Adapter: %ls\n"
-    IDS_ETH "\nEthernet-Adapter: %ls\n"
-    IDS_TOKEN "\nToken-Ring-Adapter: %ls\n"
-    IDS_FDDI "\nFDDI-Adapter: %ls\n"
-    IDS_PPP "\nPPP-Adapter: %ls\n"
-    IDS_LOOP "\nLoopback-Adapter: %ls\n"
-    IDS_SLIP "\nSLIP-Adapter: %ls\n"
-    IDS_WIFI "\nDrahtlos-LAN-Adapter: %ls\n"
+    IDS_UNKNOWNADAPTER "\nUnbekannter Adapter: %ls\n\n"
+    IDS_OTHER "\nAnderer Adapter: %ls\n\n"
+    IDS_ETH "\nEthernet-Adapter: %ls\n\n"
+    IDS_TOKEN "\nToken-Ring-Adapter: %ls\n\n"
+    IDS_FDDI "\nFDDI-Adapter: %ls\n\n"
+    IDS_PPP "\nPPP-Adapter: %ls\n\n"
+    IDS_LOOP "\nLoopback-Adapter: %ls\n\n"
+    IDS_SLIP "\nSLIP-Adapter: %ls\n\n"
+    IDS_WIFI "\nDrahtlos-LAN-Adapter: %ls\n\n"
 END
 
 STRINGTABLE
@@ -87,6 +87,10 @@ BEGIN
     IDS_DNSNONAME           "\tName existiert nicht.\n\n"
     IDS_DNSFLUSHERROR       "Der DNS-Auflösungscache konnte nicht geleert werden: "
     IDS_DNSFLUSHSUCCESS     "Der DNS-Auflösungscache wurde geleert.\n"
+    IDS_DHCPNOTCONNECTED    "Es kann kein Vorgang auf %ls ausgeführt werden, solange dessen Medium nicht verbunden ist.\n"
+    IDS_DHCPNOTENABLED      "Der Adapter %ls ist nicht für DHCP aktiviert.\n"
+    IDS_DHCPNOADAPTER       "Der Vorgang ist fehlgeschlagen, weil kein Adapter sich in einem für diesen\nVorgang zulässigen Zustand befindet.\n"
+    IDS_DHCPRELEASED        "Die IP-Adresse für den Adapter %ls wurde bereits freigegeben.\n"
 END
 
 STRINGTABLE

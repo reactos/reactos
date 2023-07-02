@@ -528,7 +528,10 @@ PrintAdapterTypeAndName(
     }
 }
 
-VOID ShowInfo(BOOL bAll)
+VOID
+ShowInfo(
+    BOOL bShowHeader,
+    BOOL bAll)
 {
     MIB_IFROW mibEntry;
     PIP_ADAPTER_INFO pAdapterInfo = NULL;
@@ -602,7 +605,8 @@ VOID ShowInfo(BOOL bAll)
 
     pAdapter = pAdapterInfo;
 
-    ConResPrintf(StdOut, IDS_HEADER);
+    if (bShowHeader)
+        ConResPrintf(StdOut, IDS_HEADER);
 
     if (bAll)
     {
@@ -805,120 +809,215 @@ MatchWildcard(
     return TRUE;
 }
 
+static
+VOID
+BuildAdapterMap(
+    PIP_ADAPTER_INDEX_MAP pAdapterMap,
+    PIP_ADAPTER_INFO pAdapterInfo)
+{
+    int i, l1, l2;
+
+    pAdapterMap->Index = pAdapterInfo->Index;
+
+    wcscpy(pAdapterMap->Name, L"\\DEVICE\\TCPIP_");
+    l1 = wcslen(pAdapterMap->Name);
+    l2 = strlen(pAdapterInfo->AdapterName);
+    for (i = 0; i < l2; i++)
+        pAdapterMap->Name[i + l1] = (WCHAR)pAdapterInfo->AdapterName[i];
+    pAdapterMap->Name[i + l1] = UNICODE_NULL;
+}
+
 VOID
 Release(
     LPWSTR pszAdapterName)
 {
-    IP_ADAPTER_INDEX_MAP AdapterInfo;
-    DWORD i, ret;
-    PIP_INTERFACE_INFO pInfo = NULL;
-    ULONG ulOutBufLen = 0;
+    PIP_ADAPTER_INFO pAdapterInfo = NULL;
+    PIP_ADAPTER_INFO pAdapter = NULL;
+    ULONG adaptOutBufLen = 0;
+    ULONG ret = 0;
     WCHAR szFriendlyName[MAX_PATH];
+    MIB_IFROW mibEntry;
+    IP_ADAPTER_INDEX_MAP AdapterMap;
+    BOOL bFoundAdapter = FALSE;
 
     ConResPrintf(StdOut, IDS_HEADER);
 
-    if (GetInterfaceInfo(pInfo, &ulOutBufLen) != ERROR_INSUFFICIENT_BUFFER)
+    /* call GetAdaptersInfo to obtain the adapter info */
+    ret = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen);
+    if (ret != ERROR_BUFFER_OVERFLOW)
     {
-        _tprintf(_T("\nGetInterfaceInfo failed : "));
-        DoFormatMessage(0);
+        DoFormatMessage(ret);
         return;
     }
 
-    pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
-    if (pInfo == NULL)
+    pAdapterInfo = (IP_ADAPTER_INFO *)HeapAlloc(ProcessHeap, 0, adaptOutBufLen);
+    if (pAdapterInfo == NULL)
     {
         _tprintf(_T("memory allocation error"));
         return;
     }
 
-    if (GetInterfaceInfo(pInfo, &ulOutBufLen) != NO_ERROR)
+    ret = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen);
+    if (ret != NO_ERROR)
     {
-        _tprintf(_T("\nGetInterfaceInfo failed : "));
         DoFormatMessage(0);
         goto done;
     }
 
-    for (i = 0; i < pInfo->NumAdapters; i++)
+    pAdapter = pAdapterInfo;
+
+    while (pAdapter)
     {
-        GetInterfaceFriendlyName(pInfo->Adapter[i].Name, MAX_PATH, szFriendlyName);
+        GetAdapterFriendlyName(pAdapterInfo->AdapterName, MAX_PATH, szFriendlyName);
 
         if ((pszAdapterName == NULL) || MatchWildcard(pszAdapterName, szFriendlyName))
         {
-            /* TODO: Check for enabled DHCP and connected medium */
+            bFoundAdapter = TRUE;
 
-            CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
-            _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
+            mibEntry.dwIndex = pAdapter->Index;
+            GetIfEntry(&mibEntry);
 
-            /* Call IpReleaseAddress to release the IP address on the specified adapter. */
-            ret = IpReleaseAddress(&AdapterInfo);
-            if (ret != NO_ERROR)
+            if (mibEntry.dwOperStatus == MIB_IF_OPER_STATUS_CONNECTED ||
+                mibEntry.dwOperStatus == MIB_IF_OPER_STATUS_OPERATIONAL)
             {
-                _tprintf(_T("\nAn error occured while releasing interface %ls : \n"), szFriendlyName);
-                DoFormatMessage(ret);
+                if (pAdapter->DhcpEnabled)
+                {
+                    if (strcmp(pAdapter->IpAddressList.IpAddress.String, "0.0.0.0"))
+                    {
+                        BuildAdapterMap(&AdapterMap, pAdapter);
+
+                        /* Call IpReleaseAddress to release the IP address on the specified adapter. */
+                        ret = IpReleaseAddress(&AdapterMap);
+                        if (ret != NO_ERROR)
+                        {
+                            _tprintf(_T("\nAn error occured while releasing interface %ls : \n"), szFriendlyName);
+                            DoFormatMessage(ret);
+                        }
+                    }
+                    else
+                    {
+                        ConResPrintf(StdOut, IDS_DHCPRELEASED);
+                    }
+                }
+                else
+                {
+                    ConResPrintf(StdOut, IDS_DHCPNOTENABLED, szFriendlyName);
+                }
+            }
+            else
+            {
+                ConResPrintf(StdOut, IDS_DHCPNOTCONNECTED, szFriendlyName);
             }
         }
+
+        pAdapter = pAdapter->Next;
+    }
+
+    if (bFoundAdapter == FALSE)
+    {
+        ConResPrintf(StdOut, IDS_DHCPNOADAPTER);
+    }
+    else
+    {
+        ShowInfo(FALSE, FALSE);
     }
 
 done:
-    HeapFree(ProcessHeap, 0, pInfo);
+    if (pAdapterInfo)
+        HeapFree(ProcessHeap, 0, pAdapterInfo);
 }
 
 VOID
 Renew(
     LPWSTR pszAdapterName)
 {
-    IP_ADAPTER_INDEX_MAP AdapterInfo;
-    DWORD i, ret;
-    PIP_INTERFACE_INFO pInfo = NULL;
-    ULONG ulOutBufLen = 0;
+    PIP_ADAPTER_INFO pAdapterInfo = NULL;
+    PIP_ADAPTER_INFO pAdapter = NULL;
+    ULONG adaptOutBufLen = 0;
+    ULONG ret = 0;
     WCHAR szFriendlyName[MAX_PATH];
+    MIB_IFROW mibEntry;
+    IP_ADAPTER_INDEX_MAP AdapterMap;
+    BOOL bFoundAdapter = FALSE;
 
     ConResPrintf(StdOut, IDS_HEADER);
 
-    if (GetInterfaceInfo(pInfo, &ulOutBufLen) != ERROR_INSUFFICIENT_BUFFER)
+    /* call GetAdaptersInfo to obtain the adapter info */
+    ret = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen);
+    if (ret != ERROR_BUFFER_OVERFLOW)
     {
-        _tprintf(_T("\nGetInterfaceInfo failed : "));
-        DoFormatMessage(0);
+        DoFormatMessage(ret);
         return;
     }
 
-    pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
-    if (pInfo == NULL)
+    pAdapterInfo = (IP_ADAPTER_INFO *)HeapAlloc(ProcessHeap, 0, adaptOutBufLen);
+    if (pAdapterInfo == NULL)
     {
         _tprintf(_T("memory allocation error"));
         return;
     }
 
-    /* Make a second call to GetInterfaceInfo to get the actual data we want */
-    if (GetInterfaceInfo(pInfo, &ulOutBufLen) != NO_ERROR)
+    ret = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen);
+    if (ret != NO_ERROR)
     {
-        _tprintf(_T("\nGetInterfaceInfo failed : "));
         DoFormatMessage(0);
         goto done;
     }
 
-    for (i = 0; i < pInfo->NumAdapters; i++)
+    pAdapter = pAdapterInfo;
+
+    while (pAdapter)
     {
-        GetInterfaceFriendlyName(pInfo->Adapter[i].Name, MAX_PATH, szFriendlyName);
+        GetAdapterFriendlyName(pAdapterInfo->AdapterName, MAX_PATH, szFriendlyName);
 
         if ((pszAdapterName == NULL) || MatchWildcard(pszAdapterName, szFriendlyName))
         {
-            /* TODO: Check for enabled DHCP and connected medium */
+            bFoundAdapter = TRUE;
 
-            CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
+            mibEntry.dwIndex = pAdapter->Index;
+            GetIfEntry(&mibEntry);
 
-            /* Call IpRenewAddress to renew the IP address on the specified adapter. */
-            ret = IpRenewAddress(&AdapterInfo);
-            if (ret != NO_ERROR)
+            if (mibEntry.dwOperStatus == MIB_IF_OPER_STATUS_CONNECTED ||
+                mibEntry.dwOperStatus == MIB_IF_OPER_STATUS_OPERATIONAL)
             {
-                _tprintf(_T("\nAn error occured while renew interface %ls : "), szFriendlyName);
-                DoFormatMessage(ret);
+                if (pAdapter->DhcpEnabled)
+                {
+                    BuildAdapterMap(&AdapterMap, pAdapter);
+
+                    /* Call IpRenewAddress to renew the IP address on the specified adapter. */
+                    ret = IpRenewAddress(&AdapterMap);
+                    if (ret != NO_ERROR)
+                    {
+                        _tprintf(_T("\nAn error occured while renew interface %ls : "), szFriendlyName);
+                        DoFormatMessage(ret);
+                    }
+                }
+                else
+                {
+                    ConResPrintf(StdOut, IDS_DHCPNOTENABLED, szFriendlyName);
+                }
+            }
+            else
+            {
+                ConResPrintf(StdOut, IDS_DHCPNOTCONNECTED, szFriendlyName);
             }
         }
+
+        pAdapter = pAdapter->Next;
+    }
+
+    if (bFoundAdapter == FALSE)
+    {
+        ConResPrintf(StdOut, IDS_DHCPNOADAPTER);
+    }
+    else
+    {
+        ShowInfo(FALSE, FALSE);
     }
 
 done:
-    HeapFree(ProcessHeap, 0, pInfo);
+    if (pAdapterInfo)
+        HeapFree(ProcessHeap, 0, pAdapterInfo);
 }
 
 VOID
@@ -1175,13 +1274,13 @@ int wmain(int argc, wchar_t *argv[])
     switch (argc)
     {
         case 1:  /* Default behaviour if no options are given*/
-            ShowInfo(FALSE);
+            ShowInfo(TRUE, FALSE);
             break;
         case 2:  /* Process all the options that take no parameters */
             if (DoUsage)
                 Usage();
             else if (DoAll)
-                ShowInfo(TRUE);
+                ShowInfo(TRUE, TRUE);
             else if (DoRelease)
                 Release(NULL);
             else if (DoRenew)
