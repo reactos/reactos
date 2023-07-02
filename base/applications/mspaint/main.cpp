@@ -209,10 +209,8 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
     }
 
     // Initialize imageModel
-    if (__argc >= 2)
-        DoLoadImageFile(mainWindow, __targv[1], TRUE);
-    else
-        SetBitmapAndInfo(NULL, NULL, NULL, FALSE);
+    if (__argc < 2 || !DoLoadImageFile(mainWindow, __targv[1], TRUE))
+        InitializeImage(NULL, NULL, FALSE);
 
     // Make the window visible on the screen
     mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);

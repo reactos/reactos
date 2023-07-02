@@ -22,6 +22,22 @@ CFontsDialog fontsDialog;
 
 /* FUNCTIONS ********************************************************/
 
+void ShowError(INT stringID, ...)
+{
+    va_list va;
+    va_start(va, stringID);
+
+    CStringW strFormat, strText;
+    strFormat.LoadString(stringID);
+    strText.FormatV(strFormat, va);
+
+    CStringW strProgramName;
+    strProgramName.LoadString(IDS_PROGRAMNAME);
+
+    mainWindow.MessageBox(strText, strProgramName, MB_ICONERROR);
+    va_end(va);
+}
+
 LRESULT CMirrorRotateDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     CheckDlgButton(IDD_MIRRORROTATERB1, BST_CHECKED);

@@ -20,17 +20,16 @@ static inline HBITMAP CopyDIBImage(HBITMAP hbm, INT cx = 0, INT cy = 0)
 }
 
 int GetDIBWidth(HBITMAP hbm);
-
 int GetDIBHeight(HBITMAP hbm);
 
-BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, BOOL fIsMainFile);
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPCWSTR FileName, BOOL fIsMainFile);
 
-HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile);
+HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile);
 
-void ShowError(INT stringID, ...);
 void SetFileInfo(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isAFile);
 
-HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile);
+HBITMAP InitializeImage(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile);
+HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile);
 
 HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight, BOOL bMono);
 

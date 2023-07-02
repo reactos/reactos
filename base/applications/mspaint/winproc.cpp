@@ -607,7 +607,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILENEW:
             if (ConfirmSave())
             {
-                SetBitmapAndInfo(NULL, NULL, NULL, FALSE);
+                InitializeImage(NULL, NULL, FALSE);
             }
             break;
         case IDM_FILEOPEN:
@@ -845,7 +845,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITCOPYTO:
         {
-            TCHAR szFileName[MAX_LONG_PATH] = _T("");
+            WCHAR szFileName[MAX_LONG_PATH] = L"*.png";
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {
                 HBITMAP hbm = selectionModel.CopyBitmap();
@@ -857,7 +857,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITPASTEFROM:
         {
-            TCHAR szFileName[MAX_LONG_PATH] = _T("");
+            WCHAR szFileName[MAX_LONG_PATH] = L"";
             if (GetOpenFileName(szFileName, _countof(szFileName)))
             {
                 HBITMAP hbmNew = DoLoadImageFile(m_hWnd, szFileName, FALSE);

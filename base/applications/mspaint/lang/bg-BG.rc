@@ -262,5 +262,5 @@ BEGIN
     IDS_VERTICAL "Вертикален"
     IDS_PRINTRES "%d x %d pixel/cm"
     IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
-    IDS_SAVEERROR "Failed to save an image file %s."
+    IDS_SAVEERROR "Failed to save an image as the following file:\n\n%s"
 END

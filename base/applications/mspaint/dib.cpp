@@ -142,7 +142,7 @@ GetDIBHeight(HBITMAP hBitmap)
     return bm.bmHeight;
 }
 
-BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, BOOL fIsMainFile)
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPCWSTR FileName, BOOL fIsMainFile)
 {
     CImageDx img;
     img.Attach(hBitmap);
@@ -172,22 +172,6 @@ BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, BOOL fIsMainFile)
     return TRUE;
 }
 
-void ShowError(INT stringID, ...)
-{
-    va_list va;
-    va_start(va, stringID);
-
-    CStringW strFormat, strText;
-    strFormat.LoadString(stringID);
-    strText.FormatV(strFormat, va);
-
-    CStringW strProgramName;
-    strProgramName.LoadString(IDS_PROGRAMNAME);
-
-    mainWindow.MessageBox(strText, strProgramName, MB_ICONERROR);
-    va_end(va);
-}
-
 void SetFileInfo(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isAFile)
 {
     // update file time and size
@@ -209,11 +193,11 @@ void SetFileInfo(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isAFile)
     if (name && name[0])
     {
         CStringW strFileName = name; // Be careful in case of name == g_szFileName
-        ::GetFullPathName(strFileName, _countof(g_szFileName), g_szFileName, NULL);
+        ::GetFullPathNameW(strFileName, _countof(g_szFileName), g_szFileName, NULL);
     }
     else
     {
-        ::LoadString(g_hinstExe, IDS_DEFAULTFILENAME, g_szFileName, _countof(g_szFileName));
+        ::LoadStringW(g_hinstExe, IDS_DEFAULTFILENAME, g_szFileName, _countof(g_szFileName));
     }
 
     // set title
@@ -229,24 +213,23 @@ void SetFileInfo(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isAFile)
     g_imageSaved = TRUE;
 }
 
-HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile)
+HBITMAP InitializeImage(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile)
 {
+    COLORREF white = RGB(255, 255, 255);
+    HBITMAP hBitmap = CreateColorDIB(registrySettings.BMPWidth, registrySettings.BMPHeight, white);
     if (hBitmap == NULL)
-    {
-        COLORREF white = RGB(255, 255, 255);
-        hBitmap = CreateColorDIB(registrySettings.BMPWidth,
-                                 registrySettings.BMPHeight, white);
-        if (hBitmap == NULL)
-            return NULL;
+        return NULL;
 
-        HDC hScreenDC = GetDC(NULL);
-        g_xDpi = GetDeviceCaps(hScreenDC, LOGPIXELSX);
-        g_yDpi = GetDeviceCaps(hScreenDC, LOGPIXELSY);
-        ReleaseDC(NULL, hScreenDC);
+    HDC hScreenDC = ::GetDC(NULL);
+    g_xDpi = ::GetDeviceCaps(hScreenDC, LOGPIXELSX);
+    g_yDpi = ::GetDeviceCaps(hScreenDC, LOGPIXELSY);
+    ::ReleaseDC(NULL, hScreenDC);
 
-        ZeroMemory(&g_fileTime, sizeof(g_fileTime));
-    }
+    return SetBitmapAndInfo(hBitmap, name, pFound, isFile);
+}
 
+HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile)
+{
     // update image
     imageModel.PushImageForUndo(hBitmap);
     imageModel.ClearHistory();
@@ -256,24 +239,23 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, LPWIN32_FIND_DATAW pFoun
     return hBitmap;
 }
 
-HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
+HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
 {
     // find the file
     WIN32_FIND_DATA find;
-    HANDLE hFind = FindFirstFile(name, &find);
+    HANDLE hFind = ::FindFirstFileW(name, &find);
     if (hFind == INVALID_HANDLE_VALUE) // does not exist
     {
         ShowError(IDS_LOADERRORTEXT, name);
         return NULL;
     }
-    DWORD dwFileSize = find.nFileSizeLow; // get file size
-    FindClose(hFind);
+    ::FindClose(hFind);
 
     // is file empty?
-    if (dwFileSize == 0)
+    if (find.nFileSizeLow == 0 && find.nFileSizeHigh == 0)
     {
         if (fIsMainFile)
-            return SetBitmapAndInfo(NULL, name, &find, TRUE);
+            return InitializeImage(name, &find, TRUE);
     }
 
     // load the image
