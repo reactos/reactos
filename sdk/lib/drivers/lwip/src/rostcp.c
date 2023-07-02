@@ -840,3 +840,11 @@ LibTCPSetNoDelay(
     else
         pcb->flags &= ~TF_NODELAY;
 }
+
+void
+LibTCPGetSocketStatus(
+    PTCP_PCB pcb,
+    PULONG State)
+{
+    *State = pcb->state + 1;
+}
