@@ -568,28 +568,30 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         else
         {
             if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                strcatW (psfi->szTypeName, L"Folder");
+                LoadStringW(shell32_hInstance, IDS_DIRECTORY, psfi->szTypeName, 80);
             else 
             {
-                WCHAR sTemp[64];
+                WCHAR sType[64];
 
-                lstrcpyW(sTemp,PathFindExtensionW(szFullPath));
-                if (sTemp[0] == 0 || (sTemp[0] == '.' && sTemp[1] == 0))
+                lstrcpyW(sType,PathFindExtensionW(szFullPath));
+                if (sType[0] == 0 || (sType[0] == '.' && sType[1] == 0))
                 {
                     /* "name" or "name." => "File" */
-                    lstrcpynW (psfi->szTypeName, L"File", 64);
+                    LoadStringW(shell32_hInstance, IDS_FILE, psfi->szTypeName, 80);
                 }
-                else if (!( HCR_MapTypeToValueW(sTemp, sTemp, 64, TRUE) &&
-                    HCR_MapTypeToValueW(sTemp, psfi->szTypeName, 80, FALSE )))
+                else if (!( HCR_MapTypeToValueW(sType, sType, 64, TRUE) &&
+                    HCR_MapTypeToValueW(sType, psfi->szTypeName, 80, FALSE )))
                 {
-                    if (sTemp[0])
+                    WCHAR sTemp[64];
+
+                    if (sType[0])
                     {
-                        lstrcpynW (psfi->szTypeName, sTemp, 64);
-                        strcatW (psfi->szTypeName, L" file");
+                        LoadStringW(shell32_hInstance, IDS_ANY_FILE, sTemp, 64);
+                        StringCchPrintfW(psfi->szTypeName, 80, sTemp, sType);
                     }
                     else
                     {
-                        lstrcpynW (psfi->szTypeName, L"File", 64);
+                        LoadStringW(shell32_hInstance, IDS_FILE, psfi->szTypeName, 80);
                     }
                 }
             }
