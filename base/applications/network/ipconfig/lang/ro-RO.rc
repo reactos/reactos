@@ -45,15 +45,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "\nAdaptor necunoscut: %ls\n"
-    IDS_OTHER "\nAlt tip de adaptor: %ls\n"
-    IDS_ETH "\nAdaptor Ethernet: %ls\n"
-    IDS_TOKEN "\nAdaptor Token Ring: %ls\n"
-    IDS_FDDI "\nAdaptor FDDI: %ls\n"
-    IDS_PPP "\nAdaptor PPP: %ls\n"
-    IDS_LOOP "\nAdaptor Loopback: %ls\n"
-    IDS_SLIP "\nAdaptor SLIP: %ls\n"
-    IDS_WIFI "\nAdaptor de rețea fără fir: %ls\n"
+    IDS_UNKNOWNADAPTER "\nAdaptor necunoscut: %ls\n\n"
+    IDS_OTHER "\nAlt tip de adaptor: %ls\n\n"
+    IDS_ETH "\nAdaptor Ethernet: %ls\n\n"
+    IDS_TOKEN "\nAdaptor Token Ring: %ls\n\n"
+    IDS_FDDI "\nAdaptor FDDI: %ls\n\n"
+    IDS_PPP "\nAdaptor PPP: %ls\n\n"
+    IDS_LOOP "\nAdaptor Loopback: %ls\n\n"
+    IDS_SLIP "\nAdaptor SLIP: %ls\n\n"
+    IDS_WIFI "\nAdaptor de rețea fără fir: %ls\n\n"
 END
 
 STRINGTABLE
@@ -86,6 +86,10 @@ BEGIN
     IDS_DNSNONAME           "\tNumele nu există.\n\n"
     IDS_DNSFLUSHERROR       "Nu a putut fi golită memoria de depozitare a rezolvatorului DNS: "
     IDS_DNSFLUSHSUCCESS     "Memoria de depozitare a rezolvatorului DNS a fost golită cu succes.\n"
+    IDS_DHCPNOTCONNECTED    "Nu poate fi efectuată nicio operațiune %ls atât timp cât media este deconectată.\n"
+    IDS_DHCPNOTENABLED      "Adaptorul %ls nu este activat pentru DHCP.\n"
+    IDS_DHCPNOADAPTER       "Operațiunea a eșuat pentru că adaptorul nu este în stadiul admisibil \npentru această operațiune.\n"
+    IDS_DHCPRELEASED        "Adresa IP pentru adaptorul %ls a fost deja eliberată.\n"
 END
 
 STRINGTABLE

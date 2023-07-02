@@ -1,4 +1,5 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/* Translators: Ștefan Fulea (stefan dot fulea at mail dot com) 
+ *              Andrei Miloiu (miloiuandrei@gmail.com) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
@@ -13,7 +14,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Criteriu &automat", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "Aliniază la &grilă", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -34,7 +35,7 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Criteriu &automat", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "Aliniază la &grilă", FCIDM_SHVIEW_ALIGNTOGRID
         END
         MENUITEM "Împ&rospătează", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -238,10 +239,10 @@ BEGIN
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Atribute:", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "Nem&odificabil", 14021, 58, 151, 70, 10
-    AUTOCHECKBOX "Asc&uns", 14022, 126, 151, 70, 10
-    AUTOCHECKBOX "Ar&hivabil", 14023, 181, 151, 70, 10
-    PUSHBUTTON "A&vansate…", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "Nem&odificabil", 14021, 58, 151, 68, 10
+    AUTOCHECKBOX "Asc&uns", 14022, 126, 151, 55, 10
+    AUTOCHECKBOX "Ar&hivabil", 14023, 181, 151, 59, 10
+    PUSHBUTTON "A&vansate…", 14028, 158, 170, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -500,11 +501,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
-    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&Schimbă utilizatorul", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Deautentifică", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "A&nulează", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "Deautentificare", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
-    CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "Schimbă utilizatorul", IDC_SWITCH_USER_STATIC, 11, 70, 82, 11
     CTEXT "Deautentifică", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
@@ -725,17 +726,17 @@ BEGIN
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-CAPTION "Problem with Shortcut"
+CAPTION "Problemă cu scurtătura"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
-    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+    LTEXT "Elementul '%s' la care această scurtătură face referire a fost schimbată sau mutată, așa că scurtătura nu va mai funcționa corect.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Cea mai apropiată potrivire, bazată pe nume, tip, mărime și dată:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Vreți să reparați scurtătura pentru a atinge ținta sau doar vreți să o ștergeți?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Repar-o", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Șterge-o", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Anulează", IDCANCEL, 185, 120, 60, 15
 END
 
 STRINGTABLE
@@ -846,8 +847,8 @@ BEGIN
     IDS_FORMAT_COMPLETE "Formatare completă."
 
     /* Warning format system drive dialog strings */
-    IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+    IDS_NO_FORMAT_TITLE "Nu a putut fi formatat volumul"
+    IDS_NO_FORMAT "Nu a putut fi formatat acest volum! Conține fișiere de sistem importante care să facă ReactOS să meargă."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "„Executare fișier” nu a putut fi deschis (eroare internă)"
@@ -872,7 +873,7 @@ BEGIN
     IDS_PRINTHOOD "Imprimante"
     IDS_LOCAL_APPDATA "Preferințe locale\\Date de aplicație"
     IDS_INTERNET_CACHE "Preferințe locale\\Fișiere de Internet temporare"
-    IDS_COOKIES "Cookies"
+    IDS_COOKIES "Cookie-uri"
     IDS_HISTORY "Preferințe locale\\Istoric"
     IDS_PROGRAM_FILES "Fișiere de program"
     IDS_MYPICTURES "Imagini"
@@ -918,7 +919,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Eșec la scoaterea mediului de stocare (Cod de eroare: %lu)."
     IDS_CANTSHOWPROPERTIES "Eșec la inspecția proprietăților (Cod de eroare: %lu)."
     IDS_CANTDISCONNECT "Eșec la deconectare (Cod de eroare: %lu)."
-    IDS_NONE "(None)"
+    IDS_NONE "(Nimic)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dosar"
@@ -929,7 +930,7 @@ BEGIN
     IDS_CUR_FILE "Indicator"
     IDS_DB__FILE "Fișier bază-de-date"
     IDS_DLL_FILE "Bibliotecă aplicație"
-    IDS_DRV_FILE "Modúl-pilot de dispozitiv"
+    IDS_DRV_FILE "Modul-pilot de dispozitiv"
     IDS_EFI_FILE "Executabil interfață firmware extensibilă"
     IDS_EXE_FILE "Executabil"
     IDS_NLS_FILE "Fișier suport de limbă națională"
@@ -955,7 +956,7 @@ BEGIN
     IDS_EDIT_VERB "Editează"
     IDS_FIND_VERB "Caută"
     IDS_PRINT_VERB "Imprimă"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "Deschide Panoul de control aici"
 
     IDS_FILE_FOLDER "%u fișiere, %u dosare"
     IDS_PRINTERS "Imprimante"
@@ -1025,21 +1026,21 @@ BEGIN
     IDS_EDITING_ACTION "Editează acțiune pentru tipul: "
     IDS_NO_ICONS "Fișierul „%s” nu conține pictograme.\n\nAlegeți o pictogramă din listă sau specificați un alt fișier."
     IDS_FILE_NOT_FOUND "Fișierul „%s” nu a fost găsit."
-    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
-    IDS_COPYTOMENU "Copy to &folder..."
-    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
-    IDS_MOVETOMENU "Mo&ve to folder..."
-    IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
-    IDS_MOVEITEMS "Move Items"
-    IDS_MOVEBUTTON "Move"
+    IDS_LINK_INVALID "Elementul '%s' ca această scurtătură face referire la faptul ca a fost schimbat sau mutat, deci această scurtătură nu va mai funcționa în mod corespunzător."
+    IDS_COPYTOMENU "Copiază în &docsarul..."
+    IDS_COPYTOTITLE "Selectați locul unde vreți să copiați '%s'. Apoi, apăsați pe butonul Copiază."
+    IDS_COPYITEMS "Copiază elementele"
+    IDS_COPYBUTTON "Copiază"
+    IDS_MOVETOMENU "Mu&tă în dosarul..."
+    IDS_MOVETOTITLE "Selectați locul în care vreți să mutați '%s'. Apoi, apăsați butonul Mută."
+    IDS_MOVEITEMS "Mută elementele"
+    IDS_MOVEBUTTON "Mută"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "Dosar de sistem"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
-    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_DESC "Vă închide programele și vă încheie sesiunea ReactOS."
+    IDS_SWITCH_USER_DESC "Permite altui utilizator să fie logat, în timp ce programele dumneavoastră rămân deschise.\r\n\r\n(Puteți de asemenea, să schimbați utilizatorii apăsând tasta cu sigla Windows + L.)"
     IDS_LOG_OFF_TITLE "Deautentifică"
-    IDS_SWITCH_USER_TITLE "Switch User"
+    IDS_SWITCH_USER_TITLE "Schimbă utilizatorul"
 END

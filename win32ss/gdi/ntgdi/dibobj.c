@@ -518,7 +518,27 @@ NtGdiSetDIBitsToDeviceInternal(
     }
     _SEH2_END;
 
-    ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
+    DPRINT("StartScan %d ScanLines %d Bits %p bmi %p ColorUse %d\n"
+           "    Height %d Width %d SizeImage %d\n"
+           "    biHeight %d biWidth %d biBitCount %d\n"
+           "    XSrc %d YSrc %d xDext %d yDest %d\n",
+           StartScan, ScanLines, Bits, bmi, ColorUse,
+           Height, Width, bmi->bmiHeader.biSizeImage,
+           bmi->bmiHeader.biHeight, bmi->bmiHeader.biWidth,
+           bmi->bmiHeader.biBitCount,
+           XSrc, YSrc, XDest, YDest);
+
+    if (YDest >= 0)
+    {
+        ScanLines = min(abs(Height), ScanLines);
+        if (YSrc > 0)
+            ScanLines += YSrc;
+    }
+    else
+    {
+        ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
+    }
+
     if (ScanLines == 0)
     {
         DPRINT1("ScanLines == 0\n");
@@ -562,6 +582,10 @@ NtGdiSetDIBitsToDeviceInternal(
 
     SourceSize.cx = bmi->bmiHeader.biWidth;
     SourceSize.cy = ScanLines;
+    if (YDest >= 0 && YSrc > 0)
+    {
+        ScanLines += YSrc;
+    }
 
     //DIBWidth = WIDTH_BYTES_ALIGN32(SourceSize.cx, bmi->bmiHeader.biBitCount);
 

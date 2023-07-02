@@ -71,3 +71,7 @@
 #define IDS_DNSNONAME            201
 #define IDS_DNSFLUSHERROR        202
 #define IDS_DNSFLUSHSUCCESS      203
+#define IDS_DHCPNOTCONNECTED     204
+#define IDS_DHCPNOTENABLED       205
+#define IDS_DHCPNOADAPTER        206
+#define IDS_DHCPRELEASED         207

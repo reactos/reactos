@@ -943,7 +943,8 @@ IntLinkWindow(
 {
     if (Wnd == WndInsertAfter)
     {
-        ERR("IntLinkWindow -- Trying to link window 0x%p to itself!!\n", Wnd);
+        ERR("Trying to link window 0x%p to itself\n", Wnd);
+        ASSERT(WndInsertAfter != Wnd);
         return;
     }
 
@@ -1046,8 +1047,15 @@ VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev)
         }
 
         if (Wnd == WndInsertAfter)
-            ERR("IntLinkHwnd -- Trying to link window 0x%p to itself!!\n", Wnd);
-        IntLinkWindow(Wnd, WndInsertAfter);
+        {
+            ERR("Trying to link window 0x%p to itself\n", Wnd);
+            ASSERT(WndInsertAfter != Wnd);
+            // FIXME: IntUnlinkWindow(Wnd) was already called. Continuing as is seems wrong!
+        }
+        else
+        {
+            IntLinkWindow(Wnd, WndInsertAfter);
+        }
 
         /* Fix the WS_EX_TOPMOST flag */
         if (!(WndInsertAfter->ExStyle & WS_EX_TOPMOST))
