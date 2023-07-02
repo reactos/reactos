@@ -3176,12 +3176,17 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
     while (TRUE);
 
 WaitExit:
+    KeStackAttachProcess(&Process->Pcb, &ApcState);
+
     for (pti = W32Process->ptiList; pti; pti = pti->ptiSibling)
     {
        pti->TIF_flags &= ~TIF_WAITFORINPUTIDLE;
        pti->pClientInfo->dwTIFlags = pti->TIF_flags;
     }
     W32Process->W32PF_flags &= ~W32PF_WAITFORINPUTIDLE;
+
+    KeUnstackDetachProcess(&ApcState);
+
     IntDereferenceProcessInfo(W32Process);
     ObDereferenceObject(Process);
     UserLeave();
