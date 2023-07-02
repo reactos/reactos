@@ -275,7 +275,7 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ShutdownRequest;/* Queued shutdown requests */
 
     LIST_ENTRY PacketQueue;    /* Queued received packets waiting to be processed */
-    
+
     /* Disconnect Timer */
     KTIMER DisconnectTimer;
     KDPC DisconnectDpc;
