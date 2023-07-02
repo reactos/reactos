@@ -192,8 +192,10 @@ void SetFileInfo(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isAFile)
     // update g_szFileName
     if (name && name[0])
     {
-        CStringW strFileName = name; // Be careful in case of name == g_szFileName
-        ::GetFullPathNameW(strFileName, _countof(g_szFileName), g_szFileName, NULL);
+        CStringW strName = name;
+        ::GetFullPathNameW(strName, _countof(g_szFileName), g_szFileName, NULL);
+        // The following code won't work correctly when (name == g_szFileName):
+        //   ::GetFullPathNameW(name, _countof(g_szFileName), g_szFileName, NULL);
     }
     else
     {
