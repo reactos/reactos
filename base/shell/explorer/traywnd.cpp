@@ -1608,7 +1608,7 @@ GetPrimaryScreenRect:
             m_Monitor = m_DraggingMonitor;
             m_Position = m_DraggingPosition;
             g_TaskbarSettings.sr.Position = m_Position;
-            g_TaskbarSettings.Save()
+            g_TaskbarSettings.Save();
             IsDragging = FALSE;
 
             m_TrayRects[m_Position] = rcTray;
