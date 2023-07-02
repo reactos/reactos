@@ -148,11 +148,6 @@ void CMainWindow::saveImage(BOOL overwrite)
     else if (GetSaveFileName(g_szFileName, _countof(g_szFileName)))
     {
         imageModel.SaveImage(g_szFileName);
-
-        CString strTitle;
-        strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
-        SetWindowText(strTitle);
-        g_isAFile = TRUE;
     }
 }
 
@@ -201,7 +196,6 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 
     toolsModel.SetActiveTool(TOOL_RECTSEL);
 
-    imageModel.PushImageForUndo();
     selectionModel.InsertFromHBITMAP(bitmap, 0, 0);
     selectionModel.m_bShow = TRUE;
     imageModel.NotifyImageChanged();
@@ -380,9 +374,10 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
         isBMP = TRUE;
     }
 
-    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(g_isAFile && isBMP));
-    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(g_isAFile && isBMP));
-    EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(g_isAFile && isBMP));
+    UINT uWallpaperEnabled = ENABLED_IF(g_isAFile && isBMP && g_fileSize > 0);
+    ::EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERPLANE,     uWallpaperEnabled);
+    ::EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERCENTERED,  uWallpaperEnabled);
+    ::EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERSTRETCHED, uWallpaperEnabled);
 
     for (INT iItem = 0; iItem < MAX_RECENT_FILES; ++iItem)
         RemoveMenu(hPopupMenu, IDM_FILE1 + iItem, MF_BYCOMMAND);
@@ -612,7 +607,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILENEW:
             if (ConfirmSave())
             {
-                SetBitmapAndInfo(NULL, NULL, 0, FALSE);
+                SetBitmapAndInfo(NULL, NULL, NULL, FALSE);
             }
             break;
         case IDM_FILEOPEN:
@@ -854,7 +849,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {
                 HBITMAP hbm = selectionModel.CopyBitmap();
-                SaveDIBToFile(hbm, szFileName, imageModel.GetDC());
+                if (!SaveDIBToFile(hbm, szFileName, FALSE))
+                    ShowError(IDS_SAVEERROR, szFileName);
                 ::DeleteObject(hbm);
             }
             break;
@@ -866,9 +862,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             {
                 HBITMAP hbmNew = DoLoadImageFile(m_hWnd, szFileName, FALSE);
                 if (hbmNew)
-                {
                     InsertSelectionFromHBITMAP(hbmNew, m_hWnd);
-                }
+                else
+                    ShowError(IDS_LOADERRORTEXT, szFileName);
             }
             break;
         }

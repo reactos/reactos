@@ -23,13 +23,14 @@ int GetDIBWidth(HBITMAP hbm);
 
 int GetDIBHeight(HBITMAP hbm);
 
-BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, HDC hDC);
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPCTSTR FileName, BOOL fIsMainFile);
 
 HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile);
 
-void ShowFileLoadError(LPCTSTR name);
+void ShowError(INT stringID, ...);
+void SetFileInfo(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isAFile);
 
-HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile);
+HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile);
 
 HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight, BOOL bMono);
 
