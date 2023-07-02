@@ -925,6 +925,7 @@ BEGIN
     IDS_NONE "(brak)"
 
     /* Friendly File Type Names */
+    IDS_FILE "Plik"
     IDS_DIRECTORY "Folder"
     IDS_BAT_FILE "Plik wsadowy ReactOS"
     IDS_CMD_FILE "Skrypt konsoli ReactOS"

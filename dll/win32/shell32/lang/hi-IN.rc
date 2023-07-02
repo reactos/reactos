@@ -914,6 +914,7 @@ BEGIN
     IDS_NONE "(None)"
 
     /* Friendly File Type Names */
+    IDS_FILE "फ़ाइल"
     IDS_DIRECTORY "फोल्डर"
     IDS_BAT_FILE "रिऐक्ट ओएस बैच फ़ाइल"
     IDS_CMD_FILE "रिऐक्ट ओएस कमांड स्क्रिप्ट"

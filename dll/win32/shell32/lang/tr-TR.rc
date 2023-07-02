@@ -921,6 +921,7 @@ BEGIN
     IDS_NONE "(Hiçbir Şey)"
 
     /* Friendly File Type Names */
+    IDS_FILE "Dosyası"
     IDS_DIRECTORY "Dizin"
     IDS_BAT_FILE "ReactOS Toplu İş Dosyası"
     IDS_CMD_FILE "ReactOS Komut Betiği"

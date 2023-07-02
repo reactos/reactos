@@ -920,6 +920,7 @@ BEGIN
     IDS_NONE "(None)"
 
     /* Friendly File Type Names */
+    IDS_FILE "File"
     IDS_DIRECTORY "Папка"
     IDS_BAT_FILE "Пакетен файл на РеактОС"
     IDS_CMD_FILE "Писание за управление на РеактОС"

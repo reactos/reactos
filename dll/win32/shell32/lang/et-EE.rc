@@ -926,6 +926,7 @@ BEGIN
     IDS_NONE "(None)"
 
     /* Friendly File Type Names */
+    IDS_FILE "Fail"
     IDS_DIRECTORY "Kaust"
     IDS_BAT_FILE "ReactOS Batch Fail"
     IDS_CMD_FILE "ReactOS Command Skript"

@@ -153,6 +153,7 @@
 #define IDS_NONE                  161
 
 /* Friendly File Type Names */
+#define IDS_FILE                  353
 #define IDS_DIRECTORY             200
 #define IDS_BAT_FILE              201
 #define IDS_CMD_FILE              202

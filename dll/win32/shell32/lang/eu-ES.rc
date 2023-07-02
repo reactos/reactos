@@ -924,6 +924,7 @@ BEGIN
     IDS_NONE "(Ezer)"
 
     /* Friendly File Type Names */
+    IDS_FILE "fitxategi"
     IDS_DIRECTORY "Direktorioa"
     IDS_BAT_FILE "ReactOS lote fitxaetgiak"
     IDS_CMD_FILE "ReactOS Script Komanduak"

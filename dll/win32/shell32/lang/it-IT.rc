@@ -919,6 +919,7 @@ BEGIN
     IDS_NONE "(None)"
 
     /* Friendly File Type Names */
+    IDS_FILE "File"
     IDS_DIRECTORY "Cartella"
     IDS_BAT_FILE "File Batch ReactOS"
     IDS_CMD_FILE "Script di comandi ReactOS"

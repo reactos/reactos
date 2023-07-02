@@ -916,6 +916,7 @@ BEGIN
     IDS_NONE "(Tidak ada)"
 
     /* Friendly File Type Names */
+    IDS_FILE "Berkas"
     IDS_DIRECTORY "Folder"
     IDS_BAT_FILE "Berkas Batch ReactOS"
     IDS_CMD_FILE "Naskah Perintah ReactOS"

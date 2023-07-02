@@ -918,6 +918,7 @@ BEGIN
     IDS_NONE "(Nincs)"
 
     /* Friendly File Type Names */
+    IDS_FILE "fájl"
     IDS_DIRECTORY "Mappa"
     IDS_BAT_FILE "ReactOS kötegfájl"
     IDS_CMD_FILE "ReactOS parancsfájl"

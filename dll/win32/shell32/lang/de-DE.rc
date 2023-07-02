@@ -920,6 +920,7 @@ BEGIN
     IDS_NONE "(Leer)"
 
     /* Friendly File Type Names */
+    IDS_FILE "Datei"
     IDS_DIRECTORY "Dateiordner"
     IDS_BAT_FILE "ReactOS-Stapelverarbeitungsdatei"
     IDS_CMD_FILE "ReactOS-Befehlsskript"

@@ -916,6 +916,7 @@ BEGIN
     IDS_NONE "(なし)"
 
     /* Friendly File Type Names */
+    IDS_FILE "ファイル"
     IDS_DIRECTORY "フォルダ"
     IDS_BAT_FILE "ReactOS バッチ ファイル"
     IDS_CMD_FILE "ReactOS コマンド スクリプト"

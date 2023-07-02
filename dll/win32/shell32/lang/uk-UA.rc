@@ -919,6 +919,7 @@ BEGIN
     IDS_NONE "(None)"
 
     /* Friendly File Type Names */
+    IDS_FILE "Файл"
     IDS_DIRECTORY "Папка"
     IDS_BAT_FILE "Пакетний файл ReactOS"
     IDS_CMD_FILE "Командний скрипт ReactOS"

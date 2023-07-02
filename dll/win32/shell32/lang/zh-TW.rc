@@ -928,6 +928,7 @@ BEGIN
     IDS_NONE "(None)"
 
     /* Friendly File Type Names */
+    IDS_FILE "檔案"
     IDS_DIRECTORY "資料夾"
     IDS_BAT_FILE "ReactOS 批次文件"
     IDS_CMD_FILE "ReactOS 命令指令碼"

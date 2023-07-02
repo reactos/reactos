@@ -919,6 +919,7 @@ BEGIN
     IDS_NONE "(None)"
 
     /* Friendly File Type Names */
+    IDS_FILE "File"
     IDS_DIRECTORY "Priečinok"
     IDS_BAT_FILE "Dávkový súbor systému ReactOS"
     IDS_CMD_FILE "Príkazový skript systému ReactOS"

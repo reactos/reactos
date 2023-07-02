@@ -921,6 +921,7 @@ BEGIN
     IDS_NONE "(None)"
 
     /* Friendly File Type Names */
+    IDS_FILE "Fișier"
     IDS_DIRECTORY "Dosar"
     IDS_BAT_FILE "Fișier de comenzi ReactOS"
     IDS_CMD_FILE "Script de comenzi ReactOS"

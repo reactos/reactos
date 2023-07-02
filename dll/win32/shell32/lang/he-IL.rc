@@ -921,6 +921,7 @@ BEGIN
     IDS_NONE "(None)"
 
     /* Friendly File Type Names */
+    IDS_FILE "קובץ"
     IDS_DIRECTORY "תיקיה"
     IDS_BAT_FILE "קובת אצווה של ReactOS"
     IDS_CMD_FILE "תסריט פקודות של ReactOS"
