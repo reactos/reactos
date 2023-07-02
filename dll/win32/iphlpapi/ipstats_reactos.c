@@ -74,15 +74,12 @@ NTSTATUS getNthIpEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent ) {
 
     for( i = 0; i < numEntities; i++ ) {
         if( isIpEntity( tcpFile, &entitySet[i] ) ) {
-            TRACE("Entity %d is an IP Entity\n", i);
             if( numRoutes == index ) break;
             else numRoutes++;
         }
     }
 
     if( numRoutes == index && i < numEntities ) {
-        TRACE("Index %lu is entity #%d - %04x:%08x\n", index, i,
-              entitySet[i].tei_entity, entitySet[i].tei_instance);
         memcpy( ent, &entitySet[i], sizeof(*ent) );
         tdiFreeThingSet( entitySet );
         return STATUS_SUCCESS;
@@ -100,48 +97,19 @@ NTSTATUS tdiGetMibForIpEntity
 
     memset( entry, 0, sizeof( *entry ) );
 
-    TRACE("TdiGetMibForIpEntity(tcpFile 0x%p, entityId 0x%x)\n",
-          tcpFile, ent->tei_instance);
-
     req.ID.toi_class                = INFO_CLASS_PROTOCOL;
     req.ID.toi_type                 = INFO_TYPE_PROVIDER;
     req.ID.toi_id                   = IP_MIB_STATS_ID;
     req.ID.toi_entity               = *ent;
 
-    status = DeviceIoControl( tcpFile,
-                              IOCTL_TCP_QUERY_INFORMATION_EX,
-                              &req,
-                              sizeof(req),
-                              entry,
-                              sizeof(*entry),
-                              &returnSize,
-                              NULL );
-
-    TRACE("TdiGetMibForIpEntity() => status = 0x%08lx, entry = {\n"
-           "  ipsi_forwarding ............ %lu\n"
-           "  ipsi_defaultttl ............ %lu\n"
-           "  ipsi_inreceives ............ %lu\n"
-           "  ipsi_indelivers ............ %lu\n"
-           "  ipsi_outrequests ........... %lu\n"
-           "  ipsi_routingdiscards ....... %lu\n"
-           "  ipsi_outdiscards ........... %lu\n"
-           "  ipsi_outnoroutes ........... %lu\n"
-           "  ipsi_numif ................. %lu\n"
-           "  ipsi_numaddr ............... %lu\n"
-           "  ipsi_numroutes ............. %lu\n"
-           "}\n",
-          status,
-          entry->ipsi_forwarding,
-          entry->ipsi_defaultttl,
-          entry->ipsi_inreceives,
-          entry->ipsi_indelivers,
-          entry->ipsi_outrequests,
-          entry->ipsi_routingdiscards,
-          entry->ipsi_outdiscards,
-          entry->ipsi_outnoroutes,
-          entry->ipsi_numif,
-          entry->ipsi_numaddr,
-          entry->ipsi_numroutes);
+    status = DeviceIoControl(tcpFile,
+                             IOCTL_TCP_QUERY_INFORMATION_EX,
+                             &req,
+                             sizeof(req),
+                             entry,
+                             sizeof(*entry),
+                             &returnSize,
+                             NULL);
 
     return status;
 }
@@ -150,19 +118,16 @@ NTSTATUS tdiGetRoutesForIpEntity
 ( HANDLE tcpFile, TDIEntityID *ent, IPRouteEntry **routes, PDWORD numRoutes ) {
     NTSTATUS status = STATUS_SUCCESS;
 
-    TRACE("TdiGetRoutesForIpEntity(tcpFile 0x%p, entityId 0x%x)\n",
-          tcpFile, ent->tei_instance);
-
-    status = tdiGetSetOfThings( tcpFile,
-                                INFO_CLASS_PROTOCOL,
-                                INFO_TYPE_PROVIDER,
-                                IP_MIB_ARPTABLE_ENTRY_ID,
-                                CL_NL_ENTITY,
-				ent->tei_instance,
-                                0,
-                                sizeof(IPRouteEntry),
-                                (PVOID *)routes,
-                                numRoutes);
+    status = tdiGetSetOfThings(tcpFile,
+                               INFO_CLASS_PROTOCOL,
+                               INFO_TYPE_PROVIDER,
+                               IP_MIB_ARPTABLE_ENTRY_ID,
+                               CL_NL_ENTITY,
+                               ent->tei_instance,
+                               0,
+                               sizeof(IPRouteEntry),
+                               (PVOID *)routes,
+                               numRoutes);
 
     return status;
 }
@@ -171,19 +136,16 @@ NTSTATUS tdiGetIpAddrsForIpEntity
 ( HANDLE tcpFile, TDIEntityID *ent, IPAddrEntry **addrs, PDWORD numAddrs ) {
     NTSTATUS status;
 
-    TRACE("TdiGetIpAddrsForIpEntity(tcpFile 0x%p, entityId 0x%x)\n",
-          tcpFile, ent->tei_instance);
-
-    status = tdiGetSetOfThings( tcpFile,
-                                INFO_CLASS_PROTOCOL,
-                                INFO_TYPE_PROVIDER,
-                                IP_MIB_ADDRTABLE_ENTRY_ID,
-                                CL_NL_ENTITY,
-				ent->tei_instance,
-                                0,
-                                sizeof(IPAddrEntry),
-                                (PVOID *)addrs,
-                                numAddrs );
+    status = tdiGetSetOfThings(tcpFile,
+                               INFO_CLASS_PROTOCOL,
+                               INFO_TYPE_PROVIDER,
+                               IP_MIB_ADDRTABLE_ENTRY_ID,
+                               CL_NL_ENTITY,
+                               ent->tei_instance,
+                               0,
+                               sizeof(IPAddrEntry),
+                               (PVOID *)addrs,
+                               numAddrs);
 
     return status;
 }
@@ -351,11 +313,6 @@ DWORD getUDPStats(MIB_UDPSTATS *stats, DWORD family)
   return NO_ERROR;
 }
 
-static DWORD getNumWithOneHeader(const char *filename)
-{
-    return 0;
-}
-
 DWORD getNumRoutes(void)
 {
     DWORD numEntities, numRoutes = 0;
@@ -364,28 +321,22 @@ DWORD getNumRoutes(void)
     int i;
     NTSTATUS status;
 
-    TRACE("called.\n");
-
-    status = openTcpFile( &tcpFile, FILE_READ_DATA );
-    if( !NT_SUCCESS(status) ) {
-        ERR("openTcpFile returned 0x%08lx\n", status);
+    status = openTcpFile(&tcpFile, FILE_READ_DATA);
+    if (!NT_SUCCESS(status))
         return 0;
-    }
 
-    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
-    if( !NT_SUCCESS(status) ) {
-        ERR("tdiGetEntityIDSet returned 0x%08lx\n", status);
+    status = tdiGetEntityIDSet(tcpFile, &entitySet, &numEntities);
+    if (!NT_SUCCESS(status)) {
         closeTcpFile( tcpFile );
         return 0;
     }
 
-    for( i = 0; i < numEntities; i++ ) {
-        if( isIpEntity( tcpFile, &entitySet[i] ) ) {
+    for (i = 0; i < numEntities; i++) {
+        if (isIpEntity(tcpFile, &entitySet[i])) {
             IPSNMPInfo isnmp;
-            memset( &isnmp, 0, sizeof( isnmp ) );
-            status = tdiGetMibForIpEntity( tcpFile, &entitySet[i], &isnmp );
-            if( !NT_SUCCESS(status) ) {
-                ERR("tdiGetMibForIpEntity returned 0x%08lx, for i = %d", status, i);
+            memset(&isnmp, 0, sizeof(isnmp));
+            status = tdiGetMibForIpEntity(tcpFile, &entitySet[i], &isnmp);
+            if (!NT_SUCCESS(status)) {
                 numRoutes = 0;
                 break;
             }
@@ -393,25 +344,10 @@ DWORD getNumRoutes(void)
         }
     }
 
-    TRACE("numRoutes = %lu\n", numRoutes);
-
-    tdiFreeThingSet( entitySet );
-    closeTcpFile( tcpFile );
+    tdiFreeThingSet(entitySet);
+    closeTcpFile(tcpFile);
 
     return numRoutes;
-}
-
-VOID HexDump( PCHAR Data, DWORD Len ) {
-    int i;
-
-    for( i = 0; i < Len; i++ ) {
-        if( !(i & 0xf) ) {
-            if( i ) fprintf(stderr,"\n");
-            fprintf(stderr,"%08x:", i);
-        }
-        fprintf( stderr, " %02x", Data[i] & 0xff );
-    }
-    fprintf(stderr,"\n");
 }
 
 RouteTable *getRouteTable(void)
@@ -420,17 +356,15 @@ RouteTable *getRouteTable(void)
     DWORD numRoutes = getNumRoutes(), routesAdded = 0;
     TDIEntityID ent;
     HANDLE tcpFile;
-    NTSTATUS status = openTcpFile( &tcpFile, FILE_READ_DATA );
+    NTSTATUS status = openTcpFile(&tcpFile, FILE_READ_DATA);
     int i;
 
-    if( !NT_SUCCESS(status) )
+    if (!NT_SUCCESS(status))
         return 0;
 
-    TRACE("GETTING ROUTE TABLE\n");
-
-    out_route_table = HeapAlloc( GetProcessHeap(), 0,
-                                 sizeof(RouteTable) +
-                                 (sizeof(RouteEntry) * (numRoutes - 1)) );
+    out_route_table = HeapAlloc(GetProcessHeap(), 0,
+                                sizeof(RouteTable) +
+                                (sizeof(RouteEntry) * (numRoutes - 1)));
     if (!out_route_table) {
         closeTcpFile(tcpFile);
         return NULL;
@@ -438,28 +372,20 @@ RouteTable *getRouteTable(void)
 
     out_route_table->numRoutes = numRoutes;
 
-    for( i = 0; routesAdded < out_route_table->numRoutes; i++ ) {
+    for (i = 0; routesAdded < out_route_table->numRoutes; i++) {
         int j;
         IPRouteEntry *route_set;
 
-        getNthIpEntity( tcpFile, i, &ent );
+        getNthIpEntity(tcpFile, i, &ent);
 
-        tdiGetRoutesForIpEntity( tcpFile, &ent, &route_set, &numRoutes );
-        
-        if( !route_set ) {
-            closeTcpFile( tcpFile );
-            HeapFree( GetProcessHeap(), 0, out_route_table );
+        tdiGetRoutesForIpEntity(tcpFile, &ent, &route_set, &numRoutes);
+        if (!route_set) {
+            closeTcpFile(tcpFile);
+            HeapFree(GetProcessHeap(), 0, out_route_table);
             return 0;
         }
 
-        TRACE("%lu routes in instance %d\n", numRoutes, i);
-#if 0
-        HexDump( route_set,
-                 sizeof( IPRouteEntry ) *
-                 snmpInfo.ipsi_numroutes );
-#endif
-
-        for( j = 0; j < numRoutes; j++ ) {
+        for (j = 0; j < numRoutes; j++) {
             int routeNum = j + routesAdded;
             out_route_table->routes[routeNum].dest =
                 route_set[j].ire_dest;
@@ -473,15 +399,12 @@ RouteTable *getRouteTable(void)
                 route_set[j].ire_metric1;
         }
 
-        if( route_set ) tdiFreeThingSet( route_set );
+        if (route_set) tdiFreeThingSet(route_set);
 
         routesAdded += numRoutes;
     }
 
-    closeTcpFile( tcpFile );
-
-    TRACE("status = 0x%08lx, out_route_table = 0x%p\n", status, out_route_table);
-
+    closeTcpFile(tcpFile);
     return out_route_table;
 }
 
@@ -495,42 +418,36 @@ DWORD getNumArpEntries(void)
     PMIB_IPNETROW IpArpTable = NULL;
     DWORD returnSize;
 
-    TRACE("called.\n");
-
-    status = openTcpFile( &tcpFile, FILE_READ_DATA );
-    if( !NT_SUCCESS(status) ) {
-        ERR("openTcpFile returned 0x%08lx\n", status);
+    status = openTcpFile(&tcpFile, FILE_READ_DATA);
+    if (!NT_SUCCESS(status))
         return 0;
+
+    status = tdiGetEntityIDSet(tcpFile, &entitySet, &numEntities);
+
+    for (i = 0; i < numEntities; i++) {
+        if (isInterface(&entitySet[i]) && hasArp(tcpFile, &entitySet[i]))
+        {
+            status = tdiGetSetOfThings(tcpFile,
+                INFO_CLASS_PROTOCOL,
+                INFO_TYPE_PROVIDER,
+                IP_MIB_ARPTABLE_ENTRY_ID,
+                AT_ENTITY,
+                entitySet[i].tei_instance,
+                0,
+                sizeof(MIB_IPNETROW),
+                (PVOID *)&IpArpTable,
+                &returnSize);
+
+            if (status == STATUS_SUCCESS) totalNumber += returnSize;
+            if (IpArpTable) {
+                tdiFreeThingSet(IpArpTable);
+                IpArpTable = NULL;
+            }
+        }
     }
 
-    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
-
-    for( i = 0; i < numEntities; i++ ) {
-        if( isInterface( &entitySet[i] ) &&
-	    hasArp( tcpFile, &entitySet[i] ) ) {
-
-	    status = tdiGetSetOfThings( tcpFile,
-					INFO_CLASS_PROTOCOL,
-					INFO_TYPE_PROVIDER,
-					IP_MIB_ARPTABLE_ENTRY_ID,
-					AT_ENTITY,
-					entitySet[i].tei_instance,
-					0,
-					sizeof(MIB_IPNETROW),
-					(PVOID *)&IpArpTable,
-					&returnSize );
-
-	    if( status == STATUS_SUCCESS ) totalNumber += returnSize;
-		if( IpArpTable ) {
-			tdiFreeThingSet( IpArpTable );
-			IpArpTable = NULL;
-		}
-	}
-    }
-
-    closeTcpFile( tcpFile );
-    if( IpArpTable ) tdiFreeThingSet( IpArpTable );
-    if( entitySet ) tdiFreeThingSet( entitySet );
+    closeTcpFile(tcpFile);
+    if (entitySet) tdiFreeThingSet(entitySet);
     return totalNumber;
 }
 
@@ -544,115 +461,256 @@ PMIB_IPNETTABLE getArpTable(void)
     PMIB_IPNETTABLE IpArpTable = NULL;
     PMIB_IPNETROW AdapterArpTable = NULL;
 
-    TRACE("called.\n");
-
     totalNumber = getNumArpEntries();
 
-    status = openTcpFile( &tcpFile, FILE_READ_DATA );
-    if( !NT_SUCCESS(status) ) {
-        ERR("openTcpFile returned 0x%08lx\n", status);
+    status = openTcpFile(&tcpFile, FILE_READ_DATA);
+    if (!NT_SUCCESS(status))
         return 0;
-    }
 
-    IpArpTable = HeapAlloc
-	( GetProcessHeap(), 0,
-	  sizeof(DWORD) + (sizeof(MIB_IPNETROW) * totalNumber) );
+    IpArpTable = HeapAlloc(GetProcessHeap(), 0,
+        sizeof(DWORD) + (sizeof(MIB_IPNETROW) * totalNumber));
     if (!IpArpTable) {
         closeTcpFile(tcpFile);
         return NULL;
     }
 
-    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
+    status = tdiGetEntityIDSet(tcpFile, &entitySet, &numEntities);
 
-    for( i = 0; i < numEntities; i++ ) {
-        if( isInterface( &entitySet[i] ) &&
-	    hasArp( tcpFile, &entitySet[i] ) ) {
+    for (i = 0; i < numEntities; i++) {
+        if (isInterface(&entitySet[i]) && hasArp(tcpFile, &entitySet[i]))
+        {
+            status = tdiGetSetOfThings(tcpFile,
+                INFO_CLASS_PROTOCOL,
+                INFO_TYPE_PROVIDER,
+                IP_MIB_ARPTABLE_ENTRY_ID,
+                AT_ENTITY,
+                entitySet[i].tei_instance,
+                0,
+                sizeof(MIB_IPNETROW),
+                (PVOID *)&AdapterArpTable,
+                &returnSize);
 
-	    status = tdiGetSetOfThings( tcpFile,
-					INFO_CLASS_PROTOCOL,
-					INFO_TYPE_PROVIDER,
-					IP_MIB_ARPTABLE_ENTRY_ID,
-					AT_ENTITY,
-					entitySet[i].tei_instance,
-					0,
-					sizeof(MIB_IPNETROW),
-					(PVOID *)&AdapterArpTable,
-					&returnSize );
-
-            if( status == STATUS_SUCCESS ) {
-                for( TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++ )
+            if (status == STATUS_SUCCESS) {
+                for (TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++)
                     IpArpTable->table[CurrIdx] = AdapterArpTable[TmpIdx];
-                tdiFreeThingSet( AdapterArpTable );
+                tdiFreeThingSet(AdapterArpTable);
             }
         }
     }
 
-    closeTcpFile( tcpFile );
-
-    tdiFreeThingSet( entitySet );
+    closeTcpFile(tcpFile);
+    tdiFreeThingSet(entitySet);
     IpArpTable->dwNumEntries = CurrIdx;
-
     return IpArpTable;
 }
 
+struct _TABLE_CALL
+{
+    DWORD TOIID;
+    SIZE_T UdpSize;
+    SIZE_T TcpSize;
+    SIZE_T UdpOffset;
+    SIZE_T TcpOffset;
+} UdpTcpTableCall[] = {
+    {IP_MIB_ARPTABLE_ENTRY_ID, sizeof(MIB_UDPROW), sizeof(MIB_TCPROW), FIELD_OFFSET(MIB_UDPTABLE, table), FIELD_OFFSET(MIB_TCPTABLE, table)},
+    {IP_MIB_ADDRTABLE_ENTRY_ID, sizeof(MIB_UDPROW_OWNER_PID), sizeof(MIB_TCPROW_OWNER_PID), FIELD_OFFSET(MIB_UDPTABLE_OWNER_PID, table), FIELD_OFFSET(MIB_TCPTABLE_OWNER_PID, table)},
+    {IP_SPECIFIC_MODULE_ENTRY_ID, sizeof(MIB_UDPROW_OWNER_MODULE), sizeof(MIB_TCPROW_OWNER_MODULE), FIELD_OFFSET(MIB_UDPTABLE_OWNER_MODULE, table), FIELD_OFFSET(MIB_TCPTABLE_OWNER_MODULE, table)},
+};
+
+#define Add2Ptr(PTR, INC) (PVOID)((ULONG_PTR)(PTR) + (INC))
+
 DWORD getNumUdpEntries(void)
 {
-  return getNumWithOneHeader("/proc/net/udp");
+    DWORD numEntities;
+    TDIEntityID *entitySet = NULL;
+    HANDLE tcpFile;
+    int i, totalNumber = 0;
+    NTSTATUS status;
+    PMIB_UDPROW IpUdpTable = NULL;
+    DWORD returnSize;
+
+    status = openTcpFile(&tcpFile, FILE_READ_DATA);
+    if (!NT_SUCCESS(status))
+        return 0;
+
+    status = tdiGetEntityIDSet(tcpFile, &entitySet, &numEntities);
+
+    for (i = 0; i < numEntities; i++) {
+        if (entitySet[i].tei_entity == CL_TL_ENTITY && hasArp(tcpFile, &entitySet[i]))
+        {
+            status = tdiGetSetOfThings(tcpFile,
+                INFO_CLASS_PROTOCOL,
+                INFO_TYPE_PROVIDER,
+                IP_MIB_ARPTABLE_ENTRY_ID,
+                CL_TL_ENTITY,
+                entitySet[i].tei_instance,
+                0,
+                sizeof(MIB_UDPROW),
+                (PVOID *)&IpUdpTable,
+                &returnSize);
+
+            if (status == STATUS_SUCCESS) totalNumber += returnSize;
+            if (IpUdpTable) {
+                tdiFreeThingSet(IpUdpTable);
+                IpUdpTable = NULL;
+            }
+        }
+    }
+
+    closeTcpFile(tcpFile);
+    if (entitySet) tdiFreeThingSet(entitySet);
+    return totalNumber;
 }
 
-PMIB_UDPTABLE getUdpTable(void)
+PVOID getUdpTable(CLASS_TABLE Class)
 {
-  DWORD numEntries = getNumUdpEntries();
-  PMIB_UDPTABLE ret;
+    DWORD numEntities, returnSize;
+    TDIEntityID *entitySet;
+    HANDLE tcpFile;
+    int i, totalNumber, TmpIdx, CurrIdx = 0;
+    NTSTATUS status;
+    PMIB_UDPTABLE IpUdpTable = NULL;
+    PVOID AdapterUdpTable = NULL;
 
-  ret = (PMIB_UDPTABLE)calloc(1, sizeof(MIB_UDPTABLE) +
-   (numEntries - 1) * sizeof(MIB_UDPROW));
-  if (ret) {
-    FILE *fp;
+    totalNumber = getNumUdpEntries();
 
-    /* get from /proc/net/udp, no error if can't */
-    fp = fopen("/proc/net/udp", "r");
-    if (fp) {
-      char buf[512] = { 0 }, *ptr;
+    status = openTcpFile(&tcpFile, FILE_READ_DATA);
+    if (!NT_SUCCESS(status))
+        return 0;
 
-      /* skip header line */
-      ptr = fgets(buf, sizeof(buf), fp);
-      while (ptr && ret->dwNumEntries < numEntries) {
-        ptr = fgets(buf, sizeof(buf), fp);
-        if (ptr) {
-          char *endPtr;
-
-          if (ptr && *ptr) {
-            strtoul(ptr, &endPtr, 16); /* skip */
-            ptr = endPtr;
-          }
-          if (ptr && *ptr) {
-            ptr++;
-            ret->table[ret->dwNumEntries].dwLocalAddr = strtoul(ptr, &endPtr,
-             16);
-            ptr = endPtr;
-          }
-          if (ptr && *ptr) {
-            ptr++;
-            ret->table[ret->dwNumEntries].dwLocalPort = strtoul(ptr, &endPtr,
-             16);
-            ptr = endPtr;
-          }
-          ret->dwNumEntries++;
-        }
-      }
-      fclose(fp);
+    IpUdpTable = HeapAlloc(GetProcessHeap(), 0,
+        UdpTcpTableCall[Class].UdpOffset + (UdpTcpTableCall[Class].UdpSize * totalNumber));
+    if (!IpUdpTable) {
+        closeTcpFile(tcpFile);
+        return NULL;
     }
-  }
-  return ret;
+
+    status = tdiGetEntityIDSet(tcpFile, &entitySet, &numEntities);
+
+    for (i = 0; i < numEntities; i++) {
+        if (entitySet[i].tei_entity == CL_TL_ENTITY && hasArp(tcpFile, &entitySet[i]))
+        {
+            status = tdiGetSetOfThings(tcpFile,
+                INFO_CLASS_PROTOCOL,
+                INFO_TYPE_PROVIDER,
+                UdpTcpTableCall[Class].TOIID,
+                CL_TL_ENTITY,
+                entitySet[i].tei_instance,
+                0,
+                UdpTcpTableCall[Class].UdpSize,
+                &AdapterUdpTable,
+                &returnSize);
+
+            if (status == STATUS_SUCCESS) {
+                for (TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++)
+                    CopyMemory(Add2Ptr(IpUdpTable, UdpTcpTableCall[Class].UdpOffset + UdpTcpTableCall[Class].UdpSize * CurrIdx),
+                               Add2Ptr(AdapterUdpTable, UdpTcpTableCall[Class].UdpSize * TmpIdx),
+                               UdpTcpTableCall[Class].UdpSize);
+                tdiFreeThingSet(AdapterUdpTable);
+            }
+        }
+    }
+
+    closeTcpFile(tcpFile);
+    tdiFreeThingSet(entitySet);
+    IpUdpTable->dwNumEntries = CurrIdx;
+    return IpUdpTable;
 }
 
 DWORD getNumTcpEntries(void)
 {
-  return getNumWithOneHeader("/proc/net/tcp");
+    DWORD numEntities;
+    TDIEntityID *entitySet = NULL;
+    HANDLE tcpFile;
+    int i, totalNumber = 0;
+    NTSTATUS status;
+    PMIB_TCPROW IpTcpTable = NULL;
+    DWORD returnSize;
+
+    status = openTcpFile(&tcpFile, FILE_READ_DATA);
+    if (!NT_SUCCESS(status))
+        return 0;
+
+    status = tdiGetEntityIDSet(tcpFile, &entitySet, &numEntities);
+
+    for (i = 0; i < numEntities; i++) {
+        if (entitySet[i].tei_entity == CO_TL_ENTITY && hasArp(tcpFile, &entitySet[i]))
+        {
+            status = tdiGetSetOfThings(tcpFile,
+                INFO_CLASS_PROTOCOL,
+                INFO_TYPE_PROVIDER,
+                IP_MIB_ARPTABLE_ENTRY_ID,
+                CO_TL_ENTITY,
+                entitySet[i].tei_instance,
+                0,
+                sizeof(MIB_TCPROW),
+                (PVOID *)&IpTcpTable,
+                &returnSize);
+
+            if (status == STATUS_SUCCESS) totalNumber += returnSize;
+            if (IpTcpTable) {
+                tdiFreeThingSet(IpTcpTable);
+                IpTcpTable = NULL;
+            }
+        }
+    }
+
+    closeTcpFile(tcpFile);
+    if (entitySet) tdiFreeThingSet(entitySet);
+    return totalNumber;
 }
 
-PMIB_TCPTABLE getTcpTable(void)
+PVOID getTcpTable(CLASS_TABLE Class)
 {
-    return 0;
+    DWORD numEntities, returnSize;
+    TDIEntityID *entitySet;
+    HANDLE tcpFile;
+    int i, totalNumber, TmpIdx, CurrIdx = 0;
+    NTSTATUS status;
+    PMIB_TCPTABLE IpTcpTable = NULL;
+    PVOID AdapterTcpTable = NULL;
+
+    totalNumber = getNumTcpEntries();
+
+    status = openTcpFile(&tcpFile, FILE_READ_DATA);
+    if (!NT_SUCCESS(status))
+        return 0;
+
+    IpTcpTable = HeapAlloc(GetProcessHeap(), 0,
+        UdpTcpTableCall[Class].TcpOffset + (UdpTcpTableCall[Class].TcpSize * totalNumber));
+    if (!IpTcpTable) {
+        closeTcpFile(tcpFile);
+        return NULL;
+    }
+
+    status = tdiGetEntityIDSet(tcpFile, &entitySet, &numEntities);
+
+    for (i = 0; i < numEntities; i++) {
+        if (entitySet[i].tei_entity == CO_TL_ENTITY && hasArp(tcpFile, &entitySet[i]))
+        {
+            status = tdiGetSetOfThings(tcpFile,
+                INFO_CLASS_PROTOCOL,
+                INFO_TYPE_PROVIDER,
+                UdpTcpTableCall[Class].TOIID,
+                CO_TL_ENTITY,
+                entitySet[i].tei_instance,
+                0,
+                UdpTcpTableCall[Class].TcpSize,
+                &AdapterTcpTable,
+                &returnSize);
+
+            if (status == STATUS_SUCCESS) {
+                for (TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++)
+                    CopyMemory(Add2Ptr(IpTcpTable, UdpTcpTableCall[Class].TcpOffset + UdpTcpTableCall[Class].TcpSize * CurrIdx),
+                               Add2Ptr(AdapterTcpTable, UdpTcpTableCall[Class].TcpSize * TmpIdx),
+                               UdpTcpTableCall[Class].TcpSize);
+                tdiFreeThingSet(AdapterTcpTable);
+            }
+        }
+    }
+
+    closeTcpFile(tcpFile);
+    tdiFreeThingSet(entitySet);
+    IpTcpTable->dwNumEntries = CurrIdx;
+    return IpTcpTable;
 }

@@ -58,8 +58,6 @@ TDI_STATUS SetAddressFileInfo(TDIObjectID *ID,
          return TDI_SUCCESS;
 
       default:
-         DbgPrint("Unimplemented option %x\n", ID->toi_id);
-
          return TDI_INVALID_REQUEST;
     }
 }
