@@ -846,6 +846,7 @@ public:
             if (SHRestricted(REST_CLASSICSHELL) == 0)
             {
                 Lock(!g_TaskbarSettings.bLock);
+                g_TaskbarSettings.Save();
             }
             break;
 
