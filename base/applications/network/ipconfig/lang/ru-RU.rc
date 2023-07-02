@@ -84,12 +84,12 @@ STRINGTABLE
 BEGIN
     IDS_DNSNORECORD         "\tНет записей типа %ls\n\n"
     IDS_DNSNONAME           "\tИмя не существует.\n\n"
-    IDS_DNSFLUSHERROR       "Не удается очистить кэш распознавателя DNS: "
+    IDS_DNSFLUSHERROR       "Не удаётся очистить кэш распознавателя DNS: "
     IDS_DNSFLUSHSUCCESS     "Успешно сброшен кэш распознавателя DNS.\n"
-    IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
-    IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
-    IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
-    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
+    IDS_DHCPNOTCONNECTED    "Операции не могут  быть выполнены на ""%ls"", до тех пор, пока сеть отключена.\n"
+    IDS_DHCPNOTENABLED      "Адаптер ""%ls"" не доступен для DHCP.\n"
+    IDS_DHCPNOADAPTER       "Операция завершена с ошибкой, поскольку ни один адаптер\nне находился в состоянии, допустимом для её выполнения.\n"
+    IDS_DHCPRELEASED        "IP-адрес для адаптера ""%ls"" уже освобождён.\n"
 END
 
 STRINGTABLE
