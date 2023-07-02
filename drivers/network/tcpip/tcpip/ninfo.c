@@ -23,9 +23,6 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF, PNDIS_BUFFER Buffer, PUI
     PIPROUTE_ENTRY RouteEntries, RtCurrent;
     UINT i;
 
-    TI_DbgPrint(DEBUG_INFO, ("Called, routes = %d\n",
-			    RtCount));
-    
     if (RtCount == 0)
         return InfoCopyOut(NULL, 0, NULL, BufferSize);
 
@@ -47,7 +44,6 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF, PNDIS_BUFFER Buffer, PUI
 
     while( RtCurrent < RouteEntries + RtCount ) {
 	ASSERT(RCacheCur->Router);
-
 	RtlCopyMemory( &RtCurrent->Dest,
 		       &RCacheCur->NetworkAddress.Address,
 		       sizeof(RtCurrent->Dest) );
@@ -60,15 +56,6 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF, PNDIS_BUFFER Buffer, PUI
 
 	RtCurrent->Metric1 = RCacheCur->Metric;
 	RtCurrent->Type = TDI_ADDRESS_TYPE_IP;
-
-	TI_DbgPrint
-	    (DEBUG_INFO,
-	     ("%d: NA %08x NM %08x GW %08x MT %x\n",
-	      RtCurrent - RouteEntries,
-	      RtCurrent->Dest,
-	      RtCurrent->Mask,
-	      RtCurrent->Gw,
-	      RtCurrent->Metric1 ));
 
 	TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
 	for (i = 0; i < EntityCount; i++)
@@ -90,8 +77,6 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF, PNDIS_BUFFER Buffer, PUI
     ExFreePoolWithTag( RouteEntries, ROUTE_ENTRY_TAG );
     ExFreePoolWithTag( RCache, FIB_TAG );
 
-    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
-
     return Status;
 }
 
@@ -103,9 +88,6 @@ TDI_STATUS InfoTdiQueryGetAddrTable(TDIEntityID ID,
     PIPADDR_ENTRY IPEntry;
     PIP_INTERFACE CurrentIF;
     UINT i;
-
-    TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
-
 
     TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
 
@@ -161,8 +143,6 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
     UINT RouteCount = CountFIBs(IF);
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
-    TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
-
     RtlZeroMemory(&SnmpInfo, sizeof(SnmpInfo));
 
     SnmpInfo.ipsi_numif = IfCount;
@@ -172,7 +152,80 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
     Status = InfoCopyOut( (PCHAR)&SnmpInfo, sizeof(SnmpInfo),
 			  Buffer, BufferSize );
 
-    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
+    return Status;
+}
+
+#define ntohs(n) ((((n) & 0xff) << 8) | (((n) & 0xff00) >> 8))
+
+TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
+    PNDIS_BUFFER Buffer,
+    PUINT BufferSize,
+    BOOLEAN Extended)
+{
+    SIZE_T Size;
+    MIB_TCPROW_OWNER_PID TcpRow;
+    TDI_STATUS Status = TDI_INVALID_REQUEST;
+
+    TcpRow.dwOwningPid = HandleToUlong(AddrFile->ProcessId);
+    if (Extended)
+        Size = sizeof(MIB_TCPROW_OWNER_PID);
+    else
+        Size = sizeof(MIB_TCPROW);
+
+    if (AddrFile->Listener)
+    {
+        PADDRESS_FILE EndPoint;
+
+        EndPoint = AddrFile->Listener->AddressFile;
+
+        TcpRow.dwState = MIB_TCP_STATE_LISTEN;
+        TcpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
+        TcpRow.dwLocalPort = AddrFile->Port;
+        TcpRow.dwRemoteAddr = EndPoint->Address.Address.IPv4Address;
+        TcpRow.dwRemotePort = EndPoint->Port;
+
+        Status = TDI_SUCCESS;
+    }
+    else if (AddrFile->Connection && AddrFile->Connection->SocketContext)
+    {
+        TA_IP_ADDRESS EndPoint;
+
+        Status = TCPGetSockAddress(AddrFile->Connection, (PTRANSPORT_ADDRESS)&EndPoint, FALSE);
+        if (NT_SUCCESS(Status))
+        {
+            TcpRow.dwLocalAddr = EndPoint.Address[0].Address[0].in_addr;
+            TcpRow.dwLocalPort = ntohs(EndPoint.Address[0].Address[0].sin_port);
+
+            Status = TCPGetSockAddress(AddrFile->Connection, (PTRANSPORT_ADDRESS)&EndPoint, TRUE);
+            if (NT_SUCCESS(Status))
+            {
+                TcpRow.dwRemoteAddr = EndPoint.Address[0].Address[0].in_addr;
+                TcpRow.dwRemotePort = ntohs(EndPoint.Address[0].Address[0].sin_port);
+
+                Status = TCPGetSocketStatus(AddrFile->Connection, &TcpRow.dwState);
+            }
+        }
+    }
+
+    if (NT_SUCCESS(Status))
+        Status = InfoCopyOut((PCHAR)&TcpRow, Size, Buffer, BufferSize);
+
+    return Status;
+}
+
+TDI_STATUS InfoTdiQueryGetConnectionUdpTable(PADDRESS_FILE AddrFile,
+    PNDIS_BUFFER Buffer,
+    PUINT BufferSize,
+    BOOLEAN Extended)
+{
+    MIB_UDPROW_OWNER_PID UdpRow;
+    TDI_STATUS Status = TDI_INVALID_REQUEST;
+
+    UdpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
+    UdpRow.dwLocalPort = AddrFile->Port;
+    UdpRow.dwOwningPid = HandleToUlong(AddrFile->ProcessId);
+
+    Status = InfoCopyOut((PCHAR)&UdpRow, (Extended ? sizeof(MIB_UDPROW_OWNER_PID) : sizeof(MIB_UDPROW)), Buffer, BufferSize);
 
     return Status;
 }
@@ -190,20 +243,15 @@ TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize)
         return TDI_INVALID_PARAMETER;
 
     if (IF == Loopback)
-    {
-        DbgPrint("Failing attempt to add route to loopback adapter\n");
         return TDI_INVALID_PARAMETER;
-    }
 
     if( Route->Type == IP_ROUTE_TYPE_ADD ) { /* Add the route */
-        TI_DbgPrint(DEBUG_INFO,("Adding route (%s)\n", A2S(&Address)));
 	if (!RouterCreateRoute( &Address, &Netmask, &Router,
 			       IF, Route->Metric1))
 	    return TDI_NO_RESOURCES;
 
         return TDI_SUCCESS;
      } else if( Route->Type == IP_ROUTE_TYPE_DEL ) {
-	TI_DbgPrint(DEBUG_INFO,("Removing route (%s)\n", A2S(&Address)));
 	if (NT_SUCCESS(RouterRemoveRoute( &Address, &Router )))
             return TDI_SUCCESS;
         else

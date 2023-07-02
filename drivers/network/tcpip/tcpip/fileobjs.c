@@ -38,7 +38,7 @@ PADDRESS_FILE AddrSearchFirst(
     PAF_SEARCH SearchContext)
 {
     KIRQL OldIrql;
-    
+
     SearchContext->Address  = Address;
     SearchContext->Port     = Port;
     SearchContext->Protocol = Protocol;
@@ -111,7 +111,7 @@ LogActiveObjects(VOID)
     PCONNECTION_ENDPOINT Conn;
 
     DbgPrint("----------- TCP/IP Active Object Dump -------------\n");
-    
+
     TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
     CurrentEntry = AddressFileListHead.Flink;
@@ -140,19 +140,19 @@ LogActiveObjects(VOID)
             }
             DbgPrint("\n");
         }
-        
+
         CurrentEntry = CurrentEntry->Flink;
     }
-    
+
     TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
-    
+
     TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
-    
+
     CurrentEntry = ConnectionEndpointListHead.Flink;
     while (CurrentEntry != &ConnectionEndpointListHead)
     {
         Conn = CONTAINING_RECORD(CurrentEntry, CONNECTION_ENDPOINT, ListEntry);
-        
+
         DbgPrint("Connection @ 0x%p | Ref count: %d\n", Conn, Conn->RefCount);
         DbgPrint("\tPCB: ");
         if (Conn->SocketContext == NULL)
@@ -173,10 +173,10 @@ LogActiveObjects(VOID)
         DbgPrint("\tReceive shutdown: %s\n", Conn->ReceiveShutdown ? "Yes" : "No");
         if (Conn->ReceiveShutdown) DbgPrint("\tReceive shutdown status: 0x%x\n", Conn->ReceiveShutdownStatus);
         DbgPrint("\tClosing: %s\n", Conn->Closing ? "Yes" : "No");
-        
+
         CurrentEntry = CurrentEntry->Flink;
     }
-    
+
     TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
 
     DbgPrint("---------------------------------------------------\n");
@@ -233,7 +233,7 @@ PADDRESS_FILE AddrSearchNext(
     PADDRESS_FILE Current = NULL;
     BOOLEAN Found = FALSE;
     PADDRESS_FILE StartingAddrFile;
-    
+
     TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
     if (SearchContext->Next == &AddressFileListHead)
@@ -251,14 +251,6 @@ PADDRESS_FILE AddrSearchNext(
         Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_FILE, ListEntry);
 
         IPAddress = &Current->Address;
-
-        TI_DbgPrint(DEBUG_ADDRFILE, ("Comparing: ((%d, %d, %s), (%d, %d, %s)).\n",
-            WN2H(Current->Port),
-            Current->Protocol,
-            A2S(IPAddress),
-            WN2H(SearchContext->Port),
-            SearchContext->Protocol,
-            A2S(SearchContext->Address)));
 
         /* See if this address matches the search criteria */
         if ((Current->Port    == SearchContext->Port) &&
@@ -309,8 +301,6 @@ VOID AddrFileFree(
   PDATAGRAM_SEND_REQUEST SendRequest;
   PLIST_ENTRY CurrentEntry;
 
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
   /* We should not be associated with a connection here */
   ASSERT(!AddrFile->Connection);
 
@@ -323,16 +313,12 @@ VOID AddrFileFree(
 
   /* Return pending requests with error */
 
-  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting receive requests on AddrFile at (0x%X).\n", AddrFile));
-
   /* Go through pending receive request list and cancel them all */
   while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
     ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
     (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_CANCELLED, 0);
     /* ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG); FIXME: WTF? */
   }
-
-  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting send requests on address file at (0x%X).\n", AddrFile));
 
   /* Go through pending send request list and cancel them all */
   while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
@@ -393,8 +379,6 @@ NTSTATUS FileOpenAddress(
 {
   PADDRESS_FILE AddrFile;
 
-  TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
-
   /* If it's shared and has a port specified, look for a match */
   if ((Shared != FALSE) && (Address->Address[0].Address[0].sin_port != 0))
   {
@@ -424,6 +408,7 @@ NTSTATUS FileOpenAddress(
   AddrFile->DF = 0;
   AddrFile->BCast = 1;
   AddrFile->HeaderIncl = 1;
+  AddrFile->ProcessId = PsGetCurrentProcessId();
 
   /* Make sure address is a local unicast address or 0 */
   /* FIXME: IPv4 only */
@@ -438,9 +423,6 @@ NTSTATUS FileOpenAddress(
 	  return STATUS_INVALID_ADDRESS;
   }
 
-  TI_DbgPrint(MID_TRACE, ("Opening address %s for communication (P=%d U=%d).\n",
-    A2S(&AddrFile->Address), Protocol, IPPROTO_UDP));
-
   /* Protocol specific handling */
   switch (Protocol) {
   case IPPROTO_TCP:
@@ -448,14 +430,14 @@ NTSTATUS FileOpenAddress(
       {
           /* The client specified an explicit port so we force a bind to this */
           AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
-          
+
           /* Check for bind success */
           if (AddrFile->Port == 0xffff)
           {
               ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
               return STATUS_ADDRESS_ALREADY_EXISTS;
           }
-          
+
           /* Sanity check */
           ASSERT(Address->Address[0].Address[0].sin_port == AddrFile->Port);
       }
@@ -463,7 +445,7 @@ NTSTATUS FileOpenAddress(
       {
           /* The client is trying to bind to a local address so allocate a port now too */
           AddrFile->Port = TCPAllocatePort(0);
-          
+
           /* Check for bind success */
           if (AddrFile->Port == 0xffff)
           {
@@ -483,7 +465,6 @@ NTSTATUS FileOpenAddress(
       break;
 
   case IPPROTO_UDP:
-      TI_DbgPrint(MID_TRACE,("Allocating udp port\n"));
       AddrFile->Port =
 	  UDPAllocatePort(Address->Address[0].Address[0].sin_port);
 
@@ -494,10 +475,6 @@ NTSTATUS FileOpenAddress(
           ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
           return STATUS_ADDRESS_ALREADY_EXISTS;
       }
-
-      TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n",
-                             AddrFile->Port,
-                             Address->Address[0].Address[0].sin_port));
 
       AddEntity(CL_TL_ENTITY, AddrFile, CL_TL_UDP);
 
@@ -522,12 +499,6 @@ NTSTATUS FileOpenAddress(
     break;
   }
 
-  TI_DbgPrint(MID_TRACE, ("IP protocol number for address file object is %d.\n",
-    Protocol));
-
-  TI_DbgPrint(MID_TRACE, ("Port number for address file object is %d.\n",
-    WN2H(AddrFile->Port)));
-
   /* Set protocol */
   AddrFile->Protocol = Protocol;
 
@@ -546,8 +517,6 @@ NTSTATUS FileOpenAddress(
     &AddressFileListHead,
     &AddrFile->ListEntry,
     &AddressFileListLock);
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return STATUS_SUCCESS;
 }
@@ -587,8 +556,6 @@ NTSTATUS FileCloseAddress(
 
   DereferenceObject(AddrFile);
 
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-
   return STATUS_SUCCESS;
 }
 
@@ -608,8 +575,6 @@ NTSTATUS FileOpenConnection(
   NTSTATUS Status;
   PCONNECTION_ENDPOINT Connection;
 
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
   Connection = TCPAllocateConnectionEndpoint( ClientContext );
 
   if( !Connection ) return STATUS_NO_MEMORY;
@@ -623,8 +588,6 @@ NTSTATUS FileOpenConnection(
 
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return STATUS_SUCCESS;
 }
@@ -641,8 +604,6 @@ NTSTATUS FileCloseConnection(
 {
   PCONNECTION_ENDPOINT Connection;
 
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
   Connection = Request->Handle.ConnectionContext;
 
   if (!Connection) return STATUS_INVALID_PARAMETER;
@@ -650,8 +611,6 @@ NTSTATUS FileCloseConnection(
   TCPClose( Connection );
 
   Request->Handle.ConnectionContext = NULL;
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return STATUS_SUCCESS;
 }
@@ -667,7 +626,6 @@ NTSTATUS FileOpenControlChannel(
     PTDI_REQUEST Request)
 {
   PCONTROL_CHANNEL ControlChannel;
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
   ControlChannel = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ControlChannel),
                                          CONTROL_CHANNEL_TAG);
@@ -694,8 +652,6 @@ NTSTATUS FileOpenControlChannel(
 
   /* Return address file object */
   Request->Handle.ControlChannel = ControlChannel;
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return STATUS_SUCCESS;
 }

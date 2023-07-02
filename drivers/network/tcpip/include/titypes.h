@@ -154,6 +154,7 @@ typedef struct _ADDRESS_FILE {
     /* Associated listener (see transport/tcp/accept.c) */
     IP_ADDRESS AddrCache;                 /* One entry address cache (destination
                                              address of last packet transmitted) */
+    HANDLE ProcessId;
 
     /* The following members are used to control event notification */
 
@@ -272,7 +273,7 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ShutdownRequest;/* Queued shutdown requests */
 
     LIST_ENTRY PacketQueue;    /* Queued received packets waiting to be processed */
-    
+
     /* Disconnect Timer */
     KTIMER DisconnectTimer;
     KDPC DisconnectDpc;
