@@ -1,7 +1,8 @@
 /*
- * FILE:       base/applications/mmc/lang/ro-RO.rc
- *             ReactOS Project (https://reactos.org)
- * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot com)
+ * FILE:          base/applications/mmc/lang/ro-RO.rc
+ *                ReactOS Project (https://reactos.org)
+ * TRANSLATORS:   Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *                Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -32,9 +33,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Windows"
+    POPUP "&Ferestre"
     BEGIN
-        MENUITEM "List", IDM_WINDOWS_LIST
+        MENUITEM "Listă", IDM_WINDOWS_LIST
     END
     POPUP "Aj&utor"
     BEGIN
