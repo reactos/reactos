@@ -98,6 +98,9 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         // UNIMPLEMENTED.
                         ConPuts(StdErr, L"'b' option is FIXME (Accepted option though unimplemented feature).\n");
                         bDoShowProcName = TRUE;
+#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
+                        bDoShowProcessId = TRUE;
+#endif
                         break;
                     case L'e':
                         bDoShowEthStats = TRUE;
