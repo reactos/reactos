@@ -35,10 +35,15 @@ GetTextFromListView(PMAIN_WND_INFO Info,
 static BOOL
 SaveServicesToFile(PMAIN_WND_INFO Info,
                    LPCWSTR pszFileName,
-                   DWORD nIndex)
+                   DWORD nFormat)
 {
     HANDLE hFile;
     BOOL bSuccess = FALSE;
+
+    if (!nFormat || 2 < nFormat)
+    {
+        return bSuccess;
+    }
 
     hFile = CreateFileW(pszFileName,
                        GENERIC_WRITE,
@@ -76,11 +81,14 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
                               NULL);
                 }
 
-                WriteFile(hFile,
-                          &seps[nIndex-1],
-                          sizeof(WCHAR),
-                          &dwWritten,
-                          NULL);
+                if (k != 4)
+                {
+                    WriteFile(hFile,
+                              &seps[nFormat-1],
+                              sizeof(WCHAR),
+                              &dwWritten,
+                              NULL);
+                }
             }
             WriteFile(hFile,
                       newl,
