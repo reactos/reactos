@@ -74,13 +74,13 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
                               sizeof(WCHAR) * dwTextLength,
                               &dwWritten,
                               NULL);
-
-                    WriteFile(hFile,
-                              &seps[nIndex-1],
-                              sizeof(WCHAR),
-                              &dwWritten,
-                              NULL);
                 }
+
+                WriteFile(hFile,
+                          &seps[nIndex-1],
+                          sizeof(WCHAR),
+                          &dwWritten,
+                          NULL);
             }
             WriteFile(hFile,
                       newl,
