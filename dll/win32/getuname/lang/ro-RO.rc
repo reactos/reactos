@@ -27687,7 +27687,7 @@ BEGIN
     65500 "Litera hangul de jumătate de lățime i"
     65504 "Semn de cenți cu lățime completă"
     65505 "Semn de liră cu lățime completă"
-    65506 "Semnul nu cu lățime completă"
+    65506 "Semnul cu lățime incompletă"
     65507 "Macron cu lățime completă"
     65508 "Bară ruptă cu lățime completă"
     65509 "Semnul yen cu lățime completă"
