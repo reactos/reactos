@@ -872,10 +872,10 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     LPCWSTR wszLastUnquotedSpacePosition = NULL;
     LPWSTR buffer, buffer2;
     BOOL bQuoted = FALSE;
-    int i = 0;
-    SIZE_T nLen = lstrlenW(wszCmd);
     LPCWSTR extraPmts = L"";
+    int i = 0;
     LPWSTR ptr;
+    SIZE_T nLen = lstrlenW(wszCmd);
 
     buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer) * (nLen + 1));
     buffer2 = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer2) * (nLen + 1));
@@ -888,6 +888,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
         return;
     }
 
+    /* Search for unquoted commas and spaces. */
     for (i = 0; i < nLen; i++)
     {
         if (wszCmd[i] == '"')
@@ -905,36 +906,53 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
         }
     }
 
+    /* If no unquoted commas are found, parameters are either space separated, or the entire string
+     * is a path. */
     if (wszFirstCommaPosition == NULL)
     {
+        /* An unquoted space was found in the string. Assume the last word is the second 
+         * parameter. */
         if (wszLastUnquotedSpacePosition != NULL)
         {
-            int followingSpaces = 0;
+            int nSpaces = 0;
 
-            while (wszLastUnquotedSpacePosition[followingSpaces] == L' ')
-                followingSpaces++;
+            while (wszLastUnquotedSpacePosition[nSpaces] == L' ')
+                nSpaces++;
 
             StringCchCopyNW(buffer, nLen, wszCmd, wszLastUnquotedSpacePosition - wszCmd);
-            lstrcpyW(buffer2, wszLastUnquotedSpacePosition + followingSpaces);
+            lstrcpyW(buffer2, wszLastUnquotedSpacePosition + nSpaces);
         }
+        /* No parameters were passed, the entire string is a path. */
         else
         {
             lstrcpyW(buffer, wszCmd);
         }
     }
+    /* If an unquoted comma was found, there are at least two parts of the string:
+     * - the path 
+     * - either an index preceeded by @, or a name. 
+     * If there was a second unqoted comma, there is another part of the string:
+     * - the rest of the parameters. */
     else
     {
+        /* If there was no second unquoted comma in the string, the first parameter ends at the
+         * null terminator. */
         if (wszSecondCommaPosition == NULL)
             wszSecondCommaPosition = wszCmd + nLen;
 
         StringCchCopyNW(buffer, nLen, wszCmd, (wszFirstCommaPosition - wszCmd));
-        StringCchCopyNW(buffer2, nLen, wszFirstCommaPosition + 1, (wszSecondCommaPosition - wszFirstCommaPosition - 1));
+        StringCchCopyNW(buffer2, 
+                        nLen, 
+                        wszFirstCommaPosition + 1, 
+                        wszSecondCommaPosition - wszFirstCommaPosition - 1);
+                        
         if (wszSecondCommaPosition != wszCmd + nLen)
         {
             extraPmts = wszSecondCommaPosition + 1;
         }
     }
 
+    /* Remove the quotes from both buffers. */
     while ((ptr = StrChrW(buffer, '"')))
         memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
    
