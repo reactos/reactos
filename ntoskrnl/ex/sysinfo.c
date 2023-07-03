@@ -342,17 +342,17 @@ ExGetCurrentProcessorCpuUsage(PULONG CpuUsage)
  */
 VOID
 NTAPI
-ExGetCurrentProcessorCounts(PULONG ThreadKernelTime,
-                            PULONG TotalCpuTime,
+ExGetCurrentProcessorCounts(PULONG IdleTime,
+                            PULONG KernelAndUserTime,
                             PULONG ProcessorNumber)
 {
     PKPRCB Prcb;
 
     Prcb = KeGetCurrentPrcb();
 
-    *ThreadKernelTime = Prcb->KernelTime + Prcb->UserTime;
-    *TotalCpuTime = Prcb->CurrentThread->KernelTime;
-    *ProcessorNumber = KeGetCurrentProcessorNumber();
+    *IdleTime = Prcb->IdleThread->KernelTime;
+    *KernelAndUserTime = Prcb->KernelTime + Prcb->UserTime;
+    *ProcessorNumber = (ULONG)Prcb->Number;
 }
 
 /*

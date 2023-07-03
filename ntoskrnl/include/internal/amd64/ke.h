@@ -420,6 +420,9 @@ VOID KiGetCacheInformation(VOID);
 VOID KiSetProcessorType(VOID);
 ULONG KiGetFeatureBits(VOID);
 VOID KiInitializeCpuFeatures(VOID);
+#if DBG
+VOID KiReportCpuFeatures(IN PKPRCB Prcb);
+#endif
 
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);

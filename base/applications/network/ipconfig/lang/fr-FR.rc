@@ -91,6 +91,8 @@ BEGIN
     IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
     IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
     IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
+    IDS_DHCPRELEASEERROR    "An error occurred while releasing interface %ls: "
+    IDS_DHCPRENEWERROR      "An error occurred while renewing interface %ls: "
 END
 
 STRINGTABLE

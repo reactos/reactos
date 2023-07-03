@@ -22,6 +22,30 @@ extern "C"
 #define KD_BREAKPOINT_SIZE        sizeof(UCHAR)
 #define KD_BREAKPOINT_VALUE       0xCC
 
+/* CPUID 1 - EDX flags */
+#define X86_FEATURE_FPU         0x00000001 /* x87 FPU is present */
+#define X86_FEATURE_VME         0x00000002 /* Virtual 8086 Extensions are present */
+#define X86_FEATURE_DBG         0x00000004 /* Debugging extensions are present */
+#define X86_FEATURE_PSE         0x00000008 /* Page Size Extension is present */
+#define X86_FEATURE_TSC         0x00000010 /* Time Stamp Counters are present */
+#define X86_FEATURE_PAE         0x00000040 /* Physical Address Extension is present */
+#define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
+#define X86_FEATURE_APIC        0x00000200 /* APIC is present */
+#define X86_FEATURE_SYSCALL     0x00000800 /* SYSCALL/SYSRET support present */
+#define X86_FEATURE_MTTR        0x00001000 /* Memory type range registers are present */
+#define X86_FEATURE_PGE         0x00002000 /* Page Global Enable */
+#define X86_FEATURE_CMOV        0x00008000 /* "Conditional move" instruction supported */
+#define X86_FEATURE_PAT         0x00010000 /* Page Attribute Table is supported */
+#define X86_FEATURE_DS          0x00200000 /* Debug Store is present */
+#define X86_FEATURE_MMX         0x00800000 /* MMX extension present */
+#define X86_FEATURE_FXSR        0x01000000 /* FXSAVE/FXRSTOR instructions present */
+#define X86_FEATURE_SSE         0x02000000 /* SSE extension present */
+#define X86_FEATURE_SSE2        0x04000000 /* SSE2 extension present */
+#define X86_FEATURE_HT          0x10000000 /* Hyper-Threading present */
+
+/* CPUID 0x80000001 - EDX extended flags */
+#define X86_FEATURE_NX          0x00100000 /* NX support present */
+
 //
 // One-liners for getting and setting special purpose registers in portable code
 //
@@ -434,6 +458,12 @@ CODE_SEG("INIT")
 ULONG
 NTAPI
 KiGetFeatureBits(VOID);
+
+#if DBG
+CODE_SEG("INIT")
+VOID
+KiReportCpuFeatures(VOID);
+#endif
 
 VOID
 NTAPI

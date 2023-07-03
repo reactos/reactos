@@ -341,6 +341,11 @@ KiInitializeKernelMachineDependent(
         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSOFF;
         Prcb->FeatureBits |= KF_NX_DISABLED;
     }
+
+#if DBG
+    /* Print applied kernel features/policies and boot CPU features */
+    KiReportCpuFeatures(Prcb);
+#endif
 }
 
 static LDR_DATA_TABLE_ENTRY LdrCoreEntries[3];
