@@ -1,6 +1,7 @@
 /*
- * Translators: Petru Dimitriu (petrimetri at gmail dot com)
- *              Ștefan Fulea (stefan dot fulea at mail dot com)
+ * TRANSLATORS:      Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
+ *                   Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *                   Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -63,9 +64,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR "Eroare"
-    IDS_NOT_RESPONDING " (Not Responding)"
-    IDS_ASK_TERMINATE "This application is not responding. Do you want to terminate it?"
-    IDS_HUNG_UP_TITLE "Hung up!"
+    IDS_NOT_RESPONDING " (Nu răspunde)"
+    IDS_ASK_TERMINATE "Această aplicație nu răspunde. Vreți să o închideți?"
+    IDS_HUNG_UP_TITLE "Închide!"
     IDS_OK "Con&firmă"
     IDS_CANCEL "A&nulează"
     IDS_ABORT "Aba&ndon"
