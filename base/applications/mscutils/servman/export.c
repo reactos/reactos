@@ -34,7 +34,8 @@ GetTextFromListView(PMAIN_WND_INFO Info,
 
 static BOOL
 SaveServicesToFile(PMAIN_WND_INFO Info,
-                   LPCWSTR pszFileName)
+                   LPCWSTR pszFileName,
+                   DWORD nIndex)
 {
     HANDLE hFile;
     BOOL bSuccess = FALSE;
@@ -51,7 +52,7 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
     {
         WCHAR LVText[500];
         WCHAR newl[2] = {L'\r', L'\n'};
-        WCHAR tab = L'\t';
+        WCHAR seps[2] = {L'\t', L','};
         DWORD dwTextLength, dwWritten;
         INT NumListedServ = 0;
         INT i, k;
@@ -75,7 +76,7 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
                               NULL);
 
                     WriteFile(hFile,
-                              &tab,
+                              &seps[nIndex-1],
                               sizeof(WCHAR),
                               &dwWritten,
                               NULL);
@@ -113,7 +114,7 @@ VOID ExportFile(PMAIN_WND_INFO Info)
 
     if(GetSaveFileName(&ofn))
     {
-        if (SaveServicesToFile(Info, szFileName))
+        if (SaveServicesToFile(Info, szFileName, ofn.nFilterIndex))
             return;
     }
 
