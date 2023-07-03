@@ -457,19 +457,19 @@ PrintNodeType(
 {
     switch (NodeType)
     {
-        case 1:
+        case BROADCAST_NODETYPE:
             ConResPrintf(StdOut, IDS_NODETYPEBCAST);
             break;
 
-        case 2:
+        case PEER_TO_PEER_NODETYPE:
             ConResPrintf(StdOut, IDS_NODETYPEP2P);
             break;
 
-        case 4:
+        case MIXED_NODETYPE:
             ConResPrintf(StdOut, IDS_NODETYPEMIXED);
             break;
 
-        case 8:
+        case HYBRID_NODETYPE:
             ConResPrintf(StdOut, IDS_NODETYPEHYBRID);
             break;
 
@@ -890,7 +890,7 @@ Release(
                         ret = IpReleaseAddress(&AdapterMap);
                         if (ret != NO_ERROR)
                         {
-                            _tprintf(_T("\nAn error occured while releasing interface %ls : \n"), szFriendlyName);
+                            ConResPrintf(StdOut, IDS_DHCPRELEASEERROR, szFriendlyName);
                             DoFormatMessage(ret);
                         }
                     }
@@ -988,7 +988,7 @@ Renew(
                     ret = IpRenewAddress(&AdapterMap);
                     if (ret != NO_ERROR)
                     {
-                        _tprintf(_T("\nAn error occured while renew interface %ls : "), szFriendlyName);
+                        ConResPrintf(StdOut, IDS_DHCPRENEWERROR, szFriendlyName);
                         DoFormatMessage(ret);
                     }
                 }

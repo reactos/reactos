@@ -234,6 +234,60 @@ KiGetFeatureBits(VOID)
     return FeatureBits;
 }
 
+#if DBG
+VOID
+KiReportCpuFeatures(IN PKPRCB Prcb)
+{
+    ULONG CpuFeatures = 0;
+    CPU_INFO CpuInfo;
+
+    if (Prcb->CpuVendor)
+    {
+        KiCpuId(&CpuInfo, 1);
+        CpuFeatures = CpuInfo.Edx;
+    }
+
+    DPRINT1("Supported CPU features: ");
+
+#define print_kf_bit(kf_value) if (Prcb->FeatureBits & kf_value) DbgPrint(#kf_value " ")
+    print_kf_bit(KF_V86_VIS);
+    print_kf_bit(KF_RDTSC);
+    print_kf_bit(KF_CR4);
+    print_kf_bit(KF_CMOV);
+    print_kf_bit(KF_GLOBAL_PAGE);
+    print_kf_bit(KF_LARGE_PAGE);
+    print_kf_bit(KF_MTRR);
+    print_kf_bit(KF_CMPXCHG8B);
+    print_kf_bit(KF_CMPXCHG16B);
+    print_kf_bit(KF_MMX);
+    print_kf_bit(KF_WORKING_PTE);
+    print_kf_bit(KF_PAT);
+    print_kf_bit(KF_FXSR);
+    print_kf_bit(KF_FAST_SYSCALL);
+    print_kf_bit(KF_XMMI);
+    print_kf_bit(KF_3DNOW);
+    print_kf_bit(KF_XMMI64);
+    print_kf_bit(KF_DTS);
+    print_kf_bit(KF_NX_BIT);
+    print_kf_bit(KF_NX_DISABLED);
+    print_kf_bit(KF_NX_ENABLED);
+    print_kf_bit(KF_SSE3);
+    //print_kf_bit(KF_SSE3SUP);
+    //print_kf_bit(KF_SSE41);
+    //print_kf_bit(KF_MONITOR);
+    //print_kf_bit(KF_POPCNT);
+    print_kf_bit(KF_XSTATE);
+#undef print_kf_bit
+
+#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(#cpu_flag " ")
+    print_cf(X86_FEATURE_PAE);
+    print_cf(X86_FEATURE_HT);
+#undef print_cf
+
+    DbgPrint("\n");
+}
+#endif // DBG
+
 VOID
 NTAPI
 KiGetCacheInformation(VOID)

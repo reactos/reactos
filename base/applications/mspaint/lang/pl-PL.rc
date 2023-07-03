@@ -5,6 +5,7 @@
  * TRANSLATORS: Copyright 2009 Olaf Siejka <caemyr@gmail.com>
  *              Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
  *              Copyright 2017 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2023 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -105,18 +106,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Wytnij\tCtrl+X", IDM_EDITCUT
+        MENUITEM "Kopiuj\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Wkl&ej\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Wyczyść z&aznaczenie\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Zaznacz wszystko\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "Kopiuj &do...", IDM_EDITCOPYTO
+        MENUITEM "Wk&lej z...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Przerzuć/Obróć...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Roz&ciągnij/Pochyl...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Odwróć kolory\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -214,7 +215,7 @@ BEGIN
 END
 
 IDD_FONTS DIALOG 0, 0, 225, 25
-CAPTION "Fonts"
+CAPTION "Czcionki"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 8, "MS Shell Dlg"
@@ -230,7 +231,7 @@ BEGIN
     IDS_WINDOWTITLE "%s - Paint"
     IDS_INFOTITLE "Paint dla ReactOS"
     IDS_INFOTEXT "Dostępny na licencji GNU Lesser General Public License (LGPL, www.gnu.org)"
-    IDS_SAVEPROMPTTEXT "Czy chcesz zapisać zmiany do %s?"
+    IDS_SAVEPROMPTTEXT "Czy chcesz zapisać zmiany do pliku %s?"
     IDS_DEFAULTFILENAME "bez tytułu"
     IDS_MINIATURETITLE "Miniatura"
     IDS_TOOLTIP1 "Zaznaczenie dowolne"
@@ -250,17 +251,17 @@ BEGIN
     IDS_TOOLTIP15 "Elipsa"
     IDS_TOOLTIP16 "Zaokrąglony prostokąt"
     IDS_ALLFILES "Wszystkie pliki"
-    IDS_ALLPICTUREFILES "Wszystkie pliki graficzne"
+    IDS_ALLPICTUREFILES "Wszystkie pliki obrazów"
     IDS_FILESIZE "%d bajtów"
     IDS_INTNUMBERS "Wprowadź liczbę całkowitą."
     IDS_PERCENTAGE "Wprowadź liczbę całkowitą z zakresu od 1 do 500."
     IDS_ANGLE "Wprowadź liczbę całkowitą z zakresu od -89 do 89."
     IDS_LOADERRORTEXT "Plik %s nie może być załadowany."
-    IDS_ENLARGEPROMPTTEXT "Obraz w schowku jest większy niż bitmapa.\nChciałbyś powiększyć bitmapę?"
-    IDS_BOLD "Bold"
-    IDS_ITALIC "Italic"
-    IDS_UNDERLINE "Underline"
-    IDS_VERTICAL "Vertical"
-    IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
+    IDS_ENLARGEPROMPTTEXT "Obraz w schowku jest większy niż bitmapa.\nCzy chcesz powiększyć bitmapę?"
+    IDS_BOLD "Pogrubienie"
+    IDS_ITALIC "Kursywa"
+    IDS_UNDERLINE "Podkreślenie"
+    IDS_VERTICAL "Pionowe"
+    IDS_PRINTRES "%d x %d piksel/cm"
+    IDS_CANTPASTE "Nie można wkleić ze schowka. Format danych jest nieprawidłowy lub nieobsługiwany."
 END

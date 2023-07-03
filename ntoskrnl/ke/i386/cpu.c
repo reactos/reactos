@@ -365,28 +365,23 @@ KiGetFeatureBits(VOID)
     CpuFeatures = CpuInfo.Edx;
 
     /* Convert all CPUID Feature bits into our format */
-    if (CpuFeatures & 0x00000002) FeatureBits |= KF_V86_VIS | KF_CR4;
-    if (CpuFeatures & 0x00000008) FeatureBits |= KF_LARGE_PAGE | KF_CR4;
-    if (CpuFeatures & 0x00000010) FeatureBits |= KF_RDTSC;
-    if (CpuFeatures & 0x00000100) FeatureBits |= KF_CMPXCHG8B;
-    if (CpuFeatures & 0x00000800) FeatureBits |= KF_FAST_SYSCALL;
-    if (CpuFeatures & 0x00001000) FeatureBits |= KF_MTRR;
-    if (CpuFeatures & 0x00002000) FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
-    if (CpuFeatures & 0x00008000) FeatureBits |= KF_CMOV;
-    if (CpuFeatures & 0x00010000) FeatureBits |= KF_PAT;
-    if (CpuFeatures & 0x00200000) FeatureBits |= KF_DTS;
-    if (CpuFeatures & 0x00800000) FeatureBits |= KF_MMX;
-    if (CpuFeatures & 0x01000000) FeatureBits |= KF_FXSR;
-    if (CpuFeatures & 0x02000000) FeatureBits |= KF_XMMI;
-    if (CpuFeatures & 0x04000000) FeatureBits |= KF_XMMI64;
-
-    if (CpuFeatures & 0x00000040)
-    {
-        DPRINT1("Support PAE\n");
-    }
+    if (CpuFeatures & X86_FEATURE_VME)     FeatureBits |= KF_V86_VIS | KF_CR4;
+    if (CpuFeatures & X86_FEATURE_PSE)     FeatureBits |= KF_LARGE_PAGE | KF_CR4;
+    if (CpuFeatures & X86_FEATURE_TSC)     FeatureBits |= KF_RDTSC;
+    if (CpuFeatures & X86_FEATURE_CX8)     FeatureBits |= KF_CMPXCHG8B;
+    if (CpuFeatures & X86_FEATURE_SYSCALL) FeatureBits |= KF_FAST_SYSCALL;
+    if (CpuFeatures & X86_FEATURE_MTTR)    FeatureBits |= KF_MTRR;
+    if (CpuFeatures & X86_FEATURE_PGE)     FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
+    if (CpuFeatures & X86_FEATURE_CMOV)    FeatureBits |= KF_CMOV;
+    if (CpuFeatures & X86_FEATURE_PAT)     FeatureBits |= KF_PAT;
+    if (CpuFeatures & X86_FEATURE_DS)      FeatureBits |= KF_DTS;
+    if (CpuFeatures & X86_FEATURE_MMX)     FeatureBits |= KF_MMX;
+    if (CpuFeatures & X86_FEATURE_FXSR)    FeatureBits |= KF_FXSR;
+    if (CpuFeatures & X86_FEATURE_SSE)     FeatureBits |= KF_XMMI;
+    if (CpuFeatures & X86_FEATURE_SSE2)    FeatureBits |= KF_XMMI64;
 
     /* Check if the CPU has hyper-threading */
-    if (CpuFeatures & 0x10000000)
+    if (CpuFeatures & X86_FEATURE_HT)
     {
         /* Set the number of logical CPUs */
         Prcb->LogicalProcessorsPerPhysicalProcessor = (UCHAR)(CpuInfo.Ebx >> 16);
@@ -416,7 +411,7 @@ KiGetFeatureBits(VOID)
                 KiCpuId(&CpuInfo, 0x80000001);
 
                 /* Check if NX-bit is supported */
-                if (CpuInfo.Edx & 0x00100000) FeatureBits |= KF_NX_BIT;
+                if (CpuInfo.Edx & X86_FEATURE_NX) FeatureBits |= KF_NX_BIT;
 
                 /* Now handle each features for each CPU Vendor */
                 switch (Vendor)
@@ -430,34 +425,59 @@ KiGetFeatureBits(VOID)
         }
     }
 
-#define print_supported(kf_value) ((FeatureBits & kf_value) ? #kf_value : "")
-    DPRINT1("Supported CPU features : %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
-    print_supported(KF_V86_VIS),
-    print_supported(KF_RDTSC),
-    print_supported(KF_CR4),
-    print_supported(KF_CMOV),
-    print_supported(KF_GLOBAL_PAGE),
-    print_supported(KF_LARGE_PAGE),
-    print_supported(KF_MTRR),
-    print_supported(KF_CMPXCHG8B),
-    print_supported(KF_MMX),
-    print_supported(KF_WORKING_PTE),
-    print_supported(KF_PAT),
-    print_supported(KF_FXSR),
-    print_supported(KF_FAST_SYSCALL),
-    print_supported(KF_XMMI),
-    print_supported(KF_3DNOW),
-    print_supported(KF_AMDK6MTRR),
-    print_supported(KF_XMMI64),
-    print_supported(KF_DTS),
-    print_supported(KF_NX_BIT),
-    print_supported(KF_NX_DISABLED),
-    print_supported(KF_NX_ENABLED));
-#undef print_supported
-
     /* Return the Feature Bits */
     return FeatureBits;
 }
+
+#if DBG
+CODE_SEG("INIT")
+VOID
+KiReportCpuFeatures(VOID)
+{
+    ULONG CpuFeatures = 0;
+    CPU_INFO CpuInfo;
+
+    if (KiGetCpuVendor())
+    {
+        KiCpuId(&CpuInfo, 1);
+        CpuFeatures = CpuInfo.Edx;
+    }
+
+    DPRINT1("Supported CPU features: ");
+
+#define print_kf_bit(kf_value) if (KeFeatureBits & kf_value) DbgPrint(#kf_value " ")
+    print_kf_bit(KF_V86_VIS);
+    print_kf_bit(KF_RDTSC);
+    print_kf_bit(KF_CR4);
+    print_kf_bit(KF_CMOV);
+    print_kf_bit(KF_GLOBAL_PAGE);
+    print_kf_bit(KF_LARGE_PAGE);
+    print_kf_bit(KF_MTRR);
+    print_kf_bit(KF_CMPXCHG8B);
+    print_kf_bit(KF_MMX);
+    print_kf_bit(KF_WORKING_PTE);
+    print_kf_bit(KF_PAT);
+    print_kf_bit(KF_FXSR);
+    print_kf_bit(KF_FAST_SYSCALL);
+    print_kf_bit(KF_XMMI);
+    print_kf_bit(KF_3DNOW);
+    print_kf_bit(KF_AMDK6MTRR);
+    print_kf_bit(KF_XMMI64);
+    print_kf_bit(KF_DTS);
+    print_kf_bit(KF_NX_BIT);
+    print_kf_bit(KF_NX_DISABLED);
+    print_kf_bit(KF_NX_ENABLED);
+#undef print_kf_bit
+
+#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(#cpu_flag " ")
+    print_cf(X86_FEATURE_PAE);
+    print_cf(X86_FEATURE_APIC);
+    print_cf(X86_FEATURE_HT);
+#undef print_cf
+
+    DbgPrint("\n");
+}
+#endif // DBG
 
 CODE_SEG("INIT")
 VOID
@@ -481,7 +501,7 @@ KiGetCacheInformation(VOID)
         /* Handle Intel case */
         case CPU_INTEL:
 
-            /*Check if we support CPUID 2 */
+            /* Check if we support CPUID 2 */
             KiCpuId(&CpuInfo, 0);
             if (CpuInfo.Eax >= 2)
             {
