@@ -24,7 +24,7 @@ BEGIN
     IDS_WINSPROXYYES        "\tProxy-ul WINS activat . . . . . . : Da\n"
     IDS_DNSSUFFIXLIST       "\tLista de căutare a sufixului DNS. : %hs\n"
     IDS_EMPTYLINE           "\t                                    %hs\n"
-    IDS_MEDIADISCONNECTED   "\tStarea media. . . . . . . . . . . : Media deconectată\n"
+    IDS_MEDIADISCONNECTED   "\tStarea mediului . . . . . . . . . : Mediu deconectat\n"
     IDS_CONNECTIONDNSSUFFIX "\tSufixul DNS specific conexiunii . : %hs\n"
     IDS_DESCRIPTION         "\tDescriere . . . . . . . . . . . . : "
     IDS_PHYSICALADDRESS     "\tAdresă fizică . . . . . . . . . . : %hs\n"
@@ -82,16 +82,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DNSNORECORD         "\tNo records of type %ls\n\n"
-    IDS_DNSNONAME           "\tName does not exist.\n\n"
-    IDS_DNSFLUSHERROR       "Could not flush the DNS Resolver Cache: "
-    IDS_DNSFLUSHSUCCESS     "Successfully flushed the DNS Resolver Cache.\n"
-    IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
-    IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
-    IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
-    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
-    IDS_DHCPRELEASEERROR    "An error occurred while releasing interface %ls: "
-    IDS_DHCPRENEWERROR      "An error occurred while renewing interface %ls: "
+    IDS_DNSNORECORD         "\tNu sunt înregistrări de tipul %ls\n\n"
+    IDS_DNSNONAME           "\tNumele nu există.\n\n"
+    IDS_DNSFLUSHERROR       "Memoria de depozitare a resolverului DNS nu a putut fi golită: "
+    IDS_DNSFLUSHSUCCESS     "Memoria de depozitare a resolverului DNS a fost golită cu succes.\n"
+    IDS_DHCPNOTCONNECTED    "Nu poate fi efectuată nicio operațiune %ls atât timp cât mediul este deconectat.\n"
+    IDS_DHCPNOTENABLED      "Adaptorul %ls nu este activat pentru DHCP.\n"
+    IDS_DHCPNOADAPTER       "Operațiunea a eșuat pentru că adaptorul nu este în stadiul admisibil \npentru această operațiune.\n"
+    IDS_DHCPRELEASED        "Adresa IP pentru adaptorul %ls a fost deja eliberată.\n"
+    IDS_DHCPRELEASEERROR    "A apărut o eroare în timpul eliberării interfeței %ls: "
+    IDS_DHCPRENEWERROR      "A apărut o eroare în timpul reînnoirii interfeței %ls: "
 END
 
 STRINGTABLE
