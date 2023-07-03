@@ -1,4 +1,7 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/* 
+ *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+*/
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -17,7 +20,7 @@ BEGIN
     IDS_PLUM "Prună"
     IDS_PUMPKIN "Dovleac"
     IDS_RAIN "Zi ploioasă"
-    IDS_RWB "Red, White, and Blue"
+    IDS_RWB "Roșu, alb și albastru"
     IDS_CLASSIC "ReactOS Clasic"
     IDS_STANDARD "ReactOS Standard"
     IDS_ROSE "Trandafiriu"
