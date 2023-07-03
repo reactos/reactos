@@ -865,6 +865,87 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     *   "a path\foo.cpl"
     */
 {
+#ifdef __REACTOS__
+    signed sp = -1;
+    CPlApplet *applet;
+    LPCWSTR wszFirstCommaPosition = NULL, wszSecondCommaPosition = NULL;
+    LPCWSTR wszLastUnquotedSpacePosition = NULL;
+    LPWSTR buffer, buffer2;
+    BOOL bQuoted = FALSE;
+    int i = 0;
+    SIZE_T nLen = lstrlenW(wszCmd);
+    LPCWSTR extraPmts = L"";
+    LPWSTR ptr;
+
+    buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer) * (nLen + 1));
+    buffer2 = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer2) * (nLen + 1));
+    if (buffer2 == NULL || buffer == NULL)
+    {
+        if (buffer != NULL)
+            HeapFree(GetProcessHeap(), 0, buffer);
+        if (buffer2 != NULL)
+            HeapFree(GetProcessHeap(), 0, buffer2);
+        return;
+    }
+
+    for (i = 0; i < nLen; i++)
+    {
+        if (wszCmd[i] == '"')
+            bQuoted = !bQuoted;
+        if (wszCmd[i] == ',' && !bQuoted)
+        {
+            if (wszFirstCommaPosition == NULL)
+                wszFirstCommaPosition = &wszCmd[i];
+            else if (wszSecondCommaPosition == NULL)
+                wszSecondCommaPosition = &wszCmd[i];
+        }
+        if (wszCmd[i] == ' ' && !bQuoted)
+        {
+            wszLastUnquotedSpacePosition = &wszCmd[i];
+        }
+    }
+
+    if (wszFirstCommaPosition == NULL)
+    {
+        if (wszLastUnquotedSpacePosition != NULL)
+        {
+            int followingSpaces = 0;
+
+            while (wszLastUnquotedSpacePosition[followingSpaces] == L' ')
+                followingSpaces++;
+
+            StringCchCopyNW(buffer, nLen, wszCmd, wszLastUnquotedSpacePosition - wszCmd);
+            lstrcpyW(buffer2, wszLastUnquotedSpacePosition + followingSpaces);
+        }
+        else
+        {
+            lstrcpyW(buffer, wszCmd);
+        }
+    }
+    else
+    {
+        if (wszSecondCommaPosition == NULL)
+            wszSecondCommaPosition = wszCmd + nLen;
+
+        StringCchCopyNW(buffer, nLen, wszCmd, (wszFirstCommaPosition - wszCmd));
+        StringCchCopyNW(buffer2, nLen, wszFirstCommaPosition + 1, (wszSecondCommaPosition - wszFirstCommaPosition - 1));
+        if (wszSecondCommaPosition != wszCmd + nLen)
+        {
+            extraPmts = wszSecondCommaPosition + 1;
+        }
+    }
+
+    while ((ptr = StrChrW(buffer, '"')))
+        memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+   
+    while ((ptr = StrChrW(buffer2, '"')))
+        memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+
+    if (buffer2[0] == L'@')
+    {
+        sp = atoiW(buffer2 + 1);
+    }
+#else
     LPWSTR	buffer;
     LPWSTR	beg = NULL;
     LPWSTR	end;
@@ -938,6 +1019,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     if ((extraPmts) && (*extraPmts == '@') && (sp == -1)) {
         sp = atoiW(extraPmts + 1);
     }
+#endif
 
     TRACE("cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
 
@@ -945,87 +1027,103 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     if (applet)
     {
 #ifdef __REACTOS__
-    ULONG_PTR cookie;
-    BOOL bActivated;
-    ATOM aCPLName;
-    ATOM aCPLFlags;
-    ATOM aCPLPath;
-    AppDlgFindData findData;
+        ULONG_PTR cookie;
+        BOOL bActivated;
+        ATOM aCPLName;
+        ATOM aCPLFlags;
+        ATOM aCPLPath;
+        AppDlgFindData findData;
+        
+        if (sp == -1 && buffer2[0] == L'\0')
+        {
+            sp = 0;
+        }
 #endif
+
         /* we've been given a textual parameter (or none at all) */
         if (sp == -1) {
             while ((++sp) != applet->count) {
                 TRACE("sp %d, name %s\n", sp, debugstr_w(applet->info[sp].name));
 
+#ifdef __REACTOS__
+                if (StrCmpIW(buffer2, applet->info[sp].name) == 0)
+#else
                 if (StrCmpIW(extraPmts, applet->info[sp].name) == 0)
+#endif
                     break;
             }
-        }
-
-        if (sp >= applet->count) {
-            WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
-            sp = 0;
         }
 
 #ifdef __REACTOS__
         bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
 
-        aCPLPath = GlobalFindAtomW(applet->cmd);
-        if (!aCPLPath)
+        if (sp < applet->count)
         {
-            aCPLPath = GlobalAddAtomW(applet->cmd);
-        }
+            aCPLPath = GlobalFindAtomW(applet->cmd);
+            if (!aCPLPath)
+            {
+                aCPLPath = GlobalAddAtomW(applet->cmd);
+            }
 
-        aCPLName = GlobalFindAtomW(L"CPLName");
-        if (!aCPLName)
-        {
-            aCPLName = GlobalAddAtomW(L"CPLName");
-        }
+            aCPLName = GlobalFindAtomW(L"CPLName");
+            if (!aCPLName)
+            {
+                aCPLName = GlobalAddAtomW(L"CPLName");
+            }
 
-        aCPLFlags = GlobalFindAtomW(L"CPLFlags");
-        if (!aCPLFlags)
-        {
-            aCPLFlags = GlobalAddAtomW(L"CPLFlags");
-        }
+            aCPLFlags = GlobalFindAtomW(L"CPLFlags");
+            if (!aCPLFlags)
+            {
+                aCPLFlags = GlobalAddAtomW(L"CPLFlags");
+            }
 
-        findData.szAppFile = applet->cmd;
-        findData.sAppletNo = (UINT_PTR)(sp + 1);
-        findData.aCPLName = aCPLName;
-        findData.aCPLFlags = aCPLFlags;
-        findData.hRunDLL = applet->hWnd;
-        findData.hDlgResult = NULL;
-        // Find the dialog of this applet in the first instance.
-        // Note: The simpler functions "FindWindow" or "FindWindowEx" does not find this type of dialogs.
-        EnumWindows(Control_EnumWinProc, (LPARAM)&findData);
-        if (findData.hDlgResult)
-        {
-            BringWindowToTop(findData.hDlgResult);
-        }
-        else
-        {
-            SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLName), (HANDLE)MAKEINTATOM(aCPLPath));
-            SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLFlags), UlongToHandle(sp + 1));
-            Control_ShowAppletInTaskbar(applet, sp);
-#endif
+            findData.szAppFile = applet->cmd;
+            findData.sAppletNo = (UINT_PTR)(sp + 1);
+            findData.aCPLName = aCPLName;
+            findData.aCPLFlags = aCPLFlags;
+            findData.hRunDLL = applet->hWnd;
+            findData.hDlgResult = NULL;
+            // Find the dialog of this applet in the first instance.
+            // Note: The simpler functions "FindWindow" or "FindWindowEx" does not find this type of dialogs.
+            EnumWindows(Control_EnumWinProc, (LPARAM)&findData);
+            if (findData.hDlgResult)
+            {
+                BringWindowToTop(findData.hDlgResult);
+            }
+            else
+            {
+                SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLName), (HANDLE)MAKEINTATOM(aCPLPath));
+                SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLFlags), UlongToHandle(sp + 1));
+                Control_ShowAppletInTaskbar(applet, sp);
 
+                if (extraPmts[0] == L'\0' || !applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
+                    applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
+                RemovePropW(applet->hWnd, applet->cmd);
+                GlobalDeleteAtom(aCPLPath);
+            }
+        }
+#else
+        if (sp >= applet->count) {
+            WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
+            sp = 0;
+        }
+        
         if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
             applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
-#ifdef __REACTOS__
-            RemovePropW(applet->hWnd, applet->cmd);
-            GlobalDeleteAtom(aCPLPath);
-        }
 #endif
 
         Control_UnloadApplet(applet);
 
 #ifdef __REACTOS__
-    if (bActivated)
-        DeactivateActCtx(0, cookie);
+        if (bActivated)
+            DeactivateActCtx(0, cookie);
 #endif
-
     }
 
     HeapFree(GetProcessHeap(), 0, buffer);
+#ifdef __REACTOS__
+    HeapFree(GetProcessHeap(), 0, buffer2);
+#endif
 }
 
 /*************************************************************************
