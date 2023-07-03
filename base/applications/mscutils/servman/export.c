@@ -40,7 +40,7 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
     HANDLE hFile;
     BOOL bSuccess = FALSE;
 
-    if (!nFormat || 2 < nFormat)
+    if (!nFormat || nFormat > 2)
     {
         return bSuccess;
     }
@@ -66,7 +66,7 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
 
         for (i=0; i < NumListedServ; i++)
         {
-            for (k=0; k<5; k++)
+            for (k=0; k < LVMAX; k++)
             {
                 dwTextLength = GetTextFromListView(Info,
                                                    LVText,
@@ -81,8 +81,9 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
                               NULL);
                 }
 
-                if (k != 4)
+                if (k < LVMAX - 1)
                 {
+                    /* Do not add separator after the last table cell */
                     WriteFile(hFile,
                               &seps[nFormat-1],
                               sizeof(WCHAR),
