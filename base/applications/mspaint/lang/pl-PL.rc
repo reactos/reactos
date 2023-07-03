@@ -33,7 +33,7 @@ BEGIN
         MENUITEM "U&staw jako tło (wyśrodkowane)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Ustaw jako tło (rozciągnięte)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Niedawno używany plik", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "Ostatnio używany plik", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILEEXIT
     END
