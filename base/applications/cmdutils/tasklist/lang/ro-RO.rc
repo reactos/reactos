@@ -1,6 +1,9 @@
 /*
- * TRANSLATOR: Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
-*/
+ * PROJECT:     ReactOS Tasklist
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     The tool shows the list of tasks
+ * COPYRIGHT:   Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -9,7 +12,7 @@ BEGIN
     IDS_USAGE, "Utilizare: TASKLIST [/?] [/NH]\n"
     IDS_DESCRIPTION, "\n\
 Descriere:\
-    Această unealtă afișează on listă a proceselor curente care rulează pe\n\
+    Această unealtă afișează o listă a proceselor curente care rulează pe\n\
     calculator.\n"
     IDS_OPTION_TOO_MUCH, "Eroare: Sintaxă nevalidă. Opțiunea '%1' nu este permisă mai mult de '%2!d!' singură dată (ori).\n"
     IDS_INVALID_SYNTAX, "Eroare: Sintaxă nevalidă.\n"
