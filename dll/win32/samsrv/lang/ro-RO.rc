@@ -1,4 +1,6 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/* TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+*/
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -15,20 +17,20 @@ BEGIN
     IDS_ALIAS_POWER_USERS_COMMENT "Utilizatorii avansați posedă majoritatea drepturilor administrative cu unele restricții."
     IDS_ALIAS_USERS_NAME "Utilizatori"
     IDS_ALIAS_USERS_COMMENT "Utilizatorilor le este limitată capacitatea de a aduce modificări în sistem."
-    IDS_ALIAS_PRINT_OPS_NAME "Print Operators"
-    IDS_ALIAS_PRINT_OPS_COMMENT "Members can administer domain printers"
-    IDS_ALIAS_BACKUP_OPS_NAME "Backup Operators"
-    IDS_ALIAS_BACKUP_OPS_COMMENT "Backup Operators can override security restrictions for the sole purpose of backing up or restoring files"
+    IDS_ALIAS_PRINT_OPS_NAME "Operatori de imprimare"
+    IDS_ALIAS_PRINT_OPS_COMMENT "Membrii pot administra imprimantele de domeniu"
+    IDS_ALIAS_BACKUP_OPS_NAME "Operatori de copii de rezervă"
+    IDS_ALIAS_BACKUP_OPS_COMMENT "Operatorii de copii de rezervă pot trece peste restricțiile de securitate pentru singurul scop de a face o copie de rezervă sau de a restaura fișiere"
     IDS_ALIAS_REPLICATOR_NAME "Replicator"
-    IDS_ALIAS_REPLICATOR_COMMENT "Supports file replication in a domain"
-    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Remote Desktop Users"
-    IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Members in this group are granted the right to logon remotely"
-    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Network Configuration Operators"
-    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Members in this group can have some administrative privileges to manage configuration of networking features"
-    IDS_ALIAS_MONITORING_USERS_NAME "Performance Monitor Users"
-    IDS_ALIAS_MONITORING_USERS_COMMENT "Members of this group have remote access to monitor this computer"
-    IDS_ALIAS_LOGGING_USERS_NAME "Performance Log Users"
-    IDS_ALIAS_LOGGING_USERS_COMMENT "Members of this group have remote access to schedule logging of performance counters on this computer"
+    IDS_ALIAS_REPLICATOR_COMMENT "Acceptă replicarea fișierelor într-un domeniu"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Utilizatori de birou de la distanță"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Membrilor acestui grup li se acordă dreptul de a se conecta de la distanță"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Operatori de configurație a rețelei"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Membrii acestui grup pot avea privilegii administrative pentru a administra configurația caracteristicilor de rețea"
+    IDS_ALIAS_MONITORING_USERS_NAME "Utilizatori de monitorizare a performanței"
+    IDS_ALIAS_MONITORING_USERS_COMMENT "Membrii acestui grup au acces de la distanță pentru a monitoriza acest calculator"
+    IDS_ALIAS_LOGGING_USERS_NAME "Utilizatori pentru jurnalul penformanței"
+    IDS_ALIAS_LOGGING_USERS_COMMENT "Membrii acestui grup au acces de la distanță pentru a planifica înregistrarea contoarelor de performanță pe acest calculator"
     /*
      * ATTENTION:
      *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
