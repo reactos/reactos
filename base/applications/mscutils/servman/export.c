@@ -34,10 +34,16 @@ GetTextFromListView(PMAIN_WND_INFO Info,
 
 static BOOL
 SaveServicesToFile(PMAIN_WND_INFO Info,
-                   LPCWSTR pszFileName)
+                   LPCWSTR pszFileName,
+                   DWORD nFormat)
 {
     HANDLE hFile;
     BOOL bSuccess = FALSE;
+
+    if (!nFormat || nFormat > 2)
+    {
+        return bSuccess;
+    }
 
     hFile = CreateFileW(pszFileName,
                        GENERIC_WRITE,
@@ -51,7 +57,7 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
     {
         WCHAR LVText[500];
         WCHAR newl[2] = {L'\r', L'\n'};
-        WCHAR tab = L'\t';
+        WCHAR seps[2] = {L'\t', L','};
         DWORD dwTextLength, dwWritten;
         INT NumListedServ = 0;
         INT i, k;
@@ -60,7 +66,7 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
 
         for (i=0; i < NumListedServ; i++)
         {
-            for (k=0; k<5; k++)
+            for (k=0; k < LVMAX; k++)
             {
                 dwTextLength = GetTextFromListView(Info,
                                                    LVText,
@@ -73,9 +79,13 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
                               sizeof(WCHAR) * dwTextLength,
                               &dwWritten,
                               NULL);
+                }
 
+                if (k < LVMAX - 1)
+                {
+                    /* Do not add separator after the last table cell */
                     WriteFile(hFile,
-                              &tab,
+                              &seps[nFormat-1],
                               sizeof(WCHAR),
                               &dwWritten,
                               NULL);
@@ -113,7 +123,7 @@ VOID ExportFile(PMAIN_WND_INFO Info)
 
     if(GetSaveFileName(&ofn))
     {
-        if (SaveServicesToFile(Info, szFileName))
+        if (SaveServicesToFile(Info, szFileName, ofn.nFilterIndex))
             return;
     }
 

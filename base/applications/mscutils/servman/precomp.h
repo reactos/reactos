@@ -31,6 +31,7 @@
 #define LVSTATUS        2
 #define LVSTARTUP       3
 #define LVLOGONAS       4
+#define LVMAX           5
 
 #define IMAGE_UNKNOWN   0
 #define IMAGE_SERVICE   1
