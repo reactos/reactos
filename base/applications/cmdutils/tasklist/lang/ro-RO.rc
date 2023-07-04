@@ -12,7 +12,7 @@ BEGIN
     IDS_USAGE, "Utilizare: TASKLIST [/?] [/NH]\n"
     IDS_DESCRIPTION, "\n\
 Descriere:\
-    Această unealtă afișează o listă a proceselor curente care rulează pe\n\
+    Acest instrument afișează o listă a proceselor curente din\n\
     calculator.\n"
     IDS_OPTION_TOO_MUCH, "Eroare: Sintaxă nevalidă. Opțiunea '%1' nu este permisă mai mult de '%2!d!' singură dată (ori).\n"
     IDS_INVALID_SYNTAX, "Eroare: Sintaxă nevalidă.\n"
