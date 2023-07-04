@@ -910,7 +910,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
      * is a path. */
     if (wszFirstCommaPosition == NULL)
     {
-        /* An unquoted space was found in the string. Assume the last word is the second 
+        /* An unquoted space was found in the string. Assume the last word is the second
          * parameter. */
         if (wszLastUnquotedSpacePosition != NULL)
         {
@@ -929,8 +929,8 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
         }
     }
     /* If an unquoted comma was found, there are at least two parts of the string:
-     * - the path 
-     * - either an index preceeded by @, or a name. 
+     * - the path
+     * - either an index preceeded by @, or a name.
      * If there was a second unqoted comma, there is another part of the string:
      * - the rest of the parameters. */
     else
@@ -941,9 +941,9 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
             wszSecondCommaPosition = wszCmd + nLen;
 
         StringCchCopyNW(buffer, nLen, wszCmd, (wszFirstCommaPosition - wszCmd));
-        StringCchCopyNW(buffer2, 
-                        nLen, 
-                        wszFirstCommaPosition + 1, 
+        StringCchCopyNW(buffer2,
+                        nLen,
+                        wszFirstCommaPosition + 1,
                         wszSecondCommaPosition - wszFirstCommaPosition - 1);
                         
         if (wszSecondCommaPosition != wszCmd + nLen)
