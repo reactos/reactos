@@ -1052,10 +1052,6 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
         ATOM aCPLPath;
         AppDlgFindData findData;
         
-        if (sp == -1 && buffer2[0] == L'\0')
-        {
-            sp = 0;
-        }
 #endif
 
         /* we've been given a textual parameter (or none at all) */
@@ -1071,6 +1067,18 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
                     break;
             }
         }
+
+#ifdef __REACTOS__
+        if (sp >= applet->count && buffer2[0] == L'\0')
+        {
+            sp = 0;
+        }
+#else
+        if (sp >= applet->count) {
+            WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
+            sp = 0;
+        }
+#endif
 
 #ifdef __REACTOS__
         bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
@@ -1121,10 +1129,6 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
             }
         }
 #else
-        if (sp >= applet->count) {
-            WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
-            sp = 0;
-        }
         
         if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
             applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
