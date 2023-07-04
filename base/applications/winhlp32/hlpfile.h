@@ -28,7 +28,7 @@ typedef struct
 {
     char        type[10];
     char        name[9];
-    char        caption[51];
+    char        caption[300];
     POINT       origin;
     SIZE        size;
     int         style;
