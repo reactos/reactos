@@ -4,6 +4,7 @@
  * PURPOSE:         Tests for (Rtl)IsTextUnicode.
  * PROGRAMMERS:     Hermes Belusca-Maito
  *                  Dmitry Chapyshev
+ *                  Katayama Hirofumi MZ
  */
 
 #include "precomp.h"
