@@ -1356,7 +1356,7 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
         }
     }
 
-    if (NlsMbCodePageTag)
+    if (NlsMbCodePageTag && pf && (*pf & IS_TEXT_UNICODE_DBCS_LEADBYTE))
     {
         for (i = 0; i < len; i++)
         {
@@ -1367,7 +1367,7 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
             }
         }
 
-        if (lead_byte && pf && (*pf & IS_TEXT_UNICODE_DBCS_LEADBYTE))
+        if (lead_byte)
         {
             weight = (len / 2) - 1;
 
