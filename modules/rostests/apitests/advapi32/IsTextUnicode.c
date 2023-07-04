@@ -157,7 +157,7 @@ START_TEST(IsTextUnicode)
 
     Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
     ok(!IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, &Result), "IsTextUnicode() returned TRUE, expected FALSE\n");
-    ok(Result == 0, "Result returned 0x%x, expected 0x%x\n", Result, 0);
+    ok(Result == 0, "Result returned 0x%x, expected 0\n", Result);
 
     Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS | IS_TEXT_UNICODE_DBCS_LEADBYTE;
     ok(!IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, &Result), "IsTextUnicode() returned TRUE, expected FALSE\n");
