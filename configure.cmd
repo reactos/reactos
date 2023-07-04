@@ -157,7 +157,7 @@ if "%VS_SOLUTION%" == "1" (
     set REACTOS_OUTPUT_PATH=%REACTOS_OUTPUT_PATH%-sln
 )
 
-if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
+if /I "%REACTOS_SOURCE_DIR%" == "%CD%\" (
     set CD_SAME_AS_SOURCE=1
     echo Creating directories in %REACTOS_OUTPUT_PATH%
 
