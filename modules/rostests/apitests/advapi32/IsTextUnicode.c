@@ -152,26 +152,26 @@ START_TEST(IsTextUnicode)
     SetupLocale(932, 932, -1);
 
     Result = IS_TEXT_UNICODE_DBCS_LEADBYTE;
-    ok(!IsTextUnicode(japanese_with_lead, sizeof(japanese_with_lead), &Result), "IsTextUnicode() returned TRUE, expected FALSE\n");
-    ok(Result == IS_TEXT_UNICODE_DBCS_LEADBYTE, "Result returned 0x%x, expected 0x%x\n", Result, IS_TEXT_UNICODE_DBCS_LEADBYTE);
+    ok_int(IsTextUnicode(japanese_with_lead, sizeof(japanese_with_lead), &Result), FALSE);
+    ok_int(Result, IS_TEXT_UNICODE_DBCS_LEADBYTE);
 
     Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
-    ok(!IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, &Result), "IsTextUnicode() returned TRUE, expected FALSE\n");
-    ok(Result == 0, "Result returned 0x%x, expected 0\n", Result);
+    ok_int(IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, &Result), FALSE);
+    ok_int(Result, 0);
 
-    Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS | IS_TEXT_UNICODE_DBCS_LEADBYTE;
-    ok(!IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, &Result), "IsTextUnicode() returned TRUE, expected FALSE\n");
-    ok(Result == (IS_TEXT_UNICODE_DBCS_LEADBYTE | IS_TEXT_UNICODE_REVERSE_STATISTICS),
-       "Result returned 0x%x, expected 0x%x\n", Result, IS_TEXT_UNICODE_DBCS_LEADBYTE | IS_TEXT_UNICODE_REVERSE_STATISTICS);
+    Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS |
+             IS_TEXT_UNICODE_DBCS_LEADBYTE;
+    ok_int(IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, &Result), FALSE);
+    ok_int(Result, (IS_TEXT_UNICODE_DBCS_LEADBYTE | IS_TEXT_UNICODE_REVERSE_STATISTICS));
 
     Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
-    ok(!IsTextUnicode(japanese_utf8, sizeof(japanese_utf8) - 1, &Result), "IsTextUnicode() returned TRUE, expected FALSE\n");
-    ok(Result == 0, "Result returned 0x%x, expected 0x%x\n", Result, 0);
+    ok_int(IsTextUnicode(japanese_utf8, sizeof(japanese_utf8) - 1, &Result), FALSE);
+    ok_int(Result, 0);
 
-    Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS | IS_TEXT_UNICODE_DBCS_LEADBYTE;
-    ok(!IsTextUnicode(japanese_utf8, sizeof(japanese_utf8) - 1, &Result), "IsTextUnicode() returned TRUE, expected FALSE\n");
-    ok(Result == (IS_TEXT_UNICODE_DBCS_LEADBYTE | IS_TEXT_UNICODE_STATISTICS),
-       "Result returned 0x%x, expected 0x%x\n", Result, IS_TEXT_UNICODE_DBCS_LEADBYTE | IS_TEXT_UNICODE_STATISTICS);
+    Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS |
+             IS_TEXT_UNICODE_DBCS_LEADBYTE;
+    ok_int(IsTextUnicode(japanese_utf8, sizeof(japanese_utf8) - 1, &Result), FALSE);
+    ok_int(Result, (IS_TEXT_UNICODE_DBCS_LEADBYTE | IS_TEXT_UNICODE_STATISTICS));
 
     /* Simplified Chinese */
     SetupLocale(936, 936, -1);
