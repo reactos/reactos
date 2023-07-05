@@ -173,7 +173,7 @@ RtlpAddKnownObjectAce(IN PACL Acl,
     if (!RtlValidSid(Sid)) return STATUS_INVALID_SID;
 
     /* Check the validity of the revision */
-    if ((Acl->AclRevision > ACL_REVISION4) || (Revision > ACL_REVISION4))
+    if ((Acl->AclRevision > ACL_REVISION4) || (Revision != ACL_REVISION4))
     {
         return STATUS_REVISION_MISMATCH;
     }
