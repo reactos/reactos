@@ -2452,6 +2452,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             if (DefWindowProcW(hWnd /*GuiData->hWindow*/, WM_NCHITTEST, 0, lParam) == HTCLIENT)
             {
+                /* Don't display the context menu if QuickEdit is enabled */
+                if (Console->QuickEdit) break;
+                
                 HMENU hMenu = CreatePopupMenu();
                 if (hMenu != NULL)
                 {
