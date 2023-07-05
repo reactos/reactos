@@ -265,5 +265,5 @@ BEGIN
     IDS_VERTICAL "Вертикальный"
     IDS_PRINTRES "%d x %d точек/см"
     IDS_CANTPASTE "Не удалось вставить из буфера обмена. Формат данных либо некорректный, либо не поддерживается."
-    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
+    IDS_SAVEERROR "Не удалось сохранить точечный рисунок в файл:\n\n%s"
 END
