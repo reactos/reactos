@@ -106,7 +106,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_WSA_START "BŁĄD: Procedura WSAStartup() nie powiodła się : %d\n"
+    IDS_ERROR_WSA_START "BŁĄD: Procedura WSAStartup() nie powiodła się: %d\n"
     IDS_ERROR_ROUTE "BŁĄD: Nie można odnaleźć pliku 'route.exe'\n"
     IDS_ERROR_TCP_SNAPSHOT "BŁĄD: Nie powiodło się utworzenie migawki dla punktów końcowych TCP.\n"
     IDS_ERROR_UDP_ENDPOINT "BŁĄD: Nie powiodło się utworzenie migawki dla punktów końcowych UDP.\n"

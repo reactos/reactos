@@ -110,7 +110,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_WSA_START "錯誤: WSAStartup() 失敗 : %d\n"
+    IDS_ERROR_WSA_START "錯誤: WSAStartup() 失敗: %d\n"
     IDS_ERROR_ROUTE "錯誤: 找不到 'route.exe'\n"
     IDS_ERROR_TCP_SNAPSHOT "錯誤: 無法取得 TCP 端點快照。\n"
     IDS_ERROR_UDP_ENDPOINT "錯誤: 無法取得 UDP 端點快照。\n"
