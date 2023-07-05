@@ -6,7 +6,7 @@ BEGIN
 NETSTAT [-a] [-e] [-n] [-o] [-p proto] [-r] [-s] [interval]\n\n\
   -a            Displays all connections and listening ports.\n\
   -e            Displays Ethernet statistics. May be combined with -s\n\
-                option\n\
+                option.\n\
   -n            Displays address and port numbers in numeric form.\n\
   -o            Displays the process ID for each connection.\n\
   -p proto      Shows connections for protocol 'proto' TCP or UDP.\n\
@@ -18,7 +18,7 @@ NETSTAT [-a] [-e] [-n] [-o] [-p proto] [-r] [-s] [interval]\n\n\
                 the -p option may be used to specify a subset of the default.\n\
   interval      Redisplays selected statistics every 'interval' seconds.\n\
                 Press CTRL+C to stop redisplaying. By default netstat will\n\
-                print the current information only once.\n\n"
+                print the current information only once.\n"
     IDS_DISPLAY_THEADER "\n  Proto  Local Address          Foreign Address        State"
     IDS_DISPLAY_PROCESS "       Process\n"
     IDS_ACTIVE_CONNECT "\nActive Connections\n"
@@ -37,9 +37,9 @@ BEGIN
     IDS_IP_OUT_REQUEST         "  Output Requests                   = %lu\n"
     IDS_IP_ROUTE_DISCARD       "  Routing Discards                  = %lu\n"
     IDS_IP_DISCARD_OUT_PACK    "  Discarded Output Packets          = %lu\n"
-    IDS_IP_OUT_PACKET_NO_ROUTE "  Output Packets No Route           = %lu\n"
+    IDS_IP_OUT_PACKET_NO_ROUTE "  Output Packet No Route            = %lu\n"
     IDS_IP_REASSEMBLE_REQUIRED "  Reassembly Required               = %lu\n"
-    IDS_IP_REASSEMBLE_SUCCESS  "  Reassembly Succesful              = %lu\n"
+    IDS_IP_REASSEMBLE_SUCCESS  "  Reassembly Successful             = %lu\n"
     IDS_IP_REASSEMBLE_FAILURE  "  Reassembly Failures               = %lu\n"
     IDS_IP_DATAG_FRAG_SUCCESS  "  Datagrams Successfully Fragmented = %lu\n"
     IDS_IP_DATAG_FRAG_FAILURE  "  Datagrams Failing Fragmentation   = %lu\n"
@@ -91,17 +91,17 @@ STRINGTABLE
 BEGIN
     IDS_ETHERNET_INTERFACE_STAT     "Interface Statistics\n\n"
     IDS_ETHERNET_THEADER            "                           Received            Sent\n\n"
-    IDS_ETHERNET_BYTES              "  Bytes               %14lu %15lu\n"
-    IDS_ETHERNET_UNICAST_PACKET     "  Unicast packets     %14lu %15lu\n"
-    IDS_ETHERNET_NON_UNICAST_PACKET "  Non-unicast packets %14lu %15lu\n"
-    IDS_ETHERNET_DISCARD            "  Discards            %14lu %15lu\n"
-    IDS_ETHERNET_ERROR              "  Errors              %14lu %15lu\n"
-    IDS_ETHERNET_UNKNOWN            "  Unknown Protocols   %14lu\n"
+    IDS_ETHERNET_BYTES              "Bytes                %14lu %15lu\n"
+    IDS_ETHERNET_UNICAST_PACKET     "Unicast packets      %14lu %15lu\n"
+    IDS_ETHERNET_NON_UNICAST_PACKET "Non-unicast packets  %14lu %15lu\n"
+    IDS_ETHERNET_DISCARD            "Discards             %14lu %15lu\n"
+    IDS_ETHERNET_ERROR              "Errors               %14lu %15lu\n"
+    IDS_ETHERNET_UNKNOWN            "Unknown protocols    %14lu\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_WSA_START "ERROR: WSAStartup() failed : %d\n"
+    IDS_ERROR_WSA_START "ERROR: WSAStartup() failed: %d\n"
     IDS_ERROR_ROUTE "ERROR: Cannot find 'route.exe'\n"
     IDS_ERROR_TCP_SNAPSHOT "ERROR: Failed to snapshot TCP endpoints.\n"
     IDS_ERROR_UDP_ENDPOINT "ERROR: Failed to snapshot UDP endpoints.\n"

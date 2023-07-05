@@ -1,16 +1,13 @@
 /*
  * PROJECT:     ReactOS netstat utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/network/netstat/netstat.c
  * PURPOSE:     display IP stack statistics
  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
  */
 /*
  * TODO:
- * sort function return values.
- * implement -b, -o and -v
+ * implement -b, -t and -v
  * clean up GetIpHostName
- * command line parser needs more work
  */
 
 #include <stdio.h>
@@ -61,10 +58,18 @@ VOID DoFormatMessage(DWORD ErrorCode)
                NULL, ErrorCode, LANG_USER_DEFAULT);
 }
 
+VOID DisplayTableHeader(VOID)
+{
+    ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
+    ConResPuts(StdOut, IDS_DISPLAY_THEADER);
+    if (bDoShowProcessId)
+        ConResPuts(StdOut, IDS_DISPLAY_PROCESS);
+    else
+        ConPuts(StdOut, L"\n");
+}
+
 /*
- *
  * Parse command line parameters and set any options
- *
  */
 BOOL ParseCmdline(int argc, wchar_t* argv[])
 {
@@ -89,6 +94,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         break;
                     case L'b':
                         bDoShowProcName = TRUE;
+                        bDoShowProcessId = TRUE;
                         break;
                     case L'e':
                         bDoShowEthStats = TRUE;
@@ -96,8 +102,17 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                     case L'n':
                         bDoShowNumbers = TRUE;
                         break;
+                    case L'o':
+                        bDoShowProcessId = TRUE;
+                        break;
                     case L'p':
                         bDoShowProtoCons = TRUE;
+                        if (i+1 >= argc)
+                        {
+                            DisplayTableHeader();
+                            return TRUE;
+                        }
+
                         Proto = argv[i+1];
                         if (!_wcsicmp(L"IP", Proto))
                             Protocol = IP;
@@ -108,10 +123,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         else if (!_wcsicmp(L"UDP", Proto))
                             Protocol = UDP;
                         else
-                        {
-                            ConResPuts(StdOut, IDS_USAGE);
-                            return FALSE;
-                        }
+                            goto StopParsingAndShowUsageHelp;
                         break;
                     case L'r':
                         bDoShowRouteTable = TRUE;
@@ -119,15 +131,11 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                     case L's':
                         bDoShowProtoStats = TRUE;
                         break;
-                    case L'o':
-                        bDoShowProcessId = TRUE;
-                        break;
                     case L'v':
-                        // FIXME!
-                        ConPuts(StdOut, L"got v\n");
                         bDoDispSeqComp = TRUE;
                         break;
-                    default :
+                    default:
+StopParsingAndShowUsageHelp:
                         ConResPuts(StdOut, IDS_USAGE);
                         return FALSE;
                 }
@@ -140,26 +148,9 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
             else
                 return FALSE;
         }
-//        else
-//        {
-//            ConResPrintf(StdOut, IDS_USAGE);
-//            return FALSE;
-//        }
     }
 
     return TRUE;
-}
-
-/*
- * Display table header
- */
-VOID DisplayTableHeader(VOID)
-{
-    ConResPuts(StdOut, IDS_DISPLAY_THEADER);
-    if (bDoShowProcessId)
-        ConResPuts(StdOut, IDS_DISPLAY_PROCESS);
-    else
-        ConPuts(StdOut, L"\n");
 }
 
 /*
@@ -204,13 +195,11 @@ BOOL DisplayOutput(VOID)
             case TCP:
                 if (bDoShowProtoStats)
                     ShowTcpStatistics();
-                ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                 DisplayTableHeader();
                 return ShowTcpTable();
             case UDP:
                 if (bDoShowProtoStats)
                     ShowUdpStatistics();
-                ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                 DisplayTableHeader();
                 return (bDoShowAllCons ? ShowUdpTable() : TRUE);
             default:
@@ -227,7 +216,6 @@ BOOL DisplayOutput(VOID)
     }
     else
     {
-        ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
         DisplayTableHeader();
         if (ShowTcpTable() && bDoShowAllCons)
             ShowUdpTable();
@@ -241,7 +229,7 @@ VOID ShowIpStatistics(VOID)
     PMIB_IPSTATS pIpStats;
     DWORD dwRetVal;
 
-    pIpStats = (MIB_IPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPSTATS));
+    pIpStats = (MIB_IPSTATS*)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPSTATS));
 
     if ((dwRetVal = GetIpStatistics(pIpStats)) == NO_ERROR)
     {
@@ -277,7 +265,7 @@ VOID ShowIcmpStatistics(VOID)
     PMIB_ICMP pIcmpStats;
     DWORD dwRetVal;
 
-    pIcmpStats = (MIB_ICMP*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_ICMP));
+    pIcmpStats = (MIB_ICMP*)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_ICMP));
 
     if ((dwRetVal = GetIcmpStatistics(pIcmpStats)) == NO_ERROR)
     {
@@ -316,7 +304,6 @@ VOID ShowIcmpStatistics(VOID)
     }
 
     HeapFree(GetProcessHeap(), 0, pIcmpStats);
-
 }
 
 VOID ShowTcpStatistics(VOID)
@@ -367,12 +354,12 @@ VOID ShowEthernetStatistics(VOID)
     DWORD dwSize = 0;
     DWORD dwRetVal = 0;
 
-    pIfTable = (MIB_IFTABLE*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IFTABLE));
+    pIfTable = (MIB_IFTABLE*)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IFTABLE));
 
     if (GetIfTable(pIfTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER)
     {
         HeapFree(GetProcessHeap(), 0, pIfTable);
-        pIfTable = (MIB_IFTABLE*) HeapAlloc(GetProcessHeap(), 0, dwSize);
+        pIfTable = (MIB_IFTABLE*)HeapAlloc(GetProcessHeap(), 0, dwSize);
 
         if ((dwRetVal = GetIfTable(pIfTable, &dwSize, 0)) == NO_ERROR)
         {
@@ -411,17 +398,17 @@ BOOL ShowTcpTable(VOID)
     CHAR PID[64];
 
     /* Get the table of TCP endpoints */
-    dwSize = sizeof (MIB_TCPTABLE_OWNER_PID);
+    dwSize = sizeof(MIB_TCPTABLE_OWNER_PID);
     /* Should also work when we get new connections between 2 GetTcpTable()
      * calls: */
     do
     {
-        tcpTable = (PMIB_TCPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
+        tcpTable = (PMIB_TCPTABLE_OWNER_PID)HeapAlloc(GetProcessHeap(), 0, dwSize);
         error = GetExtendedTcpTable(tcpTable, &dwSize, TRUE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
-        if ( error != NO_ERROR )
+        if (error != NO_ERROR)
             HeapFree(GetProcessHeap(), 0, tcpTable);
     }
-    while  ( error == ERROR_INSUFFICIENT_BUFFER );
+    while (error == ERROR_INSUFFICIENT_BUFFER);
 
     if (error != NO_ERROR)
     {
@@ -491,7 +478,7 @@ BOOL ShowUdpTable(VOID)
         DoFormatMessage(error);
         return FALSE;
     }
-    udpTable = (PMIB_UDPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
+    udpTable = (PMIB_UDPTABLE_OWNER_PID)HeapAlloc(GetProcessHeap(), 0, dwSize);
     error = GetExtendedUdpTable(udpTable, &dwSize, TRUE, AF_INET, UDP_TABLE_OWNER_PID, 0);
     if (error)
     {
@@ -504,7 +491,6 @@ BOOL ShowUdpTable(VOID)
     /* Dump the UDP table */
     for (i = 0; i < udpTable->dwNumEntries; i++)
     {
-
         /* I've split this up so it's easier to follow */
         GetIpHostName(TRUE, udpTable->table[i].dwLocalAddr, HostIp, sizeof(HostIp));
         GetPortName(udpTable->table[i].dwLocalPort, "udp", HostPort, sizeof(HostPort));
@@ -542,7 +528,7 @@ GetPortName(UINT Port, PCSTR Proto, CHAR Name[], INT NameLen)
     }
     /* Try to translate to a name */
     if ((pServent = getservbyport(Port, Proto)))
-        strcpy(Name, pServent->s_name );
+        strcpy(Name, pServent->s_name);
     else
         sprintf(Name, "%d", htons((WORD)Port));
     return Name;
@@ -602,10 +588,8 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], INT NameLen)
 }
 
 /*
- *
  * Parse command line parameters and set any options
- * Run display output, looping over set intervals if a number is given
- *
+ * Run display output, looping over set interval if a number is given
  */
 int wmain(int argc, wchar_t *argv[])
 {
