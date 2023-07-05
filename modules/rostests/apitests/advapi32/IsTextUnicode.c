@@ -156,6 +156,8 @@ START_TEST(IsTextUnicode)
     ok_int(IsTextUnicode(japanese_with_lead, sizeof(japanese_with_lead), &Result), FALSE);
     ok_int(Result, IS_TEXT_UNICODE_DBCS_LEADBYTE);
 
+    ok_int(IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, NULL), FALSE);
+
     Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
     ok_int(IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, &Result), FALSE);
     ok_int(Result, 0);
@@ -164,6 +166,8 @@ START_TEST(IsTextUnicode)
              IS_TEXT_UNICODE_DBCS_LEADBYTE;
     ok_int(IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, &Result), FALSE);
     ok_int(Result, (IS_TEXT_UNICODE_DBCS_LEADBYTE | IS_TEXT_UNICODE_REVERSE_STATISTICS));
+
+    ok_int(IsTextUnicode(japanese_utf8, sizeof(japanese_utf8) - 1, NULL), FALSE);
 
     Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
     ok_int(IsTextUnicode(japanese_utf8, sizeof(japanese_utf8) - 1, &Result), FALSE);
