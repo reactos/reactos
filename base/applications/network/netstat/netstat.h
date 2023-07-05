@@ -13,6 +13,7 @@ BOOL bDoShowNumbers    = FALSE; // -n
 BOOL bDoShowProtoCons  = FALSE; // -p
 BOOL bDoShowRouteTable = FALSE; // -r
 BOOL bDoShowProtoStats = FALSE; // -s
+BOOL bDoShowProcessId  = FALSE; // -o
 BOOL bDoDispSeqComp    = FALSE; // -v
 BOOL bLoopOutput       = FALSE; // interval
 
@@ -43,9 +44,6 @@ typedef struct {
 } MIB_UDPEXTABLE, *PMIB_UDPEXTABLE;
 
 /* function declarations */
-BOOL ParseCmdline(int argc, char* argv[]);
-BOOL DisplayOutput(VOID);
-DWORD DoFormatMessage(DWORD ErrorCode);
 VOID ShowIpStatistics(VOID);
 VOID ShowIcmpStatistics(VOID);
 VOID ShowTcpStatistics(VOID);
