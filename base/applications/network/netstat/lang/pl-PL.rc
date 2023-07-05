@@ -54,7 +54,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ICMP4_STAT_HEADER "\nStatystyki ICMPv4\n\n"
-    IDS_ICMP_THEADER "                            Odebrano  Wysłano\n"
+    IDS_ICMP_THEADER             "                            Odebrano  Wysłano\n"
     IDS_ICMP_MSG                 "  Komunikaty                      %-11lu %lu\n"
     IDS_ICMP_ERROR               "  Błędy                           %-11lu %lu\n"
     IDS_ICMP_DEST_UNREACH        "  Miejsce docelowe nieosiągalne   %-11lu %lu\n"
