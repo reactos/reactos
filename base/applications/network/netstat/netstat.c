@@ -63,6 +63,7 @@ VOID DoFormatMessage(DWORD ErrorCode)
  */
 VOID DisplayTableHeader(VOID)
 {
+    ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
     ConResPuts(StdOut, IDS_DISPLAY_THEADER);
     if (bDoShowProcessId)
         ConResPuts(StdOut, IDS_DISPLAY_PROCESS);
@@ -115,7 +116,6 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         bDoShowProtoCons = TRUE;
                         if (i+1 >= argc)
                         {
-                            ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                             DisplayTableHeader();
                             return TRUE;
                         }
@@ -173,7 +173,6 @@ BOOL DisplayOutput(VOID)
 {
     if (bNoOptions)
     {
-        ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
         DisplayTableHeader();
         return ShowTcpTable();
     }
@@ -209,13 +208,11 @@ BOOL DisplayOutput(VOID)
             case TCP:
                 if (bDoShowProtoStats)
                     ShowTcpStatistics();
-                ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                 DisplayTableHeader();
                 return ShowTcpTable();
             case UDP:
                 if (bDoShowProtoStats)
                     ShowUdpStatistics();
-                ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                 DisplayTableHeader();
                 return (bDoShowAllCons ? ShowUdpTable() : TRUE);
             default:
@@ -232,7 +229,6 @@ BOOL DisplayOutput(VOID)
     }
     else
     {
-        ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
         DisplayTableHeader();
         if (ShowTcpTable() && bDoShowAllCons)
             ShowUdpTable();
