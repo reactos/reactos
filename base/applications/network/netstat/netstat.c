@@ -1,20 +1,17 @@
 /*
  * PROJECT:     ReactOS netstat utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/network/netstat/netstat.c
  * PURPOSE:     display IP stack statistics
  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
  */
 /*
  * TODO:
  * sort function return values.
- * implement -b, -o and -v
+ * implement -b and -v
  * clean up GetIpHostName
- * command line parser needs more work
  */
 
 #define WIN32_NO_STATUS
-#include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
 #define _INC_WINDOWS
@@ -49,12 +46,11 @@ TCHAR TcpState[][32] = {
 /*
  * format message string and display output
  */
-DWORD DoFormatMessage(DWORD ErrorCode)
+VOID DoFormatMessage(DWORD ErrorCode)
 {
     LPVOID lpMsgBuf;
-    DWORD RetVal;
 
-    if ((RetVal = FormatMessage(
+    if (FormatMessage(
             FORMAT_MESSAGE_ALLOCATE_BUFFER |
             FORMAT_MESSAGE_FROM_SYSTEM |
             FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -63,23 +59,28 @@ DWORD DoFormatMessage(DWORD ErrorCode)
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
             (LPTSTR) &lpMsgBuf,
             0,
-            NULL )))
+            NULL))
     {
         _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
 
         LocalFree(lpMsgBuf);
         /* return number of TCHAR's stored in output buffer
          * excluding '\0' - as FormatMessage does*/
-        return RetVal;
     }
+}
+
+VOID DisplayTableHeader()
+{
+    _tprintf(_T("\nActive Connections\n"));
+    _tprintf(_T("\n  Proto  Local Address          Foreign Address        State"));
+    if (bDoShowProcessId)
+        _tprintf(_T("       Process\n"));
     else
-        return 0;
+        _tprintf(_T("\n"));
 }
 
 /*
- *
  * Parse command line parameters and set any options
- *
  */
 BOOL ParseCmdline(int argc, char* argv[])
 {
@@ -99,20 +100,30 @@ BOOL ParseCmdline(int argc, char* argv[])
             {
                 switch (tolower(c))
                 {
-                    case 'a' :
+                    case 'a':
                         bDoShowAllCons = TRUE;
                         break;
-                    case 'b' :
+                    case 'b':
                         bDoShowProcName = TRUE;
+                        bDoShowProcessId = TRUE;
                         break;
-                    case 'e' :
+                    case 'e':
                         bDoShowEthStats = TRUE;
                         break;
-                    case 'n' :
+                    case 'n':
                         bDoShowNumbers = TRUE;
                         break;
-                    case 'p' :
+                    case 'o':
+                        bDoShowProcessId = TRUE;
+                        break;
+                    case 'p':
                         bDoShowProtoCons = TRUE;
+                        if (i+1 >= argc)
+                        {
+                            DisplayTableHeader();
+                            return EXIT_SUCCESS;
+                        }
+
                         Proto = argv[i+1];
                         if (!_stricmp("IP", Proto))
                             Protocol = IP;
@@ -123,25 +134,19 @@ BOOL ParseCmdline(int argc, char* argv[])
                         else if (!_stricmp("UDP", Proto))
                             Protocol = UDP;
                         else
-                        {
-                            Usage();
-                            return EXIT_FAILURE;
-                        }
+                            goto StopParsingAndShowUsageHelp;
                         break;
-                    case 'r' :
+                    case 'r':
                         bDoShowRouteTable = TRUE;
                         break;
-                    case 's' :
+                    case 's':
                         bDoShowProtoStats = TRUE;
                         break;
-                    case 'o' :
-                        bDoShowProcessId = TRUE;
-                        break;
-                    case 'v' :
-                        _tprintf(_T("got v\n"));
+                    case 'v':
                         bDoDispSeqComp = TRUE;
                         break;
-                    default :
+                    default:
+StopParsingAndShowUsageHelp:
                         Usage();
                         return EXIT_FAILURE;
                 }
@@ -154,28 +159,10 @@ BOOL ParseCmdline(int argc, char* argv[])
             else
                 return EXIT_FAILURE;
         }
-//        else
-//        {
-//            Usage();
-//            EXIT_FAILURE;
-//        }
     }
 
     return EXIT_SUCCESS;
 }
-
-/*
- * Display table header
- */
-VOID DisplayTableHeader()
-{
-    _tprintf(_T("\n  Proto  Local Address          Foreign Address        State"));
-    if (bDoShowProcessId)
-        _tprintf(_T("       Process\n"));
-    else
-        _tprintf(_T("\n"));
-}
-
 
 /*
  * Simulate Microsofts netstat utility output
@@ -191,7 +178,6 @@ BOOL DisplayOutput()
 
     if (bDoShowRouteTable)
     {
-        /* mingw doesn't have lib for _tsystem */
         if (system("route print") == -1)
         {
             _tprintf(_T("cannot find 'route.exe'\n"));
@@ -210,36 +196,28 @@ BOOL DisplayOutput()
     {
         switch (Protocol)
         {
-                case IP :
-                    if (bDoShowProtoStats)
-                    {
-                        ShowIpStatistics();
-                        return EXIT_SUCCESS;
-                    }
-                    break;
-                case ICMP :
-                    if (bDoShowProtoStats)
-                    {
-                        ShowIcmpStatistics();
-                        return EXIT_SUCCESS;
-                    }
-                    break;
-                case TCP :
-                    if (bDoShowProtoStats)
-                        ShowTcpStatistics();
-                    _tprintf(_T("\nActive Connections\n"));
-                    DisplayTableHeader();
-                    ShowTcpTable();
-                    break;
-                case UDP :
-                    if (bDoShowProtoStats)
-                        ShowUdpStatistics();
-                    _tprintf(_T("\nActive Connections\n"));
-                    DisplayTableHeader();
-                    ShowUdpTable();
-                    break;
-                default :
-                    break;
+            case IP:
+                if (bDoShowProtoStats)
+                    ShowIpStatistics();
+                break;
+            case ICMP:
+                if (bDoShowProtoStats)
+                    ShowIcmpStatistics();
+                break;
+            case TCP:
+                if (bDoShowProtoStats)
+                    ShowTcpStatistics();
+                DisplayTableHeader();
+                ShowTcpTable();
+                break;
+            case UDP:
+                if (bDoShowProtoStats)
+                    ShowUdpStatistics();
+                DisplayTableHeader();
+                ShowUdpTable();
+                break;
+            default:
+                break;
         }
     }
     else if (bDoShowProtoStats)
@@ -252,7 +230,6 @@ BOOL DisplayOutput()
     }
     else
     {
-        _tprintf(_T("\nActive Connections\n"));
         DisplayTableHeader();
         ShowTcpTable();
         if (bDoShowAllCons)
@@ -266,7 +243,7 @@ VOID ShowIpStatistics()
     PMIB_IPSTATS pIpStats;
     DWORD dwRetVal;
 
-    pIpStats = (MIB_IPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPSTATS));
+    pIpStats = (MIB_IPSTATS*)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPSTATS));
 
     if ((dwRetVal = GetIpStatistics(pIpStats)) == NO_ERROR)
     {
@@ -283,9 +260,9 @@ VOID ShowIpStatistics()
         _tprintf(_T("  %-34s = %lu\n"), _T("Discarded Output Packets"), pIpStats->dwOutDiscards);
         _tprintf(_T("  %-34s = %lu\n"), _T("Output Packets No Route"), pIpStats->dwOutNoRoutes);
         _tprintf(_T("  %-34s = %lu\n"), _T("Reassembly Required"), pIpStats->dwReasmReqds);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Reassembly Succesful"), pIpStats->dwReasmOks);
+        _tprintf(_T("  %-34s = %lu\n"), _T("Reassembly Successful"), pIpStats->dwReasmOks);
         _tprintf(_T("  %-34s = %lu\n"), _T("Reassembly Failures"), pIpStats->dwReasmFails);
-       // _tprintf(_T("  %-34s = %lu\n"), _T("Datagrams successfully fragmented"), NULL); /* FIXME: what is this one? */
+        _tprintf(_T("  %-34s = %lu\n"), _T("Datagrams successfully fragmented"), pIpStats->dwFragOks);
         _tprintf(_T("  %-34s = %lu\n"), _T("Datagrams Failing Fragmentation"), pIpStats->dwFragFails);
         _tprintf(_T("  %-34s = %lu\n"), _T("Fragments Created"), pIpStats->dwFragCreates);
     }
@@ -300,7 +277,7 @@ VOID ShowIcmpStatistics()
     PMIB_ICMP pIcmpStats;
     DWORD dwRetVal;
 
-    pIcmpStats = (MIB_ICMP*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_ICMP));
+    pIcmpStats = (MIB_ICMP*)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_ICMP));
 
     if ((dwRetVal = GetIcmpStatistics(pIcmpStats)) == NO_ERROR)
     {
@@ -337,53 +314,44 @@ VOID ShowIcmpStatistics()
         DoFormatMessage(dwRetVal);
 
     HeapFree(GetProcessHeap(), 0, pIcmpStats);
-
 }
 
 VOID ShowTcpStatistics()
 {
-    PMIB_TCPSTATS pTcpStats;
+    MIB_TCPSTATS tcpStats;
     DWORD dwRetVal;
 
-    pTcpStats = (MIB_TCPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_TCPSTATS));
-
-    if ((dwRetVal = GetTcpStatistics(pTcpStats)) == NO_ERROR)
+    if ((dwRetVal = GetTcpStatistics(&tcpStats)) == NO_ERROR)
     {
         _tprintf(_T("\nTCP Statistics for IPv4\n\n"));
-        _tprintf(_T("  %-35s = %lu\n"), _T("Active Opens"), pTcpStats->dwActiveOpens);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Passive Opens"), pTcpStats->dwPassiveOpens);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Failed Connection Attempts"), pTcpStats->dwAttemptFails);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Reset Connections"), pTcpStats->dwEstabResets);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Current Connections"), pTcpStats->dwCurrEstab);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Received"), pTcpStats->dwInSegs);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Sent"), pTcpStats->dwOutSegs);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Retransmitted"), pTcpStats->dwRetransSegs);
+        _tprintf(_T("  %-35s = %lu\n"), _T("Active Opens"), tcpStats.dwActiveOpens);
+        _tprintf(_T("  %-35s = %lu\n"), _T("Passive Opens"), tcpStats.dwPassiveOpens);
+        _tprintf(_T("  %-35s = %lu\n"), _T("Failed Connection Attempts"), tcpStats.dwAttemptFails);
+        _tprintf(_T("  %-35s = %lu\n"), _T("Reset Connections"), tcpStats.dwEstabResets);
+        _tprintf(_T("  %-35s = %lu\n"), _T("Current Connections"), tcpStats.dwCurrEstab);
+        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Received"), tcpStats.dwInSegs);
+        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Sent"), tcpStats.dwOutSegs);
+        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Retransmitted"), tcpStats.dwRetransSegs);
     }
     else
         DoFormatMessage(dwRetVal);
-
-    HeapFree(GetProcessHeap(), 0, pTcpStats);
 }
 
 VOID ShowUdpStatistics()
 {
-    PMIB_UDPSTATS pUdpStats;
+    MIB_UDPSTATS udpStats;
     DWORD dwRetVal;
 
-    pUdpStats = (MIB_UDPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_UDPSTATS));
-
-    if ((dwRetVal = GetUdpStatistics(pUdpStats)) == NO_ERROR)
+    if ((dwRetVal = GetUdpStatistics(&udpStats)) == NO_ERROR)
     {
         _tprintf(_T("\nUDP Statistics for IPv4\n\n"));
-        _tprintf(_T("  %-21s = %lu\n"), _T("Datagrams Received"), pUdpStats->dwInDatagrams);
-        _tprintf(_T("  %-21s = %lu\n"), _T("No Ports"), pUdpStats->dwNoPorts);
-        _tprintf(_T("  %-21s = %lu\n"), _T("Receive Errors"), pUdpStats->dwInErrors);
-        _tprintf(_T("  %-21s = %lu\n"), _T("Datagrams Sent"), pUdpStats->dwOutDatagrams);
+        _tprintf(_T("  %-21s = %lu\n"), _T("Datagrams Received"), udpStats.dwInDatagrams);
+        _tprintf(_T("  %-21s = %lu\n"), _T("No Ports"), udpStats.dwNoPorts);
+        _tprintf(_T("  %-21s = %lu\n"), _T("Receive Errors"), udpStats.dwInErrors);
+        _tprintf(_T("  %-21s = %lu\n"), _T("Datagrams Sent"), udpStats.dwOutDatagrams);
     }
     else
         DoFormatMessage(dwRetVal);
-
-    HeapFree(GetProcessHeap(), 0, pUdpStats);
 }
 
 VOID ShowEthernetStatistics()
@@ -392,12 +360,12 @@ VOID ShowEthernetStatistics()
     DWORD dwSize = 0;
     DWORD dwRetVal = 0;
 
-    pIfTable = (MIB_IFTABLE*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IFTABLE));
+    pIfTable = (MIB_IFTABLE*)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IFTABLE));
 
     if (GetIfTable(pIfTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER)
     {
         HeapFree(GetProcessHeap(), 0, pIfTable);
-        pIfTable = (MIB_IFTABLE*) HeapAlloc(GetProcessHeap(), 0, dwSize);
+        pIfTable = (MIB_IFTABLE*)HeapAlloc(GetProcessHeap(), 0, dwSize);
 
         if ((dwRetVal = GetIfTable(pIfTable, &dwSize, 0)) == NO_ERROR)
         {
@@ -434,17 +402,17 @@ VOID ShowTcpTable()
     CHAR PID[64];
 
     /* Get the table of TCP endpoints */
-    dwSize = sizeof (MIB_TCPTABLE_OWNER_PID);
+    dwSize = sizeof(MIB_TCPTABLE_OWNER_PID);
     /* Should also work when we get new connections between 2 GetTcpTable()
      * calls: */
     do
     {
-        tcpTable = (PMIB_TCPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
+        tcpTable = (PMIB_TCPTABLE_OWNER_PID)HeapAlloc(GetProcessHeap(), 0, dwSize);
         error = GetExtendedTcpTable(tcpTable, &dwSize, TRUE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
-        if ( error != NO_ERROR )
+        if (error != NO_ERROR)
             HeapFree(GetProcessHeap(), 0, tcpTable);
     }
-    while  ( error == ERROR_INSUFFICIENT_BUFFER );
+    while (error == ERROR_INSUFFICIENT_BUFFER);
 
     if (error != NO_ERROR)
     {
@@ -479,14 +447,9 @@ VOID ShowTcpTable()
             }
 
             if (bDoShowProcessId)
-            {
                 sprintf(PID, "%ld", tcpTable->table[i].dwOwningPid);
-            }
             else
-            {
                 PID[0] = 0;
-            }
-
             _tprintf(_T("  %-6s %-22s %-22s %-11s %s\n"), _T("TCP"),
             Host, Remote, TcpState[tcpTable->table[i].dwState], PID);
         }
@@ -512,7 +475,7 @@ VOID ShowUdpTable()
         DoFormatMessage(error);
         exit(EXIT_FAILURE);
     }
-    udpTable = (PMIB_UDPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
+    udpTable = (PMIB_UDPTABLE_OWNER_PID)HeapAlloc(GetProcessHeap(), 0, dwSize);
     error = GetExtendedUdpTable(udpTable, &dwSize, TRUE, AF_INET, UDP_TABLE_OWNER_PID, 0);
     if (error)
     {
@@ -525,23 +488,17 @@ VOID ShowUdpTable()
     /* Dump the UDP table */
     for (i = 0; i < udpTable->dwNumEntries; i++)
     {
-
         /* I've split this up so it's easier to follow */
         GetIpHostName(TRUE, udpTable->table[i].dwLocalAddr, HostIp, HOSTNAMELEN);
-        GetPortName(udpTable->table[i].dwLocalPort, "tcp", HostPort, PORTNAMELEN);
+        GetPortName(udpTable->table[i].dwLocalPort, "udp", HostPort, PORTNAMELEN);
 
         sprintf(Host, "%s:%s", HostIp, HostPort);
 
         if (bDoShowProcessId)
-        {
             sprintf(PID, "%ld", udpTable->table[i].dwOwningPid);
-        }
         else
-        {
             PID[0] = 0;
-        }
-
-        _tprintf(_T("  %-6s %-22s %-34s %s\n"), _T("UDP"), Host,  _T("*:*"), PID);
+        _tprintf(_T("  %-6s %-22s %-34s %s\n"), _T("UDP"), Host, _T("*:*"), PID);
     }
 
     HeapFree(GetProcessHeap(), 0, udpTable);
@@ -562,7 +519,7 @@ GetPortName(UINT Port, PCSTR Proto, CHAR Name[], INT NameLen)
     }
     /* Try to translate to a name */
     if ((pServent = getservbyport(Port, Proto)))
-        strcpy(Name, pServent->s_name );
+        strcpy(Name, pServent->s_name);
     else
         sprintf(Name, "%d", htons((WORD)Port));
     return Name;
@@ -624,11 +581,12 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
 VOID Usage()
 {
     _tprintf(_T("\nDisplays current TCP/IP protocol statistics and network connections.\n\n"
-    "NETSTAT [-a] [-e] [-n] [-p proto] [-r] [-s] [interval]\n\n"
+    "NETSTAT [-a] [-e] [-n] [-o] [-p proto] [-r] [-s] [interval]\n\n"
     "  -a            Displays all connections and listening ports.\n"
     "  -e            Displays Ethernet statistics. May be combined with -s\n"
     "                option\n"
     "  -n            Displays address and port numbers in numeric form.\n"
+    "  -o            Displays the process ID for each connection.\n"
     "  -p proto      Shows connections for protocol 'proto' TCP or UDP.\n"
     "                If used with the -s option to display\n"
     "                per-protocol statistics, 'proto' may be TCP, UDP, or IP.\n"
@@ -636,30 +594,27 @@ VOID Usage()
     "  -s            Displays per-protocol statistics. By default, Statistics are\n"
     "                shown for IP, ICMP, TCP and UDP;\n"
     "                the -p option may be used to specify a subset of the default.\n"
-    " -o             Displays the process ID for each connection.\n"
     "  interval      Redisplays selected statistics every 'interval' seconds.\n"
     "                Press CTRL+C to stop redisplaying. By default netstat will\n"
     "                print the current information only once.\n"));
 }
 
 /*
- *
  * Parse command line parameters and set any options
- * Run display output, looping over set intervals if a number is given
- *
+ * Run display output, looping over set interval if a number is given
  */
 int main(int argc, char *argv[])
 {
     WSADATA wsaData;
 
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-    {
-        _tprintf(_T("WSAStartup() failed : %d\n"), WSAGetLastError());
-        return -1;
-    }
-
     if (ParseCmdline(argc, argv))
         return -1;
+
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
+        _tprintf(_T("WSAStartup() failed: %d\n"), WSAGetLastError());
+        return -1;
+    }
 
     if (bLoopOutput)
     {
