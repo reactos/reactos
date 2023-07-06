@@ -722,6 +722,27 @@ public:
     };
 
 protected:
+    static bool ShouldExcludeFormat(REFGUID guidFileType, DWORD dwExclude)
+    {
+        if ((dwExclude & excludeGIF) && ::IsEqualGUID(guidFileType, Gdiplus::ImageFormatGIF))
+            return true;
+        if ((dwExclude & excludeBMP) && ::IsEqualGUID(guidFileType, Gdiplus::ImageFormatBMP))
+            return true;
+        if ((dwExclude & excludeEMF) && ::IsEqualGUID(guidFileType, Gdiplus::ImageFormatEMF))
+            return true;
+        if ((dwExclude & excludeWMF) && ::IsEqualGUID(guidFileType, Gdiplus::ImageFormatWMF))
+            return true;
+        if ((dwExclude & excludeJPEG) && ::IsEqualGUID(guidFileType, Gdiplus::ImageFormatJPEG))
+            return true;
+        if ((dwExclude & excludePNG) && ::IsEqualGUID(guidFileType, Gdiplus::ImageFormatPNG))
+            return true;
+        if ((dwExclude & excludeTIFF) && ::IsEqualGUID(guidFileType, Gdiplus::ImageFormatTIFF))
+            return true;
+        if ((dwExclude & excludeIcon) && ::IsEqualGUID(guidFileType, Gdiplus::ImageFormatIcon))
+            return true;
+        return ((dwExclude & excludeOther) == excludeOther);
+    }
+
     static HRESULT GetCommonFilterString(
         CSimpleString& strFilter,
         CSimpleArray<GUID>& aguidFileTypes,
@@ -1024,96 +1045,86 @@ protected:
         return RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);
     }
 
-    struct EXTENSION_ENTRY
+    const GUID *FileTypeFromExtension(LPCWSTR dotext) const
     {
-        LPCWSTR pszExt;
-        GUID guid;
-    };
+        UINT cEncoders = 0;
+        Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
 
-    const GUID *FileTypeFromExtension(LPCWSTR pszExt) const
-    {
-        static const EXTENSION_ENTRY table[] =
+        CStringW spec = L"*";
+        spec += dotext;
+
+        for (UINT i = 0; i < cEncoders; ++i)
         {
-            {L".jpg", Gdiplus::ImageFormatJPEG},
-            {L".png", Gdiplus::ImageFormatPNG},
-            {L".bmp", Gdiplus::ImageFormatBMP},
-            {L".gif", Gdiplus::ImageFormatGIF},
-            {L".tif", Gdiplus::ImageFormatTIFF},
-            {L".jpeg", Gdiplus::ImageFormatJPEG},
-            {L".jpe", Gdiplus::ImageFormatJPEG},
-            {L".jfif", Gdiplus::ImageFormatJPEG},
-            {L".dib", Gdiplus::ImageFormatBMP},
-            {L".rle", Gdiplus::ImageFormatBMP},
-            {L".tiff", Gdiplus::ImageFormatTIFF}
-        };
-        const size_t count = _countof(table);
-        for (size_t i = 0; i < count; ++i)
-        {
-            if (::lstrcmpiW(table[i].pszExt, pszExt) == 0)
-                return &table[i].guid;
+            if (!pEncoders[i].FilenameExtension || !pEncoders[i].FilenameExtension[0])
+                continue;
+
+            CStringW strSpecs = pEncoders[i].FilenameExtension;
+            INT i0 = 0, i1;
+            for (;;)
+            {
+                i1 = strSpecs.Find(L';', i0);
+
+                CStringW strSpec;
+                if (i1 < 0)
+                    strSpec = strSpecs.Mid(i0);
+                else
+                    strSpec = strSpecs.Mid(i0, i1 - i0);
+
+                if (strSpec.CompareNoCase(spec) == 0)
+                {
+                    static GUID s_guid;
+                    s_guid = pEncoders[i].FormatID;
+                    free(pEncoders);
+                    return &s_guid;
+                }
+
+                if (i1 < 0)
+                    break;
+
+                i0 = i1 + 1;
+            }
         }
+
+        free(pEncoders);
         return NULL;
     }
 
-    struct FORMAT_ENTRY
-    {
-        GUID guid;
-        LPCWSTR mime;
-    };
-
     bool GetClsidFromFileType(CLSID *clsid, const GUID *guid) const
     {
-        static const FORMAT_ENTRY table[] =
+        UINT cEncoders = 0;
+        Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
+
+        for (UINT iInfo = 0; iInfo < cEncoders; ++iInfo)
         {
-            {Gdiplus::ImageFormatJPEG, L"image/jpeg"},
-            {Gdiplus::ImageFormatPNG, L"image/png"},
-            {Gdiplus::ImageFormatBMP, L"image/bmp"},
-            {Gdiplus::ImageFormatGIF, L"image/gif"},
-            {Gdiplus::ImageFormatTIFF, L"image/tiff"}
-        };
-        const size_t count = _countof(table);
-        for (size_t i = 0; i < count; ++i)
-        {
-            if (::IsEqualGUID(table[i].guid, *guid))
+            if (::IsEqualGUID(pEncoders[iInfo].FormatID, *guid))
             {
-                int num = GetEncoderClsid(table[i].mime, clsid);
-                if (num >= 0)
-                {
-                    return true;
-                }
+                *clsid = pEncoders[iInfo].Clsid;
+                free(pEncoders);
+                return true;
             }
         }
+
+        free(pEncoders);
         return false;
     }
 
-    int GetEncoderClsid(LPCWSTR mime, CLSID *clsid) const
+    Gdiplus::ImageCodecInfo* _getAllEncoders(UINT& cEncoders) const
     {
-        UINT count = 0, total_size = 0;
-        GetCommon().GetImageEncodersSize(&count, &total_size);
+        UINT total_size = 0;
+        GetCommon().GetImageEncodersSize(&cEncoders, &total_size);
         if (total_size == 0)
-            return -1;  // failure
+            return NULL;  // failure
 
-        Gdiplus::ImageCodecInfo *pInfo;
-        BYTE *pb = new BYTE[total_size];
-        ATLASSERT(pb);
-        pInfo = reinterpret_cast<Gdiplus::ImageCodecInfo *>(pb);
-        if (pInfo == NULL)
-            return -1;  // failure
-
-        GetCommon().GetImageEncoders(count, total_size, pInfo);
-
-        for (UINT iInfo = 0; iInfo < count; ++iInfo)
+        Gdiplus::ImageCodecInfo *ret;
+        ret = reinterpret_cast<Gdiplus::ImageCodecInfo*>(malloc(total_size));
+        if (ret == NULL)
         {
-            if (::lstrcmpiW(pInfo[iInfo].MimeType, mime) == 0)
-            {
-                *clsid = pInfo[iInfo].Clsid;
-                delete[] pb;
-                return iInfo;  // success
-            }
+            cEncoders = 0;
+            return NULL;  // failure
         }
 
-        delete[] pb;
-        return -1;  // failure
+        GetCommon().GetImageEncoders(cEncoders, total_size, ret);
+        return ret; // needs free()
     }
 
     void AttachInternal(HBITMAP hBitmap, DIBOrientation eOrientation,
