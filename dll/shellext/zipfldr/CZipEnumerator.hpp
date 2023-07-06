@@ -10,7 +10,7 @@ struct CZipEnumerator
 private:
     CComPtr<IZip> m_Zip;
     bool m_First;
-    CAtlList<CStringA> m_Returned;
+    CAtlList<CStringW> m_Returned;
 public:
     CZipEnumerator()
         :m_First(true)
@@ -33,32 +33,32 @@ public:
         return true;
     }
 
-    bool next_unique(const char* prefix, CStringA& name, bool& folder, unz_file_info64& info)
+    bool next_unique(LPCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info)
     {
-        size_t len = strlen(prefix);
-        CStringA tmp;
-        while (next(tmp, info))
+        size_t len = wcslen(prefix);
+        CStringW tmpW;
+        while (next(tmpW, info))
         {
-            if (!_strnicmp(tmp, prefix, len))
+            if (!_wcsnicmp(tmpW, prefix, len))
             {
-                int pos = tmp.Find('/', len);
+                int pos = tmpW.Find(L'/', len);
                 if (pos < 0)
                 {
-                    name = tmp.Mid(len);
+                    name = tmpW.Mid(len);
                     folder = false;
                 }
                 else
                 {
-                    name = tmp.Mid(len, pos - len);
+                    name = tmpW.Mid(len, pos - len);
                     folder = true;
                 }
-                tmp = name;
-                tmp.MakeLower();
+                tmpW = name;
+                tmpW.MakeLower();
 
-                POSITION it = m_Returned.Find(tmp);
+                POSITION it = m_Returned.Find(tmpW);
                 if (!name.IsEmpty() && !it)
                 {
-                    m_Returned.AddTail(tmp);
+                    m_Returned.AddTail(tmpW);
                     return true;
                 }
             }
@@ -66,7 +66,7 @@ public:
         return false;
     }
 
-    bool next(CStringA& name, unz_file_info64& info)
+    bool next(CStringW& name, unz_file_info64& info)
     {
         int err;
 
@@ -84,10 +84,18 @@ public:
         err = unzGetCurrentFileInfo64(uf, &info, NULL, 0, NULL, 0, NULL, 0);
         if (err == UNZ_OK)
         {
-            PSTR buf = name.GetBuffer(info.size_filename);
-            err = unzGetCurrentFileInfo64(uf, NULL, buf, name.GetAllocLength(), NULL, 0, NULL, 0);
-            name.ReleaseBuffer(info.size_filename);
-            name.Replace('\\', '/');
+            CStringA nameA;
+            PSTR buf = nameA.GetBuffer(info.size_filename);
+            err = unzGetCurrentFileInfo64(uf, NULL, buf, nameA.GetAllocLength(), NULL, 0, NULL, 0);
+            nameA.ReleaseBuffer(info.size_filename);
+            nameA.Replace('\\', '/');
+
+            WCHAR wide_name[MAX_PATH];
+            if (info.flag & MINIZIP_UTF8_FLAG)
+                MultiByteToWideChar(CP_UTF8, 0, nameA, -1, wide_name, _countof(wide_name));
+            else
+                MultiByteToWideChar(CP_ACP, 0, nameA, -1, wide_name, _countof(wide_name));
+            name = wide_name;
         }
         return err == UNZ_OK;
     }

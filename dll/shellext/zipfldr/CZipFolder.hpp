@@ -37,7 +37,7 @@ class CZipFolder :
     public IZip
 {
     CStringW m_ZipFile;
-    CStringA m_ZipDir;
+    CStringW m_ZipDir;
     CComHeapPtr<ITEMIDLIST> m_CurDir;
     unzFile m_UnzipFile;
 
@@ -158,9 +158,9 @@ public:
             return GetDisplayNameOf(pidl, 0, &psd->str);
         case 1: /* Type */
         {
-            SHFILEINFOA shfi;
+            SHFILEINFOW shfi;
             DWORD dwAttributes = isDir ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
-            ULONG_PTR firet = SHGetFileInfoA(zipEntry->Name, dwAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME);
+            ULONG_PTR firet = SHGetFileInfoW(zipEntry->Name, dwAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME);
             if (!firet)
                 return E_FAIL;
             return SHSetStrRet(&psd->str, shfi.szTypeName);
@@ -226,7 +226,7 @@ public:
     {
         if (riid == IID_IShellFolder)
         {
-            CStringA newZipDir = m_ZipDir;
+            CStringW newZipDir = m_ZipDir;
             PCUIDLIST_RELATIVE curpidl = pidl;
             while (curpidl->mkid.cb)
             {
@@ -236,7 +236,7 @@ public:
                     return E_FAIL;
                 }
                 newZipDir += zipEntry->Name;
-                newZipDir += '/';
+                newZipDir += L'/';
 
                 curpidl = ILGetNext(curpidl);
             }
@@ -262,7 +262,7 @@ public:
         if (zipEntry1->ZipType != zipEntry2->ZipType)
             result = zipEntry1->ZipType - zipEntry2->ZipType;
         else
-            result = stricmp(zipEntry1->Name, zipEntry2->Name);
+            result = _wcsicmp(zipEntry1->Name, zipEntry2->Name);
 
         if (!result && zipEntry1->ZipType == ZIP_PIDL_DIRECTORY)
         {
@@ -392,14 +392,8 @@ public:
             const ZipPidlEntry* zipEntry = _ZipFromIL(*apidl);
             if (zipEntry)
             {
-                CComHeapPtr<WCHAR> pathW;
-
-                int len = MultiByteToWideChar(CP_ACP, 0, zipEntry->Name, -1, NULL, 0);
-                pathW.Allocate(len);
-                MultiByteToWideChar(CP_ACP, 0, zipEntry->Name, -1, pathW, len);
-
                 DWORD dwAttributes = (zipEntry->ZipType == ZIP_PIDL_DIRECTORY) ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
-                return SHCreateFileExtractIconW(pathW, dwAttributes, riid, ppvOut);
+                return SHCreateFileExtractIconW(zipEntry->Name, dwAttributes, riid, ppvOut);
             }
         }
         else if (riid == IID_IContextMenu && cidl >= 0)
@@ -444,7 +438,7 @@ public:
         if (!zipEntry)
             return E_FAIL;
 
-        return SHSetStrRet(strRet, (LPCSTR)zipEntry->Name);
+        return SHSetStrRet(strRet, zipEntry->Name);
     }
     STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
     {
@@ -621,7 +615,7 @@ public:
     }
 
 
-    STDMETHODIMP Initialize(PCWSTR zipFile, PCSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl)
+    STDMETHODIMP Initialize(PCWSTR zipFile, PCWSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl)
     {
         m_ZipFile = zipFile;
         m_ZipDir = zipDir;

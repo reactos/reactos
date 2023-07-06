@@ -23,12 +23,12 @@ struct ZipPidlEntry
     ULONG64 UncompressedSize;
     ULONG DosDate;
     BYTE Password;
+    BYTE Utf8;
 
-    char Name[1];
+    WCHAR Name[1];
 };
 #include <poppack.h>
 
 
-LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCSTR lpString, unz_file_info64& info);
+LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info);
 const ZipPidlEntry* _ZipFromIL(LPCITEMIDLIST pidl);
-

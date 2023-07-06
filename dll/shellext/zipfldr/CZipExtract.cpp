@@ -257,7 +257,7 @@ public:
         LRESULT OnPassword(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         {
             CStringA Password;
-            if (_CZipAskPassword(m_hWnd, NULL, Password) == eAccept)
+            if (_CZipAskPasswordW(m_hWnd, NULL, Password) == eAccept)
             {
                 *m_pPassword = Password;
             }
@@ -370,10 +370,10 @@ public:
 
     eZipExtractError ExtractSingle(
         HWND hDlg,
-        LPCSTR FullPath,
+        LPCWSTR WideFullPath,
         bool is_dir,
         unz_file_info64* Info,
-        CStringA Name,
+        CStringW WideName,
         CStringA Password,
         bool* bOverwriteAll,
         const bool* bCancel,
@@ -383,7 +383,7 @@ public:
         int err;
         BYTE Buffer[2048];
         DWORD dwFlags = SHPPFW_DIRCREATE | (is_dir ? SHPPFW_NONE : SHPPFW_IGNOREFILENAME);
-        HRESULT hr = SHPathPrepareForWriteA(hDlg, NULL, FullPath, dwFlags);
+        HRESULT hr = SHPathPrepareForWriteW(hDlg, NULL, WideFullPath, dwFlags);
         if (FAILED_UNEXPECTEDLY(hr))
         {
             *ErrorCode = hr;
@@ -415,7 +415,7 @@ public:
                         }
                     }
                 }
-                Response = _CZipAskPassword(hDlg, Name, Password);
+                Response = _CZipAskPasswordW(hDlg, WideName, Password);
             } while (Response == eAccept);
 
             if (Response == eSkip)
@@ -439,7 +439,8 @@ public:
             return eOpenError;
         }
 
-        HANDLE hFile = CreateFileA(FullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE hFile;
+        hFile = CreateFileW(WideFullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
         {
             DWORD dwErr = GetLastError();
@@ -448,7 +449,8 @@ public:
                 bool bOverwrite = *bOverwriteAll;
                 if (!*bOverwriteAll)
                 {
-                    eZipConfirmResponse Result = _CZipAskReplace(hDlg, FullPath);
+                    eZipConfirmResponse Result;
+                    Result = _CZipAskReplaceW(hDlg, WideFullPath);
                     switch (Result)
                     {
                     case eYesToAll:
@@ -467,7 +469,7 @@ public:
 
                 if (bOverwrite)
                 {
-                    hFile = CreateFileA(FullPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    hFile = CreateFileW(WideFullPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
                     if (hFile == INVALID_HANDLE_VALUE)
                     {
                         dwErr = GetLastError();
@@ -482,7 +484,7 @@ public:
             if (hFile == INVALID_HANDLE_VALUE)
             {
                 unzCloseCurrentFile(uf);
-                DPRINT1("ERROR, CreateFileA: 0x%x (%s)\n", dwErr, *bOverwriteAll ? "Y" : "N");
+                DPRINT1("ERROR, CreateFile: 0x%x (%s)\n", dwErr, *bOverwriteAll ? "Y" : "N");
                 *ErrorCode = dwErr;
                 return eFileError;
             }
@@ -493,9 +495,9 @@ public:
             if (*bCancel)
             {
                 CloseHandle(hFile);
-                BOOL deleteResult = DeleteFileA(FullPath);
+                BOOL deleteResult = DeleteFileW(WideFullPath);
                 if (!deleteResult)
-                    DPRINT1("ERROR, DeleteFileA: 0x%x\n", GetLastError());
+                    DPRINT1("ERROR, DeleteFile: 0x%x\n", GetLastError());
                 return eExtractAbort;
             }
 
@@ -575,13 +577,13 @@ public:
         Progress.SendMessage(PBM_SETRANGE32, 0, gi.number_entry);
         Progress.SendMessage(PBM_SETPOS, 0, 0);
 
-        CStringA BaseDirectory = m_Directory;
-        CStringA Name;
+        CStringW BaseDirectory = m_Directory;
+        CStringW WideName;
         CStringA Password = m_Password;
         unz_file_info64 Info;
         int CurrentFile = 0;
         bool bOverwriteAll = false;
-        while (zipEnum.next(Name, Info))
+        while (zipEnum.next(WideName, Info))
         {
             if (*bCancel)
             {
@@ -589,14 +591,14 @@ public:
                 return false;
             }
 
-            bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
+            bool is_dir = WideName.GetLength() > 0 && WideName[WideName.GetLength()-1] == '/';
 
-            char CombinedPath[MAX_PATH * 2] = { 0 };
-            PathCombineA(CombinedPath, BaseDirectory, Name);
-            CStringA FullPath = CombinedPath;
-            FullPath.Replace('/', '\\');    /* SHPathPrepareForWriteA does not handle '/' */
+            WCHAR CombinedPath[MAX_PATH * 2] = { 0 };
+            PathCombineW(CombinedPath, BaseDirectory, WideName);
+            CStringW WideFullPath = CombinedPath;
+            WideFullPath.Replace(L'/', L'\\');    /* SHPathPrepareForWriteA does not handle '/' */
         Retry:
-            eZipExtractError Result = ExtractSingle(hDlg, FullPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
+            eZipExtractError Result = ExtractSingle(hDlg, WideFullPath, is_dir, &Info, WideName, Password, &bOverwriteAll, bCancel, &err);
             if (Result != eDirectoryError)
                 CurrentFile++;
             switch (Result)
@@ -613,13 +615,13 @@ public:
 
                 case eDirectoryError:
                 {
-                    char StrippedPath[MAX_PATH] = { 0 };
+                    WCHAR StrippedPath[MAX_PATH] = { 0 };
 
-                    StrCpyNA(StrippedPath, FullPath, _countof(StrippedPath));
+                    StrCpyNW(StrippedPath, WideFullPath, _countof(StrippedPath));
                     if (!is_dir)
-                        PathRemoveFileSpecA(StrippedPath);
-                    PathStripPathA(StrippedPath);
-                    if (ShowExtractError(hDlg, (LPCSTR)&StrippedPath, err, eDirectoryError) == IDRETRY)
+                        PathRemoveFileSpecW(StrippedPath);
+                    PathStripPathW(StrippedPath);
+                    if (ShowExtractError(hDlg, StrippedPath, err, eDirectoryError) == IDRETRY)
                         goto Retry;
                     Close();
                     return false;
@@ -627,7 +629,7 @@ public:
 
                 case eFileError:
                 {
-                    int Result = ShowExtractError(hDlg, FullPath, err, eFileError);
+                    int Result = ShowExtractError(hDlg, WideFullPath, err, eFileError);
                     switch (Result)
                     {
                     case IDABORT:
@@ -649,7 +651,7 @@ public:
                         Info.compression_method != Z_DEFLATED &&
                         Info.compression_method != Z_BZIP2ED)
                     {
-                        if (ShowExtractError(hDlg, FullPath, Info.compression_method, eOpenError) == IDYES)
+                        if (ShowExtractError(hDlg, WideFullPath, Info.compression_method, eOpenError) == IDYES)
                             break;
                     }
                     Close();
@@ -665,11 +667,11 @@ public:
         return true;
     }
 
-    int ShowExtractError(HWND hDlg, LPCSTR path, int Error, eZipExtractError ErrorType)
+    int ShowExtractError(HWND hDlg, LPCWSTR path, int Error, eZipExtractError ErrorType)
     {
-        CStringA strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
-        CStringA strErr, strText;
-        PSTR Win32ErrorString;
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
+        CStringW strErr, strText;
+        PWSTR Win32ErrorString;
 
         if (ErrorType == eFileError || ErrorType == eOpenError)
             strText.LoadString(IDS_CANTEXTRACTFILE);
@@ -680,9 +682,9 @@ public:
 
         if (ErrorType == eFileError || HRESULT_FACILITY(Error) == FACILITY_WIN32)
         {
-            if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+            if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                                NULL, ErrorType == eFileError ? Error : HRESULT_CODE(Error), 0,
-                               (PSTR)&Win32ErrorString, 0, NULL) != 0)
+                               (PWSTR)&Win32ErrorString, 0, NULL) != 0)
             {
                 strErr.SetString(Win32ErrorString);
                 LocalFree(Win32ErrorString);
@@ -693,7 +695,7 @@ public:
         else if (strErr.GetLength() == 0)
             strErr.Format(IDS_UNKNOWNERROR, Error);
 
-        strText.Append("\r\n\r\n" + strErr);
+        strText.Append(L"\r\n\r\n" + strErr);
 
         UINT mbFlags = MB_ICONWARNING;
         if (ErrorType == eDirectoryError)
@@ -703,7 +705,7 @@ public:
         else if (ErrorType == eOpenError)
             mbFlags |= MB_YESNO;
 
-        return MessageBoxA(hDlg, strText, strTitle, mbFlags);
+        return MessageBoxW(hDlg, strText, strTitle, mbFlags);
     }
 };
 

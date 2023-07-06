@@ -7,9 +7,9 @@
 
 #include "precomp.h"
 
-LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCSTR lpString, unz_file_info64& info)
+LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info)
 {
-    int cbData = sizeof(ZipPidlEntry) + strlen(lpString);
+    int cbData = sizeof(ZipPidlEntry) + lstrlenW(lpString) * sizeof(WCHAR);
     ZipPidlEntry* pidl = (ZipPidlEntry*)SHAlloc(cbData + sizeof(WORD));
     if (!pidl)
         return NULL;
@@ -26,14 +26,14 @@ LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCSTR lpString, unz_file_info64& info)
         pidl->UncompressedSize = info.uncompressed_size;
         pidl->DosDate = info.dosDate;
         pidl->Password = info.flag & MINIZIP_PASSWORD_FLAG;
+        pidl->Utf8 = !!(info.flag & MINIZIP_UTF8_FLAG);
     }
 
-    strcpy(pidl->Name, lpString);
+    lstrcpyW(pidl->Name, lpString);
     *(WORD*)((char*)pidl + cbData) = 0;
 
     return (LPITEMIDLIST)pidl;
 }
-
 
 const ZipPidlEntry* _ZipFromIL(LPCITEMIDLIST pidl)
 {

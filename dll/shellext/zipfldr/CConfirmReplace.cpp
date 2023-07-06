@@ -10,10 +10,9 @@
 class CConfirmReplace : public CDialogImpl<CConfirmReplace>
 {
 private:
-    CStringA m_Filename;
+    CStringW m_Filename;
 public:
-
-    CConfirmReplace(const char* filename)
+    CConfirmReplace(LPCWSTR filename)
         : m_Filename(filename)
     {
     }
@@ -25,9 +24,9 @@ public:
         HICON hIcon = LoadIcon(NULL, IDI_EXCLAMATION);
         SendDlgItemMessage(IDC_EXCLAMATION_ICON, STM_SETICON, (WPARAM)hIcon);
 
-        CStringA message;
+        CStringW message;
         message.FormatMessage(IDS_OVERWRITEFILE_TEXT, m_Filename.GetString());
-        ::SetDlgItemTextA(m_hWnd, IDC_MESSAGE, message);
+        ::SetDlgItemTextW(m_hWnd, IDC_MESSAGE, message);
 
         return TRUE;
     }
@@ -50,10 +49,9 @@ public:
     END_MSG_MAP()
 };
 
-
-eZipConfirmResponse _CZipAskReplace(HWND hDlg, PCSTR FullPath)
+eZipConfirmResponse _CZipAskReplaceW(HWND hDlg, LPCWSTR FullPath)
 {
-    PCSTR Filename = PathFindFileNameA(FullPath);
+    PCWSTR Filename = PathFindFileNameW(FullPath);
     CConfirmReplace confirm(Filename);
     INT_PTR Result = confirm.DoModal(hDlg);
     switch (Result)

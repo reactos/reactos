@@ -154,7 +154,7 @@ BOOL WINAPI
 RouteTheCall(
     IN HWND hWndOwner,
     IN HINSTANCE hInstance,
-    IN LPCSTR lpStringArg,
+    IN LPCWSTR lpStringArg,
     IN INT Show)
 {
     CStringW path = lpStringArg;

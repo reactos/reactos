@@ -10,10 +10,10 @@
 class CZipPassword : public CDialogImpl<CZipPassword>
 {
 private:
-    CStringA m_Filename;
+    CStringW m_Filename;
     CStringA* m_pPassword;
 public:
-    CZipPassword(const char* filename, CStringA* Password)
+    CZipPassword(LPCWSTR filename, CStringA* Password)
         :m_pPassword(Password)
     {
         if (filename != NULL)
@@ -27,15 +27,15 @@ public:
         /* No filename, so this is the question before starting to extract */
         if (m_Filename.IsEmpty())
         {
-            CStringA message(MAKEINTRESOURCE(IDS_PASSWORD_ZIP_TEXT));
-            ::SetDlgItemTextA(m_hWnd, IDC_MESSAGE, message);
+            CStringW message(MAKEINTRESOURCE(IDS_PASSWORD_ZIP_TEXT));
+            ::SetDlgItemTextW(m_hWnd, IDC_MESSAGE, message);
             ::ShowWindow(GetDlgItem(IDSKIP), SW_HIDE);
         }
         else
         {
-            CStringA message;
+            CStringW message;
             message.FormatMessage(IDS_PASSWORD_FILE_TEXT, m_Filename.GetString());
-            ::SetDlgItemTextA(m_hWnd, IDC_MESSAGE, message);
+            ::SetDlgItemTextW(m_hWnd, IDC_MESSAGE, message);
         }
         return TRUE;
     }
@@ -64,10 +64,10 @@ public:
     END_MSG_MAP()
 };
 
-eZipPasswordResponse _CZipAskPassword(HWND hDlg, const char* filename, CStringA& Password)
+eZipPasswordResponse _CZipAskPasswordW(HWND hDlg, LPCWSTR filename, CStringA& Password)
 {
     if (filename)
-        filename = PathFindFileNameA(filename);
+        filename = PathFindFileNameW(filename);
     CZipPassword password(filename, &Password);
     INT_PTR Result = password.DoModal(hDlg);
     switch (Result)

@@ -14,14 +14,14 @@ class CEnumZipContents :
 private:
     CZipEnumerator mEnumerator;
     DWORD dwFlags;
-    CStringA m_Prefix;
+    CStringW m_Prefix;
 public:
     CEnumZipContents()
         :dwFlags(0)
     {
     }
 
-    STDMETHODIMP Initialize(IZip* zip, DWORD flags, const char* prefix)
+    STDMETHODIMP Initialize(IZip* zip, DWORD flags, LPCWSTR prefix)
     {
         dwFlags = flags;
         m_Prefix = prefix;
@@ -41,7 +41,7 @@ public:
         if (celt != 1)
             return E_FAIL;
 
-        CStringA name;
+        CStringW name;
         bool dir;
         unz_file_info64 info;
         if (mEnumerator.next_unique(m_Prefix, name, dir, info))
@@ -55,7 +55,7 @@ public:
     }
     STDMETHODIMP Skip(ULONG celt)
     {
-        CStringA name;
+        CStringW name;
         bool dir;
         unz_file_info64 info;
         while (celt--)
@@ -88,7 +88,7 @@ public:
 };
 
 
-HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, const char* prefix, REFIID riid, LPVOID * ppvOut)
+HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, LPCWSTR prefix, REFIID riid, LPVOID * ppvOut)
 {
     return ShellObjectCreatorInit<CEnumZipContents>(zip, flags, prefix, riid, ppvOut);
 }
