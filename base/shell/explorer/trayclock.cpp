@@ -38,6 +38,9 @@ const struct
 const UINT ClockWndFormatsCount = _ARRAYSIZE(ClockWndFormats);
 
 #define CLOCKWND_FORMAT_COUNT ClockWndFormatsCount
+#define CLOCKWND_FORMAT_TIME 0
+#define CLOCKWND_FORMAT_DAY  1
+#define CLOCKWND_FORMAT_DATE 2
 
 static const WCHAR szTrayClockWndClass[] = L"TrayClockWClass";
 
@@ -532,8 +535,8 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
         if (VisibleLines == 2)
         {
-            PaintLine(hDC, &rcClient, 0, 0);
-            PaintLine(hDC, &rcClient, 1, 2);
+            PaintLine(hDC, &rcClient, 0, CLOCKWND_FORMAT_TIME);
+            PaintLine(hDC, &rcClient, 1, CLOCKWND_FORMAT_DATE);
         }
 
         else
