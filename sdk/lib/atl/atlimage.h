@@ -558,8 +558,8 @@ public:
         CLSID clsid;
         if (::IsEqualGUID(guidFileType, GUID_NULL))
         {
-            LPCWSTR pszExt = GetFileExtension(pszNameW);
-            clsid = FindCodecForExtension(pszExt, pEncoders, cEncoders);
+            CString strExt = GetFileExtension(pszNameW);
+            clsid = FindCodecForExtension(strExt, pEncoders, cEncoders);
         }
         else
         {
@@ -572,8 +572,7 @@ public:
         GetCommon().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
 
         // save to file
-        Status status;
-        status = GetCommon().SaveImageToFile(pBitmap, pszNameW, &clsid, NULL);
+        Status status = GetCommon().SaveImageToFile(pBitmap, pszNameW, &clsid, NULL);
 
         // destroy GpBitmap
         GetCommon().DisposeImage(pBitmap);
@@ -760,7 +759,8 @@ protected:
                 else
                     extensions += TEXT(';');
 
-                extensions += pCodecs[i].FilenameExtension;
+                CString ext(pCodecs[i].FilenameExtension);
+                extensions += ext;
             }
             extensions.MakeLower();
 
@@ -783,7 +783,8 @@ protected:
             CString extensions = pCodecs[i].FilenameExtension;
             extensions.MakeLower();
 
-            strFilter += pCodecs[i].FormatDescription;
+            CString desc(pCodecs[i].FormatDescription);
+            strFilter += desc;
             strFilter += TEXT(" (");
             strFilter += extensions;
             strFilter += TEXT(")");
@@ -1022,19 +1023,19 @@ protected:
     {
         for (UINT i = 0; i < nCodecs; ++i)
         {
-            CStringW strSpecs = pCodecs[i].FilenameExtension;
+            CString strSpecs = pCodecs[i].FilenameExtension;
             int i0 = 0, i1;
             for (;;)
             {
                 i1 = strSpecs.Find(L';', i0);
 
-                CStringW strSpec;
+                CString strSpec;
                 if (i1 < 0)
                     strSpec = strSpecs.Mid(i0);
                 else
                     strSpec = strSpecs.Mid(i0, i1 - i0);
 
-                int ichDot = strSpec.ReverseFind(L'.');
+                int ichDot = strSpec.ReverseFind(TEXT('.'));
                 if (ichDot >= 0)
                     strSpec = strSpec.Mid(ichDot);
 
@@ -1051,26 +1052,26 @@ protected:
     }
 
     // Deprecated. Don't use this
-    static const GUID *FileTypeFromExtension(LPCWSTR dotext)
+    static const GUID *FileTypeFromExtension(LPCTSTR dotext)
     {
         UINT cEncoders = 0;
         Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
 
         for (UINT i = 0; i < cEncoders; ++i)
         {
-            CStringW strSpecs = pEncoders[i].FilenameExtension;
+            CString strSpecs = pEncoders[i].FilenameExtension;
             int i0 = 0, i1;
             for (;;)
             {
                 i1 = strSpecs.Find(L';', i0);
 
-                CStringW strSpec;
+                CString strSpec;
                 if (i1 < 0)
                     strSpec = strSpecs.Mid(i0);
                 else
                     strSpec = strSpecs.Mid(i0, i1 - i0);
 
-                int ichDot = strSpec.ReverseFind(L'.');
+                int ichDot = strSpec.ReverseFind(TEXT('.'));
                 if (ichDot >= 0)
                     strSpec = strSpec.Mid(ichDot);
 
