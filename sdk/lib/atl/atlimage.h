@@ -1029,16 +1029,16 @@ protected:
         for (UINT i = 0; i < nCodecs; ++i)
         {
             CString strSpecs(pCodecs[i].FilenameExtension);
-            int i0 = 0, i1;
+            int ichOld = 0, ichSep;
             for (;;)
             {
-                i1 = strSpecs.Find(TEXT(';'), i0);
+                ichSep = strSpecs.Find(TEXT(';'), ichOld);
 
                 CString strSpec;
-                if (i1 < 0)
-                    strSpec = strSpecs.Mid(i0);
+                if (ichSep < 0)
+                    strSpec = strSpecs.Mid(ichOld);
                 else
-                    strSpec = strSpecs.Mid(i0, i1 - i0);
+                    strSpec = strSpecs.Mid(ichOld, ichSep - ichOld);
 
                 int ichDot = strSpec.ReverseFind(TEXT('.'));
                 if (ichDot >= 0)
@@ -1047,10 +1047,10 @@ protected:
                 if (!dotext || strSpec.CompareNoCase(dotext) == 0)
                     return pCodecs[i].Clsid;
 
-                if (i1 < 0)
+                if (ichSep < 0)
                     break;
 
-                i0 = i1 + 1;
+                ichOld = ichSep + 1;
             }
         }
         return CLSID_NULL;
@@ -1065,16 +1065,16 @@ protected:
         for (UINT i = 0; i < cEncoders; ++i)
         {
             CString strSpecs(pEncoders[i].FilenameExtension);
-            int i0 = 0, i1;
+            int ichOld = 0, ichSep;
             for (;;)
             {
-                i1 = strSpecs.Find(TEXT(';'), i0);
+                ichSep = strSpecs.Find(TEXT(';'), ichOld);
 
                 CString strSpec;
-                if (i1 < 0)
-                    strSpec = strSpecs.Mid(i0);
+                if (ichSep < 0)
+                    strSpec = strSpecs.Mid(ichOld);
                 else
-                    strSpec = strSpecs.Mid(i0, i1 - i0);
+                    strSpec = strSpecs.Mid(ichOld, ichSep - ichOld);
 
                 int ichDot = strSpec.ReverseFind(TEXT('.'));
                 if (ichDot >= 0)
@@ -1088,10 +1088,10 @@ protected:
                     return &s_guid;
                 }
 
-                if (i1 < 0)
+                if (ichSep < 0)
                     break;
 
-                i0 = i1 + 1;
+                ichOld = ichSep + 1;
             }
         }
 
