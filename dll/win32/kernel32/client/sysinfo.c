@@ -414,6 +414,32 @@ GetNumaAvailableMemoryNode(IN UCHAR Node,
 }
 
 /*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetPhysicallyInstalledSystemMemory(
+    _Out_ PULONGLONG TotalMemoryInKilobytes)
+{
+    DPRINT1("GetPhysicallyInstalledSystemMemory() does not work correctly > 4 GB RAM\n");
+    
+    MEMORYSTATUSEX status;
+
+    if (TotalMemoryInKilobytes == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    status.dwLength = sizeof(status);
+    if (!GlobalMemoryStatusEx(&status))
+        return FALSE;
+
+    *TotalMemoryInKilobytes = status.ullTotalPhys / 1024;
+    return TRUE;
+}
+
+/*
  * @unimplemented
  */
 DWORD
@@ -594,3 +620,4 @@ GetCurrentPackageId(UINT32 *BufferLength,
     STUB;
     return APPMODEL_ERROR_NO_PACKAGE;
 }
+
