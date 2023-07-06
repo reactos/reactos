@@ -523,7 +523,7 @@ public:
 
         // Get Codec
         CLSID clsid = FindCodecForFileType(*guidFileType, pEncoders, cEncoders);
-        _free_mem(pEncoders);
+        delete[] pEncoders;
 
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
@@ -565,7 +565,7 @@ public:
         {
             clsid = FindCodecForFileType(guidFileType, pEncoders, cEncoders);
         }
-        _free_mem(pEncoders);
+        delete[] pEncoders;
 
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
@@ -822,7 +822,7 @@ public:
                                             pszAllFilesDescription,
                                             dwExclude,
                                             chSeparator);
-        _free_mem(pDecoders);
+        delete[] pDecoders;
         return hr;
     }
 
@@ -842,7 +842,7 @@ public:
                                             pszAllFilesDescription,
                                             dwExclude,
                                             chSeparator);
-        _free_mem(pEncoders);
+        delete[] pEncoders;
         return hr;
     }
 
@@ -1084,7 +1084,7 @@ protected:
                 {
                     static GUID s_guid;
                     s_guid = pEncoders[i].FormatID;
-                    _free_mem(pEncoders);
+                    delete[] pEncoders;
                     return &s_guid;
                 }
 
@@ -1095,7 +1095,7 @@ protected:
             }
         }
 
-        _free_mem(pEncoders);
+        delete[] pEncoders;
         return NULL;
     }
 
@@ -1116,7 +1116,7 @@ protected:
         UINT cEncoders = 0;
         Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
         *clsid = FindCodecForFileType(*guid, pEncoders, cEncoders);
-        _free_mem(pEncoders);
+        delete[] pEncoders;
         return true;
     }
 
@@ -1130,7 +1130,7 @@ protected:
             return NULL;  // failure
 
         Gdiplus::ImageCodecInfo *ret;
-        ret = reinterpret_cast<Gdiplus::ImageCodecInfo*>(_alloc_mem(total_size));
+        ret = new Gdiplus::ImageCodecInfo[total_size / sizeof(ret[0])];
         if (ret == NULL)
         {
             cEncoders = 0;
@@ -1138,7 +1138,7 @@ protected:
         }
 
         GetCommon().GetImageEncoders(cEncoders, total_size, ret);
-        return ret; // needs _free_mem()
+        return ret; // needs delete[]
     }
 
     static Gdiplus::ImageCodecInfo* _getAllDecoders(UINT& cDecoders)
@@ -1151,7 +1151,7 @@ protected:
             return NULL;  // failure
 
         Gdiplus::ImageCodecInfo *ret;
-        ret = reinterpret_cast<Gdiplus::ImageCodecInfo*>(_alloc_mem(total_size));
+        ret = new Gdiplus::ImageCodecInfo[total_size / sizeof(ret[0])];
         if (ret == NULL)
         {
             cDecoders = 0;
@@ -1159,7 +1159,7 @@ protected:
         }
 
         GetCommon().GetImageDecoders(cDecoders, total_size, ret);
-        return ret; // needs _free_mem()
+        return ret; // needs delete[]
     }
 
     void AttachInternal(HBITMAP hBitmap, DIBOrientation eOrientation,
@@ -1241,16 +1241,6 @@ protected:
         m_bHasAlphaCh = bHasAlphaCh;
 
         return hbm != NULL;
-    }
-
-    static void *_alloc_mem(size_t size)
-    {
-        return ::HeapAlloc(::GetProcessHeap(), 0, size);
-    }
-
-    static void _free_mem(void *ptr)
-    {
-        ::HeapFree(::GetProcessHeap(), 0, ptr);
     }
 
 private:
