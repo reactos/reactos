@@ -4,6 +4,7 @@
  * PURPOSE:         Tests for (Rtl)IsTextUnicode.
  * PROGRAMMERS:     Hermes Belusca-Maito
  *                  Dmitry Chapyshev
+ *                  Katayama Hirofumi MZ
  */
 
 #include "precomp.h"
@@ -128,6 +129,9 @@ START_TEST(IsTextUnicode)
     };
 
     const char japanese_with_lead[] = "ABC" "\x83\x40" "D";
+    const char japanese_sjis[] = "\x93\xFA\x96\x7B\x8C\xEA\x31\x32\x33\x93\xFA\x96\x7B\x8C\xEA";
+    const char japanese_utf8[] = "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E\x31\x32\x33\xE6\x97\xA5"
+                                 "\xE6\x9C\xAC\xE8\xAA\x9E";
     const char simplfied_chinese_with_lead[] = "ABC" "\xC5\xC5" "D";
     const char korean_with_lead[] = "ABC" "\xBF\xAD" "D";
     const char traditional_chinese_with_lead[] = "ABC" "\xB1\xC1" "D";
@@ -149,8 +153,30 @@ START_TEST(IsTextUnicode)
     SetupLocale(932, 932, -1);
 
     Result = IS_TEXT_UNICODE_DBCS_LEADBYTE;
-    ok(!IsTextUnicode(japanese_with_lead, sizeof(japanese_with_lead), &Result), "IsTextUnicode() returned TRUE, expected FALSE\n");
-    ok(Result == IS_TEXT_UNICODE_DBCS_LEADBYTE, "Result returned 0x%x, expected 0x%x\n", Result, IS_TEXT_UNICODE_DBCS_LEADBYTE);
+    ok_int(IsTextUnicode(japanese_with_lead, sizeof(japanese_with_lead), &Result), FALSE);
+    ok_int(Result, IS_TEXT_UNICODE_DBCS_LEADBYTE);
+
+    ok_int(IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, NULL), FALSE);
+
+    Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
+    ok_int(IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, &Result), FALSE);
+    ok_int(Result, 0);
+
+    Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS |
+             IS_TEXT_UNICODE_DBCS_LEADBYTE;
+    ok_int(IsTextUnicode(japanese_sjis, sizeof(japanese_sjis) - 1, &Result), FALSE);
+    ok_int(Result, (IS_TEXT_UNICODE_DBCS_LEADBYTE | IS_TEXT_UNICODE_REVERSE_STATISTICS));
+
+    ok_int(IsTextUnicode(japanese_utf8, sizeof(japanese_utf8) - 1, NULL), FALSE);
+
+    Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS;
+    ok_int(IsTextUnicode(japanese_utf8, sizeof(japanese_utf8) - 1, &Result), FALSE);
+    ok_int(Result, 0);
+
+    Result = IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_REVERSE_STATISTICS |
+             IS_TEXT_UNICODE_DBCS_LEADBYTE;
+    ok_int(IsTextUnicode(japanese_utf8, sizeof(japanese_utf8) - 1, &Result), FALSE);
+    ok_int(Result, (IS_TEXT_UNICODE_DBCS_LEADBYTE | IS_TEXT_UNICODE_STATISTICS));
 
     /* Simplified Chinese */
     SetupLocale(936, 936, -1);

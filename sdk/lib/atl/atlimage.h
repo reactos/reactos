@@ -557,7 +557,7 @@ public:
 
         // if the file type is null, get the file type from extension
         const GUID *FileType = &guidFileType;
-        if (IsGuidEqual(guidFileType, GUID_NULL))
+        if (::IsEqualGUID(guidFileType, GUID_NULL))
         {
             LPCWSTR pszExt = GetFileExtension(pszNameW);
             FileType = FileTypeFromExtension(pszExt);
@@ -1074,7 +1074,7 @@ protected:
         const size_t count = _countof(table);
         for (size_t i = 0; i < count; ++i)
         {
-            if (IsGuidEqual(table[i].guid, *guid))
+            if (::IsEqualGUID(table[i].guid, *guid))
             {
                 int num = GetEncoderClsid(table[i].mime, clsid);
                 if (num >= 0)
@@ -1114,18 +1114,6 @@ protected:
 
         delete[] pb;
         return -1;  // failure
-    }
-
-    bool IsGuidEqual(const GUID& guid1, const GUID& guid2) const
-    {
-        RPC_STATUS status;
-        if (::UuidEqual(const_cast<GUID *>(&guid1),
-                        const_cast<GUID *>(&guid2), &status))
-        {
-            if (status == RPC_S_OK)
-                return true;
-        }
-        return false;
     }
 
     void AttachInternal(HBITMAP hBitmap, DIBOrientation eOrientation,

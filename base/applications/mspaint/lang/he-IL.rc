@@ -264,4 +264,5 @@ BEGIN
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixel/cm"
     IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
+    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
 END

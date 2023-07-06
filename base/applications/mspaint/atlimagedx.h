@@ -94,7 +94,7 @@ public:
 
         // if the file type is null, get the file type from extension
         const GUID *FileType = &guidFileType;
-        if (IsGuidEqual(guidFileType, GUID_NULL))
+        if (::IsEqualGUID(guidFileType, GUID_NULL))
         {
             LPCWSTR pszExt = GetFileExtension(pszNameW);
             FileType = FileTypeFromExtension(pszExt);

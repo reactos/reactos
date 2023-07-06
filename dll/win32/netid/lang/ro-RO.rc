@@ -1,7 +1,8 @@
 /*
- * FILE:       dll/win32/netid/lang/ro-RO.rc
- *             ReactOS Project (https://reactos.org)
- * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot com)
+ * FILE:          dll/win32/netid/lang/ro-RO.rc
+ *                ReactOS Project (https://reactos.org)
+ * TRANSLATORS:   Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *                Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -25,7 +26,7 @@ BEGIN
     PUSHBUTTON  "S&chimbare…", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
     LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
     ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
-    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
+    LTEXT "Schimbările vor avea efect atunci când vă veți reporni calculatorul.", IDC_RESTARTTEXT, 25, 195, 223, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -72,20 +73,20 @@ BEGIN
     4 "Schimbarea identității calculatorului"
     5 "Grup de lucru:"
     6 "Domeniu:"
-    7 "The domain name ""%1"" does not conform to Internet Domain Name Service specifications, although it is a legal ReactOS name. You must use ReactOS DNS server for non-standard names."
-    8 "The domain name ""%1"" is not properly formatted. Periods (.) are used to separate domains. Each domain is limited to 63 characters. Example: domain-1.reactos.org."
-    10 "The new computer name ""%1"" is too long. The name may not be longer than 63 characters."
-    11 "The new computer name entered is not properly formatted. Standard names may contain letters (a-z, A-Z), numbers (0-9), and hyphens (-), but no spaces or periods (.). The name may not consist entirely of digits."
+    7 "Numele de domeniu ""%1"" nu se conformează cu specificațiile Serviciului de nume de domenii de internet, cu toate că este un nume ReactOS legal. Trebuie să folosiți serverul DNS ReactOS pentru numele non-standard."
+    8 "Numele de domeniu ""%1"" nu este formatat corect. Punctele (.) sunt folosite la domeniile separate. Fiecare domeniu este limitat la 63 de caractere. De exemplu: domeniul-1.reactos.org."
+    10 "Noul nume de calculator ""%1"" este prea lung. Numele nu poate fi mai lung de 63 de caractere."
+    11 "Noul nume de calculator introdus nu e formatat corect. Numele standard pot conține litere (a-z, A-Z), numere (0-9), și cratime (-), dar nu spații sau puncte (.). Numele nu poate fi compus numai din cifre."
     22 "Bun venit în grupul de lucru „%1”."
     23 "Bun venit în domeniul „%1”."
     24 "Repornirea calculatorului este necesară pentru a aplica schimbările aduse."
     25 "Puteți schimba numele și apartenența acestui calculator la un domeniu sau grup de lucru. Schimbările pot afecta accesul la resursele rețelei."
     1021 "Notă: Doar administratorii pot schimba identitatea calculatorului."
     1022 "Notă: Identitatea calculatorului nu poate fi schimbată deoarece:"
-    1029 "The new computer name ""%1"" is a number. The name may not be a number."
+    1029 "Noul nume de calculator ""%1"" e un număr. Numele nu poate fi un număr."
     1030 "Noul nume „%1” conține caractere nepermise. Caracterele nepermise sunt ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / și ?"
-    1031 "The first domain of the domain name ""%1"" is a number. The first domain may not be a number."
-    1032 "The domain name ""%1"" contains characters which are not allowed. Standard DNS names may contain letters (a-z, A-Z), numbers (0-9), and hyphens, but no spaces. Periods (.) are used to separate domains. Example: domain-1.reactos.org."
+    1031 "Primul domeniu al numelui de domeniu ""%1"" este un număr. Primul domeniu nu poate fi un număr."
+    1032 "Numele de domeniu ""%1"" conține caractere ce nu sunt permise. Numele standard de DNS pot conține litere (a-z, A-Z), numere (0-9), și cratime, dar nu spații. Punctele (.) sunt folosite la domeniile separate. De exemplu: domeniu-1.reactos.org."
     3210 "&Detalii >>"
     3220 "<< &Detalii"
     4000 "Informație"

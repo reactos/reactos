@@ -1027,7 +1027,7 @@ BEGIN
     IDS_NO_ICONS "Fișierul „%s” nu conține pictograme.\n\nAlegeți o pictogramă din listă sau specificați un alt fișier."
     IDS_FILE_NOT_FOUND "Fișierul „%s” nu a fost găsit."
     IDS_LINK_INVALID "Elementul '%s' ca această scurtătură face referire la faptul ca a fost schimbat sau mutat, deci această scurtătură nu va mai funcționa în mod corespunzător."
-    IDS_COPYTOMENU "Copiază în &docsarul..."
+    IDS_COPYTOMENU "Copiază în &dosarul..."
     IDS_COPYTOTITLE "Selectați locul unde vreți să copiați '%s'. Apoi, apăsați pe butonul Copiază."
     IDS_COPYITEMS "Copiază elementele"
     IDS_COPYBUTTON "Copiază"

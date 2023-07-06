@@ -1,7 +1,8 @@
 /*
  * FILE:        dll/win32/tapiui/lang/ro-RO.rc
  *              ReactOS Project (https://reactos.org)
- * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot com)
+ *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -150,7 +151,7 @@ BEGIN
     PUSHBUTTON "Numărul de &cont", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
     PUSHBUTTON "Număr &destinație…", 1020, 101, 179, 90, 14
-    PUSHBUTTON "Așt&eaptare ton…", 1017, 7, 197, 90, 14
+    PUSHBUTTON "Așt&eptare ton…", 1017, 7, 197, 90, 14
     PUSHBUTTON "Specifica&re cifre…", 1021, 101, 197, 90, 14
 END
 

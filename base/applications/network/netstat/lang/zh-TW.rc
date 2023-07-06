@@ -58,7 +58,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ICMP4_STAT_HEADER "\nICMPv4 統計資料\n\n"
-    IDS_ICMP_THEADER "                            已接收      已傳送\n"
+    IDS_ICMP_THEADER             "                            已接收      已傳送\n"
     IDS_ICMP_MSG                 "  訊息                      %-11lu %-10lu\n"
     IDS_ICMP_ERROR               "  錯誤                      %-11lu %-10lu\n"
     IDS_ICMP_DEST_UNREACH        "  無法與目的地連線          %-11lu %-10lu\n"
@@ -110,7 +110,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_WSA_START "錯誤: WSAStartup() 失敗 : %d\n"
+    IDS_ERROR_WSA_START "錯誤: WSAStartup() 失敗: %d\n"
     IDS_ERROR_ROUTE "錯誤: 找不到 'route.exe'\n"
     IDS_ERROR_TCP_SNAPSHOT "錯誤: 無法取得 TCP 端點快照。\n"
     IDS_ERROR_UDP_ENDPOINT "錯誤: 無法取得 UDP 端點快照。\n"

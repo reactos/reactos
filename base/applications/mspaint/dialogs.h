@@ -7,6 +7,8 @@
 
 #pragma once
 
+void ShowError(INT stringID, ...);
+
 class CMirrorRotateDialog : public CDialogImpl<CMirrorRotateDialog>
 {
 public:
