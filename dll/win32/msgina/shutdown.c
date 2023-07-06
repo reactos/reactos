@@ -647,7 +647,8 @@ EndFriendlyDialog(
     if (pContext->bTimer)
     {
         KillTimer(hDlg, pContext->iTimer);
-    }   
+    }
+
     DeleteObject(pContext->hBitmap);
     DeleteObject(pContext->hBrush);
     DeleteObject(pContext->hImageStrip);
@@ -656,7 +657,9 @@ EndFriendlyDialog(
     /* Remove the subclass from the buttons */
     for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
     {
-        SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_SHUTDOWN + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonProc);
+        SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_SHUTDOWN + i),
+                          GWLP_WNDPROC,
+                          (LONG_PTR)pContext->OldButtonProc);
     }
 }
 
@@ -684,7 +687,7 @@ ChangeRequiredButton(
     /* Get the position of the destination button */
     GetWindowRect(hwndDest, &rect);
 
-    /* Get the corrected translated coordinates which is relative to the client window */  
+    /* Get the corrected translated coordinates which is relative to the client window */
     MapWindowPoints(HWND_DESKTOP, hDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
 
     /* Set the position of targeted button and hide the destination button */
@@ -710,6 +713,7 @@ ChangeRequiredButton(
         LoadStringW(pContext->pgContext->hDllInstance, IDS_SHUTDOWN_SLEEP, szBuffer, _countof(szBuffer));
         SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
     }
+
     InvalidateRect(hDlg, NULL, FALSE);
 }
 
@@ -892,8 +896,8 @@ ShutdownOnInit(
         pContext->bIsSleepButtonReplaced = FALSE;
         pContext->bTimer = FALSE;
 
-       EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), FALSE);
-       EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SLEEP), IsPwrSuspendAllowed());
+        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), FALSE);
+        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SLEEP), IsPwrSuspendAllowed());
 
         /* Gather old button func */
         pContext->OldButtonProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), GWLP_WNDPROC);
@@ -902,7 +906,9 @@ ShutdownOnInit(
         for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
         {
             pContext->bIsButtonHot[i] = FALSE;
-            SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_SHUTDOWN + i), GWLP_WNDPROC, (LONG_PTR)OwnerDrawButtonSubclass);
+            SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_SHUTDOWN + i),
+                              GWLP_WNDPROC,
+                              (LONG_PTR)OwnerDrawButtonSubclass);
             CreateToolTipForButtons(IDC_BUTTON_SHUTDOWN + i,
                                     IDS_SHUTDOWN_SHUTDOWN_DESC + i,
                                     hDlg, IDS_SHUTDOWN_SHUTDOWN + i,

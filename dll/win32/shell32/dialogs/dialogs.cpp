@@ -1325,7 +1325,9 @@ VOID EndFriendlyDialog(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
     /* Remove the subclass from the buttons */
     for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
     {
-        SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonProc);
+        SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i),
+                          GWLP_WNDPROC,
+                          (LONG_PTR)pContext->OldButtonProc);
     }
 }
 
@@ -1425,8 +1427,13 @@ static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
     for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
     {
         pContext->bIsButtonHot[i] = FALSE;
-        SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_WNDPROC, (LONG_PTR)OwnerDrawButtonSubclass);
-        CreateToolTipForButtons(IDC_LOG_OFF_BUTTON + i, IDS_LOG_OFF_DESC + i, hwnd, IDS_LOG_OFF_TITLE + i);
+        SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i),
+                          GWLP_WNDPROC,
+                          (LONG_PTR)OwnerDrawButtonSubclass);
+        CreateToolTipForButtons(IDC_LOG_OFF_BUTTON + i,
+                                IDS_LOG_OFF_DESC + i,
+                                hwnd,
+                                IDS_LOG_OFF_TITLE + i);
     }
 }
 
@@ -1551,7 +1558,11 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
         LogoffDialogID = IDD_LOG_OFF_FANCY;
     }
 
-    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(LogoffDialogID), parent, LogOffDialogProc, (LPARAM)&Context);
+    DialogBoxParamW(shell32_hInstance,
+                    MAKEINTRESOURCEW(LogoffDialogID),
+                    parent,
+                    LogOffDialogProc,
+                    (LPARAM)&Context);
     return 0;
 }
 
