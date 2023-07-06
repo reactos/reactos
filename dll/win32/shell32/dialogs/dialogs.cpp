@@ -1228,7 +1228,7 @@ INT_PTR CALLBACK OwnerDrawButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam,
             if (GetCapture() != hButton)
             {
                 SetCapture(hButton);
-                
+
                 switch (buttonID)
                 {
                     case IDC_LOG_OFF_BUTTON:
@@ -1251,7 +1251,7 @@ INT_PTR CALLBACK OwnerDrawButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam,
             if (hwndTarget != hButton)
             {
                 ReleaseCapture();
-                
+
                 switch (buttonID)
                 {
                     case IDC_LOG_OFF_BUTTON:

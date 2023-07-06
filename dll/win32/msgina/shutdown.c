@@ -891,7 +891,7 @@ ShutdownOnInit(
 
         /* Gather image strip */
         pContext->hImageStrip = LoadBitmapW(pgContext->hDllInstance, MAKEINTRESOURCEW(IDB_IMAGE_STRIP));
-        
+
         /* Set the boolean flags to false */
         pContext->bIsSleepButtonReplaced = FALSE;
         pContext->bTimer = FALSE;
@@ -991,7 +991,7 @@ ShutdownOnInit(
                 break;
             }
         }
-    
+
         /* Update the choice description based on the current selection */
         UpdateShutdownDesc(hDlg, pContext);
     }
@@ -1142,7 +1142,7 @@ ShutdownDialogProc(
             }
             break;
         }
-        
+
         case WM_TIMER:
             OnTimer(hDlg, pContext);
             return TRUE;
