@@ -743,6 +743,12 @@ protected:
         DWORD dwExclude,
         TCHAR chSeparator)
     {
+        if (!pCodecs || !cCodecs)
+        {
+            strFilter += chSeparator;
+            return E_FAIL;
+        }
+
         if (pszAllFilesDescription)
         {
             strFilter += pszAllFilesDescription;
@@ -796,7 +802,6 @@ protected:
         }
 
         strFilter += chSeparator;
-
         return S_OK;
     }
 
