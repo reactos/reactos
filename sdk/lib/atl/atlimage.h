@@ -916,12 +916,12 @@ protected:
 
         // get procedure address of the DLL
         template <typename FUN_T>
-        bool _getFUN(FUN_T& fun, const char *name)
+        FUN_T _getFUN(FUN_T& fun, const char *name)
         {
             if (fun)
-                return true;
+                return fun;
             fun = reinterpret_cast<FUN_T>(::GetProcAddress(hinstGdiPlus, name));
-            return fun != NULL;
+            return fun;
         }
 
         HINSTANCE LoadLib()
