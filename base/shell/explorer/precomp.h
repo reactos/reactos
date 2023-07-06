@@ -208,6 +208,7 @@ struct TaskbarSettings
     BOOL bLock;
     BOOL bGroupButtons;
     BOOL bShowSeconds;
+    BOOL bShowWeekday;
     BOOL bHideInactiveIcons;
     TW_STRUCKRECTS2 sr;
 

@@ -39,7 +39,7 @@ const UINT ClockWndFormatsCount = _ARRAYSIZE(ClockWndFormats);
 
 #define CLOCKWND_FORMAT_COUNT ClockWndFormatsCount
 #define CLOCKWND_FORMAT_TIME 0
-#define CLOCKWND_FORMAT_DAY  1
+//#define CLOCKWND_FORMAT_DAY  1 This format is unused. Uncomment to use it.
 #define CLOCKWND_FORMAT_DATE 2
 
 static const WCHAR szTrayClockWndClass[] = L"TrayClockWClass";
@@ -533,7 +533,7 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         rcClient.top = (rcClient.bottom - CurrentSize.cy) / 2;
         rcClient.bottom = rcClient.top + CurrentSize.cy;
 
-        if (VisibleLines == 2)
+        if (VisibleLines == 2 && !g_TaskbarSettings.bShowWeekday)
         {
             PaintLine(hDC, &rcClient, 0, CLOCKWND_FORMAT_TIME);
             PaintLine(hDC, &rcClient, 1, CLOCKWND_FORMAT_DATE);
@@ -563,16 +563,16 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
 VOID CTrayClockWnd::PaintLine(HDC hDC, RECT *rcClient, UINT LineNumber, UINT szLinesIndex)
 {
-    if (LineSizes[LineNumber].cx != 0)
-    {
-        TextOut(hDC,
-                (rcClient->right - LineSizes[szLinesIndex].cx) / 2,
-                rcClient->top + TRAY_CLOCK_WND_SPACING_Y,
-                szLines[szLinesIndex],
-                wcslen(szLines[szLinesIndex]));
+    if (LineSizes[LineNumber].cx == 0)
+        return;
 
-        rcClient->top += LineSizes[LineNumber].cy + LineSpacing;
-    }
+    TextOut(hDC,
+            (rcClient->right - LineSizes[szLinesIndex].cx) / 2,
+            rcClient->top + TRAY_CLOCK_WND_SPACING_Y,
+            szLines[szLinesIndex],
+            wcslen(szLines[szLinesIndex]));
+
+    rcClient->top += LineSizes[LineNumber].cy + LineSpacing;
 }
 
 VOID CTrayClockWnd::SetFont(IN HFONT hNewFont, IN BOOL bRedraw)
@@ -720,6 +720,12 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
         {
             ResetTime();
         }
+    }
+
+    if (newSettings->bShowWeekday != g_TaskbarSettings.bShowWeekday)
+    {
+        g_TaskbarSettings.bShowWeekday = newSettings->bShowWeekday;
+        bRealign = TRUE;
     }
 
     if (bRealign)
