@@ -558,7 +558,7 @@ public:
         CLSID clsid;
         if (::IsEqualGUID(guidFileType, GUID_NULL))
         {
-            CString strExt = GetFileExtension(pszNameW);
+            CString strExt(GetFileExtension(pszNameW));
             clsid = FindCodecForExtension(strExt, pEncoders, cEncoders);
         }
         else
@@ -786,7 +786,7 @@ protected:
             if (ShouldExcludeFormat(pCodecs[i].FormatID, dwExclude))
                 continue;
 
-            CString extensions = pCodecs[i].FilenameExtension;
+            CString extensions(pCodecs[i].FilenameExtension);
             extensions.MakeLower();
 
             CString desc(pCodecs[i].FormatDescription);
@@ -1028,11 +1028,11 @@ protected:
     {
         for (UINT i = 0; i < nCodecs; ++i)
         {
-            CString strSpecs = pCodecs[i].FilenameExtension;
+            CString strSpecs(pCodecs[i].FilenameExtension);
             int i0 = 0, i1;
             for (;;)
             {
-                i1 = strSpecs.Find(L';', i0);
+                i1 = strSpecs.Find(TEXT(';'), i0);
 
                 CString strSpec;
                 if (i1 < 0)
@@ -1064,11 +1064,11 @@ protected:
 
         for (UINT i = 0; i < cEncoders; ++i)
         {
-            CString strSpecs = pEncoders[i].FilenameExtension;
+            CString strSpecs(pEncoders[i].FilenameExtension);
             int i0 = 0, i1;
             for (;;)
             {
-                i1 = strSpecs.Find(L';', i0);
+                i1 = strSpecs.Find(TEXT(';'), i0);
 
                 CString strSpec;
                 if (i1 < 0)
