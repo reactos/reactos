@@ -885,18 +885,18 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 #ifdef __REACTOS__
     LPCWSTR wszFirstCommaPosition = NULL, wszSecondCommaPosition = NULL;
     LPCWSTR wszLastUnquotedSpacePosition = NULL;
-    LPWSTR wszDialogName;
+    LPWSTR wszDialogBoxName;
     int i = 0;
     SIZE_T nLen = lstrlenW(wszCmd);
 
     buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer) * (nLen + 1));
-    wszDialogName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*wszDialogName) * (nLen + 1));
-    if (wszDialogName == NULL || buffer == NULL)
+    wszDialogBoxName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*wszDialogBoxName) * (nLen + 1));
+    if (wszDialogBoxName == NULL || buffer == NULL)
     {
         if (buffer != NULL)
             HeapFree(GetProcessHeap(), 0, buffer);
-        if (wszDialogName != NULL)
-            HeapFree(GetProcessHeap(), 0, wszDialogName);
+        if (wszDialogBoxName != NULL)
+            HeapFree(GetProcessHeap(), 0, wszDialogBoxName);
         return;
     }
 
@@ -922,8 +922,8 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
      * is a CPL path. */
     if (wszFirstCommaPosition == NULL)
     {
-        /* An unquoted space was found in the string. Assume the last word is the dialog
-         * name/index. */
+        /* An unquoted space was found in the string. Assume the last word is the dialog box
+         * name/number. */
         if (wszLastUnquotedSpacePosition != NULL)
         {
             int nSpaces = 0;
@@ -932,7 +932,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
                 nSpaces++;
 
             StringCchCopyNW(buffer, nLen, wszCmd, wszLastUnquotedSpacePosition - wszCmd);
-            lstrcpyW(wszDialogName, wszLastUnquotedSpacePosition + nSpaces);
+            lstrcpyW(wszDialogBoxName, wszLastUnquotedSpacePosition + nSpaces);
         }
         /* No parameters were passed, the entire string is the CPL path. */
         else
@@ -942,7 +942,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     }
     /* If an unquoted comma was found, there are at least two parts of the string:
      * - the CPL path
-     * - either a dialog index preceeded by @, or a dialog name.
+     * - either a dialog box number preceeded by @, or a dialog box name.
      * If there was a second unqoted comma, there is another part of the string:
      * - the rest of the parameters. */
     else
@@ -953,7 +953,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
             wszSecondCommaPosition = wszCmd + nLen;
 
         StringCchCopyNW(buffer, nLen, wszCmd, wszFirstCommaPosition - wszCmd);
-        StringCchCopyNW(wszDialogName,
+        StringCchCopyNW(wszDialogBoxName,
                         nLen,
                         wszFirstCommaPosition + 1,
                         wszSecondCommaPosition - wszFirstCommaPosition - 1);
@@ -968,12 +968,12 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     while ((ptr = StrChrW(buffer, '"')))
         memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
 
-    while ((ptr = StrChrW(wszDialogName, '"')))
+    while ((ptr = StrChrW(wszDialogBoxName, '"')))
         memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
 
-    if (wszDialogName[0] == L'@')
+    if (wszDialogBoxName[0] == L'@')
     {
-        sp = atoiW(wszDialogName + 1);
+        sp = atoiW(wszDialogBoxName + 1);
     }
 #else
     buffer = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(wszCmd) + 1) * sizeof(*wszCmd));
@@ -1059,7 +1059,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
                 TRACE("sp %d, name %s\n", sp, debugstr_w(applet->info[sp].name));
 
 #ifdef __REACTOS__
-                if (StrCmpIW(wszDialogName, applet->info[sp].name) == 0)
+                if (StrCmpIW(wszDialogBoxName, applet->info[sp].name) == 0)
 #else
                 if (StrCmpIW(extraPmts, applet->info[sp].name) == 0)
 #endif
@@ -1068,7 +1068,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
         }
 
 #ifdef __REACTOS__
-        if (sp >= applet->count && wszDialogName[0] == L'\0')
+        if (sp >= applet->count && wszDialogBoxName[0] == L'\0')
         {
             sp = 0;
         }
@@ -1144,7 +1144,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 
     HeapFree(GetProcessHeap(), 0, buffer);
 #ifdef __REACTOS__
-    HeapFree(GetProcessHeap(), 0, wszDialogName);
+    HeapFree(GetProcessHeap(), 0, wszDialogBoxName);
 #endif
 }
 
