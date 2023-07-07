@@ -10,7 +10,7 @@
 
 LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info)
 {
-    int cbData = sizeof(ZipPidlEntry) + lstrlenW(lpString) * sizeof(WCHAR);
+    size_t cbData = sizeof(ZipPidlEntry) + wcslen(lpString) * sizeof(WCHAR);
     ZipPidlEntry* pidl = (ZipPidlEntry*)SHAlloc(cbData + sizeof(WORD));
     if (!pidl)
         return NULL;
@@ -30,7 +30,7 @@ LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info
         pidl->Utf8 = !!(info.flag & MINIZIP_UTF8_FLAG);
     }
 
-    lstrcpyW(pidl->Name, lpString);
+    wcscpy(pidl->Name, lpString);
     *(WORD*)((char*)pidl + cbData) = 0;
 
     return (LPITEMIDLIST)pidl;

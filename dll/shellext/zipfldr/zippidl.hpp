@@ -16,8 +16,8 @@ enum ZipPidlType
 #include <pshpack1.h>
 struct ZipPidlEntry
 {
-    WORD cb;
-    BYTE MagicType;
+    size_t cb;
+    DWORD MagicType;
     ZipPidlType ZipType;
 
     ULONG64 CompressedSize;
