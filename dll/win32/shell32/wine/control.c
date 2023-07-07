@@ -922,7 +922,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
      * is a CPL path. */
     if (wszFirstCommaPosition == NULL)
     {
-        /* An unquoted space was found in the string. Assume the last word is the dialog 
+        /* An unquoted space was found in the string. Assume the last word is the dialog
          * name/index. */
         if (wszLastUnquotedSpacePosition != NULL)
         {
@@ -947,7 +947,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
      * - the rest of the parameters. */
     else
     {
-        /* If there was no second unquoted comma in the string, the CPL path ends at the 
+        /* If there was no second unquoted comma in the string, the CPL path ends at thes
           * null terminator. */
         if (wszSecondCommaPosition == NULL)
             wszSecondCommaPosition = wszCmd + nLen;
@@ -967,7 +967,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     /* Remove the quotes from both buffers. */
     while ((ptr = StrChrW(buffer, '"')))
         memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
-   
+
     while ((ptr = StrChrW(wszDialogName, '"')))
         memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
 
