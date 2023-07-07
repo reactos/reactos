@@ -55,7 +55,6 @@ void AnsiToWide(const CStringA& strAnsi, CStringW& strWide)
 void Utf8ToWide(const CStringA& strUtf8, CStringW& strWide)
 {
     WCHAR wide[MAX_PATH];
-    wide[0] = UNICODE_NULL;
     MultiByteToWideChar(CP_UTF8, 0, strUtf8, -1, wide, _countof(wide));
     wide[_countof(wide) - 1] = UNICODE_NULL;
     strWide = wide;
