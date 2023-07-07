@@ -891,13 +891,13 @@ BEGIN
     IDS_NETWORKPLACE "Сетевое окружение"
 
     IDS_NEWFOLDER "Новая папка"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWITEMFORMAT "Новый %s"
 
     IDS_DRIVE_FIXED "Локальный диск"
     IDS_DRIVE_CDROM "CD-дисковод"
     IDS_DRIVE_NETWORK "Сетевой диск"
     IDS_DRIVE_FLOPPY "Дисковод 3.5"
-    IDS_DRIVE_REMOVABLE "Съемный диск"
+    IDS_DRIVE_REMOVABLE "Съёмный диск"
     IDS_FS_UNKNOWN "Неизвестно"
 
     /* Open With */
@@ -908,7 +908,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Авторы"
     IDS_SHELL_ABOUT_BACK "< &Назад"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "Созд&ать" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Папка"
     FCIDM_SHVIEW_NEWLINK "&Ярлык"
     IDS_FOLDER_OPTIONS "Свойства папки"
