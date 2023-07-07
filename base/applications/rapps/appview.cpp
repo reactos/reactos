@@ -56,12 +56,6 @@ CMainToolbar::InitImageList()
 
 CMainToolbar::CMainToolbar() : m_iToolbarHeight(24), m_dButtonsWidthMax(0)
 {
-    memset(szInstallBtn, 0, sizeof(szInstallBtn));
-    memset(szUninstallBtn, 0, sizeof(szUninstallBtn));
-    memset(szModifyBtn, 0, sizeof(szModifyBtn));
-    memset(szSelectAll, 0, sizeof(szSelectAll));
-    memset(szRefreshBtn, 0, sizeof(szRefreshBtn));
-    memset(szUpdateDbBtn, 0, sizeof(szUpdateDbBtn));
 }
 
 VOID
@@ -104,23 +98,31 @@ CMainToolbar::OnGetDispInfo(LPTOOLTIPTEXT lpttt)
 HWND
 CMainToolbar::Create(HWND hwndParent)
 {
+    CStringW szInstallBtn;
+    CStringW szUninstallBtn;
+    CStringW szModifyBtn;
+    CStringW szSelectAllBtn;
+    CStringW szRefreshBtn;
+    CStringW szUpdateDbBtn;
+
+    /* Load tooltip strings */
+    szInstallBtn.LoadStringW(IDS_TOOLTIP_INSTALL);
+    szUninstallBtn.LoadStringW(IDS_TOOLTIP_UNINSTALL);
+    szModifyBtn.LoadStringW(IDS_TOOLTIP_MODIFY);
+    szSelectAllBtn.LoadStringW(IDS_TOOLTIP_SELECT_ALL);
+    szRefreshBtn.LoadStringW(IDS_TOOLTIP_REFRESH);
+    szUpdateDbBtn.LoadStringW(IDS_TOOLTIP_UPDATE_DB);
+
     /* Create buttons */
     TBBUTTON Buttons[] = {
         /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
-        {0, ID_INSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szInstallBtn},
-        {1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szUninstallBtn},
-        {2, ID_MODIFY, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szModifyBtn},
-        {3, ID_CHECK_ALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szSelectAll},
+        {0, ID_INSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szInstallBtn.GetString()},
+        {1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szUninstallBtn.GetString()},
+        {2, ID_MODIFY, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szModifyBtn.GetString()},
+        {3, ID_CHECK_ALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szSelectAllBtn.GetString()},
         {-1, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
-        {4, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szRefreshBtn},
-        {5, ID_RESETDB, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szUpdateDbBtn}};
-
-    LoadStringW(hInst, IDS_INSTALL, szInstallBtn, _countof(szInstallBtn));
-    LoadStringW(hInst, IDS_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
-    LoadStringW(hInst, IDS_MODIFY, szModifyBtn, _countof(szModifyBtn));
-    LoadStringW(hInst, IDS_SELECT_ALL, szSelectAll, _countof(szSelectAll));
-    LoadStringW(hInst, IDS_TOOLTIP_REFRESH, szRefreshBtn, _countof(szRefreshBtn));
-    LoadStringW(hInst, IDS_TOOLTIP_UPDATE_DB, szUpdateDbBtn, _countof(szUpdateDbBtn));
+        {4, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szRefreshBtn.GetString()},
+        {5, ID_RESETDB, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szUpdateDbBtn.GetString()}};
 
     m_hWnd = CreateWindowExW(
         0, TOOLBARCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_LIST, 0, 0, 0, 0,
