@@ -448,8 +448,7 @@ public:
                 bool bOverwrite = *bOverwriteAll;
                 if (!*bOverwriteAll)
                 {
-                    eZipConfirmResponse Result;
-                    Result = _CZipAskReplace(hDlg, FullPath);
+                    eZipConfirmResponse Result = _CZipAskReplace(hDlg, FullPath);
                     switch (Result)
                     {
                     case eYesToAll:
