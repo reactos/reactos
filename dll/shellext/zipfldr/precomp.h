@@ -21,7 +21,8 @@
 #include <reactos/debug.h>
 #include <shellutils.h>
 
-
+void AnsiToWide(const CStringA& strAnsi, CStringW& strWide);
+void Utf8ToWide(const CStringA& strUtf8, CStringW& strWide);
 
 #define EXTRACT_VERBA "extract"
 #define EXTRACT_VERBW L"extract"

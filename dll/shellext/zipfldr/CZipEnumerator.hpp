@@ -90,12 +90,10 @@ public:
             nameA.ReleaseBuffer(info.size_filename);
             nameA.Replace('\\', '/');
 
-            WCHAR wide_name[MAX_PATH];
             if (info.flag & MINIZIP_UTF8_FLAG)
-                MultiByteToWideChar(CP_UTF8, 0, nameA, -1, wide_name, _countof(wide_name));
+                Utf8ToWide(nameA, name);
             else
-                MultiByteToWideChar(CP_ACP, 0, nameA, -1, wide_name, _countof(wide_name));
-            name = wide_name;
+                AnsiToWide(nameA, name);
         }
         return err == UNZ_OK;
     }
