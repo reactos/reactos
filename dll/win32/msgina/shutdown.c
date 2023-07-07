@@ -898,7 +898,7 @@ ShutdownOnFriendlyInit(
     pContext->OldButtonProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), GWLP_WNDPROC);
 
     /* Set bIsButtonHot to false, create tooltips for each buttons, make buttons to remember pContext and subclass the buttons */
-    for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
+    for (i = 0; i < NUMBER_OF_BUTTONS; i++)
     {
         pContext->bIsButtonHot[i] = FALSE;
         SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_SHUTDOWN + i),
