@@ -945,7 +945,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
                         nLen,
                         wszFirstCommaPosition + 1,
                         wszSecondCommaPosition - wszFirstCommaPosition - 1);
-                        
+
         if (wszSecondCommaPosition != wszCmd + nLen)
         {
             extraPmts = wszSecondCommaPosition + 1;
@@ -1045,13 +1045,12 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     if (applet)
     {
 #ifdef __REACTOS__
-        ULONG_PTR cookie;
-        BOOL bActivated;
-        ATOM aCPLName;
-        ATOM aCPLFlags;
-        ATOM aCPLPath;
-        AppDlgFindData findData;
-        
+    ULONG_PTR cookie;
+    BOOL bActivated;
+    ATOM aCPLName;
+    ATOM aCPLFlags;
+    ATOM aCPLPath;
+    AppDlgFindData findData;
 #endif
 
         /* we've been given a textual parameter (or none at all) */
@@ -1085,60 +1084,60 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 
         if (sp < applet->count)
         {
-            aCPLPath = GlobalFindAtomW(applet->cmd);
-            if (!aCPLPath)
-            {
-                aCPLPath = GlobalAddAtomW(applet->cmd);
-            }
-
-            aCPLName = GlobalFindAtomW(L"CPLName");
-            if (!aCPLName)
-            {
-                aCPLName = GlobalAddAtomW(L"CPLName");
-            }
-
-            aCPLFlags = GlobalFindAtomW(L"CPLFlags");
-            if (!aCPLFlags)
-            {
-                aCPLFlags = GlobalAddAtomW(L"CPLFlags");
-            }
-
-            findData.szAppFile = applet->cmd;
-            findData.sAppletNo = (UINT_PTR)(sp + 1);
-            findData.aCPLName = aCPLName;
-            findData.aCPLFlags = aCPLFlags;
-            findData.hRunDLL = applet->hWnd;
-            findData.hDlgResult = NULL;
-            // Find the dialog of this applet in the first instance.
-            // Note: The simpler functions "FindWindow" or "FindWindowEx" does not find this type of dialogs.
-            EnumWindows(Control_EnumWinProc, (LPARAM)&findData);
-            if (findData.hDlgResult)
-            {
-                BringWindowToTop(findData.hDlgResult);
-            }
-            else
-            {
-                SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLName), (HANDLE)MAKEINTATOM(aCPLPath));
-                SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLFlags), UlongToHandle(sp + 1));
-                Control_ShowAppletInTaskbar(applet, sp);
-
-                if (extraPmts[0] == L'\0' || !applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
-                    applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
-                RemovePropW(applet->hWnd, applet->cmd);
-                GlobalDeleteAtom(aCPLPath);
-            }
+        aCPLPath = GlobalFindAtomW(applet->cmd);
+        if (!aCPLPath)
+        {
+            aCPLPath = GlobalAddAtomW(applet->cmd);
         }
+
+        aCPLName = GlobalFindAtomW(L"CPLName");
+        if (!aCPLName)
+        {
+            aCPLName = GlobalAddAtomW(L"CPLName");
+        }
+
+        aCPLFlags = GlobalFindAtomW(L"CPLFlags");
+        if (!aCPLFlags)
+        {
+            aCPLFlags = GlobalAddAtomW(L"CPLFlags");
+        }
+
+        findData.szAppFile = applet->cmd;
+        findData.sAppletNo = (UINT_PTR)(sp + 1);
+        findData.aCPLName = aCPLName;
+        findData.aCPLFlags = aCPLFlags;
+        findData.hRunDLL = applet->hWnd;
+        findData.hDlgResult = NULL;
+        // Find the dialog of this applet in the first instance.
+        // Note: The simpler functions "FindWindow" or "FindWindowEx" does not find this type of dialogs.
+        EnumWindows(Control_EnumWinProc, (LPARAM)&findData);
+        if (findData.hDlgResult)
+        {
+            BringWindowToTop(findData.hDlgResult);
+        }
+        else
+        {
+            SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLName), (HANDLE)MAKEINTATOM(aCPLPath));
+            SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLFlags), UlongToHandle(sp + 1));
+            Control_ShowAppletInTaskbar(applet, sp);
+
+            if (extraPmts[0] == L'\0' || !applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
 #else
-        
         if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
+#endif
             applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
+#ifdef __REACTOS__
+            RemovePropW(applet->hWnd, applet->cmd);
+            GlobalDeleteAtom(aCPLPath);
+        }
+        }
 #endif
 
         Control_UnloadApplet(applet);
 
 #ifdef __REACTOS__
-        if (bActivated)
-            DeactivateActCtx(0, cookie);
+    if (bActivated)
+        DeactivateActCtx(0, cookie);
 #endif
     }
 
