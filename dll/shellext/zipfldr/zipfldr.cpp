@@ -47,11 +47,6 @@ static void init_zlib()
     fill_win32_filefunc64W(&g_FFunc);
 }
 
-void AnsiToWide(const CStringA& strAnsi, CStringW& strWide)
-{
-    strWide = CStringW(strAnsi);
-}
-
 void Utf8ToWide(const CStringA& strUtf8, CStringW& strWide)
 {
     WCHAR wide[MAX_PATH];

@@ -93,7 +93,7 @@ public:
             if (info.flag & MINIZIP_UTF8_FLAG)
                 Utf8ToWide(nameA, name);
             else
-                AnsiToWide(nameA, name);
+                name = CStringW(nameA);
         }
         return err == UNZ_OK;
     }
