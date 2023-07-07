@@ -888,6 +888,7 @@ BEGIN
     IDS_NETWORKPLACE "Vendi Rrjetit Tim"
 
     IDS_NEWFOLDER "Dosje e're"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Disku Vendorë"
     IDS_DRIVE_CDROM "CD Drive"
@@ -904,7 +905,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autorët"
     IDS_SHELL_ABOUT_BACK "< &Mbrapa"
-    FCIDM_SHVIEW_NEW "E're"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Dosje E're"
     FCIDM_SHVIEW_NEWLINK "&Lidhje e Re"
     IDS_FOLDER_OPTIONS "Opsione Dosje"

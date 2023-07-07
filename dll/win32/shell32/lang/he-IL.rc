@@ -886,6 +886,7 @@ BEGIN
     IDS_NETWORKPLACE "מיקומי הרשת שלי"
 
     IDS_NEWFOLDER "תיקיה חדשה"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "כונן מקומי"
     IDS_DRIVE_CDROM "כונן CD"
@@ -902,7 +903,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&יוצרים"
     IDS_SHELL_ABOUT_BACK "< &חזרה"
-    FCIDM_SHVIEW_NEW "חדש"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "תיקיה חדשה"
     FCIDM_SHVIEW_NEWLINK "&קישור חדש"
     IDS_FOLDER_OPTIONS "אפשרויות תיקיה"

@@ -884,6 +884,7 @@ BEGIN
     IDS_NETWORKPLACE "Risorse di rete"
 
     IDS_NEWFOLDER "Nuova cartella"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Disco locale"
     IDS_DRIVE_CDROM "CD Drive"
@@ -900,7 +901,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autori"
     IDS_SHELL_ABOUT_BACK "< &Indietro"
-    FCIDM_SHVIEW_NEW "Nuovo"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Nuova &Cartella"
     FCIDM_SHVIEW_NEWLINK "Nuovo &Collegamento"
     IDS_FOLDER_OPTIONS "Opzioni della cartella"

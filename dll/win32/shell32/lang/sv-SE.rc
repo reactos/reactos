@@ -884,6 +884,7 @@ BEGIN
     IDS_NETWORKPLACE "Mina nätverksplatser"
 
     IDS_NEWFOLDER "Ny mapp"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Lokal disk"
     IDS_DRIVE_CDROM "CD-enhet"
@@ -900,7 +901,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Upphovsinformation"
     IDS_SHELL_ABOUT_BACK "< &Bakåt"
-    FCIDM_SHVIEW_NEW "Ny(tt)"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Ny &mapp"
     FCIDM_SHVIEW_NEWLINK "Ny &genväg"
     IDS_FOLDER_OPTIONS "Mappalternativ"

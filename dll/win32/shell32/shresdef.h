@@ -140,6 +140,7 @@
 #define FCIDM_SHVIEW_NEW          146
 #define IDS_CONTROLPANEL          148
 #define IDS_NEWFOLDER             149
+#define IDS_NEWITEMFORMAT         150
 #define IDS_COLUMN_EXTENSION      151
 #define IDS_NO_EXTENSION          152
 #define IDS_RECYCLEBIN_LOCATION   153

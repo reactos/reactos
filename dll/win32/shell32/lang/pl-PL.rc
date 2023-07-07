@@ -890,6 +890,7 @@ BEGIN
     IDS_NETWORKPLACE "Moje miejsca sieciowe"
 
     IDS_NEWFOLDER "Nowy folder"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Dysk lokalny"
     IDS_DRIVE_CDROM "Stacja dysków CD"
@@ -906,7 +907,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autorzy"
     IDS_SHELL_ABOUT_BACK "< &Wstecz"
-    FCIDM_SHVIEW_NEW "&Nowy"
+    FCIDM_SHVIEW_NEW "&Nowy" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Folder"
     FCIDM_SHVIEW_NEWLINK "&Skrót"
     IDS_FOLDER_OPTIONS "Opcje folderów"

@@ -891,6 +891,7 @@ BEGIN
     IDS_NETWORKPLACE "Minu võrgukohad"
 
     IDS_NEWFOLDER "Uus kaust"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Kohalik ketas"
     IDS_DRIVE_CDROM "CD-draiv"
@@ -907,7 +908,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autorid"
     IDS_SHELL_ABOUT_BACK "< &Tagasi"
-    FCIDM_SHVIEW_NEW "Uus"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Uus &kaust"
     FCIDM_SHVIEW_NEWLINK "Uus &otsetee"
     IDS_FOLDER_OPTIONS "Kaustasuvandid"

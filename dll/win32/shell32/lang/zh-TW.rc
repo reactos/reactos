@@ -893,6 +893,7 @@ BEGIN
     IDS_NETWORKPLACE "網路上的芳鄰"
 
     IDS_NEWFOLDER "新資料夾"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "本機磁碟"
     IDS_DRIVE_CDROM "CD 光碟機"
@@ -909,7 +910,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "作者(&A)"
     IDS_SHELL_ABOUT_BACK "< 上一步(&B)"
-    FCIDM_SHVIEW_NEW "新增"
+    FCIDM_SHVIEW_NEW "新增(&W)" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "新增資料夾(&F)"
     FCIDM_SHVIEW_NEWLINK "新增捷徑(&L)"
     IDS_FOLDER_OPTIONS "資料夾選項"

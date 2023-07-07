@@ -881,6 +881,7 @@ BEGIN
     IDS_NETWORKPLACE "Tempat Jaringan Saya"
 
     IDS_NEWFOLDER "Folder Baru"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Disk Lokal"
     IDS_DRIVE_CDROM "CD Drive"
@@ -897,7 +898,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "Peng&arang"
     IDS_SHELL_ABOUT_BACK "< Kem&bali"
-    FCIDM_SHVIEW_NEW "Baru"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Folder Baru"
     FCIDM_SHVIEW_NEWLINK "&Tautan Baru"
     IDS_FOLDER_OPTIONS "Opsi Folder"

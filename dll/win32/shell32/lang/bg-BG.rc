@@ -885,6 +885,7 @@ BEGIN
     IDS_NETWORKPLACE "Моята мрежа"
 
     IDS_NEWFOLDER "Нова папка"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Местен диск"
     IDS_DRIVE_CDROM "КД четец"
@@ -901,7 +902,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Създатели"
     IDS_SHELL_ABOUT_BACK "< &Назад"
-    FCIDM_SHVIEW_NEW "Нови"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Нова &папка"
     FCIDM_SHVIEW_NEWLINK "Нова &връзка"
     IDS_FOLDER_OPTIONS "Настройки на папките"

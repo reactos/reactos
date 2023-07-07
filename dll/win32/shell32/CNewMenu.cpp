@@ -518,17 +518,14 @@ HRESULT CNewMenu::NewItemByCommand(SHELLNEW_ITEM *pItem, LPCWSTR wszPath)
 HRESULT CNewMenu::NewItemByNonCommand(SHELLNEW_ITEM *pItem, LPWSTR wszName,
                                       DWORD cchNameMax, LPCWSTR wszPath)
 {
-    WCHAR wszBuf[MAX_PATH];
-    WCHAR wszNewFile[MAX_PATH];
     BOOL bSuccess = TRUE;
 
-    if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, wszBuf, _countof(wszBuf)))
-        return E_FAIL;
-
-    StringCchPrintfW(wszNewFile, _countof(wszNewFile), L"%s %s%s", wszBuf, pItem->pwszDesc, pItem->pwszExt);
+    CStringW strNewItem;
+    strNewItem.Format(IDS_NEWITEMFORMAT, pItem->pwszDesc);
+    strNewItem += pItem->pwszExt;
 
     /* Create the name of the new file */
-    if (!PathYetAnotherMakeUniqueName(wszName, wszPath, NULL, wszNewFile))
+    if (!PathYetAnotherMakeUniqueName(wszName, wszPath, NULL, strNewItem))
         return E_FAIL;
 
     /* Create new file */

@@ -890,6 +890,7 @@ BEGIN
     IDS_NETWORKPLACE "Místa v síti"
 
     IDS_NEWFOLDER "Nová složka"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Místní disk"
     IDS_DRIVE_CDROM "Jednotka CD"
@@ -906,7 +907,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autoři"
     IDS_SHELL_ABOUT_BACK "< &Zpět"
-    FCIDM_SHVIEW_NEW "&Nový"
+    FCIDM_SHVIEW_NEW "&Nový" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Nová &složka"
     FCIDM_SHVIEW_NEWLINK "Nový &zástupce"
     IDS_FOLDER_OPTIONS "Možnosti složky"

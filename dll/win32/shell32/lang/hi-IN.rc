@@ -879,6 +879,7 @@ BEGIN
     IDS_NETWORKPLACE "मेरे नेटवर्क स्थान"
 
     IDS_NEWFOLDER "नया फोल्डर"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "लोकल डिस्क"
     IDS_DRIVE_CDROM "सीडी ड्राइव"
@@ -895,7 +896,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&ऑथर"
     IDS_SHELL_ABOUT_BACK "< &पीछे"
-    FCIDM_SHVIEW_NEW "नया"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "नया &फोल्डर"
     FCIDM_SHVIEW_NEWLINK "नया &लिंक"
     IDS_FOLDER_OPTIONS "फोल्डर विकल्प"
