@@ -11,13 +11,16 @@
 LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info)
 {
     size_t cbData = sizeof(ZipPidlEntry) + wcslen(lpString) * sizeof(WCHAR);
+    if (cbData > MAXWORD)
+        return NULL;
+
     ZipPidlEntry* pidl = (ZipPidlEntry*)SHAlloc(cbData + sizeof(WORD));
     if (!pidl)
         return NULL;
 
     ZeroMemory(pidl, cbData + sizeof(WORD));
 
-    pidl->cb = cbData;
+    pidl->cb = (WORD)cbData;
     pidl->MagicType = 'z';
     pidl->ZipType = Type;
 
