@@ -881,6 +881,7 @@ BEGIN
     IDS_NETWORKPLACE "マイ ネットワーク"
 
     IDS_NEWFOLDER "新しいフォルダ"
+    IDS_NEWITEMFORMAT "新しい%s"
 
     IDS_DRIVE_FIXED "ローカル ディスク"
     IDS_DRIVE_CDROM "CDドライブ"
@@ -897,7 +898,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "制作者(&A)"
     IDS_SHELL_ABOUT_BACK "< 戻る(&B)"
-    FCIDM_SHVIEW_NEW "新規作成"
+    FCIDM_SHVIEW_NEW "新規作成(&W)"
     FCIDM_SHVIEW_NEWFOLDER "フォルダ(&F)"
     FCIDM_SHVIEW_NEWLINK "ショートカット(&L)"
     IDS_FOLDER_OPTIONS "フォルダ オプション"

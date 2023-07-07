@@ -890,6 +890,7 @@ BEGIN
     IDS_NETWORKPLACE "My Network Places"
 
     IDS_NEWFOLDER "Ny Mappe"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Local Disk"
     IDS_DRIVE_CDROM "CD Drive"
@@ -906,7 +907,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Authors"
     IDS_SHELL_ABOUT_BACK "< &Back"
-    FCIDM_SHVIEW_NEW "Ny"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Ny &Mappe"
     FCIDM_SHVIEW_NEWLINK "Nyt &Link"
     IDS_FOLDER_OPTIONS "Folder Options"

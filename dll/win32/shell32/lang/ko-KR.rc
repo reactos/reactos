@@ -891,6 +891,7 @@ BEGIN
     IDS_NETWORKPLACE "내 네트워크 환경"
 
     IDS_NEWFOLDER "New Folder"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "로컬 디스크"
     IDS_DRIVE_CDROM "CD 드라이브"
@@ -907,7 +908,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Authors"
     IDS_SHELL_ABOUT_BACK "< &Back"
-    FCIDM_SHVIEW_NEW "New"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "New &Folder"
     FCIDM_SHVIEW_NEWLINK "New &Link"
     IDS_FOLDER_OPTIONS "폴더 옵션"

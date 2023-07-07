@@ -884,6 +884,7 @@ BEGIN
     IDS_NETWORKPLACE "Meus Locais de Rede"
 
     IDS_NEWFOLDER "Nova Pasta"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Disco Local"
     IDS_DRIVE_CDROM "CD Drive"
@@ -900,7 +901,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autores"
     IDS_SHELL_ABOUT_BACK "< &Voltar"
-    FCIDM_SHVIEW_NEW "Novo"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Pasta"
     FCIDM_SHVIEW_NEWLINK "&Atalho"
     IDS_FOLDER_OPTIONS "Opções de Pasta"

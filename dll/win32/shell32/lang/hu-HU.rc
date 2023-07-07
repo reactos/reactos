@@ -883,6 +883,7 @@ BEGIN
     IDS_NETWORKPLACE "Hálózati helyek"
 
     IDS_NEWFOLDER "Új mappa"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Helyi lemez"
     IDS_DRIVE_CDROM "CD-meghajtó"
@@ -899,7 +900,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Készítők"
     IDS_SHELL_ABOUT_BACK "< &Vissza"
-    FCIDM_SHVIEW_NEW "Új"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Mappa"
     FCIDM_SHVIEW_NEWLINK "&Parancsikon"
     IDS_FOLDER_OPTIONS "Mappabeállítások"

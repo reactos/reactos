@@ -887,6 +887,7 @@ BEGIN
     IDS_NETWORKPLACE "Locații în rețea"
 
     IDS_NEWFOLDER "Dosar nou"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Disc local"
     IDS_DRIVE_CDROM "Unitate CD"
@@ -903,7 +904,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autori"
     IDS_SHELL_ABOUT_BACK "< Înap&oi"
-    FCIDM_SHVIEW_NEW "&Crează"
+    FCIDM_SHVIEW_NEW "&Crează" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Dosar"
     FCIDM_SHVIEW_NEWLINK "Sc&urtătură"
     IDS_FOLDER_OPTIONS "Opțiuni dosare"

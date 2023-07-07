@@ -886,6 +886,7 @@ BEGIN
     IDS_NETWORKPLACE "Ağ Bağlantılarım"
 
     IDS_NEWFOLDER "Yeni Dizin"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Yerel Disk"
     IDS_DRIVE_CDROM "CD-ROM"
@@ -902,7 +903,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Yazarlar"
     IDS_SHELL_ABOUT_BACK "< &Geri"
-    FCIDM_SHVIEW_NEW "Yeni"
+    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Yeni &Dizin"
     FCIDM_SHVIEW_NEWLINK "Yeni &Kısayol"
     IDS_FOLDER_OPTIONS "Dizin Seçenekleri"

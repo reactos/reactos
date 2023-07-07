@@ -884,6 +884,7 @@ BEGIN
     IDS_NETWORKPLACE "Miesta v sieti"
 
     IDS_NEWFOLDER "Nový priečinok"
+    IDS_NEWITEMFORMAT "New %s"
 
     IDS_DRIVE_FIXED "Lokálny disk"
     IDS_DRIVE_CDROM "Jednotka CD"
@@ -900,7 +901,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autori"
     IDS_SHELL_ABOUT_BACK "< &Späť"
-    FCIDM_SHVIEW_NEW "&Nový"
+    FCIDM_SHVIEW_NEW "&Nový" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Priečinok"
     FCIDM_SHVIEW_NEWLINK "&Odkaz"
     IDS_FOLDER_OPTIONS "Možnosti priečinka"
