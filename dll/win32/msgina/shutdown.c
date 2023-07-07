@@ -525,29 +525,21 @@ OwnerDrawButtonSubclass(
             if (GetCapture() != hButton)
             {
                 SetCapture(hButton);
-
-                switch (buttonID)
+                if (buttonID == IDC_BUTTON_SHUTDOWN)
                 {
-                    case IDC_BUTTON_SHUTDOWN:
-                    {
-                        pContext->bIsButtonHot[SHUTDOWN_BUTTON_HOT] = TRUE;
-                        break;
-                    }
-                    case IDC_BUTTON_REBOOT:
-                    {
-                        pContext->bIsButtonHot[REBOOT_BUTTON_HOT] = TRUE;
-                        break;
-                    }
-                    case IDC_BUTTON_SLEEP:
-                    {
-                        pContext->bIsButtonHot[SLEEP_BUTTON_HOT] = TRUE;
-                        break;
-                    }
-                    case IDC_BUTTON_HIBERNATE:
-                    {
-                        pContext->bIsButtonHot[HIBERNATE_BUTTON_HOT] = TRUE;
-                        break;
-                    }
+                    pContext->bIsButtonHot[SHUTDOWN_BUTTON_HOT] = TRUE;
+                }
+                else if (buttonID == IDC_BUTTON_REBOOT)
+                {
+                    pContext->bIsButtonHot[REBOOT_BUTTON_HOT] = TRUE;
+                }
+                else if (buttonID == IDC_BUTTON_SLEEP)
+                {
+                    pContext->bIsButtonHot[SLEEP_BUTTON_HOT] = TRUE;
+                }
+                else if (buttonID == IDC_BUTTON_HIBERNATE)
+                {
+                    pContext->bIsButtonHot[HIBERNATE_BUTTON_HOT] = TRUE;
                 }
                 SetCursor(LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_HAND)));
             }
@@ -558,29 +550,21 @@ OwnerDrawButtonSubclass(
             if (hwndTarget != hButton)
             {
                 ReleaseCapture();
-
-                switch (buttonID)
+                if (buttonID == IDC_BUTTON_SHUTDOWN)
                 {
-                    case IDC_BUTTON_SHUTDOWN:
-                    {
-                        pContext->bIsButtonHot[SHUTDOWN_BUTTON_HOT] = FALSE;
-                        break;
-                    }
-                    case IDC_BUTTON_REBOOT:
-                    {
-                        pContext->bIsButtonHot[REBOOT_BUTTON_HOT] = FALSE;
-                        break;
-                    }
-                    case IDC_BUTTON_SLEEP:
-                    {
-                        pContext->bIsButtonHot[SLEEP_BUTTON_HOT] = FALSE;
-                        break;
-                    }
-                    case IDC_BUTTON_HIBERNATE:
-                    {
-                        pContext->bIsButtonHot[HIBERNATE_BUTTON_HOT] = FALSE;
-                        break;
-                    }
+                    pContext->bIsButtonHot[SHUTDOWN_BUTTON_HOT] = FALSE;
+                }
+                else if (buttonID == IDC_BUTTON_REBOOT)
+                {
+                    pContext->bIsButtonHot[REBOOT_BUTTON_HOT] = FALSE;
+                }
+                else if (buttonID == IDC_BUTTON_SLEEP)
+                {
+                    pContext->bIsButtonHot[SLEEP_BUTTON_HOT] = FALSE;
+                }
+                else if (buttonID == IDC_BUTTON_HIBERNATE)
+                {
+                    pContext->bIsButtonHot[HIBERNATE_BUTTON_HOT] = FALSE;
                 }
             }
             InvalidateRect(hButton, NULL, FALSE);
