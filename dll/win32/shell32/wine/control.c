@@ -1051,7 +1051,6 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     ATOM aCPLPath;
     AppDlgFindData findData;
 #endif
-
         /* we've been given a textual parameter (or none at all) */
         if (sp == -1) {
             while ((++sp) != applet->count) {
@@ -1138,6 +1137,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     if (bActivated)
         DeactivateActCtx(0, cookie);
 #endif
+
     }
 
     HeapFree(GetProcessHeap(), 0, buffer);
