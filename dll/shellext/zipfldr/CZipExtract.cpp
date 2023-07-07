@@ -598,13 +598,13 @@ public:
                 CombinedPath += L'\\';
             CombinedPath += Name;
 
+            CombinedPath.Replace(L'/', L'\\'); // SHPathPrepareForWrite does not handle '/'
+
             // Build a full path
             CStringW FullPath;
             DWORD cchFullPath = ::GetFullPathName(CombinedPath, 0, NULL, NULL);
             ::GetFullPathName(CombinedPath, cchFullPath, FullPath.GetBuffer(cchFullPath), NULL);
             FullPath.ReleaseBuffer();
-
-            FullPath.Replace(L'/', L'\\'); // SHPathPrepareForWrite does not handle '/'
         Retry:
             eZipExtractError Result = ExtractSingle(hDlg, FullPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
             if (Result != eDirectoryError)
