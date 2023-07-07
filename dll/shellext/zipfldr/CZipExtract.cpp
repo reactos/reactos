@@ -605,6 +605,7 @@ public:
             DWORD cchFullPath = ::GetFullPathName(CombinedPath, 0, NULL, NULL);
             ::GetFullPathName(CombinedPath, cchFullPath, FullPath.GetBuffer(cchFullPath), NULL);
             FullPath.ReleaseBuffer();
+
         Retry:
             eZipExtractError Result = ExtractSingle(hDlg, FullPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
             if (Result != eDirectoryError)
