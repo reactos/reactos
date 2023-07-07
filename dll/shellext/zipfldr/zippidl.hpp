@@ -16,7 +16,7 @@ enum ZipPidlType
 #include <pshpack1.h>
 struct ZipPidlEntry
 {
-    WORD cb; // This must be a USHORT for SHITEMID compatibility
+    USHORT cb; // This must be a USHORT for SHITEMID compatibility
     WORD MagicType;
     ZipPidlType ZipType;
 

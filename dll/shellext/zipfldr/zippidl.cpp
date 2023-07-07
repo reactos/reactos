@@ -20,7 +20,7 @@ LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info
 
     ZeroMemory(pidl, cbData + sizeof(WORD));
 
-    pidl->cb = (WORD)cbData;
+    pidl->cb = (USHORT)cbData;
     pidl->MagicType = 'z';
     pidl->ZipType = Type;
 
@@ -34,7 +34,7 @@ LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info
     }
 
     wcscpy(pidl->Name, lpString);
-    *(WORD*)((char*)pidl + cbData) = 0;
+    *(WORD*)((char*)pidl + cbData) = 0; // The end of an ITEMIDLIST
 
     return (LPITEMIDLIST)pidl;
 }
