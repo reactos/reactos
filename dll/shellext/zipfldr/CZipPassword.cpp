@@ -14,7 +14,7 @@ private:
     CStringW m_Filename;
     CStringA* m_pPassword;
 public:
-    CZipPassword(LPCWSTR filename, CStringA* Password)
+    CZipPassword(PCWSTR filename, CStringA* Password)
         :m_pPassword(Password)
     {
         if (filename != NULL)
@@ -65,7 +65,7 @@ public:
     END_MSG_MAP()
 };
 
-eZipPasswordResponse _CZipAskPassword(HWND hDlg, LPCWSTR filename, CStringA& Password)
+eZipPasswordResponse _CZipAskPassword(HWND hDlg, PCWSTR filename, CStringA& Password)
 {
     if (filename)
         filename = PathFindFileNameW(filename);

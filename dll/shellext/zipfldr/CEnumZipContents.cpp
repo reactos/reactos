@@ -22,7 +22,7 @@ public:
     {
     }
 
-    STDMETHODIMP Initialize(IZip* zip, DWORD flags, LPCWSTR prefix)
+    STDMETHODIMP Initialize(IZip* zip, DWORD flags, PCWSTR prefix)
     {
         dwFlags = flags;
         m_Prefix = prefix;
@@ -89,7 +89,7 @@ public:
 };
 
 
-HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, LPCWSTR prefix, REFIID riid, LPVOID * ppvOut)
+HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, PCWSTR prefix, REFIID riid, LPVOID * ppvOut)
 {
     return ShellObjectCreatorInit<CEnumZipContents>(zip, flags, prefix, riid, ppvOut);
 }

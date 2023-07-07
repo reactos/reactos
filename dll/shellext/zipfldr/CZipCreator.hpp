@@ -22,7 +22,7 @@ public:
         return new CZipCreator();
     }
 
-    virtual void DoAddItem(LPCWSTR pszFile);
+    virtual void DoAddItem(PCWSTR pszFile);
     static BOOL runThread(CZipCreator* pCreator);
 
 protected:

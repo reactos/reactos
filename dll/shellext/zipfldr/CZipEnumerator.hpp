@@ -34,7 +34,7 @@ public:
         return true;
     }
 
-    bool next_unique(LPCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info)
+    bool next_unique(PCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info)
     {
         size_t len = wcslen(prefix);
         CStringW tmp;

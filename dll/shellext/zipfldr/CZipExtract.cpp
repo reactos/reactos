@@ -205,7 +205,7 @@ public:
         struct browse_info
         {
             HWND hWnd;
-            LPCWSTR Directory;
+            PCWSTR Directory;
         };
 
         static INT CALLBACK s_BrowseCallbackProc(HWND hWnd, UINT uMsg, LPARAM lp, LPARAM pData)
@@ -371,7 +371,7 @@ public:
 
     eZipExtractError ExtractSingle(
         HWND hDlg,
-        LPCWSTR FullPath,
+        PCWSTR FullPath,
         bool is_dir,
         unz_file_info64* Info,
         CStringW Name,
@@ -666,7 +666,7 @@ public:
         return true;
     }
 
-    int ShowExtractError(HWND hDlg, LPCWSTR path, int Error, eZipExtractError ErrorType)
+    int ShowExtractError(HWND hDlg, PCWSTR path, int Error, eZipExtractError ErrorType)
     {
         CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
         CStringW strErr, strText;

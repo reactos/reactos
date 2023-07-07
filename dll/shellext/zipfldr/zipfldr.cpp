@@ -57,7 +57,7 @@ void Utf8ToWide(const CStringA& strUtf8, CStringW& strWide)
 }
 
 static BOOL
-CreateEmptyFile(LPCWSTR pszFile)
+CreateEmptyFile(PCWSTR pszFile)
 {
     HANDLE hFile;
     hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
@@ -71,7 +71,7 @@ CreateEmptyFile(LPCWSTR pszFile)
 }
 
 static HRESULT
-CreateSendToZip(LPCWSTR pszSendTo)
+CreateSendToZip(PCWSTR pszSendTo)
 {
     WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
 
@@ -163,7 +163,7 @@ BOOL WINAPI
 RouteTheCall(
     IN HWND hWndOwner,
     IN HINSTANCE hInstance,
-    IN LPCWSTR lpStringArg,
+    IN PCWSTR lpStringArg,
     IN INT Show)
 {
     CStringW path = lpStringArg;

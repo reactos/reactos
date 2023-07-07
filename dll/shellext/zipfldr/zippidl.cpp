@@ -8,7 +8,7 @@
 
 #include "precomp.h"
 
-LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info)
+LPITEMIDLIST _ILCreate(ZipPidlType Type, PCWSTR lpString, unz_file_info64& info)
 {
     size_t cbData = sizeof(ZipPidlEntry) + wcslen(lpString) * sizeof(WCHAR);
     if (cbData > MAXWORD)

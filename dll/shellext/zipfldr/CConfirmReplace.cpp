@@ -13,7 +13,7 @@ class CConfirmReplace : public CDialogImpl<CConfirmReplace>
 private:
     CStringW m_Filename;
 public:
-    CConfirmReplace(LPCWSTR filename)
+    CConfirmReplace(PCWSTR filename)
         : m_Filename(filename)
     {
     }
@@ -50,7 +50,7 @@ public:
     END_MSG_MAP()
 };
 
-eZipConfirmResponse _CZipAskReplace(HWND hDlg, LPCWSTR FullPath)
+eZipConfirmResponse _CZipAskReplace(HWND hDlg, PCWSTR FullPath)
 {
     PCWSTR Filename = PathFindFileNameW(FullPath);
     CConfirmReplace confirm(Filename);

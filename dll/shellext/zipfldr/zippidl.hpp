@@ -30,5 +30,5 @@ struct ZipPidlEntry
 #include <poppack.h>
 
 
-LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info);
+LPITEMIDLIST _ILCreate(ZipPidlType Type, PCWSTR lpString, unz_file_info64& info);
 const ZipPidlEntry* _ZipFromIL(LPCITEMIDLIST pidl);
