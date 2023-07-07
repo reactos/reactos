@@ -866,15 +866,17 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     */
 {
     LPWSTR	buffer;
+#ifndef __REACTOS__
     LPWSTR	beg = NULL;
     LPWSTR	end;
     WCHAR	ch;
+#endif
     LPWSTR       ptr;
     signed 	sp = -1;
-    LPWSTR	extraPmtsBuf = NULL;
 #ifdef __REACTOS__
-    LPWSTR	extraPmts = L"";
+    LPCWSTR	extraPmts = L"";
 #else
+    LPWSTR	extraPmtsBuf = NULL;
     LPWSTR	extraPmts = NULL;
 #endif
     BOOL        quoted = FALSE;
