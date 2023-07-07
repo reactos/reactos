@@ -27,7 +27,7 @@ public:
         /* No filename, so this is the question before starting to extract */
         if (m_Filename.IsEmpty())
         {
-            CStringW message(MAKEINTRESOURCE(IDS_PASSWORD_ZIP_TEXT));
+            CStringW message(MAKEINTRESOURCEW(IDS_PASSWORD_ZIP_TEXT));
             ::SetDlgItemTextW(m_hWnd, IDC_MESSAGE, message);
             ::ShowWindow(GetDlgItem(IDSKIP), SW_HIDE);
         }
