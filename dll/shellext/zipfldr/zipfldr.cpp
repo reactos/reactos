@@ -89,7 +89,7 @@ CreateSendToZip(PCWSTR pszSendTo)
 }
 
 static HRESULT
-GetDefaultUserSendTo(LPWSTR pszPath)
+GetDefaultUserSendTo(PWSTR pszPath)
 {
     return SHGetFolderPathW(NULL, CSIDL_SENDTO, INVALID_HANDLE_VALUE,
                             SHGFP_TYPE_DEFAULT, pszPath);

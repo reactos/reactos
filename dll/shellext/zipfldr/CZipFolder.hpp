@@ -100,7 +100,7 @@ public:
         return E_NOTIMPL;
     }
     // Adapted from CFileDefExt::GetFileTimeString
-    BOOL _GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cchResult)
+    BOOL _GetFileTimeString(LPFILETIME lpFileTime, PWSTR pwszResult, UINT cchResult)
     {
         SYSTEMTIME st;
 
@@ -108,7 +108,7 @@ public:
             return FALSE;
 
         size_t cchRemaining = cchResult;
-        LPWSTR pwszEnd = pwszResult;
+        PWSTR pwszEnd = pwszResult;
         int cchWritten = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, pwszEnd, cchRemaining);
         if (cchWritten)
             --cchWritten; // GetDateFormatW returns count with terminating zero
@@ -474,7 +474,7 @@ public:
         case GCS_VERBA:
             return StringCchCopyA(pszName, cchMax, EXTRACT_VERBA);
         case GCS_VERBW:
-            return StringCchCopyW((LPWSTR)pszName, cchMax, EXTRACT_VERBW);
+            return StringCchCopyW((PWSTR)pszName, cchMax, EXTRACT_VERBW);
         case GCS_HELPTEXTA:
         {
             CStringA helpText(MAKEINTRESOURCEA(IDS_HELPTEXT));
@@ -483,7 +483,7 @@ public:
         case GCS_HELPTEXTW:
         {
             CStringW helpText(MAKEINTRESOURCEA(IDS_HELPTEXT));
-            return StringCchCopyW((LPWSTR)pszName, cchMax, helpText);
+            return StringCchCopyW((PWSTR)pszName, cchMax, helpText);
         }
         case GCS_VALIDATEA:
         case GCS_VALIDATEW:
