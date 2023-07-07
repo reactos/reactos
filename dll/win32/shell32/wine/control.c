@@ -865,16 +865,26 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     *   "a path\foo.cpl"
     */
 {
+    LPWSTR	buffer;
+    LPWSTR	beg = NULL;
+    LPWSTR	end;
+    WCHAR	ch;
+    LPWSTR       ptr;
+    signed 	sp = -1;
+    LPWSTR	extraPmtsBuf = NULL;
 #ifdef __REACTOS__
-    signed sp = -1;
+    LPWSTR	extraPmts = L"";
+#else
+    LPWSTR	extraPmts = NULL;
+#endif
+    BOOL        quoted = FALSE;
     CPlApplet *applet;
+
+#ifdef __REACTOS__
     LPCWSTR wszFirstCommaPosition = NULL, wszSecondCommaPosition = NULL;
     LPCWSTR wszLastUnquotedSpacePosition = NULL;
-    LPWSTR buffer, buffer2;
-    BOOL bQuoted = FALSE;
-    LPCWSTR extraPmts = L"";
+    LPWSTR buffer2;
     int i = 0;
-    LPWSTR ptr;
     SIZE_T nLen = lstrlenW(wszCmd);
 
     buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer) * (nLen + 1));
@@ -892,15 +902,15 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     for (i = 0; i < nLen; i++)
     {
         if (wszCmd[i] == '"')
-            bQuoted = !bQuoted;
-        if (wszCmd[i] == ',' && !bQuoted)
+            quoted = !quoted;
+        if (wszCmd[i] == ',' && !quoted)
         {
             if (wszFirstCommaPosition == NULL)
                 wszFirstCommaPosition = &wszCmd[i];
             else if (wszSecondCommaPosition == NULL)
                 wszSecondCommaPosition = &wszCmd[i];
         }
-        if (wszCmd[i] == ' ' && !bQuoted)
+        if (wszCmd[i] == ' ' && !quoted)
         {
             wszLastUnquotedSpacePosition = &wszCmd[i];
         }
@@ -964,17 +974,6 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
         sp = atoiW(buffer2 + 1);
     }
 #else
-    LPWSTR	buffer;
-    LPWSTR	beg = NULL;
-    LPWSTR	end;
-    WCHAR	ch;
-    LPWSTR       ptr;
-    signed 	sp = -1;
-    LPWSTR	extraPmtsBuf = NULL;
-    LPWSTR	extraPmts = NULL;
-    BOOL        quoted = FALSE;
-    CPlApplet *applet;
-
     buffer = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(wszCmd) + 1) * sizeof(*wszCmd));
     if (!buffer) return;
 
