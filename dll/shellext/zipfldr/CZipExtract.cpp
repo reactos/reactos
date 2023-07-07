@@ -257,7 +257,7 @@ public:
         LRESULT OnPassword(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         {
             CStringA Password;
-            if (_CZipAskPasswordW(m_hWnd, NULL, Password) == eAccept)
+            if (_CZipAskPassword(m_hWnd, NULL, Password) == eAccept)
             {
                 *m_pPassword = Password;
             }
@@ -415,7 +415,7 @@ public:
                         }
                     }
                 }
-                Response = _CZipAskPasswordW(hDlg, Name, Password);
+                Response = _CZipAskPassword(hDlg, Name, Password);
             } while (Response == eAccept);
 
             if (Response == eSkip)
@@ -439,8 +439,7 @@ public:
             return eOpenError;
         }
 
-        HANDLE hFile;
-        hFile = CreateFileW(FullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE hFile = CreateFileW(FullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
         {
             DWORD dwErr = GetLastError();
@@ -450,7 +449,7 @@ public:
                 if (!*bOverwriteAll)
                 {
                     eZipConfirmResponse Result;
-                    Result = _CZipAskReplaceW(hDlg, FullPath);
+                    Result = _CZipAskReplace(hDlg, FullPath);
                     switch (Result)
                     {
                     case eYesToAll:

@@ -49,7 +49,7 @@ public:
     END_MSG_MAP()
 };
 
-eZipConfirmResponse _CZipAskReplaceW(HWND hDlg, LPCWSTR FullPath)
+eZipConfirmResponse _CZipAskReplace(HWND hDlg, LPCWSTR FullPath)
 {
     PCWSTR Filename = PathFindFileNameW(FullPath);
     CConfirmReplace confirm(Filename);

@@ -64,7 +64,7 @@ public:
     END_MSG_MAP()
 };
 
-eZipPasswordResponse _CZipAskPasswordW(HWND hDlg, LPCWSTR filename, CStringA& Password)
+eZipPasswordResponse _CZipAskPassword(HWND hDlg, LPCWSTR filename, CStringA& Password)
 {
     if (filename)
         filename = PathFindFileNameW(filename);

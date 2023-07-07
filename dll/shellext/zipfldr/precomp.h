@@ -65,7 +65,7 @@ enum eZipPasswordResponse
     eAccept,
 };
 
-eZipPasswordResponse _CZipAskPasswordW(HWND hDlg, LPCWSTR filename, CStringA& Password);
+eZipPasswordResponse _CZipAskPassword(HWND hDlg, LPCWSTR filename, CStringA& Password);
 
 enum eZipConfirmResponse
 {
@@ -75,7 +75,7 @@ enum eZipConfirmResponse
     eCancel
 };
 
-eZipConfirmResponse _CZipAskReplaceW(HWND hDlg, LPCWSTR FullPath);
+eZipConfirmResponse _CZipAskReplace(HWND hDlg, LPCWSTR FullPath);
 
 enum eZipExtractError
 {
