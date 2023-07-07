@@ -592,10 +592,19 @@ public:
 
             bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
-            WCHAR CombinedPath[MAX_PATH * 2] = { 0 };
-            PathCombineW(CombinedPath, BaseDirectory, Name);
-            CStringW FullPath = CombinedPath;
-            FullPath.Replace(L'/', L'\\');    /* SHPathPrepareForWrite does not handle '/' */
+            // Get combined path
+            CStringW CombinedPath = BaseDirectory;
+            if (CombinedPath.GetLength() == 0 || CombinedPath[CombinedPath.GetLength() - 1] != L'\\')
+                CombinedPath += L'\\';
+            CombinedPath += Name;
+
+            // Get full path
+            CStringW FullPath;
+            DWORD cchFullPath = ::GetFullPathName(CombinedPath, 0, NULL, NULL);
+            ::GetFullPathName(CombinedPath, cchFullPath, FullPath.GetBuffer(cchFullPath), NULL);
+            FullPath.ReleaseBuffer();
+
+            FullPath.Replace(L'/', L'\\'); // SHPathPrepareForWrite does not handle '/'
         Retry:
             eZipExtractError Result = ExtractSingle(hDlg, FullPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
             if (Result != eDirectoryError)
