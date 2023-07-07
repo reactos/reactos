@@ -907,7 +907,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autoři"
     IDS_SHELL_ABOUT_BACK "< &Zpět"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "&Nový" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Nová &složka"
     FCIDM_SHVIEW_NEWLINK "Nový &zástupce"
     IDS_FOLDER_OPTIONS "Možnosti složky"
