@@ -20,7 +20,7 @@ LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info
 
     ZeroMemory(pidl, cbData + sizeof(WORD));
 
-    pidl->cb = (USHORT)cbData;
+    pidl->cb = (WORD)cbData;
     pidl->MagicType = 'z';
     pidl->ZipType = Type;
 
@@ -30,7 +30,6 @@ LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCWSTR lpString, unz_file_info64& info
         pidl->UncompressedSize = info.uncompressed_size;
         pidl->DosDate = info.dosDate;
         pidl->Password = info.flag & MINIZIP_PASSWORD_FLAG;
-        pidl->Utf8 = !!(info.flag & MINIZIP_UTF8_FLAG);
     }
 
     wcscpy(pidl->Name, lpString);
