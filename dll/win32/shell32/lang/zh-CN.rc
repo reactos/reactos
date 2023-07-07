@@ -911,7 +911,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "作者(&A)"
     IDS_SHELL_ABOUT_BACK "< 返回(&B)"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "新建(&W)" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "文件夹(&F)"
     FCIDM_SHVIEW_NEWLINK "快捷方式(&L)"
     IDS_FOLDER_OPTIONS "文件夹选项"
