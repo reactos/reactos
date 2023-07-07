@@ -50,10 +50,9 @@ static void init_zlib()
 
 void Utf8ToWide(const CStringA& strUtf8, CStringW& strWide)
 {
-    WCHAR wide[MAX_PATH];
-    MultiByteToWideChar(CP_UTF8, 0, strUtf8, -1, wide, _countof(wide));
-    wide[_countof(wide) - 1] = UNICODE_NULL;
-    strWide = wide;
+    INT cchWide = MultiByteToWideChar(CP_UTF8, 0, strUtf8, -1, NULL, 0);
+    MultiByteToWideChar(CP_UTF8, 0, strUtf8, -1, strWide.GetBuffer(cchWide), cchWide);
+    strWide.ReleaseBuffer();
 }
 
 static BOOL
