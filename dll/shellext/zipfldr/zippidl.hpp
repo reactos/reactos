@@ -17,13 +17,13 @@ enum ZipPidlType
 struct ZipPidlEntry
 {
     WORD cb; // This must be a WORD for SHITEMID compatibility
-    WORD MagicType;
+    BYTE MagicType;
+    BOOLEAN Password;
     ZipPidlType ZipType;
 
     ULONG64 CompressedSize;
     ULONG64 UncompressedSize;
     ULONG DosDate;
-    BYTE Password;
 
     WCHAR Name[1];
 };
