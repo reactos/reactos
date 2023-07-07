@@ -592,13 +592,13 @@ public:
 
             bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
-            // Get combined path
+            // Build a combined path
             CStringW CombinedPath = BaseDirectory;
-            if (CombinedPath.GetLength() == 0 || CombinedPath[CombinedPath.GetLength() - 1] != L'\\')
+            if (CombinedPath.GetLength() > 0 && CombinedPath[CombinedPath.GetLength() - 1] != L'\\')
                 CombinedPath += L'\\';
             CombinedPath += Name;
 
-            // Get full path
+            // Build a full path
             CStringW FullPath;
             DWORD cchFullPath = ::GetFullPathName(CombinedPath, 0, NULL, NULL);
             ::GetFullPathName(CombinedPath, cchFullPath, FullPath.GetBuffer(cchFullPath), NULL);
