@@ -36,29 +36,29 @@ public:
     bool next_unique(LPCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info)
     {
         size_t len = wcslen(prefix);
-        CStringW tmpW;
-        while (next(tmpW, info))
+        CStringW tmp;
+        while (next(tmp, info))
         {
-            if (!_wcsnicmp(tmpW, prefix, len))
+            if (!_wcsnicmp(tmp, prefix, len))
             {
-                int pos = tmpW.Find(L'/', len);
+                int pos = tmp.Find(L'/', len);
                 if (pos < 0)
                 {
-                    name = tmpW.Mid(len);
+                    name = tmp.Mid(len);
                     folder = false;
                 }
                 else
                 {
-                    name = tmpW.Mid(len, pos - len);
+                    name = tmp.Mid(len, pos - len);
                     folder = true;
                 }
-                tmpW = name;
-                tmpW.MakeLower();
+                tmp = name;
+                tmp.MakeLower();
 
-                POSITION it = m_Returned.Find(tmpW);
+                POSITION it = m_Returned.Find(tmp);
                 if (!name.IsEmpty() && !it)
                 {
-                    m_Returned.AddTail(tmpW);
+                    m_Returned.AddTail(tmp);
                     return true;
                 }
             }

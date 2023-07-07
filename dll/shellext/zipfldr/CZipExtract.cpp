@@ -370,10 +370,10 @@ public:
 
     eZipExtractError ExtractSingle(
         HWND hDlg,
-        LPCWSTR WideFullPath,
+        LPCWSTR FullPath,
         bool is_dir,
         unz_file_info64* Info,
-        CStringW WideName,
+        CStringW Name,
         CStringA Password,
         bool* bOverwriteAll,
         const bool* bCancel,
@@ -383,7 +383,7 @@ public:
         int err;
         BYTE Buffer[2048];
         DWORD dwFlags = SHPPFW_DIRCREATE | (is_dir ? SHPPFW_NONE : SHPPFW_IGNOREFILENAME);
-        HRESULT hr = SHPathPrepareForWriteW(hDlg, NULL, WideFullPath, dwFlags);
+        HRESULT hr = SHPathPrepareForWriteW(hDlg, NULL, FullPath, dwFlags);
         if (FAILED_UNEXPECTEDLY(hr))
         {
             *ErrorCode = hr;
@@ -415,7 +415,7 @@ public:
                         }
                     }
                 }
-                Response = _CZipAskPasswordW(hDlg, WideName, Password);
+                Response = _CZipAskPasswordW(hDlg, Name, Password);
             } while (Response == eAccept);
 
             if (Response == eSkip)
@@ -440,7 +440,7 @@ public:
         }
 
         HANDLE hFile;
-        hFile = CreateFileW(WideFullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        hFile = CreateFileW(FullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
         {
             DWORD dwErr = GetLastError();
@@ -450,7 +450,7 @@ public:
                 if (!*bOverwriteAll)
                 {
                     eZipConfirmResponse Result;
-                    Result = _CZipAskReplaceW(hDlg, WideFullPath);
+                    Result = _CZipAskReplaceW(hDlg, FullPath);
                     switch (Result)
                     {
                     case eYesToAll:
@@ -469,7 +469,7 @@ public:
 
                 if (bOverwrite)
                 {
-                    hFile = CreateFileW(WideFullPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    hFile = CreateFileW(FullPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
                     if (hFile == INVALID_HANDLE_VALUE)
                     {
                         dwErr = GetLastError();
@@ -495,7 +495,7 @@ public:
             if (*bCancel)
             {
                 CloseHandle(hFile);
-                BOOL deleteResult = DeleteFileW(WideFullPath);
+                BOOL deleteResult = DeleteFileW(FullPath);
                 if (!deleteResult)
                     DPRINT1("ERROR, DeleteFile: 0x%x\n", GetLastError());
                 return eExtractAbort;
@@ -578,12 +578,12 @@ public:
         Progress.SendMessage(PBM_SETPOS, 0, 0);
 
         CStringW BaseDirectory = m_Directory;
-        CStringW WideName;
+        CStringW Name;
         CStringA Password = m_Password;
         unz_file_info64 Info;
         int CurrentFile = 0;
         bool bOverwriteAll = false;
-        while (zipEnum.next(WideName, Info))
+        while (zipEnum.next(Name, Info))
         {
             if (*bCancel)
             {
@@ -591,14 +591,14 @@ public:
                 return false;
             }
 
-            bool is_dir = WideName.GetLength() > 0 && WideName[WideName.GetLength()-1] == '/';
+            bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
             WCHAR CombinedPath[MAX_PATH * 2] = { 0 };
-            PathCombineW(CombinedPath, BaseDirectory, WideName);
-            CStringW WideFullPath = CombinedPath;
-            WideFullPath.Replace(L'/', L'\\');    /* SHPathPrepareForWriteA does not handle '/' */
+            PathCombineW(CombinedPath, BaseDirectory, Name);
+            CStringW FullPath = CombinedPath;
+            FullPath.Replace(L'/', L'\\');    /* SHPathPrepareForWrite does not handle '/' */
         Retry:
-            eZipExtractError Result = ExtractSingle(hDlg, WideFullPath, is_dir, &Info, WideName, Password, &bOverwriteAll, bCancel, &err);
+            eZipExtractError Result = ExtractSingle(hDlg, FullPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
             if (Result != eDirectoryError)
                 CurrentFile++;
             switch (Result)
@@ -617,7 +617,7 @@ public:
                 {
                     WCHAR StrippedPath[MAX_PATH] = { 0 };
 
-                    StrCpyNW(StrippedPath, WideFullPath, _countof(StrippedPath));
+                    StrCpyNW(StrippedPath, FullPath, _countof(StrippedPath));
                     if (!is_dir)
                         PathRemoveFileSpecW(StrippedPath);
                     PathStripPathW(StrippedPath);
@@ -629,7 +629,7 @@ public:
 
                 case eFileError:
                 {
-                    int Result = ShowExtractError(hDlg, WideFullPath, err, eFileError);
+                    int Result = ShowExtractError(hDlg, FullPath, err, eFileError);
                     switch (Result)
                     {
                     case IDABORT:
@@ -651,7 +651,7 @@ public:
                         Info.compression_method != Z_DEFLATED &&
                         Info.compression_method != Z_BZIP2ED)
                     {
-                        if (ShowExtractError(hDlg, WideFullPath, Info.compression_method, eOpenError) == IDYES)
+                        if (ShowExtractError(hDlg, FullPath, Info.compression_method, eOpenError) == IDYES)
                             break;
                     }
                     Close();
