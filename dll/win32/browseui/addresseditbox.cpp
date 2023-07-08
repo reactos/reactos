@@ -291,7 +291,14 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
         if (hr == HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
         {
             if (ExecuteCommandLine())
+            {
+                if (pidlLastParsed)
+                {
+                    ILFree(pidlLastParsed);
+                    pidlLastParsed = NULL;
+                }
                 return S_OK;
+            }
 
             return ShowFileNotFoundError(hr);
         }
@@ -386,6 +393,13 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
             if (hdr->code == CBEN_ENDEDIT)
             {
                 NMCBEENDEDITW *endEdit = (NMCBEENDEDITW*) lParam;
+
+                if (pidlLastParsed)
+                {
+                    ILFree(pidlLastParsed);
+                    pidlLastParsed = NULL;
+                }
+
                 if (endEdit->iWhy == CBENF_RETURN)
                 {
                     Execute(0);
