@@ -16,7 +16,7 @@ enum ZipPidlType
 #include <pshpack1.h>
 struct ZipPidlEntry
 {
-    WORD cb; // This must be a WORD for SHITEMID compatibility
+    WORD cb; // This must be a WORD to keep compatibility to SHITEMID
     BYTE MagicType;
     BOOLEAN Password;
     ZipPidlType ZipType;
