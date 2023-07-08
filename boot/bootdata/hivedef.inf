@@ -1894,6 +1894,7 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\Classi
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","ListviewShadow",0x00010003,0x00000001
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","HideFileExt",0x00010003,0x00000000
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","PreferDateOverWeekday",0x00010003,0x00000001
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","StartMenuLogoff",0x00010003,0x00000001
 ; "Hidden" to be changed to 2 if we later want to have "Hide hidden files by default"
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","Hidden",0x00010003,1

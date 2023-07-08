@@ -39,7 +39,7 @@ const UINT ClockWndFormatsCount = _ARRAYSIZE(ClockWndFormats);
 
 #define CLOCKWND_FORMAT_COUNT ClockWndFormatsCount
 #define CLOCKWND_FORMAT_TIME 0
-//#define CLOCKWND_FORMAT_DAY  1 This format is unused. Uncomment to use it.
+#define CLOCKWND_FORMAT_DAY  1
 #define CLOCKWND_FORMAT_DATE 2
 
 static const WCHAR szTrayClockWndClass[] = L"TrayClockWClass";
@@ -101,7 +101,7 @@ private:
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    VOID PaintLine(HDC hDC, RECT *rcClient, UINT LineNumber, UINT szLinesIndex);
+    VOID PaintLine(IN HDC hDC, IN OUT RECT *rcClient, IN UINT LineNumber, IN UINT szLinesIndex);
 
 public:
 
@@ -533,12 +533,13 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         rcClient.top = (rcClient.bottom - CurrentSize.cy) / 2;
         rcClient.bottom = rcClient.top + CurrentSize.cy;
 
-        if (VisibleLines == 2 && !g_TaskbarSettings.bShowWeekday)
+        if (VisibleLines == 2)
         {
+            /* Display either time and weekday (by default), or time and date (opt-in) */
             PaintLine(hDC, &rcClient, 0, CLOCKWND_FORMAT_TIME);
-            PaintLine(hDC, &rcClient, 1, CLOCKWND_FORMAT_DATE);
+            PaintLine(hDC, &rcClient, 1,
+                      g_TaskbarSettings.bPreferDate ? CLOCKWND_FORMAT_DATE : CLOCKWND_FORMAT_DAY);
         }
-
         else
         {
             for (i = 0, line = 0;
@@ -561,7 +562,7 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     return TRUE;
 }
 
-VOID CTrayClockWnd::PaintLine(HDC hDC, RECT *rcClient, UINT LineNumber, UINT szLinesIndex)
+VOID CTrayClockWnd::PaintLine(IN HDC hDC, IN OUT RECT *rcClient, IN UINT LineNumber, IN UINT szLinesIndex)
 {
     if (LineSizes[LineNumber].cx == 0)
         return;
@@ -722,9 +723,9 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
         }
     }
 
-    if (newSettings->bShowWeekday != g_TaskbarSettings.bShowWeekday)
+    if (newSettings->bPreferDate != g_TaskbarSettings.bPreferDate)
     {
-        g_TaskbarSettings.bShowWeekday = newSettings->bShowWeekday;
+        g_TaskbarSettings.bPreferDate = newSettings->bPreferDate;
         bRealign = TRUE;
     }
 

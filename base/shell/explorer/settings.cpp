@@ -25,8 +25,8 @@ TaskbarSettings g_TaskbarSettings;
 BOOL TaskbarSettings::Save()
 {
     SHSetValueW(hkExplorer, NULL, L"EnableAutotray", REG_DWORD, &bHideInactiveIcons, sizeof(bHideInactiveIcons));
+    SHSetValueW(hkExplorer, L"Advanced", L"PreferDateOverWeekday", REG_DWORD, &bPreferDate, sizeof(bPreferDate));
     SHSetValueW(hkExplorer, L"Advanced", L"ShowSeconds", REG_DWORD, &bShowSeconds, sizeof(bShowSeconds));
-    SHSetValueW(hkExplorer, L"Advanced", L"ShowWeekday", REG_DWORD, &bShowWeekday, sizeof(bShowWeekday));
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarGlomming", REG_DWORD, &bGroupButtons, sizeof(bGroupButtons));
     BOOL bAllowSizeMove = !bLock;
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSizeMove", REG_DWORD, &bAllowSizeMove, sizeof(bAllowSizeMove));
@@ -45,11 +45,11 @@ BOOL TaskbarSettings::Load()
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarSizeMove", NULL, &dwValue, &cbSize);
     bLock = (dwRet == ERROR_SUCCESS) ? (dwValue == 0) : TRUE;
 
+    dwRet = SHGetValueW(hkExplorer, L"Advanced", L"PreferDateOverWeekday", NULL, &dwValue, &cbSize);
+    bPreferDate = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE; /* This is opt-in setting */
+
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"ShowSeconds", NULL, &dwValue, &cbSize);
     bShowSeconds = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE;
-
-    dwRet = SHGetValueW(hkExplorer, L"Advanced", L"ShowWeekday", NULL, &dwValue, &cbSize);
-    bShowWeekday = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE;
 
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarGlomming", NULL, &dwValue, &cbSize);
     bGroupButtons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE;
