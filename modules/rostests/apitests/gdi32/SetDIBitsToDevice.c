@@ -129,7 +129,7 @@ Test_SetDIBitsToDevice_Params()
                             (BYTE*)aulBits + 1, // lpvBits,
                             pbmi,
                             DIB_RGB_COLORS);
-    todo_ros ok_dec(ret, 0);
+    ok_dec(ret, 0);
     ok_err(0xdeadc0de);
 
     /* test unaligned illegal buffer */
@@ -146,7 +146,7 @@ Test_SetDIBitsToDevice_Params()
                             (BYTE*)0x7fffffff, // lpvBits,
                             pbmi,
                             DIB_RGB_COLORS);
-    todo_ros ok_dec(ret, 0);
+    ok_dec(ret, 0);
     ok_err(0xdeadc0de);
 
     /* Test negative XDest */
@@ -248,7 +248,7 @@ Test_SetDIBitsToDevice_Params()
                             aulBits, // lpvBits,
                             pbmi,
                             DIB_RGB_COLORS);
-    todo_ros ok_dec(ret, 7);
+    ok_dec(ret, 7);
     ok_err(0xdeadc0de);
 
     /* Test large cScanlines */
@@ -265,7 +265,7 @@ Test_SetDIBitsToDevice_Params()
                             aulBits, // lpvBits,
                             pbmi,
                             DIB_RGB_COLORS);
-    todo_ros ok_dec(ret, 0);
+    ok_dec(ret, 0);
     ok_err(0xdeadc0de);
 
     /* Test uStartScan and cScanLines larger than the DIB */
@@ -542,8 +542,8 @@ Test_SetDIBitsToDevice()
                             DIB_RGB_COLORS);
 
     ok_dec(ret, 1);
-    todo_ros ok_hex((*gpDIB32)[0][0], 0x00000000);
-    todo_ros ok_hex((*gpDIB32)[0][1], 0x00000000);
+    ok_hex((*gpDIB32)[0][0], 0x00000000);
+    ok_hex((*gpDIB32)[0][1], 0x00000000);
     ok_hex((*gpDIB32)[0][2], 0x00000000);
     ok_hex((*gpDIB32)[0][3], 0x00000000);
     todo_ros ok_hex((*gpDIB32)[1][0], 0x11000000);
