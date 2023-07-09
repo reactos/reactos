@@ -1,0 +1,30 @@
+#include "MARQUEE.H"
+
+DLG_SCRNSAVECONFIGURE DIALOG 8, 16, 286, 116
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Marquee Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 214, 8, 64, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 214, 26, 64, 14, WS_GROUP
+    PUSHBUTTON      "&Format Text...", ID_FORMATTEXT, 214, 44, 64, 14,
+                    WS_GROUP
+
+    GROUPBOX        "Position", -1, 4, 4, 112, 28, WS_GROUP
+    RADIOBUTTON     "&Centered", ID_CENTERED, 8, 15, 50, 12, WS_GROUP |
+                    WS_TABSTOP
+    RADIOBUTTON     "&Random", ID_RANDOM, 62, 15, 50, 12
+    LTEXT           "&Background Color:", ID_BGROUNDCOLOR_LABEL, 4, 38, 68, 10
+    COMBOBOX        ID_BGROUNDCOLOR, 74, 36, 42, 50, CBS_DROPDOWNLIST |
+                    CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Spee&d", -1, 118, 4, 91, 44, WS_GROUP
+    LTEXT           "Slow", ID_SPEED_SLOW, 123, 18, 16, 8
+    LTEXT           "Fast", ID_SPEED_FAST, 190, 18, 15, 8
+    SCROLLBAR       ID_SPEED, 123, 33, 82, 12, WS_GROUP | WS_TABSTOP
+    LTEXT           "Te&xt:", ID_MARQUEETEXT_LABEL, 4, 53, 18, 9
+    EDITTEXT        ID_MARQUEETEXT, 32, 51, 177, 12, ES_AUTOHSCROLL |
+                    WS_GROUP
+    GROUPBOX        "Text Example", -1, 4, 64, 205, 50, WS_GROUP
+    CONTROL         "", ID_TEXTWINDOW, "showtext", 0x0000 | WS_BORDER |
+                    WS_GROUP, 8, 78, 197, 30
+END

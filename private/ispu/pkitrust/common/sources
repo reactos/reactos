@@ -1,0 +1,45 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+CRYPT_ROOT=..\..
+!include $(CRYPT_ROOT)\crypt.mk
+
+MINORCOMP=authclib
+!include $(CRYPT_ROOT)\cryptlib.mk
+
+!include $(CRYPT_ROOT)\pkitrust\pkitrust.mk
+
+INCLUDES=$(INCLUDES);$(PKITRUST_ROOT)\mssign32
+
+PRECOMPILED_INCLUDE = global.hxx
+PRECOMPILED_PCH =     global.pch
+PRECOMPILED_OBJ =     global.obj
+
+C_DEFINES=$(C_DEFINES) -D_WINDOWS -D_CRYPT32_
+
+!IF $(FREEBUILD)
+
+C_DEFINES=$(C_DEFINES) -D_CRTIMP=
+
+!ENDIF
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=            \
+    cbfile.cpp      \
+    ccert.cpp       \
+    codbc.cpp       \
+    cwargv.cpp      \
+    eventlst.cpp    \
+    fparse.cpp      \
+    ispudlg.cpp     \
+    PrintfU.cpp     \
+    Stack.cpp
+
+
+

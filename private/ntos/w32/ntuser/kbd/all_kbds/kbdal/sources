@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdal
+
+TARGETNAME=kbdal
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdal.c kbdal.rc
+
+NTTARGETFILE0=kbdal.h kbdal.rc kbdal.def

@@ -1,0 +1,14 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#***************************************************************************/
+ALT_PROJECT=DAYTONA
+ALT_PROJECT_TARGET=.
+
+!MESSAGE Building ICM 2.0 CMM DLL for NT 5.0
+
+!include ..\sources.inc
+

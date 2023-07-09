@@ -1,0 +1,19 @@
+LANGUAGE 0x1d, 0x01
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    // Note to localizers:  it is desirable (though not absolutely necessary)
+    // to keep the following directory names synchronized with their counterparts
+    // in shell\shell32\shell32.rc.
+
+    IDS_CSIDL_PERSONAL        L"Mina dokument"
+    IDS_CSIDL_MYPICTURES      L"Mina bilder"
+    IDS_CSIDL_APPDATA         L"Programdata"
+    IDS_CSIDL_LOCAL_APPDATA   L"Lokala inst\x00e4llningar\\Programdata"
+    IDS_CSIDL_CACHE           L"Lokala inst\x00e4llningar\\Temporary Internet Files"
+    IDS_CSIDL_COOKIES         L"Cookies"
+    IDS_CSIDL_HISTORY         L"Tidigare"
+    IDS_CSIDL_COMMON_DOCUMENTS L"Dokument"
+    IDS_CSIDL_ADMINTOOLS       L"Administrationsverktyg"
+
+END

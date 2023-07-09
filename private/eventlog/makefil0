@@ -1,0 +1,48 @@
+#
+# This is the MIDL compile phase of the build process.
+#
+# The following is where you put the name of your .idl file without
+# the .idl extension:
+#
+
+!INCLUDE $(NTMAKEENV)\makefile.plt
+
+ELFIDL=elf
+
+CLIENT_FILES=elfclnt\$(ELFIDL)_c.c $(ELFIDL).h
+SERVER_FILES=server\$(ELFIDL)_s.c
+LOCAL_FILES=$(ELFIDL)_c.c $(ELFIDL)_s.c
+
+INCS=   -I$(BASEDIR)\public\sdk\inc -I$(BASEDIR)\public\sdk\inc\crt
+
+ELFMIDLARGS=-oldnames -ms_ext -c_ext \
+            -cpp_cmd "$(MIDL_CPP)" $(MIDL_FLAGS) $(INCS)
+
+#
+# Define Products and Dependencies
+#
+
+all:    $(CLIENT_FILES) $(SERVER_FILES) del_elf_sources
+!IF "$(BUILDMSG)" != ""
+    @ech ; $(BUILDMSG) ;
+!ENDIF
+
+clean: delete_source all
+
+delete_source:
+    -erase $(CLIENT_FILES) $(SERVER_FILES) $(LOCAL_FILES)
+
+#
+# MIDL COMPILE
+#
+
+$(CLIENT_FILES): $(ELFIDL).idl
+    midl $(MIDL_OPTIMIZATION) $(ELFMIDLARGS) $(ELFIDL).idl
+    copy $(ELFIDL)_c.c elfclnt\$(ELFIDL)_c.c
+
+$(SERVER_FILES): $(ELFIDL).idl
+    midl $(MIDL_OPTIMIZATION) -client none $(ELFMIDLARGS) $(ELFIDL).idl
+    copy $(ELFIDL)_s.c server\$(ELFIDL)_s.c
+
+del_elf_sources:
+    -del $(LOCAL_FILES) 1> NUL 2>NUL

@@ -1,0 +1,1107 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Forms
+//  Copyright (C) Microsoft Corporation, 1994-1996
+//
+//  File:       tcell.cxx
+//
+//  Contents:   CTableCell and related classes.
+//
+//----------------------------------------------------------------------------
+
+#include "headers.hxx"
+#include "table.hxx"
+#include "othrguid.h"
+#include "txtparse.hxx"
+#include "download.hxx"
+
+extern TAG tagTableRecalc;
+
+const CSite::ACCEL_LIST CTableCell::s_accellist =
+{
+    &CTxtSite::s_accellist,
+    {
+        { FALT | FVIRTKEY | FDESIGN | FRUN, VK_NUMPAD5, IDM_TABLESELECT },
+        { 0,                                0,          0 },
+    },
+};
+
+
+const CLSID * CTableCell::s_apclsidPages[] =
+{
+    &CLSID_CCDGenericPropertyPage,
+    &CLSID_CInlineStylePropertyPage,
+    NULL
+};
+
+
+CSite::CLASSDESC CTableCell::s_classdesc =
+{
+    {
+        {
+            &CLSID_HTMLTableCell,           // _pclsid
+            0,                              // _idrBase
+            s_apclsidPages,                 // _apClsidPages
+            ARRAY_SIZE(s_acpi),             // _ccp
+            s_acpi,                         // _pcpi
+            SITEDESC_CANSELECT |
+#ifndef FLATRUN
+            SITEDESC_TEXTEDIT |
+#endif
+            SITEDESC_TEXTSITE |
+            SITEDESC_PARENT,                // _dwFlags
+            &IID_IHTMLTableCell,            // _piidDispinterface
+            0,                              // _lAccRole
+            &s_PropCats,                    // _pPropCats;
+            s_appropdescs,                  // _appropdescs;
+            s_apVTableInterf,               // _apvtableinterf
+        },
+        s_apfnIHTMLTableCell,               // _pfnTearOff
+    },
+    ETAG_TD,                                // _etag
+    &s_accellist,                           // _paccellist
+};
+
+
+HRESULT
+CTableCell::CreateElement(CHtmlTag *pht, CElement *pElementParent,
+        CElement ** ppElement)
+{
+    Assert(
+        (pElementParent->GetSite()->Tag() == ETAG_TR && (pht->_etag == ETAG_TD || pht->_etag == ETAG_TH)) ||
+        (pElementParent->GetSite()->Tag() == ETAG_TABLE && (pht->_etag == ETAG_CAPTION))
+    );
+    Assert(ppElement);
+
+    *ppElement = new CTableCell(pElementParent, pht->_etag);
+    RRETURN ((*ppElement) ? S_OK : E_OUTOFMEMORY);
+}
+
+
+#if DBG == 1
+//+---------------------------------------------------------------------------
+//
+// CTableCellParser
+//
+//----------------------------------------------------------------------------
+
+class CTableCellParser : public CTextParser
+{
+    typedef CTextParser super;
+
+public:
+
+    CTableCellParser (CTxtSite * pTxtSite, CParser * pP, TMHEAP * ptmheap, CElement * pElementCurrent) :
+        CTextParser(pTxtSite, pP, ptmheap, pElementCurrent) {}
+
+    virtual void      CommitChanges();
+};
+
+
+void
+CTableCellParser::CommitChanges()
+{
+    if (IsTagEnabled(tagTableRecalc))
+    {
+        DYNCAST(CTableCell, _pTxtSite)->MakeDirty();
+    }
+    super::CommitChanges();
+}
+#endif
+
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CTableCell::LoadHTML, CElement
+//
+//  Synopsis:   Pushes a parser on the parser stack.
+//
+//  Arguments:  [pParser] -- Pointer to current parser
+//
+//  Returns:    HRESULT
+//
+//----------------------------------------------------------------------------
+
+HRESULT
+CTableCell::LoadHTML(CParser * pParser, TMHEAP * ptmheap)
+{
+    HRESULT hr = S_OK;
+    CTextParser * pTextParser;
+
+#if DBG == 1
+    pTextParser = new(ptmheap) CTableCellParser(this, pParser, ptmheap, this);
+#else
+    pTextParser = new(ptmheap) CTextParser(this, pParser, ptmheap, this);
+#endif
+    if(!pTextParser)
+    {
+        hr = E_OUTOFMEMORY;
+        goto Cleanup;
+    }
+
+Cleanup:
+    RRETURN(hr);
+}
+
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     EndHTML, CElement
+//
+//  Synopsis:   Notifies object that parsing has ended for it
+//
+//  Returns:    HRESULT
+//
+//----------------------------------------------------------------------------
+
+
+#pragma warning(disable:4702)
+
+HRESULT
+CTableCell::EndHTML(CParser * pParser)
+{
+    // force a recalc next time we measure the cell
+    MakeDirty();
+    return super::EndHTML(pParser);
+}
+
+
+//+------------------------------------------------------------------------
+//
+//  Member:     CTableCell::InitAttrBag, CElement
+//
+//  Synopsis:   Fetch values from CHtmlTag and put into the bag
+//
+//  Arguments:  pht : parsed attributes in text format
+//
+//  Returns:    HRESULT
+//
+//-------------------------------------------------------------------------
+
+HRESULT
+CTableCell::InitAttrBag(CHtmlTag *pht)
+{
+    HRESULT hr;
+    const CCharFormat * pCF;
+
+    hr = super::InitAttrBag(pht);
+    if (hr)
+        goto Cleanup;
+
+    if (pht)
+    {
+        CTableParser * pTableParser = DYNCAST(CTableParser, pht->Parser());
+        Assert(pTableParser->_pTable == Table());
+
+        if (Tag() == ETAG_CAPTION)
+        {
+            hr = pTableParser->_pTable->AddCaption(this);
+            if (hr)
+                goto Cleanup;
+        }
+        else
+        {
+            Assert(pTableParser->_cRow > 0);
+            CTableRow * pRow = pTableParser->_pTable->GetRow(pTableParser->_cRow - 1);
+
+            hr = pRow->AddCellAt(this, pTableParser->_iCol, &pTableParser->_iCol);
+            if (hr)
+                goto Cleanup;
+        }
+    }
+
+    pCF = CElement::GetCharFormat( this );
+
+    // Wrap text within the cell whenever NOWRAP is not specified or an
+    // explicit WIDTH is specified (WIDTH overrides NOWRAP)
+    _dp.SetWordWrap(!pCF->_fNoBreak || !GetFancyFormat(this)->_cuvWidth.IsNull());
+
+Cleanup:
+
+    RRETURN(hr);
+}
+
+
+//+------------------------------------------------------------------------
+//
+//  Member:     CTableCell::RowSpan, CTableCell
+//
+//  Synopsis:   Returns number of rows cell spans
+//
+//  Returns:    rows
+//
+//-------------------------------------------------------------------------
+
+int
+CTableCell::RowSpan()
+{
+    int cRowSpan = GetAArowSpan();
+    int cRows = Table()->GetRows();
+
+    // don't returns a span going past the number of rows in the table...
+    if (RowIndex() + cRowSpan > cRows)
+    {
+        return cRows - RowIndex();
+    }
+    else
+    {
+        return cRowSpan;
+    }
+}
+
+
+//+------------------------------------------------------------------------
+//
+//  Member:     CTableCell::ApplyCellFormat
+//
+//  Synopsis:   Apply attributes
+//
+//  Arguments:  pCFI - Format Info needed for cascading
+//
+//  Returns:    HRESULT
+//
+//-------------------------------------------------------------------------
+
+HRESULT
+CTableCell::ApplyCellFormat(CFormatInfo *pCFI)
+{
+    HRESULT hr;
+    CColorValue ccvBorderColor;
+    CColorValue ccvColor;
+    BYTE bOldBlockAlign = pCFI->_pf._bBlockAlign;
+    BYTE bOldControlAlign = pCFI->_pf._bTableVAlignment;
+
+    if (Tag() == ETAG_TH)
+    {
+        pCFI->_cf._fBold = TRUE;
+        pCFI->_cf._wWeight = 700;
+    }
+
+    // Don't inherit blockquote indentation for all of the cells.
+    pCFI->_pf._cuvLeftIndentPoints.SetPoints(0);
+    pCFI->_pf._cuvLeftIndentPercent.SetPoints(0);
+    pCFI->_pf._cuvRightIndentPoints.SetPoints(0);
+    pCFI->_pf._cuvRightIndentPercent.SetPoints(0);
+    pCFI->_pf._cuvOffsetPoints.SetPoints(0);
+    pCFI->_pf._cuvOffsetPercent.SetPoints(0);
+    pCFI->_pf._cuvNonBulletIndentPoints.SetPoints(0);
+    pCFI->_pf._cuvNonBulletIndentPercent.SetPoints(0);
+    pCFI->_pf._wNumbering &= ~PFN_LIST;
+
+    // reset the indent bits
+    _fIndentsLeft   = 0;
+    _fIndentsRight  = 0;
+
+    //Grab copy of original block alignment and set PF->WAlignment
+    //to unset.  When we exit ApplyFormat, we can see if either
+    //the attribute or style applied an alignment.  If so,
+    //perform special table alignment handling, otherwise,
+    //reinstall original value.
+
+    hr = THR( ApplyFormat(pCFI) );
+    if (hr)
+        goto Cleanup;
+
+    if (Tag() == ETAG_CAPTION)
+    {
+        // There's some trickyness going on here. The caption.pdl specifies the
+        // align as DISPID_A_BLOCKALIGN - which means it gets written into the
+        // lrcAlign - but caption has two extra ( vertical ) enum values that we need
+        // to map onto the equivalent vertical alignment values.
+        if (pCFI->_pf._bBlockAlign == (BYTE)htmlCaptionAlignTop)
+        {
+            pCFI->_pf._bTableVAlignment = htmlCellVAlignTop;
+            pCFI->_pf._bBlockAlign  = bOldBlockAlign;
+        }
+        else if (pCFI->_pf._bBlockAlign == (BYTE)htmlCaptionAlignBottom)
+        {
+            pCFI->_pf._bTableVAlignment = htmlCellVAlignBottom;
+            pCFI->_pf._bBlockAlign  = bOldBlockAlign;
+        }
+        else
+        {
+            // Restore the old values if they have not been overridden
+            if ( pCFI->_pf._bBlockAlign == htmlAlignNotSet )
+            {
+                pCFI->_pf._bBlockAlign = bOldBlockAlign;
+            }
+            if ( pCFI->_pf._bTableVAlignment == htmlAlignNotSet )
+            {
+                pCFI->_pf._bTableVAlignment = bOldControlAlign;
+            }
+            else
+            {
+                // Map Caption enum to ControlAlign enum
+                if ( pCFI->_pf._bTableVAlignment == htmlCaptionVAlignTop )
+                    pCFI->_pf._bTableVAlignment = htmlCellVAlignTop;
+                else if ( pCFI->_pf._bTableVAlignment == htmlCaptionVAlignBottom )
+                    pCFI->_pf._bTableVAlignment = htmlCellVAlignBottom;
+            }
+        }
+    }
+    ccvBorderColor = GetAAborderColor();
+    if ( ccvBorderColor.IsDefined() )
+    {
+        ccvColor = GetAAborderColorLight();
+        if ( !ccvColor.IsDefined() )
+            pCFI->_ff._ccvBorderColorLight = ccvBorderColor;
+        ccvColor = GetAAborderColorDark();
+        if ( !ccvColor.IsDefined() )
+            pCFI->_ff._ccvBorderColorDark = ccvBorderColor;
+    }
+
+Cleanup:
+    RRETURN(hr);
+}
+
+
+static HRESULT ControlAlignFromCellAlign ( htmlCellVAlign at, htmlControlAlign *pcat )
+{
+    HRESULT hr = S_OK;
+    switch ( at )
+    {
+    case htmlCellVAlignNotSet:
+        *pcat = htmlControlAlignNotSet;
+        break;
+    case htmlCellVAlignTop:
+        *pcat = htmlControlAlignTop;
+        break;
+    case htmlCellVAlignMiddle:
+        *pcat = htmlControlAlignMiddle;
+        break;
+    case htmlCellVAlignBottom:
+        *pcat = htmlControlAlignBottom;
+        break;
+    case htmlCellVAlignBaseline:
+        *pcat = htmlControlAlignBaseline;
+        break;
+    default:
+        Assert(0);
+        hr = E_INVALIDARG;
+        break;
+    }
+    RRETURN(hr);
+}
+
+
+//+------------------------------------------------------------------------
+//
+//  Member:     CTableCell::CheckAndApplySameFormat
+//
+//  Synopsis:   Check if the other cell in the other row/col has the same
+//              format and use it if it is...
+//-------------------------------------------------------------------------
+
+HRESULT
+CTableCell::CheckAndApplySameFormat
+(
+    CTableCell * pCell1,
+    CTableRow * pRow,
+    CTableRow * pRow1,
+    CTableCol * pCol,
+    CTableCol * pCol1
+)
+{
+    // BUGBUG: Extend this to cover outer as well as inner formats? (brendand)
+
+    if (pCell1->_iPFInner >= 0 && !pCell1->_pAA && !pCell1->HasInLineStyles() &&
+        ((pRow->_iPF >= 0 && pRow == pRow1) ||
+            (pRow1->_iPF >= 0 &&
+            pRow->_iPF == pRow1->_iPF &&
+            pRow->_iCF == pRow1->_iCF &&
+            pRow->_iFF == pRow1->_iFF))  &&
+        ((pCol->_iPF >= 0 && pCol == pCol1) ||
+            (pCol1->_iPF >= 0 &&
+            pCol->_iPF == pCol1->_iPF &&
+            pCol->_iCF == pCol1->_iCF &&
+            pCol->_iFF == pCol1->_iFF)))
+    {
+        TLS(_pParaFormatCache)->AddRefData( _iPFInner = pCell1->_iPFInner );
+        TLS(_pCharFormatCache)->AddRefData( _iCFInner = pCell1->_iCFInner );
+        TLS(_pFancyFormatCache)->AddRefData( _iFF = pCell1->_iFF );
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+
+//+------------------------------------------------------------------------
+//
+//  Member:     CTableCell::ComputeFormat
+//
+//  Synopsis:   Compute Char and Para formats induced by this element and
+//              every other element above it in the HTML tree.
+//
+//  Arguments:  pCFI - Format Info needed for cascading
+//
+//  Returns:    HRESULT
+//
+//  Note:       We override this here to put our defaults into the format
+//              FIRST, and also to cache vertical alignment here in the object
+//
+//-------------------------------------------------------------------------
+
+HRESULT
+CTableCell::ComputeFormat (
+    CFormatInfo * pCFI, CTxtSite * pTxtSiteContext, CElement * pElementTarget )
+{
+    CTableCol *         pCol = NULL;
+    CTableRow *         pRow = NULL;
+    CTableSection *     pSection = NULL;
+    ELEMENT_TAG         etag;
+    CTable *            pTable;
+    CTxtSite *          pTxtSite;
+    const CParaFormat * pPFRow = NULL;
+    const CParaFormat * pPFCol = NULL;
+    BOOL                fApplyInner = pTxtSiteContext && pTxtSiteContext == (CTxtSite *)this;
+    HRESULT             hr = S_OK;
+    CUnitValue          cuvColWidth;
+
+
+    Assert(pCFI);
+    Assert( SameScope( this, pElementTarget ) );
+
+    // if we already have formats.
+    if (pElementTarget->IsComputeFormatCached( pCFI, pTxtSiteContext ))
+        return S_OK;
+
+    etag     = Tag();
+    pTable   = Table();
+    pTxtSite = pTable->GetTxtSite();
+
+    // if there are no attributes to worry about try to use an other cell's format
+    if (etag != ETAG_CAPTION)
+    {
+        pSection = Section();
+        pRow     = Row();
+        pCol     = pTable->GetCol(_iCol);
+
+        // make sure row and col cached it's format...
+        pPFRow = pRow->GetParaFormat(pTxtSite);
+        pPFCol = pCol->GetParaFormat(pTxtSite);
+
+        if (!_pAA && !HasInLineStyles() && fApplyInner)
+        {
+            CTableCell *    pCellNeighbor;
+            CTableRow *     pRowNeighbor;
+
+            // check if cell in front of this in the row has the same format
+            if (_iCol > 0                                          &&
+                (pCellNeighbor = pRow->GetCell(_iCol - 1)) != this &&
+                pCellNeighbor                                      &&
+                pCellNeighbor->Section() == pSection               &&
+                pCellNeighbor->Tag() == etag)
+            {
+                if (CheckAndApplySameFormat(pCellNeighbor, pRow, pRow, pCol, pTable->GetCol(_iCol-1)))
+                    return S_OK;
+            }
+
+            // check if cell above this in the column has the same format
+            if (RowIndex() > 0)
+            {
+                pRowNeighbor = pTable->GetRow(RowIndex() - 1);
+                if (pRowNeighbor->GetCells() > _iCol                       && 
+                    (pCellNeighbor = pRowNeighbor->GetCell(_iCol)) != this &&
+                    pCellNeighbor                                          &&
+                    pCellNeighbor->Section() == pSection                   &&
+                    pCellNeighbor->Tag() == etag)
+                {
+                    if (CheckAndApplySameFormat(pCellNeighbor, pRow, pRowNeighbor, pCol, pCol))
+                        return S_OK;
+                }
+            }
+        }
+    }
+
+    //The current element is the only one who should
+    //write into our CFancyFormat
+    //This is because nothing in these
+    //structures are inherited from element to element
+
+    //BUGBUG In general, CFancyFormat doesn't inherit
+    //unfortunately, most table things which are stored here, inherit.
+    //YUCK!!!  So in general, normal elements don't cascade these,
+    //but tables do.
+
+    // get format from above table
+
+    hr = THR(
+        pTable->EParent()->ComputeFormat(
+            pCFI, pTxtSite, pTable->EParent() ) );
+
+    if (hr)
+        RRETURN( hr );
+
+    // Override the SF/FF's
+
+    pCFI->_ff.InitDefault();
+
+    pCFI->_fApplyInner = fApplyInner;
+
+    // Apply table first
+    hr = THR(pTable->ApplyFormat(pCFI));
+    if (hr)
+        goto Cleanup;
+
+    // Because we're re-using the SF/FF between applies, we need to explicetly
+    // clear those Members that we don't want to "inherit" as we apply.
+    // Don't want the SF W/H from the table!!
+
+    pCFI->_cf._ccvBackColor.Undefine();
+    pCFI->_pf._ccvBackColor.Undefine();
+    pCFI->_cf._lBgUrlImgCtxCacheCookie = -1;
+    pCFI->_pf._lBgUrlImgCtxCacheCookie = -1;
+    pCFI->_ff._cuvWidth.SetNull();
+    pCFI->_ff._cuvHeight.SetNull();
+
+    if (etag != ETAG_CAPTION)
+    {
+        hr = THR(DYNCAST(CTableCol, pCol->EParent())->ApplyFormat(pCFI));
+        if (hr)
+            goto Cleanup;
+
+        hr = THR(pCol->ApplyFormat(pCFI));
+        if (hr)
+            goto Cleanup;
+
+        cuvColWidth = pCFI->_ff._cuvWidth;
+
+        hr = THR(pSection->ApplyFormat(pCFI));
+        if (hr)
+            goto Cleanup;
+
+        hr = THR(pRow->ApplyFormat(pCFI));
+        if (hr)
+            goto Cleanup;
+
+        // set the correct width (column width)
+        if (pCFI->_ff._cuvWidth.IsNull())
+            pCFI->_ff._cuvWidth = cuvColWidth;
+
+        // set defaults
+        if (pCFI->_pf._bBlockAlign == htmlAlignNotSet)
+        {
+            pCFI->_pf._bBlockAlign = (etag == ETAG_TH
+                                            ? htmlAlignCenter
+                                            : htmlAlignLeft);
+        }
+
+        // apply horizontal alignment in different order
+        if (pPFRow->_bBlockAlign != htmlAlignNotSet)
+        {
+            pCFI->_pf._bBlockAlign = pPFRow->_bBlockAlign;
+        }
+
+        // don't inherit block align from columns for table cells
+        if (etag != ETAG_TH && pPFCol->_bBlockAlign != htmlAlignNotSet)
+        {
+            pCFI->_pf._bBlockAlign = pPFCol->_bBlockAlign;
+        }
+
+        if (pCFI->_pf._bTableVAlignment == htmlCellVAlignNotSet)
+        {
+            Assert(etag == ETAG_TH || etag == ETAG_TD);
+            pCFI->_pf._bTableVAlignment = (etag == ETAG_TH || etag == ETAG_TD
+                                                ? htmlCellVAlignMiddle
+                                                : htmlCellVAlignTop);
+        }
+    }
+    else
+    {
+        pCFI->_pf._bTableVAlignment = htmlCellVAlignTop;
+        pCFI->_pf._bBlockAlign      = htmlAlignCenter;
+    }
+
+    // Apply the cell itself
+    hr = THR( ApplyCellFormat( pCFI ) );
+    if (hr)
+        goto Cleanup;
+
+    // Since WIDTH overrides NOWRAP, remove NOWRAP from the cell if an explicit WIDTH is specified
+    // NOTE: It is simpler to remove the value here than to alter the measurer to detect
+    //       this case (brendand)
+    if (!pCFI->_ff._cuvWidth.IsNull())
+    {
+        pCFI->_cf._fNoBreak = FALSE;
+    }
+
+    // Transfer the cascading table valign into the rendering control align
+    hr = ControlAlignFromCellAlign ((htmlCellVAlign)pCFI->_pf._bTableVAlignment,
+                                    (htmlControlAlign *)&pCFI->_ff._bControlAlign);
+    if (hr)
+        goto Cleanup;
+
+    hr = THR( pElementTarget->CacheNewFormats( pCFI, pTxtSiteContext ) );
+
+Cleanup:
+    RRETURN(hr);
+}
+
+
+//+------------------------------------------------------------------------
+//
+//  Member:     CTableCell::GetViewInsetDisp, CTxtEdit
+//
+//  Synopsis:   return insets between the text and border area
+//
+//  Arguments:  prc     rect returns inset
+//              pdp     display info
+//
+//-------------------------------------------------------------------------
+
+void
+CTableCell::GetViewInsetDisp(LPRECT prc, CDisplay *pdp, CFormDrawInfo * pDI) const
+{
+    if (Tag() == ETAG_CAPTION)
+    {
+        prc->top = prc->bottom = prc->right = prc->left = 0;
+    }
+    else
+    {
+        CTable * pTable = Table();
+
+        prc->top = prc->bottom = pTable->GetCellInsetY();
+        prc->right = prc->left = pTable->GetCellInsetX();
+
+        // Vertical alignment is implemented by manipulating the insets
+        // However, so that sizing works correctly, insets are only calculated
+        // if the cell is sizing.
+        // NOTE: The odd casts below remove "const-ness" from the this pointer
+        if (!((CTableCell *)this)->TestLock(SITELOCK_SIZING))
+        {
+            switch(((CTableCell *)this)->CElement::GetParaFormat()->_bTableVAlignment)
+            {
+            case htmlCellVAlignMiddle:
+                prc->top += (_sizeProposed.cy - _sizeCell.cy) / 2;
+                break;
+            case htmlCellVAlignBottom:
+                prc->top += _sizeProposed.cy - _sizeCell.cy;
+                break;
+            case htmlCellVAlignBaseline:
+                if (_yBaseLine != -1 && ((CTableCell *)this)->Row()->_yBaseLine != -1)
+                {
+                    prc->top += ((CTableCell *)this)->Row()->_yBaseLine - _yBaseLine;
+                }
+                break;
+            }
+        }
+    }
+}
+
+//+------------------------------------------------------------------------
+//
+//  Member:     CTableCell::GetAutoSize, CTxtEdit
+//
+//  Synopsis:   Return if autosize
+//
+//  Returns:    TRUE if autosize
+//
+//-------------------------------------------------------------------------
+
+BOOL
+CTableCell::GetAutoSize()
+{
+    return TRUE;
+}
+
+
+//+-------------------------------------------------------------------------
+//
+//  Method:     CTableCell::CalcSize, CTableCell
+//
+//  Synopsis:   Calculate the size of the object
+//
+//--------------------------------------------------------------------------
+
+DWORD
+CTableCell::CalcSize(
+    CFormDrawInfo * pDI,
+    SIZEMODE        smMode,
+    DWORD           grfLayout,
+    SIZE *          psize,
+    SIZE *          psizeDefault)
+{
+    Assert(pDI);
+    Assert(psize);
+
+    // It is illegal to call with SIZEMODE_LOGICAL on a site not yet sized
+    Assert((smMode != SIZEMODE_LOGICAL) || (TestLock(SITELOCK_SIZING) || !_fSizeThis));
+
+    // Ensure that min/max requests come only during table sizing
+    Assert((smMode != SIZEMODE_MINWIDTH &&
+            smMode != SIZEMODE_MAXWIDTH) ||
+           Table()->TestLock(SITELOCK_SIZING));
+
+    _fSizeThis = (_fSizeThis || (grfLayout & LAYOUT_FORCE));
+    DWORD   grfReturn  = (grfLayout & (LAYOUT_FORCE | LAYOUT_NOINVAL));
+
+    // Handle immediately min/max requests if already calculated
+    if ((smMode == SIZEMODE_MINWIDTH ||
+         smMode == SIZEMODE_MAXWIDTH  ) &&
+        _xMax >= 0                      &&
+        !_fSizeThis)
+    {
+        Assert(_xMax >= 0);
+        Assert(_xMin <= _xMax);
+        Assert(_xMin != -1);
+        if (smMode == SIZEMODE_MAXWIDTH)
+        {
+            pDI->_xMinWidth = _xMin;
+            psize->cx       = _xMax;
+        }
+        else
+        {
+            psize->cx = _xMin;
+        }
+        psize->cy = 0;
+    }
+
+    // Otherwise, use normal handling
+    else
+    {
+        CSaveDrawInfo Save(pDI, *psize);        // Propagate available size as parent size
+        BORDERINFO    borderinfo;
+
+#if DBG == 1
+        if (smMode == SIZEMODE_MAXWIDTH)
+        {
+            pDI->_xMinWidth = -1;
+        }
+#endif
+        if (smMode == SIZEMODE_NATURAL)
+        {
+            pDI->_yBaseLine = -1;
+        }
+
+        grfReturn = super::CalcSize(pDI, smMode, grfLayout, psize);
+
+        switch (smMode)
+        {
+        case SIZEMODE_NATURAL:
+        case SIZEMODE_SET:
+            if (grfReturn & LAYOUT_THIS)
+            {
+                memset( &borderinfo, 0, sizeof( borderinfo ) );
+
+                // If the cell is empty (contains no text), set its height to zero
+                // BUGBUG: This check does not take into account margins! (brendand)
+                if (_dp.GetWidth() == 0 && GetTextLength() == 0)
+                {
+                    _sizeProposed.cy =
+                    psize->cy        = 0;
+                }
+
+                // If the cell has no height, but does have borders
+                // Then ensure enough space for the horizontal borders
+                else if (smMode == SIZEMODE_NATURAL &&
+                         GetBorderInfo(pDI, &borderinfo, FALSE))
+                {
+                    _sizeProposed.cy += 2 * borderinfo.yWidth;
+                    psize->cy        += 2 * borderinfo.yWidth;
+                }
+
+                Assert(pDI->_yBaseLine != -1);
+                _yBaseLine = pDI->_yBaseLine;
+
+                Assert(Table()->TestLock(SITELOCK_SIZING));
+                _sizeCell = *psize;
+
+                // Cache the client RECT deltas
+                // (This must be done here even though CTxtSite does it as well since
+                //  cells do not return the correct insets during sizing. At this point
+                //  sizing is off and the correct insets will be returned such that the
+                //  correct client RECT deltas can be cached.)
+                CacheClientRect(pDI);
+
+                Assert(_xMin >= 0 || IsGenerated());
+                Assert(_xMin <= _sizeCell.cx);
+                Assert(_xMax >= 0 || IsGenerated());
+            }
+            pDI->_yBaseLine = _yBaseLine;
+            break;
+
+#if DBG == 1
+        case SIZEMODE_MINWIDTH:
+            _xMin = psize->cx;
+            break;
+#endif
+
+        case SIZEMODE_MAXWIDTH:
+            _xMin = pDI->_xMinWidth;
+            _xMax = psize->cx;
+            Assert(_xMin != -1);
+            Assert(_xMin <= _xMax);
+            break;
+        }
+    }
+
+    return grfReturn;
+}
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CTableCell::RequestResize, CSite
+//
+//  Synopsis:   Propagate a re-position request from a descendent site
+//
+//----------------------------------------------------------------------------
+
+void
+CTableCell::RequestResize(CElement * pElement, DWORD grfLayout)
+{
+    // Ignore the request if currently sizing
+    if (TestLock(SITELOCK_SIZING))
+        return;
+
+#if DBG == 1
+    if (!IsTagEnabled(tagTableRecalc))
+#endif
+    if (!Table()->_fCompleted)
+        return;
+
+    // If sizing this site, invalidate min/max values
+    if (!pElement)
+    {
+        MakeDirty();
+    }
+
+    // Continue with default handling
+    super::RequestResize(pElement, grfLayout);
+}
+
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CTableCell::Notify, CSite
+//
+//  Synopsis:   Handle notification
+//
+//----------------------------------------------------------------------------
+
+HRESULT
+CTableCell::Notify(SITE_NOTIFICATION sn, DWORD dw)
+{
+    switch (sn)
+    {
+    case SN_AMBIENTPROPCHANGE:
+        switch (dw)
+        {
+        case DISPID_FONT:
+            RequestResize();
+            break;
+        }
+        break;
+
+    case SN_CLEARFORMATCACHES:
+        RequestResize();
+        break;
+    }
+
+    RRETURN1(THR(super::Notify(sn, dw)), S_FALSE);
+}
+
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     Draw
+//
+//  Synopsis:   Paint the object.
+//
+//----------------------------------------------------------------------------
+
+void
+CTableCell::Draw(CFormDrawInfo *pDI)
+{
+    // if cell is not recalced don't draw it...
+    if (_xMax < 0  || _fSizeThis)
+        return;
+
+    CTable *pTable = Table();
+
+    RECT rc = _rc;
+
+    // Netscape issue: Don't draw the cell if it is empty
+    if (!IsZeroWidth())
+    {
+        super::Draw(pDI);
+    }
+
+    if (Tag() != ETAG_CAPTION && pTable->_fBorder)
+    {
+        htmlRules trRules = pTable->GetAArules();
+        BORDERINFO borderinfo;
+
+        // draw borders if cell is not empty or rules set...
+        if (!IsZeroWidth() || trRules != htmlRulesNotSet)
+        {
+            memset( &borderinfo, 0, sizeof( borderinfo ) );
+
+            GetBorderInfo(pDI, &borderinfo, TRUE);
+            // in case of group border extend left and right to cover
+            // cellspacing
+            if (trRules != htmlRulesNotSet)
+            {
+                if (!(borderinfo.wEdges & BF_BOTTOM))
+                {
+                    rc.bottom += pTable->CellSpacingY();
+                }
+                if (!(borderinfo.wEdges & BF_RIGHT))
+                {
+                    rc.right += pTable->CellSpacingX();
+                }
+            }
+            CSaveDrawInfo Save(pDI, &rc, TRUE);
+            ::DrawBorder(pDI, &rc, &borderinfo);
+        }
+    }
+}
+
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     Draw, CSite
+//
+//  Synopsis:   Fill background information
+//
+//----------------------------------------------------------------------------
+
+BOOL CTableCell::GetBackgroundInfo(BACKGROUNDINFO * pbginfo)
+{
+    BOOL fResult = super::GetBackgroundInfo(pbginfo);
+
+    const CParaFormat * pPF = CElement::GetParaFormat();
+
+    if (pPF && pPF->_ccvBackColor.IsDefined())
+    {
+        pbginfo->crBack = pPF->_ccvBackColor.GetColorRef();
+        fResult = TRUE;
+    }
+
+    return(fResult);
+}
+
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     GetBackgroundColor, CSite
+//
+//  Synopsis:   Return background color (possibly showing thru)
+//
+//----------------------------------------------------------------------------
+
+COLORREF
+CTableCell::GetBackgroundColor()
+{
+    const CParaFormat * pPF = CElement::GetParaFormat();
+
+    if (pPF && pPF->_ccvBackColor.IsDefined())
+        return(pPF->_ccvBackColor.GetColorRef());
+
+    return(super::GetBackgroundColor());
+}
+
+
+#if DBG == 1
+//+---------------------------------------------------------------------------
+//
+//  Member:     CTableCell::SetPosition, CSite
+//
+//
+//  Synopsis:   Set new site position
+//
+//  Arguments:  pDI         - Current device/transform
+//              prcPosition - Proposed location by parent
+//              grfLayout   - One or more LAYOUT_xxxx flags
+//
+//  Returns:    Collection of LAYOUT_xxxx flags
+//                  LAYOUT_THIS    - If _rc was changed
+//                  LAYOUT_HRESIZE - If _rc was changed horizontally
+//                  LAYOUT_VRESIZE - If _rc was changed vertically
+//                  LAYOUT_MOVE    - If _rc.top/left was changed
+//                  LAYOUT_FORCE   - If passed in
+//                  LAYOUT_NOINVAL - If passed in
+//
+//----------------------------------------------------------------------------
+
+DWORD
+CTableCell::SetPosition(CFormDrawInfo * pDI, RECT * prcPosition, DWORD grfLayout)
+{
+    // If row is not calculated yet don't assert
+    if (_xMax > 0 && !_fSizeThis && (Tag() == ETAG_CAPTION || Row()->_yHeight >= 0))
+    {
+        Assert(_sizeCell.cx != -1);
+        Assert(prcPosition->right - prcPosition->left == _sizeCell.cx);
+    }
+
+    return super::SetPosition(pDI, prcPosition, grfLayout);
+}
+#endif
+
+
+//+------------------------------------------------------------------------
+//
+//  Member:     CSite::PaintSelectionFeedback
+//
+//  Synopsis:   Paints the object's selection feedback, if it exists and
+//              painting it is appropriate
+//
+//  Arguments:  hdc         HDC to draw on.
+//              prc         Rect to draw in
+//              dwSelInfo   Additional info about the selection
+//
+//-------------------------------------------------------------------------
+
+void
+CTableCell::PaintSelectionFeedback(CFormDrawInfo *pDI, RECT *prc, DWORD dwSelInfo)
+{
+    // no selection feedback on table cells
+}
+
+
+#define _cxx_
+#include "caption.hdl"
+
+
+CSite::CLASSDESC CTableCaption::s_classdesc =
+{
+    {
+        {
+            &CLSID_HTMLTableCaption,        // _pclsid
+            0,                              // _idrBase
+            s_apclsidPages,                 // _apClsidPages
+            ARRAY_SIZE(s_acpi),             // _ccp
+            s_acpi,                         // _pcpi
+            SITEDESC_CANSELECT |
+            SITEDESC_TEXTEDIT |
+            SITEDESC_TEXTSITE |
+            SITEDESC_PARENT,                // _dwFlags
+            &IID_IHTMLTableCaption,         // _piidDispinterface
+            0,                              // _lAccRole
+            &s_PropCats,                    // _pPropCats;
+            s_appropdescs,                  // _appropdescs;
+            s_apVTableInterf,               // _apvtableinterf
+        },
+        s_apfnIHTMLTableCaption,            // _pfnTearOff
+    },
+    ETAG_CAPTION,                           // _etag
+    &s_accellist,                           // _paccellist
+};
+
+
+HRESULT
+CTableCaption::CreateElement(CHtmlTag *pht, CElement *pElementParent,
+        CElement ** ppElement)
+{
+    Assert(
+        (pElementParent->GetSite()->Tag() == ETAG_TABLE && (pht->_etag == ETAG_CAPTION))
+    );
+    Assert(ppElement);
+
+    *ppElement = new CTableCaption(pElementParent);
+    RRETURN ((*ppElement) ? S_OK : E_OUTOFMEMORY);
+}
+
+

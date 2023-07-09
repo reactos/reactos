@@ -1,0 +1,491 @@
+<HTML STYLE="font-family: ms sans serif; font-size: 8pt; width: 34.1em;
+height: 14em">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE id=dialogTitle>
+Replace
+</TITLE>
+
+<SCRIPT LANGUAGE="JavaScript" defer>
+
+//+-------------------------------------------------------------------------
+//
+//  This section contains code LOCAL to this particular dilaog.
+//
+//--------------------------------------------------------------------------
+
+//
+//  global variables
+//
+var fFindEnabled = false;   // Whether or not the find button is
+                            // disabled. Used for perf enhancement.
+
+    //+--------------------------------------------------------------------
+    //
+    //  Synopsis:   Opens the help file with the appropriate helpid
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //---------------------------------------------------------------------
+
+    function callHelp()
+    {
+        var L_NoHelp_Text = "No help topic available.";
+        var elm = window.event.srcElement;
+        if (null != elm.helpid)
+        {
+            if ("btnCancel" != elm.id)
+            {
+                window.showHelp("iexplore.hlp", parseInt(elm.helpid));
+            }
+            else
+            {
+                window.showHelp("windows.hlp", parseInt(elm.helpid));
+            }
+        }
+    }   //  callHelp
+
+
+    //+--------------------------------------------------------------------
+    //
+    //  Synopsis:   Closes the dialog doing nothing.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //---------------------------------------------------------------------
+
+    function btnCancelClick()
+    {
+        window.close();
+    }   //  btnCancelClick
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Checks the status of the appropriate checkboxes and
+    //              sets the flags for the findText method.
+    //
+    //  Arguments:  none
+    //
+    //  returns:    a number representing the flags for the findText
+    //              method. (See OM spec for more info.)
+    //
+    //----------------------------------------------------------------------
+
+    function findFlags()
+    {
+        var htmlMatchWord = 2;
+        var htmlMatchCase = 4;
+
+        return (htmlMatchWord * document.all.chkWholeWord.checked)
+            | (htmlMatchCase * document.all.chkMatchCase.checked)
+    }   //  findFlags
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Three steps:
+    //              1. Make sure there's something to find.
+    //              2. Determine the direction and how far to search.
+    //              3. Find and select the text.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function btnFindClick()
+    {
+        var L_FinishedDocument_Text = "Finished searching the document.";
+        var docSearch = window.dialogArguments.document; //  The document we're
+                                                    //  searching
+        var intDirection;       //  What direction to search and
+                                //  how far to search
+        var rngCurrent = docSearch.selection.createRange(); //  The current
+                                                            //  selection in
+                                                            //  the document
+        var rngWorking = docSearch.body.createTextRange();  //  The range we're
+                                                            //  going to search
+        var rngFoundText;       //  The found text
+        var fFoundText = false; //  If the text has already been found
+
+        //
+        //  If the current selection == the text in txtFindText,
+        //  we've found the text at least once. (At least we can
+        //  act as if we have.)
+        //
+        if ((docSearch.selection.type == "Text") ||
+            (docSearch.selection.type == "None"))
+        {
+            fFoundText = (rngCurrent.text.toLowerCase()
+                == txtFindText.value.toLowerCase());
+        }
+
+        //
+        //  rngWorking starts as the entire body, and is then narrowed
+        //  down by the 'set direction' code.
+        //
+
+        //
+        //  Set direction
+        //
+        if (radDirection[0].checked)    //  Search backwards
+        {
+            //
+            //  set range to search
+            //
+            if (!fFoundText)
+            {
+                //
+                //  Search from the end of the current selection
+                //  to the beginning of document
+                //
+                rngWorking.end = rngCurrent.end;
+            }
+            else
+            {
+                //
+                //  Search from the end of the current selection
+                //  minus 1 so we don't find the text we just found
+                //
+                rngWorking.end = rngCurrent.end - 1;
+            }
+            intDirection = rngWorking.start - rngWorking.end    //  Should
+                                                      //  be negative or 0
+        }
+        else                            //  Search forwards
+        {
+            //
+            //  set range to search
+            //
+            if (!fFoundText)
+            {
+                //
+                //  Search from start of the current selection to the end
+                //  of document
+                //
+                rngWorking.start = rngCurrent.start;
+            }
+            else
+            {
+                //
+                //  Search from the start of the current selection plus
+                //  one so we don't find the text we just found
+                //
+                rngWorking.start = rngCurrent.start + 1;
+            }
+            intDirection = rngWorking.end - rngWorking.start    //  Should
+                                                    //  be positive or 0
+        }
+
+        //
+        //  Here's where we do the dirty work (step 3) ...
+        //
+        rngFoundText = rngWorking.duplicate();
+        success = rngFoundText.findText(txtFindText.value, intDirection, findFlags());
+
+        if (!success)   //  Text was not found
+        {
+            alert(L_FinishedDocument_Text);
+        }
+        else                        //  Text was found
+        {
+            rngFoundText.select();
+            rngFoundText.scrollIntoView(true);
+        }
+    }   //  btnFindClick
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Looks for the ENTER and ESC keypresses and runs the
+    //              appropriate action.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function defaultActions()
+    {
+        var htmlKeyReturn = 13;
+        var htmlKeyEscape = 27;
+
+        if ((event.keyCode) == htmlKeyReturn)       //  Enter
+        {
+            if (!btnFind.disabled)
+            {
+                btnFindClick();
+                btnFind.focus();
+            }
+        }
+        else if ((event.keyCode) == htmlKeyEscape)  //  Esc
+        {
+            btnCancelClick();
+        }
+    }   //  defaultActions
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Disables or enables the find button depending in
+    //              whether there is text in txtFindText.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function setFindState()
+    {
+        if (("" == txtFindText.value) == fFindEnabled)
+        {
+            btnFind.disabled = !btnFind.disabled;
+            btnReplace.disabled = !btnReplace.disabled;
+            btnReplaceAll.disabled = !btnReplaceAll.disabled;
+            fFindEnabled = !fFindEnabled;
+        }
+    }   //  setFindState
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Go through the entire document or range and replace all
+    //              occurrences of txtFindText with txtReplaceText
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function btnReplaceAllClick()
+    {
+        var docSearch = window.dialogArguments.document;
+        var L_FinishedReplaceAll_Text = "Finished replace all";
+        var rngFindText;
+        var intDocEnd;      // The position of the last character in
+                            // the document
+        rngFindText = docSearch.body.createTextRange();
+        intDocEnd = rngFindText.end;
+
+        success = rngFindText.findText(txtFindText.value, 0, findFlags());
+
+        while (success) //  Loop until text is no longer found.
+        {
+            rngFindText.text = txtReplaceText.value;
+            rngFindText.end = intDocEnd;
+            rngFindText.findText(txtFindText.value, 0, findFlags());
+        }
+
+        alert(L_FinishedReplaceAll_Text);
+    }   //  btnReplaceAllClick
+
+
+    //+----------------------------------------------------------------------
+    //
+    //  Synopsis:   Replace current seelction with value from txtReplaceText
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function btnReplaceClick()
+    {
+        var docSearch = window.dialogArguments.document;
+        var rngWorking = docSearch.selection.createRange();
+
+        if (txtFindText.value == rngWorking.text)  //  selected text equals
+                                                   //  text in Find what:
+        {
+            rngWorking.text = txtReplaceText.value;
+        }
+
+        btnFindClick();
+    }   //  btnReplaceClick
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Sets the focus to the find button. Also determines
+    //              whether something is selected in the document.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function loadBdy()
+    {
+        var docSearch = window.dialogArguments.document;
+        var rng = docSearch.selection.createRange();
+
+        //
+        //  Bind events to controls
+        //
+        btnFind.onclick         = new Function("btnFindClick()");
+        btnCancel.onclick       = new Function("btnCancelClick()");
+        btnReplace.onclick      = new Function("btnReplaceClick()");
+        btnReplaceAll.onclick   = new Function("btnReplaceAllClick()");
+
+        document.onhelp     = new Function("callHelp()");
+        document.onkeypress = new Function("defaultActions()");
+
+        txtFindText.onkeyup = new Function("setFindState()");
+        txtFindText.onfocus = new Function("txtFindText.select()");
+
+        txtReplaceText.onfocus = new Function("txtReplaceText.select()");
+
+        //
+        //  txtFindText gets an expando property "_enabled" that
+        //  can be set to true or false depending on whether the find next
+        //  button is enabled
+        //
+        txtFindText._enabled = false
+
+        //
+        //  If the selection is less than 16 characters, populate
+        //  txtFind with the selection
+        //
+        if ("Text" == docSearch.selection.type)
+        {
+            if (16 > rng.text.length)
+            {
+                txtFindText.value = rng.text;
+                txtFindText.select();
+            }
+        }
+
+        setFindState();
+    }   //  loadBdy
+
+</SCRIPT>
+
+</HEAD>
+
+<BODY ID=bdy onLoad="loadBdy()" style="font-family: ms sans serif;
+font-size: 8pt; background: buttonface;">
+
+<DIV align=absMiddle style="font-family: ms sans serif; font-size: 8pt;
+position: absolute; LEFT: 1em; TOP: 1.3em; WIDTH: 8em; HEIGHT: 1em;">
+<LABEL FOR=txtFindText ID=lblFindText>
+Fi<U>n</U>d what:
+</LABEL>
+</DIV>
+
+<DIV align=absMiddle style="font-family: ms sans serif; font-size: 8pt;
+position: absolute; LEFT: 1em; TOP: 3.8em; WIDTH: 8em; HEIGHT: 1em;">
+<LABEL FOR=txtReplaceText ID=lblReplaceText>
+Re<U>p</U>lace with:
+</LABEL>
+</DIV>
+
+<INPUT type=text id=txtFindText ACCESSKEY=n tabIndex=5
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 7.2em; TOP: 1em; WIDTH: 17.5em; HEIGHT: 2.1em">
+
+<INPUT type=text id=txtReplaceText ACCESSKEY=p tabIndex=8
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 7.2em; TOP: 3.5em; WIDTH: 17.5em; HEIGHT: 2.1em">
+
+<BUTTON id=btnFind ACCESSKEY=f DISABLED=1 tabIndex=60
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 25.7em; TOP: 1em; WIDTH: 6.8em; HEIGHT: 2.1em">
+<U>F</U>ind Next
+</BUTTON>
+
+<BUTTON id=btnReplace ACCESSKEY=r DISABLED=1 tabIndex=65
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 25.7em; TOP: 3.5em; WIDTH: 6.8em; HEIGHT: 2.1em">
+<U>R</U>eplace
+</BUTTON>
+
+<BUTTON id=btnReplaceAll ACCESSKEY=a DISABLED=1 tabIndex=70
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 25.7em; TOP: 6em; WIDTH: 6.8em; HEIGHT: 2.1em">
+Replace <U>A</U>ll
+</BUTTON>
+
+<BUTTON id=btnCancel tabIndex=75
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 25.7em; TOP: 8.5em; WIDTH: 6.8em; HEIGHT: 2.1em">
+Cancel
+</BUTTON>
+
+<INPUT id=chkWholeWord type=checkbox ACCESSKEY=w tabIndex=40
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 1em; TOP: 7.6em; WIDTH: 1em; HEIGHT: 1em">
+
+<INPUT id=chkMatchCase type=checkbox ACCESSKEY=c tabIndex=45
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 1em; TOP: 9.4em; WIDTH: 1em; HEIGHT: 1em">
+
+<DIV style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 2.6em; TOP: 7.6em; WIDTH: 11em; HEIGHT: 1.3em">
+<LABEL FOR=chkWholeWord id=lblWholeWord tabIndex="-1">
+Match <U>w</U>hole word only
+</LABEL>
+</DIV>
+
+<DIV style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 2.6em; TOP: 9.4em; WIDTH: 10em; HEIGHT: 1em">
+<LABEL FOR=chkMatchCase id=lblMatchCase tabIndex="-1">
+Match <U>C</U>ase
+</LABEL>
+</DIV>
+
+<TABLE cellspacing cellPadding=7 borderColorDark=buttonhighlight
+borderColorLight=buttonshadow border=1 noshade="yes"
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 14.5em; TOP: 7.5em; WIDTH: 9.5em; HEIGHT: 3em">
+
+
+    <TR>
+        <TD style="font-family: ms sans serif; font-size: 8pt;
+        width: 6.4em; height: 2em;">
+        <DIV style="color: buttonface">a</DIV>
+        </TD>
+    </TR>
+</TABLE>
+
+        <INPUT id=radDirectionUp type=radio name=radDirection ACCESSKEY=u
+        tabIndex=50
+        style="position: absolute;font-family: ms sans serif; font-size: 8pt;
+        top: 8.6em; left: 15.3em; width: 1em; height: 1em;">
+
+        <DIV style="position: absolute;font-family: ms sans serif;
+        font-size: 8pt;top: 8.6em; left: 17em; width: 2em; height: 2em;">
+        <LABEL FOR=radDirectionUp id=lblDirectionUp tabIndex="-1"
+        STYLE="font-family: ms sans serif; font-size: 8pt"> <U>U</U>p </LABEL>
+        </DIV>
+
+        <INPUT id=radDirectionDown type=radio CHECKED name=radDirection
+        ACCESSKEY=d tabIndex=55
+        style="position: absolute;font-family: ms sans serif; font-size: 8pt;
+        top: 8.6em; left: 19.25em; width: 1em; height: 1em;">
+
+        <DIV style="position: absolute;font-family: ms sans serif;
+        font-size: 8pt;top: 8.6em; left: 20.75em; width: 3em; height: 1em;">
+        <LABEL FOR=radDirectionDown id=lblDirectionDown tabIndex="-1"
+        STYLE="font-family: ms sans serif; font-size: 8pt"> <U>D</U>own </LABEL>
+        </DIV>
+
+<DIV style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+background: buttonface; HEIGHT: 1em; LEFT: 15em; TOP: 7em; WIDTH: 4.1em">
+<LABEL id=lblDirection tabIndex="-1" STYLE="font-family: ms sans serif;
+font-size: 8pt;">
+&nbsp;Direction&nbsp;</LABEL>
+
+</DIV>
+</BODY>
+</HTML>

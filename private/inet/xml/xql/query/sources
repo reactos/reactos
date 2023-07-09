@@ -1,0 +1,68 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=msxml
+MINORCOMP=xql
+
+ROOT=$(MAKEDIR:\xql\query=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=query
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES= \
+    absolutequery.cxx    \
+    ancestorquery.cxx    \
+    andexpr.cxx          \
+    baseoperand.cxx      \
+    basequery.cxx        \
+    childrenquery.cxx    \
+    condition.cxx        \
+    constantoperand.cxx  \
+    elementquery.cxx     \
+    elementstack.cxx     \
+    filterquery.cxx      \
+    groupquery.cxx       \
+    orquery.cxx          \
+    refquery.cxx         \
+    methodoperand.cxx    \
+    nodecontextquery.cxx \
+    notexpr.cxx          \
+    operandvalue.cxx     \
+    orexpr.cxx           \
+    treequery.cxx        \
+    qsort.c              \
+    sortedquery.cxx      
+
+
+INCLUDES= \
+        $(ROOT); \
+        $(ROOT)\core\base; \
+        $(ROOT)\include; \
+        $(ROOT)\xml\om; \
+	$(SDK_INC_PATH);\
+    $(WINDOWS_INC_PATH)\
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+

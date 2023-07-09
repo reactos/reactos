@@ -1,1 +1,0 @@
-@ stdcall SchedServiceMain(long ptr)

@@ -1,0 +1,3084 @@
+#include "priv.h"
+#include "dochost.h"
+#include "basesb.h"
+
+HRESULT LoadDefaultSiteMap(LPCITEMIDLIST pidl);
+
+#define NO_IE_NAMESPACE
+
+#define DM_STARTUP          0
+
+extern "C" {
+#include "..\shell32\shitemid.h"	// for SHID_XX
+}
+
+extern LPCITEMIDLIST g_pidlRootClass;
+
+HRESULT CDocObjectView_Create(IShellView** ppv, IShellFolder* psf, LPCITEMIDLIST pidl, REFCLSID rclsid, Site *pSite);
+
+#define CSTMSG(psz)		DebugMsg(0, TEXT("shd TR-CDOF::%s called"), psz)
+#define IPFMSG(psz)		DebugMsg(0, TEXT("shd TR-IPF::%s called"), psz)
+#define URLMSG(psz)		DebugMsg(0, "shd TR-DOF::%s", psz)
+#define URLMSG2(psz, x)		DebugMsg(0, "shd TR-DOF::%s %x", psz, x)
+#define URLMSG3(psz, x, y)	DebugMsg(0, "shd TR-DOF::%s %x %x", psz, x, y)
+
+typedef HRESULT (*DATACOMPLETECB)(LPCSTR lpszLocalFileName, IUnknown *pUnk);
+HRESULT URLDataToFile(LPSTR lpURL, LPSTR lpFileName, DATACOMPLETECB fnDataCompleteCallback);
+#define DEFAULT_SITEMAP_NAME   TEXT("sitemap.smp")
+HRESULT Sitemap_OnDataComplete(LPCSTR  lpszLocalFileName, IUnknown *pUnk);
+HRESULT _GetStdLocation(LPTSTR szPath, DWORD cbSize, UINT id);
+
+typedef struct tagURLID {
+    ITEMIDLIST idl;
+    BYTE bType;
+    TCHAR ach[MAX_URL_STRING];
+    WORD wNullTerminate;
+} URLID, *PURLID;
+
+
+#define _URLPidlType(pidl)      ((BYTE)((pidl)->bType))
+#define _PidlToUrlPtr(pidl)     ((LPSTR)((PCURLID)(pidl))->ach)
+#define _URLDelegateID(pidl)    (((PURLID)(pidl))->idl.mkid.abID[0])
+#define ProtocolIdlOuterData(pidl)  (((LPVOID)&((PDELEGATEITEMID)(pidl))->rgb[((PDELEGATEITEMID)(pidl))->cbInner]))
+#define PDID_SIG                    MAKEWORD(SHID_INTERNET_SITE, URLID_PROTOCOL)
+#define _IsPidlProtocol(pidl)       ((((PDELEGATEITEMID)(pidl))->cbSize >= (SIZEOF(PDELEGATEITEMID)-1)) && \
+                                     (((PDELEGATEITEMID)(pidl))->wOuter == PDID_SIG))
+#define _PidlToProtocol(pidl)       ((CHAR *)(ProtocolIdlOuterData(pidl)))
+
+
+IShellFolder* g_psfInternet = NULL;
+LPWSTR g_szStartPageTitle = NULL;  //stores title of start page (global)
+
+
+class CDocObjectFolder :
+    public IShellFolder, public IPersistFolder, public IShellIcon
+{
+public:
+    CDocObjectFolder(REFCLSID rclsid, LPCITEMIDLIST pidl = NULL, LPCITEMIDLIST pidlRoot = NULL,
+                     Site *psite = NULL);
+
+    // IUnknown
+    virtual STDMETHODIMP QueryInterface(REFIID,void **);
+    virtual STDMETHODIMP_(ULONG) AddRef(void);
+    virtual STDMETHODIMP_(ULONG) Release(void);
+
+    // IShellFolder
+    virtual STDMETHODIMP ParseDisplayName(HWND hwndOwner,
+        LPBC pbcReserved, LPOLESTR lpszDisplayName,
+        ULONG * pchEaten, LPITEMIDLIST * ppidl, ULONG *pdwAttributes);
+
+    virtual STDMETHODIMP EnumObjects( THIS_ HWND hwndOwner, DWORD grfFlags, LPENUMIDLIST * ppenumIDList);
+
+    virtual STDMETHODIMP BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved,
+                                 REFIID riid, LPVOID * ppvOut);
+    virtual STDMETHODIMP BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved,
+                                 REFIID riid, LPVOID * ppvObj);
+    virtual STDMETHODIMP CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
+    virtual STDMETHODIMP CreateViewObject (HWND hwndOwner, REFIID riid, LPVOID * ppvOut);
+    virtual STDMETHODIMP GetAttributesOf(UINT cidl, LPCITEMIDLIST * apidl,
+                                    ULONG * rgfInOut);
+    virtual STDMETHODIMP GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST * apidl,
+                                 REFIID riid, UINT * prgfInOut, LPVOID * ppvOut);
+    virtual STDMETHODIMP GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD uFlags, LPSTRRET lpName);
+    virtual STDMETHODIMP SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,
+                                 LPCOLESTR lpszName, DWORD uFlags,
+                                 LPITEMIDLIST * ppidlOut);
+
+    // IPersistFolder
+    virtual STDMETHODIMP GetClassID(LPCLSID lpClassID);
+    virtual STDMETHODIMP Initialize(LPCITEMIDLIST pidl);
+
+    // IShellIcon (yes, we are cheating here!)
+    virtual STDMETHODIMP GetIconOf(LPCITEMIDLIST pidl, UINT flags,
+				LPINT lpIconIndex);
+
+protected:
+
+    ~CDocObjectFolder();
+
+    UINT            _cRef;
+    LPITEMIDLIST    _pidlRoot;
+    LPITEMIDLIST    _pidlItem;
+    REFCLSID	    _rclsid;
+    Site*           _psite;
+
+    BOOL _IsInternetFolder() { return IsEqualGUID(_rclsid, CLSID_CURLFolder); };
+    BOOL _IsInternetRoot() { return !_psite; }; // this returns true if it's Desktop/Internet (not a child of it)
+    BOOL _ValidateSite();
+    BOOL _GetProtocolHandler(LPCSTR szProtocol, IShellFolder **ppsfHandler);
+    BOOL _GetProtocolHandlerFromPidl(LPCITEMIDLIST pidl, IShellFolder **ppsfHandler);
+    HRESULT _GetAttributesOfProtocol(LPCSTR pszProtocol, LPCITEMIDLIST *apidl, UINT cpidl, ULONG *rgfInOut);
+};
+
+class CMallocItem : public IMalloc
+{
+public:
+    CMallocItem(LPCSTR szProtocol);
+    ~CMallocItem();
+
+    // IUnknown
+    virtual STDMETHODIMP QueryInterface(REFIID,void **);
+    virtual STDMETHODIMP_(ULONG) AddRef(void);
+    virtual STDMETHODIMP_(ULONG) Release(void);
+
+    // IMalloc
+    virtual STDMETHODIMP_(LPVOID)   Alloc(ULONG cb);
+    virtual STDMETHODIMP_(LPVOID)   Realloc(LPVOID pv, ULONG cb);
+    virtual STDMETHODIMP_(void)     Free(LPVOID pv);
+    virtual STDMETHODIMP_(ULONG)    GetSize(LPVOID pv);
+    virtual STDMETHODIMP_(int)      DidAlloc(LPVOID pv);
+    virtual STDMETHODIMP_(void)     HeapMinimize();
+
+protected:
+    UINT _cRef;
+    LPSTR _pszProtocol;  // protocol for the allocator
+};
+
+class CInetEnum : public IEnumIDList
+{
+public:
+    // *** IUnknown methods ***
+    STDMETHOD(QueryInterface) (REFIID riid, LPVOID * ppvObj);
+    STDMETHOD_(ULONG,AddRef) () ;
+    STDMETHOD_(ULONG,Release) ();
+
+    // *** IEnumIDList methods ***
+    STDMETHOD(Next)  (ULONG celt,
+                      LPITEMIDLIST *rgelt,
+                      ULONG *pceltFetched);
+    STDMETHOD(Skip)  (ULONG celt);
+    STDMETHOD(Reset) ();
+    STDMETHOD(Clone) (IEnumIDList **ppenum);
+
+    CInetEnum(Site *psite);
+    ~CInetEnum();
+protected:
+    UINT  _cRef;
+    UINT  _iCur;
+    Site *_psite; // what's our base site  (NULL means top level)
+};
+
+class CDocIcon : public IExtractIcon
+{
+public:
+    // *** IUnknown methods ***
+    STDMETHOD(QueryInterface) (REFIID riid, LPVOID * ppvObj);
+    STDMETHOD_(ULONG,AddRef) () ;
+    STDMETHOD_(ULONG,Release) ();
+
+    // *** IExtractIcon methods ***
+    STDMETHOD(GetIconLocation)(
+                         UINT   uFlags,
+                         LPSTR  szIconFile,
+                         UINT   cchMax,
+                         int   * piIndex,
+                         UINT  * pwFlags);
+
+    STDMETHOD(Extract)(
+                           LPCSTR pszFile,
+                           UINT   nIconIndex,
+                           HICON   *phiconLarge,
+                           HICON   *phiconSmall,
+                           UINT    nIconSize);
+
+    CDocIcon(LPCITEMIDLIST pidl);
+    virtual ~CDocIcon();
+
+protected:
+
+    HRESULT CDocIcon::_GetIconLocationForFile(LPSTR pszFile,
+                         UINT   uFlags,
+                         LPSTR  szIconFile,
+                         UINT   cchMax,
+                         int   * piIndex,
+                         UINT  * pwFlags);
+
+    UINT 		_cRef;
+    LPITEMIDLIST 	_pidl;
+};
+
+class CInternetIcon : public CDocIcon
+{
+public:
+    CInternetIcon(LPCITEMIDLIST pidl, Site* site);
+    ~CInternetIcon();
+
+    // *** IUnknown methods ***
+    STDMETHOD(GetIconLocation)(
+                         UINT   uFlags,
+                         LPSTR  szIconFile,
+                         UINT   cchMax,
+                         int   * piIndex,
+                         UINT  * pwFlags);
+
+protected:
+    Site*               _psite;
+
+};
+
+class CDocMenu : public IContextMenu
+{
+public:
+    // *** IUnknown methods ***
+    STDMETHOD(QueryInterface) (REFIID riid, LPVOID * ppvObj);
+    STDMETHOD_(ULONG,AddRef) () ;
+    STDMETHOD_(ULONG,Release) ();
+
+    // IContextMenu
+    STDMETHOD(QueryContextMenu)(HMENU hmenu,
+                                UINT indexMenu,
+                                UINT idCmdFirst,
+                                UINT idCmdLast,
+                                UINT uFlags);
+    STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpici);
+    STDMETHOD(GetCommandString)(UINT        idCmd,
+                                UINT        uType,
+                                UINT      * pwReserved,
+                                LPSTR       pszName,
+                                UINT        cchMax);
+
+    CDocMenu(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlItem);
+    virtual ~CDocMenu();
+
+protected:
+    UINT 		_cRef;
+    LPITEMIDLIST 	_pidl;
+};
+//========================================================================
+//
+//========================================================================
+//#define FAKE_SITEMAP
+#ifdef FAKE_SITEMAP
+BOOL _ValidateURL(LPTSTR pszName);
+
+void LoadFakeSiteMap(LPCITEMIDLIST pidl)
+{
+    TCHAR szUrl[MAX_URL_STRING];
+    TCHAR szSiteMapFile[MAX_URL_STRING];
+    LPTSTR pszEnd;
+    LPTSTR pszStart;
+
+    PidlToUrl(pidl, szUrl);
+    if (szUrl[0] && _ValidateURL(szUrl))  {
+        pszStart = szUrl + 7; // skip over http://
+        pszEnd = StrChr(pszStart, '/');
+        if (!pszEnd)
+            pszEnd = StrChr(pszStart, '\\');
+        if (!pszEnd)
+            pszEnd = pszStart + lstrlen(pszStart) + 1;
+        lstrcpy(szSiteMapFile, TEXT("c:\\"));
+        lstrcpyn(szSiteMapFile + 3, pszStart, pszEnd - pszStart);
+        lstrcat(szSiteMapFile, TEXT(".smp"));
+        SL_AddNewSiteMap(szSiteMapFile);
+    }
+}
+#else
+#define LoadFakeSiteMap(pidl) 0
+#endif
+
+
+#ifdef DEBUG
+HRESULT WINAPI URLQualifyA(PCSTR pcszURL, DWORD dwInFlags,
+                           PSTR *ppszTranslatedURL);
+
+void TryOneURLQualify(PCSTR pszUrl)
+{
+    HRESULT hres;
+    LPSTR pszUrlFull;
+
+    hres = URLQualifyA(pszUrl, TRANSLATEURL_FL_GUESS_PROTOCOL | TRANSLATEURL_FL_USE_DEFAULT_PROTOCOL,
+                       &pszUrlFull);
+    DebugMsg(DM_TRACE, "Translate %s returned %d \n(%s)", pszUrl, hres, pszUrlFull ? pszUrlFull : pszUrl);
+    if (pszUrlFull) {
+        LocalFree(pszUrlFull);
+    }
+}
+
+void TestURLQualify()
+{
+    TryOneURLQualify("www.mit.edu");
+    TryOneURLQualify("http://msw");
+    TryOneURLQualify("msw");
+}
+#endif
+
+//========================================================================
+// CDocObjectFolder members
+//========================================================================
+
+CDocObjectFolder::CDocObjectFolder(REFCLSID rclsid, LPCITEMIDLIST pidl, LPCITEMIDLIST pidlRoot, Site* psite)
+		: _cRef(1), _rclsid(rclsid), _pidlItem(NULL), _pidlRoot(NULL), _psite(psite)
+{
+    DebugMsg(TF_SHDLIFE, TEXT("ctor CDocObjectFolder %x"), this);
+
+    //
+    // WARNING: See comments above OleUninitialize (which is also commented out).
+    //
+    // OleInitialize(NULL);
+
+    DllAddRef();
+
+#if 0
+    TestURLQualify();
+#endif
+
+
+    if (_psite)
+        _psite->AddRef();
+
+    if (pidl) {
+        _pidlItem = ILClone(pidl);
+    }
+
+    if (pidlRoot) {
+        _pidlRoot = ILClone(pidlRoot);
+    }
+}
+
+CDocObjectFolder::~CDocObjectFolder()
+{
+    DebugMsg(TF_SHDLIFE, TEXT("dtor CDocObjectFolder %x"), this);
+
+    if (_pidlItem) {
+        ILFree(_pidlItem);
+        _pidlItem = NULL;
+    }
+
+    if (_pidlRoot) {
+        ILFree(_pidlRoot);
+        _pidlRoot = NULL;
+    }
+
+    if (_psite)
+        _psite->Release();
+
+    //
+    // WARNING: We can't call OLE here because this destructor will be
+    //  called from within the ThreadDetach. At this point, OLE might
+    //  have already done the clean-up. I believe it is quite safe
+    //  to remove OleInitialize/OleUninitialize pair from this instance.
+    //  (SatoNa)
+    //
+    // OleUninitialize();
+
+    DllRelease();
+}
+
+HRESULT CDocObjectFolder::QueryInterface(REFIID riid, LPVOID * ppvObj)
+{
+    if (IsEqualIID(riid, IID_IShellFolder) || IsEqualIID(riid, IID_IUnknown))
+    {
+        *ppvObj = (IShellFolder*)this;
+    }
+    else if (IsEqualIID(riid, IID_IPersistFolder))
+    {
+        *ppvObj = (IPersistFolder*)this;
+    }
+    else if (IsEqualIID(riid, IID_IShellIcon))
+    {
+        *ppvObj = (IShellIcon*)this;
+    }
+    else
+    {
+        *ppvObj = NULL;
+        return E_NOINTERFACE;
+    }
+
+    AddRef();
+    return S_OK;
+}
+
+ULONG CDocObjectFolder::AddRef()
+{
+    _cRef++;
+    return _cRef;
+}
+
+ULONG CDocObjectFolder::Release()
+{
+    _cRef--;
+    if (_cRef > 0)
+        return _cRef;
+
+    delete this;
+    return 0;
+}
+
+HRESULT CDocObjectFolder_CreateInstance(IUnknown* pUnkOuter, IUnknown **ppunk, LPCOBJECTINFO poi)
+{
+    // aggregation checking is handled in class factory
+
+    CSTMSG(TEXT("CreateInstance"));
+    CDocObjectFolder* ptfld = new CDocObjectFolder(*poi->pclsid);
+    if (ptfld) {
+#ifdef DEBUG
+        //
+        // HACK:
+        //
+        //   SHELL32 caches c_sfInetRoot in a static DATA section
+        //  and never release it. It caches an instance of CDocobjectFolder
+        //  and never release it. Therefore, we are removing this object
+        //  from the to-be-memleak-detected list to avoid a false alarm
+        //  assuming that we don't realy leak this object.
+        //   Please don't copy it to another place unless you are really
+        //  sure that it's OK not to detect leaks in that scenario.
+        //  (SatoNa)
+        //
+        extern void remove_from_memlist(void *pv);
+        remove_from_memlist(ptfld);
+#endif
+
+        *ppunk = SAFECAST(ptfld, IShellFolder *);
+        return S_OK;
+    }
+    return E_OUTOFMEMORY;
+}
+
+
+//
+// this might modify pszName if it's not a fully qualified url!
+BOOL _ValidateURL(LPTSTR pszName)
+{
+    //
+    // WARNING: In order to allow URL extensions, we assume all strings
+    //  which contains ":" in it is a valid string.
+    // Assumptions are:
+    //
+    // (1) CDesktop::ParseDisplayName parse file system strings first.
+    // (2) URL moniker will return an error correctly if URL is not valid.
+    //
+    if (SUCCEEDED(IURLQualify(pszName, TRANSLATEURL_FL_GUESS_PROTOCOL | TRANSLATEURL_FL_USE_DEFAULT_PROTOCOL, pszName))
+        && -1 != GetUrlScheme(pszName))
+            return TRUE;
+    else
+        return FALSE;
+}
+
+
+#define LOC_IsLocation(pidl) (((((LPIDFILELOCATION)pidl)->bFlags) & SHID_LOC) == SHID_LOC)
+#define LOC_Type(pidl)  ((((LPIDFILELOCATION)pidl)->bFlags) & SHID_LOC_TYPEMASK)
+#define LOC_GetLocation(pidl) (((LPIDFILELOCATION)pidl)->cLocation)
+
+
+// this gives a good guess as to whether something could be a location spec.
+// it can give a false positive, but not a false negative.
+// this allows us to blow off work if we get a negative.
+//
+// if it finds something it suspects to be a location spec, it returns a pointer
+// to it.  otherwise returns NULL;
+LPIDFILELOCATION IEMaybeHasLocationSpec(LPCITEMIDLIST pidl)
+{
+    LPITEMIDLIST pidlLast = ILFindLastID(pidl);
+
+    // the SHID_LOC bits aren't valid for filesys pidls
+    if (!(pidlLast && pidlLast != pidl && LOC_IsLocation(pidlLast))) {
+        pidlLast = NULL;
+    }
+    return (LPIDFILELOCATION)pidlLast;
+}
+
+// BUGBUG: this might get deceived on junction points.
+// we should add another check on filesys
+
+// fills in the location and removes the location pidl if it was such a thing
+BOOL ILRemoveLocation(LPITEMIDLIST pidl, LPWSTR pszLocation)
+{
+    WORD cbOld;
+    LPIDFILELOCATION pidlLast;
+    BOOL fRet = FALSE;
+
+    if (pszLocation)
+        pszLocation[0] = 0;
+    pidlLast = IEMaybeHasLocationSpec(pidl);
+
+    if (pidlLast) {
+        char szBuffer[MAX_PATH];
+
+        cbOld = pidlLast->cb;
+        pidlLast->cb = 0;
+
+        // one last check...  after stripping it off, we should
+        // be able to get a path from the pidl
+        if (SHGetPathFromIDList(pidl, szBuffer)) {
+
+            // yes, we did have the location
+            if (pszLocation)
+                ualstrcpyW(pszLocation, pidlLast->cLocation);
+            fRet = TRUE;
+        } else {
+            // nope!
+            pidlLast->cb = cbOld;
+        }
+
+    }
+
+    return fRet;
+}
+
+void ILAppendLocation(LPITEMIDLIST *ppidl, LPWSTR pszLocation)
+{
+    if (pszLocation) {
+        LPITEMIDLIST pidl;
+        IDFILELOCATION id;
+
+        ZeroMemory(&id, sizeof(id));
+
+        id.bFlags = SHID_LOC;
+        ualstrcpyW(id.cLocation, pszLocation);
+        id.cb = (((LPBYTE)(&id.cLocation[0])) + (ualstrlenW(id.cLocation) + 1) * SIZEOF(WCHAR)) - ((LPBYTE)&id);
+        pidl = ILCombine(*ppidl, (LPITEMIDLIST)&id);
+        if (pidl) {
+            ILFree(*ppidl);
+            *ppidl = pidl;
+        }
+    }
+}
+
+
+
+void PidlToUrl(LPCITEMIDLIST pidl, LPTSTR pszUrl)
+{
+    lstrcpy(pszUrl, _PidlToUrlPtr(pidl));
+}
+
+
+void UrlToID(LPSTR psz, BYTE bType, PURLID pidlUrl)
+{
+    ZeroMemory(pidlUrl, sizeof(URLID));
+
+    lstrcpyn(_PidlToUrlPtr(pidlUrl), psz, MAX_URL_STRING);
+
+#ifdef DEBUG
+    if (lstrlen(psz) < lstrlen(_PidlToUrlPtr(pidlUrl))) {
+    	DebugMsg(TF_WARNING, "UrlToID string trancated (%d->%d)",
+	    	lstrlen(_PidlToUrlPtr(pidlUrl)), lstrlen(psz) );
+    }
+#endif
+
+    // assuming the string is the end of the pidl, get the length
+    // by subtracting the idl address from the end of the string (null)
+    pidlUrl->idl.mkid.cb = ((lstrlen(_PidlToUrlPtr(pidlUrl)) + 1 +
+        (LPBYTE)_PidlToUrlPtr(pidlUrl)) - ((LPBYTE)pidlUrl));
+    _URLDelegateID(pidlUrl) = SHID_INTERNET_SITE;
+    _URLPidlType(pidlUrl) = bType;
+}
+
+LPITEMIDLIST UrlToPidl(LPTSTR pszUrl, LPWSTR pszLocation, LPTSTR pszFrameName,
+    LPTSTR pszHeaders, LPBYTE pPostData, int cbPostData)
+{
+    LPITEMIDLIST pidlRet = NULL;
+    URLID idl;
+    URLID idlLocation;
+    PURLID pidlFree = NULL;
+    PURLID pidlUrl = &idl;
+    BOOL fEnhancedURL = pszUrl && (pszFrameName || pszHeaders || pPostData);
+    char szSize[10];
+
+    if (fEnhancedURL)
+    {
+        int cbEURL = lstrlen(pszUrl)+ 1;
+        LPBYTE pb;
+
+        if (pszFrameName)
+            cbEURL += lstrlen(pszFrameName) + 2;
+        if (pszHeaders)
+            cbEURL += lstrlen(pszHeaders) + 2;
+        if (pPostData)
+        {
+            wsprintf(szSize, "%i", cbPostData);
+            cbEURL += cbPostData + lstrlen(szSize) + 2;
+        }
+        if (cbEURL > 0xFFFF-FIELD_OFFSET(URLID,ach)) goto exitPoint;
+        // NOTE: include an extra 2 0 bytes at end to Terminate (cb of following
+        // id)
+        pidlUrl = (PURLID) LocalAlloc(LPTR, FIELD_OFFSET(URLID,ach)+cbEURL+2);
+        if (pidlUrl == NULL) goto exitPoint;
+        pidlFree = pidlUrl;
+        ZeroMemory(pidlUrl, FIELD_OFFSET(URLID,ach)+cbEURL+2);
+
+        pb = (LPBYTE)_PidlToUrlPtr(pidlUrl);
+        lstrcpy((LPSTR)pb, pszUrl);
+        pb += lstrlen(pszUrl) + 1;
+
+        if (pszFrameName)
+        {
+            *pb++ = EURL_FRAMENAME;
+            lstrcpy((LPSTR)pb, pszFrameName);
+            pb += lstrlen(pszFrameName) + 1;
+            ASSERT(pb <= ((LPBYTE) pidlUrl)+FIELD_OFFSET(URLID,ach)+cbEURL);
+        }
+        if (pszHeaders)
+        {
+            *pb++ = EURL_HEADERS;
+            lstrcpy((LPSTR)pb, pszHeaders);
+            pb += lstrlen(pszHeaders) + 1;
+            ASSERT(pb <= ((LPBYTE) pidlUrl)+FIELD_OFFSET(URLID,ach)+cbEURL);
+        }
+        if (pPostData)
+        {
+            *pb++ = EURL_POSTDATA;
+            lstrcpy((LPSTR)pb, szSize);
+            pb += lstrlen(szSize) + 1;
+            memcpy(pb, pPostData, cbPostData);
+            ASSERT(pb+cbPostData <= ((LPBYTE) pidlUrl)+FIELD_OFFSET(URLID,ach)+cbEURL);
+        }
+        // assuming the string is the end of the pidl, get the length
+        // by subtracting the idl address from the end of the EURL
+        pidlUrl->idl.mkid.cb = (cbEURL + (LPBYTE)_PidlToUrlPtr(pidlUrl))
+                       - ((LPBYTE)pidlUrl);
+        _URLDelegateID(pidlUrl) = SHID_INTERNET_SITE;
+        _URLPidlType(pidlUrl) = URLID_URLBASE;
+    }
+    else
+    {
+        if (pszUrl)
+            UrlToID(pszUrl, URLID_URLBASE, &idl);
+    }
+
+    if (pszLocation && pszLocation[0]) {
+        char szLocation[MAX_URL_STRING];
+        WideCharToMultiByte(CP_ACP, 0, pszLocation, -1, szLocation,
+            ARRAYSIZE(szLocation), NULL, NULL);
+
+        UrlToID(szLocation, URLID_LOCATION, &idlLocation);
+    } else {
+        pszLocation = NULL;
+    }
+
+    if (pszUrl && pszLocation ) {
+        pidlRet = ILCombine((LPITEMIDLIST)pidlUrl, (LPITEMIDLIST)&idlLocation);
+    } else if (pszUrl) {
+        pidlRet = ILClone((LPITEMIDLIST)pidlUrl);
+    } else if (pszLocation) {
+        pidlRet = ILClone((LPITEMIDLIST)&idlLocation);
+    }
+
+exitPoint:
+    if (pidlFree) LocalFree(pidlFree);
+    return pidlRet;
+}
+
+LPITEMIDLIST UrlToPidl2(LPCITEMIDLIST pidlParent, LPTSTR pszURL, BYTE bType)
+{
+    URLID idl;
+    UrlToID(pszURL, bType, &idl);
+    if (pidlParent) {
+        return ILCombine(pidlParent, (LPITEMIDLIST)&idl);
+    }
+    return ILClone((LPITEMIDLIST)&idl);
+}
+
+BOOL CDocObjectFolder::_GetProtocolHandler(LPCSTR pszProtocol, IShellFolder **ppsfHandler)
+{
+    BOOL fRet = FALSE;
+    char szCLSID[GUIDSTR_MAX];
+    DWORD cbSize;
+
+    TraceMsg(TF_PIDLWRAP, "GetProtocolHandler(%s)", pszProtocol);
+
+    *ppsfHandler = NULL;
+    cbSize = SIZEOF(szCLSID);
+    if (pszProtocol && pszProtocol[0] &&
+        SHGetValue(HKEY_CLASSES_ROOT, pszProtocol, TEXT("ShellFolder"),
+                   NULL, &szCLSID, &cbSize) == ERROR_SUCCESS)
+    {
+        IDelegateFolder *pdf;
+
+        //
+        // Get his IDelegateFolder.
+        //
+
+        // BUGBUG if we already have a psf initialized with the same
+        // pidl, can we just reuse it instead of CoCreateInstancing another?
+
+        if (SUCCEEDED(SHCoCreateInstance(szCLSID, NULL, NULL, IID_IDelegateFolder, (LPVOID *)&pdf)))
+        {
+            //
+            // Get his IShellFolder.
+            //
+            if (SUCCEEDED(pdf->QueryInterface(IID_IShellFolder, (LPVOID *)ppsfHandler)))
+            {
+                IPersistFolder *ppf;
+
+                //
+                // Get his IPersistFolder.
+                //
+                if (SUCCEEDED(pdf->QueryInterface(IID_IPersistFolder, (LPVOID *)&ppf)))
+                {
+                    CMallocItem *pmi;
+
+                    //
+                    // Get an allocator.
+                    //
+
+                    // BUGBUG - if we already have an IMalloc around
+                    // for this protocol, just find & addref it, instead
+                    // of creating a new one each time.
+                    pmi = new CMallocItem(pszProtocol);
+                    if (pmi)
+                    {
+                        //
+                        // Tell his IDelegateFolder to use my allocator.
+                        //
+                        if (SUCCEEDED(pdf->SetItemAlloc(pmi)))
+                        {
+                            fRet = TRUE;
+                        }
+
+                        //
+                        // I don't need my allocator any more.
+                        // We assume here that the pdf AddRef()ed the
+                        // pmi (unless he didn't need it either).
+                        //
+                        pmi->Release();
+                    }
+
+                    //
+                    // Don't need the ppf any more.
+                    //
+                    ppf->Release();
+                }
+
+                if (fRet)
+                {
+                    //
+                    // On success, initialize him with the root pidl.
+                    //
+                    ppf->Initialize(_pidlRoot);
+                }
+                else
+                {
+                    //
+                    // On failure, don't return an IShellFolder.
+                    //
+                    (*ppsfHandler)->Release();
+                    *ppsfHandler = NULL;
+                }
+            }
+
+            //
+            // Don't need the pdf any more.
+            //
+            pdf->Release();
+        }
+    }
+
+    TraceMsg(TF_PIDLWRAP, "GetProtocolHandler=%d", fRet);
+    return fRet;
+}
+
+BOOL CDocObjectFolder::_GetProtocolHandlerFromPidl(LPCITEMIDLIST pidl, IShellFolder **ppsfHandler)
+{
+    BOOL fRet = FALSE;
+
+    TraceMsg(TF_PIDLWRAP, "GetProtocolHandlerFromPidl(pidl=%08X)", pidl);
+
+    *ppsfHandler = NULL;
+    if (_IsPidlProtocol(pidl))
+    {
+        fRet = _GetProtocolHandler(_PidlToProtocol(pidl), ppsfHandler);
+    }
+
+    TraceMsg(TF_PIDLWRAP, "GetProtocolHandlerFromPidl=%d", fRet);
+    return fRet;
+}
+
+BOOL _GetUrlProtocol(LPCTSTR szURL, LPTSTR pszProtocol, DWORD cchBufferSize)
+{
+    PARSEDURL pu;
+
+    pu.cbSize = SIZEOF(PARSEDURL);
+
+    if (SUCCEEDED(ParseURL(szURL, &pu)) && cchBufferSize > pu.cchProtocol)
+    {
+        StrCpyN(pszProtocol, pu.pszProtocol, pu.cchProtocol +1);
+        return TRUE;
+    }
+    return FALSE;
+}
+    
+
+HRESULT CDocObjectFolder::ParseDisplayName(HWND hwndOwner,
+        LPBC pbcReserved, LPOLESTR pwszDisplayName,
+        ULONG * pchEaten, LPITEMIDLIST * ppidl, ULONG *pdwAttributes)
+{
+    HRESULT hres = E_FAIL;
+
+    // BUGBUG: We'd better use separate C++ class!
+    if (_IsInternetFolder() && !_pidlItem)
+    {
+        char szName[MAX_URL_STRING];
+
+        WideCharToMultiByte(CP_ACP, 0, pwszDisplayName, -1, szName, ARRAYSIZE(szName), NULL, NULL);
+        if (!PathIsFilePath(szName))  {
+            if (_ValidateURL(szName) || ShouldShellExecURL( szName ))  {
+                char szEncoded[MAX_URL_STRING];
+                char szProtocol[MAX_PATH];
+                LPSTR pszName = szName;
+                DWORD dwSize = ARRAYSIZE(szEncoded);
+                IShellFolder *psfHandler;
+                // if we're down here, then the szName was really a url so try to encode it.
+                // turn spaces to %20
+
+                if (SUCCEEDED(UrlEscape(szName, szEncoded, &dwSize, 0)))
+                    pszName = szEncoded;
+
+                if (_GetUrlProtocol(pszName, szProtocol, ARRAYSIZE(szProtocol)) &&
+                    _GetProtocolHandler(szProtocol, &psfHandler))
+                {
+                    TraceMsg(TF_PIDLWRAP, "Asking \"%s\" handler to parse %s (%08X) into a pidl", szProtocol, szName, szName);
+                    hres = psfHandler->ParseDisplayName(hwndOwner, pbcReserved,
+                                                        pwszDisplayName, pchEaten,
+                                                        ppidl, pdwAttributes);
+                    TraceMsg(TF_PIDLWRAP, "the result is %08X, the pidl is %08X", hres, *ppidl);
+                    psfHandler->Release();
+                    DebugMsg(TF_URLNAMESPACE, TEXT("CODF::PDN(%s) called psfHandler and returning %x"),
+                             szName, hres);
+                }
+                else
+                {
+                    *ppidl = UrlToPidl(pszName, NULL, NULL, NULL, NULL, 0);
+                    hres = (*ppidl ? S_OK : E_OUTOFMEMORY);
+                    DebugMsg(TF_URLNAMESPACE, TEXT("CODF::PDN(%s) called UrlToPidl and returning %x"),
+                             szName, hres);
+                }
+            } else {
+                DebugMsg(DM_ERROR, TEXT("CDOF::PDN(%s) returning E_FAIL because of (%s) is FALSE"),
+                    szName,
+                    TEXT("(_ValidateURL(szName) || ShouldShellExecURL( szName ))"));
+            }
+        } else {
+            DebugMsg(DM_ERROR, TEXT("CDOF::PDN(%s) returning E_FAIL because of (%s) is FALSE"),
+                szName,
+                TEXT("(!PathIsFilePath(szName))"));
+        }
+    } else {
+        DebugMsg(DM_ERROR, TEXT("CDOF::PDN returning E_FAIL because of (%s) is FALSE"),
+                TEXT("if (_IsInternetFolder() && !_pidlItem)"));
+    }
+
+    return hres;
+}
+
+HRESULT CDocObjectFolder::EnumObjects(HWND hwndOwner, DWORD grfFlags, LPENUMIDLIST * ppenumIDList)
+{
+    DebugMsg(0, TEXT("sdv DOF:EnumObjects called"));
+
+    if (!_ValidateSite())
+        return E_FAIL;
+
+    *ppenumIDList = new CInetEnum(_psite);
+    return *ppenumIDList ? S_OK : E_OUTOFMEMORY;
+}
+
+BOOL CDocObjectFolder::_ValidateSite()
+{
+    BOOL fRet = TRUE;
+    if (_psite) {
+        Site* psiteParent = _psite->GetParent();
+        if (psiteParent->IsInternetRoot()) {
+            Site* psiteNew;
+
+            // if this was a top level item site, it could have been replaced
+            psiteNew = psiteParent->FindSite(_psite->GetUrl(), FALSE);
+            if (psiteNew != _psite) {
+                if (psiteNew) {
+                    // if we found one swap us
+                    _psite->Release();
+                    _psite = psiteNew;
+                    psiteNew->AddRef();
+                } else {
+                    // if we didn't, we really failed... bail out
+                    fRet = FALSE;
+                }
+            }
+            psiteNew->Release();  //Earlier FindSite() did one Addref.
+        }
+        //Eariler GetParent() did one AddRef()...
+        if(psiteParent != INVALID_SITE)
+            psiteParent->Release(); //...And this is the corresponding Release()
+    }
+
+    return fRet;
+}
+
+HRESULT CDocObjectFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved,
+                                       REFIID riid, LPVOID * ppvOut)
+{
+    HRESULT hres = E_OUTOFMEMORY;
+    *ppvOut = NULL;
+    Site* psiteNew = NULL;
+
+    if (_IsInternetFolder()) {
+
+        if (_IsPidlProtocol(pidl))
+        {
+            IShellFolder *psfHandler;
+
+            if (_GetProtocolHandlerFromPidl(pidl, &psfHandler))
+            {
+                TraceMsg(TF_PIDLWRAP, "Calling \"%s\" handler to bind to object", _PidlToProtocol(pidl));
+                HRESULT hres = psfHandler->BindToObject(pidl, pbcReserved, riid, ppvOut);
+                TraceMsg(TF_PIDLWRAP, "Hander hres=%08X, ppvOut=%08X", hres, ppvOut);
+
+                if (SUCCEEDED(hres))
+                {
+                    // TraceMsg(TF_PIDLWRAP, "Adding to site list too!");
+                    // SL_AddExplicitLocation(pidl);
+                }
+                psfHandler->Release();
+                return hres;
+            }
+
+            ASSERT(FALSE);
+            // BUGBUG -
+            // where do we want to fall into if we don't have the protocol?
+            // let's try to fall through into the old code.
+            return E_FAIL;
+        }
+
+        if (!_ValidateSite())
+            return E_FAIL;
+
+        psiteNew = PidlToSite(pidl, _psite);
+
+        // if we couldn't find the site and we are a top level site
+        if(psiteNew == INVALID_SITE) {
+
+            if (_IsInternetRoot()) {
+
+                // BUGBUG just set a flag here and actually add to
+                // sitelist at end of function if/when EVERYTHING succeeds.
+
+                SL_AddExplicitLocation(pidl);
+             // This breaks IE's Form submission stuff. So, backed out
+             // temporarily
+             // This break's BharatS's offline reading stuff. So, backed out
+             // temporarily.
+             //   if(WhichPlatform() == PLATFORM_NASH)
+             //       LoadDefaultSiteMap(pidl);
+                psiteNew = PidlToSite(pidl, _psite);
+
+                if (psiteNew == INVALID_SITE)
+                    return E_OUTOFMEMORY;
+
+#ifdef FAKE_SITEMAP
+                LoadFakeSiteMap(pidl);
+#endif
+
+            } else {
+                // not one of our kids
+                return E_FAIL;
+            }
+        }
+    }
+
+    CDocObjectFolder* ptfld = new CDocObjectFolder(_rclsid, pidl, _pidlRoot,
+                                                   psiteNew);
+    if (ptfld) {
+        hres = ptfld->QueryInterface(riid, ppvOut);
+        ptfld->Release();
+    } else {
+        ASSERT(hres == E_OUTOFMEMORY);
+    }
+
+    psiteNew->Release();
+    return hres;
+}
+
+HRESULT CDocObjectFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved,
+                                 REFIID riid, LPVOID * ppvObj)
+{
+    if (_IsPidlProtocol(pidl))
+    {
+        IShellFolder *psfHandler;
+        if (_GetProtocolHandlerFromPidl(pidl, &psfHandler))
+        {
+            HRESULT hres = psfHandler->BindToStorage(pidl, pbcReserved, riid, ppvObj);
+            psfHandler->Release();
+            return hres;
+        }
+    }
+
+    return E_NOTIMPL;
+}
+
+HRESULT CDocObjectFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+{
+    int iRet;
+
+    //
+    // Check for empty pidls.
+    //
+    if (ILIsEmpty(pidl1) && ILIsEmpty(pidl2))
+    {
+        return ResultFromShort(0);
+    }
+    else if (ILIsEmpty(pidl1))
+    {
+        return ResultFromShort(-1);
+    }
+    else if (ILIsEmpty(pidl2))
+    {
+        return ResultFromShort(1);
+    }
+
+    //
+    // Check for location pidls.
+    //
+    if (LOC_IsLocation(pidl1) && LOC_IsLocation(pidl2))
+    {
+        // they're both locations... strcmp them.
+        return ResultFromShort(ualstrcmpW(LOC_GetLocation(pidl1), LOC_GetLocation(pidl2)));
+    }
+    else if (LOC_IsLocation(pidl1))
+    {
+        return ResultFromShort(1);
+    }
+    else if (LOC_IsLocation(pidl2))
+    {
+        return ResultFromShort(-1);
+    }
+
+    //
+    // Check for protocol pidls.
+    //
+    if (_IsPidlProtocol(pidl1) && _IsPidlProtocol(pidl2))
+    {
+        //
+        // They are both protocol pidls, compare their protocols
+        //
+        iRet = lstrcmpA(_PidlToProtocol(pidl1), _PidlToProtocol(pidl2));
+
+        if (iRet == 0)
+        {
+            //
+            // Wow, the same protocol too.  Call their handler to compare.
+            //
+            IShellFolder *psfHandler;
+
+            if (_GetProtocolHandler(_PidlToProtocol(pidl1), &psfHandler))
+            {
+                iRet = psfHandler->CompareIDs(lParam, pidl1, pidl2);
+                psfHandler->Release();
+            }
+        }
+
+        return ResultFromShort(iRet);
+    }
+    else if (_IsPidlProtocol(pidl1))
+    {
+        return ResultFromShort(1);
+    }
+    else if (_IsPidlProtocol(pidl2))
+    {
+        return ResultFromShort(-1);
+    }
+
+    //
+    // whack off the last / so that http://foo/  == http://foo
+    //
+    iRet = lstrcmp(_PidlToUrlPtr(pidl1), _PidlToUrlPtr(pidl2));
+
+    if (iRet) {
+        return ResultFromShort(iRet);
+    }
+
+    return CompareIDs(lParam, _ILNext(pidl1), _ILNext(pidl2));
+}
+
+HRESULT CDocObjectFolder::CreateViewObject(HWND hwndOwner, REFIID riid,
+    LPVOID *ppvOut)
+{
+    HRESULT hres = E_NOINTERFACE;
+    *ppvOut = NULL;
+
+    if (IsEqualIID(riid, IID_IShellView))
+    {
+        LPITEMIDLIST pidlFull;
+        if (_pidlRoot && _pidlItem) {
+            pidlFull = ILCombine(_pidlRoot, _pidlItem);
+        } else {
+            pidlFull = _pidlRoot;
+        }
+
+        hres = CDocObjectView_Create((IShellView**)ppvOut, this, pidlFull,
+                                     _rclsid, _psite);
+
+        if (pidlFull && pidlFull!=_pidlRoot) {
+            ILFree(pidlFull);
+        }
+    }
+    return hres;
+}
+
+HRESULT CDocObjectFolder::_GetAttributesOfProtocol(LPCSTR pszProtocol,
+                                                   LPCITEMIDLIST *apidl,
+                                                   UINT cpidl, ULONG *rgfInOut)
+{
+    HRESULT hres = S_OK;
+
+    if (cpidl)
+    {
+        if (pszProtocol)
+        {
+            //
+            // We have a protocol.  Find the protocol handler
+            // and pass it the bundle of pidls.
+            //
+            IShellFolder *psfHandler;
+
+            if (_GetProtocolHandler(pszProtocol, &psfHandler))
+            {
+                hres = psfHandler->GetAttributesOf(cpidl, apidl, rgfInOut);
+                psfHandler->Release();
+            }
+            else
+            {
+                hres = E_FAIL;
+            }
+        }
+        else
+        {
+            //
+            // These pidls are normal children of the Internet folder.
+            //
+            ULONG uOut = SFGAO_FOLDER | SFGAO_CANLINK;
+
+            if ((*rgfInOut) & SFGAO_HASSUBFOLDER)
+            {
+                _ValidateSite();
+
+                if (cpidl == 1)
+                {
+                    Site *psite;
+
+                    psite = PidlToSite(apidl[0], _psite);
+                    if (psite != INVALID_SITE)
+                    {
+                        if (psite->GetCount())
+                        {
+                            uOut |= SFGAO_HASSUBFOLDER;
+                        }
+                        psite->Release();
+                    }
+                }
+            }
+
+            *rgfInOut &= uOut;
+        }
+    }
+
+    return hres;
+}
+
+int CALLBACK ComparePidl(LPVOID pv1, LPVOID pv2, LPARAM lParam)
+{
+    LPCITEMIDLIST pidl1=(LPCITEMIDLIST)pv1;
+    LPCITEMIDLIST pidl2=(LPCITEMIDLIST)pv2;
+
+    if (_IsPidlProtocol(pidl1) && _IsPidlProtocol(pidl2))
+    {
+        return lstrcmpA(_PidlToProtocol(pidl1), _PidlToProtocol(pidl2));
+    }
+    else if (_IsPidlProtocol(pidl1))
+    {
+        return 1;
+    }
+    else if (_IsPidlProtocol(pidl2))
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+HRESULT CDocObjectFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST * apidl,
+                                    ULONG * rgfInOut)
+{
+    if (*rgfInOut == 0)
+    {
+        //
+        // Nothing to do.
+        //
+    }
+    else if (!_IsInternetFolder())
+    {
+        //
+        // Asking about a docobject file or some of its children.
+        //
+        *rgfInOut &= SFGAO_BROWSABLE | SFGAO_CANLINK;
+    }
+    else
+    {
+        //
+        // Internet folder case.
+        //
+        LPCSTR pszProtocol;
+
+        if (cidl == 0)
+        {
+            //
+            // They are asking about the Internet Folder itself.
+            //
+            *rgfInOut &= SFGAO_FOLDER | SFGAO_CANLINK | SFGAO_HASSUBFOLDER;
+            if ((*rgfInOut) & SFGAO_HASSUBFOLDER)
+            {
+                _ValidateSite();
+
+                if (_psite->GetCount() == 0)
+                {
+                    *rgfInOut &= ~SFGAO_HASSUBFOLDER;
+                }
+            }
+        }
+        else if (cidl == 1)
+        {
+            //
+            // Often we are asked about only one child,
+            // so we optimize that case.
+            //
+            pszProtocol = _IsPidlProtocol(apidl[0]) ?
+                            _PidlToProtocol(apidl[0]) :
+                            NULL;
+
+            _GetAttributesOfProtocol(pszProtocol, apidl, cidl, rgfInOut);
+        }
+        else
+        {
+            //
+            // They are asking about multiple internet children.
+            // These children may have different protocols,
+            // so we have to find the GetAttributesOf handler for
+            // each group of protocols in the list.
+            //
+            HDPA hdpa;
+            LPCITEMIDLIST pidlBase;
+            UINT i, cpidlGroup;
+
+            //
+            // Create a list of pidls sorted by protocol.
+            //
+            hdpa = DPA_Create(100);
+            if (!hdpa)
+            {
+                return E_OUTOFMEMORY;
+            }
+            for (i=0; i<cidl; i++)
+            {
+                DPA_AppendPtr(hdpa, (LPVOID)apidl[i]);
+            }
+            DPA_Sort(hdpa, ComparePidl, NULL);
+
+            //
+            // Call GetAttributesOf on each protocol group.
+            // A group
+            //   starts at pidlBase
+            //   contains cpidlGroup pidls
+            //   has a protocol of pszProtocol
+            //
+            pidlBase = (LPCITEMIDLIST)DPA_FastGetPtr(hdpa, 0);
+            pszProtocol = NULL;
+            cpidlGroup = 0;
+            for (i=0; *rgfInOut && (i<cidl); i++)
+            {
+                LPCITEMIDLIST pidlNew;
+
+                pidlNew = (LPCITEMIDLIST)DPA_FastGetPtr(hdpa, i);
+
+                if (_IsPidlProtocol(pidlNew))
+                {
+                    LPCSTR pszProtocolNew;
+
+                    pszProtocolNew = _PidlToProtocol(pidlNew);
+
+                    //
+                    // See if we have a new protocol.
+                    //
+                    if (!pszProtocol ||
+                        (lstrcmpA(pszProtocol, pszProtocolNew) != 0))
+                    {
+                        //
+                        // We have a new protocol, time to process
+                        // the last batch pidls.
+                        //
+                        _GetAttributesOfProtocol(pszProtocol,
+                                                 &pidlBase, cpidlGroup,
+                                                 rgfInOut);
+
+                        pidlBase = pidlNew;
+                        pszProtocol = pszProtocolNew;
+                        cpidlGroup = 0;
+                    }
+                }
+                cpidlGroup++;
+            }
+            if (*rgfInOut)
+            {
+                ASSERT(cpidlGroup);
+                _GetAttributesOfProtocol(pszProtocol, &pidlBase,
+                                         cpidlGroup, rgfInOut);
+            }
+
+            DPA_Destroy(hdpa);
+        }
+    }
+
+    return S_OK;
+}
+
+BOOL GetCommonProtocol(LPCITEMIDLIST *apidl, UINT cpidl, LPSTR *ppszProtocol)
+{
+    UINT ipidl;
+    LPSTR pszProtocol;
+    LPSTR pszProtocolNext;
+
+    *ppszProtocol = NULL;
+
+    if (cpidl == 0)
+    {
+        //
+        // No pidls - no protocols, but they do all match!
+        //
+        return TRUE;
+    }
+
+    //
+    // Grab the protocol of the first pidl, and use it to compare
+    // against the rest of the pidls.
+    //
+    pszProtocol = _IsPidlProtocol(apidl[0]) ?
+                    _PidlToProtocol(apidl[0]) : NULL;
+
+    for (ipidl=1; ipidl<cpidl; ipidl++)
+    {
+
+        pszProtocolNext = _IsPidlProtocol(apidl[ipidl]) ?
+                            _PidlToProtocol(apidl[ipidl]) : NULL;
+
+        //
+        // Check if the protocols are different.
+        //
+        if ((pszProtocol != pszProtocolNext) &&
+            ((pszProtocol == NULL) ||
+             (pszProtocolNext == NULL) ||
+             (lstrcmpA(pszProtocol, pszProtocolNext) != 0)))
+        {
+            return FALSE;
+        }
+    }
+
+    *ppszProtocol = pszProtocol;
+    return TRUE;
+}
+
+HRESULT CDocObjectFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST * apidl,
+                                 REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
+{
+    HRESULT hres = E_FAIL;
+
+    *ppvOut = NULL;
+
+    if (IsEqualIID(riid, IID_IExtractIcon)) 
+    {
+        if (_IsInternetFolder()) 
+        {
+            Site* psiteChild;
+
+            ASSERT(cidl == 1);
+
+            if (apidl[0]) 
+            {
+                if (_IsPidlProtocol(apidl[0]))
+                {
+                    IShellFolder *psfHandler;
+
+                    if (_GetProtocolHandlerFromPidl(apidl[0], &psfHandler))
+                    {
+                        hres = psfHandler->GetUIObjectOf(hwndOwner, 1, apidl, riid, prgfInOut, ppvOut);
+                        psfHandler->Release();
+                        return hres;
+                    }
+                    return E_INVALIDARG;
+                }
+
+                psiteChild = PidlToSite(apidl[0], _psite);
+                if (psiteChild == INVALID_SITE)
+                {
+                    psiteChild = NULL;
+                }
+            } 
+            else 
+            {
+                psiteChild = _psite;
+                _psite->AddRef();
+            }
+
+            *ppvOut = (IExtractIcon*)new CInternetIcon(apidl[0], psiteChild);
+            psiteChild->Release();
+        } 
+        else 
+        {
+            LPITEMIDLIST pidl = NULL;
+
+            if (apidl[0] && LOC_IsLocation(apidl[0])) 
+            {
+                // if it's a location thing, pass in us
+                pidl = _pidlRoot;
+            } 
+            else 
+            {
+                // this should never happen... the only sub item you
+                // can bind to and get info for is a location
+                ASSERT(0);
+                //pidl = apidl[0];
+            }
+            *ppvOut = (IExtractIcon*)new CDocIcon(pidl);
+        }
+        hres = (*ppvOut) ? S_OK : E_OUTOFMEMORY;
+    }
+    else if (IsEqualIID(riid, IID_IContextMenu)) 
+    {
+        LPSTR pszProtocol;
+
+        if (GetCommonProtocol(apidl, cidl, &pszProtocol))
+        {
+            //
+            // Whew, at least all the pidls are of the same protocol,
+            // so we only need to call one handler.
+            //
+            if (pszProtocol)
+            {
+                IShellFolder *psfHandler;
+
+                if (_GetProtocolHandler(pszProtocol, &psfHandler))
+                {
+                    hres = psfHandler->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, ppvOut);
+                    psfHandler->Release();
+                    return hres;
+                }
+
+                ASSERT(FAILED(hres));
+            }
+            else
+            {
+                *ppvOut = (IContextMenu*)new CDocMenu(_pidlRoot, apidl[0]);
+                hres = (*ppvOut) ? S_OK : E_OUTOFMEMORY;
+            }
+        }
+        else
+        {
+            //
+            // BUGBUG in the multiple pidl case, should we get
+            // the menu of the first item and use it?  If we do
+            // it that way, we need to be sure that all possible
+            // IContextMenus (including our CDocMenu) must be
+            // able to identify their pidls and process only them.
+            //
+            ASSERT(FAILED(hres));
+        }
+    }
+    else if (IsEqualIID(riid, IID_IDataObject))
+    {
+        if (cidl == 1)
+        {
+            LPSTR pszURL = _PidlToUrlPtr(apidl[0]);
+            if (pszURL)
+            {
+                IUniformResourceLocator *purl;
+                hres = CoCreateInstance(CLSID_InternetShortcut, NULL, CLSCTX_INPROC_SERVER,
+                        IID_IUniformResourceLocator, (void **)&purl);
+                if (SUCCEEDED(hres))
+                {
+                    hres = purl->SetURL(pszURL, 0);
+                    
+                    if (SUCCEEDED(hres))
+                    {
+                        IShellLink * psl;
+                        if (SUCCEEDED(purl->QueryInterface(IID_IShellLink, (LPVOID *)&psl)))
+                        {
+                            STRRET srName;
+                            TCHAR szName[MAX_PATH];
+                            if (SUCCEEDED(GetDisplayNameOf(apidl[0], SHGDN_INFOLDER, &srName)))
+                            {
+                                StrRetToStrN(szName, ARRAYSIZE(szName), &srName, apidl[0]);
+                                PathRenameExtension(szName, TEXT(".url"));
+                                psl->SetDescription(szName);
+                            }
+                            psl->Release();
+                        }
+                        
+                        hres = purl->QueryInterface(IID_IDataObject, ppvOut);
+                    }
+                    purl->Release();
+                }
+            }       
+        }
+        else
+            ASSERT(FAILED(hres));
+    }
+    else
+        ASSERT(FAILED(hres));
+
+    return hres;
+}
+
+HRESULT CDocObjectFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD uFlags, LPSTRRET lpName)
+{
+    HRESULT hres = S_OK;    // assume success
+
+    // Special case for IE 3.0 frame.
+    if (_IsInternetFolder())
+    {
+        //
+        // Check for wrapped pidl.
+        //
+        if (_IsPidlProtocol(pidl))
+        {
+            IShellFolder *psfHandler;
+
+            if (_GetProtocolHandlerFromPidl(pidl, &psfHandler))
+            {
+                hres = psfHandler->GetDisplayNameOf(pidl, uFlags, lpName);
+                psfHandler->Release();
+            }
+            else
+            {
+                hres = E_FAIL;
+            }
+            return hres;
+        }
+
+        Site* psite = PidlToSite(pidl, _psite);
+        if (psite != INVALID_SITE) {
+            CHAR szBuf[MAX_URL_STRING];
+            szBuf[0] = 0;
+
+            if (psite->IsInternetRoot()) {
+                ENTERCRITICAL;
+                if ((uFlags & (SHGDN_FORPARSING | SHGDN_FORADDRESSBAR)) ||
+                    !g_szStartPageTitle) {
+                    LEAVECRITICAL;
+                    DWORD  cbSize = ARRAYSIZE(szBuf);
+                    hres = _GetStdLocation(szBuf, ARRAYSIZE(szBuf), IDM_GOHOME);
+
+                    // We treat URLs from the registry like they were typed on
+                    // the address bar.
+                    if SUCCEEDED(hres) {
+                        ParseURLFromOutsideSource (szBuf, szBuf, &cbSize);
+                    }
+                } else {
+
+                    //it's the start page: if we have the title stored in g_szStartPageTitle,
+                    //use it; otherwise, go thru _GetStdLocation.  This is a special case.
+                    WideCharToMultiByte(CP_ACP,0,g_szStartPageTitle,-1,
+                        szBuf,ARRAYSIZE(szBuf),NULL,NULL);
+                    LEAVECRITICAL;
+                }
+            } else {
+                Site* psiteLocation = NULL;
+                LPSTR pszName = NULL;
+                // default
+
+                if (uFlags & (SHGDN_FORPARSING | SHGDN_FORADDRESSBAR)) {
+                    if (psite->GetType() == URLID_LOCATION) {
+                        psiteLocation = psite;
+                        psite = psiteLocation->GetParent();
+                    }
+                    pszName = psite->GetUrl();
+                    if (pszName) {
+                        DWORD dwSize = ARRAYSIZE(szBuf);
+
+                        UrlCanonicalize(pszName, szBuf, &dwSize, 0);
+                    }
+                } else {
+                    pszName = psite->GetName();
+                    lstrcpyn(szBuf, pszName, ARRAYSIZE(szBuf));
+                }
+
+                if (psiteLocation) {
+                    if (uFlags & (SHGDN_FORPARSING | SHGDN_FORADDRESSBAR) &&
+                        (lstrlen(szBuf) + lstrlen(psiteLocation->GetUrl())) < ARRAYSIZE(szBuf)) {
+                        lstrcat(szBuf, psiteLocation->GetUrl());
+                    }
+                    psiteLocation->Release();
+                }
+
+                psite->Release();
+            }
+
+            if (SUCCEEDED(hres)) {
+                if (lstrlen(szBuf) < ARRAYSIZE(lpName->cStr)) {
+                    lpName->uType = STRRET_CSTR;
+                    lstrcpy(lpName->cStr, szBuf);
+                    ASSERT(hres==S_OK);
+                } else {
+                    lpName->uType = STRRET_OLESTR;
+                    lpName->pOleStr = MakeWideStrFromAnsi(szBuf, STR_OLESTR);
+                    hres = lpName->pOleStr ? S_OK : E_OUTOFMEMORY;
+                }
+            }
+
+            return hres;
+        }
+        else //INVALID_SITE: this case happens when no Site exists yet for this pidl
+        {
+            //if you're passed a pidl that has no associated site
+
+            LPITEMIDLIST pidlLast = ILFindLastID(pidl);
+
+            if (pidlLast && !ILIsEmpty(pidlLast) && ((PURLID)pidlLast)->bType == URLID_LOCATION &&
+                pidl != pidlLast)
+            {
+                LPITEMIDLIST pidl2;
+                CHAR szUrl[MAX_URL_STRING];
+
+                lpName->uType = STRRET_WSTR;
+
+                pidl2 = (LPITEMIDLIST)pidl;
+                while (pidl != pidlLast)
+                {
+                    pidl2 = (LPITEMIDLIST)pidl;
+                    pidl = _ILNext(pidl);
+                }
+
+                if ((lstrlen(PidlToUrlPtr(pidl2))+lstrlen(PidlToUrlPtr(pidlLast)) < ARRAYSIZE(szUrl)))
+                {
+                    wsprintf(szUrl, TEXT("%s%s"), PidlToUrlPtr(pidl2), PidlToUrlPtr(pidlLast));
+                    lpName->pOleStr = MakeWideStrFromAnsi(szUrl,STR_OLESTR);
+                    return lpName->pOleStr ? S_OK : E_OUTOFMEMORY;
+                }
+            }
+
+            // fall through
+        }
+
+    } else {
+
+        // BUGBUG: for the location, we probably want to return something better that
+        // #location...  at least for the address bar
+        if (LOC_IsLocation(pidl)) {
+            LPIDFILELOCATION pidlLoc = (LPIDFILELOCATION)pidl;
+            lpName->uType = STRRET_OLESTR;
+            lpName->pOleStr = (LPWSTR)OleAlloc(sizeof(WCHAR) * (1+ualstrlenW(LOC_GetLocation(pidlLoc))));
+            if (lpName->pOleStr) {
+                ualstrcpyW(lpName->pOleStr, pidlLoc->cLocation);
+                ASSERT(hres == S_OK);
+            } else {
+                hres = E_OUTOFMEMORY;
+            }
+            return hres;
+        }
+    }
+
+    lpName->uType = STRRET_OFFSET;
+    lpName->uOffset = (LPBYTE)(_PidlToUrlPtr(pidl)) - (LPBYTE)pidl;
+
+    return S_OK;
+}
+
+HRESULT CDocObjectFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,
+                                 LPCOLESTR lpszName, DWORD uFlags,
+                                 LPITEMIDLIST * ppidlOut)
+{
+    HRESULT hres = E_FAIL;
+    Site* psite;
+
+    //
+    // Check for wrapped pidl.
+    //
+    if (_IsPidlProtocol(pidl))
+    {
+        IShellFolder *psfHandler;
+
+        if (_GetProtocolHandlerFromPidl(pidl, &psfHandler))
+        {
+            hres = psfHandler->SetNameOf(hwndOwner, pidl, lpszName, uFlags, ppidlOut);
+            psfHandler->Release();
+        }
+        else
+        {
+            hres = E_FAIL;
+        }
+        return hres;
+    }
+
+    if (!ILIsEmpty(pidl)) {
+        psite = PidlToSite(pidl, _psite);
+    } else {
+        psite = _psite;
+        _psite->AddRef();
+    }
+
+    if (psite) {
+
+        TCHAR szTitle[256];
+
+        OleStrToStrN(szTitle, ARRAYSIZE(szTitle), lpszName, (UINT)-1);
+
+        if (psite->SetName(szTitle))
+            hres = NOERROR;
+
+        psite->Release();
+    } else {
+        // then we're setting the name for the start page...
+        if (g_szStartPageTitle)
+            LocalFree(g_szStartPageTitle);
+        g_szStartPageTitle = StrDupW(lpszName);
+    }
+
+    return E_FAIL;
+}
+
+HRESULT CDocObjectFolder::GetClassID(LPCLSID lpClassID)
+{
+    *lpClassID = _rclsid;
+    return S_OK;
+}
+
+HRESULT CDocObjectFolder::Initialize(LPCITEMIDLIST pidl)
+{
+    IPFMSG(TEXT("Initialize"));
+
+    if (_pidlRoot) {
+        ILFree(_pidlRoot);
+        _pidlRoot = NULL;
+    }
+
+    if (pidl) {
+        _pidlRoot = ILClone(pidl);
+    }
+
+    return S_OK;
+}
+
+HRESULT CDocObjectFolder::GetIconOf(LPCITEMIDLIST pidl, UINT flags,
+				LPINT lpIconIndex)
+{
+    SHFILEINFO sfi;
+    LPCSTR psz;
+    sfi.iIcon = 0;
+    char szLocation[MAX_URL_STRING];
+
+    //
+    // Check for wrapped pidl.
+    //
+    if (_IsPidlProtocol(pidl))
+    {
+        HRESULT hres = S_FALSE;
+        IShellFolder *psfHandler;
+
+        if (_GetProtocolHandlerFromPidl(pidl, &psfHandler))
+        {
+            IShellIcon *psi;
+
+            if (SUCCEEDED(psfHandler->QueryInterface(IID_IShellIcon, (LPVOID *)&psi)))
+            {
+                hres = psi->GetIconOf(pidl, flags, lpIconIndex);
+                psi->Release();
+            }
+            psfHandler->Release();
+        }
+
+        return hres;
+    }
+
+    if (!_IsInternetFolder() && LOC_IsLocation(pidl)) {
+
+        // if it's a location, the icon is the same as for the "this" icon
+        SHGetPathFromIDList(_pidlRoot, szLocation);
+        psz = szLocation;
+
+    } else {
+        psz = _PidlToUrlPtr(pidl);
+    }
+
+    DWORD ret = SHGetFileInfo(psz,
+                              FILE_ATTRIBUTE_NORMAL,
+                              &sfi,
+                              sizeof(sfi),
+                              SHGFI_SYSICONINDEX|SHGFI_USEFILEATTRIBUTES);
+    DebugMsg(0, TEXT("sdv DOF::GetIconOf returns %d with iIcon=%d"), ret, sfi.iIcon);
+    *lpIconIndex = sfi.iIcon;
+
+    return S_OK;
+}
+
+HRESULT CMallocItem::QueryInterface(REFIID riid, LPVOID *ppvObj)
+{
+    if (IsEqualIID(riid, IID_IMalloc) || IsEqualIID(riid, IID_IUnknown))
+    {
+        *ppvObj = (IMalloc *)this;
+    }
+    else
+    {
+        *ppvObj = NULL;
+        return E_NOINTERFACE;
+    }
+    AddRef();
+    return S_OK;
+}
+
+ULONG CMallocItem::AddRef()
+{
+    return ++_cRef;
+}
+
+ULONG CMallocItem::Release()
+{
+    if (--_cRef > 0) {
+        return _cRef;
+    }
+
+    delete this;
+    return 0;
+}
+
+LPVOID CMallocItem::Alloc(ULONG cb)
+{
+    WORD cbActualSize;
+    PDELEGATEITEMID pidl;
+
+    cbActualSize = SIZEOF(DELEGATEITEMID) - 1 +     // header
+                   cb +                             // inner
+                   lstrlenA(_pszProtocol) + 1;      // outer + sz terminator
+
+    pidl = (PDELEGATEITEMID)SHAlloc(cbActualSize + 2);  // +2 for pidl term
+    if (pidl)
+    {
+        pidl->cbSize = cbActualSize;
+        pidl->wOuter = PDID_SIG;
+        pidl->cbInner = (WORD)cb;
+        lstrcpyA((CHAR *)&(pidl->rgb[cb]), _pszProtocol);
+        *(WORD *)&(((BYTE *)pidl)[cbActualSize])=0;
+    }
+
+    return pidl;
+}
+
+LPVOID CMallocItem::Realloc(LPVOID pv, ULONG cb)
+{
+    return NULL;
+}
+
+void CMallocItem::Free(LPVOID pv)
+{
+    SHFree(pv);
+}
+
+ULONG CMallocItem::GetSize(LPVOID pv)
+{
+    return (ULONG)-1;
+}
+
+int CMallocItem::DidAlloc(LPVOID pv)
+{
+    return -1;
+}
+
+void CMallocItem::HeapMinimize()
+{
+}
+
+CMallocItem::CMallocItem(LPCSTR szProtocol) : _cRef(1)
+{
+    DebugMsg(TF_SHDLIFE, TEXT("ctor CMallocItem %x"), this);
+
+    int cbSize = lstrlenA(szProtocol) + 1;
+
+    _pszProtocol = (LPSTR)SHAlloc(cbSize);
+    if (_pszProtocol)
+    {
+        lstrcpyA(_pszProtocol, szProtocol);
+    }
+}
+
+CMallocItem::~CMallocItem()
+{
+    DebugMsg(TF_SHDLIFE, TEXT("dtor CMallocItem %x"), this);
+
+    if (_pszProtocol)
+    {
+        SHFree(_pszProtocol);
+        _pszProtocol = NULL;
+    }
+}
+
+HRESULT CDocIcon::QueryInterface(REFIID riid, LPVOID * ppvObj)
+{
+    if (IsEqualIID(riid, IID_IExtractIcon) || IsEqualIID(riid, IID_IUnknown))
+    {
+        *ppvObj = (IExtractIcon*)this;
+    }
+    else
+    {
+        *ppvObj = NULL;
+        return E_NOINTERFACE;
+    }
+
+    AddRef();
+    return S_OK;
+
+}
+
+ULONG CDocIcon::AddRef()
+{
+    return ++_cRef;
+}
+
+ULONG CDocIcon::Release()
+{
+    if (--_cRef > 0) {
+        return _cRef;
+    }
+
+    delete this;
+    return 0;
+}
+
+HRESULT CDocIcon::_GetIconLocationForFile(LPSTR pszFile,
+                         UINT   uFlags,
+                         LPSTR  szIconFile,
+                         UINT   cchMax,
+                         int   * piIndex,
+                         UINT  * pwFlags)
+{
+    *pwFlags = GIL_NOTFILENAME;
+    szIconFile[0] = '*';
+    szIconFile[1] = '\0';
+
+    SHFILEINFO sfi;
+    sfi.iIcon = 0;
+    DWORD ret = SHGetFileInfo(pszFile,
+                              FILE_ATTRIBUTE_NORMAL,
+                              &sfi,
+                              sizeof(sfi),
+                              SHGFI_SYSICONINDEX|SHGFI_USEFILEATTRIBUTES);
+    DebugMsg(0, TEXT("sdv DOF::GetIconLocation returns %d with iIcon=%d"), ret, sfi.iIcon);
+
+    // "*" as the file name means iIndex is already a system icon index.
+    *piIndex = sfi.iIcon;
+
+    return S_OK;
+}
+
+HRESULT CDocIcon::GetIconLocation(
+                         UINT   uFlags,
+                         LPSTR  szIconFile,
+                         UINT   cchMax,
+                         int   * piIndex,
+                         UINT  * pwFlags)
+{
+    if (_pidl==NULL) {
+	return E_FAIL;
+    }
+
+    char szFile[MAX_PATH];
+    SHGetPathFromIDList(_pidl, szFile);
+    return _GetIconLocationForFile(szFile, uFlags, szIconFile, cchMax, piIndex, pwFlags);
+}
+
+HRESULT CDocIcon::Extract(
+                           LPCSTR pszFile,
+                           UINT   nIconIndex,
+                           HICON   *phiconLarge,
+                           HICON   *phiconSmall,
+                           UINT    nIconSize)
+{
+    DebugMsg(0, TEXT("sdv ER DOF::Extract called (shouldn't be called!)"));
+    return E_FAIL;
+}
+
+CDocIcon::CDocIcon(LPCITEMIDLIST pidl) : _cRef(1)
+{
+    DebugMsg(TF_SHDLIFE, TEXT("ctor CDocIcon %x"), this);
+
+    if (pidl) {
+        _pidl = ILClone(pidl);
+    }
+}
+
+CDocIcon::~CDocIcon()
+{
+    DebugMsg(TF_SHDLIFE, TEXT("dtor CDocIcon %x"), this);
+
+    if (_pidl) {
+	ILFree(_pidl);
+    }
+}
+
+
+/// Internet IExtractIcon impl.
+CInternetIcon::CInternetIcon(LPCITEMIDLIST pidl, Site* psite) :
+    CDocIcon(pidl),
+    _psite(psite)
+{
+    DebugMsg(TF_SHDLIFE, TEXT("ctor CInternetIcon %x"), this);
+
+    if (_psite)
+        _psite->AddRef();
+}
+
+CInternetIcon::~CInternetIcon()
+{
+    DebugMsg(TF_SHDLIFE, TEXT("dtor CInternetIcon %x"), this);
+
+    if (_psite)
+        _psite->Release();
+}
+
+HRESULT CInternetIcon::GetIconLocation(
+                         UINT   uFlags,
+                         LPSTR  szIconFile,
+                         UINT   cchMax,
+                         int   * piIndex,
+                         UINT  * pwFlags)
+{
+    if (_pidl==NULL) {
+	return E_FAIL;
+    }
+
+    *pwFlags = GIL_NOTFILENAME;
+
+    szIconFile[0] = '*';
+    szIconFile[1] = '\0';
+    if(_psite) {
+        *piIndex = _psite->SysIconIndex();
+    }
+
+    if (*piIndex == -1) {
+        return _GetIconLocationForFile(_PidlToUrlPtr(_pidl), uFlags,
+            szIconFile, cchMax, piIndex, pwFlags);
+    }
+    return S_OK;
+}
+
+HRESULT CDocMenu::QueryInterface(REFIID riid, LPVOID * ppvObj)
+{
+    if (IsEqualIID(riid, IID_IContextMenu) || IsEqualIID(riid, IID_IUnknown))
+    {
+        *ppvObj = SAFECAST(this, IContextMenu*);
+    }
+    else
+    {
+        *ppvObj = NULL;
+        return E_NOINTERFACE;
+    }
+
+    AddRef();
+    return S_OK;
+}
+
+ULONG CDocMenu::AddRef()
+{
+    return ++_cRef;
+}
+
+ULONG CDocMenu::Release()
+{
+    if (--_cRef > 0) {
+        return _cRef;
+    }
+
+    delete this;
+    return 0;
+}
+
+CDocMenu::CDocMenu(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlItem) : _cRef(1)
+{
+    DebugMsg(TF_SHDLIFE, TEXT("ctor CDocMenu %x"), this);
+
+    if (pidlRoot && pidlItem) {
+	_pidl = ILCombine(pidlRoot, pidlItem);
+    }
+}
+
+CDocMenu::~CDocMenu()
+{
+    DebugMsg(TF_SHDLIFE, TEXT("dtor CDocMenu %x"), this);
+
+    if (_pidl) {
+	ILFree(_pidl);
+    }
+}
+
+HRESULT CDocMenu::QueryContextMenu(HMENU hmenu,
+                                UINT indexMenu,
+                                UINT idCmdFirst,
+                                UINT idCmdLast,
+                                UINT uFlags)
+{
+    TCHAR szOpen[64];
+    LoadString(HINST_THISDLL, IDS_OPEN, szOpen, ARRAYSIZE(szOpen));
+    
+    InsertMenu(hmenu, indexMenu, MF_BYPOSITION, idCmdFirst, szOpen);
+    return ResultFromShort(1);
+}
+
+//
+//
+// typedef struct _CMINVOKECOMMANDINFO {
+//     DWORD cbSize;        // sizeof(CMINVOKECOMMANDINFO)
+//     DWORD fMask;         // any combination of CMIC_MASK_*
+//     HWND hwnd;           // might be NULL (indicating no owner window)
+//     LPCSTR lpVerb;       // either a string or MAKEINTRESOURCE(idOffset)
+//     LPCSTR lpParameters; // might be NULL (indicating no parameter)
+//     LPCSTR lpDirectory;  // might be NULL (indicating no specific directory)
+//     int nShow;           // one of SW_ values for ShowWindow() API
+//
+//     DWORD dwHotKey;
+//     HANDLE hIcon;
+// } CMINVOKECOMMANDINFO,  *LPCMINVOKECOMMANDINFO;
+//
+HRESULT CDocMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
+{
+    if (HIWORD(lpici->lpVerb)) {
+	if (lstrcmp(lpici->lpVerb, TEXT("open"))) {
+	    return E_INVALIDARG;
+	}
+    }
+
+    SHELLEXECUTEINFO sei = {
+	sizeof(SHELLEXECUTEINFO),
+	SEE_MASK_IDLIST | SEE_MASK_CLASSNAME,
+	lpici->hwnd,
+	TEXT("open"),
+	NULL,
+	NULL,
+	NULL,
+	SW_NORMAL,
+	NULL,
+	(LPVOID)_pidl,
+	TEXT("Folder"),
+	NULL,
+	0,
+	NULL,
+	NULL
+    };
+
+    BOOL fRet=ShellExecuteEx(&sei);
+    DebugMsg(0, TEXT("sdv TR ::InvokeCommand ShellEx returned %d"), fRet);
+
+    return S_OK;
+}
+
+HRESULT CDocMenu::GetCommandString(UINT        idCmd,
+                                UINT        uType,
+                                UINT      * pwReserved,
+                                LPSTR       pszName,
+                                UINT        cchMax)
+{
+    HRESULT hres = E_INVALIDARG;
+    if (idCmd==0)
+    {
+	if (uType == GCS_VERB) {
+	    lstrcpy(pszName, TEXT("open"));
+	    hres = S_OK;
+	}
+	else if ((uType & GCS_HELPTEXT) != 0)
+	{
+	    // BUGBUG: NLS
+	    lstrcpy(pszName, TEXT("Open"));
+	    hres = S_OK;
+	}
+    }
+
+    return S_OK;
+}
+
+class CDocObjMenuExt : public CDocMenu, public IShellExtInit
+{
+public:
+    // *** IUnknown methods ***
+    STDMETHOD(QueryInterface) (REFIID riid, LPVOID * ppvObj);
+    STDMETHOD_(ULONG,AddRef) () { return CDocMenu::AddRef(); }
+    STDMETHOD_(ULONG,Release) () { return CDocMenu::Release(); }
+
+    // IContextMenu
+    STDMETHOD(QueryContextMenu)(HMENU hmenu,
+                                UINT indexMenu,
+                                UINT idCmdFirst,
+                                UINT idCmdLast,
+                                UINT uFlags);
+
+    // *** IShellExtInit methods ***
+    STDMETHOD(Initialize)(LPCITEMIDLIST pidlFolder,
+                          IDataObject *lpdobj, HKEY hkeyProgID);
+
+    CDocObjMenuExt() : CDocMenu(NULL, NULL) {}
+protected:
+    DWORD	_dwAttrib;
+};
+
+HRESULT CDocObjMenuExt::QueryInterface(REFIID riid, void ** ppvObj)
+{
+    if (IsEqualIID(riid, IID_IShellExtInit))
+    {
+        *ppvObj = (IShellExtInit*)this;
+        _cRef++;
+        return S_OK;
+    }
+
+    return CDocMenu::QueryInterface(riid, ppvObj);
+}
+
+HRESULT CDocObjMenuExt::QueryContextMenu(HMENU hmenu,
+                                UINT indexMenu,
+                                UINT idCmdFirst,
+                                UINT idCmdLast,
+                                UINT uFlags)
+{
+    HRESULT hres = ResultFromShort(0);
+    if (_pidl && (_dwAttrib & SFGAO_FOLDER))
+    {
+	// BUGBUG: NLS
+	InsertMenu(hmenu, indexMenu, MF_BYPOSITION, idCmdFirst, TEXT("Open in &Explorer"));
+	hres = ResultFromShort(1);
+    }
+    return hres;
+}
+
+HRESULT CDocObjMenuExt::Initialize(LPCITEMIDLIST pidlFolder,
+                          IDataObject *pdtobj, HKEY hkeyProgID)
+{
+    HRESULT hres = S_OK;
+    if (_pidl) {
+	ILFree(_pidl);
+	_pidl = NULL;
+    }
+
+    STGMEDIUM medium;
+    FORMATETC fmte = {CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    hres = pdtobj->GetData(&fmte, &medium);
+    if (SUCCEEDED(hres))
+    {
+	TCHAR szPath[MAX_PATH];
+	if (DragQueryFile((HDROP)medium.hGlobal, 0, szPath, ARRAYSIZE(szPath)))
+	{
+	    _dwAttrib = SFGAO_FOLDER;
+	    hres = SHILCreateFromPath(szPath, &_pidl, &_dwAttrib);
+	    if (FAILED(hres)) {
+		_dwAttrib = 0;
+	    }
+	}
+
+	ReleaseStgMedium(&medium);
+    }
+
+    return hres;
+}
+
+HRESULT CDocObjMenuExt_CreateInstance(IUnknown* pUnkOuter, IUnknown** ppunk, LPCOBJECTINFO poi)
+{
+    *ppunk = NULL;
+    if (pUnkOuter)
+        return CLASS_E_NOAGGREGATION;
+
+    DebugMsg(0, TEXT("shd - TR CDocObjmenuExt_CreateInstance called"));
+
+    CDocObjMenuExt* pdomx = new CDocObjMenuExt();
+    if (pdomx) {
+	*ppunk = (IContextMenu*)pdomx;
+	return S_OK;
+    }
+    return E_OUTOFMEMORY;
+}
+
+
+
+//// CInetEnum
+
+
+HRESULT CInetEnum::QueryInterface(REFIID riid, LPVOID * ppvObj)
+{
+    if (IsEqualIID(riid, IID_IEnumIDList) || IsEqualIID(riid, IID_IUnknown))
+    {
+        *ppvObj = SAFECAST(this, IEnumIDList *);
+    }
+    else
+    {
+        *ppvObj = NULL;
+        return E_NOINTERFACE;
+    }
+
+    AddRef();
+    return S_OK;
+}
+
+ULONG CInetEnum::AddRef()
+{
+    return ++_cRef;
+}
+
+ULONG CInetEnum::Release()
+{
+    if (--_cRef > 0) {
+	return _cRef;
+    }
+
+    delete this;
+    return 0;
+}
+
+HRESULT CInetEnum::Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched)
+{
+    UINT celtFetched = 0;
+    HRESULT hres = S_FALSE;
+
+    //
+    // WARNING: Never return from within this critical section!
+    //
+    DebugMsg(0, TEXT("sdv TR INE::Next called when _iCur is %d and DPA has %d items"),
+             _iCur, _psite->GetCount());
+
+    // it's ok if _psite is NULL....
+    Site* psite = _psite->Enum(_iCur);
+    if (psite) {
+
+        _iCur++;
+        rgelt[0] = psite->CloneID();
+        if (rgelt[0]) {
+            celtFetched = 1;
+            hres = S_OK;
+        } else {
+            hres = E_OUTOFMEMORY;
+        }
+    }
+
+    if (pceltFetched) {
+        *pceltFetched = celtFetched;
+    }
+
+    return hres;
+}
+
+HRESULT CInetEnum::Skip(ULONG celt)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT CInetEnum::Reset()
+{
+    _iCur = 0;
+    return S_OK;
+}
+
+HRESULT CInetEnum::Clone(IEnumIDList **ppenum)
+{
+    *ppenum = NULL;
+    return E_NOTIMPL;
+}
+
+CInetEnum::~CInetEnum()
+{
+    DebugMsg(TF_SHDLIFE, TEXT("dtor CInetEnum %x"), this);
+
+    if (_psite)
+        _psite->Release();
+}
+
+CInetEnum::CInetEnum(Site* psite) :
+    _cRef(1),
+    _iCur(0),
+    _psite(psite)
+{
+    DebugMsg(TF_SHDLIFE, TEXT("ctor CInetEnum %x"), this);
+
+    if (_psite)
+        _psite->AddRef();
+
+}
+
+STDAPI MonikerFromURL(LPCWSTR wszPath, IMoniker** ppmk)
+{
+    HRESULT hres = CreateURLMoniker(NULL, wszPath, ppmk);
+    if (FAILED(hres)) 
+    {
+        IBindCtx* pbc;
+        hres = CreateBindCtx(0, &pbc);
+        if (SUCCEEDED(hres)) 
+        {
+            // Fall back to a system (file) moniker
+            ULONG cchEaten = 0;
+            hres = MkParseDisplayName(pbc, wszPath, &cchEaten, ppmk);
+            pbc->Release();
+        }
+    }
+
+    return hres;
+}
+
+STDAPI MonikerFromString(LPCTSTR szPath, IMoniker** ppmk)
+{
+    WCHAR wszPath[MAX_URL_STRING];
+
+    MultiByteToWideChar(CP_ACP, 0, szPath, -1, wszPath, ARRAYSIZE(wszPath));
+
+    return MonikerFromURL(wszPath, ppmk);
+}
+
+HRESULT InitPSFInternet()
+{
+    HRESULT hres = S_OK;
+    if (!g_psfInternet) 
+    {
+        hres = SHCoCreateInstance(NULL, &CLSID_CURLFolder, NULL, 
+            IID_IShellFolder, (void **)&g_psfInternet);
+        ASSERT(SUCCEEDED(hres));
+    }
+    return hres;
+}
+
+LPCSTR PidlToUrlPtr(LPCITEMIDLIST pidl)
+{
+    return _PidlToUrlPtr((PURLID)pidl);
+}
+
+BYTE   URLPidlType(LPCITEMIDLIST pidl)
+{
+    return _URLPidlType((PURLID)pidl);
+}
+
+LPCSTR PidlToEURLPtr(LPCITEMIDLIST pidl, BYTE eurlID)
+{
+    LPCSTR pstr = _PidlToUrlPtr((PURLID)pidl);
+    LPCSTR plast = pstr + (pidl->mkid.cb - FIELD_OFFSET(URLID, ach));
+
+    //  advance past URL
+    pstr += lstrlen(pstr)+1;
+    while (pstr+1 < plast)
+    {
+        if ((BYTE)*pstr == eurlID) return ++pstr;
+        //  PostData has cbBytes as first string followed by
+        //  cbBytes BINARY data
+        if ((BYTE)*pstr == EURL_POSTDATA)
+        {
+            int cbPostData;
+
+            pstr++;
+            cbPostData = StrToInt(pstr);
+            pstr += lstrlen(pstr) + 1 + cbPostData;
+        }
+        else
+        {
+            pstr++;
+            pstr += lstrlen(pstr) + 1;
+        }
+    }
+    return NULL;
+}
+
+LPCSTR PidlToFrameNamePtr(LPCITEMIDLIST pidl)
+{
+    return PidlToEURLPtr(pidl, EURL_FRAMENAME);
+}
+
+LPCSTR PidlToHeadersPtr(LPCITEMIDLIST pidl)
+{
+    return PidlToEURLPtr(pidl, EURL_HEADERS);
+}
+
+void PidlToPostData(LPCITEMIDLIST pidl, LPCBYTE *pcb, int *cbPostData)
+{
+    LPCSTR psSize;
+
+    psSize = PidlToEURLPtr(pidl, EURL_POSTDATA);
+    if (!psSize)
+    {
+        *pcb = NULL;
+    }
+    else
+    {
+        *cbPostData = StrToInt(psSize);
+        *pcb = (LPCBYTE) (psSize + lstrlen(psSize) + 1);
+    }
+}
+
+BOOL IsEURLPidl(LPCITEMIDLIST pidl)
+{
+    BOOL bResult = FALSE;
+
+    if (IsURLChild(pidl, TRUE))
+    {
+        LPCITEMIDLIST pidlURL = ILGetNext(pidl);
+        if (pidlURL && URLPidlType(pidlURL) == URLID_URLBASE)
+        {
+            bResult = PidlToEURLPtr(pidlURL, EURL_FRAMENAME) ||
+                      PidlToEURLPtr(pidlURL, EURL_HEADERS) ||
+                      PidlToEURLPtr(pidlURL, EURL_POSTDATA);
+        }
+    }
+    return bResult;
+}
+
+STDAPI_(BOOL) IEILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+{
+    UINT cb = ILGetSize(pidl1);
+
+    if (cb == ILGetSize(pidl2) && memcmp(pidl1, pidl2, cb)==0) {
+        return TRUE;
+    }
+
+#ifdef NO_IE_NAMESPACE
+    if (IsURLChild(pidl1, TRUE)) {
+	if (IsURLChild(pidl2, TRUE)) {
+            if (SUCCEEDED(InitPSFInternet())) {
+	        return g_psfInternet->CompareIDs(0, _ILNext(pidl1), _ILNext(pidl2)) == ResultFromShort(0);
+            } else {
+                ASSERT(0);
+                return FALSE;   // We are not supposed to hit this code.
+            }
+	} else {
+	    return FALSE;
+	}
+    } else if (IsURLChild(pidl2, TRUE)) {
+	return FALSE;
+    }
+#endif
+
+    LPIDFILELOCATION pid1Loc = IEMaybeHasLocationSpec(pidl1);
+    LPIDFILELOCATION pid2Loc = IEMaybeHasLocationSpec(pidl2);
+
+    if (pid1Loc && pid2Loc) {
+        BOOL fRet = FALSE;;
+        LPITEMIDLIST pidl1Clone = ILClone(pidl2);
+        LPITEMIDLIST pidl2Clone = ILClone(pidl1);
+
+        // they both have a location..  whack them off, and compare.
+        if (pidl1Clone && pidl2Clone &&
+            ILRemoveLocation(pidl1Clone, NULL) && ILRemoveLocation(pidl2Clone, NULL)) {
+            if (ILIsEqual(pidl1Clone, pidl2Clone)) {
+                if (!ualstrcmpW(pid1Loc->cLocation, pid2Loc->cLocation))
+                    fRet = TRUE;
+            }
+        }
+
+        if (pidl1Clone)
+            ILFree(pidl1Clone);
+
+        if (pidl2Clone)
+            ILFree(pidl2Clone);
+
+        return fRet;
+    } else if (pid1Loc || pid2Loc){
+        // if either of them have it but they don't both have it,
+        // they aren't equal
+        return FALSE;
+    }
+
+#undef ILIsEqual
+    return ILIsEqual(pidl1, pidl2);
+#define ILIsEqual g_pfnILIsEqual
+}
+
+PFNILISEQUAL g_pfnILIsEqual  = NULL;
+
+//
+// HACK: Copied from regitems.c
+//
+#pragma pack(1)
+typedef struct
+{
+    WORD    cb;
+    BYTE    bFlags;
+    BYTE    bReserved;      // This is to get DWORD alignment
+    CLSID   clsid;
+} IDREGITEM;
+
+typedef struct
+{
+    IDREGITEM       idri;
+    USHORT          cbNext;
+//    operator LPCITEMIDLIST () const { return (LPCITEMIDLIST)&idri; };
+} IDLREGITEM;
+#pragma pack()
+
+IDLREGITEM c_idlURLRoot =
+{
+    {
+        SIZEOF(IDREGITEM),
+        SHID_ROOT_REGITEM,
+        0,
+        // CLSID_ShellInetRoot goes here
+    },
+    0
+};
+
+LPCITEMIDLIST c_pidlURLRoot = (LPCITEMIDLIST)&c_idlURLRoot;
+
+STDAPI_(BOOL) IsURLChild(LPCITEMIDLIST pidl, BOOL fIncludeHome)
+{
+
+    // if we're a rooted explorer, this is always false
+    // this means we're definitely in nashville, so we shouldn't have a split
+    // world
+    if (IsRooted())
+        return FALSE;
+
+    //
+    // it must be an absolute pidl with a root regitem id at the front
+    //
+    if ((pidl->mkid.cb != sizeof(IDREGITEM)) ||
+        (pidl->mkid.abID[0] != SHID_ROOT_REGITEM))
+    {
+        return FALSE;
+    }
+
+    //
+    // the clsid in the pidl must be our internet folder's
+    //
+    if (!IsEqualGUID(((IDREGITEM*)pidl)->clsid, c_idlURLRoot.idri.clsid))
+    {
+        //
+        // this should never happen, find francish to debug it immediately
+        //
+        ASSERT(!IsEqualGUID(((IDREGITEM*)pidl)->clsid, CLSID_CURLFolder));
+        return FALSE;
+    }
+
+    //
+    // if it is a pidl to the internet root then it is the IE3 Home Page
+    //
+    if (ILIsEmpty(_ILNext(pidl))) 
+        return fIncludeHome;
+
+    //
+    // otherwise it is our child if it is a site object
+    //
+    return (_URLDelegateID(_ILNext(pidl)) == SHID_INTERNET_SITE);
+}
+
+STDAPI_(void) InitURLIDs(UINT uPlatform)
+{
+    c_idlURLRoot.idri.clsid = CLSID_ShellInetRoot;
+
+    switch (uPlatform)
+    {
+    case PLATFORM_NASH:
+#undef ILIsEqual
+        g_pfnILIsEqual = ILIsEqual;
+#define ILIsEqual g_pfnILIsEqual
+        break;
+
+    default:
+        ASSERT(FALSE);
+        //
+        // fall through
+        //
+    case PLATFORM_IE3:
+        g_pfnILIsEqual = IEILIsEqual;
+        break;
+
+    }
+}
+
+#ifdef DEBUG
+void DumpValue(LPSTR lpName, LPSTR lpStr, DWORD dwLen)
+{
+  char Name[256];
+
+  if(lpStr)
+      lstrcpyn(Name, lpStr, (int)dwLen+1);
+  else
+      lstrcpy(Name, "");
+  DebugMsg(TF_SITEMAP, TEXT("%s = %s, Length=%d\n\r"),lpName, Name, dwLen);
+}
+#else
+#define DumpValue(x,y,z) 0
+#endif
+
+
+
+#ifdef FEATURE_SITEMAP
+//#define TESTING  1
+#ifdef TESTING
+
+HRESULT LoadDefaultSiteMap(LPCITEMIDLIST pidl)
+{
+  return(URLDataToFile("http://batcave", DEFAULT_SITEMAP_NAME, Sitemap_OnDataComplete));
+}
+
+#else
+
+HRESULT LoadDefaultSiteMap(LPCITEMIDLIST pidl)
+{
+  URL_COMPONENTS  uc;
+  CHAR  szHomeUrl[MAX_URL_STRING];
+  CHAR  szUrl[MAX_URL_STRING];
+
+  //Let's crack the URL to determine various parts of it.
+  ZeroMemory(&uc, sizeof(uc));
+
+  //Initialize the fields with non-zero to indicate that we need the ptrs back.
+#ifdef DEBUG
+  uc.dwUserNameLength = uc.dwPasswordLength =
+  uc.dwUrlPathLength =
+#endif
+  uc.dwSchemeLength = uc.dwHostNameLength =
+  uc.dwExtraInfoLength = 1;
+  uc.dwStructSize = sizeof(uc);
+
+  // Make a copy of the string so that InternetCrackUrl doesn't overwrite
+  // the string in the pidl!
+  PidlToUrl(pidl, szUrl);
+
+  if (!InternetCrackUrl(szUrl, 0, 0, &uc))
+  {
+      DebugMsg(TF_SITEMAP, TEXT("InternetCrackUrl failed:Error=%d"), GetLastError());
+      return(E_FAIL);
+  }
+
+  DumpValue("lpszScheme", uc.lpszScheme, uc.dwSchemeLength);
+  DumpValue("lpszHostName", uc.lpszHostName, uc.dwHostNameLength);
+  DumpValue("lpszUserName", uc.lpszUserName, uc.dwUserNameLength);
+  DumpValue("lpszPassword", uc.lpszPassword, uc.dwPasswordLength);
+  DumpValue("lpszUrlPath", uc.lpszUrlPath, uc.dwUrlPathLength);
+  DumpValue("lpszExtraInfo", uc.lpszExtraInfo, uc.dwExtraInfoLength);
+  DumpValue("nScheme", NULL, uc.nScheme);
+  DumpValue("nPort", NULL, uc.nPort);
+
+  //Check if this is a form based request.
+  if (uc.lpszExtraInfo)
+      return(E_FAIL);  //If so, do not try to download sitemap for it.
+
+  //We need to copy the "://" too. So add 3 to the scheme length.
+  lstrcpyn(szHomeUrl, uc.lpszScheme, uc.dwSchemeLength+3+uc.dwHostNameLength+1);
+
+  return URLDataToFile(szHomeUrl, DEFAULT_SITEMAP_NAME, Sitemap_OnDataComplete);
+}
+
+#endif
+
+//
+// When we boot up, this function is called just once by explorer. Explorer
+// looks at the specific location in the registry to see
+// if there is an "Intranet Home" Page specified. If so, it calls this function.
+// This function tries to download the default sitemap from this location,
+// increment the sitemap's viewcount sothat it is kept around all the time.
+//
+//  Note: This is called from RunStartupApps() in explorer.exe.
+//
+HRESULT WINAPI LoadIntranetSitemap(LPSTR szIntranetHomePage)
+{
+  DWORD dwBuffLen = SIZEOF(szIntranetHomePage);
+  LPITEMIDLIST pidlFull, pidlIntranetHome;
+  Site *pSiteNew;
+  HRESULT hres = E_FAIL;
+
+  //Let's create a pidl for the URL for Intranet Home page.
+  if(pidlFull = ILCreateFromPath(szIntranetHomePage))
+  {
+      // Is there a way to create the pidl just for an URL instead of
+      // getting the full pidl and then to skip to the URL part of it?
+      if(pidlIntranetHome = ILFindChild(c_pidlURLRoot, pidlFull))  //Skip to the URL part of it!
+      {
+          // If this site is already there, bail out!
+          if((pSiteNew = PidlToSite(pidlIntranetHome, NULL)) != INVALID_SITE)
+          {
+              DebugMsg(TF_SITEMAP, TEXT("Site for %s already there!"), szIntranetHomePage);
+              pSiteNew->Release();
+          }
+          else
+          {
+
+              // Add an explicit location first. This is needed to increment the ViewCount
+              // immediately because the actual sitemap gets downloaded asynchronously
+              // later.
+              SL_AddExplicitLocation(pidlIntranetHome);
+
+              pSiteNew = PidlToSite(pidlIntranetHome, NULL);
+
+              ASSERT(pSiteNew != INVALID_SITE);  //This must be valid because we already added an
+                     // explicit location.
+              if(pSiteNew != INVALID_SITE)
+              {
+                  // This ensures that the sitemap will stick around for ever.
+                  pSiteNew->IncrementViewCount();
+                  pSiteNew->Release();
+
+                  //Load the default sitemap asynchronously.
+                  hres = LoadDefaultSiteMap(pidlIntranetHome);
+              }
+          }
+      }
+      ILFree(pidlFull);
+  }
+  return(hres);
+}
+
+#endif //FEATURE_SITEMAP
+//  this function requires MAX_URL_STRING
+HRESULT IEGetDisplayName(LPCITEMIDLIST pidl, LPTSTR pszName, UINT uFlags)
+{
+    HRESULT hres;
+    BOOL    fNeedRelease = FALSE;
+
+#ifdef NO_IE_NAMESPACE
+    if (IsURLChild(pidl, TRUE)) {
+        hres = InitPSFInternet();
+
+	if (SUCCEEDED(hres))
+        {
+            STRRET srName;
+            hres = g_psfInternet->GetDisplayNameOf(_ILNext(pidl), uFlags, &srName);
+            if (SUCCEEDED(hres))
+            {
+                StrRetToStrN(pszName, MAX_URL_STRING, &srName, _ILNext(pidl));
+                DebugMsg(0, TEXT("ief TR IEGDN psfI->GDNO returned %s"), pszName);
+            }
+            else
+            {
+                DebugMsg(0, TEXT("ief TR IEGDN psfI->GDNO failed %x"), hres);
+            }
+        }
+    } else {
+#endif
+        DWORD dwGDNFlags;
+        switch (uFlags) {
+        case SHGDN_NORMAL:
+        case SHGDN_FORADDRESSBAR:
+            dwGDNFlags = ILGDN_ITEMONLY;
+            break;
+
+        case SHGDN_INFOLDER:
+            dwGDNFlags = ILGDN_INFOLDER;
+            break;
+
+        case SHGDN_FORPARSING:
+        default:
+            dwGDNFlags = ILGDN_FULLNAME;
+            break;
+        }
+        
+        IShellFolder* psfDesktop = g_psfDesktop;
+        if (g_pidlRootClass && ILIsEmpty(pidl)) {
+            hres = SHGetDesktopFolder(&psfDesktop);
+            fNeedRelease = TRUE; // Remember that we will need to Release psfDesktop when we are don't because we didn't just make a copy.
+            if (FAILED(hres))
+                return hres;
+            pidl = g_pidlRootClass;
+        } else if (!psfDesktop) {
+            SHGetDesktopFolder(&psfDesktop);
+        }
+        
+        hres = ILGetDisplayNameEx(psfDesktop, pidl, pszName, dwGDNFlags) ? S_OK : E_FAIL;
+#if 0
+        if (FAILED(hres)) {
+            // this was a bug in win95 that ILGetDisplayName for \\server
+            // failed because it wasn't a filesys  \\server\share succeeds...
+
+            // instead we need to use SHGetDataFromIDList.
+            IShellFolder *psfDesktop;
+
+            SHGetDesktopFolder(&psfDesktop);
+
+            if (psfDesktop)  {
+                LPITEMIDLIST pidlParent = ILClone(pidl);
+
+                if (pidlParent) {
+                    IShellFolder *psf;
+
+                    ILRemoveLastID(pidlParent);
+                    if (!ILIsEmpty(pidlParent) && SUCCEEDED(psfDesktop->BindToObject(pidlParent, NULL, IID_IShellFolder, (void **)&psf))) {
+                        BYTE bBuffer[1024];
+
+                        hres = SHGetDataFromIDList(psf, ILFindLastID(pidl), SHGDFIL_NETRESOURCE,
+                                                   (LPNETRESOURCE)bBuffer, SIZEOF(bBuffer));
+                        if (SUCCEEDED(hres)) {
+                            LPNETRESOURCE pnr = (LPNETRESOURCE)bBuffer;
+                            lstrcpy(pszName, pnr->lpRemoteName);
+                        }
+
+                        psf->Release();
+                    }
+                    ILFree(pidlParent);
+                }
+                psfDesktop->Release();
+            }
+        }
+#endif
+        if (fNeedRelease)
+            psfDesktop->Release();
+
+        if (FAILED(hres))
+            pszName[0] = 0;
+#ifdef NO_IE_NAMESPACE
+    }
+#endif
+
+    DebugMsg(TF_URLNAMESPACE, TEXT("IEGDN(%s) returning %x"), pszName, hres);
+    return hres;
+}
+
+#ifndef UNICODE
+HRESULT IEGetDisplayNameW(LPCITEMIDLIST pidl, LPWSTR pwszName, UINT uFlags)
+{
+    TCHAR szName[MAX_URL_STRING];
+
+    HRESULT hres = IEGetDisplayName(pidl, szName, uFlags);
+        
+    if (SUCCEEDED(hres))
+        StrToOleStrN(pwszName, MAX_URL_STRING, szName, -1);
+    return hres;
+}
+#endif
+
+
+HRESULT IEGetAttributesOf(LPCITEMIDLIST pidl, DWORD* pdwAttribs)
+{
+    HRESULT hres = E_OUTOFMEMORY;
+
+    LPCITEMIDLIST pidlLast = ILFindLastID(pidl);
+
+    if (FAILED(InitPSFDesktop(NULL, NULL)))
+        return E_FAIL;
+
+    if (pidlLast == pidl) {
+        hres = g_psfDesktop->GetAttributesOf(1, &pidlLast, pdwAttribs);
+        if (FAILED(hres)) {
+            DebugMsg(DM_ERROR, TEXT("CSB::_GetAttributesOf g_psfDesktop->GetAttr failed %x"), hres);
+        }
+    } else {
+        IShellFolder* psfParent = NULL;
+        LPITEMIDLIST pidlCopy = ILClone(pidl);
+
+        if (pidlCopy) {
+
+            // remove the location info if any...
+            // we do this because we tacked it on ourselves, and the binding
+            // might not know about it.
+            ILRemoveLocation(pidlCopy, NULL);
+
+            // find last again because ILRemoveLocation may have whacked it off
+            LPITEMIDLIST pidlLast = ILFindLastID(pidlCopy);
+
+            WORD cbOld = pidlLast->mkid.cb;
+            pidlLast->mkid.cb = 0;
+            hres = g_psfDesktop->BindToObject(pidlCopy, NULL, IID_IShellFolder, (void **)&psfParent);
+            pidlLast->mkid.cb = cbOld;
+
+            if (SUCCEEDED(hres)) {
+                hres = psfParent->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlLast, pdwAttribs);
+                if (FAILED(hres)) {
+                    DebugMsg(DM_ERROR, TEXT("CSB::_GetAttributesOf psfParent->GetAttr failed %x"), hres);
+                }
+                psfParent->Release();
+            } else {
+                DebugMsg(DM_ERROR, TEXT("CSB::_GetAttributesOf g_psfDesktop->Bind failed %x"), hres);
+            }
+
+            ILFree(pidlCopy);
+        }
+    }
+
+    DebugMsg(TF_URLNAMESPACE, TEXT("IEGAO(%x) returning %x (hres=%x)"),
+             pidl, *pdwAttribs, hres);
+    return hres;
+}
+
+
+HRESULT IEBindToObject(LPCITEMIDLIST pidl, IShellFolder **ppsfOut)
+{
+    HRESULT hres = NOERROR;
+
+    *ppsfOut = NULL;
+
+    if (FAILED(InitPSFDesktop(NULL, NULL)))
+        return E_FAIL;
+
+    // Special case:  If we have the pidl for the "Desktop" then just use the Desktop folder itself
+    if(ILIsEmpty(pidl))
+    {
+        *ppsfOut = g_psfDesktop;
+        g_psfDesktop->AddRef();
+        hres = NOERROR;
+        
+#ifdef NO_IE_NAMESPACE
+        // we need this else clause if The Internet is NOT in the namespace (ie3)
+    } else if (IsURLChild(pidl, TRUE)) {
+        DebugMsg(DM_STARTUP, TEXT("_CreateNewShellViewPidl IsURLChild is true"));
+	hres = InitPSFInternet();
+        if (SUCCEEDED(hres))
+        {
+	    hres = g_psfInternet->BindToObject(_ILNext(pidl), NULL, IID_IShellFolder, (void **)ppsfOut);
+            AssertMsg(SUCCEEDED(hres), TEXT("_CreateNewShellViewPidl g_psfINet->Bind failed %x"), hres);
+        }
+#endif
+        
+    } else {
+	DWORD dwAttribs = SFGAO_FOLDER | SFGAO_BROWSABLE | SFGAO_FILESYSTEM;
+
+
+        if (SUCCEEDED(hres)) {
+            hres = IEGetAttributesOf(pidl, &dwAttribs);
+
+            if (SUCCEEDED(hres)) {
+                DebugMsg(DM_STARTUP, TEXT("CSB::_CreateNSVP GetAttributesOf returned %x (%x, %x)"),
+                         dwAttribs, dwAttribs & SFGAO_FOLDER, dwAttribs & SFGAO_BROWSABLE);
+                //
+                // Check if desktop can help us binding to it.
+                //  case 1: pidl is a folder
+                //  case 2: pidl is a doc-object and this is Win96
+                //
+                if (dwAttribs & (SFGAO_FOLDER | SFGAO_BROWSABLE)) {
+                    //
+                    // Yes, just call psfDesktop->BindToObjec
+                    //
+
+                    if (SUCCEEDED(hres)) {
+                        // Special case:  If we have the pidl for the "Desktop" then just use the Desktop folder itself
+                        if(ILIsEmpty(pidl)) {
+                            *ppsfOut = g_psfDesktop;
+                            g_psfDesktop->AddRef();
+                            hres = NOERROR;
+                        } else {
+                            DebugMsg(DM_STARTUP, TEXT("CSB::_CreateNSVP calling psdDesktop->BindToObject"));
+                            hres = g_psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (void **)ppsfOut);
+                            DebugMsg(DM_STARTUP, TEXT("CSB::_CreateNSVP called psdDesktop->BindToObject %x %x"), hres, *ppsfOut);
+                        }
+                    }
+                } else {
+                    DebugMsg(DM_WARNING, TEXT("IEBindToObject dwAttribs has no folder/browser bit"));
+
+                    //
+                    //  This code forces a fake binding to CDocObjectFolder for
+                    // files which are not DocObject. Without this code, file:
+                    // to non-Docobject files (such as multi-media files)
+                    // won't do anything.
+                    //
+                    //  We also have this code in case we change our mind to
+                    // release a stand-alone IE browser which does not require
+                    // new SHELL32.DLL. 
+                    //
+                    if (dwAttribs & SFGAO_FILESYSTEM) {
+                        //
+                        // No, we need to fake BindToObject.
+                        //
+                        DebugMsg(DM_STARTUP, TEXT("CSB::_CreateNSVP calling SHCoCreateInstance"));
+                        IPersistFolder *ppsf;
+                        hres = SHCoCreateInstance(NULL, &CLSID_CDocObjectFolder, NULL,
+                                                  IID_IPersistFolder, (void **)&ppsf);
+                        if (SUCCEEDED(hres)) {
+                            hres = ppsf->Initialize(pidl);
+                            if (SUCCEEDED(hres)) {
+                                hres = ppsf->QueryInterface(IID_IShellFolder, (void **)ppsfOut);
+                            }
+                            ppsf->Release();
+                        }
+                    } else {
+                        hres = E_FAIL;
+                    }
+                }
+            } else {
+                DebugMsg(DM_ERROR, TEXT("CBS::_CreateNSVP _GetAttributesOf failed %x"), hres);
+            }
+        }
+	DebugMsg(DM_STARTUP, TEXT("CSB::_CreateNSVP got %x %x"), hres, *ppsfOut);
+    }
+
+    DebugMsg(TF_URLNAMESPACE, TEXT("IEBTO(%x) returning %x"), pidl, hres);
+    return hres;
+}
+

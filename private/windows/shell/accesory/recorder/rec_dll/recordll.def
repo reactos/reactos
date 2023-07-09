@@ -1,0 +1,30 @@
+LIBRARY
+
+DESCRIPTION 'Recorder Library'
+
+STUB 'WINSTUB.EXE'
+EXETYPE WINDOWS
+CODE    FIXED
+DATA	SINGLE MOVEABLE PRELOAD
+SECTIONS
+.data READ WRITE SHARED
+.bss READ WRITE SHARED
+
+EXPORTS
+    JRHook		@1
+    StartRecord 	@2
+    StopRecord		@3
+    StartPlayback	@4
+    StopPlayback	@5
+    JPHook		@6
+    KHook		@7
+    AddHotKey		@8
+    DelHotKey		@9
+    EnaHotKeys		@10
+    InitRDLL		@11
+    SuspendRecord	@12
+    Wait		@13
+    SetPBWindow 	@14
+    EnableBreak 	@15
+    CloseRDLL		@16
+    REnumProc		@17

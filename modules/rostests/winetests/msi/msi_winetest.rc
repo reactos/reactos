@@ -1,5 +1,0 @@
-
-CUSTOM.DLL TESTDLL "custom.dll"
-SELFREG.DLL TESTDLL "selfreg.dll"
-
-1 TYPELIB "typelib.tlb"

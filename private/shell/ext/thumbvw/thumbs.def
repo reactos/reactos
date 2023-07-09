@@ -1,0 +1,11 @@
+EXPORTS
+	LibMain
+	DllRegisterServer    PRIVATE
+	DllUnregisterServer  PRIVATE
+	DllCanUnloadNow      PRIVATE
+	DllGetClassObject    PRIVATE
+
+
+; exported helper functions
+
+	ConvertDIBSECTIONToThumbnail

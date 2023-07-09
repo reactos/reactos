@@ -1,0 +1,89 @@
+!IF 0
+
+Copyright (c) 1997  Microsoft Corporation
+
+!ENDIF
+
+MAJORCOMP=windows
+MINORCOMP=oleacc
+
+TARGETNAME=oleacc
+TARGETPATH=obj
+TARGETPATHLIB=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+# This Macro:     Specifies This Runtime Library:
+# USE_CRTDLL      Multi-threaded runtime in a DLL
+# USE_MSVCRT      Multi-threaded runtime in a DLL
+# USE_LIBCMT      Multi-threaded static
+# USE_LIBCNTPR    Kernel
+# USE_NTDLL       The DLL for WindowsÿNT
+# USE_NOLIBS      None
+# The default is LIBC, statically linked in single-threaded runtime
+# libraries. If you do not define any of these macros, you get LIBC.
+
+USE_MSVCRT=1
+USE_MAPSYM=1
+
+DLLDEF=oleacc.def
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+C_DEFINES=$(C_DEFINES) -DUNICODE
+
+INCLUDES=$(BASEDIR)\private\windows\inc;$(BASEDIR)\private\lib\$(TARGET_DIRECTORY);$(BASEDIR)\private\types\oleacc\idl\
+
+DLLENTRY=_DllMainCRTStartup
+UMTYPE=windows
+
+USE_MIDL_FOR_MKTYPLIB=0
+MIDL_NO_ROBUST=1
+
+SOURCES= \
+    oleacc.rc \
+    alttab.cpp \
+    animated.cpp \
+    api.cpp \
+    button.cpp \
+    calendar.cpp \
+    caret.cpp \
+    client.cpp \
+    combo.cpp \
+    cursor.cpp \
+    default.cpp \
+    desktop.cpp \
+    dialog.cpp \
+    edit.cpp \
+    guids.c \
+    header.cpp \
+    hotkey.cpp \
+    html.cpp \
+    listbox.cpp \
+    listview.cpp \
+    mdicli.cpp \
+    menu.cpp \
+    oleacc.cpp \
+    outline.cpp \
+    progress.cpp \
+    scroll.cpp \
+    sdm.cpp \
+    slider.cpp \
+    statbar.cpp \
+    static.cpp \
+    tabctrl.cpp \
+    titlebar.cpp \
+    toolbar.cpp \
+    tooltips.cpp \
+    updown.cpp \
+    window.cpp \
+    w95trace.cpp \
+    memchk.cpp
+
+TARGETLIBS = \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\gdi32.lib \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\oleaut32.lib \
+    $(SDK_LIB_PATH)\uuid.lib

@@ -1,0 +1,25 @@
+;
+; vidcap.Def : Video Capture tool
+;
+
+NAME            vidcap
+EXETYPE         WINDOWS
+STUB            'WINSTUB.EXE'
+
+CODE            PRELOAD MOVEABLE
+DATA            PRELOAD MOVEABLE MULTIPLE
+
+HEAPSIZE        8192
+STACKSIZE       8192
+
+EXPORTS         MainWndProc       @1
+                AboutProc         @2
+                CapSetUpProc      @3
+                AudioFormatProc   @4
+                AllocCapFileProc  @5
+                MakePaletteProc   @6
+                ErrorCallbackProc @7
+                StatusCallbackProc @8
+                FrameCallbackProc @9
+                VideoCallbackProc @10
+

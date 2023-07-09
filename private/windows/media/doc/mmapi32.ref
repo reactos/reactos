@@ -1,0 +1,5324 @@
+.refpage auxGetDevCaps
+
+WORD %auxGetDevCaps%(<wDeviceID>, <lpCaps>, <wSize>)
+
+This function queries a specified auxiliary output device to determine its
+capabilities.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the auxiliary output device to be queried.
+
+LPAUXCAPS <lpCaps>
+
+    Specifies a far pointer to an AUXCAPS structure. This structure is
+    filled with information about the capabilities of the device.
+
+WORD <wSize>
+
+    Specifies the size of the AUXCAPS structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_NODRIVER
+
+    The driver failed to install.
+
+.endlist
+
+.comments
+
+Use %auxGetNumDevs% to determine the number of auxiliary output devices
+present in the system. The device ID specified by <wDeviceID> varies from
+zero to one less than the number of devices present.
+
+.seealso
+
+%auxGetNumDevs%
+
+.refpage auxGetNumDevs
+
+WORD %auxGetNumDevs%()
+
+This function retrieves the number of auxiliary output devices present in
+the system.
+
+.parameters
+
+None
+
+.returns
+
+Returns the number of auxiliary output devices present in the system.
+
+.seealso
+
+%auxGetDevCaps%
+
+.refpage auxGetVolume
+
+WORD %auxGetVolume%(<wDeviceID>, <lpdwVolume>)
+
+This function returns the current volume setting of an auxiliary output
+device.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the auxiliary output device to be queried.
+
+LPDWORD <lpdwVolume>
+
+    Specifies a far pointer to a location to be filled with the current
+    volume setting. The low-order word of this location contains the left
+    channel volume setting, and the high-order word contains the right
+    channel setting. A value of 0xFFFF represents full volume, and a value
+    of 0x0000 is silence.
+
+    If a device does not support both left and right volume control, the
+    low-order word of the specified location contains the volume level.
+
+    The full 16-bit setting(s) set with %auxSetVolume% are returned,
+    regardless of whether the device supports the full 16 bits of volume
+    level control.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_NODRIVER
+
+    The driver failed to install.
+
+.endlist
+
+.comments
+
+Not all devices support volume control. To determine whether the device
+supports volume control, use the AUXCAPS_VOLUME flag to test the %dwSupport%
+field of the %AUXCAPS% structure (filled by %auxGetDevCaps%).
+
+To determine whether the device supports volume control on both the left and
+right channels, use the AUXCAPS_LRVOLUME flag to test the %dwSupport% field
+of the %AUXCAPS% structure (filled by %auxGetDevCaps%).
+
+.seealso
+
+%auxSetVolume%
+
+.refpage auxSetVolume
+
+WORD %auxSetVolume%(<wDeviceID>, <dwVolume>)
+
+This function sets the volume in an auxiliary output device.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the auxiliary output device to be queried. Device IDs are
+    determined implicitly from the number of devices present in the system.
+    Device ID values range from zero to one less than the number of devices
+    present. Use %auxGetNumDevs% to determine the number of auxiliary
+    devices in the system.
+
+DWORD <dwVolume>
+
+    Specifies the new volume setting. The low-order word specifies the left
+    channel volume setting, and the high-order word specifies the right
+    channel setting. A value of 0xFFFF represents full volume, and a value
+    of 0x0000 is silence.
+
+    If a device does not support both left and right volume control, the
+    low-order word of <dwVolume> specifies the volume level, and the
+    high-order word is ignored.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_NODRIVER
+
+    The driver failed to install.
+
+.endlist
+
+.comments
+
+Not all devices support volume control. To determine whether the device
+supports volume control, use the AUXCAPS_VOLUME flag to test the %dwSupport%
+field of the %AUXCAPS% structure (filled by %auxGetDevCaps%).
+
+To determine whether the device supports volume control on both the left and
+right channels, use the AUXCAPS_LRVOLUME flag to test the %dwSupport% field
+of the %AUXCAPS% structure (filled by %auxGetDevCaps%).
+
+Most devices do not support the full 16 bits of volume level control and
+will use only the high-order bits of the requested volume setting. For
+example, for a device that supports 4 bits of volume control, requested
+volume level values of 0x4000, 0x4fff, and 0x43be will all produce the same
+physical volume setting, 0x4000. The %auxGetVolume% function will return the
+full 16-bit setting set with %auxSetVolume%.
+
+Volume settings are interpreted logarithmically. This means the perceived
+volume increase is the same when increasing the volume level from 0x5000 to
+0x6000 as it is from 0x4000 to 0x5000.
+
+.seealso
+
+%auxGetVolume%
+
+.refpage mciExecute
+
+BOOL %mciExecute%(<lpstrCommand>)
+
+This function is a simplified version of the %mciSendString% function. It
+does not take a buffer for return information, and it displays a message box
+when errors occur.
+
+.parameters
+
+LPSTR <lpstrCommand>
+
+    Specifies an MCI command string.
+
+.returns
+
+TRUE if successful, FALSE if unsuccessful.
+
+.comments
+
+This function provides a simple interface to MCI from scripting languages.
+
+.seealso
+
+%mciSendString%
+
+.refpage mciGetErrorString
+
+WORD %mciGetErrorString%(<dwError>, <lpstrBuffer>, <wLength>)
+
+This function returns a textual description of the specified MCI error.
+
+.parameters
+
+DWORD <dwError>
+
+    Specifies the error code returned by %mciSendCommand% or
+    %mciSendString%.
+
+LPSTR <lpstrBuffer>
+
+    Specifies a pointer to a buffer that is filled with a textual
+    description of the specified error.
+
+WORD <wLength>
+
+    Specifies the length of the buffer pointed to by <lpstrBuffer>.
+
+.returns
+
+Returns TRUE if successful. Otherwise, the given error code was not known.
+
+.refpage mciSendCommand
+
+DWORD %mciSendCommand%(<wDeviceID>, <wMessage>, <dwParam1>, <dwParam2>)
+
+This function sends a command message to the specified MCI device.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Specifies the device ID of the MCI device to receive the command. This
+    parameter is not used with the %MCI_OPEN% command.
+
+WORD <wMessage>
+
+    Specifies the command message.
+
+DWORD <dwParam1>
+
+    Specifies flags for the command.
+
+DWORD <dwParam2>
+
+    Specifies a pointer to a parameter block for the command.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns error
+information. The low-order word of the returned DWORD is the error return
+value. If the error is device-specific, the high-order word contains the
+driver ID; otherwise the high-order word is zero.
+
+To get a textual description of %mciSendCommand% return values, pass the
+return value to %mciGetErrorString%.
+
+Error values that are returned when a device is being opened are listed with
+the MCI_OPEN message. In addition to the MCI_OPEN error returns, this
+function can return the following values:
+
+MCIERR_BAD_TIME_FORMAT
+
+    Illegal value for time format.
+
+MCIERR_CANNOT_USE_ALL
+
+    The device name "all" is not allowed for this command.
+
+MCIERR_CREATEWINDOW
+
+    Could not create or use window.
+
+MCIERR_DEVICE_LOCKED
+
+    The device is locked until it is closed automatically.
+
+MCIERR_DEVICE_NOT_READY
+
+    Device not ready.
+
+MCIERR_DEVICE_TYPE_REQUIRED
+
+    The device name must be a valid device type.
+
+MCIERR_DRIVER
+
+    Unspecified device error.
+
+MCIERR_DRIVER_INTERNAL
+
+    Internal driver error.
+
+MCIERR_FILE_NOT_FOUND
+
+    Requested file not found.
+
+MCIERR_FILE_NOT_SAVED
+
+    The file was not saved.
+
+MCIERR_FILE_READ
+
+    A read from the file failed.
+
+MCIERR_FILE_WRITE
+
+    A write to the file failed.
+
+MCIERR_FLAGS_NOT_COMPATIBLE
+
+    Incompatible parameters were specified.
+
+MCIERR_HARDWARE
+
+    Hardware error on media device.
+
+MCIERR_INTERNAL
+
+    Internal error.
+
+MCIERR_INVALID_DEVICE_ID
+
+    Invalid device ID.
+
+MCIERR_INVALID_DEVICE_NAME
+
+    The device is not open or is not known.
+
+MCIERR_INVALID_FILE
+
+    Invalid file format.
+
+MCIERR_MULTIPLE
+
+    Errors occurred in more than one device.
+
+MCIERR_NO_WINDOW
+
+    There is no display window.
+
+MCIERR_NULL_PARAMETER_BLOCK
+
+    Parameter block pointer was NULL.
+
+MCIERR_OUT_OF_MEMORY
+
+    Not enough memory for requested operation.
+
+MCIERR_OUTOFRANGE
+
+    Parameter value out of range.
+
+MCIERR_UNNAMED_RESOURCE
+
+    Attempt to save unnamed file.
+
+MCIERR_UNRECOGNIZED_COMMAND
+
+    Unknown command.
+
+MCIERR_UNSUPPORTED_FUNCTION
+
+    Action not available for this device.
+
+    The following additional return values are defined for MCI sequencers:
+
+MCIERR_SEQ_DIV_INCOMPATIBLE
+
+    Set Song Pointer incompatible with SMPTE files.
+
+MCIERR_SEQ_PORT_INUSE
+
+    Specified port is in use.
+
+MCIERR_SEQ_PORT_MAPNODEVICE
+
+    Current map uses non-existent device.
+
+MCIERR_SEQ_PORT_MISCERROR
+
+    Miscellaneous error with specified port.
+
+MCIERR_SEQ_PORT_NONEXISTENT
+
+    Specified port does not exist.
+
+MCIERR_SEQ_PORTUNSPECIFIED
+
+    No current MIDI port.
+
+MCIERR_SEQ_TIMER
+
+    Timer error.
+
+    The following additional return values are defined for MCI waveform
+    audio devices:
+
+MCIERR_WAVE_INPUTSINUSE
+
+    No compatible waveform recording device is free.
+
+MCIERR_WAVE_INPUTSUNSUITABLE
+
+    No compatible waveform recording devices.
+
+MCIERR_WAVE_INPUTUNSPECIFIED
+
+    Any compatible waveform recording device may be used.
+
+MCIERR_WAVE_OUTPUTSINUSE
+
+    No compatible waveform playback device is free.
+
+MCIERR_WAVE_OUTPUTSUNSUITABLE
+
+    No compatible waveform playback devices.
+
+MCIERR_WAVE_OUTPUTUNSPECIFIED
+
+    Any compatible waveform playback device may be used.
+
+MCIERR_WAVE_SETINPUTINUSE
+
+    Set waveform recording device is in use.
+
+MCIERR_WAVE_SETINPUTUNSUITABLE
+
+    Set waveform recording device is incompatible with set format.
+
+MCIERR_WAVE_SETOUTPUTINUSE
+
+    Set waveform playback device is in use.
+
+MCIERR_WAVE_SETOUTPUTUNSUITABLE
+
+    Set waveform playback device is incompatible with set format.
+
+.comments
+
+Use the %MCI_OPEN% command to obtain the device ID specified by
+ <wDeviceID>.
+
+.seealso
+
+%mciGetErrorString%, %mciSendString%
+
+.refpage mciSendString
+
+DWORD %mciSendString%(<lpstrCommand>, <lpstrReturnString>, <wReturnLength>,
+ <hCallback>)
+
+This function sends a command string to an MCI device. The device that the
+command is sent to is specified in the command string.
+
+.parameters
+
+LPSTR <lpstrCommand>
+
+    Specifies an MCI command string.
+
+LPSTR <lpstrReturnString>
+
+    Specifies a buffer for return information. If no return information is
+    needed, you can specify NUL for this parameter.
+
+WORD <wReturnLength>
+
+    Specifies the size of the return buffer specified by
+    <lpstrReturnString>.
+
+HANDLE <hCallback>
+
+    Specifies a handle to a window to call back if "notify" was specified in
+    the command string.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns error
+information. The low-order word of the returned DWORD contains the error
+return value.
+
+To get a textual description of %mciSendString% return values, pass the
+return value to %mciGetErrorString%.
+
+The error returns listed for %mciSendCommand% also apply to %mciSendString%.
+The following error returns are unique to %mciSendString%:
+
+MCIERR_BAD_CONSTANT
+
+    Unknown value for parameter.
+
+MCIERR_BAD_INTEGER
+
+    Invalid or missing integer in command.
+
+MCIERR_DUPLICATE_FLAGS
+
+    A flag or value was specified twice.
+
+MCIERR_MISSING_COMMAND_STRING
+
+    No command was specified.
+
+MCIERR_MISSING_DEVICE_NAME
+
+    No device name was specified.
+
+MCIERR_MISSING_STRING_ARGUMENT
+
+    A string value was missing from the command.
+
+MCIERR_NEW_REQUIRES_ALIAS
+
+    An alias must be used with the "new" device name.
+
+MCIERR_NO_CLOSING_QUOTE
+
+    A closing quotation mark is missing.
+
+MCIERR_NOTIFY_ON_AUTO_OPEN
+
+    The "notify" flag is illegal with auto-open.
+
+MCIERR_PARAM_OVERFLOW
+
+    The output string was not long enough.
+
+MCIERR_PARSER_INTERNAL
+
+    Internal parser error.
+
+MCIERR_UNRECOGNIZED_KEYWORD
+
+    Unknown command parameter.
+
+.seealso
+
+%mciExecute%, %mciGetErrorString%, %mciSendCommand%
+
+.refpage mciSetYieldProc
+
+WORD FAR %mciSetYieldProc%(<wDeviceID>, <fpYieldProc>, <dwYieldData>)
+
+This function sets the address of a callback procedure to be called
+periodically when an MCI device is completing a command specified with the
+WAIT flag.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Specifies the device ID of the MCI device to which the yield procedure
+    is to be assigned.
+
+YIELDPROC <fpYieldProc>
+
+    Specifies the callback procedure to be called when the given device is
+    yielding. Specify a NULL value to disable any existing yield procedure.
+
+DWORD <dwYieldData>
+
+    Specifies the data sent to the yield procedure when it is called for the
+    given device.
+
+.returns
+
+Returns TRUE if successful. Returns FALSE for an invalid device ID.
+
+.head "Callback"
+
+int FAR PASCAL %YieldProc%(<wDeviceID>, <dwData>)
+
+%YieldProc% is a placeholder for the application-supplied function name.
+Export the actual name by including it in the EXPORTS statement in your
+module-definition file.
+
+%Parameters%
+
+WORD <wDeviceID>
+
+    Specifies the device ID of the MCI device.
+
+DWORD <dwData>
+
+    Specifies the application-supplied yield data originally supplied in the
+    <dwYieldData> parameter.
+
+%Return Value%
+
+Return zero to continue the operation. To cancel the operation, return a
+nonzero value.
+
+%Comments%
+
+This call overides any previous yield procedure for this device.
+
+.refpage MessageBeep
+
+void %MessageBeep%(<wAlert>)
+
+This function plays a waveform sound corresponding to a given system alert
+level. The sound for each alert level is identified by an entry in the
+[sounds] section of WIN.INI.
+
+.parameters
+
+WORD <wAlert>
+
+    Specifies the alert level. Use one of the following values:
+
+MB_OK
+
+    Plays the sound identified by the "SystemDefault" entry in the [sounds]
+    section of WIN.INI.
+
+MB_ICONASTERISK
+
+    Plays the sound identified by the "SystemAsterisk" entry in the [sounds]
+    section of WIN.INI.
+
+MB_ICONEXCLAMATION
+
+    Plays the sound identified by the "SystemExclamation" entry in the
+    [sounds] section of WIN.INI.
+
+MB_ICONHAND
+
+    Plays the sound identified by the "SystemHand" entry in the [sounds]
+    section of WIN.INI.
+
+MB_ICONQUESTION
+
+    Plays the sound identified by the "SystemQuestion" entry in the [sounds]
+    section of WIN.INI.
+
+0
+
+    Plays the sound identified by the "SystemDefault" entry in the [sounds]
+    section of WIN.INI.
+
+-1
+
+    Produces a standard beep sound using the computer speaker.
+
+.returns
+
+None
+
+.comments
+
+%MessageBeep% returns control to the caller after queuing the sound and
+plays the sound asynchronously.
+
+If the specified alert sound can't be played, %MessageBeep% tries to play
+the system default sound. If the system default sound can't be played, it
+produces a standard beep sound using the computer speaker.
+
+The user can disable the warning beep using the Sounds control-panel
+applet.
+
+.seealso
+
+%sndPlaySound%
+
+.refpage midiInAddBuffer
+
+WORD %midiInAddBuffer%(<hMidiIn>, <lpMidiInHdr>, <wSize>)
+
+This function sends an input buffer to a specified opened MIDI input device.
+When the buffer is filled, it is sent back to the application. Input buffers
+are used only for system exclusive messages.
+
+.parameters
+
+HMIDIIN <hMidiIn>
+
+    Specifies a handle to the MIDI input device.
+
+LPMIDIHDR <lpMidiInHdr>
+
+    Specifies a far pointer to a %MIDIHDR% structure that identifies the
+    buffer.
+
+WORD <wSize>
+
+    Specifies the size of the %MIDIHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MIDIERR_UNPREPARED
+
+    <lpMidiInHdr> hasn't been prepared.
+
+.endlist
+
+.comments
+
+The data buffer must be prepared with %midiInPrepareHeader% before it is
+passed to %midiInAddBuffer%. The %MIDIHDR% data structure and the data
+buffer pointed to by its %lpData% field must be allocated with %GlobalAlloc%
+using the GMEM_MOVEABLE and GMEM_SHARE flags, and locked with %GlobalLock%.
+
+.seealso
+
+%midiInPrepareHeader%
+
+.refpage midiInClose
+
+WORD %midiInClose%(<hMidiIn>)
+
+This function closes the specified MIDI input device.
+
+.parameters
+
+HMIDIIN <hMidiIn>
+
+    Specifies a handle to the MIDI input device. If the function is
+    successful, the handle is no longer valid after this call.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MIDIERR_STILLPLAYING
+
+    There are still buffers in the queue.
+
+.endlist
+
+.comments
+
+If there are input buffers that have been sent with %midiInAddBuffer% and
+haven't been returned to the application, the close operation will fail.
+Call %midiInReset% to mark all pending buffers as being done.
+
+.seealso
+
+%midiInOpen%, %midiInReset%
+
+.refpage midiInGetDevCaps
+
+WORD %midiInGetDevCaps%(<wDeviceID>, <lpCaps>, <wSize>)
+
+This function queries a specified MIDI input device to determine its
+capabilities.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the MIDI input device.
+
+LPMIDIINCAPS <lpCaps>
+
+    Specifies a far pointer to a %MIDIINCAPS% data structure. This structure
+    is filled with information about the capabilities of the device.
+
+WORD <wSize>
+
+    Specifies the size of the %MIDIINCAPS% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_NODRIVER
+
+    The driver was not installed.
+
+.endlist
+
+.comments
+
+Use %midiInGetNumDevs% to determine the number of MIDI input devices present
+in the system. The device ID specified by <wDeviceID> varies from zero to
+one less than the number of devices present. Only <wSize> bytes (or less) of
+information is copied to the location pointed to by <lpCaps>. If <wSize> is
+zero, nothing is copied, and the function returns zero.
+
+.seealso
+
+%midiInGetNumDevs%
+
+.refpage midiInGetErrorText
+
+WORD %midiInGetErrorText%(<wError>, <lpText>, <wSize>)
+
+This function retrieves a textual description of the error identified by the
+specified error number.
+
+.parameters
+
+WORD <wError>
+
+    Specifies the error number.
+
+LPSTR <lpText>
+
+    Specifies a far pointer to the buffer to be filled with the textual
+    error description.
+
+WORD <wSize>
+
+    Specifies the length of buffer pointed to by <lpText>.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADERRNUM
+
+    Specified error number is out of range.
+
+.endlist
+
+.comments
+
+If the textual error description is longer than the specified buffer, the
+description is truncated. The returned error string is always
+null-terminated. If <wSize> is zero, nothing is copied, and the function
+returns zero. All error descriptions are less than MAXERRORLENGTH characters
+long.
+
+.refpage midiInGetID
+
+WORD %midiInGetID%(<hMidiIn>, <lpwDeviceID>)
+
+This function gets the device ID for a MIDI input device.
+
+.parameters
+
+HMIDIIN <hMidiIn>
+
+    Specifies the handle to the MIDI input device.
+
+LPWORD <lpwDeviceID>
+
+    Specifies a pointer to the WORD-sized memory location to be filled with
+    the device ID.
+
+.returns
+
+Returns zero if successful. Otherwise, returns an error number. Possible
+error returns are:
+
+MMSYSERR_INVALHANDLE
+
+    The <hMidiIn> parameter specifies an invalid handle.
+
+.refpage midiInGetNumDevs
+
+WORD %midiInGetNumDevs%()
+
+This function retrieves the number of MIDI input devices in the system.
+
+.parameters
+
+None
+
+.returns
+
+Returns the number of MIDI input devices present in the system.
+
+.seealso
+
+%midiInGetDevCaps%
+
+.refpage midiInOpen
+
+WORD %midiInOpen%(<lphMidiIn>, <wDeviceID>, <dwCallback>,
+ <dwCallbackInstance>, <dwFlags>)
+
+This function opens a specified MIDI input device.
+
+.parameters
+
+LPHMIDIIN <lphMidiIn>
+
+    Specifies a far pointer to an HMIDIIN handle. This location is filled
+    with a handle identifying the opened MIDI input device. Use the handle
+    to identify the device when calling other MIDI input functions.
+
+WORD <wDeviceID>
+
+    Identifies the MIDI input device to be opened.
+
+DWORD <dwCallback>
+
+    Specifies the address of a fixed callback function or a handle to a
+    window called with information about incoming MIDI messages.
+
+DWORD <dwCallbackInstance>
+
+    Specifies user instance data passed to the callback function. This
+    parameter is not used with window callbacks.
+
+DWORD <dwFlags>
+
+    Specifies a callback flag for opening the device.
+
+CALLBACK_WINDOW
+
+    If this flag is specified, <dwCallback> is assumed to be a window
+    handle.
+
+CALLBACK_FUNCTION
+
+    If this flag is specified, <dwCallback> is assumed to be a callback
+    procedure address.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_ALLOCATED
+
+    Specified resource is already allocated.
+
+MMSYSERR_NOMEM
+
+    Unable to allocate or lock memory.
+
+.endlist
+
+.comments
+
+Use %midiInGetNumDevs% to determine the number of MIDI input devices present
+in the system. The device ID specified by <wDeviceID> varies from zero to
+one less than the number of devices present.
+
+If a window is chosen to receive callback information, the following
+messages are sent to the window procedure function to indicate the progress
+of MIDI input:
+
+.blist
+o   %MM_MIM_OPEN%
+
+o   %MM_MIM_CLOSE%
+
+o   %MM_MIM_DATA%
+
+o   %MM_MIM_LONGDATA%
+
+o   %MM_MIM_ERROR%
+
+o   %MM_MIM_LONGERROR%
+.endblist
+
+If a function is chosen to receive callback information, the following
+messages are sent to the function to indicate the progress of MIDI input:
+
+.blist
+o   %MIM_OPEN%, %MIM_CLOSE%
+
+o   %MIM_DATA%
+
+o   %MIM_LONGDATA%
+
+o   %MIM_ERROR%
+
+o   %MIM_LONGERROR%
+.endblist
+
+The callback function must reside in a DLL. You do not have to use
+%MakeProcInstance% to get a procedure-instance address for the callback
+function.
+
+.head "Callback"
+
+void FAR PASCAL %MidiInFunc%(<hMidiIn>, <wMsg>, <dwInstance>, <dwParam1>,
+ <dwParam2>)
+
+%MidiInFunc% is a placeholder for the application-supplied function name.
+The actual name must be exported by including it in an EXPORTS statement in
+the DLL's module definition file.
+
+%Parameters%
+
+HMIDIIN <hMidiIn>
+
+    Specifies a handle to the MIDI input device.
+
+WORD <wMsg>
+
+    Specifies a MIDI input message.
+
+DWORD <dwInstance>
+
+    Specifies the instance data supplied with %midiInOpen%.
+
+DWORD <dwParam1>
+
+    Specifies a parameter for the message.
+
+DWORD <dwParam2>
+
+    Specifies a parameter for the message.
+
+%Comments%
+
+Because the callback is accessed at interrupt time, it must reside in a DLL,
+and its code segment must be specified as FIXED in the module-definition
+file for the DLL. Any data that the callback accesses must be in a FIXED
+data segment as well. The callback may not make any system calls except for
+%PostMessage%, %timeGetSystemTime%, %timeGetTime%, %timeSetEvent%,
+%timeKillEvent%, %midiOutShortMsg%, %midiOutLongMsg%, and %OutputDebugStr%.
+
+.seealso
+
+%midiInClose%
+
+.refpage midiInPrepareHeader
+
+WORD %midiInPrepareHeader%(<hMidiIn>, <lpMidiInHdr>, <wSize>)
+
+This function prepares a buffer for MIDI input.
+
+.parameters
+
+HMIDIIN <hMidiIn>
+
+    Specifies a handle to the MIDI input device.
+
+LPMIDIHDR <lpMidiInHdr>
+
+    Specifies a pointer to a %MIDIHDR% structure that identifies the buffer
+    to be prepared.
+
+WORD <wSize>
+
+    Specifies the size of the %MIDIHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOMEM
+
+    Unable to allocate or lock memory.
+
+.endlist
+
+.comments
+
+The %MIDIHDR% data structure and the data block pointed to by its %lpData%
+field must be allocated with %GlobalAlloc% using the GMEM_MOVEABLE and
+GMEM_SHARE flags, and locked with %GlobalLock%. Preparing a header that has
+already been prepared has no effect, and the function returns zero.
+
+.seealso
+
+%midiInUnprepareHeader%
+
+.refpage midiInReset
+
+WORD %midiInReset%(<hMidiIn>)
+
+This function stops input on a given MIDI input device and marks all pending
+input buffers as done.
+
+.parameters
+
+HMIDIIN <hMidiIn>
+
+    Specifies a handle to the MIDI input device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.seealso
+
+%midiInStart%, %midiInStop%, %midiInAddBuffer%, %midiInClose%
+
+.refpage midiInStart
+
+WORD %midiInStart%(<hMidiIn>)
+
+This function starts MIDI input on the specified MIDI input device.
+
+.parameters
+
+HMIDIIN <hMidiIn>
+
+    Specifies a handle to the MIDI input device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.comments
+
+This function resets the timestamps to zero; timestamp values for
+subsequently received messages are relative to the time this function was
+called.
+
+All messages other than system exclusive messages are sent directly to the
+client when received. System exclusive messages are placed in the buffers
+supplied by %midiInAddBuffer%; if there are no buffers in the queue, the
+data is thrown away without notification to the client, and input
+continues.
+
+Buffers are returned to the client when full, when a complete system
+exclusive message has been received, or when %midiInReset% is called. The
+%dwBytesRecorded% field in the header will contain the actual length of data
+received.
+
+Calling this function when input is already started has no effect, and the
+function returns zero.
+
+.seealso
+
+%midiInStop%, %midiInReset%
+
+.refpage midiInStop
+
+WORD %midiInStop%(<hMidiIn>)
+
+This function terminates MIDI input on the specified MIDI input device.
+
+.parameters
+
+HMIDIIN <hMidiIn>
+
+    Specifies a handle to the MIDI input device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.comments
+
+Current status (running status, parsing state, etc.) is maintained across
+calls to %midiInStop% and %midiInStart%. If there are any system exclusive
+message buffers in the queue, the current buffer is marked as done (the
+%dwBytesRecorded% field in the header will contain the actual length of
+data), but any empty buffers in the queue remain there. Calling this
+function when input is not started has no no effect, and the function
+returns zero.
+
+.seealso
+
+%midiInStart%, %midiInReset%
+
+.refpage midiInUnprepareHeader
+
+WORD %midiInUnprepareHeader%(<hMidiIn>, <lpMidiInHdr>, <wSize>)
+
+This function cleans up the preparation performed by %midiInPrepareHeader%.
+The %midiInUnprepareHeader% function must be called after the device driver
+fills a data buffer and returns it to the application. You must call this
+function before freeing the data buffer.
+
+.parameters
+
+HMIDIIN <hMidiIn>
+
+    Specifies a handle to the MIDI input device.
+
+LPMIDIHDR <lpMidiInHdr>
+
+    Specifies a pointer to a %MIDIHDR% structure identifying the data buffer
+    to be cleaned up.
+
+WORD <wSize>
+
+    Specifies the size of the %MIDIHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MIDIERR_STILLPLAYING
+
+    <lpMidiInHdr> is still in the queue.
+
+.endlist
+
+.comments
+
+This function is the complementary function to %midiInPrepareHeader%. You
+must call this function before freeing the data buffer with %GlobalFree%.
+After passing a buffer to the device driver with %midiInAddBuffer%, you must
+wait until the driver is finished with the buffer before calling
+%midiInUnprepareHeader%. Unpreparing a buffer that has not been prepared has
+no effect, and the function returns zero.
+
+.seealso
+
+%midiInPrepareHeader%
+
+.refpage midiOutCacheDrumPatches
+
+WORD %midiOutCacheDrumPatches%(<hMidiOut>, <wPatch>, <lpKeyArray>, <wFlags>)
+
+This function requests that an internal MIDI synthesizer device preload a
+specified set of key-based percussion patches. Some synthesizers are not
+capable of keeping all percussion patches loaded simultaneously. Caching
+patches ensures specified patches are available.
+
+.parameters
+
+HMIDIOUT <hMidiOut>
+
+    Specifies a handle to the opened MIDI output device. This device should
+    be an internal MIDI synthesizer.
+
+WORD <wPatch>
+
+    Specifies which drum patch number should be used. Currently, this
+    parameter must be set to zero.
+
+LPKEYARRAY <lpKeyArray>
+
+    Specifies a pointer to a %KEYARRAY% array indicating the key numbers of
+    the specified percussion patches to be cached or uncached.
+
+WORD <wFlags>
+
+    Specifies options for the cache operation. Only one of the following
+    flags can be specified:
+
+MIDI_CACHE_ALL
+
+    Cache all of the specified patches. If they can't all be cached, cache
+    none, clear the %KEYARRAY% array, and return MMSYSERR_NOMEM.
+
+MIDI_CACHE_BESTFIT
+
+    Cache all of the specified patches. If all patches can't be cached,
+    cache as many patches as possible, change the %KEYARRAY% array to
+    reflect which patches were cached, and return MMSYSERR_NOMEM.
+
+MIDI_CACHE_QUERY
+
+    Change the %KEYARRAY% array to indicate which patches are currently
+    cached.
+
+MIDI_UNCACHE
+
+    Uncache the specified patches and clear the %KEYARRAY% array.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns one of
+the following error codes:
+
+MMSYSERR_INVALHANDLE
+
+    The specified device handle is invalid.
+
+MMSYSERR_NOTSUPPORTED
+
+    The specified device does not support patch caching.
+
+MMSYSERR_NOMEM
+
+    The device does not have enough memory to cache all of the requested
+    patches.
+
+.comments
+
+The %KEYARRAY% data type is defined as:
+
+typedef WORD KEYARRAY[128];
+
+Each element of the array represents one of the 128 key-based percussion
+patches and has bits set for each of the 16 MIDI channels that use that
+particular patch. The least-significant bit represents physical channel 0;
+the most-significant bit represents physical channel 15. For example, if the
+patch on key number 60 is used by physical channels 9 and 15, element 60
+would be set to 0x8200.
+
+This function applies only to internal MIDI synthesizer devices. Not all
+internal synthesizers support patch caching. Use the MIDICAPS_CACHE flag to
+test the %dwSupport% field of the %MIDIOUTCAPS% structure filled by
+%midiOutGetDevCaps% to see if the device supports patch caching.
+
+.seealso
+
+%midiOutCachePatches%
+
+.refpage midiOutCachePatches
+
+WORD %midiOutCachePatches%(<hMidiOut>, <wBank>, <lpPatchArray>, <wFlags>)
+
+This function requests that an internal MIDI synthesizer device preload a
+specified set of patches. Some synthesizers are not capable of keeping all
+patches loaded simultaneously and must load data from disk when they receive
+MIDI program change messages. Caching patches ensures specified patches are
+immediately available.
+
+.parameters
+
+HMIDIOUT <hMidiOut>
+
+    Specifies a handle to the opened MIDI output device. This device must be
+    an internal MIDI synthesizer.
+
+WORD <wBank>
+
+    Specifies which bank of patches should be used. Currently, this
+    parameter must be set to zero.
+
+LPPATCHARRAY <lpPatchArray>
+
+    Specifies a pointer to a %PATCHARRAY% array indicating the patches to be
+    cached or uncached.
+
+WORD <wFlags>
+
+    Specifies options for the cache operation. Only one of the following
+    flags can be specified:
+
+MIDI_CACHE_ALL
+
+    Cache all of the specified patches. If they can't all be cached, cache
+    none, clear the %PATCHARRAY% array, and return MMSYSERR_NOMEM.
+
+MIDI_CACHE_BESTFIT
+
+    Cache all of the specified patches. If all patches can't be cached,
+    cache as many patches as possible, change the %PATCHARRAY% array to
+    reflect which patches were cached, and return MMSYSERR_NOMEM.
+
+MIDI_CACHE_QUERY
+
+    Change the %PATCHARRAY% array to indicate which patches are currently
+    cached.
+
+MIDI_UNCACHE
+
+    Uncache the specified patches and clear the %PATCHARRAY% array.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns one of
+the following error codes:
+
+MMSYSERR_INVALHANDLE
+
+    The specified device handle is invalid.
+
+MMSYSERR_NOTSUPPORTED
+
+    The specified device does not support patch caching.
+
+MMSYSERR_NOMEM
+
+    The device does not have enough memory to cache all of the requested
+    patches.
+
+.comments
+
+The %PATCHARRAY% data type is defined as:
+
+typedef WORD PATCHARRAY[128];
+
+Each element of the array represents one of the 128 patches and has bits set
+for each of the 16 MIDI channels that use that particular patch. The
+least-significant bit represents physical channel 0; the most-significant
+bit represents physical channel 15 (0x0F). For example, if patch 0 is used
+by physical channels 0 and 8, element 0 would be set to 0x0101.
+
+This function only applies to internal MIDI synthesizer devices. Not all
+internal synthesizers support patch caching. Use the MIDICAPS_CACHE flag to
+test the %dwSupport% field of the %MIDIOUTCAPS% structure filled by
+%midiOutGetDevCaps% to see if the device supports patch caching.
+
+.seealso
+
+%midiOutCacheDrumPatches%
+
+.refpage midiOutClose
+
+WORD %midiOutClose%(<hMidiOut>)
+
+This function closes the specified MIDI output device.
+
+.parameters
+
+HMIDIOUT <hMidiOut>
+
+    Specifies a handle to the MIDI output device. If the function is
+    successful, the handle is no longer valid after this call.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MIDIERR_STILLPLAYING
+
+    There are still buffers in the queue.
+
+.endlist
+
+.comments
+
+If there are output buffers that have been sent with %midiOutLongMsg% and
+haven't been returned to the application, the close operation will fail.
+Call %midiOutReset% to mark all pending buffers as being done.
+
+.seealso
+
+%midiOutOpen%, %midiOutReset%
+
+.refpage midiOutGetDevCaps
+
+WORD %midiOutGetDevCaps%(<wDeviceID>, <lpCaps>, <wSize>)
+
+This function queries a specified MIDI output device to determine its
+capabilities.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the MIDI output device.
+
+LPMIDIOUTCAPS <lpCaps>
+
+    Specifies a far pointer to a %MIDIOUTCAPS% structure. This structure is
+    filled with information about the capabilities of the device.
+
+WORD <wSize>
+
+    Specifies the size of the %MIDIOUTCAPS% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_NODRIVER
+
+    The driver was not installed.
+
+.endlist
+
+.comments
+
+Use %midiOutGetNumDevs% to determine the number of MIDI output devices
+present in the system. The device ID specified by <wDeviceID> varies from
+zero to one less than the number of devices present. Only <wSize> bytes (or
+less) of information is copied to the location pointed to by <lpCaps>. If
+ <wSize> is zero, nothing is copied, and the function returns zero.
+
+.seealso
+
+%midiOutGetNumDevs%
+
+.refpage midiOutGetErrorText
+
+WORD %midiOutGetErrorText%(<wError>, <lpText>, <wSize>)
+
+This function retrieves a textual description of the error identified by the
+specified error number.
+
+.parameters
+
+WORD <wError>
+
+    Specifies the error number.
+
+LPSTR <lpText>
+
+    Specifies a far pointer to a buffer to be filled with the textual error
+    description.
+
+WORD <wSize>
+
+    Specifies the length of the buffer pointed to by <lpText>.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADERRNUM
+
+    Specified error number is out of range.
+
+.endlist
+
+.comments
+
+If the textual error description is longer than the specified buffer, the
+description is truncated. The returned error string is always
+null-terminated. If <wSize> is zero, nothing is copied, and the function
+returns MMSYSERR_NOERROR. All error descriptions are less than
+MAXERRORLENGTH characters long.
+
+.refpage midiOutGetID
+
+WORD %midiOutGetID%(<hMidiOut>, <lpwDeviceID>)
+
+This function gets the device ID for a MIDI output device.
+
+.parameters
+
+HMIDIOUT <hMidiOut>
+
+    Specifies the handle to the MIDI output device.
+
+LPWORD <lpwDeviceID>
+
+    Specifies a pointer to the WORD-sized memory location to be filled with
+    the device ID.
+
+.returns
+
+Returns MMSYSERR_NOERROR if successful. Otherwise, returns an error number.
+Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    The <hMidiOut> parameter specifies an invalid handle.
+
+.endlist
+
+.refpage midiOutGetNumDevs
+
+WORD %midiOutGetNumDevs%()
+
+This function retrieves the number of MIDI output devices present in the
+system.
+
+.parameters
+
+None
+
+.returns
+
+Returns the number of MIDI output devices present in the system.
+
+.seealso
+
+%midiOutGetDevCaps%
+
+.refpage midiOutGetVolume
+
+WORD %midiOutGetVolume%(<wDeviceID>, <lpdwVolume>)
+
+This function returns the current volume setting of a MIDI output device.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the MIDI output device.
+
+LPDWORD <lpdwVolume>
+
+    Specifies a far pointer to a location to be filled with the current
+    volume setting. The low-order word of this location contains the left
+    channel volume setting, and the high-order word contains the right
+    channel setting. A value of 0xFFFF represents full volume, and a value
+    of 0x0000 is silence.
+
+    If a device does not support both left and right volume control, the
+    low-order word of the specified location contains the mono volume
+    level.
+
+    The full 16-bit setting(s) set with %midiOutSetVolume% is returned,
+    regardless of whether the device supports the full 16 bits of volume
+    level control.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOTSUPPORTED
+
+    Function isn't supported.
+
+MMSYSERR_NODRIVER
+
+    The driver was not installed.
+
+.endlist
+
+.comments
+
+Not all devices support volume control. To determine whether the device
+supports volume control, use the MIDICAPS_VOLUME flag to test the
+%dwSupport% field of the %MIDIOUTCAPS% structure (filled by
+%midiOutGetDevCaps%).
+
+To determine whether the device supports volume control on both the left and
+right channels, use the MIDICAPS_LRVOLUME flag to test the %dwSupport% field
+of the %MIDIOUTCAPS% structure (filled by %midiOutGetDevCaps%).
+
+.seealso
+
+%midiOutSetVolume%
+
+.refpage midiOutLongMsg
+
+WORD %midiOutLongMsg%(<hMidiOut>, <lpMidiOutHdr>, <wSize>)
+
+This function sends a long MIDI message to the specified MIDI output device.
+Use this function to send system exclusive messages or to send a buffer
+filled with short messages.
+
+.parameters
+
+HMIDIOUT <hMidiOut>
+
+    Specifies a handle to the MIDI output device.
+
+LPMIDIHDR <lpMidiOutHdr>
+
+    Specifies a far pointer to a %MIDIHDR% structure that identifies the
+    MIDI data buffer.
+
+WORD <wSize>
+
+    Specifies the size of the %MIDIHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MIDIERR_UNPREPARED
+
+    <lpMidiOutHdr> hasn't been prepared.
+
+MIDIERR_NOTREADY
+
+    The hardware is busy with other data.
+
+.endlist
+
+.comments
+
+The data buffer must be prepared with %midiOutPrepareHeader% before it is
+passed to %midiOutLongMsg%. The %MIDIHDR% data structure and the data buffer
+pointed to by its %lpData% field must be allocated with %GlobalAlloc% using
+the GMEM_MOVEABLE and GMEM_SHARE flags, and locked with %GlobalLock%. This
+function may or may not return until the data block has been sent to the
+output device.
+
+.seealso
+
+%midiOutShortMsg%, %midiOutPrepareHeader%
+
+.refpage midiOutOpen
+
+WORD %midiOutOpen%(<lphMidiOut>, <wDeviceID>, <dwCallback>,
+ <dwCallbackInstance>, <dwFlags>)
+
+This function opens a specified MIDI output device for playback.
+
+.parameters
+
+LPHMIDIOUT <lphMidiOut>
+
+    Specifies a far pointer to an HMIDIOUT handle. This location is filled
+    with a handle identifying the opened MIDI output device. Use the handle
+    to identify the device when calling other MIDI output functions.
+
+WORD <wDeviceID>
+
+    Identifies the MIDI output device that is to be opened.
+
+DWORD <dwCallback>
+
+    Specifies the address of a fixed callback function or a handle to a
+    window called during MIDI playback to process messages related to the
+    progress of the playback. Specify NULL for this parameter if no callback
+    is desired.
+
+DWORD <dwCallbackInstance>
+
+    Specifies user instance data passed to the callback. This parameter is
+    not used with window callbacks.
+
+DWORD <dwFlags>
+
+    Specifies a callback flag for opening the device.
+
+CALLBACK_WINDOW
+
+    If this flag is specified, <dwCallback> is assumed to be a window
+    handle.
+
+CALLBACK_FUNCTION
+
+    If this flag is specified, <dwCallback> is assumed to be a callback
+    procedure address.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are as follows:
+
+.list Value Meaning
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_ALLOCATED
+
+    Specified resource is already allocated.
+
+MMSYSERR_NOMEM
+
+    Unable to allocate or lock memory.
+
+MIDIERR_NOMAP
+
+    There is no current MIDI map. This occurs only when opening the mapper.
+
+MIDIERR_NODEVICE
+
+    A port in the current MIDI map doesn't exist. This occurs only when
+    opening the mapper.
+
+.endlist
+
+.comments
+
+Use %midiOutGetNumDevs% to determine the number of MIDI output devices
+present in the system. The device ID specified by <wDeviceID> varies from
+zero to one less than the number of devices present. You may also specify
+MIDIMAPPER as the device ID to open the MIDI mapper.
+
+If a window is chosen to receive callback information, the following
+messages are sent to the window procedure function to indicate the progress
+of MIDI output: %MM_MOM_OPEN%, %MM_MOM_CLOSE%, %MM_MOM_DONE%.
+
+If a function is chosen to receive callback information, the following
+messages are sent to the function to indicate the progress of MIDI output:
+%MOM_OPEN%, %MOM_CLOSE%, %MOM_DONE%. The callback function must reside in a
+DLL. You do not have to use %MakeProcInstance% to get a procedure-instance
+address for the callback function.
+
+.head "Callback"
+
+void FAR PASCAL %MidiOutFunc%(<hMidiOut>, <wMsg>, <dwInstance>, <dwParam1>,
+ <dwParam2>)
+
+%MidiOutFunc% is a placeholder for the application-supplied function name.
+The actual name must be exported by including it in an EXPORTS statement in
+the DLL's module-definition file.
+
+%Parameters%
+
+HMIDIOUT <hMidiOut>
+
+    Specifies a handle to the MIDI device associated with the callback.
+
+WORD <wMsg>
+
+    Specifies a MIDI output message.
+
+DWORD <dwInstance>
+
+    Specifies the instance data supplied with %midiOutOpen%.
+
+DWORD <dwParam1>
+
+    Specifies a parameter for the message.
+
+DWORD <dwParam2>
+
+    Specifies a parameter for the message.
+
+%Comments%
+
+Because the callback is accessed at interrupt time, it must reside in a DLL
+and its code segment must be specified as FIXED in the module-definition
+file for the DLL. Any data that the callback accesses must be in a FIXED
+data segment as well. The callback may not make any system calls except for
+%PostMessage%, %timeGetSystemTime%, %timeGetTime%, %timeSetEvent%,
+%timeKillEvent%, %midiOutShortMsg%, %midiOutLongMsg%, and %OutputDebugStr%.
+
+.seealso
+
+%midiOutClose%
+
+.refpage midiOutPrepareHeader
+
+WORD %midiOutPrepareHeader%(<hMidiOut>, <lpMidiOutHdr>, <wSize>)
+
+This function prepares a MIDI system exclusive data block for output.
+
+.parameters
+
+HMIDIOUT <hMidiOut>
+
+    Specifies a handle to the MIDI output device.
+
+LPMIDIHDR <lpMidiOutHdr>
+
+    Specifies a far pointer to a %MIDIHDR% structure that identifies the
+    data block to be prepared.
+
+WORD <wSize>
+
+    Specifies the size of the %MIDIHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOMEM
+
+    Unable to allocate or lock memory.
+
+.endlist
+
+.comments
+
+The %MIDIHDR% data structure and the data block pointed to by its %lpData%
+field must be allocated with %GlobalAlloc% using the GMEM_MOVEABLE and
+GMEM_SHARE flags and locked with %GlobalLock%. Preparing a header that has
+already been prepared has no effect, and the function returns zero.
+
+.seealso
+
+%midiOutUnprepareHeader%
+
+.refpage midiOutReset
+
+WORD %midiOutReset%(<hMidiOut>)
+
+This function turns off all notes on all MIDI channels for the specified
+MIDI output device.
+
+.parameters
+
+HMIDIOUT <hMidiOut>
+
+    Specifies a handle to the MIDI output device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.comments
+
+If the specified MIDI output device is an output port, a note off message
+for each note of each channel is sent. In addition, a sustain (damper pedal)
+off controller message is sent for each channel.
+
+.seealso
+
+%midiOutLongMsg%, %midiOutClose%
+
+.refpage midiOutSetVolume
+
+WORD %midiOutSetVolume%(<wDeviceID>, <dwVolume>)
+
+This function sets the volume of a MIDI output device.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the MIDI output device.
+
+DWORD <dwVolume>
+
+    Specifies the new volume setting. The low-order word contains the left
+    channel volume setting, and the high-order word contains the right
+    channel setting. A value of 0xFFFF represents full volume, and a value
+    of 0x0000 is silence.
+
+    If a device does not support both left and right volume control, the
+    low-order word of <dwVolume> specifies the volume level, and the
+    high-order word is ignored.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOTSUPPORTED
+
+    Function isn't supported.
+
+MMSYSERR_NODRIVER
+
+    The driver was not installed.
+
+.endlist
+
+.comments
+
+Not all devices support volume changes. To determine whether the device
+supports volume control, use the MIDICAPS_VOLUME flag to test the
+%dwSupport% field of the %MIDIOUTCAPS% structure (filled by
+%midiOutGetDevCaps%).
+
+To determine whether the device supports volume control on both the left and
+right channels, use the MIDICAPS_LRVOLUME flag to test the %dwSupport% field
+of the %MIDIOUTCAPS% structure (filled by %midiOutGetDevCaps%).
+
+Most devices do not support the full 16 bits of volume level control and
+will use only the high-order bits of the requested volume setting. For
+example, for a device that supports 4 bits of volume control, requested
+volume level values of 0x4000, 0x4fff, and 0x43be will all produce the same
+physical volume setting, 0x4000. The %midiOutGetVolume% function will return
+the full 16-bit setting set with %midiOutSetVolume%.
+
+Volume settings are interpreted logarithmically. This means the perceived
+increase in volume is the same when increasing the volume level from 0x5000
+to 0x6000 as it is from 0x4000 to 0x5000.
+
+.seealso
+
+%midiOutGetVolume%
+
+.refpage midiOutShortMsg
+
+WORD %midiOutShortMsg%(<hMidiOut>, <dwMsg>)
+
+This function sends a short MIDI message to the specified MIDI output
+device. Use this function to send any MIDI message except for system
+exclusive messages.
+
+.parameters
+
+HMIDIOUT <hMidiOut>
+
+    Specifies a handle to the MIDI output device.
+
+DWORD <dwMsg>
+
+    Specifies the MIDI message. The message is packed into a DWORD with the
+    first byte of the message in the low order byte.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MIDIERR_NOTREADY
+
+    The hardware is busy with other data.
+
+.endlist
+
+.comments
+
+This function may not return until the message has been sent to the output
+device.
+
+.seealso
+
+%midiOutLongMsg%
+
+.refpage midiOutUnprepareHeader
+
+WORD %midiOutUnprepareHeader%(<hMidiOut>, <lpMidiOutHdr>, <wSize>)
+
+This function cleans up the preparation performed by %midiOutPrepareHeader%.
+The %midiOutUnprepareHeader% function must be called after the device driver
+fills a data buffer and returns it to the application. You must call this
+function before freeing the data buffer.
+
+.parameters
+
+HMIDIOUT <hMidiOut>
+
+    Specifies a handle to the MIDI output device.
+
+LPMIDIHDR <lpMidiOutHdr>
+
+    Specifies a pointer to a %MIDIHDR% structure identifying the buffer to
+    be cleaned up.
+
+WORD <wSize>
+
+    Specifies the size of the %MIDIHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MIDIERR_STILLPLAYING
+
+    <lpMidiOutHdr> is still in the queue.
+
+.endlist
+
+.comments
+
+This function is the complementary function to %midiOutPrepareHeader%. You
+must call this function before freeing the data buffer with %GlobalFree%.
+After passing a buffer to the device driver with %midiOutLongMsg%, you must
+wait until the driver is finished with the buffer before calling
+%midiOutUnprepareHeader%.
+
+Unpreparing a buffer that has not been prepared has no effect, and the
+function returns zero.
+
+.seealso
+
+%midiOutPrepareHeader%
+
+.refpage mmioAdvance
+
+MMRESULT %mmioAdvance%(<hmmio>, <lpmmioinfo>, <uFlags>)
+
+This function advances the I/O buffer of a file set up for direct I/O buffer
+access with %mmioGetInfo%. If the file is opened for reading, the I/O buffer
+is filled from the disk. If the file is opened for writing and the
+MMIO_DIRTY flag is set in the %dwFlags% field of the %MMIOINFO% structure,
+the buffer is written to disk. The %pchNext%, %pchEndRead%, and
+%pchEndWrite% fields of the %MMIOINFO% structure are updated to reflect the
+new state of the I/O buffer.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle for a file opened with %mmioOpen%.
+
+LPMMIOINFO <lpmmioinfo>
+
+    Specifies a pointer to the %MMIOINFO% structure obtained with
+    %mmioGetInfo%.
+
+UINT <uFlags>
+
+    Specifies options for the operation. Contains exactly one of the
+    following two flags:
+
+MMIO_READ
+
+    The buffer is filled from the file.
+
+MMIO_WRITE
+
+    The buffer is written to the file.
+
+.returns
+
+The return value is zero if the operation is successful. Otherwise, the
+return value specifies an error code. The error code can be one of the
+following codes:
+
+MMIOERR_CANNOTWRITE
+
+    The contents of the buffer could not be written to disk.
+
+MMIOERR_CANNOTREAD
+
+    An error occurred while re-filling the buffer.
+
+MMIOERR_UNBUFFERED
+
+    The specified file is not opened for buffered I/O.
+
+MMIOERR_CANNOTEXPAND
+
+    The specified memory file cannot be expanded, probably because the
+    %adwInfo[0]% field was set to zero in the initial call to %mmioOpen%.
+
+MMIOERR_OUTOFMEMORY
+
+    There was not enough memory to expand a memory file for further
+    writing.
+
+.comments
+
+If the specified file is opened for writing or for both reading and writing,
+the I/O buffer will be flushed to disk before the next buffer is read. If
+the I/O buffer cannot be written to disk because the disk is full, then
+%mmioAdvance% will return MMIOERR_CANNOTWRITE.
+
+If the specified file is only open for writing, the MMIO_WRITE flag must be
+specified.
+
+If you have written to the I/O buffer, you must set the MMIO_DIRTY flag in
+the %dwFlags% field of the %MMIOINFO% structure before calling
+%mmioAdvance%. Otherwise, the buffer will not be written to disk.
+
+If the end of file is reached, %mmioAdvance% will still return success, even
+though no more data can be read. Thus, to check for the end of the file, it
+is necessary to see if the %pchNext% and %pchEndRead% fields of the
+%MMIOINFO% structure are equal after calling %mmioAdvance%.
+
+.seealso
+
+%mmioGetInfo%, %MMIOINFO%
+
+.refpage mmioAscend
+
+MMRESULT %mmioAscend%(<hmmio>, <lpck>, <uFlags>)
+
+This function ascends out of a chunk in a RIFF file descended into with
+%mmioDescend% or created with %mmioCreateChunk%.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of an open RIFF file.
+
+LPMMCKINFO <lpck>
+
+    Specifies a pointer to a caller-supplied %MMCKINFO% structure
+    previously filled by %mmioDescend% or %mmioCreateChunk%.
+
+UINT <uFlags>
+
+    Is not used and should be set to zero.
+
+.returns
+
+The return value is zero if the function is successful. Otherwise, the
+return value specifies an error code. The error code can be one of the
+following codes:
+
+MMIOERR_CANNOTWRITE
+
+    The contents of the buffer could not be written to disk.
+
+MMIOERR_CANNOTSEEK
+
+    There was an error while seeking to the end of the chunk.
+
+.comments
+
+If the chunk was descended into using %mmioDescend%, then %mmioAscend% seeks
+to the location following the end of the chunk (past the extra pad byte, if
+any).
+
+If the chunk was created and descended into using %mmioCreateChunk%, or if
+the MMIO_DIRTY flag is set in the %dwFlags% field of the %MMCKINFO%
+structure referenced by <lpck>, then the current file position is assumed to
+be the end of the data portion of the chunk. If the chunk size is not the
+same as the value stored in the %cksize% field when %mmioCreateChunk% was
+called, then %mmioAscend% corrects the chunk size in the file before
+ascending from the chunk. If the chunk size is odd, %mmioAscend% writes a
+null pad byte at the end of the chunk. After ascending from the chunk, the
+current file position is the location following the end of the chunk (past
+the extra pad byte, if any).
+
+.seealso
+
+%mmioDescend%, %mmioCreateChunk%, %MMCKINFO%
+
+.refpage mmioClose
+
+MMRESULT %mmioClose%(<hmmio>, <uFlags>)
+
+This function closes a file opened with %mmioOpen%.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of the file to close.
+
+UINT <uFlags>
+
+    Specifies options for the close operation.
+
+MMIO_FHOPEN
+
+    If the file was opened by passing the DOS file handle of an
+    already-opened file to %mmioOpen%, then using this flag tells
+    %mmioClose% to close the MMIO file handle, but not the DOS file handle.
+    (This is performed by the installed or default IOProc).
+
+.returns
+
+The return value is zero if the function is successful. Otherwise, the
+return value is an error code, either from %mmioFlush% or from the I/O
+procedure. The error code can be one of the following codes:
+
+MMIOERR_CANNOTWRITE
+
+    The contents of the buffer could not be written to disk.
+
+MMIOERR_CANNOTCLOSE
+
+    The DOS file system failed to close the file.
+
+Other error codes are possible depending on the IOProcedure installed
+
+.seealso
+
+%mmioOpen%, %mmioFlush%
+
+.refpage mmioCreateChunk
+
+MMRESULT %mmioCreateChunk%(<hmmio>, <lpck>, <uFlags>)
+
+This function creates a chunk in a RIFF file opened with %mmioOpen%. The new
+chunk is created at the current file position. After the new chunk is
+created, the current file position is the beginning of the data portion of
+the new chunk.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of an open RIFF file.
+
+LPMMCKINFO <lpck>
+
+    Specifies a pointer to a caller-supplied %MMCKINFO% structure containing
+    information about the chunk to be created. Set up the %MMCKINFO%
+    structure as follows:
+
+.blist
+o   The %ckid% field specifies the chunk ID of the chunk. If <wFlags>
+    includes MMIO_CREATERIFF or MMIO_CREATELIST, this field will be filled
+    by %mmioCreateChunk%.
+
+o   The %cksize% field specifies the size of the data portion of the chunk,
+    including the form type or list type (if any). If this value is not
+    correct when %mmioAscend% is called to mark the end of the chunk, them
+    %mmioAscend% will correct the chunk size.
+
+o   The %fccType% field specifies the form type or list type if the chunk is
+    a "RIFF" or "LIST" chunk. If the chunk is not a "RIFF" or "LIST" chunk,
+    this field need not be filled in.
+
+o   The %dwDataOffset% field need not be filled in. The %mmioCreateChunk%
+    function will fill this field with the file offset of the data portion
+    of the chunk.
+
+o   The %dwFlags% field need not be filled in. The %mmioCreateChunk%
+    function will set the MMIO_DIRTY flag in %dwFlags%.
+.endblist
+
+UINT <uFlags>
+
+    Specifies flags to optionally create either a "RIFF" chunk or a "LIST"
+    chunk. Can contain one of the following flags:
+
+MMIO_CREATERIFF
+
+    Creates a "RIFF" chunk.
+
+MMIO_CREATELIST
+
+    Creates a "LIST" chunk.
+
+.returns
+
+The return value is zero if the function is successful. Otherwise, the
+return value specifies an error code. The error code can be one of the
+following codes:
+
+MMIOERR_CANNOTWRITE
+
+    Unable to write the chunk header.
+
+MMIOERR_CANNOTSEEK
+
+    Uanble to determine offset of data portion of the chunk.
+
+.comments
+
+This function cannot insert a chunk into the middle of a file. If a chunk is
+created anywhere but the end of a file, %mmioCreateChunk% will overwrite
+existing information in the file.
+
+.refpage mmioDescend
+
+MMRESULT %mmioDescend%(<hmmio>, <lpck>, <lpckParent>, <uFlags>)
+
+This function descends into a chunk of a RIFF file opened with %mmioOpen%.
+It can also search for a given chunk.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of an open RIFF file.
+
+LPMMCKINFO <lpck>
+
+    Specifies a pointer to a caller-supplied %MMCKINFO% structure that
+    %mmioDescend% fills with the following information:
+
+.blist
+o   The %ckid% field is the chunk ID of the chunk.
+
+o   The %cksize% field is the size of the data portion of the chunk. The
+    data size includes the form type or list type (if any), but does not
+    include the 8-byte chunk header or the pad byte at the end of the data
+    (if any).
+
+o   The %fccType% field is the form type if %ckid% is "RIFF", or the list
+    type if %ckid% is "LIST". Otherwise, it is NULL.
+
+o   The %dwDataOffset% field is the file offset of the beginning of the data
+    portion of the chunk. If the chunk is a "RIFF" chunk or a "LIST" chunk,
+    then %dwDataOffset% is the offset of the form type or list type.
+
+o   The %dwFlags% contains other information about the chunk. Currently,
+    this information is not used and is set to zero.
+.endblist
+
+    If the MMIO_FINDCHUNK, MMIO_FINDRIFF, or MMIO_FINDLIST flag is specified
+    for <uFlags>, then the %MMCKINFO% structure is also used to pass
+    parameters to %mmioDescend%:
+
+.blist
+o   The %ckid% field specifies the four-character code of the chunk ID, form
+    type, or list type to search for.
+.endblist
+
+LPMMCKINFO <lpckParent>
+
+    Specifies a pointer to an optional caller-supplied %MMCKINFO%
+    structure identifying the parent of the chunk being searched for. A
+    parent of a chunk is the enclosing chunk--only "RIFF" and "LIST" chunks
+    can be parents. If <lpckParent> is not NULL, then %mmioDescend% assumes
+    the %MMCKINFO% structure it refers to was filled when %mmioDescend% was
+    called to descend into the parent chunk, and %mmioDescend% will only
+    search for a chunk within the parent chunk. Set <lpckParent> to NULL if
+    no parent chunk is being specified.
+
+UINT <uFlags>
+
+    Specifies search options. Contains up to one of the following flags. If
+    no flags are specified, %mmioDescend% descends into the chunk beginning
+    at the current file position.
+
+MMIO_FINDCHUNK
+
+    Searches for a chunk with the specified chunk ID.
+
+MMIO_FINDRIFF
+
+    Searches for a chunk with chunk ID "RIFF" and with the specified form
+    type.
+
+MMIO_FINDLIST
+
+    Searches for a chunk with chunk ID "LIST" and with the specified form
+    type.
+
+.returns
+
+The return value is zero if the function is successful. Otherwise, the
+return value specifies an error code. If the end of the file (or the end of
+the parent chunk, if given) is reached before the desired chunk is found,
+the return value is MMIOERR_CHUNKNOTFOUND.  Other non-zero error returns
+may be possible.
+
+.comments
+
+A RIFF chunk consists of a four-byte chunk ID (type FOURCC), followed by a
+four-byte chunk size (type DWORD), followed by the data portion of the
+chunk, followed by a null pad byte if the size of the data portion is odd.
+If the chunk ID is "RIFF" or "LIST", the first four bytes of the data
+portion of the chunk are a form type or list type (type FOURCC).
+
+If %mmioDescend% is used to search for a chunk, the file position should be
+at the beginning of a chunk before calling %mmioDescend%. The search begins
+at the current file position and continues to the end of the file. If a
+parent chunk is specified, the file position should be somewhere within the
+parent chunk before calling %mmioDescend%. In this case, the search begins
+at the current file position and continues to the end of the parent chunk.
+
+If %mmioDescend% is unsuccessful in searching for a chunk, the current file
+position is undefined. If %mmioDescend% is successful, the current file
+position is changed. If the chunk is a "RIFF" or "LIST" chunk, the new file
+position will be just after the form type or list type (12 bytes from the
+beginning of the chunk). For other chunks, the new file position will be the
+start of the data portion of the chunk (8 bytes from the beginning of the
+chunk).
+
+For efficient RIFF file I/O, use buffered I/O.
+
+.seealso
+
+%mmioAscend%, %MMCKINFO%
+
+.refpage mmioFlush
+
+MMRESULT %mmioFlush%(<hmmio>, <uFlags>)
+
+This function writes the I/O buffer of a file to disk, if the I/O buffer has
+been written to.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of a file opened with %mmioOpen%.
+
+UINT <uFlags>
+
+    Is not used and should be set to zero.
+
+.returns
+
+The return value is zero if the function is successful. Otherwise, the
+return value specifies an error code. The error code can be one of the
+following codes:
+
+MMIOERR_CANNOTWRITE
+
+    The contents of the buffer could not be written to disk.
+
+.comments
+
+Closing a file with %mmioClose% will automatically flush its buffer.
+
+If there is insufficient disk space to write the buffer, %mmioFlush% will
+fail, even if the preceding %mmioWrite% calls were successful.
+
+.refpage mmioFOURCC
+
+FOURCC %mmioFOURCC%(<ch0>, <ch1>, <ch2>, <ch3>)
+
+This macro converts four characters to to a DWORD code.
+
+.parameters
+
+CHAR <ch0>
+
+    The first character of the four-character code.
+
+CHAR <ch1>
+
+    The second character of the four-character code.
+
+CHAR <ch2>
+
+    The third character of the four-character code.
+
+CHAR <ch3>
+
+    The fourth character of the four-character code.
+
+.returns
+
+The return value is the DWORD representing the four character code
+created from the given characters.
+
+.comments
+
+This macro does not check to see if the four character code follows any
+conventions regarding which characters to include in a four-character code.
+
+.seealso
+
+%mmioStringToFOURCC%
+
+.refpage mmioGetInfo
+
+MMRESULT %mmioGetInfo%(<hmmio>, <lpmmioinfo>, <uFlags>)
+
+This function retrieves information about a file opened with %mmioOpen%.
+This information allows the caller to directly access the I/O buffer, if the
+file is opened for buffered I/O.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of the file.
+
+LPMMIOINFO <lpmmioinfo>
+
+    Specifies a pointer to a caller-allocated %MMIOINFO% structure that
+    %mmioGetInfo% fills with information about the file. See the %MMIOINFO%
+    structure and the %mmioOpen% function for information about the fields
+    in this structure.
+
+UINT <uFlags>
+
+    Is not used and should be set to zero.
+
+.returns
+
+The return value is zero if the function is successful.
+
+.comments
+
+To directly access the I/O buffer of a file opened for buffered I/O, use the
+following fields of the %MMIOINFO% structure filled by %mmioGetInfo%:
+
+.blist
+o   The %pchNext% field points to the next byte in the buffer that can be
+    read or written. When you read or write, increment %pchNext% by the
+    number of bytes read or written.
+
+o   The %pchEndRead% field points to one byte past the last valid byte in
+    the buffer that can be read.
+
+o   The %pchEndWrite% field points to one byte past the last location in the
+    buffer that can be written.
+.endblist
+
+Once you read or write to the buffer and modify %pchNext%, do not call any
+MMIO function except %mmioAdvance% until you call %mmioSetInfo%. Call
+%mmioSetInfo% when you are finished directly accessing the buffer.
+
+When you reach the end of the buffer specified by %pchEndRead% or
+%pchEndWrite%, call %mmioAdvance% to fill the buffer from the disk, or write
+the buffer to the disk. The %mmioAdvance% function will update the
+%pchNext%, %pchEndRead%, and %pchEndWrite% fields in the %MMIOINFO%
+structure for the file.
+
+Before calling %mmioAdvance% or %mmioSetInfo% to flush a buffer to disk, set
+the MMIO_DIRTY flag in the %dwFlags% field of the %MMIOINFO% structure for
+the file. Otherwise, the buffer will not get written to disk.
+
+Do not decrement %pchNext% or modify any fields in the %MMIOINFO% structure
+other than %pchNext% and %dwFlags%. Do not set any flags in %dwFlags% except
+MMIO_DIRTY.
+
+.seealso
+
+%mmioSetInfo%, %MMIOINFO%
+
+.refpage mmioInstallIOProc
+
+LPMMIOPROC %mmioInstallIOProc%(<fccIOProc>, <pIOProc>, <dwFlags>)
+
+This function installs or removes a custom I/O procedure. It will also
+locate an installed I/O procedure, given its corresponding four-character
+code.
+
+.parameters
+
+FOURCC <fccIOProc>
+
+    Specifies a four-character code identifying the I/O procedure to
+    install, remove, or locate. All characters in this four-character code
+    should be uppercase characters.
+
+LPMMIOPROC <pIOProc>
+
+    Specifies the address of the I/O procedure to install. To remove or
+    locate an I/O procedure, set this parameter to NULL.
+
+DWORD <dwFlags>
+
+    Specifies one of the following flags indicating whether the I/O
+    procedure is being installed, removed, or located:
+
+MMIO_INSTALLPROC
+
+    Installs the specified I/O procedure.
+
+MMIO_REMOVEPROC
+
+    Removes the specified I/O procedure.
+
+MMIO_FINDPROC
+
+    Searches for the specified I/O procedure.
+
+.returns
+
+The return value is the address of the I/O procedure installed, removed, or
+located. If there is an error, the return value is NULL.
+
+.comments
+
+If the I/O procedure resides in the application, for compatibility with the
+16 bit windows API use %MakeProcInstance% to
+get a procedure-instance address and specify this address for <pIOProc>. You
+don't need to get a procedure-instance address if the I/O procedure resides
+in a DLL.
+
+.head "Callback"
+
+LONG %IOProc%(<lpmmioinfo>, <wMsg>, <lParam1>, <lParam2>)
+
+%IOProc% is a placeholder for the application-supplied function name. The
+actual name must be exported by including it in a EXPORTS statement in the
+application's module-definitions file.
+
+%Parameters%
+
+LPSTR <lpmmioinfo>
+
+    Specifies a pointer to an %MMIOINFO% structure containing
+    information about the open file. The I/O procedure must maintain the
+    %lDiskOffset% field in this structure to indicate the file offset to the
+    next read or write location. The I/O procedure can use the %adwInfo[]%
+    field to store state information. The I/O procedure should not modify
+    any other fields of the %MMIOINFO% structure.
+
+UINT <uMsg>
+
+    Specifies a message indicating the requested I/O operation. Messages
+    that can be received include %MMIOM_OPEN%, %MMIOM_CLOSE%, %MMIOM_READ%,
+    %MMIOM_WRITE%, and %MMIOM_SEEK%.
+
+LONG <lParam1>
+
+    Specifies a parameter for the message.
+
+LONG <lParam2>
+
+    Specifies a parameter for the message.
+
+%Return Value%
+
+The return value depends on the message specified by <wMsg>. If the I/O
+procedure does not recognize a message, it should return zero.
+
+%Comments%
+
+The four-character code specified by the %fccIOProc% field in the %MMIOINFO%
+structure associated with a file identifies a filename extension for a
+custom storage system. When an application calls %mmioOpen% with a filename
+like "foo.xyz!bar", the I/O procedure associated with the four-character
+code "XYZ " is called to open the "bar" element of the file "foo.xyz".
+
+The %mmioInstallIOProc% function maintains a separate list of installed I/O
+procedures for each Windows application. Therefore, different applications
+can use the same I/O procedure identifier for different I/O procedures
+without conflict.
+
+To share an I/O procedure among applications, the I/O procedure must reside
+in a DLL called by each application using it. Each application using the
+shared I/O procedure must call %mmioInstallIOProc% to install the procedure
+(or call the DLL to install the procedure on behalf of the application).
+Each application must call %mmioInstallIOProc% to remove the I/O procedure
+before terminating.
+
+If an application calls %mmioInstallIOProc% more than once to register the
+same I/O procedure, then it must call %mmioInstallIOProc% to remove the
+procedure once for each time it installed the procedure.
+
+%mmioInstallIOProc% will not prevent an application from installing two
+different I/O procedures with the same identifier, or installing an I/O
+procedure with one of the predefined identifiers ("DOS ", "MEM ", or "BND
+"). The most recently installed procedure takes precedence, and the most
+recently installed procedure is the first one to get removed.
+
+.seealso
+
+%mmioOpen%
+
+.refpage mmioOpen
+
+HMMIO %mmioOpen%(<szFilename>, <lpmmioinfo>, <dwOpenFlags>)
+
+This function opens a file for unbuffered or buffered I/O. The file can be a
+DOS file, a memory file, or an element of a custom storage system.
+
+.parameters
+
+LPSTR <szFilename>
+
+    Specifies a pointer to a string containing the filename of the file
+    to open. If no I/O procedure is specified to open the file, then the
+    filename determines how the file is opened, as follows:
+
+.blist
+o   If the filename does not contain "+", then it is assumed to be the name
+    of a DOS file.
+
+o   If the filename is of the form "foo.ext+bar", then the extension "EXT "
+    is assumed to identify an installed I/O procedure which is called to
+    perform I/O on the file (see %mmioInstallIOProc%).
+
+o   If the filename is NULL and no I/O procedure is given, then %adwInfo[0]%
+    is assumed to be the DOS file handle of a currently open file.
+.endblist
+
+    The filename should not be longer than 128 bytes, including the
+    terminating NULL.
+
+    When opening a memory file, set <szFilename> to NULL.
+
+LPMMIOINFO <lpmmioinfo>
+
+    Specifies a pointer to an %MMIOINFO% structure containing extra
+    parameters used by %mmioOpen%. Unless you are opening a memory file,
+    specifying the size of a buffer for buffered I/O, or specifying an
+    uninstalled I/O procedure to open a file, this parameter should be
+    NULL.
+
+    If <lpmmioinfo> is not NULL, all unused fields of the %MMIOINFO%
+    structure it references must be set to zero, including the reserved
+    fields.
+
+DWORD <dwOpenFlags>
+
+    Specifies option flags for the open operation. The MMIO_READ,
+    MMIO_WRITE, and MMIO_READWRITE flags are mutually exclusive--only one
+    should be specified. The MMIO_COMPAT, MMIO_EXCLUSIVE, MMIO_DENYWRITE,
+    MMIO_DENYREAD, and MMIO_DENYNONE flags are DOS file-sharing flags, and
+    can only be used after the DOS command SHARE has been executed.
+
+MMIO_READ
+
+    Opens the file for reading only. This is the default, if MMIO_WRITE and
+    MMIO_READWRITE are not specified.
+
+MMIO_WRITE
+
+    Opens the file for writing. You should not read from a file opened in
+    this mode.
+
+MMIO_READWRITE
+
+    Opens the file for both reading and writing.
+
+MMIO_CREATE
+
+    Creates a new file. If the file already exists, it is truncated to zero
+    length. For memory files, MMIO_CREATE indicates the end of the file is
+    initially at the start of the buffer.
+
+MMIO_DELETE
+
+    Deletes a file. If this flag is specified, <szFilename> should not be
+    NULL. The return value will be TRUE (cast to HMMIO) if the file was
+    deleted successfully, FALSE otherwise. Do not call %mmioClose% for a
+    file that has been deleted. If this flag is specified, all other flags
+    are ignored.
+
+MMIO_ALLOCBUF
+
+    Opens a file for buffered I/O. To allocate a buffer larger or smaller
+    than the default buffer size (8K), set the %cchBuffer% field of the
+    %MMIOINFO% structure to the desired buffer size. If %cchBuffer% is zero,
+    then the default buffer size is used. If you are providing your own I/O
+    buffer, then the MMIO_ALLOCBUF flag should not be used.
+
+MMIO_COMPAT
+
+    Opens the file with compatibility mode, allowing any process on a given
+    machine to open the file any number of times. %mmioOpen% fails if the
+    file has been opened with any of the other sharing modes.
+
+MMIO_EXCLUSIVE
+
+    Opens the file with exclusive mode, denying other processes both read
+    and write access to the file. %mmioOpen% fails if the file has been
+    opened in any other mode for read or write access, even by the current
+    process.
+
+MMIO_DENYWRITE
+
+    Opens the file and denies other processes write access to the file.
+    %mmioOpen% fails if the file has been opened in compatibility or for
+    write access by any other process.
+
+MMIO_DENYREAD
+
+    Opens the file and denies other processes read access to the file.
+    %mmioOpen% fails if the file has been opened in compatibility mode or
+    for read access by any other process.
+
+MMIO_DENYNONE
+
+    Opens the file without denying other processes read or write access to
+    the file. %mmioOpen% fails if the file has been opened in compatibility
+    mode by any other process.
+
+.returns
+
+The return value is a handle to the opened file. This handle is not a DOS
+file handle--do not use it with any file I/O functions other than MMIO
+functions.
+
+If the file cannot be opened, the return value is NULL. If <lpmmioinfo> is
+not NULL, then its %wError% field will contain extended error information
+returned by the I/O procedure.
+
+.comments
+
+If <lpmmioinfo> references an %MMIOINFO% structure, set up the fields as
+described below. All unused fields must be set to zero, including reserved
+fields.
+
+.blist
+o   To request that a file be opened with an installed I/O procedure, set
+    the %fccIOProc% field to the four-character code of the I/O procedure,
+    and set the %pIOProc% field to NULL.
+
+o   To request that a file be opened with an uninstalled I/O procedure, set
+    the %pIOProc% field to point to the I/O procedure, and set %fccIOProc%
+    to NULL.
+
+o   To request that %mmioOpen% determine which I/O procedure to use to open
+    the file based on the filename contained in <szFilename>, set both
+    %fccIOProc% and %pIOProc% to NULL. This is the default behavior if no
+    %MMIOINFO% structure is specified.
+
+o   To open a memory file using an internally allocated and managed buffer,
+    set the %pchBuffer% field to NULL, %fccIOProc% to FOURCC_MEM,
+    %cchBuffer% to the initial size of the buffer, and %adwInfo[0]% to the
+    incremental expansion size of the buffer. This memory file will
+    automatically be expanded in increments of %adwInfo[0]% bytes when
+    necessary. Specify the MMIO_CREATE flag for the <dwOpenFlags> parameter
+    to initially set the end of the file to be the beginning of the buffer.
+
+o   To open a memory file using a caller-supplied buffer, set the
+    %pchBuffer% field to point to the memory buffer, %fccIOProc% to
+    FOURCC_MEM, %cchBuffer% to the size of the buffer, and %adwInfo[0]% to
+    the incremental expansion size of the buffer. The expansion size in
+    %adwInfo[0]% should only be non-zero if %pchBuffer% is a pointer
+    obtained by calling %GlobalAlloc% and %GlobalLock%, since
+    %GlobalReAlloc% will be called to expand the buffer. In particular, if
+    %pchBuffer% points to a local or global array, a block of memory in the
+    local heap, or a block of memory allocated by %GlobalDosAlloc%,
+    %adwInfo[0]% must be zero.
+
+    Specify the MMIO_CREATE flag for the <dwOpenFlags> parameter to
+    initially set the end of the file to be the beginning of the buffer;
+    otherwise, the entire block of memory will be considered readable.
+
+o   To use a currently open DOS file handle with MMIO, set the %fccIOProc%
+    field to FOURCC_DOS, %pchBuffer% to NULL, and %adwInfo[0]% to the DOS
+    file handle. Note that offsets within the file will be relative to the
+    beginning of the file, and will not depend on the DOS file position at
+    the time %mmioOpen% is called; the initial MMIO offset will be the same
+    as the DOS offset when %mmioOpen% is called. Later, to close the MMIO
+    file handle without closing the DOS file handle, pass the MMIO_FHOPEN
+    flag to %mmioClose%.
+.endblist
+
+You must call %mmioClose% to close a file opened with %mmioOpen%. Open files
+are not automatically closed when an application exits.
+
+.seealso
+
+%mmioClose%
+
+.refpage mmioRead
+
+LRESULT %mmioRead%(<hmmio>, <pch>, <cch>)
+
+This function reads a specified number of bytes from a file opened with
+%mmioOpen%.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of the file to be read.
+
+LPSTR <pch>
+
+    Specifies a pointer to a buffer to contain the data read from the
+    file.
+
+LONG <cch>
+
+    Specifies the number of bytes to read from the file.
+
+.returns
+
+The return value is the number of bytes actually read. If the end of the
+file has been reached and no more bytes can be read, the return value is
+zero. If there is an error reading from the file, the return value is -1.
+
+.comments
+
+On 16 bit windows pch is a huge pointer.  On 32 bit windows there is no
+distinction between huge poointers and long pointers.
+
+.seealso
+
+%mmioWrite%
+
+.refpage mmioSeek
+
+LRESULT %mmioSeek%(<hmmio>, <lOffset>, <iOrigin>)
+
+This function changes the current file position in a file opened with
+%mmioOpen%. The current file position is the location in the file where data
+is read or written.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of the file to seek in.
+
+LONG <lOffset>
+
+    Specifies an offset to change the file position.
+
+int <iOrigin>
+
+    Specifies how the offset specified by <lOffset> is interpreted. Contains
+    one of the following flags:
+
+SEEK_SET
+
+    Seeks to <lOffset> bytes from the beginning of the file.
+
+SEEK_CUR
+
+    Seeks to <lOffset> bytes from the current file position.
+
+SEEK_END
+
+    Seeks to <lOffset> bytes from the end of the file.
+
+.returns
+
+The return value is the new file position in bytes, relative to the
+beginning of the file. If there is an error, the return value is -1.
+
+.comments
+
+Seeking to an invalid location in the file, such as past the end of the
+file, may fail to cause %mmioSeek% to return an error, but may cause subsequent
+I/O operations on the file to fail.
+
+To locate the end of a file, call %mmioSeek% with <lOffset> set to zero and
+ <iOrigin> set to SEEK_END.
+
+.refpage mmioSendMessage
+
+LRESULT %mmioSendMessage%(<hmmio>, <uMsg>, <lParam1>, <lParam2>)
+
+This function sends a message to the I/O procedure associated with the
+specified file.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle for a file opened with %mmioOpen%.
+
+UINT <uMsg>
+
+    Specifies the message to send to the I/O procedure.
+
+LONG <lParam1>
+
+    Specifies a parameter for the message.
+
+LONG <lParam2>
+
+    Specifies a parameter for the message.
+
+.returns
+
+The return value depends on the message. If the I/O procedure does not
+recognize the message, the return value is zero.
+
+.comments
+
+Use this function to send custom user-defined messages. Do not use it to
+send the %MMIOM_OPEN%, %MMIOM_CLOSE%, %MMIOM_READ%, %MMIOM_WRITE%,
+%MMIOM_WRITEFLUSH%, or %MMIOM_SEEK% messages. Define custom messages to be
+greater than or equal to the MMIOM_USER constant.
+
+.seealso
+
+%mmioInstallIOProc%
+
+.refpage mmioSetBuffer
+
+MMRESULT %mmioSetBuffer%(<hmmio>, <pchBuffer>, <cchBuffer>, <uFlags>)
+
+This function enables or disables buffered I/O, or changes the buffer or
+buffer size for a file opened with %mmioOpen%.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of the file.
+
+LPSTR <pchBuffer>
+
+    Specifies a pointer to a caller-supplied buffer to use for buffered
+    I/O. If NULL, %mmioSetBuffer% allocates an internal buffer for buffered
+    I/O.
+
+LONG <cchBuffer>
+
+    Specifies the size of the caller-supplied buffer, or the size of the
+    buffer for %mmioSetBuffer% to allocate.
+
+UINT <uFlags>
+
+    Is not used and should be set to zero.
+
+.returns
+
+The return value is zero if the function is successful. Otherwise, the
+return value specifies an error code. If an error occurs, the file handle
+remains valid. The error code can be one of the following codes:
+
+MMIOERR_CANNOTWRITE
+
+    The contents of the old buffer could not be written to disk, so the
+    operation was aborted.
+
+MMIOERR_OUTOFMEMORY
+
+    The new buffer could not be allocated, probably due to a lack of
+    available memory.
+
+.comments
+
+To enable buffering using an internal buffer, set <pchBuffer> to NULL and
+ <cchBuffer> to the desired buffer size.
+
+To supply your own buffer, set <pchBuffer> to point to the buffer, and set
+ <cchBuffer> to the size of the buffer.
+
+To disable buffered I/O, set <pchBuffer> to NULL and <cchBuffer> to zero.
+
+If buffered I/O is already enabled using an internal buffer, you can
+reallocate the buffer to a different size by setting <pchBuffer> to NULL and
+ <cchBuffer> to the new buffer size. The contents of the buffer may be
+changed after resizing.
+
+.refpage mmioSetInfo
+
+MMRESULT %mmioSetInfo%(<hmmio>, <lpmmioinfo>, <uFlags>)
+
+This function updates the information retrieved by %mmioGetInfo% about a
+file opened with %mmioOpen%. Use this function to terminate direct buffer
+access of a file opened for buffered I/O.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of the file.
+
+LPMMIOINFO <lpmmioinfo>
+
+    Specifies a pointer to an %MMIOINFO% structure filled with
+    information with %mmioGetInfo%.
+
+UINT <uFlags>
+
+    Is not used and should be set to zero.
+
+.returns
+
+The return value is zero if the function is successful.
+
+.comments
+
+If you have written to the file I/O buffer, set the MMIO_DIRTY flag in the
+%dwFlags% field of the %MMIOINFO% structure before calling %mmioSetInfo% to
+terminate direct buffer access. Otherwise, the buffer will not get flushed
+to disk.
+
+.seealso
+
+%mmioGetInfo%, %MMIOINFO%
+
+.refpage mmioStringToFOURCC
+
+FOURCC %mmioStringToFOURCC%(<sz>, <uFlags>)
+
+This function converts a null-terminated string to a four-character code.
+
+.parameters
+
+LPSTR <sz>
+
+    Specifies a pointer to a null-terminated string to a four-character
+    code.
+
+UINT <uFlags>
+
+    Specifies options for the conversion:
+
+MMIO_TOUPPER
+
+    Converts all characters to uppercase.
+
+.returns
+
+The return value is the four character code created from the given string.
+
+.comments
+
+This function does not check to see if the string <sz> follows conventions
+regarding legal characters to use in a four-character code. The string is
+simply copied to a four-character code and padded to the right with blanks
+or truncated to four characters as required.
+
+.seealso
+
+%mmioFOURCC%
+
+.refpage mmioWrite
+
+LRESULT %mmioWrite%(<hmmio>, <pch>, <cch>)
+
+This function writes a specified number of bytes to a file opened with
+%mmioOpen%.
+
+.parameters
+
+HMMIO <hmmio>
+
+    Specifies the file handle of the file.
+
+LPSTR <pch>
+
+    Specifies a pointer to the buffer to be written to the file.
+
+LONG <cch>
+
+    Specifies the number of bytes to write to the file.
+
+.returns
+
+The return value is the number of bytes actually written. If there is an
+error writing to the file, the return value is -1.
+
+.comments
+
+The current file position is incremented by the number of bytes written.
+On 16 bit windows pch is a huge pointer.  On 32 bit windows there is no
+distinction between huge poointers and long pointers.
+
+.seealso
+
+%mmioRead%
+
+.refpage sndPlaySound
+
+BOOL %sndPlaySound%(<lpszSoundName>, <wFlags>)
+
+This function plays a waveform sound specified by a filename or by an entry
+in the [sounds] section of WIN.INI. If the sound can't be found, it plays
+the default sound specified by the SystemDefault entry in the [sounds]
+section of WIN.INI. If there is no SystemDefault entry or if the default
+sound can't be found, the function makes no sound and returns FALSE.
+
+.parameters
+
+LPSTR <lpszSoundName>
+
+    Specifies the name of the sound to play. The function searches the
+    [sounds] section of WIN.INI for an entry with this name and plays the
+    associated waveform file. If no entry by this name exists, then it
+    assumes the name is the name of a waveform file. If this parameter is
+    NULL, any currently playing sound is stopped.
+
+WORD <wFlags>
+
+    Specifies options for playing the sound using one or more of the
+    following flags:
+
+SND_SYNC
+
+    The sound is played synchronously and the function does not return until
+    the sound ends.
+
+SND_ASYNC
+
+    The sound is played asynchronously and the function returns immediately
+    after beginning the sound. To terminate an asynchronously-played sound,
+    call %sndPlaySound% with <lpszSoundName> set to NULL.
+
+SND_NODEFAULT
+
+    If the sound can't be found, the function returns silently without
+    playing the default sound.
+
+SND_MEMORY
+
+    The parameter specified by <lpszSoundName> points to an in-memory image
+    of a waveform sound.
+
+SND_LOOP
+
+    The sound will continue to play repeatedly until %sndPlaySound% is
+    called again with the <lpszSoundName> parameter set to NULL. You must
+    also specify the SND_ASYNC flag to loop sounds.
+
+SND_NOSTOP
+
+    If a sound is currently playing, the function will immediately return
+    FALSE without playing the requested sound.
+
+.returns
+
+Returns TRUE if the sound is played, otherwise returns FALSE.
+
+.comments
+
+The sound must fit in available physical memory and be playable by an
+installed waveform audio device driver. The directories searched for sound
+files are, in order: the current directory; the Windows directory; the
+Windows system directory; the directories listed in the PATH environment
+variable; the list of directories mapped in a network. See the Windows
+%OpenFile% function for more information about the directory search order.
+
+If you specify the SND_MEMORY flag, <lpszSoundName> must point to an
+in-memory image of a waveform sound. If the sound is stored as a resource,
+use %LoadResource% and %LockResource% to load and lock the resource and get
+a pointer to it. If the sound is not a resource, you must use %GlobalAlloc%
+with the GMEM_MOVEABLE and GMEM_SHARE flags set and then %GlobalLock% to
+allocate and lock memory for the sound.
+
+.seealso
+
+%MessageBeep%
+
+.refpage timeBeginPeriod
+
+WORD %timeBeginPeriod%(<wPeriod>)
+
+This function sets the minimum (lowest number of milliseconds) timer
+resolution that an application or driver is going to use. Call this function
+immediately before starting to use timer-event services, and call
+%timeEndPeriod% immediately after finishing with the timer-event services.
+
+.parameters
+
+WORD <wPeriod>
+
+    Specifies the minimum timer-event resolution that the application or
+    driver will use.
+
+.returns
+
+Returns zero if successful. Returns TIMERR_NOCANDO if the specified
+ <wPeriod> resolution value is out of range.
+
+.comments
+
+For each call to %timeBeginPeriod%, you must call %timeEndPeriod% with a
+matching <wPeriod> value. An application or driver can make multiple calls
+to %timeBeginPeriod%, as long as each %timeBeginPeriod% call is matched with
+a %timeEndPeriod% call.
+
+.seealso
+
+%timeEndPeriod%, %timeSetEvent%
+
+.refpage timeEndPeriod
+
+WORD %timeEndPeriod%(<wPeriod>)
+
+This function clears a previously set minimum (lowest number of
+milliseconds) timer resolution that an application or driver is going to
+use. Call this function immediately after using timer event services.
+
+.parameters
+
+WORD <wPeriod>
+
+    Specifies the minimum timer-event resolution value specified in the
+    previous call to %timeBeginPeriod%.
+
+.returns
+
+Returns zero if successful. Returns TIMERR_NOCANDO if the specified
+ <wPeriod> resolution value is out of range.
+
+.comments
+
+For each call to %timeBeginPeriod%, you must call %timeEndPeriod% with a
+matching <wPeriod> value. An application or driver can make multiple calls
+to %timeBeginPeriod%, as long as each %timeBeginPeriod% call is matched with
+a %timeEndPeriod% call.
+
+.seealso
+
+%timeBeginPeriod%, %timeSetEvent%
+
+.refpage timeGetDevCaps
+
+WORD %timeGetDevCaps%(<lpTimeCaps>, <wSize>)
+
+This function queries the timer device to determine its capabilities.
+
+.parameters
+
+LPTIMECAPS <lpTimeCaps>
+
+    Specifies a far pointer to a %TIMECAPS% structure. This structure is
+    filled with information about the capabilities of the timer device.
+
+WORD <wSize>
+
+    Specifies the size of the %TIMECAPS% structure.
+
+.returns
+
+Returns zero if successful. Returns TIMERR_NOCANDO if it fails to return the
+timer device capabilities.
+
+.refpage timeGetSystemTime
+
+WORD %timeGetSystemTime%(<lpTime>, <wSize>)
+
+This function retrieves the system time in milliseconds. The system time is
+the time elapsed since Windows was started.
+
+.parameters
+
+LPMMTIME <lpTime>
+
+    Specifies a far pointer to an %MMTIME% data structure.
+
+WORD <wSize>
+
+    Specifies the size of the %MMTIME% structure.
+
+.returns
+
+Returns zero. The system time is returned in the %ms% field of the %MMTIME%
+structure.
+
+.comments
+
+The time is always returned in milliseconds.
+
+.seealso
+
+%timeGetTime%
+
+.refpage timeGetTime
+
+DWORD %timeGetTime%()
+
+This function retrieves the system time in milliseconds. The system time is
+the time elapsed since Windows was started.
+
+.parameters
+
+None
+
+.returns
+
+The return value is the system time in milliseconds.
+
+.comments
+
+The only difference between this function and the %timeGetSystemTime%
+function is %timeGetSystemTime% uses the standard multimedia time structure
+%MMTIME% to return the system time. The %timeGetTime% function has less
+overhead than %timeGetSystemTime%.
+
+.seealso
+
+%timeGetSystemTime%
+
+.refpage timeKillEvent
+
+WORD %timeKillEvent%(<wID>)
+
+This functions destroys a specified timer callback event.
+
+.parameters
+
+WORD <wID>
+
+    Identifies the event to be destroyed.
+
+.returns
+
+Returns zero if successful. Returns TIMERR_NOCANDO if the specified timer
+event does not exist.
+
+.comments
+
+The timer event ID specified by <wID> must be an ID returned by
+%timeSetEvent%.
+
+.seealso
+
+%timeSetEvent%
+
+.refpage timeSetEvent
+
+WORD %timeSetEvent%(<wDelay>, <wResolution>, <lpFunction>, <dwUser>,
+ <wFlags>)
+
+This function sets up a timed callback event. The event can be a one-time
+event or a periodic event. Once activated, the event calls the specified
+callback function.
+
+.parameters
+
+WORD <wDelay>
+
+    Specifies the event period in milliseconds. If the delay is less than
+    the minimum period supported by the timer, or greater than the maximum
+    period supported by the timer, the function returns an error.
+
+WORD <wResolution>
+
+    Specifies the accuracy of the delay in milliseconds. The resolution of
+    the timer event increases with smaller <wResolution> values. To reduce
+    system overhead, use the maximum <wResolution> value appropriate for
+    your application.
+
+LPTIMECALLBACK <lpFunction>
+
+    Specifies the procedure address of a callback function that is called
+    once upon expiration of a one-shot event or periodically upon expiration
+    of periodic events.
+
+DWORD <dwUser>
+
+    Contains user-supplied callback data.
+
+WORD <wFlags>
+
+    Specifies the type of timer event, using one of the following flags:
+
+TIME_ONESHOT
+
+    Event occurs once, after <wPeriod> milliseconds.
+
+TIME_PERIODIC
+
+    Event occurs every <wPeriod> milliseconds.
+
+.returns
+
+Returns an ID code that identifies the timer event. Returns NULL if the
+timer event was not created. The ID code is also passed to the callback
+function.
+
+.comments
+
+Using this function to generate a high-frequency periodic-delay event (with
+a period less than 10 milliseconds) can consume a significant portion of the
+system CPU bandwidth. Any call to %timeSetEvent% for a periodic-delay timer
+must be paired with a call to %timeKillEvent%.
+
+The callback function must reside in a DLL. You don't have to use
+%MakeProcInstance% to get a procedure-instance address for the callback
+function.
+
+.head "Callback"
+
+void FAR PASCAL %TimeFunc%(<wID>, <wMsg>, <dwUser>, <dw1>, <dw2>)
+
+%TimeFunc% is a placeholder for the application-supplied function name. The
+actual name must be exported by including it in the EXPORTS statement of the
+module-definition file for the DLL.
+
+%Parameters%
+
+WORD <wID>
+
+    The ID of the timer event. This is the ID returned by %timeSetEvent%.
+
+WORD <wMsg>
+
+    Not used.
+
+DWORD <dwUser>
+
+    User instance data supplied to the <dwUser> parameter of
+    %timeSetEvent%.
+
+DWORD <dw1>
+
+    Not used.
+
+DWORD <dw2>
+
+    Not used.
+
+%Comments%
+
+Because the callback is accessed at interrupt time, it must reside in a DLL,
+and its code segment must be specified as FIXED in the module-definition
+file for the DLL. Any data that the callback accesses must be in a FIXED
+data segment as well. The callback may not make any system calls except for
+%PostMessage%, %timeGetSystemTime%, %timeGetTime%, %timeSetEvent%,
+%timeKillEvent%, %midiOutShortMsg%, %midiOutLongMsg%, and %OutputDebugStr%.
+
+.seealso
+
+%timeKillEvent%, %timeBeginPeriod%, %timeEndPeriod%
+
+.refpage waveInAddBuffer
+
+WORD %waveInAddBuffer%(<hWaveIn>, <lpWaveInHdr>, <wSize>)
+
+This function sends an input buffer to a waveform input device. When the
+buffer is filled, it is sent back to the application.
+
+.parameters
+
+HWAVEIN <hWaveIn>
+
+    Specifies a handle to the waveform input device.
+
+LPWAVEHDR <lpWaveInHdr>
+
+    Specifies a far pointer to a %WAVEHDR% structure that identifies the
+    buffer.
+
+WORD <wSize>
+
+    Specifies the size of the %WAVEHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+WAVERR_UNPREPARED
+
+    <lpWaveInHdr> hasn't been prepared.
+
+.endlist
+
+.comments
+
+The data buffer must be prepared with %waveInPrepareHeader% before it is
+passed to %waveInAddBuffer%. The %WAVEHDR% data structure and the data
+buffer pointed to by its %lpData% field must be allocated with %GlobalAlloc%
+using the GMEM_MOVEABLE and GMEM_SHARE flags, and locked with %GlobalLock%.
+
+.seealso
+
+%waveInPrepareHeader%
+
+.refpage waveInClose
+
+WORD %waveInClose%(<hWaveIn>)
+
+This function closes the specified waveform input device.
+
+.parameters
+
+HWAVEIN <hWaveIn>
+
+    Specifies a handle to the waveform input device. If the function is
+    successful, the handle is no longer valid after this call.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+WAVERR_STILLPLAYING
+
+    There are still buffers in the queue.
+
+.endlist
+
+.comments
+
+If there are input buffers that have been sent with %waveInAddBuffer%, and
+haven't been returned to the application, the close operation will fail.
+Call %waveInReset% to mark all pending buffers as done.
+
+.seealso
+
+%waveInOpen%, %waveInReset%
+
+.refpage waveInGetDevCaps
+
+WORD %waveInGetDevCaps%(<wDeviceID>, <lpCaps>, <wSize>)
+
+This function queries a specified waveform input device to determine its
+capabilities.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the waveform input device.
+
+LPWAVEINCAPS <lpCaps>
+
+    Specifies a far pointer to a %WAVEINCAPS% structure. This structure is
+    filled with information about the capabilities of the device.
+
+WORD <wSize>
+
+    Specifies the size of the %WAVEINCAPS% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_NODRIVER
+
+    The driver was not installed.
+
+.endlist
+
+.comments
+
+Use %waveInGetNumDevs% to determine the number of waveform input devices
+present in the system. The device ID specified by <wDeviceID> varies from
+zero to one less than the number of devices present. Only <wSize> bytes (or
+less) of information is copied to the location pointed to by <lpCaps>. If
+ <wSize> is zero, nothing is copied, and the function returns zero.
+
+.seealso
+
+%waveInGetNumDevs%
+
+.refpage waveInGetErrorText
+
+WORD %waveInGetErrorText%(<wError>, <lpText>, <wSize>)
+
+This function retrieves a textual description of the error identified by the
+specified error number.
+
+.parameters
+
+WORD <wError>
+
+    Specifies the error number.
+
+LPSTR <lpText>
+
+    Specifies a far pointer to the buffer to be filled with the textual
+    error description.
+
+WORD <wSize>
+
+    Specifies the size of the buffer pointed to by <lpText>.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADERRNUM
+
+    Specified error number is out of range.
+
+.endlist
+
+.comments
+
+If the textual error description is longer than the buffer, the description
+is truncated. The returned string is always null-terminated. If <wSize> is
+zero, nothing is copied, and the function returns zero. All error
+descriptions are less than MAXERRORLENGTH characters long.
+
+.refpage waveInGetID
+
+WORD %waveInGetID%(<hWaveIn>, <lpwDeviceID>)
+
+This function gets the device ID for a waveform input device.
+
+.parameters
+
+HWAVEIN <hWaveIn>
+
+    Specifies the handle to the waveform input device.
+
+LPWORD <lpwDeviceID>
+
+    Specifies a pointer to the WORD-sized memory location to fill with the
+    device ID.
+
+.returns
+
+Returns zero if successful. Otherwise, it returns an error number. Possible
+error returns are:
+
+MMSYSERR_INVALHANDLE
+
+    The <hWaveIn> parameter specifies an invalid handle.
+
+.refpage waveInGetNumDevs
+
+WORD %waveInGetNumDevs%()
+
+This function returns the number of waveform input devices.
+
+.parameters
+
+None
+
+.returns
+
+Returns the number of waveform input devices present in the system.
+
+.seealso
+
+%waveInGetDevCaps%
+
+.refpage waveInGetPosition
+
+WORD %waveInGetPosition%(<hWaveIn>, <lpInfo>, <wSize>)
+
+This function retrieves the current input position of the specified waveform
+input device.
+
+.parameters
+
+HWAVEIN <hWaveIn>
+
+    Specifies a handle to the waveform input device.
+
+LPMMTIME <lpInfo>
+
+    Specifies a far pointer to an %MMTIME% structure.
+
+WORD <wSize>
+
+    Specifies the size of the %MMTIME% structure.
+
+.returns
+
+Returns zero if the function was successful. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.comments
+
+Before calling %waveInGetPosition%, set the %wType% field of the %MMTIME%
+structure to indicate the time format that you desire. After calling
+%waveInGetPosition%, be sure to check the %wType% field to determine if the
+desired time format is supported. If the desired format is not supported,
+%wType% will specify an alternative format.
+
+The position is set to zero when the device is opened or reset.
+
+.refpage waveInOpen
+
+WORD %waveInOpen%(<lphWaveIn>, <wDeviceID>, <lpFormat>, <dwCallback>,
+ <dwCallbackInstance>, <dwFlags>)
+
+This function opens a specified waveform input device for recording.
+
+.parameters
+
+LPHWAVEIN <lphWaveIn>
+
+    Specifies a far pointer to a HWAVEIN handle. This location is filled
+    with a handle identifying the opened waveform input device. Use this
+    handle to identify the device when calling other waveform input
+    functions. This parameter may be NULL if the WAVE_FORMAT_QUERY flag is
+    specified for <dwFlags>.
+
+WORD <wDeviceID>
+
+    Identifies the waveform input device to open. Use a valid device ID or
+    the following flag:
+
+WAVE_MAPPER
+
+    If this flag is specified, the function selects a waveform input device
+    capable of recording in the given format.
+
+LPWAVEFORMAT <lpFormat>
+
+    Specifies a pointer to a %WAVEFORMAT% data structure that identifies the
+    desired format for recording waveform data.
+
+DWORD <dwCallback>
+
+    Specifies the address of a callback function or a handle to a window
+    called during waveform recording to process messages related to the
+    progress of recording.
+
+DWORD <dwCallbackInstance>
+
+    Specifies user instance data passed to the callback. This parameter is
+    not used with window callbacks.
+
+DWORD <dwFlags>
+
+    Specifies flags for opening the device.
+
+WAVE_FORMAT_QUERY
+
+    If this flag is specified, the device will be queried to determine if it
+    supports the given format but will not actually be opened.
+
+CALLBACK_WINDOW
+
+    If this flag is specified, <dwCallback> is assumed to be a window
+    handle.
+
+CALLBACK_FUNCTION
+
+    If this flag is specified, <dwCallback> is assumed to be a callback
+    procedure address.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_NODRIVER
+
+    The driver was not installed.
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_ALLOCATED
+
+    Specified resource is already allocated.
+
+MMSYSERR_NOMEM
+
+    Unable to allocate or lock memory.
+
+WAVERR_BADFORMAT
+
+    Attempted to open with an unsupported wave format.
+
+.endlist
+
+.comments
+
+Use %waveInGetNumDevs% to determine the number of waveform input devices
+present in the system. The device ID specified by <wDeviceID> varies from
+zero to one less than the number of devices present.
+
+If a window is chosen to receive callback information, the following
+messages are sent to the window procedure function to indicate the progress
+of waveform input: %MM_WIM_OPEN%, %MM_WIM_CLOSE%, %MM_WIM_DATA%
+
+If a function is chosen to receive callback information, the following
+messages are sent to the function to indicate the progress of waveform
+input: %WIM_OPEN%, %WIM_CLOSE%, %WIM_DATA%. The callback function must
+reside in a DLL. You do not have to use %MakeProcInstance% to get a
+procedure-instance address for the callback function.
+
+.head "Callback"
+
+void FAR PASCAL %WaveInFunc%(<hWaveIn>, <wMsg>, <dwInstance>, <dwParam1>,
+ <dwParam2>)
+
+%WaveInFunc% is a placeholder for the application-supplied function name.
+The actual name must be exported by including it in an EXPORTS statement in
+the DLL's module-definition file.
+
+%Parameters%
+
+HWAVEIN <hWaveIn>
+
+    Specifies a handle to the waveform device associated with the callback.
+
+WORD <wMsg>
+
+    Specifies a waveform input device.
+
+DWORD <dwInstance>
+
+    Specifies the user instance data specified with %waveInOpen%.
+
+DWORD <dwParam1>
+
+    Specifies a parameter for the message.
+
+DWORD <dwParam2>
+
+    Specifies a parameter for the message.
+
+%Comments%
+
+Because the callback is accessed at interrupt time, it must reside in a DLL
+and its code segment must be specified as FIXED in the module-definition
+file for the DLL. Any data that the callback accesses must be in a FIXED
+data segment as well. The callback may not make any system calls except for
+%PostMessage%, %timeGetSystemTime%, %timeGetTime%, %timeSetEvent%,
+%timeKillEvent%, %midiOutShortMsg%, %midiOutLongMsg%, and %OutputDebugStr%.
+
+.seealso
+
+%waveInClose%
+
+.refpage waveInPrepareHeader
+
+WORD %waveInPrepareHeader%(<hWaveIn>, <lpWaveInHdr>, <wSize>)
+
+This function prepares a buffer for waveform input.
+
+.parameters
+
+HWAVEIN <hWaveIn>
+
+    Specifies a handle to the waveform input device.
+
+LPWAVEHDR <lpWaveInHdr>
+
+    Specifies a pointer to a %WAVEHDR% structure that identifies the buffer
+    to be prepared.
+
+WORD <wSize>
+
+    Specifies the size of the %WAVEHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOMEM
+
+    Unable to allocate or lock memory.
+
+.endlist
+
+.comments
+
+The %WAVEHDR% data structure and the data block pointed to by its %lpData%
+field must be allocated with %GlobalAlloc% using the GMEM_MOVEABLE and
+GMEM_SHARE flags, and locked with %GlobalLock%. Preparing a header that has
+already been prepared will have no effect, and the function will return
+zero.
+
+.seealso
+
+%waveInUnprepareHeader%
+
+.refpage waveInReset
+
+WORD %waveInReset%(<hWaveIn>)
+
+This function stops input on a given waveform input device and resets the
+current position to 0. All pending buffers are marked as done and returned
+to the application.
+
+.parameters
+
+HWAVEIN <hWaveIn>
+
+    Specifies a handle to the waveform input device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.seealso
+
+%waveInStart%, %waveInStop%, %waveInAddBuffer%, %waveInClose%
+
+.refpage waveInStart
+
+WORD %waveInStart%(<hWaveIn>)
+
+This function starts input on the specified waveform input device.
+
+.parameters
+
+HWAVEIN <hWaveIn>
+
+    Specifies a handle to the waveform input device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.comments
+
+Buffers are returned to the client when full or when %waveInReset% is called
+(the %dwBytesRecorded% field in the header will contain the actual length of
+data). If there are no buffers in the queue, the data is thrown away without
+notification to the client, and input continues.
+
+Calling this function when input is already started has no effect, and the
+function returns zero.
+
+.seealso
+
+%waveInStop%, %waveInReset%
+
+.refpage waveInStop
+
+WORD %waveInStop%(<hWaveIn>)
+
+This function stops waveform input.
+
+.parameters
+
+HWAVEIN <hWaveIn>
+
+    Specifies a handle to the waveform input device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.comments
+
+If there are any buffers in the queue, the current buffer will be marked as
+done (the %dwBytesRecorded% field in the header will contain the actual
+length of data), but any empty buffers in the queue will remain there.
+Calling this function when input is not started has no effect, and the
+function returns zero.
+
+.seealso
+
+%waveInStart%, %waveInReset%
+
+.refpage waveInUnprepareHeader
+
+WORD %waveInUnprepareHeader%(<hWaveIn>, <lpWaveInHdr>, <wSize>)
+
+This function cleans up the preparation performed by %waveInPrepareHeader%.
+The function must be called after the device driver fills a data buffer and
+returns it to the application. You must call this function before freeing
+the data buffer.
+
+.parameters
+
+HWAVEIN <hWaveIn>
+
+    Specifies a handle to the waveform input device.
+
+LPWAVEHDR <lpWaveInHdr>
+
+    Specifies a pointer to a %WAVEHDR% structure identifying the data buffer
+    to be cleaned up.
+
+WORD <wSize>
+
+    Specifies the size of the %WAVEHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+WAVERR_STILLPLAYING
+
+    <lpWaveInHdr> is still in the queue.
+
+.endlist
+
+.comments
+
+This function is the complementary function to %waveInPrepareHeader%. You
+must call this function before freeing the data buffer with %GlobalFree%.
+After passing a buffer to the device driver with %waveInAddBuffer%, you must
+wait until the driver is finished with the buffer before calling
+%waveInUnprepareHeader%. Unpreparing a buffer that has not been prepared has
+no effect, and the function returns zero.
+
+.seealso
+
+%waveInPrepareHeader%
+
+.refpage waveOutBreakLoop
+
+WORD %waveOutBreakLoop%(<hWaveOut>)
+
+This function breaks a loop on a given waveform output device and allows
+playback to continue with the next block in the driver list.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.comments
+
+Waveform looping is controlled by the %dwLoops% and %dwFlags% fields in the
+%WAVEHDR% structures passed to the device with %waveOutWrite%. Use the
+WHDR_BEGINLOOP and WHDR_ENDLOOP flags in the %dwFlags% field to specify the
+beginning and ending data blocks for looping.
+
+To loop on a single block, specify both flags for the same block. To specify
+the number of loops, use the %dwLoops% field in the %WAVEHDR% structure for
+the first block in the loop.
+
+The blocks making up the loop are played to the end before the loop is
+terminated.
+
+Calling this function when the nothing is playing or looping has no effect,
+and the function returns zero.
+
+.seealso
+
+%waveOutWrite%, %waveOutPause%, %waveOutRestart%
+
+.refpage waveOutClose
+
+WORD %waveOutClose%(<hWaveOut>)
+
+This function closes the specified waveform output device.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device. If the function is
+    successful, the handle is no longer valid after this call.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+WAVERR_STILLPLAYING
+
+    There are still buffers in the queue.
+
+.endlist
+
+.comments
+
+If the device is still playing a waveform, the close operation will fail.
+Use %waveOutReset% to terminate waveform playback before calling
+%waveOutClose%.
+
+.seealso
+
+%waveOutOpen%, %waveOutReset%
+
+.refpage waveOutGetDevCaps
+
+WORD %waveOutGetDevCaps%(<wDeviceID>, <lpCaps>, <wSize>)
+
+This function queries a specified waveform device to determine its
+capabilities.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the waveform output device.
+
+LPWAVEOUTCAPS <lpCaps>
+
+    Specifies a far pointer to a %WAVEOUTCAPS% structure. This structure is
+    filled with information about the capabilities of the device.
+
+WORD <wSize>
+
+    Specifies the size of the %WAVEOUTCAPS% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_NODRIVER
+
+    The driver was not installed.
+
+.endlist
+
+.comments
+
+Use %waveOutGetNumDevs% to determine the number of waveform output devices
+present in the system. The device ID specified by <wDeviceID> varies from
+zero to one less than the number of devices present. Only <wSize> bytes (or
+less) of information is copied to the location pointed to by <lpCaps>. If
+ <wSize> is zero, nothing is copied, and the function returns zero.
+
+.seealso
+
+%waveOutGetNumDevs%
+
+.refpage waveOutGetErrorText
+
+WORD %waveOutGetErrorText%(<wError>, <lpText>, <wSize>)
+
+This function retrieves a textual description of the error identified by the
+specified error number.
+
+.parameters
+
+WORD <wError>
+
+    Specifies the error number.
+
+LPSTR <lpText>
+
+    Specifies a far pointer to a buffer to be filled with the textual error
+    description.
+
+WORD <wSize>
+
+    Specifies the length of the buffer pointed to by <lpText>.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADERRNUM
+
+    Specified error number is out of range.
+
+.endlist
+
+.comments
+
+If the textual error description is longer than the specified buffer, the
+description is truncated. The returned error string is always
+null-terminated. If <wSize> is zero, nothing is copied, and the function
+returns zero. All error descriptions are less than MAXERRORLENGTH characters
+long.
+
+.refpage waveOutGetID
+
+WORD %waveOutGetID%(<hWaveOut>, <lpwDeviceID>)
+
+This function gets the device ID for a waveform output device.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies the handle to the waveform output device.
+
+LPWORD <lpwDeviceID>
+
+    Specifies a pointer to the WORD-sized memory location to be filled with
+    the device ID.
+
+.returns
+
+Returns zero if successful. Otherwise, it returns an error number. Possible
+error returns are:
+
+MMSYSERR_INVALHANDLE
+
+    The <hWaveOut> parameter specifies an invalid handle.
+
+.refpage waveOutGetNumDevs
+
+WORD %waveOutGetNumDevs%()
+
+This function retrieves the number of waveform output devices present in the
+system.
+
+.parameters
+
+None
+
+.returns
+
+Returns the number of waveform output devices present in the system.
+
+.seealso
+
+%waveOutGetDevCaps%
+
+.refpage waveOutGetPitch
+
+WORD %waveOutGetPitch%(<hWaveOut>, <lpdwPitch>)
+
+This function queries the the current pitch setting of a waveform output
+device.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+LPDWORD <lpdwPitch>
+
+    Specifies a far pointer to a location to be filled with the current
+    pitch multiplier setting. The pitch multiplier indicates the current
+    change in pitch from the original authored setting. The pitch multiplier
+    must be a positive value.
+
+    The pitch multiplier is specified as a fixed-point value. The high-order
+    word of the DWORD location contains the signed integer part of the
+    number, and the low-order word contains the fractional part. The
+    fraction is expressed as a WORD in which a value of 0x8000 represents
+    one half, and 0x4000 represents one quarter. For example, the value
+    0x00010000 specifies a multiplier of 1.0 (no pitch change), and a value
+    of 0x000F8000 specifies a multiplier of 15.5.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOTSUPPORTED
+
+    Function isn't supported.
+
+.endlist
+
+.comments
+
+Changing the pitch does not change the playback rate, sample rate, or
+playback time. Not all devices support pitch changes. To determine whether
+the device supports pitch control, use the WAVECAPS_PITCH flag to test the
+%dwSupport% field of the %WAVEOUTCAPS% structure (filled by
+%waveOutGetDevCaps%).
+
+.seealso
+
+%waveOutSetPitch%, %waveOutGetPlaybackRate%, %waveOutSetPlaybackRate%
+
+.refpage waveOutGetPlaybackRate
+
+WORD %waveOutGetPlaybackRate%(<hWaveOut>, <lpdwRate>)
+
+This function queries the current playback rate setting of a waveform output
+device.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+LPDWORD <lpdwRate>
+
+    Specifies a far pointer to a location to be filled with the current
+    playback rate. The playback rate setting is a multiplier indicating the
+    current change in playback rate from the original authored setting. The
+    playback rate multiplier must be a positive value.
+
+    The rate is specified as a fixed-point value. The high-order word of the
+    DWORD location contains the signed integer part of the number, and the
+    low-order word contains the fractional part. The fraction is expressed
+    as a WORD in which a value of 0x8000 represents one half, and 0x4000
+    represents one quarter. For example, the value 0x00010000 specifies a
+    multiplier of 1.0 (no playback rate change), and a value of 0x000F8000
+    specifies a multiplier of 15.5.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOTSUPPORTED
+
+    Function isn't supported.
+
+.endlist
+
+.comments
+
+Changing the playback rate does not change the sample rate but does change
+the playback time.
+
+Not all devices support playback rate changes. To determine whether a device
+supports playback rate changes, use the WAVECAPS_PLAYBACKRATE flag to test
+the %dwSupport% field of the %WAVEOUTCAPS% structure (filled by
+%waveOutGetDevCaps%).
+
+.seealso
+
+%waveOutSetPlaybackRate%, %waveOutSetPitch%, %waveOutGetPitch%
+
+.refpage waveOutGetPosition
+
+WORD %waveOutGetPosition%(<hWaveOut>, <lpInfo>, <wSize>)
+
+This function retrieves the current playback position of the specified
+waveform output device.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+LPMMTIME <lpInfo>
+
+    Specifies a far pointer to an %MMTIME% structure.
+
+WORD <wSize>
+
+    Specifies the size of the %MMTIME% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.comments
+
+Before calling %waveOutGetPosition%, set the %wType% field of the MMTIME
+structure to indicate the time format that you desire. After calling
+%waveOutGetPosition%, check the %wType% field to determine if the desired
+time format is supported. If the desired format is not supported, %wType%
+will specify an alternative format.
+
+The position is set to zero when the device is opened or reset.
+
+.refpage waveOutGetVolume
+
+WORD %waveOutGetVolume%(<wDeviceID>, <lpdwVolume>)
+
+This function queries the current volume setting of a waveform output
+device.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the waveform output device.
+
+LPDWORD <lpdwVolume>
+
+    Specifies a far pointer to a location to be filled with the current
+    volume setting. The low-order word of this location contains the left
+    channel volume setting, and the high-order word contains the right
+    channel setting. A value of 0xFFFF represents full volume, and a value
+    of 0x0000 is silence.
+
+    If a device does not support both left and right volume control, the
+    low-order word of the specified location contains the mono volume
+    level.
+
+    The full 16-bit setting(s) set with %waveOutSetVolume% is returned,
+    regardless of whether the device supports the full 16 bits of
+    volume-level control.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOTSUPPORTED
+
+    Function isn't supported.
+
+MMSYSERR_NODRIVER
+
+    The driver was not installed.
+
+.endlist
+
+.comments
+
+Not all devices support volume changes. To determine whether the device
+supports volume control, use the WAVECAPS_VOLUME flag to test the
+%dwSupport% field of the %WAVEOUTCAPS% structure (filled by
+%waveOutGetDevCaps%).
+
+To determine whether the device supports volume control on both the left and
+right channels, use the WAVECAPS_VOLUME flag to test the %dwSupport% field
+of the %WAVEOUTCAPS% structure (filled by %waveOutGetDevCaps%).
+
+.seealso
+
+%waveOutSetVolume%
+
+.refpage waveOutOpen
+
+WORD %waveOutOpen%(<lphWaveOut>, <wDeviceID>, <lpFormat>, <dwCallback>,
+ <dwCallbackInstance>, <dwFlags>)
+
+This function opens a specified waveform output device for playback.
+
+.parameters
+
+LPHWAVEOUT <lphWaveOut>
+
+    Specifies a far pointer to an HWAVEOUT handle. This location is filled
+    with a handle identifying the opened waveform output device. Use the
+    handle to identify the device when calling other waveform output
+    functions. This parameter may be NULL if the WAVE_FORMAT_QUERY flag is
+    specified for <dwFlags>.
+
+WORD <wDeviceID>
+
+    Identifies the waveform output device to open. Use a valid device ID or
+    the following flag:
+
+WAVE_MAPPER
+
+    If this flag is specified, the function selects a waveform output device
+    capable of playing the given format.
+
+LPWAVEFORMAT <lpFormat>
+
+    Specifies a pointer to a %WAVEFORMAT% structure that identifies the
+    format of the waveform data to be sent to the waveform output device.
+
+DWORD <dwCallback>
+
+    Specifies the address of a callback function or a handle to a window
+    called during waveform playback to process messages related to the
+    progress of the playback. Specify NULL for this parameter if no callback
+    is desired.
+
+DWORD <dwCallbackInstance>
+
+    Specifies user instance data passed to the callback. This parameter is
+    not used with window callbacks.
+
+DWORD <dwFlags>
+
+    Specifies flags for opening the device.
+
+WAVE_FORMAT_QUERY
+
+    If this flag is specified, the device is be queried to determine if it
+    supports the given format but is not actually opened.
+
+CALLBACK_WINDOW
+
+    If this flag is specified, <dwCallback> is assumed to be a window
+    handle.
+
+CALLBACK_FUNCTION
+
+    If this flag is specified, <dwCallback> is assumed to be a callback
+    procedure address.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_BADDEVICEID
+
+    Specified device ID is out of range.
+
+MMSYSERR_ALLOCATED
+
+    Specified resource is already allocated.
+
+MMSYSERR_NOMEM
+
+    Unable to allocate or lock memory.
+
+WAVERR_BADFORMAT
+
+    Attempted to open with an unsupported wave format.
+
+.endlist
+
+.comments
+
+Use %waveOutGetNumDevs% to determine the number of waveform output devices
+present in the system. The device ID specified by <wDeviceID> varies from
+zero to one less than the number of devices present.
+
+The %WAVEFORMAT% structure pointed to by <lpFormat> may be extended to
+include type-specific information for certain data formats. For example, for
+PCM data, an extra WORD is added to specify the number of bits per sample.
+Use the %PCMWAVEFORMAT% structure in this case.
+
+If a window is chosen to receive callback information, the following
+messages are sent to the window procedure function to indicate the progress
+of waveform output: %MM_WOM_OPEN%, %MM_WOM_CLOSE%, %MM_WOM_DONE%
+
+If a function is chosen to receive callback information, the following
+messages are sent to the function to indicate the progress of waveform
+output: %WOM_OPEN%, %WOM_CLOSE%, %WOM_DONE%. The callback function must
+reside in a DLL. You do not have to use %MakeProcInstance% to get a
+procedure-instance address for the callback function.
+
+.head "Callback"
+
+void FAR PASCAL %WaveOutFunc%(<hWaveOut>, <wMsg>, <dwInstance>, <dwParam1>,
+ <dwParam2>)
+
+%WaveOutFunc% is a placeholder for the application-supplied function name.
+The actual name must be exported by including it in an EXPORTS statement in
+the DLL's module- definition file.
+
+%Parameters%
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform device associated with the callback.
+
+WORD <wMsg>
+
+    Specifies a waveform output message.
+
+DWORD <dwInstance>
+
+    Specifies the user instance data specified with %waveOutOpen%.
+
+DWORD <dwParam1>
+
+    Specifies a parameter for the message.
+
+DWORD <dwParam2>
+
+    Specifies a parameter for the message.
+
+%Comments%
+
+Because the callback is accessed at interrupt time, it must reside in a DLL
+and its code segment must be specified as FIXED in the module-definition
+file for the DLL. Any data that the callback accesses must be in a FIXED
+data segment as well. The callback may not make any system calls except for
+%PostMessage%, %timeGetSystemTime%, %timeGetTime%, %timeSetEvent%,
+%timeKillEvent%, %midiOutShortMsg%, %midiOutLongMsg%, and %OutputDebugStr%.
+
+.seealso
+
+%waveOutClose%
+
+.refpage waveOutPause
+
+WORD %waveOutPause%(<hWaveOut>)
+
+This function pauses playback on a specified waveform output device. The
+current playback position is saved. Use %waveOutRestart% to resume playback
+from the current playback position.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.comments
+
+Calling this function when the output is already paused has no effect, and
+the function returns zero.
+
+.seealso
+
+%waveOutRestart%, %waveOutBreakLoop%
+
+.refpage waveOutPrepareHeader
+
+WORD %waveOutPrepareHeader%(<hWaveOut>, <lpWaveOutHdr>, <wSize>)
+
+This function prepares a waveform data block for playback.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+LPWAVEHDR <lpWaveOutHdr>
+
+    Specifies a pointer to a %WAVEHDR% structure that identifies the data
+    block to be prepared.
+
+WORD <wSize>
+
+    Specifies the size of the %WAVEHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOMEM
+
+    Unable to allocate or lock memory.
+
+.endlist
+
+.comments
+
+The %WAVEHDR% data structure and the data block pointed to by its %lpData%
+field must be allocated with %GlobalAlloc% using the GMEM_MOVEABLE and
+GMEM_SHARE flags, and locked with %GlobalLock%. Preparing a header that has
+already been prepared has no effect, and the function returns zero.
+
+.seealso
+
+%waveOutUnprepareHeader%
+
+.refpage waveOutReset
+
+WORD %waveOutReset%(<hWaveOut>)
+
+This function stops playback on a given waveform output device and resets
+the current position to 0. All pending playback buffers are marked as done
+and returned to the application.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.seealso
+
+%waveOutWrite%, %waveOutClose%
+
+.refpage waveOutRestart
+
+WORD %waveOutRestart%(<hWaveOut>)
+
+This function restarts a paused waveform output device.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+.endlist
+
+.comments
+
+Calling this function when the output is not paused has no effect, and the
+function returns zero.
+
+.seealso
+
+%waveOutPause%, %waveOutBreakLoop%
+
+.refpage waveOutSetPitch
+
+WORD %waveOutSetPitch%(<hWaveOut>, <dwPitch>)
+
+This function sets the pitch of a waveform output device.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+DWORD <dwPitch>
+
+    Specifies the new pitch multiplier setting. The pitch multiplier setting
+    indicates the current change in pitch from the original authored
+    setting. The pitch multiplier must be a positive value.
+
+    The pitch multiplier is specified as a fixed-point value. The high-order
+    word location contains the signed integer part of the number, and the
+    low-order word contains the fractional part. The fraction is expressed
+    as a WORD in which a value of 0x8000 represents one half, and 0x4000
+    represents one quarter. For example, the value 0x00010000 specifies a
+    multiplier of 1.0 (no pitch change), and a value of 0x000F8000 specifies
+    a multiplier of 15.5.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOTSUPPORTED
+
+    Function isn't supported.
+
+.endlist
+
+.comments
+
+Changing the pitch does not change the playback rate or the sample rate. The
+playback time is also unchanged. Not all devices support pitch changes. To
+determine whether the device supports pitch control, use the WAVECAPS_PITCH
+flag to test the %dwSupport% field of the %WAVEOUTCAPS% structure (filled by
+%waveOutGetDevCaps%).
+
+.seealso
+
+%waveOutGetPitch%, %waveOutSetPlaybackRate%, %waveOutGetPlaybackRate%
+
+.refpage waveOutSetPlaybackRate
+
+WORD %waveOutSetPlaybackRate%(<hWaveOut>, <dwRate>)
+
+This function sets the playback rate of a waveform output device.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+DWORD <dwRate>
+
+    Specifies the new playback rate setting. The playback rate setting is a
+    multiplier indicating the current change in playback rate from the
+    original authored setting. The playback rate multiplier must be a
+    positive value.
+
+    The rate is specified as a fixed-point value. The high-order word
+    contains the signed integer part of the number, and the low-order word
+    contains the fractional part. The fraction is expressed as a WORD in
+    which a value of 0x8000 represents one half, and 0x4000 represents one
+    quarter. For example, the value 0x00010000 specifies a multiplier of 1.0
+    (no playback rate change), and a value of 0x000F8000 specifies a
+    multiplier of 15.5.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOTSUPPORTED
+
+    Function isn't supported.
+
+.endlist
+
+.comments
+
+Changing the playback rate does not change the sample rate but does change
+the playback time.
+
+Not all devices support playback rate changes. To determine whether a device
+supports playback rate changes, use the WAVECAPS_PLAYBACKRATE flag to test
+the %dwSupport% field of the %WAVEOUTCAPS% structure (filled by
+%waveOutGetDevCaps%).
+
+.seealso
+
+%waveOutGetPlaybackRate%, %waveOutSetPitch%, %waveOutGetPitch%
+
+.refpage waveOutSetVolume
+
+WORD %waveOutSetVolume%(<wDeviceID>, <dwVolume>)
+
+This function sets the volume of a waveform output device.
+
+.parameters
+
+WORD <wDeviceID>
+
+    Identifies the waveform output device.
+
+DWORD <dwVolume>
+
+    Specifies the new volume setting. The low-order word contains the left
+    channel volume setting, and the high-order word contains the right
+    channel setting. A value of 0xFFFF represents full volume, and a value
+    of 0x0000 is silence.
+
+    If a device does not support both left and right volume control, the
+    low-order word of <dwVolume> specifies the volume level, and the
+    high-order word is ignored.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+MMSYSERR_NOTSUPPORTED
+
+    Function isn't supported.
+
+MMSYSERR_NODRIVER
+
+    The driver was not installed.
+
+.endlist
+
+.comments
+
+Not all devices support volume changes. To determine whether the device
+supports volume control, use the WAVECAPS_VOLUME flag to test the
+%dwSupport% field of the %WAVEOUTCAPS% structure (filled by
+%waveOutGetDevCaps%).
+
+To determine whether the device supports volume control on both the left and
+right channels, use the WAVECAPS_LRVOLUME flag flag to test the %dwSupport%
+field of the %WAVEOUTCAPS% structure (filled by %waveOutGetDevCaps%).
+
+Most devices don't support the full 16 bits of volume level control and will
+not use the high-order bits of the requested volume setting. For example,
+for a device that supports 4 bits of volume control, requested volume level
+values of 0x4000, 0x4fff, and 0x43be all produce the same physical volume
+setting, 0x4000. The %waveOutGetVolume% function returns the full 16-bit
+setting set with %waveOutSetVolume%.
+
+Volume settings are interpreted logarithmically. This means the perceived
+increase in volume is the same when increasing the volume level from 0x5000
+to 0x6000 as it is from 0x4000 to 0x5000.
+
+.seealso
+
+%waveOutGetVolume%
+
+.refpage waveOutUnprepareHeader
+
+WORD %waveOutUnprepareHeader%(<hWaveOut>, <lpWaveOutHdr>, <wSize>)
+
+This function cleans up the preparation performed by %waveOutPrepareHeader%.
+The function must be called after the device driver is finished with a data
+block. You must call this function before freeing the data buffer.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+LPWAVEHDR <lpWaveOutHdr>
+
+    Specifies a pointer to a %WAVEHDR% structure identifying the data block
+    to be cleaned up.
+
+WORD <wSize>
+
+    Specifies the size of the %WAVEHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+WAVERR_STILLPLAYING
+
+    <lpWaveOutHdr> is still in the queue.
+
+.endlist
+
+.comments
+
+This function is the complementary function to %waveOutPrepareHeader%. You
+must call this function before freeing the data buffer with %GlobalFree%.
+After passing a buffer to the device driver with %waveOutWrite%, you must
+wait until the driver is finished with the buffer before calling
+%waveOutUnprepareHeader%.
+
+Unpreparing a buffer that has not been prepared has no effect, and the
+function returns zero.
+
+.seealso
+
+%waveOutPrepareHeader%
+
+.refpage waveOutWrite
+
+WORD %waveOutWrite%(<hWaveOut>, <lpWaveOutHdr>, <wSize>)
+
+This function sends a data block to the specified waveform output device.
+
+.parameters
+
+HWAVEOUT <hWaveOut>
+
+    Specifies a handle to the waveform output device.
+
+LPWAVEHDR <lpWaveOutHdr>
+
+    Specifies a far pointer to a %WAVEHDR% structure containing information
+    about the data block.
+
+WORD <wSize>
+
+    Specifies the size of the %WAVEHDR% structure.
+
+.returns
+
+Returns zero if the function was successful. Otherwise, it returns an error
+number. Possible error returns are:
+
+.list Value Meaning
+
+MMSYSERR_INVALHANDLE
+
+    Specified device handle is invalid.
+
+WAVERR_UNPREPARED
+
+    <lpWaveOutHdr> hasn't been prepared.
+
+.endlist
+
+.comments
+
+The data buffer must be prepared with %waveOutPrepareHeader% before it is
+passed to %waveOutWrite%. The %WAVEHDR% data structure and the data buffer
+pointed to by its %lpData% field must be allocated with %GlobalAlloc% using
+the GMEM_MOVEABLE and GMEM_SHARE flags, and locked with %GlobalLock%. Unless
+the device is paused by calling %waveOutPause%, playback begins when the
+first data block is sent to the device.
+
+.seealso
+
+%waveOutPrepareHeader%, %waveOutPause%, %waveOutReset%, %waveOutRestart%

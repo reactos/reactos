@@ -1,0 +1,117 @@
+PRODUCT = CORE
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+VPATH = unix/${MWARCH}
+
+ifeq (${MWARCH},hp700)
+UNIX_SOURCES = \
+    unixtearoff.cxx \
+    thunks.s
+else
+UNIX_SOURCES = \
+    unixtearoff.cxx \
+    thunks.S
+endif
+
+WIN32_SOURCES = \
+    tearoff.cxx
+
+SOURCES =  \
+    ${UNIX_SOURCES} \
+    assoc.cxx \
+    atomtbl.cxx \
+    baseprot.cxx \
+    border.cxx \
+    brush.cxx \
+    brushbmp.cxx \
+    buffer.cxx \
+    buttutil.cxx \
+    cbufstr.cxx \
+    cenum.cxx \
+    color.cxx \
+    color3d.cxx \
+    cputil.cxx \
+    csimutil.cxx \
+    cstr.cxx \
+    datastm.cxx \
+    disputil.cxx \
+    disputl2.cxx \
+    dvutils.cxx \
+    errinfo.cxx \
+    errtbl.cxx \
+    fatstg.cxx \
+    fbstr.cxx \
+    file.cxx \
+    format.cxx \
+    formsary.cxx \
+    genutil.cxx \
+    gwnd.cxx \
+    help.cxx \
+    himetric.cxx \
+    htpvpv.cxx \
+    identpal.cxx \
+    memmg.cxx \
+    memutils.cxx \
+    misc.cxx \
+    misccom.cxx \
+    offscrn.cxx \
+    perfdbg.cxx \
+    regdbhlp.cxx \
+    rostm.cxx \
+    specpage.cxx \
+    stdenum.cxx \
+    stdfact.cxx \
+    stgutils.cxx \
+    stmbuff.cxx \
+    substm.cxx \
+    taskman.cxx \
+    timer.cxx   \
+    tooltip.cxx \
+    triapi.cxx  \
+    vmem.cxx    \
+    wndclass.cxx \
+    wutils.cxx \
+    xform.cxx
+
+WLIB	= cdutil
+LIB	= lib${WLIB}.a # target static library
+
+LIBOBJS := ${SOURCES:%.C=%.o}
+LIBOBJS := ${LIBOBJS:%.cpp=%.o}
+LIBOBJS := ${LIBOBJS:%.cxx=%.o}
+LIBOBJS := ${LIBOBJS:%.c=%.o}
+LIBOBJS := ${LIBOBJS:%.S=%.o}
+LIBOBJS := ${LIBOBJS:%.s=%.o}
+
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+INCLUDES=\
+    $(COREINCLUDES) \
+    $(ROOT)/src/site/include \
+    $(ROOT)/src/f3/crt
+
+PRECOMPILED_OPTION = -Xhdrstop=headers.hxx -Xpch=../include/${O}/headers.pch
+
+PROJECT_CFLAGS = \
+	${INCLUDES:%=-I%} 
+#	${PRECOMPILED_OPTION}
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+

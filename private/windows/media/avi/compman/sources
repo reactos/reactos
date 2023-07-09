@@ -1,0 +1,30 @@
+#
+#   Create an MCI handler DLL
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=compman
+TARGETPATH=..\lib
+TARGETTYPE=LIBRARY
+UMTYPE=windows
+
+C_DEFINES=-DNT_THUNK32 -DUNICODE -DINC_OLE2 -DDEBUGLOAD
+
+# Define libs we need and where to find them
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+	   $(_NTBINDIR)\public\sdk\lib\*\libc.lib     \
+	   $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+	   $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib    \
+	   $(_NTBINDIR)\public\sdk\lib\*\winmm.lib
+
+INCLUDES=..\inc;..\..\inc;..\video
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= compman.c \
+	 icm.c \
+	 thunk.c
+

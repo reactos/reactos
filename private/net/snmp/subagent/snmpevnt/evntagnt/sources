@@ -1,0 +1,33 @@
+TARGETNAME=evntagnt
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+DLLENTRY=DllMain
+
+MSC_WARNING_LEVEL=/W3 /WX
+USE_CRTDLL=1
+UNICODE=1
+C_FLAGS=-DUNICODE
+
+!IFDEF USE_CALLTREE
+LINKER_FLAGS=$(LINKER_FLAGS) -calltree
+!ENDIF
+
+NTTARGETFILE0=snmpelmg.h snmpelmg.rc
+
+INCLUDES=\
+    $(BASEDIR)\private\net\inc;
+
+SOURCES=\
+    evntagnt.rc  \
+    snmpeldl.cpp \
+    snmpelpt.cpp \
+    snmptrlg.cpp \
+    EALoad.cpp
+
+TARGETLIBS=\
+    $(BASEDIR)\Public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+    $(BASEDIR)\public\sdk\lib\*\snmpapi.lib  \
+    $(BASEDIR)\public\sdk\lib\*\wsock32.lib
+

@@ -1,0 +1,8 @@
+#include "winuser.h"
+#include "winver.h"
+#include "resource.h"
+
+#include "app.rcv"
+
+AppIcon ICON "app.ico"
+

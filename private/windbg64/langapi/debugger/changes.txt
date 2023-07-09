@@ -1,0 +1,207 @@
+22-Feb-1994 MarkBro
+	od.h:
+		Added msgMaskNone and reversed two values for consistency with
+		the IDE's UI.
+
+21-Sep-1993 MikeMo
+	od.h
+		Stuff for stepping across OLE Remote Procedure Calls.
+
+06-Aug-1993 MikeMo
+	od.h
+		Post-mortem debugging (OSDDebugActive).
+
+11-May-1993 MikeMo
+	od.h
+		Removed lpfnGetMsg -- due to other changes, it's not necessary
+		after all.
+
+06-May-1993 MikeMo
+	od.h
+		cuda#3652: added lpfnGetMsg to the DBF structure, so that OSDebug
+		can use a GetMsg function supplied by the debugger.
+
+04-May-1993 MikeMo
+    od.h
+        Added xosdLoadAborted, which is the error code returned by
+        the NT DM's dmfProgLoad if the user does a Stop Debuggging
+        before the debuggee has finished loading.
+
+03-May-1993 RicoM
+    cvinfo.h
+        CV_TYP_IS_UNSIGNED(typ) no longer includes T_RCHAR as an unsigned
+        primitive type CV_TYP_IS_SIGNED(typ) still does though (after all
+        T_RCHAR can't be both signed AND unsigned...
+
+22-Apr-1993 MikeMo
+    od.h
+        Added another function pointer to the DBF structure:
+        lpfnDispatchMsg points to a function in the debugger which will
+        dispatch a message.  This is needed if the TL or DM has to run
+        a message pump (as the NT DM does): since OSDebug doesn't know
+        what special processing the debugger may want to do with the
+        message, we now pass down this pointer.
+
+        lpfnDispatchMsg takes an LPVOID argument, and what it points to
+        depends on what version of OSDebug is being built.  For the NT
+        version, this is an LPMSG.
+
+17-Apr-1993 MikeMo
+    od.h
+        Added xosdDLLNotFound, which is needed for NT.
+
+13-Apr-1993 MikeMo
+    od.h
+        Added mtrcMaxSuspend, which returns the maximum suspend count of
+        a process or thread in the target OS.  For some environments, this
+        may be 0 (such as DOS) or 1 (such as OS/2).  For NT, this happens
+        to be 127.
+
+12-Apr-1993 DanS
+    types.h
+        use std CRT names instead of oldnames for WIN32
+
+02-Apr-1993 MikeMo
+    od.h
+        Changed the TState field of a TST (thread state): removed
+        the TRC_C_Suspended value (since you can tell if it's suspended
+        by checking dwSuspendCount), and added the TRC_C_FirstChance
+        value to determine if the thread is currently processing a
+        first-chance exception.
+
+01-Apr-1993 MikeMo
+    od.h
+        Moved private EXOP fields out of this structure, into EXOPE
+        (which is defined inside OSDebug).
+
+        Added stoPassEx, so that when doing a step you can indicate
+        whether to pass a first-chance exception on to the debuggee.
+        This is directly orthogonal to exop.fGoException.
+
+24-Mar-1993 MikeMo
+    od.h
+        Added xosdAllThreadsSuspended, which is returned as a dbcError
+        if the debugger does Go, Step, etc. when all debuggee threads
+        are suspended.
+
+23-Mar-1993 DanS
+    cvinfo.h
+    cvexefmt.h
+        cleanup from RossG, added ALPHA processor identifiers.
+
+22-Mar-1993 MikeMo
+    od.h
+        Now instead of OSDHandleEx taking a BOOL fHandle, it takes
+        an EFD which indicates whether the DM should ignore the
+        exception, notify the debugger of it and keep running, or
+        stop the debuggee.
+
+22-Mar-1993 MarkBro
+    cvinfo.h:
+        Changed field in lfOEM struct from OEM to cvOEM.  The OEM 
+        field conflicted with #defines in OEM (DBCS) versions of
+        CodeView.
+
+21-Mar-1993 MikeMo
+    od.h
+        Enhancements to exception support:
+        (1) Added mtrcFirstChanceExc, which indicates whether the
+            target OS supports first-chance exceptions.
+        (2) dbcException's wParam now consists of two bitfields:
+            excFirstChance is set if this is a first-chance exception
+            (if the target OS doesn't support first-chance exceptions
+            then this will never be set); and excContinuing is set
+            if OSDebug is continuing to run the debuggee despite
+            receiving the exception (this will never be set for
+            last-chance exceptions).
+
+16-Mar-1993 MikeMo
+    od.h
+        Revised TST (Thread State) to be a more OS-independent
+        (although it's still not completely OS-independent).
+
+05-Mar-1993 MikeMo
+    od.h
+        Minor change: added bpnsMax, upper-limit value for BPNS enum
+
+25-Feb-1993 MikeMo
+    od.h
+        Added some fields to the RT (Register Type) enumeration to
+        allow the debugger to determine if a particular register
+        is used as part of the program counter, base pointer,
+        stack pointer, and/or flags.
+
+        The new flags (rtPC, rtBase, rtStack, and rtFlags) are to
+        be used to determine if a given register is used for a
+        given purpose, e.g. to determine if a register is (part
+        of) the program counter.  You shouldn't use these to
+        calculate, for example, the program counter, because the
+        PC may be calculated in an unusual way (e.g. CS:EIP).
+
+        Each register can have zero or more of these set (e.g. the
+        SS register will have rtBase and rtStack).  Each of these
+        flags can be set on zero or more registers (e.g. the rtPC
+        flag will be set for the CS, IP, and EIP registers).
+
+09-Feb-1993 MikeMo
+    od.h
+        Some of the RT (Register Type) fields were not bitfields
+        before.  This wasn't a bug in itself, but it made it more
+        likely that someone writing a debugger would introduce
+        bugs because they might not realize that the fields weren't
+        bitfields.  Now all RT fields are bitfields.
+
+29-Jan-1993 MikeMo
+    od.h
+        Added dopHexUpper, for upper-case hex digits.  We already
+        had dopUpper, but that converts everything; in some cases
+        we will want lower case disassembly but with upper case
+        hex digits.  (If caller sets dopUpper, then dopHexUpper is
+        also implied.)
+
+15-Jan-1993 MikeMo
+    od.h
+        Removed dbcThreadDestroy, which was a bogus duplicate of
+        dbcDeleteThread.
+
+13-Jan-1993 MikeMo
+    Removed osdHandleEx, since instead you're supposed to use
+    OSDHandleEx().
+
+04-Dec-1992 MikeMo
+    Since the CRT printf routines return "int", the return types for
+    the EE's prototypes for eprintf and sprintf have been changed
+    from "short" to "int".
+
+30-Nov-1992 MikeMo
+    types.h
+        Moved "#define WNDPROC FARPROC" inside the section that only
+        gets evaluated if <windows.h> has NOT been included.  (It
+        doesn't seem to me that this should be needed at all, but I'm
+        leaving it just in case.)
+
+24-Nov-1992 MikeMo
+    od.h
+        Moved some debug modes (dbm's) here from dmwin\dmw0.c, where
+        they had previously been hardcoded.
+
+29-Oct-1992 MikeMo
+    od.h
+        The TST structure used to be in stump\emp.hmd, but it's a
+        public structure (filled in by osdThreadStat), so I moved it
+        to od.h
+
+28-Oct-1992 MikeMo
+    types.h
+        For HOST32: PASCAL = __stdcall, CDECL = _cdecl, so as to match
+        the NT header files.
+    cvtypes.h
+        Added EXPCALL, calling convention to be used for exported
+        functions (PASCAL on most systems, CDECL on NT & Win32s).
+    od.h
+    shapi.h
+    eeapi.h
+        Exported functions now use EXPCALL calling convention.
+
+15-Oct-1992 MikeMo
+    CVINC project created.

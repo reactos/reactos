@@ -1,0 +1,521 @@
+//+---------------------------------------------------------------------------
+//
+//  Copyright 1995 - 1996 Microsoft Corporation. All Rights Reserved.
+//
+//  Contents:   OLE Document Object interfaces
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// DocObj.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1996 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("// OLE Document Object Interfaces.")
+
+
+import "ocidl.idl";
+import "objidl.idl";
+import "oleidl.idl";
+import "oaidl.idl";
+import "servprov.idl";
+
+#define HWND        UserHWND
+#define HACCEL      UserHACCEL
+#define HDC         UserHDC
+#define HFONT       UserHFONT
+#define MSG         UserMSG
+#define BSTR        UserBSTR
+#define EXCEPINFO   UserEXCEPINFO
+#define VARIANT     UserVARIANT
+
+interface IOleDocument;
+interface IOleDocumentSite;
+interface IOleDocumentView;
+interface IEnumOleDocumentViews;
+interface IContinueCallback;
+interface IPrint;
+interface IOleCommandTarget;
+
+
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//  Interface Definitions")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:    IOleDocument interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPOLEDOCUMENT_DEFINED")
+cpp_quote("#define _LPOLEDOCUMENT_DEFINED")
+[
+        object,
+        uuid(b722bcc5-4e68-101b-a2bc-00aa00404770),
+        pointer_default(unique)
+]
+interface IOleDocument : IUnknown
+{
+        typedef [unique] IOleDocument *LPOLEDOCUMENT;
+
+        typedef enum {
+                DOCMISC_CANCREATEMULTIPLEVIEWS          = 1,
+                DOCMISC_SUPPORTCOMPLEXRECTANGLES        = 2,
+                DOCMISC_CANTOPENEDIT                        = 4,        // fails the IOleDocumentView::Open  method
+                DOCMISC_NOFILESUPPORT                       = 8,        //  does not support read/writing to a file
+        } DOCMISC;
+
+
+        HRESULT CreateView(
+                [in, unique] IOleInPlaceSite *pIPSite,
+                [in, unique] IStream *pstm,
+                [in] DWORD dwReserved,
+                [out] IOleDocumentView **ppView);
+
+        HRESULT GetDocMiscStatus(
+                [out] DWORD *pdwStatus);
+
+        HRESULT EnumViews(
+                [out] IEnumOleDocumentViews **ppEnum,
+                [out] IOleDocumentView **ppView);
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:    IOleDocumentSite interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPOLEDOCUMENTSITE_DEFINED")
+cpp_quote("#define _LPOLEDOCUMENTSITE_DEFINED")
+[
+        object,
+        uuid(b722bcc7-4e68-101b-a2bc-00aa00404770),
+        pointer_default(unique)
+]
+interface IOleDocumentSite : IUnknown
+{
+        typedef [unique] IOleDocumentSite *LPOLEDOCUMENTSITE;
+
+        HRESULT ActivateMe(
+                [in] IOleDocumentView *pViewToActivate);
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:    IOleDocumentView interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPOLEDOCUMENTVIEW_DEFINED")
+cpp_quote("#define _LPOLEDOCUMENTVIEW_DEFINED")
+[
+        object,
+        uuid(b722bcc6-4e68-101b-a2bc-00aa00404770),
+        pointer_default(unique)
+]
+interface IOleDocumentView : IUnknown
+{
+        typedef [unique] IOleDocumentView *LPOLEDOCUMENTVIEW;
+
+        HRESULT SetInPlaceSite(
+                [in, unique] IOleInPlaceSite *pIPSite);
+
+        HRESULT GetInPlaceSite(
+                [out] IOleInPlaceSite **ppIPSite);
+
+        HRESULT GetDocument(
+                [out] IUnknown **ppunk);
+
+        [input_sync]
+        HRESULT SetRect(
+        [in] LPRECT prcView);
+
+        HRESULT GetRect(
+        [out] LPRECT prcView);
+
+        [input_sync]
+        HRESULT SetRectComplex(
+                [in, unique] LPRECT prcView,
+                [in, unique] LPRECT prcHScroll,
+                [in, unique] LPRECT prcVScroll,
+                [in, unique] LPRECT prcSizeBox);
+
+        HRESULT Show(
+                [in] BOOL fShow);
+
+        HRESULT UIActivate(
+                [in] BOOL fUIActivate);
+
+        HRESULT Open(void);
+
+        HRESULT CloseView(DWORD dwReserved);
+
+        HRESULT SaveViewState(
+                [in] LPSTREAM pstm);
+
+        HRESULT ApplyViewState(
+                [in] LPSTREAM pstm);
+
+        HRESULT Clone(
+                [in] IOleInPlaceSite *pIPSiteNew,
+                [out] IOleDocumentView **ppViewNew);
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:    IEnumOleDocumentViews interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPENUMOLEDOCUMENTVIEWS_DEFINED")
+cpp_quote("#define _LPENUMOLEDOCUMENTVIEWS_DEFINED")
+[
+        object,
+        uuid(b722bcc8-4e68-101b-a2bc-00aa00404770),
+        pointer_default(unique)
+]
+interface IEnumOleDocumentViews : IUnknown
+{
+
+        typedef [unique] IEnumOleDocumentViews *LPENUMOLEDOCUMENTVIEWS;
+
+        [local]
+        HRESULT __stdcall Next(
+        [in] ULONG cViews,
+                [out] IOleDocumentView **rgpView,
+                [out] ULONG *pcFetched);
+
+        [call_as(Next)]
+        HRESULT __stdcall RemoteNext(
+        [in] ULONG cViews,
+                [out, size_is(cViews), length_is(*pcFetched)]
+                IOleDocumentView **rgpView,
+                [out] ULONG *pcFetched);
+
+        HRESULT Skip(
+                [in] ULONG cViews);
+
+        HRESULT Reset();
+
+        HRESULT Clone(
+                [out] IEnumOleDocumentViews **ppEnum);
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:    IContinueCallback interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPCONTINUECALLBACK_DEFINED")
+cpp_quote("#define _LPCONTINUECALLBACK_DEFINED")
+[
+        object,
+        uuid(b722bcca-4e68-101b-a2bc-00aa00404770),
+        pointer_default(unique)
+]
+interface IContinueCallback : IUnknown
+{
+        typedef [unique] IContinueCallback *LPCONTINUECALLBACK;
+
+        HRESULT FContinue();
+
+        HRESULT FContinuePrinting(
+                [in] LONG nCntPrinted,
+                [in] LONG nCurPage,
+                [in, unique] wchar_t * pwszPrintStatus);
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:    IPrint interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPPRINT_DEFINED")
+cpp_quote("#define _LPPRINT_DEFINED")
+[
+        object,
+        uuid(b722bcc9-4e68-101b-a2bc-00aa00404770),
+        pointer_default(unique)
+]
+interface IPrint : IUnknown
+{
+        typedef [unique] IPrint *LPPRINT;
+
+        typedef enum
+        {
+                PRINTFLAG_MAYBOTHERUSER         = 1,
+                PRINTFLAG_PROMPTUSER            = 2,
+                PRINTFLAG_USERMAYCHANGEPRINTER  = 4,
+                PRINTFLAG_RECOMPOSETODEVICE     = 8,
+                PRINTFLAG_DONTACTUALLYPRINT     = 16,
+                PRINTFLAG_FORCEPROPERTIES       = 32,
+                PRINTFLAG_PRINTTOFILE           = 64
+        } PRINTFLAG;
+
+        typedef struct  tagPAGERANGE
+        {
+                LONG nFromPage;
+                LONG nToPage;
+        } PAGERANGE;
+
+        typedef struct  tagPAGESET
+        {
+                ULONG   cbStruct;
+                BOOL    fOddPages;
+                BOOL    fEvenPages;
+                ULONG   cPageRange;
+                [size_is(cPageRange)]
+                PAGERANGE rgPages[];
+        } PAGESET;
+
+        cpp_quote("#define PAGESET_TOLASTPAGE   ((WORD)(-1L))")
+
+        HRESULT SetInitialPageNum(
+                [in] LONG nFirstPage);
+
+        HRESULT GetPageInfo(
+                [out] LONG *pnFirstPage,
+                [out] LONG *pcPages);
+
+        [local]
+        HRESULT __stdcall Print(
+                [in] DWORD grfFlags,
+                [in, out] DVTARGETDEVICE **pptd,
+                [in, out] PAGESET ** ppPageSet,
+                [in, out, unique] STGMEDIUM * pstgmOptions,
+                [in] IContinueCallback *pcallback,
+                [in]  LONG nFirstPage,
+                [out] LONG *pcPagesPrinted,
+                [out] LONG *pnLastPage);
+
+        [call_as(Print)]
+        HRESULT __stdcall RemotePrint(
+                [in] DWORD grfFlags,
+                [in, out] DVTARGETDEVICE **pptd,
+                [in, out] PAGESET ** pppageset,
+                [in, out, unique] RemSTGMEDIUM * pstgmOptions,
+                [in] IContinueCallback * pcallback,
+                [in]  LONG nFirstPage,
+                [out] LONG * pcPagesPrinted,
+                [out] LONG * pnLastPage);
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:    IOleCommandTarget interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPOLECOMMANDTARGET_DEFINED")
+cpp_quote("#define _LPOLECOMMANDTARGET_DEFINED")
+[
+        //local,
+        object,
+        uuid(b722bccb-4e68-101b-a2bc-00aa00404770),
+        pointer_default(unique)
+]
+interface IOleCommandTarget : IUnknown
+{
+        typedef [unique] IOleCommandTarget *LPOLECOMMANDTARGET;
+
+        typedef enum
+        {
+                OLECMDF_SUPPORTED       = 0x00000001,
+                OLECMDF_ENABLED         = 0x00000002,
+                OLECMDF_LATCHED         = 0x00000004,
+                OLECMDF_NINCHED         = 0x00000008,
+        } OLECMDF;
+
+
+        typedef struct _tagOLECMD {
+                ULONG   cmdID;
+                DWORD   cmdf;
+        } OLECMD;
+
+        typedef struct _tagOLECMDTEXT{
+                DWORD cmdtextf;
+                ULONG cwActual;
+                ULONG cwBuf;    /* size in wide chars of the buffer for text */
+                [size_is(cwBuf)]
+                wchar_t rgwz[]; /* Array into which callee writes the text */
+        } OLECMDTEXT;
+
+        typedef enum
+        {
+                OLECMDTEXTF_NONE        = 0,
+                OLECMDTEXTF_NAME        = 1,
+                OLECMDTEXTF_STATUS      = 2,
+        } OLECMDTEXTF;
+
+        typedef enum
+        {
+                OLECMDEXECOPT_DODEFAULT         = 0,
+                OLECMDEXECOPT_PROMPTUSER        = 1,
+                OLECMDEXECOPT_DONTPROMPTUSER    = 2,
+                OLECMDEXECOPT_SHOWHELP          = 3
+        } OLECMDEXECOPT;
+
+cpp_quote("/* OLECMDID_STOPDOWNLOAD is supported for QueryStatus Only */")
+
+        typedef enum {
+                OLECMDID_OPEN                           = 1,
+                OLECMDID_NEW                            = 2,
+                OLECMDID_SAVE                           = 3,
+                OLECMDID_SAVEAS                         = 4,
+                OLECMDID_SAVECOPYAS                     = 5,
+                OLECMDID_PRINT                          = 6,
+                OLECMDID_PRINTPREVIEW                   = 7,
+                OLECMDID_PAGESETUP                      = 8,
+                OLECMDID_SPELL                          = 9,
+                OLECMDID_PROPERTIES                     = 10,
+                OLECMDID_CUT                            = 11,
+                OLECMDID_COPY                           = 12,
+                OLECMDID_PASTE                          = 13,
+                OLECMDID_PASTESPECIAL                   = 14,
+                OLECMDID_UNDO                           = 15,
+                OLECMDID_REDO                           = 16,
+                OLECMDID_SELECTALL                      = 17,
+                OLECMDID_CLEARSELECTION                 = 18,
+                OLECMDID_ZOOM                           = 19,
+                OLECMDID_GETZOOMRANGE                   = 20,
+                OLECMDID_UPDATECOMMANDS                 = 21,
+                OLECMDID_REFRESH                        = 22,
+                OLECMDID_STOP                           = 23,
+                OLECMDID_HIDETOOLBARS                   = 24,
+                OLECMDID_SETPROGRESSMAX                 = 25,
+                OLECMDID_SETPROGRESSPOS                 = 26,
+                OLECMDID_SETPROGRESSTEXT                = 27,
+                OLECMDID_SETTITLE                       = 28,
+                OLECMDID_SETDOWNLOADSTATE               = 29,
+                OLECMDID_STOPDOWNLOAD                   = 30
+        } OLECMDID;
+
+/* error codes */
+cpp_quote("#define OLECMDERR_E_FIRST            (OLE_E_LAST+1)")
+cpp_quote("#define OLECMDERR_E_NOTSUPPORTED (OLECMDERR_E_FIRST)")
+cpp_quote("#define OLECMDERR_E_DISABLED         (OLECMDERR_E_FIRST+1)")
+cpp_quote("#define OLECMDERR_E_NOHELP           (OLECMDERR_E_FIRST+2)")
+cpp_quote("#define OLECMDERR_E_CANCELED         (OLECMDERR_E_FIRST+3)")
+cpp_quote("#define OLECMDERR_E_UNKNOWNGROUP     (OLECMDERR_E_FIRST+4)")
+
+cpp_quote("#define MSOCMDERR_E_FIRST OLECMDERR_E_FIRST")
+cpp_quote("#define MSOCMDERR_E_NOTSUPPORTED OLECMDERR_E_NOTSUPPORTED")
+cpp_quote("#define MSOCMDERR_E_DISABLED OLECMDERR_E_DISABLED")
+cpp_quote("#define MSOCMDERR_E_NOHELP OLECMDERR_E_NOHELP")
+cpp_quote("#define MSOCMDERR_E_CANCELED OLECMDERR_E_CANCELED")
+cpp_quote("#define MSOCMDERR_E_UNKNOWNGROUP OLECMDERR_E_UNKNOWNGROUP")
+
+        [input_sync]
+        HRESULT QueryStatus(
+        [in, unique] const GUID *pguidCmdGroup,
+                [in] ULONG cCmds,
+                [size_is(cCmds)]
+                [in, out] OLECMD prgCmds[],
+                [in, out, unique] OLECMDTEXT *pCmdText);
+
+
+        HRESULT Exec(
+        [in, unique] const GUID *pguidCmdGroup,
+                [in] DWORD nCmdID,
+                [in] DWORD nCmdexecopt,
+                [in, unique] VARIANT *pvaIn,
+                [in, out, unique] VARIANT *pvaOut);
+}
+cpp_quote("#endif")
+
+cpp_quote("typedef enum")
+cpp_quote("{")
+cpp_quote("      OLECMDIDF_REFRESH_NORMAL     = 0,")
+cpp_quote("      OLECMDIDF_REFRESH_IFEXPIRED  = 1,")
+cpp_quote("      OLECMDIDF_REFRESH_CONTINUE   = 2,")
+cpp_quote("      OLECMDIDF_REFRESH_COMPLETELY = 3,")
+cpp_quote("} OLECMDID_REFRESHFLAG;")
+
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//  Aliases to original office-compatible names")
+cpp_quote("#define IMsoDocument             IOleDocument")
+cpp_quote("#define IMsoDocumentSite         IOleDocumentSite")
+cpp_quote("#define IMsoView                 IOleDocumentView")
+cpp_quote("#define IEnumMsoView             IEnumOleDocumentViews")
+cpp_quote("#define IMsoCommandTarget        IOleCommandTarget")
+cpp_quote("#define LPMSODOCUMENT            LPOLEDOCUMENT")
+cpp_quote("#define LPMSODOCUMENTSITE        LPOLEDOCUMENTSITE")
+cpp_quote("#define LPMSOVIEW                LPOLEDOCUMENTVIEW")
+cpp_quote("#define LPENUMMSOVIEW            LPENUMOLEDOCUMENTVIEWS")
+cpp_quote("#define LPMSOCOMMANDTARGET       LPOLECOMMANDTARGET")
+cpp_quote("#define MSOCMD                   OLECMD")
+cpp_quote("#define MSOCMDTEXT               OLECMDTEXT")
+cpp_quote("#define IID_IMsoDocument         IID_IOleDocument")
+cpp_quote("#define IID_IMsoDocumentSite     IID_IOleDocumentSite")
+cpp_quote("#define IID_IMsoView             IID_IOleDocumentView")
+cpp_quote("#define IID_IEnumMsoView         IID_IEnumOleDocumentViews")
+cpp_quote("#define IID_IMsoCommandTarget    IID_IOleCommandTarget")
+cpp_quote("#define MSOCMDF_SUPPORTED OLECMDF_SUPPORTED")
+cpp_quote("#define MSOCMDF_ENABLED OLECMDF_ENABLED")
+cpp_quote("#define MSOCMDF_LATCHED OLECMDF_LATCHED")
+cpp_quote("#define MSOCMDF_NINCHED OLECMDF_NINCHED")
+cpp_quote("#define MSOCMDTEXTF_NONE OLECMDTEXTF_NONE")
+cpp_quote("#define MSOCMDTEXTF_NAME OLECMDTEXTF_NAME")
+cpp_quote("#define MSOCMDTEXTF_STATUS OLECMDTEXTF_STATUS")
+cpp_quote("#define MSOCMDEXECOPT_DODEFAULT OLECMDEXECOPT_DODEFAULT")
+cpp_quote("#define MSOCMDEXECOPT_PROMPTUSER OLECMDEXECOPT_PROMPTUSER")
+cpp_quote("#define MSOCMDEXECOPT_DONTPROMPTUSER OLECMDEXECOPT_DONTPROMPTUSER")
+cpp_quote("#define MSOCMDEXECOPT_SHOWHELP OLECMDEXECOPT_SHOWHELP")
+cpp_quote("#define MSOCMDID_OPEN OLECMDID_OPEN")
+cpp_quote("#define MSOCMDID_NEW OLECMDID_NEW")
+cpp_quote("#define MSOCMDID_SAVE OLECMDID_SAVE")
+cpp_quote("#define MSOCMDID_SAVEAS OLECMDID_SAVEAS")
+cpp_quote("#define MSOCMDID_SAVECOPYAS OLECMDID_SAVECOPYAS")
+cpp_quote("#define MSOCMDID_PRINT OLECMDID_PRINT")
+cpp_quote("#define MSOCMDID_PRINTPREVIEW OLECMDID_PRINTPREVIEW")
+cpp_quote("#define MSOCMDID_PAGESETUP OLECMDID_PAGESETUP")
+cpp_quote("#define MSOCMDID_SPELL OLECMDID_SPELL")
+cpp_quote("#define MSOCMDID_PROPERTIES OLECMDID_PROPERTIES")
+cpp_quote("#define MSOCMDID_CUT OLECMDID_CUT")
+cpp_quote("#define MSOCMDID_COPY OLECMDID_COPY")
+cpp_quote("#define MSOCMDID_PASTE OLECMDID_PASTE")
+cpp_quote("#define MSOCMDID_PASTESPECIAL OLECMDID_PASTESPECIAL")
+cpp_quote("#define MSOCMDID_UNDO OLECMDID_UNDO")
+cpp_quote("#define MSOCMDID_REDO OLECMDID_REDO")
+cpp_quote("#define MSOCMDID_SELECTALL OLECMDID_SELECTALL")
+cpp_quote("#define MSOCMDID_CLEARSELECTION OLECMDID_CLEARSELECTION")
+cpp_quote("#define MSOCMDID_ZOOM OLECMDID_ZOOM")
+cpp_quote("#define MSOCMDID_GETZOOMRANGE OLECMDID_GETZOOMRANGE")
+
+cpp_quote("EXTERN_C const GUID SID_SContainerDispatch;")
+
+

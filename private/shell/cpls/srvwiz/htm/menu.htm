@@ -1,0 +1,119 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css">
+<TITLE>leftmenu</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="menu.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript">
+//disable dragging and subsequent scrolling horizontally
+
+document.onselectstart = fnSelect;
+
+function fnSelect()
+{
+   event.returnValue = false;
+}
+document.ondragstart = fnDrag;
+
+function fnDrag()
+{
+   event.returnValue = false;
+}
+</SCRIPT></HEAD>
+<BODY ondragover="return false" ID="lm" TOPMARGIN="10" LEFTMARGIN="0">
+<TABLE WIDTH="300" cellspacing="0" BORDER="0">
+    <TR>
+        <TD ID="menu1">
+            <IMG SRC="mnu_hm1.gif" WIDTH=24 HEIGHT=24 NAME="b1" BORDER="0" HSPACE="5" ALIGN="middle">
+            <A HREF="javascript:home()" ONCLICK="MenuOnClick(-1);" oncontextmenu="return false;" onmouseover="b_on(1);return true;" onmouseout="b_off(1);return true;">Home</A>
+        </TD>
+    <TR>
+        <TD ID="menu2">
+            <DIV id=miReg STYLE="display:none">
+                <IMG SRC="mnu_reg1.gif" WIDTH=24 HEIGHT=24  NAME="b2" BORDER="0" vspace="2" HSPACE="5" ALIGN="middle">
+                <A HREF="javascript:reg()" oncontextmenu="return false;" onmouseover="b_on(2);return true;" onmouseout="b_off(2);return true;" ONCLICK="MenuOnClick(-1);">Register Now</A>
+                <SCRIPT LANGUAGE="javascript">
+                        // show it only if it is not registered yet
+                        if (!srvwiz.ProductRegistered)
+                            document.all.miReg.style.display = '';
+                </SCRIPT>
+            </DIV>
+        </TD>
+    <TR>
+        <TD ID="menu3">
+            <IMG SRC="mnu_ad1.gif" WIDTH=24 HEIGHT=24 NAME="b3" BORDER="0" vspace="2" HSPACE="5" ALIGN="middle">
+            <A HREF="javascript:ad()" oncontextmenu="return false;" onmouseover="b_on(3);return true;" onmouseout="b_off(3);return true;" ONCLICK="MenuOnClick(-1);">Active Directory</A>
+        </TD>
+    </TR>    
+    <TR>
+        <TD ID="menu9">
+            <IMG SRC="mnu_fl1.gif" WIDTH=24 HEIGHT=24 NAME="b5" BORDER="0" vspace="2" HSPACE="5" ALIGN="middle">
+            <A HREF="javascript:file()" oncontextmenu="return false;" onmouseover="b_on(5);return true;" onmouseout="b_off(5);return true;" ONCLICK="MenuOnClick(-1);">File Server</A>
+        </TD>
+    </TR>    
+    <TR>
+        <TD ID="menu10">
+            <IMG SRC="mnu_prt1.gif" WIDTH=24 HEIGHT=24 NAME="b6" BORDER="0" vspace="2" HSPACE="5" ALIGN="middle">
+            <A HREF="javascript:print()" oncontextmenu="return false;" onmouseover="b_on(6);return true;" onmouseout="b_off(6);return true;" ONCLICK="MenuOnClick(-1);">Print Server</A>
+        </TD>
+    </TR>    
+    <TR>
+        <TD ID="menu11">
+            <IMG SRC="mnu_web1.gif" WIDTH=24 HEIGHT=24 NAME="b7" BORDER="0" vspace="2" HSPACE="5" ALIGN="middle">
+            <A HREF="javascript:web()" oncontextmenu="return false;" onmouseover="b_on(7);return true;" onmouseout="b_off(7);return true;" ONCLICK="MenuOnClick(1);">Web/Media Server</A>
+            <IMG SRC="arrow.gif" BORDER="0" HSPACE="1" onmouseover="b_on(7);return true;" onmouseout="b_off(7);return true;" ONCLICK="MenuOnClick(1),web()">
+            <menu ID="w" STYLE="display:none">
+                <A HREF="javascript:iis()" oncontextmenu="return false;"><LI TYPE="square" ID="menu12">Web Server</A></LI>
+                <A HREF="javascript:sms()" oncontextmenu="return false;"><LI TYPE="square" ID="menu13">Streaming Media Server</A></LI>
+            </menu>
+        </TD>
+    </TR>    
+    <TR>
+        <TD ID="menu4">
+            <IMG SRC="mnu_net1.gif" WIDTH=24 HEIGHT=24 NAME="b4" BORDER="0" vspace="2" HSPACE="5" ALIGN="middle">
+            <A HREF="javascript:net()" oncontextmenu="return false;" onmouseover="b_on(4);return true;" onmouseout="b_off(4);return true;" ONCLICK="MenuOnClick(0);">Networking</A>
+            <IMG SRC="arrow.gif" BORDER="0" HSPACE="1" onmouseover="b_on(4);return true;" onmouseout="b_off(4);return true;" ONCLICK="MenuOnClick(0),net()">
+            <menu ID="n" STYLE="display:none">
+                <A HREF="javascript:dhcp()" oncontextmenu="return false;"><LI TYPE="square" ID="menu5">DHCP</A></LI>
+                <A HREF="javascript:dns()" oncontextmenu="return false;"><LI TYPE="square" ID="menu6">DNS</A></LI>
+                <A HREF="javascript:ras()" oncontextmenu="return false;"><LI TYPE="square" ID="menu7">Remote Access</A></LI>
+                <A HREF="javascript:rtg()" oncontextmenu="return false;"><LI TYPE="square" ID="menu8">Routing</A></LI>
+            </menu>
+        </TD>
+    </TR>    
+    <TR>
+        <TD ID="menu14">
+            <IMG SRC="mnu_ap1.gif" WIDTH=24 HEIGHT=24 NAME="b8" BORDER="0" vspace="2" HSPACE="5" ALIGN="middle">
+            <A HREF="javascript:as()" oncontextmenu="return false;" onmouseover="b_on(8);return true;" onmouseout="b_off(8);return true;" ONCLICK="MenuOnClick(2);">Application Server</A>
+            <IMG SRC="arrow.gif" BORDER="0" HSPACE="1" onmouseover="b_on(8);return true;" onmouseout="b_off(8);return true;" ONCLICK="MenuOnClick(2),as()">
+            <menu ID="as" STYLE="display:none">
+                <A HREF="javascript:com()" oncontextmenu="return false;"><LI TYPE="square" ID="menu15">Component Services</A></LI>
+                <A HREF="javascript:ts()" oncontextmenu="return false;"><LI TYPE="square" ID="menu21">Terminal Services</A></LI>
+                <A HREF="javascript:db()" oncontextmenu="return false;"><LI TYPE="square" ID="menu17">Database Server</A></LI>
+                <A HREF="javascript:email()" oncontextmenu="return false;"><LI TYPE="square" ID="menu18">E-mail Server</A></LI>
+            </menu>
+        </TD>
+    </TR>    
+    <TR>
+        <TD ID="menu19">
+            <IMG SRC="mnu_adv1.gif" WIDTH=24 HEIGHT=24 NAME="b9" BORDER="0" vspace="2" HSPACE="5" ALIGN="middle">
+            <A HREF="javascript:adv()" oncontextmenu="return false;" onmouseover="b_on(9);return true;" onmouseout="b_off(9);return true;" ONCLICK="MenuOnClick(3);">Advanced</A>
+            <IMG SRC="arrow.gif" BORDER="0" HSPACE="1" onmouseover="b_on(9);return true;" onmouseout="b_off(9);return true;" ONCLICK="MenuOnClick(3),adv()">
+            <menu ID="a" STYLE="display:none">
+                <DIV id=miClustering STYLE="display:none">
+                    <A HREF="javascript:cls()" oncontextmenu="return false;"><LI TYPE="square" ID="menu20">Cluster Service</A></LI>
+                    <SCRIPT LANGUAGE="javascript">
+                        // show it only on windows 2000 advanced server
+                        if (0xffffffff != srvwiz.ServiceState("Clustering"))
+                            document.all.miClustering.style.display = '';
+                    </SCRIPT>
+                </DIV>
+                <A HREF="javascript:mq()" oncontextmenu="return false;"><LI TYPE="square" ID="menu16">Message Queuing</A></LI>
+                <A HREF="javascript:reskit()" oncontextmenu="return false;"><LI TYPE="square" ID="menu22">Support Tools</A></LI>
+                <A HREF="javascript:oth()" oncontextmenu="return false;"><LI TYPE="square" ID="menu23">Optional Components</A></LI>
+            </menu>
+        </TD>
+    </TR>
+</TABLE>
+</BODY>
+</HTML>

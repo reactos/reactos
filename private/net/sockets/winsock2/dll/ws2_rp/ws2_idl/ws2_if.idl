@@ -1,0 +1,230 @@
+//---------------------------------------------------------------------
+// Copyright (c)1997 Microsoft Corporation, All Rights Reserved
+//
+// ws2_if.idl
+//
+//---------------------------------------------------------------------
+
+import "unknwn.idl";
+
+[
+object,
+pointer_default(unique),
+uuid(3ae0b7e0-3c19-11d1-8bf1-0000f8754035)
+]
+interface IRestrictedProcess : IUnknown
+{
+   typedef struct _RPC_SOCKADDR_IN 
+      {
+      short          sin_family;
+      unsigned short sin_port;
+      unsigned long  sin_addr;
+      char           sin_zero[8];
+      } RPC_SOCKADDR_IN;
+
+   typedef struct _RPC_WSABUF 
+      {
+      ULONG   len;
+      [size_is(len)] char *buf;
+      } RPC_WSABUF, *LP_RPC_WSABUF;
+   
+   
+   typedef enum
+      {
+      BestEffortService,
+      ControlledLoadService,
+      PredictiveService,
+      GuaranteedService
+      } RPC_GUARANTEE;
+   
+   
+   typedef struct _RPC_flowspec
+      {
+      long          TokenRate;            // In Bytes/sec.
+      long          TokenBucketSize;      // In Bytes.
+      long          PeakBandwidth;        // In Bytes/sec.
+      long          Latency;              // In microseconds.
+      long          DelayVariation;       // In microseconds.
+      RPC_GUARANTEE LevelOfGuarantee;     // Guaranteed, Predictive,
+                                          //   (Best Effort, etc.).
+      long          CostOfCall;           // Reserved for future use,
+                                          //   must be set to 0 now.
+      long          NetworkAvailability;  // read-only: 
+                                          //   1 if accessible,
+                                          //   0 if not.
+      } RPC_FLOWSPEC, *LP_RPC_FLOWSPEC;
+   
+   
+   
+   typedef struct _RPC_QualityOfService
+      {
+      RPC_FLOWSPEC SendingFlowspec;      // The flowspec for data 
+                                         //   sending.
+      RPC_FLOWSPEC ReceivingFlowspec;    // The flowspec for data
+                                         //   receiving.
+      RPC_WSABUF   ProviderSpecific;     // Additional provider
+                                         //   specific parameters.
+      } RPC_QOS, *LP_RPC_QOS;
+
+
+   typedef unsigned long RPC_GROUP;
+
+   typedef struct _RPC_WSAPROTOCOLCHAIN 
+      {
+      long ChainLen;          // the length of the chain, 
+                              //   length = 0 means layered protocol,
+                              //   length = 1 means base protocol,
+                              //   length > 1 means protocol chain.
+      DWORD ChainEntries[7];  // A list of dwCatalogEntryIds,
+                              //   MAX_PROTOCOL_CHAIN = 7.
+      } RPC_WSAPROTOCOLCHAIN, *LP_RPC_WSAPROTOCOLCHAIN;
+   
+   typedef struct _RPC_WSAPROTOCOL_INFOW 
+      {
+      DWORD dwServiceFlags1;
+      DWORD dwServiceFlags2;
+      DWORD dwServiceFlags3;
+      DWORD dwServiceFlags4;
+      DWORD dwProviderFlags;
+      GUID  ProviderId;
+      DWORD dwCatalogEntryId;
+      RPC_WSAPROTOCOLCHAIN ProtocolChain;
+      long  iVersion;
+      long  iAddressFamily;
+      long  iMaxSockAddr;
+      long  iMinSockAddr;
+      long  iSocketType;
+      long  iProtocol;
+      long  iProtocolMaxOffset;
+      long  iNetworkByteOrder;
+      long  iSecurityScheme;
+      DWORD dwMessageSize;
+      DWORD dwProviderReserved;
+      WCHAR szProtocol[256];       // 1+WSAPROTOCOL_LEN.
+      } RPC_WSAPROTOCOL_INFOW, *LP_RPC_WSAPROTOCOL_INFOW;
+
+   typedef enum _RPC_WSAEcomparator
+      {
+      RPC_COMP_EQUAL = 0,
+      RPC_COMP_NOTLESS
+      } RPC_WSAECOMPARATOR;
+
+   typedef struct _RPC_WSAVersion
+      {
+      DWORD           dwVersion;
+      RPC_WSAECOMPARATOR  ecHow;
+      } RPC_WSAVERSION;
+
+   typedef struct _RPC_AFPROTOCOLS 
+      {
+      long iAddressFamily;
+      long iProtocol;
+      } RPC_AFPROTOCOLS;
+
+   typedef struct _RPC_SOCKET_ADDRESS 
+      {
+      RPC_SOCKADDR_IN *lpSockaddr ;
+      long             iSockaddrLength ;
+      } RPC_SOCKET_ADDRESS;
+
+   typedef struct _RPC_CSADDR_INFO 
+      {
+      RPC_SOCKET_ADDRESS LocalAddr ;
+      RPC_SOCKET_ADDRESS RemoteAddr ;
+      long       iSocketType ;
+      long       iProtocol ;
+      } RPC_CSADDR_INFO;
+
+   typedef struct _RPC_BLOB 
+      {
+      ULONG cbSize ;
+      [size_is(cbSize)] BYTE *pBlobData;
+      } RPC_BLOB;
+
+   typedef struct _RPC_WSAQuerySetW
+      {
+      DWORD             dwSize;
+      [string] wchar_t *lpszServiceInstanceName;
+      GUID             *lpServiceClassId;
+      RPC_WSAVERSION   *lpVersion;
+      [string] wchar_t *lpszComment;
+      DWORD             dwNameSpace;
+      GUID             *lpNSProviderId;
+      [string] wchar_t *lpszContext;
+      DWORD             dwNumberOfProtocols;
+      RPC_AFPROTOCOLS  *lpafpProtocols;
+      [string] wchar_t *lpszQueryString;
+      DWORD             dwNumberOfCsAddrs;
+      RPC_CSADDR_INFO  *lpcsaBuffer;
+      DWORD             dwOutputFlags;
+      RPC_BLOB         *lpBlob;
+      } RPC_WSAQUERYSETW;
+
+   HRESULT  RP_HelperInit();
+
+   HRESULT  RP_WahOpenHandleHelper( [in]  DWORD  dwTargetPid,
+                                    [out] DWORD *pdwHelperHandle,
+                                    [out] DWORD *pdwStatus );
+
+   HRESULT  RP_WahCreateSocketHandle( [in]  DWORD  dwTargetPid,
+                                      [in]  DWORD  dwHelperHandle,
+                                      [out] DWORD *pdwSocket,
+                                      [out] DWORD *pdwStatus );
+
+   HRESULT  RP_WSPSocket( [in] long    af,
+                          [in] long    type,
+                          [in] long    protocol,
+                          [in,unique] RPC_WSAPROTOCOL_INFOW *pProtocolInfo,
+                          [in] RPC_GROUP  g,
+                          [in] DWORD   dwFlags,
+                          [in,out] long  *plErrno );
+
+   HRESULT RP_WSPConnect( [in]  RPC_SOCKADDR_IN *pSockAddr,
+                          [in]  long        lSockAddrLen,
+                          [in,unique]  RPC_WSABUF *pCallerData,
+                          [in,out,unique] RPC_WSABUF *pCalleeData,
+                          [in,unique]  RPC_QOS *pSQOS,
+                          [in,unique]  RPC_QOS *pGQOS,
+                          [in]  DWORD       dwTargetPid,
+                          [in,out] DWORD   *pTargetSocket,
+                          [in,out] long    *plErrno );
+
+   HRESULT RP_SetSockOpt( [in] int iLevel,
+                          [in] int iOptname,
+                          [in,size_is(iOptlen)] char *pOptval,
+                          [in] int iOptlen,
+                          [in,out] int *piError );
+
+   HRESULT RP_GetSockOpt( [in] int iLevel,
+                          [in] int iOptname,
+                          [in,out,size_is(*pOptlen)] char *pOptval,
+                          [in,out] int *pOptlen,
+                          [in,out] int *piError );
+
+   HRESULT RP_HelperListen( [in]  DWORD   Socket,
+                            [in]  int     iBacklog,
+                            [in,out] int *piRet,
+                            [in,out] int *piErrno  );
+
+   HRESULT RP_HelperWSALookupServiceBeginW(
+                          [in]  RPC_WSAQUERYSETW *pRestrictions,
+                          [in]  DWORD     dwControlFlags,
+                          [in,out] DWORD *pdwLookupHandle,
+                          [in,out] int   *piRet,
+                          [in,out] int   *piErrno );
+
+   HRESULT RP_HelperWSALookupServiceNextW(
+                          [in]     DWORD  dwLookupHandle,
+                          [in]     DWORD  dwControlFlags,
+                          [in,out] DWORD *pdwBufferLength,
+                          [in,out,size_is(*pdwBufferLength)] 
+                                   char  *pResults, // RPC_WSAQUERYSETW*
+                          [in,out] int   *piRet,
+                          [in,out] int   *piErrno );
+
+   HRESULT RP_HelperWSALookupServiceEnd(
+                          [in]     DWORD  dwLookupHandle,
+                          [in,out] int   *piRet,
+                          [in,out] int   *piErrno );
+}
+

@@ -1,0 +1,71 @@
+LIBRARY SHELL
+
+EXETYPE WINDOWS
+
+DESCRIPTION 'Windows 3.1 Shell API Library'
+
+CODE MOVEABLE DISCARDABLE
+DATA MOVEABLE SINGLE SHARED PRELOAD
+
+SEGMENTS
+    _TEXT               PRELOAD MOVEABLE DISCARDABLE
+    THUNK_TEXT          MOVEABLE DISCARDABLE
+    WIN31_TEXT          MOVEABLE DISCARDABLE
+
+HEAPSIZE        256
+
+EXPORTS
+    WEP                         ;Internal
+
+    ; 3.1 exports, ordinals mush not change
+    ; Mark these as internal now so new apps link to
+    ; versions in kernel16
+
+    REGOPENKEY=MYREGOPENKEY         @1      ;Internal
+    REGCREATEKEY=MYREGCREATEKEY     @2      ;Internal
+    REGCLOSEKEY=MYREGCLOSEKEY       @3      ;Internal
+    REGDELETEKEY=MYREGDELETEKEY     @4      ;Internal
+    REGSETVALUE=MYREGSETVALUE       @5      ;Internal
+    REGQUERYVALUE=MYREGQUERYVALUE   @6      ;Internal
+    REGENUMKEY=MYREGENUMKEY         @7      ;Internal
+
+    DRAGACCEPTFILES                 @9      ;public
+    DRAGQUERYFILE                   @11     ;public
+    DRAGFINISH                      @12     ;public
+    DRAGQUERYPOINT                  @13     ;public
+
+    SHELLEXECUTE        	    @20     ;public
+    FINDEXECUTABLE      	    @21     ;public
+    SHELLABOUT          	    @22     ;Internal private for shell
+    EXTRACTICON         	    @34     ;public
+    EXTRACTASSOCIATEDICON 	    @36     ;Internal private for shell
+    DOENVIRONMENTSUBST              @37     ;public
+    FINDENVIRONMENTSTRING           @38     ;public
+    INTERNALEXTRACTICON   	    @39     ;Internal private for shell
+
+    REGISTERSHELLHOOK               @102    ;Internal private for shell
+
+    ; end 3.1
+
+    EXTRACTICONEXA                   @40     ;public
+
+    ; thunk connection stufff
+    Shl3216_ThunkData16             @98    RESIDENTNAME
+    Shl1632_ThunkData16             @99    RESIDENTNAME
+    DllEntryPoint                   @101   RESIDENTNAME
+
+    ;
+    ;   New APIs for Windows 4.0
+    ;
+    RESTARTDIALOG                   @157        ;Internal 4.0
+    PICKICONDLG                     @166        ;Internal 4.0
+
+    DRIVETYPE                       @262        ;Internal 4.0
+    SH16TO32DRIVEIOCTL              @263        ;Internal 4.0
+    SH16TO32INT2526                 @264        ;Internal 4.0
+
+    SHGETFILEINFOA                   @300        ;Internal 4.0
+
+    SHFORMATDRIVE                   @400        ;Internal 4.0
+    SHCHECKDRIVE                    @401        ;Internal 4.0
+    _RUNDLLCHECKDRIVE               @402        ;Internal 4.0

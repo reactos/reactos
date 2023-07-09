@@ -1,0 +1,52 @@
+#
+#  Recorder exe makefile
+#
+
+DLL=..\rec_dll
+EXE=..\rec_exe
+INC=..\rec_inc
+
+EXEFLAGS=-c -AM -Zpie -DNOCOMM -Od -Gcsw -W3 -FPi -DNTPORT -DVER=$(WINVER) -I$(INC) -DWIN16
+DLLFLAGS=-c -u -Asnw -Gcsw -DNOCOMM -Od -Zpei -FPi -W3 -DNTPORT -DVER=$(WINVER) -I$(INC) -DWIN16
+RCFLAGS=-r -I$(INC)
+CC=cl
+RC=rc
+LINK=link
+
+all: recmain.exe
+
+rinit.obj: rinit.c $(INC)\recordll.h $(INC)\recorder.h $(INC)\msgs.h
+    $(CC) $(EXEFLAGS) rinit.c
+
+fileio.obj: fileio.c $(INC)\recordll.h $(INC)\recorder.h $(INC)\msgs.h
+    $(CC) $(EXEFLAGS) fileio.c
+
+dlg.obj: dlg.c $(INC)\recorder.h $(INC)\recordll.h $(INC)\msgs.h
+    $(CC) $(EXEFLAGS) dlg.c
+
+recorder.obj: recorder.c $(INC)\recordll.h $(INC)\recorder.h $(INC)\msgs.h
+    $(CC) $(EXEFLAGS) recorder.c
+
+globals.obj: globals.c $(INC)\recordll.h $(INC)\recorder.h
+    $(CC) $(EXEFLAGS) globals.c
+
+util.obj: util.c $(INC)\recordll.h $(INC)\recorder.h $(INC)\msgs.h
+    $(CC) $(EXEFLAGS) util.c
+
+utilc.obj: utilc.c $(INC)\recordll.h $(INC)\recorder.h $(INC)\msgs.h
+    $(CC) $(EXEFLAGS) utilc.c
+
+record.obj: record.c $(INC)\recordll.h $(INC)\recorder.h $(INC)\msgs.h
+    $(CC) $(EXEFLAGS) record.c
+
+recorder.res: recorder.rc recorder.dlg recorder.ico $(INC)\recorder.h $(INC)\msgs.h
+    rc $(RCFLAGS) recorder.rc
+
+recmain.exe: recorder.obj globals.obj record.obj dlg.obj util.obj rinit.obj \
+	      utilc.obj fileio.obj recmain.def recorder.res
+    $(LINK) recorder record globals dlg util utilc fileio rinit, \
+	    recmain/align:16,recorder/nod/noe/nop/map/co,$(DLL)\recordll+libw+mlibcew,recmain.def
+    copy recmain.exe recorder.exe
+    del recmain.exe
+    rc recorder.res recorder.exe
+    mapsym recorder.map

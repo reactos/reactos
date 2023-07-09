@@ -1,0 +1,10 @@
+LIBRARY  SAMPLE
+DESCRIPTION 'Sample provider for obtaining Internet Ratings'
+
+EXPORTS
+
+    DllCanUnloadNow         PRIVATE
+    DllGetClassObject       PRIVATE
+    DllRegisterServer	    PRIVATE
+    DllUnregisterServer	    PRIVATE
+

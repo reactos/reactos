@@ -1,0 +1,46 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css" />
+<TITLE>MSMQ</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("apsrv_bg.gif");
+        background-repeat:no-repeat;
+        background-position:130 37;
+    }
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">Message Queuing</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Message Queuing is a communication infrastructure 
+                that enables distributed messaging applications running at different times to 
+                communicate across platforms and networks that may be temporarily offline.
+            <P ID="para2"><B>Note</B>
+            <BR>Active Directory must be available on your network to complete Message Queuing Setup 
+                unless you plan to join a Windows NT 4.0 MSMQ enterprise or a workgroup. 
+            <UL STYLE="margin-left: 16pt; margin-top: 12pt;">
+                <LI TYPE="square" ID="para3">
+                    <B>If you are part of a Windows 2000 domain</B>&nbsp;&#151;&nbsp;
+                    Message Queuing must be installed on at least one domain controller in the current site 
+                    before you can install Message Queuing on other servers.
+                </LI>
+                <LI TYPE="square" ID="para4"><B>If you plan to join a Windows NT 4.0 MSMQ enterprise</B>&nbsp;&#151;&nbsp;
+                    You must provide the name of an MSMQ primary site controller (PSC) during Message Queuing Setup.
+                </LI>
+            </UL>
+            <P ID="para5"><A HREF="javascript:exec('sysocmgr.exe', '/x /i:%windir%/inf/mqsysoc.inf')"><IMG SRC="wiz.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Start</A> the Message Queuing Installation Wizard.
+            <P ID="para6"><A HREF="javascript:help('msmqconcepts.chm::/sag_MSMQtopnode.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about Message Queuing.</P>
+            <P>&nbsp;
+        </TD>
+    </TR>
+</TABLE>
+</BODY>
+</HTML>

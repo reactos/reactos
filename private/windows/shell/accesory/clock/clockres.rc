@@ -1,0 +1,103 @@
+#include "windows.h"
+#include "clock.h"
+
+#include "font.dlg"
+
+Clock MENU PRELOAD DISCARDABLE
+#ifdef JAPAN
+    BEGIN
+        POPUP    "設定(&S)"
+            BEGIN
+                MENUITEM "アナログ表示(&A)",        IDM_ANALOG
+                MENUITEM "デジタル表示(&D)",        IDM_DIGITAL
+                MENUITEM SEPARATOR
+                MENUITEM "デジタル時計のフォントの指定(&F)...",    IDM_SETFONT
+                MENUITEM SEPARATOR
+                MENUITEM "グリニッジ標準時(&G)",            IDM_UTC
+                MENUITEM "タイトルバーなし(&N)",            IDM_NOTITLE
+                MENUITEM SEPARATOR
+                MENUITEM "秒を表示(&S)"     IDM_SECONDS
+                MENUITEM "日付を表示(&T)"           IDM_DATE
+                MENUITEM SEPARATOR
+                MENUITEM "バージョン情報(&B)...", IDM_ABOUT
+            END
+    END
+#else
+    BEGIN
+        POPUP    "&Settings"
+            BEGIN
+                MENUITEM "&Analog",         IDM_ANALOG
+                MENUITEM "&Digital",        IDM_DIGITAL
+                MENUITEM SEPARATOR
+                MENUITEM "Set &Font...",    IDM_SETFONT
+                MENUITEM SEPARATOR
+                MENUITEM "&GMT",            IDM_UTC
+                MENUITEM "&No Title",       IDM_NOTITLE
+                MENUITEM SEPARATOR
+                MENUITEM "&Seconds"         IDM_SECONDS
+                MENUITEM "Da&te"            IDM_DATE
+                MENUITEM SEPARATOR
+                MENUITEM "A&bout Clock...", IDM_ABOUT
+            END
+    END
+#endif
+
+cckk    ICON PRELOAD DISCARDABLE clock.ico
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+/*
+    Attention localizers!  Only the following lines need to be
+    localized!
+*/
+
+#ifdef JAPAN
+    IDS_APPNAME,    "時計"
+/*
+    Note: We can not split the following line into two because it is used in a
+    hardsysmodal dialogbox.
+*/
+    IDS_TOOMANY,    "時計に必要なタイマーを使用できません。ほかのアプリケーションを終了してから、やり直してください。"
+    IDS_FONTFILE,   "arial"   /* File containing default font. */
+    IDS_TOPMOST,    "つねに手前に表示(&T)"
+#else
+    IDS_APPNAME,    "Clock"
+/*
+    Note: We can not split the following line into two because it is used in a
+    hardsysmodal dialogbox.
+*/
+    IDS_TOOMANY,    "Not enough timing resources for Clock. Close other applications and try again."
+    IDS_FONTFILE,   "uclucida"   /* File containing default font. */
+    IDS_TOPMOST,    "Always on &Top"
+#endif
+
+/*
+    DO NOT LOCALIZE THESE!
+    Below: Names of the keys in the file "win.ini" that
+            contain the international time and date settings
+*/
+
+    IDS_FONTCHOICE  "sFont"
+#ifdef JAPAN
+    IDS_INIFILE,    "winclock.ini"
+#else
+    IDS_INIFILE,    "clock.ini"
+#endif
+
+    IDS_USNAME,     "Clock"
+
+/*
+    End of non-localized strings.
+*/
+END
+
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Clock Applet"
+#define VER_INTERNALNAME_STR        "clock\0"
+#define VER_ORIGINALFILENAME_STR    "CLOCK.EXE"
+
+#include "common.ver"

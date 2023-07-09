@@ -1,0 +1,31 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\f3\tlb=)
+!include $(ROOT)\common.inc
+
+# Make sure bscmake isn't run here (there's nothing for bscmake to do here).
+!undef BROWSER_INFO
+NO_BROWSER_INFO=1
+
+!undef USE_MAPSYM
+
+RESOURCE_ONLY_DLL=1
+
+TARGETNAME=mshtml
+TARGETEXT=tlb
+TARGETPATH=..\..\..\$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+DLLBASE=@$(COFFBASE_TXT_FILE),mshtmtlb
+
+ROOTDIR=..\..\..
+
+INCLUDES= \
+    $O; \
+    $(ROOTDIR)\types\$(O); \
+
+SOURCES= \
+    mshtmtlb.rc

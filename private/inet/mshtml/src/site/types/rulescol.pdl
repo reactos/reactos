@@ -1,0 +1,48 @@
+#ifndef _RULESCOL_PDL_
+#define _RULESCOL_PDL_ 1
+
+#include "types.pdl"
+#include "element.pdl"
+
+file rulescol.pdl
+
+import types.pdl
+import element.pdl
+
+
+interface IHTMLStyleSheetRule super:IDispatch guid:3050f357-98b5-11cf-bb82-00aa00bdce0b
+    refprop CStyleSheetRule:selectorText
+    refprop CStyleSheetRule:style
+    refprop CStyleSheetRule:readOnly
+
+tearoff CStyleSheetRule interface:IHTMLStyleSheetRule
+tearoff CStyleSheetRule interface:IDispatchEx BaseImpl:super::
+
+class CStyleSheetRule name:HTMLStyleSheetRule super:CBase primaryinterface:IHTMLStyleSheetRule \
+ guid:3050f3ce-98b5-11cf-bb82-00aa00bdce0b
+    property selectorText   atype:BSTR          dispid:DISPID_STYLERULE+1 \
+                            abstract get set maxstrlen:pdlNoLimit
+    property style          atype:IHTMLRuleStyle*   dispid:STDPROPID_XOBJ_STYLE \
+        type:IHTMLRuleStyle*    abstract get nonbrowsable
+    property readOnly       atype:VARIANT_BOOL  dispid:DISPID_STYLERULE+2 \
+        vt:VT_BOOL          abstract get
+
+interface IHTMLStyleSheetRulesCollection super:IDispatch guid:3050f2e5-98b5-11cf-bb82-00aa00bdce0b
+    refprop CStyleSheetRuleArray:length
+    refmethod CStyleSheetRuleArray:item
+
+tearoff CStyleSheetRuleArray interface:IHTMLStyleSheetRulesCollection
+tearoff CStyleSheetRuleArray interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID        mapto:GetDispID
+    tearmethod InvokeEx         mapto:InvokeEx
+    tearmethod GetNextDispID    mapto:GetNextDispID
+    tearmethod GetMemberName    mapto:GetMemberName
+
+class CStyleSheetRuleArray name:HTMLStyleSheetRulesCollection super:CBase primaryinterface:IHTMLStyleSheetRulesCollection \
+ guid:3050f3cd-98b5-11cf-bb82-00aa00bdce0b
+    property  length   atype:long        dispid:DISPID_STYLERULES_COL+1    type:long   \
+         abstract get
+    method HRESULT item      dispid:DISPID_VALUE  (in type:long arg:index, \
+                                                   out retval type:IHTMLStyleSheetRule** arg:ppHTMLStyleSheetRule)                                                  
+
+#endif _RULESCOL_PDL_

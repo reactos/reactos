@@ -1,0 +1,26 @@
+;+-------------------------------------------------------------------------
+;
+;  Microsoft Windows
+;
+;  Copyright (C) Microsoft Corporation, 1997 - 1999
+;
+;  File:       tprov1.def
+;
+;--------------------------------------------------------------------------
+
+
+LIBRARY TESTPROV
+
+EXPORTS
+
+DllRegisterServer       PRIVATE
+DllUnregisterServer     PRIVATE
+
+TestprovInitialize
+TestprovObjectProv
+TestprovSigProv
+TestprovCheckCertProv
+TestprovFinalProv
+TestprovCleanup
+TestprovTester
+

@@ -1,0 +1,64 @@
+/* msvideo.rc
+ *
+ * Capture DLL resource script.
+ *
+ * (C) Copyright Microsoft Corporation 1991. All rights reserved.
+ */
+
+#include <windows.h>
+#include "msvideo.h"
+#include "msvideo.rcv"
+#include "icm.rc"              // Kludge, copied from compman to inc directory
+#include "..\mciwnd.16\strings.rc"
+
+// dont change this without changing DRAWDIB\PROFDISP.C
+#define IDS_PROFILING       4000
+#define IDS_DISPLAY_WARN    4001
+#define IDS_DISPLAY_SUCKS   4002
+
+STRINGTABLE	LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+    DV_ERR_OK               "No Error."
+    DV_ERR_NONSPECIFIC      "Unspecified error."
+    DV_ERR_BADFORMAT        "Unsupported video format."
+    			
+    DV_ERR_STILLPLAYING     "Device is still playing."
+    			
+    DV_ERR_UNPREPARED       "Unprepared header."
+    			
+    DV_ERR_SYNC             "Sync error."
+    			
+    DV_ERR_TOOMANYCHANNELS  "Device already in use."
+    			
+    DV_ERR_NOTDETECTED	    "Capture device was not detected."
+    DV_ERR_BADINSTALL	    "Capture driver is not installed properly."
+    DV_ERR_CREATEPALETTE    "Palette creation error."	
+    DV_ERR_SIZEFIELD	    "Structure size incorrect."
+    DV_ERR_PARAM1	    "Param1 invalid."	
+    DV_ERR_PARAM2	    "Param2 invalid."	
+    DV_ERR_CONFIG1	    "Configuration parameter 1 invalid."
+    DV_ERR_CONFIG2	    "Configuration parameter 2 invalid."	
+    DV_ERR_FLAGS	    "Flags parameter invalid."
+    DV_ERR_13		    "Error 13."
+
+    DV_ERR_NOTSUPPORTED     "Unsupported function."
+    DV_ERR_NOMEM            "Out of memory."
+    DV_ERR_ALLOCATED        "Device is already in use."
+    DV_ERR_BADDEVICEID      "Invalid device ID."
+    DV_ERR_INVALHANDLE      "Invalid handle."
+    DV_ERR_BADERRNUM        "Invalid error number."
+    DV_ERR_NO_BUFFERS       "No buffers are available."
+
+    DV_ERR_MEM_CONFLICT     "Memory conflict / problem detected."
+    DV_ERR_IO_CONFLICT      "I/O address conflict detected."
+    DV_ERR_DMA_CONFLICT     "DMA conflict detected."
+    DV_ERR_INT_CONFLICT     "Interrupt conflict / problem detected."
+    DV_ERR_PROTECT_ONLY     "Driver cannot run in Standard mode, requires Enhanced mode."
+
+    //
+    // strings used by PROFDISP.
+    //
+    IDS_PROFILING           "Profiling Display"
+    IDS_DISPLAY_WARN        "Warning!"
+    IDS_DISPLAY_SUCKS       "You may encounter display performance problems; please contact the manufacturer of your video board to see if an updated driver is available."
+END

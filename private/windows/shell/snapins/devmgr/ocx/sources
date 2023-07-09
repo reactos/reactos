@@ -1,0 +1,50 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1997 - 1999
+
+Module Name:
+
+    sources.
+
+!ENDIF
+
+MAJORCOMP=devmgr
+MINORCOMP=ocx
+
+# before changing the DLL name, resolve the references in applib\domthred.cxx
+TARGETNAME=dmocx
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+!IF defined(SLATE_REGISTER) && defined(MAKEDLL)
+REGSVR_FILE=$(O)\$(TARGETNAME).dll
+REGSVR_MARKER=$O\$(TARGETNAME).trg
+NTTARGETFILES=$(REGSVR_MARKER)
+!ENDIF
+#DLLENTRY=_DllMainCRTStartup
+UMTYPE=windows
+#DS_BUILD=1
+C_DEFINES = -DUNICODE
+USE_MFCUNICODE=1
+TARGETLIBS=\
+           $(BASEDIR)\public\sdk\lib\*\mmc.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+           $(BASEDIR)\public\sdk\lib\*\oleaut32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib          \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib       \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\netapi32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\netui2.lib   \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib   \
+
+#INCLUDES=$(BASEDIR)\public\sdk\inc\mfc42;
+PRECOMPILED_INCLUDE = stdafx.h
+PRECOMPILED_CXX = 1
+
+SOURCES= ctv.cpp        \
+         ctvctl.cpp     \
+         ctvppg.cpp     \
+         dmocx.idl      \
+         ctv.rc

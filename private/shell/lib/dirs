@@ -1,0 +1,6 @@
+DIRS    = \
+          badapps \
+          stock   \
+          stock5
+
+OPTIONAL_DIRS =

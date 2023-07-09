@@ -1,0 +1,16 @@
+!INCLUDE $(NTMAKEENV)\makefile.plt
+
+TARGETSRCS=ptagdbg.h
+
+all: $(TARGETSRCS)
+!IF "$(BUILDMSG)" != ""
+    @ech ; $(BUILDMSG) ;
+!ENDIF
+
+clean: cleansrc all
+
+cleansrc:
+    -erase $(TARGETSRCS)
+
+ptagdbg.h: ptagdbg.bat ..\kernel\ptag.lst
+    ptagdbg.bat ..\kernel\ptag.lst ptagdbg.h

@@ -1,0 +1,6 @@
+DIRS=common \
+     3dfo \
+     flwbox \
+     maze \
+     pipes \
+     text3d

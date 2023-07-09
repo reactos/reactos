@@ -1,0 +1,33 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\other\moniker=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=moniker
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES= \
+    $(ROOT)\src\other\include; \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\src\site\include; \
+    $(ROOT)\src\f3\include; \
+    $(ROOT)\external\inc; \
+    $(ROOT)\types\$(O); \
+    $(ROOT)\src\core\types; \
+    $(ROOT)\src\f3\types; \
+    $(ROOT)\src\f3\ocx96;   \
+    $(BASEDIR)\private\windows\inc;
+
+SOURCES= \
+    resprot.cxx \
+    mailprot.cxx \
+    abtprot.cxx  \
+    simgprot.cxx
+    
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

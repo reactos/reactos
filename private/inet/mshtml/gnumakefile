@@ -1,0 +1,17 @@
+# This makefile was generated automatically by mwgenmakeC.
+
+.NOTPARALLEL: world all clean install depend
+
+world all clean install depend trident:
+	@enterdir types ${MAKE} ${MFLAGS} $@
+	@enterdir src ${MAKE} ${MFLAGS} $@
+	@enterdir imgfilt ${MAKE} ${MFLAGS} $@
+	@enterdir iextag ${MAKE} ${MFLAGS} $@
+#	@enterdir msaahtml ${MAKE} ${MFLAGS} $@
+
+
+
+# Pass 0 tools build in types/GNUmakefile
+pass0tools:
+	@enterdir src/f3/pdlparse          ${MAKE} ${MFLAGS}
+	@enterdir src/f3/pdlparse/ascparse ${MAKE} ${MFLAGS}

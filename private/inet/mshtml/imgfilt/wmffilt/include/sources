@@ -1,0 +1,40 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+Author:   Ramesh G    06-07-96
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\imgfilt\wmffilt\include=)
+!include $(ROOT)\common.inc
+
+TARGETPATH= obj
+TARGETTYPE= NOTARGET
+
+PASS0_HEADERDIR=$(SDK_INC_PATH)
+
+ACTVEXINC=..\..\..\inc
+
+WIN32_WINNT_VERSION=0x0400
+WIN32_WIN95_VERSION=0x0400
+
+INCLUDES=$(SDK_INC_PATH);..\..
+
+SOURCES= \
+   WMFFilt.idl
+
+NTTARGETFILE0= \
+   WMFFilt.H   \
+   WMFFilt.ic

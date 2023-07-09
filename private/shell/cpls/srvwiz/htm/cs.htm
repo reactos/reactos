@@ -1,0 +1,45 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css"/>
+<TITLE>Clustering</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="popups.js"></SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("adv_bg.gif");
+        background-repeat:no-repeat;
+        background-position:149 35;
+    }
+	.defdiv {background-color:ffffff; visibility:hidden; position:absolute; top:1px; border:1px solid black;}
+	.defspan {font-size:8pt; border:1px solid #cccccc; padding:10px}
+
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" id="body">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000" onkeypress="popOff(1)">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10" VALIGN="top">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">Cluster Service</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top">
+            <P ID="para1">Cluster service enables you to access and manage <A HREF="javascript:nothing()" onclick="popup(1)">cluster</A> 
+                nodes as a single system rather than as separate computers. 
+                Windows has detected that Cluster service is installed on this server.
+            <P ID="para2"><A HREF="javascript:exec(SHGetSpecialFolderPath(0x24) + '\\cluster\\cluadmin.exe')"><IMG SRC="mmc.gif" WIDTH=24 HEIGHT=24  BORDER="0" ALIGN="middle" HSPACE="5">Manage</A> Cluster service.
+            <P ID="para3"><A HREF="javascript:help('cluster.chm::/win_cluster.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24  BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about Cluster service.
+            <P>&nbsp;
+        </TD>
+    </TR>
+</TABLE>
+
+<!--Definition for cluster-->
+<DIV class="defdiv" ID="popup1">
+	<span class="defspan" onblur="popOff(1)" ID="def1"><b>cluster</b>
+	<br>A group of computers that cooperate to achieve a common task. A cluster must meet the following criteria: first, the cluster must be composed of whole computers, called nodes. Second, no two nodes of a cluster should have incompatible versions of the same data; this is called consistency. Finally, a cluster must be named and used as a single computing resource.
+	</span>
+</DIV>
+<div id="shadow" style="background:url(shadow.gif); filter:alpha(opacity=50); height:1px; width:1px; position:absolute; top:1px; visibility:hidden"></div>
+</BODY>
+</HTML>

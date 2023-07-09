@@ -1,0 +1,33 @@
+#----------------------------------------------------------------------------
+#
+# Description:
+#
+#       sources file for test program for cryptapi
+#
+# History:
+#
+#       11/29/94 larrys created
+#       03/15/95 raymondm added conditional linking to capi.dll
+#
+#----------------------------------------------------------------------------
+
+MAJORCOMP=dssinstl
+MINORCOMP=EXE
+
+TARGETNAME=dssinstl
+TARGETPATH=..\..\programs\bin
+TARGETTYPE=PROGRAM
+
+INCLUDES=..\..\inc;
+
+TARGETLIBS=\
+        $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+
+SOURCES=\
+        dssinstl.c   \
+        dssinstl.rc
+
+UMTYPE=console
+UMENTRY=main
+
+USE_MSVCRT=1

@@ -1,0 +1,4 @@
+LIBRARY         netobjs
+EXPORTS
+    DllGetClassObject PRIVATE
+    DllCanUnloadNow   PRIVATE

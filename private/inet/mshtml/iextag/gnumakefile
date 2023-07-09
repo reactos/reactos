@@ -1,0 +1,62 @@
+PRODUCT= IEXTAG
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE INCLUDES
+
+WRESOURCE = $(O)/iepeers.rc
+
+RGSOBJS = \
+	$(O)/ccaps.unix_rgs \
+	$(O)/favorite.unix_rgs \
+	$(O)/homepg.unix_rgs \
+	$(O)/snapshot.unix_rgs \
+	$(O)/download.unix_rgs \
+	$(O)/history.unix_rgs \
+	$(O)/httpwf.unix_rgs \
+	$(O)/peerfact.unix_rgs \
+	$(O)/userdata.unix_rgs
+
+DLLDEF_SRC = iextag.def
+DLLDEF_EXPORTS = \
+	_____iepeers_initDLL
+
+COMPILE_OPTION = debug
+
+# Depends on ${_SLM_NTROOT}/private/iedev/inc/GNUmakefile.
+SDK_TLB_PATH = ${SDK_DIR}/../lib/${MWARCH}
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%}
+APP_RCFLAGS = -I${SDK_TLB_PATH}
+DYN_LIBS= \
+    -lshlwapi -lole32 -loleaut32 -ladvapi32 -luuid -lurlmon -lwininet
+
+PROJECT_LIBS = \
+	${DYN_LIBS}
+
+# 
+# Easy way to resolve circular interlibrary dependencies
+#
+
+DLLMAIN = DllMain
+DIP_CFLAGS = -DDLL_SPECIFIC_OPERATOR_NEW
+
+__cplusplus = true
+
+PROJECT_DLLFLAGS :=  \
+	${PROJECT_LIBS} ${PROJECT_LIBS} ${PROJECT_LIBS} \
+	-L/vobs/build/mw/lib-sunos5_debug
+
+include $(MWHOME)/make.rules.simple
+
+$(O)/iepeers.rc: iextag.rc ${RGSOBJS}
+	${ECHOOBJ}
+	sed -f unixrgs.sed $< | ${DOS2UNIX} > $@ 
+
+$(O)/%.unix_rgs: ./%.rgs
+	${ECHOOBJ}
+	sed -f unix.sed $< | ${DOS2UNIX} > $@
+
+
+

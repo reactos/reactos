@@ -1,0 +1,51 @@
+LIBRARY           LINKINFO
+HEAPSIZE          0
+
+SECTIONS
+
+#ifdef WINNT
+   .text          EXECUTE READ            /* executable code and read-only data */
+   .bss           READ WRITE              /* uninitialized data */
+   .rdata         READ                    /* read-only data */
+   .data          READ WRITE              /* initialized data */
+   .rsrc          READ                    /* resources */
+   .idata         READ WRITE              /* imported address table */
+   .edata         READ                    /* exported function information */
+   .reloc         READ                    /* relocation information */
+   .instanc       READ WRITE              /* instance data */
+#else
+   .text          EXECUTE READ            /* executable code and read-only data */
+   .bss           READ WRITE     SHARED   /* uninitialized data */
+   .rdata         READ           SHARED   /* read-only data */
+   .data          READ WRITE     SHARED   /* initialized data */
+   .rsrc          READ           SHARED   /* resources */
+   .idata         READ WRITE              /* imported address table */
+   .edata         READ           SHARED   /* exported function information */
+   .reloc         READ           SHARED   /* relocation information */
+   .instanc       READ WRITE              /* instance data */
+#endif
+
+EXPORTS
+
+   /* LinkInfo APIs */
+
+   CreateLinkInfo = CreateLinkInfoA
+   DestroyLinkInfo
+   CompareLinkInfoReferents
+   CompareLinkInfoVolumes
+   ResolveLinkInfo = ResolveLinkInfoA
+   DisconnectLinkInfo
+   GetLinkInfoData
+   IsValidLinkInfo
+
+   /* canonical path APIs */
+
+   GetCanonicalPathInfo = GetCanonicalPathInfoA
+
+   CreateLinkInfoA
+   ResolveLinkInfoA
+   GetCanonicalPathInfoA
+
+   CreateLinkInfoW
+   ResolveLinkInfoW
+   GetCanonicalPathInfoW

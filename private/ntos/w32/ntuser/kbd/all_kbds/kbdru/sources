@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdru
+
+TARGETNAME=kbdru
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdru.c kbdru.rc
+
+NTTARGETFILE0=kbdru.h kbdru.rc kbdru.def

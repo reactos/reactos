@@ -1,0 +1,2567 @@
+/*++
+
+Copyright (c) 1994  Microsoft Corporation
+
+Module Name:
+
+    urlpars.cpp
+
+Abstract:
+
+    Contains all the worker routines for Combine and Canonicalize
+
+    Contents:
+        (ConvertChar)
+
+Author:
+
+    Zeke Lucas (zekel) 16-Dez-96
+
+
+Environment:
+
+    Win32(s) user-mode DLL
+
+Revision History:
+
+    there is about one percent of this derived 
+    from the Spyglass or MSHTML/WININET codebase
+
+--*/
+
+#include "priv.h"
+#include <shstr.h>
+
+// DO NOT REMOVE : Url parsing must be ansi   - zekel - 21-dec-96
+#ifdef UNICODE 
+#undef UNICODE
+#endif
+// END DO NOT REMOVE
+
+
+#define HEX_ESCAPE '%'
+
+
+#define TERMSTR(pch)      *(pch) = TEXT('\0')
+
+// (TCHAR) 8 is backspace
+#define DEADSEGCHAR       ((TCHAR) 8)
+#define KILLSEG(pch)      *(pch) = DEADSEGCHAR
+
+#define CR          TEXT('\r')
+#define LF          TEXT('\n')
+#define TAB         TEXT('\t')
+#define SPC         TEXT(' ')
+#define SLASH       TEXT('/')
+#define WHACK       TEXT('\\')
+#define QUERY       TEXT('?')
+#define POUND       TEXT('#')
+#define SEMICOLON   TEXT(';')
+#define COLON       TEXT(':')
+#define BAR         TEXT('|')
+#define DOT         TEXT('.')
+
+
+#define UPF_SCHEME_OPAQUE           0x00000001  //  should not be treated as heriarchical
+
+#define UPF_SEG_ABSOLUTE            0x00000100  //  the initial segment is the root
+#define UPF_SEG_LOCKFIRST           0x00000200  //  this is for file parsing
+#define UPF_EXSEG_DIRECTORY           0x00001000  //  the final segment is a "directory" (trailing slash)
+
+//
+//  the masks are for inheritance purposes during BlendParts
+//  if you inherit that part you inherit that mask
+//
+#define UPF_SCHEME_MASK             0x000000FF
+#define UPF_SEG_MASK                0x00000F00
+#define UPF_EXSEG_MASK              0x0000F000
+
+
+//  right now these masks are unused, and can be recycled
+#define UPF_SERVER_MASK             0x000F0000
+#define UPF_QUERY_MASK              0x0F000000
+#define UPF_FRAG_MASK               0xF0000000
+
+#ifdef UNICODE
+typedef struct _UrlPartsW
+#else
+typedef struct _UrlPartsA
+#endif
+{
+    DWORD   dwFlags;
+    LPTSTR  pszScheme;
+    DWORD   dwScheme;
+    LPTSTR  pszServer;
+    LPTSTR  pszSegments;
+    DWORD   cSegments;
+    LPTSTR  pszExtraSegs;
+    DWORD   cExtraSegs;
+    LPTSTR  pszQuery;
+    LPTSTR  pszFragment;
+}
+#ifdef UNICODE
+URLPARTSW
+#else
+URLPARTSA
+#endif
+ ;
+
+#ifdef UNICODE
+#define URLPARTS    URLPARTSW
+#else
+#define URLPARTS    URLPARTSA
+#endif
+
+typedef URLPARTS *PURLPARTS;
+
+
+#ifdef UNICODE
+#define g_mpUrlSchemeTypes      g_mpUrlSchemeTypesW
+#else
+#define g_mpUrlSchemeTypes      g_mpUrlSchemeTypesA
+#endif
+
+#pragma data_seg(DATASEG_READONLY)
+
+TCHAR const c_szHttpScheme[]           = TEXT("http");
+TCHAR const c_szFileScheme[]           = TEXT("file");
+TCHAR const c_szFTPScheme[]            = TEXT("ftp");
+TCHAR const c_szGopherScheme[]         = TEXT("gopher");
+TCHAR const c_szMailToScheme[]         = TEXT("mailto");
+TCHAR const c_szNewsScheme[]           = TEXT("news");
+TCHAR const c_szNNTPScheme[]           = TEXT("nntp");
+TCHAR const c_szTelnetScheme[]         = TEXT("telnet");
+TCHAR const c_szWAISScheme[]           = TEXT("wais");
+TCHAR const c_szMkScheme[]             = TEXT("mk");
+TCHAR const c_szHttpsScheme[]          = TEXT("https");
+
+
+const struct  
+{
+    LPCTSTR pszScheme;
+    DWORD dwScheme;
+    DWORD cchScheme;
+    DWORD dwFlags;
+} g_mpUrlSchemeTypes[] = 
+    {
+    // Because we use a linear search, sort this in the order of 
+    // most common usage.
+    { c_szHttpScheme,   URL_SCHEME_HTTP,      SIZECHARS(c_szHttpScheme) - 1,     0},
+    { c_szFileScheme,   URL_SCHEME_FILE,      SIZECHARS(c_szFileScheme) - 1,     0},
+    { c_szFTPScheme,    URL_SCHEME_FTP,       SIZECHARS(c_szFTPScheme) - 1,      0},
+    { c_szHttpsScheme,  URL_SCHEME_HTTPS,     SIZECHARS(c_szHttpsScheme) -1,     0},
+    { c_szNewsScheme,   URL_SCHEME_NEWS,      SIZECHARS(c_szNewsScheme) - 1,     UPF_SCHEME_OPAQUE},
+    { c_szMailToScheme, URL_SCHEME_MAILTO,    SIZECHARS(c_szMailToScheme) - 1,   UPF_SCHEME_OPAQUE},
+    { c_szGopherScheme, URL_SCHEME_GOPHER,    SIZECHARS(c_szGopherScheme) - 1,   0},
+    { c_szNNTPScheme,   URL_SCHEME_NNTP,      SIZECHARS(c_szNNTPScheme) - 1,     0},
+    { c_szTelnetScheme, URL_SCHEME_TELNET,    SIZECHARS(c_szTelnetScheme) - 1,   0},
+    { c_szWAISScheme,   URL_SCHEME_WAIS,      SIZECHARS(c_szWAISScheme) - 1,     0},
+    { c_szMkScheme,     URL_SCHEME_MK,        SIZECHARS(c_szMkScheme) - 1,        0}
+    };
+#pragma data_seg()
+
+//
+//  there are very similar structures and functions in SHLWAPI
+//  but they are legacy APIs for URL.DLL and they are not very useful to me.
+//  i decided to not change them and make my own
+//  though we share the same URL_SCHEME* numbers
+//
+PRIVATE DWORD
+GetSchemeTypeAndFlags(LPCTSTR pszScheme, LPDWORD pdwFlags)
+{
+    DWORD i;
+
+    ASSERT(pszScheme);
+
+
+    for (i = 0; i < ARRAYSIZE(g_mpUrlSchemeTypes); i++)
+    {
+        if(0 == lstrcmp(pszScheme, g_mpUrlSchemeTypes[i].pszScheme))
+        {
+            if (pdwFlags)
+                *pdwFlags |= g_mpUrlSchemeTypes[i].dwFlags;
+            return g_mpUrlSchemeTypes[i].dwScheme;
+        }
+    }
+
+    return URL_SCHEME_UNKNOWN;
+}
+
+#ifndef UNICODE // right now we only need this for ANSI
+/*----------------------------------------------------------
+Purpose: Return the scheme ordinal type (URL_SCHEME_*) based on the
+         URL string.
+
+  NOTE: this is used by ParseUrl() in url.c
+
+Returns: URL_SCHEME_ ordinal
+Cond:    --
+*/
+extern "C"{
+    
+DWORD
+SchemeTypeFromURL(
+   LPCTSTR pszURL);
+}
+
+DWORD
+SchemeTypeFromURL(
+   LPCTSTR pszURL)
+   {
+   DWORD i;
+
+   ASSERT(IS_VALID_STRING_PTR(pszURL, CTSTR));
+
+   // We use a linear search.  A binary search wouldn't pay off 
+   // because the list isn't big enough, and we can sort the list
+   // according to the most popular protocol schemes and pay off
+   // bigger.
+
+   for (i = 0; i < ARRAYSIZE(g_mpUrlSchemeTypes); i++)
+      {
+      if (0 == lstrnicmp(pszURL, g_mpUrlSchemeTypes[i].pszScheme, 
+                         g_mpUrlSchemeTypes[i].cchScheme))
+         {
+          if(pszURL[g_mpUrlSchemeTypes[i].cchScheme] == TEXT(':'))
+            return g_mpUrlSchemeTypes[i].dwScheme;
+         }
+      }
+
+   return URL_SCHEME_UNKNOWN;
+   }
+#endif //!UNICODE
+
+//
+//  these are used during path fumbling that i do
+//  each string between a path delimiter ( '/' or '\')
+//  is a segment.  we dont ever really care about 
+//  empty ("") segments, so it is best to use
+//  NextLiveSegment().
+//
+inline PRIVATE LPTSTR
+NextSegment(LPTSTR psz)
+{
+    ASSERT (psz);
+    return psz + lstrlen(psz) + 1;
+}
+
+#define IsLiveSegment(p)    ((p) && (*p) != DEADSEGCHAR)
+
+PRIVATE LPTSTR 
+NextLiveSegment(LPTSTR pszSeg, DWORD *piSeg, DWORD cSegs)
+{
+    if(pszSeg) do
+    {
+        if((*piSeg) +1 < cSegs)
+        {
+            pszSeg = NextSegment(pszSeg);
+            (*piSeg)++;
+        }
+        else
+            pszSeg = NULL;
+
+    } while (pszSeg && (*pszSeg == DEADSEGCHAR || !*pszSeg));
+
+    return pszSeg;
+}
+
+PRIVATE LPTSTR
+LastLiveSegment(LPTSTR pszSeg, DWORD cSegs, BOOL fFailIfFirst)
+{
+    DWORD iSeg = 0;
+    LPTSTR pszLast = NULL;
+    BOOL fLastIsFirst = FALSE;
+
+    if(cSegs)
+    {
+        if(IsLiveSegment(pszSeg))
+        {
+            pszLast = pszSeg;
+            fLastIsFirst = TRUE;
+        }
+
+        while(pszSeg = NextLiveSegment(pszSeg, &iSeg, cSegs))
+        {
+            if(!pszLast)
+                fLastIsFirst = TRUE;
+            else 
+                fLastIsFirst = FALSE;
+
+            pszLast = pszSeg;
+        }
+
+        if(fFailIfFirst && fLastIsFirst)
+            pszLast = NULL;
+    }
+
+    return pszLast;
+}
+
+PRIVATE LPTSTR
+FirstLiveSegment(LPTSTR pszSeg, DWORD *piSeg, DWORD cSegs)
+{
+    ASSERT(pszSeg && piSeg && cSegs);
+
+    *piSeg = 0;
+
+    if(!IsLiveSegment(pszSeg))
+        pszSeg = NextLiveSegment(pszSeg, piSeg, cSegs);
+
+    return pszSeg;
+}
+
+
+inline BOOL IsDrive(const TCHAR *p)
+{
+    return (*p && (p[1] == COLON || p[1] == BAR));
+}
+
+inline BOOL IsSeparator(const TCHAR *p)
+{
+    return (*p == SLASH || *p == WHACK );
+}
+
+inline BOOL IsAbsolute(const TCHAR *p)
+{
+    return (IsSeparator(p) || IsDrive(p));
+}
+
+inline BOOL IsUNC(const TCHAR *p)
+{
+    return (!StrNCmp(p, TEXT("\\\\"), 2)) || (!StrNCmp(p, TEXT("//"), 2));
+}
+
+inline BOOL IsDot(LPCTSTR p)     // if p == "." return TRUE
+{
+    return (*p == DOT && !p[1]);
+}
+
+inline BOOL IsDotDot(LPCTSTR p)  // if p == ".." return TRUE
+{
+    return (*p == DOT && p[1] == DOT && !p[2]);
+}
+       
+//+---------------------------------------------------------------------------
+//
+//  Method:     ConvertChar
+//
+//  Synopsis:
+//
+//  Arguments:  [szStr] --
+//              [cIn] --
+//              [cOut] --
+//
+//  Returns:
+//
+//  History:    03-20-96    JoeS (Joe Souza)    Created
+//
+//  Notes:
+//
+//----------------------------------------------------------------------------
+static void ConvertChar(LPTSTR ptr, TCHAR cIn, TCHAR cOut)
+{
+    while (*ptr)
+    {
+        if (*ptr == QUERY || *ptr == POUND )
+        {
+            break;
+        }
+
+        if (*ptr == cIn)
+        {
+            *ptr = cOut;
+        }
+
+        ptr = CharNext(ptr);
+    }
+}
+
+PUBLIC void WininetFixFileSlashes(TCHAR *p)
+{
+    // NB: This function assumes that p points to a file URL.
+    // The file URL *MUST* be of the form "file://...".
+    // HTParse() guarantees that this will be so.
+
+    int schemelen = 0;
+
+    schemelen = sizeof(TEXT("file://")) - 1;
+
+    if (p && lstrlen(p) > schemelen)
+    {
+        ConvertChar(p + schemelen, SLASH, WHACK);
+    }
+}
+
+//
+//  BUGBUGZEKEL shouldnt we be nuking all the bad whites here ? - zekel - 10-Dez-96
+//  you know what the real meal is here?
+//  ** URLs are allowed to whitespace in them **
+//  it just so happens that it is all supposed to be discarded
+//  so in honesty, we should remove all whitespace:
+//  TAB CR LF SPC and whatever
+//
+static void HTRemoveTabs(TCHAR *str)
+{
+    TCHAR *p, *p1;
+
+    if (!str)
+    {
+        return;
+    }
+
+    p = str;
+
+    while (*p)
+    {
+        if (*p == TAB)
+        {
+            p1 = p;
+
+            while (*p1 == TAB)
+            {
+                ++p1;
+            }
+
+            lstrcpy(p, p1);
+        }
+        else
+        {
+            ++p;
+        }
+    }
+}
+
+
+PRIVATE CONST WORD isSafe[96] =
+
+/*   Bit 0       alphadigit     -- 'a' to 'z', '0' to '9', 'A' to 'Z'
+**   Bit 1       Hex            -- '0' to '9', 'a' to 'f', 'A' to 'F'
+**   Bit 2       valid scheme   -- alphadigit | "-" | "." | "+"
+**   Bit 3       mark           -- "$"| "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")" | ","
+*/
+/*   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
+    {0, 8, 0, 0, 8, 0, 0, 8, 8, 8, 8, 4, 8,12,12, 0,    /* 2x   !"#$%&'()*+,-./  */
+     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 8, 8, 0, 0, 0, 0,    /* 3x  0123456789:;<=>?  */
+     8, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1,    /* 4x  @ABCDEFGHIJKLMNO  */
+     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 8,    /* 5X  PQRSTUVWXYZ[\]^_  */
+     0, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1,    /* 6x  `abcdefghijklmno  */
+     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 8, 0};   /* 7X  pqrstuvwxyz{|}~  DEL */
+
+PRIVATE const TCHAR hex[] = TEXT("0123456789ABCDEF");
+
+PRIVATE inline BOOL IsSafe(TCHAR ch, WORD mask)
+{
+    if(ch > 31 && ch < 128 && (isSafe[ch - 32] & mask))
+        return TRUE;
+
+    return FALSE;
+}
+
+#define IsAlphaDigit(c)         IsSafe(c, 1)
+#define IsHex(c)                IsSafe(c, 2)
+#define IsValidSchemeChar(c)    IsSafe(c, 5)
+#define IsSafePathChar(c)       IsSafe(c, 9)
+
+
+/*+++
+
+  BreakUrl() 
+    Break a URL for its consituent parts
+
+  Parameters
+  IN -
+            the URL to crack open, need not be fully qualified
+     
+  OUT -
+    parts       absolute or relative may be nonzero (but not both).
+                host, anchor and access may be nonzero if they were specified.
+                Any which are nonzero point to zero terminated strings.
+     
+  Returns   
+    VOID
+
+  Details -
+
+  WARNING !! function munges the incoming buffer
+
+---*/
+
+PRIVATE VOID BreakFragment(LPTSTR *ppsz, PURLPARTS parts)
+{
+    if(!**ppsz)
+        return;
+
+    TCHAR *pch = StrChr(*ppsz, POUND);
+
+    if (pch)
+    {
+        TERMSTR(pch);
+        parts->pszFragment = pch +1;
+    }
+}
+
+
+PRIVATE VOID BreakScheme(LPTSTR *ppsz, PURLPARTS parts)
+{
+    if(!**ppsz)
+        return;
+
+    TCHAR *pch;
+
+    for (pch = *ppsz; *pch; pch = CharNext(pch))
+    {
+        
+        if (*pch == COLON)
+        {
+            TERMSTR(pch);
+            CharLower(*ppsz);
+            if (!lstrcmp(*ppsz, TEXT("url")))
+            {
+                *ppsz = pch +1;
+                continue;
+            }
+
+            //  Scheme found!
+            parts->pszScheme = *ppsz;   
+            *ppsz = pch + 1;
+            break;
+        }
+        if(!IsValidSchemeChar(*pch))
+            break;
+    }
+
+    if(parts->pszScheme)
+        parts->dwScheme = GetSchemeTypeAndFlags(parts->pszScheme, &parts->dwFlags);
+}
+
+
+PRIVATE VOID BreakQuery(LPTSTR *ppsz, PURLPARTS parts)
+{
+    TCHAR *pch;
+
+    if(!**ppsz)
+        return;
+
+    if(parts->dwFlags & UPF_SCHEME_OPAQUE)
+        return;
+
+    pch = StrChr(*ppsz, QUERY);
+
+    if (pch)
+    {
+        TERMSTR(pch);
+        parts->pszQuery = pch + 1;
+    }
+}
+PRIVATE VOID MkBreakServer(LPTSTR *ppsz, PURLPARTS parts)
+{
+    if (**ppsz == TEXT('@'))
+    {
+        TCHAR *pch;
+        // treat everything to seperator as host
+        //
+        parts->pszServer = *ppsz;
+
+        pch = StrChr(*ppsz ,SLASH);
+        if (pch)
+        {
+            parts->dwFlags |= UPF_SEG_ABSOLUTE;
+            TERMSTR(pch);
+            *ppsz = pch + 1;
+        }
+    }
+}
+
+PRIVATE VOID DefaultBreakServer(LPTSTR *ppsz, PURLPARTS parts)
+{
+    if(parts->dwFlags & UPF_SCHEME_OPAQUE)
+        return ;
+
+    if (**ppsz == SLASH)
+    {
+        parts->dwFlags |= UPF_SEG_ABSOLUTE;
+
+        *ppsz = CharNext(*ppsz);
+
+        if (**ppsz == SLASH)
+        {
+            // we have a winner!
+            TCHAR * pch;
+
+            parts->pszServer = CharNext(*ppsz);
+
+            pch = StrChr(parts->pszServer, SLASH);
+            
+            if(pch)
+            {
+                TERMSTR(pch);
+                *ppsz = pch + 1;
+            }
+            else
+                *ppsz = *ppsz + lstrlen(*ppsz);
+
+            // we want to CharLower() the hostname only...
+            pch = StrRChr(parts->pszServer, NULL, TEXT('@'));
+            if(!pch)
+                pch = parts->pszServer;
+
+            CharLower(pch);
+        }
+    }
+}
+
+PRIVATE DWORD
+CountSlashes(LPTSTR *ppsz)
+{
+    DWORD cSlashes = 0;
+    LPTSTR pch = *ppsz;
+
+    while (IsSeparator(pch))
+    {
+        *ppsz = pch;
+        pch = CharNext(pch);
+        cSlashes++;
+    }
+
+    return cSlashes;
+}
+
+PRIVATE VOID FileBreakServer(LPTSTR *ppsz, PURLPARTS parts)
+{
+    LPTSTR pch;
+    
+    //  CountSlashes() will set *ppsz to the last slash
+    DWORD cSlashes = CountSlashes(ppsz);
+
+    if(cSlashes || IsDrive(*ppsz))
+        parts->dwFlags |= UPF_SEG_ABSOLUTE;
+
+    switch (cSlashes)
+    {
+    case 0:
+        break;
+
+    case 2:
+        if(IsDrive(CharNext(*ppsz)))
+        {
+            //  this is a root drive
+            TERMSTR(*ppsz);
+            parts->pszServer = *ppsz;
+            (*ppsz)++;
+            break;
+        } //else fallthru to UNC handling
+    case 4:
+    case 5:
+        //
+        // cases like "file:////..." or "file://///..."
+        // we see this as a UNC path
+        // lets set the server
+        //
+        parts->pszServer = ++(*ppsz);
+        for(pch = *ppsz; *pch && !IsSeparator(pch); pch = CharNext(pch));
+        
+        if(pch && *pch)
+        {
+            TERMSTR(pch);
+            *ppsz = pch + 1;
+        }
+        else
+            *ppsz = pch + lstrlen(pch);
+        break;
+
+    case 1:
+        //
+        //we think of "file:/..." as on the local machine
+        // so we have zero length pszServer
+        //
+    case 3:
+        //
+        //we think of file:///... as properly normalized on the local machine
+        // so we have zero length pszServer
+        //
+    default:
+        //  there is just too many, we pretend that there is just one and ignore
+        //  the rest
+        TERMSTR(*ppsz);
+        parts->pszServer = *ppsz;
+        (*ppsz)++;
+        break;
+    }
+
+}
+
+PRIVATE VOID BreakServer(LPTSTR *ppsz, PURLPARTS parts)
+{
+    if(!**ppsz)
+        return;
+
+    //  we pretend that whacks are always the equiv of slashes
+    ConvertChar(*ppsz, WHACK, SLASH);
+
+    switch(parts->dwScheme)
+    {
+    case URL_SCHEME_FILE:
+        FileBreakServer(ppsz, parts);
+        break;
+
+    case URL_SCHEME_MK:
+        MkBreakServer(ppsz, parts);
+        break;
+
+    default:
+        DefaultBreakServer(ppsz, parts);
+        break;
+    }
+}
+
+PRIVATE VOID DefaultBreakSegments(LPTSTR psz, PURLPARTS parts)
+{
+    TCHAR *pch;
+
+    while (pch = StrChr(psz, SLASH))
+    {
+        parts->cSegments++;
+        TERMSTR(pch);
+        psz = pch + 1;
+    }
+
+    if(!*psz)
+        parts->dwFlags |= UPF_EXSEG_DIRECTORY;
+}
+
+        
+PRIVATE VOID DefaultBreakPath(LPTSTR *ppsz, PURLPARTS parts)
+{
+    if(!**ppsz)
+        return;
+
+    if((**ppsz == SLASH) && !(parts->dwFlags & UPF_SCHEME_OPAQUE))
+    {
+        parts->dwFlags |= UPF_SEG_ABSOLUTE;
+        *ppsz = CharNext(*ppsz);
+    }
+
+    parts->pszSegments = *ppsz;
+    parts->cSegments = 1;
+
+    if(!(parts->dwFlags & UPF_SCHEME_OPAQUE))
+        DefaultBreakSegments(parts->pszSegments, parts);
+
+}
+
+PRIVATE VOID FileBreakPath(LPTSTR *ppsz, PURLPARTS parts)
+{
+    if(!**ppsz)
+        return;
+
+    if(IsSeparator(*ppsz) && !(parts->dwFlags & UPF_SCHEME_OPAQUE))
+    {
+        parts->dwFlags |= UPF_SEG_ABSOLUTE;
+        *ppsz = CharNext(*ppsz);
+    }
+
+    //
+    //  this will keep the drive letter from being backed up over
+    //  during canonicalization.  if we want keep the UNC share 
+    //  from being backed up we should do it here 
+    //  or in FileBreakServer() similarly 
+    //
+    if(IsDrive(*ppsz))
+        parts->dwFlags |= UPF_SEG_LOCKFIRST;
+
+    parts->pszSegments = *ppsz;
+    parts->cSegments = 1;
+
+    if(!(parts->dwFlags & UPF_SCHEME_OPAQUE))
+        DefaultBreakSegments(parts->pszSegments, parts);
+
+}
+
+PRIVATE VOID BreakPath(LPTSTR *ppsz, PURLPARTS parts)
+{
+    if(!**ppsz)
+        return;
+
+    switch(parts->dwScheme)
+    {
+    case URL_SCHEME_FILE:
+        FileBreakPath(ppsz, parts);
+        break;
+
+    default:
+        DefaultBreakPath(ppsz, parts);
+        break;
+    }
+}
+PRIVATE void 
+BreakUrl(LPTSTR pszUrl, PURLPARTS parts)
+{
+    LPTSTR pszRoot = pszUrl;
+
+    ASSERT(pszUrl && parts);
+
+    ZeroMemory(parts, SIZEOF(URLPARTS));
+
+    //
+    //  WARNING: this order is specific, according to the proposed standard
+    //  
+    BreakFragment(&pszRoot, parts);
+    BreakScheme(&pszRoot, parts);
+    BreakQuery(&pszRoot, parts);
+    BreakServer(&pszRoot, parts);
+    BreakPath(&pszRoot, parts);
+
+    return;
+}
+
+
+/*+++
+
+  WininetCopyUrlForParse()
+    this copies the url and prepends a "file://" if necessary
+    This should never be called except from wininet
+    everyone else should be calling UrlCreateFromPath()
+
+  Parameters
+  IN -
+    pszDst      the destination buffer
+    pszSrc      source buffer
+     
+  OUT -
+    pszDst      is filled with a Live URL
+
+  Returns   
+  VOID
+
+  NOTE - Assume "file:" if no scheme and it looks like fully-qualified file path.
+---*/
+PRIVATE HRESULT
+WininetCopyUrlForParse(PSHSTR pstrDst, LPCTSTR pszSrc)
+{
+    static const TCHAR szFileSchemeString[] = TEXT("file://");
+    //#define FILE_SCHEME_LENGTH sizeof(szFileSchemeString) - 1
+
+    if (IsDrive(pszSrc) || IsUNC(pszSrc))
+    {
+        //
+        // NOTE: the first SetStr will always succeed
+        // because the default buffer is more than "file://"
+        pstrDst->SetStr(szFileSchemeString);
+        return pstrDst->Append(pszSrc);
+    }
+    else
+        return pstrDst->SetStr(pszSrc);
+
+}
+
+/*+++
+  BlendParts()  & all dependant Blend* functions
+        Blends the parts structures into one, taking the relavent 
+        bits from each one and dumping the unused data.
+
+  Parameters
+  IN -
+    partsUrl        the primary or relative parts   - Takes precedence
+    partsBase       the base or referrers parts
+     
+  OUT -
+    partsOut        the combined result
+
+  Returns   
+  VOID -
+
+  NOTE:  this will frequently NULL out the entire partsBase.
+---*/
+
+PRIVATE VOID
+BlendScheme(PURLPARTS partsUrl, PURLPARTS partsBase, PURLPARTS partsOut)
+{
+    if(partsUrl->pszScheme)
+    {
+        LPCTSTR pszScheme = partsOut->pszScheme = partsUrl->pszScheme;
+        DWORD dwScheme = partsOut->dwScheme = partsUrl->dwScheme;
+
+        partsOut->dwFlags |= (partsUrl->dwFlags & UPF_SCHEME_MASK);
+
+        if ((dwScheme && (dwScheme != partsBase->dwScheme)) ||
+            (partsBase->pszScheme && lstrcmp(pszScheme, partsBase->pszScheme)))
+        {
+            //  they are different schemes.  DUMP partsBase.
+
+            ZeroMemory(partsBase, SIZEOF(URLPARTS));
+        }
+    }
+    else
+    {
+        partsOut->pszScheme = partsBase->pszScheme;
+        partsOut->dwScheme = partsBase->dwScheme;
+        partsOut->dwFlags |= (partsBase->dwFlags & UPF_SCHEME_MASK);
+    }
+}
+
+PRIVATE VOID
+BlendServer(PURLPARTS partsUrl, PURLPARTS partsBase, PURLPARTS partsOut)
+{
+    ASSERT(partsUrl && partsBase && partsOut);
+
+    //
+    //  if we have different hosts then everything but the pszAccess is DUMPED
+    //
+    if(partsUrl->pszServer)
+    {
+        partsOut->pszServer = partsUrl->pszServer;
+        // NOTUSED partsOut->dwFlags |= (partsUrl->dwFlags & UPF_SERVER_MASK);
+
+        if ((partsBase->pszServer && lstrcmp(partsUrl->pszServer, partsBase->pszServer)))
+        {
+            //  they are different Servers.  DUMP partsBase.
+
+            ZeroMemory(partsBase, SIZEOF(URLPARTS));
+        }
+    }
+    else
+    {
+        partsOut->pszServer = partsBase->pszServer;
+        // NOTUSED partsOut->dwFlags |= (partsBase->dwFlags & UPF_SERVER_MASK);
+    }
+}
+
+PRIVATE VOID
+BlendPath(PURLPARTS partsUrl, PURLPARTS partsBase, PURLPARTS partsOut)
+{
+    ASSERT(partsUrl && partsBase && partsOut);
+
+    if (partsUrl->dwFlags & UPF_SEG_ABSOLUTE)
+    {
+        //  just use the absolute path
+
+        partsOut->pszSegments = partsUrl->pszSegments;
+        partsOut->cSegments = partsUrl->cSegments;
+        partsOut->dwFlags |= (partsUrl->dwFlags & (UPF_SEG_MASK |UPF_EXSEG_MASK) );
+
+        ZeroMemory(partsBase, SIZEOF(URLPARTS));
+
+    }
+    else if ((partsBase->dwFlags & UPF_SEG_ABSOLUTE))
+    {                       
+        //  Adopt path not name 
+        partsOut->pszSegments = partsBase->pszSegments;
+        partsOut->cSegments = partsBase->cSegments;
+        partsOut->dwFlags |= (partsBase->dwFlags & UPF_SEG_MASK );
+
+        if(partsUrl->cSegments)
+        {
+            //
+            // this a relative path that needs to be combined
+            //
+
+            partsOut->pszExtraSegs = partsUrl->pszSegments;
+            partsOut->cExtraSegs = partsUrl->cSegments;
+            partsOut->dwFlags |= (partsUrl->dwFlags & UPF_EXSEG_MASK );
+
+            if(!(partsBase->dwFlags & UPF_EXSEG_DIRECTORY))
+            {
+                //
+                //  knock off the file name segment 
+                //  as long as the it isnt the first or the first is not locked
+                //
+                LPTSTR pszLast = LastLiveSegment(partsOut->pszSegments, partsOut->cSegments, partsOut->dwFlags & UPF_SEG_LOCKFIRST);
+
+                if(pszLast)
+                    KILLSEG(pszLast);
+            }
+        }
+    }
+    else if (partsUrl->cSegments)
+    {
+        partsOut->pszSegments = partsUrl->pszSegments;
+        partsOut->cSegments = partsUrl->cSegments;
+        partsOut->dwFlags |= (partsUrl->dwFlags & (UPF_SEG_MASK |UPF_EXSEG_MASK) );
+
+        ZeroMemory(partsBase, SIZEOF(URLPARTS));
+    }
+    else if (partsBase->cSegments)
+    {
+        partsOut->pszSegments = partsBase->pszSegments;
+        partsOut->cSegments = partsBase->cSegments;
+        partsOut->dwFlags |= (partsBase->dwFlags & (UPF_SEG_MASK |UPF_EXSEG_MASK) );
+
+    }
+
+}
+
+PRIVATE VOID
+BlendQuery(PURLPARTS partsUrl, PURLPARTS partsBase, PURLPARTS partsOut)
+{
+    if(partsUrl->pszQuery || partsUrl->cSegments)
+    {
+        LPCTSTR pszQuery = partsOut->pszQuery = partsUrl->pszQuery;
+
+        // NOTUSED partsOut->dwFlags |= (partsUrl->dwFlags & UPF_Query_MASK);
+
+        if ((partsBase->pszQuery && lstrcmp(pszQuery, partsBase->pszQuery)))
+        {
+            //  they are different Querys.  DUMP partsBase.
+
+            ZeroMemory(partsBase, SIZEOF(URLPARTS));
+        }
+    }
+    else
+    {
+        partsOut->pszQuery = partsBase->pszQuery;
+        // NOTUSED partsOut->dwFlags |= (partsBase->dwFlags & UPF_Query_MASK);
+    }
+}
+
+PRIVATE VOID
+BlendFragment(PURLPARTS partsUrl, PURLPARTS partsBase, PURLPARTS partsOut)
+{
+    if(partsUrl->pszFragment || partsUrl->cSegments)
+    {
+        LPCTSTR pszFragment = partsOut->pszFragment = partsUrl->pszFragment;
+
+        // NOTUSED partsOut->dwFlags |= (partsUrl->dwFlags & UPF_Fragment_MASK);
+
+        if ((partsBase->pszFragment && lstrcmp(pszFragment, partsBase->pszFragment)))
+        {
+            //  they are different Fragments.  DUMP partsBase.
+
+            ZeroMemory(partsBase, SIZEOF(URLPARTS));
+        }
+    }
+    else
+    {
+        partsOut->pszFragment = partsBase->pszFragment;
+        // NOTUSED partsOut->dwFlags |= (partsBase->dwFlags & UPF_Fragment_MASK);
+    }
+}
+
+PRIVATE VOID
+BlendParts(PURLPARTS partsUrl, PURLPARTS partsBase, PURLPARTS partsOut)
+{
+    //
+    //  partsUrl always takes priority over partsBase
+    //
+
+    ASSERT(partsUrl && partsBase && partsOut);
+
+    ZeroMemory(partsOut, SIZEOF(URLPARTS));
+
+    BlendScheme( partsUrl,  partsBase,  partsOut);
+    BlendServer( partsUrl,  partsBase,  partsOut);
+    BlendPath( partsUrl,  partsBase,  partsOut);
+    BlendQuery( partsUrl,  partsBase,  partsOut);
+    BlendFragment( partsUrl,  partsBase,  partsOut);
+    
+}
+
+PRIVATE VOID
+CanonServer(PURLPARTS parts)
+{
+    if (parts->pszServer)
+    {
+        LPTSTR pszName = StrRChr(parts->pszServer, NULL, TEXT('@'));
+
+        if(!pszName)
+            pszName = parts->pszServer;
+
+        //  FQDNs should be lower case.
+        CharLower(pszName);
+
+        //
+        //  Ignore default port numbers, and trailing dots on FQDNs
+        //  which will only cause identical adresses to look different
+        //
+        {
+            TCHAR *pch = StrChr(pszName, COLON);
+
+            if (pch && parts->dwScheme)
+            {              
+                BOOL fIgnorePort = FALSE;
+
+                //
+                //  BUGBUG we should actually be getting this from
+                //  the services file to find out the default protocol port
+                //  but we dont think that most people will change them - zekel 17-Dec-96
+                //
+                switch(parts->dwScheme)
+                {
+                case URL_SCHEME_HTTP:
+                        if(lstrcmp(pch, TEXT(":80")) == 0)
+                            fIgnorePort = TRUE;
+                        break;
+
+                case URL_SCHEME_FTP:
+                        if(lstrcmp(pch, TEXT(":21")) == 0)
+                            fIgnorePort = TRUE;
+                        break;
+
+                case URL_SCHEME_GOPHER:
+                        if(lstrcmp(pch, TEXT(":70")) == 0)
+                            fIgnorePort = TRUE;
+                        break;
+
+                case URL_SCHEME_HTTPS:
+                        if(lstrcmp(pch, TEXT(":443")) == 0)
+                            fIgnorePort = TRUE;
+                        break;
+
+                default:
+                    break;
+                }
+                if(fIgnorePort)
+                    TERMSTR(pch);  // It is the default: ignore it 
+            }
+
+            pch = pszName + lstrlen(pszName) - 1;   // last character in the host name
+
+            if (*pch == DOT)
+                TERMSTR(pch);  // ignore trailing DOTs
+        }
+    }
+}
+
+
+PRIVATE VOID
+CanonCombineSegs(PURLPARTS parts)
+{
+    ASSERT(parts);
+    ASSERT(parts->pszSegments && parts->cSegments);
+    ASSERT(parts->pszExtraSegs && parts->cExtraSegs);
+
+    LPTSTR pszLast = LastLiveSegment(parts->pszSegments, parts->cSegments, parts->dwFlags & UPF_SEG_LOCKFIRST);
+
+    LPTSTR pszExtra = parts->pszExtraSegs;
+    DWORD iExtra = 0;
+    DWORD cExtras = parts->cExtraSegs;
+
+    if(!IsLiveSegment(pszExtra))
+        pszExtra = NextLiveSegment(pszExtra, &iExtra, cExtras);
+
+    while(pszLast && pszExtra && IsDotDot(pszExtra))
+    {
+        KILLSEG(pszLast);
+        KILLSEG(pszExtra);
+        pszLast = LastLiveSegment(parts->pszSegments, parts->cSegments, parts->dwFlags & UPF_SEG_LOCKFIRST);
+        pszExtra = NextLiveSegment(pszExtra, &iExtra, cExtras);
+    }
+}
+
+PRIVATE VOID
+CanonSegments(LPTSTR pszSeg, 
+              DWORD cSegs, 
+              BOOL fLockFirst)
+
+{
+    DWORD  iSeg = 0;
+    LPTSTR pszLastSeg = NULL;
+    BOOL fLastIsFirst = TRUE;
+    BOOL fFirstSeg = TRUE;
+
+    ASSERT (pszSeg && cSegs);
+
+    pszSeg = FirstLiveSegment(pszSeg, &iSeg, cSegs);
+
+    while (pszSeg)
+    {
+        if(IsDot(pszSeg))
+        {
+            //  if it is just a "." we can discard the segment
+            KILLSEG(pszSeg);
+        }
+    
+        else if(IsDotDot(pszSeg))
+        {
+            //  if it is ".." then we discard it and the last seg
+
+            //
+            //  if we are at the first (root) or 
+            //  the last is the root and it is locked
+            //  then we dont want to do anything
+            //
+            if(pszLastSeg && !IsDotDot(pszLastSeg) && !(fLastIsFirst && fLockFirst))
+            {
+                KILLSEG(pszLastSeg);
+                pszLastSeg = NULL;
+                KILLSEG(pszSeg);
+            }
+        }
+
+        if(IsLiveSegment(pszSeg))
+        {
+            if(!pszLastSeg && fFirstSeg)
+                fLastIsFirst = TRUE;
+            else 
+                fLastIsFirst = FALSE;
+                
+            pszLastSeg = pszSeg;
+            fFirstSeg = FALSE;
+        }
+
+        pszSeg = NextLiveSegment(pszSeg, &iSeg, cSegs);
+
+    }
+}
+
+PRIVATE VOID
+CanonPath(PURLPARTS parts)
+{
+
+    ASSERT(parts);
+
+    if(parts->cSegments)
+        CanonSegments(parts->pszSegments, parts->cSegments, (parts->dwFlags & UPF_SEG_LOCKFIRST));
+
+    if(parts->cExtraSegs)
+        CanonSegments(parts->pszExtraSegs, parts->cExtraSegs, FALSE);
+
+    if(parts->cSegments && parts->cExtraSegs)
+        CanonCombineSegs(parts);
+
+}
+
+
+PRIVATE VOID
+CanonParts(PURLPARTS parts)
+{
+    ASSERT(parts);
+
+    //CanonScheme(parts);
+    CanonServer(parts);
+    CanonPath(parts);
+    //CanonQuery(parts);
+    //CanonFragment(parts);
+}
+
+PRIVATE HRESULT
+BuildScheme(PURLPARTS parts, DWORD dwFlags, PSHSTR pstr)
+{
+    HRESULT hr = S_OK;
+
+    ASSERT(parts && pstr);
+
+    if(parts->pszScheme)
+    {
+        hr = pstr->Append(parts->pszScheme);
+        if(SUCCEEDED(hr))
+            hr = pstr->Append(COLON);
+    }
+
+    return hr;
+
+}
+
+PRIVATE HRESULT
+BuildServer(PURLPARTS parts, DWORD dwFlags, PSHSTR pstr)
+{
+    HRESULT hr = S_OK;
+
+    ASSERT(parts && pstr);
+
+    switch(parts->dwScheme)
+    {
+    case URL_SCHEME_MK:
+    // CraigC's "mk:" has no // but acts like it does
+        break;
+
+    case URL_SCHEME_FILE:
+        if ((dwFlags & URL_WININET_COMPATIBILITY) )
+        {
+            if(parts->pszServer && *parts->pszServer)
+                hr = pstr->Append(TEXT("////"));
+            else if (IsDrive(parts->pszSegments))
+                hr = pstr->Append(SLASH);
+            else if (parts->dwFlags & UPF_SEG_ABSOLUTE)
+                hr = pstr->Append(TEXT("//"));
+                
+            break;
+        }
+        else if (!(parts->dwFlags & UPF_SEG_ABSOLUTE) )
+            break;
+        //else dropthrough if there is a server or we want to pretend
+        //there is <gryn> for "file://" and "file:///"
+
+        
+    default:
+        if(parts->pszServer && SUCCEEDED(hr))
+            hr = pstr->Append(TEXT("//"));
+    }
+
+    if(parts->pszServer && SUCCEEDED(hr))
+            hr = pstr->Append(parts->pszServer);
+
+    return hr;
+}
+
+PRIVATE HRESULT
+BuildSegments(LPTSTR pszSeg, DWORD cSegs, PSHSTR pstr, BOOL fRoot)
+{
+    DWORD iSeg = 0;
+    HRESULT hr = S_OK;
+
+    ASSERT(pszSeg && pstr);
+
+    pszSeg = FirstLiveSegment(pszSeg, &iSeg, cSegs);
+
+    if(!fRoot)
+    {
+        hr = pstr->Append(pszSeg);
+
+        if(SUCCEEDED(hr))
+            pszSeg = NextLiveSegment(pszSeg, &iSeg, cSegs);
+        else
+            pszSeg = NULL;
+    }
+
+    while (pszSeg)
+    {
+        hr = pstr->Append(SLASH);
+        if(SUCCEEDED(hr))
+            hr = pstr->Append(pszSeg);
+
+        if(SUCCEEDED(hr))
+            pszSeg = NextLiveSegment(pszSeg, &iSeg, cSegs);
+        else 
+            break;
+    }
+
+    return hr;
+
+}
+
+
+PRIVATE HRESULT
+BuildPath(PURLPARTS parts, DWORD dwFlags, PSHSTR pstr)
+{
+    HRESULT hr = S_OK;
+
+    ASSERT(parts && pstr);
+
+    if(parts->cSegments)
+        hr = BuildSegments(parts->pszSegments, parts->cSegments, pstr, parts->dwFlags & UPF_SEG_ABSOLUTE);
+
+    if(SUCCEEDED(hr) && parts->cExtraSegs)
+        hr = BuildSegments(parts->pszExtraSegs, parts->cExtraSegs, pstr, TRUE);
+
+    //  trailing slash on a server name for IIS
+    if( (parts->dwFlags & UPF_EXSEG_DIRECTORY) ||
+        (!parts->cSegments && !parts->cExtraSegs && parts->dwFlags & UPF_SEG_ABSOLUTE))
+        hr = pstr->Append(SLASH);
+
+    return hr;
+}
+
+
+
+PRIVATE HRESULT
+BuildQuery(PURLPARTS parts, DWORD dwFlags, PSHSTR pstr)
+{
+    HRESULT hr = S_OK;
+
+    ASSERT(parts && pstr);
+
+    if(parts->pszQuery)
+    {
+        hr = pstr->Append(QUERY);
+        if(SUCCEEDED(hr))
+            hr = pstr->Append(parts->pszQuery);
+    }
+
+    return hr;
+
+}
+
+PRIVATE HRESULT
+BuildFragment(PURLPARTS parts, DWORD dwFlags, PSHSTR pstr)
+{
+    HRESULT hr = S_OK;
+
+    ASSERT(parts && pstr);
+
+    if(parts->pszFragment)
+    {
+        hr = pstr->Append(POUND);
+        if(SUCCEEDED(hr))
+            hr = pstr->Append(parts->pszFragment);
+    }
+
+    return hr;
+
+}
+
+PRIVATE HRESULT
+BuildUrl(PURLPARTS parts, DWORD dwFlags, PSHSTR pstr)
+{
+    HRESULT hr;
+
+    ASSERT(parts && pstr);
+
+    if( 
+        (SUCCEEDED(hr = BuildScheme(parts, dwFlags, pstr)))      &&
+        (SUCCEEDED(hr = BuildServer(parts, dwFlags, pstr)))      &&
+        (SUCCEEDED(hr = BuildPath(parts, dwFlags, pstr)))        &&
+        (SUCCEEDED(hr = BuildQuery(parts, dwFlags, pstr)))
+        )
+        hr = BuildFragment(parts, dwFlags, pstr);
+
+    return hr;
+}
+
+/*+++
+
+  SHUrlEscape()
+    Escapes an URL
+    right now, i am only escaping stuff in the Path part of the URL
+
+  Parameters
+  IN -
+    pszUrl      URL to examine
+    pstrOut     SHSTR destination
+    dwFlags     the relevant URL_* flags, 
+     
+  Returns   
+  HRESULT -
+    SUCCESS     S_OK
+    ERROR       only E_OUTOFMEMORY
+
+
+  Helper Routines
+    Escape*(part)           each part gets its own escape routine (ie EscapeScheme)
+    EscapeSpaces            will only escape spaces (WININET compatibility mostly)
+    EscapeSegmentsGetNeededSize     gets the required size of destination buffer for all path segments
+    EscapeLiveSegment               does the work of escaping each path segment
+---*/
+
+PRIVATE HRESULT
+EscapeSpaces(LPCTSTR psz, PSHSTR pstr, DWORD dwFlags)
+{
+    HRESULT hr = S_OK;
+    LPCTSTR pch;
+    DWORD cSpaces = 0;
+
+
+    ASSERT(psz && pstr);
+
+    
+    pstr->Reset();
+
+    for (pch = psz; *pch; pch = CharNext(pch))
+    {
+        if (*pch == SPC)
+            cSpaces++;
+    }
+
+    if(cSpaces)
+    {
+        hr = pstr->SetSize(lstrlen(psz) + cSpaces * 2 + 1);
+        if(SUCCEEDED(hr))
+        {
+            LPTSTR pchOut = (LPTSTR) *pstr;
+
+            for (pch = psz; *pch; pch = CharNext(pch))
+            {
+                if ((*pch == POUND || *pch == QUERY) && (dwFlags & URL_DONT_ESCAPE_EXTRA_INFO))
+                {
+                    lstrcpy(pchOut, pch);
+                    pchOut += lstrlen(pchOut);
+                }
+
+                if (*pch == SPC)
+                {
+                    *pchOut++ = HEX_ESCAPE;  
+                    *pchOut++ = TEXT('2');
+                    *pchOut++ = TEXT('0');
+                }
+                else
+                    *pchOut++ = *pch;
+            }
+
+            TERMSTR(pchOut);
+        }
+
+            
+
+
+    }
+    else 
+        hr = pstr->SetStr(psz);
+
+    return hr;
+}
+
+
+inline PRIVATE HRESULT
+EscapeScheme(PURLPARTS partsUrl, DWORD dwFlags, PURLPARTS partsOut, PSHSTR pstr)
+{
+    ASSERT(partsUrl && partsOut);
+
+    partsOut->pszScheme = partsUrl->pszScheme;
+    partsOut->dwScheme = partsUrl->dwScheme;
+
+    return S_OK;
+}
+
+inline PRIVATE HRESULT
+EscapeServer(PURLPARTS partsUrl, DWORD dwFlags, PURLPARTS partsOut, PSHSTR pstr)
+{
+    ASSERT(partsUrl && partsOut);
+
+    partsOut->pszServer = partsUrl->pszServer;
+
+    return S_OK;
+}
+
+inline PRIVATE HRESULT
+EscapeQuery(PURLPARTS partsUrl, DWORD dwFlags, PURLPARTS partsOut, PSHSTR pstr)
+{
+    ASSERT(partsUrl && partsOut);
+
+    partsOut->pszQuery = partsUrl->pszQuery;
+
+    return S_OK;
+}
+
+inline PRIVATE HRESULT
+EscapeFragment(PURLPARTS partsUrl, DWORD dwFlags, PURLPARTS partsOut, PSHSTR pstr)
+{
+    ASSERT(partsUrl && partsOut);
+
+    partsOut->pszFragment = partsUrl->pszFragment;
+
+    return S_OK;
+}
+
+PRIVATE DWORD
+EscapeSegmentsGetNeededSize(LPTSTR pszSegments, DWORD cSegs)
+{
+    DWORD cchNeeded = 0;
+    BOOL fResize = FALSE;
+    LPTSTR pszSeg;
+    DWORD iSeg;
+
+    ASSERT(pszSegments && cSegs);
+
+    pszSeg = FirstLiveSegment(pszSegments, &iSeg, cSegs);
+
+    while (IsLiveSegment(pszSeg))
+    {
+        TCHAR *pch;
+
+        for (pch = pszSeg; *pch; pch = CharNext(pch))
+        {
+            cchNeeded++;
+
+#ifndef UNICODE
+            if(IsDBCSLeadByte(*pch))
+            {
+                cchNeeded += 4;
+                fResize = TRUE;
+                continue;
+            }
+#endif //UNICODE
+
+            if(!IsSafePathChar(*pch))
+            {
+                fResize = TRUE;
+                cchNeeded += 2;
+            }
+
+        }
+
+        // for the NULL term
+        cchNeeded++;
+
+        pszSeg = NextLiveSegment(pszSeg, &iSeg, cSegs);
+    }
+
+    return fResize ? cchNeeded : 0;
+}
+
+PRIVATE VOID
+EscapeLiveSegment(LPTSTR pszSeg, LPTSTR *ppchOut)
+{
+    LPTSTR pchIn;
+    LPTSTR pchOut = *ppchOut;
+    TCHAR ch;
+
+    for (pchIn = pszSeg; *pchIn; pchIn = CharNext(pchIn))
+    {
+        ch = *pchIn;
+#ifndef UNICODE
+        if(IsDBCSLeadByte(ch))
+        {
+            //  must encode the next 2 chars...
+            *pchOut++ = HEX_ESCAPE;
+            *pchOut++ = hex[(ch >> 4) & 15];
+            *pchOut++ = hex[ch & 15];
+
+            //  must not use charnext here, cuz we need the real thing
+            ch++;
+
+            *pchOut++ = HEX_ESCAPE;
+            *pchOut++ = hex[(ch >> 4) & 15];
+            *pchOut++ = hex[ch & 15];
+
+            continue;
+        }
+#endif // UNICODE
+
+        if(!IsSafePathChar(ch))
+        {
+            *pchOut++ = HEX_ESCAPE;
+            *pchOut++ = hex[(ch >> 4) & 15];
+            *pchOut++ = hex[ch & 15];
+
+        }
+        else
+            *pchOut++ = *pchIn;
+    }
+
+    TERMSTR(pchOut);
+
+    // move past the terminator
+    pchOut++;
+
+    *ppchOut = pchOut;
+
+}
+
+PRIVATE HRESULT 
+EscapeSegments(LPTSTR pszSegments, DWORD cSegs, PURLPARTS partsOut, PSHSTR pstr)
+{
+    DWORD cchNeeded;
+
+    HRESULT hr = S_OK;
+
+    ASSERT(pszSegments && cSegs && partsOut && pstr);
+
+    cchNeeded = EscapeSegmentsGetNeededSize(pszSegments, cSegs);
+
+    if(cchNeeded)
+    {
+        ASSERT(pstr);
+
+        hr = pstr->SetSize(cchNeeded);
+
+        if(SUCCEEDED(hr))
+        {
+            LPTSTR pchOut = (LPTSTR) *pstr;
+            LPTSTR pszSeg;
+            DWORD iSeg;
+
+            partsOut->pszSegments = pchOut;
+            partsOut->cSegments = 0;
+
+            pszSeg = FirstLiveSegment(pszSegments, &iSeg, cSegs);
+
+            while (IsLiveSegment(pszSeg))
+            {
+                EscapeLiveSegment(pszSeg, &pchOut);
+                partsOut->cSegments++;
+
+                pszSeg = NextLiveSegment(pszSeg, &iSeg, cSegs);
+            }
+
+
+        }
+
+    }
+    else
+    {
+        partsOut->cSegments = cSegs;
+        partsOut->pszSegments = pszSegments;
+    }
+
+
+    return hr;
+}
+
+PRIVATE HRESULT
+EscapePath(PURLPARTS partsUrl, DWORD dwFlags, PURLPARTS partsOut, PSHSTR pstr)
+{
+    HRESULT hr = S_OK;
+
+    ASSERT(partsUrl && partsOut && pstr);
+
+    if(partsUrl->cSegments)
+    {
+        hr = EscapeSegments(partsUrl->pszSegments, partsUrl->cSegments, partsOut, pstr);
+
+    }
+    else 
+    {
+        partsOut->cSegments = 0;
+        partsOut->pszSegments = NULL;
+    }
+
+    return hr;
+}
+
+HRESULT
+SHUrlEscape (LPCTSTR pszUrl, 
+             PSHSTR pstrOut,
+             DWORD dwFlags)
+{
+    SHSTR strUrl;
+    HRESULT hr;
+    
+    ASSERT(pszUrl && pstrOut);
+    if(!pszUrl || !pstrOut)
+        return E_INVALIDARG;
+
+
+    //
+    //  EscapeSpaces is remarkably stupid, 
+    //  but so is this kind of functionality...
+    //  it doesnt do any kind of real parsing, it
+    //  only looks for spaces and escapes them...
+    //
+    if(dwFlags & URL_ESCAPE_SPACES_ONLY)
+        return EscapeSpaces(pszUrl, pstrOut, dwFlags);
+
+    pstrOut->Reset();
+
+    hr = strUrl.SetStr(pszUrl);
+        
+    if(SUCCEEDED(hr))
+    {
+        URLPARTS partsUrl, partsOut;
+        SHSTR strPath;
+
+        BreakUrl(strUrl, &partsUrl);
+
+        ZeroMemory(&partsOut, SIZEOF(URLPARTS));
+        //
+        //  NOTE the only function here that is really active right now is the EscapePath
+        //  if some other part needs to be escaped, then add a new SHSTR in the 4th param
+        //  and change the appropriate subroutine
+        //
+
+        if(
+            (SUCCEEDED(hr = EscapeScheme(&partsUrl, dwFlags, &partsOut, NULL)))
+            && (SUCCEEDED(hr = EscapeServer(&partsUrl, dwFlags, &partsOut, NULL)))
+            && (SUCCEEDED(hr = EscapePath(&partsUrl, dwFlags, &partsOut, &strPath)))
+            && (SUCCEEDED(hr = EscapeQuery(&partsUrl, dwFlags, &partsOut, NULL)))
+            && (SUCCEEDED(hr = EscapeFragment(&partsUrl, dwFlags, &partsOut, NULL)))
+           )
+        {
+            partsOut.dwFlags = partsUrl.dwFlags;
+
+            hr = BuildUrl(&partsOut, dwFlags, pstrOut);
+        }
+    }
+    else
+        hr = E_OUTOFMEMORY;
+
+    return hr;
+    
+}
+
+
+/*+++
+
+  SHUrlUnescape()
+    Unescapes a string in place.  this is ok because 
+    it should never grow
+
+  Parameters
+  IN -
+    psz         string to unescape inplace
+    dwFlags     the relevant URL_* flags, 
+     
+  Returns   
+  HRESULT -
+    SUCCESS     S_OK
+    ERROR       DOESNT error right now
+
+
+  Helper Routines
+    HexToWord               takes a hexdigit and returns WORD with the right number or -1
+    IsEscapedChar           looks at a ptr for "%XX" where X is a hexdigit
+    TranslateEscapedChar    translates "%XX" to an 8 bit char
+---*/
+
+PRIVATE WORD
+HexToWord(TCHAR ch)
+{
+    if(ch >= TEXT('0') && ch <= TEXT('9'))
+        return (WORD) ch - TEXT('0');
+    if(ch >= TEXT('A') && ch <= TEXT('F'))
+        return (WORD) ch - TEXT('A') + 10;
+    if(ch >= TEXT('a') && ch <= TEXT('f'))
+        return (WORD) ch - TEXT('a') + 10;
+
+    ASSERT(FALSE);  //we have tried to use a non-hex number
+    return (WORD) -1;
+}
+
+PRIVATE BOOL inline
+IsEscapedChar(LPCTSTR pch)
+{
+    return (pch[0] == HEX_ESCAPE && IsHex(pch[1]) && IsHex(pch[2])) ? TRUE : FALSE;
+}
+
+PRIVATE TCHAR 
+TranslateEscapedChar(LPCTSTR pch)
+{
+    TCHAR ch;
+    ASSERT(IsEscapedChar(pch));
+
+    pch++;
+    ch = (TCHAR) HexToWord(*pch++) * 16; // hi nibble
+    ch += HexToWord(*pch); // lo nibble
+
+    return ch;
+}
+
+HRESULT SHUrlUnescape(LPTSTR psz, DWORD dwFlags)
+{
+    TCHAR *pchSrc = psz;
+    TCHAR *pchDst = psz;
+    BOOL fAfterSpecial = FALSE;
+
+    while (*pchSrc)
+    {
+        if ((*pchSrc == POUND || *pchSrc == QUERY) && (dwFlags & URL_DONT_ESCAPE_EXTRA_INFO))
+        {
+            lstrcpy(pchDst, pchSrc);
+            pchDst += lstrlen(pchDst);
+            break;
+        }
+
+        if (!fAfterSpecial && IsEscapedChar(pchSrc))
+        {
+            *pchDst++ = TranslateEscapedChar(pchSrc);
+            pchSrc += 3; // enuff for "%XX"
+        }
+        else
+        {
+            *pchDst++ = *pchSrc++;
+        }
+    }
+
+    TERMSTR(pchDst);
+
+    return S_OK;
+
+}
+
+
+
+/*+++
+
+  SHUrlParse()
+    Canonicalize an URL 
+    or Combine and Canonicalize two URLs
+
+  Parameters
+  IN -
+    pszBase     the base or referring URL
+    pszUrl      the relative URL, may be NULL
+    dwFlags     the relevant URL_* flags, 
+     
+  Returns   
+  HRESULT -
+    SUCCESS     S_OK
+    ERROR       appropriate error, usually just E_OUTOFMEMORY;
+
+  NOTE:  pszUrl will always take precedence over pszBase.
+
+---*/
+HRESULT SHUrlParse(LPCTSTR pszBase, LPCTSTR pszUrl, PSHSTR pstrOut, DWORD dwFlags)
+{
+    HRESULT hr = S_OK;
+    URLPARTS partsBase, partsOut;
+    
+    SHSTR strBase;
+    SHSTR strUrl;
+    
+    ASSERT(pszBase);
+    ASSERT(pstrOut);
+
+    pstrOut->Reset();
+
+
+    //
+    // Don't bother parsing if all we have in an inter-page link as the 
+    // pszBase and no pszUrl to parse
+    //
+
+    if (pszBase[0] == POUND && (!pszUrl || !*pszUrl))
+    {
+        hr = pstrOut->SetStr(pszBase);
+
+        goto quit;
+    }
+
+
+    //  
+    //  now we will make copies of the URLs so that we can rip them apart
+    //  CopyUrlForHTParse() will prepend a file: if it wants...
+    //
+
+    if(dwFlags & URL_WININET_COMPATIBILITY)
+        hr = WininetCopyUrlForParse(&strBase, pszBase);
+    else
+    {
+        hr = strBase.SetStr(pszBase);
+        ASSERT(!IsUNC(pszBase) && !IsDrive(pszBase));
+    }
+
+    if(FAILED(hr))
+        goto quit;
+
+    // Trim leading and trailing whitespace
+
+    strBase.Trim();
+
+    // Remove tab characters.  Netscape does this.
+
+    HTRemoveTabs((LPTSTR) strBase);
+
+    //
+    //  crack open the URLs in a violent manner.
+    //  this can change the str buffers
+    //  but thats ok because we dont touch them again
+    //
+    BreakUrl((LPTSTR) strBase, &partsBase);
+
+
+    //
+    //  if we are trying to combine... 
+    //  then we handle the other URL
+    //
+    if(pszUrl)
+    {
+        URLPARTS partsUrl;
+
+        if(dwFlags & URL_WININET_COMPATIBILITY)
+            hr = WininetCopyUrlForParse(&strUrl, pszUrl);
+        else
+        {
+            hr = strUrl.SetStr(pszUrl);
+            ASSERT(!IsUNC(pszUrl) && !IsDrive(pszUrl));
+        }
+
+        if(FAILED(hr))
+            goto quit;
+
+        strUrl.Trim();
+
+        HTRemoveTabs((LPTSTR) strUrl);
+
+        BreakUrl((LPTSTR) strUrl, &partsUrl);
+    
+        //
+        //  this is where the real combination logic happens
+        //  this first parts is the one that takes precedence
+        //
+        BlendParts(&partsUrl, &partsBase, &partsOut);
+    }
+    else
+        partsOut = partsBase;
+
+    //
+    //  we will now do the work of putting it together
+    //  if these fail, it is because we are out of memory.
+    //
+
+    if (!(dwFlags & URL_DONT_SIMPLIFY))
+        CanonParts(&partsOut);
+
+    hr = BuildUrl(&partsOut, dwFlags, pstrOut);
+
+
+    if(SUCCEEDED(hr))
+    {
+        if (dwFlags & URL_UNESCAPE)
+            SHUrlUnescape((LPTSTR) *pstrOut, dwFlags);
+
+        if (dwFlags & URL_ESCAPE_SPACES_ONLY || dwFlags & URL_ESCAPE_UNSAFE)
+        {
+            //
+            //  we are going to reuse strUrl here
+            //
+            hr = strUrl.SetStr(*pstrOut);
+
+            if(SUCCEEDED(hr))
+                hr = SHUrlEscape((LPTSTR)strUrl, pstrOut, dwFlags);
+        }
+    }
+
+    if (SUCCEEDED(hr) && 
+        (dwFlags & URL_WININET_COMPATIBILITY) && 
+        (partsOut.dwScheme == URL_SCHEME_FILE))
+        WininetFixFileSlashes((LPTSTR) *pstrOut);
+
+
+quit:
+    
+    
+    if(FAILED(hr))
+        pstrOut->Reset();
+
+    return hr;  
+
+}
+
+HRESULT
+SHPathCreateFromUrl(LPCTSTR pszUrl, PSHSTR pstrOut, DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTR strUrl;
+    ASSERT(pszUrl && pstrOut);
+
+    pstrOut->Reset();
+    hr = strUrl.SetStr(pszUrl);
+
+    if(SUCCEEDED(hr))
+    {
+        URLPARTS partsUrl;
+
+        //  first we need to break it open
+        BreakUrl((LPTSTR) strUrl, &partsUrl);
+
+        //  then we make sure it is a file:
+        if(partsUrl.dwScheme == URL_SCHEME_FILE)
+        {
+            //  this will disable a preceding slash when there is a drive
+            if(IsDrive(partsUrl.pszSegments))
+                partsUrl.dwFlags = (partsUrl.dwFlags & ~UPF_SEG_ABSOLUTE);
+
+            //  if there is a zero length server then 
+            //  we skip building it
+            if(partsUrl.pszServer && !*partsUrl.pszServer)
+                partsUrl.pszServer = NULL;
+
+            //
+            //  then go ahead and put the path together
+            if( (SUCCEEDED(hr = BuildServer(&partsUrl, dwFlags, pstrOut))) &&
+                (SUCCEEDED(hr = BuildPath(&partsUrl, dwFlags, pstrOut)))
+              )
+            {
+                //  then decode it cuz paths arent escaped
+                ConvertChar((LPTSTR)*pstrOut, SLASH, WHACK);
+                SHUrlUnescape((LPTSTR)*pstrOut, dwFlags);
+            }
+        }
+        else
+            hr = E_INVALIDARG;
+    }
+
+    return hr;
+}
+
+
+HRESULT
+SHUrlCreateFromPath(LPCTSTR pszPath, PSHSTR pstrOut, DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTR strPath;
+    ASSERT(pszPath && pstrOut);
+
+    pstrOut->Reset();
+    hr = strPath.SetStr(pszPath);
+
+    if(SUCCEEDED(hr))
+    {
+        URLPARTS partsIn, partsOut;
+        SHSTR strEscapedPath, strEscapedServer;
+        LPTSTR pch = (LPTSTR)strPath;
+
+
+        ZeroMemory(&partsIn, SIZEOF(URLPARTS));
+
+        partsIn.pszScheme = (LPTSTR) c_szFileScheme;
+        partsIn.dwScheme = URL_SCHEME_FILE;
+
+        //  first break the path
+        BreakServer(&pch, &partsIn);
+        BreakPath(&pch, &partsIn);
+
+        partsOut = partsIn;
+
+        //  then escape the path
+        hr = EscapePath(&partsIn, dwFlags, &partsOut, &strEscapedPath);
+
+        if(SUCCEEDED(hr) && partsOut.pszServer)
+        {
+            //
+            //  i am treating the pszServer exactly like a path segment
+            //
+
+            DWORD cbNeeded = EscapeSegmentsGetNeededSize(partsOut.pszServer, 1);
+
+            if(cbNeeded && SUCCEEDED(hr = strEscapedServer.SetSize(cbNeeded)))
+            {
+                pch = (LPTSTR) strEscapedServer;
+
+                EscapeLiveSegment(partsOut.pszServer, &pch);
+                partsOut.pszServer = (LPTSTR) strEscapedServer;
+            }
+        }
+        else if(partsOut.dwFlags & UPF_SEG_ABSOLUTE)
+            partsOut.pszServer = TEXT("");
+
+        //  then build the URL
+        if(SUCCEEDED(hr))
+            hr = BuildUrl(&partsOut, dwFlags, pstrOut);
+    }
+
+    return hr;
+}
+
+PRIVATE HRESULT
+CopyOutA(PSHSTRA pstr, LPSTR psz, LPDWORD pcch)
+{
+    HRESULT hr = S_OK;
+    DWORD cch;
+    ASSERT(pstr);
+    ASSERT(psz);
+    ASSERT(pcch);
+
+    cch = pstr->GetLen();
+    if(*pcch > cch)
+        lstrcpyA(psz, pstr->GetStr());
+    else
+        hr = E_POINTER;
+
+    *pcch = cch + (FAILED(hr) ? 1 : 0);
+
+    return hr;
+}
+
+PRIVATE HRESULT
+CopyOutW(PSHSTRW pstr, LPWSTR psz, LPDWORD pcch)
+{
+    HRESULT hr = S_OK;
+    DWORD cch;
+    ASSERT(pstr);
+    ASSERT(psz);
+    ASSERT(pcch);
+
+    cch = pstr->GetLen();
+    if(*pcch > cch)
+        lstrcpyW(psz, pstr->GetStr());
+    else
+        hr = E_POINTER;
+
+    *pcch = cch + (FAILED(hr) ? 1 : 0);
+
+    return hr;
+}
+
+LWSTDAPI_(HRESULT)	
+UrlCombine(LPCTSTR pszBase, 
+           LPCTSTR pszRelative, 
+           LPTSTR pszCombined, 
+           LPDWORD pcchCombined, 
+           DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTR strOut;
+
+    if (!pszBase || !pszRelative || !pszCombined ||
+        !pcchCombined || !*pcchCombined)
+        hr = E_INVALIDARG;
+    else
+        hr = SHUrlParse(pszBase, pszRelative, &strOut, dwFlags);
+
+    if(SUCCEEDED(hr) )
+        hr = CopyOutA(&strOut, pszCombined, pcchCombined);
+
+    return hr;
+}
+
+LWSTDAPI_(HRESULT)	
+UrlCanonicalize(LPCTSTR pszUrl,
+                LPTSTR pszCanonicalized, 
+                LPDWORD pcchCanonicalized, 
+                DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTR strOut;
+
+    if (!pszUrl || !pszCanonicalized || 
+        !pcchCanonicalized || !*pcchCanonicalized )
+        hr = E_INVALIDARG;
+    else
+        hr = SHUrlParse(pszUrl, NULL,&strOut, dwFlags);
+
+    if(SUCCEEDED(hr) )
+        hr = CopyOutA(&strOut, pszCanonicalized, pcchCanonicalized);
+
+    return hr;
+
+}
+
+
+LWSTDAPI	
+UrlEscape(LPCTSTR pszUrl,
+                LPTSTR pszEscaped, 
+                LPDWORD pcchEscaped, 
+                DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTR strOut;
+
+    if (!pszUrl || !pszEscaped || 
+        !pcchEscaped || !*pcchEscaped )
+        hr = E_INVALIDARG;
+    else
+        hr = SHUrlEscape(pszUrl, &strOut, dwFlags);
+
+    if(SUCCEEDED(hr) )
+        hr = CopyOutA(&strOut, pszEscaped, pcchEscaped);
+
+    return hr;
+
+}
+
+LWSTDAPI_(int)
+UrlCompare(LPCTSTR psz1, LPCTSTR psz2, BOOL fIgnoreSlash)
+{
+    SHSTR str1, str2;
+
+    if (psz1 && psz2)
+    {
+        if(SUCCEEDED(SHUrlParse(psz1, NULL, &str1, URL_UNESCAPE)))
+        {
+            if(SUCCEEDED(SHUrlParse(psz2, NULL, &str2, URL_UNESCAPE)))
+            {
+                if(fIgnoreSlash)
+                {
+                    LPTSTR pch;
+
+                    pch = (LPTSTR)str1 + str1.GetLen() - 1;
+                    if(*pch == SLASH)
+                        TERMSTR(pch);
+
+                    pch = (LPTSTR)str2 + str2.GetLen() - 1;
+                    if(*pch == SLASH)
+                        TERMSTR(pch);
+                }
+
+                return lstrcmp((LPTSTR) str1, (LPTSTR) str2);
+            }
+        }
+    }
+
+    return lstrcmp(psz1, psz2);
+}
+                    
+
+    
+LWSTDAPI
+UrlUnescape(LPTSTR pszUrl, LPTSTR pszOut, LPDWORD pcchOut, DWORD dwFlags)
+{
+    HRESULT hr = S_OK;
+
+    if(pszUrl)
+    {
+        if(dwFlags & URL_UNESCAPE_INPLACE)
+        {
+            SHUrlUnescape(pszUrl, dwFlags);
+        }
+        else if(pszOut && pcchOut && *pcchOut)
+        {
+            SHSTR strUrl;
+
+            hr = strUrl.SetStr(pszUrl);
+            if(SUCCEEDED(hr))
+            {
+                SHUrlUnescape((LPTSTR)strUrl, dwFlags);
+                hr = CopyOutA(&strUrl, pszOut, pcchOut);
+
+            }
+        }
+        else
+            hr = E_INVALIDARG;
+    }
+    else 
+        hr = E_INVALIDARG;
+
+    return hr;
+}
+
+LWSTDAPI
+PathCreateFromUrl(LPCTSTR pszUrl, LPTSTR pszPath, LPDWORD pcchPath, DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTR strOut;
+
+    if (!pszUrl || !pszPath || 
+        !pcchPath || !*pcchPath )
+        hr = E_INVALIDARG;
+    else
+        hr = SHPathCreateFromUrl(pszUrl, &strOut, dwFlags);
+
+    if(SUCCEEDED(hr) )
+        hr = CopyOutA(&strOut, pszPath, pcchPath);
+
+    return hr;
+
+}
+
+LWSTDAPI
+UrlCreateFromPath(LPCTSTR pszPath, LPTSTR pszUrl, LPDWORD pcchUrl, DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTR strOut;
+
+    if (!pszPath || !pszUrl || 
+        !pcchUrl || !*pcchUrl )
+        hr = E_INVALIDARG;
+    else
+        hr = SHUrlCreateFromPath(pszPath, &strOut, dwFlags);
+
+    if(SUCCEEDED(hr) )
+        hr = CopyOutA(&strOut, pszUrl, pcchUrl);
+
+    return hr;
+
+}
+
+//
+//  UNICODE version must thunk down because of URL restrictions to 
+//  ASCII charset.  otherwise weird probs crop up
+//
+
+LWSTDAPI_(HRESULT)	
+UrlCombineW(LPCWSTR pszBase, 
+           LPCWSTR pszRelative, 
+           LPWSTR pszCombined, 
+           LPDWORD pcchCombined, 
+           DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTRW strwOut;
+
+    if (!pszBase || !pszRelative || !pszCombined ||
+        !pcchCombined || !*pcchCombined)
+        hr = E_INVALIDARG;
+    else
+    {
+        SHSTRA straOut;
+        SHSTRA straBase;
+        SHSTRA straRelative;
+
+        if(SUCCEEDED(straBase.SetStr(pszBase)) && SUCCEEDED(straRelative.SetStr(pszBase)))
+            hr = SHUrlParse((LPSTR) straBase, (LPSTR)straRelative, &straOut, dwFlags);
+        else
+            hr = E_OUTOFMEMORY;
+
+        if(SUCCEEDED(hr))
+            hr = strwOut.SetStr(straOut);
+    }
+
+    if(SUCCEEDED(hr) )
+        hr = CopyOutW(&strwOut, pszCombined, pcchCombined);
+
+    return hr;
+}
+
+LWSTDAPI_(HRESULT)	
+UrlCanonicalizeW(LPCWSTR pszUrl, 
+           LPWSTR pszCanonicalized, 
+           LPDWORD pcchCanonicalized, 
+           DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTRW strwOut;
+
+    if (!pszUrl || !pszCanonicalized ||
+        !pcchCanonicalized || !*pcchCanonicalized)
+        hr = E_INVALIDARG;
+    else
+    {
+        SHSTRA straOut;
+        SHSTRA straUrl;
+
+        if(SUCCEEDED(straUrl.SetStr(pszUrl))) 
+            hr = SHUrlParse((LPSTR) straUrl, NULL, &straOut, dwFlags);
+        else
+            hr = E_OUTOFMEMORY;
+
+        if(SUCCEEDED(hr))
+            hr = strwOut.SetStr(straOut);
+    }
+
+    if(SUCCEEDED(hr) )
+        hr = CopyOutW(&strwOut, pszCanonicalized, pcchCanonicalized);
+
+    return hr;
+}
+
+LWSTDAPI
+UrlEscapeW(LPCWSTR pszUrl, 
+           LPWSTR pszEscaped, 
+           LPDWORD pcchEscaped, 
+           DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTRW strwOut;
+
+    if (!pszUrl || !pszEscaped ||
+        !pcchEscaped || !*pcchEscaped)
+        hr = E_INVALIDARG;
+    else
+    {
+        SHSTRA straOut;
+        SHSTRA straUrl;
+
+        if(SUCCEEDED(straUrl.SetStr(pszUrl))) 
+            hr = SHUrlEscape((LPSTR) straUrl, &straOut, dwFlags);
+        else
+            hr = E_OUTOFMEMORY;
+
+        if(SUCCEEDED(hr))
+            hr = strwOut.SetStr(straOut);
+    }
+
+    if(SUCCEEDED(hr) )
+        hr = CopyOutW(&strwOut, pszEscaped, pcchEscaped);
+
+    return hr;
+}
+
+
+LWSTDAPI_(int)
+UrlCompareW(LPCWSTR psz1, LPCWSTR psz2, BOOL fIgnoreSlash)
+{
+
+    if (psz1 && psz2)
+    {
+        SHSTRA stra1, stra2, straRaw1, straRaw2;
+
+        if( SUCCEEDED(straRaw1.SetStr(psz1)) && SUCCEEDED(straRaw2.SetStr(psz2)) && 
+            SUCCEEDED(SHUrlParse((LPSTR)straRaw1, NULL, &stra1, URL_UNESCAPE)))
+        {
+            if(SUCCEEDED(SHUrlParse((LPSTR)straRaw2, NULL, &stra2, URL_UNESCAPE)))
+            {
+                if(fIgnoreSlash)
+                {
+                    LPTSTR pch;
+
+                    pch = (LPSTR)stra1 + stra1.GetLen() - 1;
+                    if(*pch == SLASH)
+                        TERMSTR(pch);
+
+                    pch = (LPSTR)stra2 + stra2.GetLen() - 1;
+                    if(*pch == SLASH)
+                        TERMSTR(pch);
+                }
+
+                return lstrcmpA((LPSTR) stra1, (LPSTR) stra2);
+            }
+        }
+    }
+
+    return lstrcmpW(psz1, psz2);
+}
+                    
+
+    
+LWSTDAPI
+UrlUnescapeW(LPWSTR pszUrl, LPWSTR pszOut, LPDWORD pcchOut, DWORD dwFlags)
+{
+    HRESULT hr = S_OK;
+
+    if(pszUrl)
+    {
+        SHSTRA straUrl;
+
+        hr = straUrl.SetStr(pszUrl);
+        if(SUCCEEDED(hr))
+        {
+            SHSTRW strwUrl;
+            SHUrlUnescape((LPTSTR)straUrl, dwFlags);
+
+            hr = strwUrl.SetStr((LPSTR)straUrl);
+
+            if(SUCCEEDED(hr))
+            {
+                if(dwFlags & URL_UNESCAPE_INPLACE)
+                {
+                    lstrcpyW(pszUrl, strwUrl.GetStr());
+                }
+                else if(pszOut && pcchOut && *pcchOut)
+                {
+                    hr = CopyOutW(&strwUrl, pszOut, pcchOut);
+                }
+                else
+                    hr = E_INVALIDARG;
+            }
+        }
+    }
+    else 
+        hr = E_INVALIDARG;
+
+    return hr;
+}
+
+LWSTDAPI
+PathCreateFromUrlW
+           (LPCWSTR pszUrl, 
+           LPWSTR pszPath, 
+           LPDWORD pcchPath, 
+           DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTRW strwOut;
+
+    if (!pszUrl || !pszPath ||
+        !pcchPath || !*pcchPath)
+        hr = E_INVALIDARG;
+    else
+    {
+        SHSTRA straOut;
+        SHSTRA straUrl;
+
+        if(SUCCEEDED(straUrl.SetStr(pszUrl))) 
+            hr = SHPathCreateFromUrl((LPSTR) straUrl, &straOut, dwFlags);
+        else
+            hr = E_OUTOFMEMORY;
+
+        if(SUCCEEDED(hr))
+            hr = strwOut.SetStr(straOut);
+    }
+
+    if(SUCCEEDED(hr) )
+        hr = CopyOutW(&strwOut, pszPath, pcchPath);
+
+    return hr;
+}
+
+LWSTDAPI
+UrlCreateFromPathW
+           (LPCWSTR pszPath, 
+           LPWSTR pszUrl, 
+           LPDWORD pcchUrl, 
+           DWORD dwFlags)
+{
+    HRESULT hr;
+    SHSTRW strwOut;
+
+    if (!pszPath || !pszUrl ||
+        !pcchUrl || !*pcchUrl)
+        hr = E_INVALIDARG;
+    else
+    {
+        SHSTRA straOut;
+        SHSTRA straPath;
+
+        if(SUCCEEDED(straPath.SetStr(pszPath))) 
+            hr = SHUrlCreateFromPath((LPSTR) straPath, &straOut, dwFlags);
+        else
+            hr = E_OUTOFMEMORY;
+
+        if(SUCCEEDED(hr))
+            hr = strwOut.SetStr(straOut);
+    }
+
+    if(SUCCEEDED(hr) )
+        hr = CopyOutW(&strwOut, pszUrl, pcchUrl);
+
+    return hr;
+}

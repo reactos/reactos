@@ -1,0 +1,43 @@
+
+#define IDS_ALLFILES		185
+#define IDS_BADACM		186
+#define IDS_BADACMV		187
+#define IDS_RLEDECOMPRESS	188
+#define IDS_VIDEO		189
+#define IDS_AUDIO		190
+#define IDS_SSSTREAMD		191
+#define IDS_AVIFILE		192
+#define IDS_FFDESC		193
+#define IDS_STREAMNAME		100
+#define IDS_FILETYPE		101
+
+#define IDD_COMPRESSOPTIONS	110
+
+/*	-	-	-	-	-	-	-	-	*/
+
+#ifdef RC_INVOKED
+
+#include <windows.h>
+#include "avifile.rcv"
+#include "avireg.h"
+
+STRINGTABLE MOVEABLE DISCARDABLE
+BEGIN
+IDS_ALLFILES		"All Files (*.*)@*.*"
+IDS_BADACM		"Choosing a wave format from this dialog requires at least version 2.0 of the Microsoft Audio Compression Manager."
+IDS_BADACMV		"Bad MSACM Version"
+IDS_RLEDECOMPRESS	"Microsoft RLE (Decompress)"
+IDS_VIDEO		"Video"
+IDS_AUDIO		"Audio"
+IDS_SSSTREAMD		"%s %s #%d"
+IDS_AVIFILE		"AVI Default File Handler"
+IDS_FFDESC		"Uncompressed"
+IDS_STREAMNAME		"Microsoft Waveform: %s"
+IDS_FILETYPE		"Microsoft Waveform"
+END
+
+#endif
+
+#include "aviopts.dlg"
+
+/*	-	-	-	-	-	-	-	-	*/

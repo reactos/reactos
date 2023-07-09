@@ -1,0 +1,142 @@
+KBD     Geo     "Georgian"
+
+		// LCID     : 0437
+
+
+
+VERSION 1
+
+SHIFTSTATE
+
+  0             // Column 4 :
+  1             // Column 5 : Shft
+  6             // Column 6 : AltGr
+  2             // Column 7 : Ctrl
+
+LAYOUT
+
+//SC  VK_        Cap	0	1	6	2
+//--  ---------- ---	----	----	----	----
+  29  OEM_3      0      201e    201c                       // Double Low-9 Quotation Mark, Left Double Quotation Mark
+  02  1          0      !       1
+  03  2          0      ?       2
+  04  3          0      2116    3                          // Numero Sign
+  05  4          0      00a7    4                          // Section Sign
+  06  5          0      %       5
+  07  6          0      :       6
+  08  7          0      .       7
+  09  8          0      ;       8
+  0a  9          0      ,       9
+  0b  0          0      /       0
+  0c  OEM_MINUS  0      2013    -                          // En Dash
+  0d  OEM_PLUS   0      =       +
+//--  ---------- ---	----	----	----	----
+  10  Q          0      10e6    10e6                       // Georgian Letter Ghan
+  11  W          0      10ef    10ef                       // Georgian Letter Jhan
+  12  E          0      10e3    10e3                       // Georgian Letter Un
+  13  R          0      10d9    10d9                       // Georgian Letter Kan
+  14  T          0      10d4    10d4    10f1               // Georgian Letter En, Georgian Letter He
+  15  Y          0      10dc    10dc                       // Georgian Letter Nar
+  16  U          0      10d2    10d2                       // Georgian Letter Gan
+  17  I          0      10e8    10e8                       // Georgian Letter Shin
+  18  O          0      10ec    10ec                       // Georgian Letter Cil
+  19  P          0      10d6    10d6                       // Georgian Letter Zen
+  1a  OEM_4      0      10ee    10ee    10f4               // Georgian Letter Xan, Georgian Letter Har
+  1b  OEM_6      0      10ea    10ea                       // Georgian Letter Can
+  2b  OEM_5      0      (       )
+//--  ---------- ---	----	----	----	----
+  1e  A          0      10e4    10e4    10f6               // Georgian Letter Phar, Georgian Letter Fi
+  1f  S          0      10eb    10eb                       // Georgian Letter Jil
+  20  D          0      10d5    10d5    10f3               // Georgian Letter Vin, Georgian Letter We
+  21  F          0      10d7    10d7                       // Georgian Letter Tan
+  22  G          0      10d0    10d0                       // Georgian Letter An
+  23  H          0      10de    10de                       // Georgian Letter Par
+  24  J          0      10e0    10e0                       // Georgian Letter Rae
+  25  K          0      10dd    10dd                       // Georgian Letter On
+  26  L          0      10da    10da                       // Georgian Letter Las
+  27  OEM_1      0      10d3    10d3                       // Georgian Letter Don
+  28  OEM_7      0      10df    10df                       // Georgian Letter Zhar
+//--  ---------- ---	----	----	----	----
+  2c  Z          0      10ed    10ed                       // Georgian Letter Char
+  2d  X          0      10e9    10e9                       // Georgian Letter Chin
+  2e  C          0      10e7    10e7                       // Georgian Letter Qar
+  2f  V          0      10e1    10e1                       // Georgian Letter San
+  30  B          0      10db    10db                       // Georgian Letter Man
+  31  N          0      10d8    10d8    10f2               // Georgian Letter In, Georgian Letter Hie
+  32  M          0      10e2    10e2                       // Georgian Letter Tar
+  33  OEM_COMMA  0      10e5    10e5                       // Georgian Letter Khar
+  34  OEM_PERIOD 0      10d1    10d1                       // Georgian Letter Ban
+  35  OEM_2      0      10f0    10f0    10f5               // Georgian Letter Rae, Georgian Letter Hoe
+  56  OEM_102    0      (       )
+//--  ---------- ---	----	----	----	----
+  53  DECIMAL    0      ,       ,
+
+
+KEYNAME
+
+ 01	ESC
+ 0e	BACKSPACE
+ 0f	TAB
+ 1c	ENTER
+ 1d	CTRL
+ 2a	SHIFT
+ 36	"RIGHT SHIFT"
+ 37	NUMMULT
+ 38	ALT
+ 39	SPACE
+ 3a	CAPSLOCK
+ 3b	F1
+ 3c	F2
+ 3d	F3
+ 3e	F4
+ 3f	F5
+ 40	F6
+ 41	F7
+ 42	F8
+ 43	F9
+ 44	F10
+ 45	Pause
+ 46	"SCROLL LOCK"
+ 47	"NUM 7"
+ 48	"NUM 8"
+ 49	"NUM 9"
+ 4a	"NUM SUB"
+ 4b	"NUM 4"
+ 4c	"NUM 5"
+ 4d	"NUM 6"
+ 4e	"NUM PLUS"
+ 4f	"NUM 1"
+ 50	"NUM 2"
+ 51	"NUM 3"
+ 52	"NUM 0"
+ 53	"NUM DECIMAL"
+ 57	F11
+ 58	F12
+
+KEYNAME_EXT
+
+ 1c	"NUM ENTER"
+ 1d	"Right Ctrl"
+ 35	"NUM DIVIDE"
+ 37	"Prnt Scrn"
+ 38	"RIGHT ALT"
+ 45	"Num Lock"
+ 46	Break
+ 47	HOME
+ 48	UP
+ 49	PGUP
+ 4b	LEFT
+ 4d	RIGHT
+ 4f	END
+ 50	DOWN
+ 51	PGDOWN
+ 52	INSERT
+ 53	DELETE
+ 54	<00>
+ 56	Help
+ 5b	"Left Windows"
+ 5c	"Right Windows"
+ 5d	Application
+
+ENDKBD
+

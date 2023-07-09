@@ -1,0 +1,27 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Mar-06-1996 HideyukN Created
+#***************************************************************************/
+
+W32_SB=1
+
+ALT_PROJECT=HYDRA
+ALT_PROJECT_TARGET=$(ALT_PROJECT)
+
+!include ..\sources.inc
+
+INCLUDES= $(INCLUDES); $(BASEDIR)\private\windows\spooler\inc; \
+                       $(BASEDIR)\private\windows\spooler\spoolss; \
+                       $(BASEDIR)\public\sdk\inc\hydra
+
+SOURCES=$(SOURCES)  ..\api.c \
+                    ..\icadis.c \
+                    ..\icamsg.c \
+                    ..\command.c \
+                    ..\dynres.c

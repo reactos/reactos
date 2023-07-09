@@ -1,0 +1,42 @@
+//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\
+//
+// version.rcv 
+//
+//   Version resource item for cdfview.dll.
+//
+//   History:
+//
+//       3/18/97  edwardp   Created.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+//
+// Get project level version information from ntverp.h
+//
+
+#include <ntverp.h>
+
+//
+// Define ineticon version information
+//
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Channel Definition File Viewer"
+#define VER_INTERNALNAME_STR        "Cdf Viewer DLL"
+#define VER_ORIGINALFILENAME_STR    "CDFVIEW.DLL"
+#define VER_OLESELFREGISTER
+
+//
+// Include version defines from windows.
+//
+
+#include <winver.h>
+
+//
+// Create the version structure using a standard template.
+//
+
+#include <common.ver>
+

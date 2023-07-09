@@ -1,0 +1,27 @@
+// -*- c++ -*-
+// This file is automagically generated.  Do not mess with it!
+
+#ifdef sparc_sunos5
+text = LOAD ?RXO;
+#define OUTPUT_FUNCTION(name,fullobj,obj)      text: .text%name: fullobj;
+#define OUTPUT_LIBFUNCTION(name,lib,obj)       text: .text%name: lib(obj);
+#endif
+
+// Undef common things that may be in paths.
+#undef unix
+#undef obj
+#undef objd
+#undef sparc
+#undef sunos5
+
+#ifdef USE_FUNCTION_MAP
+OUTPUT_FUNCTION(__0CH_STCON_v,obj/unix/sunos5/unixstuff.o,unixstuff.o)
+OUTPUT_FUNCTION(__0CH_STCON_v,obj/unix/sunos5/mainloop.o,mainloop.o)
+OUTPUT_FUNCTION(WinMain,obj/unix/sunos5/unixstuff.o,unixstuff.o)
+OUTPUT_FUNCTION(ModuleEntry,obj/unix/sunos5/mainloop.o,mainloop.o)
+OUTPUT_FUNCTION(__0FIWinMainTP6LHINSTANCE__TBPci,obj/unix/sunos5/mainloop.o,mainloop.o)
+OUTPUT_FUNCTION(__0FPIsCommandSwitchPcTBi,obj/unix/sunos5/mainloop.o,mainloop.o)
+OUTPUT_FUNCTION(__0FRRemoteIENewWindowPc,obj/unix/sunos5/unixstuff.o,unixstuff.o)
+OUTPUT_FUNCTION(__0FXCheckForSP3RSAOverwritev,obj/unix/sunos5/mainloop.o,mainloop.o)
+OUTPUT_FUNCTION(IEWinMain,obj/unix/sunos5/dllload.o,dllload.o)
+#endif // USE_FUNCTION_MAP

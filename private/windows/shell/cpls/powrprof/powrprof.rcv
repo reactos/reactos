@@ -1,0 +1,29 @@
+/*******************************************************************************
+*
+*  (C) COPYRIGHT MICROSOFT CORP., 1993-1994
+*
+*  TITLE:       POWRPROF.RCV
+*
+*  VERSION:     2.0
+*
+*  AUTHOR:      ReedB
+*
+*  DATE:        31 Dec 1996
+*
+*  DESCRIPTION:
+*
+*   Version information resource file.
+*
+*******************************************************************************/
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Power Profile Helper DLL"
+#define VER_INTERNALNAME_STR        "POWRPROF"
+#define VER_LEGALCOPYRIGHT_YEARS    "1991-1997"
+#define VER_ORIGINALFILENAME_STR    "POWRPROF.DLL"
+
+#include <common.ver>
+

@@ -1,0 +1,244 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML//EN">
+<HTML>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+<TITLE>Internet Explorer Search Setup</TITLE>
+
+<!-- Search Assistant OC -->
+<object id=srchAsst CLASSID='clsid:B45FF030-4447-11D2-85DE-00C04FA35C89' HEIGHT=0 width=0> </OBJECT>
+
+<STYLE type=text/css>
+   .basic { font: 8pt MS Sans Serif; color: black  }
+   .title { font: bold 16pt verdana; color: #0099FF }
+   .spot { font: bold 8pt verdana; color: white; background: #0099FF; width: 140px; line-height: 16px; height: 18px}
+   .logo { font: 8pt MS Sans Serif; color: #FF6600  }
+   .mini { font: bold 8pt verdana; color: #0099FF; line-height: 15px; height: 18px; width: 100%; border: solid 1px #969696; }
+   .box {width: 100%; border-left: solid 1px; border-right: solid 1px;border-bottom: solid 1px; border-color: #969696;}
+</STYLE>
+
+<META content='"MSHTML 5.00.0809.1100"' name=GENERATOR></HEAD>
+<BODY class=basic id=base leftMargin=6 link=#ff6600 rightMargin=1 topMargin=4>
+
+
+<SCRIPT language=javascript src="provider.js"></SCRIPT>
+
+<SCRIPT>
+
+
+
+function DumpTable( cat, title, explain )
+{
+	var str = "";
+	var first = true;
+	var count = 0;
+	for (var e in gEngineList) {
+		var eng = gEngineList[e];
+		if (eng.cat == cat) {
+			count++;
+
+			if (first) {
+				str += '<table width=100% cellspacing=0>';
+			}
+
+			str += '<tr>';
+			if (first) {
+				str += '<td width=160 nowrap><div class=mini>&nbsp;' + title + 
+					   '</div><td colspan=99>\
+					    <div style="position:relative; margin-left: -2; top: 40%; width: 100%;border-top: solid 1px #969696"></div><tr>';
+				str += '<td class=basic width = 160 rowspan=99 valign=top>' + explain ;
+			}
+			str += '<td valign=top><a class=logo id=' + eng.id +
+				   ' href="javascript:EM(\'' + eng.id + '\')" onfocus = "Entree();" onmouseover="window.status=\'\'">' + eng.name + '</a>';
+			if (first) {
+				str += '<td class=basic valign=top align=left width=45% rowspan=99>';
+				if (cat == "usp") {
+					str += '<div style="margin-top: -3"><label for=user1url>Address</label>\
+							<input id=user1url type=text class=basic size=40 value="' + 
+							GetProp("user1URL") +
+							'" onchange=\'SetProp("user1URL", this.value);\'\
+							   onkeyup=\'if (window.event.keyCode == 13) {SetProp("user1URL", this.value);EM("USER");}\'></div>';
+				}
+				else {
+					str += '<span id=' + cat + 
+							' style="position: absolute; border: solid 1px #0099FF; display: none;"></span>';
+				}
+				str += '<td width=8>';
+				first=false;
+			}
+		}
+	}
+	if (!first) {
+		while (count++ < 5) str += '<tr><td>&nbsp;';
+
+		str += '</table><tr><tr><td>';
+	}
+	document.write( str );
+}
+
+
+
+
+var asynch = null;
+var asyncher;
+function ToolTip( )
+{
+	var eng = gEngineList[ asyncher ];
+	document.all[eng.cat].innerHTML = "<div style='margin: 6; cursor: hand' onclick=EM('" + 
+										eng.id + 
+										"')><div style='margin: 6'><center>\
+										<img id=stamp width=80 height=32 src=logos/" + eng.id + 
+									  ".gif alt='" + eng.name + "'></center></div>" + eng.help + "</div>";
+	document.all[eng.cat].style.display = "";
+	asynch = null;
+
+	for (var i in gCategoryList) {
+		var cat = gCategoryList[i];
+		if (eng.cat != cat.id && cat.id != "usp") 
+			document.all[cat.id].style.display = "none";
+		
+	}
+}
+
+function Entree()
+{
+	var hit = window.event.srcElement;
+	if (hit != null && hit.className == "logo" && hit.id.substring(0,4) != "USER") {
+		if (asynch != null) window.clearTimeout( asynch );
+
+		asyncher = hit.id;
+		asynch = window.setTimeout( "ToolTip()", 100 );
+ 	}
+}
+document.onmouseover = Entree;
+
+
+
+function EM( engineID ) {
+	
+	if (engineID == "USER") {
+		var url = GetProp("user1URL");
+		if (url == "") {
+			alert("Please enter a valid, complete address in the space provided (i.e. www.yourSearchProvider.com).");
+			return;
+		}
+		if (url.indexOf(":") == -1) {
+			url = "http://" + url;
+			SetProp("user1URL", url);
+			user1url.value = url;
+		}
+		SetUserSP( url );
+	}
+
+	var eng = gEngineList[ engineID ];
+	srchAsst.SetDefaultSearchURL(eng.url);
+	
+	var mruMax = 50;
+	var menuMax = 5;
+	var engineMax = 10;
+
+	srchAsst.NavigateToDefaultSearch();
+
+	var mru = engineID + "," + GetProp("engineMRU");
+
+	for (var i in gEngineList) gEngineList[i].count = 0;
+
+	var offset = 0;
+	var count = 0;
+	while (true) {
+		var next = mru.indexOf(",", offset);
+		if (next < 0) break;
+
+		count = count + 1;
+		if (count > mruMax) {
+			mru = mru.substring( 0, offset );
+			break;
+		}
+		var mruID = mru.substring( offset, next );
+		if (gEngineList[mruID] != null)
+			gEngineList[mruID].count++;
+
+		offset = next + 1;
+	}
+
+	if (gEngineList[engineID].count >= engineMax)
+		mru = GetProp("engineMRU");
+	gEngineList[engineID].count = 1000;
+
+	SetProp("engineMRU", mru );
+
+	for (var count=1; count<=menuMax; count++) {
+		var highest = 0;
+		var best;
+
+		for (var i in gEngineList) {
+			if (gEngineList[i].count > highest) {
+				highest = gEngineList[i].count
+				best = gEngineList[i];
+			}
+		}
+		if (highest > 0)
+			best.count = -99;
+	}
+
+	count = 1;
+	for (var i in gEngineList) {
+		var best = gEngineList[i];
+		if (best.count == -99) {
+			SetProp("sp" + count, best.id );
+			count++;
+		}
+	}
+	SetProp("sp" + count, "");
+
+	SetProp("engine", engineID );
+//	srchAsst.SetDefaultSearchUrl("");
+}
+
+
+
+if (parent.location.href != location.href)
+	parent.location.href = "picksrch.htm";
+srchAsst.NavigateToDefaultSearch();
+
+
+</SCRIPT>
+
+<TABLE cellSpacing=8>
+  <TR>
+    <TD align=middle vAlign=center width=72><IMG id=id0001 alt="Internet Explorer Search" height=80 
+      src="picker.gif" width=80> 
+      <TD class=title id=id0002>Choose a Search Provider<BR><SPAN class=basic>Choose one 
+        from the complete list of Internet Explorer search engine providers 
+        below, click on the <SPAN class=logo id=USERexempt>Name</SPAN>, and 
+        enter your query as prompted in the Search Explorer Bar to the left. 
+      </TABLE>
+      <BR>
+      <TABLE cellSpacing=8>
+        <TD rowSpan=99 vAlign=top width=160>
+          <DIV class=spot id=id0003 style="MARGIN-TOP: 2px">&nbsp;Search Spotlight </DIV>
+
+          <TABLE cellPadding=4 cellSpacing=2 class=box style="WIDTH: 140px">
+            <TR>
+              <TD align=middle>
+                <SCRIPT>
+	var today = new Date();
+	var index = today.getSeconds() % gNumEngines;
+	for (var spot in gEngineList) if (index-- == 0) break;
+
+	document.write( '<a href=\'' + 'javascript:EM("' + spot + '")\'>' );
+	document.write( '<img border=0 src="' + "logos/" + spot + ".gif" +  '"  alt="' + gEngineList[spot].name + '"></a><tr><td class=basic>' );
+	document.write( gEngineList[spot].help );
+	</SCRIPT>
+              </TD></TABLE>
+
+            <TD>
+              <SCRIPT>
+	for (id in gCategoryList) {
+		var cat = gCategoryList[id];
+		DumpTable( cat.id, cat.name, cat.help );
+
+	}
+</SCRIPT>
+            </TABLE>
+            </BODY></HTML>

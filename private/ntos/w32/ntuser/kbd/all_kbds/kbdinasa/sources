@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdinasa
+
+TARGETNAME=kbdinasa
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdinasa.c kbdinasa.rc
+
+NTTARGETFILE0=kbdinasa.h kbdinasa.rc kbdinasa.def

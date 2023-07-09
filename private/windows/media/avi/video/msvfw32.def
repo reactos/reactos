@@ -1,0 +1,125 @@
+LIBRARY     MSVFW32
+
+HEAPSIZE    128
+
+EXPORTS
+;        WEP                     @1      RESIDENTNAME    ;Internal
+        VideoForWindowsVersion  @2      ; MUST be @2
+        ICMThunk32              ;@3
+;
+; VIDEO interface
+;
+;;      videoGetNumDevs                   	@20
+;;      videoGetErrorTextA                	@21
+;;      videoGetErrorTextW                	@22
+;;      videoGetErrorText=videoGetErrorTextA
+;;
+;;      videoOpen                       	@28
+;;      videoClose              	        @29
+;;      videoDialog     	                @30
+;;      videoFrame 	                 	@31
+;;      videoConfigure     	                @32
+;;      videoConfigureStorageA 	                @33
+;;      videoGetChannelCaps                 	@34
+;;      videoUpdate                       	@35
+;;      videoConfigureStorageW 	                @36
+;;      videoConfigureStorage=videoConfigureStorageA
+;;
+;;      videoStreamAddBuffer            	@40
+;;      videoStreamFini                 	@41
+;;      videoStreamGetError             	@42
+;;      videoStreamGetPosition          	@43
+;;      videoStreamInit                 	@44
+;;      videoStreamPrepareHeader        	@46
+;;      videoStreamReset                	@47
+;;      videoStreamStart                	@49
+;;      videoStreamStop                 	@50
+;;      videoStreamUnprepareHeader      	@51
+;;
+;;      videoMessage                            @60
+;;
+;
+;   DrawDib interface.
+;
+        DrawDibOpen                             ;@102
+        DrawDibClose                            ;@103
+
+        DrawDibBegin                            ;@104
+        DrawDibEnd                              ;@105
+
+        DrawDibDraw                             ;@106
+
+;       DrawDibGetError                         @107
+        DrawDibGetPalette                       ;@108
+        DrawDibSetPalette                       ;@110
+        DrawDibChangePalette                    ;@111
+        DrawDibRealize                          ;@112
+	StretchDIB				;@115
+        DrawDibGetBuffer                        ;@120
+
+        DrawDibTime                             ;@113
+        DrawDibProfileDisplay                   ;@114
+
+        DrawDibStart                            ;@118
+        DrawDibStop                             ;@119
+
+;
+;   CompMan interface.
+;
+        ICInfo                                  ;@200
+        ICInstall                               ;@201
+        ICRemove                                ;@202
+        ICOpen                                  ;@203
+        ICClose                                 ;@204
+        ICSendMessage                           ;@205
+        ICOpenFunction                          ;@206    ; New for 1.x
+
+; not on Win32!!
+;       ICMessage                              @207    ; New for 1.x
+;       _ICMessage                              @207    ; New for 1.x
+
+        ICGetInfo                               ;@212
+        ICLocate                                ;@213
+
+;       _ICCompress                             @224
+;       _ICDecompress                           @230
+;       _ICDrawBegin                            @232
+;       _ICDraw                                 @234
+        ICCompress                             ;@224
+        ICDecompress                           ;@230
+        ICDrawBegin                            ;@232
+        ICDraw                                 ;@234
+
+        ICGetDisplayFormat                      ;@239
+
+        ICImageCompress                         ;@240    ; New for 1.x
+        ICImageDecompress                       ;@241    ; New for 1.x
+
+        ICCompressorChoose                      ;@242    ; New for 1.x
+        ICCompressorFree                        ;@243    ; New for 1.x
+
+        ICSeqCompressFrameStart                 ;@244    ; New for 1.x
+        ICSeqCompressFrameEnd                   ;@245    ; New for 1.x
+        ICSeqCompressFrame                      ;@246    ; New for 1.x
+
+
+;
+; MCIWnd Interface
+;
+        MCIWndCreateA                           ;@250    ; New for 1.x
+        MCIWndRegisterClass                     ;@251    ; New for 1.x
+        GetOpenFileNamePreviewA                 ;@252    ; New for 1.x
+        MCIWndCreateW                           ;@253    ; New for NT 1.x
+        GetOpenFileNamePreviewW                 ;@254    ; New for NT 1.x
+        MCIWndCreate=MCIWndCreateA
+        GetOpenFileNamePreview=GetOpenFileNamePreviewA
+        GetSaveFileNamePreviewA                 ;@255    ; new for Win95
+        GetSaveFileNamePreviewW                 ;@256    ; new for Win95
+
+;
+; AVICap Interface
+;
+;   THESE ARE NOT IN THIS DLL THEY ARE IN AVICAP.DLL
+;
+;	capCreateCaptureWindow			@260
+;	capGetDriverDescription                 @261

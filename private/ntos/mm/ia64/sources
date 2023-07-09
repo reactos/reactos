@@ -1,0 +1,6 @@
+IA64_SOURCES=..\ia64\initia64.c  \
+             ..\ia64\dataia64.c  \
+             ..\ia64\debugsup.c \
+             ..\ia64\hypermap.c \
+             ..\ia64\altperm.c \
+             ..\ia64\setdirty.c

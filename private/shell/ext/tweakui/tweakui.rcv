@@ -1,0 +1,83 @@
+/*
+ *  tweakui.rcv - version control info
+ */
+
+#define FINAL 1
+
+#ifdef WINNT
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEVERSION                 1,2,1,0
+#define VER_FILEVERSION_STR             "1.20.1"
+#define VER_FILEDESCRIPTION_STR 	"User interface customization toy"
+#define VER_INTERNALNAME_STR            "TWEAKUI"
+#ifndef WINNT
+#define VER_LEGALCOPYRIGHT_YEARS        "1995-1999"
+#endif
+#define VER_ORIGINALFILENAME_STR	"TWEAKUI.CPL"
+
+#undef	VER_PRODUCTVERSION_STR
+#undef	VER_PRODUCTVERSION
+#undef	VER_PRODUCTVERSION_DW
+#undef	VER_PRODUCTVERSION_W
+#undef	VER_PRODUCTNAME_STR
+
+#define VER_PRODUCTVERSION_STR      "96.02.06"
+#define VER_PRODUCTVERSION          96,02,06,00
+#define VER_PRODUCTNAME_STR         "Microsoft\256 Windows(TM) 95 PowerToys"
+
+#ifdef	USE_VERSION_H
+
+#include <common.ver>
+
+#else
+
+VS_VERSION_INFO VERSIONINFO 
+FILEVERSION    1,23,1,0
+PRODUCTVERSION 96,02,06,00
+FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+#ifdef	PRERELEASE
+FILEFLAGS      VS_FF_PRERELEASE
+#else
+FILEFLAGS      0
+#endif
+#ifdef	WINNT
+FILEOS         VOS_NT_WINDOWS32
+#else
+FILEOS         VOS_DOS_WINDOWS32
+#endif
+FILETYPE       VER_FILETYPE
+FILESUBTYPE    VER_FILESUBTYPE
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN 
+            VALUE "CompanyName"     ,"Microsoft Corporation"
+            VALUE "FileDescription" ,VER_FILEDESCRIPTION_STR
+#ifdef	PRERELEASE
+            VALUE "FileVersion"     ,VER_FILEVERSION_STR " Prerelease 6"
+#else
+            VALUE "FileVersion"     ,VER_FILEVERSION_STR
+#endif
+            VALUE "InternalName"    ,VER_INTERNALNAME_STR
+            VALUE "LegalCopyright"  ,"Copyright \251 Microsoft Corp. 1995-1996"
+            VALUE "OriginalFilename",VER_ORIGINALFILENAME_STR
+            VALUE "ProductName"     ,VER_PRODUCTNAME_STR
+            VALUE "ProductVersion"  ,VER_PRODUCTVERSION_STR
+        END 
+
+    END 
+ 
+    BLOCK "VarFileInfo" 
+    BEGIN 
+        VALUE "Translation", 0x0409, 0x04E4
+    END 
+END 
+
+#endif

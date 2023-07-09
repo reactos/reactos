@@ -1,0 +1,15 @@
+LIBRARY Display
+
+
+EXPORTS
+    CPlApplet
+    DllInitialize
+    InstallScreenSaverA
+    InstallScreenSaverW
+    InstallScreenSaver = InstallScreenSaverA
+    DeskSetCurrentSchemeA
+    DeskSetCurrentSchemeW
+    DeskSetCurrentScheme = DeskSetCurrentSchemeA
+
+    DisplayClassInstaller
+    InstallGraphicsDriver

@@ -1,0 +1,26 @@
+!ifdef OS2
+RCFLAGS=-dOS2=YES
+!else
+RCFLAGS=
+!endif
+#CFLAGS=-c -AS -Gsw -W3 -Os -DWIN16
+CFLAGS=-c -AS -Gsw -W3 -Od -Zi -DWIN16
+#LFLAGS =
+LFLAGS = /MAP /CO
+
+reversi:  reversi.exe
+
+res.res: reversi.ico blank.cur res.rc reversi.dlg
+    rc $(RCFLAGS) -r res.rc
+
+reversi.obj: reversi.c
+    cl $(CFLAGS) reversi.c
+
+rev.obj: rev.c reversi.h
+    cl $(CFLAGS) rev.c
+
+reversi.exe: reversi.obj rev.obj reversi.def res.res
+    link $(LFLAGS) reversi+rev,,,libw pwin16 slibcew,reversi.def/align:16/map/noe/nod
+    mapsym reversi
+    rc res.res reversi.exe
+    

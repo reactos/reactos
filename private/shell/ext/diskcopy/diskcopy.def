@@ -1,0 +1,7 @@
+LIBRARY         DISKCOPY
+
+EXPORTS
+        DllGetClassObject       PRIVATE
+        DllCanUnloadNow         PRIVATE
+        DiskCopyRunDll          PRIVATE
+        DiskCopyRunDllW         PRIVATE

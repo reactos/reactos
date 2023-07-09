@@ -1,0 +1,197 @@
+BODY { 
+    font-size: 8pt; 
+    font-family: Verdana, Arial, sans-serif; 
+    color: windowtext;
+    }
+
+.CAccessKey {
+    text-decoration: underline;
+    }
+
+.CMenuBar {
+    position: absolute;
+    left: 4;
+    width: 100%;
+    background: inactivecaption;
+    cursor: hand;
+    }
+    
+.CMenuItem { 
+    position: absolute;
+    height: 23px;
+    color: windowtext;
+    padding: 3 3;
+    }
+
+.CMenuItemSel {
+    position: absolute;
+    height: 23px;
+    background: captiontext;
+    color: windowtext;
+    padding: 3 3;
+    border-style: solid;
+    border-width: 1;
+    border-color: threedshadow;
+    border-right: none;
+    cursor: default;
+    }
+
+.CMenuImg {
+    margin-top: 2px;
+    }
+
+.CSelectList {
+    font-size: 8pt; 
+    font-family: Verdana, Arial, sans-serif; 
+    color: windowtext;
+    }
+
+.CBody {
+	margin-left:15px;
+	margin-right:15px;
+	margin-top:15px;
+	margin-bottom:15px;
+    font-size: 8pt; 
+    font-family: Verdana, Arial, sans-serif; 
+    color: windowtext;
+    }
+
+.CRoundCorner {
+    position:absolute;
+    top:0;
+    left:0;
+    height:11;
+    width:11;
+    background-color:inactivecaption;
+	}
+
+.CHeader {
+    font-weight: bold;
+	color: inactivecaption;
+    font-size: 8pt; 
+    font-family: Verdana, Arial, sans-serif; 
+    }
+
+.CNormalText {
+    font-size: 8pt; 
+    font-family: Verdana, Arial, sans-serif; 
+    color: inactivecaption;
+    }
+
+.CListView {
+	position:relative;
+	overflow: auto;
+	width: 100%;
+    height:100%;
+}
+
+.CAppTable {
+    font-size: 8pt; 
+    font-family: Verdana, Arial, sans-serif; 
+    overflow: auto;
+    cursor: hand;
+    }
+
+
+.CAppItem {
+ 	background: window;
+	color: windowtext;
+	cursor:	hand;
+	font-size: 8pt;
+	font-family: Verdana, Arial, sans-serif;
+	border-bottom: solid 1 threedshadow;
+    }
+    
+.CAppItemActive {
+    background: window;
+	color: 		blue;
+	cursor:		hand;
+	font-size: 8pt; 
+	font-family: Verdana, Arial, sans-serif;
+	border-bottom: solid 1 threedshadow;
+    text-decoration: underline;
+    }
+    
+.CAppItemSel {
+	color: 		window;
+    font-weight: bold;
+    background: buttonface;
+	border-top:	    solid 1 threedshadow;
+	border-left:	solid 1 threedshadow;
+	border-right:	solid 1 threedshadow;
+	border-bottom:	none;
+    font-size: 8pt; 
+    font-family: Verdana, Arial, sans-serif;
+	cursor:		hand;
+	height: 30px;
+    }
+
+.CAppItemPanel {
+    z-index:	    -1;
+	color: 		    window;
+    background:     buttonface;
+	border-top:	    none;
+	border-left:	solid 1 threedshadow;
+	border-right:	solid 1 threedshadow;
+	border-bottom:	solid 1 threedshadow;
+    font-size:      8pt; 
+    font-family:    Verdana, Arial, sans-serif;
+    }
+
+.CAppIcon {
+    background-color: captiontext;
+    }
+
+.CAppIconSel {
+    background-color: inactivecaption;
+    }
+
+.CAppTitle {
+    font-weight:normal;
+    color: red;
+    }
+
+.CAppTitleSel {
+    font-weight: bold;
+    }
+
+.CAppDataVisible {
+    display: visible;
+    }
+
+.CAppDataHidden {
+    display: none;
+    }
+
+
+.CBtn {
+    font-size: 8pt; 
+    font-family: Verdana, Arial, sans-serif;
+    width: 10em;
+    }
+
+
+.buttonOffSort {
+	background:	white;
+	color: 		windowtext;
+    font-size: 8pt; 
+    font-family: Verdana, Arial, sans-serif;
+    }
+
+.panelOn {
+    z-index:	    -1;
+	color: 		    black;
+    background:     buttonface;
+	border-top:	    none;
+	border-left:	solid 1 threedshadow;
+	border-right:	solid 1 threedshadow;
+	border-bottom:	solid 1 threedshadow;
+    font-size:      8pt; 
+    font-family:    Verdana, Arial, sans-serif;
+    }	
+
+.hotspot {
+	text-decoration: none;
+	color:		windowtext;
+    }
+

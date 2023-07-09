@@ -1,0 +1,71 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+
+CUSTOM_RULES = /vobs/ie4/wininet.template
+
+DLLDEF_SRC = jsproxy.def
+DLLDEF_EXPORTS = \
+                 _____jsproxy_initDLL
+
+SOURCES =  \
+	cscpsite.cpp \
+	jsproxy.cpp \
+	regexp.cpp \
+	utils.cpp \
+	dllmain.cpp\
+	unxutil.cpp
+
+INCLUDES += \
+         -I.\
+         -I${WININET_DIR}/inc\
+         -I${WININET_DIR}/inc/private\
+         -I${WININET_DIR}/debug
+ 
+# Warning: DLL based on MFC (compiled with _USRDLL flag) is not supported yet.
+# This makefile is just for demo purpose.
+## Original Windows DLL name:
+WDLL = jsproxy
+## Target Unix shared library:
+DLL	= lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+DLLOBJS = ${CPP_OBJS:%.c=%.o}
+DLL-EXPORTS = jsproxy.def
+SRCS=${SOURCES}
+WRESOURCE = $(O)/jsproxy.rc    # Windows resource
+TRESOURCE = ${WDLL}.rxt   # Target X resource (must match DLL name)
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+NO_UNICODE = 1
+APP_CFLAGS += ${WININET_CFLAGS}  ${INCLUDES} ${DEFINES}
+DIP_CFLAGS += -DDLL_SPECIFIC_OPERATOR_NEW
+
+APP_DLLFLAGS = \
+                 -lwininet\
+		 -loleaut32\
+                 -lole32\
+                 -ladvapi32\
+                 -lshlwapi\
+                 -lwsock32\
+		 -luuid
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+
+$(O)/%.rc: %.rc
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $<) ]"
+	${COPY}
+

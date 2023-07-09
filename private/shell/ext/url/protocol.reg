@@ -1,0 +1,178 @@
+REGEDIT4
+
+
+
+
+[HKEY_CLASSES_ROOT\http]
+@="URL:HyperText Transfer Protocol"
+"EditFlags"=hex:02,00,00,00
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\http\DefaultIcon]
+@="C:\\WINDOWS\\SYSTEM\\url.dll,0"
+
+[HKEY_CLASSES_ROOT\http\shell\open\command]
+@="\"C:\\PROGRAM FILES\\PLUS!\\MICROSOFT INTERNET\\IExplore.exe\" -nohome"
+
+[HKEY_CLASSES_ROOT\http\shell\open\ddeexec]
+@="\"%1\",,-1,,,,,"
+
+[HKEY_CLASSES_ROOT\http\shell\open\ddeexec\Application]
+@="IExplore"
+
+[HKEY_CLASSES_ROOT\http\shell\open\ddeexec\Topic]
+@="WWW_OpenURL"
+
+
+
+
+[HKEY_CLASSES_ROOT\https]
+@="URL:HyperText Transfer Protocol with Privacy"
+"EditFlags"=hex:02,00,00,00
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\https\DefaultIcon]
+@="C:\\WINDOWS\\SYSTEM\\url.dll,0"
+
+[HKEY_CLASSES_ROOT\https\shell\open\command]
+@="\"C:\\PROGRAM FILES\\PLUS!\\MICROSOFT INTERNET\\IExplore.exe\" -nohome"
+
+[HKEY_CLASSES_ROOT\https\shell\open\ddeexec]
+@="\"%1\",,-1,,,,,"
+
+[HKEY_CLASSES_ROOT\https\shell\open\ddeexec\Application]
+@="IExplore"
+
+[HKEY_CLASSES_ROOT\https\shell\open\ddeexec\Topic]
+@="WWW_OpenURL"
+
+
+
+
+[HKEY_CLASSES_ROOT\ftp]
+@="URL:File Transfer Protocol"
+"EditFlags"=hex:02,00,00,00
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\ftp\DefaultIcon]
+@="C:\\WINDOWS\\SYSTEM\\url.dll,0"
+
+[HKEY_CLASSES_ROOT\ftp\shell\open\command]
+@="\"C:\\PROGRAM FILES\\PLUS!\\MICROSOFT INTERNET\\IExplore.exe\" -nohome"
+
+[HKEY_CLASSES_ROOT\ftp\shell\open\ddeexec]
+@="\"%1\",,-1,,,,,"
+
+[HKEY_CLASSES_ROOT\ftp\shell\open\ddeexec\Application]
+@="IExplore"
+
+[HKEY_CLASSES_ROOT\ftp\shell\open\ddeexec\Topic]
+@="WWW_OpenURL"
+
+
+
+
+[HKEY_CLASSES_ROOT\telnet]
+@="URL:Telnet Protocol"
+"EditFlags"=hex:02,00,00,00
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\telnet\DefaultIcon]
+@="C:\\WINDOWS\\SYSTEM\\url.dll,0"
+
+[HKEY_CLASSES_ROOT\telnet\shell\open\command]
+@="rundll32.exe url.dll,TelnetProtocolHandler %l"
+
+
+
+
+[HKEY_CLASSES_ROOT\rlogin]
+@="URL:RLogin Protocol"
+"EditFlags"=hex:02,00,00,00
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\rlogin\DefaultIcon]
+@="C:\\WINDOWS\\SYSTEM\\url.dll,0"
+
+[HKEY_CLASSES_ROOT\rlogin\shell\open\command]
+@="rundll32.exe url.dll,TelnetProtocolHandler %l"
+
+
+
+
+[HKEY_CLASSES_ROOT\tn3270]
+@="URL:TN3270 Protocol"
+"EditFlags"=hex:02,00,00,00
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\tn3270\DefaultIcon]
+@="C:\\WINDOWS\\SYSTEM\\url.dll,0"
+
+[HKEY_CLASSES_ROOT\tn3270\shell\open\command]
+@="rundll32.exe url.dll,TelnetProtocolHandler %l"
+
+
+
+
+[HKEY_CLASSES_ROOT\gopher]
+@="URL:Gopher Protocol"
+"EditFlags"=hex:02,00,00,00
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\gopher\DefaultIcon]
+@="C:\\WINDOWS\\SYSTEM\\url.dll,0"
+
+[HKEY_CLASSES_ROOT\gopher\shell\open\command]
+@="\"C:\\PROGRAM FILES\\PLUS!\\MICROSOFT INTERNET\\IExplore.exe\" -nohome"
+
+[HKEY_CLASSES_ROOT\gopher\shell\open\ddeexec]
+@="\"%1\",,-1,,,,,"
+
+[HKEY_CLASSES_ROOT\gopher\shell\open\ddeexec\Application]
+@="IExplore"
+
+[HKEY_CLASSES_ROOT\gopher\shell\open\ddeexec\Topic]
+@="WWW_OpenURL"
+
+
+
+
+[HKEY_CLASSES_ROOT\mailto]
+@="URL:MailTo Protocol"
+"EditFlags"=hex:02,00,00,00
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\mailto\DefaultIcon]
+@="C:\\WINDOWS\\SYSTEM\\url.dll,2"
+
+[HKEY_CLASSES_ROOT\mailto\shell\open\command]
+@="rundll32.exe url.dll,MailToProtocolHandler %l"
+
+
+
+
+[HKEY_CLASSES_ROOT\news]
+@="URL:News Protocol"
+"EditFlags"=hex:02,00,00,00
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\news\DefaultIcon]
+@="C:\\WINDOWS\\SYSTEM\\url.dll,1"
+
+[HKEY_CLASSES_ROOT\news\shell\open\command]
+@="rundll32.exe url.dll,NewsProtocolHandler %l"
+
+
+
+
+[HKEY_CLASSES_ROOT\file]
+@="URL:File Protocol"
+"EditFlags"=hex:02,00,00,00
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\file\DefaultIcon]
+@="C:\\WINDOWS\\SYSTEM\\url.dll,0"
+
+[HKEY_CLASSES_ROOT\file\shell\open\command]
+@="rundll32.exe url.dll,FileProtocolHandler %l"
+

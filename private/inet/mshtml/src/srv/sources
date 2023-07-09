@@ -1,0 +1,43 @@
+!IF 0
+
+Copyright (c) 1998  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\srv=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=mshtmsrv
+TARGETPATHLIB=$(_OBJ_DIR)
+TARGETPATH=..\..\$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+DLLENTRY = $(CRTMAIN)
+DLLDEF = mshtmsrv.def
+
+MSC_WARN_LEVEL =/W4 /WX
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+    stdafx.cxx \
+    mshtmsrv.cxx \
+    server.cxx \
+    filter.cxx \
+    ext.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp$(ROOT)\src\site\include\$(O)\headers.pch
+PRECOMPILED_CXX=1
+
+TARGETLIBS = \
+    $(ROOT)\src\core\include\$(O)\corepch.lib \
+    $(ROOT)\src\site\include\$(O)\sitepch.lib \
+    $(ROOT)\src\f3\crt\$(O)\crt.lib \
+    $(ROOT)\src\core\cdutil\$(O)\memutils.obj \
+    $(ROOT)\src\core\cdutil\$(O)\vmem.obj \
+!ifdef USE_DEBUGLIB
+    $(ROOT)\src\core\debuglib\$(O)\debuglib.lib \
+!endif
+    $(SDK_LIB_PATH)\shlwapip.lib \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib

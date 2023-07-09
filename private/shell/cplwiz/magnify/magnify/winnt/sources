@@ -1,0 +1,11 @@
+
+C_DEFINES=$(C_DEFINES) -DWIN32 -DWINNT -DUNICODE -D_UNICODE
+
+USE_MFCUNICODE=1
+
+TARGETLIBS=$(BASEDIR)\private\shell\cplwiz\Magnify\Mag_Hook\WinNT\obj\*\Mag_Hook.lib
+
+!include ..\sources.inc
+
+SOURCES_USED    = $(SOURCES_USED) ..\sources.inc
+

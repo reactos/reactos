@@ -1,0 +1,154 @@
+LIBRARY		COMMCTRL
+DESCRIPTION	'COMMCTRL - Custom controls'
+EXETYPE		WINDOWS
+CODE		MOVEABLE DISCARDABLE
+DATA		PRELOAD MOVEABLE SINGLE
+HEAPSIZE   	512
+
+IMPORTS
+    ;; TEMP HACK UNTIL LIBW.LIB IS REBUILT
+    MONITORFROMPOINT=USER.295
+    GETMONITORINFO=USER.298
+    
+EXPORTS
+;;
+;; Win31 stuff.
+;;
+
+	WEP				@1  RESIDENTNAME    ;Internal
+     	MENUHELP			@2
+     	SHOWHIDEMENUCTL			@3
+     	GETEFFECTIVECLIENTRECT		@4
+     	DRAWSTATUSTEXT			@5
+     	CREATESTATUSWINDOW		@6
+     	CREATETOOLBAR			@7
+     	CREATEMAPPEDBITMAP		@8
+;     	CREATEHEADERWINDOW		@9   ;; only if WANT_SUCKY_HEADER
+;     	WRITEPRIVATEPROFILESTRUCT	@10
+;     	GETPRIVATEPROFILESTRUCT		@11
+
+     	MAKEDRAGLIST			@13
+     	LBITEMFROMPT			@14
+     	DRAWINSERT			@15
+     	CREATEUPDOWNCONTROL		@16
+     	INITCOMMONCONTROLS		@17
+
+        CREATETOOLBAREX                 @20
+
+;;
+;; by name stuff
+;;
+DllEntryPoint                           @300 RESIDENTNAME ;Internal
+Cctl1632_ThunkData16                    @301 RESIDENTNAME ;Internal
+
+;;
+;; Win95 stuff
+;;
+; ImageList stuff
+;;IMAGELIST_LOADIMAGE         @39
+IMAGELIST_CREATE            @40
+IMAGELIST_DESTROY           @41
+IMAGELIST_GETIMAGECOUNT     @42
+IMAGELIST_SETOVERLAYIMAGE   @43
+IMAGELIST_SETBKCOLOR        @44
+IMAGELIST_GETBKCOLOR        @45
+IMAGELIST_ADD               @46
+;;IMAGELIST_REPLACE           @47
+;;IMAGELIST_REMOVE            @48
+IMAGELIST_DRAW              @49
+;;IMAGELIST_SETOBJECTOWNER    @50
+;;IMAGELIST_GETIMAGERECT      @51
+;;IMAGELIST_GETIMAGEINFO      @52
+IMAGELIST_ADDICON           @53
+IMAGELIST_REPLACEICON       @54
+;;IMAGELIST_DRAGMOVE          @55
+;;IMAGELIST_STARTDRAG         @56
+;;IMAGELIST_GETDRAGIMAGE      @58
+;;IMAGELIST_SETDRAGIMAGE      @59
+;;IMAGELIST_ENDDRAG           @60
+;;IMAGELIST_MERGE             @61
+;;IMAGELIST_EXTRACTICON       @64
+;;IMAGELIST_ADDFROMIMAGELIST  @65       ;; not called by anyone
+;;IMAGELIST_ADDMASKED         @66
+;;IMAGELIST_LOADBITMAP        @67       ;; not called by anyone
+;;IMAGELIST_GETICONSIZE       @68
+;;IMAGELIST_GETICON           @69
+
+;       RESERVED up to      @69
+
+;; Alloc/Free are not called on the 16-bit side
+;;
+;;
+;;ALLOC                       @71         ;Internal
+;;REALLOC                     @72         ;Internal
+;;FREE                        @73         ;Internal
+;;GETSIZE                     @74         ;Internal
+
+;; not called either
+;;SETDEBUGMASK                @75         ;Internal
+;;GETDEBUGMASK                @76         ;Internal
+;;ASSERTFAILED                @77         ;Internal
+;;__AssertMsg                 @78         ;Internal
+;;__DebugMsg                  @79         ;Internal
+
+;; These are never called
+;;
+;CREATEMRULIST               @151		;Internal
+;FREEMRULIST                 @152		;Internal
+;ADDMRUSTRING                @153		;Internal
+;ENUMMRULIST                 @154		;Internal
+;FINDMRUSTRING               @155                ;Internal
+
+;
+PROPERTYSHEET               @159
+CREATEPROPERTYSHEETPAGE     @160
+DESTROYPROPERTYSHEETPAGE    @161
+
+;;never called for 16-bit apps.
+;;STR_GETPTR                      @233            ;Internal
+;;STR_SETPTR                      @234            ;Internal
+
+;; The HASH Item stuff is not called on the 16-bit side.
+;;FINDHASHITEM                   @235            ;Internal
+;;ADDHASHITEM                    @236            ;Internal
+;;DELETEHASHITEM                 @237            ;Internal
+;;GETHASHITEMNAME                @238            ;Internal
+;;SETHASHITEMDATA                @239            ;Internal
+;;GETHASHITEMDATA                @240            ;Internal
+;;CREATEHASHITEMTABLE            @241            ;Internal
+
+; Dynamic array APIs				;Internal
+;;DSA_CREATE                  @320                ;Internal
+;;DSA_DESTROY                 @321                ;Internal
+;;DSA_GETITEM                 @322                ;Internal
+;;DSA_GETITEMPTR              @323                ;Internal
+;;DSA_INSERTITEM              @324                ;Internal
+;;DSA_SETITEM                 @325                ;Internal
+;;DSA_DELETEITEM              @326                ;Internal
+;;DSA_DELETEALLITEMS          @327                ;Internal
+
+;;SETUPX.DLL calls these by doing a GetProcAddress
+DPA_CREATE                  @328                ;Internal
+DPA_DESTROY                 @329                ;Internal
+DPA_GROW                    @330                ;Internal
+DPA_CLONE                   @331                ;Internal
+DPA_GETPTR                  @332                ;Internal
+DPA_GETPTRINDEX             @333                ;Internal
+DPA_INSERTPTR               @334                ;Internal
+DPA_SETPTR                  @335                ;Internal
+DPA_DELETEPTR               @336                ;Internal
+DPA_DELETEALLPTRS           @337                ;Internal
+DPA_SORT                    @338                ;Internal
+DPA_SEARCH                  @339                ;Internal
+;       RESERVED up to      @349		;Internal
+
+SEGMENTS
+	_TEXT		PRELOAD MOVEABLE DISCARDABLE
+	_INIT		PRELOAD MOVEABLE DISCARDABLE
+	DOSBOX_TEXT	LOADONCALL MOVEABLE DISCARDABLE
+	PRSHT_TEXT	LOADONCALL MOVEABLE DISCARDABLE
+        LV_TEXT         LOADONCALL MOVEABLE DISCARDABLE
+        TV_TEXT         LOADONCALL MOVEABLE DISCARDABLE
+	RARE1_TEXT	LOADONCALL MOVEABLE DISCARDABLE
+	RARE2_TEXT	LOADONCALL MOVEABLE DISCARDABLE
+

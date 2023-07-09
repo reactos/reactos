@@ -1,0 +1,101 @@
+#ifndef _CSITE_PDL_
+#define _CSITE_PDL_ 1
+
+#include "element.pdl"
+#include "eform.pdl"
+
+file csite.pdl
+
+import element.pdl 
+import eform.pdl
+
+enum htmlStart   prefix:htmlStart         guid:3050f3d3-98b5-11cf-bb82-00aa00bdce0b
+    eval fileopen   string:fileopen
+    eval mouseover   string:mouseover
+
+
+interface IHTMLControlElement super:IDispatch guid:3050f4e9-98b5-11cf-bb82-00aa00bdce0b
+    refprop     CSite:tabIndex
+    refmethod   CSite:focus
+
+    refprop     CSite:accessKey
+
+    refprop     CSite:onblur
+    refprop     CSite:onfocus
+    refprop     CSite:onresize
+
+    refmethod   CSite:blur
+    refmethod   CSite:addFilter
+    refmethod   CSite:removeFilter
+
+    refprop     CSite:clientHeight
+    refprop     CSite:clientWidth
+    refprop     CSite:clientTop
+    refprop     CSite:clientLeft
+
+
+// Every event dispid here should be in the x-object or standard
+// ranges.  This is so that we can present one event dispinterface
+// for the olesite and the contained control inside it.
+//
+
+/* New style element events w/ eventObject parameter: */
+event HTMLControlElementEvents2  super:HTMLElementEvents2  guid:3050f612-98b5-11cf-bb82-00aa00bdce0b
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLControlElementEvents super:HTMLElementEvents guid:3050f4ea-98b5-11cf-bb82-00aa00bdce0b
+
+tearoff CSite interface:IHTMLControlElement BaseImpl:super::
+    tearmethod tabIndex                mapto:super::tabIndex
+    tearmethod focus                   mapto:super::focus
+    tearmethod accessKey               mapto:super::accessKey
+    tearmethod onblur                  mapto:super::onblur
+    tearmethod onfocus                 mapto:super::onfocus
+    tearmethod onresize                mapto:super::onresize
+    tearmethod blur                    mapto:super::blur
+    tearmethod addFilter               mapto:super::addFilter
+    tearmethod removeFilter            mapto:super::removeFilter
+    tearmethod clientHeight            mapto:super::clientHeight
+    tearmethod clientWidth             mapto:super::clientWidth
+    tearmethod clientTop               mapto:super::clientTop
+    tearmethod clientLeft              mapto:super::clientLeft
+
+class CSite \
+            primaryinterface:IHTMLControlElement \
+            super:CElement \
+            events:HTMLControlElementEvents \
+            nonprimaryevents:HTMLControlElementEvents2 \
+            abstract
+
+    // Need for nopropdesc handling to find signature match in IHTMLElement2
+    implements IHTMLControlElement
+    implements IHTMLElement2
+
+    method HRESULT focus dispid:DISPID_SITE+0   nopropdesc
+    method HRESULT blur dispid:DISPID_SITE+2    nopropdesc
+
+    property onblur        atype:VARIANT       dispid:DISPID_EVPROP_ONBLUR   \
+        type:code  get set caa bindable displaybind scriptlet baseimplementation    maxstrlen:pdlEvent  nopropdesc
+    property onfocus       atype:VARIANT       dispid:DISPID_EVPROP_ONFOCUS  \
+        type:code  get set caa bindable displaybind scriptlet baseimplementation    maxstrlen:pdlEvent  nopropdesc
+    property form          atype:IHTMLFormElement*       dispid:DISPID_SITE+4    type:IHTMLFormElement*     \
+        abstract get
+    property accessKey  caa atype:BSTR      dispid:DISPID_SITE+5    type:CStr   \
+        clearcaches     updatecollection    get set bindable displaybind    maxstrlen:pdlToken  nopropdesc
+
+
+    property onresize      atype:VARIANT      dispid:DISPID_EVPROP_ONRESIZE  type:code   \
+        get set caa bindable displaybind scriptlet baseimplementation   maxstrlen:pdlEvent      nopropdesc
+
+    method HRESULT addFilter  (in type:IUnknown* arg:pUnk) restricted dispid:DISPID_SITE+17     nopropdesc
+    method HRESULT removeFilter (in type:IUnknown* arg:pUnk) restricted dispid:DISPID_SITE+18   nopropdesc
+
+    property clientHeight        abstract atype:long dispid:DISPID_SITE+19         type:long get     displaybind    nopropdesc 
+    property clientWidth         abstract atype:long dispid:DISPID_SITE+20         type:long get     displaybind    nopropdesc 
+    property clientTop           abstract atype:long dispid:DISPID_SITE+21         type:long get     displaybind    nopropdesc 
+    property clientLeft          abstract atype:long dispid:DISPID_SITE+22         type:long get     displaybind    nopropdesc 
+
+    property tabIndex  atype:short  type:short default:htmlTabIndexNotSet  dispid:STDPROPID_XOBJ_TABINDEX \
+        dwFlags:0  caa get set bindable displaybind help:f3proTabIndex nopropdesc
+
+#endif //_CSITE_PDL_

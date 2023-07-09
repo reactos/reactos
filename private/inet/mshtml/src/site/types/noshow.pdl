@@ -1,0 +1,27 @@
+#ifndef _NOSHOW_PDL_
+#define _NOSHOW_PDL_ 1
+
+#include "element.pdl"
+
+file noshow.pdl
+
+import element.pdl
+
+
+interface IHTMLNoShowElement guid:3050f38a-98b5-11cf-bb82-00aa00bdce0b
+
+tearoff CNoShowElement interface:IHTMLNoShowElement
+
+class CNoShowElement name:HTMLNoShowElement \
+            primaryinterface:IHTMLNoShowElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f38b-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f528-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLNoShowElement
+
+#endif _NOSHOW_PDL_
+

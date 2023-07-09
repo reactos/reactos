@@ -1,0 +1,30 @@
+# This makefile was generated automatically by mwgenmakeC.
+
+#.NOTPARALLEL: world all clean install depend
+
+world all install depend: INCLUDE STD DL NILE2STD MISC
+
+INCLUDE:
+	@enterdir include ${MAKE} ${MFLAGS}
+
+STD:
+	@enterdir std ${MAKE} ${MFLAGS}
+
+DL:
+	@enterdir dl ${MAKE} ${MFLAGS}
+
+NILE2STD:
+	@enterdir nile2std ${MAKE} ${MFLAGS}
+
+MISC:
+	@enterdir misc ${MAKE} ${MFLAGS}
+
+clean:
+	@enterdir include ${MAKE} ${MFLAGS} $@
+	@enterdir std ${MAKE} ${MFLAGS} $@
+	@enterdir dl ${MAKE} ${MFLAGS} $@
+	@enterdir nile2std ${MAKE} ${MFLAGS} $@
+	@enterdir misc ${MAKE} ${MFLAGS} $@
+
+NOT_USED:
+	@enterdir include ${MAKE} ${MFLAGS} $@

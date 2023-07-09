@@ -1,0 +1,164 @@
+FTPSERVER-MIB DEFINITIONS ::= BEGIN
+
+  
+        IMPORTS
+                enterprises,
+                OBJECT-TYPE,
+                Counter
+                        FROM RFC1155-SMI
+                internetServer
+                        FROM INTERNETSERVER-MIB;
+
+--      microsoft       OBJECT IDENTIFIER ::= { enterprises 311 }
+--      software        OBJECT IDENTIFIER ::= { microsoft 1 }
+--      internetServer  OBJECT IDENTIFIER ::= { software 7 }
+        ftpServer       OBJECT IDENTIFIER ::= { internetServer 2 }
+        ftpStatistics   OBJECT IDENTIFIER ::= { ftpServer 1 }
+
+-- FTP Server Statistics
+
+        totalBytesSentHighWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the high 32-bits of the total number of
+                        of BYTEs sent by the FTP Server"
+                ::= { ftpStatistics 1 }
+
+        totalBytesSentLowWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the low 32-bits of the total number of
+                        of BYTEs sent by the FTP Server"
+                ::= { ftpStatistics 2 }
+
+        totalBytesReceivedHighWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the high 32-bits of the total number of
+                        of BYTEs received by the FTP Server"
+                ::= { ftpStatistics 3 }
+
+        totalBytesReceivedLowWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the low 32-bits of the total number of
+                        of BYTEs received by the FTP Server"
+                ::= { ftpStatistics 4 }
+
+        totalFilesSent OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of files sent by this
+                        FTP Server"
+                ::= { ftpStatistics 5 }
+
+        totalFilesReceived OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of files received by this
+                        FTP Server"
+                ::= { ftpStatistics 6 }
+
+        currentAnonymousUsers OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of anonymous users currently
+                        connected to the FTP Server"
+                ::= { ftpStatistics 7 }
+
+        currentNonAnonymousUsers OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of nonanonymous users currently
+                        connected to the FTP Server"
+                ::= { ftpStatistics 8 }
+
+        totalAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of anonymous users that
+                        have ever connected to the FTP Server"
+                ::= { ftpStatistics 9 }
+
+        totalNonAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of nonanonymous users that
+                        have ever connected to the FTP Server"
+                ::= { ftpStatistics 10 }
+
+        maxAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of anonymous users
+                        simultaneously connected to the FTP Server"
+                ::= { ftpStatistics 11 }
+
+        maxNonAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of nonanonymous users
+                        simultaneously connected to the FTP Server"
+                ::= { ftpStatistics 12 }
+
+        currentConnections OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the current number of connections to the
+                        FTP Server"
+                ::= { ftpStatistics 13 }
+
+        maxConnections OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of simultaneous
+                        connections to the FTP Server"
+                ::= { ftpStatistics 14 }
+
+        connectionAttempts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of connection attempts that
+                        have been made to the FTP Server"
+                ::= { ftpStatistics 15 }
+
+        logonAttempts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of logon attempts that have
+                        been made to the FTP Server"
+                ::= { ftpStatistics 16 }
+
+END

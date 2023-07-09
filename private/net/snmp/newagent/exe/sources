@@ -1,0 +1,66 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+TARGETNAME=snmp
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+MSC_WARNING_LEVEL=/W3 /WX
+USE_CRTDLL=1
+#USER_C_FLAGS=-DUNICODE -D_UNICODE
+#USER_C_FLAGS=-DUNICODE -D_UNICODE -D_POLICY
+
+!IFDEF USE_CALLTREE
+LINKER_FLAGS=$(LINKER_FLAGS) -calltree
+!ENDIF
+
+SOURCES= \
+    snmp.rc \
+    args.c \
+    contexts.c \
+    globals.c \
+    mem.c \
+    network.c \
+    regions.c \
+    registry.c \
+    service.c \
+    snmpevts.c \
+    snmpmgrs.c \
+    snmppdus.c \
+    snmpthrd.c \
+    regthrd.c \
+    startup.c \
+    subagnts.c \
+    trapmgrs.c \
+    trapthrd.c \
+    query.c \
+    varbinds.c \
+    snmpmgmt.c
+
+INCLUDES=\
+    ..\inc;\
+    $(BASEDIR)\private\net\inc;
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\ws2_32.lib \
+    $(BASEDIR)\public\sdk\lib\*\snmpapi.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib  \
+    $(BASEDIR)\public\sdk\lib\*\ntdll.lib
+
+NTTARGETFILE0=snmpevts.h
+UMTYPE=console

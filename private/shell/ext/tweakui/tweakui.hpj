@@ -1,0 +1,23 @@
+; This file is maintained by HCW. Do not modify this file directly.
+
+[OPTIONS]
+HCW=0
+COMPRESS=12 Hall Zeck
+LCID=0x409 0x0 0x0 ;English (United States)
+REPORT=No
+TITLE=Tweak UI
+COPYRIGHT=Tweak UI Copyright 1995-1997 Microsoft Corporation
+CITATION=Copyright 1995-1997 Microsoft Corporation
+HLP=tweakui.hlp
+
+[FILES]
+.\tweakui.rtf
+
+[MAP]
+#include tweakhlp.h
+
+[WINDOWS]
+main="",(648,95,368,563),17412,(r14876671),(r12632256),f2
+
+[CONFIG]
+BrowseButtons()

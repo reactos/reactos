@@ -1,0 +1,67 @@
+#
+# build.smp: SAMPLE build.inc file.
+#
+# Copy this file to build.inc to use its features.
+#
+# nmake D=0 builds ship.
+# nmake D=1 builds debug (default).
+# nmake D=3 builds profile.
+#
+# nmake LOUD=1 builds verbose (default off). (Invoke nmake with -s option).
+#
+# nmake L=1 builds with incremental linking turned off (applies to debug
+#     builds only - default incremental is enabled)
+#
+# nmake W=n build with warnings at level n (n = 3 or 4)
+#
+
+_NOPDBS=1
+
+LOGFILE=logfile.debug
+
+!if "$(D)" == ""
+D=1
+!endif
+
+!if "$(LOUD)" == ""
+.SILENT:
+!endif
+
+!if "$(P)" == ""
+_PRODUCT=96P
+!endif
+
+!if "$(L)" == "1"
+_NO_INCREMENTAL_LINK=1
+!endif
+
+!if "$(W)" != ""
+_WARNINGLEVEL=$(W)
+!endif
+
+
+!if "$(D)" == "1"
+_BROWSE=0
+_DEBUG=1
+_MAP=0
+# _DROPDIR=$(MAKEDIR:\src=)\drop\debug
+!elseif "$(D)" == "2"
+_BROWSE=0
+_DEBUG=2
+_MAP=0
+!elseif "$(D)" == "3"
+_BROWSE=0
+_DEBUG=3
+_MAP=0
+# _DROPDIR=$(MAKEDIR:\src=)\drop\perf
+!else
+_BROWSE=0
+_DEBUG=0
+_MAP=1
+LOGFILE=logfile.retail
+# _DROPDIR=$(MAKEDIR:\src=)\drop\ship
+!endif
+
+!if "$(W)" == "4" && "$(_DEBUG)" != "1"
+_WARNINGSAREERRORS=0
+!endif

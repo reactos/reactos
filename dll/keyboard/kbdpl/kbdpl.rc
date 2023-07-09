@@ -1,5 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Polish Keyboard Layout"
-#define REACTOS_STR_INTERNAL_NAME     "kbdpl"
-#define REACTOS_STR_ORIGINAL_FILENAME "kbdpl.dll"
-#include <reactos/version.rc>

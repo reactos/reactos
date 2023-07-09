@@ -1,0 +1,24 @@
+TARGETNAME=compress
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+USE_MSVCRT=1
+
+INCLUDES=.;..;..\..\libs
+
+C_DEFINES=-DWIN32 -DLZA_DLL -DCOMPRESS
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=args.c  \
+        compress.rc \
+        compress.c  \
+        diamond.c
+		
+UMTYPE=console
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\user32.lib  \
+    $(SDK_LIB_PATH)\winlza.lib  \
+    $(SDK_LIB_PATH)\setargv.obj \
+    $(SDK_LIB_PATH)\fci.lib
+

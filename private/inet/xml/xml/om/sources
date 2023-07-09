@@ -1,0 +1,76 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=msxml
+MINORCOMP=om
+
+ROOT=$(MAKEDIR:\xml\om=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=om
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+
+SOURCES= \
+    provideclassinfo.cxx \
+    domnode.cxx \
+    w3cdom.cxx \
+    node.cxx\
+    xmldom.cxx \
+    document.cxx \
+    eventhelp.cxx \
+    idomerror.cxx \
+    iobjectsafety.cxx \
+    iobjectwithsite.cxx \
+    iolecommandtarget.cxx \
+    msxmlcom.cxx \
+    xmldocument.cxx \
+    xmlerror.cxx \
+    element.cxx \
+    nodedatanodefactory.cxx \
+    namespacenodefactory.cxx \
+    namespacemgr.cxx \
+    domimplementation.cxx \
+    xqlnodelist.cxx \
+    enumvariant.cxx \
+    ie4nodefactory.cxx \
+    omlock.cxx \
+    docstream.cxx \
+
+
+INCLUDES= \
+    $(ROOT)\include; \
+    $(ROOT); \
+    $(ROOT)\xml\dtd; \
+    $(ROOT)\xml\util; \
+    $(ROOT)\xml\dso; \
+    $(ROOT)\core\base; \
+    $(ROOT)\core\util; \
+    $(IDL_GENERATED_HEADERS); \
+    $(WINDOWS_INC_PATH)\
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+CONDITIONAL_INCLUDES=\
+    $(CONDITIONAL_INCLUDES)\
+    Document.hxx\
+

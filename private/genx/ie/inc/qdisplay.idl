@@ -1,0 +1,183 @@
+//+------------------------------------------------------------------------
+//
+//  Display tree interfaces
+//
+//  Copyright (C) Microsoft Corporation, 1997-1999.
+//
+//  File:       qdisplay.idl
+//
+//-------------------------------------------------------------------------
+
+import "oaidl.idl";
+
+
+//+------------------------------------------------------------------------
+//
+//  IDispClient interface
+//
+//-------------------------------------------------------------------------
+
+interface CDispNode;
+interface CDispSurface;
+
+// BUGBUG: WE SHOULDN'T NEED THESE, BUT THE FORWARD DECLARATIONS ABOVE
+// AREN'T SHOWING UP IN THE GENERATED .h FILE!!
+cpp_quote("class CDispNode;")
+cpp_quote("class CDispSurface;")
+
+[
+        object,
+        uuid(46482135-b251-11d2-a438-00c04fb177e3),
+        pointer_default(unique),
+        local
+]
+interface IDispClient : IUnknown
+{
+    void DrawClient(
+            [in] const RECT* prcBounds,
+            [in] const RECT* prcRedraw,
+            [in] CDispSurface *pSurface,
+            [in] CDispNode *pDispNode,
+            [in] void *cookie,
+            [in] void *pClientData,
+            [in] DWORD dwFlags);
+
+    void DrawClientBackground(
+            [in] const RECT* prcBounds,
+            [in] const RECT* prcRedraw,
+            [in] CDispSurface *pSurface,
+            [in] CDispNode *pDispNode,
+            [in] void *pClientData,
+            [in] DWORD dwFlags);
+
+    void DrawClientBorder(
+            [in] const RECT* prcBounds,
+            [in] const RECT* prcRedraw,
+            [in] CDispSurface *pSurface,
+            [in] CDispNode *pDispNode,
+            [in] void *pClientData,
+            [in] DWORD dwFlags);
+
+    void DrawClientVScrollbar(
+            [in] const RECT* prcBounds,
+            [in] const RECT* prcRedraw,
+            [in] LONG contentSize,
+            [in] LONG containerSize,
+            [in] LONG scrollAmount,
+            [in] CDispSurface *pSurface,
+            [in] CDispNode *pDispNode,
+            [in] void *pClientData,
+            [in] DWORD dwFlags);
+
+    void DrawClientHScrollbar(
+            [in] const RECT* prcBounds,
+            [in] const RECT* prcRedraw,
+            [in] LONG contentSize,
+            [in] LONG containerSize,
+            [in] LONG scrollAmount,
+            [in] CDispSurface *pSurface,
+            [in] CDispNode *pDispNode,
+            [in] void *pClientData,
+            [in] DWORD dwFlags);
+
+    void DrawClientScrollbarFiller(
+            [in] const RECT* prcBounds,
+            [in] const RECT* prcRedraw,
+            [in] CDispSurface *pSurface,
+            [in] CDispNode *pDispNode,
+            [in] void *pClientData,
+            [in] DWORD dwFlags);
+
+    BOOL HitTestPoint(
+            [in] const POINT *pptHit,
+            [in] CDispNode *pDispNode,
+            [in] void *pClientData);
+
+    BOOL HitTestRect(
+            [in] const RECT *prcHit,
+            [in] CDispNode *pDispNode,
+            [in] void *pClientData);
+
+    BOOL HitVScrollbar(
+            [in] const POINT *pptHit,
+            [in] CDispNode *pDispNode,
+            [in] void *pClientData);
+
+    BOOL HitHScrollbar(
+            [in] const POINT *pptHit,
+            [in] CDispNode *pDispNode,
+            [in] void *pClientData);
+
+    // called only for z ordered items
+    LONG GetZOrderForSelf();
+    LONG GetZOrderForChild(
+            [in] void *cookie);
+    
+    // called only for "position aware" items
+    void PositionChanged(
+            [in] const SIZE* pOffset,
+            [in] CDispNode *pDispNode,
+            [in] BOOL fDidScrollDC);
+}
+
+
+//+------------------------------------------------------------------------
+//
+//  IDispClientDebug interface
+//
+//-------------------------------------------------------------------------
+interface CDispNode;
+
+// BUGBUG: WE SHOULDN'T NEED THESE, BUT THE FORWARD DECLARATIONS ABOVE
+// AREN'T SHOWING UP IN THE GENERATED .h FILE!!
+cpp_quote("class CDispNode;")
+
+[
+        object,
+        uuid(46482137-b251-11d2-a438-00c04fb177e3),
+        pointer_default(unique),
+        local
+]
+interface IDispClientDebug : IUnknown
+{
+    void DumpDebugInfo(
+            [in] HANDLE hFile,
+            [in] long level,
+            [in] long childNumber,
+            [in] CDispNode *pDispNode,
+            [in] void* cookie);
+}
+
+
+//+------------------------------------------------------------------------
+//
+//  IDispObserver interface
+//
+//-------------------------------------------------------------------------
+
+[
+        object,
+        uuid(46482136-b251-11d2-a438-00c04fb177e3),
+        pointer_default(unique),
+        local
+]
+interface IDispObserver : IUnknown
+{
+    void Invalidate(
+            [in] const RECT *prcInvalid,
+            [in] HRGN rgnInvalid,
+            [in] DWORD flags);
+            
+    HDC GetClientDC(
+            [in] const RECT* prc);
+            
+    void ReleaseClientDC(
+            [in] HDC hdc);
+
+    void DrawSynchronous(
+            [in] HRGN hrgn,
+            [in] HDC hdc,
+            [in] const RECT* prcClip);
+}
+
+

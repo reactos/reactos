@@ -1,0 +1,251 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Reg]
+AddReg=Msxml.Reg,Msxmldom.Reg,MsxmlIsland.Reg,MsxmlScriptIsland.Reg,XMLPSR.Reg,Msxql.Reg,XMLDSO.Reg,XmlHttp.Reg
+DelReg=MsxmlCleanup.Reg
+
+[Unreg]
+DelReg=Msxml.Reg,Msxmldom.Reg,MsxmlIsland.Reg,MsxmlScriptIsland.Reg,XMLPSR.Reg,Msxql.Reg,XMLDSO.Reg,XmlHttp.Reg
+
+[RegMIME]
+AddReg=XMLMimeView.Reg,XMLFileAssoc.Inst,XSLFileAssoc.Inst,XMLMIME.Inst
+
+[UnregMIME]
+DelReg=XMLMimeView.Reg,XMLFileAssoc.Inst,XSLFileAssoc.Inst,XMLMIME.Inst
+
+;------- IE4 Object Model ---------------------------------------
+[Msxml.Reg]
+HKCR,CLSID\%CLSID_XMLDocument%,,,"Msxml"
+HKCR,CLSID\%CLSID_XMLDocument%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_XMLDocument%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_XMLDocument%\ProgID,,,"Msxml"
+HKCR,CLSID\%CLSID_XMLDocument%\TypeLib,,,%TypeLibID%
+
+HKCR,Msxml,,,"Msxml"
+HKCR,Msxml\CLSID,,,%CLSID_XMLDocument%
+
+;------- DOM Object Model ---------------------------------------
+[Msxmldom.Reg]
+HKCR,CLSID\%CLSID_DOMDocument%,,,"%NAME_DOMDocument%"
+HKCR,CLSID\%CLSID_DOMDocument%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_DOMDocument%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_DOMDocument%\ProgID,,,"Microsoft.XMLDOM.1.0"
+HKCR,CLSID\%CLSID_DOMDocument%\VersionIndependentProgID,,,"Microsoft.XMLDOM"
+HKCR,CLSID\%CLSID_DOMDocument%\Version,,, "1.0"
+HKCR,CLSID\%CLSID_DOMDocument%\TypeLib,,,%TypeLibID%
+
+HKCR,Microsoft.XMLDOM,,,"%NAME_DOMDocument%"
+HKCR,Microsoft.XMLDOM\CLSID,,,%CLSID_DOMDocument%
+HKCR,Microsoft.XMLDOM\CurVer,,,"Microsoft.XMLDOM.1.0"
+
+HKCR,MSXML.DOMDocument,,,"%NAME_DOMDocument%"
+HKCR,MSXML.DOMDocument\CLSID,,,%CLSID_DOMDocument%
+HKCR,MSXML.DOMDocument\CurVer,,,"Microsoft.XMLDOM.1.0"
+
+HKCR,Microsoft.XMLDOM.1.0,,,"%NAME_DOMDocument%"
+HKCR,Microsoft.XMLDOM.1.0\CLSID,,,%CLSID_DOMDocument%
+
+;------- Free Threaded DOM Object Model ---------------------------------------
+HKCR,CLSID\%CLSID_DOMFreeThreadedDocument%,,,"%NAME_FreeThreadedDocument%"
+HKCR,CLSID\%CLSID_DOMFreeThreadedDocument%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_DOMFreeThreadedDocument%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_DOMFreeThreadedDocument%\ProgID,,,"Microsoft.FreeThreadedXMLDOM.1.0"
+HKCR,CLSID\%CLSID_DOMFreeThreadedDocument%\VersionIndependentProgID,,,"Microsoft.FreeThreadedXMLDOM"
+HKCR,CLSID\%CLSID_DOMFreeThreadedDocument%\Version,,, "1.0"
+HKCR,CLSID\%CLSID_DOMFreeThreadedDocument%\TypeLib,,,%TypeLibID%
+
+HKCR,Microsoft.FreeThreadedXMLDOM,,,"%NAME_FreeThreadedDocument%"
+HKCR,Microsoft.FreeThreadedXMLDOM\CLSID,,,%CLSID_DOMFreeThreadedDocument%
+HKCR,Microsoft.FreeThreadedXMLDOM\CurVer,,,"Microsoft.FreeThreadedXMLDOM.1.0"
+
+HKCR,MSXML.FreeThreadedDOMDocument,,,"%NAME_FreeThreadedDocument%"
+HKCR,MSXML.FreeThreadedDOMDocument\CLSID,,,%CLSID_DOMFreeThreadedDocument%
+HKCR,MSXML.FreeThreadedDOMDocument\CurVer,,,"Microsoft.FreeThreadedXMLDOM.1.0"
+
+HKCR,Microsoft.FreeThreadedXMLDOM.1.0,,,"%NAME_FreeThreadedDocument%"
+HKCR,Microsoft.FreeThreadedXMLDOM.1.0\CLSID,,,%CLSID_DOMFreeThreadedDocument%
+
+;------- XML Data Islands ---------------------------------------
+[MsxmlIsland.Reg]
+
+HKCR,CLSID\%CLSID_XMLIsland%,,,"MsxmlIsland"
+HKCR,CLSID\%CLSID_XMLIsland%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_XMLIsland%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_XMLIsland%\TypeLib,,,%TypeLibID%
+
+; Script engine settings
+[MsxmlScriptIsland.Reg]
+HKCR,CLSID\%CLSID_XMLScriptIsland%,,,"XML Script Engine"
+HKCR,CLSID\%CLSID_XMLScriptIsland%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_XMLScriptIsland%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_XMLScriptIsland%\ProgID,,,%SCRIPTLANGNAME1%
+HKCR,CLSID\%CLSID_XMLScriptIsland%\OLEScript
+HKCR,CLSID\%CLSID_XMLScriptIsland%\%IMPLCATEGORIES%
+HKCR,CLSID\%CLSID_XMLScriptIsland%\%IMPLCATEGORIES%\{F0B7A1A1-9847-11CF-8F20-00805F2CD064}
+HKCR,CLSID\%CLSID_XMLScriptIsland%\%IMPLCATEGORIES%\{F0B7A1A2-9847-11CF-8F20-00805F2CD064}
+HKCR,%SCRIPTLANGNAME1%,,,"XML Script Engine"
+HKCR,%SCRIPTLANGNAME1%\CLSID,,,%CLSID_XMLScriptIsland%
+HKCR,%SCRIPTLANGNAME1%\OLEScript
+
+;------- Low-level XML Parser ---------------------------------------
+[XMLPSR.Reg]
+HKCR,CLSID\%CLSID_XMLParser%,,,"%NAME_XMLParser%"
+HKCR,CLSID\%CLSID_XMLParser%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_XMLParser%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_XMLParser%\ProgID,,,"Microsoft.XMLParser.1.0"
+HKCR,CLSID\%CLSID_XMLParser%\VersionIndependentProgID,,,"Microsoft.XMLParser"
+HKCR,CLSID\%CLSID_XMLParser%\Version,,,"1.0"
+
+HKCR,Microsoft.XMLParser,,,"%NAME_XMLParser%"
+HKCR,Microsoft.XMLParser\CLSID,,,%CLSID_XMLParser%
+HKCR,Microsoft.XMLParser\CurVer,,,"Microsoft.XMLParser.1.0"
+
+HKCR,Microsoft.XMLParser.1.0,,,"%NAME_XMLParser%0"
+HKCR,Microsoft.XMLParser.1.0\CLSID,,,%CLSID_XMLParser%
+
+;------- DSO ---------------------------------------
+[XMLDSO.Reg]
+HKCR,CLSID\%CLSID_XMLDSO%,,,"%NAME_XMLDSO%"
+HKCR,CLSID\%CLSID_XMLDSO%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_XMLDSO%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_XMLDSO%\ProgID,,,"Microsoft.XMLDSO.1.0"
+HKCR,CLSID\%CLSID_XMLDSO%\VersionIndependentProgID,,,"Microsoft.XMLDSO"
+HKCR,CLSID\%CLSID_XMLDSO%\Version,,, "1.0"
+HKCR,CLSID\%CLSID_XMLDSO%\TypeLib,,,%TypeLibID%
+
+HKCR,Microsoft.XMLDSO,,,"%NAME_XMLDSO%"
+HKCR,Microsoft.XMLDSO\CLSID,,,%CLSID_XMLDSO%
+HKCR,Microsoft.XMLDSO\CurVer,,,"Microsoft.XMLDSO.1.0"
+
+HKCR,Microsoft.XMLDSO.1.0,,,"%NAME_XMLDSO%"
+HKCR,Microsoft.XMLDSO.1.0\CLSID,,,%CLSID_XMLDSO%
+
+;------- XMLHTTPRequest control ---------------------------------------
+
+[XmlHttp.Reg]
+HKCR,CLSID\%CLSID_XMLHTTPRequest%,,,"%NAME_XMLHTTP%"
+HKCR,CLSID\%CLSID_XMLHTTPRequest%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_XMLHTTPRequest%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_XMLHTTPRequest%\ProgID,,,"Microsoft.XMLHTTP.1"
+HKCR,CLSID\%CLSID_XMLHTTPRequest%\VersionIndependentProgID,,,"Microsoft.XMLHTTP"
+HKCR,CLSID\%CLSID_XMLHTTPRequest%\TypeLib,,,%TypeLibID%
+
+HKCR,Microsoft.XMLHTTP,,,"%NAME_XMLHTTP%"
+HKCR,Microsoft.XMLHTTP\CLSID,,,%CLSID_XMLHTTPRequest%
+HKCR,Microsoft.XMLHTTP\CurVer,,,"Microsoft.XMLHTTP.1"
+HKCR,Microsoft.XMLHTTP.1,,,"%NAME_XMLHTTP%"
+HKCR,Microsoft.XMLHTTP.1\CLSID,,,%CLSID_XMLHTTPRequest%
+
+;------- MimeType viwer ---------------------------------------
+[XMLMimeView.Reg]
+HKCR,"CLSID\%CLSID_XMLView%",,,"XML Document"
+HKCR,"CLSID\%CLSID_XMLView%\BrowseInPlace",,,""
+HKCR,"CLSID\%CLSID_XMLView%\DefaultIcon",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%,0"
+HKCR,"CLSID\%CLSID_XMLView%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XMLView%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XMLView%\MiscStatus",,,"2228625"
+HKCR,"CLSID\%CLSID_XMLView%\ProgID",,,"xmlfile"
+HKCR,"CLSID\%CLSID_XMLView%\Version",,,"1.0"
+HKCR,"CLSID\%CLSID_XMLBehavior%",,,"XML Viewer Behavior"
+HKCR,"CLSID\%CLSID_XMLBehavior%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XMLBehavior%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XMLMoniker%",,,"XML Viewer Moniker"
+HKCR,"CLSID\%CLSID_XMLMoniker%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XMLMoniker%\InProcServer32","ThreadingModel",,"Apartment"
+
+[XMLFileAssoc.Inst]
+HKCR,".xml",,,"xmlfile"
+HKCR,".xml","Content Type",,"text/xml"
+HKCR,"xmlfile",,,"XML Document"
+HKCR,"xmlfile","EditFlags",3,00,00,01,00
+HKCR,"xmlfile\BrowseInPlace",,,""
+HKCR,"xmlfile\CLSID",,,"%CLSID_XMLView%"
+HKCR,"xmlfile\DefaultIcon",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%,0"
+HKCR,"xmlfile\shell",,,"Open"
+HKCR,"xmlfile\shell\Open",,,"%OPEN_MENU_TEXT%"
+HKCR,"xmlfile\shell\Open\command",,%REG_EXPAND_SZ%,"""%IEXPLORE%"" -nohome"
+HKCR,"xmlfile\shell\Open\ddeexec",,,"""file:%1"",,-1,,,,,"
+HKCR,"xmlfile\shell\Open\ddeexec\application",,,"IExplore"
+HKCR,"xmlfile\shell\Open\ddeexec\topic",,,"WWW_OpenURL"
+
+[XSLFileAssoc.Inst]
+HKCR,".xsl",,,"xslfile"
+HKCR,".xsl","Content Type",,"text/xml"
+HKCR,"xslfile",,,"XSL Stylesheet"
+HKCR,"xslfile","EditFlags",3,00,00,01,00
+HKCR,"xslfile\BrowseInPlace",,,""
+HKCR,"xslfile\CLSID",,,"%CLSID_XMLView%"
+HKCR,"xslfile\DefaultIcon",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%,1"
+HKCR,"xslfile\shell",,,"Open"
+HKCR,"xslfile\shell\Open",,,"%OPEN_MENU_TEXT%"
+HKCR,"xslfile\shell\Open\command",,%REG_EXPAND_SZ%,"""%IEXPLORE%"" -nohome"
+HKCR,"xslfile\shell\Open\ddeexec",,,"""file:%1"",,-1,,,,,"
+HKCR,"xslfile\shell\Open\ddeexec\application",,,"IExplore"
+HKCR,"xslfile\shell\Open\ddeexec\topic",,,"WWW_OpenURL"
+
+[XMLMIME.Inst]
+HKCR,"MIME\Database\Content Type\application/xml","CLSID",,"%CLSID_XMLView%"
+HKCR,"MIME\Database\Content Type\application/xml","Extension",,".xml"
+HKCR,"MIME\Database\Content Type\application/xml","Encoding",1,08,00,00,00
+HKCR,"MIME\Database\Content Type\text/xml","CLSID",,"%CLSID_XMLView%"
+HKCR,"MIME\Database\Content Type\text/xml","Extension",,".xml"
+HKCR,"MIME\Database\Content Type\text/xml","Encoding",1,08,00,00,00
+
+;------- IE5 Beta cleanup ---------------------------------------
+;This removes a whole bunch of junk we used to register
+[MsxmlCleanup.Reg]
+; 
+HKCR,%IE4GUID_PATH%
+HKCU,%MSXML_PATH%
+HKCU,%MSXMLDOM_PATH%
+HKCU,%XMLISLAND_PATH%
+HKCU,%XMLParser_PATH%
+HKCU,%MSXMLDSO_PATH%
+
+;------- Strings used above. ---------------------------------------
+[Strings]
+TypeLibID = "{d63e0ce2-a0a2-11d0-9c02-00c04fc99c8e}"
+
+CLSID_XMLDocument ="{CFC399AF-D876-11d0-9C10-00C04FC99C8E}"
+
+CLSID_DOMDocument ="{2933BF90-7B36-11d2-B20E-00C04F983E60}"
+NAME_DOMDocument = "XML DOM Document"
+
+CLSID_DOMFreeThreadedDocument ="{2933BF91-7B36-11d2-B20E-00C04F983E60}"
+NAME_FreeThreadedDocument = "Free Threaded XML DOM Document"
+
+CLSID_XMLIsland ="{379E501F-B231-11d1-ADC1-00805FC752D8}"
+
+CLSID_XMLScriptIsland="{989D1DC0-B162-11d1-B6EC-D27DDCF9A923}"
+
+CLSID_XMLParser ="{d2423620-51a0-11d2-9caf-0060b0ec3d39}"
+NAME_XMLParser = "XML Parser"
+
+IMPLCATEGORIES="Implemented Categories"
+SCRIPTLANGNAME1="XML"
+
+CLSID_XMLDSO="{550dda30-0541-11d2-9ca9-0060b0ec3d39}"
+NAME_XMLDSO = "XML Data Source Object"
+
+CLSID_XMLHTTPRequest ="{ED8C108E-4349-11D2-91A4-00C04F7969E8}"
+NAME_XMLHTTP = "XML HTTP Request"
+
+; Stuff for the XML MIME Viewer
+CLSID_XMLView = "{48123bc4-99d9-11d1-a6b3-00c04fd91555}";
+CLSID_XMLBehavior = "{4419DD31-28A5-11d2-AE08-0080C7337EA1}";
+CLSID_XMLMoniker = "{7E3FCEA1-31B4-11d2-AE1F-0080C7337EA1}";
+REG_EXPAND_SZ = 0x00020000
+OPEN_MENU_TEXT = "&Open";
+
+; Old keys we used to register - here only so we can nuke them when we
+; are registered
+IE4GUID_PATH="TypeLib\{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}\1.0"
+MSXML_PATH="Software\Microsoft\Windows\CurrentVersion\Msxml"
+MSXMLDSO_PATH="Software\Microsoft\Windows\CurrentVersion\Microsoft.XMLDSO"
+MSXMLDOM_PATH="Software\Microsoft\Windows\CurrentVersion\Microsoft.XMLDOM"
+XMLISLAND_PATH="Software\Microsoft\Windows\CurrentVersion\MsxmlIsland"
+XMLParser_PATH="Software\Microsoft\Windows\CurrentVersion\Microsoft.XMLParser"
+
+
+[End]

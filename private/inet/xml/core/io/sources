@@ -1,0 +1,56 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=msxml
+MINORCOMP=core
+
+ROOT=$(MAKEDIR:\core\io=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=io	
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES= \
+    ipersistmoniker.cxx \
+    ipersiststream.cxx \
+    printstream.cxx\
+    file.cxx \
+    fileinputstream.cxx \
+    fileoutputstream.cxx \
+    istreaminputstream.cxx \
+    istreamoutputstream.cxx \
+    stringbufferoutputstream.cxx \
+    cstdio.cxx \
+    outputstream.cxx \
+    stringstream.cxx 
+
+
+INCLUDES= \
+	$(ROOT)\core\include; \
+	$(ROOT)\core\base; \
+	$(ROOT); 
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+
+

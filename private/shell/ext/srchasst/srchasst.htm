@@ -1,0 +1,1972 @@
+<html id=ieSearch>
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="HippieTim">
+<meta name="GENERATOR" content="PMShawn">
+
+<title>Internet Explorer Search</title>
+
+</head>
+
+<style>
+
+.AdSpace
+{
+}
+
+.dlgBtn 
+{
+    cursor: default;
+    border-width: 1px;
+    border-style: solid;
+    color: ButtonText;
+} 
+
+.searchTable
+{
+    padding-top: 5px;
+}
+
+.rightButton
+{
+    text-align: right;
+}
+
+.userData {behavior:url(#_IE_)}
+
+.indentRadio
+{
+    margin-top:3px;
+    line-height:16pt;
+    margin-left:4px;
+    margin-bottom:3px;
+}
+
+.searchPanel
+{
+    width: 100%;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    border: 1px solid buttonshadow;
+    margin: 0px;
+    padding: 9px;
+}
+
+select
+{
+    width:100%;
+}
+
+.inputs
+{
+    width:100%;
+}
+
+body,p,td
+{
+    font-size: 8pt;
+}
+
+.selectedTitle
+{
+    font-weight: bold;
+}
+
+</style>
+
+<script defer>
+
+//  Globals
+var g_srchPanel;
+var g_displayPanel;
+var g_prevSearchStore = "IESA_PreviousSearchesI";
+var g_catConfig = "IESA_CatConfigI";
+var g_pnlConfig = "IESA_PnlConfigI";
+var g_bEnableShellSearch;
+var g_catObjMap;
+
+var g_SRCID_SWebSearch = "{94FD6891-92CD-11d1-A1C6-00C04FD75D13}";
+var g_SRCID_SFileSearch = "{3AEBD6B1-975B-11d1-A1C9-00C04FD75D13}";
+var g_SRCID_SFindComputer = "{996E1EB1-B524-11d1-9120-00A0C98BA67D}";
+var g_SRCID_SFindPrinter = "{D515F311-B78B-11d1-9123-00A0C98BA67D}";
+
+var ENG_IN_PANE     = 0x00000001;
+
+var PNL_SHELL       = 0x00000001;
+var PNL_DISABLED    = 0x00000002;
+var PNL_POSITIONED  = 0x00000004;
+
+var shOC;
+
+function MyReplace(s, tok, val)
+{
+    var n = s.indexOf(tok);
+
+    if (n > -1)
+    {
+        var toklen = tok.length;
+        do
+        {
+            s = s.substring(0, n) + val + s.substring(n + toklen, 2048);
+            n = s.indexOf(tok);
+        }
+        while (n > -1);
+    }
+
+    return s;
+}
+
+function CEngineBucket(panelID)
+{
+    this.m_panelID = panelID;       //  Lets us know about our container
+    this.m_blocks = new Array();    //  Array of search engine blocks
+}
+
+function CEngineBucket_UnPersistOrder()
+{
+    xmlObj.load(g_pnlConfig + this.m_panelID)
+        
+    var doc = xmlObj.XMLDocument;
+    var docNode = doc.documentElement;
+    var n = docNode.childNodes.length;
+    var blockName;
+
+    for (blockName in this.m_blocks)
+    {
+        var block = eval("this.m_blocks['" + blockName + "']");
+        block.UnPersistBlock(n, docNode);
+    }
+}
+
+function CEngineBucket_NewEngineBlock(blockName)
+{
+    this.m_blocks[blockName] = new CEngineBlock(blockName);
+    return this.m_blocks[blockName];
+}
+
+function CEngineBucket_GetEngineBlock(blockName)
+{
+    return this.m_blocks[blockName];
+}
+
+function CEngineBucket_Prototype()
+{
+    CEngineBucket.prototype.UnPersistOrder = CEngineBucket_UnPersistOrder;
+    CEngineBucket.prototype.NewEngineBlock = CEngineBucket_NewEngineBlock;
+    CEngineBucket.prototype.GetEngineBlock = CEngineBucket_GetEngineBlock;
+}
+
+function CEngineBlock(blockName)
+{
+    this.m_blockName = blockName;
+    this.m_engs = new Array();
+    this.m_order = new Array();
+    this.m_prefCount = 4;
+}
+
+function CEngineBlock_UnPersistBlock(nNodes, docNode)
+{
+    var i;
+    var bSettingsExist = false;
+
+    for (i = 0; i < nNodes; i++)
+    {
+        var blockNode = docNode.childNodes.item(i);
+
+        if (XML_GetAttribute(blockNode, "NAME") == this.m_blockName)
+        {
+            var nEngines = blockNode.childNodes.length;
+            var j;
+            for (j = 0; j < nEngines; j++)
+            {
+                bSettingsExist = true;
+                var engineId = XML_GetAttribute(blockNode.childNodes.item(j), "ID");
+
+                if (null != this.m_engs[engineId])
+                {
+                    var nOrder = this.m_order.length;
+                    this.m_order[nOrder] = engineId;
+                }
+            }
+
+            break;
+        }
+    }
+
+    //  Ensure each block has at least one engine.
+    //  If no settings have been persisted, turn 'em all on.
+    if (this.m_order.length < 1)
+    {
+        i = 0;
+        for (eng in this.m_engs)
+        {
+            this.m_order[i] = eng + "";
+            i++;
+
+            if (bSettingsExist)
+            {
+                break;
+            }
+        }
+    }
+}
+
+function CEngineBlock_NewEngine(engineId, dispName, flags, query)
+{
+    this.m_engs[engineId] = new CEngine(engineId, dispName, flags, query);
+    return this.m_engs[engineId];
+}
+
+function CEngineBlock_GetEngine(index)
+{
+    return this.m_engs[this.m_order[index]];
+}
+
+function CEngineBlock_GetEngineCount()
+{
+    return this.m_order.length;
+}
+
+function CEngineBlock_Prototype()
+{
+    CEngineBlock.prototype.UnPersistBlock = CEngineBlock_UnPersistBlock;
+    CEngineBlock.prototype.NewEngine = CEngineBlock_NewEngine;
+    CEngineBlock.prototype.GetEngine = CEngineBlock_GetEngine;
+    CEngineBlock.prototype.GetEngineCount = CEngineBlock_GetEngineCount;
+}
+
+function CEngine(engineId, dispName, flags, query)
+{
+    this.m_engineId = engineId;
+    this.m_dispName = dispName;
+    this.m_flags = flags;
+    this.m_query = query;
+}
+
+function CEngine_ProcessQueryFields(names, values)
+{
+    var url = this.m_query;
+    var n = names.length;
+
+    for (i = 0; i < n; i++)
+    {
+        url = MyReplace(url, "**" + names[i] + "**", values[i]);
+    }
+
+    return url;
+}
+
+function CEngine_Prototype()
+{
+    CEngine.prototype.ProcessQueryFields = CEngine_ProcessQueryFields;
+}
+
+//  CPanel "class"
+
+function CPanel(pnl)
+{
+    this.m_panelID = pnl.panelID;
+    this.m_flds = null;
+    this.m_fldNames = null;
+    this.m_fldValues = null;
+    this.m_engBucket = null;
+    this.m_curBlock = "default";
+    this.m_bNavInPlace = true;
+
+    var flags = eval(pnl.flags);
+    this.m_flags = (null != flags) ? flags : 0;
+
+    var pnlInitProc = eval(pnl.InitProc);
+    if (null != pnlInitProc)
+    {
+        this.InitProc = pnlInitProc;
+    }
+}
+
+function CPanel_Show(bShow)
+{
+    var opt = GetOption(this.m_panelID);
+    var pnl = GetPanel(this.m_panelID);
+
+    if (bShow)
+    {
+        opt.className = "selectedTitle";
+        pnl.style.display = "";
+        this.OnShow();
+    }
+    else
+    {
+        opt.className = "";
+        pnl.style.display = "none";
+    }
+}
+
+function CPanel_ExtractFields()
+{
+    if (null == this.m_flds)
+    {
+        var srchflds = GetPanel(this.m_panelID).srchflds;
+        var i;
+
+        if (null != srchflds)
+        {
+            var ctrls = srchflds.split(",");
+            
+            this.m_flds = new Array();
+
+            for (i = 0; i < ctrls.length; i++)
+            {
+                this.m_flds[i] = eval("form" + GetPanel(this.m_panelID).panelID + "." + ctrls[i]);
+            }
+        }
+    }
+}
+
+function CPanel_CanSearch()
+{
+    var L_NeedSearchText_ErrorMessage = "Please specify something to search for!";
+    var result;
+    var n = this.m_flds.length;
+    var i;
+
+    for (i = 0; i < n; i++)
+    {
+        if (this.m_flds[i].value.length > 0)
+        {
+            break;
+        }
+    }
+
+    if (i < n)
+    {
+        result = true;
+    }
+    else
+    {
+        alert(L_NeedSearchText_ErrorMessage);
+
+        for (i = 0; i < n; i++)
+        {
+            if (itemIsVisible(this.m_flds[i]))
+            {
+                this.m_flds[i].focus();
+                break;
+            }
+        }
+        result = false;
+    }
+    
+    return result;
+}
+
+function CPanel_CreateEngineBucket()
+{
+    if (null == this.m_engBucket)
+    {
+        this.m_engBucket = new CEngineBucket(this.m_panelID);
+        return true;
+    }
+
+    return false;
+}
+
+function CPanel_InitProc()
+{
+    this.ExtractFields();
+}
+
+function CPanel_OnShow()
+{
+    this.InitProc();
+    this.SetAd();
+}
+
+function CPanel_ClearFields()
+{
+    var flds = this.m_flds;
+
+    if (null != flds)
+    {
+        var n = flds.length;
+        var i;
+
+        for (i = 0; i < n; i++)
+        {
+            flds.value = "";
+        }
+    }
+}
+
+function CPanel_PersistSearch()
+{
+    xmlObj.load(g_prevSearchStore);
+
+    var doc = xmlObj.XMLDocument;
+    var docNode = doc.documentElement;
+    var node = doc.createNode(1, "PREVIOUSSEARCH", "");
+    
+    XML_SetAttribute(doc, node, "PANELID", this.m_panelID);
+    XML_SetAttribute(doc, node, "BLOCK", this.m_curBlock);
+
+    var nvnode;
+    var i;
+    var n = this.m_flds.length;
+
+    for (i = 0; i < n; i++)
+    {
+        nvnode = doc.createNode(1, "SEARCHFIELD", "");
+
+        XML_SetAttribute(doc, nvnode, "NAME", this.m_names[i]);
+        XML_SetAttribute(doc, nvnode, "VALUE", this.m_values[i]);
+        node.insertBefore(nvnode, null);
+    }
+
+    docNode.insertBefore(node, docNode.firstChild);
+
+    n = docNode.childNodes.length;
+
+    for (i = 10; i < n; i++)
+    {
+        docNode.removeChild(docNode.childNodes.item(i));
+    }
+
+    xmlObj.save(g_prevSearchStore);
+}
+
+function CPanel_SetNameValuePairs(names, values)
+{
+    this.m_names = names;
+    this.m_values = values;
+}
+
+function CPanel_SetBlock(block)
+{
+    if (null != this.m_engBucket.GetEngineBlock(block))
+    {
+        this.m_curBlock = block;
+    }
+}
+
+function CPanel_RunEngineSearch(engIndex)
+{
+    g_srchPanel = GetPanel(this.m_panelID);
+
+    var block = this.m_engBucket.GetEngineBlock(this.m_curBlock);
+    var eng = block.GetEngine(engIndex);
+    var url = eng.ProcessQueryFields(this.m_names, this.m_values);
+    
+    if (eng.m_flags & ENG_IN_PANE)
+    {
+        paneAssistant.style.display = "none";
+        paneResults.style.display = "";
+        iframeResults.location.href = url;
+        document.body.style.overflow = "hidden";
+    }
+    else
+    {
+        window.open(url, "_main");
+    }
+}
+
+function CPanel_SetupNextMenu()
+{
+    if (null != saOC)
+    {
+        var block = this.m_engBucket.GetEngineBlock(this.m_curBlock);
+        var n = block.GetEngineCount();
+
+        if (n > 1)
+        {
+            var i;
+
+            for (i = 0; i < n; i++)
+            {
+                var eng = block.GetEngine(i);
+                saOC.AddNextMenuItem(eng.m_dispName, i);
+            }
+        }
+    }
+}
+
+function CPanel_RunWebSearch()
+{
+    if (this.CanSearch())
+    {
+        this.m_names = new Array();
+        this.m_values = new Array();
+        var n = this.m_flds.length;
+        var i;
+
+        for (i = 0; i < n; i++)
+        {
+            this.m_names[i] = this.m_flds[i].name;
+            this.m_values[i] = this.m_flds[i].value;
+        }
+        
+        this.PersistSearch();
+        this.SetupNextMenu();
+        this.RunEngineSearch(0);
+    }
+}
+
+function CPanel_OnEnter()
+{
+    this.RunWebSearch();
+}
+
+function CPanel_GetNextEngine()
+{
+    var max = this.m_engBucket.GetEngineBlock(this.m_curBlock).GetEngineCount();
+    
+    curEngine += 1;
+
+    if (curEngine >= max)
+    {
+        curEngine = 0;
+    }
+    else if (curEngine < 0)
+    {
+        curEngine = max - 1;
+    }
+
+    return curEngine;
+}
+
+function CPanel_SetAd()
+{
+    var L_BroughtToYou_Text = "Brought to you by ";
+    var idAd = document.all["ad" + this.m_panelID];
+
+    if (idAd != null)
+    {
+        if (null != this.m_engBucket)
+        {
+            var block = this.m_engBucket.GetEngineBlock(this.m_curBlock);
+
+            idAd.innerHTML = L_BroughtToYou_Text + block.GetEngine(0).m_dispName;
+        }
+    }
+}
+
+function CPanel_SetDefFocus()
+{
+    if ((this.m_flds != null) && (this.m_flds.length > 0))
+    {
+        this.m_flds[0].focus();
+    }
+}
+
+function CPanel_InitializeDefaults()
+{
+    if (!(this.m_flags & PNL_SHELL))
+    {
+        this.InitProc();
+
+        if (null != this.m_engBucket)
+        {
+            var blockName;
+
+            for (blockName in this.m_engBucket.m_blocks)
+            {
+                var block = this.m_engBucket.GetEngineBlock(blockName);
+                var nEngs = block.GetEngineCount();
+                var prefCount = block.m_prefCount < nEngs ? block.m_prefCount : nEngs;
+                var i;
+                var engineName;
+
+                i = 0;
+                for (engineName in block.m_engs)
+                {
+                    block.m_order[i] = engineName;
+                    i++;
+                }
+
+                for (i = 0; i < nEngs; i++)
+                {
+                    var rand;
+                    
+                    if (i < prefCount)
+                    {
+                        rand = Math.floor(prefCount * Math.random());
+                    }
+                    else
+                    {
+                        rand = Math.floor((nEngs - prefCount) * Math.random()) + prefCount;
+                    }
+                    var ordSave = block.m_order[i];
+                    block.m_order[i] = block.m_order[rand];
+                    block.m_order[rand] = ordSave;
+                }
+            }
+        }
+    }
+}
+function CPanel_Prototype()
+{
+    //  NOTE: All of these methods can be overridden easily.  
+    //  For instance, the InitProc method must be overridden 
+    //  (it is also the best place to hook in overrides).
+
+    CPanel.prototype.CanSearch = CPanel_CanSearch;
+    CPanel.prototype.ClearFields = CPanel_ClearFields;
+    CPanel.prototype.CreateEngineBucket = CPanel_CreateEngineBucket;
+    CPanel.prototype.ExtractFields = CPanel_ExtractFields;
+    CPanel.prototype.GetNextEngine = CPanel_GetNextEngine;
+    CPanel.prototype.InitializeDefaults = CPanel_InitializeDefaults;
+    CPanel.prototype.InitProc = CPanel_InitProc; // intended to be "virtual"
+    CPanel.prototype.OnEnter = CPanel_OnEnter;
+    CPanel.prototype.OnShow = CPanel_OnShow;    
+    CPanel.prototype.PersistSearch = CPanel_PersistSearch;
+    CPanel.prototype.RunEngineSearch = CPanel_RunEngineSearch
+    CPanel.prototype.RunWebSearch = CPanel_RunWebSearch;
+    CPanel.prototype.SetAd = CPanel_SetAd;
+    CPanel.prototype.SetBlock = CPanel_SetBlock;
+    CPanel.prototype.SetDefFocus = CPanel_SetDefFocus;
+    CPanel.prototype.SetNameValuePairs = CPanel_SetNameValuePairs;
+    CPanel.prototype.SetupNextMenu = CPanel_SetupNextMenu;
+    CPanel.prototype.Show = CPanel_Show;
+}
+
+function GetPanelObj(panelID)
+{
+    var res = g_catObjMap[panelID];
+    if (res == null)
+    {
+        ODS("null return in GetPanelObj!");
+    }
+
+    return res;
+}
+
+function GetPanel(panelID)
+{
+    return ObjFromPanelID(panel, panelID);
+}
+
+function GetOption(panelID)
+{
+    return ObjFromPanelID(option, panelID);
+}
+
+function GetRadioButton(panelID)
+{
+    return ObjFromPanelID(rbSearch, panelID);
+}
+
+function PersistSettings()
+{
+    var i;
+    var n;
+
+    xmlObj.load(g_catConfig);
+
+    doc = xmlObj.XMLDocument;
+    docNode = doc.documentElement;
+
+    XML_EmptyDocNode(docNode);
+
+    var defPanelOrder = new Array("Web", "Pers", "Co", "Files", "Prev", "Map", "Enc", "News", "Printer", "Computer");
+    
+    n = defPanelOrder.length;
+
+    for (i = 0; i < n; i++)
+    {
+        var pnl = ObjFromPanelID(panel, defPanelOrder[i]);
+
+        if (null != pnl)
+        {
+            var catNode = doc.createNode(1, "CATEGORY", "");
+            XML_SetAttribute(doc, catNode, "PANELID", defPanelOrder[i]);
+            docNode.insertBefore(catNode, docNode.childNodes[0]);
+        }
+    }
+
+    xmlObj.save(g_catConfig);
+
+    n = panel.length;
+
+    for (i = 0; i < n; i++)
+    {
+        var pnlObj = GetPanelObj(panel[i].panelID);
+
+        if (!(pnlObj.m_flags & PNL_SHELL))
+        {
+            if (null != pnlObj.m_engBucket)
+            {
+                xmlObj.load(g_pnlConfig + panel[i].panelID);
+                
+                doc = xmlObj.XMLDocument;
+                docNode = doc.documentElement;
+
+                XML_EmptyDocNode(docNode);
+
+                for (blockName in pnlObj.m_engBucket.m_blocks)
+                {
+                    var block = pnlObj.m_engBucket.GetEngineBlock(blockName);
+                    var nEngines = block.GetEngineCount();
+                    var blockNode = doc.createNode(1, "BLOCK", "");
+                    var j;
+
+                    XML_SetAttribute(doc, blockNode, "NAME", blockName);
+
+                    for (j = 0; j < nEngines; j++)
+                    {
+                        var engNode = doc.createNode(1, "ENGINE", "");
+                        XML_SetAttribute(doc, engNode, "ID", block.GetEngine(j).m_engineId);
+
+                        blockNode.insertBefore(engNode, blockNode.childNodes[0]);
+                    }
+                    docNode.insertBefore(blockNode, docNode.childNodes[0]);
+                }
+
+                xmlObj.save(g_pnlConfig + panel[i].panelID);
+            }
+        }
+    }
+}
+
+function EnableOptions(obj, bEnable)
+{
+    var kids = obj.children;
+    var n = kids.length;
+    var i;
+
+    for (i = 0; i < n; i++)
+    {
+        var kid = kids[i];
+
+        if (kid.children.length > 0)
+        {
+            EnableOptions(kid, bEnable);    //recurse
+        }
+
+        if ((kid.tagName == "INPUT") && (kid.type == "radio"))
+        {
+            kid.disabled = !bEnable;
+        }
+    }
+}
+
+function ShowPanel(panelID, optCount)
+{
+    InitializePanels();
+
+    var pnlObj = GetPanelObj(panelID);
+
+    //  Don't try to work with a null and don't try to add a disabled or already positioned option
+    if ((null != pnlObj) && (!(pnlObj.m_flags & (PNL_DISABLED | PNL_POSITIONED))))
+    {
+        var spanHost;
+
+        if (optCount < 5)
+        {
+            spanHost = spanTopFive;
+        }
+        else
+        {
+            if (showMeMore.style.display != "")
+            {
+                showMeMore.style.display = "";
+            }
+            spanHost = spanTheRest;
+        }
+
+        spanHost.insertBefore(GetOption(panelID));
+        pnlObj.m_flags |= PNL_POSITIONED;
+        optCount++;
+    }
+
+    return optCount;
+}
+
+function ObjFromPanelID(col, panelID)
+{
+    var n = col.length;
+    var i;
+
+    for (i = 0; i < n; i++)
+    {
+        if (col[i].panelID == panelID)
+            return col[i];
+    }
+
+    ODS(col[i].id + " " + panelID + " not found!");
+    return null;
+}
+
+
+function InitializePanels()
+{
+    if (g_catObjMap == null)
+    {
+        var i;
+        var nPanels;
+
+        g_catObjMap = new Array;
+
+        //  * Assign each panel basic data
+        //  * Tell each radio button about it's corresponding panel about each other
+        nPanels = panel.length;
+        for (i = 0; i < nPanels; i++)
+        {
+            g_catObjMap[panel[i].panelID] = new CPanel(panel[i]);
+        }
+    }
+}
+
+function win_OnLoad()
+{
+    var i;
+    var n;
+
+    window.onerror = win_OnError;
+
+    //  Build class prototypes
+
+    CPanel_Prototype();
+    CEngineBucket_Prototype();
+    CEngineBlock_Prototype();
+    CEngine_Prototype();
+
+    var optCount = 0;
+
+    //  Check if shell support is enabled
+    g_bEnableShellSearch = (null != saOC) ? saOC.ShellFeaturesEnabled : false;
+
+    if (g_bEnableShellSearch)
+    {
+        shOC = new ActiveXObject("Shell.Application");
+
+        if (null == shOC)
+        {
+            //  RUH-ROH!  Couldn't instantiate the shell OC, better to disable the feature
+            //  than to get script errors.
+
+            //  REVIEW:  Should we display a "friendly" error message?
+            g_bEnableShellSearch = false;
+        }
+    }
+
+    if (g_bEnableShellSearch)
+    {
+        var searches = saOC.Searches;
+
+        if ((!saOC.InWebFolder) && (null != searches))
+        {
+            var searchCount = searches.Count;
+
+            if (searchCount < 1)
+            {
+                var defSearch = searches.Default;
+                var topPanelID = "";
+                var panelMap = new Array(g_SRCID_SFileSearch, "Files", 
+                                         g_SRCID_SFindComputer, "Computer", 
+                                         g_SRCID_SFindPrinter, "Printer");
+
+                for (i = 0; i < panelMap.length; i += 2)
+                {
+                    if (defSearch.toLowerCase() == panelMap[i].toLowerCase())
+                    {
+                        topPanelID = panelMap[i + 1];
+                        break;
+                    }
+                }
+
+                if (topPanelID != "")
+                {
+                    optCount = ShowPanel(topPanelID, optCount);
+                }
+            }
+            else
+            {
+                for (i = 0; i < searcheCount; i++)
+                {
+                    var search = searches.Item(i);
+
+                    //  TODO: Need to generate search blocks and call ShowPanel()
+                }
+            }
+        }
+        InitializePanels();
+    }
+    else
+    {
+        InitializePanels();
+        for (i = 0; i < panel.length; i++)
+        {
+            var pnlObj = GetPanelObj(panel[i].panelID);
+
+            if (pnlObj.m_flags & PNL_SHELL)
+            {
+                pnlObj.m_flags |= PNL_DISABLED;
+            }
+        }
+    }
+
+    xmlObj.load(g_catConfig);
+
+    //  First time initialization.
+
+    if (xmlObj.XMLDocument.documentElement.childNodes.length < 1)
+    {
+        n = panel.length;
+
+        for (i = 0; i < n; i++)
+        {
+            GetPanelObj(panel[i].panelID).InitializeDefaults();
+        }
+
+        PersistSettings();
+    
+        //  Reload, since we have no idea what's currently loaded.
+        xmlObj.load(g_catConfig);
+    }
+
+    var doc = xmlObj.XMLDocument;
+    var docNode = doc.documentElement;
+
+    n = docNode.childNodes.length;
+
+    for (i = 0; i < n; i++)
+    {
+        optCount = ShowPanel(XML_GetAttribute(docNode.childNodes.item(i), "PANELID"), optCount);
+    }
+
+    EnableOptions(spanTopFive, true);
+
+    spanLoading.style.display = "none";
+    spanOptions.style.display = "";
+
+    var defPanelID = spanTopFive.children[0].panelID;
+    GetRadioButton(defPanelID).click();
+    GetPanelObj(defPanelID).SetDefFocus();
+
+    //document.onkeypress = doc_OnKeyPress;
+}
+
+function customize()
+{
+    window.open("customize.htm", "_main");
+}
+
+function doc_OnKeyPress()
+{
+    if ((event.keyCode == 13) && (event.srcElement.tagName == "INPUT") && (event.srcElement.type == "button"))
+    {
+        OnEnter();
+    }
+}
+
+function win_OnError(message, url, line)
+{
+    //  This is displayed when a script error occurs
+    var L_ScriptErrMsg_ErrorMessage = "An error has occured on this page.";
+    var L_ScriptErrLine_Text = "Line: ";
+    var L_ScriptErrURL_Text = "URL: ";
+
+    var str = L_ScriptErrMsg_ErrorMessage + "\n\n"
+            + L_ScriptErrLine_Text + line + "\n"
+            + L_ScriptErrURL_Text + url + "\n\n"
+            + message;
+
+    ODS(str);
+    return true;
+}
+
+function XML_EmptyDocNode(docNode)
+{
+    var n = docNode.childNodes.length;
+    var i;
+
+    for (i = 0; i < n; i++)
+    {
+        docNode.removeChild(docNode.childNodes.item(0))
+    }
+}
+
+function XML_SetAttribute(doc, node, name, value)
+{
+    var attr = doc.createNode(2, name, "");
+
+    attr.nodeValue = value;
+    node.attributes.setNamedItem(attr);
+}
+
+function XML_GetAttribute(node, name)
+{
+    var attr = node.attributes.getNamedItem(name);
+
+    if (null != attr)
+    {
+        return attr.nodeValue;
+    }
+    else
+    {
+        return "";
+    }
+}
+
+function OnEnter()
+{
+    //  Check for null in case anxious user hits enter before we've inited.
+    if (null != g_displayPanel)
+    {
+        GetPanelObj(g_displayPanel.panelID).OnEnter();
+    }
+}
+
+function NewSearch()
+{
+    paneAssistant.style.display = "";
+    paneResults.style.display = "none";
+    iframeResults.location.href = "about:blank";
+    document.body.style.overflow = "auto";
+}
+
+function opt_OnClick(panelID)
+{
+    if (null != g_displayPanel)
+    {
+        GetPanelObj(g_displayPanel.panelID).Show(false);
+    }
+
+    //  Check for null in case a user clicks on an option 
+    //  before onLoad has fired.
+
+    var pnlObj = GetPanelObj(panelID);
+
+    if (null != pnlObj)
+    {
+        g_displayPanel = GetPanel(panelID);
+
+        pnlObj.Show(true);
+    }
+}
+
+function itemIsVisible(item)
+{
+    var curItem = item;
+    
+    while (curItem.style.display != "none")
+    {
+        curItem = curItem.parentElement;
+        
+        if (null == curItem)
+        {
+            return true;
+        } 
+    }
+    return false;
+}
+
+function showMore()
+{
+    EnableOptions(spanTheRest, true);
+    showMeMore.style.display = "none";
+    spanTheRest.style.display = "";
+}
+
+function spewChildren(elem)
+{
+    var s = elem.name + " contains\n";
+    var i;
+    var n = elem.children.length;
+
+    for (i = 0; i < n; i++)
+    {
+        s += "name="+ elem.children[i].name + "tag="+elem.children[i].tagName +"\n";
+    }
+    ODS(s);
+}
+
+function spewCollection(coll)
+{
+    var s = coll.name + " "
+
+    for (x in coll)
+    {
+        s += x + " ";
+    }
+
+    ODS(s);
+}
+
+var g_Dbg = "";
+
+function Debug()
+{
+    var s = prompt('Debugger:', g_Dbg);
+    if ((s != "") && (s != "undefined") && (s != null))
+    {
+        g_Dbg = s;
+        ODS(eval(g_Dbg));
+    }
+}
+
+function ODS(s)
+{
+    alert(s);
+}
+
+</script>
+
+<script defer for=saOC event="OnNextMenuSelect(idItem)">
+    GetPanelObj(g_srchPanel.panelID).RunEngineSearch(idItem);
+</script>
+
+<body bgcolor=window text=windowtext scroll=no style="margin:0px;overflow:auto" onload="return win_OnLoad()">
+
+<basefont id=idBaseFont face="MS Shell Dlg">
+
+<!-- Search Assistant OC -->
+<span style="display:none">
+<object id=saOC CLASSID='clsid:B45FF030-4447-11D2-85DE-00C04FA35C89' HEIGHT=0 width=0></object>
+<input type=hidden id=xmlObj style="behavior:url(#_IE_)" class=userData>
+</span>
+
+<!-- Search results pane -->
+<div id=paneResults style="display:none;margin:0px">
+<iframe id="iframeResults" width="100%" height="100%" style="position:relative;top:0;left:0;margin:0px" src="about:blank">
+</iframe>
+</div>
+
+<!-- Options and search specific panels pane -->
+<div id=paneAssistant style="padding-left:9px;padding-right:9px;padding-top:6px;width:100%">
+    <div id=id0000>
+        <span>
+            <span id=spanLoading>
+                Loading Search Settings...
+            </span>
+            <span id=spanOptions style="display:none">
+                <nobr id=idChooseCategory>Choose a category for your search:</nobr>
+                <ul class="indentRadio">
+                    <span id=spanTopFive>
+                    </span>
+                    <div id=showMeMore style="display:none;text-align:'right'">
+                        <a href="javascript:showMore();" title="Show more search categories">more...</a>
+                    </div>
+                    <span id=spanTheRest style="display:none">
+                    </span>
+
+                    <span id=spanTheWell style="display:none">
+                        <!-- Web searches -->
+                        <span id=option panelID=Web lbl=lWebPage>
+                            <nobr>
+                                <input panelID=Web type=radio name=rbSearch disabled=true id=optWeb accesskey=w onclick="opt_OnClick(this.panelID)">
+                                <label id=lWebPage for=optWeb>Find a <u>W</u>eb page</label> 
+                            </nobr>
+                            <br>
+                        </span>
+                        <span id=option panelID=Pers lbl=lPersonal>
+                            <nobr>
+                                <input panelID=Pers type=radio name=rbSearch disabled=true id=optPers accesskey=a onclick="opt_OnClick(this.panelID)">
+                                <label id=lPersonal for=optPers>Find a Person's <u>A</u>ddress</label> 
+                            </nobr>
+                            <br>
+                        </span>
+                        <span id=option panelID=Co lbl=lCompany>
+                            <nobr>
+                                <input panelID=Co type=radio name=rbSearch disabled=true id=optCo accesskey=c onclick="opt_OnClick(this.panelID)">
+                                <label id=lCompany for=optCo>Find a <u>C</u>ompany/organization</label>     
+                            </nobr>
+                            <br>
+                        </span>
+                        <span id=option panelID=Enc lbl=lEncyclopedia>
+                            <nobr>
+                                <input panelID=Enc type=radio name=rbSearch disabled=true id=optEnc accesskey=e onclick="opt_OnClick(this.panelID)">
+                                <label id=lEncyclopedia for=optEnc>Find in <u>E</u>ncyclopedia</label> 
+                            </nobr>
+                            <br>
+                        </span>
+                        <span id=option panelID=Map lbl=lMap>
+                            <nobr>
+                                <input panelID=Map type=radio name=rbSearch disabled=true id=optMap accesskey=m onclick="opt_OnClick(this.panelID)">
+                                <label id=lMap for=optMap>Find a <u>M</u>ap</label> 
+                            </nobr>
+                            <br>
+                        </span>
+                        <span id=option panelID=News lbl=lNews>
+                            <nobr>
+                                <input panelID=News type=radio name=rbSearch disabled=true id=optNews accesskey=n onclick="opt_OnClick(this.panelID)">
+                                <label id=lNews for=optNews>Find in <u>N</u>ewsgroups</label> 
+                            </nobr>
+                            <br>
+                        </span>
+                        <span id=option panelID=Prev>
+                            <nobr>
+                                <input panelID=Prev type=radio name=rbSearch disabled=true id=optPrev accesskey=p onclick="opt_OnClick(this.panelID)">
+                                <label id=lPrevious for=optPrev><U>P</U>revious Searches</label>
+                            </nobr>
+                            <br>
+                        </span>
+
+                        <!-- Shell searches -->
+
+                        <span id=option panelID=Files lbl=lFiles>
+                            <nobr>
+                                <input panelID=Files type=radio name=rbSearch disabled=true id=optFiles accesskey=z onclick="opt_OnClick(this.panelID)">
+                                <label id=lFiles for=optFiles>Find Files and Folders</label> 
+                            </nobr>
+                            <br>
+                        </span>
+                        <span id=option panelID=Printer lbl=lPrinter>
+                            <nobr>
+                                <input panelID=Printer type=radio name=rbSearch disabled=true id=optPrinter accesskey=z onclick="opt_OnClick(this.panelID)">
+                                <label id=lPrinter for=optPrinter>Find a Printer</label> 
+                            </nobr>
+                            <br>
+                        </span>
+                        <span id=option panelID=Computer lbl=lComputer>
+                            <nobr>
+                                <input panelID=Computer type=radio name=rbSearch disabled=true id=optComputer accesskey=z onclick="opt_OnClick(this.panelID)">
+                                <label id=lComputer for=optComputer>Find a Computer</label> 
+                            </nobr>
+                            <br>
+                        </span>
+
+                        <span id=option panelID=Custom lbl=lCustom>
+                            <nobr>
+                                <input panelID=Custom type=radio name=rbSearch disabled=true id=optCustom onclick="opt_OnClick(this.panelID)">
+                                <label id=lCustom for=optCustom>TBD</label> 
+                            </nobr>
+                            <br>
+                        </span>
+
+                    </span>
+                </ul>
+            </span>
+        </span>
+    </div>
+
+    <!-- specific search option panels -->
+
+    <!-- Web searches -->
+
+    <!-- Standard Web Query -->
+
+    <script defer>
+
+    //  "virtual" CPanel.InitProc
+    function WebInitProc()
+    {
+        if (this.CreateEngineBucket())
+        {
+            var block = this.m_engBucket.NewEngineBlock("default");
+            block.m_prefCount = 5;
+            block.NewEngine("altavista","AltaVista", ENG_IN_PANE, "http://www.altavista.com/cgi-bin/query?pg=n200&kl=XX&q=**SearchText**");
+            block.NewEngine("infoseek", "InfoSeek", ENG_IN_PANE, "http://www.infoseek.com/Titles?qt=**SearchText**&col=WW%2Ccat_RES&sv=M6&lk=noframes&nh=10&ud9=IE5");
+            block.NewEngine("hotbot", "HotBot", ENG_IN_PANE, "http://www.hotbot.com/msiesearchpanel/msResult.html?MT=**SearchText**&DV=0&RG=all&_v=2&OPs=MDRTP");
+            block.NewEngine("lycos", "Lycos", ENG_IN_PANE, "http://www.lycos.com/cgi-bin/pursuit?mtemp=msie&results=ie4&etemp=error_msie&query=**SearchText**&matchmode=and");
+            block.NewEngine("msn", "MSN Web Search", ENG_IN_PANE, "http://search.msn.com/spbasic.htm?MT=**SearchText**");
+            block.NewEngine("excite", "Excite", ENG_IN_PANE, "http://search.excite.com/search.gw?trace=1&look=ie40&search=**SearchText**");
+            block.NewEngine("aolnetfind", "AOL NetFind", ENG_IN_PANE, "http://netfind.aol.com/search.gw?c=web&lk=aolienew_us&search=**SearchText**");
+            block.NewEngine("yahoo", "Yahoo!", ENG_IN_PANE, "http://search.yahoo.com/search?o=1&m=i&a=fd&p=**SearchText**");
+            block.NewEngine("euroseek", "Euroseek", ENG_IN_PANE, "http://www.euroseek.net/query?iflang=uk&style=msie&query=**SearchText**&domain=world&lang=world");
+            
+            this.m_engBucket.UnPersistOrder();
+            this.ExtractFields();
+        }
+    }
+
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" panelID=Web 
+        srchflds=txtWebSearch InitProc=WebInitProc>
+        <form id=formWeb onsubmit="OnEnter();return false;">
+            Find a web page containing:<br>
+            <input class=inputs type=text name=SearchText id=txtWebSearch><br>
+            <table width=100% cellspacing=0 cellpadding=0 class=searchTable>
+                <tr>
+                    <td>
+                        <div class=AdSpace id=adWeb></div>
+                    </td>
+                    <td class=rightButton>
+                        <input type=submit id=btnWebSearch value=Search title="Start Searching">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <!-- Search for personal e-mail/snail mail addresses  -->
+
+    <script defer>
+
+    //  "virtual" CPanel.InitProc
+    function PersInitProc()
+    {
+        if (this.CreateEngineBucket())
+        {
+            block = this.m_engBucket.NewEngineBlock("email");
+            block.NewEngine("infospace", "InfoSpace", ENG_IN_PANE, "http://in-110.infospace.com/_1_211777544__info.iebar/Email?leftbar=1&QN=**LastName**&QF=**FirstName**&QC=**City**&QS=**State**&QO=");
+            block.NewEngine("bigfoot", "Bigfoot", ENG_IN_PANE, "http://search.bigfoot.com/search?FormName=SearchBar&locale=en&action=e&SearchName=**FirstName**%20**LastName**");
+
+            block = this.m_engBucket.NewEngineBlock("smail");
+            block.NewEngine("infospace", "InfoSpace", ENG_IN_PANE, "http://in-128.infospace.com/_1_66025228__info.iebar/kevdb-g2?KDB=res-us&OTMPL=%2Fres%2Fr1.html&QTAPPEND=QN%2CQF&QFM=N&QK=5&QN=**LastName**&QF=**FirstName**&QC=**City**&QS=**State**");
+            block.NewEngine("bigfoot", "Bigfoot", ENG_IN_PANE, "http://search.bigfoot.com/search?FormName=SearchBar&locale=en&Action=W&SearchName=**FirstName**%20**LastName**");
+
+            this.m_curBlock = "smail";
+
+            this.m_engBucket.UnPersistOrder();
+            this.ExtractFields();
+        }
+    }
+
+    function PersType_OnChange(val)
+    {
+        var pnlObj = GetPanelObj("Pers");
+        
+        pnlObj.m_curBlock = val;
+        pnlObj.SetAd();
+    }
+    
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" panelID=Pers
+        srchflds="txtPersFName,txtPersLName,txtPersCity,txtPersState" InitProc=PersInitProc>
+
+        <form id=formPers onsubmit="OnEnter();return false;">
+            <span id=idPersSearchFor>Search For:</span><br>
+            <select id=persSubType onchange=PersType_OnChange(this.value)>
+                <option id=idOptSmail value="smail" selected>mailing address</option>
+                <option id=idOptEmail value="email">e-mail address</option>
+            </select><br>
+            <id id=idPersFirstName>First Name:</id><br>
+            <input class=inputs name=FirstName id=txtPersFName><br>
+            <id id=idPersLastName>Last Name:</id><br>
+            <input class=inputs name=LastName id=txtPersLName>
+            <table cellspacing=0 cellpadding=0 width=100%>
+                <tr>
+                    <td id=idPersCity>City:</td>
+                    <td width=7 id=id0002>&nbsp;</td>
+                    <td width=25 id=idPersState>State/Province:</td>
+                </tr>
+                <tr>
+                    <td><input class=inputs name=City id=txtPersCity></td>
+                    <td></td>
+                    <td><input class=inputs size=2 maxlength=2 name=State id=txtPersState></td>
+                </tr>
+            </table>
+            <table width=100% cellspacing=0 cellpadding=0 class=searchTable>
+                <tr>
+                    <td>
+                        <div class=AdSpace id=adPers></div>
+                    </td>
+                    <td class=rightButton>
+                        <input type=submit id=btnSearchPers value=Search title="Start Searching">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <!-- Search for companies -->
+
+    <script defer>
+
+    //  "virtual" CPanel.InitProc
+    function CoInitProc()
+    {
+        if (this.CreateEngineBucket())
+        {
+            block = this.m_engBucket.NewEngineBlock("default");
+            block.NewEngine("infoseek", "InfoSeek Company", 0, "http://www.infoseek.com/Titles?qt=**SearchText**&col=HV%2Ckt_A%2Cak_corpdir&sv=IS&lk=noframes&nh=10&ud9=IE5");
+
+            this.m_engBucket.UnPersistOrder();
+            this.ExtractFields();
+        }
+    }
+
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" panelID=Co
+        srchflds=txtCoSearch InitProc=CoInitProc>
+
+        <form id=formCo onsubmit="OnEnter();return false;">
+            <id id=idCoCompany>Find company information:</id><br>
+            <input class=inputs name=SearchText id=txtCoSearch>
+            <table width=100% cellspacing=0 cellpadding=0 class=searchTable>
+                <tr>
+                    <td>
+                        <div class=AdSpace id=adCo></div>
+                    </td>
+                    <td class=rightButton>
+                        <input type=submit id="btnSearchCo" value=Search title="Start Searching">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <!-- Search encyclopedias -->
+
+    <script defer>
+
+    //  "virtual" CPanel.InitProc
+    function EncInitProc()
+    {
+        if (this.CreateEngineBucket())
+        {
+            block = this.m_engBucket.NewEngineBlock("default");
+            block.NewEngine("encarta", "Encarta", ENG_IN_PANE, "http://find.msn.com/encarta/iesearchresults.asp?ix=concise1&mh=&so=ir_title&pp=1&o1=eq&q1=**SearchText**&c1=ir_title&x=11&y=12");
+
+            this.m_engBucket.UnPersistOrder();
+            this.ExtractFields();
+        }
+    }
+
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" panelID=Enc
+        srchflds=txtEncSearch InitProc=EncInitProc>
+
+        <form id=formEnc onsubmit="OnEnter();return false;">
+            <id id=EncEncylopediaFind>Find encyclopedia articles on:</id><br>
+            <input class=inputs name=SearchText id=txtEncSearch>
+            <table width=100% cellspacing=0 cellpadding=0 class=searchTable>
+                <tr>
+                    <td>
+                        <div class=AdSpace id=adEnc></div>
+                    </td>
+                    <td class=rightButton>
+                        <input type=submit id=btnSearchEnc value=Search title="Start Searching">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <!-- Search Maps -->
+
+    <script defer>
+
+    //  "virtual" CPanel.InitProc
+    function MapInitProc()
+    {
+        if (this.CreateEngineBucket())
+        {
+            block = this.m_engBucket.NewEngineBlock("address");
+            block.NewEngine("expedia", "Expedia", 0, "http://www.expediamaps.com/results.asp?Street=**StreetAddress**&City=**City**&State=**State**&Zip=**ZipCode**");
+
+            block = this.m_engBucket.NewEngineBlock("company");
+            block.NewEngine("expedia", "Expedia", 0, "http://www.expediamaps.com/results.asp?FindBy=N&Name=**CompanyName**&City=**City**&State=**State**&Zip=**ZipCode**");
+
+            block = this.m_engBucket.NewEngineBlock("place");
+            block.NewEngine("expedia", "Expedia", 0, "http://www.expediamaps.com/results.asp?Place=**PlaceName**");
+
+            this.m_engBucket.UnPersistOrder();
+            this.ExtractFields();
+
+            this.m_curBlock = "address";
+        }       
+    }
+
+    function MapType_OnChange(val)
+    {
+        var pnlObj = GetPanelObj("Map");
+        
+        pnlObj.m_curBlock = val;
+        pnlObj.SetAd();
+
+        switch (val)
+        {
+            case "address":
+                spanMapAddress.style.display = "";
+                spanMapCompany.style.display = "none";
+                spanMapPlace.style.display = "none";
+                break;
+
+            case "company":
+                spanMapAddress.style.display = "";
+                spanMapCompany.style.display = "";
+                spanMapPlace.style.display = "none";
+                break;
+
+            case "place":
+                spanMapAddress.style.display = "none";
+                spanMapCompany.style.display = "none";
+                spanMapPlace.style.display = "";
+                break;
+        }
+    }
+
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" panelID=Map
+        srchflds="txtMapCompany,txtMapAddress,txtMapCity,txtMapState,txtMapZip,txtMapPlace" InitProc=MapInitProc>
+
+        <form id=formMap onsubmit="OnEnter();return false;">
+            <id id=idMapSearchFor>Search For:</id><br>
+            <select id=mapSubType onchange="MapType_OnChange(this.value)">
+                <option value="address" id=idOptMapAddress selected>Address</option>
+                <option value="company" id=idOptMapCompany>Company</option>
+                <option value="place" id=idOptMapPlace>Place or landmark</option>
+            </select><br>
+            <span id=spanMapCompany style="display:none">
+                <id id=idMapCompany>This Company Name:</id><br>
+                <input class=inputs name=CompanyName id=txtMapCompany><br>
+            </span>
+
+            <span id=spanMapAddress>
+                <id id=idMapAddress>This Address:</id><br>
+                <input class=inputs name=StreetAddress id=txtMapAddress><br>
+                <id id=idMapCity>City:</id><br>
+                <input class=inputs name=City id=txtMapCity><br>
+                <span>
+                <table cellspacing=0 cellpadding=0 width=100% id="maptable">
+                    <tr>
+                        <td id=idMapState>State/Province:</td>
+                        <td width=7 id=id0003>&nbsp;</td>
+                        <td width=50 id=idMapZip>Zip/Postal Code:</td>
+                    </tr>
+                    <tr>
+                        <td><input class=inputs id=txtMapState name=State></td>
+                        <td></td>
+                        <td><input class=inputs size=7 maxlength=11 name=ZipCode id=txtMapZip></td>
+                    </tr>     
+                </table>
+                </span>
+            </span>
+
+            <span id=spanMapPlace style="display:none">
+                <id id=idMapPlace>This place or landmark:</id><br>
+                <input class=inputs name=PlaceName id=txtMapPlace><br>
+            </span>
+
+            <table width=100% cellspacing=0 cellpadding=0 class=searchTable>
+                <tr>
+                    <td>
+                        <div class=AdSpace id=adMap></div>
+                    </td>
+                    <td class=rightButton>
+                        <input type=submit id=btnSearchMap value=Search title="Start Searching">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <!-- Newsgroup search -->
+
+    <script defer>
+
+    //  "virtual" CPanel.InitProc
+    function NewsInitProc()
+    {
+        if (this.CreateEngineBucket())
+        {
+            var block = this.m_engBucket.NewEngineBlock("default");
+            block.NewEngine("dejanews","Dejanews", ENG_IN_PANE, "http://www.dejanews.com/=mssb/dnquery.xp?defaultOp=AND&svcclass=dncurrent&maxhits=10&format=terse2&ST=QS&site=mssb&QRY=**SearchText**");
+
+            this.m_engBucket.UnPersistOrder();
+            this.ExtractFields();
+        }
+    }
+
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" panelID=News
+        srchflds=txtNewsSearch InitProc=NewsInitProc>
+
+        <form id=formNews onsubmit="OnEnter();return false;">
+            <id id=idNewsFind>Find a Newsgroup containing:</id><br>
+            <input style="width:100%" type=text name=SearchText id=txtNewsSearch class=inputs><br>
+            <table width=100% cellspacing=0 cellpadding=0 class=searchTable>
+                <tr>
+                    <td>
+                        <div class=AdSpace id=adNews></div>
+                    </td>
+                    <td class=rightButton>
+                        <input type=submit id=btnNewsSearch value=Search title="Start Searching">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <!-- Run previous searches -->
+
+    <script defer>
+    
+    //  "virtual" CPanel.InitProc
+    function PrevInitProc()
+    {
+        this.OnEnter = ClearPreviousSearches;
+
+        xmlObj.load(g_prevSearchStore);
+    
+        var html = "";
+        var doc = xmlObj.XMLDocument;           
+        var docNode = doc.documentElement;
+        var nPrevSearches = docNode.childNodes.length;
+        var i, j;
+
+        if (nPrevSearches > 0)
+        {
+            for (i = 0; i < nPrevSearches; i++)
+            {
+                var searchNode = docNode.childNodes.item(i);
+
+                if (searchNode.nodeName == "PREVIOUSSEARCH")
+                {
+                    var nFields = searchNode.childNodes.length;
+                    var names = "";
+                    var values = "";
+                    var nameValuePairs = "";
+                    var namesAdded = 0;
+                    var valsAdded = 0;
+
+                    for (j = 0; j < nFields; j++)
+                    {
+                        var nvnode = searchNode.childNodes.item(j);
+                        if (nvnode.nodeName == "SEARCHFIELD")
+                        {
+                            var name = XML_GetAttribute(nvnode, "NAME");
+                            var value = XML_GetAttribute(nvnode, "VALUE")
+
+                            if (name != "")
+                            {
+                                if (namesAdded > 0)
+                                {
+                                    names += ",";
+                                }
+
+                                namesAdded++;
+                                names += name;
+
+                                if (value != "")
+                                {
+                                    if (valsAdded > 0)
+                                    {
+                                        values += ",";
+                                    }
+                                    valsAdded++;
+                                    values += value;
+                                    value = "\"" + escape(value) + "\"";
+                                }
+                                else
+                                {
+                                    value = "\"\"";
+                                }
+
+                                nameValuePairs += " " + name + "=" + value;
+                            }
+                        }
+                    }
+
+                    var panelID = XML_GetAttribute(searchNode, "PANELID");
+                    var block = XML_GetAttribute(searchNode, "BLOCK");
+
+                    var opt = GetOption(panelID);
+
+                    if ((null != opt) && (valsAdded > 0))
+                    {
+                        var lbl = eval(opt.lbl);
+                        if (lbl != null)
+                        {
+                            var toolTip = eval(lbl).innerText;
+
+                            var thisId = "prevSearch" + i;
+                            var itemHTML;
+                            itemHTML =  "<li class=indent id=" + thisId + " " + "panelID=" + panelID + " block=" + block;
+                            itemHTML += " names=" + names + nameValuePairs + "><a href='javascript:RunPreviousSearch(" + thisId + ")' title=\"" + toolTip + "\">" + values + "</a><br>"
+
+                            html += itemHTML;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (html != "")
+        {
+            btnClearPrevSearches.disabled = false;
+        }
+        else
+        {
+            btnClearPrevSearches.disabled = true;
+            html = GetEmptyPrevSearchText();
+        }
+
+        spanSearchPrev.innerHTML = html;
+    }
+
+    function GetEmptyPrevSearchText()
+    {
+        var L_EmptyPrevSearch_Text = "There are no saved searches";
+        return "<span style='font-weight:bold;'>" + L_EmptyPrevSearch_Text + "</span>"
+    }
+
+    function RunPreviousSearch(item)
+    {
+        var pnlObj = GetPanelObj(item.panelID);
+
+        if (null != pnlObj)
+        {
+            var names = item.names.split(",");
+            var values = new Array();
+            var i;
+            var n = names.length;
+
+            for (i = 0; i < n; i++)
+            {
+                var val = eval("item." + names[i]);
+
+                values[i] = val != "" ? unescape(val) : "";
+            }
+            pnlObj.InitProc();
+            pnlObj.SetNameValuePairs(names, values);
+            pnlObj.SetBlock(item.block);
+            pnlObj.SetupNextMenu();
+            pnlObj.RunEngineSearch(0);
+        }
+    }
+    
+    function ClearPreviousSearches()
+    {
+        xmlObj.load(g_prevSearchStore);
+
+        var docNode = xmlObj.XMLDocument.documentElement;
+        var n = docNode.childNodes.length;
+
+        for (i = 0; i < n; i++)
+        {
+            docNode.removeChild(docNode.childNodes.item(0));
+        }
+
+        xmlObj.save(g_prevSearchStore);
+
+        btnClearPrevSearches.disabled = true;
+        spanSearchPrev.innerHTML = GetEmptyPrevSearchText();
+    }
+
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" InitProc=PrevInitProc panelID=Prev> 
+
+        <id id=idPrevSearches>You've run the following searches:</id><br>
+        <br>
+        <ul>
+            <span ID=spanSearchPrev>
+
+            </span>
+        </ul>
+        <table width=100% cellspacing=0 cellpadding=0 class=searchTable>
+            <tr>
+                <td class=rightButton>
+                    <input type=button id=idBtnClearSearches onclick=OnEnter() value="Clear" title="Clear previous searches" name=btnClearPrevSearches></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Shell searches -->
+    <object id=DocFindOC height=0 width=0 classid="clsid:B005E690-678D-11d1-B758-00A0C90564FE"></object>
+    <object id=ShellOC height=0 width=0 classid="clsid:13709620-C279-11CE-A49E-444553540000"></object>
+
+    <script defer>
+    
+    //  Shell search helpers
+    var g_fShellSearchInProgress = false;
+    var g_btnHandler = null;
+        
+    </script>
+
+    <script language="javascript" for="DocFindOC" event="SearchStart">
+        g_fShellSearchInProgress = true;
+        g_btnHandler();
+    </script>
+
+    <script language="javascript" for="DocFindOC" event="SearchAbort">
+        g_fShellSearchInProgress = false;
+        g_btnHandler();
+    </script>
+
+    <script language="javascript" for="DocFindOC" event="SearchComplete">
+        g_fShellSearchInProgress = false;
+        g_btnHandler();
+    </script>
+
+    <!-- Files and Folders -->
+
+    <script defer>
+
+    function FilesInitProc()
+    {
+        this.OnEnter = FindFilesAndFolders;
+    }
+
+    function FilesBtnHandler()
+    {
+        if (g_fShellSearchInProgress)
+        {
+            formFiles.btnFilesStartSearch.disabled = true;
+        }
+        else
+        {
+            formFiles.btnFilesStartSearch.disabled = false;
+        }
+
+        formFiles.btnFilesStopSearch.disabled = !formFiles.btnFilesStartSearch.disabled;
+    }
+
+    function FindFilesAndFolders()
+    {
+        g_btnHandler = FilesBtnHandler;
+
+        if (!g_fShellSearchInProgress)
+        {
+            var searchFor = formFiles.txtFilesSearch.value;
+            var lookIn = formFiles.txtFilesLookIn.String;
+        
+            if (searchFor != "")
+            {
+                DocFindOC.SearchFor(0);
+                DocFindOC.AddConstraint("SearchFor", searchFor);
+                DocFindOC.AddConstraint("LookIn", lookIn);
+                DocFindOC.Execute();
+            }
+        }
+        else
+        {
+            DocFindOC.Execute();
+        }
+    }
+
+    function FilesAdvanced()
+    {
+        //  show files and folders desk band:
+        var bShow = true ;
+        shOC.ShowBrowserBar("{C4EE31F3-4768-11D2-BE5C-00A0C9A83DA1}", bShow ) ;
+    }
+    
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" panelID=Files flags="PNL_SHELL"
+        srchflds="txtFilesSearch,txtFilesLookIn" InitProc=FilesInitProc>
+
+        <form id=formFiles onsubmit="FindFilesAndFolders();return false;">
+            <id id=idFilesSearch>Search For Files or Folders:</id><br>
+            <input class=text name=SearchText size=26 id=txtFilesSearch><br>
+            <id id=idFilesLookIn>Look In:</id><br>
+            <object classid="clsid:71D90AE1-A4BF-11d1-923E-006097DF5BD4" WIDTH="180px" HEIGHT="25px" id=txtFilesLookIn style="position:relative; left:-1pt">
+                <param name="AutoComplete In File System" value="1">
+                <param name="Enable Edit" value="1">
+                <param name="Persist String" value="Last Search Folder">
+            </object><br>
+            <input type=submit id=btnFilesStartSearch value=Search title="Start Searching">
+            <input type=submit id=btnFilesStopSearch value=Stop title="Begin a new search" disabled=true>
+            <br>
+            <id id=idFilesAdvanced>You can do a more <a href="javascript:FilesAdvanced()">detailed search</a> by file contents, date, type, or size.</id>
+        </form>
+    </div>
+
+    <!-- Printers -->
+
+    <script defer>
+
+    function PrinterInitProc()
+    {
+        this.OnEnter = FindPrinter;
+    }
+
+    function FindPrinter()
+    {
+        ShellOC.FindPrinter(formPrinter.txtPrinterName.value, formPrinter.txtPrinterLoc.value, formPrinter.txtPrinterModel.value);
+    }
+
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" panelID=Printer flags="PNL_SHELL" 
+        srchflds="txtPrinterName,txtPrinterLoc,txtPrinterModel" InitProc=PrinterInitProc>
+
+        <form id=formPrinter onsubmit="FindPrinter();return false;">
+            <id id=idPrinterName>Name:</id><br>
+            <input type=text name=PrinterName id=txtPrinterName class=inputs><br>
+            <id id=idPrinterLocation>Location:</id><br>
+            <input type=text name=PrinterLoc id=txtPrinterLoc class=inputs><br>
+            <id id=idPrinterModel>Model:</id><br>
+            <input type=text name=PrinterModel id=txtPrinterModel class=inputs><br>
+            <input type=submit id=btnPrinterStartSearch value=Search title="Start Searching">
+        </form>
+    </div>
+
+    <!-- Computers -->
+
+    <script defer>
+
+    function ComputerInitProc()
+    {
+        this.OnEnter = FindComputer;
+    }
+
+    function ComputerBtnHandler()
+    {
+        if (g_fShellSearchInProgress)
+        {
+            formComputer.btnComputerStartSearch.disabled = true;
+        }
+        else
+        {
+            formComputer.btnComputerStartSearch.disabled = false;
+        }
+
+        formComputer.btnComputerStopSearch.disabled = !formComputer.btnComputerStartSearch.disabled;
+    }
+
+    function FindComputer()
+    {
+        g_btnHandler = ComputerBtnHandler;
+        
+        if (!g_fShellSearchInProgress)       
+        {
+            var computerName = formComputer.txtComputerName.value;
+        
+            if (computerName != "")
+            {
+                DocFindOC.SearchFor(1);
+                DocFindOC.AddConstraint("SearchFor", computerName);
+                DocFindOC.Execute();
+            }
+        }
+        else
+        {
+            DocFindOC.Execute();
+        }
+    }
+
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" panelID=Computer flags="PNL_SHELL"
+        srchflds="txtComputerName" InitProc=FindComputer>
+
+        <form id=formComputer onsubmit="FindComputer();return false;">
+            <id id=idComputerSearch>Search for:</id><br>
+            <input type=text name=ComputerName id=txtComputerName class=inputs><br>
+            <input type=submit id=btnComputerStartSearch value=Search title="Start Searching">
+            <input type=submit id=btnComputerStopSearch value=Stop title="Begin a new search" disabled=true>
+        </form>
+    </div>
+
+    <!-- Custom Folder -->
+
+    <script defer>
+
+    </script>
+
+    <div class=searchPanel id=panel style="display:none" panelID=Custom flags="PNL_SHELL">
+        <form id=formCustom onsubmit="return false;">
+            <id id=idCustomSearch>Custom search goes here!</id>
+            <iframe id="iframeCustom" src="about:blank"></iframe>
+        </form>
+    </div>
+</div>
+
+</basefont>
+
+</body>
+
+</html>

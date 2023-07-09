@@ -1,0 +1,17 @@
+
+    setjmp
+    longjmp
+    RtlCaptureContext
+    RtlRestoreContext
+    RtlCopyMemory
+    RtlLookupFunctionEntry
+    RtlVirtualUnwind
+    RtlUnwind2
+    __C_specific_handler
+    __jump_unwind
+    _RtlCheckStack
+    RtlDeleteFunctionTable
+    RtlAddFunctionTable
+    RtlGetFunctionTableListHead
+    RtlLookupFunctionEntry
+

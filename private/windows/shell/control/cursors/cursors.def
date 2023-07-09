@@ -1,0 +1,6 @@
+LIBRARY Cursors
+
+EXPORTS
+    CPlApplet
+    DllInitialize
+

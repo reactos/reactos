@@ -1,0 +1,13 @@
+// This file contains directives for how to order the functions.
+#include "jsproxy.fmap"
+
+libjsproxy.so.1
+{
+    global:
+	InternetInitializeAutoProxyDll;
+	InternetDeInitializeAutoProxyDll;
+	InternetGetProxyInfo;
+        _____jsproxy_initDLL;
+    local:
+	*;
+};

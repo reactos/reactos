@@ -1,0 +1,19 @@
+//
+// Version info.
+//
+#ifdef WINNT
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Multi Language Support DLL"
+#define VER_INTERNALNAME_STR        "MLANG"
+#define VER_ORIGINALFILENAME_STR    "MLANG.DLL"
+
+#define VER_OLESELFREGISTER
+
+#include <winver.h>
+#include <common.ver>

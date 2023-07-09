@@ -1,0 +1,99 @@
+#ifndef _EFORM_PDL_
+#define _EFORM_PDL_ 1
+
+#include "element.pdl"
+#include "domcoll.pdl"
+
+file eform.pdl
+
+import element.pdl
+import domcoll.pdl
+
+interface IHTMLFormElement guid:3050f1f7-98b5-11cf-bb82-00aa00bdce0b
+    refprop CFormElement:action
+    refprop CFormElement:dir
+    refprop CFormElement:encoding
+    refprop CFormElement:method
+    refprop CFormElement:elements
+    refprop CFormElement:target
+    refprop CFormElement:name
+    refprop CFormElement:onsubmit 
+    refprop CFormElement:onreset 
+
+    refmethod CFormElement:submit
+    refmethod CFormElement:reset
+
+    // collection properties and methods
+#define EXPAND_COLLECTION_REFS CFormElement
+#include "basecoll.pdl"
+
+interface IHTMLFormElement2 super:IDispatch guid:3050f4f6-98b5-11cf-bb82-00aa00bdce0b
+    refprop CFormElement:acceptCharset
+    refmethod  CFormElement:urns  
+
+/* New style element events w/ eventObject parameter: */
+event HTMLFormElementEvents2 super:HTMLElementEvents2 guid:3050f614-98b5-11cf-bb82-00aa00bdce0b
+    method VARIANT_BOOL onsubmit (in type:IHTMLEventObj* arg:pEvtObj)   cancelable \
+           dispid:DISPID_EVMETH_ONSUBMIT 
+    method VARIANT_BOOL onreset (in type:IHTMLEventObj* arg:pEvtObj)    cancelable \
+           dispid:DISPID_EVMETH_ONRESET
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLFormElementEvents super:HTMLElementEvents guid:3050f364-98b5-11cf-bb82-00aa00bdce0b
+    method VARIANT_BOOL onsubmit    cancelable      dispid:DISPID_EVMETH_ONSUBMIT ()
+    method VARIANT_BOOL onreset     cancelable      dispid:DISPID_EVMETH_ONRESET ()
+
+tearoff CFormElement interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID            mapto:GetDispID
+    tearmethod InvokeEx             mapto:ContextThunk_InvokeEx
+    tearmethod GetNextDispID        mapto:GetNextDispID
+    tearmethod GetNameSpaceParent   mapto:GetNameSpaceParent
+    tearmethod GetMemberName        mapto:GetMemberName
+
+tearoff CFormElement interface:IHTMLFormElement
+tearoff CFormElement interface:IHTMLFormElement2
+
+class CFormElement name:HTMLFormElement \
+        primaryinterface:IHTMLFormElement \
+        super:CElement \
+        events:HTMLFormElementEvents \
+        nonprimaryevents:HTMLFormElementEvents2 \
+        guid:3050f251-98b5-11cf-bb82-00aa00bdce0b \
+        mondoguid:3050f510-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLFormElement
+    implements IHTMLFormElement2
+
+    property action    atype:BSTR                  dispid:DISPID_FORM+1  type:CStr          dwFlags:0   \
+       get set caa bindable displaybind maxstrlen:pdlUrlLen
+    property encoding szAttribute:encType   atype:BSTR        dispid:DISPID_FORM+3  type:htmlEncoding  dwFlags:0   \
+       get set caa bindable displaybind default:htmlEncodingURL maxstrlen:pdlNoLimit
+    property method    atype:BSTR        dispid:DISPID_FORM+4  type:htmlMethod  dwFlags:0   \
+       get set caa bindable displaybind baseimplementation  maxstrlen:pdlToken
+    property elements  atype:IDispatch*  dispid:DISPID_FORM+5                   dwFlags:0   \
+      get  abstract 
+    property target    atype:BSTR        dispid:DISPID_FORM+6        type:CStr  dwFlags:0   \
+       get set caa bindable displaybind maxstrlen:pdlNoLimit
+    property name      atype:BSTR        dispid:STDPROPID_XOBJ_NAME  type:CStr              \
+      get set method:nameHelper baseimplementation bindable displaybind   maxstrlen:pdlNoLimit
+    property onsubmit    atype:VARIANT         dispid:DISPID_EVPROP_ONSUBMIT        type:code \
+       get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property onreset     atype:VARIANT         dispid:DISPID_EVPROP_ONRESET         type:code \
+       get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+
+    property dir atype:BSTR dispid:DISPID_A_DIR type:htmlDir dwFlags:0 \
+        caa get set bindable displaybind baseimplementation nopropdesc:nameonly \
+        default:htmlDirNotSet maxstrlen:pdlToken 
+
+    method HRESULT  submit          dispid:DISPID_FORM+9 ()
+    method HRESULT  reset           dispid:DISPID_FORM+10()
+
+    property acceptCharset szAttribute:accept-charset   atype:BSTR dispid:DISPID_FORM+11  type:CStr  dwFlags:0   \
+       get set caa bindable displaybind maxstrlen:pdlNoLimit
+
+//now include the collection Interface methods as part of this interface.
+#define EXPAND_COLLECTION_DEFNS
+#include "basecoll.pdl"
+
+#endif _EFORM_PDL_

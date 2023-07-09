@@ -1,0 +1,33 @@
+/********************************************************************/
+/*        SHELL.RCV                                                 */
+/*        Version control data generated from layouts.dat           */
+/********************************************************************/
+#ifdef FROSTING
+#define NO_FROSTING_VER
+#undef FROSTING
+#endif
+
+#if defined(NASH) && defined(OPK2)
+#if (VER_PRODUCTVERSION_BUILD < 1100)
+#undef OPK2
+#endif
+#endif // NASH && OPK2
+
+#include <version.h>
+
+#ifdef NO_FROSTING_VER
+#define FROSTING
+#endif
+
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Windows Shell library"
+#define VER_INTERNALNAME_STR		"SHELL"
+#define VER_LEGALCOPYRIGHT_YEARS	"1991-1995"
+#define VER_ORIGINALFILENAME_STR	"SHELL.DLL"
+
+
+
+#include <common.ver>
+

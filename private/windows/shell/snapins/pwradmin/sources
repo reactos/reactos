@@ -1,0 +1,36 @@
+MAJORCOMP=admin
+MINORCOMP=common
+
+TARGETNAME=pwradmin
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+DLLENTRY=_DllMainCRTStartup
+DLLBASE=0x52890000
+UMTYPE=windows
+C_DEFINES = -DUNICODE
+TARGETLIBS=\
+           $(BASEDIR)\public\sdk\lib\*\mmc.lib            \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+           $(BASEDIR)\public\sdk\lib\*\oleaut32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib          \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib           \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib          \
+
+SOURCES= dataobj.cpp  \
+         dialogs.cpp    \
+         pwradmin.cpp  \
+         snapin.cpp   \
+         util.cpp       \
+         pwradmin.rc
+
+USE_RTTI=1
+USE_ATL=1
+USE_MSVCRT=1
+
+PRECOMPILED_CXX=1
+PRECOMPILED_INCLUDE=main.h
+PRECOMPILED_PCH=pch.pch
+PRECOMPILED_OBJ=pch.obj

@@ -1,0 +1,10 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft stress program for CAPI"
+#define VER_INTERNALNAME_STR        "stress.exe"
+
+#include "common.ver"
+

@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity type="win32" name="Microsoft.MSXML2" version="4.1.0.0" processorArchitecture="" publicKeyToken="6bd6b9abf345378f"/>
-  <file name="msxml4.dll"/>
-</assembly>

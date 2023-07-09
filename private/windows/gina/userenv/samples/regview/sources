@@ -1,0 +1,22 @@
+MAJORCOMP=cairoshl
+MINORCOMP=regview
+
+TARGETNAME=regview
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+C_DEFINES=-DNT -DWINNT -DUNICODE -D_UNICODE
+
+INCLUDES=
+
+INCLUDES=.
+
+SOURCES= regview.c
+
+
+LINKLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib           \
+         $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+UMTYPE=console
+UMAPPL=
+UMRES=

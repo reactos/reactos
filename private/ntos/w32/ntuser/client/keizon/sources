@@ -1,0 +1,17 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Feb-14-1996 GerardoB Created
+#***************************************************************************/
+ALT_PROJECT=KEIZON
+ALT_PROJECT_TARGET=$(ALT_PROJECT)
+
+!include ..\sources.inc
+
+
+

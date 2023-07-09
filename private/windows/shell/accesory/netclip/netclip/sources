@@ -1,0 +1,55 @@
+!IF 0
+
+  Application build file
+
+  created: 1-Mar-96
+  history: 1-Mar-96 <ckindel> created; based on build files VC++ 4.0 project
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=NetClip
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+UMTYPE=windows
+
+USE_NATIVE_EH=1
+
+# USE_MFCUNICODE=1
+USE_MFC=1
+
+PRECOMPILED_INCLUDE=stdafx.h
+PRECOMPILED_CXX=1
+
+C_DEFINES=\
+            $(C_DEFINES)    \
+            -D_NTBUILD
+
+INCLUDES=..\nclipps
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=\
+    netclip.rc       \
+    cntritem.cpp     \
+    netclip.cpp      \
+    dataobj.cpp      \
+    doc.cpp          \
+    mainfrm.cpp      \
+    server.cpp       \
+    svrdlg.cpp       \
+    util.cpp         \
+    view.cpp         \
+    guids.cpp
+
+TARGETLIBS= \
+    ..\proxy\obj\*\netclip_i.obj             \
+    $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+    $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib     \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\version.lib
+

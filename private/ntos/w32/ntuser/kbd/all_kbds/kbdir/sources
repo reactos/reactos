@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdir
+
+TARGETNAME=kbdir
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdir.c kbdir.rc
+
+NTTARGETFILE0=kbdir.h kbdir.rc kbdir.def

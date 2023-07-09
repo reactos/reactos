@@ -1,0 +1,377 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML STYLE="font-family: ms sans serif; font-size: 8pt; width: 38em;
+height: 16em">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>Bookmark</TITLE>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+//+-------------------------------------------------------------------------
+//
+//  This section contains code to be moved into a GLOBAL MODULE outside
+//  of this particular dialog.
+//
+//--------------------------------------------------------------------------
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Turns on the document's expando property.  When this
+    //              property is on, it is possible to create new expando
+    //              properties or assign to existing ones.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    Nothing
+    //
+    //----------------------------------------------------------------------
+
+    function expandoOn()
+    {
+        document.expando = true;
+    }   //  expandoOn
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Turns off the document's expando property.  When this
+    //              property is off, it is possible to read the value of
+    //              existing expando properties, but not possible to create
+    //              new ones or modify existing ones.
+    //
+    //              EXPANDO SHOULD BE OFF EXCEPT WHEN CREATING/MODIFYING
+    //              EXPANDO PROPERTIES.  This will save hours debugging
+    //              accidentally created expando properties.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function expandoOff()
+    {
+        document.expando = false;
+    }   //  expandoOff
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+//+--------------------------------------------------------------------------
+//
+//  This section contains variables that need to be LOCALIZED
+//
+//---------------------------------------------------------------------------
+
+// var L_EditBookmark_DIALOG_Width_Text  = "38em";
+// var L_EditBookmark_DIALOG_Height_Text = "16em";
+
+var L_NoHelp_Text = "No help topic available.";
+
+</SCRIPT>
+
+
+<SCRIPT LANGUAGE="JavaScript">
+
+//+-------------------------------------------------------------------------
+//
+//  This section contains code LOCAL to this particular dilaog.
+//
+//--------------------------------------------------------------------------
+
+    expandoOff();
+
+    //  Constants
+    var cmdBookmark     = "CreateBookmark";
+    var cmdUnbookmark   = "UnBookmark";
+
+    // Global variables
+    var globalDoc   = window.dialogArguments.document;
+    var gboolNewBookmark = true;                 // Is the bookmark
+                                                 // a new bookmark?
+
+
+    //+----------------------------------------------------------------------
+    //
+    //  Synopsis:   Given a text range, returns an anchor element if that
+    //              element appears within or overlaps the range. If no
+    //              anchor exists, returns null.
+    //
+    //  Arguments:  range   The range we're looking for an element in.
+    //
+    //  Returns:    an anchor element if one is found, null if one is not.
+    //
+    //-----------------------------------------------------------------------
+
+    function findAnchor(range)
+    {
+        var rangeWorking;
+        var elmWorking;
+        var index;
+
+        //
+        //  First, look for the anchor as a parent element of the range
+        //  NOTE: This will only find an anchor under fairly special
+        //  circumstances (the first character of the range is part of an
+        //  anchor), but it's much faster than the method below.
+        //
+        elmWorking = range.parentElement( )
+
+        while ("HTML" != elmWorking.tagName)
+        {
+            if ("A" == elmWorking.tagName)
+            {
+                return elmWorking;
+            }
+            else
+            {
+                elmWorking = elmWorking.parentElement
+            }
+        }
+
+        //
+        //  That didn't work, so let's walk through each character in the
+        //  range and see if there's an anchor somewhere.
+        //
+        rangeWorking = range.duplicate( );
+
+        //
+        //  Reduce rangeWorking to one character
+        //
+        rangeWorking.end = rangeWorking.start + 1;
+
+        while (rangeWorking.end < range.end)
+        {
+            rangeWorking.move("Character");
+            //
+            //  "Wait!" you're saying. "You can't move rngWorking yet,
+            //  you'll miss the first character." If the first character
+            //  is part of an anchor, the section of code above will catch
+            //  it.
+            //
+            if (null != findAnchor(rangeWorking))
+            {
+                return findAnchor(rangeWorking);
+            }
+        }
+
+        //
+        //  Nothing yet found an anchor, so I guess there isn't one.
+        //
+        return null;
+    }   //  findAnchor
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Initialize the dialog
+    //
+    //  Arguments:  None
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function bdyLoad()
+    {
+        var rngMaster;
+        var rngBookmark;
+        var elmBookmark;
+
+        if (("Text" == globalDoc.selection.type) ||
+            ("None" == globalDoc.selection.type))
+        {
+            rngMaster = globalDoc.selection.createRange();
+            elmBookmark = findAnchor(rngMaster);
+
+            if (null != elmBookmark)
+            {
+                gboolNewBookmark = false;
+
+                //
+                //  If the range contains an anchor, expand it to
+                //  encompass the anchor
+                //
+                rngBookmark = globalDoc.rangeFromElement(elmBookmark);
+                if (rngBookmark.start < rngMaster.start)
+                {
+                    rngMaster.start = rngBookmark.start;
+                }
+                if (rngBookmark.end > rngMaster.end)
+                {
+                    rngMaster.end = rngBookmark.end;
+                }
+                rngMaster.select();
+
+                //
+                //  Fill the dialog with info about the link
+                //
+                txtName.value = elmBookmark.name;
+            }
+        }
+    }   // bdyLoad
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Discard the user's changes and dismiss the dialog.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function btnCancelClick()
+    {
+        window.close();
+    }   //  btnCancelClick
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Inserts a bookmark in the document
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function btnOKClick()
+    {
+        var range;
+
+        //
+        //  if txtName is empty, delete the bookmark if it exists.
+        //  Otherwise, create the bookmark
+        //
+        if ("" == txtName.value)
+        {
+            range = globaldoc.selection.createRange();
+            range.execCommand(cmdUnbookmark, false);
+        }
+        else
+        {
+            //
+            //  If no text is selected, add the URL as the text,
+            //  then select it.
+            //
+            if ("None" == globalDoc.selection.type)
+            {
+                range = globalDoc.selection.createRange();
+                range.text = txtName.value;
+                range.start = range.start - txtName.value.length
+                range.select();
+            }
+
+            range = globalDoc.selection.createRange()
+
+            range.execCommand(cmdBookmark, false, txtName.value);
+        }
+
+        window.close();
+    }   //  btnOKClick
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=document EVENT="onkeypress()">
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Looks for the ENTER and ESC keypresses and runs the
+//              appropriate action.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+    var htmlKeyReturn = 13;
+    var htmlKeyEscape = 27;
+
+    if ((event.keyCode) == htmlKeyReturn)     //  Enter
+    {
+        btnOKClick();
+        btnOK.focus();
+    }
+
+    if ((event.keyCode) == htmlKeyEscape)     //  Esc
+    {
+        btnCancelClick();
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=document EVENT="onhelp()">
+
+//+-------------------------------------------------------------------------
+//
+//  Synopsis:   Opens the help file with the appropriate helpid
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//--------------------------------------------------------------------------
+
+    //  BUGBUG  Once we get help for the editing dialogs, this function
+    //          will have to change.
+    alert(L_NoHelp_Text);
+
+</SCRIPT>
+
+</HEAD>
+
+<BODY style="font-family: ms sans serif; font-size: 8pt;
+background: buttonface;" onLoad="bdyLoad()" >
+
+<TABLE cellPadding=7 cellspacing borderColorDark=buttonhighlight
+borderColorLight=buttonshadow noshade="yes"
+border=1 style="position: absolute; LEFT: 1em; TOP: 1.5em; width: 30.5em;
+height: 7em; font-family: ms sans serif; font-size: 8pt;">
+
+<TR>
+<TD style="position: relative;LEFT: 0; TOP: 0; WIDTH: 20em; HEIGHT: 4.5em;
+font-family: ms sans serif; font-size: 8pt;">
+
+
+    <DIV style="position: absolute;LEFT: 2.4em; TOP: 2.9em; WIDTH: 8em;
+    HEIGHT: 2.1em;font-family: ms sans serif; font-size: 8pt;">
+    <LABEL FOR=txtName tabIndex=-1>
+    <u>N</u>ame:
+    </LABEL>
+    </DIV>
+
+    <input ID="txtName" type=text size=35 maxlength=256 tabIndex=15
+    ACCESSKEY=n tyle="position: absolute;LEFT: 10.5em; TOP: 2.6em; WIDTH: 10em;
+    HEIGHT: 2.1em; font-family: ms sans serif; font-size: 8pt;">
+
+</TD>
+</TR>
+</TABLE>
+
+<DIV style="position: absolute;background: buttonface; HEIGHT: 1em;
+LEFT: 1.6em; TOP: .5em; WIDTH: 10em; font-family: ms sans serif;
+font-size: 8pt;">
+<LABEL tabindex=-1>&nbsp;&nbsp;Bookmark information</LABEL>
+</DIV>
+
+
+<BUTTON id=btnOK tabIndex=35 onclick="btnOKClick()"
+style="position: absolute;LEFT: 18.0em; TOP: 9.5em; WIDTH: 7.5em;
+HEIGHT: 2.5em; font-family: ms sans serif; font-size: 8pt;">
+OK
+</BUTTON>
+<BUTTON id=btnCancel tabIndex=40 onclick="btnCancelClick()"
+style="position: absolute;LEFT: 26em; TOP: 9.5em; WIDTH: 7.5em; HEIGHT: 2.5em;
+font-family: ms sans serif; font-size: 8pt;">
+Cancel
+</BUTTON>
+
+</BODY>
+
+</HTML>

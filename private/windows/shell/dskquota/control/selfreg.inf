@@ -1,0 +1,105 @@
+;
+; Self-registration for dskquota.dll
+;
+[Version]
+Signature="$Windows NT$"
+
+[RegDll]
+AddReg=AddRegEntries
+
+[UnregDll]
+DelReg=DelRegEntries
+
+;------------------------------------------------------------------------------
+;                          ADD ENTRIES SECTION
+;------------------------------------------------------------------------------
+[AddRegEntries]
+;
+; DiskQuotaControl object.
+;
+HKCR,CLSID\%CLSID_DiskQuotaControl%,,,%MS_DISK_QUOTA%
+HKCR,CLSID\%CLSID_DiskQuotaControl%\InProcServer32,,,%DISK_QUOTA_DLL%
+HKCR,CLSID\%CLSID_DiskQuotaControl%\InProcServer32,"ThreadingModel",,Both
+HKCR,CLSID\%CLSID_DiskQuotaControl%\ProgID,,,Microsoft.DiskQuota.1
+HKCR,CLSID\%CLSID_DiskQuotaControl%\VersionIndependentProgID,,,Microsoft.DiskQuota
+HKCR,CLSID\%CLSID_DiskQuotaControl%\TypeLib,,,%CLSID_DiskQuotaTypeLib%
+HKCR,CLSID\%CLSID_DiskQuotaControl%\Programmable,,,
+HKCR,Microsoft.DiskQuota.1,,,%MS_DISK_QUOTA%
+HKCR,Microsoft.DiskQuota.1\CLSID,,,%CLSID_DiskQuotaControl%
+
+;
+; Group Policy Editor extension.
+;
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"",,%MS_DISK_QUOTA%
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"NoMachinePolicy",0x00010001,0
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"NoUserPolicy",0x00010001,1
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"NoSlowLink",0x00010001,1
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"NoBackgroundPolicy",0x00010001,1
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"NoGPOListChanges",0x00010001,1
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"PerUserLocalSettings",0x00010001,0
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"RequiresSuccessfulRegistry",0x00010001,1
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"EnableAsynchronousProcessing",0x00010001,0
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"DllName",0x00020000,%DISK_QUOTA_DLL%
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%,"ProcessGroupPolicy",0x00000000,%DISK_QUOTA_GROUP_POLICY_API%
+
+;
+; NT event log event source registration
+;
+HKLM,System\CurrentControlSet\Services\EventLog\Application\DiskQuota,"EventMessageFile",,"%SystemRoot%\System32\dskquota.dll"
+HKLM,System\CurrentControlSet\Services\EventLog\Application\DiskQuota,"TypesSupported",,0x00000007
+
+;
+; Type library.
+;
+HKCR,TypeLib\%CLSID_DiskQuotaTypeLib%,,,
+HKCR,TypeLib\%CLSID_DiskQuotaTypeLib%\1.0,,,Microsoft Disk Quota 1.0
+HKCR,TypeLib\%CLSID_DiskQuotaTypeLib%\1.0\0,,,
+HKCR,TypeLib\%CLSID_DiskQuotaTypeLib%\1.0\0\win32,,,%DISK_QUOTA_DLL%
+
+;------------------------------------------------------------------------------
+;                        DELETE ENTRIES SECTION
+;------------------------------------------------------------------------------
+[DelRegEntries]
+;
+; DiskQuotaControl object.
+;
+HKCR,CLSID\%CLSID_DiskQuotaControl%\InProcServer32
+HKCR,CLSID\%CLSID_DiskQuotaControl%\ProgID
+HKCR,CLSID\%CLSID_DiskQuotaControl%\VersionIndependentProgID
+HKCR,CLSID\%CLSID_DiskQuotaControl%\TypeLib
+HKCR,CLSID\%CLSID_DiskQuotaControl%\Programmable
+HKCR,CLSID\%CLSID_DiskQuotaControl%
+HKCR,Microsoft.DiskQuota.1\CLSID
+HKCR,Microsoft.DiskQuota.1
+;
+; Group Policy Editor extension.
+;
+HKLM,Software\Microsoft\Windows NT\CurrentVersion\Winlogon\GPExtensions\%GUID_GPE_EXTENSION%
+;
+; NT event log event source
+;
+HKLM,System\CurrentControlSet\Services\EventLog\Application\DiskQuota
+;
+; Type library.
+;
+HKCR,TypeLib\%CLSID_DiskQuotaTypeLib%\1.0\0\win32
+HKCR,TypeLib\%CLSID_DiskQuotaTypeLib%\1.0\0
+HKCR,TypeLib\%CLSID_DiskQuotaTypeLib%\1.0
+HKCR,TypeLib\%CLSID_DiskQuotaTypeLib%
+;
+; General persistence data created programatically.
+;
+HKCU,Software\Microsoft\Windows NT\CurrentVersion\DiskQuota
+
+
+;------------------------------------------------------------------------------
+;                           CONSTANT STRINGS
+;------------------------------------------------------------------------------
+[Strings]
+CLSID_DiskQuotaControl={7988B571-EC89-11cf-9C00-00AA00A14F56}
+CLSID_DiskQuotaTypeLib={7988B57C-EC89-11cf-9C00-00AA00A14F56}
+GUID_GPE_EXTENSION={3610eda5-77ef-11d2-8dc5-00c04fa31a66}
+MS_DISK_QUOTA=Microsoft Disk Quota
+DISK_QUOTA_DLL=dskquota.dll
+DISK_QUOTA_GROUP_POLICY_API=ProcessGroupPolicy

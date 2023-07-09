@@ -1,0 +1,17 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#***************************************************************************/
+ALT_PROJECT=win95
+ALT_PROJECT_TARGET=win95
+
+!MESSAGE Building ICM 2.0 CMM DLL for Memphis
+
+ANSI=1
+USE_MAPSYM=1
+SUBSYSTEM_VERSION=4.00
+
+!include ..\sources.inc

@@ -1,3 +1,0 @@
-# The HAL expects these files to be in CR-LF.
-pci_classes.ids text eol=crlf
-pci_vendors.ids text eol=crlf

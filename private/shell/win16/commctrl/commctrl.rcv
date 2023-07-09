@@ -1,0 +1,43 @@
+/********************************************************************/
+/*        MSCTLS.RCV                                                */
+/********************************************************************/
+#ifdef WIN32
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Custom Controls Library"
+#define VER_INTERNALNAME_STR            "COMMCTRL"
+#ifndef WIN32
+#define VER_LEGALCOPYRIGHT_YEARS        "1992-1997"
+#endif
+#define VER_ORIGINALFILENAME_STR        "COMMCTRL.DLL"
+
+#ifdef IEWIN31_25
+// Override defines from version.h for the ie win16 project
+#undef VER_ORIGINALFILENAME_STR
+#undef VER_INTERNALNAME_STR
+#undef VER_PRODUCTNAME_STR
+#undef VER_PRODUCTVERSION_STR
+#undef VER_PRODUCTVERSION
+#undef VER_PRODUCTVERSION_BUILD
+#undef VER_PRODUCTVERSION_DW
+#undef VER_PRODUCTVERSION_W
+
+#define VER_ORIGINALFILENAME_STR    "COMMCTRL.DLL\0"
+#define VER_INTERNALNAME_STR        "COMCTLIE\0"
+#define VER_PRODUCTNAME_STR         "Microsoft\256 Windows\256 Internet Tools\0"
+#define VER_PRODUCTVERSION_STR      "4.73.0000.0\0"
+#define VER_PRODUCTVERSION          4,73,0000,0
+#define VER_PRODUCTVERSION_BUILD    0000
+#define VER_PRODUCTVERSION_DW       (0x04470000 | 0000)
+#define VER_PRODUCTVERSION_W        (0x0447)
+#endif
+
+
+#include <common.ver>
+
+

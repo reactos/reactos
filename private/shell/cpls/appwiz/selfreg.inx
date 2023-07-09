@@ -1,0 +1,133 @@
+
+;
+;  Control registration and DLL installation
+;
+;  Note the AddReg and DelReg keys have a maximum length of 255 characters.
+;  Only one AddReg and DelReg key per header section.
+;
+;  Because of the length limitations, we use shorthand names for the
+;  sections.
+;
+;  RegItems with %11% or %25% are substituted on NT with 
+;  %SystemRoot%\whatever. But this needs to be REGEXSZ!  Use the 
+;  token %REGEXSZ% (0x20000).
+;
+;  Any entries that go into the registry that contain 
+;  %_SYS_MOD_PATH%, %11%, %25% MUST have this flag set. (w95 ignores it).
+
+
+[Version]
+Signature="$CHICAGO$"
+
+[RegDll]
+ComponentName=Shell.AppMgr
+ComponentVersion=5.0
+AdvOptions=36
+
+AddReg=RegAppMgr,!RegRollbackAppMgr
+DelReg=DelRegAppMgr
+BackupReg=RegBackupSettings
+
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnregDll]
+ComponentName=Shell.AppMgr
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  General Unregistration
+;
+;  This section will be applied with the component's uninstall.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[DelRegAppMgr]
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Rollback Registration
+;
+;  These registry keys will kick off the RollBack during uninstall.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[!RegRollbackAppMgr]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","Shell.AppMgr",0,""
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  General Registration
+;
+;  This section will be applied with the component's installtion and any existing
+;  settings will be backed up.  These backed up settings will be restored
+;  on uninstall.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[RegAppMgr]
+
+;;;;;;;  App Manager
+; In: Shell5
+HKCR,"CLSID\%CLSID_ShellAppManager%",,,"%DESC_AppMgr%"
+HKCR,"CLSID\%CLSID_ShellAppManager%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellAppManager%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ShellAppManager%",,"%DESC_ShellAppManager%"
+
+;;;;;;;  Installed App Enumerator
+; In: Shell5
+HKCR,"CLSID\%CLSID_EnumInstalledApps%",,,"%DESC_EnumInstalledApps%"
+HKCR,"CLSID\%CLSID_EnumInstalledApps%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_EnumInstalledApps%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_EnumInstalledApps%",,"%DESC_EnumInstalledApps%"
+
+;;;;;;;  Darwin App Publisher 
+; In: Shell5
+HKCR,"CLSID\%CLSID_DarwinAppPublisher%",,,"%DESC_DarwinAppPub%"
+HKCR,"CLSID\%CLSID_DarwinAppPublisher%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DarwinAppPublisher%\%IPS%","ThreadingModel",,"Apartment"
+
+HKLM,"%SMWCA%\%DESC_DarwinAppPub%","",2,"%CLSID_DarwinAppPublisher%"
+HKLM,"%SMWCVSEA%","%CLSID_DarwinAppPublisher%",,"%DESC_DarwinAppPub%"
+
+;;;;;;; Register myself as an Inproc CPL
+HKLM,"%SMWCCIA%","%DESC_CPLModule%",,""
+
+;;;;;;; Register Icon Hints 
+HKLM,"%SMWCAI%","Microsoft Office",,"msoffice.exe"
+HKLM,"%SMWCAI%","Lotus Notes",,"notes.exe"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Backup Settings
+;
+;  This section will force several keys to be backed up so they can be
+;  restored on uninstall.  This will only work for the user that
+;  installs and uninstalls, but that is acceptable for now.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[RegBackupSettings]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Tokenized strings
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[Strings]
+IPS="InProcServer32"
+; (REG_EXPAND_SZ << 16)
+REGEXSZ=0x00020000
+; (REG_DWORD << 16)
+REGDW=0x00010001
+
+SMWCA = "Software\Microsoft\Windows\CurrentVersion\App Management\Publishers"
+SMWCAI = "Software\Microsoft\Windows\CurrentVersion\App Management\Icon Hints"
+SMWCVSEA = "Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"
+SMWCCIA   = "Software\Microsoft\Windows\CurrentVersion\Explorer\ControlPanel\InProcCPLs"
+
+DESC_ShellAppManager        = "Shell Application Manager"
+DESC_EnumInstalledApps      = "Installed Apps Enumerator"
+DESC_DarwinAppPub           = "Darwin App Publisher"
+DESC_CPLModule                = "appwiz.cpl"
+; CLSIDs
+CLSID_ShellAppManager           = "{352EC2B7-8B9A-11D1-B8AE-006008059382}"
+CLSID_EnumInstalledApps         = "{0B124F8C-91F0-11D1-B8B5-006008059382}"
+CLSID_DarwinAppPublisher        = "{CFCCC7A0-A282-11D1-9082-006008059382}"
+
+ERR_NOSETUPAPI="Can not register APPMGR.DLL because SETUPAPI.DLL is missing."
+
+

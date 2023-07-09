@@ -1,0 +1,13 @@
+/********************************************************************/
+/*        APP.RCV                                                   */
+/********************************************************************/
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Clean INF"
+#define VER_INTERNALNAME_STR            "cleaninf"
+#define VER_ORIGINALFILENAME_STR        "CLEANINF.EXE"
+
+#include <common.ver>

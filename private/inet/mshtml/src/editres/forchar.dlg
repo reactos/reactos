@@ -1,0 +1,1182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML id=dlgFont STYLE="font-family: MS Shell Dlg; font-size: 8pt;
+width: 35.4em; height: 26.9em">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE id=dialogTitle>
+Font
+</TITLE>
+</HEAD>
+
+<SCRIPT defer>
+
+#include    "dialogs.dh"
+#define     TIMEOUT     200
+#define     MAX_CHARSET 256
+#define     HELPFILE msoe.hlp
+#define     HTML_KEY_DOWN   40
+#define     HTML_KEY_UP     38
+
+//
+//  Global variables
+//  Currently, these are all to optimize the speed of seaching
+//  through the font list
+//
+var g_bSearchList = false;   // Whether to search the font list
+var g_nTimeoutID;            // The timeout ID to be cancelled
+var g_szLastFound = "";      // The font last found
+var g_nLastFoundIndex = 0;   // The position on the list of the 
+                             // last font we found
+var g_nMatchLength = 0;      // How many characters the last match
+                             // matched
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Returns the sample string based on the return value
+//              of getCharset();
+//
+//  Arguments:  None, but uses the font name typed into txtFontName
+//
+//  Returns:    The sample string
+//
+//-----------------------------------------------------------------------
+
+function GetSampleString()
+{
+    var strReturn = "AaBbYyZz";
+
+    if (txtFontName.value != "")
+    {
+
+        switch (dialogHelper.getCharset(txtFontName.value))
+        {
+        case 2:
+            {
+                strReturn = "Symbol";
+                break;
+            }
+        case 128:
+            {
+                strReturn = "Aa\u3042\u3041\u30a2\u30a1\u4e9c\u5b87";
+                break;
+            }
+        case 129:
+        case 130:
+            {
+                strReturn = "\uac00\ub098\ub2e4\u0041\u0061\u0042\u0062\u0059\u0079\u005a\u007a";
+                break;
+            }
+        case 136:
+            {
+                strReturn = "\u4e2d\u6587\u5b57\u578b\u7bc4\u4f8b";
+                break;
+            }
+        case 161:
+            {
+                strReturn = "AaBb\u0391\u03b1\u0392\u03b2";
+                break;
+            }
+        case 162:
+            {
+                strReturn = "AaBb\u011e\u011f\u015e\u015f";
+                break;
+            }
+        case 177:
+            {
+                strReturn = "AaBb\u05e0\u05e1\u05e9\u05ea";
+                break;
+            }
+        case 178:
+        case 179:
+            {
+                strReturn = "AaBb\u0639\u0645\u0646\u062e\u0631\u0648\u0643\u0645";
+                break;
+            }
+        case 204:
+            {
+                strReturn = "AaBb\u0411\u0431\u0424\u0444";
+                break;
+            }
+        case 238:
+            {
+                strReturn = "AaBb\u00c1\u00e1\u00d4\u00f4";
+                break;
+            }
+        case 255:
+            {
+                strReturn = "Aa\u00f8\u00f1\u00fd"; //"AaBbøñý";
+                break;
+            }
+        }
+    }
+
+    return strReturn;
+
+}   //  GetSampleString
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Sets the state of a checkbox based on a range and a
+//              command id. The command ID comes from the VALUE of
+//              the checkbox.
+//
+//  Arguments:  checkbox    The checkbox we're partying on
+//              range       The range we're querying the status of
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function getCheckStateCmd(checkbox, range)
+{
+    checkbox.checked = (true == range.queryCommandState(checkbox.value));
+}   //  getCheckStateCmd
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Sets the state of a select box based on a range and a
+//              command id. The command ID comes from the ID of the
+//              select box. (It's prefixed by "cmd".) NOTE: The VALUEs
+//              of OPTIONs of the SELECT box must be set to the possible
+//              return values of the queryCommandValue method.
+//
+//  Arguments:  select   The select box we're partying on
+//              range   The range we're querying the status of
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function getSelectStateCmd(select, range)
+{
+    var index;
+
+    if (null != range.queryCommandValue(select.id.substring(3)))
+    {
+        for (index = 0; index < select.options.length; index++)
+        {
+            if (select.options[index].value ==
+                range.queryCommandValue(select.id.substring(3)))
+            {
+                select.selectedIndex = index;
+                break;
+            }
+        }
+    }
+    else
+    {
+        select.selectedIndex = -1;
+    }
+}   //  getSelectStateCmd
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Sets the state of a range based on the state of a checkbox
+//              and a command id. The command id comes from the VALUE of
+//              the checkbox.
+//
+//  Arguments:  checkbox:   The checkbox we're querying the status of.
+//              range:      The range we're partying on.
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function setCheckStateCmd(checkbox, range)
+{
+    if (checkbox.checked !=
+        (true == range.queryCommandState(checkbox.value)))
+    {
+        range.execCommand(checkbox.value, false);
+    }
+}   //  setCheckStateCmd
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Sets the state of a range based on the selection in a
+//              SELECT box and a command id. The command id comes from
+//              the ID of the SELECT box (minus the "cmd" prefix).
+//              NOTE: The VALUEs of the OPTIONs of the SELECT box must
+//              be set to the possible values for the execCommand
+//              method.
+//
+//  Arguments:  select  The select box we're querying the value of.
+//              range   The range we're partying on.
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function setSelectStateCmd(select, range)
+{
+    if (-1 != select.selectedIndex)
+    {
+        range.execCommand(select.id.substring(3), false,
+            select.options[select.selectedIndex].value);
+    }
+}   //  setSelectStateCmd
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   non case sensitive comparison of 2 strings
+//
+//  Arguments:  str1    First string to be compared
+//              str2    String to compare to
+//
+//  Returns:    0 if the strings match, -1 if str1 < str2,
+//              and 1 if str1 > str2
+//
+//----------------------------------------------------------------------
+
+function NoCaseCompare(str1, str2)
+{
+    // Force ideographic names to bubble up to the top.
+ 
+    var ideo1 = 1 != escape(str1.charAt(0)).length;
+    var ideo2 = 1 != escape(str2.charAt(0)).length;
+ 
+    if (ideo1 != ideo2)
+        return ideo1 ? -1 : 1;
+    if (str1.toLowerCase() < str2.toLowerCase())
+        return -1;
+    if (str1.toLowerCase() > str2.toLowerCase())
+        return 1;
+ 
+    return 0;        
+}   //  NoCaseCompare
+
+
+//+-----------------------------------------------------------------------
+//
+//  Synopsis:   Fills the passed in select box with all the fonts installed
+//              on the system.
+//
+//  Arguments:  select  The select box we're filling with the font names
+//
+//  Returns:    nothing
+//
+//------------------------------------------------------------------------
+
+function fillFontSelect(select)
+{
+    var index;
+    var fontList = new Array();
+    var optFontName;
+    
+    var len = dialogHelper.fonts.length;
+    
+    for (index = 0; index < len; index++)
+    {
+        fontList[index] =
+            dialogHelper.fonts.item(index);
+    }
+    
+    fontList.sort(NoCaseCompare);
+    
+    for (index = 0; index < fontList.length; index++)
+    {
+        optFontName = new Option();
+        optFontName.value = fontList[index];
+        optFontName.text = fontList[index];
+
+        select.options[index] = optFontName;
+    }
+}   //  fillFontSelect
+
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   Sets range to the font specified in txtFontName
+//
+//  Arguments:  range   The range we're partying on
+//
+//  Returns:    nothing
+//
+//--------------------------------------------------------------------
+
+function setFont(range)
+{
+    var FontNameCommand = "FontName";
+
+    if (window.event.srcElement == txtFontName ||
+        window.event.srcElement == cmdFontName)
+    {
+        range.text = GetSampleString();
+        range = getTextRange(elmSample);
+    }
+
+    if (-1 != cmdFontName.selectedIndex)
+    {
+        range.execCommand(FontNameCommand, false, txtFontName.value);
+    }
+}
+
+
+//+-----------------------------------------------------------------------
+//
+//  Synopsis:   Looks at the currently selected text and set selFontStyle
+//              appropriately
+//
+//  Arguments:  none.
+//
+//  Returns:    nothing
+//
+//------------------------------------------------------------------------
+
+function getFontStyle()
+{
+    var cmdBold = "Bold";
+    var cmdItalic = "Italic";
+    var globalDoc = window.dialogArguments;
+    var range = globalDoc;
+
+    with (range)
+    {
+        if (queryCommandState(cmdBold) && queryCommandState(cmdItalic))
+        {
+            selFontStyle.value = "Bold-Italic";
+        }
+        else if (queryCommandState(cmdBold))
+        {
+            selFontStyle.value = "Bold";
+        }
+        else if (queryCommandState(cmdItalic))
+        {
+            selFontStyle.value = "Italic";
+        }
+        else
+        {
+            selFontStyle.value = "Regular";
+        }
+    }
+}   //  getFontStyle
+
+
+//+-----------------------------------------------------------------------
+//
+//  Synopsis:   Sets the current selection to bold or italic based on the
+//              setting of selFontStyle.
+//
+//  Arguments:  range   The range we're partying on.
+//
+//  Returns:    nothing
+//
+//------------------------------------------------------------------------
+
+function setFontStyle(range)
+{
+    var cmdBold = "Bold";
+    var cmdItalic = "Italic";
+
+    with (range)
+    {
+        if ("Bold-Italic" == selFontStyle.value)
+        {
+            if (true != queryCommandState(cmdBold))
+            {
+                execCommand(cmdBold, false);
+            }
+            if (true != queryCommandState(cmdItalic))
+            {
+                execCommand(cmdItalic, false);
+            }
+        }
+        else if ("Bold" == selFontStyle.value)
+        {
+            if (true != queryCommandState(cmdBold))
+            {
+                execCommand(cmdBold, false);
+            }
+            if (true == queryCommandState(cmdItalic))
+            {
+                execCommand(cmdItalic, false);
+            }
+        }
+        else if ("Italic" == selFontStyle.value)
+        {
+            if (true == queryCommandState(cmdBold))
+            {
+                execCommand(cmdBold, false);
+            }
+            if (true != queryCommandState(cmdItalic))
+            {
+                execCommand(cmdItalic, false);
+            }
+        }
+        else
+        {
+            if (true == queryCommandState(cmdBold))
+            {
+                execCommand(cmdBold, false);
+            }
+            if (true == queryCommandState(cmdItalic))
+            {
+                execCommand(cmdItalic, false);
+            }
+        }
+    }
+}   //  setFontStyle
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Sets the state of selColor based on the color of the
+//              selected font.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function getFontColor()
+{
+    var cmdForeColor = "ForeColor";
+    var globalDoc = window.dialogArguments;
+    var range = globalDoc;
+    var intColor = range.queryCommandValue(cmdForeColor);
+
+    if (null != intColor)
+    {
+        selColor.value = intColor;
+        if (parseInt(selColor.value) != parseInt(intColor))
+        {
+            selColor.customColor = intColor;
+            selColor.value = "custom";
+        }
+    }
+    else
+    {
+        selColor.selectedIndex = -1;
+    }
+}   //  getFontColor
+
+
+//+--------------------------------------------------------------------------
+//
+//  Synopsis:   Sets the color of the selected text based on the selection
+//              in selColor.
+//
+//  Arguments:  range   The range we're partying on.
+//
+//  Returns:    nothing
+//
+//---------------------------------------------------------------------------
+
+function setFontColor(range)
+{
+    var cmdForeColor = "ForeColor";
+    var intDefaultColor = 0;
+
+    if (-1 != selColor.selectedIndex)
+    {
+        if ("custom" == selColor.value)
+        {
+            range.execCommand(cmdForeColor, false,
+                parseInt(selColor.customColor));
+            return;
+        }
+        else
+        {
+            range.execCommand(cmdForeColor, false,
+                parseInt(selColor.value));
+        }
+    }
+}   //  setFontColor
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Fills a text box with the value of the calling control
+//              (which should be a select box).
+//
+//  Arguments:  ctlSelect   The select box we're getting the value from
+//              ctlText     The text box we're filling
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function syncSelect(ctlSelect, ctlText)
+{
+    if (-1 != ctlSelect.selectedIndex)
+    {
+        if (ctlText.value.toLowerCase()
+            == ctlSelect.options[ctlSelect.selectedIndex]
+            .text.toLowerCase())
+        {
+            ctlText.value = ctlSelect.options[ctlSelect.selectedIndex].text;
+        }
+    }
+}   //  syncSelect
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Fills a text box with the value of the calling control
+//              (which should be a select box).
+//
+//  Arguments:  ctlSelect   The select box we're getting the value from
+//              ctlText     The text box we're filling
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function syncSelect2(ctlSelect, ctlText)
+{
+    if (-1 != ctlSelect.selectedIndex)
+    {
+        ctlText.value = ctlSelect.options[ctlSelect.selectedIndex].text;
+    }
+}   //  syncSelect2
+
+
+//+-----------------------------------------------------------------------
+//
+//  Synopsis:   Takes a string and an options collection and finds the
+//              index of the option whose VALUE best matches the string
+//
+//  Arguments:  strMatch        The string we're looking for a match to
+//              optionsList     The options collection we're looking for
+//                              the match in
+//
+//  Returns:    an integer representing the index of option that best
+//              matches the string.
+//
+//------------------------------------------------------------------------
+
+function findMatch (strMatch, optionsList)
+{
+    var index;
+    var index2;
+    var bestChar    =   0;
+    var bestMatch   =   0;
+    var strOptText;
+
+    for (index = 0; index < optionsList.length; index++)
+    {
+        strOptText = optionsList.options[index].text;
+        for (index2 = bestChar; index2 < strMatch.length; index2++)
+        {
+            if (strMatch.substring(0, index2 + 1).toLowerCase() ==
+                strOptText.substring(0, index2 + 1)
+                    .toLowerCase())
+            {
+                bestChar = index2 + 1;
+                bestMatch = index;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+    return bestMatch;
+}   //  findMatch
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Loops through all the controls in the dialog and updates
+//              the sample appropriately.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function updateSample()
+{
+    var rngSample = getTextRange(elmSample);
+
+    //
+    //  Let's take advantage of the the dialog exit routines to set
+    //  font face, underline, and font size.
+    //
+    setCheckStateCmd(chkUnderline, rngSample);
+
+    //
+    //  Set the sample text
+    //
+    rngSample.text = GetSampleString();
+
+    rngSample = getTextRange(elmSample);
+    
+    setFont(rngSample);
+
+    setSelectStateCmd(cmdFontSize, rngSample);    // size
+
+    setFontStyle(rngSample);
+    setFontColor(rngSample);
+}   //  updateSample
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Selects the closes match in cmdFontName with the 
+//              value typed into txtFontName
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function searchText()
+{
+    var index;
+    var index2;
+    var bestChar    =   g_nMatchLength;
+    var bestMatch   =   g_nLastFoundIndex;
+    var strOptText;
+    
+    var optionsList = cmdFontName.options;
+    var strMatch = txtFontName.value;
+
+    //
+    //  If strMatch is empty, select nothing in the select list
+    //  reset global variables, and exit
+    //
+    if (strMatch.length == 0)
+    {
+        cmdFontName.selectedIndex = -1;
+        g_nMatchLength = 0;
+        g_nLastFoundIndex = 0;
+        g_bSearchList = false;
+        g_szLastFound = "";
+        return;
+    }
+
+    //
+    //  If the text has only gotten longer, start the 
+    //  search from the current selection.
+    //
+    if (strMatch.length >= g_szLastFound.length
+        && (strMatch.substring(0, g_nMatchLength).toLowerCase()
+        == g_szLastFound.substring(0, g_nMatchLength).toLowerCase()))
+    {
+        index = g_nLastFoundIndex;
+    }
+    else
+    {
+        index = 0;
+        bestChar = 0;
+    }
+
+    for (; index < optionsList.length; index++)
+    {
+        strOptText = optionsList.options[index].text;
+        for (index2 = bestChar; index2 < strMatch.length; index2++)
+        {
+            if (strMatch.substring(index2, index2 + 1).toLowerCase() ==
+                strOptText.substring(index2, index2 + 1)
+                    .toLowerCase())
+            {
+                bestChar = index2 + 1;
+                bestMatch = index;
+                g_nLastFoundIndex = bestMatch;
+                g_nMatchLegth = bestChar;
+            }
+            else
+            {
+                break;
+            }
+        }
+    //
+    //  If the next font in the list doesn't match as well
+    //  as the current, we've found our match.
+    //
+    if (bestChar > 0 && index < optionsList.options.length - 2 &&
+        optionsList.options[index + 1].text
+        .substring(bestChar - 1, bestChar).toLowerCase()
+        != strMatch.substring(bestChar - 1, bestChar).toLowerCase())
+    {
+        break;
+    }
+
+    }
+    cmdFontName.selectedIndex = bestMatch;
+    
+    g_bSearchList = false;
+    g_szLastFound = txtFontName.value;
+}   //  SearchText
+
+//+------------------------------------------------------------------------
+//
+//  Synopsis:   Handles the keydown event for the textbox of textbox/listbox
+//              combos. Determines which key was pressed, updates the listbox,
+//              updates the combo box, then updates the sample.
+//
+//  Arguments:  textbox The textbox of the textbox/listbox combo
+//              select  the listbox
+//              keycode the keyCode of the key that was pressed
+//
+//  Returns:    true if we handled the event, false if we didn't.
+//
+//-------------------------------------------------------------------------
+
+function TextboxKeyDown(textbox, select, iKeyCode)
+{
+    var fReturn = false;
+
+    if (HTML_KEY_UP == iKeyCode || HTML_KEY_DOWN ==iKeyCode)
+    {
+        var iDirection = (iKeyCode == HTML_KEY_UP) ? -1 : 1;
+
+        if (!((iDirection == 1 && 
+            !(select.selectedIndex < select.options.length - 1))
+            || (iDirection == -1 && !select.selectedIndex)))
+        {
+            select.selectedIndex = select.selectedIndex + iDirection;
+            textbox.value = 
+                select.options(select.selectedIndex).text;
+            textbox.select();
+            updateSample(getTextRange(elmSample));
+        }
+        fReturn = true;
+    }
+
+
+    return fReturn;
+}
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Same as syncText, but with speed optimizations
+//
+//  Arguments:  none
+//  
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function syncTextFont()
+{
+    if (TextboxKeyDown(txtFontName, cmdFontName, window.event.keyCode))
+        return;
+
+    //
+    //  If the text has not changed, do nothing
+    //
+    if (g_szLastFound.toLowerCase() == txtFontName.value.toLowerCase())
+    {
+        return;
+    }
+    
+    if (g_bSearchList)
+    {
+        window.clearTimeout(g_nTimeoutID);
+    }
+
+    g_bSearchList = true;
+    g_nTimeoutID = window.setTimeout("searchText()", TIMEOUT);
+}   //  syncSelectFont
+
+
+//+-----------------------------------------------------------------------
+//
+//  Synopsis:   Looks at the currently selected text and fills the dialog
+//              options appropriately
+//
+//  Arguments:  None
+//
+//  Returns:    Nothing
+//
+//------------------------------------------------------------------------
+
+function loadBdy()
+{
+    var doc = window.dialogArguments;  // The document we're
+                                       // partying on
+    var L_InsideFrameset_ErrorMessage = 
+        "This command is not available because the page contains frames.";
+    
+    //
+    //  See if the current document is 
+    //  in a frameset. If it is, display an alert and close the dialog.
+    //
+
+    if (doc.parentWindow.frames.length > 0 && 
+        doc.all.tags("IFRAME").length == 0)
+    {
+        alert(L_InsideFrameset_ErrorMessage);
+        window.close();
+    }
+
+    
+    var rngCurrent = doc;   // The range currently
+                                                    // selected
+
+    //
+    //  bind event to controls
+    //
+    document.onhelp     = new Function("callHelp(window.event.srcElement)");
+    document.onmouseup  = new Function("mouseClick()");
+
+    txtFontName.onblur      = new
+        Function("syncSelect(cmdFontName, txtFontName)");
+    txtFontName.onfocus     = new Function("txtFontName.select()");
+    txtFontName.onchange    = new
+        Function("setFont(getTextRange(elmSample))");
+    txtFontName.onkeyup     = new Function("syncTextFont()");
+    txtFontName.onfocus     = new Function("txtFontName.select()");
+    txtFontName.onkeypress = new Function("txtDefaultESC()");
+
+
+    txtFontStyle.onblur     = new
+        Function("syncSelect(selFontStyle, txtFontStyle)");
+    txtFontStyle.onfocus    = new Function("txtFontStyle.select()");
+    txtFontStyle.onchange   = new Function("setFontStyle" +
+        "(getTextRange(elmSample))");
+    txtFontStyle.onkeyup    = new Function("synchText()");
+    txtFontStyle.onfocus    = new Function("txtFontStyle.select()");
+    txtFontStyle.onkeypress = new Function("txtDefaultESC()");
+
+
+    txtFontSize.onblur      = new
+        Function("syncSelect(cmdFontSize, txtFontSize)");
+    txtFontSize.onfocus     = new Function("txtFontSize.select()");
+    txtFontSize.onchange    = new
+        Function("setSelectStateCmd(cmdFontSize, " +
+            "getTextRange(elmSample))");
+    txtFontSize.onkeyup     = new Function("synchText()");
+    txtFontSize.onfocus     = new Function("txtFontSize.select()");
+    txtFontSize.onkeypress = new Function("txtDefaultESC()");
+
+    //
+    //  cmdFontName is the font list
+    //
+    cmdFontName.onchange = new Function("syncSelect2(cmdFontName, txtFontName);" +
+        "setFont(getTextRange(elmSample))");
+
+    selFontStyle.onchange = new Function("syncSelect2(selFontStyle," +
+        "txtFontStyle);" +
+        "setFontStyle(getTextRange(elmSample))");
+    //
+    //  cmdFontSize is the font size
+    //
+    cmdFontSize.onchange = new Function("syncSelect2(cmdFontSize, txtFontSize);" +
+        "setSelectStateCmd(cmdFontSize, getTextRange(elmSample))");
+
+    chkUnderline.onclick = new Function("setCheckStateCmd(chkUnderline," +
+        "getTextRange(elmSample))");
+
+    selColor.onchange = new Function("setFontColor(getTextRange(elmSample))");
+
+    btnCustom.onclick       = new Function("btnCustomClick()");
+    btnOK.onclick           = new Function("btnOKClick()");
+    btnCancel.onclick       = new Function("btnCancelClick()");
+
+    //
+    //  Initialize the dialog
+    //
+    fillFontSelect(cmdFontName);
+
+    getCheckStateCmd(chkUnderline, rngCurrent);
+    getSelectStateCmd(cmdFontName, rngCurrent);   // font
+    getSelectStateCmd(cmdFontSize, rngCurrent);   // size
+
+    getFontStyle();
+
+    selColor.customColor = 0;   // If a custom color is selected,
+                                // this is where it's value is
+                                // stored.
+    getFontColor();
+
+    //
+    //  populate the textboxes
+    //
+    syncSelect2(cmdFontName, txtFontName);
+    syncSelect2(selFontStyle, txtFontStyle);
+    syncSelect2(cmdFontSize, txtFontSize);
+
+    txtFontName.select();
+
+    g_szLastFound = txtFontName.value;
+
+    updateSample();
+    txtFontName.focus();
+}   //loadBdy
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Launches the color picker and sets the custom color 
+//              appropriately
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function btnCustomClick()
+{
+    selColor.customColor
+        = dialogHelper.choosecolordlg(selColor.customColor);
+    selColor.value = "custom";
+    setFontColor(getTextRange(elmSample));
+}   //  btnCustomClick
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Closes the dialog after applying the user's selections
+//              to the document
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function btnOKClick()
+{
+    var globalDoc = window.dialogArguments;
+    var range = globalDoc;
+
+    setCheckStateCmd(chkUnderline, range);
+    setSelectStateCmd(cmdFontSize, range);
+    setFont(range);
+
+    setFontColor(range);
+    setFontStyle(range);
+
+//    range.select();
+    
+    window.close();
+}   //  btnOKClick
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Selects the item in the appropriate select box that
+//              most closely matches the text in the textbox.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//----------------------------------------------------------------------
+
+function synchText()
+{
+    var index;
+    var elmSource = window.event.srcElement;
+    var arrSelect = new Array();
+    var elmSelect;   // The Select box we're partying on
+    var elmOptions;  // The options collection of the Select we're
+                     // partying on
+
+    //
+    //  Set up select boxes with corresponding text boxes
+    //
+    arrSelect["txtFontName"]    = cmdFontName;
+    arrSelect["txtFontStyle"]   = selFontStyle;
+    arrSelect["txtFontSize"]    = cmdFontSize;
+
+    elmSelect = arrSelect[elmSource.id];
+    elmOptions = elmSelect.options;
+
+
+    if (TextboxKeyDown(elmSource, elmSelect, window.event.keyCode))
+        return;
+
+    if ("" != elmSource.value)
+    {
+        elmSelect.selectedIndex = findMatch(elmSource.value,
+            elmOptions);
+    }
+}   //  synchText
+
+</SCRIPT>
+
+<BODY id=bdy onload="loadBdy()" style="font-family: 'MS Shell Dlg'; font-size: 8pt;
+background: threedface; color: windowtext;" scroll=no>
+
+<OBJECT ID="dialogHelper" CLASSID="CLSID:3050f4e1-98b5-11cf-bb82-00aa00bdce0b"
+        HEIGHT=0 WIDTH=0 tabindex=-1>
+</OBJECT>
+
+<DIV id=divFontName style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 0.98em; top: 0.9126em; width: 2.38em; height: 1.2168em;">
+<LABEL id=lblFontName for=txtFontName tabIndex=-1 helpid="35420" 
+helpfile=HELPFILE>
+<u>F</u>ont:</LABEL>
+</DIV>
+
+<DIV id=divFontStyle style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 13.86em; top: 0.9126em; width: 4.76em; height: 1.2168em;">
+<LABEL id=lblFontStyle for=txtFontStyle tabIndex=-1 helpid="35425" 
+helpfile=HELPFILE>
+St<u>y</u>le:</LABEL>
+</DIV>
+
+<DIV id=divFontSize style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 20.58em; top: 0.9126em; width: 2.24em; height: 1.2168em;">
+<LABEL id=lblFontSize for=txtFontSize tabIndex=-1 helpid="35430" 
+helpfile=HELPFILE>
+<u>S</u>ize:</LABEL>
+</DIV>
+
+<INPUT type=text ID=txtFontName ACCESSKEY=f tabIndex=5
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 0.98em; top: 2.3em; width: 12.04em; height: 1.9773em; "
+helpid="35420" helpfile=HELPFILE>
+
+<INPUT type=text ID=txtFontStyle ACCESSKEY=y tabIndex=10
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 13.86em; top: 2.3em; width: 5.8em; height: 1.9773em; "
+helpid="35425" helpfile=HELPFILE>
+
+<INPUT type=text ID=txtFontSize ACCESSKEY=s tabIndex=15
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 20.58em; top: 2.3em; width: 4.8em; height: 1.9773em; "
+helpid="35430" helpfile=HELPFILE>
+
+<SELECT ID=cmdFontName style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 0.8em; top: 4.2588em; width: 12.2em; height: 9.9739em; "
+name=setCmdID ACCESSKEY=f tabIndex=-1 size=7
+helpid="35420" helpfile=HELPFILE>
+</SELECT>
+
+<SELECT ID=selFontStyle  ACCESSKEY=y size=7 tabIndex=-1
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 13.7em; top: 4.2588em; width: 6em; height: 9.9739em; "
+helpid="35425" helpfile=HELPFILE>
+<OPTION id=optRegular    VALUE=Regular SELECTED>   Regular     </OPTION>
+<OPTION id=optItalic     VALUE=Italic>             Italic      </OPTION>
+<OPTION id=optBold       VALUE=Bold>               Bold        </OPTION>
+<OPTION id=optBoldItalic VALUE=Bold-Italic>        Bold Italic </OPTION>
+</SELECT>
+
+<SELECT ID=cmdFontSize ACCESSKEY=s size=7 tabIndex=-1 name=setCmdID
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 20.4em; top: 4.2588em; width: 5em; height: 9.9739em; "
+helpid="35430" helpfile=HELPFILE>
+<OPTION id=opt8  VALUE=1>            8   </OPTION>
+<OPTION id=opt10 VALUE=2>            10  </OPTION>
+<OPTION id=opt12 VALUE=3 SELECTED>   12  </OPTION>
+<OPTION id=opt14 VALUE=4>            14  </OPTION>
+<OPTION id=opt18 VALUE=5>            18  </OPTION>
+<OPTION id=opt24 VALUE=6>            24  </OPTION>
+<OPTION id=opt36 VALUE=7>            36  </OPTION>
+</SELECT>
+
+<FIELDSET id=fldEffects style="font-family: MS Shell Dlg; font-size: 8pt; 
+position: absolute; left: 0.98em; top: 14.6em; width: 12.04em; 
+height: 8.8em;">
+<LEGEND id=lgdEffects>
+Effects
+</LEGEND>
+</FIELDSET>
+
+<INPUT ID=chkUnderline ACCESSKEY=u type=checkbox  tabIndex=35 value=Underline
+name=setCmdID helpid="35445" helpfile=HELPFILE
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 2em; top: 16.5em; width: 1.2em; height: 1.2em; ">
+
+<DIV id=divUnderline style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 3.6em; top: 16.5789em; width: 6.44em; height: 1.521em;">
+<LABEL id=lblUnderline for=chkUnderline helpid="35445" helpfile=HELPFILE
+tabIndex=-1><u>U</u>nderline
+</LABEL>
+</DIV>
+
+<DIV id=divColor style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 1.96em; top: 18.8604em; width: 2.66em; height: 1.2168em;">
+<LABEL id=lblColor helpid="35440" helpfile=HELPFILE for=selColor>
+<u>C</u>olor:</LABEL>
+</DIV>
+
+<SELECT ID=selColor ACCESSKEY=c tabIndex=55
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 1.96em; top: 20.3814em; width: 7em; height: 1.21em; "
+helpid="35440" helpfile=HELPFILE>
+<OPTION id=optBlack   value=0       >     Black   </OPTION>
+<OPTION id=optWhite   value=16777215>     White   </OPTION>
+<OPTION id=optGreen   value=32768   >     Green   </OPTION>
+<OPTION id=optMaroon  value=128     >     Maroon  </OPTION>
+<OPTION id=optOlive   value=32896   >     Olive   </OPTION>
+<OPTION id=optNavy    value=8388608 >     Navy    </OPTION>
+<OPTION id=optPurple  value=8388736 >     Purple  </OPTION>
+<OPTION id=optGray    value=8421504 >     Gray    </OPTION>
+<OPTION id=optYellow  value=65535   >     Yellow  </OPTION>
+<OPTION id=optLime    value=65280   >     Lime    </OPTION>
+<OPTION id=optAqua    value=16776960>     Aqua    </OPTION>
+<OPTION id=optFuchsia value=16711935>     Fuchsia </OPTION>
+<OPTION id=optSilver  value=12632256>     Silver  </OPTION>
+<OPTION id=optRed     value=255     >     Red     </OPTION>
+<OPTION id=optBlue    value=16711680>     Blue    </OPTION>
+<OPTION id=optTeal    value=8421376 >     Teal    </OPTION>
+<OPTION id=optCustom  value=custom  >     Custom  </OPTION>
+</SELECT>
+
+<BUTTON id=btnCustom tabIndex=56
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 9.5em; top: 20.2em;"
+helpid="35440" helpfile=HELPFILE>
+<IMG id=imgPalette
+align=bottom height=16px width=16px hspace=0 vspace=0 src="palette.gif">
+</BUTTON>
+
+<FIELDSET id=fldSample style="font-family: MS Shell Dlg; font-size: 8pt; position: 
+absolute; left: 13.86em; top: 14.6em; width: 11.4em; height: 8.8em;">
+<LEGEND id=lgdSample helpid="35435" helpfile=HELPFILE>
+Sample
+</LEGEND>
+</FIELDSET>
+
+<table cellspacing borderColorDark=threedhighlight
+borderColorLight=threedshadow noshade="yes" border=1 id=tblSample1
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 14.98em; top: 16.5789em; width: 9.24em; height: 5.0277em;">
+<tr>
+    <td id=tdSample1 style="font-family: MS Shell Dlg; font-size: 8pt;
+    left: 14.98em; top: 16.5789em; width: 9.24em; height: 5.0277em;">
+    </td>
+</tr>
+</table>
+
+<DIV id=divSample2 style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 14.98em; top: 16.5789em; width: 8.9em; height: 5.0277em;
+overflow: hidden" helpid="35435" 
+helpfile=HELPFILE>
+<TABLE id=tblSample2 style="font-family: MS Shell Dlg; font-size: 8pt; width: 8.9em;
+height: 5.0277em; " helpid="35435" 
+helpfile=HELPFILE>
+<TR>
+<TD id=tdSample2 style="font-family: MS Shell Dlg; font-size: 8pt; width: 8.9em;
+height: 5.0277em; "
+helpid="35435" helpfile=HELPFILE>
+        <CENTER>
+        <DIV id=elmSample>
+        <NOBR id=nbrSample helpid="35435" helpfile=HELPFILE>
+        AaBbYyZz</NOBR></DIV></CENTER>
+</TD>
+</TR>
+</TABLE>
+</DIV>
+
+<BUTTON id=btnOK tabIndex=60
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 26.6em; top: 2.2815em; width: 7em; height: 2.2em; "
+helpid="28443" helpfile="windows.hlp" type=submit>
+OK</BUTTON>
+
+<BUTTON id=btnCancel tabIndex=70
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 26.6em; top: 4.7151em; width: 7em; height: 2.2em; "
+helpid="28444" helpfile="windows.hlp" type=reset>
+Cancel</BUTTON>
+
+</BODY>
+</HTML>

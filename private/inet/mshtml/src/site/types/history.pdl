@@ -1,0 +1,268 @@
+#ifndef _HISTORY_PDL_
+#define _HISTORY_PDL_   1
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  ***************************************************************************
+//  ********************************* WARNING *********************************
+//  ***************************************************************************
+//
+//  USE HARDCODED CONSTANTS between 0 and 1000 for dispid.  ShDocVw will handle
+//  the invoke for DISPIDs < 1000 anything > 1000 is handled by MSHTML.  The
+//  objects in this file are provided for the window and navigator object by
+//  ShDocVw
+//
+////////////////////////////////////////////////////////////////////////////////
+
+#include "types.pdl"
+
+file history.pdl
+
+import types.pdl
+
+//
+// ============== IOmHistory ===========================
+//
+
+interface IOmHistory super:IDispatch guid:FECEAAA2-8405-11cf-8BA1-00AA00476DA6
+    refprop     COmHistory:length
+    refmethod   COmHistory:back
+    refmethod   COmHistory:forward
+    refmethod   COmHistory:go
+
+tearoff COmHistory interface:IOmHistory
+tearoff COmHistory interface:IObjectIdentity
+    tearmethod IsEqualObject            mapto:IsEqualObject
+
+class COmHistory name:HTMLHistory primaryinterface:IOmHistory guid:FECEAAA3-8405-11cf-8BA1-00AA00476DA6
+    property length         atype:short         dispid:DISPID_HISTORY  \
+        get abstract
+    method HRESULT back  maxstrlen:pdlUrlLen    dispid:DISPID_HISTORY+1  \
+        (in optional type:VARIANT*  arg:pvargdistance )
+    method HRESULT forward  maxstrlen:pdlUrlLen dispid:DISPID_HISTORY+2  \
+        (in optional type:VARIANT*  arg:pvargdistance )
+    method HRESULT go   maxstrlen:pdlUrlLen     dispid:DISPID_HISTORY+3  \
+        (in optional type:VARIANT*  arg:pvargdistance )
+
+//
+// ============== IHTMLMimeTypesCollection ===========================
+//
+
+interface IHTMLMimeTypesCollection super:IDispatch guid:3050f3fc-98b5-11cf-bb82-00aa00bdce0b
+    refprop CMimeTypes:length
+
+tearoff CMimeTypes interface:IHTMLMimeTypesCollection
+
+tearoff CMimeTypes interface:IDispatchEx BaseImpl:super::
+
+class CMimeTypes super:CBase primaryinterface:IHTMLMimeTypesCollection guid:3050f3fe-98b5-11cf-bb82-00aa00bdce0b
+    property  length   atype:long        dispid:1    type:long   \
+         abstract get
+
+//
+// ============== IHTMLPluginsCollection ===========================
+//
+
+interface IHTMLPluginsCollection super:IDispatch   guid:3050f3fd-98b5-11cf-bb82-00aa00bdce0b
+    refprop CPlugins:length
+    refmethod CPlugins:refresh
+
+tearoff CPlugins interface:IHTMLPluginsCollection
+
+tearoff CPlugins interface:IDispatchEx BaseImpl:super::
+
+class CPlugins super:CBase primaryinterface:IHTMLPluginsCollection guid:3050f3ff-98b5-11cf-bb82-00aa00bdce0b
+    property  length   atype:long        dispid:1    type:long   \
+         abstract get
+    method HRESULT refresh dispid:2 (in type:VARIANT_BOOL defaultvalue:0 arg:reload)
+
+//
+// ============== IHTMLOpsProfile ===========================
+//
+
+interface IHTMLOpsProfile super:IDispatch   guid:3050f401-98b5-11cf-bb82-00aa00bdce0b
+    refmethod COpsProfile:addRequest
+    refmethod COpsProfile:clearRequest
+    refmethod COpsProfile:doRequest
+    refmethod COpsProfile:getAttribute
+    refmethod COpsProfile:setAttribute
+    refmethod COpsProfile:commitChanges
+    refmethod COpsProfile:addReadRequest
+    refmethod COpsProfile:doReadRequest
+    refmethod COpsProfile:doWriteRequest
+
+tearoff COpsProfile interface:IHTMLOpsProfile
+
+tearoff COpsProfile interface:IDispatchEx BaseImpl:super::
+
+class COpsProfile super:CBase primaryinterface:IHTMLOpsProfile guid:3050f402-98b5-11cf-bb82-00aa00bdce0b 
+
+    method  HRESULT addRequest maxstrlen:pdlNoLimit    dispid:1 \
+        (in              type:BSTR      arg:name,    \
+         in  optional    type:VARIANT   arg:reserved, \
+         out retval      type:VARIANT_BOOL* arg:success)
+
+    method  HRESULT clearRequest                       dispid:2 \
+        ()
+
+    method  HRESULT doRequest maxstrlen:pdlNoLimit     dispid:3  \
+        (in              type:VARIANT   arg:usage,      \
+         in  optional    type:VARIANT   arg:fname,      \
+         in  optional    type:VARIANT   arg:domain,     \
+         in  optional    type:VARIANT   arg:path,       \
+         in  optional    type:VARIANT   arg:expire,     \
+         in  optional    type:VARIANT   arg:reserved)
+
+    method  HRESULT getAttribute maxstrlen:pdlNoLimit  dispid:4  \
+        (in              type:BSTR      arg:name        \
+         out retval      type:BSTR*     arg:value)
+        
+    method  HRESULT setAttribute maxstrlen:pdlNoLimit  dispid:5 \
+        (in              type:BSTR      arg:name        \
+         in              type:BSTR      arg:value,      \
+         in  optional    type:VARIANT   arg:prefs,      \
+         out retval      type:VARIANT_BOOL* arg:success)
+                    
+    method HRESULT commitChanges                       dispid:6 \
+        (out retval     type:VARIANT_BOOL* arg:success)
+        
+    method  HRESULT addReadRequest maxstrlen:pdlNoLimit dispid:7 \
+        (in              type:BSTR      arg:name,    \
+         in  optional    type:VARIANT   arg:reserved, \
+         out retval      type:VARIANT_BOOL* arg:success)
+           
+    method  HRESULT doReadRequest maxstrlen:pdlNoLimit dispid:8 \
+        (in              type:VARIANT   arg:usage,      \
+         in  optional    type:VARIANT   arg:fname,      \
+         in  optional    type:VARIANT   arg:domain,     \
+         in  optional    type:VARIANT   arg:path,       \
+         in  optional    type:VARIANT   arg:expire,     \
+         in  optional    type:VARIANT   arg:reserved)
+
+    method  HRESULT doWriteRequest                      dispid:9 \
+        (out retval     type:VARIANT_BOOL* arg:success)
+      
+
+
+//
+// ============== IOmNavigator ===========================
+//
+
+interface IOmNavigator super:IDispatch guid:FECEAAA5-8405-11cf-8BA1-00AA00476DA6
+    refprop COmNavigator:appCodeName
+    refprop COmNavigator:appName
+    refprop COmNavigator:appVersion
+    refprop COmNavigator:userAgent
+    refmethod COmNavigator:javaEnabled
+    refmethod COmNavigator:taintEnabled
+    refprop COmNavigator:mimeTypes
+    refprop COmNavigator:plugins
+    refprop COmNavigator:cookieEnabled
+    refprop COmNavigator:opsProfile
+    refmethod COmNavigator:toString
+	refprop COmNavigator:cpuClass
+	refprop COmNavigator:systemLanguage
+	refprop COmNavigator:browserLanguage
+	refprop COmNavigator:userLanguage
+	refprop COmNavigator:platform
+	refprop COmNavigator:appMinorVersion
+	refprop COmNavigator:connectionSpeed
+	refprop COmNavigator:onLine
+    refprop COmNavigator:userProfile
+
+
+tearoff COmNavigator interface:IOmNavigator
+class COmNavigator name:HTMLNavigator primaryinterface:IOmNavigator guid:FECEAAA6-8405-11cf-8BA1-00AA00476DA6
+    property appCodeName         atype:BSTR          dispid:DISPID_NAVIGATOR  \
+        get abstract
+    property appName             atype:BSTR          dispid:DISPID_NAVIGATOR+1  \
+        get abstract
+    property appVersion          atype:BSTR          dispid:DISPID_NAVIGATOR+2  \
+        get abstract
+    property userAgent           atype:BSTR          dispid:DISPID_NAVIGATOR+3  \
+        get abstract
+    method HRESULT javaEnabled   dispid:DISPID_NAVIGATOR+4  \
+        (out retval     type:VARIANT_BOOL*  arg:enabled)
+    method HRESULT taintEnabled  dispid:DISPID_NAVIGATOR+5  \
+        (out retval     type:VARIANT_BOOL*  arg:enabled)
+    property mimeTypes atype:IHTMLMimeTypesCollection*  dispid:DISPID_NAVIGATOR+6  \
+       get  abstract
+    property plugins   atype:IHTMLPluginsCollection*  dispid:DISPID_NAVIGATOR+7  \
+       get  abstract
+    property cookieEnabled       atype:VARIANT_BOOL  dispid:DISPID_NAVIGATOR+8  \
+        get abstract
+    property opsProfile atype:IHTMLOpsProfile*       dispid:DISPID_NAVIGATOR+9  \
+        get abstract
+    method HRESULT toString      dispid:DISPID_NAVIGATOR+10 \
+        (out retval type:BSTR* arg:string)
+    property cpuClass           atype:BSTR          dispid:DISPID_NAVIGATOR+11  \
+        get abstract
+    property systemLanguage     atype:BSTR          dispid:DISPID_NAVIGATOR+12  \
+        get abstract
+// Remove hidden when implementing browserLanguage. it is here to prevent enumeration
+    property browserLanguage    atype:BSTR          dispid:DISPID_NAVIGATOR+13  \
+        get abstract hidden
+    property userLanguage       atype:BSTR          dispid:DISPID_NAVIGATOR+14  \
+        get abstract
+    property platform           atype:BSTR          dispid:DISPID_NAVIGATOR+15  \
+        get abstract
+    property appMinorVersion    atype:BSTR          dispid:DISPID_NAVIGATOR+16  \
+        get abstract
+// Remove hidden when implementing comnnectionSpeed. it is here to prevent enumeration
+    property connectionSpeed    atype:long          dispid:DISPID_NAVIGATOR+17  \
+        get abstract hidden
+    property onLine			    atype:VARIANT_BOOL  dispid:DISPID_NAVIGATOR+18  \
+        get abstract
+    property userProfile atype:IHTMLOpsProfile*      dispid:DISPID_NAVIGATOR+19  \
+        get abstract
+
+//
+// ============== IHTMLLocation ===========================
+//
+
+interface IHTMLLocation super:IDispatch guid:163BB1E0-6E00-11cf-837A-48DC04C10000
+    refprop COmLocation:href
+    refprop COmLocation:protocol
+    refprop COmLocation:host
+    refprop COmLocation:hostname
+    refprop COmLocation:port
+    refprop COmLocation:pathname
+    refprop COmLocation:search
+    refprop COmLocation:hash
+    refmethod COmLocation:reload
+    refmethod COmLocation:replace
+    refmethod COmLocation:assign
+    refmethod COmLocation:toString
+
+
+tearoff COmLocation interface:IHTMLLocation
+tearoff COmLocation interface:IObjectIdentity
+    tearmethod IsEqualObject            mapto:IsEqualObject
+
+class COmLocation name:HTMLLocation primaryinterface:IHTMLLocation guid:163BB1E1-6E00-11cf-837A-48DC04C10000
+    property href         atype:BSTR          dispid:DISPID_VALUE  \
+        get set abstract maxstrlen:pdlUrlLen
+    property protocol     atype:BSTR          dispid:DISPID_LOCATION  \
+        get set abstract maxstrlen:pdlNoLimit
+    property host         atype:BSTR          dispid:DISPID_LOCATION+1  \
+        get set abstract maxstrlen:pdlUrlLen
+    property hostname     atype:BSTR          dispid:DISPID_LOCATION+2  \
+        get set abstract maxstrlen:pdlUrlLen
+    property port         atype:BSTR          dispid:DISPID_LOCATION+3  \
+        get set abstract maxstrlen:pdlToken
+    property pathname     atype:BSTR          dispid:DISPID_LOCATION+4  \
+        get set abstract maxstrlen:pdlUrlLen
+    property search       atype:BSTR          dispid:DISPID_LOCATION+5  \
+        get set abstract maxstrlen:pdlUrlLen
+    property hash         atype:BSTR          dispid:DISPID_LOCATION+6  \
+        get set abstract maxstrlen:pdlUrlLen
+    method HRESULT reload                     dispid:DISPID_LOCATION+7  \
+        (in type:VARIANT_BOOL arg:flag defaultvalue:0)
+    method HRESULT replace maxstrlen:pdlUrlLen dispid:DISPID_LOCATION+8  \
+        (in type:BSTR arg:bstr)
+    method HRESULT assign maxstrlen:pdlUrlLen dispid:DISPID_LOCATION+9  \
+        (in type:BSTR arg:bstr)
+    method HRESULT toString                   dispid:DISPID_LOCATION+10 \
+        (out retval type:BSTR* arg:string)
+
+#endif 

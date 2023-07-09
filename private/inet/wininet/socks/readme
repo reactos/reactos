@@ -1,0 +1,6 @@
+This directory contains the code for the 32-bit shim that implements
+SOCKS V4 over the native Microsoft TCP stacks on Windows NT and Windows 95.
+The code compiles on all NT RISC platforms.  WSOCK32.386 is the DEF file
+for Intel platforms, while WSOCK32.AXP is the DEF file for all RISC platforms.
+The RES.BIN resource is used by some Microsoft applications and is drawn
+from the shipping Microsoft DLLs.

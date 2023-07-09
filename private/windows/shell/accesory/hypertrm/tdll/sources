@@ -1,0 +1,134 @@
+
+
+USE_CRTDLL=1
+NOT_LEAN_AND_MEAN=1
+
+NTTARGETFILE0=preprocess copytermrc
+
+
+MAJORCOMP=
+MINORCOMP=
+
+TARGETNAME=HYPERTRM
+TARGETTYPE=DYNLINK
+TARGETPATH=..\bin
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib     \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(BASEDIR)\public\sdk\lib\*\winspool.lib \
+           $(BASEDIR)\public\sdk\lib\*\tapi32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\wsock32.lib  \
+           $(BASEDIR)\public\sdk\lib\*\htmlhelp.lib \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib
+
+
+LINKLIBS=  ..\bin\*\ext2.lib                        \
+           ..\bin\*\emu.lib                         \
+           ..\bin\*\xfer.lib                        \
+           ..\bin\*\cncttapi.lib                    \
+           ..\bin\*\comstd.lib                      \
+           ..\bin\*\comwsock.lib
+
+INCLUDES=.;..;..\term
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=    ABOUTDLG.C \
+            ASCIIDLG.C \
+            ASSERT.C   \
+            AUTOSAVE.C \
+            BACKSCRL.C \
+            BANNER.C   \
+            CAPTURE.C  \
+            CLIPBRD.C  \
+            CLOOP.C    \
+            CLOOPCTL.C \
+            CLOOPOUT.C \
+            CLOOPSET.C \
+            CNCTHDL.C  \
+            CNCTSTUB.C \
+            COM.C      \
+            COMDEF.C   \
+            COMSEND.C  \
+            CPF_DLG.C  \
+            DODIALOG.C \
+            ERRORBOX.C \
+            FILE_IO.C  \
+            FILE_MSC.C \
+            FONTDLG.C  \
+            GENRCDLG.C \
+            GETCHAR.C  \
+            GLOBALS.C  \
+            HLPTABLE.C \
+            KEY_DLG.C  \
+            KEY_SDLG.C \
+            KEYEDIT.C  \
+            KEYEXTRN.CPP   \
+            KEYMACRO.CPP   \
+            KEYMLIST.CPP   \
+            KEYUTIL.C  \
+            LOAD_RES.C \
+            MISC.C     \
+            NAGDLG.C   \
+            NEW_CNCT.C \
+            OPEN_MSC.C \
+            PRE_DLG.C  \
+            PRINT.C    \
+            PRINTDC.C  \
+            PRINTHDL.C \
+            PRINTSET.C \
+            PRNECHO.C  \
+            PROPERTY.C \
+            PROPTERM.C \
+            RECV_DLG.C \
+            REGISTRY.C \
+            SEND_DLG.C \
+            SERIALNO.C \
+            SESSFILE.C \
+            SESSHDL.C  \
+            SESSMENU.C \
+            SESSPROC.C \
+            SESSUTIL.C \
+            SF.C       \
+            SIDEBAR.C  \
+            STATUSBR.C \
+            TCHAR.C    \
+            TDLL.C     \
+            TELNETCK.C \
+            TERMCPY.C  \
+            TERMCUR.C  \
+            TERMHDL.C  \
+            TERMMOS.C  \
+            TERMPNT.C  \
+            TERMPROC.C \
+            TERMUPD.C  \
+            TERMUTIL.C \
+            TIMERS.C   \
+            TOOLBAR.C  \
+            TRANSLAT.C \
+            UPDATE.C   \
+            UPGRDDLG.C \
+            VU_METER.C \
+            XFDSPDLG.C \
+            XFER_MSC.C \
+            TERM.RC
+
+##            BV_TEXT.C  \
+##            COMDEV.C   \
+##            ENGNTHRD.C \
+##            FRAMEPRC.C \
+##            MC.C       \
+##            PROPGNRL.C \
+##            SF_DATA.C  \
+
+
+
+DLLBASE=0x79000000
+DLLENTRY=TDllEntry
+

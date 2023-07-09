@@ -1,0 +1,39 @@
+#define     ID_SPEED            100
+#define     ID_DENSITY          101
+#define     ID_DENSITYARROW     102
+#define     ID_SPEED_SLOW       104
+#define     ID_SPEED_FAST       105
+#define     ID_DENSITY_LABEL    106
+
+//
+// Help IDs
+//
+#define IDH_DISPLAY_SCREENSAVER_STARFIELD_WARP          4216
+#define IDH_DISPLAY_SCREENSAVER_STARFIELD_DENSITY       4217
+
+#ifdef RC_INVOKED
+
+/* This is the dialog box template and must be defined as DLG_SCRNSAVECONFIGURE
+    Anything else in here is perfectly acceptable... */
+DLG_SCRNSAVECONFIGURE   DIALOG      8,16,202,80
+FONT 8, "MS Shell Dlg"
+STYLE WS_POPUP | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Starfield Simulation Setup"
+BEGIN
+    DEFPUSHBUTTON "OK",                 IDOK,                   158,8,40,14,WS_TABSTOP
+    PUSHBUTTON "Cancel",                IDCANCEL,               158,26,40,14,WS_TABSTOP
+
+    GROUPBOX "&Warp Speed"              -1,                     4,4,150,36
+    LTEXT "Slow",                       ID_SPEED_SLOW,          8,16,32,14
+    RTEXT "Fast",                       ID_SPEED_FAST,          114,16,32,14
+    SCROLLBAR,                          ID_SPEED,               8,24,138,12, WS_GT
+
+    GROUPBOX "Starfield &Density"       -1,                     4,43,150,30
+    LTEXT "Number of stars (10-200)",   ID_DENSITY_LABEL,       8,57,92,14
+    EDITTEXT                            ID_DENSITY,             106,54,26,12,WS_TABSTOP
+    CONTROL "",ID_DENSITYARROW,"msctls_updown32", WS_TABSTOP | UDS_WRAP | UDS_SETBUDDYINT |
+                                              UDS_ALIGNRIGHT | UDS_ARROWKEYS, 124, 54, 8, 12
+END
+
+
+#endif

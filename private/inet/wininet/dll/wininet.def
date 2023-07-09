@@ -1,0 +1,298 @@
+LIBRARY     WININET
+
+EXPORTS
+
+    InternetTimeFromSystemTimeA
+    InternetTimeFromSystemTimeW
+    InternetTimeFromSystemTime = InternetTimeFromSystemTimeA
+
+    InternetTimeToSystemTimeA
+    InternetTimeToSystemTimeW
+    InternetTimeToSystemTime = InternetTimeToSystemTimeA
+
+    InternetCrackUrlA
+    InternetCrackUrlW
+    InternetCreateUrlA
+    InternetCreateUrlW
+    InternetCanonicalizeUrlA
+    InternetCanonicalizeUrlW
+    InternetCombineUrlA
+    InternetCombineUrlW
+    InternetOpenA
+    InternetOpenW
+    InternetCloseHandle
+    InternetConnectA
+    InternetConnectW
+    InternetOpenUrlA
+    InternetOpenUrlW
+    InternetSetFilePointer
+    InternetReadFile
+    InternetReadFileExA
+    InternetReadFileExW
+    InternetWriteFile
+    InternetWriteFileExA
+    InternetWriteFileExW
+    InternetQueryDataAvailable
+    InternetFindNextFileA
+    InternetFindNextFileW
+    InternetQueryOptionA
+    InternetQueryOptionW
+    InternetSetOptionA
+    InternetSetOptionW
+    InternetSetOptionExA
+    InternetSetOptionExW
+    InternetGetLastResponseInfoA
+    InternetGetLastResponseInfoW
+    InternetSetStatusCallbackA
+    InternetSetStatusCallbackW
+    InternetSetStatusCallback = InternetSetStatusCallbackA
+
+    InternetConfirmZoneCrossingA
+    InternetConfirmZoneCrossingW
+    InternetConfirmZoneCrossing = InternetConfirmZoneCrossingA
+
+    InternetAlgIdToStringA
+    InternetAlgIdToStringW
+    InternetSecurityProtocolToStringA
+    InternetSecurityProtocolToStringW
+    InternetQueryFortezzaStatus
+    InternetFortezzaCommand
+
+    FtpFindFirstFileA
+    FtpFindFirstFileW
+    FtpGetFileA
+    FtpGetFileW
+    FtpGetFileEx
+    FtpPutFileA
+    FtpPutFileW
+    FtpPutFileEx
+    FtpDeleteFileA
+    FtpDeleteFileW
+    FtpRenameFileA
+    FtpRenameFileW
+    FtpOpenFileA
+    FtpOpenFileW
+    FtpCreateDirectoryA
+    FtpCreateDirectoryW
+    FtpRemoveDirectoryA
+    FtpRemoveDirectoryW
+    FtpSetCurrentDirectoryA
+    FtpSetCurrentDirectoryW
+    FtpGetCurrentDirectoryA
+    FtpGetCurrentDirectoryW
+    FtpGetFileSize
+    FtpCommandA
+    FtpCommandW
+
+    GopherCreateLocatorA
+    GopherCreateLocatorW
+    GopherGetLocatorTypeA
+    GopherGetLocatorTypeW
+    GopherFindFirstFileA
+    GopherFindFirstFileW
+    GopherOpenFileA
+    GopherOpenFileW
+    GopherGetAttributeA
+    GopherGetAttributeW
+    ;GopherSendDataA
+    ;GopherSendDataW
+
+    HttpOpenRequestA
+    HttpOpenRequestW
+    HttpAddRequestHeadersA
+    HttpAddRequestHeadersW
+    HttpSendRequestA
+    HttpSendRequestW
+    HttpSendRequestExA
+    HttpSendRequestExW
+    HttpEndRequestA
+    HttpEndRequestW
+    HttpQueryInfoA
+    HttpQueryInfoW
+
+    InternetErrorDlg
+
+    InternetSetCookieA
+    InternetSetCookieW
+    InternetGetCookieA
+    InternetGetCookieW
+
+    CreateUrlCacheEntryA
+    CreateUrlCacheEntryW
+    CommitUrlCacheEntryA
+    CommitUrlCacheEntryW
+
+    RetrieveUrlCacheEntryFileA
+    RetrieveUrlCacheEntryFileW
+
+    UnlockUrlCacheEntryFileA
+    UnlockUrlCacheEntryFileW
+    UnlockUrlCacheEntryFile = UnlockUrlCacheEntryFileA
+
+    RetrieveUrlCacheEntryStreamA
+    RetrieveUrlCacheEntryStreamW
+    ReadUrlCacheEntryStream
+    UnlockUrlCacheEntryStream
+
+    GetUrlCacheEntryInfoA
+    GetUrlCacheEntryInfoW
+    GetUrlCacheEntryInfoExA
+    GetUrlCacheEntryInfoExW
+    SetUrlCacheEntryInfoA
+    SetUrlCacheEntryInfoW
+
+    DeleteUrlCacheEntryA
+    DeleteUrlCacheEntryW
+    DeleteUrlCacheEntry = DeleteUrlCacheEntryA
+
+    FindFirstUrlCacheContainerA
+    FindFirstUrlCacheContainerW
+    FindNextUrlCacheContainerA
+    FindNextUrlCacheContainerW
+    CreateUrlCacheContainerA
+    CreateUrlCacheContainerW
+    DeleteUrlCacheContainerA
+    DeleteUrlCacheContainerW
+
+    FindFirstUrlCacheEntryA
+    FindFirstUrlCacheEntryW
+    FindFirstUrlCacheEntryExA
+    FindFirstUrlCacheEntryExW
+
+    FindNextUrlCacheEntryA
+    FindNextUrlCacheEntryW
+    FindNextUrlCacheEntryExA
+    FindNextUrlCacheEntryExW
+
+    FindCloseUrlCache
+    IsUrlCacheEntryExpiredA
+    IsUrlCacheEntryExpiredW
+
+    CreateUrlCacheGroup
+    DeleteUrlCacheGroup
+    SetUrlCacheEntryGroupA
+    SetUrlCacheEntryGroupW
+    SetUrlCacheEntryGroup = SetUrlCacheEntryGroupA
+    FindFirstUrlCacheGroup
+    FindNextUrlCacheGroup
+    GetUrlCacheGroupAttributeA
+    GetUrlCacheGroupAttributeW
+    SetUrlCacheGroupAttributeA
+    SetUrlCacheGroupAttributeW
+    FreeUrlCacheSpaceA
+    FreeUrlCacheSpaceW
+
+    GetUrlCacheConfigInfoA
+    GetUrlCacheConfigInfoW
+
+    SetUrlCacheConfigInfoA
+    SetUrlCacheConfigInfoW
+
+    GetUrlCacheHeaderData
+    SetUrlCacheHeaderData
+    IncrementUrlCacheHeaderData
+
+    LoadUrlCacheContent
+        UpdateUrlCacheContentPath
+
+    RegisterUrlCacheNotification
+
+
+;    InternetAddHistoryItem
+;    InternetIsHistorical
+
+
+
+    ; BUGBUG [arthurbi] - Remove this function after Beta 1.
+    ;  This is exported out of WININET so MSHTML can reuse
+    ;  some of the IE 2 SSL code without too much modification.
+    ;
+    ;  POST-BETA1 we need to have InternetErrorDlg do all
+    ;  the work for MSHTML.  That way we impliment ONE
+    ;  set Certifcate UI code.
+    ;
+
+    InternetShowSecurityInfoByURLA
+    InternetShowSecurityInfoByURLW
+    InternetShowSecurityInfoByURL = InternetShowSecurityInfoByURLA
+
+        RunOnceUrlCache
+        DeleteIE3Cache
+
+    InternetAttemptConnect      ; A caller may call this the first time to
+                                ; so we make a winsock call, which may invoke dial
+                                ; dialog
+
+    ShowSecurityInfo
+    ShowX509EncodedCertificate
+    ShowClientAuthCerts
+    ParseX509EncodedCertificateForListBoxEntry
+
+    InternetLockRequestFile
+    InternetUnlockRequestFile
+
+    InternetCheckConnectionA     ;
+    InternetCheckConnectionW     ;
+
+    InternetInitializeAutoProxyDll
+
+    InternetAutodialCallback
+    InternetDialA
+    InternetDialW
+    InternetDial = InternetDialA
+
+    InternetHangUp
+    InternetGoOnlineA
+    InternetGoOnlineW
+    InternetGoOnline = InternetGoOnlineA
+
+    InternetAutodial
+    InternetAutodialHangup
+    InternetSetDialStateA
+    InternetSetDialStateW
+    InternetSetDialState = InternetSetDialStateA
+
+    InternetGetConnectedState
+
+    InternetGetConnectedStateExA
+    InternetGetConnectedStateExW
+    InternetGetConnectedStateEx = InternetGetConnectedStateExA
+
+    ; Exports for the Security Zones functions.
+    IsHostInProxyBypassList
+
+    ; Called by setup to install registry entries needed by Wininet.
+    DllInstall  PRIVATE
+
+    InternetGetCertByURLA
+    InternetGetCertByURL = InternetGetCertByURLA
+
+    ShowCertificate
+    ResumeSuspendedDownload
+
+    DetectAutoProxyUrl
+
+    DoConnectoidsExist @101 NONAME
+    GetDiskInfoA @102 NONAME
+    PerformOperationOverUrlCacheA @103 NONAME
+
+
+    HttpCheckDavComplianceA @104 NONAME
+    HttpCheckDavComplianceW @105 NONAME
+    HttpCheckDavCompliance = HttpCheckDavComplianceA
+
+
+    ; Commenting out as per bug 15696
+    ;HttpCheckCachedDavStatusA @106 NONAME
+    ;HttpCheckCachedDavStatusW @107 NONAME
+    ;HttpCheckCachedDavStatus = HttpCheckCachedDavStatusA
+    
+    ; This is a huge hack
+    UrlZonesDetach
+    ;;  Don't forget wininet.w in iedev\inc
+    ImportCookieFileA  @108 NONAME
+    ExportCookieFileA  @109 NONAME
+    ImportCookieFileW  @110 NONAME
+    ExportCookieFileW  @111 NONAME
+
+    IsProfilesEnabled   @112 NONAME

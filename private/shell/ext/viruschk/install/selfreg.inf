@@ -1,0 +1,45 @@
+[version]
+signature="$CHICAGO$"
+AdvancedINF=2.5,"advpack.dll is missing."
+
+[SourceDisksNames]
+1="%AppName%",,1
+
+[DestinationDirs]
+
+[InstallOCXs]
+RegisterOCXs=RegisterControls
+
+[MyCustomDir]
+49000,49010,49011,49012=DestA,1
+
+[DestA]
+HKLM,SOFTWARE\MarkTest,TestLoc,'%Prompt1%',
+HKLM,SOFTWARE\Markus,Blah,'%Prompt2%',
+HKLM,SOFTWARE\Microsoft\Access,,'%Prompt3%',"%11%"
+
+[InstallRegs]
+AddReg=AddRegEntries
+
+[UnInstall]
+UnRegisterOCXs=RegisterControls
+DelReg=DelRegEntries
+
+[RegisterControls]
+%24%\progra~1\viruss~1\mcafee\mvscan.dll
+
+[AddRegEntries]
+HKEY_CLASSES_ROOT,CLSID\{91B0C1B0-0B71-11D0-8217-00A02474294C}\VirusScanner,"VendorDescription",0,"McAfee Virus Scanner"
+HKEY_CLASSES_ROOT,CLSID\{91B0C1B0-0B71-11D0-8217-00A02474294C}\VirusScanner,"VendorContactInfo",0,"http://www.mcafee.com"
+HKEY_CLASSES_ROOT,CLSID\{91B0C1B0-0B71-11D0-8217-00A02474294C}\VirusScanner,VendorFlags,1,0xF,0,0,0
+HKEY_CLASSES_ROOT,CLSID\{91B0C1B0-0B71-11D0-8217-00A02474294C}\VirusScanner,"VendorIcon",0,"%11%\shell32.dll,32"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VirusScanner,"DisplayName",0,"VirusScanner"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VirusScanner,"UninstallString",0,"Rundll vrsreg.exe /U"
+
+[DelRegEntries]
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VirusScanner
+HKEY_CLASSES_ROOT,CLSID\{91B0C1B0-0B71-11D0-8217-00A02474294C}\VirusScanner
+
+[Strings]
+AppName = Virus Scanner Setup
+

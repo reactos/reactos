@@ -1,0 +1,20 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# 10/28/97 Created by cdturner (from the userexts sources)
+#***************************************************************************/
+
+W32_SB=1
+
+ALT_PROJECT=NTSD
+ALT_PROJECT_TARGET=.
+
+!include ..\sources.inc
+
+
+

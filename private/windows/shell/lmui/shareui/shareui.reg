@@ -1,0 +1,21 @@
+\Registry\MACHINE\SOFTWARE\Classes
+    CLSID
+        {02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}
+            = Shared Directories
+            DefaultIcon
+                = REG_EXPAND_SZ %SystemRoot%\System32\shareui.dll
+            InProcServer32
+                = REG_EXPAND_SZ %SystemRoot%\System32\shareui.dll
+                ThreadingModel = Apartment
+            ShellFolder
+                Attributes = REG_BINARY 4 0x20000004
+
+\Registry\MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
+    MyComputer
+        NameSpace
+            {02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}
+                = Shared Directories
+    RemoteComputer
+        NameSpace
+            {02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}
+                = Shared Directories

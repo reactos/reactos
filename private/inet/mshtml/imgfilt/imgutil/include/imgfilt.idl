@@ -1,0 +1,164 @@
+// BitmapSurfaces.idl : IDL source for BitmapSurfaces.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (BitmapSurfaces.tlb) and marshalling code.
+
+cpp_quote( "#define SURFACE_LOCK_NORMAL 0x00" )
+cpp_quote( "#define SURFACE_LOCK_EXCLUSIVE 0x01" )
+cpp_quote( "#define SURFACE_LOCK_ALLOW_DISCARD 0x02" )
+cpp_quote( "#define SURFACE_LOCK_READ_ONLY 0x04" )
+cpp_quote( "#define SURFACE_LOCK_WAIT 0x08" )
+
+cpp_quote( "#define DECODE_EVENT_PROGRESS 0x01" )
+cpp_quote( "#define DECODE_EVENT_PALETTE 0x02" )
+cpp_quote( "#define DECODE_EVENT_BEGINBITS 0x04" )
+cpp_quote( "#define DECODE_EVENT_BITSCOMPLETE 0x08" )
+
+cpp_quote( "#define DECODE_HINT_TOPDOWN 0x01" )
+cpp_quote( "#define DECODE_HINT_BOTTOMUP 0x02" )
+cpp_quote( "#define DECODE_HINT_FULLWIDTH 0x04" )
+
+cpp_quote( "#define COLOR_NO_TRANSPARENT 0xffffffff" )
+
+cpp_quote( "#define MAP_DEFAULT 0" )
+cpp_quote( "#define MAP_CLSID 1" )
+cpp_quote( "#define MAP_DISABLE 2" )
+cpp_quote( "#define MAP_DEFAULT_ALWAYS 3" )
+
+cpp_quote( "EXTERN_C const GUID BFID_RGB_32;" )
+cpp_quote( "EXTERN_C const GUID BFID_RGB_555;" )
+cpp_quote( "EXTERN_C const GUID BFID_RGB_565;" )
+cpp_quote( "EXTERN_C const GUID BFID_RGB_24;" )
+cpp_quote( "EXTERN_C const GUID BFID_RGB_8;" )
+cpp_quote( "#define BFID_INDEXED_RGB_8 BFID_RGB_8" )
+cpp_quote( "EXTERN_C const GUID BFID_RGB_4;" )
+cpp_quote( "#define BFID_INDEXED_RGB_4 BFID_RGB_4" )
+cpp_quote( "EXTERN_C const GUID BFID_MONOCHROME;" )
+cpp_quote( "#define BFID_INDEXED_RGB_1 BFID_MONOCHROME" )
+cpp_quote( "EXTERN_C const GUID BFID_RGBA_32;" )
+cpp_quote( "EXTERN_C const GUID BFID_GRAY_8;" )
+cpp_quote( "EXTERN_C const GUID BFID_GRAY_16;" )
+
+typedef struct tagRGBQUAD RGBQUAD;
+
+interface IImageDecodeEventSink;
+interface IImageDecodeFilter;
+interface IBitmapSurface;
+interface IBitmapSurfaceFactory;
+
+[
+	object,
+   local,
+	uuid( 3050f2ef-98b5-11cf-bb82-00aa00bdce0b ),
+	helpstring( "IBitmapSurface Interface" ),
+	pointer_default( unique )
+]
+interface IBitmapSurface : IUnknown
+{
+   import "oaidl.idl";
+
+   HRESULT Clone( [out] IBitmapSurface** ppSurface );
+   HRESULT GetFormat( [out] GUID* pBFID );
+   HRESULT GetFactory( [out] IBitmapSurfaceFactory** ppFactory );
+   HRESULT GetSize( LONG* pnWidth, LONG* pnHeight );
+   HRESULT LockBits( [in] RECT* pBounds, [in] DWORD dwLockFlags, 
+      [out] void** ppBits, [out] LONG* pnPitch );
+   HRESULT UnlockBits( [in] RECT* pBounds, [in] void* pBits );
+};
+
+[
+   object,
+   local,
+   uuid( 3050f2f0-98b5-11cf-bb82-00aa00bdce0b ),
+   helpstring( "IGdiSurface Interface" ),
+   pointer_default( unique )
+]
+interface IGdiSurface : IUnknown
+{
+   HRESULT GetDC( [out] HDC* phDC, [in] DWORD dwLockFlags );
+   HRESULT ReleaseDC( [in] HDC hDC );
+};
+
+[
+   object,
+   local,
+   uuid( 3050f2f5-98b5-11cf-bb82-00aa00bdce0b ),
+   helpstring( "IRGBColorTable Interface" ),
+   pointer_default( unique )
+]
+interface IRGBColorTable : IUnknown
+{
+   HRESULT GetCount( [out] LONG* pnCount );
+   HRESULT GetColors( [in] LONG iFirst, [in] LONG nCount, 
+      [out] RGBQUAD* pColors );
+   HRESULT SetColors( [in] LONG iFirst, [in] LONG nCount, 
+      [in] RGBQUAD* pColors );
+   HRESULT GetTransparentIndex( [out] LONG* piIndex );
+   HRESULT SetTransparentIndex( [in] LONG iIndex );
+};
+
+[
+   object,
+   local,
+   uuid( 3050f2f2-98b5-11cf-bb82-00aa00bdce0b ),
+   helpstring( "IBitmapSurfaceFactory Interface" ),
+   pointer_default( unique )
+]
+interface IBitmapSurfaceFactory : IUnknown
+{
+   HRESULT CreateBitmapSurface( [in] LONG nWidth, [in] LONG nHeight, 
+      [in] GUID* pBFID, [in] DWORD dwHintFlags, 
+      [out] IBitmapSurface** ppSurface );
+   HRESULT GetSupportedFormatsCount( [out] LONG* pnFormats );
+   HRESULT GetSupportedFormats( [in] LONG nFormats, [out] GUID* pBFIDs );
+};
+
+[
+	object,
+   local,
+	uuid( D9E89500-30FA-11d0-B724-00AA006C1A01 ),
+	helpstring( "IMapMIMEToCLSID Interface" ),
+	pointer_default( unique )
+]
+interface IMapMIMEToCLSID : IUnknown
+{
+   HRESULT EnableDefaultMappings( BOOL bEnable );
+   HRESULT MapMIMEToCLSID( LPCOLESTR pszMIMEType, GUID* pCLSID );
+   HRESULT SetMapping( LPCOLESTR pszMIMEType, DWORD dwMapMode, REFGUID clsid );
+};
+
+[
+	object,
+   local,
+	uuid( A3CCEDF3-2DE2-11D0-86F4-00A0C913F750 ),
+	helpstring( "IImageDecodeFilter Interface" ),
+	pointer_default( unique )
+]
+interface IImageDecodeFilter : IUnknown
+{
+   HRESULT Initialize( IImageDecodeEventSink* pEventSink );
+   HRESULT Process( IStream* pStream );
+   HRESULT Terminate( HRESULT hrStatus );
+};
+
+[
+	object,
+   local,
+	uuid( BAA342A0-2DED-11d0-86F4-00A0C913F750 ),
+	helpstring( "IImageDecodeEventSink Interface" ),
+	pointer_default( unique )
+]
+interface IImageDecodeEventSink : IUnknown
+{
+   HRESULT GetSurface( [in] LONG nWidth, [in] LONG nHeight, [in] REFGUID bfid, 
+      [in] ULONG nPasses, [in] DWORD dwHints, 
+      [out] IBitmapSurface** ppSurface );
+   HRESULT OnBeginDecode( [out] DWORD* pdwEvents, [out] ULONG* pnFormats,
+      [out, size_is(,*pnFormats)] GUID** ppFormats );
+   HRESULT OnBitsComplete();
+   HRESULT OnDecodeComplete( [in] HRESULT hrStatus );
+   HRESULT OnPalette();
+   HRESULT OnProgress( [in] RECT* pBounds, [in] BOOL bComplete );
+};
+

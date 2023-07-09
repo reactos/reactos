@@ -1,0 +1,237 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+PRECOMPILED_CXX   = 1
+
+# Build a shdocvwp.lib
+BUILD_PRIVLIB   = 1
+SELFREGNAME     = ..\selfreg_shdocvw.inf
+
+!include $(CCSHELL_DIR)\shdocvw\shdocvw.inc
+
+NO_BROWSER_FILE = 1
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\shdocvw\shdocvw.inc
+
+# For RC to find exdisp.TLB
+INCLUDES        = $(SDK_LIB_PATH);$(INCLUDES);$O;
+
+# Include makefile.inc, and build these files before what is in SOURCES
+NTTARGETFILE0= $(SELFREGNAME)
+
+
+!if "$(BUILD_PRODUCT)" == "NT"
+MISCFILES = $(MISCFILES) $(SELFREGNAME)
+!endif
+
+
+# !!!!!!!!!!!!!!!!!
+#
+# READ THIS!!!  Do not add -DFEATURE_* defines here. Add it to shdocvw.inc.
+#
+# !!!!!!!!!!!!!!!!!
+
+TARGETNAME      = shdocvw
+TARGETPATH      = obj
+TARGETPATHLIB   = $(BASEDIR)\public\sdk\lib
+TARGETTYPE      = DYNLINK
+
+# NOTE!! We deliberately link to an NT4 compatible shell32.lib
+#        so shdocvw can be loaded in the browser-only installations.
+#        We use the NT version because it contains lego info.
+#        The debug version of shdocvw links to the Win95 version
+#        of shell32.lib simply so we can verify that we load in the
+#        browser-only installations on Win95.
+#
+# NOTE!! Do not link to ntdll!  NTDLL does not exist on Win95, so all
+#        calls into it need to be delay-loaded.
+#
+
+TARGETLIBS      = $(SDK_LIB_PATH)\kernel32.lib      \
+                  $(LIBRARY_PATH)\shlwapip.lib      \
+                  $(SDK_LIB_PATH)\gdi32.lib         \
+                  $(SDK_LIB_PATH)\user32.lib        \
+                  $(SDK_LIB_PATH)\advapi32.lib      \
+                  $(SDK_LIB_PATH)\uuid.lib          \
+                  $(SDK_LIB_PATH)\ole32.lib         \
+                  $(SDK_LIB_PATH)\htmlhelp.lib      \
+                  $(CCSHELL_DIR)\lib\$O\shguidp.lib \
+                  $(LIBRARY_PATH)\comctl32.lib      \
+                  $(LIBRARY_PATH)\comctlp.lib       \
+!if $(386)
+! if !$(FREEBUILD)
+                  $(BASEDIR)\private\lib\chicago\*\shell32.w95  \
+! else
+                  $(BASEDIR)\private\lib\*\shell32.nt4  \
+! endif
+!else
+                  $(SDK_LIB_PATH)\shell32p.lib        \
+!endif
+                  $(CCSHELL_DIR)\lib\$O\stock5.lib            \
+
+!if $(IA64) || $(AXP64)
+USE_LIBCMT      = 1
+DLLENTRY        = _DllMainCRTStartup
+!else
+USE_IERT        = 1
+DLLENTRY        = DllMain
+!endif
+
+# srcc must be finished before this one
+SYNCHRONIZE_DRAIN=1
+
+LINKLIBS        = ..\srcc\$O\srcc.lib \
+                  ..\util\$O\util.lib \
+                  ..\hist\$O\hist.lib \
+                  ..\nt5api\$O\apithk.lib   \
+                  ..\cdfview\$O\cdfview.lib \
+                  $(CCSHELL_DIR)\lib\$O\stocklib.lib \
+
+DLLDEF          = $(O)\shdocvw.def
+DLLBASE         = 0x71500000
+
+DLLORDER        = $(BASEDIR)\private\prf\shdocvw.prf
+
+PRIVDEF         = $(O)\shdocvwp.def
+PRIVDEFSRC      = ..\shdocvw.src
+PRIVLIB         = shdocvwp.lib
+
+!ifdef UNIX
+
+SOURCES_PLATFORM =  \
+                  ..\unixstuff.cpp \
+                  ..\sheula.cpp \
+
+
+!else
+
+SOURCES_PLATFORM =  \
+
+!endif
+
+SOURCES         = \
+                  $(SOURCES_PLATFORM)\
+                  ..\shdocvw.rc   \
+                  ..\about.cpp    \
+                  ..\atl.cpp      \
+                  ..\bands.cpp    \
+                  ..\basesb.cpp   \
+                  ..\bcwx.cpp     \
+                  ..\bindcb.cpp   \
+                  ..\browsext.cpp \
+                  ..\cachecln.cpp \
+                  ..\cacheoff.cpp \
+                  ..\caggunk.cpp  \
+                  ..\chanoc.cpp   \
+                  ..\clslock.cpp  \
+                  ..\cnctnpt.cpp  \
+                  ..\cobjsafe.cpp \
+                  ..\cowsite.cpp  \
+                  ..\cwndproc.cpp \
+                  ..\debdump.cpp  \
+                  ..\dhuihand.cpp \
+                  ..\dllreg.cpp   \
+                  ..\dochost.cpp  \
+                  ..\dochostbsc.cpp \
+                  ..\download.cpp \
+                  ..\dpastuff.cpp \
+                  ..\droptgt.cpp  \
+                  ..\dspsprt.cpp  \
+                  ..\expdsprt.cpp \
+                  ..\favband.cpp  \
+                  ..\favorite.cpp \
+                  ..\fldset.cpp   \
+                  ..\histband.cpp \
+                  ..\history.cpp  \
+                  ..\hlframe.cpp  \
+                  ..\htregmng.cpp \
+                  ..\iedde.cpp    \
+                  ..\iedisp.cpp   \
+                  ..\iforms.cpp   \
+                  ..\impexp.cpp   \
+                  ..\inetnot.cpp  \
+                  ..\infotip.cpp  \
+                  ..\inpobj.cpp   \
+                  ..\inst.cpp     \
+                  ..\ipstg.cpp    \
+                  ..\isbase.cpp   \
+                  ..\isdtobj.cpp  \
+                  ..\isexicon.cpp \
+                  ..\isnewshk.cpp \
+                  ..\ispersis.cpp \
+                  ..\isprsht.cpp  \
+                  ..\isshlink.cpp \
+                  ..\isurl.cpp    \
+                  ..\iscmdt.cpp   \
+                  ..\libx.cpp     \
+                  ..\mainloop.cpp \
+                  ..\mime64.cpp   \
+                  ..\mruex.cpp    \
+                  ..\multimon.cpp \
+                  ..\nicotask.cpp \
+                  ..\nsc.cpp      \
+                  ..\nscband.cpp  \
+                  ..\nscoc.cpp    \
+                  ..\occtrl.cpp   \
+                  ..\olestuff.cpp \
+                  ..\opsprof.cpp  \
+                  ..\packager.cpp \
+                  ..\ratings.cpp  \
+                  ..\reload.cpp   \
+                  ..\sftupmb.cpp  \
+                  ..\shdocfl.cpp  \
+                  ..\shdocvw.cpp  \
+                  ..\shell32.cpp  \
+                  ..\shembed.cpp  \
+                  ..\shocx.cpp    \
+                  ..\shvocx.cpp   \
+                  ..\shuioc.cpp   \
+                  ..\splash.cpp   \
+                  ..\srchasst.cpp \
+                  ..\stdafx.cpp   \
+                  ..\stdenum.cpp  \
+                  ..\stream.cpp   \
+                  ..\strmwrap.cpp \
+                  ..\swindows.cpp \
+                  ..\tasklist.cpp \
+                  ..\tbext.cpp    \
+                  ..\tframe.cpp   \
+                  ..\thicket.cpp  \
+                  ..\tlog.cpp     \
+                  ..\trsite.cpp   \
+                  ..\url.cpp      \
+                  ..\urlassoc.cpp \
+                  ..\urlhist.cpp  \
+                  ..\urlhook.cpp  \
+                  ..\urlprop.cpp  \
+                  ..\urltrack.cpp \
+                  ..\util.cpp     \
+                  ..\winlist.cpp  \
+                  ..\wvt.cpp      \
+                  ..\impexpwz.cpp
+
+PRECOMPILED_INCLUDE = ..\priv.h

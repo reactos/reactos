@@ -1,0 +1,45 @@
+HKCR
+{
+    NoRemove *
+    {
+        NoRemove shellex
+        {
+            NoRemove PropertySheetHandlers
+            {
+                ForceRemove {883373C3-BF89-11D1-BE35-080036B11A03}
+            }
+        }
+    }
+
+    ShDocProp.Ext.1 = s 'ShDocProp class'
+    {
+        CLSID = s '{883373C3-BF89-11D1-BE35-080036B11A03}'
+    }
+    ShDocProp.ShellExt = s 'ShDocProp Class'
+    {
+        CurVer = s 'ShDocProp.Ext.1'
+    }
+    NoRemove CLSID
+    {
+        ForceRemove {883373C3-BF89-11D1-BE35-080036B11A03} = s 'ShDocProp class'
+        {
+            ProgID = s 'ShDocProp.Ext.1'
+            VersionIndependentProgID = s 'ShDocProp.Ext'
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+        }
+    }
+
+    NoRemove SoundRec
+    {
+        NoRemove shellex
+        {
+            NoRemove AdvancedPropertyHandlers
+            {
+                ForceRemove {E14BB48F-3183-11D2-BE3C-3078302C2030}
+            }
+        }
+    }
+}

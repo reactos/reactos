@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdgeo
+
+TARGETNAME=kbdgeo
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdgeo.c kbdgeo.rc
+
+NTTARGETFILE0=kbdgeo.h kbdgeo.rc kbdgeo.def

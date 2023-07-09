@@ -1,0 +1,47 @@
+
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+TARGETNAME=mgmtapi
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+DLLENTRY=DllMain
+USE_CRTDLL=1
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\ws2_32.lib \
+    $(BASEDIR)\public\sdk\lib\*\snmpapi.lib \
+    $(BASEDIR)\public\sdk\lib\*\wsnmp32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib
+
+INCLUDES=\
+    ..\..\..\tools\mibcc;\
+    ..\..\..\..\inc
+
+!IFDEF USE_CALLTREE
+LINKER_FLAGS=$(LINKER_FLAGS) -calltree
+!ENDIF
+
+SOURCES=\
+    mgmtapi.c \
+    oidconv.c \
+    mgmtapi.rc
+
+SYNCHRONIZE_DRAIN=1

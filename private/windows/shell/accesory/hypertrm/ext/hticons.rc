@@ -1,0 +1,34 @@
+/*	File: D:\wacker1\ext\hticons.rc (Created: 06-May-1994)
+ *
+ *	Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+ *	All rights reserved
+ *
+ *	$Revision: 1 $
+ *	$Date: 10/05/98 12:27p $
+ */
+
+#include <winver.h>
+#include <..\term\version.h>
+#include <..\term\res.h>
+
+IDI_PROG        ICON    "..\\term\\newcon.ico"
+
+IDI_PROG1       ICON    "..\\term\\delphi.ico"
+IDI_PROG2       ICON    "..\\term\\att.ico"
+IDI_PROG3       ICON    "..\\term\\dowjones.ico"
+IDI_PROG4       ICON    "..\\term\\mci.ico"
+IDI_PROG5       ICON    "..\\term\\genie.ico"
+IDI_PROG6       ICON    "..\\term\\compuser.ico"
+IDI_PROG7       ICON    "..\\term\\gen01.ico"
+IDI_PROG8       ICON    "..\\term\\gen02.ico"
+IDI_PROG9       ICON    "..\\term\\gen03.ico"
+IDI_PROG10      ICON    "..\\term\\gen04.ico"
+IDI_PROG11      ICON    "..\\term\\gen05.ico"
+IDI_PROG12      ICON    "..\\term\\gen06.ico"
+IDI_PROG13      ICON    "..\\term\\gen07.ico"
+IDI_PROG14      ICON    "..\\term\\gen08.ico"
+IDI_PROG15      ICON    "..\\term\\gen09.ico"
+IDI_PROG16      ICON    "..\\term\\gen10.ico"
+
+
+#include <..\term\ver_ico.rc>

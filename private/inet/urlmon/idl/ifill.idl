@@ -1,0 +1,50 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1994.
+//
+//  File:	ifill.idl
+//
+//  Contents:	IFillLockBytes
+//
+//  History:	28-Dec-95	PhilipLa	Created
+//
+//----------------------------------------------------------------------------
+
+
+[
+    local,
+    object,
+    uuid(99caf010-415e-11cf-8814-00aa00b569f5),
+    pointer_default(unique)
+]
+
+interface IFillLockBytes: IUnknown
+{
+    import "unknwn.idl";
+
+    HRESULT FillAppend
+    (
+        [in] void const *pv,
+        [in] ULONG cb,
+        [out] ULONG *pcbWritten
+    );
+    
+    HRESULT FillAt
+    (
+        [in] ULARGE_INTEGER ulOffset,
+        [in] void const *pv,
+        [in] ULONG cb,
+        [out] ULONG *pcbWritten
+    );
+    
+    HRESULT SetFillSize
+    (
+        [in] ULARGE_INTEGER ulSize
+    );
+    
+    HRESULT Terminate
+    (
+        [in] BOOL bCanceled
+    );
+}

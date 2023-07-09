@@ -1,0 +1,6 @@
+PPC_DLLLIBOBJECTS=..\..\rtl\user\obj\ppc\chkstk.obj
+
+PPC_SOURCES=..\ppc\critsect.s \
+            ..\ppc\currteb.s  \
+            ppc\usrstubs.s    \
+            ..\ppc\ldrthunk.s

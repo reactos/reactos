@@ -1,0 +1,21 @@
+HKCR
+{
+    ActSaver.ScreenSaver.1 = s 'ScreenSaver Class'
+    {
+        CLSID = s '{A5193FB7-1574-11D0-9D47-00A0C9034938}'
+    }
+    ActSaver.ScreenSaver = s 'ScreenSaver Class'
+    {
+        CLSID = s '{A5193FB7-1574-11D0-9D47-00A0C9034938}'
+    }
+    NoRemove CLSID
+    {
+        ForceRemove {A5193FB7-1574-11D0-9D47-00A0C9034938} = s 'ScreenSaver Class'
+        {
+            ProgID = s 'ActSaver.ScreenSaver.1'
+            VersionIndependentProgID = s 'ActSaver.ScreenSaver'
+            val AppID = s '{A5193FB2-1574-11D0-9D47-00A0C9034938}'
+            LocalServer32 = s '%Module%'
+        }
+    }
+}

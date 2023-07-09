@@ -1,0 +1,45 @@
+!IF 0
+
+Copyright (c) 1992  Micro Computer Systems, Inc
+
+!ENDIF
+
+MAJORCOMP=win32
+MINORCOMP=snmp
+
+TARGETNAME=mibs
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+SOURCES=
+
+NTTARGETFILES=
+
+!if "$(NOLINK)" != "1"
+MISCFILES = \
+    smi.mib	 \
+    acs.mib      \
+    dhcp.mib     \
+    ftp.mib      \
+    gopherd.mib  \
+    hostmib.mib  \
+    http.mib     \
+    inetsrv.mib  \
+    ipforwd.mib  \
+    lmmib2.mib   \
+    $(O)\mib.bin \
+    mib_ii.mib   \
+    mipx.mib     \
+    mripsap.mib  \
+    msft.mib     \
+    msipbtp.mib  \
+    msiprip2.mib \
+    nipx.mib     \
+    toaster.mib  \
+    wfospf.mib   \
+    wins.mib     \
+    printmib.mib \
+    igmpv2.mib   \
+    authserv.mib \
+    accserv.mib  \
+    mcastmib.mib
+!endif

@@ -1,0 +1,15 @@
+LIBRARY MSPORTS.DLL
+
+EXPORTS
+        LibMain
+        PortsClassInstaller
+        ParallelPortPropPageProvider
+        SerialPortPropPageProvider
+        SerialDisplayAdvancedSettings
+        ComDBOpen
+        ComDBClose
+        ComDBGetCurrentPortUsage
+        ComDBClaimNextFreePort
+        ComDBClaimPort
+        ComDBReleasePort
+        ComDBResizeDatabase

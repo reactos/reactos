@@ -1,0 +1,6 @@
+C_DEFINES=$(C_DEFINES) -DWIN32 -DWINNT
+
+!include ..\sources.inc
+
+SOURCES_USED    = $(SOURCES_USED) ..\sources.inc
+

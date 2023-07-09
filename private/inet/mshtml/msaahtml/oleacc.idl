@@ -1,0 +1,363 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright 1995-1996 Microsoft Corporation. All Rights Reserved.
+//  Microsoft Confidential
+//
+//  File: oleacc.idl
+//
+//  Notes:
+//  (1) OPTIONAL parameters must be the last parameters, excepting the single
+//  "RETVAL" output parameter.
+//  (2) The methods must be in the same order as the interface!
+//
+//+-------------------------------------------------------------------------
+
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// OLEACC.H")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1996 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+
+cpp_quote("")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// Typedefs")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("typedef LRESULT (STDAPICALLTYPE *LPFNLRESULTFROMOBJECT)(REFIID riid, WPARAM wParam, LPUNKNOWN punk);")
+cpp_quote("typedef HRESULT (STDAPICALLTYPE *LPFNOBJECTFROMLRESULT)(LRESULT lResult, REFIID riid, WPARAM wParam, void** ppvObject);")
+cpp_quote("typedef HRESULT (STDAPICALLTYPE *LPFNACCESSIBLEOBJECTFROMWINDOW)(HWND hwnd, DWORD dwId, REFIID riid, void** ppvObject);")
+cpp_quote("typedef HRESULT (STDAPICALLTYPE *LPFNACCESSIBLEOBJECTFROMPOINT)(POINT ptScreen, IAccessible** ppacc, VARIANT* pvarChild);")
+cpp_quote("typedef HRESULT (STDAPICALLTYPE *LPFNCREATESTDACCESSIBLEOBJECT)(HWND hwnd, LONG idObject, REFIID riid, void** ppvObject);")
+cpp_quote("typedef HRESULT (STDAPICALLTYPE *LPFNACCESSIBLECHILDREN)(IAccessible* paccContainer, LONG iChildStart,LONG cChildren,VARIANT* rgvarChildren,LONG* pcObtained);")
+
+
+cpp_quote("")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// GUIDs")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("DEFINE_GUID(LIBID_Accessibility,	0x1ea4dbf0, 0x3c3b, 0x11cf, 0x81, 0x0c, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);")
+cpp_quote("DEFINE_GUID(IID_IAccessible,		0x618736e0, 0x3c3d, 0x11cf, 0x81, 0x0c, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);")
+cpp_quote("DEFINE_GUID(IID_IAccessibleHandler, 0x03022430, 0xABC4, 0x11d0, 0xBD, 0xE2, 0x00, 0xAA, 0x00, 0x1A, 0x19, 0x53);")
+
+cpp_quote("")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// MSAA API Prototypes")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+
+cpp_quote("STDAPI_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN punk);")
+cpp_quote("STDAPI          ObjectFromLresult(LRESULT lResult, REFIID riid, WPARAM wParam, void** ppvObject);")
+cpp_quote("STDAPI          WindowFromAccessibleObject(IAccessible*, HWND* phwnd);")
+cpp_quote("STDAPI          AccessibleObjectFromWindow(HWND hwnd, DWORD dwId, REFIID riid, void **ppvObject);")
+cpp_quote("STDAPI          AccessibleObjectFromEvent(HWND hwnd, DWORD dwId, DWORD dwChildId, IAccessible** ppacc, VARIANT* pvarChild);")
+cpp_quote("STDAPI          AccessibleObjectFromPoint(POINT ptScreen, IAccessible ** ppacc, VARIANT* pvarChild);")
+cpp_quote("STDAPI          CreateStdAccessibleObject(HWND hwnd, LONG idObject, REFIID riid, void** ppvObject);")
+cpp_quote("STDAPI          AccessibleChildren (IAccessible* paccContainer, LONG iChildStart,LONG cChildren, VARIANT* rgvarChildren,LONG* pcObtained);")
+cpp_quote("")
+cpp_quote("STDAPI_(UINT)   GetRoleTextA(DWORD lRole, LPSTR lpszRole, UINT cchRoleMax);")
+cpp_quote("STDAPI_(UINT)   GetRoleTextW(DWORD lRole, LPWSTR lpszRole, UINT cchRoleMax);")
+cpp_quote("#ifdef UNICODE")
+cpp_quote("#define GetRoleText     GetRoleTextW")
+cpp_quote("#else")
+cpp_quote("#define GetRoleText     GetRoleTextA")
+cpp_quote("#endif // UNICODE")
+cpp_quote("")
+cpp_quote("STDAPI_(UINT)   GetStateTextA(DWORD lStateBit, LPSTR lpszState, UINT cchState);")
+cpp_quote("STDAPI_(UINT)   GetStateTextW(DWORD lStateBit, LPWSTR lpszState, UINT cchState);")
+cpp_quote("#ifdef UNICODE")
+cpp_quote("#define GetStateText    GetStateTextW")
+cpp_quote("#else")
+cpp_quote("#define GetStateText    GetStateTextA")
+cpp_quote("#endif // UNICODE")
+
+
+cpp_quote("")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// Interface Definitions")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+
+import "oaidl.idl";
+
+[
+	object,
+	uuid(618736e0-3c3d-11cf-810c-00aa00389b71),
+	hidden,
+	dual,
+	pointer_default(unique)
+]
+
+interface IAccessible : IDispatch
+{
+		// PROPERTIES:  Hierarchical
+
+		const long DISPID_ACC_PARENT				= -5000;
+		const long DISPID_ACC_CHILDCOUNT            = -5001;
+		const long DISPID_ACC_CHILD                 = -5002;
+                                             
+		// PROPERTIES:  Descriptional
+
+		const long DISPID_ACC_NAME					= -5003;
+		const long DISPID_ACC_VALUE                 = -5004;
+		const long DISPID_ACC_DESCRIPTION           = -5005;
+		const long DISPID_ACC_ROLE                  = -5006;
+		const long DISPID_ACC_STATE                 = -5007;
+		const long DISPID_ACC_HELP                  = -5008;
+		const long DISPID_ACC_HELPTOPIC             = -5009;
+		const long DISPID_ACC_KEYBOARDSHORTCUT      = -5010;
+		const long DISPID_ACC_FOCUS                 = -5011;
+		const long DISPID_ACC_SELECTION             = -5012;
+		const long DISPID_ACC_DEFAULTACTION         = -5013;
+
+		// METHODS
+
+		const long DISPID_ACC_SELECT				= -5014;
+		const long DISPID_ACC_LOCATION              = -5015;
+		const long DISPID_ACC_NAVIGATE              = -5016;
+		const long DISPID_ACC_HITTEST               = -5017;
+		const long DISPID_ACC_DODEFAULTACTION       = -5018;
+
+		typedef [unique] IAccessible *LPACCESSIBLE;
+
+		//
+		// Input to DISPID_ACC_NAVIGATE
+		//
+
+		const long NAVDIR_MIN						= 0x00000000;
+		const long NAVDIR_UP						= 0x00000001;
+		const long NAVDIR_DOWN						= 0x00000002;
+		const long NAVDIR_LEFT						= 0x00000003;
+		const long NAVDIR_RIGHT						= 0x00000004;
+		const long NAVDIR_NEXT						= 0x00000005;
+		const long NAVDIR_PREVIOUS					= 0x00000006;
+		const long NAVDIR_FIRSTCHILD				= 0x00000007;
+		const long NAVDIR_LASTCHILD					= 0x00000008;
+		const long NAVDIR_MAX						= 0x00000009;
+
+		// Input to DISPID_ACC_SELECT
+		const long SELFLAG_NONE						= 0x00000000;
+		const long SELFLAG_TAKEFOCUS				= 0x00000001;
+		const long SELFLAG_TAKESELECTION			= 0x00000002;
+		const long SELFLAG_EXTENDSELECTION			= 0x00000004;
+		const long SELFLAG_ADDSELECTION				= 0x00000008;
+		const long SELFLAG_REMOVESELECTION			= 0x00000010;
+		const long SELFLAG_VALID					= 0x0000001F;
+
+		// Output from DISPID_ACC_STATE
+		const long STATE_SYSTEM_UNAVAILABLE			= 0x00000001;  // Disabled
+		const long STATE_SYSTEM_SELECTED			= 0x00000002;
+		const long STATE_SYSTEM_FOCUSED				= 0x00000004;
+		const long STATE_SYSTEM_PRESSED				= 0x00000008;
+		const long STATE_SYSTEM_CHECKED				= 0x00000010;
+		const long STATE_SYSTEM_MIXED				= 0x00000020;  // 3-state checkbox or toolbar button
+		const long STATE_SYSTEM_INDETERMINATE		= STATE_SYSTEM_MIXED;
+		const long STATE_SYSTEM_READONLY			= 0x00000040;
+		const long STATE_SYSTEM_HOTTRACKED			= 0x00000080;
+		const long STATE_SYSTEM_DEFAULT				= 0x00000100;
+		const long STATE_SYSTEM_EXPANDED			= 0x00000200;
+		const long STATE_SYSTEM_COLLAPSED			= 0x00000400;
+		const long STATE_SYSTEM_BUSY				= 0x00000800;
+		const long STATE_SYSTEM_FLOATING			= 0x00001000;  // Children "owned" not "contained" by parent
+		const long STATE_SYSTEM_MARQUEED			= 0x00002000;
+		const long STATE_SYSTEM_ANIMATED			= 0x00004000;
+		const long STATE_SYSTEM_INVISIBLE			= 0x00008000;
+		const long STATE_SYSTEM_OFFSCREEN			= 0x00010000;
+		const long STATE_SYSTEM_SIZEABLE			= 0x00020000;
+		const long STATE_SYSTEM_MOVEABLE			= 0x00040000;
+		const long STATE_SYSTEM_SELFVOICING			= 0x00080000;
+		const long STATE_SYSTEM_FOCUSABLE			= 0x00100000;
+		const long STATE_SYSTEM_SELECTABLE			= 0x00200000;
+		const long STATE_SYSTEM_LINKED				= 0x00400000;
+		const long STATE_SYSTEM_TRAVERSED			= 0x00800000;
+		const long STATE_SYSTEM_MULTISELECTABLE		= 0x01000000;  // Supports multiple selection
+		const long STATE_SYSTEM_EXTSELECTABLE		= 0x02000000;  // Supports extended selection
+		const long STATE_SYSTEM_ALERT_LOW			= 0x04000000;  // This information is of low priority
+		const long STATE_SYSTEM_ALERT_MEDIUM		= 0x08000000;  // This information is of medium priority
+		const long STATE_SYSTEM_ALERT_HIGH			= 0x10000000;  // This information is of high priority
+		const long STATE_SYSTEM_REDUNDANT			= 0x20000000;  // this child object's data is also represented by it's parent
+		const long STATE_SYSTEM_ONLY_REDUNDANT		= 0x40000000;  // this object has children, but they are all redundant
+		const long STATE_SYSTEM_VALID				= 0x7FFFFFFF;
+
+		// Output from DISPID_ACC_ROLE
+
+		const long ROLE_SYSTEM_TITLEBAR				= 0x00000001;
+		const long ROLE_SYSTEM_MENUBAR				= 0x00000002;
+		const long ROLE_SYSTEM_SCROLLBAR			= 0x00000003;
+		const long ROLE_SYSTEM_GRIP					= 0x00000004;
+		const long ROLE_SYSTEM_SOUND				= 0x00000005;
+		const long ROLE_SYSTEM_CURSOR				= 0x00000006;
+		const long ROLE_SYSTEM_CARET				= 0x00000007;
+		const long ROLE_SYSTEM_ALERT				= 0x00000008;
+		const long ROLE_SYSTEM_WINDOW				= 0x00000009;
+		const long ROLE_SYSTEM_CLIENT				= 0x0000000A;
+		const long ROLE_SYSTEM_MENUPOPUP			= 0x0000000B;
+		const long ROLE_SYSTEM_MENUITEM				= 0x0000000C;
+		const long ROLE_SYSTEM_TOOLTIP				= 0x0000000D;
+		const long ROLE_SYSTEM_APPLICATION			= 0x0000000E;
+		const long ROLE_SYSTEM_DOCUMENT				= 0x0000000F;
+		const long ROLE_SYSTEM_PANE					= 0x00000010;
+		const long ROLE_SYSTEM_CHART				= 0x00000011;
+		const long ROLE_SYSTEM_DIALOG				= 0x00000012;
+		const long ROLE_SYSTEM_BORDER				= 0x00000013;
+		const long ROLE_SYSTEM_GROUPING				= 0x00000014;
+		const long ROLE_SYSTEM_SEPARATOR			= 0x00000015;
+		const long ROLE_SYSTEM_TOOLBAR				= 0x00000016;
+		const long ROLE_SYSTEM_STATUSBAR			= 0x00000017;
+		const long ROLE_SYSTEM_TABLE				= 0x00000018;
+		const long ROLE_SYSTEM_COLUMNHEADER			= 0x00000019;
+		const long ROLE_SYSTEM_ROWHEADER			= 0x0000001A;
+		const long ROLE_SYSTEM_COLUMN				= 0x0000001B;
+		const long ROLE_SYSTEM_ROW					= 0x0000001C;
+		const long ROLE_SYSTEM_CELL					= 0x0000001D;
+		const long ROLE_SYSTEM_LINK					= 0x0000001E;
+		const long ROLE_SYSTEM_HELPBALLOON			= 0x0000001F;
+		const long ROLE_SYSTEM_CHARACTER			= 0x00000020;
+		const long ROLE_SYSTEM_LIST					= 0x00000021;
+		const long ROLE_SYSTEM_LISTITEM				= 0x00000022;
+		const long ROLE_SYSTEM_OUTLINE				= 0x00000023;
+		const long ROLE_SYSTEM_OUTLINEITEM			= 0x00000024;
+		const long ROLE_SYSTEM_PAGETAB				= 0x00000025;
+		const long ROLE_SYSTEM_PROPERTYPAGE			= 0x00000026;
+		const long ROLE_SYSTEM_INDICATOR			= 0x00000027;
+		const long ROLE_SYSTEM_GRAPHIC				= 0x00000028;
+		const long ROLE_SYSTEM_STATICTEXT			= 0x00000029;
+		const long ROLE_SYSTEM_TEXT					= 0x0000002A;  // Editable, selectable, etc.
+		const long ROLE_SYSTEM_PUSHBUTTON			= 0x0000002B;
+		const long ROLE_SYSTEM_CHECKBUTTON			= 0x0000002C;
+		const long ROLE_SYSTEM_RADIOBUTTON			= 0x0000002D;
+		const long ROLE_SYSTEM_COMBOBOX				= 0x0000002E;
+		const long ROLE_SYSTEM_DROPLIST				= 0x0000002F;
+		const long ROLE_SYSTEM_PROGRESSBAR			= 0x00000030;
+		const long ROLE_SYSTEM_DIAL					= 0x00000031;
+		const long ROLE_SYSTEM_HOTKEYFIELD			= 0x00000032;
+		const long ROLE_SYSTEM_SLIDER				= 0x00000033;
+		const long ROLE_SYSTEM_SPINBUTTON			= 0x00000034;
+		const long ROLE_SYSTEM_DIAGRAM				= 0x00000035;
+		const long ROLE_SYSTEM_ANIMATION			= 0x00000036;
+		const long ROLE_SYSTEM_EQUATION				= 0x00000037;
+		const long ROLE_SYSTEM_BUTTONDROPDOWN		= 0x00000038;
+		const long ROLE_SYSTEM_BUTTONMENU			= 0x00000039;
+		const long ROLE_SYSTEM_BUTTONDROPDOWNGRID	= 0x0000003A;
+		const long ROLE_SYSTEM_WHITESPACE			= 0x0000003B;
+		const long ROLE_SYSTEM_PAGETABLIST			= 0x0000003C;
+		const long ROLE_SYSTEM_CLOCK				= 0x0000003D;
+
+
+		// Hierarchy Properties
+
+		[hidden, propget, id(DISPID_ACC_PARENT)] HRESULT accParent([out, retval] IDispatch** ppdispParent);
+
+		[hidden, propget, id(DISPID_ACC_CHILDCOUNT)] HRESULT accChildCount([out, retval] long* pcountChildren);
+
+		[hidden, propget, id(DISPID_ACC_CHILD)] HRESULT accChild([in] VARIANT varChild, [out, retval] IDispatch** ppdispChild);
+
+	    // Description Properties
+
+		[hidden, propget, id(DISPID_ACC_NAME)] HRESULT accName([in, optional] VARIANT varChild,[out, retval] BSTR* pszName);
+
+		[hidden, propget, id(DISPID_ACC_VALUE)] HRESULT accValue([in, optional] VARIANT varChild,[out, retval] BSTR* pszValue);
+
+		[hidden, propget, id(DISPID_ACC_DESCRIPTION)] HRESULT accDescription([in, optional] VARIANT varChild,[out, retval] BSTR* pszDescription);
+
+		[hidden, propget, id(DISPID_ACC_ROLE)] HRESULT accRole([in, optional] VARIANT varChild,[out, retval] VARIANT * pvarRole);
+
+		[hidden, propget, id(DISPID_ACC_STATE)] HRESULT accState([in, optional] VARIANT varChild,[out, retval] VARIANT * pvarState);
+
+		[hidden, propget, id(DISPID_ACC_HELP)] HRESULT accHelp([in, optional] VARIANT varChild,[out, retval] BSTR * pszHelp);
+
+		[hidden, propget, id(DISPID_ACC_HELPTOPIC)] HRESULT accHelpTopic([out] BSTR * pszHelpFile,[in, optional] VARIANT varChild,[out, retval] long * pidTopic);
+
+		[hidden, propget, id(DISPID_ACC_KEYBOARDSHORTCUT)] HRESULT accKeyboardShortcut([in, optional] VARIANT varChild,[out, retval] BSTR * pszKeyboardShortcut);
+
+		[hidden, propget, id(DISPID_ACC_FOCUS)] HRESULT accFocus([out, retval] VARIANT * pvarChild);					
+		
+		[hidden, propget, id(DISPID_ACC_SELECTION)] HRESULT accSelection([out, retval] VARIANT * pvarChildren);
+
+		[hidden, propget, id(DISPID_ACC_DEFAULTACTION)] HRESULT accDefaultAction([in, optional] VARIANT varChild,[out, retval] BSTR * pszDefaultAction);
+
+
+		// Methods
+
+		[hidden, id(DISPID_ACC_SELECT)] HRESULT accSelect([in] long flagsSelect,[in, optional] VARIANT varChild);
+
+		[hidden, id(DISPID_ACC_LOCATION)] HRESULT accLocation([out] long * pxLeft,[out] long * pyTop,[out] long * pcxWidth,[out] long * pcyHeight, [in, optional] VARIANT varChild);
+
+		[hidden, id(DISPID_ACC_NAVIGATE)] HRESULT accNavigate([in] long navDir,[in, optional] VARIANT varStart,[out, retval] VARIANT * pvarEndUpAt);
+
+		[hidden, id(DISPID_ACC_HITTEST)] HRESULT accHitTest([in] long xLeft, [in] long yTop,[out, retval] VARIANT * pvarChild);
+
+		[hidden, id(DISPID_ACC_DODEFAULTACTION)] HRESULT accDoDefaultAction([in, optional] VARIANT varChild);
+
+		// Description Properties, puts
+
+		[hidden, propput, id(DISPID_ACC_NAME)] HRESULT accName([in, optional] VARIANT varChild,[in] BSTR szName);
+
+		[hidden, propput, id(DISPID_ACC_VALUE)] HRESULT accValue([in, optional] VARIANT varChild,[in] BSTR szValue);
+}
+
+
+
+[
+	object,
+	uuid(03022430-ABC4-11d0-BDE2-00AA001A1953),
+	hidden,
+	oleautomation,
+	pointer_default(unique)
+]
+
+interface IAccessibleHandler : IUnknown
+{
+	typedef [unique] IAccessibleHandler *LPACCESSIBLEHANDLER;
+
+	HRESULT AccessibleObjectFromID( [in] long hwnd, [in] long lObjectID, [out] LPACCESSIBLE *pIAccessible );
+}
+
+/*	TODO - to convert the IAccessibleHandler interface into a dual interface, simply replace the current
+		   interface definition above with the one commented out below.
+[
+	object,
+	uuid(03022430-ABC4-11d0-BDE2-00AA001A1953),
+	hidden,
+	dual,
+	pointer_default(unique)
+]
+
+interface IAccessibleHandler : IDispatch
+{
+	typedef [unique] IAccessibleHandler *LPACCESSIBLEHANDLER;
+
+	const long DISPID_ACCHANDLER_ACCOBJFROMID	= -5019;
+
+	[hidden, id(DISPID_ACCHANDLER_ACCOBJFROMID)] HRESULT AccessibleObjectFromID( [in] long hwnd, [in] long lObjectID, [out, retval] LPACCESSIBLE *pIAccessible );
+}
+*/
+
+cpp_quote("")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// Type Library Definitions")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+
+[
+    uuid(1ea4dbf0-3c3b-11cf-810c-00aa00389b71),
+    lcid(0),
+    version(1.1),
+    hidden
+]
+
+library Accessibility 
+{
+	interface	IAccessible;
+	interface	IAccessibleHandler;
+}
+
+
+

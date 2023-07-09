@@ -1,0 +1,15 @@
+TARGETNAME=clipdump
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+C_DEFINES=-DNT -DWINNT
+
+INCLUDES=..\..\..\inc
+
+SOURCES=clipdump.rc \
+        clipdump.c
+
+LINKLIBS=$(SDK_LIB_PATH)\user32.lib           \
+         $(SDK_LIB_PATH)\kernel32.lib
+
+UMTYPE=console

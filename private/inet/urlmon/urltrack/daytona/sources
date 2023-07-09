@@ -1,0 +1,53 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Johann Posch (JohannP) 03-10c-1996
+
+!ENDIF
+
+
+MAJORCOMP   = urlmon
+MINORCOMP   = urltrack
+
+!include      ..\..\daytona.inc
+
+TARGETNAME=  urltrack
+TARGETPATH= obj
+TARGETTYPE=   LIBRARY 
+
+INCLUDES=     ..\..\inc;$(BASEDIR)\private\shell\inc;$(BASEDIR)\private\windows\inc
+
+
+C_DEFINES=    \
+              $(C_DEFINES)
+
+SOURCES=            \
+              ..\trkapia.cxx     \
+              ..\trkapiw.cxx     \
+              ..\util.cxx
+
+UMTYPE=       windows
+
+
+CONDITIONAL_INCLUDES = \
+	winwlm.h \
+	macwin32.h \
+	new
+
+
+

@@ -1,0 +1,192 @@
+ PRODUCT = MSXML
+
+CUSTOM_RULES = ${MWROOT}/ie4/xml.template
+
+
+MSXML_INF_FILES = \
+                  ${O}/selfreg_msxml.inf
+
+TYPELIB_FILES = \
+	msxml.tlb
+
+SOURCES_FILE    = sources
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME
+
+INCLUDES += \
+	${MSXML}/xml/dll \
+        ${MSXML}/include \
+        ${MSXML}/idl/$(O) \
+        ${MSXML}/xml/resource \
+        ${MSXML}/xql/om/objd/unix/sunos5 \
+        ${MSXML} \
+	${MSXML}/core \
+	${MSXML}/core/base \
+	${MSXML}/core/io \
+	${MSXML}/core/util \
+	${MSXML}/core/com \
+	${MSXML}/core/crt \
+	${MSXML}/core/export \
+	${MSXML}/xml \
+        ${MSXML}/xml/om \
+	${MSXML}/xtl/engine
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%}
+
+# Windows DLL name
+WDLL = ${TARGETNAME}
+DLL = lib${TARGETNAME}.${MW_SHARED_LIBRARY_SUFFIX}
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+DLLOBJS   = ${CPP_OBJS:%.c=%.o}
+
+DEFINES += -DSTD_CALL -DCONDITION_HANDLING=1 -DNT_UP=1  -DNT_INST=0 -DWIN32=100 -D_NT1X_=100 -DWINNT=1 -D_WIN32_WINNT=0x0400 -DWINVER=0x0400 -D_WIN32_IE=0x0500    -DWIN32_LEAN_AND_MEAN=1 -DDEVL=1 -DFPO=0  -DSLOTNEW=0 -DELEMENTNODE=0 -DSTRICT  -DUNICODE  -D_UNICODE  -DOLEDBVER=0x0200 -DNASHVILLE  -DNEWPARSER -DONE_DLL -DMSXML_EXPORT -DXML_HTTP_FEATURE
+
+ifndef COMPILE_OPTION
+  COMPILE_OPTION = debug
+endif
+
+# COMPILE_OPTION can have the values: debug, optimized
+ifeq (${COMPILE_OPTION}, debug)
+DEFINES += -DDBG=1 -DACTIVEX_DEBUG -D_DEBUG=1 -DNDEBUG
+endif
+
+SRCS= initunix.cxx ${SOURCES}
+WRESOURCE = $(O)/msxml.rc    # Windows resource
+TRESOURCE = ${WDLL}.rxt   # Target X resource (must match DLL name)
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+## NO_UNICODE = 1
+#RUN.dir = /vobs/ie4/drop/${MWOS}/${COMPILE_OPTION}
+
+APP_CFLAGS += ${XML_CFLAGS} ${INCLUDES:%=-I%} ${DEFINES}
+APP_CCPPFLAGS += ${XML_CFLAGS} ${INCLUDES:%=-I%} ${DEFINES}
+APP_RCFLAGS = -I${RUN.dir}
+
+TOOLSDIR =     ${MWHOME}/lib-${MWCONFIG_NAME}
+SLASH =        ${TOOLSDIR}/Slash
+DEC_PROTECT =  ${TOOLSDIR}/dec_protect
+HSPLIT =       ${TOOLSDIR}/hsplit
+WCSHDR =       ${TOOLSDIR}/wcshdr
+HEXTRACT =     ${TOOLSDIR}/hextract
+LISTMUNG =     ${TOOLSDIR}/listmung
+WS2HDR =       ${TOOLSDIR}/ws2hdr
+MCERR =        ${MWHOME}/bin/mcerr
+
+RM =	       /bin/rm -f
+MC =           ${MWHOME}/bin/mc 
+PROTECT =      chmod a-w 
+CP =	       /bin/cp 
+
+MSXML_STATIC_LIBS=   \
+                -lcom  \
+                -lcrt   \
+                -llang  \
+                -ltokbase \
+                -lxqlparse \
+                -lquery \
+                -ldtd \
+                -lxmlparser \
+                -lxmlstream \
+                -lxmlencoder \
+                -lxmlnet \
+                -lxmlisland \
+		-lschema \
+		-lmimeview \
+                -lom \
+                -lio \
+		-lbase \
+                -lutil \
+		-lxmlutil \
+                -lxmldso \
+                -lengine \
+                -loutput \
+                -lscript \
+                -lhttp
+
+ifeq (${MWOS},ux10)
+PROJECT_DLLFLAGS += -Wl,-cmsxml_hpux.map
+endif
+
+ifeq (${COMPILE_OPTION}, debug)
+	MSXML_STATIC_LIBS += -lmsxmldbg		
+endif
+
+
+
+ifeq "${MWARCH}" "hp700"
+PROJECT_LIBS = \
+        ${DEBUG_LIBS} \
+        ${MSXML_STATIC_LIBS} \
+	-luuid \
+        -lmwsupl 
+else
+PROJECT_LIBS = \
+	${DEBUG_LIBS} \
+	${MSXML_STATIC_LIBS} \
+	-luuid 
+endif
+
+# 
+# Easy way to resolve circular interlibrary dependencies
+#
+
+DIP_CFLAGS += \
+	-DDLL_SPECIFIC_OPERATOR_NEW
+
+
+__cplusplus = true
+
+
+PROJECT_DLLFLAGS := \
+	${PROJECT_LIBS} ${PROJECT_LIBS} ${PROJECT_LIBS} \
+        -lurlmon   \
+        -lole32    \
+        -loleaut32 \
+        -ladvapi32 \
+        -lshlwapi
+
+MAPFILE.sunos5 = msxml.umap
+FMAPFILE_OTHERS = ${MSXML_STATIC_LIBS}
+
+include $(MWHOME)/make.rules.simple
+
+ifeq "${MWARCH}" "hp700"
+${RUN.dir}/%.tlb: ${SDKINC}/../lib/hp700/%.tlb
+	${ECHOOBJ}
+	/bin/rm -f $@
+	/bin/rm -f ${RUN.dir}/${WDLL}.tlb
+#	/bin/cp $< $@
+	/bin/cp $< ${RUN.dir}/${WDLL}.tlb
+	chmod a-w $@
+else
+${RUN.dir}/%.tlb: ${SDKINC}/../lib/sparc/%.tlb
+	${ECHOOBJ}
+	/bin/rm -f $@
+	/bin/rm -f ${RUN.dir}/${WDLL}.tlb
+#	/bin/cp $< $@
+	/bin/cp $< ${RUN.dir}/${WDLL}.tlb
+	chmod -f a-w $@
+endif
+
+$(O)/%.rc: %.rc ${MSXML_INF_FILES}
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+$(O)/%.inx:%.inx
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+$(O)/%_msxml.inf: $(O)/%.inx
+	cleaninf -w $< $@
+

@@ -1,0 +1,110 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+
+#################################################################
+###
+##  Sources. Required for build in NT environment.
+##  This file is also used for the file list and for compile
+##  flags in the nashville environment.
+#
+
+#relative paths
+WININETDIR=..\
+
+#
+# Zero out our macros and
+# Get any project global stuff
+#
+
+
+#################################################################
+###
+##  Other settings for BUILD.EXE (NT)
+#
+# if we are building for I386 then don't use the libs
+!IF $(386)
+USE_NOLIBS=1
+!ENDIF
+
+#USE_CRTDLL=1
+MAJORCOMP=JSPROXY
+
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETNAME=JSPROXY
+UMTYPE=windows
+DLLBASE=0x01000000
+DLLENTRY=DllMain
+
+C_DEFINES=$(C_DEFINES) -DNASHVILLE
+
+
+#################################################################
+###
+##  Add these directories to be searched for header files (NT)
+#
+
+INCLUDES=\
+	$(BASEDIR)\public\sdk\inc; \
+	$(BASEDIR)\private\windows\shell\ccshell\inc; \
+	$(BASEDIR)\private\windows\inc; \
+
+TARGETLIBS=\
+	$(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+	$(BASEDIR)\public\sdk\lib\*\gdi32.lib \
+	$(BASEDIR)\public\sdk\lib\*\user32.lib \
+	$(BASEDIR)\public\sdk\lib\*\shlwapi.lib \
+	$(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+	$(BASEDIR)\public\sdk\lib\*\oleaut32.lib \
+	$(BASEDIR)\public\sdk\lib\*\ole32.lib \
+	$(BASEDIR)\public\sdk\lib\*\uuid.lib \
+	$(BASEDIR)\public\sdk\lib\*\wininet.lib
+
+#################################################################
+###
+##  Compiler switches ...... (both env)
+##  Careful with /G and /O options. They are different for RISC!
+#
+USER_C_FLAGS=$(USER_C_FLAGS) -Opi
+
+##
+## Sources files
+##
+
+SOURCES=\
+	cscpsite.cpp    \
+	dllmain.cpp     \
+	jsproxy.cpp     \
+	regexp.cpp      \
+	utils.cpp       \
+	jsproxy.rc
+
+
+CONDITIONAL_INCLUDES = \
+	winwlm.h \
+	macocidl.h \
+	macwin32.h
+
+

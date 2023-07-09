@@ -1,0 +1,71 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=pubapp
+MINORCOMP=pubquery
+
+TARGETNAME=pubquery
+
+TARGETPATH=obj
+
+TARGETTYPE=DYNLINK
+
+TARGETLIBS= $(BASEDIR)\public\sdk\lib\*\kernel32.lib    \
+            $(BASEDIR)\public\sdk\lib\*\user32.lib      \
+            $(BASEDIR)\public\sdk\lib\*\ole32.lib       \
+            $(BASEDIR)\public\sdk\lib\*\cstore.lib      \
+            $(BASEDIR)\public\sdk\lib\*\shell32p.lib    \
+            $(BASEDIR)\public\sdk\lib\*\comctl32.lib    \
+            $(BASEDIR)\public\sdk\lib\*\uuid.lib
+
+INCLUDES=..\inc;$(BASEDIR)\private\windows\inc;$(BASEDIR)\private\shell\inc
+
+SOURCES=clsfact.cpp     \
+        dll.cpp         \
+        pubquery.cpp    \
+        pubquery.rc     \
+        queryfrm.cpp    \
+        queryhlr.cpp    \
+        util.cpp
+
+i386_SOURCES=
+
+i860_SOURCES=
+
+MIPS_SOURCES=
+
+PPC_SOURCES=
+
+IA64_SOURCES=
+
+C_DEFINES= -DUNICODE
+#   USE_CL860_LARGE_MODEL=
+
+NTTEST=
+
+UMTYPE=windows
+UMBASE=0x1000000
+
+DLLENTRY=DllMain
+USE_CRTDLL=1

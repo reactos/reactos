@@ -1,0 +1,29 @@
+#
+#   Create an MCI handler DLL
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=drawdib
+TARGETPATH=..\lib
+TARGETTYPE=LIBRARY
+UMTYPE=windows
+
+##C_DEFINES=-DUNICODE -DVFW -DUSE_DCI
+C_DEFINES=-DUNICODE -DVFW
+
+# Define libs we need and where to find them
+
+INCLUDES=..\inc;dva;..\..\inc;..\video
+
+SOURCES= dith666.c  \
+         dither.c   \
+         drawdib.c  \
+         profdisp.c \
+	 setdi.c    \
+         lockbm.c   \
+         stretchc.c
+
+#####    ddsucks.c  \  Redundant
+#####    dith775.c  \  Alternative to dith775.c

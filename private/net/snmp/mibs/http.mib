@@ -1,0 +1,490 @@
+HTTPSERVER-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+                enterprises,
+                OBJECT-TYPE,
+                Counter
+                        FROM RFC1155-SMI
+                internetServer
+                        FROM INTERNETSERVER-MIB;
+
+--      microsoft       OBJECT IDENTIFIER ::= { enterprises 311 }
+--      software        OBJECT IDENTIFIER ::= { microsoft 1 }
+--      internetServer  OBJECT IDENTIFIER ::= { software 7 }
+        httpServer      OBJECT IDENTIFIER ::= { internetServer 3 }
+        httpStatistics  OBJECT IDENTIFIER ::= { httpServer 1 }
+
+-- Http Server Statistics
+
+        totalBytesSentHighWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the high 32-bits of the total number of
+                        of BYTEs sent by the HTTP Server."
+                ::= { httpStatistics 1 }
+
+        totalBytesSentLowWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the low 32-bits of the total number of
+                        of BYTEs sent by the HTTP Server."
+                ::= { httpStatistics 2 }
+
+        totalBytesReceivedHighWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the high 32-bits of the total number of
+                        of BYTEs received by the HTTP Server."
+                ::= { httpStatistics 3 }
+
+        totalBytesReceivedLowWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the low 32-bits of the total number of
+                        of BYTEs received by the HTTP Server."
+                ::= { httpStatistics 4 }
+
+        totalFilesSent OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of files sent by this
+                        HTTP Server."
+                ::= { httpStatistics 5 }
+
+        totalFilesReceived OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of files received by this
+                        HTTP Server."
+                ::= { httpStatistics 6 }
+                
+        currentAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of anonymous users currently
+                        connected to the HTTP Server."
+                ::= { httpStatistics 7 }
+
+        currentNonAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of nonanonymous users currently
+                        connected to the HTTP Server."
+                ::= { httpStatistics 8  }
+
+        totalAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of anonymous users that
+                        have ever connected to the HTTP Server."
+                ::= { httpStatistics 9  }
+
+        totalNonAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of nonanonymous users that
+                        have ever connected to the HTTP Server."
+                ::= { httpStatistics 10  }
+
+        maxAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of anonymous users
+                        simultaneously connected to the HTTP Server."
+                ::= { httpStatistics 11 }
+
+        maxNonAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of nonanonymous users
+                        simultaneously connected to the HTTP Server."
+                ::= { httpStatistics 12 }
+
+        currentConnections OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the current number of connections to the
+                        HTTP Server."
+                ::= { httpStatistics 13 }
+
+        maxConnections OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of simultaneous
+                        connections to the HTTP Server."
+                ::= { httpStatistics 14 }
+
+        connectionAttempts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of connection attempts that
+                        have been made to the HTTP Server."
+                ::= { httpStatistics 15 }
+
+        logonAttempts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of logon attempts that have
+                        been made to this HTTP Server."
+                ::= { httpStatistics 16 }
+
+        totalOptions OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the OPTIONS method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 17 }
+
+        totalGets OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the GET method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 18 }
+
+        totalPosts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the POST method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 19 }
+
+        totalHeads OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the HEAD method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 20 }
+
+        totalPuts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the PUT method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 21 }
+
+        totalDeletes OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the DELETE method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 22 }
+
+        totalTraces OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the TRACE method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 23 }
+
+        totalMove OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the MOVE method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 24 }
+
+        totalCopy OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the COPY method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 25 }
+
+        totalMkcol OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the MKCOL method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 26 }
+
+        totalPropfind OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the PROPFIND method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 27 }
+
+        totalProppatch OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the PROPPATCH method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 28 }
+
+        totalSearch OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the MS-SEARCH method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 29 }
+
+        totalLock OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the LOCK method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 30 }
+
+        totalUnlock OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the UNLOCK method
+                        that have been made to this HTTP Server."
+                ::= { httpStatistics 31 }
+
+        totalOthers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests not using the OPTIONS, GET, HEAD
+                        POST, PUT, DELETE, TRACE, MOVE, COPY, MKCOL, PROPFIND, PROPPATCH,
+                        MS-SEARCH, LOCK or UNLOCK method that have been made to this HTTP
+                        Server. This may include LINK or other methods supported by gateway 
+                        applications."
+                ::= { httpStatistics 32 }
+
+        currentCGIRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of Common Gateway Interface (CGI)
+                         requests that are currently being serviced by this HTTP Server."
+                ::= { httpStatistics 33 }
+
+        currentBGIRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of Binary Gateway Interface (BGI)
+                        requests that are currently being serviced by this HTTP Server."
+                ::= { httpStatistics 34 }
+                
+        totalCGIRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of Common Gateway Interface (CGI)
+                        requests that have been made to this HTTP Server."
+                ::= { httpStatistics 35 }
+
+        totalBGIRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of Binary Gateway Interface (BGI)
+                        requests that have been made to this HTTP Server."
+                ::= { httpStatistics 36 }
+                
+        maxCGIRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of Common Gateway Interface (CGI)
+                        requests simultaneous processed by this HTTP Server."
+                ::= { httpStatistics 37 }
+
+        maxBGIRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of Binary Gateway Interface (BGI)
+                        requests simultaneous processed by this HTTP Server."
+                ::= { httpStatistics 38 }
+
+        currentBlockedRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the current number of requests that have been temporarily
+                        blocked by this HTTP Server due to bandwidth throttling settings."
+                ::= { httpStatistics 39 }
+                
+        totalBlockedRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of requests that have been temporarily
+                        blocked by this HTTP Server due to bandwidth throttling settings."
+                ::= { httpStatistics 40 }
+                
+        totalAllowedRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of requests that have been allowed
+                        by the bandwidth throttling settings on this HTTP Server."
+                ::= { httpStatistics 41 }
+
+        totalRejectedRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of requests that have been rejected
+                        by this HTTP Server due to bandwidth throttling settings."
+                ::= { httpStatistics 42 }
+                
+        totalNotFoundErrors OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of requests the HTTP server could
+                        not satisfy because the requested resource could not
+                        be found."
+                ::= { httpStatistics 43 }
+
+        totalLockedErrors OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of requests the HTTP server could
+                        not satisfy because the requested resource was locked."
+                ::= { httpStatistics 44 }
+
+        measuredBandwidth OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the I/O bandwidth used by this HTTP Server,
+                        averaged over a minute."
+                ::= { httpStatistics 45 }
+
+        currentCALsforAuthenticatedUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the current count of Client Access Licenses (CALs)
+                        available to this HTTP Server for simultaneous use by authenticated 
+                        users."
+                ::= { httpStatistics 46 }
+                
+        maxCALsforAuthenticatedUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum count of Client Access Licenses (CALs)
+                        used by this HTTP Server for simultaneous use by authenticated 
+                        users."
+                ::= { httpStatistics 47 }
+                
+        totalCALFailedAuthenticatedUser OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of HTTP requests that have failed on this
+                        HTTP server due to a Client Access License (CAL) being unavailable for 
+                        an authenticated user."
+                ::= { httpStatistics 48 }
+                
+        currentCALsforSecureConnections OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the current count of Client Access Licenses (CALs)
+                        available to this HTTP Server for simultaneous use by secure 
+                        connections."
+                ::= { httpStatistics 49 }
+                
+        maxCALsforSecureConnections OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum count of Client Access Licenses (CALs)
+                        available to this Http Server for simultaneous use by secure 
+                        connections."
+                ::= { httpStatistics 50 }
+                
+        totalCALFailedSecureConnection OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of HTTP requests that have failed on this
+                        HTTP server due to a Client Access License (CAL) being unavailable for 
+                        use by a secure connection."
+                ::= { httpStatistics 51 }
+
+END
+
+

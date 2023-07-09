@@ -1,0 +1,34 @@
+/* msvideo.rc
+ *
+ * Capture DLL resource script.
+ *
+ * (C) Copyright Microsoft Corporation 1991. All rights reserved.
+ */
+
+#include <windows.h>
+#include <vfw.h>
+#include "msvideo.rcv"
+#include "icm.rc"              // Kludge, copied from compman to inc directory
+#if WINVER >= 0x400
+#include "..\mciwnd.32\strings.rc"
+#else
+#include "..\mciwnd\strings.rc"
+#endif
+
+// dont change this without changing DRAWDIB\PROFDISP.C & INIT.C
+#define IDS_PROFILING       4000
+#define IDS_DISPLAY_WARN    4001
+#define IDS_DISPLAY_SUCKS   4002
+#define IDS_ISRTL           4003
+
+STRINGTABLE	LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+
+    //
+    // strings used by PROFDISP.
+    //
+    IDS_PROFILING           "Profiling Display"
+    IDS_DISPLAY_WARN        "Warning!"
+    IDS_DISPLAY_SUCKS       "You may encounter display performance problems; please contact the manufacturer of your video board to see if an updated driver is available."
+    IDS_ISRTL               "0=rtl"
+END

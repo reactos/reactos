@@ -1,0 +1,36 @@
+LIBRARY         MSWSOCK
+
+EXPORTS
+
+        TransmitFile
+        AcceptEx
+        GetAcceptExSockaddrs
+
+        inet_network
+        getnetbyname
+        rcmd
+        rexec
+        rresvport
+        sethostname
+        dn_expand
+
+        WSARecvEx
+        s_perror
+
+        GetAddressByNameA
+        GetAddressByNameW
+        EnumProtocolsA
+        EnumProtocolsW
+        GetTypeByNameA
+        GetTypeByNameW
+        GetNameByTypeA
+        GetNameByTypeW
+        SetServiceA
+        SetServiceW
+        GetServiceA
+        GetServiceW
+
+        NPLoadNameSpaces
+
+        MigrateWinsockConfiguration
+

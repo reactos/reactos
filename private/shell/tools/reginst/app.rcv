@@ -1,0 +1,13 @@
+/********************************************************************/
+/*        APP.RCV                                                   */
+/********************************************************************/
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "RegInstall Component Utility"
+#define VER_INTERNALNAME_STR            "REGINST"
+#define VER_ORIGINALFILENAME_STR        "REGINST.EXE"
+
+#include <common.ver>

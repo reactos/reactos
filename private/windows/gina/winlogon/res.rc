@@ -1,0 +1,43 @@
+/****************************** Module Header ******************************\
+* Module Name: res.rc
+*
+* Copyright (c) 1991, Microsoft Corporation
+*
+* Main winlogon resource file.
+*
+* History:
+* 12-09-91 Davidc       Created.
+\***************************************************************************/
+
+
+#include "winlogon.h"
+
+#include "strings.rc"
+
+#include "sysshut.dlg"
+
+#include "dialogs.dlg"
+
+#include "win31mig.dlg"
+
+#include "wlevents.rc"
+
+#include "access.rc"
+
+#include "sbdlg.dlg"
+
+#include "ctxdlgs.dlg"
+
+IDD_SHUTDOWN_BITMAP     ICON    "shutdown.ico"
+IDD_SB_ICON_PW          ICON    "sbpw.ico"
+IDD_SB_ICON_DISK        ICON    "sbdisk.ico"
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows NT Logon Application"
+#define VER_INTERNALNAME_STR        "winlogon\0"
+#define VER_ORIGINALFILENAME_STR    "WINLOGON.EXE"
+
+#include "common.ver"

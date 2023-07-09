@@ -1,0 +1,93 @@
+!IF 0
+
+  Application build file
+
+  created: 28-Jun-95
+  history: 28-Jun-95 <t-stefb> created; based on build files from Win95 source tree
+  history:  2-Aug-95 <t-stefb> converted to new version of WordPad
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=wordpad
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+UMTYPE=windows
+
+USE_NATIVE_EH=1
+
+USE_MFCUNICODE=1
+
+MSC_WARNING_LEVEL=/W4 /WX /wd4267
+
+PRECOMPILED_INCLUDE=stdafx.h
+PRECOMPILED_CXX=1
+
+#
+# Turn of native MFC richedit support because we can't use any of it and if
+# we turn it off we'll catch any attempt to use it.  This can be removed when
+# MFC gets native richedit2 support.
+#
+
+C_DEFINES=  \
+            $(C_DEFINES)                \
+            -D_AFX_NO_RICHEDIT_SUPPORT
+
+INCLUDES=   \
+            include
+
+#
+# Note, the files from dlgcomm.cpp to winctrl4.cpp are snapshotted from the
+# MFC 4.2 source to provide richedit2 capability.  When MFC gets native support
+# for richedit2 the can be removed.
+#
+
+SOURCES=\
+    dlgcomm.cpp     \
+    dlgfnt.cpp      \
+    oleinit.cpp     \
+    viewrich.cpp    \
+    winctrl2.cpp    \
+    winctrl4.cpp    \
+    wordpad.rc   \
+	buttondi.cpp \
+	chicdial.cpp \
+	cntritem.cpp \
+	colorlis.cpp \
+	datedial.cpp \
+	ddxm.cpp     \
+	docopt.cpp   \
+	doctype.cpp  \
+    filedlg.cpp  \
+	filenewd.cpp \
+	formatba.cpp \
+	formatpa.cpp \
+	formatta.cpp \
+	ipframe.cpp  \
+	key.cpp      \
+	listdlg.cpp  \
+	mainfrm.cpp  \
+	multconv.cpp \
+	options.cpp  \
+	optionsh.cpp \
+	pageset.cpp  \
+	ruler.cpp    \
+	srvritem.cpp \
+	strings.cpp  \
+	unitspag.cpp \
+	wordpad.cpp  \
+	wordpdoc.cpp \
+	wordpvw.cpp  \
+    fixhelp.cpp
+
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+    $(BASEDIR)\public\sdk\lib\*\htmlhelp.lib \
+    $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib     \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\oledlg.lib

@@ -1,6 +1,0 @@
-1 stdcall AppCleanup(ptr)
-2 stdcall capCreateCaptureWindowA(str long long long long long long long)
-3 stdcall capCreateCaptureWindowW(wstr long long long long long long long)
-4 stdcall capGetDriverDescriptionA(long ptr long ptr long)
-5 stdcall capGetDriverDescriptionW(long ptr long ptr long)
-6 stdcall videoThunk32(long long long long long)

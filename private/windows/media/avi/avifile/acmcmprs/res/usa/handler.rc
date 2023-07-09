@@ -1,0 +1,19 @@
+
+/*	-	-	-	-	-	-	-	-	*/
+
+#include <windows.h>
+#include "handler.h"
+#include "handler.rcv"
+
+/*
+ * STRINGS
+ */
+STRINGTABLE  MOVEABLE DISCARDABLE PRELOAD
+BEGIN
+
+IDS_CNVTERR	"ACMCmprs: Cannot convert %s %s to %s %s, leaving unchanged."
+IDS_ACMERR	"ACM Error"
+
+END
+
+/*	-	-	-	-	-	-	-	-	*/

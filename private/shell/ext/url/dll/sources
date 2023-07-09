@@ -1,0 +1,102 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+TARGET_BOTH     = 1
+NOT_UNICODE     = 1
+PRECOMPILED_CXX = 1
+
+!include $(CCSHELL_DIR)\ext\url\url.inc
+
+NO_BROWSER_FILE = 1
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\ext\url\url.inc
+
+TARGETNAME      = url
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+TARGETPATHLIB   = $(BASEDIR)\public\sdk\lib
+
+TARGETLIBS      = $(BASEDIR)\public\sdk\lib\*\gdi32.lib        \
+                  $(BASEDIR)\public\sdk\lib\*\kernel32.lib     \
+                  $(BASEDIR)\public\sdk\lib\*\user32.lib       \
+                  $(BASEDIR)\public\sdk\lib\*\advapi32.lib     \
+                  $(BASEDIR)\public\sdk\lib\*\shlwapip.lib     \
+                  $(BASEDIR)\public\sdk\lib\*\comctlp.lib      \
+                  $(BASEDIR)\public\sdk\lib\*\shell32p.lib     \
+                  $(BASEDIR)\public\sdk\lib\*\uuid.lib         \
+                  $(BASEDIR)\public\sdk\lib\*\wininet.lib      \
+                  $(CCSHELL_DIR)\lib\$O\shguidp.lib            \
+                  $(CCSHELL_DIR)\lib\$O\stocklib.lib           \
+                  $(SDK_LIB_PATH)\htmlhelp.lib                 \
+
+USE_LIBCMT      = 1
+
+SYNCHRONIZE_DRAIN=1
+LINKLIBS        = ..\srcc\$O\srcc.lib
+
+DLLDEF          = ..\url.def
+DLLENTRY        = DllMain
+DLLORDER        = $(BASEDIR)\private\prf\url.prf
+
+!ifdef UNIX
+
+SOURCES_PLATFORM = ..\unixstuff.cpp
+
+!else
+
+SOURCES_PLATFORM = \
+
+!endif
+
+SOURCES         = \
+                  $(SOURCES_PLATFORM)\
+                  ..\url.rc         \
+                  ..\autodial.cpp   \
+                  ..\comcpp.cpp     \
+                  ..\contmenu.cpp   \
+                  ..\dataobj.cpp    \
+                  ..\dllinit.cpp    \
+                  ..\enumfmte.cpp   \
+                  ..\extricon.cpp   \
+                  ..\ftps.cpp       \
+                  ..\guids.cpp      \
+                  ..\inetps.cpp     \
+                  ..\intshcut.cpp   \
+                  ..\newshk.cpp     \
+                  ..\persist.cpp    \
+                  ..\propsht.cpp    \
+                  ..\refcount.cpp   \
+                  ..\shlexhk.cpp    \
+                  ..\shlink.cpp     \
+                  ..\url.cpp        \
+                  ..\urlexec.cpp    \
+
+PRECOMPILED_INCLUDE = ..\project.hpp
+PRECOMPILED_PCH = priv.pch
+PRECOMPILED_OBJ = priv.obj
+

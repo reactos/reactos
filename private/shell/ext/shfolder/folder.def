@@ -1,0 +1,8 @@
+LIBRARY         SHFOLDER
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Shell Folder Services'
+
+EXPORTS
+    SHGetFolderPathA
+    SHGetFolderPathW
+

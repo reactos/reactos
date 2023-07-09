@@ -1,0 +1,33 @@
+MAJORCOMP=ds
+MINORCOMP=browse
+
+TARGETNAME=browse
+TARGETTYPE=PROGRAM
+TARGETPATH=obj
+
+UMTYPE=windows
+UMENTRY=winmain
+
+TARGETLIBS=     $(BASEDIR)\public\sdk\lib\*\user32.lib    \
+                $(BASEDIR)\public\sdk\lib\*\shell32.lib   \
+                $(BASEDIR)\public\sdk\lib\*\shell32p.lib  \
+                $(BASEDIR)\public\sdk\lib\*\ole32.lib     \
+                $(BASEDIR)\public\sdk\lib\*\comctl32.lib  \
+                $(BASEDIR)\public\sdk\lib\*\shlwapi.lib   \
+                $(BASEDIR)\public\sdk\lib\*\shlwapip.lib  \
+                $(BASEDIR)\public\sdk\lib\*\dsuiext.lib
+
+INCLUDES=   \
+            ..\..\inc;                      \
+            $(BASEDIR)\private\windows\inc; \
+            $(BASEDIR)\private\shell\inc;
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+C_DEFINES=-DUNICODE
+
+SOURCES= main.cpp \
+         resource.rc

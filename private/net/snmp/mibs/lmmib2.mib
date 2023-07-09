@@ -1,0 +1,940 @@
+LanMgr-Mib-II-MIB DEFINITIONS ::= BEGIN
+
+          --
+          -- Notes:
+          --
+          --   This MIB is documented in "LAN Manager 2.0 Management
+          --   Information Base, LAN Manager MIB Working Group, Internet
+          --   Draft: LanMgr-Mib-II" by Microsoft.
+          --
+          --   The Windows NT implementation currently does not support 
+          --   the following objects:
+          -- 
+          --        svSesNumConns     
+          --        svAuditLogSize
+          --        wkstaErrorLogSize
+          --        domLogonDomain
+          --
+
+          IMPORTS
+                  enterprises, OBJECT-TYPE, Counter
+                          FROM RFC1155-SMI
+                  DisplayString
+                          FROM RFC1213-MIB;
+
+    lanmanager  OBJECT IDENTIFIER ::= { enterprises 77 }
+    lanmgr-2    OBJECT IDENTIFIER ::= { lanmanager 1 }
+
+-- lanmgr-2 Tree
+
+    common      OBJECT IDENTIFIER ::= { lanmgr-2 1 }
+    server      OBJECT IDENTIFIER ::= { lanmgr-2 2 }
+    workstation OBJECT IDENTIFIER ::= { lanmgr-2 3 }
+    domain      OBJECT IDENTIFIER ::= { lanmgr-2 4 }
+
+
+-- Common Group
+
+comVersionMaj OBJECT-TYPE
+    SYNTAX  OCTET STRING
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The major release version number of the software."
+    ::= { common 1 }
+
+comVersionMin  OBJECT-TYPE
+    SYNTAX  OCTET STRING
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The minor release version number of the software."
+    ::= { common 2 }
+
+comType  OBJECT-TYPE
+    SYNTAX  OCTET STRING
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The type of LAN Manager software this system is running.  
+            If no server is running the node is a workstation.  This 
+            object type is an octet string of length 4 treated as a bit 
+            map (with the least significant bit being bit 0):
+
+            OCTET 1 --  Software Type  Bit
+                        -------------  ---
+                        workstation     0
+                        server          1
+                        sqlserver       2
+                        Primary DC      3
+                        Backup DC       4
+                        Time Source     5
+                        AFP Server      6
+                        Netware Server  7
+
+            OCTET 2 --  undefined
+
+            OCTET 3 --  undefined
+
+            OCTET 4 --  undefined"
+    ::= { common 3 }
+
+comStatStart  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The time, represented as seconds since January 1, 1970, at 
+            which the statistics on this node were last cleared."
+    ::= { common 4 }
+
+comStatNumNetIOs  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of network I/O operations submitted on this node." 
+    ::= { common 5 }
+
+comStatFiNetIOs  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of network I/O operations on this node that failed 
+            issue."  
+    ::= { common 6 }
+
+comStatFcNetIOs  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of network I/O operations on this node that failed 
+            completion." 
+    ::= { common 7 }
+
+
+--The Server Group
+
+svDescription   OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..255))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION 
+            "A comment describing this server." 
+    ::= {  server  1  }
+
+svSvcNumber     OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of network services installed on this server."
+    ::= {  server  2  }
+
+svSvcTable      OBJECT-TYPE
+    SYNTAX SEQUENCE OF SvSvcEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "A list of service entries describing network services installed 
+            on this server."
+    ::= {  server  3  }
+
+svSvcEntry OBJECT-TYPE
+    SYNTAX  SvSvcEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "The names of the network services installed on this server." 
+    INDEX   { svSvcName }
+    ::= { svSvcTable 1 }
+
+SvSvcEntry ::= SEQUENCE {
+                 svSvcName
+                     DisplayString,
+                 svSvcInstalledState
+                     INTEGER,
+                 svSvcOperatingState
+                     INTEGER,
+                 svSvcCanBeUninstalled
+                     INTEGER,
+                 svSvcCanBePaused
+                     INTEGER
+             }
+
+svSvcName  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..15))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the network service described by this entry."
+
+    ::= { svSvcEntry 1 }
+
+svSvcInstalledState  OBJECT-TYPE
+    SYNTAX
+             INTEGER {
+                   uninstalled(1),
+                   install-pending(2),
+                   uninstall-pending(3),
+                   installed(4)
+             }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The installation status of the network service specified by 
+            this entry."
+    ::= { svSvcEntry 2 }
+
+svSvcOperatingState  OBJECT-TYPE
+    SYNTAX
+             INTEGER {
+                   active(1),
+                   continue-pending(2),
+                   pause-pending(3),
+                   paused(4)
+             }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The operating status of the network service specified by 
+            this entry."
+    ::= { svSvcEntry 3 }
+
+svSvcCanBeUninstalled  OBJECT-TYPE
+    SYNTAX
+             INTEGER {
+                   cannot-be-uninstalled(1),
+                   can-be-uninstalled(2)
+             }
+
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "Whether or not the network service specified by this entry 
+            can be uninstalled."
+    ::= { svSvcEntry 4 }
+
+svSvcCanBePaused  OBJECT-TYPE
+    SYNTAX
+             INTEGER {
+                   cannot-be-paused(1),
+                   can-be-paused(2)
+             }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "Whether or not the network service specified by this entry 
+            can be paused."
+    ::= { svSvcEntry 5 }
+
+svStatOpens     OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The total number of files that have been opened on the server."
+    ::= {  server  4  }
+
+svStatDevOpens  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The total number of communication devices opened on the server."
+    ::= {  server  5  }
+
+svStatQueuedJobs        OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The total number of print jobs that have been spooled on the 
+            server."
+    ::= {  server  6  }
+
+svStatSOpens            OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of sessions that have been started on the server."
+    ::= {  server  7  }
+
+svStatErrorOuts OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of sessions disconnected due to an error on the 
+            server."
+    ::= {  server  8  }
+
+svStatPwErrors  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of password violations encountered on the server."
+    ::= {  server  9  }
+
+svStatPermErrors        OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of access permission violations encountered on this 
+            server."
+    ::= {  server  10  }
+
+svStatSysErrors OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of system errors encountered on the server."
+    ::= {  server  11  }
+
+svStatSentBytes OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of bytes sent by the server."
+    ::= {  server  12  }
+
+svStatRcvdBytes OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of bytes received by this server."
+    ::= {  server  13  }
+
+svStatAvResponse        OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The mean number of milliseconds it has taken this server 
+            to process a workstation I/O request."
+    ::= {  server  14  }
+
+svSecurityMode  OBJECT-TYPE
+    SYNTAX
+        INTEGER {
+              share-level(1),
+              user-level(2)
+        }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The type of security being run at this server."
+    ::= {  server  15  }
+
+svUsers OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of concurrent users this server is able to support."
+    ::= {  server  16  }
+
+svStatReqBufsNeeded     OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of times the server has needed a request buffer in 
+            the process of handling a client request and could not allocate 
+            one." 
+    ::= {  server  17  }
+
+svStatBigBufsNeeded     OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of times the server has needed a big buffer in the 
+            process of handling a client request and could not allocate one."
+    ::= {  server  18  }
+
+svSessionNumber OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of sessions have established to this server."
+    ::= {  server  19  }
+
+svSessionTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF SvSessionEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "A list of session entries corressponding to the current sessions 
+            clients have with this server."
+    ::= {  server  20  }
+
+svSessionEntry  OBJECT-TYPE
+    SYNTAX  SvSessionEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "A session that is currently established to this server."
+    INDEX   { svSesClientName, svSesUserName }
+    ::= { svSessionTable 1 }
+
+SvSessionEntry ::= SEQUENCE {
+             svSesClientName
+             DisplayString,
+                 svSesUserName
+             DisplayString,
+--               svSesNumConns
+--                   INTEGER,
+                 svSesNumOpens
+                     INTEGER,
+                 svSesTime
+                     Counter,
+             svSesIdleTime
+                 Counter,
+             svSesClientType
+                 INTEGER,
+              svSesState
+                 INTEGER
+             }
+
+svSesClientName  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..15))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the remote machine that has established the session."
+    ::= { svSessionEntry 1 }
+
+svSesUserName  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..20))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the user at the remote machine that established the 
+            session."
+    ::= { svSessionEntry 2 }
+
+--svSesNumConns  OBJECT-TYPE
+--    SYNTAX  INTEGER
+--    ACCESS  read-only
+--    STATUS  mandatory
+--    DESCRIPTION
+--            "The number of connections to server resources currently active
+--            across this session."
+--    ::= { svSessionEntry 3 }
+
+svSesNumOpens  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of open files, devices and pipes are open on this 
+            session."
+    ::= { svSessionEntry 4 }
+
+svSesTime  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The length of time in seconds this session has been established."
+    ::= { svSessionEntry 5 }
+
+svSesIdleTime  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The length of time in seconds this session has been idle."
+    ::= { svSessionEntry 6 }
+
+svSesClientType  OBJECT-TYPE
+    SYNTAX  INTEGER {
+              down-level(1),
+              dos-lm(2),
+              dos-lm-2(3),
+              os2-lm-1(4),
+              os2-lm-2(5),
+              dos-lm-2-1(6),
+              os2-lm-2-1(7),
+              afp-1-1(8),
+              afp-2-0(9),
+              nt-3-1(10)
+        }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The type of client that established the session." 
+    ::= { svSessionEntry 7 }
+
+svSesState  OBJECT-TYPE
+    SYNTAX  INTEGER {
+              active(1),
+              deleted(2)
+        }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION 
+            "Used to indicate the state of this session. 
+            The deleted state will never be returned on a 
+            session but can be used in set requests to delete 
+            a session." 
+    ::= { svSessionEntry 8 }
+
+svAutoDisconnects  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of sessions that the server has 
+            auto-disconnected due to timeout."
+    ::= { server  21 }
+
+svDisConTime  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of seconds the server waits before 
+            disconnecting an idle session.  A value of 0xffff 
+            indicates that idle sessions will never be disconnected."
+    ::= { server  22 }
+
+svAuditLogSize  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION 
+            "The maximum size in kilobytes that the server's audit 
+            log can attain."
+    ::= { server  23 }
+
+svUserNumber  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of users that have accounts on this server."
+    ::= { server 24 }
+
+svUserTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF SvUserEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "The table of active user accounts on this server."
+    ::= { server 25 }
+
+svUserEntry OBJECT-TYPE
+    SYNTAX  SvUserEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "One of the user accounts on this server."    
+    INDEX  { svUserName }
+    ::= { svUserTable 1 }
+
+SvUserEntry  ::= SEQUENCE {
+         svUserName
+        DisplayString
+    }
+
+svUserName OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..20))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the user account."
+    ::= { svUserEntry 1 }
+
+svShareNumber  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of shared resources on this server."    
+    ::= { server 26 }
+
+svShareTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF SvShareEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "The table of shares on this server."
+    ::= { server 27 }
+
+svShareEntry  OBJECT-TYPE
+    SYNTAX  SvShareEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "A table entry corresponding to a single share on this server."
+    INDEX   { svShareName }
+    ::= { svShareTable 1 }
+
+SvShareEntry ::= SEQUENCE {
+            svShareName
+                DisplayString ,
+            svSharePath
+                DisplayString ,
+            svShareComment
+                DisplayString
+        }
+
+svShareName  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..12))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the share."
+    ::= { svShareEntry 1 }
+
+svSharePath  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..255))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The local name of this shared resource."
+    ::= { svShareEntry 2 }
+
+svShareComment  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..255))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "A comment associated with this share."
+    ::= { svShareEntry 3 }
+
+svPrintQNumber  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of print queues on this server."
+    ::= { server 28 }
+
+svPrintQTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF SvPrintQEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "The table of print queues on this server."
+    ::= { server 29 }
+
+svPrintQEntry  OBJECT-TYPE
+    SYNTAX  SvPrintQEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "A table entry corresponding to a single print queue on this 
+            server."
+    INDEX   { svPrintQName }
+    ::= { svPrintQTable 1 }
+
+SvPrintQEntry ::= SEQUENCE {
+            svPrintQName
+                DisplayString ,
+            svPrintQNumJobs
+                INTEGER
+        }
+
+svPrintQName  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..12))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the print queue."
+    ::= { svPrintQEntry 1 }
+
+svPrintQNumJobs  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of jobs currently in this print queue."
+    ::= { svPrintQEntry 2 }
+
+
+-- The Workstation Group
+
+wkstaStatSessStarts  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of sessions that this workstation has initiated."
+    ::= { workstation 1 }
+
+wkstaStatSessFails  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of failed sessions that this workstation has 
+            experienced."
+    ::= { workstation 2 }
+
+wkstaStatUses OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of connections this workstation has initiated."
+    ::= { workstation 3 }
+
+wkstaStatUseFails  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of failed connections this workstation has 
+            experienced."
+    ::= { workstation 4 }
+
+wkstaStatAutoRecs  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of sessions broken and then automatically 
+            reestablished."
+    ::= { workstation 5 }
+
+wkstaErrorLogSize  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION 
+            "The size in kilobytes to which the workstation error log 
+            can grow."
+    ::= { workstation 6 }
+
+wkstaUseNumber  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of active uses the workstation is currently 
+            maintaining."
+    ::= { workstation 7 }
+
+wkstaUseTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF WkstaUseEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "The table of active uses made by this workstation."
+    ::= { workstation 8 }
+
+wkstaUseEntry  OBJECT-TYPE
+    SYNTAX WkstaUseEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "A use of a remote network resource."
+    INDEX   { useLocalName, useRemote }
+    ::= { wkstaUseTable 1 }
+
+WkstaUseEntry ::= SEQUENCE {
+            useLocalName
+                DisplayString ,
+            useRemote
+                DisplayString ,
+            useStatus
+                INTEGER
+        }
+
+useLocalName  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..8))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the local devicename (e.g. e: or lpt1:) that 
+            is redirected."
+    ::= { wkstaUseEntry 1 }
+
+useRemote  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..255))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the remote shared resource to which the redirection 
+            has been made. (eg. \\server\share)."
+    ::= { wkstaUseEntry 2 }
+
+useStatus  OBJECT-TYPE
+    SYNTAX
+        INTEGER {
+            use-ok(1),
+            use-paused(2),
+            use-session-lost(3),
+            use-network-error(4),
+            use-connecting(5),
+            use-reconnecting(6)
+        }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The status of this connection."
+    ::= { wkstaUseEntry 3 }
+
+
+-- The Domain Group
+
+domPrimaryDomain  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..15))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the primary domain to which this machine belongs."
+    ::= { domain  1 }
+
+domLogonDomain  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..15))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the domain to which this machine is logged on."
+    ::= { domain  2 }
+
+domOtherDomainNumber  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of entries in domOtherDamainTable."
+    ::= { domain  3 }
+
+domOtherDomainTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF DomOtherDomainEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "The list of other domains which this machine is monitoring."
+    ::= { domain  4 }
+
+domOtherDomainEntry OBJECT-TYPE
+    SYNTAX DomOtherDomainEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION 
+            "An entry in the table of other domains."
+    INDEX  { domOtherName }
+    ::= { domOtherDomainTable 1 }
+
+DomOtherDomainEntry ::= SEQUENCE {
+        domOtherName
+          DisplayString
+    }
+
+domOtherName OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..15))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of an additional domain which this machine is 
+            monitoring."
+    ::= { domOtherDomainEntry 1 }
+
+domServerNumber OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of entries in domServerTable."
+    ::= { domain 5 }
+
+domServerTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF DomServerEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "The list of non-hidden servers that are on all of the 
+            domains this machine is monitoring."
+    ::= { domain 6 }
+
+domServerEntry OBJECT-TYPE
+    SYNTAX DomServerEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION 
+            "An entry in the domain server table."
+    INDEX  { domServerName }
+    ::= { domServerTable 1 }
+
+DomServerEntry ::= SEQUENCE {
+        domServerName
+          DisplayString
+    }
+
+domServerName OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..15))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of a server on one of the domains which this 
+            machine is monitoring."
+    ::= { domServerEntry 1 }
+
+domLogonNumber OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The number of entries in domLogonTable."
+    ::= { domain 7 }
+
+domLogonTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF DomLogonEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "The list of domain logons which this machine has processed.
+            Available only on servers acting as primary or backup domain 
+            controllers.  To compile the complete table of all logons on 
+            a given domain it is necessary to query all primary and backup 
+            domain controllers on the domain."
+    ::= { domain 8 }
+
+domLogonEntry OBJECT-TYPE
+    SYNTAX  DomLogonEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION 
+            "An entry in the logon table."
+    INDEX   { domLogonUser, domLogonMachine }
+    ::= { domLogonTable 1 }
+
+DomLogonEntry ::= SEQUENCE {
+            domLogonUser
+                DisplayString ,
+            domLogonMachine
+                DisplayString
+        }
+
+domLogonUser OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..20))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the user who is logged on to this domain."
+    ::= { domLogonEntry 1 }
+
+domLogonMachine OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (1..15))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION 
+            "The name of the machine from which the user logged on."
+    ::= { domLogonEntry 2 }
+
+END

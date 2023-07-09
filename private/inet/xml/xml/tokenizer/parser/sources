@@ -1,0 +1,36 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=xmltok
+MINORCOMP=xmlparser
+
+ROOT=$(MAKEDIR:xml\tokenizer\parser=)
+TOK_ROOT=$(MAKEDIR:\parser=)
+!include $(TOK_ROOT)\common.inc
+
+TARGETNAME=xmlparser
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES= \
+    xmlparser.cxx
+
+INCLUDES= \
+    $(TOK_ROOT)\xmlstream; \
+    $(MSXML)\core\util; \
+    $(MSXML);\
+    $(XML_TOKENIZER_INCLUDES)

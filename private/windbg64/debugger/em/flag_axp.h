@@ -1,0 +1,10 @@
+    { szFlagMode,   rtRegular|rtExtended, 1, 0,  CV_ALPHA_Psr, 0 },
+    { szFlagIe,     rtRegular|rtExtended, 1, 0,  CV_ALPHA_Psr, 1 },
+    { szFlagIrql,   rtRegular|rtExtended, 3, 0,  CV_ALPHA_Psr, 2},
+    { szFlagInt5,   rtRegular|rtExtended, 3, 0,  CV_ALPHA_Psr, 2 },
+    { szFlagInt4,   rtRegular|rtExtended, 3, 0,  CV_ALPHA_Psr, 2 },
+    { szFlagInt3,   rtRegular|rtExtended, 3, 0,  CV_ALPHA_Psr, 2 },
+    { szFlagInt2,   rtRegular|rtExtended, 3, 0,  CV_ALPHA_Psr, 2 },
+    { szFlagInt1,   rtRegular|rtExtended, 3, 0,  CV_ALPHA_Psr, 2 },
+    { szFlagInt0,   rtRegular|rtExtended, 3, 0,  CV_ALPHA_Psr, 2 },
+

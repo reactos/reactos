@@ -1,0 +1,22 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\core\include=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=corepch
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SYNCHRONIZE_BLOCK=1
+
+INCLUDES=$(COREINCLUDES)
+
+SOURCES= \
+    empty.cxx
+
+PRECOMPILED_INCLUDE=headers.hxx
+PRECOMPILED_CXX=1

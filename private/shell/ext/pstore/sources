@@ -1,0 +1,64 @@
+#----------------------------------------------------------------------------
+#
+# Description:
+#
+#
+# History:
+#
+#
+#
+#----------------------------------------------------------------------------
+
+
+MINORCOMP=pstoreex
+TARGETNAME=pstoreex
+
+TARGETTYPE=DYNLINK
+TARGETPATH=$(_OBJ_DIR)
+
+
+INCLUDES=     $(NTINCLUDES);$(INCLUDES);.\inc;
+
+# TODO real DLLBASE
+DLLBASE=0x60000000
+DLLENTRY=DllMain
+
+
+!if $(FREEBUILD)
+
+C_DEFINES=$(C_DEFINES) -D_CRTIMP=
+
+!UNDEF USE_MSVCRT
+USE_LIBCNTPR=1
+!endif
+
+NO_NTDLL=1
+
+LINKLIBS=\
+    .\lib\*\unicode.lib \
+    .\lib\*\crtem.lib
+
+TARGETLIBS= \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib     \
+           .\lib\*\pstorec.lib
+
+
+SOURCES=\
+    classfac.cpp    \
+    enumid.cpp      \
+    main.cpp        \
+    shfolder.cpp    \
+    shview.cpp      \
+    icon.cpp        \
+    utility.cpp     \
+    psexsup.cpp     \
+    listansi.cpp    \
+    listunic.cpp    \
+    pstoreex.rc
+

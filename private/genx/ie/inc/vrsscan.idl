@@ -1,0 +1,134 @@
+//****************************************************************************
+//
+//  Copyright (C) Microsoft Corporation, 1993-1998.
+//
+//  File:       vrsscan.idl
+//
+//  Contents:   Interfaces for virus scanning
+//
+//****************************************************************************
+
+#ifndef DO_NO_IMPORTS
+import "objidl.idl";
+import "oleidl.idl";
+#endif
+
+interface IVirusScanner;
+interface IRegisterVirusScanEngine;
+interface IVirusScanEngine;
+
+[
+    uuid(5F47DB70-D9FE-11d0-9564-00609797EA4F),     // LIBID_VIRUSSCAN
+    helpstring("Microsoft Virus Scanning Handlers 1.0"),
+    lcid(0x0000),
+    version(1.0)
+]
+library VIRUSSCAN
+{
+
+cpp_quote("//   Virus Scan Error codes")
+cpp_quote("#define  VSCAN_E_NOPROVIDERS      _HRESULT_TYPEDEF_(0x800D1001)")
+cpp_quote("#define  VSCAN_E_CHECKPARTIAL     _HRESULT_TYPEDEF_(0x800D1002)")
+cpp_quote("#define  VSCAN_E_CHECKFAIL        _HRESULT_TYPEDEF_(0x800D1003)")
+cpp_quote("#define  VSCAN_E_DELETEFAIL       _HRESULT_TYPEDEF_(0x800D1004)")
+cpp_quote("")
+cpp_quote("// Virus Scanner Capabilities flags")
+cpp_quote("#define  VSC_LIKESISTREAM      0x00000001")
+cpp_quote("#define  VSC_LIKESFILE         0x00000002")
+cpp_quote("#define  VSC_LIKESHGLOBAL      0x00000004")
+cpp_quote("#define  VSC_HASMOREINFO       0x00000008")
+cpp_quote("")
+cpp_quote("//   Virus Scan Engine Error codes")
+cpp_quote("#define  VSE_E_UNSUPPORTEDINPUTTYPE      _HRESULT_TYPEDEF_(0x800D2001)")
+cpp_quote("#define  VSE_E_CHECKFAIL                 _HRESULT_TYPEDEF_(0x800D2002)")
+cpp_quote("")
+
+
+const USHORT MAX_DESCRIPTION = 128;
+const USHORT MAX_URL_LENGTH = 2048;
+
+
+typedef struct _tagVIRUSINFO
+{
+   DWORD       cbSize;
+   WCHAR       wszVendorDescription[MAX_DESCRIPTION];
+   HICON       hVendorIcon;
+   WCHAR       wszVendorContactInfo[MAX_URL_LENGTH];
+   WCHAR       wszVirusName[MAX_DESCRIPTION];
+   WCHAR       wszVirusDescription[MAX_DESCRIPTION];
+} VIRUSINFO;
+typedef [unique] VIRUSINFO *LPVIRUSINFO;
+
+cpp_quote("")
+cpp_quote("#define    SFV_DONTDOUI             0x00000002                                ")
+cpp_quote("#define    SFV_DELETE               0x00000004                                ")
+cpp_quote("#define    SFV_WANTVENDORICON       0x00000008                                ")
+cpp_quote("#define    SFV_ENGINE_DOUI          0x00010000                                ")
+cpp_quote("")
+
+[
+    local,
+    object,
+    uuid(4589BEE0-B4B1-11CF-AAFA-00AA00B6015C)  // IID_IVirusScanner
+]
+interface IVirusScanner: IUnknown
+{
+    HRESULT ScanForVirus(
+        [in] HWND hWnd,
+        [in] STGMEDIUM *pstgMedium,
+        [in] LPWSTR pwszItemDescription,
+        [in] DWORD dwFlags,
+        [in, out] LPVIRUSINFO pVirusInfo);
+}
+
+cpp_quote("#define REGISTERSCANNER_REREGISTER     1")
+
+[
+    local,
+    object,
+    uuid(0825E060-B961-11CF-AAFA-00AA00B6015C)  // IID_IRegisterVirusScanEngine
+]
+interface IRegisterVirusScanEngine: IUnknown
+{
+    HRESULT RegisterScanEngine(
+        [in] REFCLSID rclsid,
+        [in] LPWSTR pwszDescription,
+        [in] DWORD dwFlags,
+        [in] DWORD dwReserved,
+        [in, out] DWORD *pdwCookie);
+
+    HRESULT UnRegisterScanEngine(
+        [in] REFCLSID rclsid,
+        [in] LPWSTR pwszDescription,
+        [in] DWORD dwFlags,
+        [in] DWORD dwReserved,
+        [in] DWORD dwCookie );
+}
+
+[
+    local,
+    object,
+    uuid(083DB180-B4A8-11CF-AAFA-00AA00B6015C)  // IID_IVirusScanEngine
+]
+interface IVirusScanEngine: IUnknown
+{
+    HRESULT ScanForVirus(
+        [in] HWND hWnd,
+        [in] STGMEDIUM *pstgMedium,
+        [in] LPWSTR pwszItemDescription,
+        [in] DWORD dwFlags,
+        [in] DWORD dwReserved,
+        [in, out] LPVIRUSINFO pVirusInfo);
+
+    HRESULT DisplayCustomInfo( void );
+}
+
+[
+    uuid(E88E5DE0-BD3E-11CF-AAFA-00AA00B6015C)  // CLSID_VirusScan - the standard implementation
+]
+coclass VirusScan
+{
+    [default] interface IVirusScanner;
+}
+
+}

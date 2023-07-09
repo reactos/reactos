@@ -1,0 +1,18 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Virus Check]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Virus Check\Scanners]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Virus Check\Scanners\{E489FDC0-BD6C-11CF-AAFA-00AA00B6015C}]
+@="Sample Scanner"
+
+[HKEY_CLASSES_ROOT\CLSID\{E489FDC0-BD6C-11CF-AAFA-00AA00B6015C}]
+@="Sample Virus Scanner"
+
+[HKEY_CLASSES_ROOT\CLSID\{E489FDC0-BD6C-11CF-AAFA-00AA00B6015C}\VirusScanner]
+"VendorDescription"="Dummy Scanner"
+"VendorContactInfo"="http://www.microsoft.com"
+"VendorIcon"="?"
+"VendorFlags"=dword:0000000f
+

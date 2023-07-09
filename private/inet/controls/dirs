@@ -1,0 +1,54 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    dirs.
+
+Abstract:
+
+    This file specifies the subdirectories of the current directory that
+    contain component makefiles.
+
+
+!ENDIF
+
+#
+# This is a list of all subdirectories that build required components.
+# Each subdirectory name should appear on a line by itself.  The build
+# follows the order in which the subdirectories are specified.
+#
+
+DIRS=   \
+        framewrk    \
+        licmgr      \
+        plugin
+
+
+#
+# This is a list of all subdirectories that build optional components.
+# Each subdirectory name should appear on a line by itself.  The build
+# follows the order in which the subdirectories are specified.
+#
+
+OPTIONAL_DIRS= \
+        adlog       \
+        autofill    \
+        btnmenu     \
+        ieanbtn     \
+        iechart     \
+        iedate      \
+        iegrad      \
+        ienewitm    \
+        iepopwnd    \
+        iestock     \
+        ietrack     \
+        htmlctl     \
+        lpk_tool    \
+        ielabel     \
+        iemenu      \
+        ietimer     \
+        iepreld     \
+        marquee
+        

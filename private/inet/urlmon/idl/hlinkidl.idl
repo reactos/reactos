@@ -1,0 +1,820 @@
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   Hyperlinking interfaces
+// 
+//	Author:	Srinik (Srini Koppolu)
+//  
+// 	History: 07/26/95. Original
+// 		
+//----------------------------------------------------------------------------
+
+
+import "objidl.idl";
+import "oleidl.idl";
+
+interface IBinding;
+interface IBindStatusCallback;
+interface IHlinkSite;
+interface IHlink;
+interface IHlinkSource;
+interface IHlinkFrame;
+interface IEnumHLITEM;
+interface IHlinkBrowseContext;
+interface IPersistMoniker;
+
+#ifdef LATER
+interface IFile;
+#endif
+
+cpp_quote("#ifndef _HLINK_ERRORS_DEFINED")
+cpp_quote("#define _HLINK_ERRORS_DEFINED")
+
+cpp_quote("#define HLINK_E_FIRST 				(OLE_E_LAST+1)")
+
+cpp_quote("#define HLINK_S_FIRST 				(OLE_S_LAST+1)")
+cpp_quote("#define HLINK_S_NAVIGATEDTOALEAFNODE (HLINK_S_FIRST)")  
+cpp_quote("#define HLINK_S_DONTHIDEYOURWINDOW	(HLINK_S_FIRST+1)")
+
+cpp_quote("#endif //_HLINK_ERRORS_DEFINED")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IBinding interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPBINDING_DEFINED")
+cpp_quote("#define _LPBINDING_DEFINED")
+
+[
+#ifdef _MAC
+	local,
+#endif
+	object,
+	uuid(79eac9c0-baf9-11ce-8c82-00aa004ba90b),
+	pointer_default(unique)
+]
+
+
+interface IBinding: IUnknown
+{
+	typedef [unique] IBinding *LPBINDING;
+
+	HRESULT Abort();
+	
+	HRESULT Suspend();
+	
+	HRESULT Resume();
+	
+	HRESULT SetPriority(
+		[in] LONG nPriority);
+	
+	HRESULT GetPriority(
+		[out] LONG * pnPriority);
+}
+
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IBindStatusCallback interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPBINDSTATUSCALLBACK_DEFINED")
+cpp_quote("#define _LPBINDSTATUSCALLBACK_DEFINED")
+
+[
+//#ifdef _MAC
+	local,
+//#endif
+	object,
+	uuid(79eac9c1-baf9-11ce-8c82-00aa004ba90b),
+	pointer_default(unique)
+]
+
+
+interface IBindStatusCallback: IUnknown
+{
+	typedef [unique] IBindStatusCallback *LPBINDSTATUSCALLBACK;
+
+	// flags that describe the type of transaction that caller wants 
+	typedef enum 
+	{
+		BINDF_ASYNCHRONOUS		= 0x00000001,
+		BINDF_NOPROGRESSIVERENDERING	= 0x00000002,
+		BINDF_NOPROGRESSNOTIFICATIONS	= 0x00000004,
+		BINDF_DONTUSECACHE		= 0x00000008,
+	} BINDF;
+
+	typedef struct _tagBINDINFO
+	{
+		ULONG	cbSize;
+		LPWSTR	pwzUrlAppendString;
+				// string that gets appended to the url
+		STGMEDIUM stgmedPostData; 
+				// data sent using POST method
+	} BINDINFO;
+
+	// Data notification flags
+	typedef enum 
+	{
+		BSCF_FIRSTDATANOTIFICATION = 0x00000001,
+		BSCF_LASTDATANOTIFICATION = 0x00000002,
+	} BSCF;
+	
+	// status codes
+	typedef enum
+	{
+		BINDSTATUS_CONNECTING							= 1,
+		BINDSTATUS_BEGIN_DOWNLOAD						= 2,
+		BINDSTATUS_DOWNLOADING							= 3,
+		BINDSTATUS_CLASSID_AVAILABLE					= 4, 
+		BINDSTATUS_BEGIN_SYNCHRONOUS_OPERATIONS			= 5,
+			// the recipients may want to display hour glass on their windows
+		BINDSTATUS_LAUNCHING_SERVER						= 6,
+		BINDSTATUS_OBJECT_AVAILABLE						= 7,
+		BINDSTATUS_ATTEMPTING_LOAD_WITH_PARTIAL_DATA	= 8,
+		BINDSTATUS_FAILED_LOAD_WITH_PARTIAL_DATA		= 9,
+		BINDSTATUS_END_SYNCHRONOUS_OPERATIONS			= 10,
+			// time to remove the hour glass 
+			// BEGIN/END_SYCNYRONOUS_OPERATIONS pair can be called multiple times 
+			// in  a single transaction
+		BINDSTATUS_END_DOWNLOAD							= 11,
+		BINDSTATUS_ATTEMPTING_LOAD_WITH_FULL_DATA		= 12,
+		BINDSTATUS_FAILED_LOAD_WITH_FULL_DATA			= 13
+	} BINDSTATUS;
+
+	HRESULT GetBindInfo(
+		[out] DWORD *pgrfBINDF,
+		[in, out, unique] BINDINFO * pbindinfo);
+
+	HRESULT OnStartBinding(
+		[in] IBinding * pib,
+		[in] DWORD grf);
+
+	HRESULT GetPriority(
+		[out] LONG * pnPriority);
+
+	HRESULT OnProgress(
+		[in] ULONG ulProgress,
+		[in] ULONG ulProgressMax,
+		[in] ULONG ulStatusCode,
+		[in] LPCWSTR pwzStatusText);
+
+	HRESULT	OnDataAvailable(
+		[in] DWORD grfBSCF,
+		[in] DWORD dwSize,
+		[in] FORMATETC * pFmtetc,
+		[in] REFIID riid,
+		[in, iid_is(riid)] IUnknown * piunk);
+
+	HRESULT OnLowResource(
+		[in] DWORD reserved);
+
+	HRESULT OnStopBinding(
+		[in] HRESULT hrError,
+		[in, unique] LPCWSTR pwzError);
+}
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IHlinkSite interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPHLINKSITE_DEFINED")
+cpp_quote("#define _LPHLINKSITE_DEFINED")
+
+[
+	object,
+	uuid(79eac9c2-baf9-11ce-8c82-00aa004ba90b),
+	pointer_default(unique)
+]
+
+
+interface IHlinkSite: IUnknown
+{
+	typedef [unique] IHlinkSite *LPHLINKSITE;
+
+	// values indicating the moniker to be retrieved
+	typedef enum
+	{
+		HLINKWHICHMK_CONTAINER	= 1,
+		HLINKWHICHMK_BASE		= 2,
+	} HLINKWHICHMK;
+
+	HRESULT GetMoniker(
+		[in] DWORD dwSiteData,
+		[in] DWORD dwAssign,
+		[in] DWORD dwWhich,
+		[out] IMoniker ** ppimk);
+
+	HRESULT GetInterface(
+		[in] DWORD dwSiteData,
+		[in] DWORD dwReserved, 
+		[in] REFIID riid,
+		[out, iid_is(riid)] IUnknown ** ppiunk);
+
+	HRESULT OnReleaseNavigationState(
+		[in] DWORD dwSiteData,
+		[in] DWORD dwReserved);
+}
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IHlink interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPHLINK_DEFINED")
+cpp_quote("#define _LPHLINK_DEFINED")
+
+[
+	object,
+	uuid(79eac9c3-baf9-11ce-8c82-00aa004ba90b),
+	pointer_default(unique)
+]
+
+
+interface IHlink: IUnknown
+{
+	typedef [unique] IHlink *LPHLINK;
+
+	// Hlink bind flags
+	typedef enum 
+	{
+		HLBF_USEBROWSECONTEXTCLONE	= 0x00000001,
+		HLBF_OPENINNEWWINDOW		= 0x00000002 
+	} HLBF;
+
+	// Navigation flags
+	typedef enum 
+	{
+		HLNF_INTERNALJUMP		= 0x00000001,
+		HLNF_NAVIGATINGBACK		= 0x00000002, 
+		HLNF_NAVIGATINGFORWARD		= 0x00000004,
+		HLNF_NAVIGATINGTOSTACKITEM	= 0x00000008,
+		HLNF_OFFSETWINDOWORG		= 0x00000010,
+		HLNF_CREATENOHISTORY		= 0x00000020,
+	} HLNF;
+
+	// Status flags
+	typedef enum 
+	{
+		HLINKMISC_RELATIVE = 0x00000001,
+	} HLINKMISC;
+
+	HRESULT SetHlinkSite(
+		[in] IHlinkSite * pihlSite,
+		[in] DWORD dwSiteData);
+
+	HRESULT GetHlinkSite(
+		[out] IHlinkSite ** ppihlSite,
+		[out] DWORD * pdwSiteData);
+
+	HRESULT	GetMonikerReference(
+		[in] DWORD dwReserved,
+		[out] IMoniker ** ppimk, 
+		[in, out, unique] LPWSTR * ppwzLocation);		
+
+	HRESULT GetStringReference(
+		[in] DWORD dwReserved,
+		[out] LPWSTR * ppwzSource,
+		[out] LPWSTR * ppwzLocation);
+
+	HRESULT	GetFriendlyName(
+		[in] DWORD dwReserved,
+		[out] LPWSTR * ppwzFriendlyName);
+
+	HRESULT	PrepareForNavigation(
+		[in] IHlinkFrame * pihlFrame, 
+		[in] DWORD grfHLBF,
+		[in] LPBC pibc,
+		[in] IBindStatusCallback * pibsc,
+		[in] IHlinkBrowseContext * pihlbc);
+
+	HRESULT	Navigate(
+		[in] DWORD grfHLNF);
+
+	HRESULT GetBoundSource(
+		[out] IUnknown ** ppiunk);
+
+	HRESULT ReleaseNavigationState();
+
+	HRESULT GetMiscStatus(
+		[out] DWORD *pdwStatus);
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IHlinkSource interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPHLINKSOURCE_DEFINED")
+cpp_quote("#define _LPHLINKSOURCE_DEFINED")
+
+[
+	object,
+	uuid(79eac9c4-baf9-11ce-8c82-00aa004ba90b),
+	pointer_default(unique)
+]
+
+
+interface IHlinkSource : IUnknown
+{
+	typedef [unique] IHlinkSource *LPHLINKSOURCE;
+
+	HRESULT SetBrowseContext(
+		[in, unique] IHlinkBrowseContext * pihlbc);
+	
+	HRESULT GetBrowseContext(
+		[out] IHlinkBrowseContext ** ppihlbc);
+
+	HRESULT Navigate(
+ 		[in] DWORD grfHLNF,
+		[in, unique] LPCWSTR pwzJumpLocation);
+
+	HRESULT GetMoniker(
+		[in,unique]  LPCWSTR pwzLocation,
+		[in] DWORD dwAssign,
+		[out] IMoniker ** ppimkLocation);
+
+	HRESULT GetFriendlyName(
+		[in,unique]  LPCWSTR pwzLocation,
+		[out] LPWSTR * ppwzFriendlyName);
+}
+
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IHlinkFrame interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPHLINKFRAME_DEFINED")
+cpp_quote("#define _LPHLINKFRAME_DEFINED")
+
+[
+	object,
+	uuid(79eac9c5-baf9-11ce-8c82-00aa004ba90b),
+	pointer_default(unique)
+]
+
+
+interface IHlinkFrame : IUnknown
+{
+	typedef [unique] IHlinkFrame *LPHLINKFRAME;
+
+	HRESULT GetBrowseContext(
+		[out] IHlinkBrowseContext ** ppihlbc); 
+
+	HRESULT PrepareForNavigation(
+		[in] DWORD grfHLBF,
+		[in] LPBC pbc,
+		[in] IBindStatusCallback * pibsc,
+		[in] IHlink * pihlNavigate);
+
+	HRESULT Navigate(
+		[in] DWORD grfHLNF,
+		[in] IHlink * pihlNavigate);
+
+	HRESULT OnReleaseNavigationState(
+		[in] IHlink * pihlNavigate,
+		[in] DWORD dwReserved);
+
+	HRESULT OnNavigate(
+		[in] DWORD grfHLNF);
+}
+
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:  IEnumHLITEM interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPENUMHLITEM_DEFINED")
+cpp_quote("#define _LPENUMHLITEM_DEFINED")
+
+[
+	local,
+	object,
+	uuid(79eac9c6-baf9-11ce-8c82-00aa004ba90b),
+	pointer_default(unique)
+]
+
+
+interface IEnumHLITEM : IUnknown
+{
+	typedef [unique] IEnumHLITEM *LPENUMHLITEM;
+
+	typedef struct tagHLITEM
+	{
+		ULONG uHLID;
+		LPWSTR pwzFriendlyName;
+	} HLITEM;
+	typedef [unique] HLITEM *LPHLITEM;
+
+	//[local]
+	HRESULT __stdcall Next(
+    		[in] ULONG celt, 
+		[out] HLITEM * rgelt, 
+		[out] ULONG * pceltFetched);
+
+#ifdef NOTUSED
+	[call_as(Next)]
+	HRESULT __stdcall RemoteNext(
+        	[in] ULONG celt,
+		[out, size_is(celt), length_is(*pceltFetched)] 
+		HLITEM * rgelt,
+		[out] ULONG *pceltFetched);
+#endif
+
+	HRESULT Skip(
+   		[in] ULONG celt);
+    	
+	HRESULT Reset();
+
+	HRESULT Clone(
+   		[out] IEnumHLITEM ** ppienumhlitem);
+}
+
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IHlinkBrowseContext interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPHLINKBROWSECONTEXT_DEFINED")
+cpp_quote("#define _LPHLINKBROWSECONTEXT_DEFINED")
+
+[
+	local,
+	object,
+	uuid(79eac9c7-baf9-11ce-8c82-00aa004ba90b),
+	pointer_default(unique)
+]
+
+
+interface IHlinkBrowseContext : IUnknown
+{
+	typedef [unique] IHlinkBrowseContext *LPHLINKBROWSECONTEXT;
+	
+	enum 
+	{
+		HLBWIF_HASFRAMEWNDINFO		= 0x00000001,
+		HLBWIF_HASDOCWNDINFO		= 0x00000002,
+		HLBWIF_FRAMEWNDMAXIMIZED	= 0x00000004,
+		HLBWIF_DOCWNDMAXIMIZED		= 0x00000008
+	};
+
+	typedef struct _tagHLBWINFO
+	{
+		ULONG	cbSize;
+		DWORD 	grfHLBWIF;
+		RECT 	rcFramePos;
+		RECT 	rcDocPos;
+	} HLBWINFO;
+	typedef [unique] HLBWINFO *LPHLBWINFO;
+
+ 	enum 
+	{
+		HLID_PREVIOUS    = 0L,
+		HLID_NEXT        = 0xFFFFFFFF,
+		HLID_CURRENT     = 0xFFFFFFFE,
+		HLID_STACKBOTTOM = 0xFFFFFFFD,
+		HLID_STACKTOP    = 0xFFFFFFFC
+	};
+
+ 	enum 
+	{
+		HLQF_ISVALID	= 0x00000001,
+		HLQF_ISCURRENT	= 0x00000002
+	};
+
+	HRESULT Register(
+		[in] DWORD reserved,
+		[in, unique] IUnknown * piunk,
+		[in, unique] IMoniker * pimk,
+		[out] DWORD * pdwRegister);
+
+	HRESULT GetObject(
+		[in, unique] IMoniker * pimk, 
+		[out] IUnknown ** ppiunk);
+
+	HRESULT Revoke(
+		[in] DWORD dwRegister);
+
+	HRESULT SetBrowseWindowInfo(
+	   	[in, unique] HLBWINFO * phlbwi);
+
+	HRESULT GetBrowseWindowInfo(
+		[out] HLBWINFO * phlbwi);
+
+	HRESULT EnumNavigationStack(
+		[out] IEnumHLITEM ** ppienumhlitem);
+
+	HRESULT QueryHlink(
+		[in] DWORD grfHLQF,
+		[in] ULONG uHLID);
+
+	HRESULT GetHlink(	
+		[in] ULONG uHLID,
+		[out] IHlink ** ppihl);
+
+	HRESULT SetCurrentHlink(	
+		[in] ULONG uHLID);
+
+	HRESULT OnNavigateHlink(
+		[in] DWORD grfHLNF,
+		[in] IMoniker * pimkSource,
+		[in] LPCWSTR pwzLocation,
+		[in] LPCWSTR pwzFriendlyName);
+
+	HRESULT UpdateCurrentHlink(
+		[in] IMoniker * pimkSource,
+		[in] LPCWSTR pwzLocation,
+		[in] LPCWSTR pwzFriendlyName);
+
+	HRESULT Clone(
+		[in] IUnknown * piunkOuter,
+		[in] REFIID riid,
+		[out, iid_is(riid)] IUnknown ** ppiunkObj);
+	
+	HRESULT Close(
+		[in] DWORD reserved);
+}
+
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:  IPersistMoniker interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPPERSISTMONIKER_DEFINED")
+cpp_quote("#define _LPPERSISTMONIKER_DEFINED")
+
+// Because of a limitation in PPCMAC MIDL, we can't derive from an
+// interface other than IUnknown, unless we define it ourselves.
+// Hence, we derive IPersistMoniker from IUnknown instead of IPersist, and
+// we add GetClassID to it.  We later use a SED script to make it look like
+// it's derived from IPersist in the header file.
+
+[
+	object,
+	uuid(79eac9c9-baf9-11ce-8c82-00aa004ba90b),
+	pointer_default(unique)
+]
+
+#ifndef _MAC
+interface IPersistMoniker : IPersist
+{
+	typedef [unique] IPersistMoniker *LPPERSISTMONIKER;
+#else
+interface IPersistMoniker : IUnknown
+{
+	typedef [unique] IPersistMoniker *LPPERSISTMONIKER;
+
+    HRESULT GetClassID(
+        [out] CLSID *pClassID);
+#endif
+
+    HRESULT IsDirty(void);
+
+	HRESULT InitNew(
+        [in] IMoniker * pimkName,
+        [in] LPBC pibc);
+
+    HRESULT Load(
+		[in] BOOL fFullyAvailable,
+        [in] IMoniker * pimkName,
+		[in] LPBC pibc,
+        [in] DWORD grfMode);
+
+    HRESULT Save(
+        [in] IMoniker * pimkName,
+		[in] LPBC pibc,
+        [in] BOOL fRemember);
+
+    HRESULT SaveCompleted(
+        [in] IMoniker * pimkName,
+        [in] LPBC pibc);
+
+    HRESULT GetCurMoniker(
+        [out] IMoniker ** ppimkName);
+}
+
+cpp_quote("#endif")
+
+
+#ifdef LATER
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:  IFile interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPFILE_DEFINED")
+cpp_quote("#define _LPFILE_DEFINED")
+
+[
+	local,
+	object,
+	uuid(79eac9ca-baf9-11ce-8c82-00aa004ba90b),
+	pointer_default(unique)
+]
+
+
+interface IFile : IUnknown
+{
+	typedef [unique] IFile *LPFILE;
+
+	// Navigation flags
+	typedef enum 
+	{
+		FILEGETF_ONLYIFTHERE   = 0x00000001,
+		FILEGETF_FORCEASSIGN   = 0x00000002, 
+	} FILEGETF;
+
+	HRESULT GetFileName(
+		[in] DWORD grf,
+		[in] DWORD cbBuf,
+		[in, out] WCHAR wzFilePathBuf[], 
+		[out] DWORD * pcbActual);
+	
+	HRESULT GetDisplayName(
+		[in] DWORD cbBuf,
+		[in, out] WCHAR wzDisplayNameBuf[], 
+		[out] DWORD * pcbActual);
+
+	HRESULT BindToStorage(
+		[in] DWORD grfMode,
+		[in] REFIID riid,
+		[out] void ** ppv);
+
+    HRESULT Save(
+		[in] STGMEDIUM * pstgmed,
+        [in] BOOL (__stdcall *pfnContinue)(void));
+}
+cpp_quote("#endif")
+#endif
+
+#ifdef _MAC
+cpp_quote("/****************************************************************************")
+cpp_quote("	tbframe.h")
+cpp_quote("")
+cpp_quote("	GENERATED FILE!!!  DO NOT EDIT!!!")
+cpp_quote("	")
+cpp_quote("	Owner: WahhabB")
+cpp_quote(" 	Copyright (c) 1995 Microsoft Corporation")
+cpp_quote(" ")
+cpp_quote("	This file contains the exported interfaces for the Toolbars' IMsoTbFrame")
+cpp_quote("	class.  It is generated by midl.exe from tbframe.idl")
+cpp_quote("****************************************************************************/")
+
+cpp_quote("#ifndef TBFRAME_H")
+cpp_quote("#define TBFRAME_H")
+cpp_quote("/*****************************************************************************")
+cpp_quote("	 Defines the IMsoTbFrame interface.")
+cpp_quote("	 An OLE container app implements IMsoTbFrame in order to receive calls to")
+cpp_quote("	 the various toolbar users.  It should simply pass them through to its")
+cpp_quote("	 user objects and return the results.")
+cpp_quote("***************************************************************** WAHHABB ***/")
+
+
+[
+	object,
+	uuid(000c0114-0000-0000-c000-000000000046)
+]
+interface IMsoTbFrame : IUnknown
+	{
+	import "unknwn.idl";
+	
+/* Prepare to serialize the app's toolbar set.  Generate an ID to use for 
+	shared memory and return it in pdwShMem.  */
+	[input_sync] 
+	HRESULT HrPrepareToMerge ([out] DWORD *pdwShrMem);
+
+/* Serialize a toolbar (or more) from the client corresponding to the server's
+	toolbar with group tbid */
+	[input_sync] 
+	HRESULT HrSerializeToolbar([in] int tbid, [in] BOOL fAlreadyMerged);
+	
+/* A pass-thru method for toolbars */
+	/* A pass-thru method for toolbars */
+	[input_sync] 
+	HRESULT HrAutoVisibleToolbar([in] long ptb);
+	
+/* A pass-thru call to the frame to have it call the Click method
+   on the button the bits of whose address are in pctl */
+	HRESULT HrClickButton([in] long pctl, [out] int *ptbbs, [in] int grf);
+	
+/* A pass-thru call to the frame to have it call the Pick method on 
+	the Dropdown  the bits of whose address are in pctl.
+	Item i was just selected, and the user exited via mdExit.  If the
+   dropdown is a split-btn variety, Pick will be called with i == -2
+   when the push button was pressed. */
+	HRESULT HrPickDropdown([in] long pctl, [in] int i, [in] int mdExit);
+	
+/* A pass-thru call to the frame to have it call the EnterText method on 
+	the Dropdown  the bits of whose address are in pctl.
+	Returns the text typed in the edit (limited to 255 chars), 
+	mdExit says how the user left the dropdown. */
+	HRESULT HrEnterTextDropdown([in] long pctl, [out] WCHAR *wtz, [in] int mdExit);
+	
+/* Another pass-thru call to the frame to have it call the ToolbarSetUser
+	NotifySelect method for the control the bits of whose address are
+	in pctl, passing thru fSelect. */
+	HRESULT HrNotifyActionControl([in] long pctl, [in] int tba);
+	
+/* Request the container to update cache values for its controls in the
+	stream pistm using dwShMem to access shared memory */
+	[input_sync] 
+	HRESULT HrLoadOleCache(void);
+	
+/* When the server's ToolbarSet FUpdate is called, it queries the client
+	whether to request a cache update. */
+	[input_sync] 
+	HRESULT HrCacheUpdateNeeded(void);
+	
+/* Request the container to free session data */
+	[input_sync] 
+	HRESULT HrDeactivateOleSession(void);
+	
+/* Request the container to reactivate session data */
+	[input_sync] 
+	HRESULT HrReactivateOleSession(void);
+	
+/* Find out the quick tip information for this control */
+	[input_sync] 
+	HRESULT HrGetQuickTip([in] long pctl, [out] WCHAR *wtzHelpFile, 
+			[out] int *piHelpContext);
+	}
+
+
+cpp_quote("/*****************************************************************************")
+cpp_quote("	 Defines the IMsoOfficeAsst interface.")
+cpp_quote("	 An OLE container app implements IMsoOfficeAsst in order to supply filenames")
+cpp_quote("	 of Intellisearch database files for use by the Answer Wizard.")
+cpp_quote("***************************************************************** BillBle ***/")
+
+[
+	object,
+	uuid(000c0305-0000-0000-c000-000000000046)
+]
+interface IMsoOfficeAsst : IUnknown
+{
+	import "unknwn.idl";
+   HRESULT HrGetAWDbCount([out] int * pcFilenames );
+   HRESULT HrGetAWDbFilename([in] int iFilename, [in] int cbFilename,
+                   [out, string, size_is(cbFilename)] WCHAR * pwzFilename);
+}
+cpp_quote("#endif // TBFRAME_H")
+#endif	// _MAC
+

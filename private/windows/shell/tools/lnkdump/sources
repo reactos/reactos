@@ -1,0 +1,16 @@
+TARGETNAME=lnkdump
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+C_DEFINES=-DNT -DWINNT
+USE_CRTDLL=1
+
+INCLUDES=..\..\..\inc
+
+SOURCES=lnkdump.rc \
+        lnkdump.c
+
+TARGETLIBS=$(SDK_LIB_PATH)\user32.lib \
+           $(SDK_LIB_PATH)\ole32.lib
+
+UMTYPE=console

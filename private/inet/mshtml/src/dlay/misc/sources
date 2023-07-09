@@ -1,0 +1,21 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\dlay\misc=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=misc
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES= \
+    $(ROOT)\src\dlay\include; \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\external\inc; \
+    $(ROOT)\types\$(O);
+
+SOURCES= \
+    dlayidpr.cxx

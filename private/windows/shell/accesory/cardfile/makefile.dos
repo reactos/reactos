@@ -1,0 +1,97 @@
+!ifdef OS2
+CFLAGS=-c -AM -PLM -G2sw -Oas -Zpe -DOS2 -Fo$@
+RCFLAGS=-DOS2
+!else
+CFLAGS=-c -AM -PLM -G2sw -Oas -Zpe -Fo$@
+RCFLAGS=
+!endif
+LFLAGS=
+
+!ifdef CVW
+CFLAGS= -c -AM -PLM -G2sw -Zipe -Fo$@ -Od -W3
+LFLAGS=$(LFLAGS) /CO
+!endif
+
+AFLAGS=-D?PLM=1 -D?WIN=1 -DmemM=1
+BLD=.
+
+target:  $(BLD)\cardfile.exe
+
+cardfile.res:  cardfile.rc cardfile.dlg cardfile.ico ecda.dlg
+    rc $(RCFLAGS) -r cardfile.rc
+
+$(BLD)\init.obj: init.c
+    cl $(CFLAGS) -NT _INIT init.c
+
+$(BLD)\register.obj: register.c
+    cl $(CFLAGS) -NT _INIT register.c
+
+$(BLD)\main.obj: main.c
+    cl $(CFLAGS) -NT _TEXT main.c
+
+$(BLD)\print.obj: print.c
+    cl $(CFLAGS) -NT _PRINT print.c
+
+$(BLD)\dragdrop.obj: dragdrop.c
+    cl $(CFLAGS) -NT _FILE dragdrop.c
+
+$(BLD)\file.obj: file.c
+    cl $(CFLAGS) -NT _FILE file.c
+
+$(BLD)\read.obj: read.c
+    cl $(CFLAGS) -NT _READ read.c
+
+$(BLD)\write.obj: write.c
+    cl $(CFLAGS) -NT _WRITE write.c
+
+$(BLD)\index.obj:  index.c
+    cl $(CFLAGS) -NT _INDEX index.c
+
+$(BLD)\input.obj: input.c
+    cl $(CFLAGS) -NT _INPUT input.c
+
+$(BLD)\fixmenu.obj: fixmenu.c
+    cl $(CFLAGS) -NT _INPUT fixmenu.c
+
+$(BLD)\card.obj: card.c
+    cl $(CFLAGS) -NT _INPUT card.c
+
+$(BLD)\object.obj: object.c
+    cl $(CFLAGS) -NT _OBJECT object.c
+
+$(BLD)\find.obj: find.c
+    cl $(CFLAGS) -NT _FIND find.c
+
+$(BLD)\lstrfns.obj: ..\common\lstrfns.c
+    cl $(CFLAGS) -NT _FIND -DSTR -DCMP -DCPY -DINSENS ..\common\lstrfns.c
+
+$(BLD)\indb.obj: indb.c register.h
+    cl $(CFLAGS) -NT _DLGBOX indb.c
+
+$(BLD)\dial.obj: dial.c
+    cl $(CFLAGS) -NT _DIAL dial.c
+
+$(BLD)\picture.obj: picture.c register.h
+    cl $(CFLAGS) -NT _FILE picture.c
+
+$(BLD)\indos2.obj: indos2.asm
+    masm $(AFLAGS) indos2.asm $(BLD)\;
+
+$(BLD)\indos.obj: indos.asm
+    masm $(AFLAGS) indos.asm $(BLD)\;
+
+$(BLD)\cardfile.exe:  $(BLD)\index.obj $(BLD)\cardfile.def \
+    $(BLD)\input.obj $(BLD)\fixmenu.obj $(BLD)\file.obj $(BLD)\read.obj \
+    $(BLD)\write.obj $(BLD)\indb.obj $(BLD)\indos.obj $(BLD)\picture.obj \
+	$(BLD)\card.obj cardfile.res $(BLD)\lstrfns.obj \
+    $(BLD)\print.obj $(BLD)\main.obj $(BLD)\indos2.obj \
+    $(BLD)\find.obj $(BLD)\init.obj $(BLD)\register.obj\
+    $(BLD)\object.obj $(BLD)\dial.obj \
+    $(BLD)\dragdrop.obj $(BLD)\cardfile.lnk
+    link $(LFLAGS) @cardfile.lnk
+    mapsym cardfile
+    rc $(RCFLAGS) cardfile.res
+
+!   ifdef OS2
+    exehdr /newfiles cardfile.exe
+!   endif

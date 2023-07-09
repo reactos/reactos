@@ -1,0 +1,37 @@
+#
+#   Create a codec DLL
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=msvidc32
+TARGETPATH=..\lib
+TARGETTYPE=DYNLINK
+UMTYPE=windows
+DLLDEF=msvidc32.def
+
+C_DEFINES=-DUNICODE -DVFW
+
+USE_CRTDLL=1
+
+NTPROFILEINPUT=yes
+
+# Define libs we need and where to find them
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib \
+
+INCLUDES=..\inc;..\..\verinfo\usa;..\..\inc;..\video;..\drawdib
+
+SOURCES=compress.c \
+        decmprss.c \
+        drvproc.c \
+        msvidc.c \
+        invcmap.c \
+        debug.c   \
+        msvidc.rc
+
+DLLBASE=0x1c200000

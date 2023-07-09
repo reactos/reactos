@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdcan
+
+TARGETNAME=kbdcan
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdcan.c kbdcan.rc
+
+NTTARGETFILE0=kbdcan.h kbdcan.rc kbdcan.def

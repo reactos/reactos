@@ -1,0 +1,216 @@
+COM 'Instance's (and explorer band categories)
+980305
+andyp
+
+WARNING WARNING WARNING -- v. early draft of doc in progress, likely to
+have many errors/omissions.
+
+- abstract
+...
+
+- contents
+...
+
+- overview
+COM has a (core!) notion of a CLSID for the code that implements an object
+but no similar notion for a particular instance of that object.  thus every
+client must write custom code for each instance.
+
+we provide a generalization which makes creation and initialization of such
+instances easy and consistent.
+
+- motivation
+an e.g. of usage might be a browser band implementation.  the code for
+such a band is identical no matter what URL one happens to initialize
+it to.  however it is quite useful to be able to install many different
+browser bands, each pointing to a different URL, by writing only
+registry 'goo' (vs.  writing custom code, however simple it may be,
+to do the same thing).
+
+- instance = code + data
+an 'INSTID' is a GUID that identifies two things:
+    - the CLSID for the code for an object
+    - data for an IPersistXxx iface to initialize an instance of the object
+
+- creation
+INSTID's are fully hidden from the client.  that is, there is no special
+API to create an instance.  one simply does a CoCreateInstance, and if the
+CLSID happens to actually be an INSTID, we quietly do everything that is
+necessary to create and initialize the instance.
+
+- code
+the code for an 'instance' is exactly a CLSID.
+
+- initialization
+initialization is done from an IPersistXxx iface.  we try to load 1st from
+an IPropertyBag, next from an IPersistStream, and finally from ???
+
+all of these ifaces are created using our various registry-based
+implementations.  e.g. CRegStrPropertyBag (IPropertyBag on top of
+a registry key), OpenRegStream (IPersistStream on top of a registry
+key), etc.
+
+NYI: only IPersistPropertyBag is implemented.  this makes (some) sense,
+since we're trying to provide a registry-goo-only method for 'coding',
+and a property bag is the main string-based COM IPersistXxx mechanism.
+
+- installation
+for convenience, we also provide code to create the registry goo (why?).
+
+CRegStrPropBag *InstallInstAndBag(LPTSTR pszInst, LPTSTR pszName, LPTSTR pszClass)
+
+...
+
+- registry goo
+the key looks as follows:
+    subkey                              value(s)
+    ------                              --------
+    HKCR/CLSID/
+        {instid}/                       @=...description...
+            InProcServer
+                                        @=...path...
+                                        ThreadingModel=...etc....
+            Instance
+                                        CLSID={clsid}
+                InitPropertyBag
+                                        name1=value1
+                                        ...
+
+the InProcServer should point to browseui.dll, which is where we've
+implemented the generic support code for InstIDs.  (if the idea proves
+useful enough, perhaps COM will pick it up as a standard part of the
+CoCreateInstance API).
+
+- implementation
+here's how it works...
+
+the INSTID points to our DLL which implements inst.cpp.  DllGetClassObject
+goes thru its usual loop.  if it fails, it tries to create a
+CInstClassFactory for the given CLSID (INSTID).  creation looks for and
+caches the magic 'Instance' subkey (and fails if it's not found).  then
+when the ::CI method is called it gets the appropriate keys/values, does
+the CCI, creates the IPropertyBag (etc.), and does the ::Load.
+
+- perf
+from the implementation details, it should be clear that a 'normal'
+CCI goes thru exactly the same code path as before.  we intentionally
+keep this code path exactly the same cost.
+
+the only time our INSTID code is hit at all is if the vanilla CCI
+fails (due to it not being in our sccls.c table).  when that happens,
+we look for the 'Instance' subkey.  if that fails, we fail the entire
+CCI (w/ the only added cost for that failure case being the 1 extra
+RegOpenKey call).  we intentionally keep this code path as close to
+0 extra cost as possible.
+
+if that succeeds, we open/read several other keys, do the 'real' CCI,
+and do the initialization.  again, the only extra cost (vs. the equivalent
+custom code) is the extra registry operations, which we try to keep
+cheap.
+
+to keep the extra registry operations cheap we do 'relative' opens
+as we work our way down the registry.
+
+BUGBUG what about cost of CInstClassFactory?
+
+
+- example
+to continue w/ our browser band e.g., here's the registry 'goo' for
+such a band:
+    HKCR/CLSID/
+        {77777777-7777-7777-7777-777777777777}
+            InProcServer
+                                            @="%systemdir%/browseui.dll"
+                                            ThreadingModel="Apartment"
+            Instance
+                                            CLSID=Clsid_BrowserBand
+                InitPropertyBag
+                                            Url="http://www.nytimes.com"
+                                            ... other properties ...
+
+a CCI(7777, ...) will do:
+    - create an uninitialized instance of the object by doing
+    CCI(Clsid_BrowserBand, ...);
+    - create an IPropertyBag for the 'InitPropertyBag' registry data (using
+    our CRegStrPropertyBag implementation)
+    - call punk->IPB::Load to load the IPropertyBag into the punk
+    - we now have an initialized instance of the object (we're done!)
+
+- gotcha's and subtleties
+
+- gotcha: GetCLSID et. al.
+while each INSTID is unique and will create a separate instance initialized
+w/ the appropriate data, once the object has been created there is no
+(standard) way to distinguish it from any other instance of the same class
+(code).
+
+e.g. two browsers, one pointing at www.nytimes.com and the other at
+www.wsj.com, actually just look like two generic browsers.
+
+thus (e.g.)
+    - IPS::GetCLSID gives the same CLSID (not different INSTID!) for both
+    of them,
+    - OleSaveToStream saves out the same CLSID and the (different) URL's
+    - a subsequent OleLoadFromStream will use the same CLSID and the
+    (different URL's)
+
+while at 1st this might seem odd, it actually makes a lot of sense.  INSTID's
+are just a convenient standard 'packaging' of existing COM mechanisms.
+if one does a 'classic' CCI of two CLSID_BrowserBand's, initializes them
+to point to two different URLs, saves each w/ OleSaveToStream (presumably
+to two different streams), and later reloads each w/ OleLoadFromStream
+(again from the different streams), one will get *exactly* the same
+behavior as w/ the above INSTID e.g.
+
+in fact doing anything else (e.g. saving the object out w/ its INSTID)
+would be wrong (or at least inefficient).  consider: the user may have
+changed various properties (e.g. navigated to a new URL).  when we save
+it, the object saves the properties that exactly represent its current
+state.  but if we create it by INSTID, we'd init it to a *different* set
+of properties (which we'd then blast w/ the IPB::Load call).
+
+moreover doing so would be impossible, since neither the object nor the
+system even know what the INSTID is once the CCI is complete.
+
+that said, one does need to be a bit careful.
+
+- gotcha: find
+the fact that IPS::GetCLSID returns the code CLSID rather than the
+object INSTID also complicates uniquely identifying the object in
+one's code.  e.g. in our explorer bar implementation, each menu
+item has a unique CLSID or INSTID.  the 1st time one clicks on a menu
+item, we just call CCI, add the band to the bar, show the band, and
+hide all other bands.  so far so good.
+
+but now consider what happens steady-state when one re-clicks on a
+previously created menu item.  while the menu item still knows they
+have different INSTID's, we have no way to ask the each object (when
+enumerating our list of bands) if it came from the INSTID.
+
+to solve this we use IE's Get/PutProperty mechanism to store a
+<name,value> pair, in this case <instIdBand,punkBand>.
+
+- gotcha: client dependencies
+since we're providing inst.cpp (vs. ole32.dll), the InProcServer for each
+INSTID must point to our implementation (ie4:shdocvw, ie5:browseui).
+
+however while the code 'belongs' to us, the INSTIDs in question 'belong'
+to the client app.  that is, 3rd-party apps will point *their* INSTIDs at
+*our* DLL.  this means that their selfreg.inx will contain knowledge of
+where we implement our support routines.
+
+this in turn means that we can't move our implementation (or rather when
+we do, we need to somehow forward it so that old code continues to work).
+
+use a treat-as or somesuch so that old code continues to work).
+
+BUGBUG we need to do this for ie5 since we've moved stuff!
+
+- links
+docs/inst.txt               this document
+browseui/inst.cpp           CCI support code
+browseui/stream.cpp         CRegStrPropertyBag
+
+- appendix: 777a.reg
+here's the exact registry 'goo'
+    #include 777a.reg

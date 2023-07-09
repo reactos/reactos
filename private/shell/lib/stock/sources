@@ -1,0 +1,80 @@
+!IF 0
+
+Copyright (c) 1989-1998 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+!include $(CCSHELL_DIR)\lib\lib.inc
+
+NO_BROWSER_FILE = 1
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\lib\lib.inc
+
+TARGETNAME      = stocklib
+TARGETPATH      = obj
+TARGETTYPE      = LIBRARY
+
+!ifdef UNIX
+SOURCES_PLATFORM = ..\shguidp.c
+!else
+DIR_GENERATED    = ..
+SOURCES_PLATFORM = 
+!endif
+
+GENERATED_SOURCES =  \
+                  $(DIR_GENERATED)\dkaa.cpp    \
+                  $(DIR_GENERATED)\dkaw.cpp    \
+                  $(DIR_GENERATED)\shstra.cpp  \
+                  $(DIR_GENERATED)\shstrw.cpp  \
+                  $(DIR_GENERATED)\nativea.cpp \
+                  $(DIR_GENERATED)\nativew.cpp \
+
+SOURCES         = ..\debug.c     \
+                  ..\mmhelper.cpp\
+                  ..\runtask.cpp \
+                  ..\caggunk.cpp \
+                  ..\util.cpp    \
+                  ..\isos.cpp    \
+                  ..\crst.cpp    \
+                  ..\security.cpp \
+                  ..\dllver.cpp  \
+                  ..\valid.c     \
+                  ..\shco.c      \
+                  $(GENERATED_SOURCES) \
+                  $(SOURCES_PLATFORM)
+
+#PRECOMPILED_CXX   = 1
+PRECOMPILED_INCLUDE = ..\proj.h
+
+#
+# do guids with guidlib.exe
+#
+NTTARGETFILE0   = $(CCSHELL_DIR)\lib\$(O)\shguid.lib \
+                  $(CCSHELL_DIR)\lib\$(O)\shguidp.lib
+
+# 
+# all shell components expect the stocklib to be in shell\lib\$O,
+# so we'll copy it there
+#
+NTTARGETFILES   = $(CCSHELL_DIR)\lib\$(O)\stocklib.lib

@@ -1,0 +1,117 @@
+ROOT=$(MAKEDIR:\xml\exe=)
+!include $(ROOT)\common.inc
+
+NO_NTDLL	= 1
+
+TARGETNAME=msxml
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=console
+
+SOURCES = \
+    crt0.c \
+    crt0init.c \
+    crt0dat.c \
+    stdargv.c \
+    msxml.cxx \
+    msxql.cxx \
+    msxml.rc
+
+# messages.mc --- now lives in msxml\resource
+
+!ifdef WORKINGSET
+C_DEFINES = $(C_DEFINES) \
+    /DWORKINGSET
+!endif
+
+!if defined(_DEBUG)
+CLIB=libcmtd.lib
+!else
+CLIB=libcmt.lib
+!endif
+
+LINKLIBS=\
+    $(SDK_LIB_PATH)\wininet.lib           \
+    $(ROOT)\core\crt\$O\crt.lib \
+    $(ROOT)\include\$O\corepch.lib \
+    $(ROOT)\core\com\$O\com.lib \
+    $(ROOT)\core\base\$O\base.lib \
+    $(ROOT)\mimeviewer\src\$O\mimeview.lib \
+    $(SDK_LIB_PATH)\ole32.lib  \
+    $(SDK_LIB_PATH)\shlwapip.lib \
+    $(SDK_LIB_PATH)\oleaut32.lib  \
+    $(SDK_LIB_PATH)\urlmon.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+    $(SDK_LIB_PATH)\version.lib \
+#    $(SDK_LIB_PATH)\$(CLIB) \
+!if defined(PRFDATA)
+    $(SDK_LIB_PATH)\advapi32.lib\
+!endif
+    $(ROOT)\core\io\$O\io.lib \
+    $(ROOT)\core\lang\$O\lang.lib \
+    $(ROOT)\core\util\$O\util.lib \
+    $(ROOT)\core\prfdata\$O\prfdata.lib \
+    $(ROOT)\xml\tokenizer\base\$O\tokbase.lib \
+    $(ROOT)\xml\tokenizer\xmlstream\$O\xmlstream.lib \
+    $(ROOT)\xml\tokenizer\encoder\$O\xmlencoder.lib \
+    $(ROOT)\xml\tokenizer\parser\$O\xmlparser.lib \
+    $(ROOT)\xml\tokenizer\net\$O\xmlnet.lib \
+    $(ROOT)\xml\util\$O\xmlutil.lib \
+    $(ROOT)\xml\dtd\$O\dtd.lib \
+    $(ROOT)\xml\om\$O\om.lib \
+    $(ROOT)\xml\schema\$O\schema.lib \
+    $(ROOT)\xml\islands\$O\xmlisland.lib \
+    $(ROOT)\xql\parser\$O\xqlparse.lib \
+    $(ROOT)\xql\query\$O\query.lib \
+    $(ROOT)\xtl\engine\$O\engine.lib \
+    $(ROOT)\xtl\output\$O\output.lib \
+    $(ROOT)\xtl\script\$O\script.lib \
+!if defined(_DEBUG)
+    $(MSXML_DEBUGDLL_LIB)
+!endif
+
+# For RC to find msxml.TLB
+INCLUDES= \
+	$(ROOT)\core\crt; \
+	$(ROOT)\xml\include; \
+	$(ROOT)\xml\resource; \
+	$(ROOT)\xml\om; \
+	$(ROOT)\xml\schema; \
+	$(ROOT)\core\base; \
+	$(IDL_GENERATED_HEADERS); \
+	$(ROOT); \
+	$(SDK_INC_PATH); \
+	$(SDK_LIB_PATH);\
+	$(ROOT)\xql\om; \
+	$(WINDOWS_INC_PATH)\
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+# for profiling add -FIXED:NO
+LINKER_FLAGS = $(LINKER_FLAGS) -FORCE:MULTIPLE -FIXED:NO
+
+# include files that are inside ifdef blocks - prevents build warnings
+
+CONDITIONAL_INCLUDES=\
+    $(CONDITIONAL_INCLUDES)\
+	Document.hxx\
+	core\base.hxx \
+	macos\types.h\
+	macos\traps.h\
+	macos\gestalte.h\
+	macos\segload.h\
+	macos\osutils.h\
+	fltintrn.h\
+	mpw.h\
+	\usr\include\stdio.h\
+
+	
+	
+	
+

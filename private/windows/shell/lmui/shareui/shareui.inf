@@ -1,0 +1,48 @@
+; |SHAREUI.INF entries
+;
+; Sample ShellView/ShellFolder
+; Copyright 1992-96 Microsoft Corporation.  All Rights Reserved.
+;
+
+[Version]
+Signature="$Windows NT$"
+Provider=%Provider%
+
+[DefaultInstall]
+CopyFiles=ThisDll_InstallFiles
+AddReg=ThisDll_AddReg
+
+[DefaultUninstall]
+DelFiles=ThisDll_UninstallFiles
+DelReg=ThisDll_DelReg
+
+[ThisDll_AddReg]
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6},,,"Shared Directories"
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}\DefaultIcon,,,"%11%\ShareUI.dll"
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}\InProcServer32,,,"%11%\ShareUI.dll"
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}\ShellFolder,Attributes,1,04,00,00,20
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6},,,"Shared Directories"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\RemoteComputer\NameSpace\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6},,,"Shared Directories"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MSSharedDirectoriesFolder,"DisplayName",,"Shared Directories Folder"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MSSharedDirectoriesFolder,"UninstallString",,"rundll32.exe %11%\ShareUI.dll,Uninstall %11%\shareui.inf"
+
+[ThisDll_DelReg]
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\RemoteComputer\NameSpace\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MSSharedDirectoriesFolder
+
+[ThisDll_InstallFiles]
+ShareUI.dll
+ShareUI.inf
+
+[ThisDll_UninstallFiles]
+ShareUI.dll,,,1  ; DELFLG_IN_USE. Delete file on reboot if in use.
+ShareUI.inf,,,1  ; DELFLG_IN_USE. Delete file on reboot if in use.
+
+[DestinationDirs]
+ThisDll_Files=11 ; to System32
+
+[Strings]
+Provider="Microsoft Corporation"

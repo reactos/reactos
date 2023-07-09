@@ -1,0 +1,21 @@
+1 DLGINCLUDE "Prictl.H"
+
+DLG_TASKING DIALOG 7, 17, 295, 67
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Tasking"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Foreground/Background Responsiveness", 101, 2, 2, 291,
+                    47
+    AUTORADIOBUTTON "&Best Foreground Application Response Time",
+                    IDB_DEFAULT, 6, 15, 281, 10, WS_GROUP
+    AUTORADIOBUTTON "&Foreground Application More Responsive than Background",
+                    IDB_SMALLER, 6, 25, 281, 10
+    AUTORADIOBUTTON "Foreground and Background Applications &Equally Responsive",
+                    IDB_NONE, 6, 35, 280, 10
+    DEFPUSHBUTTON   "OK", IDB_OK, 71, 52, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDB_CANCEL, 127, 52, 40, 14
+    PUSHBUTTON      "&Help", IDB_HELP, 183, 52, 40, 14
+END
+
+

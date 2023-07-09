@@ -1,0 +1,37 @@
+!IF 0
+
+Copyright (c) 1993-94  Microsoft Corporation
+
+!ENDIF
+
+TARGETNAME=imagehlp
+C_DEFINES=/DBUILD_IMAGEHLP
+
+!INCLUDE ..\sources.inc
+SOURCES=\
+        ..\imagehlp.c    \
+        ..\bindi.c       \
+        ..\checksum.c    \
+        ..\dice.cxx      \
+	..\dload.c       \
+	..\imagedir.c    \
+        ..\map.c         \
+        ..\rebasei.c     \
+	..\splitsymi.c   \
+	..\upddbgi.c     \
+        ..\$(TARGETNAME).rc
+	
+ALPHA_SOURCES=..\alpha\chksum.s
+
+AXP64_SOURCES=..\alpha\chksum.s
+
+i386_SOURCES=..\i386\chksum.asm
+
+IA64_SOURCES=..\ia64\chksum.s
+
+LINKLIBS=$(BASEDIR)\public\sdk\lib\*\dbghelp.lib
+
+NTTARGETFILES=$(O)\p$(TARGETNAME).lib
+
+DELAYLOAD=dbghelp.dll
+DLOAD_ERROR_HANDLER=homegrown

@@ -1,0 +1,9 @@
+i386_SOURCES=..\i386\init386.c     \
+             ..\i386\initdat.c     \
+             ..\i386\geninst.c     \
+             ..\i386\parseini.c    \
+             ..\i386\rules.c
+
+C_DEFINES=$(C_DEFINES) -D_WANT_MACHINE_IDENTIFICATION
+
+             

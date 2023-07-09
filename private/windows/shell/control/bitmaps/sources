@@ -1,0 +1,69 @@
+!IF 0
+
+The bindrop directory is a drop point for binaries (dll, lib, exe) that are
+not built, but need to be binplaced.
+
+!ENDIF
+
+TARGETNAME=
+TARGETTYPE=NOTARGET
+TARGETPATH=
+
+SOURCES=
+
+# makefile.def will binplace any file listed in the MISCFILES macro.
+
+MISCFILES = \
+    blueday.bmp \
+    blulac16.bmp \
+    blumon16.bmp \
+    boxes.bmp \
+    bubbles.bmp \
+    chess.bmp \
+    coffee16.bmp \
+    coffeebn.bmp \
+    enterp.bmp \
+    feather.bmp \
+    fidlhead.bmp \
+    furry16.bmp \
+    furrydog.bmp \
+    geometrx.bmp \
+    gonefish.bmp \
+    grnstone.bmp \
+    hazy16.bmp \
+    hikingbt.bmp \
+    lanma256.bmp \
+    lanmannt.bmp \
+    leaves16.bmp \
+    lether16.bmp \
+    mpltrail.bmp \
+    nt.bmp \
+    paper.bmp \
+    party.bmp \
+    pglyph16.bmp \
+    pool.bmp \
+    prairie.bmp \
+    prelim.bmp \
+    pyramid.bmp \
+    rhody.bmp \
+    ribbons.bmp \
+    rvrsumid.bmp \
+    santafe.bmp \
+    seaside.bmp \
+    seside16.bmp \
+    slash.bmp \
+    snakeskn.bmp \
+    solstice.bmp \
+    spots.bmp \
+    std.bmp \
+    steel.bmp \
+    upstrm16.bmp \
+    weave.bmp \
+    winnt.bmp \
+    winnt256.bmp \
+    zapotec.bmp \
+    zaptec16.bmp \
+    ..\cursors\anis\*.cur \
+    ..\cursors\anis\*.ani \
+    ..\scrnsave\black16.scr \
+    ..\midi\midimap.cfg

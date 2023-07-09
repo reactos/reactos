@@ -1,0 +1,20 @@
+
+.NOTPARALLEL:
+
+world all clean install depend:
+	@enterdir lib     	${MAKE} ${MFLAGS} $@
+	@enterdir shlwapi	${MAKE} ${MFLAGS} $@
+	@enterdir comctl32	${MAKE} ${MFLAGS} $@
+	@enterdir iexplore	${MAKE} ${MFLAGS} $@
+	@enterdir shdocvw 	${MAKE} ${MFLAGS} $@
+	@enterdir browseui	${MAKE} ${MFLAGS} $@
+	@enterdir cpls		${MAKE} ${MFLAGS} $@
+	@enterdir ext 		${MAKE} ${MFLAGS} $@
+
+# Those directories are built for IE purposes only.
+IE_SHELL:
+	@enterdir iexplore	${MAKE} ${MFLAGS}
+	@enterdir shdocvw 	${MAKE} ${MFLAGS}
+	@enterdir browseui	${MAKE} ${MFLAGS}
+	@enterdir cpls		${MAKE} ${MFLAGS}
+	@enterdir ext 		${MAKE} ${MFLAGS}

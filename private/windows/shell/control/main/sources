@@ -1,0 +1,88 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=main
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+DLLENTRY=DllInitialize
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(BASEDIR)\public\sdk\lib\*\lz32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+           $(BASEDIR)\public\sdk\lib\*\version.lib  \
+           $(BASEDIR)\public\sdk\lib\*\libc.lib     \
+           $(BASEDIR)\public\sdk\lib\*\ntdll.lib    \
+           ..\t1instal\obj\*\t1instal.lib           \
+           ..\..\..\prsinf\obj\*\prsinf.lib         \
+           ..\..\userpri\lib\*\userpri.lib
+
+INCLUDES=..\..\userpri;..\..\..\inc;..\..\..\prsinf;..\t1instal
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+C_DEFINES=-DWIN32 -DW3 -DUNICODE -D_UNICODE
+
+UMTYPE=windows
+
+SOURCES=arrow.c    \
+        color.c    \
+        color2.c   \
+        cpl.c      \
+        date.c     \
+        desktop.c  \
+        font.c     \
+        font2.c    \
+        font3.c    \
+        icur.c     \
+        idate.c    \
+        intl.c     \
+        itime.c    \
+        inum.c     \
+        keybd.c    \
+        memutil.c  \
+        mouse.c    \
+        ports.c    \
+        prictl.c   \
+        syspart.c  \
+        system.c   \
+        t2.c       \
+        util.c     \
+        utiltext.c \
+        virtual.c  \
+        main.rc
+
+
+
+

@@ -1,0 +1,10 @@
+LIBRARY         xmlpsr
+DESCRIPTION     'Microsoft XML Parser 1.0'
+
+EXPORTS
+    DllCanUnloadNow                                       PRIVATE
+    DllGetClassObject                                     PRIVATE
+    DllRegisterServer                                     PRIVATE
+    DllUnregisterServer                                   PRIVATE
+    ;; DllGetVersion				                      PRIVATE
+    ;; DllInstall					                      PRIVATE

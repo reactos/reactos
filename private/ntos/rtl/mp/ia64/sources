@@ -1,0 +1,16 @@
+IA64_SOURCES=..\ia64\bswapi64.s \
+             ..\ia64\chandler.c \
+             ..\ia64\context.c  \
+             ..\ia64\exdsptch.c \
+             ..\ia64\vunwind.c  \
+             ..\ia64\getcalr.c  \
+             ..\ia64\miscc.c    \
+             ..\ia64\capture.s  \
+             ..\ia64\debugstb.s \
+             ..\ia64\largeint.s \
+             ..\ia64\largeic.c  \
+             ..\ia64\xcptmisc.s \
+             ..\ia64\chksum.s   \
+             ..\ia64\fillmem.s  \
+             ..\ia64\chkstk.s   \
+             ..\ia64\convctx.s

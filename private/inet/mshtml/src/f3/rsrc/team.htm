@@ -1,0 +1,131 @@
+<!-- This is an obfuscated (smaller) copy of team2.htm -->
+<HTML><HEAD><STYLE>
+BODY {background:skyblue}
+#hdr {position:relative;left:-800px; width:50%;font-family:"Arial"}
+TD {color:white;font-weight:bold;text-align:center}
+TD SPAN {visibility:hidden}
+H2 {color:darkblue;font-family:"Times New Roman";font-style:italic}
+#ld, #rd {position:absolute;width:100px;color:darkred;overflow:clip;
+  font-weight:bold;text-align:center;top:-300px;left:0px}
+</STYLE><SCRIPT>
+N=new Array(
+"Adam Bosworth","Alex Shtaygrud","Alex Zotov","Ambrosio Blanco","Anand Ramakrishna",
+"Art Becker","Artak Kalantarian","Arye Gittelman","Ben Chronister","Brendan Dixon",
+"Briggs Willoughby","Carl Edlund","Charles Frankston","Chris Rude","Chris Thrasher","Chris Wilson",
+"Christian Fortini","Dan Duffek","Dave C. Mitchell","Dave Massy","David Bau",
+"David Schach","Dean Paron","Debby Engevik","Dinarte Morais","Eric Rockey","Eric Vasilik","Ferhan Elvanoglu",
+"Frank Mantek","Gary Burd","George Chen","Gideon Schaller","Greg Franklin","Hoang Nguyen",
+"Holly Marklyn","Istvan Cseri","Jacqueline Sowell","Jean Paoli","Jen-Lung Chiu","Jennifer Teed",
+"Jerry Dunietz","John Harding","John Veson","Julia Cai","Ken Ong","Kris Markel","Lajos Frank","Laszlo Gaal",
+"Laurent Mollicone","Laurent Vernhes","Laurie Anna Edlund","Lawrence Wood","Lyle Corbin",
+"Mario Mitre","Mark Kuharich","Mark Wagner","Michael Tucker","Michael Wallent","Michael Winser",
+"Mike Reilly","Mohan Bulusu","Neetu Rajpal","Oliver Seeliger","Phillip Cooper","Ramin Halviatti",
+"Rashmi Kohli","Rich Rollman","Richard Gardner","Rod Chavez","Sam Bent","Samrach Tun","Scott Ferguson",
+"Scott Isaacs","Sherri Duran","Srinivasa Burugapalli","Steve Benedict","Steve Coy","Sujal Parikh",
+"Sumit Chakravarty","Sundaram Ramani","Ted Weinberg","Teri Lum","Terry Lucas","Tom Polucci",
+"Tom Snyder","Val Horvath","William Hsu","Yin Xie");
+N2 = new Array();
+var g_c = 0;var g_cy = 0;var g_eltL = 0;var g_eltR = 0;
+var g_cxL;var g_cxR;var g_cyT;
+function Init() {
+g_cxL = cell1.offsetLeft + tbl.offsetLeft - 1;
+g_cxR = cell3.offsetLeft + tbl.offsetLeft - 1;
+ld.style.width = cell1.offsetWidth;
+rd.style.width = cell3.offsetWidth;
+g_cyT = tbl.offsetTop;
+Next();
+setTimeout("Tmr()", 20);}
+function Next() {
+if (typeof(g_eltL) == "object")
+{
+ g_eltL.style.visibility = "visible";
+ g_c += 2;
+}
+if (typeof(g_eltR) == "object")
+ g_eltR.style.visibility = "visible";
+ld.style.posTop = -tbl.offsetTop - 100;
+ld.style.posLeft = g_cxL - 150;
+rd.style.posTop = -tbl.offsetTop - 100;
+rd.style.posLeft = g_cxR + 150;
+if (g_c >= N2.length)
+{
+ g_eltL = 0; g_eltR = 0;
+ return;
+}
+g_eltL = "s_" + g_c;
+g_eltL = document.all(g_eltL);
+g_eltL.scrollIntoView(false);
+if ((g_c+1) < N2.length)
+{
+ g_eltR = "s_" + (g_c+1);
+ g_eltR = document.all(g_eltR);
+}
+else g_eltR = 0;
+g_cy = 0; m = g_eltL;
+while (m.tagName != 'TABLE')
+{
+ g_cy += m.offsetTop;
+ m = m.parentElement;
+}
+ld.innerText = N2[g_c];
+if ((g_c+1) < N2.length)
+ rd.innerText = N2[g_c+1];
+}
+function Tmr()
+{
+if (hdr.style.posLeft < 0)
+{
+ hdr.style.posLeft += 10;
+ setTimeout("Tmr()", 20);
+}
+else if (g_c < N2.length)
+{
+ if (ld.style.posTop < g_cy)
+ {
+  v = g_cy - ld.style.posTop;
+  if (v > 10) v = 10;
+  ld.style.posTop += v;
+  if (typeof(g_eltR) == "object")
+   rd.style.posTop += v;
+ }
+ else if (ld.style.posLeft < g_cxL)
+ {
+  v = g_cxL - ld.style.posLeft;
+  if (v > 10) v = 10;
+  ld.style.posLeft += v;
+  if (typeof(g_eltR) == "object")
+   rd.style.posLeft -= v;
+ }
+ else Next();
+ setTimeout("Tmr()", 20);
+}
+else
+{
+ ld.style.posTop = -300;
+ rd.style.posTop = -300;
+ hr.scrollIntoView(false);
+}
+}
+</SCRIPT>
+</HEAD><BODY><CENTER><DIV id=hdr><H2>The Trident Team, 1997</H2></DIV><BR>
+<TABLE id=tbl cellpadding=0>
+<TR><TD id=cell1 width=30%></TD><TD id=cell2 width=3%></TD><TD id=cell3 width=30%></TD></TR>
+<SCRIPT>
+i=N.length;
+while(i>0)
+{
+j=Math.floor(Math.random()*i);
+document.write("<TR><TD><SPAN id=s_"+(N.length-i)+">"+N[j]+"</SPAN></TD><TD></TD>");
+N2[N.length-i]=N[j];i--;N[j]=N[i];
+if (i > 0)
+{
+ j=Math.floor(Math.random()*i);
+ document.write("<TD><SPAN id=s_"+(N.length-i)+">"+N[j]+"</SPAN></TD></TR>");
+ N2[N.length-i]=N[j];i--;N[j]=N[i];
+}
+}
+setTimeout("Init()", 500);
+</SCRIPT></TABLE><HR WIDTH=75%>
+<DIV id=ld> . </DIV><DIV id=rd> . </DIV>
+<HR id=hr WIDTH=75%></CENTER>
+</BODY></HTML>

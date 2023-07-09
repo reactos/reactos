@@ -1,0 +1,51 @@
+
+PRODUCT = mlang
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/shell.template
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+NO_UNICODE = 1
+NOT_UNICODE = 1
+
+DLLDEF_SRC = mlang.def
+
+DLLDEF_EXPORTS = \
+    _____mlang_initDLL\
+
+PROJECT_CFLAGS = \
+	-DTRIDENT2 \
+	-I/vobs/ie4/nt/private/shell/inc  \
+	-I/vobs/ie4/nt/private/shell/ext/inc \
+	-I/vobs/ie4/nt/public/sdk/inc/atl21
+
+DIP_CFLAGS = -DDLL_SPECIFIC_OPERATOR_NEW 
+
+PROJECT_LIBS = \
+	-lole32 \
+	-lshlwapi \
+	-ladvapi32 \
+	-luuid \
+	-lstocklib
+
+# 
+# Easy way to resolve circular interlibrary dependencies
+#
+
+PROJECT_DLLFLAGS := \
+ ${PROJECT_LIBS} ${PROJECT_LIBS} ${PROJECT_LIBS}
+
+__cplusplus = true
+
+MAPFILE.sunos5=mlang.map
+
+include $(MWHOME)/make.rules.simple
+
+
+
+
+
+

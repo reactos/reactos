@@ -1,0 +1,547 @@
+# Microsoft Developer Studio Generated Build File, Format Version 50001
+# ** DO NOT EDIT **
+
+# TARGTYPE "Power Macintosh Dynamic-Link Library" 0x0402
+# TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
+
+CFG=dm - Win32 Debug
+!MESSAGE "dm - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "dm - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "dm - Power Macintosh Release" (based on\
+ "Power Macintosh Dynamic-Link Library")
+!MESSAGE "dm - Power Macintosh Debug" (based on\
+ "Power Macintosh Dynamic-Link Library")
+
+# Begin Project
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "Release"
+# PROP BASE Intermediate_Dir "Release"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Release"
+# PROP Intermediate_Dir "Release"
+# PROP Target_Dir ""
+CPP=cl.exe
+# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /Yu"precomp.h" /FD /c
+MTL=mktyplib.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /win32
+# ADD MTL /nologo /D "NDEBUG" /win32
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d "NDEBUG"
+# ADD RSC /l 0x409 /i "-I$(IDE)\debugger\dm" /d "NDEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
+# ADD LINK32 gdi32.lib winspool.lib comdlg32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib msvcrtd.lib $(NONSHIP)\lib\i386\crashlib.lib $(NONSHIP)\lib\i386\disasm.lib kernel32.lib user32.lib vdmdbg.lib advapi32.lib /nologo /subsystem:windows /dll /machine:I386
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "Debug"
+# PROP BASE Intermediate_Dir "Debug"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Debug"
+# PROP Intermediate_Dir "Debug"
+# PROP Target_Dir ""
+CPP=cl.exe
+# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /Gz /MTd /W3 /GR /GX /Od /Gf /Gy /I "." /I "..\include" /I "..\od\include" /I "$(LANGAPI)\debugger" /I "$(LANGAPI)\include" /I "$(NONSHIP)\inc" /D _DBCS=1 /D "_DEBUG" /D "_DLL" /D "_MBCS" /D _MT=1 /D _NT1X_=100 /D "_NTWIN" /D "_SUSHI" /D "_TEST" /D _WIN32_WINNT=0x0400 /D "_WINDOWS" /D _X86_=1 /D "ADDR_MIXED" /D "CODEVIEW" /D CONDITION_HANDLING=1 /D "CROSS_PLATFORM" /D DBG=1 /D DEBUG=1 /D DEVL=1 /D "DOLPHIN" /D FPO=0 /D "HOST32" /D "HOST_i386" /D i386=1 /D "NEW_PROJ_VIEW" /D "NT_BUILD" /D NT_INST=0 /D NT_UP=1 /D "OSDEBUG4" /D "PPC_PLATFORM" /D "SHIP" /D "STD_CALL" /D "STRICT" /D "TARGET32" /D WIN32=100 /D WINNT=1 /D "x86" /D "BORDER_BUTTONS" /D DWORDLONG=ULONGLONG /D "TARGET_i386" /D "WOW" /Yu"precomp.h" /FD /Bd /c
+MTL=mktyplib.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /win32
+# ADD MTL /nologo /D "_DEBUG" /win32
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d "_DEBUG"
+# ADD RSC /l 0x409 /i "..\include" /i "..\od\include" /i "..\..\..\langapi\debugger\osdebug4" /i "..\..\..\langapi\debugger" /i "..\..\..\langapi\include" /i "..\..\..\public\nonship\inc" /i "-I$(IDE)\debugger\dm" /d _DBCS=1 /d _DLL=1 /d "_MBCS" /d _MT=1 /d _NT1X_=100 /d "_NTWIN" /d "_SUSHI" /d "_TEST" /d _WIN32_WINNT=0x0400 /d "_WINDOWS" /d _X86_=1 /d "ADDR_MIXED" /d "CODEVIEW" /d CONDITION_HANDLING=1 /d "CROSS_PLATFORM" /d DBG=1 /d DEBUG=1 /d DEVL=1 /d "DOLPHIN" /d FPO=0 /d "HOST32" /d i386=1 /d "NEW_PROJ_VIEW" /d "NT_BUILD" /d NT_INST=0 /d NT_UP=1 /d "OSDEBUG4" /d "PPC_PLATFORM" /d "SHIP" /d "STD_CALL" /d "STRICT" /d "TARGET32" /d WIN32=100 /d WINNT=1 /d "BORDER_BUTTONS" /d DWORDLONG=ULONGLONG
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386
+# ADD LINK32 msvcrtd.lib $(NONSHIP)\lib\i386\crashlib.lib $(NONSHIP)\lib\i386\disasm.lib vdmdbg.lib kernel32.lib user32.lib advapi32.lib /nologo /version:5.0 /entry:"DllMain@12" /subsystem:windows /dll /pdb:"dmd.pdb" /debug /machine:I386 /nodefaultlib /out:"dmd.dll" /merge:.rdata=.text /merge:_PAGE=PAGE /merge:_TEXT=.text /opt:REF /section:INIT,d
+# SUBTRACT LINK32 /profile /pdb:none /incremental:no /force
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "PMacRel"
+# PROP BASE Intermediate_Dir "PMacRel"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "PMacRel"
+# PROP Intermediate_Dir "PMacRel"
+# PROP Target_Dir ""
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "PMacDbg"
+# PROP BASE Intermediate_Dir "PMacDbg"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "PMacDbg"
+# PROP Intermediate_Dir "PMacDbg"
+# PROP Target_Dir ""
+
+!ENDIF 
+
+# Begin Target
+
+# Name "dm - Win32 Release"
+# Name "dm - Win32 Debug"
+# Name "dm - Power Macintosh Release"
+# Name "dm - Power Macintosh Debug"
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+!ENDIF 
+
+# Begin Source File
+
+SOURCE=.\user\wow.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+DEP_CPP_WOW_C_WOW_C=\
+	".\user\dmole.h"\
+	".\user\precomp.h"\
+	
+NODEP_CPP_WOW_C_WOW_C=\
+	".\user\bp.h"\
+	".\user\ctxptrs.h"\
+	".\user\dbgver.h"\
+	".\user\debug.h"\
+	".\user\dm.h"\
+	".\user\funccall.h"\
+	".\user\list.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+DEP_CPP_WOW_C_WOW_C=\
+	".\user\dmole.h"\
+	".\user\precomp.h"\
+	
+NODEP_CPP_WOW_C_WOW_C=\
+	".\user\bp.h"\
+	".\user\ctxptrs.h"\
+	".\user\dbgver.h"\
+	".\user\debug.h"\
+	".\user\dm.h"\
+	".\user\funccall.h"\
+	".\user\list.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\user\dmole.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+DEP_CPP_WOW_C_DMOLE=\
+	".\user\dmole.h"\
+	".\user\glue.h"\
+	".\user\precomp.h"\
+	
+NODEP_CPP_WOW_C_DMOLE=\
+	".\user\bp.h"\
+	".\user\ctxptrs.h"\
+	".\user\dbgver.h"\
+	".\user\debug.h"\
+	".\user\dm.h"\
+	".\user\funccall.h"\
+	".\user\list.h"\
+	".\user\orpc_dbg.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+DEP_CPP_WOW_C_DMOLE=\
+	".\user\dmole.h"\
+	".\user\glue.h"\
+	".\user\precomp.h"\
+	
+NODEP_CPP_WOW_C_DMOLE=\
+	".\user\bp.h"\
+	".\user\ctxptrs.h"\
+	".\user\dbgver.h"\
+	".\user\debug.h"\
+	".\user\dm.h"\
+	".\user\funccall.h"\
+	".\user\list.h"\
+	".\user\orpc_dbg.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\walk.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+NODEP_CPP_WOW_C_WALK_=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+NODEP_CPP_WOW_C_WALK_=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\dmdisasm.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+NODEP_CPP_WOW_C_DMDIS=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+NODEP_CPP_WOW_C_DMDIS=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\dmx32.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+# ADD CPP /Yc"precomp.h"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+# ADD CPP /Yc"precomp.h"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+DEP_CPP_WOW_C_DMX32=\
+	".\resrc1.h"\
+	
+NODEP_CPP_WOW_C_DMX32=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+DEP_CPP_WOW_C_DMX32=\
+	".\resrc1.h"\
+	
+NODEP_CPP_WOW_C_DMX32=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\event.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+NODEP_CPP_WOW_C_EVENT=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+NODEP_CPP_WOW_C_EVENT=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\funccall.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+NODEP_CPP_WOW_C_FUNCC=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+NODEP_CPP_WOW_C_FUNCC=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\i386mach.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+NODEP_CPP_WOW_C_I386M=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+NODEP_CPP_WOW_C_I386M=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\i386thnk.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+NODEP_CPP_WOW_C_I386T=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+NODEP_CPP_WOW_C_I386T=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\procem.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+NODEP_CPP_WOW_C_PROCE=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+NODEP_CPP_WOW_C_PROCE=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\step.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+NODEP_CPP_WOW_C_STEP_=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+NODEP_CPP_WOW_C_STEP_=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\util.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+NODEP_CPP_WOW_C_UTIL_=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+NODEP_CPP_WOW_C_UTIL_=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\bp.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+# ADD CPP /YX
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+NODEP_CPP_WOW_C_BP_C18=\
+	".\precomp.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+NODEP_CPP_WOW_C_BP_C18=\
+	".\precomp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Group "user"
+
+# Begin Source File
+
+SOURCE=.\user\userapi.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\user\dm.rc
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+DEP_RSC_DM_RC=\
+	"..\..\..\langapi\include\common.ver"\
+	"..\..\..\langapi\include\version.h"\
+	"..\..\..\langapi\include\verstamp.h"\
+	
+NODEP_RSC_DM_RC=\
+	".\user\resrc1.h"\
+	
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\user\process.c
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\user\dm.def
+
+!IF  "$(CFG)" == "dm - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dm - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Release"
+
+!ELSEIF  "$(CFG)" == "dm - Power Macintosh Debug"
+
+!ENDIF 
+
+# End Source File
+# End Group
+# End Target
+# End Project

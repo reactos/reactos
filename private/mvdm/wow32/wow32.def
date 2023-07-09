@@ -1,0 +1,44 @@
+LIBRARY wow32
+
+EXPORTS
+
+    W32Init
+    W32Dispatch
+    W32HungAppNotifyThread
+
+    GetCommShadowMSR
+    GetCommHandle
+
+    WOW32DriverCallback
+    WOW32ResolveHandle
+
+    WOW32ResolveMemory
+
+    WOWGetVDMPointer
+    WOWGetVDMPointerFix = WOWGetVDMPointer
+    WOWGetVDMPointerUnfix
+
+    WOWGlobalAlloc16
+    WOWGlobalFree16
+    WOWGlobalLock16
+    WOWGlobalUnlock16
+    WOWGlobalAllocLock16
+    WOWGlobalUnlockFree16
+    WOWGlobalLockSize16
+
+    WOWYield16
+    WOWDirectedYield16
+
+    WOWHandle32
+    WOWHandle16
+
+    WOWFreeMetafile
+
+    WOWCallback16
+    WOWCallback16Ex
+
+    CopyDropFilesFrom32
+    CopyDropFilesFrom16
+
+    WOWUseMciavi16
+

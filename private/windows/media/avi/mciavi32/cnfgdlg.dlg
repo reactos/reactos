@@ -1,0 +1,107 @@
+/******************************************************************************
+
+   Copyright (C) Microsoft Corporation 1992-1995. All rights reserved.
+
+   Title:   cnfgdlg.h - Multimedia Systems Media Control Interface
+            driver for AVI - configuration dialog.
+
+*****************************************************************************/
+#ifdef WIN32
+ID_ICON         ICON "VFW.ICO"
+#endif
+
+IDA_CONFIG DIALOG 9, 22, 161, 136
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+
+CAPTION "Video Playback Options"
+//FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK,                113,  5, 45, 14
+    PUSHBUTTON      "Cancel", IDCANCEL,        113, 20, 45, 14
+    PUSHBUTTON      "Se&t Default", ID_DEFAULT, 113, 35, 45, 14
+#ifndef DEBUG
+#ifdef WIN32
+    PUSHBUTTON      "&Advanced...", ID_REJECT, 113, 50, 45, 14
+#endif
+#endif
+#ifndef WIN32
+    GROUPBOX        "Video Mode", -1, 5, 5, 64, 38
+    CONTROL         "&Window", ID_WINDOW, "Button", BS_AUTORADIOBUTTON |
+                    WS_GROUP, 10, 16, 39, 10
+    CONTROL         "&Full Screen", ID_VGA240, "Button", BS_AUTORADIOBUTTON,
+                    10, 29, 55, 10
+#else
+    CONTROL         ID_ICON, -1, "static", SS_ICON, 16, 10, 0, 0
+#endif
+    CONTROL         "&Zoom by 2", ID_ZOOM2, "Button", BS_AUTOCHECKBOX |
+                    WS_GROUP | WS_TABSTOP, 5, 38, 49, 10
+    CONTROL         "&Skip video frames if behind", ID_SKIPFRAMES, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 5, 50, 107, 10
+    CONTROL         "Enable &DCI for playback", ID_USEDCI, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 5, 62, 107, 10
+    GROUPBOX        "&Information", ID_SIZE, 3, 76, 155, 56
+    EDITTEXT        ID_INFO, 7, 86, 149, 45, ES_MULTILINE | ES_AUTOVSCROLL |
+                    ES_READONLY | NOT WS_BORDER | WS_VSCROLL | WS_TABSTOP
+
+#ifdef DEBUG
+    PUSHBUTTON      "De&bug...", ID_DEBUG, 113, 51, 45, 14
+#else
+#endif
+END
+
+#ifdef DEBUG
+IDA_DEBUG DIALOG 9, 20, 160, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debug"
+FONT 8, "MS Shell Dlg"
+//FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Decompress To S&creen", ID_SCREEN, "Button",
+                    BS_AUTO3STATE | WS_TABSTOP, 4, 45, 147, 10
+    CONTROL         "Decompress To &Bitmap", ID_BITMAP, "Button",
+                    BS_AUTO3STATE | WS_TABSTOP, 4, 56, 96, 10
+    CONTROL         "D&raw with bitmaps", ID_SUCKS, "Button", BS_AUTO3STATE |
+                    WS_TABSTOP, 4, 67, 93, 10
+    LTEXT           "R&ate:", -1, 1, 121, 24, 8
+    SCROLLBAR       ID_RATE, 22, 122, 69, 10, WS_TABSTOP
+    LTEXT           "  ", ID_RATE_LABEL, 95, 122, 63, 8
+    LTEXT           "&Level", -1, 3, 25, 24, 8
+    COMBOBOX        ID_LEVEL, 29, 23, 69, 51, CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "OK", IDOK, 116, 3, 40, 14
+    LTEXT           "MCIAVI Build 1.X.X", ID_BUILD, 5, 4, 104, 8
+    CONTROL         "Use AVI&File for playback.", ID_USE_AVIFILE, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 4, 80, 150, 10
+    CONTROL         "Play &Silently", ID_NO_SOUND, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 4, 91, 100, 10
+    // The control below forces OPEN calls from 16 bit to 32 bit MCIAVI32
+    // to be rejected by the 32 bit side.  This has the effect of forcing
+    // the open to be done on the 16 bit side.  Might be slower... but you
+    // get DrawProc compatibility.
+    CONTROL         "&Maximum 16-bit compatibility", ID_REJECT, "Button", BS_AUTOCHECKBOX |
+                    WS_GROUP | WS_TABSTOP, 4, 102, 100, 10
+END
+#endif
+
+#ifndef DEBUG
+#ifdef WIN32
+IDA_REJECT DIALOG 6, 18, 160, 100
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced Video options"
+FONT 8, "MS Shell Dlg"
+//FONT 8, "MS Sans Serif"
+BEGIN
+    // The control below forces OPEN calls from 16 bit to 32 bit MCIAVI32
+    // to be rejected by the 32 bit side.  This has the effect of forcing
+    // the open to be done on the 16 bit side.  Might be slower... but you
+    // get DrawProc compatibility.
+    AUTOCHECKBOX    "&Maximum 16-bit compatibility", ID_REJECT, 8, 8, 106, 10
+    PUSHBUTTON      "OK", IDOK, 32, 80, 40, 14
+    DEFPUSHBUTTON   "Cancel", IDCANCEL, 88, 80, 40, 14
+    LTEXT           "Check the button to use 16 bit MCIAVI code in preference to 32 bit code.  This provides the highest level of compatibility, but might impact performance.  You must have 16 bit VFW runtimes installed for this to work."
+                    ,104, 7, 24, 144, 50
+END
+#endif
+#endif

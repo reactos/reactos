@@ -1,0 +1,75 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+!include $(CCSHELL_DIR)\common.inc
+SOURCES_USED    =  $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+TARGETNAME      = desknt4
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+TARGETEXT       = cpl
+DLLENTRY        = DllInitialize
+DLLDEF          = $O\desk.def
+COFFBASE        = desk
+
+USE_CRTDLL      = 1
+
+SOURCES         = ..\init.c      \
+                  ..\backdlg.c   \
+                  ..\globals.c   \
+                  ..\desk.c      \
+                  ..\pattern.c   \
+                  ..\backprev.c  \
+                  ..\ssdlg.c     \
+                  ..\exe.c       \
+                  ..\lookdlg.c   \
+                  ..\lookprev.c  \
+                  ..\color2.c    \
+                  ..\colorpic.c  \
+                  ..\desk.rc     \
+                  ..\setdrw.c    \
+                  ..\setinit.c   \
+                  ..\install.c   \
+                  ..\settings.cpp
+
+TARGETLIBS= \
+!if $(386)
+    $(CCSHELL_DIR)\lib\*\user32p.nt4  \
+!else
+    $(SDK_LIB_PATH)\user32p.lib \
+!endif
+    $(LIBRARY_PATH)\kernel32.lib \
+    $(LIBRARY_PATH)\gdi32.lib    \
+    $(LIBRARY_PATH)\comctlp.lib \
+    $(LIBRARY_PATH)\comdlg32.lib \
+    $(LIBRARY_PATH)\syssetup.lib \
+    $(LIBRARY_PATH)\setupapi.lib \
+    $(LIBRARY_PATH)\cfgmgr32.lib \
+    $(LIBRARY_PATH)\shell32p.lib  \
+    $(LIBRARY_PATH)\mpr.lib      \
+    $(LIBRARY_PATH)\version.lib  \
+    $(LIBRARY_PATH)\advapi32.lib

@@ -1,0 +1,26 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling C++ application.
+COMPONENT = SHELL
+PRODUCT = SHLWAPI
+
+CUSTOM_RULES = ${MWROOT}/ie4/shell.template
+
+NO_BROWSER_FILE=1
+
+SOURCES_FILE    = sources
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME DLLENTRY 
+
+WLIB = shlwccpp
+LIB	= lib${WLIB}.a # target static library
+
+## you may define the following variables
+## 
+NO_UNICODE = 1
+PROJECT_CFLAGS = -DDBCS -DUNICODE_SHDOCVW -I..
+
+
+__cplusplus = true
+
+#MAPFILE.sunos5 = shlwapi.map
+
+include $(MWHOME)/make.rules.simple

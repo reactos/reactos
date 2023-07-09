@@ -1,0 +1,34 @@
+#include <windows.h>
+#include "shlobj.h"
+#include "ids.h"
+#include "unicpp\resource.h"
+#include "resource.h"
+
+REGINST                 REGINST "selfreg.inf"
+
+IDC_MENUMOVE            CURSOR "..\lib\menumv.cur"
+IDC_MENUCOPY            CURSOR "..\lib\menucp.cur"
+IDC_MENUDENY            CURSOR "..\lib\menuno.cur"
+
+IDI_FOLDER              ICON    DISCARDABLE     "FOLDER.ICO"
+IDI_HTTFILE             ICON    DISCARDABLE     "HTT.ICO"
+IDI_FOLDER_VIEW         ICON    DISCARDABLE     "FOLDVIEW.ICO"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+#ifdef NEW_FILE_MENU_STUFF
+    IDS_NONE                "     (Empty)    "
+#else
+    IDS_NONE                "(Empty)    "
+#endif
+END
+
+#include "unicpp\shell32.rc"
+
+1 TYPELIB "shldisp.tlb"
+
+#ifdef MLUI_SUPPORT
+#include "shdoc401.rcv"
+#else
+#include "shd401lc.rc"
+#endif

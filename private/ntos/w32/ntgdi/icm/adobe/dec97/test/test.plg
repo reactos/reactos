@@ -1,0 +1,29 @@
+--------------------Configuration: test - Win32 Debug--------------------
+Begining build with project "E:\adobe_files\icm\test\test.dsp", at root.
+Active configuration is Win32 (x86) Application (based on Win32 (x86) Application)
+
+Project's tools are:
+			"32-bit C/C++ Compiler for 80x86" with flags "/nologo /MLd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "ICMDLL" /D "WIN32" /D "_WINDOWS" /Fp"WinDebug/test.pch" /YX /Fo"WinDebug/" /Fd"WinDebug/" /FD /c "
+			"OLE Type Library Maker" with flags "/nologo /D "_DEBUG" /mktyplib203 /win32 "
+			"Win32 Resource Compiler" with flags "/l 0x409 /fo"WinDebug/main.res" /d "_DEBUG" "
+			"Browser Database Maker" with flags "/nologo /o"WinDebug/test.bsc" "
+			"COFF Linker for 80x86" with flags "icmdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /incremental:yes /pdb:"WinDebug/test.pdb" /debug /machine:I386 /out:"WinDebug/test.exe" "
+			"Custom Build" with flags ""
+			"<Component 0xa>" with flags ""
+
+Creating temp file "C:\TEMP\RSP107.tmp" with contents </nologo /MLd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "ICMDLL" /D "WIN32" /D "_WINDOWS" /Fp"WinDebug/test.pch" /YX /Fo"WinDebug/" /Fd"WinDebug/" /FD /c 
+"E:\adobe_files\icm\test\control.c"
+>
+Creating command line "cl.exe @C:\TEMP\RSP107.tmp" 
+Creating temp file "C:\TEMP\RSP108.tmp" with contents <icmdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /incremental:yes /pdb:"WinDebug/test.pdb" /debug /machine:I386 /out:"WinDebug/test.exe" 
+.\WinDebug\control.obj
+.\WinDebug\main.obj
+.\WinDebug\main.res>
+Creating command line "link.exe @C:\TEMP\RSP108.tmp" 
+Compiling...
+control.c
+Linking...
+
+
+
+test.exe - 0 error(s), 0 warning(s)

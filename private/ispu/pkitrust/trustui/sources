@@ -1,0 +1,35 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+CRYPT_ROOT=..\..
+!include $(CRYPT_ROOT)\crypt.mk
+
+MINORCOMP=trustui
+!include $(CRYPT_ROOT)\cryptlib.mk
+
+!include $(CRYPT_ROOT)\pkitrust\pkitrust.mk
+
+C_DEFINES=$(C_DEFINES) -D_WINDOWS
+
+INCLUDES=$(INCLUDES);..\..\ui\cryptui;..\..\ui\wizards
+
+NOT_LEAN_AND_MEAN=1
+
+USE_MSVCRT=1
+
+PRECOMPILED_INCLUDE = stdpch.h
+PRECOMPILED_PCH     = stdpch.pch
+PRECOMPILED_OBJ     = stdpch.obj
+PRECOMPILED_CXX     = 1
+
+SOURCES= \
+         dllmain.cpp \
+         acui.cpp    \
+         iih.cpp     \
+         util.cpp    \
+         acuictl.cpp

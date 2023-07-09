@@ -1,0 +1,34 @@
+ACCESS UTILITY FOR MICROSOFT WINDOWS NT
+----------------------------------------------------
+Access Utility for Microsoft Windows NT provides a number
+of features designed to make it easier for people with
+disabilities to use Microsoft Windows NT version 3.5.
+
+The Access Utility is a program that controls several
+related features which allow you to customize the behavior
+of the computer's keyboard or mouse.  There are also features
+of interest for users who are deaf or hard-of-hearing.
+
+You can install the Access Utility by running the INSTALL.CMD
+batch file included in this directory.  This process will copy
+the required files into your Windows NT directory.
+
+After running the installation procedure, you may want to create
+a program item for the file ACCESS.EXE.  For more information
+about creating program items, see Chapter 3, "Program Manager,"
+in the "Microsoft Windows NT Workstation System Guide" or the
+"Microsoft Windows NT Server System Guide."
+
+For information about using Access Pack, see the ACCESS.WRI 
+online document that is copied to your system when the Access
+Utility is installed. You may also want to print the ACCESS.WRI
+file by using Windows Write. For more information about printing
+documents, see the on-line help for Microsoft Write.
+
+Installing the Access Utility does not cause any change
+in your system's normal behavior.  Therefore we recommend
+installing the utility on all public-access machines and
+machines used by multiple individuals.  We recommend that
+you enable Access Utility's emergency hotkey sequences on these
+machines so that individuals who have disabilities can activate
+the features they need.

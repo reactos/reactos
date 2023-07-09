@@ -1,0 +1,20 @@
+/******************************Module*Header*******************************\
+* Module Name: version.rc
+*
+* Created: 03-Sep-1994 10:02:27
+* Author: Bodin Dresevic [BodinD]
+*
+* Copyright (c) 1990 Microsoft Corporation
+*
+\**************************************************************************/
+
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE             VFT_DLL
+#define VER_FILESUBTYPE          VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR  "Type 1 to True Type Converter"
+#define VER_INTERNALNAME_STR     "t1instal"
+#define VER_ORIGINALFILENAME_STR "t1instal.dll"
+
+#include "common.ver"

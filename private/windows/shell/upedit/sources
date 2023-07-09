@@ -1,0 +1,43 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=windows
+MINORCOMP=shell
+
+TARGETNAME=upedit
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=.;..\..\inc
+
+C_DEFINES= -DWIN32 -DUNICODE
+
+SOURCES=upedit.c \
+        upesave.c \
+        upeutil.c \
+	upedit.rc
+
+UMTYPE=windows
+UMAPPL=upedit
+UMLIBS=\
+       \nt\public\sdk\lib\*\netui2.lib    \
+       \nt\public\sdk\lib\*\comdlg32.lib  \
+       \nt\public\sdk\lib\*\shell32.lib   \
+       \nt\public\sdk\lib\*\ntdll.lib     \
+       obj\*\upedit.lib \
+       obj\*\upedit.res

@@ -1,0 +1,110 @@
+1. Source: WordPad scrap
+
+ 1-A. No cached data
+   Dest: WordPad
+    DAD:        Paste rich text (very good)
+    Paste:      Paste rich text (very good)
+    PS WordPad: Paste as specified (Not painted correctly -- WordPad bug?)
+
+   Dest MSPaint
+    DAD:        Try to open the scrap as a bitmap file (not good, but ok)
+    Paste:      Disabled
+
+   Dest Word
+    DAD:        Paste it as an embedding (not useful).
+    Paste:      "There is not enough memory" (Word requires metafile)
+    PS WordPad: Nothing (Word bug)
+
+   Dest Excel
+    DAD:        Try to open the scrap as an Excel file (not good, but ok)
+    Paste/PS:   Disabled (Excel requires metafile)
+
+
+ 1-B. Metafile/EnhMetafile cached
+
+   Dest: WordPad
+    DAD/Paste:  Same as 1-A
+    PS WordPad: Same as 1-A
+    PS Picture: Only available if we cache metafile (doesn't support EnhMetafile)
+
+   Dest: MSPaint
+    All:        Same as 1-A
+
+   Dest: Word
+    DAD:        Same as 1-A
+    Paste:      Pastes it as an embedding (not useful, but works!)
+    PS WordPad: Pastes it as specified
+    PS Picture: Only available if we cache metafile (doesn't support EnhMetafile)
+
+   Dest: Excel
+    DAD:        Same as 1-A
+    Paste:      Paste it as an embedding
+    PS WordPad: Pastes as specified
+    PS Picture: Pastes as specified
+
+
+ 1-C. Metafile and RTF cached
+
+   Dest: WordPad
+    DAD/Paste:  Same as 1-A
+    PS Wordpad: Same as 1-A
+    PS Picture: Same as 1-B
+    PS RTF:     Pastes as specified
+
+   Dest: MSPaint
+    All:        Same as 1-A
+
+   Dest: Word
+    DAD:        Same as 1-A
+    Paste:      Paste as RTF (very good)
+    PS WordPad: Same as 1-B
+    PS Picture: Same as 1-B
+    PS RTF:     Pastes it as specified
+
+   Dest: Excel
+    DAD:        Same as 1-A
+    Paste:      Paste it as an embedding
+    PS WordPad: Pastes as specified
+    PS Picture: Pastes as specified
+    PS RTF:     Not offered
+
+
+2. Source: Word
+
+ 1-A. No cache
+   Dest: WordPad
+    DAD/Paste:  Pastes it as an embedding (not useful, but ok)
+    PS Word:    Pastes it as specified
+
+   Dest: Paint
+    DAD/Paste:  Disabled
+
+   Dest: Word
+   Dest Word
+    DAD:        Paste it as an embedding (not useful -- Round Trip problem).
+    Paste:      "There is not enough memory" (Word bug, it requires metafile)
+    PS Word:    Nothing (Word bug)
+
+   Dest: Excel
+    DAD:        Try to open the scrap as an Excel file (not good, but ok)
+    Paste/PS:   Disabled (Excel requires metafile)
+
+
+ 2-B. Metafile cached
+   (not tried, probably the same as 1-B).
+
+ 2-C. Metafile and RTF cached
+   Dest: Word
+    DAD:        Creates an embedding (round trip still broken)
+    Paste:      Pastes it as RTF (very good)
+    PS Word:    Pastes it as specified
+    PS RTF:     Pastes it as specified
+    PS Picture: Pastes it as specified
+
+   Dest: WordPad
+    DAD:        Creates an embedding (not nice, but ok)
+    Paste:      Creates an embedding (not nice, but ok)
+    PS Word:    Pastes it as specified
+    PS RTF:     Pastes it as specified
+    PS Picture: Pastes it as specified
+

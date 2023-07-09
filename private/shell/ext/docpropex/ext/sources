@@ -1,0 +1,77 @@
+MAJORCOMP=shell
+MINORCOMP=shdocext
+
+TARGETNAME=docprop2
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+DLLBASE=0x6B000000
+DLLENTRY=_DllMainCRTStartup
+DLLDEF=shdocext.def
+
+EXPECTED_WINVER=4.0
+NOT_LEAN_AND_MEAN=1
+USE_LIBCMT=1
+USE_NATIVE_EH=1
+USE_STATIC_ATL=1
+
+SYNCHRONIZE_DRAIN=1
+
+MSC_WARNING_LEVEL=/WX /W3
+
+PRECOMPILED_CXX=1
+PRECOMPILED_INCLUDE=pch.h
+PRECOMPILED_PCH=pch.pch
+PRECOMPILED_OBJ=pch.obj
+
+IDL_TYPE=ole
+PASS0_HEADERDIR=..\inc
+PASS0_SOURCEDIR=..\cmn
+
+INCLUDES=$(BASEDIR)\public\sdk\inc\mfc42;$(BASEDIR)\private\shell\inc;$(BASEDIR)\private\windows\inc;..\inc
+
+SOURCES= \
+    shdocext.idl \
+    shdocext.rc	 \
+    shdocext.cpp \
+    ext.cpp \
+    page.cpp 
+ 
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib            \
+    $(BASEDIR)\public\sdk\lib\*\gdi32.lib             \
+    $(BASEDIR)\public\sdk\lib\*\comdlg32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\shlwapi.lib           \
+    $(BASEDIR)\public\sdk\lib\*\shell32.lib           \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib             \
+    $(BASEDIR)\public\sdk\lib\*\oleaut32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib              \
+    $(BASEDIR)\public\sdk\lib\*\comctl32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\comctlp.lib          \
+    $(BASEDIR)\public\sdk\lib\*\shell32p.lib          \
+    $(BASEDIR)\public\sdk\lib\*\shdocvw.lib           \
+    $(BASEDIR)\public\sdk\lib\*\winmm.lib           \
+    $(BASEDIR)\public\sdk\lib\*\vfw32.lib           \
+    $(BASEDIR)\public\sdk\lib\*\msacm32.lib           \
+    $(BASEDIR)\public\sdk\lib\*\imm32.lib           \
+    ..\cmn\$O\cmn.lib \
+    ..\ctl\$O\ctl.lib \
+    ..\srv\$O\srv.lib \
+    ..\avprop\$O\avprop.lib \
+    ..\srv\imageflt\imaged.lib \
+
+
+
+# !if !defined(IEBBT) &&  !defined(NTBBT)
+# TARGETLIBS = $(TARGETLIBS) ..\srv\imageflt\image.lib
+# !else
+# TARGETLIBS = $(TARGETLIBS) ..\srv\imageflt\imaged.lib
+# !endif
+
+C_DEFINES = \
+    -D_WINDOWS \
+    -D_USRDLL \
+    -D_UNICODE \
+    -DUNICODE

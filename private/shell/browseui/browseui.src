@@ -1,0 +1,50 @@
+LIBRARY         BROWSEUI
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Browse UI DLL'
+
+;; There should be no shared data section in this dll so that we
+;; can run different versions in different processes.
+
+EXPORTS
+    DllCanUnloadNow                 ULTRAPRIVATE
+    DllGetClassObject               ULTRAPRIVATE
+    DllRegisterServer               ULTRAPRIVATE
+    DllUnregisterServer             ULTRAPRIVATE
+    DllGetVersion = CCDllGetVersion ULTRAPRIVATE
+    DllInstall                      ULTRAPRIVATE
+
+    InitOCHostClass            @101 NONAME PRIVATE // BUGBUG REMOVE approx dec 98
+    SHOpenFolderWindow         @102 NONAME PRIVATE
+    SHOpenNewFrame             @103 NONAME PRIVATE
+; **** Space for rent, no pets @104 NONAME PRIVATE
+    SHCreateSavedWindows       @105 NONAME PRIVATE
+    SHCreateFromDesktop         @106 NONAME PRIVATE
+    SHExplorerParseCmdLine      @107 NONAME PRIVATE
+
+    // FILL IN THIS RANGE
+    DropTargetWrap_CreateInstance @119 NONAME PRIVATE
+    SHCreateBandForPidl         @120 NONAME PRIVATE
+    SHPidlFromDataObject        @121 NONAME PRIVATE
+    IDataObject_GetDeskBandState @122 NONAME PRIVATE
+
+    // since we export SHOpenFolderWindow which takes an IETHREADPARAM,
+    // we need to export these to create the things:
+    SHCreateIETHREADPARAM       @123 NONAME PRIVATE
+    SHCloneIETHREADPARAM        @124 NONAME PRIVATE
+    SHParseIECommandLine        @125 NONAME PRIVATE
+    SHDestroyIETHREADPARAM      @126 NONAME PRIVATE
+    SHOnCWMCommandLine          @127 NONAME PRIVATE
+
+    // Exported for use by the channel OC (shdocvw).  If the channel OC
+    // gets moved back to browseui these can be removed.
+    Channel_GetFolderPidl       @128 NONAME PRIVATE
+    ChannelBand_Create          @129 NONAME PRIVATE
+    Channels_SetBandInfoSFB     @130 NONAME PRIVATE
+    IUnknown_SetBandInfoSFB     @131 NONAME PRIVATE
+
+    // Exported for IE4 channel quick launch button.
+    Channel_QuickLaunch         @133 NONAME PRIVATE
+
+    // Exported for namespace control (nsc) in shdocvw
+    SHGetNavigateTarget         @134 NONAME PRIVATE
+    GetInfoTip                  @135 NONAME PRIVATE

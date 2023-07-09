@@ -1,0 +1,28 @@
+/********************************************************************/
+/*        MSRATING.RCV                                              */
+/********************************************************************/
+#ifndef WINNT
+#include <version.h>
+#else
+#define NASHVILLE		/* otherwise we get an NT version number */
+#include <ntverp.h>
+#endif /* WINNT */
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Network provider delay load stub"
+#define VER_INTERNALNAME_STR		"IENPSTUB"
+#define VER_ORIGINALFILENAME_STR	"IENPSTUB.DLL"
+
+#define VER_LEGALCOPYRIGHT_YEARS	"1995-1999"
+
+/* Freeze NPSTUB's version number at 4.71.0831.1 so that SETUP won't try to
+ * upgrade it (which would fail if NPSTUB is loaded as a net provider).
+ */
+#undef VER_PRODUCTVERSION
+#undef VER_PRODUCTVERSION_STR
+#define VER_PRODUCTVERSION  4,71,831,1
+#define VER_PRODUCTVERSION_STR  "4.71.0831.1"
+
+#include <common.ver>
+

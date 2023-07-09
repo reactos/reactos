@@ -1,0 +1,17 @@
+
+MAJORCOMP=windows
+MINORCOMP=shell
+
+TARGETNAME=convgrp
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+INCLUDES=.;..\..\inc
+
+SOURCES=convgrp.c convgrp.rc
+
+UMTYPE=console
+UMLIBS=\
+       $(BASEDIR)\public\sdk\lib\*\user32.lib \
+       $(BASEDIR)\public\sdk\lib\*\shell32.lib \
+       $(BASEDIR)\public\sdk\lib\*\ntdll.lib

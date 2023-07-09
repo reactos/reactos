@@ -1,0 +1,94 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+DLLENTRY=_DllMainCRTStartup
+
+MAJORCOMP=shell
+MINORCOMP=DiskQuota
+PRECOMPILED_INCLUDE=pch.h
+PRECOMPILED_PCH=pch.pch
+PRECOMPILED_OBJ=pch.obj
+PRECOMPILED_CXX=1
+TARGETNAME=dskquota
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+USE_CRTDLL=1
+USE_NATIVE_EH=1
+USE_VCCOM=1 
+
+#
+# Define PROFILE to enable IceCAP profiling.
+#
+!IF "$(PROFILE)" == "1"
+ICECAP_LIBS=$(BASEDIR)\public\sdk\lib\*\icap.lib
+USER_C_FLAGS=$(USER_C_FLAGS) -Gh -Zi -MD
+C_DEFINES=$(C_DEFINES) -DPROFILE
+!ENDIF
+
+#
+# Add compiler definitions
+#
+C_DEFINES=$(C_DEFINES) -DWIN32 -DWINNT -DUNICODE
+!IF !$(FREEBUILD)
+C_DEFINES=$(C_DEFINES) -DDEBUG
+!ENDIF
+
+#
+# Make warnings equivalent to errors
+#
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+
+INCLUDES=.;\
+         ..\common; \
+         $(BASEDIR)\private\shell\inc;\
+         $(BASEDIR)\private\windows\shell\inc;\
+         $(BASEDIR)\private\windows\inc;\
+         $(BASEDIR)\private\inc
+
+SOURCES= \
+         dispatch.idl \
+         connect.cpp \
+         control.cpp \
+         dskquota.cpp \
+         dskquota.rc \
+         factory.cpp \
+         fsobject.cpp \
+         oadisp.cpp \
+         sidcache.cpp \
+         sidname.cpp \
+         user.cpp \
+         userenum.cpp \
+         userbat.cpp
+
+LINKLIBS=..\common\obj\*\common.lib
+
+TARGETLIBS=$(ICECAP_LIBS) \
+           $(BASEDIR)\public\sdk\lib\*\ntdll.lib \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\netapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib \
+           $(BASEDIR)\public\sdk\lib\*\oleaut32.lib \
+           $(BASEDIR)\public\sdk\lib\*\secur32.lib \
+           $(BASEDIR)\public\sdk\lib\*\oleaut32.lib \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib \
+           $(BASEDIR)\public\sdk\lib\*\shlwapi.lib
+

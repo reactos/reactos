@@ -1,0 +1,54 @@
+//+------------------------------------------------------------------------
+//
+//  Filter and Bitmap Surface interfaces
+//
+//  Copyright (C) Microsoft Corporation, 1996-1999.
+//
+//  File:       qfilter.idl
+//
+//-------------------------------------------------------------------------
+
+import "oaidl.idl";
+import "oleidl.idl";
+
+interface IHTMLViewFilter;
+interface IHTMLViewFilterSite;
+
+cpp_quote("// GetStatusBits Flags")
+cpp_quote("#define FILTER_STATUS_OPAQUE    (0x00000001)")
+cpp_quote("#define FILTER_STATUS_INVISIBLE (0x00000002)")
+cpp_quote("#define FILTER_STATUS_SURFACE   (0x00000004)")
+cpp_quote("#define FILTER_STATUS_3DSURFACE (0x00000008)")
+
+[
+    object,
+    uuid(46482133-b251-11d2-a438-00c04fb177e3),
+    pointer_default(unique),
+	local
+]
+interface IHTMLViewFilter : IUnknown
+{
+    HRESULT SetSource([in] IHTMLViewFilter *pFilter);
+    HRESULT GetSource([out] IHTMLViewFilter **ppFilter);
+    HRESULT SetSite([in] IHTMLViewFilterSite *pSink);
+    HRESULT GetSite([out] IHTMLViewFilterSite **ppSink);
+    HRESULT SetPosition(LPCRECT prc);
+    HRESULT Draw([in] HDC hdc, [in] LPCRECT prcBounds);
+    HRESULT GetStatusBits([out] DWORD *pdwFlags);
+}
+
+[
+    object,
+    uuid(46482134-b251-11d2-a438-00c04fb177e3),
+    pointer_default(unique),
+	local
+]
+interface IHTMLViewFilterSite : IUnknown
+{
+    HRESULT GetDC([in] LPCRECT prc, [in] DWORD dwFlags, [out] HDC *phdc);
+    HRESULT ReleaseDC([in] HDC hdc);
+    HRESULT InvalidateRect([in] LPCRECT prc, [in] BOOL fErase);
+    HRESULT InvalidateRgn([in] HRGN hrgn, [in] BOOL fErase);
+    HRESULT OnStatusBitsChange([in] DWORD dwFlags);
+}
+

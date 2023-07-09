@@ -1,0 +1,16 @@
+
+    setjmp
+    _setjmpex
+    longjmp
+    NtCurrentTeb
+    RtlCaptureContext
+    RtlCopyMemory
+    RtlCopyMemory32
+    RtlEqualMemory
+    RtlLookupFunctionEntry
+    RtlVirtualUnwind
+    __C_specific_handler
+    __C_ExecuteExceptionFilter
+    __C_ExecuteTerminationHandler
+    __jump_unwind
+

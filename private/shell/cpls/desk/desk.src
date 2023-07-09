@@ -1,0 +1,23 @@
+LIBRARY Display
+
+DESCRIPTION 'Control Panel: Display Settings'
+
+EXPORTS
+    DllGetClassObject   PRIVATE
+    DllCanUnloadNow     PRIVATE
+    DllRegisterServer   PRIVATE
+    DllUnregisterServer PRIVATE
+
+    CPlApplet
+    DllInitialize
+    InstallScreenSaverA
+    InstallScreenSaverW
+    InstallScreenSaver = InstallScreenSaverA
+    DeskSetCurrentSchemeA
+    DeskSetCurrentSchemeW
+    DeskSetCurrentScheme = DeskSetCurrentSchemeA
+
+#ifdef WINNT
+    DisplayClassInstaller
+    MonitorClassInstaller
+#endif

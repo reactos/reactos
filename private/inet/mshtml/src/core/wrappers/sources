@@ -1,0 +1,41 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\core\wrappers=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=wrappers
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=\
+    $(COREINCLUDES) \
+    $(ROOT)\external\inc\msls;
+
+SOURCES= \
+    comctl32.cxx \
+    comdlg32.cxx \
+    dynwrap.cxx \
+    hlink.cxx \
+    imgutil.cxx \
+    imm32.cxx \
+    msls.cxx \
+    unicwrap.cxx \
+    oleaut32.cxx \
+    olepro32.cxx \
+    shell32.cxx \
+    urlmon.cxx \
+    wininet.cxx \
+    winmm.cxx \
+    winspool.cxx \
+    printwrp.cxx \
+    inetcomm.cxx \
+    msrating.cxx \
+    msjava.cxx \
+    usp.cxx
+
+PRECOMPILED_INCLUDE=precomp.hxx
+PRECOMPILED_CXX=1

@@ -1,0 +1,71 @@
+#ifndef _MAP_PDL
+#define _MAP_PDL 1
+
+#include "element.pdl"
+#include "collect.pdl"
+
+file map.pdl
+
+import element.pdl
+import collect.pdl
+
+interface IHTMLAreasCollection super:IDispatch guid:3050f383-98b5-11cf-bb82-00aa00bdce0b
+#define EXPAND_COLLECTION_REFS CAreasCollection
+#include "basecoll.pdl"
+    refmethod CAreasCollection:add
+    refmethod CAreasCollection:remove
+
+
+interface IHTMLAreasCollection2 super:IDispatch guid:3050f5ec-98b5-11cf-bb82-00aa00bdce0b
+    refmethod  CAreasCollection:urns  
+
+
+tearoff CAreasCollection interface:IHTMLAreasCollection2
+
+
+class CAreasCollection \
+    name:HTMLAreasCollection \
+    primaryinterface:IHTMLAreasCollection \
+    guid:3050f4ca-98b5-11cf-bb82-00aa00bdce0b \
+    mondoguid:3050f56a-98b5-11cf-bb82-00aa00bdce0b
+
+    implements IHTMLAreasCollection
+    implements IHTMLAreasCollection2
+
+
+#define EXPAND_COLLECTION_DEFNS
+#include "basecoll.pdl"
+    method HRESULT add maxstrlen:pdlToken dispid:DISPID_COLLECTION+3 (in type:IHTMLElement* arg:element , \
+                                                      in optional type:VARIANT arg:before)
+    method HRESULT remove dispid:DISPID_COLLECTION+4 (in defaultvalue:-1 type:long arg:index )
+
+interface IHTMLMapElement guid:3050f266-98b5-11cf-bb82-00aa00bdce0b
+    refprop CMapElement:areas
+    refprop CMapElement:name
+
+/* New style element events w/ eventObject parameter: */
+event HTMLMapEvents2  super:HTMLElementEvents2  guid:3050f61e-98b5-11cf-bb82-00aa00bdce0b
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLMapEvents super:HTMLElementEvents guid:3050f3ba-98b5-11cf-bb82-00aa00bdce0b
+
+tearoff CMapElement interface:IHTMLMapElement
+
+class CMapElement name:HTMLMapElement \
+            primaryinterface:IHTMLMapElement \
+            super:CElement \
+            events:HTMLMapEvents \
+            nonprimaryevents:HTMLMapEvents2 \
+            guid:3050f271-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f526-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLMapElement
+
+    property    name    atype:BSTR  dispid:STDPROPID_XOBJ_NAME  type:CStr \
+                get set method:nameHelper baseimplementation  maxstrlen:pdlNoLimit
+    property    areas   atype:IHTMLAreasCollection*  dispid:DISPID_MAP+2  get abstract
+
+#endif _MAP_PDL
+
+

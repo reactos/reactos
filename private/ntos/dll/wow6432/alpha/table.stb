@@ -1,0 +1,84 @@
+6 // This is the number of argument registers for Alpha (used by gensrv).
+//++
+//
+// Copyright (c) 1989  Microsoft Corporation
+//
+// Module Name:
+//
+//    systable.s
+//
+// Abstract:
+//
+//    This module implements the system service dispatch table.
+//
+// Author:
+//
+//    David N. Cutler (davec) 29-Apr-1989
+//
+// Environment:
+//
+//    Kernel mode only.
+//
+// Revision History:
+//
+//    Joe Notarangelo 08-Jul-1992
+//      alpha version
+//              - 6 argument registers for alpha
+//              - size of allocation for each table entry address = 64 bits
+//                (this was necessary with BL3 of the compiler, it may no
+//                 longer be the case but this shouldn't hurt, the system
+//                 service exception code will load long anyway)
+//
+//    Thomas Van Baak (tvb) 04-Sep-1992
+//
+//        The first line of this file was "6 8" which the new gensrv used
+//        to set the number of in-register arguments (6) and the size of a
+//        register (8).
+//
+//        Now instead, the ARGTBL_ENTRY macro itself converts i386/Mips 4
+//        byte units into Alpha 8 byte units. This way, if an old version
+//        of gensrv is used, we still get the proper byte counts for Alpha.
+//
+//--
+
+//
+// To add a system service simply add the name of the service to the below
+// table. If the system service has in memory arguments, then immediately
+// follow the name of the serice with a comma and following that the number
+// of bytes of in memory arguments, e.g. CreateObject,40.
+//
+
+#define TABLE_BEGIN1( t ) .rdata
+#define TABLE_BEGIN2( t ) .align 4
+#define TABLE_BEGIN3( t ) .globl KiServiceTable
+#define TABLE_BEGIN4( t ) KiServiceTable:
+#define TABLE_BEGIN5( t )
+#define TABLE_BEGIN6( t )
+#define TABLE_BEGIN7( t )
+#define TABLE_BEGIN8( t )
+
+#define TABLE_ENTRY( l,bias,numargs ) .long   Nt##l+bias
+
+#define TABLE_END( n ) .sdata ; .globl KiServiceLimit ; KiServiceLimit: .long n + 1
+
+#define ARGTBL_BEGIN .rdata ; .align 4 ; .globl KiArgumentTable ; KiArgumentTable:
+
+//
+// Convert gensrv 4-byte units to Alpha 8-bytes-per-register units.
+//
+
+#define ARGTBL_ENTRY( e0,e1,e2,e3,e4,e5,e6,e7 ) \
+        .byte   e0 *2, e1 *2, e2 *2, e3 *2, e4 *2, e5 *2, e6 *2, e7 *2
+
+#define ARGTBL_END
+
+
+        TABLE_BEGIN1( "System Service Dispatch Table" )
+        TABLE_BEGIN2( "System Service Dispatch Table" )
+        TABLE_BEGIN3( "System Service Dispatch Table" )
+        TABLE_BEGIN4( "System Service Dispatch Table" )
+        TABLE_BEGIN5( "System Service Dispatch Table" )
+        TABLE_BEGIN6( "System Service Dispatch Table" )
+        TABLE_BEGIN7( "System Service Dispatch Table" )
+        TABLE_BEGIN8( "System Service Dispatch Table" )
+

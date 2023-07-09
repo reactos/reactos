@@ -1,0 +1,10 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows NT Image Debug Info Splitter"
+#define VER_INTERNALNAME_STR        "splitsym.exe"
+#define VER_ORIGINALFILENAME_STR    "splitsym.exe"
+
+#include "common.ver"

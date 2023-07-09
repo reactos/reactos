@@ -1,0 +1,127 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+# relative path to root of shell project
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+#
+# Include our common makefile
+#
+
+!include $(CCSHELL_DIR)\common.inc
+
+NO_BROWSER_FILE     = 1
+PRECOMPILED_CXX     = 1
+
+UNICODE=1
+USE_CRTDLL=1
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+INCLUDES        =$(SDK_LIB_PATH);$(SDK_INC_PATH);$(INCLUDES)
+
+WIN32_WINNT_VERSION=0x0500
+
+
+#
+# Cross-compiler macros for unique naming
+#
+MAJORCOMP       = shell
+MINORCOMP       = srvwiz
+
+#
+# Common settings required by build.exe and makefile.def
+#
+
+#UMTYPE     = windows
+TARGETNAME  = srvwiz
+TARGETPATH  = obj
+TARGETTYPE  = DYNLINK
+DLLENTRY    = DllMain
+TARGETEXT   = dll
+
+DLLDEF      = srvwiz.def
+
+# SELFREGNAME     = selfreg_srvwiz.inf
+
+
+# include makefile.inc
+NTTARGETFILES = 
+
+# Pass zero stuff
+NTTARGETFILE0 = 
+
+# make sure shlwapi.lib is before shell32.lib for override.
+TARGETLIBS = \
+    $(SDK_LIB_PATH)\gdi32.lib           \
+    $(SDK_LIB_PATH)\user32.lib          \
+    $(SDK_LIB_PATH)\kernel32.lib        \
+    $(SDK_LIB_PATH)\ole32.lib           \
+    $(SDK_LIB_PATH)\oleaut32.lib        \
+    $(SDK_LIB_PATH)\uuid.lib            \
+    $(LIBRARY_PATH)\wininet.lib         \
+    $(LIBRARY_PATH)\urlmon.lib          \
+    $(SDK_LIB_PATH)\shlwapi.lib         \
+    $(SDK_LIB_PATH)\shlwapip.lib        \
+    $(SDK_LIB_PATH)\shell32.lib         \
+    $(SDK_LIB_PATH)\shell32p.lib        \
+    $(SDK_LIB_PATH)\advapi32.lib        \
+    $(SDK_LIB_PATH)\rpcrt4.lib          \
+    $(SDK_LIB_PATH)\rpcutil.lib         \
+    $(SDK_LIB_PATH)\dnsapi.lib          \
+    $(SDK_LIB_PATH)\clusapi.lib         \
+    $(SDK_LIB_PATH)\netapi32.lib        \
+    $(CCSHELL_DIR)\lib\$(O)\shguid.lib  \
+    $(CCSHELL_DIR)\lib\$(O)\shguidp.lib \
+    $(SDK_LIB_PATH)\dsauth.lib          \
+    $(SDK_LIB_PATH)\ws2_32.lib          \
+    $(SDK_LIB_PATH)\iphlpapi.lib        \
+    $(SDK_LIB_PATH)\mprapi.lib          \
+    $(SDK_LIB_PATH)\dhcpcsvc.lib        \
+    $(SDK_LIB_PATH)\ntdll.lib
+
+#   $(SDK_LIB_PATH)\ADsIID.lib          \
+#   $(SDK_LIB_PATH)\ActiveDs.lib        \
+#   $(SDK_LIB_PATH)\dnslib.lib          \
+#   $(LIBRARY_PATH)\libcmt.lib          \
+
+LINKLIBS= \
+    $(CCSHELL_DIR)\lib\$(O)\stocklib.lib\
+
+
+#
+# List of sources
+#
+SOURCES = \
+    srvwiz.idl   \
+    dll.cpp      \
+    dllreg.cpp   \
+    sccls.cpp    \
+    srvwiz_i.c   \
+    dspsprt.cpp  \
+    util.cpp     \
+    dhcpself.c   \
+    isdhcp.c     \
+    srvwiz.cpp   \
+    srvwiz.rc

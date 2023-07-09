@@ -1,0 +1,338 @@
+
+; MSPORTS.INF
+; Copyright (c) 1994-1995 Microsoft Corporation
+
+[version]
+CatalogFile=msports.cat
+LayoutFile= Layout.inf, Layout1.inf, Layout2.inf
+signature="$CHICAGO$"
+Class=Ports
+ClassGUID={4d36e978-e325-11ce-bfc1-08002be10318}
+Provider=%MS%
+
+[DestinationDirs]
+DefaultDestDir = 11        ;LDID_SYS
+
+
+; Install class "Ports"
+;----------------------------------------------------------
+[ClassInstall]
+AddReg=PortsClass.AddReg
+
+[PortsClass.AddReg]
+HKR,,,,%PortsClassName%
+HKR,,Icon,,-23
+
+[ControlFlags]
+ExcludeFromSelect=MF\EISA_HWP1C10_DEV0,MF\EISA_HWP1C10_DEV1
+ExcludeFromSelect=PCMCIA\SOCKET_COMMUNICATIONS_INC-SOCKET_IO_PCMCIA_SERIAL_PORT_ADAPTER_REVISION_A-0484         ; Socket PCMCIA Serial Adapter
+ExcludeFromSelect=PCMCIA\SOCKET_COMMUNICATIONS_INC-SOCKET_IO_PCMCIA_SERIAL_PORT_ADAPTER_REVISION_B-12F8         ; Socket PCMCIA Serial Adapter
+ExcludeFromSelect=PCMCIA\SOCKET_COMMUNICATIONS_INC-PAGECARD_REVISION_A-FA29     ; Socket PCMCIA PageCard V3.0
+ExcludeFromSelect=PCMCIA\DATA_BROADCASTING_CORP-SIGNALCARD_RECEIVER-4E9B                ; DBC SignalCard
+ExcludeFromSelect=PCMCIA\SMART_SERIAL_PORT-A0F6
+ExcludeFromSelect=*IBM0002,*IBM0034
+
+; Drivers
+;----------------------------------------------------------
+[Manufacturer]
+%Std%=Std
+%HP%=HP
+%IBM%=IBM
+%Socket%=Socket
+%DBC%=DBC
+%Smart%=Smart
+
+[Std]
+%*PNP0400.DeviceDesc% = LptPort, *PNP0400           ; Printer Port
+%*PNP0401.DeviceDesc% = EcpPort, *PNP0401           ; ECP Printer Port 
+%*PNP0500.DeviceDesc% = ComPort, *PNP0500           ; Communications Port
+%*PNP0501.DeviceDesc% = ComPort, *PNP0501           ; Communications Port
+
+; No; *PNP051x devices are now supported in IRMINI.INF
+; %*PNP0510.DeviceDesc% = InfraredComPort, *PNP0510   ; IR Communications Port used byr IrDA stack
+; %*PNP0511.DeviceDesc% = InfraredComPort, *PNP0511   ; IR Communications Port used byr IrDA stack
+
+; Compaq devices
+%*CPQA0E0.DeviceDesc% = EcpPort, *CPQA0E0           ; ECP Printer Port
+%*CPQA0D9.DeviceDesc% = ComPort, *CPQA0D9           ; Communications Port
+
+[HP]            ; Hewlett Packard devices
+%MF\EISA_HWP1C10_DEV0.DeviceDesc% = ComPort, MF\EISA_HWP1C10_DEV0
+%MF\EISA_HWP1C10_DEV1.DeviceDesc% = LptPort, MF\EISA_HWP1C10_DEV1
+%HWPDEAD.DeviceDesc% = ComPort, HWPDEAD
+
+[IBM]
+%*IBM0002.DeviceDesc%=ComPort,*IBM0002
+%*IBM0034.DeviceDesc%=ComPort,*IBM0034
+
+[Socket]
+%Socket-0484.DeviceDesc% = ComPort, "PCMCIA\SOCKET_COMMUNICATIONS_INC-SOCKET_IO_PCMCIA_SERIAL_PORT_ADAPTER_REVISION_A-0484"
+%Socket-12F8.DeviceDesc% = ComPort, "PCMCIA\SOCKET_COMMUNICATIONS_INC-SOCKET_IO_PCMCIA_SERIAL_PORT_ADAPTER_REVISION_B-12F8"
+%Socket-FA29.DeviceDesc% = NonPort, "PCMCIA\SOCKET_COMMUNICATIONS_INC-PAGECARD_REVISION_A-FA29"
+
+[DBC]
+%DBC-4E9B.DeviceDesc% = NonPort, "PCMCIA\DATA_BROADCASTING_CORP-SIGNALCARD_RECEIVER-4E9B"
+
+[Smart]
+%Smart-A0F6.DeviceDesc% = ComPort, "PCMCIA\SMART_SERIAL_PORT-A0F6"
+
+
+; LPT sections
+;----------------------------------------------------------
+[LptPort]
+CopyFiles=LptPort.Copy
+AddReg=LptPort.AddReg
+LogConfig=lsnn,lsan,lann,laan
+
+[EcpPort]
+CopyFiles=LptPort.Copy
+AddReg=EcpPort.AddReg
+LogConfig=lsnn,lsan,lsaa,lann,laaa
+
+[LptPort.Copy]
+lpt.vxd,,,33
+
+[LptPort.AddReg]
+HKR,,DevLoader,,*vcomm
+HKR,,Enumerator,,lptenum.vxd
+HKR,,Contention,,*vpd
+HKR,,PortDriver,,lpt.vxd
+HKR,,PortSubClass,1,00
+HKR,,ECPDevice,1,00
+
+[ECPPort.AddReg]
+HKR,,DevLoader,,*vcomm
+HKR,,Enumerator,,lptenum.vxd
+HKR,,Contention,,*vpd
+HKR,,PortDriver,,lpt.vxd
+HKR,,PortSubClass,1,00
+HKR,,ECPDevice,1,01
+
+; The following sections are LPT and ECP port logical
+; resource configurations. Section name format means:
+; Char 1 = l (LPT port)
+; Char 2 = I/O config:    s (std), a (any)
+; Char 3 = IRQ config: #,          a (any), n (none) 
+; Char 4 = DMA config:             a (any), n (none)
+
+[lsnn]
+ConfigPriority=HARDRECONFIG
+IOConfig=3bc-3be(3ff::),378-37a(3ff::),278-27a(3ff::)
+
+[lsan]
+ConfigPriority=HARDRECONFIG
+IOConfig=3bc-3be(3ff::),378-37a(3ff::),278-27a(3ff::)
+IRQConfig=3,4,5,6,7,8,9,10,11,12,13,14,15
+
+[lann]
+ConfigPriority=HARDRECONFIG
+IOConfig=8@100-3ff%fff8(3ff::)
+
+[laan]
+ConfigPriority=HARDRECONFIG
+IOConfig=8@100-3ff%fff8(3ff::)
+IRQConfig=3,4,5,6,7,8,9,10,11,12,13,14,15
+
+[lsaa]
+ConfigPriority=HARDRECONFIG
+IOConfig=3bc-3be(3ff::),378-37a(3ff::),278-27a(3ff::)
+IRQConfig=3,4,5,6,7,8,9,10,11,12,13,14,15
+DMAConfig=1,2,3,5,6,7
+
+[laaa]
+ConfigPriority=HARDRECONFIG
+IOConfig=8@100-3ff%fff8(3ff::)
+IRQConfig=3,4,5,6,7,8,9,10,11,12,13,14,15
+DMAConfig=1,2,3,5,6,7
+
+; End LPT and ECP LogConfig sections
+
+
+[*pnp0400.det]
+AddReg=Ports.AddReg
+
+[Ports.AddReg]
+HKR,,NoSetupUI,,1
+
+[*pnp0401.det]
+AddReg=Ports.AddReg
+
+[LptPort.PosDup]
+*PNP0401
+
+[EcpPort.PosDup]
+*PNP0400
+
+
+; COM sections
+;----------------------------------------------------------
+[ComPort]
+CopyFiles=ComPort.Copy
+AddReg=ComPort.AddReg
+LogConfig=c14,c1a,c23,c2a,c34,c3a,c43,c4a,caa
+
+
+[InfraredComPort]
+CopyFiles=ComPort.Copy
+AddReg=InfraredComPort.AddReg
+LogConfig=c14,c1a,c23,c2a,c34,c3a,c43,c4a,caa
+
+
+[ComPort.Copy]
+serial.vxd
+serialui.dll
+
+[ComPort.AddReg]
+HKR,,DevLoader,,*vcomm
+HKR,,Enumerator,,serenum.vxd
+HKR,,PortDriver,2,serial.vxd
+HKR,,Contention,,*vcd
+HKR,,ConfigDialog,,serialui.dll
+HKR,,DCB,3,1C,00,00,00, 80,25,00,00, 11,33,00,00, 00,00, 0a,00, 0a,00, 08, 00, 00, 11, 13, 00, 00, 00
+HKR,,PortSubClass,1,01
+HKR,,EnumPropPages,,"serialui.dll,EnumPropPages"
+
+
+[InfraredComPort.AddReg]
+HKR,,DevLoader,,"*vcomm"
+HKR,,Enumerator,,serenum.vxd
+HKR,,PortDriver,,serial.vxd
+HKR,,Contention,,*vcd
+HKR,,ConfigDialog,,serialui.dll
+HKR,,DCB,3,1C,00,00,00, 80,25,00,00, 11,33,00,00, 00,00, 0a,00, 0a,00, 08, 00, 00, 11, 13, 00, 00, 00
+HKR,,PortSubClass,1,01
+HKR,,EnumPropPages,,"serialui.dll,EnumPropPages"
+
+
+[*pnp0500.det]
+AddReg=Ports.AddReg,DevMap.AddReg
+
+; The following sections are COM port resource configs.
+; Section name format means:
+; Char 1 = c (COM port)
+; Char 2 = I/O config: 1 (3f8), 2 (2f8), 3 (3e8), 4 (2e8), a (any)
+; Char 3 = IRQ config: #, a (any)
+
+[c14]                   ; COM1,IRQ4
+ConfigPriority=HARDRECONFIG
+IOConfig=3f8-3ff(3ff::)
+IRQConfig=S:4
+
+[c1a]                   ; COM1, any IRQ
+ConfigPriority=HARDRECONFIG
+IOConfig=3f8-3ff(3ff::)
+IRQConfig=S:3,4,5,7,9,10,11,12,14,15
+
+[c23]                   ; COM2, IRQ3
+ConfigPriority=HARDRECONFIG
+IOConfig=2f8-2ff(3ff::)
+IRQConfig=S:3
+
+[c2a]                   ; COM2, any IRQ
+ConfigPriority=HARDRECONFIG
+IOConfig=2f8-2ff(3ff::)
+IRQConfig=S:3,4,5,7,9,10,11,12,14,15
+
+[c34]                   ; COM3, IRQ4
+ConfigPriority=HARDRECONFIG
+IOConfig=3e8-3ef(3ff::)
+IRQConfig=S:4
+
+[c3a]                   ; COM3, any IRQ
+ConfigPriority=HARDRECONFIG
+IOConfig=3e8-3ef(3ff::)
+IRQConfig=S:3,4,5,7,9,10,11,12,14,15
+
+[c43]                   ; COM4, IRQ3
+ConfigPriority=HARDRECONFIG
+IOConfig=2e8-2ef(3ff::)
+IRQConfig=S:3,5
+
+[c4a]                   ; COM4, any IRQ
+ConfigPriority=HARDRECONFIG
+IOConfig=2e8-2ef(3ff::)
+IRQConfig=S:3,4,5,7,9,10,11,12,14,15
+
+[caa]                   ; Any base, any IRQ
+ConfigPriority=HARDRECONFIG
+IOConfig=8@100-ffff%fff8(3ff::)
+IRQConfig=S:3,4,5,7,9,10,11,12,14,15
+
+; End COM port LogConfig sections
+
+[ComPort.PosDup]
+; Note: don't include *PNP051x
+*PNP0500,*PNP0501
+
+[DevMap.AddReg]
+HKLM,hardware\devicemap\serialcomm,COM1,,COM1
+HKLM,hardware\devicemap\serialcomm,COM2,,COM2
+
+
+; "NoDrv" section: We do not yet support these port devices.
+;----------------------------------------------------------
+[NoDrv]
+
+; "Non-port" sections: PCMCIA cards that look like COM
+; ports, but aren't (excluding modems).
+;----------------------------------------------------------
+[NonPort]
+CopyFiles=NonPort.Copy
+AddReg=NonPort.AddReg
+
+[NonPort.Copy]
+serial.vxd
+
+[NonPort.AddReg]
+HKR,,PortSubClass,1,01
+HKR,,DevLoader,,*vcomm
+HKR,,PortDriver,,serial.vxd
+HKR,,Contention,,*vcd
+HKR,,DCB,3,1C,00,00,00, 80,25,00,00, 11,33,00,00, 00,00, 0a,00, 0a,00, 08, 00, 00, 11, 13, 00, 00, 00
+
+
+; User readable strings
+;----------------------------------------------------------
+[Strings]
+MS  = "Microsoft"
+Std = "(Standard port types)"
+PortsClassName = "Ports (COM & LPT)"
+
+*PNP0400.DeviceDesc = "Printer Port"
+*PNP0401.DeviceDesc = "ECP Printer Port"
+*PNP0500.DeviceDesc = "Communications Port"
+*PNP0501.DeviceDesc = "Communications Port"
+;*PNP0510.DeviceDesc = "Generic Ir Serial Port"
+;*PNP0511.DeviceDesc = "Generic Ir Serial Port"
+
+; Compaq devices
+*CPQA0E0.DeviceDesc = "ECP Printer Port"
+*CPQA0D9.DeviceDesc = "Communications Port"
+
+HP = "Hewlett Packard"
+MF\EISA_HWP1C10_DEV0.DeviceDesc="HP Communications Port"
+MF\EISA_HWP1C10_DEV1.DeviceDesc="HP Printer Port"
+HWPDEAD.DeviceDesc="HP Infra-Red Communication Port"
+
+IBM="IBM"
+*IBM0002.DeviceDesc="IBM Thinkpad Infrared Port"
+*IBM0034.DeviceDesc="IBM Thinkpad Infrared Port"
+
+Socket="Socket Communications"
+Socket-0484.DeviceDesc="Socket PCMCIA Serial Adapter"
+Socket-12F8.DeviceDesc="Socket PCMCIA Serial Adapter"
+Socket-FA29.DeviceDesc="Socket PCMCIA PageCard V3.0"
+
+DBC="DBC"
+DBC-4E9B.DeviceDesc="DBC SignalCard"
+
+Smart="SMART Modular Technologies"
+Smart-A0F6.DeviceDesc="SMART Serial Port"
+
+
+[Det.DevINFs]
+*pnp8215=netxir.inf     ;Xircom PE3
+*pnpa01e=scsi.inf       ;Trantor T338
+*pnpa01f=scsi.inf       ;Trantor T348
+*pnpa02f=scsi.inf       ;Trantor T358
+

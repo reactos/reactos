@@ -1,0 +1,61 @@
+MINORCOMP=apidll_a
+TARGETNAME=setupapi
+
+ANSI_SETUPAPI=1
+
+!if !$(386)
+# Do nothing for non-x86 platforms
+
+TARGETPATH=obj
+TARGETTYPE=NOTARGET
+
+!else
+
+!include ..\sources.inc
+
+USE_LIBCMT=1
+USE_MAPSYM=1
+TARGETPATHLIB=$(BASEDIR)\public\sdk\lib\chicago
+
+C_DEFINES=$(C_DEFINES) -D_MBCS -D_SETUPAPI_ -DANSI_SETUPAPI
+# To enable asserts, add: -DASSERTS_ON=1
+
+SUBSYSTEM_VERSION=4.00
+CHICAGO_PRODUCT=1
+BINPLACE_PLACEFILE=placefil.txt
+
+
+#
+# ***** DO NOT CHANGE THIS LIST *****
+#
+# unless you are adding a DLL that runs on the gold release of Windows 95
+#
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\chicago\*\kernel32.lib    \
+    $(BASEDIR)\public\sdk\lib\chicago\*\advapi32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\comctl32.lib            \
+    $(BASEDIR)\public\sdk\lib\*\comdlg32.lib            \
+    $(BASEDIR)\public\sdk\lib\chicago\*\gdi32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\lz32.lib                \
+    $(BASEDIR)\public\sdk\lib\chicago\*\mpr.lib         \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib               \
+    $(BASEDIR)\public\sdk\lib\*\rpcndr.lib              \
+    $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib              \
+    $(BASEDIR)\public\sdk\lib\*\rpcutil.lib             \
+    $(BASEDIR)\public\sdk\lib\*\shell32p.lib            \
+    $(BASEDIR)\public\sdk\lib\chicago\*\user32.lib      \
+    $(BASEDIR)\public\sdk\lib\*\version.lib             \
+    $(BASEDIR)\public\sdk\lib\chicago\*\winspool.lib    \
+    $(BASEDIR)\public\sdk\lib\*\cabinet.lib             \
+    $(BASEDIR)\public\sdk\lib\*\dload.lib               \
+    ..\..\setuplog\obj\*\setuplga.lib                   \
+    .\cfgmgr32.lib                                      \
+
+
+MISCFILES = i386\cfgmgra.dll
+!endif
+
+
+i386_SOURCES=$(SOURCES)
+SOURCES=

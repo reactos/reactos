@@ -1,0 +1,10 @@
+LIBRARY FONTEXT
+HEAPSIZE    512
+
+EXPORTS
+
+DllMain             @1
+DllGetClassObject   @3
+DllCanUnloadNow     @2
+
+; model

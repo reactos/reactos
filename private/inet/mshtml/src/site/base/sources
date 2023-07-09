@@ -1,0 +1,106 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\base=)
+WARNING_LEVEL=W3
+!include $(ROOT)\common.inc
+
+TARGETNAME=base
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+!ifdef UNIX
+SOURCES_PLATFORM = \
+    unixbase.cxx
+
+!else
+SOURCES_PLATFORM = \
+
+!endif
+
+SOURCES= \
+    $(SOURCES_PLATFORM) \
+    attr.cxx \
+    avundo.cxx \
+    bindhost.cxx \
+    breaker.cxx \
+    csite.cxx \
+    ctxmenu.cxx \
+    cutil.cxx \
+    debugger.cxx \
+    docdata.cxx \
+    dom.cxx \
+    dump.cxx \
+    edrouter.cxx \
+    elemdb.cxx \
+    element.cxx \
+    element2.cxx \
+    element3.cxx \
+    filter.cxx \
+    fframe.cxx \
+    folectrl.cxx \
+    formkrnl.cxx \
+    fpersist.cxx \
+    formats.cxx \
+    formcoll.cxx \
+    formmso.cxx \
+    fpropdlg.cxx \
+    fscroll.cxx \
+    getid.cxx \
+    grab.cxx \
+    hedelems.cxx \
+    history.cxx \
+    hlink.cxx \
+    htc.cxx \
+    inplace.cxx \
+    ipwnd.cxx \
+    jsprot.cxx \
+    krnldisp.cxx \
+    doclyout.cxx \
+    markup.cxx \
+    markupundo.cxx \
+    meta.cxx \
+    mshtmsvr.cxx \
+    notify.cxx \
+    optnobj.cxx \
+    paint.cxx \
+    peer.cxx \
+    peersite.cxx \
+    peerdoc.cxx \
+    peermarkup.cxx \
+    peerelem.cxx \
+    peermisc.cxx \
+    peerfact.cxx \
+    peermgr.cxx \
+    perhist.cxx \
+    progsink.cxx \
+    recalchost.cxx \
+    rootelem.cxx \
+    rtftohtm.cxx \
+    saver.cxx \
+    scollect.cxx \
+    secmgr.cxx \
+    security.cxx \
+    selecobj.cxx \
+    sholder.cxx \
+    stable.cxx \
+    stdform.cxx \
+    sui.cxx \
+    taborder.cxx \
+    treenode.cxx \
+    treeserv.cxx \
+    unknown.cxx \
+    urlcomp.cxx \
+    viewserv.cxx \
+    wfromd.cxx \
+    window.cxx \
+    wscript.cxx \
+    xbag.cxx \
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

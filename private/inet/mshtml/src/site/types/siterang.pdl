@@ -1,0 +1,63 @@
+#ifndef _SITERANG_PDL_
+#define _SITERANG_PDL_ 1
+
+#include "types.pdl"
+
+file siterang.pdl
+
+import types.pdl
+
+interface IHTMLControlRange   super:IDispatch    guid:3050f29c-98b5-11cf-bb82-00aa00bdce0b
+    refmethod CAutoTxtSiteRange:select
+    refmethod CAutoTxtSiteRange:add
+    refmethod CAutoTxtSiteRange:remove
+    refmethod CAutoTxtSiteRange:item
+    refmethod CAutoTxtSiteRange:scrollIntoView
+
+    refmethod CAutoTxtSiteRange:queryCommandSupported
+    refmethod CAutoTxtSiteRange:queryCommandEnabled
+    refmethod CAutoTxtSiteRange:queryCommandState
+    refmethod CAutoTxtSiteRange:queryCommandIndeterm
+    refmethod CAutoTxtSiteRange:queryCommandText
+    refmethod CAutoTxtSiteRange:queryCommandValue
+    refmethod CAutoTxtSiteRange:execCommand
+    refmethod CAutoTxtSiteRange:execCommandShowHelp
+
+    refmethod CAutoTxtSiteRange:commonParentElement
+
+    refprop CAutoTxtSiteRange:length
+
+class CAutoTxtSiteRange primaryinterface:IHTMLControlRange
+    method    HRESULT queryCommandStatus  dispid:DISPID_RANGE+1  (in type:long arg:cmdID    \
+                                                                  out retval type:VARIANT* arg:Value)
+    method    HRESULT select              dispid:DISPID_RANGE+2  ()
+    method    HRESULT add                 dispid:DISPID_RANGE+3  (in type:IHTMLControlElement* arg:item)
+    method    HRESULT remove              dispid:DISPID_RANGE+4  (in type:long arg:index)
+    method    HRESULT item                dispid:DISPID_VALUE    (in type:long arg:index \
+                                                                  out retval type:IHTMLElement** arg:pdisp)
+    property  length    atype:long        dispid:DISPID_RANGE+5  type:long   dwFlags:0   abstract get  
+
+    method    HRESULT scrollIntoView      maxstrlen:pdlToken    dispid:DISPID_RANGE+6  (in optional type:VARIANT arg:varargStart)
+
+    method HRESULT queryCommandSupported  maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+7 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet)
+    method HRESULT queryCommandEnabled    maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+8 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet)
+    method HRESULT queryCommandState      maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+9 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet)
+    method HRESULT queryCommandIndeterm   maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+10 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet)
+    method HRESULT queryCommandText       maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+11 (in type:BSTR arg:cmdID \
+                                                               out retval type:BSTR* arg:pcmdText
+    method HRESULT queryCommandValue      maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+12 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT* arg:pcmdValue)
+    method HRESULT execCommand            maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+13 (in type:BSTR arg:cmdID \
+                                                               in type:VARIANT_BOOL defaultvalue:0 arg:showUI \
+                                                               in type:VARIANT optional arg:value \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet )
+    method HRESULT execCommandShowHelp    maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+14 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet )
+
+    method HRESULT commonParentElement     dispid:DISPID_RANGE+15 (out retval type:IHTMLElement** arg:parent)
+
+#endif _SITERANG_PDL_

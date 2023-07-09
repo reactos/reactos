@@ -1,0 +1,340 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright 1995-1998 Microsoft Corporation. All Rights Reserved.
+//
+//--------------------------------------------------------------------------
+
+cpp_quote("#ifndef _SHAPPMGR_H_")
+cpp_quote("#define _SHAPPMGR_H_")
+
+
+// This file will be processed by the MIDL tool to
+// produce the type library (shappmgr.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+import "appmgmt.h";
+
+#include <olectl.h>
+#include <shdispid.h>
+
+// shappmgr.idl : IDL source for shappmgr.dll
+//
+[
+    uuid(3964D990-AC96-11D1-9851-00C04FD91972),     // LIBID_SHAPPMGR
+    helpstring("shappmgr 1.0 Type Library"),
+    lcid(0x0000),
+    version(1.0)
+]
+library SHAPPMGRLib
+{
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
+
+    [
+        uuid(3964D99F-AC96-11D1-9851-00C04FD91972),     // IID_IADCCtl
+        helpstring("Application Data Control Interface"),
+        pointer_default(unique),
+        oleautomation,
+        object,
+        dual
+    ]
+    interface IADCCtl : IDispatch
+    {
+        // Properties
+
+        [propput, id(DISPID_IADCCTL_DIRTY)]
+            HRESULT Dirty([in] VARIANT_BOOL bDirty);
+        [propget, id(DISPID_IADCCTL_DIRTY)]
+            HRESULT Dirty([out, retval] VARIANT_BOOL * pbDirty);
+
+        [propput, id(DISPID_IADCCTL_PUBCAT)]
+            HRESULT Category([in] BSTR bstrCategory);
+        [propget, id(DISPID_IADCCTL_PUBCAT)]
+            HRESULT Category([out, retval] BSTR * pbstrCategory);
+
+        [propput, id(DISPID_IADCCTL_SORT)]
+            HRESULT Sort([in] BSTR bstrSortExpr);
+        [propget, id(DISPID_IADCCTL_SORT)]
+            HRESULT Sort([out, retval] BSTR* pbstrSortExpr);
+
+        [propput, id(DISPID_IADCCTL_FORCEX86)]
+            HRESULT Forcex86([in] VARIANT_BOOL bForce);
+        [propget, id(DISPID_IADCCTL_FORCEX86)]
+            HRESULT Forcex86([out, retval] VARIANT_BOOL * pbForce);
+
+        [propget, id(DISPID_IADCCTL_SHOWPOSTSETUP)]
+            HRESULT ShowPostSetup([out, retval] VARIANT_BOOL * pbShow);
+
+        [propput, id(DISPID_IADCCTL_ONDOMAIN)]
+            HRESULT OnDomain([in] VARIANT_BOOL bOnDomain);
+        [propget, id(DISPID_IADCCTL_ONDOMAIN)]
+            HRESULT OnDomain([out, retval] VARIANT_BOOL * pbOnDomain);
+
+        [propget, id(DISPID_IADCCTL_DEFAULTCAT)]
+            HRESULT DefaultCategory([out, retval] BSTR * pbstrCategory);
+
+        [restricted, id(-3900)]
+        HRESULT msDataSourceObject([in] BSTR qualifier,
+                                   [out, retval] IUnknown **ppUnk);
+
+        [restricted, id(-3901)]
+        HRESULT addDataSourceListener([in] IUnknown *pEvent);
+
+        // Methods
+        //
+
+        HRESULT Reset(BSTR bstrQualifier);
+
+        HRESULT IsRestricted([in] BSTR bstrPolicy, [out, retval] VARIANT_BOOL * pbRestricted);
+
+        // Valid Exec command strings:
+        //
+        //  "install"       - install app at nRecord
+        //  "uninstall"     - uninstall app
+        //  "modify"        - modify app
+        //  "repair"        - repair app
+        //  "upgrade"       - upgrade app
+        //  "generic install" - invoke the 'install from floppy or CD' wizard
+        //  "ntoptions"     - add/remove NT options
+        //  "winupdate"     - update windows
+        HRESULT Exec(BSTR bstrQualifier, [in] BSTR bstrCmd, [in] LONG nRecord);
+    };
+
+    [
+        uuid(3964D9A0-AC96-11D1-9851-00C04FD91972),     // CLSID_ADCCtl
+        helpstring("ADCCtl Class")
+    ]
+    coclass ADCCtl
+    {
+        [default] interface IADCCtl;
+    };
+
+    // Interface IShellApp -- Base interface for Shell App
+    [
+        uuid(A3E14960-935F-11D1-B8B8-006008059382),     // IID_IShellApp
+        helpstring("Shell Application Interface"),
+        object,
+    ]
+
+    interface IShellApp : IUnknown
+    {
+        typedef enum _tagAppInfoFlags {
+            AIM_DISPLAYNAME           = 0x00000001,
+            AIM_VERSION               = 0x00000002,
+            AIM_PUBLISHER             = 0x00000004,
+            AIM_PRODUCTID             = 0x00000008,
+            AIM_REGISTEREDOWNER       = 0x00000010,
+            AIM_REGISTEREDCOMPANY     = 0x00000020,
+            AIM_LANGUAGE              = 0x00000040,
+            AIM_SUPPORTURL            = 0x00000080,
+            AIM_SUPPORTTELEPHONE      = 0x00000100,
+            AIM_HELPLINK              = 0x00000200,
+            AIM_INSTALLLOCATION       = 0x00000400,
+            AIM_INSTALLSOURCE         = 0x00000800,
+            AIM_INSTALLDATE           = 0x00001000,
+            AIM_CONTACT               = 0x00004000,
+            AIM_COMMENTS              = 0x00008000,
+            AIM_IMAGE                 = 0x00020000,
+            AIM_READMEURL             = 0x00040000,
+            AIM_UPDATEINFOURL         = 0x00080000,
+        } APPINFODATAFLAGS;
+
+        // 0x00002000 is reserved for AIM_REQUIREDBYPOLICY, which is not used any more.
+        typedef struct _AppInfoData {
+            DWORD cbSize;
+            DWORD dwMask;                     // IN/OUT parameter
+            LPWSTR pszDisplayName;
+            LPWSTR pszVersion;
+            LPWSTR pszPublisher;
+            LPWSTR pszProductID;
+            LPWSTR pszRegisteredOwner;
+            LPWSTR pszRegisteredCompany;
+            LPWSTR pszLanguage;
+            LPWSTR pszSupportUrl;
+            LPWSTR pszSupportTelephone;
+            LPWSTR pszHelpLink;
+            LPWSTR pszInstallLocation;
+            LPWSTR pszInstallSource;
+            LPWSTR pszInstallDate;
+            LPWSTR pszContact;
+            LPWSTR pszComments;
+            LPWSTR pszImage;
+            LPWSTR pszReadmeUrl;
+            LPWSTR pszUpdateInfoUrl;
+        } APPINFODATA, *PAPPINFODATA;
+
+        HRESULT GetAppInfo([in, out] PAPPINFODATA pai);
+
+        typedef enum _tagAppActionFlags {
+            APPACTION_INSTALL      = 0x00000001,
+            APPACTION_UNINSTALL    = 0x00000002,
+            APPACTION_MODIFY       = 0x00000004,
+            APPACTION_REPAIR       = 0x00000008,
+            APPACTION_UPGRADE      = 0x00000010,
+            APPACTION_CANGETSIZE   = 0x00000020,
+            APPACTION_MODIFYREMOVE = 0x00000080,  // for legacy (logo 3) we can't distinguish between modify or uninstall (most likely through one program anyways)
+            APPACTION_ADDLATER     = 0x00000100,
+            APPACTION_UNSCHEDULE   = 0x00000200,
+        } APPACTIONFLAGS;
+
+        HRESULT GetPossibleActions([out] DWORD * pdwActions);
+
+        // Synchronoursly gets the slow info for the app, this method call
+        // can be very slow
+        typedef struct _tagSlowAppInfo {
+               ULONGLONG ullSize;
+               FILETIME  ftLastUsed;
+               int       iTimesUsed;
+               LPWSTR    pszImage;  // for both the icon or the preview image
+        } SLOWAPPINFO, *PSLOWAPPINFO;
+        HRESULT GetSlowAppInfo([in] PSLOWAPPINFO psaid);
+
+        // Get the cached slow info for the app, this will be fast
+        HRESULT GetCachedSlowAppInfo([in] PSLOWAPPINFO psaid);
+
+        // S_OK if installed S_FALSE if not installed
+        HRESULT IsInstalled(void);
+    };
+
+    // Interface IInstalledApp
+    [
+        uuid(1BC752DF-9046-11D1-B8B3-006008059382),     // IID_IInstalledApp
+        helpstring("Shell Installed Application Interface"),
+        object,
+    ]
+
+    interface IInstalledApp : IShellApp
+    {
+        HRESULT Uninstall(HWND hwnd); // Same as Add/Remove maybe we should call it AddRemove.
+        HRESULT Modify(HWND hwndParent);
+        HRESULT Repair([in] BOOL bReinstall);
+        HRESULT Upgrade(void);
+    };
+
+    // Interface IPublishedApp
+    [
+        uuid(1BC752E0-9046-11D1-B8B3-006008059382),     // IID_IPublishedApp
+        helpstring("Shell Published (not installed yet) Application Interface"),
+        object,
+    ]
+
+    interface IPublishedApp : IShellApp
+    {
+        typedef enum _tagPublishedAppInfoFlags {
+            PAI_SOURCE                = 0x00000001,
+            PAI_ASSIGNEDTIME          = 0x00000002,
+            PAI_PUBLISHEDTIME         = 0x00000004,
+            PAI_SCHEDULEDTIME         = 0x00000008,
+            PAI_EXPIRETIME            = 0x00000010
+        } PUBAPPINFOFLAGS;
+
+        typedef struct _PubAppInfo {
+            DWORD cbSize;
+            DWORD dwMask;                     // IN/OUT parameter
+            LPWSTR pszSource;                 // Identifies the source of this app
+            SYSTEMTIME  stAssigned;           // when this app was assigned
+            SYSTEMTIME  stPublished;          // when this app was published
+            SYSTEMTIME  stScheduled;          // when this app was scheduled to install
+            SYSTEMTIME  stExpire;             // when this app will no longer be published
+        } PUBAPPINFO, *PPUBAPPINFO;
+
+        HRESULT Install([in]LPSYSTEMTIME pstInstall); // pstInstall contains the scheduled install time
+        HRESULT GetPublishedAppInfo([in, out] PPUBAPPINFO ppai);
+        HRESULT Unschedule(void);
+    };
+
+
+    // IEnumInstalledApps interface
+    [
+        uuid(1BC752E1-9046-11D1-B8B3-006008059382),     // IID_IEnumInstalledApps
+        helpstring("Shell Installed Apps Enumeration Interface"),
+        object,
+    ]
+
+    interface IEnumInstalledApps : IUnknown
+    {
+        HRESULT Next([out] IInstalledApp** pia);
+        HRESULT Reset(void);
+    };
+
+    [
+        uuid(0B124F8F-91F0-11D1-B8B5-006008059382),     // CLSID_EnumInstalledApps
+        helpstring("Shell Installed Applications Enumeration Object"),
+    ]
+    coclass EnumInstalledApps
+    {
+        [default] interface IEnumInstalledApps;
+    };
+
+
+    // IEnumPublishedApps interface
+    [
+        uuid(0B124F8C-91F0-11D1-B8B5-006008059382),     // IID_IEnumPublishedApps
+        helpstring("Shell Published Apps Enumeration Interface"),
+        object,
+    ]
+
+    interface IEnumPublishedApps : IUnknown
+    {
+
+        HRESULT Next([out] IPublishedApp** pia);
+        HRESULT Reset(void);
+    };
+
+    [
+        uuid(07250A10-9CF9-11D1-9076-006008059382),     // IID_IAppPublisher
+        helpstring("Application Publisher"),
+    ]
+
+    interface IAppPublisher : IUnknown
+    {
+        HRESULT GetNumberOfCategories(DWORD * pdwCat);
+        HRESULT GetCategories(APPCATEGORYINFOLIST * pAppCategoryList);
+        HRESULT GetNumberOfApps(DWORD * pdwApps);
+        HRESULT EnumApps(GUID * pAppCategoryId, IEnumPublishedApps ** ppepa);
+    }
+
+    [
+        uuid(352EC2B8-8B9A-11D1-B8AE-006008059382),     // IID_IShellAppManager
+        helpstring("Application Manager"),
+        object,
+    ]
+
+    interface IShellAppManager : IUnknown
+    {
+        // NOTE: These structures are very similar to CategoryInfo* in NT5
+        typedef struct _ShellAppCategory {
+            LPWSTR pszCategory;  // category description
+            UINT  idCategory;   // category id for ShellAppManager
+        } SHELLAPPCATEGORY, *PSHELLAPPCATEGORY;
+
+        typedef struct _ShellAppCategoryList {
+            UINT  cCategories;
+            SHELLAPPCATEGORY * pCategory;
+        } SHELLAPPCATEGORYLIST, *PSHELLAPPCATEGORYLIST;
+
+        HRESULT GetNumberofInstalledApps(DWORD * pdwResult);
+        HRESULT EnumInstalledApps(IEnumInstalledApps ** peia);
+        HRESULT GetPublishedAppCategories(PSHELLAPPCATEGORYLIST pCategoryList);
+        HRESULT EnumPublishedApps(LPCWSTR pszCategory, IEnumPublishedApps ** ppepa);
+        HRESULT InstallFromFloppyOrCDROM(HWND hwndParent);
+    }
+
+    [
+        uuid(352EC2B7-8B9A-11D1-B8AE-006008059382),     // CLSID_ShellAppManager
+        helpstring("Shell Application Manager"),
+    ]
+
+    coclass ShellAppManager
+    {
+        [default] interface IShellAppManager;
+    };
+
+};
+
+cpp_quote("#endif // _SHAPPMGR_H_")
+
+

@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdusx
+
+TARGETNAME=kbdusx
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdusx.c kbdusx.rc
+
+NTTARGETFILE0=kbdusx.h kbdusx.rc kbdusx.def

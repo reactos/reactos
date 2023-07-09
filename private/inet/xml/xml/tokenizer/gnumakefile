@@ -1,0 +1,17 @@
+# This makefile was generated automatically by mwgenmakeC.
+
+.NOTPARALLEL: world all clean install depend
+
+world all clean install depend:
+	@enterdir base ${MAKE} ${MFLAGS} $@
+	@enterdir parser ${MAKE} ${MFLAGS} $@
+	@enterdir xmlstream ${MAKE} ${MFLAGS} $@
+	@enterdir encoder ${MAKE} ${MFLAGS} $@
+	@enterdir net ${MAKE} ${MFLAGS} $@
+
+#	@enterdir dll ${MAKE} ${MFLAGS} $@
+#	@enterdir test ${MAKE} ${MFLAGS} $@
+
+
+
+

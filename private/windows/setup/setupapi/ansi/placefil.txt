@@ -1,0 +1,7 @@
+;
+; This private placefile allows the ANSI build of setupapi.dll
+; to go to the Win9x upgrade.  To add additional destinations,
+; append a colon and then your dir name (or retail for the root)
+;
+
+setupapi.dll        winnt32\win9xupg

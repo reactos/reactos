@@ -1,0 +1,131 @@
+1 DLGINCLUDE "Dialogs.h"
+
+DLG_SET_DISPLAY DIALOG 0, 0, 253, 218
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK | DS_NOIDLEMSG
+CAPTION "Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_SCREENSAMPLE,"Static",SS_BITMAP | SS_CENTERIMAGE,
+                    63,4,125,107
+
+    GROUPBOX        "&Color Palette",      ID_DSP_CLRPALGRP, 7, 118, 115, 42, WS_GROUP
+    COMBOBOX        ID_DSP_COLORBOX, 13, 130, 103, 80, CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "", ID_DSP_COLORBAR, "Static", WS_BORDER | SS_BITMAP | SS_CENTERIMAGE /* | NOT WS_VISIBLE */,
+                    13, 146, 103, 9
+
+    GROUPBOX        "&Desktop Area",       ID_DSP_DSKAREAGRP, 129, 118, 115, 42, WS_GROUP
+    LTEXT           "Less", 0xffff, 135, 130, 15, 8, NOT WS_GROUP
+    CONTROL         "",ID_DSP_AREA_SB, "msctls_trackbar32", WS_TABSTOP |
+                    TBS_HORZ | TBS_AUTOTICKS | TBS_BOTTOM, 156, 130, 58, 15
+    LTEXT           "More", 0xffff, 219, 130, 21, 8, NOT WS_GROUP
+    CTEXT           "9999 X 9999 pixels",  ID_DSP_X_BY_Y, 136, 146,100,10,
+                    NOT WS_GROUP
+
+    GROUPBOX        "&Font Size",          ID_DSP_FONTSIZEGRP, 7, 161, 115, 30, WS_GROUP
+    COMBOBOX        ID_DSP_FONTSIZE, 13, 173,103, 80, CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+
+    GROUPBOX        "&Refresh Frequency",  ID_DSP_REFFREQGRP, 129, 161, 115, 30
+    COMBOBOX        ID_DSP_FREQ, 135, 173, 103, 80, CBS_DROPDOWNLIST |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+
+    PUSHBUTTON      "&List All Modes...", ID_DSP_LIST_ALL,    7, 196, 75, 14
+    PUSHBUTTON      "T&est",               ID_DSP_TEST,       88, 196, 75, 14
+    PUSHBUTTON      "Display &Type...",    ID_DSP_CHANGE,    169, 196, 75, 14
+
+END
+
+DLG_SET_CHANGE_VID DIALOG 6, 18, 240, /* 104 */ 185
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Display Type"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Cancel",              IDCANCEL,        192,   6,  42, 14
+    GROUPBOX        "Adapter Type",        ID_ADP_ADPGRP,      6,   3, 180, 38
+    LTEXT           "",                    ID_ADP_ADAPTOR,    12,  19, 120, 18
+    PUSHBUTTON      "&Change...",          ID_ADP_CHGADP,    138,  17,  42, 14
+    PUSHBUTTON      "&Detect",             ID_ADP_DETECT,    192,  28,  42, 14
+
+    GROUPBOX        "Driver Information",  ID_ADP_DRVINFGRP,   6,  47, 228, 51
+    LTEXT           "Manufacturer:",       ID_ADP_DI1,        12,  62,  58, 8
+    LTEXT           "Version Numbers:",    ID_ADP_DI2,        12,  74,  58, 8
+    LTEXT           "Current Files:",      ID_ADP_DI3,        12,  86,  58, 8
+    LTEXT           "",                    ID_ADP_MANUFACT,   70,  62, 160, 8
+    LTEXT           "",                    ID_ADP_VERSION,    70,  74, 160, 8
+    LTEXT           "",                    ID_ADP_CURFILES,   70,  86, 160, 8
+
+    GROUPBOX        "Adapter Information", ID_ADP_ADPINFGRP,   6, 104, 228, 75
+    LTEXT           "Chip Type:",          ID_ADP_AI1,        12, 119,  58, 8
+    LTEXT           "DAC Type:",           ID_ADP_AI2,        12, 131,  58, 8
+    LTEXT           "Memory Size:",        ID_ADP_AI3,        12, 143,  58, 8
+    LTEXT           "Adapter String:",     ID_ADP_AI4,        12, 155,  58, 8
+    LTEXT           "Bios Information:",   ID_ADP_AI5,        12, 167,  58, 8
+    LTEXT           "",                    ID_ADP_CHIP,       70, 119, 160, 8
+    LTEXT           "",                    ID_ADP_DAC,        70, 131, 160, 8
+    LTEXT           "",                    ID_ADP_MEM,        70, 143, 160, 8
+    LTEXT           "",                    ID_ADP_ADP_STRING, 70, 155, 160, 8
+    LTEXT           "",                    ID_ADP_BIOS_INFO,  70, 167, 160, 8
+
+END
+
+DLG_SET_STARTUP DIALOG 40, 40, 200, 118
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Detected Display"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "The system found the following video adapter in your machine:",  0xffff, 8, 12, 180, 22
+    CTEXT           "", ID_STARTUP_DETECT, 30, 38, 140, 16, NOT WS_GROUP
+    LTEXT           "Use the controls to select the size and number of colors for your display.  Then use the Test button to preview those settings.",  0xffff, 8, 60, 180, 32
+    DEFPUSHBUTTON   "OK",     IDOK,       80, 94, 42, 14
+END
+
+DLG_SET_MODE_LIST DIALOG 6, 18, 220, 135
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Detected Adapter"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "List of valid modes:",  0xffff, 6, 6, 80, 10
+    DEFPUSHBUTTON   "OK",     IDOK,       6, 115, 42, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 172, 115, 42, 14
+    LISTBOX         ID_MODE_LIST, 6, 20, 208, 87, WS_VSCROLL |
+                    WS_GROUP | WS_TABSTOP
+END
+
+
+/* */
+/* Two copies of same dialog, one with default yes, the other default no */
+/* */
+
+
+DLG_SET_REBOOT_YES DIALOG 6, 18, 218, 78
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Display Settings Change"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            32515, -1, 10, 8, 25, 24
+    LTEXT           "You will need to exit and restart Windows so that the new settings can take effect.",
+                    102, 40, 30, 160, 20
+    PUSHBUTTON      "&Restart Now", IDOK, 117, 58, 75, 14, WS_GROUP
+    PUSHBUTTON      "&Don't Restart Now", IDCANCEL, 26, 58, 75, 14
+    LTEXT           "Your display settings have changed.", 105, 40, 10, 160,
+                    14
+END
+
+DLG_SET_REBOOT_NO DIALOG 6, 18, 218, 78
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Display Settings Change"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            32515, -1, 10, 8, 25, 24
+    LTEXT           "You will need to exit and restart Windows so that the new settings can take effect.",
+                    102, 40, 30, 160, 20
+    PUSHBUTTON      "&Don't Restart Now", IDCANCEL, 26, 58, 75, 14, WS_GROUP
+    PUSHBUTTON      "&Restart Now", IDOK, 117, 58, 75, 14
+    LTEXT           "Your display settings have changed.", 105, 40, 10, 160,
+                    14
+END

@@ -1,0 +1,266 @@
+/****************************** Module Header ******************************\
+* Module Name: res.rc
+*
+* Copyright (c) 1985-91, Microsoft Corporation
+*
+* Constants
+*
+* History:
+* 09-18-90 DarrinM      Created.
+\***************************************************************************/
+
+#include "usercli.h"
+#include "winuserp.h"
+#undef NOSCROLL
+#include <winuser.h>
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_INTERNALNAME_STR        "user32\0"
+
+#ifdef _HYDRA_
+#define VER_FILEDESCRIPTION_STR     "Multi-User Windows 2000 USER API Client DLL"
+#else
+#define VER_FILEDESCRIPTION_STR     "Windows 2000 USER API Client DLL"
+#endif
+
+#include "common.ver"
+
+#ifdef _JANUS_
+#include "strid.rc"
+#endif
+
+
+// Edit field menu
+ID_EC_PROPERTY_MENU MENUEX LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Undo",       WM_UNDO
+        MENUITEM MFT_SEPARATOR
+        MENUITEM "Cu&t",        WM_CUT
+        MENUITEM "&Copy",       WM_COPY
+        MENUITEM "&Paste",      WM_PASTE
+        MENUITEM "&Delete",     WM_CLEAR
+        MENUITEM MFT_SEPARATOR
+        MENUITEM "Select &All", EM_SETSEL
+        MENUITEM MFT_SEPARATOR
+        MENUITEM "&Right to left Reading order",      ID_CNTX_RTL,,              MFS_GRAYED
+        MENUITEM "&Show Unicode control characters",  ID_CNTX_DISPLAYCTRL,,      MFS_GRAYED
+        POPUP    "&Insert Unicode control character", ID_CNTX_INSERTCTRL,,       MFS_GRAYED
+        BEGIN
+            MENUITEM "LRM \t&Left-to-right mark",                 ID_CNTX_LRM,,  MFS_GRAYED
+            MENUITEM "RLM \t&Right-to-left mark",                 ID_CNTX_RLM,,  MFS_GRAYED
+            MENUITEM "ZWJ \tZero width &joiner",                  ID_CNTX_ZWJ,,  MFS_GRAYED
+            MENUITEM "ZWNJ\tZero width &non-joiner",              ID_CNTX_ZWNJ,, MFS_GRAYED
+            MENUITEM "LRE \tStart of left-to-right &embedding",   ID_CNTX_LRE,,  MFS_GRAYED
+            MENUITEM "RLE \tStart of right-to-left e&mbedding",   ID_CNTX_RLE,,  MFS_GRAYED
+            MENUITEM "LRO \tStart of left-to-right &override",    ID_CNTX_LRO,,  MFS_GRAYED
+            MENUITEM "RLO \tStart of right-to-left o&verride",    ID_CNTX_RLO,,  MFS_GRAYED
+            MENUITEM "PDF \t&Pop directional formatting",         ID_CNTX_PDF,,  MFS_GRAYED
+            MENUITEM "NADS\tN&ational digit shapes substitution", ID_CNTX_NADS,, MFS_GRAYED
+            MENUITEM "NODS\tNominal (European) &digit shapes",    ID_CNTX_NODS,, MFS_GRAYED
+            MENUITEM "ASS \tActivate &symmetric swapping",        ID_CNTX_ASS,,  MFS_GRAYED
+            MENUITEM "ISS \tInhibit s&ymmetric swapping",         ID_CNTX_ISS,,  MFS_GRAYED
+            MENUITEM "AAFS\tActivate Arabic &form shaping",       ID_CNTX_AAFS,, MFS_GRAYED
+            MENUITEM "IAFS\tInhibit Arabic form s&haping",        ID_CNTX_IAFS,, MFS_GRAYED
+            MENUITEM "RS  \tRecord Separator (&Block separator)", ID_CNTX_RS,,   MFS_GRAYED
+            MENUITEM "US  \tUnit Separator (&Segment separator)", ID_CNTX_US,,   MFS_GRAYED
+        END
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STR_ERROR,      "Error"
+    STR_MOREWINDOWS,"&More Windows..."
+    STR_NOMEMBITMAP,"Insufficient memory to create the bitmap.  Close one or more applications to increase available memory."
+END
+
+/* IME specific context menu string */
+STRINGTABLE
+BEGIN
+    STR_IMEOPEN             "&Open IME"
+    STR_IMECLOSE            "C&lose IME"
+    STR_SOFTKBDOPEN         "Op&en Soft Keyboard"
+    STR_SOFTKBDCLOSE        "Close So&ft Keyboard"
+    STR_RECONVERTSTRING     "&Reconversion"
+END
+
+/*
+ * Scalable resources
+ *
+ * The are number starting at offset OFFSET_SCALE_DPI ( = 000)
+ */
+
+036    bitmap           "rcscale\\truetype.bmp" // OBM_TRUETYPE     32732
+
+/*
+ * 96 DPI resources
+ *
+ * The are number starting at offset OFFSET_96_DPI ( = 100)
+ */
+
+136    bitmap           "rc96dpi\\truetype.bmp" // OBM_TRUETYPE     32732
+
+/*
+ * 120 DPI resources
+ *
+ * The are number starting at offset OFFSET_120_DPI ( = 200)
+ */
+
+236    bitmap  PRELOAD  "rc120dpi\\truetype.bmp" // OBM_TRUETYPE     32732
+
+
+/*
+ * default icons and cursors
+ */
+
+OIC_WINLOGO_DEFAULT     ICON    PRELOAD MOVEABLE DISCARDABLE "cursicon\\windows.ico"
+OIC_WARNING_DEFAULT     ICON    PRELOAD MOVEABLE DISCARDABLE "cursicon\\warning.ico"
+OIC_QUESTION_DEFAULT    ICON    PRELOAD MOVEABLE DISCARDABLE "cursicon\\question.ico"
+OIC_ERROR_DEFAULT       ICON    PRELOAD MOVEABLE DISCARDABLE "cursicon\\error.ico"
+OIC_INFORMATION_DEFAULT ICON    PRELOAD MOVEABLE DISCARDABLE "cursicon\\info.ico"
+OIC_APPLICATION_DEFAULT ICON    PRELOAD MOVEABLE DISCARDABLE "cursicon\\app.ico"
+
+OBM_HELP                BITMAP  PRELOAD MOVEABLE DISCARDABLE "cursicon\\help.bmp"
+
+OCR_ARROW_DEFAULT       CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\arrow.cur"
+OCR_IBEAM_DEFAULT       CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\ibeam.cur"
+OCR_WAIT_DEFAULT        CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\wait.cur"
+OCR_CROSS_DEFAULT       CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\cross.cur"
+OCR_UPARROW_DEFAULT     CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\uparrow.cur"
+OCR_SIZENWSE_DEFAULT    CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\sizenwse.cur"
+OCR_SIZENESW_DEFAULT    CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\sizenesw.cur"
+OCR_SIZEWE_DEFAULT      CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\sizewe.cur"
+OCR_SIZENS_DEFAULT      CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\sizens.cur"
+OCR_SIZEALL_DEFAULT     CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\sizeall.cur"
+OCR_NO_DEFAULT          CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\nodrop.cur"
+OCR_APPSTARTING_DEFAULT CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\appstart.cur"
+OCR_HELP_DEFAULT        CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\help.cur"
+OCR_NWPEN_DEFAULT       CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\nwpen.cur"
+OCR_HAND_DEFAULT        CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\hand.cur"
+OCR_ICON_DEFAULT        CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\icon.cur"
+
+OCR_RDRVERT             CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrvert.cur"
+OCR_RDRHORZ             CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrhorz.cur"
+OCR_RDR2DIM             CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdr2dim.cur"
+OCR_RDRNORTH            CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrnorth.cur"
+OCR_RDRSOUTH            CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrsouth.cur"
+OCR_RDRWEST             CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrwest.cur"
+OCR_RDREAST             CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdreast.cur"
+OCR_RDRNORTHWEST        CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrnw.cur"
+OCR_RDRNORTHEAST        CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrne.cur"
+OCR_RDRSOUTHWEST        CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrsw.cur"
+OCR_RDRSOUTHEAST        CURSOR  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrse.cur"
+
+OBM_RDRVERT             BITMAP  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrvert.bmp"
+OBM_RDRHORZ             BITMAP  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdrhorz.bmp"
+OBM_RDR2DIM             BITMAP  PRELOAD MOVEABLE DISCARDABLE "cursicon\\rdr2dim.bmp"
+
+/* Default System Menu */
+ID_SYSMENU MENU PRELOAD MOVEABLE DISCARDABLE
+BEGIN
+    POPUP " "
+    BEGIN
+    MENUITEM "&Restore",        SC_RESTORE
+    MENUITEM "&Move",           SC_MOVE
+    MENUITEM "&Size",           SC_SIZE
+    MENUITEM "Mi&nimize",       SC_MINIMIZE
+    MENUITEM "Ma&ximize",       SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Close\tAlt+F4",  SC_CLOSE
+
+/*  Removed for Chicago compatibility
+
+    MENUITEM SEPARATOR
+    MENUITEM "S&witch To...\tCtrl+Esc",SC_TASKLIST
+*/
+
+    END
+END
+
+// Help Menu
+ID_HELPMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+    POPUP ""
+        BEGIN
+            MENUITEM "&What's This?",   HELP_CONTEXTPOPUP
+    END
+END
+
+/* MDI child window system menu */
+ID_CLOSEMENU MENU PRELOAD MOVEABLE DISCARDABLE
+BEGIN
+    POPUP "-"
+    BEGIN
+    MENUITEM "&Restore",        SC_RESTORE
+    MENUITEM "&Move",           SC_MOVE
+    MENUITEM "&Size",           SC_SIZE
+    MENUITEM "Mi&nimize",       SC_MINIMIZE, GRAYED
+    MENUITEM "Ma&ximize",       SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Close\tCtrl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "Nex&t\tCtrl+F6",  SC_NEXTWINDOW
+    END
+END
+
+/* Default dialog system menu */
+ID_DIALOGSYSMENU MENU PRELOAD MOVEABLE DISCARDABLE
+BEGIN
+    POPUP " "
+    BEGIN
+    MENUITEM "&Move",           SC_MOVE
+    MENUITEM "&Close\tAlt+F4",  SC_CLOSE
+    END
+END
+
+/* Horizontal scroll menu */
+ID_HSCROLLMENU MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+    MENUITEM "Scroll Here",     0x1000 + SB_THUMBPOSITION
+    MENUITEM SEPARATOR
+    MENUITEM "Left Edge",       0x1000 + SB_LEFT
+    MENUITEM "Right Edge",      0x1000 + SB_RIGHT
+    MENUITEM SEPARATOR
+    MENUITEM "Page Left",       0x1000 + SB_PAGELEFT
+    MENUITEM "Page Right",      0x1000 + SB_PAGERIGHT
+    MENUITEM SEPARATOR
+    MENUITEM "Scroll Left",     0x1000 + SB_LINELEFT
+    MENUITEM "Scroll Right",    0x1000 + SB_LINERIGHT
+    END
+END
+
+/* Vertical scroll menu */
+ID_VSCROLLMENU MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+    MENUITEM "Scroll Here",     0x1000 + SB_THUMBPOSITION
+    MENUITEM SEPARATOR
+    MENUITEM "Top",             0x1000 + SB_TOP
+    MENUITEM "Bottom",          0x1000 + SB_BOTTOM
+    MENUITEM SEPARATOR
+    MENUITEM "Page Up",         0x1000 + SB_PAGEUP
+    MENUITEM "Page Down",       0x1000 + SB_PAGEDOWN
+    MENUITEM SEPARATOR
+    MENUITEM "Scroll Up",       0x1000 + SB_LINEUP
+    MENUITEM "Scroll Down",     0x1000 + SB_LINEDOWN
+    END
+END
+
+IDD_MDI_ACTIVATE DIALOG LOADONCALL MOVEABLE DISCARDABLE 20, 20, 220, 140
+CAPTION "Select Window"
+FONT 8, "MS Shell Dlg"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_THICKFRAME | WS_POPUP | WS_SYSMENU
+
+BEGIN
+           CONTROL "", 100, "listbox", LBS_NOINTEGRALHEIGHT | LBS_NOTIFY | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_CHILD, 5, 5, 210, 110
+           CONTROL "OK", 1, "button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_CHILD, 60, 120, 40, 15
+           CONTROL "Cancel", 2, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 120, 120, 40, 15
+END

@@ -1,0 +1,151 @@
+#ifndef _RANGE_PDL_
+#define _RANGE_PDL_ 1
+
+#include "element.pdl"
+#include "omrect.pdl"
+
+file range.pdl
+
+import element.pdl
+import omrect.pdl
+
+interface IHTMLTxtRange super:IDispatch guid:3050f220-98b5-11cf-bb82-00aa00bdce0b
+    refprop     CAutoRange:htmlText
+    refprop     CAutoRange:text
+
+    refmethod   CAutoRange:parentElement
+    refmethod   CAutoRange:duplicate
+    refmethod   CAutoRange:inRange
+    refmethod   CAutoRange:isEqual
+    refmethod   CAutoRange:scrollIntoView
+    refmethod   CAutoRange:collapse
+    refmethod   CAutoRange:expand
+    refmethod   CAutoRange:move
+    refmethod   CAutoRange:moveStart
+    refmethod   CAutoRange:moveEnd
+    refmethod   CAutoRange:select
+    refmethod   CAutoRange:pasteHTML
+    refmethod   CAutoRange:moveToElementText
+    refmethod   CAutoRange:setEndPoint
+    refmethod   CAutoRange:compareEndPoints
+    refmethod   CAutoRange:findText
+    refmethod   CAutoRange:moveToPoint
+    refmethod   CAutoRange:getBookmark
+    refmethod   CAutoRange:moveToBookmark
+
+    refmethod CAutoRange:queryCommandSupported
+    refmethod CAutoRange:queryCommandEnabled
+    refmethod CAutoRange:queryCommandState
+    refmethod CAutoRange:queryCommandIndeterm
+    refmethod CAutoRange:queryCommandText
+    refmethod CAutoRange:queryCommandValue
+    refmethod CAutoRange:execCommand
+    refmethod CAutoRange:execCommandShowHelp
+
+
+interface IHTMLTextRangeMetrics super:IDispatch guid:3050f40b-98b5-11cf-bb82-00aa00bdce0b
+    refprop CAutoRange:offsetTop
+    refprop CAutoRange:offsetLeft
+    refprop CAutoRange:boundingTop
+    refprop CAutoRange:boundingLeft
+    refprop CAutoRange:boundingWidth
+    refprop CAutoRange:boundingHeight
+
+interface IHTMLTextRangeMetrics2 super:IDispatch guid:3050f4a6-98b5-11cf-bb82-00aa00bdce0b
+    refmethod CAutoRange:getClientRects
+    refmethod CAutoRange:getBoundingClientRect
+
+
+enum htmlUnit prefix:htmlUnit guid:3050f228-98b5-11cf-bb82-00aa00bdce0b
+    eval Character     value:1
+    eval Word          value:2
+    eval Sentence      value:3
+    eval TextEdit      value:6
+
+enum htmlEndPoints prefix:htmlEndPoints guid:3050f3e0-98b5-11cf-bb82-00aa00bdce0b
+    eval StartToStart     value:1
+    eval StartToEnd       value:2
+    eval EndToStart       value:3
+    eval EndToEnd         value:4
+
+enum htmlDirection prefix:htmlDirection guid:3050f29b-98b5-11cf-bb82-00aa00bdce0b
+    eval Forward       value:99999          // BUGBUG: when prop.awk is fixed, changes these values to 2gig
+    eval Backward      value:-99999
+
+tearoff CAutoRange interface:IHTMLTextRangeMetrics 
+tearoff CAutoRange interface:IHTMLTextRangeMetrics2
+
+class CAutoRange  primaryinterface:IHTMLTxtRange
+    implements IHTMLTextRangeMetrics
+    implements IHTMLTextRangeMetrics2
+
+    property    htmlText      atype:BSTR        dispid:DISPID_RANGE+3   type:CStr        abstract        get
+    property    text          atype:BSTR        dispid:DISPID_RANGE+4   type:CStr        abstract        get set maxstrlen:pdlNoLimit
+
+    method      HRESULT parentElement           dispid:DISPID_RANGE+6   (out retval type:IHTMLElement** arg:parent)
+    method      HRESULT duplicate               dispid:DISPID_RANGE+8   (out retval type:IHTMLTxtRange** arg:Duplicate)
+    method      HRESULT inRange                 dispid:DISPID_RANGE+10  (in type:IHTMLTxtRange* arg:Range           \
+                                                                         out retval type:VARIANT_BOOL* arg:InRange)
+    method      HRESULT isEqual                 dispid:DISPID_RANGE+11  (in type:IHTMLTxtRange* arg:Range           \
+                                                                         out retval type:VARIANT_BOOL* arg:IsEqual)
+    method      HRESULT scrollIntoView          dispid:DISPID_RANGE+12  (in defaultvalue:-1 type:VARIANT_BOOL arg:fStart)
+    method      HRESULT collapse                dispid:DISPID_RANGE+13  (in defaultvalue:-1 type:VARIANT_BOOL arg:Start)
+    method      HRESULT expand          maxstrlen:pdlToken   dispid:DISPID_RANGE+14  (in type:BSTR arg:Unit              \
+                                                                         out retval type:VARIANT_BOOL* arg:Success)
+    method      HRESULT findText        maxstrlen:pdlNoLimit dispid:DISPID_RANGE+19  (in type:BSTR arg:String  \
+                                                                         in type:long defaultvalue:1073741823 arg:count  \
+                                                                         in type:long defaultvalue:0 arg:Flags \
+                                                                         out retval type:VARIANT_BOOL* arg:Success)
+    method      HRESULT getBookmark             dispid:DISPID_RANGE+21  (out retval type:BSTR* arg:Boolmark)
+    method      HRESULT moveToBookmark  maxstrlen:pdlUrlLen   dispid:DISPID_RANGE+9   (in type:BSTR arg:Bookmark  \
+                                                                         out retval type:VARIANT_BOOL* arg:Success)
+    method      HRESULT moveToPoint             dispid:DISPID_RANGE+20  (in type:long arg:x in type:long arg:y )
+
+    method      HRESULT moveToElementText       dispid:DISPID_RANGE+1   (in type:IHTMLElement* arg:element)
+    method      HRESULT move            maxstrlen:pdlToken   dispid:DISPID_RANGE+15  (in type:BSTR arg:Unit              \
+                                                                         in type:long defaultvalue:1 arg:Count  \
+                                                                         out retval type:long* arg:ActualCount)
+    method      HRESULT moveStart       maxstrlen:pdlToken   dispid:DISPID_RANGE+16  (in type:BSTR arg:Unit              \
+                                                                         in type:long defaultvalue:1 arg:Count  \
+                                                                         out retval type:long* arg:ActualCount)
+    method      HRESULT moveEnd         maxstrlen:pdlToken   dispid:DISPID_RANGE+17  (in type:BSTR arg:Unit              \
+                                                                         in type:long defaultvalue:1 arg:Count  \
+                                                                         out retval type:long* arg:ActualCount)
+    method      HRESULT setEndPoint            maxstrlen:pdlToken    dispid:DISPID_RANGE+25  (in type:BSTR arg:how              \
+                                                                         in type:IHTMLTxtRange* arg:SourceRange )
+    method      HRESULT compareEndPoints       maxstrlen:pdlToken    dispid:DISPID_RANGE+18  (in type:BSTR arg:how              \
+                                                                         in type:IHTMLTxtRange* arg:SourceRange \
+                                                                         out retval type:long* arg:ret)
+    method      HRESULT select                  dispid:DISPID_RANGE+24  ()
+    method      HRESULT pasteHTML		maxstrlen:pdlNoLimit dispid:DISPID_RANGE+26   (in type:BSTR arg:html)
+
+    method      HRESULT queryCommandSupported  maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+27 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet)
+    method      HRESULT queryCommandEnabled    maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+28 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet)
+    method      HRESULT queryCommandState      maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+29 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet)
+    method      HRESULT queryCommandIndeterm   maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+30 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet)
+    method      HRESULT queryCommandText       maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+31 (in type:BSTR arg:cmdID \
+                                                               out retval type:BSTR* arg:pcmdText)
+    method      HRESULT queryCommandValue      maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+32 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT* arg:pcmdValue)
+    method      HRESULT execCommand            maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+33 (in type:BSTR arg:cmdID \
+                                                               in type:VARIANT_BOOL defaultvalue:0 arg:showUI \
+                                                               in type:VARIANT optional arg:value \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet)
+    method      HRESULT execCommandShowHelp    maxstrlen:pdlNoLimit  dispid:DISPID_RANGE+34 (in type:BSTR arg:cmdID \
+                                                               out retval type:VARIANT_BOOL* arg:pfRet)
+
+    property    offsetTop      dispid:DISPID_RANGE+35 get abstract  atype:long type:long
+    property    offsetLeft     dispid:DISPID_RANGE+36 get abstract  atype:long type:long
+    property    boundingTop    dispid:DISPID_RANGE+37 get abstract  atype:long type:long
+    property    boundingLeft   dispid:DISPID_RANGE+38 get abstract  atype:long type:long
+    property    boundingWidth  dispid:DISPID_RANGE+39 get abstract  atype:long type:long
+    property    boundingHeight dispid:DISPID_RANGE+40 get abstract  atype:long type:long
+
+    method HRESULT getClientRects        dispid:DISPID_RANGE+41 (out retval type:IHTMLRectCollection** arg:pRectCol)
+    method HRESULT getBoundingClientRect dispid:DISPID_RANGE+42 (out retval type:IHTMLRect** arg:pRect)
+
+#endif //_RANGE_PDL_

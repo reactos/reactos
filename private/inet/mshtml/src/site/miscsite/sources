@@ -1,0 +1,22 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\miscsite=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=miscsite
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+    ehr.cxx \
+    frameset.cxx \
+    e1d.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

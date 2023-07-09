@@ -1,0 +1,15 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-97, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+#***************************************************************************/
+
+
+ALT_PROJECT=HYDRA
+ALT_PROJECT_TARGET=$(ALT_PROJECT)
+
+!include ..\sources.inc

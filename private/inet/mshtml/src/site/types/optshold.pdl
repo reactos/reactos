@@ -1,0 +1,159 @@
+#ifndef _OPTSHOLD_PDL_
+#define _OPTSHOLD_PDL_ 1
+
+#include "document.pdl"
+#include "object.pdl"
+
+file optshold.pdl
+
+import document.pdl
+import object.pdl
+
+//
+// HTMLFontNamesCollection
+//---------------------------------------------------------------------------------
+
+interface IHTMLFontNamesCollection super:IDispatch guid:3050f376-98b5-11cf-bb82-00aa00bdce0b
+    refprop CFontNameOptions:length
+    refprop CFontNameOptions:_newEnum
+    refmethod CFontNameOptions:item
+
+
+class CFontNameOptions primaryinterface:IHTMLFontNamesCollection
+    property  length   atype:long        dispid:DISPID_OPTIONS_COL+1    type:long   \
+         dwFlags:0   abstract get    hidden 
+
+    property  _newEnum atype:IUnknown*   dispid:DISPID_NEWENUM     type:IUnknown* \
+         dwFlags:0   abstract get     hidden restricted 
+
+    method HRESULT item      dispid:DISPID_VALUE  (in type:long arg:index, \
+                                                   out retval type:BSTR* arg:pBstr)
+
+
+
+
+//
+// HTMLFontSizesCollection
+//---------------------------------------------------------------------------------
+
+interface IHTMLFontSizesCollection super:IDispatch guid:3050f377-98b5-11cf-bb82-00aa00bdce0b
+    refprop CFontSizeOptions:length
+    refprop CFontSizeOptions:_newEnum
+    refprop CFontSizeOptions:forFont
+    refmethod CFontSizeOptions:item
+
+
+class CFontSizeOptions primaryinterface:IHTMLFontSizesCollection
+    property  length   atype:long        dispid:DISPID_OPTIONS_COL+2   type:long    \
+                       dwFlags:0   abstract get    hidden 
+    property  _newEnum atype:IUnknown*   dispid:DISPID_NEWENUM       type:IUnknown* \
+                       dwFlags:0   abstract get     hidden restricted 
+    property  forFont  atype:BSTR        dispid:DISPID_OPTIONS_COL+3 type:CStr \
+                       dwflags:0   member:_cstrFont get
+
+    method HRESULT item   dispid:DISPID_VALUE        (in type:long arg:index, \
+                                                     out retval type:long* arg:plSize)
+
+
+//
+// OptionsHolder Interface and class
+//---------------------------------------------------------------------------------
+
+interface IHTMLOptionsHolder  super:IDispatch   guid:3050f378-98b5-11cf-bb82-00aa00bdce0b
+    refprop   COptionsHolder:document
+    refprop   COptionsHolder:fonts
+    refprop   COptionsHolder:execArg
+    
+    refprop   COptionsHolder:errorLine
+    refprop   COptionsHolder:errorCharacter
+    refprop   COptionsHolder:errorCode
+    refprop   COptionsHolder:errorMessage
+    refprop   COptionsHolder:errorDebug
+    
+    refprop   COptionsHolder:unsecuredWindowOfDocument
+
+    refprop   COptionsHolder:findText
+    
+    refprop   COptionsHolder:anythingAfterFrameset
+
+    refMethod COptionsHolder:sizes
+
+    refMethod COptionsHolder:openfiledlg
+    refMethod COptionsHolder:savefiledlg
+    refMethod COptionsHolder:choosecolordlg
+
+    refMethod COptionsHolder:showSecurityInfo
+
+    refMethod COptionsHolder:isApartmentModel
+
+    refMethod COptionsHolder:getCharset
+
+    refprop   COptionsHolder:secureConnectionInfo
+
+
+class COptionsHolder name:HTMLOptionsHolder  primaryinterface:IHTMLOptionsHolder 
+    property document  atype:IHTMLDocument2*   dispid:DISPID_OPTIONS_COL+3 \
+        type:IHTMLDocument2*    dwflags:0    get abstract hidden
+    property fonts   atype:IHTMLFontNamesCollection*  dispid:DISPID_OPTIONS_COL+4 \
+        type:IHTMLFontNamesCollection* dwflags:0 get abstract hidden
+
+    property execArg atype:VARIANT dispid:DISPID_OPTIONS_COL+5 \
+        type:VARIANT dwflags:0 get set abstract maxstrlen:pdlNoLimit
+
+    property errorLine atype:long dispid:DISPID_OPTIONS_COL+6 \
+        type:long dwflags:0 get set caa setaahr
+    property errorCharacter atype:long dispid:DISPID_OPTIONS_COL+7 \
+        type:long dwflags:0 get set caa setaahr
+    property errorCode atype:long dispid:DISPID_OPTIONS_COL+8 \
+        type:long dwflags:0 get set caa setaahr
+    property errorMessage atype:BSTR dispid:DISPID_OPTIONS_COL+9 \
+        type:CStr dwflags:0 get set caa setaahr maxstrlen:pdlNoLimit
+    property errorDebug atype:VARIANT_BOOL dispid:DISPID_OPTIONS_COL+10 \
+        type:VARIANT_BOOL dwflags:0 get set caa setaahr
+
+    property unsecuredWindowOfDocument  atype:IHTMLWindow2*   dispid:DISPID_OPTIONS_COL+11 \
+        type:IHTMLDocument2*    dwflags:0    get abstract hidden
+
+    property findText atype:BSTR dispid:DISPID_OPTIONS_COL+12 \
+        type:CStr dwflags:0 get set caa setaahr maxstrlen:pdlNoLimit
+
+    property anythingAfterFrameset atype:VARIANT_BOOL dispid:DISPID_OPTIONS_COL+13 \
+        type:VARIANT_BOOL dwflags:0 get set caa setaahr
+
+    method  HRESULT  sizes  maxstrlen:pdlNoLimit  dispid:DISPID_OPTIONS_COL+14 (               \
+                                    in type:BSTR arg:fontName,              \
+                                    out retval type:IHTMLFontSizesCollection**  \
+                                    arg:pSizesCollection)
+    method  HRESULT  openfiledlg  maxstrlen:pdlNoLimit  dispid:DISPID_OPTIONS_COL+15 (           \
+                                    in optional type:VARIANT arg:initFile   \
+                                    in optional type:VARIANT arg:initDir    \
+                                    in optional type:VARIANT arg:filter     \
+                                    in optional type:VARIANT arg:title      \
+                                    out retval type:BSTR* arg:pathName)
+
+    method  HRESULT  savefiledlg  maxstrlen:pdlNoLimit  dispid:DISPID_OPTIONS_COL+16 (           \
+                                    in optional type:VARIANT arg:initFile   \
+                                    in optional type:VARIANT arg:initDir    \
+                                    in optional type:VARIANT arg:filter     \
+                                    in optional type:VARIANT arg:title      \
+                                    out retval type:BSTR* arg:pathName)
+
+    method  HRESULT choosecolordlg  maxstrlen:pdlNoLimit  dispid:DISPID_OPTIONS_COL+17 (        \
+                                    in optional type:VARIANT arg:initColor  \
+                                    out retval type:long* arg:rgbColor)
+
+    method  HRESULT showSecurityInfo dispid:DISPID_OPTIONS_COL+18 ()
+
+    method  HRESULT  isApartmentModel   dispid:DISPID_OPTIONS_COL+19 (      \
+                                    in type:IHTMLObjectElement* arg:object  \
+                                    out retval type:VARIANT_BOOL* arg:fApartment)
+
+    method  HRESULT  getCharset  maxstrlen:pdlNoLimit  dispid:DISPID_OPTIONS_COL+20 (      \
+                                    in type:BSTR arg:fontName                \
+                                    out retval type:long* arg:charset)
+
+
+    property secureConnectionInfo atype:BSTR dispid:DISPID_OPTIONS_COL+21 \
+        type:BSTR dwflags:0 get abstract
+
+#endif _OPTSHOLD_PDL_

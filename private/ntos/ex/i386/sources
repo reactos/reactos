@@ -1,0 +1,7 @@
+i386_SOURCES=..\i386\fmutex.asm   \
+             ..\i386\intrlock.asm \
+             ..\i386\intrlfst.asm \
+             ..\i386\raisests.asm \
+             ..\i386\splocks.asm  \
+             ..\i386\resoura.asm  \
+             ..\i386\tickcnt.asm

@@ -1,0 +1,156 @@
+[current]
+color schemes=Windows Default
+
+
+
+Windows definitions for System Colors
+
+#define COLOR_SCROLLBAR         0
+#define COLOR_BACKGROUND        1
+#define COLOR_ACTIVECAPTION     2
+#define COLOR_INACTIVECAPTION   3
+#define COLOR_MENU              4
+#define COLOR_WINDOW            5
+#define COLOR_WINDOWFRAME       6
+#define COLOR_MENUTEXT          7
+#define COLOR_WINDOWTEXT        8
+#define COLOR_CAPTIONTEXT       9
+#define COLOR_ACTIVEBORDER      10
+#define COLOR_INACTIVEBORDER    11
+#define COLOR_APPWORKSPACE      12
+#define COLOR_HIGHLIGHT         13
+#define COLOR_HIGHLIGHTTEXT     14
+#define COLOR_BTNFACE           15
+#define COLOR_BTNSHADOW         16
+#define COLOR_GRAYTEXT          17
+#define COLOR_BTNTEXT           18
+#define COLOR_INACTIVECAPTIONTEXT 19
+#define COLOR_BTNHIGHLIGHT      20
+#define COLOR_ENDCOLORS         COLOR_BTNHIGHLIGHT
+
+
+Control Panel Color Applet Organization and Color Schemes layout
+
+      Color                   Index
+
+  COLOR_BACKGROUND              0
+  COLOR_APPWORKSPACE            1
+  COLOR_WINDOW                  2
+  COLOR_WINDOWTEXT              3
+  COLOR_MENU                    4
+  COLOR_MENUTEXT                5
+  COLOR_ACTIVECAPTION           6
+  COLOR_INACTIVECAPTION         7
+  COLOR_CAPTIONTEXT             8
+  COLOR_ACTIVEBORDER,           9                                                                                           ,
+  COLOR_INACTIVEBORDER         10
+  COLOR_WINDOWFRAME            11
+  COLOR_SCROLLBAR              12
+  COLOR_BTNFACE                13
+  COLOR_BTNSHADOW              14
+  COLOR_BTNTEXT                15
+  COLOR_GRAYTEXT               16
+  COLOR_HIGHLIGHT              17
+  COLOR_HIGHLIGHTTEXT          18
+  COLOR_INACTIVECAPTIONTEXT    19
+  COLOR_BTNHIGHLIGHT           20
+
+                                                                       
+                       BACKGROUND         WINDOW             MENU       ACTIVECAPTION     CAPTIONTEXT      INACTIVEBORDER      SCROLLBAR           BTNSHADOW    GRAYTEXT        HIGHLIGHTTEXT         BTNHIGHLIGHT
+
+                               APPWORKSPACE       WINDOWTEXT      MENUTEXT     INACTIVECAPTION     ACTIVEBORDER      WINDOWFRAME           BTNFACE        BTNTEXT        HIGHLIGHT       INACTIVECAPTIONTEXT
+
+                           0         1       2        3        4      5      6        7        8        9        10      11         12        13       14    15     16       17       18        19        20
+
+                         bbggrr   bbggrr   bbggrr   bbggrr   bbggrr        bbggrr   bbggrr   bbggrr   bbggrr   bbggrr   bbggrr    bbggrr    bbggrr   bbggrr       bbggrr   bbggrr   bbggrr    bbggrr    bbggrr
+
+Windows Default=         808000,  FFFFFF,  FFFFFF,       0,  FFFFFF,  0,   800000,  C0C0C0,  FFFFFF,  C0C0C0,  C0C0C0,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,  800000,  FFFFFF,        0,   FFFFFF
+// (Old)Windows Default= C0C0C0,  DFFFFF,  FFFFFF,       0,  FFFFFF,  0,   804000,  FFFFFF,  FFFFFF,  C0C0C0,  FFFFFF,       0,   C1C1C1,   C0C0C0,  808080,  0,  C0C0C0,  800000,  FFFFFF,        0,   FFFFFF
+
+[color schemes]          bbggrr
+Arizona=                 804000,  FFFFFF,  FFFFFF,       0,  FFFFFF,  0,   808040,  C0C0C0,  FFFFFF,  4080FF,  C0C0C0,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,  808000,  FFFFFF,        0,   FFFFFF
+Black Leather Jacket=         0,  808080,  FFFFFF,       0,  C0C0C0,  0,   800040,  828282,  FFFFFF,  808080,  828282,       0, 10E0E0E0,   C0C0C0,  828282,  0,  808080,       0,  FFFFFF,        0,   FFFFFF
+Bordeaux=                400080,  C0C0C0,  FFFFFF,       0,  FFFFFF,  0,   800080,  C0C0C0,  FFFFFF,  FF0080,  C0C0C0,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,  800080,  FFFFFF,        0,   FFFFFF
+Cinnamon=                404080,  C0C0C0,  FFFFFF,       0,  FFFFFF,  0,       80,  C0C0C0,  FFFFFF,      80,  C0C0C0,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,      80,  FFFFFF,        0,   FFFFFF
+Designer=                7C7C3F,  C0C0C0,  FFFFFF,       0,  FFFFFF,  0,   808000,  C0C0C0,  FFFFFF,  C0C0C0,  C0C0C0,       0,   C0C0C0,   C0C0C0,  808080,  0,  C0C0C0,  808000,       0,        0,   FFFFFF
+Emerald City=            404000,  C0C0C0,  FFFFFF,       0,  C0C0C0,  0,   408000,  808040,  FFFFFF,  408000,  808040,       0,   C0C0C0,   C0C0C0,  828282,  0,  808080,    8000,  FFFFFF,        0,   FFFFFF
+Flourescent=                  0,  FF00FF,  FFFFFF,       0,    FF00,  0,   FF00FF,  C0C0C0,       0,    FF80,  C0C0C0,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,       0,  FFFFFF,        0,   FFFFFF
+Hotdog Stand=              FFFF,    FFFF,      FF,  FFFFFF,  FFFFFF,  0,        0,      FF,  FFFFFF,      FF,      FF,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,       0,  FFFFFF,   FFFFFF,   FFFFFF
+LCD Default Screen Settings=  0,  C0C0C0,  C0C0C0,       0,  C0C0C0,  0,   800000,  C0C0C0,  FFFFFF,  800000,  C0C0C0,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,       0,  FFFFFF,        0,   FFFFFF
+LCD Reversed - Dark=          0,      80,      80,  FFFFFF,    8080,  0,     8080,  800000,       0,    8080,  800000,       0,     8080,   C0C0C0,  808080,  0,  808080,       0,  FFFFFF,        0,   FFFFFF
+LCD Reversed - Light=    800000,  FFFFFF,  FFFFFF,       0,  FFFFFF,  0,   808040,  FFFFFF,       0,  C0C0C0,  C0C0C0,  800000,   C0C0C0    C0C0C0,  808080,  0,  808080,       0,  FFFFFF,        0,   FFFFFF
+Mahogany=                404040,  C0C0C0,  FFFFFF,       0,  FFFFFF,  0,       40,  C0C0C0,  FFFFFF,  C0C0C0,  C0C0C0,       0,   C0C0C0,   C0C0C0,  828282,  0,  C0C0C0,      80,  FFFFFF,        0,   FFFFFF
+Monochrome=              C0C0C0,  FFFFFF,  FFFFFF,       0,  FFFFFF,  0,        0,  C0C0C0,  FFFFFF,  C0C0C0,  C0C0C0,       0,   818181,   C0C0C0,  808080,  0,  808080,       0,  FFFFFF,        0,   FFFFFF
+Ocean=                   808000,  408000,  FFFFFF,       0,  FFFFFF,  0,   804000,  C0C0C0,  FFFFFF,  C0C0C0,  C0C0C0,       0,   C0C0C0,   C0C0C0,  808080,  0,       0,  808000,       0,        0,   FFFFFF
+Pastel=                  C0FF82,  80FFFF,  FFFFFF,       0,  FFFFFF,  0,   FFFF80,  FFFFFF,       0,  C080FF,  FFFFFF,  808080,   C0C0C0,   C0C0C0,  808080,  0,  C0C0C0,  FFFF00,       0,        0,   FFFFFF
+Patchwork=               9544BB,  C1FBFA,  FFFFFF,       0,  FFFFFF,  0,   FFFF80,  FFFFFF,       0,  64B14E,  FFFFFF,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,  FFFF00,       0,        0,   FFFFFF
+Peaceful=                804000,  C0C0C0,  C0C0C0,       0,  C0C0C0,  0,   808000,  C0C0C0,  FFFFFF,  808000,  C0C0C0,       0,   C0C0C0,   C0C0C0,  828282,  0,  808080,  808000,  FFFFFF,        0,   FFFFFF
+Plasma Power Saver=           0,  FF0000,       0,  FFFFFF,  FF00FF,  0,   800000,  C0C0C0,       0,      80,  FFFFFF,  C0C0C0,   FF0000,   C0C0C0,  808080,  0,  C0C0C0,  FFFFFF,       0,        0,   FFFFFF
+Rugby=                   C0C0C0,  80FFFF,  FFFFFF,       0,  FFFFFF,  0,   800000,  FFFFFF,  FFFFFF,      80,  FFFFFF,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,  800000,  FFFFFF,        0,   FFFFFF
+School Colors=           800000,  408080,  FFFFFF,       0,  FFFFFF,  0,     8080,  800000,  FFFFFF,  800000,  800000,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,    8080,  FFFFFF,   FFFFFF,   FFFFFF     
+The Blues=               804000,  C0C0C0,  FFFFFF,       0,  FFFFFF,  0,   800000,  C0C0C0,  FFFFFF,  C0C0C0,  C0C0C0,       0,   C0C0C0,   C0C0C0,  828282,  0,  C0C0C0,  800000,  FFFFFF,        0,   FFFFFF
+Tweed=                   6A619E,  C0C0C0,  FFFFFF,       0,  FFFFFF,  0,   408080,  C0C0C0,  FFFFFF,  404080,  C0C0C0,       0, 10E0E0E0,   C0C0C0,  828282,  0,  C0C0C0,    8080,       0,        0,   FFFFFF
+Valentine=               C080FF,  FFFFFF,  FFFFFF,       0,  FFFFFF,  0,   8000FF,  400080,  FFFFFF,  C080FF,  C080FF,       0,   C0C0C0,   C0C0C0,  808080,  0,  808080,  FF00FF,       0,   FFFFFF,   FFFFFF
+Wingtips=                408080,  C0C0C0,  FFFFFF,       0,  FFFFFF,  0,   808080,  FFFFFF,  FFFFFF,    4080,  FFFFFF,       0,   818181,   C0C0C0,  808080,  0,  C0C0C0,  808080,  FFFFFF,        0,   FFFFFF
+
+[Custom Colors]
+ColorA=FFFFFF
+ColorB=FFFFFF
+ColorC=FFFFFF
+ColorD=FFFFFF
+ColorE=FFFFFF
+ColorF=FFFFFF
+ColorG=FFFFFF
+ColorH=FFFFFF
+ColorI=FFFFFF
+ColorJ=FFFFFF
+ColorK=FFFFFF
+ColorL=FFFFFF
+ColorM=FFFFFF
+ColorN=FFFFFF
+ColorO=FFFFFF
+ColorP=FFFFFF
+
+[Patterns]
+(None)=(None)
+Boxes=127 65 65 65 65 65 127 0
+Paisley=2 7 7 2 32 80 80 32
+Weave=136 84 34 69 136 21 34 81
+Waffle=0 0 0 0 128 128 128 240
+Tulip=0 0 84 124 124 56 146 124
+Spinner=20 12 200 121 158 19 48 40
+Scottie=64 192 200 120 120 72 0 0
+Critters=0 80 114 32 0 5 39 2
+50% Gray=170 85 170 85 170 85 170 85
+Quilt=130 68 40 17 40 68 130 1
+Diamonds=32 80 136 80 32 0 0 0
+Thatches=248 116 34 71 143 23 34 113
+Pattern=224 128 142 136 234 10 14 0
+[Screen Saver.Marquee]
+PWProtected=0
+Font=Times New Roman
+Size=24
+Text=I'm not here.  Go away.
+TextColor=255 0 255
+BackgroundColor=0 0 128
+Mode=1
+Speed=14
+CharSet=0
+[Screen Saver.Mystify]
+Clear Screen=1
+PWProtected=0
+Active1=1
+WalkRandom1=1
+Lines1=7
+StartColor1=0 0 0
+EndColor1=255 255 255
+Active2=1
+WalkRandom2=1
+Lines2=12
+StartColor2=0 0 0
+EndColor2=255 255 255
+[Screen Saver.Stars]
+Density=50
+WarpSpeed=10
+PWProtected=0
+

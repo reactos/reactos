@@ -1,0 +1,11 @@
+LIBRARY         "mshtmsrv.dll"
+DESCRIPTION     "Mshtml Server Helper"
+
+EXPORTS
+  	HttpExtensionProc
+	TerminateExtension
+	GetExtensionVersion
+    HttpFilterProc
+    TerminateFilter
+    GetFilterVersion
+

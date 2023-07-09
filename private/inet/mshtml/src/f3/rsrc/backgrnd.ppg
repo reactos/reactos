@@ -1,0 +1,14 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML>
+<HEAD>
+<META NAME=GENERATOR CONTENT="Trident 3027">
+
+<TITLE>Background</TITLE>
+
+</HEAD>
+<BODY>
+<P id=par1> Test
+<P id=par2>Color <INPUT ID=_bgcolor TYPE=TEXT>Image <INPUT ID=_background TYPE=TEXT>
+<P><INPUT ID=_bgproperties TYPE=CHECKBOX>Scroll Background 
+
+</BODY></HTML>

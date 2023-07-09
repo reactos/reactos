@@ -1,0 +1,25 @@
+#ifndef _LIST_PDL_
+#define _LIST_PDL_ 1
+
+#include "element.pdl"
+
+file list.pdl
+
+import element.pdl
+
+interface IHTMLListElement guid:3050f20e-98b5-11cf-bb82-00aa00bdce0b
+
+tearoff CListElement interface:IHTMLListElement
+
+class CListElement name:HTMLListElement \
+            primaryinterface:IHTMLListElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f272-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f525-98b5-11cf-bb82-00aa00bdce0b
+         
+#include "basedom.pdl"
+    implements IHTMLListElement
+
+#endif _ULIST_PDL_

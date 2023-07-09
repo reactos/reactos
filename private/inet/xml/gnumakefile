@@ -1,0 +1,21 @@
+# This makefile was generated automatically by mwgenmakeC.
+
+MESSAGE_DIR = xml/resource
+IDL_DIR = idl
+
+.NOTPARALLEL: world all clean install depend
+
+world all clean install depend:
+	@enterdir ${IDL_DIR} ${MAKE} ${MFLAGS} $@
+	@enterdir ${MESSAGE_DIR} ${MAKE} ${MFLAGS} $@
+ifeq (${COMPILE_OPTION},debug)
+	@enterdir debug ${MAKE} ${MFLAGS} $@
+endif
+	@enterdir core ${MAKE} ${MFLAGS} $@
+	@enterdir xql ${MAKE} ${MFLAGS} $@
+	@enterdir mimeviewer ${MAKE} ${MFLAGS} $@
+	@enterdir xtl ${MAKE} ${MFLAGS} $@
+	@enterdir http ${MAKE} ${MFLAGS} $@
+	@enterdir xml ${MAKE} ${MFLAGS} $@
+	@enterdir test ${MAKE} ${MFLAGS} $@
+

@@ -1,5 +1,0 @@
-1 stdcall ClbAddData(long long long)
-2 stdcall ClbSetColumnWidths(long long long)
-3 stdcall ClbStyleW(ptr ptr)
-4 stdcall ClbWndProc(ptr long ptr ptr)
-5 stdcall CustomControlInfoW(ptr)

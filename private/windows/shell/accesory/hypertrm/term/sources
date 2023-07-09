@@ -1,0 +1,30 @@
+
+
+USE_CRTDLL=1
+NOT_LEAN_AND_MEAN=1
+
+MAJORCOMP=
+MINORCOMP=
+
+VERSION=WIN_DEBUG
+NTTARGETFILE0=preprocess
+
+TARGETNAME=HYPERTRM
+TARGETTYPE=PROGRAM
+TARGETENTRY=WinMain
+TARGETPATH=obj
+TARGETLIBS=..\bin\*\hticons.lib  \
+           ..\bin\*\htrn_jis.lib \
+           ..\bin\*\hypertrm.lib
+
+SUBSYSTEM=windows
+
+LINKLIBS=
+INCLUDES=.;..
+
+SOURCES=    term.c \
+            online.rc
+
+
+UMTYPE=windows
+UMENTRY=winmain

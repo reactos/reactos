@@ -1,0 +1,112 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#***************************************************************************/
+ALT_PROJECT=DAYTONA
+ALT_PROJECT_TARGET=.
+
+!MESSAGE Building ICM 2.0 MSCMS DLL for NT 5.0
+
+!include ..\sources.inc
+
+MISCFILES=$(ICMROOT)\profiles\icminst.inf  \
+          $(ICMROOT)\profiles\sRGB.icm     \
+          $(ICMROOT)\profiles\NG18D50.icm  \
+          $(ICMROOT)\profiles\NG18D65.icm  \
+          $(ICMROOT)\profiles\NG18D93.icm  \
+          $(ICMROOT)\profiles\NG22D50.icm  \
+          $(ICMROOT)\profiles\NG22D65.icm  \
+          $(ICMROOT)\profiles\NG22D93.icm  \
+          $(ICMROOT)\profiles\HG22D50.icm  \
+          $(ICMROOT)\profiles\HG22D65.icm  \
+          $(ICMROOT)\profiles\HG22D93.icm  \
+          $(ICMROOT)\profiles\HG18D50.icm  \
+          $(ICMROOT)\profiles\HG18D65.icm  \
+          $(ICMROOT)\profiles\HG18D93.icm  \
+          $(ICMROOT)\profiles\Tg18d50.icm  \
+          $(ICMROOT)\profiles\Tg18d65.icm  \
+          $(ICMROOT)\profiles\Tg18d93.icm  \
+          $(ICMROOT)\profiles\Tg22d50.icm  \
+          $(ICMROOT)\profiles\Tg22d65.icm  \
+          $(ICMROOT)\profiles\Tg22d93.icm  \
+          $(ICMROOT)\profiles\Dg18d50.icm  \
+          $(ICMROOT)\profiles\Dg18d65.icm  \
+          $(ICMROOT)\profiles\Dg18d93.icm  \
+          $(ICMROOT)\profiles\Dg22d50.icm  \
+          $(ICMROOT)\profiles\Dg22d65.icm  \
+          $(ICMROOT)\profiles\Dg22d93.icm  \
+          $(ICMROOT)\profiles\adod6522.icm \
+          $(ICMROOT)\profiles\appd6518.icm \
+          $(ICMROOT)\profiles\gend9318.icm \
+          $(ICMROOT)\profiles\gend9322.icm \
+          $(ICMROOT)\profiles\ntscic22.icm \
+          $(ICMROOT)\profiles\radd5018.icm \
+          $(ICMROOT)\profiles\MNB22G15.ICM \
+          $(ICMROOT)\profiles\MNB22G18.ICM \
+          $(ICMROOT)\profiles\MNB22G21.ICM \
+          $(ICMROOT)\profiles\MNEBUG15.ICM \
+          $(ICMROOT)\profiles\MNEBUG18.ICM \
+          $(ICMROOT)\profiles\MNEBUG21.ICM \
+          $(ICMROOT)\profiles\MNP22G15.ICM \
+          $(ICMROOT)\profiles\MNP22G18.ICM \
+          $(ICMROOT)\profiles\MNP22G21.ICM \
+          $(ICMROOT)\profiles\apl12600.icm \
+          $(ICMROOT)\profiles\hp1200d.icm  \
+          $(ICMROOT)\profiles\hp1200p.icm  \
+          $(ICMROOT)\profiles\hp1200bd.icm \
+          $(ICMROOT)\profiles\hp1200bp.icm \
+          $(ICMROOT)\profiles\hp1200nd.icm \
+          $(ICMROOT)\profiles\hp1200np.icm \
+          $(ICMROOT)\profiles\hp1600d.icm  \
+          $(ICMROOT)\profiles\hp1600p.icm  \
+          $(ICMROOT)\profiles\hp1600g.icm  \
+          $(ICMROOT)\profiles\hp1600bg.icm \
+          $(ICMROOT)\profiles\hp1600bd.icm \
+          $(ICMROOT)\profiles\hp1600bp.icm \
+          $(ICMROOT)\profiles\hp1600ng.icm \
+          $(ICMROOT)\profiles\hp1600nd.icm \
+          $(ICMROOT)\profiles\hp1600np.icm \
+          $(ICMROOT)\profiles\HP1600Cn.icm \
+          $(ICMROOT)\profiles\HP1600Cp.icm \
+          $(ICMROOT)\profiles\HP1600Mp.icm \
+          $(ICMROOT)\profiles\HP1600Mn.icm \
+          $(ICMROOT)\profiles\hp310nd.icm  \
+          $(ICMROOT)\profiles\hp310ng.icm  \
+          $(ICMROOT)\profiles\hp320ng.icm  \
+          $(ICMROOT)\profiles\hp320nd.icm  \
+          $(ICMROOT)\profiles\hp500ng.icm  \
+          $(ICMROOT)\profiles\hp500nd.icm  \
+          $(ICMROOT)\profiles\hp540ng.icm  \
+          $(ICMROOT)\profiles\hp540nd.icm  \
+          $(ICMROOT)\profiles\hp540np.icm  \
+          $(ICMROOT)\profiles\hp550ng.icm  \
+          $(ICMROOT)\profiles\hp550nd.icm  \
+          $(ICMROOT)\profiles\hp560ng.icm  \
+          $(ICMROOT)\profiles\hp560nd.icm  \
+          $(ICMROOT)\profiles\hpcl5mbp.icm \
+          $(ICMROOT)\profiles\hpcl5mnd.icm \
+          $(ICMROOT)\profiles\hpclj.icm    \
+          $(ICMROOT)\profiles\hpcljbd.icm  \
+          $(ICMROOT)\profiles\hpcljnd.icm  \
+          $(ICMROOT)\profiles\hpclj5.icm   \
+          $(ICMROOT)\profiles\hpclj5mn.icm \
+          $(ICMROOT)\profiles\lx1275d.icm  \
+          $(ICMROOT)\profiles\tekph560.icm \
+          $(ICMROOT)\profiles\tekph600.icm \
+          $(ICMROOT)\profiles\tek3pxi.icm  \
+          $(ICMROOT)\profiles\xrxdpc55.icm \
+          $(ICMROOT)\profiles\tkph340d.icm \
+          $(ICMROOT)\profiles\tkph340h.icm \
+          $(ICMROOT)\profiles\tkph350d.icm \
+          $(ICMROOT)\profiles\tkph550d.icm \
+          $(ICMROOT)\profiles\xrx4915d.icm \
+          $(ICMROOT)\profiles\xrx4915h.icm
+
+
+
+
+
+

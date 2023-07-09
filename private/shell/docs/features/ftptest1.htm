@@ -1,0 +1,74 @@
+<HTML>
+<HEAD>
+<LINK REL=STYLESHEET HREF="http://ie/CSS/master.css" TYPE="text/css">
+<META http-equiv="PICS-Label" content='(PICS-1.0 "http://www.rsac.org/ratingsv01.html" l gen true comment "RSACi North America Server" by "ratings@microsoft.com" on "1996.04.04T08:15-0500" r (n 0 s 0 v 0 l 0))'>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META DATE="Oct 24, 97"> 
+<META AUTHOR="Arul Kumaravel"> 
+<TITLE>Ftp Shell Extension Tests</TITLE> 
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF">
+
+<H2>Ftp Tests</H2>
+
+<H3> FTP HREFs</H3>
+<UL>
+<LI> <A HREF="ftp://ohserv/test/win95.gif"> Ftp File (Host In Place)</A> <BR>
+<LI> <A HREF="ftp://ohserv/files/calc.exe"> Ftp File (Launch/Save) </A> </LI>
+<LI> <A HREF="ftp://ohserv/test/"> Ftp Dir </A> </LI>
+</UL>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP HREFs Requiring Login </H3>(Domain: BryanSt2, User: JoeMama, Password: Pass)
+<UL>
+<LI> <A HREF="ftp://bryanst2%5cjoemama:pass@bryanst2/User/JoeMama/SubDir1/artgifts1-banner.gif"> Ftp File (Host In Place)</A>
+     (<A HREF="ftp://bryanst2%5cjoemama:pass@bryanst2/SubDir1/artgifts1-banner.gif"> Correct URL </A>)<BR>
+<LI> <A HREF="ftp://bryanst2%5cjoemama:pass@bryanst2/User/JoeMama/SubDir1/Calc.exe"> Ftp File (Launch/Save) </A> 
+     (<A HREF="ftp://bryanst2%5cjoemama:pass@bryanst2/SubDir1/Calc.exe"> Correct URL </A>)<BR>
+<LI> <A HREF="ftp://bryanst2%5cjoemama:pass@bryanst2/SubDir1/"> Ftp Dir (ftp://bryanst2%5cjoemama:pass@bryanst2/SubDir1/)</A> <BR>
+</UL>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP Dir in IFRAMEs:</H3>
+<A HREF="ftp://ohserv/files/"> ftp://ohserv/files/ </A> <BR>
+<IFRAME SRC="ftp://ohserv/files/" WIDTH=90% HEIGHT=300px>
+</IFRAME>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP File in IFRAMEs:</H3>
+<A HREF="ftp://ohserv/files/foo.txt"> ftp://ohserv/files/foo.txt </A> <BR>
+<IFRAME SRC="ftp://ohserv/files/foo.txt" WIDTH=90% HEIGHT=300px>
+</IFRAME>
+<BR>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP Dir in IFRAMEs: (w/User Login)</H3>
+<A HREF="ftp://bryanst2%5cjoemama:pass@bryanst2/SubDir1/"> ftp://bryanst2%5cjoemama:pass@bryanst2/SubDir1/ </A> <BR>
+<IFRAME SRC="ftp://bryanst2%5cjoemama:pass@bryanst2/SubDir1/" WIDTH=90% HEIGHT=300px>
+</IFRAME>
+<BR>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP File in IFRAMEs: (w/User Login)</H3>
+<A HREF="ftp://bryanst2%5cjoemama:pass@bryanst2/User/JoeMama/SubDir1/index.html"> ftp://bryanst2%5cjoemama:pass@bryanst2/User/JoeMama/SubDir1/index.html </A> <BR>
+<IFRAME SRC="ftp://bryanst2%5cjoemama:pass@bryanst2/User/JoeMama/SubDir1/index.html" WIDTH=90% HEIGHT=300px>
+</IFRAME>
+<BR>
+<BR>
+<BR>
+<BR>
+
+
+</BODY>
+</HTML>

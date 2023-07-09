@@ -1,0 +1,37 @@
+#ifndef _BASEFONT_PDL_
+#define _BASEFONT_PDL_ 1
+
+#include "element.pdl"
+
+file basefont.pdl
+
+import element.pdl
+
+interface IHTMLBaseFontElement guid:3050f202-98b5-11cf-bb82-00aa00bdce0b
+    refprop CBaseFontElement:color
+    refprop CBaseFontElement:face
+    refprop CBaseFontElement:size
+
+tearoff CBaseFontElement interface:IHTMLBaseFontElement
+
+class CBaseFontElement name:HTMLBaseFontElement \
+        super:CElement \
+        events:HTMLElementEvents \
+        nonprimaryevents:HTMLElementEvents2 \
+        primaryinterface:IHTMLBaseFontElement \
+        guid:3050f282-98b5-11cf-bb82-00aa00bdce0b \
+        mondoguid:3050f504-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLBaseFontElement
+
+    property color caa atype:VARIANT  type:CColorValue \
+        get set setaahr getaa  \
+        dispid:DISPID_A_COLOR   bindable displaybind    maxstrlen:pdlColor 
+    property face caa  atype:BSTR type:CStr  \
+        get set setaahr getaa  \
+        dispid:DISPID_A_FONTFACE   bindable displaybind     maxstrlen:pdlNoLimit 
+    property size  caa get set getaa atype:long   type:long \
+        default:3  dispid:DISPID_A_BASEFONT bindable displaybind 
+
+#endif _BASEFONT_PDL_

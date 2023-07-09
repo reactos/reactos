@@ -1,0 +1,26 @@
+// JPEGFilter.idl : IDL source for JPEGFilter.dll
+//
+// This file will be processed by the MIDL tool to
+// produce the type library (JPEGFilter.tlb) and marshalling code.
+
+import "ocmm.idl";
+
+[
+	uuid( 58504260-3CD2-11d0-8700-00A0C913F750 ),
+	version( 1.0 ),
+	helpstring( "JPEGFilter 1.0 Type Library" )
+]
+library JPEGFilterLib
+{
+	importlib( "stdole2.tlb" );
+
+	[
+		uuid( 65EABEB0-3CD2-11d0-8700-00A0C913F750 ),
+		helpstring("CoJPEGFilter Class")
+	]
+	coclass CoJPEGFilter
+	{
+		[default] interface IImageDecodeFilter;
+	};
+
+};

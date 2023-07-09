@@ -1,0 +1,15 @@
+LIBRARY         MIDIMAP
+EXPORTS
+;       WEP
+        CPlApplet               @1
+        DriverProc              @2
+        modMessage              @3
+;       MainBox                 @4
+;       SetupBox                @5
+;       PatchBox                @6
+;       KeyBox                  @7
+;       PropBox                 @8
+;       EnumFunc                @9
+;       FSetupEnumPortsFunc     @10
+;       ArrowControlProc        @11
+

@@ -1,0 +1,35 @@
+#
+#  Recorder dll makefile
+#
+
+DLL=..\rec_dll
+EXE=..\rec_exe
+INC=..\rec_inc
+
+EXEFLAGS=-c -AM -Zpie -DNOCOMM -Od -Gcsw -W3 -FPi -DNTPORT -DVER=$(WINVER) -I$(INC) -DWIN16
+DLLFLAGS=-c -u -Asnw -Gcsw -DNOCOMM -Od -Zpei -FPi -W3 -DNTPORT -DVER=$(WINVER) -I$(INC) -DWIN16
+RCFLAGS=-r -I $(INC)
+CC=cl
+RC=rc
+
+all: recordll.dll
+
+recordll.lib: recordll.def
+    implib recordll.lib recordll.def
+
+rdinit2.obj: rdinit2.c $(INC)\recordll.h
+    $(CC) $(DLLFLAGS) rdinit2.c
+
+recordll.obj: recordll.c $(INC)\msgs.h $(INC)\recordll.h $(INC)\rdlocal.h
+    $(CC) $(DLLFLAGS) recordll.c
+
+rddis.obj: rddis.c $(INC)\msgs.h $(INC)\recordll.h $(INC)\rdlocal.h
+    $(CC) $(DLLFLAGS) rddis.c
+
+rdglob.obj: rdglob.c $(INC)\msgs.h $(INC)\recordll.h $(INC)\rdlocal.h
+    $(CC) $(DLLFLAGS) rdglob.c
+
+recordll.dll: recordll.obj rdinit2.obj rddis.obj rdglob.obj recordll.lib
+    link recordll rddis rdglob rdinit2, recordll.dll/align:16,recordll/nod/noe/nof/nop/map/co,sdllcew libw,recordll.def
+    mark memory font recordll.dll
+    mapsym recordll.map

@@ -1,0 +1,29 @@
+#
+#   Create an MCI handler DLL
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=dispdb32
+TARGETPATH=..\lib
+TARGETTYPE=DYNLINK
+UMTYPE=windows
+DLLDEF=dispdb32.def
+
+C_DEFINES=-DWIN32 -DUNICODE -DVFW -DINC_OLE2
+
+# Define libs we need and where to find them
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\winmm.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           ..\lib\*\msvfw32.lib
+
+INCLUDES=..\inc;.\res\usa;..\..\verinfo\usa;..\..\inc
+
+SOURCES=dispdb32.c
+
+DLLBASE=0x66400000

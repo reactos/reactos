@@ -1,0 +1,37 @@
+#ifndef _FRAME_PDL_
+#define _FRAME_PDL_ 1
+
+#include "frmsite.pdl"
+
+file frame.pdl
+
+import frmsite.pdl
+
+interface IHTMLFrameElement guid:3050f313-98b5-11cf-bb82-00aa00bdce0b
+    refprop CFrameElement:borderColor
+
+tearoff CFrameElement interface:IHTMLFrameElement
+
+class CFrameElement name:HTMLFrameElement \
+            primaryinterface:IHTMLFrameElement \
+            super:CFrameSite \
+            events:HTMLControlElementEvents \
+            nonprimaryevents:HTMLControlElementEvents2 \
+            guid:3050f314-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f513-98b5-11cf-bb82-00aa00bdce0b
+     
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLFrameBase
+    implements IHTMLFrameElement
+
+    property borderColor dispid:DISPID_FRAME+1 atype:VARIANT type:CColorValue caa get set setaahr default:VALUE_UNDEF maxstrlen:pdlColor
+    property height abstract get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT \
+        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+    property width abstract get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_WIDTH  \
+        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+
+#endif _FRAME_PDL_
+

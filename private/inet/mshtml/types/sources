@@ -1,0 +1,213 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\types=)
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+
+TARGETNAME=MSHTUUID
+TARGETTYPE=LIBRARY
+TARGETPATH=$(_OBJ_DIR)
+
+!undef USE_NOLIBS
+!undef USE_NTDLL
+!undef PASS0ONLY
+!undef NOLINK
+NO_BINPLACE=1
+USE_MSVCRT=1
+NOT_LEAN_AND_MEAN=1
+
+SYNCHRONIZE_BLOCK=1
+
+PASS0_HEADERDIR =$(_OBJ_DIR)
+PASS0_SOURCEDIR =$(_OBJ_DIR)
+MIDL_UUIDDIR    =$(_OBJ_DIR)
+
+SOURCES =
+
+C_DEFINES = $(C_DEFINES) /DMIDL_COMPILER /D__MKTYPLIB__ /DIID_IHTMLDocument=IID_IFoobar
+
+INCLUDES= \
+    $(O); \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\src\dlay\include; \
+    $(ROOT)\src\core\types; \
+    $(ROOT)\src\ctrl\types;
+
+NTTARGETFILES= \
+    $O\funcsig.cxx \
+    $O\funcsig.hxx \
+    $O\funcsig.dat \
+
+# Please note that the order of these files is now important - don't re-order them
+# unless you grok the dependency order!
+SITE_PDL_FILES =    \
+    $O\style.pdl    \
+    $O\curstyle.pdl \
+    $O\filter.pdl   \
+    $O\omrect.pdl   \
+    $O\dom.pdl      \
+    $O\domcoll.pdl  \
+    $O\element.pdl  \
+    $O\htc.pdl  \
+    $O\urncoll.pdl  \
+    $O\generic.pdl  \
+    $O\rulescol.pdl \
+    $O\sheet.pdl    \
+    $O\sheetcol.pdl \
+    $O\link.pdl     \
+    $O\range.pdl    \
+    $O\eform.pdl    \
+    $O\csite.pdl    \
+    $O\textelem.pdl \
+    $O\txtedit.pdl  \
+    $O\siterang.pdl \
+    $O\img.pdl      \
+    $O\body.pdl     \
+    $O\font.pdl     \
+    $O\anchor.pdl   \
+    $O\label.pdl    \
+    $O\list.pdl     \
+    $O\ulist.pdl    \
+    $O\olist.pdl    \
+    $O\li.pdl       \
+    $O\block.pdl    \
+    $O\div.pdl      \
+    $O\dd.pdl       \
+    $O\dt.pdl       \
+    $O\br.pdl       \
+    $O\dlist.pdl    \
+    $O\hr.pdl       \
+    $O\para.pdl     \
+    $O\collect.pdl  \
+    $O\header.pdl   \
+    $O\select.pdl   \
+    $O\selecobj.pdl \
+    $O\option.pdl   \
+    $O\inputtxt.pdl \
+    $O\textarea.pdl \
+    $O\inputbtn.pdl \
+    $O\marquee.pdl  \
+    $O\hedelems.pdl \
+    $O\basefont.pdl \
+    $O\unknown.pdl  \
+    $O\history.pdl  \
+    $O\bmkcoll.pdl  \
+    $O\eventobj.pdl \
+    $O\window.pdl   \
+    $O\document.pdl \
+    $O\markup.pdl   \
+    $O\scrptlet.pdl \
+    $O\pluginst.pdl \
+    $O\map.pdl      \
+    $O\area.pdl     \
+    $O\caption.pdl  \
+    $O\comment.pdl  \
+    $O\phrase.pdl   \
+    $O\table.pdl    \
+    $O\script.pdl   \
+    $O\noshow.pdl   \
+    $O\olesite.pdl  \
+    $O\object.pdl   \
+    $O\frmsite.pdl  \
+    $O\frame.pdl    \
+    $O\iframe.pdl   \
+    $O\e1d.pdl      \
+    $O\espan.pdl    \
+    $O\frameset.pdl \
+    $O\bgsound.pdl  \
+    $O\optshold.pdl \
+    $O\estyle.pdl   \
+    $O\fontface.pdl \
+    $O\mshtmext.pdl \
+
+OTHER_PDL_FILES = \
+    $O\htmldlg.pdl \
+    $O\htmlapp.pdl
+
+CORE_PDL_FILES = \
+    $O\types.pdl
+
+BUILT_PDL_FILES = \
+    $(CORE_PDL_FILES)  \
+    $(SITE_PDL_FILES)  \
+    $(OTHER_PDL_FILES) \
+    $O\internal.pdl    \
+    $O\behavior.pdl    \
+
+APPENDED_IDL_FILES = \
+    $(CORE_PDL_FILES)  \
+    $(SITE_PDL_FILES)  \
+    $(OTHER_PDL_FILES)
+
+ALL_PDL_FILES = \
+    $(BUILT_PDL_FILES) \
+    $O\basecoll.pdl    \
+    $O\baseDOM.pdl     \
+    $O\baseDB.pdl
+
+HDL_FILES = \
+    $(BUILT_PDL_FILES:.pdl=.hdl)
+
+DISPIDS= \
+    $O\coredisp.h
+
+DISPID_FILES = \
+    $(DISPIDS) $(BUILT_PDL_FILES:.pdl=.dsp)
+
+IDL_FILES = \
+    $(APPENDED_IDL_FILES:.pdl=.idl)
+
+EXTRA_FILES = \
+    $O\f3ctx.h \
+
+ASC_FILES = \
+    $O\entity.asc   \
+    $O\tags.asc     \
+
+HSC_FILES = \
+    $(ASC_FILES:.asc=.h)
+
+NF_FILES = \
+    $O\notifytype.nf   \
+
+HNF_FILES = \
+    $(NF_FILES:.nf=.h)
+    
+# Note we need to get the did & idl files across to the genx\ie\inc directory on pass Zero
+# so they're available in the first pass when we do an IEBUILD - if you don't do
+# this the UUID's file won't be built correctly
+NTTARGETFILE0= \
+    $(ALL_PDL_FILES) \
+    $(DISPIDS) \
+    $(EXTRA_FILES) \
+    $(HDL_FILES)  \
+    $(ASC_FILES) \
+    $(HSC_FILES) \
+    $O\mshtmdid.h \
+# only place copy to genx\ie\inc if this is an IE build env
+!if "$(BUILD_PRODUCT)" == "IE"
+    $(_NTBINDIR)\private\genx\ie\inc\mshtmdid.h \
+!endif
+    $O\mshtml.idl \
+    $O\mshtmtmp.idl \
+# only place copy to genx\ie\inc if this is an IE build env
+!if "$(BUILD_PRODUCT)" == "IE"
+    $(_NTBINDIR)\private\genx\ie\inc\mshtml.idl \
+!endif
+    $O\interned.idl \
+# only place copy to genx\ie\inc if this is an IE build env
+!if "$(BUILD_PRODUCT)" == "IE"
+    $(_NTBINDIR)\private\genx\ie\inc\interned.idl \
+!endif
+    $O\mshtml.tlb \
+    $(NF_FILES) \
+!if "$(PROCESSOR_ARCHITECTURE)" == "x86" 
+    $O\errors.out \
+!endif
+    $(HNF_FILES)
+

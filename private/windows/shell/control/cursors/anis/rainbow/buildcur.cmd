@@ -1,0 +1,1 @@
+makeani -t "Rainbow" -a "Microsoft Corporation, Copyright 1993" -o ..\rainbow.ani -r360 normal -r4 rainbow1 rainbow2 rainbow3 rainbow4 rainbow5 rainbow6 rainbow7 rainbow8 rainbow9 rainbo10 rainbo11 rainbo12

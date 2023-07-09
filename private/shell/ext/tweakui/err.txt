@@ -1,0 +1,34 @@
+
+Error P1073: line...4 of tweakui.HPJ : Unrecognized option in [OPTIONS] section.
+Warning P1079: line...5 of tweakui.HPJ : Invalid compression option.
+Error P1073: line...6 of tweakui.HPJ : Unrecognized option in [OPTIONS] section.
+Error P1087: line...7 of tweakui.HPJ : Invalid reporting option.
+Error P1073: line...9 of tweakui.HPJ : Unrecognized option in [OPTIONS] section.
+Error P1073: line...10 of tweakui.HPJ : Unrecognized option in [OPTIONS] section.
+Error P1073: line...11 of tweakui.HPJ : Unrecognized option in [OPTIONS] section.
+Error P1083: line...17 of tweakui.HPJ : Invalid context identification number.
+Error P1025: line...19 of tweakui.HPJ : Section heading WINDOWS unrecognized.
+Error P1029: line...20 of tweakui.HPJ : Section heading missing.
+Error P1025: line...22 of tweakui.HPJ : Section heading CONFIG unrecognized.
+Error P1029: line...23 of tweakui.HPJ : Section heading missing.
+
+Warning R2001: Unable to open bitmap file bullet.bmp.
+Warning R2001: Unable to open bitmap file bullet.bmp.
+Warning R2001: Unable to open bitmap file bullet.bmp.
+Warning R2095: Title defined more than once in topic 4 of file .\tweakui.rtf.
+Warning R2041: Jump '!ExecFile(rundll32.exe,"shell32.dll,Control_RunDLL mmsys.cpl")' unresolved in topic 61 of file .\tweakui.rtf.
+Warning R2001: Unable to open bitmap file shortcut.bmp.
+Warning R2041: Jump '' unresolved in topic 62 of file .\tweakui.rtf.
+Warning R2001: Unable to open bitmap file shortcut.bmp.
+Warning R2041: Jump '!ExecFile(explorer.exe,"::' unresolved in topic 65 of file .\tweakui.rtf.
+Warning R2001: Unable to open bitmap file shortcut.bmp.
+Warning R2041: Jump '!ExecFile(rundll32.exe,"shell32.dll,Control_RunDLL appwiz.cpl")' unresolved in topic 67 of file .\tweakui.rtf.
+Warning R2001: Unable to open bitmap file shortcut.bmp.
+Warning R2041: Jump '!ExecFile(rundll32.exe,"TWEAKUI.CPL,TweakMeUp 1")' unresolved in topic 69 of file .\tweakui.rtf.
+Warning R2001: Unable to open bitmap file shortcut.bmp.
+Warning R2041: Jump '!JumpId(HOWTO_UNINSTALL)' unresolved in topic 69 of file .\tweakui.rtf.
+Warning R2001: Unable to open bitmap file shortcut.bmp.
+Warning R2041: Jump '!ExecFile(explorer.exe,"::' unresolved in topic 76 of file .\tweakui.rtf.
+Warning R2001: Unable to open bitmap file shortcut.bmp.
+Warning R2041: Jump '!ExecFile(rundll32.exe,"shell32.dll,Control_RunDLL sysdm.cpl")' unresolved in topic 85 of file .\tweakui.rtf.
+Warning R2001: Unable to open bitmap file shortcut.bmp.

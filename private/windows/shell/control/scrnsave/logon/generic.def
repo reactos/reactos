@@ -1,0 +1,23 @@
+; module-definition file for generic
+
+NAME		  GENERIC	   ; application's module name
+
+EXETYPE       WINDOWS       ; required for all Windows applications
+
+PROTMODE
+
+;CODE can be moved in memory and discarded/reloaded
+CODE  PRELOAD MOVEABLE DISCARDABLE
+
+;DATA must be MULTIPLE if program can be invoked more than once
+DATA  PRELOAD MOVEABLE MULTIPLE
+
+HEAPSIZE     1024
+STACKSIZE    5120           ; recommended minimum for Windows applications
+
+; All functions that will be called by any Windows routine
+; MUST be exported.
+
+EXPORTS
+    ScreenSaverProc
+    ScreenSaverConfigureDialog

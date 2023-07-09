@@ -1,0 +1,23 @@
+#
+# Sources file for ActiveX License Manager (licmgr.dll)
+#
+# Julian Jiggins July 16, 1996
+#
+
+TARGETNAME= core
+TARGETTYPE= LIBRARY
+TARGETPATH= obj
+
+USE_MSVCRT=1
+
+SYNCHRONIZE_BLOCK=1
+MSC_WARNING_LEVEL=/W3 /WX
+INCLUDES=include
+
+SOURCES=\
+	basecom.cxx\
+	corepch.cxx\
+	dll.cxx\
+	dllreg.cxx\
+	mime64.cxx\
+	util.cxx

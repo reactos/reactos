@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdro
+
+TARGETNAME=kbdro
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdro.c kbdro.rc
+
+NTTARGETFILE0=kbdro.h kbdro.rc kbdro.def

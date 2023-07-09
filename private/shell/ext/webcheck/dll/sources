@@ -1,0 +1,150 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+DELAYLOAD       = OLE32.DLL; COMCTL32.DLL; OLEAUT32.DLL; SHDOCVW.DLL; WSOCK32.DLL; WININET.DLL; URLMON.DLL; SHELL32.DLL
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+SELFREGNAME     = ..\selfreg_webcheck.inf
+
+#
+# TARGET_BOTH is used by $(CCSHELL_DIR)\common.inc to build components that run
+# on both W95 and NT.
+#
+TARGET_BOTH     = 1
+
+#
+# NOT_UNICODE is used by $(CCSHELL_DIR)\common.inc to not include -DUNICODE and
+# -D_UNICODE in CDEFINES.
+#
+#NOT_UNICODE     = 1
+
+PRECOMPILED_CXX = 1
+
+!include $(CCSHELL_DIR)\common.inc
+
+NO_BROWSER_FILE = 1
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+# for RC to find webchk.TLB
+INCLUDES        = $(SDK_LIB_PATH);$(INCLUDES)
+
+TARGETNAME      = webcheck
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+TARGETLIBS      = $(LIBRARY_PATH)\gdi32.lib         \
+                  $(LIBRARY_PATH)\kernel32.lib      \
+                  $(LIBRARY_PATH)\user32.lib        \
+                  $(LIBRARY_PATH)\advapi32.lib      \
+                  $(LIBRARY_PATH)\shlwapi.lib       \
+                  $(LIBRARY_PATH)\shlwapip.lib      \
+                  $(LIBRARY_PATH)\comctlp.lib       \
+                  $(LIBRARY_PATH)\uuid.lib          \
+                  $(LIBRARY_PATH)\ole32.lib         \
+                  $(LIBRARY_PATH)\oleaut32.lib         \
+                  $(LIBRARY_PATH)\shdocvwp.lib         \
+                  $(LIBRARY_PATH)\wsock32.lib         \
+                  $(LIBRARY_PATH)\wininet.lib         \
+                  $(LIBRARY_PATH)\icmp.lib         \
+                  $(LIBRARY_PATH)\htmlhelp.lib         \
+!if $(386)
+! if !$(FREEBUILD)
+                  $(BASEDIR)\private\lib\chicago\*\shell32.w95  \
+! else
+                  $(BASEDIR)\private\lib\*\shell32.nt4  \
+! endif
+!else
+                  $(SDK_LIB_PATH)\shell32p.lib        \
+!endif
+                  $(CCSHELL_DIR)\lib\$O\shguidp.lib \
+                  $(CCSHELL_DIR)\lib\$(O)\stocklib.lib \
+                  $(LIBRARY_PATH)\urlmon.lib
+
+!if $(IA64) || $(AXP64)
+USE_LIBCMT      = 1
+!else
+USE_IERT        = 1
+!endif
+
+DLLDEF          = $O\webcheck.def
+DLLBASE         = 0x77770000
+DLLENTRY        = LibMain
+
+# Include makefile.inc
+NTTARGETFILE0= $(SELFREGNAME)
+NTTARGETFILES   =
+
+!if "$(BUILD_PRODUCT)" == "NT"
+MISCFILES = $(MISCFILES) $(SELFREGNAME)
+!endif
+
+
+# In alphabetical order
+SOURCES         = \
+                  ..\admin.cpp \
+                  ..\cdlabsc.cpp \
+                  ..\cdlagent.cpp \
+                  ..\debug.c \
+                  ..\cdfagent.cpp \
+                  ..\delagent.cpp \
+                  ..\dialmon.cpp \
+                  ..\dllload.cpp \
+                  ..\downld.cpp \
+                  ..\droptrgt.cpp \
+                  ..\factory.cpp \
+                  ..\folder.cpp \
+                  ..\helper.cpp \
+                  ..\idle.cpp \
+                  ..\item.cpp \
+                  ..\iwebck.cpp \
+                  ..\mailagnt.cpp \
+                  ..\notfcvt.cpp \
+                  ..\offsync.cpp \
+                  ..\postagnt.cpp \
+                  ..\propshts.cpp \
+                  ..\smtp.cpp \
+                  ..\ssseprox.cpp \
+                  ..\strlist.cpp \
+                  ..\subitem.cpp \
+                  ..\subsmgr.cpp \
+                  ..\subsmgr2.cpp \
+                  ..\throttle.cpp \
+                  ..\trkcache.cpp \
+                  ..\utils.cpp \
+                  ..\webcheck.cpp \
+                  ..\webcheck.rc \
+                  ..\webcrawl.cpp \
+                  ..\wizards.cpp
+
+PRECOMPILED_INCLUDE = ..\private.h
+PRECOMPILED_OBJ=precomp.obj
+
+#
+# Remove build warning
+#
+CONDITIONAL_INCLUDES=\
+                macocidl.h \
+                macwin32.h

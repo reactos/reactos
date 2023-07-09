@@ -1,0 +1,54 @@
+[version]
+signature="$CHICAGO$"
+
+[InetFindInstall]
+CopyFiles = InetFind.Files.Ext, InetFind.Files.Inf
+AddReg    = InetFind.Add.Reg
+
+[DefaultInstall]
+CopyFiles = InetFind.Files.Ext, InetFind.Files.Inf
+AddReg    = InetFind.Add.Reg
+
+[DefaultUnInstall]
+DelFiles  = InetFind.Files.Ext, InetFind.Files.Inf
+DelReg    = InetFind.Del.Reg
+
+[DestinationDirs]
+InetFind.Files.Ext = 11,ShellExt
+InetFind.Files.Inf = 17
+
+[SourceDisksNames]
+1="Find... On the Internet","",1
+
+[SourceDisksFiles]
+InetFind.DLL=1
+InetFind.INF=1
+
+[InetFind.Files.Ext]
+InetFind.Dll
+
+[InetFind.Files.Inf]
+InetFind.INF
+
+[InetFind.Add.Reg]
+HKLM,%UIF%,DisplayName,,"%InetFind%"
+HKLM,%UIF%,UninstallString,,"%10%\rundll.exe setupx.dll,InstallHinfSection DefaultUninstall 132 %17%\InetFind.inf"
+HKLM,%FIND%,,,"%GUID%"
+HKLM,%FIND%\0,,,"%InetFindH%"
+HKLM,%FIND%\0\DefaultIcon,,,"%11%\ShellExt\InetFind.dll,0"
+HKCR,CLSID\%GUID%,,,"%InetFind%"
+HKCR,CLSID\%GUID%\InProcServer32,,,"%11%\ShellExt\InetFind.dll"
+HKCR,CLSID\%GUID%\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\%GUID%\DefaultIcon,,,"%11%\ShellExt\InetFind.dll,0"
+
+[InetFind.Del.Reg]
+HKLM,%UIF%
+HKLM,%FIND%
+HKCR,CLSID\%GUID%
+
+[Strings]
+InetFind="Find... On the Internet"
+InetFindH="On the &Internet..."
+UIF="Software\Microsoft\Windows\CurrentVersion\Uninstall\InetFind"
+FIND="Software\Microsoft\Windows\CurrentVersion\Explorer\FindExtensions\Static\InetFind"
+GUID="{37865980-75d1-11cf-bfc7-444553540000}"

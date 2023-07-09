@@ -1,0 +1,13 @@
+This is a feature wishlist of scrap/doc-shortcut.
+
+1. More clipboard format support (CF_TEXT, CF_RICHTEXT, CF_METAFILE).
+2. Paste Special...
+3. Custmizing UI for default behavior of scrap creation (CF's)
+4. View/Print command (without activation)
+5. Much better file names (e.g., "shortcuts into foobar")
+6. Property shee page ("Shortcut" or "Embedding" and "Presentation" page)
+    "Shortcut" page let you update/modify the shortcut
+    "Embedding" page just shows you the type of data
+    "Presentation" page let you add/remove cached presentation/format
+7. Inheriting Summary Info (if it is technically possible)
+

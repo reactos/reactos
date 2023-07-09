@@ -1,0 +1,13 @@
+#include <windows.h>
+
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_DLL
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "NT Layer DLL"
+#define VER_INTERNALNAME_STR        "ntdll.dll"
+#define VER_ORIGINALFILENAME_STR    "ntdll.dll"
+
+#include "common.ver"
+
+#include "ntstatus.rc"

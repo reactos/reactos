@@ -1,0 +1,8 @@
+LIBRARY         JOY
+PROTMODE
+
+HEAPSIZE  8192
+
+EXPORTS
+    CPlApplet
+    ShowJoyCPL

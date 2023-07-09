@@ -1,0 +1,840 @@
+//------------------------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:   Hyperlinking interfaces
+//
+//------------------------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// HLInk.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("// OLE Hyperlinking Interfaces.")
+cpp_quote("                                                                              ")
+cpp_quote("#ifndef HLINK_H                                                               ")
+cpp_quote("#define HLINK_H                                                               ")
+cpp_quote("                                                                              ")
+
+import "urlmon.idl";
+
+interface IHlinkSite;
+interface IHlink;
+interface IHlinkTarget;
+interface IHlinkFrame;
+interface IEnumHLITEM;
+interface IHlinkBrowseContext;
+
+cpp_quote("#define SID_SHlinkFrame IID_IHlinkFrame")
+cpp_quote("#define IID_IHlinkSource IID_IHlinkTarget                                     ")
+cpp_quote("#define IHlinkSource IHlinkTarget                                             ")
+cpp_quote("#define IHlinkSourceVtbl IHlinkTargetVtbl                                     ")
+cpp_quote("#define LPHLINKSOURCE LPHLINKTARGET                                           ")
+cpp_quote("                                                                              ")
+cpp_quote("/****************************************************************************/")
+cpp_quote("/**** Error codes                                                        ****/")
+cpp_quote("/****************************************************************************/")
+cpp_quote("#ifndef _HLINK_ERRORS_DEFINED                                                 ")
+cpp_quote("#define _HLINK_ERRORS_DEFINED                                                 ")
+cpp_quote("#define HLINK_E_FIRST                    (OLE_E_LAST+1)                       ")
+cpp_quote("#define HLINK_S_FIRST                    (OLE_S_LAST+1)                       ")
+cpp_quote("#define HLINK_S_DONTHIDE                 (HLINK_S_FIRST)                      ")
+cpp_quote("#endif //_HLINK_ERRORS_DEFINED                                                ")
+cpp_quote("                                                                              ")
+cpp_quote("                                                                              ")
+cpp_quote("/****************************************************************************/")
+cpp_quote("/**** Hyperlink APIs                                                     ****/")
+cpp_quote("/****************************************************************************/")
+cpp_quote("                                                                              ")
+
+// Hyperlink Clipboard Format: On MAC it is 'HLNK', and on windows it is the
+// the value returned from RegisterClipboardFormat(CFSTR_HYPERLINK).
+cpp_quote("#if MAC || defined(_MAC)                                                      ")
+cpp_quote("#define  cfHyperlink   'HLNK'                                                 ")
+cpp_quote("#else                                                                         ")
+cpp_quote("#define CFSTR_HYPERLINK         (TEXT(\"Hyperlink\"))                         ")
+cpp_quote("#endif                                                                        ")
+cpp_quote("                                                                              ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkCreateFromMoniker(                                                ")
+cpp_quote("             IMoniker * pimkTrgt,                                             ")
+cpp_quote("             LPCWSTR pwzLocation,                                             ")
+cpp_quote("             LPCWSTR pwzFriendlyName,                                         ")
+cpp_quote("             IHlinkSite * pihlsite,                                           ")
+cpp_quote("             DWORD dwSiteData,                                                ")
+cpp_quote("             IUnknown * piunkOuter,                                           ")
+cpp_quote("             REFIID riid,                                                     ")
+cpp_quote("             void ** ppvObj);                                                 ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkCreateFromString(                                                 ")
+cpp_quote("             LPCWSTR pwzTarget,                                               ")
+cpp_quote("             LPCWSTR pwzLocation,                                             ")
+cpp_quote("             LPCWSTR pwzFriendlyName,                                         ")
+cpp_quote("             IHlinkSite * pihlsite,                                           ")
+cpp_quote("             DWORD dwSiteData,                                                ")
+cpp_quote("             IUnknown * piunkOuter,                                           ")
+cpp_quote("             REFIID riid,                                                     ")
+cpp_quote("             void ** ppvObj);                                                 ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkCreateFromData(                                                   ")
+cpp_quote("             IDataObject *piDataObj,                                          ")
+cpp_quote("             IHlinkSite * pihlsite,                                           ")
+cpp_quote("             DWORD dwSiteData,                                                ")
+cpp_quote("             IUnknown * piunkOuter,                                           ")
+cpp_quote("             REFIID riid,                                                     ")
+cpp_quote("             void ** ppvObj);                                                 ")
+cpp_quote("                                                                              ")
+
+// Returns S_OK if a hyperlink can be created from piDataObj, S_FALSE if not.
+cpp_quote("STDAPI HlinkQueryCreateFromData(IDataObject *piDataObj);                      ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkClone(                                                            ")
+cpp_quote("             IHlink * pihl,                                                   ")
+cpp_quote("             REFIID riid,                                                     ")
+cpp_quote("             IHlinkSite * pihlsiteForClone,                                   ")
+cpp_quote("             DWORD dwSiteData,                                                ")
+cpp_quote("             void ** ppvObj);                                                 ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkCreateBrowseContext(                                              ")
+cpp_quote("             IUnknown * piunkOuter,                                           ")
+cpp_quote("             REFIID riid,                                                     ")
+cpp_quote("             void ** ppvObj);                                                 ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkNavigateToStringReference(                                        ")
+cpp_quote("             LPCWSTR pwzTarget,                                               ")
+cpp_quote("             LPCWSTR pwzLocation,                                             ")
+cpp_quote("             IHlinkSite * pihlsite,                                           ")
+cpp_quote("             DWORD dwSiteData,                                                ")
+cpp_quote("             IHlinkFrame *pihlframe,                                          ")
+cpp_quote("             DWORD grfHLNF,                                                   ")
+cpp_quote("             LPBC pibc,                                                       ")
+cpp_quote("             IBindStatusCallback * pibsc,                                     ")
+cpp_quote("             IHlinkBrowseContext *pihlbc);                                    ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkNavigate(                                                         ")
+cpp_quote("             IHlink * pihl,                                                   ")
+cpp_quote("             IHlinkFrame * pihlframe,                                         ")
+cpp_quote("             DWORD grfHLNF,                                                   ")
+cpp_quote("             LPBC pbc,                                                        ")
+cpp_quote("             IBindStatusCallback * pibsc,                                     ")
+cpp_quote("             IHlinkBrowseContext *pihlbc);                                    ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkOnNavigate(                                                       ")
+cpp_quote("             IHlinkFrame * pihlframe,                                         ")
+cpp_quote("             IHlinkBrowseContext * pihlbc,                                    ")
+cpp_quote("             DWORD grfHLNF,                                                   ")
+cpp_quote("             IMoniker * pimkTarget,                                           ")
+cpp_quote("             LPCWSTR pwzLocation,                                             ")
+cpp_quote("             LPCWSTR pwzFriendlyName,                                         ")
+cpp_quote("             ULONG * puHLID);                                                 ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkUpdateStackItem(                                                  ")
+cpp_quote("             IHlinkFrame * pihlframe,                                         ")
+cpp_quote("             IHlinkBrowseContext * pihlbc,                                    ")
+cpp_quote("             ULONG uHLID,                                                     ")
+cpp_quote("             IMoniker * pimkTrgt,                                             ")
+cpp_quote("             LPCWSTR pwzLocation,                                             ")
+cpp_quote("             LPCWSTR pwzFriendlyName);                                        ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkOnRenameDocument(                                                 ")
+cpp_quote("             DWORD dwReserved,                                                ")
+cpp_quote("             IHlinkBrowseContext * pihlbc,                                    ")
+cpp_quote("             IMoniker * pimkOld,                                              ")
+cpp_quote("             IMoniker * pimkNew);                                             ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkResolveMonikerForData(                                            ")
+cpp_quote("             LPMONIKER pimkReference,                                         ")
+cpp_quote("             DWORD reserved,                                                  ")
+cpp_quote("             LPBC pibc,                                                       ")
+cpp_quote("             ULONG cFmtetc,                                                   ")
+cpp_quote("             FORMATETC * rgFmtetc,                                            ")
+cpp_quote("             IBindStatusCallback * pibsc,                                     ")
+cpp_quote("             LPMONIKER pimkBase);                                             ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkResolveStringForData(                                             ")
+cpp_quote("             LPCWSTR pwzReference,                                            ")
+cpp_quote("             DWORD reserved,                                                  ")
+cpp_quote("             LPBC pibc,                                                       ")
+cpp_quote("             ULONG cFmtetc,                                                   ")
+cpp_quote("             FORMATETC * rgFmtetc,                                            ")
+cpp_quote("             IBindStatusCallback * pibsc,                                     ")
+cpp_quote("             LPMONIKER pimkBase);                                             ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkParseDisplayName(                                                 ")
+cpp_quote("             LPBC pibc,                                                       ")
+cpp_quote("             LPCWSTR pwzDisplayName,                                          ")
+cpp_quote("             BOOL fNoForceAbs,                                                ")
+cpp_quote("             ULONG * pcchEaten,                                               ")
+cpp_quote("             IMoniker ** ppimk);                                              ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkCreateExtensionServices(                                          ")
+cpp_quote("             LPCWSTR pwzAdditionalHeaders,                                    ")
+cpp_quote("             HWND phwnd,                                                      ")
+cpp_quote("             LPCWSTR pszUsername,                                             ")
+cpp_quote("             LPCWSTR pszPassword,                                             ")
+cpp_quote("             IUnknown * piunkOuter,                                           ")
+cpp_quote("             REFIID riid,                                                     ")
+cpp_quote("             void ** ppvObj);                                                 ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkPreprocessMoniker(                                                ")
+cpp_quote("             LPBC pibc,                                                       ")
+cpp_quote("             IMoniker *pimkIn,                                                ")
+cpp_quote("             IMoniker **ppimkOut);                                            ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI OleSaveToStreamEx(                                                     ")
+cpp_quote("             IUnknown * piunk,                                                ")
+cpp_quote("             IStream * pistm,                                                 ")
+cpp_quote("             BOOL fClearDirty);                                               ")
+cpp_quote("                                                                              ")
+
+// hlink special reference ids used in HlinkSetSpecialReference and HlinkGetSpecialReference
+typedef enum _HLSR_NOREDEF10
+{
+    HLSR_HOME = 0,
+    HLSR_SEARCHPAGE = 1,
+    HLSR_HISTORYFOLDER = 2,
+} HLSR;
+
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkSetSpecialReference(                                              ")
+cpp_quote("             ULONG uReference,                                                ")
+cpp_quote("             LPCWSTR pwzReference);                                           ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkGetSpecialReference(                                              ")
+cpp_quote("             ULONG uReference,                                                ")
+cpp_quote("             LPWSTR *ppwzReference);                                          ")
+cpp_quote("                                                                              ")
+
+typedef enum _HLSHORTCUTF__NOREDEF10
+{
+    HLSHORTCUTF_DEFAULT             = 0x00000000,
+    HLSHORTCUTF_DONTACTUALLYCREATE  = 0x00000001,
+    HLSHORTCUTF_USEFILENAMEFROMFRIENDLYNAME = 0x00000002,
+    HLSHORTCUTF_USEUNIQUEFILENAME   = 0x00000004,
+    HLSHORTCUTF_MAYUSEEXISTINGSHORTCUT = 0x00000008,
+} HLSHORTCUTF;
+
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkCreateShortcut(                                                   ")
+cpp_quote("             DWORD grfHLSHORTCUTF,                                            ")
+cpp_quote("             IHlink *pihl,                                                    ")
+cpp_quote("             LPCWSTR pwzDir,                                                  ")
+cpp_quote("             LPCWSTR pwzFileName,                                             ")
+cpp_quote("             LPWSTR *ppwzShortcutFile,                                        ")
+cpp_quote("             DWORD dwReserved);                                               ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkCreateShortcutFromMoniker(                                        ")
+cpp_quote("             DWORD grfHLSHORTCUTF,                                            ")
+cpp_quote("             IMoniker *pimkTarget,                                            ")
+cpp_quote("             LPCWSTR pwzLocation,                                             ")
+cpp_quote("             LPCWSTR pwzDir,                                                  ")
+cpp_quote("             LPCWSTR pwzFileName,                                             ")
+cpp_quote("             LPWSTR *ppwzShortcutFile,                                        ")
+cpp_quote("             DWORD dwReserved);                                               ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkCreateShortcutFromString(                                         ")
+cpp_quote("             DWORD grfHLSHORTCUTF,                                            ")
+cpp_quote("             LPCWSTR pwzTarget,                                               ")
+cpp_quote("             LPCWSTR pwzLocation,                                             ")
+cpp_quote("             LPCWSTR pwzDir,                                                  ")
+cpp_quote("             LPCWSTR pwzFileName,                                             ")
+cpp_quote("             LPWSTR *ppwzShortcutFile,                                        ")
+cpp_quote("             DWORD dwReserved);                                               ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkResolveShortcut(                                                  ")
+cpp_quote("             LPCWSTR pwzShortcutFileName,                                     ")
+cpp_quote("             IHlinkSite * pihlsite,                                           ")
+cpp_quote("             DWORD dwSiteData,                                                ")
+cpp_quote("             IUnknown * piunkOuter,                                           ")
+cpp_quote("             REFIID riid,                                                     ")
+cpp_quote("             void ** ppvObj);                                                 ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkResolveShortcutToMoniker(                                         ")
+cpp_quote("             LPCWSTR pwzShortcutFileName,                                     ")
+cpp_quote("             IMoniker **ppimkTarget,                                          ")
+cpp_quote("             LPWSTR *ppwzLocation);                                           ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkResolveShortcutToString(                                          ")
+cpp_quote("             LPCWSTR pwzShortcutFileName,                                     ")
+cpp_quote("             LPWSTR *ppwzTarget,                                              ")
+cpp_quote("             LPWSTR *ppwzLocation);                                           ")
+cpp_quote("                                                                              ")
+
+// Returns S_OK if pwzFileName is a hlink shortcut file.
+// Currently, this succeeds for Internet Shortcut (.url) files.
+cpp_quote("                                                                              ")
+cpp_quote(" STDAPI HlinkIsShortcut(LPCWSTR pwzFileName);                                 ")
+cpp_quote("                                                                              ")
+
+//      Find pwzName within pwzParams and return the associated value.
+//      The syntax of pwzParams is < ID1 = "value1" > < ID2 = "value2" > with
+//      all whitespace outside the quoted strings being ignored.
+//      If the pwzName is found, allocate and fill in *ppwzValue with the
+//      associated value and return S_OK.
+//      If pwzName is not found, return S_FALSE.
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkGetValueFromParams(                                               ")
+cpp_quote("             LPCWSTR pwzParams,                                               ")
+cpp_quote("             LPCWSTR pwzName,                                                 ")
+cpp_quote("             LPWSTR *ppwzValue);                                              ")
+cpp_quote("                                                                              ")
+cpp_quote("                                                                              ")
+
+typedef enum _HLTRANSLATEF_NOREDEF10
+{
+    HLTRANSLATEF_DEFAULT                = 0x00000000,
+    HLTRANSLATEF_DONTAPPLYDEFAULTPREFIX = 0x00000001
+} HLTRANSLATEF;
+
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI HlinkTranslateURL(                                                     ")
+cpp_quote("             LPCWSTR pwzURL,                                                  ")
+cpp_quote("             DWORD grfFlags,                                                  ")
+cpp_quote("             LPWSTR *ppwzTranslatedURL);                                      ")
+cpp_quote("                                                                              ")
+cpp_quote("                                                                              ")
+
+
+cpp_quote("                                                                              ")
+cpp_quote("/****************************************************************************/")
+cpp_quote("/**** Hyperlink interface definitions                                    ****/")
+cpp_quote("/****************************************************************************/")
+cpp_quote("                                                                              ")
+
+
+/****************************************************************************/
+/*  THIS MUST BE THE FIRST INTERFACE DEFINITION IN THIS IDL. DO NOT MOVE IT */
+/****************************************************************************/
+
+
+//----------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:   IHlink interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPHLINK_DEFINED")
+cpp_quote("#define _LPHLINK_DEFINED")
+
+[
+        object,
+        uuid(79eac9c3-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+
+interface IHlink: IUnknown
+{
+        typedef [unique] IHlink *LPHLINK;
+
+        // Navigation flags
+        typedef enum
+        {
+            HLNF_INTERNALJUMP           = 0x00000001,
+            HLNF_OPENINNEWWINDOW        = 0x00000002,
+            HLNF_NAVIGATINGBACK         = 0x00000004,
+            HLNF_NAVIGATINGFORWARD      = 0x00000008,
+            HLNF_NAVIGATINGTOSTACKITEM  = 0x00000010,
+            HLNF_CREATENOHISTORY        = 0x00000020,
+        } HLNF;
+
+        // GetXXXReference values indicating reference to be retrieved
+        typedef enum
+        {
+            HLINKGETREF_DEFAULT  = 0,
+            HLINKGETREF_ABSOLUTE = 1,
+            HLINKGETREF_RELATIVE = 2,
+        } HLINKGETREF;
+
+        // GetFriendlyName flags
+        typedef enum
+        {
+            HLFNAMEF_DEFAULT            = 0x00000000,
+            HLFNAMEF_TRYCACHE           = 0x00000001,
+            HLFNAMEF_TRYPRETTYTARGET    = 0x00000002,
+            HLFNAMEF_TRYFULLTARGET      = 0x00000004,
+            HLFNAMEF_TRYWIN95SHORTCUT   = 0x00000008,
+        } HLFNAMEF;
+
+        // Status flags
+        typedef enum
+        {
+            HLINKMISC_RELATIVE = 0x00000001,
+        } HLINKMISC;
+
+        // SetXXXReference flags, indicating which part of the reference
+        // need to be updated
+        typedef enum
+        {
+            HLINKSETF_TARGET              = 0x00000001,
+            HLINKSETF_LOCATION            = 0x00000002,
+        } HLINKSETF;
+
+        HRESULT SetHlinkSite(
+                [in, unique] IHlinkSite * pihlSite,
+                [in] DWORD dwSiteData);
+
+        HRESULT GetHlinkSite(
+                [out] IHlinkSite ** ppihlSite,
+                [out] DWORD * pdwSiteData);
+
+        HRESULT SetMonikerReference(
+                [in] DWORD grfHLSETF,
+                [in, unique] IMoniker * pimkTarget,
+                [in, unique] LPCWSTR pwzLocation);
+
+        HRESULT GetMonikerReference(
+                [in] DWORD dwWhichRef,
+                [out] IMoniker ** ppimkTarget,
+                [out] LPWSTR * ppwzLocation);
+
+        HRESULT SetStringReference(
+                [in] DWORD grfHLSETF,
+                [in, unique] LPCWSTR pwzTarget,
+                [in, unique] LPCWSTR pwzLocation);
+
+        HRESULT GetStringReference(
+                [in] DWORD dwWhichRef,
+                [out] LPWSTR * ppwzTarget,
+                [out] LPWSTR * ppwzLocation);
+
+        HRESULT SetFriendlyName(
+                [in, unique] LPCWSTR pwzFriendlyName);
+
+        HRESULT GetFriendlyName(
+                [in] DWORD grfHLFNAMEF,
+                [out] LPWSTR * ppwzFriendlyName);
+
+        HRESULT SetTargetFrameName(
+                [in, unique] LPCWSTR pwzTargetFrameName);
+
+        HRESULT GetTargetFrameName(
+                [out] LPWSTR *ppwzTargetFrameName);
+
+        HRESULT GetMiscStatus(
+                [out] DWORD *pdwStatus);
+
+        HRESULT Navigate(
+                [in] DWORD grfHLNF,
+                [in, unique] LPBC pibc,
+                [in, unique] IBindStatusCallback * pibsc,
+                [in, unique] IHlinkBrowseContext * pihlbc);
+
+        HRESULT SetAdditionalParams(
+                [in, unique] LPCWSTR pwzAdditionalParams);
+
+        HRESULT GetAdditionalParams(
+                [out] LPWSTR *ppwzAdditionalParams);
+}
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:   IHlinkSite interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPHLINKSITE_DEFINED")
+cpp_quote("#define _LPHLINKSITE_DEFINED")
+cpp_quote("EXTERN_C const GUID SID_SContainer;")
+
+[
+        object,
+        uuid(79eac9c2-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+
+interface IHlinkSite: IUnknown
+{
+        typedef [unique] IHlinkSite *LPHLINKSITE;
+
+        // values indicating the moniker to be retrieved
+        typedef enum
+        {
+            HLINKWHICHMK_CONTAINER  = 1,
+            HLINKWHICHMK_BASE       = 2,
+        } HLINKWHICHMK;
+
+        HRESULT QueryService(
+                [in] DWORD dwSiteData,
+#ifdef _MAC
+        [in] GUID * guidService,
+#else
+        [in] REFGUID guidService,
+#endif // _MAC
+            [in] REFIID riid,
+                [out, iid_is(riid)] IUnknown ** ppiunk);
+
+        HRESULT GetMoniker(
+                [in] DWORD dwSiteData,
+                [in] DWORD dwAssign,
+                [in] DWORD dwWhich,
+                [out] IMoniker ** ppimk);
+
+        HRESULT ReadyToNavigate(
+                [in] DWORD dwSiteData,
+                [in] DWORD dwReserved);
+
+        HRESULT OnNavigationComplete(
+                [in] DWORD dwSiteData,
+                [in] DWORD dwreserved,
+                [in] HRESULT hrError,
+                [in, unique] LPCWSTR pwzError);
+}
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:   IHlinkTarget interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPHLINKTARGET_DEFINED")
+cpp_quote("#define _LPHLINKTARGET_DEFINED")
+
+[
+        object,
+        uuid(79eac9c4-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+
+interface IHlinkTarget : IUnknown
+{
+        typedef [unique] IHlinkTarget *LPHLINKTARGET;
+
+        HRESULT SetBrowseContext(
+                [in, unique] IHlinkBrowseContext * pihlbc);
+
+        HRESULT GetBrowseContext(
+                [out] IHlinkBrowseContext ** ppihlbc);
+
+        HRESULT Navigate(
+                [in] DWORD grfHLNF,
+                [in, unique] LPCWSTR pwzJumpLocation);
+
+        HRESULT GetMoniker(
+                [in,unique]  LPCWSTR pwzLocation,
+                [in] DWORD dwAssign,
+                [out] IMoniker ** ppimkLocation);
+
+        HRESULT GetFriendlyName(
+                [in,unique]  LPCWSTR pwzLocation,
+                [out] LPWSTR * ppwzFriendlyName);
+}
+
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:   IHlinkFrame interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPHLINKFRAME_DEFINED")
+cpp_quote("#define _LPHLINKFRAME_DEFINED")
+cpp_quote("EXTERN_C const GUID SID_SHlinkFrame;")
+
+[
+        object,
+        uuid(79eac9c5-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+
+interface IHlinkFrame : IUnknown
+{
+        typedef [unique] IHlinkFrame *LPHLINKFRAME;
+
+        HRESULT SetBrowseContext(
+                [in, unique] IHlinkBrowseContext * pihlbc);
+
+        HRESULT GetBrowseContext(
+                [out] IHlinkBrowseContext ** ppihlbc);
+
+        HRESULT Navigate(
+                [in] DWORD grfHLNF,
+                [in, unique] LPBC pbc,
+                [in, unique] IBindStatusCallback * pibsc,
+                [in, unique] IHlink * pihlNavigate);
+
+        HRESULT OnNavigate(
+                [in] DWORD grfHLNF,
+                [in, unique] IMoniker * pimkTarget,
+                [in, unique] LPCWSTR pwzLocation,
+                [in, unique] LPCWSTR pwzFriendlyName,
+                [in] DWORD dwreserved);
+
+        HRESULT UpdateHlink(
+                [in] ULONG uHLID,
+                [in, unique] IMoniker * pimkTarget,
+                [in, unique] LPCWSTR pwzLocation,
+                [in, unique] LPCWSTR pwzFriendlyName);
+}
+
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:  IEnumHLITEM interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPENUMHLITEM_DEFINED")
+cpp_quote("#define _LPENUMHLITEM_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eac9c6-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+
+interface IEnumHLITEM : IUnknown
+{
+        typedef [unique] IEnumHLITEM *LPENUMHLITEM;
+
+        typedef struct tagHLITEM
+        {
+                ULONG uHLID;
+                LPWSTR pwzFriendlyName;
+        } HLITEM;
+        typedef [unique] HLITEM *LPHLITEM;
+
+        //[local]
+        HRESULT __stdcall Next(
+                [in] ULONG celt,
+                [out] HLITEM * rgelt,
+                [out] ULONG * pceltFetched);
+
+#ifdef NOTUSED
+        [call_as(Next)]
+        HRESULT __stdcall RemoteNext(
+                [in] ULONG celt,
+                [out, size_is(celt), length_is(*pceltFetched)]
+                HLITEM * rgelt,
+                [out] ULONG *pceltFetched);
+#endif
+
+        HRESULT Skip(
+                [in] ULONG celt);
+
+        HRESULT Reset();
+
+        HRESULT Clone(
+                [out] IEnumHLITEM ** ppienumhlitem);
+}
+
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:   IHlinkBrowseContext interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPHLINKBROWSECONTEXT_DEFINED")
+cpp_quote("#define _LPHLINKBROWSECONTEXT_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eac9c7-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+
+interface IHlinkBrowseContext : IUnknown
+{
+        typedef [unique] IHlinkBrowseContext *LPHLINKBROWSECONTEXT;
+
+        // Information about the toolbars
+        enum
+        {
+            HLTB_DOCKEDLEFT     = 0,
+            HLTB_DOCKEDTOP      = 1,
+            HLTB_DOCKEDRIGHT    = 2,
+            HLTB_DOCKEDBOTTOM   = 3,
+            HLTB_FLOATING       = 4,
+        };
+
+        typedef struct _tagHLTBINFO
+        {
+            ULONG   uDockType;
+            RECT    rcTbPos;
+        } HLTBINFO;
+
+        // information about the browse window
+        enum
+        {
+            HLBWIF_HASFRAMEWNDINFO      = 0x00000001,
+            HLBWIF_HASDOCWNDINFO        = 0x00000002,
+            HLBWIF_FRAMEWNDMAXIMIZED    = 0x00000004,
+            HLBWIF_DOCWNDMAXIMIZED      = 0x00000008,
+            HLBWIF_HASWEBTOOLBARINFO    = 0x00000010,
+            HLBWIF_WEBTOOLBARHIDDEN     = 0x00000020
+        };
+
+        typedef struct _tagHLBWINFO
+        {
+            ULONG       cbSize;
+            DWORD       grfHLBWIF;
+            RECT        rcFramePos;
+            RECT        rcDocPos;
+            HLTBINFO    hltbinfo;
+        } HLBWINFO;
+        typedef [unique] HLBWINFO *LPHLBWINFO;
+
+        enum
+        {
+            HLID_INVALID        = 0x0,
+            HLID_PREVIOUS       = 0xFFFFFFFF,
+            HLID_NEXT           = 0xFFFFFFFE,
+            HLID_CURRENT        = 0xFFFFFFFD,
+            HLID_STACKBOTTOM    = 0xFFFFFFFC,
+            HLID_STACKTOP       = 0xFFFFFFFB,
+         };
+
+        enum
+        {
+            HLQF_ISVALID    = 0x00000001,
+            HLQF_ISCURRENT  = 0x00000002
+        };
+
+        HRESULT Register(
+                [in] DWORD reserved,
+                [in, unique] IUnknown * piunk,
+                [in, unique] IMoniker * pimk,
+                [out] DWORD * pdwRegister);
+
+        HRESULT GetObject(
+                [in, unique] IMoniker * pimk,
+                [in] BOOL fBindIfRootRegistered,
+                [out] IUnknown ** ppiunk);
+
+        HRESULT Revoke(
+                [in] DWORD dwRegister);
+
+        HRESULT SetBrowseWindowInfo(
+                [in, unique] HLBWINFO * phlbwi);
+
+        HRESULT GetBrowseWindowInfo(
+                [out] HLBWINFO * phlbwi);
+
+        HRESULT SetInitialHlink(
+                [in, unique] IMoniker * pimkTarget,
+                [in, unique] LPCWSTR pwzLocation,
+                [in, unique] LPCWSTR pwzFriendlyName);
+
+        HRESULT OnNavigateHlink(
+                [in] DWORD grfHLNF,
+                [in, unique] IMoniker * pimkTarget,
+                [in, unique] LPCWSTR pwzLocation,
+                [in, unique] LPCWSTR pwzFriendlyName,
+                [out] ULONG * puHLID);
+
+        HRESULT UpdateHlink(
+                [in] ULONG uHLID,
+                [in, unique] IMoniker * pimkTarget,
+                [in, unique] LPCWSTR pwzLocation,
+                [in, unique] LPCWSTR pwzFriendlyName);
+
+        HRESULT EnumNavigationStack(
+                [in] DWORD dwReserved,
+                [in] DWORD grfHLFNAMEF,
+                [out] IEnumHLITEM ** ppienumhlitem);
+
+        HRESULT QueryHlink(
+                [in] DWORD grfHLQF,
+                [in] ULONG uHLID);
+
+        HRESULT GetHlink(
+                [in] ULONG uHLID,
+                [out] IHlink ** ppihl);
+
+        HRESULT SetCurrentHlink(
+                [in] ULONG uHLID);
+
+        HRESULT Clone(
+                [in, unique] IUnknown * piunkOuter,
+                [in] REFIID riid,
+                [out, iid_is(riid)] IUnknown ** ppiunkObj);
+
+        HRESULT Close(
+                [in] DWORD reserved);
+}
+
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:  IExtensionServices interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPEXTENSIONSERVICES_DEFINED")
+cpp_quote("#define _LPEXTENSIONSERVICES_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eac9cb-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+
+interface IExtensionServices : IUnknown
+{
+        typedef [unique] IExtensionServices *LPEXTENSIONSERVICES;
+
+        HRESULT SetAdditionalHeaders(
+                [in] LPCWSTR pwzAdditionalHeaders);
+
+        HRESULT SetAuthenticateData(
+                [in] HWND phwnd,
+                [in] LPCWSTR pwzUsername,
+                [in] LPCWSTR pwzPassword);
+}
+
+cpp_quote("#endif")
+
+
+cpp_quote("                                                                              ")
+cpp_quote("#endif // !HLINK_H                                                            ")
+

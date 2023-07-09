@@ -1,0 +1,25 @@
+LIBRARY WININEXTDBG
+
+DESCRIPTION 'Wininet Debug KD and NTSD Extensions'
+
+EXPORTS
+    help
+    version
+	fsm
+	ho
+	tinf
+	iho
+	icho
+	hrho
+	serialist
+	lste
+	proxyinfo
+	proxybyplst
+	proxybyplste
+	proxysrvlst
+	proxysrvlste
+	symbol
+    ExtensionApiVersion
+    WinDbgExtensionDllInit
+
+

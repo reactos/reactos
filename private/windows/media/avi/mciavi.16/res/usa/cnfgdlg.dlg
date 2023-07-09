@@ -1,0 +1,59 @@
+#ifdef WIN32
+ID_ICON         ICON VFW.ICO
+#endif
+
+IDA_CONFIG DIALOG 9, 22, 161, 136
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+
+CAPTION "Video Playback Options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK,                113,  5, 45, 14
+    PUSHBUTTON      "Cancel", IDCANCEL,        113, 20, 45, 14
+    PUSHBUTTON      "Se&t Default", ID_DEFAULT, 113, 35, 45, 14
+#ifndef WIN32
+    GROUPBOX        "Video Mode", -1, 5, 5, 64, 38
+    CONTROL         "&Window", ID_WINDOW, "Button", BS_AUTORADIOBUTTON |
+                    WS_GROUP, 10, 16, 39, 10
+    CONTROL         "&Full Screen", ID_VGA240, "Button", BS_AUTORADIOBUTTON,
+                    10, 29, 55, 10
+#else
+    CONTROL         ID_ICON, -1, "static", SS_ICON, 16, 10, 0, 0
+#endif
+    CONTROL         "&Zoom by 2", ID_ZOOM2, "Button", BS_AUTOCHECKBOX |
+                    WS_GROUP | WS_TABSTOP, 5, 49, 49, 10
+    CONTROL         "&Skip video frames if behind", ID_SKIPFRAMES, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 5, 61, 107, 10
+    GROUPBOX        "&Information", ID_SIZE, 3, 77, 155, 56
+    EDITTEXT        ID_INFO, 7, 87, 149, 44, ES_MULTILINE | ES_AUTOVSCROLL |
+                    ES_READONLY | NOT WS_BORDER | WS_VSCROLL |
+                    WS_TABSTOP
+#ifdef DEBUG
+    PUSHBUTTON      "De&bug...", ID_DEBUG, 113, 51, 45, 14
+#endif
+END
+
+#ifdef DEBUG
+IDA_DEBUG DIALOG 9, 20, 160, 145
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debug"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Decompress To S&creen", ID_SCREEN, "Button",
+                    BS_AUTO3STATE | WS_TABSTOP, 4, 49, 147, 10
+    CONTROL         "Decompress To &Bitmap", ID_BITMAP, "Button",
+                    BS_AUTO3STATE | WS_TABSTOP, 4, 60, 96, 10
+    CONTROL         "D&raw with bitmaps", ID_SUCKS, "Button", BS_AUTO3STATE |
+                    WS_TABSTOP, 4, 71, 93, 10
+    LTEXT           "R&ate:", -1, 1, 121, 24, 8
+    SCROLLBAR       ID_RATE, 22, 122, 69, 10, WS_TABSTOP
+    LTEXT           "&Level", -1, 3, 25, 24, 8
+    COMBOBOX        ID_LEVEL, 29, 23, 69, 51, CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "OK", IDOK, 116, 3, 40, 14
+    LTEXT           "MCIAVI Build 1.X.X", ID_BUILD, 5, 4, 104, 8
+    CONTROL         "Use AVI&File for playback.", ID_USE_AVIFILE, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 4, 84, 150, 10
+END
+#endif

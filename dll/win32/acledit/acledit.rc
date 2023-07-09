@@ -1,9 +1,0 @@
-#include <windef.h>
-
-#include "resource.h"
-
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Access Control Editor"
-#define REACTOS_STR_INTERNAL_NAME     "acledit"
-#define REACTOS_STR_ORIGINAL_FILENAME "acledit.dll"
-#include <reactos/version.rc>

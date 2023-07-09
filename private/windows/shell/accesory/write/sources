@@ -1,0 +1,44 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Alex Embrey (alexe) 23-Feb-1996
+
+!ENDIF
+
+MAJORCOMP=    accesory
+MINORCOMP=    write
+
+TARGETNAME=   write
+
+TARGETPATH=   obj
+
+TARGETTYPE=   PROGRAM
+
+USE_MSVCRT=1
+
+SOURCES=      \
+              write.rc \
+              write.c
+
+UMTYPE=       windows
+UMENTRY=      winmain
+
+UMLIBS=       \
+              $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+              $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+

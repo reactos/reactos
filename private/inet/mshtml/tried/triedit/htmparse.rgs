@@ -1,0 +1,24 @@
+HKCR
+{
+	TriEditParse.TriEditParse.1 = s 'TriEditParse Class'
+	{
+		CLSID = s '{010E6CBE-FE2B-11D0-B079-006008058A0E}'
+	}
+	TriEditParse.TriEditParse = s 'TriEditParse Class'
+	{
+		CurVer = s 'TriEditParse.TriEditParse.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {010E6CBE-FE2B-11D0-B079-006008058A0E} = s 'TriEditParse Class'
+		{
+			ProgID = s 'TriEditParse.TriEditParse.1'
+			VersionIndependentProgID = s 'TriEditParse.TriEditParse'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

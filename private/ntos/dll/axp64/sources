@@ -1,0 +1,6 @@
+AXP64_DLLLIBOBJECTS=$(BASEDIR)\private\ntos\rtl\user\obj\axp64\chkstk.obj
+
+AXP64_SOURCES=..\alpha\ldrthunk.s \
+              ..\alpha\critsect.s \
+              ..\alpha\ldrctx.c \
+              axp64\usrstubs.s

@@ -1,0 +1,193 @@
+#ifndef _BEHAVIOR_PDL_
+#define _BEHAVIOR_PDL_ 1
+
+#include "element.pdl"
+
+file behavior.pdl
+
+import element.pdl
+import document.pdl
+
+
+   
+                                            
+//-------------------------------------------------------------------------
+//
+//
+//  BEHAVIOR interfaces
+//
+//
+//  IElementBehavior, IElementBehaviorSite, IElementBehaviorSiteOM;
+//  IElementBehaviorFactory;
+//  IElementBehaviorRender, IElementBehaviorSiteRender;
+//  ISubDivisionProvider, IElementBehaviorUI;
+//  IElementBehaviorCategory, IElementBehaviorSiteCAtegory
+//
+//-------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------
+//
+//  Misc
+//
+//-------------------------------------------------------------------------
+
+enum BEHAVIOR_EVENT   prefix:BEHAVIOREVENT_ 
+    eval FIRST                      value:0
+
+    eval CONTENTREADY               value:0       
+    eval DOCUMENTREADY              value:1       
+    eval APPLYSTYLE                 value:2
+    eval DOCUMENTCONTEXTCHANGE      value:3
+
+    eval LAST                       value:3
+    
+enum BEHAVIOR_EVENT_FLAGS   prefix:BEHAVIOREVENTFLAGS_ 
+    eval BUBBLE                     value:1
+
+enum BEHAVIOR_RENDER_INFO   prefix:BEHAVIORRENDERINFO_
+    eval BEFOREBACKGROUND           value:0x000001
+    eval AFTERBACKGROUND            value:0x000002
+    eval BEFORECONTENT              value:0x000004
+    eval AFTERCONTENT               value:0x000008
+    eval AFTERFOREGROUND            value:0x000020
+
+    eval ABOVECONTENT               value:0x000028
+    eval ALLLAYERS                  value:0x0000FF
+
+    eval DISABLEBACKGROUND          value:0x000100
+    eval DISABLENEGATIVEZ           value:0x000200
+    eval DISABLECONTENT             value:0x000400
+    eval DISABLEPOSITIVEZ           value:0x000800
+    eval DISABLEALLLAYERS           value:0x000F00
+
+    eval HITTESTING                 value:0x001000
+
+    eval SURFACE                    value:0x100000
+    eval 3DSURFACE                  value:0x200000
+
+enum BEHAVIOR_RELATION prefix:BEHAVIOR_
+    eval FIRSTRELATION              value:0
+    eval SAMEELEMENT                value:0
+    eval PARENT                     value:1
+    eval CHILD                      value:2
+    eval SIBLING                    value:3
+    eval LASTRELATION               value:3
+
+
+//+------------------------------------------------------------------------
+//
+//  IElementBehaviorSite
+//
+//-------------------------------------------------------------------------
+
+interface IElementBehaviorSite super:IUnknown custom guid:3050f427-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT GetElement                          (out retval type:IHTMLElement**        arg:ppElement)
+    method      HRESULT RegisterNotification                (in  type:LONG arg:lEvent)
+
+//+------------------------------------------------------------------------
+//
+//  IElementBehavior
+//
+//-------------------------------------------------------------------------
+
+interface IElementBehavior super:IUnknown custom guid:3050f425-98b5-11cf-bb82-00aa00bdce0b 
+    method      HRESULT Init                                (in         type:IElementBehaviorSite*  arg:pBehaviorSite)
+    method      HRESULT Notify                              (in         type:LONG                   arg:lEvent, \
+                                                             in out     type:VARIANT*               arg:pVar)
+    method      HRESULT Detach                              ()
+
+//+------------------------------------------------------------------------
+//
+//  IElementBehaviorFactory
+//
+//-------------------------------------------------------------------------
+
+cpp_quote("#define SID_SElementBehaviorFactory IID_IElementBehaviorFactory") 
+
+interface IElementBehaviorFactory super:IUnknown custom guid:3050f429-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT FindBehavior                        (in         type:BSTR                  arg:bstrBehavior, \
+                                                             in         type:BSTR                  arg:bstrBehaviorUrl, \
+                                                             in         type:IElementBehaviorSite* arg:pSite, \
+                                                             out retval type:IElementBehavior**    arg:ppBehavior)
+
+//+------------------------------------------------------------------------
+//
+//  IElementBehaviorSiteOM
+//
+//-------------------------------------------------------------------------
+
+interface IElementBehaviorSiteOM super:IUnknown custom guid:3050f489-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT RegisterEvent maxstrlen:pdlNoLimit  (in         type:LPOLESTR              arg:pchEvent, \
+                                                             in         type:LONG                  arg:lFlags, \
+                                                             out retval type:LONG*                 arg:plCookie)
+    method      HRESULT GetEventCookie maxstrlen:pdlNoLimit (in         type:LPOLESTR              arg:pchEvent, \
+                                                             out retval type:LONG*                 arg:plCookie)
+    method      HRESULT FireEvent                           (in         type:LONG                  arg:lCookie, \
+                                                             in         type:IHTMLEventObj*        arg:pEventObject)
+    method      HRESULT CreateEventObject                   (out retval type:IHTMLEventObj**       arg:ppEventObject)
+    method      HRESULT RegisterName maxstrlen:pdlNoLimit   (in         type:LPOLESTR              arg:pchName)
+    method      HRESULT RegisterUrn  maxstrlen:pdlNoLimit   (in         type:LPOLESTR              arg:pchUrn)
+
+//+------------------------------------------------------------------------
+//
+//  IElementBehaviorRender
+//
+//-------------------------------------------------------------------------
+
+interface IElementBehaviorRender super:IUnknown custom guid:3050f4aa-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT Draw                                (in         type:HDC                   arg:hdc, \
+                                                             in         type:LONG                  arg:lLayer, \ 
+                                                             in         type:RECT*                 arg:pRect, \
+                                                             in         type:IUnknown*             arg:pReserved)
+    method      HRESULT GetRenderInfo                       (out retval type:LONG*                 arg:plRenderInfo)
+    method      HRESULT HitTestPoint                        (in         type:POINT*                arg:pPoint, \
+                                                             in         type:IUnknown*             arg:pReserved, \
+                                                             out retval type:BOOL*                 arg:pbHit)
+
+//+------------------------------------------------------------------------
+//
+//  IElementBehaviorSiteRender
+//
+//-------------------------------------------------------------------------
+
+interface IElementBehaviorSiteRender super:IUnknown custom guid:3050f4a7-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT Invalidate                          (in         type:RECT*                  arg:pRect)
+    method      HRESULT InvalidateRenderInfo                ()
+    method      HRESULT InvalidateStyle                     ()
+
+
+//+------------------------------------------------------------------------
+//
+//  IElementBehaviorCategory
+//
+//-------------------------------------------------------------------------
+
+interface IElementBehaviorCategory super:IUnknown custom guid:3050f4ed-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT GetCategory                         (out retval type:LPOLESTR*             arg:ppchCategory)
+
+//+------------------------------------------------------------------------
+//
+//  IElementBehaviorSiteCategory
+//
+//-------------------------------------------------------------------------
+
+interface IElementBehaviorSiteCategory super:IUnknown custom guid:3050f4ee-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT GetRelatedBehaviors                 (in         type:LONG                  arg:lDirection, \
+                                                             in         type:LPOLESTR              arg:pchCategory, \
+                                                             out retval type:IEnumUnknown**        arg:ppEnumerator)
+
+
+//+------------------------------------------------------------------------
+//
+//  XmlNamespaceMapping
+//
+//-------------------------------------------------------------------------
+
+cpp_quote("DEFINE_GUID(SID_SXmlNamespaceMapping, 0x3050f628, 0x98b5, 0x11cf, 0xbb, 0x82, 0x00, 0xaa, 0x00, 0xbd, 0xce, 0x0b);")
+cpp_quote("DEFINE_GUID(CGID_XmlNamespaceMapping, 0x3050f629, 0x98b5, 0x11cf, 0xbb, 0x82, 0x00, 0xaa, 0x00, 0xbd, 0xce, 0x0b);")
+cpp_quote("#define XMLNAMESPACEMAPPING_GETURN 1")
+
+
+#endif //_BEHAVIOR_PDL_
+
+

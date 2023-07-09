@@ -1,0 +1,6 @@
+LIBRARY testdll
+
+EXPORTS
+  SnmpExtensionInit
+  SnmpExtensionTrap
+  SnmpExtensionQuery

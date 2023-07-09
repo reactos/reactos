@@ -1,0 +1,166 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>DA Sample</TITLE>
+<LINK REL=stylesheet HREF=styles.css TYPE="text/css">
+<style>
+  #banner
+  {
+    top: -73;
+  }
+  #smallflag
+  {
+    position: absolute;
+    top: -73;
+    left: 16;
+    z-index:20;
+  }
+  #contents
+  {
+    top:322;
+  }
+</style>
+<script LANGUAGE=JScript src=welcome.js></script>
+<script LANGUAGE=JScript FOR=window EVENT=OnLoad>
+  window.onerror = EatErrors;
+  ReturnToDefault();
+  SetContentHeight();
+  window.setTimeout( "StartDA();", 10 );  // part of HackHack
+</script>
+</HEAD>
+<!-- HACK NOTE: the property "basedir" is dynamically set on the body tag by the container.
+     This property contains the windows directory path without a trailing slash (eg "c:\winnt"). -->
+<BODY scroll=no>
+<OBJECT ID="DAControl"
+  CLASSID="CLSID:B6FFC24C-7E13-11D0-9B47-00C04FC2F51D">
+</OBJECT>
+<img ID=banner src="title.gif">
+<img ID=smallflag src="flagsm.gif">
+<div ID=contents>
+ <img ID=fadebar src="bar.jpg">
+ <div ID=leftpanel>
+  <div ID=cmdlist onmouseout="TimedSelect();">
+  </div>
+  <table ID=checkboxarea>
+    <tr>
+      <td><input accesskey=s ID=showmecheck type=checkbox checked ONCLICK="ReturnToDefault();"></td>
+      <td><LABEL for=showmecheck><u>S</u>how this screen at startup.</LABEL></td>
+    </tr>
+  </table>
+ </div>
+ <div id=rightpanel>
+  <div id=header></div>
+  <div id=description></div>
+ </div>
+</div>
+<SCRIPT LANGUAGE="JScript">
+function StartDA()
+{
+  m = DAControl.PixelLibrary;
+
+  basedir = document.body.basedir;  // hackhack, overcome DA limitation
+
+  // the logo
+  pt1 = m.Point2Anim( m.Interpolate(60,-60,1), m.DANumber(50));
+  myNum = m.Sequence(m.DANumber(60).Duration(1),m.Interpolate(60,-60,1));
+  pt2 = m.Point2Anim( myNum,m.DANumber(-50));
+  pt3 = m.Point2Anim( myNum,m.DANumber(50));
+  pt4 = m.Point2(60,-50);
+  sfac = m.Interpolate(1.0, 0.46, 1);
+  img1 = m.ImportImage(basedir + "\\flagblk.gif").Crop( pt1, pt2 );
+  img2 = m.ImportImage(basedir + "\\flag.gif").Crop( pt3, pt4 );
+  moveAndShrink =
+    m.Sequence(
+      m.IdentityTransform2.Duration(3),
+      m.Compose2(
+        m.Translate2Rate( -196, -118 ).Duration(1),
+        m.Scale2Anim(sfac,sfac).Duration(1)
+      )
+    );
+  logoFinal = m.Overlay( img1.Opacity(0.95).Transform(moveAndShrink), img2.Opacity(0.95).Transform(moveAndShrink));
+
+  // the main box
+  ds = m.NewDrawingSurface();
+  ds.borderStyle = m.EmptyLineStyle;
+  ds.FillColor(m.ColorRgb(0.3984375, 0.59765625, 0.796875));
+  ds.Rect(-93,-93,186,186);
+  ds.FillColor(m.ColorRgb(1.0, 1.0, 1.0));
+  ds.Rect(-66,-66,132,132);
+  sfac = m.Interpolate(0.0, 1.0, 0.5);
+  trans =
+    m.Compose2(
+      moveAndShrink,
+      m.Sequence(
+        m.IdentityTransform2.Duration(2),
+        m.Scale2Anim(sfac,sfac).Duration(0.5)
+      )
+    );
+  mainBox = ds.Image.Transform(trans).OpacityAnim(m.Sequence( m.DANumber(0.0).Duration(2), m.DANumber(1.0) ));
+
+  // second box
+  ds.Clear();
+  ds.borderStyle = m.EmptyLineStyle;
+  ds.FillColor(m.ColorRgb(0.6484375, 0.7890625, 0.9375));
+  ds.Rect(-239, -88,86,13);
+  ds.Rect(-239,-161,86,13);
+  ds.Rect(-239,-148,13,60);
+  ds.Rect(-166,-148,13,60);
+  trans =
+    m.Sequence(
+      m.IdentityTransform2.Duration(4),
+      m.Translate2Rate( 58, 84 ).Duration(0.5)
+    );
+  boxTwo = ds.Image.Transform(trans).OpacityAnim(m.Sequence( m.DANumber(0.0).Duration(4), m.DANumber(1.0) ));
+
+  // third box
+  ds.Clear();
+  ds.borderStyle = m.EmptyLineStyle;
+  ds.FillColor(m.ColorRgb(0.796875, 0.921875, 1.0));
+  ds.Rect(-210,-119,86,86);
+  ds.FillColor(m.ColorRgb(1.0, 1.0, 1.0));
+  ds.Rect(-197,-106,60,60);
+  sfac = m.Interpolate(1.0, 0.5, 0.5);
+  trans =
+    m.Sequence(
+      m.IdentityTransform2.Duration(4.5),
+      m.Compose2(
+        m.Translate2Rate( -38, -205 ).Duration(0.5),
+        m.Scale2Anim(sfac,sfac).Duration(0.5)
+      )
+    );
+  boxThree = ds.Image.Transform(trans).OpacityAnim(m.Sequence( m.DANumber(0.0).Duration(4.5), m.DANumber(1.0) ));
+
+  // the last two boxes (4 and 5)
+  ds.Clear();
+  ds.borderStyle = m.EmptyLineStyle;
+  ds.FillColor(m.ColorRgb(0.796875, 0.921875, 1.0));
+  ds.Rect(126,-48,86,86);
+  ds.FillColor(m.ColorRgb(0.6484375, 0.7890625, 0.9375));
+  ds.Rect(82,38,44,44);
+  ds.FillColor(m.ColorRgb(1.0, 1.0, 1.0));
+  ds.Rect(139,-35,60,60);
+  ds.Rect(89,45,30,30);
+  trans =
+    m.Sequence(
+      m.IdentityTransform2.Duration(6.5),
+      m.Translate2Rate( 0, -98 ).Duration(1)
+    );
+  box4and5 = ds.Image.Transform(trans).OpacityAnim(m.Sequence( m.DANumber(0.0).Duration(6), m.DANumber(1.0) ));
+
+  // move the cleaned up flag image
+  myNum = m.Sequence( m.DANumber(-73).Duration(4), m.DANumber(22) );
+  DAControl.AddBehaviorToRun(myNum.AnimateProperty("smallflag.style.pixelTop", "JScript", false, .1));
+
+  // move down the banner
+  myNum = m.Sequence( m.DANumber(-73).Duration(5), m.DANumber(19) );
+  DAControl.AddBehaviorToRun(myNum.AnimateProperty("banner.style.pixelTop", "JScript", false, .1));
+  // move up the contents
+  myNum = m.Sequence( m.DANumber(322).Duration(6), m.DANumber(113) );
+  DAControl.AddBehaviorToRun(myNum.AnimateProperty("contents.style.pixelTop", "JScript", false, .1));
+
+  DAControl.Image = m.Overlay( logoFinal, m.Overlay(mainBox, m.Overlay(boxTwo, m.Overlay(boxThree, box4and5))));
+  DAControl.Start();
+}
+</SCRIPT>
+</BODY>
+</HTML>

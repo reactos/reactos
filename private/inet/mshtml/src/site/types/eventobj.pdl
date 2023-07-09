@@ -1,0 +1,241 @@
+#ifndef _EVENTOBJ_PDL_
+#define _EVENTOBJ_PDL_
+
+#include "types.pdl"
+#include "element.pdl"
+#include "bmkcoll.pdl"
+
+file eventobj.pdl
+
+import types.pdl
+import element.pdl
+import bmkcoll.pdl
+
+enum htmlPersistState prefix:htmlPersistState guid:3050f48d-98b5-11cf-bb82-00aa00bdce0b
+    eval Normal      string:            value:0
+    eval Favorite    string:favorite
+    eval History     string:history
+    eval Snapshot    string:snapshot
+    eval UserData    string:UserData
+   
+
+//
+// ============== IHTMLDataTransfer ===========================
+//
+
+enum htmlDropEffect prefix:htmlDropEffect guid:3050f4b4-98b5-11cf-bb82-00aa00bdce0b
+    eval Copy         string:copy
+    eval Link         string:link
+    eval Move         string:move
+    eval None         string:none
+
+enum htmlEffectAllowed prefix:htmlEffectAllowed guid:3050f4d1-98b5-11cf-bb82-00aa00bdce0b
+    eval Copy           string:copy
+    eval Link           string:link
+    eval Move           string:move
+    eval CopyLink       string:copylink
+    eval CopyMove       string:copymove
+    eval LinkMove       string:linkmove
+    eval All            string:all
+    eval None           string:none
+    eval Uninitialized  string:uninitialized
+
+interface IHTMLDataTransfer super:IDispatch guid:3050f4b3-98b5-11cf-bb82-00aa00bdce0b
+    refmethod   CDataTransfer:setData
+    refmethod   CDataTransfer:getData
+    refmethod   CDataTransfer:clearData
+    refprop     CDataTransfer:dropEffect
+    refprop     CDataTransfer:effectAllowed
+
+tearoff CDataTransfer interface:IHTMLDataTransfer
+class CDataTransfer primaryinterface:IHTMLDataTransfer
+    method  HRESULT setData                           dispid:DISPID_DATATRANSFER+1 \
+	(in type:BSTR     arg:format, \
+	 in type:VARIANT* arg:data, \
+	 out retval type:VARIANT_BOOL* arg:pret)    maxstrlen:pdlNoLimit
+    method  HRESULT getData                           dispid:DISPID_DATATRANSFER+2 \
+	(in type:BSTR     arg:format, \
+	 out retval type:VARIANT* arg:pvarRet)      maxstrlen:pdlToken
+    method  HRESULT clearData                         dispid:DISPID_DATATRANSFER+3 \
+	(in type:BSTR     arg:format, \
+	 out retval type:VARIANT_BOOL* arg:pret)      maxstrlen:pdlToken
+    property dropEffect           atype:BSTR          dispid:DISPID_DATATRANSFER+4 \
+	type:htmlDropEffect     get set abstract default:htmlDropEffectNone    maxstrlen:pdlToken
+    property effectAllowed        atype:BSTR          dispid:DISPID_DATATRANSFER+5 \
+	type:htmlEffectAllowed  get set abstract default:htmlEffectAllowedUninitialized    maxstrlen:pdlToken
+
+//
+// ============== IHTMLEventObj ===========================
+//
+
+interface IHTMLEventObj super:IDispatch guid:3050f32d-98b5-11cf-bb82-00aa00bdce0b
+    refprop   CEventObj:srcElement2
+    refprop   CEventObj:altKey2
+    refprop   CEventObj:ctrlKey2
+    refprop   CEventObj:shiftKey2
+    refprop   CEventObj:returnValue
+    refprop   CEventObj:cancelBubble
+    refprop   CEventObj:fromElement2
+    refprop   CEventObj:toElement2
+    refprop   CEventObj:keyCode
+    refprop   CEventObj:button2
+    refprop   CEventObj:type2
+    refprop   CEventObj:qualifier2
+    refprop   CEventObj:reason2
+
+    refprop   CEventObj:x2              // parent coordinat system relative
+    refprop   CEventObj:y2              // parent coordinat system relative
+    refprop   CEventObj:clientX2        // in client window coordinates
+    refprop   CEventObj:clientY2        // in client Window coordinates
+    refprop   CEventObj:offsetX2        // in container relative coordinates
+    refprop   CEventObj:offsetY2        // in container relative coordinates
+    refprop   CEventObj:screenX2        // in user's screen coordinates
+    refprop   CEventObj:screenY2        // in user's screen coordinates
+    refprop   CEventObj:srcFilter2
+
+interface IHTMLEventObj2 super:IDispatch guid:3050f48B-98b5-11cf-bb82-00aa00bdce0b
+    refmethod CBase:setAttribute
+    refmethod CBase:getAttribute
+    refmethod CBase:removeAttribute
+    refprop   CEventObj:propertyName
+    refprop   CEventObj:bookmarks
+    refprop   CEventObj:recordset
+    refprop   CEventObj:dataFld
+    refprop   CEventObj:boundElements
+    refprop   CEventObj:repeat
+    refprop   CEventObj:srcUrn
+
+    refprop   CEventObj:srcElement
+    refprop   CEventObj:altKey
+    refprop   CEventObj:ctrlKey
+    refprop   CEventObj:shiftKey
+    refprop   CEventObj:fromElement
+    refprop   CEventObj:toElement
+    refprop   CEventObj:button
+    refprop   CEventObj:type
+    refprop   CEventObj:qualifier
+    refprop   CEventObj:reason
+
+    refprop   CEventObj:x              // parent coordinat system relative
+    refprop   CEventObj:y              // parent coordinat system relative
+    refprop   CEventObj:clientX        // in client window coordinates
+    refprop   CEventObj:clientY        // in client Window coordinates
+    refprop   CEventObj:offsetX        // in container relative coordinates
+    refprop   CEventObj:offsetY        // in container relative coordinates
+    refprop   CEventObj:screenX        // in user's screen coordinates
+    refprop   CEventObj:screenY        // in user's screen coordinates
+    refprop   CEventObj:srcFilter
+
+    refprop   CEventObj:dataTransfer
+
+tearoff CEventObj interface:IHTMLEventObj
+tearoff CEventObj interface:IHTMLEventObj2
+
+class CEventObj \
+            primaryinterface:IHTMLEventObj \
+            guid:3050f48A-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f558-98b5-11cf-bb82-00aa00bdce0b
+    
+    implements IHTMLEventObj
+    implements IHTMLEventObj2
+
+    property srcElement      	atype:IHTMLElement* dispid:DISPID_EVENTOBJ+1 \
+	            get set abstract
+    property srcElement2      	atype:IHTMLElement* dispid:DISPID_EVENTOBJ+1 \
+	            get abstract  szInterfaceExpose:srcElement nopropdesc:nameonly
+    property altKey          	atype:VARIANT_BOOL  dispid:DISPID_EVENTOBJ+2 \
+	            get set abstract
+    property altKey2          	atype:VARIANT_BOOL  dispid:DISPID_EVENTOBJ+2 \
+	            get abstract szInterfaceExpose:altKey nopropdesc:nameonly
+    property ctrlKey         	atype:VARIANT_BOOL  dispid:DISPID_EVENTOBJ+3 \
+	            get set abstract
+    property ctrlKey2         	atype:VARIANT_BOOL  dispid:DISPID_EVENTOBJ+3 \
+	            get abstract szInterfaceExpose:ctrlKey nopropdesc:nameonly
+    property shiftKey        	atype:VARIANT_BOOL  dispid:DISPID_EVENTOBJ+4 \
+            	get set abstract
+    property shiftKey2        	atype:VARIANT_BOOL  dispid:DISPID_EVENTOBJ+4 \
+            	get abstract szInterfaceExpose:shiftKey nopropdesc:nameonly
+    property x               	atype:long          dispid:DISPID_EVENTOBJ+5 \
+            	get set abstract
+    property x2               	atype:long          dispid:DISPID_EVENTOBJ+5 \
+            	get abstract szInterfaceExpose:x nopropdesc:nameonly
+    property y               	atype:long          dispid:DISPID_EVENTOBJ+6 \
+            	get set abstract
+    property y2               	atype:long          dispid:DISPID_EVENTOBJ+6 \
+            	get abstract szInterfaceExpose:y nopropdesc:nameonly
+    property returnValue     	atype:VARIANT       dispid:DISPID_EVENTOBJ+7 \
+            	get set abstract    maxstrlen:pdlNoLimit
+    property cancelBubble    	atype:VARIANT_BOOL  dispid:DISPID_EVENTOBJ+8 \
+            	get set abstract
+    property fromElement     	atype:IHTMLElement* dispid:DISPID_EVENTOBJ+9 \
+            	get set abstract
+    property fromElement2     	atype:IHTMLElement* dispid:DISPID_EVENTOBJ+9 \
+            	get abstract szInterfaceExpose:fromElement nopropdesc:nameonly
+    property toElement       	atype:IHTMLElement* dispid:DISPID_EVENTOBJ+10 \
+            	get set abstract
+    property toElement2       	atype:IHTMLElement* dispid:DISPID_EVENTOBJ+10 \
+            	get abstract szInterfaceExpose:toElement nopropdesc:nameonly
+    property keyCode         	atype:long          dispid:DISPID_EVENTOBJ+11 \
+            	get set abstract
+    property button          	atype:long          dispid:DISPID_EVENTOBJ+12 \
+            	get set abstract
+    property button2          	atype:long          dispid:DISPID_EVENTOBJ+12 \
+            	get abstract szInterfaceExpose:button nopropdesc:nameonly
+    property type               atype:BSTR          dispid:DISPID_EVENTOBJ+13 \
+            	get set abstract    maxstrlen:pdlNoLimit
+    property type2               atype:BSTR          dispid:DISPID_EVENTOBJ+13 \
+            	get abstract    maxstrlen:pdlNoLimit szInterfaceExpose:type nopropdesc:nameonly
+    property qualifier          atype:BSTR          dispid:DISPID_EVENTOBJ+14 \
+            	get set abstract        maxstrlen:pdlNoLimit
+    property qualifier2          atype:BSTR          dispid:DISPID_EVENTOBJ+14 \
+            	get abstract        maxstrlen:pdlNoLimit  szInterfaceExpose:qualifier nopropdesc:nameonly
+    property reason             atype:long          dispid:DISPID_EVENTOBJ+15 \
+            	get set abstract
+    property reason2             atype:long          dispid:DISPID_EVENTOBJ+15 \
+            	get abstract szInterfaceExpose:reason nopropdesc:nameonly
+    property clientX            atype:long          dispid:DISPID_EVENTOBJ+20 \
+            	get set abstract
+    property clientX2            atype:long          dispid:DISPID_EVENTOBJ+20 \
+            	get abstract szInterfaceExpose:clientX nopropdesc:nameonly
+    property clientY            atype:long          dispid:DISPID_EVENTOBJ+21 \
+            	get set abstract
+    property clientY2            atype:long          dispid:DISPID_EVENTOBJ+21 \
+            	get abstract szInterfaceExpose:clientY nopropdesc:nameonly
+    property offsetX            atype:long          dispid:DISPID_EVENTOBJ+22 \
+            	get set abstract
+    property offsetX2            atype:long          dispid:DISPID_EVENTOBJ+22 \
+            	get abstract szInterfaceExpose:offsetX nopropdesc:nameonly
+    property offsetY            atype:long          dispid:DISPID_EVENTOBJ+23 \
+            	get set abstract
+    property offsetY2            atype:long          dispid:DISPID_EVENTOBJ+23 \
+            	get abstract szInterfaceExpose:offsetY nopropdesc:nameonly
+    property screenX            atype:long          dispid:DISPID_EVENTOBJ+24 \
+            	get set abstract
+    property screenX2            atype:long          dispid:DISPID_EVENTOBJ+24 \
+            	get abstract szInterfaceExpose:screenX nopropdesc:nameonly
+    property screenY            atype:long          dispid:DISPID_EVENTOBJ+25 \
+            	get set abstract
+    property screenY2            atype:long          dispid:DISPID_EVENTOBJ+25 \
+            	get abstract szInterfaceExpose:screenY nopropdesc:nameonly
+    property srcFilter          atype:IDispatch*    dispid:DISPID_EVENTOBJ+26 \
+            	get set abstract
+    property srcFilter2          atype:IDispatch*    dispid:DISPID_EVENTOBJ+26 \
+            	get abstract szInterfaceExpose:srcFilter nopropdesc:nameonly
+    property  propertyName      atype:BSTR          dispid:DISPID_EVENTOBJ+27 \
+                get set abstract        maxstrlen:pdlNoLimit
+    property  bookmarks         atype:IHTMLBookmarkCollection* dispid:DISPID_EVENTOBJ+31 \
+                get set abstract
+    property  recordset         atype:IDispatch* dispid:DISPID_EVENTOBJ+32 \
+                get set abstract
+    property  dataFld           atype:BSTR dispid:DISPID_EVENTOBJ+33 \
+                get set abstract        maxstrlen:pdlNoLimit
+    property  boundElements     atype:IHTMLElementCollection* dispid:DISPID_EVENTOBJ+34 \
+                get set abstract
+    property  repeat            atype:VARIANT_BOOL  dispid:DISPID_EVENTOBJ+35 \
+                get set abstract
+    property srcUrn             atype:BSTR          dispid:DISPID_EVENTOBJ+36 \
+            	get set abstract        maxstrlen:pdlNoLimit
+    property  dataTransfer     atype:IHTMLDataTransfer* dispid:DISPID_EVENTOBJ+37 \
+                get abstract
+
+#endif _EVENTOBJ_PDL_           atype

@@ -1,0 +1,100 @@
+#include "ups.h"
+
+//#include "control.rcv"
+
+UPSICON      ICON    PRELOAD    ups.ico
+
+CP_ACCEL ACCELERATORS PRELOAD
+BEGIN
+  VK_F1, MENU_INDHELP, VIRTKEY
+END
+
+
+#include "ups.dlg"
+
+STRINGTABLE DISCARDABLE LOADONCALL
+BEGIN
+  /* initialization strings */
+  ERRMEM,      "Insufficient memory for this operation."
+  LSFAIL,      "LoadString fail due to the string resource does not exist."
+  CPCAPTION,   "Control Panel"         /* for message box titles */
+
+  _STOPPED,           "Stopped"
+  _START_PENDING,     "Start_pending"
+  _STOP_PENDING,      "Stop_pending"
+  _RUNNING,           "running"
+  _CONTINUE_PENDING,  "Continue_pending"
+  _PAUSE_PENDING,     "Pause_pending"
+  _PAUSED,            "Paused"
+
+  UPS_STATUS_ERROR,   "The status of the UPS service is unknown."
+
+  UPS_REGISTRY_ERROR, "Cannot read/save UPS information in the registry."
+
+  CHILDREN,       "&UPS"
+
+  INFO,	"Configures the Uninterruptible Power Supply"
+
+  UPS_OPTIONS_ERROR, "The UPS must support signal on either low battery or power failure."
+
+  UPS_ACCESS_ERROR, "You do not have access to set UPS options."
+
+  UPS_SERVICE_ERROR, "Cannot restart UPS service.  Please restart the system."
+
+  UPS_FW_WARNING, "Time before first warning message is greater than the battery life."
+
+  UPS_DELAY_WARNING, "Time between Warning messages is greater than the battery life."
+
+  UPS_FWRange,   "Time between power failure and initial warning
+                  message is out of the valid range. (0-120 sec)"
+
+  UPS_WIRange,   "Delay between warning message is out
+                  of the valid range. (5-300 sec)"
+
+  UPS_BLRange,   "Expected Battery Life is out of
+                  the valid range. (2-720 min)"
+
+  UPS_RPMRange,  "Battery recharge time per minute of run time
+                  is out of the valid range. (1-250 min)"
+
+  UPS_START_MSG,   "The UPS service has not been started.
+                    Would you like to start it now?"
+
+  UPS_RESTART_MSG, "The UPS service is running.
+                    Would you like to restart it now?"
+
+  UPS_STOP_MSG,    "The UPS service is running.
+                    Would you like to stop it now?"
+
+  UPS_PENDING_MSG, "The UPS service is in a pending state.
+                    Use the Services applet in the Control Panel."
+
+  UPS_STARTFAIL_MSG,"Could not start the UPS service.
+                     Check the connections and the interface signals."
+
+  UPS_STOPFAIL_MSG, "Could not stop the UPS service.
+                     Use the Services applet in the Control Panel."
+
+  UPS_UNKNOWNSTATE_MSG, "The UPS service is in an unknown state.
+                         Use the Services applet in the Control Panel."
+
+  UPS_INVALID_PATH,   "The command file specified is not valid.
+                       Please specify the filename only."
+
+  UPS_INVALID_FILENAME, "The command file specified is not valid."
+
+  UPS_FILE_NOT_EXIST,  "The command file specified does not exist on your
+                        %1 directory."
+
+  UPS_CANT_FIND_SYSDIR, "Cannot find the system directory."
+
+END
+
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_DLL
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Control Panel UPS Applet"
+#define VER_INTERNALNAME_STR        "ups\0"
+
+#include "common.ver"

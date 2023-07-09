@@ -1,5 +1,0 @@
-add_subdirectory(advapi32)
-add_subdirectory(cmd)
-add_subdirectory(comctl32)
-add_subdirectory(kernel32)
-add_subdirectory(user32)

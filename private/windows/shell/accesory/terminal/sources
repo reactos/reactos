@@ -1,0 +1,64 @@
+
+MAJORCOMP=windows
+MINORCOMP=terminal
+
+TARGETNAME=terminal
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+TARGETLIBS=
+
+INCLUDES=.
+
+386_STDCALL=0
+C_DEFINES=-DWIN32  -DBUGBYPASS -DNO_STRICT -DNO_MMSYSTEMH -DNO_NB30H -DNO_DLGSH
+
+SOURCES= \
+    asm2c_32.c \
+    chrpaint.c \
+    connect.c  \
+    datestuf.c \
+    dcutil0.c  \
+    dcutil1.c  \
+    dcutil2.c  \
+    dcutil3.c  \
+    dofile.c   \
+    fileopen.c \
+    icon.c     \
+    kermit.c   \
+    keyboard.c \
+    mdmutil.c  \
+    menus.c    \
+    messages.c \
+    modeminp.c \
+    phone.c    \
+    printfil.c \
+    prtsetup.c \
+    pwin32.c   \
+    rcvbfile.c \
+    rdmodem.c  \
+    scroll.c   \
+    serial.c   \
+    settings.c \
+    showstat.c \
+    sndbfile.c \
+    term.c     \
+    termfile.c \
+    terminal.c \
+    textxfer.c \
+    trmspcl.c  \
+    tskctrl.c  \
+    winmain.c  \
+    wndproc.c  \
+    xferutil.c \
+    xmodem.c   \
+    dynacomm.rc
+
+UMTYPE=windows
+UMENTRY=winmain
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib \
+       $(BASEDIR)\public\sdk\lib\*\gdi32.lib \
+       $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+       $(BASEDIR)\public\sdk\lib\*\ntdll.lib \
+       $(BASEDIR)\public\sdk\lib\*\shell32.lib \
+       $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+       $(BASEDIR)\public\sdk\lib\*\binmode.obj

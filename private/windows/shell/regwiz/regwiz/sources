@@ -1,0 +1,83 @@
+
+!IF 0
+REGWIZ
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Suresh Krishnan
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+
+MAJORCOMP=RegWiz
+MINORCOMP=RegWiz
+#USE_STATIC_ATL=1
+
+REGWIZ_WITH_UCODE=-DUNICODE  -D_UNICODE
+REGWIZ_COMMON_FLAGS= $(REGWIZ_WITH_UCODE)  -D_TAPI -D_WINDOWS  -D_USRDLL -DWINDOWS -DNT -D_WINNT -DWINNT
+NOT_LEAN_AND_MEAN=1
+MSC_WARNING_LEVEL=/W3 /WX
+USE_NATIVE_EH=1
+C_DEFINES=$(REGWIZ_COMMON_FLAGS)
+
+!if !$(FREEBUILD)
+DEBUG_CRTS=1
+MSC_OPTIMIZATION=/Odi
+USE_LIBCMT=1
+!else
+USE_MSVCRT=1
+!endif
+
+UMTYPE=windows
+TARGETNAME=RegWiz
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+REGWIZ_INCLUDES= ..\include;..\Res;..\PhBookLib
+INCLUDES=$(REGWIZ_INCLUDES);..\inc;
+
+SOURCES=Addrdlg.cpp \
+     Addr_fe.cpp \
+     Business.cpp \
+     Cbitmap.cpp \
+     Cntryinf.cpp  \
+     Cregwiz.cpp \
+     Cstattxt.cpp  \
+     DialScr.cpp  \
+     EXITDLG.CPP   \
+     Fe_util.CPP   \
+     FinalScr.CPP   \
+     FailScr.CPP   \
+     Home.CPP   \
+     InetDlg.cpp   \
+     Informdlg.cpp \
+     INVDLG.CPP    \
+     modem.cpp     \
+     msgdlg.cpp    \
+     namedlg.cpp   \
+     name_fe.cpp   \
+     PINVDLG.CPP   \
+     pr_psswd.cpp  \
+     regdlg.cpp    \
+     regpage.cpp    \
+     regWizMain.cpp \
+     REGUTIL.CPP   \
+     RESELDLG.CPP   \
+     rw_common.cpp   \
+     Sysinv.cpp      \
+     WELCDLG.CPP

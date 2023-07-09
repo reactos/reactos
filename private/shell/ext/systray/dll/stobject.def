@@ -1,0 +1,10 @@
+NAME            STOBJECT
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Microsoft System Tray Object'
+
+EXPORTS
+                DllCanUnloadNow     @1   PRIVATE
+                DllGetClassObject   @2   PRIVATE
+                DllRegisterServer   @3   PRIVATE
+                DllUnregisterServer @4   PRIVATE
+                DllMain             @5   PRIVATE

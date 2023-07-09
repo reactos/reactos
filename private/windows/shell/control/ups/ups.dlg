@@ -1,0 +1,69 @@
+//1 DLGINCLUDE "ups.h"
+
+UPSICON DIALOG 25, 38, 286, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "UPS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTOCHECKBOX    "&Uninterruptible Power Supply is installed on:",
+                    IDD_UPS_EXISTS, 12, 10, 154, 12, WS_GROUP
+    COMBOBOX        IDD_UPS_PORTCB, 176, 10, 45, 43, CBS_DROPDOWNLIST |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "UPS Configuration", IDD_UPS_UPSGROUP, 5, 30, 223, 74
+    AUTOCHECKBOX    "&Power failure signal", IDD_UPS_PFSIGNAL, 12, 50, 101,
+                    10, WS_GROUP
+    AUTORADIOBUTTON "Negative", IDD_UPS_PFSIGNALHIGH, 128, 50, 47, 12,
+                    WS_TABSTOP
+    AUTORADIOBUTTON "Positive", IDD_UPS_PFSIGNALLOW, 180, 50, 47, 12, WS_TABSTOP
+
+    AUTOCHECKBOX    "&Low battery signal at least", IDD_UPS_LOWBATTERY, 12,
+                    63, 100, 15, WS_GROUP
+    AUTORADIOBUTTON "Negative", IDD_UPS_LOWBATTERYHIGH, 128, 67, 47, 12,
+                    WS_TABSTOP
+    AUTORADIOBUTTON "Positive", IDD_UPS_LOWBATTERYLOW, 180, 67, 47, 12,
+                    WS_TABSTOP
+    AUTOCHECKBOX    "&Remote UPS Shutdown", IDD_UPS_TURNOFF, 12, 87, 99, 10, WS_GROUP
+    AUTORADIOBUTTON "Negative", IDD_UPS_TURNOFFHIGH, 128, 87, 47, 12, WS_TABSTOP
+
+    AUTORADIOBUTTON "Positive", IDD_UPS_TURNOFFLOW, 180, 87, 47, 12, WS_TABSTOP
+
+    GROUPBOX        " [--]Execute Command File", IDD_UPS_BLANKGROUP, 5, 107, 223, 32,WS_GROUP
+    AUTOCHECKBOX    "E&xecute Command File", IDD_UPS_COMMANDFILE, 12, 107, 85, 10
+    LTEXT           "File Name:", IDD_UPS_FILETEXT, 22, 124, 38, 12, NOT WS_GROUP
+    EDITTEXT        IDD_UPS_FILENAME, 62, 121, 154, 12, ES_AUTOHSCROLL
+
+    GROUPBOX        "UPS Characteristics", IDD_UPS_CHARACTER, 5, 140, 128, 56
+    LTEXT           "&Expected  Battery Life:", IDD_UPS_BLTEXT1, 10, 156, 79,
+                    12, NOT WS_GROUP
+    EDITTEXT        IDD_UPS_BLEDIT, 90, 155, 18, 12, ES_AUTOHSCROLL
+    CONTROL         "", IDD_UPS_BATTERYLIFE, "upsArrow", 0, 108, 155,
+                    7, 12
+    LTEXT           "min", IDD_UPS_BLTEXT2, 117, 156, 12, 12, NOT WS_GROUP
+    LTEXT           "&Battery recharge time per minute of run time:",
+                    IDD_UPS_RPMTEXT1, 10, 173, 74, 17, NOT WS_GROUP
+    EDITTEXT        IDD_UPS_RPMEDIT, 90, 176, 18, 12, ES_AUTOHSCROLL
+    CONTROL         "", IDD_UPS_RECHARGEPERMINUTE, "upsArrow",0,
+                    108, 176, 7, 12
+    LTEXT           "min", IDD_UPS_RPMTEXT2, 117, 177, 13, 10, NOT WS_GROUP
+
+    GROUPBOX        "UPS Service ", IDD_UPS_SERVICE, 137, 140, 144, 56
+    LTEXT           "&Time between power failure and initial warning message:",
+                    IDD_UPS_FWTEXT1, 143, 152, 94, 17, NOT WS_GROUP
+    EDITTEXT        IDD_UPS_FWEDIT, 238, 155, 18, 12, ES_AUTOHSCROLL
+    CONTROL         "", IDD_UPS_FIRSTWARNING, "upsArrow", 0, 256,
+                    155, 7, 12
+    LTEXT           "sec", IDD_UPS_FWTEXT2, 265, 156, 13, 12, NOT WS_GROUP
+    LTEXT           "&Delay between warning messages:", IDD_UPS_WITEXT1, 143,
+                    173, 77, 18, NOT WS_GROUP
+    EDITTEXT        IDD_UPS_WIEDIT, 238, 176, 18, 12, ES_AUTOHSCROLL
+    CONTROL         "", IDD_UPS_WARNINGINTERVAL, "upsArrow", 0, 256,
+                    176, 7, 12
+    LTEXT           "sec", IDD_UPS_WITEXT2, 265, 177, 14, 14, NOT WS_GROUP
+    DEFPUSHBUTTON   "OK", UPS_INSTALLED, 236, 10, 45, 16
+    PUSHBUTTON      "Cancel", UPS_POWERFAILSIGNAL, 236, 30, 45, 16
+    PUSHBUTTON      "&Help", IDD_HELP, 236, 50, 45, 16
+    LTEXT           "2 minutes before shutdown", IDD_UPS_TEXT, 22, 76, 90, 11, NOT
+                    WS_GROUP
+    LTEXT           "UPS Interface Voltages:", IDD_UPS_SIGN, 128, 39, 79, 9, NOT
+                    WS_GROUP
+END

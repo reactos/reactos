@@ -1,0 +1,22 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+NOTE:   Commented description of this file is in \nt\bak\bin\dirs.tpl
+
+!ENDIF
+
+DIRS= \
+    common      \
+    initpki     \
+    mscat32     \
+    mssip32     \
+    performance \
+    softpub     \
+    trustui     \
+    wintrust    \
+    tools       \
+    tests       \
+    utils 
+
+

@@ -1,0 +1,36 @@
+#include            <windows.h>
+#include            "scrnsave.h"
+#include            "strings.h"
+#include            "marquee.dlg"
+
+
+/* This is the icon for the program and must be defined as ID_APP... */
+ID_APP              ICON        marquee.ico
+
+STRINGTABLE PRELOAD
+BEGIN
+    idsDescription      "Marquee Display"
+    idsName             "Marquee"
+    idsAppName          "Screen Saver.Marquee"
+    idsDefaultText      "Windows NT %d.%d"
+    idsFormatText       "Format Text"
+    idsDefFontName      "Tahoma"
+END
+
+#include "..\common\strings.rc"
+
+#include <ntverp.h>
+
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ */
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Marquee Screen Saver"
+#define VER_INTERNALNAME_STR        "ssmarque\0"
+
+#include "common.ver"

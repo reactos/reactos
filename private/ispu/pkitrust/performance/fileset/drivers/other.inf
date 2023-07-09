@@ -1,0 +1,621 @@
+[Options]
+    Computer            = cpt
+    Video               = vio
+    Layout              = lay
+    Language            = lng
+    Printer             = prn
+    Sound               = snd
+    Driver              = drv
+    NetAdapter          = nad
+    NetDriver           = ndr
+    NetTransport        = nxp
+    NetService          = nsv
+    Network             = nwk
+    NetProvider         = npr
+[OemOptionFiles]
+    OemFiles = {} ? $(!LIBHANDLE) FindFileInstances $(!STF_WINDOWSSYSPATH)"\oem"$(Abb)"*.inf"
+[DetectFileTime]
+    FileDateTime = {"0","0"} ? $(!LIBHANDLE) GetFileLastWriteTime $(!STF_WINDOWSSYSPATH)"\"$(FileDateTimeName)
+[ReturnOemOptions]
+    set Status         = STATUS_FAILED
+    set OemOptionList  = {}
+    set FromNetwork    = $($2)
+    set AllChars       = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789."
+    set Numerals      = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }
+    set Abb = #(Options, $($1), 1)
+    read-syms OemOptionFiles
+    detect OemOptionFiles
+    ifcontains(i) "oemnadzz.inf" in $(OemFiles)
+        set newList = {"oemnadzz.inf"}
+        ForListDo $(OemFiles)
+            ifstr(i) $($) != "oemnadzz.inf"
+                set newList = >($(newList),$($))
+            endif
+        EndForListDo
+        set OemFiles = $(newList)
+    endif
+    debug-output $(OemFiles)
+    set TotalOptions = {}
+    ForListDo $(OemFiles)
+        set fExclude = ""
+        Split-String $($) $(AllChars) InfNameChars
+        ifcontains(i) *($(InfNameChars), 7) in $(Numerals)
+            set fExclude = $(FromNetwork)
+        endif
+        ifstr(i) $(fExclude) == ""
+            set OemFileName = $(!STF_WINDOWSSYSPATH)"\"$($)
+            ifstr(i) $(FromNetwork) == ""
+                shell "", GetOptionsFromINF $($0) $($1) $(OemFileName)
+            else
+                shell "", GetNetworkOptionsFromINF $($0) $($1) $(OemFileName)
+            endif
+            set CurrentInf = $($)
+            ifstr(i) $($R0) == STATUS_SUCCESSFUL
+                set Index = 0
+                set ReturnOption = $($R1)
+                set ReturnOptionText = $($R2)
+                ForListDo $(ReturnOption)
+                    set-add Index = $(Index), 1
+                    ifcontains(i) $($) not-in $(TotalOptions)
+                        set OemOptionList = >($(OemOptionList), {$(CurrentInf), $($), *($(ReturnOptionText),$(Index))})
+                        set TotalOptions = >($(TotalOptions), $($))
+                    endif
+                EndForListDo
+            endif
+        endif
+    EndForListDo
+    set Status = STATUS_SUCCESSFUL
+finish_GetCurrentOemOptions = +
+    Return $(Status) $(OemOptionList)
+[GetNetworkOptionsFromINF]
+    set Status         = STATUS_FAILED
+    set OptionList     = {}
+    set OptionTextList = {}
+    set FileToCheck = $($2)
+    install Install-SeeIfFileIsPresent
+    ifstr(i) $(STATUS) != "YES"
+        set Status = STATUS_INFNOTFOUND
+        goto finish_GetNetworkOptionsFromINF
+    endif
+    Shell "" GetOptionsFromRegistry $($1) $($2)
+    ifstr(i) $($R0) == "STATUS_SUCCESSFUL"
+        set  OptionList     = $($R1)
+        set  OptionTextList = $($R2)
+        set  Status         = STATUS_SUCCESSFUL
+        goto finish_GetNetworkOptionsFromINF
+    endif
+    shell $($2) Identify
+    ifstr(i) $($R0) == "STATUS_SUCCESSFUL"
+        ifstr(i) $($R1) == $($1)
+            set OptionList = {}
+            set OptionTextList = {}
+            forlistdo $(!STF_BUSTYPELIST)
+                shell $($2) ReturnOptions $($0) $($)
+                ifstr(i) $($R0) == STATUS_SUCCESSFUL
+                    set Index = 0
+                    set ReturnOption = $($R1)
+                    set ReturnOptionText = $($R2)
+                    ForListDo $(ReturnOption)
+                        set-add Index = $(Index), 1
+                        ifstr(i) $(OptionList) == {}
+                            set OptionList = {$($)}
+                            set OptionTextList = {*($(ReturnOptionText),$(Index))}
+                        else
+                            ifcontains(i) $($) not-in $(OptionList)
+                                set OptionList = >($(OptionList),$($))
+                                set OptionTextList = >($(OptionTextList),*($(ReturnOptionText),$(Index)))
+                            endif
+                        endif
+                    EndForListDo
+                    set  Status         = STATUS_SUCCESSFUL
+                endif
+            endforlistdo
+            ifstr(i) $(OptionList) != ""
+                Shell "" SetOptionsIntoRegistry $($1) $($2) $(OptionList) $(OptionTextList)
+            endif
+        endif
+    endif
+finish_GetNetworkOptionsFromINF = +
+    Return $(Status) $(OptionList) $(OptionTextList)
+[GetOptionsFromINF]
+    set Status         = STATUS_FAILED
+    set OptionList     = {}
+    set OptionTextList = {}
+    set FileToCheck = $($2)
+    install Install-SeeIfFileIsPresent
+    ifstr(i) $(STATUS) != "YES"
+        set Status = STATUS_INFNOTFOUND
+        goto finish_GetOptionsFromINF
+    endif
+    Shell "" GetOptionsFromRegistry $($1) $($2)
+    ifstr(i) $($R0) == "STATUS_SUCCESSFUL"
+        set  OptionList     = $($R1)
+        set  OptionTextList = $($R2)
+        set  Status         = STATUS_SUCCESSFUL
+        goto finish_GetOptionsFromINF
+    endif
+    shell $($2) Identify
+    ifstr(i) $($R0) == "STATUS_SUCCESSFUL"
+        ifstr(i) $($R1) == $($1)
+            set OptionList = ""
+            shell $($2) ReturnOptions $($0) $($)
+            ifstr(i) $($R0) == STATUS_SUCCESSFUL
+                 set  OptionList     = $($R1)
+                 set  OptionTextList = $($R2)
+                 set  Status         = STATUS_SUCCESSFUL
+            endif
+            ifstr(i) $(OptionList) != ""
+                Shell "" SetOptionsIntoRegistry $($1) $($2) $(OptionList) $(OptionTextList)
+            endif
+        endif
+    endif
+finish_GetOptionsFromINF = +
+    Return $(Status) $(OptionList) $(OptionTextList)
+[GetNewOEMOption]
+    set Status            = STATUS_FAILED
+    set Option            = $($2)
+    set OptDisketteSrc    = $($3)
+    set OptionalDlgText   = $($4)
+    set OptDiskette       = #(OptionDiskettes$($0), $($2), 1)
+    set InfName1          = "OEMSETUP.INF"
+    set InfName2          = "OEMSETNT.INF"
+    set Abb = #(Options, $(Option), 1)
+    set NewOemOptionList  = $($1)
+    set OptionChosen      = ""
+    set OptionChosenText  = ""
+ask_dodiskette = +
+    set InfName = $(InfName1)
+    shell "" DoDiskette $($0) $(OptDiskette) $(OptDisketteSrc)
+    set Status = STATUS_FAILED
+    ifstr(i) $($R0) == STATUS_USERCANCEL
+        set Status = STATUS_USERCANCEL
+        goto finish_GetOEMOption
+    else-ifstr(i) $($R0) == STATUS_FAILED
+        goto finish_GetOEMOption
+    endif
+    set OptDisketteSrc = $($R1)
+ask_inf_retry = +
+    FlushInf $(InfName)
+    LibraryProcedure FileToCheck, $(!LIBHANDLE), AppendBackSlash $(OptDisketteSrc)
+    set FileToCheck = $(FileToCheck)$(InfName)
+    install Install-SeeIfFileIsPresent
+    set OemSetupFilePath = $(FileToCheck)
+    set NfError = 1
+    ifstr(i) $(STATUS) == YES
+        set NfError = 2
+        shell $(OemSetupFilePath) Identify
+        ifstr(i) $($R0) == "STATUS_SUCCESSFUL"
+            ifstr(i) $($R1) == $(Option)
+                ForListDo $(!STF_BUSTYPELIST)
+                    shell $(OemSetupFilePath) ReturnOptions $($0) $($)
+                    ifstr(i) $($R0) == STATUS_SUCCESSFUL
+                         set OemList     = $($R1)
+                         set OemTextList = $($R2)
+                         goto asksingleselection
+                    endif
+                EndForListDo
+            endif
+        endif
+    endif
+    ifstr(i) $(InfName) == $(InfName1)
+        Set InfName = $(InfName2)
+        goto ask_inf_retry
+    endif
+    read-syms NonFatalError$(NfError)$($0)
+    shell "subroutn.inf" SetupMessage $($0) "NONFATAL" $(NonFatal)
+    goto ask_dodiskette
+asksingleselection = +
+    shell "" DoSingleOption $(OemList) $(OemTextList) $(OptDiskette) $(OptionalDlgText)
+    ifstr(i) $($R0) == STATUS_FAILED
+        set Status = STATUS_FAILED
+        goto finish_GetOEMOption
+    else-ifstr(i) $($R0) == STATUS_USERCANCEL
+        set Status = STATUS_USERCANCEL
+        goto finish_GetOEMOption
+    endif
+    set OptionChosen     = $($R1)
+    set OptionChosenText = $($R2)
+    set Duplicate = FALSE
+    ForListDo $($1)
+        ifstr(i) *($($), 2) == $(OemList)
+            set OemFileName = *($($), 1)
+            set Duplicate = TRUE
+            FlushInf $(OemFileName)
+            goto copyinf
+        endif
+    EndForListDo
+    set Num = 0
+nextinf = +
+    ifint $(Num) < 99
+        set OemFileName = "oem"$(Abb)$(Num)".inf"
+        set FileToCheck = $(!STF_WINDOWSSYSPATH)"\"$(OemFileName)
+        install Install-SeeIfFileIsPresent
+        ifstr(i) $(STATUS) == "YES"
+            set-add Num = $(Num) 1
+            goto nextinf
+        else
+            goto copyinf
+        endif
+    endif
+    goto finish_GetOEMOption
+copyinf = +
+    set OemSrc = $(OemSetupFilePath)
+    set OemDst = $(!STF_WINDOWSSYSPATH)"\"$(OemFileName)
+    install Install-OemINF
+    ifstr(i) $(Duplicate) == TRUE
+    else
+        set NewOemOptionList = >($(NewOemOptionList), {$(OemFileName), $(OemList), $(OemTextList)})
+    endif
+    set Status = STATUS_SUCCESSFUL
+finish_GetOEMOption = +
+    FlushInf $(InfName)
+    Return $(Status) $(NewOemOptionList) $(OptionChosen) $(OptionChosenText) $(OptDisketteSrc)
+[GetNewOEMMultiOption]
+    Debug-Output $(STF_CONTEXTINFNAME)": GetNewOEMMultiOption called"
+    set Status            = STATUS_FAILED
+    set OptionType        = ""
+    set OptionTypeList    = $($2)
+    set OptDisketteSrc    = $($3)
+    set OptionalDlgText   = $($4)
+    set InfName1          = "OEMSETUP.INF"
+    set InfName2          = "OEMSETNT.INF"
+    read-syms OptionDisketteMulti$($0)
+    Set TypeNames = ^(Options,0)
+    Set TypeAbbs  = ^(Options,1)
+    set NewOemOptionList  = $($1)
+    set OptionChosen      = ""
+    set OptionChosenText  = ""
+m_ask_dodiskette = +
+    Debug-Output $(STF_CONTEXTINFNAME)": GetNewOEMMultiOption shelling DoDiskette"
+    set InfName = $(InfName1)
+    shell "" DoDiskette $($0) $(OptDiskette) $(OptDisketteSrc)
+    set Status = STATUS_FAILED
+    ifstr(i) $($R0) == STATUS_USERCANCEL
+        set Status = STATUS_USERCANCEL
+        goto m_finish_GetOEMOption
+    else-ifstr(i) $($R0) == STATUS_FAILED
+        goto m_finish_GetOEMOption
+    endif
+    set OptDisketteSrc = $($R1)
+m_ask_inf_retry = +
+    FlushInf $(InfName)
+    LibraryProcedure FileToCheck, $(!LIBHANDLE), AppendBackSlash $(OptDisketteSrc)
+    set FileToCheck = $(FileToCheck)$(InfName)
+    install Install-SeeIfFileIsPresent
+    set OemSetupFilePath = $(FileToCheck)
+    set NfError = 1
+    ifstr(i) $(STATUS) == YES
+        set NfError = 2
+        shell $(OemSetupFilePath) Identify
+        ifstr(i) $($R0) == "STATUS_SUCCESSFUL"
+            ifcontains(i) $($R1) in $(OptionTypeList)
+                Set OptionType = $($R1)
+                ForListDo $(!STF_BUSTYPELIST)
+                    shell $(OemSetupFilePath) ReturnOptions $($0) $($)
+                    ifstr(i) $($R0) == STATUS_SUCCESSFUL
+                         set OemList     = $($R1)
+                         set OemTextList = $($R2)
+                         goto m_asksingleselection
+                    endif
+                EndForListDo
+            endif
+        endif
+    endif
+    ifstr(i) $(InfName) == $(InfName1)
+        Set InfName = $(InfName2)
+        goto m_ask_inf_retry
+    endif
+    read-syms NonFatalError$(NfError)$($0)
+    shell "subroutn.inf" SetupMessage $($0) "NONFATAL" $(NonFatal)
+    goto m_ask_dodiskette
+m_asksingleselection = +
+    shell "" DoSingleOption $(OemList) $(OemTextList) $(OptDiskette) $(OptionalDlgText)
+    ifstr(i) $($R0) == STATUS_FAILED
+        set Status = STATUS_FAILED
+        goto m_finish_GetOEMOption
+    else-ifstr(i) $($R0) == STATUS_USERCANCEL
+        set Status = STATUS_USERCANCEL
+        goto m_finish_GetOEMOption
+    endif
+    set OptionChosen     = $($R1)
+    set OptionChosenText = $($R2)
+    set Duplicate = FALSE
+    ForListDo $($1)
+        ifstr(i) *($($), 2) == $(OemList)
+            set OemFileName = *($($), 1)
+            set Duplicate = TRUE
+            FlushInf $(OemFileName)
+            goto m_copyinf
+        endif
+    EndForListDo
+    set Num = 0
+    Set Abb = *($(TypeAbbs),~($(TypeNames),$(OptionType)))
+m_nextinf = +
+    ifint $(Num) < 99
+        set OemFileName = "oem"$(Abb)$(Num)".inf"
+        Debug-Output "OTHER.INF: Checking winsyspath for "$(OemFileName)
+        set FileToCheck = $(!STF_WINDOWSSYSPATH)"\"$(OemFileName)
+        install Install-SeeIfFileIsPresent
+        ifstr(i) $(STATUS) == "YES"
+            set-add Num = $(Num) 1
+            goto m_nextinf
+        else
+            goto m_copyinf
+        endif
+    endif
+    goto m_finish_GetOEMOption
+m_copyinf = +
+    set OemSrc = $(OemSetupFilePath)
+    set OemDst = $(!STF_WINDOWSSYSPATH)"\"$(OemFileName)
+    install Install-OemINF
+    ifstr(i) $(Duplicate) == TRUE
+    else
+        set NewOemOptionList = >($(NewOemOptionList), {$(OemFileName), $(OemList), $(OemTextList)})
+    endif
+    set Status = STATUS_SUCCESSFUL
+m_finish_GetOEMOption = +
+    FlushInf $(InfName)
+    Return $(Status) $(NewOemOptionList) $(OptionChosen) $(OptionChosenText) $(OptDisketteSrc)
+[DoDiskette]
+    set Status         = STATUS_FAILED
+    set OemDiskette    = $($1)
+    set OemDisketteSrc = $($2)
+    Debug-Output $(STF_CONTEXTINFNAME)": DoDiskette called"
+    read-syms DisketteDlg$($0)
+    ui start "Diskette"
+    ifstr(i) $(DLGEVENT) == "CONTINUE"
+        set OemDisketteSrc = $(EditTextOut)
+        ui pop 1
+        set Status = STATUS_SUCCESSFUL
+        goto finish_dodiskette
+    else-ifstr(i) $(DLGEVENT) == "BACK"
+        ui pop 1
+        set Status = STATUS_USERCANCEL
+        goto finish_dodiskette
+    else
+        ui pop 1
+        goto finish_dodiskette
+    endif
+finish_dodiskette = +
+    Return $(Status) $(OemDisketteSrc)
+[DoSingleOption]
+    set Status              = STATUS_FAILED
+    set OemOptionChosen     = ""
+    set OemOptionChosenText = ""
+    set OemOptionList       = $($0)
+    set OemOptionTextList   = $($1)
+    set OemOptionTypeText   = $($2)
+    read-syms OemSingleOptionDlg$(!STF_LANGUAGE)
+    ifstr(i) $($3) != ""
+        set DlgText = $($3)
+    endif
+    ui start "Diskette"
+    ifstr(i) $(DLGEVENT) == "CONTINUE"
+        ui pop 1
+        ifstr(i) $(ListItemsOut) == ""
+            set Status = STATUS_USERCANCEL
+        else
+            set OemOptionChosenText = $(ListItemsOut)
+            set OemOptionChosen = *($($0), ~($(ListItemsIn), $(ListItemsOut)))
+            set Status = STATUS_SUCCESSFUL
+        endif
+        goto finish_dosingleoption
+    else-ifstr(i) $(DLGEVENT) == "BACK"
+        ui pop 1
+        set Status = STATUS_USERCANCEL
+        goto finish_dosingleoption
+    else
+        ui pop 1
+        set Status = STATUS_FAILED
+        goto finish_dosingleoption
+    endif
+finish_dosingleoption = +
+    Return $(Status) $(OemOptionChosen) $(OemOptionChosenText)
+[GetOptionsFromRegistry]
+   Set InfType        = $($0)
+   Set InfFullName    = $($1)
+   Set Status         = STATUS_FAILED
+   Set OptionList     = {}
+   Set OptionTextList = {}
+   Set KeyInf         = ""
+   Set KeyType        = ""
+   Set RegLastError   = $(!REG_ERROR_SUCCESS)
+   Ifstr(i) $(!STF_BUSTYPE) == ""
+       goto finish_getregoptions
+   Endif
+   Split-String $(InfFullName) "\" NameInfo
+   QueryListSize NameInfoListSize $(NameInfo)
+   Set InfName = *($(NameInfo),$(NameInfoListSize))
+   Set KeyName = "Software\Microsoft\Ncpa\InfOptions\"$(InfName)
+   OpenRegKey $(!REG_H_LOCAL) "" $(KeyName) $(!REG_KEY_READ) KeyInf
+   Ifint $(RegLastError) != $(!REG_ERROR_SUCCESS)
+      goto finish_getregoptions
+   Endif
+   Set FileDateTimeName = $(InfName)
+   Detect DetectFileTime
+   Set TimeLow = *($(FileDateTime),1)
+   Ifint $(TimeLow) == 0
+       goto finish_getregoptions
+   Endif
+   GetRegValue $(KeyInf) DateLow  ValueRegTimeLow
+   Ifint $(RegLastError) != $(!REG_ERROR_SUCCESS)
+      goto finish_getregoptions
+   Endif
+   Set RegTimeLow  = *($(ValueRegTimeLow),4)
+   Ifint $(TimeLow) != $(RegTimeLow)
+       goto finish_getregoptions
+   Endif
+   ForListDo $(!STF_BUSTYPELIST)
+       Set TypeKeyName = $(InfType)"."$($)
+       OpenRegKey $(KeyInf) "" $(TypeKeyName) $(!REG_KEY_READ) KeyType
+       ifint $(RegLastError) == $(!REG_ERROR_SUCCESS )
+          goto findit
+       endif
+   EndForListDo
+   Ifint $(RegLastError) != $(!REG_ERROR_SUCCESS)
+      Set Status = STATUS_SUCCESSFUL
+      goto finish_getregoptions
+   Endif
+findit = +
+   GetRegValue $(KeyType) OptionList ValueOptionList
+   Ifint $(RegLastError) != $(!REG_ERROR_SUCCESS)
+      goto finish_getregoptions
+   Endif
+   Set OptionList = *($(ValueOptionList),4)
+   GetRegValue $(KeyType) OptionTextList ValueOptionTextList
+   Ifint $(RegLastError) != $(!REG_ERROR_SUCCESS)
+      goto finish_getregoptions
+   Endif
+   Set OptionTextList = *($(ValueOptionTextList),4)
+   Set Status = STATUS_SUCCESSFUL
+finish_getregoptions =+
+   Ifstr(i) $(Status) != STATUS_SUCCESSFUL
+       Set OptionList = {}
+       Set OptionTextList = {}
+   Endif
+   Ifstr(i) $(KeyType) != ""
+      CloseRegKey  $(KeyType)
+   Endif
+   Ifstr(i) $(KeyInf) != ""
+      CloseRegKey  $(KeyInf)
+   Endif
+   return $(Status) $(OptionList) $(OptionTextList)
+[SetOptionsIntoRegistry]
+    Debug-Output "OTHER.INF: SetOptionsIntoRegistry - Entry "$($0)", "$($1)", "$($2)", "$($3)
+    Set OptionType     = $($0)
+    Set InfFullName    = $($1)
+    Set OptionList     = $($2)
+    Set OptionTextList = $($3)
+    Set MaskAllAccess  = 33554432
+    Set NoTitle        = 0
+    Set RegLastError   = $(!REG_ERROR_SUCCESS)
+    Set Status         = STATUS_FAILED
+    Set KeyInf         = ""
+    Ifstr(i) $(!STF_BUSTYPE) == ""
+        goto finish_setregoptions
+    Endif
+    Split-String $(InfFullName) "\" NameInfo
+    QueryListSize NameInfoListSize $(NameInfo)
+    Set InfName = *($(NameInfo),$(NameInfoListSize))
+    Set KeyInfName     = "SOFTWARE\Microsoft\Ncpa\InfOptions\"$(InfName)
+    Set KeyOptName     = $(OptionType)"."$(!STF_BUSTYPE)
+    Set FileDateTimeName = $(InfName)
+    Detect DetectFileTime
+    Set TimeLsw = *($(FileDateTime),1)
+    Ifint $(TimeLsw) == 0
+        goto finish_setregoptions
+    Endif
+    Set KeyInfo = {$(KeyInfName),$(NoTitle),""}
+    OpenRegKey $(!REG_H_LOCAL) "" $(KeyInfName) $(MaskAllAccess) KeyInf
+    ifstr(i) $(KeyInf) == ""
+        CreateRegKey $(!REG_H_LOCAL) $(KeyInfo) "" $(MaskAllAccess) "" KeyInf
+        Ifint $(RegLastError) != $(!REG_ERROR_SUCCESS)
+            Debug-Output "OTHER.INF: SetOptionsIntoRegistry - Reg Error"$(KeyInfo)
+            goto finish_setregoptions
+        Endif
+    Endif
+    Set KeyInfo = {$(KeyOptName),$(NoTitle),""}
+    OpenRegKey $(KeyInf) "" $(KeyOptName) $(MaskAllAccess) KeyType
+    ifstr(i) $(KeyType) == ""
+        CreateRegKey $(KeyInf) $(KeyInfo) "" $(MaskAllAccess) "" KeyType
+        Ifint $(RegLastError) != $(!REG_ERROR_SUCCESS)
+            Debug-Output "OTHER.INF: SetOptionsIntoRegistry - Reg Error"$(KeyInfo)
+            goto finish_setregoptions
+        Endif
+    Endif
+    Set ValueInfo = {DateLow, $(NoTitle), $(!REG_VT_DWORD), $(TimeLsw)}
+    SetRegValue $(KeyInf) $(ValueInfo)
+    Ifint $(RegLastError) != $(!REG_ERROR_SUCCESS)
+        goto finish_setregoptions
+    Endif
+    Set ValueInfo = {OptionList, $(NoTitle), $(!REG_VT_MULTI_SZ), $(OptionList)}
+    SetRegValue $(KeyType) $(ValueInfo)
+    Ifint $(RegLastError) != $(!REG_ERROR_SUCCESS)
+        goto finish_setregoptions
+    Endif
+    Set ValueInfo = {OptionTextList, $(NoTitle), $(!REG_VT_MULTI_SZ), $(OptionTextList)}
+    SetRegValue $(KeyType) $(ValueInfo)
+    Ifint $(RegLastError) != $(!REG_ERROR_SUCCESS)
+        goto finish_setregoptions
+    Endif
+    Set Status = STATUS_SUCCESSFUL
+finish_setregoptions =+
+   Ifstr(i) $(KeyType) != ""
+       CloseRegKey  $(KeyType)
+       Ifstr(i) $(Status) != STATUS_SUCCESSFUL
+           DeleteRegTree $(KeyOptName)
+       Endif
+   Endif
+   Ifstr(i) $(KeyInf) != ""
+      CloseRegKey  $(KeyInf)
+   Endif
+   Debug-Output "OTHER.INF: SetOptionsIntoRegistry - Exit "$(Status)
+   return $(Status)
+[Install-SeeIfFileIsPresent]
+LibraryProcedure STATUS,$(!LIBHANDLE), CheckFileExistance $(FileToCheck)
+exit
+[Install-OemINF]
+LibraryProcedure STATUS,$(!NCPA_HANDLE), CopySingleFile $(!STF_HWND) $(OemSrc) $(OemDst)
+exit
+[LanguagesSupported]
+    ENG
+[OptionDiskettesENG]
+    Computer     = "Computer Driver"
+    Video        = "Display Driver"
+    Layout       = "Keyboard Layout"
+    Language     = "Language Driver"
+    Printer      = "Printer Driver"
+    Sound        = "Sound Driver"
+    Driver       = "Driver"
+    NetAdapter   = "Network Adapter"
+    NetDriver    = "Network Driver"
+    NetTransport = "Network Transport"
+    NetService   = "Network Service"
+    Network      = "Network"
+    NetProvider  = "Network Provider"
+[OptionDisketteMultiENG]
+    OptDiskette = "software"
+[DisketteDlgENG]
+    Caption        = "Insert Disk"
+    DlgText        = "Insert disk with "$(OemDiskette)" provided by the "+
+                     "software or hardware manufacturer.  If the files can be found at "+
+                     "a different location, for example on another drive "+
+                     "type a new path to the files below."
+    Continue       = "OK"
+    Cancel         = "Cancel"
+    DlgType        = "Edit"
+    DlgTemplate    = "DISKETTE"
+    Edit1Label     = ""
+    EditTextIn     = $(OemDisketteSrc)
+    EditFocus      = "ALL"
+[OemSingleOptionDlgENG]
+    Caption        = "Select OEM Option"
+    DlgText        = "Choose a "$(OemOptionTypeText)" supported by this hardware "+
+                     "manufacturer's disk."
+    Continue       = "OK"
+    Cancel         = "Cancel"
+    Help           = "&Help"
+    DlgType        = List
+    DlgTemplate    = "OEMSINGLESEL"
+    HelpContext    = $(!IDH_DB_OEMSINGLESEL_INS)
+    ListItemsIn    = $(OemOptionTextList)
+    ListItemsOut   = *($(OemOptionTextList),1)
+[OemMultiOptionENG]
+    Caption        = "Select OEM Option(s)"
+    DlgText        = "Choose "$(DeviceOem)"(s) supported by this hardware "+
+                     "manufacturer's disk."
+    Continue       = "OK"
+    Cancel         = "Cancel"
+    Help           = "&Help"
+    DlgType        = List
+    DlgTemplate    = "OEMMULTISEL"
+    HelpContext    = $(!IDH_DB_OEMMULTISEL_INS)
+    ListItemsIn    = $(OemTextList)
+    ListItemsOut   = {}
+[NonFatalError1ENG]
+NonFatal = "Setup cannot find OEMSETUP.INF or OEMSETNT.INF."$(!LF)$(!LF)+
+           "Please type a new path to the OEMSETUP.INF file."
+[NonFatalError2ENG]
+NonFatal = "The OEMSETUP.INF or OEMSETNT.INF file found is not valid "+
+           "for the current option."$(!LF)$(!LF)+
+           "Please type a new path to the OEMSETUP.INF file."

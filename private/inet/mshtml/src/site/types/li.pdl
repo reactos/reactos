@@ -1,0 +1,34 @@
+#ifndef _LI_PDL_
+#define _LI_PDL_ 1
+
+#include "element.pdl"
+
+file li.pdl
+
+import element.pdl
+
+interface IHTMLLIElement guid:3050f1e0-98b5-11cf-bb82-00aa00bdce0b
+    refprop CLIElement:type
+    refprop CLIElement:value
+
+tearoff CLIElement interface:IHTMLLIElement
+
+class CLIElement name:HTMLLIElement \
+            primaryinterface:IHTMLLIElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f273-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f523-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLLIElement
+
+    property    type    atype:BSTR    dispid:DISPID_A_LISTTYPE    type:htmlListType \
+                default:htmlListTypeNotSet ppFlags:PROPPARAM_CASESENSITIVE \
+                get set caa bindable displaybind maxstrlen:pdlToken
+    property    value   atype:long    dispid:DISPID_LI+1          type:long \
+                min:1 max:MAXLONG default:0 noassigndefault:1 invalid=noassigndefault \
+                get set caa clearcaches remeasure bindable displaybind
+
+#endif _LI_PDL_

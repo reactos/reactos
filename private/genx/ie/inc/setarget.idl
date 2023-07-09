@@ -1,0 +1,71 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992-1998.
+//
+//  File:       SETarget.idl
+//
+//  Contents:   IShellExecuteTarget interfaces
+//
+//  Classes:
+//
+//  Functions:
+//
+//  History:    28-JAN-98  ZekeL (Zeke Lucas)  - created
+//
+//----------------------------------------------------------------------------
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// setarget.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//---------------------------------------------------------------------------=")
+cpp_quote("// IShellExecuteTarget Interface.")
+cpp_quote("")
+
+import "objidl.idl";
+import "oleidl.idl";
+
+interface IShellExecuteTarget;
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:  IShellExecuteTarget interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPSHELLEXECUTETARGET_DEFINED")
+cpp_quote("#define _LPSHELLEXECUTETARGET_DEFINED")
+
+
+[
+
+	uuid(7C1B9250-9380-11D1-BE5E-0000F805CA57),
+
+	helpstring("IShellExecuteTarget Interface"),
+	pointer_default(unique)
+]
+interface IShellExecuteTarget : IUnknown
+{
+	HRESULT ExecObject(
+        [in] LPCOLESTR pszVerb, 
+        [in] REFCLSID clsidObject, 
+        [in] IStream *pstmObject, 
+        [in] DWORD dwFlags);
+};
+
+
+
+cpp_quote("#endif")
+
+

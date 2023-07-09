@@ -1,0 +1,67 @@
+#ifndef _SCRIPT_PDL_
+#define _SCRIPT_PDL_ 1
+
+#include "element.pdl"
+
+file script.pdl
+
+import element.pdl
+
+interface IHTMLScriptElement guid:3050f28b-98b5-11cf-bb82-00aa00bdce0b
+    refprop CScriptElement:src
+    refprop CScriptElement:htmlFor
+    refprop CScriptElement:event
+    refprop CScriptElement:text
+    refprop CScriptElement:defer
+    refprop CScriptElement:readyState
+    refprop CScriptElement:onerror
+    refprop CScriptElement:type
+
+/* New style element events w/ eventObject parameter: */
+event HTMLScriptEvents2 super:HTMLElementEvents2  guid:3050f621-98b5-11cf-bb82-00aa00bdce0b
+    method void     onerror (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONERROR
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLScriptEvents super:HTMLElementEvents  guid:3050f3e2-98b5-11cf-bb82-00aa00bdce0b
+    method void     onerror     dispid:DISPID_EVMETH_ONERROR()
+
+tearoff CScriptElement interface:IHTMLScriptElement
+    tearmethod readyState        mapto:readyState
+
+tearoff CScriptElement interface:IHTMLElement2 BaseImpl:CElement::
+    tearmethod readyState        mapto:readyState
+    tearmethod get_tabIndex      mapto:super::get_tabIndex
+
+class CScriptElement name:HTMLScriptElement \
+            primaryinterface:IHTMLScriptElement \
+            super:CElement \
+            events:HTMLScriptEvents \
+            nonprimaryevents:HTMLScriptEvents2 \
+            guid:3050f28c-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f530-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLScriptElement
+
+    property src    atype:BSTR         dispid:DISPID_SCRIPT+1 type:url    \
+        get set caa bindable displaybind maxstrlen:pdlUrlLen baseimplementation
+    property htmlFor atype:BSTR        dispid:DISPID_SCRIPT+4 type:CStr   \
+        get set caa bindable displaybind szattribute:for maxstrlen:pdlNoLimit baseimplementation
+    property event  atype:BSTR         dispid:DISPID_SCRIPT+5 type:CStr   \
+        get set caa bindable displaybind maxstrlen:512 baseimplementation
+    property text   atype:BSTR         dispid:DISPID_SCRIPT+6 type:CStr   \
+        member:_cstrText  get set     bindable displaybind nopersist maxstrlen:pdlNoLimit baseimplementation
+    property defer  atype:VARIANT_BOOL dispid:DISPID_SCRIPT+7 type:VARIANT_BOOL vt:VT_BOOL \
+        get set caa bindable displaybind
+    property readyState aType:BSTR     dispid:DISPID_A_READYSTATE type:CStr   \
+        abstract get nopropdesc:nameonly
+    property onerror    atype:VARIANT   dispid:DISPID_EVPROP_ONERROR  type:code \
+        scriptlet get set caa displaybind maxstrlen:pdlEvent
+    property type   atype:BSTR         dispid:DISPID_SCRIPT+9 type:CStr   \
+        get set caa bindable displaybind maxstrlen:pdlNoLimit
+    
+
+
+#endif _SCRIPT_PDL_
+

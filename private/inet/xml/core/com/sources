@@ -1,0 +1,50 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=msxml
+MINORCOMP=com
+
+ROOT=$(MAKEDIR:\core\com=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=com
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES= \
+    _unknown.cxx \
+    _dispatch.cxx \
+    bstr.cxx  \
+    classfactory.cxx \
+    variant.cxx\
+    staticunknown.cxx\
+    _gitpointer.cxx
+
+INCLUDES= \
+	$(ROOT)\core\include; \
+	$(ROOT)\core\base; \
+	$(ROOT); 
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+
+

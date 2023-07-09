@@ -1,9 +1,0 @@
-/* Thai translation by Sumath Aowsakulsutthi */
-
-LANGUAGE LANG_THAI, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "การบรรจุค่าระบบเกิดผิดพลาด '%s'"
-    IDS_MissingEntry "การเข้าหาตำแหน่งผิดพลาด: %s\n%s"
-END

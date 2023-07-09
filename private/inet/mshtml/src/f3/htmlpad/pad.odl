@@ -1,0 +1,836 @@
+#define RC_INVOKED
+#include "paddisp.h"
+#include "privcid.h"
+#include "padrc.h"
+
+#undef ASSERT
+
+#define DEFAULTVALUE_(x)    ,defaultvalue(x)
+
+[uuid(ad000220-a915-11cf-9cce-00a0c90564de), version(1.0)]
+library Pad
+{
+    importlib("stdole2.tlb");
+
+    // Command IDs
+    // { a0e0, , , { xaa, x3f,  }
+
+    typedef [uuid(4A18A0E0-AE5D-11cf-BFF1-00AA003F40D0), helpstring("Command IDs")] enum
+    {
+        cmdALIGNBOTTOM              = IDM_ALIGNBOTTOM,
+        cmdALIGNHORIZONTALCENTERS   = IDM_ALIGNHORIZONTALCENTERS,
+        cmdALIGNLEFT                = IDM_ALIGNLEFT,
+        cmdALIGNRIGHT               = IDM_ALIGNRIGHT,
+        cmdALIGNTOGRID              = IDM_ALIGNTOGRID,
+        cmdALIGNTOP                 = IDM_ALIGNTOP,
+        cmdALIGNVERTICALCENTERS     = IDM_ALIGNVERTICALCENTERS,
+        cmdARRANGEBOTTOM            = IDM_ARRANGEBOTTOM,
+        cmdARRANGERIGHT             = IDM_ARRANGERIGHT,
+        cmdBRINGFORWARD             = IDM_BRINGFORWARD,
+        cmdBRINGTOFRONT             = IDM_BRINGTOFRONT,
+        cmdCENTERHORIZONTALLY       = IDM_CENTERHORIZONTALLY,
+        cmdCENTERVERTICALLY         = IDM_CENTERVERTICALLY,
+        cmdCODE                     = IDM_CODE,
+        cmdCOPY                     = IDM_COPY,
+        cmdCUT                      = IDM_CUT,
+        cmdDELETE                   = IDM_DELETE,
+        cmdFONTNAME                 = IDM_FONTNAME,
+        cmdFONTSIZE                 = IDM_FONTSIZE,
+        cmdGROUP                    = IDM_GROUP,
+        cmdHORIZSPACECONCATENATE    = IDM_HORIZSPACECONCATENATE,
+        cmdHORIZSPACEDECREASE       = IDM_HORIZSPACEDECREASE,
+        cmdHORIZSPACEINCREASE       = IDM_HORIZSPACEINCREASE,
+        cmdHORIZSPACEMAKEEQUAL      = IDM_HORIZSPACEMAKEEQUAL,
+        cmdINSERTOBJECT             = IDM_INSERTOBJECT,
+        cmdPASTE                    = IDM_PASTE,
+        cmdPRINT                    = IDM_PRINT,
+        cmdPROPERTIES               = IDM_PROPERTIES,
+        cmdREDO                     = IDM_REDO,
+        cmdMULTILEVELREDO           = IDM_MULTILEVELREDO,
+        cmdSELECTALL                = IDM_SELECTALL,
+        cmdSENDBACKWARD             = IDM_SENDBACKWARD,
+        cmdSENDTOBACK               = IDM_SENDTOBACK,
+        cmdSHOWTABLE                = IDM_SHOWTABLE,
+        cmdSIZETOCONTROL            = IDM_SIZETOCONTROL,
+        cmdSIZETOCONTROLHEIGHT      = IDM_SIZETOCONTROLHEIGHT,
+        cmdSIZETOCONTROLWIDTH       = IDM_SIZETOCONTROLWIDTH,
+        cmdSIZETOFIT                = IDM_SIZETOFIT,
+        cmdSIZETOGRID               = IDM_SIZETOGRID,
+        cmdSNAPTOGRID               = IDM_SNAPTOGRID,
+        cmdTABORDER                 = IDM_TABORDER,
+#ifdef WHEN_CONTROL_PALETTE_IS_SUPPORTED
+        cmdTOOLBOX                  = IDM_TOOLBOX,
+#endif // WHEN_CONTROL_PALETTE_IS_SUPPORTED
+        cmdUNDO                     = IDM_UNDO,
+        cmdMULTILEVELUNDO           = IDM_MULTILEVELUNDO,
+        cmdUNGROUP                  = IDM_UNGROUP,
+        cmdVERTSPACECONCATENATE     = IDM_VERTSPACECONCATENATE,
+        cmdVERTSPACEDECREASE        = IDM_VERTSPACEDECREASE,
+        cmdVERTSPACEINCREASE        = IDM_VERTSPACEINCREASE,
+        cmdVERTSPACEMAKEEQUAL       = IDM_VERTSPACEMAKEEQUAL,
+        cmdBACKCOLOR                = IDM_BACKCOLOR,
+        cmdBOLD                     = IDM_BOLD,
+        cmdBORDERCOLOR              = IDM_BORDERCOLOR,
+        cmdFLAT                     = IDM_FLAT,
+        cmdFORECOLOR                = IDM_FORECOLOR,
+        cmdITALIC                   = IDM_ITALIC,
+        cmdJUSTIFYCENTER            = IDM_JUSTIFYCENTER,
+        cmdJUSTIFYGENERAL           = IDM_JUSTIFYGENERAL,
+        cmdJUSTIFYLEFT              = IDM_JUSTIFYLEFT,
+        cmdJUSTIFYRIGHT             = IDM_JUSTIFYRIGHT,
+        cmdRAISED                   = IDM_RAISED,
+        cmdSUNKEN                   = IDM_SUNKEN,
+        cmdUNDERLINE                = IDM_UNDERLINE,
+        cmdCHISELED                 = IDM_CHISELED,
+        cmdETCHED                   = IDM_ETCHED,
+        cmdSHADOWED                 = IDM_SHADOWED,
+        cmdFIND                     = IDM_FIND,
+        cmdSHOWGRID                 = IDM_SHOWGRID,
+        cmdSAVE                     = IDM_SAVE,
+        cmdSAVEAS                   = IDM_SAVEAS,
+        cmdOBJECTVERBLIST0          = IDM_OBJECTVERBLIST0,
+        cmdOBJECTVERBLIST1          = IDM_OBJECTVERBLIST1,
+        cmdOBJECTVERBLIST2          = IDM_OBJECTVERBLIST2,
+        cmdOBJECTVERBLIST3          = IDM_OBJECTVERBLIST3,
+        cmdOBJECTVERBLIST4          = IDM_OBJECTVERBLIST4,
+        cmdOBJECTVERBLIST5          = IDM_OBJECTVERBLIST5,
+        cmdOBJECTVERBLIST6          = IDM_OBJECTVERBLIST6,
+        cmdOBJECTVERBLIST7          = IDM_OBJECTVERBLIST7,
+        cmdOBJECTVERBLIST8          = IDM_OBJECTVERBLIST8,
+        cmdOBJECTVERBLIST9          = IDM_OBJECTVERBLIST9,
+        cmdOBJECTVERBLISTLAST       = IDM_OBJECTVERBLISTLAST,
+        cmdCONVERTOBJECT            = IDM_CONVERTOBJECT,
+        cmdCUSTOMCONTROL            = IDM_CUSTOMCONTROL,
+        cmdCUSTOMIZEITEM            = IDM_CUSTOMIZEITEM,
+        cmdRENAME                   = IDM_RENAME,
+        cmdIMPORT                   = IDM_IMPORT,
+        cmdNEWPAGE                  = IDM_NEWPAGE,
+        cmdMOVE                     = IDM_MOVE,
+        cmdCANCEL                   = IDM_CANCEL,
+        cmdFONT                     = IDM_FONT,
+
+        cmdOPEN                     = IDM_OPEN,
+        cmdNEW                      = IDM_NEW,
+        cmdSAVECOPYAS               = IDM_SAVECOPYAS,
+        cmdPRINTPREVIEW             = IDM_PRINTPREVIEW,
+        cmdPAGESETUP                = IDM_PAGESETUP,
+        cmdSPELL                    = IDM_SPELL,
+        cmdPASTESPECIAL             = IDM_PASTESPECIAL,
+        cmdCLEARSELECTION           = IDM_CLEARSELECTION,
+        cmdFOLLOW_ANCHOR            = IDM_FOLLOW_ANCHOR,
+
+#if DBG==1
+        cmdDEBUG_TRACETAGS          = IDM_DEBUG_TRACETAGS,
+        cmdDEBUG_RESFAIL            = IDM_DEBUG_RESFAIL,
+        cmdDEBUG_DUMPOTRACK         = IDM_DEBUG_DUMPOTRACK,
+        cmdDEBUG_BREAK              = IDM_DEBUG_BREAK,
+        cmdDEBUG_VIEW               = IDM_DEBUG_VIEW,
+        cmdDEBUG_DUMPTREE           = IDM_DEBUG_DUMPTREE,
+#if PAST_BETA1 == 1
+        cmdLOADHTML                 = IDM_DEBUG_LOADHTML,
+        cmdSAVEHTML                 = IDM_DEBUG_SAVEHTML,
+#endif
+#endif
+
+        cmdPASTEINSERT              = IDM_PASTEINSERT,
+        cmdREPLACE                  = IDM_REPLACE,
+        cmdEDITSOURCE               = IDM_EDITSOURCE,
+        cmdBOOKMARK                 = IDM_BOOKMARK,
+        cmdHYPERLINK                = IDM_HYPERLINK,
+        cmdUNLINK                   = IDM_UNLINK,
+        cmdBROWSEMODE               = IDM_BROWSEMODE,
+        cmdEDITMODE                 = IDM_EDITMODE,
+
+        cmdTOOLBARS                 = IDM_TOOLBARS,
+        cmdSTATUSBAR                = IDM_STATUSBAR,
+        cmdFORMATMARK               = IDM_FORMATMARK,
+        cmdTEXTONLY                 = IDM_TEXTONLY,
+        cmdREFRESH                  = IDM_PAD_REFRESH,
+        cmdOPTIONS                  = IDM_OPTIONS,
+        cmdFOLLOWLINKC              = IDM_FOLLOWLINKC,
+        cmdFOLLOWLINKN              = IDM_FOLLOWLINKN,
+        cmdSTOP                     = IDM_STOP,
+        cmdVIEWSOURCE               = IDM_VIEWSOURCE,
+
+        cmdBASELINEFONT1            = IDM_BASELINEFONT1,
+        cmdBASELINEFONT2            = IDM_BASELINEFONT2,
+        cmdBASELINEFONT3            = IDM_BASELINEFONT3,
+        cmdBASELINEFONT4            = IDM_BASELINEFONT4,
+        cmdBASELINEFONT5            = IDM_BASELINEFONT5,
+
+        cmdHORIZONTALLINE           = IDM_HORIZONTALLINE,
+        cmdLINEBREAKNORMAL          = IDM_LINEBREAKNORMAL,
+        cmdLINEBREAKLEFT            = IDM_LINEBREAKLEFT,
+        cmdLINEBREAKRIGHT           = IDM_LINEBREAKRIGHT,
+        cmdLINEBREAKBOTH            = IDM_LINEBREAKBOTH,
+        cmdNONBREAK                 = IDM_NONBREAK,
+        cmdSPECIALCHAR              = IDM_SPECIALCHAR,
+        cmdHTMLSOURCE               = IDM_HTMLSOURCE,
+        cmdFRAME                    = IDM_IFRAME,
+        cmdHTMLCONTAIN              = IDM_HTMLCONTAIN,
+        cmdTEXTBOX                  = IDM_TEXTBOX,
+        cmdTEXTAREA                 = IDM_TEXTAREA,
+        cmdCHECKBOX                 = IDM_CHECKBOX,
+        cmdRADIOBUTTON              = IDM_RADIOBUTTON,
+        cmdDROPDOWNBOX              = IDM_DROPDOWNBOX,
+        cmdLISTBOX                  = IDM_LISTBOX,
+        cmdBUTTON                   = IDM_BUTTON,
+        cmdIMAGE                    = IDM_IMAGE,
+        cmdOBJECT                   = IDM_OBJECT,
+        cmdIMAGEMAP                 = IDM_IMAGEMAP,
+        cmdFILE                     = IDM_FILE,
+
+        cmdPARAGRAPH                = IDM_PARAGRAPH,
+        cmdFORM                     = IDM_FORM,
+        cmdMARQUEE                  = IDM_MARQUEE,
+        cmdLIST                     = IDM_LIST,
+        cmdORDERLIST                = IDM_ORDERLIST,
+        cmdUNORDERLIST              = IDM_UNORDERLIST,
+        cmdINDENT                   = IDM_INDENT,
+        cmdOUTDENT                  = IDM_OUTDENT,
+        cmdPREFORMATTED             = IDM_PREFORMATTED,
+        cmdADDRESS                  = IDM_ADDRESS,
+        cmdBLINK                    = IDM_BLINK,
+        cmdDIV                      = IDM_DIV,
+
+        cmdTABLEINSERT              = IDM_TABLEINSERT,
+        cmdRCINSERT                 = IDM_RCINSERT,
+        cmdCELLINSERT               = IDM_CELLINSERT,
+        cmdCAPTIONINSERT            = IDM_CAPTIONINSERT,
+        cmdCELLMERGE                = IDM_CELLMERGE,
+        cmdCELLSPLIT                = IDM_CELLSPLIT,
+        cmdCELLSELECT               = IDM_CELLSELECT,
+        cmdROWSELECT                = IDM_ROWSELECT,
+        cmdCOLUMNSELECT             = IDM_COLUMNSELECT,
+        cmdTABLESELECT              = IDM_TABLESELECT,
+        cmdTABLEPROPERTIES          = IDM_TABLEPROPERTIES,
+
+        cmdHELP_CONTENT             = IDM_HELP_CONTENT,
+        cmdHELP_ABOUT               = IDM_HELP_ABOUT,
+
+        cmdREMOVEFORMAT             = IDM_REMOVEFORMAT,
+        cmdPAGEINFO                 = IDM_PAGEINFO,
+        cmdTELETYPE                 = IDM_TELETYPE,
+        cmdGETBLOCKFMTS             = IDM_GETBLOCKFMTS,
+        cmdBLOCKFMT                 = IDM_BLOCKFMT,
+        cmdSHOWHIDE_CODE            = IDM_SHOWHIDE_CODE,
+        cmdTABLE                    = IDM_TABLE,
+        cmd1DCONTAINER              = IDM_1D,
+
+        cmdSHOWALLTAGS              = IDM_SHOWALLTAGS,
+        cmdSHOWALIGNEDSITETAGS      = IDM_SHOWALIGNEDSITETAGS,
+        cmdSHOWSCRIPTTAGS           = IDM_SHOWSCRIPTTAGS,
+        cmdSHOWSTYLETAGS            = IDM_SHOWSTYLETAGS,
+        cmdSHOWCOMMENTTAGS          = IDM_SHOWCOMMENTTAGS,
+        cmdSHOWAREATAGS             = IDM_SHOWAREATAGS,
+        cmdSHOWUNKNOWNTAGS          = IDM_SHOWUNKNOWNTAGS,
+        cmdSHOWMISCTAGS             = IDM_SHOWMISCTAGS,
+
+        cmdDOCLTR                   = IDM_DIRLTR,
+        cmdDOCRTL                   = IDM_DIRRTL,
+        cmdBLOCKDIRLTR              = IDM_BLOCKDIRLTR,
+        cmdBLOCKDIRRTL              = IDM_BLOCKDIRRTL,
+    } CommandID;
+
+    typedef [uuid(1098E430-AEE7-11cf-BFF2-00AA003F40D0), helpstring("Command status")] enum
+    {
+        cmdStateDisabled            = 1,
+        cmdStateUp                  = 3,
+        cmdStateDown                = 7,
+        cmdStateNinched             = 0x1011,
+    } CommandStatus;
+
+    // Pad class
+
+    coclass       Pad;
+    interface     IPad;
+    dispinterface PadEvents;
+
+    [uuid(ad000222-a915-11cf-9cce-00a0c90564de), odl, dual]
+    interface IPad : IDispatch
+    {
+        [helpstring("Similar to VB DoEvents. If Wait=False then returns when all messages sent else returns when EndEvents called.")]
+        HRESULT DoEvents(
+                [in, DEFAULTVALUE_(0)] VARIANT_BOOL Wait);
+
+        [helpstring("Causes 'DoEvents True' to return.")]
+        HRESULT EndEvents();
+
+        [helpstring("Locks key state")]
+		HRESULT LockKeyState(
+				[in, DEFAULTVALUE_(0)] VARIANT_BOOL Shift,
+				[in, DEFAULTVALUE_(0)] VARIANT_BOOL Control,
+				[in, DEFAULTVALUE_(0)] VARIANT_BOOL Alt);
+
+        [helpstring("Unlocks key state")]
+		HRESULT UnlockKeyState();
+
+        [helpstring("Same as VB SendKeys")]
+        HRESULT SendKeys(
+                [in] BSTR Keys,
+                [in  DEFAULTVALUE_(0)] VARIANT_BOOL Wait);
+
+        [helpstring("Open file, URL, or create new file.")]
+        HRESULT OpenFile(
+                [in, DEFAULTVALUE_("")] BSTR Path,
+                [in, DEFAULTVALUE_("")] BSTR ProgID);
+
+        [helpstring("Save current file.")]
+        HRESULT SaveFile([in] BSTR Path);
+
+        [helpstring("Close current file.")]
+        HRESULT CloseFile();
+
+        [helpstring("Execute command.")]
+        HRESULT ExecuteCommand(
+                [in] LONG CmdID,
+                [optional, in] VARIANT * Data);
+
+        [helpstring("Query command status.")]
+        HRESULT QueryCommandStatus(
+                [in] LONG CmdID,
+                [retval, out] VARIANT * Status);
+
+        [helpstring("Execute script file. Param is available to script as 'ScriptParam'.")]
+        HRESULT ExecuteScript(
+                [in] BSTR Path,
+                [optional, in] VARIANT *Param,
+                [in DEFAULTVALUE_(0)] VARIANT_BOOL Async);
+
+        [helpstring("Include script file into current script.")]
+        HRESULT IncludeScript([in] BSTR Path);
+
+        [helpstring("Set property named 'Property' on 'Object' to 'Value'.")]
+        HRESULT SetProperty([in] IDispatch * Object, [in] BSTR Property, [in] VARIANT * Value);
+
+        [helpstring("Get property named 'Property' on 'Object'.")]
+        HRESULT GetProperty([in] IDispatch * Object, [in] BSTR Property, [out, retval] VARIANT * Value);
+
+        HRESULT RegisterControl([in] BSTR Path);
+
+        [propget]
+        HRESULT ProcessorArchitecture([out, retval] BSTR * pbstrMachineType);
+
+        [propget,
+        helpstring("Path of currently executing script.")]
+        HRESULT ScriptPath(
+                [in DEFAULTVALUE_(0)] long Level,
+                [out, retval] BSTR *Path);
+
+        [propget,
+        helpstring("Argument passed to 'ExecuteScript'")]
+        HRESULT ScriptParam(
+                [out, retval] VARIANT *Param);
+
+        [propget,
+        helpstring("The script engines object model.")]
+        HRESULT ScriptObject(
+                [out, retval] IDispatch **Script);
+
+        [propget,
+        helpstring("The current time in milliseconds.")]
+        HRESULT CurrentTime(
+                [out, retval] long * Time);
+
+        [propget,
+        helpstring("The document Trident document.")]
+        HRESULT Document(
+                [out, retval] IDispatch** Document);
+
+        [propget]
+        HRESULT TempPath([out, retval] BSTR * Path);
+
+        [helpstring("Get name of a scratch file.")]
+        HRESULT GetTempFileName([out, retval] BSTR * Name);
+
+        [helpstring("Cleanup scratch files created with GetTempFileName.")]
+        HRESULT CleanupTempFiles();
+
+        [helpstring("Make application exit on assert instead of displaying dialog.")]
+        HRESULT DisableDialogs();
+
+        [propget,
+        helpstring("Returns true if 'DisableDialogs' called.")]
+        HRESULT DialogsEnabled(
+                [out, retval] VARIANT_BOOL *Enabled);
+
+        [helpstring("Print string to status line.")]
+        HRESULT PrintStatus(
+                [in] BSTR Message);
+
+        [helpstring("Print string to debug log file.")]
+        HRESULT PrintLog(
+                [in]BSTR Line);
+
+        [helpstring("Print string to debug console.")]
+        HRESULT PrintDebug([in]BSTR Line);
+
+        [helpstring("Same as VB CreateObject.")]
+        HRESULT CreateObject(
+                [in]BSTR ProgID,
+                [out, retval] IDispatch **Obj);
+
+        [helpstring("Same as VB GetObject.")]
+        HRESULT GetObject(
+                [in  DEFAULTVALUE_("")]BSTR FileName,
+                [in, DEFAULTVALUE_("")]BSTR ProgID,
+                [out, retval]IDispatch **Obj);
+
+        [helpstring("Return true if files are equal.")]
+        HRESULT CompareFiles(
+                [in] BSTR File1,
+                [in] BSTR File2,
+                [retval, out] VARIANT_BOOL * FilesMatch);
+
+        [helpstring("Copies a file.")]
+        HRESULT CopyThisFile(
+                [in] BSTR File1,
+                [in] BSTR File2,
+                [retval, out] VARIANT_BOOL * Success);
+
+        [helpstring("Print document previously opened from DRT.")]
+        HRESULT DRTPrint(
+                [in] long Flags,
+                [retval, out] VARIANT_BOOL * Success);
+
+        [helpstring("Sets the default printer.")]
+        HRESULT SetDefaultPrinter(
+                [in] BSTR bstrNewDefaultPrinter,
+                [retval, out] VARIANT_BOOL * Success);
+
+        [helpstring("Start IceCAP.")]
+        HRESULT StartCAP();
+
+        [helpstring("Stop IceCAP.")]
+        HRESULT StopCAP();
+
+        [helpstring("Suspend IceCAP.")]
+        HRESULT SuspendCAP();
+
+        [helpstring("Resume IceCAP.")]
+        HRESULT ResumeCAP();
+
+        [helpstring("Call TicStartAll in TimeLib.DLL")]
+        HRESULT TicStartAll();
+
+        [helpstring("Call TicStopAll in TimeLib.DLL.")]
+        HRESULT TicStopAll();
+
+        [propget,
+        helpstring("Get interval for Pad_TimerEvent")]
+        HRESULT TimerInterval([out, retval] long * Interval);
+
+        [propput,
+        helpstring("Set interval for Pad_TimerEvent")]
+        HRESULT TimerInterval([in] long Interval);
+
+        [helpstring("Calls through to Windows ShowWindow. SW_HIDE=0, SW_NORMAL=1")]
+        HRESULT ShowWindow(
+                [in] long Command);
+
+        [helpstring("Move Pad window.")]
+        HRESULT MoveWindow(
+                [in] long Left,
+                [in] long Top,
+                [in] long Width,
+                [in] long Height);
+
+        [propget,
+        helpstring("Get Pad window left.")]
+        HRESULT WindowLeft(
+                [out, retval] long *Left);
+
+        [propget,
+        helpstring("Get Pad window top.")]
+        HRESULT WindowTop(
+                [out, retval] long *Top);
+
+        [propget,
+        helpstring("Get Pad window width.")]
+        HRESULT WindowWidth(
+                [out, retval] long *Width);
+
+        [propget,
+        helpstring("Get Pad window height.")]
+        HRESULT WindowHeight(
+                [out, retval] long *Height);
+
+        [helpstring("If 'Assertion' = True then Assert with 'Message'.")]
+        HRESULT ASSERT(
+                [in] VARIANT_BOOL Assertion,
+                [in] BSTR Message);
+
+        [propget]
+        HRESULT Lines(
+                [in] IDispatch * Object, [out, retval] long *Lines);
+
+        [propget]
+        HRESULT Line(
+                [in] IDispatch * Object, [in] long l, [out, retval] IDispatch **Line);
+
+        [propget]
+        HRESULT Cascaded(
+                [in] IDispatch * Object, [out, retval] IDispatch **Cascaded);
+
+        [helpstring("Wait for document to finish recalcing.")]
+        HRESULT WaitForRecalc();
+
+        [helpstring("Setup the HtmPerfCtl block.")]
+        HRESULT SetPerfCtl(DWORD dwFlags);
+
+        [helpstring("Clear the WININET download cache.")]
+        HRESULT ClearDownloadCache();
+
+        [helpstring("Enable/Disable painting.")]
+        HRESULT LockWindowUpdate(VARIANT_BOOL Lock);
+
+        [helpstring("Enable/Disable trace tag.")]
+        HRESULT EnableTraceTag([in] BSTR bstrTag, [in] BOOL fEnable);
+
+        [propget]
+        HRESULT Dbg(
+                [out, retval] long * Dbg);
+
+        [helpstring("Empty Working Set Pages.")]
+        HRESULT WsClear();
+
+        [helpstring("Get Current Working Set Pages.")]
+        HRESULT WsTakeSnapshot();
+
+        [propget]
+        HRESULT WsModule([in] long row, [out, retval] BSTR *pbstrModule);
+
+        [propget]
+        HRESULT WsSection([in] long row, [out, retval] BSTR *pbstrSection);
+
+        [propget]
+        HRESULT WsSize([in] long row, [out, retval] long *plWsSize);
+
+        [propget]
+        HRESULT WsCount([out, retval] long *plCount);
+
+        [propget]
+        HRESULT WsTotal([out, retval] long *plTotal);
+
+        [helpstring("Initiate Collection of Working Set Change Deltas.")]
+        HRESULT WsStartDelta();
+
+        [helpstring("End Collection of Working Set Deltas and return no. of Page Faults.")]
+        HRESULT WsEndDelta([out, retval] long *pnPageFaults);
+
+        [helpstring("Set a Registry Entry Value.")]
+        HRESULT SetRegValue(
+                [in] long hkey,
+                [in] BSTR bstrSubKey,
+                [in] BSTR bstrValueName,
+                [in] VARIANT value);
+
+        [helpstring("Controls leak tracking of Co allocated memory")]
+        HRESULT CoMemoryTrackDisable([in] VARIANT_BOOL fDisable);
+
+        [propget,
+        helpstring("Returns true if shdocvw is hosted in Pad.")]
+        HRESULT UseShdocvw([out, retval] VARIANT_BOOL *pfHosted);
+
+        [propput,
+        helpstring("If set to true, hosts shdocvw in Pad.")]
+        HRESULT UseShdocvw([in] VARIANT_BOOL fHosted);
+
+        [helpstring("Navigate To previous document")]
+        HRESULT GoBack([out, retval] VARIANT_BOOL *pfWentBack);
+
+        [helpstring("Navigate To next document")]
+        HRESULT GoForward([out, retval] VARIANT_BOOL *pfWentForward);
+
+        [helpstring("Call external function in specified DLL")]
+        HRESULT TestExternal(
+                        [in] BSTR bstrDLLName,
+                        [in] BSTR bstrFunctionName,
+                        [in,optional] VARIANT *pParam,
+                        [out,retval] long *pdwRetVal);
+
+        [helpstring("Return true if file exists.")]
+        HRESULT FileExists(
+                [in] BSTR File,
+                [retval, out] VARIANT_BOOL *pfFileExists);
+
+        [helpstring("UnLoad All DLLs CoLoadLibararied by Pad")]
+        HRESULT UnLoadDLL();
+
+        [helpstring("UnLoad DLL")]
+        HRESULT DeinitDynamicLibrary([in] BSTR bstrDLLName);
+
+        [helpstring("Is DLL Loaded")]
+        HRESULT IsDynamicLibraryLoaded([in] BSTR bstrDLLName, [out, retval] VARIANT_BOOL * pfLoaded);
+
+        [helpstring("Get a Registry Entry Value.")]
+        HRESULT GetRegValue(
+                [in] long hKey,
+                [in] BSTR bstrSubKey,
+                [in] BSTR bstrValueName,
+                [out, retval] VARIANT *pValue);
+
+        [helpstring("Delete a Registry Entry Value.")]
+        HRESULT DeleteRegValue(
+                [in] long hKey,
+                [in] BSTR bstrSubKey,
+                [in] BSTR bstrValueName);
+
+        [helpstring("Register a Trust Provider.  Returns old keyvalue")]
+        HRESULT TrustProvider(
+                [in] BSTR bstrKey,
+                [in] BSTR bstrProvider,
+                [out, retval] VARIANT *poldValue);
+                              
+        [helpstring("Revert Trust Provider key")]
+        HRESULT RevertTrustProvider(
+                [in] BSTR bstrKey);
+                
+        [helpstring("Reload the document using IPersistHistory")]
+        HRESULT DoReloadHistory();
+
+        [helpstring("Compute the CRC of a string")]
+        HRESULT ComputeCRC(
+                [in] BSTR bstrText,
+                [out, retval] VARIANT * pCRC);
+                
+        [helpstring("Open file using IPersistStreamInit")]
+        HRESULT OpenFileStream(
+                [in, DEFAULTVALUE_("")] BSTR Path);
+
+        [propget,
+        helpstring("Returns the no. of times IAdviseSink::OnViewChange was fired.")]
+        HRESULT ViewChangesFired([out, retval] long *plCount);
+
+        [propget,
+        helpstring("Returns the no. of times IAdviseSink::OnDataChange was fired.")]
+        HRESULT DataChangesFired([out, retval] long *plCount);
+
+        [propget,
+        helpstring("Returns true if download notify object is to be attached.")]
+        HRESULT DownloadNotifyMask([out, retval] ULONG *pulMask);
+
+        [propput,
+        helpstring("Returns true if download notify object is to be attached.")]
+        HRESULT DownloadNotifyMask([in] ULONG ulMask);
+
+        [helpstring("Dump Meter Log")]
+        HRESULT DumpMeterLog([in] BSTR Path);
+
+        [helpstring("Get Switch Timers")]
+        HRESULT GetSwitchTimers([out, retval] VARIANT * pValue);
+
+        [helpstring("move the mouse to the desired position")]
+        HRESULT MoveMouseTo([in] int x, 
+                            [in] int Y, 
+                            [in] VARIANT_BOOL fLeftButton, 
+                            [in] int keyState);
+
+        [helpstring("drive a mouse button event")]
+        HRESULT DoMouseButton(
+            [in]VARIANT_BOOL fLeftButton, 
+            [in] BSTR action,
+            [in] int keystate);
+
+        [helpstring("drive a mouse button event using given coords")]
+        HRESULT DoMouseButtonAt(
+            [in] int x, 
+            [in] int Y,
+            [in]VARIANT_BOOL fLeftButton, 
+            [in] BSTR action,
+            [in] int keystate);
+            
+	    [helpstring("Returns number of microseconds to save the document's HTML to a stream.")]
+	    HRESULT TimeSaveDocToDummyStream(
+		    [out, retval] long *plTimeMicros);
+
+	    [helpstring("sleeps n milliseconds")]
+	    HRESULT Sleep([in] int nTimeout);
+
+	    [helpstring("returns TRUE if OS is Win95")]
+	    HRESULT IsWin95([out, retval] long * pfWin95);
+
+        [helpstring("Returns an IAccessible pointer to the window's accessible object")]
+        HRESULT GetAccWindow([out, retval] IDispatch** ppAccWindow );
+
+        [helpstring("Returns the IAccessible interface for the object at (x,y) client coordinates")]
+        HRESULT GetAccObjAtPoint( [in] long x, [in] long y, [out, retval] IDispatch ** ppAccObject );
+
+        [helpstring("Set the keyboard layout")]
+        HRESULT SetKeyboard(
+            [in] BSTR bstrKeyboard);
+
+        [helpstring("Get the keyboard layout")]
+        HRESULT GetKeyboard(
+            [out, retval] VARIANT *pKeyboard);
+
+        [helpstring("Move the IME mode one step")]
+        HRESULT ToggleIMEMode(
+            [in] BSTR bstrIME);
+
+        [helpstring("Send keys in a way that the IME can intercept.")]
+        HRESULT SendIMEKeys(
+            [in] BSTR bstrKeys);
+
+        [helpstring("Access to Markup Services")]
+        HRESULT Markup (
+            [in,optional] VARIANT *pParam1,
+            [in,optional] VARIANT *pParam2,
+            [in,optional] VARIANT *pParam3,                
+            [in,optional] VARIANT *pParam4,
+            [in,optional] VARIANT *pParam5,
+            [in,optional] VARIANT *pParam6,
+            [retval, out] VARIANT * Ret );
+
+        [helpstring("Produces a random number")]
+        HRESULT Random (
+            [in]          long range,
+            [retval, out] long * Ret );
+
+        [helpstring("Seeds the random number generator")]
+        HRESULT RandomSeed (
+            [in] long );
+
+        [helpstring("Gets heap counter; 0 = Bytes allocates (all heaps); 1 = blocks allocated (all heaps)")]
+        HRESULT GetHeapCounter (
+            [in]          long iCounter,
+            [retval, out] long * Ret );
+
+        [helpstring("Calls CreateProcess to launch a process and optionally wait for its completion.")]
+        HRESULT CreateProcess (
+            [in]          BSTR bstrCommandLine,
+            [in]          VARIANT_BOOL fWait );
+
+        [helpstring("Returns the current process Id.")]
+        HRESULT GetCurrentProcessId (
+            [retval, out] long * Ret );
+
+    }
+
+    [uuid(ad000223-a915-11cf-9cce-00a0c90564de)]
+    dispinterface PadEvents
+    {
+    properties:
+    methods: // Events
+        //
+        // WARNING -- Do not change these events without updating the
+        //   AddScriplet calls in padssite.cxx!
+        //
+        [id(DISPID_PadEvents_Load)] void Load();
+        [id(DISPID_PadEvents_Status)] void Status(BSTR Status);
+        [id(DISPID_PadEvents_Timer)] void Timer();
+        [id(DISPID_PadEvents_DocLoaded)] void DocLoaded(BOOL fLoaded);
+        [id(DISPID_PadEvents_OnPaint)] void OnPaint(long lClientArea, long lPaintArea);
+        [id(DISPID_PadEvents_Unload)] void Unload();
+        [id(DISPID_PadEvents_PerfCtl)] void PerfCtl(DWORD dwArg);
+    }
+
+    [uuid(3050f221-98b5-11cf-bb82-00aa00bdce0b)]
+    coclass Pad
+    {
+        [default]          interface     IPad;
+        [default, source]  dispinterface PadEvents;
+    }
+
+    [uuid(E99CA1D0-076D-11d0-8B1A-00AA00C0180B), odl, dual]
+    interface ILine : IDispatch
+    {
+        [propget]
+        HRESULT Chars(
+                [out, retval] long * Chars);
+        [propget]
+        HRESULT xLeft(
+                [out, retval] long * xLeft);
+        [propget]
+        HRESULT xWidth(
+                [out, retval] long * xWidth);
+        [propget]
+        HRESULT xLeftMargin(
+                [out, retval] long * xLeftMargin);
+        [propget]
+        HRESULT xLineWidth(
+                [out, retval] long * xLineWidth);
+        [propget]
+        HRESULT yHeight(
+                [out, retval] long * yHeight);
+        [propget]
+        HRESULT yTxtDescent(
+                [out, retval] long * yTxtDescent);  // max text descent for the line
+        [propget]
+        HRESULT yDescent(
+                [out, retval] long * yDescent);     // distance from baseline to bottom of line
+        [propget]
+        HRESULT xLineOverhang(
+                [out, retval] long * xLineOverhang);
+        [propget]
+        HRESULT cchWhite(
+                [out, retval] long * cchWhite);
+        [propget]
+        HRESULT yPos(
+                [out, retval] long * yPos);
+
+        [propget]
+        HRESULT HasBulletOrNum(
+                [out, retval] VARIANT_BOOL * HasBulletOrNum);         // Set if the line has a bullet
+        [propget]
+        HRESULT HasTabs(
+                [out, retval] VARIANT_BOOL * HasTabs);                // set if tabs, *not* iff tabs
+        [propget]
+        HRESULT HasEOP(
+                [out, retval] VARIANT_BOOL * HasEOP);                 // set if ends in paragraph mark
+        [propget]
+        HRESULT HasOle(
+                [out, retval] VARIANT_BOOL * HasOle);
+        [propget]
+        HRESULT FirstInPara(
+                [out, retval] VARIANT_BOOL * FirstInPara);
+        [propget]
+        HRESULT ForceBeforeSpace(
+                [out, retval] VARIANT_BOOL * ForceBeforeSpace);
+        [propget]
+        HRESULT HasBreak(
+                [out, retval] VARIANT_BOOL * HasBreak);               // Specifies that the line ends in a break character.
+        [propget]
+        HRESULT SingleSite(
+                [out, retval] VARIANT_BOOL * SingleSite);             // Set if the line contains one of our sites that always lives on its own line, but still in the text stream.
+        [propget]
+        HRESULT HasDefParaBeforeSpace(
+                [out, retval] VARIANT_BOOL * HasDefParaBeforeSpace);        // line has default para space
+        [propget]
+        HRESULT LeftAligned(
+                [out, retval] VARIANT_BOOL * LeftAligned);            // line is left aligned
+        [propget]
+        HRESULT RightAligned(
+                [out, retval] VARIANT_BOOL * RightAligned);           // line is right aligned
+        [propget]
+        HRESULT Frame(
+                [out, retval] VARIANT_BOOL * Frame);                  // set if line is a frame aligned left or right
+        [propget]
+        HRESULT HasAligned(
+                [out, retval] VARIANT_BOOL * HasAligned);             // line contains a embeded char's for left and right aligned sites
+        [propget]
+        HRESULT ClearLeft(
+                [out, retval] VARIANT_BOOL * ClearLeft);              // line clears left margin
+        [propget]
+        HRESULT ClearRight(
+                [out, retval] VARIANT_BOOL * ClearRight);             // line clears right margin
+        [propget]
+        HRESULT HasClear(
+                [out, retval] VARIANT_BOOL * HasClear);               // has clear flags set on the line
+        [propget]
+        HRESULT NewList(
+                [out, retval] VARIANT_BOOL * NewList);                // A new list starting
+    }
+
+    [uuid(D1F20C00-0841-11d0-8B1A-00AA00C0180B), odl, dual]
+    interface ICascaded : IDispatch
+    {
+        [propget]
+        HRESULT RealTop(
+                [out, retval] long * RealTop);
+
+        [propget]
+        HRESULT RealLeft(
+                [out, retval] long * RealLeft);
+    }
+}

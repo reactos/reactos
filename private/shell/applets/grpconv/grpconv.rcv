@@ -1,0 +1,19 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#ifdef WIN32
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Windows Progman Group Converter"
+#define VER_INTERNALNAME_STR            "GrpConv"
+#ifndef WINNT
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1999"
+#endif
+#define VER_ORIGINALFILENAME_STR        "GRPCONV.EXE"
+
+#include <common.ver>

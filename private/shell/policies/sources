@@ -1,0 +1,10 @@
+TARGETPATH =
+TARGETNAME =
+TARGETTYPE = NOTARGET
+
+NO_BROWSER_FILE = 1
+
+SOURCES    =
+
+MISCFILES  = \
+             inetres.adm

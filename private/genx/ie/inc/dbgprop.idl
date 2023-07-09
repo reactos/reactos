@@ -1,0 +1,412 @@
+// Debug Property
+
+import "ocidl.idl";
+import "oleidl.idl";
+
+interface IDebugProperty;
+interface IDebugExtendedProperty;
+interface IEnumDebugPropertyInfo;
+interface IEnumDebugExtendedPropertyInfo;
+interface IPerPropertyBrowsing2;
+
+/* IDebugProperty Intro
+ *
+ * The IDebugProperty interface provides a language-neutral way to browse entities such as:
+ * 
+ * 	- object properties, methods, and events 
+ * 	- interfaces
+ * 	- local variables
+ * 	-·etc.
+ *
+ * IDebugProperty is not intended to be a general replacement for ITypeInfo. 
+ * For example, it does not include enough low-level information to construct vtable 
+ * calls or implement IDispatch. 
+ * 
+ * Instead, IDebugProperty is intended to provide human-readable information to 
+ * allow IDE users to browse and modify objects at design 
+ * or run-time.  Because of this more limited scope, IDebugProperty is much easier 
+ * to use and to implement than ITypeInfo.  
+ *
+ * INTERFACE NOTES:
+ * ===============
+ * 1) Run-time type vs. declared type
+ *    The type of a DebugProperty can be determined via two methods.  When the type 
+ *    is obtained via GetPropertyInfo, the type is the *run-time* type.  However,
+ *    when the type obtained via a GetMemberEnum on the parent, the type is the 
+ *    *declared* type.  In other words, object 'A' will give you its run-time
+ *    type, but A's parent will give you A's declared type.
+ * 
+ * ISSUE: other guids?  guidSuperClass, guidMostDerived?
+ * ISSUE: too many QIs to get IDebugExtendedProp 
+ * ISSUE: out of attrib bits
+ * ISSUE: specify filters (thru guids?)
+ */
+
+typedef enum tagOBJECT_ATTRIB_FLAG
+{
+	// -----------------------------------------------------------------------
+	// OBJECT ATTRIBUTES
+	// AD1 type was OBJECT_ATTRIB, enums were OBJECTATTRIB_foo, struct was PropertyInfo
+	// AD2 type is  OBJECTATTRIB,  enums are  OBJECT_ATTRIB_foo,struct is DebugPropertyInfo
+	// confusing, oh yes indeed, please someone come up with a better solution
+
+	// ---------------------
+	// Slot Characteristics  
+	OBJECT_ATTRIB_NO_ATTRIB =			0x00000000,
+	OBJECT_ATTRIB_NO_NAME =				0x00000001,		// this slot has no name
+	OBJECT_ATTRIB_NO_TYPE =				0x00000002,		// this slot has no type
+	OBJECT_ATTRIB_NO_VALUE =			0x00000004,		// this slot has no value
+	OBJECT_ATTRIB_VALUE_IS_INVALID =	0x00000008,		// the value in this slot is invalid
+	OBJECT_ATTRIB_VALUE_IS_OBJECT =		0x00000010,		// value is an object that can be expanded into a new object browser
+	OBJECT_ATTRIB_VALUE_IS_ENUM =		0x00000020,		// value has enumerated values that might go into a drop down
+	OBJECT_ATTRIB_VALUE_IS_CUSTOM =		0x00000040,		// value has a custom viewer (use custom view CLSID)
+	OBJECT_ATTRIB_OBJECT_IS_EXPANDABLE =0x00000070,		// the object has children
+	OBJECT_ATTRIB_VALUE_HAS_CODE =		0x00000080,		// the value has associated code
+
+	// ---------------------
+	// Attributes about a slot's type
+	OBJECT_ATTRIB_TYPE_IS_OBJECT =		0x00000100,		// the type has an object browser
+	OBJECT_ATTRIB_TYPE_HAS_CODE =		0x00000200,		// the type has associated code
+	OBJECT_ATTRIB_TYPE_IS_EXPANDABLE =	0x00000100,		// the type is expandable
+	OBJECT_ATTRIB_SLOT_IS_CATEGORY =	0x00000400,		// indication that this slot is a category
+	OBJECT_ATTRIB_VALUE_READONLY =		0x00000800,		// the value is read-only
+
+	// ---------------------
+	// Common attributes
+
+	// field access control
+	OBJECT_ATTRIB_ACCESS_PUBLIC =		0x00001000,
+	OBJECT_ATTRIB_ACCESS_PRIVATE =		0x00002000,
+	OBJECT_ATTRIB_ACCESS_PROTECTED =	0x00004000,
+	OBJECT_ATTRIB_ACCESS_FINAL =		0x00008000,
+	// storage types
+	OBJECT_ATTRIB_STORAGE_GLOBAL =		0x00010000,
+	OBJECT_ATTRIB_STORAGE_STATIC =		0x00020000,
+	OBJECT_ATTRIB_STORAGE_FIELD =		0x00040000,
+	// type modifiers  
+	OBJECT_ATTRIB_STORAGE_VIRTUAL =		0x00080000,		// this slot is virtual (do we need pure virtual?)
+	OBJECT_ATTRIB_TYPE_IS_CONSTANT =	0x00100000,		// this slot is a constant value
+	OBJECT_ATTRIB_TYPE_IS_SYNCHRONIZED =0x00200000,		// this slot is thread synchronized
+	OBJECT_ATTRIB_TYPE_IS_VOLATILE =	0x00400000,		// this slot is volatile WRT persistent storage
+	OBJECT_ATTRIB_HAS_EXTENDED_ATTRIBS =0x00800000,		// has attributes above and beyond these predefined bits
+
+	// ---------------------
+	// Kind information (I'm not sure how useful these are)
+	OBJECT_ATTRIB_IS_CLASS =			0x01000000,
+	OBJECT_ATTRIB_IS_FUNCTION =			0x02000000,
+	OBJECT_ATTRIB_IS_VARIABLE =			0x04000000,
+	OBJECT_ATTRIB_IS_PROPERTY =			0x08000000,
+	OBJECT_ATTRIB_IS_MACRO =			0x10000000,
+	OBJECT_ATTRIB_IS_TYPE =				0x20000000,
+	OBJECT_ATTRIB_IS_INHERITED =		0x40000000,
+	OBJECT_ATTRIB_IS_INTERFACE =		0x80000000,
+} OBJECT_ATTRIB_FLAGS;
+
+// -----------------------------------------------------------------------
+// DebugPropertyInfo
+// Basic info that all IDebugProperty implementations must support
+
+typedef enum tagPROP_INFO_FLAGS
+{
+	// Flags used to specify DebugPropertyInfo (and ExtendedDebugPropertyInfo) fields
+	PROP_INFO_NAME =		0x001,		// init the bstrName field
+	PROP_INFO_TYPE =		0x002,		// init the bstrType field
+	PROP_INFO_VALUE =		0x004,		// init the bstrValue field
+	PROP_INFO_FULLNAME =	0x020,		// init the full name field
+	PROP_INFO_ATTRIBUTES =	0x008,		// init the dwAttrib field
+	PROP_INFO_DEBUGPROP =	0x010,		// init the pDebugProp field
+
+	PROP_INFO_AUTOEXPAND =  0x8000000,	// make the Value result auto-expand
+} PROP_INFO_FLAGS;
+
+const DWORD PROP_INFO_STANDARD =	PROP_INFO_NAME | PROP_INFO_TYPE | PROP_INFO_VALUE | PROP_INFO_ATTRIBUTES;
+const DWORD PROP_INFO_ALL =			PROP_INFO_NAME | PROP_INFO_TYPE | PROP_INFO_VALUE | PROP_INFO_FULLNAME | PROP_INFO_ATTRIBUTES | PROP_INFO_DEBUGPROP;
+
+typedef struct tagDebugPropertyInfo
+{
+	DWORD			m_dwValidFields;	// which DebugPropertyInfo fields were successfully initialized
+	BSTR			m_bstrName;			// property name
+	BSTR			m_bstrType;			// property type, as formatted string
+	BSTR			m_bstrValue;		// property value, as formatted string
+	BSTR			m_bstrFullName;		// property's full name, like pObject->m_fFlag
+	DWORD			m_dwAttrib;			// property attributes (ORed OBJECT_ATTRIB_* above)
+	IDebugProperty*	m_pDebugProp;		// IDebugProperty object corresponding to this DebugPropertyInfo
+} DebugPropertyInfo;
+
+// -----------------------------------------------------------------------
+// Extended info that some IDebugProperty implementations support
+
+typedef enum tagEX_PROP_INFO_FLAGS
+{
+	// Flags used to specify ExtendedDebugPropertyInfo fields
+	EX_PROP_INFO_ID =			0x0100,		// init the nDISPID field
+	EX_PROP_INFO_NTYPE =		0x0200,		// init the nType field
+	EX_PROP_INFO_NVALUE =		0x0400,		// init the varValue field
+	EX_PROP_INFO_LOCKBYTES =	0x0800,		// init the plb field
+	EX_PROP_INFO_DEBUGEXTPROP =	0x1000,		// init the pDebugExtProp field
+} EX_PROP_INFO_FLAGS;
+
+typedef struct tagExtendedDebugPropertyInfo
+{
+	// members from DebugPropertyInfo
+	DWORD						dwValidFields;	// which ExtendedDebugPropertyInfo fields were successfully initialized
+	LPOLESTR					pszName;		// property name
+	LPOLESTR					pszType;		// property type, as formatted string
+	LPOLESTR					pszValue;		// property value, as formatted string
+	LPOLESTR					pszFullName;	// property's full name, like pObject->m_fFlag
+	DWORD						dwAttrib;		// property attributes (ORed OBJECT_ATTRIB_* above)
+	IDebugProperty*			pDebugProp;		// IDebugProperty object corresponding to this DebugPropertyInfo
+	// extra members
+	DWORD						nDISPID;		// DISPID of this child (DISPID_NIL, if n/a or none)
+	DWORD						nType;			// property type
+	VARIANT						varValue;		// property value (if value can physically fit in VARIANT)
+	ILockBytes*					plbValue;		// property value (actual data bytes)
+	IDebugExtendedProperty*	pDebugExtProp;	// IDebugExtendedProperty object corresponding to this DebugPropertyInfo
+} ExtendedDebugPropertyInfo;
+
+// -----------------------------------------------------------------------
+// IDebugProperty
+[
+	object,
+	uuid(51973C50-CB0C-11d0-B5C9-00A0244A0E7A),,
+	pointer_default(unique)
+]
+interface IDebugProperty : IUnknown
+{
+	// Get Information for this object
+	// By setting various PROPERTY_INFO_FLAGS, any subset of the basic info 
+	// contained in DebugPropertyInfo can be fetched
+	[local]
+	HRESULT GetPropertyInfo(
+		// OR together PROP_INFO_* defines
+		[in] DWORD dwFieldSpec,
+		[in] UINT nRadix,
+		[out] DebugPropertyInfo* pPropertyInfo);
+
+	// The following custom marshaller works around a marshalling bug
+    [call_as(GetPropertyInfo)]
+    HRESULT RemoteGetPropertyInfo(		
+		[in] DWORD dwFieldSpec,
+		[in] UINT nRadix,
+		[out] DWORD *dwValidFields,
+		[out] BSTR *pbstrName,
+		[out] BSTR *pbstrType,
+		[out] BSTR *pbstrValue,
+		[out] BSTR *pbstrFullName,
+		[out] DWORD *pdwAttrib,
+		[in, out, unique] IDebugProperty **ppDebugProperty);
+
+	// Get ExtendedInfo for this object
+	// 
+	// An array of GUIDs and result VARIANTs is passed so that multiple items
+	// of extended info can be fetched at the same time.  If a variant cannot
+	// be initialized for some reason, the vt field should be set to VT_ERROR.
+
+	// The currently defined extended info guids are described below.
+	// A QI is typically required to obtain interfaces on the right from
+	// IUnknowns in the variant.
+
+	// GUID                         VALUE
+	//
+	// guidDefinitionContext        IDebugDocumentContext2
+	// ISSUE: Add additional GUIDS, such as:
+	// <guidSomeRandomBSTR>         BSTR
+	// <guidSomeRandomI4>           I4
+	HRESULT GetExtendedInfo(
+		[in] ULONG cInfos, 
+		[in, size_is(cInfos)] GUID* rgguidExtendedInfo,		// this arg causes MIDL_CANT_COPE
+		[out, size_is(cInfos)] VARIANT* rgvar);
+
+	// Set the value of this object as a string	
+	HRESULT SetValueAsString(
+		[in] LPCOLESTR pszValue,
+		[in] UINT nRadix);
+
+	// Get enumerator for props of members
+	HRESULT EnumMembers(
+		// OR together PROP_INFO_* defines
+		[in]  DWORD dwFieldSpec,
+		[in] UINT nRadix,
+		[in]  REFIID refiid,
+		[out] IEnumDebugPropertyInfo **ppepi);
+
+	// Get the parent property
+	HRESULT GetParent(
+		[out] IDebugProperty **ppDebugProp);
+};
+
+
+[
+	object,
+	uuid(51973C51-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IEnumDebugPropertyInfo : IUnknown
+{
+	// Enumerate information for sub-objects
+	// get the next celt elements, if possible
+
+	[local]
+    HRESULT Next(
+        [in] ULONG celt,
+		[out] DebugPropertyInfo *pi,
+		[out] ULONG *pcEltsfetched
+		);
+
+    [call_as(Next)]
+    HRESULT __stdcall RemoteNext(
+        [in] ULONG celt,
+        [in, out,unique,size_is(celt),length_is(*pcEltsfetched)] 	DebugPropertyInfo *pinfo,
+		[out] ULONG *pcEltsfetched
+		);
+
+	// skip the next celt slots
+	HRESULT Skip(
+		[in] ULONG celt);
+
+	// restart from the beginning
+	HRESULT Reset(void);
+
+	// clone this property browser at the current enumeration state
+	HRESULT Clone(
+		[out] IEnumDebugPropertyInfo **ppepi);
+
+	HRESULT GetCount(
+		[out] ULONG* pcelt);
+};
+
+
+[
+	object,
+	uuid(51973C52-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugExtendedProperty : IDebugProperty
+{
+	// Get Information for this object
+	// By setting various EXPROPERTY_INFO_FLAGS and PROPERTY_INFO_FLAGS, 
+	// any subset of the basic info contained in ExtendedDebugPropertyInfo 
+	// can be fetched
+	HRESULT GetExtendedPropertyInfo(
+		// OR together EX_PROP_INFO_* defines
+		[in] DWORD dwFieldSpec,
+		[in] UINT nRadix,
+		[out] ExtendedDebugPropertyInfo *pExtendedPropertyInfo);		// this arg is BAD
+
+	// Get enumerator for props of members
+	HRESULT EnumExtendedMembers(
+		// OR together EX_PROP_INFO_* defines
+		[in] DWORD dwFieldSpec,
+		[in] UINT nRadix,
+		[out] IEnumDebugExtendedPropertyInfo **ppeepi);
+};
+
+
+[
+	object,
+	uuid(51973C53-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IEnumDebugExtendedPropertyInfo : IUnknown
+{
+	// Enumerate information for sub-objects
+	// get the next celt elements, if possible
+	HRESULT Next(
+		[in] ULONG celt,
+		[out, size_is(celt), length_is(*pceltFetched)] ExtendedDebugPropertyInfo *rgExtendedPropertyInfo,
+		[out] ULONG *pceltFetched);
+	// skip the next celt slots
+	HRESULT Skip(
+		[in] ULONG celt);
+	// restart from the beginning
+	HRESULT Reset(void);
+	// clone this property browser at the current enumeration state
+	HRESULT Clone(
+		[out] IEnumDebugExtendedPropertyInfo **pedpe);
+
+	HRESULT GetCount(
+		[out] ULONG* pcelt);
+};
+
+[
+	object,
+	uuid(51973C54-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IPerPropertyBrowsing2 : IUnknown
+{
+	// Get a string to display for those types which are inheritly non-viewable
+	// Note: The returned string is *not* a legal value for the property,
+	// just an indication to the user of what the property is.
+	HRESULT GetDisplayString(
+		[in] DISPID dispid,
+		[out] BSTR *pBstr);
+
+	// Return the CLSID of the property page which can be used to edit this
+	// property.
+	HRESULT MapPropertyToPage(
+		[in] DISPID dispid,
+		[out] CLSID *pClsidPropPage);
+
+	// These methods allow the caller to fill a listbox with a set of strings
+	// which _represent_ potential values for this property.  When an item
+	// is chosen, the cookie is passed back to the object, so that the object
+	// can set itself to the corresponding value.
+	HRESULT GetPredefinedStrings(
+		[in] DISPID dispid,
+		[out] CALPOLESTR *pCaStrings,
+		[out] CADWORD *pCaCookies);
+
+	HRESULT SetPredefinedValue(
+		[in] DISPID dispid,
+		[in] DWORD dwCookie);
+};
+
+// the IDebugPropertyEnumType interfaces are really defined for their IIDs,
+// we have no need currently to *implement* any of them, but we might one day
+// These IIDs are passed to EnumMembers for filtering the enumerator.
+[
+	object,
+	uuid(51973C55-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugPropertyEnumType_All : IUnknown
+{
+	HRESULT GetName([out] BSTR *);
+};
+
+[
+	object,
+	uuid(51973C56-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugPropertyEnumType_Locals : IDebugPropertyEnumType_All
+{
+};
+
+[
+	object,
+	uuid(51973C57-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugPropertyEnumType_Arguments : IDebugPropertyEnumType_All
+{
+};
+
+[
+	object,
+	uuid(51973C58-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugPropertyEnumType_LocalsPlusArgs : IDebugPropertyEnumType_All
+{
+};
+
+[
+	object,
+	uuid(51973C59-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugPropertyEnumType_Registers : IDebugPropertyEnumType_All
+{
+};

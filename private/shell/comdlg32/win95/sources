@@ -1,0 +1,13 @@
+TARGET_WIN95 = 1
+
+!include ..\sources.inc
+
+SOURCES_USED = $(SOURCES_USED) ..\sources.inc 
+
+INCLUDES = $(CCSHELL_DIR)\thunk;$(INCLUDES)
+
+ASM_DEFINES  = -DIS_32
+i386_SOURCES = dlgthk.asm
+
+LINKER_FLAGS = $(LINKER_FLAGS) -ignore:4092
+

@@ -1,0 +1,21 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\encode=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=encode
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+    encode.cxx   \
+    unicode.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

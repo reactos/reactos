@@ -1,0 +1,207 @@
+/*++
+
+Copyright (c) 1997-1998 Microsoft Corporation
+
+Module Name:
+
+    sensevts.idl
+
+Abstract:
+
+    This file contains the ISensEvents interface which should be implemented
+    by any Subscriber that subscribes to SENS events.
+
+Author:
+
+    Gopal Parupudi    <GopalP>
+
+[Notes:]
+
+    optional-notes
+
+Revision History:
+
+    GopalP          11/12/1997         Start.
+
+--*/
+
+import "wtypes.idl";
+
+
+//
+// SENS Events Type library
+//
+[
+uuid(d597deed-5b9f-11d1-8dd2-00aa004abd5e),
+version(1.0),
+helpstring("SENS Events Type Library")
+]
+
+library SensEvents
+{
+    importlib("stdole.tlb");
+
+    typedef [uuid(d597fad1-5b9f-11d1-8dd2-00aa004abd5e)] struct SENS_QOCINFO
+    {
+        DWORD dwSize;
+        DWORD dwFlags;
+        DWORD dwOutSpeed;
+        DWORD dwInSpeed;
+    } SENS_QOCINFO;
+
+    typedef SENS_QOCINFO *LPSENS_QOCINFO;
+
+    //
+    // Interface ISensNetwork
+    //
+    [
+    object,
+    uuid(d597bab1-5b9f-11d1-8dd2-00aa004abd5e),
+    version(1.0),
+    helpstring("SENS Network Events"),
+    dual,
+    ]
+    interface ISensNetwork : IDispatch
+    {
+        [id(0x00000001)]
+        HRESULT
+        ConnectionMade(
+            [in] BSTR bstrConnection,
+            [in] ULONG ulType,
+            [in] LPSENS_QOCINFO lpQOCInfo
+            );
+
+        [id(0x00000002)]
+        HRESULT
+        ConnectionMadeNoQOCInfo(
+            [in] BSTR bstrConnection,
+            [in] ULONG ulType
+            );
+
+        [id(0x00000003)]
+        HRESULT
+        ConnectionLost(
+            [in] BSTR bstrConnection,
+            [in] ULONG ulType
+            );
+
+        [id(0x00000004)]
+        HRESULT
+        DestinationReachable(
+            [in] BSTR bstrDestination,
+            [in] BSTR bstrConnection,
+            [in] ULONG ulType,
+            [in] LPSENS_QOCINFO lpQOCInfo
+            );
+
+        [id(0x00000005)]
+        HRESULT
+        DestinationReachableNoQOCInfo(
+            [in] BSTR bstrDestination,
+            [in] BSTR bstrConnection,
+            [in] ULONG ulType
+            );
+    };
+
+
+    //
+    // Interface ISensOnNow
+    //
+    [
+    object,
+    uuid(d597bab2-5b9f-11d1-8dd2-00aa004abd5e),
+    version(1.0),
+    helpstring("SENS OnNow Events"),
+    dual
+    ]
+    interface ISensOnNow : IDispatch
+    {
+        [id(0x00000001)]
+        HRESULT
+        OnACPower(
+            void
+            );
+
+        [id(0x00000002)]
+        HRESULT
+        OnBatteryPower(
+            [in] DWORD dwBatteryLifePercent
+            );
+
+        [id(0x00000003)]
+        HRESULT
+        BatteryLow(
+            [in] DWORD dwBatteryLifePercent
+            );
+    };
+
+
+    //
+    // Interface ISensLogon
+    //
+    [
+    object,
+    uuid(d597bab3-5b9f-11d1-8dd2-00aa004abd5e),
+    version(1.0),
+    helpstring("SENS WinLogon Events"),
+    dual
+    ]
+    interface ISensLogon : IDispatch
+    {
+        [id(0x00000001)]
+        HRESULT
+        Logon(
+            [in] BSTR bstrUserName
+            );
+
+        [id(0x00000002)]
+        HRESULT
+        Logoff(
+            [in] BSTR bstrUserName
+            );
+
+        [id(0x00000003)]
+        HRESULT
+        StartShell(
+            [in] BSTR bstrUserName
+            );
+
+        [id(0x00000004)]
+        HRESULT
+        DisplayLock(
+            [in] BSTR bstrUserName
+            );
+
+        [id(0x00000005)]
+        HRESULT
+        DisplayUnlock(
+            [in] BSTR bstrUserName
+            );
+
+        [id(0x00000006)]
+        HRESULT
+        StartScreenSaver(
+            [in] BSTR bstrUserName
+            );
+
+        [id(0x00000007)]
+        HRESULT
+        StopScreenSaver(
+            [in] BSTR bstrUserName
+            );
+    };
+
+    //
+    // CoClass SENS
+    //
+    [
+    uuid(d597cafe-5b9f-11d1-8dd2-00aa004abd5e),
+    helpstring("System Event Notification Service (SENS)")
+    ]
+    coclass SENS
+    {
+        [default, source]   interface ISensNetwork;
+        [source]            interface ISensOnNow;
+        [source]            interface ISensLogon;
+    };
+};

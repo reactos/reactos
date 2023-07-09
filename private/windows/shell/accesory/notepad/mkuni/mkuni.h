@@ -1,0 +1,15 @@
+#define ID_ASCII                    105
+#define ID_LATIN                    106
+#define ID_LATIN_E                  107
+#define ID_LATIN_X                  108
+#define ID_PHONETIC                 109
+#define ID_MODIFIER                 110
+#define ID_DIACRITICAL              111
+#define ID_GREEK                    112
+#define ID_CYRILLIC                 113
+#define ID_CYRILLIC_X               114
+#define ID_HEBREW                   115
+#define ID_CURRENCY                 116
+#define ID_LETTERS                  117
+#define ID_ARROWS                   118
+#define ID_MATH                     119

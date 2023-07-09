@@ -1,0 +1,71 @@
+#include "taskman.h"
+
+PWRTASKMANDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 30, 22, 160, 130
+CAPTION "Task List"
+FONT 8 "MS Shell Dlg"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+BEGIN
+   CONTROL "", IDD_TASKLISTBOX, "listbox", LBS_NOTIFY | WS_VSCROLL | WS_BORDER | WS_CHILD | WS_TABSTOP, 3, 3, 154, 70
+   CONTROL "&New Task:", IDD_CLTEXT, "static", SS_LEFT | WS_GROUP | WS_CHILD, 3, 77, 37, 10
+   CONTROL "", IDD_PATH, "combobox",  CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | WS_CHILD | WS_VSCROLL, 40, 75, 92, 50
+   CONTROL "&Run", IDD_RUN, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 136, 74, 21, 14
+   CONTROL "&Switch To", IDD_SWITCH, "button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_CHILD, 1, 92, 45, 14
+   CONTROL "&End Task", IDD_TERMINATE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 52, 92, 45, 14
+   CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 103, 92, 55, 14
+   CONTROL "", IDD_TEXT, "static", SS_BLACKRECT | WS_CHILD, 0, 109, 160, 1
+   CONTROL "&Cascade", IDD_CASCADE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 1, 113, 45, 14
+   CONTROL "&Tile", IDD_TILE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 52, 113, 45, 14
+   CONTROL "&Arrange Icons", IDD_ARRANGEICONS, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 103, 113, 55, 14
+END
+
+WMPTASKMANDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 30, 22, 160, 112
+CAPTION "Task List"
+FONT 8 "MS Shell Dlg"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+BEGIN
+   CONTROL "", IDD_TASKLISTBOX, "listbox", LBS_NOTIFY | WS_VSCROLL | WS_BORDER | WS_CHILD | WS_TABSTOP, 3, 3, 154, 70
+   CONTROL "&Switch To", 1, "button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_CHILD, 1, 74, 45, 14
+   CONTROL "&End Task", IDD_TERMINATE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 52, 74, 45, 14
+   CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 103, 74, 55, 14
+   CONTROL "", IDD_TEXT, "static", SS_BLACKRECT | WS_CHILD, 0, 91, 160, 1
+   CONTROL "&Cascade", IDD_CASCADE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 1, 95, 45, 14
+   CONTROL "&Tile", IDD_TILE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 52, 95, 45, 14
+   CONTROL "&Arrange Icons", IDD_ARRANGEICONS, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 103, 95, 55, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MSGBOXSTR1, "The application has chosen not to close.  It may be completing a lengthy task.  "
+    IDS_MSGBOXSTR2, "Forcing the application to close may lose data.  Do you wish to force the application to close?"
+
+    IDS_EXECERRTITLE,       "Application Execution Error"   /* 32 */
+
+    IDS_NOMEMORYMSG,        "Insufficient memory to run this application; close one or more Windows applications and try again."                       /* 128 */
+    IDS_FILENOTFOUNDMSG,    "Cannot find file %s (or one of its components); check to ensure the path and filename are correct and that all required libraries are available." /* 128 */
+    IDS_BADPATHMSG,         "The path is invalid."                                                                                          /* 128 */
+    IDS_MANYOPENFILESMSG,   "Too many other files are currently in use."
+    IDS_ACCESSDENIED,       "Access to the specified device, path or file is denied."                                                                  /* 128 */
+    IDS_NEWWINDOWSMSG,      "This application requires a newer version of Microsoft Windows."                                                          /* 128 */
+    IDS_OS2APPMSG           "The specified application is not a Windows or DOS program."                                                               /* 128 */
+    IDS_MULTIPLEDSMSG,      "Cannot start more than one copy of the specified program."                                                                /* 128 */
+    IDS_PMODEONLYMSG,       "This application requires Standard or Enhanced Mode Windows."
+    IDS_COMPRESSEDEXE       "This program or one of its components is compressed.\n\nPlease uncompress it and try again."
+    IDS_INVALIDDLL          "One of the library files needed to run this application is damaged. Please reinstall this application."
+    IDS_SHAREERROR          "This file is in use by some other application."
+    IDS_ASSOCINCOMPLETE,    "Cannot open file. Start the application used to create this file, and open it from there."
+    IDS_DDEFAIL,            "An error occurred sending the command to the application."                                                                /* 128 */
+    IDS_NOASSOCMSG,         "No association exists for the specified file."
+
+    IDS_UNKNOWNMSG,         "Unexpected DOS error: %d."                                                                                             /* 125!*/
+END
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Task Manager"
+#define VER_INTERNALNAME_STR        "taskman\0"
+#define VER_ORIGINALFILENAME_STR    "TASKMAN.EXE"
+
+#include "common.ver"
+

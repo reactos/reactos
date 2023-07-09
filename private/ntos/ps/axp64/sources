@@ -1,0 +1,5 @@
+GPSIZE=32
+AXP64_SOURCES=..\alpha\psctxalp.c  \
+              ..\alpha\psldt.c     \
+              ..\alpha\psvdm.c     \
+              ..\alpha\pswrap.s

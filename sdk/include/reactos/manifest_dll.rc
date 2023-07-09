@@ -1,6 +1,0 @@
-
-#ifndef ISOLATIONAWARE_MANIFEST_RESOURCE_ID
-#error please include winuser.h before including me!
-#endif
-
-ISOLATIONAWARE_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"

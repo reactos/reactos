@@ -1,0 +1,4 @@
+DIRS = codepage   \
+       dlls       \
+       other      \
+       sorting

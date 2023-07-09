@@ -1,0 +1,3 @@
+VadimE and Keith Moore said this was dead code.
+
+See ntbug# 259949

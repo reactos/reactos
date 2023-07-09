@@ -1,0 +1,269 @@
+Utilities for reading files compressed with the Lempel-Ziv-Arithmetic
+Encoding (LZA) program COMPRESS.EXE:
+
+
+A number of functions for reading LZA-compressed files and copying them to
+uncompressed files are provided in the DOS static link library LZEXPAND.LIB
+and the Windows DLL LZEXPAND.DLL.
+
+The Windows functions are available to Control Panel, the Windows part of
+Setup, the font installer (FINSTALL.DLL), and other Windows applications and
+libraries.
+
+
+Library Functions:
+
+    Files which are compressed with COMPRESS.EXE are identified by a
+    special header.  The functions provided by LZEXPAND.DLL enable an
+    application to read either a compressed or an uncompressed file, or to
+    copy it to another file (expanding the file if it was compressed).  It
+    is possible to read and seek within the source file.  Reading and
+    seeking are done directly in an uncompressed file, and in the expanded
+    image of a compressed file.
+
+    Files are opened with the normal Windows OpenFile() function.  If seeks
+    and / or reads are to be performed, files can be opened with the
+    LZOpenFile() function, which creates and initializes the data
+    structures used by the other LZ functions.
+
+    The original expanded name of a compressed file can be obtained  using
+    GetExpandedName().
+
+    If an entire file is to be copied to a new (expanded) file, the
+    LZCopy() function is used.  The input and output files should be opened
+    with the Windows OpenFile() function, not LZOpenFile().  The copying
+    will still proceed properly if the files are opened with LZOpenFile(),
+    but it won't be as fast, since the compressed file is unnecessarily
+    buffered through the data structue set up during the call to
+    LZOpenFile().  Using LZCopy() is faster for copying purposes than using
+    the other functions listed below.  LZCopy(), however, allocates the
+    global buffers used upon entrance, and frees them upon exit.
+
+    For copying multiple files consecutively, use LZStart(), CopyLZFile(),
+    and LZDone().  LZStart() allocates the global buffers used, and
+    LZDone() frees them.  CopyLZFile() works like LZCopy(), but it doesn't
+    free the global buffers upon exit.
+
+    If a file is to be read, sequentially or randomly, then the file is
+    first opened in one of two ways.  The normal Windows OpenFile()
+    function can be used, followed by a call to LZInit() to allocate and
+    initialize the data structures used by the expansion algorithm.  The
+    file might also be opened by calling LZOpenFile(), which calls
+    LZInit().
+
+    LZSeek() and LZRead() may then be used to read the file and seek in it.
+    Finally, LZClose() is used to release the data structures and close the
+    file.
+
+    The LZInit() function returns either a DOS file handle or an LZFile
+    struct identifier of some kind, depending upon how it is called.  The
+    LZ functions LZSeek(), LZRead(), and LZClose() needed some way to
+    differentiate between DOS file handles and the LZFile struct
+    identifiers.  As the functions stand now, they use DOS file handles
+    directly and table offsets plus a bias as LZFile identifiers.  The
+    table offsets are incremented by a bias value in order to push their
+    values past all possible DOS file handle values.  The (table offset -
+    bias value) is used as an index into an array of global handles.  So by
+    using this table offset, the LZ functions retrieve the appropriate
+    global handle to the associated LZFile struct.  The table of global
+    handles is allocated statically from the DLL's data segment.  The
+    LZFile struct's are allocated from global heap space and are moveable.
+
+    DOS file handles and LZFile struct identifiers can be differentiated.
+    DOS file handles are always < the bias value, while LZFile struct
+    identifiers are always >= the bias value.  This dichotomy may be used
+    in macros, like the sample ones provided in lzexpand.h, to select the
+    appropriate function to call (e.g., LZSeek() or _llseek()) in order to
+    avoid the overhead of an extra function call for uncompressed files.
+    LZSeek(), LZRead(), and LZClose() are, however, "smart" enough to
+    figure out whether they are dealing with DOS file handles or table
+    offsets, and act appropriately.  As an extreme example, LZOpenFile(),
+    LZSeek(), LZRead, and LZClose() can be used as replacements for
+    OpenFile(), _llseek(), _lread(), and _lclose, respectively.  In this
+    case, the program using the DLL functions could call them without ever
+    knowing or caring whether the files it was reading were LZA-compressed
+    or not.
+
+
+
+LONG FAR PASCAL LZCopy(int doshSource, int doshDest);
+
+    Arguments:  doshSource - source DOS file handle
+                doshDest   - destination DOS file handle
+
+    Returns:    LONG - Number of bytes written to output file if sucessful.
+                       One of the LZERROR_ codes if unsuccessful.
+
+    Copies file with associated DOS file handle doshSource to file with
+    associated DOS file handle doshDest, expanding the data if the source
+    file is a compressed file, and returns the output length.
+
+    The destination file is always uncompressed.
+
+    The LONG value returned is the number of bytes actually written to the
+    output file, or one of the LZERROR_ codes listed in lzexpand.h and below.
+
+    Both the input and output file should be opened in binary mode.
+
+
+
+int FAR PASCAL GetExpandedName(LPSTR lpszSource, LPSTR lpszBuffer);
+
+    Arguments:  lpszSource - name of input file
+                lpszBuffer - pointer to a buffer that will be filled in with
+                             the expanded name of the compressed source file
+
+    Returns:    int - TRUE if successful.  One of the LZERROR_ codes if
+                      unsuccessful.
+
+    Looks in the header of a compressed file to find its original expanded
+    name.  For uncompressed files, lpszBuffer will hold a copy of lpszSource.
+
+
+
+DOS:
+int FAR PASCAL LZOpenFile(LPSTR lpFileName, WORD wStyle)
+
+Windows:
+int FAR PASCAL LZOpenFile(LPSTR lpFileName, LPOFSTRUCT lpReOpenBuf,
+                          WORD wStyle);
+
+    Arguments:  lpFileName  - name of input file
+                lpReOpenBuf - pointer to LPOFSTRUCT to be used by OpenFile()
+                wStyle      - OpenFile() action to take
+
+    Returns:    int - LZFile struct table offset or DOS file handle if
+                      successful.  One of the LZERROR_ codes if unsuccessful.
+
+    This function takes arguments similar to those of OpenFile().  It opens
+    a file, using the Windows OpenFile() function.  If the file is opened
+    in any mode other than read-only, OpenFile()'s result is returned (a
+    DOS file handle if successful).  If the file has been opened read-only
+    and the file is compressed, LZInit() is called to create an LZFile
+    buffer structure, and LZOpenFile() returns the table offset (plus bias)
+    of the struct's global handle instead of a DOS file handle.
+
+
+
+int FAR PASCAL LZInit(int doshSource);
+
+    Arguments:  doshSource - source DOS file handle
+
+    Returns:    int - LZFile struct table offset or DOS file handle if
+                      successful.  One of the LZERROR_ codes if unsuccessful.
+
+    This function takes a DOS file handle as its argument.  The file should
+    first be opened read-only (with Windows OpenFile()).  If the file is
+    compressed, the table offset (plus bias) of the global handle to the
+    structure used by the following functions is returned.  Storage for the
+    structure is allocated from the global heap.  If the file is not
+    compressed, the DOS file handle is returned.
+
+    The structure contains information about the compressed file and its
+    expanded image, and buffers used in I/O and expansion.
+
+
+
+LONG FAR PASCAL LZSeek(int oLZFile, long lSeekTo, int nMode);
+
+    Arguments:  oLZFile - source LZFile struct identifier or DOS file handle
+                lSeekTo - number of bytes past nMode target to seek
+                nMode   - seek mode as in _llseek()
+
+    Returns:    LONG - Offset of the seek target if successful.  One of the
+                LZERROR_ codes if unsuccessful.
+
+    Works like _llseek().
+
+    Information in the LZfile structure is used to determine whether or not
+    the file is compressed.  If the file is not compressed, _llseek() is
+    called, using the DOS file handle.
+
+    If the file is compressed, _llseek() is emulated on the expanded
+    (buffered) image of the file.  Enough of the file is read and
+    decompressed so that the desired data (seek destination) is in the
+    output buffer in the LZfile structure.
+
+
+
+int FAR PASCAL LZRead(int oLZFile, LPSTR lpBuf, int nCount);
+
+    Arguments:  oLZFile - source LZFile struct identifier or DOS file handle
+                lpBuf   - pointer to destination buffer for bytes read
+                nCount  - number of bytes to read
+
+    Returns:    int - Number of bytes copied to destination buffer if
+                      successful.  One of the LZERROR_ codes if unsuccessful.
+
+    Works like _lread().
+
+    If the file is not compressed, _lread() is called, using the DOS file
+    handle.
+
+    If the file is compressed, the file is read, decompressed, and copied
+    from the buffer in the LZfile structure to lpBuf until either EOF is
+    reached or nCount bytes have been written to the output buffer.
+
+    The actual number of bytes written is returned.  It is less than nCount
+    only if EOF has been reached.
+
+
+
+VOID FAR PASCAL LZClose(int oLZFile);
+
+    Arguments:  oLZFile - source LZFile struct identifier or DOS file handle
+
+    Returns:    VOID
+
+    The file is closed.  If the file is compressed, the global heap space
+    occupied by the associated LZfile structure is freed.
+
+
+
+int FAR PASCAL LZStart(void);
+
+    Arguments:  void
+
+    Returns:    int - TRUE if function is successful, LZERROR_GLOBALLOC if
+                      not.
+
+    Allocates buffers for CopyLZFile().
+
+
+LONG FAR PASCAL CopyLZFile(int doshSource, int doshDest);
+
+    Arguments:  doshSource  - source DOS file handle
+                doshDest    - destination DOS file handle
+
+    Returns:    LONG - Number of bytes written to destination handle if copy
+                       was successful.  One of the LZERROR_ codes if
+                       unsuccessful.
+
+    Works like LZCopy(), but doesn't free the buffers used when it finishes.
+
+
+
+VOID FAR PASCAL LZDone(void);
+
+    Arguments:  void
+
+    Returns:    VOID
+
+    Frees buffers allocated by LZStart().
+
+
+
+LZERROR_ return codes:
+
+    LZERROR_BADINHANDLE  - Invalid input handle.
+    LZERROR_BADOUTHANDLE - Invalid output handle.
+    LZERROR_READ         - Bad compressed file format.
+    LZERROR_WRITE        - Out of space for output file.
+    LZERROR_GLOBALLOC    - Insufficient memory for buffers.
+    LZERROR_GLOBLOCK     - Bad global handle.
+    LZERROR_BADVALUE     - Input parameter out of acceptable range.
+    LZERROR_UNKNOWNALG   - Compression algorithm not recognized.
+
+    The LZERROR_ return codes are all negative.
+
+

@@ -1,0 +1,166 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Jim Schaad (jimsch)
+
+!ENDIF
+
+!IFDEF DEBUGVER
+USE_RTTI=1
+!ENDIF
+
+USECXX_FLAG=/TP
+
+MAJORCOMP=windbg
+MINORCOMP=windbg
+
+!IF 0
+BUGBUG 64 bit - windbg needs to be loaded into 32 bit space
+LINKER_FLAGS=$(LINKER_FLAGS) /LARGEADDRESSAWARE:NO
+!ENDIF
+
+TARGETNAME=windbg
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+#
+# wrkspace.c needs to be the first file compiled.
+# If it isn't, the C++ classes will not yet be constructed,
+# and all code that references workspace variables will be 
+# assigned 0 plus an offset.
+# ie. ".opt"
+#
+
+SOURCES= \
+    windbg.rc       \
+    wrkspace.c      \
+    old_wksp.c      \
+    apisupp.c       \
+    arrange.c       \
+    breakpts.c      \
+    brkpt0.c        \
+    callswin.c      \
+    cmdexec0.c      \
+    cmdexec1.c      \
+    cmdexec2.c      \
+    cmdwin.c        \
+    codemgr.c       \
+    colors.c        \
+    confirm.c       \
+    cp.c            \
+    cpuwin.c        \
+    cvextras.c      \
+    data.c          \
+    dbgext.c        \
+    dbugdll.c       \
+    dbugexcp.c      \
+    disasm.c        \
+    docfile.c       \
+    document.c      \
+    edit.c          \
+    editutil.c      \
+    environ.c       \
+    find.c          \
+    findnext.c      \
+    findrep.c       \
+    fonts.c         \
+    function.c      \
+    init.c          \
+    line.c          \
+    linklist.c      \
+    kdopt.c         \
+    localwin.c      \
+    makeeng.c       \
+    memory.c        \
+    memwin.c        \
+    menu.c          \
+    ncmdwin.c       \
+    newrem.c        \
+    ntexpr.c        \
+    ntsdsup.c       \
+    optsheet.c      \
+    panemgr.c       \
+    paneopt.c       \
+    paneuser.c      \
+    pidtid.c        \
+    pipeex.c        \
+    process.c       \
+    program.c       \
+    quickw.c        \
+    re_mi.c         \
+    reparse.c       \
+    replace.c       \
+    setbreak.c      \
+    status.c        \
+    tasklist.c      \
+    thread.c        \
+    toolbar.c       \
+    undoredo.c      \
+    userctrl.c      \
+    userdll.c       \
+    util.c          \
+    util2.c         \
+    vib.c           \
+    watch.c         \
+    watchwin.c      \
+    wcrash.c        \
+    windbg.c
+
+UMTYPE=windows
+
+#INCLUDES=..\osdebug\include;include;obj\$(TARGET_DIRECTORY)
+
+!include ..\common.src
+
+INCLUDES=.\include;                          \
+        .\obj\$(TARGET_DIRECTORY);          \
+        ..\include;                         \
+        $(LANGAPI)\debugger;                \
+        $(LANGAPI)\include;                 \
+        $(VCTOOLS)\debugger\od\include;     \
+        $(VCTOOLS)\debugger\wrkspc;         \
+        $(VCTOOLS)\debugger\include
+
+
+C_DEFINES = $(C_DEFINES) -DOSDEBUG -DOSDEBUG4
+
+UMLIBS= $(MORE_LIBS) \
+        $(BASEDIR)\private\windbg64\lib\obj\*\mathlib.lib  \
+        $(VCTOOLS)\debugger\lib\*\odnt.lib          \
+        $(VCTOOLS)\debugger\lib\*\wslib.lib         \
+        $(BASEDIR)\public\sdk\lib\*\shell32.lib     \
+        $(BASEDIR)\public\sdk\lib\*\comdlg32.lib    \
+        $(BASEDIR)\public\sdk\lib\*\version.lib     \
+        $(BASEDIR)\public\sdk\lib\*\mpr.lib         \
+        $(BASEDIR)\public\sdk\lib\*\dbghelp.lib    \
+        $(BASEDIR)\public\sdk\lib\*\comctl32.lib    \
+        $(BASEDIR)\public\sdk\lib\*\crashlib.lib
+
+NTTARGETFILES=
+NTKEEPRESOURCETMPFILES=1
+
+SUBSYSTEM_VERSION=4.00
+
+#WIN32_IE_VERSION=0x0300
+#WIN32_WINNT=0x0400
+
+PRECOMPILED_INCLUDE=precomp.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj
+
+MISCFILES = windbg.hlp windbg.cnt

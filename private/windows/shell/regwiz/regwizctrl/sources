@@ -1,0 +1,81 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name: RegWizC
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author: Suresh Krishnan
+
+
+
+!ENDIF
+
+
+
+
+MAJORCOMP=RegWiz
+MINORCOMP=RegWizC
+USE_ATL=1
+REGWIZ_WITH_UCODE=-DUNICODE  -D_UNICODE
+REGWIZ_COMMON_FLAGS= $(REGWIZ_WITH_UCODE) -D_TAPI -D_WINDOWS  -DWINDOWS -DNT -D_WINNT -DWINNT
+NOT_LEAN_AND_MEAN=1
+MSC_WARNING_LEVEL=/W3 /WX
+USE_NATIVE_EH=1
+C_DEFINES=$(REGWIZ_COMMON_FLAGS)
+
+!if !$(FREEBUILD)
+DEBUG_CRTS=1
+MSC_OPTIMIZATION=/Odi
+USE_LIBCMT=1
+!else
+USE_MSVCRT=1
+!endif
+
+USE_IOSTREAM=1
+
+USER_C_FLAGS=  $(REGWIZ_COMMON_FLAGS)
+UMTYPE=windows
+TARGETNAME=RegWizC
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLDEF=RegWizCtrl.def
+DLLENTRY=_DllMainCRTStartup
+REGWIZ_INCLUDES= ..\include;..\Res;..\PhBookLib
+INCPATH0=$(REGWIZ_INCLUDE)
+INCLUDES=$(REGWIZ_INCLUDES);..\inc;
+
+SOURCES=RegwizCtrl.idl \
+	 RegWizCtrl.rc \
+	 CatHelp.cpp \
+	 CrwCtrl.cpp \
+	 RegwizCtrl.cpp \
+	 Stdafx.cpp
+
+DLLBASE=0x10000000
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\advapi32.lib   \
+         	   $(BASEDIR)\public\sdk\lib\*\user32.lib \
+	   $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+	   $(BASEDIR)\public\sdk\lib\*\ole32.lib \
+	   $(BASEDIR)\public\sdk\lib\*\gdi32.lib  \
+	$(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+	$(BASEDIR)\public\sdk\lib\*\shell32.lib \
+	$(BASEDIR)\public\sdk\lib\*\oleaut32.lib \
+	$(BASEDIR)\public\sdk\lib\*\uuid.lib  \
+	$(BASEDIR)\public\sdk\lib\*\wininet.lib \
+	$(BASEDIR)\public\sdk\lib\*\tapi32.lib \
+	$(BASEDIR)\public\sdk\lib\*\wsock32.lib\
+	$(BASEDIR)\public\sdk\lib\*\rpcrt4.lib\
+	..\regwiz\obj\*\regWiz.lib \
+	..\regwizPost\obj\*\regWizPost.lib  \
+	..\PhBookLib\obj\*\PhBookLib.lib

@@ -1,0 +1,43 @@
+#
+#   Create an MCI handler DLL
+#
+
+MAJORCOMP=windows
+MINORCOMP=
+
+TARGETNAME=mciavi
+TARGETPATH=\nt\system
+TARGETTYPE=DYNLINK
+UMTYPE=windows
+
+# Define libs we need and where to find them
+
+TARGETLIBS=\nt\public\sdk\lib\*\user32.lib   \
+           \nt\public\sdk\lib\*\userrtl.lib \
+           \nt\public\sdk\lib\*\libc.lib \
+           \nt\public\sdk\lib\*\kernel32.lib \
+           \nt\public\sdk\lib\*\gdi32.lib \
+           \nt\public\sdk\lib\*\winmm.lib \
+	   \prj\lib\i386\compman.lib \
+	   \prj\lib\i386\drawdib.lib
+
+INCLUDES=\nt\public\sdk\inc;\nt\public\sdk\inc\crt;..\inc
+
+SOURCES=avidraw.c	\
+	aviplay.c	\
+	avisound.c	\
+	avitask.c	\
+        aviopen.c       \
+	common.c	\
+	config.c	\
+	device.c	\
+	drvproc.c	\
+	graphic.c	\
+	playrle.c	\
+	window.c	\
+        mciavi.rc
+
+# Set	\
+
+DLLENTRY=DllInstanceInit
+

@@ -1,0 +1,13 @@
+# This makefile was generated automatically by mwgenmake.
+
+.NOTPARALLEL: world all clean install depend
+
+world all clean install depend:
+	@enterdir core ${MAKE} ${MFLAGS} $@
+	@enterdir site ${MAKE} ${MFLAGS} $@
+	@enterdir dlay ${MAKE} ${MFLAGS} $@
+	@enterdir other ${MAKE} ${MFLAGS} $@
+	@enterdir f3 ${MAKE} ${MFLAGS} $@
+	@enterdir edit ${MAKE} ${MFLAGS} $@
+	@enterdir editres ${MAKE} ${MFLAGS} $@
+

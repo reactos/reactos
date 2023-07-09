@@ -1,0 +1,240 @@
+KBD     HEBX     "Hebrew_Extended"
+
+                // LCID     : 040d
+                // CodePage : 1255
+
+                // Source   : mhd@world.std.com
+                //   Date   : 11/8/1997
+
+VERSION 1.0
+
+SHIFTSTATE
+
+  0             // Column 4 :
+  1             // Column 5 : Shft
+  6             // Column 6 :      Ctrl Alt
+  2             // Column 7 :      Ctrl
+  3             // Column 8 : Shft Ctrl
+
+LAYOUT
+
+//SC  VK_        Cap	0	1	6	2	3
+//--  ---------- ---	----	----	----	----	----
+  29  OEM_3      SGCap	;	~	05B0			// Point Sheva
+  -1  -1         0	;	05B0	05B0
+  02  1          SGCap	1	!	05B1			// Point Hataf Segol
+  -1  -1         0	1	05B1	05B1
+  03  2          SGCap	2	@	05B2			// Point Hataf Patah
+  -1  -1         0	2	05B2	05B2
+  04  3          SGCap	3	#	05B3	-1	200E	// Point Hataf Qamats, LTR
+  -1  -1         0	3	05B3	05B3	-1	200E
+  05  4          SGCap	4	$	05B4	-1	200F	// Point Hiriq       , RTL
+  -1  -1         0	4	05B4	05B4	-1	200F
+  06  5          SGCap	5	%	05B5			// Point Tsere
+  -1  -1         0	5	05B5	05B5
+  07  6          SGCap	6	^	05B6	-1	001E	// Point Segol
+  -1  -1         0	6	05B6	05B6	-1	001E
+  08  7          SGCap	7	&	05B7			// Point Patah
+  -1  -1         0	7	05B7	05B7
+  09  8          SGCap	8	*	05B8			// Point Qamats
+  -1  -1         0	8	05B8	05B8
+  0a  9          SGCap	9	(	05C2			// Point Sin Dot
+  -1  -1         0	9	05C2	05C2
+  0b  0          SGCap	0	)	05C1			// Point Shin Dot
+  -1  -1         0	0	05C1	05C1
+  0c  OEM_MINUS  SGCap	-	_	05B9	-1	001F	// Point Holam
+  -1  -1         0	-	05B9	05B9	-1	001F
+  0d  OEM_PLUS   SGCap	=	+	05BC			// Point Dagesh Or Mapiq
+  -1  -1         0	=	05BC	05BC
+//--  ---------- ---	----	----	----	----	----
+  10  Q          SGCap	/	201C	201C			// Left Double Quotation
+  -1  -1         0	q	Q	201C
+  11  W          SGCap	'	201E	201E			// Double Low-9 Quotation
+  -1  -1         0	w	W	201E
+  12  E          SGCap	05E7	`	`			// Qof
+  -1  -1         0	e	E	`
+  13  R          SGCap	05E8	%%	%%			// Resh, (Alef + Point Qamats)
+  -1  -1         0	r	R
+  14  T          SGCap	05D0	%%	%%			// Alef, (Alef + Point Patah)
+  -1  -1         0	t	T
+  15  Y          SGCap	05D8	05F0	05F0			// Tet, Ligature Yiddish Double Vav
+  -1  -1         0	y	Y	05F0
+  16  U          SGCap	05D5	%%	%%			// Vav, (Vav + Point Dagesh Or Mapiq)
+  -1  -1         0	u	U
+  17  I          SGCap	05DF	%%	%%			// Final Nun, (Vav + Point Holam)
+  -1  -1         0	i	I
+  18  O          SGCap	05DD	%%	%%			// Final Mem, (Pe + Point Rafe)
+  -1  -1         0	o	O
+  19  P          SGCap	05E4	%%	%%			// Pe, ( Pe + Point Dagesh Or Mapiq)
+  -1  -1         0	p	P
+  1a  OEM_4      SGCap	]	}	05BD	200E		// Point Meteg, LTR
+  -1  -1         0	[	]	05BD	200E
+  1b  OEM_6      SGCap	[	{	05BF	200F		// Point Rafe,  RTL
+  -1  -1         0	]	[	05BF	200F
+  2b  OEM_5      SGCap	\	|	05BB	001C		// Point Qubuts
+  -1  -1         0	\	05BB	05BB	001C
+//--  ---------- ---	----	----	----	----	----
+  1e  A          SGCap	05E9	%%	%%	001C		// Shin, (Shin + Point Shin Dot)
+  -1  -1         0	a	A
+  1f  S          SGCap	05D3	%%	%%	001C		// Dalet, (Shin + Point Sin Dot)
+  -1  -1         0	s	S
+  20  D          SGCap	05D2	-1				// Gimel
+  -1  -1         0	d	D
+  21  F          SGCap	05DB	%%	%%	001C		// Kaf, (Kaf + Point Dagesh Or Mapiq)
+  -1  -1         0	f	F
+  22  G          SGCap	05E2	05F1	05F1			// Ayin,  Ligature Yiddish Vav Yod
+  -1  -1         0	g	G	05F1
+  23  H          SGCap	05D9	%%	%%			// Yod, (Yod + Point Hiriq)
+  -1  -1         0	h	H
+  24  J          SGCap	05D7	%%	%%			// Het, (Double Yod + Point Patah)
+  -1  -1         0	j	J
+  25  K          SGCap	05DC	05F2	05F2			// Lamed, Ligature Yiddish Double Yod
+  -1  -1         0	k	K	05F2
+  26  L          SGCap	05DA	-1				// Final Kaf
+  -1  -1         0	l	L
+  27  OEM_1      SGCap	05E3	:	05C3			// Final Pe, Punctuation Sof Pasuq
+  -1  -1         0	;	05E3	05C3
+  28  OEM_7      SGCap	,	"	05C0			// Punctuation Paseq
+  -1  -1         0	'	,	05C0
+//--  ---------- ---	----	----	----	----	----
+  2c  Z          SGCap	05D6	20AA	20AA			// Zayin, Sheqel
+  -1  -1         0	z	Z	20AA
+  2d  X          SGCap	05E1	%%	%%			// Samekh, (Bet + Point Rafe)
+  -1  -1         0	x	X
+  2e  C          SGCap	05D1	%%	%%			// Bet, (Bet + Point Dagesh Or Mapiq)
+  -1  -1         0	c	C
+  2f  V          SGCap	05D4	-1				// He, Punctuation Maqaf
+  -1  -1         0	v	V
+  30  B          SGCap	05E0	2013	2013			// Nun, En Dash
+  -1  -1         0	b	B	2013
+  31  N          SGCap	05DE	2014	2014			// Mem, Em Dash
+  -1  -1         0	n	N	2014
+  32  M          SGCap	05E6	%%	%%			// Tsadi, (Tav + Point Dagesh Or Mapiq)
+  -1  -1         0	m	M
+  33  OEM_COMMA  SGCap	05EA	<	05F3			// Tav, Punctuation Geresh
+  -1  -1         0	,	05EA	05F3
+  34  OEM_PERIOD SGCap	05E5	>	05F4			// Final Tsadi, Punctuation Gershayim
+  -1  -1         0	.	05E5	05F4
+  35  OEM_2      SGCap	.	?	20AA			// Sheqel
+  -1  -1         0	/	.	20AA
+  56  OEM_102    0	\	|	05BB	001C		// Point Qubuts
+//--  ---------- ---	----	----	----	----	----
+  53  DECIMAL    0      .       .
+//--  ---------- ---	----	----	----	----	----
+//SC  VK_        Cap	0	1	6	2	3
+
+LIGATURE
+
+//VK_	Mod#	Char0	Char1
+//----	----	-----	-----
+
+  A	1	05E9	05C2	// Shin       + Point Sin Dot
+  C	1	05D1	05BC	// Bet        + Point Dagesh Or Mapiq
+  F	1	05DB	05BC	// Kaf        + Point Dagesh Or Mapiq
+  H	1	05D9	05B4	// Yod        + Point Hiriq
+  I	1	05D5	05B9	// Vav        + Point Holam
+  J	1	05F2	05B7	// Double Yod + Point Patah
+  M	1	05EA	05BC	// Tav        + Point Dagesh Or Mapiq
+  O	1	05E4	05BF	// Pe         + Point Rafe
+  P	1	05E4	05BC	// Pe         + Point Dagesh Or Mapiq
+  R	1	05D0	05B8	// Alef       + Point Qamats
+  S	1	05E9	05C1	// Shin       + Point Shin Dot
+  T	1	05D0	05B7	// Alef       + Point Patah
+  U	1	05D5	05BC	// Vav        + Point Dagesh Or Mapiq
+  X	1	05D1	05BF	// Bet        + Point Rafe
+  A	2	05E9	05C2	// Shin       + Point Sin Dot
+  C	2	05D1	05BC	// Bet        + Point Dagesh Or Mapiq
+  F	2	05DB	05BC	// Kaf        + Point Dagesh Or Mapiq
+  H	2	05D9	05B4	// Yod        + Point Hiriq
+  I	2	05D5	05B9	// Vav        + Point Holam
+  J	2	05F2	05B7	// Double Yod + Point Patah
+  M	2	05EA	05BC	// Tav        + Point Dagesh Or Mapiq
+  O	2	05E4	05BF	// Pe         + Point Rafe
+  P	2	05E4	05BC	// Pe         + Point Dagesh Or Mapiq
+  R	2	05D0	05B8	// Alef       + Point Qamats
+  S	2	05E9	05C1	// Shin       + Point Shin Dot
+  T	2	05D0	05B7	// Alef       + Point Patah
+  U	2	05D5	05BC	// Vav        + Point Dagesh Or Mapiq
+  X	2	05D1	05BF	// Bet        + Point Rafe
+
+KEYNAME
+
+ 01     Esc
+ 0e     Backspace
+ 0f     Tab
+ 1c     Enter
+ 1d     Ctrl
+ 2a     Shift
+ 36     "Right Shift"
+ 37     "Num *"
+ 38     Alt
+ 39     Space
+ 3a     "Caps Lock"
+ 3b     F1
+ 3c     F2
+ 3d     F3
+ 3e     F4
+ 3f     F5
+ 40     F6
+ 41     F7
+ 42     F8
+ 43     F9
+ 44     F10
+ 45     Pause
+ 46     "Scroll Lock"
+ 47     "Num 7"
+ 48     "Num 8"
+ 49     "Num 9"
+ 4a     "Num -"
+ 4b     "Num 4"
+ 4c     "Num 5"
+ 4d     "Num 6"
+ 4e     "Num +"
+ 4f     "Num 1"
+ 50     "Num 2"
+ 51     "Num 3"
+ 52     "Num 0"
+ 53     "Num Del"
+ 54     "Sys Req"
+ 57     F11
+ 58     F12
+ 7c     F13
+ 7d     F14
+ 7e     F15
+ 7f     F16
+ 80     F17
+ 81     F18
+ 82     F19
+ 83     F20
+ 84     F21
+ 85     F22
+ 86     F23
+ 87     F24
+
+KEYNAME_EXT
+
+ 1c     "Num Enter"
+ 1d     "Right Control"
+ 35     "Num /"
+ 37     "Prnt Scrn"
+ 38     "Right Alt"
+ 45     "Num Lock"
+ 46     Break
+ 47     Home
+ 48     Up
+ 49     "Page Up"
+ 4b     Left
+ 4d     Right
+ 4f     End
+ 50     Down
+ 51     "Page Down"
+ 52     Insert
+ 53     Delete
+ 54     <00>
+ 56     Help
+ 5b     "Left Windows"
+ 5c     "Right Windows"
+ 5d     Application
+
+ENDKBD
+

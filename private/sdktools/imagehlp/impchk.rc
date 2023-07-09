@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows NT Import Checker"
+#define VER_INTERNALNAME_STR        "impchk.exe"
+#define VER_ORIGINALFILENAME_STR    "impchk.exe"
+
+#include "common.ver"
+

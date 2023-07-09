@@ -1,0 +1,132 @@
+KBD	DV	"Dvorak US English"
+
+VERSION	1.0
+
+SHIFTSTATE
+
+ 0	;Column 4 : 
+ 1	;Column 5 : Shift
+ 2	;Column 6 :       Control
+ 3	;Column 7 : Shift Control
+
+LAYOUT		;an extra '@' at the end is a dead key
+
+;SC  VK_         Cap	0	1	2	3
+
+ 29  OEM_3       0	`	~
+ 02  1           0	1	!
+ 03  2           0	2	@	-1	0000
+ 04  3           0	3	#
+ 05  4           0	4	$
+ 06  5           0	5	%
+ 07  6           0	6	^	-1	001e
+ 08  7           0	7	&
+ 09  8           0	8	*
+ 0a  9           0	9	(
+ 0b  0           0	0	)
+ 0c  OEM_4       0	[	{	001b
+ 0d  OEM_6       0	]	}	001d
+ 10  OEM_7       0	'	"
+ 11  OEM_COMMA   0	,	<
+ 12  OEM_PERIOD  0	.	>
+ 13  P           1	p	P
+ 14  Y           1	y	Y
+ 15  F           1	f	F
+ 16  G           1	g	G
+ 17  C           1	c	C
+ 18  R           1	r	R
+ 19  L           1	l	L
+ 1a  OEM_2       0	/	?
+ 1b  OEM_PLUS    0	=	+
+ 2b  OEM_5       0	\	|	001c
+ 1e  A           1	a	A
+ 1f  O           1	o	O
+ 20  E           1	e	E
+ 21  U           1	u	U
+ 22  I           1	i	I
+ 23  D           1	d	D
+ 24  H           1	h	H
+ 25  T           1	t	T
+ 26  N           1	n	N
+ 27  S           1	s	S
+ 28  OEM_MINUS   0	-	_	-1	001f
+ 2c  OEM_1       0	;	:
+ 2d  Q           1	q	Q
+ 2e  J           1	j	J
+ 2f  K           1	k	K
+ 30  X           1	x	X
+ 31  B           1	b	B
+ 32  M           1	m	M
+ 33  W           1	w	W
+ 34  V           1	v	V
+ 35  Z           1	z	Z
+ 56  OEM_102     0	\	|	001c
+ 53  DECIMAL     0	.	.
+
+KEYNAME
+
+ 01	ESC
+ 0e	BACKSPACE
+ 0f	TAB
+ 1c	ENTER
+ 1d	CTRL
+ 2a	SHIFT
+ 36	"RIGHT SHIFT"
+ 37	NUMMULT
+ 38	ALT
+ 39	SPACE
+ 3a	CAPSLOCK
+ 3b	F1
+ 3c	F2
+ 3d	F3
+ 3e	F4
+ 3f	F5
+ 40	F6
+ 41	F7
+ 42	F8
+ 43	F9
+ 44	F10
+ 45	Pause
+ 46	"SCROLL LOCK"
+ 47	"NUM 7"
+ 48	"NUM 8"
+ 49	"NUM 9"
+ 4a	"NUM SUB"
+ 4b	"NUM 4"
+ 4c	"NUM 5"
+ 4d	"NUM 6"
+ 4e	"NUM PLUS"
+ 4f	"NUM 1"
+ 50	"NUM 2"
+ 51	"NUM 3"
+ 52	"NUM 0"
+ 53	"NUM DECIMAL"
+ 57	F11
+ 58	F12
+
+KEYNAME_EXT
+
+ 1c	"NUM ENTER"
+ 1d	"Right Ctrl"
+ 35	"NUM DIVIDE"
+ 37	"Prnt Scrn"
+ 38	"RIGHT ALT"
+ 45	"Num Lock"
+ 46	Break
+ 47	HOME
+ 48	UP
+ 49	PGUP
+ 4b	LEFT
+ 4d	RIGHT
+ 4f	END
+ 50	DOWN
+ 51	PGDOWN
+ 52	INSERT
+ 53	DELETE
+ 54	<00>
+ 56	Help
+ 5b	"Left Windows"
+ 5c	"Right Windows"
+ 5d	Application
+
+ENDKBD

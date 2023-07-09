@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdinben
+
+TARGETNAME=kbdinben
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdinben.c kbdinben.rc
+
+NTTARGETFILE0=kbdinben.h kbdinben.rc kbdinben.def

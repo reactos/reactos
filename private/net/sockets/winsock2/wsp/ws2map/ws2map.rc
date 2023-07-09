@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft Windows Sockets 2 To 1.1 Mapper Service Provider"
+#define VER_INTERNALNAME_STR        "ws2map.dll"
+#define VER_ORIGINALFILENAME_STR    "ws2map.dll"
+
+#include "common.ver"
+

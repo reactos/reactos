@@ -1,0 +1,49 @@
+!IF 0
+
+Copyright (c) 1994  Microsoft Corporation
+
+Module Name: kbddll.dll
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Diane K. Oh (a-dianeo) 23-Mar-1994
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=kbdsel
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=.\;..\dll;$(BASEDIR)\private\windows\prsinf
+C_DEFINES=-DUNICODE -D_UNICODE
+
+SOURCES=kbdsel.rc \
+        kbddlg.c  \
+        kbdsel.c
+
+UMTYPE=windows
+UMENTRY=winmain
+UMAPPL=kbdsel
+UMRES=obj\*\kbdsel.res
+UMLIBS= \
+       $(BASEDIR)\private\windows\prsinf\obj\*\prsinf.lib \
+       ..\dll\obj\*\kbddll.lib                      \
+       obj\*\kbdsel.lib
+
+

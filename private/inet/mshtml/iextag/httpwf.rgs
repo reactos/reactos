@@ -1,0 +1,24 @@
+HKCR
+{
+    wfolders.wfolders.1 = s 'wfolders Class'
+    {
+        CLSID = s '{BAE31F9A-1B81-11D2-A97A-00C04F8ECB02}'
+    }
+    wfolders.wfolders = s 'wfolders Class'
+    {
+        CurVer = s 'wfolders.wfolders.1'
+    }
+    NoRemove CLSID
+    {
+        ForceRemove {BAE31F9A-1B81-11D2-A97A-00C04F8ECB02} = s 'wfolders Class'
+        {
+            ProgID = s 'wfolders.wfolders.1'
+            VersionIndependentProgID = s 'wfolders.wfolders'
+            ForceRemove 'Programmable'
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+        }
+    }
+}

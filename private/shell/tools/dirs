@@ -1,0 +1,7 @@
+DIRS = \
+    cleaninf \
+    shlexts 
+
+OPTIONAL_DIRS = 
+    chinproc \
+    reginst

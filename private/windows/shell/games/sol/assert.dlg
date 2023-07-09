@@ -1,0 +1,17 @@
+ASSERTFAILED DIALOG LOADONCALL MOVEABLE DISCARDABLE 12, 15, 198, 113
+CAPTION "Assertion Failure"
+STYLE WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
+Font 8, "MS Shell Dlg"
+BEGIN
+	   CONTROL "Please send bug report to winbug.  Include file, line number, game number, version number and steps to reproduce.", 100, "static", SS_LEFT | WS_CHILD, 4, 40, 191, 25
+	   CONTROL "File:", 101, "static", SS_RIGHT | WS_CHILD, 8, 4, 28, 9
+	   CONTROL "A file named sol.dbg will be created in the current directory.  Please attach this file to the bug report -- Thanks", 102, "static", SS_LEFT | WS_CHILD, 4, 68, 188, 26
+	   CONTROL "Continue", OK, "button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_CHILD, 36, 96, 44, 14
+	   CONTROL "Exit Windows", EXIT, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 100, 96, 59, 14
+	   CONTROL "Line:", 105, "static", SS_RIGHT | WS_CHILD, 12, 12, 24, 8
+	   CONTROL szVer, SOLVERSION, "static", SS_LEFT | WS_CHILD, 4, 28, 173, 8
+	   CONTROL "", LINE, "static", SS_LEFT | WS_CHILD, 40, 12, 100, 8
+	   CONTROL "", FILE, "static", SS_LEFT | WS_CHILD, 40, 4, 98, 9
+	   CONTROL "Game #:", 109, "static", SS_RIGHT | WS_CHILD, 0, 20, 36, 8
+	   CONTROL "", GAMENO, "static", SS_LEFT | WS_CHILD, 40, 20, 68, 8
+END

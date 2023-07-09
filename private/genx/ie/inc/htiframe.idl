@@ -1,0 +1,161 @@
+//+---------------------------------------------------------------------------
+//
+//  Copyright 1995-1998 Microsoft Corporation. All Rights Reserved.
+//
+//  Contents:   OLE Hyperlinking interfaces
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// HTIframe.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("// OLE Hyperlinking ITargetFrame2 Interfaces.")
+cpp_quote("")
+
+import "objidl.idl";
+import "oleidl.idl";
+
+interface ITargetFrame2;
+interface ITargetContainer;
+
+cpp_quote("EXTERN_C const IID IID_ITargetFrame2;")
+cpp_quote("EXTERN_C const IID IID_ITargetContainer;")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:   ITargetFrame interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPTARGETFRAME2_DEFINED")
+cpp_quote("#define _LPTARGETFRAME2_DEFINED")
+
+cpp_quote("#define TF_NAVIGATE 0x7FAEABAC")
+cpp_quote("#define TARGET_NOTIFY_OBJECT_NAME L\"863a99a0-21bc-11d0-82b4-00a0c90c29c5\"")
+
+
+
+
+[
+	object,
+	uuid(863a99a0-21bc-11d0-82b4-00a0c90c29c5),
+	pointer_default(unique)
+]
+interface ITargetNotify: IUnknown
+{
+	typedef [unique] ITargetNotify *LPTARGETNOTIFY;
+
+
+    HRESULT OnCreate(
+        [in] IUnknown *pUnkDestination,
+        [in] ULONG cbCookie);
+
+    HRESULT OnReuse(
+        [in] IUnknown *pUnkDestination);
+
+}
+
+[
+	object,
+	uuid(86D52E11-94A8-11d0-82AF-00C04FD5AE38),
+	pointer_default(unique)
+]
+interface ITargetFrame2: IUnknown
+{
+	typedef [unique] ITargetFrame2 *LPTARGETFRAME2;
+
+    typedef enum
+        {	
+	    FINDFRAME_NONE	= 0,
+	    FINDFRAME_JUSTTESTEXISTENCE	= 1,
+        FINDFRAME_INTERNAL = 0x80000000,
+        }	FINDFRAME_FLAGS;
+
+    // values indicating frame layout options
+    typedef enum
+        {	
+	    FRAMEOPTIONS_SCROLL_YES		= 0x00000001,
+	    FRAMEOPTIONS_SCROLL_NO		= 0x00000002,
+	    FRAMEOPTIONS_SCROLL_AUTO	= 0x00000004,
+	    FRAMEOPTIONS_NORESIZE		= 0x00000008,
+        FRAMEOPTIONS_NO3DBORDER     = 0x00000010,
+        FRAMEOPTIONS_DESKTOP        = 0x00000020,
+        FRAMEOPTIONS_BROWSERBAND    = 0x00000040,
+        }	FRAMEOPTIONS_FLAGS;
+
+    HRESULT SetFrameName(
+        [in] LPCWSTR pszFrameName);
+
+    HRESULT GetFrameName(
+        [out] LPWSTR *ppszFrameName);
+
+    HRESULT GetParentFrame(
+        [out] IUnknown **ppunkParent);
+
+    HRESULT SetFrameSrc(
+        [in] LPCWSTR pszFrameSrc);
+
+    HRESULT GetFrameSrc(
+        [out] LPWSTR *ppszFrameSrc);
+
+    HRESULT GetFramesContainer(
+        [out] IOleContainer **ppContainer);
+
+	HRESULT SetFrameOptions(
+        [in] DWORD dwFlags);
+
+    HRESULT GetFrameOptions(
+        [out] DWORD *pdwFlags);
+
+ 	HRESULT SetFrameMargins(
+        [in] DWORD dwWidth,
+        [in] DWORD dwHeight);
+
+    HRESULT GetFrameMargins(
+        [out] DWORD *pdwWidth,
+        [out] DWORD *pdwHeight);
+
+    HRESULT FindFrame(
+        [in,unique] LPCWSTR pszTargetName,
+        [in] DWORD dwFlags,
+		[out] IUnknown **ppunkTargetFrame);
+
+    HRESULT GetTargetAlias(
+        [in,unique] LPCWSTR pszTargetName,
+        [out] LPWSTR *ppszTargetAlias);
+
+
+}
+
+[
+	object,
+	uuid(7847EC01-2BEC-11d0-82B4-00A0C90C29C5),
+	pointer_default(unique)
+]
+interface ITargetContainer: IUnknown
+{
+	typedef [unique] ITargetContainer *LPTARGETCONTAINER;
+
+    HRESULT GetFrameUrl(
+        [out] LPWSTR *ppszFrameSrc);
+
+    HRESULT GetFramesContainer(
+        [out] IOleContainer **ppContainer);
+
+}
+
+cpp_quote("#endif")

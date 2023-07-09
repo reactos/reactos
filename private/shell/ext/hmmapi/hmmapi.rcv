@@ -1,0 +1,19 @@
+/********************************************************************/
+/* HMMAPI.RCV  Microsoft HotMail Simple MAPI Stub                   */
+/********************************************************************/
+#include <ntverp.h>
+
+#undef  VER_PRODUCTVERSION
+#define VER_PRODUCTVERSION          1,0,VER_PRODUCTBUILD,VER_PRODUCTBUILD_QFE
+
+#undef  VER_PRODUCTVERSION_STRING
+#define VER_PRODUCTVERSION_STRING   "1.00"
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft HTTP Mail Simple MAPI"
+#define VER_INTERNALNAME_STR        "HMMAPI"
+#define VER_ORIGINALFILENAME_STR    "HMMAPI.DLL"
+#define VER_FILEVERSION_STR         VER_PRODUCTVERSION_STR
+
+#include <common.ver>

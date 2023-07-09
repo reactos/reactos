@@ -1,0 +1,4 @@
+# Maintain consistency throughout the shell project.  This way people
+# who have ~winnt won't build this.
+
+DIRS    = winnt

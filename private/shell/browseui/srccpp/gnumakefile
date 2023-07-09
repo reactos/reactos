@@ -1,0 +1,25 @@
+COMPONENT = SHELL
+PRODUCT   = BROWSEUI
+
+CUSTOM_RULES = /vobs/ie4/shell.template
+
+NO_BROWSER_FILE=1
+
+SOURCES_FILE    = sources
+SOURCES_IMPORTS = TARGETTYPE 
+
+TARGETNAME = browseuisrccpp
+
+## you may define the following variables
+## 
+PROJECT_CFLAGS = -I.. \
+	-D_MT=1 \
+	-DNASHVILLE \
+	-DIN_SHDOCVW \
+        -DUNICODE_SHDOCVW \
+        -D_ATL_STATIC_REGISTRY \
+	-DNO_SPLASHSCREEN \
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple

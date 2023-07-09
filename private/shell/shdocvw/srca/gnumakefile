@@ -1,0 +1,48 @@
+# This makefile was generated automatically by mwgenmake.
+COMPONENT = SHELL
+PRODUCT = SHDOCVW_SRCA
+
+NO_BROWSER_FILE=1
+
+VOBS = /vobs
+CUSTOM_RULES = ${VOBS}/ie4/shell.template
+
+VPATH = ..
+SOURCES =  \
+	filetypa.cpp
+
+NO_UNICODE = 1
+
+DEFINES = \
+	-DIN_SHDOCVW \
+	-DFEATURE_FRAMES \
+	-DMSOCT2=1 \
+	-DFEATURE_URLHIST \
+	-DFEATURE_PICS \
+	-DVSTF \
+	-DNO_FILETYPES
+
+# Removed from UNIX-RTW
+#	-DBETA1_DIALMON_HACK \
+
+WLIB	= shdocvwsrca
+LIB	= lib${WLIB}.a # target static library
+
+LIBOBJS = ${SOURCES:%.cpp=%.o}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+PROJECT_CFLAGS = ${DEFINES}
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+
+## filetypa.cpp is now being generated from filetype.cpp
+../filetypa.cpp:../filetype.cpp
+	echo "#undef UNICODE\n"              > ../filetypa.cpp
+	echo "#define STATIC_HIMAGELISTS\n" >> ../filetypa.cpp
+	cat  ../filetype.cpp                >> ../filetypa.cpp

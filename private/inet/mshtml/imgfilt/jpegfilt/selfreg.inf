@@ -1,0 +1,29 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Unreg]
+DelReg=JPEGFilt.Reg
+
+[Reg]
+AddReg=JPEGFilt.Reg
+
+[JPEGFilt.Reg]
+HKCR,CLSID\%CLSID_CoJPEGFilter%,,,"CoJPEGFilter Class"
+HKCR,CLSID\%CLSID_CoJPEGFilter%\InProcServer32,,,%_MOD_PATH%
+HKCR,CLSID\%CLSID_CoJPEGFilter%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_CoJPEGFilter%\ProgID,,,"JPEGFilter.CoJPEGFilter.1"
+
+HKCR,JPEGFilter.CoJPEGFilter,,,"CoJPEGFilter Class"
+HKCR,JPEGFilter.CoJPEGFilter\CLSID,,,%CLSID_CoJPEGFilter%
+HKCR,JPEGFilter.CoJPEGFilter.1,,,"CoJPEGFilter Class"
+HKCR,JPEGFilter.CoJPEGFilter.1\CLSID,,,%CLSID_CoJPEGFilter%
+
+HKCR,"MIME\Database\Content Type\image/jpeg\Bits","0",1,02,00,00,00,FF,FF,FF,D8
+HKCR,"MIME\Database\Content Type\image/jpeg","Image Filter CLSID",,%CLSID_CoJPEGFilter%
+HKCR,"MIME\Database\Content Type\image/pjpeg\Bits","0",1,02,00,00,00,FF,FF,FF,D8
+HKCR,"MIME\Database\Content Type\image/pjpeg","Image Filter CLSID",,%CLSID_CoJPEGFilter%
+
+[Strings]
+CLSID_CoJPEGFilter={65EABEB0-3CD2-11d0-8700-00A0C913F750}
+
+[End]

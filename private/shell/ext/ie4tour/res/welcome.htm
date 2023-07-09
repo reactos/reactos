@@ -1,0 +1,517 @@
+<html>
+
+
+<head>
+    <title>Welcome</title>
+    <meta http-equiv="PICS-Label"   content='(PICS-1.1 "http://www.rsac.org/ratingsv01.html" l gen true comment "RSACi North America Server" by "inet@microsoft.com" for "res://ie4tour.dll/welcome.htm" on "1997.06.30T14:21-0500" r (n 0 s 0 v 0 l 0))'></meta>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1"></meta>
+    <base href="res://ie4tour.dll/welcome.htm"></base>
+</head>
+
+
+<style>
+    body    { background : black; color : white; margin: 0 }
+    body    { font-family: Verdana, Arial, sans-serif; font-size: 8pt }
+    table   { font-family: Verdana, Arial, sans-serif; font-size: 8pt }
+    
+    div.Offscreen     { display:none }
+    span.Offscreen    { display:none }
+    span.BulletNumber { font-size: 26pt; font-weight: bold; color: #66c2ff; text-decoration: none }
+    span.BulletText   { font-size: 9pt; font-weight: bold; letter-spacing: -0; text-align:center; text-decoration: none}
+</style>
+
+
+<!-- Script is located at the end of this file -->
+
+
+<body>
+
+<!-- Logo & line -->
+<div style="position:absolute; left:185; top: 56; width:214; height:120; 
+            border-top:solid 1 silver; border-right:solid 1 silver" id=DivRule>
+</div>
+<img style="position:absolute; left: 28; top: 26; width:156; height: 67" src="msielogo.bmp">
+</img>
+
+
+<!-- Description text -->
+<div style="position:absolute; left:115; top:99; width:228; height:40; visibility:hidden"  id=DivDescription>
+<table cellspacing=0 cellpadding=0><tr>
+    <td style="height=100%; border:solid 1 white; border-right:none;">&nbsp</td>
+    <td style="vertical-align: middle">
+    <p style="margin: 5">
+
+        <!-- this text changes dynamically --><span id=DescriptionField>
+        Welcome to Internet Explorer 4.0!  Click Start for a quick tour.
+        <!-----------------------------------></span>
+
+    </p></td>
+    <td style="height=100%; border:solid 1 white; border-left: none;">&nbsp</td>
+</tr></table>
+
+
+</div>
+
+<div  style="position:absolute; left: 28; top:171; width:80; height:80; visibility:hidden" id=Div1>
+<a href="javascript:OnButton(1);">
+<img  style="position:absolute; left:  0; top:  0; width:80; height:80; border:none" src="w-blue.bmp" id=Graphic1></img>
+<span style="position:absolute; left:  5; top:  0" class=BulletNumber>1</span>
+<span style="position:absolute; left:  0; top: 23; width:80; color:white" class=BulletText>&nbsp &nbsp Take a Quick Tour</span>
+<div  style="position:absolute; left:  0; top:  0; width:80; height:80; z-index:10; cursor:hand" id=Bullet1></div>
+</a>
+</div>
+
+<div  style="position:absolute; left:125; top:171; width:80; height:80; visibility:hidden" id=Div2>
+<a href="javascript:OnButton(2);">
+<img  style="position:absolute; left:  0; top:  0; width:80; height:80; border:none" src="w-blue.bmp" id=Graphic2></img>
+<span style="position:absolute; left: 10; top:  0" class=BulletNumber>2</span>
+<span style="position:absolute; left:  0; top: 23; width:80; color:white" class=BulletText>&nbsp Explore Channels</span>
+<div  style="position:absolute; left:  0; top:  0; width:80; height:80; z-index:10; cursor:hand" id=Bullet2></div>
+</a>
+</div>
+
+<div  style="position:absolute; left:222; top:171; width:80; height:80; visibility:hidden" id=Div3>
+<a href="javascript:OnButton(3);">
+<img  style="position:absolute; left:  0; top:  0; width:80; height:80; border:none" src="w-blue.bmp" id=Graphic3></img>
+<span style="position:absolute; left: 11; top:  0" class=BulletNumber>3</span>
+<span style="position:absolute; left:  0; top: 23; width:80; color:white" class=BulletText id=RegText>&nbsp &nbsp Register Online</span>
+<div  style="position:absolute; left:  0; top:  0; width:80; height:80; z-index:10; cursor:hand" id=Bullet3></div>
+</a>
+</div>
+
+<div  style="position:absolute; left:358; top:171; width:80; height=80" id=Div4>
+<a href="javascript:OnButtonNext();">
+<img  style="position:absolute; left:  0; top:  0; width:80; height:80; border:none" src="w-orange.bmp" id=Graphic4></img>
+<span style="position:absolute; left:  0; top: 25; width:80; color:white; cursor:hand;visibility=hidden" class=BulletText id=Bullet4Text>Start the Tour</span>
+<div  style="position:absolute; left:  0; top:  0; width:80; height:80; z-index:10; cursor:hand" id=Bullet4></div>
+</a>
+</div>
+
+<div style="position:absolute; left:122; top:256; display:none" id=DivCheck>
+    <input type=checkbox id=CheckShowAgain>
+    Show this next time you log in
+    </input>
+    <object width=0 height=0 id=RunOnceCheckBox classid="CLSID:D81A5542-0F4E-11D1-9671-00A0C9054168"></object>
+</div>
+
+<!-- String table (not displayed) -->
+<div class=OffScreen>
+<span id=Description1 class=OffScreen>Get a head start on new features like single-click, channels, improved Search, Outlook Express, and more.</span>
+<span id=Description2 class=OffScreen>Discover Active Channels<sup>TM</sup>, and get the Web the way you want it!</span>
+<span id=Description3 class=OffScreen>Register now to find out about special offers, product updates, and Internet Explorer news.</span>
+<span id=Description4 class=OffScreen>Click Start for a quick step-by-step tour.</span>
+<span id=DescriptionX class=OffScreen>Welcome to Internet Explorer 4.0!  Click a link below, or click Close.</span>
+<span id=StrFinish    class=OffScreen>Close</span>
+<span id=StrAlert     class=OffScreen>You already have an Internet Explorer window viewing this page.  Are you sure you want to open a new window?</span>
+<span id=StrConnect   class=OffScreen>Click OK to connect to the Internet and start the tour.  If you just installed Internet Explorer 4.0, this will start the Internet Connection Wizard. Just follow the instructions on your screen to get connected.</span>
+<span id=StrContest   class=OffScreen>&nbsp Subscribe to Win!</span>
+<span id=Description3c class=OffScreen>Enter the Subscribe to Win sweepstakes and earn chances to win great prizes!</span>
+<span id=OnUnloadMsg  class=OffScreen>To navigate to a web site or open an HTML document, you should close this window first.</span>
+<span id=DescriptionL class=OffScreen>Now loading...</span>
+<span id=OnlineURL    class=OffScreen>http://www.microsoft.com/ie/ie40/tour</span>
+</div>
+
+<!-- cached images (not displayed) -->
+<div class=OffScreen>
+<img src="w-blue.bmp"></img>
+<img src="w-orange.bmp"></img>
+<img src="w-tour.bmp"></img>
+<img src="w-chan.bmp"></img>
+<img src="w-reg.bmp"></img>
+<img src="w-begin.bmp"></img>
+</div>
+
+</body>
+
+
+<script language=JavaScript>
+// first group of functions handles the initial animations
+function TuneCurrentAnimation()
+{
+    // tune the animation
+    var newTick = (new Date()).getTime();
+    if( newTick - document.AnimationLastTick > document.AnimationTimeout * 5 )
+    {
+        document.AnimationTimeout  = document.AnimationTimeout  * 120 / 100;
+        document.AnimationStepSize = document.AnimationStepSize * 120 / 100;
+    }
+    document.AnimationLastTick = newTick;
+}
+function AnimateTheBullet(index)
+{
+    var bullet = document.all.item("Div" + index, 0);
+
+    // set it all up
+    if( index==0 )
+    {
+        document.AnimationStepSize = 30;
+        document.AnimationTimeout  = 40;
+        document.AnimationLastTick = (new Date()).getTime();
+        index=1;
+    }
+    // step 1: show the bullet
+    else if( bullet.style.visibility == "hidden" )
+    {
+        document.AnimationRestingPos = bullet.style.pixelLeft;
+        bullet.style.pixelLeft = Div4.style.pixelLeft - bullet.style.pixelWidth;
+        bullet.style.visibility = "visible";
+    }
+    // step 2: slide it step by step (tune as we go)
+    else if( (bullet.style.pixelLeft - document.AnimationStepSize) > document.AnimationRestingPos )
+    {
+        bullet.style.pixelLeft -= document.AnimationStepSize;
+        TuneCurrentAnimation();
+    }
+    // step 3: lock it into place
+    else
+    {
+
+        bullet.style.pixelLeft = document.AnimationRestingPos;
+        ++index;
+        document.AnimationStepSize = document.AnimationStepSize * 2 / 3;
+    }
+
+    if( index <= 3 )
+    {
+        window.setTimeout( "AnimateTheBullet("+index+");", document.AnimationTimeout );
+    }
+    else
+    {
+        CleanupAnimations();
+    }
+}
+function CleanupAnimations()
+{
+    DivDescription.style.visibility="visible";
+    Bullet4Text.style.visibility="visible";
+    if( !document.FirstTime )
+    {
+        DivCheck.style.display = "block";
+        OnAllDone();
+    }
+}
+function InitAnimations()
+{
+    AnimateTheBullet(0);
+}
+
+
+// The next group of functions handles hot-tracking for bullet items
+function MakeBulletHot(index) // 0 means none
+{
+    var graphic;
+    for(i=1; i<=4; i++)
+    {
+        graphic = document.all.item("Graphic" + i, 0);
+        if( index==i )//&& i<4 ) //bugbug do we really want the hand to change?
+        {
+            graphic.src = graphic.hotSrc;
+            graphic.style.zIndex = 5;
+        }
+        else
+        {
+            if( i==4 ) graphic.src = "w-orange.bmp";
+            else       graphic.src = "w-blue.bmp";
+            graphic.style.zIndex = 0;
+        }
+    }
+
+    var description = document.all.item("Description" + index, 0);
+
+
+    if( document.isWaitingForChildToLoad )
+        DescriptionField.innerHTML = DescriptionL.innerHTML;
+    else if( index > 0 )
+        DescriptionField.innerHTML = description.innerHTML;
+    else 
+        DescriptionField.innerHTML = DescriptionField.OriginalHTML;
+
+    // hack/workaround - force a refresh of the description text
+    DivDescription.style.pixelHeight=40 + (index);
+}
+function OnAllDone()
+{
+    document.AllDone = true;
+    // kill the timeout behavior
+    InitializeTimeouts();
+
+    // set the exit prompt
+    DescriptionField.innerHTML    = DescriptionX.innerHTML;
+    DescriptionField.OriginalHTML = DescriptionX.innerHTML;
+    Description4.innerHTML        = DescriptionX.innerHTML;
+    Bullet4Text.innerText = StrFinish.innerText;
+    Bullet4Text.style.top = 31;
+
+    // turn the static bullets into links
+    Bullet1.style.cursor = "hand";
+    Bullet2.style.cursor = "hand";
+    Bullet3.style.cursor = "hand";
+    Bullet1.onclick = new Function("OpenChild(1);");
+    Bullet2.onclick = new Function("OpenChild(2);");
+    Bullet3.onclick = new Function("OpenChild(3);");
+    Bullet4.onmouseover = null;
+    Bullet4.onmouseout  = null;
+}
+function OnMouseOverBullet()
+{
+    var index = this.id.substring( 6,7 );
+    InitializeTimeouts();
+    document.BulletTimeout = window.setTimeout( "MakeBulletHot("+index+");", 0 );
+}
+function OnMouseOutBullet()
+{
+    InitializeTimeouts();
+    document.BulletTimeout = window.setTimeout( "MakeBulletHot(0);", 250 );
+}
+function OnTimeoutAuto(index)
+{
+    MakeBulletHot(index);
+    ++index;
+    if( index > 3 )
+        index = 0;
+    document.AutoTimeout = window.setTimeout( "OnTimeoutAuto("+index+");", 4000 );
+}
+function InitializeBullet( bullet )
+{
+    bullet.onmouseover = OnMouseOverBullet;
+    bullet.onmouseout  = OnMouseOutBullet;
+}
+function InitializeTimeouts()
+{
+    window.clearTimeout( document.BulletTimeout );
+    window.clearTimeout( document.AutoTimeout );
+    if( !document.AllDone )
+        document.AutoTimeout = window.setTimeout( "OnTimeoutAuto(1);", 30000 );
+}
+function InitializeHotTracking()
+{
+    InitializeBullet( Bullet1 );
+    InitializeBullet( Bullet2 );
+    InitializeBullet( Bullet3 );
+    InitializeBullet( Bullet4 );
+    DescriptionField.OriginalHTML = DescriptionField.innerHTML;
+    Graphic1.hotSrc = "w-tour.bmp";
+    Graphic2.hotSrc = "w-chan.bmp";
+    Graphic3.hotSrc = "w-reg.bmp";
+    Graphic4.hotSrc = "w-begin.bmp";
+    InitializeTimeouts();
+}
+
+// The following code manages the 'state' of the initial experience
+function OpenChild(index)
+{
+    if( document.isWaitingForChildToLoad )
+        return;
+    if( !document.MinimalTour )
+    {
+        if( document.childWindow && !document.childWindow.closed )
+        {
+            alertText = StrAlert.innerText;
+            if( !confirm(alertText) )
+                return;
+        }
+    }
+
+    document.isWaitingForChildToLoad = true;
+
+    var url = "";
+    if( document.MinimalTour )
+    {
+        url = OnlineURL.innerText + "/";
+    }
+    url += "tour.htm#TopNav=1#CallParent=1#Section=" + index + "#Contest=" + document.Contest + "#MinimalTour=" + document.MinimalTour;
+    document.StepNumber = index;
+
+    // parameters for how to open the child window
+    var options = "";
+    if( index==2 ) 
+        options = "channelmode=yes, scrollbars=no";
+    else
+    {
+        var screenHeight = window.screen.height - 28; // allow for std taskbar
+        var screenWidth  = window.screen.width;
+        var width  = (screenWidth  * 90 / 100) - 10;  // allow for window borders
+        var height = (screenHeight * 90 / 100) - 40;  // allow for caption + status bar
+        var left   = (screenWidth - width  - 10) / 2; 
+        var top    = (screenHeight- height - 40) / 2; 
+        options += "width = "+width+", height = "+height+", top = "+top+", left = "+left+", ";
+        options += "resizable=yes, status=yes";
+    }
+
+    if( document.MinimalTour )
+        alert( StrConnect.innerText );
+
+    // timeout 'loading' indicator after reasonable delay
+    document.body.style.cursor = "wait";
+    document.LoadingTimeout = window.setTimeout( "OnChildIsInitialized();", 10000 );
+
+    // we have to delay this code a bit so trident can let the UI update itself...
+    window.setTimeout( "document.childWindow = window.open('"+url+"', '', '"+options+"');", 0 );
+}
+function CalculateNextChild()
+{
+    var bullet;
+    var nextIndex = 0;
+    for(i=3; i>=1; --i)
+    {
+        bullet = document.all.item("Bullet" + i, 0);
+        if( !bullet.isStepComplete )
+            nextIndex = i;
+    }
+    return nextIndex;
+}
+function OpenNextChild()
+{
+    var nextIndex = CalculateNextChild();
+    if( nextIndex > 0 )
+        OpenChild( nextIndex );
+    return nextIndex;
+}
+function OnChildIsInitialized()
+{
+    // called by the child window.  they must talk back to us so we can track them.
+    document.isWaitingForChildToLoad = false;
+    document.body.style.cursor = "auto";
+    window.clearTimeout( document.LoadingTimeout );
+
+    description = document.all.item( "Description" + document.StepNumber, 0 );
+    DescriptionField.innerHTML = description.innerHTML;
+
+}
+function OnChildComplete(index)
+{
+    // called by the child window.  they must talk back to us so we can track them.
+    var bullet = document.all.item("Bullet" + index, 0);
+    bullet.isStepComplete = true;
+    if( CalculateNextChild()==0 )
+        document.OnAllDone();
+}
+function InitializeStep(elem)
+{
+    elem.isStepComplete = false;
+}
+function OnFocus()
+{
+    if( !document.childWindow )
+        return;
+
+    // careful! we may get 'permission denied' during the 'closed' check
+    if( !document.MinimalTour )
+        if( !document.childWindow.closed )
+            return;
+
+    OnChildIsInitialized();
+    OnAllDone();
+    window.onfocus = null;
+}
+function InitializeStateMachine()
+{
+    window.name = "MSIE4.00-Welcome"
+
+    //initialize globals
+    document.isWaitingForChildToLoad = false;
+    document.childWindow = null;
+    document.childChannelWindow = null;
+
+    InitializeStep( Bullet1 );
+    InitializeStep( Bullet2 );
+    InitializeStep( Bullet3 );
+
+    // when we come back from the secondary window, we should report that we're done
+    window.onfocus = OnFocus;
+}
+
+function OnButtonNext()
+{
+    if( document.AllDone )
+    {
+        window.close();
+        return;
+    }
+
+    var index = OpenNextChild();
+    if( index > 0 )
+    {
+        MakeBulletHot( index );
+        InitializeTimeouts();
+    }
+    else
+    {
+        window.close();
+        return;
+    }
+}
+function OnButton(index)
+{
+    OpenChild( index );
+    MakeBulletHot( index );
+    InitializeTimeouts();
+}
+function OnCheck()
+{
+    RunOnceCheckBox.ShowIE4State = CheckShowAgain.checked;
+}
+function GetHashParameter( name )
+{
+    var hash = location.hash;
+    var key  = "#" + name + "=";
+    if( ( iLeft=hash.indexOf( key ) )>=0 )
+    {
+        if( ( iRight=hash.indexOf( "#", iLeft+1 ) )<0 )
+            iRight=hash.length;
+        value = parseInt( hash.substring( iLeft+key.length, iRight ) );
+        if( !isNaN( value ) )
+            return value;
+    }
+
+    return null;
+}
+function InitializeNavigation()
+{
+    InitAnimations();
+    InitializeHotTracking();
+    InitializeStateMachine();
+
+    // defaults
+    document.Contest       = 0;
+    document.FirstTime     = 0;
+    document.MinimalTour   = 0;
+
+    contest    = GetHashParameter( "Contest" );
+    firsttime  = GetHashParameter( "FirstTime" );
+    minimaltour= GetHashParameter( "MinimalTour" );
+
+    if( contest!=null )     document.Contest   = contest;
+    if( firsttime!=null )   document.FirstTime = firsttime;
+    if( minimaltour!=null ) document.MinimalTour = minimaltour;
+
+    // check contest expiration date
+    var today       = new Date();
+    var contestover = new Date( "Nov 1, 1997" );
+    if( today.getYear()  >= contestover.getYear() &&
+        today.getMonth() >= contestover.getMonth() &&
+        today.getDay()   >= contestover.getDay() )
+    {
+        document.Contest = 0;
+    }
+
+    if( document.Contest )
+    {
+        // workaround...have to delay load this code
+        window.setTimeout( "RegText.innerHTML = StrContest.innerHTML", 0 );        
+        window.setTimeout( "Description3.innerHTML = Description3c.innerHTML", 0 );
+    }
+
+    if( !document.FirstTime )
+    {
+        CheckShowAgain.checked = RunOnceCheckBox.ShowIE4State;
+        CheckShowAgain.onclick = OnCheck;
+    }
+
+//    window.onbeforeunload = new Function("return '"+OnUnloadMsg.innerText+"';");
+}
+window.onload = InitializeNavigation;
+</script>
+
+
+</html> 

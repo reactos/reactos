@@ -1,0 +1,35 @@
+#include <windows.h>
+#include <ntverp.h>
+
+
+/********************************************************************/
+/*                                                                  */
+/*  VER.RC                                                          */
+/*                                                                  */
+/*  This RC fragment shows how to define version information in an  */
+/*  internal RC file                                                */
+/*                                                                  */
+/*  It relies upon both the public WINVER.H and private VERSION.H   */
+/*  Note that WINVER.H is included in VERSION.H                     */
+/*                                                                  */
+/********************************************************************/
+
+
+
+
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ */
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Version Checking and File Installation Libraries\0"
+#define VER_INTERNALNAME_STR        "version\0"
+#define VER_ORIGINALFILENAME_STR    "VERSION.DLL"
+
+#include "common.ver"
+
+

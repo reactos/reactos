@@ -1,0 +1,61 @@
+!IF 0
+
+Copyright (c) 1992-1997  Microsoft Corporation
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=sysdm
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+DLLENTRY=DllInitialize
+
+TARGETLIBS= \
+           $(SDK_LIB_PATH)\user32.lib     \
+           $(SDK_LIB_PATH)\gdi32.lib      \
+	   $(SDK_LIB_PATH)\ole32.lib      \
+	   $(SDK_LIB_PATH)\oleaut32.lib   \
+           $(SDK_LIB_PATH)\comctl32.lib   \
+           $(SDK_LIB_PATH)\comctlp.lib    \
+           $(SDK_LIB_PATH)\kernel32.lib   \
+    	   $(SDK_LIB_PATH)\netapi32.lib   \
+           $(SDK_LIB_PATH)\advapi32.lib   \
+           $(SDK_LIB_PATH)\shell32.lib    \
+           $(SDK_LIB_PATH)\shell32p.lib   \
+           $(SDK_LIB_PATH)\shlwapi.lib    \
+           $(SDK_LIB_PATH)\netui2.lib     \
+           $(SDK_LIB_PATH)\userenv.lib    \
+           $(SDK_LIB_PATH)\rpcrt4.lib     \
+           $(SDK_LIB_PATH)\imm32.lib    
+
+INCLUDES=$(BASEDIR)\private\shell\inc;$(BASEDIR)\private\windows\inc;$(BASEDIR)\private\inc;$(BASEDIR)\public\sdk\inc\hydra;
+
+C_DEFINES=-DWIN32 -DUNICODE -D_UNICODE
+RCOPTIONS=-N
+
+USE_CRTDLL=1
+
+SOURCES= \
+        sysdm.c     \
+        general.c   \
+        profile.cpp \
+        sid.c       \
+        debug.c     \
+        util.c      \
+        hardware.c  \
+        hwprof.c    \
+        netid.cpp   \
+        advanced.c  \
+        perf.c      \
+        virtual.c   \
+        envvar.c    \
+        edtenvar.c  \
+        startup.c   \
+        strtlst.c   \
+        syspart.c   \
+        crashdmp.c  \
+        sysdm.rc

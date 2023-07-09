@@ -1,0 +1,24 @@
+HKCR
+{
+	DownloadBehavior.DownloadBehavior.1 = s 'DownloadBehavior Class'
+	{
+		CLSID = s '{3050f5be-98b5-11cf-bb82-00aa00bdce0b}'
+	}
+	DownloadBehavior.DownloadBehavior = s 'DownloadBehavior Class'
+	{
+		CurVer = s 'DownloadBehavior.DownloadBehavior.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {3050f5be-98b5-11cf-bb82-00aa00bdce0b} = s 'DownloadBehavior Class'
+		{
+			ProgID = s 'DownloadBehavior.DownloadBehavior.1'
+			VersionIndependentProgID = s 'DownloadBehavior.DownloadBehavior'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

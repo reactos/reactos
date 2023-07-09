@@ -1,0 +1,36 @@
+__foldwin32sstuff __foldwin32sstuff;
+//foldstyleinitialization = true;
+
+enablemapdirect3216 = true;
+flatthunks = true;
+
+#include "..\types.thk"
+
+//
+// thunks for COMCTL32.DLL (32) -> COMMCTRL.DLL (16)
+//
+// 1st function is the 16 bit name
+// 2nd is the 32 bit name
+//
+
+typedef HANDLE32  HPROPSHEETPAGE16;
+
+BOOL DestroyPropertySheetPage16(HPROPSHEETPAGE16 hpage)
+{
+	target = DestroyPropertySheetPage;
+}
+
+HWND CreatePage16(HPROPSHEETPAGE16 hpage, HWND hwndParent)
+{
+	target = CreatePage;
+}
+
+typedef UINT *PHICON;
+
+BOOL GetPageInfo16(HPROPSHEETPAGE16 hpage, LPSTR pszCaption, int cbCaption, LPPOINT ppt, PHICON phIcon)
+{
+	target = GetPageInfo;
+	ppt = output;
+	phIcon = output;
+	pszCaption = output;
+}

@@ -1,0 +1,90 @@
+#ifndef _SELECT_PDL_
+#define _SELECT_PDL_ 1
+
+#include "csite.pdl"
+
+file select.pdl
+
+import csite.pdl
+import collect.pdl
+
+enum htmlSelectType prefix:htmlSelectType guid:3050f2c5-98b5-11cf-bb82-00aa00bdce0b
+    eval SelectOne      string:select-one    value:1
+    eval SelectMultiple string:select-multiple
+
+interface IHTMLSelectElement guid:3050f244-98b5-11cf-bb82-00aa00bdce0b
+    refprop     CSelectElement:size
+    refprop     CSelectElement:multiple
+    refprop     CSelectElement:name
+    refprop     CSelectElement:options
+    refprop     CSelectElement:onchange
+    refprop     CSelectElement:selectedIndex
+    refprop     CSelectElement:type
+    refprop     CSelectElement:value
+    refprop     CElement:disabled
+    refprop     CSite:form
+
+    refmethod   CSelectElement:add
+    refmethod   CSelectElement:remove
+
+    // collection reference properties and methods
+#define EXPAND_COLLECTION_REFS CSelectElement
+#include "basecoll.pdl"
+
+interface IHTMLSelectElement2 super:IDispatch guid:3050f5ed-98b5-11cf-bb82-00aa00bdce0b
+    refmethod  CSelectElement:urns  
+
+/* New style element events w/ eventObject parameter: */
+event HTMLSelectElementEvents2 super:HTMLControlElementEvents2 guid:3050f622-98b5-11cf-bb82-00aa00bdce0b
+    method void     onchange (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONCHANGE
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLSelectElementEvents super:HTMLControlElementEvents guid:3050f302-98b5-11cf-bb82-00aa00bdce0b
+    method void     onchange        dispid:DISPID_EVMETH_ONCHANGE ()
+
+tearoff CSelectElement interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID            mapto:GetDispID
+    tearmethod InvokeEx             mapto:InvokeEx
+    tearmethod GetNextDispID        mapto:GetNextDispID
+    tearmethod GetNameSpaceParent   mapto:CElement::GetNameSpaceParent
+    tearmethod GetMemberName        mapto:GetMemberName
+
+tearoff CSelectElement interface:IHTMLSelectElement
+tearoff CSelectElement interface:IHTMLSelectElement2
+
+
+class CSelectElement name:HTMLSelectElement \
+            primaryinterface:IHTMLSelectElement \
+            super:CSite \
+            events:HTMLSelectElementEvents \
+            nonprimaryevents:HTMLSelectElementEvents2 \
+            guid:3050f245-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f531-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLSelectElement
+    implements IHTMLSelectElement2
+
+
+    property size       atype:long                dispid:DISPID_SELECT+2        type:long   get set caa bindable displaybind setaahr clearcaches default:0 min:0
+    property multiple   atype:VARIANT_BOOL        dispid:DISPID_SELECT+3        type:VARIANT_BOOL get set caa bindable displaybind  clearcaches vt:VT_BOOL min:0 max:1 default:0 
+    property align      atype:BSTR     dispid:STDPROPID_XOBJ_CONTROLALIGN   type:htmlControlAlign get set caa displaybind maxstrlen:pdlToken
+    property name       atype:BSTR     dispid:STDPROPID_XOBJ_NAME    noassigndefault:"" type:CStr   get set method:nameHelper baseimplementation bindable displaybind maxstrlen:pdlNoLimit
+    property options    aType:IDispatch*          dispid:DISPID_SELECT+5                    get     abstract
+    property selectedIndex   aType:long           dispid:DISPID_SELECT+10                   get set abstract min:-1
+    property type   aType:BSTR          dispid:DISPID_SELECT+12     type:htmlSelectType     get     abstract bindable displaybind
+    property value      aType:BSTR                dispid:DISPID_SELECT+11     type:BSTR     get set abstract bindable displaybind maxstrlen:pdlNoLimit
+
+    property onchange   atype:VARIANT  dispid:DISPID_EVPROP_ONCHANGE     type:code        get set caa scriptlet bindable displaybind maxstrlen:pdlEvent
+
+    method HRESULT add  maxstrlen:pdlToken  dispid:DISPID_COLLECTION+3 (in type:IHTMLElement* arg:element , \
+                                                      in optional type:VARIANT arg:before)
+    method HRESULT remove dispid:DISPID_COLLECTION+4 (in defaultvalue:-1 type:long arg:index )
+
+//now include the collection Interface methods as part of this interface.
+#define EXPAND_COLLECTION_DEFNS
+#include "basecoll.pdl"
+
+#endif _SELECT_PDL_

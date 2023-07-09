@@ -1,0 +1,211 @@
+#
+#       Microsoft Confidential
+#       Copyright (C) Microsoft Corporation 1994,95,96,97
+#       All Rights Reserved.
+#
+#       Makefile for:
+#
+#       Cabinet File Viewer DLL
+#
+#       Built with C 10.0 (VC 4.2)
+#
+
+#
+#       target of this makefile
+#
+
+all: cabview.dll
+
+#
+#       DEBUG=YES builds with debugging information (and opts. disabled)
+#       DEBUG=NO builds retail
+#
+
+DEBUG=NO
+
+#
+#       compiler options
+#
+
+!include <ntwin32.mak>
+
+CFLAGS_COMMON = /nologo /c /Gz /MT /W3 /D WIN32 /D _WINDOWS
+CFLAGS_DEBUG  = $(CFLAGS_COMMON) /D _DEBUG /Od /Z7
+CFLAGS_RETAIL = $(CFLAGS_COMMON) /D NDEBUG /Ox /Os
+
+LFLAGS_COMMON = /nologo /entry:DllMain /subsystem:windows /DLL /nodefaultlib \
+                /incremental:no 
+LFLAGS_DEBUG  = $(LFLAGS_COMMON) /debug /debugtype:cv
+LFLAGS_RETAIL = $(LFLAGS_COMMON)
+
+LIBS = comctl32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib \
+       advapi32.lib libcmt.lib shell32.lib ole32.lib uuid.lib
+
+!if "$(DEBUG)" == "YES"
+CFLAGS        = $(CFLAGS_DEBUG)
+LFLAGS        = $(LFLAGS_DEBUG)
+!else
+CFLAGS        = $(CFLAGS_RETAIL)
+LFLAGS        = $(LFLAGS_RETAIL)
+!endif
+
+CL = cl $(CFLAGS)
+RC = rc -r
+
+#
+#       rules
+#
+
+.c.obj:
+        $(CL) $*.c
+
+.cpp.obj:
+        $(CL) $*.cpp
+
+.rc.res:
+        $(RC) $*.rc
+
+#
+#       dependencies
+#
+
+cabitms.obj:    cabitms.cpp pch.h thisdll.h resource.h path.h fdi.h \
+                cabitms.h dpda.h cabobj.h cabvw2.h cabp.h shlobj.h
+
+da.obj:         da.c pch.h dpda.h cabobj.h cabvw2.h cabp.h shlobj.h
+
+dataobj.obj:    dataobj.cpp pch.h path.h thisdll.h folder.h dataobj.h \
+                cabitms.h fdi.h dpda.h cabobj.h cabvw2.h cabp.h shlobj.h
+
+debug.obj:      debug.c pch.h debug.h dpda.h cabobj.h cabvw2.h cabp.h shlobj.h
+
+dlg.obj:        dlg.cpp pch.h thisdll.h dlg.h dpda.h cabobj.h cabvw2.h cabp.h \
+                shlobj.h
+
+enum.obj:       enum.cpp pch.h thisdll.h enum.h folder.h dpda.h cabobj.h \
+                cabvw2.h cabp.h shlobj.h
+
+fdidll.obj:     fdidll.c fdi.h
+
+folder.obj:     folder.cpp pch.h thisdll.h thisguid.h sfview.h folder.h \
+                enum.h view.h icon.h menu.h dataobj.h cabitms.h resource.h \
+                fdi.h dpda.h cabobj.h cabvw2.h cabp.h shlobj.h
+
+icon.obj:       icon.cpp pch.h thisdll.h path.h icon.h dpda.h cabobj.h \
+                cabvw2.h cabp.h shlobj.h
+
+iutil.obj:      iutil.c pch.h cabvw2.h dpda.h cabobj.h cabvw2.h cabp.h \
+                shlobj.h
+
+logger.obj:     logger.c logger.h
+
+menu.obj:       menu.cpp pch.h thisdll.h resource.h folder.h menu.h \
+                cabitms.h fdi.h dpda.h cabobj.h cabvw2.h cabp.h shlobj.h
+
+os.obj:         os.cpp pch.h os.h dpda.h cabobj.h cabvw2.h cabp.h shlobj.h
+
+path.obj:       path.c pch.h path.h debug.h strings.h dpda.h cabobj.h \
+                cabvw2.h cabp.h shlobj.h
+
+sfview.obj:     sfview.cpp pch.h sfview.h sfvwnd.h resource.h thisguid.h \
+                sfview.h dpda.h cabobj.h cabvw2.h cabp.h thisdll.h sfview.h \
+                xicon.h dlg.h unknown.h shlobj.h
+
+sfvmenu.obj:    sfvmenu.cpp pch.h sfview.h sfvwnd.h resource.h dpda.h \
+                cabobj.h cabvw2.h cabp.h thisdll.h sfview.h xicon.h dlg.h \
+                unknown.h shlobj.h
+
+sfvwnd.obj:     sfvwnd.cpp pch.h sfvwnd.h thisdll.h resource.h dpda.h \
+                cabobj.h cabvw2.h cabp.h thisdll.h sfview.h xicon.h dlg.h \
+                unknown.h shlobj.h
+
+strings.obj:    strings.c pch.h strings.h dpda.h cabobj.h cabvw2.h cabp.h \
+                shlobj.h
+
+thisdll.obj:    thisdll.cpp pch.h thisguid.h thisdll.h resource.h dpda.h \
+                cabobj.h cabvw2.h cabp.h shlobj.h
+
+unknown.obj:    unknown.cpp pch.h thisdll.h unknown.h dpda.h cabobj.h \
+                cabvw2.h cabp.h shlobj.h
+
+view.obj:       view.cpp pch.h thisdll.h resource.h folder.h view.h os.h \
+                unknown.h dpda.h cabobj.h cabvw2.h cabp.h sfview.h shlobj.h
+
+xicon.obj:      xicon.cpp pch.h thisdll.h unknown.h path.h xicon.h dpda.h \
+                cabobj.h cabvw2.h cabp.h shlobj.h
+
+cabview.res:    cabview.rc resource.h cabview.ver
+
+
+#
+#       link CABVIEW.DLL
+#
+
+cabview.dll:    cabview.def cabview.res \
+                cabitms.obj da.obj dataobj.obj debug.obj dlg.obj enum.obj \
+                fdidll.obj folder.obj icon.obj iutil.obj menu.obj os.obj \
+                path.obj sfview.obj sfvmenu.obj sfvwnd.obj strings.obj \
+                thisdll.obj unknown.obj view.obj xicon.obj
+        @echo >nul <<cabview.crf
+-def:cabview.def
+cabitms.obj
+da.obj
+dataobj.obj
+debug.obj
+dlg.obj
+enum.obj
+fdidll.obj
+folder.obj
+icon.obj
+iutil.obj
+menu.obj
+os.obj
+path.obj
+sfview.obj
+sfvmenu.obj
+sfvwnd.obj
+strings.obj
+thisdll.obj
+unknown.obj
+view.obj
+xicon.obj
+cabview.res
+-out:cabview.dll
+$(LIBS)
+<<nokeep
+        link $(LFLAGS) @cabview.crf
+        @if exist cabview.lib erase cabview.lib
+        @if exist cabview.exp erase cabview.exp
+
+
+#
+#       directory cleanup
+#
+
+clean:
+        @if exist cabitms.obj erase cabitms.obj
+        @if exist da.obj erase da.obj
+        @if exist dataobj.obj erase dataobj.obj
+        @if exist debug.obj erase debug.obj
+        @if exist dlg.obj erase dlg.obj
+        @if exist enum.obj erase enum.obj
+        @if exist fdidll.obj erase fdidll.obj
+        @if exist folder.obj erase folder.obj
+        @if exist icon.obj erase icon.obj
+        @if exist iutil.obj erase iutil.obj
+        @if exist logger.obj erase logger.obj
+        @if exist menu.obj erase menu.obj
+        @if exist os.obj erase os.obj
+        @if exist path.obj erase path.obj
+        @if exist sfview.obj erase sfview.obj
+        @if exist sfvmenu.obj erase sfvmenu.obj
+        @if exist sfvwnd.obj erase sfvwnd.obj
+        @if exist strings.obj erase strings.obj
+        @if exist thisdll.obj erase thisdll.obj
+        @if exist unknown.obj erase unknown.obj
+        @if exist view.obj erase view.obj
+        @if exist xicon.obj erase xicon.obj
+        @if exist cabview.res erase cabview.res
+        @if exist cabview.dll erase cabview.dll
+        @if exist cabview.lib erase cabview.lib
+        @if exist cabview.exp erase cabview.exp

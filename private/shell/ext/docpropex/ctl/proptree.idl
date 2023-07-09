@@ -1,0 +1,142 @@
+//-------------------------------------------------------------------------//
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1996.
+//
+//  PropTree.idl : IDL source for Property Tree Control
+//
+//-------------------------------------------------------------------------//
+
+cpp_quote("//-------------------------------------------------------------------------//")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1992 - 1996.")
+cpp_quote("//")
+cpp_quote("//-------------------------------------------------------------------------//")
+
+#include <olectl.h>
+import "oaidl.idl";
+import "ocidl.idl";
+
+//-------------------------------------------------------------------------//
+//	IPropertyTreeCtl interface
+[
+	object,
+	uuid(40710C25-4BC7-11D1-8B6F-080036B11A03),
+	dual,
+	helpstring("IPropertyTreeCtl Interface"),
+	pointer_default(unique)
+]
+interface IPropertyTreeCtl : IDispatch
+{
+	[propget, id(DISPID_HWND)]
+	HRESULT Window([out, retval]long* phwnd);
+	[propput, id(DISPID_ENABLED)]
+	HRESULT Enabled([in]VARIANT_BOOL vbool);
+	[propget, id(DISPID_ENABLED)]
+	HRESULT Enabled([out,retval]VARIANT_BOOL* pbool);
+	[propput, id(6), helpstring("property NoSourcesCaption")] 
+	HRESULT NoSourcesCaption([in] BSTR newVal);
+	[propget, id(6), helpstring("property NoSourcesCaption")] 
+	HRESULT NoSourcesCaption([out, retval] BSTR *pVal);
+	[propput, id(7), helpstring("property PropEmptyCaption")] 
+	HRESULT NoPropertiesCaption([in] BSTR newVal);
+	[propget, id(7), helpstring("property PropEmptyCaption")] 
+	HRESULT NoPropertiesCaption([out, retval] BSTR *pVal);
+	[propput, id(8), helpstring("property NoCommonsCaption")]
+	HRESULT NoCommonsCaption([in] BSTR newVal);
+	[propget, id(8), helpstring("property NoCommonsCaption")]
+	HRESULT NoCommonsCaption([out, retval] BSTR *pVal);
+	[propget, id(9), helpstring("property DirtyCount")]
+	HRESULT Empty([out, retval] BOOL *pVal);
+	[propget, id(10), helpstring("property EmptyVisible")]
+	HRESULT EmptyVisible([out, retval] BOOL *pVal);
+	[propget, id(11), helpstring("property FolderCountVisible")]
+	HRESULT DirtyCount([out, retval] long *pVal);
+	[propget, id(12), helpstring("property FolderCount")]
+	HRESULT FolderCount([out, retval] long *pVal);
+	[propget, id(13), helpstring("property PropertyCount")]
+	HRESULT FolderCountVisible([out, retval] long *pVal);
+	[propget, id(14), helpstring("property PropertyCountVisible")]
+	HRESULT PropertyCount([out, retval] long *pVal);
+	[propget, id(15), helpstring("property Empty")] 
+	HRESULT PropertyCountVisible([out, retval] long *pVal);
+
+	[id(18), helpstring("method AddSource")] 
+	HRESULT AddSource([in] const VARIANT* pvarSrc, [in] const VARIANT* pvarServer, [in] ULONG dwDisposition);
+	[id(19), helpstring("method RemoveSource")] 
+	HRESULT RemoveSource([in] const VARIANT* pvarSrc, [in] ULONG dwDisposition);
+	[id(20), helpstring("method RemoveAllSources")] 
+	HRESULT RemoveAllSources([in] ULONG dwDisposition) ;
+	[id(21), helpstring("method Apply")] 
+	HRESULT Apply() ;
+	[id(22), helpstring("method GetPropertyValue")] 
+	HRESULT GetPropertyValue([in] BSTR FmtID, [in] LONG nPropID, [in] LONG nDataType, [out] BSTR* bstrVal, [out] VARIANT_BOOL* pbDirty ) ;
+	[id(23), helpstring("method SetPropertyValue")]
+	HRESULT SetPropertyValue([in] BSTR FmtID, [in] LONG nPropID, [in] LONG nDataType, [in] BSTR bstrVal, [in] VARIANT_BOOL bMakeDirty ) ;
+	[id(24), helpstring("method IsPropertyDirty")]
+	HRESULT IsPropertyDirty([in] BSTR FmtID, [in] LONG nPropID, [in] LONG nDataType, [out] VARIANT_BOOL* pbDirty ) ;
+} ;
+
+//-------------------------------------------------------------------------//
+enum PROPERTYTREE_EVENT_DISPID
+{
+	PTDISPID_EMPTIED = 1,
+	PTDISPID_PROPERTYSHOW,
+	PTDISPID_PROPERTYHIDE,
+	PTDISPID_PROPERTYGETFOCUS,
+	PTDISPID_PROPERTYKILLFOCUS,
+	PTDISPID_FOLDERSHOW,
+	PTDISPID_FOLDERHIDE,
+	PTDISPID_FOLDERGETFOCUS,
+	PTDISPID_FOLDERKILLFOCUS,
+	PTDISPID_PROPERTYDIRTY,
+	PTDISPID_DIRTYCOUNTCHANGED,
+} ;
+
+//-------------------------------------------------------------------------//
+[
+	uuid(40710C17-4BC7-11D1-8B6F-080036B11A03),
+	version(1.0),
+	helpstring("PropertyTree 1.0 Type Library")
+]
+library PROPERTYTREELib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+    //-------------------------------------//
+    //	_DIPropertyTreeCtl event interface
+    [
+	    uuid(C888D881-6EE6-11d1-9A9C-444553540000),
+	    helpstring("IPropertyTreeCtl Event Interface")
+    ]
+    dispinterface _DIPropertyTreeCtl
+    {
+    properties:
+    methods:
+	    [id(PTDISPID_EMPTIED)]			 void Emptied( [in] long nReason ) ;
+	    [id(PTDISPID_PROPERTYSHOW)]		 void PropertyShow( [in]BSTR FmtID, [in]LONG nPropID, [in]LONG nDataType ) ;
+	    [id(PTDISPID_PROPERTYHIDE)]		 void PropertyHide( [in]BSTR FmtID, [in]LONG nPropID, [in]LONG nDataType ) ;
+	    [id(PTDISPID_PROPERTYGETFOCUS)]  void PropertyGetFocus( [in]BSTR FmtID, [in]LONG nPropID, [in]LONG nDataType ) ;
+	    [id(PTDISPID_PROPERTYKILLFOCUS)] void PropertyKillFocus( [in]BSTR FmtID, [in]LONG nPropID, [in]LONG nDataType ) ;
+	    [id(PTDISPID_FOLDERSHOW)]		 void FolderShow( [in]LONG nFolderID ) ;
+	    [id(PTDISPID_FOLDERHIDE)]		 void FolderHide( [in]LONG nFolderID ) ;
+	    [id(PTDISPID_FOLDERGETFOCUS)]	 void FolderGetFocus( [in]LONG nFolderID ) ;
+	    [id(PTDISPID_FOLDERKILLFOCUS)]   void FolderKillFocus( [in]LONG nFolderID ) ;
+	    [id(PTDISPID_PROPERTYDIRTY)]	 void PropertyDirty( [in]BSTR FmtID, [in]LONG nPropID, [in]LONG nDataType, [in]VARIANT_BOOL bDirty ) ;
+		[id(PTDISPID_DIRTYCOUNTCHANGED)] void DirtyCountChanged( [in]LONG cDirtyCount, [in]LONG cDirtyCountVis ) ;
+    } ;
+
+    //-------------------------------------//
+    //	IPropertyTreeCtl COM class
+	[
+		uuid(40710C26-4BC7-11D1-8B6F-080036B11A03),
+		helpstring("PropertyTreeCtl Class")
+	]
+	coclass PropertyTreeCtl
+	{
+		[default]		 interface		IPropertyTreeCtl;
+		[default,source] dispinterface _DIPropertyTreeCtl;
+	};
+};

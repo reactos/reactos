@@ -1,0 +1,461 @@
+#ifndef _REGIDL_
+#define _REGIDL_
+
+import "objidl.idl";
+import "oleidl.idl";
+
+interface IRegistryW;
+interface IRegistryA;
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IRegistry interface definition
+//
+//  Description:
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPREGISTRY_DEFINED")
+cpp_quote("#define _LPREGISTRY_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4b0-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface IRegistryW : IUnknown
+{
+    typedef [unique] IRegistryW *LPREGISTRYW;
+
+    typedef DWORD ACCESS_MASK;
+    typedef ACCESS_MASK REGSAM;
+    //typedef DWORD HKEY;
+    typedef HKEY *PHKEY;
+    typedef BYTE *LPBYTE;
+    typedef DWORD SECURITY_INFORMATION, *PSECURITY_INFORMATION;
+    typedef PVOID PSECURITY_DESCRIPTOR;
+
+    typedef struct value_entXW {
+        LPWSTR  ve_valuename;
+        DWORD ve_valuelen;
+        DWORD ve_valueptr;
+        DWORD ve_type;
+    } VALENTXW, *PVALENTXW;
+
+    // can this method be supported
+    LONG ConnectRegistry (
+        [in]  LPWSTR lpMachineName,
+        [in]  HKEY hKey,
+        [out] IRegistryW **ppReg
+        );
+
+    LONG CloseKey (
+        [in]  HKEY hKey
+        );
+
+    LONG CreateKey (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpSubKey,
+        [out] PHKEY phkResult
+        );
+
+    LONG CreateKeyEx (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpSubKey,
+        [in]  DWORD Reserved,
+        [in]  LPWSTR lpClass,
+        [in]  DWORD dwOptions,
+        [in]  REGSAM samDesired,
+        [in]  LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+        [out] PHKEY phkResult,
+        [out] LPDWORD lpdwDisposition
+        );
+
+    LONG DeleteKey (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpSubKey
+        );
+
+    LONG DeleteValue (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpValueName
+        );
+
+    LONG EnumKey (
+        [in]  HKEY hKey,
+        [in]  DWORD dwIndex,
+        [in]  LPWSTR lpName,
+        [in]  DWORD cbName
+        );
+
+    LONG EnumKeyEx (
+        [in]  HKEY hKey,
+        [in]  DWORD dwIndex,
+        [in]  LPWSTR lpName,
+        [out] LPDWORD lpcbName,
+        [out] LPDWORD lpReserved,
+        [in]  LPWSTR lpClass,
+        [out] LPDWORD lpcbClass,
+        [out] PFILETIME lpftLastWriteTime
+        );
+
+    LONG EnumValue (
+        [in]  HKEY hKey,
+        [in]  DWORD dwIndex,
+        [in]  LPWSTR lpValueName,
+        [out] LPDWORD lpcbValueName,
+        [out] LPDWORD lpReserved,
+        [out] LPDWORD lpType,
+        [out] LPBYTE lpData,
+        [in,out] LPDWORD lpcbData
+        );
+
+    LONG FlushKey (
+        HKEY hKey
+        );
+
+    LONG GetKeySecurity (
+        [in]  HKEY hKey,
+        [in]  SECURITY_INFORMATION SecurityInformation,
+        [out] PSECURITY_DESCRIPTOR pSecurityDescriptor,
+        [in, out] LPDWORD lpcbSecurityDescriptor
+        );
+
+    LONG LoadKey (
+        [in]  HKEY  hKey,
+        [in]  LPCWSTR  lpSubKey,
+        [in]  LPCWSTR  lpFile
+        );
+
+    LONG NotifyChangeKeyValue (
+        [in]  HKEY hKey,
+        [in]  BOOL bWatchSubtree,
+        [in]  DWORD dwNotifyFilter,
+        [in]  HANDLE hEvent,
+        [in]  BOOL fAsynchronus
+        );
+
+    LONG OpenKey (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpSubKey,
+        [out] PHKEY phkResult
+        );
+
+    LONG OpenKeyEx (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpSubKey,
+        [in]  DWORD ulOptions,
+        [in]  REGSAM samDesired,
+        [out] PHKEY phkResult
+        );
+
+    LONG QueryInfoKey (
+        [in]  HKEY    hKey,
+        [in]  LPWSTR  lpClass,
+        [out] LPDWORD lpcbClass,
+        [out] LPDWORD lpReserved,
+        [out] LPDWORD lpcSubKeys,
+        [out] LPDWORD lpcbMaxSubKeyLen,
+        [out] LPDWORD lpcbMaxClassLen,
+        [out] LPDWORD lpcValues,
+        [out] LPDWORD lpcbMaxValueNameLen,
+        [out] LPDWORD lpcbMaxValueLen,
+        [out] LPDWORD lpcbSecurityDescriptor,
+        [out] PFILETIME lpftLastWriteTime
+        );
+
+    LONG QueryValue (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpSubKey,
+        [in]  LPWSTR lpValue,
+        [in, out] LONG   *lpcbValue
+        );
+
+    LONG QueryMultipleValues (
+        [in]  HKEY hKey,
+        [in]  PVALENTXW val_list,
+        [in]  DWORD num_vals,
+        [in]  LPWSTR lpValueBuf,
+        [in,out] LPDWORD ldwTotsize
+        );
+
+    LONG QueryValueEx (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpValueName,
+        [out] LPDWORD lpReserved,
+        [out] LPDWORD lpType,
+        [in,out] LPBYTE lpData,
+        [in,out] LPDWORD lpcbData
+        );
+
+    LONG ReplaceKey (
+        [in]  HKEY     hKey,
+        [in]  LPCWSTR  lpSubKey,
+        [in]  LPCWSTR  lpNewFile,
+        [in]  LPCWSTR  lpOldFile
+        );
+
+    LONG RestoreKey (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpFile,
+        [in]  DWORD   dwFlags
+        );
+
+    LONG SaveKey (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpFile,
+        [out] LPSECURITY_ATTRIBUTES lpSecurityAttributes
+        );
+
+    LONG SetKeySecurity (
+        [in]  HKEY hKey,
+        [in]  SECURITY_INFORMATION SecurityInformation,
+        [out] PSECURITY_DESCRIPTOR pSecurityDescriptor
+        );
+
+    LONG SetValue (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpSubKey,
+        [in]  DWORD dwType,
+        [in]  LPCWSTR lpData,
+        [in]  DWORD cbData
+        );
+
+    LONG SetValueEx (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpValueName,
+        [in]  DWORD Reserved,
+        [in]  DWORD dwType,
+        [in]  const BYTE* lpData,
+        [in]  DWORD cbData
+        );
+
+    LONG UnLoadKey (
+        [in]  HKEY hKey,
+        [in]  LPCWSTR lpSubKey
+        );
+
+}
+
+
+[
+        local,
+        object,
+        uuid(c733e4b1-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface IRegistryA : IUnknown
+{
+    typedef [unique] IRegistryA *LPREGISTRYA;
+
+    typedef struct value_entXA {
+        LPSTR  ve_valuename;
+        DWORD ve_valuelen;
+        DWORD ve_valueptr;
+        DWORD ve_type;
+    } VALENTXA, *PVALENTXA;
+
+    // can this method be supported
+    LONG ConnectRegistry (
+        [in]  LPSTR lpMachineName,
+        [in]  HKEY hKey,
+        [out] IRegistryA **ppReg
+        );
+
+    LONG CloseKey (
+        [in]  HKEY hKey
+        );
+
+    LONG CreateKey (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpSubKey,
+        [out] PHKEY phkResult
+        );
+
+    LONG CreateKeyEx (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpSubKey,
+        [in]  DWORD Reserved,
+        [in]  LPSTR lpClass,
+        [in]  DWORD dwOptions,
+        [in]  REGSAM samDesired,
+        [in]  LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+        [out] PHKEY phkResult,
+        [out] LPDWORD lpdwDisposition
+        );
+
+    LONG DeleteKey (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpSubKey
+        );
+
+    LONG DeleteValue (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpValueName
+        );
+
+    LONG EnumKey (
+        [in]  HKEY hKey,
+        [in]  DWORD dwIndex,
+        [in]  LPSTR lpName,
+        [in]  DWORD cbName
+        );
+
+    LONG EnumKeyEx (
+        [in]  HKEY hKey,
+        [in]  DWORD dwIndex,
+        [in]  LPSTR lpName,
+        [out] LPDWORD lpcbName,
+        [out] LPDWORD lpReserved,
+        [in]  LPSTR lpClass,
+        [out] LPDWORD lpcbClass,
+        [out] PFILETIME lpftLastWriteTime
+        );
+
+    LONG EnumValue (
+        [in]  HKEY hKey,
+        [in]  DWORD dwIndex,
+        [in]  LPSTR lpValueName,
+        [out] LPDWORD lpcbValueName,
+        [out] LPDWORD lpReserved,
+        [out] LPDWORD lpType,
+        [out] LPBYTE lpData,
+        [in,out] LPDWORD lpcbData
+        );
+
+    LONG FlushKey (
+        HKEY hKey
+        );
+
+    LONG GetKeySecurity (
+        [in]  HKEY hKey,
+        [in]  SECURITY_INFORMATION SecurityInformation,
+        [out] PSECURITY_DESCRIPTOR pSecurityDescriptor,
+        [in, out] LPDWORD lpcbSecurityDescriptor
+        );
+
+    LONG LoadKey (
+        [in]  HKEY  hKey,
+        [in]  LPCSTR  lpSubKey,
+        [in]  LPCSTR  lpFile
+        );
+
+    LONG NotifyChangeKeyValue (
+        [in]  HKEY hKey,
+        [in]  BOOL bWatchSubtree,
+        [in]  DWORD dwNotifyFilter,
+        [in]  HANDLE hEvent,
+        [in]  BOOL fAsynchronus
+        );
+
+    LONG OpenKey (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpSubKey,
+        [out] PHKEY phkResult
+        );
+
+    LONG OpenKeyEx (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpSubKey,
+        [in]  DWORD ulOptions,
+        [in]  REGSAM samDesired,
+        [out] PHKEY phkResult
+        );
+
+    LONG QueryInfoKey (
+        [in]  HKEY    hKey,
+        [in]  LPSTR  lpClass,
+        [out] LPDWORD lpcbClass,
+        [out] LPDWORD lpReserved,
+        [out] LPDWORD lpcSubKeys,
+        [out] LPDWORD lpcbMaxSubKeyLen,
+        [out] LPDWORD lpcbMaxClassLen,
+        [out] LPDWORD lpcValues,
+        [out] LPDWORD lpcbMaxValueNameLen,
+        [out] LPDWORD lpcbMaxValueLen,
+        [out] LPDWORD lpcbSecurityDescriptor,
+        [out] PFILETIME lpftLastWriteTime
+        );
+
+    LONG QueryValue (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpSubKey,
+        [in]  LPSTR lpValue,
+        [in, out] LONG   *lpcbValue
+        );
+
+    LONG QueryMultipleValues (
+        [in]  HKEY hKey,
+        [in]  PVALENTXA val_list,
+        [in]  DWORD num_vals,
+        [in]  LPSTR lpValueBuf,
+        [in,out] LPDWORD ldwTotsize
+        );
+
+    LONG QueryValueEx (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpValueName,
+        [out] LPDWORD lpReserved,
+        [out] LPDWORD lpType,
+        [in,out] LPBYTE lpData,
+        [in,out] LPDWORD lpcbData
+        );
+
+    LONG ReplaceKey (
+        [in]  HKEY     hKey,
+        [in]  LPCSTR  lpSubKey,
+        [in]  LPCSTR  lpNewFile,
+        [in]  LPCSTR  lpOldFile
+        );
+
+    LONG RestoreKey (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpFile,
+        [in]  DWORD   dwFlags
+        );
+
+    LONG SaveKey (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpFile,
+        [out] LPSECURITY_ATTRIBUTES lpSecurityAttributes
+        );
+
+    LONG SetKeySecurity (
+        [in]  HKEY hKey,
+        [in]  SECURITY_INFORMATION SecurityInformation,
+        [out] PSECURITY_DESCRIPTOR pSecurityDescriptor
+        );
+
+    LONG SetValue (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpSubKey,
+        [in]  DWORD dwType,
+        [in]  LPCSTR lpData,
+        [in]  DWORD cbData
+        );
+
+    LONG SetValueEx (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpValueName,
+        [in]  DWORD Reserved,
+        [in]  DWORD dwType,
+        [in]  const BYTE* lpData,
+        [in]  DWORD cbData
+        );
+
+    LONG UnLoadKey (
+        [in]  HKEY hKey,
+        [in]  LPCSTR lpSubKey
+        );
+
+}
+
+
+cpp_quote("#endif")
+
+
+#endif // _REGIDL_

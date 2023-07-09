@@ -1,0 +1,69 @@
+//
+// Get the messages
+//
+
+#include "messages.rc"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu. Can't put this in app.rc because MSVC loses the numbers on POPUPs
+//
+
+POPUP_SHARESBG_POPUPMERGE1 MENUEX DISCARDABLE 
+BEGIN
+    POPUP "", SFVIDM_MENU_ARRANGE
+    BEGIN
+        MENUITEM "by &Name",                    FSIDM_SORTBYNAME
+        MENUITEM "by &Comment",                 FSIDM_SORTBYCOMMENT
+    END
+END
+
+POPUP_SHARESBG_POPUPMERGE2 MENUEX DISCARDABLE 
+BEGIN
+    POPUP "", FCIDM_MENU_FILE
+    BEGIN
+        POPUP "Ne&w", FSIDM_MENU_NEW
+        BEGIN
+            MENUITEM "&Share",                  FSIDM_NEWSHARE
+        END
+    END
+    POPUP "", SFVIDM_MENU_ARRANGE
+    BEGIN
+        MENUITEM "by &Name",                    FSIDM_SORTBYNAME
+        MENUITEM "by &Comment",                 FSIDM_SORTBYCOMMENT
+        MENUITEM "by &Path",                    FSIDM_SORTBYPATH
+        MENUITEM "by &Max Uses",                FSIDM_SORTBYMAXUSES
+    END
+END
+
+#ifdef WIZARDS
+POPUP_SPECIAL MENUEX DISCARDABLE
+BEGIN
+    POPUP "", FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "&Open",               FSIDM_OPENSPECIAL
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Create &Shortcut",    SHARED_FILE_LINK
+    END
+END
+
+POPUP_SPECIAL_FILE MENUEX DISCARDABLE
+BEGIN
+    POPUP "", FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "&Open",               FSIDM_OPENSPECIAL
+    END
+END
+#endif // WIZARDS
+
+/////////////////////////////////////////////////////////////////////
+
+#include <ntverp.h>
+
+#define VER_FILETYPE              VFT_APP
+#define VER_FILESUBTYPE           VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR   "Shared Directories folder"
+#define VER_INTERNALNAME_STR      "shareui\0"
+#define VER_ORIGINALFILENAME_STR  "shareui.dll"
+
+#include <common.ver>

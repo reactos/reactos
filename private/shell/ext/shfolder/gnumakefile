@@ -1,0 +1,51 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling C++ application.
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/shell.template
+
+SOURCES_FILE    = sources
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME DLLENTRY
+
+DLLDEF_SRC=folder.def
+
+DLLDEF_EXPORTS = \
+     _____shfolder_initDLL
+
+
+INCLUDES = \
+	${SHELL_DIR}/inc \
+	${SHELL_DIR}/inc/stubs
+
+# Warning: DLL based on MFC (compiled with _USRDLL flag) is not supported yet.
+# This makefile is just for demo purpose.
+## Original Windows DLL name:
+WDLL = shfolder
+DLL	= lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+NO_UNICODE = 1
+PROJECT_CFLAGS = -I. -I.. ${DEFINES}
+PROJECT_CCPPFLAGS = -pto
+
+PROJECT_DLLFLAGS   = \
+		    -lshell32\
+		    -ladvapi32\
+		    -lole32\
+                    -lstocklib
+ 
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple

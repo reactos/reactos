@@ -1,0 +1,86 @@
+!IF 0
+
+Copyright (c) 1989-99  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+   History:    02-Aug-94     LyleC    Created
+               26-Jan-96     MikeHill Added "sifmt_i.c"
+!ENDIF
+
+TARGETNAME=ieuuid
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+# prevent system headers from being included.  They are not needed just to
+# process a bunch of DEFINE_GUIDs anyhow.  Excluding them generates a much
+# smaller library too.
+C_DEFINES=$(C_DEFINES) /D_MIDL_USE_GUIDDEF_\
+    /D__RPCNDR_H__ /D__RPC_H__ /DRPC_NO_WINDOWS_H /DCOM_NO_WINDOWS_H\
+    /DGUID_DEFS_ONLY
+
+
+# These sources are generated when the ..\inc directory is processed.
+# They are copied here because the MIDL_UUIDDIR statement in the
+# ..\inc\sources file points to this directory.
+
+SOURCES=\
+    ieguids.c \
+    activaut_i.c \
+    activdbg_i.c \
+    activscp_i.c \
+    chanmgr_i.c \
+    comcat_i.c \
+    dbgprop_i.c \
+    dimm_i.c \
+    dispex_i.c \
+    disptree_i.c \
+    docobj_i.c \
+    dwnnot_i.c \
+    emptyvc_i.c \
+    exdisp_i.c \
+    hlink_i.c \
+    htiface_i.c \
+    htiframe_i.c \
+    htmlfilter_i.c \
+    iextag_i.c \
+    imgutil_i.c \
+    interned_i.c \
+    mimeinfo_i.c \
+    mlang_i.c \
+    mobsync_i.c \
+    mobsyncp_i.c \
+    mshtmhst_i.c \
+    mshtml_i.c \
+    msident_i.c \
+    msieftp_i.c \
+    msxml_i.c \
+    objsafe_i.c \
+    ocmm_i.c \
+    opsprof_i.c \
+    optary_i.c \
+    perhist_i.c \
+    prgsnk_i.c \
+    procdm_i.c \
+    recalc_i.c \
+    safeocx_i.c \
+    sensevts_i.c \
+    servprov_i.c \
+    subsmgr_i.c \
+    urlhist_i.c \
+    urlmon_i.c \
+    urltrack_i.c \
+    vervec_i.c \
+    vrsscan_i.c \
+    webcheck_i.c \
+    xmlparser_i.c
+

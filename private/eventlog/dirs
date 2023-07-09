@@ -1,0 +1,30 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    dirs.
+
+Abstract:
+
+    This file specifies the subdirectories of the current directory that
+    contain component makefiles.
+
+
+Author:
+
+    Steve Wood (stevewo) 17-Apr-1990
+
+Note:
+    
+    The 'misc' directory is temporary. Will be removed after PPC.
+        
+!ENDIF
+
+DIRS=server     \
+     elfclnt    \
+     misc
+
+
+OPTIONAL_DIRS=test

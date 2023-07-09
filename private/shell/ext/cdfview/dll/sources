@@ -1,0 +1,147 @@
+!IF 0
+
+Copyright (c) 1989-1997 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+History:
+    Created cdfview version of this fie 16-Mar-97 Ed Praitis (edwardp)
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+#
+# Get the path of the shell project
+#
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+#
+# Need to have ..\resdll built first since it produces
+# ..\res\selfreg_cdfview.inf
+#
+
+SYNCHRONIZE_DRAIN = 1
+
+#
+# TARGET_BOTH is used by $(CCSHELL_DIR)\common.inc to build components that run
+# on both W95 and NT.
+#
+
+TARGET_BOTH     = 1
+
+#
+# This is so it will be indexed by the browser info
+#
+NO_BROWSER_FILE = 1
+
+#
+# Include the common shell sources file and update the list of sources used.
+#
+
+!include $(CCSHELL_DIR)\common.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+
+PRECOMPILED_CXX = 1
+PRECOMPILED_INCLUDE = ..\stdinc.h
+
+TARGETNAME      = cdfview
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+DLLDEF          = $(O)\cdfview.def
+
+# NOTE!! We deliberately link to an NT4 compatible shell32.lib
+#        so cdfview can be loaded in the browser-only installations.
+#        We use the NT version because it contains lego info.
+#        The debug version of shdocvw links to the Win95 version
+#        of shell32.lib simply so we can verify that we load in the
+#        browser-only installations on Win95.
+
+TARGETLIBS      = \
+          $(LIBRARY_PATH)\kernel32.lib       \
+          $(LIBRARY_PATH)\user32.lib         \
+          $(LIBRARY_PATH)\shlwapip.lib       \
+!if $(386)
+! if !$(FREEBUILD)
+          $(BASEDIR)\private\lib\chicago\*\shell32.w95  \
+          $(BASEDIR)\private\lib\chicago\*\shell32p.lib  \
+! else
+          $(BASEDIR)\private\lib\*\shell32.nt4  \
+          $(BASEDIR)\private\lib\*\shell32p.lib  \
+! endif
+!else
+          $(LIBRARY_PATH)\shell32p.lib        \
+!endif
+          $(LIBRARY_PATH)\gdi32.lib          \
+          $(LIBRARY_PATH)\uuid.lib           \
+          $(LIBRARY_PATH)\urlmon.lib         \
+          $(LIBRARY_PATH)\wininet.lib        \
+          $(LIBRARY_PATH)\ole32.lib          \
+          $(LIBRARY_PATH)\oleaut32.lib       \
+          $(LIBRARY_PATH)\advapi32.lib       \
+          $(LIBRARY_PATH)\comctlp.lib        \
+          $(CCSHELL_DIR)\lib\$O\shguidp.lib  \
+          $(CCSHELL_DIR)\lib\$O\stocklib.lib \
+          $(SDK_LIB_PATH)\htmlhelp.lib       \
+
+DELAYLOAD = OLE32.DLL;urlmon.dll;wininet.dll
+
+!if $(IA64) || $(AXP64)
+USE_LIBCMT      = 1
+DLLENTRY        = _DllMainCRTStartup
+!else
+USE_IERT        = 1
+DLLENTRY        = DllMain
+!endif
+
+SOURCES         = \
+          ..\cdfview.rc   \
+          ..\bindstcb.cpp \
+          ..\cache.cpp    \
+          ..\cdfidl.cpp   \
+          ..\cdfview.cpp  \
+          ..\chanapi.cpp  \
+          ..\chanenum.cpp \
+          ..\chanmenu.cpp \
+          ..\clsfact.cpp  \
+          ..\crt.cpp      \
+          ..\debug.cpp    \
+          ..\dll.cpp      \
+          ..\dllload.cpp  \
+          ..\enum.cpp     \
+          ..\exticon.cpp  \
+          ..\folder.cpp   \
+          ..\globals.cpp  \
+          ..\iconhand.cpp \
+          ..\itemmenu.cpp \
+          ..\oleobj.cpp   \
+          ..\persist.cpp  \
+          ..\proppgs.cpp  \
+          ..\strutil.cpp  \
+          ..\tooltip.cpp  \
+          ..\view.cpp     \
+          ..\xmlutil.cpp  \
+          ..\utils.cpp    \
+          ..\runonnt.cpp
+
+CONDITIONAL_INCLUDES = \
+          macwin32.h \
+          macocidl.h \
+          winwlm.h   \
+          res\menus.rcm

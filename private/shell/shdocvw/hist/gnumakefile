@@ -1,0 +1,52 @@
+#NO_UNICODE=1
+
+CUSTOM_RULES = ${MWROOT}/ie4/shell.template
+
+NO_BROWSER_FILE=1
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE
+
+WLIB	= hist
+LIB	= lib${WLIB}.a # target static library
+
+CPP_OBJS := ${SOURCES:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+LIBOBJS = ${CPP_OBJS:%.c=%.o}
+
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir     : the directory where you want the executables to go
+## APP_CFLAGS  : additional compilation flags
+## APP_LDFLAGS : additional link flags (maybe specifying DLLs)
+## DLL         : name of the DLL to make
+## DLLOBJS     : list of .o of the DLL
+## DLL-EXPORTS : name of the .def file for the DLL
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+##
+APP_CFLAGS = -I. -I.. -I../../inc  \
+                  -DIN_SHDOCVW \
+                  -DUNICODE_SHDOCVW \
+                  -DFEATURE_FRAMES \
+                  -DMSOCT2=1 \
+                  -DFEATURE_URLHIST \
+                  -DFEATURE_PICS \
+                  -DFEATURE_MENUBAND \
+                  -DPAGER \
+                  -D_HSFOLDER \
+		  -D_NTSDK -D_USRDLL -D_ATL_MIN_CRT -D_DESK_MOVE -D_WIN32\
+	          -D_NO_DBGMEMORY_REDEFINITION_
+ 
+# Remove from UNIX_RTW
+#                  -DBETA1_DIALMON_HACK \
+
+# APP_LDFLAGS = -ladvapi32 -l comctl32 -luuid
+
+include $(MWHOME)/make.rules.simple

@@ -1,0 +1,22 @@
+/********************************************************************/
+/*        MSRATING.RCV                                              */
+/********************************************************************/
+#ifndef WINNT
+#include <version.h>
+#else
+#ifndef NASHVILLE
+#define NASHVILLE		/* otherwise we get an NT version number */
+#endif // NASHVILLE
+
+#include <ntverp.h>
+#endif /* WINNT */
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Internet Ratings and Local User Management DLL"
+#define VER_INTERNALNAME_STR		"MSRATING"
+#define VER_ORIGINALFILENAME_STR	"MSRATING.DLL"
+#define VER_OLESELFREGISTER
+
+#include <common.ver>
+

@@ -1,0 +1,748 @@
+// --------------------------------------------------------------------------------
+// Imnact.idl
+// Copyright (c)1993-1998 Microsoft Corporation, All Rights Reserved
+// Steven J. Bailey
+// --------------------------------------------------------------------------------
+import "objidl.idl";
+
+interface IImnAccount;
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// Imnact.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//---------------------------------------------------------------------------=")
+cpp_quote("// Internet Mail and News Account Manager Interfaces.")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// GUIDS")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#if !defined( WIN16 ) || defined( __cplusplus )")
+cpp_quote("// {8D4B04E1-1331-11d0-81B8-00C04FD85AB4}")
+cpp_quote("DEFINE_GUID(CLSID_ImnAccountManager, 0x8d4b04e1, 0x1331, 0x11d0, 0x81, 0xb8, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("")
+cpp_quote("// {FD465484-1384-11d0-ABBD-0020AFDFD10A}")
+cpp_quote("DEFINE_GUID(IID_IPropertyContainer, 0xfd465484, 0x1384, 0x11d0, 0xab, 0xbd, 0x0, 0x20, 0xaf, 0xdf, 0xd1, 0xa);")
+cpp_quote("")
+cpp_quote("// {FD465481-1384-11d0-ABBD-0020AFDFD10A}")
+cpp_quote("DEFINE_GUID(IID_IImnAccountManager, 0xfd465481, 0x1384, 0x11d0, 0xab, 0xbd, 0x0, 0x20, 0xaf, 0xdf, 0xd1, 0xa);")
+cpp_quote("")
+cpp_quote("// {C43DFC6F-62BB-11d2-A727-00C04F79E7C8}")
+cpp_quote("DEFINE_GUID(IID_IImnAccountManager2, 0xc43dfc6f, 0x62bb, 0x11d2, 0xa7, 0x27, 0x0, 0xc0, 0x4f, 0x79, 0xe7, 0xc8);")
+cpp_quote("")
+cpp_quote("// {FD465482-1384-11d0-ABBD-0020AFDFD10A}")
+cpp_quote("DEFINE_GUID(IID_IImnAccount, 0xfd465482, 0x1384, 0x11d0, 0xab, 0xbd, 0x0, 0x20, 0xaf, 0xdf, 0xd1, 0xa);")
+cpp_quote("")
+cpp_quote("// {FD465483-1384-11d0-ABBD-0020AFDFD10A}")
+cpp_quote("DEFINE_GUID(IID_IImnEnumAccounts, 0xfd465483, 0x1384, 0x11d0, 0xab, 0xbd, 0x0, 0x20, 0xaf, 0xdf, 0xd1, 0xa);")
+cpp_quote("")
+cpp_quote("// {8D0AED11-1638-11d0-81B9-00C04FD85AB4}")
+cpp_quote("DEFINE_GUID(IID_IImnAdviseMigrateServer, 0x8d0aed11, 0x1638, 0x11d0, 0x81, 0xb9, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("")
+cpp_quote("// {0A06BD31-166F-11d0-81B9-00C04FD85AB4}")
+cpp_quote("DEFINE_GUID(IID_IImnAdviseAccount, 0xa06bd31, 0x166f, 0x11d0, 0x81, 0xb9, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("")
+cpp_quote("#endif //!WIN16 || __cplusplus")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// Exported C Functions")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#if !defined(_IMNACCT_)")
+cpp_quote("#define IMNACCTAPI DECLSPEC_IMPORT HRESULT WINAPI")
+cpp_quote("#define IMNACCTAPI_(_type_) DECLSPEC_IMPORT _type_ WINAPI")
+cpp_quote("#else")
+cpp_quote("#define IMNACCTAPI HRESULT WINAPI")
+cpp_quote("#define IMNACCTAPI_(_type_) _type_ WINAPI")
+cpp_quote("#endif")
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("extern \"C\" {")
+cpp_quote("#endif")
+cpp_quote("")
+cpp_quote("IMNACCTAPI HrCreateAccountManager(IImnAccountManager **ppAccountManager);")
+cpp_quote("IMNACCTAPI ValidEmailAddress(LPSTR lpAddress);")
+cpp_quote("")
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("}")
+cpp_quote("#endif")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// Errors")
+cpp_quote("// --------------------------------------------------------------------------------")
+//;begin_internal
+//
+//  NOTE:  All inetcomm error codes must reside between CC00 and CFFF (a 1k block).
+//  This has been approved by Johann Posch (johannp)
+//  We further subdevide this range as follows:
+//      CC00-CCFF   IMNXPORT results
+//      CD00-CDFF   IMNACCT results
+//      CE00-CEFF   MIMEOLE results
+//      CF00-CFFF   undefined, do not use
+//  (t-erikne 03/24/97)
+//
+//;end_internal
+cpp_quote("#ifndef FACILITY_INTERNET")
+cpp_quote("#define FACILITY_INTERNET 12")
+cpp_quote("#endif")
+cpp_quote("#ifndef HR_E")
+cpp_quote("#define HR_E(n) MAKE_SCODE(SEVERITY_ERROR, FACILITY_INTERNET, n)")
+cpp_quote("#endif")
+cpp_quote("#ifndef HR_S")
+cpp_quote("#define HR_S(n) MAKE_SCODE(SEVERITY_SUCCESS, FACILITY_INTERNET, n)")
+cpp_quote("#endif")
+cpp_quote("#ifndef HR_CODE")
+cpp_quote("#define HR_CODE(hr) (INT)(hr & 0xffff)")
+cpp_quote("#endif")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// General Errors")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define E_RegCreateKeyFailed         HR_E(0xCD00)")
+cpp_quote("#define E_RegQueryInfoKeyFailed      HR_E(0xCD01)")
+cpp_quote("#define E_UserCancel                 HR_E(0xCD02)")
+cpp_quote("#define E_RegOpenKeyFailed           HR_E(0xCD03)")
+cpp_quote("#define E_RegSetValueFailed          HR_E(0xCD04)")
+cpp_quote("#define E_RegDeleteKeyFailed         HR_E(0xCD05)")
+cpp_quote("#define E_DuplicateAccountName       HR_E(0xCD06)")
+cpp_quote("#define S_NonStandardValue           HR_S(0xCD07)")
+cpp_quote("#define E_InvalidValue               HR_E(0xCD08)")
+cpp_quote("#define S_AlreadyInitialized         HR_S(0xCD09)")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// IPropertyContainer Errors")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define E_NoPropData                 HR_E(0xCDA0)")
+cpp_quote("#define E_BufferTooSmall             HR_E(0xCDA1)")
+cpp_quote("#define E_BadPropType                HR_E(0xCDA2)")
+cpp_quote("#define E_BufferSizeMismatch         HR_E(0xCDA3)")
+cpp_quote("#define E_InvalidBooleanValue        HR_E(0xCDA4)")
+cpp_quote("#define E_InvalidMinMaxValue         HR_E(0xCDA5)")
+cpp_quote("#define E_PropNotFound               HR_E(0xCDA6)")
+cpp_quote("#define E_InvalidPropTag             HR_E(0xCDA7)")
+cpp_quote("#define E_InvalidPropertySet         HR_E(0xCDA8)")
+cpp_quote("#define E_EnumFinished               HR_E(0xCDA9)") //N should be S_FALSE?
+cpp_quote("#define S_NoSaveNeeded               HR_S(0xCDAA)")
+cpp_quote("#define S_PasswordDeleted            HR_S(0xCDAB)")
+cpp_quote("#define S_PasswordNotFound           HR_S(0xCDAC)")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// ImnAccountManager errors")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define E_NoAccounts                 HR_E(0xCDD0)")
+cpp_quote("#define E_BadFriendlyName            HR_E(0xCDD1)")
+cpp_quote("#define E_NoIdentities               HR_E(0xCDD2)")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// RAS Connection Types")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define CF_AUTO_CONNECT          FLAG02 // Automatically connect")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// Property Macros")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define PROPTAG_MASK                 ((ULONG)0x0000FFFF)")
+cpp_quote("#define PROPTAG_TYPE(ulPropTag)	    (PROPTYPE)(((ULONG)(ulPropTag)) & PROPTAG_MASK)")
+cpp_quote("#define PROPTAG_ID(ulPropTag)		(((ULONG)(ulPropTag))>>16)")
+cpp_quote("#define PROPTAG(ulPropType,ulPropID)	((((ULONG)(ulPropID))<<16)|((ULONG)(ulPropType)))")
+cpp_quote("#define MAX_PROPID                   ((ULONG) 0xFFFF)")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// IImnAccount Properties")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define AP_FIRST                    0X1234")
+cpp_quote("// per account properties")
+cpp_quote("#define AP_ACCOUNT_NAME             PROPTAG(TYPE_STRING,    AP_FIRST+1)")
+cpp_quote("#define AP_ACCOUNT_FIRST            AP_ACCOUNT_NAME")
+cpp_quote("#define AP_TEMP_ACCOUNT             PROPTAG(TYPE_DWORD,     AP_FIRST+3)")
+cpp_quote("#define AP_LAST_UPDATED             PROPTAG(TYPE_FILETIME,  AP_FIRST+4)")
+cpp_quote("#define AP_RAS_CONNECTION_TYPE      PROPTAG(TYPE_DWORD,     AP_FIRST+5)")
+cpp_quote("#define AP_RAS_CONNECTOID           PROPTAG(TYPE_STRING,    AP_FIRST+6)")
+cpp_quote("#define AP_RAS_CONNECTION_FLAGS     PROPTAG(TYPE_DWORD,     AP_FIRST+7)")
+cpp_quote("#define AP_ACCOUNT_ID               PROPTAG(TYPE_STRING,    AP_FIRST+9)")
+cpp_quote("#define AP_RAS_BACKUP_CONNECTOID    PROPTAG(TYPE_STRING,    AP_FIRST+10)")
+cpp_quote("#define AP_SERVICE	               PROPTAG(TYPE_STRING,    AP_FIRST+11)")
+cpp_quote("#define AP_AVAIL_OFFLINE            PROPTAG(TYPE_DWORD,     AP_FIRST+12)")
+cpp_quote("#define AP_UNIQUE_ID                PROPTAG(TYPE_BINARY,    AP_FIRST+13)")
+cpp_quote("#define AP_SERVER_READ_ONLY         PROPTAG(TYPE_BOOL,      AP_FIRST+14)")
+cpp_quote("#define AP_ACCOUNT_LAST             AP_SERVER_READ_ONLY")
+cpp_quote("")
+cpp_quote("// IMAP properties")
+cpp_quote("#define AP_IMAP_SERVER              PROPTAG(TYPE_STRING,    AP_FIRST+100)")
+cpp_quote("#define AP_IMAP_FIRST               AP_IMAP_SERVER")
+cpp_quote("#define AP_IMAP_USERNAME            PROPTAG(TYPE_STRING,    AP_FIRST+101)")
+cpp_quote("#define AP_IMAP_PASSWORD            PROPTAG(TYPE_PASS,      AP_FIRST+102)")
+cpp_quote("#define AP_IMAP_USE_SICILY          PROPTAG(TYPE_BOOL,      AP_FIRST+104)")
+cpp_quote("#define AP_IMAP_PORT                PROPTAG(TYPE_DWORD,     AP_FIRST+105)")
+cpp_quote("#define AP_IMAP_SSL                 PROPTAG(TYPE_BOOL,      AP_FIRST+106)")
+cpp_quote("#define AP_IMAP_TIMEOUT             PROPTAG(TYPE_DWORD,     AP_FIRST+107)")
+cpp_quote("#define AP_IMAP_ROOT_FOLDER         PROPTAG(TYPE_STRING,    AP_FIRST+108)")
+cpp_quote("#define AP_IMAP_DATA_DIR            PROPTAG(TYPE_STRING,    AP_FIRST+109)")
+cpp_quote("#define AP_IMAP_USE_LSUB            PROPTAG(TYPE_BOOL,      AP_FIRST+111)")
+cpp_quote("#define AP_IMAP_POLL                PROPTAG(TYPE_BOOL,      AP_FIRST+112)")
+cpp_quote("#define AP_IMAP_FULL_LIST           PROPTAG(TYPE_BOOL,      AP_FIRST+113)")
+cpp_quote("#define AP_IMAP_NOOP_INTERVAL       PROPTAG(TYPE_DWORD,     AP_FIRST+114)")
+cpp_quote("#define AP_IMAP_SVRSPECIALFLDRS     PROPTAG(TYPE_BOOL,      AP_FIRST+116)")
+cpp_quote("#define AP_IMAP_SENTITEMSFLDR       PROPTAG(TYPE_STRING,    AP_FIRST+117)")
+cpp_quote("#define AP_IMAP_DRAFTSFLDR          PROPTAG(TYPE_STRING,    AP_FIRST+119)")
+cpp_quote("#define AP_IMAP_PROMPT_PASSWORD     PROPTAG(TYPE_BOOL,      AP_FIRST+124)")
+cpp_quote("#define AP_IMAP_DIRTY               PROPTAG(TYPE_DWORD,     AP_FIRST+125)")
+cpp_quote("#define AP_IMAP_POLL_ALL_FOLDERS    PROPTAG(TYPE_BOOL,      AP_FIRST+126)")
+cpp_quote("#define AP_IMAP_LAST                AP_IMAP_POLL_ALL_FOLDERS")
+cpp_quote("")
+cpp_quote("// LDAP properties")
+cpp_quote("#define AP_LDAP_SERVER              PROPTAG(TYPE_STRING,    AP_FIRST+200)")
+cpp_quote("#define AP_LDAP_FIRST               AP_LDAP_SERVER")
+cpp_quote("#define AP_LDAP_USERNAME            PROPTAG(TYPE_STRING,    AP_FIRST+201)")
+cpp_quote("#define AP_LDAP_PASSWORD            PROPTAG(TYPE_PASS,      AP_FIRST+202)")
+cpp_quote("#define AP_LDAP_AUTHENTICATION      PROPTAG(TYPE_DWORD,     AP_FIRST+203)")
+cpp_quote("#define AP_LDAP_TIMEOUT             PROPTAG(TYPE_DWORD,     AP_FIRST+204)")
+cpp_quote("#define AP_LDAP_SEARCH_RETURN       PROPTAG(TYPE_DWORD,     AP_FIRST+205)")
+cpp_quote("#define AP_LDAP_SEARCH_BASE         PROPTAG(TYPE_STRING,    AP_FIRST+206)")
+cpp_quote("#define AP_LDAP_SERVER_ID           PROPTAG(TYPE_DWORD,     AP_FIRST+207)")
+cpp_quote("#define AP_LDAP_RESOLVE_FLAG        PROPTAG(TYPE_DWORD,     AP_FIRST+208)")
+cpp_quote("#define AP_LDAP_URL                 PROPTAG(TYPE_STRING,    AP_FIRST+209)")
+cpp_quote("#define AP_LDAP_PORT                PROPTAG(TYPE_DWORD,     AP_FIRST+210)")
+cpp_quote("#define AP_LDAP_SSL                 PROPTAG(TYPE_BOOL,      AP_FIRST+211)")
+cpp_quote("#define AP_LDAP_LOGO                PROPTAG(TYPE_STRING,    AP_FIRST+212)")
+cpp_quote("#define AP_LDAP_USE_BIND_DN         PROPTAG(TYPE_DWORD,     AP_FIRST+213)")
+cpp_quote("#define AP_LDAP_SIMPLE_SEARCH       PROPTAG(TYPE_DWORD,     AP_FIRST+214)")
+cpp_quote("#define AP_LDAP_ADVANCED_SEARCH_ATTR PROPTAG(TYPE_STRING,   AP_FIRST+215)")
+cpp_quote("#define AP_LDAP_PAGED_RESULTS       PROPTAG(TYPE_DWORD,     AP_FIRST+216)")
+cpp_quote("#define AP_LDAP_NTDS                PROPTAG(TYPE_DWORD,     AP_FIRST+217)")
+cpp_quote("#define AP_LDAP_LAST                AP_LDAP_NTDS")
+cpp_quote("")
+cpp_quote("// HTTPMail properties")
+cpp_quote("#define AP_HTTPMAIL_SERVER           PROPTAG(TYPE_STRING,    AP_FIRST+250)")
+cpp_quote("#define AP_HTTPMAIL_FIRST            AP_HTTPMAIL_SERVER")
+cpp_quote("#define AP_HTTPMAIL_USERNAME         PROPTAG(TYPE_STRING,    AP_FIRST+251)")
+cpp_quote("#define AP_HTTPMAIL_PASSWORD         PROPTAG(TYPE_PASS,      AP_FIRST+252)")
+cpp_quote("#define AP_HTTPMAIL_PROMPT_PASSWORD  PROPTAG(TYPE_BOOL,      AP_FIRST+253)")
+cpp_quote("#define AP_HTTPMAIL_USE_SICILY       PROPTAG(TYPE_DWORD,     AP_FIRST+254)")
+cpp_quote("#define AP_HTTPMAIL_FRIENDLY_NAME    PROPTAG(TYPE_STRING,    AP_FIRST+255)")
+cpp_quote("#define AP_HTTPMAIL_DOMAIN_MSN       PROPTAG(TYPE_BOOL,      AP_FIRST+256)")
+cpp_quote("#define AP_HTTPMAIL_POLL             PROPTAG(TYPE_BOOL,      AP_FIRST+257)")
+cpp_quote("#define AP_HTTPMAIL_LAST             AP_HTTPMAIL_POLL")
+cpp_quote("")
+cpp_quote("// NNTP properties")
+cpp_quote("#define AP_NNTP_SERVER              PROPTAG(TYPE_STRING,    AP_FIRST+300)")
+cpp_quote("#define AP_NNTP_FIRST               AP_NNTP_SERVER")
+cpp_quote("#define AP_NNTP_USERNAME            PROPTAG(TYPE_STRING,    AP_FIRST+301)")
+cpp_quote("#define AP_NNTP_PASSWORD            PROPTAG(TYPE_PASS,      AP_FIRST+302)")
+cpp_quote("#define AP_NNTP_USE_SICILY          PROPTAG(TYPE_BOOL,      AP_FIRST+304)")
+cpp_quote("#define AP_NNTP_PORT                PROPTAG(TYPE_DWORD,     AP_FIRST+305)")
+cpp_quote("#define AP_NNTP_SSL                 PROPTAG(TYPE_BOOL,      AP_FIRST+306)")
+cpp_quote("#define AP_NNTP_TIMEOUT             PROPTAG(TYPE_DWORD,     AP_FIRST+307)")
+cpp_quote("#define AP_NNTP_DISPLAY_NAME        PROPTAG(TYPE_STRING,    AP_FIRST+308)")
+cpp_quote("#define AP_NNTP_ORG_NAME            PROPTAG(TYPE_STRING,    AP_FIRST+309)")
+cpp_quote("#define AP_NNTP_EMAIL_ADDRESS       PROPTAG(TYPE_STRING,    AP_FIRST+310)")
+cpp_quote("#define AP_NNTP_REPLY_EMAIL_ADDRESS PROPTAG(TYPE_STRING,    AP_FIRST+311)")
+cpp_quote("#define AP_NNTP_SPLIT_MESSAGES      PROPTAG(TYPE_BOOL,      AP_FIRST+312)")
+cpp_quote("#define AP_NNTP_SPLIT_SIZE          PROPTAG(TYPE_DWORD,     AP_FIRST+313)")
+cpp_quote("#define AP_NNTP_USE_DESCRIPTIONS    PROPTAG(TYPE_BOOL,      AP_FIRST+314)")
+cpp_quote("#define AP_NNTP_DATA_DIR            PROPTAG(TYPE_STRING,    AP_FIRST+315)")
+cpp_quote("#define AP_NNTP_POLL                PROPTAG(TYPE_BOOL,      AP_FIRST+316)")
+cpp_quote("#define AP_NNTP_POST_FORMAT         PROPTAG(TYPE_DWORD,     AP_FIRST+317)")
+cpp_quote("#define AP_NNTP_SIGNATURE           PROPTAG(TYPE_STRING,    AP_FIRST+318)")
+cpp_quote("#define AP_NNTP_PROMPT_PASSWORD     PROPTAG(TYPE_BOOL,      AP_FIRST+319)")
+cpp_quote("#define AP_NNTP_LAST                AP_NNTP_PROMPT_PASSWORD")
+cpp_quote("")
+cpp_quote("// POP3 properties")
+cpp_quote("#define AP_POP3_SERVER              PROPTAG(TYPE_STRING,    AP_FIRST+400)")
+cpp_quote("#define AP_POP3_FIRST               AP_POP3_SERVER")
+cpp_quote("#define AP_POP3_USERNAME            PROPTAG(TYPE_STRING,    AP_FIRST+401)")
+cpp_quote("#define AP_POP3_PASSWORD            PROPTAG(TYPE_PASS,      AP_FIRST+402)")
+cpp_quote("#define AP_POP3_USE_SICILY          PROPTAG(TYPE_BOOL,      AP_FIRST+404)")
+cpp_quote("#define AP_POP3_PORT                PROPTAG(TYPE_DWORD,     AP_FIRST+405)")
+cpp_quote("#define AP_POP3_SSL                 PROPTAG(TYPE_BOOL,      AP_FIRST+406)")
+cpp_quote("#define AP_POP3_TIMEOUT             PROPTAG(TYPE_DWORD,     AP_FIRST+407)")
+cpp_quote("#define AP_POP3_LEAVE_ON_SERVER     PROPTAG(TYPE_BOOL,      AP_FIRST+408)")
+cpp_quote("#define AP_POP3_REMOVE_DELETED      PROPTAG(TYPE_BOOL,      AP_FIRST+409)")
+cpp_quote("#define AP_POP3_REMOVE_EXPIRED      PROPTAG(TYPE_BOOL,      AP_FIRST+410)")
+cpp_quote("#define AP_POP3_EXPIRE_DAYS         PROPTAG(TYPE_DWORD,     AP_FIRST+411)")
+cpp_quote("#define AP_POP3_SKIP                PROPTAG(TYPE_BOOL,      AP_FIRST+412)")
+cpp_quote("#define AP_POP3_OUTLOOK_CACHE_NAME  PROPTAG(TYPE_STRING,    AP_FIRST+413)")
+cpp_quote("#define AP_POP3_PROMPT_PASSWORD     PROPTAG(TYPE_BOOL,      AP_FIRST+414)")
+cpp_quote("#define AP_POP3_LAST                AP_POP3_PROMPT_PASSWORD")
+cpp_quote("")
+cpp_quote("// SMTP properties")
+cpp_quote("#define AP_SMTP_SERVER              PROPTAG(TYPE_STRING,    AP_FIRST+500)")
+cpp_quote("#define AP_SMTP_FIRST               AP_SMTP_SERVER")
+cpp_quote("#define AP_SMTP_USERNAME            PROPTAG(TYPE_STRING,    AP_FIRST+501)")
+cpp_quote("#define AP_SMTP_PASSWORD            PROPTAG(TYPE_PASS,      AP_FIRST+502)")
+cpp_quote("#define AP_SMTP_USE_SICILY          PROPTAG(TYPE_DWORD,     AP_FIRST+504) // SMTPAUTHTYEP")
+cpp_quote("#define AP_SMTP_PORT                PROPTAG(TYPE_DWORD,     AP_FIRST+505)")
+cpp_quote("#define AP_SMTP_SSL                 PROPTAG(TYPE_BOOL,      AP_FIRST+506)")
+cpp_quote("#define AP_SMTP_TIMEOUT             PROPTAG(TYPE_DWORD,     AP_FIRST+507)")
+cpp_quote("#define AP_SMTP_DISPLAY_NAME        PROPTAG(TYPE_STRING,    AP_FIRST+508)")
+cpp_quote("#define AP_SMTP_ORG_NAME            PROPTAG(TYPE_STRING,    AP_FIRST+509)")
+cpp_quote("#define AP_SMTP_EMAIL_ADDRESS       PROPTAG(TYPE_STRING,    AP_FIRST+510)")
+cpp_quote("#define AP_SMTP_REPLY_EMAIL_ADDRESS PROPTAG(TYPE_STRING,    AP_FIRST+511)")
+cpp_quote("#define AP_SMTP_SPLIT_MESSAGES      PROPTAG(TYPE_BOOL,      AP_FIRST+512)")
+cpp_quote("#define AP_SMTP_SPLIT_SIZE          PROPTAG(TYPE_DWORD,     AP_FIRST+513)")
+cpp_quote("#define AP_SMTP_CERTIFICATE         PROPTAG(TYPE_BINARY,    AP_FIRST+514)")
+cpp_quote("#define AP_SMTP_SIGNATURE           PROPTAG(TYPE_STRING,    AP_FIRST+515)")
+cpp_quote("#define AP_SMTP_PROMPT_PASSWORD     PROPTAG(TYPE_BOOL,      AP_FIRST+516)")
+cpp_quote("#define AP_SMTP_LAST                AP_SMTP_PROMPT_PASSWORD")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// Account Flags")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define ACCT_FLAG_NEWS           ((DWORD)1)")
+cpp_quote("#define ACCT_FLAG_MAIL           ((DWORD)2)")
+cpp_quote("#define ACCT_FLAG_DIR_SERV       ((DWORD)4)")
+cpp_quote("#define ACCT_FLAG_ALL            (ACCT_FLAG_NEWS | ACCT_FLAG_MAIL | ACCT_FLAG_DIR_SERV)")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// Server Types")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define SRV_NNTP                 ((DWORD)1)")
+cpp_quote("#define SRV_IMAP                 ((DWORD)2)")
+cpp_quote("#define SRV_POP3                 ((DWORD)4)")
+cpp_quote("#define SRV_SMTP                 ((DWORD)8)")
+cpp_quote("#define SRV_LDAP                 ((DWORD)16)")
+cpp_quote("#define SRV_HTTPMAIL             ((DWORD)32)")
+cpp_quote("#define SRV_MAIL                 ((DWORD)(SRV_IMAP | SRV_POP3 | SRV_SMTP | SRV_HTTPMAIL))")
+cpp_quote("#define SRV_ALL                  ((DWORD)(SRV_NNTP | SRV_IMAP | SRV_POP3 | SRV_SMTP | SRV_LDAP | SRV_HTTPMAIL))")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// LDAP Authentication Types")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define LDAP_AUTH_ANONYMOUS      ((DWORD)0)")
+cpp_quote("#define LDAP_AUTH_PASSWORD       ((DWORD)1)")
+cpp_quote("#define LDAP_AUTH_MEMBER_SYSTEM  ((DWORD)2)")
+cpp_quote("#define LDAP_AUTH_MAX            ((DWORD)2)")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// LDAP Paged Result Support Types")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define LDAP_PRESULT_UNKNOWN         ((DWORD)0)")
+cpp_quote("#define LDAP_PRESULT_SUPPORTED       ((DWORD)1)")
+cpp_quote("#define LDAP_PRESULT_NOTSUPPORTED    ((DWORD)2)")
+cpp_quote("#define LDAP_PRESULT_MAX             ((DWORD)2)")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// LDAP NTDS Types")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define LDAP_NTDS_UNKNOWN      ((DWORD)0)")
+cpp_quote("#define LDAP_NTDS_IS           ((DWORD)1)")
+cpp_quote("#define LDAP_NTDS_ISNOT        ((DWORD)2)")
+cpp_quote("#define LDAP_NTDS_MAX          ((DWORD)2)")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// AP_NNTP_POST_FORMAT types")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define POST_USE_DEFAULT         ((DWORD)0)")
+cpp_quote("#define POST_USE_PLAIN_TEXT      ((DWORD)1)")
+cpp_quote("#define POST_USE_HTML            ((DWORD)2)")
+cpp_quote("")
+cpp_quote("// -----------------------------------------------------------------------------")
+cpp_quote("// Account Manager Notification Types")
+cpp_quote("// -----------------------------------------------------------------------------")
+cpp_quote("#define AN_ACCOUNT_DELETED           WM_USER + 1")
+cpp_quote("#define AN_ACCOUNT_ADDED             WM_USER + 2")
+cpp_quote("#define AN_ACCOUNT_CHANGED           WM_USER + 3")
+cpp_quote("#define AN_DEFAULT_CHANGED           WM_USER + 4")
+cpp_quote("#define AN_SERVERTYPES_CHANGED       WM_USER + 5")
+cpp_quote("#define AN_ACCOUNT_PREDELETE         WM_USER + 6")
+cpp_quote("")
+cpp_quote("// IImnAccountManager::AccountListDialog flags")
+cpp_quote("// IImnAccount::ShowProperties flags")
+cpp_quote("#define ACCTDLG_NO_IMAP          0x0001")
+cpp_quote("#define ACCTDLG_NO_REMOVEDELETE  0x0002")
+cpp_quote("#define ACCTDLG_NO_BREAKMESSAGES 0x0004")
+cpp_quote("#define ACCTDLG_NO_REMOVEAFTER   0x0008")
+cpp_quote("#define ACCTDLG_NO_SENDRECEIVE   0x0010")
+cpp_quote("#define ACCTDLG_NO_NEWSPOLL      0x0020")
+cpp_quote("#define ACCTDLG_NO_SECURITY      0x0040")
+cpp_quote("#define ACCTDLG_BACKUP_CONNECT   0x0080")
+cpp_quote("#define ACCTDLG_NO_IMAPPOLL      0x0100")
+cpp_quote("#define ACCTDLG_NO_NEW_POP       0x0200")
+cpp_quote("#define ACCTDLG_SHOWIMAPSPECIAL  0x0400")
+cpp_quote("#define ACCTDLG_INTERNETCONNECTION   0x0800")
+cpp_quote("#define ACCTDLG_HTTPMAIL             0x1000")
+cpp_quote("#define ACCTDLG_REVOCATION           0x2000")
+cpp_quote("#define ACCTDLG_OE                   0x4000")
+cpp_quote("#define ACCTDLG_ALL                  0x7fff")
+cpp_quote("")
+cpp_quote("// AP_RAS_CONNECTION_TYPE            values")
+cpp_quote("#define CONNECTION_TYPE_LAN               0")
+cpp_quote("#define CONNECTION_TYPE_MANUAL            1")
+cpp_quote("#define CONNECTION_TYPE_RAS               2")
+cpp_quote("#define CONNECTION_TYPE_INETSETTINGS      3")
+cpp_quote("")
+cpp_quote("// IImnAccount::DoWizard flags")
+cpp_quote("#define ACCT_WIZ_MIGRATE             0x0001")
+cpp_quote("#define ACCT_WIZ_MAILIMPORT          0x0002")
+cpp_quote("#define ACCT_WIZ_OUTLOOK             0x0004")
+cpp_quote("#define ACCT_WIZ_NEWSIMPORT          0x0008")
+cpp_quote("#define ACCT_WIZ_NO_NEW_POP          0x0010")
+cpp_quote("#define ACCT_WIZ_INTERNETCONNECTION  0x0020")
+cpp_quote("#define ACCT_WIZ_HTTPMAIL            0x0040")
+cpp_quote("#define ACCT_WIZ_OE                  0x0080")
+cpp_quote("")
+cpp_quote("// IImnAccount::InitEx flags")
+cpp_quote("#define ACCT_INIT_ATHENA         0x0001")
+cpp_quote("#define ACCT_INIT_OUTLOOK        0x0002")
+cpp_quote("")
+cpp_quote(" // AP_IMAP_DIRTY flags")
+cpp_quote("#define IMAP_FLDRLIST_DIRTY      0x0001")
+cpp_quote("#define IMAP_OE4MIGRATE_DIRTY    0x0002")
+cpp_quote("#define IMAP_SENTITEMS_DIRTY     0x0004")
+cpp_quote("#define IMAP_DRAFTS_DIRTY        0x0008")
+
+
+
+
+// --------------------------------------------------------------------------------
+// SMTP Authentication Types
+// --------------------------------------------------------------------------------
+typedef enum tagSMTPAUTHTYPE {
+    SMTP_AUTH_NONE,
+    SMTP_AUTH_SICILY,
+    SMTP_AUTH_USE_POP3ORIMAP_SETTINGS,
+    SMTP_AUTH_USE_SMTP_SETTINGS,
+} SMTPAUTHTYPE;
+
+// --------------------------------------------------------------------------------
+// String Lengths
+// --------------------------------------------------------------------------------
+const SHORT CCHMAX_ORG_NAME         = 256;
+const SHORT CCHMAX_DISPLAY_NAME     = 256;
+const SHORT CCHMAX_ACCOUNT_NAME     = 256;
+const SHORT CCHMAX_SERVER_NAME      = 256;
+const SHORT CCHMAX_PASSWORD         = 256;
+const SHORT CCHMAX_USERNAME         = 256;
+const SHORT CCHMAX_EMAIL_ADDRESS    = 256;
+const SHORT CCHMAX_CONNECTOID       = 256;
+const SHORT CCHMAX_SEARCH_BASE      = 256;
+const SHORT CCHMAX_ROOT_FOLDER      = 256;
+const SHORT CCHMAX_SIGNATURE        = 16;
+const SHORT CCHMAX_SERVICE          = 256;
+
+// --------------------------------------------------------------------------------
+// IImnAdviseAccount
+// --------------------------------------------------------------------------------
+[
+    object,
+    uuid(0A06BD31-166F-11d0-81B9-00C04FD85AB4),
+    pointer_default(unique)
+]
+interface IImnAdviseAccount : IUnknown
+{
+    import "unknwn.idl";
+
+    typedef enum {
+
+	ACCT_NEWS = 0,
+	ACCT_MAIL,
+	ACCT_DIR_SERV,
+	ACCT_LAST
+
+	} ACCTTYPE;
+
+    typedef struct tagAccountContext
+	{
+	ACCTTYPE                AcctType;
+	LPSTR                   pszAccountID;
+	LPSTR           pszOldName; // set if name changes or account deleted
+	DWORD                   dwServerType;
+	} ACTX;
+
+    HRESULT AdviseAccount(
+		[in]   DWORD            dwAdviseType,
+		[in]   ACTX            *pAcctCtx);
+}
+
+// --------------------------------------------------------------------------------
+// IImnAdviseMigrateServer
+// --------------------------------------------------------------------------------
+[
+    object,
+    uuid(8D0AED11-1638-11d0-81B9-00C04FD85AB4),
+    pointer_default(unique)
+]
+interface IImnAdviseMigrateServer : IUnknown
+{
+    import "unknwn.idl";
+
+    HRESULT MigrateServer(
+		[in]   DWORD            dwSrvType,
+		[in]   IImnAccount      *pAccount);
+}
+
+// --------------------------------------------------------------------------------
+// IImnEnumAccounts
+// --------------------------------------------------------------------------------
+[
+    object,
+    uuid(FD465483-1384-11d0-ABBD-0020AFDFD10A),
+    pointer_default(unique)
+]
+interface IImnEnumAccounts : IUnknown
+{
+    import "unknwn.idl";
+
+    HRESULT GetCount(
+		[out]   ULONG           *pcItems);
+
+    HRESULT SortByAccountName(void);
+
+    HRESULT GetNext(
+		[out]   IImnAccount     **ppAccount);
+
+    HRESULT Reset(void);
+}
+
+// --------------------------------------------------------------------------------
+// IImnAccountManager
+// --------------------------------------------------------------------------------
+[
+    object,
+    uuid(FD465481-1384-11d0-ABBD-0020AFDFD10A),
+    pointer_default(unique)
+]
+interface IImnAccountManager : IUnknown
+{
+    import "unknwn.idl";
+
+    typedef struct tagACCTLISTINFO
+	{
+	DWORD       cbSize;
+	ACCTTYPE    AcctTypeInit;
+	DWORD       dwAcctFlags;
+	DWORD       dwFlags;
+	} ACCTLISTINFO;
+
+    HRESULT Init(
+		[in]    IImnAdviseMigrateServer *pAdviseMigrateServer);
+
+    HRESULT CreateAccountObject(
+		[in]    ACCTTYPE            AcctType,
+		[out]   IImnAccount         **ppAccount);
+
+    HRESULT Enumerate(
+		[in]    DWORD               dwSrvTypes,
+		[out]   IImnEnumAccounts    **ppEnumAccounts);
+
+    HRESULT GetAccountCount(
+		[in]    ACCTTYPE            AcctType,
+		[out]   ULONG               *pcServers);
+
+    HRESULT FindAccount(
+		[in]    DWORD               dwPropTag,
+		[in]    LPCSTR              pszSearchData,
+		[out]   IImnAccount         **ppAccount);
+
+    HRESULT GetDefaultAccount(
+		[in]    ACCTTYPE            AcctType,
+		[out]   IImnAccount         **ppAccount);
+
+    HRESULT GetDefaultAccountName(
+		[in]    ACCTTYPE            AcctType,
+		[in,ref]LPSTR               pszAccount,
+		[in]    ULONG               cchMax);
+
+    HRESULT ProcessNotification(
+		[in]    UINT                uMsg,
+		[in]    WPARAM              wParam,
+		[in]    LPARAM              lParam);
+
+    HRESULT ValidateDefaultSendAccount(void);
+
+    HRESULT AccountListDialog(
+		[in]    HWND                hwnd,
+		[in]    ACCTLISTINFO        *pinfo);
+
+    HRESULT Advise(
+		[in]    IImnAdviseAccount   *pAdviseAccount,
+		[out]   DWORD               *pdwConnection);
+
+    HRESULT Unadvise(
+		[in]    DWORD               dwConnection);
+
+    HRESULT GetUniqueAccountName(
+		[in]    LPSTR               szName,
+		[in]    UINT                cch);
+
+    HRESULT InitEx(
+		[in]    IImnAdviseMigrateServer *pAdviseMigrateServer,
+				[in]    DWORD                           dwFlags);
+}
+
+// --------------------------------------------------------------------------------
+// IImnAccountManager2
+// --------------------------------------------------------------------------------
+[
+    object,
+    uuid(C43DFC6F-62BB-11d2-A727-00C04F79E7C8),
+    pointer_default(unique)
+]
+interface IImnAccountManager2 : IImnAccountManager
+{
+    import "unknwn.idl";
+
+    HRESULT InitUser(
+		[in]    IImnAdviseMigrateServer *pAdviseMigrateServer,
+		[in]    REFGUID             rguidID,
+			[in]    DWORD                   dwFlags);
+
+    HRESULT GetIncompleteAccount(
+		[in]    ACCTTYPE            AcctType,
+		[in,ref]LPSTR               pszAccountId,
+		[in]    ULONG               cchMax);
+
+    HRESULT SetIncompleteAccount(
+		[in]    ACCTTYPE            AcctType,
+		[in]    LPCSTR              pszAccountId);
+}
+
+// --------------------------------------------------------------------------------
+// IPropertyContainer
+// --------------------------------------------------------------------------------
+[
+    object,
+    uuid(FD465484-1384-11d0-ABBD-0020AFDFD10A),
+    pointer_default(unique)
+]
+interface IPropertyContainer : IUnknown
+{
+    import "unknwn.idl";
+
+    typedef enum {
+
+	TYPE_ERROR = 1000,     // Unknown data type - or data type is in error
+	TYPE_DWORD,     // Unsigned 32 bit value
+	TYPE_LONG,      // Signed 32 bit value
+	TYPE_WORD,      // Unsigned 16 bit value
+	TYPE_SHORT,     // Signed 16 bit value
+	TYPE_BYTE,      // Unsigned 8 bit value
+	TYPE_CHAR,      // Signed 8 bit value
+	TYPE_FILETIME,  // FILETIME stucture
+	TYPE_STRING,    // Fixed-length null-term string
+	TYPE_BINARY,    // Fixed-length binary data
+	TYPE_FLAGS,     // Flags fields
+	TYPE_STREAM,    // Stream data type
+	TYPE_WSTRING,   // UNICODE fixed-length null-term string
+	TYPE_BOOL,      // BOOL checked to be equal to 1 or 0
+	TYPE_PASS,      // Neeto burrito password mosquito
+	TYPE_LAST
+
+    } PROPTYPE;
+
+    HRESULT GetProp(
+		    [in]            DWORD       dwPropTag,
+		    [in,size_is(*pcb),ref] BYTE *pb,
+		    [in]            ULONG       *pcb);
+
+    HRESULT GetPropDw(
+		    [in]            DWORD       dwPropTag,
+		    [out]           DWORD       *pdw);
+
+    HRESULT GetPropSz(
+		    [in]            DWORD       dwPropTag,
+		    [in,ref]        LPSTR       psz,
+		    [in]            ULONG       cchMax);
+
+    HRESULT SetProp(
+		    [in]            DWORD       dwPropTag,
+		    [in,size_is(cb)] BYTE       *pb,
+		    [in]            ULONG       cb);
+
+    HRESULT SetPropDw(
+		    [in]            DWORD       dwPropTag,
+		    [in]            DWORD       dw);
+
+    HRESULT SetPropSz(
+		    [in]            DWORD       dwPropTag,
+		    [in]            LPSTR       psz);
+}
+
+// --------------------------------------------------------------------------------
+// IImnAccount
+// --------------------------------------------------------------------------------
+[
+    object,
+    uuid(FD465482-1384-11d0-ABBD-0020AFDFD10A),
+    pointer_default(unique)
+]
+interface IImnAccount : IPropertyContainer
+{
+    import "unknwn.idl";
+
+    HRESULT Exist(void);
+    HRESULT SetAsDefault(void);
+    HRESULT Delete(void);
+    HRESULT SaveChanges(void);
+
+    HRESULT GetAccountType(
+		    [out]           ACCTTYPE    *pAcctType);
+    HRESULT GetServerTypes(
+		    [out]           DWORD       *pdwSrvTypes);
+
+    HRESULT ShowProperties(
+		    [in]            HWND        hwnd,
+		    [in]            DWORD       dwFlags);
+
+    HRESULT ValidateProperty(
+		    [in]            DWORD       dwPropTag,
+		    [in,size_is(cb)] BYTE       *pb,
+		    [in]            ULONG       cb);
+
+    HRESULT DoWizard(
+		    [in]            HWND        hwnd,
+		    [in]            DWORD       dwFlags);
+
+    HRESULT DoImportWizard(
+		    [in]            HWND        hwnd,
+		    [in]            CLSID       clsid,
+		    [in]            DWORD       dwFlags);
+}
+
+//
+// This definition is for C files in 16bit WAB, because of two reasons:
+//
+// 1. IID definitions generated by MIDL is not compatible with 16bit DEFINE_GUID
+// 2. DEFINE_GUID should be placed LATER than the declaration generated by MIDL
+//
+cpp_quote("#if defined( WIN16 ) && !defined( __cplusplus )")
+cpp_quote("// {8D4B04E1-1331-11d0-81B8-00C04FD85AB4}")
+cpp_quote("EXTERN_C const IID CLSID_ImnAccountManager =")
+cpp_quote("    { 0x8d4b04e1, 0x1331, 0x11d0, { 0x81, 0xb8, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4 } };")
+cpp_quote("")
+cpp_quote("// {FD465484-1384-11d0-ABBD-0020AFDFD10A}")
+cpp_quote("EXTERN_C const IID IID_IPropertyContainer =")
+cpp_quote("    { 0xfd465484, 0x1384, 0x11d0, { 0xab, 0xbd, 0x0, 0x20, 0xaf, 0xdf, 0xd1, 0xa } };")
+cpp_quote("")
+cpp_quote("// {FD465481-1384-11d0-ABBD-0020AFDFD10A}")
+cpp_quote("EXTERN_C const IID IID_IImnAccountManager =")
+cpp_quote("    { 0xfd465481, 0x1384, 0x11d0, { 0xab, 0xbd, 0x0, 0x20, 0xaf, 0xdf, 0xd1, 0xa } };")
+cpp_quote("")
+cpp_quote("// {C43DFC6F-62BB-11d2-A727-00C04F79E7C8}")
+cpp_quote("EXTERN_C const IID IID_IImnAccountManager2 =")
+cpp_quote("    { 0xc43dfc6f, 0x62bb, 0x11d2, { 0xa7, 0x27, 0x0, 0xc0, 0x4f, 0x79, 0xe7, 0xc8 } };")
+cpp_quote("")
+cpp_quote("// {FD465482-1384-11d0-ABBD-0020AFDFD10A}")
+cpp_quote("EXTERN_C const IID IID_IImnAccount =")
+cpp_quote("    { 0xfd465482, 0x1384, 0x11d0, { 0xab, 0xbd, 0x0, 0x20, 0xaf, 0xdf, 0xd1, 0xa } };")
+cpp_quote("")
+cpp_quote("// {FD465483-1384-11d0-ABBD-0020AFDFD10A}")
+cpp_quote("EXTERN_C const IID IID_IImnEnumAccounts =")
+cpp_quote("    { 0xfd465483, 0x1384, 0x11d0, { 0xab, 0xbd, 0x0, 0x20, 0xaf, 0xdf, 0xd1, 0xa } };")
+cpp_quote("")
+cpp_quote("// {8D0AED11-1638-11d0-81B9-00C04FD85AB4}")
+cpp_quote("EXTERN_C const IID IID_IImnAdviseMigrateServer =")
+cpp_quote("    { 0x8d0aed11, 0x1638, 0x11d0, { 0x81, 0xb9, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4 } };")
+cpp_quote("")
+cpp_quote("// {0A06BD31-166F-11d0-81B9-00C04FD85AB4}")
+cpp_quote("EXTERN_C const IID IID_IImnAdviseAccount =")
+cpp_quote("    { 0xa06bd31, 0x166f, 0x11d0, { 0x81, 0xb9, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4 } };")
+cpp_quote("")
+cpp_quote("#endif //WIN16 && !__cplusplus")

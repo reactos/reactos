@@ -1,0 +1,96 @@
+
+
+RES_DLG_PAGE_TITLE DIALOG DISCARDABLE  6, 18, 226, 117
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Page Setup"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Headers and Footers",-1,9,6,206,81,WS_GROUP
+    LTEXT           "&Headers:",-1,22,21,35,10
+    EDITTEXT        RES_DLG_PAGE_LH,22,31,170,14,
+                                        ES_AUTOHSCROLL | WS_TABSTOP | WS_GROUP
+    LTEXT           "&Footers:",-1,23,52,65,10
+    EDITTEXT        RES_DLG_PAGE_LF,22,62,170,14,
+                                        ES_AUTOHSCROLL | WS_TABSTOP | WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,111,96,50,14,WS_TABSTOP
+    PUSHBUTTON      "Cancel",IDCANCEL,165,96,50,14, WS_TABSTOP
+// BUGBUG We need to have a help procedure here.
+//    DEFPUSHBUTTON   "OK",IDOK,58,96,50,14,WS_TABSTOP
+//    PUSHBUTTON      "Cancel",IDCANCEL,111,96,50,14, WS_TABSTOP
+//    PUSHBUTTON      "&Help",RES_DLG_PAGE_HELP,165,96,50,14, WS_TABSTOP
+END
+
+
+RES_DLG_PAGE_SETUP DIALOG DISCARDABLE  32, 32, 240, 240
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Page Setup"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",RES_DLG_RCT1,"PageSampleWnd",SS_WHITERECT | WS_GROUP,80,8,80,80
+    CONTROL         "",RES_DLG_RCT2,"PageSampleGrayWnd",SS_GRAYRECT | WS_GROUP,160,12,4,80
+    CONTROL         "",RES_DLG_RCT3,"PageSampleGrayWnd",SS_GRAYRECT | WS_GROUP,84,88,80,4
+    // CONTROL         "",RES_DLG_RCT1,"Static",SS_WHITERECT | WS_GROUP,80,8,80,80
+    // CONTROL         "",RES_DLG_RCT2,"Static",SS_GRAYRECT | WS_GROUP,160,12,4,80
+    // CONTROL         "",RES_DLG_RCT3,"Static",SS_GRAYRECT | WS_GROUP,84,88,80,4
+    GROUPBOX        "Paper",-1,8,96,224,56,WS_GROUP
+    LTEXT           "Si&ze:",-1,16,112,36,8
+    COMBOBOX        RES_DLG_PAGE_COMBO1,64,110,160,100,
+                                        CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Source:",-1,16,132,36,8
+    COMBOBOX        RES_DLG_PAGE_COMBO2,64,130,160,100,
+                                        CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Orientation",-1,8,156,64,56,WS_GROUP
+    CONTROL         "P&ortrait",RES_DLG_PAGE_PORTRAIT,
+                                        "Button",BS_AUTORADIOBUTTON | WS_GROUP |
+                    WS_TABSTOP,16,170,52,12
+    CONTROL         "L&andscape",RES_DLG_PAGE_LANDSCAPE,
+                                        "Button",BS_AUTORADIOBUTTON,16,190,52,
+                    12
+    GROUPBOX        "Margins",-1,80,156,152,56,WS_GROUP
+    LTEXT           "&Left:",-1,88,172,32,8
+    EDITTEXT        RES_DLG_PAGE_LEFT,120,170,28,12,WS_GROUP
+    LTEXT           "&Right:",-1,164,172,32,8
+    EDITTEXT        RES_DLG_PAGE_RIGHT,196,170,28,12,WS_GROUP
+    LTEXT           "&Top:",-1,88,192,32,8
+    EDITTEXT        RES_DLG_PAGE_TOP,120,190,28,12,WS_GROUP
+    LTEXT           "&Bottom:",-1,164,192,32,8
+    EDITTEXT        RES_DLG_PAGE_BOTTOM,196,190,28,12,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,28,220,48,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,80,220,48,14
+    PUSHBUTTON      "&Headers...",RES_DLG_PAGE_HEADER,132,220,48,14
+    PUSHBUTTON      "&Printer...",RES_DLG_PAGE_PRINTER,184,220,48,14
+END
+
+
+RES_DLG_PAGE_PRNSETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE 30, 23, 287, 74
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Print Setup"
+FONT 8, "Helv"
+BEGIN
+  GROUPBOX      "Printer", grp3, 4, 6, 224, 66
+  LTEXT         "(No Default Printer)", stc1, 18, 30, 208, 9
+  RADIOBUTTON   "&Default Printer", rad3, 8, 16, 218, 12, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "Specific &Printer:", rad4, 8, 42, 218, 12
+  COMBOBOX      cmb1, 18, 56, 208, 80, CBS_DROPDOWNLIST | WS_GROUP |
+                WS_BORDER | WS_VSCROLL
+  // GROUPBOX      "Orientation", grp1, 4, 74, 91, 46
+  // ICON          "", ico1, 12, 92, 24, 16
+  // RADIOBUTTON   "Po&rtrait", rad1, 40, 86, 53, 12, WS_GROUP | WS_TABSTOP
+  // RADIOBUTTON   "&Landscape", rad2, 40, 102, 53, 12
+  // GROUPBOX      "Paper", grp2, 100, 74, 128, 46, WS_GROUP
+  // LTEXT         "Si&ze:", stc2, 104, 88, 26, 9
+  // COMBOBOX      cmb2, 134, 86, 92, 80, CBS_DROPDOWNLIST | WS_BORDER |
+                WS_VSCROLL | WS_TABSTOP
+  // LTEXT         "&Source:", stc3, 104, 104, 28, 9
+  // COMBOBOX      cmb3, 134, 102, 92, 80, CBS_DROPDOWNLIST | WS_BORDER |
+                WS_VSCROLL | WS_TABSTOP
+  DEFPUSHBUTTON "OK", IDOK, 232, 4, 50, 14, WS_GROUP
+  PUSHBUTTON    "Cancel", IDCANCEL, 232, 20, 50, 14, WS_GROUP
+  PUSHBUTTON    "&Options...", psh1, 232, 40, 50, 14, WS_GROUP
+  PUSHBUTTON    "&Help", pshHelp, 232, 56, 50, 14, WS_GROUP
+END
+
+
+

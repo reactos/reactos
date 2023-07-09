@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdaze
+
+TARGETNAME=kbdaze
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdaze.c kbdaze.rc
+
+NTTARGETFILE0=kbdaze.h kbdaze.rc kbdaze.def

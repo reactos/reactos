@@ -1,0 +1,116 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Reg]
+AddReg=Webcheck.Reg
+DelReg=Webcheck.DeleteKeys
+
+[UnReg]
+DelReg=Webcheck.Reg
+DelReg=Webcheck.Garbage
+
+[Webcheck.Reg] ;*************************************************
+
+HKCR,CLSID\%CLSID_WebCheck%,,,"%DESC_WebCheck%"
+HKCR,CLSID\%CLSID_WebCheck%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_WebCheck%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"%APPROVED_SHELLEXT%","%CLSID_WebCheck%",,"%DESC_WebCheck%"
+
+HKCR,CLSID\%CLSID_SubscriptionMgr%,,,"%DESC_SubscriptionMgr%"
+HKCR,CLSID\%CLSID_SubscriptionMgr%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_SubscriptionMgr%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"%APPROVED_SHELLEXT%","%CLSID_SubscriptionMgr%",,"%DESC_SubscriptionMgr%"
+
+HKCR,CLSID\%CLSID_SubscriptionFolder%,,,"%DESC_SubscriptionFolder%"
+HKCR,CLSID\%CLSID_SubscriptionFolder%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_SubscriptionFolder%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_SubscriptionFolder%\DefaultIcon,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_SubscriptionFolder%\ShellFolder,"Attributes",1,04,01,00,00
+HKLM,"%APPROVED_SHELLEXT%","%CLSID_SubscriptionFolder%",,"%DESC_SubscriptionFolder%"
+
+HKCR,CLSID\%CLSID_WebCheckWebCrawler%,,,"%DESC_WebCheckWebCrawler%"
+HKCR,CLSID\%CLSID_WebCheckWebCrawler%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_WebCheckWebCrawler%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"%APPROVED_SHELLEXT%","%CLSID_WebCheckWebCrawler%",,"%DESC_WebCheckWebCrawler%"
+
+HKCR,CLSID\%CLSID_WebCheckChannelAgent%,,,"%DESC_WebCheckChannelAgent%"
+HKCR,CLSID\%CLSID_WebCheckChannelAgent%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_WebCheckChannelAgent%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"%APPROVED_SHELLEXT%","%CLSID_WebCheckChannelAgent%",,"%DESC_WebCheckChannelAgent%"
+
+HKCR,CLSID\%CLSID_TrayAgent%,,,"%DESC_TrayAgent%"
+HKCR,CLSID\%CLSID_TrayAgent%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_TrayAgent%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"%APPROVED_SHELLEXT%","%CLSID_TrayAgent%",,"%DESC_TrayAgent%"
+
+HKCR,CLSID\%CLSID_CDLAgent%,,,"%DESC_CDLAgent%"
+HKCR,CLSID\%CLSID_CDLAgent%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CDLAgent%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"%APPROVED_SHELLEXT%","%CLSID_CDLAgent%",,"%DESC_CDLAgent%"
+
+HKCR,CLSID\%CLSID_ConnectionAgent%,,,"%DESC_ConnectionAgent%"
+HKCR,CLSID\%CLSID_ConnectionAgent%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_ConnectionAgent%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"%APPROVED_SHELLEXT%","%CLSID_ConnectionAgent%",,"%DESC_ConnectionAgent%"
+
+HKCR,CLSID\%CLSID_PostAgent%,,,"%DESC_PostAgent%"
+HKCR,CLSID\%CLSID_PostAgent%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_PostAgent%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"%APPROVED_SHELLEXT%","%CLSID_PostAgent%",,"%DESC_PostAgent%"
+
+HKCR,CLSID\%CLSID_OfflineSync%,,,"%DESC_OfflineSync%"
+HKCR,CLSID\%CLSID_OfflineSync%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_OfflineSync%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"%APPROVED_SHELLEXT%","%CLSID_OfflineSync%",,"%DESC_OfflineSync%"
+
+HKLM,%SHELL_LOAD%,"WebCheck",,%CLSID_WebCheck%
+
+HKLM,%SYNCMGR_PATH%\%CLSID_OfflineSync%,,,"%DESC_OfflineSync%"
+
+HKLM,%WEBCHECK_PATH%,"LoadSens",,"auto"
+HKLM,%WEBCHECK_PATH%,"LoadLCE",,"auto"
+
+[Webcheck.DeleteKeys]
+HKCR,InternetShortcut\ShellEx\PropertySheetHandlers\%CLSID_SubscriptionMgr%
+;TODO: whack this before we ship it's temporary:
+HKCU,%WEBCHECK_PATH%\Store.0
+
+[Webcheck.Garbage] ;*************************************************
+
+HKLM,%WEBCHECK_PATH%
+HKCU,%WEBCHECK_PATH%
+
+[Strings] ;*************************************************
+
+CLSID_WebCheck="{E6FB5E20-DE35-11CF-9C87-00AA005127ED}"
+CLSID_WebCheckWebCrawler="{08165EA0-E946-11CF-9C87-00AA005127ED}"
+CLSID_WebCheckChannelAgent="{E3A8BDE6-ABCE-11d0-BC4B-00C04FD929DB}"
+CLSID_ConnectionAgent="{E6CC6978-6B6E-11D0-BECA-00C04FD940BE}"
+CLSID_TrayAgent="{E8BB6DC0-6B4E-11d0-92DB-00A0C90C2BD7}"
+CLSID_PostAgent="{D8BD2030-6FC9-11D0-864F-00AA006809D9}"
+CLSID_CDLAgent="{7D559C10-9FE9-11d0-93F7-00AA0059CE02}"
+CLSID_OfflineSync="{7FC0B86E-5FA7-11d1-BC7C-00C04FD929DB}"
+CLSID_SubscriptionFolder="{F5175861-2688-11d0-9C5E-00AA00A45957}"
+CLSID_SubscriptionMgr="{ABBE31D0-6DAE-11D0-BECA-00C04FD940BE}"
+
+; Do not Localize
+DESC_WebCheck="WebCheck"
+DESC_SubscriptionMgr="Subscription Mgr"
+DESC_SubscriptionFolder="Subscription Folder"
+DESC_WebCheckWebCrawler="WebCheckWebCrawler"
+DESC_WebCheckChannelAgent="WebCheckChannelAgent"
+DESC_TrayAgent="TrayAgent"
+DESC_CDLAgent="Code Download Agent"
+DESC_ConnectionAgent="ConnectionAgent"
+DESC_PostAgent="PostAgent"
+DESC_OfflineSync="WebCheck SyncMgr Handler"
+
+NOTFMGR_PATH="Software\Microsoft\Windows\CurrentVersion\NotificationMgr"
+WEBCHECK_PATH="Software\Microsoft\Windows\CurrentVersion\WebCheck"
+SHELL_LOAD="Software\Microsoft\Windows\CurrentVersion\ShellServiceObjectDelayLoad"
+LOGCONTROL="Software\Microsoft\Windows\CurrentVersion\WebCheck\Log"
+APPROVED_SHELLEXT="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"
+SYNCMGR_PATH="Software\Microsoft\Windows\CurrentVersion\SyncMgr\Handlers"
+
+
+[End]

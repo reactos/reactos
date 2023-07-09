@@ -1,0 +1,63 @@
+--------------------Configuration: Extensions - Win32 Pseudo-Debug--------------------
+Begining build with project "E:\nt\private\shell\tools\ExtWiz\Ext.dsp", at root.
+Active configuration is Win32 (x86) Dynamic-Link Library (based on Win32 (x86) Dynamic-Link Library)
+
+Project's tools are:
+			"32-bit C/C++ Compiler for 80x86" with flags "/nologo /MD /W3 /Gm /GX /Zi /Od /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_PSEUDO_DEBUG" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /Fp"Debug/Ext.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /c "
+			"OLE Type Library Maker" with flags "/nologo /D "NDEBUG" /mktyplib203 /o NUL /win32 "
+			"Win32 Resource Compiler" with flags "/l 0x409 /fo"Debug/Ext.res" /d "NDEBUG" /d "_PSEUDO_DEBUG" /d "_AFXDLL" "
+			"Browser Database Maker" with flags "/nologo /o"Debug/Ext.bsc" "
+			"COFF Linker for 80x86" with flags "/nologo /subsystem:windows /dll /incremental:yes /pdb:"Debug/Ext.pdb" /debug /machine:I386 /out:"Debug/Ext.awx" /implib:"Debug/Ext.lib" "
+			"Custom Build" with flags ""
+			"<Component 0xa>" with flags ""
+
+Creating command line "rc.exe /l 0x409 /fo"Debug/Ext.res" /d "NDEBUG" /d "_PSEUDO_DEBUG" /d "_AFXDLL" "E:\nt\private\shell\tools\ExtWiz\Ext.rc"" 
+Creating temp file "C:\TEMP\RSP81.tmp" with contents </nologo /MD /W3 /Gm /GX /Zi /Od /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_PSEUDO_DEBUG" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /Fp"Debug/Ext.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /c 
+"E:\nt\private\shell\tools\ExtWiz\Chooser.cpp"
+"E:\nt\private\shell\tools\ExtWiz\Debug.cpp"
+"E:\nt\private\shell\tools\ExtWiz\Shextdlg.cpp"
+"E:\nt\private\shell\tools\ExtWiz\ExtAw.cpp"
+"E:\nt\private\shell\tools\ExtWiz\Extdlg.cpp"
+"E:\nt\private\shell\tools\ExtWiz\Ext.cpp"
+>
+Creating command line "cl.exe @C:\TEMP\RSP81.tmp" 
+Creating temp file "C:\TEMP\RSP82.tmp" with contents </nologo /MD /W3 /Gm /GX /Zi /Od /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_PSEUDO_DEBUG" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /Fp"Debug/Ext.pch" /Yc"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /c 
+"E:\nt\private\shell\tools\ExtWiz\StdAfx.cpp"
+>
+Creating command line "cl.exe @C:\TEMP\RSP82.tmp" 
+Creating temp file "C:\TEMP\RSP83.tmp" with contents </nologo /subsystem:windows /dll /incremental:yes /pdb:"Debug/Ext.pdb" /debug /machine:I386 /out:"Debug/Ext.awx" /implib:"Debug/Ext.lib" 
+.\Debug\Chooser.obj
+.\Debug\Debug.obj
+.\Debug\StdAfx.obj
+.\Debug\Shextdlg.obj
+.\Debug\ExtAw.obj
+.\Debug\Extdlg.obj
+.\Debug\Ext.obj
+.\Debug\Ext.res>
+Creating command line "link.exe @C:\TEMP\RSP83.tmp" 
+Creating temp file "C:\TEMP\RSP84.bat" with contents <@echo off
+if not exist "C:\Program Files\DevStudio\SharedIDE\Template\nul" md "C:\Program Files\DevStudio\SharedIDE\Template"
+copy ".\Debug\Ext.awx" "C:\Program Files\DevStudio\SharedIDE\Template"
+if exist ".\Debug\Ext.pdb" copy ".\Debug\Ext.pdb"     "C:\Program Files\DevStudio\SharedIDE\Template"
+>
+Creating command line "C:\TEMP\RSP84.bat" 
+Compiling resources...
+Compiling...
+StdAfx.cpp
+Compiling...
+Chooser.cpp
+Debug.cpp
+Shextdlg.cpp
+ExtAw.cpp
+Extdlg.cpp
+Ext.cpp
+Generating Code...
+Linking...
+Copying custom AppWizard to Template directory...
+A subdirectory or file C:\Program Files\DevStudio\SharedIDE\Template already exists.
+        1 file(s) copied.
+        1 file(s) copied.
+
+
+
+Ext.awx - 0 error(s), 0 warning(s)

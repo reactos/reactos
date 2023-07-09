@@ -1,0 +1,34 @@
+#
+#   Create MCIWND.LIB - this is then linked into MSVFW32.DLL
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=mciwnd
+TARGETPATH=..\lib
+TARGETTYPE=LIBRARY
+UMTYPE=windows
+
+# for common controls
+EXPECTED_WINVER=4.0
+C_DEFINES=-DUNICODE -DVFW -DWINVER=0x0400
+
+# Define libs we need and where to find them
+
+#TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+#           $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib \
+#           $(_NTBINDIR)\public\sdk\lib\*\libc.lib \
+#           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+#           $(_NTBINDIR)\public\sdk\lib\*\shell32.lib \
+#           $(_NTBINDIR)\public\sdk\lib\*\mpr.lib \
+#           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib
+
+INCLUDES=..\inc;..\..\verinfo\usa;..\..\inc;..\..\..\inc;..\video
+
+SOURCES=mciwnd.c   \
+        preview.c
+
+
+#DLLENTRY=DllInstanceInit
+DLLBASE=0x1c200000

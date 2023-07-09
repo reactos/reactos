@@ -1,0 +1,37 @@
+MAJORCOMP=win32
+MINORCOMP=snmp
+
+TARGETNAME=snmp
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+MSC_WARNING_LEVEL=/W3 /WX
+USE_CRTDLL=1
+
+SOURCES= \
+    snmp.c \
+    servcomm.c \
+    servtrap.c \
+    procreq.c  \
+    regconf.c  \
+    snmp.rc
+
+INCLUDES=\
+    $(BASEDIR)\private\net\inc
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\user32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\snmpapi.lib    \
+    $(BASEDIR)\public\sdk\lib\*\ws2_32.lib
+
+!IFNDEF BLD_FOR_MEMPHIS
+
+UMTYPE=console
+C_DEFINES=$(C_DEFINES) -DNT
+
+!ELSE
+
+UMTYPE=windows
+UMENTRY=winmain
+
+!ENDIF

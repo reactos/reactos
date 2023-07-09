@@ -1,0 +1,14 @@
+Wow64CsrClientConnectToServer,6
+Wow64CsrNewThread,0
+Wow64CsrIdentifyAlertableThread,0
+Wow64CsrClientCallServer,4
+Wow64CsrAllocateCaptureBuffer,2
+Wow64CsrFreeCaptureBuffer,1
+Wow64CsrAllocateMessagePointer,3
+Wow64CsrCaptureMessageBuffer,4
+Wow64CsrCaptureMessageString,5
+Wow64CsrSetPriorityClass,2
+DbgUiConnectToDbg,0
+DbgUiWaitStateChange,2
+DbgUiContinue,2
+Wow64DebuggerCall,3

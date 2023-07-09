@@ -1,0 +1,28 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Mar-06-1996 HideyukN Created
+#***************************************************************************/
+
+W32_SB=1
+
+ALT_PROJECT=DAYTONA
+ALT_PROJECT_TARGET=.
+
+C_DEFINES=$(C_DEFINES)
+
+!include ..\sources.inc
+
+INCLUDES= $(INCLUDES); $(BASEDIR)\public\sdk\inc\hydra
+
+SOURCES=$(SOURCES)  ..\api.c \
+                    ..\icadis.c \
+                    ..\icamsg.c \
+                    ..\command.c\
+                    ..\sendmsg.c
+

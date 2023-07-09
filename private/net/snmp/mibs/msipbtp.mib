@@ -1,0 +1,602 @@
+MSIPBOOTP-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Microsoft(R) BOOTP for Internet Protocol MIB
+--
+-- This MIB defines the management information for the BOOTP  
+-- Protocol.  The information in this MIB is divided
+-- into 3 groups:
+--		
+-- 1. Global Group
+--		Contains the global information BOOTP protocol
+--		Information contained in this group is independent of the interfaces
+--		over which the protocol is enabled.
+--
+-- 2. Interface Group
+--		Contains RIP configuration information and statistics specific 
+--		to each interface.
+--
+--
+
+IMPORTS
+        enterprises, OBJECT-TYPE, 
+        TimeTicks, Counter, IpAddress 
+            FROM RFC1155-SMI
+        microsoft, software
+            FROM MSFT-MIB;
+
+-- MSIPRIP2
+
+-- microsoft   OBJECT IDENTIFIER ::= { enterprises 311 }
+-- software    OBJECT IDENTIFIER ::= { microsoft 1 }
+
+msipbootp   OBJECT IDENTIFIER ::= { software 12 }
+
+--
+-- groups in MSIPRIP2
+--
+
+global      OBJECT IDENTIFIER ::= { msipbootp 1 }
+interface   OBJECT IDENTIFIER ::= { msipbootp 2 }
+
+
+--
+-- BOOTP Global Group
+--
+--		Contains the global information for the BOOTP protocol
+--		Information contained in this group is independent of the 
+--		interfaces over which the protocol is enabled.
+--
+--		Global information consists of scalar variables which can be 
+--		updated and table of DHCP/BOOTP servers to which packets will be
+--		sent.
+--
+
+globalLoggingLevel OBJECT-TYPE
+    SYNTAX INTEGER {
+                none(1),
+                error(2),
+                warning(3),
+                information(4)
+           }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Information logged can be None, Error only, Error + Warning, 
+         Error + Warn + Logging.  This variable controls the amount
+         of information logged"
+         
+    ::= { global 1 }
+
+
+globalMaxRecQueueSize OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Maximum size to use for queueing incoming packets."
+        
+    ::= { global 2 }
+
+
+globalServerCount OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of entries BOOTP server table"
+        
+    ::= { global 3 }
+
+
+--
+-- the DHCP/BOOTP Server Table
+--
+--
+-- Entries in the BOOTP Server table are IP addresses of BOOTP servers 
+-- to which request packets are forwarded.  
+--
+
+globalBOOTPServerTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF GlobalBOOTPServerEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Table of BOOTP servers to which packets are sent by this router"
+        
+    ::= { global 4 }
+
+
+globalBOOTPServerEntry OBJECT-TYPE
+    SYNTAX  GlobalBOOTPServerEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "BOOTP server entry. Contains the IP address of a BOOTP server"
+
+    INDEX   { globalBOOTPServerAddr }
+    
+    ::= { globalBOOTPServerTable 1 }
+
+
+GlobalBOOTPServerEntry ::=
+    SEQUENCE {
+        globalBOOTPServerAddr
+            IpAddress,
+        globalBOOTPServerTag
+        	INTEGER
+    }
+
+
+globalBOOTPServerAddr OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "IP Address of DHCP/BOOTP router"
+        
+    ::= { globalBOOTPServerEntry 1 }
+
+globalBOOTPServerTag OBJECT-TYPE
+	SYNTAX	INTEGER {	
+        		create(1),
+        		delete(2)
+        	}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION	
+		"create : Creates an entry in the BOOTP Server table
+		 delete	: Deletes an entry in the BOOTP Server table
+		"
+		
+	::= { globalBOOTPServerEntry 2 }
+
+
+--
+-- BOOTP Interface group
+--
+-- 		Contains BOOTP interface configuration information, BOOTP interface 
+--		statistics and BOOTP interface binding information.  Each type of
+--		information is stored in a table with one entry for each 
+--		interface over which BOOTP is enabled. 
+--
+--		Asscociated with each entry in the Interface binding table is a
+--		list of entries in the 
+--
+--			Interface Address Table		: List of address bound to an interface
+--
+
+--
+-- Interface Statistics Table.
+--
+
+--
+-- 	BOOTP statistics for each interface.  Statistics include 
+--		number of send/receive failures
+--		number of ARP Update Failures 
+--		number of requests/replies received/discarded, 
+--
+
+ifStatsTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfStatsEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Table of BOOTP statistics for interfaces"
+        
+    ::= { interface 1 }
+
+
+ifStatsEntry OBJECT-TYPE
+    SYNTAX  IfStatsEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "BOOTP interface statistics entry. 
+         Each entry contains counts of send/receive failures, requests/relies
+         received/discarded, and ARP Update failures"
+        
+    INDEX   { ifSEIndex }
+    
+    ::= { ifStatsTable 1 }
+
+
+IfStatsEntry ::=
+    SEQUENCE {
+        ifSEIndex
+            INTEGER,
+        ifSEState
+            INTEGER,
+        ifSESendFailures
+            Counter,
+        ifSEReceiveFailures
+            Counter,
+        ifSEArpUpdateFailures
+            Counter,
+        ifSERequestReceiveds
+            Counter,
+        ifSERequestDiscards
+            Counter,
+        ifSEReplyReceiveds
+            Counter,
+        ifSEReplyDiscards
+            Counter
+    }
+
+
+ifSEIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Index for the BOOTP interface Statistics table"
+        
+    ::= { ifStatsEntry 1 } 
+
+    
+ifSEState OBJECT-TYPE
+    SYNTAX  INTEGER {
+                enabled(1),
+                bound(2)
+            }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Current state of BOOTP on this interface."
+        
+    ::= { ifStatsEntry 2 }
+
+
+ifSESendFailures OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of times a failure occurred while attempting to send a 
+         packet on this interface."
+
+    ::= { ifStatsEntry 3 }
+
+
+ifSEReceiveFailures OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of times a failure occurred while attempting to receive
+         a packet on this interface."
+
+    ::= { ifStatsEntry 4 }
+
+
+ifSEArpUpdateFailures OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of times a failure occurred while attempting to 
+         update the ARP cache on this interface."
+
+    ::= { ifStatsEntry 5 }
+
+
+ifSERequestReceiveds OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of BOOTP REQUEST packets received on this interface."
+        
+    ::= { ifStatsEntry 6 }
+
+
+ifSERequestDiscards OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of BOOTP REQUEST packets discarded on this interface."
+        
+    ::= { ifStatsEntry 7 }
+
+
+ifSEReplyReceiveds OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of BOOTP REPLY packets received on this interface."
+        
+    ::= { ifStatsEntry 8 }
+
+
+ifSEReplyDiscards OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of BOOTP REPLY packets discarded due to errors in the header."
+        
+    ::= { ifStatsEntry 9 }
+
+
+
+
+--
+-- BOOTP Interface Configuration Table.
+--
+
+--
+-- 	BOOTP Interface config includes the interface setting for :
+--
+--		Relay Modes, max hop count and minimum seconds since boot
+--
+--
+
+ifConfigTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfConfigEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "BOOTP Interface configuration table.  List of subnets that require
+         separate configuration in BOOTP."
+        
+    ::= { interface 2 }
+
+
+ifConfigEntry OBJECT-TYPE
+    SYNTAX  IfConfigEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "BOOTP configuration entry for an interface. A single routing domain in a
+         single subnet."
+        
+    INDEX   { ifCEIndex }
+    
+    ::= { ifConfigTable 1 }
+
+
+IfConfigEntry ::=
+    SEQUENCE {
+        ifCEIndex
+            INTEGER,
+        ifCEState
+            INTEGER,
+        ifCERelayMode
+        	INTEGER,
+       	ifCEMaxHopCount
+       		INTEGER,
+       	ifCEMinSecondsSinceBoot
+       		INTEGER
+    }
+
+
+ifCEIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Index for BOOTP interface config. table."
+        
+    ::= { ifConfigEntry 1 }
+
+
+ifCEState OBJECT-TYPE
+    SYNTAX  INTEGER {
+                enabled(1),
+                bound(2)
+            }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Current state of BOOTP on this interface."
+        
+    ::= { ifConfigEntry 2 }
+
+
+ifCERelayMode OBJECT-TYPE
+	SYNTAX	INTEGER {
+				disabled(1),
+				enabled(2)
+			}
+				
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Relay Mode for BOOTP request/reply packets "
+
+	DEFVAL { enabled }
+	
+	::= { ifConfigEntry 3 }
+
+
+ifCEMaxHopCount OBJECT-TYPE
+	SYNTAX INTEGER (1..16)
+	ACCESS read-write
+	STATUS mandatory
+	DESCRIPTION
+		"Each time a BOOTP request is forwarded by the BOOTP relay agent 
+		 the request packet's hop count is incremented.  If the number of 
+		 hops traversed by the packet exceeds the max hop count configured
+		 on a relay agent the request packet is discarded by that relay agent."
+
+	DEFVAL { 4 }
+
+	::= { ifConfigEntry 4 }
+
+
+ifCEMinSecondsSinceBoot OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-write
+	STATUS mandatory
+	DESCRIPTION
+		"Each BOOTP request sent by a client contains the time since the client 
+		 has booted.  If the time since boot for the client exceeds the 
+		 configured value of ifCEMinSecondsSinceBoot on a relay agent,  
+		 the relay agent will forward the request.  Otherwise it will discard 
+		 the request."
+
+	DEFVAL { 4 }
+
+	::= { ifConfigEntry 5 }
+	
+
+--
+-- Interface Binding Table.
+--
+
+--
+-- This table stores information pertaining to the binding state and the 
+-- number of IP addresses bound to an interface.
+--
+-- The list of IP address bound to an interface is maintained in the 
+-- Interface Address Table
+--
+
+
+ifBindingTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfBindingEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Table containing binding information for each interface."
+        
+    ::= { interface 3 }
+
+
+ifBindingEntry OBJECT-TYPE
+    SYNTAX  IfBindingEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    	"Binding information entry for an interface"
+    	
+    INDEX   { ifBindingIndex }
+    
+    ::= { ifBindingTable 1 }
+
+
+IfBindingEntry ::=
+    SEQUENCE {
+        ifBindingIndex
+            INTEGER,
+        ifBindingState
+            INTEGER,
+        ifBindingAddrCount
+            INTEGER
+    }
+
+
+ifBindingIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    	"Index for an interface entry in the binding table"
+    	
+    ::= { ifBindingEntry 1 }
+
+
+ifBindingState OBJECT-TYPE
+    SYNTAX  INTEGER {
+                enabled(1),
+                bound(2)
+            }        
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "State of the interface binding"
+        
+    ::= { ifBindingEntry 2 }
+
+
+ifBindingAddrCount OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of IP address bound to this interface.  This is also the 
+         number of entries in the Interface Address Table corresponding
+         to this interface."
+        
+    ::= { ifBindingEntry 3 }
+
+
+--
+-- Interface Address Table
+--
+
+--
+-- The Interface Address Table contains the list of address bound to
+-- each interface.
+--
+-- This table is indexed by an interface number and an IP address.
+--
+
+ifAddressTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfAddressEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    	"Table of IP addresses bound to interfaces"
+    	
+    ::= { interface 4 }
+
+
+ifAddressEntry OBJECT-TYPE
+    SYNTAX  IfAddressEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    	"Entry for an IP address for an interface"
+    	
+    INDEX   { ifAEIfIndex, ifAEAddress, ifAEMask }
+    
+    ::= { ifAddressTable 1 }
+
+
+IfAddressEntry ::=
+    SEQUENCE {
+    	ifAEIfIndex
+    		INTEGER,
+        ifAEAddress
+            IpAddress,
+        ifAEMask
+            IpAddress
+    }
+
+
+ifAEIfIndex OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS mandatory
+	DESCRIPTION
+		"Index corresponding to the Interface with which this entry 
+		 is associated."
+
+	::= { ifAddressEntry 1 }
+
+	
+ifAEAddress OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Ip address bound to the associated interface."
+        
+    ::= { ifAddressEntry 2 }
+
+
+ifAEMask OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Address Mask associated with the IP address contained in the 
+         corresponding ifAEAddress field."
+         
+    ::= { ifAddressEntry 3 }
+
+
+END

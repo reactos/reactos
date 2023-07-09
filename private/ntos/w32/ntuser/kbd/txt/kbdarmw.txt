@@ -1,0 +1,143 @@
+KBD     ARMW     "Western Armenian"
+
+          //LCID 042b
+
+
+VERSION 1.0
+
+SHIFTSTATE
+
+0       //Column 4 :
+1       //Column 5 : Shift
+2       //Column 6 : Ctrl
+
+
+LAYOUT
+
+//SC  VK_       Cap	0	1
+//--  --------	---	----	----
+  29  OEM_7    	 0	055D	055C	//Armenian Comma, Armenian Exclamation Mark
+  02  1          0	:	1
+  03  2          1	0571	0541	//Armenian Ja
+  04  3          1	0575	0545	//Armenian Yi
+  05  4          0	055B	3	//Armenian Emphasis Mark
+  06  5          0	,	4
+  07  6          0	-	9
+  08  7          0	.	0587	//Armenian Small Ligature Ech Yiwn
+  09  8          0	00AB	(	//Left-Pointing Double Angle Quotation Mark
+  0a  9          0	00BB	)	//Right-Pointing Double Angle Quotation Mark
+  0b  0          1	0585	0555	//Armenian Oh
+  0c  OEM_4      1	057C	054C	//Armenian Ra
+  0d  OEM_2      1	056A	053A	//Armenian Zhe
+//--  --------	---	----	----
+  10  Q          1	056D    053D    //Armenian Xeh
+  11  W          1	057E    054E    //Armenian Vew
+  12  E          1	0567    0537    //Armenian Eh
+  13  R          1	0580    0550    //Armenian Reh
+  14  T          1	0564 	0534    //Armenian Da
+  15  Y          1	0565    0535	//Armenian Ech
+  16  U          1	0568    0538    //Armenian Et
+  17  I          1	056B    053B    //Armenian Ini
+  18  O          1	0578    0548    //Armenian Vo
+  19  P          1	0562    0532    //Armenian Ben
+  1a  OEM_6      1	0579    0549    //Armenian Cha
+  1b  OEM_1      1	057B    054B    //Armenian Jheh
+  2b  OEM_5      0	'       055E    //Armenian Question Mark
+//--  --------	---	----	----
+  1e  A          1	0561    0531    //Armenian Ayb
+  1f  S          1	057D    054D    //Armenian Seh
+  20  D          1	057f    054f    //Armenian Tiwn
+  21  F          1	0586    0556    //Armenian Feh
+  22  G          1	056F    053F    //Armenian Ken
+  23  H          1	0570    0540    //Armenian Ho
+  24  J          1	0573    0543    //Armenian Cheh
+  25  K          1	0584    0554    //Armenian Keh
+  26  L          1	056C    056C    //Armenian Liwn
+  27  OEM_PLUS   1	0569    0539    //Armenian To
+  28  OEM_3      1	0583    0553    //Armenian Piwr
+//--  --------	---	----	----
+  2c  Z          1	0566    0536    //Armenian Za
+  2d  X          1	0581    0551    //Armenian Co
+  2e  C          1	0563    0533    //Armenian Gim
+  2f  V          1	0582    0552    //Armenian Yiwn
+  30  B          1	057a    054a    //Armenian Peh
+  31  N          1	0576    0546    //Armenian Now
+  32  M          1	0574    0544    //Armenian Men
+  33  OEM_COMMA  1	0577    0547    //Armenian Sha
+  34  OEM_PERIOD 1	0572    0542    //Armenian Ghad
+  35  OEM_MINUS  1	056E    053E    //Armenian Ca
+  56  OEM_102    0	'       055E    //same as OEM_5
+//--  --------	---	----	----
+  53  DECIMAL    0	,     	,       //decimal 10 key
+//--  --------	---	----	----
+//SC  VK_       Cap	0	1
+
+KEYNAME
+
+ 01	ESC
+ 0e	BACKSPACE
+ 0f	TAB
+ 1c	ENTER
+ 1d	CTRL
+ 2a	SHIFT
+ 36	"RIGHT SHIFT"
+ 37	NUMMULT
+ 38	ALT
+ 39	SPACE
+ 3a	CAPSLOCK
+ 3b	F1
+ 3c	F2
+ 3d	F3
+ 3e	F4
+ 3f	F5
+ 40	F6
+ 41	F7
+ 42	F8
+ 43	F9
+ 44	F10
+ 45	Pause
+ 46	"SCROLL LOCK"
+ 47	"NUM 7"
+ 48	"NUM 8"
+ 49	"NUM 9"
+ 4a	"NUM SUB"
+ 4b	"NUM 4"
+ 4c	"NUM 5"
+ 4d	"NUM 6"
+ 4e	"NUM PLUS"
+ 4f	"NUM 1"
+ 50	"NUM 2"
+ 51	"NUM 3"
+ 52	"NUM 0"
+ 53	"NUM DECIMAL"
+ 57	F11
+ 58	F12
+
+KEYNAME_EXT
+
+ 1c	"NUM ENTER"
+ 1d	"Right Ctrl"
+ 35	"NUM DIVIDE"
+ 37	"Prnt Scrn"
+ 38	"RIGHT ALT"
+ 45	"Num Lock"
+ 46	Break
+ 47	HOME
+ 48	UP
+ 49	PGUP
+ 4b	LEFT
+ 4d	RIGHT
+ 4f	END
+ 50	DOWN
+ 51	PGDOWN
+ 52	INSERT
+ 53	DELETE
+ 54	<00>
+ 56	Help
+ 5b	"Left Windows"
+ 5c	"Right Windows"
+ 5d	Application
+
+ENDKBD
+
+

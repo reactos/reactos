@@ -1,0 +1,52 @@
+MAJORCOMP=snmp
+MINORCOMP=hostmib
+
+TARGETNAME=hostmib
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+USE_CRTDLL=1
+
+INCLUDES=\
+    $(BASEDIR)\private\net\inc;
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\snmpapi.lib \
+    $(BASEDIR)\public\sdk\lib\*\netapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\wsock32.lib \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+    $(BASEDIR)\public\sdk\lib\*\winspool.lib \
+    $(BASEDIR)\public\sdk\lib\*\iphlpapi.lib
+
+!IFDEF USE_CALLTREE
+LINKER_FLAGS=$(LINKER_FLAGS) -calltree
+!ENDIF
+
+SOURCES=\
+    genmsg.mc  \
+    hostmib.rc  \
+    hostmib.C   \
+    HMCACHE.C   \
+    GENNT.C     \
+    HESWINEN.C  \
+    HOSTMSMI.C  \
+    HRDEVENT.C  \
+    HRDISKST.C  \
+    HRFSENTR.C  \
+    HRNETWOR.C  \
+    HRPARTIT.C  \
+    HRPRINTE.C  \
+    HRPROCES.C  \
+    HRSTOENT.C  \
+    HRSTORAG.C  \
+    HRSWINST.C  \
+    HRSWPREN.C  \
+    HRSWRUN.C   \
+    HRSWRUNE.C  \
+    HRSYSTEM.C  \
+    MIB.C       \
+    SMINT.C     \
+    USER.C

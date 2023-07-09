@@ -1,0 +1,12 @@
+LIBRARY   AVICAP
+EXETYPE   WINDOWS
+CODE      PRELOAD MOVEABLE DISCARDABLE
+DATA      PRELOAD MOVEABLE SINGLE
+HEAPSIZE  4096
+EXPORTS
+          WEP                        @1 RESIDENTNAME NODATA PRIVATE
+          capCreateCaptureWindow     @2
+          capGetDriverDescription    @3
+;         DllEntryPoint              @4 RESIDENTNAME    ;Internal
+IMPORTS
+        msvideo.videoCapDriverDescAndVer

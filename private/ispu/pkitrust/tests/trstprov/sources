@@ -1,0 +1,35 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+DLLBASE=0x47a90000
+
+CRYPT_ROOT=..\..\..
+!include $(CRYPT_ROOT)\crypt.mk
+
+MINORCOMP=tprov1
+!include $(CRYPT_ROOT)\cryptdll.mk
+
+INCLUDES=$(INCLUDES)
+
+C_DEFINES=$(C_DEFINES) -D_WINDOWS
+
+SYNCHRONIZE_DRAIN=1
+
+!IF 0
+LINKER_FLAGS=/VERBOSE /MAP $(LINKER_FLAGS)
+!ENDIF
+
+SOURCES=\
+    testprov.cpp        \
+    $(MINORCOMP).rc 
+
+
+TARGETLIBS= \
+    $(CRYPT_LIB)                        \
+    $(CRYPT_SDKORLOCALLIB)\wintrust.lib \
+    $(TARGETLIBS)

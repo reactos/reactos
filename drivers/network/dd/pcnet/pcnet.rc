@@ -1,5 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "PCNet Ethernet PCI Driver"
-#define REACTOS_STR_INTERNAL_NAME     "pcnet"
-#define REACTOS_STR_ORIGINAL_FILENAME "pcnet.sys"
-#include <reactos/version.rc>

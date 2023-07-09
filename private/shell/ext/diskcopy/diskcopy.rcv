@@ -1,0 +1,19 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#ifdef WINNT
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE			VFT_APP
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Windows DiskCopy"
+#define VER_INTERNALNAME_STR		"diskcopy"
+#define VER_LEGALCOPYRIGHT_YEARS	"1991-1999"
+#define VER_ORIGINALFILENAME_STR	"DISKCOPY.EXE"
+
+
+
+#include <common.ver>

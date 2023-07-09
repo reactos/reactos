@@ -1,0 +1,83 @@
+/*++
+
+Copyright(c) 1992  Microsoft Corporation
+
+Module Name:
+
+    Regrpc.acf
+
+Abstract:
+
+Author:
+
+    David J. Gilman (davegi) 27-Jan-1992
+
+--*/
+
+[ implicit_handle( handle_t winreg_bhandle )]
+
+interface winreg
+
+{
+
+[comm_status, fault_status] OpenClassesRoot();
+
+[comm_status, fault_status] OpenCurrentUser();
+
+[comm_status, fault_status] OpenLocalMachine();
+
+[comm_status, fault_status] OpenPerformanceData();
+
+[comm_status, fault_status] OpenUsers();
+
+[comm_status, fault_status] BaseRegCloseKey();
+
+[comm_status, fault_status] BaseRegCreateKey();
+
+[comm_status, fault_status] BaseRegDeleteKey();
+
+[comm_status, fault_status] BaseRegDeleteValue();
+
+[comm_status, fault_status] BaseRegEnumKey();
+
+[comm_status, fault_status] BaseRegEnumValue();
+
+[comm_status, fault_status] BaseRegFlushKey();
+
+[comm_status, fault_status] BaseRegGetKeySecurity();
+
+[comm_status, fault_status] BaseRegLoadKey();
+
+[comm_status, fault_status] BaseRegNotifyChangeKeyValue();
+
+[comm_status, fault_status] BaseRegOpenKey();
+
+[comm_status, fault_status] BaseRegQueryInfoKey();
+
+[comm_status, fault_status] BaseRegQueryValue();
+
+[comm_status, fault_status] BaseRegReplaceKey();
+
+[comm_status, fault_status] BaseRegRestoreKey( );
+
+[comm_status, fault_status] BaseRegSaveKey( );
+
+[comm_status, fault_status] BaseRegSetKeySecurity( );
+
+[comm_status, fault_status] BaseRegSetValue( );
+
+[comm_status, fault_status] BaseRegUnLoadKey( );
+
+//
+// New APIs for Win 95.
+//
+
+[comm_status, fault_status] BaseRegGetVersion( );
+
+[comm_status, fault_status] OpenCurrentConfig( );
+
+[comm_status, fault_status] OpenDynData( );
+
+[comm_status, fault_status] BaseRegQueryMultipleValues( );
+
+}

@@ -1,0 +1,15 @@
+/*
+ *  resource.rcv - version control info
+ */
+#include <ntverp.h>
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR 	"Microsoft Internet Explorer FTP Folder Shell Extension"
+#define VER_INTERNALNAME_STR            "MSIEFTP"
+#ifndef WINNT
+#define VER_LEGALCOPYRIGHT_YEARS        "1995-1999"
+#endif
+#define VER_ORIGINALFILENAME_STR	"MSIEFTP.DLL"
+
+#include <common.ver>

@@ -1,0 +1,24 @@
+!INCLUDE ..\..\..\place.inc
+
+MAJORCOMP=wininet
+MINORCOMP=ftpcat
+
+TARGETNAME=ftpcat
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+USE_CRTDLL=1
+
+INCLUDES=..\..\..\inc;..\..\..\test\inc
+
+SOURCES=ftpcat.c    \
+        cmds.c
+
+UMAPPL=ftpcat
+UMTYPE=console
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\wininet.lib \
+       ..\..\..\lib\*\catlib.lib
+
+PRECOMPILED_INCLUDE=ftpcatp.h
+PRECOMPILED_PCH=ftpcatp.pch
+PRECOMPILED_OBJ=ftpcatp.obj

@@ -1,0 +1,6 @@
+ALPHA_DLLLIBOBJECTS=$(BASEDIR)\private\ntos\rtl\user\obj\alpha\chkstk.obj
+
+ALPHA_SOURCES=..\alpha\ldrthunk.s \
+              ..\alpha\ldrctx.c \
+              ..\alpha\critsect.s \
+              alpha\usrstubs.s

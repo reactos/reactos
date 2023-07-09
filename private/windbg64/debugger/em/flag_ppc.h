@@ -1,0 +1,8 @@
+    { szFlagCR0,   rtRegular|rtExtended, 4,  0, CV_PPC_CR, 28 },
+    { szFlagCR1,   rtRegular|rtExtended, 4,  0, CV_PPC_CR, 24},
+    { szFlagCR2,   rtRegular|rtExtended, 4,  0, CV_PPC_CR, 20 },
+    { szFlagCR3,   rtRegular|rtExtended, 4,  0, CV_PPC_CR, 16 },
+    { szFlagCR4,   rtRegular|rtExtended, 4,  0, CV_PPC_CR, 12},
+    { szFlagCR5,   rtRegular|rtExtended, 4,  0, CV_PPC_CR, 8},
+    { szFlagCR6,   rtRegular|rtExtended, 4,  0, CV_PPC_CR, 4},
+    { szFlagCR7,   ftRegular|rtExtended, 4,  0, CV_PPC_CR, 0},

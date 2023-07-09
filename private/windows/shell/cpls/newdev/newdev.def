@@ -1,0 +1,26 @@
+;//+-------------------------------------------------------------------------
+;//
+;//  Microsoft Windows
+;//
+;//  Copyright (C) Microsoft Corporation, 1996 - 1999
+;//
+;//  File:       newdev.def
+;//
+;//--------------------------------------------------------------------------
+
+LIBRARY newdev
+
+EXPORTS
+    DllInitialize
+    InstallDevInst
+    InstallDevInstEx
+    InstallNewDevice
+    InstallSelectedDevice
+    DevInstallRebootPromptW
+    DevInstallUiOnlyW
+    DevInstallW
+    InstallCDMDriver
+    InstallWindowsUpdateDriver
+    InstallSelectedDriver
+    UpdateDriverForPlugAndPlayDevicesA
+    UpdateDriverForPlugAndPlayDevicesW

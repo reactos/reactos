@@ -1,0 +1,592 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML id=dlgImage STYLE="font-family: MS Shell Dlg; font-size: 8pt;
+width: 40.1em; height: 18em">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>
+Picture
+</TITLE>
+
+<SCRIPT defer>
+
+#include "dialogs.dh"
+
+#define HELPFILE msoe.hlp
+
+setState(OK, btnOK, txtFileName)
+
+//+-----------------------------------------------------------------------
+//
+//  Synopsis:   Opens the open file common dialog. If the user selects a
+//              file, put the file name into txtFileName.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//------------------------------------------------------------------------
+
+function btnBrowseClick()
+{
+    var L_Picture_DIALOG_Title_DialogTitle = "Picture";
+    var L_Picture_DIALOG_FileTypes_Text = "GIF and JPEG (*.gif, *.jpg)|*.gif;*.jpg|Bitmap (*.bmp)|*.bmp|Windows Metafile (*.wmf)|*.wmf|XBM (*.xbm)|*.xbm|ART (*.art)|*.art|All files (*.*)|*.*|";
+
+    var strFileName;
+
+    strFileName = dialogHelper.openfiledlg("", "",
+        L_Picture_DIALOG_FileTypes_Text,L_Picture_DIALOG_Title_DialogTitle);
+
+    if ("" != strFileName)
+    {
+        txtFileName.value = strFileName;
+    }
+
+    setOKState(false);
+}   //  btnBrowseClick
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Returns the protocol when given a URL.
+//
+//  Arguments:  strURL  The URL to get the protocol from
+//
+//  Returns:    a string that matches a protocol or null if no match is
+//              found.
+//
+//----------------------------------------------------------------------
+
+function getProtocolFromURL(strURL)
+{
+    var index;
+
+    //
+    //  We're assuming that the protocol ends at the first colon.
+    //
+    return strURL.substring(0, strURL.indexOf(":") + 1);
+}   // getProtocolFromURL
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   First, set up the dialog with the default options. Then
+//              if an image is selected, fill the dialog with the
+//              settings for that image.
+//
+//  Agruments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function bdyLoad()
+{
+    var elmSelectedImage;       //  the image that's selected when the
+                                //  dialog is called.
+                                //  (If any image is selected.)
+
+    var htmlSelectionControl = "Control";
+
+    //
+    //  Set the document and master range variables
+    //
+    var globalDoc = window.dialogArguments;
+
+    var grngMaster = globalDoc.selection.createRange();
+
+    //
+    //  Bind events. We bind the events here so the dialog loads faster
+    //
+    txtFileName.onfocus = new Function("txtFileName.select()");
+    txtFileName.onkeypress = new Function("txtDefaultESC()");
+
+    txtAltText.onfocus = new Function("txtAltText.select()");
+    txtAltText.onkeypress = new Function("txtDefaultESC()");
+
+    txtHorizontal.onfocus = new Function("txtHorizontal.select()");
+    txtHorizontal.onkeypress = new Function("txtDefaultESC()");
+
+    txtBorder.onfocus = new Function("txtBorder.select()");
+    txtBorder.onkeypress = new Function("txtDefaultESC()");
+
+    txtVertical.onfocus = new Function("txtVertical.select()");
+    txtVertical.onkeypress = new Function("txtDefaultESC()");
+
+    btnBrowse.onclick = new Function("btnBrowseClick()");
+    btnOK.onclick = new Function("btnOKClick()");
+    btnCancel.onclick = new Function("btnCancelClick()");
+
+    document.onhelp     = new Function("callHelp(window.event.srcElement)");
+    document.onmouseup  = new Function("mouseClick()");
+
+    txtFileName.onpropertychange = new Function("setOKState(true)");
+
+    //
+    //  Set expando properties. These are used instead of global variables
+    //  so the dialog loads faster.
+    //
+    txtFileName.fImageLoaded = false;   // Whether an image was selected
+                                        // when the dialog was opened
+    txtFileName.intImageWidth = 0;  // The width of the selected image
+    txtFileName.intImageHeight = 0; // The height of the selected image
+
+    //
+    //  If the currently selected object is an image, get its attributes
+    //  and fill the dialog accordingly
+    //
+    if (globalDoc.selection.type == htmlSelectionControl)     //  a control
+                                                    //  range is selected
+    {
+        if (grngMaster.length == 1)   //  There's only one control selected
+        {
+            elmSelectedImage = grngMaster.item(0);
+
+            if (elmSelectedImage.tagName == "IMG")  //  and it's an image
+            {
+
+                txtFileName.fImageLoaded = true;
+
+                //
+                //  set the source
+                //
+                txtFileName.value = elmSelectedImage.src;
+
+                //
+                //  Get the height and width
+                //
+                txtFileName.intImageHeight = elmSelectedImage.height;
+                txtFileName.intImageWidth = elmSelectedImage.width;
+
+                //
+                //  Set the vertical and horizontal spacing.
+                //
+                txtVertical.value = elmSelectedImage.vspace;
+                txtHorizontal.value = elmSelectedImage.hspace;
+
+                //
+                //  Get the border size
+                //
+                txtBorder.value = elmSelectedImage.border;
+
+                //
+                //  Get the alt text
+                //
+                txtAltText.value = elmSelectedImage.alt;
+
+                //
+                //  Get the alignment
+                //
+                selAlignment.value = elmSelectedImage.align;
+            }
+        }
+    }
+    setOKState(false);
+    txtFileName.focus();
+} //    bdyLoad
+
+
+//+------------------------------------------------------------------
+//
+//  Synopsis:   Returns true or false if the value in txtBox meets
+//              the following criteria:
+//              1. It's a number
+//              2. >=0 && <=999
+//
+//  Arguments:  txtBox  The textbox we're testing the value of
+//
+//  Returns:    true or false
+//
+//-------------------------------------------------------------------
+
+function testTextValue(txtBox)
+{
+    var val = parseInt(txtBox.value);
+
+    if (isNaN(val) || val < 0 || val > 999)
+    {
+        return false;
+    }
+
+    return true;
+}   //  testTextValue
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Okay, this function does quite a bit. First, if there is
+//              no text in the file name input, we do nothing or delete
+//              the currently selected image. Then we insert an image,
+//              select it and set its properties according to the
+//              user's selections in the dialog box.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function btnOKClick()
+{
+    var elmImage;       //  The element that is the image we're inserting.
+    var intAlignment;   //  The selectedIndex of selAlignment
+
+    var L_HorizontalNotNumber_ErrorMessage
+        = "Horizontal spacing must be a number between 0 and 999.";
+    var L_VerticalNotNumber_ErrorMessage
+        = "Vertical spacing must be a number between 0 and 999.";
+    var L_BoderNotNumber_ErrorMessage
+        = "Border thickness must be a number between 0 and 999.";
+
+    var cmdInsertImage = "InsertImage";
+    var cmdDelete = "Delete";
+
+    var htmlSelectionControl = "Control";
+
+    var globalDoc = window.dialogArguments;
+    var grngMaster = globalDoc.selection.createRange();
+
+    //
+    //  Make sure the border spacing textboxes are numbers or blank
+    //
+    if ("" != txtHorizontal.value)
+    {
+        if (!testTextValue(txtHorizontal))
+        {
+            alert(L_HorizontalNotNumber_ErrorMessage);
+            txtHorizontal.focus();
+            return;
+        }
+    }
+
+    if ("" != txtBorder.value)
+    {
+        if (!testTextValue(txtBorder))
+        {
+            alert(L_BoderNotNumber_ErrorMessage);
+            txtBorder.focus();
+            return;
+        }
+    }
+
+    if ("" != txtVertical.value)
+    {
+        if (!testTextValue(txtVertical))
+        {
+            alert(L_VerticalNotNumber_ErrorMessage);
+            txtVertical.focus();
+            return;
+        }
+    }
+
+    //
+    //  If the current selection is a control range, delete it.
+    //  But only if it's not the image we loaded into the dialog
+    //
+    if (globalDoc.selection.type == htmlSelectionControl
+        && !txtFileName.fImageLoaded)
+    {
+        grngMaster.execCommand(cmdDelete);
+        grngMaster = globalDoc.selection.createRange();
+    }
+
+
+    //
+    //  If no image was selected when the dialog was loaded,
+    //  insert an image
+    //
+    if (!txtFileName.fImageLoaded)
+    {
+        grngMaster.execCommand(cmdInsertImage);
+
+        //
+        //  Inserting the image collapses the range, so we have to expand
+        //  it to include the newly inserted image.
+        //
+        grngMaster.moveStart("character", -1);
+        elmImage = grngMaster.parentElement();
+    }
+    else    // get the image that's selected in the document
+    {
+        elmImage = grngMaster.item(0);
+
+        //
+        //  If the user is inserting a new image (ie. changing
+        //  the source of the current image), we want to 
+        //  delete the current image to get the dimensions
+        //  of the new image
+        //
+        if (elmImage.src != txtFileName.value)
+        {
+            grngMaster.execCommand(cmdDelete);
+            grngMaster = globalDoc.selection.createRange();
+        
+            grngMaster.execCommand(cmdInsertImage);
+
+            //
+            //  Inserting the image collapses the range, so we have to expand
+            //  it to include the newly inserted image.
+            //
+            grngMaster.moveStart("character", -1);
+            elmImage = grngMaster.parentElement();
+            txtFileName.fImageLoaded = false;
+
+        }
+        grngMaster = getTextRange(elmImage);
+    }
+
+    //
+    //  If the image was selected when the dialog was started.
+    //  Set the width and height to previous settings
+    //
+    if (txtFileName.fImageLoaded)
+    {
+        elmImage.style.width = txtFileName.intImageWidth;
+        elmImage.style.height = txtFileName.intImageHeight;
+    }
+
+    // If the URL is > 2040, truncate it to the first 2040 characters
+    if (txtFileName.value.length > 2040)
+        txtFileName.value = txtFileName.value.substring(0,2040);
+
+
+    //
+    //  If txtFileName.value doesn't contain a protocol, make
+    //  "file://" the protocol.
+    //
+    if ("" == getProtocolFromURL(txtFileName.value))
+    {
+        elmImage.src = "file://" + txtFileName.value;
+    }
+    else
+    {
+        elmImage.src = txtFileName.value;
+    }
+
+    //
+    //  Set spacing
+    //
+    if (txtHorizontal.value != "")
+    {
+        elmImage.hspace = parseInt(txtHorizontal.value);
+    }
+    else
+    {
+        elmImage.hspace = 0;
+    }
+    if (txtVertical.value != "")
+    {
+        elmImage.vspace = parseInt(txtVertical.value);
+    }
+    else
+    {
+        elmImage.vspace = 0;
+    }
+
+    //
+    //  Set the alt text
+    //
+    elmImage.alt = txtAltText.value;
+
+    //
+    //  Set the border size
+    //
+    if (txtBorder.value != "")
+    {
+        elmImage.border = parseInt(txtBorder.value);
+    }
+    else
+    {
+        elmImage.border = 0;
+    }
+
+    //
+    //  Set the alignment;
+    //
+    elmImage.align = selAlignment.value;
+
+    //
+    //  Put insertion point after newly inserted image.
+    //
+    grngMaster.collapse(false);  
+
+    grngMaster.select();
+
+    window.close();
+}   //  btnOKClick
+
+</SCRIPT>
+
+</HEAD>
+
+#ifndef UNIX
+<BODY id=bdy onload="bdyLoad()" style="font-family: MS Shell Dlg; 
+font-size: 8pt; background: threedface; color: windowtext;" scroll=no>
+#else
+<BODY id=bdy onload="bdyLoad()" style="font-family: MS Shell Dlg; 
+font-size: 8pt; background: threedface; color:buttontext" scroll=no>
+#endif
+
+<OBJECT ID="dialogHelper" CLASSID="CLSID:3050f4e1-98b5-11cf-bb82-00aa00bdce0b"
+        HEIGHT=0 WIDTH=0 tabindex=-1>
+</OBJECT>
+
+<DIV id=divFileName style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 0.98em; top: 1.2168em; width: 7em; height: 1.2168em; ">
+<LABEL id=lblFileName FOR=txtFileName tabIndex=-1
+helpid="35450" helpfile=HELPFILE>
+<U>P</U>icture Source:
+</LABEL>
+</DIV>
+
+<INPUT ID=txtFileName type=text style="font-family: MS Shell Dlg; font-size: 8pt;
+position: absolute; left: 8.54em; top: 1.0647em; width: 13.58em;
+height: 2.1294em; " tabIndex=10 ACCESSKEY=p 
+helpid="35450" helpfile=HELPFILE>
+
+<DIV id=divAltText style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 0.98em; top: 4.1067em; width: 6.58em; height: 1.2168em; ">
+    <LABEL id=lblAltText FOR=txtAltText tabIndex=-1
+    helpid="35455" helpfile=HELPFILE>
+    Alternate <u>T</u>ext:
+    </LABEL>
+</DIV>
+
+<INPUT type=text ID=txtAltText tabIndex=15 ACCESSKEY=t
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 8.54em; top: 3.8025em; width: 21.5em; height: 2.1294em; "
+helpid="35455" helpfile=HELPFILE>
+
+<BUTTON ID=btnBrowse style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 22.96em; top: 1.0647em; width: 7em; height: 2.2em; "
+ACCESSKEY=r tabIndex=12 helpid="35462" helpfile=HELPFILE>
+B<U>r</U>owse...
+</BUTTON>
+
+<FIELDSET id=fldLayout style="font-family: MS Shell Dlg; font-size: 8pt; 
+position: absolute; left: .9em; top: 7.1em; width: 17.08em; 
+height: 7.6em;">
+<LEGEND id=lgdLayout>
+Layout
+</LEGEND>
+</FIELDSET>
+
+#ifndef UNIX
+<FIELDSET id=fldSpacing style="font-family: MS Shell Dlg; font-size: 8pt; 
+position: absolute; left: 18.9em; top: 7.1em; width: 11em; 
+height: 7.6em;">
+<LEGEND id=lgdSpacing>
+Spacing
+</LEGEND>
+</FIELDSET>
+#else
+<FIELDSET id=fldSpacing style="font-family: MS Shell Dlg; font-size: 8pt;
+position: absolute; left: 18.9em; top: 7.1em; width: 12em;
+height: 7.6em;">
+<LEGEND id=lgdSpacing>
+Spacing
+</LEGEND>
+</FIELDSET>
+#endif
+
+<DIV id=divAlign style="font-family: MS Shell Dlg; font-size: 8pt; 
+position: absolute; left: 1.82em; top: 9.126em; width: 4.76em; 
+height: 1.2168em; ">
+<LABEL id=lblAlignment FOR=selAlignment tabIndex=-1 helpid="35465" 
+helpfile=HELPFILE>
+<U>A</U>lignment:
+</LABEL>
+</DIV>
+
+<SELECT size=1 ID=selAlignment tabIndex=20 ACCESSKEY=a
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 10.36em; top: 8.8218em; width: 6.72em; height: 1.2168em; "
+helpid="35465" helpfile=HELPFILE>
+    <OPTION id=optNotSet    value="">                Not set    </OPTION>
+    <OPTION id=optLeft      value=left>              Left       </OPTION>
+    <OPTION id=optRight     value=right>             Right      </OPTION>
+    <OPTION id=optTexttop   value=textTop>           Texttop    </OPTION>
+    <OPTION id=optAbsMiddle value=absMiddle>         Absmiddle  </OPTION>
+    <OPTION id=optBaseline  value=baseline SELECTED> Baseline   </OPTION>
+    <OPTION id=optAbsBottom value=absBottom>         Absbottom  </OPTION>
+    <OPTION id=optBottom    value=bottom>            Bottom     </OPTION>
+    <OPTION id=optMiddle    value=middle>            Middle     </OPTION>
+    <OPTION id=optTop       value=top>               Top        </OPTION>
+</SELECT>
+
+<DIV id=divHoriz style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 19.88em; top: 9.126em; width: 4.76em; height: 1.2168em; ">
+<LABEL id=lblHorizontal FOR=txtHorizontal tabIndex=-1 helpid="35475" 
+helpfile=HELPFILE>
+<U>H</U>orizontal:
+</LABEL>
+</DIV>
+
+#ifndef UNIX
+<INPUT ID=txtHorizontal style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 24.92em; top: 8.8218em; width: 4.2em; height: 2.1294em; ime-mode: disabled;"
+type=text size=3 value="" tabIndex=25 ACCESSKEY=h
+helpid="35475" helpfile=HELPFILE>
+#else
+<INPUT ID=txtHorizontal style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 25.92em; top: 8.8218em; width: 4.2em; height: 2.1294em; ime-mode: disabled;"
+type=text size=3 value="" tabIndex=25 ACCESSKEY=h
+helpid="35475" helpfile=HELPFILE>
+#endif
+
+#ifndef UNIX
+<DIV id=divBorder style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 1.82em; top: 12.0159em; width: 8.12em; height: 1.2168em; ">
+<LABEL id=lblBorder tabIndex=-1 FOR=txtBorder helpid="35470" 
+helpfile=HELPFILE>
+<u>B</u>order Thickness:
+</LABEL>
+</DIV>
+#else
+<DIV id=divBorder style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 1.82em; top: 11.5596em; width: 8.12em; height: 1.2168em; ">
+<LABEL id=lblBorder tabIndex=-1 FOR=txtBorder helpid="35470"
+helpfile=HELPFILE>
+<u>B</u>order Thickness:
+</LABEL>
+</DIV>
+#endif
+
+<INPUT ID=txtBorder style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 10.36em; top: 11.5596em; width: 6.72em; height: 2.1294em; ime-mode: disabled;"
+type=text size=3 value="" tabIndex=21 ACCESSKEY=b
+helpid="35470" helpfile=HELPFILE>
+
+<DIV id=divVert style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 19.88em; top: 12.0159em; width: 3.64em; height: 1.2168em; ">
+<LABEL id=lblVertical FOR=txtVertical tabIndex=-1 helpid="35480" 
+helpfile=HELPFILE>
+<U>V</U>ertical:
+</LABEL>
+</DIV>
+
+#ifndef UNIX
+<INPUT ID=txtVertical style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 24.92em; top: 11.5596em; width: 4.2em; height: 2.1294em; ime-mode: disabled;"
+type=text size=3 value="" tabIndex=30 ACCESSKEY=v
+helpid="35480" helpfile=HELPFILE>
+#else
+<INPUT ID=txtVertical style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 25.92em; top: 11.5596em; width: 4.2em; height: 2.1294em; ime-mode: disabled;"
+type=text size=3 value="" tabIndex=30 ACCESSKEY=v
+helpid="35480" helpfile=HELPFILE>
+#endif
+
+<BUTTON ID=btnOK style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 31.36em; top: 1.0647em; width: 7em; height: 2.2em; " type=submit
+tabIndex=40 DISABLED=1 helpid="28443" helpfile="windows.hlp">
+OK
+</BUTTON>
+
+<BUTTON ID=btnCancel style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 31.36em; top: 3.6504em; width: 7em; height: 2.2em; " type=reset
+tabIndex=45 helpid="28444" helpfile="windows.hlp">
+Cancel
+</BUTTON>
+
+</BODY>
+</HTML>

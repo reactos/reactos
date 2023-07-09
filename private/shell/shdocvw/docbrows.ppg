@@ -1,0 +1,186 @@
+<html id=docbrows
+#ifdef UNIX
+STYLE="font-family: MS Shell Dlg; font-size: 8pt; background: buttonface;
+width: 31.5em; height: 34.5em">
+#else
+STYLE="font-family: MS Shell Dlg; font-size: 8pt; background: buttonface;
+width: 31.5em; height: 32.5em">
+#endif
+
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>General</TITLE>
+<SCRIPT>
+function btnCertsClick()
+{
+    window.dialogArguments.showSecurityInfo();
+}
+
+function btnAnalyzeClick()
+{
+#ifdef UNIX 
+    showModalDialog("analyze.dlg", window.dialogArguments, 
+        "dialogWidth: 30em; dialogHeight: 31em; help: 0;");
+#else
+    showModalDialog("analyze.dlg", window.dialogArguments, 
+        "dialogWidth: 30em; dialogHeight: 33em; help: 0;");
+#endif
+}
+function BodyLoad()
+{
+    var L_NotAvailable_Text = "Not Available";
+	var L_NotEncrypted_Text = "Not Encrypted";
+    var arrAll = document.all;
+    for (i=0; i < arrAll.length; i++)
+    {
+        var elm = arrAll[i];
+        if (elm.id.substring(0,1) == "_")
+        {
+            if (elm.innerText== "undefined" || elm.innerText == "")
+            {
+                elm.innerText = L_NotAvailable_Text;
+                if (elm.id == "_fileSize")
+                    spaBytes.innerText = "";
+                else if (elm.id == "_connInfo" )
+                {
+                    var secInfo = window.dialogArguments.secureConnectionInfo;
+					if (secInfo == "")
+						elm.innerText = L_NotEncrypted_Text;
+					else
+						elm.innerText = secInfo ;
+                }
+            }
+        }
+    }
+}
+</SCRIPT>
+</HEAD>
+<BODY onload="BodyLoad()" id=bdy bgcolor=buttonface style="background: buttonface; 
+font-family: MS Shell Dlg; font-size: 8pt; color: windowtext" scroll=no>
+
+<table cellPadding=3 cellspacing=2 border=0 id=tbl1 width=100%
+style="background: buttonface; font-family: MS Shell Dlg; font-size: 8pt;">
+
+<TR>
+
+<TD id=tdImage>
+<img id=imgPage src=page.gif width=29 height=36 border=0>
+</td>
+
+<td id=td1 style="font-family: MS Shell Dlg; font-size: 8pt;">
+<TEXTAREA id=_nameProp style="font-family: MS Shell Dlg; font-size: 8pt; 
+background: buttonface; overflow: hidden; width: 24em; height: 2.7em;
+border: 0px" readonly=1 wrap=physical tabindex=-1></TEXTAREA>
+</td></tr>
+<tr id=tr2 style="font-family: MS Shell Dlg; font-size: 8pt;">
+<td colspan=2><hr></td></tr>
+
+<tr>
+
+<Td id=td3 style="font-family: MS Shell Dlg; font-size: 8pt;">
+Protocol:</TD>
+<td id=td4 style="font-family: MS Shell Dlg; font-size: 8pt;">
+<TEXTAREA id=_protocol style="font-family: MS Shell Dlg; font-size: 8pt;
+background: buttonface; overflow: hidden; width: 24em; height: 1.5em; 
+border: 0px" readonly=1 wrap=physical tabindex=-1></TEXTAREA>
+</tr>
+
+<tr>
+<TD id=td5 style="font-family: MS Shell Dlg; font-size: 8pt;">Type:
+</TD>
+<TD id=td6 style="font-family: MS Shell Dlg; font-size: 8pt;">
+<TEXTAREA id=_mimeType style="font-family: MS Shell Dlg; font-size: 8pt; 
+background: buttonface; overflow: hidden; width: 24em; height: 1.5em; 
+border: 0px" readonly=1 wrap=physical tabindex=-1></TEXTAREA>
+</TD>
+</tr>
+
+<tr>
+<TD id=td55 style="vertical-align: top;">
+Connection:
+</TD>
+<TD id=td65 style="vertical-align: top;">
+<TEXTAREA id=_connInfo style="font-family: MS Shell Dlg; font-size: 8pt;  
+background: buttonface; overflow: hidden; width: 24em; height: 2.7em; 
+border: 0px" readonly=1 wrap=physical tabindex=-1>
+</TEXTAREA>
+</TD>
+</tr>
+
+
+<tr>
+<td id=td 7 style="font-family: MS Shell Dlg; font-size: 8pt;
+vertical-align: top;">
+Address:<br>
+(URL)
+</TD>
+
+<TD id=td8 style="font-family: MS Shell Dlg; font-size: 8pt;
+vertical-align: top"> 
+<TEXTAREA id=_URL style="font-family: MS Shell Dlg; font-size: 8pt; 
+#ifdef UNIX
+background: buttonface; overflow: hidden; width: 24em; height: 3.0em; 
+#else
+background: buttonface; overflow: hidden; width: 24em; height: 2.7em; 
+#endif
+border: 0px" readonly=1 wrap=physical tabindex=-1></TEXTAREA></tr>
+
+<tr>
+<td id=td10 style="font-family: MS Shell Dlg; font-size: 8pt;">Size:
+<td id=tdBytes style="font-family: MS Shell Dlg; font-size: 8pt;">
+<SPAN id=_fileSize style="font-family: MS Shell Dlg; font-size: 8pt; 
+background: buttonface"></SPAN>&nbsp;<SPAN id=spaBytes>bytes</SPAN>
+</tr>
+
+<tr>
+<td id=td11 style="font-family: MS Shell Dlg; font-size: 8pt;" colspan=2>
+<hr>
+</tr>
+ 
+<tr>
+<td id=td12 style="font-family: MS Shell Dlg; font-size: 8pt;">Created:
+<td id=td13 style="font-family: MS Shell Dlg; font-size: 8pt;">
+<TEXTAREA id=_fileCreatedDate style="font-family: MS Shell Dlg; font-size: 8pt; 
+background: buttonface; overflow: hidden; width: 24em; height: 1.5em; 
+border: 0px" readonly=1 wrap=physical tabindex=-1></TEXTAREA></TD></tr>
+
+<tr>
+<td id=td14 style="font-family: MS Shell Dlg; font-size: 8pt;">Modified:
+<td id=td15 style="font-family: MS Shell Dlg; font-size: 8pt;">
+<TEXTAREA id=_fileModifiedDate style="font-family: MS Shell Dlg; font-size: 8pt; 
+background: buttonface; overflow: hidden; width: 24em; height: 1.5em;
+border: 0px" readonly=1 wrap=physical tabindex=-1></TEXTAREA>
+</tr>
+</table>
+
+
+<Div id=divButtons align=right 
+#ifdef UNIX
+STYLE="font-family: MS Shell Dlg; position: absolute; top: 29.2em; left: 15.7em; 
+font-size: 8pt; background: buttonface; margin-top: .7em; margin-right: .2em">
+#else
+STYLE="font-family: MS Shell Dlg; position: absolute; 
+top: expression(document.body.clientHeight - (btnCerts.offsetHeight + 15)); 
+left: expression(document.body.clientWidth - (btnCerts.offsetWidth * 2 + 25));
+font-size: 8pt; background: buttonface; margin-top: .7em">
+#endif
+<NOBR><BUTTON id=btnCerts onclick="btnCertsClick()" accesskey=c
+#ifdef UNIX
+style="font-family: MS Shell Dlg; font-size: 8pt; width: 7.4em; height: 2.5em">
+#else
+style="font-family: MS Shell Dlg; font-size: 8pt; width: 7em; height: 2.2em">
+#endif
+<U>C</U>ertificates
+</BUTTON>
+&nbsp;&nbsp;
+<BUTTON id=btnAnalyze onclick="btnAnalyzeClick()" accesskey=a
+#ifdef UNIX
+style="font-family: MS Shell Dlg; font-size: 8pt; width: 7.4em; height: 2.5em">
+#else
+style="font-family: MS Shell Dlg; font-size: 8pt; width: 7em; height: 2.2em">
+#endif
+<U>A</U>nalyze
+</BUTTON></NOBR>
+</DIV>
+</BODY>
+</HTML>

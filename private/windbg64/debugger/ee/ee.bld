@@ -1,0 +1,206 @@
+# Microsoft Developer Studio Generated Build File, Format Version 50001
+# ** DO NOT EDIT **
+
+# TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
+
+CFG=ee - Win32 Debug
+!MESSAGE "ee - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "ee - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
+
+# Begin Project
+RSC=rc.exe
+MTL=mktyplib.exe
+CPP=cl.exe
+
+!IF  "$(CFG)" == "ee - Win32 Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "Release"
+# PROP BASE Intermediate_Dir "Release"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Release"
+# PROP Intermediate_Dir "Release"
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD BASE MTL /nologo /D "NDEBUG" /win32
+# ADD MTL /nologo /D "NDEBUG" /win32
+# ADD BASE RSC /l 0x409 /d "NDEBUG"
+# ADD RSC /l 0x409 /d "NDEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
+# SUBTRACT LINK32 /force
+
+!ELSEIF  "$(CFG)" == "ee - Win32 Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "Debug"
+# PROP BASE Intermediate_Dir "Debug"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Debug"
+# PROP Intermediate_Dir "Debug"
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /Gz /MTd /W3 /GR /GX /Zi /Od /Gf /Gy /I "Debug" /I "..\include" /I "..\od\include" /I "..\..\..\langapi\debugger\osdebug4" /I "..\..\..\langapi\debugger" /I "..\..\..\langapi\include" /I "..\..\..\public\nonship\inc" /D "_AFX_ENABLE_INLINES" /D "_AFX_NOFORCE_LIBS" /D "_AFXDLL" /D "_CROSS_PLATFORM_" /D "_DEBUG" /D _DLL=1 /D _MT=1_NT1X_=100 /D _WIN32_WINNT=0x0400 /D _X86_=1 /D CONDITION_HANDLING=1 /D DBG=1 /D "DEBUGVER" /D DEVL=1 /D FPO=0 /D "HOST32" /D "HOST_i386" /D i386=1 /D NT_INST=0 /D NT_UP=1 /D "OSDEBUG4" /D "STD_CALL" /D "TARGET32" /D "WIN32" /D WIN32=100 /D WIN32_LEAN_AND_MEAN=1 /D WINNT=1 /YX /FD /c
+# SUBTRACT CPP /WX
+# ADD BASE MTL /nologo /D "_DEBUG" /win32
+# ADD MTL /nologo /D "_DEBUG" /win32
+# ADD BASE RSC /l 0x409 /d "_DEBUG"
+# ADD RSC /l 0x409 /i "..\include" /i "..\od\include" /i "..\..\..\langapi\debugger\osdebug4" /i "..\..\..\langapi\debugger" /i "..\..\..\langapi\include" /i "..\..\..\public\nonship\inc" /d "_CROSS_PLATFORM_" /d _DLL=1 /d _MT=1 /d _NT1X_=100 /d _WIN32_WINNT=0x0400 /d _X86_=1 /d CONDITION_HANDLING=1 /d DBG=1 /d "DEBUGVER" /d DEVL=1 /d FPO=0 /d "HOST32" /d i386=1 /d NT_INST=0 /d NT_UP=1 /d "OSDEBUG4" /d "STD_CALL" /d "TARGET32" /d "WIN32" /d WIN32=100 /d WIN32_LEAN_AND_MEAN=1 /d WINNT=1
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386
+# ADD LINK32 mfc42d.lib mfcs42d.lib mfco42d.lib mfcd42d.lib mfcn42d.lib msvcrtd.lib kernel32.lib user32.lib /nologo /version:5.0 /entry:"_DllMainCRTStartup@12" /subsystem:windows /dll /incremental:no /pdb:"..\..\bind/eecxxd.pdb" /debug /machine:I386 /nodefaultlib /include:"__afxForceSTDAFX" /out:"..\..\bind/eecxxd.dll" /merge:_PAGE=PAGE /merge:_TEXT=.text -section:INIT,d -opt:REF -optidata -merge:.rdata=.text
+# SUBTRACT LINK32 /pdb:none /force
+
+!ENDIF 
+
+# Begin Target
+
+# Name "ee - Win32 Release"
+# Name "ee - Win32 Debug"
+
+!IF  "$(CFG)" == "ee - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "ee - Win32 Debug"
+
+!ENDIF 
+
+# Begin Source File
+
+SOURCE=.\ldouble.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debbind.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\deberr.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debeval.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debfmt.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\deblex.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\deblexr.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debparse.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debsrch.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debsup.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debsym.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debtree.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debtyper.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debutil.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debwalk.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\dllmain.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\debapi.c
+
+!IF  "$(CFG)" == "ee - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "ee - Win32 Debug"
+
+# ADD CPP /YX
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\eecxx.def
+
+!IF  "$(CFG)" == "ee - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "ee - Win32 Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\eecxx.rc
+
+!IF  "$(CFG)" == "ee - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "ee - Win32 Debug"
+
+DEP_RSC_EECXX=\
+	"..\..\..\langapi\include\common.ver"\
+	"..\..\..\langapi\include\version.h"\
+	"..\..\..\langapi\include\verstamp.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\expr2.z
+
+!IF  "$(CFG)" == "ee - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "ee - Win32 Debug"
+
+# Begin Custom Build - Building Debug\debops.h from expr2.z
+InputPath=.\expr2.z
+
+"Debug\debops.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   opprec c expr2.z > Debug\debops.h
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# End Target
+# End Project

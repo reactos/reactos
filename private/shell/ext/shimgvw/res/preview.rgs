@@ -1,0 +1,34 @@
+HKCR
+{
+	Preview.Preview.1 = s 'Preview Class'
+	{
+		CLSID = s '{50F16B26-467E-11D1-8271-00C04FC3183B}'
+	}
+	Preview.Preview = s 'Preview Class'
+	{
+		CurVer = s 'Preview.Preview.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {50F16B26-467E-11D1-8271-00C04FC3183B} = s 'Preview Class'
+		{
+			ProgID = s 'Preview.Preview.1'
+			VersionIndependentProgID = s 'Preview.Preview'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			ForceRemove 'Control'
+			ForceRemove 'Programmable'
+			ForceRemove 'Insertable'
+			ForceRemove 'ToolboxBitmap32' = s '%MODULE%, 1'
+			'MiscStatus' = s '0'
+			{
+			    '1' = s '131473'
+			}
+			'TypeLib' = s '{50F16B18-467E-11D1-8271-00C04FC3183B}'
+			'Version' = s '1.0'
+		}
+	}
+}

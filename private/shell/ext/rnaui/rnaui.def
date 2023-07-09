@@ -1,0 +1,18 @@
+LIBRARY         RNAUI
+DESCRIPTION     'Dial-Up Networking User Interface'
+
+SECTIONS
+    ; evil shared data... avoid use when possible
+    SHAREDATA     READ WRITE     SHARED   ; shared data
+
+EXPORTS
+    DllCanUnloadNow           PRIVATE              ; Internal
+    DllGetClassObject         PRIVATE              ; Internal
+
+    Remote_CreateInstance                   ; Internal
+    RnaDial                                 ; Internal
+    RnaRunImport                            ; Internal
+    RnaWizard                               ; Internal
+    Remote_CreateEntry                      ; Internal
+    Remote_EditEntry                        ; Internal
+    Remote_Notify                           ; Internal

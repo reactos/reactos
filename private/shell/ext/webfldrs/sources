@@ -1,0 +1,23 @@
+#
+# The Office WebFolders shell namespace extension is provided by the 
+# office team as a single MSI installer package (WEBFLDRS.MSI).
+# There are no binaries to build so we just need to binplace the
+# MSI file.  
+#
+TARGETNAME=webfldrs
+TARGETPATH=obj
+TARGETTYPE=NOTARGET
+
+SOURCES=
+
+#
+# Use this once we have an alpha binary.
+# MISCFILES=$(TARGET_DIRECTORY)\webfldrs.msi 
+
+!IF $(386)
+MISCFILES=i386\webfldrs.msi
+!ENDIF
+
+!IF $(ALPHA)
+MISCFILES=alpha\webfldrs.msi
+!ENDIF

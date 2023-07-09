@@ -1,6 +1,0 @@
-HACKING:   Some notes for adding code to ReactOS
-DIRS:      Explanation of directory layout
-INTERNALS: Some notes on kernel internals
-TODO:      Bugs and omissions, big and little things that need to be done
-NOTES:     Unsorted material, some of it is redundant
-BUGLIST:   Known bugs, please update when you find one

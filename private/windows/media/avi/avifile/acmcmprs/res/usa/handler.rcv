@@ -1,0 +1,22 @@
+#ifdef WIN32
+#include <ntverp.h>
+
+#define VER_FILETYPE              VFT_DRV
+#define VER_FILESUBTYPE           VFT2_DRV_INSTALLABLE
+#define VER_FILEDESCRIPTION_STR   "Microsoft Standard audio compression DLL"
+#define VER_INTERNALNAME_STR      "acmcps32.dll"
+#define VER_ORIGINALFILENAME_STR  "acmcps32.dll"
+
+#include <common.ver>
+
+#else
+#include <ver.h>
+#include <verinfo.h>
+
+#define VERSIONNAME               "acmcmprs.dll\0"
+#define VERSIONDESCRIPTION        "Microsoft Standard audio compression DLL\0"
+#define VERSIONTYPE               VFT_DLL
+#define VERSIONSUBTYPE            VFT2_DRV_INSTALLABLE
+
+#include <verinfo.ver>
+#endif

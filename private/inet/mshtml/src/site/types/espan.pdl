@@ -1,0 +1,33 @@
+#ifndef _ESPAN_PDL_
+#define _ESPAN_PDL_ 1
+
+#include "csite.pdl"
+#include "txtedit.pdl"
+
+file espan.pdl
+
+import  txtedit.pdl
+import  csite.pdl
+
+interface IHTMLSpanFlow guid:3050f3e5-98b5-11cf-bb82-00aa00bdce0b
+    refprop CSpanSite:align
+
+tearoff CSpanSite interface:IHTMLSpanFlow
+
+class CSpanSite name:HTMLSpanFlow \
+            primaryinterface:IHTMLSpanFlow \
+            super:CTxtSite \
+            events:HTMLTextContainerEvents \
+            nonprimaryevents:HTMLTextContainerEvents2 \
+            guid:3050f3e6-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f544-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLSpanFlow
+
+    property align         atype:BSTR  type:htmlControlAlign   dispid:STDPROPID_XOBJ_CONTROLALIGN  \
+        get set caa bindable displaybind  default:htmlControlAlignNotSet maxstrlen:pdlToken
+
+#endif _ESPAN_PDL_

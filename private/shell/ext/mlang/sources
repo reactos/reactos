@@ -1,0 +1,121 @@
+!if 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Created 31-Oct-1996 by Beomseok Oh (beomoh)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!endif
+
+CCSHELL_DIR         = $(BASEDIR)\private\shell
+
+TARGET_BOTH         = 1
+NOT_UNICODE         = 1
+PRECOMPILED_CXX     = 1
+
+!include $(CCSHELL_DIR)\common.inc
+
+NO_BROWSER_FILE     = 1
+
+SOURCES_USED        = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+NTTARGETFILES       =
+
+TARGETTYPE          = DYNLINK
+TARGETNAME          = mlang
+TARGETPATH          = obj
+
+UMTYPE              = windows
+
+DLLENTRY            = DllMain
+DLLDEF              = mlang.def
+
+PRECOMPILED_INCLUDE = private.h
+
+
+TARGETLIBS          = $(SDK_LIB_PATH)\kernel32.lib      \
+                      $(SDK_LIB_PATH)\user32.lib        \
+                      $(SDK_LIB_PATH)\gdi32.lib         \
+                      $(SDK_LIB_PATH)\advapi32.lib      \
+                      $(SDK_LIB_PATH)\uuid.lib          \
+                      $(SDK_LIB_PATH)\ole32.lib         \
+                      $(CCSHELL_DIR)\lib\$O\stocklib.lib \
+                      $(SDK_LIB_PATH)\shlwapi.lib
+
+!ifdef CCOVER
+TARGETLIBS = $(TARGETLIBS) $(SDK_LIB_PATH)\msvcrt.lib
+!else
+USE_LIBCMT          = 1
+!endif
+
+INCLUDES            = $(INCLUDES); \
+                      $(BASEDIR)\public\sdk\inc\atl21
+
+# Multi Language part
+SOURCES_ML          = mlang.rc      \
+                      init.cpp      \
+                      mimedb.cpp    \
+                      mimereg.cpp   \
+                      rfc1766.cpp   \
+                      enumcp.cpp    \
+                      mlang.cpp     \
+                      dllload.cpp   \
+                      reg.cpp       \
+                      debug.c
+
+# IMLConvertCharset part
+SOURCES_CC          = utf8obj.cpp   \
+                      utf7obj.cpp   \
+                      ichrcnv.cpp   \
+                      convbase.cpp  \
+                      convinet.cpp  \
+                      detcbase.cpp  \
+                      kscobj.cpp    \
+                      eucjobj.cpp   \
+                      hzgbobj.cpp   \
+                      jisobj.cpp    \
+                      convobj.cpp
+
+# IMLangX part
+SOURCES_MLX         = mlflink.cpp   \
+                      mlstr.cpp     \
+                      mlstrw.cpp    \
+                      mlstra.cpp    \
+                      mlswalk.cpp   \
+                      mllbcons.cpp  \
+                      attrstr.cpp   \
+                      attrstrw.cpp  \
+                      attrstra.cpp  \
+                      attrloc.cpp   \
+                      util.cpp
+
+# Multi Language detection
+SOURCES_AUTO        = fechauto.cpp   \
+                      fechmap.cpp    \
+                      jislex.cpp     \
+                      lcinit.cpp     \
+                      detcjpn.cpp	 \
+                      detckrn.cpp    \
+                      cpdetect.cpp   \
+                      lcdetect.cpp   \
+                      validate.cpp   
+
+SOURCES             = $(SOURCES_ML) $(SOURCES_CC) $(SOURCES_MLX) $(SOURCES_AUTO)
+
+MISCFILES           = mlang.dat

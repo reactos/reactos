@@ -1,0 +1,134 @@
+; This is the Setup information file to install shell components
+; Copyright (c) 1999 Microsoft Corporation
+
+;
+; This file can be used to copy/delete files, to create/delete start menu shortcuts,
+; and to add/remove registry keys.  This file gets processed during GUI mode setup.
+; Shortcuts and HKCU registry keys created here will be automagically applied to every
+; users profile directory/registry hive.  When making "per user" changes in this file,
+; keep the following in mind:
+;   1.) You can only delete files that already exist in the "default user" profile
+;       from this file.  If the file does not exist in the default user profile then
+;       you change will have no effect on the various users profiles.
+;   2.) You can only delete registry keys that already exist in the default user
+;       registry hive.  As above, change will only be mirrored if the Default Hive is
+;       setup correctly.
+; If you need to make a change that violates any of the above limitations then you
+; will need to alter \nt\private\windows\setup\inf\win4\inf\hiveusd.inx to make the
+; change work correctly.  See that file for further details.
+;
+; Also remember that, as a general practice, you should NEVER write shell policies to
+; HKCU.  Write the policy to HKLM and use SHRegGet/Set...Value to check the policy.
+;
+
+[version]
+signature="$Windows NT$"
+ClassGUID={00000000-0000-0000-0000-000000000000}
+LayoutFile=layout.inf
+
+;
+; The format of this section is:
+;   SectionName = DirID[,SubDir]
+; Where section name corresponds to the CopyFiles or DelFiles section name.  You can
+; get a list of DirID values from \nt\public\sdk\inc\setupapi.h.  Or you can build
+; your own DirID by taking a shell special folder id (look for CSIDL_ in shlobj.w) and
+; adding 0x4000 to the value.  You must convert these values to base 10 before using.
+;
+[DestinationDirs]
+QuickLaunch         = 16410,%QuickLaunchDir%
+
+[DefaultInstall]
+CopyFiles = QuickLaunch
+RegisterOCXs = ComponentRegList
+ProfileItems = ExplorerDel,ExplorerAdd,WelcomeDel,WelcomeAdd,DiskCleanDel,DiskCleanAdd,SchedDel,SchedAdd
+
+[QuickLaunch]
+%ShowDesktop%,desktop.scf
+
+; 
+; This section can be used to register DLLs and OCXs.
+; You can call DllRegisterServer using a line like this:
+;       dllname
+; You can call DllInstall AND DllRegisterServer using a line like this:
+;       dllname,I
+; You can call ONLY DllInstall by doing this:
+;       dllname,NI
+; You can pass arguments to DllInstall like this:
+;       dllname,I,This String Gets Passed As An Arg
+;
+[ComponentRegList]
+%11%\dmwinctl.dll
+
+;
+; This profile item section provides a good example of the available fields.  The
+; numbers following the name are made from the following flags:
+;   0x00000000  The item goes in the All Users start menu
+;   0x00000001  The item goes in the Per-user start menu
+;   0x00000002  Delete the item in question
+;   0x00000004  The item is a new group (otherwise a link is created)
+;
+[ExplorerAdd]
+Name            =%Explorer_DESC%,0x00000001
+CmdLine         =10,,explorer.exe
+SubDir          =%Accessories%
+IconPath        =10,,explorer.exe
+IconIndex       =1
+InfoTip         =%Explorer_InfoTip%
+
+[ExplorerDel]
+Name            =%Explorer_DESC%,0x00000003
+SubDir          =%Accessories%
+
+[WelcomeAdd]
+Name            =%Welcome_DESC%,0x00000001
+CmdLine         =10,,welcome.exe
+SubDir          =%SystemTools%
+InfoTip         =%Welcome_InfoTip%
+
+[WelcomeDel]
+Name            =%Welcome_DESC%,0x00000003
+SubDir          =%SystemTools%
+
+[DiskCleanAdd]
+Name            =%DiskClean_DESC%,0x00000001
+CmdLine         =11,,cleanmgr.exe
+SubDir          =%SystemTools%
+InfoTip         =%DiskClean_InfoTip%
+
+[DiskCleanDel]
+Name            =%DiskClean_DESC%,0x00000003
+SubDir          =%SystemTools%
+
+[SchedAdd]
+Name            =%Scheduled_DESC%,0x00000001
+CmdLine         =10,,explorer.exe "::%CLSID_MyComputer%\::%CLSID_ControlPanel%\::%CLSID_TaskScheduler%"
+SubDir          =%SystemTools%
+IconPath        =11,,mstask.dll
+InfoTip         =%Scheduled_InfoTip%
+
+[SchedDel]
+Name            =%Scheduled_DESC%,0x00000003
+SubDir          =%SystemTools%
+
+
+[Strings]
+ShowDesktop         = "Show Desktop.scf"
+QuickLaunchDir      = "Microsoft\Internet Explorer\Quick Launch"
+
+Accessories         = "Accessories"
+SystemTools         = "Accessories\System Tools"
+
+Explorer_DESC       = "Windows Explorer"
+Explorer_InfoTip    = "Displays the files and folders on your computer."
+
+Welcome_DESC        = "Getting Started"
+Welcome_Infotip     = "Provides information about new Windows features and helps you to start using Windows 2000."
+
+DiskClean_DESC      = "Disk Cleanup"
+DiskClean_InfoTip   = "Enables you to clear your disk of unnecessary files."
+
+Scheduled_DESC      = "Scheduled Tasks"
+Scheduled_InfoTip   = "Use Task Scheduler to schedule computer tasks to run automatically."
+CLSID_MyComputer    = "{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
+CLSID_ControlPanel  = "{21EC2020-3AEA-1069-A2DD-08002B30309D}"
+CLSID_TaskScheduler = "{D6277990-4C6A-11CF-8D87-00AA0060F5BF}"

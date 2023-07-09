@@ -1,0 +1,66 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name: PhBookLib
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author: Suresh Krishnan
+
+    
+
+NOTE:   
+
+!ENDIF
+
+MAJORCOMP=RegWiz
+MINORCOMP=PhBookLib
+REGWIZ_COMMON_FLAGS= $(REGWIZ_WITH_UCODE) -D_USRDLL -D_TAPI -D_WINDOWS -DWINNT -DNT
+NOT_LEAN_AND_MEAN=1
+#WIN32_LEAN_AND_MEAN=1
+MSC_WARNING_LEVEL=/W3
+USE_NATIVE_EH=1
+C_DEFINES=-DNT -DWINNT $(REGWIZ_COMMON_FLAGS)
+
+C_DEFINES=$(C_DEFINES) -DDEBUG -D_DEBUG
+NTDEBUG=ntsd
+NTDEBUGTYPE=both
+MSC_OPTIMIZATION=/Odi
+
+USE_LIBCMT=1
+#USER_C_FLAGS=  $(REGWIZ_COMMON_FLAGS) 
+UMTYPE=windows
+TARGETNAME=PhBookLib
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=..\Phone1\obj\*\Phbk.lib
+REGWIZ_INCLUDES= ..\include;..\Res;..\PhBookLib
+INCLUDES=..\inc;..\..\..\..\inc;$(BASEDIR)\public\sdk\inc;$(BASEDIR)\public\sdk\inc\crt;
+
+
+
+#
+# Setup for application developer to set breakpoints with windbg
+#
+
+#NTDEBUGTYPE=both
+
+SOURCES=CCSV.CPP  \
+        DEBUG.CPP \
+	Main.CPP \
+	MISC.CPP \
+	RNAAPI.CPP \
+	SUAPI.CPP \
+	PhBk.cpp
+
+
+

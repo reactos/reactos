@@ -1,0 +1,85 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = ..\..\..
+
+TARGET_BOTH     = 1
+NOT_UNICODE     = 1
+USE_STATIC_ATL  = 1
+
+!include $(CCSHELL_DIR)\common.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+WIN32_WINNT_VERSION=0x0400
+WIN32_WIN95_VERSION=0x0400
+
+SUBSYSTEM_VERSION=4.00
+
+C_DEFINES = $(C_DEFINES) \
+            -D_ATL_MIN_CRT \
+            -D_USRDLL
+
+TARGETNAME      = ie4tour
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+DLLDEF          = ie4tour.def
+DLLENTRY        = DllMain
+DLLBASE         = 0x10000000
+
+TARGETLIBS      = $(SDK_LIB_PATH)\kernel32.lib          \
+                  $(SDK_LIB_PATH)\gdi32.lib             \
+                  $(SDK_LIB_PATH)\user32.lib            \
+                  $(SDK_LIB_PATH)\advapi32.lib          \
+                  $(SDK_LIB_PATH)\uuid.lib              \
+                  $(SDK_LIB_PATH)\ole32.lib             \
+                  $(SDK_LIB_PATH)\oleaut32.lib          \
+                  $(SDK_LIB_PATH)\urlmon.lib            \
+                  $(SDK_LIB_PATH)\rpcndr20.lib          \
+                  $(SDK_LIB_PATH)\rpcns4.lib            \
+                  $(SDK_LIB_PATH)\rpcrt4.lib            \
+                  $(CCSHELL_DIR)\lib\$(O)\shguid.lib    \
+                  $(CCSHELL_DIR)\lib\$(O)\shguidp.lib   \
+                  $(CCSHELL_DIR)\lib\$(O)\stocklib.lib  \
+                  $(LIBRARY_PATH)\shlwapip.lib          \
+                  $(LIBRARY_PATH)\comctlp.lib           \
+                  $(LIBRARY_PATH)\shell32p.lib
+
+!ifdef CCOVER
+TARGETLIBS = $(TARGETLIBS) $(SDK_LIB_PATH)\msvcrt.lib
+!else
+USE_LIBCMT  =  1
+!endif
+
+SOURCES         = ie4tour.rc                \
+                  ..\StdAfx.cpp             \
+                  ..\RunOnce.cpp            \
+                  ..\RunOnceCB.cpp          \
+                  ..\RunOnce.idl
+		
+PASS0_HEADERDIR=$(O)
+PASS0_SOURCEDIR=$(O)
+MIDL_FLAGS=/tlb $(O)\runonce.tlb
+INCLUDES=$(INCLUDES);$(O)

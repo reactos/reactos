@@ -1,0 +1,135 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+
+CUSTOM_RULES = /vobs/ie4/wininet.template
+
+WININET_INF_FILES = \
+                    $(O)/selfreg_wininet.inf
+
+WININET_MSG_FILES = \
+                    $(O)/inetmsg.h
+
+DLLDEF_SRC = wininet.def
+DLLDEF_EXPORTS = \
+        StrTokEx\
+        StrToDbl\
+        _____wininet_initDLL\
+        unixForceAutoProxSync\
+        unixCleanupWininetCacheLockFile\
+        unixGetWininetCacheLockStatus
+
+SOURCES =  \
+	autodial.cxx \
+    blocklst.cxx \
+	certcach.cxx \
+	cliauth.cxx  \
+    cookimp.cxx  \
+    cookexp.cxx  \
+	dllentry.cxx \
+    event.cxx    \
+	globals.cxx  \
+	inetapia.cxx \
+	inetapiu.cxx \
+	inetapiw.cxx \
+    options.cxx  \
+	parseurl.cxx \
+	readhtml.cxx \
+	registry.cxx \
+	thrdinfo.cxx \
+    strtokex.c   \
+    strtodbl.c \
+    proxreg.cxx  \
+    unixwrap.cxx
+
+INCLUDES += \
+         -I.\
+         -I${WININET_DIR}/inc\
+         -I${WININET_DIR}/inc/private\
+         -I${WININET_DIR}/debug
+
+DEFINES += -DNT -DWIN32S=0
+
+WDLL = wininet
+DLL = lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+DLLOBJS = ${CPP_OBJS:%.c=%.o}
+DLL-EXPORTS = win32/wininet.def
+SRCS=${SOURCES}
+
+WRESOURCE = $(O)/wininet.rc # Windows resource
+TRESOURCE = ${WDLL}.rxt   # Target X resource (must match DLL name)
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+NO_UNICODE = 1
+
+ifndef COMPILE_OPTION
+  COMPILE_OPTION = debug
+endif
+APP_CFLAGS += ${WININET_CFLAGS} ${INCLUDES} ${DEFINES}
+
+DIP_CFLAGS += -DDLL_SPECIFIC_OPERATOR_NEW
+
+ifdef UNIX_BUILDS_AUTOPROXY_DETECT
+APDETECT_LIBS = \
+	-lapdetect \
+else
+APDETECT_LIBS =
+endif
+
+STATIC_LIBS = \
+	-ldebug		\
+	-lhttpauth	\
+	-lftp		\
+	-lgopher		\
+	-lhttp		\
+	${APDETECT_LIBS} \
+	-lhndlobj		\
+	-linetui		\
+	-lcommon		\
+	-lurlcache
+
+APP_DLLFLAGS = \
+               -L${LIB.dir}\
+               ${STATIC_LIBS}\
+               -lole32\
+               -lshlwapi
+
+ifeq (${MWOS},irix6)
+APP_DLLFLAGS += -all
+endif
+ 
+__cplusplus = true
+
+MESSAGES.file = $(O)/inetmsg.mc
+MESSAGES.hdir = $(O)
+MESSAGES.rdir = $(O)
+
+include $(MWHOME)/make.rules.simple
+
+$(O)/%.rc: %.rc ${WININET_MSG_FILES} ${WININET_INF_FILES}
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+$(O)/%.mc:%.mc
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+$(O)/%.inx:%.inx
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+$(O)/%_wininet.inf: $(O)/%.inx
+	cleaninf -w $< $@
+

@@ -1,0 +1,92 @@
+<HTML id=anchbrws style="font-family: MS Shell Dlg; font-size: 8pt;
+#ifdef UNIX
+color:buttontext;
+#endif
+width: 31.5em; height: 32.5em">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>General</TITLE>
+<SCRIPT>
+function BodyLoad()
+{
+    var L_NotAvailable_Text = "Not available";
+    var arrAll = document.all;
+    for (i=0; i < arrAll.length; i++)
+    {
+        var elm = arrAll[i];
+        if (elm.id.substring(0,1) == "_")
+        {
+            if (elm.innerText== "undefined" || elm.innerText == "")
+            {
+                elm.innerText = L_NotAvailable_Text;
+            }
+        }
+    }
+}
+</SCRIPT>
+</HEAD>
+<BODY onload="BodyLoad()" id=bdy style="font-family: MS Shell Dlg; font-size: 8pt;
+background: buttonface; color: windowtext" scroll=no>
+
+<table id=tbl1 cellPadding=3 cellspacing=2 border=0 style="font-family: MS Shell Dlg;
+font-size: 8pt;" width=100%>
+
+<TR>
+
+<TD id=tdImage>
+<img id=imgLink src=link.gif width=35 height=36 border=0>
+</td>
+
+<td id=td1 style="font-family: MS Shell Dlg; font-size: 8pt">
+<TEXTAREA id=_nameProp style="font-family: MS Shell Dlg; font-size: 8pt; 
+#ifdef UNIX
+color:buttontext;
+#endif
+background: buttonface; overflow: hidden; width: 24em; height: 2.7em;
+border: 0px" readonly=1 wrap=physical tabindex=-1></TEXTAREA>
+</td></tr>
+<tr>
+<td id=td2 style="font-family: MS Shell Dlg; font-size: 8pt" colspan=2>&nbsp;
+<hr id=hr1>
+</td>
+</tr>
+
+<tr>
+
+<Td nowrap id=td3 style="font-family: MS Shell Dlg; font-size: 8pt">Protocol:
+</TD>
+<td id=td4 style="font-family: MS Shell Dlg; font-size: 8pt">
+<TEXTAREA id=_protocolLong style="font-family: MS Shell Dlg; font-size: 8pt; 
+#ifdef UNIX
+color:buttontext;
+#endif
+background: buttonface; overflow: hidden; width: 24em; height: 1.5em;
+border: 0px" readonly=1 wrap=physical tabindex=-1></TEXTAREA></TD></tr>
+
+<tr>
+<TD id=td4a style="font-family: MS Shell Dlg; font-size: 8pt">Type:
+</TD>
+<TD id=td5 style="font-family: MS Shell Dlg; font-size: 8pt">
+<TEXTAREA id=_mimeType style="font-family: MS Shell Dlg; font-size: 8pt; 
+#ifdef UNIX
+color:buttontext;
+#endif
+background: buttonface; overflow: hidden; width: 24em; height: 1.5em;
+border: 0px" readonly=1 wrap=physical tabindex=-1></TEXTAREA></TD></tr>
+
+<tr>
+<td id=td6 style="font-family: MS Shell Dlg; font-size: 8pt" 
+valign=top>Address:<br>
+(URL)
+</TD>
+<TD id=td7 style="font-family: MS Shell Dlg; font-size: 8pt" valign=top>
+<TEXTAREA id=_href style="font-family: MS Shell Dlg; font-size: 8pt; 
+#ifdef UNIX
+color:buttontext;
+#endif
+background: buttonface; overflow: hidden; width: 24em; height: 2.7em;
+border: 0px" readonly=1 wrap=physical tabindex=-1></TEXTAREA></TD></tr>
+
+</table>
+</BODY>
+</HTML>

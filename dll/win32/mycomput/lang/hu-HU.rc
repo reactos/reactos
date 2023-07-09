@@ -1,8 +1,0 @@
-/* Hungarian translation by Tibor Lajos Füzi (tibor.fuzi@gmail.com) 2021 */
-
-LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_MANAGE "Kezelés"
-END

@@ -1,0 +1,169 @@
+#include <windows.h>
+#include <mmddk.h>
+//#include <ver.h>
+#include "sulib.h"
+#include "drivers.h"
+#include <cphelp.h>
+#include "drivers.rcv"
+
+DRIVERS_ICON    ICON LOADONCALL MOVEABLE DISCARDABLE "drivers.ico"
+
+STRINGTABLE PRELOAD DISCARDABLE MOVEABLE
+BEGIN
+    IDS_OEMSETUP                    ,"oemsetup.inf"
+    IDS_LASTQUERY                   ,"LastTime"
+    IDS_SYSTEM                      ,"0:system32"
+    IDS_SYSTEM_DRIVERS              ,"0:system32\\drivers"
+    IDS_NAME                        ,"D&rivers"
+    IDS_RESTART_ADD                 ,"The %s driver has been added. For the new driver to take effect, you must quit and restart Windows NT."
+    IDS_RESTART_REM                 ,"The %s driver has been removed. To remove the driver from your system, you must quit and restart Windows NT."
+    IDS_INFO                        ,"Installs, removes, and configures drivers"
+    IDS_NOINF                       ,"Cannot find the MMDRIVER.INF file needed to install drivers. The file may be damaged or may not be in your Windows NT SYSTEM32 directory.\n\nCopy the original file on Windows NT Disk 1 to your SYSTEM32 directory.
+"
+    IDS_DEFDRIVE                    ,"A:\\"
+    IDS_OUTOFDISK                   ,"Not enough disk space to copy the driver file.\n\nClose the Drivers dialog box, delete one or more files to increase available disk space, and then try again."
+    IDS_DISKS                       ,"source media descriptions"
+    IDS_UNLISTED                    ,"Insert the disk with the unlisted, updated, or vendor-provided driver in:"
+    IDS_KNOWN                       ,"Insert %s or the disk with the updated\n%s driver in:"
+    IDS_FILE_ERROR                  ,"File Installation Error"
+    IDS_UNABLE_TOINSTALL            ,"Unable to install the driver file. There may be a problem with your system. Check your system integrity or contact your system administrator."
+    IDS_UPDATED                     ,"Unlisted or Updated Driver"
+    IDS_ERROR + ERROR_OUTOFMEMORY   ,"Not enough memory available to perform this operation.\n\nQuit one or more applications to increase available memory, and then try again."
+    IDS_FILEINUSEREM                ,"You cannot update to a new driver until you remove the old one. Remove the old driver, quit and restart Windows NT, and then try again."
+    IDS_FILEINUSEADD                ,"The old driver is still being used by Windows NT. You must quit and restart Windows NT before you can add the updated driver."
+    IDS_DRIVERDESC                  ,"drivers.desc"
+    IDS_RELATEDDESC                 ,"related.desc"
+    IDS_INSTALLDRIVERS              ,"Installable.drivers"
+    IDS_INSTALLDRIVERS32            ,"Installable.drivers32"
+    IDS_BOOT                        ,"Boot"
+    IDS_USERINSTALLDRIVERS          ,"Userinstallable.drivers"
+    IDS_REMOVE                      ,"Remove"
+    IDS_REMOVEORNOTSTRICT           ,"This %s driver is required by the system. If you remove it, your system may not work properly.\n\nAre you sure you want to remove it?"
+    IDS_REMOVEORNOT                 ,"Are you sure you want to remove\nthe %s driver?"
+    IDS_OUT_OF_REMOVE_SPACE         ,"Out of remove 'undo' space."
+    IDS_INSTALLING_DRIVERS          ,"Cannot load the %s driver. The driver file may be missing. Try installing the driver again, or contact your system administrator."
+    IDS_NO_DESCRIPTION              ,"[No Driver Description]"
+    IDS_ERRORBOX                    ,"Driver Error"
+    IDS_CONFIGURE_DRIVER            ,"Installation Error"
+    IDS_CLOSE                       ,"Close"
+    IDS_TOO_MANY_DRIVERS            ,"Cannot install more drivers of the type: %s. Remove an unused driver, and then try again."
+    IDS_APPNAME                     ,"Install Drivers"
+    IDS_DRIVERS                     ,DRIVERS_SECTION
+    IDS_SETUPINF                    ,"mmdriver.inf"
+    IDS_CONTROLINI                  ,"control.ini"
+    IDS_SYSINI                      ,"system.ini"
+    IDS_MCI                         ,MCI_SECTION
+    IDS_VALID_DRIVER_TYPES          ,"WAVE MIDI AUX KERNEL"
+    IDS_CONTROL_HLP                 ,"control.hlp"
+    IDS_DRIVER_EXISTS               ,"The required %s driver is already on the system. Do you want to use the current driver or install a new driver?"
+    IDS_INSUFFICIENT_PRIVILEGE      ,"You have insufficient privilege to install or remove kernel driver file %s"
+    IDS_CANTADD                     ,"You have insufficient privilege to add or remove a driver"
+    IDS_CANNOT_RESTART_PRIVILEGE    ,"You have insufficient privilege to restart the system"
+    IDS_CANNOT_RESTART_UNKNOWN      ,"Due to an unexpected error the system cannot be restarted"
+    IDS_DRIVER_CONFIG_ERROR         ,"Cannot install the driver %s.  Check your hardware configuration"
+END
+
+DLG_KNOWN DIALOG 10, 18, 220, 126
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&List of Drivers", ID_DRVSTRING, 6, 4, 170, 8
+    LISTBOX         LB_AVAILABLE, 5, 15, 159, 92, LBS_SORT | WS_VSCROLL | LBS_DISABLENOSCROLL |  WS_TABSTOP
+    DEFPUSHBUTTON   "OK", IDOK, 175, 9, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 175, 26, 40, 14
+    PUSHBUTTON      "&Help", IDH_DLG_ADD_DRIVERS, 175, 43, 40, 14
+END
+
+
+DLG_INSTALLED DIALOG 10, 18, 227, 112
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Drivers"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Installed Drivers", 100, 6, 2, 160, 13
+    LISTBOX         LB_INSTALLED, 6, 16, 160, 92, LBS_SORT | WS_VSCROLL | LBS_DISABLENOSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Cancel", IDCANCEL, 175, 6, 40, 14, WS_GROUP
+    PUSHBUTTON      "&Add...", ID_ADD, 175, 23, 40, 14
+    PUSHBUTTON      "&Remove", ID_REMOVE, 175, 40, 40, 14
+    PUSHBUTTON      "&Setup...", ID_CONFIGURE, 175, 57, 40, 14
+    PUSHBUTTON      "&Help", IDH_CHILD_DRIVERS, 175, 74, 40, 14
+END
+
+DLG_INSERTDISK DIALOG 10, 18, 190, 75
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Install Driver"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "", ID_TEXT, 10, 5, 130, 32
+    EDITTEXT        ID_EDIT, 10, 42, 125, 14,  ES_AUTOHSCROLL | ES_OEMCONVERT
+    DEFPUSHBUTTON   "OK", IDOK, 145, 6, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 145, 23, 40, 14
+    PUSHBUTTON      "&Browse...", IDS_BROWSE, 145, 40, 40, 14
+    PUSHBUTTON      "&Help", IDH_DLG_INSERT_DISK, 145, 57, 40, 14
+END
+
+
+DLG_BROWSE DIALOG 46, 21, 158, 165
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | WS_POPUP | WS_VISIBLE
+CAPTION "Browse"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "", ctlLast+1, 5, 5, 147, 30
+    LTEXT           "&Directories:", -1, 5, 40, 92, 9, NOT WS_GROUP
+    LTEXT           "", stc1, 5, 50, 120, 8, NOT WS_GROUP
+    LISTBOX         lst2, 5, 62, 92, 64, LBS_SORT | LBS_OWNERDRAWFIXED |
+                    LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT |
+                    LBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Dri&ves:", -1, 5, 135, 92, 9, NOT WS_GROUP
+    COMBOBOX        cmb2, 5, 145, 92, 68, CBS_DROPDOWNLIST |
+                    CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT |
+                    CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK", IDOK, 104, 63, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 104, 81, 50, 14, WS_GROUP
+    PUSHBUTTON      "Net&work...", psh14, 104, 145, 50,  14, WS_GROUP
+    PUSHBUTTON      "&Help", IDH_DLG_BROWSE, 104, 121, 50, 14, WS_GROUP
+    EDITTEXT        edt1, -100, -100, 10, 10, ES_LOWERCASE | ES_AUTOHSCROLL |
+                    NOT WS_TABSTOP
+    LISTBOX         lst1, -100, -100, 10, 10, LBS_EXTENDEDSEL
+    CONTROL         "", chx1, "Button", BS_AUTOCHECKBOX, -100, -100, 10, 10
+    LTEXT           "", stc2, -100, -100, 10, 10
+    COMBOBOX        cmb1, -100, -100, 10, 10, CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+END
+
+DLG_UPDATE DIALOG 54, 36, 220, 85
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+CAPTION "Add Unlisted or Updated Driver"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&List of Drivers:", ID_LIST, 10, 18, 124, 8
+    LISTBOX         LB_UNLISTED, 6, 16, 160, 68, LBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP | LBS_DISABLENOSCROLL
+    DEFPUSHBUTTON   "OK", IDOK, 175, 6, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 175, 23, 40, 14
+    PUSHBUTTON      "&Help", IDH_DLG_ADD_UNKNOWN, 175, 40, 40, 14
+END
+
+DLG_RESTART DIALOG 10, 10, 225, 70
+CAPTION "System Setting Change"
+STYLE DS_MODALFRAME | WS_CAPTION | WS_POPUP | WS_VISIBLE | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+   LTEXT            "Your driver settings have changed. You will need to exit and restart Windows NT so that the new settings can take effect.", IDS_RESTARTTEXT, 30, 6, 170, 40,  WS_CHILD
+   DEFPUSHBUTTON    "&Don't Restart Now", IDCANCEL, 30, 51, 80, 14, WS_GROUP
+   PUSHBUTTON       "&Restart Now", IDOK, 120, 51, 80, 14
+   ICON             32515  -1, 8, 14, 16, 21
+END
+
+DLG_EXISTS DIALOG LOADONCALL MOVEABLE DISCARDABLE 8, 12, 180, 80
+CAPTION "Driver Exists"
+FONT 8, "MS Shell Dlg"
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+    ICON            32515  -1, 8, 14, 16, 21
+    LTEXT           "", ID_STATUS2, 34, 8, 126, 35,  WS_CHILD
+    DEFPUSHBUTTON   "Cu&rrent", ID_CURRENT, 70, 50, 40, 14
+    PUSHBUTTON      "&New", ID_NEW, 20, 50, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 120, 50, 40, 14
+END

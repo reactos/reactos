@@ -1,0 +1,407 @@
+#ifndef _MSHTMEXT_PDL_
+#define _MSHTMEXT_PDL_ 1
+
+#include "element.pdl"
+
+file mshtmext.pdl
+
+import element.pdl
+import document.pdl
+
+interface IElementBehaviorSite
+interface ICSSFilterSite
+interface IMarkupPointer
+interface IMarkupContainer
+interface IHTMLDocument2
+interface IActiveIMMApp
+
+//-------------------------------------------------------------------------
+//
+//  ICSSFilterSite, ICSSFilter
+//
+//-------------------------------------------------------------------------
+
+interface ICSSFilterSite super:IUnknown custom guid:3050f3ed-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT GetElement              (out retval type:IHTMLElement** arg:Element)
+    method      HRESULT FireOnFilterChangeEvent ()
+
+
+interface ICSSFilter super:IUnknown custom guid:3050f3ec-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT SetSite                 (in type:ICSSFilterSite* arg:pSink)
+    method      HRESULT OnAmbientPropertyChange (in type:LONG arg:dispid)
+
+
+//+------------------------------------------------------------------------
+//
+//  ISecureUrlHost
+//
+//-------------------------------------------------------------------------
+
+interface ISecureUrlHost super:IUnknown custom guid:c81984c4-74c8-11d2-baa9-00c04fc2040e
+    method      HRESULT ValidateSecureUrl (out type:BOOL* arg:pfAllow,\
+                                           in type:OLECHAR* arg:pchUrlInQuestion,\
+                                           in type:DWORD arg:dwFlags)
+                                            
+enum SECUREURLHOSTVALIDATE_FLAGS  prefix:SUHV_ guid:d1de878e-74c8-11d2-baa9-00c04fc2040e 
+    eval PROMPTBEFORENO        value:0x00000001
+    eval SILENTYES             value:0x00000002
+    eval UNSECURESOURCE        value:0x00000004
+    
+                                            
+cpp_quote("DEFINE_GUID(SID_SEditCommandTarget,0x3050f4b5,0x98b5,0x11cf,0xbb,0x82,0x00,0xaa,0x00,0xbd,0xce,0x0b);")
+cpp_quote("DEFINE_GUID(CGID_EditStateCommands,0x3050f4b6,0x98b5,0x11cf,0xbb,0x82,0x00,0xaa,0x00,0xbd,0xce,0x0b);")
+cpp_quote("DEFINE_GUID(CGID_DocHostCommandHandler,0xf38bc242,0xb950,0x11d1,0x89,0x18,0x00,0xc0,0x4f,0xc2,0xc8,0x36);")
+cpp_quote("DEFINE_GUID(SID_SHTMLEditor,0x3050f4f4,0x98b5,0x11cf,0xbb,0x82,0x00,0xaa,0x00,0xbd,0xce,0x0b);")
+
+
+//-------------------------------------------------------------------------
+//
+//  Markup services
+//
+//-------------------------------------------------------------------------
+
+enum POINTER_GRAVITY    prefix:POINTER_GRAVITY_ guid:3050f5af-98b5-11cf-bb82-00aa00bdce0b
+    eval Left   value:0       
+    eval Right  value:1       
+
+enum ELEMENT_ADJACENCY  prefix:ELEM_ADJ_    guid:3050f5b0-98b5-11cf-bb82-00aa00bdce0b
+    eval BeforeBegin   value:0
+    eval AfterBegin    value:1
+    eval BeforeEnd     value:2
+    eval AfterEnd      value:3
+
+enum MARKUP_CONTEXT_TYPE prefix:CONTEXT_TYPE_   guid:3050f5b1-98b5-11cf-bb82-00aa00bdce0b
+    eval None          value:0
+    eval Text          value:1
+    eval EnterScope    value:2
+    eval ExitScope     value:3
+    eval NoScope       value:4
+
+// must agree with FR_xxx (commdlg.h)
+enum FINDTEXT_FLAGS  prefix:FINDTEXT_ guid:3050f5b2-98b5-11cf-bb82-00aa00bdce0b 
+    eval BACKWARDS         value:0x00000001
+    eval WHOLEWORD         value:0x00000002
+    eval MATCHCASE         value:0x00000004
+    eval RAW               value:0x00020000
+    eval MATCHDIAC         value:0x20000000
+    eval MATCHKASHIDA      value:0x40000000
+    eval MATCHALEFHAMZA    value:0x80000000
+
+enum MOVEUNIT_ACTION  prefix:MOVEUNIT_  guid:3050f5b3-98b5-11cf-bb82-00aa00bdce0b
+    eval PREVCHAR       
+    eval NEXTCHAR       
+    eval PREVCLUSTERBEGIN
+    eval NEXTCLUSTERBEGIN
+    eval PREVCLUSTEREND
+    eval NEXTCLUSTEREND
+    eval PREVWORDBEGIN  
+    eval NEXTWORDBEGIN  
+    eval PREVWORDEND    
+    eval NEXTWORDEND    
+    eval PREVPROOFWORD  
+    eval NEXTPROOFWORD  
+    eval NEXTURLBEGIN
+    eval PREVURLBEGIN
+    eval NEXTURLEND
+    eval PREVURLEND
+    eval PREVSENTENCE   
+    eval NEXTSENTENCE   
+    eval PREVBLOCK      
+    eval NEXTBLOCK      
+
+
+enum PARSE_FLAGS prefix:PARSE_ guid:3050f5b4-98b5-11cf-bb82-00aa00bdce0b
+    eval ABSOLUTIFYIE40URLS value:0x00000001  
+
+enum ELEMENT_TAG_ID prefix:TAGID_ guid:3050f5b5-98b5-11cf-bb82-00aa00bdce0b
+    //
+    // TAGID_NULL is the non-ID
+    //
+    eval NULL           value:0
+    eval UNKNOWN 
+    eval A
+    eval ACRONYM
+    eval ADDRESS
+    eval APPLET
+    eval AREA
+    eval B
+    eval BASE
+    eval BASEFONT
+    eval BDO
+    eval BGSOUND
+    eval BIG
+    eval BLINK
+    eval BLOCKQUOTE
+    eval BODY
+    eval BR
+    eval BUTTON
+    eval CAPTION
+    eval CENTER
+    eval CITE 
+    eval CODE
+    eval COL
+    eval COLGROUP
+    eval COMMENT
+    eval COMMENT_RAW
+    eval DD 
+    eval DEL
+    eval DFN 
+    eval DIR 
+    eval DIV
+    eval DL 
+    eval DT 
+    eval EM
+    eval EMBED 
+    eval FIELDSET
+    eval FONT 
+    eval FORM 
+    eval FRAME
+    eval FRAMESET
+    eval GENERIC
+    eval H1 
+    eval H2
+    eval H3 
+    eval H4 
+    eval H5 
+    eval H6
+    eval HEAD
+    eval HR
+    eval HTML
+    eval I
+    eval IFRAME
+    eval IMG
+    eval INPUT
+    eval INS
+    eval KBD
+    eval LABEL
+    eval LEGEND
+    eval LI
+    eval LINK
+    eval LISTING
+    eval MAP
+    eval MARQUEE
+    eval MENU
+    eval META 
+    eval NEXTID
+    eval NOBR
+    eval NOEMBED
+    eval NOFRAMES
+    eval NOSCRIPT
+    eval OBJECT
+    eval OL
+    eval OPTION
+    eval P
+    eval PARAM
+    eval PLAINTEXT
+    eval PRE
+    eval Q
+    eval RP
+    eval RT
+    eval RUBY
+    eval S
+    eval SAMP
+    eval SCRIPT
+    eval SELECT
+    eval SMALL
+    eval SPAN 
+    eval STRIKE
+    eval STRONG 
+    eval STYLE 
+    eval SUB
+    eval SUP 
+    eval TABLE
+    eval TBODY 
+    eval TC
+    eval TD
+    eval TEXTAREA
+    eval TFOOT
+    eval TH
+    eval THEAD 
+    eval TITLE
+    eval TR 
+    eval TT
+    eval U 
+    eval UL 
+    eval VAR 
+    eval WBR 
+    eval XMP
+
+    // These should be at the end of the list!  This acts as the total number
+    // of TAG_IDs.
+    eval COUNT
+    eval LAST_PREDEFINED  value:10000
+
+//-------------------------------------------------------------------------
+//
+//  IMarkupServices, IMarkupContainer, IMarkupPointer
+//
+//-------------------------------------------------------------------------
+
+interface IMarkupServices super:IUnknown custom guid:3050f4a0-98b5-11cf-bb82-00aa00bdce0b
+
+    method      HRESULT CreateMarkupPointer     (out type:IMarkupPointer** arg:ppPointer)
+    method      HRESULT CreateMarkupContainer   (out type:IMarkupContainer** arg:ppMarkupContainer)
+    method      HRESULT CreateElement           (in type:ELEMENT_TAG_ID arg:tagID, \
+                                                 in type:OLECHAR* arg:pchAttributes, \
+                                                 out type:IHTMLElement** arg:ppElement)
+    method      HRESULT CloneElement            (in type:IHTMLElement* arg:pElemCloneThis, \
+                                                 out type:IHTMLElement** arg:ppElementTheClone)
+    method      HRESULT InsertElement           (in type:IHTMLElement* arg:pElementInsert, \
+                                                 in type:IMarkupPointer* arg:pPointerStart, \
+                                                 in type:IMarkupPointer* arg:pPointerFinish)
+    method      HRESULT RemoveElement           (in type:IHTMLElement* arg:pElementRemove)
+    method      HRESULT Remove                  (in type:IMarkupPointer* arg:pPointerStart, \
+                                                 in type:IMarkupPointer* arg:pPointerFinish)
+    method      HRESULT Copy                    (in type:IMarkupPointer* arg:pPointerSourceStart, \
+                                                 in type:IMarkupPointer* arg:pPointerSourceFinish, \
+                                                 in type:IMarkupPointer* arg:pPointerTarget)
+    method      HRESULT Move                    (in type:IMarkupPointer* arg:pPointerSourceStart, \
+                                                 in type:IMarkupPointer* arg:pPointerSourceFinish, \
+                                                 in type:IMarkupPointer* arg:pPointerTarget)
+    method      HRESULT InsertText              (in type:OLECHAR* arg:pchText, \
+                                                 in type:long arg:cch \
+                                                 in type:IMarkupPointer* arg:pPointerTarget)
+    method      HRESULT ParseString             (in type:OLECHAR* arg:pchHTML, \
+                                                 in type:DWORD arg:dwFlags, \
+                                                 out type:IMarkupContainer** arg:ppContainerResult, \
+                                                 in type:IMarkupPointer* arg:ppPointerStart, \
+                                                 in type:IMarkupPointer* arg:ppPointerFinish)
+    method      HRESULT ParseGlobal             (in type:HGLOBAL arg:hglobalHTML, \
+                                                 in type:DWORD arg:dwFlags, \
+                                                 out type:IMarkupContainer** arg:ppContainerResult, \
+                                                 in type:IMarkupPointer* arg:pPointerStart, \
+                                                 in type:IMarkupPointer* arg:pPointerFinish)
+    method      HRESULT IsScopedElement         (in type:IHTMLElement* arg:pElement, \
+                                                 out type:BOOL* arg:pfScoped)
+    method      HRESULT GetElementTagId         (in type:IHTMLElement* arg:pElement, \
+                                                 out type:ELEMENT_TAG_ID* arg:ptagId)
+    method      HRESULT GetTagIDForName maxstrlen:pdlNoLimit (in type:BSTR arg:bstrName, \
+                                                 out type:ELEMENT_TAG_ID* arg:ptagId)
+    method      HRESULT GetNameForTagID         (in type:ELEMENT_TAG_ID arg:tagId, \
+                                                 out type:BSTR* arg:pbstrName)
+    method      HRESULT MovePointersToRange     (in type:IHTMLTxtRange* arg:pIRange, \
+                                                 in type:IMarkupPointer* arg:pPointerStart, \
+                                                 in type:IMarkupPointer* arg:pPointerFinish)
+    method      HRESULT MoveRangeToPointers     (in type:IMarkupPointer* arg:pPointerStart, \
+                                                 in type:IMarkupPointer* arg:pPointerFinish, \
+                                                 in type:IHTMLTxtRange* arg:pIRange)
+    method      HRESULT BeginUndoUnit           (in type:OLECHAR* arg:pchTitle)
+    method      HRESULT EndUndoUnit             ()
+
+interface IMarkupContainer super:IUnknown custom guid:3050f5f9-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT OwningDoc               (out type:IHTMLDocument2** arg:ppDoc)
+
+interface IMarkupPointer super:IUnknown custom guid:3050f49f-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT OwningDoc               (out type:IHTMLDocument2** arg:ppDoc)
+    method      HRESULT Gravity                 (out type:POINTER_GRAVITY* arg:pGravity)
+    method      HRESULT SetGravity              (in type:POINTER_GRAVITY arg:Gravity)
+    method      HRESULT Cling                   (out type:BOOL* arg:pfCling)
+    method      HRESULT SetCling                (in type:BOOL arg:fCLing)
+    method      HRESULT Unposition              ()
+    method      HRESULT IsPositioned            (out type:BOOL* arg:pfPositioned)
+    method      HRESULT GetContainer            (out type:IMarkupContainer** arg:ppContainer)
+    method      HRESULT MoveAdjacentToElement   (in type:IHTMLElement* arg:pElement, \
+                                                 in type:ELEMENT_ADJACENCY arg:eAdj)
+    method      HRESULT MoveToPointer           (in type:IMarkupPointer* arg:pPointer)
+    method      HRESULT MoveToContainer         (in type:IMarkupContainer* arg:pContainer, \
+                                                 in type:BOOL arg:fAtStart)
+    method      HRESULT Left                    (in type:BOOL arg:fMove, \
+                                                 out type:MARKUP_CONTEXT_TYPE* arg:pContext, \
+                                                 out type:IHTMLElement** arg:ppElement, \
+                                                 in out type:long* arg:pcch, \
+                                                 out type:OLECHAR* arg:pchText)
+    method      HRESULT Right                   (in type:BOOL arg:fMove, \
+                                                 out type:MARKUP_CONTEXT_TYPE* arg:pContext, \
+                                                 out type:IHTMLElement** arg:ppElement, \
+                                                 in out type:long* arg:pcch, \
+                                                 out type:OLECHAR* arg:pchText)
+    method      HRESULT CurrentScope            (out type:IHTMLElement** arg:ppElemCurrent)
+    method      HRESULT IsLeftOf                (in type:IMarkupPointer* arg:pPointerThat, \
+                                                 out type:BOOL* arg:pfResult)
+    method      HRESULT IsLeftOfOrEqualTo       (in type:IMarkupPointer* arg:pPointerThat, \
+                                                 out type:BOOL* arg:pfResult)
+    method      HRESULT IsRightOf               (in type:IMarkupPointer* arg:pPointerThat, \
+                                                 out type:BOOL* arg:pfResult)
+    method      HRESULT IsRightOfOrEqualTo      (in type:IMarkupPointer* arg:pPointerThat, \
+                                                 out type:BOOL* arg:pfResult)
+    method      HRESULT IsEqualTo               (in type:IMarkupPointer* arg:pPointerThat, \
+                                                 out type:BOOL* arg:pfAreEqual)
+    method      HRESULT MoveUnit                (in type:MOVEUNIT_ACTION arg:muAction)
+    method      HRESULT FindText                (in type:OLECHAR* arg:pchFindText, \
+                                                 in type:DWORD arg:dwFlags, \
+                                                 in type:IMarkupPointer* arg:pIEndMatch, \
+                                                 in type:IMarkupPointer* arg:pIEndSearch)
+
+interface IMarkupTextFrags super:IUnknown custom guid:3050f5fa-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT GetTextFragCount        (out type:long* arg:pcFrags)
+    method      HRESULT GetTextFrag             (in type:long arg:iFrag, \
+                                                 out type:BSTR* arg:pbstrFrag, \
+                                                 in type:IMarkupPointer* arg:pPointerFrag)
+    method      HRESULT RemoveTextFrag          (in type:long arg:iFrag)
+    method      HRESULT InsertTextFrag          (in type:long arg:iFrag, \
+                                                 in type:BSTR arg:bstrInsert, \
+                                                 in type:IMarkupPointer* arg:pPointerInsert)
+    method      HRESULT FindTextFragFromMarkupPointer \
+                                                (in type:IMarkupPointer* arg:pPointerFind, \
+                                                 out type:long* arg:piFrag, \
+                                                 out type:BOOL* arg:pfFragFound)
+
+#ifdef TREE_SYNC
+// this is temporary initial code enabling markup change notification for netdocs
+// it will likely totally change in the future.
+interface IMarkupSyncServices
+interface IMarkupSyncLogSink
+interface IHTMLElement
+interface IMarkupPointer
+interface IMarkupContainer
+interface IHTMLDocument2
+
+interface IMarkupSyncServices super:IUnknown custom guid:8860B601-178E-11d2-96AE-00805F852B4D
+    method      HRESULT GetCpFromPointer        (in type:IMarkupPointer* arg:pIPointer,\
+                                                 out type:long* arg:pcp)
+    method      HRESULT MovePointerToCp         (in type:IMarkupPointer* arg:pIPointer,\
+                                                 in type:long arg:cp,\
+                                                 in type:IMarkupContainer* arg:pIContainer)
+    method      HRESULT RegisterLogSink         (in type:IMarkupSyncLogSink* arg:pILogSink)
+    method      HRESULT UnregisterLogSink       (in type:IMarkupSyncLogSink* arg:pILogSink)
+
+interface IMarkupSyncLogSink super:IUnknown custom guid:48a18696-2e3d-11d2-bfd9-00805f852336
+    method      HRESULT SetAttribute            (in type:IHTMLDocument2* arg:pIDoc,\
+                                                 in type:IHTMLElement* arg:pIElement,\
+                                                 in type:BSTR arg:strPropertyName,\
+                                                 in type:VARIANT* arg:pvarPropertyValue,\
+                                                 in type:LONG arg:lFlags)
+    method      HRESULT InsertElement           (in type:IHTMLDocument2* arg:pIDoc,\
+                                                 in type:IMarkupPointer* arg:pIPointerStart,\
+                                                 in type:IMarkupPointer* arg:pIPointerFinish,\
+                                                 in type:IHTMLElement* arg:pIElementInsert)
+    method      HRESULT RemoveElement           (in type:IHTMLDocument2* arg:pIDoc,\
+                                                 in type:IHTMLElement* arg:pIElementRemove)
+    method      HRESULT InsertText              (in type:IHTMLDocument2* arg:pIDoc,\
+                                                 in type:OLECHAR* arg:pchText,\
+                                                 in type:long arg:cch,\
+                                                 in type:IMarkupPointer* arg:pIPointerTarget)
+    method      HRESULT CutCopyMove             (in type:IHTMLDocument2* arg:pIDoc,\
+                                                 in type:IMarkupPointer* arg:pIPointerStart,\
+                                                 in type:IMarkupPointer* arg:pIPointerFinish,\
+                                                 in type:IMarkupPointer* arg:pIPointerTarget,\
+                                                 in type:BOOL arg:fRemove)
+    method      HRESULT CutCopyMoveFinalize     (in type:IHTMLDocument2* arg:pIDoc)
+#endif // TREE_SYNC
+
+
+#ifdef XMV_PARSE
+//-------------------------------------------------------------------------
+//
+//  XML Generic Parse interface, allows unqualified tags to be interpreted as 
+//  generic tags for the XML MimeViewer
+//
+//-------------------------------------------------------------------------
+
+interface IXMLGenericParse super:IUnknown custom guid:E4E23071-4D07-11d2-AE76-0080C73BC199
+    method      HRESULT SetGenericParse         (in type:VARIANT_BOOL arg:fDoGeneric)
+
+#endif // XMV_PARSE
+
+#endif //_MSHTMEXT_PDL_
+

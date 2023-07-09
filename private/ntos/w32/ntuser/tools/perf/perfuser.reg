@@ -1,0 +1,7 @@
+\registry\machine\system\currentcontrolset\services\PerfUser
+\registry\machine\system\currentcontrolset\services\PerfUser\Performance
+Close = REG_SZ CloseUserPerformanceData
+Collect = REG_SZ CollectUserPerformanceData
+Open = REG_SZ OpenUserPerformanceData
+Library = REG_SZ perfuser.dll
+

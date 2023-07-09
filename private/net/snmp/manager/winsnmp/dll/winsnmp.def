@@ -1,0 +1,77 @@
+;  WSNMP32.def
+;  v1.0 13-Sep-93
+;  v1.1 12-Jun-94
+;  v2.0 01-Nov-97
+;
+;  Questions/comments to Bob Natale, bnatale@acecomm.com
+;
+;  PROTOTYPE for WinSNMP Implementors
+;  System: Microsoft Windows NT and Win95
+;  Summary: Module definition file for WSNMP32 DLL.
+;
+LIBRARY        WSNMP32
+HEAPSIZE       4096
+; All defined WinSNMP functions must be exported.
+; WinSNMP will use the range 100-999 (to allow for future growth).
+; Only standard WinSNMP functions may be exported via this MDF.
+EXPORTS
+   ; These ordinals MUST be used by all WinSNMP implementations:
+   ; x00 - x19 = functions defined in WinSNMP v1.1a.
+   ; 999 = SnmpGetLastError for historical reasons,
+   ; x20 - x29 = functions (5) added in WinSNMP v2.0.
+   ;
+   ; Local database functions
+   SnmpGetTranslateMode           @100
+   SnmpSetTranslateMode           @101
+   SnmpGetRetransmitMode          @102
+   SnmpSetRetransmitMode          @103
+   SnmpGetTimeout                 @104
+   SnmpSetTimeout                 @105
+   SnmpGetRetry                   @106
+   SnmpSetRetry                   @107
+   SnmpGetVendorInfo              @120
+   ; Communications Functions
+   SnmpStartup                    @200
+   SnmpCleanup                    @201
+   SnmpOpen                       @202
+   SnmpClose                      @203
+   SnmpSendMsg                    @204
+   SnmpRecvMsg                    @205
+   SnmpRegister                   @206
+   SnmpCreateSession              @220
+   SnmpListen                     @221
+   SnmpCancelMsg                  @222
+   ; Entity Functions
+   SnmpStrToEntity                @300
+   SnmpEntityToStr                @301
+   SnmpFreeEntity                 @302
+   SnmpSetPort                    @320
+   ; Context Functions
+   SnmpStrToContext               @400
+   SnmpContextToStr               @401
+   SnmpFreeContext                @402
+   ; Pdu Functions
+   SnmpCreatePdu                  @500
+   SnmpGetPduData                 @501
+   SnmpSetPduData                 @502
+   SnmpDuplicatePdu               @503
+   SnmpFreePdu                    @504
+   ; Vbl Functions
+   SnmpCreateVbl                  @600
+   SnmpDuplicateVbl               @601
+   SnmpFreeVbl                    @602
+   SnmpCountVbl                   @603
+   SnmpGetVb                      @604
+   SnmpSetVb                      @605
+   SnmpDeleteVb                   @606
+   ; Utility Functions
+   SnmpFreeDescriptor             @900
+   SnmpEncodeMsg                  @901
+   SnmpDecodeMsg                  @902
+   SnmpStrToOid                   @903
+   SnmpOidToStr                   @904
+   SnmpOidCopy                    @905
+   SnmpOidCompare                 @906
+   SnmpGetLastError               @999
+   ; End of required WinSNMP ordinals.
+;eof

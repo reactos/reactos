@@ -1,0 +1,59 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Rajen Shah (rajens) 2-Jul-1991
+
+
+Revision History:
+
+!ENDIF
+
+#
+# The TARGETNAME variable is defined by the developer.  It is the name of
+# the target (component) that is being built by this makefile.  It
+# should NOT include any path or file extension information.
+#
+
+MAJORCOMP=eventlog
+MINORCOMP=client
+TARGETNAME=elfapi
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=LIBRARY
+
+#
+# The INCLUDES variable specifies any include paths that are specific to
+# this source directory.  Separate multiple directory paths with single
+# semicolons.  Relative path specifications are okay.
+#
+
+INCLUDES=.;..;$(BASEDIR)\private\inc
+
+#
+# The SOURCES variable is defined by the developer.  It is a list of all the
+# source files for this component.  Each source file should be on a separate
+# line using the line continuation character.  This will minimize merge
+# conflicts if two developers adding source files to the same component.
+#
+
+SOURCES=    \
+        elf_c.c     \
+        apistub.c   \
+        rpcbind.c   \
+        getconfg.c
+
+C_DEFINES=$(C_DEFINES) -DRPC_NO_WINDOWS_H -D_ADVAPI32_

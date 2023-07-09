@@ -1,0 +1,39 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\builtin=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=builtin
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+    textarea.cxx \
+    inputbtn.cxx \
+    table.cxx \
+    tdraw.cxx \
+    tdata.cxx \
+    tcalc.cxx \
+    tcell.cxx \
+    trowcol.cxx \
+    tableom.cxx \
+    btnhlper.cxx \
+    eoption.cxx \
+    eselect.cxx \
+    imghlper.cxx \
+    imgelem.cxx \
+    imgsize.cxx \
+    imganim.cxx \
+    marquee.cxx \
+    wselect.cxx \
+    txtslave.cxx \
+    inputtxt.cxx \
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

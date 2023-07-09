@@ -1,0 +1,85 @@
+!IF 0
+
+Copyright (c) 1994  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Cathcart (stevecat) 15-Nov-1994
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+Use the following line when this is UNICODE ported
+
+NOT_UNICODE=1
+
+
+           $(BASEDIR)\public\sdk\lib\*\mpr.lib     \
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=cpls
+
+TARGETNAME=appwiz
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\shlwapi.lib  \
+           $(BASEDIR)\public\sdk\lib\*\shlwapip.lib \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+           $(BASEDIR)\public\sdk\lib\*\shell32p.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib     \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib	\
+           $(BASEDIR)\public\sdk\lib\*\syssetup.lib
+
+DLLENTRY= LibMain
+
+NOT_LEAN_AND_MEAN=1
+
+INCLUDES=.;..\..\inc;$(BASEDIR)\private\windows\inc;$(BASEDIR)\private\shell\inc
+
+C_DEFINES=-DWIN32 -DWINNT -D_WIN32 -DWINVER=0x0400 -DUNICODE
+
+!IF "$(SHELLDBG)"=="1"
+C_DEFINES=$(C_DEFINES) -DDEBUG -DFULL_DEBUG
+!ENDIF
+
+# Make warnings equivalent to errors
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+UMTYPE=windows
+EXPECTED_WINVER=4.0
+
+SOURCES=  appwiz.rc     \
+          applist.c     \
+          appwiz.c      \
+          browse.c      \
+          confopt.c     \
+          folder.c      \
+          gettitle.c    \
+          link.c        \
+          msdos.c       \
+          pickicon.c    \
+          setup.c       \
+          uninstal.c

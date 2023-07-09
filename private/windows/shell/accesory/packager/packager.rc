@@ -1,0 +1,245 @@
+#include <windows.h>
+#include "ids.h"
+#include "packager.rcv"
+#include "dialogs.h"
+
+
+ID_APPLICATION  ICON    packager.ico
+SPLIT           CURSOR  split.cur
+
+ID_APPLICATION MENU
+BEGIN
+    POPUP        "&File"
+    BEGIN
+
+        MENUITEM    "&New",                     IDM_NEW
+        MENUITEM    "&Update",                  IDM_UPDATE, GRAYED
+        MENUITEM    "&Import...",               IDM_IMPORT
+        MENUITEM    "&Save Contents...",        IDM_EXPORT
+        MENUITEM    SEPARATOR
+        MENUITEM    "E&xit",                    IDM_EXIT
+    END
+
+    POPUP       "&Edit"
+    BEGIN
+        MENUITEM    "&Undo\tCtrl+Z",            IDM_UNDO
+        MENUITEM    SEPARATOR
+        MENUITEM    "Cu&t\tCtrl+X",             IDM_CUT
+        MENUITEM    "&Copy\tCtrl+C",            IDM_COPY
+        MENUITEM    "&Delete\tDel",             IDM_CLEAR
+        MENUITEM    "&Paste\tCtrl+V",           IDM_PASTE
+        MENUITEM    "Paste &Link",              IDM_PASTELINK
+        MENUITEM    "Copy Pac&kage",            IDM_COPYPACKAGE
+        MENUITEM    SEPARATOR
+        MENUITEM    "Li&nks...",                IDM_LINKS
+        MENUITEM    "La&bel...",                IDM_LABEL
+        MENUITEM    "Co&mmand Line...",         IDM_COMMAND
+        MENUITEM    "&Object",                  IDM_VERBMIN
+    END
+
+    POPUP       "&Help"
+    BEGIN
+        MENUITEM    "&Help Topics",             IDM_INDEX
+        MENUITEM    SEPARATOR
+        MENUITEM    "&About Object Packager...",IDM_ABOUT
+    END
+END
+
+
+ID_APPLICATION ACCELERATORS
+BEGIN
+    VK_F6,      IDM_NEXTWINDOW, VIRTKEY,    SHIFT
+    VK_BACK,    IDM_UNDO,       VIRTKEY,    ALT
+    "^Z",       IDM_UNDO
+    VK_DELETE,  IDM_CLEAR,      VIRTKEY
+    VK_DELETE,  IDM_CUT,        VIRTKEY,    SHIFT
+    "^X",       IDM_CUT
+    VK_INSERT,  IDM_COPY,       VIRTKEY,    CONTROL
+    "^C",       IDM_COPY
+    VK_INSERT,  IDM_PASTE,      VIRTKEY,    SHIFT
+    "^V",       IDM_PASTE
+    VK_TAB,     IDM_NEXTWINDOW, VIRTKEY
+    VK_F1,      IDM_INDEX,      VIRTKEY
+    "d",        IDM_DESC,       ALT
+    "p",        IDM_PICT,       ALT
+    "i",        IDM_INSERTICON, ALT
+    "D",        IDM_DESC,       ALT
+    "P",        IDM_PICT,       ALT
+    "I",        IDM_INSERTICON, ALT
+END
+
+/*
+ * Dialog for Link Properties...
+ */
+DTPROP DIALOG LOADONCALL MOVEABLE DISCARDABLE 12, 34, 291, 97
+CAPTION "Links"
+FONT 8, "MS Shell Dlg"
+STYLE WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME | WS_POPUP | DS_3DLOOK
+BEGIN
+    CONTROL "&Edit", IDD_EDIT, "button", BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP | WS_CHILD, 249, 63, 37, 14
+
+    /* List box full of links and objects */
+    CONTROL "&Links:", -1, "static", SS_LEFT | WS_CHILD, 6, 4, 30, 9
+    CONTROL "", IDD_LISTBOX, "listbox", LBS_EXTENDEDSEL | LBS_MULTIPLESEL
+        | WS_TABSTOP | LBS_NOTIFY | LBS_USETABSTOPS | WS_BORDER | WS_CHILD | WS_VSCROLL, 5, 15, 234, 37
+
+    /* Automatic and manual link options */
+    CONTROL "Update:", -1, "static", SS_LEFT | WS_CHILD, 8, 60, 30, 9
+    CONTROL "Au&tomatic", IDD_AUTO, "button", BS_RADIOBUTTON | WS_GROUP | WS_TABSTOP | WS_CHILD, 39, 58, 46, 14
+    CONTROL "&Manual", IDD_MANUAL, "button", BS_RADIOBUTTON | WS_TABSTOP | WS_CHILD, 89, 58, 42, 14
+
+    /* Push buttons at the bottom of the dialog */
+    CONTROL "&Update Now", IDD_UPDATE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 26, 75, 58, 14
+    CONTROL "Ca&ncel Link", IDD_FREEZE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 91, 75, 58, 14
+    CONTROL "C&hange Link...", IDD_CHANGE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 156, 75, 58, 14
+
+    /* Push buttons on the side of the dialog */
+    CONTROL "OK", IDOK, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 249, 6, 37, 14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 249, 25, 37, 14
+    CONTROL "&Activate", IDD_PLAY, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 249, 44, 37, 14
+END
+
+DTINVALIDLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 9, 25, 134, 38
+CAPTION "Packager"
+FONT 8, "MS Shell Dlg"
+STYLE WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP | DS_MODALFRAME | DS_3DLOOK
+BEGIN
+    CONTROL "Link unavailable.", 100, "static", SS_CENTER | WS_CHILD, 10, 5, 112, 8
+    CONTROL "OK", IDOK, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 10, 18, 36, 14
+    CONTROL "&Link Properties...", IDD_CHANGE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 55, 18, 69, 14
+END
+
+DTCREATE DIALOG LOADONCALL MOVEABLE DISCARDABLE 9, 26, 183, 62
+CAPTION "Insert New Object"
+FONT 8, "MS Shell Dlg"
+STYLE WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | WS_POPUP | DS_MODALFRAME | DS_3DLOOK
+BEGIN
+    CONTROL "Object Type:", -1, "static", SS_LEFT | WS_CHILD, 7, 5, 123, 8
+    CONTROL "", IDD_LISTBOX, "listbox", LBS_NOTIFY | LBS_STANDARD
+    | WS_BORDER | WS_VSCROLL | WS_CHILD, 5, 15, 125, 41
+    CONTROL "OK", IDOK, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 140, 8, 35, 14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 140, 25, 35, 14
+END
+
+DTCHANGETEXT DIALOG LOADONCALL MOVEABLE DISCARDABLE 9, 26, 183, 34
+CAPTION "Label"
+FONT 8, "MS Shell Dlg"
+STYLE WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP | DS_MODALFRAME | DS_3DLOOK
+BEGIN
+    CONTROL "&Label:", IDD_LABEL, "static", SS_LEFT | WS_CHILD, 11, 4, 25, 8
+    CONTROL "", IDD_ICONTEXT, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | WS_CHILD, 10, 15, 128, 14
+    CONTROL "OK", IDOK, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 146, 2, 32, 14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 146, 18, 32, 14
+END
+
+DTCHANGECMDTEXT DIALOG LOADONCALL MOVEABLE DISCARDABLE 9, 26, 183, 34
+CAPTION "Command Line"
+FONT 8, "MS Shell Dlg"
+STYLE WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP | DS_MODALFRAME | DS_3DLOOK
+BEGIN
+    CONTROL "&Command:", IDD_LABEL, "static", SS_LEFT | WS_CHILD, 11, 4, 80, 8
+    CONTROL "", IDD_COMMAND, "edit", ES_OEMCONVERT | ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | WS_CHILD, 10, 15, 128, 14
+    CONTROL "OK", IDOK, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 146, 2, 32, 14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 146, 18, 32, 14
+END
+
+
+DTFAILEDUPDATE DIALOG 6, 18, 251, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Object Update"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Continue Editing", IDD_CONTINUEEDIT, 77, 36, 68, 14, WS_TABSTOP|WS_GROUP
+    PUSHBUTTON      "Update && E&xit", IDD_UPDATEEXIT, 6, 36, 55, 14
+    LTEXT           "Text", IDD_TEXT, 9, 9, 233, 20
+END
+
+STRINGTABLE DISCARDABLE {
+    IDS_APPNAME,                    "Object Packager"
+    IDS_EMBNAME_CONTENT,            "Package in"
+    IDS_MAYBESAVE,                  "Save Changes to %s?"
+    IDS_MAYBEUPDATE,                "Update %s?"
+    IDS_FILTER,                     "Package"
+    IDS_CHANGELINK,                 "Change Link"
+    IDS_ALLFILTER,                  "All Files (*.*)"
+    IDS_CONTENT,                    "--Content--"
+    IDS_DESCRIPTION,                "&Description"
+    IDS_PICTURE,                    "&Picture"
+    IDS_APPEARANCE,                 "--Appearance--"
+    IDS_CONTENT_OBJECT,             "ContentObject"
+    IDS_APPEARANCE_OBJECT,          "AppearanceObject"
+    IDS_GENERIC,                    "Generic"
+    IDS_INSERTICON,                 "Insert &Icon..."
+    IDS_VIEW,                       "View:"
+    IDS_LINKTOFILE,                 "Link to %s"
+    IDS_EMBEDFILE,                  "Copy of %s"
+    IDS_IMPORTFILE,                 "Import"
+    IDS_EXPORTFILE,                 "Save Contents"
+    IDS_UNTITLED,                   "Package"
+    IDS_FROZEN,                     "Frozen %s"
+    IDS_OBJECT,                     "Object"
+    IDS_OBJECT_MENU,                "&Object"
+    IDS_UNDO_MENU,                  "Undo %s"
+    IDS_EDIT,                       "Edit"
+    IDS_ASKCLOSETASK,               "This object has been changed.\nUpdate document before proceeding?"
+    IDS_OVERWRITE,                  "%s exists. You can either replace the existing version or use the Save Contents command to save to a different filename.\n\nDo you want to replace the existing version?"
+
+    IDS_PRIMARY_VERB,               "Activate &Contents"
+    IDS_SECONDARY_VERB,             "Edit &Package"
+    IDS_FAILEDUPDATE,               "This %s document can only be updated when you exit %s."
+
+    IDS_NOICONSTITLE,               "Change Icon"
+    IDS_NOICONSMSG,                 "Cannot find any icons in the specified file.  The filename may be invalid, or the file may not exist."
+
+    E_FAILED_TO_READ_FILE,          "Failed to read file."
+    E_FAILED_TO_SAVE_FILE,          "Failed to save file."
+    IDS_INVALID_FILENAME,           "The package contents could not be saved to the filename '%s'.\n\nMake sure that there is enough free space on the volume, deleting some files if necessary, and try again."
+
+    E_FAILED_TO_DELETE_OBJECT,      "The object can not be deleted because the application needed by the object is busy.\n\nYou may switch to the object's application and try to correct the problem."
+
+    E_CLIPBOARD_COPY_FAILED,        "Not enough memory to cut to the Clipboard.\n\nQuit one or more applications to increase available memory, and then try again."
+
+    E_GET_FROM_CLIPBOARD_FAILED,    "Not enough memory to paste the contents of the Clipboard.\n\nQuit one or more applications to increase available memory and then try again."
+
+    E_FAILED_TO_READ_OBJECT,        "Failed to read object."
+    E_FAILED_TO_CREATE_CHILD_WINDOW,"Failed to create child window."
+    E_FAILED_TO_CREATE_OBJECT,      "Failed to create new object."
+
+    E_UNEXPECTED_RELEASE,           "DDE conversation is not valid."
+    E_FAILED_TO_LAUNCH_SERVER,      "Server application can not be found. Make sure that the application is set up on your system and that the directory containing the application is on your PATH. Or try reinstalling the application."
+    E_FAILED_TO_UPDATE,             "Failed to update object."
+    E_FAILED_TO_FREEZE,             "Failed to freeze object."
+    E_FAILED_TO_UPDATE_LINK,        "Not enough memory to determine the link update setting.\n\nQuit one or more applications to increase available memory, and then try again."
+
+    E_FAILED_TO_REGISTER_SERVER,    "Failed to register server."
+    E_FAILED_TO_REGISTER_DOCUMENT,  "Failed to register document."
+    E_FAILED_TO_RECONNECT_OBJECT,   "Failed to reconnect link to server."
+    E_FAILED_TO_EXECUTE_COMMAND,    "Failed to carry out command."
+    E_FAILED_TO_FIND_ASSOCIATION,   "No application is associated with this file."
+
+    W_STATIC_OBJECT,                "Warning:  Static object unexpected."
+    W_FAILED_TO_CLONE_UNDO,         "Warning:  You will not be able to undo this action using the Undo command."
+    W_FAILED_TO_NOTIFY,             "Warning:  Failed to notify library."
+
+    IDS_AUTO,                       "Automatic"
+    IDS_MANUAL,                     "Manual"
+    IDS_CANCELED,                   "Canceled"
+
+    IDS_LOWMEM,         "Not enough memory to perform this operation.\n\nClose one or more applications and try again."            /* 128 */
+    IDS_CHNGICONPROGS       "Programs (*.exe)#*.exe#Libraries (*.dll)#*.dll#Icons (*.ico)#*.ico#All Files (*.*)#*.*#"
+    IDS_BROWSE              "Browse"
+    IDS_ACCESSDENIED,       "Access to the specified device, path or file is denied."                                     /* 128 */
+    IDS_NOZEROSIZEFILES,            "Packager cannot package empty files."
+    /*
+        For localizing Edit.Object menu item: 'v'erb, 'c'lass, 'o'bject.
+        You can omit any word in the menu string by omitting the
+        character from the control string.  Both control strings *must* be
+        defined because each is used in different circumstances (single and
+        popup cases).   Any characters besides v,c, and o are interpreted
+        literally and are inserted into the menu string (spaces, hyphens, etc).
+    */
+    IDS_SINGLEVERB          "v c o"
+    IDS_POPUPVERBS          "c o"
+}
+
+

@@ -1,0 +1,31 @@
+MAJORCOMP=opengl
+MINORCOMP=scrnsave
+TARGETNAME=sstext3d
+TARGETPATH=obj
+ALT_PROJECT_TARGET=Nashvile\Win95
+TARGETTYPE=UMAPPL_NOLIB
+LINKLIBS=$(_NTDRIVE)\nt\public\sdk\lib\*\opengl32.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\comdlg32.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\comctl32.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\glaux.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\glu32.lib
+
+
+INCLUDES=..; ..\..\inc; ..\..\common; \
+         $(BASEDIR)\private\windows\opengl\toolkits\libaux
+
+SOURCES=..\dialog.c   \
+        ..\sstext3d.c  \
+        ..\font.c      \
+        ..\sstext3d.rc
+
+C_DEFINES=$(C_DEFINES) -DWINVER=0x0400 -DSS_WIN95
+
+UMTYPE=windows
+UMAPPL=sstext3d
+UMAPPLEXT=.scr
+UMLIBS= \
+       ..\..\common\win95\obj\*\sscommon.lib \
+       obj\*\dialog.obj \
+       obj\*\font.obj \
+       obj\*\sstext3d.res

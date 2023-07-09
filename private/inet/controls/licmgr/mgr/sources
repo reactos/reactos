@@ -1,0 +1,43 @@
+#
+# Sources file for ActiveX License Manager (licmgr.dll)
+#
+# Julian Jiggins July 16, 1996
+#
+
+TARGETNAME= licmgr10
+TARGETTYPE= DYNLINK
+TARGETPATH= obj
+
+USE_MSVCRT=1
+MSC_WARNING_LEVEL=/W3 /WX
+
+INCLUDES=..\core\include;include
+
+C_DEFINES=$(C_DEFINES) -DNASHVILLE
+
+DLLBASE=@..\..\inc\base.txt,plugin
+DLLDEF=..\licmgr.def
+DLLENTRY=_DllMainCRTStartup
+
+SOURCES=\
+    mgrpch.cxx\
+    array.cxx\
+    guids.cxx\
+    main.cxx\
+    mgr.rc\
+    persist.cxx\
+
+LINKLIBS  = ..\core\$(O)\core.lib
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\oleaut32.lib      \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib         \
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib          \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib        \
+    $(BASEDIR)\public\sdk\lib\*\gdi32.lib         \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib      \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib      \
+    $(BASEDIR)\public\sdk\lib\*\shell32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\version.lib
+
+UMTYPE=       windows

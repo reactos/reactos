@@ -1,0 +1,37 @@
+#ifndef _RETURN_PDL_
+#define _RETURN_PDL_ 1
+
+#include "types.pdl"
+
+file return.pdl
+
+import types.pdl
+
+
+interface IReturnInteger super:IDispatch guid:82b02370-b5bc-11cf-810f-00a0c9030074
+    property value  dispid:DISPID_VALUE type:int atype:int get set abstract
+
+interface IReturnBoolean super:IDispatch guid:82b02371-b5bc-11cf-810f-00a0c9030074
+    property value  dispid:DISPID_VALUE type:BYTE atype:VARIANT_BOOL vt:VT_BOOL \
+        get set abstract
+
+interface IReturnString super:IDispatch guid:82b02372-b5bc-11cf-810f-00a0c9030074
+    property value  dispid:DISPID_VALUE type:BSTR atype:BSTR get set abstract
+
+    
+interface IReturnSingle super:IDispatch guid:8a683c90-ba84-11cf-8110-00a0c9030074
+    property value  dispid:DISPID_VALUE type:float atype:float get set abstract
+
+interface IReturnEffect super:IDispatch guid:8a683c91-ba84-11cf-8110-00a0c9030074
+    property value  dispid:DISPID_VALUE type:fmDropEffect atype:BSTR  \
+        get set abstract
+
+class ReturnInteger name:ReturnInteger primaryinterface:IReturnInteger guid:82b02373-b5bc-11cf-810f-00a0c9030074 abstract
+class ReturnBoolean name:ReturnBoolean primaryinterface:IReturnBoolean guid:82b02374-b5bc-11cf-810f-00a0c9030074  abstract
+class ReturnString name:ReturnString primaryinterface:IReturnString guid:82b02375-b5bc-11cf-810f-00a0c9030074 abstract
+class ReturnSingle name:ReturnSingle primaryinterface:IReturnSingle guid:8a683c92-ba84-11cf-8110-00a0c9030074 abstract
+class ReturnEffect name:ReturnEffect primaryinterface:IReturnEffect guid:8a683c93-ba84-11cf-8110-00a0c9030074 
+
+
+#endif // _RETURN_PDL_
+

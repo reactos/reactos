@@ -1,0 +1,55 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=msxml
+MINORCOMP=om
+
+ROOT=$(MAKEDIR:\xml\dso=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=xmldso
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES= \
+    xmldso.cxx \
+    xmlrowset.cxx \
+    ospwrap.cxx \
+    datasrc.cxx \
+    dsoctrl.cxx
+
+INCLUDES= \
+	$(ROOT)\xml\include; \
+	$(ROOT)\core\base; \
+	$(ROOT)\core\com; \
+	$(IDL_GENERATED_HEADERS); \
+	$(ROOT)\core\util; \
+	$(ROOT)\xml\om; \
+	$(ROOT)\xml\dtd; \
+	$(ROOT); \
+	$(ROOT)\xml\islands; \
+    $(WINDOWS_INC_PATH)\
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+CONDITIONAL_INCLUDES=\
+    $(CONDITIONAL_INCLUDES)
+

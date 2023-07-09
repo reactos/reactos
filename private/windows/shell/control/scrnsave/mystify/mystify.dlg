@@ -1,0 +1,58 @@
+#define ID_SHAPE                100
+#define ID_2COLORS              102
+#define ID_RANDOMCOLORS         103
+#define ID_LINES                104
+#define ID_LINESARROW           105
+#define ID_ACTIVE               106
+#define ID_CLEARSCREEN          121
+#define ID_COLOR1               122
+#define ID_COLOR2               123
+#define ID_COLORGROUP           124
+#define ID_PASSWORDPROTECT      125
+#define ID_SETPASSWORD          126
+#define ID_SHAPE_LABEL          128
+#define ID_LINES_LABEL          129
+
+#define IDM_COLOR1  0x0100
+#define IDM_COLOR2  0x0200
+
+//
+// Help IDs
+//
+#define IDH_DISPLAY_SCREENSAVER_MYSTIFY_SHAPE           4207
+#define IDH_DISPLAY_SCREENSAVER_MYSTIFY_ACTIVE          4208
+#define IDH_DISPLAY_SCREENSAVER_MYSTIFY_LINES           4209
+#define IDH_DISPLAY_SCREENSAVER_MYSTIFY_TWO_COLORS      4210
+#define IDH_DISPLAY_SCREENSAVER_MYSTIFY_RANDOM_COLORS   4211
+#define IDH_DISPLAY_SCREENSAVER_MYSTIFY_CLEAR_SCREEN    4212
+
+#ifdef RC_INVOKED
+
+DLG_SCRNSAVECONFIGURE    DIALOG      8,16,236,88
+FONT 8, "MS Shell Dlg"
+STYLE WS_POPUP | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Mystify Setup"
+BEGIN
+    DEFPUSHBUTTON "OK"          IDOK,       178,8,50,14,WS_GT
+    PUSHBUTTON "Cancel"         IDCANCEL,   178,26,50,14,WS_GT
+
+    GROUPBOX "Object",         -1,         4,3,168,79
+    LTEXT "Sh&ape:",            ID_SHAPE_LABEL,   8,20,30,12
+    COMBOBOX                    ID_SHAPE,     42,19,48,30,WS_VSCROLL|WS_GT|CBS_DROPDOWNLIST
+    CHECKBOX "Acti&ve"          ID_ACTIVE,     94,19,32,14,WS_GT
+    LTEXT "&Lines:",            ID_LINES_LABEL, 140,9,30,10
+    EDITTEXT                    ID_LINES,     140,19,25,12,WS_GT|ES_AUTOHSCROLL
+    CONTROL "", ID_LINESARROW, "msctls_updown32", 0|WS_CHILD|WS_GT | UDS_SETBUDDYINT |
+                                              UDS_ALIGNRIGHT | UDS_ARROWKEYS|UDS_AUTOBUDDY,152,19,7,12
+
+    GROUPBOX "Colors To Use",  ID_COLORGROUP,     8,34,158,42
+    RADIOBUTTON "&Two Colors",  ID_2COLORS,     12,44,60,12,WS_GT
+    COMBOBOX                    ID_COLOR1,     76,44,40,80,CBS_OWNERDRAWFIXED|CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
+    COMBOBOX                    ID_COLOR2,     120,44,40,80,CBS_OWNERDRAWFIXED|CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
+    RADIOBUTTON "&Multiple Random Colors",ID_RANDOMCOLORS,12,61,100,12,WS_GT
+
+    CHECKBOX "&Clear Screen"    ID_CLEARSCREEN,     178,62,60,14,WS_GT
+END
+
+
+#endif

@@ -1,0 +1,36 @@
+#ifndef _GENERIC_PDL_
+#define _GENERIC_PDL_ 1
+
+#include "types.pdl"
+#include "element.pdl"
+
+file generic.pdl
+
+import types.pdl
+import element.pdl
+
+interface IHTMLGenericElement guid:3050f4b7-98b5-11cf-bb82-00aa00bdce0b
+	refprop CGenericElement:recordset
+	refmethod CGenericElement:namedRecordset
+
+tearoff CGenericElement interface:IHTMLGenericElement
+
+class CGenericElement name:HTMLGenericElement \
+    super:CElement \
+    primaryinterface:IHTMLGenericElement \
+    events:HTMLElementEvents \
+    nonprimaryevents:HTMLElementEvents2 \
+    guid:3050f4b8-98b5-11cf-bb82-00aa00bdce0b \
+    mondoguid:3050f563-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLGenericElement
+
+    property recordset  dispid:DISPID_GENERIC+1              atype:IDispatch*    \
+        type:IDispatch* abstract get hidden
+    method    HRESULT   namedRecordset maxstrlen:pdlNoLimit dispid:DISPID_GENERIC+2 \
+        (in type:BSTR arg:dataMember, optional in type:VARIANT* arg:hierarchy \
+        out retval type:IDispatch** arg:ppRecordset)
+
+
+#endif _GENERIC_PDL_

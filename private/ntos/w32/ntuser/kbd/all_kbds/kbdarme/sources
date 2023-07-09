@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdarme
+
+TARGETNAME=kbdarme
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdarme.c kbdarme.rc
+
+NTTARGETFILE0=kbdarme.h kbdarme.rc kbdarme.def

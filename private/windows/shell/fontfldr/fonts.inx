@@ -1,0 +1,725 @@
+; FONTS.INF
+;
+; This is the Setup information file for font options
+; included in the Windows 95 retail product.
+;
+; Copyright 1993,1995 Microsoft Corporation
+
+[version]
+LayoutFile=layout.inf
+signature="$CHICAGO$"
+SetupClass=BASE
+
+[DestinationDirs]
+MS_SMALL_CopyFiles = 20        ; LDID_FONTS
+MS_LARGE_CopyFiles = 20        ; LDID_FONTS
+MS_SMALL_DelFiles  = 11        ; LDID_SYS
+MS_LARGE_DelFiles  = 11        ; LDID_SYS
+SmallTTFonts       = 20        ; LDID_FONTS
+LargeTTFonts       = 20        ; LDID_FONTS
+CyrillicNLSFiles   = 11        ; LDID_SYS
+GreekNLSFiles      = 11        ; LDID_SYS
+CENLSFiles                 = 11
+ttfonts.del.files  = 11        ; LDID_SYS
+tt_FOT.del.files   = 11        ; LDID_SYS
+folder.sys         = 11
+folder.win         = 25
+MultiLangInf       = 17
+
+[BaseWinOptions]
+#ifdef BUILD_CD_ROM
+ MultiLanguageSupport
+#endif
+bothfontsizes
+
+[MultiLanguageSupport]
+CopyFiles=MultiLangInf
+AddReg=RegMultiLanguage
+
+
+[MultiLangInf]
+mullang.inf
+
+[bothfontsizes]
+CopyFiles=MS_SMALL_CopyFiles, MS_LARGE_CopyFiles, folder.sys, folder.win
+DelFiles = ttfonts.del.files, tt_FOT.del.files, MS_SMALL_DelFiles, MS_LARGE_DelFiles
+UpdateInis=ttfonts.inis, FontSubs, OldFontSubRemove
+DelReg=MS_FONTSIZE_DelReg, folder.delreg
+AddReg=MS_FONTSIZE_AddReg, folder.addreg
+
+;****************************************************
+;*** This section added for MultiLanguage Support ***
+;****************************************************
+
+[Modules]
+MultiLanguage=*
+
+
+[MultiLanguage]
+ClassDesc=%MultiLanguageDesc%
+ListOptions=MultiLanguageList
+DefaultOption=ENGLISH
+IconIndex=50
+
+[MultiLanguageList]
+ENGLISH
+#ifdef BUILD_CD_ROM
+ GREEK
+ CYRILLIC
+ CE
+#endif
+
+[ENGLISH]
+OptionDesc=%EnglishDes%
+CopyFiles=SmallTTFonts
+#ifdef BUILD_CD_ROM
+ AddReg=EnglishOnly
+#endif
+
+[GREEK]
+OptionDesc=%GreekDes%
+CopyFiles=LargeTTFonts,GreekNLSFiles
+AddReg=GreekInstalled
+UpdateInis=GreekSubs
+
+
+[CYRILLIC]
+OptionDesc=%CyrillicDes%
+CopyFiles=LargeTTFonts,CyrillicNLSFiles
+AddReg=CyrillicInstalled
+UpdateInis=CyrillicSubs
+
+[CE]
+OptionDesc=%CEDes%
+CopyFiles=LargeTTFonts,CENLSFiles
+AddReg=CEInstalled
+UpdateInis=CESubs
+
+;*** END ML SUPPORT
+
+[folder.sys]
+panmap.dll
+fontreg.exe
+fontext.dll
+
+[folder.win]
+fontview.exe
+
+;****************************************************
+;*** This section added for MultiLanguage Support ***
+;****************************************************
+
+[GreekInstalled]
+HKLM,%KEY_Optional%,"Cyrillic",,"Cyrillic"
+HKLM,%KEY_Optional%\Cyrillic,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\Cyrillic,Section,,"Cyrillic"
+HKLM,%KEY_Optional%\Cyrillic,Installed,,"0"
+
+HKLM,%KEY_Optional%,"Greek",,"Greek"
+HKLM,%KEY_Optional%\Greek,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\Greek,Section,,"Greek"
+HKLM,%KEY_Optional%\Greek,Installed,,"1"
+
+HKLM,%KEY_Optional%,"CE",,"CE"
+HKLM,%KEY_Optional%\CE,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\CE,Section,,"CE"
+HKLM,%KEY_Optional%\CE,Installed,,"0"
+
+HKLM, system\currentcontrolset\control\Nls\Locale,00000408,,%00000408%  ;Greek
+
+HKLM,"%KEY_Keyboard%\00010408","layout file",,kbdgk220.kbd
+HKLM,"%KEY_Keyboard%\00010408","layout text",,%KBD_GK220%
+HKLM,"%KEY_Keyboard%\00010408","layout id",,000D
+
+HKLM,"%KEY_Keyboard%\00020408","layout file",,kbdgl220.kbd
+HKLM,"%KEY_Keyboard%\00020408","layout text",,%KBD_GK319%
+HKLM,"%KEY_Keyboard%\00020408","layout id",,000E
+
+HKLM,"%KEY_Keyboard%\00030408","layout file",,kbdgk319.kbd
+HKLM,"%KEY_Keyboard%\00030408","layout text",,%KBD_GL220%
+HKLM,"%KEY_Keyboard%\00030408","layout id",,000F
+
+HKLM,"%KEY_Keyboard%\00040408","layout file",,kbdgl319.kbd
+HKLM,"%KEY_Keyboard%\00040408","layout text",,%KBD_GL319%
+HKLM,"%KEY_Keyboard%\00040408","layout id",,0012
+
+HKLM,"%KEY_Keyboard%\00000408","layout file",,kbdgk.kbd
+HKLM,"%KEY_Keyboard%\00000408","layout text",,%KBD_GK%
+
+;** Greek codepages **
+HKLM, system\currentcontrolset\control\Nls\Codepage,1253,,cp_1253.nls
+HKLM, system\currentcontrolset\control\Nls\Codepage,737,,cp_737.nls
+HKLM, system\currentcontrolset\control\Nls\Codepage,869,,cp_869.nls
+
+
+[CyrillicInstalled]
+HKLM,%KEY_Optional%,"Cyrillic",,"Cyrillic"
+HKLM,%KEY_Optional%\Cyrillic,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\Cyrillic,Section,,"Cyrillic"
+HKLM,%KEY_Optional%\Cyrillic,Installed,,"1"
+
+HKLM,%KEY_Optional%,"Greek",,"Greek"
+HKLM,%KEY_Optional%\Greek,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\Greek,Section,,"Greek"
+HKLM,%KEY_Optional%\Greek,Installed,,"0"
+
+HKLM,%KEY_Optional%,"CE",,"CE"
+HKLM,%KEY_Optional%\CE,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\CE,Section,,"CE"
+HKLM,%KEY_Optional%\CE,Installed,,"0"
+
+;** Cyrillic specific locales **
+HKLM, system\currentcontrolset\control\Nls\Locale,00000423,,%00000423%  ;Belarusian
+HKLM, system\currentcontrolset\control\Nls\Locale,00000419,,%00000419%  ;Russian
+HKLM, system\currentcontrolset\control\Nls\Locale,00000402,,%00000402%  ;Bulgarian
+
+;** Cyrillic specific keyboards **
+HKLM,"%KEY_Keyboard%\00000419","layout file",,kbdru.kbd
+HKLM,"%KEY_Keyboard%\00000419","layout text",,%KBD_RU%
+
+HKLM,"%KEY_Keyboard%\00010419","layout file",,kbdru1.kbd
+HKLM,"%KEY_Keyboard%\00010419","layout text",,%KBD_RU1%
+HKLM,"%KEY_Keyboard%\00010419","layout id",,0008
+
+HKLM,"%KEY_Keyboard%\00000423","layout file",,kbdblr.kbd
+HKLM,"%KEY_Keyboard%\00000423","layout text",,%KBD_BLR%
+
+HKLM,"%KEY_Keyboard%\00000402","layout file",,kbdbul.kbd
+HKLM,"%KEY_Keyboard%\00000402","layout text",,%KBD_BUL%
+
+HKLM,"%KEY_Keyboard%\00010402","layout file",,kbdbll.kbd
+HKLM,"%KEY_Keyboard%\00010402","layout text",,%KBD_BLL%
+HKLM,"%KEY_Keyboard%\00010402","layout id",,0004
+
+
+;** Cyrillic codepages **
+HKLM, system\currentcontrolset\control\Nls\Codepage,866,,cp_866.nls
+HKLM, system\currentcontrolset\control\Nls\Codepage,1251,,cp_1251.nls
+
+[CEInstalled]
+HKLM,%KEY_Optional%,"Cyrillic",,"Cyrillic"
+HKLM,%KEY_Optional%\Cyrillic,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\Cyrillic,Section,,"Cyrillic"
+HKLM,%KEY_Optional%\Cyrillic,Installed,,"0"
+
+HKLM,%KEY_Optional%,"Greek",,"Greek"
+HKLM,%KEY_Optional%\Greek,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\Greek,Section,,"Greek"
+HKLM,%KEY_Optional%\Greek,Installed,,"0"
+
+HKLM,%KEY_Optional%,"CE",,"CE"
+HKLM,%KEY_Optional%\CE,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\CE,Section,,"CE"
+HKLM,%KEY_Optional%\CE,Installed,,"1"
+
+;** CE Specific locales **
+HKLM, system\currentcontrolset\control\Nls\Locale,00000424,,%00000424%  ;Slovenian
+HKLM, system\currentcontrolset\control\Nls\Locale,00000415,,%00000415%  ;Polish
+HKLM, system\currentcontrolset\control\Nls\Locale,0000040E,,%0000040E%  ;Hungarian
+HKLM, system\currentcontrolset\control\Nls\Locale,00000405,,%00000405%  ;Czech
+
+;** CE Specific Keyboards **
+HKLM,"%KEY_Keyboard%\00000405","layout file",,kbdcz.kbd
+HKLM,"%KEY_Keyboard%\00000405","layout text",,%KBD_CZ%
+
+HKLM,"%KEY_Keyboard%\00010405","layout file",,kbdcz1.kbd
+HKLM,"%KEY_Keyboard%\00010405","layout text",,%KBD_CZ1%
+HKLM,"%KEY_Keyboard%\00010405","layout id",,0005
+
+HKLM,"%KEY_Keyboard%\0000040E","layout file",,kbdhu.kbd
+HKLM,"%KEY_Keyboard%\0000040E","layout text",,%KBD_HU%
+
+HKLM,"%KEY_Keyboard%\0001040E","layout file",,kbdhu1.kbd
+HKLM,"%KEY_Keyboard%\0001040E","layout text",,%KBD_HU1%
+HKLM,"%KEY_Keyboard%\0001040E","layout id",,0006
+
+HKLM,"%KEY_Keyboard%\00000415","layout file",,kbdpl.kbd
+HKLM,"%KEY_Keyboard%\00000415","layout text",,%KBD_PL%
+
+HKLM,"%KEY_Keyboard%\00010415","layout file",,kbdpl1.kbd
+HKLM,"%KEY_Keyboard%\00010415","layout text",,%KBD_PL1%
+HKLM,"%KEY_Keyboard%\00010415","layout id",,0007
+
+HKLM,"%KEY_Keyboard%\00000424","layout file",,kbdsv.kbd
+HKLM,"%KEY_Keyboard%\00000424","layout text",,%KBD_SV%
+
+
+;** CE Codepages **
+HKLM, system\currentcontrolset\control\Nls\Codepage,1250,,cp_1250.nls
+HKLM, system\currentcontrolset\control\Nls\Codepage,852,,cp_852.nls
+
+[RegMultiLanguage]
+HKLM,%KEY_Optional%,"MultiLanguageTop",,"MultiLanguageTop"
+HKLM,%KEY_Optional%\MultiLanguageTop,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\MultiLanguageTop,Section,,"MultiLanguageTop"
+HKLM,%KEY_Optional%\MultiLanguageTop,Installed,,"0"
+
+[EnglishOnly]
+HKLM,%KEY_Optional%,"Cyrillic",,"Cyrillic"
+HKLM,%KEY_Optional%\Cyrillic,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\Cyrillic,Section,,"Cyrillic"
+HKLM,%KEY_Optional%\Cyrillic,Installed,,"0"
+
+HKLM,%KEY_Optional%,"Greek",,"Greek"
+HKLM,%KEY_Optional%\Greek,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\Greek,Section,,"Greek"
+HKLM,%KEY_Optional%\Greek,Installed,,"0"
+
+HKLM,%KEY_Optional%,"CE",,"CE"
+HKLM,%KEY_Optional%\CE,INF,,"mullang.inf"
+HKLM,%KEY_Optional%\CE,Section,,"CE"
+HKLM,%KEY_Optional%\CE,Installed,,"0"
+
+;** END ML SUPPORT
+
+[folder.addreg]
+HKCR,CLSID\{BD84B381-8CA2-1069-AB1D-08000948F534},,,"PANOSE Core Mapper"
+HKCR,CLSID\{BD84B381-8CA2-1069-AB1D-08000948F534}\InprocServer32,,,"panmap.dll"
+HKCR,CLSID\{BD84B381-8CA2-1069-AB1D-08000948F534}\InprocServer32,ThreadingModel,,"Apartment"
+
+HKCR,CLSID\{BD84B380-8CA2-1069-AB1D-08000948F534},,,"%Font_Folder_Desc%"
+HKCR,CLSID\{BD84B380-8CA2-1069-AB1D-08000948F534}\InProcServer32,,,"fontext.dll"
+HKCR,CLSID\{BD84B380-8CA2-1069-AB1D-08000948F534}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\{BD84B380-8CA2-1069-AB1D-08000948F534}\DefaultIcon,,,"fontext.dll, -101"
+HKCR,CLSID\{BD84B380-8CA2-1069-AB1D-08000948F534}\Hierarchical,,,"0"
+
+HKCR,ttffile\shell
+HKCR,ttffile\shell\open
+HKCR,ttffile\shell\open\command,,,"%25%\fontview.exe %%1"
+HKCR,ttffile\shell\print
+HKCR,ttffile\shell\print\command,,,"%25%\fontview.exe /p %%1"
+
+HKCR,fonfile\shell
+HKCR,fonfile\shell\open
+HKCR,fonfile\shell\open\command,,,"%25%\fontview.exe %%1"
+HKCR,fonfile\shell\print
+HKCR,fonfile\shell\print\command,,,"%25%\fontview.exe /p %%1"
+
+; Set the System attribute on the Fonts folder:
+; R=1; H=2; S=4; HS=6; SHR=7
+HKLM,Software\Microsoft\Windows\CurrentVersion\RenameFiles\Win,,,%25%
+HKLM,Software\Microsoft\Windows\CurrentVersion\RenameFiles\Win,FONTS,,"FONTS,4"
+
+[folder.delreg]
+; remove old font folder Review: leave in for m8, remove for RTM
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{BD84B380-8CA2-1069-AB1D-08000948F534}
+
+;****************************************************
+;*** This section added for MultiLanguage Support ***
+;****************************************************
+[LargeTTFonts]
+arial.ttf,larial.ttf,larial.001,8
+arialbd.ttf,larialbd.ttf,larialbd.001,8
+arialbi.ttf,larialbi.ttf,larialbi.001,8
+ariali.ttf,lariali.ttf,lariali.001,8
+cour.ttf,lcour.ttf,lcour.001,8
+courbd.ttf,lcourbd.ttf,lcourbd.001,8
+courbi.ttf,lcourbi.ttf,lcourbi.001,8
+couri.ttf,lcouri.ttf,lcouri.001,8
+times.ttf,ltimes.ttf,ltimes.001,8
+timesbd.ttf,ltimesbd.ttf,ltimesbd.001,8
+timesbi.ttf,ltimesbi.ttf,ltimesbi.001,8
+timesi.ttf,ltimesi.ttf,ltimesi.001,8
+marlett.ttf,,,8
+symbol.ttf,,,8
+wingding.ttf,,,8
+modern.fon,,,8
+
+desktop.ini
+
+;*** End ML Support
+
+[SmallTTFonts]
+; the "8" flag forces a rename since the files may be in use and we can't detect it.
+arial.ttf,,,8
+arialbd.ttf,,,8
+arialbi.ttf,,,8
+ariali.ttf,,,8
+cour.ttf,,,8
+courbd.ttf,,,8
+courbi.ttf,,,8
+couri.ttf,,,8
+marlett.ttf,,,8
+times.ttf,,,8
+timesbd.ttf,,,8
+timesbi.ttf,,,8
+timesi.ttf,,,8
+symbol.ttf,,,8
+wingding.ttf,,,8
+modern.fon,,,8
+
+desktop.ini
+
+[ttfonts.del.files]
+arial.ttf
+arialbd.ttf
+arialbi.ttf
+ariali.ttf
+cour.ttf
+courbd.ttf
+courbi.ttf
+couri.ttf
+mscon.ttf
+times.ttf
+timesbd.ttf
+timesbi.ttf
+timesi.ttf
+symbol.ttf
+wingding.ttf
+
+
+[tt_FOT.del.files]
+arial.fot
+arialbd.fot
+arialbi.fot
+ariali.fot
+cour.fot
+courbd.fot
+courbi.fot
+couri.fot
+symbol.fot
+times.fot
+timesbd.fot
+timesbi.fot
+timesi.fot
+wingding.fot
+
+[OldFontSubRemove]
+;Turkish
+win.ini,FontSubstitutes,"System,0=System,162",
+win.ini,FontSubstitutes,"Small Fonts,0=Small Fonts,162",
+win.ini,FontSubstitutes,"MS Shell Dlg,0=MS Sans Serif,162",
+win.ini,FontSubstitutes,"Helv,0=MS Sans Serif,162",
+win.ini,FontSubstitutes,"Tms Rmn,0=MS Serif,162",
+win.ini,FontSubstitutes,"Arial Tur,162=Arial,162",
+win.ini,FontSubstitutes,"Arial Tur,0=Arial,162",
+win.ini,FontSubstitutes,"Helvetica,162=Arial,162",
+win.ini,FontSubstitutes,"Helvetica,0=Arial,162",
+win.ini,FontSubstitutes,"Courier New Tur,162=Courier New,162",
+win.ini,FontSubstitutes,"Courier New Tur,0=Courier New,162",
+win.ini,FontSubstitutes,"Times New Roman Tur,162=Times New Roman,162",
+win.ini,FontSubstitutes,"Times New Roman Tur,0=Times New Roman,162",
+win.ini,FontSubstitutes,"Times,162=Times New Roman,162",
+win.ini,FontSubstitutes,"Times,0=Times New Roman,162",
+;Remove Baltic
+win.ini,FontSubstitutes,"System,0=System,186",
+win.ini,FontSubstitutes,"MS Serif,0=MS Serif,186",
+win.ini,FontSubstitutes,"MS Sans Serif,0=MS Sans Serif,186",
+win.ini,FontSubstitutes,"Helv,0=MS Sans Serif,186",
+win.ini,FontSubstitutes,"Tms Rmn,0=MS Serif,186",
+win.ini,FontSubstitutes,"MS Shell Dlg,0=MS Sans Serif,186",
+win.ini,FontSubstitutes,"Arial Baltic,186=Arial,186",
+win.ini,FontSubstitutes,"Helvetica,0=Arial,186",
+win.ini,FontSubstitutes,"Courier New Baltic,186=Courier New,186",
+win.ini,FontSubstitutes,"Times New Roman Baltic,186=Times New Roman,186",
+win.ini,FontSubstitutes,"Times,0=Times New Roman,186",
+;Remove CE
+win.ini,FontSubstitutes,"System,0=System,238",
+win.ini,FontSubstitutes,"MS Serif,0=MS Serif,238",
+win.ini,FontSubstitutes,"MS Sans Serif,0=MS Sans Serif,238",
+win.ini,FontSubstitutes,"Helv,0=MS Sans Serif,238",
+win.ini,FontSubstitutes,"Tms Rmn,0=MS Serif,238",
+win.ini,FontSubstitutes,"MS Shell Dlg,0=MS Sans Serif,238",
+win.ini,FontSubstitutes,"Helv,238=MS Sans Serif,238",
+win.ini,FontSubstitutes,"Tms Rmn,238=MS Serif,238",
+win.ini,FontSubstitutes,"MS Shell Dlg,238=MS Sans Serif,238",
+win.ini,FontSubstitutes,"Arial CE,238=Arial,238",
+win.ini,FontSubstitutes,"Arial CE,0=Arial,238",
+win.ini,FontSubstitutes,"Helvetica,238=Arial,238",
+win.ini,FontSubstitutes,"Helvetica,0=Arial,238",
+win.ini,FontSubstitutes,"Courier New CE,238=Courier New,238",
+win.ini,FontSubstitutes,"Courier New CE,0=Courier New,238",
+win.ini,FontSubstitutes,"Times New Roman CE,238=Times New Roman,238",
+win.ini,FontSubstitutes,"Times New Roman CE,0=Times New Roman,238",
+win.ini,FontSubstitutes,"Times,238=Times New Roman,238",
+win.ini,FontSubstitutes,"Times,0=Times New Roman,238",
+;Remove Cyrillic
+win.ini,FontSubstitutes,"Courier,0=Courier,204",
+win.ini,FontSubstitutes,"System,0=System,204",
+win.ini,FontSubstitutes,"Small Fonts,0=Small Fonts,204",
+win.ini,FontSubstitutes,"MS Serif,0=MS Serif,204",
+win.ini,FontSubstitutes,"MS Sans Serif,0=MS Sans Serif,204",
+win.ini,FontSubstitutes,"Helv,204=MS Sans Serif,204",
+win.ini,FontSubstitutes,"Helv,0=MS Sans Serif,204",
+win.ini,FontSubstitutes,"Tms Rmn,204=MS Serif,204",
+win.ini,FontSubstitutes,"Tms Rmn,0=MS Serif,204",
+win.ini,FontSubstitutes,"MS Shell Dlg,204=MS Sans Serif,204",
+win.ini,FontSubstitutes,"MS Shell Dlg,0=MS Sans Serif,204",
+win.ini,FontSubstitutes,"Arial Cyr,204=Arial,204",
+win.ini,FontSubstitutes,"Arial Cyr,0=Arial,204",
+win.ini,FontSubstitutes,"Helvetica,204=Arial,204",
+win.ini,FontSubstitutes,"Helvetica,0=Arial,204",
+win.ini,FontSubstitutes,"Courier New Cyr,204=Courier New,204",
+win.ini,FontSubstitutes,"Courier New Cyr,0=Courier New,204",
+win.ini,FontSubstitutes,"Times New Roman Cyr,204=Times New Roman,204",
+win.ini,FontSubstitutes,"Times New Roman Cyr,0=Times New Roman,204",
+win.ini,FontSubstitutes,"Times,204=Times New Roman,204",
+win.ini,FontSubstitutes,"Times,0=Times New Roman,204",
+;Remove Greek
+win.ini,FontSubstitutes,"Courier,0=Courier,161",
+win.ini,FontSubstitutes,"System,0=System,161",
+win.ini,FontSubstitutes,"Small Fonts,0=Small Fonts,161",
+win.ini,FontSubstitutes,"MS Serif,0=MS Serif,161",
+win.ini,FontSubstitutes,"MS Sans Serif,0=MS Sans Serif,161",
+win.ini,FontSubstitutes,"Fixedsys Greek,0=Fixedsys,161",
+win.ini,FontSubstitutes,"System Greek,0=System,161",
+win.ini,FontSubstitutes,"Courier Greek,0=Courier,161",
+win.ini,FontSubstitutes,"MS Serif Greek,0=MS Serif,161",
+win.ini,FontSubstitutes,"Small Fonts Greek,0=Small Fonts,161",
+win.ini,FontSubstitutes,"MS Sans Serif Greek,0=MS Sans Serif,161",
+win.ini,FontSubstitutes,"Arial Greek,161=Arial,161",
+win.ini,FontSubstitutes,"Arial Greek,0=Arial,161",
+win.ini,FontSubstitutes,"Helvetica,161=Arial,161",
+win.ini,FontSubstitutes,"Helvetica,0=Arial,161",
+win.ini,FontSubstitutes,"Courier New Greek,161=Courier New,161",
+win.ini,FontSubstitutes,"Courier New Greek,0=Courier New,161",
+win.ini,FontSubstitutes,"Times New Roman Greek,161=Times New Roman,161",
+win.ini,FontSubstitutes,"Times New Roman Greek,0=Times New Roman,161",
+win.ini,FontSubstitutes,"Times,161=Times New Roman,161",
+win.ini,FontSubstitutes,"Times,0=Times New Roman,161",
+win.ini,FontSubstitutes,"Helv,161=MS Sans Serif,161",
+win.ini,FontSubstitutes,"Helv,0=MS Sans Serif,161",
+win.ini,FontSubstitutes,"Tms Rmn,161=MS Serif,161",
+win.ini,FontSubstitutes,"Tms Rmn,0=MS Serif,161",
+win.ini,FontSubstitutes,"MS Shell Dlg,161=MS Sans Serif,161",
+win.ini,FontSubstitutes,"MS Shell Dlg,0=MS Sans Serif,161",
+
+
+
+[ttfonts.inis]
+win.ini,fonts,,"Arial (TrueType)=ARIAL.TTF"
+win.ini,fonts,,"Arial %Bold% (TrueType)=ARIALBD.TTF"
+win.ini,fonts,,"Arial %Bold.Italic% (TrueType)=ARIALBI.TTF"
+win.ini,fonts,,"Arial %Italic% (TrueType)=ARIALI.TTF"
+win.ini,fonts,,"Courier New (TrueType)=COUR.TTF"
+win.ini,fonts,,"Courier New %Bold% (TrueType)=COURBD.TTF"
+win.ini,fonts,,"Courier New %Bold.Italic% (TrueType)=COURBI.TTF"
+win.ini,fonts,,"Courier New %Italic% (TrueType)=COURI.TTF"
+win.ini,fonts,,"Times New Roman (TrueType)=TIMES.TTF"
+win.ini,fonts,,"Times New Roman %Bold% (TrueType)=TIMESBD.TTF"
+win.ini,fonts,,"Times New Roman %Bold.Italic% (TrueType)=TIMESBI.TTF"
+win.ini,fonts,,"Times New Roman %Italic% (TrueType)=TIMESI.TTF"
+win.ini,fonts,,"WingDings (TrueType)=WINGDING.TTF"
+win.ini,fonts,,"Symbol (TrueType)=SYMBOL.TTF"
+win.ini,fonts,,"Modern (Plotter)=MODERN.FON"
+
+
+; delete this line:
+win.ini,fonts,"MS Console (TrueType)="
+
+;****************************************************
+;*** This section added for MultiLanguage Support ***
+;****************************************************
+
+
+[GreekSubs]
+win.ini,FontSubstitutes,,"Arial Greek,161=Arial,161"
+win.ini,FontSubstitutes,,"Courier New Greek,161=Courier New,161"
+win.ini,FontSubstitutes,,"Times New Roman Greek,161=Times New Roman,161"
+
+[CyrillicSubs]
+win.ini,FontSubstitutes,,"Arial Cyr,204=Arial,204"
+win.ini,FontSubstitutes,,"Courier New Cyr,204=Courier New,204"
+win.ini,FontSubstitutes,,"Times New Roman Cyr,204=Times New Roman,204"
+
+[CESubs]
+win.ini,FontSubstitutes,,"Arial CE,238=Arial,238"
+win.ini,FontSubstitutes,,"Courier New CE,238=Courier New,238"
+win.ini,FontSubstitutes,,"Times New Roman CE,238=Times New Roman,238"
+
+;** END MultiLanguage Support
+
+
+[FontSubs]
+win.ini,FontSubstitutes,,"Helv=MS Sans Serif"
+win.ini,FontSubstitutes,,"Tms Rmn=MS Serif"
+win.ini,FontSubstitutes,"Courier=Courier New",         ; Delete this entry
+win.ini,FontSubstitutes,,"Times=Times New Roman"
+win.ini,FontSubstitutes,,"Helvetica=Arial"
+win.ini,FontSubstitutes,,"MS Shell Dlg=MS Sans Serif"
+
+; Copy.Files References
+
+[MS_SMALL_CopyFiles]
+vgasys.fon,,,8
+vgafix.fon,,,8
+vgaoem.fon,,,8
+sserife.fon,,,8
+serife.fon,,,8
+coure.fon,,,8
+symbole.fon,,,8
+smalle.fon,,,8
+
+[MS_SMALL_DelFiles]
+;Delete these from the Sys Dir since they're now copied to the Fonts Folder
+vgasys.fon
+vgafix.fon
+vgaoem.fon
+sserife.fon
+serife.fon
+coure.fon
+symbole.fon
+smalle.fon
+
+[MS_LARGE_CopyFiles]
+8514sys.fon,,,8
+8514fix.fon,,,8
+8514oem.fon,,,8
+sseriff.fon,,,8
+seriff.fon,,,8
+courf.fon,,,8
+symbolf.fon,,,8
+smallf.fon,,,8
+
+;****************************************************
+;*** This section added for MultiLanguage Support ***
+;****************************************************
+
+[CENLSFiles]
+cp_852.nls,,,1
+cp_1250.nls,,,1
+
+[CyrillicNLSFiles]
+cp_866.nls,,,1
+cp_1251.nls,,,1
+
+[GreekNLSFiles]
+cp_1253.nls,,,1
+cp_737.nls,,,1
+cp_869.nls,,,1
+
+;** END MultiLanguage Support
+
+[MS_LARGE_DelFiles]
+;Delete these from the Sys Dir since they're now copied to the Fonts Folder
+8514sys.fon
+8514fix.fon
+8514oem.fon
+sseriff.fon
+seriff.fon
+courf.fon
+symbolf.fon
+smallf.fon
+
+[MS_FONTSIZE_DelReg]
+HKLM,%KEY_FontSize%,96
+HKLM,%KEY_FontSize%,120
+HKLM,%KEY_FontSize%\96\system
+
+[MS_FONTSIZE_AddReg]
+HKLM,%KEY_FontSize%\96,Description,,%Small.Desc%
+HKLM,%KEY_FontSize%\96\System,vgasys.fon,,fonts.fon
+HKLM,%KEY_FontSize%\96\System,vgafix.fon,,fixedfon.fon
+HKLM,%KEY_FontSize%\96\System,vgaoem.fon,,oemfonts.fon
+HKLM,%KEY_FontSize%\96\User,serife.fon,,%Small.Serif%
+HKLM,%KEY_FontSize%\96\User,sserife.fon,,%Small.SSerif%
+HKLM,%KEY_FontSize%\96\User,coure.fon,,%Small.Cour%
+HKLM,%KEY_FontSize%\96\User,symbole.fon,,%Small.Symbol%
+HKLM,%KEY_FontSize%\96\User,smalle.fon,,%Small.Small%
+
+HKLM,%KEY_FontSize%\120,Description,,%Large.Desc%
+HKLM,%KEY_FontSize%\120\System,8514sys.fon,,fonts.fon
+HKLM,%KEY_FontSize%\120\System,8514fix.fon,,fixedfon.fon
+HKLM,%KEY_FontSize%\120\System,8514oem.fon,,oemfonts.fon
+HKLM,%KEY_FontSize%\120\User,seriff.fon,,%Large.Serif%
+HKLM,%KEY_FontSize%\120\User,sseriff.fon,,%Large.SSerif%
+HKLM,%KEY_FontSize%\120\User,courf.fon,,%Large.Cour%
+HKLM,%KEY_FontSize%\120\User,symbolf.fon,,%Large.Symbol%
+HKLM,%KEY_FontSize%\120\User,smallf.fon,,%Large.Small%
+
+; Mark .FON and Marlet.ttf w/ the HIDDEN attrib on first boot:
+; (Note that you need to use CAPS so the filesystem doesn't treat it as a LFN)
+; R=1; H=2; S=4; HR=3; HS=6; SHR=7
+HKLM,%KEY_RENAME%\Fonts,,,%20%
+HKLM,%KEY_RENAME%\Fonts,MARLETT.TTF,,",6"
+HKLM,%KEY_RENAME%\Fonts,MODERN.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,DOSAPP.FON,,",6"
+HKLM,%KEY_RENAME%\Fonts,APP850.FON,,",6"
+HKLM,%KEY_RENAME%\Fonts,VGA850.FON,,",6"
+
+HKLM,%KEY_RENAME%\Fonts,VGASYS.FON,,",6"
+HKLM,%KEY_RENAME%\Fonts,VGAFIX.FON,,",6"
+HKLM,%KEY_RENAME%\Fonts,VGAOEM.FON,,",6"
+HKLM,%KEY_RENAME%\Fonts,SSERIFE.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,SERIFE.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,COURE.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,SYMBOLE.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,SMALLE.FON,,",2"
+
+HKLM,%KEY_RENAME%\Fonts,8514SYS.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,8514FIX.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,8514OEM.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,SSERIFF.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,SERIFF.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,COURF.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,SYMBOLF.FON,,",2"
+HKLM,%KEY_RENAME%\Fonts,SMALLF.FON,,",2"
+
+; User-visible strings
+
+[Strings]
+;Non-Localizable strings:
+KEY_Optional="SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\OptionalComponents"
+KEY_FontSize="software\Microsoft\windows\currentversion\fontsize"
+KEY_Keyboard="system\currentcontrolset\control\keyboard layouts"
+KEY_RENAME     = "Software\Microsoft\Windows\CurrentVersion\RenameFiles"
+
+;Localizable strings:
+MSFontSizeOptions="Font Size Options"
+TTFONTS          ="True Type Fonts"
+Font_Folder_Desc = "Fonts"
+Bold="Bold"
+Italic="Italic"
+Bold.Italic="Bold Italic"
+
+;Normal Strings
+
+Small.Desc="Small Fonts"
+Small.Serif="MS Serif 8,10,12,14,18,24 (VGA res)"
+Small.SSerif="MS Sans Serif 8,10,12,14,18,24 (VGA res)"
+Small.Cour="Courier 10,12,15 (VGA res)"
+Small.Symbol="Symbol 8,10,12,14,18,24 (VGA res)"
+Small.Small="Small Fonts (VGA res)"
+Large.Desc="Large Fonts"
+Large.Serif="MS Serif 8,10,12,14,18,24 (8514/a res)"
+Large.SSerif="MS Sans Serif 8,10,12,14,18,24 (8514/a res)"
+Large.Cour="Courier 10,12,15 (8514/a res)"
+Large.Symbol="Symbol 8,10,12,14,18,24 (8514/a res)"
+Large.Small="Small Fonts (8514/a res)"
+
+;****************************************************
+;*** This section added for MultiLanguage Support ***
+;****************************************************
+
+MultiLanguageDesc="Language Support"
+EnglishDes="English/Western European language support"
+GreekDes="English/Western European and Greek language support"
+CyrillicDes="English/Western European and Cyrillic language support"
+CEDes="English/Western European and Central European language support"
+00000423="Belarusian"
+00000402="Bulgarian"
+00000405="Czech"
+00000408="Greek"
+0000040E="Hungarian"
+00000415="Polish"
+00000419="Russian"
+00000424="Slovenian"
+KBD_RU="Russian"
+KBD_BUL="Bulgarian (Cyrillic)"
+KBD_BLL="Bulgarian (Latin)"
+KBD_BLR="Belarusian"
+KBD_CZ="Czech"
+KBD_CZ1="Czech (Qwerty)"
+KBD_GK="Greek"
+KBD_HU="Hungarian"
+KBD_HU1="Hungarian (101 keys)"
+KBD_PL="Polish"
+KBD_PL1="Polish (Programmers)"
+KBD_RU1="Russian (Typewriter)"
+KBD_SV="Slovenian"
+KBD_GK220="Greek IBM 220"
+KBD_GK319="Greek IBM 319"
+KBD_GL220="Greek Latin IBM 220"
+KBD_GL319="Greek Latin IBM 319"
+
+

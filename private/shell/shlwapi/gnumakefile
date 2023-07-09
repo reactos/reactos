@@ -1,0 +1,11 @@
+# This makefile was generated automatically by mwgenmake.
+
+.NOTPARALLEL:
+
+world all clean install depend:
+	@enterdir srca   ${MAKE} ${MFLAGS} $@
+	@enterdir srcw   ${MAKE} ${MFLAGS} $@
+	@enterdir srccpp ${MAKE} ${MFLAGS} $@
+	@enterdir nt5api ${MAKE} ${MFLAGS} $@
+	@enterdir dll    ${MAKE} ${MFLAGS} $@
+

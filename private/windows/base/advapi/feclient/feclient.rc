@@ -1,0 +1,11 @@
+#include <windows.h>
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows NT File Encryption Client Interfaces"
+#define VER_INTERNALNAME_STR        "FECLIENT.DLL"
+#define VER_ORIGINALFILENAME_STR    "FECLIENT.DLL"
+
+#include "common.ver"

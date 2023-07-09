@@ -1,0 +1,11 @@
+#
+# Build Drawdib and Compman first to create the lib files
+# Build Video next which creates msvideo.dll and lib
+# MSCVIDC can be inserted next
+# MCIAVI32.DLL uses msvideo.lib
+#
+# VFW32.LIB is built after building mciavi32.  Anything that relies on
+# that library being around needs to be built after mciavi32.  Similarly,
+# all libraries input to vfw32.lib need to be built before mciavi32.
+DIRS=drawdib compman mciwnd video msvidc msrle avifile avicap.io mciavi32 vidcap32
+OPTIONAL_DIRS=NEC_98

@@ -1,0 +1,439 @@
+#ifndef _TABLE_PDL_
+#define _TABLE_PDL_ 1
+
+#include "csite.pdl"
+#include "txtedit.pdl"
+#include "collect.pdl"
+#include "caption.pdl"
+
+file table.pdl
+
+import csite.pdl
+import txtedit.pdl
+import collect.pdl
+import caption.pdl
+
+interface IHTMLTableSection
+
+enum htmlFrame prefix:htmlFrame guid:3050f235-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet  string:  
+    eval void    string:void
+    eval above   string:above
+    eval below   string:below
+    eval hsides  string:hsides
+    eval lhs     string:lhs
+    eval rhs     string:rhs
+    eval vsides  string:vsides
+    eval box     string:box
+    eval border  string:border
+
+
+enum htmlRules prefix:htmlRules guid:3050f236-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet string: 
+    eval none   string:none
+    eval groups string:groups
+    eval rows   string:rows
+    eval cols   string:cols
+    eval all    string:all
+
+
+interface IHTMLTable guid:3050f21e-98b5-11cf-bb82-00aa00bdce0b
+    refprop CTable:cols
+    refprop CTable:border
+    refprop CTable:frame
+    refprop CTable:rules
+    refprop CTable:cellSpacing
+    refprop CTable:cellPadding
+    refprop CTable:background
+    refprop CTable:bgColor
+    refprop CTable:borderColor
+    refprop CTable:borderColorLight
+    refprop CTable:borderColorDark
+    refprop CTable:align
+    refmethod CTable:refresh
+    refprop CTable:rows
+    refprop CTable:width
+    refprop CTable:height
+    refprop CTable:dataPageSize
+    refmethod CTable:nextPage
+    refmethod CTable:previousPage
+    refprop CTable:tHead
+    refprop CTable:tFoot
+    refprop CTable:tBodies
+    refprop CTable:caption
+    refmethod CTable:createTHead
+    refmethod CTable:deleteTHead
+    refmethod CTable:createTFoot
+    refmethod CTable:deleteTFoot
+    refmethod CTable:createCaption
+    refmethod CTable:deleteCaption
+    refmethod CTable:insertRow
+    refmethod CTable:deleteRow
+    refprop CTable:readyState
+    refprop CTable:onreadystatechange
+
+interface IHTMLTable2 super:IDispatch guid:3050f4ad-98b5-11cf-bb82-00aa00bdce0b
+    refmethod CTable:firstPage
+    refmethod CTable:lastPage
+    refprop CTable:cells
+    refmethod CTable:moveRow
+
+/* New style element events w/ eventObject parameter: */
+event HTMLTableEvents2 super:HTMLElementEvents2 guid:3050f623-98b5-11cf-bb82-00aa00bdce0b
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLTableEvents super:HTMLElementEvents guid:3050f407-98b5-11cf-bb82-00aa00bdce0b
+
+tearoff CTable interface:IHTMLElement2 BaseImpl:CElement::
+    tearmethod readyState        mapto:readyState
+    tearmethod get_tabIndex      mapto:super::get_tabIndex
+
+tearoff CTable interface:IHTMLTable
+    tearmethod readyState        mapto:readyState
+
+tearoff CTable interface:IHTMLTable2
+
+tearoff CTable interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID        mapto:GetDispID
+    tearmethod InvokeEx         mapto:ContextThunk_InvokeEx
+
+class CTable name:HTMLTable \
+            primaryinterface:IHTMLTable \
+            super:CSite \
+            events:HTMLTableEvents \
+            nonprimaryevents:HTMLTableEvents2 \
+            guid:3050f26b-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f532-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTable
+    implements IHTMLTable2
+
+    property background         atype:BSTR                type:CStr                  \
+    dispid:DISPID_A_BACKGROUNDIMAGE  get set caa \
+    siteredraw  maxstrlen:4736
+    property bgColor            atype:VARIANT             type:CColorValue  default:VALUE_UNDEF \
+    dispid:DISPID_BACKCOLOR          get set caa \
+    siteredraw  maxstrlen:pdlColor
+
+    property height caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT \
+    default:NULL_UNITVALUE min:MAKE_PIXEL_UNITVALUE(1) ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+
+    property width caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_WIDTH  \
+    default:NULL_UNITVALUE min:MAKE_PIXEL_UNITVALUE(1) ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+
+    property cellSpacing        atype:VARIANT         type:CUnitValue            \
+    default:NULL_UNITVALUE  noassigndefault:MAKE_PIXEL_UNITVALUE(0)              \
+        min:MAKE_PIXEL_UNITVALUE(0) max:MAKE_PIXEL_UNITVALUE(1000)               \
+    invalid=noassigndefault  dispid:DISPID_TABLE+5    get set caa ppflags:PP_UV_LENGTH \
+    clearcaches  remeasure  maxstrlen:pdlLength
+    property cellPadding        atype:VARIANT   type:CUnitValue                  \
+    default:NULL_UNITVALUE  noassigndefault:MAKE_PIXEL_UNITVALUE(0)              \
+        min:MAKE_PIXEL_UNITVALUE(0) max:MAKE_PIXEL_UNITVALUE(1000)               \
+    invalid=noassigndefault dispid:DISPID_TABLE+6    get set caa ppflags:PP_UV_LENGTH  \
+    clearcaches  remeasure  maxstrlen:pdlLength
+    property borderColor        atype:VARIANT             type:CColorValue       \
+    default:VALUE_UNDEF          dispid:DISPID_A_TABLEBORDERCOLOR   \
+    get set caa getaa clearcaches default:VALUE_UNDEF \
+    siteredraw  maxstrlen:pdlColor
+    property borderColorLight   atype:VARIANT             type:CColorValue       \
+    default:VALUE_UNDEF          dispid:DISPID_A_TABLEBORDERCOLORLIGHT  \
+    get set caa getaa clearcaches \
+    siteredraw  maxstrlen:pdlColor
+    property borderColorDark    atype:VARIANT             type:CColorValue       \
+    default:VALUE_UNDEF          dispid:DISPID_A_TABLEBORDERCOLORDARK  \
+    get set caa getaa clearcaches \
+    siteredraw  maxstrlen:pdlColor
+    property cols               atype:long                type:int               \
+    default:NULL_UNITVALUE  dispid:DISPID_TABLE+1            \ 
+    min:0                                                    \
+    get set caa remeasure
+    property align              atype:BSTR    type:htmlControlAlign  \
+    dispid:STDPROPID_XOBJ_CONTROLALIGN \
+    get set caa maxstrlen:pdlToken
+    property border             atype:VARIANT    type:CUnitValue                                                                \
+    default:MAKEUNITVALUE(1,UNIT_NULLVALUE) noassigndefault:MAKE_PIXEL_UNITVALUE(1)    \
+        min:MAKE_PIXEL_UNITVALUE(0) max:MAKE_PIXEL_UNITVALUE(1000)                                    \
+    invalid=noassigndefault  dispid:DISPID_TABLE+2  get set caa ppflags:PP_UV_LENGTH clearcaches \
+    remeasure  maxstrlen:pdlToken
+    property rules              atype:BSTR           type:htmlRules         \
+    default:htmlRulesNotSet      dispid:DISPID_TABLE+3                  \
+    get set caa clearcaches remeasure maxstrlen:pdlToken
+    property frame              atype:BSTR           type:htmlFrame         \
+    default:htmlFrameNotSet      dispid:DISPID_TABLE+4                  \
+    get set caa clearcaches remeasure maxstrlen:pdlLength
+
+    method HRESULT refresh           dispid:DISPID_TABLE+15
+
+    property rows    aType:IHTMLElementCollection* dispid:DISPID_TABLE+16   \
+    get abstract
+    property dataPageSize atype:long   type:int  dispid:DISPID_TABLE+17     \
+    default:0 get set caa baseimplementation
+
+    method HRESULT nextPage         dispid:DISPID_TABLE+18
+    method HRESULT previousPage     dispid:DISPID_TABLE+19
+
+    property tHead     atype:IHTMLTableSection*       dispid:DISPID_TABLE+20 type:IHTMLTableSection*      get abstract
+    property tFoot     atype:IHTMLTableSection*       dispid:DISPID_TABLE+21 type:IHTMLTableSection*      get abstract
+    property tBodies atype:IHTMLElementCollection*  dispid:DISPID_TABLE+24 type:IHTMLElementCollection* get abstract
+    property caption       atype:IHTMLTableCaption*       dispid:DISPID_TABLE+25 type:IHTMLTableCaption*      get abstract
+
+    method HRESULT createTHead      DISPID:DISPID_TABLE+26 (out retval arg:head type:IDispatch**)
+    method HRESULT deleteTHead      DISPID:DISPID_TABLE+27 
+    method HRESULT createTFoot      DISPID:DISPID_TABLE+28 (out retval arg:foot type:IDispatch**)
+    method HRESULT deleteTFoot      DISPID:DISPID_TABLE+29 
+    method HRESULT createCaption    DISPID:DISPID_TABLE+30 (out retval arg:caption type:IHTMLTableCaption**)
+    method HRESULT deleteCaption    DISPID:DISPID_TABLE+31 
+    method HRESULT insertRow            dispid:DISPID_TABLE+32 (in defaultvalue:-1 arg:index type:long, \
+                                                            out retval arg:row type:IDispatch**)
+    method HRESULT deleteRow            dispid:DISPID_TABLE+33 (in defaultvalue:-1 arg:index type:long)
+
+    property readyState aType:BSTR           dispid:DISPID_A_READYSTATE type:CStr \
+    	abstract   get  nopersist nopropdesc:nameonly
+    property onreadystatechange atype:VARIANT type:code dispid:DISPID_EVPROP_ONREADYSTATECHANGE \
+	    caa scriptlet get set bindable displaybind maxstrlen:pdlEvent nopropdesc
+
+    method HRESULT firstPage        dispid:DISPID_TABLE+35
+    method HRESULT lastPage         dispid:DISPID_TABLE+36
+    property cells atype:IHTMLElementCollection*    dispid:DISPID_TABLE+37   get abstract
+    method HRESULT moveRow          dispid:DISPID_TABLE+38 (in defaultvalue:-1 arg:indexFrom type:long in defaultvalue:-1 arg:indexTo type:long, \
+                                                            out retval arg:row type:IDispatch**)
+
+
+enum htmlCellAlign prefix:htmlCellAlign guid:3050f238-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet  string:  
+    eval Left    string:left
+    eval Center  string:center 
+    eval Right   string:right
+    eval Middle  string:middle value:htmlCellAlignCenter
+
+enum htmlCellVAlign prefix:htmlCellVAlign guid:3050f239-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet   string: 
+    eval Top      string:top
+    eval Middle   string:middle
+    eval Bottom   string:bottom
+    eval Baseline string:baseline
+    eval Center   string:center value:htmlCellVAlignMiddle
+
+
+interface IHTMLTableCol guid:3050f23a-98b5-11cf-bb82-00aa00bdce0b
+    refprop CTableCol:span
+    refprop CTableCol:width
+    refprop CTableCol:align
+    refprop CTableCol:vAlign
+//    refprop CTableCol:bgColor         
+
+
+tearoff CTableCol interface:IHTMLTableCol
+
+class CTableCol name:HTMLTableCol \
+            primaryinterface:IHTMLTableCol \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f26c-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f533-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLTableCol
+
+// Cascaded Properties
+    property bgColor    atype:VARIANT             type:CColorValue      default:VALUE_UNDEF   \
+    dispid:DISPID_BACKCOLOR     get set caa siteredraw  maxstrlen:pdlColor
+
+    property width      atype:VARIANT type:CUnitValue   \
+    default:NULL_UNITVALUE  min:MAKE_PIXEL_UNITVALUE(1)                         \
+    dispid:STDPROPID_XOBJ_WIDTH get set caa ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+
+
+    property align      atype:BSTR    type:htmlCellAlign    default:htmlCellAlignNotSet  \
+    dispid:STDPROPID_XOBJ_BLOCKALIGN   get set caa maxstrlen:pdlToken
+    property vAlign     atype:BSTR   type:htmlCellVAlign    default:htmlCellVAlignNotSet \
+       noassigndefault:htmlCellVAlignTop invalid=noassigndefault dispid:DISPID_A_TABLEVALIGN get set caa maxstrlen:pdlToken
+// Non-Cascaded Properties
+    property span       atype:long             type:int              default:1  min:1  max:1000 \
+    dispid:DISPID_TABLECOL+1    get set caa clearcaches remeasure
+
+
+interface IHTMLTableSection  guid:3050f23b-98b5-11cf-bb82-00aa00bdce0b
+    refprop CTableSection:align
+    refprop CTableSection:vAlign
+    refprop CTableSection:bgColor         
+    refprop CTableSection:rows
+    refmethod CTableSection:insertRow
+    refmethod CTableSection:deleteRow
+
+interface IHTMLTableSection2 super:IDispatch guid:3050f5c7-98b5-11cf-bb82-00aa00bdce0b
+    refmethod CTableSection:moveRow
+
+
+tearoff CTableSection interface:IHTMLTableSection
+
+tearoff CTableSection interface:IHTMLTableSection2
+
+class CTableSection name:HTMLTableSection \
+            primaryinterface:IHTMLTableSection \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f2e9-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f534-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLTableSection
+    implements IHTMLTableSection2
+
+// Cascaded Properties
+    property bgColor    atype:VARIANT             type:CColorValue       default:VALUE_UNDEF            \
+    dispid:DISPID_BACKCOLOR         get set caa siteredraw  maxstrlen:pdlColor
+    property vAlign     atype:BSTR   type:htmlCellVAlign    default:htmlCellVAlignNotSet \
+       noassigndefault:htmlCellVAlignTop invalid=noassigndefault dispid:DISPID_A_TABLEVALIGN get set caa remeasure maxstrlen:pdlToken
+    property align      atype:BSTR    type:htmlCellAlign     default:htmlCellAlignNotSet    \
+    dispid:STDPROPID_XOBJ_BLOCKALIGN       get set caa remeasure maxstrlen:pdlToken
+// Non-Cascaded Properties
+
+    property rows atype:IHTMLElementCollection*     dispid:DISPID_TABLESECTION   get abstract
+    method HRESULT insertRow dispid:DISPID_TABLESECTION+1 (in defaultvalue:-1 arg:index type:long, \
+                                                            out retval arg:row type:IDispatch**)
+    method HRESULT deleteRow dispid:DISPID_TABLESECTION+2 (in defaultvalue:-1 arg:index type:long)
+    method HRESULT moveRow   dispid:DISPID_TABLESECTION+3 (in defaultvalue:-1 arg:indexFrom type:long in defaultvalue:-1 arg:indexTo type:long, \
+                                                            out retval arg:row type:IDispatch**)
+
+interface IHTMLTableRow guid:3050f23c-98b5-11cf-bb82-00aa00bdce0b
+    refprop CTableRow:align           
+    refprop CTableRow:vAlign          
+    refprop CTableRow:bgColor         
+    refprop CTableRow:borderColor     
+    refprop CTableRow:borderColorLight
+    refprop CTableRow:borderColorDark
+
+    refprop CTableRow:rowIndex
+    refprop CTableRow:sectionRowIndex
+    refprop CTableRow:cells
+    refmethod CTableRow:insertCell
+    refmethod CTableRow:deleteCell
+
+interface IHTMLTableRow2 super:IDispatch guid:3050f4a1-98b5-11cf-bb82-00aa00bdce0b
+    refprop CTableRow:height
+
+interface IHTMLTableRowMetrics super:IDispatch guid:3050f413-98b5-11cf-bb82-00aa00bdce0b
+    refprop CTableRow:clientHeight
+    refprop CTableRow:clientWidth
+    refprop CTableRow:clientTop
+    refprop CTableRow:clientLeft
+
+tearoff CTableRow interface:IHTMLTableRowMetrics 
+tearoff CTableRow interface:IHTMLTableRow2
+tearoff CTableRow interface:IHTMLTableRow
+
+class CTableRow name:HTMLTableRow \
+            primaryinterface:IHTMLTableRow \
+            super:CSite \
+            events:HTMLControlElementEvents \
+            nonprimaryevents:HTMLControlElementEvents2 \
+            guid:3050f26d-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f535-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLTableRow
+    implements IHTMLTableRowMetrics
+    implements IHTMLTableRow2
+
+// Cascaded Properties
+    property bgColor          atype:VARIANT           type:CColorValue      default:VALUE_UNDEF \
+    dispid:DISPID_BACKCOLOR     get set caa siteredraw  maxstrlen:pdlColor
+    property borderColor      atype:VARIANT           type:CColorValue      default:VALUE_UNDEF \
+    dispid:DISPID_A_TABLEBORDERCOLOR    get set caa getaa siteredraw    maxstrlen:pdlColor
+    property borderColorLight atype:VARIANT           type:CColorValue      default:VALUE_UNDEF \
+    dispid:DISPID_A_TABLEBORDERCOLORLIGHT get set caa getaa siteredraw  maxstrlen:pdlColor
+    property borderColorDark  atype:VARIANT           type:CColorValue      default:VALUE_UNDEF \
+    dispid:DISPID_A_TABLEBORDERCOLORDARK  get set caa getaa  siteredraw maxstrlen:pdlColor
+
+    property align            atype:BSTR     type:htmlCellAlign    default:htmlCellAlignNotSet \
+    dispid:STDPROPID_XOBJ_BLOCKALIGN    get set caa maxstrlen:pdlToken
+    property vAlign             atype:BSTR   type:htmlCellVAlign    default:htmlCellVAlignNotSet \
+       noassigndefault:htmlCellVAlignTop invalid=noassigndefault dispid:DISPID_A_TABLEVALIGN get set caa maxstrlen:pdlToken
+// Non-Cascaded Properties
+
+    property rowIndex   atype:long                    dispid:DISPID_TABLEROW     get abstract
+    property sectionRowIndex   atype:long             dispid:DISPID_TABLEROW+1   get abstract
+    property cells   atype:IHTMLElementCollection*    dispid:DISPID_TABLEROW+2   get abstract
+
+    property height caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT \
+    default:NULL_UNITVALUE min:MAKE_PIXEL_UNITVALUE(1) ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+
+    method  HRESULT insertCell dispid:DISPID_TABLEROW+3 (in defaultvalue:-1 arg:index type:long \
+                                                         out retval arg:row type:IDispatch**)
+    method  HRESULT deleteCell dispid:DISPID_TABLEROW+4 (in defaultvalue:-1 arg:index type:long)
+// IHTMLTableRowMetrics properties
+
+    property clientHeight        abstract atype:long dispid:DISPID_TABLEROW+5         type:long get     displaybind nopropdesc
+    property clientWidth         abstract atype:long dispid:DISPID_TABLEROW+6         type:long get     displaybind nopropdesc
+    property clientTop           abstract atype:long dispid:DISPID_TABLEROW+7         type:long get     displaybind nopropdesc
+    property clientLeft          abstract atype:long dispid:DISPID_TABLEROW+8         type:long get     displaybind nopropdesc
+
+       
+interface IHTMLTableCell guid:3050f23d-98b5-11cf-bb82-00aa00bdce0b
+    refprop CTableCell:rowSpan         
+    refprop CTableCell:colSpan         
+    refprop CTableCell:align           
+    refprop CTableCell:vAlign          
+    refprop CTableCell:bgColor         
+    refprop CTableCell:noWrap          
+    refprop CTableCell:background      
+    refprop CTableCell:borderColor     
+    refprop CTableCell:borderColorLight
+    refprop CTableCell:borderColorDark 
+    refprop CTableCell:width
+    refprop CTableCell:height
+    refprop CTableCell:cellIndex
+
+tearoff CTableCell interface:IHTMLTableCell
+
+class CTableCell name:HTMLTableCell \
+            primaryinterface:IHTMLTableCell \
+            super:CTxtSite \
+            events:HTMLTextContainerEvents \
+            nonprimaryevents:HTMLTextContainerEvents2 \
+            guid:3050f246-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f536-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLTableCell
+
+// Cascaded Properties
+    property bgColor            atype:VARIANT          type:CColorValue       default:VALUE_UNDEF     \
+    dispid:DISPID_BACKCOLOR get set caa siteredraw maxstrlen:pdlColor
+    property background         atype:BSTR             type:CStr                         \
+    dispid:DISPID_A_BACKGROUNDIMAGE  get set caa siteredraw maxstrlen:4736
+
+    property height caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT \
+    default:NULL_UNITVALUE min:MAKE_PIXEL_UNITVALUE(1) ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+
+    property width caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_WIDTH  \
+    default:NULL_UNITVALUE min:MAKE_PIXEL_UNITVALUE(1) ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+
+    property borderColor        atype:VARIANT          type:CColorValue       default:VALUE_UNDEF     \
+    dispid:DISPID_A_TABLEBORDERCOLOR get set getaa caa getaa siteredraw maxstrlen:pdlColor
+    property borderColorLight   atype:VARIANT          type:CColorValue       default:VALUE_UNDEF     \
+    dispid:DISPID_A_TABLEBORDERCOLORLIGHT  get set getaa caa siteredraw maxstrlen:pdlColor
+    property borderColorDark    atype:VARIANT          type:CColorValue       default:VALUE_UNDEF     \
+    dispid:DISPID_A_TABLEBORDERCOLORDARK   get set getaa caa siteredraw maxstrlen:pdlColor
+    property noWrap             atype:VARIANT_BOOL     type:VARIANT_BOOL      default:0               \
+    dispid:DISPID_A_NOWRAP get set caa vt:VT_BOOL 
+    property align              atype:BSTR    type:htmlCellAlign     default:htmlCellAlignNotSet  \
+    dispid:STDPROPID_XOBJ_BLOCKALIGN get set caa maxstrlen:pdlToken
+    property vAlign             atype:BSTR   type:htmlCellVAlign    default:htmlCellVAlignNotSet \
+       noassigndefault:htmlCellVAlignTop invalid=noassigndefault dispid:DISPID_A_TABLEVALIGN get set caa maxstrlen:pdlToken
+// Non-Cascaded Properties
+    property rowSpan            atype:long             type:int               default:1 min:1   \
+    dispid:DISPID_TABLECELL+1   get set caa remeasure baseimplementation
+    property colSpan            atype:long             type:int               default:1 min:1 max:1000  \
+    dispid:DISPID_TABLECELL+2   get set caa remeasure baseimplementation
+    property cellIndex              atype:long             type:int               \
+    dispid:DISPID_TABLECELL+3 get abstract
+
+#endif _TABLE_PDL_

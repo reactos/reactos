@@ -1,8 +1,0 @@
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_USAGE "Wyświetla obecną nazwę komputera.\n\nhostname"
-    IDS_NOSET "Opcja hostname -s nie jest wspierana."
-    IDS_ERROR "Błąd Win32"
-END

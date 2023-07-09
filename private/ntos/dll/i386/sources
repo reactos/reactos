@@ -1,0 +1,15 @@
+386_DLLLIBOBJECTS=$(BASEDIR)\public\sdk\lib\i386\exsup.lib
+
+i386_SOURCES=..\i386\critsect.asm \
+             ..\i386\ldrthunk.asm \
+             ..\i386\emulator.asm \
+             ..\i386\ldrctx.c     \
+             ..\i386\npxnp.c      \
+             i386\usrstubs.asm
+
+ASM_DEFINES=-DNT386
+
+CONDITIONAL_INCLUDES=\
+        $(CONDITIONAL_INCLUDES) \
+        emccall.asm\
+        except32.inc

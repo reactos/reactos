@@ -1,0 +1,49 @@
+
+MAJORCOMP=sockets
+MINORCOMP=ws2_rlsp
+
+TARGETNAME=msrlsp
+TARGETPATH=$(_NTBINDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\ole32.lib     \
+           $(_NTBINDIR)\public\sdk\lib\*\oleaut32.lib  \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\comdlg32.lib\
+           $(_NTDRIVE)\nt\public\sdk\lib\*\uuid.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\ws2_32.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\ws2help.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\rpcrt4.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib  \
+           $(_NTBINDIR)\public\sdk\lib\*\ntdll.lib     \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib  \
+           $(_NTBINDIR)\public\sdk\lib\*\user32.lib
+
+
+INCLUDES=.;..\..\include
+
+SOURCES=dbuffmgr.cpp \
+        doverlap.cpp \
+        rworker.cpp  \
+        dcatalog.cpp \
+        dcatitem.cpp \
+        dllmain.cpp  \
+        rprovide.cpp \
+        rsocket.cpp  \
+        spi.cpp      \
+        trace.cpp    \
+        dthook.cpp   \
+        memory.cpp   \
+        msrlsp.rc
+
+# PRECOMPILED_INCLUDE=precomp.h
+
+LINKLIBS=..\..\lib\*\ws2_if.lib   \
+         ..\..\lib\*\ws2_rp.lib   \
+         ..\..\lib\*\ws2_hlpr.lib
+
+C_DEFINES=-DNTENV
+
+DLLENTRY=DllMain
+
+USE_NTDLL=1
+

@@ -1,0 +1,11 @@
+MIPS_OPTIONS=-nodwalign
+GPSIZE=32
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+MIPS_SOURCES=..\mips\fmutex.s   \
+             ..\mips\gettick.s  \
+             ..\mips\hifreqlk.s \
+             ..\mips\x4intrlk.s \
+             ..\mips\raisests.c \
+             ..\mips\splocks.c

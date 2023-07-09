@@ -1,0 +1,90 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Wesley Witt (wesw)
+
+!ENDIF
+
+OSDEBUG4=1
+
+!include ..\..\sources.inc
+
+USE_NATIVE_EH=0
+
+
+MAJORCOMP=windbg
+MINORCOMP=dmkd
+
+TARGETNAME=dmkdalp$(D)
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLDEF=dmkdalp.def
+COFFBASE=dmkdalp
+
+DLLENTRY=DllMain
+
+SOURCES=\
+    ..\kdapi.c       \
+    ..\bp.c        \
+    ..\cache.c     \
+    ..\com.c       \
+    ..\dmdisasm.c  \
+    ..\dmx32.c     \
+    ..\event.c     \
+    ..\funccall.c  \
+    ..\packet.c    \
+    ..\procem.c    \
+    ..\support.c   \
+    ..\step.c      \
+    ..\util.c      \
+    ..\walk.c      \
+    ..\kdwow.c     \
+    ..\alpmach.c   \
+    ..\alpthnk.c   \
+    ..\alphaopt.c  \
+    ..\alphaasm.c  \
+    ..\dmkd.rc
+
+UMTYPE=windows
+
+C_DEFINES = $(C_DEFINES) -DDOLPHIN -DTARGET_ALPHA -DKERNEL
+
+INCLUDES=   ..;                             \
+            $(DEBUGGER_ROOT)\include;       \
+            $(DEBUGGER_ROOT)\od\include;    \
+            $(DEBUG_INCLUDES);              \
+            $(LANGAPI)\include;             \
+            $(BASEDIR)\private\ntos\inc;    \
+            $(BASEDIR)\private\ntos\io;     \
+
+CONDITIONAL_INCLUDES=odp.h win32dm.h
+
+TARGETLIBS=$(MORE_LIBS) \
+           $(SDK_LIB_PATH)\kernel32.lib \
+           $(SDK_LIB_PATH)\user32.lib   \
+           $(SDK_LIB_PATH)\advapi32.lib \
+           $(SDK_LIB_PATH)\dbghelp.lib \
+           $(NONSHIP_LIB_PATH)\crashlib.lib \
+           $(SDK_LIB_PATH)\disasm.lib \
+           $(BASEDIR)\private\ntos\rtl\user\obj\$(TARGET_DIRECTORY)\splay.obj
+
+#NTTARGETFILES=
+
+PRECOMPILED_INCLUDE=precomp.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj

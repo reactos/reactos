@@ -1,0 +1,125 @@
+<html>  
+
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+  <head>
+    <title>XML DSO Control: Example 2</title>
+    <style>
+      td    {font-size:80%;}
+      xmp   {font-size:120%; background:yellow}
+    </style>
+  </head>
+
+<script src=DOMformatter.js></script>
+<OBJECT width=0 height=0
+    classid="clsid:550dda30-0541-11d2-9ca9-0060b0ec3d39"
+    id="xmldso">
+<BOOKS>
+	<ITEM>
+		<XTITLE>Number, the Language of Science</XTITLE>
+		<AUTHOR>Danzig</AUTHOR>
+		<PRICE>5.95</PRICE>
+		<QUANTITY>3</QUANTITY>
+	</ITEM>
+	<DSIG>192817265</DSIG>
+	<ITEM>
+		<XTITLE>Tales of Grandpa Cat</XTITLE>
+		<PUBLISHER>Associated Press</PUBLISHER>
+		<AUTHOR>Wardlaw, Lee</AUTHOR>
+		<PRICE>6.8</PRICE>
+		<QUANTITY>5</QUANTITY>
+	</ITEM>
+	<ITEM>
+		<XTITLE>Evolution of Complexity in Animal Culture</XTITLE>
+		<AUTHOR>Bonner</AUTHOR>
+		<PRICE>5.95</PRICE>
+		<QUANTITY>2</QUANTITY>
+	</ITEM>
+	<ITEM TAX="7.5">
+		<XTITLE>When We Were Very Young</XTITLE>
+		<AUTHOR>Milne, A. A.</AUTHOR>
+		<PRICE>12.5</PRICE>
+		<QUANTITY>1</QUANTITY>
+	</ITEM>
+	<ITEM>
+		<XTITLE>Learn Java Now</XTITLE>
+		<AUTHOR>Stephen R. Davis</AUTHOR>
+		<PUBLISHER>Microsoft Corporation</PUBLISHER>
+		<PRICE>9.95</PRICE>
+		<QUANTITY>12</QUANTITY>
+	</ITEM>
+	<ITEM TAX="12.5">
+		<XTITLE>Design Patterns</XTITLE>
+		<AUTHOR>Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides</AUTHOR>
+		<PUBLISHER>Addison Wesley</PUBLISHER>
+		<PRICE>49.95</PRICE>
+		<QUANTITY>2</QUANTITY>
+	</ITEM>
+</BOOKS>
+
+</OBJECT>
+<SCRIPT for=window event=onload>
+    var doc = xmldso.XMLDocument;
+    doc.loadXML(xmldso.altHtml);
+    if (doc.documentElement == null)
+    {
+        error.innerText = doc.parseError.reason;
+    }
+</SCRIPT>
+
+<BODY TOPMARGIN=0 LEFTMARGIN=40 BGCOLOR="#ffffff" LINK="#000066" VLINK="#666666" TEXT="#000000">
+<FONT FACE="verdana,arial,helvetica" SIZE=2>
+
+<table align=right>
+<tr><td bgcolor=black><a href="Example1.htm">
+    <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Previous<b></font></a>
+    <td bgcolor=black><a href="xmldso.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Home<b></font></a>
+    <td bgcolor=black><a href="Example3.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Next<b></font></a>
+</table>
+
+<h2>XML DSO Control</h2>
+<h3>Example 2</h3>
+<P>
+This example shows how the XML DSO can get the XML data from inside
+the OBJECT tag in the HTML page instead of getting it from a separate file.
+<P>
+<table id=table border=2 width=100% datasrc=#xmldso cellpadding=5>
+<thead style="background-color:yellow" align=left>
+	<th>Author
+	<th>Title
+	<th>Publisher
+	<th>Price
+</thead>
+<tr>
+  <td valign=top><div datafld=AUTHOR dataformatas=HTML></td>
+  <td valign=top><div datafld=XTITLE dataformatas=HTML></td>
+  <td valign=top><div datafld=PUBLISHER dataformatas=HTML></td>
+  <td valign=top><div datafld=PRICE dataformatas=HTML></td>
+</tr>
+</table>
+<P>
+<xmp id=error></xmp>
+<P>
+<i>(Note: Currently the &lt;TITLE&gt; tag is not allowed
+inside inline XML so you will notice that I changed it to XTITLE.)</i>
+<P>
+<P>
+<input type=button value="Show XML Data" 
+    onclick='ShowXML(xmldso.XMLDocument);'>
+
+<!--DocFooterStart-->
+<P>
+</FONT>
+<FONT FACE="MS SANS SERIF" SIZE="1" COLOR="BLACK">
+&copy;  <A HREF="http://www.microsoft.com/misc/cpyright.htm" TARGET="_top">1997 Microsoft Corporation. All rights reserved. Terms of use</A>.<P>
+</FONT>
+
+
+  </body>
+</html>

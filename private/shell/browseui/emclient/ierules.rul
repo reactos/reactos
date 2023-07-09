@@ -1,0 +1,179 @@
+/*----------------------------------------------------------------------------
+    %%File: INTERP\EM.RUL
+    %%Unit: Event Monitor (mntr)
+    %%Contact: daleg
+
+    Event Monitor Sample Rule Base.
+
+    This is a source file to the Rule Compiler to demonstrate how to process
+    events.
+
+ ----------------------------------------------------------------------------
+    NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+
+    There are *two* rule syntaxes used here, simple rules, and rule patterns.
+
+    Simple rules appear as ordinary C "if" statements, and follow the same
+    syntax rules.  Example of a simple rule:
+
+        if ("x")
+            {
+            Say("You just typed \"x\"");
+            }
+
+    In Rule patterns, the test clause is enclosed by square
+    brackets [ ] instead of the parentheses ( ) used in simple rules.
+    Example of a rule pattern:
+
+        if ["d" "e" "m" "o"] ... (LCheckButton2)
+            {
+            Say("You just typed \"demo\"");
+            }
+
+    The pattern is a regular expression, with the following allowable
+    operators:
+
+    operator    Marks                   Example
+    ------------------------------------------------------------------------
+        |       Alternatives            "a" "b" | "c" "d"
+        [ ]     Optional sequences      [ "a" "b" "c" ]
+        { }     Required sequence       { "a" "b" | "c" "d" }
+
+
+    Note that required or optional (sub) sequences can always have alternatives
+
+ ----------------------------------------------------------------------------
+ ----------------------------------------------------------------------------
+
+    Note also that there are two forms of rules, "if" rules, and "and_if"
+    rules.
+
+    Rules marked with "if" are primary rules, and are automatically sheduled
+    to run whenever any of their primary events are scheduled.
+
+    Rules marked with "and_if" are secondary rules, and must be explicitly
+    scheduled from another rule or from the application.  The "..." syntax
+    and the "then ()" function are used to schedule rules from within the
+    rule.base
+
+    See the document "Writing Rules In The Event Monitor" for details.
+
+----------------------------------------------------------------------------*/
+
+// #include "genrules.rul"
+
+#pragma argv "-d -f -a  -m128 -s128 -xl -xo -pEm"
+
+#include "libem.h"   // configure genem.c and other client-side stuff
+#include "uemevt.h"
+
+declare group ALWAYS;
+
+declare event_type _YYSTD : ALWAYS;
+declare event_type IE : ALWAYS;
+
+// BUGBUG MsoPact doesn't enqueue
+declare action NoArgs(0) MSOACT *MsoPact(  // Declare action cons
+    MSOACTTBL *pacttbl,
+    int actt,
+    ...
+);
+
+#if YY_DELAYED  // BUGBUG tmp #if
+#define TraceMB PactTraceMB
+#endif
+
+// {
+//***   _YYSTD -- standard events
+In event_type _YYSTD;
+
+declare _YYSTD_INIT                               export; // OnInit
+declare _YYSTD_LOADING_RULEBASE                   export; // OnRulesLoaded
+
+declare _YYSTD_GENERIC                            export; // generic
+declare _YYSTD_UNKNOWN                            export; // unknown
+
+    if (_YYSTD_INIT) {
+        TraceMB("init");
+    }
+
+// }
+
+
+// {
+//***   IE -- IE-specific events
+In event_type IE;
+
+declare keytable IE_KEYTABLE integer /*prefix("IE")*/       // Declare char keys
+    default (irulIE_UNKNOWN);
+
+declare IE_ALPHA        generic(alpha)          export; // ALPHA tk event
+
+declare IE_UNKNOWN                              export; // unknown
+declare IE_GENERIC                              export; // generic
+
+declare IE_UIGENERIC;
+declare IE_UIMENU   key(UEME_UIMENU)    IE_UIGENERIC    export; //
+declare IE_UIQCUT   key(UEME_UIQCUT)    IE_UIGENERIC    export; //
+declare IE_UISCUT   key(UEME_UISCUT)    IE_UIGENERIC    export; //
+declare IE_UIHOTKEY key(UEME_UIHOTKEY)  IE_UIGENERIC    export; //
+
+declare IE_RUNGENERIC;
+declare IE_RUNWMCMD key(UEME_RUNWMCMD)  IE_RUNGENERIC   export;
+
+    if (IE_GENERIC) {
+        TraceMB("generic");
+    }
+
+    if (IE_UIGENERIC) {
+        TraceMB("ui*");
+    }
+
+    if [IE_UIMENU IE_RUNGENERIC] {
+        TraceMB("ui run*");
+    }
+
+    if (IE_RUNGENERIC) {
+        TraceMB("run*");
+    }
+
+
+// }
+
+
+
+
+
+
+
+#if 0 // {
+
+#if 0
+#include "clock.rul"
+#endif
+
+#endif // }
+
+
+//***   code
+//
+
+#ifdef TraceMB
+    action NoArgs msoactfNonEdit
+MSOACT *TraceMB(char *str)      // PactTraceMB
+#undef TraceMB
+{
+    TraceMB(str);
+    //return 0;
+}
+#endif
+
+FUNCTION void TraceMB(char *str)
+{
+    TraceMsg(DM_TRACE, "em: %s", str);
+#if 0
+    // can't call this since MSOEM isn't reentrant
+    MessageBox(NULL, str, "em", MB_OKCANCEL);
+#endif
+    return;
+}

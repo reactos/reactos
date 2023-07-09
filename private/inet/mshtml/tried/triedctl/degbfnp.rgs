@@ -1,0 +1,30 @@
+HKCR
+{
+	DEGetBlockFmtNamesParam.DEGetBlockFmtNamesParam.1 = s 'DEGetBlockFmtNamesParam Class'
+	{
+		CLSID = s '{8D91090E-B955-11D1-ADC5-006008A5848C}'
+	}
+	DEGetBlockFmtNamesParam.DEGetBlockFmtNamesParam = s 'DEGetBlockFmtNamesParam Class'
+	{
+		CurVer = s 'DEGetBlockFmtNamesParam.DEGetBlockFmtNamesParam.1'
+		CLSID = s '{8D91090E-B955-11D1-ADC5-006008A5848C}'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {8D91090E-B955-11D1-ADC5-006008A5848C} = s 'DEGetBlockFmtNamesParam Class'
+		{
+			ProgID = s 'DEGetBlockFmtNamesParam.DEGetBlockFmtNamesParam.1'
+			VersionIndependentProgID = s 'DEGetBlockFmtNamesParam.DEGetBlockFmtNamesParam'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'Version' = s '1.0'
+			'Implemented Categories'
+			{
+				'{7DD95801-9882-11CF-9FA9-00AA006C42C4}'
+			}
+		}
+	}
+}

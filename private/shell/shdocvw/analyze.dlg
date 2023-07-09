@@ -1,0 +1,478 @@
+<HTML id=dlgAnalyze STYLE="font-family: MS Shell Dlg; font-size: 8pt;
+width: 30em; height: 33em">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE id=dialogTitle>
+Analyze Document
+</TITLE>
+
+<SCRIPT LANGUAGE="JavaScript" defer>
+
+#define HTMLKEYESCAPE   27
+
+window.onerror = HandleError
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   Turns off error messages in dialogs
+//
+//  Arguments:  none
+//
+//  returns:    true (tells browser not to handle message)
+//
+//--------------------------------------------------------------------
+
+function HandleError(message, url, line)
+{
+    var L_Dialog_ErrorMessage = "An error has occured in this dialog.";
+    var L_ErrorNumber_Text = "Error: ";
+
+    var str = L_Dialog_ErrorMessage + "\n\n" 
+        + L_ErrorNumber_Text + line + "\n"
+        + message;
+
+    alert (str);
+    window.close();
+
+    return true;
+}
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Returns the document object for the page to be analyzed
+//
+//  Arguments:  none
+//
+//  returns:    document object for the page to be analyzed
+//
+//----------------------------------------------------------------------
+
+function otherDocument() 
+{
+    return window.dialogArguments.document;
+}
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   onload handler for this dialog. sets up events. Calls 
+//		analysis function.
+//
+//  Arguments:  none
+//
+//  returns:    none
+//
+//----------------------------------------------------------------------
+
+function loadBdy()
+{
+    //
+    //  Bind events to controls. This is done here to load the dialog
+    //  quicker.
+    //
+
+    document.all.btnOk.onclick = new Function("window.close();");
+    document.onkeyup = new Function("documentOnKeyUp()");
+
+    runAnalysis();
+
+}   //  loadBdy
+
+
+//+---------------------------------------------------------------------
+//
+//  Checks for the escape key and closes the dialog
+//
+//----------------------------------------------------------------------
+
+function documentOnKeyUp()
+{
+    if (window.event.keyCode == HTMLKEYESCAPE)
+    {
+        window.close();
+    }
+}   //  documentOnKeyUp
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Performs analysis function on primary document. 
+//		Initializes display error, then calls each of the individual
+//		analysis functions in turn
+//
+//  Arguments:  none
+//
+//  returns:    none
+//
+//----------------------------------------------------------------------
+
+function runAnalysis() 
+{ 
+    var errorsFound, reportLocation;
+
+    errorsFound = false;
+
+    reportLocation = document.all.ReportArea;
+
+    initializeResults(reportLocation);
+
+    errorsFound = errorsFound || checkBodyWithinFrameset(reportLocation);
+    errorsFound = errorsFound || checkAnythingAfterFrameset(reportLocation);
+    errorsFound = errorsFound || checkUnloadedComponents(reportLocation);
+    errorsFound = errorsFound || checkNonApartmentControls(reportLocation);
+    errorsFound = errorsFound || checkUnloadedStyleSheets(reportLocation);
+
+    if (errorsFound == false) {
+       reportNothingFound(reportLocation);
+    }
+}
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Sets the initial state of the results window - blank
+//
+//  Arguments:  none
+//
+//  returns:    none
+//
+//----------------------------------------------------------------------
+
+function initializeResults(reportLocation) 
+{
+   reportLocation.innerHTML = "&nbsp;";
+}
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   If no errors found in document, reports that to user
+//
+//  Arguments:  none
+//
+//  returns:    none
+//
+//----------------------------------------------------------------------
+
+function reportNothingFound(reportLocation) 
+{
+   var L_NoErrors_Text = "No errors found.";
+   reportLocation.innerHTML = L_NoErrors_Text;
+}
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Checks for existence of a frameset and a body on the same document 
+//
+//  Arguments:  none
+//
+//  returns:    true if found, false if not
+//
+//----------------------------------------------------------------------
+
+function checkBodyWithinFrameset(reportLocation) 
+{
+   var theDocument;
+   var framesets, bodies;
+   var retVal;
+   var L_FramesetInBody_Text = "This document might not display properly because there is a FRAMESET within the BODY of the document. The page author can resolve this problem by<OL><li>Removing the BODY tag.</li><li>Insuring that there is no additional HTML code between the HEAD of the document and the FRAMESET.</li></ol><br><hr>";
+
+   retVal = false;
+
+   theDocument = otherDocument();
+
+   framesets = theDocument.all.tags("frameset");
+   
+   if (framesets.length > 0) {
+       bodies = theDocument.all.tags("body");
+       if (bodies.length > 0) {
+           reportLocation.insertAdjacentHTML("BeforeEnd", L_FramesetInBody_Text );
+          
+           retVal = true;
+       }
+   }
+   // tested case of implied body - looks like trident creates a body 
+   // tag even when one doesn't exist
+
+   return retVal;
+}
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Checks for existence of any tags but comments after a frameset 
+//
+//  Arguments:  none
+//
+//  returns:    true if found, false if not
+//
+//----------------------------------------------------------------------
+
+function checkAnythingAfterFrameset(reportLocation) 
+{
+   var L_ContentAfterFrameset_Text = "This document might not display properly because there is content after the FRAMESET.<br><hr>";
+   var theDocument;
+   var framesets;
+   var i, startIndex;
+   var retVal;
+
+   retVal = false;
+
+   theDocument = otherDocument();
+
+   framesets = theDocument.all.tags("frameset");
+   
+   if (framesets.length > 0) {
+      startIndex = framesets(0).sourceIndex;
+      
+     if (window.dialogArguments.anythingAfterFrameset) {
+        reportLocation.insertAdjacentHTML("BeforeEnd", L_ContentAfterFrameset_Text );
+        retVal = true;
+     }
+   }
+
+   return retVal;
+}
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Checks for existence of objects, applets or embeds that are
+//		readyState != complete
+//
+//  Arguments:  none
+//
+//  returns:    true if found, false if not
+//
+//----------------------------------------------------------------------
+function checkUnloadedComponents(reportLocation) 
+{
+   var theDocument;
+   var objects, applets, embeds;
+   var retVal;
+   retVal = false;
+
+   theDocument = otherDocument();
+
+   objects = theDocument.all.tags("object");
+   applets = theDocument.all.tags("applet");
+   embeds = theDocument.all.tags("embed");
+
+   retVal = checkReadyStateComplete(objects, reportLocation);
+   retVal = retVal || checkReadyStateComplete(applets, reportLocation);
+   retVal = retVal || checkReadyStateComplete(embeds, reportLocation);
+
+   return retVal;
+}
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Checks for readystate = complete for collection passed in. 
+//       	If any components found that are not readystate = complete
+//		error is passed to reportLocation. Valid for object, applet
+//		and embed
+//
+//  Arguments:  collection of elements to check for readystate = complete
+//		area to report errors to
+//
+//  returns:    true if found, false if not
+//
+//----------------------------------------------------------------------
+
+function checkReadyStateComplete(objects, reportLocation) 
+{
+  var L_ObjectNotInstalled_Text = "The following OBJECT did not install properly.<BR>";
+  var L_AppletNotInstalled_Text = "The following APPLET did not install properly.<BR>";
+  var L_EmbedNotInstalled_Text = "The following EMBED did not install properly.<BR>";
+  
+  var L_ObjectNotInstalledReasons_Text = "<br><br>This might have been caused by one of the following conditions:<OL><LI>Your current security settings prevent this OBJECT from being used.</li><li>This OBJECT was not properly installed on your computer.</li><li>The page or OBJECT was authored incorrectly.</li></ul><hr>";
+  var L_AppletNotInstalledReasons_Text = "<br><br>This might have been caused by one of the following conditions:<OL><LI>Your current security settings prevent this APPLET from being used.</li><li>This APPLET was not properly installed on your computer.</li><li>The page or APPLET was authored incorrectly.</li></ul><hr>";
+  var L_EmbedNotInstalledReasons_Text = "<br><br>This might have been caused by one of the following conditions:<OL><LI>Your current security settings prevent this EMBED from being used.</li><li>This EMBED was not properly installed on your computer.</li><li>The page or EMBED was authored incorrectly.</li></ul><hr>";
+  
+  var strNotInstalled;
+  var strNotInstalledReason;
+
+  var i, element;
+  var retVal;
+
+  retVal = false;
+
+  if (objects == null) 
+     return retVal;
+
+  for (i=0; i < objects.length; i++) {
+     element = objects(i);
+     // looks like 4 = complete
+     if (element.readyState != 4 && element.readyState != "complete") {
+         switch (element.tagName.toLowerCase())
+         {
+         case "object":
+             strNotInstalled = L_ObjectNotInstalled_Text;
+             strNotInstalledReason = L_ObjectNotInstalledReasons_Text;
+             break;
+         case "applet":
+             strNotInstalled = L_AppletNotInstalled_Text;
+             strNotInstalledReason = L_AppletNotInstalledReasons_Text;
+             break;
+         case "embed":
+             strNotInstalled = L_EmbedNotInstalled_Text;
+             strNotInstalledReason = L_EmbedNotInstalledReasons_Text;
+             break;
+         }
+
+        reportLocation.insertAdjacentHTML("BeforeEnd", strNotInstalled);
+        reportLocation.insertAdjacentText("BeforeEnd", element.outerHTML);
+        reportLocation.insertAdjacentHTML("BeforeEnd", strNotInstalledReason);
+        retVal = true;
+     }
+  }
+
+  return retVal;
+}
+     
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Checks for existence ocx's that are known to be non-apartment
+//		model
+//
+//  Arguments:  none
+//
+//  returns:    true if found, false if not
+//
+//----------------------------------------------------------------------
+function checkNonApartmentControls(reportLocation) 
+{
+   var L_ObjectNotApartmentModel_Text = "The following OBJECT may not work reliably in all circumstances because it doesn't use the Apartment threading model.<br>";
+   var theDocument;
+   var objects;
+   var i;
+   var retVal;
+   retVal = false;
+
+   theDocument = otherDocument();
+
+   objects = theDocument.all.tags("object");
+
+   for (i=0; i < objects.length; i++) {
+     element = objects(i);
+     nonApartmentModel = checkCLSIDForNonApartmentModel(element);
+     retVal = retVal || nonApartmentModel;
+     if (nonApartmentModel == true) {
+        reportLocation.insertAdjacentHTML("BeforeEnd", L_ObjectNotApartmentModel_Text);
+        reportLocation.insertAdjacentText("BeforeEnd", element.outerHTML);
+        reportLocation.insertAdjacentHTML("BeforeEnd", "<br><hr>");
+     }
+   }    
+
+   return retVal;
+}
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Checks to see if specified clsid is for an apartment model 
+//		control
+//
+//  Arguments:  clsid to check
+//
+//  returns:    true if non-apartment model, false if apartment model
+//
+//----------------------------------------------------------------------
+
+function checkCLSIDForNonApartmentModel(element) {
+
+    return !(window.dialogArguments.isApartmentModel(element));
+}
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Checks for any link tags where readyState != complete 
+//
+//  Arguments:  none
+//
+//  returns:    true if found, false if not
+//
+//----------------------------------------------------------------------
+function checkUnloadedStyleSheets(reportLocation) 
+{
+   var theDocument;
+   var links;
+   var retVal;
+   retVal = false;
+
+   theDocument = otherDocument();
+
+   links = theDocument.all.tags("link");
+
+   retVal = checkLinkReadyStateComplete(links, reportLocation);
+
+   return retVal;
+}
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Checks for readystate = complete for collection of links  passed in. 
+//       	If any links found that are not readystate = complete
+//		error is passed to reportLocation. Note that separate function
+//		is used for links because different error info needs to 
+//		be reported
+//
+//  Arguments:  collection of elements to check for readystate = complete
+//		area to report errors to
+//
+//  returns:    true if found, false if not
+//
+//----------------------------------------------------------------------
+
+function checkLinkReadyStateComplete(objects, reportLocation) 
+{
+  var i, element;
+  var retVal;
+  var L_StyleSheetNotInstalled_Text = "This document might not display properly because the following style sheet did not get installed: ";
+
+  retVal = false;
+
+  if (objects == null) 
+     return retVal;
+
+  for (i=0; i < objects.length; i++) {
+     element = objects(i);
+     
+     if (element.rel.toLowerCase() == "stylesheet"
+         || element.rel.toLowerCase() == "alternate stylesheet")
+     {
+        // looks like 4 = complete
+         if (element.readyState != "complete" && element.readyState != 4) {
+            reportLocation.insertAdjacentHTML("BeforeEnd", L_StyleSheetNotInstalled_Text + element.href + "<BR><hr>");
+            retVal = true;
+         }
+     }
+     }
+
+  return retVal;
+}
+
+</SCRIPT>
+
+</HEAD>
+<BODY ID=bdy onLoad="loadBdy()" style="font-family: 'MS Shell Dlg';
+font-size: 8pt; background: threedface; color: windowtext;" 
+topmargin=0 scroll=no>
+<br id=brAnalysis>&nbsp;&nbsp;Analysis of current document:<br>
+<br>
+<DIV id=ReportArea style="height: 75%; width: 93%; 
+position: absolute; left: 5%; top: 12%; overflow: auto; padding: 3px;
+border-style: solid; border-width: 1px; border-color: threeddarkshadow">
+No errors found.
+</DIV>
+<br id=br2><P id=par1>&nbsp;</P>
+<DIV id=divButton style="font-family: MS Shell Dlg; font-size: 8pt; 
+width: 8em; height: 2.2em; position: absolute;
+top: 27.1em; left: 20em; background: threedface;">
+</DIV>
+<BUTTON id=btnOk tabIndex=55 
+style="font-family: MS Shell Dlg; font-size: 8pt; 
+width: 7em; height: 2.2em; position: absolute;
+top: 27.5em; left: 21em" type=submit>
+OK
+</BUTTON>
+</BODY>
+</HTML>

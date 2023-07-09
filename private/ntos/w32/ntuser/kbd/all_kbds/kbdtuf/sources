@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdtuf
+
+TARGETNAME=kbdtuf
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdtuf.c kbdtuf.rc
+
+NTTARGETFILE0=kbdtuf.h kbdtuf.rc kbdtuf.def

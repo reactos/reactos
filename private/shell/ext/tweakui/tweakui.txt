@@ -1,0 +1,368 @@
+Tweak UI -- The control panel applet for Type A personalities
+
+0. Meta-information
+
+0.1. Install
+
+    To install Tweak UI, right-click the tweakui.inf file and select
+    Install.  The inf file will do the rest.  When it is finished, you
+    will have a new control panel applet called "Tweak UI".
+
+0.2. Run
+
+    To run Tweak UI, go to the Control Panel and double-click the
+    "Tweak UI" icon.
+
+0.3. Uninstall
+
+    To uninstall "Tweak UI", go to the Control Panel and double-click
+    the "Add/Remove Programs" icon.  From the list of programs,
+    double-click "Tweak UI" to uninstall it.
+
+Here follows a description of each tweakable.
+
+1. General
+
+    Items on the General page affect all applications.
+
+1.1. Menu speed
+
+    "Menu speed" allows you to control the speed at which cascading
+    menus automatically open themselves when you move the mouse over
+    them.  The fastest setting causes them to open immediately.  The
+    slowest setting will wait for you to click explicitly on the menu
+    item in order to open the cascading submenu.
+
+    To test the menu speed setting, right-click on the test icon.
+    Note that some systems do not support interactive testing of the
+    menu drop speed.  On such systems, right-clicking on the test
+    icon won't do anything, and the instructions telling you to do
+    so will not appear.  However, the changed settings *will* take
+    effect the next time you log in.
+
+    This is a per-user setting.
+
+1.2. Mouse sensitivity
+
+1.2.1. Double click
+
+    This setting allows you to control how close together two mouse
+    clicks need to be (in pixels) in order to be considered a
+    double-click.  This is the spatial counterpart to the double-click
+    time setting in the mouse property sheet.
+
+    To test the double-click sensitivity, click twice on the test icon
+    with the left mouse button.  If the two clicks were close enough
+    together both temporally and spatially, then the icon will change.
+
+    This is a per-user setting.
+
+1.2.2. Drag
+
+    This setting allows you to control how far (in pixels) the mouse
+    must move with the button held down before the system decides that
+    you are dragging the object.  Increase this value if you find that
+    you are dragging objects accidentally when you click on them.
+
+    To test the drag sensitivity, try to drag the test icon with the
+    left mouse button.  The icon will begin dragging when you have
+    moved the mouse the necessary distance.
+
+    This is a per-user setting.
+
+1.3. Effects
+
+1.3.1. Window animation
+
+    The "Window animation" check-box allows you to enable or disable
+    the window animation effect that occurs when you minimize,
+    maximize, or restore a window.
+
+    This is a per-user setting.
+
+1.3.2. Beep on errors
+
+    Windows normally plays a beep sound (customizable in the "Sounds"
+    control panel) when an error occurs.  Removing this check box
+    causes Windows not to play a beep sound.
+
+    This is a per-user setting.
+
+1.4. Restore Factory Settings
+
+    The "Restore Factory Settings" button sets all the options on the
+    page to the default settings.
+
+2. Explorer
+
+    Items on the Explorer page affect the Windows 95 Explorer.
+
+2.1. Shortcut overlay
+
+    Use this area to customize the effect used by Explorer to indicate
+    that an icon represents a shortcut.
+
+    "Arrow" is the default setting, which overlays a bold arrow in the
+    lower-left corner of the icon.
+
+    "Light arrow" is the same as "Arrow", but uses a more subtle
+    arrow.
+
+    "None" removes the effect completely.  With this setting,
+    shortcuts are indistinguishable from normal files.  Use this
+    setting with caution, because you might end up deleting a file
+    instead of a shortcut by mistake, so don't say I didn't warn you.
+
+    "Custom" allows you to choose any icon in the system to be used as
+    the overlay effect icon.
+
+    The shortcut overlay effect is a system-wide setting.  When
+    changing the overlay effect, it is your duty to inform all users
+    of the machine of the change, particular if you change the effect
+    to "None".  Restore the shortcut overlay effect to the system
+    default before calling Microsoft Product Support.  (Remember,
+    PowerToys are provided as-is with no support.)
+
+    If you uninstall Tweak UI, the customized shortcut overlay is
+    uninstalled as well.
+
+2.2. Settings
+
+2.2.1. Prefix "Shortcut to" on new shortcuts
+
+    By default, the name of a shortcut is "Shortcut to", followed by
+    the name of the target.  Unchecking this box causes the shell not
+    to prepend this phrase to new shortcuts.
+
+    Note that some systems do not support dynamic changing of the
+    prefix setting.  On such systems, the changed settings will
+    take effect the next time you log in.
+
+    This is a per-user setting.
+
+    If you uninstall Tweak UI, this customization is uninstalled as
+    well.
+
+2.2.2. Save settings on exit
+
+    By default, when you close an Explorer window, the shell remembers
+    the settings of that window and restores them when you reopen that
+    folder.  Moreover, when you shut down, it also remembers the settings
+    of all the open Explorer windows and reopens them when you log on
+    the next time.
+
+    If you uncheck the "Save settings" box, then these settings are not
+    saved when you close an Explorer window or shut down.
+
+    Note that the shell remembers the settings for only the 50 most
+    recently visited folders.  When you visit the 51st folder, the
+    folder setting you visited least recently is discarded.
+
+    This is a per-user setting.
+
+2.3. Restore Factory Settings
+
+    The "Restore Factory Settings" button sets all the options on the
+    page to the default settings.
+
+3. Desktop
+
+    Items on the Desktop page affect the Windows 95 Desktop.
+
+3.1. Special desktop icons
+
+    As you've noticed, the Windows 95 desktop contains several special
+    icons which cannot be manipulated in the traditional manner.  This
+    page allows you to tinker with these special desktop icons.
+
+    You are presented with a list of all possible special desktop
+    icons; next to each one is a check-box indicating whether it is
+    currently on the desktop or not.  Click on a check-box to add or
+    remove special desktop icons to or from the desktop.
+
+    Some of the icons won't have a box next to them.  These icons
+    cannot be placed on the desktop as special desktop icons, but
+    you can still use Create As File (below) to put them on the
+    desktop, or anywhere else for that matter.
+
+    You can rename an icon by double-clicking its name.  However,
+    changes to the name may require manually refreshing the desktop
+    after you close the property sheet.  (Sorry.)
+
+    Note that the status of special desktop icons is a system-wide
+    setting.  Removing a special desktop icon removes it from
+    everybody's desktop.  The one exception is the Network
+    Neighborhood, which is a per-user setting.
+
+    Note that removing the desktop icon merely removes the icon.
+    Any software associated with the desktop icon remains installed.
+    This page exists so you can (1) get rid of pesky icons that
+    refuse to go away by other means, or (2) restore icons after
+    you accidentally nuke them.
+
+    If you add or remove the Network Neighborhood, you must log off
+    and back on for the changes will take effect.
+
+3.2. Create As File
+
+    If you select a special desktop icon, then click the "Create As
+    File" button, Tweak UI will create a special file which behaves
+    just like the special desktop icon, but with the added feature
+    that, since it is a file, you can drag and drop it anywhere you
+    want.  For example, if you want to move The Internet into a
+    folder, first remove it from the desktop by unchecking the
+    check-box, then click "Create As File", and place it in whatever
+    folder you want.
+
+    A fun place to save special desktop icons is on the Start Menu.
+    (Control Panel is everybody's favorite.)  Try it!
+
+    Suppose you want to let your young children use the computer, but
+    don't want the Inbox on their desktop, because they might
+    double-click on it and mess up your mail.  After creating a
+    separate login for your kids and configuring the system to use a
+    different desktop for each user, you can delete the Inbox from the
+    system-wide desktop, then create the Inbox as a file on your
+    private desktop.  When you log in, you get an Inbox on your
+    desktop, but your kids don't.
+
+4. Templates
+
+    The Templates page allows you to do stuff with document templates.
+    There isn't much here right now.  Someday, I may write more.
+
+4.1. Create New Document Template
+
+    If you drop a file onto the Create New Document Template area,
+    Tweak UI will automatically convert it into a document template,
+    which will then appear on the list of document types when you
+    right-click and select "New".
+
+    When you drop the file, one of a few things can happen.
+
+    0.  "Drop only one file at a time, please."
+
+	Tweak UI can create only one document template at a time.
+
+    1.  "No application is associated with this file."
+
+        This means that the file type was not recognized.  Go
+        to the Explorer, View, Options, File Types dialog and create
+        an association for the file, then try again.
+
+    2.  "A template for this document type has already been defined."
+
+	Somebody else beat you to it and created a document template
+        already.
+
+    3.  "Unable to copy the file to the templates folder."
+
+	There was an error copying the file into the templates folder.
+        Tweak UI doesn't tell you what sort of error actually happened;
+        that's left for you to figure out.
+
+    4.  "The document template was created succesfully."
+
+	Oh frabjous day.  You can now right-click the desktop and
+	select New, and look! your document is on the list of
+        document templates.
+	
+    Yes, you may have noticed that there is no keyboard interface to
+    this feature.  If you're such a propeller-head that you don't want
+    to use the mouse, you probably didn't need this applet in the
+    first place.
+
+\*
+\*  Strange things happen if you drag a folder, but fortunately we
+\*  stop before things get out of hand.  (Albeit with a weird error
+\*  message.)
+\*
+
+5. Boot
+
+    The Boot page allows you to customize UI-related aspects of the
+    Windows 95 boot process.  This page won't appear if you are
+    running Windows NT.  (Duh.)  It also won't appear if Tweak UI
+    can't find your Windows 95 boot configuration file.
+
+    Obviously, any changes made on this page won't take effect until
+    the next time you reboot the computer.
+
+5.1. General
+
+5.1.1. Function keys available for nn seconds.
+
+    Uncheck the "Function keys available" option to disable the
+    various function keys that modify the boot process, such
+    as F5 and F8.
+
+    If the option is enabled, you can adjust how long Windows 95
+    will pause after the "Starting Windows 95" message to see
+    if you are pressing a function key.
+
+5.1.2. Start GUI automatically
+
+    Uncheck the "Start GUI automatically" option to make Windows 95
+    stop the boot process once it has reached a command prompt instead
+    instead of continuing to the GUI automatically.
+
+5.1.3. Display splash screen while booting
+
+    Uncheck the "Display splash screen" option to suppress the
+    Windows 95 splash screen that appears during the boot process.
+
+5.1.4. Allow F4 to boot previous operating system
+
+    If you check the "Allow F4 to boot previous operating system"
+    option, then you will be able to press F4 when the "Starting
+    Windows 95" message is on the screen to cause Windows 95 to
+    load the operating system that you were running before installing
+    Windows 95.
+
+    Of course, this assumes that you (1) actually had a previous
+    operating system, and (2) didn't delete any files required
+    by the previous operating system in the meantime...
+
+5.2. Boot menu
+
+5.2.1. Always show boot menu
+
+    Check "Always show boot menu" to see a boot menu every time you
+    start Windows 95.  Normally, Windows 95 will show a boot menu
+    only if it detected that there was a problem with the previous
+    boot.
+
+5.2.2. Default menu option
+
+    Changing the default menu option allows you to choose which
+    option on the boot menu will be highlighted automatically.
+
+5.2.3. Continue booting after nn seconds.
+
+    Setting the value of "Continue booting after" controls how long
+    the boot menu will remain on the screen before the default action
+    is taken.
+
+5.3. Restore Factory Settings
+
+    The "Restore Factory Settings" button sets all the options on the
+    page to the default settings.
+
+z. Other stuff
+
+z.1. The speaker on the TaskBar
+
+    To enable or disable the speaker on the task bar, go to the
+    Control Panel, select Multimedia, and then check or uncheck
+    the box that says "Show volume control on the taskbar."
+
+    Or you can right-click the speaker icon on the taskbar and
+    select "Adjust Audio Properties".  Then check or uncheck the
+    box that says "Show volume control on the taskbar."
+
+z.2. Save as default Explorer settings
+
+    To save the current window settings as the default Explorer
+    settings for all new windows, hold the Ctrl key while you
+    click the "X" button.  Note that "Save settings on exit"
+    must be enabled for this to work.

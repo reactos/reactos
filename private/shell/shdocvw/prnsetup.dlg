@@ -1,0 +1,75 @@
+//Microsoft Developer Studio generated resource script.
+//
+#ifndef UNIX
+PAGESETUPDLGORD DIALOG DISCARDABLE  32, 32, 258, 233
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Page Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",1080,"Static",SS_WHITERECT | WS_GROUP,168,7,79,69
+    CONTROL         "",1081,"Static",SS_GRAYRECT | WS_GROUP,247,7,4,73
+    CONTROL         "",1082,"Static",SS_GRAYRECT | WS_GROUP,168,76,79,4
+    GROUPBOX        "Paper",grp2,7,7,133,69,WS_GROUP
+    LTEXT           "Si&ze:",stc2,12,17,36,8
+    COMBOBOX        cmb2,12,29,122,160,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Source:",stc3,12,45,36,8
+    COMBOBOX        cmb3,12,57,122,160,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Headers and Footers",IDC_HEADERFOOTER,7,83,244,69
+    LTEXT           "&Header",IDC_STATICHEADER,12,93,44,9
+    EDITTEXT        IDC_EDITHEADER,12,106,234,12,ES_AUTOHSCROLL
+    LTEXT           "&Footer",IDC_STATICFOOTER,12,123,28,8
+    EDITTEXT        IDC_EDITFOOTER,12,135,234,12,ES_AUTOHSCROLL
+    GROUPBOX        "Orientation",1072,7,159,65,46,WS_GROUP
+    CONTROL         "P&ortrait",rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,12,169,52,12
+    CONTROL         "L&andscape",rad2,"Button",BS_AUTORADIOBUTTON,12,188,52,
+                    12
+    GROUPBOX        "Margins",1075,80,159,171,46,WS_GROUP
+    LTEXT           "&Left:",stc15,85,171,32,8
+    EDITTEXT        edt4,118,169,40,12,WS_GROUP
+    LTEXT           "&Right:",stc16,173,171,32,8
+    EDITTEXT        edt6,206,169,40,12,WS_GROUP
+    LTEXT           "&Top:",stc17,85,190,32,8
+    EDITTEXT        edt5,118,188,40,12,WS_GROUP
+    LTEXT           "&Bottom:",stc18,173,190,32,8
+    EDITTEXT        edt7,206,188,40,12,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,99,212,48,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,151,212,48,14
+    PUSHBUTTON      "&Printer...",psh3,203,212,48,14
+    CONTROL         "",-1,"NativeFontCtl",NFS_ALL,0,0,6,6
+END
+#else
+/* ID_BOTH_P_HELP is from New common dialogs */
+#define ID_BOTH_P_HELP pshHelp
+PAGESETUPDLGORDMOTIF DIALOG DISCARDABLE  32, 32, 240, 141
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Page Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Header",IDC_STATICHEADER,8,3,44,9
+    EDITTEXT        IDC_EDITHEADER,8,15,225,11,ES_AUTOHSCROLL
+    LTEXT           "&Footer",IDC_STATICFOOTER,8,29,44,9
+    EDITTEXT        IDC_EDITFOOTER,8,41,225,11,ES_AUTOHSCROLL
+    GROUPBOX        "Orientation",1072,8,69,64,56,WS_GROUP
+    CONTROL         "P&ortrait",rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,16,83,52,12
+    CONTROL         "L&andscape",rad2,"Button",BS_AUTORADIOBUTTON,16,103,52,
+                    12
+    GROUPBOX        "Margins",1075,81,69,152,56,WS_GROUP
+    LTEXT           "&Left:",stc15,88,85,32,8
+    EDITTEXT        edt4,120,83,28,12,WS_GROUP
+    LTEXT           "&Right:",stc16,164,85,32,8
+    EDITTEXT        edt6,196,83,28,12,WS_GROUP
+    LTEXT           "&Top:",stc17,88,103,32,8
+    EDITTEXT        edt5,120,101,28,12,WS_GROUP
+    LTEXT           "&Bottom:",stc18,164,103,32,8
+    EDITTEXT        edt7,196,101,28,12,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,48,135,48,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,144,135,48,14
+END
+#endif // UNIX
+

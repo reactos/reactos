@@ -1,0 +1,313 @@
+/*
+ *   Windows Calendar
+ *   Copyright (c) 1985 by Microsoft Corporation, all rights reserved.
+ *   Written by Mark L. Chamberlin, consultant to Microsoft.
+ *
+ ****** calendar.rc
+ *
+*/
+
+#define RESOURCE
+#include "cal.h"
+
+#define GRP      WS_GROUP
+#define TAB      WS_TABSTOP
+#define TABGRP   WS_TABSTOP | WS_GROUP
+#define DLGMODAL WS_POPUP | WS_DLGFRAME | WS_VISIBLE
+
+
+1   ICON CAL.ICO
+1   BITMAP ALARMBEL.BMP
+
+1 MENU PRELOAD DISCARDABLE
+    BEGIN
+     POPUP     "&File"
+      BEGIN
+          MENUITEM  "&New",IDCM_NEW
+          MENUITEM  "&Open...",IDCM_OPEN
+          MENUITEM  "&Save",IDCM_SAVE
+          MENUITEM  "Save &As...",IDCM_SAVEAS
+          MENUITEM  "&Print...",IDCM_PRINT
+          MENUITEM  "Page Se&tup...", IDCM_PAGESETUP
+          MENUITEM  "P&rint Setup...", IDCM_PRINTERSETUP
+          MENUITEM  SEPARATOR
+          MENUITEM  "E&xit",    IDCM_EXIT
+      END
+     POPUP     "&Edit"
+      BEGIN
+          MENUITEM  "Cu&t\tShift+Del",IDCM_CUT
+          MENUITEM  "&Copy\tCtrl+Ins",IDCM_COPY
+          MENUITEM  "&Paste\tShift+Ins",IDCM_PASTE
+          MENUITEM  "&Remove...",IDCM_REMOVE
+          MENUITEM  SEPARATOR
+          MENUITEM  "Set &Font",IDCM_SETFONT
+      END
+     POPUP     "&View"
+      BEGIN
+       MENUITEM  "&Day\tF8",IDCM_DAY
+       MENUITEM  "&Month\tF9",IDCM_MONTH
+      END
+     POPUP     "&Show"
+      BEGIN
+          MENUITEM  "&Today",IDCM_TODAY
+          MENUITEM  "&Previous\tCtrl+PgUp",IDCM_PREVIOUS
+          MENUITEM  "&Next\tCtrl+PgDn",IDCM_NEXT
+          MENUITEM  "&Date...\tF4",IDCM_DATE
+      END
+     POPUP     "&Alarm"
+      BEGIN
+          MENUITEM  "&Set\tF5",IDCM_SET
+          MENUITEM  "&Controls...",IDCM_CONTROLS
+      END
+     POPUP     "&Options"
+      BEGIN
+       MENUITEM  "&Mark...\tF6",IDCM_MARK
+          MENUITEM  "&Special Time...\tF7",IDCM_SPECIALTIME
+          MENUITEM  "&Day Settings...",IDCM_DAYSETTINGS
+      END
+#ifndef NOHELP
+     POPUP  "&Help"
+      BEGIN
+          MENUITEM  "&Contents\tF1",            IDCM_HELP
+          MENUITEM  "&Search for Help On...",   IDCM_SEARCH
+          MENUITEM  "&How to Use Help",         IDCM_USINGHELP
+          MENUITEM  SEPARATOR
+          MENUITEM  "&About Calendar...",       IDCM_ABOUT
+      END
+#else
+     POPUP "&Info"
+      BEGIN
+          MENUITEM  "&About Calendar...",     IDCM_ABOUT
+      END
+#endif /*NOHELP*/
+    END
+
+
+1 ACCELERATORS PRELOAD DISCARDABLE
+    BEGIN
+     VK_PRIOR, IDCM_PREVIOUS, VIRTKEY, CONTROL
+     VK_NEXT, IDCM_NEXT, VIRTKEY, CONTROL
+#ifndef NOHELP
+     VK_F1, IDCM_HELP, VIRTKEY
+#endif /*NOHELP*/
+     VK_F4, IDCM_DATE, VIRTKEY
+     VK_F5, IDCM_SET, VIRTKEY
+     VK_F6, IDCM_MARK, VIRTKEY
+     VK_F7, IDCM_SPECIALTIME, VIRTKEY
+     VK_F8, IDCM_DAY, VIRTKEY
+     VK_F9, IDCM_MONTH, VIRTKEY
+     VK_INSERT, IDCM_COPY, VIRTKEY, CONTROL
+/* Tandyt wants Ctrl+Home to goto start time
+ * and Ctrl+End to goto start time + 12 hours.
+ * 26-Mar-1987.
+ */
+     VK_HOME,   IDCM_START, VIRTKEY, CONTROL
+     VK_END,    IDCM_START12, VIRTKEY, CONTROL
+    END
+
+
+
+/* Wed  24-May-1989 c-kraigb, broke up massive stringtable into
+   smaller chunks.  */
+
+/* !!! WARNING - the total length of all the strings (including a zero
+   byte terminator for each string) must not exceed CCHSTRINGSMAX, which
+   is defined in CAL.H.  If it does, CalInit should detect the problem
+   and prevent Calendar from running.  If this happens, CCHSTRINGS must
+   be increased, and it may also be necessary to increase the initial
+   heap size in CALENDAR.DEF too.
+*/
+STRINGTABLE     PRELOAD DISCARDABLE
+    BEGIN
+     /* Note to translators!!
+     The following string (IDS_MERGE1) is the "merge spec" string.  It must
+     be a unique TWO CHARACTER string that occurs in no other strings for
+     this application.  In the strings that follow, every occurrence of the
+     merge spec will be replaced with message specific string variables,
+     such as filenames, dates, etc.     */
+     IDS_MERGE1    "%%"
+
+     IDS_UNTITLED,           "(Untitled)"
+     IDS_CALENDAR,           "Calendar"
+     IDS_BADDATE,            "Type the date, using the following format: %%."
+     IDS_BADDATERANGE,       "The specified dates do not fall between 1980 and 2099, the format is invalid, or a later date precedes an earlier date. Use the following format to specify the date: %%."
+     IDS_BADTIME,            "Use this format '%%' to type the time in the Starting Time text box."
+     IDS_NOCREATECHANGEFILE, "Cannot create to the temporary change file.\nChanges made to this file will not be saved."
+     IDS_NOCHANGEFILE,       "Cannot save temp file.\n\nCalendar will discard it."
+     IDS_ERRORWRITINGCHANGES,"Cannot save changes.\nThe file is read-only or is currently being used by another application.\n\nWait until the application is finished, or use the Properties command in File Manager to change the file's attributes."
+     IDS_ERRORREADINGDATE,   "Cannot read a date from the file."
+     IDS_TIMETOSAVE,         "The temporary change file is full.\nUse the Save or Save As command before making any more changes."
+     IDS_OUTOFMEMORY,        "Not enough memory available to perform this operation.\nQuit one or more applications to increase available memory, and then try again."
+     IDS_RENAMEFAILED,       "Could not save the file under the existing name.\nThe file was saved under the name %% instead."
+     IDS_SAVEFAILED,         "Cannot save the file.\nVerify that the path and filename are correct."
+     IDS_DISKFULL,           "Not enough disk space to save file.\nDelete one or more files to increase available disk space, and then try again."
+     IDS_FILEEXISTS,         "The %% file already exists.\n\nDo you want to overwrite it?"
+     IDS_SAVECHANGES,        "The %% file has changed.\n\nDo you want to save the changes?"
+     IDS_FILENOTFOUND,       "Cannot find the specified file.\nVerify that the path and filename are correct."
+     IDS_NOTCALFILE,         "The selected file is not in the correct format for use with Calendar.\n\nCreate a new file or open a file with the .CAL extension."
+     IDS_CANNOTREADFILE,     "Cannot read file."
+     IDS_BADEARLYRING,       "Type an Early Ring period between 0 and 10 minutes."
+     IDS_NOTSPECIALTIME,     "Not a special time."
+     IDS_NOSUCHTIME,         "Specified time not found."
+     IDS_TIMEALREADYINUSE,   "You have already specified this value as a Special Time."
+     IDS_CANNOTPRINT,        "Cannot print the %% file.\nVerify that your printer is connected and configured properly."
+     /* !!! WARNING - The length of this string must not exceed 50 bytes -
+     49 characters + 1 terminating 0.
+     If it is made longer than 50 bytes, CCHSZCALENDARDASH
+     must be changed in CAL.H to correspond to the new length of the
+     string.
+     */
+     IDS_CALENDARDASH,       "Calendar - "
+     /* !!! WARNING END */
+
+     IDS_TOOMANYDATES,       "Cannot add another date to this file.\nRemove one or more dates, and then try again."
+     IDS_DATEISFULL,         "Cannot add any more text to this date.\nDelete unwanted text to increase available space, and then try again."
+     IDS_TEXTTRUNCATED,      "Text truncated."
+
+
+  END
+
+STRINGTABLE     PRELOAD DISCARDABLE
+    BEGIN
+     IDS_GIVEMEORIGINAL,     "original Calendar file"
+     IDS_GIVEMECHANGEFILE,   "Calendar change file"
+     IDS_GIVEMENEW,          "new Calendar file"
+
+     IDS_BADFILENAME,        "The filename %% is not valid.\nVerify that the filename is no longer than 8 characters, followed by a period and a 3 character extension."
+     IDS_NEDSTP,             "Not enough disk space available to print.\nDelete one or more files to increase available disk space."
+     IDS_NEMTP,              "Not enough memory available to print.\n\nQuit one or more applications to increase available memory, and then try again."
+     IDS_ALARMSYNC,          "System clock has been changed. Adjusting the next alarm to reflect the change."
+     IDS_NOTIMER,            "Not timing resources available for Calendar because they are being used by other applications.\n\nQuit one or more applications, and then try again."
+     IDS_DATERANGE,          "Specify a date that falls between the years 1980 and 2099."
+     IDS_DATESUBRANGE,       "The day or month is not within the expected range.\nPlease type valid day and month values."
+     IDS_TIMESUBRANGE,       "If you are using a 12-hour clock format, type a time value between 12:00 AM and 11:59 PM. If you are using a 24-hour clock format, type a time between 0:00 and 23:59."
+     IDS_NOCREATE,           "Cannot create the %% file.\nPlease verify that the correct path and filename are given."
+     IDS_FILEEXTENSION,      ".CAL"
+     IDS_FILTERTEXT,         "Cal. Files (*.CAL)"
+     IDS_ALLFILES,           "All Files (*.*)"
+     IDS_OPENCAPTION,        "Open"
+     IDS_SAVEASCAPTION,      "Save As"
+   END
+
+
+STRINGTABLE     PRELOAD DISCARDABLE
+    BEGIN
+     IDS_FILEREADONLY,       "The selected file is read-only.\n\nUse a different filename, or use the Properties command in File Manager to change the file attributes."
+     IDS_BLANK,              " "
+     IDS_PNAMEPREFIX,        "\\*"
+
+     IDS_MARKCIRCLE,         "o"
+     IDS_MARKLEFTPAREN,      "("
+     IDS_MARKRIGHTPAREN,     ")"
+     IDS_MARKCROSS,          "x"
+     IDS_BLANKSTRING,        "                "
+     IDS_HELPFILE,           "calendar.hlp"
+     IDS_INCORRECTSYNTAX,    "The Margin values are not correct.\nPlease verify that margin values are valid decimal numbers."
+
+/*  IDS_LETTERS     "fFpPtTdDcCrRlL"   Original US values. DO NOT TRANSLATE   */
+/*                  The order is: File, Page, Time, Date, Center, Right, Left */
+
+    IDS_LETTERS     "fFpPtTdDcCrRlL"    /* Localizers:  This will change the  */
+                                        /* letters used in Page Setup         */
+    IDS_FONTERR     "Unable to load the Unicode Font.\n\nWill not be able to display certain characters."
+
+    END
+
+
+/* Strings for Page Setup.  Get read into chPageTest[][] */
+STRINGTABLE     DISCARDABLE
+    BEGIN
+     IDS_HEADER, "&f"
+     IDS_FOOTER, "Page &p"
+     IDS_LEFT,   ".75"
+     IDS_RIGHT,  ".75"
+     IDS_TOP,    "1"
+     IDS_BOTTOM, "1"
+#ifdef JAPAN    //KKBUGFIX  #437 : 11/18/92 : Change page space caption by intl
+     IDS_SPACEISINCH,  "余白(インチ単位)"
+     IDS_SPACEISCENTI, "余白(センチ単位)"
+#endif
+    END
+
+/*** Time/Date strings */
+STRINGTABLE     PRELOAD DISCARDABLE
+    BEGIN
+    /* Month names */
+    IDS_MONTHS+0, "January"
+    IDS_MONTHS+1, "February"
+    IDS_MONTHS+2, "March"
+    IDS_MONTHS+3, "April"
+    IDS_MONTHS+4, "May"
+    IDS_MONTHS+5, "June"
+    IDS_MONTHS+6, "July"
+    IDS_MONTHS+7, "August"
+    IDS_MONTHS+8, "September"
+    IDS_MONTHS+9, "October"
+    IDS_MONTHS+10,"November"
+    IDS_MONTHS+11,"December"
+
+    /* Abbreviated month names */
+    IDS_MONTHABBREVS+0, "Jan"
+    IDS_MONTHABBREVS+1, "Feb"
+    IDS_MONTHABBREVS+2, "Mar"
+    IDS_MONTHABBREVS+3, "Apr"
+    IDS_MONTHABBREVS+4, "May"
+    IDS_MONTHABBREVS+5, "Jun"
+    IDS_MONTHABBREVS+6, "Jul"
+    IDS_MONTHABBREVS+7, "Aug"
+    IDS_MONTHABBREVS+8, "Sep"
+    IDS_MONTHABBREVS+9, "Oct"
+    IDS_MONTHABBREVS+10,"Nov"
+    IDS_MONTHABBREVS+11,"Dec"
+
+    /* Days of the week */
+    IDS_DAYSOFWEEK+0, "Sunday"
+    IDS_DAYSOFWEEK+1, "Monday"
+    IDS_DAYSOFWEEK+2, "Tuesday"
+    IDS_DAYSOFWEEK+3, "Wednesday"
+    IDS_DAYSOFWEEK+4, "Thursday"
+    IDS_DAYSOFWEEK+5, "Friday"
+    IDS_DAYSOFWEEK+6, "Saturday"
+
+    /* Abbreviated days of the week */
+    IDS_DAYABBREVS+0, "Sun"
+    IDS_DAYABBREVS+1, "Mon"
+    IDS_DAYABBREVS+2, "Tue"
+    IDS_DAYABBREVS+3, "Wed"
+    IDS_DAYABBREVS+4, "Thu"
+    IDS_DAYABBREVS+5, "Fri"
+    IDS_DAYABBREVS+6, "Sat"
+
+    /* Day of week headers for month mode */
+    IDS_DAYLETTER+0, "S"
+    IDS_DAYLETTER+1, "M"
+    IDS_DAYLETTER+2, "T"
+    IDS_DAYLETTER+3, "W"
+    IDS_DAYLETTER+4, "T"
+    IDS_DAYLETTER+5, "F"
+    IDS_DAYLETTER+6, "S"
+
+#ifdef JAPAN
+    /* JAPANESE VERSION ONLY */
+    IDS_SEPSTRINGS+5, "年"
+    IDS_SEPSTRINGS+6, "日"
+#endif
+/*** End of Time/Date strings ****/
+   END
+
+/* !!! WARNING END */
+
+/* Go Get the dialog boxes. */
+rcinclude calendar.dlg
+rcinclude font.dlg
+
+
+#include <ntverp.h>
+
+#define     VER_FILETYPE                VFT_APP
+#define     VER_FILESUBTYPE             VFT2_UNKNOWN
+#define     VER_FILEDESCRIPTION_STR     "Calendar Applet"
+#define     VER_INTERNALNAME_STR        "cal\0"
+
+#include "common.ver"
+

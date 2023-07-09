@@ -1,0 +1,142 @@
+/////////////////////////////////////////////////////////////////////////////
+// ACTSAVER.IDL
+//
+// IDL source for ACTSAVER.SCR
+//
+// History:
+//
+// Author   Date        Description
+// ------   ----        -----------
+// jaym     08/26/96    Created
+// jaym     10/28/96    Added DISPID_ONPAUSE
+// jaym     12/16/96    Added DisplayFavorites and NumRecentFavorites
+// jaym     12/16/96    Removed Hot Corners
+// jaym     01/12/97    Added DisplaySubscriptions
+// jaym     05/05/97    #ifdef'd Subscriptions and Pause
+// jaym     06/05/97    Added Mode removed Pause and PreviewMode
+// jaym     07/04/97    Added Features property
+// jaym     07/17/97    Added new features (Top Most, Transitions)
+/////////////////////////////////////////////////////////////////////////////
+#include "dispids.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// Defines and Flags
+/////////////////////////////////////////////////////////////////////////////
+cpp_quote("#define SSMODE_NORMAL                        0x0001")
+cpp_quote("#define SSMODE_PREVIEW                       0x0002")
+cpp_quote("#define SSMODE_SINGLEURL                     0x0003")
+    // Screen saver mode
+
+cpp_quote("#define FEATURE_USE_CACHED_CONTENT_FIRST     0x0001")
+cpp_quote("#define FEATURE_USE_CDF_TOPLEVEL_URL         0x0002")
+cpp_quote("#define FEATURE_DEFAULT_TRANSITIONS          0x0004")
+cpp_quote("#define FEATURE_NOT_TOPMOST                  0x0008")
+cpp_quote("#define FEATURE_IGNORE_FKEYS                 0x0010")
+cpp_quote("#define FEATURE_IGNORE_MOUSE_CLICKS          0x0020")
+    // Features
+
+/////////////////////////////////////////////////////////////////////////////
+// IScreenSaverConfig
+/////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid(A5193FB5-1574-11D0-9D47-00A0C9034938),
+    helpstring("IScreenSaverConfig Interface"),
+    pointer_default(unique)
+]
+interface IScreenSaverConfig : IUnknown
+{
+    import "oaidl.idl";
+
+    [propget]
+    HRESULT Features([out, retval] DWORD * retval);
+    [propput, hidden]
+    HRESULT Features([in] DWORD dwFeatureFlags);
+
+    [propget]
+    HRESULT NavigateOnClick([out, retval] VARIANT_BOOL * retval);
+    [propput, hidden]
+    HRESULT NavigateOnClick([in] VARIANT_BOOL bNavOnClick);
+
+    [propget]
+    HRESULT ChannelTime([out, retval] int * retval);
+    [propput, hidden]
+    HRESULT ChannelTime([in] int nChannelTime);
+
+    [propget]
+    HRESULT RestartTime([out, retval] DWORD * retval);
+    [propput, hidden]
+    HRESULT RestartTime([in] DWORD dwRestartTime);
+
+    [propget]
+    HRESULT PlaySounds([out, retval] VARIANT_BOOL * retval);
+    [propput, hidden]
+    HRESULT PlaySounds([in] VARIANT_BOOL bPlaySounds);
+
+    // Methods
+    HRESULT ShowDialog([in] HWND hWndParent);
+
+    [hidden]
+    HRESULT Apply();
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// IScreenSaver
+/////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid(A5193FB3-1574-11D0-9D47-00A0C9034938),
+    helpstring("IScreenSaver Interface"),
+    pointer_default(unique)
+]
+interface IScreenSaver : IUnknown
+{
+    import "oaidl.idl";
+
+    // Properties
+    [propget]
+    HRESULT Mode([out, retval] long * retval);
+    [propput, hidden]
+    HRESULT Mode([in] long lMode);
+
+    [propget]
+    HRESULT Running([out, retval] VARIANT_BOOL * retval);
+    [propput, hidden]
+    HRESULT Running([in] VARIANT_BOOL bRunning);
+
+    [propget]
+    HRESULT Config([out, retval] IScreenSaverConfig ** retval);
+
+    [propget]
+    HRESULT CurrentURL([out, retval] BSTR * bstrURL);
+    [propput]
+    HRESULT CurrentURL([in] BSTR bstrURL);
+
+    // Methods
+    [hidden]
+    HRESULT Run([in] HWND hwndParent);
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// ACTSAVERLib
+/////////////////////////////////////////////////////////////////////////////
+[
+    uuid(A5193FB1-1574-11D0-9D47-00A0C9034938),
+    version(1.0),
+    helpstring("Channel Screen Saver 1.0 Type Library")
+]
+library ACTSAVERLib
+{
+    importlib("stdole2.tlb");
+
+    // Channel Desktop Screen Saver object
+    [
+        uuid(A5193FB7-1574-11D0-9D47-00A0C9034938),
+        helpstring("CActiveScreenSaver Class")
+    ]
+    coclass CActiveScreenSaver
+    {
+        [default] interface IScreenSaver;
+        interface IScreenSaverConfig;
+    };
+};

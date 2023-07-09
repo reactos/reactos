@@ -1,0 +1,52 @@
+#include "settings.h"
+#include "settings.dlg"
+
+#include "setmsg.rc"
+
+IDB_MONSCREEN   BITMAP  PRELOAD     setscrn.bmp
+IDB_MONMASK     BITMAP  PRELOAD     setmask.bmp
+
+DSP_ICO_SELDEV  ICON    setsel.ico
+DSP_ICO_DSKDRV  ICON    setdrv.ico
+
+#if 0
+CP_ACCEL ACCELERATORS PRELOAD
+BEGIN
+  VK_F1, MENU_INDHELP, VIRTKEY
+END
+#endif
+
+/*
+ * WARNING! Keep these strings to less than 256 characters or they will be
+ * truncated.  Also, note that all characters of value \001 will be conveted
+ * to \0 when the string is loaded.
+ */
+
+STRINGTABLE DISCARDABLE PRELOAD
+BEGIN
+  IDS_TEST_BITMAP,          "Test bitmap for the new screen resolution"
+  IDS_COLOR_RED,            " Red "
+  IDS_COLOR_GREEN,          " Green "
+  IDS_COLOR_BLUE,           " Blue "
+  IDS_COLOR_YELLOW,         " Yellow "
+  IDS_COLOR_MAGENTA,        " Magenta "
+  IDS_COLOR_CYAN,           " Cyan "
+  IDS_COLOR_WHITE,          " White "
+  IDS_PATTERN_HORZ,         " Thin horizontal lines "
+  IDS_PATTERN_VERT,         " Thin vertical lines "
+  IDS_RED_SHADES,           " Red Gradient "
+  IDS_GREEN_SHADES,         " Green Gradient "
+  IDS_BLUE_SHADES,          " Blue Gradient "
+  IDS_GRAY_SHADES,          " Gray Gradient "
+  IDS_RESOLUTION_FMT,       " %d by %d "   /* X in english is 'by' */
+  IDS_NO_VERSION_INFO,      "Version Information missing"
+  IDS_UNAVAILABLE,          "<unavailable>"
+  IDS_DEFDRIVE,             "A:\\"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_DISPLAYINST             "Change Display"
+  IDS_WINNTDEV_INSTRUCT       "Choose the manufacturer and model of your display adapter.  If your display adapter came with an installation disk, click on HaveDisk."
+  IDS_SELECTDEV_LABEL         "&Display:"
+END

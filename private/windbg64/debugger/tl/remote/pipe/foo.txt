@@ -1,0 +1,54 @@
+
+
+
+#ifdef DEFINE_PREFERENCES
+
+ITEM(INT_WORKSPACE_ITEM, FontSize, ...)
+ITEM(INT_WORKSPACE_ITEM, FontSize, ...)
+ITEM(INT_WORKSPACE_ITEM, FontSize, ...)
+ITEM(INT_WORKSPACE_ITEM, FontSize, ...)
+
+
+#endif
+
+#ifdef DEFINE_WINDOW_LAYOUT
+
+#endif
+
+PWORKSPACE_PREFERENCES pref = new WORKSPACE_PREFERENCES;
+
+pref->BackgroundColor = whatever;
+
+pref->SaveMe(RegKey);
+
+MY_CONTAINER : CONTAINER {
+
+    LIST_ENTRY SubContainerListHead;
+
+    LIST_ENTRY ItemListHead;
+
+#define DEFINE_PREFERENCES
+#define ITEM(t, n, ...) t& n;
+#include "wkspdefs.h"
+#undef ITEM
+#undef DEFINE_PREFERENCES
+}
+
+
+MY_CONTAINER::MY_CONTAINER () {
+
+#define DEFINE_PREFERENCES
+#define ITEM(t, n, ...) n = new t(this, #n)
+#include "wkspdefs.h"
+#undef ITEM
+#undef DEFINE_PREFERENCES
+
+    color = new var(..);
+
+    for (... memberlist ...) {
+
+        new  memberlist[n];
+
+    }
+
+}

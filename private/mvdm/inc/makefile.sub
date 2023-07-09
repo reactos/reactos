@@ -1,0 +1,136 @@
+# MVDM\INC makefile
+#
+# Copyright (c) 1991, Microsoft Corporation
+#
+# History:
+#   14-May-1991 Jeff Parsons (jeffpar)
+#   Created.
+#   08-Dec-1991 Sudeep Bharati (sudeepb)
+#   Changed the h2inc usage for DOSSVC to include strucs
+#   12-FEB-92 mattfe added tdb16.h
+#   14-April-92 ChandanC added WOWSHELL.H
+#   12-May-1992 MikeTri added MultiMedia header
+#
+
+!IFDEF USEBUILD
+
+# If using BUILD.EXE, edit .\sources. if you want to add a new source
+# file to this component.  This file merely indirects to the real make file
+# that is shared by all the components of NT OS/2.
+
+!INCLUDE $(NTMAKEENV)\makefile.def
+
+!ELSE
+
+########## Path definition so we find 16 bit tools ##########
+# Also works around stupid bug in RC 3.1 that doesn't allow rcpp.err to be
+# in a directory that is greater than 128 chars down the path, even if
+# rc 3.1 is running as an OS/2 app.
+
+PATH    = $(_NTBINDIR)\private\tools16;$(PATH)
+
+.SUFFIXES:
+.SUFFIXES: .c   .asm .h   .inc .obj .lst .sys .exe .com .map .sym .def .lib
+
+
+.h.inc:
+    h2inc -t -s mvdm.h -s wow.h $*.h -o $*.inc
+
+
+INC_FILES = mvdm.inc softpc.inc bop.inc vint.inc \
+     wow.inc wownt32.inc wowkrn.inc wowusr.inc wowgdi.inc wowshell.inc \
+     wowkbd.inc wowsnd.inc tdb16.inc dpmi.inc dossvc.inc \
+     xmssvc.inc cmdsvc.inc rdrsvc.inc dbgsvc.inc \
+     apistruc.inc enumapis.inc wowmmed.inc wowmmcb.inc vrdlctab.inc \
+     wowwsock.inc wowth.inc vrdefld.inc wowcmdlg.inc wowcmpat.inc  \
+     doswow.inc curdir.inc wowtd.inc
+!ifdef ALT_PROJECT
+INC_FILES = $(INC_FILES) wownls.inc wowwife.inc
+!endif
+
+all: $(INC_FILES)
+
+clean: cleanup all
+
+
+#
+# Do NOT do del *.inc here.  There are include files checked into this
+# directory, and it's really annoying to have all of your changes vanish
+# on a clean build
+#
+cleanup:
+    !-del $(INC_FILES) 2>nul
+
+mvdm.inc:   mvdm.h
+
+softpc.inc:   softpc.h
+
+bop.inc:      bop.h
+
+vint.inc:   vint.h
+
+wow.inc:      wow.h mvdm.h bop.h
+
+wowcmdlg.inc: wowcmdlg.h wow.inc
+
+wowkrn.inc:   wowkrn.h wow.inc
+
+wowusr.inc:   wowusr.h wow.inc
+
+wowgdi.inc:   wowgdi.h wow.inc
+
+wowshell.inc: wowshell.h wow.inc
+
+wowkbd.inc:   wowkbd.h wow.inc
+
+wowsnd.inc:   wowsnd.h wow.inc
+
+wowmmed.inc: wowmmed.h wowmmcb.inc wow.inc
+    h2inc -t -s mvdm.h -s wow.h -s wowmmcb.h $*.h -o $*.inc
+
+wowwsock.inc: wowwsock.h wow.inc
+
+wowth.inc:    wowth.h wow.inc
+
+!ifdef ALT_PROJECT
+wownls.inc:  wownls.h wow.inc
+
+wowwife.inc:  wowwife.h wow.inc
+!endif
+
+tdb16.inc:  tdb16.h
+    h2inc -s mvdm.h -s wow.h tdb16.h -o tdb16.inc
+
+dossvc.inc: dossvc.h bop.h
+    h2inc -s mvdm.h -s wow.h dossvc.h -o dossvc.inc
+
+xmssvc.inc: xmssvc.h bop.h
+
+cmdsvc.inc: cmdsvc.h bop.h
+
+curdir.inc:   curdir.h bop.h
+    h2inc -s mvdm.h -s wow.h curdir.h -o curdir.inc
+
+dbgsvc.inc: dbgsvc.h bop.h
+
+dpmi.inc: dpmi.h bop.inc
+
+rdrsvc.inc: rdrsvc.h bop.h
+
+apistruc.inc: apistruc.h
+
+enumapis.inc: enumapis.h
+
+vrdlctab.inc: vrdlctab.h
+
+vrdefld.inc: vrdefld.h
+
+doswow.inc: doswow.h
+
+wownt32.inc: \nt\public\sdk\inc\wownt32.h
+    h2inc -t -s mvdm.h -s wow.h \nt\public\sdk\inc\wownt32.h -o wownt32.inc
+
+wowtd.inc: wowtd.h
+    h2inc -f -d wowtd.h -o wowtd.inc
+
+!ENDIF

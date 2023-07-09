@@ -1,0 +1,9 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Serial transport layer for WinDbg"
+#define VER_INTERNALNAME_STR        "TLSER.DLL"
+
+#include <common.ver>

@@ -1,0 +1,74 @@
+!IF 0
+
+This directory is a drop point for binaries (dll, lib, exe) that are
+not built, but need to be binplaced.
+
+!ENDIF
+
+TARGETPATH=
+TARGETNAME=
+TARGETTYPE=NOTARGET
+SOURCES=
+
+# makefile.def will binplace any file listed in the MISCFILES macro.
+
+#!if $(386)
+#TDIR = x86
+#!else
+#TDIR = $(TARGET_DIRECTORY)
+#!endif
+
+#!if $(FREEBUILD)
+#BDIR = retail
+#!else
+#BDIR = debug
+#!endif
+
+# Platform specific MISCFILES
+
+!if "$(BUILD_PRODUCT)" == "NT"
+NO_BINPLACE=1
+!endif
+
+#X86_MISCFILES =
+
+#MIPS_MISCFILES =
+
+#PPC_MISCFILES =
+
+#ALPHA_MISCFILES =
+
+# Files that have the same name, but are different for each platform
+
+COMMON_MISCFILES = \
+    iejit.htx    \
+    jitalert.gif
+
+
+
+# Complete file lists
+
+!if $(386)
+MISCFILES = \
+    $(MISCFILES) \
+    $(COMMON_MISCFILES) \
+    $(X86_MISCFILES)
+
+!elseif $(MIPS)
+MISCFILES = \
+    $(MISCFILES) \
+    $(COMMON_MISCFILES) \
+    $(MIPS_MISCFILES)
+
+!elseif $(PPC)
+MISCFILES = \
+    $(MISCFILES) \
+    $(COMMON_MISCFILES) \
+    $(PPC_MISCFILES)
+
+!elseif $(ALPHA)
+MISCFILES = \
+    $(MISCFILES) \
+    $(COMMON_MISCFILES) \
+    $(ALPHA_MISCFILES)
+!endif

@@ -1,0 +1,22 @@
+#include "winuser.h"
+#include "winver.h"
+#include "resource.h"
+
+#include "app.rcv"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HELP            "reginst /q /u /i /r foo.dll <cmdline>\n\n   /q  Quiet\n   /u  Uninstall\n\nCalls both DllInstall and DllRegisterServer unless:\n\n   /i  Call DllInstall only\n   /r  Call DllRegisterServer/DllUnregisterServer only\n\n<cmdline> is passed to DllInstall if it exists."
+    IDS_FAILED          "Could not register %1."
+    IDS_LOADFAILED      "Could not load %1."
+    IDS_INSTALLFAILED   "%2 failed.  Could not register %1."
+    IDS_UNEXPECTED      "An unexpected error occurred in %1."
+    IDS_REGSUCCESS      "Successfully registered %1."
+    IDS_INSTALLSUCCESS  "Successfully installed %1."
+    IDS_FULLSUCCESS     "Successfully registered and installed %1."
+    IDS_UNREGSUCCESS      "Successfully unregistered %1."
+    IDS_UNINSTALLSUCCESS  "Successfully uninstalled %1."
+    IDS_UNFULLSUCCESS     "Successfully unregistered and uninstalled %1."
+
+    IDS_TITLE           "Reg Install"
+END

@@ -1,0 +1,72 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling C++ application.
+COMPONENT = SHELL
+PRODUCT	= CDFVIEW
+
+RM        = /bin/rm -f
+PROTECT   = chmod a-w
+UNPROTECT = chmod a+w
+CP        = /bin/cp
+DOS2UNIX  = /bin/dos2unix
+COPY = \
+    ${RM} $@ ; \
+    ${CP} $< $@ ; \
+    ${UNPROTECT} $@; \
+    ${DOS2UNIX} $@ $@
+
+NO_BROWSER_FILE = 1
+
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/shell.template
+
+SOURCES_FILE    = sources
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME DLLENTRY
+
+DLLDEF_EXPORTS = \
+	_____cdfview_initDLL
+
+
+DEFINES += \
+           -DNO_BROWSER_FILE=1
+
+# Warning: DLL based on MFC (compiled with _USRDLL flag) is not supported yet.
+# This makefile is just for demo purpose.
+## Original Windows DLL name:
+WDLL = cdfview
+## Target Unix shared library:
+DLL	= lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+WRESOURCE = ${O}/cdfview.rc
+TRESOURCE = ${WDLL}.rxt
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+PROJECT_CFLAGS = ${DEFINES} -I${O} -I. -I./res -I..
+
+PROJECT_DLLFLAGS = \
+                   -lstocklib\
+                   -lshdocvw \
+                   -lurlmon\
+                   -lwininet\
+                   -lshlwapi\
+                   -lshell32\
+                   -lole32\
+                   -loleaut32\
+                   -luuid\
+                   -ladvapi32
+
+DIP_CFLAGS = -DDLL_SPECIFIC_OPERATOR_NEW 
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+
+$(O)/%.rc: ../%.rc $(O)/selfreg_cdfview.inf
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+$(O)/%_cdfview.inf: ../res/%.inx
+	${ECHOOBJ}
+	cleaninf -w $< $@

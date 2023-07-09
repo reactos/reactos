@@ -1,0 +1,51 @@
+Directory       Merge?          Owner                   Status
+=========       ======          =====                   ======
+
+shell\*.*
+ANI             No
+APPLETS         Yes
+APPSTUB         No?
+COMMON          ?
+CPLS            Yes
+DDEML           Yes?
+DISKCOPY        Yes
+DSKMAINT        Yes?
+EXT             Yes?
+GETLPTID        No?
+INC             No? (defunct?)
+INFEDIT         ?
+INTERNAT        Yes?
+IOSCLASS        ?
+LIB             No
+LIBRARY         No
+RUNDLL          Yes
+SAMPLES         Yes
+SCRNSV32        Yes?
+SYSCLASS        ?
+TEMPLATE        No?
+WARNING         Yes?
+WEBLIKE         No
+
+
+ccshell\*.*
+COMCTL32        Yes             EricFlo/CheeChew        Done
+COMDLG          No?
+COMDLG32        Yes
+COMMCTRL        No?
+DISTRIB         No
+DOCPROP         Yes
+EXPLORER        Yes             MikeSch                 In progress
+IEXPLORE        No
+INC             Yes             
+LIB             No
+SHDISP          No?
+SHDOCVW         No
+SHELL16         No?
+SHELL32         Yes             BobDay                  In progress
+SHELLINS        No
+SHSCRAP(SHOLE)  Yes
+
+dev\*.*
+INC             Yes             MikeSch                 In progress
+
+

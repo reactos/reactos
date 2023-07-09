@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdinpun
+
+TARGETNAME=kbdinpun
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdinpun.c kbdinpun.rc
+
+NTTARGETFILE0=kbdinpun.h kbdinpun.rc kbdinpun.def

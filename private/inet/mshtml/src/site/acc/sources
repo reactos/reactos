@@ -1,0 +1,39 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\acc=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=acc
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES= $(SITEINCLUDES)
+
+SOURCES= \
+    accutil.cxx \
+    accbase.cxx \
+    accelem.cxx \
+    accwind.cxx \
+    accbody.cxx \
+    accanch.cxx \
+    accarea.cxx \
+    accbtn.cxx  \
+    accimg.cxx  \
+    acccheck.cxx\
+    accinimg.cxx\
+    accedit.cxx \
+    accradio.cxx\
+    accmarq.cxx \
+    accframe.cxx\
+    accobj.cxx  \
+    acctable.cxx\
+    acctab.cxx \
+    accsel.cxx
+    
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

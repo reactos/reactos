@@ -1,0 +1,87 @@
+// ad1ex.idl : AD2 extensions to the AD1 API
+
+import "ocidl.idl";
+import "oleidl.idl";
+
+
+#if 0
+// a block of unused uuids, take one off the top
+uuid(51973C02-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C03-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C04-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C05-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C06-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C07-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C08-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C09-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C0a-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C0b-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C0c-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C0d-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C0e-CB0C-11d0-B5C9-00A0244A0E7A)
+uuid(51973C0f-CB0C-11d0-B5C9-00A0244A0E7A)
+#endif
+
+
+interface IDebugApplicationEx;
+interface IRemoteDebugApplicationEx;
+interface IRemoteDebugApplicationThread;
+
+// IDebugApplicationEx
+//
+// Purpose:
+//
+// Implemented by: PDM
+//
+// Used by: LE
+[
+	object,
+	uuid(51973C00-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugApplicationEx: IUnknown
+{
+	// called on method entry
+	HRESULT onCallEnter (
+		[in] DWORD dwLim);
+
+	// called before making method call
+	HRESULT onCallOut (
+		[in] DWORD dwLim,
+		[in] DWORD dwAddrDest);
+
+		// called after returning from method call
+	HRESULT onCallReturn (
+		[in] DWORD dwLim);
+
+		// called on method exit
+	HRESULT onCallExit (	
+		[in] DWORD dwLim,
+		[in] DWORD dwAddrDest);
+}
+
+// IRemoteDebugApplicationEx
+//
+// Purpose:
+//
+// Implemented by: PDM
+//
+// Used by: IDE
+[
+	object,
+	uuid(51973C01-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IRemoteDebugApplicationEx: IUnknown
+{
+	HRESULT GetHostPid(
+		[out] DWORD* dwHostPid);
+
+	HRESULT GetHostMachineName(
+		[out] BSTR* pbstrHostMachineName);
+
+#ifdef STEP_HACK
+	HRESULT ForceStepMode(
+		[in] IRemoteDebugApplicationThread* pStepThread);
+#endif
+};

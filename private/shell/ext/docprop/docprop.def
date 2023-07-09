@@ -1,0 +1,16 @@
+LIBRARY         DOCPROP
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Ole Docfile Properties Page '
+
+SECTIONS
+    .bss READ WRITE;SINGLE
+    .data READ WRITE;SINGLE
+    .rodata READ SHARED
+    .idata READ WRITE SHARED
+    .rsrc READ SHARED
+
+HEAPSIZE        512
+
+EXPORTS
+    DllCanUnloadNow             @2       PRIVATE           ;DLL unloading
+    DllGetClassObject           @3       PRIVATE           ;Component object model

@@ -1,0 +1,41 @@
+/*** mm.hmd - Memory Manager routines and callback routines for cw
+*
+*   Copyright <C> 1989, Microsoft Corporation
+*
+* Purpose:  handle the near and far memory requests of cw and help systems.
+*
+*
+*************************************************************************/
+/* based heap function prototypes, defines */
+
+extern unsigned long ucbHelpBuffer;
+extern unsigned long ulcbDLLBuffer;
+
+
+enum _misc {
+    cbFWORKMIN      = 0x1000,   // minimum far memory needed
+    cbFWORKGRAN     = 0x0200,   // granularity decrement when allocating space
+    cbNEARBUFFER    = 0x2000,   // near work buffer size, 8K bytes.
+    cbFWORKSTART    = 0x2000,   // start with 8K bytes in far space.  (does
+                                //  not include help buffer)
+    cbNEARLEAVEFREE = 0x800,    // leave a minimum of 2K bytes free in SBAlloc.
+    MB_TABLE_MAX    = 7,        // Number of MB tables
+    MB_ENTRY_MAX    = 128       // Number of entries in MB table
+
+    };
+
+//
+// Far work space data
+//
+#define MAXHEAPSELS (7)
+
+#if defined(DOS16)
+#define cHEAPSEL (sizeof(selBasedHeap)/sizeof(WORD))
+#endif
+
+// forward declarations
+
+// LOCAL
+PMB PASCAL PmbHmemToPmb ( HDEP hdep );
+
+LOCAL WORD PASCAL bselAlloc ( unsigned short *, long );

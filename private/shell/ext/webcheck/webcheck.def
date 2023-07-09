@@ -1,0 +1,15 @@
+LIBRARY         WebCheck
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Webcheck support DLL'
+
+EXPORTS
+    DllCanUnloadNow         PRIVATE
+    DllGetClassObject       PRIVATE
+    DllRegisterServer       PRIVATE
+    DllUnregisterServer     PRIVATE
+    DllInstall              PRIVATE
+    
+    XMLScheduleElementToTaskTrigger
+
+    ExtStartService         @7 NONAME PRIVATE
+    ExtStopService          @8 NONAME PRIVATE

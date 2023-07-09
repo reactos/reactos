@@ -1,0 +1,168 @@
+KBD     INBEN         "Bengali"
+
+	//LCID 0445
+
+VERSION 1.0
+
+SHIFTSTATE
+
+  0     //Column 4 :
+  1     //Column 5 : Shft
+  3     //Column 6 : Shft Ctrl
+  6	//Column 7 :      Ctrl Alt
+  7	//Column 8 : Shft Ctrl Alt
+  2	//Column 9 :      Ctrl
+
+LAYOUT
+
+//SC  VK_        Cap	0	1	3	6	7	2
+//--  ---------- ---	----	----	----	----	----	----
+  29  OEM_3      0	-1	-1
+  02  1          0	1	-1	200d	09E7		//Bengali Digit One, ZWJ
+  03  2          0	2	-1	200c	09E8		//Bengali Digit Two, ZWNJ
+  04  3          0	3	%%	-1	09E9		//09CD+09B0, Bengali Digit Three
+  05  4          0	4	%%	-1	09EA		//09B0+09CD, Bengali Digit Four
+  06  5          0	5	%%	-1	09EB		//099C+09CD+09B0, Bengali Digit Five
+  07  6          0	6	%%	-1	09EC		//09A4+09CD+09B7, Bengali Digit Six
+  08  7          0	7	%%	-1	09ED		//0995+09CD+09B0, Bengali Digit Seven
+  09  8          0	8	%%	-1	09EE		//09B6+09CD+09B0, Bengali Digit Eight
+  0a  9          0	9	(	-1	09EF		//Bengali Digit Nine
+  0b  0          0	0	)	-1	09E6		//Bengali Digit Zero
+  0c  OEM_MINUS  0	-	0983				//Bengali Sign Visarga
+  0d  OEM_PLUS   0	09C3	098B	-1	09E2	09E0	//Bengali Vowel Sign Vocalic R, Bengali Letter Vocalic R
+//--  ---------- ---	----	----	----	----	----	----
+  10  Q          0	09CC	0994    -1      09D7            //Bengali Vowel Sign Au, Bengali Letter Au
+  11  W          0	09C8	0990                            //Bengali Vowel Sign Ai, Bengali Letter Ai
+  12  E          0	09BE	0986                            //Bengali Vowel Sign Aa, Bengali Letter Aa
+  13  R          0	09C0	0988    -1      09E3    09E1    //Bengali Vowel Sign Ii, Bengali Letter Ii
+  14  T          0	09C2	098A                            //Bengali Vowel Sign Uu, Bengali Letter Uu
+  15  Y          0	09AC	09AD                            //Bengali Letter Ba, Bengali Letter Bha
+  16  U          0	09B9	0999                            //Bengali Letter Ha, Bengali Letter Nga
+  17  I          0	0997	0998                            //Bengali Letter Ga, Bengali Letter Gha
+  18  O          0	09A6	09A7                            //Bengali Letter Da, Bengali Letter Dha
+  19  P          0	099C	099D                            //Bengali Letter Ja, Bengali Letter Jha
+  1a  OEM_4      0	09A1	09A2    -1      09DC    09DD    //Bengali Letter Dda, Bengali Letter Ddha
+  1b  OEM_6      0	09BC	099E                            //Bengali Sign Nukta, Bengali Letter Nya
+  2b  OEM_5      0	-1    	-1
+//--  ---------- ---	----	----	----	----	----	----
+  1e  A          0	09CB	0993    -1      09F4    09F5    //Bengali Vowel Sign O, Bengali Letter O
+  1f  S          0	09C7	098F    -1      09F6    09F7    //Bengali Vowel Sign E, Bengali Letter E
+  20  D          0	09CD	0985    -1      09F8    09F9    //Bengali Sign Virama, Bengali Letter A
+  21  F          0	09BF	0987    -1      09E2    098C    //Bengali Vowel Sign I, Bengali Letter I
+  22  G          0	09C1	0989                            //Bengali Vowel Sign U, Bengali Letter U
+  23  H          0	09AA	09AB                            //Bengali Letter Pa, Bengali Letter Pha
+  24  J          0	09B0	-1	-1      09F0    09F1    //Bengali Letter Ra
+  25  K          0	0995	0996                            //Bengali Letter Ka, Bengali Letter Kha
+  26  L          0	09A4	09A5                            //Bengali Letter Ta, Bengali Letter Tha
+  27  OEM_1      0	099A	099B                            //Bengali Letter Ca, Bengali Letter Cha
+  28  OEM_7      0	099F	09A0                            //Bengali Letter Tta, Bengali Letter Ttha
+//--  ---------- ---	----	----	----	----	----	----
+  2c  Z          0	-1    	-1
+  2d  X          0	0982	0981    -1      09FA            //Bengali Sign Anusvara, Bengali Sign Candrabindu
+  2e  C          0	09AE	09A3                            //Bengali Letter Ma, Bengali Letter Nna
+  2f  V          0	09A8	-1				//Bengali Letter Na
+  30  B          0	09AC	-1				//Bengali Letter Ba
+  31  N          0	09B2	-1				//Bengali Letter La
+  32  M          0	09B8	09B6                            //Bengali Letter Sa, Bengali Letter Sha
+  33  OEM_COMMA  0	,	09B7                            //Bengali Letter SSa
+  34  OEM_PERIOD 0	.	{
+  35  OEM_2      0	09AF	09DF                            //Bengali Letter Ya, Bengali Letter Yya
+  56  OEM_102    0	-1    	-1
+//--  ---------- ---	----	----	----	----	----	----
+  53  DECIMAL    0	.        .
+//--  ---------- ---	----	----	----	----	----	----
+//SC  VK_        Cap	0	1	3	6	7	2
+
+LIGATURE
+
+//VK_	Mod#	Char0	Char1	Char2
+//---	----	-----	-----	-----
+  3	1	09CD	09B0		//       Virama + Ra
+  4	1	09B0	09CD		// Ra  + Virama
+  5	1	099C	09CD	09B0	// Ja  + Virama + Ra
+  6	1	09A4	09CD	09B7	// Ta  + Virama + Ssa
+  7	1	0995	09CD	09B0	// Ka  + Virama + Ra
+  8	1	09B6	09CD	09B0	// Sha + Virama + Ra
+
+KEYNAME
+
+  01    Esc
+  0e    Backspace
+  0f    Tab
+  1c    Enter
+  1d    Ctrl
+  2a    Shift
+  36    "Right Shift"
+  37    "Num *"
+  38    Alt
+  39    Space
+  3a    "Caps Lock"
+  3b    F1
+  3c    F2
+  3d    F3
+  3e    F4
+  3f    F5
+  40    F6
+  41    F7
+  42    F8
+  43    F9
+  44    F10
+  45    Pause
+  46    "Scroll Lock"
+  47    "Num 7"
+  48    "Num 8"
+  49    "Num 9"
+  4a    "Num -"
+  4b    "Num 4"
+  4c    "Num 5"
+  4d    "Num 6"
+  4e    "Num +"
+  4f    "Num 1"
+  50    "Num 2"
+  51    "Num 3"
+  52    "Num 0"
+  53    "Num Del"
+  54    "Sys Req"
+  57    F11
+  58    F12
+  7c    F13
+  7d    F14
+  7e    F15
+  7f    F16
+  80    F17
+  81    F18
+  82    F19
+  83    F20
+  84    F21
+  85    F22
+  86    F23
+  87    F24
+
+KEYNAME_EXT
+
+  1c    "Num Enter"
+  1d    "Right Control"
+  35    "Num /"
+  37    "Prnt Scrn"
+  38    "Right Alt"
+  45    "Num Lock"
+  46    Break
+  47    Home
+  48    Up
+  49    "Page Up"
+  4b    Left
+  4d    Right
+  4f    End
+  50    Down
+  51    "Page Down"
+  52    Insert
+  53    Delete
+  54    <00>
+  56    Help
+  5b    "Left Windows"
+  5c    "Right Windows"
+  5d    Application
+
+ENDKBD
+
+

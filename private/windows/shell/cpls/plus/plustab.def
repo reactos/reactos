@@ -1,0 +1,14 @@
+LIBRARY		PLUSTAB
+;SECTIONS
+;    .bss READ WRITE SINGLE
+;    .data READ WRITE SINGLE
+;    .text READ SHARED
+;    .rodata READ SHARED
+;    .idata READ WRITE SHARED
+;    .rsrc READ SHARED
+
+HEAPSIZE        512
+
+EXPORTS
+    DllCanUnloadNow             @2        PRIVATE          ;DLL unloading
+    DllGetClassObject           @3        PRIVATE          ;Component object model

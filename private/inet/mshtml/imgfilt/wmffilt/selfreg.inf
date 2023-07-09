@@ -1,0 +1,27 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Unreg]
+DelReg=WMFFilt.Reg
+
+[Reg]
+AddReg=WMFFilt.Reg
+
+[WMFFilt.Reg]
+HKCR,CLSID\%CLSID_CoWMFFilter%,,,"CoWMFFilter Class"
+HKCR,CLSID\%CLSID_CoWMFFilter%\InProcServer32,,,%_MOD_PATH%
+HKCR,CLSID\%CLSID_CoWMFFilter%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_CoWMFFilter%\ProgID,,,"WMFFilter.CoWMFFilter.1"
+
+HKCR,WMFFilter.CoWMFFilter,,,"CoWMFFilter Class"
+HKCR,WMFFilter.CoWMFFilter\CLSID,,,%CLSID_CoWMFFilter%
+HKCR,WMFFilter.CoWMFFilter.1,,,"CoWMFFilter Class"
+HKCR,WMFFilter.CoWMFFilter.1\CLSID,,,%CLSID_CoWMFFilter%
+
+HKCR,"MIME\Database\Content Type\image/x-wmf\Bits","0",1,04,00,00,00,FF,FF,FF,FF,D7,CD,C6,9A
+HKCR,"MIME\Database\Content Type\image/x-wmf","Image Filter CLSID",,%CLSID_CoWMFFilter%
+
+[Strings]
+CLSID_CoWMFFilter={EC3DB3C6-333E-11D0-B724-00AA006C1A01}
+
+[End]

@@ -1,0 +1,41 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=ntos
+MINORCOMP=fsrec
+
+TARGETNAME=fs_rec
+TARGETPATH=obj
+TARGETTYPE=DRIVER
+
+INCLUDES=..\inc
+
+SOURCES=fs_rec.c    \
+        cdfs_rec.c  \
+        udfs_rec.c  \
+        fat_rec.c   \
+        ntfs_rec.c  \
+        fs_rec.rc
+
+

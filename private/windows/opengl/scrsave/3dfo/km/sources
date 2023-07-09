@@ -1,0 +1,48 @@
+MAJORCOMP=opengl
+MINORCOMP=scrnsave
+TARGETNAME=ss3dfo
+TARGETPATH=obj
+TARGETTYPE=UMAPPL_NOLIB
+LINKLIBS = $(_NTDRIVE)\nt\public\sdk\lib\*\opengl32.lib \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\glu32.lib    \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\glaux.lib    \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\comdlg32.lib \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\comctl32.lib
+
+INCLUDES=..\..\common; \
+         $(BASEDIR)\private\windows\opengl\toolkits\libaux
+
+SOURCES= ..\ss3dfo.c   \
+         ..\gendrop.c  \
+         ..\genexpld.c \
+         ..\genlem.c   \
+         ..\genstrip.c \
+         ..\gentex.c   \
+         ..\genwin.c   \
+         ..\mesh.c     \
+         ..\ss3dfo.rc
+
+
+C_DEFINES=-DUNICODE -D_UNICODE -DWINVER=0x0400
+
+USE_MSVCRT = 1
+
+#SSDEV = 1
+!if "$(SSDEV)" == ""
+UMAPPLEXT = .scr
+!else
+C_DEFINES = $(C_DEFINES) -DSS_DEBUG -DSS_DEVELOP
+!endif
+
+UMTYPE=windows
+UMAPPL=ss3dfo
+UMLIBS= \
+       ..\..\common\km\obj\*\sscommon.lib \
+       obj\*\gendrop.obj \
+       obj\*\genexpld.obj \
+       obj\*\genlem.obj \
+       obj\*\genstrip.obj \
+       obj\*\gentex.obj \
+       obj\*\genwin.obj \
+       obj\*\mesh.obj \
+       obj\*\ss3dfo.res

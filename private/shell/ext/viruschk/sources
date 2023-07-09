@@ -1,0 +1,103 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Created 27-Aug-96 by inateeg
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = ..\..
+
+
+#
+# Cross-compiler macros for unique naming
+#
+
+MAJORCOMP       = shell
+MINORCOMP       = viruschk
+
+
+#
+# Defines for common.inc
+#
+
+NOT_UNICODE     = 1
+#PRECOMPILED_CXX = 1
+
+#
+# Include our common makefile
+#
+
+!include $(CCSHELL_DIR)\common.inc
+
+#
+# Wait to compile the bsc file
+#
+
+NO_BROWSER_FILE = 1
+
+
+#
+# Other directives
+#
+
+#
+# Common settings required by build.exe and makefile.def
+#
+
+TARGETNAME      = viruschk
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+TARGETLIBS      = $(LIBRARY_PATH)\gdi32.lib         \
+                  $(LIBRARY_PATH)\kernel32.lib      \
+                  $(LIBRARY_PATH)\user32.lib        \
+                  $(LIBRARY_PATH)\advapi32.lib      \
+                  $(LIBRARY_PATH)\comctl32.lib      \
+                  $(LIBRARY_PATH)\uuid.lib          \
+                  $(LIBRARY_PATH)\ole32.lib         \
+                  $(LIBRARY_PATH)\oleaut32.lib      \
+                  $(LIBRARY_PATH)\rpcrt4.lib        \
+                  $(LIBRARY_PATH)\version.lib       \
+                  $(LIBRARY_PATH)\shell32.lib       \
+                  $(LIBRARY_PATH)\libc.lib
+
+
+DLLDEF          = $(_OBJ_DIR)\*\viruschk.def
+DLLBASE         = 0x77770000
+DLLENTRY        = _DllMainCRTStartup
+
+UMTYPE=windows
+USE_PDB=1
+#
+# List of sources
+#
+
+SOURCES= \
+         viruschk.cpp \
+         virusmn.cpp \
+         virusfct.cpp \
+         util.cpp \
+         vguids.cpp \
+         viruschk.rc
+
+#
+# Precompiled specs
+#
+
+#PRECOMPILED_INCLUDE = ..\viruspch.h

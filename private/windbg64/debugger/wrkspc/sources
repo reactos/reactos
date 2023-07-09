@@ -1,0 +1,60 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Miche Baker-Harvey (v-michbh)
+
+!ENDIF
+
+!include ..\sources.inc
+
+!if "$(NTDEBUG)" != "" && "$(NTDEBUG)" != "ntsdnodbg" && "$(NTDEBUG)" != "retail"
+USE_RTTI=1
+!endif
+
+MAJORCOMP=dbg
+MINORCOMP=wslib
+
+TARGETNAME=wslib
+TARGETPATH=$(DEBUG_LIB)
+TARGETTYPE=LIBRARY
+
+SOURCES=ws_misc.cpp     \
+        ws_defs.cpp     \
+        windbgrm.cpp    \
+        windbg.cpp      \
+        ws_items.cpp    \
+        ws_impl.cpp
+
+UMTYPE=windows
+
+
+INCLUDES=obj\$(TARGET_DIRECTORY);                   \
+        $(LANGAPI)\debugger;                        \
+        $(LANGAPI)\include;                         \
+        $(BASEDIR)\private\windbg64\windbg\include
+
+C_DEFINES = $(C_DEFINES) -DOSDEBUG -DOSDEBUG4
+
+SUBSYSTEM_VERSION=4.00
+
+#WIN32_IE_VERSION=0x0300
+#WIN32_WINNT=0x0400
+
+PRECOMPILED_INCLUDE=precomp.hxx
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj

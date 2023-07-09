@@ -1,8 +1,0 @@
-Windows provides OpenGL 1.1 with platform-specific extensions (WGL) in its
-software implementation of OpenGL. The purpose of Mesa in this directory is to
-provide an equivalent of that. In order to accomplish just this purpose, it is
-based on Mesa 2.6 and not intended to be synchronized with recent versions.
-See CORE-7499 for details.
-
-If you look for a modern software OpenGL implemenation, a Mesa package with
-the Gallium LLVMpipe driver is available on RAPPS.

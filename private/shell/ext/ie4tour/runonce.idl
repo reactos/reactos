@@ -1,0 +1,40 @@
+// RunOnce.idl : IDL source for RunOnce.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (RunOnce.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+	[
+		object,
+		uuid(7E67ADF1-1334-11D1-9676-00A0C9054168),
+		dual,
+		helpstring("IRunOnceCheckBox Interface"),
+		pointer_default(unique)
+	]
+	interface IRunOnceCheckBox : IDispatch
+	{
+		[propget, id(1), helpstring("property ShowIE4State")] HRESULT ShowIE4State([out, retval] BOOL *pVal);
+		[propput, id(1), helpstring("property ShowIE4State")] HRESULT ShowIE4State([in] BOOL newVal);
+	};
+[
+	uuid(7E67ADE2-1334-11D1-9676-00A0C9054168),
+	version(1.0),
+	helpstring("RunOnce 1.0 Type Library")
+]
+library RUNONCELib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+		uuid(D81A5542-0F4E-11D1-9671-00A0C9054168),
+		helpstring("RunOnceCheckBox Class")
+	]
+	coclass RunOnceCheckBox
+	{
+		[default] interface IRunOnceCheckBox;
+	};
+};

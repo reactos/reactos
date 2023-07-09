@@ -1,0 +1,101 @@
+FORMS³ NAMING SUMMARY
+
+    PREFIX      DESCRIPTION
+    ======      ===========
+    a           array
+    c           count
+    d           difference
+    h           handle
+    i,j,k       array index
+    l           long
+    p           pointer
+    s           signed
+    u           unsigned
+    s_          static
+    g_          global
+
+FUNDAMENTAL
+
+    TAG         TYPE                DESCRIPTION
+    ===         ====                ===========
+    b           BYTE                byte
+    bstr        BSTR                OLE Automation string
+    ch          WCHAR,char          character
+    dw          DWORD               32 bit cookie, bitfield, etc. (not ordinal)
+    f           BOOL                flag
+    fn          (*)()               funtion
+    l           long                32 bit signed ordinal
+    n           int                 signed ordinal
+    pstr        LPWSTR,LPSTR        pointer to null terminated string
+    u           UINT                unsigned ordinal
+    ul          ULONG               32 bit unsigned ordinal
+    v           void                void
+    w           WORD                16 bit cookie, bitfield, etc. (not ordinal)
+    x           int                 x coordinate
+    y           int                 y coordinate
+    xl          long                x coordinate himetric
+    yl          long                y coordinate himetric
+
+WINDOWS
+
+    TAG         TYPE                DESCRIPTION
+    ===         ====                ===========
+    pt          POINT               position
+    ptl         POINTL              position in himetric
+    rc          RECT                rectangle
+    rcl         RECTL               rectangle in himetric
+    size        SIZE                size
+    sizel       SIZEL               size in himetric
+    hwnd        HWND                window handle
+    hdc         HDC                 drawing context handle
+
+OLE
+
+    TAG         TYPE                DESCRIPTION
+    ===         ====                ===========
+    Stg         IStorage
+    Stm         IStream
+    TI          ITypeInfo
+    TL          ITypeLibrary
+    Unk         IUnknown
+    BCtx        IBindCtx
+    Binding     IBinding
+    PF          IPersistFile
+    PS          IPersistStreamInit
+    PM          IPersistMoniker
+    Mk          IMoniker
+
+CORE
+
+    TAG         TYPE                DESCRIPTION
+    ===         ====                ===========
+    Site        CSite
+    Server      CServer
+    Base        CBase
+    DI          CDrawInfo
+    Transform   CTransform
+
+SITE
+
+    TAG         TYPE                DESCRIPTION
+    ===         ====                ===========
+    Form        CForm
+	ParseBuffer CParseBuffer
+	Parser		CParser
+	Lex			CLex
+
+CTRL
+
+    TAG         TYPE                DESCRIPTION
+    ===         ====                ===========
+
+FORM
+
+    TAG         TYPE                DESCRIPTION
+    ===         ====                ===========
+
+DLAY
+
+    TAG         TYPE                DESCRIPTION
+    ===         ====                ===========
+

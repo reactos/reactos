@@ -1,0 +1,755 @@
+<HTML id=dlgAbout STYLE="width: 25.9em; height: 22em">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<head>
+<TITLE>
+About Microsoft Ftp Folders
+</TITLE>
+<style>
+    .versionformat {
+        color: black;
+        font-family: MS Sans Serif;
+        font-size: 8pt;
+        position: absolute; 
+        left: 0em; 
+	top: 0em;
+        height: 2em; 
+        width:25em;
+	z-index: 20;
+       }
+
+    .textformat {
+	color: black;
+        font-family: MS Sans Serif;
+        font-size:8pt;
+        position: absolute; 
+        left: 10.2em; 
+        top: 19.3em;  //19.5em;
+        height: 3em; 
+        width:26.5em;
+    }
+
+    .logo {
+	color: LIGHTGREY;
+	font-family: MS Sans Serif;
+        font-size:40pt;
+        position: absolute; 
+        left: 1.9em; 
+        top: 4.5em;
+        height: 0.5em; 
+        width:1em;
+	z-index: -1;
+	}
+  .button{
+	position: absolute;
+	top: 28em;
+	width: 7em;
+	height: 2.2em;
+	color: black;
+	font-family: MS Sans Serif;
+       	font-size:8pt;
+	cursor: hand;
+	z-index: 100;
+
+	}
+</style>
+
+
+
+</head>
+
+<body id=bodyid onload="OnPageLoad()" onfilterchange="bodyOnFilterChange()" onkeydown="bodyOnKeyDown()" bgcolor="white" scroll=no leftmargin=0 topmargin=0 rightmargin=0 bottommargin=0 style="border:none">
+<!--Graphics -->
+<div id="allPic"  STYLE="width:25em;position: absolute; top: 0px;left:0px;font-family: MS Sans Serif;font-size: 8pt; z-index: 13;">
+</div>
+<img src="ie256.gif" id="ID_IE" CLASS="Movable" style="position:absolute; left:0; top:0; width:0; height:0; visibility:hidden; z-index: 10;" FinalHeight=44, FinalWidth=39, FinalX=353, FinalY=0>
+<img src="world256.gif" id="ID_World"
+		style="position:absolute; left:0px; top:0px; width:0; height:0; visibility:hidden; z-index: 3;" 
+		FinalHeight=86, FinalWidth=86, FinalX=12, FinalY=56 nOrigLeft=86, nOrigTop=86>
+
+<img src=ietxt256.bmp id="ID_IEText" style="position:absolute; left:104; top:61; width:269; height:109; visibility:hidden; z-index:100"
+	SuperClass="Flingable" xDelta="0" yDelta="0" reqDirX=1 reqDirY=0 nScore=2>
+
+<img src=lines256.bmp id=lines style="position:absolute;left:0;top:0;visibility:hidden">
+
+<div id="versionDetails" class=versionformat style="color: white; left: 10.2em; top: 16.2em">
+Version <SPAN id=spaVersion ></SPAN><br>
+<span id=minorversion></SPAN>
+</div>
+
+<div id="userInfo"  class=textformat style="visibility:hidden;z-index: 10;line-height: 140%">
+	<SPAN id=spaText>Product ID: <SPAN id=pID></SPAN></SPAN>
+	<BR><A href="" id=copyrightLink onclick="copyrightclick()"  > Copyright Information</A><!-- onmouseover="copyrightmouseover()" onmouseout="copyrightmouseout()" --> 
+</div>
+
+
+<div id=gettingStarted class=textformat style="visibility:hidden;line-height:175%">
+    <div id=techSupport style="visibility:hidden"><a href="http://www.microsoft.com/iesupport/">Technical Support</a></div>
+    <DIV id=copyrightMicrosoft  style="visibility:hidden"><a href="http://www.microsoft.com/" id="copyright">Copyright &copy;1995-97 Microsoft Corp.</a><span id="rightsReserved"><BR>All rights reserved.</span></DIV>
+</DIV>
+<BUTTON id="backButton" class=button accessKey="B" onClick="backButtononclick()" style="left: 31.5em; visibility: hidden">&lt; <U>B</U>ack</BUTTON> <!-- onmouseover="buttonOnMouseOver()" onmouseout="buttonOnMouseOut()" --> 
+<BUTTON id="nextButton" class=button accessKey="N" onClick="nextButtononclick()"  style="left: 31.5em; visibility: hidden"><U>N</U>ext &gt;</BUTTON> <!-- onmouseover="buttonOnMouseOver()" onmouseout="buttonOnMouseOut()" --> 
+<BUTTON id="okButton" class=button onClick="window.close();" style="left: 29.5em; visibility: hidden">OK</BUTTON> <!-- onmouseover="buttonOnMouseOver()" onmouseout="buttonOnMouseOut()" --> 
+<BUTTON id="ID_Lock" class=button onClick="UnLock(ID_Lock);" style="left:104; top:61; visibility: hidden; z-index:1">Unlock</BUTTON>
+<SCRIPT language=javascript>
+window.onerror = HandleError;
+var isMMInstalled=0;  //Disable MM because of DirectD flicker bug on S3 cards
+var beforeLinksDivCount=0;
+var totaldivCount=3;
+var noReEntry=0;
+var curDiv=0;
+var fade=0;
+var backwards=0;
+divNames = new Object();
+divNames[0]="userInfo";
+divNames[1]="gettingStarted";
+divNames[2]="techSupport";
+divNames[3]="copyrightMicrosoft";
+
+var g_nFinalGrowth = 12;
+var g_nCurrGrowth = 0;
+
+var g_nDragOffsetX=0;
+var g_nDragOffsetY=0;
+var g_fInDrag=0;
+var g_nStep=0;
+var g_nMaxStepHistory=4;
+var g_szPrevElement="";
+var g_cFlungObjects=0;
+var g_nScore=0;
+var g_nScoreNeeded=3;  // 1 for text  + 1 for button
+
+FlingingItems = new Object();
+
+CursorHistoryX = new Object();
+CursorHistoryY = new Object();
+
+var g_nWobbleAmount = 4;
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   Turns off error messages in dialogs
+//
+//  Arguments:  none
+//
+//  returns:    true (tells browser not to handle message)
+//
+//--------------------------------------------------------------------
+
+
+function HandleError(message, url, line)
+{
+    var L_Dialog_ErrorMessage = "An error has occured in this dialog.";
+    var L_ErrorNumber_Text = "Error: ";
+
+    var str = L_Dialog_ErrorMessage + "\n\n" 
+        + L_ErrorNumber_Text + line + "\n"
+        + message;
+
+    alert (str);
+    window.close();
+
+    return true;
+}
+
+
+//function called by body.onload.  Starts initial animation
+function OnPageLoad()
+{
+	var L_UpdateVersions_Text = "Update versions: "; 
+   
+    if(window.screen.colorDepth<8)
+    {
+        document.all["ID_IE"].src="ie.gif";
+        document.all["ID_World"].src="world.bmp";
+        document.all["lines"].src="lines.bmp";
+        document.all["ID_IEText"].src="ietext.bmp";
+    }
+    else
+        document.body.bgColor="#F8F8F8";
+
+    if(isMMInstalled==1)
+    {
+        for(i=0;i<=beforeLinksDivCount;i++)
+        {
+            document.all[divNames[i]].style.filter="blendTrans(duration=0.5)";
+            document.all[divNames[i]].onfilterchange="onfilterchangeHandler()";
+        }
+        for(i=beforeLinksDivCount+1;i<=totaldivCount;i++)
+        {
+            document.all[divNames[i]].style.filter="blendTrans(duration=0.5)";
+            document.all[divNames[i]].onfilterchange="onfilterchangeHandlerLinks()";
+        }
+        document.all.copyrightLogo.style.filter="blendTrans(duration=0.5)";
+    }
+
+    if ((null != window.dialogArguments))
+    {
+        arrArgs = window.dialogArguments.split("~");
+        spaVersion.innerText = arrArgs[0];
+        pID.innerText=arrArgs[4];
+    }
+
+    //Check for QFEs
+    var mv=window.navigator.appMinorVersion;
+    if(mv!="0") minorversion.innerText=L_UpdateVersions_Text + mv;
+    spaText.innerText = spaText.innerText;
+    backButton.style.posLeft=okButton.style.posLeft-15.3;
+    nextButton.style.posLeft=okButton.style.posLeft-7.6;
+    allPic.style.pixelLeft=userInfo.offsetLeft-103;
+    allPic.style.pixelTop=(versionDetails.offsetTop-170)/2;
+
+    //start initial animation
+	document.all["ID_World"].style.visibility="";
+	document.all["ID_IE"].style.visibility="";
+
+    // Create final x/y for World and Logo.
+	document.all["ID_IE"].FinalX=allPic.style.posLeft+350;
+	document.all["ID_IE"].FinalY=allPic.style.posTop+0;
+	document.all["ID_World"].FinalX=allPic.style.posLeft+10;
+	document.all["ID_World"].FinalY=allPic.style.posTop+50;
+	document.all["ID_World"].nOrigLeft=document.all["ID_World"].FinalX;
+	document.all["ID_World"].nOrigTop=document.all["ID_World"].FinalY;
+
+    // Move World and Logo onto screen.
+    window.setTimeout("DoGrow();",100);
+}
+
+//this function grows the earth and IE logos from the upper left corner
+function DoGrow()
+{
+	g_nCurrGrowth += 1;
+
+	ID_World.style.posHeight = Math.round(parseInt(ID_World.FinalHeight) * (g_nCurrGrowth/g_nFinalGrowth));
+	ID_World.style.posWidth = Math.round(parseInt(ID_World.FinalWidth) * (g_nCurrGrowth/g_nFinalGrowth));
+	ID_World.style.posLeft = Math.round(parseInt(ID_World.FinalX) * (g_nCurrGrowth/g_nFinalGrowth));
+	ID_World.style.posTop = Math.round(parseInt(ID_World.FinalY) * (g_nCurrGrowth/g_nFinalGrowth));
+
+	document.all.ID_IE.style.posHeight = Math.round(parseInt(document.all.ID_IE.FinalHeight) * (g_nCurrGrowth/g_nFinalGrowth));
+	document.all.ID_IE.style.posWidth = Math.round(parseInt(document.all.ID_IE.FinalWidth) * (g_nCurrGrowth/g_nFinalGrowth));
+	document.all.ID_IE.style.posLeft = Math.round(parseInt(document.all.ID_IE.FinalX) * (g_nCurrGrowth/g_nFinalGrowth));
+	document.all.ID_IE.style.posTop = Math.round(parseInt(document.all.ID_IE.FinalY) * (g_nCurrGrowth/g_nFinalGrowth));
+
+
+	if(g_nCurrGrowth < g_nFinalGrowth)
+	{
+		window.setTimeout("DoGrow()",1);
+	}
+	else
+	{
+		window.setTimeout("DoPics()",200);
+	}
+}
+
+//When done growing, display the other parts of the IE splash screen
+function DoPics() {
+    ID_IEText.style.posTop=allPic.offsetTop+60;
+    ID_IEText.style.posLeft=allPic.offsetLeft+98;
+    ID_IEText.style.visibility="";
+
+    ID_Lock.style.posTop=ID_IEText.style.posTop+30;
+    ID_Lock.style.posLeft=ID_IEText.style.posLeft+100;
+    ID_Lock.style.visibility="";
+
+    lines.style.posLeft=allPic.style.posLeft+43;
+    lines.style.posTop=allPic.style.posTop+17;
+    lines.style.visibility="";
+
+    window.setTimeout("startVersion()",500);
+}
+
+//Start version number sliding in from bottom
+function startVersion() {
+	versionDetails.style.posTop=28;
+	versionDetails.style.color="black";
+	DoVersion();
+}
+
+function DoVersion() {
+if (versionDetails.style.posTop>16.2) versionDetails.style.posTop=versionDetails.style.posTop-1;
+if (versionDetails.style.posTop<=16.2) 
+	{
+	versionDetails.style.posTop=16.2;
+	okButton.style.visibility="";
+	okButton.focus();
+	window.setTimeout("DoShow()",100);
+	showDiv=-2;
+	}
+else window.setTimeout("DoVersion()",1);
+}
+
+//General function for showing the different paragraphs of text
+//If MM is used, performs a fade-in transition
+
+function DoShow() {
+if(isMMInstalled==1) document.all[divNames[curDiv]].filters[0].Apply();
+document.all[divNames[curDiv]].style.visibility="visible";
+if(isMMInstalled==1) document.all[divNames[curDiv]].filters[0].Play();
+//Next two lines call the filterchanged events manually
+//when MM is not enabled
+else if(curDiv<=beforeLinksDivCount) onfilterchangeHandler();
+else onfilterchangeHandlerLinks();
+}
+
+//General function for hiding the different paragraphs
+//IF MM is used, performs a fade-out transition
+
+function DoFade() {
+var divNum=DoFade.arguments[0];
+fade=1;
+if(isMMInstalled==1) document.all[divNames[divNum]].filters[0].Apply();
+document.all[divNames[divNum]].style.visibility="hidden";
+if(isMMInstalled==1) document.all[divNames[divNum]].filters[0].Play();
+//Next two lines call the filterchanged events manually
+//when MM is not enabled
+else if(curDiv<=beforeLinksDivCount) onfilterchangeHandler();
+else {
+	if(backwards==0) curDiv=curDiv-1; 
+	onfilterchangeHandlerLinks();
+	}
+}
+
+//Logo behind copyright info needs separate fade routine
+
+//function DoLogoFade() { //Fade logo characters
+//if(isMMInstalled==1) document.all.copyrightLogo.filters[0].Apply();
+//document.all.copyrightLogo.style.visibility="hidden";
+//if(isMMInstalled==1) document.all.copyrightLogo.filters[0].Play();
+//}
+
+//When copyright link is clicked, show first paragraph of copyright info
+
+function copyrightclick(){
+window.event.returnValue=0;
+if (noReEntry!=1) 
+	{
+	backButton.style.visibility="";	
+	nextButton.style.visibility="";	
+	backButton.disabled=0;
+	curDiv=1;
+	noReEntry=1;
+	DoFade(0);
+//	DoLogoFade();
+	}
+}
+
+//Show logo underneath copyright link when hover over
+//function copyrightmouseover(){
+//copyrightLogo.style.visibility="visible";
+//}
+
+//Hide logo again when mouse leaves copyright link
+//function copyrightmouseout(){
+//copyrightLogo.style.visibility="hidden";
+//}
+
+//Go back one paragraph.  Check to see if at beginning
+function backButtononclick(){
+if (noReEntry==0) {
+	curDiv=curDiv-1;
+	if(curDiv<0) curDiv=0;
+	else {
+	     noReEntry=1;
+	     backwards=1;
+	     //Fade old div out
+	     DoFade(curDiv+1); 
+	     }
+	}
+setButtonColor();
+}
+
+//Go forward one paragraph
+function nextButtononclick(){
+if (noReEntry==0) {
+	curDiv=curDiv+1;
+	if(curDiv>beforeLinksDivCount+1) curDiv=beforeLinksDivCount+1;
+	else {
+	     noReEntry=1;
+	     //Fade old div out
+	     DoFade(curDiv-1);
+	     }
+	}
+setButtonColor();
+}
+
+//Check to see if one of the buttons should be disabled
+//if at the beginning or end of the paragraphs
+
+function setButtonColor() {
+if((curDiv==beforeLinksDivCount+1)&&(backwards==0)) {
+	nextButton.style.color="";
+	nextButton.disabled=1;
+	}
+else {
+      nextButton.disabled=0;
+      if(curDiv==0) {
+	backButton.style.color="";
+	backButton.disabled=1;
+	}
+      else backButton.disabled=0;
+     }
+}
+
+//Respond to ESC key
+
+function bodyOnKeyDown() {
+if (window.event.keyCode==27) window.close();
+}
+
+//General function for turning the buttons text blue when mouseover
+
+function buttonOnMouseOver(){
+var srcElement=window.event.srcElement;
+if (((srcElement.id!="backButton")|| (backButton.disabled==0))&&((srcElement.id!="nextButton")||(nextButton.disabled==0))) window.event.srcElement.style.color="blue";
+}
+
+//General function for restoring the buttons text when mouse out
+
+function buttonOnMouseOut(){
+var srcElement=window.event.srcElement;
+if (((srcElement.id!="backButton")|| (backButton.disabled==0))&&((srcElement.id!="nextButton")||(nextButton.disabled==0))) window.event.srcElement.style.color="";
+}
+
+//launch IE tour in new window
+
+function gettingStartedClick() {
+var foo="gettingstarted";
+window.open("res://ie4tour.dll/tour.htm#MinimalTour=1",foo,"");
+window.event.returnValue=false;
+return false;
+}
+
+//Event is called when a transition is complete
+//Used to go from fade of one paragraph to show of the next
+//This event is called manually when MM is not enabled
+
+function onfilterchangeHandler() {
+if(fade==1) window.setTimeout("DoShow()",100);
+else noReEntry=0;
+backwards=0;
+fade=0;
+}
+
+//Separate event for the links, since they act differently
+//This is also called manually when MM is not enabled
+
+function onfilterchangeHandlerLinks() {
+if(backwards!=1) { //going forwards
+	if(curDiv<totaldivCount) 
+		{
+		curDiv=curDiv+1;
+		window.setTimeout("DoShow()",100);
+		}
+	else 	noReEntry=0;
+	}		
+else { //going backwards
+	if(curDiv>beforeLinksDivCount) { //still have links to fade
+		curDiv=curDiv-1;
+		window.setTimeout("DoFade(" +parseInt(curDiv+1) +")",100);
+		}
+	else {    //show div the comes before the links
+		curDiv=beforeLinksDivCount;
+		window.setTimeout("DoShow()",100);
+		}
+	}  		
+fade=0;
+}
+
+
+// BUGBUG: This is a hack to work around MSHTML crashing on document.onselectstart events
+// being canceled (false being returned).
+var g_fWasMouseDown;
+
+function MyOnMouseDown()
+{
+    g_fWasMouseDown = window.event.button;
+}
+
+document.onmousedown = MyOnMouseDown;
+
+
+function CancelEvent()
+{
+    if (2 == g_fWasMouseDown)
+    {
+        return true;        // Trident crashes when Right-Click events are canceled.
+    }
+
+    return false;   // Cancel event.
+}
+
+// Disable text and object selecting.
+document.onselectstart = CancelEvent;
+document.ondragstart = CancelEvent;
+
+function OpenEEGG()
+{
+    // Do the navigation
+    window.open("wcee.htm", "TheWCEE", "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,width=414,height=352");
+    window.close();
+    return false;
+}
+
+
+function GetIndex(nStep, nDelta)
+{
+	nReturn = nStep + nDelta;
+
+	if (nReturn < 0)
+		nReturn += g_nMaxStepHistory;
+
+	if (g_nMaxStepHistory <= nReturn)
+		nReturn -= g_nMaxStepHistory;
+
+	return nReturn;
+}
+
+function StartFlinging()
+{
+	nStop = 1;
+
+	for (j in FlingingItems)
+	{
+        obj = FlingingItems[j];
+
+		if(obj.xDelta != 0) obj.style.pixelLeft += obj.xDelta;
+		if(obj.yDelta != 0) obj.style.pixelTop += obj.yDelta;
+
+		if ((obj.style.pixelLeft > -1000) && (obj.style.pixelLeft < 2000) &&
+			(obj.style.pixelTop > -1000) && (obj.style.pixelTop < 2000))
+			nStop = 0;
+	}
+
+	// Stop looping when object is fully off the screen.
+	if (0 == nStop)
+	{
+		window.setTimeout("StartFlinging()", 10);
+	}
+}
+
+function TrackStep(x, y, e, bkey)
+{
+	CursorHistoryX[g_nStep] = x;
+	CursorHistoryY[g_nStep] = y;
+
+	// Did we just bounce into a flingable object?
+    if ((e.SuperClass != g_szPrevElement) && (e.SuperClass == "Flingable"))
+	{
+		fValidFling = 1;
+		// Yes, so see if we can fling it.
+
+		if (0 == e.reqDirX)
+		{
+			nIndex = 0;
+
+			// It's necessary that all x movement remain within object width.
+			while ((nIndex < (g_nMaxStepHistory - 1)) && (1 == fValidFling))
+			{
+				nPrevX = CursorHistoryX[GetIndex(g_nStep, -nIndex)];
+				if ((nPrevX < e.style.pixelLeft) ||
+					(nPrevX > e.style.pixelLeft + e.style.pixelWidth))
+				{
+					fValidFling = 0;
+				}
+				nIndex++;
+			}
+		}
+		else
+		{
+			nIndex = 0;
+
+			// It's necessary that all x movement stay constantly left or right.
+			while ((nIndex < (g_nMaxStepHistory - 1)) && (1 == fValidFling))
+			{
+				if (0 < e.reqDirX)
+				{
+					if (CursorHistoryX[GetIndex(g_nStep, -nIndex)] < CursorHistoryX[GetIndex(g_nStep, -nIndex - 1)])
+					{
+						fValidFling = 0;
+					}
+				}
+				else
+				{
+					if (CursorHistoryX[GetIndex(g_nStep, -nIndex)] > CursorHistoryX[GetIndex(g_nStep, -nIndex - 1)])
+					{
+						fValidFling = 0;
+					}
+				}
+				nIndex++;
+			}
+		}
+
+		if (1 == fValidFling)
+		{
+		    if (0 == e.reqDirY)
+		    {
+			    nIndex = 0;
+
+			    // It's necessary that all y movement remain within object height.
+			    while ((nIndex < (g_nMaxStepHistory - 1)) && (1 == fValidFling))
+			    {
+				    nPrevY = CursorHistoryY[GetIndex(g_nStep, -nIndex)];
+				    if ((nPrevY < e.style.pixelTop) ||
+					    (nPrevY > e.style.pixelTop + e.style.pixelHeight))
+				    {
+					    fValidFling = 0;
+				    }
+				    nIndex++;
+			    }
+		    }
+		    else
+		    {
+			    nIndex = 0;
+
+			    // It's necessary that all y movement stay constantly up or down.
+			    while ((nIndex < (g_nMaxStepHistory - 1)) && (1 == fValidFling))
+			    {
+				    if (0 < e.reqDirY)
+				    {
+					    if (CursorHistoryY[GetIndex(g_nStep, -nIndex)] < CursorHistoryY[GetIndex(g_nStep, -nIndex - 1)])
+					    {
+						    fValidFling = 0;
+					    }
+				    }
+				    else
+				    {
+					    if (CursorHistoryY[GetIndex(g_nStep, -nIndex)] > CursorHistoryY[GetIndex(g_nStep, -nIndex - 1)])
+					    {
+						    fValidFling = 0;
+					    }
+				    }
+				    nIndex++;
+			    }
+		    }
+		}
+
+		if ((1 == fValidFling) && bkey)
+		{
+			nXDelta = CursorHistoryX[g_nStep] - CursorHistoryX[GetIndex(g_nStep, -g_nMaxStepHistory + 1)];
+			nYDelta = CursorHistoryY[g_nStep] - CursorHistoryY[GetIndex(g_nStep, -g_nMaxStepHistory + 1)];
+
+			if (0 != e.reqDirX)
+				e.xDelta = Math.round(nXDelta / 2);
+			else
+				e.xDelta = 0;
+
+			if (0 != e.reqDirY)
+				e.yDelta = Math.round(nYDelta / 2);
+			else
+				e.yDelta = 0;
+
+		    FlingingItems[FlingingItems.length] = e;
+            g_cFlungObjects++;
+			g_nScore += (g_cFlungObjects * e.nScore);
+			StartFlinging();
+		}
+
+	}
+
+
+	// Increment
+	g_szPrevElement = e.SuperClass;
+	g_nStep = GetIndex(g_nStep, 1);
+}
+
+function StartWorldGrow()
+{
+    if (ID_World.style.pixelWidth > 800)
+	{
+	    OpenEEGG();
+	}
+	else
+    {
+        ID_World.style.pixelWidth += 100;
+        ID_World.style.pixelHeight += 100;
+        ID_World.style.pixelLeft -= 30;
+        ID_World.style.pixelTop -= 30;
+    	window.setTimeout("StartWorldGrow()", 10);
+    }
+}
+
+function UpdateMouse(x, y, shift, button)
+{
+    var e;
+
+    e = event.srcElement;
+
+    if ((0 == g_fInDrag) && (e.className == "Movable"))
+	{
+		g_fInDrag = 1;
+		g_nDragOffsetX = event.x - document.all["ID_IE"].style.pixelLeft;
+		g_nDragOffsetY = event.y - document.all["ID_IE"].style.pixelTop;
+	}
+
+
+	if ((1 == event.button) && (1 == g_fInDrag) && (true == event.ctrlKey))
+	{
+		document.all["ID_IE"].style.pixelLeft = event.x - g_nDragOffsetX;
+		document.all["ID_IE"].style.pixelTop = event.y - g_nDragOffsetY;
+
+		TrackStep(event.x, event.y, e, event.ctrlKey);
+	}
+	else
+	{
+		g_fInDrag = 0;
+
+		// Check if IE Logo was dropped on the world.
+		if ((document.all["ID_IE"].style.pixelLeft > document.all["ID_World"].style.pixelLeft) &&
+			(document.all["ID_IE"].style.pixelLeft + document.all["ID_IE"].style.pixelWidth < document.all["ID_World"].style.pixelLeft + document.all["ID_World"].style.pixelWidth) &&
+		    (document.all["ID_IE"].style.pixelTop > document.all["ID_World"].style.pixelTop) &&
+			(document.all["ID_IE"].style.pixelTop + document.all["ID_IE"].style.pixelHeight < document.all["ID_World"].style.pixelTop + document.all["ID_World"].style.pixelHeight) &&
+            g_nScore >= g_nScoreNeeded)
+		{
+            // Move the logo so we don't continue to navigate over and over again.
+            document.all["ID_IE"].style.pixelLeft = parseInt(document.all["ID_IE"].FinalX);
+            document.all["ID_IE"].style.pixelTop = parseInt(document.all["ID_IE"].FinalY);
+
+            document.all["ID_IE"].style.visibility="hidden";
+
+			// Make this cover everything else.
+            document.all["ID_World"].style.zIndex = "1000";
+			
+			g_nScore = 0;
+            StopWobble(ID_World);
+    		window.setTimeout("StartWorldGrow()", 10);
+		}
+	}
+
+	return 1;
+}
+
+document.onmousemove = UpdateMouse;
+
+function WobbleControl(obj)
+{
+    if (0 != obj.wobbleTimer)
+    {
+        obj.style.posLeft = parseInt(obj.nOrigLeft) + Math.round(Math.random() * 2 * g_nWobbleAmount) - g_nWobbleAmount;
+        obj.style.posTop = parseInt(obj.nOrigTop) + Math.round(Math.random() * 2 * g_nWobbleAmount) - g_nWobbleAmount;
+    }
+}
+
+function StartWobble(obj)
+{
+    obj.wobbleTimer = setInterval("WobbleControl(ID_World)", 100);
+}
+
+function StopWobble(obj)
+{
+    if (0 != obj.wobbleTimer)
+    {
+        clearInterval(obj.wobbleTimer);
+        obj.wobbleTimer = 0;
+        document.all["ID_World"].posLeft = parseInt(document.all["ID_World"].nOrigLeft);
+        document.all["ID_World"].posTop = parseInt(document.all["ID_World"].nOrigTop);
+    }
+}
+
+function UnLock(obj)
+{
+    g_nScore += 1;
+    obj.disabled = true;
+    StartWobble(obj);
+}
+</SCRIPT>
+</body>
+</html>

@@ -1,0 +1,60 @@
+#include <windows.h>
+#include "cpl_defs.h"
+
+MMCPL ACCELERATORS PRELOAD MOVEABLE DISCARDABLE
+BEGIN
+    VK_F1, MENU_F1, VIRTKEY
+END
+
+MMCPL  ICON   cpl.ico
+
+MMCPL  MENU
+{
+    POPUP "&Settings"
+    {
+/*
+ *  Uncomment this menu item if we want to expose the "Refresh Cache"
+ *  capability to the User - all code to support this has already been
+ *  implemented and tested - [stevecat] 10/13/93
+            MENUITEM SEPARATOR
+            MENUITEM "&Refresh cache",      MENU_CACHE
+*/
+            MENUITEM SEPARATOR
+            MENUITEM "E&xit",               MENU_EXIT
+    }
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Contents",                   MENU_INDHELP
+        MENUITEM "&Search for Help on...",      MENU_SCHHELP
+        MENUITEM "&How to Use Help",            MENU_USEHELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About Control Panel...",     MENU_ABOUT
+    END
+}
+
+STRINGTABLE PRELOAD MOVEABLE DISCARDABLE
+BEGIN
+        /* Strings that are loaded at init time
+         */
+        INITS+0, "Control Panel"
+        INITS+1, "Loading "
+        INITS+2, "Not enough memory available for this task.\n\nQuit one or more applications to increase available memory, and then try again."
+        INITS+3, "Cannot find the Control Panel components (files with .CPL extension).\n\n Verify that they are installed in your Windows NT SYSTEM32 directory."
+
+        CONTROLABOUT, "Control Panel"
+END
+
+/* rcinclude cplabout.dlg
+ */
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Control Panel"
+#define VER_INTERNALNAME_STR        "control\0"
+#define VER_ORIGINALFILENAME_STR    "control.exe"
+
+#include "common.ver"
+
+

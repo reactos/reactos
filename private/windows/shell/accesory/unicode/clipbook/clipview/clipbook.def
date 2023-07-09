@@ -1,0 +1,25 @@
+
+NAME	     ClipBook
+
+EXETYPE      WINDOWS
+PROTMODE
+
+STUB	     'WINSTUB.EXE'
+
+CODE  MOVEABLE DISCARDABLE PRELOAD
+DATA  MOVEABLE MULTIPLE PRELOAD
+
+HEAPSIZE     4096
+STACKSIZE    8000
+
+SEGMENTS
+    _TEXT		FIXED PRELOAD NONDISCARDABLE
+	VCLP_TEXT	MOVEABLE LOADONCALL DISCARDABLE
+
+EXPORTS
+	FrameWndProc   @1   ; name of window processing function
+	ChildWndProc	@2
+	MyMsgFilterProc @3  ; DDEML sync xact filter
+	DdeCallback		@4
+	EnumMetafileProc @5  ; for enummetafile callback
+

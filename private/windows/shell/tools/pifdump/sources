@@ -1,0 +1,15 @@
+TARGETNAME=pifdump
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+C_DEFINES=-DNT -DWINNT
+
+INCLUDES=..\..\..\inc
+
+SOURCES=pifdump.rc \
+        pifdump.c
+
+LINKLIBS=$(SDK_LIB_PATH)\user32.lib           \
+         $(SDK_LIB_PATH)\kernel32.lib
+
+UMTYPE=console

@@ -1,0 +1,44 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css" />
+<TITLE>Print Server</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("prntr_bg.gif");
+        background-repeat:no-repeat;
+        background-position:160 40;
+    }
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">Print Server</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">The Add Printer wizard helps you set up a local or network printer and publish to Active Directory. 
+                Run the wizard for each printer and platform you want to set up. 
+                After you run the wizard, network users can begin using the printer immediately. 
+                You can also administer the print server from any computer on the network by using the Printers folder or a Web browser.
+            <P ID="para2"><A HREF="javascript:exec('rundll32', 'shell32.dll,SHHelpShortcuts_RunDLL AddPrinter')"><IMG SRC="wiz.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Start</A> the Add Printer wizard.</P>
+            <P ID="para4"><A HREF="javascript:exec('control','printers')"><IMG SRC="mmc.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Manage</A> printers.</P>
+            <TABLE cellspacing="0" cellpadding="0">
+                <TR>
+                    <TD VALIGN="top">
+                        <A HREF="javascript:help('printing.chm::/sag_PRINTtopnode.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5"></A>
+                    </TD>
+                    <TD ID="para3">
+                        <A HREF="javascript:help('printing.chm::/sag_PRINTtopnode.htm')">Learn more</A>&nbsp;about setting up and configuring print services.
+                    </TD>
+                </TR>
+            </TABLE>
+        </TD>
+   </TR>
+</TABLE>
+&nbsp;
+</BODY>
+</HTML>

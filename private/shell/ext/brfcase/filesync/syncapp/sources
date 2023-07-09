@@ -1,0 +1,68 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+NTLEANANDMEAN=
+
+INDENTED_DIRECTIVES=1
+
+MAJORCOMP=shell
+MINORCOMP=syncapp
+
+TARGETNAME=syncapp
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+NOT_LEAN_AND_MEAN=1
+
+USE_LIBCMT=1
+
+C_DEFINES=-DNT -DWINNT -DUNICODE
+
+CONDITIONAL_INCLUDES=\
+        syncapp.rcv \
+        shell.h \
+        w32sys.h \
+        ..\inc16\shellapi.h \
+
+INCLUDES=$(BASEDIR)\private\windows\inc;$(BASEDIR)\private\shell\inc 
+
+SOURCES= \
+        syncapp.rc      \
+        syncapp.c
+
+UMTYPE=windows
+UMENTRY=winmain
+EXPECTED_WINVER=4.0
+UMAPPL=syncapp
+
+UMRES=$(O)\syncapp.res
+UMLIBS= \
+        $(BASEDIR)\public\sdk\lib\*\gdi32p.lib   \
+        $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+        $(BASEDIR)\public\sdk\lib\*\mpr.lib      \
+        $(BASEDIR)\public\sdk\lib\*\kernel32.lib  \
+        $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+        $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+        $(BASEDIR)\public\sdk\lib\*\uuid.lib

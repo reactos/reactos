@@ -1,0 +1,86 @@
+#  File: D:\WACKER\makefile (Created: 23-Nov-1993)
+#
+#  Copyright 1993 by Hilgraeve Inc. -- Monroe, MI
+#  All rights reserved
+#
+#  $Revision: 1.1 $
+#  $Date: 1995/06/06 14:52:22 $
+#
+
+RCSFILES = \wacker\makefile \wacker\common.mki \wacker\options.lnt		  \
+		   \wacker\term.reg \wacker\nih\shmalloc.h \wacker\nih\smrtheap.h \
+		   \wacker\nih\sh22w32d.dll \wacker\nih\shdw32md.lib
+
+#-------------------#
+
+%include common.mki
+
+#-------------------#
+
+TARGETS : hticons.dll  \
+		  hypertrm.dll \
+		  htrn_jis.dll \
+		  hypertrm.exe
+
+#-------------------#
+
+.NOINFER : makefile
+
+#-------------------#
+
+# --- Add directory of subsystem here. --- #
+
+DIRECTORIES = term tdll ext htrn_jis
+
+#-------------------#
+
+hypertrm.exe .ALWAYS:
+	%do callmake dir=term
+
+hypertrm.dll .ALWAYS:
+	%do callmake dir=tdll
+
+hticons.dll .ALWAYS:
+	%do callmake dir=ext
+
+htrn_jis.dll .ALWAYS:
+	%do callmake dir=htrn_jis
+
+#-------------------#
+
+torcs .ALWAYS:
+	-del torcs.zip
+	-del pkzip.rsp
+	%foreach dir in \wacker $(DIRECTORIES)
+		%chdir $(dir)
+		$(MAKE) $(MFLAGS) \wacker\rcsctrl
+		%chdir \wacker
+	%end
+	*pkzip -P torcs.zip @pkzip.rsp
+	@echo ... Done ...
+
+fromrcs .ALWAYS : fromrcs.zip
+	*pkunzip -d -o fromrcs.zip \wacker
+	-erase fromrcs.zip
+	-attrib -r rcsctrl
+	-touch rcsctrl
+	-attrib +r rcsctrl
+	%do mkmfall
+
+mkmfall :
+	%foreach dir in $(DIRECTORIES)
+		%chdir $(dir)
+		mkmf -t makefile.t
+		%chdir \wacker
+	%end
+	@echo ... Done ...
+
+clean :
+	-del $(BD)\*.obj
+	-del $(BD)\*.lib
+	-del $(BD)\*.dll
+	-del $(BD)\*.exp
+	-del $(BD)\*.exe
+	@echo ... Done ...
+
+#-------------------#

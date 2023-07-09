@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdsp
+
+TARGETNAME=kbdsp
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdsp.c kbdsp.rc
+
+NTTARGETFILE0=kbdsp.h kbdsp.rc kbdsp.def

@@ -1,0 +1,55 @@
+;
+;  Control registration and DLL installation
+;
+;  Note the AddReg and DelReg keys have a maximum length of 255 characters.
+;  Only one AddReg and DelReg key per header section.
+;
+;  Because of the length limitations, we use shorthand names for the
+;  sections.
+;
+;  Section Name Notations:
+;       A_*     - add reg section
+;       D_*     - del reg section
+;       AD_*    - add/del reg section
+;
+;
+;  RegItems with %11% or %25% are substituted on NT with 
+;  %SystemRoot%\whatever. But this needs to be REG_EXPAND_SZ!
+;  The flag 131072 (0x20000) will make the item be of type
+;  REG_EXPAND_SZ.
+;
+;  Any entries that go into the registry that contain 
+;  %_SYS_MOD_PATH%, %11%, %25% MUST have this flag set. (w95 ignores it).
+
+
+[Version]
+Signature="$CHICAGO$"
+
+[RegDll]
+ComponentName=IE40.Comctl32
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=!RegRollbackComctl32
+DelReg=IncompatReg
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnregDll]
+ComponentName=IE40.Comctl32
+AdvOptions=260
+RequireEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Rollback Registration
+;
+;  These registry keys will kick off the RollBack during uninstall.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[!RegRollbackComctl32]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","IE40.Comctl32",0,""
+
+
+[IncompatReg]
+; Nortion Navigator 95 date & time property sheet crashes when user hit OK and Cancel
+HKCR,"*\shellex\PropertySheetHandlers\Navigator"
+
+[Strings]

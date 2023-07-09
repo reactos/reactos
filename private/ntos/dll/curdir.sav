@@ -1,0 +1,3474 @@
+/*++
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    curdir.c
+
+Abstract:
+
+    Current directory support
+
+Author:
+
+    Mark Lucovsky (markl) 10-Oct-1990
+
+Revision History:
+
+--*/
+
+#include "ntos2.h"
+#include "ntrtl.h"
+#include "nturtl.h"
+#include "string.h"
+#include "ctype.h"
+
+#define IS_PATH_SEPARATOR(ch) ((ch == '\\') || (ch == '/'))
+#define IS_DOT(s) ( s[0] == '.' && ( IS_PATH_SEPARATOR(s[1]) || s[1] == '\0') )
+#define IS_DOT_DOT(s) ( s[0] == '.' && s[1] == '.' && ( IS_PATH_SEPARATOR(s[2]) || s[2] == '\0') )
+
+#define IS_PATH_SEPARATOR_U(ch) ((ch == (WCHAR)'\\') || (ch == (WCHAR)'/'))
+#define IS_DOT_U(s) ( s[0] == (WCHAR)'.' && ( IS_PATH_SEPARATOR_U(s[1]) || s[1] == UNICODE_NULL) )
+#define IS_DOT_DOT_U(s) ( s[0] == (WCHAR)'.' && s[1] == (WCHAR)'.' && ( IS_PATH_SEPARATOR_U(s[2]) || s[2] == UNICODE_NULL) )
+
+ULONG RtlpFilePartOffset;
+STRING RtlpLastFullDosPath;
+STRING RtlpLastDosPath;
+CHAR RtlpLastFullDosPathBuffer[DOS_MAX_PATH_LENGTH];
+CHAR RtlpLastDosPathBuffer[DOS_MAX_PATH_LENGTH];
+ULONG RtlpCacheHit;
+ULONG RtlpCacheMiss;
+
+#define NUMBER_OF_DOS_DEVICE_NAMES 5
+#define DOS_DEVICE_LPT 0
+#define DOS_DEVICE_COM 1
+#define DOS_DEVICE_PRN 2
+#define DOS_DEVICE_AUX 3
+#define DOS_DEVICE_NUL 4
+UNICODE_STRING RtlpDosDevices[NUMBER_OF_DOS_DEVICE_NAMES];
+UNICODE_STRING RtlpSlashSlashDot;
+ULONG RtlpLongestPrefix;
+UNICODE_STRING RtlpDosDevicesPrefix;
+UNICODE_STRING RtlpDosDevicesUncPrefix;
+
+#define UNICODE_CHECK
+
+#ifdef UNICODE_CHECK
+VOID
+CheckDetermineDosPathNameType(
+    IN PSZ DosFileName,
+    IN RTL_PATH_TYPE PathType
+    );
+
+VOID
+CheckIsDosDeviceName(
+    IN PSZ DosFileName,
+    IN ULONG Length
+    );
+
+VOID
+CheckFullPathName(
+    PSZ lpFileName,
+    ULONG nBufferLength,
+    PSZ lpBuffer,
+    PSZ *lpFilePart,
+    ULONG ReturnedBufferLength
+    );
+
+VOID
+CheckDosPathNameToNtPathName(
+    PSZ DosFileName,
+    PSTRING NtFileName,
+    PSZ *FilePart OPTIONAL,
+    PRTL_RELATIVE_NAME RelativeName OPTIONAL
+    );
+
+VOID
+CheckDosFileExist(
+    PSZ FileName,
+    BOOLEAN ReturnValue
+    );
+
+#endif // UNICODE_CHECK
+
+VOID
+RtlpCurdirInit()
+{
+
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    NTSTATUS Status;
+
+    RtlpFilePartOffset = 0;
+    RtlpLastFullDosPath.Length = 0;
+    RtlpLastFullDosPath.MaximumLength = DOS_MAX_PATH_LENGTH-1;
+    RtlpLastFullDosPath.Buffer = RtlpLastFullDosPathBuffer;
+    RtlpLastDosPath.Length = 0;
+    RtlpLastDosPath.MaximumLength = DOS_MAX_PATH_LENGTH-1;
+    RtlpLastDosPath.Buffer = RtlpLastDosPathBuffer;
+    RtlpCacheHit = 0;
+    RtlpCacheMiss = 0;
+
+    //
+    // Initialize the built in dos device names.
+    //
+
+    RtlInitAnsiString(&AnsiString,"LPT");
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    RtlpDosDevices[ DOS_DEVICE_LPT ] = UnicodeString;
+    RtlInitAnsiString(&AnsiString,"COM");
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    RtlpDosDevices[ DOS_DEVICE_COM ] = UnicodeString;
+    RtlInitAnsiString(&AnsiString,"PRN");
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    RtlpDosDevices[ DOS_DEVICE_PRN ] = UnicodeString;
+    RtlInitAnsiString(&AnsiString,"AUX");
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    RtlpDosDevices[ DOS_DEVICE_AUX ] = UnicodeString;
+    RtlInitAnsiString(&AnsiString,"NUL");
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    RtlpDosDevices[ DOS_DEVICE_NUL ] = UnicodeString;
+
+    RtlInitAnsiString(&AnsiString,"\\\\.\\");
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    RtlpSlashSlashDot = UnicodeString;
+
+    RtlInitAnsiString(&AnsiString,"\\DosDevices\\");
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    RtlpDosDevicesPrefix = UnicodeString;
+
+    RtlInitAnsiString(&AnsiString,"\\DosDevices\\UNC\\");
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    RtlpDosDevicesUncPrefix = UnicodeString;
+    RtlpLongestPrefix = RtlpDosDevicesUncPrefix.Length;
+}
+
+#ifdef OLD
+
+RTL_PATH_TYPE
+RtlDetermineDosPathNameType(
+    IN PSZ DosFileName
+    )
+
+/*++
+
+Routine Description:
+
+    This function examines the Dos format file name and determines the
+    type of file name (i.e.  UNC, DriveAbsolute, Current Directory
+    rooted, or Relative.
+
+Arguments:
+
+    DosFileName - Supplies the Dos format file name whose type is to be
+        determined.
+
+Return Value:
+
+    RtlPathTypeUnknown - The path type can not be determined
+
+    RtlPathTypeUncAbsolute - The path specifies a Unc absolute path
+        in the format \\server-name\sharename\rest-of-path
+
+    RtlPathTypeLocalDevice - The path specifies a local device in the format
+        \\.\rest-of-path this can be used for any device where the nt and
+        Win32 names are the same. For example mailslots.
+
+    RtlPathTypeRootLocalDevice - The path specifies the root of the local
+        devices in the format \\.
+
+    RtlPathTypeDriveAbsolute - The path specifies a drive letter absolute
+        path in the form drive:\rest-of-path
+
+    RtlPathTypeDriveRelative - The path specifies a drive letter relative
+        path in the form drive:rest-of-path
+
+    RtlPathTypeRooted - The path is rooted relative to the current disk
+        designator (either Unc disk, or drive). The form is \rest-of-path.
+
+    RtlPathTypeRelative - The path is relative (i.e. not absolute or rooted).
+
+--*/
+
+{
+
+    RTL_PATH_TYPE ReturnValue;
+
+    if ( IS_PATH_SEPARATOR(*DosFileName) ) {
+        if ( IS_PATH_SEPARATOR(*(DosFileName+1)) ) {
+            if ( DosFileName[2] == '.' ) {
+                if ( IS_PATH_SEPARATOR(*(DosFileName+3)) ){
+                    ReturnValue = RtlPathTypeLocalDevice;
+                    }
+                else if ( (*(DosFileName+3)) == '\0' ){
+                    ReturnValue = RtlPathTypeRootLocalDevice;
+                    }
+                else {
+                    ReturnValue = RtlPathTypeUncAbsolute;
+                    }
+                }
+            else {
+                ReturnValue = RtlPathTypeUncAbsolute;
+                }
+            }
+        else {
+            ReturnValue = RtlPathTypeRooted;
+            }
+        }
+    else if (*(DosFileName+1)==':') {
+            if (IS_PATH_SEPARATOR(*(DosFileName+2))) {
+                ReturnValue = RtlPathTypeDriveAbsolute;
+                }
+            else  {
+                ReturnValue = RtlPathTypeDriveRelative;
+                }
+            }
+    else {
+        ReturnValue = RtlPathTypeRelative;
+        }
+
+#ifdef UNICODE_CHECK
+    CheckDetermineDosPathNameType(DosFileName,ReturnValue);
+#endif // UNICODE_CHECK
+
+    return ReturnValue;
+}
+
+
+ULONG
+RtlIsDosDeviceName(
+    IN PSZ DosFileName
+    )
+
+/*++
+
+Routine Description:
+
+    This function examines the Dos format file name and determines if it
+    is a Dos device name (e.g. LPT1, etc.).  Valid Dos device names are:
+
+        LPTn
+        COMn
+        PRN
+        AUX
+        NUL
+
+    when n is a digit.  Trailing colon is ignored if present.
+
+Arguments:
+
+    DosFileName - Supplies the Dos format file name that is to be examined.
+
+Return Value:
+
+    0 - Specified Dos file name is not the name of a Dos device.
+
+    > 0 - Specified Dos file name is the name of a Dos device and the
+          return value is the length of the name (excluding any optional
+          trailing colon).
+
+--*/
+
+{
+    ULONG n = strlen(DosFileName);
+    ULONG ReturnLength;
+
+    if (n && DosFileName[n-1] == ':') {
+        n--;
+        }
+    ReturnLength = n;
+    if ( n == 4 && isdigit( DosFileName[3] ) &&
+         ( !strnicmp(DosFileName,"LPT",3) || !strnicmp(DosFileName,"COM",3) )
+       ) {
+        ReturnLength = n;
+        }
+    else
+    if ( n != 3 ) {
+        ReturnLength = 0;
+        }
+    else
+    if ( !strnicmp(DosFileName,"PRN",3) ) {
+        ;
+        }
+    else
+    if ( !strnicmp(DosFileName,"AUX",3) ) {
+        ;
+        }
+    else
+    if ( !strnicmp(DosFileName,"NUL",3) ) {
+        ;
+        }
+    else {
+        ReturnLength = 0;
+        }
+
+#ifdef UNICODE_CHECK
+    CheckIsDosDeviceName(DosFileName,ReturnLength);
+#endif // UNICODE_CHECK
+
+    return ReturnLength;
+
+}
+
+ULONG
+RtlGetFullPathName(
+    PSZ lpFileName,
+    ULONG nBufferLength,
+    PSZ lpBuffer,
+    PSZ *lpFilePart OPTIONAL
+    )
+
+/*++
+
+Routine Description:
+
+    This function is used to return a fully qualified pathname
+    corresponding to the specified filename.  It does this by merging
+    the current drive and directory together with the specified file
+    name.  In addition to this, it calculates the address of the file
+    name portion of the fully qualified pathname.
+
+Arguments:
+
+    lpFileName - Supplies the file name of the file whose fully
+        qualified pathname is to be returned.
+
+    nBufferLength - Supplies the length in bytes of the buffer that is
+        to receive the fully qualified path.
+
+    lpBuffer - Returns the fully qualified pathname corresponding to the
+        specified file.
+
+    lpFilePart - Optional parameter that if specified, returns the
+        address of the last component of the fully qualified pathname.
+
+Return Value:
+
+    The return value is the length of the string copied to lpBuffer, not
+    including the terminating null character.  If the return value is
+    greater than nBufferLength, the return value is the size of the buffer
+    required to hold the pathname.  The return value is zero if the
+    function failed.
+
+--*/
+
+{
+    ULONG DeviceNameLength;
+    ULONG PrefixSourceLength;
+    LONG PathNameLength;
+    UCHAR CurDrive, NewDrive;
+    UCHAR EnvVarNameBuffer[4];
+    STRING EnvVarName;
+    PSZ Source,Dest;
+    STRING Prefix;
+    PCURDIR CurDir;
+    ULONG MaximumLength;
+    STRING FullPath;
+    ULONG BackupIndex;
+    RTL_PATH_TYPE PathType;
+    NTSTATUS Status;
+    BOOLEAN StripTrailingSlash;
+
+
+    //
+    // Return zero if zero length file name specified.
+    //
+
+    PathNameLength = strlen(lpFileName);
+    if ( PathNameLength == 0 ) {
+        return 0;
+        }
+
+    if ( lpFileName[PathNameLength-1] == '\\' ) {
+        StripTrailingSlash = FALSE;
+        }
+    else {
+        StripTrailingSlash = TRUE;
+        }
+
+    //
+    // If pass Dos file name is a Dos device name, then turn it into
+    // \\.\devicename and return its length.
+    //
+
+    DeviceNameLength = RtlIsDosDeviceName(lpFileName);
+    if ( DeviceNameLength ) {
+        PathNameLength = DeviceNameLength + sizeof( "\\\\.\\" ) - 1;
+        if ( PathNameLength < (LONG)nBufferLength ) {
+            strcpy(lpBuffer,"\\\\.\\");
+            strncat(lpBuffer,lpFileName,DeviceNameLength);
+            return PathNameLength;
+            }
+        else {
+            return PathNameLength+1;
+            }
+        }
+    try {
+        RtlAcquirePebLock();
+
+        //
+        // Check the path cache. If the length of the input string
+        // matches the last string, and the names compare, then it is
+        // a cache hit.
+        //
+
+        if ( RtlpLastDosPath.Length ) {
+            if ( (RtlpLastDosPath.Length == PathNameLength &&
+                    !stricmp(RtlpLastDosPath.Buffer,lpFileName)) ||
+                 (RtlpLastFullDosPath.Length == PathNameLength &&
+                    !stricmp(RtlpLastFullDosPath.Buffer,lpFileName)) ) {
+
+                //
+                // Cache Hit
+                //
+
+                RtlpCacheHit++;
+                if ( RtlpLastFullDosPath.Length <= (LONG)nBufferLength ) {
+
+                    //
+                    // Return cached copy
+                    //
+
+                    strcpy(lpBuffer,RtlpLastFullDosPath.Buffer);
+                    if ( ARGUMENT_PRESENT(lpFilePart) ) {
+                        *lpFilePart = lpBuffer + RtlpFilePartOffset;
+                        }
+                    return RtlpLastFullDosPath.Length;
+                    }
+                else {
+                    return RtlpLastFullDosPath.Length;
+                    }
+                }
+            else {
+                RtlpLastDosPath.Length = 0;
+                RtlpCacheMiss++;
+                }
+            }
+        }
+    finally {
+        RtlReleasePebLock();
+        }
+
+
+    //
+    // Setup output string that points to callers buffer.
+    //
+
+    FullPath.MaximumLength = (USHORT)nBufferLength;
+    FullPath.Length = 0;
+    FullPath.Buffer = lpBuffer;
+    RtlZeroMemory(lpBuffer,nBufferLength);
+
+    //
+    // Get a pointer to the current directory structure.
+    //
+
+    CurDir = &(NtCurrentPeb()->ProcessParameters->CurrentDirectory);
+
+
+    //
+    // Determine the type of Dos Path Name specified.
+    //
+
+    PathType = RtlDetermineDosPathNameType(lpFileName);
+
+    //
+    // Determine the prefix and backup index.
+    //
+    //  Input        Prefix                     Backup Index
+    //
+    //  \\        -> \\,                            end of \\server\share
+    //  \\.\      -> \\.\,                          4
+    //  \\.       -> \\.                            3 (\\.)
+    //  \         -> Drive: from CurDir.DosPath     3 (Drive:\)
+    //  d:        -> Drive:\curdir from environment 3 (Drive:\)
+    //  d:\       -> no prefix                      3 (Drive:\)
+    //  any       -> CurDir.DosPath                 3 (Drive:\)
+    //
+
+    try {
+        RtlAcquirePebLock();
+
+        //
+        // No prefixes yet.
+        //
+
+        Source = lpFileName;
+        PrefixSourceLength = 0;
+        Prefix.Length = 0;
+        Prefix.MaximumLength = 0;
+        Prefix.Buffer = NULL;
+
+        switch (PathType) {
+            case RtlPathTypeUncAbsolute :
+                {
+                    PSZ UncPathPointer;
+                    ULONG NumberOfPathSeparators;
+
+                    //
+                    // We want to scan the supplied path to determine where
+                    // the "share" ends, and set BackupIndex to that point.
+                    //
+
+                    UncPathPointer = lpFileName + 2;
+                    NumberOfPathSeparators = 0;
+                    while (*UncPathPointer) {
+                        if (IS_PATH_SEPARATOR(*UncPathPointer)) {
+
+                            NumberOfPathSeparators++;
+
+                            if (NumberOfPathSeparators == 2) {
+                                break;
+                                }
+                            }
+
+                        UncPathPointer++;
+
+                        }
+
+                    BackupIndex = UncPathPointer - lpFileName;
+
+                    //
+                    // Unc name. prefix = \\server\share
+                    //
+
+                    PrefixSourceLength = BackupIndex;
+                    Source += PrefixSourceLength;
+
+                    }
+                break;
+
+            case RtlPathTypeLocalDevice :
+
+                //
+                // Local device name. prefix = \\.\
+                //
+
+                PrefixSourceLength = 4;
+                BackupIndex = PrefixSourceLength;
+                Source += PrefixSourceLength;
+                break;
+
+            case RtlPathTypeRootLocalDevice :
+
+                //
+                // Local Device root. prefix = \\.\
+                //
+
+                PrefixSourceLength = 3;
+                RtlInitString(&Prefix,"\\");
+                BackupIndex = PrefixSourceLength + Prefix.Length;
+                Source += PrefixSourceLength;
+                break;
+
+            case RtlPathTypeDriveAbsolute :
+
+                //
+                // Dos drive absolute name
+                //
+
+                BackupIndex = 3;
+                break;
+
+            case RtlPathTypeDriveRelative :
+
+                //
+                // Dos drive relative name
+                //
+
+                CurDrive = (UCHAR)toupper( CurDir->DosPath.Buffer[0] );
+                NewDrive = (UCHAR)toupper( lpFileName[0] );
+                if ( CurDrive == NewDrive ) {
+                    Prefix = CurDir->DosPath;
+                    }
+                else {
+                    EnvVarNameBuffer[0] = '=';
+                    EnvVarNameBuffer[1] = NewDrive;
+                    EnvVarNameBuffer[2] = ':';
+                    EnvVarNameBuffer[3] = '\0';
+                    RtlInitString(&EnvVarName,EnvVarNameBuffer);
+
+                    Prefix = FullPath;
+                    Status = RtlQueryEnvironmentVariable( NULL,
+                                                          &EnvVarName,
+                                                          &Prefix
+                                                        );
+                    if ( !NT_SUCCESS( Status ) ) {
+                        if (Status == STATUS_BUFFER_TOO_SMALL) {
+                            return Prefix.Length + PathNameLength + 2;
+                            }
+                        else {
+                            //
+                            // Otherwise default to root directory of drive
+                            //
+
+                            EnvVarNameBuffer[0] = NewDrive;
+                            EnvVarNameBuffer[1] = ':';
+                            EnvVarNameBuffer[2] = '\\';
+                            EnvVarNameBuffer[3] = '\0';
+                            RtlInitString(&Prefix,EnvVarNameBuffer);
+                            }
+                        }
+                    else {
+                        if (Prefix.Length > 3) {
+                            Prefix.Buffer[ Prefix.Length++ ] = '\\';
+                            }
+                        }
+                    }
+
+                BackupIndex = 3;
+                Source += 2;
+                break;
+
+            case RtlPathTypeRooted :
+
+                //
+                // Rooted name. Prefix is drive portion of current directory
+                //
+
+                Prefix = CurDir->DosPath;
+                Prefix.Length = 2;
+                BackupIndex = 3;
+                break;
+
+            case RtlPathTypeRelative :
+
+                //
+                // Current drive:directory relative name
+                //
+
+                Prefix = CurDir->DosPath;
+                BackupIndex = 3;
+                break;
+
+            default:
+                return 0;
+
+            }
+
+        //
+        // Maximum length required is the length of the prefix plus
+        // the length of the specified pathname. If the callers buffer
+        // is not at least this large, then return an error.
+        //
+
+        MaximumLength = PathNameLength + Prefix.Length + 1;
+
+        if ( MaximumLength > nBufferLength ) {
+            if ( (MaximumLength - nBufferLength != 1) ||
+                 (PathNameLength > 1) ||
+                 (*lpFileName != '.') ) {
+                return MaximumLength;
+                }
+            }
+
+        if (PrefixSourceLength || Prefix.Buffer != FullPath.Buffer) {
+            //
+            // Copy the prefix from the source string.
+            //
+
+            RtlMoveMemory(FullPath.Buffer,lpFileName,PrefixSourceLength);
+            FullPath.Length = (USHORT)PrefixSourceLength;
+
+            //
+            // Append any additional prefix
+            //
+
+            RtlAppendStringToString(&FullPath,&Prefix);
+            }
+        else {
+            FullPath.Length = Prefix.Length;
+            }
+
+        Dest =  FullPath.Buffer + FullPath.Length;
+        *Dest = '\0';
+
+        while ( *Source != '\0' ) {
+            switch ( *Source ) {
+
+            case '\\' :
+            case '/' :
+
+                //
+                // collapse multiple "\" characters.
+                //
+
+                if  ( *(Dest-1) != '\\' ) {
+                    *Dest++ = '\\';
+                    }
+
+                Source++;
+                break;
+
+            case '.' :
+
+                //
+                // Ignore dot in a leading //./
+                // Eat single dots as in /./
+                // Double dots back up one level as in /../
+                // Any other . is just a filename character
+                //
+
+                if ( IS_DOT(Source) ) {
+                    Source++;
+                    if (IS_PATH_SEPARATOR(*Source)) {
+                        Source++;
+                        }
+                    break;
+                    }
+                else if ( IS_DOT_DOT(Source) ) {
+
+                    //
+                    // backup destination string looking for
+                    // a \
+                    //
+
+                    while (*Dest != '\\') Dest--;
+
+                    //
+                    // backup to previous component..
+                    // \a\b\c\.. to \a\b
+                    //
+
+                    do {
+
+                        //
+                        // If we bump into root prefix, then
+                        // stay at root
+                        //
+
+                        if ( Dest ==  FullPath.Buffer + (BackupIndex-1) ) {
+                            break;
+                            }
+
+                        Dest--;
+
+                        } while (*Dest != '\\');
+                    if ( Dest ==  FullPath.Buffer + (BackupIndex-1) ) {
+                        Dest++;
+                        }
+
+                    //
+                    // Advance source past ..
+                    //
+
+                    Source += 2;
+
+                    break;
+                    }
+
+                //
+                // FALLTHRU
+                //
+
+            default:
+
+                //
+                // Copy the filename. The copy will stop
+                // on "non-portable" characters. Note that
+                // null and /,\ will stop the copy. If any
+                // charcter other than null or /,\ is encountered,
+                // then the pathname is invalid.
+                //
+
+                while ( *Source && !IS_PATH_SEPARATOR(*Source) ) {
+                    *Dest++ = *Source++;
+                    }
+                }
+            }
+
+        *Dest = '\0';
+
+        if ( StripTrailingSlash ) {
+            if ( Dest > (FullPath.Buffer + BackupIndex ) && *(Dest-1) == '\\' ) {
+                Dest--;
+                *Dest = '\0';
+                }
+            }
+        FullPath.Length = (USHORT)Dest - (USHORT)FullPath.Buffer;
+
+        //
+        // Locate the file part...
+        //
+
+        Source = lpBuffer;
+        Dest = NULL;
+
+        while(*Source) {
+            if ( *Source == '\\' ) {
+                Dest = Source + 1;
+                }
+            Source++;
+            }
+
+        if ( ARGUMENT_PRESENT( lpFilePart ) ) {
+            if ( Dest && *Dest ) {
+                *lpFilePart = Dest;
+                }
+            else {
+                *lpFilePart = NULL;
+                }
+            }
+
+        if ( Dest && *Dest ) {
+            RtlpFilePartOffset = Dest - lpBuffer;
+            }
+        else {
+            RtlpFilePartOffset = 0;
+            }
+        RtlpLastFullDosPath.Length = FullPath.Length;
+        RtlMoveMemory(RtlpLastFullDosPath.Buffer,lpBuffer,FullPath.Length+1);
+        RtlpLastDosPath.Length = PathNameLength;
+        RtlMoveMemory(RtlpLastDosPath.Buffer,lpFileName,PathNameLength+1);
+        }
+
+    finally {
+        RtlReleasePebLock();
+        }
+
+#if 0
+DbgPrint( "RtlGetFullPath( %s => %S  ", lpFileName, &FullPath );
+if ( ARGUMENT_PRESENT( lpFilePart ) ) {
+    DbgPrint("fp %s\n",*lpFilePart ? *lpFilePart : "None");
+    }
+else {
+    DbgPrint("NOT SPECIFIED\n");
+    }
+#endif
+
+#ifdef UNICODE_CHECK
+    CheckFullPathName(lpFileName,nBufferLength,lpBuffer,lpFilePart,FullPath.Length);
+#endif // UNICODE_CHECK
+    return FullPath.Length;
+}
+
+BOOLEAN
+RtlDosPathNameToNtPathName(
+    IN PSZ DosFileName,
+    OUT PSTRING NtFileName,
+    OUT PSZ *FilePart OPTIONAL,
+    OUT PRTL_RELATIVE_NAME RelativeName OPTIONAL
+    )
+
+/*++
+
+Routine Description:
+
+    A Dos pathname can be translated into an Nt style pathname
+    using this function.
+
+    This function is used only within the Base dll to translate Dos
+    pathnames to Nt pathnames. Upon successful translation, the
+    pointer (NtFileName->Buffer) points to memory from RtlProcessHeap()
+    that contains the Nt version of the input dos file name.
+
+Arguments:
+
+    DosFileName - Supplies the Dos style file name that is to be
+        translated into an equivalent Nt file  name.
+
+    NtFileName - Returns the address of memory in the RtlProcessHeap() that
+        contains an NT filename that refers to the specified Dos file
+        name.
+
+    FilePart - Optional parameter that if specified, returns the
+        trailing file portion of the file name.  A path of \foo\bar\x.x
+        returns the address of x.x as the file part.
+
+    RelativeName - An optional parameter, that if specified, returns
+        a pathname relative to the current directory of the file. The
+        length field of RelativeName->RelativeName is 0 if the relative
+        name can not be used.
+
+Return Value:
+
+    TRUE - The path name translation was successful.  Once the caller is
+        done with the translated name, the memory pointed to by
+        NtFileName.Buffer should be returned to the RtlProcessHeap().
+
+    FALSE - The operation failed.
+
+Note:
+    The buffers pointed to by RelativeName, FilePart, and NtFileName must ALL
+    point within the same memory address.  If they don't, code that calls
+    this routine will fail.
+
+--*/
+
+{
+
+    ULONG BufferLength;
+    ULONG DosPathLength;
+    PSZ FullNtPathName = NULL;
+    PSZ FullDosPathName = NULL;
+    STRING Prefix;
+    PCURDIR CurDir;
+    RTL_PATH_TYPE DosPathType;
+    ULONG DosPathNameOffset;
+    ULONG FullDosPathNameLength;
+
+    //
+    // Calculate the size needed for the full pathname. Add in
+    // space for the longest Nt prefix
+    //
+
+    DosPathLength = BufferLength = RtlGetFullPathName(DosFileName,0,NULL,FilePart)+1;
+
+    if ( !BufferLength ) {
+        return FALSE;
+        }
+
+
+    try {
+
+        RtlAcquirePebLock();
+
+        //
+        // The dos name starts just after the longest Nt prefix
+        //
+
+        FullDosPathName = RtlAllocateHeap(RtlProcessHeap(), BufferLength);
+
+        if ( !FullDosPathName ) {
+            return FALSE;
+            }
+
+        BufferLength += sizeof("\\DosDevices\\UNC\\");
+
+        //
+        // Allocate space for the full Nt Name (including DOS name portion)
+        //
+
+        FullNtPathName = RtlAllocateHeap(RtlProcessHeap(), BufferLength);
+
+        if ( !FullNtPathName ) {
+            return FALSE;
+            }
+
+        FullDosPathNameLength = RtlGetFullPathName(
+                                    DosFileName,
+                                    DosPathLength,
+                                    FullDosPathName,
+                                    FilePart
+                                    );
+
+        if ( !FullDosPathNameLength ||
+              FullDosPathNameLength > DosPathLength ) {
+            return FALSE;
+            }
+
+        //
+        // Determine how to format prefix of FullNtPathName base on the
+        // the type of Dos path name.  All Nt names begin in the \DosDevices
+        // directory.
+        //
+
+        RtlInitString(&Prefix,"\\DosDevices\\");
+        DosPathType = RtlDetermineDosPathNameType(FullDosPathName);
+
+        switch (DosPathType) {
+            case RtlPathTypeUncAbsolute :
+
+                //
+                // Unc name, use \DosDevices\UNC symbolic link to find
+                // redirector.  Skip of \\ in source Dos path.
+                //
+
+                RtlInitString(&Prefix,"\\DosDevices\\UNC\\");
+                DosPathNameOffset = 2;
+                break;
+
+            case RtlPathTypeLocalDevice :
+
+                //
+                // Local device name, so just use \DosDevices prefix and
+                // skip \\.\ in source Dos path.
+                //
+
+                DosPathNameOffset = 4;
+                break;
+
+            case RtlPathTypeRootLocalDevice :
+
+                ASSERT( FALSE );
+                break;
+
+            case RtlPathTypeDriveAbsolute :
+            case RtlPathTypeDriveRelative :
+            case RtlPathTypeRooted :
+            case RtlPathTypeRelative :
+
+                //
+                // All drive references just use \DosDevices prefix and
+                // do not skip any of the characters in the source Dos path.
+                //
+
+                DosPathNameOffset = 0;
+                break;
+
+            default:
+                ASSERT( FALSE );
+            }
+
+        //
+        // Copy the full DOS path next to the name prefix, skipping over
+        // the "\\" at the front of the UNC path or the "\\.\" at the front
+        // of a device name.
+        //
+
+        RtlMoveMemory(FullNtPathName,Prefix.Buffer,Prefix.Length);
+        RtlMoveMemory(FullNtPathName+Prefix.Length,
+                      FullDosPathName + DosPathNameOffset,
+                      FullDosPathNameLength - DosPathNameOffset);
+
+        //
+        // Null terminate the path name to make strlen below happy.
+        //
+
+
+        NtFileName->Buffer = FullNtPathName;
+        NtFileName->Length = (USHORT)(FullDosPathNameLength-DosPathNameOffset)+Prefix.Length;
+        NtFileName->MaximumLength = (USHORT)BufferLength;
+        FullNtPathName[ NtFileName->Length ] = '\0';
+
+
+        //
+        // Readjust the file part to point to the appropriate position within
+        // the FullNtPathName buffer instead of inside the FullDosPathName
+        // buffer
+        //
+        
+        if ( ARGUMENT_PRESENT(FilePart) ) {
+            if (*FilePart) {
+                *FilePart = (FullNtPathName + NtFileName->Length) -
+                            strlen(*FilePart);
+                }
+            }
+
+        if ( ARGUMENT_PRESENT(RelativeName) ) {
+
+            //
+            // If the current directory is a sub-string of the
+            // Nt file name, and if a handle exists for the current
+            // directory, then return the directory handle and name
+            // relative to the directory.
+            //
+
+            RelativeName->RelativeName.Length = 0;
+            RelativeName->RelativeName.MaximumLength = 0;
+            RelativeName->RelativeName.Buffer = 0;
+            RelativeName->ContainingDirectory = NULL;
+
+            CurDir = &(NtCurrentPeb()->ProcessParameters->CurrentDirectory);
+
+            if ( CurDir->Handle ) {
+                if ( !strnicmp(FullDosPathName,CurDir->DosPath.Buffer,CurDir->DosPath.Length) ) {
+
+                    //
+                    // The full dos pathname is a substring of the current directory.
+                    // Compute the start of the relativename.
+                    //
+
+                    RelativeName->RelativeName.Buffer = FullNtPathName + Prefix.Length + CurDir->DosPath.Length;
+                    RelativeName->RelativeName.Length = (USHORT)FullDosPathNameLength - CurDir->DosPath.Length;
+                    if ( *RelativeName->RelativeName.Buffer == '\\' ) {
+                        RelativeName->RelativeName.Buffer++;
+                        RelativeName->RelativeName.Length--;
+                        }
+                    RelativeName->RelativeName.MaximumLength = RelativeName->RelativeName.Length;
+                    RelativeName->ContainingDirectory = CurDir->Handle;
+//DbgPrint("RelativeName %S CurDir %S\n",&RelativeName->RelativeName,&CurDir->DosPath);
+                    }
+                }
+            }
+        }
+    finally {
+
+        //
+        // Always free up the DOS path name - it was allocated as temp storage.
+        //
+
+        if ( FullDosPathName ) {
+            RtlFreeHeap(RtlProcessHeap(), FullDosPathName, 0);
+            }
+
+        if ( AbnormalTermination() ) {
+            if ( FullNtPathName ) {
+                RtlFreeHeap(RtlProcessHeap(), FullNtPathName, 0);
+                }
+
+            RtlReleasePebLock();
+
+            return FALSE;
+            }
+
+	ASSERT (NtFileName->Length < MAXIMUM_FILENAME_LENGTH);
+	ASSERT (NtFileName->MaximumLength < MAXIMUM_FILENAME_LENGTH);
+
+	if (ARGUMENT_PRESENT(RelativeName)) {
+	    ASSERT (NtFileName->Length < MAXIMUM_FILENAME_LENGTH);
+	    ASSERT (NtFileName->MaximumLength < MAXIMUM_FILENAME_LENGTH);
+	}
+
+        RtlReleasePebLock();
+    }
+
+#ifdef UNICODE_CHECK
+    CheckDosPathNameToNtPathName(DosFileName,NtFileName,FilePart,RelativeName);
+#endif // UNICODE_CHECK
+
+//DbgPrint( "RtlDosPathNameToNtPathName( %s => %S )\n", DosFileName, NtFileName );
+    return TRUE;
+}
+
+BOOLEAN
+RtlDoesFileExists(
+    PSZ FileName
+    )
+
+/*++
+
+Routine Description:
+
+    This function checks to see if the specified filename exists.
+
+Arguments:
+
+    FileName - Supplies the file name of the file to find.
+
+Return Value:
+
+    TRUE - The file was found.
+
+    FALSE - The file was not found.
+
+--*/
+
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES Obja;
+    HANDLE Handle;
+    STRING NtFileName;
+    IO_STATUS_BLOCK IoStatusBlock;
+    BOOLEAN ReturnValue;
+    RTL_RELATIVE_NAME RelativeName;
+    PVOID FreeBuffer;
+
+    ReturnValue = RtlDosPathNameToNtPathName(
+                    FileName,
+                    &NtFileName,
+                    NULL,
+                    &RelativeName
+                    );
+
+    if ( !ReturnValue ) {
+        return FALSE;
+        }
+
+    FreeBuffer = NtFileName.Buffer;
+
+    if ( RelativeName.RelativeName.Length ) {
+        NtFileName = RelativeName.RelativeName;
+        }
+    else {
+        RelativeName.ContainingDirectory = NULL;
+        }
+
+    InitializeObjectAttributes(
+        &Obja,
+        &NtFileName,
+        OBJ_CASE_INSENSITIVE,
+        RelativeName.ContainingDirectory,
+        NULL
+        );
+
+    //
+    // Open the file
+    //
+
+    Status = NtOpenFile(
+                &Handle,
+                (ACCESS_MASK)FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                &Obja,
+                &IoStatusBlock,
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                FILE_SYNCHRONOUS_IO_NONALERT
+                );
+    RtlFreeHeap(RtlProcessHeap(),FreeBuffer,0);
+    NtClose(Handle);
+    if ( !NT_SUCCESS(Status) ) {
+        if ( Status == STATUS_SHARING_VIOLATION ||
+             Status == STATUS_ACCESS_DENIED ) {
+            ReturnValue = TRUE;
+            }
+        else {
+            ReturnValue = FALSE;
+            }
+        }
+    else {
+        ReturnValue = TRUE;
+        }
+#ifdef UNICODE_CHECK
+    CheckDosFileExist(FileName,ReturnValue);
+#endif // UNICODE_CHECK
+    return ReturnValue;
+}
+
+
+#else
+
+RTL_PATH_TYPE
+RtlDetermineDosPathNameType(
+    IN PSZ DosFileName
+    )
+
+/*++
+
+Routine Description:
+
+    This function examines the Dos format file name and determines the
+    type of file name (i.e.  UNC, DriveAbsolute, Current Directory
+    rooted, or Relative.
+
+Arguments:
+
+    DosFileName - Supplies the Dos format file name whose type is to be
+        determined.
+
+Return Value:
+
+    RtlPathTypeUnknown - The path type can not be determined
+
+    RtlPathTypeUncAbsolute - The path specifies a Unc absolute path
+        in the format \\server-name\sharename\rest-of-path
+
+    RtlPathTypeLocalDevice - The path specifies a local device in the format
+        \\.\rest-of-path this can be used for any device where the nt and
+        Win32 names are the same. For example mailslots.
+
+    RtlPathTypeRootLocalDevice - The path specifies the root of the local
+        devices in the format \\.
+
+    RtlPathTypeDriveAbsolute - The path specifies a drive letter absolute
+        path in the form drive:\rest-of-path
+
+    RtlPathTypeDriveRelative - The path specifies a drive letter relative
+        path in the form drive:rest-of-path
+
+    RtlPathTypeRooted - The path is rooted relative to the current disk
+        designator (either Unc disk, or drive). The form is \rest-of-path.
+
+    RtlPathTypeRelative - The path is relative (i.e. not absolute or rooted).
+
+--*/
+
+{
+
+    RTL_PATH_TYPE ReturnValue;
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+
+    RtlInitString(&AnsiString,DosFileName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+
+    ReturnValue = RtlDetermineDosPathNameType_U(UnicodeString.Buffer);
+    RtlFreeUnicodeString(&UnicodeString);
+    return ReturnValue;
+}
+
+
+ULONG
+RtlIsDosDeviceName(
+    IN PSZ DosFileName
+    )
+
+/*++
+
+Routine Description:
+
+    This function examines the Dos format file name and determines if it
+    is a Dos device name (e.g. LPT1, etc.).  Valid Dos device names are:
+
+        LPTn
+        COMn
+        PRN
+        AUX
+        NUL
+
+    when n is a digit.  Trailing colon is ignored if present.
+
+Arguments:
+
+    DosFileName - Supplies the Dos format file name that is to be examined.
+
+Return Value:
+
+    0 - Specified Dos file name is not the name of a Dos device.
+
+    > 0 - Specified Dos file name is the name of a Dos device and the
+          return value is the length of the name (excluding any optional
+          trailing colon).
+
+--*/
+
+{
+    NTSTATUS Status;
+    ULONG ReturnLength;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+
+    RtlInitString(&AnsiString,DosFileName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+
+    ReturnLength = RtlIsDosDeviceName_U(UnicodeString.Buffer);
+    ReturnLength >>= 1;
+    RtlFreeUnicodeString(&UnicodeString);
+    return ReturnLength;
+}
+
+ULONG
+RtlGetFullPathName(
+    PSZ lpFileName,
+    ULONG nBufferLength,
+    PSZ lpBuffer,
+    PSZ *lpFilePart OPTIONAL
+    )
+
+/*++
+
+Routine Description:
+
+    This function is used to return a fully qualified pathname
+    corresponding to the specified filename.  It does this by merging
+    the current drive and directory together with the specified file
+    name.  In addition to this, it calculates the address of the file
+    name portion of the fully qualified pathname.
+
+Arguments:
+
+    lpFileName - Supplies the file name of the file whose fully
+        qualified pathname is to be returned.
+
+    nBufferLength - Supplies the length in bytes of the buffer that is
+        to receive the fully qualified path.
+
+    lpBuffer - Returns the fully qualified pathname corresponding to the
+        specified file.
+
+    lpFilePart - Optional parameter that if specified, returns the
+        address of the last component of the fully qualified pathname.
+
+Return Value:
+
+    The return value is the length of the string copied to lpBuffer, not
+    including the terminating null character.  If the return value is
+    greater than nBufferLength, the return value is the size of the buffer
+    required to hold the pathname.  The return value is zero if the
+    function failed.
+
+--*/
+
+{
+
+    NTSTATUS Status;
+    ULONG UnicodeLength;
+    UNICODE_STRING UnicodeString;
+    UNICODE_STRING UnicodeResult;
+    ANSI_STRING AnsiString;
+    ANSI_STRING AnsiResult;
+    PWSTR Ubuff;
+    PWSTR FilePart;
+    PWSTR *FilePartPtr;
+
+    if ( ARGUMENT_PRESENT(lpFilePart) ) {
+        FilePartPtr = &FilePart;
+        }
+    else {
+        FilePartPtr = NULL;
+        }
+
+    RtlInitString(&AnsiString,lpFileName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    Ubuff = RtlAllocateHeap(RtlProcessHeap(),512);
+
+    UnicodeLength = RtlGetFullPathName_U(
+                        UnicodeString.Buffer,
+                        510,
+                        Ubuff,
+                        FilePartPtr
+                        );
+    UnicodeLength >>= 1;
+    if ( UnicodeLength && UnicodeLength <= nBufferLength ) {
+        RtlInitUnicodeString(&UnicodeResult,Ubuff);
+        RtlUnicodeStringToAnsiString(&AnsiResult,&UnicodeResult,TRUE);
+        RtlMoveMemory(lpBuffer,AnsiResult.Buffer,UnicodeLength+1);
+        RtlFreeAnsiString(&AnsiResult);
+
+        if ( ARGUMENT_PRESENT(lpFilePart) ) {
+            if ( FilePart == NULL ) {
+                *lpFilePart = NULL;
+                }
+            else {
+                *lpFilePart = (PSZ)(FilePart - Ubuff);
+                *lpFilePart = *lpFilePart + (ULONG)lpBuffer;
+                }
+            }
+        }
+    RtlFreeUnicodeString(&UnicodeString);
+    RtlFreeHeap(RtlProcessHeap(),Ubuff,0);
+#if 0
+DbgPrint( "RtlGetFullPath( %s => %s ", lpFileName, lpBuffer );
+if ( ARGUMENT_PRESENT( lpFilePart ) ) {
+    DbgPrint("fp %s\n",*lpFilePart ? *lpFilePart : "None");
+    }
+else {
+    DbgPrint("NOT SPECIFIED\n");
+    }
+#endif // 0
+    return UnicodeLength;
+}
+
+BOOLEAN
+RtlDosPathNameToNtPathName(
+    IN PSZ DosFileName,
+    OUT PSTRING NtFileName,
+    OUT PSZ *FilePart OPTIONAL,
+    OUT PRTL_RELATIVE_NAME RelativeName OPTIONAL
+    )
+
+/*++
+
+Routine Description:
+
+    A Dos pathname can be translated into an Nt style pathname
+    using this function.
+
+    This function is used only within the Base dll to translate Dos
+    pathnames to Nt pathnames. Upon successful translation, the
+    pointer (NtFileName->Buffer) points to memory from RtlProcessHeap()
+    that contains the Nt version of the input dos file name.
+
+Arguments:
+
+    DosFileName - Supplies the Dos style file name that is to be
+        translated into an equivalent Nt file  name.
+
+    NtFileName - Returns the address of memory in the RtlProcessHeap() that
+        contains an NT filename that refers to the specified Dos file
+        name.
+
+    FilePart - Optional parameter that if specified, returns the
+        trailing file portion of the file name.  A path of \foo\bar\x.x
+        returns the address of x.x as the file part.
+
+    RelativeName - An optional parameter, that if specified, returns
+        a pathname relative to the current directory of the file. The
+        length field of RelativeName->RelativeName is 0 if the relative
+        name can not be used.
+
+Return Value:
+
+    TRUE - The path name translation was successful.  Once the caller is
+        done with the translated name, the memory pointed to by
+        NtFileName.Buffer should be returned to the RtlProcessHeap().
+
+    FALSE - The operation failed.
+
+Note:
+    The buffers pointed to by RelativeName, FilePart, and NtFileName must ALL
+    point within the same memory address.  If they don't, code that calls
+    this routine will fail.
+
+--*/
+
+{
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeString;
+    UNICODE_STRING UnicodeResult;
+    ANSI_STRING AnsiString;
+    ANSI_STRING AnsiResult;
+    PWSTR UFilePart;
+    PWSTR *UFilePartPtr;
+    BOOLEAN b;
+
+    if ( ARGUMENT_PRESENT(FilePart) ) {
+        UFilePartPtr = &UFilePart;
+        }
+    else {
+        UFilePartPtr = NULL;
+        }
+
+    RtlInitString(&AnsiString,DosFileName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    b = RtlDosPathNameToNtPathName_U(
+                UnicodeString.Buffer,
+                &UnicodeResult,
+                UFilePartPtr,
+                RelativeName
+                );
+    if ( !b ) {
+        RtlFreeUnicodeString(&UnicodeString);
+        }
+
+    RtlUnicodeStringToAnsiString(&AnsiResult,&UnicodeResult,TRUE);
+    NtFileName->Buffer = RtlAllocateHeap(RtlProcessHeap(),AnsiResult.MaximumLength);
+    NtFileName->Length = AnsiResult.Length;
+    NtFileName->MaximumLength = AnsiResult.MaximumLength;
+    RtlMoveMemory(NtFileName->Buffer,AnsiResult.Buffer,AnsiResult.MaximumLength);
+    RtlFreeAnsiString(&AnsiResult);
+
+    if ( ARGUMENT_PRESENT(FilePart) ) {
+        if ( UFilePart == NULL ) {
+            *FilePart = NULL;
+            }
+        else {
+            *FilePart = (PSZ)(UFilePart - UnicodeResult.Buffer);
+            *FilePart = *FilePart + (ULONG)NtFileName->Buffer;
+            }
+        }
+
+    if ( ARGUMENT_PRESENT(RelativeName) ) {
+        if ( RelativeName->RelativeName.Length ) {
+            RelativeName->RelativeName.Buffer =
+                (PCHAR)((PWSTR)RelativeName->RelativeName.Buffer - UnicodeResult.Buffer);
+            RelativeName->RelativeName.Buffer =
+                RelativeName->RelativeName.Buffer + (ULONG)NtFileName->Buffer;
+            RelativeName->RelativeName.Length >>= 1;
+            RelativeName->RelativeName.MaximumLength >>= 1;
+            }
+        }
+    RtlFreeUnicodeString(&UnicodeString);
+    RtlFreeHeap(RtlProcessHeap(),UnicodeResult.Buffer,0);
+
+    return TRUE;
+}
+
+BOOLEAN
+RtlDoesFileExists(
+    PSZ FileName
+    )
+
+/*++
+
+Routine Description:
+
+    This function checks to see if the specified filename exists.
+
+Arguments:
+
+    FileName - Supplies the file name of the file to find.
+
+Return Value:
+
+    TRUE - The file was found.
+
+    FALSE - The file was not found.
+
+--*/
+
+{
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    BOOLEAN ReturnValue;
+
+    RtlInitString(&AnsiString,FileName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+
+    ReturnValue = RtlDoesFileExists_U(UnicodeString.Buffer);
+    RtlFreeUnicodeString(&UnicodeString);
+    return ReturnValue;
+}
+
+#endif // OLD
+
+ULONG
+RtlGetCurrentDirectory(
+    ULONG nBufferLength,
+    PSZ lpBuffer
+    )
+
+/*++
+
+Routine Description:
+
+    The current directory for a process can be retreived using
+    GetCurrentDirectory.
+
+Arguments:
+
+    nBufferLength - Supplies the length in bytes of the buffer that is to
+        receive the current directory string.
+
+    lpBuffer - Returns the current directory string for the current
+        process.  The string is a null terminated string and specifies
+        the absolute path to the current directory.
+
+Return Value:
+
+    The return value is the length of the string copied to lpBuffer, not
+    including the terminating null character.  If the return value is
+    greater than nBufferLength, the return value is the size of the buffer
+    required to hold the pathname.  The return value is zero if the
+    function failed.
+
+--*/
+
+{
+    PCURDIR CurDir;
+    ULONG Length;
+
+    CurDir = &(NtCurrentPeb()->ProcessParameters->CurrentDirectory);
+
+    RtlAcquirePebLock();
+
+    //
+    // Make sure user's buffer is big enough to hold the null
+    // terminated current directory
+    //
+
+    Length = CurDir->DosPath.Length;
+    if (CurDir->DosPath.Buffer[Length-2] != ':') {
+        if ( nBufferLength < Length-1 ) {
+            RtlReleasePebLock();
+            return Length-1;
+            }
+        }
+    else {
+        if ( nBufferLength < Length ) {
+            RtlReleasePebLock();
+            return Length;
+            }
+        }
+
+    try {
+        RtlMoveMemory(lpBuffer,CurDir->DosPath.Buffer,Length);
+        ASSERT(lpBuffer[Length-1] == '\\');
+        if (lpBuffer[Length-2] == ':') {
+            lpBuffer[Length] = '\0';
+            }
+        else {
+            lpBuffer[Length-1] = '\0';
+            Length--;
+            }
+        }
+    except (EXCEPTION_EXECUTE_HANDLER) {
+        RtlReleasePebLock();
+        return 0L;
+        }
+    RtlReleasePebLock();
+    return Length;
+}
+
+NTSTATUS
+RtlSetCurrentDirectory(
+    PSZ lpPathName
+    )
+
+/*++
+
+Routine Description:
+
+    The current directory for a process is changed using
+    SetCurrentDirectory.
+
+    Each process has a single current directory.  A current directory is
+    made up of type parts.
+
+        - A disk designator either which is either a drive letter followed
+          by a colon, or a UNC servername/sharename "\\servername\sharename".
+
+        - A directory on the disk designator.
+
+    For APIs that manipulate files, the file names may be relative to
+    the current directory.  A filename is relative to the entire current
+    directory if it does not begin with a disk designator or a path name
+    SEPARATOR.  If the file name begins with a path name SEPARATOR, then
+    it is relative to the disk designator of the current directory.  If
+    a file name begins with a disk designator, than it is a fully
+    qualified absolute path name.
+
+    The value of lpPathName supplies the current directory.  The value
+    of lpPathName, may be a relative path name as described above, or a
+    fully qualified absolute path name.  In either case, the fully
+    qualified absolute path name of the specified directory is
+    calculated and is stored as the current directory.
+
+Arguments:
+
+    lpPathName - Supplies the pathname of the directory that is to be
+        made the current directory.
+
+Return Value:
+
+    NT_SUCCESS - The operation was successful
+
+    !NT_SUCCESS - The operation failed
+
+--*/
+
+{
+    PCURDIR CurDir;
+    NTSTATUS Status;
+    BOOLEAN TranslationStatus;
+    PVOID FreeBuffer;
+    ULONG DosDirLength;
+    STRING DosDir;
+    STRING NtFileName;
+    HANDLE NewDirectoryHandle;
+    OBJECT_ATTRIBUTES Obja;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    CurDir = &(NtCurrentPeb()->ProcessParameters->CurrentDirectory);
+
+    DosDir.Buffer = NULL;
+    FreeBuffer = NULL;
+    NewDirectoryHandle = NULL;
+
+    RtlAcquirePebLock();
+    try {
+        try {
+
+            //
+            // Compute the length of the Dos style fully qualified current
+            // directory
+            //
+
+            DosDirLength = CurDir->DosPath.MaximumLength;
+            DosDir.Buffer = RtlAllocateHeap(RtlProcessHeap(),DosDirLength);
+            DosDir.Length = 0;
+            DosDir.MaximumLength = (USHORT)DosDirLength;
+
+            //
+            // Now get the full pathname for the Dos style current
+            // directory
+            //
+            RtlpLastDosPath.Length = 0;
+
+            DosDirLength = RtlGetFullPathName(
+                                lpPathName,
+                                DosDirLength,
+                                DosDir.Buffer,
+                                NULL
+                                );
+
+            //
+            // Get the Nt filename of the new current directory
+            //
+
+            TranslationStatus = RtlDosPathNameToNtPathName(
+                                    DosDir.Buffer,
+                                    &NtFileName,
+                                    NULL,
+                                    NULL
+                                    );
+
+            if ( !TranslationStatus ) {
+                return STATUS_OBJECT_NAME_INVALID;
+                }
+            FreeBuffer = NtFileName.Buffer;
+
+            InitializeObjectAttributes(
+                &Obja,
+                &NtFileName,
+                OBJ_CASE_INSENSITIVE,
+                NULL,
+                NULL
+                );
+
+            //
+            // Open a handle to the current directory. Don't allow
+            // deletes of the directory.
+            //
+
+            Status = NtOpenFile(
+                        &NewDirectoryHandle,
+                        FILE_LIST_DIRECTORY | SYNCHRONIZE,
+                        &Obja,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT
+                        );
+
+            if ( !NT_SUCCESS(Status) ) {
+                return Status;
+                }
+
+            //
+            // If there is no trailing '\', than place one
+            //
+
+            if ( DosDir.Buffer[DosDirLength] != '\\' &&
+                 DosDir.Buffer[DosDirLength-1] != '\\') {
+                DosDir.Buffer[DosDirLength] = '\\';
+                DosDir.Buffer[DosDirLength+1] = '\0';
+                DosDir.Length = (USHORT)(DosDirLength + 1L);
+                }
+            else {
+                DosDir.Length = (USHORT)DosDirLength;
+                }
+
+            //
+            // Now we are set to change to the new directory.
+            //
+
+            RtlMoveMemory( CurDir->DosPath.Buffer, DosDir.Buffer, DosDir.Length+1 );
+            CurDir->DosPath.Length = DosDir.Length;
+
+            if ( CurDir->Handle ) {
+                NtClose(CurDir->Handle);
+                }
+            CurDir->Handle = NewDirectoryHandle;
+            NewDirectoryHandle = NULL;
+
+            return STATUS_SUCCESS;
+            }
+        finally {
+            if ( DosDir.Buffer ) {
+                RtlFreeHeap(RtlProcessHeap(), DosDir.Buffer, 0L);
+                }
+            if ( FreeBuffer ) {
+                RtlFreeHeap(RtlProcessHeap(), FreeBuffer, 0L);
+                }
+            if ( NewDirectoryHandle ) {
+                NtClose(NewDirectoryHandle);
+                }
+            RtlReleasePebLock();
+            }
+        }
+    except (EXCEPTION_EXECUTE_HANDLER) {
+        return STATUS_ACCESS_VIOLATION;
+        }
+}
+
+
+ULONG
+RtlDosSearchPath(
+    PSZ lpPath,
+    PSZ lpFileName,
+    PSZ lpExtension,
+    ULONG nBufferLength,
+    PSZ lpBuffer,
+    PSZ *lpFilePart OPTIONAL
+    )
+
+/*++
+
+Routine Description:
+
+    This function is used to search for a file specifying a search path
+    and a filename.  It returns with a fully qualified pathname of the
+    found file.
+
+    This function is used to locate a file using the specified path.  If
+    the file is found, its fully qualified pathname is returned.  In
+    addition to this, it calculates the address of the file name portion
+    of the fully qualified pathname.
+
+Arguments:
+
+    lpPath - Supplies the search path to be used when locating the file.
+
+    lpFileName - Supplies the file name of the file to search for.
+
+    lpExtension - An optional parameter, that if specified, supplies an
+        extension to be added to the filename when doing the search.
+        The extension is only added if the specified filename does not
+        end with an extension.
+
+    nBufferLength - Supplies the length in bytes of the buffer that is
+        to receive the fully qualified path.
+
+    lpBuffer - Returns the fully qualified pathname corresponding to the
+        file that was found.
+
+    lpFilePart - Optional parameter that if specified, returns the
+        address of the last component of the fully qualified pathname.
+
+Return Value:
+
+    The return value is the length of the string copied to lpBuffer, not
+    including the terminating null character.  If the return value is
+    greater than nBufferLength, the return value is the size of the buffer
+    required to hold the pathname.  The return value is zero if the
+    function failed.
+
+
+--*/
+
+{
+
+    PSZ ComputedFileName;
+    ULONG ExtensionLength;
+    ULONG PathLength;
+    ULONG FileLength;
+    PSZ p;
+
+    //
+    // if the file name is not a relative name, then
+    // return an if the file does not exist.
+    //
+
+    if ( RtlDetermineDosPathNameType(lpFileName) != RtlPathTypeRelative ) {
+        if (RtlDoesFileExists(lpFileName) ) {
+            PathLength = RtlGetFullPathName(
+                           lpFileName,
+                           nBufferLength,
+                           lpBuffer,
+                           lpFilePart
+                           );
+            return PathLength;
+            }
+        else {
+            return 0;
+            }
+        }
+
+    //
+    // Determine if the file name contains an extension
+    //
+
+    ExtensionLength = 1;
+    p = lpFileName;
+    while (*p) {
+        if ( *p == '.' ) {
+            ExtensionLength = 0;
+            break;
+            }
+        p++;
+        }
+
+    //
+    // If no extension was found, then determine the extension length
+    // that should be used to search for the file
+    //
+
+    if ( ExtensionLength ) {
+        if ( ARGUMENT_PRESENT(lpExtension) ) {
+            ExtensionLength = strlen(lpExtension);
+            }
+        }
+    else {
+        ExtensionLength = 0;
+        }
+
+    //
+    // Compute the file name length and the path length;
+    //
+
+    PathLength = strlen(lpPath);
+    FileLength = strlen(lpFileName);
+
+    ComputedFileName = RtlAllocateHeap(
+                            RtlProcessHeap(),
+                            PathLength + FileLength + ExtensionLength + 3
+                            );
+
+    //
+    // find ; 's in path and copy path component to computed file name
+    //
+
+    do {
+        p = ComputedFileName;
+        while (*lpPath) {
+            if (*lpPath == ';') {
+                lpPath++;
+                break;
+                }
+            *p++ = *lpPath++;
+            }
+
+        if (p != ComputedFileName &&
+            p [ -1 ] != '\\' ) {
+            *p++ = '\\';
+            }
+        if (*lpPath == '\0') {
+            lpPath = NULL;
+            }
+        RtlMoveMemory(p,lpFileName,FileLength);
+        if ( ExtensionLength ) {
+            RtlMoveMemory(p+FileLength,lpExtension,ExtensionLength+1);
+            }
+        else {
+            *(p+FileLength) = '\0';
+            }
+
+        if (RtlDoesFileExists(ComputedFileName) ) {
+            PathLength = RtlGetFullPathName(
+                           ComputedFileName,
+                           nBufferLength,
+                           lpBuffer,
+                           lpFilePart
+                           );
+            RtlFreeHeap(RtlProcessHeap(), ComputedFileName, 0);
+            return PathLength;
+            }
+        }
+    while ( lpPath );
+
+    RtlFreeHeap(RtlProcessHeap(), ComputedFileName, 0);
+    return 0;
+}
+
+
+RTL_PATH_TYPE
+RtlDetermineDosPathNameType_U(
+    IN PWSTR DosFileName
+    )
+
+/*++
+
+Routine Description:
+
+    This function examines the Dos format file name and determines the
+    type of file name (i.e.  UNC, DriveAbsolute, Current Directory
+    rooted, or Relative.
+
+Arguments:
+
+    DosFileName - Supplies the Dos format file name whose type is to be
+        determined.
+
+Return Value:
+
+    RtlPathTypeUnknown - The path type can not be determined
+
+    RtlPathTypeUncAbsolute - The path specifies a Unc absolute path
+        in the format \\server-name\sharename\rest-of-path
+
+    RtlPathTypeLocalDevice - The path specifies a local device in the format
+        \\.\rest-of-path this can be used for any device where the nt and
+        Win32 names are the same. For example mailslots.
+
+    RtlPathTypeRootLocalDevice - The path specifies the root of the local
+        devices in the format \\.
+
+    RtlPathTypeDriveAbsolute - The path specifies a drive letter absolute
+        path in the form drive:\rest-of-path
+
+    RtlPathTypeDriveRelative - The path specifies a drive letter relative
+        path in the form drive:rest-of-path
+
+    RtlPathTypeRooted - The path is rooted relative to the current disk
+        designator (either Unc disk, or drive). The form is \rest-of-path.
+
+    RtlPathTypeRelative - The path is relative (i.e. not absolute or rooted).
+
+--*/
+
+{
+
+    RTL_PATH_TYPE ReturnValue;
+
+    if ( IS_PATH_SEPARATOR_U(*DosFileName) ) {
+        if ( IS_PATH_SEPARATOR_U(*(DosFileName+1)) ) {
+            if ( DosFileName[2] == '.' ) {
+                if ( IS_PATH_SEPARATOR_U(*(DosFileName+3)) ){
+                    ReturnValue = RtlPathTypeLocalDevice;
+                    }
+                else if ( (*(DosFileName+3)) == UNICODE_NULL ){
+                    ReturnValue = RtlPathTypeRootLocalDevice;
+                    }
+                else {
+                    ReturnValue = RtlPathTypeUncAbsolute;
+                    }
+                }
+            else {
+                ReturnValue = RtlPathTypeUncAbsolute;
+                }
+            }
+        else {
+            ReturnValue = RtlPathTypeRooted;
+            }
+        }
+    else if (*(DosFileName+1)==(WCHAR)':') {
+            if (IS_PATH_SEPARATOR_U(*(DosFileName+2))) {
+                ReturnValue = RtlPathTypeDriveAbsolute;
+                }
+            else  {
+                ReturnValue = RtlPathTypeDriveRelative;
+                }
+            }
+    else {
+        ReturnValue = RtlPathTypeRelative;
+        }
+    return ReturnValue;
+}
+
+ULONG
+RtlIsDosDeviceName_U(
+    IN PWSTR DosFileName
+    )
+
+/*++
+
+Routine Description:
+
+    This function examines the Dos format file name and determines if it
+    is a Dos device name (e.g. LPT1, etc.).  Valid Dos device names are:
+
+        LPTn
+        COMn
+        PRN
+        AUX
+        NUL
+
+    when n is a digit.  Trailing colon is ignored if present.
+
+Arguments:
+
+    DosFileName - Supplies the Dos format file name that is to be examined.
+
+Return Value:
+
+    0 - Specified Dos file name is not the name of a Dos device.
+
+    > 0 - Specified Dos file name is the name of a Dos device and the
+          return value is the length of the name (excluding any optional
+          trailing colon).
+
+--*/
+
+{
+    UNICODE_STRING UnicodeString;
+    ULONG NumberOfCharacters;
+    ULONG ReturnLength;
+
+    RtlInitUnicodeString(&UnicodeString,DosFileName);
+
+    NumberOfCharacters = UnicodeString.Length >> 1;
+
+    if (NumberOfCharacters && DosFileName[NumberOfCharacters-1] == (WCHAR)':') {
+        NumberOfCharacters--;
+        }
+    ReturnLength = NumberOfCharacters << 1;
+
+    if ( NumberOfCharacters == 4 && isdigit( (WCHAR)DosFileName[3] ) ) {
+        UnicodeString.Length -= sizeof(WCHAR);
+        if ( !RtlCompareString((PSTRING)&UnicodeString,(PSTRING)&RtlpDosDevices[ DOS_DEVICE_LPT ],TRUE) ||
+             !RtlCompareString((PSTRING)&UnicodeString,(PSTRING)&RtlpDosDevices[ DOS_DEVICE_COM ],TRUE) ) {
+            ;
+            }
+        else {
+            ReturnLength = 0;
+            }
+        }
+    else
+    if ( NumberOfCharacters != 3 ) {
+        ReturnLength = 0;
+        }
+    else
+    if ( !RtlCompareString((PSTRING)&UnicodeString,(PSTRING)&RtlpDosDevices[ DOS_DEVICE_PRN ],TRUE) ) {
+        ;
+        }
+    else
+    if ( !RtlCompareString((PSTRING)&UnicodeString,(PSTRING)&RtlpDosDevices[ DOS_DEVICE_AUX ],TRUE) ) {
+        ;
+        }
+    else
+    if ( !RtlCompareString((PSTRING)&UnicodeString,(PSTRING)&RtlpDosDevices[ DOS_DEVICE_NUL ],TRUE) ) {
+        ;
+        }
+    else {
+        ReturnLength = 0;
+        }
+    return ReturnLength;
+}
+
+ULONG
+RtlGetFullPathName_U(
+    PWSTR lpFileName,
+    ULONG nBufferLength,
+    PWSTR lpBuffer,
+    PWSTR *lpFilePart OPTIONAL
+    )
+
+/*++
+
+Routine Description:
+
+    This function is used to return a fully qualified pathname
+    corresponding to the specified unicode filename.  It does this by
+    merging the current drive and directory together with the specified
+    file name.  In addition to this, it calculates the address of the
+    file name portion of the fully qualified pathname.
+
+Arguments:
+
+    lpFileName - Supplies the unicode file name of the file whose fully
+        qualified pathname is to be returned.
+
+    nBufferLength - Supplies the length in bytes of the buffer that is
+        to receive the fully qualified path.
+
+    lpBuffer - Returns the fully qualified pathname corresponding to the
+        specified file.
+
+    lpFilePart - Optional parameter that if specified, returns the
+        address of the last component of the fully qualified pathname.
+
+Return Value:
+
+    The return value is the length of the string copied to lpBuffer, not
+    including the terminating unicode null character.  If the return
+    value is greater than nBufferLength, the return value is the size of
+    the buffer required to hold the pathname.  The return value is zero
+    if the function failed.
+
+--*/
+
+{
+    ULONG DeviceNameLength;
+    ULONG PrefixSourceLength;
+    LONG PathNameLength;
+    UCHAR CurDrive, NewDrive;
+    UCHAR EnvVarNameBuffer[4];
+    STRING EnvVarName;
+    PWSTR Source,Dest;
+    UNICODE_STRING Prefix;
+    PCURDIR CurDir;
+    ULONG MaximumLength;
+    UNICODE_STRING FullPath;
+    ULONG BackupIndex;
+    RTL_PATH_TYPE PathType;
+    NTSTATUS Status;
+    BOOLEAN StripTrailingSlash;
+    UNICODE_STRING UnicodeString,DeleteMe;
+    ULONG NumberOfCharacters;
+
+    DeleteMe.Buffer = NULL;
+    RtlInitUnicodeString(&UnicodeString,lpFileName);
+
+    NumberOfCharacters = UnicodeString.Length >> 1;
+    PathNameLength = UnicodeString.Length;
+
+    if ( PathNameLength == 0 ) {
+        return 0;
+        }
+
+    if ( lpFileName[NumberOfCharacters-1] == (WCHAR)'\\' ) {
+        StripTrailingSlash = FALSE;
+        }
+    else {
+        StripTrailingSlash = TRUE;
+        }
+
+    //
+    // If pass Dos file name is a Dos device name, then turn it into
+    // \\.\devicename and return its length.
+    //
+
+    DeviceNameLength = RtlIsDosDeviceName_U(lpFileName);
+    if ( DeviceNameLength ) {
+
+        PathNameLength = DeviceNameLength + RtlpSlashSlashDot.Length;
+        if ( PathNameLength <= (LONG)nBufferLength ) {
+            RtlMoveMemory(
+                lpBuffer,
+                RtlpSlashSlashDot.Buffer,
+                RtlpSlashSlashDot.Length
+                );
+            RtlMoveMemory(
+                (PVOID)((PUCHAR)lpBuffer+RtlpSlashSlashDot.Length),
+                lpFileName,
+                DeviceNameLength+sizeof(UNICODE_NULL)
+                );
+
+            return PathNameLength;
+            }
+        else {
+            return PathNameLength+1;
+            }
+        }
+
+    //
+    // Setup output string that points to callers buffer.
+    //
+
+    FullPath.MaximumLength = (USHORT)nBufferLength;
+    FullPath.Length = 0;
+    FullPath.Buffer = lpBuffer;
+    RtlZeroMemory(lpBuffer,nBufferLength);
+    //
+    // Get a pointer to the current directory structure.
+    //
+
+    CurDir = &(NtCurrentPeb()->ProcessParameters->CurrentDirectory);
+
+
+    //
+    // Determine the type of Dos Path Name specified.
+    //
+
+    PathType = RtlDetermineDosPathNameType_U(lpFileName);
+
+    //
+    // Determine the prefix and backup index.
+    //
+    //  Input        Prefix                     Backup Index
+    //
+    //  \\        -> \\,                            end of \\server\share
+    //  \\.\      -> \\.\,                          4
+    //  \\.       -> \\.                            3 (\\.)
+    //  \         -> Drive: from CurDir.DosPath     3 (Drive:\)
+    //  d:        -> Drive:\curdir from environment 3 (Drive:\)
+    //  d:\       -> no prefix                      3 (Drive:\)
+    //  any       -> CurDir.DosPath                 3 (Drive:\)
+    //
+
+    try {
+        RtlAcquirePebLock();
+
+        //
+        // No prefixes yet.
+        //
+
+        Source = lpFileName;
+        PrefixSourceLength = 0;
+        Prefix.Length = 0;
+        Prefix.MaximumLength = 0;
+        Prefix.Buffer = NULL;
+
+        switch (PathType) {
+            case RtlPathTypeUncAbsolute :
+                {
+                    PWSTR UncPathPointer;
+                    ULONG NumberOfPathSeparators;
+
+                    //
+                    // We want to scan the supplied path to determine where
+                    // the "share" ends, and set BackupIndex to that point.
+                    //
+
+                    UncPathPointer = lpFileName + 2;
+                    NumberOfPathSeparators = 0;
+                    while (*UncPathPointer) {
+                        if (IS_PATH_SEPARATOR_U(*UncPathPointer)) {
+
+                            NumberOfPathSeparators++;
+
+                            if (NumberOfPathSeparators == 2) {
+                                break;
+                                }
+                            }
+
+                        UncPathPointer++;
+
+                        }
+
+                    BackupIndex = (UncPathPointer - lpFileName) >> 1;
+
+                    //
+                    // Unc name. prefix = \\server\share
+                    //
+
+                    PrefixSourceLength = BackupIndex << 1;
+                    Source += BackupIndex;
+
+                    }
+                break;
+
+            case RtlPathTypeLocalDevice :
+
+                //
+                // Local device name. prefix = \\.\
+                //
+
+                PrefixSourceLength = RtlpSlashSlashDot.Length;
+                BackupIndex = 4;
+                Source += BackupIndex;
+                break;
+
+            case RtlPathTypeRootLocalDevice :
+
+                //
+                // Local Device root. prefix = \\.\
+                //
+
+
+                Prefix = RtlpSlashSlashDot;
+                Prefix.Length = (USHORT)(Prefix.Length - (USHORT)(2*sizeof(UNICODE_NULL)));
+                PrefixSourceLength = Prefix.Length + sizeof(UNICODE_NULL);
+                BackupIndex = 3;
+                Source += BackupIndex;
+                break;
+
+            case RtlPathTypeDriveAbsolute :
+
+                //
+                // Dos drive absolute name
+                //
+
+                BackupIndex = 3;
+                break;
+
+            case RtlPathTypeDriveRelative :
+
+                //
+                // Dos drive relative name
+                //
+   //
+   // BUGBUG CURDIR ASSUMED ANSI
+   //
+                CurDrive = (UCHAR)toupper( CurDir->DosPath.Buffer[0] );
+                NewDrive = (UCHAR)toupper( (UCHAR)lpFileName[0] );
+                if ( CurDrive == NewDrive ) {
+                    RtlAnsiStringToUnicodeString(
+                        &DeleteMe,
+                        (PANSI_STRING)&CurDir->DosPath,
+                        TRUE
+                        );
+                    Prefix = DeleteMe;
+                    }
+
+                else {
+                    EnvVarNameBuffer[0] = '=';
+                    EnvVarNameBuffer[1] = NewDrive;
+                    EnvVarNameBuffer[2] = ':';
+                    EnvVarNameBuffer[3] = '\0';
+                    RtlInitString(&EnvVarName,EnvVarNameBuffer);
+
+                    Prefix = FullPath;
+                    Status = RtlQueryEnvironmentVariable( NULL,
+                                                          &EnvVarName,
+                                                          (PSTRING)&Prefix
+                                                        );
+                    if ( !NT_SUCCESS( Status ) ) {
+                        if (Status == STATUS_BUFFER_TOO_SMALL) {
+                            return (Prefix.Length*2) + PathNameLength + 2;
+                            }
+                        else {
+                            //
+                            // Otherwise default to root directory of drive
+                            //
+
+                            EnvVarNameBuffer[0] = NewDrive;
+                            EnvVarNameBuffer[1] = ':';
+                            EnvVarNameBuffer[2] = '\\';
+                            EnvVarNameBuffer[3] = '\0';
+                            RtlInitAnsiString((PANSI_STRING)&Prefix,EnvVarNameBuffer);
+                            RtlAnsiStringToUnicodeString(
+                                &DeleteMe,
+                                (PANSI_STRING)&Prefix,
+                                TRUE
+                                );
+                            Prefix = DeleteMe;
+                            }
+                        }
+                    else {
+
+                        RtlAnsiStringToUnicodeString(
+                            &DeleteMe,
+                            (PANSI_STRING)&Prefix,
+                            TRUE
+                            );
+                        Prefix = DeleteMe;
+
+                            {
+                            ULONG LastChar;
+
+                            //
+                            // Determine
+                            // if a backslash needs to be added
+                            //
+
+                            LastChar = Prefix.Length >> 1;
+
+                            if (LastChar > 3) {
+                                Prefix.Buffer[ LastChar ] = (WCHAR)'\\';
+                                Prefix.Length += sizeof(UNICODE_NULL);
+                                }
+                            }
+
+                        }
+                    }
+
+                BackupIndex = 3;
+                Source += 2;
+                break;
+
+            case RtlPathTypeRooted :
+
+                //
+                // Rooted name. Prefix is drive portion of current directory
+                //
+                RtlAnsiStringToUnicodeString(
+                    &DeleteMe,
+                    (PANSI_STRING)&CurDir->DosPath,
+                    TRUE
+                    );
+                Prefix = DeleteMe;
+                Prefix.Length = 2*sizeof(UNICODE_NULL);
+                BackupIndex = 3;
+                break;
+
+            case RtlPathTypeRelative :
+
+                //
+                // Current drive:directory relative name
+                //
+
+                RtlAnsiStringToUnicodeString(
+                    &DeleteMe,
+                    (PANSI_STRING)&CurDir->DosPath,
+                    TRUE
+                    );
+                Prefix = DeleteMe;
+                BackupIndex = 3;
+                break;
+
+            default:
+                return 0;
+
+            }
+
+        //
+        // Maximum length required is the length of the prefix plus
+        // the length of the specified pathname. If the callers buffer
+        // is not at least this large, then return an error.
+        //
+
+        MaximumLength = PathNameLength + Prefix.Length;
+
+        if ( MaximumLength > nBufferLength ) {
+            if ( (MaximumLength - nBufferLength != sizeof(UNICODE_NULL)) ||
+                 (NumberOfCharacters > 1) ||
+                 (*lpFileName != (WCHAR)'.') ) {
+                return MaximumLength;
+                }
+            }
+
+        if (PrefixSourceLength || Prefix.Buffer != FullPath.Buffer) {
+            //
+            // Copy the prefix from the source string.
+            //
+
+            RtlMoveMemory(FullPath.Buffer,lpFileName,PrefixSourceLength);
+            FullPath.Length = (USHORT)PrefixSourceLength;
+
+            //
+            // Append any additional prefix
+            //
+
+            RtlAppendStringToString((PSTRING)&FullPath,(PSTRING)&Prefix);
+            }
+        else {
+            FullPath.Length = Prefix.Length;
+            }
+
+        Dest =  (PWSTR)((PUCHAR)FullPath.Buffer + FullPath.Length);
+        *Dest = UNICODE_NULL;
+
+        while ( *Source ) {
+            switch ( *Source ) {
+
+            case (WCHAR)'\\' :
+            case (WCHAR)'/' :
+
+                //
+                // collapse multiple "\" characters.
+                //
+
+                if  ( *(Dest-1) != (WCHAR)'\\' ) {
+                    *Dest++ = (WCHAR)'\\';
+                    }
+
+                Source++;
+                break;
+
+            case '.' :
+
+                //
+                // Ignore dot in a leading //./
+                // Eat single dots as in /./
+                // Double dots back up one level as in /../
+                // Any other . is just a filename character
+                //
+                if ( IS_DOT_U(Source) ) {
+                    Source++;
+                    if (IS_PATH_SEPARATOR_U(*Source)) {
+                        Source++;
+                        }
+                    break;
+                    }
+                else if ( IS_DOT_DOT_U(Source) ) {
+                    //
+                    // backup destination string looking for
+                    // a \
+                    //
+
+                    while (*Dest != (WCHAR)'\\') Dest--;
+
+                    //
+                    // backup to previous component..
+                    // \a\b\c\.. to \a\b
+                    //
+
+                    do {
+
+                        //
+                        // If we bump into root prefix, then
+                        // stay at root
+                        //
+
+                        if ( Dest ==  FullPath.Buffer + (BackupIndex-1) ) {
+                            break;
+                            }
+
+                        Dest--;
+
+                        } while (*Dest != (WCHAR)'\\');
+                    if ( Dest ==  FullPath.Buffer + (BackupIndex-1) ) {
+                        Dest++;
+                        }
+
+                    //
+                    // Advance source past ..
+                    //
+
+                    Source += 2;
+
+                    break;
+                    }
+
+                //
+                // FALLTHRU
+                //
+
+            default:
+
+                //
+                // Copy the filename. The copy will stop
+                // on "non-portable" characters. Note that
+                // null and /,\ will stop the copy. If any
+                // charcter other than null or /,\ is encountered,
+                // then the pathname is invalid.
+                //
+
+                while ( *Source && !IS_PATH_SEPARATOR_U(*Source) ) {
+                    *Dest++ = *Source++;
+                    }
+                }
+            }
+
+        *Dest = UNICODE_NULL;
+
+        if ( StripTrailingSlash ) {
+            if ( Dest > (FullPath.Buffer + BackupIndex ) && *(Dest-1) == (WCHAR)'\\' ) {
+                Dest--;
+                *Dest = UNICODE_NULL;
+                }
+            }
+        FullPath.Length = (USHORT)Dest - (USHORT)FullPath.Buffer;
+
+        //
+        // Locate the file part...
+        //
+
+        Source = lpBuffer;
+        Dest = NULL;
+
+        while(*Source) {
+            if ( *Source == (WCHAR)'\\' ) {
+                Dest = Source + 1;
+                }
+            Source++;
+            }
+
+        if ( ARGUMENT_PRESENT( lpFilePart ) ) {
+            if ( Dest && *Dest ) {
+                *lpFilePart = Dest;
+                }
+            else {
+                *lpFilePart = NULL;
+                }
+            }
+        }
+    finally {
+        if ( DeleteMe.Buffer ) {
+            RtlFreeUnicodeString(&DeleteMe);
+            }
+        RtlReleasePebLock();
+        }
+
+    return FullPath.Length;
+}
+
+ULONG
+RtlGetCurrentDirectory_U(
+    ULONG nBufferLength,
+    PWSTR lpBuffer
+    )
+{
+    return 0;
+}
+
+NTSTATUS
+RtlSetCurrentDirectory_U(
+    PSTRING PathName
+    )
+{
+    NTSTATUS Status;
+    ANSI_STRING CurDirA;
+
+    Status = RtlUnicodeStringToAnsiString(
+                &CurDirA,
+                (PUNICODE_STRING)PathName,
+                TRUE
+                );
+    if ( NT_SUCCESS(Status) ) {
+        Status = RtlSetCurrentDirectory(CurDirA.Buffer);
+        RtlFreeAnsiString(&CurDirA);
+        }
+    return Status;
+}
+
+BOOLEAN
+RtlDosPathNameToNtPathName_U(
+    IN PWSTR DosFileName,
+    OUT PUNICODE_STRING NtFileName,
+    OUT PWSTR *FilePart OPTIONAL,
+    OUT PRTL_RELATIVE_NAME RelativeName OPTIONAL
+    )
+
+/*++
+
+Routine Description:
+
+    A Dos pathname can be translated into an Nt style pathname
+    using this function.
+
+    This function is used only within the Base dll to translate Dos
+    pathnames to Nt pathnames. Upon successful translation, the
+    pointer (NtFileName->Buffer) points to memory from RtlProcessHeap()
+    that contains the Nt version of the input dos file name.
+
+Arguments:
+
+    DosFileName - Supplies the unicode Dos style file name that is to be
+        translated into an equivalent unicode Nt file name.
+
+    NtFileName - Returns the address of memory in the RtlProcessHeap() that
+        contains an NT filename that refers to the specified Dos file
+        name.
+
+    FilePart - Optional parameter that if specified, returns the
+        trailing file portion of the file name.  A path of \foo\bar\x.x
+        returns the address of x.x as the file part.
+
+    RelativeName - An optional parameter, that if specified, returns
+        a pathname relative to the current directory of the file. The
+        length field of RelativeName->RelativeName is 0 if the relative
+        name can not be used.
+
+Return Value:
+
+    TRUE - The path name translation was successful.  Once the caller is
+        done with the translated name, the memory pointed to by
+        NtFileName.Buffer should be returned to the RtlProcessHeap().
+
+    FALSE - The operation failed.
+
+Note:
+    The buffers pointed to by RelativeName, FilePart, and NtFileName must ALL
+    point within the same memory address.  If they don't, code that calls
+    this routine will fail.
+
+--*/
+
+{
+
+    ULONG BufferLength;
+    ULONG DosPathLength;
+    PWSTR FullNtPathName = NULL;
+    PWSTR FullDosPathName = NULL;
+    UNICODE_STRING Prefix;
+    UNICODE_STRING UnicodeFilePart;
+    UNICODE_STRING DeleteMe;
+    UNICODE_STRING FullDosPathString;
+    PCURDIR CurDir;
+    RTL_PATH_TYPE DosPathType;
+    ULONG DosPathNameOffset;
+    ULONG FullDosPathNameLength;
+    ULONG LastCharacter;
+
+    //
+    // Calculate the size needed for the full pathname. Add in
+    // space for the longest Nt prefix
+    //
+    DeleteMe.Buffer = NULL;
+
+    DosPathLength = BufferLength = RtlGetFullPathName_U(
+                                        DosFileName,
+                                        0,
+                                        NULL,
+                                        FilePart
+                                        )+sizeof(UNICODE_NULL);
+
+    if ( !BufferLength ) {
+        return FALSE;
+        }
+
+
+    try {
+
+        RtlAcquirePebLock();
+
+        //
+        // The dos name starts just after the longest Nt prefix
+        //
+
+        FullDosPathName = RtlAllocateHeap(RtlProcessHeap(), BufferLength);
+
+        if ( !FullDosPathName ) {
+            return FALSE;
+            }
+
+        BufferLength += RtlpLongestPrefix;
+
+        //
+        // Allocate space for the full Nt Name (including DOS name portion)
+        //
+
+        FullNtPathName = RtlAllocateHeap(RtlProcessHeap(), BufferLength);
+
+        if ( !FullNtPathName ) {
+            return FALSE;
+            }
+
+        FullDosPathNameLength = RtlGetFullPathName_U(
+                                    DosFileName,
+                                    DosPathLength,
+                                    FullDosPathName,
+                                    FilePart
+                                    );
+
+        if ( !FullDosPathNameLength ||
+              FullDosPathNameLength > DosPathLength ) {
+            return FALSE;
+            }
+
+        //
+        // Determine how to format prefix of FullNtPathName base on the
+        // the type of Dos path name.  All Nt names begin in the \DosDevices
+        // directory.
+        //
+
+        Prefix = RtlpDosDevicesPrefix;
+
+        DosPathType = RtlDetermineDosPathNameType_U(FullDosPathName);
+
+        switch (DosPathType) {
+            case RtlPathTypeUncAbsolute :
+
+                //
+                // Unc name, use \DosDevices\UNC symbolic link to find
+                // redirector.  Skip of \\ in source Dos path.
+                //
+
+                Prefix = RtlpDosDevicesUncPrefix;
+                DosPathNameOffset = 2;
+                break;
+
+            case RtlPathTypeLocalDevice :
+
+                //
+                // Local device name, so just use \DosDevices prefix and
+                // skip \\.\ in source Dos path.
+                //
+
+                DosPathNameOffset = 4;
+                break;
+
+            case RtlPathTypeRootLocalDevice :
+
+                ASSERT( FALSE );
+                break;
+
+            case RtlPathTypeDriveAbsolute :
+            case RtlPathTypeDriveRelative :
+            case RtlPathTypeRooted :
+            case RtlPathTypeRelative :
+
+                //
+                // All drive references just use \DosDevices prefix and
+                // do not skip any of the characters in the source Dos path.
+                //
+
+                DosPathNameOffset = 0;
+                break;
+
+            default:
+                ASSERT( FALSE );
+            }
+
+        //
+        // Copy the full DOS path next to the name prefix, skipping over
+        // the "\\" at the front of the UNC path or the "\\.\" at the front
+        // of a device name.
+        //
+
+        RtlMoveMemory(FullNtPathName,Prefix.Buffer,Prefix.Length);
+        RtlMoveMemory((PUCHAR)FullNtPathName+Prefix.Length,
+                      FullDosPathName + DosPathNameOffset,
+                      FullDosPathNameLength - (DosPathNameOffset<<1));
+
+        //
+        // Null terminate the path name to make strlen below happy.
+        //
+
+
+        NtFileName->Buffer = FullNtPathName;
+        NtFileName->Length = (USHORT)(FullDosPathNameLength-(DosPathNameOffset<<1))+Prefix.Length;
+        NtFileName->MaximumLength = (USHORT)BufferLength;
+        LastCharacter = NtFileName->Length >> 1;
+        FullNtPathName[ LastCharacter ] = UNICODE_NULL;
+
+
+        //
+        // Readjust the file part to point to the appropriate position within
+        // the FullNtPathName buffer instead of inside the FullDosPathName
+        // buffer
+        //
+
+
+        if ( ARGUMENT_PRESENT(FilePart) ) {
+            if (*FilePart) {
+                 RtlInitUnicodeString(&UnicodeFilePart,*FilePart);
+                *FilePart = &FullNtPathName[ LastCharacter ] - (UnicodeFilePart.Length >> 1);
+                }
+            }
+
+        if ( ARGUMENT_PRESENT(RelativeName) ) {
+
+            //
+            // If the current directory is a sub-string of the
+            // Nt file name, and if a handle exists for the current
+            // directory, then return the directory handle and name
+            // relative to the directory.
+            //
+
+            RelativeName->RelativeName.Length = 0;
+            RelativeName->RelativeName.MaximumLength = 0;
+            RelativeName->RelativeName.Buffer = 0;
+            RelativeName->ContainingDirectory = NULL;
+
+            CurDir = &(NtCurrentPeb()->ProcessParameters->CurrentDirectory);
+
+            if ( CurDir->Handle ) {
+
+                //
+                // Until unicode curdir...
+                //
+
+                RtlAnsiStringToUnicodeString(
+                    &DeleteMe,
+                    (PANSI_STRING)&CurDir->DosPath,
+                    TRUE
+                    );
+
+                //
+                // Now compare curdir to full dos path. If curdir length is
+                // greater than full path. It is not a match. Otherwise,
+                // trim full path length to cur dir length and compare.
+                //
+
+                RtlInitUnicodeString(&FullDosPathString,FullDosPathName);
+
+                if ( DeleteMe.Length <= FullDosPathString.Length ) {
+                    FullDosPathString.Length = DeleteMe.Length;
+                    if ( !RtlCompareString(
+                            (PSTRING)&DeleteMe,
+                            (PSTRING)&FullDosPathString,
+                            TRUE
+                            ) ) {
+
+                        //
+                        // The full dos pathname is a substring of the
+                        // current directory.  Compute the start of the
+                        // relativename.
+                        //
+
+                        RelativeName->RelativeName.Buffer = ((PUCHAR)FullNtPathName + Prefix.Length + (CurDir->DosPath.Length<<1));
+                        RelativeName->RelativeName.Length = (USHORT)FullDosPathNameLength - (CurDir->DosPath.Length<<1);
+                        if ( *(PWSTR)(RelativeName->RelativeName.Buffer) == (WCHAR)'\\' ) {
+                            (PWSTR)(RelativeName->RelativeName.Buffer)++;
+                            RelativeName->RelativeName.Length -= 2;
+                            }
+                        RelativeName->RelativeName.MaximumLength = RelativeName->RelativeName.Length;
+                        RelativeName->ContainingDirectory = CurDir->Handle;
+                        }
+                    }
+                }
+            }
+        }
+    finally {
+
+        if ( DeleteMe.Buffer ) {
+            RtlFreeUnicodeString(&DeleteMe);
+            }
+
+        //
+        // Always free up the DOS path name - it was allocated as temp storage.
+        //
+
+        if ( FullDosPathName ) {
+            RtlFreeHeap(RtlProcessHeap(), FullDosPathName, 0);
+            }
+
+        if ( AbnormalTermination() ) {
+            if ( FullNtPathName ) {
+                RtlFreeHeap(RtlProcessHeap(), FullNtPathName, 0);
+                }
+
+            RtlReleasePebLock();
+
+            return FALSE;
+            }
+
+	ASSERT (NtFileName->Length < MAXIMUM_FILENAME_LENGTH);
+	ASSERT (NtFileName->MaximumLength < MAXIMUM_FILENAME_LENGTH);
+
+	if (ARGUMENT_PRESENT(RelativeName)) {
+	    ASSERT (NtFileName->Length < MAXIMUM_FILENAME_LENGTH);
+	    ASSERT (NtFileName->MaximumLength < MAXIMUM_FILENAME_LENGTH);
+	}
+
+        RtlReleasePebLock();
+    }
+
+    return TRUE;
+}
+
+ULONG
+RtlDosSearchPath_U(
+    IN PWSTR lpPath,
+    IN PWSTR lpFileName,
+    IN PWSTR lpExtension OPTIONAL,
+    IN ULONG nBufferLength,
+    OUT PWSTR lpBuffer,
+    OUT PWSTR *lpFilePart
+    )
+{
+    return 0;
+}
+
+BOOLEAN
+RtlDoesFileExists_U(
+    IN PWSTR FileName
+    )
+
+/*++
+
+Routine Description:
+
+    This function checks to see if the specified unicode filename exists.
+
+Arguments:
+
+    FileName - Supplies the file name of the file to find.
+
+Return Value:
+
+    TRUE - The file was found.
+
+    FALSE - The file was not found.
+
+--*/
+
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES Obja;
+    HANDLE Handle;
+    UNICODE_STRING NtFileName;
+    IO_STATUS_BLOCK IoStatusBlock;
+    BOOLEAN ReturnValue;
+    RTL_RELATIVE_NAME RelativeName;
+    PVOID FreeBuffer;
+
+    ReturnValue = RtlDosPathNameToNtPathName_U(
+                    FileName,
+                    &NtFileName,
+                    NULL,
+                    &RelativeName
+                    );
+
+    if ( !ReturnValue ) {
+        return FALSE;
+        }
+
+    FreeBuffer = NtFileName.Buffer;
+
+    if ( RelativeName.RelativeName.Length ) {
+        NtFileName = *(PUNICODE_STRING)&RelativeName.RelativeName;
+        }
+    else {
+        RelativeName.ContainingDirectory = NULL;
+        }
+
+    InitializeObjectAttributes_U(
+        &Obja,
+        &NtFileName,
+        OBJ_CASE_INSENSITIVE,
+        RelativeName.ContainingDirectory,
+        NULL
+        );
+
+    //
+    // Open the file
+    //
+
+    Status = NtOpenFile(
+                &Handle,
+                (ACCESS_MASK)FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                &Obja,
+                &IoStatusBlock,
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                FILE_SYNCHRONOUS_IO_NONALERT
+                );
+    RtlFreeHeap(RtlProcessHeap(),FreeBuffer,0);
+    NtClose(Handle);
+    if ( !NT_SUCCESS(Status) ) {
+        if ( Status == STATUS_SHARING_VIOLATION ||
+             Status == STATUS_ACCESS_DENIED ) {
+            ReturnValue = TRUE;
+            }
+        else {
+            ReturnValue = FALSE;
+            }
+        }
+    else {
+        ReturnValue = TRUE;
+        }
+    return ReturnValue;
+}
+
+PUNICODE_STRING
+RtlQueryNtPrefix_U(
+    IN PWSTR FullDosPathName
+    )
+{
+    return NULL;
+}
+
+
+#ifdef UNICODE_CHECK
+VOID
+CheckDetermineDosPathNameType(
+    IN PSZ DosFileName,
+    IN RTL_PATH_TYPE PathType
+    )
+{
+    NTSTATUS Status;
+    RTL_PATH_TYPE UPathType;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+
+    RtlInitString(&AnsiString,DosFileName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+
+    UPathType = RtlDetermineDosPathNameType_U(UnicodeString.Buffer);
+    if (UPathType != PathType) {
+        DbgPrint("CheckDetermineDosPathNameType(%s,%d) == %d\n",
+            DosFileName,
+            PathType,
+            UPathType
+            );
+        DbgPrint("UnicodeString at %lx AnsiString at %lx\n",&UnicodeString,&AnsiString);
+        }
+    ASSERT(UPathType == PathType);
+    RtlFreeUnicodeString(&UnicodeString);
+}
+
+VOID
+CheckIsDosDeviceName(
+    IN PSZ DosFileName,
+    IN ULONG Length
+    )
+{
+    NTSTATUS Status;
+    ULONG ULength;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+
+    RtlInitString(&AnsiString,DosFileName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+
+    ULength = RtlIsDosDeviceName_U(UnicodeString.Buffer);
+    ULength >>= 1;
+    if (ULength != Length) {
+        DbgPrint("CheckIsDosDeviceName(%s,%d) == %d\n",
+            DosFileName,
+            Length,
+            ULength
+            );
+        DbgPrint("UnicodeString at %lx AnsiString at %lx\n",&UnicodeString,&AnsiString);
+        }
+    ASSERT(ULength == Length);
+    RtlFreeUnicodeString(&UnicodeString);
+}
+
+VOID
+CheckFullPathName(
+    PSZ lpFileName,
+    ULONG nBufferLength,
+    PSZ lpBuffer,
+    PSZ *lpFilePart,
+    ULONG ReturnedBufferLength
+    )
+{
+    NTSTATUS Status;
+    ULONG UnicodeLength;
+    UNICODE_STRING UnicodeString;
+    UNICODE_STRING UnicodeResult;
+    ANSI_STRING AnsiString;
+    ANSI_STRING AnsiResult;
+    PWSTR Ubuff;
+    PWSTR FilePart;
+    PWSTR *FilePartPtr;
+
+    if ( ARGUMENT_PRESENT(lpFilePart) ) {
+        FilePartPtr = &FilePart;
+        }
+    else {
+        FilePartPtr = NULL;
+        }
+
+    RtlInitString(&AnsiString,lpFileName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    Ubuff = RtlAllocateHeap(RtlProcessHeap(),512);
+
+    UnicodeLength = RtlGetFullPathName_U(
+                        UnicodeString.Buffer,
+                        510,
+                        Ubuff,
+                        FilePartPtr
+                        );
+    UnicodeLength >>= 1;
+    if (UnicodeLength != ReturnedBufferLength) {
+        DbgPrint("CheckFullPathName(\n%s,\n%d,\n%s,\n,%d) == %d\n",
+            lpFileName,
+            nBufferLength,
+            lpBuffer,
+            ReturnedBufferLength,
+            UnicodeLength
+            );
+        DbgPrint("UnicodeString at %lx AnsiString at %lx\n",&UnicodeString,&AnsiString);
+        DbgPrint("Ubuff %lx\n",Ubuff);
+        DbgBreakPoint();
+    UnicodeLength = RtlGetFullPathName_U(
+                        UnicodeString.Buffer,
+                        510,
+                        Ubuff,
+                        FilePartPtr
+                        );
+
+        }
+    ASSERT(UnicodeLength == ReturnedBufferLength);
+    if ( UnicodeLength ) {
+        RtlInitUnicodeString(&UnicodeResult,UnicodeString.Buffer);
+        RtlUnicodeStringToAnsiString(&AnsiResult,&UnicodeResult,TRUE);
+        if ( strcmp(lpFileName,AnsiResult.Buffer) ) {
+            DbgPrint("CheckFullPathName(\n%s,\n%d,\n%s,\n,%d) == %d\n",
+                lpFileName,
+                nBufferLength,
+                lpBuffer,
+                ReturnedBufferLength,
+                UnicodeLength
+                );
+            DbgPrint("Ansi %s == Uni %s\n",lpFileName,AnsiResult.Buffer);
+            }
+        ASSERT( !strcmp(lpFileName,AnsiResult.Buffer) );
+        RtlFreeAnsiString(&AnsiResult);
+        }
+
+    if ( ARGUMENT_PRESENT(lpFilePart) ) {
+        if ( *lpFilePart == NULL ) {
+            ASSERT(FilePart == NULL);
+            }
+        else {
+            UNICODE_STRING UnicodeFilePart;
+            ANSI_STRING AnsiFilePart;
+
+            ASSERT(FilePart);
+
+            RtlInitUnicodeString(&UnicodeFilePart,FilePart);
+            RtlUnicodeStringToAnsiString(&AnsiFilePart,&UnicodeFilePart,TRUE);
+            if ( strcmp(*lpFilePart,AnsiFilePart.Buffer) ) {
+                DbgPrint("CheckFullPathName(\n%s,\n%d,\n%s,\n,%d) == %d\n",
+                    lpFileName,
+                    nBufferLength,
+                    lpBuffer,
+                    ReturnedBufferLength,
+                    UnicodeLength
+                    );
+                DbgPrint("Ansi FP %s == Uni FP %s\n",*lpFilePart,AnsiFilePart.Buffer);
+                }
+            ASSERT( !strcmp(*lpFilePart,AnsiFilePart.Buffer) );
+            RtlFreeAnsiString(&AnsiFilePart);
+            }
+        }
+
+    RtlFreeUnicodeString(&UnicodeString);
+    RtlFreeHeap(RtlProcessHeap(),Ubuff,0);
+}
+
+VOID
+CheckDosPathNameToNtPathName(
+    PSZ DosFileName,
+    PSTRING NtFileName,
+    PSZ *FilePart OPTIONAL,
+    PRTL_RELATIVE_NAME RelativeName OPTIONAL
+    )
+{
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeString;
+    UNICODE_STRING UnicodeResult;
+    ANSI_STRING AnsiString;
+    ANSI_STRING AnsiResult;
+    PWSTR UFilePart;
+    PWSTR *UFilePartPtr;
+    RTL_RELATIVE_NAME UnicodeRelativeName;
+    PRTL_RELATIVE_NAME UnicodeRelativeNamePtr;
+    BOOLEAN b;
+
+    if ( ARGUMENT_PRESENT(RelativeName) ) {
+        UnicodeRelativeNamePtr = &UnicodeRelativeName;
+        }
+    else {
+        UnicodeRelativeNamePtr = NULL;
+        }
+
+    if ( ARGUMENT_PRESENT(FilePart) ) {
+        UFilePartPtr = &UFilePart;
+        }
+    else {
+        UFilePartPtr = NULL;
+        }
+
+    RtlInitString(&AnsiString,DosFileName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+    b = RtlDosPathNameToNtPathName_U(
+                UnicodeString.Buffer,
+                &UnicodeResult,
+                UFilePartPtr,
+                UnicodeRelativeNamePtr
+                );
+    ASSERT(b);
+
+    RtlUnicodeStringToAnsiString(&AnsiResult,&UnicodeResult,TRUE);
+    if ( RtlCompareString(NtFileName,(PSTRING)&AnsiResult,TRUE) ) {
+        DbgPrint("CheckDosPathNameToNtPathName(\n%s,\n%s)\n\t== %s\n",
+            DosFileName,
+            NtFileName->Buffer,
+            AnsiResult.Buffer
+            );
+        DbgPrint("Ansi %s == Uni %s\n",DosFileName,AnsiResult.Buffer);
+        }
+    ASSERT(!RtlCompareString(NtFileName,(PSTRING)&AnsiResult,TRUE));
+    RtlFreeAnsiString(&AnsiResult);
+
+    if ( ARGUMENT_PRESENT(FilePart) ) {
+        if ( *FilePart == NULL ) {
+            ASSERT(UFilePart == NULL);
+            }
+        else {
+            UNICODE_STRING UnicodeFilePart;
+            ANSI_STRING AnsiFilePart;
+
+            ASSERT(UFilePart);
+
+            RtlInitUnicodeString(&UnicodeFilePart,UFilePart);
+            RtlUnicodeStringToAnsiString(&AnsiFilePart,&UnicodeFilePart,TRUE);
+            if ( strcmpi(*FilePart,AnsiFilePart.Buffer) ) {
+                DbgPrint("CheckDosPathNameToNtPathName(\n%s,\n%s,\n) == %S\n",
+                    DosFileName,
+                    NtFileName->Buffer,
+                    AnsiResult.Buffer
+                    );
+                DbgPrint("Ansi FP %s == Uni FP %s\n",*FilePart,AnsiFilePart.Buffer);
+                }
+            ASSERT( !strcmpi(*FilePart,AnsiFilePart.Buffer) );
+            RtlFreeAnsiString(&AnsiFilePart);
+            }
+        }
+
+    if ( ARGUMENT_PRESENT(RelativeName) ) {
+            ANSI_STRING AnsiRName;
+            if ( UnicodeRelativeName.RelativeName.Length ) {
+                if ( UnicodeRelativeName.ContainingDirectory != RelativeName->ContainingDirectory ) {
+                    DbgPrint("CheckDosPathNameToNtPathName(\n%s,\n%s,\n) == %s\n",
+                        DosFileName,
+                        NtFileName->Buffer,
+                        AnsiResult.Buffer
+                        );
+                    DbgPrint("UContainingDirectory %lx AContainingDirectory %lx\n",
+                        UnicodeRelativeName.ContainingDirectory,
+                        RelativeName->ContainingDirectory
+                        );
+                    }
+                ASSERT(UnicodeRelativeName.ContainingDirectory == RelativeName->ContainingDirectory );
+                RtlUnicodeStringToAnsiString(&AnsiRName,(PUNICODE_STRING)&UnicodeRelativeName.RelativeName,TRUE);
+                if ( strcmpi(RelativeName->RelativeName.Buffer,AnsiRName.Buffer) ) {
+                    DbgPrint("CheckDosPathNameToNtPathName(\n%s,\n%s,\n) == %S\n",
+                        DosFileName,
+                        NtFileName->Buffer,
+                        AnsiResult.Buffer
+                        );
+                    DbgPrint("Ansi Rn %s == Uni Rn %s\n",RelativeName->RelativeName.Buffer,AnsiRName.Buffer);
+                    }
+                ASSERT( !strcmpi(RelativeName->RelativeName.Buffer,AnsiRName.Buffer) );
+                RtlFreeAnsiString(&AnsiRName);
+                }
+            }
+    RtlFreeUnicodeString(&UnicodeString);
+    RtlFreeHeap(RtlProcessHeap(),UnicodeResult.Buffer,0);
+}
+
+VOID
+CheckDosFileExist(
+    PSZ FileName,
+    BOOLEAN ReturnValue
+    )
+{
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    BOOLEAN UnicodeReturnValue;
+
+    RtlInitString(&AnsiString,FileName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+    ASSERT(NT_SUCCESS(Status));
+
+    UnicodeReturnValue = RtlDoesFileExists_U(UnicodeString.Buffer);
+    if (UnicodeReturnValue != ReturnValue) {
+        DbgPrint("CheckDoesFileExist(%s) Faile\n",
+            FileName
+            );
+        DbgPrint("UnicodeString at %lx AnsiString at %lx\n",&UnicodeString,&AnsiString);
+        }
+    ASSERT(UnicodeReturnValue == ReturnValue );
+    RtlFreeUnicodeString(&UnicodeString);
+}
+
+
+#endif // UNICODE_CHECK

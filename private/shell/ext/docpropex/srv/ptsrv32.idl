@@ -1,0 +1,46 @@
+import "oaidl.idl";
+import "ocidl.idl";
+import "..\cmn\PTserver.idl";
+
+//	Dummy interface IColumnProviderX
+[
+	uuid(C3E84442-F744-11D1-833A-00A0C9A83DA1),
+	helpstring("IColumnProviderX Interface"),
+	pointer_default(unique)
+]
+interface IColumnProviderX : IUnknown
+{
+};
+
+//	Type library
+[
+	uuid(FA173DE5-5B7B-11D1-8B82-080036B11A03),
+	version(1.0),
+	helpstring("PTsrv32 1.0 Type Library")
+
+]		  
+library PTsrv32Lib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+
+	[
+		uuid(1F183F5A-5C4D-11D1-8B83-080036B11A03),
+		helpstring("PTDefaultServer32 Class")
+	]
+	coclass PTDefaultServer32
+	{
+		[default] interface IAdvancedPropertyServer;
+	};
+
+
+	[
+		uuid(66742402-F9B9-11D1-A202-0000F81FEDEE),
+		helpstring("ExeVerColumnProvider class")
+	]
+	coclass ExeVerColumnProvider
+	{
+		[default] interface IColumnProviderX;
+	};
+};

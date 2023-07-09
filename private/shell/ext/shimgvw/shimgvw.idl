@@ -1,0 +1,60 @@
+#include <olectl.h>
+// shimgvw.idl : IDL source for shimgvw.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (shimgvw.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+    object,
+    uuid(50F16B25-467E-11D1-8271-00C04FC3183B),
+    dual,
+    helpstring("IPreview Interface"),
+    pointer_default(unique)
+]
+interface IPreview : IDispatch
+{
+        [id(1), helpstring("method ShowFile")] HRESULT ShowFile(BSTR bstrFileName, int iSelectCount);
+        [propget, id(2), helpstring("property printable")] HRESULT printable([out, retval] BOOL *pVal);
+        [propput, id(2), helpstring("property printable")] HRESULT printable([in] BOOL newVal);
+        [propget, id(3), helpstring("property cxImage")] HRESULT cxImage([out, retval] long *pVal);
+        [propget, id(4), helpstring("property cyImage")] HRESULT cyImage([out, retval] long *pVal);
+        [id(5), helpstring("method Show")] HRESULT Show(VARIANT var);
+};
+    
+[
+    uuid(50F16B18-467E-11D1-8271-00C04FC3183B),
+    version(1.0),
+    helpstring("Preview 1.0 Type Library")
+]
+library PREVIEWLib
+{
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
+
+    [
+        uuid(1B490296-50DF-11d1-8B44-00C04FC3183B),
+        helpstring("Event interface for ThumbCtl")
+    ]
+    dispinterface DPreviewEvents
+    {
+    properties:
+    methods:
+        [id(1), helpstring("The preview should be closed or hidden."), helpcontext(0x0000)]
+        void OnClose();
+        [id(2), helpstring("The preview image has been generated."), helpcontext(0x0000)]
+        void OnPreviewReady();
+    }
+    [
+        uuid(50F16B26-467E-11D1-8271-00C04FC3183B),
+        helpstring("Preview Class")
+    ]
+    coclass Preview
+    {
+        [default] interface IPreview;
+        [default, source] dispinterface DPreviewEvents;
+    };
+};

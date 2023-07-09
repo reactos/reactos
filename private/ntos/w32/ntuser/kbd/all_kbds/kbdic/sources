@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdic
+
+TARGETNAME=kbdic
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdic.c kbdic.rc
+
+NTTARGETFILE0=kbdic.h kbdic.rc kbdic.def

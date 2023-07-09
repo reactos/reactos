@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdusl
+
+TARGETNAME=kbdusl
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdusl.c kbdusl.rc
+
+NTTARGETFILE0=kbdusl.h kbdusl.rc kbdusl.def

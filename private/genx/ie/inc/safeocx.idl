@@ -1,0 +1,106 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1997-1998.
+//
+//  File: safeocx.idl
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1997-1998.")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+import "wtypes.idl";
+import "urlmon.idl";
+#endif
+
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("DEFINE_GUID(CLSID_IActiveXSafetyProvider, 0xaaf8c6ce, 0xf972, 0x11d0, 0x97, 0xeb, 0x00, 0xaa, 0x00, 0x61, 0x53, 0x33);")
+cpp_quote("DEFINE_GUID(IID_IActiveXSafetyProvider,   0x69ff5101, 0xfc63, 0x11d0, 0x97, 0xeb, 0x00, 0xaa, 0x00, 0x61, 0x53, 0x33);")
+
+
+[
+    object,
+    uuid(69ff5101-fc63-11d0-97eb-00aa00615333),
+    pointer_default(unique),
+    local
+]
+interface IActiveXSafetyProvider : IUnknown
+{
+    typedef [unique] IActiveXSafetyProvider *LPACTIVEXSAFETYPROVIDER;
+
+    // Controls whether the call to SafeGetClassObject/SafeCreateInstance will
+    // just call OLE32.DLL or whether the control will be loaded into a VM
+    HRESULT TreatControlAsUntrusted(
+                [in] BOOL fTreatAsTUntrusted
+            );
+
+    // Gets the current setting of TreatControlAsUntrusted
+    HRESULT IsControlUntrusted(
+                [out] BOOL *pfIsUntrusted
+            );
+
+    // Informs the ActiveX safety provider talk to zones
+    HRESULT SetSecurityManager(
+                [in] IInternetSecurityManager *pSecurityManager
+            );
+
+    // Informs the ActiveX safety provider where the document was loaded from
+    HRESULT SetDocumentURLA(
+                [in] LPCSTR szDocumentURL
+            );
+    HRESULT SetDocumentURLW(
+                [in] LPCWSTR szDocumentURL
+            );
+
+    // Resets the all of the above settings to their defaults
+    HRESULT ResetToDefaults(
+                void
+            );
+
+    // Calls DllRegisterServer on the specified control, using the current
+    // safety settings.
+    HRESULT SafeDllRegisterServerA(
+                [in] LPCSTR szServerName
+            );
+    HRESULT SafeDllRegisterServerW(
+                [in] LPCWSTR szServerName
+            );
+
+    // Calls DllUnregisterServer on the specified control, using the current
+    // safety settings.
+    HRESULT SafeDllUnregisterServerA(
+                [in] LPCSTR szServerName
+            );
+    HRESULT SafeDllUnregisterServerW(
+                [in] LPCWSTR szServerName
+            );
+
+    // Calls CoGetClassObject for the specified control, using the current
+    // safety settings.
+    HRESULT SafeGetClassObject(
+                [in] REFCLSID rclsid,
+                [in] DWORD dwClsContext,
+                [in] LPVOID reserved,
+                [in] REFIID riid,
+                [out, iid_is(riid)] IUnknown **ppObj
+            );
+
+    // Calls CoCreateInstance for the specified control, using the current
+    // safety settings.
+    HRESULT SafeCreateInstance(
+                [in] REFCLSID rclsid,
+                [in] LPUNKNOWN pUnkOuter,
+                [in] DWORD dwClsContext,
+                [in] REFIID riid,
+                [out, iid_is(riid)] IUnknown **pObj
+            );
+}

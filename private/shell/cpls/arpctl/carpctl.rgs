@@ -1,0 +1,24 @@
+HKCR
+{
+	ARPCtl.ARPCtl.1 = s 'ARPCtl Class'
+	{
+		CLSID = s '{0CB57B2C-D652-11D1-B1DE-00C04FC2A118}'
+	}
+	ARPCtl.ARPCtl = s 'ARPCtl Class'
+	{
+		CurVer = s 'ARPCtl.ARPCtl.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {0CB57B2C-D652-11D1-B1DE-00C04FC2A118} = s 'ARPCtl Class'
+		{
+			ProgID = s 'ARPCtl.ARPCtl.1'
+			VersionIndependentProgID = s 'ARPCtl.ARPCtl'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

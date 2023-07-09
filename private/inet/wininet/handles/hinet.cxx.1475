@@ -1,0 +1,1637 @@
+/*++
+
+Copyright (c) 1994  Microsoft Corporation
+
+Module Name:
+
+    hinet.cxx
+
+Abstract:
+
+    contains methods for INTERNET_HANDLE_OBJECT class
+
+    Contents:
+        ContainingHandleObject
+        CancelActiveSyncRequests
+        HANDLE_OBJECT::IsValid()
+        INTERNET_HANDLE_OBJECT::INTERNET_HANDLE_OBJECT(LPCSTR, ...)
+        INTERNET_HANDLE_OBJECT::INTERNET_HANDLE_OBJECT(INTERNET_HANDLE_OBJECT*)
+        INTERNET_HANDLE_OBJECT::~INTERNET_HANDLE_OBJECT()
+        INTERNET_HANDLE_OBJECT::SetAbortHandle()
+        INTERNET_HANDLE_OBJECT::ResetAbortHandle()
+        INTERNET_HANDLE_OBJECT::AbortSocket()
+        INTERNET_HANDLE_OBJECT::CheckGlobalProxyUpdated()
+        INTERNET_HANDLE_OBJECT::SetProxyInfo()
+        INTERNET_HANDLE_OBJECT::GetProxyInfo(LPVOID, LPDWORD)
+        INTERNET_HANDLE_OBJECT::GetProxyInfo(INTERNET_SCHEME, LPINTERNET_SCHEME, LPSTR *, LPDWORD, LPINTERNET_PORT)
+        INTERNET_HANDLE_OBJECT::ProxyScheme(INTERNET_SCHEME)
+        INTERNET_HANDLE_OBJECT::IsBypassed(INTERNET_SCHEME, LPSTR, DWORD, INTERNET_PORT)
+        INTERNET_HANDLE_OBJECT::IsBypassed(INTERNET_SCHEME, LPSTR, INTERNET_PORT)
+        INTERNET_HANDLE_OBJECT::IndicateStatus()
+
+Author:
+
+    Madan Appiah (madana)  16-Nov-1994
+
+Environment:
+
+    User Mode - Win32
+
+Revision History:
+
+   Sophia Chung (sophiac) 14-Feb-1995 (added FTP and Archie class impl.)
+   (code adopted from madana)
+
+--*/
+
+#include <wininetp.h>
+
+//
+// private manifests
+//
+
+#define PROXY_REGISTRY_STRING_LENGTH    (4 K)
+
+//
+// functions
+//
+
+
+HANDLE_OBJECT *
+ContainingHandleObject(
+    IN LPVOID lpAddress
+    )
+
+/*++
+
+Routine Description:
+
+    Returns address of containing HANDLE_OBJECT from address of _List member
+
+Arguments:
+
+    lpAddress   - address of _List in this object
+
+Return Value:
+
+    HANDLE_OBJECT *
+
+--*/
+
+{
+    return CONTAINING_RECORD(lpAddress, HANDLE_OBJECT, _List);
+}
+
+
+VOID
+CancelActiveSyncRequests(
+    IN DWORD dwError
+    )
+
+/*++
+
+Routine Description:
+
+    For all currently active synchronous requests, cancels them with the error
+    code supplied
+
+Arguments:
+
+    dwError - error code to complete requests
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_INET,
+                 None,
+                 "CancelActiveSyncRequests",
+                 "%s",
+                 InternetMapError(dwError)
+                 ));
+
+    LockSerializedList(&GlobalObjectList);
+
+    for (PLIST_ENTRY pEntry = (PLIST_ENTRY)HeadOfSerializedList(&GlobalObjectList);
+         pEntry != (PLIST_ENTRY)SlSelf(&GlobalObjectList);
+         pEntry = pEntry->Flink) {
+
+        HANDLE_OBJECT * pObject = ContainingHandleObject(pEntry);
+        HINTERNET_HANDLE_TYPE objectType = pObject->GetObjectType();
+
+        //
+        // check handle types in decreasing order of expectation for IE
+        //
+
+        if ((objectType == TypeHttpRequestHandle)
+        || (objectType == TypeFtpFindHandleHtml)
+        || (objectType == TypeFtpFindHandle)
+        || (objectType == TypeFtpFileHandle)
+        || (objectType == TypeGopherFindHandleHtml)
+        || (objectType == TypeGopherFindHandle)
+        || (objectType == TypeGopherFileHandle)) {
+
+            //
+            // all these handle types are descended from INTERNET_HANDLE_OBJECT
+            // which in turn is descended from HANDLE_OBJECT
+            //
+
+            if (!((INTERNET_HANDLE_OBJECT *)pObject)->IsAsyncHandle()) {
+
+                //
+                // sync request
+                //
+
+                DEBUG_PRINT(INET,
+                            INFO,
+                            ("cancelling %s sync request on handle %#x (%#x) \n",
+                            InternetMapHandleType(objectType),
+                            pObject->GetPseudoHandle(),
+                            pObject
+                            ));
+
+                pObject->InvalidateWithError(dwError);
+            }
+        }
+    }
+
+    UnlockSerializedList(&GlobalObjectList);
+
+    DEBUG_LEAVE(0);
+}
+
+//
+// methods
+//
+
+
+DWORD
+HANDLE_OBJECT::IsValid(
+    IN HINTERNET_HANDLE_TYPE ExpectedHandleType
+    )
+
+/*++
+
+Routine Description:
+
+    Checks a HANDLE_OBJECT for validity
+
+Arguments:
+
+    ExpectedHandleType  - type of object we are testing for. Can be
+                          TypeWildHandle which matches any valid handle
+
+Return Value:
+
+    DWORD
+        Success - ERROR_SUCCESS
+
+        Failure - ERROR_INVALID_HANDLE
+                    The handle object is invalid
+
+                  ERROR_INTERNET_INCORRECT_HANDLE_TYPE
+                    The handle object is valid, but not the type we want
+
+--*/
+
+{
+    DWORD error;
+    BOOL IsOkHandle = TRUE;
+
+    //
+    // test handle object within try..except in case we are given a bad address
+    //
+
+    __try {
+        if (_Signature == OBJECT_SIGNATURE) {
+
+            error = ERROR_SUCCESS;
+
+            //
+            // check handle type if we are asked to do so.
+            //
+
+            if (ExpectedHandleType != TypeWildHandle) {
+                if (ExpectedHandleType != this->GetHandleType()) {
+                    error = ERROR_INTERNET_INCORRECT_HANDLE_TYPE;
+                }
+            }
+        } else {
+            error = ERROR_INVALID_HANDLE;
+        }
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        error = ERROR_INVALID_HANDLE;
+    }
+
+    return error;
+}
+
+
+INTERNET_HANDLE_OBJECT::INTERNET_HANDLE_OBJECT(
+    LPCSTR UserAgent,
+    DWORD AccessMethod,
+    LPSTR ProxyServerList,
+    LPSTR ProxyBypassList,
+    DWORD Flags
+    ) : HANDLE_OBJECT(NULL)
+
+/*++
+
+Routine Description:
+
+    Creates the handle object for InternetOpen()
+
+Arguments:
+
+    UserAgent       - name of agent (user-agent string for HTTP)
+
+    AccessMethod    - DIRECT, PROXY or PRECONFIG
+
+    ProxyServerList - one or more proxy servers. The string has the form:
+
+                        [<scheme>=][<scheme>"://"]<server>[":"<port>][";"*]
+
+    ProxyBypassList - zero or more addresses which if matched will result in
+                      requests NOT going via the proxy (only if PROXY access).
+                      The string has the form:
+
+                        bp_entry ::= [<scheme>"://"]<server>[":"<port>]
+                        bp_macro ::= "<local>"
+                        bp_list ::= [<> | bp_entry bp_macro][";"*]
+
+    Flags           - various open flags:
+
+                        INTERNET_FLAG_ASYNC
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    //
+    // if the HANDLE_OBJECT constructor failed then bail out now
+    //
+
+    if (_Status != ERROR_SUCCESS) {
+        return;
+    }
+
+    //
+    // BUGBUG - remove _INetHandle
+    //
+
+    _INetHandle = INET_INVALID_HANDLE_VALUE;
+
+    _IsCopy = FALSE;
+    _UserAgent = (LPSTR)UserAgent;
+    _IsSecureProxyTunnelling = FALSE;
+    _ProxyInfo = NULL;
+    _dwInternetOpenFlags = Flags;
+    _WinsockLoaded = FALSE;
+
+    //
+    // BUGBUG - post-beta: move to HANDLE_OBJECT
+    //
+
+    _Context = INTERNET_NO_CALLBACK;
+
+    //
+    // initialize the timeout/retry/backoff values for this object from the
+    // global (DLL) values
+    //
+
+    _ConnectTimeout = GlobalConnectTimeout;
+    _ConnectRetries = GlobalConnectRetries;
+
+    //
+    // BUGBUG - _ConnectBackoff: no longer used
+    //
+
+    _ConnectBackoff = GlobalConnectBackoff;
+    _SendTimeout = GlobalSendTimeout;
+    _DataSendTimeout = GlobalDataSendTimeout;
+    _ReceiveTimeout = GlobalReceiveTimeout;
+    _DataReceiveTimeout = GlobalDataReceiveTimeout;
+    _SocketSendBufferLength = GlobalSocketSendBufferLength;
+    _SocketReceiveBufferLength = GlobalSocketReceiveBufferLength;
+
+    //
+    // set _Async based on the INTERNET_FLAG_ASYNC supplied to InternetOpen()
+    //
+
+    _Async = (Flags & INTERNET_FLAG_ASYNC) ? TRUE : FALSE;
+
+    //
+    // no data available yet
+    //
+
+    SetAvailableDataLength(0);
+
+    //
+    // not yet end of file
+    //
+
+    ResetEndOfFile();
+
+    //
+    // no status callback by default
+    //
+
+    _StatusCallback = NULL;
+
+    //
+    // the number of pending async requests is 0. The clash test variable is
+    // used to test for ownership using InterlockedIncrement()
+    //
+
+    _PendingAsyncRequests = 0;
+    _AsyncClashTest = -1;
+
+    SetObjectType(TypeInternetHandle);
+
+    _ProxyInfoResourceLock.Initialize();
+    _Status = SetProxyInfo(AccessMethod, ProxyServerList, ProxyBypassList);
+
+    //
+    // if _pSocket is not NULL then this is the socket that this object handle
+    // is currently working on. We close it to cancel the operation
+    //
+
+    _pSocket = NULL;
+
+    //
+    // load winsock now. We always want to go via winsock since the demise of
+    // catapult
+    //
+
+    if (_Status == ERROR_SUCCESS) {
+        _INetHandle = LOCAL_INET_HANDLE;
+        _Status = LoadWinsock();
+        _WinsockLoaded = (_Status == ERROR_SUCCESS);
+    }
+}
+
+
+INTERNET_HANDLE_OBJECT::INTERNET_HANDLE_OBJECT(
+    INTERNET_HANDLE_OBJECT *INetObj
+    ) : HANDLE_OBJECT((HANDLE_OBJECT*)INetObj)
+
+/*++
+
+Routine Description:
+
+    Constructor for derived handle object. We are creating this handle as part
+    of an INTERNET_CONNECT_HANDLE_OBJECT
+
+Arguments:
+
+    INetObj - pointer to INTERNET_HANDLE_OBJECT to copy
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    _INetHandle = INetObj->_INetHandle;
+    _IsCopy = TRUE;
+
+    //
+    // copy user agent string
+    //
+
+    //
+    // BUGBUG - compiler generated copy constructor (no new string)
+    //
+
+    _UserAgent = INetObj->_UserAgent;
+
+    //
+    // do not inherit the proxy info - code must go to parent handle
+    //
+
+    _IsSecureProxyTunnelling = INetObj->_IsSecureProxyTunnelling;
+    _ProxyInfo = NULL;
+
+    _dwInternetOpenFlags = INetObj->_dwInternetOpenFlags;
+
+    //
+    // creating this handle didn't load winsock
+    //
+
+    _WinsockLoaded = FALSE;
+
+    //
+    // inherit the context, timeout values, async flag and status callback from
+    // the parent object handle
+    //
+
+    _Context = INetObj->_Context;
+
+    _ConnectTimeout = INetObj->_ConnectTimeout;
+    _ConnectRetries = INetObj->_ConnectRetries;
+    _ConnectBackoff = INetObj->_ConnectBackoff;
+    _SendTimeout = INetObj->_SendTimeout;
+    _DataSendTimeout = INetObj->_DataSendTimeout;
+    _ReceiveTimeout = INetObj->_ReceiveTimeout;
+    _DataReceiveTimeout = INetObj->_DataReceiveTimeout;
+
+    //
+    // inherit the async I/O mode and callback function
+    //
+
+    _Async = INetObj->_Async;
+    SetAvailableDataLength(0);
+    ResetEndOfFile();
+    _StatusCallback = INetObj->_StatusCallback;
+
+    //
+    // this is a new object: we need a new pending async request count and clash
+    // test variable
+    //
+
+    _PendingAsyncRequests = 0;
+    _AsyncClashTest = -1;
+
+    //
+    // no socket operation to abort yet
+    //
+
+    _pSocket = NULL;
+
+    //
+    // BUGBUG - this overwrites status set above?
+    //
+
+    _Status = INetObj->_Status;
+}
+
+
+INTERNET_HANDLE_OBJECT::~INTERNET_HANDLE_OBJECT(
+    VOID
+    )
+
+/*++
+
+Routine Description:
+
+    INTERNET_HANDLE_OBJECT destructor
+
+Arguments:
+
+    None.
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    //
+    // if this handle is not a copy then delete proxy information if we are not
+    // using the global proxy info, and unload the sockets package if we loaded
+    // it in the first place
+    //
+
+    if (!IsCopy()) {
+        if (IsProxy()) {
+            if (!IsProxyGlobal()) {
+                delete _ProxyInfo;
+                _ProxyInfo = NULL;
+            }
+        }
+        if (_WinsockLoaded) {
+            UnloadWinsock();
+        }
+    }
+}
+
+HINTERNET
+INTERNET_HANDLE_OBJECT::GetInternetHandle(
+    VOID
+    )
+{
+    return _INetHandle;
+}
+
+HINTERNET
+INTERNET_HANDLE_OBJECT::GetHandle(
+    VOID
+    )
+{
+    return _INetHandle;
+}
+
+VOID
+INTERNET_HANDLE_OBJECT::SetTimeout(
+    IN DWORD TimeoutOption,
+    IN DWORD TimeoutValue
+    )
+{
+    switch (TimeoutOption) {
+    case INTERNET_OPTION_SEND_TIMEOUT:
+        _SendTimeout = TimeoutValue;
+        break;
+
+    case INTERNET_OPTION_RECEIVE_TIMEOUT:
+        _ReceiveTimeout = TimeoutValue;
+        break;
+
+    case INTERNET_OPTION_DATA_SEND_TIMEOUT:
+        _DataSendTimeout = TimeoutValue;
+        break;
+
+    case INTERNET_OPTION_DATA_RECEIVE_TIMEOUT:
+        _DataReceiveTimeout = TimeoutValue;
+        break;
+
+    case INTERNET_OPTION_CONNECT_TIMEOUT:
+        _ConnectTimeout = TimeoutValue;
+        break;
+
+    case INTERNET_OPTION_CONNECT_RETRIES:
+        _ConnectRetries = TimeoutValue;
+        break;
+
+    case INTERNET_OPTION_CONNECT_BACKOFF:
+        _ConnectBackoff = TimeoutValue;
+        break;
+    }
+}
+
+DWORD
+INTERNET_HANDLE_OBJECT::GetTimeout(
+    IN DWORD TimeoutOption
+    )
+{
+    switch (TimeoutOption) {
+    case INTERNET_OPTION_SEND_TIMEOUT:
+        return _SendTimeout;
+
+    case INTERNET_OPTION_RECEIVE_TIMEOUT:
+        return _ReceiveTimeout;
+
+    case INTERNET_OPTION_DATA_SEND_TIMEOUT:
+        return _DataSendTimeout;
+
+    case INTERNET_OPTION_DATA_RECEIVE_TIMEOUT:
+        return _DataReceiveTimeout;
+
+    case INTERNET_OPTION_CONNECT_TIMEOUT:
+        return _ConnectTimeout;
+
+    case INTERNET_OPTION_CONNECT_RETRIES:
+        return _ConnectRetries;
+
+    case INTERNET_OPTION_CONNECT_BACKOFF:
+        return _ConnectBackoff;
+
+    case INTERNET_OPTION_LISTEN_TIMEOUT:
+
+        //
+        // BUGBUG - not per-object
+        //
+
+        return GlobalFtpAcceptTimeout;
+    }
+
+    INET_ASSERT(FALSE);
+
+    //
+    // we should not be here, but in case we are, return a random timeout
+    //
+
+    return DEFAULT_CONNECT_TIMEOUT;
+}
+
+VOID INTERNET_HANDLE_OBJECT::AcquireAsyncSpinLock(VOID) {
+
+    //
+    // wait until we're the exclusive owner of the async info
+    //
+
+    while (TRUE) {
+        if (InterlockedIncrement(&_AsyncClashTest) == 0) {
+            return;
+        } else {
+            InterlockedDecrement(&_AsyncClashTest);
+            Sleep(0);
+        }
+    }
+}
+
+VOID INTERNET_HANDLE_OBJECT::ReleaseAsyncSpinLock(VOID) {
+    InterlockedDecrement(&_AsyncClashTest);
+}
+
+DWORD
+INTERNET_HANDLE_OBJECT::ExchangeStatusCallback(
+    LPINTERNET_STATUS_CALLBACK
+    lpStatusCallback
+    )
+{
+    DWORD error;
+
+    //
+    // we can only change the status callback if there are no async requests
+    // pending
+    //
+
+    AcquireAsyncSpinLock();
+
+    if (_PendingAsyncRequests == 0) {
+
+        INTERNET_STATUS_CALLBACK callback;
+
+        //
+        // exchange new and current callbacks
+        //
+
+        callback = _StatusCallback;
+        _StatusCallback = *lpStatusCallback;
+        *lpStatusCallback = callback;
+        error = ERROR_SUCCESS;
+    } else {
+        error = ERROR_INTERNET_REQUEST_PENDING;
+    }
+
+    ReleaseAsyncSpinLock();
+
+    return error;
+}
+
+DWORD INTERNET_HANDLE_OBJECT::AddAsyncRequest(BOOL fNoCallbackOK) {
+    DWORD error;
+
+    AcquireAsyncSpinLock();
+
+    if (fNoCallbackOK || _StatusCallback != NULL) {
+        ++_PendingAsyncRequests;
+
+        INET_ASSERT(_PendingAsyncRequests > 0);
+
+        error = ERROR_SUCCESS;
+    } else {
+
+        INET_ASSERT(_PendingAsyncRequests == 0);
+
+        error = ERROR_INTERNET_NO_CALLBACK;
+    }
+
+    ReleaseAsyncSpinLock();
+
+    return error;
+}
+
+VOID INTERNET_HANDLE_OBJECT::RemoveAsyncRequest(VOID) {
+
+    INET_ASSERT(_PendingAsyncRequests > 0);
+
+    InterlockedDecrement(&_PendingAsyncRequests);
+}
+
+
+VOID
+INTERNET_HANDLE_OBJECT::SetAbortHandle(
+    IN CSOCKET * Socket
+    )
+
+/*++
+
+Routine Description:
+
+    Associates with this request handle the CSOCKET object currently being used
+    for network I/O
+
+Arguments:
+
+    Socket  - address of CSOCKET
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_OBJECTS | DBG_SOCKETS,
+                 None,
+                 "INTERNET_HANDLE_OBJECT::SetAbortHandle",
+                 "{%#x} %#x [sock=%#x ref=%d]\n",
+                 GetPseudoHandle(),
+                 Socket,
+                 Socket ? Socket->GetSocket() : 0,
+                 Socket ? Socket->ReferenceCount() : 0
+                 ));
+
+    INET_ASSERT(Socket != NULL);
+
+    //
+    // first off, increase the socket reference count to stop any other threads
+    // killing it whilst we are performing the socket operation. The only way
+    // another thread can dereference the socket is by calling our AbortSocket()
+    // method
+    //
+
+    Socket->Reference();
+
+    //
+    // now associate the socket object with this handle object. We should not
+    // have a current association
+    //
+
+    CSOCKET * pSocket;
+
+    pSocket = (CSOCKET *)InterlockedExchange((LPLONG)&_pSocket, (LONG)Socket);
+
+    INET_ASSERT(pSocket == NULL);
+
+    //
+    // if the handle was invalidated on another thread before we got
+    // chance to set the socket to close, then abort the request now
+    //
+
+    //
+    // BUGBUG - screws up normal FTP close handle processing - we
+    //          have to communicate with the server in order to
+    //          drop the connection
+    //
+
+    //if (IsInvalidated()) {
+    //    AbortSocket();
+    //}
+
+    DEBUG_LEAVE(0);
+}
+
+
+VOID
+INTERNET_HANDLE_OBJECT::ResetAbortHandle(
+    VOID
+    )
+
+/*++
+
+Routine Description:
+
+    Disassociates this request handle and the CSOCKET object when the network
+    operation has completed
+
+Arguments:
+
+    None.
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_OBJECTS | DBG_SOCKETS,
+                 None,
+                 "INTERNET_HANDLE_OBJECT::ResetAbortHandle",
+                 "{%#x}",
+                 GetPseudoHandle()
+                 ));
+
+    CSOCKET * pSocket;
+
+    pSocket = (CSOCKET *)InterlockedExchange((LPLONG)&_pSocket, (LONG)NULL);
+
+    //
+    // there really should be a CSOCKET associated with this object, otherwise
+    // our handle close/invalidation logic is broken
+    //
+
+    //
+    // however, we can call ResetAbortHandle() from paths where we completed
+    // early, not having called SetAbortHandle()
+    //
+
+    //INET_ASSERT(pSocket != NULL);
+
+    //
+    // so if there was a CSOCKET associated with this object then remove the
+    // reference added in SetAbortHandle()
+    //
+
+    if (pSocket != NULL) {
+        pSocket->Dereference();
+    }
+
+    DEBUG_LEAVE(0);
+}
+
+
+VOID
+INTERNET_HANDLE_OBJECT::AbortSocket(
+    VOID
+    )
+
+/*++
+
+Routine Description:
+
+    If there is a CSOCKET associated with this handle object then abort it. This
+    forces the current network operation aborted and the request to complete
+    with ERROR_INTERNET_OPERATION_CANCELLED
+
+Arguments:
+
+    None.
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_OBJECTS | DBG_SOCKETS,
+                 None,
+                 "INTERNET_HANDLE_OBJECT::AbortSocket",
+                 "{%#x, %#x [sock=%#x, ref=%d]}",
+                 GetPseudoHandle(),
+                 _pSocket,
+                 _pSocket ? _pSocket->GetSocket() : 0,
+                 _pSocket ? _pSocket->ReferenceCount() : 0
+                 ));
+
+    //
+    // get the associated CSOCKET. It may have already been removed by a call
+    // to ResetAbortHandle()
+    //
+
+    CSOCKET * pSocket;
+
+    pSocket = (CSOCKET *)InterlockedExchange((LPLONG)&_pSocket, (LONG)NULL);
+
+    //
+    // if there is an associated CSOCKET then abort it (close the socket handle)
+    // which will complete the current network I/O (if active) with an error.
+    // Once the CSOCKET is aborted, we reduce the reference count that was added
+    // in SetAbortHandle(). This may cause the CSOCKET to be deleted
+    //
+
+    if (pSocket != NULL) {
+//dprintf("%#x AbortSocket %#x [%#x]\n", GetCurrentThreadId(), pSocket, pSocket->GetSocket());
+        pSocket->AbortSocket();
+        pSocket->Dereference();
+    }
+
+    DEBUG_LEAVE(0);
+}
+
+
+VOID
+INTERNET_HANDLE_OBJECT::CheckGlobalProxyUpdated(
+    VOID
+    )
+
+/*++
+
+Routine Description:
+
+    Tests whether we need to update the global proxy info structure from the registry
+
+Arguments:
+
+    None.
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_INET,
+                None,
+                "INTERNET_HANDLE_OBJECT::CheckGlobalProxyUpdated",
+                NULL
+                ));
+
+    if (IsProxyGlobal() && InternetSettingsChanged()) {
+
+        //
+        // acquire the pointer for exclusive access
+        //
+
+        AcquireProxyInfo(TRUE);
+
+        //
+        // check to make sure we are still using the global proxy info
+        //
+
+        if (IsProxyGlobal() && !GlobalProxyInfo.IsModified()) {
+            GlobalProxyInfo.SetProxyInfo(INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL);
+        }
+        ReleaseProxyInfo();
+    }
+
+    DEBUG_LEAVE(0);
+}
+
+
+DWORD
+INTERNET_HANDLE_OBJECT::SetProxyInfo(
+    IN DWORD dwAccessType,
+    IN LPCSTR lpszProxy OPTIONAL,
+    IN LPCSTR lpszProxyBypass OPTIONAL
+    )
+
+/*++
+
+Routine Description:
+
+    Sets the proxy info on an InternetOpen() HINTERNET based on the parameters
+
+    Assumes: 1. The parameters have already been validated in the API that calls
+                this method (i.e. InternetOpen(), InternetSetOption())
+
+Arguments:
+
+    dwAccessType    - type of proxy access required
+
+    lpszProxy       - pointer to proxy server list
+
+    lpszProxyBypass - pointer to proxy bypass list
+
+Return Value:
+
+    DWORD
+        Success - ERROR_SUCCESS
+
+        Failure - ERROR_INVALID_PARAMETER
+                    The lpszProxy or lpszProxyBypass list was bad
+
+                  ERROR_NOT_ENOUGH_MEMORY
+                    Failed to create an object or allocate space for a list,
+                    etc.
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_INET,
+                Dword,
+                "INTERNET_HANDLE_OBJECT::SetProxyInfo",
+                "%s (%d), %#x (%q), %#x (%q)",
+                InternetMapOpenType(dwAccessType),
+                dwAccessType,
+                lpszProxy,
+                lpszProxy,
+                lpszProxyBypass,
+                lpszProxyBypass
+                ));
+
+    //
+    // we only set proxy information on the top-level InternetOpen() handle
+    //
+
+    INET_ASSERT(!IsCopy());
+
+/*
+
+    We are setting the proxy information for an InternetOpen() handle. Based on
+    the current and new settings we do the following (Note: the handle is
+    initialized to DIRECT operation):
+
+                                        current access
+                +---------------------------------------------------------------
+        new     |      DIRECT        |       PROXY        |      PRECONFIG
+       access   |                    |                    |
+    +-----------+--------------------+--------------------+---------------------
+    | DIRECT    | No action          | Delete proxy info  | Remove reference to
+    |           |                    |                    | global proxy info
+    +-----------+--------------------+--------------------+---------------------
+    | PROXY     | Set new proxy info | Delete proxy info. | Remove reference to
+    |           |                    | Set new proxy info | global proxy info.
+    |           |                    |                    | Set new proxy info
+    +-----------+--------------------+--------------------+---------------------
+    | PRECONFIG | Set proxy info to  | Delete proxy info. | No action
+    |           | global proxy info  | Set proxy info to  |
+    |           |                    | global proxy info  |
+    +-----------+--------------------+--------------------+---------------------
+*/
+
+    DWORD error = ERROR_SUCCESS;
+    PROXY_INFO * proxyInfo = NULL;
+
+    //
+    // acquire proxy info for exclusive access
+    //
+
+    AcquireProxyInfo(TRUE);
+
+    if (IsProxy()) {
+
+        //
+        // delete private proxy info, or unlink from global proxy info
+        //
+
+        SafeDeleteProxyInfo();
+    }
+    if (dwAccessType == INTERNET_OPEN_TYPE_PROXY) {
+
+        INET_ASSERT(!IsProxy());
+
+        proxyInfo = new PROXY_INFO;
+        if (proxyInfo != NULL) {
+            proxyInfo->Initialize();
+            error = proxyInfo->GetError();
+            if (error == ERROR_SUCCESS) {
+                error = proxyInfo->SetProxyInfo(INTERNET_OPEN_TYPE_PROXY,
+                                                lpszProxy,
+                                                lpszProxyBypass
+                                                );
+            }
+            if (error != ERROR_SUCCESS) {
+                delete proxyInfo;
+                proxyInfo = NULL;
+            }
+        } else {
+            error = ERROR_NOT_ENOUGH_MEMORY;
+        }
+    } else if (dwAccessType == INTERNET_OPEN_TYPE_PRECONFIG) {
+        proxyInfo = &GlobalProxyInfo;
+    }
+
+    SetProxyInfo(proxyInfo);
+
+    ReleaseProxyInfo();
+
+    DEBUG_LEAVE(error);
+
+    return error;
+}
+
+
+DWORD
+INTERNET_HANDLE_OBJECT::GetProxyInfo(
+    OUT LPVOID lpBuffer,
+    IN OUT LPDWORD lpdwBufferLength
+    )
+
+/*++
+
+Routine Description:
+
+    Returns the current proxy information for this INTERNET_HANDLE_OBJECT
+
+Arguments:
+
+    lpBuffer            - pointer to buffer where INTERNET_PROXY_INFO will be
+                          written, and any proxy strings (if sufficient space)
+
+    lpdwBufferLength    - IN: number of bytes in lpBuffer
+                          OUT: number of bytes returned in lpBuffer
+
+Return Value:
+
+    DWORD
+        Success - ERROR_SUCCESS
+
+        Failure - ERROR_INSUFFICIENT_BUFFER
+                    lpBuffer doesn't have enough space to hold the proxy
+                    information. *lpdwBufferLength has the required size
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_INET,
+                Dword,
+                "INTERNET_HANDLE_OBJECT::GetProxyInfo",
+                "%#x, %#x [%d]",
+                lpBuffer,
+                lpdwBufferLength,
+                lpdwBufferLength ? *lpdwBufferLength : 0
+                ));
+
+    INET_ASSERT(!IsCopy());
+
+    AcquireProxyInfo(FALSE);
+
+    DWORD error;
+
+    if (IsProxy()) {
+        error = _ProxyInfo->GetProxyInfo(lpBuffer, lpdwBufferLength);
+    } else {
+        if (*lpdwBufferLength >= sizeof(INTERNET_PROXY_INFO)) {
+
+            LPINTERNET_PROXY_INFO lpInfo = (LPINTERNET_PROXY_INFO)lpBuffer;
+
+            lpInfo->dwAccessType = INTERNET_OPEN_TYPE_DIRECT;
+            lpInfo->lpszProxy = NULL;
+            lpInfo->lpszProxyBypass = NULL;
+            error = ERROR_SUCCESS;
+        } else {
+            error = ERROR_INSUFFICIENT_BUFFER;
+        }
+        *lpdwBufferLength = sizeof(INTERNET_PROXY_INFO);
+    }
+
+    ReleaseProxyInfo();
+
+    DEBUG_LEAVE(error);
+
+    return error;
+}
+
+
+BOOL
+INTERNET_HANDLE_OBJECT::GetProxyInfo(
+    IN INTERNET_SCHEME tProtocol,
+    IN OUT LPINTERNET_SCHEME lptScheme,
+    OUT LPSTR * lplpszHostName,
+    OUT LPDWORD lpdwHostNameLength,
+    OUT LPINTERNET_PORT lpHostPort
+    )
+
+/*++
+
+Routine Description:
+
+    Returns all proxy information based on a protocol scheme
+
+Arguments:
+
+    tProtocol           - protocol to get proxy info for
+
+    lptScheme           - returned scheme
+
+    lplpszHostName      - returned proxy name
+
+    lpdwHostNameLength  - returned length of proxy name
+
+    lpHostPort          - returned proxy port
+
+Return Value:
+
+    BOOL
+        Success - TRUE
+
+        Failure - FALSE
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_INET,
+                Bool,
+                "INTERNET_HANDLE_OBJECT::GetProxyInfo",
+                "%s (%d), %#x [%s (%d)], %#x, %#x, %#x",
+                InternetMapScheme(tProtocol),
+                tProtocol,
+                lptScheme,
+                InternetMapScheme(*lptScheme),
+                *lptScheme,
+                lplpszHostName,
+                lpdwHostNameLength,
+                lpHostPort
+                ));
+
+    INET_ASSERT(!IsCopy());
+
+    BOOL rc;
+
+    if (IsProxyGlobal()) {
+        CheckGlobalProxyUpdated();
+    }
+
+    AcquireProxyInfo(FALSE);
+
+    if (IsProxy()) {
+        rc = _ProxyInfo->GetProxyInfo(tProtocol,
+                                      lptScheme,
+                                      lplpszHostName,
+                                      lpdwHostNameLength,
+                                      lpHostPort
+                                      );
+    } else {
+        rc = FALSE;
+    }
+
+    ReleaseProxyInfo();
+
+    DEBUG_LEAVE(rc);
+
+    return rc;
+}
+
+
+INTERNET_SCHEME
+INTERNET_HANDLE_OBJECT::ProxyScheme(
+    IN INTERNET_SCHEME tProtocol
+    )
+
+/*++
+
+Routine Description:
+
+    Returns the proxy scheme used for a particular protocol
+
+Arguments:
+
+    tProtocol   - protocol to return scheme for
+
+Return Value:
+
+    INTERNET_SCHEME
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_INET,
+                Int,
+                "INTERNET_HANDLE_OBJECT::ProxyScheme",
+                "%s (%d)",
+                InternetMapScheme(tProtocol),
+                tProtocol
+                ));
+
+    INET_ASSERT(!IsCopy());
+
+    if (IsProxyGlobal()) {
+        CheckGlobalProxyUpdated();
+    }
+
+    AcquireProxyInfo(FALSE);
+
+    INTERNET_SCHEME rc;
+
+    if (IsProxy()) {
+        rc = _ProxyInfo->ProxyScheme(tProtocol);
+    } else {
+        rc = INTERNET_SCHEME_UNKNOWN;
+    }
+
+    ReleaseProxyInfo();
+
+    DEBUG_LEAVE(rc);
+
+    return rc;
+}
+
+
+BOOL
+INTERNET_HANDLE_OBJECT::IsBypassed(
+    IN INTERNET_SCHEME tScheme,
+    IN LPSTR lpszHostName,
+    IN DWORD dwHostNameLength,
+    IN INTERNET_PORT nPort
+    )
+
+/*++
+
+Routine Description:
+
+    Determines whether a site can be reached directly
+
+Arguments:
+
+    tScheme             - scheme type we want to use to reach the server
+
+    lpszHostName        - name of the server we want to get to
+
+    dwHostNameLength    - length of lpszHostName
+
+    nPort               - port at server we wish to connect with
+
+Return Value:
+
+    BOOL
+        TRUE    - site can be reached directly
+
+        FALSE   - proxy must be used to get to site
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_INET,
+                Bool,
+                "INTERNET_HANDLE_OBJECT::IsBypassed",
+                "%s (%d), %q, %d, %d",
+                InternetMapScheme(tScheme),
+                tScheme,
+                lpszHostName,
+                dwHostNameLength,
+                nPort
+                ));
+
+    INET_ASSERT(!IsCopy());
+
+    if (IsProxyGlobal()) {
+        CheckGlobalProxyUpdated();
+    }
+
+    AcquireProxyInfo(FALSE);
+
+    BOOL rc;
+
+    if (IsProxy()) {
+        rc =  _ProxyInfo->IsBypassed(tScheme,
+                                     lpszHostName,
+                                     dwHostNameLength,
+                                     nPort
+                                     );
+    } else {
+        rc = FALSE;
+    }
+
+    ReleaseProxyInfo();
+
+    DEBUG_LEAVE(rc);
+
+    return rc;
+}
+
+
+BOOL
+INTERNET_HANDLE_OBJECT::IsBypassed(
+    IN INTERNET_SCHEME tScheme,
+    IN LPSTR lpszHostName,
+    IN INTERNET_PORT nPort
+    )
+
+/*++
+
+Routine Description:
+
+    IsBypassed() method but takes LPSZ string instead of string address & length
+
+Arguments:
+
+    tScheme             - scheme type we want to use to reach the server
+
+    lpszHostName        - name of the server we want to get to
+
+    nPort               - port at server we wish to connect with
+
+Return Value:
+
+    BOOL
+        TRUE    - site can be reached directly
+
+        FALSE   - proxy must be used to get to site
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_INET,
+                Bool,
+                "INTERNET_HANDLE_OBJECT::IsBypassed",
+                "%s (%d), %q, %d",
+                InternetMapScheme(tScheme),
+                tScheme,
+                lpszHostName,
+                nPort
+                ));
+
+    INET_ASSERT(!IsCopy());
+
+    if (IsProxyGlobal()) {
+        CheckGlobalProxyUpdated();
+    }
+
+    AcquireProxyInfo(FALSE);
+
+    BOOL rc;
+
+    if (IsProxy()) {
+        rc =  _ProxyInfo->IsBypassed(tScheme,
+                                     lpszHostName,
+                                     nPort
+                                     );
+    } else {
+        rc = FALSE;
+    }
+
+    ReleaseProxyInfo();
+
+    DEBUG_LEAVE(rc);
+
+    return rc;
+}
+
+
+DWORD
+INTERNET_HANDLE_OBJECT::IndicateStatus(
+    IN DWORD dwStatus,
+    IN LPVOID lpBuffer,
+    IN DWORD dwLength
+    )
+
+/*++
+
+Routine Description:
+
+    Object version of InternetIndicateStatus
+
+Arguments:
+
+    dwStatus    - status code
+
+    lpBuffer    - pointer to information to indicate
+
+    dwLength    - length of information
+
+Return Value:
+
+    DWORD
+        Success - ERROR_SUCCESS
+
+        Failure - ERROR_INTERNET_OPERATION_CANCELLED
+                    The app closed the object handle during the callback
+
+--*/
+
+{
+    DEBUG_ENTER((DBG_OBJECTS,
+                 Dword,
+                 "HANDLE_OBJECT::IndicateStatus",
+                 "{%#x} %s, %#x, %d",
+                 GetPseudoHandle(),
+                 InternetMapStatus(dwStatus),
+                 lpBuffer,
+                 dwLength
+                 ));
+
+    DWORD error = ERROR_SUCCESS;
+    INTERNET_STATUS_CALLBACK appCallback = GetStatusCallback();
+    LPINTERNET_THREAD_INFO lpThreadInfo = InternetGetThreadInfo();
+    DWORD context = GetContext();
+    BOOL bCopyFailed = FALSE;
+
+    if (appCallback == NULL) {
+
+        DEBUG_PRINT(THRDINFO,
+                    INFO,
+                    ("%#x: no callback\n",
+                    GetPseudoHandle()
+                    ));
+
+        INET_ASSERT(dwStatus != INTERNET_STATUS_REQUEST_COMPLETE);
+
+        goto quit;
+    }
+
+    if (lpThreadInfo == NULL) {
+
+        INET_ASSERT(dwStatus != INTERNET_STATUS_REQUEST_COMPLETE);
+        INET_ASSERT(FALSE);
+
+        error = ERROR_INTERNET_INTERNAL_ERROR;
+        goto quit;
+    }
+
+    IF_DEBUG(OBJECTS) {
+
+        if (dwStatus == INTERNET_STATUS_REQUEST_COMPLETE) {
+
+            DEBUG_PRINT(THRDINFO,
+                        INFO,
+                        ("REQUEST_COMPLETE: dwResult = %#x, dwError = %d [%s]\n",
+                        ((LPINTERNET_ASYNC_RESULT)lpBuffer)->dwResult,
+                        ((LPINTERNET_ASYNC_RESULT)lpBuffer)->dwError,
+                        InternetMapError(((LPINTERNET_ASYNC_RESULT)lpBuffer)->dwError)
+                        ));
+
+        }
+    }
+
+    LPVOID pInfo;
+    DWORD infoLength;
+
+    //
+    // we make a copy of the info to remove the app's opportunity to change it.
+    // E.g. if we were about to resolve host name "foo" and passed the pointer
+    // to our buffer containing "foo", the app could change the name to "bar",
+    // changing the intended server
+    //
+
+    if (lpBuffer != NULL) {
+        pInfo = (LPVOID)ALLOCATE_FIXED_MEMORY(dwLength);
+        if (pInfo != NULL) {
+            memcpy(pInfo, lpBuffer, dwLength);
+            infoLength = dwLength;
+        } else {
+
+            DEBUG_PRINT(THRDINFO,
+                        ERROR,
+                        ("Failed to allocate %d bytes for info\n",
+                        dwLength
+                        ));
+
+            //
+            // if this is a request complete indication, then we CANNOT fail it
+            // because we cannot make a copy of the parameters. In this case,
+            // we'll trust the app & pass in a pointer to our (stack) data
+            //
+
+            if (dwStatus == INTERNET_STATUS_REQUEST_COMPLETE) {
+                pInfo = lpBuffer;
+                infoLength = dwLength;
+                bCopyFailed = TRUE; // don't free pInfo
+            } else {
+                infoLength = 0;
+            }
+        }
+    } else {
+        pInfo = NULL;
+        infoLength = 0;
+    }
+
+    //
+    // we're about to call into the app. We may be in the context of an async
+    // worker thread, and if the callback submits an async request then we'll
+    // execute it synchronously. To avoid this, we will reset the async worker
+    // thread indicator in the per-thread info block and restore it when the
+    // app returns control to us. This way, if the app makes an API request
+    // during the callback, on a handle that has async I/O semantics, then we
+    // will simply queue it, and not try to execute it synchronously
+    //
+
+    BOOL isAsyncWorkerThread;
+
+    isAsyncWorkerThread = lpThreadInfo->IsAsyncWorkerThread;
+    lpThreadInfo->IsAsyncWorkerThread = FALSE;
+    lpThreadInfo->InCallback = TRUE;
+
+    INET_ASSERT(!IsBadCodePtr((FARPROC)appCallback));
+
+    //
+    // protect the object from being dereferenced & deleted inside the
+    // callback
+    //
+
+    Reference();
+
+    DEBUG_ENTER((DBG_OBJECTS,
+                 None,
+                 "(*callback)",
+                 "%#x, %#x, %s (%d), %#x [%#x], %d",
+                 GetPseudoHandle(),
+                 context,
+                 InternetMapStatus(dwStatus),
+                 dwStatus,
+                 pInfo,
+                 (infoLength == sizeof(DWORD))
+                    ? *(LPDWORD)pInfo
+                    : 0,
+                 infoLength
+                 ));
+
+    appCallback(GetPseudoHandle(),
+                context,
+                dwStatus,
+                pInfo,
+                infoLength
+                );
+
+    DEBUG_LEAVE(0);
+
+    //
+    // reduce the reference count on the object (it *may* be destroyed)
+    //
+
+    BOOL ok;
+
+    ok = Dereference();
+
+    //
+    // restore the app/worker thread state in our per-thread info
+    //
+
+    lpThreadInfo->InCallback = FALSE;
+    lpThreadInfo->IsAsyncWorkerThread = isAsyncWorkerThread;
+
+    //
+    // free the buffer if we created a copy
+    //
+
+    if ((pInfo != NULL)&& !bCopyFailed) {
+        FREE_FIXED_MEMORY(pInfo);
+    }
+
+    //
+    // if the object is now invalid then the app closed the handle in
+    // the callback, and the entire operation is cancelled
+    //
+
+    if (ok || IsInvalidated()) {
+        error = ERROR_INTERNET_OPERATION_CANCELLED;
+    }
+
+quit:
+
+    DEBUG_LEAVE(error);
+
+    return error;
+}

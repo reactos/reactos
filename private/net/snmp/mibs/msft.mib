@@ -1,0 +1,18 @@
+MSFT-MIB DEFINITIONS ::= BEGIN
+ 
+
+IMPORTS
+    enterprises
+        FROM RFC1155-SMI;
+
+microsoft       OBJECT IDENTIFIER ::= { enterprises 311 }
+software        OBJECT IDENTIFIER ::= { microsoft 1 }
+systems         OBJECT IDENTIFIER ::= { software 1 }
+os              OBJECT IDENTIFIER ::= { systems 3 }
+windowsNT       OBJECT IDENTIFIER ::= { os 1 }
+windows         OBJECT IDENTIFIER ::= { os 2 }
+workstation     OBJECT IDENTIFIER ::= { windowsNT 1 }
+server          OBJECT IDENTIFIER ::= { windowsNT 2 }
+dc              OBJECT IDENTIFIER ::= { windowsNT 3 }
+
+END

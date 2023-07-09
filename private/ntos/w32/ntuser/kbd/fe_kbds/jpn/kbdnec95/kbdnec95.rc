@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define	VER_FILETYPE	          VFT_DLL
+#define	VER_FILESUBTYPE	          VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR   "JP Japanese Keyboard Layout for (NEC PC-9800 Windows 95)"
+#define VER_INTERNALNAME_STR      "kbdnec95"
+#define VER_ORIGINALFILENAME_STR  "kbdnec95.dll"
+
+#include "common.ver"
+

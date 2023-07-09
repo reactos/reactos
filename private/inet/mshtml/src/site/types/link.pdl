@@ -1,0 +1,86 @@
+#ifndef _LINK_PDL_
+#define _LINK_PDL_ 1
+
+#include "element.pdl"
+#include "sheet.pdl"
+
+file link.pdl
+
+import element.pdl
+import sheet.pdl
+
+interface IHTMLLinkElement guid:3050f205-98b5-11cf-bb82-00aa00bdce0b
+    refprop CLinkElement:href
+    refprop CLinkElement:rel
+    refprop CLinkElement:rev
+    refprop CLinkElement:type
+    refprop CLinkElement:readyState
+    refprop CLinkElement:onreadystatechange
+    refprop CLinkElement:onload
+    refprop CLinkElement:onerror
+    refprop CLinkElement:styleSheet
+    refprop CElement:disabled
+    refprop CLinkElement:media
+
+interface IHTMLLinkElement2 super:IDispatch guid:3050f4e5-98b5-11cf-bb82-00aa00bdce0b
+    refprop CLinkElement:target
+    
+/* New style element events w/ eventObject parameter: */
+event HTMLLinkElementEvents2 super:HTMLElementEvents2 guid:3050f61d-98b5-11cf-bb82-00aa00bdce0b
+    method void onload (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONLOAD
+    method void onerror (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONERROR
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLLinkElementEvents super:HTMLElementEvents guid:3050f3cc-98b5-11cf-bb82-00aa00bdce0b
+    method void onload      dispid:DISPID_EVMETH_ONLOAD ()
+    method void onerror     dispid:DISPID_EVMETH_ONERROR ()
+
+tearoff CLinkElement interface:IDispatchEx BaseImpl:super::
+    tearmethod InvokeEx             mapto:ContextThunk_InvokeExReady
+    tearmethod GetNameSpaceParent   mapto:CElement::GetNameSpaceParent
+
+tearoff CLinkElement interface:IHTMLLinkElement
+    tearmethod readyState        mapto:readyState
+
+tearoff CLinkElement interface:IHTMLLinkElement2
+
+tearoff CLinkElement interface:IHTMLElement2 BaseImpl:CElement::
+    tearmethod readyState           mapto:readyState
+    tearmethod get_readyStateValue  mapto:get_readyStateValue
+    tearmethod get_tabIndex         mapto:super::get_tabIndex
+
+class CLinkElement name:HTMLLinkElement \
+            primaryinterface:IHTMLLinkElement \
+            super:CElement \
+            events:HTMLLinkElementEvents \
+            nonprimaryevents:HTMLLinkElementEvents2 \
+            guid:3050f277-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f524-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLLinkElement
+    implements IHTMLLinkElement2
+
+    property href       atype:BSTR    dispid:DISPID_HEDELEMS+5   type:url    get set caa bindable displaybind maxstrlen:pdlUrlLen
+    property rel        atype:BSTR    dispid:DISPID_HEDELEMS+6   type:CStr   get set caa bindable displaybind maxstrlen:pdlNoLimit
+    property rev        atype:BSTR    dispid:DISPID_HEDELEMS+7   type:CStr   get set caa bindable displaybind maxstrlen:pdlNoLimit
+    property type       atype:BSTR    dispid:DISPID_HEDELEMS+8   type:CStr   get set caa bindable displaybind maxstrlen:pdlNoLimit
+
+    property readyState atype:BSTR   dispid:DISPID_A_READYSTATE \
+         abstract get nopropdesc:nameonly
+    property onreadystatechange     atype:VARIANT type:code dispid:DISPID_EVPROP_ONREADYSTATECHANGE  caa scriptlet \
+        get set bindable displaybind maxstrlen:pdlEvent nopropdesc
+    property onload     atype:VARIANT   dispid:DISPID_EVPROP_ONLOAD   type:code \
+        scriptlet get set caa bindable displaybind maxstrlen:pdlEvent
+    property onerror    atype:VARIANT   dispid:DISPID_EVPROP_ONERROR  type:code \
+        scriptlet get set caa bindable displaybind maxstrlen:pdlEvent
+    property styleSheet atype:IHTMLStyleSheet*        dispid:DISPID_HEDELEMS+14 \
+         abstract get
+    property media      atype:BSTR      dispid:DISPID_HEDELEMS+16    \
+        type:CStr   get set caa bindable displaybind maxstrlen:pdlToken
+    property target     atype:BSTR      dispid:DISPID_HEDELEMS+17    \
+        type:CStr   get set caa bindable displaybind maxstrlen:pdlToken
+
+#endif _LINK_PDL_

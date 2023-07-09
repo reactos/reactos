@@ -1,0 +1,37 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+TARGETNAME=nukesub
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+USE_CRTDLL=1
+
+INCLUDES=\
+    $(BASEDIR)\public\sdk\inc\sockets;\
+    $(BASEDIR)\private\net\inc
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\snmpapi.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+SOURCES=\
+    nukesub.c \
+    nukesub.rc
+
+UMTYPE=console

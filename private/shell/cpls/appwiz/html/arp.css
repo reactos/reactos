@@ -1,0 +1,58 @@
+
+/* ARP.CSS - stylesheet for the add and remove pages */
+
+H1 {
+    font-size: 13pt;
+    font-family: Verdana, Tahoma, Arial;
+    font-weight: bold;
+    }
+
+BUTTON {
+    font-size: 8pt;                             /* Set explicitly b/c it is not inherited */
+    font-family: Tahoma, Verdana, Arial, sans-serif;    /* Set explicitly b/c it is not inherited */
+    padding: 1px;                               /* Make buttons look more like Win32 buttons */
+    }
+
+BODY { 
+    margin:7px;
+    cursor: default;
+    font-size: 8pt;
+    font-family: Tahoma, Verdana, Arial, sans-serif; 
+    }
+
+TABLE {
+    font-size: 8pt;                             /* Set explicitly b/c it is not inherited */
+    cursor: default;                            /* Set explicitly b/c it is not inherited */
+    xborder: '1px solid green';
+    border-collapse:collapse;
+    width:100%;
+    height:100%;
+    }
+    
+SELECT {
+    font-family: Tahoma, Verdana, Arial, sans-serif;    /* Set explicitly b/c it is not inherited */
+    font-size: 8pt;                             /* Set explicitly b/c it is not inherited */
+    color: windowtext;
+    }
+
+TD {
+    padding: 0px;
+    xborder: '1px solid burlywood';                   /* Used for layout debugging */
+    }
+
+A {
+    color: windowtext;
+    }
+    
+A.Focus {
+    color: highlighttext;
+    }
+
+
+/* Spans in a label element are considered the accelerator,
+   so underline them. */
+LABEL SPAN {
+    text-decoration: underline;
+    accelerator: true;                          /* tell trident to apply keyboard cues as necessary */
+    }
+

@@ -1,0 +1,16 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Dec-19-1996 v-HirShi Created
+#***************************************************************************/
+W32_SB=1
+ALT_PROJECT=DAYTONA
+ALT_PROJECT_TARGET=.
+!include ..\sources.inc
+
+SOURCES=$(SOURCES) 

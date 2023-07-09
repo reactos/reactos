@@ -1,0 +1,30 @@
+/*++
+
+Copyright (c) 1991-1999,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    c_other.rc
+
+Abstract:
+
+    This file contains the resource descriptions.
+
+Revision History:
+
+    10-30-96    JulieB    Created.
+
+--*/
+
+
+#include <winver.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                   VFT_DLL
+#define VER_FILESUBTYPE                VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR        "Code Page Translation DLL"
+#define VER_INTERNALNAME_STR           "c_other\0"
+#define VER_ORIGINALFILENAME_STR       "c_other.dll"
+
+#include "common.ver"
+

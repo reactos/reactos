@@ -1,0 +1,17 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\core\dbglite=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=dbglite
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(COREINCLUDES)
+
+SOURCES= \
+    dbglite.cxx

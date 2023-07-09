@@ -1,0 +1,10 @@
+# The win95 binary should be built only by x86 systems.
+#
+# Build the win95 binary first, so the PDB file of the NT version won't
+# get stomped on by the linker.
+#
+DIRS    = w95cpp{x86} \
+          w5api{x86} win95{x86} \
+          ntcpp nt5api winnt 
+
+OPTIONAL_DIRS =

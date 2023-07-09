@@ -1,0 +1,49 @@
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+
+NOT_UNICODE     = 1
+TARGET_BOTH     = 1
+
+!include $(CCSHELL_DIR)\common.inc
+
+NO_BROWSER_FILE = 1
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+TARGETNAME      = shfolder
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+TARGETPATHLIB   = $(BASEDIR)\public\sdk\lib
+
+# NOTE!! We deliberately link to an NT4 compatible shell32.lib
+#        so shdocvw can be loaded in the browser-only installations.
+#        We use the NT version because it contains lego info.
+#        The debug version of shdocvw links to the Win95 version
+#        of shell32.lib simply so we can verify that we load in the
+#        browser-only installations on Win95.
+
+TARGETLIBS      = $(LIBRARY_PATH)\gdi32.lib     \
+                  $(LIBRARY_PATH)\user32.lib    \
+                  $(LIBRARY_PATH)\kernel32.lib  \
+                  $(LIBRARY_PATH)\shell32.lib  \
+                  $(LIBRARY_PATH)\advapi32.lib  \
+                  $(CCSHELL_DIR)\lib\$O\stocklib.lib
+
+
+USE_LIBCMT      = 1
+
+DLLDEF          = $(O)\folder.def
+DLLBASE         = 0x71300000
+
+DLLENTRY        = DllMain
+
+SOURCES         = folder.rc    \
+                  folder.c     \
+
+
+#PRECOMPILED_INCLUDE = folder.h
+PRECOMPILED_PCH = precomp.pch
+PRECOMPILED_OBJ = precomp.obj
+
+MISCFILES       = shfldexe.sed shfldcab.sed shfolder.inf

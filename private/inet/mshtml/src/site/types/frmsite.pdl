@@ -1,0 +1,64 @@
+#ifndef _FRMSITE_PDL_
+#define _FRMSITE_PDL_ 1
+
+#include "csite.pdl"
+#include "olesite.pdl"
+
+file frmsite.pdl
+
+import csite.pdl
+
+// BUGBUG (alexz) (rgardner): the enum should use the constants
+enum frameScrolling prefix:frameScrolling guid:3050f31E-98b5-11cf-bb82-00aa00bdce0b
+    eval yes    string:yes      value:1 //FRAMEOPTIONS_SCROLL_YES
+    eval no     string:no       value:2 //FRAMEOPTIONS_SCROLL_NO
+    eval auto   string:auto     value:4 //FRAMEOPTIONS_SCROLL_AUTO
+
+interface IHTMLFrameBase guid:3050f311-98b5-11cf-bb82-00aa00bdce0b
+    refprop CFrameSite:src
+    refprop CFrameSite:name
+    refprop CFrameSite:border
+    refprop CFrameSite:frameBorder
+    refprop CFrameSite:frameSpacing
+    refprop CFrameSite:marginWidth
+    refprop CFrameSite:marginHeight
+    refprop CFrameSite:noResize
+    refprop CFrameSite:scrolling
+
+tearoff CFrameSite interface:IHTMLFrameBase
+
+class CFrameSite name:HTMLFrameBase \
+            primaryinterface:IHTMLFrameBase \
+            super:COleSite \
+            events:HTMLControlElementEvents \
+            nonprimaryevents:HTMLControlElementEvents2 \
+            guid:3050f312-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f541-98b5-11cf-bb82-00aa00bdce0b \
+            abstract
+             
+#include "basedom.pdl"
+    implements IHTMLControlElement
+    implements IHTMLFrameBase
+
+    property src            dispid:DISPID_FRAMESITE+0   atype:BSTR type:url  caa get set setaahr    maxstrlen:pdlUrlLen
+    property name           dispid:STDPROPID_XOBJ_NAME  atype:BSTR type:CStr method:nameHelper baseimplementation \
+       get set  maxstrlen:pdlNoLimit
+    property border         dispid:DISPID_FRAMESITE+2  atype:VARIANT  type:CUnitValue \
+        caa get set ppflags:PP_UV_LENGTH maxstrlen:pdlToken
+    property frameBorder    dispid:DISPID_FRAMESITE+3  atype:BSTR     type:CStr caa get set maxstrlen:pdlToken
+
+    property frameSpacing   dispid:DISPID_FRAMESITE+4  atype:VARIANT type:CUnitValue  \
+        caa get set default:NULL_UNITVALUE ppflags:PP_UV_LENGTH maxstrlen:pdlLength
+
+    property marginWidth    dispid:DISPID_FRAMESITE+5  atype:VARIANT type:CUnitValue  \
+        caa get set default:NULL_UNITVALUE ppflags:PP_UV_LENGTH maxstrlen:pdlLength
+
+    property marginHeight   dispid:DISPID_FRAMESITE+6  atype:VARIANT type:CUnitValue  \
+        caa get set default:NULL_UNITVALUE ppflags:PP_UV_LENGTH maxstrlen:pdlLength
+
+    property noResize       dispid:DISPID_FRAMESITE+7 atype:VARIANT_BOOL type:BYTE vt:VT_BOOL caa get set
+    
+    property scrolling      dispid:DISPID_FRAMESITE+8  atype:BSTR  type:frameScrolling  caa get set default:4 maxstrlen:pdlToken /*FRAMEOPTIONS_SCROLL_AUTO*/
+
+#endif _FRMSITE_PDL_
+

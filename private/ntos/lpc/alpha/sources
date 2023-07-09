@@ -1,0 +1,2 @@
+GPSIZE=32
+ALPHA_SOURCES=..\alpha\lpcmove.s

@@ -1,0 +1,5 @@
+DIRS=skdll     \
+     skeys     \
+     access
+
+OPTIONAL_DIRS=

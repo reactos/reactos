@@ -1,0 +1,7 @@
+# This makefile was generated automatically by mwgenmakeC.
+
+.NOTPARALLEL: world all clean install depend
+
+world all clean install depend:
+	@enterdir lib ${MAKE} ${MFLAGS} $@
+	@enterdir jpglib6a ${MAKE} ${MFLAGS} $@

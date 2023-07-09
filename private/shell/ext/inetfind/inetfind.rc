@@ -1,0 +1,27 @@
+#include "fnd.h"
+
+#include "windows.h"
+
+/*****************************************************************************
+ *
+ *	Icons
+ *
+ *****************************************************************************/
+
+IDI_INETFIND	ICON INETFIND.ICO	/* My main icon */
+
+/*****************************************************************************
+ *
+ *	String table
+ *
+ *****************************************************************************/
+
+STRINGTABLE MOVEABLE DISCARDABLE
+BEGIN
+
+IDS_ONTHEINTERNET	"On the &Internet..."
+IDS_FINDHELP		"Locate information on the Internet"
+
+END
+
+#include "inetfind.rcv"

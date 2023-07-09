@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdhe
+
+TARGETNAME=kbdhe
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdhe.c kbdhe.rc
+
+NTTARGETFILE0=kbdhe.h kbdhe.rc kbdhe.def

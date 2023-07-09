@@ -1,0 +1,5 @@
+LIBRARY         DT_DLL
+
+EXPORTS
+    WSAPreApiNotify
+    WSAPostApiNotify

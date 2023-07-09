@@ -1,0 +1,17 @@
+NAME	     ClipSrv	
+
+EXETYPE      WINDOWS	
+
+STUB	     'WINSTUB.EXE'
+
+CODE  PRELOAD MOVEABLE DISCARDABLE
+
+DATA  PRELOAD MOVEABLE MULTIPLE
+
+HEAPSIZE     2048
+STACKSIZE    5120	   ; recommended minimum for Windows applications
+
+
+EXPORTS
+	MainWndProc             @1
+	DdeCallback             @2

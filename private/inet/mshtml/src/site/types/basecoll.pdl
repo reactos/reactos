@@ -1,0 +1,40 @@
+
+// this is strictly to be included into other files that need to implement a 
+//  collection interface. it is NOT intended to stand on its own.
+//  this file is currently used in:
+//      collect.pdl
+//      eform.pdl
+//      map.pdl
+//      select.pdl
+
+
+#ifdef EXPAND_COLLECTION_REFS
+    refprop    EXPAND_COLLECTION_REFS:length 
+    refprop    EXPAND_COLLECTION_REFS:_newEnum 
+    refmethod  EXPAND_COLLECTION_REFS:item   
+    refmethod  EXPAND_COLLECTION_REFS:tags  
+#undef EXPAND_COLLECTION_REFS
+
+
+#else
+
+#ifdef EXPAND_COLLECTION_DEFNS
+
+
+    property  length   atype:long        dispid:DISPID_COLLECTION    type:long      \
+                       dwFlags:0   abstract get set virtual
+    property  _newEnum atype:IUnknown*   dispid:DISPID_NEWENUM       type:IUnknown* \
+                       dwFlags:0   abstract get     hidden restricted virtual
+
+    method HRESULT tags   maxstrlen:pdlNoLimit  dispid:DISPID_COLLECTION+2 (in type:VARIANT arg:tagName, \
+                                                      out retval type:IDispatch** arg:pdisp )   
+    method HRESULT item   maxstrlen:pdlNoLimit  dispid:DISPID_VALUE  (in optional type:VARIANT arg:name \
+                                                     , in optional type:VARIANT arg:index,  \
+                                                      out retval type:IDispatch** arg:pdisp)
+    method HRESULT urns   maxstrlen:pdlNoLimit  dispid:DISPID_COLLECTION+5 (in type:VARIANT arg:urn, \
+                                                      out retval type:IDispatch** arg:pdisp )   
+
+#undef EXPAND_COLLECTION_DEFNS
+#endif
+#endif
+

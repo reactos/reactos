@@ -1,0 +1,42 @@
+;/*++
+;
+;Copyright (c) 1991-1999,  Microsoft Corporation  All rights reserved.
+;
+;Module Name:
+;
+;    c_other.def
+;
+;Abstract:
+;
+;    This file contains the dll module definitions.
+;
+;Revision History:
+;
+;    10-30-96    JulieB    Created.
+;
+;--*/
+
+
+
+;
+;  Definitions.
+;
+
+LIBRARY       c_other
+
+
+
+;
+;  Exports.
+;
+
+EXPORTS
+    NlsDllCodePageTranslation
+
+
+
+
+;
+;  Imports.
+;
+

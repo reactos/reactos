@@ -1,0 +1,83 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=ntos
+MINORCOMP=krtl
+
+TARGETNAME=ntosrtl
+TARGETPATH=..\..\obj
+TARGETTYPE=LIBRARY
+GPSIZE=32
+
+INCLUDES=..;..\..\inc;$(DDK_INC_PATH)
+
+NTPROFILEINPUT=yes
+
+C_DEFINES=$(C_DEFINES) -D_NTSYSTEM_ -DNTOS_KERNEL_RUNTIME=1
+
+ASM_DEFINES=-DNTOS_KERNEL_RUNTIME=1
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=..\acledit.c   \
+        ..\assert.c    \
+        ..\atom.c      \
+        ..\bitmap.c    \
+        ..\cnvint.c    \
+        ..\compress.c  \
+        ..\debug.c     \
+        ..\dev2dos.c   \
+        ..\eballoc.c   \
+        ..\environ.c   \
+        ..\error.c     \
+        ..\excptdbg.c  \
+        ..\gentable.c  \
+        ..\gen8dot3.c  \
+        ..\guid.c      \
+        ..\heap.c      \
+        ..\imagedir.c  \
+        ..\checksum.c  \
+        ..\ldrrsrc.c   \
+        ..\ldrreloc.c  \
+        ..\lznt1.c     \
+        ..\message.c   \
+        ..\nls.c       \
+        ..\pctohdr.c   \
+        ..\prefix.c    \
+        ..\prodtype.c  \
+        ..\random.c    \
+        ..\range.c     \
+        ..\regutil.c   \
+        ..\rtlassig.c  \
+        ..\rtldata.c   \
+        ..\rtlexec.c   \
+        ..\rxact.c     \
+        ..\sertl.c     \
+        ..\splay.c     \
+        ..\string.c    \
+        ..\stktrace.c  \
+        ..\time.c      \
+        ..\tracedb.c   \
+        ..\nlsxlat.c   \
+		..\version.c
+
+
+UMTYPE=console
+
+NTTARGETFILE1=..\error.c

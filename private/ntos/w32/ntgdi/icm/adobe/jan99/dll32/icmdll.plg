@@ -1,0 +1,46 @@
+--------------------Configuration: icmdll - Win32 Debug--------------------
+Begining build with project "D:\BUGFIX\Icm.test\DLL32.NEW\icmdll.dsp", at root.
+Active configuration is Win32 (x86) Dynamic-Link Library (based on Win32 (x86) Dynamic-Link Library)
+
+Project's tools are:
+			"32-bit C/C++ Compiler for 80x86" with flags "/nologo /MTd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "ICMDLL" /Fr"WinDebug/" /Fp"WinDebug/icmdll.pch" /YX /Fo"WinDebug/" /Fd"WinDebug/" /FD /c "
+			"OLE Type Library Maker" with flags "/nologo /D "_DEBUG" /mktyplib203 /win32 "
+			"Win32 Resource Compiler" with flags "/l 0x409 /d "_DEBUG" "
+			"Browser Database Maker" with flags "/nologo /o"WinDebug/icmdll.bsc" "
+			"COFF Linker for 80x86" with flags "kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /incremental:yes /pdb:"WinDebug/icmdll.pdb" /debug /machine:I386 /def:".\icmdll.def" /out:"WinDebug/icmdll.dll" /implib:"WinDebug/icmdll.lib" "
+			"Custom Build" with flags ""
+			"<Component 0xa>" with flags ""
+
+Creating temp file "c:\tmp\RSP281.TMP" with contents </nologo /MTd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "ICMDLL" /Fr"WinDebug/" /Fp"WinDebug/icmdll.pch" /YX /Fo"WinDebug/" /Fd"WinDebug/" /FD /c 
+"D:\BUGFIX\Icm.test\DLL32.NEW\csprof.c"
+"D:\BUGFIX\Icm.test\DLL32.NEW\DLLMAIN.C"
+"D:\BUGFIX\Icm.test\DLL32.NEW\getcrd.c"
+"D:\BUGFIX\Icm.test\DLL32.NEW\getcsa.c"
+"D:\BUGFIX\Icm.test\DLL32.NEW\profcrd.c"
+>
+Creating command line "cl.exe @c:\tmp\RSP281.TMP" 
+Creating temp file "c:\tmp\RSP0282.TMP" with contents <kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /incremental:yes /pdb:"WinDebug/icmdll.pdb" /debug /machine:I386 /def:".\icmdll.def" /out:"WinDebug/icmdll.dll" /implib:"WinDebug/icmdll.lib" 
+.\WinDebug\csprof.obj
+.\WinDebug\DLLMAIN.OBJ
+.\WinDebug\getcrd.obj
+.\WinDebug\getcsa.obj
+.\WinDebug\profcrd.obj>
+Creating command line "link.exe @c:\tmp\RSP0282.TMP" 
+Compiling...
+csprof.c
+D:\BUGFIX\Icm.test\DLL32.NEW\csprof.c(3) : warning C4618: pragma parameters included an empty string, pragma ignored
+DLLMAIN.C
+getcrd.c
+D:\BUGFIX\Icm.test\DLL32.NEW\getcrd.c(3) : warning C4618: pragma parameters included an empty string, pragma ignored
+getcsa.c
+D:\BUGFIX\Icm.test\DLL32.NEW\getcsa.c(4) : warning C4618: pragma parameters included an empty string, pragma ignored
+profcrd.c
+D:\BUGFIX\Icm.test\DLL32.NEW\profcrd.c(4) : warning C4083: expected 'string'; found identifier '_ICM3SEG'
+Linking...
+   Creating library WinDebug/icmdll.lib and object WinDebug/icmdll.exp
+Creating command line "bscmake.exe /nologo /o"WinDebug/icmdll.bsc"  .\WinDebug\csprof.sbr .\WinDebug\DLLMAIN.SBR .\WinDebug\getcrd.sbr .\WinDebug\getcsa.sbr .\WinDebug\profcrd.sbr" 
+Creating browse info file...
+
+
+
+icmdll.dll - 0 error(s), 4 warning(s)

@@ -1,0 +1,16 @@
+MAJORCOMP=windows
+MINORCOMP=version
+
+TARGETNAME=test
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+INCLUDES=.
+
+C_DEFINES=-DWIN32
+
+SOURCES=test.c test.rc
+
+UMTYPE=windows
+UMENTRY=winmain
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\version.lib

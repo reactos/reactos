@@ -1,0 +1,7 @@
+#include "ws_resrc.h"
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    // Error writing to the registry
+    //ERR_Registry_Write_Permission,  "An error occurred while trying to write to registry. Please make sure your user account has permission to modify it."
+END

@@ -1,0 +1,85 @@
+          TOASTER-MIB DEFINITIONS ::= BEGIN
+ 
+          --
+          -- Microsoft copied from SNMP mailing list and made no changes.
+          --
+
+          IMPORTS
+                  enterprises
+                          FROM RFC1155-SMI
+                  OBJECT-TYPE
+                          FROM RFC-1212
+                  DisplayString
+                          FROM RFC-1213;
+ 
+ 
+          epilogue        OBJECT IDENTIFIER ::= { enterprises 12 }
+          toaster         OBJECT IDENTIFIER ::= { epilogue 2 }
+ 
+          -- toaster MIB
+ 
+          toasterManufacturer OBJECT-TYPE
+              SYNTAX  DisplayString
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "The name of the toaster's manufacturer. For instance,
+                       Sunbeam."
+              ::= { toaster 1 }
+ 
+          toasterModelNumber OBJECT-TYPE
+              SYNTAX  DisplayString
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "The name of the toaster's model. For instance,
+                       Radiant Automatic."
+              ::= { toaster 2 }
+ 
+          toasterControl OBJECT-TYPE
+              SYNTAX  INTEGER  {
+                          up(1),
+                          down(2)
+                      }
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "This variable controls the current state of the 
+                       toaster. To begin toasting, set it to down(2). To 
+                       abort toasting (perhaps in the event of an 
+                       emergency), set it to up(2)."
+              ::= { toaster 3 }
+ 
+          toasterDoneness OBJECT-TYPE
+              SYNTAX  INTEGER (1..10)
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "This variable controls how well done ensuing toast 
+                       should be on a scale of 1 to 10. Toast made at 10 
+                       is generally considered unfit for human consumption; 
+                       toast made at 1 is lightly warmed."
+              ::= { toaster 4 }
+ 
+          toasterToastType OBJECT-TYPE
+              SYNTAX  INTEGER  {
+                          white-bread(1),
+                          wheat-bread(2),
+                          wonder-bread(3),
+                          frozen-waffle(4),
+                          frozen-bagel(5),
+                          hash-brown(6),
+                          other(7)
+                      }
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "This variable informs the toaster of the type of 
+                       material being toasted. The toaster uses this 
+                       information combined with toasterToastDoneness to 
+                       compute how long the material must be toasted for 
+                       to achieve the desired doneness."
+              ::= { toaster 5 }
+ 
+ 
+          END

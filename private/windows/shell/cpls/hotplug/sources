@@ -1,0 +1,50 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+(C) Copyright MICROSOFT Corp., 1993
+
+   10-Oct-1996 Jonle , created
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=HotPlug
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=dll
+DLLENTRY=DllInitialize
+INCLUDES=$(BASEDIR)\private\shell\inc;$(BASEDIR)\private\windows\inc;$(BASEDIR)\private\inc
+
+C_DEFINES=-DUNICODE -D_UNICODE
+
+USE_CRTDLL=1
+
+UMTYPE = windows
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+           $(BASEDIR)\public\sdk\lib\*\shlwapi.lib  \
+           $(BASEDIR)\public\sdk\lib\*\version.lib  \
+           $(BASEDIR)\public\sdk\lib\*\setupapi.lib
+
+
+SOURCES=init.c     \
+        miscutil.c \
+        hotplug.c  \
+        devtree.c  \
+        rconfirm.c \
+        notify.c   \
+        hotplug.rc
+
+
+UMTEST=tHotPlug
+UMENTRY=wmain
+UMLIBS=

@@ -1,0 +1,30 @@
+LIBRARY         SHDOC401
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Shell extension DLL for DocView host / Windows 95'
+
+SECTIONS
+    SHAREDAT     READ WRITE SHARED   ; Shared data
+
+EXPORTS
+    DllCanUnloadNow                 ULTRAPRIVATE
+    DllGetClassObject               ULTRAPRIVATE
+    DllRegisterServer               ULTRAPRIVATE
+    DllUnregisterServer             ULTRAPRIVATE
+;    DllGetVersion                   ULTRAPRIVATE
+    DllInstall                      ULTRAPRIVATE
+
+;
+;   These are ULTRAPRIVATE because nobody should be linking to them
+;   directly.  These functions also exist in shell32, and anybody who
+;   wants to call them (i.e., SHDOCVW) needs to decide whether to use
+;   the shell32 version or the shdoc401 version.
+;
+;   WARNING!  These ordinals must match the ordinals in shell32.src!
+;
+;
+    ; For explorer/shdocvw to create the desktop
+    DDECreatePostNotify                     @82  ULTRAPRIVATE
+    ShellDDEInit                            @188 ULTRAPRIVATE
+    SHCreateDesktop                         @200 ULTRAPRIVATE
+    SHDesktopMessageLoop                    @201 ULTRAPRIVATE
+    DDEHandleViewFolderNotify               @202 ULTRAPRIVATE

@@ -1,0 +1,11 @@
+#ifndef WIN32   //!!!!
+#include <ver.h>
+#include <verinfo.h>
+
+#define VERSIONNAME               "avifile.dll\0"
+#define VERSIONDESCRIPTION        "Microsoft AVI File support library\0"
+#define VERSIONTYPE               VFT_DLL
+#define VERSIONSUBTYPE            VFT2_DRV_INSTALLABLE
+
+#include <verinfo.ver>
+#endif

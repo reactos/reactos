@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdpl1
+
+TARGETNAME=kbdpl1
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdpl1.c kbdpl1.rc
+
+NTTARGETFILE0=kbdpl1.h kbdpl1.rc kbdpl1.def

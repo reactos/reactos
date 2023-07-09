@@ -1,0 +1,33 @@
+LIBRARY  MSRATING
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION 'Windows Ratings Services'
+
+EXPORTS
+
+    DllCanUnloadNow         PRIVATE
+    DllGetClassObject       PRIVATE
+    DllRegisterServer       PRIVATE
+    DllUnregisterServer     PRIVATE
+
+    ; Private (unpublished) exports should be by ordinal, and NONAME.
+    IntroDialogProc     @1  NONAME
+
+    ; public entry ponits
+    RatingCheckUserAccess
+    RatingEnable
+    RatingSetupUI
+    RatingInit
+    RatingFreeDetails
+    RatingObtainCancel
+    RatingObtainQuery
+    RatingAccessDeniedDialog
+    RatingEnabledQuery
+    RatingAddPropertyPages
+
+    VerifySupervisorPassword
+    ChangeSupervisorPassword
+
+    RatingAccessDeniedDialog2
+
+    ClickedOnPRF
+    ClickedOnRAT

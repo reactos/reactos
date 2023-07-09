@@ -1,0 +1,62 @@
+;
+; Self-registration for dskquoui.dll
+;
+[Version]
+Signature="$Windows NT$"
+
+[RegDll]
+AddReg=AddRegEntries
+
+[UnregDll]
+DelReg=DelRegEntries
+
+[AddRegEntries]
+;
+; Disk Quota UI Shell property sheet extension.
+;
+HKCR,CLSID\%CLSID_DiskQuotaPropSheetExt%,,,Microsoft Disk Quota UI
+HKCR,CLSID\%CLSID_DiskQuotaPropSheetExt%\InProcServer32,,,dskquoui.dll
+HKCR,CLSID\%CLSID_DiskQuotaPropSheetExt%\InProcServer32,"ThreadingModel",,Both
+HKCR,Drive\shellex\PropertySheetHandlers\%CLSID_DiskQuotaPropSheetExt%,,,
+HKLM,%APPROVED_SHELL_EXTENSIONS%,%CLSID_DiskQuotaPropSheetExt%,,Disk Quota UI
+;
+; Group Policy Editor MMC snapin.
+; This snapin has been removed in favor of an ADM-file approach.
+; All related code has been disabled through conditional compilation in case
+; we later decide to reinstate the snapin.  Therefore, leave these entries
+; commented out.
+;
+;HKLM,Software\Microsoft\MMC\SnapIns\%CLSID_DiskQuotaUI%,,,
+;HKLM,Software\Microsoft\MMC\SnapIns\%CLSID_DiskQuotaUI%,NameString,,Disk Quota Extension
+;HKLM,Software\Microsoft\MMC\NodeTypes\%CLSID_GPEComputerNode%\Extensions\NameSpace,%CLSID_DiskQuotaUI%,,Microsoft Disk Quota
+
+
+
+[DelRegEntries]
+;
+; Disk Quota UI Shell property sheet extension.
+;
+HKCR,CLSID\%CLSID_DiskQuotaPropSheetExt%\InProcServer32
+HKCR,CLSID\%CLSID_DiskQuotaPropSheetExt%
+HKCR,Drive\shellex\PropertySheetHandlers\%CLSID_DiskQuotaPropSheetExt%
+HKLM,%APPROVED_SHELL_EXTENSIONS%,%CLSID_DiskQuotaPropSheetExt%
+;
+; Group Policy Editor MMC snapin.
+; This snapin has been removed in favor of an ADM-file approach.
+; All related code has been disabled through conditional compilation in case
+; we later decide to reinstate the snapin.  Therefore, leave these entries
+; commented out.
+;
+;HKLM,Software\Microsoft\MMC\SnapIns\%CLSID_DiskQuotaUI%
+;HKLM,Software\Microsoft\MMC\NodeTypes\%CLSID_GPEComputerNode%\Extensions\NameSpace,%CLSID_DiskQuotaUI%
+;
+; General persistence data created programatically.
+;
+HKCU,Software\Microsoft\Windows NT\CurrentVersion\DiskQuota
+
+
+[Strings]
+CLSID_DiskQuotaUI={7988B573-EC89-11cf-9C00-00AA00A14F56}
+CLSID_DiskQuotaPropSheetExt={7988B573-EC89-11cf-9C00-00AA00A14F56}
+CLSID_GPEComputerNode={8FC0B737-A0E1-11d1-A7D3-0000F87571E3}
+APPROVED_SHELL_EXTENSIONS=Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved

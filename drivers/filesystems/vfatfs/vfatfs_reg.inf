@@ -1,7 +1,0 @@
-; Virtual FATX filesystem driver
-[AddReg]
-HKLM,"SYSTEM\CurrentControlSet\Services\vfatfs","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\vfatfs","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\vfatfs","ImagePath",0x00020000,"system32\drivers\vfatfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\vfatfs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\vfatfs","Type",0x00010001,0x00000002

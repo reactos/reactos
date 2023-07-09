@@ -1,0 +1,20 @@
+CLOCK DIALOG LOADONCALL MOVEABLE DISCARDABLE 17, 15, 162, 80
+STYLE DS_MODALFRAME | WS_SYSMENU | WS_DLGFRAME | WS_VISIBLE | WS_POPUP
+FONT 6 "MS Shell Dlg"
+CAPTION "About Clock"
+BEGIN
+#ifdef OS2
+           CONTROL "Microsoft OS/2", -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 5, 161, 8
+#else
+           CONTROL "Microsoft Windows", -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 5, 161, 8
+#endif
+           CONTROL "Clock", -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 15, 161, 8
+#ifdef OS2
+           CONTROL "Version 2.0 ", -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 34, 161, 8
+#else
+           CONTROL "Version 3.0 ", -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 34, 161, 8
+#endif
+           CONTROL "Copyright © 1985-1991 Microsoft Corp.", -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 47, 161, 9
+           CONTROL "OK", ID_JUNK, "button", BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP | WS_CHILD, 65, 60, 32, 14
+           CONTROL "cckk", -1, "static", SS_ICON | WS_GROUP | WS_CHILD, 14, 14, 26, 30
+END

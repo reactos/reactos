@@ -1,0 +1,779 @@
+MSIPX-MIB DEFINITIONS ::= BEGIN
+
+-- This MIB defines the management information for a system using the IPX
+-- protocol.  The MIB consists of four groups:
+--
+--    1.  Base Group - contains general information about IPX.
+--
+--    2.  Interface Group - contains information about all interfaces used by IPX.
+--
+--    3.  Forwarding Group - contains generic routing information that
+--                           must be provided by any IPX routing protocol.
+--
+--    4.  Services Group - contains information about all known services.
+--
+-- This MIB is designed to provide a basic framework for the management
+-- of systems implementing the IPX protocol.  Additional MIBs may be
+-- created (especially in the area of IPX routing protocols) to contain
+-- more specific information.  Whenever possible, these additional MIBs
+-- should follow the format of this IPX MIB.
+--
+--
+
+IMPORTS
+				enterprises, Counter
+						FROM RFC1155-SMI
+				OBJECT-TYPE
+						FROM RFC-1212
+				TRAP-TYPE
+						FROM RFC-1215
+                microsoft, software
+                        FROM MSFT-MIB;
+
+-- microsoft 	OBJECT IDENTIFIER ::= { enterprises 311 }
+-- software		OBJECT IDENTIFIER ::= { microsoft 1 }
+ipx                             OBJECT IDENTIFIER ::= { software 8 }
+
+-- Groups
+
+ipxBase			OBJECT IDENTIFIER ::= {ipx 1}
+ipxInterface	OBJECT IDENTIFIER ::= {ipx 2}
+ipxForwarding	OBJECT IDENTIFIER ::= {ipx 3}
+ipxServices		OBJECT IDENTIFIER ::= {ipx 4}
+ipxTraps		OBJECT IDENTIFIER ::= {ipx 5}
+
+
+-- Types
+
+NetNumber		::= OCTET STRING (SIZE(4))
+PhysAddress		::= OCTET STRING (SIZE(6))
+
+
+-- Base Group
+ipxBaseOperState OBJECT-TYPE
+	SYNTAX		INTEGER {
+						down(1),
+						up(2)
+						}
+	ACCESS      read-only
+	STATUS      mandatory
+	DESCRIPTION "The current operational state of the software."
+	::= {ipxBase 1}
+
+
+ipxBasePrimaryNetNumber OBJECT-TYPE
+	SYNTAX      NetNumber
+	ACCESS      read-only
+	STATUS      mandatory
+	DESCRIPTION "The 'internal' network number."
+	::= {ipxBase 2}
+
+ipxBaseNode		OBJECT-TYPE
+	SYNTAX		PhysAddress
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The node number portion of the IPX address of this
+				system."
+	::= {ipxBase 3}
+
+ipxBaseSysName	OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(0..48))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The readable name for this system."
+	::= {ipxBase 4}
+
+ipxBaseMaxPathSplits OBJECT-TYPE
+	SYNTAX		INTEGER (1..32)
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The maximum number of paths with equal routing metric
+				value which  this instance of IPX may split between when
+				forwarding packets."
+   ::= {ipxBase 5}
+
+ipxBaseIfCount	OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of interfaces known to this instance of IPX."
+	::= {ipxBase 6}
+
+ipxBaseDestCount OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of currently reachable destinations known to
+				this instance of IPX."
+	::= {ipxBase 7}
+
+ipxBaseServCount OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of services known to this instance of IPX."
+	::= {ipxBase 8}
+
+-- Interface Group
+--   This group contains management information for each interface known
+--   to this system.
+
+-- Interface Table
+--   The interface table contains an entry for each interface known to the
+--   system.
+
+ipxIfTable		OBJECT-TYPE
+	SYNTAX		SEQUENCE OF IPXIfEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION "The interface table."
+	::= {ipxInterface 1}
+
+ipxIfEntry		OBJECT-TYPE
+	SYNTAX      IPXIfEntry
+	ACCESS      not-accessible
+	STATUS      mandatory
+	DESCRIPTION "Each entry corresponds to one interface known to the
+				system."
+	INDEX       {
+				ipxIfIndex
+				}
+	::= {ipxIfTable 1}
+
+IPXIfEntry		::= SEQUENCE {
+					ipxIfIndex			INTEGER,
+					ipxIfAdminState		INTEGER,
+					ipxIfOperState		INTEGER,
+					ipxIfAdapterIndex	INTEGER,
+					ipxIfName			OCTET STRING,
+					ipxIfType			INTEGER,
+					ipxIfLocalMaxPacketSize	INTEGER,
+					ipxIfMediaType		INTEGER,
+					ipxIfNetNumber		NetNumber,
+					ipxIfMacAddress		PhysAddress,
+					ipxIfDelay			INTEGER,
+					ipxIfThroughput		INTEGER,
+					ipxIfIpxWanEnable	INTEGER,
+					ipxIfNetbiosAccept	INTEGER,
+					ipxIfNetbiosDeliver	INTEGER,
+					ipxIfInHdrErrors	Counter,
+					ipxIfInFilterDrops	Counter,
+					ipxIfInNoRoutes		Counter,
+					ipxIfInDiscards		Counter,
+					ipxIfInDelivers		Counter,
+					ipxIfOutFilterDrops	Counter,
+					ipxIfOutDiscards	Counter,
+					ipxIfOutDelivers	Counter,
+					ipxIfInNetbiosPackets	Counter,
+					ipxIfOutNetbiosPackets	Counter
+					}
+
+ipxIfIndex		OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS      mandatory
+	DESCRIPTION	"The identifier of this interface, unique within the
+				system."
+	::= {ipxIfEntry 1}
+
+ipxIfAdminState OBJECT-TYPE
+	SYNTAX		INTEGER	{
+					disabled (1),
+					enabled (2)
+					}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The desired state of the interface.Default is enabled(2).
+				The interface state can be set to disabled(1) by explicit
+				management action or by configuration information."
+	::= {ipxIfEntry 2}
+
+ipxIfOperState	OBJECT-TYPE
+	SYNTAX      INTEGER {
+					down(1),
+					up(2),
+					sleeping(3)
+					}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The current operational state of the interface.
+				If ipxIfAdminState is disabled(1) then
+				ipxIfOperState should be down(1). If ipxIfAdminState is
+				changed to enabled(2) then ipxIfOperState should change to
+				up(2) if the interface is ready to transmit and
+				receive network traffic; it should change to
+				sleeping(3) if the interface is waiting for external
+				actions (such as a serial line waiting for an
+				incomming connection); it should remain in the down(1)
+				state if and only if there is a fault that prevents it
+				from going to the up(2) state."
+	::= {ipxIfEntry 3}
+
+ipxIfAdapterIndex OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION "The value of adapter index for the adapter used by this
+				interface. On-demand interfaces in a sleeping state
+				are not mapped to any adapter."
+	::= {ipxIfEntry 4}
+
+ipxIfName		OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(0..48))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The readable name for the interface."
+	::= {ipxIfEntry 5}
+
+ipxIfType		OBJECT-TYPE
+	SYNTAX		INTEGER {
+                    other(1),
+					lan(2),
+					wanRouter(3),
+					wanWorkstation(4),
+					internal(5),
+					personalWanRouter(6),
+					routerWorkstationDialout(7),
+					standaloneWorkstationDialout(8)
+                    }
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The type of the interface."
+   ::= {ipxIfEntry 6}
+
+ipxIfLocalMaxPacketSize OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The maximum size (including header), in bytes, that the
+				system supports locally on this interface."
+	::= {ipxIfEntry 7}
+
+
+ipxIfMediaType	OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The media type used on this interface."
+	::= {ipxIfEntry 8}
+
+ipxIfNetNumber	OBJECT-TYPE
+	SYNTAX		NetNumber
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The IPX network number of this interface."
+	::= {ipxIfEntry 9}
+
+ipxIfMacAddress OBJECT-TYPE
+	SYNTAX		PhysAddress
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION "The MAC address of this interface."
+	::= {ipxIfEntry 10}
+
+ipxIfDelay		OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The period of time, in microseconds, that it takes to
+				transmit one byte of data, excluding protocol headers,
+				to a destination on the other end of the interface, if
+				the interface is free of other traffic."
+	::= {ipxIfEntry 11}
+
+ipxIfThroughput	OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The amount of data, in bits per second, that may flow
+				through the interface if there is no other traffic."
+	::= {ipxIfEntry 12}
+
+ipxIfIpxWanEnable OBJECT-TYPE
+	SYNTAX		INTEGER	{
+					disabled (1),
+					enabled (2)
+					}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Enable IPXWAN negotiation."
+	::= {ipxIfEntry 13}
+
+ipxIfNetbiosAccept OBJECT-TYPE
+	SYNTAX		INTEGER	{
+					disabled (1),
+					enabled (2)
+					}
+	ACCESS      read-write
+	STATUS      mandatory
+	DESCRIPTION "Accept Netbios Broadcast Packets."
+	::= {ipxIfEntry 14}
+
+ipxIfNetbiosDeliver OBJECT-TYPE
+	SYNTAX		INTEGER	{
+					disabled (1),
+					enabled (2),
+					enabledForStaticlySeededNames(3),
+					enabledWhenOperStateUp(4)
+					}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Deliver Netbios Broadcast Packets."
+	::= {ipxIfEntry 15}
+
+ipxIfInHdrErrors OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The total number of IPX packets received and discarded due
+				to errors in their IPX headers, including any packet with
+				a size less than the minimum 30 bytes, bad checksums,
+				other format errors, etc."
+	::= {ipxIfEntry 16}
+
+ipxIfInFilterDrops OBJECT-TYPE
+    SYNTAX		Counter
+    ACCESS		read-only
+    STATUS		mandatory
+    DESCRIPTION	"The total number of incoming IPX packets discarded
+				due to input filtering."
+    ::= {ipxIfEntry 17}
+
+ipxIfInNoRoutes	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The total number of IPX packets received and discarded because
+				no route was found to forward them to their destination"
+	::= {ipxIfEntry 18}
+
+ipxIfInDiscards	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION "The total number of IPX packets received and discarded for any
+				other reason not counted in ipxIfInHdrErrors,
+				ipxIfInFilterDrops and ipxIfNoRoutes."
+	::= {ipxIfEntry 19}
+
+ipxIfInDelivers	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The total number of IPX packets successfully received"
+	::= {ipxIfEntry 20}
+
+ipxIfOutFilterDrops OBJECT-TYPE
+    SYNTAX		Counter
+    ACCESS		read-only
+    STATUS		mandatory
+    DESCRIPTION	"The total number of outgoing IPX packets discarded
+				due to output filtering."
+    ::= {ipxIfEntry 21}
+
+ipxIfOutDiscards OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION "The total number of IPX packets discarded for any
+				other reason not counted in ipxIfOutFilterDrops."
+	::= {ipxIfEntry 22}
+
+ipxIfOutDelivers OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The total number of IPX packets successfully sent"
+	::= {ipxIfEntry 23}
+
+
+ipxIfInNetbiosPackets OBJECT-TYPE
+    SYNTAX		Counter
+    ACCESS		read-only
+    STATUS		mandatory
+    DESCRIPTION "The total number of IPX Type 20 packets received on this
+				 interface. This includes the Type 20 packets received and
+				 discarded for various reasons."
+    ::= {ipxIfEntry 24}
+
+ipxIfOutNetbiosPackets OBJECT-TYPE
+    SYNTAX		Counter
+    ACCESS		read-only
+    STATUS		mandatory
+    DESCRIPTION "The total number of IPX Type 20 packets successfully sent on
+				this interface."
+    ::= {ipxIfEntry 25}
+
+-- Forwarding Group
+--   This group provides a representation of the IPX forwarding database
+
+-- Destination Table
+--   The Destination table contains information about all known
+--   destinations.  The routing information shown in this table represents
+--   the path currently being used to reach the destination.
+
+ipxDestTable	OBJECT-TYPE
+	SYNTAX		SEQUENCE OF IPXDestEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"The Destination table contains information about all
+				known destinations."
+	::= {ipxForwarding 1}
+
+ipxDestEntry	OBJECT-TYPE
+	SYNTAX		IPXDestEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Each entry corresponds to one destination."
+	INDEX		{
+				ipxDestNetNum
+				}
+	::= {ipxDestTable 1}
+
+IPXDestEntry	::= SEQUENCE {
+					ipxDestNetNum		NetNumber,
+					ipxDestProtocol		INTEGER,
+					ipxDestTicks		INTEGER,
+					ipxDestHopCount		INTEGER,
+					ipxDestNextHopIfIndex INTEGER,
+					ipxDestNextHopMacAddress PhysAddress,
+					ipxDestFlags		INTEGER
+					}
+
+ipxDestNetNum	OBJECT-TYPE
+	SYNTAX		NetNumber
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION "The IPX network number of the destination."
+	::= {ipxDestEntry 1}
+
+ipxDestProtocol	OBJECT-TYPE
+	SYNTAX		INTEGER {
+					other(1),
+					local(2),
+					rip(3),
+					nlsp(4),
+					static(5)
+					}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The routing protocol from which knowledge of this
+				destination was obtained."
+	::= {ipxDestEntry 2}
+
+ipxDestTicks	OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The delay in ticks to reach this destination."
+	::= {ipxDestEntry 3}
+
+ipxDestHopCount	OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of hops necessary to reach the destination."
+	::= {ipxDestEntry 4}
+
+ipxDestNextHopIfIndex OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The unique identifier of the interface used to reach the
+				next hop."
+	::= {ipxDestEntry 5}
+
+ipxDestNextHopMacAddress OBJECT-TYPE
+	SYNTAX		PhysAddress
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The MAC address of the next hop."
+	::= {ipxDestEntry 6}
+
+ipxDestFlags	OBJECT-TYPE
+	SYNTAX		INTEGER (0..3)
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"A value that indicates of a special meaning of the route
+				1 - this route is for a network used for dialing in clients
+				2 - this route should not be advertised."
+	::= {ipxDestEntry 7}
+
+-- Static Routes Table
+--   This table contains the information about all the static routes
+--   defined.  There may be more than one static route to any given
+--   destination.  Only the route currently being used will also be
+--   present in the Destination Table defined above.
+
+ipxStaticRouteTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF IPXStaticRouteEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION "The Static Routes table contains information about all
+				destinations reached via statically configured routes."
+	::= {ipxForwarding 2}
+
+ipxStaticRouteEntry OBJECT-TYPE
+	SYNTAX		IPXStaticRouteEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Each entry corresponds to one static route."
+	INDEX		{
+				ipxStaticRouteIfIndex,
+				ipxStaticRouteNetNum
+				}
+	::= {ipxStaticRouteTable 1}
+
+IPXStaticRouteEntry ::= SEQUENCE {
+					ipxStaticRouteIfIndex		INTEGER,
+                    ipxStaticRouteNetNum		NetNumber,
+					ipxStaticRouteEntryStatus	INTEGER,
+					ipxStaticRouteTicks			INTEGER,
+                    ipxStaticRouteHopCount		INTEGER,
+					ipxStaticRouteNextHopMacAddress PhysAddress
+                    }
+
+ipxStaticRouteIfIndex OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The unique identifier of the interface used to
+				reach the first hop in the static route."
+	::= {ipxStaticRouteEntry 1}
+
+ipxStaticRouteNetNum OBJECT-TYPE
+	SYNTAX		NetNumber
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The IPX network number of the route's destination."
+	::= {ipxStaticRouteEntry 2}
+
+ipxStaticRouteEntryStatus OBJECT-TYPE
+	SYNTAX		INTEGER {
+					deleted(1),
+					created(2)
+					}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Create/Delete parameter. Default is created.
+				Users perform an SNMP SET operation on this
+				object in order to create/delete the IPX static route."
+	::= {ipxStaticRouteEntry 3}
+
+ipxStaticRouteTicks OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The delay, in ticks, to reach the route's destination."
+	::= {ipxStaticRouteEntry 4}
+
+ipxStaticRouteHopCount OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The number of hops necessary to reach the destination."
+	::= {ipxStaticRouteEntry 5}
+
+ipxStaticRouteNextHopMacAddress OBJECT-TYPE
+	SYNTAX		PhysAddress
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The Mac address of the next hop."
+	::= {ipxStaticRouteEntry 6}
+
+
+-- Services Group
+--   The Services group contains management information for all known
+--   services.
+
+-- Services Table
+--    This table contains the services information indexed by service
+--    name and type.
+
+ipxServTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF IPXServEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"The table of services, indexed by name and type."
+	::= {ipxServices 1}
+
+ipxServEntry OBJECT-TYPE
+	SYNTAX		IPXServEntry
+	ACCESS      not-accessible
+	STATUS      mandatory
+	DESCRIPTION "Each entry corresponds to one service."
+	INDEX       {
+				ipxServType,
+				ipxServName
+			   }
+	::= {ipxServTable 1}
+
+IPXServEntry	::= SEQUENCE {
+					ipxServType			OCTET STRING,
+					ipxServName			OCTET STRING,
+					ipxServProtocol		INTEGER,
+					ipxServNetNum		NetNumber,
+					ipxServNode			OCTET STRING,
+					ipxServSocket		OCTET STRING,
+					ipxServHopCount		INTEGER
+                    }
+
+ipxServType OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(2))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The service type."
+	::= {ipxServEntry 1}
+
+ipxServName OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(1..48))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The service name."
+	::= {ipxServEntry 2}
+
+ipxServProtocol OBJECT-TYPE
+	SYNTAX		INTEGER {
+					other(1),
+					local(2),
+					nlsp(4),
+					static(5),
+					sap(6)
+					}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The protocol from which knowledge of this service was
+				obtained."
+	::= {ipxServEntry 3}
+
+ipxServNetNum OBJECT-TYPE
+	SYNTAX		NetNumber
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The IPX network number portion of the IPX address of the
+				service."
+	::= {ipxServEntry 4}
+
+ipxServNode OBJECT-TYPE
+	SYNTAX		OCTET STRING(SIZE(6))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The node portion of the IPX address of the service."
+	::= {ipxServEntry 5}
+
+ipxServSocket OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(2))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The socket portion of the IPX address of the service."
+	::= {ipxServEntry 6}
+
+ipxServHopCount OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of hops to the service."
+	::= {ipxServEntry 7}
+
+
+-- Static Services Table
+--   This table contains information for all staticly seeded services
+
+ipxStaticServTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF IPXStaticServEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"The Static Services table contains information about
+				all staticly seeded services."
+	::= {ipxServices 2}
+
+ipxStaticServEntry OBJECT-TYPE
+	SYNTAX		IPXStaticServEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Each entry corresponds to one service."
+	INDEX		{
+				ipxStaticServIfIndex,
+				ipxStaticServType,
+				ipxStaticServName
+				}
+	::= {ipxStaticServTable 1}
+
+IPXStaticServEntry ::= SEQUENCE {
+				ipxStaticServIfIndex		INTEGER,
+				ipxStaticServType			OCTET STRING,
+				ipxStaticServName			OCTET STRING,
+				ipxStaticServEntryStatus	INTEGER,
+				ipxStaticServNetNum			NetNumber,
+				ipxStaticServNode			PhysAddress,
+				ipxStaticServSocket			OCTET STRING,
+				ipxStaticServHopCount		INTEGER
+				}
+
+ipxStaticServIfIndex OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The interface used to reach this service."
+	::= {ipxStaticServEntry 1}
+
+ipxStaticServType OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(2))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The service type."
+	::= {ipxStaticServEntry 2}
+
+ipxStaticServName OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(1..48))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The service name."
+	::= {ipxStaticServEntry 3}
+
+
+ipxStaticServEntryStatus OBJECT-TYPE
+	SYNTAX		INTEGER {
+					deleted(1),
+					created(2)
+					}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Create/Delete parameter. Default is created.
+				Users perform an SNMP SET operation on this
+				object in order to create/delete the IPX static service."
+	::= {ipxStaticServEntry 4}
+
+ipxStaticServNetNum OBJECT-TYPE
+	SYNTAX		NetNumber
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The IPX network number portion of the IPX address of the
+				service."
+	::= {ipxStaticServEntry 5}
+
+ipxStaticServNode OBJECT-TYPE
+	SYNTAX		PhysAddress
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The node portion of the IPX address of the service."
+	::= {ipxStaticServEntry 6}
+
+ipxStaticServSocket OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(2))
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The socket portion of the IPX address of the service."
+	::= {ipxStaticServEntry 7}
+
+ipxStaticServHopCount OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The number of hops to the service."
+	::= {ipxStaticServEntry 8}
+
+
+
+
+END

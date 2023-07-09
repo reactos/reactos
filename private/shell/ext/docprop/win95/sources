@@ -1,0 +1,9 @@
+
+TARGET_WIN95    = 1
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+C_DEFINES=$(C_DEFINES) -DIPROPERTY -DSHELL
+!include $(CCSHELL_DIR)\ext\docprop\sources.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\ext\docprop\sources.inc 
+

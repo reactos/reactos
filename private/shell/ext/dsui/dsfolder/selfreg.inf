@@ -1,0 +1,64 @@
+[Version]
+Signature="$CHICAGO$"
+
+[RegDll]
+AddReg=RegisterServer
+
+[RegNSE]
+AddReg=RegisterNSE
+
+[UnRegDll]
+DelReg=DelRegistry
+
+; Registry information we need to wack in place
+
+[RegisterServer]
+HKCR,CLSID\%CLSID_MicrosoftDS%,,,%DirectoryName%
+HKCR,CLSID\%CLSID_MicrosoftDS%\DefaultIcon,,,dsfolder.dll,0
+HKCR,CLSID\%CLSID_MicrosoftDS%\ShellFolder,"CallForAttributes",,""
+;
+HKCR,CLSID\%CLSID_MicrosoftDS%\InProcServer32,,,dsfolder.dll
+HKCR,CLSID\%CLSID_MicrosoftDS%\InProcServer32,ThreadingModel,,Apartment
+HKCR,CLSID\%CLSID_MicrosoftDS%\InProcServer32,LoadWithoutCOM,,""
+HKLM,%ApprovedSHExt%,%CLSID_MicrosoftDS%,,"Directory Namespace"
+;
+HKCR,CLSID\%CLSID_DsFolderProperties%\InProcServer32,,,dsfolder.dll
+HKCR,CLSID\%CLSID_DsFolderProperties%\InProcServer32,ThreadingModel,,Apartment
+HKLM,%ApprovedSHExt%,%CLSID_DsFolderProperties%,,"Shell properties for a DS object"
+;
+HKCR,CLSID\%CLSID_MicrosoftDS%\Classes,,,
+HKCR,CLSID\%CLSID_MicrosoftDS%\Classes\printQueue,PropertiesHandler,,"%CLSID_PrintQueueProperties%"
+;
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers,Attributes,0x00010001,0xB0000040
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SEXPLORE%\command,,,"Explorer.Exe /e,/idlist,%I,/L"
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SEXPLORE%\ddeexec,,,"[ExploreFolder("%l", %I, %S)]"
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SEXPLORE%\ddeexec,"NoActivateHandler",,""
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SEXPLORE%\ddeexec\application,,,"Folders"
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SEXPLORE%\ddeexec\ifexec,,,"[]"
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SEXPLORE%\ddeexec\topic,,,"AppProperties"
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SOPEN%\command,,,"Explorer.Exe /idlist,%I,/L"
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SOPEN%\ddeexec,,,"[ViewFolder("%l", %I, %S)]"
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SOPEN%\ddeexec,"NoActivateHandler",,""
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SOPEN%\ddeexec\application,,,"Folders"
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SOPEN%\ddeexec\ifexec,,,"[]"
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllContainers\%SOPEN%\ddeexec\topic,,,"AppProperties"
+;
+HKCR,CLSID\%CLSID_MicrosoftDS%\AllObjects,Attributes,0x00010001,0x00000040
+
+[RegisterNSE]
+HKLM,Software\Microsoft\Windows\CurrentVersion\Explorer\NetworkNeighborhood\EntireNetwork\NameSpace\%CLSID_MicrosoftDS%,,
+
+[DelRegistry]
+HKCR,CLSID\%CLSID_MicrosoftDS%
+HKLM,Software\Microsoft\Windows\CurrentVersion\Explorer\NetworkNeighborhood\NameSpace\%CLSID_MicrosoftDS%
+HKLM,Software\Microsoft\Windows\CurrentVersion\Explorer\NetworkNeighborhood\EntireNetwork\NameSpace\%CLSID_MicrosoftDS%
+
+[Strings]
+DirectoryName="Directory"
+ApprovedSHExt=Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved
+CLSID_MicrosoftDS={fe1290f0-cfbd-11cf-a330-00aa00c16e65}
+CLSID_NetworkNeighborhood = "{208D2C60-3AEA-1069-A2D7-08002B30309D}"
+CLSID_DsFolderProperties={9E51E0D0-6E0F-11d2-9601-00C04FA31A86}
+CLSID_PrintQueueProperties={77597368-7b15-11d0-a0c2-080036af3f03}
+SEXPLORE=shell\explore
+SOPEN=shell\open

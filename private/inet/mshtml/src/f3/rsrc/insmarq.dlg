@@ -1,0 +1,1055 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML>
+<HEAD>
+<META content='"Trident 214"' name=GENERATOR>
+<TITLE>Marquee</TITLE>
+
+<!-- TO DO
+    * (RAID #10938, #10943) CHECKBOX: onChange event does not fire.
+      Code for changing the state of the loop count text box should be in
+      this event.  Since it does not fire, the code is in the onclick event.
+      This is not completely saticfactory because the accelerator key does
+      not fire the onclick event.
+-->
+<SCRIPT language=JavaScript src="">
+
+    //  Constants
+
+    //
+    //  BEGIN PHONY CONSTANTS
+    //  Once constants are implemented, this section can be removed.
+    //
+
+    var htmlSelectionNone       = "None";
+    var htmlSelectionText       = "Text";
+    var htmlSelectionControl    = "Control";
+    var htmlSelectionTable      = "Table";
+
+    var htmlDirectionDown       = "down";
+    var htmlDirectionUp         = "up";
+    var htmlDirectionRight      = "right";
+    var htmlDirectionLeft       = "left";
+
+    var htmlBehaviorScroll      = "scroll";
+    var htmlBehaviorSlide       = "slide";
+    var htmlBehaviorAlternate   = "alternate";
+
+    var htmlAlignBottom         = "bottom";
+    var htmlAlignMiddle         = "middle";
+    var htmlAlignTop            = "top";
+
+    var htmlKeyReturn           = 13;
+    var htmlKeyEscape           = 27;
+
+    var cmdInsertMarquee        = "Insertmarquee";
+
+    var stateDisabled           = 3;
+    var stateEnabled            = 7;
+
+    // END PHONY CONSTANTS
+
+    //  Set dialog position and dimensions
+    window.dialogLeft        =  50;
+    window.dialogTop         = 100;
+    window.dialogWidth       = 660;
+    window.dialogHeight      = 300;
+
+</SCRIPT>
+
+<SCRIPT language=JavaScript src="">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Gets the document object for the page that was active
+    //              when the dialog was opened.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    a Document object
+    //
+    //  Note:       By convention the document object is passed to the dialog
+    //              in arg.
+    //
+    //----------------------------------------------------------------------
+
+    function documentGet( )
+    {
+        return window.dialogArguments;
+
+    }   //  documentGet
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Creates a range that reflects the selection in the
+    //              active page.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    a Range object
+    //
+    //----------------------------------------------------------------------
+
+    function rangeGetSelected( )
+    {
+        return documentGet( ).selection.createRange( );
+
+    }   //  rangeGetSelected
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//  BEGIN STANDARD INITIALIZATION ROUTINES
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard initialization routine for dialog controls.
+    //              All controls with a Class of "standard" or "custom"
+    //              are initialized.
+    //
+    //  Arguments:
+    //      elmSrc  The element from which the dialog controls are initialized.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function initDialogControls(elmSrc)
+    {
+        var elmDlg;
+        var index;
+        var indexMax = document.all.count;
+        var Class;
+
+        for (index = 0; index < indexMax; index++)
+        {
+            elmDlg = document.all[index];
+            Class  = elmDlg.Class;
+            if ("standard" == Class)
+            {
+                initStandardControl(elmDlg, elmSrc);
+            }
+            else if ("custom" == Class)
+            {
+                initCustomControl(elmDlg, elmSrc);
+            }
+        }
+    }   //  initDialogControls
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard initialization routine for dialog controls that
+    //              require custom initialization.  These controls must have
+    //              their Class property set to "custom."
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control to be initialized.
+    //      elmSrc  The element from which the dialog control is initialized.
+    //
+    //  Returns:
+    //
+    //----------------------------------------------------------------------
+
+    function initCustomControl(elmDlg, elmSrc)
+    {
+        if ("text" == elmDlg.name)
+        {
+            initText(elmDlg, elmSrc);
+        }
+        else if ("loop" == elmDlg.name)
+        {
+            initLoop(elmDlg, elmSrc);
+        }
+        else if ("bgcolor" == elmDlg.name)
+        {
+            initBGColor(elmDlg, elmSrc);
+        }
+    }   //  initCustomControls
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard initialization routine for controls with their
+    //              Class property set to "standard."  The initial state of
+    //              these controls is dependent on their "value" property.
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control to be initialized.
+    //      elmSrc  The element from which the dialog control is initialized.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function initStandardControl(elmDlg, elmSrc)
+    {
+        if ("INPUT" == elmDlg.tagName)
+        {
+            initInputControl(elmDlg, elmSrc);
+        }
+        else if ("SELECT" == elmDlg.tagName)
+        {
+            initSelectControl(elmDlg, elmSrc);
+        }
+        else if ("BUTTON" == elmDlg.tagName)
+        {
+            initButtonControl(elmDlg, elmSrc);
+        }
+        else
+        {
+            window.alert("ERROR: Invalid tagName: " + elmDlg.tagName);
+        }
+    }   //  initStandardControl
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard initialization routine for SELECT controls (ie:
+    //              (list boxes and combo boxes).
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control to be initialized.
+    //      elmSrc  The element from which the dialog control is initialized.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function initSelectControl(elmDlg, elmSrc)
+    {
+        // BUGBUG (a-danell) initSelectControl not implemented
+        window.alert("initSelectControl: NOT YET IMPLEMENTED");
+    }   //  initSelectControl
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard initialization routine for BUTTON controls.
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control to be initialized.
+    //      elmSrc  The element from which the dialog control is initialized.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function initButtonControl(elmDlg, elmSrc)
+    {
+        // BUGBUG (a-danell) initButtonControl not implemented
+        window.alert("initButtonControl: NOT YET IMPLEMENTED");
+    }   //  initButtonControl
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard initialization routine for INPUT controls (ie:
+    //              radio buttons, checkboxes, text boxes, buttons).
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control to be initialized.
+    //      elmSrc  The element from which the dialog control is initialized.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function initInputControl(elmDlg, elmSrc)
+    {
+        if ("checkbox" == elmDlg.type || "radio" == elmDlg.type)
+        {
+            elmDlg.checked = (elmDlg.value == elmSrc[elmDlg.name].toLowerCase( ));
+        }
+        else if ("text" == elmDlg.type || "button" == elmDlg.type)
+        {
+            elmDlg.value = elmSrc[elmDlg.name].value;
+        }
+        else
+        {
+            window.alert("ERROR: Invalid INPUT type: " + elmDlg.type);
+        }
+    }   //  initInputControl
+
+//
+//  END STANDARD INITIALIZATION ROUTINES
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  BEGIN CUSTOM INITIALIZATION ROUTINES
+//
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Custom initialization routine for the text control that
+    //              contains the marquees message.
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control to be initialized.
+    //      elmSrc  The element from which the dialog control is initialized.
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function initText(elmDlg, elmSrc)
+    {
+        elmDlg.value = elmSrc.createTextRange( ).text;
+    }   //  textInitFromMarquee
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Custom initialization routine for controls with their
+    //              name property set to "bgcolor."  These controls will
+    //              set and display the current background color for the
+    //              marquee.
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control to be initialized.
+    //      elmSrc  The element from which the dialog control is initialized.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function initBGColor(elmDlg, elmSrc)
+    {
+        // BUGBUG (a-danell) initBGColor not implemented
+        window.alert("initBGColor: NOT YET IMPLEMENTED");
+    }
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Custom initialization routine for controls with their
+    //              name property set to "loop."  These controls will
+    //              control the number of times the marquee is repeated.
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control to be initialized.
+    //      elmSrc  The element from which the dialog control is initialized.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function initLoop(elmDlg, elmSrc)
+    {
+        if ("checkbox" == elmDlg.type)
+        {
+            elmDlg.checked = (elmSrc.loop == elmDlg.value);
+        }
+        else if ("text" == elmDlg.type)
+        {
+            elmDlg.disabled = (elmSrc.loop == elmDlg.value);
+            elmDlg.value = (elmDlg.disabled) ? "" : elmSrc.loop;
+        }
+        else
+        {
+            window.alert("ERROR: Invalid Loop control: type=" + elmDlg.type +
+                         " name=" + elmDlg.name);
+        }
+    }
+
+//
+//  END CUSTOM INITIALIZATION ROUTINES
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  BEGIN STANDARD APPLY ROUTINES
+//
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard apply routine for dialog controls.
+    //              All controls with a Class of "standard" or "custom"
+    //              are initialized.
+    //
+    //  Arguments:
+    //      elmDst  The element to which the dialog controls changes are
+    //              applied.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function applyDialogControls(elmDst)
+    {
+        var elmDlg;
+        var index;
+        var indexMax = document.all.count;
+        var Class;
+
+        for (index = 0; index < indexMax; index++)
+        {
+            elmDlg = document.all[index];
+            Class = elmDlg.Class;
+            if ("standard" == Class)
+            {
+                applyStandardControl(elmDlg, elmDst);
+            }
+            else if ("custom" == Class)
+            {
+                applyCustomControl(elmDlg, elmDst);
+            }
+        }
+
+    }   //  applyDialogControls
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard apply routine for dialog controls that
+    //              require custom initialization.  These controls must have
+    //              their Class property set to "custom."
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control whose value is to be applied.
+    //      elmDst  The elment to which the dialog control value is applied.
+    //
+    //  Returns:
+    //
+    //----------------------------------------------------------------------
+
+    function applyCustomControl(elmDlg, elmDst)
+    {
+        if ("text" == elmDlg.name)
+        {
+            applyText(elmDlg, elmDst);
+        }
+        else if ("loop" == elmDlg.name)
+        {
+            applyLoop(elmDlg, elmDst);
+        }
+        else if ("bgcolor" == elmDlg.name)
+        {
+            applyBGColor(elmDlg, elmDst);
+        }
+    }   //  applyCustomControls
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard apply routine for controls with their
+    //              Class property set to "standard."
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control whose value is to be applied.
+    //      elmDst  The elment to which the dialog control value is applied.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function applyStandardControl(elmDlg, elmDst)
+    {
+        if ("INPUT" == elmDlg.tagName)
+        {
+            applyInputControl(elmDlg, elmDst);
+        }
+        else if ("SELECT" == elmDlg.tagName)
+        {
+            applySelectControl(elmDlg, elmDst);
+        }
+        else if ("BUTTON" == elmDlg.tagName)
+        {
+            applyButtonControl(elmDlg, elmDst);
+        }
+        else
+        {
+            window.alert("ERROR: Invalid tagName: " + elmDlg.tagName);
+        }
+    }   //  applyStandardControl
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard apply routine for SELECT controls (ie:
+    //              (list boxes and combo boxes).
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control whose value is to be applied.
+    //      elmDst  The elment to which the dialog control value is applied.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function applySelectControl(elmDlg, elmDst)
+    {
+        // BUGBUG (a-danell) applySelectControl not implemented
+        window.alert("applySelectControl: NOT YET IMPLEMENTED");
+    }   //  applySelectControl
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard apply routine for BUTTON controls.
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control whose value is to be applied.
+    //      elmDst  The elment to which the dialog control value is applied.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function applyButtonControl(elmDlg, elmDst)
+    {
+        // BUGBUG (a-danell) applyButtonControl not implemented
+        window.alert("applyButtonControl: NOT YET IMPLEMENTED");
+    }   //  applyButtonControl
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Standard apply routine for INPUT controls (ie:
+    //              radio buttons, checkboxes, text boxes, buttons).
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control whose value is to be applied.
+    //      elmDst  The elment to which the dialog control value is applied.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function applyInputControl(elmDlg, elmDst)
+    {
+        var index;
+        var indexMax;
+
+        if ("checkbox" == elmDlg.type)
+        {
+            elmDst[elmDlg.name] = elmDlg.checked;
+        }
+        else if ("radio" == elmDlg.type)
+        {
+            if (elmDlg.checked)
+            {
+                elmDst[elmDlg.name] = elmDlg.value;
+            }
+        }
+        else if ("text" == elmDlg.type || "button" == elmDlg.type)
+        {
+            elmDst[elmDlg.name] = elmDlg.value;
+        }
+        else
+        {
+            window.alert("ERROR: Invalid INPUT type: " + elmDlg.type);
+        }
+    }   //  applyInputControl
+
+//
+//  END STANDARD APPLY ROUTINES
+//
+///////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//  BEGIN CUSTOM APPLY ROUTINES
+//
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Custom apply routine for the text control that
+    //              contains the marquees message.
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control whose value is to be applied.
+    //      elmDst  The elment to which the dialog control value is applied.
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function applyText(elmDlg, elmDst)
+    {
+        elmDst.createTextRange( ).text = elmDlg.value;
+    }   //  applyText
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Custom apply routine for controls with their
+    //              name property set to "bgcolor."
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control whose value is to be applied.
+    //      elmDst  The elment to which the dialog control value is applied.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function applyBGColor(elmDlg, elmDst)
+    {
+        // BUGBUG (a-danell) applyBGColor not implemented
+        window.alert("applyBGColor: NOT YET IMPLEMENTED");
+    }   //  applyBGColor
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Custom apply routine for controls with their
+    //              name property set to "loop."  These controls will
+    //              control the number of times the marquee is repeated.
+    //
+    //  Arguments:
+    //      elmDlg  The dialog control whose value is to be applied.
+    //      elmDst  The elment to which the dialog control value is applied.
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function applyLoop(elmDlg, elmDst)
+    {
+        if ("checkbox" == elmDlg.type)
+        {
+            elmDst.loop = (elmDlg.checked) ? elmDlg.value : elmDst.loop;
+        }
+        else if ("text" == elmDlg.type)
+        {
+            elmDst.loop = (elmDlg.disabled) ? elmDst.loop : elmDlg.value;
+        }
+        else
+        {
+            window.alert("ERROR: Invalid Loop control: type=" + elmDlg.type +
+                         " name=" + elmDlg.name);
+        }
+    }   //  applyLoop
+
+//
+//  END CUSTOM APPLY ROUTINES
+//
+/////////////////////////////////////////////////////////////////////////////
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Initialize the text control containing the marquee's
+    //              text from a text range.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function textInitFromRange(rng)
+    {
+        // BUGBUG (a-danell) The text property of a range that includes a
+        // marquee does not include text following the marquee??
+        txtText.value = rng.text;
+    }   //  textInitFromRange
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Set the state and contents of txtLoopCount based on
+    //              the state of chkLoopContinuously.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function loopCountSetState( )
+    {
+        // BUGBUG (a-danell) Do hard coded id's need to be removed?
+        if (chkLoopContinuously.checked)
+        {
+            txtLoopCount.value = "";
+            txtLoopCount.disabled = true;
+        }
+        else
+        {
+            txtLoopCount.disabled = false;
+            txtLoopCount.value = REPEATCOUNT_DEFAULT;
+        }
+    }   //  loopCountSetState
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Initialize the dialog.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onBodyLoad( )
+    {
+        var rngSrc;
+        var elmSrc;
+
+        // Initialize the dialog from a selected control if it meets the
+        // following criteria:
+        // * the selection is a control range
+        // * the range contains only 1 control
+        // * that control is a MARQUEE
+        // Otherwise, initialize the dialog based on the selected range.
+        //
+        rngSrc = rangeGetSelected( );
+        if (documentGet( ).selection.type == htmlSelectionControl &&
+            rngSrc.count == 1 && rngSrc.item(0).tagName == "MARQUEE")
+        {
+            elmSrc = rngSrc.item(0);
+            initDialogControls(elmSrc);
+        }
+        else
+        {
+            // Default everything but text.
+            textInitFromRange(rngSrc);
+        }
+
+    }   //  onBodyLoad
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Handle <ENTER> and <ESC> keys.
+    //
+    //  Arguments:
+    //      keyAscii    Ascii value of the key pressed.
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onBodyKeyPress()
+    {
+        if (event.keyCode == htmlKeyReturn)
+        {
+            onCmdOk( );
+        }
+        else if (event.keyCode == htmlKeyEscape)
+        {
+            onCmdCancel( );
+        }
+
+    }   //  onBodyKeyPress
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Set the state of controls in the Loop table based
+    //              on the state of the check box
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onChangeLoop( )
+    {
+        loopCountSetState( );
+    }   //  onChangeLoop
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Apply the user's changes and dismiss the dialog.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onCmdOk( )
+    {
+        var     rngDst;                    // text range object
+        var     elmDst;                    // marquee element
+
+        rngDst = rangeGetSelected( );
+        if (documentGet( ).selection.type == htmlSelectionControl &&
+            rngDst.count == 1 && rngDst.item(0).tagName == "MARQUEE")
+        {
+            elmDst = rngDst.item(0);
+        }
+        else
+        {
+            rngDst.execCommand(cmdInsertMarquee);
+            rngDst.start--;
+            elmDst = rngDst.parentElement( );
+        }
+
+        applyDialogControls(elmDst);
+
+        window.close( );
+
+    }   //  onCmdOk
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Discard the user's changes and dismiss the dialog.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onCmdCancel( )
+    {
+        window.close( );
+    }   //  onCmdCancel
+
+
+</SCRIPT>
+
+<SCRIPT language=JavaScript src="" For=chkLoopContinuously event="onclick( )">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Set the state of controls in the Loop table based
+    //              on the state of the check box
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+window.alert("chkLC_onclick");
+        onChangeLoop( );
+    }   //  chkLoopContinuously_onclick
+
+
+</SCRIPT>
+
+<SCRIPT language=JavaScript src="" For=btnOk event="onclick( )">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:  Apply styles to selected paragraph(s).
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        onCmdOk( );
+    }   //  btnOk_onclick
+
+
+</SCRIPT>
+
+<SCRIPT language=JavaScript src="" For=btnChooseColor event="onclick( )">
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Display the color picker dialog.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        alert("Not yet implemented");
+    }   //  btnChooseColor_onclick
+</SCRIPT>
+
+<SCRIPT language=JavaScript src="" For=btnCancel event="onclick( )">
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Close dialog.  Changes are ignored.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        onCmdCancel( );
+    }   //  btnCancel_onclick
+
+
+</SCRIPT>
+
+<SCRIPT language=JavaScript src="" For=document event=keyPress()>
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Handle <ENTER> and <ESC> keys.
+    //
+    //  Arguments:
+    //      keyAscii    Ascii value of the key pressed.
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        onBodyKeyPress();
+    }   //  btnCancel_onclick
+
+</SCRIPT>
+
+</HEAD>
+<BODY  onLoad="onBodyLoad( )">
+
+<!-- TEXT -->
+<DIV style="positioned:absolute; LEFT: .5em; TOP: .5em; WIDTH: 3em; HEIGHT: 1em">
+<LABEL For=txtText AccessKey=T>
+<U>T</U>ext:
+</LABEL>
+</DIV>
+<INPUT Class="custom" name="text" id=txtText value="" style="position:absolute; HEIGHT: 2em; LEFT: 4em; TOP: .5em; WIDTH: 43em">
+
+<!-- DIRECTION -->
+<TABLE border=1 style="position:absolute; LEFT: 1em; TOP: 2em; WIDTH: 6em; HEIGHT: 7em">
+<CAPTION Align=left>Direction
+<TR>
+<TD>
+    <DIV style="position:absolute; WIDTH: 6em; HEIGHT: 7em">
+
+    <INPUT type=radio Class="standard" name="direction" value="left" id=radDirectionLeft CHECKED style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: 1em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: .8em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radDirectionLeft AccessKey=L>
+    <U>L</U>eft
+    </LABEL>
+    </DIV>
+
+    <INPUT type=radio Class="standard" name="direction" value="right" id=radDirectionRight style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: 2.5em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: 2.3em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radDirectionRight AccessKey=R>
+    <U>R</U>ight
+    </LABEL>
+    </DIV>
+
+    <INPUT type=radio Class="standard" name="direction" value="up" id=radDirectionUp style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: 4em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: 3.8em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radDirectionUp AccessKey=U>
+    <U>U</U>p
+    </LABEL>
+    </DIV>
+
+    <INPUT type=radio Class="standard" name="direction" value="down" id=radDirectionDown style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: 5.5em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: 5.3em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radDirectionDown AccessKey=D>
+    <U>D</U>own
+    </LABEL>
+    </DIV>
+
+    </DIV>
+</TD>
+</TR>
+</TABLE>
+
+
+<!-- BEHAVIOR -->
+<TABLE border=1 style="position:absolute; LEFT: 8.5em; TOP: 2em; WIDTH: 6em; HEIGHT: 7em">
+<CAPTION Align=left>Behavior
+<TR>
+<TD>
+    <DIV style="position:absolute; WIDTH: 6em; HEIGHT: 7em">
+
+    <INPUT type=radio Class="standard" name="behavior" value="scroll" id=radBehaviorScroll CHECKED style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: 1em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: .8em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radBehaviorScroll AccessKey=O>
+    Scr<U>o</U>ll
+    </LABEL>
+    </DIV>
+
+    <INPUT type=radio Class="standard" name="behavior" value="slide" id=radBehaviorSlide style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: 3.25em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: 3.05em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radBehaviorSlide AccessKey=S>
+    <U>S</U>lide
+    </LABEL>
+    </DIV>
+
+    <INPUT type=radio Class="standard" name="behavior" value="alternate" id=radBehaviorAlternate style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: 5.5em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: 5.3em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radBehaviorAlternate AccessKey=N>
+    Alter<U>n</U>ate
+    </LABEL>
+    </DIV>
+
+    </DIV>
+    </DIV>
+</TD>
+</TR>
+</TABLE>
+
+<!-- ALIGN -->
+<TABLE border=1 style="position:absolute; LEFT: 16em; TOP: 2em; WIDTH: 6em; HEIGHT: 7em">
+<CAPTION Align=left>Align with Text
+<TR>
+<TD>
+    <DIV style="position:absolute; WIDTH: 6em; HEIGHT: 7em">
+
+    <INPUT type=radio Class="standard" name="align" value="top" id=radAlignTop CHECKED style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: 1em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: .8em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radAlignTop AccessKey=P>
+    To<U>p</U>
+    </LABEL>
+    </DIV>
+
+    <INPUT type=radio Class="standard" name="align" value="middle" id=radAlignMiddle style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: 3.25em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: 3.05em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radAlignMiddle AccessKey=M>
+    <U>M</U>iddle
+    </LABEL>
+    </DIV>
+
+    <INPUT type=radio Class="standard" name="align" value="bottom" id=radAlignBottom style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: 5.5em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: 5.3em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radAlignBottom AccessKey=B>
+    <U>B</U>ottom
+    </LABEL>
+    </DIV>
+
+    </DIV>
+</TD>
+</TR>
+</TABLE>
+
+<!-- REPEAT -->
+<TABLE border=1 style="position:absolute; LEFT: 23.5em; TOP: 2em; WIDTH: 8em; HEIGHT: 4em">
+<CAPTION Align=left>Repeat
+<TR>
+<TD>
+    <DIV style="position:absolute; WIDTH: 8em; HEIGHT: 4em">
+
+    <INPUT type=checkbox Class="custom" name="loop" value=-1 id=chkLoopContinuously style="position:absolute; HEIGHT: 1em; LEFT: .5em; TOP: .5em; WIDTH: 1em">
+    <DIV style="position:absolute; LEFT: 1.5em; TOP: .3em; WIDTH: 4em; HEIGHT: 1em">
+    <LABEL For=chkLoopContinuously AccessKey=Y>
+    Continuousl<U>y</U>
+    </LABEL>
+    </DIV>
+
+    <INPUT Class="custom" name="loop" id=txtLoopCount value=-1 style="position:absolute; HEIGHT: 2em; LEFT: .5em; TOP: 3em; WIDTH: 5em">
+    <DIV style="position:absolute; LEFT: 4.5em; TOP: 2em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=txtLoopCount AccessKey=T>
+    <U>t</U>imes
+    </LABEL>
+    </DIV>
+
+    </DIV>
+</TD>
+</TR>
+</TABLE>
+
+<!-- BGCOLOR -->
+<DIV style="position:absolute; TOP: 8em; LEFT: 23.5em; HEIGHT: 1em">
+Background Color:
+</DIV>
+<BUTTON name="bgcolor" id=btnChooseColor value="Choose" style="position:absolute; HEIGHT: 2.5em; LEFT: 36em; TOP: 14.25em; WIDTH: 5em" AccessKey=C>
+<U>C</U>hoose
+</BUTTON>
+<TABLE border=1 style="position:absolute; LEFT: 29em; TOP: 9.25em; WIDTH: 3em; HEIGHT: 1.75em">
+<TR>
+<TD Class="custom" name="bgcolor" value= "#FF0000" id="tdColorSample" bgcolor="#FF0000">
+<DIV style="position:absolute; WIDTH: 2em; HEIGHT: 1em">
+</DIV>
+</TD>
+</TR>
+</TABLE>
+
+<!-- DEFAULT BUTTONS -->
+<INPUT value=OK id=btnOk style="position:absolute; HEIGHT: 2.5em; LEFT: 32em; TOP: 17.5em; WIDTH: 7.5em" type=button>
+<INPUT value=Cancel id=btnCancel style="position:absolute; HEIGHT: 2.5em; LEFT: 40em; TOP: 17.5em; WIDTH: 7.5em" type=button>
+
+</BODY >
+</HTML>

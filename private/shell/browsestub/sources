@@ -1,0 +1,87 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = ..\
+
+NOT_UNICODE     = 1
+TARGET_BOTH     = 1
+#PRECOMPILED_CXX   = 1
+
+!include $(CCSHELL_DIR)\common.inc
+
+NO_BROWSER_FILE = 1
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+INCLUDES        = $(SDK_LIB_PATH);$(SDK_INC_PATH);$(INCLUDES)
+
+WIN32_WINNT_VERSION=0x0400
+WIN32_WIN95_VERSION=0x0400
+
+SUBSYSTEM_VERSION=4.00
+
+TARGETNAME      = brwsstub
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+# make sure shlwapi.lib is before shell32.lib for override.
+TARGETLIBS      = \
+                  $(LIBRARY_PATH)\gdi32.lib \
+                  $(LIBRARY_PATH)\user32.lib \
+                  $(LIBRARY_PATH)\kernel32.lib \
+                  $(LIBRARY_PATH)\ole32.lib \
+                  $(LIBRARY_PATH)\uuid.lib \
+                  $(LIBRARY_PATH)\shlwapi.lib   \
+                  $(LIBRARY_PATH)\shlwapip.lib  \
+                  $(LIBRARY_PATH)\comctl32.lib  \
+                  $(CCSHELL_DIR)\lib\$(O)\stocklib.lib \
+                  $(CCSHELL_DIR)\lib\$(O)\stock5.lib   \
+                  $(LIBRARY_PATH)\comctlp.lib       \
+                  $(CCSHELL_DIR)\lib\$(O)\shguid.lib \
+                  $(CCSHELL_DIR)\lib\$(O)\shguidp.lib 
+
+
+!if $(IA64) || $(AXP64)
+USE_LIBCMT      = 1
+!else
+USE_IERT        = 1
+!endif
+
+DLLDEF          = $(O)\browseui.def
+DLLBASE         = 0x71200000
+
+#DELAYLOAD       = 
+
+DLLENTRY        = DllMain
+
+#PRECOMPILED_INCLUDE = priv.h
+
+NTTARGETFILES   =
+
+SOURCES         = \
+                browseui.rc \
+                browseui.cpp    \
+                stdafx.cpp      
+
+

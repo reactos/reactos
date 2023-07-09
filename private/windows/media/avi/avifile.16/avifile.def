@@ -1,0 +1,85 @@
+LIBRARY		AVIFILE
+PROTMODE
+;EXETYPE         WINDOWS
+CODE		PRELOAD MOVEABLE DISCARDABLE
+DATA		PRELOAD MOVEABLE SINGLE
+HEAPSIZE	1024
+SEGMENTS	_TEXT MOVEABLE DISCARDABLE PRELOAD
+		_INIT MOVEABLE DISCARDABLE PRELOAD
+EXPORTS
+                WEP                             @1    RESIDENTNAME ;Internal
+		DllGetClassObject		@2
+		DllCanUnloadNow			@3
+
+		_IID_IAVIStream			@10
+		_IID_IAVIFile			@11
+		_IID_IAVIEditStream		@12
+		_IID_IGetFrame			@13
+		_CLSID_AVISimpleUnmarshal	@14
+
+                AVIFileInit                     @100
+                AVIFileExit                     @101
+
+		AVIFileOpen			@102
+		AVIStreamOpenFromFile		@103
+		AVIStreamCreate			@104
+		
+		AVIMakeCompressedStream		@105
+		AVIMakeFileFromStreams		@106
+		AVIMakeStreamFromClipboard	@107
+
+		AVIStreamGetFrame		@110
+		AVIStreamGetFrameClose		@111
+		AVIStreamGetFrameOpen		@112
+		
+		_AVISave			@120
+		AVISaveV			@121
+		AVISaveOptions			@122
+		AVIBuildFilter			@123
+		AVISaveOptionsFree		@124
+
+		AVIStreamStart			@130
+		AVIStreamLength			@131
+		AVIStreamTimeToSample		@132
+		AVIStreamSampleToTime		@133
+		
+		;; These just all call methods...
+		AVIFileAddRef			@140
+                AVIFileRelease                  @141
+		AVIFileInfo			@142
+		AVIFileGetStream		@143
+		AVIFileCreateStream		@144
+;;		AVIFileAddStream		@145
+		AVIFileWriteData		@146
+		AVIFileReadData			@147
+		AVIFileEndRecord		@148
+
+		AVIStreamAddRef			@160
+                AVIStreamRelease                @161
+		AVIStreamInfo			@162
+                AVIStreamFindSample             @163
+		AVIStreamReadFormat		@164
+		AVIStreamReadData		@165
+		AVIStreamWriteData		@166
+		AVIStreamRead			@167
+		AVIStreamWrite			@168
+		AVIStreamSetFormat		@169
+                ;;
+
+		EditStreamCopy			@180
+		EditStreamCut			@181
+		EditStreamPaste			@182
+		EditStreamClone			@190
+		EditStreamSetName		@191
+		EditStreamSetInfo		@192
+
+		CreateEditableStream		@184
+		AVIPutFileOnClipboard		@185
+		AVIGetFromClipboard		@187
+                AVIClearClipboard               @188
+
+                AVIStreamBeginStreaming         @200
+                AVIStreamEndStreaming           @201
+
+
+		

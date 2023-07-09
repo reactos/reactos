@@ -1,0 +1,13 @@
+
+DIRS= badapps \
+      inc    \
+      rtl    \
+      client \
+      kernel \
+      server \
+      kdexts \
+      kbd    \
+      imm    \
+      shim
+
+OPTIONAL_DIRS=

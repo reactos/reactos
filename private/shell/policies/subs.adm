@@ -1,0 +1,70 @@
+; subs.adm
+;
+;;;;;;;;;;;;;;;;;;;;;;
+CLASS USER ;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+CATEGORY !!sz_Channels
+KEYNAME "Software\Policies\Microsoft\Internet Explorer\Infodelivery\Restrictions"
+    POLICY !!sz_Channels
+        
+        PART !!MaxChannelSize NUMERIC SPIN 250
+        VALUENAME MaxChannelSize
+        END PART
+        
+        PART !!MaxSubscriptionCount NUMERIC SPIN 5
+        VALUENAME MaxSubscriptionCount
+        END PART
+        
+        PART !!MinUpdateInterval NUMERIC SPIN 60
+        VALUENAME MinUpdateInterval
+        END PART
+        
+        PART !!UpdateExcludeBegin NUMERIC SPIN 60
+        MAX 1440
+        VALUENAME UpdateExcludeBegin
+        END PART
+        
+        PART !!UpdateExcludeEnd NUMERIC SPIN 60
+        MAX 1440
+        VALUENAME UpdateExcludeEnd
+        END PART
+
+        PART !!MaxWebcrawlLevels DROPDOWNLIST
+        VALUENAME MaxWebcrawlLevels
+        ITEMLIST
+        	NAME !!MaxWebcrawlDepth0 VALUE NUMERIC 1
+        	NAME !!MaxWebcrawlDepth1 VALUE NUMERIC 2
+        	NAME !!MaxWebcrawlDepth2 VALUE NUMERIC 3
+        	NAME !!MaxWebcrawlDepth3 VALUE NUMERIC 4
+        END ITEMLIST
+        END PART
+
+    END POLICY
+END CATEGORY
+
+[strings]
+sz_Channels="Offline Pages"
+
+MaxChannelSize="Maximum KB of an offline page (zero disables restriction)"
+MaxSubscriptionCount="Maximum number of offline pages (zero disables restriction)"
+MinUpdateInterval="Minimum number of minutes between scheduled update of offline pages (zero disables restriction)"
+UpdateExcludeBegin="Beginning of range in which to exclude scheduled update of offline pages.  Measured in minutes from midnight (zero disables restriction)"
+UpdateExcludeEnd="End of range in which to exclude scheduled update of offline pages. Measured in minutes from midnight (zero disables restriction)"
+MaxWebcrawlLevels="Maximum offline page crawl depth."
+MaxWebcrawlDepth0="0"
+MaxWebcrawlDepth1="1"
+MaxWebcrawlDepth2="2"
+MaxWebcrawlDepth3="3"
+
+IEAK_Title=Offline Pages
+IEAK_DescriptionTitle=Offline Pages Settings
+IEAK_Description1=The restrictions on these offline page settings allow you to control the amount of information downloaded. These settings allow you to restrict bandwidth in a number of ways. You may want to consider using these settings if you are concerned about server load.
+IEAK_Description2=Maximum offline page crawl depth controls how many levels the webcasting update utility will search for new information. This setting should be used carefully as a high setting could make the amount of information being downloaded exponentially large.
+IEAK_Description3=Internet Explorer 4.0 users: Channels are also administered by the settings for offline pages. 
+
+[IEAK]
+Lock=1
+Roles=001
+NumOfDescLines=3
+Platform=010

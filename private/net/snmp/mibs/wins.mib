@@ -1,0 +1,809 @@
+          WINS-MIB DEFINITIONS ::= BEGIN
+ 
+
+          IMPORTS
+                  enterprises,
+                  OBJECT-TYPE
+                          FROM RFC1155-SMI
+                  DisplayString
+                          FROM RFC1213-MIB
+                  microsoft,
+                  software
+                          FROM MSFT-MIB;
+
+ 
+--      microsoft       OBJECT IDENTIFIER ::= { enterprises 311 }
+--      software        OBJECT IDENTIFIER ::= { microsoft 1 }
+        wins    	OBJECT IDENTIFIER ::= { software 2 }
+        par  		OBJECT IDENTIFIER ::= { wins 1 }
+        pull    	OBJECT IDENTIFIER ::= { wins 2 }
+        push    	OBJECT IDENTIFIER ::= { wins 3 }
+        datafiles    	OBJECT IDENTIFIER ::= { wins 4 }
+	cmd		OBJECT IDENTIFIER ::= { wins 5 }
+
+
+ 
+          -- WINS MIB
+	-- Parameters (Prefix  Par) 
+ 
+          parWinsStartTime OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (1..30)) 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Wins start time"
+              ::= { par 1 }
+
+          parLastPScvTime OBJECT-TYPE
+              SYNTAX  DisplayString  (SIZE (1..30)) 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Most recent date and time at which planned scavenging 
+		       took place.  Planned scavenging happens at intervals
+		       specified in the registry.  Scavenging involves
+		       changing owned non-refreshed entries to the released
+		       state. Further, replicas may be changed to tombstones,
+		       tombstones maye be deleted and revalidation of old
+		       replicas may take place"
+              ::= { par 2 }
+
+          parLastATScvTime OBJECT-TYPE
+              SYNTAX  DisplayString  (SIZE (1..30))   
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Most recent data and time at which scavenging as a
+		       result of administrative action took place"
+              ::= { par 3 }
+
+          parLastTombScvTime OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (1..30))   
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Most recent data and time at which replica tombstone
+		       scavenging took place" 
+              ::= { par 4 }
+          parLastVerifyScvTime OBJECT-TYPE
+              SYNTAX  DisplayString  (SIZE (1..30))     
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Most recent data and time at which revalidation of
+		       old active replicas took place"
+              ::= { par 5 }
+
+          parLastPRplTime OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (1..30))   
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Most recent data and time at which planned replication
+		       took place.  Planned replication happens at intervals
+		       specified in the registry" 
+              ::= { par 6 }
+
+          parLastATRplTime OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (1..30))   
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Most recent data and time at which administrator
+		       triggered replication took place." 
+              ::= { par 7 }
+
+          parLastNTRplTime OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (1..30))   
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Most recent data and time at which network triggered
+		       replication took place.  Network triggered replication 
+		       happens as a result of an update notification message
+		       from a remote WINS"
+              ::= { par 8 }
+
+          parLastACTRplTime OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (1..30))   
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Most recent data and time at which address change
+		       triggered replication took place.  Address change
+		       triggered replication happens when the address of
+		       an owned name changes due to a new registration" 
+              ::= { par 9 }
+
+          parLastInitDbTime OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (1..30))   
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Most recent data and time at which the local database
+		       was populated statically from one or more data files" 
+              ::= { par 10 }
+ 
+          parLastCounterResetTime OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (1..30))   
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Most recent data and time at which the local counters
+		       were initialized to zero" 
+              ::= { par 11 }
+ 
+          parWinsTotalNoOfReg OBJECT-TYPE
+              SYNTAX  Counter  
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the number of
+			 registrations received"
+              ::= { par 12 }
+
+          parWinsTotalNoOfQueries OBJECT-TYPE
+              SYNTAX  Counter 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the number of
+			 queries received"
+              ::= { par 13 }
+
+          parWinsTotalNoOfRel OBJECT-TYPE
+              SYNTAX  Counter 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the number of
+			 releases received"
+              ::= { par 14 }
+
+          parWinsTotalNoOfSuccRel OBJECT-TYPE
+              SYNTAX  Counter 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the number of
+			 releases that succeeded"
+              ::= { par 15 }
+
+          parWinsTotalNoOfFailRel OBJECT-TYPE
+              SYNTAX  Counter 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the number of
+			 releases that failed"
+              ::= { par 16 }
+
+          parWinsTotalNoOfSuccQueries OBJECT-TYPE
+              SYNTAX  Counter 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the number of
+			 queries that succeeded"
+              ::= { par 17 }
+
+          parWinsTotalNoOfFailQueries OBJECT-TYPE
+              SYNTAX  Counter 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the number of
+			 queries that failed"
+              ::= { par 18 }
+
+          parRefreshInterval OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the refresh interval.
+			 Unit is in milliseconds"
+              ::= { par 19 }
+
+          parTombstoneInterval OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the tombstone interval,
+			 Unit is in milliseconds"
+              ::= { par 20 }
+
+          parTombstoneTimeout OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the tombstone timeout.
+			 Unit is in milliseconds"
+              ::= { par 21 }
+
+          parVerifyInterval OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the verify interval
+			 Unit is in milliseconds."
+              ::= { par 22 }
+
+          parVersCounterStartValLowWord OBJECT-TYPE
+              SYNTAX  Counter 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the low word of the
+			version counter that WINS should start with"
+              ::= { par 23 }
+
+          parVersCounterStartValHighWord OBJECT-TYPE
+              SYNTAX  Counter 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the High word of the
+			version counter that WINS should start with"
+              ::= { par 24 }
+ 
+          parRplOnlyWCnfPnrs OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates whether or not  
+			replication should be done with non-configures pnrs.
+			If not set to zero, replication will be done only with
+			partners listed in the registry (except when an
+			update notification comes in)"	
+              ::= { par 25 }
+ 
+          parStaticDataInit OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates whether Static data should 
+			 be read in at initialization and reconfiguration time.
+			 Update of any mib variable in the parameters group
+			 constitutes reconfigurations "	
+              ::= { par 26 }
+
+          parLogFlag OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates whether logging should be
+			 done. Default behaviour is to do logging" 
+              ::= { par 27 }
+
+          parLogFileName OBJECT-TYPE
+              SYNTAX  DisplayString 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable gives the path to the log file" 
+              ::= { par 28 }
+
+          parBackupDirPath  OBJECT-TYPE
+              SYNTAX  DisplayString 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable gives the path to the backup dir" 
+              ::= { par 29 }
+
+          parDoBackupOnTerm  OBJECT-TYPE
+              SYNTAX  INTEGER  {
+                                no(0),
+                                yes(1)
+                               }
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable specifies whether WINS should do 
+                         backup on termination. Setting it 1 holds no
+                         meaning unless parBackupDirPath is set also" 
+              ::= { par 30 }
+
+          parMigrateOn  OBJECT-TYPE
+              SYNTAX  INTEGER  {
+                                no(0),
+                                yes(1)
+                               }
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable specifies whether static records
+                         in the wins database should be treated as
+                         dynamic records during conflicts with new
+                         dynamic registrations." 
+              ::= { par 31 }
+
+-- datafiles group (Prefix  df)
+
+          dfDatafilesTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF DFDatafileEntry 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "A list of datafiles specified under the Datafiles
+		       key in the registry.  These files are used for
+		       statically initialization of the WINS database"
+              ::= { datafiles 1 }
+
+	 dfDatafileEntry OBJECT-TYPE
+	      SYNTAX  DFDatafileEntry
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION 
+			"data file name"
+	      INDEX   { dfDatafileIndex }
+	      ::= { dfDatafilesTable 1 }
+
+	DFDatafileEntry ::= SEQUENCE {
+			dfDatafileIndex
+				INTEGER,
+			dfDatafileName 
+				DisplayString
+				}
+
+	dfDatafileIndex OBJECT-TYPE
+              SYNTAX  INTEGER  
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+			"Used for indexing entries in the datafiles table.
+			It has no other use"	
+              ::= { dfDatafileEntry 1 }
+
+	dfDatafileName OBJECT-TYPE
+              SYNTAX  DisplayString
+              ACCESS read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"Name of the datafile to use for static initialization"
+              ::= { dfDatafileEntry 2 }
+	  
+-- pull group (Prefix pull)
+
+          pullInitTime OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates whether pull should be
+			done at WINS invocation and at reconfiguration.
+			If any pull group's mib variable is set, that
+			constitutes reconfiguration"
+              ::= { pull 1 }
+
+          pullCommRetryCount OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable gives the retry count in
+			case of comm failure when doing pull replication.
+			This is the max. number of retries that will be
+			done at the interval specified for the Partner
+			before WINS will stop for a certain number (canned) of
+			replication time intervals before starting again."
+              ::= { pull 2 }
+
+          pullPnrTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF PullPnrEntry
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "A list of Partners with which pull replication needs
+		       to be done"
+              ::= { pull 3 }
+
+          pPullPnrEntry  OBJECT-TYPE
+              SYNTAX  PullPnrEntry 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This is the row corresponding to a partner" 
+	      INDEX   { pullPnrAdd }
+              ::= { pullPnrTable 1 }
+
+	  PullPnrEntry ::= SEQUENCE { 
+		pullPnrAdd
+			IpAddress,
+
+		pullPnrSpTime
+			DisplayString,
+		
+		pullPnrTimeInterval
+			INTEGER,
+		
+		pullPnrMemberPrec
+			INTEGER { low(0), high(1) },
+
+		pullPnrNoOfSuccRpls
+			Counter,
+
+		pullPnrNoOfCommFails
+			Counter,
+
+        pullPnrVersNoLowWord
+			Counter,
+
+		pullPnrVersNoHighWord
+			Counter
+		}
+          pullPnrAdd  OBJECT-TYPE
+              SYNTAX  IpAddress 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This is the address of the remote WINS partner" 
+              ::= { pPullPnrEntry 1 }
+
+	
+          pullPnrSpTime OBJECT-TYPE
+              SYNTAX  DisplayString 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable gives the specific time at which 
+			 pull replication should occur" 
+              ::= { pPullPnrEntry 2 }
+
+          pullPnrTimeInterval  OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable gives the time interval for 
+			pull replication" 
+              ::= { pPullPnrEntry 3 }
+
+          pullPnrMemberPrec  OBJECT-TYPE
+    	   SYNTAX
+             INTEGER {
+                   low(0),
+                   high(1)
+             }
+    	  ACCESS  read-write
+    	  STATUS  mandatory
+          DESCRIPTION
+		   "This is the precedence to be given to members of 
+		   the special group pulled from the WINS. Note:
+		   the precedence of locally registered members of a 
+		   special group is more than any replicas pulled in"
+    		::= { pPullPnrEntry 4 }
+
+          pullPnrNoOfSuccRpls  OBJECT-TYPE
+          SYNTAX  Counter 
+    	  ACCESS  read-only
+    	  STATUS  mandatory
+          DESCRIPTION
+		  "The number of times replication was successful with
+		   the WINS after invocation or reset of counters"
+    		::= { pPullPnrEntry 5 }
+
+          pullPnrNoOfCommFails  OBJECT-TYPE
+          SYNTAX  Counter 
+    	  ACCESS  read-only
+    	  STATUS  mandatory
+          DESCRIPTION
+		  "The number of times replication was unsuccessful with
+		   the WINS due to comm. failure (after invocation or reset 
+		   of counters"
+    		::= { pPullPnrEntry 6 }
+
+          pullPnrVersNoLowWord  OBJECT-TYPE
+          SYNTAX  Counter 
+    	  ACCESS  read-only
+    	  STATUS  mandatory
+          DESCRIPTION
+		  "The low word of the highest vers. no found in records
+		   owned by this WINS." 
+    		::= { pPullPnrEntry 7 }
+
+          pullPnrVersNoHighWord  OBJECT-TYPE
+          SYNTAX  Counter 
+    	  ACCESS  read-only
+    	  STATUS  mandatory
+          DESCRIPTION
+		  "The high word of the highest vers. no found in records
+		   owned by this WINS." 
+    		::= { pPullPnrEntry 8 }
+
+-- push group (Prefix - push)
+          pushInitTime OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates whether a push (i.e. 
+			notification message) should be done at invocation."
+              ::= { push 1 }
+
+          pushRplOnAddChg OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates whether  a notification 
+			 message  should be sent when address changes" 
+              ::= { push 2 }
+
+          pushPnrTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF PushPnrEntry
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "A list of WINS Partners with which push
+		       replication is to be initiated"
+              ::= { push 3 }
+
+
+          pushPnrEntry  OBJECT-TYPE
+              SYNTAX  PushPnrEntry 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This is the row corresponding to the WINS pnr" 
+	      INDEX   { pushPnrAdd }
+              ::= { pushPnrTable 1 }
+
+	  PushPnrEntry ::= SEQUENCE { 
+		pushPnrAdd
+			IpAddress,
+
+		pushPnrUpdateCount
+			INTEGER
+		
+		}
+
+          pushPnrAdd OBJECT-TYPE
+              SYNTAX  IpAddress 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"Address of the WINS partner"
+              ::= { pushPnrEntry 1 }
+
+          pushPnrUpdateCount OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable indicates the # of updates that
+			 should result in a push message" 
+              ::= { pushPnrEntry 2 }
+
+-- cmd group (Prefix - cmd)
+
+          cmdPullTrigger OBJECT-TYPE
+              SYNTAX  IpAddress 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable when set will cause the WINS to
+			 pull from the remote WINS identified by the IpAddress"
+              ::= { cmd 1 }
+
+          cmdPushTrigger OBJECT-TYPE
+              SYNTAX  IpAddress 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable when set will cause the WINS to
+			 push a notification message to the remote WINS 
+			identified by the IpAddress"
+              ::= { cmd 2 }
+
+          cmdDeleteWins OBJECT-TYPE
+              SYNTAX  IpAddress 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable when set will cause all information
+			 pertaining to a WINS (data records, context 
+			 information to be deleted from the local WINS.
+			 Use this only when owner-address mapping table is
+			 getting to near capacity. NOTE: deletion of all 
+			 information pertaining to the managed WINS is not
+			 permitted"
+              ::= { cmd 3 }
+
+          cmdDoScavenging OBJECT-TYPE
+              SYNTAX  INTEGER {
+				no(0),
+				yes(1)
+			      } 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable when set will cause WINS to do
+			 scavenging." 
+              ::= { cmd 4 }
+
+          cmdDoStaticInit OBJECT-TYPE
+              SYNTAX  DisplayString
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"When set WINS will do static initialization
+			 using the file specified as the value.  If
+			 0 is specified, WINS will do static 
+			 initialization using the files specified
+			 in the registry (can be read-written using
+			 Datafile table"
+              ::= { cmd 5 }
+
+          cmdNoOfWrkThds OBJECT-TYPE
+              SYNTAX  INTEGER (1..4)
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"Sets the number of worker threads in WINS"
+              ::= { cmd 6 }
+
+          cmdPriorityClass OBJECT-TYPE
+              SYNTAX  INTEGER { 
+				normal(0),
+				high(1)
+			     } 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"Set the priority class of WINS to normal or high"
+              ::= { cmd 7 }
+
+          cmdResetCounters OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"Reset the counters. Value is ignored"
+              ::= { cmd 8 }
+
+          cmdDeleteDbRecs OBJECT-TYPE
+              SYNTAX  IpAddress 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable when set will cause all date records 
+			 pertaining to a WINS to be deleted from the local WINS.
+			 Note: Only data records are deleted."
+              ::= { cmd 9 }
+
+          cmdDRPopulateTable OBJECT-TYPE
+              SYNTAX  IpAddress 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+			"This variable can set to retrieve records of
+			 a WINS whose Ip address is provided. When set
+			 the table is populated right-away"
+              ::= { cmd 10 }
+
+          cmdDRDataRecordsTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF CmdDRRecordEntry
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"This is the table that stores the data records
+			 The records are sorted lexicographically by name  
+			 Note: the table is cached (to save on overhead on WINS)
+			 To repopulate the table, set cmdDRDataRecordsTable
+			 mib var" 
+              ::= { cmd 11 }
+
+	 cmdDRRecordEntry OBJECT-TYPE
+	      SYNTAX  CmdDRRecordEntry
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION  "data record owned by WINS whose address
+			    was specified when CmdDRRecordsTable was
+			    set"
+	      INDEX { cmdDRRecordName }
+	      ::= { cmdDRDataRecordsTable 1 }
+
+	CmdDRRecordEntry ::= SEQUENCE {
+			cmdDRRecordName
+				DisplayString,
+			cmdDRRecordAddress 
+				OCTET STRING,
+			cmdDRRecordType
+				INTEGER,
+			cmdDRRecordPersistenceType
+				INTEGER,
+			cmdDRRecordState
+				INTEGER
+				}
+
+	cmdDRRecordName OBJECT-TYPE
+              SYNTAX  OCTET STRING (SIZE(1..255)) 
+              ACCESS read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"Name in the record"
+              ::= { cmdDRRecordEntry 1 }
+	
+	cmdDRRecordAddress  OBJECT-TYPE
+              SYNTAX  OCTET STRING  
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"Address(es) of the record.  If the record is
+			 a multihomed record or a special group, the
+			 addresses are returned sequentially in pairs.
+			 Each pair is comprised of the address of the
+		         owner wins followed by the address of the 
+			 machine (multihomed)/member (special group).
+			 Note: Following snmp's convention, the records
+			 are always returned in network byte order"
+              ::= { cmdDRRecordEntry 2 }
+
+	cmdDRRecordType  OBJECT-TYPE
+              SYNTAX  INTEGER {
+			unique(0),
+			normalgroup(1),
+			specialgroup(2),
+			multihomed(3) 
+			}
+	-- Note the above order should not be disturbed.  It is same as
+	-- in winsintf.h (WINSINTF_RECTYPE_E)
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"Type of the record"
+              ::= {cmdDRRecordEntry 3 }
+
+	cmdDRRecordPersistenceType OBJECT-TYPE
+              SYNTAX  INTEGER {
+			static(0),
+			dynamic(1)
+			}
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"Persistence type of the record"
+              ::= { cmdDRRecordEntry 4 }
+
+	cmdDRRecordState  OBJECT-TYPE
+              SYNTAX  INTEGER {
+			active(0),
+			released(1),
+			tombstone(2),
+			deleted(3)
+			}
+	-- Note the above order should not be disturbed.  It is same as
+	-- in winsintf.h (WINSINTF_STATE_E)
+
+	-- for a SET operation only released and deleted values are
+	-- allowed
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"State of the record."
+              ::= { cmdDRRecordEntry 5 }
+
+          cmdWinsVersNoLowWord OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"The low word of the version number counter of the WINS"
+              ::= { cmd 12 }
+
+          cmdWinsVersNoHighWord OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+			"The high word of the version number counter of the WINS"
+              ::= { cmd 13 }
+          END

@@ -1,0 +1,19 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       dssec.src
+//
+//--------------------------------------------------------------------------
+
+LIBRARY DSSEC
+EXPORTS
+    DllGetClassObject           PRIVATE
+    DllCanUnloadNow             PRIVATE
+
+    DSCreateISecurityInfoObject     @1
+    DSCreateSecurityPage            @2
+    DSEditSecurity                  @3
+    DSCreateISecurityInfoObjectEx   @4

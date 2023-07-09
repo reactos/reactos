@@ -1,0 +1,12 @@
+/////////////////////////////////////////////////////////////////////////////
+// Version stamp for this .EXE
+
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Private Character Editor"
+#define VER_INTERNALNAME_STR            "Eudcedit"
+#define VER_ORIGINALFILENAME_STR        "EUDCEDIT.EXE"
+
+#include <ntverp.h>
+#include "common.ver"

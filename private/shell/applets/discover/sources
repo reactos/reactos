@@ -1,0 +1,72 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+#
+# Cross-compiler macros for unique naming
+#
+
+MAJORCOMP       = shell
+MINORCOMP       = discover
+
+#
+# Common settings required by build.exe and makefile.def
+#
+
+INCLUDES=$(BASEDIR)\public\sdk\inc;$(BASEDIR)\private\windows\inc;$(BASEDIR)\private\inc;$(CCSHELL_DIR)\inc
+
+C_DEFINES=-DWIN32 -DW3 -DWINNT -DUNICODE -D_UNICODE
+
+TARGETNAME = discover
+TARGETPATH = obj
+TARGETTYPE = PROGRAM
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\gdi32.lib         \
+    $(SDK_LIB_PATH)\shell32p.lib      \
+    $(SDK_LIB_PATH)\shlwapip.lib      \
+    $(SDK_LIB_PATH)\uuid.lib          \
+    $(SDK_LIB_PATH)\ole32.lib         \
+
+UMTYPE=windows
+UMENTRY=winmain
+
+#
+# List of sources
+#
+
+SOURCES = \
+    container.cpp \
+    discover.cpp \
+    discover.rc \
+    webapp.cpp \
+
+#
+# Define PROFILE to enable IceCAP profiling.
+#
+!IF "$(PROFILE)" == "1"
+C_DEFINES=$(C_DEFINES) -DPROFILE
+USER_C_FLAGS=$(USER_C_FLAGS) /Gh /Zi
+TARGETLIBS=$(TARGETLIBS) $(SDK_LIB_PATH)\icap.lib
+!ENDIF
+

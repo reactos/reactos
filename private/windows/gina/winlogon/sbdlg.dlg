@@ -1,0 +1,29 @@
+
+IDD_SECURE_BOOT DIALOG 37, 79, 223, 85
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Windows 2000 Startup Password"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This computer is configured to require a password in order to start up.  Please enter the Startup Password below.",
+                    IDD_SB_TEXT_1, 52, 7, 157, 29
+    LTEXT           "&Password:", IDD_SB_PW_LABEL, 52, 47, 51, 8
+    EDITTEXT        IDD_SB_PASSWORD, 96, 46, 109, 12, ES_PASSWORD |
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", IDOK, 61, 68, 47, 14
+    PUSHBUTTON      "&Restart", IDCANCEL, 114, 68, 47, 14
+    ICON            "", IDD_SB_PW_ICON, 10, 9, 38, 51
+END
+
+IDD_SECURE_BOOT_DISK DIALOG 65, 39, 206, 86
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Windows 2000 Startup Key Disk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This computer has been configured to require a disk to be present during startup.  Please insert the disk and press OK.",
+                    IDD_SB_DISK_TEXT, 52, 7, 145, 29
+    LTEXT           "If you do not have the disk, contact your administrator or select the Restart button to restart the computer.",
+                    IDD_SB_DISK_TEXT2, 52, 34, 144, 36
+    PUSHBUTTON      "OK", IDOK, 77, 66, 47, 14
+    PUSHBUTTON      "&Restart", IDCANCEL, 128, 66, 47, 14
+    ICON            "", IDD_SB_DISK_ICON, 9, 10, 38, 51
+END

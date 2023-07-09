@@ -1,0 +1,140 @@
+LIBRARY IMM32
+
+EXPORTS
+
+; Internal - Microsoft company only
+; Internal-ISV - Can be disclosed to ISV
+; other - Can be disclosed to ordinal people
+
+        ImmGetDefaultIMEWnd
+
+        ImmGetDescriptionA
+        ImmGetDescriptionW
+        ImmGetIMEFileNameA                      ; Internal-ISV
+        ImmGetIMEFileNameW
+        ImmGetProperty
+        ImmInstallIMEA
+        ImmInstallIMEW
+
+        ImmIsIME
+
+        ImmGetHotKey                            ; Internal-ISV
+        ImmSetHotKey = USER32.CliImmSetHotKey   ; Internal-ISV
+        ImmSimulateHotKey
+
+        ImmCreateContext
+        ImmDestroyContext
+        ImmGetContext
+        ImmReleaseContext
+        ImmAssociateContext
+
+        ImmGetCompositionStringA
+        ImmGetCompositionStringW
+        ImmSetCompositionStringA
+        ImmSetCompositionStringW
+        ImmGetCandidateListCountA
+        ImmGetCandidateListCountW
+        ImmGetCandidateListA
+        ImmGetCandidateListW
+        ImmGetGuideLineA
+        ImmGetGuideLineW
+
+        ImmGetConversionStatus
+        ImmSetConversionStatus
+        ImmGetOpenStatus
+        ImmSetOpenStatus
+        ImmGetCompositionFontA
+        ImmGetCompositionFontW
+        ImmSetCompositionFontA
+        ImmSetCompositionFontW
+
+        ImmConfigureIMEA
+        ImmConfigureIMEW
+        ImmEscapeA
+        ImmEscapeW
+        ImmGetConversionListA
+        ImmGetConversionListW
+        ImmNotifyIME
+
+        ImmIsUIMessageA
+        ImmIsUIMessageW
+        ImmGenerateMessage
+        ImmGetVirtualKey
+
+        ImmRegisterWordA
+        ImmRegisterWordW
+        ImmUnregisterWordA
+        ImmUnregisterWordW
+        ImmGetRegisterWordStyleA
+        ImmGetRegisterWordStyleW
+        ImmEnumRegisterWordA
+        ImmEnumRegisterWordW
+
+        ImmGetStatusWindowPos
+        ImmSetStatusWindowPos
+        ImmGetCompositionWindow
+        ImmSetCompositionWindow
+        ImmGetCandidateWindow
+        ImmSetCandidateWindow
+
+
+        ImmLockIMC
+        ImmUnlockIMC
+        ImmGetIMCLockCount
+        ImmCreateIMCC
+        ImmDestroyIMCC
+        ImmLockIMCC
+        ImmUnlockIMCC
+        ImmGetIMCCLockCount
+        ImmReSizeIMCC
+        ImmGetIMCCSize
+
+        ImmCreateSoftKeyboard
+        ImmDestroySoftKeyboard
+        ImmShowSoftKeyboard
+
+; new entries for NT 5.0 SB
+        ImmDisableIme = ImmDisableIME PRIVATE
+        ImmDisableIME
+        ImmAssociateContextEx
+        ImmEnumInputContext
+        ImmRequestMessageA            ; Internal-ISV
+        ImmRequestMessageW            ; Internal-ISV
+        ImmGetImeMenuItemsA           ; Internal-ISV
+        ImmGetImeMenuItemsW           ; Internal-ISV
+; end new NT5.0 entries
+
+        ImmRegisterClient             PRIVATE
+        ImmSetActiveContext           PRIVATE
+        ImmLoadLayout                 PRIVATE
+        ImmFreeLayout                 PRIVATE
+        ImmActivateLayout             PRIVATE
+        ImmLockClientImc              PRIVATE
+        ImmUnlockClientImc            PRIVATE
+        ImmLockImeDpi                 PRIVATE
+        ImmUnlockImeDpi               PRIVATE
+        ImmGetImeInfoEx               PRIVATE
+        ImmProcessKey                 PRIVATE
+        ImmTranslateMessage           PRIVATE
+        ImmLoadIME                    PRIVATE
+
+        ImmWINNLSGetIMEHotkey         PRIVATE
+        ImmWINNLSEnableIME            PRIVATE
+        ImmWINNLSGetEnableStatus      PRIVATE
+        ImmSendIMEMessageExW          PRIVATE
+        ImmSendIMEMessageExA          PRIVATE
+        ImmIMPGetIMEW                 PRIVATE
+        ImmIMPGetIMEA                 PRIVATE
+        ImmIMPQueryIMEW               PRIVATE
+        ImmIMPQueryIMEA               PRIVATE
+        ImmIMPSetIMEW                 PRIVATE
+        ImmIMPSetIMEA                 PRIVATE
+
+        ImmCallImeConsoleIME          PRIVATE
+        ImmSetActiveContextConsoleIME PRIVATE
+
+; new for NT 5.0
+        ImmPutImeMenuItemsIntoMappedFile        PRIVATE
+        ImmSendMessageToActiveDefImeWndW        PRIVATE
+        ImmPenAuxInput                          PRIVATE
+        ImmSystemHandler                        PRIVATE

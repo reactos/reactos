@@ -1,0 +1,5 @@
+GPSIZE=32
+IA64_SOURCES=..\ia64\kdtrap.c \
+	     ..\ia64\kdreboot.c \
+	     ..\ia64\kdcpuapi.c \
+             ..\ia64\kdcmsup.c

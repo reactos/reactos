@@ -1,0 +1,135 @@
+REGEDIT4
+
+;
+; Old Packager Registry modifications
+;   These modifications are necessary so that the old packages are handled by
+;   the new DLL and so the old packager is never called.
+;
+
+;
+; don't make this entry anymore 27 May 96
+;
+;[HKEY_CLASSES_ROOT\Package\Protocol\StdFileEditing\server]
+;@="pack2.dll"
+;
+
+[HKEY_CLASSES_ROOT\Package\Protocol\StdFileEditing\verb\0]
+@="&Activate Contents"
+
+[HKEY_CLASSES_ROOT\Package\Protocol\StdFileEditing\verb\1]
+@="&Edit Package"
+
+[HKEY_CLASSES_ROOT\CLSID\{0003000C-0000-0000-C000-000000000046}\TreatAs]
+@="{F20DA720-C02F-11CE-927B-0800095AE340}"
+
+; we don't want to be able to insert old packages anymore.
+;
+[HKEY_CLASSES_ROOT\CLSID\{0003000C-0000-0000-C000-000000000046}\NotInsertable]
+@=""
+
+[HKEY_CLASSES_ROOT\Package\NotInsertable]
+@=""
+
+
+; 
+; New Packager Version Independent ProgID stuff
+; 
+
+[HKEY_CLASSES_ROOT\Package2]
+@="Package"
+
+[HKEY_CLASSES_ROOT\Package2\CLSID]
+@="{F20DA720-C02F-11CE-927B-0800095AE340}"
+
+[HKEY_CLASSES_ROOT\Package2\CurVer]
+@="Package2.1"
+
+;
+; New Packager ProgID Stuff
+;
+
+[HKEY_CLASSES_ROOT\Package2.1]
+@="Package"
+
+[HKEY_CLASSES_ROOT\Package2.1\CLSID]
+@="{F20DA720-C02F-11CE-927B-0800095AE340}"
+
+[HKEY_CLASSES_ROOT\Package2.1\Insertable]
+@=""
+
+[HKEY_CLASSES_ROOT\Package2.1\protocol]
+
+[HKEY_CLASSES_ROOT\Package2.1\protocol\StdFileEditing]
+
+[HKEY_CLASSES_ROOT\Package2.1\protocol\StdFileEditing\server]
+@="pack2.dll"
+
+[HKEY_CLASSES_ROOT\Package2.1\protocol\StdFileEditing\verb]
+
+[HKEY_CLASSES_ROOT\Package2.1\protocol\StdFileEditing\verb\0]
+@="&Activate Contents"
+
+[HKEY_CLASSES_ROOT\Package2.1\protocol\StdFileEditing\verb\1]
+@="&Edit Package"
+
+;
+; New Packager CLSID stuff
+;
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}]
+@="Package"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\InProcServer32]
+@="pack2.dll"
+"ThreadingModel"="Apartment"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\verb]
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\verb\0]
+@="&Activate Contents,0,2"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\verb\1]
+@="&Edit Package,0,2"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\AuxUserType]
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\AuxUserType\2]
+@="Package"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\AuxUserType\3]
+@="Object Packager"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\MiscStatus]
+@="2"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\DataFormats]
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\DataFormats\GetSet]
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\DataFormats\GetSet\0]
+@="FileContents,1,3,1"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\DataFormats\GetSet\1]
+@="FileGroupDescriptor,1,1,1"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\DataFormats\GetSet\2]
+@="Embed Source,1,8,1"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\DataFormats\GetSet\3]
+@="3,1,32,1"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\DataFormats\GetSet\4]
+@="Object Descriptor,1,1,1"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\Insertable]
+@=""
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\ProgID]
+@="Package2.1"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\VersionIndependentProgID]
+@="Package2"
+
+[HKEY_CLASSES_ROOT\CLSID\{F20DA720-C02F-11CE-927B-0800095AE340}\DefaultIcon]
+@="pack2.dll,0"
+

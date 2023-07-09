@@ -1,0 +1,66 @@
+!IF 0
+########################################################################
+
+Copyright (c) 1991  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Babak Jahromi (babakj)
+
+Issues:
+        -.cod files are used (they are just mixed source-object listing!
+          so don't worry about them)
+        - RCFLAGS needs -dWINVER_3
+
+###########################################################################
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=games
+
+USE_CRTDLL=1
+
+TARGETNAME=sol
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+INCLUDES=.;..\..\..\ep\carddll
+
+SOURCES= sol.c     \
+         util.c    \
+         game.c    \
+         col.c     \
+         klond.c   \
+         undo.c    \
+         marq.c    \
+         stat.c    \
+         debug.c   \
+         sol_new.rc
+
+C_DEFINES=-DWIN32 -DWINVER_3 -D_UNICODE -DUNICODE
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+UMTYPE=windows
+UMENTRY=winmain
+UMLIBS=   $(BASEDIR)\public\sdk\lib\*\user32.lib      \
+          $(BASEDIR)\public\sdk\lib\*\ntdll.lib       \
+          $(BASEDIR)\public\sdk\lib\*\gdi32.lib       \
+          $(BASEDIR)\public\sdk\lib\*\pwin32.lib      \
+          $(BASEDIR)\private\windows\ep\carddll\obj\*\cards.lib \
+!if !$(IA64)
+          $(BASEDIR)\public\sdk\lib\*\shell32.lib     \
+!endif
+          $(BASEDIR)\public\sdk\lib\*\htmlhelp.lib

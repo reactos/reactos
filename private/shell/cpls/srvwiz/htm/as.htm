@@ -1,0 +1,65 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css"/>
+<TITLE>Application Server</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="popups.js"></SCRIPT>
+<STYLE>
+    BODY {background-image:url("apsrv_bg.gif"); background-repeat:no-repeat; background-position:130 37;}
+	.defdiv {background-color:ffffff; visibility:hidden; position:absolute; top:1px; border:1px solid black;}
+	.defspan {font-size:8pt; border:1px solid #cccccc; padding:10px}
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#cccccc" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" id="body">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">Application Server</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top">
+            <P ID="para1">Windows 2000 Server can be configured as a powerful application server for your organization. 
+            A Windows 2000-based application server can improve your network in the following ways:
+        </TD>
+    </TR>
+    <TR>
+        <TD>
+            <UL>
+                <LI ID="para2"><B>Client-server applications</B>&nbsp;&#151;&nbsp;
+                    For your messaging, database, and other line of business client/server applications, 
+                    please follow the installation instructions included with these server products. 
+                    Be sure to check the Web for the latest updates. To learn more, click <B>Email Server</B> 
+                    or <B>Database Server</B> on the menu at the left.
+                </LI>
+                <LI ID="para3">
+                    <B>Group Policy and <A HREF="javascript:nothing()" onclick="popup(1)" STYLE="font-weight: bold">IntelliMirror</A></B>&nbsp;&#151;&nbsp;
+                        To control, deploy, and install desktop productivity applications on the client systems in your organization, 
+                        use Group Policy.
+                    <BR>&nbsp;
+                    <BR><A HREF="javascript:help('spconcepts.chm::/sag_SPtopnode.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about Group Policy.
+                </LI>
+                <LI ID="para4">
+                    <B>Terminal Services</B>&nbsp;&#151;&nbsp;Terminal Services enables you to deliver the newest Windows-based applications to diverse client systems. Click <B>Terminal Services</B> on the menu at the left. 
+                </LI>
+            </UL>
+            <P>&nbsp;
+        </TD>
+    </TR>
+</TABLE>
+
+<!--definition for IntelliMirror-->
+<DIV ID="popup1" class="defdiv">
+    <span class="defspan" onblur="popOff(1)" ID="def1"><b>Intellimirror</b>
+	<br>A set of features that enables users' data, applications, and settings to follow them throughout their environment. Users have constant access to all of their information and applications, whether or not they are connected to the network, with the assurance that their data is safely maintained and available from the server.
+        <P STYLE="font-size:8pt; margin-top: 4pt" ID="def1b">At the core of IntelliMirror are three features: 
+        <UL STYLE="margin-top: 4pt">
+            <LI STYLE="font-size:8pt; margin-bottom: 0pt" ID="def1c">User Data Management</LI>
+            <LI STYLE="font-size:8pt; margin-bottom: 0pt" ID="def1d">Software Installation and Maintenance</LI>
+            <LI STYLE="font-size:8pt; margin-bottom: 0pt" ID="def1e">User Settings Management</LI>
+        </UL>
+        <P STYLE="font-size:8pt; margin-top: -10pt" ID="def1f">When fully deployed, IntelliMirror uses Active Directory and Group Policy to provide policy-based management of users’ desktops. Through centrally defined policies based on the users’ business roles, group memberships, and location, Windows 2000 Professional desktops will automatically reconfigure to meet a specific user’s requirements each time that user logs onto the network.
+        </span>            
+</DIV>
+<div id="shadow" style="background:url(shadow.gif); filter:alpha(opacity=50); height:1px; width:1px; position:absolute;  visibility:hidden"></div>
+</BODY>
+</HTML>

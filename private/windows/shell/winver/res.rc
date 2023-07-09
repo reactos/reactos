@@ -1,0 +1,17 @@
+#include "windows.h"
+#include "winverp.h"
+
+STRINGTABLE PRELOAD
+BEGIN
+    IDS_APPTITLE,           "Windows"             /* 32 */
+    IDS_EVALUATION,         "Evaluation copy. Expires "    /* 128 */
+END
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Version Reporter Applet"
+#define VER_INTERNALNAME_STR        "winver\0"
+#define VER_ORIGINALFILENAME_STR    "WINVER.EXE"
+#include "common.ver"

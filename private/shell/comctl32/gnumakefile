@@ -1,0 +1,7 @@
+# This makefile was generated automatically by mwgenmake.
+
+.NOTPARALLEL:
+
+world all clean install depend:
+	@enterdir nt5api    ${MAKE}	${MFLAGS} $@
+	@enterdir winnt    	${MAKE}	${MFLAGS} $@

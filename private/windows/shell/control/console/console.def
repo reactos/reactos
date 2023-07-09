@@ -1,0 +1,5 @@
+LIBRARY     Console
+
+EXPORTS
+            CPlApplet
+            DllInitialize

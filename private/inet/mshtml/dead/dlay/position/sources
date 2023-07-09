@@ -1,0 +1,31 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\dlay\position=)
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+TARGETNAME=position
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES= \
+    $(ROOT)\src\dlay\include; \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\external\inc; \
+    $(ROOT)\types\$(O); \
+    $(ROOT)\src\dlay\position; \
+    $(ROOT)\src\dlay\dl;
+
+SOURCES= \
+    position.cxx
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr=..\include\$(O)\headers.pch
+!else
+PRECOMPILED_OPTION=/Yudlaypch.hxx /Fp..\include\$(O)\headers.pch
+!endif
+PRECOMPILED_CXX=1

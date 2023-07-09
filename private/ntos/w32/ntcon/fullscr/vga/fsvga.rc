@@ -1,0 +1,13 @@
+#include <windows.h>
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DRV
+#define VER_FILESUBTYPE VFT2_DRV_SYSTEM
+#define VER_FILEDESCRIPTION_STR     "Full Screen Video Driver"
+#define VER_INTERNALNAME_STR        "fsvga.sys"
+#define VER_ORIGINALFILENAME_STR    "fsvga.sys"
+
+#include "common.ver"
+
+#include "fsvgalog.rc"

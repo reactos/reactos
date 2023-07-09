@@ -1,7 +1,0 @@
-LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "LoadLibrary gagal memuat '%s'"
-    IDS_MissingEntry "entry point hilang:%s\nDalam %s"
-END

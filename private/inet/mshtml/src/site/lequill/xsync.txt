@@ -1,0 +1,29 @@
+CROSS-SYNCING
+-------------
+
+Siddharth Agrawal 07/14/98
+Updated: 09/01/98
+
+You will need to implement a mechanism to cross-sync the following
+forked source files:
+
+	TRIDENT FILE			OUR FILE
+	base\treeserv.cxx		lequill\qtreeserv.cxx
+	base\viewserv.cxx		lequill\qviewserv.cxx
+	cdbase\base.cxx			lequill\qbase.cxx
+
+***********************************************************
+Here's a description of how I do this USING ONE ENLISTMENT.
+***********************************************************
+
+1) Check out the files
+		base\treeserv.cxx, viewserv.cxx
+		cdbase\base.cxx
+
+2) If needed, fix the drive letters in the batch file lequill\xsync.bat.
+
+3) You must run xsync.bat BEFORE you ssync in the base and cdbase directories!
+   Run the batch file lequill\xsync.bat.
+
+4) After running xsync.bat, resolve any conflicts, and then go ahead and ssync the
+   entire mshtml project.

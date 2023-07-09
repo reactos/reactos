@@ -1,0 +1,46 @@
+#ifndef _DIV_PDL_
+#define _DIV_PDL_ 1
+
+#include "element.pdl"
+#include "csite.pdl"
+#include "txtedit.pdl"
+#include "e1d.pdl"
+
+file div.pdl
+
+import element.pdl
+import csite.pdl
+import txtedit.pdl
+import e1d.pdl
+
+interface IHTMLDivElement guid:3050f200-98b5-11cf-bb82-00aa00bdce0b
+    refprop CDivElement:align
+    refprop CDivElement:noWrap
+
+tearoff CDivElement interface:IHTMLDivElement
+tearoff CDivElement interface:IHTMLControlElement
+tearoff CDivElement interface:IHTMLTextContainer
+
+class CDivElement name:HTMLDivElement \
+            primaryinterface:IHTMLDivElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLTextContainerEvents \
+            nonprimaryevents2:HTMLElementEvents2 \
+            nonprimaryevents3:HTMLTextContainerEvents2 \
+            guid:3050f27e-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f50c-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLDivElement
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+
+    property align          atype:BSTR   dispid:STDPROPID_XOBJ_BLOCKALIGN  type:htmlBlockAlign  \
+        get set caa displaybind setaahr maxstrlen:pdlToken
+    property noWrap         atype:VARIANT_BOOL     dispid:DISPID_A_NOWRAP            type:BYTE            \
+        vt:VT_BOOL default:0  get set caa displaybind
+    property nofocusrect       atype:VARIANT_BOOL   dispid:DISPID_DIV    type:VARIANT_BOOL \
+    caa get default:0 vt:VT_BOOL
+
+#endif _DIV_PDL_

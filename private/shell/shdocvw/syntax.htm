@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<style>
+a:link			{font:8pt/11pt verdana; color:red}
+a:visited		{font:8pt/11pt verdana; color:#4e4e4e}
+</style>
+<meta HTTP-EQUIV="Content-Type" Content="text-html; charset=Windows-1252">
+<title>Invalid syntax error</title>
+</head>
+<script> 
+function Homepage(){
+
+// in real bits, urls get returned to our script like this:
+// res://shdocvw.dll/http_404.htm#http://www.DocURL.com/bar.htm 
+
+	//For testing use DocURL = "res://shdocvw.dll/http_404.htm#https://www.microsoft.com/bar.htm"
+	DocURL=document.location.href;
+	
+	//this is where the http or https will be, as found by searching for :// but skipping the res://
+	protocolIndex=DocURL.indexOf("://",4);
+	
+	//this finds the ending slash for the domain server 
+	serverIndex=DocURL.indexOf("/",protocolIndex + 3);
+
+	//for the href, we need a valid URL to the domain. We search for the # symbol to find the begining 
+	//of the true URL, and add 1 to skip it - this is the BeginURL value. We use serverIndex as the end marker.
+	//urlresult=DocURL.substring(protocolIndex - 4,serverIndex);
+	BeginURL=DocURL.indexOf("#",1) + 1;
+	urlresult=DocURL.substring(BeginURL,serverIndex);
+	if (protocolIndex - BeginURL > 7)
+		urlresult=""
+
+	//for display, we need to skip after http://, and go to the next slash
+	displayresult=DocURL.substring(protocolIndex + 3 ,serverIndex);
+
+	// Security precaution: must filter out "urlResult" and "displayresult"
+	forbiddenChars = new RegExp("[<>\'\"]", "g");	// Global search/replace
+	urlresult = urlresult.replace(forbiddenChars, "");
+	displayresult = displayresult.replace(forbiddenChars, "");
+
+	document.write('<A HREF="' + urlresult + '">' + displayresult + "</a>");
+}
+
+</script>
+
+<body bgcolor="white">
+
+<table width="400" cellpadding="3" cellspacing="5">
+  <tr>
+    <td id="tableProps" valign="top" align="left"><img id="pagerrorImg" SRC="pagerror.gif"
+    width="25" height="33"></td>
+    <td id="tableProps2" align="left" valign="middle" width="360"><h1 id="errorText"
+    style="COLOR: black; FONT: 13pt/15pt verdana">The page cannot be displayed</h1>
+    </td>
+  </tr>
+  <tr>
+    <td id="tablePropsWidth" width="400" colspan="2"><font id="LID1"
+    style="COLOR: black; FONT: 8pt/11pt verdana">The page you are looking for might have been
+    removed or had its name changed.</font></td>
+  </tr>
+  <tr>
+    <td id="tablePropsWidth2" width="400" colspan="2"><font id="LID2"
+    style="COLOR: black; FONT: 8pt/11pt verdana"><hr color="#C0C0C0" noshade>
+    <p id="LID3">Please try the following:</p><ul>
+      <li id="term1">Open the <script> Homepage();</script> home page, and then look for links to the
+        information you want.<br>
+      </li>
+      <li id="term2">If you typed the page address in the Address bar, make sure that it is
+        spelled correctly.<br>
+      </li>
+    </ul>
+    <p id="instructionsText3">If you still cannot open the page, click the Internet Explorer <br>
+    <a onclick="window.open('','_search');event.returnValue=false" href=""><img border=0 src="search.gif" width="16" height="16" alt="search.gif (114 bytes)" align="center">Search</a> button to look for
+    similar sites. </p>
+    <p><br>
+    </p>
+    <h2 id="ietext" style="font:8pt/11pt verdana; color:black">Internet Explorer </h2>
+    </font></td>
+  </tr>
+</table>
+</body>
+</html>

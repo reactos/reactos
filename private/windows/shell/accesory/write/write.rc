@@ -1,0 +1,13 @@
+
+#include <windows.h>
+#include <ntverp.h>
+
+1             ICON    PRELOAD DISCARDABLE "WRITE.ICO"
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows Write\0"
+#define VER_INTERNALNAME_STR        "write\0"
+
+#include "common.ver"
+

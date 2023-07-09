@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdusa
+
+TARGETNAME=kbdusa
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdusa.c kbdusa.rc
+
+NTTARGETFILE0=kbdusa.h kbdusa.rc kbdusa.def

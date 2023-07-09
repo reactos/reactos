@@ -1,0 +1,19 @@
+NAME            REGEDIT
+EXETYPE         WINDOWS
+
+STUB            'WINSTUB.EXE'
+
+CODE            PRELOAD MOVEABLE DISCARDABLE
+DATA            PRELOAD MOVEABLE MULTIPLE
+
+;HEAPSIZE
+;STACKSIZE
+
+SECTIONS
+    .bss        READ WRITE
+    .data       READ WRITE
+    .rodata     READ
+    .idata      READ WRITE
+    .instance   READ WRITE
+    .rsrc       READ
+

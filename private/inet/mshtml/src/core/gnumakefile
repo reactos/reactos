@@ -1,0 +1,47 @@
+
+#.NOTPARALLEL: world all clean install depend
+
+ifeq (${COMPILE_OPTION},optimized)
+world all install depend: INCLUDE CDBASE CDUTIL WRAPPERS MISC DLC
+else
+world all install depend: INCLUDE CDBASE CDUTIL WRAPPERS MISC DLC DEBUG DEBUGLIB
+endif
+
+INCLUDE:
+	@enterdir include ${MAKE} ${MFLAGS}
+
+CDBASE:
+	@enterdir cdbase ${MAKE} ${MFLAGS}
+
+CDUTIL:
+	@enterdir cdutil ${MAKE} ${MFLAGS}
+
+WRAPPERS:
+	@enterdir wrappers ${MAKE} ${MFLAGS}
+
+MISC:
+	@enterdir misc ${MAKE} ${MFLAGS}
+
+DLC:
+	@enterdir dlc ${MAKE} ${MFLAGS}
+
+DEBUG:
+	@enterdir debug ${MAKE} ${MFLAGS}
+
+DEBUGLIB:
+	@enterdir debuglib ${MAKE} ${MFLAGS}
+
+clean:
+	@enterdir include ${MAKE} ${MFLAGS} $@
+	@enterdir cdbase ${MAKE} ${MFLAGS} $@
+	@enterdir cdutil ${MAKE} ${MFLAGS} $@
+	@enterdir wrappers ${MAKE} ${MFLAGS} $@
+	@enterdir misc ${MAKE} ${MFLAGS} $@
+	@enterdir dlc ${MAKE} ${MFLAGS} $@
+	@enterdir debug ${MAKE} ${MFLAGS} $@
+	@enterdir debuglib ${MAKE} ${MFLAGS} $@
+
+## wait for MIDL
+withmidl:
+# ??	@enterdir types ${MAKE} ${MFLAGS} $@
+

@@ -1,0 +1,42 @@
+
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+# Library name
+TARGETNAME=dummy
+
+TARGETPATH=obj
+
+# LIBRARY for multiple-module apps, DYNLINK for DLLs
+TARGETTYPE=LIBRARY
+
+INCLUDES=.;           \
+         ..\common
+
+# Every source file EXCEPT your main, w/extensions
+SOURCES=callback.c      \
+        ddeutil.c       \
+        islocal.c       \
+        clipsrv.rc
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+
+C_DEFINES=-DWIN_32 -DNT
+
+USE_CRTDLL=1
+
+UMTYPE=windows
+
+# If you use UMAPPL, running BUILD automatically builds the exe
+UMAPPL=CLIPSRV
+
+# Libs to build, including .\obj\*\$(TARGETNAME).lib.
+UMLIBS=.\obj\*\dummy.lib                       \
+       .\obj\*\clipsrv.RES                     \
+       ..\common\obj\*\common.lib              \
+       $(BASEDIR)\public\sdk\lib\*\nddeapi.lib
+
+# "winmain" MUST be in lower case.
+UMENTRY=main

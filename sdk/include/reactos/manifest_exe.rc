@@ -1,6 +1,0 @@
-
-#ifndef CREATEPROCESS_MANIFEST_RESOURCE_ID
-#error please include winuser.h before including me!
-#endif
-
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"

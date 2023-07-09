@@ -1,0 +1,821 @@
+<HTML xmlns:ctls >
+
+<HEAD>
+
+<META content="text/html; charset=iso-8859-1" http-equiv=Content-Type>
+
+<TITLE ID=ARP>Add/Remove Programs</TITLE>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF="arp.css">
+
+<STYLE>
+ctls\:PLACES { behavior: url(places.htc); }
+ctls\:LISTBOX { behavior: url(listbox.htc); }
+ctls\:ACCEL { behavior: url(accel.htc); }
+
+.PlacesBar {
+    background-color:threedshadow
+}
+
+.Hide {
+    display:none
+}
+
+.NonClientBackground {                          /* non-client area background */
+    background-color: buttonface;
+    }
+    
+.Header {                                       /* group headers */
+    padding-bottom: 5px;
+    vertical-align: text-top; 
+    }
+
+.GroupImage {                                   /* used for the images adjacent to group descriptions */
+    margin-right: 5px;
+    }
+
+.GroupDesc {
+    padding-left: 1em;
+    padding-right: 1em;
+    }
+
+.AppNameRow {
+    }
+
+.AppImageTD {
+    width: 20px; 
+    padding: '4px 2px 2px 2px';
+    }
+    
+
+.InfoPane {                                     /* The pane that has the 'support info' */
+    padding-top:4px;                            /* give a little breathing room */
+    vertical-align: top;
+    }
+
+
+/* Property label style for TD elements.  The datasource object spits 
+   out HTML using this class. 
+*/
+.PropLabel {
+    width: 7em;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-right: 3px;
+    text-align: right;
+    }
+
+
+/* Property value style for TD elements.  The datasource object spits
+   out HTML using this class. 
+*/
+.PropValue {
+    width: 6em;
+    text-align: right;
+    padding-right: 7px;
+    }
+
+
+/* Property label style for TD elements.  The datasource object spits 
+   out HTML using this class. 
+*/
+.AddPropLabel {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-right: 3px;
+    text-align: right;
+    }
+
+
+/* Property value style for TD elements.  The datasource object spits
+   out HTML using this class. 
+*/
+.AddPropValue {
+    width: 13em;
+    text-align: right;
+    padding-right: 7px;
+    }
+
+
+.ButtonDescPane {                               /* The pane that contains the button instructions */
+    padding-top: 5px;                           /* give a little breathing room */
+    padding-bottom: 7px;
+    padding-right: 5px;
+    }
+
+.ButtonPane {                                   /* The pane that contains the buttons */
+    width: 15em;                                /* Cause the columns to line up nicely */
+    padding: 5px;                               /* give a little breathing room */
+    text-align: right;
+    }
+    
+.FakeAnchor {
+	cursor:hand;
+	}
+	
+/* idTblExtendedProps is the table that contains the extended properties (installed on, 
+   last used, etc.).  The datasource object spits out HTML using this ID. 
+*/ 
+#idTblExtendedProps.Focus {
+    color: highlighttext;
+    }
+
+</STYLE>
+
+
+<SCRIPT LANGUAGE="JavaScript" SRC="preload.js" DEFER></SCRIPT>
+
+<SCRIPT LANGUAGE="JavaScript">
+
+// Set the initial size of the window.  This must come before
+// the HTA:APPLICATION tag, otherwise we'd see the window resize
+//
+window.resizeTo(600, 450);
+
+</SCRIPT>
+
+<!-- Show the window as soon as we can, to improve perf perception -->
+
+<HTA:APPLICATION 
+ id=idAppARP
+ icon=appwiz.ico 
+ applicationName="Windows Add/Remove Programs" 
+ version=1.0 
+ singleInstance=yes 
+ border=normal
+ borderStyle=normal
+ innerBorder=off
+ sysMenu=yes 
+ windowState=Normal 
+ selection=off
+ contextMenu=off
+ scroll=off
+ scrollFlat=off
+ Caption=yes
+>
+
+</HEAD>
+
+<!-- ********************************************************************* -->
+<!--                            MAIN BODY                                  -->
+<!-- ********************************************************************* -->
+
+
+<BODY scroll=no style='margin:0px' onload="Body_OnLoad()">
+
+
+<!-- App Data Control -->
+
+
+<OBJECT id=idCtlAppsDso classid="clsid:3964D9A0-AC96-11D1-9851-00C04FD91972"
+ style='display:none'
+>
+    <PARAM name="Sort" value="displayname">
+</OBJECT>
+
+
+<!-- Fake version
+
+<OBJECT id=idCtlCategory classid=clsid:333C7BC4-460F-11D0-BC04-0080C7055A83
+ style='display:none' 
+>
+    <PARAM name="DataURL" value="category.csv">
+    <PARAM name="UseHeader" value="1">
+</OBJECT>
+
+<OBJECT id=idCtlRemoveApps classid=clsid:333C7BC4-460F-11D0-BC04-0080C7055A83
+ style='display:none' 
+>
+    <PARAM name="DataURL" value="installed.csv">
+    <PARAM name="Sort" value="displayname">
+    <PARAM name="UseHeader" value="1">
+</OBJECT>
+
+<OBJECT id=idCtlAddApps classid=clsid:333C7BC4-460F-11D0-BC04-0080C7055A83
+ style='display:none' 
+>
+    <PARAM name="DataURL" value="published.csv">
+    <PARAM name="Sort" value="displayname">
+    <PARAM name="UseHeader" value="1">
+</OBJECT>
+
+<OBJECT id=idCtlOcsetup classid=clsid:333C7BC4-460F-11D0-BC04-0080C7055A83
+ style='display:none' 
+>
+    <PARAM name="DataURL" value="config.csv">
+    <PARAM name="Sort" value="displayname">
+    <PARAM name="UseHeader" value="1">
+</OBJECT>
+
+-->
+
+
+<ctls:PLACES id=idPlaces 
+ onSelectItem='Places_OnSelectItem()'
+ onExecItem='Places_OnExecItem()'
+ onComplete='Places_OnComplete()'
+ style='position:absolute;
+        left:0;
+        top:0;'
+>
+    <SPAN id=idChangeRemove img=install_lg.gif>Change or Remove Programs</SPAN>
+    <SPAN id=idAdd img=add_lg.gif>Add New Programs</SPAN>
+    <SPAN id=idConfig img=config_lg.gif execItem>Add/Remove Windows Components</SPAN>
+</ctls:PLACES>
+
+<TABLE id=idTblOuter cellspacing=0 cellpadding=0 width=100% height=100% 
+ style="border-collapse:collapse;"
+>
+    <!-- Set the width of the Places column.  The definitive width is set in script. -->
+    <COL id=idColPlaces width=83>
+    
+    <THEAD>
+    
+        <!-- ***********************  REMOVE PROGRAMS PAGE  ********************** -->
+        
+        <TR id=idTrHeadMargin_Remove class=Hide>
+            <TD class=PlacesBar rowspan=15>
+                <!-- Trick: place a dummy image to keep the column from shrinking 
+                     too small.  Columns w/o any content are lowest priority to the
+                     table layout code, so we're placing something here to avoid that. -->
+                <IMG id=idImgDummy1 width=83 height=0>
+            </TD>
+            
+            <!-- Universal padding across the top of the pane -->
+            <!-- Trick: specify the width of the 1st column as a percentage so the 
+                 layout doesn't jump around as the page renders.  
+
+                 Without this percentage, the 1st column will default to some narrow 
+                 width, and then the table engine would recalc after everything is 
+                 parsed, and you would see the layout shift dramatically.  Very 
+                 unpleasant. -->
+            <TD width=70%><DIV style='height:11px'></DIV></TD>
+            <TD colspan=4><DIV style='height:11px'></DIV></TD>
+        </TR>
+        
+        <TR id=idTrHead_Remove class=Hide>
+            <!-- HEADER -->
+
+            <TD valign=baseline style='padding-left:11px; padding-bottom:5px' colspan=4>
+                <DIV id=idDivInstalledHeader>
+                    Currently installed programs:
+                </DIV>
+            </TD>
+            
+            <!-- SORT -->
+
+            <TD id=idTdSort valign=baseline align=right
+             style='padding-right:11px; padding-bottom:5px'
+            >
+                <NOBR>
+                <ctls:ACCEL id=idLblSort style='position:relative; top:-.1em' forElem=idSelSortBy>&Sort by:</ctls:ACCEL>
+                <SELECT id=idSelSortBy size="1">
+                    <OPTION id=idOptName value="displayname" selected>Name</OPTION>
+                    <OPTION id=idOptSize value="size">Size</OPTION>
+                    <OPTION id=idOptFreq value="timesused">Frequency Of Use</OPTION>
+                    <OPTION id=idOptLastUsed value="lastused">Date Last Used</OPTION>
+                </SELECT>
+                </NOBR>
+            </TD>
+            
+        </TR>
+
+        <!-- ***********************  ADD PROGRAMS PAGE  ********************** -->
+
+        <TR id=idTrHeadMargin_Add class=Hide>
+            <TD class=PlacesBar rowspan=15>
+                <!-- Trick: place a dummy image to keep the column from shrinking 
+                     too small.  Columns w/o any content are lowest priority to the
+                     table layout code, so we're placing something here to avoid that. -->
+                <IMG id=idImgDummy2 width=83 height=0>
+            </TD>
+            
+            <!-- Universal padding across the top of the pane -->
+            <!-- Trick: the columns on this page are *highly* volatile.  specify widths 
+                 of the 3rd and 4th columns so we can get our layout correct.
+
+                 General rule of thumb is: columns with no specified width get squeezed
+                 first, followed by percentage-widths, followed by pixel widths.  
+                 Determining what these values should be are the result of trial and
+                 error on different resolutions.  Can we say painful?  That's not the
+                 end of it.  Changing the width by just one pixel can result in a large
+                 skew.  Also, the existence of <NOBR> changes the layout heuristic 
+                 even more. -->
+            <TD><DIV style='height:11px'></DIV></TD>
+            <TD><DIV style='height:11px'></DIV></TD>
+            <TD width=40><DIV style='height:11px'></DIV></TD>
+            <TD width=3><DIV style='height:11px'></DIV></TD>
+            <TD><DIV style='height:11px'></DIV></TD>
+        </TR>
+        
+        <!-- Install from CD-ROM or Floppy section -->
+
+        <TR id=idTrHeadCDROM1_Add class=Hide>  
+            <TD id=idLocCDROMHeader class='Header' colspan=5
+             style='padding-left:11px; padding-right:11px'
+            >
+                Add a program from CD-ROM or floppy disk
+            </TD>
+        </TR>
+        <TR id=idTrHeadCDROM2_Add class=Hide>
+            <TD width=8% style='padding-left:11px'>
+                <IMG id=idImgCDROM class='GroupImage' src='install_lg.gif' title='' alt='CD-ROM Graphic'>
+            </TD>
+            <TD id=idLocCDROMDesc class='GroupDesc' colspan=3 width=80%>
+                To add a program from a CD-ROM or floppy disk, click CD or Floppy.
+            </TD>
+            <TD style='padding-right:11px; text-align:right'>
+                <BUTTON id=idBtnCDFloppy style='width:9em'>
+                    <ctls:ACCEL id=idLblCDFloppy forElem=idBtnCDFloppy>CD or &Floppy</ctls:ACCEL>
+                </BUTTON>
+            </TD>
+        </TR>
+
+        <!-- Install from the Internet section -->
+
+        <TR id=idTrHeadInternet1_Add class=Hide>
+            <TD class='Header' colspan=5
+             style='padding-left:11px; padding-right:11px; padding-top:1.5em'
+            >
+                <DIV id=idLocInetHeader>
+                    Add programs from Microsoft
+                </DIV>
+            </TD>
+        </TR>
+        <TR id=idTrHeadInternet2_Add class=Hide>
+            <TD style='padding-left:11px; width:8%'>
+                <IMG id=idImgInet class='GroupImage' src='winupd_lg.gif' title='' alt='Windows Globe Graphic'>
+            </TD>
+            <TD id=idLocInetDesc class='GroupDesc' colspan=3>
+                To add new Windows features, device drivers, and system updates over
+                the Internet, click Windows Update.
+            </TD>
+            <TD style='padding-right:11px; text-align:right'>
+                <BUTTON id=idBtnInternet style='width:9em'>
+                    <ctls:ACCEL id=idLblInternet forElem=idBtnInternet>Windows &Update</ctls:ACCEL>
+                </BUTTON>
+            </TD>
+        </TR>
+
+        <!-- Install from Corporate Network -->
+
+        <TR id=idTrHeadPub_Add class=Hide>
+            <TD valign=baseline colspan=3
+             style='padding-left:11px; padding-top:1.5em; padding-bottom:3px; width:80%'
+            >
+                <DIV id=idLocPubHeader>
+                Add programs from your network:
+                </DIV>
+            </TD>
+
+            <!-- FILTER -->
+
+            <TD valign=baseline colspan=2 align=right
+             style='padding-right:11px; padding-top:1.5em; padding-bottom:3px; width:10%'>
+                <NOBR>
+                <ctls:ACCEL id=idLblCategory style='position:relative; top:-.1em' forElem=idSelCategory>&Category:</ctls:ACCEL>
+                <SELECT id=idSelCategory size=1>
+                    <OPTION id=idOptAll value=all>All Categories
+                </SELECT>
+                </NOBR>
+                <!-- Bind something so the category DSO is loaded.  This is not bound
+                     until the user navigates to this page -->
+                <SPAN id=idBindCategories style="display:none"></SPAN>
+            </TD>
+        </TR>
+        
+
+        <!-- **************************  CONFIG PAGE  ************************* -->
+        
+        <TR id=idTrHeadMargin_Config class=Hide>
+            <TD class=PlacesBar rowspan=15>
+                <!-- Trick: place a dummy image to keep the column from shrinking 
+                     too small.  Columns w/o any content are lowest priority to the
+                     table layout code, so we're placing something here to avoid that. -->
+                <IMG id=idImgDummy3 width=83 height=0>
+            </TD>
+            
+            <!-- Universal padding across the top of the pane -->
+            <TD width=8%><DIV style='height:11px'></DIV></TD>
+            <TD width=80% colspan=3><DIV style='height:11px'></DIV></TD>
+            <TD><DIV style='height:11px'></DIV></TD>
+        </TR>
+        
+        <!-- Configure Windows Components section -->
+        
+        <TR id=idTrHeadComponents1_Config class=Hide>
+            <TD id=idLocConfigHeader class='Header' colspan=5 style='padding-left:11px'>
+                Add or remove Windows components
+            </TD>
+        </TR>
+        
+        <TR id=idTrHeadComponents2_Config class=Hide>
+            <TD style='padding-left:11px'>
+                <IMG id=idImgComponent class='GroupImage' src='install_lg.gif' title='' alt='Computer Graphic'>
+            </TD>
+            <TD id=idLocConfigDesc class='GroupDesc' colspan=3>
+                To add or remove a Windows component, such as Internet Information
+                Services (IIS), click Components.
+            </TD>
+            <TD style='padding-right:11px; text-align:right'>
+                <BUTTON id=idBtnNTOptions>
+                    <ctls:ACCEL id=idLblNTOptions forElem=idBtnNTOptions>&Components</ctls:ACCEL>
+                </BUTTON>
+            </TD>
+        </TR>
+        
+        <TR id=idTrHeadServices_Config class=Hide>
+            <TD colspan=5 valign=baseline 
+             style='padding-left:11px; padding-right:11px; padding-top:1.5em; padding-bottom:5px'>
+                <DIV id=idLocConfigHeader>
+                Set up services:
+                </DIV>
+            </TD>
+        </TR>
+                
+
+    </THEAD>
+    
+    <TBODY>
+        <!-- ***********************  REMOVE PROGRAMS PAGE  ********************** -->
+        
+        <TR id=idTrBody_Remove height=100% class=Hide>
+            <TD class=PlacesBar></TD>
+            
+            <TD valign=top colspan=5 style='padding-left:11px; padding-right:11px'>
+            
+                <ctls:LISTBOX id=idRemoveListbox
+                 onCustomDraw='Remove_OnCustomDraw()'
+                 onSetFocus='Remove_OnSetFocus()'
+                 defaultSelection=0
+                 autoExpand=true
+                 freeze=true
+                 templateSource="idRemoveTemplates"
+                >
+                </ctls:LISTBOX>
+                
+            </TD>
+        </TR>
+
+        <!-- ***********************  ADD PROGRAMS PAGE  ********************** -->
+        
+        <TR id=idTrBody1_Add height=100% class=Hide>
+            <TD class=PlacesBar rowspan=3></TD>
+        </TR>
+        
+        <TR id=idTrBody2_Add height=100% class=Hide>
+            <TD class=PlacesBar></TD>
+            
+            <TD valign=top colspan=5 style='padding-left:11px; padding-right:11px'>
+            
+                <ctls:LISTBOX id=idAddListbox
+                 onCustomDraw="Add_OnCustomDraw()"
+                 onSetFocus="Add_OnSetFocus()"
+                 defaultSelection=0
+                 autoExpand=true
+                 freeze=true
+                 templateSource="idAddTemplates"
+                >
+                </ctls:LISTBOX>
+                
+            </TD>
+        </TR>
+
+        <!-- **************************  CONFIG PAGE  ************************* -->
+
+        <TR id=idTrBody_Config height=100% class=Hide>
+            <TD class=PlacesBar></TD>
+            
+            <TD valign=top colspan=5 style='padding-left:11px; padding-right:11px'>
+            
+                <ctls:LISTBOX id=idConfigListbox
+                 onCustomDraw="Config_OnCustomDraw()"
+                 onSetFocus="Config_OnSetFocus()"
+                 defaultSelection=0
+                 autoExpand=true
+                 freeze=true
+                 templateSource="idConfigTemplates"
+                >
+                </ctls:LISTBOX>
+                
+            </TD>
+        </TR>
+        
+    </TBODY>
+
+    <TFOOT>
+        <!-- ***********************  REMOVE PROGRAMS PAGE  ********************** -->
+        
+        <TR id=idTrFoot_Remove class=Hide>
+            <TD class=PlacesBar></TD>
+
+            <!-- Force x86 Install -->
+
+            <TD id=idRemoveForceX86 valign=center colSpan=2
+             style='padding-left:11px; padding-right:11px; padding-top:5px'
+            >
+                <INPUT type="checkbox" id=idChkRemoveForcex86
+                 accesskey=b 
+                 name="forcex86">
+                <ctls:ACCEL id=idLblForce forElem=idChkRemoveForcex86>Emulate &x86 when changing or removing programs</ctls:ACCEL>
+            </TD>
+        </TR>
+
+        <!-- ***********************  ADD PROGRAMS PAGE  ********************** -->
+        
+        <TR id=idTrFoot_Add class=Hide>
+            <TD class=PlacesBar></TD>
+            
+            <!-- Force x86 install -->
+            
+            <TD id=idAddForceX86 valign=center colSpan=5
+             style='padding-left:11px; padding-right:11px; padding-top:5px'
+            >
+                <INPUT id=idChkAddForcex86 type='checkbox'
+                 accesskey=b 
+                 name="ForceX86">
+                <ctls:ACCEL id=idLblForceX86 forElem=idChkAddForcex86>Emulate &x86 when adding programs</ctls:ACCEL>
+            </TD>
+        </TR>
+
+        <!-- **************************  UNIVERSAL  ****************************** -->
+        
+        <TR>
+            <TD class=PlacesBar></TD>
+            
+            <!-- Universal padding across the bottom of the pane -->
+            <TD colspan=6><DIV style='height:11px'></DIV></TD>
+        </TR>
+        
+        <TR>
+            <TD class='NonClientBackground'></TD>
+            
+            <!-- Debug checkbox -->
+            <TD class='NonClientBackground' colspan=3></TD>
+            <!-- Fake version
+            <TD class='NonClientBackground' colspan=3>
+                <INPUT type="checkbox" id=idShowDebug
+                 name="showdebug">
+                <LABEL for=idShowDebug>Show debug window</LABEL>
+            </TD>
+            -->
+            
+            <!-- Close Button  -->
+            
+            <TD id=idTdClose class='NonClientBackground' colspan=3 align=right
+             style='height:43px; padding:11px'
+            >
+                <BUTTON id=idBtnClose style='width:8em'>
+                    <ctls:ACCEL id=idLblClose forElem=idBtnClose>Cl&ose</ctls:ACCEL>
+                </BUTTON>
+            </TD>
+        </TR>
+    </TFOOT>
+    
+</TABLE>
+
+
+<!-- ********************************************************************* -->
+<!--                            REMOVE TEMPLATES                           -->
+<!-- ********************************************************************* -->
+
+
+<SPAN id=idRemoveTemplates style='display:none'>
+    <TABLE>
+        <TR class=AppNameRow>
+            <TD class=AppImageTD>
+                <IMG id=idImgRemove datafld="icon" dataformatas="html" hspace=3 align=absmiddle title='' alt='Computer Graphic'>
+            </TD>
+            <TD id=idTdDisplayName>
+                <SPAN id=idDisplayName datafld="displayname" lbDisplayName nofocusrect></SPAN>
+            </TD>
+            <TD class=PropLabel>
+                <SPAN datafld="indexlabel"></SPAN>
+            </TD>
+            <TD class=PropValue>
+                <SPAN id=idSpnIndexValue datafld="indexvalue"></SPAN>
+            </TD>
+        </TR>
+        
+        <!-- "lbExpandedRow" templates -->
+        
+        <TR id=idTrInfo lbExpandedRow>
+            <TD></TD>
+            <TD id=idTdInfoDesc class=InfoPane>
+                Click here for <SPAN id=idASupportInfo class="FakeAnchor" tabIndex=0 onKeyDown="_OnKeyDownFakeAnchor()" onClick="_OpenSupportInfo();">&nbsp;<U>support information</U></SPAN>.
+            </TD>
+            <TD colSpan=2>
+                <SPAN id=idSpnExpandedProps 
+                 datasrc=#idCtlAppsDso.Remove 
+                 datafld="htmlproperties" dataformatas="html"
+                 onClick="_OpenDefinition();"></SPAN>
+            </TD>
+        </TR>
+
+        <TR id=idTrMultiBtns lbExpandedRow lbDisable>
+            <TD></TD>
+            <TD id=idTdMultiDesc class=ButtonDescPane>
+                To change this program or remove it from your computer, click Change or Remove.
+            </TD>
+            <TD class=ButtonPane colSpan=2>
+                <nobr>
+                <BUTTON id=idBtnModify style='width:6em'>
+                    <LABEL id=idLblChange for=idBtnModify accesskey="c">
+                    <SPAN>C</SPAN>hange
+                    </LABEL>
+                    <!--<ctls:ACCEL id=idLblChange forElem=idBtnModify>&Change</ctls:ACCEL>-->
+                </BUTTON>&nbsp&nbsp
+                <BUTTON id=idBtnRemove style='width:6em'>
+                    <LABEL id=idLblRemove for=idBtnRemove accesskey="r">
+                    <SPAN>R</SPAN>emove
+                    </LABEL>
+                    <!--<ctls:ACCEL id=idLblRemove forElem=idBtnRemove>&Remove</ctls:ACCEL>-->
+                </BUTTON>
+                </nobr>
+            </TD>
+        </TR>
+
+        <TR id=idTrSingleBtns lbExpandedRow>
+            <TD></TD>
+            <TD id=idTdSingleDesc class=ButtonDescPane>
+                To change this program or remove it from your computer, click Change/Remove.
+            </TD>
+            <TD class=ButtonPane colSpan=2>
+                <BUTTON id=idBtnBoth>
+                    <LABEL id=idLblBoth for=idBtnBoth accesskey="c">
+                    <SPAN>C</SPAN>hange/Remove
+                    </LABEL>
+                    <!--<ctls:ACCEL id=idLblBoth forElem=idBtnBoth>&Change/Remove</ctls:ACCEL>-->
+                </BUTTON>
+            </TD>
+        </TR>
+    </TABLE>
+</SPAN>
+
+
+<!-- ********************************************************************* -->
+<!--                            ADD TEMPLATES                              -->
+<!-- ********************************************************************* -->
+
+
+<SPAN id=idAddTemplates style='display:none'>
+
+    <TABLE>
+        <TR class=AppNameRow>
+            <TD class=AppImageTD>
+                <IMG id=idImgAdd src="add.gif" hspace=3 align=absmiddle title='' alt='Graphic'>
+            </TD>
+            <TD>
+                <SPAN id=idDisplayName datafld="displayname" lbDisplayName nofocusrect></SPAN>
+            </TD>
+            <TD class=PropValue>
+                <SPAN id=idIsInstalled datafld="isinstalled"> </SPAN>
+            </TD>
+        </TR>
+        
+        <!-- "lbExpandedRow" templates -->
+        
+        <TR id=idTrInfo lbExpandedRow>
+            <TD></TD>
+            <TD id=idTdInfoDesc class=InfoPane>
+                <SPAN id=idSpnMoreInfo style="display:none">Click here for <SPAN id=idAMoreInfo class="FakeAnchor" tabIndex=0 onKeyDown="_OnKeyDownFakeAnchor()" onClick="_OpenMoreInfo();">&nbsp;<U>more information</U></SPAN>.</SPAN>
+            </TD>
+            <TD colSpan=2>
+                <SPAN id=idSpnAddLaterSchedule 
+                 datafld="addlaterschedule" dataformatas="html"
+                 onClick="_Schedule();">
+                </SPAN>
+            </TD>
+
+        </TR>
+
+        <TR id=idTrMultiBtns lbExpandedRow lbDisable>
+            <TD></TD>
+            <TD id=idTdMultiDesc class=ButtonDescPane>
+                To add this program, click Add.
+            </TD>
+            <TD class=ButtonPane colSpan=2>
+                <nobr>
+                <BUTTON id=idBtnAddLater style='width:8em'>
+                    <LABEL id=idLblAddLater for=idBtnAddLater accesskey="l">
+                    Add <SPAN>L</SPAN>ater...
+                    </LABEL>
+                    <!--<ctls:ACCEL id=idLblAddLater forElem=idBtnAddLater>Add &Later...</ctls:ACCEL>-->
+                </BUTTON>&nbsp&nbsp
+                <BUTTON id=idBtnAdd style='width:8em'>
+                    <LABEL id=idLblAdd for=idBtnAdd accesskey="a">
+                    <SPAN>A</SPAN>dd
+                    </LABEL>
+                    <!--<ctls:ACCEL id=idLblAdd forElem=idBtnAdd>&Add</ctls:ACCEL>-->
+                </BUTTON>
+                </nobr>
+            </TD>
+        </TR>
+
+        <TR id=idTrSingleBtns lbExpandedRow>
+            <TD></TD>
+            <TD id=idTdSingleDesc class=ButtonDescPane>
+                To add this program, click Add.
+            </TD>
+            <TD class=ButtonPane colSpan=2>
+                <BUTTON id=idBtnAdd style='width:8em'>
+                    <LABEL id=idLblAdd for=idBtnAdd accesskey="a">
+                    <SPAN>A</SPAN>dd
+                    </LABEL>
+                    <!--<ctls:ACCEL id=idLblAdd forElem=idBtnAdd>&Add</ctls:ACCEL>-->
+                </BUTTON>
+            </TD>
+        </TR>
+    </TABLE>
+
+</SPAN>
+
+
+<!-- ********************************************************************* -->
+<!--                            CONFIG TEMPLATES                           -->
+<!-- ********************************************************************* -->
+
+
+<SPAN id=idConfigTemplates style='display:none'>
+
+    <TABLE>
+        <TBODY>
+        <TR class=AppNameRow>
+            <TD class=AppImageTD>
+                <IMG id=idImgRemove src="winupd.gif" hspace=3 align=absmiddle title='' alt='Graphic'>
+            </TD>
+            <TD>
+                <SPAN id=idDisplayName datafld="displayname" lbDisplayName nofocusrect></SPAN>
+            </TD>
+        </TR>
+        
+        <!-- "lbExpandedRow" templates -->
+        
+        <TR id=idTrInfo lbExpandedRow>
+            <TD></TD>
+            <TD id=idTdInfoDesc class=InfoPane colSpan=2>
+                Click Configure to complete Setup for this component.
+            </TD>
+        </TR>
+
+        <TR id=idTrConfigBtn lbExpandedRow>
+            <TD></TD>
+            <TD id=idTdBtnDesc class=ButtonDescPane>
+                It cannot run until you have supplied all the necessary information.
+            </TD>
+            <TD class=ButtonPane>
+                <BUTTON id=idBtnConfig style='width:8em'>
+                    <LABEL id=idLblConfig for=idBtnConfig accesskey="n">
+                    Co<SPAN>n</SPAN>figure
+                    </LABEL>
+                    <!--<ctls:ACCEL id=idLblConfig forElem=idBtnConfig>Co&nfigure</ctls:ACCEL>-->
+                </BUTTON>
+            </TD>
+        </TR>
+        </TBODY>
+    </TABLE>
+
+</SPAN>
+
+
+<SCRIPT LANGUAGE="JavaScript">
+
+// Keycode values
+
+var KC_F5 = 116;
+
+var g_docAll = document.all;            // Cache this collection
+var g_idCur = '';                       // Init current pane to nothing
+var g_bIsAlpha = false;
+var g_iPageDefault = 0;
+
+if (window.clientInformation.cpuClass == "Alpha")
+    g_bIsAlpha = true;          // this is an alpha machine
+
+// Globals from remove.js
+
+var g_bRemovePageLoaded = false;
+var g_szSupportInfoSize = "dialogWidth:20em; dialogHeight:25em";
+var g_bShowSupportInfo = true;
+
+// Globals from add.js
+
+var g_bAddPageLoaded = false;
+var g_bReenumInstalledList;
+var g_bReenumAddList;
+var g_bIsOnDomain;
+var g_bSelectDefault = false;
+
+// Globals from config.js
+
+var g_bConfigPageLoaded = false;
+var g_bShowServices = true;
+
+</SCRIPT>
+
+
+</BODY>
+</HTML>
+
+
+

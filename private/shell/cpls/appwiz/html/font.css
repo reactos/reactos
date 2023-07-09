@@ -1,0 +1,28 @@
+
+/* FONT.CSS - stylesheet to specify basic font info */
+
+BODY { 
+    font-size: 8pt;
+    font-family: Tahoma, Verdana, Arial, sans-serif; 
+    }
+
+H1 {
+    font-size: 13pt;
+    font-family: Verdana, Tahoma, Arial;
+    font-weight: bold;
+    }
+
+TABLE {
+    font-size: 8pt;                             /* Set explicitly b/c it is not inherited */
+    }
+    
+BUTTON {
+    font-size: 8pt;                             /* Set explicitly b/c it is not inherited */
+    font-family: Tahoma, Verdana, Arial, sans-serif;    /* Set explicitly b/c it is not inherited */
+    }
+
+SELECT {
+    font-family: Tahoma, Verdana, Arial, sans-serif;    /* Set explicitly b/c it is not inherited */
+    font-size: 8pt;                             /* Set explicitly b/c it is not inherited */
+    }
+

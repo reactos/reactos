@@ -1,0 +1,2 @@
+dirs = util hist cdfview \
+       srcc nt5api dll resdll

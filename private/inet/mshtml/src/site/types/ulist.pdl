@@ -1,0 +1,34 @@
+#ifndef _ULIST_PDL_
+#define _ULIST_PDL_ 1
+
+#include "element.pdl"
+#include "list.pdl"
+
+file ulist.pdl
+
+import element.pdl
+
+interface IHTMLUListElement guid:3050f1dd-98b5-11cf-bb82-00aa00bdce0b
+    refprop CUListElement:compact
+    refprop CUListElement:type
+
+tearoff CUListElement interface:IHTMLUListElement
+
+class CUListElement name:HTMLUListElement \
+            primaryinterface:IHTMLUListElement \
+            super:CListElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f269-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f538-98b5-11cf-bb82-00aa00bdce0b
+ 
+#include "basedom.pdl"
+    implements IHTMLListElement
+    implements IHTMLUListElement
+
+    property compact     atype:VARIANT_BOOL  dispid:DISPID_UL+2                type:BYTE           \
+        clearcaches remeasure vt:VT_BOOL min:0 max:1 default:0  get set caa bindable displaybind
+    property type        atype:BSTR          dispid:DISPID_A_LISTTYPE          type:htmlListType   \
+        default:htmlListTypeNotSet        get set caa bindable displaybind \
+        ppFlags:PROPPARAM_CASESENSITIVE maxstrlen:pdlToken
+#endif _ULIST_PDL_

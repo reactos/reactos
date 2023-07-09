@@ -1,0 +1,64 @@
+#
+# build instructions for avifil32.dll
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=avifil32
+TARGETPATH=..\lib
+TARGETTYPE=DYNLINK
+UMTYPE=windows
+DLLDEF=avifile.d32
+
+USE_CRTDLL=1
+
+SYNCHRONIZE_BLOCK=1
+
+C_DEFINES=-DUNICODE -DINC_OLE2 -DUSE_DIRECTIO -DNT_VERSION
+
+# Define libs we need and where to find them
+
+TARGETLIBS=$(_NTDRIVE)$(_NTROOT)\public\sdk\lib\*\user32.lib     \
+           $(_NTDRIVE)$(_NTROOT)\public\sdk\lib\*\kernel32.lib   \
+           $(_NTDRIVE)$(_NTROOT)\public\sdk\lib\*\gdi32.lib      \
+           $(_NTDRIVE)$(_NTROOT)\public\sdk\lib\*\winmm.lib      \
+           $(_NTDRIVE)$(_NTROOT)\public\sdk\lib\*\advapi32.lib   \
+           $(_NTDRIVE)$(_NTROOT)\public\sdk\lib\*\version.lib    \
+           $(_NTDRIVE)$(_NTROOT)\public\sdk\lib\*\ole32.lib      \
+           $(_NTDRIVE)$(_NTROOT)\public\sdk\lib\*\uuid.lib       \
+           $(_NTDRIVE)$(_NTROOT)\public\sdk\lib\*\msacm32.lib    \
+           ..\lib\*\msvfw32.lib
+
+
+INCLUDES=..\inc;..\..\inc;..\video
+
+SOURCES=                \
+        classobj.cpp    \
+        avilib.cpp      \
+        avilibcf.cpp    \
+        device.cpp      \
+        avifile.cpp     \
+        extra.cpp       \
+        avisave.c       \
+        aviopts.c       \
+        avicmprs.cpp    \
+        avifps.cpp      \
+        buffer.c        \
+        fakefile.cpp    \
+        avimem.cpp      \
+        enumfetc.c      \
+        afclip.c        \
+        editstrm.cpp    \
+        getframe.cpp    \
+        fileshar.cpp    \
+        avigraph.c      \
+        aviidx.cpp      \
+        acmcmprs.cpp    \
+        directio.cpp    \
+        wavefile.c      \
+        profile.c       \
+        avifile.rc
+
+DLLENTRY=DLLEntryPoint
+DLLBASE=0x1c300000

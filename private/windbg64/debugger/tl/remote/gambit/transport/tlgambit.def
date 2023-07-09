@@ -1,0 +1,7 @@
+LIBRARY tlser
+
+EXPORTS
+    OSDebug4VersionCheck
+    DBGVersionCheck
+    TLFunc
+    TLSetup

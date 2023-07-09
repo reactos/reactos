@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdcz2
+
+TARGETNAME=kbdcz2
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdcz2.c kbdcz2.rc
+
+NTTARGETFILE0=kbdcz2.h kbdcz2.rc kbdcz2.def

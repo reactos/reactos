@@ -1,0 +1,1862 @@
+11-Jun-1996 a-MatH
+		Allowed the ee to work for multiple target machine types.  Removed any
+		#ifdef TARGMACPPC &c and changed to if (TargetMachine == mtpmppc).
+		
+15-Jan-1996 BryanT
+        *.c *.h sources
+	        Use .hxx versions of ee/sapi/cvtypes headers.  Don't need ldouble.c.
+
+10-Jan-1996 BryanT
+        *.c *.h
+	        Make it compile/link as C++ code.  This uncovered a number of problems
+		with functions w/o return values, incorrect enum usage, etc.
+
+09-Jan-1996 BryanT
+        *.c *.h
+	        Delete Win16/DOS support.  Detab.  Format to OSDEBUG standard.
+		Replace _fmemxxx with memxxx.  Replace _ftcsxxx with _tcsxxx.
+		Remove PASCAL, FAR, NEAR, LOADDS, LOCAL.
+		Remove C_ONLY and ADDR_xxx usage (the EE is always C++ ADDR_MIXED).
+
+08-Jan-1996 BryanT
+        *.asm *.inc *.lib
+	empty.c mat.c libmain.c
+		Delete Win16/DOS files.
+
+	sources makefile eecxx.def eecxx.rc
+	        Add NT style build process.
+
+07-Aug-1995 SanjayS
+	debfmt.c dllmain.c
+		Support automatic display of unicode strings/arrays.
+03-Jul-1995 SanjayS
+	debtyper.c
+		Don't allow arithmetic on void pointers.
+28-Jun-1995 Sanjays
+	debapi.c debsup.c debfmt.c debsym.c
+		Allow settings bps on bound virtual functions. We figure out the derived most class
+		and construct the name of the func preceded by is class scope i.e. CFoo::vfunc and
+		then try to set a bp on that.
+27-Apr-1995 Sanjays
+	debeval.c
+		Fix virtual func ptr evals. We read the vtable ptr as a sym (4 byte value)
+		and need to take this value and work out the actual unfixed up address.
+30-Mar-1995 Sanjays
+	debsup.c debfmt.c
+		Support multiple level auto-expand rules. Support -> in
+		autoexpand strings.
+30-Mar-1995 v-LeoL
+	debsup.c
+		Special case __$ReturnUdt in SetFcniParm for pretty printing
+		function signature
+
+21-Mar-1995 Sanjays
+	debsup.c
+		GetParmTM did not intialize pExState like is should.	
+
+22-Feb-1995 v-LeoL
+	debbind.c debeval.c shfunc.h
+		MIPS Function evaluation
+	debexpr.h debsym.c
+		Cleanup
+	eent.mak
+		Use msvcrtd for DEBUG build
+
+10-Jan-1995 v-LeoL
+	debeval.c debbind.c
+		Support for $ReturnValue on MIPS
+        ldouble.h
+		Use pragma pack(push/pop)
+
+06-Jan-1995 v-LeoL
+	debsym.c
+		Tune fValidInProlog to toss out only SP/S8 regrel symbols
+        debsrch.c
+		Olympus 3763 -- Fix to avoid Float10 use on MIPS
+
+14-Dec-1994 v-LeoL
+	debsym.c
+		fValidInProlog assumes that offsets are FP relative --
+		MIPS are SP relative so return FALSE for all symbols.
+		[An optimization would be to pass in frame size and then
+		test offset >= framesize+16]
+
+13-Dec-1994 v-LeoL
+	deblex.c
+		L"a" was getting lexed as IDENT STRING. moved Ident test
+	        after string test and added L'a' support.
+
+16-Nov-1994 SanjayS
+	debsym.c
+		Cull search at first hit for Auto expand in Multiple inheritance scenarios.
+	debwalk.c
+		Incorrect handling of MBCS filenames.
+	debutil.c
+		Fix Olympus:2864. Change check for type validity.	
+07-Nov-1994 SanjayS
+	debsup.c
+		Speed up GetMemberIA for the common case.
+03-Nov-1994 SanjayS
+	debsup.c
+	debapi.c
+	debexpr.h
+		Added EEGetBCIA to support the this window in the IDE.
+11-Oct-1994 RicoM
+	debsup.c
+		pCxt was not initialized while getting the ith child of
+		a class if the class reference variable.  Olympus #1723
+
+23-Sept-1994 RicoM
+	debutil.c
+	debfmt.c
+		Revisiting Dolphin Bug #14596.  Now using the context from
+		the expression to find UDT symbols.  We had been trying to
+		make a context from the HMOD but this turns out to be unsafe
+		see debutil.c
+
+21-Sept-1994 RicoM
+	debbind.c
+	debexpr.h
+	debsym.c
+		Allow binding to labels inside of functions even if the
+		frame for that function has not been instantiated yet
+		(this regressed when we tryed to not let you bind to
+		arguments of functions that were not yet instantiated)
+
+02-Sept-1994 GeorgioP
+	debbind.c
+	debexpr.h
+	debsym.c
+		Support display of function arguments while being in the prolog
+		of the function.
+
+31-Aug-1994 RicoM
+	debbind.c
+		Minor fix to auto-expand to avoid re-freeing memory
+
+31-Aug-1994 GeorgioP
+	debfmt.c
+		Low budget unicode display via the ",mu" and ",su" format specifiers
+
+25-Aug-1994 GeorgioP
+	debapi.c
+	debbind.c
+	debeval.c
+	debexpr.h
+	debfmt.c
+	debparse.c
+	debsup.c
+	debsym.c
+	debsym.h
+	debutil.c
+	dllmain.c
+		Support auto-expansion of class members. Each TM that is a class or
+		a pointer to a class has now a list of auto-expanded child TMs that
+		are created and displayed based on expansion rules that reside
+		in the "AutoExpand" section of "msvc.ini". (E.g., a rule like
+		CPoint = x=<x>,y=<y> allows displaying points like
+		point = {x=1,y=2} instead of point = {...})
+
+27-Jul-1994 GeorgioP
+	debbind.c
+	debeval.c
+	debexpr.h
+	deblex.c
+	debparse.c
+	debsrch.c
+	debsym.c
+	debutil.c
+	debwalk.c
+	expr2.z
+		Support the "$ReturnValue" keyword that binds to the return value
+		of the current function (assuming the current function is ready
+		to return). This feature enables the kernel (or even the user) to
+		access the return value of the current function. The kernel can
+		also get the return value of a function that has just returned, by
+		using an appropriate context.
+		Implementation (x86 only): A new operator, OP_retval, has been
+		added in order to handle "$ReturnValue" as a special identifier.
+		If the return value resides in a register, the OP_retval node
+		is marked as a register value. The reg field that used to be a
+		union member in the evaluation node is now a separate struct, so
+		that register-storage information do not overwrite type
+		information. Register-handling code has been extended to handle
+		registers having non-trivial types.
+	
+
+11-Jul-1994 RicoM
+	debutil.c
+		Bug #14596.  Fixed SetDPtr so that it doesn't fault if it can't find
+		the type that it is looking for in the module that it's supposed
+		to be in.  This now "masks" a more serious problem that
+		forward reference type need to be looked up using the context that
+		is in the evaluation node (when HMOD != NULL) instead of the global
+		context (which may be totally inappropriate for that node).
+		Also, a fake node and context should be created when formatting pointers
+		to functions instead of just faking the HMOD.
+
+16-Jun-1994 Georgiop
+	debsrch.c
+		Apply this adjustment at the end of LoadAddress [Dolphin #13652]
+		(Code under #if THISADJUST, until the compiler bug gets fixed)
+	debexpr.h
+	debsup.c
+		Fixed counting of overloaded methods in GetClassiChild.
+
+13-Jun-1994 Georgiop
+	debbind.c
+	debexpr.h
+	debsup.c
+		Addition to the previous change: since the cost of EEcChildrenTM
+		is now higher (due to potential presence of static members) and
+		since the kernel calls EEcChildrenTM quite often (via
+		LTIsExpandableTM), we now save the child count in the TM.
+		Also BindStMember now saves and restores pCxt
+
+12-Jun-1994 Georgiop
+	debbind.c
+	debexpr.h
+	debsup.c
+		Do not display non-present static data members when expanding
+		a class TM. EEcChildrenTM and EEGetChildTM ignore static data
+		members that are not present.
+		In addition search state for GetClassiChild is saved in the TM
+		so that search for child (i+1) can continue from the point where
+		search for child i ended.
+
+31-May-1994 v-LeoL
+	debsup.c
+		Avoid using pCxt in ResolveAddr. When called from EEInfoFromTM
+		this is undefined. Use pExState->cxt instead.
+
+19-May-1994 Geogiop
+	debexpr.h
+	debsym.c
+	debwalk.c
+		The context list returned by EEGetCXTLFromTM contained a starting
+		context from which the corresponding symbol was visible, not the
+		exact context where the symbol was found. The kernel needs to know
+		the exact context for each symbol in order to set breakpoints
+		properly. I extended eval_t to accomodate full context information,
+		so that SearchSym can store the context where a symbol was found.
+
+14-May-1994 Georgiop
+	debbind.c
+	debeval.c
+	debfmt.c
+	debsrch.c
+	debtyper.c
+	debutil.c
+		Provided support for T_(U)INT1 types (FORTRAN uses them)
+		[Dolphin #12021]
+
+12-May-1994 Georgiop
+	debtyper.c
+		CastNode was not setting ADDR_IS_OFF32 properly, and PushUserValue
+		ended up pushing 2 bytes instead of 4 for function arguments that
+		were cast to ptrs. [Dolphin #12157]
+
+06-May-1994 Georgiop
+	debexpr.h
+	debparse.c
+	debapi.c
+	debsup.c
+		Allow transformation of template names to a 'canonical' form only
+		when EEParse is called. In other cases (e.g., when ParseBind is
+		called) the expression should have been generated by the EE and
+		should be in canonical form already. This optimization makes the
+		EE more tolerant to debug info idiosyncracies as we avoid
+		transforming template names that have been generated by the
+		compiler (even if these are not really 'canonical' as far as the
+		EE is concerned).               [Dolphin #11696]
+
+04-May-1994 Georgiop
+	debbind.c
+	debeval.c
+	debexpr.h
+	debfmt.c
+	deblex.c
+	debparse.c
+	debsrch.c
+	debsym.c
+	debtyper.c
+	debutil.c
+		Enhanced support for __int64: common binary and unary opearations
+		can now accept int64 operands, and int64 string conversions have
+		been enabled. Floating point <-> int64 conversions are not supported
+		yet in order to avoid build problems due to potential unsupported
+		operations by the compiler. Code involving pointer segments and
+		offsets does not treat int64 in a special manner.
+
+25-Apr-1994 v-LeoL
+	shfunc.h debsup.c
+		Support for locals inside nested procedures. C++EH Catch blocks
+		and SEH finally blocks and SEH filters are implemented via
+		nested procedures on MIPS
+		
+22-Apr-1994 Georgiop
+	debsym.c
+		AddVBType was not updating "*ppList" and "pList->MaxIndex"
+		following a reallocation of "*phList". This could eventually
+		cause a heap corruption and a GPF. [Dolphin #10293]
+
+21-Apr-1994 Georgiop
+	debbind.c
+		Disabled overloaded operator functionality for "&". The EE uses the
+		non-overloaded "&" operator internally for constructing child
+		expressions. When rebinding nested child expressions the EE would
+		waste a lot of time looking for potential overloads of "&". As a
+		result the watch window would become extremely slugish and the
+		IDE would appear to be hung. [Dolphin #10293]
+
+20-Apr-1994 Georgiop
+	debbind.c
+		BindSymbol prefers binding to a non-UDT symbol in case both a UDT and
+		a non-UDT have the same name and appear in the same scope. (Most of
+		the time, the user really wants the variable, not the type)
+		[Dolphin #10794]
+
+18-Apr-1994 v-LeoL
+	debeval.c debbind.c
+		Change error for Mips func eval from ERR_CALLSEQ to
+		ERR_NOFUNCEVAL
+
+15-Apr-1994 v-LeoL
+	debeval.c
+		Fix warning
+	debtyper.c
+		Another place to call ResolveAddr
+		
+15-Apr-1994 Georgiop
+	debeval.c
+	debexpr.h
+	debfmt.c
+	debsrch.c
+	debtyper.c
+	debutil.c
+	fmtstr.h
+		Provided minimal support for __int64, as the EE would hang or
+		misbehave while handling this type. Most operations on __int64
+		are not supported yet, but __int64 variables can be evaluated
+		and displayed in hex.  [Dolphin 10611]
+
+11-Apr-1994 Georgiop
+	debfmt.c
+	debutil.c
+		[Dolphin 10456]
+
+		FormatExpand now handles a SetNodeType failure that could set
+		the underlying type of an array to T_NOTYPE and cause a divide
+		by 0 exception.
+
+		SetNodeType resolves fwd references to underlying array types
+		while setting the node of an array type. This is done in order to
+		avoid having to resolve the type at a later time, when the
+		appropriate context for the symbol search may be unavailable.
+
+
+07-Apr-1994 Georgiop
+	debtree.c
+		AddLeaf and AddNode were not checking for stack space in the
+		syntax tree before adding a new node. This could cause a memory
+		corruption and a GPF, since the the tree stack size is fixed
+		(although the rest of the tree may grow). [Dolphin #10293]
+
+05-Apr-1994 v-LeoL
+	debbind.c debeval.c debtyper.c
+		Fix uninitialized local (Dolphin 7755) and enable some MAC/PPC
+		ifdefs for MIPS too.
+
+04-Apr-1994 v-LeoL
+	debsym.c
+		If we find something in the publics don't save uninitialized
+		CXT [fix is MIPS only for now]
+
+01-Apr-1994 Georgiop
+	debsup.c
+		Changed GetNameFromHSYM to skip the numeric leaf before accessing
+		the symbol name. The "value" field of CONSTSYM has fixed length
+		at compile time, and is followed by the "name" field. In fact
+		CONSTSYM is a numeric leaf that may have variable length, and
+		we ended up treating the last bytes of the numeric leaf as part
+		of the symbol name. [Dolphin #9323]
+	
+	debtyper.c
+		CastNode now sets the ADDR_IS_FLAT flag. (EvalMem was emitting
+		a segmented address after calling CastNode.) [Dolphin #9941]
+
+	debfmt.c
+		Do not allow garbage following a format specifier; allow only
+		trailing white space. [Dolphin #9902, #9903]
+
+	debexpr.h
+	debbind.c
+	debutil.c
+	debeval.c
+		Added routine for checking if pointer subtraction is allowed, as
+		the existing check for type equality was too restrictive.
+		[Dolphin #8914]
+
+		
+01-Apr-1994 MarkBro
+	debfmt.c:
+		Changed size of buffer in EvalMem (bigger) and now handle
+		buffer (in) is smaller than local copy of buffer (DOLPHIN:9942)
+
+31-Mar-1994 v-LeoL
+	debutil.c
+		Protect against unaligned numeric leafs
+		Also avoid Float10 when updating REAL32 and REAL64
+		
+30-Mar-1994 v-LeoL
+	debsup.c
+		Handle REGREL in InfoFromTM (use ResolveAddr to get BASE+off
+		rather than just off)
+		Also fix ResolveAddr to handle S8 correctly when at Top of Stack
+		OSDEBUG4 does not return correct adrBase when alloca frame is
+		topmost.
+	
+30-Mar-1994 Georgiop
+	debwalk.c:
+		OP_uscope now contains an eval_t node. BindBScope uses the eval_t
+		node of its left child (which can be a unary scope operator) to
+		set the CLASS_GLOBALTYPE flag. Since OP_uscope contained no eval_t
+		node this was resulting to a memory corruption. [Dolphin 9185]
+
+	debtree.c
+		GetExpr was not skipping over embedded hSym values properly and
+		returned garbage, preventing editing of child TMs in the locals
+		window. [Dolphin 9842]
+
+25-Mar-1994 Georgiop
+	debsym.c
+	debeval.c
+		MatchArgs and EvalFunction were not handling fwd references to enum
+		types. [Dolphin 3659]
+
+24-Mar-1994 Georgiop
+	debfmt.c
+		Fixed formatting of const/volatile type qualifiers. (A type like
+		"const Foo const *" was being displayed as "const const Foo *")
+		[dolphin 5043]
+
+23-Mar-1994 v-LeoL
+	debeval.c
+		As the EE knows nothing about how to make a MIPSCALL function
+		call use ERR_CALLSEQ
+
+16-Mar-1994 Georgiop
+	debexpr.h
+	debsym.c
+	debutil.c
+		Worked around the following bug:
+		While self debugging, bp at LTIsExpandableTM and watch
+			"{,,een0cxxd.dll}(pexstate_t*){*}phtm"
+		The resulting expression is not expandable, because
+		while in EEIsExpandable, we call SetNodeType and try to
+		resolve a forward reference by performing a symbol search
+		in the default context instead of {,,een0cxxd.dll}
+
+		Since we cannot always update pCxt before calling SetNodeType,
+		resolve potential forward references in undelrying types
+		when they are first introduced int the evaluation node.
+
+04-Mar-1994 Georgiop
+	debbind.c
+	debeval.c
+	debexpr.h
+		Dolphin #5503: We GP-faulted while binding an expression like
+		Foo::m_array[Foo::m_staticCount], because we needed to fake
+		up a stack entry even if ST was not NULL.
+		Now we always push a faked entry unless there is a preceding
+		bnOp (".", "->", etc); in that case a class stack entry has
+		already been pushed onto the stack.
+
+	debsup.c
+		Dolphin #8336: When dereferencing a "reference to pointer" we
+		should dereference the underlying pointer (this is what
+		EEIsExpandable implies when it returns EEPOINTER)
+
+	debparse.c
+		pExState->strIndexSav should not be set by XFormExpr, since at that
+		time the actual parsing has not started and the value of strIndex is
+		unknown.
+
+01-Mar-1994 v-LeoL
+	debsup.c
+		Dolphin #7908. Intel avoid printing 'this' param by checking
+		for negative offset. Centaur has 0 offset for this (or even positive)
+		so special case it.
+
+	debutil.c
+		Dolphin #7945
+
+	debeval.c
+		Dolphin #7945. OSDSaveRegister currently broken on MIPS so
+		avoid calling in EvalFunction if doing EvalProto
+		(EvalProto returns anyway without restoring)
+		
+24-Feb-1994 Georgiop
+	debexpr.h
+		CLEAR_EVAL_FLAGS was only clearing out part of the flags structure.
+		(the "bits" struct in vbits_t had grown beyond 32bits in size,
+		and the clr field was too small for clearing all bits.)
+
+	debbind.c
+		Restricted the symbol search to class names only, when binding the
+		left operand of "::". The EE would erroneously bind the class name
+		at the left of "::" to the corresponding constructor and rewrite
+		the expression by inserting the "this" pointer. (This in turn
+		prevented binding static members like Foo::m_static when the
+		"this" pointer was not in scope).
+
+
+23-Feb-1994 Georgiop
+	debdef.h
+	deberr.c
+	debexpr.h
+	debfmt.c
+	eent.mak
+	eemc.mak
+	errors.h
+	resource.h (new file)
+	debmsb.rc (new file)
+	dllmain.c (new file)
+		Moved error messages to string resources so that they can be localized.
+
+21-Feb-1994 RicoM
+	debsym.c
+		We no longer check the type index in the globals for and exact
+		match with the type index in the class for static data members.
+		This is because sometimes it doesn't match (e.g. unspecified
+		length arrays)
+
+20-Feb-1994 Georgiop
+	debapi.c
+	debbind.c
+	deberr.c
+	debfmt.c
+	deblex.c
+	debparse.c
+	debsrch.c
+	debsup.c
+	debsym.c
+	debutil.c
+	debwalk.c
+	debexpr.h
+		Changes to use tchar.h - DBCS enabling
+
+16-Feb-1994 RicoM
+	debsym.c
+		If nested type forward ref cannot be converted into a real type
+		then pretend we didn't find the symbol we were looking for in
+		the nested type and proceed with the search instead of returning
+		an OMF error and abandoning the search
+
+15-Feb-1994 DaveS
+	errors.h
+	debeval.c
+		Fix function eval for mac68k.  We still don't eval funcs, but
+		now we will eval BPs and prototypes.  Also, I've added a new
+		error message for attempting function eval.
+
+10-Feb-1994 Georgiop
+	debbind.c
+	debeval.c
+		Fixed expansion of function calls that return references to derived
+		classes. Such function calls are now treated as lvalues (as per the
+		C++ spec), and it is possible to bind child expressions (such as
+		base classes) that need the address of the referenced object.
+
+02-Feb-1994 Georgiop
+	debexpr.h
+	deblex.c
+	debeval.c
+		Dolphin #5663: Work around for a compiler optimization bug: replaced
+		instaces of "(float)DoubleFromFloat10" with new inlined function
+		"FloatFromFloat10".
+
+	debutil.c
+		Dolphin #5783: RemoveIndir should clear the EVAL_IS_LABEL flag.
+
+04-Feb-1994 Georgiop [by RicoM]
+	debeval.c
+		Dolphin 5530: Handle subtraction of void* pointers (fail gracefully).
+		Misc: Fixed bug in Store32 -- ADDR packet uninitialized
+	debsym.c
+		Dolphin 5465:
+		Fail symbol searches on member functions that are not
+		instantiated in the current .exe/.dll (i.e. if a class
+		imports member function you must be in the scope of the
+		function to set a breakpoint -- the kernel does this search
+		automatically)
+
+29-Jan-1994 Georgiop
+	debapi.c
+	debeval.c
+	debexpr.h
+	debsup.c
+	debutil.c
+	expr2.z
+		Implemented evaluation caching mechanism: child TMs can now
+		be evaluated incrementally by reusing the evaluated result
+		of a parent TM.
+
+27-Jan-1994 MarkBro
+	debfmt.c:
+		Restored _MBCS enabled code from previous whoops
+
+	debparse.c:
+		Change _MBCS #ifdef's to #ifNdef's _SBCS
+
+26-Jan-1994 BillJoy
+	debsym.c
+		pulled MHOmfUnLock (hCFlag) inside the #if !defined(TARGMAC68K)
+
+
+23-Jan-1994 RicoM
+	debutil.c
+	debsym.c
+		Fixed calls to GetUdtDefnTIndex() so that the type index
+		corresponds to the module that the type is being looked
+		up in.  Fixes Dolf#5544
+
+23-Jan-1994 RicoM
+	debapi.c
+	shfunc.h
+		Added stub implementation of EEInvalidateCache per GeorgioP
+
+21-Jan-1994 MikeMo
+	makefile
+		Added -WX: no warnings allowed.
+
+12-Jan-1994 Georgiop
+	debsup.c
+	debbind.c
+		Special handling of context operators when generating synthesized
+		expressions. Unified context handling scheme.
+		Minor bug fixes and misc. cleanup for can vs cxx builds.
+	debexpr.h
+	debsrch.c
+	debsup.c
+	debsym.c
+	debwalk.c
+		Misc. cleanup for can vs cxx builds.
+	
+22-Dec-1993 MikeMo
+	debsym.c
+		Dolphin #4678: realloc was the wrong size.
+
+06-Dec-1993 Georgiop
+	debutil.c
+		SetNodeType was not restoring PTR_REG_IREG and PTR_REG_HIBYTE
+		of an enregistered pointer.
+
+04-Dec-1993 Georgiop
+	debeval.c
+	debbind.c
+		Modified EvalFunction in order to fixe dolphin 1170: When a
+		simple variable is passed by ref we need to pass a pointer
+		to the variable (i.e., treat it in the same way we currently
+		treat passing classes by ref).
+		Modified Push?Args functions in debbind.c in order to restore
+		the PTR_UTYPE macros (when handling args that are passed by
+		ref) that had somehow disappeared.
+
+	debsym.c:
+		Updated comment header for SearchSym in an attempt to document
+		some of its side-effects. Didn't change any code.
+
+	debparse.c
+		Changed the condition on which a special path is taken when
+		parsing consecutive closing ')' of nested function calls in
+		order to fix dolphin #3404.
+
+		Changed FParseExpr to treat 'by', 'wo', 'dw' as identifiers if
+		they follow a '.' or a '->' (in that case they are probably
+		struct memebers, not commands). (dolphin #977)
+
+	debutil.c
+	debfmt.c
+		TypeDefSize and Format now use the f32bit flag ti decide on
+		whether a based pointer is 16-bit or 32-bit wide (there is
+		no distinction between these in codeview information).
+		(dolphin #979)
+
+30-Nov-1993 MarkBro
+	debsym.c:
+		Corrected initialization of localeval in SearchRoot for
+		nested symbols.  Was asserting since the previous initialization
+		of localeval of *pvF didn't have an associated module
+
+05-Nov-1993 RicoM
+	debsup.c
+		Corrected off by one error allocating space for derived most
+		class cast
+
+01-Nov-1993 RicoM
+	debsup.c
+		EECChildren now returns 1 for # children of a pointer to a
+		primitive type
+
+26-Oct-1993 Stevesm
+	debapi.c
+		We had to initialize some of the global variables in
+		EEFormatCXTFromPCXT for NB10 restart with breakpoints.  Resolving
+		forward reference UDTs caused us to invoke SearchSym.  We needed to
+		initialize pCxt, pExState and various Eval Stack variables
+		
+30-Oct-1993 Georgiop
+	The EE was displaying bogus values for missing static class members.
+	Now if a static data member is missing the corresponding expression
+	binds properly and its evaluation or expansion is prevented. Affected
+	files:
+	debsym.c:
+		SearchQualName sets the HSYM of the eval node to 0 in order to
+		indicate a missing static data member. It also sets a global
+		flag in the TM to prevent expansion.
+	debeval.c:
+		StructEval returns an error in case an evaluation of a missing
+		static data member or function is attempted.
+	errors.h:
+		added ERR_STMEMBERNP ("static member not present") error
+	debexpr.h:
+		added fNotPresent flag in the state field of TMs
+	debapi.c:
+		EEIsExpandable: do not expand expressions that contain missing
+		static data members.
+
+29-Oct-1993 Georgiop
+	debbind.c:
+		BindDot allows binding of expressions like {main,,}foo.bar where
+		foo is not yet in context and bar is a (non-virtual) member
+		function. This allows setting certain break points when restarting
+		a debugging session [dolphin #2433]. This fix addresses part of
+		a more general issue, i.e., what happens if part of an expression
+		cannot be bound, but the expression itself is bindable (i.e., does
+		not need all the information of the part that cannot be bound). In
+		general the EE does not allow binding of such expressions -- this
+		fix overrides this behavior.
+
+20-Oct-1993 Georgiop
+	debexpr.h:
+	debeval.c:
+	debbind.c:
+	debapi.c:
+		Backed out the change made on 10-15-93 (fPreventEval flag). Now
+		EEDereferenceTM verifies that the downcast node is bindable. This
+		involves an extra call to EEGetChildTM, but results in better UI.
+		BindCast does not allow illegal casts that pertain to the class
+		hierarchy (e.g., casting a vitr. base ptr to a derived class ptr).
+		[dolphin #2751]
+
+
+15-Oct-1993 Georgiop
+	debexpr.h:
+	debeval.c:
+	debbind.c:
+		Introduced fPreventEval in the TM state in order to prevent
+		evaluation of certain expressions. This is used together with
+		the auto class cast feature as follows: Neither DereferenceTM
+		or cChildrenTM check the validity of the cast required to build
+		the derived class node (it would be too costly to do so). If
+		BindCast discovers an illegal cast it lets the expression bind
+		properly (so that the kernel can query the expression name) but
+		prevents the evaluation of the node (which would produce meaningless
+		results)
+
+
+15-Oct-1993 Georgiop
+	debeval.c:
+		Minor changes in VFuncAddr2 and StructEval in order to support
+		evaluation of virtual functino addresses. These should fix
+		dolphin bug #2223
+
+14-Oct-1993 Georgiop
+	Dolphin bugs 299, 2312, 2223
+	debsup.c:
+		UpdateMem was not resetting properly the EVAL_IS_BPREL flag.
+		(dolphin 299)
+	debeval.c:
+		StructEval now produces an ERR_NOTEVALUATABLE instead of
+		ERR_INTERNAL if VFuncAddress2 fails. VFuncAddress2 may fail if the
+		object does not have a valid vfptr -- dolphin 2223.
+		(The problem of computing the right address of a virtual
+		function still exists)
+		EvalAddrOf() was not handling references properly. RemoveIndir()
+		was not handling CV_PTR_NEAR32 types.
+
+13-Oct-1993 Georgiop
+	debfmt.c:
+		FormatCXT has been changed to append an argument type list
+		to function names in context strings, so that the kernel can
+		disambiguate overloaded functions.
+	debbind.c:
+		ContextToken() now accepts tokens that contain a parenthesized
+		substring. This allows parsing of contexts generated by
+		FormatCXT. The parenthesized part is ignored, since BindContext
+		cannot deal with overloaded functions
+	debbind.c:
+		Bug fix in BindContext: Typing "{foo,,}bar" in the watch window
+		before starting a debugging session would cause an assertion
+		in sapi, as BindContext was attempting to call SHGetNextMod
+		passing a NULL hExe. This call has been removed.
+
+12-Oct-1993 Georgiop
+	Bug fix for Dolphin #2109: attempt to cast a register to a UDT
+	during evaluation of an assignment failed due to the NULL hmod
+	in the evaluation node of the register.
+	debeval.c:
+		Check if ST has a null hmod before calling CastNode() in
+		Assign().In that case use the hmod found in STP
+
+08-Oct-1993 Georgiop
+	Further enhancements to auto class casting: nested class support,
+	pointer adjustment when casting from "pointer to base" to
+	"pointer to derived"
+	debapi.c:
+	debexpr.h:
+	shfunc.h:
+		New API EEEnableAutoClassCast
+	debparse.c:
+	debbind.c:
+		Modified ParseTypeName and ParseType to allow contexts in
+		type strings. Added CastBaseToDeriv().
+	debsup.c:
+		GetDerivClassName generates a context together with the
+		type name. Minor changes in the way the magic node is
+		formatted
+
+05-Oct-1993 RicoM
+	Minor bug fixes
+	debsup.c
+	debapi.c
+		Skip LF_MODIFIER nodes during auto class cast so that
+		auto class cast works even on const or volatile pointers
+		Don't ever use BIND_fSupBase as it prevents expansion
+	    of members found in base classes in
+	
+01-Oct-1993 Georgiop
+	Implemented automatic detection of the type of a class
+	object pointed by a ptr, in case the ptr points to an
+	enclosed base class object which has a vtable.
+	debexpr.h:
+		Added hDClassName in pexstate_t to hold the
+		derived class name.
+	debsup.c
+		Added GetDerivClassName, modified DereverenceTM to
+		set hDClassName, and cChildren, GettChildTM to
+		use hDClassName.
+	debapi.h
+		Minor changes due to hDClassName addition in the TM
+
+29-Sep-1993 SanjayS
+	debeval.c
+		Don't force operand of ++ and -- to be treated as an lvalue in
+		EvalPostIncDec and EvalPreIncDec.
+
+28-Sep-1993 SanjayS
+	debbind.c
+		Free the correct memory handles in BinaryOperator, even if a
+		realloc happens.
+
+27-Sep-1993 MarkBro
+	debfmt.c:
+		Added fix for ensuring that the types table checked for a type
+		matches the hmod of the symbol.
+
+24-Sep-1993 Georgiop
+	debfmt.c
+		Use the mod for the type we back from SHModFromCxt when
+		formatting a pointer to function value.
+24-Sep-1993 Georgiop
+	debfmt.c
+		Dolphin #1389: Changed Format() to set the proper hmod in the
+		evaluation node.
+
+25-Aug-1993 Georgiop
+	debapi.c
+	dogfood.mak
+	eent.mak
+	makefile.mak
+		Replaced LANG and LANGID macros with EELANG and EELANGID respectively
+
+20-Aug-1992 SanjayS
+	debsup.c
+	debwalk.c
+	debexpr.h
+		Checked in changes made by Georgiop to fix problem where any TM
+		created using EEGetTMFromHSYM would return a bogus string when
+
+		EEGetExprFromTM was called on it.  See log made by Georgios below...
+		N.B. Georgios was in Greece so his changes.txt was checked in later...
+
+19-Aug-1993 Georgiop
+	debsup.c
+	debwalk.c
+	debexpr.h
+		Changed GetExpr to replace HSYMs found in the expression string
+		with the corresponding symbol names.
+	dogfood.mak
+		Added /MD /W3 to the compiler command line
+
+12-Aug-1993 MikeMo
+	debtyper.c
+		Fix a bug I introduced way back in February: when casting int to
+		FOO*, where FOO* is not a primitive type, CastNode() was treating
+		FOO* as a primitive type (e.g. doing CV_MODE on it and stuff).
+
+10-Aug-1993 MikeMo
+	debbind.c
+	debparse.c
+	debsup.c
+	debsym.c
+		Fix bugs in the use of MHMemReAlloc.  Some calls were assuming that
+		the handle value could change, and others were assuming that it
+		could not.  The former is correct: the handle value CAN change.
+
+09-Aug-1993 GeorgioP
+	debutil.c
+		Modified erroneous (but harmless) code in GetUdtDefnTindex
+		that generated compiler warning.
+
+09-Aug-1993 GeorgioP
+	Implemented "quick binding" for child TM's that represent member functions.
+	Bind info are stored in the TM during the child TM creation and the bind
+	phase is bypassed. Currently such TMs are not evaluatable. Affected files:
+	debapi.c:
+		Modified GetChildTM, added GetParmTM
+	debeval.c:
+		DoEval now fails gracefully if the TM has no eval stack.
+	debexpr.h:
+		Modified/added prototypes for GetChildTM, GetParmTM, ParseBind
+	debsup.c:
+		Modified GetChildTM, replaced SetClassiName with GetClassiChild
+
+15-Jul-1993 GeorgioP
+	debbind.c
+	debeval.c
+	debfmt.c
+	debtyper.c
+	debutil.c
+		Fixes to avoid some compiler warnings
+
+15-Jul-1993 GeorgioP
+	debbind.c:
+		One-line fix (Replaced '==' with '!=' on line 3023): AddrOf
+		should not set EVAL_STATE(ST) to rvalue in case ST is a type
+		(dolphin #1169)
+
+15-Jul-1993 GeorgioP
+    debparse.c:
+	Added XFormExpr and GetToken for template support.
+    debbind.c:
+	GetId looks for matching <>'s in order to treat template class
+	names as identifiers.
+    debexpr.h:
+	Added hExStrSav, strIndexSav, ExLenSav in exstate_t. These hold
+	info about the original string in case it has been modified by
+	XFormExpr.
+    debwalk.c:
+	GetExpr now uses the saved string if it exists.
+    debsup.c:
+	DupTM duplicates the saved string
+    debapi.c:
+	EEFreeTM frees the saved string
+
+07-Jul-1993 DanS
+    debfmt.c
+	cuda:5647, display T_NOTYPE and default cases with 4 bytes
+	for 32-bit addresses, 2 bytes for 16-bit.
+
+02-Jul-1993 MikeMo
+	debapi.c
+		cuda#5595: EEGetTMFromHSYM now returns EENOMEMORY instead of
+		EECATASTROPHIC if a memory allocation fails.  This allows the
+		callstack to come up with an empty stack instead of crashing.
+
+01-Jul-1993 DanS
+    debfmt.c
+    debbind.c
+	cuda:5546, transfer all addr bits from ptr to sym in ref case.
+	initialize type in AddrOf case for &(int &bar) case.
+
+29-Jun-1993 DanS
+    debutil.c
+	cuda:5515, if type packing leaves dupes, we can end up with
+	sym recs to have type indices that don't point into the correct
+	type index "tree". the trick is to find a fix that won't break
+	searching for ambiguous methods.  what we settled on was in fnCmp
+	to a) if name matched exactly (case sensitive), b) the type that
+	we were carrying around for the method was not the same as the one
+	on the symbol record, then c) we would say they are equivalent if
+	there were no overloads (overloadCount == 1).
+
+22-Jun-1993 DanS
+    debsym.c
+	cuda:5345, don't let registers/line #'s be evaluated in an
+	explicit class/struct scope.
+
+\-------------------End Conflict-------------------/
+16-Jun-1993 DanS
+    debbind.c
+	cuda:5171 (and more!) propagate an explicit context from the
+	left bind tree to the right during BindDot and BindPointsTo.
+	this handles the case where we have {,,foo.dll}fooStruct and
+	we want to expand it.  trouble is that the expansion results
+	in an expr like this: ({,,foo.dll}fooStruct).fooMember.  the
+	context is bound to the right side and not applied to the
+	right hand side for the type lookups.
+
+	an alternative fix would be to always carry a context around
+	on every symbol node or to elevate the context precedence so
+	that we end up with {,,foo.dll}(fooStruct).fooMember instead.
+
+14-Jun-1993 DanS
+    debbind.c
+    debeval.c
+	cuda:5124, vtshape tables not dumped correctly.
+	debeval.c wasn't passing on all of the address from ptr to sym
+	in VFuncAddress.
+	debbind.c had some unused code removed.
+
+28-May-1993 DanS
+    debsym.c
+	cuda:4886, add case S_LTHREAD32 to SymToNode so that we can
+	look at static (local and module) TLS variables.
+
+25-May-1993 DanS
+    debsrch.c
+	cuda:4798, use all 4 bytes of 32-bit regs when loading symval
+    debutil.c
+	cuda:4799, xfer all data pertaining to register values from pv
+	to nv in SetNodeType for any case that is a register.
+
+25-May-1993 MikeMo
+	debfmt.c
+		cuda#4793: EVAL_IS_NPTR32 and EVAL_IS_FPTR32 return FALSE for
+		arrays, which was causing trouble for code which assumed they
+		would return TRUE for arrays as well as pointers.
+
+06-May-1993 RicoM
+    debsym.c
+	CUDA #4305: SetValue() now also avoids referencing "this" when
+	accessing a BASE class name that was found in the context of
+	a member function.  It used to turn FOO::bar into this->FOO::bar
+	if you were in a member function of a class derived from FOO.
+
+06-May-1993 RicoM
+    debsym.c
+	CUDA #4030: SetValue() now avoids referencing "this" when accessing
+	static data members from a class that was implicitly in scope.
+	This lets us refer to a static data member from within a static
+	member function without having to qualify with the class name.
+	The old way we'd be told that we could find "this" even though
+	we didn't really need it.
+
+05-May-1993 RicoM
+    debutil.c
+	CUDA #4067: SetNodeType() needs to preserve the EVAL_IS_LABEL
+	bit or else labels get treated as data and can't be fixed up
+	correctly
+
+04-May-1993 DanS
+    ldouble.c
+    ldouble.h
+    debfmt.c
+    deblex.c
+    eent.mak
+	cuda:2119, low budget float10 support using CRT internals.
+
+    debfmt.c
+    deblex.c
+    debeval.c
+    debsrch.c
+    debsup.c
+    debsym.c
+    debtyper.c
+    debutil.c
+    debwalk.c
+	change near to NEAR all over the place because new compiler removed
+	near do nothing keyword
+
+03-May-1993 RicoM
+    debfmt.c
+	CUDA #4028: FormatLong() renamed to ExtendToLong() which more
+	accurately reflects what it does.  Bug #4028 says that
+	(unsigned char)255,d formats as '-1'.  The problem here is
+	that in the ,d case ExtendToLong() always did a sign-extend even
+	when converting from an unsigned type.  There is now a check
+	to see if we are converting from a unsigned type, or if we need
+	an unsigned result.  In either of these two cases no-sign extension
+	is performed.
+
+30-Apr-1993 RicoM
+    debeval.c
+	CUDA #4044: VerifyFormat needed to check the return code of
+	its CastNode() calls to prevent trying to format a float as
+	memory for instance (i.e. float f; ?f,m)
+
+30-Apr-1993 RicoM
+    debeval.c
+	CUDA #4020: EvalFunction stack handling changed so that
+	any temporary objects that were pushed on the stack (e.g.
+	string literals are not removed until the whole expression
+	has been evaluated.  This handles nested/multiple functions
+
+29-Apr-1993 RicoM
+    debsrch.c
+	CUDA #2962: LoadAddress wasn't always using pExState->frame.DS
+	for the segment value (sometimes it used just 0)
+
+29-Apr-1993 MikeMo
+    debfmt.c
+	cuda#4043: The IDE displays chars with null value as '\x00',
+	but CV displays them as ''.
+
+29-Apr-1993 RicoM
+    debeval.c
+	EvalFunction and VFuncAddress2 both preserve the EMI and MODE
+	parts of the address when they copy the results of EvalUtil()
+	into the address part of the expression.  This allows us to
+	correctly fixup/unfixup vtable addresses...  EvalFunction
+	was also modified to correctly compute the logical address
+	of a near virtual function without consulting CS (which doesn't
+	work anyway)  CUDA #3949 is now completely fixed
+
+28-Apr-1993 RicoM
+    debeval.c
+	EvalFunction doesn't try to restore the registers if it fails
+	before they've been saved anymore...  This makes CUDA #3949
+	not fault anymore, but we still can't call the function...
+
+27-Apr-1993 MikeMo
+    debsup.c
+	Revision of the change mentioned below on 21-Apr: this change
+	is in Cuda after all.  EEInfoFromTM won't automatically
+	dereference pointers.
+
+26-Apr-1993 RicoM
+    debbind.c
+    debeval.c
+	CUDA #3743, use 32 bit types in bind/eval of 'by', 'wo', and 'dw' ops
+
+23-Apr-1993 RicoM
+    debeval.c
+	Push function addresses on the stack in EvalFunction in the prototype
+	case.  CUDA #3673
+
+21-Apr-1993 MikeMo
+    debsup.c
+	Under Dolphin, EEInfoFromTM won't automatically dereference
+	pointers.
+
+09-Apr-1993 SanjayS
+    deblex.c
+	Added additional overflow check in ParseIntConst.
+
+08-Apr-1993 SanjayS
+    debeval.c
+    debbind.c
+	EvalSegOp and BindSegOp were disallowing T_INT4's. Fixed this
+	as integral constants are always typed INT in 32-bits. Added
+	check in EvalSegOp to make sure that the value of the segment
+	portion is in range.
+
+08-Apr-1993 MikeMo
+    debexpr.h
+    debbind.c
+    debeval.c
+    debfmt.c
+    deblex.c
+    debparse.c
+    debsrch.c
+    debtyper.c
+	* exstate_t.state now contains an 'f32bit' flag, which indicates
+	  whether this expression has 32-bit ints and pointer offsets.  This
+	  should usually be used instead of the 'fWin32' global (now removed)
+	  or the 'CVTargetInfo' function.
+
+	* Various expressions that used to return type T_SHORT or T_USHORT for
+	  C boolean operations like "a != b" and "!x", have been changed to
+	  return T_INT2 or T_INT4 as appropriate.
+
+	* T_RCHAR is now treated as a signed char as it should, rather than
+	  unsigned.  (There is still one case we don't handle correctly, which
+	  is too hard to fix: if someone compiles a C++ program with -J, we'll
+	  still be treating chars as signed.  But this is a rare case.)
+
+	* In hex display, chars are always displayed with two hex bytes even
+	  if variable's value is negative; shorts always with four hex bytes.
+
+	* Fixed value display of things like "sc,d" and "sc,u" where sc is a
+	  signed char.
+
+	* When lexing a constant for 32-bit, return T_LONG or T_ULONG if user
+	  explicitly appended 'u' and/or 'l'.
+
+	* Fixed rules for "integral promotion."
+
+	* Fixed rules for the "usual arithmetic conversions."
+
+06-Apr-1993 MikeMo
+    debtyper.c
+	Cuda#2616: "eip == label" did not work, because the code was
+	attempting to cast the label from a 32-bit address to a 16-bit
+	address.
+
+30-Mar-1993 Brucejo
+    debutil.c
+    debsup.c
+	Fix 16 <--> 32 bit ptr casting problem.  This caused the array
+	expansion to fail.  The macro N_EVAL_PTRTYPE was checking more
+	than just the type, the tests were changed to check just the type.
+	Also, examine return from SetNodeType and assert on false for the
+	array element counting.  This should help catch this kind of bug
+	easier.
+
+04-Mar-1993 MikeMo
+    fmtstr.h
+    debfmt.c
+	Clean up code which maps a primitive type to a string.  In
+	the process, fix cuda#2558 (vars of type "int *" not displaying
+	their type correctly).
+
+29-Feb-1993 DavidGra
+    debsup.c
+    debsym.c
+    debutil.c
+	Added S_[L|G]Thread cases where appropriate in order to support
+	thread local storage.
+
+
+08-Feb-1993 MikeMo
+    debbind.c
+    debeval.c
+    debfmt.c
+    debtyper.c
+    debutil.c
+    fmtstr.h
+	Fixes for 32-bit pointers.  Main fix was in CastNode() in
+	debtyper.c: we now correctly cast between 32-bit pointers to
+	different types.  Other small fixes.
+
+01-Feb-1993 MikeMo
+    makefile
+	Added -Zp4 to NT builds.  We haven't tracked down why this is
+	needed, but it is.
+
+30-Jan-1993 MikeMo
+    debfmt.c
+    debsup.c
+    shfunc.h
+    makefile
+	Added support for the debugger to pass a flag which indicates
+	whether it wants hex constants to be in upper case or lower
+	case.  (Flag is in eeapi.h.)  This option is ON by default
+	when building the NT DLL, OFF for all others.
+
+	Also cleaned up some M68K code that had far more ifdefs than
+	it needed to.
+
+09-Jan-1993 Georgiop
+    debbind.c:
+    debeval.c:
+    Modified BindContext and EvalContext to treat bp-relative l-values
+    without converting them to r-values if the explicit context is the
+    same as the current context (workaround for caviar #6902).
+
+07-Jan-1993 Georgiop
+    debfmt.c:
+    Extended EvalMem functionality to handle word, dword and ascii
+    display (i.e., now the following specifiers are accepted:
+    m, mb, mw, md, ma. The default (m) is byte display.
+
+05-Jan-1993 Georgiop
+    debexpr.h
+    Made SearchBasePtrBase global
+
+    debutil.c
+    Now SetNodeType calls SearchBasePtrBase in order to
+    find the base symbol of a based pointer.
+
+    debsym.c
+    Disabled calling of SearchBasePtrBase from Searchsym.
+
+05-Jan-1993 Georgiop
+    debfmt.c
+    Implemented 'm' format specifier for memory dumps. "addr,m" displays
+    16 bytes in hex and their ascii equivalents if printable.
+
+29-Dec-1992 Georgiop
+    debsrch.c
+    Changed LoadSymVal to load additional bytes if a bitfield crosses
+    a byte boundary (caviar #6610). Also fixed an off-by-one error
+    in the index used for accessing BitsToBytes[]. (Related bugs: 3120,
+    3107)
+
+    debeval.c
+    SBitField was polluting neighboring bits during a bitfield assignment.
+    Now LoadSymVal is called after the type of the node has been set to
+    the underlying type of the bitfield.
+
+23-Dec-1992 Georgiop
+    debapi.c
+    Defined two new functions FpMask and FpRestore in order to mask
+    and restore floating point exceptions under WINDOWS3. This is
+    now used by EEParse, EEvaluateTM and EEGetValueFromTM. (affects
+    caviar #6765 and #6372)
+
+22-Dec-1992 Georgiop
+    debutil.c
+    Restored old behavior of SetNodeType regarding based pointers
+    and added an extra symbol search. If the symbol on which the
+    pointer is based is bp-relative we get the base information from the
+    copy of symbol record in the type section, otherwise we call SearchSym
+    and do a module/global search. This fix should permit dereferencing
+    based pointers that are members of a struct, or double dereferencing
+    of a pointer to a based pointer. (caviar #6413)
+
+18-Dec-1992 Georgiop
+    debapi.c:
+    Mask fp exceptions before calling DoEval --cav. #6372
+
+17-Dec-1992 Georgiop
+    debexpr.c:
+    Fixed return value in GetChildTM prototype (EESTATUS instead of bool_t).
+
+    debsup.c:
+    GetChildTM now returns EEGENERAL if the parent TM is not expandable.
+    This should fix caviar #6381
+
+14-Dec-1992 Georgiop
+    debexpr.h:
+    Temporary change: added CVFTargetInfo() until it is implemented by
+    the kernel.
+
+    debbind.c:
+    Modified ParseType to handle 32-bit ptrs (cuda #960)
+
+    deblex.c:
+    Modified ParseString for 32bit support (cuda #908)
+
+    debtyper.c:
+    Modified CvtPtr, CastNode, CvtSizeDown, NormalizeBase for 32bit support
+    (cuda #857)
+
+    debsym.c:
+    SetAmbiant now supports NEAR32  (cuda #960)
+
+05-Dec-1992 Georgiop
+    debapi.c:
+    EEGetChildTM now initializes pExState puts any error messages
+    to the parent TM. If it fails it frees the child TM. Caviar 5387
+
+    debfmt.c:
+    Removed "NYI" message. FormatClass now prints "{...}" in all cases.
+
+    debsym.c:
+    MatchArgs: If the argument is a type, require an exact match (i.e.,
+    identical type indices). In general when matching args we
+    ignore certain modifiers (e.g., const). In this case we want to
+    be very strict, since we are probably dumping a class and we want
+    to let all overloaded methods bind properly. Otherwise a "symbol
+    is ambiguous" message may appear instead of a function name when
+    dumping a class.
+
+
+03-Dec-1992 MikeMo
+    deblexer.asm
+	Fixed 32-bit version to have the correct size for the
+	elements of the LexTable: 6 bytes per element rather
+	than 4.  Now lexing works.
+    deblex.c
+    deblexer.asm
+	Changed ParseOp from pascal to stdcall.  (Actually in deblex.c
+	it's defined PASCAL, which is stdcall.)
+
+01-Dec-1992 Georgiop
+    errors.h:
+    Added ERR_NOSTACKFRAME: "variable needs stack frame"
+    debsym.c:
+    Changed SearchSym to stop the search for a symbol that has
+    been found and has been rejected because of the fact that we
+    are in the prolog of a function. Instead of searching the
+    parent scope we now set an error message and return HR_error.
+    this fix should also handle the case ?{foo}i where foo is
+    a function that has not been invoked yet and i is a local
+    variable in the scope of foo. In that case BindContext will
+    create a context based on the address of foo, and things
+    will go on as if we were in the prolog of foo. --caviar #5898
+
+25-Nov-1992 Georgiop
+    Caviar #5563: error gracefully when a FORTRAN complex type is
+    encountered. Affected files:
+    errors.h:
+    Added new message "type not supported"
+    debutil.c:
+    Error detection in UpdateMem, TypeSizePrim
+    debtyper.c:
+    Error detection in IntegralPromote, CheckType, CastNode
+    Also changed CastNode to allow casting of an enum to an int.
+    debsrch.c:
+    Error detection in LoadSymVal
+    debbind.c:
+    Error detection in BindByteOps, Function
+
+
+21-Nov-1992 Georgiop
+    debeval.c:
+    Added code in PlusMinus to compute the address of a huge array
+    element. --caviar 2120
+
+    Disabled function evaluation for functions that return large
+    classes or structs (this is because of differences in calling
+    conventions that do not appear in codeview information.)
+
+    Changed EvalDot to call EvalStruct instead of EvalElem if the
+    Right child is a reference. This should correct the problem
+    of miscalculating the return value when evaluating a function
+    that returns a reference to a class. (Changes related to caviar
+    #5425.)
+
+18-Nov-1992 Georgiop
+    debparse.c:
+    Added a special case in FParseExpr in order to parse nested
+    function calls of the form "fun1(arg1,fun2(arg2))" --cav. #3678
+
+    debsym.c:
+    The test in SearchSym that restricts the function search if an
+    explicit context is given was moved one level up (from SYM_EXE
+    to SYM_GLOBAL) because of the changes in the symbol handler.
+    In addition this test has been enhanced in order to terminate
+    the search only if a symbol has already been found. This should
+    fix the problem described in caviar #5321 (empty error message).
+
+    CheckDupAmb uses function addresses again in order to determine
+    if a function is already on the list. A new ADDR field has been
+    added to search_t struct for this reason. --caviar #5564
+
+    Merged change from .420 tree: added explicit casts to (char far *)
+    for the args of _fstrncmp(). This should not affect the generated
+    code, since we compile large model anyway. --#5575
+
+    debexpr.h:
+    Added ADDR field in search_t. Removed the old address_t field, as
+    it was not being used.
+
+    debfmt.c:
+    Added missing quote (') in _fmt_char_zr --caviar #5513
+
+12-Nov-1992 Georgiop
+    debsym.c:
+    Changed MatchArgs to tolerate duplicate functions. pName->best is not
+    updated if the current function is the same as the best one so far.
+    Changed CheckDupAmb to compare function names and types instead of
+    addresses. (It was broken because it was accessing a volatile
+    evaluation node) -- Caviar #4791
+
+11-Nov-1992 Georgiop
+    debsym.c:
+    DebLoadConst does not change the type of an enum to the underlying
+    type any more. This helps proper argument matching. (caviar
+    #3716, 3718).
+    debfmt.c:
+    Format(): In order to display an enum constant as an int, cast it
+    to the underlying type before displaying it.
+
+05-Nov-1992 Georgiop
+    debeval.c:
+    EvalAddrOf now sets an error message instead of asserting
+    if it sees anything but an l-value (caviar #5191)
+
+    debsym.c:
+    Fixed coding error: '==' was being used instead of '=' in some
+    assignements related to pExState->err_num. (caviar #4517)
+
+28-Oct-1992 MikeMo
+    deblexer.asm
+	For NT, changed from C to PASCAL.
+    deblex.c
+	Under NT Beta 1, PASCAL is defined to __stdcall, but we want
+	to declare ParseOp (which is defined in deblexer.asm) as actually
+	being pascal, so I changed the prototype from using PASCAL to
+	using _pascal.
+    shfunc.h
+    debapi.c
+	Use EXPCALL calling convention for exported functions.
+    eent.mak
+	No longer need to invoke CVTOMF.
+
+27-Oct-1992 Georgiop
+    debsym.c:
+    Changed SearchSym to handle failures of PushStack. This should
+    prevent a GP fault in low memory conditions (caviar 4075)
+    debutil.c:
+    Added check in GrowStack to avoid unlimited growth of stack.
+    Removed corresponding check from PushStack. (caviar 4075)
+    debfmt.c:
+    Increased the size of tempbuf in VerifyFormat so that FLT_MAX
+    can be printed using %f format. Doubles and Long Doubles that
+    are too large to be printed in %f format, are now printed in %e
+    format. (caviar #4049, also related to #933).
+
+20-Oct-1992 MarkBro
+    debapi.c:
+	Changed order of checking in EEGetExtendedInfo.  It was checking
+	for ETIPOINTER before ETIARRAY.  The problem was that arrays
+	are always pointers, but pointers aren't necessisarily arrays.  So
+	now, check to see if the htm is an array before a pointer.
+
+16-Oct-1992 Georgiop
+    debeval.c:
+	Added VFuncAddress2 function in order to compute the address of
+	a virtual function if the offset in the vtable is given
+	(VFuncAddress does a similar thing, but uses the function index,
+	not the offset). This should solve caviar #4094. (Also inlined
+	these functions as they were called only once.)
+
+    debsym.c
+	Modified MatchArgs in order to allow matching a far pointer with
+	an array that has the same underlying type. Based pointer matching
+	is not supported. (caviar #3713)
+	Also changed definitions of vtabind (UOFFSET instead of ushort) and
+	made the EE skip 4 bytes instead of 2 when accessing the vtab offset
+	in an LF_MLIST record. (caviar #4342)
+
+
+16-Oct-1992 MikeMo
+    cvinfo.h
+    cvtypes.h
+    eeapi.h
+    shapi.h
+    types.h
+	Deleted, moved to the CVINC.420 project.
+
+    makefile
+    *.mak
+	Modified to support the new CVINC.420 project.
+
+15-Oct-1992 Georgiop
+    debsym.c:
+	Modified MatchArgs to handle actual arguments that are references.
+	This should fix the third function call mentioned in caviar #4182.
+	Also changed two error messages to ERR_AMBIGUOUS instead of
+	ERR_ARGLIST.
+
+14-Oct-1992 Georgiop
+    debbind.c:
+	Changed the way VerifyFormat treated floating point format
+	specifiers: Now g,e,f can be used with any floating point
+	type. All prefixes except h are accepted, but are actually
+	ignored: the EE uses the right prefix based on the size of
+	the corresponding size. (caviar #933, #4058)
+
+13-Oct-1992 GlennN
+    debsym.c:
+	 bug 4380. SearchRoot() changed to ignore returns
+	 of NOTYPE when it encounters a nested unnamed ENUM
+	 type. By doing this searches of classes with
+	 unnamed enums will not abort prematurely. After
+	 review from SteveSm We put a check around the
+	 break, we only do this if we are binding a
+	 breakpoint so that we minimize the potential
+	 impact.
+
+11-Oct-1992 MikeMo
+    debapi.c
+    debbind.c
+    deberr.c
+    debsup.c
+    debsym.c
+    debexpr.h
+    errors.h:
+	Added hErrStr to the exstate_t structure to save additional info
+	about an error, so that if a "symbol not found" error occurs we
+	can tell the user what symbol wasn't found.
+    makefile:
+	Changed NT build to use -Z7 instead of -Zi, and to not use -f
+	since cl3232 doesn't recognize it.
+
+10-Oct-1992 MikeMo
+    *.mak makefile:
+	Cleaned up some of the make stuff, to reduce needless repetition.
+    types.h:
+	SEGBASED(x) maps to _based(x) for 16-bit, nothing for 32-bit
+	INLINE      maps to __inline (the EE uses this)
+	_fstrcmp    maps to strcmp on NT
+    debapi.c:
+	Removed eedllinit(); link sets entry point to _CRT_INIT directly.
+    debbind.c deberr.c debfmt.c debeval.c deblex.c debparse.c debsym.c:
+	Use SEGBASED instead of _based.
+    deberr.c debfmt.c:
+	Fix lots of bogus based/unbased warnings.
+    *.*
+	Lots of fixes to get it working under NT.
+
+07-Oct-1992 Georgiop
+    debbind.c:
+	BindBScope now reorganizes the tree if its left child foo has
+	been rewritten as "this->foo". Reorganizing is necessary to
+	restore operator priority (the bscope operator has higher priority
+	than '->'). This should fix caviar #932, 2571.
+
+06-Oct-1992 Georgiop
+    debparse.c:
+	Added a static table with the primitive type names. This table
+	is scanned when an expression like "(token) op ..." is parsed,
+	where op is an operator that has a binary and a unary form (e.g,
+	+, -, *, &). If "token" is a primitive type name we know that
+	the expression is a type cast and the operator is unary
+	(caviar #3836)
+
+
+05-Oct-1992 Georgiop
+   debeval.c
+       Added a new function (IsStringLiteral) that gets called by
+       EvalFunction before the invokation of PushString.
+       PushString is not called unless there is actually a quoted
+       string in the expression that needs to be pushed on the
+       user's stack. (this should solve caviar #4152)
+
+
+05-Oct-1992 v-natjm
+   makefile:    Modified these two files to handle the new Visual
+   eew0cxx.mak: C++ DLL names
+
+04-Oct-1992 Georgiop
+    debsup.c
+    'format' pointer in GetChildTM was incorrectly typed as static.
+
+04-Oct-1992 Georgiop
+    debeval.c
+    Fix for caviar #932,4092,4099: EvalFunction fakes a stack entry
+    before evaluating Lchild (if the Lchild node is OP_bscope).
+
+04-Oct-1992 MikeMo
+    debapi.c
+	Fixed EEGetAccessFromTM: (1) it failed to handle a number of
+	error cases; (2) it was allocating a much bigger buffer than
+	it needed.  Also commented the little bugger.
+
+	Changed two uses of "C_only" to "C_ONLY".
+
+02-Oct-1992 JimSa
+    debbind.c
+	Need to fail for _segment in BuildType() when debugging 32 bit .exe.
+	(Cuda #962)
+    debsym.c
+	Needed to set addr.flat32 bit for S_*32 symbols in SymToNode().
+	This was only bein done for M68K but needed to be done for all
+	32 bit expression evaluation. (Cuda #1030)
+
+01-Oct-1992 Georgiop
+    debsup.c:
+    GetChildTM uses radix of parent TM for generating array indices (caviar
+    #3910, see also #872)
+
+30-Sep-1992 GlennN
+    debapi.c
+    eeapi.h
+    shfunc.h
+	added parameter fForceBind to pass to EEBind from this call.
+
+30-Sep-1992 Georgiop
+    debeval.c:
+    Changed Relational() and Arith() for special handling of near null
+    pointer comparison (caviar #3699, #3654)
+    DoEval() now allocates EStack space if hEStack is Null (caviar #3804)
+    EvalFunction() was not handling correctly references to integers
+    constants (caviar #3712)
+
+    debbind.c:
+    PushCArgs, PushPArgs, PushFargs: if the argument is a reference use
+    SetNodeType for the underlying type in order to remove modifiers.
+    (caviar #3712)
+
+    errors.h:
+    Changed "implicit conversion required" message to "argument type not
+    supported" (caviar #3843)
+
+29-Sep-1992 v-natjm
+   eew0cxx.mak:
+      Added /NOE to link command line to avoid the linker error on multiple
+      symbols for WEP (Build with C800)
+
+21-Sep-1992 Georgiop
+    debsym.c:
+    SkipModifiers now handles primitive types
+
+18-Sep-1992 DanS
+    eentcxx.mak
+    remove ntmain.obj, -base switch, use libcmt.lib
+    debapi.c
+    add call to _CRT_INIT from eedllinit
+    coffbase.txt
+    ntmain.c
+
+    removed from project
+17-Sep-1992 Georgiop
+    debexpr.h
+    Added overloadCount field in search_t.
+    debsym.c:
+    Changed MatchArgs, MatchFunction and MatchMethod to require exact
+    type matches for overloaded function calls.
+    debbind.c:
+    Disabled error checking for string literals.
+    BindCast now propagates type info to the OP_CAST node. This is necessary
+    for calling functions with cast string literals as arguments.
+    debeval.c:
+    Changed the conditions under which PushString is called by EvalFunction
+    debutil.c:
+    SetNodeType now sets PTR_UTYPE for primitive pointer types
+    (changes related to caviar #919)
+
+10-Sep-1992 Georgiop
+    debsym.c:
+    Changed SetBPValue to save the offset of a class member (caviar #1756)
+
+10-Sep-1992 DanS
+    debeval.c:
+    far -> FAR (portability)
+    deblexer.asm:
+    rewrote ParseOp for 32-bit i386, used HOST32 macro to key 32-bit code.
+    debsym.c:
+    far -> FAR (portability)
+    debutil.c:
+    far -> FAR (portability)
+    makefile:
+    added eentcxx
+    opprec.c:
+    bug on using pointer from strpbrk w/o checking for NULL
+    eentcxx.mak:
+    added for NT build of EE
+    coffbase.txt:
+    HACK! copied from NT for basing DLLs in NT.
+
+4-Sept-1992 Rossg
+    cvinfo.h
+    Update to cvinfo with LF_VARSTRING numeric leaf
+
+03-Sep-1992 Georgiop
+    debutil.c:
+    TypeDefSize now handles T_CHAR, T_UCHAR, T_INT2, T_UINT2
+    T_INT4, T_UINT4 when dealing with bitfields.
+
+01-Sep-1992 Georgiop
+    debbind.c:
+    debeval.c:
+    Changed T_PCHAR to T_PRCHAR so that string literals can be
+    passed as arguments to functions. (Caviar #3127 -- this was
+    a regression caused by the changes on 16-Jul-92)
+
+28-Aug-1992 Georgiop
+    debbind.c:
+    Bug fix in ParseType: restore original start and length of type
+    string.
+    debtyper.d:
+    Do not allow casting of an object to a pointer.
+
+28-Aug-1992 Georgiop
+    debapi.c:
+    Do not print "public " when displaying access type info.
+
+25-Aug-1992 Georgiop
+    eeapi.h:
+    debapi.h:
+    Added extra argument in EEGetAccessFromTM, so that one can choose
+    between the full text and the abbreviated version
+
+24-Aug-1992 Georgiop
+    debeval.c:
+    Changed EvalFunction to call EvalUtil in case the formal argument
+    type is a reference to a class. (caviar #914)
+    debsym.c:
+    MatchArgs now allows references. Both changes are for caviar #914
+
+20-Aug-1992 Georgiop
+    debsym.c:
+    Removed a line from MatchFunction that accessed pSymClass. This
+    line had been added (incorrectly) in order to support
+    propagation of access type info, and could produce a GPfault.
+
+19-Aug-1992 MarkBro
+    debapi.c:
+	Added missing entries in the EXF struct in EEInitializeExpr.
+
+18-Aug-1992 MarkBro
+    dosdll.asm:
+	Added missing entries in the dosx exe header.
+
+16-Aug-1992 Georgiop
+    debapi.c:
+    Comment out DASSERT in EEGetAccessFromTM (conversion functions
+    did not bind ok, so EEGetAccessFromTM was hitting the assersion)
+    debeval.c:
+    restore access flags after evaluation
+    debsym.c:
+    support propagation of access type information
+
+11-Aug-1992 Georgiop
+    debapi.c:
+    ParseBind now uses the radix stored in the TM. This is a
+    fix for Caviar #872
+
+23-Jul-1992 Georgiop
+    debeval.c:
+    EvalBScope faked up a stack entry if CLASS_GLOBALTYPE(pv) was
+    true, and the stack was empty. However, in cases like ?C::foo(5)
+    CLASS_GLOBALTYPE may be true, and the stack is not empty (i.e., it
+    contains the argument to the function), yet a separate entry is
+    required on the stack. The change was to enable faking up a stack
+    entry in this case.
+
+23-Jul-1992 Georgiop
+    debsym.c:
+    Disabled the code in SearchQualName that tried a symbol even if
+    there was not exact type match when binding breakpoints.
+    According to RossG this was a hack for an incomplete pack
+    problem that should have been fixed by now. Disabling this
+    code resolves Caviar #1081.
+
+23-Jul-1992 Georgiop
+    debapi.c:
+    accessstr = {"   ", "private ", "protected ", "public "}
+    (Changed uppercase 'P' to lowercase after a request from
+    Sequoia people)
+
+21-Jul-1992 Georgiop
+    debbind.c:
+    Fixed ParseType to retain type information if the type is an alias
+    to a primitive type. [Caviar # 2271]
+
+17-Jul-1992 Georgiop
+    debfmt.c:
+    Fixed bug in FormatProc, in order to print the function return type
+    if select is 0. This takes care of bugs 1142 and 2343. The kernel
+    should also be modified to call EEGetTypeFromTM using a handle to
+    a Name. That way EEGetTypeFromTM will insert the name in the proper
+    place and a function name will be displayed as "void foo(void)",
+    not "void (void) foo".
+
+16-Jul-1992 Georgiop
+    deblex.c:
+    ParseString now sets type to T_RCHAR instead of T_CHAR. This
+    takes care of bug 917, although the real problem (EE does not
+    distinguish between explicit and implicit casts) remains.
+
+16-Jul-1992 Georgiop
+    errors.h:
+    Added ERR_NOMODIFIABLELV (l-value is not modifiable)
+
+    debbind.c:
+    BindAssign now checks for non-modifiable l-values (arrays,
+    functions, or constants) -- CAVIAR bug 952
+
+09-Jul-1992 Georgiop
+    debapi.c:
+    eeapi.c:
+    Added a new enumarator as a return value for EEIsExpandableTM:
+    ETYPEPTR denotes that the TM is a type that is expandable as a
+    pointer to a type. (The underlying type may or may not be
+    expandable). This solves CAVIAR bug 927.

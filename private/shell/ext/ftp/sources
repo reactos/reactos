@@ -1,0 +1,152 @@
+!IF 0
+
+Copyright (c) 1997-1999 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = ..\..
+
+#NOT_UNICODE     = 1
+TARGET_BOTH     = 1
+PRECOMPILED_CXX   = 1
+
+!include $(CCSHELL_DIR)\common.inc
+
+NO_BROWSER_FILE = 1
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+INCLUDES        = $(SDK_LIB_PATH);$(SDK_INC_PATH);$(INCLUDES)
+
+WIN32_WINNT_VERSION=0x0400
+WIN32_WIN95_VERSION=0x0400
+
+SUBSYSTEM_VERSION=4.00
+
+TARGETNAME      = MSIEFTP
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+# make sure shlwapi.lib is before shell32.lib for override.
+TARGETLIBS      = \
+                  $(LIBRARY_PATH)\gdi32.lib     \
+                  $(LIBRARY_PATH)\user32.lib    \
+                  $(LIBRARY_PATH)\kernel32.lib  \
+                  $(LIBRARY_PATH)\ole32.lib     \
+                  $(LIBRARY_PATH)\oleaut32.lib  \
+                  $(LIBRARY_PATH)\uuid.lib      \
+                  $(LIBRARY_PATH)\wininet.lib   \
+                  $(LIBRARY_PATH)\msrating.lib  \
+                  $(LIBRARY_PATH)\urlmon.lib    \
+                  $(LIBRARY_PATH)\shlwapip.lib  \
+                  $(LIBRARY_PATH)\shdocvwp.lib  \
+!if $(386)
+! if !$(FREEBUILD)
+                  $(BASEDIR)\private\lib\chicago\*\shell32.w95  \
+! else
+                  $(BASEDIR)\private\lib\*\shell32.nt4  \
+! endif
+!else
+                  $(SDK_LIB_PATH)\shell32p.lib        \
+!endif
+                  $(LIBRARY_PATH)\comctlp.lib          \
+                  $(LIBRARY_PATH)\advapi32.lib         \
+                  $(SDK_LIB_PATH)\htmlhelp.lib         \
+                  $(CCSHELL_DIR)\lib\$(O)\shguid.lib   \
+                  $(CCSHELL_DIR)\lib\$(O)\shguidp.lib  \
+                  $(CCSHELL_DIR)\lib\$(O)\stocklib.lib
+		
+!if $(IA64) || $(AXP64)
+USE_LIBCMT      = 1
+!else
+USE_IERT        = 1
+!endif
+
+DLLDEF          = $(O)\ftpfld.def
+DLLBASE         = 0x71200000
+
+DELAYLOAD       = WININET.DLL;MSRATING.DLL
+
+DLLENTRY        = DllEntry
+
+PRECOMPILED_INCLUDE = priv.h
+
+SOURCES         = \
+                  account.cpp   \
+                  cobjsafe.cpp  \
+                  cookie.cpp    \
+                  cowsite.cpp   \
+                  debug.cpp     \
+                  dllload.cpp   \
+                  dllreg.cpp    \
+                  dialogs.cpp   \
+                  dspsprt.cpp   \
+                  encoding.cpp  \
+                  ftp.cpp       \
+                  ftpapi.cpp    \
+                  ftpcf.cpp     \
+                  ftpcm.cpp     \
+                  ftpdhlp.cpp   \
+                  ftpdir.cpp    \
+                  ftpdlg.cpp    \
+                  ftpdrop.cpp   \
+                  ftpefe.cpp    \
+                  ftpeidl.cpp   \
+                  ftpfoldr.cpp  \
+                  ftpglob.cpp   \
+                  ftpgto.cpp    \
+                  ftpicon.cpp   \
+                  ftpinet.cpp   \
+                  ftplist.cpp   \
+                  ftpobj.cpp    \
+                  ftppidl.cpp   \
+                  ftppl.cpp     \
+                  ftpprop.cpp   \
+                  ftpresp.cpp   \
+                  ftpsite.cpp   \
+                  ftpstm.cpp    \
+                  ftpurl.cpp    \
+                  ftpwebvw.cpp  \
+                  installwv.cpp \
+                  isf.cpp       \
+                  isfvcb.cpp    \
+                  newmenu.cpp   \
+                  offline.cpp   \
+                  olestuff.cpp  \
+                  proxycache.cpp   \
+                  passwordapi.cpp  \
+                  resource.rc   \
+                  security.cpp  \
+                  statusbr.cpp  \
+                  util.cpp      \
+                  view.cpp
+
+#
+# To make binplace copy the file to the drop point (eg, \nt\drop),
+# add the file to MISCFILES.
+#
+
+!if "$(BUILD_PRODUCT)" != "NT"
+MISCFILES       = ftp.htt \
+                  ftpnt5.htt
+!else
+MISCFILES       = ftpnt5.htt
+!endif

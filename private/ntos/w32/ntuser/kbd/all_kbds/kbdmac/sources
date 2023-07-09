@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdmac
+
+TARGETNAME=kbdmac
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdmac.c kbdmac.rc
+
+NTTARGETFILE0=kbdmac.h kbdmac.rc kbdmac.def

@@ -1,0 +1,5 @@
+
+!include ..\sources.inc
+
+C_DEFINES=-DUNICODE -D_UNICODE
+

@@ -1,0 +1,61 @@
+[Version]
+signature = $CHICAGO$
+SetupClass=BASE
+
+[DefaultInstall]
+CopyFiles=otherfld.Copy.Sys, Other.copy.SendTo
+AddReg=otherfld.reg, ThisDll.Uninst.Reg,Other.Lfn
+
+[DefaultUninstall]
+DelFiles=otherfld.Copy.Sys, Other.Delete.SendTo
+DelReg=otherfld.reg, ThisDll.Uninst.Reg, Other.Lfn
+
+[Other.Lfn]
+HKLM,%KEY_RENAME%\SendTo,,,"%10%\SendTo"
+HKLM,%KEY_RENAME%\SendTo,ANYFOL~1.OTH,,"%LongName%,1"
+
+[otherfld.Copy.Sys]
+otherfld.dll
+AnyFldr.inf
+
+[Other.copy.SendTo]
+ANYFOL~1.OTH
+
+[Other.delete.SendTo]
+ANYFOL~1.OTH
+"%longName%"
+
+[otherfld.reg]
+HKCR,CLSID\{%CSID00%},,,"Any Folder Shell Extension"
+HKCR,CLSID\{%CSID00%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CSID00%}\InProcServer32,,,"%11%\%SubDir%\%ThisDll%"
+HKCR,CLSID\{%CSID00%}\shellex\DropHandler,,,"{%CSID00%}"
+HKCR,CLSID\{%CSID00%}\DefaultIcon,,,"%11%\%SubDir%\%ThisDll%"
+HKCR,.OtherFolder,,,"CLSID\{%CSID00%}"
+
+[ThisDll.Uninst.Reg]
+HKLM,SoftWare\Microsoft\Windows\CurrentVersion\Uninstall\MSOtherFld,,,
+HKLM,SoftWare\Microsoft\Windows\CurrentVersion\Uninstall\MSOtherFld,"DisplayName",,%UNINSTAL_NAME%
+HKLM,SoftWare\Microsoft\Windows\CurrentVersion\Uninstall\MSOtherFld,"UninstallString",,"rundll32.exe %11%\%SubDir%\%ThisDll%,Uninstall %11%\%SubDir%\AnyFldr.inf"
+
+[DestinationDirs]
+otherfld.Copy.Sys=11,%SubDir%   ; to System\ShellExt
+Other.Copy.SendTo=10,SendTo
+Other.Delete.SendTo=10,SendTo
+
+[SourceDisksNames]
+55=%DISK_NAME%,"",1
+
+[SourceDisksFiles]
+otherfld.dll=55
+anyfol~1.oth=55
+
+
+[Strings]
+CSID00=AA7C7080-860A-11CE-8424-08002B2CFF76
+DISK_NAME="Any Folder Shell Extension 1.1."
+UNINSTAL_NAME="Send To Any Folder"
+SubDir = "ShellExt"
+ThisDll = "otherfld.dll"
+LongName=Any Folder....OtherFolder
+KEY_RENAME="Software\Microsoft\Windows\CurrentVersion\RenameFiles"

@@ -1,0 +1,6 @@
+LIBRARY PerfNet
+
+EXPORTS
+    OpenNetSvcsObject
+    CollectNetSvcsObjectData
+    CloseNetSvcsObject

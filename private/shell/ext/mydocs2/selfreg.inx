@@ -1,0 +1,94 @@
+[Version]
+Signature="$CHICAGO$"
+
+[RegDll]
+AddReg=DllGoo
+DelReg=DllCleanup
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnregDll]
+DelReg=DllGoo
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+; stuff from where everything was under one clsid
+[DllCleanup]
+HKCR,"CLSID\%CLSID_MyDocuments%\shellex\PropertySheetHandlers\%CLSID_MyDocuments%"
+HKCR,"CLSID\%CLSID_MyDocuments%\shellex\ContextMenuHandlers\%CLSID_MyDocuments%"
+HKCR,"CLSID\%CLSID_MyDocuments%\shellex\ContextMenuHandlers\%CLSID_MyDocsProp%"
+HKCR,"CLSID\%CLSID_MyDocuments%\shellex\IconHandler\%CLSID_MyDocuments%"
+;HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems"
+; old per user name regitem name entry
+HKCU,"Software\Classes\CLSID\%CLSID_MyDocuments%"
+HKCR,".mydocs\ShellNew"
+HKCR,"CLSID\%CLSID_MyDocuments%\ShellFolder",HideAsDelete
+
+[DllGoo]
+; MyDocs icon on the desktop
+HKCR,"CLSID\%CLSID_MyDocuments%\InProcServer32",,,mydocs.dll
+HKCR,"CLSID\%CLSID_MyDocuments%\InProcServer32",ThreadingModel,,Apartment
+HKCR,"CLSID\%CLSID_MyDocuments%\InProcServer32",LoadWithoutCOM
+HKCR,"CLSID\%CLSID_MyDocuments%\ShellFolder",WantsFORPARSING
+HKCR,"CLSID\%CLSID_MyDocuments%\ShellFolder",CallForAttributes,%REGDW%,0x00020000
+HKCR,"CLSID\%CLSID_MyDocuments%\ShellFolder",HideAsDeletePerUser
+HKCR,"CLSID\%CLSID_MyDocuments%\ShellFolder",QueryForOverlay
+HKCR,"CLSID\%CLSID_MyDocuments%\ShellFolder",Attributes,%REGDW%,0xF0400174
+HKCR,"CLSID\%CLSID_MyDocuments%\DefaultIcon",,,mydocs.dll
+HKCR,"CLSID\%CLSID_MyDocuments%",SortOrderIndex,%REGDW%,0x00000048
+HKCR,"CLSID\%CLSID_MyDocuments%\shell\find\command",,%REGEXSZ%,"%25%\Explorer.exe"
+HKCR,"CLSID\%CLSID_MyDocuments%\shell\find\ddeexec",,,"[FindFolder(""%l"", %I)]"
+HKCR,"CLSID\%CLSID_MyDocuments%\shell\find\ddeexec\application",,,"Folders"
+HKCR,"CLSID\%CLSID_MyDocuments%\shell\find\ddeexec\topic",,,"AppProperties"
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%CLSID_MyDocuments%",,%MYDOCUMENTS%
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%CLSID_MyDocuments%","Removal Message",,"@mydocs.dll,-900"
+
+; drop target (sent to menu entry)
+HKCR,CLSID\%CLSID_MyDocsDropTarget%,,,"MyDocs Drop Target"
+HKCR,CLSID\%CLSID_MyDocsDropTarget%,NeverShowExt
+HKCR,CLSID\%CLSID_MyDocsDropTarget%,NoOpen,,%DESC_NoOpen%
+HKCR,CLSID\%CLSID_MyDocsDropTarget%\InProcServer32,,,mydocs.dll
+HKCR,CLSID\%CLSID_MyDocsDropTarget%\InProcServer32,ThreadingModel,,Apartment
+HKCR,CLSID\%CLSID_MyDocsDropTarget%\DefaultIcon,,,mydocs.dll
+HKCR,CLSID\%CLSID_MyDocsDropTarget%\shellex\DropHandler,,,%CLSID_MyDocsDropTarget%
+HKCR,.mydocs,,,"CLSID\%CLSID_MyDocsDropTarget%"
+
+; property page handler
+HKCR,"CLSID\%CLSID_MyDocsProp%",,,"MyDocs menu and properties"
+HKCR,"CLSID\%CLSID_MyDocsProp%\InProcServer32",,,mydocs.dll
+HKCR,"CLSID\%CLSID_MyDocsProp%\InProcServer32",ThreadingModel,,Apartment
+
+HKCR,"CLSID\%CLSID_MyDocuments%\shellex\PropertySheetHandlers\%CLSID_MyDocsProp%"
+
+; the copyhook (to make sure mydocs is not set improperly)
+HKCR,"CLSID\%CLSID_MyDocsCopyHook%\InProcServer32",,,mydocs.dll
+HKCR,"CLSID\%CLSID_MyDocsCopyHook%\InProcServer32",ThreadingModel,,Apartment
+HKCR,"CLSID\%CLSID_MyDocsCopyHook%\InProcServer32",LoadWithoutCOM
+HKCR,"Directory\ShellEx\CopyHookHandlers\MyDocuments",,,"%CLSID_MyDocsCopyHook%"
+
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_MyDocuments%",,"MyDocs Folder"
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_MyDocsCopyHook%",,"MyDocs Copy Hook"
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_MyDocsDropTarget%",,"MyDocs Drop Target"
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_MyDocsProp%",,"MyDocs Properties"
+
+HKLM,%SMWCEA%\Folder\MyDocsOnDesktop,RegPath,,"Software\Microsoft\Windows\CurrentVersion\Explorer\CLSID\%CLSID_MyDocuments%\ShellFolder"
+HKLM,%SMWCEA%\Folder\MyDocsOnDesktop,Text,,"%SHOWONDESKTOP%"
+HKLM,%SMWCEA%\Folder\MyDocsOnDesktop,Type,,checkbox
+HKLM,%SMWCEA%\Folder\MyDocsOnDesktop,ValueName,,Attributes
+HKLM,%SMWCEA%\Folder\MyDocsOnDesktop,CheckedValue,%REGDW%,0xF0400174
+HKLM,%SMWCEA%\Folder\MyDocsOnDesktop,UncheckedValue,%REGDW%,0xF0500174
+HKLM,%SMWCEA%\Folder\MyDocsOnDesktop,DefaultValue,%REGDW%,0xF0400174
+HKLM,%SMWCEA%\Folder\MyDocsOnDesktop,HKeyRoot,%REGDW%,0x80000001
+HKLM,%SMWCEA%\Folder\MyDocsOnDesktop,HelpID,,"shell.hlp#51141"
+
+
+[Strings]
+REGDW=0x00010001
+REGEXSZ=0x00020000
+CLSID_MyDocuments="{450D8FBA-AD25-11D0-98A8-0800361B1103}"
+CLSID_MyDocsDropTarget="{ECF03A32-103D-11d2-854D-006008059367}"
+CLSID_MyDocsCopyHook="{ECF03A33-103D-11d2-854D-006008059367}"
+CLSID_MyDocsProp="{4a7ded0a-ad25-11d0-98a8-0800361b1103}"
+MYDOCUMENTS="My Documents"
+SHOWONDESKTOP="Show My Documents on the Desktop"
+SMWCEA="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+DESC_NoOpen=Drag Files onto this icon to store them in My Documents
+ERR_NOSETUPAPI="Can not register MYDOCS.DLL because SETUPAPI.DLL is missing."

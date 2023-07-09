@@ -1,0 +1,182 @@
+GopherServer-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+                enterprises,
+                OBJECT-TYPE,
+                Counter
+                        FROM RFC1155-SMI
+                internetServer
+                        FROM INTERNETSERVER-MIB;
+
+--      microsoft       OBJECT IDENTIFIER ::= { enterprises 311 }
+--      software        OBJECT IDENTIFIER ::= { microsoft 1 }
+--      internetServer  OBJECT IDENTIFIER ::= { software 7 }
+        gopherServer       OBJECT IDENTIFIER ::= { internetServer 4 }
+        gopherStatistics   OBJECT IDENTIFIER ::= { gopherServer 1 }
+
+-- Gopher Server Statistics
+
+        totalBytesSentHighWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the high 32-bits of the total number of
+                        of BYTEs sent by the Gopher Server"
+                ::= { gopherStatistics 1 }
+
+        totalBytesSentLowWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the low 32-bits of the total number of
+                        of BYTEs sent by the Gopher Server"
+                ::= { gopherStatistics 2 }
+
+        totalBytesReceivedHighWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the high 32-bits of the total number of
+                        of BYTEs received by the Gopher Server"
+                ::= { gopherStatistics 3 }
+
+        totalBytesReceivedLowWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the low 32-bits of the total number of
+                        of BYTEs received by the Gopher Server"
+                ::= { gopherStatistics 4 }
+
+        totalFilesSent OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of files sent by this
+                        Gopher Server"
+                ::= { gopherStatistics 5 }
+
+        totalDirectorySent OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of directory listings sent
+                        by this Gopher Server"
+
+                ::= { gopherStatistics 6 }
+
+        totalSearchesDone OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of searches done by this
+                         Gopher Server"
+                ::= { gopherStatistics 7 }
+
+        currentAnonymousUsers OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of anonymous users currently
+                        connected to the Gopher Server"
+                ::= { gopherStatistics 8 }
+
+        currentNonAnonymousUsers OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of nonanonymous users currently
+                        connected to the Gopher Server"
+                ::= { gopherStatistics 9 }
+
+        totalAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of anonymous users that
+                        have ever connected to the Gopher Server"
+                ::= { gopherStatistics 10 }
+
+        totalNonAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of nonanonymous users that
+                        have ever connected to the Gopher Server"
+                ::= { gopherStatistics 11 }
+
+        maxAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of anonymous users
+                        simultaneously connected to the Gopher Server"
+                ::= { gopherStatistics 12 }
+
+        maxNonAnonymousUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of nonanonymous users
+                        simultaneously connected to the Gopher Server"
+                ::= { gopherStatistics 13 }
+
+        currentConnections OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the current number of connections to the
+                        Gopher Server"
+                ::= { gopherStatistics 14 }
+
+        maxConnections OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of simultaneous
+                        connections to the Gopher Server"
+                ::= { gopherStatistics 15 }
+
+        connectionAttempts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of connection attempts that
+                        have been made to the Gopher Server"
+                ::= { gopherStatistics 16 }
+
+        logonAttempts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of logon attempts that have
+                        been made to this Gopher Server"
+                ::= { gopherStatistics 17 }
+
+        abortedConnections OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        " This is the number of aborted connections that have
+                                been made to this Gopher Server"
+                ::= { gopherStatistics  18 }
+END
+

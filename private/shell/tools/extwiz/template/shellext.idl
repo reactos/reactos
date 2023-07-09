@@ -1,0 +1,71 @@
+// ShellExtensions.idl : IDL source for $$root$$.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library ($$root$$.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "shlobj.idl";
+
+[
+	uuid($$LibGUID$$),
+	version(1.0),
+	helpstring("$$root$$ 1.0 Type Library")
+]
+library $$root$$Lib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+$$IF(Icon)
+
+	[
+		uuid($$IconGUID$$),
+		helpstring("$$ClassType$$EI Class")
+	]
+	coclass $$ClassType$$EI
+	{
+#ifdef UNICODE
+		[default] interface IExtractIconW;
+#else
+		[default] interface IExtractIconA;
+#endif
+	};
+$$ENDIF
+$$IF(IContextMenu)
+
+	[
+		uuid($$ContextMenuGUID$$),
+		helpstring("$$ClassType$$CM Class")
+	]
+	coclass $$ClassType$$CM
+	{
+		[default] interface IContextMenu;
+                  interface IShellExtInit;
+	};
+$$ENDIF
+$$IF(PropertySheet)
+
+	[
+		uuid($$PropertySheetGUID$$),
+		helpstring("$$ClassType$$PS Class")
+	]
+	coclass $$ClassType$$PS
+	{
+		[default] interface IShellPropSheetExt;
+                  interface IShellExtInit;
+	};
+$$ENDIF
+$$IF(InfoTip)
+
+	[
+		uuid($$InfoTipGUID$$),
+		helpstring("$$ClassType$$IT Class")
+	]
+	coclass $$ClassType$$IT
+	{
+		[default] interface IQueryInfo;
+                  interface IPersistFile;
+	};
+$$ENDIF
+};

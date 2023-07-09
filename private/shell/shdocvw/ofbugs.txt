@@ -1,0 +1,22 @@
+BUG #1 (Word95): IPersistFile::Load disables open-in-place
+
+    Bug: When you bind to a WordDocument via file moniker, activating it
+         as a DocObject will open it in the Word application window. This
+         is caused by an internal flag, which is set by IPersistFile::Load.
+
+    Work-around: Call SetHostName() after IPersistFile::Load, which will
+         reset this internal flag.
+
+BUG #2 (Word 95): Word does not call IPersistStorage::Save when saving.
+
+    Bug: Word95 does not call IPersistStorage::Save when I insert a new shell
+         embedding and select File->Save(). Here is the calling sequence.
+
+        [Excel]      GetData, GetClassID, Save, HandsOffStorage, SaveComplated
+        [PowerPoint] Update, GetClassID, Save, SaveComplated
+        [WordPad]    GetClassID, Save, SaveComplated
+        [Word]       Update, GetData, HandsOffStorage, SetHostNames, SaveComplated
+
+    Work-around: Unknown
+
+

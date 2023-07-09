@@ -1,0 +1,34 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: walk - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\winnt\TEMP\RSP107.tmp" with contents
+[
+/nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Debug/walk.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"E:\nt\private\shell\ext\walk\walk.cpp"
+]
+Creating command line "cl.exe @C:\winnt\TEMP\RSP107.tmp" 
+Creating temporary file "C:\winnt\TEMP\RSP108.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib shlwapi.lib shell32p.lib  "C:\Program Files\Microsoft Visual Studio\VC98\Lib\libcd.lib" /nologo /subsystem:console /incremental:yes /pdb:"Debug/walk.pdb" /debug /machine:I386 /out:"Debug/walk.exe" /pdbtype:sept 
+.\Debug\idlist.obj
+.\Debug\StdAfx.obj
+.\Debug\walk.obj
+]
+Creating command line "link.exe @C:\winnt\TEMP\RSP108.tmp"
+<h3>Output Window</h3>
+Compiling...
+walk.cpp
+Linking...
+
+
+
+<h3>Results</h3>
+walk.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

@@ -1,0 +1,1020 @@
+<html id=ieCustomizeSearchSettings>
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="HippieTim">
+<meta name="GENERATOR" content="PMShawn">
+
+<title>Customize Search Settings</title>
+
+</head>
+
+<style>
+
+body, p, td
+{
+	font: 9pt;
+}
+
+.hdrLabel
+{
+	font-weight: bold;
+}
+
+.title
+{
+	font: 16pt;
+	color: #336699;
+	top: -5px;
+}
+
+.catdata
+{
+	padding-left: 15px;
+}
+
+select
+{
+	width: 100px;
+}
+
+.header
+{
+	background: url('hdrback.bmp');
+	width: 100%;
+}
+
+</style>
+
+<script defer>
+
+var g_engineAds;	//	Array of ads, indexed by name
+var g_nAds;			//	Number of ads
+var g_curAdName;	//	Current ad name
+var g_defAdName;	//	Default ad name, randomly selected at startup
+var g_adTimer;
+var g_dirty;
+var g_catConfig = "IESA_CatConfigI";
+var g_pnlConfig = "IESA_PnlConfigI";
+var g_bEnableShellSearch;
+
+function ItemCount(coll)
+{
+	var i = 0;
+	var item;
+
+	for (item in coll)
+	{
+		i++;
+	}
+
+	return i;
+}
+
+function FindNameByIndex(coll, index)
+{
+	var i = 0;
+	var item;
+
+	for (item in coll)
+	{
+		if (i == index)
+		{
+			return item + "";
+		}
+		i++;
+	}
+
+	return "";
+}
+
+function ShowAd(adName)
+{
+	adName = adName.toLowerCase();
+
+	if ((adName != "") && (adName != null) && (g_engineAds[adName] != null))
+	{
+		g_curAdName = adName;
+//		divAdSpace.innerHTML = g_engineAds[g_curAdName];
+
+		if (g_adTimer != null)
+		{
+			clearTimeout(g_adTimer);
+			g_adTimer = null;
+		}
+	}
+}
+
+function ShowDefAdTimeout()
+{
+	g_adTimer = setTimeout('ShowDefAd()', 500);
+}
+
+function ShowDefAd()
+{
+	ShowAd(g_defAdName);
+}
+
+function FormatAdHTML(imgName, oneLiner)
+{
+	//var adHTML = "<img src=" + imgName + "/><br>" + oneLiner;
+	var adHTML = oneLiner + " ad goes here";
+
+	return adHTML;
+}
+
+function win_OnLoad()
+{
+	window.onerror = win_OnError;
+
+	if ((null != saOC) && (!saOC.SearchAssistantDefault))
+	{
+		window.location.href = "picksrch.htm"
+	}
+
+	g_bEnableShellSearch = (null != saOC) ? saOC.ShellFeaturesEnabled : false;
+
+	if (!g_bEnableShellSearch)
+	{
+		var i;
+		var n = chkCat.length;
+
+		for (i = 0; i < n; i++)
+		{
+			if (chkCat[i].shell == "yes")
+			{
+				var el = chkCat[i].parentElement;
+
+				while ((el != null) && (el.id != "panel"))
+				{
+					el = el.parentElement;
+				}
+
+				if (el != null)
+				{
+					el.style.display = "none";
+				}
+			}
+		}
+	}
+
+	UnPersistSettings();
+
+	divLoading.style.display = "none";
+	divOptions.style.display = "";
+
+
+	//	Initialize Ads
+	g_engineAds = new Array();
+
+	g_engineAds["aolnetfind"] = FormatAdHTML("", "AOL NetFind");
+	g_engineAds["excite"] = FormatAdHTML("", "Excite");
+	g_engineAds["infoseek"] = FormatAdHTML("", "Infoseek");
+	g_engineAds["lycos"] = FormatAdHTML("", "Lycos");
+	g_engineAds["msn"] = FormatAdHTML("", "MSN Web Search");
+	g_engineAds["yahoo"] = FormatAdHTML("", "Yahoo!");
+	g_engineAds["altavista"] = FormatAdHTML("", "AltaVista");
+	g_engineAds["hotbot"] = FormatAdHTML("", "HotBot");
+	g_engineAds["infospace"] = FormatAdHTML("", "InfoSpace");
+	g_engineAds["bigfoot"] = FormatAdHTML("", "BigFoot");
+	g_engineAds["worldpages"] = FormatAdHTML("", "World Pages");
+	g_engineAds["gowords"] = FormatAdHTML("", "Go Words");
+	g_engineAds["expedia"] = FormatAdHTML("", "Expedia");
+	g_engineAds["terraserver"] = FormatAdHTML("", "TerraServer");
+	g_engineAds["encarta"] = FormatAdHTML("", "Encarta");
+	g_engineAds["euroseek"] = FormatAdHTML("", "Euroseek");
+	
+	g_nAds = ItemCount(g_engineAds);
+	g_defAdName = FindNameByIndex(g_engineAds, Math.floor(g_nAds * Math.random()));
+	ShowDefAd();
+
+	document.onmouseover = doc_MouseOver;
+	document.onmouseout = doc_MouseOut;
+
+	g_dirty = false;
+}
+
+function win_OnError(message, url, line)
+{
+	//	This is displayed when a script error occurs
+	var L_ScriptErrMsg_ErrorMessage = "An error has occured on this page.";
+	var L_ScriptErrLine_Text = "Line: ";
+	var L_ScriptErrURL_Text = "URL: ";
+
+	var str = L_ScriptErrMsg_ErrorMessage + "\n\n"
+			+ L_ScriptErrLine_Text + line + "\n"
+			+ L_ScriptErrURL_Text + url + "\n\n"
+			+ message;
+
+	alert(str);
+	return true;
+}
+
+function doc_MouseOver()
+{
+	var eventSrc = event.srcElement;
+
+	if (eventSrc.tagName == "LABEL")
+	{
+		inputCtl = eval(eventSrc.htmlFor);
+		if (inputCtl.optVal != null)
+		{
+			ShowAd(inputCtl.optVal);
+			return true;
+		}
+	}
+	else if (eventSrc.tagName == "INPUT" && eventSrc.optVal != null)
+	{
+		ShowAd(eventSrc.optVal);
+		return true;
+	}
+}
+
+function doc_MouseOut()
+{
+	var eventSrc = event.srcElement;
+
+	if (eventSrc.tagName == "LABEL")
+	{
+		inputCtl = eval(eventSrc.htmlFor);
+		if (inputCtl.optVal != null)
+		{
+			ShowDefAdTimeout();
+			return true;
+		}
+	}
+	else if (eventSrc.tagName == "INPUT" && eventSrc.optVal != null)
+	{
+		ShowDefAdTimeout();
+		return true;
+	}
+}
+
+function XML_EmptyDocNode(docNode)
+{
+	var n = docNode.childNodes.length;
+	var i;
+
+	for (i = 0; i < n; i++)
+	{
+		docNode.removeChild(docNode.childNodes.item(0))
+	}
+}
+
+function XML_SetAttribute(doc, node, name, value)
+{
+	var attr = doc.createNode(2, name, "");
+
+	attr.nodeValue = value;
+	node.attributes.setNamedItem(attr);
+}
+
+function XML_GetAttribute(node, name)
+{
+	var attr = node.attributes.getNamedItem(name);
+
+	return attr.nodeValue;
+}
+
+function PersistSettings()
+{
+	var doc;
+	var docNode;
+	var chk;
+	var i;
+	var n;
+
+	xmlObj.load(g_catConfig);
+	doc = xmlObj.XMLDocument;
+	docNode = doc.documentElement;
+	XML_EmptyDocNode(docNode);
+	
+	n = catlist.options.length;
+
+	for (i = 0; i < n; i++)
+	{
+		chk = eval(catlist.item(i).value);
+		var catNode = doc.createNode(1, "CATEGORY", "");
+		XML_SetAttribute(doc, catNode, "PANELID", chk.panelID);
+		docNode.insertBefore(catNode, docNode.childNodes[0]);
+	}
+
+	xmlObj.save(g_catConfig);
+
+	n = chkCat.length;
+
+	for (i = 0; i < n; i++)
+	{
+		if (chkCat[i].blocks != null)
+		{
+			chk = chkCat[i];
+
+			xmlObj.load(g_pnlConfig + chk.panelID);
+			doc = xmlObj.XMLDocument;
+			docNode = doc.documentElement;
+			XML_EmptyDocNode(docNode);
+			
+			var j;
+			var blocks = chkCat[i].blocks.split(",");
+			var nBlocks = blocks.length;
+
+			for (j = 0; j < nBlocks; j++)
+			{
+				var select = eval(blocks[j]);
+				var blockNode = doc.createNode(1, "BLOCK", "");
+				var nEngines = select.options.length;
+
+				XML_SetAttribute(doc, blockNode, "NAME", select.block);
+
+				for (k = 0; k < nEngines; k++)
+				{
+					var engNode = doc.createNode(1, "ENGINE", "");
+					var engChk = eval(select.item(k).value);
+					XML_SetAttribute(doc, engNode, "ID", engChk.optVal.toLowerCase());
+
+					blockNode.insertBefore(engNode, blockNode.childNodes[0]);
+				}
+				docNode.insertBefore(blockNode, docNode.childNodes[0]);
+			}
+			xmlObj.save(g_pnlConfig + chk.panelID);
+		}
+	}
+}
+
+function CategoryOptionFromPanelID(panelID)
+{
+	var i;
+	var n = chkCat.length;
+	var result = null;
+
+	for (i = 0; i < n; i++)
+	{	
+		if (chkCat[i].panelID == panelID)
+		{
+			result = chkCat[i];
+			break;
+		}
+	}
+
+	return result;
+}
+
+function UnPersistSettings()
+{
+	var doc;
+	var docNode;
+	var chk;
+	var i;
+	var n;
+
+	ClearAll();
+
+	xmlObj.load(g_catConfig);
+	doc = xmlObj.XMLDocument;
+	docNode = doc.documentElement;
+	n = docNode.childNodes.length;
+
+	if (n > 0)
+	{
+		for (i = 0; i < n; i++)
+		{
+			var panelID = XML_GetAttribute(docNode.childNodes.item(i), "PANELID");
+			chk = CategoryOptionFromPanelID(panelID);
+
+			if (chk != null)
+			{
+				if (g_bEnableShellSearch || (chk.shell != "yes"))
+				{
+					chk.click();
+				}
+			}
+		}
+
+		n = chkCat.length;
+
+		for (i = 0; i < n; i++)
+		{
+			if (chkCat[i].blocks != null)
+			{
+				chk = chkCat[i];
+
+				xmlObj.load(g_pnlConfig + chk.panelID);
+				doc = xmlObj.XMLDocument;
+				docNode = doc.documentElement;
+
+				var j;
+				var nBlocks = docNode.childNodes.length;
+
+				for (j = 0; j < nBlocks; j++)
+				{
+					var blockNode = docNode.childNodes.item(j);
+					var blockName = XML_GetAttribute(blockNode, "NAME");
+
+					var nEngines = blockNode.childNodes.length;
+
+					for (k = 0; k < nEngines; k++)
+					{
+						var engID = XML_GetAttribute(blockNode.childNodes.item(k), "ID");
+						var ctlID = String(chk.panelID + "_" + blockName + "_" + engID).toLowerCase();
+						
+						var ctl = document.all[ctlID];
+
+						if (ctl != null)
+						{
+							ctl.click();
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		SetDefaults();
+	}
+}
+
+function SetCheckGroupDefaults(chkGroup)
+{
+	var n = chkGroup.length;
+	var i;
+
+	for (i = 0; i < n; i++)
+	{
+		var chk = chkGroup[i];
+
+		if (chk.defOn == "true")
+		{
+			chk.click();
+		}
+	}
+}
+
+function ClearCheckGroup(chkGroup)
+{
+	var n = chkGroup.length;
+	var i;
+
+	for (i = 0; i < n; i++)
+	{
+		chkGroup[i].checked = false;
+	}
+}
+
+function ClearSelectGroup(selGroup)
+{
+	var n = selGroup.length;
+	var i;
+
+	for (i = 0; i < n; i++)
+	{
+		var opts = selGroup[i].options;
+		var nOpts = opts.length;
+		var j;
+
+		for (j = 0; j < nOpts; j++)
+		{
+			opts.remove(0);
+		}
+	}
+}
+
+function ClearAll()
+{
+	ClearCheckGroup(chkCat);
+	ClearCheckGroup(chkEng);
+	ClearSelectGroup(selList);
+}
+
+function SetDefaults()
+{
+	var i;
+	var n;
+	var defPanelOrder = new Array("Web", "Pers", "Co", "Files", "Prev", "Map", "Enc", "News", "Printer", "Computer");
+
+	ClearAll();
+
+	n = defPanelOrder.length;
+
+	for (i = 0; i < n; i++)
+	{
+		var chk = CategoryOptionFromPanelID(defPanelOrder[i]);
+
+		if ((null != chk) && ((g_bEnableShellSearch || (chk.shell != "yes"))))
+		{
+			chk.click();
+		}
+	}
+
+	n = chkCat.length;
+
+	for (i = 0; i < n; i++)
+	{
+		if (null != chkCat[i].blocks)
+		{
+			var blocks = chkCat[i].blocks.split(",");
+
+			for (j = 0; j < blocks.length; j++)
+			{
+				var prefix = blocks[j].substring(2, 1024) + "_";
+				var cchPrefix = prefix.length;
+				var order = new Array();
+				var k;
+				var prefCountFld = eval(blocks[j] + ".prefCount");
+				var prefCount = (prefCountFld != null) ? Number(prefCountFld) : 4;
+				
+				for (k = 0; k < chkEng.length; k++)
+				{
+					var curID = chkEng[k].id;
+					if (curID.substring(0, cchPrefix) == prefix)
+					{
+						order[order.length] = curID;
+					}
+				}
+				
+				if (prefCount > order.length)
+				{
+					prefCount = order.length;
+				}
+				
+				for (k = 0; k < order.length; k++)
+				{
+					var rand;
+					
+					if (k < prefCount)
+					{
+						rand = Math.floor(prefCount * Math.random());
+					}
+					else
+					{
+						rand = Math.floor((order.length - prefCount) * Math.random()) + prefCount;
+					}
+					var saveIt = order[k];
+					order[k] = order[rand];
+					order[rand] = saveIt;
+				}
+
+				for (k = 0; k < order.length; k++)
+				{
+					eval(order[k]).click();
+				}
+			}
+		}
+	}
+}
+
+function Exit()
+{
+	history.back(1);
+}
+
+function Update()
+{
+	var i;
+	var count = 0;
+	var n = chkCat.length;
+
+	for (i = 0; (i < n) && (count < 1); i++)
+	{
+		if (chkCat[i].checked)
+		{
+			count++;
+		}
+	}
+
+	if (count > 0)
+	{
+		PersistSettings();
+		saOC.NavigateToDefaultSearch();
+		Exit();
+	}
+	else
+	{
+		var L_NoCategoriesChosen_ErrorMessage = "You must select at least one Category!";
+		alert(L_NoCategoriesChosen_ErrorMessage);
+	}
+}
+
+function CategoryClick(chk)
+{
+	if (chk.checked == true)
+	{
+		AddToList(catlist, chk); 	
+	}
+	else
+	{
+		RemoveFromList(catlist, chk); 	
+	}
+}
+
+function EngineClick(chk)
+{
+	var select = eval(chk.select);
+
+	if (chk.checked == true)
+	{
+		AddToList(select, chk);
+	}
+	else
+	{
+		RemoveFromList(select, chk);
+	}
+}
+
+function SelectMoveUp(select)
+{
+	var i = select.selectedIndex;
+
+	if (i > 0)
+	{
+		var item = select.item(i);
+		select.options.remove(i);
+		select.options.add(item, i - 1);
+		g_dirty = true;
+	}
+}
+
+function SelectMoveDn(select)
+{
+	var i = select.selectedIndex;
+
+	if ((i < (select.options.length - 1)) && (i != -1))
+	{
+		var item = select.item(i);
+		select.options.remove(i);
+		select.options.add(item, i + 1);
+		g_dirty = true;
+	}
+}
+
+function AddToList(select, chk)
+{
+	var opt = document.createElement('option');
+	opt.text = chk.nextSibling.innerText;
+	opt.value = chk.id + "";
+	select.options.add(opt);
+	g_dirty = true;
+}
+
+function RemoveFromList(select, chk)
+{
+	var iLimit = select.length;
+	var dispTitle = chk.nextSibling.innerText;
+
+	for (i = 0; i < iLimit; i++)
+	{
+		if (select.item(i).text == dispTitle)
+		{
+			select.remove(i);
+			g_dirty = true;
+			break;
+		}
+	}
+}
+
+function spewChildren(elem)
+{
+	var s = elem.name + " contains\n";
+	var i;
+	var n = elem.children.length;
+
+	for (i = 0; i < n; i++)
+	{
+		s += elem.children[i].name;
+	}
+}
+
+function spewCollection(coll)
+{
+	var s = coll.name + " "
+
+	for (x in coll)
+	{
+		s += x + " ";
+	}
+
+	alert(s);
+}
+
+var g_Dbg = "";
+
+function Debug()
+{
+	var s = prompt('Debugger:', g_Dbg);
+	if ((s != "") && (s != "undefined") && (s != null))
+	{
+		g_Dbg = s;
+		alert(eval(g_Dbg));
+	}
+}
+
+</script>
+
+<body style="margin:0px; margin-right:0px;" scroll=no onload=win_OnLoad()>
+
+<basefont id=idBaseFont face="MS Shell Dlg">
+
+<!-- Search Assistant OC -->
+<object id=saOC CLASSID='clsid:B45FF030-4447-11D2-85DE-00C04FA35C89' HEIGHT=0 width=0></OBJECT>
+
+<table cellspacing="0" cellpadding="0" border="0" width="100%" height="100%">
+	<tr valign="top" style="padding: 10px;">
+		<td colspan="2">
+			<nobr><img src="icon.gif" width=32 height=32><id id=id0000>&nbsp;&nbsp;<span class="title"><b>Customize Search Settings</b></span></id></nobr>
+			<table cellspacing="0" cellpadding="0" background="2pixel_line.gif" width="100%" height="2">
+				<tr>
+					<td>
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		</td>
+		<td id=idInstruct>
+			Choose categories that you want to search. You can also choose search providers within each 
+			category.  If you have multiple search providers within a category, you can determine the 
+			order in which they are used by clicking the arrows below the list.
+			<br>
+			<br>
+		</td>
+	</tr>
+	</tr>
+	<tr height="100%" valign="top">
+		<td id=ads width="156px" style="padding-left:10px;padding-right:10px;padding-top:5px;">	
+		</td>
+		<td width="100%">
+			<div id=divLoading style="width:100%;height:100%;overflow:auto">
+				Loading Search Settings...
+			</div>
+			<div id=divOptions style="display:none;width:100%;height:100%;overflow:auto">
+				<div class=panel id=panel>
+					<div class=header>
+						<input type=checkbox id=optWeb onClick="CategoryClick(this)" name=chkCat panelID=Web blocks="s_web_default"><label for=optWeb class=hdrLabel id=idFindAWebPage>Find a Web Page</label>
+					</div>
+					<div id=pWeb>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td align="center">
+									<select id="s_web_default" prefCount=5 block=default name=selList size="5">
+									</select><br>
+									<input type=image src="upcolr.gif" onMouseDown="this.src='upgry.gif';" onMouseUp="this.src='upcolr.gif';" onMouseOut="this.src='upcolr.gif';" onClick="SelectMoveUp(s_web_default);">
+									<input type=image src="downcolr.gif" onMouseDown="this.src='downgry.gif';" onMouseUp="this.src='downcolr.gif';" onMouseOut="this.src='downcolr.gif';" onClick="SelectMoveDn(s_web_default);">
+
+								</td>
+								<td>
+									<input onClick='EngineClick(this)' name=chkEng optVal=AltaVista type=checkbox id="web_default_altavista" select="s_web_default"><label for="web_default_altavista">AltaVista</label><br>
+									<input onClick='EngineClick(this)' name=chkEng optVal=Infoseek type=checkbox id="web_default_infoseek" select="s_web_default"><label for="web_default_infoseek">Infoseek</label><br>
+									<input onClick='EngineClick(this)' name=chkEng optVal=Hotbot type=checkbox id="web_default_hotbot" select="s_web_default"><label for="web_default_hotbot">HotBot</label><br>
+									<input onClick='EngineClick(this)' name=chkEng optVal=Lycos type=checkbox id="web_default_lycos" select="s_web_default"><label for="web_default_lycos">Lycos</label>
+								</td>
+								<td>
+									<input onClick='EngineClick(this)' name=chkEng optVal=MSN type=checkbox id="web_default_msn" select="s_web_default"><label for="web_default_msn">MSN Web Search</label><br>
+									<input onClick='EngineClick(this)' name=chkEng optVal=Excite type=checkbox id="web_default_excite" select="s_web_default"><label for="web_default_excite">Excite</label><br>
+									<input onClick='EngineClick(this)' name=chkEng optVal=AOLNetFind type=checkbox id="web_default_aolnetfind" select="s_web_default"><label for="web_default_aolnetfind">AOL NetFind</label><br>
+									<input onClick='EngineClick(this)' name=chkEng optVal=Yahoo type=checkbox id="web_default_yahoo" select="s_web_default"><label for="web_default_yahoo">Yahoo!</label><br>
+								</td>
+								<td>
+									<input onClick='EngineClick(this)' name=chkEng optVal=Euroseek type=checkbox id="web_default_euroseek" select="s_web_default"><label for="web_default_euroseek">Euroseek</label><br>
+								</td>
+							</tr>
+						</table>									
+					</div>
+				</div>
+				<div class=panel id=panel>
+					<div class=header>
+						<input type=checkbox id=optPers onClick="CategoryClick(this)" name=chkCat panelID=Pers blocks="s_pers_smail,s_pers_email"><label for=optPers class=hdrLabel id=idFindAPersonsAddress>Find a Person's Address</label>
+					</div>
+					<div id=pPers>
+						<id id=idPersMailingAddress><b>Mailing Address:</b></id>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td align="center">
+									<select id="s_pers_smail" block=smail name=selList size="5">
+									</select><br>
+									<input type=image src="upcolr.gif" onMouseDown="this.src='upgry.gif';" onMouseUp="this.src='upcolr.gif';" onMouseOut="this.src='upcolr.gif';" onClick="SelectMoveUp(s_pers_smail);">
+									<input type=image src="downcolr.gif" onMouseDown="this.src='downgry.gif';" onMouseUp="this.src='downcolr.gif';" onMouseOut="this.src='downcolr.gif';" onClick="SelectMoveDn(s_pers_smail);">
+								</td>
+								<td>
+									<input onClick='EngineClick(this)' name=chkEng optVal=InfoSpace type=checkbox id="pers_smail_infospace" select="s_pers_smail"><label for="pers_smail_infospace">InfoSpace</label><br>
+									<input onClick='EngineClick(this)' name=chkEng optVal=BigFoot type=checkbox id="pers_smail_bigfoot" select="s_pers_smail"><label for="pers_smail_bigfoot">BigFoot</label><br>
+								</td>
+							</tr>
+						</table>
+						<id id=idPersEmailAddress><b>Email Address:</b></id>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td align="center">
+									<select id="s_pers_email" block=email name=selList size="5">
+									</select><br>
+									<input type=image src="upcolr.gif" onMouseDown="this.src='upgry.gif';" onMouseUp="this.src='upcolr.gif';" onMouseOut="this.src='upcolr.gif';" onClick="SelectMoveUp(s_pers_email);">
+									<input type=image src="downcolr.gif" onMouseDown="this.src='downgry.gif';" onMouseUp="this.src='downcolr.gif';" onMouseOut="this.src='downcolr.gif';" onClick="SelectMoveDn(s_pers_email);">
+								</td>
+								<td>
+									<input onClick='EngineClick(this)' name=chkEng optVal=InfoSpace type=checkbox id="pers_email_infospace" select="s_pers_email"><label for="pers_email_infospace">InfoSpace</label><br>
+									<input onClick='EngineClick(this)' name=chkEng optVal=BigFoot type=checkbox id="pers_email_bigfoot" select="s_pers_email"><label for="pers_email_bigfoot">BigFoot</label><br>
+								</td>
+							</tr>
+						</table>													
+					</div>
+				</div>
+				<div class=panel id=panel>
+					<div class=header>
+						<input type=checkbox id=optCo onClick="CategoryClick(this)" name=chkCat panelID=Co blocks="s_co_default"><label for=optCo class=hdrLabel id=idFindACompanyOrganization>Find a Company/organization</label>
+					</div>
+					<div id=pCo>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td align="center">
+									<select id="s_co_default"" block=default name=selList size="5">
+									</select><br>
+									<input type=image src="upcolr.gif" onMouseDown="this.src='upgry.gif';" onMouseUp="this.src='upcolr.gif';" onMouseOut="this.src='upcolr.gif';" onClick="SelectMoveUp(s_co_default);">
+									<input type=image src="downcolr.gif" onMouseDown="this.src='downgry.gif';" onMouseUp="this.src='downcolr.gif';" onMouseOut="this.src='downcolr.gif';" onClick="SelectMoveDn(s_co_default);">
+								</td>
+								<td>
+									<input onClick='EngineClick(this)' name=chkEng optVal=InfoSeek type=checkbox id="co_default_infoseek" select="s_co_default"><label for="co_default_infoseek">Infoseek</label><br>
+								</td>
+							</tr>
+						</table>								
+					</div>
+				</div>
+				<div class=panel id=panel>
+					<div class=header>
+						<input type=checkbox id=optMap onClick="CategoryClick(this)" name=chkCat panelID=Map blocks="s_map_address,s_map_place,s_map_company"><label for=optMap class=hdrLabel id=idFindAMap>Find a Map</label>
+					</div>
+					<div id=pMap>
+						<id id=idMapAddress><b>Address:</b></id>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td align="center">
+									<select id="s_map_address" block=address name=selList size="5">
+									</select><br>
+									<input type=image src="upcolr.gif" onMouseDown="this.src='upgry.gif';" onMouseUp="this.src='upcolr.gif';" onMouseOut="this.src='upcolr.gif';" onClick="SelectMoveUp(s_map_address);">
+									<input type=image src="downcolr.gif" onMouseDown="this.src='downgry.gif';" onMouseUp="this.src='downcolr.gif';" onMouseOut="this.src='downcolr.gif';" onClick="SelectMoveDn(s_map_address);">
+								</td>
+								<td>
+									<input onClick='EngineClick(this)' name=chkEng optVal=Expedia type=checkbox id="map_address_expedia" select="s_map_address"><label for="map_address_expedia">Expedia Maps</label><br>
+								</td>
+							</tr>
+						</table>
+						<id id=idMapPlaceName><b>Place Name:</b></id>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td align="center">
+									<select id="s_map_place" block=place name=selList size="5">
+									</select><br>
+									<input type=image src="upcolr.gif" onMouseDown="this.src='upgry.gif';" onMouseUp="this.src='upcolr.gif';" onMouseOut="this.src='upcolr.gif';" onClick="SelectMoveUp(s_map_place);">
+									<input type=image src="downcolr.gif" onMouseDown="this.src='downgry.gif';" onMouseUp="this.src='downcolr.gif';" onMouseOut="this.src='downcolr.gif';" onClick="SelectMoveDn(s_map_place);">								
+								</td>
+								<td>
+									<input onClick='EngineClick(this)' name=chkEng optVal=Expedia type=checkbox id="map_place_expedia" select="s_map_place"><label for="map_place_expedia">Expedia Maps</label><br>
+								</td>
+							</tr>
+						</table>
+						<id id=idCompany><b>Company:</b></id>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td align="center">
+									<select id="s_map_company" block=company name=selList size="5">
+									</select><br>
+									<input type=image src="upcolr.gif" onMouseDown="this.src='upgry.gif';" onMouseUp="this.src='upcolr.gif';" onMouseOut="this.src='upcolr.gif';" onClick="SelectMoveUp(s_map_company);">
+									<input type=image src="downcolr.gif" onMouseDown="this.src='downgry.gif';" onMouseUp="this.src='downcolr.gif';" onMouseOut="this.src='downcolr.gif';" onClick="SelectMoveDn(s_map_company);">								
+								</td>
+								<td>
+									<input onClick='EngineClick(this)' name=chkEng optVal=Expedia type=checkbox id="map_company_expedia" select="s_map_company"><label for="map_company_expedia">Expedia Maps</label><br>
+								</td>
+							</tr>
+						</table>								
+					</div>
+				</div>
+				<div class=panel id=panel>
+					<div class=header>
+						<input type=checkbox id=optEnc onClick="CategoryClick(this)" name=chkCat panelID=Enc><label for=optEnc class=hdrLabel id=idFindInEncyclopedia>Find in Encyclopedia</label>
+					</div>
+					<div id=pEncy>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td>
+								<id id=idEncSearchDescription>This will search Microsoft Encarta for articles in the online encyclopedia</id>
+								</td>
+							</tr>
+						</table>									
+					</div>
+				</div>
+				<div class=panel id=panel>
+					<div class=header>
+						<input type=checkbox id=optNews onClick="CategoryClick(this)" name=chkCat panelID=News blocks="s_news_default"><label for=optNews class=hdrLabel id=idFindInNewsgroups>Find in Newsgroups</label>
+					</div>
+					<div id=pNews>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td align="center">
+									<select id="s_news_default" block=default name=selList size="5">
+									</select><br>
+									<input type=image src="upcolr.gif" onMouseDown="this.src='upgry.gif';" onMouseUp="this.src='upcolr.gif';" onMouseOut="this.src='upcolr.gif';" onClick="SelectMoveUp(s_news_default);">
+									<input type=image src="downcolr.gif" onMouseDown="this.src='downgry.gif';" onMouseUp="this.src='downcolr.gif';" onMouseOut="this.src='downcolr.gif';" onClick="SelectMoveDn(s_news_default);">
+								</td>
+								<td>
+									<input onClick='EngineClick(this)' name=chkEng optVal=Dejanews type=checkbox id="news_default_dejanews" select="s_news_default"><label for="news_default_dejanews">Dejanews</label><br>
+								</td>
+							</tr>
+						</table>								
+					</div>
+				</div>
+				<div class=panel id=panel>
+					<div class=header>
+						<input type=checkbox id=optPrev onClick="CategoryClick(this)" name=chkCat panelID=Prev><label for=optPrev class=hdrLabel id=idPreviousSearches>Previous Searches</label>
+					</div>
+					<div id=pPrev>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td>
+								<id id=idPrevSearchDescription>This will store the last 10 searches you did so that you can redo those searches easily</id>
+								</td>
+							</tr>
+						</table>									
+					</div>
+				</div>
+				<div class=panel id=panel>
+					<div class=header>
+						<input type=checkbox id=optFiles onClick="CategoryClick(this)" name=chkCat panelID=Files shell=yes><label for=optFiles class=hdrLabel id=idFindInFilesAndFolders>Find Files and Folders</label>
+					</div>
+					<div id=pFiles>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td>
+								<id id=idFindInFilesDescription>This will allow you to search for files and folders.</id>
+								</td>
+							</tr>
+						</table>									
+					</div>
+				</div>
+				<div class=panel id=panel>
+					<div class=header>
+						<input type=checkbox id=optPrinter onClick="CategoryClick(this)" name=chkCat panelID=Printer shell=yes><label for=optPrinter class=hdrLabel id=idFindAPrinter>Find a Printer</label>
+					</div>
+					<div id=pPrinter>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td>
+								<id id=idFindPrinterDescription>This will allow you to search for printers.</id>
+								</td>
+							</tr>
+						</table>									
+					</div>
+				</div>
+				<div class=panel id=panel>
+					<div class=header>
+						<input type=checkbox id=optComputer onClick="CategoryClick(this)" name=chkCat panelID=Computer shell=yes><label for=optComputer class=hdrLabel id=idFindAComputer>Find a Computer</label>
+					</div>
+					<div id=pComputer>
+						<table cellspacing="5" border="0">
+							<tr valign="top">
+								<td>
+								<id id=idFindComputerDescription>This will allow you to search for computers.</id>
+								</td>
+							</tr>
+						</table>									
+					</div>
+				</div>
+
+				<hr color=buttonface height=2 noshadow>
+				<id id=idSelectCatOrder>Select the order of your chosen categories:</id>
+				<table>
+					<tr>
+						<td align=center>
+							<select id=catlist name=selList size=6 style='width: 200px'>
+							</select><br>
+							<input type=image src="upcolr.gif" onMouseDown="this.src='upgry.gif';" onMouseUp="this.src='upcolr.gif';" onMouseOut="this.src='upcolr.gif';" onClick="SelectMoveUp(catlist);">
+							<input type=image src="downcolr.gif" onMouseDown="this.src='downgry.gif';" onMouseUp="this.src='downcolr.gif';" onMouseOut="this.src='downcolr.gif';" onClick="SelectMoveDn(catlist);">
+						</td>
+					</tr>
+				</table>
+				<hr color=buttonface height=2 noshadow>
+				<id id=idPickOtherProvider>If you would rather work with only one search provider, you can <a href="picksrch.htm">Choose a Default Search Provider</a>. This will replace the Search Assistant with a search engine of your choice in the Explorer bar.</id>
+			</div>
+		</td>
+	</tr>
+	<tr height="25" valign="top">
+		<td colspan="2" style="padding-left: 10px;">
+			<table cellspacing="0" cellpadding="0" bgcolor="threedlightshadow" width="100%" height="2">
+				<tr>
+					<td>
+					</td>
+				</tr>
+			</table>
+			<div style="padding: 7px; position: relative; left: 167px;">  
+                                <input type="button" width=60px value="Update" onclick="Update()">
+                                <input type="button" width=60px value="Reset" onclick="SetDefaults()">
+                                <input type="button" width=60px value="Cancel" onclick="Exit()">
+			</div>
+		</td>
+	</tr>
+</table>
+
+<span style="display:none"><input type=hidden id=xmlObj style="behavior:url(#_IE_)" class=userData></span>
+
+</body>
+</html>

@@ -1,0 +1,54 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Kent Forschmiedt (kentf)
+
+!ENDIF
+
+OSDEBUG4=1
+
+!include ..\sources.inc
+
+MAJORCOMP=osdebug
+MINORCOMP=osdebug
+
+TARGETNAME=odnt$(D)
+TARGETPATH=$(DEBUG_LIB)
+TARGETTYPE=LIBRARY
+
+!UNDEF USE_PDB_TO_COMPILE
+
+!if "$(_VCBUILD)"=="1"
+MISCFILES=$(TARGETPATH)\$(TARGET_DIRECTORY)\$(TARGETNAME).lib
+!endif
+
+SOURCES=    od.c
+
+UMTYPE=windows
+
+LINKER_FLAGS=-ignore:505
+MSC_WARNING_LEVEL=/WX /W3
+
+USECXX_FLAG=/Tp
+
+INCLUDES =  include;            \
+            $(DEBUG_INCLUDES);  \
+            ..\include
+
+386_STDCALL=1
+

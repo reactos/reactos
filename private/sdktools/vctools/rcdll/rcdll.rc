@@ -1,0 +1,18 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#ifdef JAPAN
+LANGUAGE 0x11,0x1
+1 11 MSG00411.bin
+#endif
+LANGUAGE 0x9,0x1
+1 11 MSG00001.bin
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft Windows Resource Compiler DLL"
+#define VER_INTERNALNAME_STR        "rcdll.dll"
+#define VER_ORIGINALFILENAME_STR    "rcdll.dll"
+
+#include "common.ver"
+

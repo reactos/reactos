@@ -1,0 +1,47 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\miscelem=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=miscelem
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES) $(BASEDIR)\public\sdk\amovie\inc
+
+SOURCES= \
+    comment.cxx \
+    div.cxx \
+    eanchor.cxx \
+    earea.cxx \
+    ebgsound.cxx \
+    eblock.cxx \
+    ebr.cxx \
+    edd.cxx \
+    edlist.cxx \
+    edt.cxx \
+    efont.cxx \
+    eform.cxx \
+    eheader.cxx \
+    hyplnk.cxx \
+    elabel.cxx \
+    eli.cxx \
+    elink.cxx \
+    elist.cxx \
+    emap.cxx \
+    enoshow.cxx \
+    eolist.cxx \
+    epara.cxx \
+    ephrase.cxx \
+    escript.cxx \
+    estyle.cxx \
+    eulist.cxx \
+    generic.cxx \
+    mmplay.cxx \
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

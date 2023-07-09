@@ -1,0 +1,878 @@
+--
+-- WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+-- 
+--    This Microsoft private RSVP MIB is still in development and 
+--    can change without notice. 
+-- 
+--
+
+ACSServer-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+                enterprises,
+                OBJECT-TYPE,
+                Counter
+                        FROM RFC1155-SMI
+                microsoft,
+                software
+                        FROM MSFT-MIB;
+
+
+--      microsoft       OBJECT IDENTIFIER ::= { enterprises 311 }
+--      software        OBJECT IDENTIFIER ::= { microsoft 1 }
+        acsService      OBJECT IDENTIFIER ::= { software 15 }
+        acsSvcStats     OBJECT IDENTIFIER ::= { acsService 1 }
+        acsInterfaces   OBJECT IDENTIFIER ::= { acsService 2 }
+        acsMsidlpmStats OBJECT IDENTIFIER ::= { acsService 3 }
+        
+        acsSvcStatsIfNumber OBJECT-TYPE
+              SYNTAX  INTEGER
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "The number of network interfaces on this 
+                      system detected by ACS server."
+              ::= { acsSvcStats 1 }
+
+        acsSvcStatsActiveApiSessions OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of API sessions
+                        active on this ACS Server"
+                ::= { acsSvcStats 2 }
+
+        acsSvcStatsActiveApiSockets OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of API sockets
+                        active on this ACS Server"
+                ::= { acsSvcStats 3 }
+
+        acsSvcStatsReceivedApiPathRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of Path requests
+                        received from QoS aware applications by this ACS Server"
+                ::= { acsSvcStats 4 }
+
+        acsSvcStatsReceivedApiResvRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of Resv requests
+                        received from QoS aware applications by this ACS Server"
+                ::= { acsSvcStats 5 }
+
+        acsSvcStatsFailedApiRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of requests received from QoS 
+                        aware applications by this ACS Server which failed"
+                ::= { acsSvcStats 6 }
+                
+        acsSvcStatsFailedApiSends OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of requests which could not be sent to QoS 
+                        aware applications by this ACS Server"
+                ::= { acsSvcStats 7 }
+
+        acsSvcStatsApiNotifications OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of notifications sent by this 
+                        ACS Server to QoS aware applications"
+                ::= { acsSvcStats 8 }
+
+        acsSvcStatsApiNotificationBytes OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of bytes in notifications sent by this 
+                        ACS Server to QoS aware applications"
+                ::= { acsSvcStats 9 }
+
+        acsSvcStatsNetSockets OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of network sockets opened
+                        by this ACS Server currently"
+                ::= { acsSvcStats 10 }
+
+        acsSvcStatsTimers OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of timer events
+                        active in this ACS Server currently"
+                ::= { acsSvcStats 11 }
+
+          -- the Interfaces table
+
+          -- The Interfaces table contains information on the entity's
+          -- interfaces.  Each interface is thought of as being
+          -- attached to a `subnetwork'.
+
+          acsIfStatsTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF AcsIfStatsEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                      "A list of interface entries.  The number of
+                      entries is given by the value of ifNumber."
+                ::= { acsInterfaces 1 }
+
+          acsIfStatsEntry OBJECT-TYPE
+              SYNTAX  AcsIfStatsEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                      "An interface entry containing objects at the
+                      subnetwork layer and below for a particular
+                      interface."
+              INDEX   { acsIfStatsIndex }
+              ::= { acsIfStatsTable 1 }
+
+          AcsIfStatsEntry ::=
+              SEQUENCE {
+                acsIfStatsIndex
+                    INTEGER,
+                  
+                acsIfStatsIpAddr
+                    IpAddress,
+                    
+                acsIfStatsRawIpSentBytes
+                    Counter,
+
+                acsIfStatsRawIpReceivedBytes
+                    Counter,
+                    
+                acsIfStatsReceivedRsvpPathMsgs
+                    Counter,
+                    
+                acsIfStatsReceivedRsvpResvMsgs   
+                    Counter,
+
+                acsIfStatsReceivedRsvpPathErrMsgs
+                    Counter,
+
+                acsIfStatsReceivedRsvpResvErrMsgs
+                    Counter,
+
+                acsIfStatsReceivedRsvpPathTearMsgs
+                    Counter,
+
+                acsIfStatsReceivedRsvpResvTearMsgs
+                    Counter,
+
+                acsIfStatsReceivedRsvpConfirmMsgs
+                    Counter,
+                    
+                acsIfStatsSentRsvpPathMsgs
+                    Counter,
+
+                acsIfStatsSentRsvpResvMsgs
+                    Counter,
+
+                acsIfStatsSentRsvpPathErrMsgs
+                    Counter,
+
+                acsIfStatsSentRsvpResvErrMsgs
+                    Counter,
+
+                acsIfStatsSentRsvpPathTearMsgs
+                    Counter,
+
+                acsIfStatsSentRsvpResvTearMsgs
+                    Counter,
+
+                acsIfStatsSentRsvpConfirmMsgs
+                    Counter,
+
+                acsIfStatsAdmissionControlFailures
+                    Counter,
+
+                acsIfStatsPolicyControlFailures
+                    Counter,
+                    
+                acsIfStatsOtherFailures
+                    Counter,
+
+                acsIfStatsInBlockadeStateResvs
+                    Counter,
+
+                acsIfStatsResvTimeOuts
+                    Counter,
+
+                acsIfStatsPathTimeOuts
+                    Counter,
+
+                acsIfStatsReceiveFailsBigMsg
+                    Counter,
+
+                acsIfStatsSendFailsBigMsg
+                    Counter,
+
+                acsIfStatsReceiveFailsNoMemory
+                    Counter,
+
+                acsIfStatsSendFailsNoMemory
+                    Counter,
+
+                acsIfStatsActiveFlows
+                    INTEGER,
+
+                acsIfStatsAllocatedBandwidthBits
+                    INTEGER,
+
+                acsIfStatsMaxAllocatedBandwidthBits
+                    INTEGER
+              }
+
+        acsIfStatsIndex OBJECT-TYPE
+              SYNTAX  INTEGER
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "A unique value for each interface.  Its value
+                      ranges between 1 and the value of ifNumber.  The
+                      value for each interface must remain constant at
+                      least from one re-initialization of the entity's
+                      network management system to the next re-
+                      initialization."
+              ::= { acsIfStatsEntry 1 }
+
+        acsIfStatsIpAddr OBJECT-TYPE
+              SYNTAX  IpAddress
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "The IP address of the interface to which these
+                      statistics pertains."
+              ::= { acsIfStatsEntry 2 }
+
+        acsIfStatsRawIpSentBytes OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RAW IP 
+                        BYTEs sent by ACS Server"
+              ::= { acsIfStatsEntry 3 }
+
+        acsIfStatsRawIpReceivedBytes OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RAW IP 
+                        BYTEs received by ACS Server"
+              ::= { acsIfStatsEntry 4 }
+                
+        acsIfStatsReceivedRsvpPathMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP Path messages
+                        received by this ACS Server"
+              ::= { acsIfStatsEntry 5 }
+
+        acsIfStatsReceivedRsvpResvMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP Resv messages
+                        received by this ACS Server"
+              ::= { acsIfStatsEntry 6 }
+
+        acsIfStatsReceivedRsvpPathErrMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP PathErr messages
+                        received by this ACS Server"
+              ::= { acsIfStatsEntry 7 }
+
+        acsIfStatsReceivedRsvpResvErrMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP ResvErr messages
+                        received by this ACS Server"
+              ::= { acsIfStatsEntry 8 }
+
+        acsIfStatsReceivedRsvpPathTearMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP PathTear messages
+                        received by this ACS Server"
+              ::= { acsIfStatsEntry 9 }
+
+        acsIfStatsReceivedRsvpResvTearMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP ResvTear messages
+                        received by this ACS Server"
+              ::= { acsIfStatsEntry 10 }
+
+        acsIfStatsReceivedRsvpConfirmMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP Confirm messages
+                        received by this ACS Server"
+              ::= { acsIfStatsEntry 11 }
+
+        acsIfStatsSentRsvpPathMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP Path messages
+                        sent by this ACS Server"
+              ::= { acsIfStatsEntry 12 }
+
+        acsIfStatsSentRsvpResvMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP Resv messages
+                        sent by this ACS Server"
+              ::= { acsIfStatsEntry 13 }
+
+        acsIfStatsSentRsvpPathErrMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP PathErr messages
+                        sent by this ACS Server"
+              ::= { acsIfStatsEntry 14 }
+
+        acsIfStatsSentRsvpResvErrMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP ResvErr messages
+                        sent by this ACS Server"
+              ::= { acsIfStatsEntry 15 }
+
+        acsIfStatsSentRsvpPathTearMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP PathTear messages
+                        sent by this ACS Server"
+              ::= { acsIfStatsEntry 16 }
+
+        acsIfStatsSentRsvpResvTearMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP ResvTear messages
+                        sent by this ACS Server"
+              ::= { acsIfStatsEntry 17 }
+
+        acsIfStatsSentRsvpConfirmMsgs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP Confirm messages
+                        sent by this ACS Server"
+              ::= { acsIfStatsEntry 18 }
+
+        acsIfStatsAdmissionControlFailures OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of Admission Control errors generated 
+                        by this ACS Server"
+              ::= { acsIfStatsEntry 19 }
+
+        acsIfStatsPolicyControlFailures OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of Policy Control errors generated 
+                        by this ACS Server"
+              ::= { acsIfStatsEntry 20 }
+
+        acsIfStatsOtherFailures OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of other types errors generated 
+                        by this ACS Server"
+              ::= { acsIfStatsEntry 21 }
+
+        acsIfStatsInBlockadeStateResvs OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of Resv State Blocks in 
+                        blockade state in this ACS Server"
+              ::= { acsIfStatsEntry 22 }
+
+        acsIfStatsResvTimeOuts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of Reservations which have 
+                        timed out in this ACS Server"
+              ::= { acsIfStatsEntry 23 }
+
+        acsIfStatsPathTimeOuts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of Path states which have 
+                        timed out in this ACS Server"
+              ::= { acsIfStatsEntry 24 }
+
+        acsIfStatsReceiveFailsBigMsg OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP messages which could 
+                        not be received by this ACS Server because they are too big to
+                        fit in the message buffer"
+              ::= { acsIfStatsEntry 25 }
+
+        acsIfStatsSendFailsBigMsg OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP messages which could 
+                        not be sent by this ACS Server because they are too big to
+                        fit in the message buffer"
+              ::= { acsIfStatsEntry 26 }
+
+        acsIfStatsReceiveFailsNoMemory OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP messages which could 
+                        not be sent by this ACS Server because there was no free
+                        message buffer"
+              ::= { acsIfStatsEntry 27 }
+
+        acsIfStatsSendFailsNoMemory OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of RSVP messages which could 
+                        not be sent by this ACS Server because there was no free
+                        message buffer"
+              ::= { acsIfStatsEntry 28 }
+
+        acsIfStatsActiveFlows OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number flows currently active 
+                        in this ACS Server currently"
+              ::= { acsIfStatsEntry 29 }
+
+        acsIfStatsAllocatedBandwidthBits OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total bandwidth allocated currently
+                        by this ACS Server"
+              ::= { acsIfStatsEntry 30 }
+
+        acsIfStatsMaxAllocatedBandwidthBits OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum bandwidth ever allocated
+                        by this ACS Server"
+              ::= { acsIfStatsEntry 31 }
+
+
+          -- the MSIDLPM table
+
+          -- The MSIDLPM table contains information on the policy based
+          -- admission control performed by Microsoft supplied Identity LPM.  
+          -- Statistics are maintained for each subnetwork managed by this ACS
+
+          acsMsidlpmStatsTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF MsidlpmStatsEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                      "A list of interface entries.  The number of
+                      entries is given by the value of ifNumber."
+                ::= { acsMsidlpmStats 1 }
+
+          acsMsidlpmStatsEntry OBJECT-TYPE
+              SYNTAX  MsidlpmStatsEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                      "An interface entry containing objects at the
+                      subnetwork layer and below for a particular
+                      interface."
+              INDEX   { acsMsidlpmStatsIndex }
+              ::= { acsMsidlpmStatsTable 1 }
+
+          MsidlpmStatsEntry ::=
+              SEQUENCE {
+                acsMsidlpmStatsIndex
+                    INTEGER,
+
+                acsMsidlpmStatsSubnetAddr
+                    IpAddress,
+                    
+                acsMsidlpmSendersAccepted
+                    Counter,
+
+                acsMsidlpmSenderChgAccepted
+                    Counter,
+                    
+                acsMsidlpmRejSndFlowRate
+                    Counter,
+
+                acsMsidlpmRejSndPeakRate
+                    Counter,
+                    
+                acsMsidlpmRejSndSumFlowRate
+                    Counter,
+
+                acsMsidlpmRejSndSumPeakRate
+                    Counter,
+
+                acsMsidlpmRejSndIdChange
+                	Counter,
+                	
+                acsMsidlpmRejSndDuration
+                    Counter,
+                    
+                acsMsidlpmRejSndCount
+                    Counter,
+
+                acsMsidlpmRejSndOthersPolicies
+                    Counter,
+                    
+                acsMsidlpmReceiversAccepted
+                    Counter,
+
+                acsMsidlpmReceiverChgAccepted
+                    Counter,
+                    
+                acsMsidlpmRejRecvFlowRate
+                    Counter,
+
+                acsMsidlpmRejRecvPeakRate
+                    Counter,
+                    
+                acsMsidlpmRejRecvSumFlowRate
+                    Counter,
+
+                acsMsidlpmRejRecvSumPeakRate
+                    Counter,
+                    
+                acsMsidlpmRejRecvIdChange
+                	Counter,
+                	
+                acsMsidlpmRejRecvDuration
+                    Counter,
+
+                acsMsidlpmRejRecvCount
+                    Counter,
+                    
+                acsMsidlpmRejRecvOthersPolicies
+                    Counter,
+
+                acsMsidlpmBadIdentityPes
+                    Counter,
+                    
+                acsMsidlpmDsCacheSize
+                    INTEGER
+              }
+
+        acsMsidlpmStatsIndex OBJECT-TYPE
+              SYNTAX  INTEGER
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "A unique value for each subnet.  Its value
+                      ranges between 1 and the value of ifNumber.  The
+                      value for each subnet must remain constant at
+                      least from one re-initialization of the entity's
+                      network management system to the next re-
+                      initialization."
+              ::= { acsMsidlpmStatsEntry 1 }
+
+        acsMsidlpmStatsSubnetAddr OBJECT-TYPE
+              SYNTAX  IpAddress
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "The IP address of the subnet to which these
+                      statistics pertains."
+              ::= { acsMsidlpmStatsEntry 2 }
+
+        acsMsidlpmSendersAccepted OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose PATH messages were accepted"
+              ::= { acsMsidlpmStatsEntry 3 }
+
+        acsMsidlpmSenderChgAccepted OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose PATH message changes were accepted"
+              ::= { acsMsidlpmStatsEntry 4 }
+              
+        acsMsidlpmRejSndFlowRate OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose PATH message were rejected because of
+                        data flow rate policy"
+              ::= { acsMsidlpmStatsEntry 5 }
+              
+        acsMsidlpmRejSndPeakRate OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose PATH message were rejected because of
+                        peak data rate policy"
+              ::= { acsMsidlpmStatsEntry 6 }
+              
+        acsMsidlpmRejSndSumFlowRate OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose PATH message were rejected because of
+                        aggregate data flow rate policy"
+              ::= { acsMsidlpmStatsEntry 7 }
+              
+        acsMsidlpmRejSndSumPeakRate OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose PATH message were rejected because of
+                        aggregate peak data rate policy"
+              ::= { acsMsidlpmStatsEntry 8 }
+
+        acsMsidlpmRejSndIdChange OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose PATH message were rejected because of
+                        identity change"
+              ::= { acsMsidlpmStatsEntry 9 }                	
+              
+        acsMsidlpmRejSndDuration OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose PATH message were rejected because of
+                        flow duration policy"
+              ::= { acsMsidlpmStatsEntry 10 }
+              
+        acsMsidlpmRejSndCount OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose PATH message were rejected because of
+                        flow count policy"
+              ::= { acsMsidlpmStatsEntry 11 }
+              
+        acsMsidlpmRejSndOthersPolicies OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose PATH message were rejected because of
+                        policies other than flow rate, peak rate,
+                        flow duration and flow count"
+              ::= { acsMsidlpmStatsEntry 12 }
+              
+        acsMsidlpmReceiversAccepted OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of receivers
+                        whose RESV messages were accepted"
+              ::= { acsMsidlpmStatsEntry 13 }
+
+        acsMsidlpmReceiverChgAccepted OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of receivers
+                        whose RESV message changes were accepted"
+              ::= { acsMsidlpmStatsEntry 14 }
+              
+        acsMsidlpmRejRecvFlowRate OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of receivers
+                        whose RESV message were rejected because of
+                        data flow rate policy"
+              ::= { acsMsidlpmStatsEntry 15 }
+              
+        acsMsidlpmRejRecvPeakRate OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of receivers
+                        whose RESV message were rejected because of
+                        peak data rate policy"
+              ::= { acsMsidlpmStatsEntry 16 }
+              
+        acsMsidlpmRejRecvSumFlowRate OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of receivers
+                        whose RESV message were rejected because of
+                        aggregate data flow rate policy"
+              ::= { acsMsidlpmStatsEntry 17 }
+              
+        acsMsidlpmRejRecvSumPeakRate OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of receivers
+                        whose RESV message were rejected because of
+                        aggregate peak data rate policy"
+              ::= { acsMsidlpmStatsEntry 18 }
+              
+        acsMsidlpmRejRecvIdChange OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of senders
+                        whose RESV message were rejected because of
+                        identity change"
+              ::= { acsMsidlpmStatsEntry 19 }                	
+              
+        acsMsidlpmRejRecvDuration OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of receivers
+                        whose RESV message were rejected because of
+                        flow duration policy"
+              ::= { acsMsidlpmStatsEntry 20 }
+              
+        acsMsidlpmRejRecvCount OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of receivers
+                        whose RESV message were rejected because of
+                        flow count policy"
+              ::= { acsMsidlpmStatsEntry 21 }
+              
+        acsMsidlpmRejRecvOthersPolicies OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of receivers
+                        whose RESV message were rejected because of
+                        policies other than flow rate, peak rate,
+                        flow duration and flow count"
+              ::= { acsMsidlpmStatsEntry 22 }
+
+        acsMsidlpmBadIdentityPes OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of Identity Policy elements
+                        which could not be cracked by the MSIDLPM"
+              ::= { acsMsidlpmStatsEntry 23 }
+      
+        acsMsidlpmDsCacheSize OBJECT-TYPE
+                SYNTAX  INTEGER
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of entries in the
+                        policy cache maintained by the MSIDLPM"
+              ::= { acsMsidlpmStatsEntry 24 }
+      
+              
+END
+

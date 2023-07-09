@@ -1,0 +1,160 @@
+<html>
+<meta http-equiv="refresh" content=10>
+<body style="background-color: white" scrolling=no>
+<div style="position: absolute; top: 100%; text-align: center; font-family: 'verdana'; font-size: 8pt">
+[To setup your Active Channel Screen Saver, subscribe to Active Channels from the <a href="http://channels.microsoft.com/guide/chguide.cdf" style="color: #FF6633">Microsoft Channel Guide</a>]
+</div>
+<img id="banner" src="banner.gif" style="position:absolute; left: 99%; top: 800px">
+
+<center>
+<div id="dots" style="position: relative; width: 452px; height: 480px; color: white; zindex: 1; font-family: 'times new roman'; font-size: 155pt">
+<script language=vbscript>
+  hortRes = window.screen.width
+  if hortres = 640 then
+	topMargin = -30
+  elseif hortres = 800 then
+	topMargin = 30
+  else
+	topMargin = 100
+  end if
+  dots.style.top = topMargin
+</script>
+
+ <img id="gleam" src="gleam.gif" style="position:absolute; left: 208px; top: 225px; width: 42px; height: 42px">
+ <img id="satdishc" src="sat_clr.gif" style="position:absolute; left: 172px; top: 191px; width: 112px; height: 112px">
+ <img id="satdishg" src="sat_grey.gif" style="position:absolute; left: 172px; top: 191px; width: 112px; height: 112px">
+ <div id="dot11" STYLE="position:absolute; left: 105px; top: 128px; width:46px; height:46px">•</div>
+ <div id="dot12" STYLE="position:absolute; left: 280px; top: 128px; width:46px; height:46px">•</div>
+ <div id="dot13" STYLE="position:absolute; left: 193px; top: 41px; width:46px; height:46px">•</div>
+ <div id="dot14" STYLE="position:absolute; left: 193px; top: 216px; width:46px; height:46px">•</div>
+ <div id="dot15" STYLE="position:absolute; left: 130px; top: 66px; width:46px; height:46px">•</div>
+ <div id="dot16" STYLE="position:absolute; left: 130px; top: 191px; width:46px; height:46px">•</div>
+ <div id="dot17" STYLE="position:absolute; left: 255px; top: 66px; width:46px; height:46px">•</div>
+ <div id="dot18" STYLE="position:absolute; left: 255px; top: 191px; width:46px; height:46px">•</div>
+ <img id="arrow" src="arrow.gif" style="position:absolute; left: 208px; top: 430px; width: 33px; height: 57px">
+</div>
+</center>
+<OBJECT ID="Seq"
+	CLASSID="CLSID:B0A6BAE2-AAF0-11d0-A152-00A0C908DB96"
+	STYLE="WIDTH:2;HEIGHT:2">
+</OBJECT>
+
+<OBJECT ID="ArrowPath"  CLASSID="CLSID:E0E3CC60-6A80-11D0-9B40-00A0C903AA7F">
+<PARAM NAME=AutoStart VALUE=-1>
+<PARAM NAME=YSeries VALUE="0,430;15,230">
+<PARAM NAME=EdgeAction VALUE="0"><PARAM NAME=TickInterval VALUE=52></OBJECT>
+
+<OBJECT ID="BannerPath"  CLASSID="CLSID:E0E3CC60-6A80-11D0-9B40-00A0C903AA7F">
+<PARAM NAME=AutoStart VALUE=-1>
+<PARAM NAME=YSeries VALUE="0,800;10,100">
+<PARAM NAME=EdgeAction VALUE="0"><PARAM NAME=TickInterval VALUE=75></OBJECT>
+
+<script language="vbscript">
+
+Sub Seq_OnInit
+	call seq("ActionSet1").At(0.000, "GoArrow", -1, 10.000)
+
+
+	call seq("ActionSet1").At(1.000, "ChangeSatdish", -1, 10.000)
+	call seq("ActionSet1").At(1.100, "ColorBlue", -1, 10.000)
+	call seq("ActionSet1").At(1.100, "Step1", -1, 10.000)
+
+	call seq("ActionSet1").At(1.400, "Step2", -1, 10.000)
+	call seq("ActionSet1").At(1.700, "Step3", -1, 10.000)
+	call seq("ActionSet1").At(2.000, "Step4", -1, 10.000)
+	call seq("ActionSet1").At(2.300, "Step5", -1, 10.000)
+	call seq("ActionSet1").At(2.600, "Step6", -1, 10.000)
+	call seq("ActionSet1").At(2.900, "ColorOrange", -1, 10.000)
+
+	call seq("ActionSet1").At(3.200, "Step5", -1, 10.000)
+	call seq("ActionSet1").At(3.500, "Step4", -1, 10.000)
+	call seq("ActionSet1").At(3.800, "Step3", -1, 10.000)
+	call seq("ActionSet1").At(4.100, "Step2", -1, 10.000)
+	call seq("ActionSet1").At(4.400, "Step1", -1, 10.000)
+
+	call seq("ActionSet1").At(4.600, "ChangeGleam", -1, 6.000)
+
+	Call Seq("ActionSet1").play
+End Sub
+
+Sub GoArrow
+ ArrowPath.Target = Arrow.Style 
+ BannerPath.Target = Banner.Style 
+End Sub 
+
+SUB ChangeSatdish
+ Satdishg.style.display = "none"
+ Satdishc.style.display = ""
+END SUB
+
+SUB ChangeGleam
+ Satdishc.style.display = "none"
+ dots.style.color = "white"
+ Gleam.style.display = ""
+END SUB
+
+SUB ColorOrange
+ dots.style.color = "#FF6633"
+END SUB
+
+SUB ColorBlue
+ arrow.style.display="none"
+ dots.style.color = "#3399CC"
+END SUB
+
+SUB Step1
+ x1=105: y1=280
+ x2=130: y2=255 
+ drawPattern x1,y1,x2,y2 
+END SUB
+
+SUB Step2
+ x1=101: y1=284
+ x2=127: y2=258 
+ drawPattern x1,y1,x2,y2 
+END SUB
+
+SUB Step3
+ x1=93: y1=292
+ x2=119: y2=266 
+ drawPattern x1,y1,x2,y2 
+END SUB
+
+SUB Step4
+ x1=67: y1=318
+ x2=103: y2=282 
+ drawPattern x1,y1,x2,y2 
+END SUB
+
+SUB Step5
+ x1=12: y1=373
+ x2=63: y2=321 
+ drawPattern x1,y1,x2,y2
+END SUB
+
+SUB Step6
+ x1=0: y1=385
+ x2=55: y2=329 
+ drawPattern x1,y1,x2,y2
+END SUB
+
+SUB drawPattern (a1,b1,a2,b2)
+
+ dot11.style.left = a1
+ dot12.style.left = b1
+ dot13.style.top = a1-64
+ dot14.style.top = b1-64
+ dot15.style.left = a2
+ dot15.style.top = a2-64
+ dot16.style.left = a2
+ dot16.style.top = b2-64
+ dot17.style.left = b2
+ dot17.style.top = a2-64
+ dot18.style.left = b2
+ dot18.style.top = b2-64
+
+END SUB
+
+</script>
+</body>
+</html>

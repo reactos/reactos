@@ -1,0 +1,26 @@
+####################
+#
+# Module RULES.MKH
+#
+# Description:
+# This module contains the inference rules to be used by the 
+# make system
+
+.c.exe:	
+	$(CC) $(CFLAGS) $*.c	
+.c.obj:
+	$(CC) $(CFLAGS) /c $*.c	
+.cpp.exe:
+	$(CPP) $(CPPFLAGS) $*.cpp	
+.cpp.obj:
+	$(CPP) $(CPPFLAGS) /c $*.cpp	
+.cxx.exe:
+	$(CXX) $(CXXFLAGS) $*.cxx	
+.cxx.obj:
+	$(CXX) $(CXXFLAGS) /c $*.cxx	
+.rc.res:
+	$(RC) $(RFLAGS) /r $*.rc	
+.asm.exe:
+	$(AS) $(AFLAGS) $*.asm	
+.asm.obj:
+	$(AS) $(AFLAGS) /c $*.asm	

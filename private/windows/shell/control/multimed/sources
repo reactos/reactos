@@ -1,0 +1,31 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=multimed
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+UMTYPE=windows
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib
+
+INCLUDES=..\main
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+SOURCES=multimed.c  \
+        multimed.rc
+
+DLLBASE=0x70E00000

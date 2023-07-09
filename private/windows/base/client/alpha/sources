@@ -1,0 +1,3 @@
+ALPHA_SOURCES=..\alpha\context.c  \
+              ..\alpha\critsect.s \
+              ..\alpha\thunk.s

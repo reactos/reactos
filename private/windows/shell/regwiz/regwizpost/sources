@@ -1,0 +1,61 @@
+
+!IF 0
+REGWIZ
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:RegWizPost
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author: Suresh Krishnan
+
+
+NOTE:   This is to Create RegWizPost.LIB
+
+!ENDIF
+
+MAJORCOMP=RegWiz
+MINORCOMP=RegWizPost
+
+REGWIZ_WITH_UCODE=-DUNICODE  -D_UNICODE
+
+REGWIZ_COMMON_FLAGS= $(REGWIZ_WITH_UCODE)  -D_TAPI  -D_WINDOWS -D_USRDLL -DWINDOWS -DNT -D_WINNT -DWINNT
+NOT_LEAN_AND_MEAN=1
+MSC_WARNING_LEVEL=/W3 /WX
+USE_NATIVE_EH=1
+C_DEFINES=$(REGWIZ_COMMON_FLAGS)
+
+!if !$(FREEBUILD)
+DEBUG_CRTS=1
+MSC_OPTIMIZATION=/Odi
+USE_LIBCMT=1
+!else
+USE_MSVCRT=1
+!endif
+
+UMTYPE=windows
+TARGETNAME=RegWizPost
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+REGWIZ_INCLUDES= ..\include;..\Res;..\PhBookLib
+INCLUDES=$(REGWIZ_INCLUDES);..\inc;
+
+SOURCES=AtkInter.cpp \
+     ATK_inet.cpp \
+     ATK_RAS.cpp \
+     Connect.cpp  \
+     dconv.cpp \
+     Ithread.cpp   \
+     Phone.CPP    \
+     rwpost.cpp    \
+     Tcp.cpp   \
+     Util.CPP

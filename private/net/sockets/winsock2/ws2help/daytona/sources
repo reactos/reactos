@@ -1,0 +1,57 @@
+!IF 0
+
+Copyright (c) 1995  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+
+!ENDIF
+
+
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+DLLENTRY=DllMain
+SYNCHRONIZE_BLOCK=1
+
+!INCLUDE ..\sources.inc
+TARGETLIBS=$(TARGETLIBS)                        \
+    $(BASEDIR)\public\sdk\lib\*\ntdll.lib       \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib      \
+
+DELAYLOAD=user32.dll
+USE_NTDLL=1
+
+SOURCES=\
+    ..\ws2help.rc                               \
+    apc.c                                       \
+    handle.c                                    \
+    notify.c                                    \
+    newctx.c                                    \
+
+
+NTPROFILEINPUT=yes
+!UNDEF NTTARGETFILE0
+
+UMTEST=wsht whcperf
+UMTYPE=console
+UMLIBS=\
+    $(TARGETPATH)\*\$(TARGETNAME).lib   \
+    $(LIBRARY_PATH)\ntdll.lib           \
+    $(LIBRARY_PATH)\gdi32.lib           \
+    $(LIBRARY_PATH)\user32.lib          \
+    $(LIBRARY_PATH)\ws2_32.lib

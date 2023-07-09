@@ -1,0 +1,115 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+!INCLUDE ..\..\security.mk
+
+MAJORCOMP=lsa
+MINORCOMP=msv1_0
+
+TARGETNAME=msv1_0
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+
+TARGETLIBS= ..\..\lsaitf\obj\*\lsaitf.lib               \
+            $(BASEDIR)\public\sdk\lib\*\kernel32.lib    \
+            $(BASEDIR)\public\sdk\lib\*\rpcutil.lib     \
+            $(DSLIBRARY)\*\samlib.lib                   \
+            $(BASEDIR)\public\sdk\lib\*\lsasrv.lib      \
+            $(BASEDIR)\public\sdk\lib\*\advapi32.lib    \
+            $(BASEDIR)\public\sdk\lib\*\netapi32.lib    \
+            $(DSLIBRARY)\*\secur32.lib                  \
+            $(BASEDIR)\private\lib\*\rsa32.lib          \
+            $(BASEDIR)\public\sdk\lib\*\dnsapi.lib      \
+            $(BASEDIR)\public\sdk\lib\*\ntdsapi.lib
+
+DELAYLOAD=samlib.dll;lsasrv.dll;netapi32.dll;dnsapi.dll;ntdsapi.dll
+
+TARGETTYPE=DYNLINK
+DLLDEF=..\msv1_0.def
+
+#
+# Define COMPILED_BY_DEVELOPER to hit a breakpoint during initialization.
+#
+
+C_DEFINES=-DUNICODE=1 -DRPC_NO_WINDOWS_H -DSECURITY_WIN32
+# C_DEFINES=$(C_DEFINES) -DDUMP_CACHE_INFO
+# C_DEFINES=$(C_DEFINES) -DCOMPILED_BY_DEVELOPER
+
+
+DLLBASE=@$(BASEDIR)\PUBLIC\SDK\LIB\coffbase.txt,msv1_0
+
+
+INCLUDES=..;..\..\inc;$(BASEDIR)\private\inc;$(BASEDIR)\private\net\inc; \
+            $(BASEDIR)\private\inc\crypto;
+
+NTPROFILEINPUT=yes
+MSC_WARNING_LEVEL=/W3 /WX
+
+USE_NTDLL=1
+
+!if "$(WIN64)" == "1"
+NO_SSPI_SIGNATURES=1
+!endif
+
+!IF "$(NO_SSPI_SIGNATURES)" == ""
+BINPLACE_FLAGS=-o Unsigned
+!ENDIF
+
+# Strict warning, can be used to detect uninitialized vars. Picks up random
+# stuff too
+
+# COMPILER_WARNINGS=$(COMPILER_WARNINGS) -FI$(BASEDIR)\private\security\inc\secwarn.h
+
+SOURCES=            \
+         ..\msv1_0.c   \
+         ..\msv1_0.rc  \
+         ..\msvars.c   \
+         ..\msvpaswd.c \
+         ..\msvsam.c   \
+         ..\nlmain.c   \
+         ..\nlnetapi.c \
+         ..\nlp.c      \
+         ..\nlpcache.c \
+         ..\subauth.c  \
+         ..\credderi.c \
+         ..\ntlm.cxx     \
+         ..\credapi.cxx  \
+         ..\ctxtapi.cxx  \
+         ..\miscapi.cxx  \
+         ..\userapi.cxx  \
+         ..\ntlmutil.cxx \
+         ..\crc32.c      \
+         ..\encrypt.cxx  \
+         ..\credhand.cxx \
+         ..\utility.cxx  \
+         ..\context.cxx  \
+         ..\rng.cxx      \
+         ..\debug.cxx
+
+
+UMTYPE=console
+UMTEST=pwdtest
+UMLIBS=obj\*\msvpaswd.obj \
+       obj\*\nlnetapi.obj \
+       obj\*\msvars.obj \
+       $(BASEDIR)\public\sdk\lib\*\samlib.lib

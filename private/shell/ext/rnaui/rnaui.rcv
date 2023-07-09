@@ -1,0 +1,30 @@
+/******************************************************************************
+**
+** Module:          RNAUI.dll
+** File:            rnaui.rcv
+** Descriptions:    Remote Network Access User Interface DLL
+** Contains:        Definitions of version control data
+**
+** Copyright (c) 1992-1994, Microsoft Corporation, all rights reserved
+**
+** History:         Mon 29-Nov-1993 17:42:39  -by-  Viroon  Touranachun [viroont]
+**
+******************************************************************************/
+
+#ifdef WIN32
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Dial-Up Networking User Interface"
+#define VER_INTERNALNAME_STR		"RNAUI"
+#define VER_LEGALCOPYRIGHT_YEARS	"1992-1996"
+#define VER_ORIGINALFILENAME_STR	"RNAUI.DLL"
+#define VER_OLESELFREGISTER
+
+
+#include <common.ver>

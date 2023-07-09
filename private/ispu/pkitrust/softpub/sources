@@ -1,0 +1,46 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+CRYPT_ROOT=..\..
+!include $(CRYPT_ROOT)\crypt.mk
+
+MINORCOMP=softpubl
+!include $(CRYPT_ROOT)\cryptlib.mk
+
+!include $(CRYPT_ROOT)\pkitrust\pkitrust.mk
+
+INCLUDES=$(INCLUDES);$(PKITRUST_ROOT)\mssip32;$(BASEDIR)\private\inc\asn1
+
+PRECOMPILED_INCLUDE = global.hxx
+PRECOMPILED_PCH =     global.pch
+PRECOMPILED_OBJ =     global.obj
+
+C_DEFINES=$(C_DEFINES) -D_WINDOWS
+
+
+SOURCES=\
+    authcode.cpp        \
+    callui.cpp          \
+    certprov.cpp        \
+    checks.cpp          \
+    chkcert.cpp         \
+    clnprov.cpp         \
+    defusage.cpp        \
+    dllmain.cpp         \
+    drvprov.cpp         \
+    expapis.cpp         \
+    initprov.cpp        \
+    msgprov.cpp         \
+    offprov.cpp         \
+    sigprov.cpp         \
+    sphelper.cpp        \
+    httpsprv.cpp        \
+    chainprv.cpp        \
+    test.cpp            \
+    trustdb.cpp         \
+    trustdlg.cpp

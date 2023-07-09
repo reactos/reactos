@@ -1,0 +1,36 @@
+LIBRARY         comdlg32
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Common Windows Dialogs'
+
+EXPORTS
+    ChooseColorA
+    ChooseColorW
+    ChooseFontA
+    ChooseFontW
+    CommDlgExtendedError
+    FindTextA
+    FindTextW
+    GetFileTitleA
+    GetFileTitleW
+    GetOpenFileNameA
+    GetOpenFileNameW
+    GetSaveFileNameA
+    GetSaveFileNameW
+    PageSetupDlgA
+    PageSetupDlgW
+    PrintDlgA
+    PrintDlgW
+    PrintDlgExA
+    PrintDlgExW
+    ReplaceTextA
+    ReplaceTextW
+
+    LoadAlterBitmap
+    WantArrows
+    dwLBSubclass                                 ;Internal
+    dwOKSubclass                                 ;Internal
+    FormatCharDlgProc        @100      NONAME    ;Internal
+
+#ifdef WINNT
+    Ssync_ANSI_UNICODE_Struct_For_WOW            ;Internal
+#endif

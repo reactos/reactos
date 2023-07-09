@@ -1,0 +1,47 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\other\htmldlg=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=htmldlg
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES= \
+    $(ROOT)\src\other\include; \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\src\f3\include; \
+    $(ROOT)\external\inc; \
+    $(ROOT)\external\inc\msls; \
+    $(ROOT)\types\$(O); \
+    $(ROOT)\src\core\types; \
+    $(ROOT)\src\f3\types; \
+    $(ROOT)\src\f3\ocx96; \
+    $(ROOT)\src\other\proppage; \
+    $(ROOT)\src\site\include; \
+    $(ROOT)\src\site\base; \
+    $(ROOT)\src\site\display; \
+    $(ROOT)\src\site\layout; \
+    $(ROOT)\src\site\text; \
+    $(ROOT)\src\site\style; \
+    $(ROOT)\src\site\ole; \
+    $(ROOT)\src\site\util; \
+    $(ROOT)\src\site\view; \
+    $(ROOT)\src\site\acc; \
+    $(ROOT)\src\other\moniker; \
+    $(BASEDIR)\private\windows\inc;
+
+SOURCES= \
+    dlgframe.cxx \
+    dlgmodel.cxx \
+    dlgsink.cxx \
+    dlgsite.cxx \
+    htmldlg.cxx \
+    modeless.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

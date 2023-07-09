@@ -1,0 +1,18 @@
+HKCR
+{
+        Trident.HTMLEditor.1 = s 'Trident HTMLEditor'
+        {
+                CLSID = s '{3050f4f5-98B5-11CF-BB82-00AA00BDCE0B}'
+        }
+        CLSID
+        {
+                ForceRemove {3050f4f5-98B5-11CF-BB82-00AA00BDCE0B} = s 'Trident HTMLEditor'
+                {
+                        ProgID = s 'Trident.HTMLEditor.1'
+                        InprocServer32 = s '%MODULE%'
+                        {
+                                val ThreadingModel = s 'Apartment'
+                        }
+                }
+        }
+}

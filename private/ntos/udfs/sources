@@ -1,0 +1,68 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=ntos
+MINORCOMP=udfs
+
+TARGETNAME=udfs
+TARGETPATH=obj
+TARGETTYPE=DRIVER
+
+INCLUDES=..\inc
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=		\
+	allocsup.c	\
+	cachesup.c	\
+	cleanup.c	\
+	close.c		\
+	create.c	\
+	devctrl.c	\
+	deviosup.c	\
+	dirctrl.c	\
+	dirsup.c	\
+	fileinfo.c	\
+	filobsup.c	\
+	fsctrl.c	\
+	fspdisp.c	\
+	lockctrl.c	\
+	namesup.c	\
+	pnp.c		\
+	prefxsup.c	\
+	read.c		\
+	resrcsup.c	\
+	strucsup.c	\
+	udfdata.c	\
+	udfinit.c	\
+	udfs.rc		\
+	verfysup.c	\
+	vmcbsup.c	\
+	volinfo.c	\
+	workque.c
+
+PRECOMPILED_INCLUDE=udfprocs.h
+PRECOMPILED_PCH=udfprocs.pch
+PRECOMPILED_OBJ=udfprocs.obj
+

@@ -1,0 +1,51 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\include=)
+XMLROOT=$(MAKEDIR:\xml\tokenizer\include=)
+
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+TARGETNAME=xmltokpch
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SYNCHRONIZE_BLOCK=1
+
+SOURCES= \
+    headers.cxx
+
+INCLUDES= \
+	$(ROOT); \
+    $(ROOT)\base;\
+	$(MSXML)\core\include; \
+	$(MSXML)\core\base; \
+	$(MSXML); \
+    $(MSXML)\debug\include;\
+    $(WINDOWS_INC_PATH)\
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fh=$(O)\headers.pch
+!else
+PRECOMPILED_INCLUDE=headers.hxx
+!endif
+PRECOMPILED_CXX=1
+
+
+CONDITIONAL_INCLUDES=\
+	macwin32.h\
+	macocidl.h\
+	winwlm.h\
+	rpcerr.h\
+	macname1.h\
+	macname2.h\
+	macpub.h\
+	macapi.h\
+	shlwapip.h\
+	rpcmac.h\
+	pure.h\
+	codepage.h

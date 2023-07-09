@@ -1,0 +1,26 @@
+
+
+USE_CRTDLL=1
+NOT_LEAN_AND_MEAN=1
+
+MAJORCOMP=
+MINORCOMP=
+
+NTTARGETFILE0=copyverrc
+
+TARGETNAME=htrn_jis
+TARGETTYPE=DYNLINK
+TARGETPATH=..\bin
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           ..\bin\*\hypertrm.lib
+
+LINKLIBS=
+INCLUDES=.;..
+
+SOURCES=    htrn_jis.rc \
+            htrn_jis.c
+
+DLLBASE=0x79000000
+DLLENTRY=transJisEntry

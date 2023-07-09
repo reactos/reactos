@@ -1,0 +1,38 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    dirs.
+
+Abstract:
+
+    This file specifies the subdirectories of the current directory that
+    contain component makefiles.
+
+
+Author:
+
+    Donna Liu (DonnaLi) 19-Dec-1993
+
+!ENDIF
+
+#
+# This is a list of all subdirectories that build required components.
+# Each subdirectory name should appear on a line by itself.  The build
+# follows the order in which the subdirectories are specified.
+#
+
+DIRS=
+
+#
+# This is a list of all subdirectories that build optional components.
+# Each subdirectory name should appear on a line by itself.  The build
+# follows the order in which the subdirectories are specified.
+#
+
+OPTIONAL_DIRS= \
+    cairo      \
+    chicago    \
+    daytona

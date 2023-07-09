@@ -1,0 +1,40 @@
+#ifndef _FILTER_PDL_
+#define _FILTER_PDL_ 1
+
+#include "types.pdl"
+
+file filter.pdl
+
+import types.pdl
+
+interface IHTMLElement
+
+interface IHTMLFiltersCollection super:IDispatch guid:3050f3ee-98b5-11cf-bb82-00aa00bdce0b
+    refprop CFilterArray:length
+    refprop CFilterArray:_newEnum
+    refmethod CFilterArray:item
+
+tearoff CFilterArray interface:IHTMLFiltersCollection
+tearoff CFilterArray interface:IDispatchEx BaseImpl:super::
+
+class CFilterArray name:HTMLFiltersCollection \
+            primaryinterface:IHTMLFiltersCollection \
+            super:CBase \
+            guid:3050f3ef-98b5-11cf-bb82-00aa00bdce0b
+
+    property  length   atype:long        dispid:DISPID_FILTERS+1    type:long   \
+         abstract get
+    property  _newEnum atype:IUnknown*   dispid:DISPID_NEWENUM     type:IUnknown* \
+         abstract get    hidden restricted
+    method HRESULT item maxstrlen:pdlNoLimit dispid:DISPID_VALUE  (in type:VARIANT* arg:pvarIndex, \
+                                                   out retval type:VARIANT* arg:pvarResult)
+
+//
+// CSS Extension Interfaces (Filters, but not visual filters)
+//
+tearoff CCSSFilterSite interface:IDispatchEx
+    tearmethod InvokeEx             mapto:InvokeEx
+
+class CCSSFilterSite super:CBase abstract
+
+#endif _FILTER_PDL_

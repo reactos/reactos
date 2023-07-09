@@ -1,0 +1,233 @@
+; conf.adm
+;
+;;;;;;;;;;;;;;;;;;;;;
+CLASS USER   ;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;
+
+CATEGORY !!NetMeeting
+KEYNAME "Software\Microsoft\Conferencing\Policies"
+
+	POLICY !!RestrictFileTransfer
+	VALUENAME "RestrictFileTransfer"
+		PART !!PreventSendingFiles CHECKBOX
+			VALUENAME "NoSendingFiles"
+		END PART
+
+		PART !!PreventReceivingFiles CHECKBOX
+			VALUENAME "NoReceivingFiles"
+		END PART
+	END POLICY
+
+	POLICY !!RestrictAppSharing
+	VALUENAME "RestrictAppSharing"
+		PART !!PreventAppSharing CHECKBOX
+			VALUENAME "NoAppSharing"
+		END PART
+		PART !!PreventSharedClip CHECKBOX
+			VALUENAME "NoSharedClip"
+		END PART
+		PART !!PreventSharingMSDOS CHECKBOX
+			VALUENAME "NoSharingDosWindows"
+		END PART
+		PART !!PreventSharingExplorer CHECKBOX
+			VALUENAME "NoSharingExplorer"
+		END PART
+		PART !!PreventGrantingControl CHECKBOX
+			VALUENAME "WorkAloneOnly"
+		END PART
+	END POLICY
+
+	POLICY !!RestrictOptionsDialog
+	VALUENAME "OptionsDialogRestricted"
+		PART !!DisableGeneralPage CHECKBOX
+			VALUENAME "NoGeneralPage"
+		END PART
+		PART !!DisableMyInfoPage CHECKBOX
+			VALUENAME "NoMyInformationPage"
+		END PART
+		PART !!DisableSDDirPage CHECKBOX
+			VALUENAME "NoSDDirPage"
+		END PART
+		PART !!DisableAudioPage CHECKBOX
+			VALUENAME "NoAudioPage"
+		END PART
+		PART !!DisableVideoPage CHECKBOX
+			VALUENAME "NoVideoPage"
+		END PART
+		PART !!DisableProtocolsPage CHECKBOX
+			VALUENAME "NoProtocolsPage"
+		END PART
+	END POLICY
+
+	POLICY !!PreventAnswering
+	VALUENAME "NoAnswering"
+	END POLICY
+
+	POLICY !!PreventAudio
+	VALUENAME "NoAudio"
+	END POLICY
+
+	POLICY !!RestrictVideo
+	VALUENAME "RestrictVideo"
+		PART !!PreventSendingVideo CHECKBOX
+			VALUENAME "NoSendingVideo"
+		END PART
+		PART !!PreventReceivingVideo CHECKBOX
+			VALUENAME "NoReceivingVideo"
+		END PART
+	END POLICY
+
+	POLICY !!PreventDirectoryServices
+	VALUENAME "NoDirectoryServices"
+	END POLICY
+
+	POLICY !!SetULSServer
+		PART !!UlsServer EDITTEXT
+			KEYNAME "Software\Microsoft\User Location Service\Client"
+			VALUENAME "Server Name"
+		END PART
+	END POLICY
+
+	POLICY !!SetExchangeProperty
+			PART !!ExchangePropertyID DROPDOWNLIST
+			KEYNAME "Software\Microsoft\Conferencing\Policies"
+			VALUENAME "NetMeeting Address Property"
+			ITEMLIST
+				NAME !!Extension-Attribute-1 VALUE NUMERIC 32813
+				NAME !!Extension-Attribute-2 VALUE NUMERIC 32814
+				NAME !!Extension-Attribute-3 VALUE NUMERIC 32815
+				NAME !!Extension-Attribute-4 VALUE NUMERIC 32816
+				NAME !!Extension-Attribute-5 VALUE NUMERIC 32817
+				NAME !!Extension-Attribute-6 VALUE NUMERIC 32818
+				NAME !!Extension-Attribute-7 VALUE NUMERIC 32819
+				NAME !!Extension-Attribute-8 VALUE NUMERIC 32820
+				NAME !!Extension-Attribute-9 VALUE NUMERIC 32821
+				NAME !!Extension-Attribute-10 VALUE NUMERIC 32822
+			END ITEMLIST
+			END PART	
+		END POLICY
+
+	POLICY !!SetUserInfoClass
+		PART !!UserInfoClassID DROPDOWNLIST
+		KEYNAME "Software\Microsoft\Conferencing\Policies"
+		VALUENAME "RestrictedULS"
+		ITEMLIST
+			NAME !!UserInfoPersonal			VALUE NUMERIC 1
+			NAME !!UserInfoBusiness			VALUE NUMERIC 2
+			NAME !!UserInfoAdult			VALUE NUMERIC 4
+		END ITEMLIST
+		END PART	
+	END POLICY
+
+	POLICY !!NetMeetingHomePage		
+		PART !!HomePage EDITTEXT
+			KEYNAME "Software\Microsoft\Conferencing"
+			VALUENAME "NetMeeting Home Page"
+		END PART
+	END POLICY
+
+	POLICY !!SetAVThroughput
+		PART !!AVThroughput EDITTEXT
+			KEYNAME "Software\Microsoft\Conferencing\QoS\Resources\1"
+			VALUENAME "MaxUnits"
+		END PART
+	END POLICY
+END CATEGORY	; NetMeeting
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CLASS MACHINE   ;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CATEGORY !!NetMeeting2
+KEYNAME "Software\Microsoft\Conferencing"
+	POLICY !!NetMeeting2
+		PART !!EnableTCPIP CHECKBOX
+		KEYNAME "Software\Microsoft\Conferencing\Transports\TCPIP"
+		VALUENAME Disabled
+		END PART
+
+		PART !!EnableNullModem CHECKBOX
+		KEYNAME "Software\Microsoft\Conferencing\Transports\DIRCB"
+		VALUENAME Disabled
+		DEFCHECKED
+		END PART
+	END POLICY
+END CATEGORY
+
+[strings]
+Y="Y"
+N="N"
+
+NetMeeting="NetMeeting Settings"
+NetMeeting2="NetMeeting Protocols"
+
+PreventAnswering="Prevent the user from answering calls"
+
+RestrictFileTransfer="Restrict the use of file transfer"
+PreventSendingFiles="Prevent the user from sending files"
+PreventReceivingFiles="Prevent the user from receiving files"
+
+PreventAudio="Prevent the user from using audio features"
+
+PreventDirectoryServices="Prevent the user from using directory services"
+
+RestrictVideo="Restrict the use of video"
+PreventSendingVideo="Prevent the user from sending video"
+PreventReceivingVideo="Prevent the user from receiving video"
+
+NetMeetingHomePage="Set the NetMeeting home page"
+SetULSServer="Set the default Directory Server"
+HomePage="NetMeeting Home Page URL:"
+UlsServer="Directory Server:"
+
+SetExchangeProperty="Set Exchange Server Property for NetMeeting Address"
+ExchangePropertyID="Exchange Server Property:"
+Extension-Attribute-1="Extension Attribute  1"
+Extension-Attribute-2="Extension Attribute  2"
+Extension-Attribute-3="Extension Attribute  3"
+Extension-Attribute-4="Extension Attribute  4"
+Extension-Attribute-5="Extension Attribute  5"
+Extension-Attribute-6="Extension Attribute  6"
+Extension-Attribute-7="Extension Attribute  7"
+Extension-Attribute-8="Extension Attribute  8"
+Extension-Attribute-9="Extension Attribute  9"
+Extension-Attribute-10="Extension Attribute 10"
+
+SetUserInfoClass="Preset User Information Category"
+UserInfoClassID="Note: Only applicable for silent installs"
+UserInfoPersonal="Personal"
+UserInfoBusiness="Business"
+UserInfoAdult="Adult"
+
+RestrictAppSharing="Restrict the use of application sharing"
+PreventAppSharing="Disable all application sharing features"
+PreventSharedClip="Prevent the user from sharing the clipboard"
+PreventSharingMSDOS="Prevent the user from sharing MS-DOS windows"
+PreventSharingExplorer="Prevent the user from sharing explorer windows"
+PreventGrantingControl="Prevent the user from collaborating"
+
+RestrictOptionsDialog="Restrict the use of the options dialog"
+DisableGeneralPage="Disable the 'General' options page"
+DisableProtocolsPage="Disable the 'Protocols' options page"
+DisableAudioPage="Disable the 'Audio' options page"
+DisableVideoPage="Disable the 'Video' options page"
+DisableMyInfoPage="Disable the 'My Information' options page"
+DisableSDDirPage="Disable the 'Calling' options page"
+
+EnableTCPIP="Disable TCP/IP"
+EnableNullModem="Disable null modem"
+
+SetAVThroughput="Set limit for audio/video throughput"
+AVThroughput="Average audio/video throughput limit (in bps):"
+
+IEAK_Title=Microsoft NetMeeting
+IEAK_DescriptionTitle=NetMeeting Settings and Restrictions
+IEAK_Description1=Microsoft NetMeeting enables you to make audio and video calls and share data over the Internet or Intranet. Using NetMeeting, two or more people can share applications, transfer files, view and draw on a shared whiteboard, and chat. All of this will work over a standard modem connection to the Internet, as well as over ISDN and on a local area network.
+IEAK_Description2=System policies for NetMeeting 2.0 are a powerful mechanism for increasing control and manageability of computers across a network. Defined in this file, system policies are a method to enforce user and computer settings by overriding default registry values. Using this editor, you can implement policies to control user and computer access privileges and to standardize configurations for your NetMeeting 2.0 user community.
+IEAK_Description3=System policy settings for users can apply to an individual user, a user group, or all users; system policy settings for computers can apply to an individual computer or all computers. 
+
+[IEAK]
+Lock=1
+Roles=011
+NumOfDescLines=3
+Platform=010

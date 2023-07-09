@@ -1,0 +1,2 @@
+IA64_SOURCES=..\ia64\initia64.c     \
+             ..\ia64\initdat.c

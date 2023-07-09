@@ -1,0 +1,22 @@
+MAJORCOMP=cairoshl
+MINORCOMP=creategpt
+
+TARGETNAME=creategpt
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+C_DEFINES=-DNT -DWINNT
+
+INCLUDES=
+
+INCLUDES=.
+
+SOURCES= createadt.c
+
+
+LINKLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib           \
+         $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+UMTYPE=console
+UMAPPL=
+UMRES=

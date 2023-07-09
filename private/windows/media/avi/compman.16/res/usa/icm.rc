@@ -1,0 +1,92 @@
+
+/* MCI capture */
+#define ID_COMPRESSOR               880
+#define ID_FORMAT                   881
+#define ID_CONFIG                   882
+#define ID_ABOUT                    883
+#define ID_QUALITY                  884
+#define ID_QUALITYTEXT              885
+#define ID_QUALITYLABEL	            886
+#define ID_KEYFRAMEBOX              887
+#define ID_KEYFRAME            	    888
+#define ID_KEYFRAMETEXT        	    889
+#define ID_PREVIEW            	    890
+#define ID_PREVIEWWIN		    891
+#define ID_PREVIEWSCROLL            892
+#define ID_PREVIEWTEXT              893
+#define ID_DATARATEBOX              894
+#define ID_DATARATE            	    895
+#define ID_DATARATETEXT        	    896
+#define ID_CHOOSE_SMALL        	    897
+#define ID_CHOOSE_NORMAL       	    898
+#define ID_CHOOSE_BIG        	    899
+
+#define ID_NOCOMPSTRING        	    900
+#define ID_FULLFRAMESSTRING         901
+#define ID_FRAMECOMPRESSING         902
+#define ID_FRAMESIZE 		    903
+#define ID_FRAME 		    904
+#define ID_NONSUPPORTED		    905
+
+// How tall is this dialog without the PREVIEW button or DATARATE checkbox?
+#define ICM_CHOOSE_SMALL_HEIGHT		79
+
+#ifdef RC_INVOKED
+
+STRINGTABLE	LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+    ID_NOCOMPSTRING             "No Recompression"
+    ID_FULLFRAMESSTRING         "Full Frames (Uncompressed)"
+    ID_FRAMECOMPRESSING		"Frame: %u\nCompressing.... (%ld%%)"
+    ID_FRAMESIZE		"Frame: %u\nSize: %lu / %lu (%d%%)"
+    ID_FRAME			"Frame: %u"
+    ID_NONSUPPORTED		"%s\r\n is a non-supported AVI Codec."
+END
+
+ICCDLG DIALOG 5, 16, 275, 91
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Video Compression"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Compressor:", -1, 9, 6, 105, 8
+    // ***
+    // !!! PLEASE DO NOT SORT THIS COMBO BOX !!!
+    // ***
+    COMBOBOX        ID_COMPRESSOR, 9, 16, 111, 67, CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Compression &Quality:", ID_QUALITYLABEL, 9, 34, 80, 8
+    SCROLLBAR       ID_QUALITY, 9, 44, 111, 9, WS_TABSTOP
+    LTEXT           "", ID_QUALITYTEXT, 86, 34, 33, 8
+    CHECKBOX        "&Key Frame Every", ID_KEYFRAMEBOX, 9, 60, 66, 12,
+			BS_AUTOCHECKBOX | WS_TABSTOP
+    EDITTEXT        ID_KEYFRAME, 78, 60, 22, 12, WS_TABSTOP
+    LTEXT           "frames", ID_KEYFRAMETEXT, 103, 62, 26, 10
+
+    // !!! width needs to be greater than size of dialog... why???
+    CONTROL         "", ID_CHOOSE_SMALL, "Static", SS_BLACKRECT,
+		    0, ICM_CHOOSE_SMALL_HEIGHT, 185, 1
+
+    CHECKBOX        "&Data Rate", ID_DATARATEBOX, 9, 76, 66, 12,
+			BS_AUTOCHECKBOX | WS_TABSTOP
+    EDITTEXT        ID_DATARATE, 78, 76, 22, 12, WS_TABSTOP
+    LTEXT           "KB/sec", ID_DATARATETEXT, 102, 78, 26, 10
+    DEFPUSHBUTTON   "OK", IDOK, 129, 2, 49, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 129, 18, 49, 14
+    PUSHBUTTON      "Con&figure...", ID_CONFIG, 129, 36, 49, 14
+    PUSHBUTTON      "&About...", ID_ABOUT, 129, 52, 49, 14
+    PUSHBUTTON      "&Preview>>", ID_PREVIEW, 136, 74, 42, 14
+
+    // !!! Hacky constants again!
+    CONTROL         "", ID_CHOOSE_NORMAL, "Static", SS_BLACKRECT,
+			185, 0, 1, 100
+
+    CONTROL         "", ID_PREVIEWWIN, "Static", SS_SIMPLE, 188, 4, 80, 60
+    SCROLLBAR       ID_PREVIEWSCROLL, 188, 65, 80, 9, WS_TABSTOP
+    LTEXT           "", ID_PREVIEWTEXT, 179, 75, 96, 16
+
+    // !!! Hacky constants again!
+    CONTROL         "", ID_CHOOSE_BIG, "Static", SS_BLACKRECT,
+			280, 0, 1, 100
+END
+
+#endif

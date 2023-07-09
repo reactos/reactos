@@ -1,0 +1,32 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\xql\include=)
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+TARGETNAME=xqlpch
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SYNCHRONIZE_BLOCK=1
+
+SOURCES= \
+    headers.cxx
+
+INCLUDES= \
+	$(ROOT)\xml\include; \
+	$(ROOT); \
+    $(WINDOWS_INC_PATH)\
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fh=$(O)\core.pch
+!else
+PRECOMPILED_INCLUDE=core.hxx
+!endif
+PRECOMPILED_CXX=1
+
+

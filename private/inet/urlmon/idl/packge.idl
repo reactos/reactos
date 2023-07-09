@@ -1,0 +1,18 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:       packge.idl
+//
+//  Contents:
+//
+//  Classes:
+//
+//  Functions:
+//
+//  History:    11-17-1996   JohannP (Johann Posch)   Created
+//
+//----------------------------------------------------------------------------
+#include "notftn.idl"
+

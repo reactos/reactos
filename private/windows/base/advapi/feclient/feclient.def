@@ -1,0 +1,5 @@
+LIBRARY FeClient
+
+EXPORTS
+    FeClientInitialize
+

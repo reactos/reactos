@@ -1,0 +1,118 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP   = msxql
+MINORCOMP   = dll
+
+# Do this to assure that we run on NT 4.0 and Win95, even with
+# NT5/Memphis headers.
+#
+
+ROOT=$(MAKEDIR:\xql\dll=)
+!include $(ROOT)\common.inc
+
+NO_NTDLL	= 1
+
+TARGETNAME=   msxql
+TARGETPATHLIB=$(ROOT)\$(_OBJ_DIR)
+TARGETPATH=  $(ROOT)\$(_OBJ_DIR)
+TARGETTYPE=   DYNLINK
+
+# Include makefile.inc
+NTTARGETFILES   =
+
+# Make sure the component libs are built before this.
+SYNCHRONIZE_DRAIN=1
+DLLENTRY        = _DllMainCRTStartup
+
+DELAYLOAD=oleaut32.dll
+
+TARGETLIBS = \
+            $(SDK_LIB_PATH)\wininet.lib           \
+            $(SDK_LIB_PATH)\ole32.lib             \
+            $(SDK_LIB_PATH)\uuid.lib              \
+            $(SDK_LIB_PATH)\shlwapip.lib               \
+            $(SDK_LIB_PATH)\user32.lib            \
+            $(SDK_LIB_PATH)\shell32.lib           \
+            $(SDK_LIB_PATH)\kernel32.lib          \
+            $(SDK_LIB_PATH)\oleaut32.lib          \
+            $(SDK_LIB_PATH)\version.lib	     \
+!ifdef _DEBUG
+            $(SDK_LIB_PATH)\libc.lib
+!endif
+
+LINKLIBS        = \
+    $(ROOT)\core\crt\$O\crt.lib \
+    $(ROOT)\xql\parser\$O\xqlparse.lib \
+    $(ROOT)\xql\query\$O\query.lib \
+    $(ROOT)\xql\om\$O\om.lib \
+    $(ROOT)\include\$O\corepch.lib \
+    $(ROOT)\xql\include\$O\xqlpch.lib \
+    $(ROOT)\$(O)\msxml.lib    \
+    $(ROOT)\core\com\$O\com.lib \
+    $(ROOT)\core\base\$O\base.lib \
+    $(ROOT)\core\lang\$O\lang.lib \
+    $(ROOT)\core\util\$O\util.lib \
+# NOTE following libs are required only for Datatype support
+            $(ROOT)\xml\tokenizer\base\$O\base.lib \
+            $(ROOT)\xml\tokenizer\xmlstream\$O\xmlstream.lib \
+            $(ROOT)\xml\tokenizer\encoder\$O\xmlencoder.lib \
+            $(ROOT)\xml\tokenizer\parser\$O\xmlparser.lib \
+            $(ROOT)\xml\tokenizer\net\$O\xmlnet.lib \
+!IFDEF _DEBUG
+    $(ROOT)\core\io\$O\io.lib \
+    $(ROOT)\external\lib\*\mshtmdbg.lib
+!endif
+
+
+SOURCES =  \
+    msxql.cxx \
+    msxql.rc
+
+# For RC to find msxml.TLB
+INCLUDES= \
+    $(ROOT)\xql\om; \
+	$(ROOT)\xml\include; \
+	$(ROOT)\xml\resource; \
+	$(ROOT); \
+	$(ROOT)\core;\
+	$(ROOT)\core\base;\
+	$(ROOT)\core\io;\
+	$(ROOT)\core\util;\
+	$(SDK_INC_PATH);
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+
+
+	
+	
+	
+	

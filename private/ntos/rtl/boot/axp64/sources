@@ -1,0 +1,5 @@
+AXP64_SOURCES=..\alpha\debugstb.s \
+              ..\alpha\largeint.s \
+              ..\alpha\lzntaxp.s  \
+              ..\alpha\ntcurteb.s \
+              ..\alpha\mvmem.s

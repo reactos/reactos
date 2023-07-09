@@ -1,0 +1,53 @@
+REGEDIT4
+
+
+[HKEY_CLASSES_ROOT\InternetExplorer.Application]
+@="Internet Explorer"
+
+[HKEY_CLASSES_ROOT\InternetExplorer.Application\CLSID]
+@="{0002DF01-0000-0000-C000-000000000046}"
+
+[HKEY_CLASSES_ROOT\InternetExplorer.Application\CurVer]
+@="InternetExplorer.Application.1"
+
+[HKEY_CLASSES_ROOT\InternetExplorer.Application\NotInsertable]
+@=""
+
+[HKEY_CLASSES_ROOT\InternetExplorer.Application.1]
+@="Internet Explorer (Ver 1.0)"
+
+[HKEY_CLASSES_ROOT\InternetExplorer.Application.1\CLSID]
+@="{0002DF01-0000-0000-C000-000000000046}"
+
+[HKEY_CLASSES_ROOT\InternetExplorer.Application.1\NotInsertable]
+@=""
+
+[HKEY_CLASSES_ROOT\CLSID\{0002DF01-0000-0000-C000-000000000046}]
+@="Internet Explorer(Ver 1.0)"
+
+[HKEY_CLASSES_ROOT\CLSID\{0002DF01-0000-0000-C000-000000000046}\LocalServer32]
+@="c:\\windows\\ie96.exe"
+
+[HKEY_CLASSES_ROOT\CLSID\{0002DF01-0000-0000-C000-000000000046}\ProgID]
+@="InternetExplorer.Application.1"
+
+[HKEY_CLASSES_ROOT\CLSID\{0002DF01-0000-0000-C000-000000000046}\VersionIndependentProgID]
+@="InternetExplorer.Application"
+
+[HKEY_CLASSES_ROOT\CLSID\{0002DF01-0000-0000-C000-000000000046}\TypeLib]
+@="{4547D580-355D-11CF-A9BC-00AA004AE837}"
+
+[HKEY_CLASSES_ROOT\CLSID\{0002DF01-0000-0000-C000-000000000046}\Programmable]
+@=""
+
+[HKEY_CLASSES_ROOT\CLSID\{0002DF01-0000-0000-C000-000000000046}\NotInsertable]
+@=""
+
+[HKEY_CLASSES_ROOT\TypeLib\{4547D580-355D-11CF-A9BC-00AA004AE837}]
+@="Internet Explorer Type Library"
+
+[HKEY_CLASSES_ROOT\TypeLib\{4547D580-355D-11CF-A9BC-00AA004AE837}\1.0]
+@="Internet Explorer (Ver 1.0) Type Library"
+
+[HKEY_CLASSES_ROOT\TypeLib\{4547D580-355D-11CF-A9BC-00AA004AE837}\1.0\0\win32]
+@="c:\windows\ie96.exe\1"

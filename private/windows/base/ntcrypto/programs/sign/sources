@@ -1,0 +1,37 @@
+#----------------------------------------------------------------------------
+#
+# Description:
+#
+#       sources file for test program for cryptapi
+#
+# History:
+#
+#       11/29/94 larrys created
+#       03/15/95 raymondm added conditional linking to capi.dll
+#
+#----------------------------------------------------------------------------
+
+MAJORCOMP=sign
+MINORCOMP=EXE
+
+TARGETNAME=sign
+TARGETPATH=..\bin
+TARGETTYPE=PROGRAM
+
+INCLUDES=\
+    $(BASEDIR)\private\inc\crypto; \
+    ..\..\inc; \
+    ..\inc;
+
+TARGETLIBS=\
+           $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+           $(BASEDIR)\private\lib\*\rsa32.lib \
+           $(BASEDIR)\public\sdk\lib\*\ntdll.lib
+
+SOURCES=\
+                sign.c  \
+                keys.c  \
+		sign.rc
+
+UMTYPE=console
+USE_MSVCRT=1

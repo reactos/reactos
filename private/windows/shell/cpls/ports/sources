@@ -1,0 +1,59 @@
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=msports
+TARGETPATH=obj
+TARGETPATHLIB=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+TARGETEXT=dll
+DLLENTRY=LibMain
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\setupapi.lib     \
+           $(BASEDIR)\public\sdk\lib\*\libc.lib         \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib        \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib      \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\cfgmgr32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\version.lib      
+
+UMLIBS=    $(BASEDIR)\public\sdk\lib\*\setupapi.lib     \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\libc.lib         \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib        \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib      \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\cfgmgr32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\version.lib      
+
+
+INCLUDES=..\..\..\inc
+
+USE_NTDLL=1
+
+DLLBASE=0x70100000
+
+USE_MSVCRT=1
+USE_CRTDLL=1
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+C_DEFINES=-DWIN32 -DW3 -DUNICODE -D_UNICODE -DPORT_INC_VERINFO
+
+UMTYPE=windows
+
+SOURCES=pp.c       \
+        advandlg.c \
+        ports.c    \
+        util.c     \
+        comdb.c    \
+        pp_lpt.c    \
+        ports.rc   

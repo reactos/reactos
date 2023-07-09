@@ -1,0 +1,125 @@
+$INPUT$win30api$END$
+$SELECT$$IFN:dll:$$END$
+$OUTPUT$$IFN:file:$t$DATA:file$.c$ELSE$t$DATA:dll$.c$ENDIF$$END$
+$HEADER
+
+$TEMPLATE
+
+
+ULONG W32$DATA:API$(VPVOID vpFrame)
+{
+$IFE:params:void
+$IFN:type:void$    ULONG ul;
+
+$ENDIF
+$ELSE
+$IFN:type:void$    ULONG ul = 0;
+$ENDIF
+$LOOP:paramdir
+$IFE:paramdir*:IN
+$IFE:params*:LPSTR
+    int cb$COUNT$;  PSZ psz$COUNT$ = NULL;
+$ELSEIFIN:params*:LP:LPz
+    $DATA:params*$ t$COUNT$;
+$ENDIF
+$ELSEIFE:paramdir*:IN OUT
+$IFE:params*:LPSTR
+    int cb$COUNT$;  PSZ psz$COUNT$ = NULL;
+$ELSEIFIN:params*:LP:LPz
+    $DATA:params*$ t$COUNT$;
+$ENDIF
+$ELSEIFE:paramdir*:DESTROY IN
+$IFE:params*:LPSTR
+    int cb$COUNT$;  PSZ psz$COUNT$ = NULL;
+$ELSEIFIN:params*:LP:LPz
+    $DATA:params*$ t$COUNT$;
+$ENDIF
+$ELSEIFE:paramdir*:OUT
+$IFE:params*:LPSTR
+    PSZ psz$COUNT$ = NULL;
+$ELSEIFIN:params*:LP:LPz
+    $DATA:params*$ t$COUNT$;
+$ENDIF
+$ENDIF
+$ENDLOOP
+    register P$DATA:API$16 parg16;
+
+    GETARGPTR(vpFrame, sizeof($DATA:API$16), parg16);
+$LOOP:paramdir
+$IFE:params*:LPSTR
+$IFE:paramdir*:IN
+    GETPSZPTR(parg16->f$COUNT$, &cb$COUNT$, psz$COUNT$);
+$ELSEIFE:paramdir*:IN OUT
+    GETPSZPTR(parg16->f$COUNT$, &cb$COUNT$, psz$COUNT$);
+$ELSEIFE:paramdir*:DESTROY IN
+    GETPSZPTR(parg16->f$COUNT$, &cb$COUNT$, psz$COUNT$);
+$ELSEIFE:paramdir*:OUT
+    GETPSZPTR(parg16->f$COUNT$, cb$COUNT$, psz$COUNT$);
+$ENDIF
+$ELSEIFIN:params*:LP:LPz
+$IFE:paramdir*:IN
+    GET$DATA:params*$16(parg16->f$COUNT$, &t$COUNT$);
+$ELSEIFE:paramdir*:IN OUT
+    GET$DATA:params*$16(parg16->f$COUNT$, &t$COUNT$);
+$ELSEIFE:paramdir*:DESTROY IN
+    GET$DATA:params*$16(parg16->f$COUNT$, &t$COUNT$);
+$ENDIF
+$ENDIF
+$ENDLOOP
+
+$ENDIF
+$IFE:params:void
+    $IFN:type:void$ul = GET$DATA:type$16($ENDIF$$DATA:API$();
+$ELSE
+    $IFN:type:void$ul = GET$DATA:type$16($ENDIF$$DATA:API$($LOOP:params
+
+$IFE:params*:LPSTR
+	psz$COUNT
+$ELSEIFIN:params*:LP:LPz
+	&t$COUNT
+$ELSEIFOUT:params*:LP:LPz
+$IFN:params*:void
+	$DATA:params*$32(parg16->f$COUNT$)$ENDIF
+$ENDIF
+$ENDLOOP:,$
+    $IFN:type:void$)$ENDIF$);
+$ENDIF
+
+$IFN:params:void
+$LOOP:paramdir
+$IFE:params*:LPSTR
+$IFE:paramdir*:OUT
+    FLUSHPSZPTR(parg16->f$COUNT$, cb$COUNT$, psz$COUNT$);
+$ELSEIFE:paramdir*:IN OUT
+    FLUSHPSZPTR(parg16->f$COUNT$, cb$COUNT$, psz$COUNT$);
+$ENDIF
+$ELSEIFIN:params*:LP:LPz
+$IFE:paramdir*:OUT
+    PUT$DATA:params*$16(parg16->f$COUNT$, &t$COUNT$);
+$ELSEIFE:paramdir*:IN OUT
+    PUT$DATA:params*$16(parg16->f$COUNT$, &t$COUNT$);
+$ENDIF
+$ENDIF
+$ENDLOOP
+    Error:
+$LOOP:paramdir
+$IFE:paramdir*:IN
+$IFE:params*:LPSTR
+    FREEPSZPTR(psz$COUNT$);
+$ENDIF
+$ELSEIFE:paramdir*:IN OUT
+$IFE:params*:LPSTR
+    FREEPSZPTR(psz$COUNT$);
+$ENDIF
+$ELSEIFE:paramdir*:DESTROY IN
+$IFE:params*:LPSTR
+    FREEPSZPTR(psz$COUNT$);
+$ENDIF
+$ENDIF
+$ENDLOOP
+    FREEARGPTR(parg16);
+$ENDIF
+$IFN:type:void$    return ul;
+$ELSE$    return 0;
+$ENDIF
+}

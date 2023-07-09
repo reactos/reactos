@@ -1,0 +1,42 @@
+TARGETNAME=perfproc
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+USE_CRTDLL=1
+
+DLLBASE=0x61800000
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib     \
+	   $(BASEDIR)\public\sdk\lib\*\advapi32.lib         \
+        ..\common\obj\*\perfutil.obj
+
+INCLUDES=.;..\common
+
+GPSIZE=0        
+
+DLLENTRY=DllInit
+
+SOURCES=procmsg.mc  \
+        DATAEXPR.C  \
+        DATAIMAG.C  \
+        DATAPROC.C  \
+        DATATDET.C  \
+        DATATHRD.C  \
+		datajob.c	\
+        perfexpr.c  \
+        perfimag.c  \
+        perfproc.c  \
+        perftdet.c  \
+        perfthrd.c  \
+        perfsprc.c  \
+        perfva.c    \
+		perfjob.c	\
+        perfsprc.rc
+  
+
+PASS0_HEADERDIR=.
+PASS0_SOURCEDIR=.
+
+C_DEFINES= -DWIN32 -DSTRICT
+
+

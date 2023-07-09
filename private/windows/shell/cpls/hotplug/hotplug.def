@@ -1,0 +1,26 @@
+;//+-------------------------------------------------------------------------
+;//
+;//  Microsoft Windows
+;//
+;//  Copyright (C) Microsoft Corporation, 1997 - 1999
+;//
+;//  File:       hotplug.def
+;//
+;//--------------------------------------------------------------------------
+
+LIBRARY PLGCARD
+
+EXPORTS
+    CPlApplet
+    DllInitialize
+    HotPlugDeviceTree
+    HotPlugEjectDevice
+    HotPlugSurpriseWarnW
+    HotPlugGetWizardPages
+    HotPlugRemovalVetoedW
+    HotPlugEjectVetoedW
+    HotPlugSafeRemovalNotificationW
+    HotPlugStandbyVetoedW
+    HotPlugHibernateVetoedW
+    HotPlugWarmEjectVetoedW
+

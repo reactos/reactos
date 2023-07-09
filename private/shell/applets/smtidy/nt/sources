@@ -1,0 +1,10 @@
+
+C_DEFINES       = $(C_DEFINES) -DUNICODE
+!include ..\sources.inc
+
+SOURCES_USED    = $(SOURCES_USED) ..\sources.inc
+
+TARGETLIBS      = $(TARGETLIBS) \
+                  $(LIBRARY_PATH)\kernel32.lib
+
+INCLUDES        = $(CCSHELL_DIR)\applets\smtidy;$(INCLUDES)

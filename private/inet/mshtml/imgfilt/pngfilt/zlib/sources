@@ -1,0 +1,60 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+Author:   Ramesh G    06-07-96
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\imgfilt\pngfilt\zlib=)
+WARNING_LEVEL=W3
+!include $(ROOT)\common.inc
+
+TARGETPATH=   obj
+TARGETTYPE=   LIBRARY
+TARGETNAME=   ZLib
+
+ACTIVEXINC=..\..\inc
+
+PASS0_HEADERDIR=$(SDK_INC_PATH)
+
+# needs to run on Win95 and NT 3.51
+MIDL_OPTIMIZATION=$(MIDL_OPTIMIZATION) -Oi1
+
+WIN32_WINNT_VERSION=0x0400
+WIN32_WIN95_VERSION=0x0400
+
+INCLUDES=$(ACTIVEXINC)
+
+SOURCES= \
+    adler32.c        \
+    compress.c       \
+    crc32.c          \
+    deflate.c        \
+    gzio.c           \
+    infblock.c       \
+    infcodes.c       \
+    inffast.c        \
+    inflate.c        \
+    inftrees.c       \
+    infutil.c        \
+    trees.c          \
+    uncompr.c        \
+    zutil.c
+
+# include files that are inside ifdef blocks - prevents build warnings
+
+CONDITIONAL_INCLUDES=   \
+   $(CONDITIONAL_INCLUDES) \
+   alloc.h

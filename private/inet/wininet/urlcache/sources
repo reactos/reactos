@@ -1,0 +1,96 @@
+!IF 0
+
+Copyright (c) 1994  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1989
+
+
+Revision History:
+
+!ENDIF
+
+!include ..\place.inc
+
+MINORCOMP = urlcache
+
+TARGETNAME=urlcache
+TARGETTYPE=LIBRARY
+TARGETPATH=..\lib\$(_OBJ_DIR)
+
+
+INCLUDES=.;..\inc;..\inc\private;..\inetui;$(BASEDIR)\private\windows\inc;
+
+SOURCES= \
+        cachapia.cxx    \
+        cachapiw.cxx    \
+        cacheapi.cxx    \
+        cachecfg.cxx    \
+        urlcache.cxx    \
+        contain.cxx     \
+        instcon.cxx     \
+        downsize.cxx    \
+        filemap.cxx     \
+        hashutil.cxx    \
+        hndlmgr.cxx     \
+        initglob.cxx    \
+        cookies.cxx     \
+        conlist.cxx     \
+        conmgr.cxx      \
+        filemgr.cxx     \
+        reg.cxx         \
+        util.cxx        \
+        group.cxx       \
+        401imprt.cxx	\
+        debug.c
+
+C_DEFINES=  $(C_DEFINES) -DWIN32 -D_URLCACHEAPI_ -D_WINX32_ -DBETA_LOGGING
+
+# Set debugging level
+
+!IF "$(NTDEBUG)" != "" && "$(NTDEBUG)" != "retail" && "$(NTDEBUG)" != "ntsdnodbg"
+C_DEFINES=$(C_DEFINES) -DENABLE_DEBUG -DINET_DEBUG=1
+
+!IF "$(FULL_DEBUG)" != ""
+C_DEFINES=$(C_DEFINES) -DUSE_DEBUG_MEMORY
+!ELSE
+C_DEFINES=$(C_DEFINES) -DRETAIL_LOGGING
+!IF "$(BUILD_PRODUCT)" != "IE"
+C_DEFINES=$(C_DEFINES) -DDISABLE_ASSERTS
+!ENDIF
+!ENDIF
+
+!ENDIF
+
+
+PRECOMPILED_CXX=1
+PRECOMPILED_INCLUDE=cache.hxx
+PRECOMPILED_PCH=cache.pch
+PRECOMPILED_OBJ=cache.obj
+
+CONDITIONAL_INCLUDES = \
+        winwlm.h \
+        macwin32.h \
+        ia64inst.h \
+        pshpck16.h \
+        rpcerr.h \
+        rpcmac.h \
+        macname1.h \
+        macpub.h \
+        macapi.h \
+        macname2.h \
+	mainwin.h
+

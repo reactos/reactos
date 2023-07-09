@@ -1,0 +1,145 @@
+#-----------------------------------------------------------------------------
+# LIBRARY MAKE FILE SCRIPT
+#   This is the build-file for DOS-based systems.  It will build the testing
+#   program for WINCHAT
+#
+#
+# Copyright (C) 1990-1992 Microsoft Corp.
+#
+# created: 28-Mar-91
+# history: 28-Mar-91 <chriswil> created.
+#
+#-----------------------------------------------------------------------------
+
+
+#-------------------------------------------------
+# LIBRARY NAME - enter program name.
+#-------------------------------------------------
+PROGRAM   = winchat
+CDEFINES  = -DSTRICT -DTESTLOCAL
+INCLUDES  = -I. -I$(APPSROOT)\inc -I..\commctrl
+
+SUBSYSTEM = windows
+DBG       = PARTIAL
+DBGTYPE   = coff
+
+LINKLIBS  = $(LIB)\gdi32.lib         \
+            $(LIB)\user32.lib        \
+            $(LIB)\kernel32.lib      \
+            $(LIB)\crtdll.lib        \
+            $(LIB)\comdlg32.lib
+
+LINKFLAGS = -out:$(PROGRAM).exe -debug:$(DBG) -debugtype:$(DBGTYPE) -subsystem:$(SUBSYSTEM) -entry:WinMainCRTStartup
+
+
+
+#-------------------------------------------------
+# COMPILER OPTIONS - Windows NT i386
+#  List the particular compiler options.
+#-------------------------------------------------
+!IF "$(CPU)" == "i386"
+CFLAGS    = -c -D$(CPU)=1 -G3z -Zel -Od -W3 $(INCLUDES)
+CC        = cl386 $(CFLAGS) -DNT -DWIN32 $(CDEFINES)
+CVTOBJ    =
+LINK      = link $(LINKFLAGS) $(OBJECTS) $(LINKLIBS) $(PROGRAM).res
+IMPLIB    = lib -out:$(PROGRAM).lib -machine:$(CPU) -def:$(PROGRAM).def $(OBJECTS) $(LINKLIBS)
+RC        = rc -r -fo $(PROGRAM).tmp $(PROGRAM).rc
+RLINK     = cvtres -$(CPU) $(PROGRAM).tmp -o $(PROGRAM).res
+RCLINK    =
+ASM       =
+TXTSEG    =
+MAPSYM    =
+CLEAN     = erase *.tmp
+!ENDIF
+
+
+#-------------------------------------------------
+# COMPILER OPTIONS - Windows NT MIPS
+#  List the particular compiler options.
+#-------------------------------------------------
+!IF "$(CPU)" == "MIPS"
+CFLAGS    = -c -std -G0 -O -o $(*B).obj -EL -D$(CPU)=1 $(INCLUDES)
+CC        = cc $(CFLAGS) -DNT -DWIN32 $(CDEFINES)
+CVTOBJ    = mip2coff *.obj
+LINK      = link $(LINKFLAGS) $(OBJECTS) $(LINKLIBS) $(PROGRAM).res
+IMPLIB    = lib -out:$(PROGRAM).lib -machine:$(CPU) -def:$(PROGRAM).def
+RC        = rc -r -fo $(PROGRAM).tmp $(PROGRAM).rc
+RLINK     = cvtres -$(CPU) $(PROGRAM).tmp -o $(PROGRAM).res
+RCLINK    =
+ASM       =
+TXTSEG    =
+MAPSYM    =
+CLEAN     = erase *.tmp
+!ENDIF
+
+
+#-------------------------------------------------
+# COMPILER OPTIONS - Windows NT PPC
+#  List the particular compiler options.
+#-------------------------------------------------
+!IF "$(CPU)" == "PPC"
+CFLAGS    = -c -D$(CPU)=1 -G3z -Zel -Od -W3 $(INCLUDES)
+CC        = mcl $(CFLAGS) -DNT -DWIN32 $(CDEFINES)
+CVTOBJ    =
+LINK      = link $(LINKFLAGS) $(OBJECTS) $(LINKLIBS) $(PROGRAM).res
+IMPLIB    = link -lib -out:$(PROGRAM).lib -machine:$(CPU) -def:$(PROGRAM).def $(OBJECTS) $(LINKLIBS)
+RC        = rc -r -fo $(PROGRAM).tmp $(PROGRAM).rc
+RLINK     = cvtres -$(CPU) $(PROGRAM).tmp -o $(PROGRAM).res
+RCLINK    =
+ASM       =
+TXTSEG    =
+MAPSYM    =
+CLEAN     = erase *.tmp
+!ENDIF
+
+
+#-------------------------------------------------
+# COMPILER OPTIONS - Windows (DOS16)
+#  List the particular compiler options.
+#-------------------------------------------------
+!IFNDEF CPU
+CFLAGS    = -c -Asnw -Gsw -Od -W3 -Zped $(INCLUDES)
+CC        = cl $(CFLAGS) -DWIN16 -DWIN$(WINVER) $(CDEFINES)
+CVTOBJ    =
+LINK      = link /BA @$*.lnk
+IMPLIB    =
+RC        = rc -r $*.rc
+RLINK     =
+RCLINK    = rc $(RCVER) $(PROGRAM).res $(PROGRAM).exe
+ASM       = masm /MX /T
+TXTSEG    = -NT _TEXT
+MAPSYM    = mapsym $*.map
+CLEAN     =
+!ENDIF
+
+
+#-------------------------------------------------
+# OBJECTS
+#   list the objects according to the segments
+#   they belong in.
+#-------------------------------------------------
+TXTOBJ = $(PROGRAM).obj wcinit.obj dialogs.obj dde.obj globals.obj
+
+OBJECTS = $(INIOBJ) $(TXTOBJ) $(DLGOBJ) $(WNDOBJ)
+
+
+#-------------------------------------------------
+# BUILD TARGETS
+#-------------------------------------------------
+$(PROGRAM).exe : $(OBJECTS) $(PROGRAM).def $(PROGRAM).res
+    $(CVTOBJ)
+    $(LINK)
+    $(RCLINK)
+    $(MAPSYM)
+    $(CLEAN)
+
+$(PROGRAM).res : $*.rc $*.h
+    $(RC)
+    $(RLINK)
+
+
+#-------------------------------------------------
+# OBJECTS
+#-------------------------------------------------
+$(TXTOBJ) : $*.c $(PROGRAM).h
+    $(CC) $(TXTSEG) $*.c

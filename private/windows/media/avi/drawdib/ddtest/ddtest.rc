@@ -1,0 +1,77 @@
+#include <windows.h>
+#include "ddtest.h"
+#include "..\drawdib.h"
+
+ID_APP  ICON   ddtest.ico
+AppIcon ICON   ddtest.ico
+
+ABOUTBOX DIALOG 22, 17, 144, 75
+STYLE WS_POPUP | WS_DLGFRAME
+BEGIN
+    CTEXT "Microsoft Windows"			-1, 37,  5, 60, 8
+    CTEXT "AVI DrawDib test"                -1,  0, 14, 144, 8
+    CTEXT "Version 1.00"			-1, 38, 34, 64, 8
+    CTEXT "Copyright © 1986-1992, Microsoft Corp."   -1,  5, 47,132, 9
+    ICON  "AppIcon"				-1,  9, 23,  0, 0
+    DEFPUSHBUTTON "Ok"			      IDOK, 53, 59, 32, 14, WS_GROUP
+END
+
+TestDib4    BITMAP test4.dib
+TestDib8    BITMAP test8.dib
+//TestDib16   BITMAP test16.dib
+//TestDib24   BITMAP test24.dib
+
+ID_APP menu
+begin
+    POPUP "&File"
+	begin
+            MENUITEM "&Open..."         , MENU_OPEN
+            MENUITEM "&Save..."         , MENU_SAVE
+            MENUITEM SEPARATOR
+            MENUITEM "&About..."        , MENU_ABOUT
+            MENUITEM "E&xit"            , MENU_EXIT
+            MENUITEM SEPARATOR
+            MENUITEM "Test&4  bpp"      , MENU_DIB_4
+            MENUITEM "Test&8  bpp"      , MENU_DIB_8
+            MENUITEM "Test&16 bpp"      , MENU_DIB_16
+            MENUITEM "Test&24 bpp"      , MENU_DIB_24
+        end
+
+    POPUP "&Edit"
+	begin
+            MENUITEM "Copy"              , MENU_COPY
+            MENUITEM "Paste"             , MENU_PASTE
+        end
+
+    POPUP "&Compressor"
+	begin
+            MENUITEM ""                  , MENU_COMPRESS
+        end
+
+    POPUP "&Options"
+	begin
+            MENUITEM "Stretch 1:&1"      , MENU_STRETCH_1
+            MENUITEM "Stretch 2:&3"      , MENU_STRETCH_15
+            MENUITEM "Stretch 1:&2"      , MENU_STRETCH_2
+            MENUITEM "Stretch To &Window", MENU_STRETCH_WIN
+            MENUITEM "Random"            , MENU_STRETCH_HUH
+            MENUITEM SEPARATOR
+            MENUITEM "&Just Draw It"     , MENU_JUST_DRAW_IT
+            MENUITEM "&Fullscreen"       , MENU_FULLSCREEN
+        end
+
+    POPUP "&Test"
+	begin
+            MENUITEM "&DrawDib Time"     , MENU_TIME_DRAWDIB
+            MENUITEM SEPARATOR
+            MENUITEM "&DrawDib Test"          , MENU_TEST_DRAWDIB
+            MENUITEM "Displa&y Test"          , MENU_TEST_DISPLAY
+            MENUITEM "Escape Test"            , MENU_TEST_ESCAPE
+            MENUITEM SEPARATOR
+            MENUITEM "Compress &It!"          , MENU_COMPRESS_IT
+            MENUITEM "&Compress Test"         , MENU_TEST_COMPRESS
+            MENUITEM "D&ecompress Test"       , MENU_TEST_DECOMPRESS
+//          MENUITEM SEPARATOR
+//          MENUITEM "&All"                   , MENU_TEST_ALL
+        end
+end

@@ -1,0 +1,24 @@
+HKCR
+{
+    NoRemove Folder
+    {
+        NoRemove shellEx
+        {
+            NoRemove ColumnHandlers
+            {
+                ForceRemove {66742402-F9B9-11D1-A202-0000F81FEDEE} = s 'Version Column Provider'
+            }
+        }
+    }
+
+	NoRemove CLSID
+	{
+		ForceRemove {66742402-F9B9-11D1-A202-0000F81FEDEE} = s 'Version Column Provider'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

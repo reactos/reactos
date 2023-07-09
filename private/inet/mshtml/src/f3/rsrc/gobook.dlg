@@ -1,0 +1,996 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML>
+<HEAD>
+<TITLE id=dialogTitle>
+Go To Bookmark
+</TITLE>
+
+
+<!-- TO DO
+    * Need robust method of determining whether the current selection contains
+      an anchor element.  The current implementation in loadBdy() will
+      fail if text preceding the anchor tag in the document is selected.  PM
+      (scotti) is working on providing a method to do this.
+    * (TASK #2) Tab order
+    * (TASK #5) No way to change button caption
+    * (RAID #8892) Can't create Option object with new operator
+      Affects selBookmark_fill().
+    * (RAID #9255) Can't use arrow keys to move between radio buttons
+      Affects usability.
+    * (RAID #10031) Parent of <HTML> element is not null.  Result is error
+      when parent of <HTML> is accessed.  This will occur during initialization.
+    * (RAID #10321) Wrong answer returned when comparing anchor href and name
+      properties to null.
+      Affects isLink().  Can't test bookmarkDelete() until it's fixed.
+-->
+
+<!-- NOTES
+* Expando properties
+    * Object: selBookmark.option
+        * exAnchor: a reference to the anchor that corresponds to the entry.
+                    This is used to access properties of a particular anchor
+                    directly.
+        * exDocIndex:  0-based index corresponding to the order in which the
+                  bookmark appears in the document.  This property is used
+                  when sorting the bookmarks by index.  Reloading the
+                  bookmarks from the document wasn't a viable solution
+                  because it doesn't provide a way to remember which
+                  bookmark(s) were selected.
+    * Object: btnNext
+        * exState:  Should the button execute the GoTo action or the Next
+                    action?
+-->
+
+<SCRIPT LANGUAGE=JavaScript>
+
+//+-------------------------------------------------------------------------
+//
+//  This section contains code to be moved into a GLOBAL MODULE outside
+//  of this particular dialog.
+//
+//--------------------------------------------------------------------------
+
+
+    var cmdDeleteBookmark       = "UnBookmark";
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Turns on the document's expando property.  When this
+    //              property is on, it is possible to create new expando
+    //              properties or assign to existing ones.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    Nothing
+    //
+    //----------------------------------------------------------------------
+
+    function expandoOn()
+    {
+        document.expando = true;
+    }   //  expandoOn
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Turns off the document's expando property.  When this
+    //              property is off, it is possible to read the value of
+    //              existing expando properties, but not possible to create
+    //              new ones or modify existing ones.
+    //
+    //              EXPANDO SHOULD BE OFF EXCEPT WHEN CREATING/MODIFYING
+    //              EXPANDO PROPERTIES.  This will save hours debugging
+    //              accidentally created expando properties.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    Nothing.
+    //
+    //----------------------------------------------------------------------
+
+    function expandoOff()
+    {
+        document.expando = false;
+    }   //  expandoOff
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Determines whether the ID attribute for an object is
+    //              set to a value.
+    //
+    //  Arguments:  object  the object to query
+    //
+    //  Returns:    true    if the object's id attribute has a value
+    //              false   otherwise
+    //
+    //  NOTE:       This will generate a runtime error if the object does
+    //              not support the ID attribute.
+    //----------------------------------------------------------------------
+
+    function hasID(object)
+    {
+        return null != object.id;
+
+    }   //  hasID
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Determines whether there is a link with the name 'name'.
+    //
+    //  Arguments:  name    the name to search for
+    //
+    //  Returns:    true    if the object's href attribute has a value
+    //              false   otherwise
+    //
+    //----------------------------------------------------------------------
+
+    function isLink (anchor)
+    {
+        return null != anchor.href;
+    }   //  isLink
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Sort bookmarks by name using a selection sort.  Bookmarks
+    //              that were selected when sort began, remain selected when
+    //              it is complete.
+    //
+    //  Arguments:  sel         The <SELECT> object (list box)
+    //
+    //  Returns:    Nothing
+    //
+    //----------------------------------------------------------------------
+
+        function selSortByName(sel)
+        {
+                var             index1;
+                var             index2;
+                var             textTemp;
+                var     selectedTemp;
+        var     anchorTemp;
+        var     docIndexTemp;
+
+        expandoOn();
+                for (index1 = 1; index1 < sel.options.length; index1++)
+                {
+            with (sel.options[index1])
+            {
+                textTemp      = text;
+                selectedTemp  = selected;
+                anchorTemp    = exAnchor;
+                docIndexTemp  = exDocIndex;
+            }
+
+                        for (index2 = index1 - 1;
+                                 index2 >= 0 && textTemp < sel.options[index2].text;
+                                 index2--)
+                        {
+                with (sel.options[index2 + 1])
+                {
+                    text        = sel.options[index2].text;
+                    selected    = sel.options[index2].selected;
+                    exAnchor    = sel.options[index2].exAnchor;
+                    exDocIndex  = sel.options[index2].exDocIndex;
+                }
+                        }
+
+            with (sel.options[index2 + 1])
+            {
+                text        = textTemp;
+                selected    = selectedTemp;
+                exAnchor    = anchorTemp;
+                exDocIndex  = docIndexTemp;
+            }
+                }
+        expandoOff();
+        }       //      selSortByName
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Sort bookmarks by index using a selection sort.  Bookmarks
+    //              that were selected when sort began, remain selected when
+    //              it is complete.
+    //
+    //  Arguments:  sel         The <SELECT> object (list box)
+    //
+    //  Returns:    Nothing
+    //
+    //----------------------------------------------------------------------
+
+    function selSortByIndex(sel)
+    {
+                var             index1;
+                var             index2;
+                var             textTemp;
+                var     selectedTemp;
+        var     anchorTemp;
+        var     docIndexTemp;
+
+        expandoOn();
+
+                for (index1 = 1; index1 < sel.options.length; index1++)
+                {
+            with (sel.options[index1])
+            {
+                textTemp      = text;
+                selectedTemp  = selected;
+                anchorTemp    = exAnchor;
+                docIndexTemp  = exDocIndex;
+            }
+
+                        for (index2 = index1 - 1;
+                                 index2 >= 0 && docIndexTemp < sel.options[index2].exDocIndex;
+                                 index2--)
+                        {
+                with (sel.options[index2 + 1])
+                {
+                    text        = sel.options[index2].text;
+                    selected    = sel.options[index2].selected;
+                    exAnchor      = sel.options[index2].exAnchor;
+                    exDocIndex    = sel.options[index2].exDocIndex;
+                }
+                        }
+
+            with (sel.options[index2 + 1])
+            {
+                text        = textTemp;
+                selected    = selectedTemp;
+                exAnchor    = anchorTemp;
+                exDocIndex  = docIndexTemp;
+            }
+                }
+
+        expandoOff();
+
+    }   //  selSortByIndex
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Given a string, returns the number the string represents.
+    //              This is needed because current localization tools can
+    //              only find strings.
+    //
+    //  Arguments:  string  The string we're changing into a number.
+    //
+    //  Returns:    a number
+    //
+    //----------------------------------------------------------------------
+
+    function number(string)
+    {
+        return parseFloat(string);
+    }   //  number
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+//+--------------------------------------------------------------------------
+//
+//  This section contains variables that need to be LOCALIZED
+//
+//---------------------------------------------------------------------------
+
+
+var L_GoToBookmark_DIALOG_Left_Number   =   number("50");
+var L_GoToBookmark_DIALOG_Top_Number    =   number("100");
+var L_GoToBookmark_DIALOG_Width_Number  =   number("450");
+var L_GoToBookmark_DIALOG_Height_Number =   number("250");
+
+var L_BookmarkHasID_Text =
+    "This bookmark contains an ID attribute.  Are you sure want to delete it?";
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE="JavaScript">
+
+//+-------------------------------------------------------------------------
+//
+//  This section contains code LOCAL to this particular dilaog.
+//
+//--------------------------------------------------------------------------
+
+    expandoOff();
+
+    // Constants
+
+    // states for btnNext
+    var STATE_GOTO              = 0;    // Scroll to the selected bookmark
+    var STATE_NEXT              = 1;    // Select the next bookmark and scroll
+                                        // to it.
+
+    // confirm return values
+    var htmlConfirmYes          = 6;
+    var htmlConfirmNo           = 7;
+
+    //  Set dialog position and dimensions
+    window.dialogLeft        =    L_GoToBookmark_DIALOG_Left_Number;
+    window.dialogTop         =    L_GoToBookmark_DIALOG_Top_Number;
+    window.dialogWidth       =    L_GoToBookmark_DIALOG_Width_Number;
+    window.dialogHeight      =    L_GoToBookmark_DIALOG_Height_Number;
+
+    //  Global variables
+    gdoc    =   window.dialogArguments;
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Adds exAnchor and exDocIndex properties to selBookmark
+    //              element.                .
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function selBookmark_fill()
+    {
+        var     index;
+
+        expandoOn();
+        for (index = 0; index < selBookmark.options.length; index++)
+        {
+            selBookmark.options[index].exAnchor     = gdoc.anchors[index];
+            selBookmark.options[index].exDocIndex   = index;
+        }
+        expandoOff();
+
+    }   //  selBookmark_fill
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Count the number of options selected in a list box
+    //
+    //  Arguments:  sel         The <SELECT> object (list box)
+    //
+    //  Returns:    The number of items selected in the list box
+    //
+    //----------------------------------------------------------------------
+
+    function selCount(sel)
+    {
+        var index;
+        var indexMax = sel.options.length;
+        var cSelected = 0;
+
+        for (index = 0; index < indexMax; index++)
+        {
+            if (sel.options[index].selected)
+            {
+                cSelected++;
+            }
+        }
+
+        return cSelected;
+
+    }   //  selCount
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Delete the bookmark with the corresponding name.
+    //
+    //
+    //  Arguments:  name    the name of the bookmark to be deleted
+    //
+    //  Returns:    nothing
+    //
+    //  Assumptions:
+    //              1.  A bookmark with the corresponding name exists in
+    //                  the page that was active when the dialog was invoked.
+    //
+    //----------------------------------------------------------------------
+
+    function bookmarkDelete(opt)
+    {
+        var     anchor      = opt.exAnchor;
+
+        if (isLink(anchor))
+        {
+            // clear the NAME attribute
+            // BUGBUG: What if multiple links with same name?
+            anchor.name = "";
+        }
+        else
+        {
+            if (hasID(anchor))       // ID only
+            {
+                // query user whether to delete entire tag or only
+                // clear name attribute
+
+                var rc = confirm(L_BookmarkHasID_Text);
+                if (rc == htmlConfirmYes)
+                {
+                    // delete entire tag
+
+                    rng = gdoc.rangeFromElement(anchor);
+                    rng.execCommand(cmdDeleteBookmark);
+                }
+                else
+                {
+                    // clear the NAME attribute
+                    anchor.name = "";
+                }
+            }
+            else                                // neither
+            {
+                rng = gdoc.rangeFromElement(anchor);
+                rng.execCommand(cmdDeleteBookmark);
+            }
+        }
+
+    }   // bookmarkDelete
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Scroll the bookmark selected in the bookmark list
+    //              to the top of the page.
+    //
+    //  Arguments:  opt     The option object selected in selBookmark
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function bookmarkScroll(opt)
+    {
+        if (null == opt)
+        {
+            return;
+        }
+
+        opt.exAnchor.scrollIntoView(true);
+
+    }   //  bookmarkScroll
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Enable/disable the 'Goto/Next' button
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function btnNextSetState()
+    {
+
+        // Disable 'Next' button if no items are selected, multiple items
+        // are selected, or the last item in the list is selected.
+        if ((1 != selCount(selBookmark)) ||
+            ((STATE_NEXT == btnNext.exState) &&
+            (selBookmark.options.length - 1 == selBookmark.selectedIndex)))
+        {
+            btnNext.disabled = true;
+        }
+        else
+        {
+            btnNext.disabled = false;
+        }
+    }   //  btnNextSetState
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Enable/disable the 'Previous' button
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function btnPrevSetState()
+    {
+        // Disable if the first list item is selected or multiple items
+        // are selected
+        if ((0 == selBookmark.selectedIndex) || (1 < selCount(selBookmark))
+            || (0 == selBookmark.options.length))
+        {
+            btnPrev.disabled = true;
+        }
+        else
+        {
+            btnPrev.disabled = false;
+        }
+    }   //  btnPrevSetState
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Enable/disable the 'Delete' button
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function btnDeleteSetState()
+    {
+        // Disable if no items are selected
+        if (0 == selCount(selBookmark))
+        {
+            btnDelete.disabled = true;
+        }
+        else
+        {
+            btnDelete.disabled = false;
+        }
+    }   //  btnDeleteSetState
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Initialize dialog.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function loadBdy()
+    {
+        var name;
+
+        expandoOn();
+        btnNext.exState = STATE_GOTO;
+        expandoOff();
+
+        // Set button states
+        btnNextSetState();
+        btnPrevSetState();
+        btnDeleteSetState();
+
+        selBookmark_fill();
+
+        // If current selection is in a bookmark, select the bookmark in
+        // the listbox.
+        name = "";
+        rng = gdoc.selection.createRange();
+        rng.collapse(true);
+        elm = rng.parentElement();
+
+        //
+        //  BUGBUG The condition below will have to be changed once raid 10031
+        //  is fixed.
+        //
+        while(elm.tagName != "HTML")
+        {
+            if (elm.tagName == "A")
+            {
+                name = elm.name;
+                break;
+            }
+            elm = elm.parentElement;
+        }
+
+        // BUGBUG: (a-danell) Access option directly when ID property is implemented.
+        if (name != "")
+        {
+            for (index = 0; index < selBookmark.options.length; index++)
+            {
+                if (selBookmark.options[index].text == name)
+                {
+                    selBookmark.options[index].selected = true;
+                    break;
+                }
+            }
+        }
+
+    }   //  loadBdy
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Scroll selected bookmark into view.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onCmdGoto()
+    {
+        bookmarkScroll(selBookmark.options[selBookmark.selectedIndex]);
+
+        btnPrevSetState();
+        btnNextSetState();
+
+    }   //  onCmdGoto
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Scroll the next bookmark into view.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onCmdNext()
+    {
+        selBookmark.selectedIndex++;
+        bookmarkScroll(selBookmark.options[selBookmark.selectedIndex]);
+        btnPrevSetState();
+        btnNextSetState();
+
+    }   // onCmdNext
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Select the previous bookmark in the list and scroll
+    //              to it.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onCmdPrevious()
+    {
+        selBookmark.selectedIndex--;
+        bookmarkScroll(selBookmark.options[selBookmark.selectedIndex]);
+        btnNextSetState();
+        btnPrevSetState();
+
+    }   //  onCmdPrevious
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Delete each selected bookmark from HTML source and
+    //              dismiss dialog.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onCmdDelete()
+    {
+
+        var     index;
+        var     indexMax;
+
+        // selBookmark.selectedIndex returns the first selected option for
+        // multiple selections.
+        //
+        for (index = selBookmark.selectedIndex, indexMax = selBookmark.options.length;
+             index < indexMax;
+             index++)
+        {
+            if (selBookmark.options[index].selected)
+            {
+                bookmarkDelete(selBookmark.options[index]);
+            }
+        }
+
+        window.close();
+    }   //  onCmdDelete
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Discard the user's changes and dismiss the dialog.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onCmdCancel()
+    {
+        window.close();
+    }   //  onCmdCancel
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=document EVENT="onkeypress()">
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Looks for the ENTER and ESC keypresses and runs the
+//              appropriate action.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+    var htmlKeyReturn = 13;
+    var htmlKeyEscape = 27;
+
+    if (event.keyCode == htmlKeyReturn)     //  Enter
+    {
+        if (btnNext.exState == STATE_GOTO)
+        {
+            onCmdGoto();
+        }
+        else
+        {
+            onCmdNext();
+        }
+    }
+
+    if (event.keyCode == htmlKeyEscape)     //  Esc
+    {
+        onCmdCancel();
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=selBookmark EVENT="dblClick()">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Scroll selected bookmark into view.
+    //
+    //  Arguments:  none.
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        onCmdGoto();
+    }   //  selBookmark_dblClick
+
+</SCRIPT>
+
+<SCRIPT Language=JavaScript FOR=selBookmark Event="keyUp(shift)">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Update button states depending on selection(s).
+    //
+    //  Arguments:  keyCode     Code identifying the key that was pressed
+    //              shift       State of the Ctrl, Alt, and Shift keys
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        btnPrevSetState();
+        btnNextSetState();
+        btnDeleteSetState();
+
+    }   //  selBookmark_keyUp
+
+
+</SCRIPT>
+
+<SCRIPT Language=JavaScript FOR=selBookmark Event="onclick()">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Update button states depending on selection(s).
+    //
+    //  Arguments:  none.
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+
+        btnPrevSetState();
+        btnNextSetState();
+        btnDeleteSetState();
+    }   //  selBookmark_onclick
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=radByLoc EVENT="onclick()">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Sort bookmark list by location in document.
+    //
+    //  Arguments:  none.
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+                selSortByIndex(document.selBookmark);
+        btnPrevSetState();
+        btnNextSetState();
+    }   //  radByLoc_onclick
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=radByName EVENT="onclick()">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Sort list by name.
+    //
+    //  Arguments:  none.
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+                selSortByName(document.selBookmark);
+        btnPrevSetState();
+        btnNextSetState();
+    }   //  radByName_onclick
+
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=btnNext EVENT="onclick()">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Scroll selected bookmark into view.
+    //
+    //  Arguments:  none.
+    //
+    //  Returns:    nothing
+    //
+    //  NOTE:  This button handles both GoTo and Next.
+    //
+    //----------------------------------------------------------------------
+
+    {
+        if (btnNext.exState == STATE_GOTO)
+        {
+            onCmdGoto();
+
+            // Change caption of button
+            expandoOn();
+            btnNext.exState = STATE_NEXT;
+            expandoOff();
+        }
+        else
+        {
+            onCmdNext();
+        }
+    }   //  btnNext_onclick
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=btnPrev EVENT="onclick()">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Select the previous bookmark in the list and scroll
+    //              to it.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        onCmdPrevious();
+
+    }   //  btnPrev_onclick
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=btnDelete EVENT="onclick()">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Delete each selected bookmark from HTML source and
+    //              dismiss dialog.
+    //
+    //  Arguments:  none.
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        onCmdDelete();
+    }   //  btnDelete_onclick
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=btnClose EVENT="onclick()">
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Dismiss dialog.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        onCmdCancel();
+    }   //  btnClose_onclick
+
+</SCRIPT>
+
+</HEAD>
+
+<BODY id=bodyBookmark onLoad="loadBdy()">
+
+<DIV style="position:absolute; LEFT: .5em; TOP: .5em; WIDTH: 8em; HEIGHT: 1em">
+<LABEL For=selBookmark id=lblBookmark>
+S<U>e</U>lect Bookmark:
+</LABEL>
+</DIV>
+
+<SCRIPT LANGUAGE=JavaScript>
+var index;
+var doc = window.dialogArguments;
+document.write('<SELECT id=selBookmark ACCESSKEY=e multiple style="position: absolute; LEFT: .5em; TOP: 2.5em; WIDTH: 22em; HEIGHT: 9em">');
+for (index = 0; index < doc.anchors.length; index++)
+{
+    if (doc.anchors[index].name != "")
+    {
+        document.write('<OPTION>' + doc.anchors[index].name);
+    }
+}
+document.write('</SELECT>');
+</SCRIPT>
+
+<TABLE border=1 style="position: absolute; LEFT: .5em; TOP: 7.9em; WIDTH: 14.5em; HEIGHT: 2em">
+<TR>
+<TD>
+    <DIV style="position: absolute; LEFT: .5em; TOP: .5em; WIDTH: 5em; HEIGHT: 1em"><LABEL id=lblSortedBy>Sorted by:
+    </LABEL></DIV>
+    <INPUT id=radByName name=radSortBy style="position: absolute; LEFT: 5em; TOP: .75em; WIDTH: 1em; HEIGHT: 1em" type=radio
+    ACCESSKEY=n>
+    <DIV style="position: absolute; LEFT: 6em; TOP: .5em; WIDTH: 3em; HEIGHT: 1em">
+    <LABEL For=radByName id=lblByName>
+    <U>N</U>ame
+    </LABEL>
+    </DIV>
+
+    <INPUT id=radByLoc name=radSortBy style="position: absolute; LEFT: 9em; TOP: .75em; WIDTH: 1em; HEIGHT: 1em" type=radio
+    CHECKED ACCESSKEY=l>
+    <DIV style="position: absolute; LEFT: 10em; TOP: .5em; WIDTH: 6em; HEIGHT: 1em">
+    <LABEL For=radByLoc id=lblByLoc>
+    <U>L</U>ocation
+    </LABEL>
+    </DIV>
+</TD>
+</TR>
+</TABLE>
+
+<BUTTON id=btnNext style="position: absolute; LEFT:23.5em; TOP: 1.6em; WIDTH: 9.5em; HEIGHT: 2.5em" AccessKey=T>
+Go<U>T</U>o
+</BUTTON>
+<BUTTON id=btnPrev style="position: absolute; LEFT:23.5em; TOP: 4.4em; WIDTH: 9.5em; HEIGHT: 2.5em" AccessKey=V>
+Pre<U>v</U>ious
+</BUTTON>
+<BUTTON id=btnDelete style="position: absolute; LEFT:23.5em; TOP: 10.1em; WIDTH: 9.5em; HEIGHT: 2.5em" AccessKey=D>
+<U>D</U>elete
+</BUTTON>
+<BUTTON id=btnClose style="position: absolute; LEFT:23.5em; TOP: 12.9em; WIDTH: 9.5em; HEIGHT: 2.5em" AccessKey=C>
+<U>C</U>lose
+</BUTTON>
+
+</BODY>
+</HTML>

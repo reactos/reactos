@@ -1,0 +1,31 @@
+#include <windows.h>
+
+#include <ntverp.h>
+
+#define	VER_FILETYPE                VFT_APP
+#define	VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "SNMP Agent Service"
+#define VER_INTERNALNAME_STR        "snmp.exe"
+#define VER_ORIGINALFILENAME_STR    "snmp.exe"
+
+#include "common.ver"
+
+#if !defined(NT)
+
+#include "snmpctrl.h"
+
+STRINGTABLE
+BEGIN
+        IDS_APP_NAME                "snmp"
+        IDS_TITLE_BAR               "SNMP Agent Service"
+        IDS_HELP_STRING             "help"
+        IDS_QUEST_STRING            "?"
+        IDS_CLOSE_STRING            "close"
+        IDS_DESTROY_STRING          "destroy"
+        IDS_HELP_TEXT1              "snmp -close\tCloses previously running instance of snmp\n\nsnmp -help\tDisplays this message"
+        IDS_HELP_TEXT2              "SNMP Agent Service"
+        IDS_HELP_TEXT3              "The SNMP Agent Service, is already running"
+END
+#endif
+
+1 11 MSG00001.bin

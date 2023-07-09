@@ -1,0 +1,308 @@
+/************************************************************************
+*                                                                       *
+*   dispatch.idl - Windows NT Disk Quota dispatch interfaces.           *
+*                                                                       *
+*   Copyright (c) 1991-1997, Microsoft Corp. All rights reserved.       *
+*                                                                       *
+************************************************************************/
+
+const int DISPID_DISKQUOTAEVENTS_USERNAMECHANGED = 1;
+
+
+import "unknwn.idl";
+
+
+
+[ 
+    uuid(7988B57C-EC89-11cf-9C00-00AA00A14F56), 
+    helpstring("Microsoft Disk Quota Type Library"),
+    version(1.0)
+]
+library DiskQuotaTypeLibrary
+{
+    importlib("stdole32.tlb");
+
+
+    // ========================================================================
+    // Interface for DIDiskQuotaUser
+    // ========================================================================
+    [ 
+        uuid(7988B57A-EC89-11cf-9C00-00AA00A14F56),
+        helpstring("Automation interface for DiskQuotaUser"),
+        oleautomation,
+        dual,
+        version(1.0)
+    ]
+    interface DIDiskQuotaUser : IDispatch
+    {
+        // --------------------------------------------------------------------
+        // Properties
+        // --------------------------------------------------------------------
+        [propget, helpstring("Unique ID number")]
+        HRESULT ID(
+            [out, retval] long *pID);
+
+        [propget, helpstring("Name of user's account container")]
+        HRESULT AccountContainerName(
+            [out, retval] BSTR *pContainerName);
+
+        [propget, helpstring("User's logon account name")]
+        HRESULT LogonName(
+            [out, retval] BSTR *pLogonName);
+
+        [propget, helpstring("User's display name")]
+        HRESULT DisplayName(
+            [out, retval] BSTR *pDisplayName);
+
+        [propget, helpstring("User's quota warning threshold (bytes)")]
+        HRESULT QuotaThreshold(
+            [out, retval] double *pThreshold);
+
+        [propput]
+        HRESULT QuotaThreshold(
+            [in] double Threshold);
+
+        [propget, helpstring("User's quota warning threshold (text)")]
+        HRESULT QuotaThresholdText(
+            [out, retval] BSTR *pThresholdText);
+
+        [propget, helpstring("User's quota limit (bytes)")]
+        HRESULT QuotaLimit(
+            [out, retval] double *pLimit);
+
+        [propput]
+        HRESULT QuotaLimit(
+            [in] double Limit);
+
+        [propget, helpstring("User's quota limit (text)")]
+        HRESULT QuotaLimitText(
+            [out, retval] BSTR *pLimitText);
+
+        [propget, helpstring("Quota charged to user (bytes)")]
+        HRESULT QuotaUsed(
+            [out, retval] double *pUsed);
+
+        [propget, helpstring("Quota charged to user (text)")]
+        HRESULT QuotaUsedText(
+            [out, retval] BSTR *pUsedText);
+
+        //
+        // AccountStatus property values.
+        // These must match the DISKQUOTA_USER_ACCOUNT_XXXXXX constants
+        // defined in dskquota.h.
+        // 
+        typedef enum AccountStatusConstants {
+            [helpstring("Account information is resolved")]    dqAcctResolved    = 0,
+            [helpstring("Account information is unavailable")] dqAcctUnavailable = 1,
+            [helpstring("Account has been deleted")]           dqAcctDeleted     = 2,
+            [helpstring("Account is invalid")]                 dqAcctInvalid     = 3,
+            [helpstring("Account cannot be found")]            dqAcctUnknown     = 4,
+            [helpstring("Account information is unresolved")]  dqAcctUnresolved  = 5
+        } AccountStatusConstants;
+
+        [propget, helpstring("Status of user's account")]
+        HRESULT AccountStatus(
+            [out, retval] AccountStatusConstants *pStatus);
+
+        // --------------------------------------------------------------------
+        // Methods
+        // --------------------------------------------------------------------
+
+        [helpstring("Invalidate data cached in user object")]
+        HRESULT Invalidate(void);
+    };
+
+    // ========================================================================
+    // Interface for DIDiskQuotaControlEvents
+    // ========================================================================
+    [
+        uuid(7988B581-EC89-11cf-9C00-00AA00A14F56),
+        helpstring("DIDiskQuotaControlEvents Interface"),
+        nonextensible,
+        version(1.0)
+    ]
+    dispinterface DIDiskQuotaControlEvents
+    {      
+        properties:
+        methods:
+            [id(DISPID_DISKQUOTAEVENTS_USERNAMECHANGED), 
+             helpstring("Called when name information for a DiskQuotaUser object has been resolved")]
+            void OnUserNameChanged(DIDiskQuotaUser *pUser);
+    };
+
+
+    // ========================================================================
+    // Interface for DIDiskQuotaControl
+    // ========================================================================
+    [ 
+        uuid(7988B575-EC89-11cf-9C00-00AA00A14F56),
+        helpstring("Automation interface for DiskQuotaControl object"),
+        oleautomation,
+        dual,
+        version(1.0)
+    ]
+    interface DIDiskQuotaControl : IDispatch
+    {
+        // --------------------------------------------------------------------
+        // Properties 
+        // --------------------------------------------------------------------
+
+        //
+        // Quota state flags used in QuotaState property.  These must match the
+        // DISKQUOTA_STATE_XXXXX flags defined in dskquota.h
+        //
+        typedef enum QuotaStateConstants {
+            [helpstring("Disk quota disabled")]   dqStateDisable = 0,
+            [helpstring("Track quota usage")]     dqStateTrack   = 1,
+            [helpstring("Enforce quota limit")]   dqStateEnforce = 2
+        } QuotaStateConstants;
+
+        const int dqStateMaxValue = 2;
+
+        [propput, helpstring("State of the volume's disk quota system")]
+        HRESULT QuotaState(
+            [in] QuotaStateConstants State);
+
+        [propget]
+        HRESULT QuotaState(
+            [out, retval] QuotaStateConstants *pState);
+
+        [propget, helpstring("Indicates if quota information is out of date")]
+        HRESULT QuotaFileIncomplete(
+            [out, retval] VARIANT_BOOL *pbIncomplete);
+
+        [propget, helpstring("Indicates if quota information is being rebuilt")]
+        HRESULT QuotaFileRebuilding(
+            [out, retval] VARIANT_BOOL *pbRebuilding);
+
+        [propput, helpstring("Write event log entry when user exceeds quota warning threshold")]
+        HRESULT LogQuotaThreshold(
+            [in] VARIANT_BOOL bLogThreshold);
+
+        [propget]
+        HRESULT LogQuotaThreshold(
+            [out, retval] VARIANT_BOOL *pbLogThreshold);
+
+        [propput, helpstring("Write event log entry when user exceeds quota limit")]
+        HRESULT LogQuotaLimit(
+            [in] VARIANT_BOOL bLogLimit);
+
+        [propget]
+        HRESULT LogQuotaLimit(
+            [out, retval] VARIANT_BOOL *pbLogLimit);
+
+        [propput, helpstring("Default warning threshold applied to new volume users (byte value)")]
+        HRESULT DefaultQuotaThreshold(
+            [in] double Threshold);
+
+        [propget]
+        HRESULT DefaultQuotaThreshold(
+            [out, retval] double *pThreshold);
+
+        [propget, helpstring("Default warning threshold applied to new volume users (text string)")]
+        HRESULT DefaultQuotaThresholdText(
+            [out, retval] BSTR *pThresholdText);
+
+        [propput, helpstring("Default quota limit applied to new volume users (byte value)")]
+        HRESULT DefaultQuotaLimit(
+            [in] double Limit);
+
+        [propget]
+        HRESULT DefaultQuotaLimit(
+            [out, retval] double *pLimit);
+
+        [propget, helpstring("Default quota limit applied to new volume users (text string)")]
+        HRESULT DefaultQuotaLimitText(
+            [out, retval] BSTR *pLimitText);
+
+        //
+        // Values for setting the user name resolution mode.  These must match
+        // the DISKQUOTA_USERNAME_RESOLVE_XXXX constants defined in dskquota.h
+        //
+        typedef enum UserNameResolutionConstants {
+            [helpstring("Do not resolve user name information")]         dqResolveNone  = 0,
+            [helpstring("Wait while resolving name information")]        dqResolveSync  = 1,
+            [helpstring("Do not wait while resolving name information")] dqResolveAsync = 2
+        } UserNameResolutionConstants;
+
+        const int dqResolveMaxValue = 2;
+
+        [propput, helpstring("Control the resolution of user Security IDs to user Names")]
+        HRESULT UserNameResolution(
+            [in]    UserNameResolutionConstants ResolutionType);
+
+        [propget]
+        HRESULT UserNameResolution(
+            [out, retval] UserNameResolutionConstants *pResolutionType);
+
+
+        // --------------------------------------------------------------------
+        // Methods
+        // --------------------------------------------------------------------
+        [helpstring("Initialize the quota control object for a specified volume")]
+        HRESULT Initialize(
+            [in]            BSTR path,
+            [in]            VARIANT_BOOL bReadWrite);
+
+        [helpstring("Terminate the user name resolution thread")]
+        HRESULT ShutdownNameResolution(void);
+
+        [helpstring("Add a user quota entry by Name")]
+        HRESULT AddUser(
+            [in]            BSTR LogonName,
+            [out, retval]   DIDiskQuotaUser **ppUser);
+
+        [helpstring("Delete a user quota entry")]
+        HRESULT DeleteUser(
+            [in]            DIDiskQuotaUser *pUser);
+
+        [helpstring("Find a user quota entry by Name")]
+        HRESULT FindUser(
+            [in]            BSTR LogonName,
+            [out, retval]   DIDiskQuotaUser **ppUser);
+
+        [helpstring("Invalidate the cache of user name information")]
+        HRESULT InvalidateSidNameCache(void);
+
+        [helpstring("Promote a user quota entry to the head of the name resolution queue")]
+        HRESULT GiveUserNameResolutionPriority(
+            [in]    DIDiskQuotaUser *pUser);
+
+        [helpstring("Translates a user logon name to a security ID")]
+        HRESULT TranslateLogonNameToSID(
+            [in]  BSTR LogonName,
+            [out, retval] BSTR *psid);
+
+        [id(DISPID_NEWENUM), helpstring("Create a Collection object for user quota entry enumeration.")]
+        HRESULT _NewEnum(
+            [out, retval] IDispatch **ppEnum);
+    };
+
+    // ========================================================================
+    // CoClass for Disk Quota object.
+    // ========================================================================
+    [ 
+        uuid(7988B571-EC89-11cf-9C00-00AA00A14F56),
+        helpstring("Microsoft Disk Quota"),
+        version(1.0)
+    ]
+    coclass DiskQuotaControl{
+        [default] interface DIDiskQuotaControl;
+        [default, source] dispinterface DIDiskQuotaControlEvents;
+        interface IDiskQuotaControlEvents;
+        interface DIDiskQuotaUser;
+    };
+};
+
+[
+    object,
+    dual,
+    uuid(7988B579-EC89-11cf-9C00-00AA00A14F56),
+    helpstring("Dual interface for DiskQuotaControl Events"),
+    version(1.0)
+]
+interface IDiskQuotaControlEvents : IDispatch
+{
+    HRESULT OnUserNameChanged(
+        [in] DIDiskQuotaUser *pUser);
+};

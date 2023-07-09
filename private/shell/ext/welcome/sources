@@ -1,0 +1,108 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = ..\..
+
+#
+# Cross-compiler macros for unique naming
+#
+
+MAJORCOMP       = ie4
+MINORCOMP       = welcome
+
+
+#
+# Defines for common.inc
+#
+
+TARGET_BOTH     = 1
+NOT_UNICODE     = 1
+
+#
+# Include our common makefile
+#
+
+!include $(CCSHELL_DIR)\common.inc
+
+
+#
+# BUGBUG (reinerf)
+#
+# We do this so we dont replace the NT version
+# of welcome.exe that gets build in win\shell\welcome.
+# Later, we can have it binplaced on NT if the NT5
+# guys decided that the want it.
+
+!if ("BUILD_PRODUCT") == "NT"
+NO_BINPLACE = 1;
+!endif
+
+#
+# Dont comple the bsc yet
+#
+
+NO_BROWSER_FILE = 1
+
+
+#
+# Common settings required by build.exe and makefile.def
+#
+
+TARGETNAME      = welcome
+TARGETPATH      = obj
+TARGETTYPE      = PROGRAM
+TARGETLIBS      =
+
+LINKLIBS        = $(LIBRARY_PATH)\gdi32.lib         \
+                  $(LIBRARY_PATH)\kernel32.lib      \
+                  $(NTDLL_LIBS)                     \
+                  $(LIBRARY_PATH)\advapi32.lib      \
+                  $(LIBRARY_PATH)\mpr.lib           \
+                  $(LIBRARY_PATH)\comctl32.lib      \
+                  $(LIBRARY_PATH)\shell32.lib       \
+                  $(LIBRARY_PATH)\uuid.lib          \
+                  $(LIBRARY_PATH)\ole32.lib         \
+                  $(SDK_LIB_PATH)\oleaut32.lib      \
+                  $(LIBRARY_PATH)\shdocvw.lib       \
+                  $(LIBRARY_PATH)\shdocvwp.lib      \
+                  $(LIBRARY_PATH)\libcmt.lib
+
+# bugbug: scousens.
+#         @0 needed because ModuleEntry is _stdcall.
+#         On mips _stdcall is mapped to nothing
+!if $(386)
+UMENTRYABS      = ModuleEntry@0
+!else
+UMENTRYABS      = ModuleEntry
+!endif
+
+
+#
+# List of sources
+#
+
+SOURCES         = ..\welcome.rc \
+                  ..\welcome.cpp #\
+                  #..\debug.c

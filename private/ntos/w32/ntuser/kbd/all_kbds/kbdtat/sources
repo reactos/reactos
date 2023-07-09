@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdtat
+
+TARGETNAME=kbdtat
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdtat.c kbdtat.rc
+
+NTTARGETFILE0=kbdtat.h kbdtat.rc kbdtat.def

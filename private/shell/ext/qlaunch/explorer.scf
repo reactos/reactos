@@ -1,0 +1,8 @@
+
+[Shell]
+Command=2
+IconFile=explorer.exe,1
+
+[Taskbar]
+Command=Explorer
+

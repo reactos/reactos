@@ -1,0 +1,586 @@
+#ifndef UNIX
+<HTML id=dlgError STYLE="font-family:ms sans serif; font-size:8pt; width:41.0025em; height:13.7em;">
+#else
+<HTML id=dlgError STYLE="font-family:ms sans serif; font-size:8pt; width:43.0025em; height:14.7em;">
+#endif
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE id=dialogTitle>
+Internet Explorer
+</TITLE>
+<style type="text/css">
+    p,td,input,button { font:8pt MS Shell Dlg; cursor:default}
+    
+    body { font:8pt MS Shell Dlg; color: windowtext;
+        background:menu;}
+</style>
+<SCRIPT LANGUAGE="JavaScript" defer>
+
+window.onerror = HandleError
+document.ondragstart = NoDragging
+
+function NoDragging()
+{
+    window.event.returnValue = false;
+}
+
+var g_errList;
+var g_detailsPaneOpen;
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   Turns off error messages in dialogs
+//
+//  Arguments:  none
+//
+//  returns:    true (tells browser not to handle message)
+//
+//--------------------------------------------------------------------
+
+function HandleError(message, url, line)
+{
+    var L_Dialog_ErrorMessage = "An error has occurred in this dialog.";
+    var L_ErrorNumber_Text = "Error: ";
+
+    var str = L_Dialog_ErrorMessage + "\n\n"
+        + L_ErrorNumber_Text + line + "\n"
+        + message;
+
+    alert (str);
+    window.close();
+
+    return true;
+}
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Binds events to controls and do some last minute
+//              dialog formatting
+//
+//  Arguments:  none.
+//
+//  Returns:    nothing.
+//
+//-----------------------------------------------------------------------
+
+function updateTabIndices()
+{
+    if (g_detailsPaneOpen)
+    {
+        var nextIndex = 3;
+
+        if (!btnPrevErr.disabled)
+        {
+            btnPrevErr.tabindex = nextIndex++;
+        }
+
+        if (!btnNextErr.disabled)
+        {
+            btnNextErr.tabindex = nextIndex++;
+        }
+
+        chkAlwaysShowErrs.tabindex = nextIndex;
+    }
+    else
+    {
+        btnPrevErr.tabindex = -1;
+        btnNextErr.tabindex = -1;
+        chkAlwaysShowErrs.tabindex = 3;
+    }
+}
+
+function loadBdy()
+{
+    g_errList = window.dialogArguments;
+    chkAlwaysShowErrs.checked = g_errList.getPerErrorDisplay();
+
+    // if the key didn't exist we got a default. if we took a
+    // default, it needs to become a real setting (non-default)
+    // because the nonexistence of the key indicates to us that
+    // we need to display the dialog but default to having
+    // "never show me again" checked. obviously we only want
+    // this behavioral exception to happen once. to make it
+    // become a non-default value, just write it out...
+
+    g_errList.setPerErrorDisplay(chkAlwaysShowErrs.checked);
+
+    // if the IEAK has locked the advanced options settings,
+    // then disable the checkbox so that people can't change
+    // the "Always present script error notifications" setting
+    // via the checkbox
+
+    chkAlwaysShowErrs.disabled = g_errList.getAlwaysShowLockState();
+
+    //
+    // set the details pane to be open or closed
+    // the easiest way to make sure all controls
+    // are set to their proper state is to just
+    // call the click function
+    //
+
+    g_detailsPaneOpen = g_errList.getDetailsPaneOpen();
+    assureControlState();
+
+    //
+    //  Bind event to controls
+    //
+
+    btnOK.onclick  = new Function("btnOKClick()");
+    btnOK.onkeydown  = new Function("SwitchFocus()");
+    btnDetails.onclick = new Function("btnDetailsClick()");
+    btnDetails.onkeydown = new Function("SwitchFocus()");
+
+    btnNextErr.onclick = new Function("btnNextErrClick()");
+    btnNextErr.onkeydown = new Function("SwitchFocus()");
+    btnPrevErr.onclick = new Function("btnPrevErrClick()");
+    btnPrevErr.onkeydown = new Function("SwitchFocus()");
+
+    //
+    //  Fill the dialog with error information
+    //
+
+    updateErrorInfo();
+
+    //
+    // set prev and next button's disabled state
+    //
+
+    if (!g_errList.canRetreatError())
+    {
+        btnPrevErr.disabled = true;
+    }
+    if (!g_errList.canAdvanceError())
+    {
+        btnNextErr.disabled = true;
+    }
+
+    btnOK.focus();
+}   // loadBdy
+
+//+-----------------------------------------------------------------------
+//
+//  Sysopsis:   sets all the error specific controls to be in sync with
+//              the current error index
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//------------------------------------------------------------------------
+
+function updateErrorInfo()
+{
+    spnLine.innerText       = g_errList.getErrorLine();
+    spnCharacter.innerText  = g_errList.getErrorChar();
+    spnCode.innerText       = g_errList.getErrorCode();
+    divError.innerText      = g_errList.getErrorMsg();
+    divURL.innerText        = g_errList.getErrorUrl();
+}
+
+//+-----------------------------------------------------------------------
+//
+//  Synopsis:   Handles keyboard-related shifting of focus among the
+//              varioud dialog controls.
+//
+//  Notes:      We're trying to pretend to be just like a normal dialog.
+//              Therefore, we need tab groups within which up/left
+//              shifts focus in the shift-tab diection, and right/down
+//              shifts focus in the tab direction. And we need a global
+//              tab order for tab and shift-tab to follow.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//------------------------------------------------------------------------
+
+function SwitchFocus()
+{
+    var HTML_KEY_ARROWLEFT  = 37;
+    var HTML_KEY_ARROWUP    = 38;
+    var HTML_KEY_ARROWRIGHT = 39;
+    var HTML_KEY_ARROWDOWN  = 40;
+
+    var iCode = event.keyCode;
+    var strSourceID = event.srcElement.id;
+    var fTabForward;
+
+    if (iCode < HTML_KEY_ARROWLEFT || iCode > HTML_KEY_ARROWDOWN)
+    {
+        return;
+    }
+
+    var fTabForward = iCode == HTML_KEY_ARROWRIGHT ||
+                      iCode == HTML_KEY_ARROWDOWN;
+
+    if (g_detailsPaneOpen)
+    {
+        // arrow keys move back and forth between:
+        // 1) ok - details
+        // 2) previous - next
+
+        if (fTabForward)
+        {
+            if (strSourceID == "btnPrevErr")
+            {
+                if (!btnNextErr.disabled)
+                {
+                    btnNextErr.focus();
+                }
+            }
+            else if (strSourceID == "btnOK")
+            {
+                btnDetails.focus();
+            }
+            else if (strSourceID == "chkAlwaysShowErrs")
+            {
+                btnOK.focus();
+            }
+        }
+        else
+        {
+            if (strSourceID == "btnNextErr")
+            {
+                if (!btnPrevErr.disabled)
+                {
+                    btnPrevErr.focus();
+                }
+            }
+            else if (strSourceID == "btnDetails")
+            {
+                btnOK.focus();
+            }
+            else if (strSourceID == "btnOK")
+            {
+                chkAlwaysShowErrs.focus();
+            }
+        }
+    }
+}
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   Closes the dialog
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//---------------------------------------------------------------------
+
+function btnOKClick()
+{
+    g_errList.setPerErrorDisplay(chkAlwaysShowErrs.checked);
+    g_errList.setDetailsPaneOpen(g_detailsPaneOpen);
+    window.close();
+}
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   make sure things which are affected by the state
+//              of the details pane are in sync with the current
+//              state of the details pane
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//--------------------------------------------------------------------
+
+function assureControlState()
+{
+#ifndef UNIX
+    var L_DetailsExpand_Text = "Show <u>D</u>etails &gt&gt";
+    var L_DetailsCollapse_Text = "Hide <u>D</u>etails &lt&lt";
+#else
+    var L_DetailsExpand_Text = "Show <u>D</u>etails";
+    var L_DetailsCollapse_Text = "Hide <u>D</u>etails";
+#endif
+
+    if (g_detailsPaneOpen)
+    {
+        // update the button text
+        btnDetails.innerHTML = L_DetailsCollapse_Text;
+
+        // enlarge the window to show the error info
+        window.dialogHeight = 27.2;
+
+        // assure details info is visible
+        divDetails.style.display = "";
+        divButtons2.style.display = "";
+        trHR.style.display = "";
+    }
+    else
+    {
+        // update the button text
+        btnDetails.innerHTML = L_DetailsExpand_Text;
+
+        // assure details info is hidden
+        divDetails.style.display = "none";
+        divButtons2.style.display = "none";
+        trHR.style.display = "none";
+
+        // shrink the window to hide the error info
+        window.dialogHeight = 13.7;
+    }
+}
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   provides user with details about accumulated script
+//              errors
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//--------------------------------------------------------------------
+
+function btnDetailsClick()
+{
+    g_detailsPaneOpen = !g_detailsPaneOpen;
+
+    assureControlState();
+
+    if (g_detailsPaneOpen)
+    {
+        // give focus to the "next" button if possible,
+        // otherwise try "previous", finally "ok"
+        if (!btnNextErr.disabled)
+        {
+            btnNextErr.focus();
+        }
+        else if (!btnPrevErr.disabled)
+        {
+            btnPrevErr.focus();
+        }
+        else
+        {
+            btnOK.focus();
+        }
+    }
+    else
+    {
+        // give focus to the "details" button
+        btnDetails.focus();
+    }
+
+    updateTabIndices();
+}
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   updates error info to correspond to the next error
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//--------------------------------------------------------------------
+
+function btnNextErrClick()
+{
+    g_errList.advanceError();
+    updateErrorInfo();
+
+    if (btnPrevErr.disabled)
+    {
+        // no longer at beginning of error list
+        btnPrevErr.disabled = false;
+    }
+
+    if (!g_errList.canAdvanceError())
+    {
+        // at end of error list
+        btnNextErr.disabled = true;
+        btnPrevErr.focus();
+    }
+
+    updateTabIndices();
+}
+
+function btnPrevErrClick()
+{
+    g_errList.retreatError();
+    updateErrorInfo();
+
+    if (btnNextErr.disabled)
+    {
+        // no longer at end of error list
+        btnNextErr.disabled = false;
+    }
+
+    if (!g_errList.canRetreatError())
+    {
+        // at beginning of error list
+        btnPrevErr.disabled = true;
+        btnNextErr.focus();
+    }
+
+    updateTabIndices();
+}
+
+function BodyOnKeyPress(nCode)
+{
+    if (nCode == 27)    //ESC
+    {
+        window.close();
+        return;
+    }
+}
+
+</SCRIPT>
+
+</HEAD>
+<BODY ID=bdy style="background: threedface" onLoad=loadBdy() onkeydown=BodyOnKeyPress(event.keyCode) onkeypress=BodyOnKeyPress(event.keyCode) topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0>
+
+<table id=tblMain tabindex=-1 cellspacing=0 border=0 style="background:buttonface; border-collapse:collapse; width:26.1em;">
+<TR>
+
+<!-- Icon image -->
+<TD id=tdIcon valign=top style="padding-left:0.9625em; padding-top:0.9295em; padding-right:0.385em;">
+    <img id=imgIcon src=warning.gif>
+</TD>
+
+<TD style="padding-top:0.5577em;">
+<!-- Inner table start -->
+   <table tabindex=-1 cellspacing=0 border=0 style="background:buttonface; border-collapse:collapse">
+
+<!-- Error message dialog -->
+   <TR>
+   <TD id=tdMsg style="padding-left:0.48125em;">
+        Problems with this Web page might prevent it from being
+        displayed properly or functioning properly. In the
+        future, you can display this message by double-clicking
+        the warning icon displayed in the status bar.
+   </TD>
+   </TR>
+
+<!-- Checkbox -->
+   <TR>
+   <TD style="padding-top:0.46475em;">
+      <input id=chkAlwaysShowErrs tabindex=5 accesskey=a type=checkbox>
+      <label for=chkAlwaysShowErrs id=labelChk>
+        <u>A</u>lways display this message when a page contains errors.
+      </label>
+   </TD>
+   </TR>
+
+<!-- OK button -->
+   <TR>
+   <TD align=right style="padding-top:1.20835em;">
+      <table id=tblMain tabindex=-1 cellspacing=0 border=0 style="background:buttonface; border-collapse:collapse;">
+        <tr>
+        <td style="padding-right:0.385em;">
+          <button id=btnOK tabindex=1
+          style="width:8em; height:2.2em;"
+          type=submit>
+            OK
+          </button>
+        </td>
+        <td>
+          <button id=btnDetails tabindex=2
+          style="width:8em; height:2.2em;"
+          accesskey=d>
+            Show <u>D</u>etails &gt&gt
+          </button>
+        </td>
+        </tr>
+      </table>
+   </TD>
+   </TR>
+   </TABLE>
+<!-- Inner table end -->
+
+</TD>
+</TR>
+
+<!-- HR -->
+<TR id=trHR style="display:none;">
+<TD colspan=2 style="padding-left:1.155em; padding-top:0.09295em; padding-right:0.28875em;">
+    <hr>
+</TD>
+</TR>
+</TABLE>
+
+#ifndef UNIX
+<DIV id=divDetails tabindex=-1 style="border:inset; overflow:auto; position:absolute; background:threedface; font-family:ms sans serif; 
+                                      font-size:8pt; top:12.4553em; width:37.9225em; height:8.1796em; margin-left:1.155em; display:none">
+#else
+<DIV id=divDetails tabindex=-1 style="border:inset; overflow:auto; position:absolute; background:threedface; font-family:ms sans serif; font-size:8pt; top:14.4553em; width:40.9225em; height:9.1796em; margin-left:1.155em;">
+#endif
+<TABLE id=tbl2 tabindex=-1 cellspacing=0 border=0 style="border-collapse:collapse; background:buttonface; font-family:ms sans serif;
+                                                         font-size:8pt;">
+<TBODY>
+<TR valign=top>
+<TD id=tdLine nowrap style="padding-top:0.3718em; padding-left:0.48125em;">
+Line:
+</TD>
+<TD id=tdSpanLine style="padding-top:0.46475em;">
+<SPAN id=spnLine></SPAN>
+</TD>
+</TR>
+<TR valign=top>
+<TD id=tdChar nowrap style="padding-left:0.48125em;">
+Char:
+</TD>
+<TD id=tdSpanCharacter>
+<SPAN id=spnCharacter></SPAN>
+</TD>
+</TR>
+<TR valign=top>
+<TD id=tdError nowrap style="padding-left:0.48125em;">
+Error:
+</TD>
+<TD id=tdSpanError>
+<DIV id=divError tabindex=-1 style="background: threedface;
+font-family: ms sans serif; font-size:8pt; width:32.1475em;"></DIV>
+</TD>
+</TR>
+<TR valign=top>
+<TD id=tdCode nowrap style="padding-left:0.48125em;">
+Code:
+</TD>
+<TD id=tdSpanCode>
+<SPAN id=spnCode></SPAN>
+</TD>
+</TR>
+<TR valign=top>
+<TD id=tdURL nowrap style="padding-left:0.48125em; padding-bottom:0.09295em;">
+URL:
+</TD>
+<TD id=tdSpanURL>
+<DIV id=divURL tabindex=-1 style="background:threedface; font-family:ms sans serif; font-size:8pt; width:32.1475em;"></DIV>
+</TEXTAREA>
+</TD>
+</TR>
+</TBODY>
+</TABLE>
+</DIV>
+
+#ifndef UNIX
+<DIV id=divButtons2 tabindex=-1 align=right style="background:buttonface; position:absolute; font-family:ms sans serif; font-size:8pt; top:21.1926em;
+           width:38.01875em; margin-left:1.155em; display:none">
+#else
+<DIV id=divButtons2 tabindex=-1 align=right style="background:buttonface; position:absolute; font-family:ms sans serif; font-size:8pt; top:24.1926em; width:41.01875em; margin-left:1.155em;">
+#endif
+      <table id=tblMain tabindex=-1 cellspacing=0 border=0 style="background:buttonface; border-collapse:collapse;">
+        <tr>
+        <td style="padding-right:0.385em;">
+            <button id=btnPrevErr tabindex=3 type=reset accesskey=p
+            style="font-family: ms sans serif; font-size:8pt; width:8em; height:2.2em;">
+                <u>P</u>revious
+            </button>
+        </td>
+        <td>
+            <button id=btnNextErr tabindex=4 type=reset accesskey=n
+            style="font-family: ms sans serif; font-size:8pt; width:8em; height:2.2em;">
+                <u>N</u>ext
+            </button>
+        </td>
+        </tr>
+      </table>
+</DIV>
+
+</BODY>
+</HTML>

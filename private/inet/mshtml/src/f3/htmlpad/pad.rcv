@@ -1,0 +1,11 @@
+/********************************************************************/
+/*        PAD.RCV                                                */
+/********************************************************************/
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft (R) HTML Pad"
+#define VER_INTERNALNAME_STR        "MSHTMPad"
+#define VER_ORIGINALFILENAME_STR    "MSHTMPad.EXE"
+#include <common.ver>

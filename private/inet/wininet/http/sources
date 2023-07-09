@@ -1,0 +1,57 @@
+!IF 0
+
+Copyright (c) 1989-91  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Keith Moore (keithmo) 16-Nov-1994
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+
+!ENDIF
+
+!INCLUDE ..\wininet.inc
+
+C_DEFINES=$(C_DEFINES) -DBETA_LOGGING
+
+MINORCOMP=http
+
+TARGETNAME=http
+TARGETTYPE=LIBRARY
+
+INCLUDES=..\inc
+
+SOURCES=add.cxx         \
+        cache.cxx       \
+        chunk.cxx       \
+        cookie.cxx      \
+        dav.cxx         \
+        headers.cxx     \
+        httptime.cxx    \
+        makeconn.cxx    \
+        open.cxx        \
+        prefetch.cxx    \
+        query.cxx       \
+        read.cxx        \
+        redirect.cxx    \
+        request.cxx     \
+        response.cxx    \
+        send.cxx        \
+        sendapi.cxx     \
+        sendreq.cxx     \
+        socket.cxx      \
+        write.cxx       \
+        hhead.cxx   

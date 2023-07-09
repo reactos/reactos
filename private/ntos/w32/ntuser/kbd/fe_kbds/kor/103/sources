@@ -1,0 +1,50 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=user
+MINORCOMP=kbd103
+
+ALT_PROJECT=DAYTONA
+ALT_PROJECT_TARGET=.
+
+TARGETNAME=kbd103
+
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETLIBS=
+
+INCLUDES=..\..\..\..\inc
+
+SOURCES=kbd103.c kbd103.rc
+
+C_DEFINES=$(C_DEFINES) -DKOREA -DFE_SB -DFE_IME
+
+NOLINK=
+UMTYPE=nt
+UMTEST=
+UMAPPL=
+UMBASE=0x1000000
+UMLIBS=
+LINKER_FLAGS = -merge:.edata=.data -merge:.rdata=.data -merge:.text=.data -section:.data,re
+

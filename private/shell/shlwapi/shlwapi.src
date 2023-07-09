@@ -1,0 +1,1094 @@
+LIBRARY         SHLWAPI
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Shell light-weight APIs'
+
+;; There should never never be any shared writeable segments here so that
+;; we can run different versions of shlwapi in different processes and not
+;; worry about global shared state.
+;; This dll runs in the private arena in both Win9x and NTx.
+
+EXPORTS
+;;=========================================================================
+;; these are public APIs that are exported by name
+;;=========================================================================
+
+        DllGetVersion = CCDllGetVersion         ULTRAPRIVATE
+
+        ; String functions that are forwarded from COMCTL32
+        StrChrA
+        StrChrW
+        StrRChrA
+        StrRChrW
+        StrCmpNA
+        StrCmpNW
+        StrCmpNIA
+        StrCmpNIW
+        StrStrA
+        StrStrW
+        StrStrIA
+        StrStrIW
+        StrCSpnA
+        StrCSpnW
+        StrToIntA
+        StrToIntW
+
+        ; More string functions that Win95 doesn't export
+        StrChrIA
+        StrChrIW
+        StrRChrIA
+        StrRChrIW
+        StrRStrIA
+        StrRStrIW
+        StrCSpnIA
+        StrCSpnIW
+        StrPBrkA
+        StrPBrkW
+        StrSpnA
+        StrSpnW
+        StrToIntExA
+        StrToIntExW
+        StrCpyW
+        StrCpyNW
+        StrCatW
+        StrNCatA
+        StrNCatW
+        StrCatBuffA
+        StrCatBuffW
+        StrDupA
+        StrDupW
+        StrCmpW
+        StrCmpIW
+        IntlStrEqWorkerA = StrIsIntlEqualA
+        IntlStrEqWorkerW = StrIsIntlEqualW
+        StrIsIntlEqualA
+        StrIsIntlEqualW
+        StrFormatByteSizeA
+        StrFormatByteSizeW
+        StrFormatByteSize64A
+        StrFormatKBSizeA
+        StrFormatKBSizeW
+        ChrCmpIA
+        ChrCmpIW
+        StrTrimA
+        StrTrimW
+        StrRetToStrA
+        StrRetToStrW
+        StrRetToBufA
+        StrRetToBufW
+        SHStrDupA
+        SHStrDupW
+
+        ; Path exports
+
+        PathMakePrettyA
+        PathMakePrettyW
+        PathGetArgsA
+        PathGetArgsW
+        PathRemoveArgsA
+        PathRemoveArgsW
+        PathFileExistsA
+        PathFileExistsW
+        PathFindOnPathA
+        PathFindOnPathW
+        PathFindExtensionA
+        PathFindExtensionW
+        PathAddExtensionA
+        PathAddExtensionW
+        PathRemoveExtensionA
+        PathRemoveExtensionW
+        PathRenameExtensionA
+        PathRenameExtensionW
+        PathCommonPrefixA
+        PathCommonPrefixW
+        PathRelativePathToA
+        PathRelativePathToW
+        PathBuildRootA
+        PathBuildRootW
+        PathRemoveBlanksA
+        PathRemoveBlanksW
+        PathRemoveBackslashA
+        PathRemoveBackslashW
+        PathCanonicalizeA
+        PathCanonicalizeW
+        PathStripToRootA
+        PathStripToRootW
+        PathCombineA
+        PathCombineW
+        PathAppendA
+        PathAppendW
+        PathRemoveFileSpecA
+        PathRemoveFileSpecW
+        PathAddBackslashA
+        PathAddBackslashW
+        PathFindFileNameA
+        PathFindFileNameW
+        PathIsFileSpecA
+        PathIsFileSpecW
+        PathIsUNCA
+        PathIsUNCW
+        PathIsNetworkPathA
+        PathIsNetworkPathW
+        PathGetDriveNumberA
+        PathGetDriveNumberW
+        PathIsRelativeA
+        PathIsRelativeW
+        PathStripPathA
+        PathStripPathW
+        PathSearchAndQualifyA
+        PathSearchAndQualifyW
+        PathIsRootA
+        PathIsRootW
+        PathIsDirectoryA
+        PathIsDirectoryW
+        PathIsDirectoryEmptyA
+        PathIsDirectoryEmptyW
+        PathCompactPathExA
+        PathCompactPathExW
+        PathCompactPathA
+        PathCompactPathW
+        PathSetDlgItemPathA
+        PathSetDlgItemPathW
+        PathUnquoteSpacesA
+        PathUnquoteSpacesW
+        PathQuoteSpacesA
+        PathQuoteSpacesW
+        PathFindNextComponentA
+        PathFindNextComponentW
+        PathMatchSpecA
+        PathMatchSpecW
+        PathSkipRootA
+        PathSkipRootW
+        PathIsSameRootA
+        PathIsSameRootW
+        PathParseIconLocationA
+        PathParseIconLocationW
+        PathIsContentTypeA
+        PathIsContentTypeW
+        PathIsURLA
+        PathIsURLW
+        PathIsPrefixA
+        PathIsPrefixW
+        PathIsUNCServerA
+        PathIsUNCServerW
+        PathIsUNCServerShareA
+        PathIsUNCServerShareW
+        PathGetCharTypeA
+        PathGetCharTypeW
+        PathMakeSystemFolderA
+        PathMakeSystemFolderW
+        PathUnmakeSystemFolderA
+        PathUnmakeSystemFolderW
+        PathIsSystemFolderA
+        PathIsSystemFolderW
+        PathFindSuffixArrayA
+        PathFindSuffixArrayW
+        PathIsLFNFileSpecA
+        PathIsLFNFileSpecW
+        PathUndecorateA
+        PathUndecorateW
+        PathUnExpandEnvStringsA
+        PathUnExpandEnvStringsW
+
+        ; Registry functions that are consistent across platforms
+        SHDeleteOrphanKeyA = SHDeleteEmptyKeyA
+        SHDeleteOrphanKeyW = SHDeleteEmptyKeyW
+        SHDeleteEmptyKeyA
+        SHDeleteEmptyKeyW
+        SHDeleteKeyA
+        SHDeleteKeyW
+        SHDeleteValueA
+        SHDeleteValueW
+        SHGetValueA
+        SHGetValueW
+        SHSetValueA
+        SHSetValueW
+        SHQueryValueExA
+        SHQueryValueExW
+        SHEnumKeyExA
+        SHEnumKeyExW
+        SHEnumValueA
+        SHEnumValueW
+        SHQueryInfoKeyA
+        SHQueryInfoKeyW
+        SHRegOpenUSKeyA
+        SHRegOpenUSKeyW
+        SHRegCreateUSKeyA
+        SHRegCreateUSKeyW
+        SHRegQueryUSValueA
+        SHRegQueryUSValueW
+        SHRegWriteUSValueA
+        SHRegWriteUSValueW
+        SHRegEnumUSKeyA
+        SHRegEnumUSKeyW
+        SHRegEnumUSValueA
+        SHRegEnumUSValueW
+        SHRegQueryInfoUSKeyA
+        SHRegQueryInfoUSKeyW
+        SHRegDeleteUSValueA
+        SHRegDeleteUSValueW
+        SHRegDeleteEmptyUSKeyA
+        SHRegDeleteEmptyUSKeyW
+        SHRegCloseUSKey
+        SHRegGetUSValueA
+        SHRegGetUSValueW
+        SHRegSetUSValueA
+        SHRegSetUSValueW
+
+        SHRegGetBoolUSValueA
+        SHRegGetBoolUSValueW
+
+        SHCopyKeyA
+        SHCopyKeyW
+
+        SHRegGetPathA
+        SHRegGetPathW
+        SHRegSetPathA
+        SHRegSetPathW
+
+        SHRegDuplicateHKey
+
+        AssocCreate
+        AssocQueryStringW
+        AssocQueryStringA
+        AssocQueryStringByKeyW
+        AssocQueryStringByKeyA
+        AssocQueryKeyW
+        AssocQueryKeyA
+
+        ; public Url Parsing functions
+        UrlCompareA
+        UrlCompareW
+        UrlCombineA
+        UrlCombineW
+        UrlCanonicalizeA
+        UrlCanonicalizeW
+        UrlIsOpaqueA
+        UrlIsOpaqueW
+        UrlIsNoHistoryA
+        UrlIsNoHistoryW
+        UrlIsA
+        UrlIsW
+        UrlGetLocationA
+        UrlGetLocationW
+        UrlUnescapeA
+        UrlUnescapeW
+        UrlEscapeA
+        UrlEscapeW
+        UrlCreateFromPathA
+        UrlCreateFromPathW
+        PathCreateFromUrlA
+        PathCreateFromUrlW
+        UrlHashA
+        UrlHashW
+        UrlGetPartA
+        UrlGetPartW
+        UrlApplySchemeA
+        UrlApplySchemeW
+        HashData
+
+        ; Stream stuff
+        SHOpenRegStreamA
+        SHOpenRegStreamW
+        SHOpenRegStream2A
+        SHOpenRegStream2W
+        SHCreateStreamOnFileA ; introduced 3-Apr-98 as private, made public on 17-May-98, export 316/317 removed 3-Oct-98
+        SHCreateStreamOnFileW
+        SHCreateStreamWrapper
+
+        ; Palette stuff
+        SHCreateShellPalette
+        SHGetInverseCMAP
+
+        ; HLS - RGB stuff
+        ColorRGBToHLS
+        ColorHLSToRGB
+        ColorAdjustLuma
+
+        ; Status/info
+        SHIsLowMemoryMachine
+
+#if 0
+        ; IDList exports
+        ILGetNext
+        ILGetSize
+        ILFindLastID
+        ILRemoveLastID
+        ILIsEqualEx
+#endif
+
+;;=========================================================================
+;; these are new public APIs
+;;=========================================================================
+
+        StrFromTimeIntervalA
+        StrFromTimeIntervalW
+        GetMenuPosFromID
+
+        SHAutoComplete
+
+        wnsprintfA
+        wvnsprintfA
+        wnsprintfW
+        wvnsprintfW
+
+        SHSkipJunction
+        SHRegisterValidateTemplate
+
+;;=========================================================================
+;; these are internal APIs
+;;=========================================================================
+
+        ParseURLA                          @1     NONAME  PRIVATE
+        ParseURLW                          @2     NONAME  PRIVATE
+
+        PathFileExistsDefExtA              @3     NONAME  PRIVATE
+        PathFileExistsDefExtW              @4     NONAME  PRIVATE
+        PathFindOnPathExA                  @5     NONAME  PRIVATE
+        PathFindOnPathExW                  @6     NONAME  PRIVATE
+
+
+        ; Shared memory mapping stuff
+        SHAllocShared                      @7     NONAME  PRIVATE
+        SHLockShared                       @8     NONAME  PRIVATE
+        SHUnlockShared                     @9     NONAME  PRIVATE
+        SHFreeShared                       @10    NONAME  PRIVATE
+        SHMapHandle                        @11    NONAME  PRIVATE
+
+        SHCreateMemStream                  @12    NONAME  PRIVATE
+
+        ; HTTP Header helper functions
+        RegisterDefaultAcceptHeaders       @13    NONAME  PRIVATE
+        GetAcceptLanguagesA                @14    NONAME  PRIVATE
+        GetAcceptLanguagesW                @15    NONAME  PRIVATE
+
+//      IE4 exported SHCreateThread as 16 so it has to stay there
+
+        SHCreateThread                     @16
+        SHGetThreadRef
+        SHSetThreadRef
+
+        SHWriteDataBlockList               @17    NONAME  PRIVATE
+        SHReadDataBlockList                @18    NONAME  PRIVATE
+        SHFreeDataBlockList                @19    NONAME  PRIVATE
+        SHAddDataBlock                     @20    NONAME  PRIVATE
+        SHRemoveDataBlock                  @21    NONAME  PRIVATE
+        SHFindDataBlock                    @22    NONAME  PRIVATE
+
+        SHStringFromGUIDA                  @23    NONAME  PRIVATE
+        SHStringFromGUIDW                  @24    NONAME  PRIVATE
+
+;;=========================================================================
+;; Unicode support for Win95
+;;=========================================================================
+
+//
+//      These functions are fully reimplemented, not wrapped.
+//
+
+        IsCharAlphaWrapW                            @25    NONAME  PRIVATE
+        IsCharUpperWrapW                            @26    NONAME  PRIVATE
+        IsCharLowerWrapW                            @27    NONAME  PRIVATE
+        IsCharAlphaNumericWrapW                     @28    NONAME  PRIVATE
+
+        IsCharSpaceW                                @29    NONAME  PRIVATE
+        IsCharBlankW                                @30    NONAME  PRIVATE
+        IsCharPunctW                                @31    NONAME  PRIVATE
+        IsCharCntrlW                                @32    NONAME  PRIVATE
+        IsCharDigitW                                @33    NONAME  PRIVATE
+        IsCharXDigitW                               @34    NONAME  PRIVATE
+
+        GetStringType3ExW                           @35    NONAME  PRIVATE
+
+//
+//  There are three classes of platforms we are interested in.
+//
+//  x86     - Since X86 might be running Win95, we need to wrap both
+//            base and shell functions, because both base and shell
+//            are ANSI on Win95.
+//
+//  Non-x86 - Since Win95 doesn't run on Alpha (yet), we don't need
+//            ANSI/UNICODE wrappers.
+//
+//  UNIX    - On UNIX, base is UNICODE but shell might be ANSI.  In the
+//            ANSI shell case, we need to wrap the shell functions but
+//            not the base functions.
+//
+//            UNIX Quirk - The UNIX people tell me that they don't have
+//            kernel32 or any of that stuff.  They recommend continuing
+//            to use all the wrappers on UNIX even though they might not
+//            be necessary.  They're willing to live with the perf hit.
+//
+//  There is a second issue, namely that of delay-load.  Functions that
+//  are delay-loaded should not forward to the final destination; they
+//  should forward to the shlwapi delay-load stubs.
+//
+
+//
+//  WRAPFN - Declare a wrapper for a Win32 base function.
+//
+//             Do this only for DLLs that we are already
+//             linked to for other reasons.  Do not do this for DLLs
+//             that we delay-load (like SHELL32)
+//
+//  WRAPDL - Declare a wrapper for a Win32 delay-loaded function.
+//
+//              The delay-load version of WRAPFN.
+//
+//  WRAPDL_ - Declare a wrapper for a Win32 delay-loaded function.
+//
+//              Same as WRAPDL, except sticks an underscore in front of
+//              the function name when we do our delay-load thingie.
+//
+//  WRAPDLLFN2 - Declare a wrapper for a Win32 base function
+//               with renaming.
+//
+//  Each of these wrap functions also has an "X" version, which means
+//  that the underlying API does not end in "W", so we shouldn't attach
+//  one to the wrapper either.
+//
+//
+
+#if defined(_X86_) || defined(UNIX)     // X86 platform - use full wrappers
+                                        // also use full wrappers on UNIX for safety
+
+#define WRAPDLLFN2(dll, fn, fn2)    fn
+#define WRAPFN(dll, fn)             fn##rapW
+#define WRAPDL(dll, fn)             fn##rapW
+#define WRAPDL_(dll, fn)            fn##rapW
+
+#define WRAPDLLFN2X(dll, fn, fn2)   fn
+#define WRAPFNX(dll, fn)            fn##Wrap
+#define WRAPDLX(dll, fn)            fn##Wrap
+#define WRAPDLX_(dll, fn)           fn##Wrap
+
+#else                                   // Non-X86 platform - use forwarders
+
+#define WRAPDLLFN2(dll, fn, fn2)    fn = dll.fn2
+#define WRAPFN(dll, fn)             fn##rapW = dll.fn
+#define WRAPDL(dll, fn)             fn##rapW = fn
+#define WRAPDL_(dll, fn)            fn##rapW = _##fn
+
+#define WRAPDLLFN2X(dll, fn, fn2)   fn = dll.fn2
+#define WRAPFNX(dll, fn)            fn##Wrap = dll.fn
+#define WRAPDLX(dll, fn)            fn##Wrap = fn
+#define WRAPDLX_(dll, fn)           fn##Wrap = _##fn
+
+#endif
+
+#define KERNEL32_WRAP(fn)       WRAPFN(KERNEL32, fn)
+#define   USER32_WRAP(fn)       WRAPFN(  USER32, fn)
+#define   USER32_WRAPX(fn)      WRAPFNX( USER32, fn)
+#define    GDI32_WRAP(fn)       WRAPFN(   GDI32, fn)
+#define ADVAPI32_WRAP(fn)       WRAPFN(ADVAPI32, fn)
+
+//
+//  These DLLs are forwarded to our delay-load wrappers.
+//
+//  Need a special macro EMPTY that expands to nothing, because the
+//  preprocessor doesn't like it when we pass a null string.
+//
+#define    WINMM_WRAP(fn)       WRAPDL_(   WINMM, fn)
+#define      MPR_WRAP(fn)       WRAPDL(      MPR, fn)
+#define  VERSION_WRAP(fn)       WRAPDL(  VERSION, fn)
+
+//
+//  Shell components are particularly funky thanks to UNIX.
+//
+#if defined(ANSI_SHELL32_ON_UNIX)
+#define  SHELL32_WRAP(fn)       fn##rapW                // Force the wrappers
+#define  SHELL32_WRAPX(fn)      fn##Wrap                // Force the wrappers
+#define COMDLG32_WRAP(fn)       fn##rapW                // Force the wrappers
+#else
+#define  SHELL32_WRAP(fn)       WRAPDL_( SHELL32, fn)
+#define  SHELL32_WRAPX(fn)      WRAPDLX_(SHELL32, fn)
+#define COMDLG32_WRAP(fn)       WRAPDL_(COMDLG32, fn)
+#endif
+
+                      AppendMenuWrapW               @36    NONAME  PRIVATE // wanted on alpha for ML
+          USER32_WRAP(CallWindowProcW)              @37    NONAME  PRIVATE
+          USER32_WRAP(CharLowerW)                   @38    NONAME  PRIVATE
+          USER32_WRAP(CharLowerBuffW)               @39    NONAME  PRIVATE
+          USER32_WRAP(CharNextW)                    @40    NONAME  PRIVATE
+          USER32_WRAP(CharPrevW)                    @41    NONAME  PRIVATE
+          USER32_WRAP(CharToOemW)                   @42    NONAME  PRIVATE
+          USER32_WRAP(CharUpperW)                   @43    NONAME  PRIVATE
+          USER32_WRAP(CharUpperBuffW)               @44    NONAME  PRIVATE
+        KERNEL32_WRAP(CompareStringW)               @45    NONAME  PRIVATE
+          USER32_WRAP(CopyAcceleratorTableW)        @46    NONAME  PRIVATE
+          USER32_WRAP(CreateAcceleratorTableW)      @47    NONAME  PRIVATE
+           GDI32_WRAP(CreateDCW)                    @48    NONAME  PRIVATE
+      CreateDialogParamWrapW                        @49    NONAME  PRIVATE // wanted on alpha for ML
+        KERNEL32_WRAP(CreateDirectoryW)             @50    NONAME  PRIVATE
+        KERNEL32_WRAP(CreateEventW)                 @51    NONAME  PRIVATE
+        KERNEL32_WRAP(CreateFileW)                  @52    NONAME  PRIVATE
+           GDI32_WRAP(CreateFontIndirectW)          @53    NONAME  PRIVATE
+           GDI32_WRAP(CreateICW)                    @54    NONAME  PRIVATE
+          USER32_WRAP(CreateWindowExW)              @55    NONAME  PRIVATE
+          USER32_WRAP(DefWindowProcW)               @56    NONAME  PRIVATE
+        KERNEL32_WRAP(DeleteFileW)                  @57    NONAME  PRIVATE
+      DialogBoxIndirectParamWrapW                   @58    NONAME  PRIVATE // wanted on alpha for ML
+      DialogBoxParamWrapW                           @59    NONAME  PRIVATE // wanted on alpha for ML
+          USER32_WRAP(DispatchMessageW)             @60    NONAME  PRIVATE
+          USER32_WRAP(DrawTextW)                    @61    NONAME  PRIVATE
+           GDI32_WRAP(EnumFontFamiliesW)            @62    NONAME  PRIVATE
+           GDI32_WRAP(EnumFontFamiliesExW)          @63    NONAME  PRIVATE
+        KERNEL32_WRAP(EnumResourceNamesW)           @64    NONAME  PRIVATE
+        KERNEL32_WRAP(FindFirstFileW)               @65    NONAME  PRIVATE
+        KERNEL32_WRAP(FindResourceW)                @66    NONAME  PRIVATE
+          USER32_WRAP(FindWindowW)                  @67    NONAME  PRIVATE
+        KERNEL32_WRAP(FormatMessageW)               @68    NONAME  PRIVATE
+          USER32_WRAP(GetClassInfoW)                @69    NONAME  PRIVATE
+          USER32_WRAP(GetClassLongW)                @70    NONAME  PRIVATE
+          USER32_WRAP(GetClassNameW)                @71    NONAME  PRIVATE
+          USER32_WRAP(GetClipboardFormatNameW)      @72    NONAME  PRIVATE
+        KERNEL32_WRAP(GetCurrentDirectoryW)         @73    NONAME  PRIVATE
+          USER32_WRAP(GetDlgItemTextW)              @74    NONAME  PRIVATE
+        KERNEL32_WRAP(GetFileAttributesW)           @75    NONAME  PRIVATE
+        KERNEL32_WRAP(GetFullPathNameW)             @76    NONAME  PRIVATE
+        KERNEL32_WRAP(GetLocaleInfoW)               @77    NONAME  PRIVATE
+                      GetMenuStringWrapW            @78    NONAME  PRIVATE // wanted on alpha for ML
+          USER32_WRAP(GetMessageW)                  @79    NONAME  PRIVATE
+        KERNEL32_WRAP(GetModuleFileNameW)           @80    NONAME  PRIVATE
+        KERNEL32_WRAP(GetSystemDirectoryW)          @81    NONAME  PRIVATE
+        KERNEL32_WRAP(SearchPathW)                  @82    NONAME  PRIVATE
+        KERNEL32_WRAP(GetModuleHandleW)             @83    NONAME  PRIVATE
+           GDI32_WRAP(GetObjectW)                   @84    NONAME  PRIVATE
+        KERNEL32_WRAP(GetPrivateProfileIntW)        @85    NONAME  PRIVATE
+        KERNEL32_WRAP(GetProfileStringW)            @86    NONAME  PRIVATE
+          USER32_WRAP(GetPropW)                     @87    NONAME  PRIVATE
+        KERNEL32_WRAP(GetStringTypeExW)             @88    NONAME  PRIVATE
+        KERNEL32_WRAP(GetTempFileNameW)             @89    NONAME  PRIVATE
+        KERNEL32_WRAP(GetTempPathW)                 @90    NONAME  PRIVATE
+           GDI32_WRAP(GetTextExtentPoint32W)        @91    NONAME  PRIVATE
+           GDI32_WRAP(GetTextFaceW)                 @92    NONAME  PRIVATE
+           GDI32_WRAP(GetTextMetricsW)              @93    NONAME  PRIVATE
+          USER32_WRAP(GetWindowLongW)               @94    NONAME  PRIVATE
+          USER32_WRAP(GetWindowTextW)               @95    NONAME  PRIVATE
+          USER32_WRAP(GetWindowTextLengthW)         @96    NONAME  PRIVATE
+        KERNEL32_WRAP(GetWindowsDirectoryW)         @97    NONAME  PRIVATE
+                      InsertMenuWrapW               @98    NONAME  PRIVATE // wanted on alpha for ML
+          USER32_WRAP(IsDialogMessageW)             @99    NONAME  PRIVATE
+          USER32_WRAP(LoadAcceleratorsW)            @100    NONAME  PRIVATE
+          USER32_WRAP(LoadBitmapW)                  @101    NONAME  PRIVATE
+          USER32_WRAP(LoadCursorW)                  @102    NONAME  PRIVATE
+          USER32_WRAP(LoadIconW)                    @103    NONAME  PRIVATE
+          USER32_WRAP(LoadImageW)                   @104    NONAME  PRIVATE
+        KERNEL32_WRAP(LoadLibraryExW)               @105    NONAME  PRIVATE
+                      LoadMenuWrapW                 @106    NONAME  PRIVATE // wanted on alpha for ML
+          USER32_WRAP(LoadStringW)                  @107    NONAME  PRIVATE
+          USER32_WRAP(MessageBoxIndirectW)          @108    NONAME  PRIVATE
+          USER32_WRAP(ModifyMenuW)                  @109    NONAME  PRIVATE
+           GDI32_WRAP(GetCharWidth32W)              @110    NONAME  PRIVATE
+           GDI32_WRAP(GetCharacterPlacementW)       @111    NONAME  PRIVATE
+        KERNEL32_WRAP(CopyFileW)                    @112    NONAME  PRIVATE
+        KERNEL32_WRAP(MoveFileW)                    @113    NONAME  PRIVATE
+          USER32_WRAP(OemToCharW)                   @114    NONAME  PRIVATE
+        KERNEL32_WRAP(OutputDebugStringW)           @115    NONAME  PRIVATE
+          USER32_WRAP(PeekMessageW)                 @116    NONAME  PRIVATE
+          USER32_WRAP(PostMessageW)                 @117    NONAME  PRIVATE
+          USER32_WRAP(PostThreadMessageW)           @118    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegCreateKeyW)                @119    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegCreateKeyExW)              @120    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegDeleteKeyW)                @121    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegEnumKeyW)                  @122    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegEnumKeyExW)                @123    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegOpenKeyW)                  @124    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegOpenKeyExW)                @125    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegQueryInfoKeyW)             @126    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegQueryValueW)               @127    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegQueryValueExW)             @128    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegSetValueW)                 @129    NONAME  PRIVATE
+        ADVAPI32_WRAP(RegSetValueExW)               @130    NONAME  PRIVATE
+          USER32_WRAP(RegisterClassW)               @131    NONAME  PRIVATE
+          USER32_WRAP(RegisterClipboardFormatW)     @132    NONAME  PRIVATE
+          USER32_WRAP(RegisterWindowMessageW)       @133    NONAME  PRIVATE
+          USER32_WRAP(RemovePropW)                  @134    NONAME  PRIVATE
+          USER32_WRAP(SendDlgItemMessageW)          @135    NONAME  PRIVATE
+          USER32_WRAP(SendMessageW)                 @136    NONAME  PRIVATE
+        KERNEL32_WRAP(SetCurrentDirectoryW)         @137    NONAME  PRIVATE
+          USER32_WRAP(SetDlgItemTextW)              @138    NONAME  PRIVATE
+                      SetMenuItemInfoWrapW          @139    NONAME  PRIVATE // wanted on alpha for ML
+          USER32_WRAP(SetPropW)                     @140    NONAME  PRIVATE
+          USER32_WRAP(SetWindowLongW)               @141    NONAME  PRIVATE
+          USER32_WRAP(SetWindowsHookExW)            @142    NONAME  PRIVATE
+          USER32_WRAP(SetWindowTextW)               @143    NONAME  PRIVATE
+           GDI32_WRAP(StartDocW)                    @144    NONAME  PRIVATE
+          USER32_WRAP(SystemParametersInfoW)        @145    NONAME  PRIVATE
+          USER32_WRAP(TranslateAcceleratorW)        @146    NONAME  PRIVATE
+          USER32_WRAP(UnregisterClassW)             @147    NONAME  PRIVATE
+          USER32_WRAP(VkKeyScanW)                   @148    NONAME  PRIVATE
+          USER32_WRAP(WinHelpW)                     @149    NONAME  PRIVATE
+          USER32_WRAP(wvsprintfW)                   @150    NONAME  PRIVATE
+
+;;=========================================================================
+;; Seven bit ASCII string compare
+;;=========================================================================
+
+        StrCmpNCA               @151 NONAME PRIVATE
+        StrCmpNCW               @152 NONAME PRIVATE
+        StrCmpNICA              @153 NONAME PRIVATE
+        StrCmpNICW              @154 NONAME PRIVATE
+        StrCmpCA                @155 NONAME PRIVATE
+        StrCmpCW                @156 NONAME PRIVATE
+        StrCmpICA               @157 NONAME PRIVATE
+        StrCmpICW               @158 NONAME PRIVATE
+
+;;=========================================================================
+;; True-Unicode String comparison
+;;=========================================================================
+
+        CompareStringAltW       @159 NONAME PRIVATE
+
+;;=========================================================================
+;; HTML About Dialog Box info
+;;=========================================================================
+
+        SHAboutInfoA            @160 NONAME PRIVATE
+        SHAboutInfoW            @161 NONAME PRIVATE
+
+
+;;=========================================================================
+        SHTruncateString        @162 NONAME PRIVATE
+        IUnknown_QueryStatus    @163 NONAME PRIVATE
+        IUnknown_Exec           @164 NONAME PRIVATE
+        SHSetWindowBits         @165 NONAME PRIVATE
+        SHIsEmptyStream         @166 NONAME PRIVATE
+        SHSetParentHwnd         @167 NONAME PRIVATE
+        ConnectToConnectionPoint    @168 NONAME PRIVATE
+        IUnknown_AtomicRelease  @169 NONAME PRIVATE
+        PathSkipLeadingSlashesA @170 NONAME PRIVATE
+        SHIsSameObject          @171 NONAME PRIVATE
+        IUnknown_GetWindow      @172 NONAME PRIVATE
+        IUnknown_SetOwner       @173 NONAME PRIVATE
+        IUnknown_SetSite        @174 NONAME PRIVATE
+        IUnknown_GetClassID     @175 NONAME PRIVATE
+        IUnknown_QueryService   @176 NONAME PRIVATE
+        SHLoadMenuPopup         @177 NONAME PRIVATE
+        SHPropagateMessage      @178 NONAME PRIVATE
+        SHMenuIndexFromID       @179 NONAME PRIVATE
+        SHRemoveAllSubMenus     @180 NONAME PRIVATE
+        SHEnableMenuItem        @181 NONAME PRIVATE
+        SHCheckMenuItem         @182 NONAME PRIVATE
+        SHRegisterClassA        @183 NONAME PRIVATE
+        IStream_Read            @184 NONAME PRIVATE
+        SHMessageBoxCheckA      @185 NONAME PRIVATE
+        SHSimulateDrop          @186 NONAME PRIVATE
+        SHLoadFromPropertyBag   @187 NONAME PRIVATE
+        IUnknown_TranslateAcceleratorOCS    @188 NONAME PRIVATE
+        IUnknown_OnFocusOCS     @189 NONAME PRIVATE
+        IUnknown_HandleIRestrict @190 NONAME PRIVATE
+        SHMessageBoxCheckW      @191 NONAME PRIVATE
+        SHGetMenuFromID         @192 NONAME PRIVATE
+        SHGetCurColorRes        @193 NONAME PRIVATE
+        SHWaitForSendMessageThread  @194 NONAME PRIVATE
+        SHIsExpandableFolder    @195 NONAME PRIVATE
+        SHVerbExistsNA          @196 NONAME PRIVATE
+        SHFillRectClr           @197 NONAME PRIVATE
+        SHSearchMapInt          @198 NONAME PRIVATE
+        IUnknown_Set            @199 NONAME PRIVATE
+        MayQSForward            @200 NONAME PRIVATE
+        MayExecForward          @201 NONAME PRIVATE
+        IsQSForward             @202 NONAME PRIVATE
+        SHStripMneumonicA       @203 NONAME PRIVATE
+        SHIsChildOrSelf         @204 NONAME PRIVATE
+        SHGetValueGoodBootA     @205 NONAME PRIVATE
+        SHGetValueGoodBootW     @206 NONAME PRIVATE
+        IContextMenu_Invoke     @207 NONAME PRIVATE
+        FDSA_Initialize         @208 NONAME PRIVATE
+        FDSA_Destroy            @209 NONAME PRIVATE
+        FDSA_InsertItem         @210 NONAME PRIVATE
+        FDSA_DeleteItem         @211 NONAME PRIVATE
+        IStream_Write           @212 NONAME PRIVATE
+        IStream_Reset           @213 NONAME PRIVATE
+        IStream_Size            @214 NONAME PRIVATE
+        SHAnsiToUnicode         @215 NONAME PRIVATE
+        SHAnsiToUnicodeCP       @216 NONAME PRIVATE
+        SHUnicodeToAnsi         @217 NONAME PRIVATE
+        SHUnicodeToAnsiCP       @218 NONAME PRIVATE
+        QISearch                @219 NONAME PRIVATE
+        SHSetDefaultDialogFont  @220 NONAME PRIVATE
+        SHRemoveDefaultDialogFont   @221 NONAME PRIVATE
+
+        ; Global counters
+        SHGlobalCounterCreate   @222 NONAME PRIVATE
+        SHGlobalCounterGetValue @223 NONAME PRIVATE
+        SHGlobalCounterIncrement    @224 NONAME PRIVATE
+        SHStripMneumonicW       @225 NONAME PRIVATE
+
+        ; Security zones
+        ZoneCheckPathA          @226 NONAME PRIVATE
+        ZoneCheckPathW          @227 NONAME PRIVATE
+        ZoneCheckUrlA           @228 NONAME PRIVATE
+        ZoneCheckUrlW           @229 NONAME PRIVATE
+        ZoneCheckUrlExA         @230 NONAME PRIVATE
+        ZoneCheckUrlExW         @231 NONAME PRIVATE
+        ZoneCheckUrlExCacheA    @232 NONAME PRIVATE
+        ZoneCheckUrlExCacheW    @233 NONAME PRIVATE
+        ZoneCheckHost           @234 NONAME PRIVATE
+        ZoneCheckHostEx         @235 NONAME PRIVATE
+
+        ; More OLE helper functions
+        SHPinDllOfCLSID         @236 NONAME PRIVATE
+
+        ; More simple wrappers
+        SHRegisterClassW        @237 NONAME PRIVATE
+        SHUnregisterClassesA    @238 NONAME PRIVATE
+        SHUnregisterClassesW    @239 NONAME PRIVATE
+        SHDefWindowProc         @240 NONAME PRIVATE
+
+        ; Shell Performance Functions
+        StopWatchMode           @241 NONAME PRIVATE
+        StopWatchFlush          @242 NONAME PRIVATE
+        StopWatchA              @243 NONAME PRIVATE
+        StopWatchW              @244 NONAME PRIVATE
+        StopWatch_TimerHandler  @245 NONAME PRIVATE
+        StopWatch_CheckMsg      @246 NONAME PRIVATE
+        StopWatch_MarkFrameStart        @247 NONAME PRIVATE
+        StopWatch_MarkSameFrameStart    @248 NONAME PRIVATE
+        StopWatch_MarkJavaStop  @249 NONAME PRIVATE
+        GetPerfTime             @250 NONAME PRIVATE
+        StopWatch_DispatchTime  @251 NONAME PRIVATE
+        StopWatch_SetMsgLastLocation @252 NONAME PRIVATE
+        ;reserved               @253 NONAME PRIVATE
+        ;reserved               @254 NONAME PRIVATE
+        ;reserved               @255 NONAME PRIVATE
+
+        IUnknown_GetSite        @256 NONAME PRIVATE
+
+        SHCreateWorkerWindowA   @257 NONAME PRIVATE
+
+;;=========================================================================
+;; Thread Pool Services
+;;=========================================================================
+
+        SHRegisterWaitForSingleObject     @258  NONAME  PRIVATE
+        SHUnregisterWait                  @259  NONAME  PRIVATE
+        SHQueueUserWorkItem               @260  NONAME  PRIVATE
+        SHCreateTimerQueue                @261  NONAME  PRIVATE
+        SHDeleteTimerQueue                @262  NONAME  PRIVATE
+        SHSetTimerQueueTimer              @263  NONAME  PRIVATE
+        SHChangeTimerQueueTimer           @264  NONAME  PRIVATE
+        SHCancelTimerQueueTimer           @265  NONAME  PRIVATE
+
+        SHRestrictionLookup               @266  NONAME  PRIVATE
+        SHWeakQueryInterface              @267  NONAME  PRIVATE
+        SHWeakReleaseInterface            @268  NONAME  PRIVATE
+        GUIDFromStringA                   @269  NONAME  PRIVATE
+        GUIDFromStringW                   @270  NONAME  PRIVATE
+        SHGetRestriction                  @271  NONAME  PRIVATE
+
+        SHSetThreadPoolLimits             @272  NONAME  PRIVATE
+        SHTerminateThreadPool             @273  NONAME  PRIVATE
+
+        SHCancelUserWorkItems             @293  NONAME  PRIVATE
+
+;;=========================================================================
+;; other services
+;;=========================================================================
+
+        RegisterGlobalHotkeyW             @274 NONAME PRIVATE
+        RegisterGlobalHotkeyA             @275 NONAME PRIVATE
+        WhichPlatform                     @276 NONAME PRIVATE
+
+        SHDialogBox                       @277 NONAME PRIVATE
+
+        SHCreateWorkerWindowW             @278 NONAME PRIVATE
+        SHInvokeDefaultCommand            @279 NONAME PRIVATE
+
+        SHRegGetIntW                      @280 NONAME PRIVATE
+
+        SHPackDispParamsV                                      @281 NONAME PRIVATE
+        SHPackDispParams                                       @282 NONAME PRIVATE
+        IConnectionPoint_InvokeWithCancel                      @283 NONAME PRIVATE
+        IConnectionPoint_SimpleInvoke                          @284 NONAME PRIVATE
+        IConnectionPoint_OnChanged                             @285 NONAME PRIVATE
+        IUnknown_CPContainerInvokeParam                        @286 NONAME PRIVATE
+        IUnknown_CPContainerOnChanged                          @287 NONAME PRIVATE
+        IUnknown_CPContainerInvokeIndirect                     @288 NONAME PRIVATE
+          WINMM_WRAP(PlaySoundW)                               @289 NONAME PRIVATE
+
+        SHMirrorIcon                                    @290 NONAME PRIVATE
+
+        SHMessageBoxCheckExA                            @291 NONAME PRIVATE
+        SHMessageBoxCheckExW                            @292 NONAME PRIVATE
+
+;       SHCancelUserWorkItems             @293 NONAME PRIVATE
+
+        SHGetIniStringW                   @294 NONAME PRIVATE
+        SHSetIniStringW                   @295 NONAME PRIVATE
+
+        CreateURLFileContentsW            @296 NONAME PRIVATE
+        CreateURLFileContentsA            @297 NONAME PRIVATE
+
+;;=========================================================================
+;; New Exports
+;;=========================================================================
+        KERNEL32_WRAP(WritePrivateProfileStringW)              @298   NONAME  PRIVATE
+           GDI32_WRAP(ExtTextOutW)                             @299   NONAME  PRIVATE
+           GDI32_WRAP(CreateFontW)                             @300   NONAME  PRIVATE
+          USER32_WRAP(DrawTextExW)                             @301   NONAME  PRIVATE
+                      GetMenuItemInfoWrapW                     @302   NONAME  PRIVATE // wanted on alpha for ML
+                      InsertMenuItemWrapW                      @303   NONAME  PRIVATE // wanted on alpha for ML
+           GDI32_WRAP(CreateMetaFileW)                         @304   NONAME  PRIVATE
+        KERNEL32_WRAP(CreateMutexW)                            @305   NONAME  PRIVATE
+        KERNEL32_WRAP(ExpandEnvironmentStringsW)               @306   NONAME  PRIVATE
+        KERNEL32_WRAP(CreateSemaphoreW)                        @307   NONAME  PRIVATE
+        KERNEL32_WRAP(IsBadStringPtrW)                         @308   NONAME  PRIVATE
+        KERNEL32_WRAP(LoadLibraryW)                            @309   NONAME  PRIVATE
+        KERNEL32_WRAP(GetTimeFormatW)                          @310   NONAME  PRIVATE
+        KERNEL32_WRAP(GetDateFormatW)                          @311   NONAME  PRIVATE
+        KERNEL32_WRAP(GetPrivateProfileStringW)                @312   NONAME  PRIVATE
+        SHELL32_WRAP(SHGetFileInfoW)                           @313   NONAME  PRIVATE
+          USER32_WRAP(RegisterClassExW)                        @314   NONAME  PRIVATE
+          USER32_WRAP(GetClassInfoExW)                         @315   NONAME  PRIVATE
+        IShellFolder_GetDisplayNameOf                          @316   NONAME  PRIVATE
+        IShellFolder_ParseDisplayName                          @317   NONAME  PRIVATE
+         SHELL32_WRAP(DragQueryFileW)                          @318   NONAME  PRIVATE
+          USER32_WRAP(FindWindowExW)                           @319   NONAME  PRIVATE
+
+;;=========================================================================
+;; MIME File Type helper functions
+;;=========================================================================
+        RegisterMIMETypeForExtensionA               @320    NONAME  PRIVATE
+        RegisterMIMETypeForExtensionW               @321    NONAME  PRIVATE
+        UnregisterMIMETypeForExtensionA             @322    NONAME  PRIVATE
+        UnregisterMIMETypeForExtensionW             @323    NONAME  PRIVATE
+        RegisterExtensionForMIMETypeA               @324    NONAME  PRIVATE
+        RegisterExtensionForMIMETypeW               @325    NONAME  PRIVATE
+        UnregisterExtensionForMIMETypeA             @326    NONAME  PRIVATE
+        UnregisterExtensionForMIMETypeW             @327    NONAME  PRIVATE
+        GetMIMETypeSubKeyA                          @328    NONAME  PRIVATE
+        GetMIMETypeSubKeyW                          @329    NONAME  PRIVATE
+        MIME_GetExtensionA                          @330    NONAME  PRIVATE
+        MIME_GetExtensionW                          @331    NONAME  PRIVATE
+
+
+;;=========================================================================
+;; More Thunk Wrappers
+;;=========================================================================
+          USER32_WRAP(CallMsgFilterW)                          @332   NONAME  PRIVATE
+         SHELL32_WRAP(SHBrowseForFolderW)                      @333   NONAME  PRIVATE
+         SHELL32_WRAP(SHGetPathFromIDListW)                    @334   NONAME  PRIVATE
+         SHELL32_WRAP(ShellExecuteExW)                         @335   NONAME  PRIVATE
+         SHELL32_WRAP(SHFileOperationW)                        @336   NONAME  PRIVATE
+         SHELL32_WRAP(ExtractIconExW)                          @337   NONAME  PRIVATE
+        KERNEL32_WRAP(SetFileAttributesW)                      @338   NONAME  PRIVATE
+        KERNEL32_WRAP(GetNumberFormatW)                        @339   NONAME  PRIVATE
+          USER32_WRAP(MessageBoxW)                             @340   NONAME  PRIVATE
+        KERNEL32_WRAP(FindNextFileW)                           @341   NONAME  PRIVATE
+#ifdef _WIN64
+    SHInterlockedCompareExchange                               @342   NONAME  PRIVATE
+#else
+    WRAPDLLFN2(KERNEL32, SHInterlockedCompareExchange,
+                           InterlockedCompareExchange)         @342   NONAME  PRIVATE
+#endif
+
+        SHRegGetCLSIDKeyA                                      @343   NONAME  PRIVATE
+        SHRegGetCLSIDKeyW                                      @344   NONAME  PRIVATE
+
+;;=========================================================================
+;; Other
+;;=========================================================================
+        SHAnsiToAnsi                                @345    NONAME  PRIVATE
+        SHUnicodeToUnicode                          @346    NONAME  PRIVATE
+
+        ADVAPI32_WRAP(RegDeleteValueW)              @347    NONAME  PRIVATE
+        SHGetFileDescriptionW                       @348    NONAME  PRIVATE
+        SHGetFileDescriptionA                       @349    NONAME  PRIVATE
+         VERSION_WRAP(GetFileVersionInfoSizeW)      @350    NONAME  PRIVATE
+         VERSION_WRAP(GetFileVersionInfoW)          @351    NONAME  PRIVATE
+         VERSION_WRAP(VerQueryValueW)               @352    NONAME  PRIVATE
+
+        SHFormatDateTimeA                           @353    NONAME  PRIVATE
+        SHFormatDateTimeW                           @354    NONAME  PRIVATE
+        IUnknown_EnableModless                      @355    NONAME  PRIVATE
+        CreateAllAccessSecurityAttributes           @356    NONAME  PRIVATE
+
+        SHGetNewLinkInfoWrapW                       @357    NONAME  PRIVATE
+         SHELL32_WRAP(SHDefExtractIconW)            @358    NONAME  PRIVATE
+        KERNEL32_WRAP(OpenEventW)                   @359    NONAME  PRIVATE
+        KERNEL32_WRAP(RemoveDirectoryW)             @360    NONAME  PRIVATE
+        KERNEL32_WRAP(GetShortPathNameW)            @361    NONAME  PRIVATE
+        ADVAPI32_WRAP(GetUserNameW)                 @362    NONAME  PRIVATE
+
+        SHInvokeCommand                             @363    NONAME  PRIVATE
+        DoesStringRoundTripA                        @364    NONAME  PRIVATE
+        DoesStringRoundTripW                        @365    NONAME  PRIVATE
+
+        ADVAPI32_WRAP(RegEnumValueW)                @366    NONAME  PRIVATE
+        KERNEL32_WRAP(WritePrivateProfileStructW)   @367    NONAME  PRIVATE
+        KERNEL32_WRAP(GetPrivateProfileStructW)     @368    NONAME  PRIVATE
+        KERNEL32_WRAP(CreateProcessW)               @369    NONAME  PRIVATE
+         SHELL32_WRAP(ExtractIconW)                 @370    NONAME  PRIVATE
+          USER32_WRAP(DdeInitializeW)               @371    NONAME  PRIVATE
+          USER32_WRAP(DdeCreateStringHandleW)       @372    NONAME  PRIVATE
+          USER32_WRAP(DdeQueryStringW)              @373    NONAME  PRIVATE
+
+        SHCheckDiskForMediaA                        @374    NONAME  PRIVATE
+        SHCheckDiskForMediaW                        @375    NONAME  PRIVATE
+
+        MLGetUILanguage                             @376    NONAME  PRIVATE
+        MLLoadLibraryA                              @377    NONAME  PRIVATE
+        MLLoadLibraryW                              @378    NONAME  PRIVATE
+
+        SHELL32_WRAP(Shell_GetCachedImageIndexW)    @379    NONAME  PRIVATE
+        Shell_GetCachedImageIndexWrapA              @380    NONAME  PRIVATE
+
+        AssocCopyVerbs                              @381    NONAME  PRIVATE
+
+        ZoneComputePaneSize                         @382    NONAME  PRIVATE
+        ZoneConfigureW                              @383    NONAME  PRIVATE
+        SHRestrictedMessageBox                      @384    NONAME  PRIVATE
+
+        SHLoadRawAccelerators                       @385    NONAME  PRIVATE
+        SHQueryRawAccelerator                       @386    NONAME  PRIVATE
+        SHQueryRawAcceleratorMsg                    @387    NONAME  PRIVATE
+
+        ShellMessageBoxWrapW                        @388    NONAME  PRIVATE // This one replaces shell32's implementation
+
+        COMDLG32_WRAP(GetSaveFileNameW)             @389    NONAME  PRIVATE
+
+             MPR_WRAP(WNetRestoreConnectionW)       @390    NONAME  PRIVATE
+             MPR_WRAP(WNetGetLastErrorW)            @391    NONAME  PRIVATE
+
+   WRAPDLLFN2(USER32, EndDialogWrap, EndDialog)     @392    NONAME  PRIVATE // Remove this soon
+
+        CreateDialogIndirectParamWrapW              @393    NONAME  PRIVATE // wanted even on alpha for ML
+
+        SHELL32_WRAPX(SHChangeNotify)               @394    NONAME  PRIVATE
+
+        MLWinHelpA                                  @395    NONAME  PRIVATE
+        MLHtmlHelpA                                 @396    NONAME  PRIVATE
+        MLWinHelpW                                  @397    NONAME  PRIVATE
+        MLHtmlHelpW                                 @398    NONAME  PRIVATE
+
+#ifndef UNIX
+        StrCpyNXA                                   @399    NONAME  PRIVATE
+        StrCpyNXW                                   @400    NONAME  PRIVATE
+#endif
+
+        COMDLG32_WRAP(PageSetupDlgW)                @401    NONAME  PRIVATE
+        COMDLG32_WRAP(PrintDlgW)                    @402    NONAME  PRIVATE
+
+        COMDLG32_WRAP(GetOpenFileNameW)             @403    NONAME  PRIVATE
+
+        IShellFolder_EnumObjects                    @404    NONAME  PRIVATE
+
+        MLBuildResURLA                              @405    NONAME  PRIVATE
+        MLBuildResURLW                              @406    NONAME  PRIVATE
+
+        AssocMakeProgid                             @407    NONAME  PRIVATE
+        AssocMakeShell                              @408    NONAME  PRIVATE
+        AssocMakeApplicationByKeyW                  @409    NONAME  PRIVATE
+        AssocMakeApplicationByKeyA                  @410    NONAME  PRIVATE
+        AssocMakeFileExtsToApplicationW             @411    NONAME  PRIVATE
+        AssocMakeFileExtsToApplicationA             @412    NONAME  PRIVATE
+
+        SHGetMachineInfo                            @413    NONAME  PRIVATE
+
+        SHHtmlHelpOnDemandW                         @414    NONAME  PRIVATE
+        SHHtmlHelpOnDemandA                         @415    NONAME  PRIVATE
+        SHWinHelpOnDemandW                          @416    NONAME  PRIVATE
+        SHWinHelpOnDemandA                          @417    NONAME  PRIVATE
+
+        MLFreeLibrary                               @418    NONAME  PRIVATE
+
+        SHELL32_WRAPX(SHFlushSFCache)               @419    NONAME  PRIVATE
+
+        SHPersistDataObject                         @420    NONAME  PRIVATE
+        SHLoadPersistedDataObject                   @421    NONAME  PRIVATE
+
+        ; More Global counter stuff
+        SHGlobalCounterCreateNamedA                 @422    NONAME  PRIVATE
+        SHGlobalCounterCreateNamedW                 @423    NONAME  PRIVATE
+        SHGlobalCounterDecrement                    @424    NONAME  PRIVATE
+
+        DeleteMenuWrap                              @425    NONAME  PRIVATE // wanted on alpha for ML
+        DestroyMenuWrap                             @426    NONAME  PRIVATE // wanted on alpha for ML
+
+        TrackPopupMenuWrap                          @427    NONAME  PRIVATE // wanted on alpha for ML
+        TrackPopupMenuExWrap                        @428    NONAME  PRIVATE // wanted on alpha for ML
+
+        MLIsMLHInstance                             @429    NONAME  PRIVATE
+        MLSetMLHInstance                            @430    NONAME  PRIVATE
+        MLClearMLHInstance                          @431    NONAME  PRIVATE
+
+        SHSendMessageBroadcastA                     @432    NONAME  PRIVATE
+        SHSendMessageBroadcastW                     @433    NONAME  PRIVATE
+
+        USER32_WRAP(SendMessageTimeoutW)            @434    NONAME  PRIVATE
+
+        CLSIDFromProgIDWrap                         @435    NONAME  PRIVATE
+        CLSIDFromStringWrap                         @436    NONAME  PRIVATE
+
+        IsOS                                        @437    NONAME  PRIVATE
+
+        SHLoadRegUIStringA                          @438    NONAME  PRIVATE
+        SHLoadRegUIStringW                          @439    NONAME  PRIVATE
+
+        SHGetWebFolderFilePathA                     @440    NONAME  PRIVATE
+        SHGetWebFolderFilePathW                     @441    NONAME  PRIVATE
+
+        KERNEL32_WRAP(GetEnvironmentVariableW)      @442    NONAME  PRIVATE
+
+        SHGetSystemWindowsDirectoryA                @443    NONAME  PRIVATE
+        SHGetSystemWindowsDirectoryW                @444    NONAME  PRIVATE
+
+;; these are functions that used to live in shell32, but have been consolidated here
+        PathFileExistsAndAttributesA                @445    NONAME  PRIVATE
+        PathFileExistsAndAttributesW                @446    NONAME  PRIVATE
+        FixSlashesAndColonA                         @447    NONAME  PRIVATE
+        FixSlashesAndColonW                         @448    NONAME  PRIVATE
+        NextPathA                                   @449    NONAME  PRIVATE
+        NextPathW                                   @450    NONAME  PRIVATE
+
+        ; export under the old shell32 name of CharXXX
+        CharUpperNoDBCSA                            @451    NONAME  PRIVATE
+        CharUpperNoDBCSW                            @452    NONAME  PRIVATE
+        CharLowerNoDBCSA                            @453    NONAME  PRIVATE
+        CharLowerNoDBCSW                            @454    NONAME  PRIVATE
+
+        PathIsValidCharA                            @455    NONAME  PRIVATE
+        PathIsValidCharW                            @456    NONAME  PRIVATE
+
+        ; These wrappers are needed on all platforms (x86 and Alpha)
+        GetLongPathNameWrapW                        @457    NONAME  PRIVATE
+        GetLongPathNameWrapA                        @458    NONAME  PRIVATE
+
+        SHExpandEnvironmentStringsA                 @459    NONAME  PRIVATE
+        SHExpandEnvironmentStringsW                 @460    NONAME  PRIVATE
+
+        ; Moved from shell32
+        SHGetAppCompatFlags                         @461    NONAME  PRIVATE
+
+        UrlFixupW                                   @462    NONAME  PRIVATE
+        
+; Functions for impersonated users with hToken
+
+        SHExpandEnvironmentStringsForUserA          @463    NONAME  PRIVATE
+        SHExpandEnvironmentStringsForUserW          @464    NONAME  PRIVATE
+        PathUnExpandEnvStringsForUserA              @465    NONAME  PRIVATE
+        PathUnExpandEnvStringsForUserW              @466    NONAME  PRIVATE
+
+        SHRunIndirectRegClientCommand               @467    NONAME  PRIVATE
+        RunIndirectRegCommand                       @468    NONAME  PRIVATE
+        RunRegCommand                               @469    NONAME  PRIVATE
+
+#if (defined(_MIPS_) || defined(_ALPHA_) || defined(_PPC_) || defined (_IA64_))
+;=========================================================================
+;; these are internal APIs for RISC machines
+;; to when manipulating PIDLS (struct _IDFILELOCATION)
+;;=========================================================================
+
+        ualstrcpynW             @500 NONAME PRIVATE
+        ualstrcmpiW             @501 NONAME PRIVATE
+        ualstrcmpW              @502 NONAME PRIVATE
+        ualstrlenW              @503 NONAME PRIVATE
+        ualstrcpyW              @504 NONAME PRIVATE
+
+#endif  // (defined(_MIPS_) || defined(_ALPHA_) || defined(_PPC_) || defined(_IA64_))
+
+
+;;=========================================================================
+;; DO NOT ADD NEW FUNCTIONS HERE - ADD THEM ABOVE THE ual FUNCTIONS
+;;=========================================================================

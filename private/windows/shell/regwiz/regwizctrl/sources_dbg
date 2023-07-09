@@ -1,0 +1,105 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name: RegWizCtrl
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    
+
+!ENDIF
+
+
+
+
+MAJORCOMP=RegWiz
+MINORCOMP=RegWizCtrl
+#USE_STATIC_ATL=1
+USE_ATL=1
+DEBUG_CRTS=1
+#REGWIZ_WITH_UCODE=-DUNICODE  -D_UNICODE
+REGWIZ_COMMON_FLAGS= $(REGWIZ_WITH_UCODE) -D_USRDLL -D_TAPI -D_WINDOWS -DWINNT -DNT
+#WIN32_LEAN_AND_MEAN=1
+NOT_LEAN_AND_MEAN=1
+MSC_WARNING_LEVEL=/W3
+USE_NATIVE_EH=1
+C_DEFINES=$(REGWIZ_COMMON_FLAGS)
+C_DEFINES=$(C_DEFINES) -DDEBUG -D_DEBUG
+NTDEBUG=ntsd
+NTDEBUGTYPE=both
+MSC_OPTIMIZATION=/Odi
+
+C_DEFINES=$(C_DEFINES) -DDEBUG
+NTDEBUG=ntsd
+NTDEBUGTYPE=both
+MSC_OPTIMIZATION=/Odi
+USE_LIBCMT=1
+#USE_MSVCRT=1
+
+#USER_C_FLAGS=$(REGWIZ_COMMON_FLAGS) 
+UMTYPE=windows
+TARGETNAME=RegWizCtrl
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLDEF=RegWizCtrl.def
+DLLENTRY=_DllMainCRTStartup
+RCOPTIONS=
+RCNOFONTMAP=
+REGWIZ_INCLUDES= ..\include;..\Res;..\PhBookLib
+INCPATH0=$(REGWIZ_INCLUDE)
+INCLUDES=$(REGWIZ_INCLUDES);..\inc;..\..\..\..\inc;$(BASEDIR)\public\sdk\inc;$(BASEDIR)\public\sdk\inc\crt;$(BASEDIR)\public\sdk\inc\atl21;$(BASEDIR)\public\sdk\inc\mfc42;
+MIDL_INCS=$(REGWIZ_INCLUDES);$(BASEDIR)\public\sdk\inc;$(BASEDIR)\public\sdk\inc\crt;$(BASEDIR)\public\sdk\inc\atl21;
+#NTPROFILEINPUT=yes
+
+#
+# Setup for application developer to set breakpoints with windbg
+#
+
+#NTDEBUGTYPE=both
+#LINKER_FLAGS= -NODEFAULTLIB:$(BASEDIR)\public\sdk\lib\*\libc.lib  -VERSION:3.0
+
+
+
+SOURCES=RegWizCtrl.idl \
+	 RegWizCtrl.rc \
+	 CRegWizCtrl.cpp \
+	 regWizCtrl.cpp \
+	 Stdafx.cpp 
+
+DLLBASE=0x10000000 
+
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\advapi32.lib   \
+	  $(BASEDIR)\public\sdk\lib\*\libcimt.lib \
+         	   $(BASEDIR)\public\sdk\lib\*\user32.lib \
+	   $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+	   $(BASEDIR)\public\sdk\lib\*\ole32.lib \
+	   $(BASEDIR)\public\sdk\lib\*\gdi32.lib  \
+	$(BASEDIR)\public\sdk\lib\*\winspool.lib \
+	$(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+	$(BASEDIR)\public\sdk\lib\*\shell32.lib \
+	$(BASEDIR)\public\sdk\lib\*\oleaut32.lib \
+	$(BASEDIR)\public\sdk\lib\*\uuid.lib  \
+	$(BASEDIR)\public\sdk\lib\*\wininet.lib \
+	$(BASEDIR)\public\sdk\lib\*\tapi32.lib \
+	$(BASEDIR)\public\sdk\lib\*\wsock32.lib\
+	$(BASEDIR)\public\sdk\lib\*\setupapi.lib\
+	$(BASEDIR)\public\sdk\lib\*\rpcrt4.lib\
+	..\regwiz\obj\*\regWiz.lib \
+	..\regwizPost\obj\*\regWizPost.lib  \
+	..\PhBookLib\obj\*\PhBookLib.lib 
+	
+	
+	
+	

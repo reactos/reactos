@@ -1,0 +1,5 @@
+LIBRARY KBDLK41A
+
+EXPORTS
+    KbdLayerDescriptor    @1
+    KbdNlsLayerDescriptor @2

@@ -1,0 +1,4 @@
+ALT_PROJECT_TARGET=entinf
+SERVER=2
+!include ..\sources.inc
+

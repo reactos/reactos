@@ -1,0 +1,44 @@
+MSC_WARNING_LEVEL=/WX /W3
+
+C_DEFINES = -DWIN32 -DTARGET32 -DHOST32 \
+            -DADDR_MIXED -DNT_BUILD -D_CROSS_PLATFORM_ -D_IMAGEHLP64
+
+C_DEFINES = $(C_DEFINES) -DDBCS -DFE_IME -D_DBCS=1 -D_MBCS=1 -DNT_BUILD_ONLY
+
+MIPS_FLAGS = -DHOST_MIPS
+386_FLAGS  = -DHOST_i386
+ALPHA_FLAGS= -DHOST_ALPHA
+PPC_FLAGS  = -DHOST_PPC
+
+USE_CRTDLL = 1
+
+MORE_LIBS=  \
+            $(MORE_LIBS)    \
+            $(BASEDIR)\public\sdk\lib\*\user32.lib  \
+            $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+!if "$(NTDEBUG)" == "" || "$(NTDEBUG)" == "ntsdnodbg" || "$(NTDEBUG)" == "retail"
+C_DEFINES = $(C_DEFINES) -DNDEBUG
+!else
+C_DEFINES = $(C_DEFINES) -DDEBUGVER
+!endif
+
+!IFDEF CALL_PROFILE
+MORE_LIBS=$(MORE_LIBS) $(BASEDIR)\public\sdk\lib\*\cap.lib
+MSC_OPTIMIZATION=$(MSC_OPTIMIZATION) /Od /Gh
+!ENDIF
+
+!IFDEF HEAP_CHECKING
+MORE_LIBS=$(MORE_LIBS) ..\..\heap\obj\*\heap.lib
+C_DEFINES=$(C_DEFINES) -DUSE_HEAP_CHECKING=1
+!ENDIF
+
+!ifndef VCTOOLS
+VCTOOLS=$(BASEDIR)\private\windbg64
+!endif
+
+!ifndef LANGAPI
+LANGAPI=$(BASEDIR)\private\windbg64\langapi
+!endif
+
+# SUBSYSTEM_VERSION=3.50

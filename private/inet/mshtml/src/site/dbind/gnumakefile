@@ -1,0 +1,23 @@
+PRODUCT = SITE
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE INCLUDES
+
+COMPILE_OPTION = debug
+
+PRECOMPILED_OPTION = -Xhdrstop=headers.hxx -Xpch=${O}/headers.pch
+
+PROJECT_CFLAGS = \
+	${INCLUDES:%=-I%} \
+#	${PRECOMPILED_OPTION}
+
+
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+
+#${OBJS.list}: ${O}/binder.o

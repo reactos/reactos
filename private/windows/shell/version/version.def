@@ -1,0 +1,18 @@
+LIBRARY         VERSION
+EXPORTS
+        GetFileVersionInfoSizeA
+        GetFileVersionInfoA
+        VerFindFileA
+        VerInstallFileA
+        VerQueryValueA
+        GetFileVersionInfoSizeW
+        GetFileVersionInfoW
+        VerFindFileW
+        VerInstallFileW
+        VerQueryValueW
+
+        VerQueryValueIndexA
+        VerQueryValueIndexW
+
+        VerLanguageNameA   = KERNEL32.VerLanguageNameA  PRIVATE
+        VerLanguageNameW   = KERNEL32.VerLanguageNameW  PRIVATE

@@ -1,0 +1,238 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+History:
+    Created 11-Jun-97 by Alan Auerbach (alanau)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+# this needs to be built last, after all the .sbr's 
+# have been created
+SYNCHRONIZE_DRAIN=1
+
+TARGETNAME      = shell
+TARGETTYPE      = NOTARGET
+TARGETPATH      = obj
+SOURCES         = dummy.c
+
+#
+# We list all of the .sbr files throught the shell project that will be
+# rolled into one giant .bsc file that will index all of the shell components.
+#
+
+OTHER_SBR_FILES = \
+#
+# shell\lib
+#
+    $(BASEDIR)\private\shell\lib\stock\$(O)\*.sbr                   \
+    $(BASEDIR)\private\shell\lib\stock5\$(O)\*.sbr                  \
+#
+# explorer.exe
+#
+    $(BASEDIR)\private\shell\explorer\ntc\$(O)\*.sbr                \
+    $(BASEDIR)\private\shell\explorer\nt5api\$(O)\*.sbr             \
+    $(BASEDIR)\private\shell\explorer\winnt\$(O)\*.sbr              \
+#
+# iexplore.exe
+#
+    $(BASEDIR)\private\shell\iexplore\$(O)\*.sbr                    \
+#
+# shlwapi.dll
+#
+    $(BASEDIR)\private\shell\shlwapi\srca\$(O)\*.sbr                \
+    $(BASEDIR)\private\shell\shlwapi\srcw\$(O)\*.sbr                \
+    $(BASEDIR)\private\shell\shlwapi\nt5api\$(O)\*.sbr              \
+    $(BASEDIR)\private\shell\shlwapi\srccpp\$(O)\*.sbr              \
+    $(BASEDIR)\private\shell\shlwapi\dll\$(O)\*.sbr                 \
+#
+# shell32.dll
+#
+    $(BASEDIR)\private\shell\shell32\unicode\$(O)\*.sbr             \
+    $(BASEDIR)\private\shell\shell32\unicpp\ntcpp\$(O)\*.sbr        \
+    $(BASEDIR)\private\shell\shell32\ntc\$(O)\*.sbr                 \
+    $(BASEDIR)\private\shell\shell32\ntcpp\$(O)\*.sbr               \
+    $(BASEDIR)\private\shell\shell32\nt5api\$(O)\*.sbr              \
+    $(BASEDIR)\private\shell\shell32\winnt\$(O)\*.sbr               \
+#
+# shdocvw.dll
+#
+    $(BASEDIR)\private\shell\shdocvw\srcc\$(O)\*.sbr                \
+    $(BASEDIR)\private\shell\shdocvw\util\$(O)\*.sbr                \
+    $(BASEDIR)\private\shell\shdocvw\hist\$(O)\*.sbr                \
+    $(BASEDIR)\private\shell\shdocvw\dll\$(O)\*.sbr                 \
+#
+# shdoc401.dll
+#
+    $(BASEDIR)\private\shell\shdoc401\dll\$(O)\*.sbr                \
+    $(BASEDIR)\private\shell\shdoc401\srcw\$(O)\*.sbr               \
+    $(BASEDIR)\private\shell\shdoc401\unicpp\$(O)\*.sbr             \
+#
+# browseui.dll
+#
+    $(BASEDIR)\private\shell\browseui\emclient\$(O)\*.sbr           \
+    $(BASEDIR)\private\shell\browseui\srcc\$(O)\*.sbr               \
+    $(BASEDIR)\private\shell\browseui\srccpp\$(O)\*.sbr             \
+    $(BASEDIR)\private\shell\browseui\nt5api\$(O)\*.sbr             \
+    $(BASEDIR)\private\shell\browseui\dll\$(O)\*.sbr                \
+#
+# comctl32.dll
+#
+    $(BASEDIR)\private\shell\comctl32\ntcpp\$(O)\*.sbr              \
+    $(BASEDIR)\private\shell\comctl32\nt5api\$(O)\*.sbr             \
+    $(BASEDIR)\private\shell\comctl32\winnt\$(O)\*.sbr              \
+#
+# comdlg32.dll
+#
+    $(BASEDIR)\private\shell\comdlg32\ntcpp\$(O)\*.sbr              \
+    $(BASEDIR)\private\shell\comdlg32\winnt\$(O)\*.sbr              \
+#
+# brfcase (syncapp.exe)
+#
+    $(BASEDIR)\private\shell\ext\brfcase\filesync\syncapp\$(O)\*.sbr \
+#
+# cabview.exe
+#
+    $(BASEDIR)\private\shell\ext\cabview\winnt\$(O)\*.sbr           \
+#
+# cdfview.dll
+#
+    $(BASEDIR)\private\shell\ext\cdfview\dll\$(O)\*.sbr             \
+#
+# diskcopy.dll
+#
+    $(BASEDIR)\private\shell\ext\diskcopy\$(O)\*.sbr                \
+#
+# docpropex
+#
+    $(BASEDIR)\private\shell\ext\docpropex\avprop\$(O)\*.sbr        \
+    $(BASEDIR)\private\shell\ext\docpropex\cmn\$(O)\*.sbr           \
+    $(BASEDIR)\private\shell\ext\docpropex\ctl\$(O)\*.sbr           \
+    $(BASEDIR)\private\shell\ext\docpropex\ext\$(O)\*.sbr           \
+    $(BASEDIR)\private\shell\ext\docpropex\srv\$(O)\*.sbr           \
+#
+# dsui
+#
+    $(BASEDIR)\private\shell\ext\dsui\cmnquery\winnt\$(O)\*.sbr     \
+    $(BASEDIR)\private\shell\ext\dsui\common\winnt\$(O)\*.sbr       \
+    $(BASEDIR)\private\shell\ext\dsui\dsfolder\winnt\$(O)\*.sbr     \
+    $(BASEDIR)\private\shell\ext\dsui\dsquery\winnt\$(O)\*.sbr      \
+    $(BASEDIR)\private\shell\ext\dsui\dsuiext\winnt\$(O)\*.sbr      \
+#
+# msieftp.dll
+#
+    $(BASEDIR)\private\shell\ext\ftp\$(O)\*.sbr                     \
+#
+# mlang.dll
+#
+    $(BASEDIR)\private\shell\ext\mlang\$(O)\*.sbr                   \
+#
+# netplwiz.dll
+#
+    $(BASEDIR)\private\shell\ext\netplwiz\dll\$(O)\*.sbr            \
+#
+# shfolder.dll
+#
+    $(BASEDIR)\private\shell\ext\shfolder\$(O)\*.sbr                \
+#
+# shimgvw.dll
+#
+    $(BASEDIR)\private\shell\ext\shimgvw\$(O)\*.sbr                 \
+#
+# shwizard.exe
+#
+    $(BASEDIR)\private\shell\ext\shwizard\$(O)\*.sbr                \
+#
+# systray.exe / stobject.dll
+#
+    $(BASEDIR)\private\shell\ext\systray\dll\$(O)\*.sbr             \
+    $(BASEDIR)\private\shell\ext\systray\exestub\$(O)\*.sbr         \
+#
+# thumbvw.dll
+#
+    $(BASEDIR)\private\shell\ext\thumbvw\thlib\$(O)\*.sbr           \
+    $(BASEDIR)\private\shell\ext\thumbvw\tngen\$(O)\*.sbr           \
+    $(BASEDIR)\private\shell\ext\thumbvw\guid\$(O)\*.sbr            \
+    $(BASEDIR)\private\shell\ext\thumbvw\dll\$(O)\*.sbr             \
+#
+# webvw.dll
+#
+    $(BASEDIR)\private\shell\ext\webvw\$(O)\*.sbr                   \
+#
+# mydocs.dll
+#
+    $(BASEDIR)\private\shell\ext\mydocs2\winnt\$(O)\*.sbr           \
+#
+# occache.dll
+#
+    $(BASEDIR)\private\shell\ext\occache\dll\$(O)\*.sbr             \
+#
+# msratings.dll
+#
+    $(BASEDIR)\private\shell\ext\ratings\common\$(O)\*.sbr          \
+    $(BASEDIR)\private\shell\ext\ratings\msrating\dll\$(O)\*.sbr    \
+#
+# sendmail.dll
+#
+    $(BASEDIR)\private\shell\ext\sendmail\$(O)\*.sbr                \
+#
+# webcheck.dll
+#
+    $(BASEDIR)\private\shell\ext\webcheck\dll\$(O)\*.sbr            \
+#
+# inetcpl.cpl
+#
+    $(BASEDIR)\private\shell\cpls\inetcpl\dll\$(O)\*.sbr            \
+#
+# desknt5.cpl
+#
+    $(BASEDIR)\private\shell\cpls\desknt5\winnt\$(O)\*.sbr          \
+#
+# srvwiz.cpl
+#
+    $(BASEDIR)\private\shell\cpls\srvwiz\$(O)\*.sbr                 \
+#
+# system.cpl
+#
+    $(BASEDIR)\private\shell\cpls\system\$(O)\*.sbr                 \
+#
+# timedate.cpl
+#
+    $(BASEDIR)\private\shell\cpls\utc\$(O)\*.sbr                    \
+#
+# grpconv.exe
+#
+    $(BASEDIR)\private\shell\applets\grpconv\winnt\$(O)\*.sbr       \
+#
+# taskmgr.exe
+#
+    $(BASEDIR)\private\shell\applets\taskmgr\$(O)\*.sbr             \
+#
+# welcome.exe
+#
+    $(BASEDIR)\private\shell\applets\welcome\winnt\$(O)\*.sbr       \
+#
+# autorun.exe
+#
+    $(BASEDIR)\private\shell\applets\autorun\pro\$(O)\*.sbr         \
+    $(BASEDIR)\private\shell\applets\autorun\srv\$(O)\*.sbr         \
+#
+# control.exe
+#
+    $(BASEDIR)\private\shell\applets\control\$(O)\*.sbr             \
+#
+# cleanmgr.exe / dataclen.dll
+#
+    $(BASEDIR)\private\shell\applets\cleanup\cleanmgr\winnt\$(O)\*.sbr \
+    $(BASEDIR)\private\shell\applets\cleanup\dataclen\winnt\$(O)\*.sbr \
+#
+# discover.exe
+#
+    $(BASEDIR)\private\shell\applets\discover\$(O)\*.sbr

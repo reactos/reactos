@@ -1,0 +1,612 @@
+//+-------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1997-1998
+//
+//  File: oestore.idl
+//
+//  Contents: Outlook Express API
+//
+//  History:    11-Oct-1997         SteveBailey         Created
+//
+//--------------------------------------------------------------------------
+import "ocidl.idl";
+import "objidl.idl";
+cpp_quote("#ifndef OE5_BETA2")
+import "mimeole.idl";
+cpp_quote("#endif")
+
+//+-------------------------------------------------------------------------
+// Interfaces
+//--------------------------------------------------------------------------
+interface IOutlookExpress;
+cpp_quote("#ifndef OE5_BETA2")
+interface IStoreNamespace;
+interface IStoreFolder;
+cpp_quote("#endif")
+interface IOEMenuExtension;
+interface IOEExtension;
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("// GUID Definitions")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("// {3338DF69-4660-11d1-8A8D-00C04FB951F3}")
+cpp_quote("DEFINE_GUID(CLSID_OutlookExpress, 0x3338df69, 0x4660, 0x11d1, 0x8a, 0x8d, 0x0, 0xc0, 0x4f, 0xb9, 0x51, 0xf3);")
+cpp_quote("")
+cpp_quote("// {0006F01A-0000-0000-C000-0000000046}")
+cpp_quote("DEFINE_GUID(CLSID_Envelope, 0x0006F01A, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);")
+cpp_quote("")
+cpp_quote("// {3338DF6A-4660-11d1-8A8D-00C04FB951F3}")
+cpp_quote("DEFINE_GUID(IID_IOutlookExpress, 0x3338df6a, 0x4660, 0x11d1, 0x8a, 0x8d, 0x00, 0xc0, 0x4f, 0xb9, 0x51, 0xf3);")
+cpp_quote("")
+cpp_quote("#ifndef OE5_BETA2")
+cpp_quote("// {E70C92A9-4BFD-11d1-8A95-00C04FB951F3}")
+cpp_quote("DEFINE_GUID(CLSID_StoreNamespace, 0xe70c92a9, 0x4bfd, 0x11d1, 0x8a, 0x95, 0x0, 0xc0, 0x4f, 0xb9, 0x51, 0xf3);")
+cpp_quote("")
+cpp_quote("// {E70C92AA-4BFD-11d1-8A95-00C04FB951F3}")
+cpp_quote("DEFINE_GUID(IID_IStoreNamespace, 0xe70c92aa, 0x4bfd, 0x11d1, 0x8a, 0x95, 0x0, 0xc0, 0x4f, 0xb9, 0x51, 0xf3);")
+cpp_quote("")
+cpp_quote("// {E70C92AC-4BFD-11d1-8A95-00C04FB951F3}")
+cpp_quote("DEFINE_GUID(IID_IStoreFolder, 0xe70c92ac, 0x4bfd, 0x11d1, 0x8a, 0x95, 0x0, 0xc0, 0x4f, 0xb9, 0x51, 0xf3);")
+cpp_quote("#endif")
+cpp_quote("")
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("// Errors Definition Macros")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("#ifndef FACILITY_INTERNET")
+cpp_quote("#define FACILITY_INTERNET 12")
+cpp_quote("#endif")
+cpp_quote("#ifndef HR_E")
+cpp_quote("#define HR_E(n) MAKE_SCODE(SEVERITY_ERROR, FACILITY_INTERNET, n)")
+cpp_quote("#endif")
+cpp_quote("#ifndef HR_S")
+cpp_quote("#define HR_S(n) MAKE_SCODE(SEVERITY_SUCCESS, FACILITY_INTERNET, n)")
+cpp_quote("#endif")
+cpp_quote("#ifndef HR_CODE")
+cpp_quote("#define HR_CODE(hr) (INT)(hr & 0xffff)")
+cpp_quote("#endif")
+cpp_quote("")
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("// MSOEAPI Failure Return Values")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("#define MSOEAPI_E_FILE_NOT_FOUND             HR_E(0xCF65)")
+cpp_quote("#define MSOEAPI_E_STORE_INITIALIZE           HR_E(0xCF66)")
+cpp_quote("#define MSOEAPI_E_INVALID_STRUCT_SIZE        HR_E(0xCF67)")
+cpp_quote("#define MSOEAPI_E_CANT_LOAD_MSOERT           HR_E(0xCF68)")
+cpp_quote("#define MSOEAPI_E_CANT_LOAD_INETCOMM         HR_E(0xCF69)")
+cpp_quote("#define MSOEAPI_E_CANT_LOAD_MSOEACCT         HR_E(0xCF70)")
+cpp_quote("#define MSOEAPI_E_CANT_MSOERT_BADVER         HR_E(0xCF71)")
+cpp_quote("#define MSOEAPI_E_CANT_INETCOMM_BADVER       HR_E(0xCF72)")
+cpp_quote("#define MSOEAPI_E_CANT_MSOEACCT_BADVER       HR_E(0xCF73)")
+cpp_quote("")
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("// String Definition Macros")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("#define EXTERN_C extern \"C\"")
+cpp_quote("#else")
+cpp_quote("#define EXTERN_C extern")
+cpp_quote("#endif")
+cpp_quote("")
+cpp_quote("#ifndef STRCONSTA")
+cpp_quote("#ifdef DEFINE_STRCONST")
+cpp_quote("#define STRCONSTA(x,y)    EXTERN_C const char x[] = y")
+cpp_quote("#define STRCONSTW(x,y)    EXTERN_C const WCHAR x[] = L##y")
+cpp_quote("#else")
+cpp_quote("#define STRCONSTA(x,y)    EXTERN_C const char x[]")
+cpp_quote("#define STRCONSTW(x,y)    EXTERN_C const WCHAR x[]")
+cpp_quote("#endif STRCONSTA")
+cpp_quote("#endif")
+cpp_quote("")
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("// Strings")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("STRCONSTA(STR_MSOEAPI_INSTANCECLASS,      \"OutlookExpressHiddenWindow\");")
+cpp_quote("STRCONSTA(STR_MSOEAPI_IPSERVERCLASS,      \"OutlookExpressInProccessServer\");")
+cpp_quote("STRCONSTA(STR_MSOEAPI_INSTANCEMUTEX,      \"OutlookExpress_InstanceMutex_101897\");")
+cpp_quote("STRCONSTA(STR_MSOEAPI_DLLNAME,            \"MSOE.DLL\");")
+cpp_quote("STRCONSTA(STR_MSOEAPI_START,              \"CoStartOutlookExpress\");")
+cpp_quote("STRCONSTA(STR_MSOEAPI_SHUTDOWN,           \"CoShutdownOutlookExpress\");")
+cpp_quote("STRCONSTA(STR_MSOEAPI_CREATE,             \"CoCreateOutlookExpress\");")
+cpp_quote("")
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("// Function Typedefs")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("typedef HRESULT (APIENTRY *PFNSTART)(DWORD dwFlags, LPCSTR pszCmdLine, INT nCmdShow);")
+cpp_quote("typedef HRESULT (APIENTRY *PFNSHUTDOWN)(DWORD dwReserved);")
+cpp_quote("typedef HRESULT (APIENTRY *PFNCREATE)(IUnknown *pUnkOuter, IUnknown **ppUnknown);")
+cpp_quote("")
+
+//+-------------------------------------------------------------------------
+// Constants
+//--------------------------------------------------------------------------
+const DWORD MSOEAPI_ACDM_CMDLINE    = 1;
+const DWORD MSOEAPI_ACDM_NOTIFY     = 2;
+const DWORD MSOEAPI_ACDM_ODBNOTIFY  = 3;
+const DWORD MSOEAPI_ACDM_STGNOTIFY  = 4;
+
+//+-------------------------------------------------------------------------
+// DECLARE_HANDLE Macro
+//--------------------------------------------------------------------------
+#ifndef DECLARE_HANDLE
+#define DECLARE_HANDLE(name) \
+    struct name##__ { DWORD unused; }; \
+    typedef struct name##__ _far* name
+#endif
+
+//+-------------------------------------------------------------------------
+// HENUMSTORE
+//--------------------------------------------------------------------------
+cpp_quote("#ifndef OE5_BETA2")
+DECLARE_HANDLE(HENUMSTORE);
+typedef HENUMSTORE *LPHENUMSTORE;
+cpp_quote("#endif // OE5_BETA2")
+
+//+-------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents: IOutlookExpress
+//
+//  History:    11-Oct-1997         SteveBailey         Created
+//
+//--------------------------------------------------------------------------
+cpp_quote("#ifndef __LPOUTLOOKEXPRESS_DEFINED")
+cpp_quote("#define __LPOUTLOOKEXPRESS_DEFINED")
+[
+    object,
+    uuid(3338DF6A-4660-11d1-8A8D-00C04FB951F3),
+    pointer_default(unique)
+]
+interface IOutlookExpress : IUnknown
+{
+    typedef IOutlookExpress *LPOUTLOOKEXPRESS;
+
+    //+---------------------------------------------------------------------
+    // Flags used in IOutlookExpress::Start
+    //----------------------------------------------------------------------
+    cpp_quote("#define MSOEAPI_START_SHOWSPLASH       0x00000001")
+    cpp_quote("#define MSOEAPI_START_MESSAGEPUMP      0x00000002")
+    cpp_quote("#define MSOEAPI_START_ALLOWCOMPACTION  0x00000004")
+    cpp_quote("#define MSOEAPI_START_INSTANCEMUTEX    0x00000008")
+    cpp_quote("#define MSOEAPI_START_SHOWERRORS       0x00000010")
+    cpp_quote("#define MSOEAPI_START_APPWINDOW        0x00000020")
+    cpp_quote("#define MSOEAPI_START_DEFAULTIDENTITY  0x00000040")
+
+    //+---------------------------------------------------------------------
+    // MSOEAPI_START_APPLICATION
+    //----------------------------------------------------------------------
+    cpp_quote("#define MSOEAPI_START_APPLICATION \\")
+    cpp_quote("    (MSOEAPI_START_SHOWSPLASH      | \\")
+    cpp_quote("     MSOEAPI_START_SHOWERRORS      | \\")
+    cpp_quote("     MSOEAPI_START_MESSAGEPUMP     | \\")
+    cpp_quote("     MSOEAPI_START_ALLOWCOMPACTION | \\")
+    cpp_quote("     MSOEAPI_START_INSTANCEMUTEX   | \\")
+    cpp_quote("     MSOEAPI_START_APPWINDOW)")
+
+    //+---------------------------------------------------------------------
+    // MSOEAPI_START_COMOBJECT
+    //----------------------------------------------------------------------
+    cpp_quote("#define MSOEAPI_START_COMOBJECT \\")
+    cpp_quote("     MSOEAPI_START_SHOWERRORS")
+
+    //+---------------------------------------------------------------------
+    // Methods
+    //----------------------------------------------------------------------
+    HRESULT Start(
+            [in]        DWORD                       dwFlags,
+            [in]        LPCSTR                      pszCmdLine,
+            [in]        INT                         nCmdShow);
+}
+cpp_quote("#endif")
+
+cpp_quote("#ifndef OE5_BETA2")
+
+//+-------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents: IStoreNamespace
+//
+//  History:    11-Oct-1997         SteveBailey         Created
+//
+//--------------------------------------------------------------------------
+cpp_quote("#ifndef __LPSTORENAMESPACE_DEFINED")
+cpp_quote("#define __LPSTORENAMESPACE_DEFINED")
+[
+    object,
+    uuid(E70C92AA-4BFD-11d1-8A95-00C04FB951F3),
+    pointer_default(unique)
+]
+interface IStoreNamespace : IUnknown
+{
+    typedef IStoreNamespace *LPSTORENAMESPACE;
+
+    //+---------------------------------------------------------------------
+    // STOREFOLDERID - folderIds are persistable
+    //----------------------------------------------------------------------
+    typedef DWORD STOREFOLDERID;
+    typedef STOREFOLDERID *LPSTOREFOLDERID;
+
+    //+---------------------------------------------------------------------
+    // Some Special FOLDER Values
+    //----------------------------------------------------------------------
+    const DWORD FOLDERID_ROOT     = 0;
+    const DWORD FOLDERID_INVALID  = 0xffffffff;
+
+    //+---------------------------------------------------------------------
+    // MESSAGEID
+    //----------------------------------------------------------------------
+    typedef DWORD MESSAGEID;
+    typedef MESSAGEID *LPMESSAGEID;
+
+    //+---------------------------------------------------------------------
+    // Some Special MESSAGEID values
+    //----------------------------------------------------------------------
+    const DWORD MESSAGEID_INVALID = 0xffffffff;
+    const DWORD MESSAGEID_FIRST   = 0xffffffff;
+
+    //+---------------------------------------------------------------------
+    // Consts
+    //----------------------------------------------------------------------
+    const DWORD CCHMAX_FOLDER_NAME = 256;
+
+    //+---------------------------------------------------------------------
+    // Notification Messages
+    //----------------------------------------------------------------------
+    cpp_quote("#define WM_FOLDERNOTIFY      (WM_USER + 1600) // IStoreNamespace Notification - lparam=LPFOLDERNOTIFYEX, client must call CoTaskMemFree(lParam)")
+    cpp_quote("#define WM_NEWMSGS           (WM_USER + 1650) // IStoreFolder Notification: wParam=MESSAGEID, lParam=Reserved")
+    cpp_quote("#define WM_DELETEMSGS        (WM_USER + 1651) // IStoreFolder Notification: wParam=prgdwMsgId, lParam=cMsgs")
+    cpp_quote("#define WM_DELETEFOLDER      (WM_USER + 1652) // IStoreFolder Notification: wParam=STOREFOLDERID or HFOLDER")
+
+    // If wParam is equal to 0xffffffff then that means that all messages in the folder
+    // were either marked as read (WM_MARKEDASREAD) or unread (WM_MARKEDASUNREAD)
+    cpp_quote("#define WM_MARKEDASREAD      (WM_USER + 1653) // IStoreFolder Notification: wParamprgdwMsgId, lParam=cMsgs")
+    cpp_quote("#define WM_MARKEDASUNREAD    (WM_USER + 1654) // IStoreFolder Notification: wParamprgdwMsgId, lParam=cMsgs")
+
+    //+---------------------------------------------------------------------
+    // FOLDERNOTIFYTYPE
+    //----------------------------------------------------------------------
+    typedef enum tagFOLDERNOTIFYTYPE {
+        NEW_FOLDER = 1,
+        DELETE_FOLDER,
+        RENAME_FOLDER,
+        MOVE_FOLDER,
+        UNREAD_CHANGE,
+        IMAPFLAG_CHANGE,
+        UPDATEFLAG_CHANGE,
+		FOLDER_PROPS_CHANGED
+    } FOLDERNOTIFYTYPE;
+
+    //+---------------------------------------------------------------------
+    // FOLDERNOTIFYEX
+    //----------------------------------------------------------------------
+    typedef struct tagFOLDERNOTIFYEX {
+        FOLDERNOTIFYTYPE type;
+        STOREFOLDERID    idFolderOld;                // not used for CREATEFOLDER and DELETEFOLDER
+        STOREFOLDERID    idFolderNew;
+    } FOLDERNOTIFYEX, *LPFOLDERNOTIFYEX;
+
+    //+---------------------------------------------------------------------
+    // MESSAGEIDLIST - A list of message ids (DWORDs)
+    //----------------------------------------------------------------------
+    typedef struct tagMESSAGEIDLIST {
+        DWORD           cbSize;                     // Sizeof this structure
+        DWORD           cMsgs;                      // Number of elements in prghMessage
+        LPMESSAGEID     prgdwMsgId;                 // Array of handles to messages
+    } MESSAGEIDLIST, *LPMESSAGEIDLIST;
+
+    //+---------------------------------------------------------------------
+    // SPECIALFOLDER - How to identify a special folder
+    //----------------------------------------------------------------------
+    typedef enum tagSPECIALFOLDER {
+        FOLDER_NOTSPECIAL = -1,                     // Not a special folder
+        FOLDER_INBOX,                               // Default receive folder
+        FOLDER_OUTBOX,                              // Default send folder
+        FOLDER_SENT,                                // Things that have been sent
+        FOLDER_DELETED,                             // Things that have been deleted
+        FOLDER_DRAFT,                               // Things that are in progress
+        FOLDER_MAX                                  // Don't use
+    } SPECIALFOLDER;
+
+    //+---------------------------------------------------------------------
+    // FOLDERPROPS - Properties of a folder
+    //----------------------------------------------------------------------
+    typedef struct tagFOLDERPROPS {
+        DWORD           cbSize;                     // Size of this structure
+        STOREFOLDERID   dwFolderId;                 // Handle of this folder
+        INT             cSubFolders;                // Number of sub-folders
+        SPECIALFOLDER   sfType;                     // Special folder type
+        DWORD           cUnread;                    // Number of un-read messages
+        DWORD           cMessage;                   // Total # of messages
+        CHAR            szName[CCHMAX_FOLDER_NAME]; // The Folder Name
+    } FOLDERPROPS, *LPFOLDERPROPS;
+
+    //+---------------------------------------------------------------------
+    // Methods
+    //----------------------------------------------------------------------
+    HRESULT Initialize(                                                     // Initialize the object
+            [in]        HWND                      hwndOwner,              // Window owner for things like compaction dialog
+            [in]        DWORD                       dwReserved);            // Reserved for future use
+
+    HRESULT GetDirectory(                                                   // Get the location of the store (filepath)
+            [in,out,size_is(cchMaxPath)] LPSTR      pszPath,                // Buffer to put path of store into
+            [in]        DWORD                       cchMaxPath);            // in: byte count size of pszPath, out: char count size of pszPath
+
+    HRESULT OpenSpecialFolder(
+            [in]        SPECIALFOLDER               sfType,                 // Special folder type
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [out]       IStoreFolder                **ppFolder);            // Pointer to an IStoreFolder
+
+    HRESULT OpenFolder(
+            [in]        STOREFOLDERID               dwFolderId,             // Folder to open
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [out]       IStoreFolder                **ppFolder);            // Pointer to an IStoreFolder
+
+    HRESULT CreateFolder(
+            [in]        STOREFOLDERID               dwParentId,             // Parent of the new folder, can use FOLDERID_ROOT
+            [in]        LPCSTR                      pszName,                // Name of new folder, must be less than MAX_FOLDER_NAME
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [out]       LPSTOREFOLDERID             pdwFolderId);           // Handle to the new folder
+
+    HRESULT RenameFolder(
+            [in]        STOREFOLDERID               dwFolderId,             // Folder to rename
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in]        LPCSTR                      pszNewName);            // New folder name, must be less than MAX_FOLDER_NAME
+
+    HRESULT MoveFolder(
+            [in]        STOREFOLDERID               dwFolderId,             // Folder to move
+            [in]        STOREFOLDERID               dwParentId,             // FolderId of the new Parent
+            [in]        DWORD                       dwReserved);            // Reserved for future use
+
+    HRESULT DeleteFolder(
+            [in]        STOREFOLDERID               dwFolderId,             // Folder to delete
+            [in]        DWORD                       dwReserved);            // Reserved for future use
+
+    HRESULT GetFolderProps(
+            [in]        STOREFOLDERID               dwFolderId,             // FolderId to get info for
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in,out]    LPFOLDERPROPS               pProps);                // in: set cbSize, out: Holds folder information
+
+    cpp_quote("// CLocalStore::CopyMoveMessages flags - dwFlags == 0 is copy")
+    cpp_quote("#define CMF_MOVE                     0x0001                  // msgs deleted from src fldr after copy")
+    cpp_quote("#define CMF_DELETE                   0x0002                  // same as CMF_MOVE but uses delete string for status")
+    HRESULT CopyMoveMessages(
+            [in]        IStoreFolder                *pSource,               // Source store folder
+            [in]        IStoreFolder                *pDest,                 // Destination Store Folder
+            [in]        LPMESSAGEIDLIST             pMsgIdList,             // List of MESSAGEIDs to move/copy
+            [in]        DWORD                       dwFlags,                // CMF_xxx Flags
+            [in]        DWORD                       dwFlagsRemove,          // MSG_xxx Flags to remove from copied/moved messages
+            [in]        IProgressNotify             *pProgress);            // Store progress callback (client implements)
+
+    HRESULT RegisterNotification(
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in]        HWND                        hwnd);                  // Handle to window to send notifications
+
+    HRESULT UnregisterNotification(
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in]        HWND                        hwnd);                  // Handle to window to un-register for notifications
+
+    HRESULT CompactAll(                                                     // Compacts all folders in the store
+            [in]        DWORD                       dwReserved);            // Reserved for future use
+
+    HRESULT GetFirstSubFolder(                                              // Enumerate sub folders
+            [in]        STOREFOLDERID               dwFolderId,             // Pass FOLDERID_ROOT to enum root folders
+            [in,out]    LPFOLDERPROPS               pProps,                 // If function succeeds, contents are valid
+            [out]       LPHENUMSTORE                phEnum);                // Use in call to GetNextSubFolder, and then GetSubFolderClose
+
+    HRESULT GetNextSubFolder(                                               // Get the next subfolder, returns S_FALSE if no more folders
+            [in]        HENUMSTORE                  hEnum,                  // Handle received from GetFirstSubFolder
+            [in,out]    LPFOLDERPROPS               pProps);                // If function returns S_OK, contains folder properties
+
+    HRESULT GetSubFolderClose(                                              // Closes the handle associated with a folder enumeration
+            [in]        HENUMSTORE                  hEnum);                 // Handle received from GetFirstSubFolder
+}
+cpp_quote("#endif")
+
+//+-------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents: IStoreFolder
+//
+//  History:    11-Oct-1997         SteveBailey         Created
+//
+//--------------------------------------------------------------------------
+cpp_quote("#ifndef __LPSTOREFOLDER_DEFINED")
+cpp_quote("#define __LPSTOREFOLDER_DEFINED")
+[
+    object,
+    uuid(E70C92AC-4BFD-11d1-8A95-00C04FB951F3),
+    pointer_default(unique)
+]
+interface IStoreFolder : IUnknown
+{
+    typedef IStoreFolder *LPSTOREFOLDER;
+
+    //+---------------------------------------------------------------------
+    // Message State Flags used in MESSAGEINFO::dwState
+    //----------------------------------------------------------------------
+    cpp_quote("#define MSG_DELETED                  0x0001  // The message has been deleted, compaction will remove it")
+    cpp_quote("#define MSG_UNREAD                   0x0002  // The message is marked as un-read")
+    cpp_quote("#define MSG_SUBMITTED                0x0004  // For messages waiting to be sent: OUTBOX ONLY")
+    cpp_quote("#define MSG_UNSENT                   0x0008  // For msgs-in-progress saved to a folder")
+    cpp_quote("#define MSG_RECEIVED                 0x0010  // For messages that came from a server")
+    cpp_quote("#define MSG_NEWSMSG                  0x0020  // For news messages")
+    cpp_quote("#define MSG_NOSECUI                  0x0040  // For messages where the user wants to die")
+    cpp_quote("#define MSG_VOICEMAIL                0x0080  // The message has the X-Voicemail header set...")
+    cpp_quote("#define MSG_REPLIED                  0x0100  // The message has been replied to")
+    cpp_quote("#define MSG_FORWARDED                0x0200  // The message has been forwarded to")
+    cpp_quote("#define MSG_RCPTSENT                 0x0400  // S/MIME Receipt has been sent")
+    cpp_quote("#define MSG_FLAGGED                  0x0800  // The message is currently flags")
+    cpp_quote("#define MSG_LAST                     0x0200  // ** Keep this puppy updated!! **")
+    cpp_quote("#define MSG_EXTERNAL_FLAGS           0x00fe")
+    cpp_quote("#define MSG_FLAGS                    0x000f")
+
+    //+---------------------------------------------------------------------
+    // MESSAGEPROPS
+    //----------------------------------------------------------------------
+    typedef struct tagMESSAGEPROPS {
+        DWORD           cbSize;                     // Size of this structure
+        DWORD           dwReserved;                 // Reserved don't use
+        MESSAGEID       dwMessageId;                // Handle to this message
+        DWORD           dwLanguage;                 // Codepage of this message
+        DWORD           dwState;                    // MSG_xxx Flags
+
+        // Things you don't get when MSGPROPS_FAST
+        DWORD           cbMessage;                  // Size of the message
+        IMSGPRIORITY    priority;                   // Message Priority
+        FILETIME        ftReceived;                 // When the message was received
+        FILETIME        ftSent;                     // When the message was sent
+        LPSTR           pszSubject;                 // The subject of the message
+        LPSTR           pszDisplayTo;               // The display to line of the message
+        LPSTR           pszDisplayFrom;             // The display from line of the message
+        LPSTR           pszNormalSubject;           // The normalized subject of the message
+        DWORD           dwFlags;                    // IMF_xxx Flags defined in mimeole.idl
+        IStream        *pStmOffsetTable;            // Use with IMimeMessage::LoadOffsetTable
+    } MESSAGEPROPS, *LPMESSAGEPROPS;
+
+    //+---------------------------------------------------------------------
+    // HBATCHLOCK
+    //----------------------------------------------------------------------
+    DECLARE_HANDLE(HBATCHLOCK);
+    typedef HBATCHLOCK *LPHBATCHLOCK;
+
+    //+---------------------------------------------------------------------
+    // Method
+    //----------------------------------------------------------------------
+    HRESULT GetFolderProps(                                                 // Get folder info for this folder
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in,out]    LPFOLDERPROPS               pProps);                // in: set cbSize, out: contains folder information
+
+    cpp_quote("#define MSGPROPS_FAST                0x00000001              // See MESSAGEPROPS structure, improved performance")
+    HRESULT GetMessageProps(
+            [in]        MESSAGEID                   dwMessageId,            // Message Identifier
+            [in]        DWORD                       dwFlags,                // GETMSGINFO_xxx Flags
+            [in,out]    LPMESSAGEPROPS              pProps);                // Message Info - set cbSize before calling
+
+    HRESULT FreeMessageProps(                                               // Handles the case where pMsgInfo->dwMask has MIP_BYREF
+            [in,out]    LPMESSAGEPROPS              pProps);                // Pointer to MESSAGEINFO structure to free
+
+    HRESULT DeleteMessages(
+            [in]        LPMESSAGEIDLIST             pMsgIdList,             // List of HMESSAGEs
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in]        IProgressNotify           *pProgress);            // Progress information
+
+    HRESULT SetLanguage(
+            [in]        DWORD                       dwLanguage,             // MLANG Codepage ID of message
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in]        LPMESSAGEIDLIST             pMsgIdList);            // List of HMESSAGEs to apply new language to
+
+    HRESULT MarkMessagesAsRead(
+            [in]        BOOL                        fRead,                  // Mark as Read or Unread
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in]        LPMESSAGEIDLIST             pMsgIdList);            // List of HMESSAGEs to mark as (un)read
+
+    HRESULT SetFlags(                                                       // Modify the flags of a message
+            [in]        LPMESSAGEIDLIST             pMsgIdList,             // Array of messages to modify flags for
+            [in]        DWORD                       dwState,                // MSG_xxx Flags to set on pMsgIdList
+            [in]        DWORD                       dwStatemask,            // ?????
+            [out]       LPDWORD                     prgdwNewFlags);         // Array of new message state flags that match pMsgIdList array
+
+    HRESULT OpenMessage(                                                    // Open a message (get a stream or a message object)
+            [in]        MESSAGEID                   dwMessageId,            // Handle to the message to open
+            [in]        REFIID                      riid,                   // IID_IStream or IID_IMimeMessage stream is readonly
+            [out,iid_is(riid)] LPVOID               *ppvObject);            // The object, you must ->Release it
+
+    HRESULT SaveMessage(                                                    // Add a new entry to a folder.
+            [in]        REFIID                      riid,                   // IID_IStream or IID_IMimeMessage
+            [in,iid_is(riid)] LPVOID                pvObject,               // Pointer to a stream or mime message
+            [in]        DWORD                       dwMsgFlags,             // MSG_xxx Flags
+            [out]       LPMESSAGEID                 pdwMessageId);          // Handle to the new message
+
+    HRESULT BatchLock(                                                      // Lock to prepare for a batch operation
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [out]       LPHBATCHLOCK                phBatchLock);           // Handle to newly created lock
+
+    HRESULT BatchFlush(                                                     // Flush the current batch operation
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in]        HBATCHLOCK                  hBatchLock);            // Folder lock obtained from BatchLock
+
+    HRESULT BatchUnlock(                                                    // Unlocks a batched operation
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in]        HBATCHLOCK                  hBatchLock);            // Handle to lock obtained from BatchLock
+
+    HRESULT CreateStream(                                                   // Create a new stream in a folder
+            [in]        HBATCHLOCK                  hBatchLock,             // Handle to a folder lock, optional if doing a one-of
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [out]       IStream                     **ppStream,             // Pointer to new stream can be used for read/write
+            [out]       LPMESSAGEID                 pdwMessageId);          // Handle to the new message
+
+    cpp_quote("#define COMMITSTREAM_REVERT          0x00000001             // Don't add this stream/message to the folder")
+    HRESULT CommitStream(                                                   // Commit/Revert a stream created with CreateStream
+            [in]        HBATCHLOCK                  hBatchLock,             // Folder lock obtained from BatchLock
+            [in]        DWORD                       dwFlags,                // COMMITSTREAM_xxx Flags
+            [in]        DWORD                       dwMsgFlags,             // MSG_xxx Flags
+            [in]        IStream                     *pStream,               // Stream obtained from CreateStream
+            [in]        MESSAGEID                   dwMessageId,            // dwMessageId obtained from CreateStream
+            [in]        IMimeMessage                *pMessage);             // Message to commit, if not passed in, pStream will be pared.
+
+    HRESULT RegisterNotification(
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in]        HWND                        hwnd);                  // Handle to window to send notifications
+
+    HRESULT UnregisterNotification(
+            [in]        DWORD                       dwReserved,             // Reserved for future use
+            [in]        HWND                        hwnd);                  // Handle to window to un-register for notifications
+
+    HRESULT Compact(                                                        // Compacts this folder
+            [in]        DWORD                       dwReserved);            // Reserved for future use
+
+    HRESULT GetFirstMessage(                                                // Get the first message in a folder
+            [in]        DWORD                       dwFlags,                // MSGPROPS_xxx Flags
+            [in]        DWORD                       dwMsgFlags,             // MSG_xxx Flags to enumerate on, pass 0 for none
+            [in]        MESSAGEID                   dwMsgIdFirst,           // MessageId to start enumerating at, Use MESSAGEID_FIRST
+            [in,out]    LPMESSAGEPROPS              pProps,                 // When function returns S_OK, contains message properties
+            [out]       LPHENUMSTORE                phEnum);                // Upon successful return, contains handle to enumeration
+
+    HRESULT GetNextMessage(                                                 // Get the next message in the enumeration
+            [in]        HENUMSTORE                  hEnum,                  // Handle to the enumeration received in GetFirstMessage
+            [in]        DWORD                       dwFlags,                // MSGPROPS_xxx Flags
+            [in,out]    LPMESSAGEPROPS              pProps);                // When function returns S_OK, contains message properties
+
+    HRESULT GetMessageClose(
+            [in]        HENUMSTORE                  hEnum);                 // Handle to the enumeration received in GetFirstMessage
+}
+cpp_quote("#endif")
+cpp_quote("#endif // OE5_BETA2")
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("// Outlook Express Exported C API Functions")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("extern \"C\" {")
+cpp_quote("#endif")
+cpp_quote("")
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("// API Name Decoration")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("#if !defined(_MSOEAPI_)")
+cpp_quote("#define MSOEAPI DECLSPEC_IMPORT HRESULT WINAPI")
+cpp_quote("#define MSOEAPI_(_type_) DECLSPEC_IMPORT _type_ WINAPI")
+cpp_quote("#else")
+cpp_quote("#define MSOEAPI HRESULT WINAPI")
+cpp_quote("#define MSOEAPI_(_type_) _type_ WINAPI")
+cpp_quote("#endif")
+cpp_quote("")
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("// Prototypes")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("MSOEAPI CoStartOutlookExpress(")
+cpp_quote("             /* IN */        DWORD               dwFlags,")
+cpp_quote("             /* IN */        LPCSTR              pszCmdLine,")
+cpp_quote("             /* IN */        INT                 nCmdShow);")
+cpp_quote("")
+cpp_quote("MSOEAPI CoCreateOutlookExpress(")
+cpp_quote("             /* IN */        IUnknown            *pUnkOuter,")
+cpp_quote("             /* OUT */       IUnknown            **ppUnknown);")
+cpp_quote("")
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("}")
+cpp_quote("#endif")

@@ -1,0 +1,70 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+!include $(CCSHELL_DIR)\browseui\browseui.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\browseui\browseui.inc
+
+NO_BROWSER_FILE = 1
+
+# For RC to find exdisp.TLB
+INCLUDES        = $(SDK_LIB_PATH);$(INCLUDES);$O;
+
+# Include makefile.inc
+NTTARGETFILES   =
+
+# !!!!!!!!!!!!!!!!!
+#
+# READ THIS!!!  Do not add -DFEATURE_* defines here. Add it to browseui.inc.
+#
+# !!!!!!!!!!!!!!!!!
+
+RESOURCE_ONLY_DLL = 1
+TARGETNAME      = browseLC
+TARGETPATH      = obj
+TARGETPATHLIB   = $(BASEDIR)\public\sdk\lib
+TARGETTYPE      = DYNLINK
+
+# NOTE!! We deliberately link to an NT4 compatible shell32.lib
+#        so browseui can be loaded in the browser-only installations.
+#        We use the NT version because it contains lego info.
+#        The debug version of browseui links to the Win95 version
+#        of shell32.lib simply so we can verify that we load in the
+#        browser-only installations on Win95.
+#
+# Note:  Do >not< link to ntdll.  Win95 has an extremely minimal
+#        implementation of ntdll.
+
+TARGETLIBS      = 
+
+DLLDEF          = ..\browseLC.def
+DLLBASE         = 0x71500000
+
+# Maintain the sources list in the alphabetical order
+
+SOURCES         = \
+                  ..\browseLC.rc

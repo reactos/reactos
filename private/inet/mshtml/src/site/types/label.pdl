@@ -1,0 +1,39 @@
+#ifndef _LABEL_PDL_
+#define _LABEL_PDL_ 1
+
+#include "element.pdl"
+
+file label.pdl
+
+import element.pdl
+
+/* New style element events w/ eventObject parameter: */
+event HTMLLabelEvents2 super:HTMLElementEvents2 guid:3050f61c-98b5-11cf-bb82-00aa00bdce0b
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLLabelEvents super:HTMLElementEvents guid:3050f329-98b5-11cf-bb82-00aa00bdce0b
+    
+interface IHTMLLabelElement guid:3050f32a-98b5-11cf-bb82-00aa00bdce0b
+	refprop         CLabelElement:htmlFor
+	refprop         CLabelElement:accessKey
+    
+tearoff CLabelElement interface:IHTMLLabelElement
+
+class CLabelElement name:HTMLLabelElement \
+	        primaryinterface:IHTMLLabelElement \
+            super:CElement \
+            events:HTMLLabelEvents \
+            nonprimaryevents:HTMLLabelEvents2 \
+	        guid:3050f32b-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f522-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLLabelElement
+
+    property    htmlFor szattribute:for atype:BSTR  dispid:DISPID_LABEL type:CStr \
+	            get set caa clearcaches updatecollection bindable displaybind maxstrlen:pdlNoLimit      
+    property    accessKey   atype:BSTR  dispid:DISPID_LABEL+1   type:CStr \
+	            get set caa clearcaches updatecollection bindable displaybind nopropdesc maxstrlen:pdlToken
+
+#endif _LABEL_PDL_
+

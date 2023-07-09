@@ -1,0 +1,67 @@
+7 // 8 is the actual number of in register arguments
+//++
+//
+// Module Name:
+//
+//    systable.s
+//
+// Abstract:
+//
+//    This module implements the system service dispatch table.
+//
+// Author:
+//
+//    William K. Cheung (wcheung) 5-Mar-1996
+//
+// Environment:
+//
+//    Kernel mode only.
+//
+// Revision History:
+//
+//--
+
+//
+// To add a system service simply add the name of the service to the below
+// table. If the system service has in memory arguments, then immediately
+// follow the name of the service with a comma and following that the number
+// of bytes of in memory arguments, e.g. CreateObject,40.
+//
+// N.B. Note that the gp corresponding to KiServiceTable must be placed
+//      just before KiServiceTable.
+//      Given that code must be at least 16-byte aligned, bits 1-3 are used
+//      used to encode number of arguments up to a value of 7.
+//
+
+#define TABLE_BEGIN1( t ) .##sdata
+#define TABLE_BEGIN2( t ) .##align 8
+#define TABLE_BEGIN3( t ) .##global KiServiceTableGp
+#define TABLE_BEGIN4( t ) KiServiceTableGp: data8 _gp
+#define TABLE_BEGIN5( t ) .##global KiServiceTable
+#define TABLE_BEGIN6( t ) KiServiceTable:
+#define TABLE_BEGIN7( t )
+#define TABLE_BEGIN8( t )
+
+#ifdef _WIN64 
+#define TABLE_ENTRY( l,bias,numargs ) .##global Nt##l; .##type Nt##l, @function; data8 Nt##l+bias+((numargs%8) << 1)
+#else
+#define TABLE_ENTRY( l,bias,numargs ) .##global Nt##l; .##type Nt##l, @function; data4 Nt##l+bias
+#endif
+
+#define TABLE_END( n ) .##sdata ; .##global KiServiceLimit ; KiServiceLimit: data4 n + 1
+
+#define ARGTBL_BEGIN .##sdata ; .##align 4 ; .##global KiArgumentTable ; KiArgumentTable:
+
+#define ARGTBL_ENTRY( e0,e1,e2,e3,e4,e5,e6,e7 ) data1   e0,e1,e2,e3,e4,e5,e6,e7
+
+#define ARGTBL_END
+
+
+        TABLE_BEGIN1( "System Service Dispatch Table" )
+        TABLE_BEGIN2( "System Service Dispatch Table" )
+        TABLE_BEGIN3( "System Service Dispatch Table" )
+        TABLE_BEGIN4( "System Service Dispatch Table" )
+        TABLE_BEGIN5( "System Service Dispatch Table" )
+        TABLE_BEGIN6( "System Service Dispatch Table" )
+        TABLE_BEGIN7( "System Service Dispatch Table" )
+        TABLE_BEGIN8( "System Service Dispatch Table" )

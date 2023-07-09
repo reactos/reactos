@@ -1,0 +1,137 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+
+
+CUSTOM_RULES = /vobs/ie4/xml.template
+
+
+SOURCES =  \
+	initunix.cxx \
+	msxml.cxx
+
+
+INCLUDES += \
+	${MSXML}/xml/exe \
+        ${MSXML} \
+	${MSXML}/core \
+	${MSXML}/core/base \
+        ${MSXML}/xml/include \
+        ${MSXML}/xml/resource \
+        ${MSXML}/xml/om \
+        ${MSXML}/xml/tokenizer/parser/objd/unix/sunos5
+
+#        ${MSXML}/xml/xql/om/objd/unix/sunos5 \
+#	${MSXML}/core/io \
+#	${MSXML}/core/util \
+#	${MSXML}/core/com \
+#	${MSXML}/core/crt \
+#	${MSXML}/xml \
+#	${MSXML}/xtl/engine
+
+ 
+
+# Do I need this?
+# TYPELIB_FILES = msxml.tlb
+
+DEFINES += -DSTD_CALL -DCONDITION_HANDLING=1 -DNT_UP=1  -DNT_INST=0 -DWIN32=100 -D_NT1X_=100 -DWINNT=1 -D_WIN32_WINNT=0x0400 -DWINVER=0x0400 -D_WIN32_IE=0x0500    -DWIN32_LEAN_AND_MEAN=1 -DDEVL=1 -DFPO=0 -DSLOTNEW=0 -DELEMENTNODE=0 -DSTRICT  -DUNICODE  -D_UNICODE  -DOLEDBVER=0x0200 -DNASHVILLE -DNEWPARSER -DONE_DLL -DMSXML_EXPORT    
+
+ifndef COMPILE_OPTION
+  COMPILE_OPTION = debug
+endif
+
+# COMPILE_OPTION can have the values: debug, optimized
+ifeq (${COMPILE_OPTION}, debug)
+DEFINES += -DDBG=1 -DACTIVEX_DEBUG -D_DEBUG=1 -DNDEBUG
+endif
+
+PROG = msxml
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+OBJS = ${CPP_OBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+WRESOURCE = msxml.rc    # Windows resource
+TRESOURCE = ${PROG}.rxt      # Target X resource (must match DLL name)
+
+
+#DIP_CFLAGS := -DDLL_SPECIFIC_OPERATOR_NEW
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+# NO_UNICODE = 1
+
+APP_CFLAGS +=  ${INCLUDES:%=-I%} ${DEFINES}
+
+APP_LDFLAGS += \
+	-lbase \
+	-lom   \
+	-lxmlparser \
+	-lxmlstream \
+	-ltokbase \
+	-lcom  \
+	-llang \
+	-lxmlencoder \
+	-lxmlnet \
+	-lcoreexp \
+	-lxmlutil \
+	-lparser \
+	-lislands \
+	-lutil \
+	-lio \
+	-lurlmon \
+	-lole32 \
+	-ladvapi32 \
+	-lshlwapi \
+	-lrpcrt4 \
+	-lntrtl \
+	-lcoolmisc \
+	-luuid \
+	-lmshtmdbg \
+	-loleaut32 \
+        -lmw32
+
+
+TOOLSDIR =     ${MWHOME}/lib-${MWCONFIG_NAME}
+SLASH =        ${TOOLSDIR}/Slash
+DEC_PROTECT =  ${TOOLSDIR}/dec_protect
+HSPLIT =       ${TOOLSDIR}/hsplit
+WCSHDR =       ${TOOLSDIR}/wcshdr
+HEXTRACT =     ${TOOLSDIR}/hextract
+LISTMUNG =     ${TOOLSDIR}/listmung
+WS2HDR =       ${TOOLSDIR}/ws2hdr
+MCERR =        ${MWHOME}/bin/mcerr
+
+RM =	       /bin/rm -f
+MC =           ${MWHOME}/bin/mc 
+PROTECT =      chmod a-w 
+CP =	       /bin/cp
+
+# MAPFILE.sunos5=msxml.map
+
+__cplusplus = true
+
+
+
+include $(MWHOME)/make.rules.simple
+
+
+%.inf: %.inx
+	cleaninf -w $< $@
+
+#../resource/messages.rc ../resource/messages.h: ../resource/messages.mc
+#	${RM} ../resource/messages.rc
+#	${RM} ../resource/messages.h
+#	${MC} ../resource/messages.mc
+#	${SLASH} ../resource/messages.h
+#	${PROTECT} ../resource/messages.rc ../resource/messages.h
+#
+

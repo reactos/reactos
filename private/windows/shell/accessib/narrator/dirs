@@ -1,0 +1,5 @@
+DIRS =  NarrHook \
+        Narrator
+
+OPTIONAL_DIRS = 
+

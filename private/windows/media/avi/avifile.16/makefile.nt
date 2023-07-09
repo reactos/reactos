@@ -1,0 +1,115 @@
+#
+#   Makefile for AVIFile
+#
+#   This makefile requires the Win32 SDK on your path/inc/lib
+#
+
+!ifndef LANG
+LANG=usa
+!endif
+
+NAME    = avifile
+DEFFILE = avifile.d32
+
+ROOT    = ..
+LRES    = res\$(LANG)
+
+LOBJ    = $(CPU)\$(LANG)
+PBIN    = $(ROOT)\bin
+PLIB    = $(ROOT)\lib
+PINC    = $(ROOT)\inc
+PVER    = $(ROOT)\verinfo\$(LANG)
+INC     = -I. -I..\sdk.vfw\inc -I\mstools\ole20\h -I..\mo\inc -I$(LRES)
+DEF     = -D__RPC_H__ -D_INC_OLE
+LIBS    = advapi32.lib winmm.lib ..\lib\compob32.lib ..\lib\msvfw32.lib
+
+OBJ1	=$(LOBJ)\avilib.obj $(LOBJ)\avilibcf.obj $(LOBJ)\classobj.obj $(LOBJ)\device.obj $(LOBJ)\avifile.obj $(LOBJ)\extra.obj $(LOBJ)\avirle.obj 
+OBJ2    =$(LOBJ)\avisave.obj $(LOBJ)\aviopts.obj $(LOBJ)\avicmprs.obj $(LOBJ)\avifps.obj $(LOBJ)\avimem.obj
+OBJ3	=$(LOBJ)\buffer.obj $(LOBJ)\fakefile.obj $(LOBJ)\unmarsh.obj $(LOBJ)\afclip.obj $(LOBJ)\enumfetc.obj $(LOBJ)\editstrm.obj
+OBJ4	=$(LOBJ)\getframe.obj
+OBJS    = $(OBJ1) $(OBJ2) $(OBJ3) $(OBJ4) $(OBJ5) $(OBJ6)
+
+!include <ntwin32.mak>
+
+.SUFFIXES: .cpp
+
+!ifndef NODEBUG
+cdebug = $(cdebug) -DDEBUG -Fc
+!endif
+
+cflags = $(cflags) $(INC) $(DEF)
+
+.c.obj:
+        $(cc) $(cdebug) $(cflags) $(cvars) -Oxwt $*.c
+
+{$(LRES)}.rc{$(LOBJ)}.rbj:
+        $(rc) $(INC) $(rcvars) -fo $(@R).res $(LRES)\$(@B).rc
+        cvtres -$(CPU) $(@R).res -o $(@R).rbj
+
+{}.c{$(LOBJ)}.obj:
+        $(cc) $(cdebug) $(cflags) $(cvars) -Oxwt $(@B).c -Fo$@
+
+{}.cpp{$(LOBJ)}.obj:
+        $(cc) $(cdebug) $(cflags) $(cvars) -Oxwt $(@B).cpp -Fo$@
+
+goal:   $(NAME).dll copy
+
+$(NAME).dll: $(OBJS) $(DEFFILE) $(LOBJ)\$(NAME).rbj $(NAME).exp
+        $(link) $(linkdebug) \
+        -align:4096          \
+        -dll                 \
+        -entry:DLLEntryPoint$(DLLENTRY) \
+        -out:$(NAME).dll     \
+        $(NAME).exp  \
+        $(LOBJ)\$(NAME).rbj  \
+        $(OBJS)     \
+        $(LIBS)     \
+        $(guilibsdll)
+
+$(NAME).lib $(NAME).exp: $(OBJS) $(DEFFILE)
+        $(implib) -machine:$(CPU) \
+        -out:$(NAME).lib   \
+        -def:$(DEFFILE)   \
+!IF "$(CPU)" == "i386"
+        $(OBJS)
+!ENDIF
+
+copy:
+        copy $(NAME).dll $(PBIN)
+        copy $(NAME).lib $(PLIB)
+        copy $(NAME).h   $(PINC)
+
+#
+# file depends
+#
+$(LOBJ)\classobj.obj:	$$(@B).cpp $(NAME).h
+$(LOBJ)\avilib.obj:	$$(@B).cpp $(NAME).h avireg.h
+$(LOBJ)\avilibcf.obj:	$$(@B).cpp $(NAME).h
+$(LOBJ)\device.obj:	$$(@B).cpp $(NAME).h
+$(LOBJ)\avifile.obj:	$$(@B).cpp $(NAME).h
+$(LOBJ)\extra.obj:	$$(@B).cpp $(NAME).h
+$(LOBJ)\avirle.obj:     $$(@B).c   $(NAME).h
+$(LOBJ)\avisave.obj:    $$(@B).c   $(NAME).h
+$(LOBJ)\aviopts.obj:    $$(@B).c   $(NAME).h
+$(LOBJ)\avicmprs.obj:	$$(@B).cpp $(NAME).h
+$(LOBJ)\avifps.obj:	$$(@B).cpp $(NAME).h
+$(LOBJ)\buffer.obj:     $$(@B).c   $(NAME).h
+$(LOBJ)\fakefile.obj:	$$(@B).cpp $(NAME).h
+$(LOBJ)\unmarsh.obj:	$$(@B).cpp $(NAME).h
+$(LOBJ)\avimem.obj:     $$(@B).cpp $(NAME).h
+
+clean:
+        echo y | del $(LOBJ)\*.*
+        del $(NAME).exe
+	del $(NAME).dll
+	del $(NAME).cpl
+	del *.exe
+        del *.rbj
+        del *.res
+        del *.obj
+        del *.map
+        del *.sym
+        del *.cod
+        del *.pdb
+        del *.lib
+        del *.exp

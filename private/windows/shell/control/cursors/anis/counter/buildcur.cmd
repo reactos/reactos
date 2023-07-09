@@ -1,0 +1,1 @@
+makeani -t "Half-Second Timer" -a "Microsoft Corporation, Copyright 1993" -o ..\counter.ani -r30 count1 count2 count3 count4 count5 count6 count7 count8 count9 count10 count11 count12 count13 count14 count15 count16 count17 count18 count19 count20

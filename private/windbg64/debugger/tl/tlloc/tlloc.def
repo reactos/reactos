@@ -1,0 +1,6 @@
+LIBRARY tlloc
+
+EXPORTS
+    OSDebug4VersionCheck
+    DBGVersionCheck
+    TLFunc

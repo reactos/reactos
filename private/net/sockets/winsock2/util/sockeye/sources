@@ -1,0 +1,55 @@
+!IF 0
+
+Copyright (c) 1989-1993  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+Author:
+
+    John Rogers (JohnRo) 25-Oct-1991
+
+Notes:
+
+    Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+Revision History:
+
+!ENDIF
+
+
+MAJORCOMP=
+MINORCOMP=
+
+TARGETNAME=sockeye
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=PROGRAM
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(BASEDIR)\public\sdk\lib\*\ws2_32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\mswsock.lib
+
+INCLUDES=.;$(BASEDIR)\public\sdk\inc
+
+USE_CRTDLL=1
+
+SOURCES=sockeye.c     \
+        vars.c        \
+        sockeye.rc
+
+UMTYPE=windows
+
+UMENTRY=winmain
+
+!IFNDEF 386_WARNING_LEVEL
+386_WARNING_LEVEL=/W3
+!ENDIF

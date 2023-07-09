@@ -1,0 +1,7 @@
+CCSHELL_DIR  = ..\..
+TARGET_WIN95 = 1
+
+!include ..\srccpp.inc
+
+SOURCES_USED = $(SOURCES_USED) ..\srccpp.inc
+

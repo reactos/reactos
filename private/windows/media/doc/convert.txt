@@ -1,0 +1,47 @@
+
+
+  ========================================================
+  |                                                      |
+  | CONVERSION AND PORTABILITY ITEMS IN NT MULTI-MEDIA   |
+  |                                                      |
+  ========================================================
+
+
+
+1. SHORT MIDI MESSAGES (RCBS)
+
+      Short midi messages are passed around the system as DWORDs.
+      The documentations says that the first byte is the 'low order
+      byte' (see midiOutShortMsg).  However, testcases (eg sbtest.exe)
+      and presumably applications often just use a union of a dword
+      and byte[4] to convert (NOT the same).
+
+
+
+2. WINDOW words
+
+      The apis now take LONG parameters but actually only store WORDs.
+      This can be fixed by using things like SetWindowLong but there
+      is still the problem of the offsets they are using.  One suggestion
+      is just to double the size of everthing and every offset but
+      the conversion effort is still there.
+
+3. (SD) MCI Device IDs
+
+        Unfortunately these are 16 bits values in Win 3.0+, and the size
+        is difficult to change as it is used in disk files.  Hence is a
+        permanent fixed value.  It could be "thunked" when read/written.
+        More work needs to be done to decide whether to use a 32 bit
+        device id for MCI devices in Win 32, or to stick with 16 bit.
+        The device type MCIDEVICEID has been added to WINMM.H.
+
+4. (SD) Global sound playing windows
+
+        Windows MM extensions (MMSYSTEM) uses a single GLOBAL window
+        handle (hwndNotify) to play all asynchronous sound (MCI and
+        sndPlaySound).  To do this a piece of global memory is used
+        that defines which sound is playing.  NO attempt is made in
+        Windows (WIN16) to synchronise playing sounds.
+
+        Much of the WIN16 high level sound code references the global
+        window handle.

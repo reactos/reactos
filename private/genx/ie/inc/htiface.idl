@@ -1,0 +1,212 @@
+//+---------------------------------------------------------------------------
+//
+//  Copyright 1995-1998 Microsoft Corporation. All Rights Reserved.
+//
+//  Contents:   OLE Hyperlinking interfaces
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// HTIface.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("// OLE Hyperlinking ITargetFrame Interfaces.")
+cpp_quote("")
+cpp_quote("#ifndef _LPTARGETFRAME2_DEFINED														")
+cpp_quote("#include \"htiframe.h\"														")
+cpp_quote("#endif // _LPTARGETFRAME2_DEFINED														")
+
+import "objidl.idl";
+import "oleidl.idl";
+import "urlmon.idl";
+
+interface ITargetFrame;
+interface ITargetEmbedding;
+
+cpp_quote("EXTERN_C const IID IID_ITargetFrame;")
+cpp_quote("EXTERN_C const IID IID_ITargetEmbedding;")
+cpp_quote("EXTERN_C const IID IID_ITargetFramePriv;")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:   ITargetFrame interface definition
+// 		
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPTARGETFRAME_DEFINED")
+cpp_quote("#define _LPTARGETFRAME_DEFINED")
+
+
+[
+	object,
+	uuid(d5f78c80-5252-11cf-90fa-00AA0042106e),
+	pointer_default(unique)
+]
+
+interface ITargetFrame: IUnknown
+{
+	typedef [unique] ITargetFrame *LPTARGETFRAME;
+
+	typedef enum
+		{
+		/* Add document to history. */
+
+		NAVIGATEFRAME_FL_RECORD         = 0x0001,
+
+		/* Post data. */
+
+		NAVIGATEFRAME_FL_POST           = 0x0002,
+
+		/* Do not retrieve document from cache. */
+
+		NAVIGATEFRAME_FL_NO_DOC_CACHE   = 0x0004,
+
+		/* Do not retrieve images from cache. */
+
+		NAVIGATEFRAME_FL_NO_IMAGE_CACHE = 0x0008,
+
+		/* Retrieve page from cache even if marked "Authorization failed"
+		 * This is overridden by NAVIGATEFRAME_FL_NO_DOC_CACHE. */
+
+		NAVIGATEFRAME_FL_AUTH_FAIL_CACHE_OK = 0x0010,
+
+		/* We are sending information contained on a for
+		 * method of sending can either be POST or GET */
+
+		NAVIGATEFRAME_FL_SENDING_FROM_FORM  = 0x0020,
+
+		/* no funny stuff here, if this bit it set we mean business,
+		 we are going to be sending a form */
+		NAVIGATEFRAME_FL_REALLY_SENDING_FROM_FORM  = 0x0040,
+
+		/* flag combinations */
+
+		} NAVIGATEFRAME_FLAGS;
+
+	typedef struct tagNavigateData
+		{
+		ULONG ulTarget;
+		ULONG ulURL;
+		ULONG ulRefURL;
+		ULONG ulPostData;
+		DWORD dwFlags;
+		}    NAVIGATEDATA;
+
+    HRESULT SetFrameName(
+        [in] LPCWSTR pszFrameName);
+
+    HRESULT GetFrameName(
+        [out] LPWSTR *ppszFrameName);
+
+    HRESULT GetParentFrame(
+        [out] IUnknown **ppunkParent);
+
+    HRESULT FindFrame(
+        [in] LPCWSTR pszTargetName,
+		[in] IUnknown *ppunkContextFrame,
+        [in] DWORD dwFlags,
+		[out] IUnknown **ppunkTargetFrame);
+
+    HRESULT SetFrameSrc(
+        [in] LPCWSTR pszFrameSrc);
+
+    HRESULT GetFrameSrc(
+        [out] LPWSTR *ppszFrameSrc);
+
+    HRESULT GetFramesContainer(
+        [out] IOleContainer **ppContainer);
+
+	HRESULT SetFrameOptions(
+        [in] DWORD dwFlags);
+
+    HRESULT GetFrameOptions(
+        [out] DWORD *pdwFlags);
+
+ 	HRESULT SetFrameMargins(
+        [in] DWORD dwWidth,
+        [in] DWORD dwHeight);
+
+    HRESULT GetFrameMargins(
+        [out] DWORD *pdwWidth,
+        [out] DWORD *pdwHeight);
+
+	HRESULT RemoteNavigate(
+		[in] ULONG cLength,
+		[in, size_is(cLength)] ULONG *pulData);
+
+    HRESULT OnChildFrameActivate(
+        [in] IUnknown * pUnkChildFrame);
+
+    HRESULT OnChildFrameDeactivate(
+        [in] IUnknown * pUnkChildFrame);
+
+}
+
+[
+	object,
+	uuid(548793C0-9E74-11cf-9655-00A0C9034923),
+	pointer_default(unique)
+]
+
+interface ITargetEmbedding: IUnknown
+{
+	typedef [unique] ITargetEmbedding *LPTARGETEMBEDDING;
+
+
+    HRESULT GetTargetFrame(
+        [out] ITargetFrame **ppTargetFrame);
+}
+
+[
+	object,
+	uuid(9216E421-2BF5-11d0-82B4-00A0C90C29C5),
+	pointer_default(unique)
+]
+interface ITargetFramePriv: IUnknown
+{
+	typedef [unique] ITargetFramePriv *LPTARGETFRAMEPRIV;
+
+    HRESULT FindFrameDownwards(
+        [in] LPCWSTR pszTargetName,
+        [in] DWORD dwFlags,
+		[out] IUnknown **ppunkTargetFrame);
+
+    HRESULT FindFrameInContext(
+        [in] LPCWSTR pszTargetName,
+		[in] IUnknown *punkContextFrame,
+        [in] DWORD dwFlags,
+		[out] IUnknown **ppunkTargetFrame);
+
+    HRESULT OnChildFrameActivate(
+        [in] IUnknown * pUnkChildFrame);
+
+    HRESULT OnChildFrameDeactivate(
+        [in] IUnknown * pUnkChildFrame);
+
+	HRESULT NavigateHack(
+        [in] DWORD grfHLNF,
+        [in, unique] LPBC pbc,
+        [in, unique] IBindStatusCallback * pibsc,
+        [in, unique] LPCWSTR pszTargetName,
+		[in] LPCWSTR pszUrl,
+		[in, unique] LPCWSTR pszLocation);
+
+    HRESULT FindBrowserByIndex(
+        [in] DWORD dwID,
+        [out] IUnknown **ppunkBrowser);
+}
+
+cpp_quote("#endif")

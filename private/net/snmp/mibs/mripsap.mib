@@ -1,0 +1,370 @@
+MSRIPSAP-MIB DEFINITIONS ::= BEGIN
+
+-- This MIB defines the management information for the RIP and SAP
+-- protocols running in an IPX enviroment.  It provides information in 
+-- addition to that contained in the IPX MIB itself.
+
+
+IMPORTS
+				enterprises, Counter
+						FROM RFC1155-SMI
+				OBJECT-TYPE
+						FROM RFC-1212
+				TRAP-TYPE
+						FROM RFC-1215
+                microsoft, software
+                        FROM MSFT-MIB;
+
+-- microsoft	OBJECT IDENTIFIER ::= { enterprises 311 }
+-- software		OBJECT IDENTIFIER ::= { microsoft 1 }
+ripsap                  OBJECT IDENTIFIER ::= { software 9 }
+
+-- Groups
+
+ripsapBase		OBJECT IDENTIFIER ::= {ripsap 1}
+ripsapInterface	OBJECT IDENTIFIER ::= {ripsap 2}
+
+
+-- Types
+
+--NetNumber		::= OCTET STRING (SIZE(4))
+--NodeAddress	::= OCTET STRING (SIZE(6))
+
+-- Base Group
+--   This group contains global information about the
+--   RIP/SAP running on the system.
+
+
+ripsapBaseRipOperState OBJECT-TYPE
+	SYNTAX		INTEGER {
+						down(1),
+						up(2)
+						}
+	ACCESS      read-only
+	STATUS      mandatory
+	DESCRIPTION "Indicates the operational state of RIP."
+	::= {ripsapBase 1}
+
+ripsapBaseSapOperState OBJECT-TYPE
+	SYNTAX		INTEGER {
+						down(1),
+						up(2)
+						}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION "Indicates the operational state of SAP."
+	::= {ripsapBase 2}
+
+-- Interface Group
+--   This group contains RIP and SAP management information for each
+--   interface known to this system.
+
+-- RIP Interface Table
+--   The RIP interface table contains an entry for the RIP information for
+--   each interface known to the system.
+
+ripIfTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF RIPIfEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION "The RIP interface table."
+	::= {ripsapInterface 1}
+
+ripIfEntry OBJECT-TYPE
+	SYNTAX      RIPIfEntry
+	ACCESS      not-accessible
+	STATUS      mandatory
+	DESCRIPTION "Each entry corresponds to one interface known to the
+				system."
+	INDEX       {
+				ripIfIndex
+				}
+	::= {ripIfTable 1}
+
+RIPIfEntry		::= SEQUENCE {
+					ripIfIndex			INTEGER,
+					ripIfAdminState		INTEGER,
+					ripIfOperState		INTEGER,
+					ripIfUpdateMode		INTEGER,
+					ripIfUpdateInterval	INTEGER,
+					ripIfAgeMultiplier	INTEGER,
+					ripIfSupply			INTEGER,
+					ripIfListen			INTEGER,
+					ripIfOutPackets		Counter,
+					ripIfInPackets		Counter
+					}
+
+ripIfIndex OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The identifier of this interface, unique within the
+				instance of RIP.  This value corresponds to the interface
+				identifier found in ipxIfIndex."
+	::= {ripIfEntry 1}
+
+ripIfAdminState	OBJECT-TYPE
+	SYNTAX		INTEGER {
+						disabled(1),
+						enabled(2)
+						}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION "The desired state of the interface."
+	::= {ripIfEntry 2}
+
+ripIfOperState OBJECT-TYPE
+	SYNTAX		INTEGER {
+						down(1),
+						up(2),
+						sleeping(3)
+						}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The current operational state of the interface.
+				If ripIfAdminState is disabled(1) then
+				ripIfOperState should be down(1). If ripIfAdminState is
+				changed to enabled(2) then ripIfOperState should change to
+				up(2) if the interface is ready to transmit and
+				receive network traffic; it should change to
+				sleeping(3) if the interface is waiting for external
+				actions (such as a serial line waiting for an
+				incomming connection); it should remain in the down(1)
+				state if and only if there is a fault that prevents it
+				from going to the up(2) state."
+	::= {ripIfEntry 3}
+
+ripIfUpdateMode OBJECT-TYPE
+	SYNTAX		INTEGER {
+						standard(1),
+						none(2),
+						autostatic(3)
+						}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The RIP update mechanism used on this interface.
+				None(2) is used for static routes configurations.
+				AutoStatic(3) means that the local router can issue
+				an update request to the remote router and the response will be
+				kept statically in the routing database as auto static routes.
+				Standard(1) is the periodic broadcast RIP mechanism."
+	::= {ripIfEntry 4}
+
+ripIfUpdateInterval OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The RIP update interval, in sec.
+				For Standard(1) ripIfUpdateMode, this is the interval with
+				which periodic update broadcasts are sent, for AutoStatic(3)
+				ripIfUpdateMode, this is the maximum interval for which
+				router will listen for rip announcements, not used for
+				None(2) ripIfUpdateMode"
+	::= {ripIfEntry 5}
+
+ripIfAgeMultiplier OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The holding multiplier for routes received in RIP periodic
+				updates (applies only if ripIfUpdateMode is Standard(1))."
+	::= {ripIfEntry 6}
+
+
+ripIfSupply OBJECT-TYPE
+	SYNTAX		INTEGER {
+						disabled(1),
+						enabled(2)
+						}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Enable sending of RIP updates (change and periodic) on
+				this interface."
+	::= {ripIfEntry 7}
+
+ripIfListen OBJECT-TYPE
+	SYNTAX		INTEGER {
+						disabled(1),
+						enabled(2)
+						}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Enable listening to RIP updates on this interface."
+	::= {ripIfEntry 8}
+
+ripIfOutPackets OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of RIP packets sent on this interface."
+	::= {ripIfEntry 9}
+
+ripIfInPackets OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION "The number of RIP packets received on this interface."
+	::= {ripIfEntry 10}
+
+
+-- SAP Interface Table
+--   The SAP interface table contains an entry for the SAP information for
+--   each interface known to the system.
+
+sapIfTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF SAPIfEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"The SAP interface table."
+	::= {ripsapInterface 2}
+
+sapIfEntry OBJECT-TYPE
+	SYNTAX		SAPIfEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Each entry corresponds to one interface known to the
+				system."
+	INDEX		{
+				sapIfIndex
+				}
+	::= {sapIfTable 1}
+
+SAPIfEntry ::= SEQUENCE {
+					sapIfIndex			INTEGER,
+					sapIfAdminState		INTEGER,
+					sapIfOperState		INTEGER,
+					sapIfUpdateMode		INTEGER,
+					sapIfUpdateInterval	INTEGER,
+					sapIfAgeMultiplier	INTEGER,
+					sapIfSupply			INTEGER,
+					sapIfListen			INTEGER,
+					sapIfGetNearestServerReply	INTEGER,
+					sapIfOutPackets		Counter,
+					sapIfInPackets		Counter
+					}
+
+sapIfIndex OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The identifier of this interface, unique within the
+				instance of SAP.  This value corresponds to the interface
+				identifier found in ipxIfIndex."
+	::= {sapIfEntry 1}
+
+sapIfAdminState	OBJECT-TYPE
+	SYNTAX		INTEGER {
+						disabled(1),
+						enabled(2)
+						}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION "The desired state of the interface."
+	::= {sapIfEntry 2}
+
+sapIfOperState OBJECT-TYPE
+	SYNTAX		INTEGER {
+						down(1),
+						up(2),
+						sleeping(3)
+						}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The current operational state of the interface.
+				If sapIfAdminState is disabled(1) then
+				ripIfOperState should be down(1). If sapIfAdminState is
+				changed to enabled(2) then sapIfOperState should change to
+				up(2) if the interface is ready to transmit and
+				receive network traffic; it should change to
+				sleeping(3) if the interface is waiting for external
+				actions (such as a serial line waiting for an
+				incomming connection); it should remain in the down(1)
+				state if and only if there is a fault that prevents it
+				from going to the up(2) state."
+	::= {sapIfEntry 3}
+
+sapIfUpdateMode OBJECT-TYPE
+	SYNTAX		INTEGER {
+						standard(1),
+						none(2),
+						autostatic(3)
+						}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The SAP update mechanism used on this interface.
+				None(2) is used for static routes configurations.
+				AutoStatic(3) means that the local router can issue
+				an update request to the remote router and the response will be
+				kept statically in the routing database as auto static services.
+				Standard(1) is the periodic broadcast SAP mechanism."
+	::= {sapIfEntry 4}
+
+sapIfUpdateInterval OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The SAP update interval, in sec.
+				For Standard(1) ripIfUpdateMode, this is the interval with
+				which periodic update broadcasts are sent, for AutoStatic(3)
+				sapIfUpdateMode, this is the maximum interval for which
+				router will listen for rip announcements. Not used for
+				None (2) sapIfUpdateMode"
+	::= {sapIfEntry 5}
+
+sapIfAgeMultiplier OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The holding multiplier for services received in SAP periodic
+				updates (applies only if sapIfUpdateMode is Standard(1))."
+	::= {sapIfEntry 6}
+
+
+sapIfSupply OBJECT-TYPE
+	SYNTAX		INTEGER {
+						disabled(1),
+						enabled(2)
+						}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Enable sending of SAP updates (change and periodic) on
+				this interface."
+	::= {sapIfEntry 7}
+
+sapIfListen OBJECT-TYPE
+	SYNTAX		INTEGER {
+						disabled(1),
+						enabled(2)
+						}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Enable listening to SAP updates on this interface."
+	::= {sapIfEntry 8}
+
+sapIfGetNearestServerReply OBJECT-TYPE
+	SYNTAX		INTEGER {
+						disabled(1),
+						enabled(2)
+						}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION "Indicates whether to respond to SAP get nearest server
+				requests received on this interface."
+	::= {sapIfEntry 9}
+
+sapIfOutPackets OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of SAP packets sent on this interface."
+	::= {sapIfEntry 10}
+
+sapIfInPackets OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION "The number of SAP packets received on this interface."
+	::= {sapIfEntry 11}
+
+
+END

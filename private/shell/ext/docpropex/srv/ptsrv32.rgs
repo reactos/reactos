@@ -1,0 +1,23 @@
+HKCR
+{
+    MSPropertyTree.DefaultServer.1 = s 'DefaultServer Class'
+    {
+        CLSID = s '{1F183F5A-5C4D-11D1-8B83-080036B11A03}'
+    }
+    MSPropertyTree.DefaultServer = s 'DefaultServer Class'
+    {
+        CurVer = s 'MSPropertyTree.DefaultServer.1'
+    }
+    NoRemove CLSID
+    {
+        ForceRemove {1F183F5A-5C4D-11D1-8B83-080036B11A03} = s 'DefaultServer Class'
+        {
+            ProgID = s 'MSPropertyTree.DefaultServer.1'
+            VersionIndependentProgID = s 'MSPropertyTree.DefaultServer'
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbda1
+
+TARGETNAME=kbda1
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbda1.c kbda1.rc
+
+NTTARGETFILE0=kbda1.h kbda1.rc kbda1.def

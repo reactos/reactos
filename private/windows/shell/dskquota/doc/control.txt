@@ -1,0 +1,169 @@
+===============================================================================
+Interface: DiskQuotaControl
+===============================================================================
+
+Methods:
+    AddUser
+    CreateEnumUsers
+    CreateUserBatch
+    DeleteUser
+    FindUser
+    GetDefaultQuotaLimit
+    GetDefaultQuotaThreshold
+    GetState
+    Initialize
+    InvalidateSidNameCache
+    SetDefaultQuotaLimit
+    SetDefaultQuotaThreshold
+    SetLoggingState
+    SetQuotaState
+    ShutdownAndRelease
+
+
+-------------------------------------------------------------------------------
+DiskQuotaControl::AddUser
+-------------------------------------------------------------------------------
+Adds a user to the volume's quota file.
+
+Arguments:
+    PSID pSid - Address of account's Security Identifier (SID).
+
+    PDISKQUOTA_USER *ppUser - Address of interface pointer variable to receive
+        the IDiskQuotaUser interface pointer for the new user object.
+
+Returns:
+    E_NOTIMPL   - This function is not yet implemented.
+
+
+-------------------------------------------------------------------------------
+DiskQuotaControl::CreateEnumUsers
+-------------------------------------------------------------------------------
+Creates a user enumerator object for enumerating users in a volume's quota
+information file.  This (along with DiskQuotaControl::Find) is the primary
+method for creating user objects from a quota control object.  The resulting
+enumerator object supports the required OLE EnumXXXXX interfaces of Next,
+Skip, Reset and Clone.  If this function returns NO_ERROR, the returned
+enumerator object has a reference count of 1 and is ready for use.
+
+Arguments
+  PSID pSidList [optional] - Address of an array of Security Identifiers; 
+    one for each user to be included in the enumeration.  This argument may
+    be NULL.  If this argument is NULL, all users in the volume's quota
+    information file are included in the enumeration.
+    
+  DWORD dwSidListLength [optional] - If pSidList is not NULL, this argument
+    specifies the number of bytes in the SID list.  If pSidList is NULL,
+    this argument is ignored.
+
+  PENUM_DISKQUOTA_USERS **ppOut - Address of interface variable to receive
+    the IEnumDiskQuotaUsers inteface pointer of the new enumerator object.
+
+  BOOL bAsyncNameResolution - Specifies the type of SID-to-Name resolution
+    performed.  Quota information files identify users by SID with SID-to-Name
+    relationships maintained by the network domain controller.  When a user
+    object is first created, unless cached on the local machine, it's 
+    name is not known and must be obtained from the network DC.  If
+    bAsyncNameResolution is FALSE, the function will block until the name
+    can be determined.  If the argument is TRUE, the name resolution is
+    performed asynchronously.  The client code is notified through an
+    OLE notification sink when the name has been obtained and set in the
+    user object.  See IDiskQuotaEvents for details.
+
+Returns:
+      NO_ERROR        - Success.
+      E_POINTER       - ppOut arg is NULL.
+      E_OUTOFMEMORY   - Insufficient memory to create enumerator object.
+
+
+-------------------------------------------------------------------------------
+DiskQuotaControl::CreateUserBatch
+-------------------------------------------------------------------------------
+Creates a user batch object for optimizing user quota information updates.
+The underlying NTIOAPI system supports batching of user quota information
+updates.  This method creates a batching object that takes advantage of this
+NTIOAPI feature.  The client creates a batch object, adds user object pointers
+to the batch object, updates the user object quota information and finally
+commands the batch object to write the data from the contained user objects
+to disk.
+
+Arguments:
+    PDISKQUOTA_USER_BATCH *ppUserBatch - Address of interface variable to 
+        receive the IDiskQuotaUserBatch interface pointer of the new batch 
+        object.
+
+Returns:
+f  
+       NO_ERROR        - Success.
+       E_POINTER       - ppOut arg is NULL.
+       E_OUTOFMEMORY   - Insufficient memory to create batch object.
+
+-------------------------------------------------------------------------------
+Macro: DiskQuotaControl_Initialize
+-------------------------------------------------------------------------------
+This macro calls DiskQuotaControl::InitializeW when the caller is compiled
+UNICODE and DiskQuotaControl::InitializeA when the caller is compiled ANSI.
+
+Arguments:
+    pController - Address of quota controller object being initialized.
+
+    pszFSObjectName - Name of the NTFS volume to open.  InitializeA expects
+        an ANSI string.  IninitializeW expects a UNICODE string.  Use the
+        DiskQuotaControl_Initialize macro to automatically compile the 
+        proper function.
+
+Returns:
+    See DiskQuotaControl::Initialize
+
+
+
+
+
+-------------------------------------------------------------------------------
+DiskQuotaControl::Initialize (A and W)
+-------------------------------------------------------------------------------
+Initializes a quota control object (IDiskQuotaControl) that has been created 
+via CoCreateInstance.  The quota control object is the primary object created
+by a client application to view/control the quota attributes of an NTFS volume.
+To create a controller object, call CoCreateInstance with the 
+CLSID_IDiskQuotaControl interface ID.  The interface pointer returned has a 
+reference count of 1.  For the object to be usable, the client must call the
+Initialize method passing the name of the NTFS volume as a text string.
+
+Arguments:
+    pszFSObjectName - Name of the NTFS volume to open.  InitializeA expects
+        an ANSI string.  IninitializeW expects a UNICODE string.  Use the
+        DiskQuotaControl_Initialize macro to automatically compile the 
+        proper function.
+        
+
+Returns:
+	NO_ERROR        - Success.
+	S_FALSE	        - Can't open FS object.
+	E_POINTER       - pszFSObjectName argument was NULL.
+	E_OUTOFMEMORY   - Insufficient memory.
+	E_UNEXPECTED    - Error thunking object name string
+    
+
+
+
+
+DiskQuotaControl::Initialize
+
+
+
+    STDMETHOD(InitializeW)(THIS_ LPCWSTR pszFSObjectNameW) PURE;
+    STDMETHOD(InitializeA)(THIS_ LPCSTR pszFSObjectNameA) PURE;
+    STDMETHOD(GetState)(THIS_ LPDWORD lpdwState) PURE;
+    STDMETHOD(SetQuotaState)(THIS_ DWORD dwState) PURE;
+    STDMETHOD(SetLoggingState)(THIS_ DWORD dwState) PURE;
+    STDMETHOD(SetDefaultQuotaThreshold)(THIS_ DWORD, DWORD) PURE;
+    STDMETHOD(SetDefaultQuotaLimit)(THIS_ DWORD, DWORD) PURE;
+    STDMETHOD(GetDefaultQuotaThreshold)(THIS_ LPDWORD, LPDWORD) PURE;
+    STDMETHOD(GetDefaultQuotaLimit)(THIS_ LPDWORD, LPDWORD) PURE;
+    STDMETHOD(AddUser)(THIS_ PSID, ULONG, PDISKQUOTA_USER *) PURE;
+    STDMETHOD(DeleteUser)(THIS_ PDISKQUOTA_USER) PURE;
+    STDMETHOD(FindUser)(THIS_ PSID, ULONG, PDISKQUOTA_USER *, BOOL) PURE;
+    STDMETHOD(CreateEnumUsers)(THIS_ PSID, DWORD, PENUM_DISKQUOTA_USERS *, BOOL) PURE;
+    STDMETHOD(CreateUserBatch)(THIS_ PDISKQUOTA_USER_BATCH *) PURE;
+    STDMETHOD(InvalidateSidNameCache)(THIS) PURE;
+    STDMETHOD(ShutdownAndRelease)(THIS) PURE;

@@ -1,0 +1,14 @@
+// TODO
+2. Support relative name (#foobar)
+3. Title (CommandTarget?)
+4. EXP: Inheriting the history from one Explorer to another
+8. Support ASYNC non-OLE object
+9. IServiceProvider
+10. 1024 vs. MAX_PATH
+
+// DONE
+1. Enable object cache when JeremyS fixed his bugs.
+5. IE96: Disable accelerator if addressbar has the focus
+6. Implement Invoke(Go Home/Search)
+7. Implement Invoke(Get Document)
+

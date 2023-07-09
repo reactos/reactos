@@ -1,0 +1,4 @@
+DIRS=dll src
+
+OPTIONAL_DIRS=
+

@@ -1,0 +1,19 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       initpki.src
+//
+//--------------------------------------------------------------------------
+
+LIBRARY INITPKI
+
+EXPORTS
+
+DllInstall              PRIVATE
+DllRegisterServer       PRIVATE
+DllUnregisterServer     PRIVATE
+
+InitializePKI

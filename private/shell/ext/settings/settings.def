@@ -1,0 +1,15 @@
+LIBRARY   SETTINGS
+
+DESCRIPTION 'Microsoft Windows NT Settings UI'
+
+EXETYPE WINDOWS
+
+HEAPSIZE  512
+STACKSIZE 4096
+
+EXPORTS
+    OpenSettingsUI 	@1 NONAME
+    SETTINGS_RUNDLLA
+    SETTINGS_RUNDLLW
+    settings_rundllA
+    settings_rundllW

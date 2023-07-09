@@ -1,0 +1,78 @@
+#include <windows.h>
+#include "movplay.h"
+#include "movplay.rcv"
+#include "strings.rc"
+
+AppIcon     ICON   "movplay.ico"
+DocIcon     ICON   "movplay.ico"
+
+ABOUTBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 23, 17, 171, 76
+STYLE WS_DLGFRAME | WS_POPUP
+BEGIN
+	   CONTROL "Microsoft Windows", -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 5, 170, 8
+	   CONTROL "VfW Play App", -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 14, 170, 8
+           CONTROL "Copyright (c) 1986-1993, Microsoft", -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 47, 170, 9
+           CONTROL "Ok", IDOK, "button", BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP | WS_CHILD, 74, 58, 32, 14
+           CONTROL "AppIcon",    -1, "static", SS_ICON | WS_CHILD, 3, 5, 16, 16
+           CONTROL "DocIcon",   -1, "static", SS_ICON | WS_CHILD, 150, 5, 16, 16
+END
+
+AppMenu menu
+begin
+    POPUP "&File"
+	begin
+	    MENUITEM "&Open..." 	   ,MENU_OPEN
+            MENUITEM "&New"                ,MENU_NEW
+            MENUITEM "&Close"              ,MENU_CLOSE
+	    MENUITEM "Close &All"	   ,MENU_CLOSEALL
+	    MENUITEM SEPARATOR
+	    MENUITEM "E&xit"		   ,MENU_EXIT
+	    MENUITEM "A&bout..."	   ,MENU_ABOUT
+	end
+    POPUP "&Movie"
+	{
+            MENUITEM "&Play",           IDM_PLAY
+            MENUITEM "Play &Reverse",   IDM_RPLAY
+            MENUITEM "&Stop",           IDM_STOP
+	    MENUITEM SEPARATOR
+	    MENUITEM "&Home",		IDM_HOME
+	    MENUITEM "&End",		IDM_END
+	    MENUITEM SEPARATOR
+            MENUITEM "Step &Fwrd",	IDM_STEP
+            MENUITEM "Step &Back",	IDM_RSTEP
+	    MENUITEM SEPARATOR
+	    POPUP "St&yles"
+		BEGIN
+			MENUITEM "Repeat",		IDM_SRepeat
+			MENUITEM "Autosize Window",	IDM_SAutosizeWindow
+			MENUITEM "Autosize Movie",	IDM_SAutosizeMovie
+			MENUITEM "Playbar",		IDM_SPlaybar
+			MENUITEM "Record",		IDM_SRecord
+			MENUITEM "Menu",		IDM_SMenu
+			MENUITEM "Error Dialogs",	IDM_SErrorDlg
+			MENUITEM "Show Name",		IDM_SShowName
+			MENUITEM "Show Mode",		IDM_SShowMode
+			MENUITEM "Show Pos",		IDM_SShowPos
+			MENUITEM "Notify Media",	IDM_SNotifyMedia
+			MENUITEM "Notify Mode",		IDM_SNotifyMode
+			MENUITEM "Notify Pos",		IDM_SNotifyPos
+			MENUITEM "Notify Size",		IDM_SNotifySize
+		END
+	}
+    POPUP "&Window"
+	begin
+	    MENUITEM "&Tile"		,WM_MDITILE
+	    MENUITEM "&Cascade" 	,WM_MDICASCADE
+	    MENUITEM "Arrange &Icons"	,WM_MDIICONARRANGE
+	end
+end
+
+AppAccel ACCELERATORS PRELOAD
+BEGIN
+//	VK_HOME,	IDM_HOME,	VIRTKEY		// !!! done by MCIWnd
+//	VK_END,		IDM_END,	VIRTKEY
+//	VK_RIGHT,	IDM_STEP,	VIRTKEY
+//	VK_LEFT,	IDM_RSTEP,	VIRTKEY
+	VK_SPACE,	IDM_PLAY, 	VIRTKEY
+	VK_SPACE,	IDM_RPLAY,	VIRTKEY, SHIFT
+END

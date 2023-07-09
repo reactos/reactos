@@ -1,0 +1,7 @@
+
+[Shell]
+Command=3
+IconFile=shdocvw.dll,-118
+
+[IE]
+Command=Channels

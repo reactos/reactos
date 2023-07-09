@@ -1,0 +1,76 @@
+#include "windows.h"
+#include "reversi.h"
+
+
+3 ICON REVERSI.ICO
+1 CURSOR PRELOAD blank.cur
+1 MENU
+BEGIN
+    POPUP "&Game"
+        begin
+            MENUITEM "&Hint", 50
+            MENUITEM "&Pass", 20
+            MENUITEM "&New",  25
+            MENUITEM SEPARATOR
+            MENUITEM "E&xit",    52
+        end
+    popup "&Skill"
+        BEGIN
+            MENUITEM "&Beginner", 41
+            MENUITEM "&Novice",   42
+            MENUITEM "&Expert",   44
+            MENUITEM "&Master",   46
+        END
+#ifndef NOHELP
+    POPUP "&Help"
+        BEGIN
+            MENUITEM "&Index",            MN_HELP_INDEX
+            MENUITEM "&Keyboard",         MN_HELP_KEYBOARD
+            MENUITEM "&Commands",         MN_HELP_COMMANDS
+            MENUITEM "&Playing the Game", MN_HELP_PLAYING
+            MENUITEM "&Rules",            MN_HELP_RULES
+            MENUITEM "&Using Help",       MN_HELP_USINGHELP
+            MENUITEM SEPARATOR
+            MENUITEM "&About Reversi...", MN_HELP_ABOUT
+        END
+#else
+    POPUP "&Info"
+        BEGIN
+            MENUITEM "&About Reversi...", MN_HELP_ABOUT
+        END
+#endif /*NOHELP*/
+END
+
+MAINACC ACCELERATORS
+BEGIN
+    "^h", 50, NOINVERT
+    VK_F1,   MN_HELP_INDEX,     VIRTKEY
+END
+
+stringtable
+begin
+    3, "Reversi"
+    4, "Reversi Practice Game"
+    5, "Pass"
+    6, "You must Pass"
+    7, "Tie Game"
+    8, "You Lost by "        /* space at the end is required */
+    9, "You Won by "         /* space at the end is required */
+    10, "About..."
+    11, ""                   /* the post string for the loss message */
+    12, ""                   /* the post string for the won message */
+    13, "You may only move to a space where the cursor is a cross."
+    14, "You may not pass.  Move where the cursor is a cross."
+    15, "reversi.hlp"
+end
+
+rcinclude reversi.dlg
+
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_APP
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Reversi Game Applet"
+#define VER_INTERNALNAME_STR        "reversi\0"
+
+#include "common.ver"

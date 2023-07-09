@@ -1,0 +1,16 @@
+[
+uuid(15b9dc10-f809-11cd-8cd3-08002b371a19),
+version(1.0)
+]
+interface hello
+{
+
+typedef unsigned long DWORD;
+typedef unsigned char UCHAR;
+
+boolean GenSignature([in, size_is(16)] UCHAR * InData,
+                     [in, out] DWORD * cbSignatureLen,
+                     [out, size_is(136)] UCHAR * pbSignature);
+
+
+}

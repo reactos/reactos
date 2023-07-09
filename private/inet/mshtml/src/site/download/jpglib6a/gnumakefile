@@ -1,0 +1,67 @@
+PRODUCT = SITE
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+WIN32_WINNT_VERSION=0x0400
+WIN32_WIN95_VERSION=0x0400
+
+SOURCES =  \
+    jcomapi.c     \
+    jdapimin.c    \
+    jdapistd.c    \
+    jdcoefct.c    \
+    jdcolor.c     \
+    jddctmgr.c    \
+    jdhuff.c      \
+    jdinput.c     \
+    jdmainct.c    \
+    jdmarker.c    \
+    jdmaster.c    \
+    jdmerge.c     \
+    jdphuff.c     \
+    jdpostct.c    \
+    jdsample.c    \
+    jdtrans.c     \
+    jidctflt.c    \
+    jidctfst.c    \
+    jidctint.c    \
+    jidctred.c    \
+    jmemmgr.c     \
+    jmemnobs.c    \
+    jquant1.c     \
+    jquant2.c     \
+    jutils.c      \
+    miint.c       \
+    mifst.c       \
+    mfint.c       \
+    mffst.c       \
+    piint.c       \
+    pifst.c       \
+    pfint.c       \
+    pffst.c
+
+WLIB	= jpglib6a
+LIB	= lib${WLIB}.a # target static library
+
+LIBOBJS := ${SOURCES:%.C=%.o}
+LIBOBJS := ${LIBOBJS:%.cpp=%.o}
+LIBOBJS := ${LIBOBJS:%.cxx=%.o}
+LIBOBJS := ${LIBOBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## PROJECT_CFLAGS   : additional compilation flags for C compiler
+## PROJECT_CCPPFLAGS: additional compilation flags for C++ compiler
+## PROJECT_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+include $(MWHOME)/make.rules.simple
+

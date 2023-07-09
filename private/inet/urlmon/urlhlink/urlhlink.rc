@@ -1,0 +1,14 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "UrlMon and HLink easy API's Win32"
+#define VER_INTERNALNAME_STR        "UrlHlink.dll"
+#define VER_ORIGINALFILENAME_STR    "UrlHlink.dll"
+
+#include "common.ver"
+
+
+
+

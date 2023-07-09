@@ -1,0 +1,46 @@
+Last Updated: 5/01/91	 [johnsp]
+
+Whats left:
+
+  **** FINISHED
+
+  1 The latest changes made to the port layer need to be
+    incorporated into recorder.  These where naming convention
+    changes to the macros.  *** These have been done ****
+
+  **** FINISHED
+
+  2 Debug on Nt.  This version of recorder has been built
+    32 bit except for the link (undefined externals on an
+    earlier nt built).	**** UPDATE: I have now seen the main
+    recorder window running under Nt build 127 ****
+
+  3 Change over to use Win 3.1 common dialog code "ShellAbout()", etc
+    Recorder creates and handles it own dialogs.  Making the above
+    changes to use the common dialogs should reduce exe
+    size substancially.
+
+  3.5  Incorporate new code from the Win 3.1 development team.	Much
+       of this work has been done (I did the first merge in Mar91).
+       I am however expecting more changes will need to be merged
+       into the Nt version of recorder.
+
+  4 Remove code under #ifndef JOHNSP (or #else JOHNSP).  This
+    code was kept for debbugging purposes.  It needs to be
+    removed when recorder is debugged on Nt.
+
+  5 Final Debug on Win 3.1.  Recorder has been run on 3.1 successfully,
+    but it has not been thoroughly tested.  This needed to be done
+    as a last step.
+
+  6 Remove unneeded code to reduce exe size.  There appears to be
+    code in recorder that is not used.	Some of it is marked
+    using the compiler directive "#if 0".  As I have run across it
+    I have been marking it.
+
+  7 Final cleanup.  Remove all dead code, this include code
+    marked #ifdef WIN2.
+
+  8 Change makefile to optimize compile and link.
+
+    -- JohnSp

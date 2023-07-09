@@ -1,0 +1,252 @@
+//+------------------------------------------------------------------------
+//
+//  Filter and Bitmap Surface interfaces
+//
+//  Copyright (C) Microsoft Corporation, 1996-1998.
+//
+//  File:       ocmm.idl
+//
+//-------------------------------------------------------------------------
+
+import "oaidl.idl";
+import "oleidl.idl";
+
+#ifdef UNIX
+interface IViewFilter;
+interface IViewFilterSite;
+
+cpp_quote("// GetStatusBits Flags")
+cpp_quote("#define FILTER_STATUS_OPAQUE    (0x00000001)")
+cpp_quote("#define FILTER_STATUS_INVISIBLE (0x00000002)")
+cpp_quote("#define FILTER_STATUS_SURFACE   (0x00000004)")
+cpp_quote("#define FILTER_STATUS_3DSURFACE (0x00000008)")
+
+[
+    object,
+    uuid(3050f2f1-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique),
+	local
+]
+interface IViewFilter : IUnknown
+{
+    HRESULT SetSource([in] IViewFilter *pFilter);
+    HRESULT GetSource([out] IViewFilter **ppFilter);
+    HRESULT SetSite([in] IViewFilterSite *pSink);
+    HRESULT GetSite([out] IViewFilterSite **ppSink);
+    HRESULT SetPosition(LPCRECT prc);
+    HRESULT Draw([in] HDC hdc, [in] LPCRECT prcBounds);
+    HRESULT GetStatusBits([out] DWORD *pdwFlags);
+}
+
+[
+    object,
+    uuid(3050f372-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique),
+	local
+]
+interface IViewTransition : IViewFilter
+{
+    HRESULT Initialize([in] HDC, LPCRECT prc);
+    HRESULT Go([in] VARIANT vtimeDuration);
+}
+
+[
+    object,
+    uuid(3050f2f4-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique),
+	local
+]
+interface IViewFilterSite : IUnknown
+{
+    HRESULT GetDC([in] LPCRECT prc, [in] DWORD dwFlags, [out] HDC *phdc);
+    HRESULT ReleaseDC([in] HDC hdc);
+    HRESULT InvalidateRect([in] LPCRECT prc, [in] BOOL fErase);
+    HRESULT InvalidateRgn([in] HRGN hrgn, [in] BOOL fErase);
+    HRESULT OnStatusBitsChange([in] DWORD dwFlags);
+}
+
+[
+    object,
+    uuid(3050f373-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique),
+	local
+]
+interface IViewTransitionSite : IViewFilterSite
+{
+    HRESULT OnComplete();
+}
+
+#endif // UNIX
+
+cpp_quote("#define SURFACE_LOCK_EXCLUSIVE        0x01")
+cpp_quote("#define SURFACE_LOCK_ALLOW_DISCARD    0x02")
+cpp_quote("#define SURFACE_LOCK_WAIT             0x04")
+cpp_quote("")
+
+// BUGBUG: DEFINING NEW ERROR AND STATUS CODES. WHAT'S THE GENERAL PROCEDURE
+// FOR THIS? WHAT'S OUR FACILITY CODE? I'M MAKING THIS UP FOR NOW.
+// FACILITY CODE FOR SUFACE WILL BE 12 (NOT USED IN WINERROR)
+
+cpp_quote("#define E_SURFACE_NOSURFACE             0x8000C000L")
+cpp_quote("#define E_SURFACE_UNKNOWN_FORMAT        0x8000C001L")
+cpp_quote("#define E_SURFACE_NOTMYPOINTER          0x8000C002L")
+cpp_quote("#define E_SURFACE_DISCARDED             0x8000C003L")
+cpp_quote("#define E_SURFACE_NODC                  0x8000C004L")
+cpp_quote("#define E_SURFACE_NOTMYDC               0x8000C005L")
+cpp_quote("#define S_SURFACE_DISCARDED             0x0000C003L")        // Success code
+cpp_quote("")
+
+typedef GUID BFID;
+
+cpp_quote("#ifndef RGBQUAD_DEFINED")
+cpp_quote("#define RGBQUAD_DEFINED")
+typedef struct tagRGBQUAD RGBQUAD;
+cpp_quote("#endif")
+
+
+cpp_quote("EXTERN_C const GUID BFID_MONOCHROME;")
+cpp_quote("EXTERN_C const GUID BFID_RGB_4;")
+cpp_quote("EXTERN_C const GUID BFID_RGB_8;")
+cpp_quote("EXTERN_C const GUID BFID_RGB_555;")
+cpp_quote("EXTERN_C const GUID BFID_RGB_565;")
+cpp_quote("EXTERN_C const GUID BFID_RGB_24;")
+cpp_quote("EXTERN_C const GUID BFID_RGB_32;")
+cpp_quote("EXTERN_C const GUID BFID_RGBA_32;")
+cpp_quote("EXTERN_C const GUID BFID_GRAY_8;")
+cpp_quote("EXTERN_C const GUID BFID_GRAY_16;")
+cpp_quote("")
+
+cpp_quote("#define SID_SDirectDraw3 IID_IDirectDraw3")
+cpp_quote("")
+
+cpp_quote("#define COLOR_NO_TRANSPARENT 0xFFFFFFFF")
+cpp_quote("")
+
+cpp_quote("#define IMGDECODE_EVENT_PROGRESS 0x01")
+cpp_quote("#define IMGDECODE_EVENT_PALETTE 0x02")
+cpp_quote("#define IMGDECODE_EVENT_BEGINBITS 0x04")
+cpp_quote("#define IMGDECODE_EVENT_BITSCOMPLETE 0x08")
+cpp_quote("#define IMGDECODE_EVENT_USEDDRAW 0x10")
+cpp_quote("")
+
+cpp_quote("#define IMGDECODE_HINT_TOPDOWN 0x01")
+cpp_quote("#define IMGDECODE_HINT_BOTTOMUP 0x02")
+cpp_quote("#define IMGDECODE_HINT_FULLWIDTH 0x04")
+cpp_quote("")
+
+cpp_quote("#define MAPMIME_DEFAULT 0")
+cpp_quote("#define MAPMIME_CLSID 1")
+cpp_quote("#define MAPMIME_DISABLE 2")
+cpp_quote("#define MAPMIME_DEFAULT_ALWAYS 3")
+cpp_quote("")
+
+
+cpp_quote("#define BFID_INDEXED_RGB_8 BFID_RGB_8")
+cpp_quote("#define BFID_INDEXED_RGB_4 BFID_RGB_4")
+cpp_quote("#define BFID_INDEXED_RGB_1 BFID_MONOCHROME")
+cpp_quote("")
+
+cpp_quote("EXTERN_C const GUID CLSID_IImageDecodeFilter;")
+cpp_quote("")
+
+
+//
+// TIMER SERVICES
+//
+cpp_quote("EXTERN_C const GUID NAMEDTIMER_DRAW;")   // in guids.c
+cpp_quote("")
+
+interface ITimerService;
+interface ITimer;
+interface ITimerSink;
+
+[
+    object,
+    uuid(3050f35f-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique)
+]
+interface ITimerService : IUnknown
+{
+    HRESULT CreateTimer ( [in] ITimer *pReferenceTimer,
+                          [out] ITimer **ppNewTimer );
+    HRESULT GetNamedTimer ( [in] REFGUID rguidName, [out] ITimer **ppTimer );
+    HRESULT SetNamedTimerReference ( [in] REFGUID rguidName,
+                     [in] ITimer *pReferenceTimer );
+}
+
+[
+    object,
+    uuid(3050f360-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique)
+]
+interface ITimer : IUnknown
+{
+    HRESULT Advise( [in] VARIANT vtimeMin, [in] VARIANT vtimeMax, [in] VARIANT vtimeInterval,
+                       [in] DWORD dwFlags, [in] ITimerSink *pTimerSink, [out] DWORD *pdwCookie);
+    HRESULT Unadvise( [in] DWORD dwCookie );
+    HRESULT Freeze( [in] BOOL fFreeze );
+    HRESULT GetTime( [out] VARIANT *pvtime );
+}
+
+[
+    object,
+    uuid(3050f361-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique)
+]
+interface ITimerSink : IUnknown
+{
+    HRESULT OnTimer ( [in] VARIANT vtimeAdvise );
+}
+
+cpp_quote("#define SID_STimerService IID_ITimerService")
+cpp_quote("")
+
+interface IMapMIMEToCLSID;
+interface IImageDecodeFilter;
+interface IImageDecodeEventSink;
+
+[
+    object,
+    uuid( D9E89500-30FA-11d0-B724-00AA006C1A01 ),
+//    helpstring( "IMapMIMEToCLSID Interface" ),
+    pointer_default( unique )
+]
+interface IMapMIMEToCLSID : IUnknown
+{
+   HRESULT EnableDefaultMappings( BOOL bEnable );
+   HRESULT MapMIMEToCLSID( LPCOLESTR pszMIMEType, CLSID* pCLSID );
+   HRESULT SetMapping( LPCOLESTR pszMIMEType, DWORD dwMapMode,
+      REFCLSID clsid );
+};
+
+[
+    object,
+    uuid( A3CCEDF3-2DE2-11D0-86F4-00A0C913F750 ),
+//    helpstring( "IImageDecodeFilter Interface" ),
+    pointer_default( unique )
+]
+interface IImageDecodeFilter : IUnknown
+{
+   HRESULT Initialize( IImageDecodeEventSink* pEventSink );
+   HRESULT Process( IStream* pStream );
+   HRESULT Terminate( HRESULT hrStatus );
+};
+
+[
+    object,
+    uuid( BAA342A0-2DED-11d0-86F4-00A0C913F750 ),
+//    helpstring( "IImageDecodeEventSink Interface" ),
+    pointer_default( unique )
+]
+interface IImageDecodeEventSink : IUnknown
+{
+   HRESULT GetSurface( [in] LONG nWidth, [in] LONG nHeight, [in] REFGUID bfid,
+      [in] ULONG nPasses, [in] DWORD dwHints,
+      [out] IUnknown** ppSurface );
+   HRESULT OnBeginDecode( [out] DWORD* pdwEvents, [out] ULONG* pnFormats,
+      [out, size_is(,*pnFormats)] BFID** ppFormats );
+   HRESULT OnBitsComplete();
+   HRESULT OnDecodeComplete( [in] HRESULT hrStatus );
+   HRESULT OnPalette();
+   HRESULT OnProgress( [in] RECT* pBounds, [in] BOOL bComplete );
+};

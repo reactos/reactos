@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdinkan
+
+TARGETNAME=kbdinkan
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdinkan.c kbdinkan.rc
+
+NTTARGETFILE0=kbdinkan.h kbdinkan.rc kbdinkan.def

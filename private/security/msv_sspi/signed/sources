@@ -1,0 +1,29 @@
+!IF 0
+
+This project contains files that are not built by the NT Build Lab.
+This file is a template for all sources files within this project.
+
+!ENDIF
+
+TARGETNAME=
+TARGETTYPE=NOTARGET
+TARGETPATH=
+
+SOURCES=
+
+!if $(FREEBUILD)
+BDIR = retail
+!else
+BDIR = debug
+!endif
+
+BINPLACE_PLACEFILE=$(BASEDIR)\private\security\signed.txt
+
+!if "$(WIN64)" == "0"
+
+MISCFILES = \
+    $(TARGET_DIRECTORY)\$(BDIR)\msv1_0.dll \
+    $(TARGET_DIRECTORY)\$(BDIR)\msv1_0.pdb \
+    $(TARGET_DIRECTORY)\$(BDIR)\msv1_0.dbg
+
+!endif

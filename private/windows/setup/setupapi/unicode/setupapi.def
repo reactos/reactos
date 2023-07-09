@@ -1,0 +1,692 @@
+LIBRARY SETUPAPI
+
+EXPORTS
+
+;----- cfgmgr32 -----
+; hw tree traveral routines
+   CM_Locate_DevNodeA
+   CM_Locate_DevNodeW
+   CM_Locate_DevNode_ExA
+   CM_Locate_DevNode_ExW
+   CM_Get_Child
+   CM_Get_Child_Ex
+   CM_Get_Sibling
+   CM_Get_Sibling_Ex
+   CM_Get_Parent
+   CM_Get_Parent_Ex
+   CM_Get_Device_IDA
+   CM_Get_Device_IDW
+   CM_Get_Device_ID_ExA
+   CM_Get_Device_ID_ExW
+   CM_Get_Device_ID_Size
+   CM_Get_Device_ID_Size_Ex
+   CM_Enumerate_EnumeratorsA
+   CM_Enumerate_EnumeratorsW
+   CM_Enumerate_Enumerators_ExA
+   CM_Enumerate_Enumerators_ExW
+   CM_Get_Device_ID_ListA
+   CM_Get_Device_ID_ListW
+   CM_Get_Device_ID_List_ExA
+   CM_Get_Device_ID_List_ExW
+   CM_Get_Device_ID_List_SizeA
+   CM_Get_Device_ID_List_SizeW
+   CM_Get_Device_ID_List_Size_ExA
+   CM_Get_Device_ID_List_Size_ExW
+   CM_Get_Depth
+   CM_Get_Depth_Ex
+
+; registry property routines
+   CM_Get_DevNode_Registry_PropertyA
+   CM_Get_DevNode_Registry_PropertyW
+   CM_Get_DevNode_Registry_Property_ExA
+   CM_Get_DevNode_Registry_Property_ExW
+   CM_Set_DevNode_Registry_PropertyA
+   CM_Set_DevNode_Registry_PropertyW
+   CM_Set_DevNode_Registry_Property_ExA
+   CM_Set_DevNode_Registry_Property_ExW
+   CM_Get_Class_Registry_PropertyA
+   CM_Get_Class_Registry_PropertyW
+   CM_Set_Class_Registry_PropertyA
+   CM_Set_Class_Registry_PropertyW
+   CM_Open_DevNode_Key
+   CM_Open_DevNode_Key_Ex
+   CM_Delete_DevNode_Key
+   CM_Delete_DevNode_Key_Ex
+   CM_Open_Class_KeyA
+   CM_Open_Class_KeyW
+   CM_Open_Class_Key_ExA
+   CM_Open_Class_Key_ExW
+   CM_Enumerate_Classes
+   CM_Enumerate_Classes_Ex
+   CM_Get_Class_NameA
+   CM_Get_Class_NameW
+   CM_Get_Class_Name_ExA
+   CM_Get_Class_Name_ExW
+   CM_Get_Class_Key_NameA
+   CM_Get_Class_Key_NameW
+   CM_Get_Class_Key_Name_ExA
+   CM_Get_Class_Key_Name_ExW
+   CM_Delete_Class_Key
+   CM_Delete_Class_Key_Ex
+   CM_Get_Device_Interface_ListA
+   CM_Get_Device_Interface_ListW
+   CM_Get_Device_Interface_List_ExA
+   CM_Get_Device_Interface_List_ExW
+   CM_Get_Device_Interface_List_SizeA
+   CM_Get_Device_Interface_List_SizeW
+   CM_Get_Device_Interface_List_Size_ExA
+   CM_Get_Device_Interface_List_Size_ExW
+   CM_Register_Device_InterfaceA
+   CM_Register_Device_InterfaceW
+   CM_Register_Device_Interface_ExA
+   CM_Register_Device_Interface_ExW
+   CM_Unregister_Device_InterfaceA
+   CM_Unregister_Device_InterfaceW
+   CM_Unregister_Device_Interface_ExA
+   CM_Unregister_Device_Interface_ExW
+   CM_Get_Device_Interface_AliasA
+   CM_Get_Device_Interface_AliasW
+   CM_Get_Device_Interface_Alias_ExA
+   CM_Get_Device_Interface_Alias_ExW
+
+; routines that operate on devnodes/devinsts
+   CM_Add_IDA
+   CM_Add_IDW
+   CM_Add_ID_ExA
+   CM_Add_ID_ExW
+   CM_Create_DevNodeA
+   CM_Create_DevNodeW
+   CM_Create_DevNode_ExA
+   CM_Create_DevNode_ExW
+   CM_Disable_DevNode
+   CM_Disable_DevNode_Ex
+   CM_Enable_DevNode
+   CM_Enable_DevNode_Ex
+   CM_Get_DevNode_Status
+   CM_Get_DevNode_Status_Ex
+   CM_Set_DevNode_Problem
+   CM_Set_DevNode_Problem_Ex
+   CM_Move_DevNode
+   CM_Move_DevNode_Ex
+   CM_Reenumerate_DevNode
+   CM_Reenumerate_DevNode_Ex
+   CM_Request_Device_EjectA
+   CM_Request_Device_Eject_ExA
+   CM_Request_Device_EjectW
+   CM_Request_Device_Eject_ExW
+   CM_Setup_DevNode
+   CM_Setup_DevNode_Ex
+   CM_Remove_SubTree
+   CM_Remove_SubTree_Ex
+   CM_Uninstall_DevNode
+   CM_Uninstall_DevNode_Ex
+   CM_Query_And_Remove_SubTreeA
+   CM_Query_And_Remove_SubTree_ExA
+   CM_Query_And_Remove_SubTreeW
+   CM_Query_And_Remove_SubTree_ExW
+   CM_Query_Remove_SubTree
+   CM_Query_Remove_SubTree_Ex
+   CM_Register_Device_Driver
+   CM_Register_Device_Driver_Ex
+
+
+; logical configuration routines
+   CM_Add_Empty_Log_Conf
+   CM_Add_Empty_Log_Conf_Ex
+   CM_Free_Log_Conf
+   CM_Free_Log_Conf_Ex
+   CM_Get_First_Log_Conf
+   CM_Get_First_Log_Conf_Ex
+   CM_Get_Next_Log_Conf
+   CM_Get_Next_Log_Conf_Ex
+   CM_Free_Log_Conf_Handle
+   CM_Get_Log_Conf_Priority
+   CM_Get_Log_Conf_Priority_Ex
+
+
+; range routines
+   CM_Add_Range
+   CM_Create_Range_List
+   CM_Delete_Range
+   CM_Dup_Range_List
+   CM_Find_Range
+   CM_First_Range
+   CM_Free_Range_List
+   CM_Intersect_Range_List
+   CM_Invert_Range_List
+   CM_Merge_Range_List
+   CM_Next_Range
+   CM_Test_Range_Available
+
+
+; hardware profile routines
+   CM_Is_Dock_Station_Present
+   CM_Is_Dock_Station_Present_Ex
+   CM_Request_Eject_PC
+   CM_Request_Eject_PC_Ex
+   CM_Get_HW_Prof_FlagsA
+   CM_Get_HW_Prof_FlagsW
+   CM_Get_HW_Prof_Flags_ExA
+   CM_Get_HW_Prof_Flags_ExW
+   CM_Set_HW_Prof_FlagsA
+   CM_Set_HW_Prof_FlagsW
+   CM_Set_HW_Prof_Flags_ExA
+   CM_Set_HW_Prof_Flags_ExW
+   CM_Get_Hardware_Profile_InfoA
+   CM_Get_Hardware_Profile_InfoW
+   CM_Get_Hardware_Profile_Info_ExA
+   CM_Get_Hardware_Profile_Info_ExW
+   CM_Set_HW_Prof                       ; NOT IMPLEMENTED
+   CM_Set_HW_Prof_Ex                    ; NOT IMPLEMENTED
+   CM_Is_Dock_Station_Present           ; NOT IMPLEMENTED
+   CM_Request_Eject_PC                  ; NOT IMPLEMENTED
+
+
+; resource routines
+   CM_Add_Res_Des
+   CM_Add_Res_Des_Ex
+   CM_Free_Res_Des
+   CM_Free_Res_Des_Ex
+   CM_Get_Next_Res_Des
+   CM_Get_Next_Res_Des_Ex
+   CM_Get_Res_Des_Data
+   CM_Get_Res_Des_Data_Ex
+   CM_Get_Res_Des_Data_Size
+   CM_Get_Res_Des_Data_Size_Ex
+   CM_Modify_Res_Des
+   CM_Modify_Res_Des_Ex
+   CM_Detect_Resource_Conflict          ; Superceded
+   CM_Detect_Resource_Conflict_Ex       ; Superceded
+   CM_Free_Res_Des_Handle
+
+; resource conflict routines
+   CM_Query_Resource_Conflict_List
+   CM_Free_Resource_Conflict_Handle
+   CM_Get_Resource_Conflict_Count
+   CM_Get_Resource_Conflict_DetailsA
+   CM_Get_Resource_Conflict_DetailsW
+
+; miscellaneous routines
+   CM_Get_Version
+   CM_Get_Version_Ex
+   CM_Connect_MachineA
+   CM_Connect_MachineW
+   CM_Disconnect_Machine
+   CM_Get_Global_State
+   CM_Get_Global_State_Ex
+   CM_Query_Arbitrator_Free_Data
+   CM_Query_Arbitrator_Free_Data_Ex
+   CM_Query_Arbitrator_Free_Size
+   CM_Query_Arbitrator_Free_Size_Ex
+   CM_Run_Detection                     ; NOT IMPLEMENTED
+   CM_Run_Detection_Ex                  ; NOT IMPLEMENTED
+
+
+; private routines
+   CMP_Report_LogOn
+   CMP_Init_Detection
+   CMP_RegisterNotification
+   CMP_UnregisterNotification
+   CMP_WaitServicesAvailable
+   CMP_WaitNoPendingInstallEvents
+
+;
+;----- setupapi -----
+;
+
+;
+; INF Open/close and version APIs
+;
+SetupGetInfInformationA
+SetupGetInfInformationW
+SetupQueryInfFileInformationA
+SetupQueryInfFileInformationW
+SetupQueryInfOriginalFileInformationA
+SetupQueryInfOriginalFileInformationW
+SetupQueryInfVersionInformationA
+SetupQueryInfVersionInformationW
+SetupGetInfFileListA
+SetupGetInfFileListW
+SetupOpenInfFileA
+SetupOpenInfFileW
+SetupOpenAppendInfFileA
+SetupOpenAppendInfFileW
+SetupCloseInfFile
+SetupOpenMasterInf
+
+;
+; INF line APIs
+;
+SetupFindFirstLineA
+SetupFindFirstLineW
+SetupFindNextLine
+SetupFindNextMatchLineA
+SetupFindNextMatchLineW
+SetupGetLineByIndexA
+SetupGetLineByIndexW
+SetupGetLineCountA
+SetupGetLineCountW
+SetupGetLineTextA
+SetupGetLineTextW
+
+;
+; INF value APIs
+;
+SetupGetFieldCount
+SetupGetStringFieldA
+SetupGetStringFieldW
+SetupGetIntField
+SetupGetMultiSzFieldA
+SetupGetMultiSzFieldW
+SetupGetBinaryField
+
+;
+; INF filelist APIs
+;
+SetupGetSourceFileLocationA
+SetupGetSourceFileLocationW
+SetupGetSourceFileSizeA
+SetupGetSourceFileSizeW
+SetupGetTargetPathA
+SetupGetTargetPathW
+
+;
+; Source media information APIs
+;
+SetupGetSourceInfoA
+SetupGetSourceInfoW
+
+;
+; Low-level copy functions
+;
+SetupGetFileCompressionInfoA
+SetupGetFileCompressionInfoW
+SetupDecompressOrCopyFileA
+SetupDecompressOrCopyFileW
+SetupInstallFileA
+SetupInstallFileW
+SetupInstallFileExA
+SetupInstallFileExW
+SetupCopyOEMInfA
+SetupCopyOEMInfW
+
+;
+; Disk prompting functions
+;
+SetupPromptForDiskA
+SetupPromptForDiskW
+
+;
+; Source list control functions
+;
+SetupSetSourceListA
+SetupSetSourceListW
+SetupCancelTemporarySourceList
+SetupAddToSourceListA
+SetupAddToSourceListW
+SetupRemoveFromSourceListA
+SetupRemoveFromSourceListW
+SetupQuerySourceListA
+SetupQuerySourceListW
+SetupFreeSourceListA
+SetupFreeSourceListW
+
+;
+; File operation error functions
+;
+SetupCopyErrorA
+SetupCopyErrorW
+SetupRenameErrorA
+SetupRenameErrorW
+SetupDeleteErrorA
+SetupDeleteErrorW
+SetupBackupErrorA
+SetupBackupErrorW
+
+;
+; File queue functions
+;
+SetupOpenFileQueue
+SetupCloseFileQueue
+SetupSetFileQueueAlternatePlatformA
+SetupSetFileQueueAlternatePlatformW
+SetupSetPlatformPathOverrideA
+SetupSetPlatformPathOverrideW
+SetupQueueCopyA
+SetupQueueCopyW
+SetupQueueCopyIndirectA
+SetupQueueCopyIndirectW
+SetupQueueDeleteA
+SetupQueueDeleteW
+SetupQueueRenameA
+SetupQueueRenameW
+SetupQueueCopySectionA
+SetupQueueCopySectionW
+SetupQueueDeleteSectionA
+SetupQueueDeleteSectionW
+SetupQueueRenameSectionA
+SetupQueueRenameSectionW
+SetupQueueDefaultCopyA
+SetupQueueDefaultCopyW
+SetupCommitFileQueue
+SetupCommitFileQueueA
+SetupCommitFileQueueW
+SetupInitDefaultQueueCallback
+SetupInitDefaultQueueCallbackEx
+SetupTermDefaultQueueCallback
+SetupDefaultQueueCallback
+SetupDefaultQueueCallbackA
+SetupDefaultQueueCallbackW
+SetupScanFileQueue
+SetupScanFileQueueA
+SetupScanFileQueueW
+SetupSetDirectoryIdA
+SetupSetDirectoryIdW
+SetupSetDirectoryIdExA
+SetupSetDirectoryIdExW
+
+;
+; Disk space list functions
+;
+SetupCreateDiskSpaceListA
+SetupCreateDiskSpaceListW
+SetupDuplicateDiskSpaceListA
+SetupDuplicateDiskSpaceListW
+SetupDestroyDiskSpaceList
+SetupQueryDrivesInDiskSpaceListA
+SetupQueryDrivesInDiskSpaceListW
+SetupQuerySpaceRequiredOnDriveA
+SetupQuerySpaceRequiredOnDriveW
+SetupAdjustDiskSpaceListA
+SetupAdjustDiskSpaceListW
+SetupAddToDiskSpaceListA
+SetupAddToDiskSpaceListW
+SetupAddSectionToDiskSpaceListA
+SetupAddSectionToDiskSpaceListW
+SetupAddInstallSectionToDiskSpaceListA
+SetupAddInstallSectionToDiskSpaceListW
+SetupRemoveFromDiskSpaceListA
+SetupRemoveFromDiskSpaceListW
+SetupRemoveSectionFromDiskSpaceListA
+SetupRemoveSectionFromDiskSpaceListW
+SetupRemoveInstallSectionFromDiskSpaceListA
+SetupRemoveInstallSectionFromDiskSpaceListW
+
+;
+; High-level INF-based installation functions
+;
+SetupInstallFromInfSectionA
+SetupInstallFromInfSectionW
+SetupInstallFilesFromInfSectionA
+SetupInstallFilesFromInfSectionW
+SetupInstallServicesFromInfSectionA
+SetupInstallServicesFromInfSectionW
+SetupInstallServicesFromInfSectionExA
+SetupInstallServicesFromInfSectionExW
+
+;
+; Even higher-level INF install function (to support
+; right-click INF installs in the shell).
+;
+InstallHinfSectionA
+InstallHinfSectionW
+InstallHinfSection = InstallHinfSectionA
+
+;
+; Property sheet extension export (e.g., for resource
+; seletion property page).
+;
+ExtensionPropSheetPageProc
+
+;
+; File logging functions
+;
+SetupInitializeFileLogA
+SetupInitializeFileLogW
+SetupTerminateFileLog
+SetupLogFileA
+SetupLogFileW
+SetupRemoveFileLogEntryA
+SetupRemoveFileLogEntryW
+SetupQueryFileLogA
+SetupQueryFileLogW
+
+;
+; File backup functions
+;
+SetupGetBackupInformationA
+SetupGetBackupInformationW
+
+;
+; Miscellaneous stuff
+;
+SetupPromptReboot
+SetupIterateCabinetA
+SetupIterateCabinetW
+
+;
+; Device Installer functions
+;
+SetupDiAskForOEMDisk
+SetupDiBuildClassInfoList
+SetupDiBuildClassInfoListExA
+SetupDiBuildClassInfoListExW
+SetupDiBuildDriverInfoList
+SetupDiCallClassInstaller
+SetupDiCancelDriverInfoSearch
+SetupDiChangeState
+SetupDiClassGuidsFromNameA
+SetupDiClassGuidsFromNameExA
+SetupDiClassGuidsFromNameExW
+SetupDiClassGuidsFromNameW
+SetupDiClassNameFromGuidA
+SetupDiClassNameFromGuidExA
+SetupDiClassNameFromGuidExW
+SetupDiClassNameFromGuidW
+SetupDiCreateDevRegKeyA
+SetupDiCreateDevRegKeyW
+SetupDiCreateDeviceInfoA
+SetupDiCreateDeviceInfoList
+SetupDiCreateDeviceInfoListExA
+SetupDiCreateDeviceInfoListExW
+SetupDiCreateDeviceInfoW
+SetupDiCreateDeviceInterfaceA
+SetupDiCreateDeviceInterfaceRegKeyA
+SetupDiCreateDeviceInterfaceRegKeyW
+SetupDiCreateDeviceInterfaceW
+SetupDiDeleteDevRegKey
+SetupDiDeleteDeviceInfo
+SetupDiDeleteDeviceInterfaceData
+SetupDiDeleteDeviceInterfaceRegKey
+SetupDiDestroyClassImageList
+SetupDiDestroyDeviceInfoList
+SetupDiDestroyDriverInfoList
+SetupDiDrawMiniIcon
+SetupDiEnumDeviceInfo
+SetupDiEnumDeviceInterfaces
+SetupDiEnumDriverInfoA
+SetupDiEnumDriverInfoW
+SetupDiGetActualSectionToInstallA
+SetupDiGetActualSectionToInstallW
+SetupDiGetClassBitmapIndex
+SetupDiGetClassDescriptionA
+SetupDiGetClassDescriptionExA
+SetupDiGetClassDescriptionExW
+SetupDiGetClassDescriptionW
+SetupDiGetClassDevPropertySheetsA
+SetupDiGetClassDevPropertySheetsW
+SetupDiGetClassDevsA
+SetupDiGetClassDevsExA
+SetupDiGetClassDevsExW
+SetupDiGetClassDevsW
+SetupDiGetClassImageIndex
+SetupDiGetClassImageList
+SetupDiGetClassImageListExA
+SetupDiGetClassImageListExW
+SetupDiGetClassInstallParamsA
+SetupDiGetClassInstallParamsW
+SetupDiGetDeviceInfoListClass
+SetupDiGetDeviceInfoListDetailA
+SetupDiGetDeviceInfoListDetailW
+SetupDiGetDeviceInstallParamsA
+SetupDiGetDeviceInstallParamsW
+SetupDiGetDeviceInstanceIdA
+SetupDiGetDeviceInstanceIdW
+SetupDiGetDeviceInterfaceAlias
+SetupDiGetDeviceInterfaceDetailA
+SetupDiGetDeviceInterfaceDetailW
+SetupDiGetDeviceRegistryPropertyA
+SetupDiGetDeviceRegistryPropertyW
+SetupDiGetDriverInfoDetailA
+SetupDiGetDriverInfoDetailW
+SetupDiGetDriverInstallParamsA
+SetupDiGetDriverInstallParamsW
+SetupDiGetHwProfileFriendlyNameA
+SetupDiGetHwProfileFriendlyNameExA
+SetupDiGetHwProfileFriendlyNameExW
+SetupDiGetHwProfileFriendlyNameW
+SetupDiGetHwProfileList
+SetupDiGetHwProfileListExA
+SetupDiGetHwProfileListExW
+SetupDiGetINFClassA
+SetupDiGetINFClassW
+SetupDiGetSelectedDevice
+SetupDiGetSelectedDriverA
+SetupDiGetSelectedDriverW
+SetupDiGetWizardPage
+SetupDiInstallClassA
+SetupDiInstallClassExA
+SetupDiInstallClassExW
+SetupDiInstallClassW
+SetupDiInstallDevice
+SetupDiInstallDeviceInterfaces
+SetupDiInstallDriverFiles
+SetupDiLoadClassIcon
+SetupDiMoveDuplicateDevice
+SetupDiOpenClassRegKey
+SetupDiOpenClassRegKeyExA
+SetupDiOpenClassRegKeyExW
+SetupDiOpenDevRegKey
+SetupDiOpenDeviceInfoA
+SetupDiOpenDeviceInfoW
+SetupDiOpenDeviceInterfaceA
+SetupDiOpenDeviceInterfaceRegKey
+SetupDiOpenDeviceInterfaceW
+SetupDiRegisterCoDeviceInstallers
+SetupDiRegisterDeviceInfo
+SetupDiRemoveDevice
+SetupDiRemoveDeviceInterface
+SetupDiSelectBestCompatDrv
+SetupDiSelectDevice
+SetupDiSelectOEMDrv
+SetupDiSetClassInstallParamsA
+SetupDiSetClassInstallParamsW
+SetupDiSetDeviceInstallParamsA
+SetupDiSetDeviceInstallParamsW
+SetupDiSetDeviceRegistryPropertyA
+SetupDiSetDeviceRegistryPropertyW
+SetupDiSetDriverInstallParamsA
+SetupDiSetDriverInstallParamsW
+SetupDiSetSelectedDevice
+SetupDiSetSelectedDriverA
+SetupDiSetSelectedDriverW
+SetupDiUnremoveDevice
+
+;
+; Message Log APIs
+;
+SetupOpenLog
+SetupLogErrorA
+SetupLogErrorW
+SetupCloseLog
+
+
+;
+; Private stuff (see \nt\private\inc\spapip.h)
+;
+AcquireSCMLock
+AddMiniIconToList
+AddTagToGroupOrderListEntry
+AppendStringToMultiSz
+AssertFail
+CaptureAndConvertAnsiArg
+CaptureStringArg
+CenterWindowRelativeToParent
+ConcatenatePaths
+DelayedMove
+DelimStringToMultiSz
+DestroyTextFileReadBuffer
+DoInstallActionWithParams
+DoesUserHavePrivilege
+DuplicateString
+EnablePrivilege
+FileExists
+FreeStringArray
+GetCurrentDriverSigningPolicy
+GetSetFileTimestamp
+GetVersionInfoFromImage
+HandleFailedVerification
+InfIsFromOemLocation
+InstallCatalog
+InstallStop
+InstallStopEx
+IsUserAdmin
+LookUpStringInTable
+MemoryInitialize
+MultiByteToUnicode
+MultiSzFromSearchControl
+MyFree
+MyGetFileTitle
+MyMalloc
+MyRealloc
+OpenAndMapFileForRead
+OutOfMemory
+QueryMultiSzValueToArray
+QueryRegistryValue
+ReadAsciiOrUnicodeTextFile
+RegistryDelnode
+RetreiveFileSecurity
+RetrieveServiceConfig
+SearchForInfFile
+SetArrayToMultiSzValue
+SetupGetInfSections
+ShouldDeviceBeExcluded
+StampFileSecurity
+StringTableAddString
+StringTableAddStringEx
+StringTableDestroy
+StringTableDuplicate
+StringTableEnum
+StringTableGetExtraData
+StringTableInitialize
+StringTableInitializeEx
+StringTableLookUpString
+StringTableLookUpStringEx
+StringTableSetExtraData
+StringTableStringFromId
+StringTableStringFromIdEx
+StringTableTrim
+TakeOwnershipOfFile
+UnicodeToMultiByte
+UnmapAndCloseFile
+VerifyCatalogFile
+VerifyFile
+pSetupAccessRunOnceNodeList
+pSetupDestroyRunOnceNodeList
+pSetupDiGetDeviceInfoContext
+pSetupDiSetDeviceInfoContext
+pSetupDirectoryIdToPath
+pSetupGetField
+pSetupGetOsLoaderDriveAndPath
+pSetupGetVersionDatum
+pSetupGuidFromString
+pSetupIsGuidNull
+pSetupMakeSurePathExists
+pSetupSetSystemSourcePath
+pSetupStringFromGuid
+pSetupSetGlobalFlags
+pSetupGetGlobalFlags
+pSetupVerifyQueuedCatalogs
+pSetupSetQueueFlags
+pSetupGetQueueFlags
+

@@ -1,0 +1,25 @@
+NAME            Sol
+STUB            'WINSTUB.EXE'
+EXETYPE         WINDOWS
+
+CODE            MOVEABLE DISCARDABLE LOADONCALL PURE
+DATA            MOVEABLE MULTIPLE
+HEAPSIZE        4096
+STACKSIZE       4096
+
+SEGMENTS
+    sol_TEXT    PRELOAD
+    UTIL_TEXT   MOVEABLE
+    GAME_TEXT   MOVEABLE
+    DEF_TEXT    MOVEABLE
+    KLOND_TEXT  MOVEABLE
+
+EXPORTS
+    SolWndProc    @1
+    About         @2
+    BackDlgProc   @3
+    BackPushProc  @4
+    TimerProc     @5
+	 StatWndProc	@6
+	 OptionsDlgProc @7
+	 DdaProc			@8

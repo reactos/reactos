@@ -1,0 +1,44 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css">
+<TITLE>DNS</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="popups.js"></SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("ntwrk_bg.gif");
+        background-repeat:no-repeat;
+        background-position:133 46;
+    }
+	.defdiv {background-color:ffffff; visibility:hidden; position:absolute; top:1px; border:1px solid black;}
+	.defspan {font-size:8pt; border:1px solid #cccccc; padding:10px}
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" id="body">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">DNS</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Use the Configure New Server wizard to create names databases &#151; called zones &#151; on the server. These databases map DNS host names to corresponding <A HREF="javascript:nothing()" onclick="popup(1)">IP addresses</A> and can be published in Active Directory. After you run the wizard, configure your DNS server properties and populate the zones you created.
+            <P ID="para3"><A HREF="javascript:exec('dnsmgmt.msc')"><IMG SRC="mmc.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Manage</A> DNS.
+            <P ID="para2"><B>Note</B>
+            <BR>To get started, click your server name in the console tree.
+			<P ID="para4"><A HREF="javascript:help('DNSconcepts.chm::/sag_DNStopnode.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about DNS.</P>
+            <BR>&nbsp;
+        </TD>
+    </TR>
+</TABLE>
+
+<!--definition for IP addresses-->
+<DIV class="defdiv" ID="popup1">
+    <span class="defspan" onblur="popOff(1)" ID="def1"><b>IP Addresses</b>
+	<br>Used to identify a node on a network and to specify routing information. Each node on the network must be assigned a unique IP address, which is made up of the network ID, plus a unique host ID assigned by the network administrator. This address is typically represented in dotted-decimal notation, with the decimal value of each octet separated by a period (for example, 138.57.7.27).
+    </span>            
+</DIV>
+<div id="shadow" style="background:url(shadow.gif); filter:alpha(opacity=50); height:1px; width:1px; position:absolute; top:1px; visibility:hidden"></div>
+</BODY>
+</HTML>

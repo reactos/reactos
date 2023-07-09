@@ -1,0 +1,38 @@
+#ifndef _BGS_PDL_
+#define _BGS_PDL_ 1
+
+#include "element.pdl"
+
+file bgsound.pdl
+
+import element.pdl
+
+interface IHTMLBGsound guid:3050f369-98b5-11cf-bb82-00aa00bdce0b
+    refprop CBGsound:src
+    refprop CBGsound:loop
+    refprop CBGsound:volume
+    refprop CBGsound:balance
+
+tearoff CBGsound interface:IHTMLBGsound
+
+class CBGsound name:HTMLBGsound \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            primaryinterface:IHTMLBGsound \
+            guid:3050f370-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f53c-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLBGsound
+
+    property src        atype:BSTR      dispid:DISPID_BGSOUND+1		type:url	\
+        caa get set displaybind     maxstrlen:pdlUrlLen
+    property loop       atype:VARIANT   dispid:DISPID_BGSOUND+2		type:long  enum:htmlLoop \
+        caa get set displaybind     default:1   maxstrlen:pdlLength
+    property volume     atype:VARIANT   dispid:DISPID_BGSOUND+3	    type:long  \
+        caa get set displaybind     default:1       min:-10000  max:0   maxstrlen:pdlLength
+    property balance    atype:VARIANT   dispid:DISPID_BGSOUND+4	    type:long  \
+        caa get set displaybind     default:100000  min:-10000  max:10000   maxstrlen:pdlLength
+
+#endif _BGS_PDL_

@@ -1,0 +1,16 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1996 - 1999
+//
+//  File:       rshx32.src
+//
+//--------------------------------------------------------------------------
+
+LIBRARY         RSHX32
+EXPORTS
+    DllGetClassObject   PRIVATE
+    DllCanUnloadNow     PRIVATE
+    DllRegisterServer   PRIVATE
+    DllUnregisterServer PRIVATE

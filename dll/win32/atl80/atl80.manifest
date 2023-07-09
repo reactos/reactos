@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity type="win32" name="Microsoft.VC80.ATL" version="8.0.50727.4053" processorArchitecture="" publicKeyToken="1fc8b3b9a1e18e3b"/>
-  <file name="atl80.dll"/>
-</assembly>

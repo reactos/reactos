@@ -1,0 +1,41 @@
+CC  = cl -c -W2 -AS -G2sw -Zip -Oxas $(DEF)
+ASM = masm -Mx -Zi
+LINK= link /CO/NOE/NOD/LI/MAP/AL:16/nopackc
+DEF =-DDEBUG
+RC  = rc
+
+NAME= ddtest
+EXENAME=ddtest.exe
+
+OBJ  = ddtest.obj dib.obj
+LIBS = libw slibcew ..\drawdib commdlg mmsystem compman
+
+.c.obj:
+	$(CC) $*.c
+
+.asm.obj:
+        $(ASM) $*;
+
+.rc.res:
+        $(RC) -r $*.rc
+
+goal: $(EXENAME)
+
+$(EXENAME): $(OBJ) $(NAME).res $(NAME).def makefile ..\drawdib.lib
+        $(LINK) @<<
+$(OBJ),
+$(EXENAME),
+$(NAME),
+$(LIBS),
+$(NAME).def
+<<
+        -cvpack -p $(EXENAME)
+        -mapsym $(NAME).map
+        $(RC) $(NAME).res $(EXENAME)
+
+clean:
+        del $(EXENAME)
+        del *.res
+        del *.obj
+        del *.map
+        del *.sym

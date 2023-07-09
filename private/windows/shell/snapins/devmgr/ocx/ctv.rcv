@@ -1,0 +1,24 @@
+/*
+*****************************************************************************
+**
+** (C) COPYRIGHT MICROSOFT CORP., 1997-
+**
+** Name:	ctv.rcv
+**
+** Created:	Wiliam Hsieh(williamh)
+**
+**
+** Version information resource file.
+**
+******************************************************************************
+*/
+#include <ntverp.h>
+
+#define VER_FILETYPE		    VFT_DLL
+#define VER_FILESUBTYPE 	    VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "TreeView OCX"
+#define VER_INTERNALNAME_STR	    "dmocx"
+#define VER_LEGALCOPYRIGHT_YEARS    "1997"
+#define VER_ORIGINALFILENAME_STR    "dmocx.dll"
+
+#include <common.ver>

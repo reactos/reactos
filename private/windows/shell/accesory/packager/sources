@@ -1,0 +1,58 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=accesory
+MINORCOMP=packager
+
+TARGETNAME=packgr32
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=.;..\..\..\inc
+
+C_DEFINES=-DWIN32 -DDBG -DWINNT
+
+SOURCES=cmdlink.c  \
+        dlgprocs.c \
+        embed.c    \
+        filedlgs.c \
+        globals.c  \
+        icon.c     \
+        packager.c \
+        pane.c     \
+        picture.c  \
+        register.c \
+        server.c   \
+        stream.c   \
+        virtable.c \
+        packager.rc
+
+USE_CRTDLL=1
+
+UMTYPE=windows
+UMAPPL=packager
+UMENTRY=winmain
+UMLIBS=obj\*\packgr32.lib                         \
+        $(BASEDIR)\public\sdk\lib\*\comdlg32.lib  \
+        $(BASEDIR)\public\sdk\lib\*\shell32.lib   \
+        $(BASEDIR)\public\sdk\lib\*\shell32p.lib  \
+        $(BASEDIR)\public\sdk\lib\*\olecli32.lib  \
+        $(BASEDIR)\public\sdk\lib\*\olesvr32.lib  \
+        $(BASEDIR)\public\sdk\lib\*\advapi32.lib  \
+        $(BASEDIR)\public\sdk\lib\*\htmlhelp.lib  \
+        obj\*\packager.res

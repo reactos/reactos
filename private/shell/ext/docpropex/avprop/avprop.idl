@@ -1,0 +1,38 @@
+// avprop.idl : IDL source for avprop.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (avprop.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+	[
+	
+		uuid(E14BB48E-3183-11D2-BE3C-3078302C2030),
+	
+		helpstring("IDummyInterface Interface"),
+		pointer_default(unique)
+	]
+	interface IDummyInterface : IUnknown
+	{
+	};
+[
+	uuid(E14BB47F-3183-11D2-BE3C-3078302C2030),
+	version(1.0),
+	helpstring("avprop 1.0 Type Library")
+]
+library AVPROPLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+		uuid(E14BB48F-3183-11D2-BE3C-3078302C2030),
+		helpstring("AVFilePropServer Class")
+	]
+	coclass AVFilePropServer
+	{
+		[default] interface IDummyInterface;
+	};
+};

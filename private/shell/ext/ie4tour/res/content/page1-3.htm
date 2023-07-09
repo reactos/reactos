@@ -1,0 +1,134 @@
+<HTML>
+<HEAD>
+	<TITLE>Browse Better</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" 
+      HREF="tour.css" TITLE="Test">
+<SCRIPT LANGUAGE="Javascript">
+CurBull = 0;
+
+function doHead(){
+	if(headline.filters.item(0).status != 2){
+		headline.filters.item(0).Apply();
+		headline.style.visibility="visible";
+		headline.filters.item(0).Play();
+	}
+}
+
+function doBody(){
+	if(bodytext.filters.item(0).status != 2){
+		bodytext.filters.item(0).Apply();
+		bodytext.style.visibility="visible";
+		bodytext.filters.item(0).Play();
+	}
+}
+
+function doArt(){
+	if(art.filters.item(0).status != 2){
+		art.filters.item(0).Apply();
+		art.style.visibility="visible";
+		art.filters.item(0).Play();
+	}
+}
+
+function doSwap(num, img){
+	if (num == CurBull){
+	
+	} else {
+		if (CurBull == 1){
+			list1.style.color = "#0099FF";
+			B1.style.display = "none";
+		}
+		else if (CurBull == 2){
+			list2.style.color = "#0099FF";
+			B2.style.display = "none";
+		}
+		else if (CurBull == 0){
+			textarea.style.display = "block";
+		}
+		
+		if (num == 1) {
+			list1.style.color = "#000000";
+			B1.style.display = "block";
+		}
+		else if (num == 2){
+			list2.style.color = "#000000";
+			B2.style.display = "block";
+		}
+
+		document.images("GIF1").setAttribute("src", img);
+		CurBull = num;
+		doRule(textarea);
+	}
+
+}
+
+function doRule(src){
+	line.style.top=(src.offsetHeight / 2) + src.offsetTop + src.offsetParent.offsetTop;
+}
+</SCRIPT>
+
+
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" LEFTMARGIN=0 RIGHTMARGIN=0 TOPMARGIN=0 BOTTOMMARGIN=0 onLoad="doHead();">
+
+<!--tokens for www.microsoft.com site maintenance -->
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+
+<DIV ID="headline" CLASS="head2" STYLE="filter: revealTrans(Duration=0.8, Transition=6)" onFilterChange="doBody();">
+Browse Better
+</DIV>
+
+<DIV ID="art" CLASS="PageArt" STYLE="filter: revealTrans(Duration=0.8, Transition=1)">
+<IMG ID="GIF1" SRC="res://ie4tour.dll/2/bdefault.bmp" BORDER=0 ALT="" ALIGN="LEFT">
+</DIV>
+
+<DIV ID="bodytext" CLASS="body" STYLE="filter: revealTrans(Duration=0.8, Transition=12)" onFilterChange="doArt();">
+Improvements to Search and History make finding Web sites the first time (and ever after!) easier. To open or close the Search or History bar, click its button on the toolbar. 
+<br><br>
+Click a feature to learn more about it.
+<BR><BR>
+<SPAN ID="list1" CLASS="listitem" onClick="doSwap(1, 'res://ie4tour.dll/2/search.bmp')">
+Search</SPAN><BR>
+<SPAN ID="list2" CLASS="listitem" onClick="doSwap(2, 'res://ie4tour.dll/2/history.bmp')">
+History</SPAN>
+<BR><BR>
+
+<DIV ID="textarea" CLASS="bubble">
+<table cellspacing=0 cellpadding=0>
+<tr>
+    <td style="height: 100%; border:solid 1 #FF6633; border-right:none;" ROWSPAN=3>&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="line-height: 10px">&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="height: 100%; border:solid 1 #FF6633; border-left:none;" ROWSPAN=3>&nbsp</td>
+</tr>
+<tr>
+    <td>
+<SPAN ID="B1" CLASS="CalloutText">
+The Search bar lets you choose your favorite search engine and then displays results right there. These links stay in view as you view the Web sites in the right side of the browser window. 
+</SPAN>
+
+<SPAN ID="B2" CLASS="CalloutText">
+The new History bar organizes the Web pages you have previously visited by date and makes finding a page you want to return to much easier. The links stay in the bar while you view the contents in the right side of the window. 
+</SPAN>
+</td>
+</tr>
+<tr>
+    <td style="line-height: 10px">&nbsp</td>
+</tr>
+</table>
+</DIV>
+</DIV>
+
+<DIV ID="line" CLASS="rule">
+</DIV>
+
+<DIV CLASS="CalloutArt">
+<IMG SRC="res://ie4tour.dll/2/history.bmp" WIDTH=160 HEIGHT=188 BORDER=0 ALT="">
+<IMG SRC="res://ie4tour.dll/2/search.bmp" WIDTH=160 HEIGHT=188 BORDER=0 ALT="">
+</DIV>
+</BODY>
+</HTML>

@@ -1,0 +1,9 @@
+MIPS_OPTIONS=-nodwalign
+GPSIZE=32
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+MIPS_SOURCES=..\mips\kdtrap.c  \
+             ..\mips\kdreboot.c \
+             ..\mips\kdcpuapi.c \
+             ..\mips\kdcmsup.c

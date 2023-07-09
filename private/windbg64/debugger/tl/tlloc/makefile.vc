@@ -1,0 +1,185 @@
+#
+# Set up debug and codeview defines to standard defaults.
+#
+
+!if "$(DEBUG)" == ""
+DEBUG = 1
+!endif
+
+!if "$(CODEVIEW)" == ""
+!if $(DEBUG)
+CODEVIEW = 1
+!else
+CODEVIEW = 0
+!endif
+!endif
+
+!if "$(ILINK)" == ""
+!if $(DEBUG)
+ILINK = 1
+!else
+ILINK = 0
+!endif
+!endif
+
+
+!if "$(CPU)" == ""
+!if "$(PROCESSOR_ARCHITECTURE)" == "MIPS"
+CPU = mips
+!elseif "$(PROCESSOR_ARCHITECTURE)" == "x86"
+CPU = i386
+!elseif "$(PROCESSOR_ARCHITECTURE)" == "ALPHA"
+CPU = alpha
+!endif
+!endif
+
+#
+# Debug vs Release things
+#
+!if $(DEBUG)
+dbg = -DDBG=1 -DDEVL=1 -DBETA=1
+opt = -Od -Zi -Fd$O/tl.pdb
+lopt = -opt:noref
+d = d
+!else
+dbg = -DDBG=0 -DDEVL=1 -DBETA=0
+opt = -O2 -Gy -Zi -Fd$O/tl.pdb
+lopt = -opt:ref
+d =
+!endif
+
+!if $(CODEVIEW)
+lfl_dbg = -debug
+!else
+lfl_dbg =
+!endif
+
+!if $(ILINK)
+lfl_dbg = $(lfl_dbg) -incremental:yes
+!else
+lfl_dbg = $(lfl_dbg) -incremental:no
+!endif
+#
+# verbose or not
+#
+!if "$(verbose)" == ""
+verbose_c = -nologo
+!endif
+
+#
+# Set up some shortcuts
+#
+CC = cl
+RC = rc
+LINKER = link
+c = -c -Gt0 -Zel -Zp8 -W3 -MD $(opt)
+P = $(PROCESSOR_ARCHITECTURE)
+L = $(LANGAPI)
+OBJDIR = $$obj$d
+O = $(OBJDIR)\$P
+I = -I. -I..\include -I$L\debugger\osdebug4 -I..\..\osdebug\include -I..\..\include -I$L\include -I$L\debugger
+
+
+!IF "$(CPU)" == "MIPS"
+XFL =
+N=1
+!ELSEIF "$(CPU)" == "ALPHA"
+XFL = -DALPHA
+N=2
+!ELSEif ("$(CPU)" == "X86") || ("$(P)" == "x86")
+XFL =
+N=0
+!ENDIF
+
+CFL = -DWIN32_LEAN_AND_MEAN=1 -DCONDITION_HANDLING=1 -DNT_INST=0 -DNT_UP=1 \
+        -DNO_EXT_KEYS $(dbg) -DWIN32 -DHOST32 -D_$P_ \
+        -DDOLPHIN -D$P=1 -DADDR_MIXED -DNO_TRACE_BIT -DOSDEBUG4 -DTARGET32 \
+        -DTARGET_$P -DHOST_$P $(XFL)
+
+RCFL = $(CFL)
+LFL =  $(lfl_dbg) $(lopt)
+
+PCH = -Yuprecomp.h
+
+#
+# Inference rule for c builds
+#
+{.}.c{$O}.obj :
+        @$(CC) @<<cl.rsp
+$(verbose_c)
+$c
+$I
+$(CFL)
+-Fo$@ $<
+<<keep
+TARGET=TLN$(N)LOC$(d)
+{.}.rc{$O}.res :
+        $(RC) -l 409 -r -I..\..\..\inc -fo $@ $(RCFL) $I <<$O\tlloc.rc
+#include "appver.h"
+#define VER_INTERNALNAME_STR            "$(TARGET).dll"
+#define VER_FILEDESCRIPTION_STR         "Microsoft\256 Windows NT Debugger Transport Layer"
+#define VER_ORIGINALFILENAME_STR        "$(TARGET).dll"
+#include "version.rc"
+<<
+
+#
+# Main goal
+#
+all:    dir_tgt tl
+
+#
+# Execution Model (EM)
+#
+TLOBJS = \
+        $O/tlloc.res \
+        $O/tllp.obj
+
+tl : tln$Nloc$d.dll
+
+tln$Nloc$d.dll : $(TLOBJS) $O/tln$Nloc$d.def
+        $(LINKER) @<<link.rsp
+-dll
+-subsystem:windows
+-machine:$(CPU)
+$(LFL)
+$(TLOBJS: =^
+)
+-def:$O/tln$Nloc$d.def
+-out:$*.dll
+kernel32.lib
+user32.lib
+msvcrt$d.lib
+oldnames.lib
+<<keep
+
+$O/tln$Nloc$d.def : tlloc.def
+        sed -e "s!tlloc!tln$Nloc$d!g" tlloc.def > $@
+
+$O/precomp.obj : precomp.h
+        @$(CC) @<<pch.rsp <<precomp.c
+$(verbose_c)
+$c
+$I
+$(CFL)
+$(PCH:Yu=Yc) -Fp$O/precomp.pch
+-Fo$@
+<<keep
+#include "precomp.h"
+<<keep
+
+#
+# Directory targets
+#
+dir_tgt: $O
+
+$O : $(OBJDIR)
+        @-mkdir $O >nul 2>&1
+
+$(OBJDIR):
+        @-mkdir $(OBJDIR) >nul 2>&1
+
+#
+# Clean goal
+#
+clean:
+        del /f /q $O\*

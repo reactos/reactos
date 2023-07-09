@@ -1,0 +1,85 @@
+!if 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Created 31-Oct-1996 by Beomseok Oh (beomoh)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!endif
+
+CCSHELL_DIR         = $(BASEDIR)\private\shell
+
+# the indicdll would need to support win95 etc as well
+TARGET_BOTH         = 1
+
+# omitting this would set -DUNICODE -D_UNICODE at common.inc
+# NOT_UNICODE         = 1
+
+PRECOMPILED_CXX     = 1
+
+#
+# setting WIN32_WINNT_VERSINO = 0x0500 for the usage of 
+# AllowSetForegroundWindow() API, that is a new on NT5
+#
+WIN32_WINNT_VERSION = 0x0500
+
+#
+# setting WIN32_IE_VERSION  = 0x0400 until we get clean NT5 builds
+# for the NOTIFYICONDATA structure change, otherwise internat fails
+# to show its icons on the tray
+#
+WIN32_IE_VERSION    = 0x0400
+
+
+!include $(CCSHELL_DIR)\common.inc
+
+NO_BROWSER_FILE     = 1
+
+SOURCES_USED        = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+# NTTARGETFILES       =
+
+TARGETTYPE          = PROGRAM
+TARGETNAME          = internat
+TARGETPATH          = obj
+
+UMTYPE              = windows
+WINVER_VERSION      = 0x0500
+
+# PRECOMPILED_INCLUDE = private.h
+
+TARGETLIBS          = 
+
+UMENTRYABS = Internat_ModuleEntry
+UMLIBS =              $(SDK_LIB_PATH)\kernel32.lib      \
+                      $(SDK_LIB_PATH)\user32p.lib       \
+                      $(SDK_LIB_PATH)\gdi32p.lib        \
+                      $(SDK_LIB_PATH)\comctlp.lib      \
+                      $(SDK_LIB_PATH)\imm32.lib         \
+                      $(SDK_LIB_PATH)\setupapi.lib      \
+                      $(SDK_LIB_PATH)\advapi32.lib      \
+                      $(SDK_LIB_PATH)\syssetup.lib      \
+                      $(SDK_LIB_PATH)\shell32.lib       
+
+USE_LIBCMT          = 1
+
+
+SOURCES = internat.rc \
+          internat.c
+

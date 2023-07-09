@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdbe
+
+TARGETNAME=kbdbe
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdbe.c kbdbe.rc
+
+NTTARGETFILE0=kbdbe.h kbdbe.rc kbdbe.def

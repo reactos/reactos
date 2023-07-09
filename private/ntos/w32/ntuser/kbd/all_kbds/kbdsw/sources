@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdsw
+
+TARGETNAME=kbdsw
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdsw.c kbdsw.rc
+
+NTTARGETFILE0=kbdsw.h kbdsw.rc kbdsw.def

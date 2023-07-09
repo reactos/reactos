@@ -1,0 +1,139 @@
+#####################################################
+# build Lempel-Ziv compression/decompression modules
+#####################################################
+
+# C source modules in this directory are compiled twice - once for COMPRESS
+# and once for EXPAND.  (.obj files for COMPRESS use .obj suffix, and .obj
+# files for EXPAND use .exp suffix.)
+
+#International mods
+!IFNDEF LANG
+RES_DIR=.\messages\usa
+!ELSE
+RES_DIR=$(INTL_SRC)\$(LANG)\core\lz\dos
+!ENDIF
+
+!ifdef DEBUG
+
+CLSWITCH     = -W3 -AS -Zipd -c -Od -G2
+LINKSWITCH   = /NOD /NOE /MAP /CO /LINENUMBERS
+
+!else
+
+CLSWITCH     = -W3 -AS -Zdp -c -Ot -Gs -G2
+LINKSWITCH   = /NOD /NOE /MAP
+
+!endif
+
+COMP_NAME    = compress
+EXP_NAME     = expand
+
+C_SOURCE     = args.c main.c
+ALL_COMP_OBJ = args.obj main.obj
+ALL_EXP_OBJ  = args.exp main.exp
+
+
+##################
+# inference rules
+##################
+
+.c.obj:
+   cl $(CLSWITCH) -D COMPRESS $*.c
+
+.c.exp:
+   cl $(CLSWITCH) -Fo$*.exp $*.c
+
+
+################
+# target module
+################
+
+!IFNDEF LANG
+target: $(COMP_NAME) $(EXP_NAME)
+!ELSE
+target: iclean $(COMP_NAME) $(EXP_NAME)
+!ENDIF
+
+iclean:
+    del messages.h
+    del args.obj
+    del main.obj
+
+!IFNDEF LANG
+$(COMP_NAME): $(COMP_NAME).exe
+
+$(EXP_NAME): $(EXP_NAME).exe
+!ELSE
+$(COMP_NAME): $(COMP_NAME).$(LANG)
+
+$(EXP_NAME): $(EXP_NAME).$(LANG)
+!ENDIF
+
+messages.h: $(RES_DIR)\$@
+    copy $(RES_DIR)\$@
+
+######################################################
+# build DOS command-line LZA file compression program
+######################################################
+
+$(COMP_NAME).exe: $(ALL_COMP_OBJ) ..\libs\doslzas.lib
+   link $(LINKSWITCH) $(ALL_COMP_OBJ) setargv.obj, $(COMP_NAME),, slibce ..\libs\doslzas.lib;
+!ifdef DEBUG
+   cvpack /p $(COMP_NAME).exe
+   mapsym $(COMP_NAME)
+!endif
+
+$(COMP_NAME).$(LANG): $(ALL_COMP_OBJ) ..\libs\doslzas.lib
+   link $(LINKSWITCH) $(ALL_COMP_OBJ) setargv.obj, $(COMP_NAME).$(LANG),, slibce ..\libs\doslzas.lib;
+
+
+####################################################
+# build DOS command-line LZA file expansion program
+####################################################
+
+$(EXP_NAME).exe: $(ALL_EXP_OBJ) ..\libs\doslzas.lib
+   link $(LINKSWITCH) $(ALL_EXP_OBJ) setargv.obj, $(EXP_NAME),, slibce ..\libs\doslzas.lib;
+!ifdef DEBUG
+   cvpack /p $(EXP_NAME).exe
+   mapsym $(EXP_NAME)
+!endif
+
+$(EXP_NAME).$(LANG): $(ALL_EXP_OBJ) ..\libs\doslzas.lib
+   link $(LINKSWITCH) $(ALL_EXP_OBJ) setargv.obj, $(EXP_NAME).$(LANG),, slibce ..\libs\doslzas.lib;
+
+
+# make frequency counter
+
+freq: freq.exe
+
+freq.exe: freq.obj ..\libs\doslzas.lib ..\libs\model.as
+   link $(LINKSWITCH) freq.obj ..\libs\model.as setargv.obj, freq,, slibce ..\libs\doslzas.lib;
+!ifdef DEBUG
+   cvpack /p freq.exe
+   mapsym freq
+!endif
+
+
+#########################
+# automatic dependencies
+#########################
+
+depend: messages.h
+   del makefile.old
+   rename makefile makefile.old
+   sed "/^# START Dependencies/,/^# END Dependencies/D" makefile.old > makefile
+   echo # START Dependencies >> makefile
+   includes -lexp -I..\libs $(C_SOURCE) >> makefile
+	echo # END Dependencies >> makefile
+   del makefile.old
+
+
+# START Dependencies
+args.obj args.exp: args.c ../libs/common.h ../libs/header.h \
+	../libs/translat.h args.h main.h messages.h
+
+main.obj main.exp: main.c ../libs/buffers.h ../libs/common.h \
+	../libs/header.h ../libs/translat.h args.h main.h messages.h
+
+# END Dependencies
+

@@ -1,0 +1,92 @@
+<HTML>
+<HEAD><TITLE>Microsoft XML Data Source Object</TITLE>
+    <style>
+      td    {font-size:80%;}
+      xmp   {font-size:120%; background:yellow}
+      pre   {font-size:120%;}
+    </style>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" LINK="#000066" VLINK="#666666" 
+	TEXT="#000000">
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+<FONT FACE="verdana,arial,helvetica" SIZE=2>
+<h2>Microsoft XML Data Source Object Applet</h2>
+<P>
+The XML Data Source ActiveX Object can be inserted into an HTML
+page as follows:
+<pre>
+&lt;OBJECT width=0 height=0
+    classid="clsid:550dda30-0541-11d2-9ca9-0060b0ec3d39"
+    id="xmldso"&gt;
+&lt;/OBJECT&gt;
+</pre>
+
+This can be used as an XML data provider in conjunction with the 
+<A HREF="http://www.microsoft.com/workshop/author/databind/datasources.htm" target="_top">
+data binding features of Internet Explorer 4.0</a>.
+for binding XML data to HTML element on the page.
+<P>
+To load XML into the DSO use the <B>XMLDocument</B> property to
+get a DOM object model then call the load method, as follows:
+<pre>
+&lt;SCRIPT for=window event=onload>
+    var doc = xmldso.XMLDocument;
+    doc.load("books.xml");
+    if (doc.documentNode == null)
+    {
+        HandleError(doc);
+    }
+&lt;/SCRIPT>
+</pre>
+<h4>Inline XML</h4>
+You can also provide the XML inline inside the OBJECT tag
+in which cas you can load the DSO as follows:
+<pre>&lt;SCRIPT for=window event=onload>
+    var doc = xmldso.XMLDocument;
+    doc.loadXML(xmldso.altHtml);
+    if (doc.documentNode == null)
+    {
+        HandleError(doc);
+    }
+&lt;/SCRIPT>
+</pre>
+
+<h4>Examples</h4>
+<P>
+The following example pages show how the applet works:
+<ul>
+<li><a href="Example1.htm">Example 1</a>: 
+A simple HTML table populated by an external XML file
+<li><a href="Example2.htm">Example 2</a>: 
+The same table populated by inline XML data
+<li><a href="Example3.htm">Example 3</a>: 
+Nested HTML tables populated by hierarchical XML data
+<li><a href="Example4.htm">Example 4</a>: 
+Editing the XML using bound INPUT fields
+<li><a href="Example5.htm">Example 5</a>: 
+Report writer style of binding
+<li><a href="Example6.htm">Example 6</a>: 
+Accessing the XML object model through JavaScript
+<li><a href="Example7.htm">Example 7</a>: 
+Viewing XML data one record at a time using the recordset object model
+<li><a href="Example8.htm">Example 8</a>: 
+Linking multiple XML DSOs together to view different parts of the XML document.
+<li><a href="Example9.htm">Example 9</a>: 
+Hooking editable fields up to a live updating table
+<li><a href="Example10.htm">Example 10</a>: 
+Same as Example 7, but editable
+</ul>
+
+<!--DocFooterStart-->
+<P>
+</FONT>
+<FONT FACE="MS SANS SERIF" SIZE="1" COLOR="BLACK">
+&copy;  <A HREF="http://www.microsoft.com/misc/cpyright.htm" TARGET="_top">1997 Microsoft Corporation. All rights reserved. Terms of use</A>.<P>
+</FONT>
+</TD>
+</TR>
+<!--DocFooterEnd-->
+</BODY>
+</HTML>

@@ -1,0 +1,5 @@
+DIRS =  win95 \
+        winnt
+
+OPTIONAL_DIRS = 
+

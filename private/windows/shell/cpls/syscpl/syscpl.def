@@ -1,0 +1,10 @@
+LIBRARY SYSCPL.CPL
+
+EXPORTS
+        CPlApplet
+        LibMain
+        ArrowControlProc
+        ArrowTimerProc
+        RestartDlg
+        SystemDlg
+        SysLBProc

@@ -1,0 +1,34 @@
+body {background-color:#c0c0c0; background-scroll:no-scroll; font-family: "arial"; font-size: 13px; color:000000; margin-top:7pt; margin-left:0pt}
+
+a:link {color: #0000FF; text-decoration: underline; font-weight: normal }
+a:visited {color: #0000FF; text-decoration: underline; font-weight: normal }
+a:active {color: #FFFFFF; text-decoration: underline }
+a:hover {color: #FFFFFF; text-decoration: underline }
+
+H3 {font-family: arial; font-size: 20pt; font-weight: bold; font-style: none; color: #f1f1f1; margin-top:0pt; margin-bottom:0pt}
+H4 {font-family: arial; font-size: 14pt; font-weight: normal; font-style: none; color: #000044; margin-top: 0pt; margin-bottom:-12pt}
+H5 {font-family: arial; font-size: 13pt; font-weight: bold; font-style: none; color: #00007C; margin-top:0pt; margin-bottom:0pt}
+H6 {font-family: arial; font-size: 12pt; font-weight: light; font-style: none; color: #ffffff; margin-top:0pt; margin-bottom:0pt}
+
+table {font-family: arial; font-size: 13px;}
+p {font-family: arial; font-size: 13px;}
+li {font-family: arial; font-size: 13px; margin-bottom: 6pt; margin-left: -4pt}
+#home li {font-family: arial; font-size: 13px; margin-bottom: 9pt; margin-left: -4pt;}
+ul {font-family: arial; font-size: 13px; margin-top: 6pt}
+dir {font-family: arial; font-size: 13px;}
+span {background-color:ffffff; height:2px; width:100%; font-size:2}
+input {font-family: arial; font-size: 9pt;}
+
+#lm {background-color:#000080; background-image:url("win2kbg.gif"); margin-top:3pt; margin-left:0pt; color:#c0c0c0;}
+#lm p {color: #c0c0c0; font-family: arial; font-size: 12px;}
+#lm menu {color: #999999; font-family: arial; font-size: 12px; margin-top:-3pt; margin-bottom:0pt; margin-left:40pt}
+#lm a:link {color: #ffffff; text-decoration: none; font-weight: normal }
+#lm a:visited {color: #ffffff; text-decoration: none; font-weight: normal }
+#lm a:active {color: #ffffff; text-decoration: none }
+#lm a:hover {color: #ffffff; text-decoration: underline }
+#lm li {color: #ffffff; font-family: arial; font-size: 11px; margin-bottom: 0pt}
+
+#popup { text-decoration: underline; }    
+.popup { text-decoration: None; }
+.poplink { text-decoration: None; }
+.mytext { font-family: arial; font-size: 8pt; color:000000;}

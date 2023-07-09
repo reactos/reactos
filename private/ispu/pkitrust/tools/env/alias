@@ -1,0 +1,21 @@
+ispu	    cd /d %_ntbpath_%\private\ispu
+ispuie      cd /d %_ntbpath_%\private\ispuie
+ispunt      cd /d %_ntbpath_%\private\ispunt
+drop        cd /d %_ntbpath_%\private\iptdbins
+common	    cd /d %_ntbpath_%\private\ispu\common
+inc	        cd /d %_ntbpath_%\private\ispu\include
+pki	        cd /d %_ntbpath_%\private\ispu\pki
+test	    cd /d %_ntbpath_%\private\ispu\test\capi20
+tools	    cd /d %_ntbpath_%\private\ispu\pkitools
+sdkinc	    cd /d %_ntbpath_%\public\sdk\inc
+sdklib	    cd /d %_ntbpath_%\public\sdk\lib
+sdkbin	    cd /d %_ntbpath_%\public\sdk\bin
+oakinc	    cd /d %_ntbpath_%\public\oak\inc
+oaklib	    cd /d %_ntbpath_%\public\oak\lib
+oakbin	    cd /d %_ntbpath_%\public\oak\bin
+sys32	    cd /d %windir%\system32
+..          cd ..
+...         cd ..\..
+....        cd ..\..\..
+.....       cd ..\..\..\..
+......      cd ..\..\..\..\..

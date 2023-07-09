@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdindev
+
+TARGETNAME=kbdindev
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdindev.c kbdindev.rc
+
+NTTARGETFILE0=kbdindev.h kbdindev.rc kbdindev.def

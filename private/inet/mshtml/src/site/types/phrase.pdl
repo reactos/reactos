@@ -1,0 +1,46 @@
+#ifndef _PHRASE_PDL_
+#define _PHRASE_PDL_ 1
+
+#include "element.pdl"
+#include "csite.pdl"
+
+file phrase.pdl
+
+import element.pdl
+
+interface IHTMLPhraseElement guid:3050f20a-98b5-11cf-bb82-00aa00bdce0b
+
+tearoff CPhraseElement interface:IHTMLPhraseElement
+
+class CPhraseElement name:HTMLPhraseElement \
+            super:CElement \
+            primaryinterface:IHTMLPhraseElement \
+            events:HTMLElementEvents \
+            guid:3050f26e-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f52d-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLPhraseElement
+
+interface IHTMLSpanElement guid:3050f3f3-98b5-11cf-bb82-00aa00bdce0b
+
+tearoff CSpanElement interface:IHTMLSpanElement
+
+tearoff CSpanElement interface:IHTMLControlElement
+
+class CSpanElement name:HTMLSpanElement \
+            super:CPhraseElement \
+            primaryinterface:IHTMLSpanElement \
+            events:HTMLElementEvents \
+            guid:3050f3f5-98b4-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f548-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLPhraseElement
+    implements IHTMLSpanElement
+    implements IHTMLControlElement
+
+    property nofocusrect       atype:VARIANT_BOOL   dispid:DISPID_PHRASE  type:VARIANT_BOOL \
+    caa get default:0 vt:VT_BOOL
+
+#endif _PHRASE_PDL_

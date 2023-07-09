@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdurs
+
+TARGETNAME=kbdurs
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdurs.c kbdurs.rc
+
+NTTARGETFILE0=kbdurs.h kbdurs.rc kbdurs.def

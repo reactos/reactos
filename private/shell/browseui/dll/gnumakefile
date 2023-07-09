@@ -1,0 +1,147 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling C++ application.
+COMPONENT = SHELL
+PRODUCT	= BROWSEUI
+
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/shell.template
+
+SOURCES_FILE    = ../sources.inc
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME
+DLLENTRY=DllMain
+
+DLLDEF_SRC = ../browseui.src
+
+DLLDEF_EXPORTS = \
+        IEFrameNewWindowSameThread\
+        UnixSendDocToMailRecipient\
+        _____browseui_initDLL\
+
+DEFINES = \
+	-D_MT=1 \
+	-DNASHVILLE \
+	-DIN_SHDOCVW \
+        -DUNICODE_SHDOCVW \
+	-DFEATURE_FRAMES \
+	-DMSOCT2=1 \
+	-DFEATURE_URLHIST \
+	-DFEATURE_PICS \
+	-DFEATURE_MENUBAND \
+	-DPAGER \
+	-D_HSFOLDER \
+	-D_NTSDK \
+	-D_USRDLL \
+	-D_ATL_MIN_CRT \
+	-D_DESK_MOVER \
+    -D_ATL_STATIC_REGISTRY \
+	-DVSTF \
+	-DNOWINRES \
+	-DNO_SPLASHSCREEN \
+
+#    -DNO_OFFICE9STYLE
+
+# Removed from IEUNIX rtw
+#	-DBETA1_DIALMON_HACK \
+
+# Warning: DLL based on MFC (compiled with _USRDLL flag) is not supported yet.
+# This makefile is just for demo purpose.
+## Original Windows DLL name:
+WDLL = browseui
+## Target Unix shared library:
+DLL	= lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+CPP_OBJS := ${SOURCES:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+
+DLLOBJS  = ${CPP_OBJS:%.c=%.o}
+DLLOBJS += ${TARGETS}
+
+SRCS=${SOURCES}
+WRESOURCE = ${O}/browseui.rc    # Windows resource
+TRESOURCE = ${WDLL}.rxt   # Target X resource (must match DLL name)
+BRESOURCE = ${WDLL}.rxb   # Target X resource (must match DLL name)
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## 
+PROJECT_CFLAGS = ${DEFINES} -I${O} -I..
+APP_RCFLAGS =  -I${RUN.dir}
+
+PROJECT_DLLFLAGS = -lemclient -lbrowseuisrcc -lbrowseuisrccpp -lbrowseuisrcc \
+                   -lbrowseuint5api \
+                   -lemclient -lbrowseuisrcc -lbrowseuisrccpp -lbrowseuisrcc \
+                   -lbrowseuint5api -lshdocvw\
+                   -lshell32 -lshlwapi -lcomctl32 -lstocklib5 -lstocklib -lcomctl32 -lole32 -ladvapi32 -luuid 
+
+DIP_CFLAGS = -DDLL_SPECIFIC_OPERATOR_NEW 
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+
+# Using original bitmaps.
+# TMP_BITMAPS := /vobs/ie4/slm/bitmaps
+TMP_BITMAPS := ..
+
+${O}/browseui.rc: ../browseui.rc ${O}/selfreg_browseui.inf
+	${ECHOOBJ}
+	rm -f ${O}/tbdef.bmp
+	rm -f ${O}/tbhot.bmp
+	rm -f ${O}/tbdef16.bmp
+	rm -f ${O}/tbhot16.bmp
+	rm -f ${O}/tbdefhi.bmp
+	rm -f ${O}/tbhothi.bmp
+	cp ${TMP_BITMAPS}/tbdef.bmp   ${O}/tbdef.bmp
+	cp ${TMP_BITMAPS}/tbhot.bmp   ${O}/tbhot.bmp
+	cp ${TMP_BITMAPS}/tbdef16.bmp ${O}/tbdef16.bmp
+	cp ${TMP_BITMAPS}/tbhot16.bmp ${O}/tbhot16.bmp
+	cp ${TMP_BITMAPS}/tbdefhi.bmp ${O}/tbdefhi.bmp
+	cp ${TMP_BITMAPS}/tbhothi.bmp ${O}/tbhothi.bmp
+	rm -f ${O}/shdef.bmp
+	rm -f ${O}/shhot.bmp
+	rm -f ${O}/shdef16.bmp
+	rm -f ${O}/shhot16.bmp
+	rm -f ${O}/shdefhi.bmp
+	rm -f ${O}/shhothi.bmp
+	cp ${TMP_BITMAPS}/shdef.bmp   ${O}/shdef.bmp
+	cp ${TMP_BITMAPS}/shhot.bmp   ${O}/shhot.bmp
+	cp ${TMP_BITMAPS}/shdef16.bmp ${O}/shdef16.bmp
+	cp ${TMP_BITMAPS}/shhot16.bmp ${O}/shhot16.bmp
+	cp ${TMP_BITMAPS}/shdefhi.bmp ${O}/shdefhi.bmp
+	cp ${TMP_BITMAPS}/shhothi.bmp ${O}/shhothi.bmp
+	sed -f rc.sed $< > $@
+
+${RUN.dir}/%.tlb: ${SDK_DIR}/../lib/sparc/%.tlb
+	${ECHOOBJ}
+	/bin/rm -f $@
+	/bin/rm -f ${RUN.dir}/${WDLL}.tlb
+	/bin/cp $< $@
+	/bin/cp $< ${RUN.dir}/${WDLL}.tlb
+	chmod -f a-w $@
+
+${O}/selfreg_browseui.inf: ${O}/selfreg.inx
+	${ECHOOBJ}
+	cleaninf -w $< $@
+
+${O}/selfreg.inx: ../selfreg.inx
+	${ECHOOBJ}
+	rm -f ${O}/tmp.C ${O}/tmp.i
+	cp -f $< ${O}/tmp.C
+	mwc++ -P $< -o ${O}/tmp.i
+	cp ${O}/tmp.i $@
+	rm -f ${O}/tmp.C ${O}/tmp.i
+
+ifeq (${MWOS},sunos5)
+CCPRE= /usr/ccs/lib/cpp
+CCPRE_FLAGS := -B -P -DUNIX
+endif
+ifeq (${MWOS},ux10)
+CCPRE= gcc
+CCPRE_FLAGS := -P -E -DUNIX
+endif
+
+${O}/%.dls: %.dlg
+	${ECHOOBJ}
+	${CCPRE} ${CCPRE_FLAGS} $< > $@

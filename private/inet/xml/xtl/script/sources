@@ -1,0 +1,50 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=xtl
+MINORCOMP=script
+
+ROOT=$(MAKEDIR:\xtl\script=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=script
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES= \
+    iactivescript.cxx \
+    iactivescripterror.cxx \
+    iactivescriptparse.cxx \
+    iactivescriptsite.cxx 
+
+
+INCLUDES= \
+        $(ROOT); \
+        $(ROOT)\include; \
+        $(ROOT)\core\base; \
+        $(ROOT)\core\com; \
+        $(IDL_GENERATED_HEADERS); \
+        $(WINDOWS_INC_PATH)
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+

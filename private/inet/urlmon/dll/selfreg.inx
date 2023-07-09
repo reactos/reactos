@@ -1,0 +1,1114 @@
+;
+;   This file setups the default zones registry information. 
+;
+;   Note the AddReg and DelReg keys have a maximum length of 255 characters
+;   Only one Addreg and DelReg key per header sections.
+;
+
+[Version]
+Signature="$CHICAGO$"
+
+;
+;   Clean up HKCU user declined JIT features/components
+;
+[UnReg.DeclinedComponents]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+DelReg=DeclinedComponents
+[DeclinedComponents]
+HKCU,"%PATH_DECLINED_COMPONENTS%"   ; IE JIT declined components list
+
+
+;
+;   Backup the User Agent string under HKCU
+;
+
+[BackupUserAgent]
+ComponentVersion=5.0
+ComponentName=IE40.UserAgent
+NoBackupPlatform="NT5"
+AdvOptions=36
+AddReg=RegBackupUserAgent,!RegRollbackUserAgent
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[RestoreUserAgent]
+ComponentVersion=5.0
+ComponentName=IE40.UserAgent
+NoBackupPlatform="NT5"
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[!RegRollbackUserAgent]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","IE40.UserAgent",0,""
+
+[RegBackupUserAgent]
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Internet Settings","User Agent",,"Mozilla/4.0 (compatible; MSIE 5.0; Win32)"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Internet Settings","IE5_UA_Backup_Flag",,"5.0"
+
+;
+;   Backup the necessary connection settings.  This really belongs in wininet,
+;   but wininet doesn't have selfreg.inx so it ends up here.
+;
+
+[BackupConnectionSettings]
+ComponentVersion=5.0
+ComponentName=ConnectionConfiguration
+NoBackupPlatform="NT5"
+AdvOptions=36
+AddReg=RegBackupConnections
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[RestoreConnectionSettings]
+ComponentVersion=5.0
+ComponentName=ConnectionConfiguration
+NoBackupPlatform="NT5"
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[RegBackupConnections]
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Internet Settings","NoNetAutodial",0x10003,0
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Internet Settings","MigrateProxy",0x10003,0
+
+
+;
+;   We use one section each for the "Zones", "TemplatePolicies" and the "ZoneMap" keys
+;   
+
+[Reg.HKCU]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+AddReg=Zones.RegCU,ZoneMap.RegCU
+
+[UnReg.HKCU]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+DelReg=Zones.RegCU,ZoneMap.RegCU,DeclinedComponents
+
+; (pritobla) IEAKReg.HKCU section is used by the IE branding DLL to reset zones to the default levels
+[IEAKReg.HKCU]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+DelReg=Del.Zones.RegCU,Del.ZoneMap.RegCU
+AddReg=Zones.RegCU,ZoneMap.RegCU
+
+[Del.Zones.RegCU]
+HKCU,"%PATH_ZONES%"
+
+[Del.ZoneMap.RegCU]
+HKCU,"%PATH_ZONEMAP%"
+
+
+[!RegRollbackZoneInfo]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","IE.HKCUZoneInfo",0,""
+
+[Backup.HKCU]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+ComponentVersion=5.0
+ComponentName=IE.HKCUZoneInfo
+NoBackupPlatform="NT5"
+AdvOptions=36
+BackupReg=RegBackup.HKCU
+AddReg=!RegRollbackZoneInfo
+
+[RegBackup.HKCU]
+HKCU,"%PATH_ZONES%"
+
+[Backup.HKLM]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+ComponentVersion=5.0
+ComponentName=IE.HKLMZoneInfo
+NoBackupPlatform="NT5"
+AdvOptions=36
+BackupReg=RegBackup.HKLM
+
+[Restore.HKLM]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+ComponentVersion=5.0
+ComponentName=IE.HKLMZoneInfo
+NoBackupPlatform="NT5"
+AdvOptions=260
+
+[RegBackup.HKLM]
+HKLM,"%PATH_ZONES%"
+HKLM,"%PATH_TEMPOL%"
+
+[Reg.HKLM]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+AddReg=Zones.RegLM,TemplatePolicies.RegLM,ZoneMap.RegLM,UATokens.RegLM
+
+[UnReg.HKLM]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+DelReg=Zones.RegLM,TemplatePolicies.RegLM,UATokens.RegLM
+
+
+; These sections are required because we want to change the unsafe activex defaults for 
+; medium security settings. 
+; 
+[Intranet.HackActiveX]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+AddReg=Intranet.USActiveX
+
+[Intranet.USActiveX]
+HKCU,"%PATH_ZONES_INTRANET%","1201",0x10001,0x3 
+
+[Internet.HackActiveX]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+AddReg=Internet.USActiveX
+
+[Internet.USActiveX]
+HKCU,"%PATH_ZONES_INTERNET%","1201",0x10001,0x3
+
+[Zones.RegCU]
+
+; --- The root Zones key
+HKCU,"%PATH_ZONES%",,,
+
+; --- Zones
+;     |
+;     +---Local
+;
+HKCU,"%PATH_ZONES_LOCAL%",,,    ; The "Local" zone attributes
+HKCU,"%PATH_ZONES_LOCAL%","DisplayName",,%NAME_LOCAL%
+HKCU,"%PATH_ZONES_LOCAL%","Description",,%DESC_LOCAL%
+HKCU,"%PATH_ZONES_LOCAL%","Icon",,%ZICON_LOCAL%
+HKCU,"%PATH_ZONES_LOCAL%","CurrentLevel",0x10001,0x00000
+;;Current level for local zone should always be custom
+;;bugbug - don't need min/rec level in Local machine zone
+HKCU,"%PATH_ZONES_LOCAL%","Flags",0x10001,0x21 
+
+; "Local Machine" Zone Policies
+;
+
+; Download policies
+HKCU,"%PATH_ZONES_LOCAL%","1001",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1004",0x10003,0x0 
+
+; Active content policies 
+HKCU,"%PATH_ZONES_LOCAL%","1200",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1201",0x10003,0x1 
+HKCU,"%PATH_ZONES_LOCAL%","1400",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1402",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1405",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1406",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1407",0x10003,0x0 
+
+; HTML policies
+HKCU,"%PATH_ZONES_LOCAL%","1601",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1604",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1605",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1606",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1607",0x10003,0x0 
+
+; Shell policies
+HKCU,"%PATH_ZONES_LOCAL%","1800",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1802",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1803",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1804",0x10003,0x0 
+HKCU,"%PATH_ZONES_LOCAL%","1805",0x10001,0x0 
+
+; Network policies
+HKCU,"%PATH_ZONES_LOCAL%","1A00",0x10003,0x0000000 
+HKCU,"%PATH_ZONES_LOCAL%","1A02",0x10003,0x0000000 
+HKCU,"%PATH_ZONES_LOCAL%","1A03",0x10003,0x0000000 
+
+; Java policies
+HKCU,"%PATH_ZONES_LOCAL%","1C00",0x10003,0x0020000 
+
+; Softdist policies
+HKCU,"%PATH_ZONES_LOCAL%","1E05",0x10003,0x0030000
+
+
+; --- Zones
+;     |
+;     +---Intranet
+;
+HKCU,"%PATH_ZONES_INTRANET%",,, ; The "Intranet" zone attributes
+HKCU,"%PATH_ZONES_INTRANET%","DisplayName",,%NAME_INTRANET%
+HKCU,"%PATH_ZONES_INTRANET%","Description",,%DESC_INTRANET%
+HKCU,"%PATH_ZONES_INTRANET%","Icon",,%ZICON_INTRANET%
+HKCU,"%PATH_ZONES_INTRANET%","CurrentLevel",0x10003,0x10500
+HKCU,"%PATH_ZONES_INTRANET%","MinLevel",0x10001,0x10000
+HKCU,"%PATH_ZONES_INTRANET%","RecommendedLevel",0x10001,0x10500
+HKCU,"%PATH_ZONES_INTRANET%","Flags",0x10003,0xDB 
+; Flags = req. verif., include proxy override, include intranet sites
+
+;
+; "Intranet" Zone Policies
+;
+
+; Download policies
+HKCU,"%PATH_ZONES_INTRANET%","1001",0x10003,0x1 ; d/l signed activex
+HKCU,"%PATH_ZONES_INTRANET%","1004",0x10003,0x3 ; d/l unsigned activex
+
+; Active content policies 
+HKCU,"%PATH_ZONES_INTRANET%","1200",0x10003,0x0 ; run ocx & plugins
+HKCU,"%PATH_ZONES_INTRANET%","1201",0x10003,0x3 ; override object safety
+HKCU,"%PATH_ZONES_INTRANET%","1400",0x10003,0x0 ; run scripts
+HKCU,"%PATH_ZONES_INTRANET%","1402",0x10003,0x0 ; scripts interact w/ applets
+HKCU,"%PATH_ZONES_INTRANET%","1405",0x10003,0x0 ; script safe activex
+HKCU,"%PATH_ZONES_INTRANET%","1406",0x10003,0x1 ; cross-domain data
+HKCU,"%PATH_ZONES_INTRANET%","1407",0x10003,0x0 ; script paste
+
+;; bugbug - Java policy (TBD)
+
+; HTML policies
+HKCU,"%PATH_ZONES_INTRANET%","1601",0x10003,0x0 ; form submit
+HKCU,"%PATH_ZONES_INTRANET%","1604",0x10003,0x0 ; HTML font download
+HKCU,"%PATH_ZONES_INTRANET%","1605",0x10003,0x0 ; HTML Java Run
+HKCU,"%PATH_ZONES_INTRANET%","1606",0x10003,0x0 ; userdata
+HKCU,"%PATH_ZONES_INTRANET%","1607",0x10003,0x0 ; cross-domain sub-frame navigate
+
+; Shell policies
+HKCU,"%PATH_ZONES_INTRANET%","1800",0x10003,0x1 ; install dt component
+HKCU,"%PATH_ZONES_INTRANET%","1802",0x10003,0x0 ; copy/move file
+HKCU,"%PATH_ZONES_INTRANET%","1803",0x10003,0x0 ; do file download
+HKCU,"%PATH_ZONES_INTRANET%","1804",0x10003,0x1 ; default verb invoke
+HKCU,"%PATH_ZONES_INTRANET%","1805",0x10001,0x0 ; webview verb, clobber since no UI.
+
+; Network policies
+HKCU,"%PATH_ZONES_INTRANET%","1A00",0x10003,0x0020000 ; credentials use. 
+HKCU,"%PATH_ZONES_INTRANET%","1A02",0x10003,0x0 ; allow persistent cookies. 
+HKCU,"%PATH_ZONES_INTRANET%","1A03",0x10003,0x0 ; allow session cookies. 
+
+; Java policies
+HKCU,"%PATH_ZONES_INTRANET%","1C00",0x10003,0x0020000 ; Java permissions
+
+; Softdist policies
+HKCU,"%PATH_ZONES_INTRANET%","1E05",0x10003,0x0020000 ; SoftDist tag in CDF?
+
+
+;
+; End of Intranet policies
+;
+
+
+; --- Zones
+;     |
+;     +---Trusted Web sites
+;
+
+HKCU,"%PATH_ZONES_TRUSTED%",,,      ; The "Trusted" zone attributes
+HKCU,"%PATH_ZONES_TRUSTED%","DisplayName",,%NAME_TRUSTED%
+HKCU,"%PATH_ZONES_TRUSTED%","Description",,%DESC_TRUSTED%
+HKCU,"%PATH_ZONES_TRUSTED%","Icon",,%ZICON_TRUSTED%
+HKCU,"%PATH_ZONES_TRUSTED%","CurrentLevel",0x10003,0x10000
+HKCU,"%PATH_ZONES_TRUSTED%","MinLevel",0x10001,0x10000
+HKCU,"%PATH_ZONES_TRUSTED%","RecommendedLevel",0x10001,0x10000
+HKCU,"%PATH_ZONES_TRUSTED%","Flags",0x10001,0x47 ; custom edit, add sites, server verify
+
+
+;
+; "Trusted" Zone Policies
+;
+
+; Download policies
+HKCU,"%PATH_ZONES_TRUSTED%","1001",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1004",0x10003,0x1
+
+; Active content policies 
+HKCU,"%PATH_ZONES_TRUSTED%","1200",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1201",0x10003,0x1
+HKCU,"%PATH_ZONES_TRUSTED%","1400",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1402",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1405",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1406",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1407",0x10003,0x0
+
+; HTML policies
+HKCU,"%PATH_ZONES_TRUSTED%","1601",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1604",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1605",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1606",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1607",0x10003,0x0
+
+; Shell policies
+HKCU,"%PATH_ZONES_TRUSTED%","1800",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1802",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1803",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1804",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1805",0x10001,0x0
+
+; Network policies
+HKCU,"%PATH_ZONES_TRUSTED%","1A00",0x10003,0x0000000 
+HKCU,"%PATH_ZONES_TRUSTED%","1A02",0x10003,0x0
+HKCU,"%PATH_ZONES_TRUSTED%","1A03",0x10003,0x0
+
+; Java policies
+HKCU,"%PATH_ZONES_TRUSTED%","1C00",0x10003,0x0030000
+
+; Softdist policies
+HKCU,"%PATH_ZONES_TRUSTED%","1E05",0x10003,0x0030000 
+
+;
+; End of "Trusted" zone policies
+
+; --- Zones
+;     |
+;     +---The Internet
+;
+
+; The "Internet" zone attributes
+
+HKCU,"%PATH_ZONES_INTERNET%",,,
+HKCU,"%PATH_ZONES_INTERNET%","DisplayName",,%NAME_INTERNET%
+HKCU,"%PATH_ZONES_INTERNET%","Description",,%DESC_INTERNET%
+HKCU,"%PATH_ZONES_INTERNET%","Icon",,%ZICON_INTERNET%
+HKCU,"%PATH_ZONES_INTERNET%","CurrentLevel",0x10003,0x11000
+HKCU,"%PATH_ZONES_INTERNET%","MinLevel",0x10001,0x11000
+HKCU,"%PATH_ZONES_INTERNET%","RecommendedLevel",0x10001,0x11000
+HKCU,"%PATH_ZONES_INTERNET%","Flags",0x10001,0x1 ; custom edit
+
+;
+; "Internet" Zone Policies
+;
+
+; Download policies
+HKCU,"%PATH_ZONES_INTERNET%","1001",0x10003,0x1
+HKCU,"%PATH_ZONES_INTERNET%","1004",0x10003,0x3
+
+; Active content policies 
+HKCU,"%PATH_ZONES_INTERNET%","1200",0x10003,0x0 
+HKCU,"%PATH_ZONES_INTERNET%","1201",0x10003,0x3
+HKCU,"%PATH_ZONES_INTERNET%","1400",0x10003,0x0
+HKCU,"%PATH_ZONES_INTERNET%","1402",0x10003,0x0
+HKCU,"%PATH_ZONES_INTERNET%","1405",0x10003,0x0
+HKCU,"%PATH_ZONES_INTERNET%","1406",0x10003,0x3
+HKCU,"%PATH_ZONES_INTERNET%","1407",0x10003,0x0
+
+; HTML policies
+HKCU,"%PATH_ZONES_INTERNET%","1601",0x10003,0x1
+HKCU,"%PATH_ZONES_INTERNET%","1604",0x10003,0x0
+HKCU,"%PATH_ZONES_INTERNET%","1605",0x10003,0x0
+HKCU,"%PATH_ZONES_INTERNET%","1606",0x10003,0x0
+HKCU,"%PATH_ZONES_INTERNET%","1607",0x10003,0x0
+
+; Shell policies
+HKCU,"%PATH_ZONES_INTERNET%","1800",0x10003,0x1
+HKCU,"%PATH_ZONES_INTERNET%","1802",0x10003,0x0
+HKCU,"%PATH_ZONES_INTERNET%","1803",0x10003,0x0
+HKCU,"%PATH_ZONES_INTERNET%","1804",0x10003,0x1
+HKCU,"%PATH_ZONES_INTERNET%","1805",0x10001,0x1
+
+; Network policies
+HKCU,"%PATH_ZONES_INTERNET%","1A00",0x10003,0x0020000  
+HKCU,"%PATH_ZONES_INTERNET%","1A02",0x10003,0x0  
+HKCU,"%PATH_ZONES_INTERNET%","1A03",0x10003,0x0  
+
+; Java policies
+HKCU,"%PATH_ZONES_INTERNET%","1C00",0x10003,0x0010000
+
+; Softdist policies
+HKCU,"%PATH_ZONES_INTERNET%","1E05",0x10003,0x0020000 
+
+
+; --- Zones
+;     |
+;     +---Untrusted sites
+;
+
+HKCU,"%PATH_ZONES_UNTRUSTED%",,,    ; The "Untrusted" zone attributes 
+HKCU,"%PATH_ZONES_UNTRUSTED%","DisplayName",,%NAME_UNTRUSTED%
+HKCU,"%PATH_ZONES_UNTRUSTED%","Description",,%DESC_UNTRUSTED%
+HKCU,"%PATH_ZONES_UNTRUSTED%","Icon",,%ZICON_UNTRUSTED%
+HKCU,"%PATH_ZONES_UNTRUSTED%","CurrentLevel",0x10003,0x12000
+HKCU,"%PATH_ZONES_UNTRUSTED%","MinLevel",0x10001,0x12000
+HKCU,"%PATH_ZONES_UNTRUSTED%","RecommendedLevel",0x10001,0x12000
+HKCU,"%PATH_ZONES_UNTRUSTED%","Flags",0x10001,0x03 ; custom edit, add sites 
+
+;
+; "Untrusted" Zone Policies
+;
+
+; Download policies
+HKCU,"%PATH_ZONES_UNTRUSTED%","1001",0x10003,0x3
+HKCU,"%PATH_ZONES_UNTRUSTED%","1004",0x10003,0x3
+
+; Active content policies 
+HKCU,"%PATH_ZONES_UNTRUSTED%","1200",0x10003,0x3
+HKCU,"%PATH_ZONES_UNTRUSTED%","1201",0x10003,0x3
+HKCU,"%PATH_ZONES_UNTRUSTED%","1400",0x10003,0x3
+HKCU,"%PATH_ZONES_UNTRUSTED%","1402",0x10003,0x3
+HKCU,"%PATH_ZONES_UNTRUSTED%","1405",0x10003,0x0
+HKCU,"%PATH_ZONES_UNTRUSTED%","1406",0x10003,0x3
+HKCU,"%PATH_ZONES_UNTRUSTED%","1407",0x10003,0x3
+
+;; bugbug - Java policy (TBD)
+
+; HTML policies
+HKCU,"%PATH_ZONES_UNTRUSTED%","1601",0x10003,0x1
+HKCU,"%PATH_ZONES_UNTRUSTED%","1604",0x10003,0x1
+HKCU,"%PATH_ZONES_UNTRUSTED%","1605",0x10003,0x0
+HKCU,"%PATH_ZONES_UNTRUSTED%","1606",0x10003,0x3
+HKCU,"%PATH_ZONES_UNTRUSTED%","1607",0x10003,0x3
+
+; Shell policies
+HKCU,"%PATH_ZONES_UNTRUSTED%","1800",0x10003,0x3
+HKCU,"%PATH_ZONES_UNTRUSTED%","1802",0x10003,0x1
+HKCU,"%PATH_ZONES_UNTRUSTED%","1803",0x10003,0x3
+HKCU,"%PATH_ZONES_UNTRUSTED%","1804",0x10003,0x3
+HKCU,"%PATH_ZONES_UNTRUSTED%","1805",0x10003,0x1
+
+; Network policies
+HKCU,"%PATH_ZONES_UNTRUSTED%","1A00",0x10003,0x0010000 
+HKCU,"%PATH_ZONES_UNTRUSTED%","1A02",0x10003,0x3 
+HKCU,"%PATH_ZONES_UNTRUSTED%","1A03",0x10003,0x3 
+
+; Java policies
+HKCU,"%PATH_ZONES_UNTRUSTED%","1C00",0x10003,0x0010000
+
+; Softdist policies
+HKCU,"%PATH_ZONES_UNTRUSTED%","1E05",0x10003,0x0010000
+
+
+
+[ZoneMap.RegCU]
+
+HKCU,"%PATH_ZONEMAP%",,,
+HKCU,"%PATH_ZONEMAP%","ProxyByPass",0x10001,0x1   ; ProxyByPass to Intranet zone. 
+HKCU,"%PATH_ZONEMAP%","IntranetName",0x10001,0x1  ; Use Intranet names. 
+HKCU,"%PATH_ZONEMAP%","UNCAsIntranet",0x10001,0x1  ; put UNC's in Intranet.  
+
+; --- ZoneMap
+;     |
+;     +---ProtocolDefaults
+;
+
+HKCU,"%PATH_ZONEMAP_PROTOCOLS%",,,  
+HKCU,"%PATH_ZONEMAP_PROTOCOLS%","http",0x10001,0x3 ; Internet
+HKCU,"%PATH_ZONEMAP_PROTOCOLS%","https",0x10001,0x3 ; Internet
+HKCU,"%PATH_ZONEMAP_PROTOCOLS%","ftp",0x10001,0x3 ; Internet
+HKCU,"%PATH_ZONEMAP_PROTOCOLS%","file",0x10001,0x3 ; Internet
+HKCU,"%PATH_ZONEMAP_PROTOCOLS%","@ivt",0x10001,0x1 ; Intranet
+
+; --- ZoneMap
+;     |
+;     +---Domains
+;
+
+HKCU,"%PATH_ZONEMAP_DOMAINS%",,,    
+
+; --- ZoneMap
+;     |
+;     +---Ranges
+;
+
+HKCU,"%PATH_ZONEMAP_RANGES%",,, 
+
+[Zones.RegLM]
+
+; --- The root Zones key
+HKLM,"%PATH_ZONES%",,,
+
+; --- Zones
+;     |
+;     +---Local
+;
+HKLM,"%PATH_ZONES_LOCAL%",,,    ; The "Local" zone attributes
+HKLM,"%PATH_ZONES_LOCAL%","DisplayName",,%NAME_LOCAL%
+HKLM,"%PATH_ZONES_LOCAL%","Description",,%DESC_LOCAL%
+HKLM,"%PATH_ZONES_LOCAL%","Icon",,%ZICON_LOCAL%
+HKLM,"%PATH_ZONES_LOCAL%","CurrentLevel",0x10001,0x00000
+;;Current level for local zone should always be custom
+;;bugbug - don't need min/rec level in Local machine zone
+HKLM,"%PATH_ZONES_LOCAL%","Flags",0x10001,0x21 
+
+; "Local Machine" Zone Policies
+;
+
+; Download policies
+HKLM,"%PATH_ZONES_LOCAL%","1001",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1004",0x10003,0x0 
+
+; Active content policies 
+HKLM,"%PATH_ZONES_LOCAL%","1200",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1201",0x10003,0x1 
+HKLM,"%PATH_ZONES_LOCAL%","1400",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1402",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1405",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1406",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1407",0x10003,0x0 
+
+;; bugbug - Java policy (TBD)
+
+; HTML policies
+HKLM,"%PATH_ZONES_LOCAL%","1601",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1604",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1605",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1606",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1607",0x10003,0x0 
+
+; Shell policies
+HKLM,"%PATH_ZONES_LOCAL%","1800",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1802",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1803",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1804",0x10003,0x0 
+HKLM,"%PATH_ZONES_LOCAL%","1805",0x10001,0x0 
+
+; Network policies
+HKLM,"%PATH_ZONES_LOCAL%","1A00",0x10003,0x0000000 
+HKLM,"%PATH_ZONES_LOCAL%","1A02",0x10003,0x0
+HKLM,"%PATH_ZONES_LOCAL%","1A03",0x10003,0x0
+
+; Java policies
+HKLM,"%PATH_ZONES_LOCAL%","1C00",0x10003,0x0020000 
+
+; Softdist policies
+HKLM,"%PATH_ZONES_LOCAL%","1E05",0x10003,0x0030000
+
+
+; --- Zones
+;     |
+;     +---Intranet
+;
+HKLM,"%PATH_ZONES_INTRANET%",,, ; The "Intranet" zone attributes
+HKLM,"%PATH_ZONES_INTRANET%","DisplayName",,%NAME_INTRANET%
+HKLM,"%PATH_ZONES_INTRANET%","Description",,%DESC_INTRANET%
+HKLM,"%PATH_ZONES_INTRANET%","Icon",,%ZICON_INTRANET%
+HKLM,"%PATH_ZONES_INTRANET%","CurrentLevel",0x10003,0x10500
+HKLM,"%PATH_ZONES_INTRANET%","MinLevel",0x10001,0x10000
+HKLM,"%PATH_ZONES_INTRANET%","RecommendedLevel",0x10001,0x10500
+HKLM,"%PATH_ZONES_INTRANET%","Flags",0x10003,0xDB 
+; Flags = req. verif., include proxy override, include intranet sites
+
+;
+; "Intranet" Zone Policies
+;
+
+; Download policies
+HKLM,"%PATH_ZONES_INTRANET%","1001",0x10003,0x1 ; d/l signed activex
+HKLM,"%PATH_ZONES_INTRANET%","1004",0x10003,0x3 ; d/l unsigned activex
+
+; Active content policies 
+HKLM,"%PATH_ZONES_INTRANET%","1200",0x10003,0x0 ; run ocx & plugins
+HKLM,"%PATH_ZONES_INTRANET%","1201",0x10003,0x3 ; override object safety
+HKLM,"%PATH_ZONES_INTRANET%","1400",0x10003,0x0 ; run scripts
+HKLM,"%PATH_ZONES_INTRANET%","1402",0x10003,0x0 ; scripts interact w/ applets
+HKLM,"%PATH_ZONES_INTRANET%","1405",0x10003,0x0 ; script ActiveX marked safe
+HKLM,"%PATH_ZONES_INTRANET%","1406",0x10003,0x1 ; cross domain data
+HKLM,"%PATH_ZONES_INTRANET%","1407",0x10003,0x0 ; script paste
+
+;; bugbug - Java policy (TBD)
+
+; HTML policies
+HKLM,"%PATH_ZONES_INTRANET%","1601",0x10003,0x0 ; form submit
+HKLM,"%PATH_ZONES_INTRANET%","1604",0x10003,0x0 ; HTML font download
+HKLM,"%PATH_ZONES_INTRANET%","1605",0x10003,0x0 ; HTML Java Run
+HKLM,"%PATH_ZONES_INTRANET%","1606",0x10003,0x0 ; userdata
+HKLM,"%PATH_ZONES_INTRANET%","1607",0x10003,0x0 ; cross-domain subframe navigate
+
+; Shell policies
+HKLM,"%PATH_ZONES_INTRANET%","1800",0x10003,0x1 ; install dt component
+HKLM,"%PATH_ZONES_INTRANET%","1802",0x10003,0x0 ; copy/move file
+HKLM,"%PATH_ZONES_INTRANET%","1803",0x10003,0x0 ; do file download
+HKLM,"%PATH_ZONES_INTRANET%","1804",0x10003,0x1 ; default verb invoke
+HKLM,"%PATH_ZONES_INTRANET%","1805",0x10001,0x0 ; webview verb invoke
+
+; Network policies
+HKLM,"%PATH_ZONES_INTRANET%","1A00",0x10003,0x0020000 ; credentials use.
+HKLM,"%PATH_ZONES_INTRANET%","1A02",0x10003,0x0 ; cookies.
+HKLM,"%PATH_ZONES_INTRANET%","1A03",0x10003,0x0 ; cookies.
+
+; Java policies
+HKLM,"%PATH_ZONES_INTRANET%","1C00",0x10003,0x0020000 ; Java permissions
+
+; Softdist policies
+HKLM,"%PATH_ZONES_INTRANET%","1E05",0x10003,0x0020000 ; SoftDist tag in CDF?
+
+;
+; End of Intranet policies
+;
+
+
+; --- Zones
+;     |
+;     +---Trusted Web sites
+;
+
+HKLM,"%PATH_ZONES_TRUSTED%",,,      ; The "Trusted" zone attributes
+HKLM,"%PATH_ZONES_TRUSTED%","DisplayName",,%NAME_TRUSTED%
+HKLM,"%PATH_ZONES_TRUSTED%","Description",,%DESC_TRUSTED%
+HKLM,"%PATH_ZONES_TRUSTED%","Icon",,%ZICON_TRUSTED%
+HKLM,"%PATH_ZONES_TRUSTED%","CurrentLevel",0x10003,0x10000
+HKLM,"%PATH_ZONES_TRUSTED%","MinLevel",0x10001,0x10000
+HKLM,"%PATH_ZONES_TRUSTED%","RecommendedLevel",0x10001,0x10000
+HKLM,"%PATH_ZONES_TRUSTED%","Flags",0x10001,0x47 ; custom edit, add sites, server verify
+
+;
+; "Trusted" Zone Policies
+;
+
+; Download policies
+HKLM,"%PATH_ZONES_TRUSTED%","1001",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1004",0x10003,0x1
+
+; Active content policies 
+HKLM,"%PATH_ZONES_TRUSTED%","1200",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1201",0x10003,0x1
+HKLM,"%PATH_ZONES_TRUSTED%","1400",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1402",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1405",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1406",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1407",0x10003,0x0
+
+; HTML policies
+HKLM,"%PATH_ZONES_TRUSTED%","1601",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1604",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1605",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1606",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1607",0x10003,0x0
+
+; Shell policies
+HKLM,"%PATH_ZONES_TRUSTED%","1800",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1802",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1803",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1804",0x10003,0x0
+HKLM,"%PATH_ZONES_TRUSTED%","1805",0x10001,0x0
+
+; Network policies
+HKLM,"%PATH_ZONES_TRUSTED%","1A00",0x10003,0x0000000 
+HKLM,"%PATH_ZONES_TRUSTED%","1A02",0x10003,0x0 
+HKLM,"%PATH_ZONES_TRUSTED%","1A03",0x10003,0x0 
+
+; Java policies
+HKLM,"%PATH_ZONES_TRUSTED%","1C00",0x10003,0x0030000
+
+; Softdist policies
+HKLM,"%PATH_ZONES_TRUSTED%","1E05",0x10003,0x0030000
+
+;
+; End of "Trusted" zone policies
+
+; --- Zones
+;     |
+;     +---The Internet
+;
+
+; The "Internet" zone attributes
+
+HKLM,"%PATH_ZONES_INTERNET%",,,
+HKLM,"%PATH_ZONES_INTERNET%","DisplayName",,%NAME_INTERNET%
+HKLM,"%PATH_ZONES_INTERNET%","Description",,%DESC_INTERNET%
+HKLM,"%PATH_ZONES_INTERNET%","Icon",,%ZICON_INTERNET%
+HKLM,"%PATH_ZONES_INTERNET%","CurrentLevel",0x10003,0x11000
+HKLM,"%PATH_ZONES_INTERNET%","MinLevel",0x10001,0x11000
+HKLM,"%PATH_ZONES_INTERNET%","RecommendedLevel",0x10001,0x11000
+HKLM,"%PATH_ZONES_INTERNET%","Flags",0x10001,0x1 ; custom edit
+
+;
+; "Internet" Zone Policies
+;
+
+; Download policies
+HKLM,"%PATH_ZONES_INTERNET%","1001",0x10003,0x1
+HKLM,"%PATH_ZONES_INTERNET%","1004",0x10003,0x3
+
+; Active content policies 
+HKLM,"%PATH_ZONES_INTERNET%","1200",0x10003,0x0 
+HKLM,"%PATH_ZONES_INTERNET%","1201",0x10003,0x3
+HKLM,"%PATH_ZONES_INTERNET%","1400",0x10003,0x0
+HKLM,"%PATH_ZONES_INTERNET%","1402",0x10003,0x0
+HKLM,"%PATH_ZONES_INTERNET%","1405",0x10003,0x0
+HKLM,"%PATH_ZONES_INTERNET%","1406",0x10003,0x3
+HKLM,"%PATH_ZONES_INTERNET%","1407",0x10003,0x0
+
+; HTML policies
+HKLM,"%PATH_ZONES_INTERNET%","1601",0x10003,0x1
+HKLM,"%PATH_ZONES_INTERNET%","1604",0x10003,0x0
+HKLM,"%PATH_ZONES_INTERNET%","1605",0x10003,0x0
+HKLM,"%PATH_ZONES_INTERNET%","1606",0x10003,0x0
+HKLM,"%PATH_ZONES_INTERNET%","1607",0x10003,0x0
+
+; Shell policies
+HKLM,"%PATH_ZONES_INTERNET%","1800",0x10003,0x1
+HKLM,"%PATH_ZONES_INTERNET%","1802",0x10003,0x0
+HKLM,"%PATH_ZONES_INTERNET%","1803",0x10003,0x0
+HKLM,"%PATH_ZONES_INTERNET%","1804",0x10003,0x1
+HKLM,"%PATH_ZONES_INTERNET%","1805",0x10001,0x1
+
+; Network policies
+HKLM,"%PATH_ZONES_INTERNET%","1A00",0x10003,0x0020000 
+HKLM,"%PATH_ZONES_INTERNET%","1A02",0x10003,0x0 
+HKLM,"%PATH_ZONES_INTERNET%","1A03",0x10003,0x0 
+
+; Java policies
+HKLM,"%PATH_ZONES_INTERNET%","1C00",0x10003,0x0010000
+
+; Softdist policies
+HKLM,"%PATH_ZONES_INTERNET%","1E05",0x10003,0x0020000
+
+
+; --- Zones
+;     |
+;     +---Untrusted sites
+;
+
+HKLM,"%PATH_ZONES_UNTRUSTED%",,,    ; The "Untrusted" zone attributes 
+HKLM,"%PATH_ZONES_UNTRUSTED%","DisplayName",,%NAME_UNTRUSTED%
+HKLM,"%PATH_ZONES_UNTRUSTED%","Description",,%DESC_UNTRUSTED%
+HKLM,"%PATH_ZONES_UNTRUSTED%","Icon",,%ZICON_UNTRUSTED%
+HKLM,"%PATH_ZONES_UNTRUSTED%","CurrentLevel",0x10003,0x12000
+HKLM,"%PATH_ZONES_UNTRUSTED%","MinLevel",0x10001,0x12000
+HKLM,"%PATH_ZONES_UNTRUSTED%","RecommendedLevel",0x10001,0x12000
+HKLM,"%PATH_ZONES_UNTRUSTED%","Flags",0x10001,0x03 ; custom edit, add sites 
+
+;
+; "Untrusted" Zone Policies
+;
+
+; Download policies
+HKLM,"%PATH_ZONES_UNTRUSTED%","1001",0x10003,0x3
+HKLM,"%PATH_ZONES_UNTRUSTED%","1004",0x10003,0x3
+
+; Active content policies 
+HKLM,"%PATH_ZONES_UNTRUSTED%","1200",0x10003,0x3
+HKLM,"%PATH_ZONES_UNTRUSTED%","1201",0x10003,0x3
+HKLM,"%PATH_ZONES_UNTRUSTED%","1400",0x10003,0x3
+HKLM,"%PATH_ZONES_UNTRUSTED%","1402",0x10003,0x3
+HKLM,"%PATH_ZONES_UNTRUSTED%","1405",0x10003,0x0
+HKLM,"%PATH_ZONES_UNTRUSTED%","1406",0x10003,0x3
+HKLM,"%PATH_ZONES_UNTRUSTED%","1407",0x10003,0x3
+
+;; bugbug - Java policy (TBD)
+
+; HTML policies
+HKLM,"%PATH_ZONES_UNTRUSTED%","1601",0x10003,0x1
+HKLM,"%PATH_ZONES_UNTRUSTED%","1604",0x10003,0x1
+HKLM,"%PATH_ZONES_UNTRUSTED%","1605",0x10003,0x0
+HKLM,"%PATH_ZONES_UNTRUSTED%","1606",0x10003,0x3
+HKLM,"%PATH_ZONES_UNTRUSTED%","1607",0x10003,0x3
+
+; Shell policies
+HKLM,"%PATH_ZONES_UNTRUSTED%","1800",0x10003,0x3
+HKLM,"%PATH_ZONES_UNTRUSTED%","1802",0x10003,0x1
+HKLM,"%PATH_ZONES_UNTRUSTED%","1803",0x10003,0x3
+HKLM,"%PATH_ZONES_UNTRUSTED%","1804",0x10003,0x3
+HKLM,"%PATH_ZONES_UNTRUSTED%","1805",0x10001,0x1
+
+; Network policies
+HKLM,"%PATH_ZONES_UNTRUSTED%","1A00",0x10003,0x0010000 
+HKLM,"%PATH_ZONES_UNTRUSTED%","1A02",0x10003,0x3 
+HKLM,"%PATH_ZONES_UNTRUSTED%","1A03",0x10003,0x3 
+
+; Java policies
+HKLM,"%PATH_ZONES_UNTRUSTED%","1C00",0x10003,0x0010000
+
+; Softdist policies
+HKLM,"%PATH_ZONES_UNTRUSTED%","1E05",0x10003,0x0010000
+
+[TemplatePolicies.RegLM]
+
+; --- The root TemplatePolicies key
+HKLM,"%PATH_TEMPOL%",,,
+
+
+; --- TemplatePolicies
+;     |
+;     +---Low
+; The comments after each reg entry in this template match those in the custom settings dialog box
+; The next template has comments in the older style
+
+HKLM,"%PATH_TEMPOL_LOW%",,, ; The "Low" zone template
+HKLM,"%PATH_TEMPOL_LOW%","TemplateIndex",0x10001,0x10000
+HKLM,"%PATH_TEMPOL_LOW%","DisplayName",,%NAME_TEMPOL_LOW% 
+HKLM,"%PATH_TEMPOL_LOW%","Description",,%DESC_TEMPOL_LOW%
+HKLM,"%PATH_TEMPOL_LOW%","Icon",,%ZICON_TEMPOL_LOW%
+
+; Download policies
+HKLM,"%PATH_TEMPOL_LOW%","1001",0x10001,0x0 ; d/l signed activex
+HKLM,"%PATH_TEMPOL_LOW%","1004",0x10001,0x1 ; d/l unsigned activex
+
+; Active content policies 
+HKLM,"%PATH_TEMPOL_LOW%","1200",0x10001,0x0 ; run activex controls and plug ins
+HKLM,"%PATH_TEMPOL_LOW%","1201",0x10001,0x1 ; initialize and script activex controls not marked as safe
+HKLM,"%PATH_TEMPOL_LOW%","1400",0x10001,0x0 ; active scripting
+HKLM,"%PATH_TEMPOL_LOW%","1402",0x10001,0x0 ; scripting of java applets
+HKLM,"%PATH_TEMPOL_LOW%","1405",0x10001,0x0 ; script controls marked safe for scripting
+HKLM,"%PATH_TEMPOL_LOW%","1406",0x10001,0x0 ; access data sources across domains
+HKLM,"%PATH_TEMPOL_LOW%","1407",0x10001,0x0 ; script paste
+
+
+; HTML policies
+HKLM,"%PATH_TEMPOL_LOW%","1601",0x10001,0x0 ; submit non-encrypted form data
+HKLM,"%PATH_TEMPOL_LOW%","1604",0x10001,0x0 ; Downloads: font downloads
+HKLM,"%PATH_TEMPOL_LOW%","1605",0x10001,0x0 ; Webview: Not an option in customs
+HKLM,"%PATH_TEMPOL_LOW%","1606",0x10001,0x0 ; userdata
+HKLM,"%PATH_TEMPOL_LOW%","1607",0x10001,0x0 ; cross domain sub-frame navigate
+
+; Shell policies
+HKLM,"%PATH_TEMPOL_LOW%","1800",0x10001,0x0 ; installation of desktop items
+HKLM,"%PATH_TEMPOL_LOW%","1802",0x10001,0x0 ; Drag & drop or copy & paste files 
+HKLM,"%PATH_TEMPOL_LOW%","1803",0x10001,0x0 ; file download
+HKLM,"%PATH_TEMPOL_LOW%","1804",0x10001,0x0 ; Launching applications and files in an IFRAME
+
+; Network policies
+HKLM,"%PATH_TEMPOL_LOW%","1A00",0x10001,0x0000000 ; Logon: auto, prompt, etc.
+HKLM,"%PATH_TEMPOL_LOW%","1A02",0x10001,0x0 ; persistant cookies
+HKLM,"%PATH_TEMPOL_LOW%","1A03",0x10001,0x0 ; session cookies
+
+; Java policies
+HKLM,"%PATH_TEMPOL_LOW%","1C00",0x10001,0x0030000 ; Java permissions
+
+; Softdist policies
+HKLM,"%PATH_TEMPOL_LOW%","1E05",0x10001,0x0030000 ; Software channel permssions
+
+
+; --- TemplatePolicies
+;     |
+;     +---RecIntranet
+; The comments after each reg entry in this template match the older style of identification
+; The comments in the previous template match those in the custom settings dialog box
+
+HKLM,"%PATH_TEMPOL_MEDLOW%",,,  ; The "Recommended for Intanet" zone template
+HKLM,"%PATH_TEMPOL_MEDLOW%","TemplateIndex",0x10001,0x10500
+HKLM,"%PATH_TEMPOL_MEDLOW%","DisplayName",,%NAME_TEMPOL_MEDLOW% 
+HKLM,"%PATH_TEMPOL_MEDLOW%","Description",,%DESC_TEMPOL_MEDLOW%
+HKLM,"%PATH_TEMPOL_MEDLOW%","Icon",,%ZICON_TEMPOL_MEDLOW%
+
+; Download policies
+HKLM,"%PATH_TEMPOL_MEDLOW%","1001",0x10001,0x1 ; d/l signed activex
+HKLM,"%PATH_TEMPOL_MEDLOW%","1004",0x10001,0x3 ; d/l unsigned activex
+
+; Active content policies 
+HKLM,"%PATH_TEMPOL_MEDLOW%","1200",0x10001,0x0 ; run ocx & plugins
+HKLM,"%PATH_TEMPOL_MEDLOW%","1201",0x10001,0x3 ; override object safety
+HKLM,"%PATH_TEMPOL_MEDLOW%","1400",0x10001,0x0 ; run scripts
+HKLM,"%PATH_TEMPOL_MEDLOW%","1402",0x10001,0x0 ; scripts interact w/ applets
+HKLM,"%PATH_TEMPOL_MEDLOW%","1405",0x10001,0x0 ; script safe ActiveX
+HKLM,"%PATH_TEMPOL_MEDLOW%","1406",0x10001,0x1 ; cross domain data
+HKLM,"%PATH_TEMPOL_MEDLOW%","1407",0x10001,0x0 ;
+
+; HTML policies
+HKLM,"%PATH_TEMPOL_MEDLOW%","1601",0x10001,0x0 ; form submit
+HKLM,"%PATH_TEMPOL_MEDLOW%","1604",0x10001,0x0 ; HTML font download
+HKLM,"%PATH_TEMPOL_MEDLOW%","1605",0x10001,0x0 ; HTML Java Run
+HKLM,"%PATH_TEMPOL_MEDLOW%","1606",0x10001,0x0 ; userdata
+HKLM,"%PATH_TEMPOL_MEDLOW%","1607",0x10001,0x0 ; 
+
+; Shell policies
+HKLM,"%PATH_TEMPOL_MEDLOW%","1800",0x10001,0x1 ; install dt component
+HKLM,"%PATH_TEMPOL_MEDLOW%","1802",0x10001,0x0 ; move/copy file
+HKLM,"%PATH_TEMPOL_MEDLOW%","1803",0x10001,0x0 ; do file download
+HKLM,"%PATH_TEMPOL_MEDLOW%","1804",0x10001,0x1 ; default verb invoke
+
+; Network policies
+HKLM,"%PATH_TEMPOL_MEDLOW%","1A00",0x10001,0x0020000  ; Auto Logon 
+HKLM,"%PATH_TEMPOL_MEDLOW%","1A02",0x10001,0x0 ; Accept cookies
+HKLM,"%PATH_TEMPOL_MEDLOW%","1A03",0x10001,0x0 
+
+; Java policies
+HKLM,"%PATH_TEMPOL_MEDLOW%","1C00",0x10001,0x0020000 ; Java permissions
+
+; Softdist policies
+HKLM,"%PATH_TEMPOL_MEDLOW%","1E05",0x10001,0x0020000 ; SoftDist tag in CDF?
+
+
+; --- TemplatePolicies
+;     |
+;     +---Medium
+;
+
+HKLM,"%PATH_TEMPOL_MED%",,, 
+HKLM,"%PATH_TEMPOL_MED%","TemplateIndex",0x10001,0x11000
+HKLM,"%PATH_TEMPOL_MED%","DisplayName",,%NAME_TEMPOL_MED%
+HKLM,"%PATH_TEMPOL_MED%","Description",,%DESC_TEMPOL_MED%
+HKLM,"%PATH_TEMPOL_MED%","Icon",,%ZICON_TEMPOL_MED%
+
+; Download policies
+HKLM,"%PATH_TEMPOL_MED%","1001",0x10001,0x1
+HKLM,"%PATH_TEMPOL_MED%","1004",0x10001,0x3
+
+; Active content policies 
+HKLM,"%PATH_TEMPOL_MED%","1200",0x10001,0x0 
+HKLM,"%PATH_TEMPOL_MED%","1201",0x10001,0x3
+HKLM,"%PATH_TEMPOL_MED%","1400",0x10001,0x0
+HKLM,"%PATH_TEMPOL_MED%","1402",0x10001,0x0
+HKLM,"%PATH_TEMPOL_MED%","1405",0x10001,0x0
+HKLM,"%PATH_TEMPOL_MED%","1406",0x10001,0x3
+HKLM,"%PATH_TEMPOL_MED%","1407",0x10001,0x0
+
+; HTML policies
+HKLM,"%PATH_TEMPOL_MED%","1601",0x10001,0x1
+HKLM,"%PATH_TEMPOL_MED%","1604",0x10001,0x0
+HKLM,"%PATH_TEMPOL_MED%","1605",0x10001,0x0
+HKLM,"%PATH_TEMPOL_MED%","1606",0x10001,0x0
+HKLM,"%PATH_TEMPOL_MED%","1607",0x10001,0x0
+
+; Shell policies
+HKLM,"%PATH_TEMPOL_MED%","1800",0x10001,0x1
+HKLM,"%PATH_TEMPOL_MED%","1802",0x10001,0x0
+HKLM,"%PATH_TEMPOL_MED%","1803",0x10001,0x0
+HKLM,"%PATH_TEMPOL_MED%","1804",0x10001,0x1
+
+; Network policies
+HKLM,"%PATH_TEMPOL_MED%","1A00",0x10001,0x0020000 
+HKLM,"%PATH_TEMPOL_MED%","1A02",0x10001,0x0 
+HKLM,"%PATH_TEMPOL_MED%","1A03",0x10001,0x0 
+
+; Java policies
+HKLM,"%PATH_TEMPOL_MED%","1C00",0x10001,0x0010000
+
+; Softdist policies
+HKLM,"%PATH_TEMPOL_MED%","1E05",0x10001,0x0020000
+
+
+
+; --- TemplatePolicies
+;     |
+;     +---High
+;
+HKLM,"%PATH_TEMPOL_HI%",,,
+HKLM,"%PATH_TEMPOL_HI%","TemplateIndex",0x10001,0x12000
+HKLM,"%PATH_TEMPOL_HI%","DisplayName",,%NAME_TEMPOL_HI%
+HKLM,"%PATH_TEMPOL_HI%","Description",,%DESC_TEMPOL_HI%
+HKLM,"%PATH_TEMPOL_HI%","Icon",,%ZICON_TEMPOL_HI%
+
+; Download policies
+HKLM,"%PATH_TEMPOL_HI%","1001",0x10001,0x3
+HKLM,"%PATH_TEMPOL_HI%","1004",0x10001,0x3
+
+; Active content policies 
+HKLM,"%PATH_TEMPOL_HI%","1200",0x10001,0x3
+HKLM,"%PATH_TEMPOL_HI%","1201",0x10001,0x3
+HKLM,"%PATH_TEMPOL_HI%","1400",0x10001,0x3
+HKLM,"%PATH_TEMPOL_HI%","1402",0x10001,0x3
+HKLM,"%PATH_TEMPOL_HI%","1405",0x10001,0x0
+HKLM,"%PATH_TEMPOL_HI%","1406",0x10001,0x3
+HKLM,"%PATH_TEMPOL_HI%","1407",0x10001,0x3
+
+;; bugbug - Java policy (TBD)
+
+; HTML policies
+HKLM,"%PATH_TEMPOL_HI%","1601",0x10001,0x1
+HKLM,"%PATH_TEMPOL_HI%","1604",0x10001,0x1
+HKLM,"%PATH_TEMPOL_HI%","1605",0x10001,0x0
+HKLM,"%PATH_TEMPOL_HI%","1606",0x10001,0x3
+HKLM,"%PATH_TEMPOL_HI%","1607",0x10001,0x3
+
+; Shell policies
+HKLM,"%PATH_TEMPOL_HI%","1800",0x10001,0x3
+HKLM,"%PATH_TEMPOL_HI%","1802",0x10001,0x1
+HKLM,"%PATH_TEMPOL_HI%","1803",0x10001,0x3
+HKLM,"%PATH_TEMPOL_HI%","1804",0x10001,0x3
+
+; Network policies
+HKLM,"%PATH_TEMPOL_HI%","1A00",0x10001,0x0010000 
+HKLM,"%PATH_TEMPOL_HI%","1A02",0x10001,0x3 
+HKLM,"%PATH_TEMPOL_HI%","1A03",0x10001,0x3 
+
+; Java policies
+HKLM,"%PATH_TEMPOL_HI%","1C00",0x10001,0x0010000
+
+; Softdist policies
+HKLM,"%PATH_TEMPOL_HI%","1E05",0x10001,0x0010000
+
+
+
+[ZoneMap.RegLM]
+
+HKLM,"%PATH_ZONEMAP%",,,
+HKLM,"%PATH_ZONEMAP%","ProxyByPass",0x10001,0x1   ; ProxyByPass to Intranet zone. 
+HKLM,"%PATH_ZONEMAP%","IntranetName",0x10001,0x1  ; Use Intranet names. 
+HKLM,"%PATH_ZONEMAP%","UNCAsIntranet",0x10001,0x1  ; put UNC's in Intranet.  
+
+; --- ZoneMap
+;     |
+;     +---ProtocolDefaults
+;
+
+HKLM,"%PATH_ZONEMAP_PROTOCOLS%",,,  
+HKLM,"%PATH_ZONEMAP_PROTOCOLS%","http",0x10001,0x3 ; Internet
+HKLM,"%PATH_ZONEMAP_PROTOCOLS%","https",0x10001,0x3 ; Internet
+HKLM,"%PATH_ZONEMAP_PROTOCOLS%","ftp",0x10001,0x3 ; Internet
+HKLM,"%PATH_ZONEMAP_PROTOCOLS%","file",0x10001,0x3 ; Internet
+HKLM,"%PATH_ZONEMAP_PROTOCOLS%","@ivt",0x10001,0x1 ; Intranet
+
+
+; --- ZoneMap
+;     |
+;     +---Domains
+;
+
+HKLM,"%PATH_ZONEMAP_DOMAINS%",,,    
+
+; --- ZoneMap
+;     |
+;     +---Ranges
+;
+
+HKLM,"%PATH_ZONEMAP_RANGES%",,, 
+
+[UATokens.RegLM]
+
+; --- User Agent
+;     |
+;     +---UA Tokens
+;
+
+HKLM, "%PATH_UA_TOKENS%",,,
+HKLM, "%PATH_UA_TOKENS%","MSN 2.0",,
+HKLM, "%PATH_UA_TOKENS%","MSN 2.5",,
+
+[Strings]
+
+
+; Roots of the various registry keys we setup stuff under
+
+PATH_ZONES="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones"
+PATH_ZONES_LOCAL="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\0"
+PATH_ZONES_INTRANET="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\1"
+PATH_ZONES_TRUSTED="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\2"
+PATH_ZONES_INTERNET="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\3"
+PATH_ZONES_UNTRUSTED="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\4"
+
+PATH_TEMPOL="Software\Microsoft\Windows\CurrentVersion\Internet Settings\TemplatePolicies"
+PATH_TEMPOL_LOW="Software\Microsoft\Windows\CurrentVersion\Internet Settings\TemplatePolicies\Low"
+PATH_TEMPOL_MEDLOW="Software\Microsoft\Windows\CurrentVersion\Internet Settings\TemplatePolicies\MedLow"
+PATH_TEMPOL_MED="Software\Microsoft\Windows\CurrentVersion\Internet Settings\TemplatePolicies\Medium"
+PATH_TEMPOL_HI="Software\Microsoft\Windows\CurrentVersion\Internet Settings\TemplatePolicies\High"
+
+PATH_ZONEMAP="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap"
+PATH_ZONEMAP_PROTOCOLS="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\ProtocolDefaults"
+PATH_ZONEMAP_DOMAINS="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains"
+PATH_ZONEMAP_RANGES="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Ranges"
+
+PATH_INTERNET_SETTINGS="Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+PATH_UA_TOKENS="Software\Microsoft\Windows\CurrentVersion\Internet Settings\User Agent\UA Tokens"
+PATH_DECLINED_COMPONENTS="Software\Microsoft\Active Setup\Declined Components IEv5.PP1"
+
+; Icon designations
+
+ZICON_LOCAL="explorer.exe#0100"
+ZICON_INTRANET="shell32.dll#0018"
+ZICON_TRUSTED="inetcpl.cpl#00004480"
+ZICON_INTERNET="inetcpl.cpl#001313"
+ZICON_UNTRUSTED="inetcpl.cpl#00004481"
+
+;; bugbug - icons?
+ZICON_TEMPOL_HI="wininet.dll#00001205"
+ZICON_TEMPOL_MED="wininet.dll#00001206"
+ZICON_TEMPOL_MEDLOW="wininet.dll#00001206"
+ZICON_TEMPOL_LOW="wininet.dll#00001207"
+
+;
+; These strings should be localized.
+;
+EngineErrorMsg="SETUPAPI.DLL is missing"
+
+NAME_LOCAL="My Computer"
+DESC_LOCAL="Your computer"
+NAME_INTRANET="Local intranet"
+DESC_INTRANET="This zone contains all Web sites that are on your organization's intranet."
+NAME_TRUSTED="Trusted sites"
+DESC_TRUSTED="This zone contains Web sites that you trust not to damage your computer or data."
+NAME_INTERNET="Internet"
+DESC_INTERNET="This zone contains all Web sites you haven't placed in other zones"
+NAME_UNTRUSTED="Restricted sites"
+DESC_UNTRUSTED="This zone contains Web sites that could potentially damage your computer or data."
+
+NAME_TEMPOL_HI="High safety (very secure)"
+NAME_TEMPOL_MED="Medium safety (medium security)"
+NAME_TEMPOL_MEDLOW="Intranet recommended safety (less secure)"
+NAME_TEMPOL_LOW="Low safety (very insecure)"
+
+DESC_TEMPOL_HI="Exclude content that could damage your computer."
+DESC_TEMPOL_MED="Warn before running potentially damaging content."
+DESC_TEMPOL_MEDLOW="Recommended for intranet."
+DESC_TEMPOL_LOW="Do not warn before running potentially damaging content."
+
+

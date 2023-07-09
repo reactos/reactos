@@ -1,0 +1,11 @@
+MIPS_SOURCES=..\mips\chandler.c \
+             ..\mips\context.c  \
+             ..\mips\debugstb.s \
+             ..\mips\exdsptch.c \
+             ..\mips\getcalr.c  \
+             ..\mips\largeint.s \
+             ..\mips\lzntmips.s \
+             ..\mips\trampoln.s \
+             ..\mips\xcptmisc.s \
+             ..\mips\xxcaptur.s \
+             ..\mips\xxmvmem.s

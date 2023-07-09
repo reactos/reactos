@@ -1,5 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "Control Method Battery Miniclass Driver"
-#define REACTOS_STR_INTERNAL_NAME     "cmbatt"
-#define REACTOS_STR_ORIGINAL_FILENAME "cmbatt.sys"
-#include <reactos/version.rc>

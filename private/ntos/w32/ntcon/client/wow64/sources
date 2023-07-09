@@ -1,0 +1,15 @@
+ALT_PROJECT=WOW64
+ALT_PROJECT_TARGET=WOW64
+
+!include ..\sources.inc
+
+SOURCES=..\cmdline.c \
+        ..\ctrlc.c   \
+        ..\dllinit.c \
+        ..\iostubs.c \
+        ..\private.c \
+        ..\stream.c  \
+        ..\getset.c  \
+        ..\dbcs.c   
+
+C_DEFINES=$(C_DEFINES) -DBUILD_WOW64

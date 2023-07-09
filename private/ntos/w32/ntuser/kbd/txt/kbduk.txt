@@ -1,0 +1,135 @@
+KBD	UK	"United Kingdom"
+
+VERSION	1.0
+
+SHIFTSTATE
+
+ 0	;Column 4 :
+ 1	;Column 5 : Shift
+ 2	;Column 6 :       Control
+ 3	;Column 7 : Shift Control
+ 6	;Column 8 :       Control Alt
+ 7	;Column 9 : Shift Control Alt
+
+LAYOUT		;an extra '@' at the end is a dead key
+
+;SC  VK_         Cap	0	1	2	3	6	7
+
+ 29  OEM_8       0	`	00ac	-1	-1	00a6
+ 02  1           0	1	!
+ 03  2           0	2	"
+ 04  3           0	3	00a3
+ 05  4           0	4	$	-1	-1	20ac
+ 06  5           0	5	%
+ 07  6           0	6	^	-1	001e
+ 08  7           0	7	&
+ 09  8           0	8	*
+ 0a  9           0	9	(
+ 0b  0           0	0	)
+ 0c  OEM_MINUS   0	-	_	-1	001f
+ 0d  OEM_PLUS    0	=	+
+ 10  Q           1	q	Q
+ 11  W           1	w	W
+ 12  E           5	e	E	-1	-1	00e9	00c9
+ 13  R           1	r	R
+ 14  T           1	t	T
+ 15  Y           1	y	Y
+ 16  U           5	u	U	-1	-1	00fa	00da
+ 17  I           5	i	I	-1	-1	00ed	00cd
+ 18  O           5	o	O	-1	-1	00f3	00d3
+ 19  P           1	p	P
+ 1a  OEM_4       0	[	{	001b
+ 1b  OEM_6       0	]	}	001d
+ 2b  OEM_7       0	#	~	001c
+ 1e  A           5	a	A	-1	-1	00e1	00c1
+ 1f  S           1	s	S
+ 20  D           1	d	D
+ 21  F           1	f	F
+ 22  G           1	g	G
+ 23  H           1	h	H
+ 24  J           1	j	J
+ 25  K           1	k	K
+ 26  L           1	l	L
+ 27  OEM_1       0	;	:
+ 28  OEM_3       0	'	@	-1	0000
+ 2c  Z           1	z	Z
+ 2d  X           1	x	X
+ 2e  C           1	c	C
+ 2f  V           1	v	V
+ 30  B           1	b	B
+ 31  N           1	n	N
+ 32  M           1	m	M
+ 33  OEM_COMMA   0	,	<
+ 34  OEM_PERIOD  0	.	>
+ 35  OEM_2       0	/	?
+ 56  OEM_5       0	\	|	001c
+ 53  DECIMAL     0	.	.
+
+KEYNAME
+
+ 01	ESC
+ 0e	BACKSPACE
+ 0f	TAB
+ 1c	ENTER
+ 1d	CTRL
+ 2a	SHIFT
+ 36	"RIGHT SHIFT"
+ 37	NUMMULT
+ 38	ALT
+ 39	SPACE
+ 3a	CAPSLOCK
+ 3b	F1
+ 3c	F2
+ 3d	F3
+ 3e	F4
+ 3f	F5
+ 40	F6
+ 41	F7
+ 42	F8
+ 43	F9
+ 44	F10
+ 45	Pause
+ 46	"SCROLL LOCK"
+ 47	"NUM 7"
+ 48	"NUM 8"
+ 49	"NUM 9"
+ 4a	"NUM SUB"
+ 4b	"NUM 4"
+ 4c	"NUM 5"
+ 4d	"NUM 6"
+ 4e	"NUM PLUS"
+ 4f	"NUM 1"
+ 50	"NUM 2"
+ 51	"NUM 3"
+ 52	"NUM 0"
+ 53	"NUM DECIMAL"
+ 57	F11
+ 58	F12
+
+KEYNAME_EXT
+
+ 1c	"NUM ENTER"
+ 1d	"Right Ctrl"
+ 35	"NUM DIVIDE"
+ 37	"Prnt Scrn"
+ 38	"RIGHT ALT"
+ 45	"Num Lock"
+ 46	Break
+ 47	HOME
+ 48	UP
+ 49	PGUP
+ 4b	LEFT
+ 4d	RIGHT
+ 4f	END
+ 50	DOWN
+ 51	PGDOWN
+ 52	INSERT
+ 53	DELETE
+ 54	<00>
+ 56	Help
+ 5b	"Left Windows"
+ 5c	"Right Windows"
+ 5d	Application
+
+ENDKBD
+

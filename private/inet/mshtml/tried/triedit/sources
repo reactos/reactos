@@ -1,0 +1,72 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\tried\triedit=)
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+
+TARGETNAME=triedit
+TARGETPATHLIB=$(_OBJ_DIR)
+TARGETPATH=$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+DLLENTRY=_DllMainCRTStartup
+
+COFFBASE=triedit
+DLLDEF=$O\triedit.def
+UMDEF=
+
+MSC_WARNING_LEVEL=/W4
+
+CONDITIONAL_INCLUDES=triedit.rcs
+
+INCLUDES= .; ..\inc;$(BASEDIR)\public\sdk\inc\atl21;$(SDK_LIB_PATH);
+
+# list all cpp files below in alphabetical order
+SOURCES=\
+	triedit.idl	\
+	dispatch.cpp	\
+	document.cpp	\
+	filter.cpp	\
+	htmparse.cpp	\
+	icmdtgt.cpp	\
+	idhuihnd.cpp	\
+	idroptgt.cpp	\
+	ioleobj.cpp	\
+	lexer.cpp	\
+	table.cpp	\
+	trace.cpp	\
+	triedit.cpp	\
+	undo.cpp	\
+	win95wrp.cpp    \
+	zorder.cpp	\
+	triedit.rc
+
+	
+USE_MIDL_FOR_MKTYPLIB=1
+
+PRECOMPILED_INCLUDE=stdafx.h
+PRECOMPILED_PCH=stdafx.pch
+PRECOMPILED_OBJ=stdafx.obj
+PRECOMPILED_CXX=1
+
+TARGETLIBS= \
+	$(SDK_LIB_PATH)\uuid.lib	\
+	$(SDK_LIB_PATH)\oleaut32.lib	\
+	$(SDK_LIB_PATH)\ole32.lib	\
+	$(SDK_LIB_PATH)\kernel32.lib	\
+	$(SDK_LIB_PATH)\gdi32.lib	\
+	$(SDK_LIB_PATH)\user32.lib	\
+	$(SDK_LIB_PATH)\advapi32.lib	\
+	$(SDK_LIB_PATH)\atl.lib		\
+	$(SDK_LIB_PATH)\msvcrt.lib	\
+	$(SDK_LIB_PATH)\msvcirt.lib \
+!IF $(IA64)
+    $(SDK_LIB_PATH)\atl21asm.lib
+!ENDIF
+
+
+

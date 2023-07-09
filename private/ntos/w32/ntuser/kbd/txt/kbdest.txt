@@ -1,0 +1,229 @@
+KBD	EST	"Estonia"
+
+		// LCID     : 0425
+		// CodePage : 1257
+
+		// Created  : 04/29/96 13:04:10
+
+		// Source   : kbdEST.kbd
+		//   Date   : 11/27/95 14:49:26
+
+
+VERSION	1.0
+
+
+SHIFTSTATE
+
+  0		// Column 4 :
+  1		// Column 5 : Shft
+  6		// Column 6 :      Ctrl Alt
+  7		// Column 7 : Shft Ctrl Alt
+  2		// Column 8 :      Ctrl
+  3		// Column 9 : Shft Ctrl
+
+LAYOUT		// extra @ indicates a dead key
+
+//SC  VK_        Cap	0	1	6	7	2	3
+//--  ---------- ---	----	----	----	----	----	----
+  29  OEM_7      0	02c7@	~@	-1	-1	001c		// Ž
+  02  1          0	1	!
+  03  2          0	2	"	@	@
+  04  3          0	3	#	00a3	00a3			// £ £
+  05  4          0	4	00a4	$	$			// ¤
+  06  5          0	5	%	20ac
+  07  6          0	6	&	-1	-1	-1	001e
+  08  7          0	7	/	{	{
+  09  8          0	8	(	[	[
+  0a  9          0	9	)	]	]
+  0b  0          0	0	=	}	}
+  0c  OEM_MINUS  0	+	?	\	\
+  0d  OEM_PLUS   0	00b4@	`@					// ´
+//--  ---------- ---	----	----	----	----	----	----
+  10  Q          1	q	Q
+  11  W          1	w	W
+  12  E          1	e	E       20ac
+  13  R          1	r	R
+  14  T          1	t	T
+  15  Y          1	y	Y
+  16  U          1	u	U
+  17  I          1	i	I
+  18  O          1	o	O
+  19  P          1	p	P
+  1a  OEM_3      1	00fc	00dc					// ü Ü
+  1b  OEM_4      1	00f5	00d5	00a7	00a7			// õ Õ § §
+  2b  OEM_5      0	'	*	00bd	00bd			// ½ ½
+//--  ---------- ---	----	----	----	----	----	----
+  1e  A          1	a	A
+  1f  S          1	s	S	0161	0160			// S-Caron
+  20  D          1	d	D
+  21  F          1	f	F
+  22  G          1	g	G
+  23  H          1	h	H
+  24  J          1	j	J
+  25  K          1	k	K
+  26  L          1	l	L
+  27  OEM_1      1	00f6	00d6	-1	-1	001b		// ö Ö
+  28  OEM_2      1	00e4	00c4	^@	^	001d		// ä Ä
+//--  ---------- ---	----	----	----	----	----	----
+  2c  Z          1	z	Z	017e	017d			// Z-Caron
+  2d  X          1	x	X
+  2e  C          1	c	C
+  2f  V          1	v	V
+  30  B          1	b	B
+  31  N          1	n	N
+  32  M          1	m	M
+  33  OEM_COMMA  0	,	;
+  34  OEM_PERIOD 0	.	:
+  35  OEM_6      0	-	_	-1	-1	001f
+  56  OEM_102    0	<	>	|	|	001c
+//--  ---------- ---	----	----	----	----	----	----
+  53  DECIMAL    0	,	.
+//--  ---------- ---	----	----	----	----	----	----
+//SC  VK_        Cap	0	1	6	7	2	3
+
+DEADKEY	0060	// `
+
+  0061	00e0	// a -> à
+  006f	00f2	// o -> ò
+  0065	00e8	// e -> è
+  0075	00f9	// u -> ù
+  0041	00c0	// A -> À
+  004f	00d2	// O -> Ò
+  0045	00c8	// E -> È
+  0055	00d9	// U -> Ù
+  0020	0060	//   -> `
+
+DEADKEY	00b4	// ´
+
+  006e	0144	// n -> n acute
+  004e	0143	// N -> N acute
+  0063	0107	// c -> c acute
+  0043	0106	// C -> C acute
+  006f	00f3	// o -> ó
+  004f	00d3	// O -> Ó
+  0065	00e9	// e -> é
+  0045	00c9	// E -> É
+  0073	015b	// s -> s acute
+  0053	015a	// S -> S acute
+  007a	017a	// z -> z acute
+  005a	0179	// Z -> Z acute
+  0020	00b4	//   -> ´
+
+DEADKEY	005e	// ^
+
+  0061	00e2	// a -> â
+  0069	00ee	// i -> î
+  0065	00ea	// e -> e circumflex
+  0075	00fb	// u -> u circumflex
+  0067	011d	// g -> g circumflex
+  0041	00c2	// A -> A circumflex
+  0049	00ce	// I -> I circumflex
+  0045	00ca	// E -> E circumflex
+  0055	00db	// U -> U circumflex
+  0047	011c	// G -> G circumflex
+  0020	005e	//   -> ^
+
+DEADKEY	02c7	// Caron (hacek)
+
+  0073	0161	// s -> s caron
+  0053	0160	// S -> S caron
+  0063	010d	// c -> c caron
+  0043	010c	// C -> C caron
+  007a	017e	// z -> z caron
+  005a	017d	// Z -> Z caron
+  0020	02c7	//   -> spacing caron
+
+DEADKEY	007e	// ~
+
+  006f	00f5	// o -> õ
+  004f	00d5	// O -> Õ
+  0020	007e	//   -> ~
+
+KEYNAME
+
+  01	Esc
+  0e	Backspace
+  0f	Tab
+  1c	Enter
+  1d	Ctrl
+  2a	Shift
+  36	"Right Shift"
+  37	"Num *"
+  38	Alt
+  39	Space
+  3a	"Caps Lock"
+  3b	F1
+  3c	F2
+  3d	F3
+  3e	F4
+  3f	F5
+  40	F6
+  41	F7
+  42	F8
+  43	F9
+  44	F10
+  45	Pause
+  46	"Scroll Lock"
+  47	"Num 7"
+  48	"Num 8"
+  49	"Num 9"
+  4a	"Num -"
+  4b	"Num 4"
+  4c	"Num 5"
+  4d	"Num 6"
+  4e	"Num +"
+  4f	"Num 1"
+  50	"Num 2"
+  51	"Num 3"
+  52	"Num 0"
+  53	"Num Del"
+  54	"Sys Req"
+  57	F11
+  58	F12
+  7c	F13
+  7d	F14
+  7e	F15
+  7f	F16
+  80	F17
+  81	F18
+  82	F19
+  83	F20
+  84	F21
+  85	F22
+  86	F23
+  87	F24
+
+KEYNAME_EXT
+
+  1c	"Num Enter"
+  1d	"Right Control"
+  35	"Num /"
+  37	"Prnt Scrn"
+  38	"Right Alt"
+  45	"Num Lock"
+  46	Break
+  47	Home
+  48	Up
+  49	"Page Up"
+  4b	Left
+  4d	Right
+  4f	End
+  50	Down
+  51	"Page Down"
+  52	Insert
+  53	Delete
+  54	<00>
+  56	Help
+  5b	"Left Windows"
+  5c	"Right Windows"
+  5d	Application
+
+KEYNAME_DEAD
+
+  0060	GRAVE
+  00b4	ACUTE
+  005e	CIRCUMFLEX
+  02c7	CARON
+  007e	TILDE
+
+ENDKBD

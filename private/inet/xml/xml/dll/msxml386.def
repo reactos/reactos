@@ -1,0 +1,9 @@
+LIBRARY         MSXML
+DESCRIPTION     'Microsoft MSXML.DLL Version 2.0'
+
+EXPORTS
+
+DllCanUnloadNow        PRIVATE
+DllGetClassObject      PRIVATE                                   
+DllRegisterServer      PRIVATE                                   
+DllUnregisterServer    PRIVATE                                   

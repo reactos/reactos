@@ -1,0 +1,48 @@
+#
+#   Create vidcap32.exe
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=vidcap32
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=windows
+UMENTRY=winmain
+DLLDEF=vidcap32.def
+
+
+C_DEFINES=-DWIN32
+
+# Define libs we need and where to find them
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\version.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\comdlg32.lib \
+	   $(_NTBINDIR)\public\sdk\lib\*\msacm32.lib	\
+           ..\lib\*\msvfw32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\shell32.lib \
+           ..\lib\*\avicap32.lib
+
+INCLUDES=$(_NTBINDIR)\private\windows\media\avi\inc;$(_NTBINDIR)\private\windows\media\inc
+
+SOURCES=        	\
+        vidcap.c        \
+        dialogs.c       \
+        vidframe.c      \
+        toolbar.c       \
+        status.c        \
+        profile.c       \
+        arrow.c         \
+        rlmeter.c       \
+        help.c          \
+        vidcap.rc
+
+
+
+

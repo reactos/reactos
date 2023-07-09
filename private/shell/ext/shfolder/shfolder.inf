@@ -1,0 +1,24 @@
+[version]
+signature="$CHICAGO$"
+AdvancedINF=2.0
+
+[DefaultInstall]
+;RequiredEngine=Setupapi,%BadSetupVer%
+CopyFiles=ShellSys.CopyFiles
+CheckAdminRights=1
+SmartReboot=N
+
+[ShellSys.CopyFiles]
+shfolder.dll
+
+[DestinationDirs]
+ShellSys.CopyFiles	= 11
+	
+[SourceDisksNames]
+55="shfolder","shfolder.exe",0
+
+[SourceDisksFiles]
+shfolder.dll=55
+
+[Strings]
+BadSetupVer = "Your system is missing the required Setup engine."

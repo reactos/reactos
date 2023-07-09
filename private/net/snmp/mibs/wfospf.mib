@@ -1,0 +1,2098 @@
+
+-- Wellfleet-Series7-MIB
+
+-- Creation date            : Tue Feb 21 11:03:44 EST 1995
+-- Series 7 Software Release: 
+
+-- Copyright 1994 Wellfleet Communications, Inc.  All Rights
+-- Reserved.  Reproduction of this document is authorized on
+-- condition that the foregoing copyright notice is included.
+-- This Wellfleet SNMP Management Information Base Specification
+-- (Specification) embodies Wellfleet's confidential and
+-- proprietary intellectual property.  Wellfleet retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+--
+-- It is Wellfleet's intent to encourage the widespread use of
+-- this Specification in connection with the management of
+-- Wellfleet products. Wellfleet grants vendors, end-users,
+-- and other interested parties a non-exclusive license to
+-- use this Specification in connection with the management
+-- of Wellfleet products utilizing series 7.xx system software.
+--
+-- This Specification is supplied "AS IS", and Wellfleet makes
+-- no warranty, either expressed or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+-- Copyright text courtesy of D. Perkins.
+
+
+RFC7777-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+
+  IpAddress, Counter, Gauge, TimeTicks, Opaque, enterprises
+    FROM RFC1155-SMI
+  OBJECT-TYPE
+    FROM RFC-1212
+  DisplayString
+    FROM RFC1213-MIB;
+
+wellfleet       OBJECT IDENTIFIER ::= { enterprises 18 }
+
+wfOspfGeneralGroup      OBJECT IDENTIFIER ::= { wellfleet 3 5 3 2 3 1 }
+
+wfOspfGeneralDelete OBJECT-TYPE
+	SYNTAX  INTEGER {
+		created(1),
+		deleted(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     'This value determines whether OSPF is configured'
+		 "
+	DEFVAL  { created }
+	::= { wfOspfGeneralGroup 1 }
+
+wfOspfGeneralDisable OBJECT-TYPE
+	SYNTAX  INTEGER {
+		enabled(1),
+		disabled(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The administrative status of OSPF in the router.  The
+			    value 'enabled' denotes that the OSPF Process is active
+			    on at least one interface; 'disabled' disables it on
+			    all interfaces.'
+		 "
+	DEFVAL  { enabled }
+	::= { wfOspfGeneralGroup 2 }
+
+wfOspfGeneralState OBJECT-TYPE
+	SYNTAX  INTEGER {
+		up(1),
+		down(2),
+		init(3),
+		notpresent(4)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		    'The state of OSPF'
+		 "
+	DEFVAL  { down }
+	::= { wfOspfGeneralGroup 3 }
+
+wfOspfRouterId OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A 32-bit integer uniquely identifying the router in
+			    the Autonomous System.
+			    By convention, to ensure uniqueness, this should
+			    default to the value of one of the router's IP
+			    interface addresses.'
+			 REFERENCE
+			    'OSPF Version 2, C.1 Global parameters'
+		 "
+	::= { wfOspfGeneralGroup 4 }
+
+wfOspfVersionNumber OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The current version number of the OSPF protocol is 2.'
+			 REFERENCE
+			    'OSPF Version 2, Title'
+		 "
+	::= { wfOspfGeneralGroup 5 }
+
+wfOspfAreaBdrRtrStatus OBJECT-TYPE
+	SYNTAX  INTEGER {
+		true(1),
+		false(2)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A flag to note whether this router is an area border
+			    router.'
+			 REFERENCE
+			    'OSPF Version 2, Section 3 Splitting the AS into Areas'
+		 "
+	DEFVAL  { false }
+	::= { wfOspfGeneralGroup 6 }
+
+wfOspfASBdrRtrStatus OBJECT-TYPE
+	SYNTAX  INTEGER {
+		true(1),
+		false(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A flag to note whether this router is an Autonomous
+			    System border router.'
+			 REFERENCE
+			    'OSPF Version 2, Section 3.3 Classification of routers'
+		 "
+	DEFVAL  { false }
+	::= { wfOspfGeneralGroup 7 }
+
+wfOspfTOSSupport OBJECT-TYPE
+	SYNTAX  INTEGER {
+		true(1),
+		false(2)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The router's support for type-of-service routing.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix F.1.2 Optional TOS support'
+		 "
+	DEFVAL  { false }
+	::= { wfOspfGeneralGroup 8 }
+
+wfOspfSpfHoldDown OBJECT-TYPE
+	SYNTAX  INTEGER {
+		defval(1),
+		maximum(10)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		       Hold Down Timer for the SPF.  The SPF will run at most
+		       once per hold down timer value.  A value of 0 means no
+		       hold down.
+		 "
+	DEFVAL  { defval }
+	::= { wfOspfGeneralGroup 9 }
+
+wfOspfSlotMask OBJECT-TYPE
+	SYNTAX  INTEGER {
+		slotmask(4261150720)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		       Slot mask for which slots OSPF is eligible
+		       to run on.  The MSBit represents slot 1, the
+		       next most significant bit represents slot 2,
+		       and so on...  Slots can be 1-14.
+		       Default is all slots on a BCN.
+		 "
+	DEFVAL  { slotmask }
+	::= { wfOspfGeneralGroup 10 }
+
+wfOspfAreaTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF WfOspfAreaEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     --      The OSPF Area Data Structure contains information
+		     --      regarding the various areas. The interfaces and
+		     --      virtual links are configured as part of these areas.
+		     --      Area 0.0.0.0, by definition, is the Backbone Area
+			    'Information describing the configured parameters and
+			    cumulative statistics of the router's attached areas.'
+			 REFERENCE
+			    'OSPF Version 2, Section 6  The Area Data Structure'
+		 "
+	::= { wellfleet 3 5 3 2 3 2 }
+
+wfOspfAreaEntry OBJECT-TYPE
+	SYNTAX  WfOspfAreaEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'Information describing the configured parameters and
+			    cumulative statistics of one of the router's attached
+			    areas.'
+		 "
+	INDEX   { wfOspfAreaId }
+	::= { wfOspfAreaTable 1 }
+
+WfOspfAreaEntry ::= SEQUENCE {
+	wfOspfAreaDelete
+		INTEGER,
+	wfOspfAreaDisable
+		INTEGER,
+	wfOspfAreaState
+		INTEGER,
+	wfOspfAreaId
+		IpAddress,
+	wfOspfAuthType
+		INTEGER,
+	wfOspfImportASExtern
+		INTEGER,
+	wfOspfStubMetric
+		INTEGER,
+	wfOspfImportSum
+		INTEGER,
+	wfOspfSpfCnt
+		Counter
+}
+
+wfOspfAreaDelete OBJECT-TYPE
+	SYNTAX  INTEGER {
+		created(1),
+		deleted(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    This value determines if the OSPF router is configured with
+		     this area.
+		 "
+	DEFVAL  { created }
+	::= { wfOspfAreaEntry 1 }
+
+wfOspfAreaDisable OBJECT-TYPE
+	SYNTAX  INTEGER {
+		enabled(1),
+		disabled(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     This value indicates the state of this area on the OSPF
+		     router.
+		 "
+	DEFVAL  { enabled }
+	::= { wfOspfAreaEntry 2 }
+
+wfOspfAreaState OBJECT-TYPE
+	SYNTAX  INTEGER {
+		up(1),
+		down(2)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    This value indicates the state of the OSPF Area.
+		 "
+	DEFVAL  { down }
+	::= { wfOspfAreaEntry 3 }
+
+wfOspfAreaId OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A 32-bit integer uniquely identifying an area.  Area
+			    ID 0.0.0.0 is used for the OSPF backbone.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix C.2 Area parameters'
+		 "
+	::= { wfOspfAreaEntry 4 }
+
+wfOspfAuthType OBJECT-TYPE
+	SYNTAX  INTEGER {
+		nopassword(1),
+		simplepassword(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The authentication type specified for an area.
+			    Additional authentication types may be assigned locally
+			    on a per Area basis.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix E Authentication'
+				     -- none (0),
+				     -- simplePassword (1)
+				     -- reserved for future specification (2..255)
+				     -- reserved for AS specific values (> 255)
+		 "
+	DEFVAL  { nopassword }
+	::= { wfOspfAreaEntry 5 }
+
+wfOspfImportASExtern OBJECT-TYPE
+	SYNTAX  INTEGER {
+		true(1),
+		false(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The area's support for importing AS external link-
+			    state advertisements.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix C.2 Area parameters'
+		 "
+	DEFVAL  { true }
+	::= { wfOspfAreaEntry 6 }
+
+wfOspfStubMetric OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		maximum(16777215)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The metric value applied at the indicated type of
+			    service.  By default, this equals the least metric at
+			    the type of service among the interfaces to other
+			    areas.'
+		 "
+	DEFVAL  { minimum }
+	::= { wfOspfAreaEntry 7 }
+
+wfOspfImportSum OBJECT-TYPE
+	SYNTAX  INTEGER {
+		true(1),
+		false(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The area's support for importing Summary 
+			    advertisements into a stub area.  This variable
+		   should not be set unless wfOspfImportASExtern is
+		   set to FALSE'
+		 "
+	DEFVAL  { true }
+	::= { wfOspfAreaEntry 8 }
+
+wfOspfSpfCnt OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     The number of times the OSPF SPF algorithm
+		     has been run for this area.
+		 "
+	::= { wfOspfAreaEntry 9 }
+
+wfOspfLsdbTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF WfOspfLsdbEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     --  OSPF Link State Database
+		     --      The Link State Database contains the Link State
+		     --      Advertisements from throughout the areas that the
+		     --      device is attached to.
+			    'The OSPF Process's Links State Database.'
+			 REFERENCE
+			    'OSPF Version 2, Section 12 Link State Advertisements'
+		"
+	::= { wellfleet 3 5 3 2 3 3 }
+
+wfOspfLsdbEntry OBJECT-TYPE
+	SYNTAX  WfOspfLsdbEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A single Link State Advertisement.'
+		 "
+	INDEX   { wfOspfLsdbAreaId,
+		wfOspfLsdbType,
+		wfOspfLsdbLSID,
+		wfOspfLsdbRouterId }
+	::= { wfOspfLsdbTable 1 }
+
+WfOspfLsdbEntry ::= SEQUENCE {
+	wfOspfLsdbAreaId
+		IpAddress,
+	wfOspfLsdbType
+		INTEGER,
+	wfOspfLsdbLSID
+		IpAddress,
+	wfOspfLsdbRouterId
+		IpAddress,
+	wfOspfLsdbSequence
+		INTEGER,
+	wfOspfLsdbAge
+		INTEGER,
+	wfOspfLsdbChecksum
+		INTEGER,
+	wfOspfLsdbAdvLen
+		INTEGER
+}
+
+wfOspfLsdbAreaId OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The 32 bit identifier of the Area from which the LSA
+			    was received.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix C.2 Area parameters'
+		 "
+	::= { wfOspfLsdbEntry 1 }
+
+wfOspfLsdbType OBJECT-TYPE
+	SYNTAX  INTEGER {
+		routerlink(1),
+		networklink(2),
+		summarylink(3),
+		assummarylink(4),
+		asexternallink(5)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The type of the link state advertisement.  Each link
+			    state type has a separate advertisement format.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix A.4.1 The Link State
+			    Advertisement header'
+		       stubLink   (0),
+				     routerLink (1),
+				     networkLink (2),
+				     summaryLink (3),
+				     asSummaryLink (4),
+				     asExternalLink (5)
+		 "
+	::= { wfOspfLsdbEntry 2 }
+
+wfOspfLsdbLSID OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The Link State ID is an LS Type Specific field
+			    containing either a Router ID or an IP Address; it
+			    identifies the piece of the routing domain that is
+			    being described by the advertisement.'
+			 REFERENCE
+			    'OSPF Version 2, Section 12.1.4 Link State ID'
+		 "
+	::= { wfOspfLsdbEntry 3 }
+
+wfOspfLsdbRouterId OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The 32 bit number that uniquely identifies the
+			    originating router in the Autonomous System.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix C.1 Global parameters'
+		 "
+	::= { wfOspfLsdbEntry 4 }
+
+wfOspfLsdbSequence OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     --  Note that the OSPF Sequence Number is a 32 bit signed
+		     --  integer.  It starts with the value '80000001'h,
+		     --  or -'7FFFFFFF'h, and increments until '7FFFFFFF'h
+		     --  Thus, a typical sequence number will be very negative.
+			    'The sequence number field is a signed 32-bit integer.
+			    It is used to detect old and duplicate link state
+			    advertisements.  The space of sequence numbers is
+			    linearly ordered.  The larger the sequence number the
+			    more recent the advertisement.'
+			 REFERENCE
+			    'OSPF Version 2, Section 12.1.6 LS sequence number'
+		 "
+	::= { wfOspfLsdbEntry 5 }
+
+wfOspfLsdbAge OBJECT-TYPE
+	SYNTAX  INTEGER {
+		lsdbmaxage(3600)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'This field is the age of the link state advertisement
+			    in seconds.'
+		      (OSPF_LSDBMINAGE = 0)
+			 REFERENCE
+			    'OSPF Version 2, Section 12.1.1 LS age'
+		 "
+	::= { wfOspfLsdbEntry 6 }
+
+wfOspfLsdbChecksum OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'This field is the checksum of the complete contents of
+			    the advertisement, excepting the age field.  The age
+			    field is excepted so that an advertisement's age can be
+			    incremented without updating the checksum.  The
+			    checksum used is the same that is used for ISO
+			    connectionless datagrams; it is commonly referred to as
+			    the Fletcher checksum.'
+			 REFERENCE
+			    'OSPF Version 2, Section 12.1.7 LS checksum'
+		 "
+	::= { wfOspfLsdbEntry 7 }
+
+wfOspfLsdbAdvLen OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The length of entire Link State Advertisement, including its
+			    header.'
+			 REFERENCE
+			    'OSPF Version 2, Section 12 Link State Advertisements'
+		 "
+	::= { wfOspfLsdbEntry 8 }
+
+wfOspfAreaRangeTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF WfOspfAreaRangeEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A range if IP addresses specified by an IP address/IP
+			    network mask pair.  For example, class B address range
+			    of X.X.X.X with a network mask of 255.255.0.0 includes
+			    all IP addresses from X.X.0.0 to X.X.255.255'
+			 REFERENCE
+			    'OSPF Version 2, Appendix C.2  Area parameters'
+		 "
+	::= { wellfleet 3 5 3 2 3 4 }
+
+wfOspfAreaRangeEntry OBJECT-TYPE
+	SYNTAX  WfOspfAreaRangeEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		 "
+	INDEX   { wfOspfAreaRangeAreaID,
+		wfOspfAreaRangeNet }
+	::= { wfOspfAreaRangeTable 1 }
+
+WfOspfAreaRangeEntry ::= SEQUENCE {
+	wfOspfAreaRangeDelete
+		INTEGER,
+	wfOspfAreaRangeDisable
+		INTEGER,
+	wfOspfAreaRangeState
+		INTEGER,
+	wfOspfAreaRangeAreaID
+		IpAddress,
+	wfOspfAreaRangeNet
+		IpAddress,
+	wfOspfAreaRangeMask
+		IpAddress
+}
+
+wfOspfAreaRangeDelete OBJECT-TYPE
+	SYNTAX  INTEGER {
+		created(1),
+		deleted(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     This value determines if an Area Range has been 
+		     configured for the OSPF router.
+		 "
+	DEFVAL  { created }
+	::= { wfOspfAreaRangeEntry 1 }
+
+wfOspfAreaRangeDisable OBJECT-TYPE
+	SYNTAX  INTEGER {
+		enabled(1),
+		disabled(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'This variable displays the status of
+			    the entry.  Setting it to 'DISBALED' has the effect of
+			    rendering it inoperative.  The internal effect (row
+			    removal) is implementation dependent.'
+		 "
+	DEFVAL  { enabled }
+	::= { wfOspfAreaRangeEntry 2 }
+
+wfOspfAreaRangeState OBJECT-TYPE
+	SYNTAX  INTEGER {
+		up(1),
+		down(2)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     The state of the OSPF Area Range.
+		 "
+	DEFVAL  { down }
+	::= { wfOspfAreaRangeEntry 3 }
+
+wfOspfAreaRangeAreaID OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The Area the Address Range is to be found within.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix C.2 Area parameters'
+		 "
+	::= { wfOspfAreaRangeEntry 4 }
+
+wfOspfAreaRangeNet OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The IP Address of the Net or Subnet indicated by the
+			    range.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix C.2 Area parameters'
+		 "
+	::= { wfOspfAreaRangeEntry 5 }
+
+wfOspfAreaRangeMask OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The Subnet Mask that pertains to the Net or Subnet.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix C.2 Area parameters'
+		 "
+	::= { wfOspfAreaRangeEntry 6 }
+
+wfOspfIfTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF WfOspfIfEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     --  OSPF Interface Table
+		     --      The OSPF Interface Table augments the ifTable with OSPF
+		     --      specific information.
+			    'The OSPF Interface Table describes the interfaces from
+			    the viewpoint of OSPF.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix C.3  Router interface
+			    parameters'
+		 "
+	::= { wellfleet 3 5 3 2 3 5 }
+
+wfOspfIfEntry OBJECT-TYPE
+	SYNTAX  WfOspfIfEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The OSPF Interface Entry describes one interface from
+			    the viewpoint of OSPF.'
+		 "
+	INDEX   { wfOspfIfIpAddress,
+		wfOspfAddressLessIf }
+	::= { wfOspfIfTable 1 }
+
+WfOspfIfEntry ::= SEQUENCE {
+	wfOspfIfDelete
+		INTEGER,
+	wfOspfIfDisable
+		INTEGER,
+	wfOspfIfState
+		INTEGER,
+	wfOspfIfIpAddress
+		IpAddress,
+	wfOspfAddressLessIf
+		INTEGER,
+	wfOspfIfAreaId
+		IpAddress,
+	wfOspfIfType
+		INTEGER,
+	wfOspfIfRtrPriority
+		INTEGER,
+	wfOspfIfTransitDelay
+		INTEGER,
+	wfOspfIfRetransInterval
+		INTEGER,
+	wfOspfIfHelloInterval
+		INTEGER,
+	wfOspfIfRtrDeadInterval
+		INTEGER,
+	wfOspfIfPollInterval
+		INTEGER,
+	wfOspfIfDesignatedRouter
+		IpAddress,
+	wfOspfIfBackupDesignatedRouter
+		IpAddress,
+	wfOspfIfMetricCost
+		INTEGER,
+	wfOspfIfAuthKey
+		OCTET STRING,
+	wfOspfIfTxHellos
+		Counter,
+	wfOspfIfTxDBDescripts
+		Counter,
+	wfOspfIfTxLinkStateReqs
+		Counter,
+	wfOspfIfTxLinkStateUpds
+		Counter,
+	wfOspfIfTxLinkStateAcks
+		Counter,
+	wfOspfIfRxHellos
+		Counter,
+	wfOspfIfRxDBDescripts
+		Counter,
+	wfOspfIfRxLinkStateReqs
+		Counter,
+	wfOspfIfRxLinkStateUpds
+		Counter,
+	wfOspfIfRxLinkStateAcks
+		Counter,
+	wfOspfIfDrops
+		Counter,
+	wfOspfMtuSize
+		INTEGER
+}
+
+wfOspfIfDelete OBJECT-TYPE
+	SYNTAX  INTEGER {
+		created(1),
+		deleted(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     This variable determines in an OSPF Interface has been
+		     configured on the router.
+		 "
+	DEFVAL  { created }
+	::= { wfOspfIfEntry 1 }
+
+wfOspfIfDisable OBJECT-TYPE
+	SYNTAX  INTEGER {
+		enabled(1),
+		disabled(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The OSPF interface's administrative status.  The value
+			    'enabled' denotes that neighbor relationships may be
+			    formed on the interface, and the interface will be
+			    advertised as an internal route to some area.  The
+			    value 'disabled' denotes that the interface is external
+			    to OSPF.'
+		 "
+	DEFVAL  { enabled }
+	::= { wfOspfIfEntry 2 }
+
+wfOspfIfState OBJECT-TYPE
+	SYNTAX  INTEGER {
+		down(1),
+		loopback(2),
+		waiting(3),
+		pointtopoint(4),
+		designatedrouter(5),
+		backupdesignatedrouter(6),
+		otherdesignatedrouter(7)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The OSPF Interface State.'
+				     down (1),
+				     loopback (2),
+				     waiting (3),
+				     pointToPoint (4),
+				     designatedRouter (5),
+				     backupDesignatedRouter (6),
+				     otherDesignatedRouter (7)
+		 "
+	DEFVAL  { down }
+	::= { wfOspfIfEntry 3 }
+
+wfOspfIfIpAddress OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The IP address of this OSPF interface.'
+		 "
+	::= { wfOspfIfEntry 4 }
+
+wfOspfAddressLessIf OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'For the purpose of easing the instancing of addressed
+			    and addressless interfaces; This variable takes the
+			    value 0 on interfaces with IP Addresses, and the
+			    corresponding value of ifIndex for interfaces having no
+			    IP Address.'
+		 "
+	::= { wfOspfIfEntry 5 }
+
+wfOspfIfAreaId OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A 32-bit integer uniquely identifying the area to
+			    which the interface connects.  Area ID 0.0.0.0 is used
+			    for the OSPF backbone.'
+			    default { '00000000'H }    -- 0.0.0.0
+		 "
+	::= { wfOspfIfEntry 6 }
+
+wfOspfIfType OBJECT-TYPE
+	SYNTAX  INTEGER {
+		broadcast(1),
+		nbma(2),
+		pointtopoint(3)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The OSPF interface type.
+			    By way of a default, this field may be intuited from
+			    the corresponding value of ifType.  Broadcast LANs,
+			    such as Ethernet and IEEE 802.5, take the value
+			    'broadcast', X.25, Frame Relay, and similar
+			    technologies take the value 'nbma', and links that are
+			    definitively point to point take the value
+			    'pointToPoint'.'
+				     broadcast (1),
+				     nbma (2),
+				     pointToPoint (3)
+		 "
+	::= { wfOspfIfEntry 7 }
+
+wfOspfIfRtrPriority OBJECT-TYPE
+	SYNTAX  INTEGER {
+		defval(1),
+		maximum(255)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The priority of this interface.  Used in multi-access
+			    networks, this field is used in the designated router
+			    election algorithm.  The value 0 signifies that the
+			    router is not eligible to become the designated router
+			    on this particular network.  In the event of a tie in
+			    this value, routers will use their router id as a tie
+			    breaker.'
+		 "
+	DEFVAL  { defval }
+	::= { wfOspfIfEntry 8 }
+
+wfOspfIfTransitDelay OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		maximum(3600)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The estimated number of seconds it takes to transmit a
+			    link- state update packet over this interface.'
+		 "
+	DEFVAL  { minimum }
+	::= { wfOspfIfEntry 9 }
+
+wfOspfIfRetransInterval OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		defval(5),
+		maximum(3600)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The number of seconds between link-state advertisement
+			    retransmissions, for adjacencies belonging to this
+			    interface.  This value is also used when retransmitting
+			    database description and link-state request packets.'
+		 "
+	DEFVAL  { defval }
+	::= { wfOspfIfEntry 10 }
+
+wfOspfIfHelloInterval OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		defval(10),
+		maximum(65535)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The length of time, in seconds, between the Hello
+			    packets that the router sends on the interface.  This
+			    value must be the same for all routers attached to a
+			    common network.'
+		 "
+	DEFVAL  { defval }
+	::= { wfOspfIfEntry 11 }
+
+wfOspfIfRtrDeadInterval OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		defval(40),
+		maximum(2147483647)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The number of seconds that a router's Hello packets
+			    have not been seen before it's neighbors declare the
+			    router down.  This should be some multiple of the Hello
+			    interval.  This value must be the same for all routers
+			    attached to a common network.'
+		 "
+	DEFVAL  { defval }
+	::= { wfOspfIfEntry 12 }
+
+wfOspfIfPollInterval OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		defval(120),
+		maximum(2147483647)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The larger time interval, in seconds, between the
+			    Hello packets sent to an inactive non-broadcast multi-
+			    access neighbor.'
+		 "
+	DEFVAL  { defval }
+	::= { wfOspfIfEntry 13 }
+
+wfOspfIfDesignatedRouter OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The IP Address of the Designated Router.'
+			    default { '00000000'H }    -- 0.0.0.0
+		 "
+	::= { wfOspfIfEntry 14 }
+
+wfOspfIfBackupDesignatedRouter OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The IP Address of the Backup Designated Router.'
+			    default { '00000000'H }    -- 0.0.0.0
+		 "
+	::= { wfOspfIfEntry 15 }
+
+wfOspfIfMetricCost OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		maximum(65535)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The cost of using this type of service on this
+			    interface.  The default value of the TOS 0 Metric is
+			    10^8 / ifSpeed.
+			    The value FFFF is distinguished to mean 'no route via
+			    this TOS'.'
+		 "
+	DEFVAL  { minimum }
+	::= { wfOspfIfEntry 16 }
+
+wfOspfIfAuthKey OBJECT-TYPE
+	SYNTAX  OCTET STRING
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The Authentication Key.  If the Area's Authorization
+			    Type is simplePassword, and the key length is shorter
+			    than 8 octets, the agent will left adjust and zero fill
+			    to 8 octets.
+			    When read, ospfIfAuthKey always returns an Octet String
+			    of length zero.'
+			    default  { '0000000000000000'H }    -- 0.0.0.0.0.0.0.0
+			 REFERENCE
+			    'OSPF Version 2, Section 9 The Interface Data
+			    Structure'
+		 "
+	::= { wfOspfIfEntry 17 }
+
+wfOspfIfTxHellos OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Hello packets transmitted.
+		 "
+	::= { wfOspfIfEntry 18 }
+
+wfOspfIfTxDBDescripts OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF DataBase Description packets transmitted.
+		 "
+	::= { wfOspfIfEntry 19 }
+
+wfOspfIfTxLinkStateReqs OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Request packets transmitted.
+		 "
+	::= { wfOspfIfEntry 20 }
+
+wfOspfIfTxLinkStateUpds OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Update packets transmitted.
+		 "
+	::= { wfOspfIfEntry 21 }
+
+wfOspfIfTxLinkStateAcks OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link States Acknowledgements transmitted.
+		 "
+	::= { wfOspfIfEntry 22 }
+
+wfOspfIfRxHellos OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Hello packets received.
+		 "
+	::= { wfOspfIfEntry 23 }
+
+wfOspfIfRxDBDescripts OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF DataBase Description packets received.
+		 "
+	::= { wfOspfIfEntry 24 }
+
+wfOspfIfRxLinkStateReqs OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Requests received.
+		 "
+	::= { wfOspfIfEntry 25 }
+
+wfOspfIfRxLinkStateUpds OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Updates received.
+		 "
+	::= { wfOspfIfEntry 26 }
+
+wfOspfIfRxLinkStateAcks OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Acknowledgements received.
+		 "
+	::= { wfOspfIfEntry 27 }
+
+wfOspfIfDrops OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF packets dropped because of invalid information
+		     in the packet.
+		 "
+	::= { wfOspfIfEntry 28 }
+
+wfOspfMtuSize OBJECT-TYPE
+	SYNTAX  INTEGER {
+		defval(1),
+		min(2),
+		maximum(10000)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    Configure MTU size per OSPF inreface
+			"
+	DEFVAL  { defval }
+	::= { wfOspfIfEntry 29 }
+
+wfOspfVirtIfTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF WfOspfVirtIfEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     --  OSPF Virtual Interface Table
+		     --      The Virtual Interface Table describes the virtual
+		     --      links that the OSPF Process is configured to
+		     --      carry on.
+			    'Information about this router's virtual interfaces.'
+			 REFERENCE
+			    'OSPF Version 2, Appendix C.4  Virtual link parameters'
+		 "
+	::= { wellfleet 3 5 3 2 3 6 }
+
+wfOspfVirtIfEntry OBJECT-TYPE
+	SYNTAX  WfOspfVirtIfEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'Information about a single Virtual Interface.'
+		 "
+	INDEX   { wfOspfVirtIfAreaID,
+		wfOspfVirtIfNeighbor }
+	::= { wfOspfVirtIfTable 1 }
+
+WfOspfVirtIfEntry ::= SEQUENCE {
+	wfOspfVirtIfDelete
+		INTEGER,
+	wfOspfVirtIfDisable
+		INTEGER,
+	wfOspfVirtIfState
+		INTEGER,
+	wfOspfVirtIfAreaID
+		IpAddress,
+	wfOspfVirtIfNeighbor
+		IpAddress,
+	wfOspfVirtIfTransitDelay
+		INTEGER,
+	wfOspfVirtIfRetransInterval
+		INTEGER,
+	wfOspfVirtIfHelloInterval
+		INTEGER,
+	wfOspfVirtIfRtrDeadInterval
+		INTEGER,
+	wfOspfVirtIfAuthKey
+		OCTET STRING,
+	wfOspfVirtIfTxHellos
+		Counter,
+	wfOspfVirtIfTxDBDescripts
+		Counter,
+	wfOspfVirtIfTxLinkStateReqs
+		Counter,
+	wfOspfVirtIfTxLinkStateUpds
+		Counter,
+	wfOspfVirtIfTxLinkStateAcks
+		Counter,
+	wfOspfVirtIfRxHellos
+		Counter,
+	wfOspfVirtIfRxDBDescripts
+		Counter,
+	wfOspfVirtIfRxLinkStateReqs
+		Counter,
+	wfOspfVirtIfRxLinkStateUpds
+		Counter,
+	wfOspfVirtIfRxLinkStateAcks
+		Counter,
+	wfOspfVirtIfDrops
+		Counter
+}
+
+wfOspfVirtIfDelete OBJECT-TYPE
+	SYNTAX  INTEGER {
+		created(1),
+		deleted(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		 "
+	DEFVAL  { created }
+	::= { wfOspfVirtIfEntry 1 }
+
+wfOspfVirtIfDisable OBJECT-TYPE
+	SYNTAX  INTEGER {
+		enabled(1),
+		disabled(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'This variable displays the validity or invalidity of
+			    the entry.  Setting it to 'invalid' has the effect of
+			    rendering it inoperative.  The internal effect (row
+			    removal) is implementation dependent.'
+		 "
+	DEFVAL  { enabled }
+	::= { wfOspfVirtIfEntry 2 }
+
+wfOspfVirtIfState OBJECT-TYPE
+	SYNTAX  INTEGER {
+		down(1),
+		pointtopoint(4)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'OSPF virtual interface states.'
+				     down (1),               -- these use the same encoding
+				     pointToPoint (4)        -- as the ospfIfTable
+		 "
+	DEFVAL  { down }
+	::= { wfOspfVirtIfEntry 3 }
+
+wfOspfVirtIfAreaID OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The Transit Area that the Virtual Link traverses.  By
+			    definition, this is not 0.0.0.0'
+		 "
+	::= { wfOspfVirtIfEntry 4 }
+
+wfOspfVirtIfNeighbor OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The Router ID of the Virtual Neighbor.'
+		 "
+	::= { wfOspfVirtIfEntry 5 }
+
+wfOspfVirtIfTransitDelay OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		maximum(3600)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The estimated number of seconds it takes to transmit a
+			    link- state update packet over this interface.'
+		 "
+	DEFVAL  { minimum }
+	::= { wfOspfVirtIfEntry 6 }
+
+wfOspfVirtIfRetransInterval OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		defval(5),
+		maximum(3600)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The number of seconds between link-state advertisement
+			    retransmissions, for adjacencies belonging to this
+			    interface.  This value is also used when retransmitting
+			    database description and link-state request packets.
+			    This value should be well over the expected round-trip
+			    time.'
+		 "
+	DEFVAL  { defval }
+	::= { wfOspfVirtIfEntry 7 }
+
+wfOspfVirtIfHelloInterval OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		defval(15),
+		maximum(65535)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The length of time, in seconds, between the Hello
+			    packets that the router sends on the interface.  This
+			    value must be the same for the virtual neighbor.'
+		 "
+	DEFVAL  { defval }
+	::= { wfOspfVirtIfEntry 8 }
+
+wfOspfVirtIfRtrDeadInterval OBJECT-TYPE
+	SYNTAX  INTEGER {
+		minimum(1),
+		defval(60),
+		maximum(2147483647)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The number of seconds that a router's Hello packets
+			    have not been seen before it's neighbors declare the
+			    router down.  This should be some multiple of the Hello
+			    interval.  This value must be the same for the virtual
+			    neighbor.'
+		 "
+	DEFVAL  { defval }
+	::= { wfOspfVirtIfEntry 9 }
+
+wfOspfVirtIfAuthKey OBJECT-TYPE
+	SYNTAX  OCTET STRING
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'If Authentication Type is simplePassword, the device
+			    will left adjust and zero fill to 8 octets.
+			    When read, ospfVifAuthKey always returns a string of
+			    length zero.'
+			 REFERENCE
+			    'OSPF Version 2, Section 9 The Interface Data
+			    Structure'
+		 "
+	::= { wfOspfVirtIfEntry 10 }
+
+wfOspfVirtIfTxHellos OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Hello packets transmitted on
+		     Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 11 }
+
+wfOspfVirtIfTxDBDescripts OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF DataBase Description packets transmitted
+		     on Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 12 }
+
+wfOspfVirtIfTxLinkStateReqs OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Request packets transmitted
+		     on Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 13 }
+
+wfOspfVirtIfTxLinkStateUpds OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Update packets transmitted
+		     on Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 14 }
+
+wfOspfVirtIfTxLinkStateAcks OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Acknowledgement packets
+		     transmitted on Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 15 }
+
+wfOspfVirtIfRxHellos OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Hello packets received on
+		     Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 16 }
+
+wfOspfVirtIfRxDBDescripts OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF DataBase Description packets received
+		     on Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 17 }
+
+wfOspfVirtIfRxLinkStateReqs OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Request packets recieved
+		     on Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 18 }
+
+wfOspfVirtIfRxLinkStateUpds OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Update packets received
+		     on Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 19 }
+
+wfOspfVirtIfRxLinkStateAcks OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF Link State Acknowledgement packets
+		     received on Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 20 }
+
+wfOspfVirtIfDrops OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     Number of OSPF packets dropped on
+		     Virtual Interfaces.
+		 "
+	::= { wfOspfVirtIfEntry 21 }
+
+wfOspfNbrTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF WfOspfNbrEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     --  OSPF Neighbor Table
+		     --      The OSPF Neighbor Table describes all neighbors in
+		     --      the locality of the subject router.
+			    'A table of non-virtual neighbor information.'
+			 REFERENCE
+			    'OSPF Version 2, Section 10 The Neighbor Data
+			    Structure'
+		 "
+	::= { wellfleet 3 5 3 2 3 7 }
+
+wfOspfNbrEntry OBJECT-TYPE
+	SYNTAX  WfOspfNbrEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The information regarding a single neighbor.'
+			 REFERENCE
+			    'OSPF Version 2, Section 10 The Neighbor Data
+			    Structure'
+		 "
+	INDEX   { wfOspfNbrIpAddr,
+		wfOspfNbrAddressLessIndex }
+	::= { wfOspfNbrTable 1 }
+
+WfOspfNbrEntry ::= SEQUENCE {
+	wfOspfNbrDelete
+		INTEGER,
+	wfOspfNbrDisable
+		INTEGER,
+	wfOspfNbrState
+		INTEGER,
+	wfOspfNbrIpAddr
+		IpAddress,
+	wfOspfNbrIfAddr
+		IpAddress,
+	wfOspfNbrAddressLessIndex
+		INTEGER,
+	wfOspfNbrRtrId
+		IpAddress,
+	wfOspfNbrOptions
+		INTEGER,
+	wfOspfNbrPriority
+		INTEGER,
+	wfOspfNbrEvents
+		Counter,
+	wfOspfNbrLSRetransQLen
+		Gauge
+}
+
+wfOspfNbrDelete OBJECT-TYPE
+	SYNTAX  INTEGER {
+		created(1),
+		deleted(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     This variable indicates the existence of a static
+		     OSPF neighbor.
+		 "
+	DEFVAL  { created }
+	::= { wfOspfNbrEntry 1 }
+
+wfOspfNbrDisable OBJECT-TYPE
+	SYNTAX  INTEGER {
+		enabled(1),
+		disabled(2)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'This variable displays the status of
+			    the entry.  Setting it to 'DISABLED' has the effect of
+			    rendering it inoperative.  The internal effect (row
+			    removal) is implementation dependent.'
+		 "
+	DEFVAL  { enabled }
+	::= { wfOspfNbrEntry 2 }
+
+wfOspfNbrState OBJECT-TYPE
+	SYNTAX  INTEGER {
+		down(1),
+		attempt(2),
+		init(3),
+		twoway(4),
+		exchangstart(5),
+		exchange(6),
+		loading(7),
+		full(8)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The State of the relationship with this Neighbor.'
+			 REFERENCE
+			    'OSPF Version 2, Section 10.1 Neighbor States'
+				     down (1),
+				     attempt (2),
+				     init (3),
+				     twoWay (4),
+				     exchangeStart (5),
+				     exchange (6),
+				     loading (7),
+				     full (8)
+		 "
+	DEFVAL  { down }
+	::= { wfOspfNbrEntry 3 }
+
+wfOspfNbrIpAddr OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The IP address of this neighbor.'
+		 "
+	::= { wfOspfNbrEntry 4 }
+
+wfOspfNbrIfAddr OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The Interface IP address for this neighbor.'
+		 "
+	::= { wfOspfNbrEntry 5 }
+
+wfOspfNbrAddressLessIndex OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    ' On an interface having an IP Address, zero.  On
+			    addressless interfaces, the corresponding value of
+			    ifIndex in the Internet Standard MIB.  On row creation,
+			    this can be derived from the instance.'
+		 "
+	::= { wfOspfNbrEntry 6 }
+
+wfOspfNbrRtrId OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A 32-bit integer (represented as a type IpAddress)
+			    uniquely identifying the neighboring router in the
+			    Autonomous System.'
+			    default { '00000000'H }    -- 0.0.0.0
+		 "
+	::= { wfOspfNbrEntry 7 }
+
+wfOspfNbrOptions OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A Bit Mask corresponding to the neighbor's options
+			    field.
+			    Bit 0, if set, indicates that the area accepts and
+			    operates on external information; if zero, it is a stub
+			    area.
+			    Bit 1, if set, indicates that the system will operate
+			    on Type of Service metrics other than TOS 0.  If zero,
+			    the neighbor will ignore all metrics except the TOS 0
+			    metric.'
+			 REFERENCE
+			    'OSPF Version 2, Section 12.1.2 Options'
+		 "
+	::= { wfOspfNbrEntry 8 }
+
+wfOspfNbrPriority OBJECT-TYPE
+	SYNTAX  INTEGER {
+		defval(1),
+		maximum(255)
+	}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The priority of this neighbor in the designated router
+			    election algorithm.  The value 0 signifies that the
+			    neighbor is not eligible to become the designated
+			    router on this particular network.'
+		 "
+	DEFVAL  { defval }
+	::= { wfOspfNbrEntry 9 }
+
+wfOspfNbrEvents OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The number of times this neighbor relationship has
+			    changed state, or an error has occurred.'
+		 "
+	::= { wfOspfNbrEntry 10 }
+
+wfOspfNbrLSRetransQLen OBJECT-TYPE
+	SYNTAX  Gauge
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The current length of the retransmission queue.'
+		 "
+	::= { wfOspfNbrEntry 11 }
+
+wfOspfVirtNbrTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF WfOspfVirtNbrEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     --  WFOSPF Virtual Neighbor Table
+		     --      This table describes all virtual neighbors.
+		     --      Since Virtual Links are configured in the
+		     --      virtual interface table, this table is read-only.
+			    'A table of virtual neighbor information.'
+			 REFERENCE
+			    'OSPF Version 2, '
+		 "
+	::= { wellfleet 3 5 3 2 3 8 }
+
+wfOspfVirtNbrEntry OBJECT-TYPE
+	SYNTAX  WfOspfVirtNbrEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'Virtual neighbor information.'
+			 REFERENCE
+			    'OSPF Version 2, '
+		 "
+	INDEX   { wfOspfVirtNbrArea,
+		wfOspfVirtNbrRtrId }
+	::= { wfOspfVirtNbrTable 1 }
+
+WfOspfVirtNbrEntry ::= SEQUENCE {
+	wfOspfVirtNbrArea
+		IpAddress,
+	wfOspfVirtNbrRtrId
+		IpAddress,
+	wfOspfVirtNbrIpAddr
+		IpAddress,
+	wfOspfVirtNbrOptions
+		INTEGER,
+	wfOspfVirtNbrState
+		INTEGER,
+	wfOspfVirtNbrEvents
+		Counter,
+	wfOspfVirtNbrLSRetransQLen
+		Gauge
+}
+
+wfOspfVirtNbrArea OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The Transit Area Identifier.'
+		 "
+	::= { wfOspfVirtNbrEntry 1 }
+
+wfOspfVirtNbrRtrId OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A 32-bit integer uniquely identifying the neighboring
+			    router in the Autonomous System.'
+		 "
+	::= { wfOspfVirtNbrEntry 2 }
+
+wfOspfVirtNbrIpAddr OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The IP address this Virtual Neighbor is using.'
+		 "
+	::= { wfOspfVirtNbrEntry 3 }
+
+wfOspfVirtNbrOptions OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A bit map corresponding to the neighbor's options
+			    field.  Thus, Bit 1, if set, indicates that the
+			    neighbor supports Type of Service Routing; if zero, no
+			    metrics other than TOS 0 are in use by the neighbor.'
+		 "
+	::= { wfOspfVirtNbrEntry 4 }
+
+wfOspfVirtNbrState OBJECT-TYPE
+	SYNTAX  INTEGER {
+		down(1),
+		attempt(2),
+		init(3),
+		twoway(4),
+		exchangstart(5),
+		exchange(6),
+		loading(7),
+		full(8)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The state of the Virtual Neighbor Relationship.'
+				     down (1),
+				     attempt (2),
+				     init (3),
+				     twoWay (4),
+				     exchangeStart (5),
+				     exchange (6),
+				     loading (7),
+				     full (8)
+		 "
+	DEFVAL  { down }
+	::= { wfOspfVirtNbrEntry 5 }
+
+wfOspfVirtNbrEvents OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The number of times this virtual link has changed its
+			    state, or an error has occurred.'
+		 "
+	::= { wfOspfVirtNbrEntry 6 }
+
+wfOspfVirtNbrLSRetransQLen OBJECT-TYPE
+	SYNTAX  Gauge
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The current length of the retransmission queue.'
+		 "
+	::= { wfOspfVirtNbrEntry 7 }
+
+wfOspfDynNbrTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF WfOspfDynNbrEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+		     --  OSPF Dynamic Neighbor Table
+		     --      The OSPF Dynamic Neighbor Table describes all neighbors in
+		     --      the locality of the subject router learned during operation.
+			    'A table of non-virtual neighbor information.'
+			 REFERENCE
+			    'OSPF Version 2, Section 10 The Neighbor Data
+			    Structure'
+		 "
+	::= { wellfleet 3 5 3 2 3 9 }
+
+wfOspfDynNbrEntry OBJECT-TYPE
+	SYNTAX  WfOspfDynNbrEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The information regarding a single neighbor.'
+			 REFERENCE
+			    'OSPF Version 2, Section 10 The Neighbor Data
+			    Structure'
+		 "
+	INDEX   { wfOspfDynNbrIpAddr,
+		wfOspfDynNbrAddressLessIndex }
+	::= { wfOspfDynNbrTable 1 }
+
+WfOspfDynNbrEntry ::= SEQUENCE {
+	wfOspfDynNbrState
+		INTEGER,
+	wfOspfDynNbrIpAddr
+		IpAddress,
+	wfOspfDynNbrIfAddr
+		IpAddress,
+	wfOspfDynNbrAddressLessIndex
+		INTEGER,
+	wfOspfDynNbrRtrId
+		IpAddress,
+	wfOspfDynNbrOptions
+		INTEGER,
+	wfOspfDynNbrPriority
+		INTEGER,
+	wfOspfDynNbrEvents
+		Counter,
+	wfOspfDynNbrLSRetransQLen
+		Gauge
+}
+
+wfOspfDynNbrState OBJECT-TYPE
+	SYNTAX  INTEGER {
+		down(1),
+		attempt(2),
+		init(3),
+		twoway(4),
+		exchangstart(5),
+		exchange(6),
+		loading(7),
+		full(8)
+	}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The State of the relationship with this Neighbor.'
+			 REFERENCE
+			    'OSPF Version 2, Section 10.1 Neighbor States'
+				     down (1),
+				     attempt (2),
+				     init (3),
+				     twoWay (4),
+				     exchangeStart (5),
+				     exchange (6),
+				     loading (7),
+				     full (8)
+		 "
+	DEFVAL  { down }
+	::= { wfOspfDynNbrEntry 1 }
+
+wfOspfDynNbrIpAddr OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The IP address of this neighbor.'
+		 "
+	::= { wfOspfDynNbrEntry 2 }
+
+wfOspfDynNbrIfAddr OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The Interface IP address for this neighbor.'
+		 "
+	::= { wfOspfDynNbrEntry 3 }
+
+wfOspfDynNbrAddressLessIndex OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    ' On an interface having an IP Address, zero.  On
+			    addressless interfaces, the corresponding value of
+			    ifIndex in the Internet Standard MIB.  On row creation,
+			    this can be derived from the instance.'
+		 "
+	::= { wfOspfDynNbrEntry 4 }
+
+wfOspfDynNbrRtrId OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A 32-bit integer (represented as a type IpAddress)
+			    uniquely identifying the neighboring router in the
+			    Autonomous System.'
+			    default { '00000000'H }    -- 0.0.0.0
+		 "
+	::= { wfOspfDynNbrEntry 5 }
+
+wfOspfDynNbrOptions OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'A Bit Mask corresponding to the neighbor's options
+			    field.
+			    Bit 0, if set, indicates that the area accepts and
+			    operates on external information; if zero, it is a stub
+			    area.
+			    Bit 1, if set, indicates that the system will operate
+			    on Type of Service metrics other than TOS 0.  If zero,
+			    the neighbor will ignore all metrics except the TOS 0
+			    metric.'
+			 REFERENCE
+			    'OSPF Version 2, Section 12.1.2 Options'
+		 "
+	::= { wfOspfDynNbrEntry 6 }
+
+wfOspfDynNbrPriority OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The priority of this neighbor in the designated router
+			    election algorithm.  The value 0 signifies that the
+			    neighbor is not eligible to become the designated
+			    router on this particular network.'
+		 "
+	::= { wfOspfDynNbrEntry 7 }
+
+wfOspfDynNbrEvents OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The number of times this neighbor relationship has
+			    changed state, or an error has occurred.'
+		 "
+	::= { wfOspfDynNbrEntry 8 }
+
+wfOspfDynNbrLSRetransQLen OBJECT-TYPE
+	SYNTAX  Gauge
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION
+		"
+			    'The current length of the retransmission queue.'
+		 "
+	::= { wfOspfDynNbrEntry 9 }
+
+END

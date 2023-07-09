@@ -1,0 +1,162 @@
+LIBRARY     COMCTL31
+DESCRIPTION	'COMMCTRL - Custom controls'
+EXETYPE		WINDOWS
+CODE		MOVEABLE DISCARDABLE
+DATA		PRELOAD MOVEABLE SINGLE
+HEAPSIZE   	512
+
+EXPORTS
+	WEP				@1  RESIDENTNAME    ;Internal
+;        MENUHELP            @2         ;; no win31
+;        SHOWHIDEMENUCTL         @3     ;; no win31
+;        GETEFFECTIVECLIENTRECT      @4 ;; no win31
+;        DRAWSTATUSTEXT          @5     ;; no win31
+;        CREATESTATUSWINDOW      @6     ;; no win31
+;        CREATETOOLBAR           @7     ;; no win31
+     	CREATEMAPPEDBITMAP		@8
+;        CREATEHEADERWINDOW      @9     ;; no win31
+;     	WRITEPRIVATEPROFILESTRUCT	@10
+;     	GETPRIVATEPROFILESTRUCT		@11
+
+;        MAKEDRAGLIST            @13    ;; no win31
+;        LBITEMFROMPT            @14    ;; no win31
+;        DRAWINSERT          @15        ;; no win31
+     	CREATEUPDOWNCONTROL		@16
+     	INITCOMMONCONTROLS		@17
+
+;        CREATETOOLBAREX         @20    ;; no win31
+
+; ImageList stuff
+
+;IMAGELIST_CREATE            @40        ;; no win31
+;IMAGELIST_DESTROY           @41        ;; no win31
+;IMAGELIST_GETIMAGECOUNT     @42        ;; no win31
+;;;;;;IMAGELIST_GETMEMORYSIZE     @43   ;; we can reuse this #
+;IMAGELIST_SETBKCOLOR        @44        ;; no win31
+;IMAGELIST_GETBKCOLOR        @45        ;; no win31
+;IMAGELIST_ADD               @46        ;; no win31
+;IMAGELIST_REPLACE           @47        ;; no win31
+;IMAGELIST_REMOVE            @48        ;; no win31
+;IMAGELIST_DRAW              @49        ;; no win31
+;;;; RESERVED               @50
+;IMAGELIST_GETIMAGERECT      @51        ;; no win31
+;IMAGELIST_GETIMAGEINFO      @52        ;; no win31
+;IMAGELIST_ADDICON           @53        ;; no win31
+;IMAGELIST_REPLACEICON       @54        ;; no win31
+;IMAGELIST_DRAGMOVE          @55        ;; no win31
+;IMAGELIST_STARTDRAG         @56        ;; no win31
+;IMAGELIST_DRAGSHOW          @57        ;; no win31
+;IMAGELIST_GETDRAGIMAGE      @58        ;; no win31
+;IMAGELIST_SETDRAGIMAGE      @59        ;; no win31
+;IMAGELIST_ENDDRAG           @60        ;; no win31
+;IMAGELIST_MERGE             @61        ;; no win31
+;IMAGELIST_EXTRACTICON       @64        ;; no win31
+;IMAGELIST_ADDFROMIMAGELIST  @65        ;; no win31
+;IMAGELIST_ADDMASKED         @66        ;; no win31
+;IMAGELIST_LOADBITMAP        @67        ;; no win31
+;IMAGELIST_GETICONSIZE       @68        ;; no win31
+;       RESERVED up to      @69
+
+;ALLOC                       @71         ;Internal
+;REALLOC                     @72         ;Internal
+;FREE                        @73         ;Internal
+;GETSIZE                     @74         ;Internal
+
+;SETDEBUGMASK                @75         ;Internal
+;GETDEBUGMASK                @76         ;Internal
+;ASSERTFAILED                @77         ;Internal
+;__AssertMsg                 @78         ;Internal
+;__DebugMsg                  @79         ;Internal
+
+;CREATEMRULIST               @151        ;Internal          ;; no win31
+;FREEMRULIST                 @152        ;Internal          ;; no win31
+;ADDMRUSTRING                @153        ;Internal          ;; no win31
+;ENUMMRULIST                 @154        ;Internal          ;; no win31
+;FINDMRUSTRING               @155                ;Internal  ;; no win31
+
+;
+PROPERTYSHEET               @159
+CREATEPROPERTYSHEETPAGE     @160
+DESTROYPROPERTYSHEETPAGE    @161
+
+;CREATEMRUDATALIST               @165        ;Internal      ;; no win31
+;FREEMRUDATALIST                 @166        ;Internal      ;; no win31
+;ADDMRUDATA                  @167        ;Internal          ;; no win31
+;ENUMMRUDATALIST                 @168        ;Internal      ;; no win31
+;FINDMRUDATA                     @169        ;Internal      ;; no win31
+
+;STR_GETPTR                      @233            ;Internal
+;STR_SETPTR                      @234            ;Internal
+
+;FINDHASHITEM                   @235            ;Internal   ;; no win31
+;ADDHASHITEM                    @236            ;Internal   ;; no win31
+;DELETEHASHITEM                 @237            ;Internal   ;; no win31
+;GETHASHITEMNAME                @238            ;Internal   ;; no win31
+;SETHASHITEMDATA                @239            ;Internal   ;; no win31
+;GETHASHITEMDATA                @240            ;Internal   ;; no win31
+;CREATEHASHITEMTABLE            @241            ;Internal   ;; no win31
+
+; Dynamic array APIs				;Internal
+;DSA_CREATE                  @320                ;Internal
+;DSA_DESTROY                 @321                ;Internal
+;DSA_GETITEM                 @322                ;Internal
+;DSA_GETITEMPTR              @323                ;Internal
+;DSA_INSERTITEM              @324                ;Internal
+;DSA_SETITEM                 @325                ;Internal
+;DSA_DELETEITEM              @326                ;Internal
+;DSA_DELETEALLITEMS          @327                ;Internal
+
+DPA_CREATE                  @328		;Internal
+DPA_DESTROY                 @329		;Internal
+DPA_GROW                    @330		;Internal
+DPA_CLONE                   @331		;Internal
+DPA_GETPTR                  @332		;Internal
+DPA_GETPTRINDEX             @333		;Internal
+DPA_INSERTPTR               @334		;Internal
+DPA_SETPTR                  @335		;Internal
+DPA_DELETEPTR               @336		;Internal
+DPA_DELETEALLPTRS           @337		;Internal
+DPA_SORT                    @338		;Internal
+DPA_SEARCH                  @339		;Internal
+;       RESERVED up to      @349		;Internal
+
+
+
+;======= Temporary stuff (?) ===================================================
+; those string things				;Internal
+;STRCHR              @1100       ;Internal          ;; no win31
+;STRRCHR             @1101       ;Internal          ;; no win31
+;STRCHRI             @1102       ;Internal          ;; no win31
+;STRRCHRI            @1103       ;Internal          ;; no win31
+;STRCMPN             @1104       ;Internal          ;; no win31
+;STRCMPNI            @1105       ;Internal          ;; no win31
+;STRCPYN             @1106       ;Internal          ;; no win31
+;STRNCMP             @1107       ;Internal          ;; no win31
+;STRNCMPI            @1108       ;Internal          ;; no win31
+;STRNCPY             @1109       ;Internal          ;; no win31
+;STRSTR              @1110       ;Internal          ;; no win31
+;STRRSTR             @1111       ;Internal          ;; no win31
+;STRSTRI             @1112       ;Internal          ;; no win31
+;STRRSTRI            @1113       ;Internal          ;; no win31
+;STRCSPN             @1114       ;Internal          ;; no win31
+;STRCSPNI            @1115       ;Internal          ;; no win31
+;STRTOINT            @1116               ;Internal  ;; no win31
+;STRTOLONG           @1117               ;Internal  ;; no win31
+
+;SENDNOTIFY                  @1200               ;Internal
+
+
+IMPORTS
+;    LOADIMAGE       = USER.389                     ;; no win31
+;    COPYIMAGE       = USER.390                     ;; no win31
+
+SEGMENTS
+	_TEXT		PRELOAD MOVEABLE DISCARDABLE
+	_INIT		PRELOAD MOVEABLE DISCARDABLE
+	DOSBOX_TEXT	LOADONCALL MOVEABLE DISCARDABLE
+	PRSHT_TEXT	LOADONCALL MOVEABLE DISCARDABLE
+        LV_TEXT         LOADONCALL MOVEABLE DISCARDABLE
+        TV_TEXT         LOADONCALL MOVEABLE DISCARDABLE
+        DRAW_TEXT       LOADONCALL MOVEABLE DISCARDABLE
+        RARE1_TEXT  LOADONCALL MOVEABLE DISCARDABLE
+	RARE2_TEXT	LOADONCALL MOVEABLE DISCARDABLE

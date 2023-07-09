@@ -1,0 +1,7 @@
+DIRS = daytona        \
+       data           \
+       wow64{64}      \
+       wow6432{32}
+
+OPTIONAL_DIRS = hydra \
+                cht   

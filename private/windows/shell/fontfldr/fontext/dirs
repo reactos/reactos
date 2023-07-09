@@ -1,0 +1,19 @@
+!IF 0
+
+Copyright (c) 1995  Microsoft Corporation
+
+Module Name:
+
+    dirs.
+
+Abstract:
+
+    This file specifies the subdirectories of the current directory that
+    contain component makefiles.
+
+!ENDIF
+
+DIRS=  t1instal src
+
+
+OPTIONAL_DIRS=

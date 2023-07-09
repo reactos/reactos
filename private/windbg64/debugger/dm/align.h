@@ -1,0 +1,2 @@
+void FixAlign(void);
+

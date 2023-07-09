@@ -1,0 +1,54 @@
+IDD_UPEDLG DIALOG PRELOAD 47, 30, 246, 235
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "User Profile Editor"
+FONT 8, "MS Shell Dlg"
+MENU UPEMENU
+BEGIN
+    LTEXT           "P&ermitted to use profile:", IDD_TEXT, 4, 7, 82, 8
+    EDITTEXT        IDD_USEDBY, 90, 5, 136, 12, WS_DISABLED
+    PUSHBUTTON      " ... ", IDD_BROWSER, 225, 5, 17, 12, WS_TABSTOP
+
+    GROUPBOX        "Program Manager Settings", IDD_TEXT, 3, 18, 240, 69, WS_GROUP
+    CONTROL         "&Disable Run in File Menu", IDD_NORUN, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP, 9, 32, 93, 10
+    CONTROL         "Disable Save Se&ttings Menu Item and Never Save Settings",
+                    IDD_NOSAVE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 9, 43,
+                    210, 10
+    CONTROL         "Show C&ommon Program Groups",
+                    IDD_SHOWCOMMONGRPS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP,
+                    9, 54, 210, 10
+
+    LTEXT           "&StartUp Group:", IDD_TEXT, 9, 69, 54, 8
+    COMBOBOX        IDD_STARTUP, 64, 67, 100, 48, CBS_DROPDOWNLIST |
+                    CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+
+    GROUPBOX        "Program Group Settings", IDD_TEXT, 3, 91, 240, 111
+    LTEXT           "U&nlocked Program Groups:", IDD_TEXT, 8, 105, 100, 8
+    LISTBOX         IDD_UNLOCKEDGRPS, 8, 117, 88, 55, LBS_HASSTRINGS | LBS_SORT |
+                    LBS_MULTIPLESEL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Lock ->", IDD_LOCK, 102, 124, 43, 14
+
+    LTEXT           "Loc&ked Program Groups:", IDD_TEXT, 148, 105, 90, 8
+    LISTBOX         IDD_LOCKEDGRPS, 150, 117, 88, 55, LBS_HASSTRINGS | LBS_SORT |
+                    LBS_MULTIPLESEL | WS_VSCROLL | WS_TABSTOP
+
+    PUSHBUTTON      "<- &Unlock", IDD_UNLOCK, 102, 145, 43, 14
+
+    LTEXT           "For Unlocked Groups, &Allow User To:", IDD_TEXT, 8, 173, 230, 8
+    COMBOBOX        IDD_EDITLEVEL, 8, 183, 230, 48, CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_TABSTOP
+
+    CONTROL         "Allow User to Connect/Remove Connections in &Print Manager",
+                    IDD_NETPRINTMGR, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP,
+                    3, 208, 240, 10
+    CONTROL         "&Wait For Logon Script To Complete Before Starting Program Manager",
+                    IDD_SYNCLOGONSCRIPT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP,
+                    3, 219, 240, 10
+//    CONTROL         "Allow User to Connect/Remove Connections in &Print Manager",
+//                    IDD_NETPRINTMGR, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP,
+//                    8, 220, 230, 10
+//    CONTROL         "Allow User to &Connect/Disconnect Network Drives in File Manager",
+//                    IDD_NETFILEMGR, "Button", BS_AUTOCHECKBOX | WS_TABSTOP,
+//                    8, 231, 230, 10
+//    GROUPBOX        "Network Connection Settings", IDD_TEXT, 3, 207, 240, 38, WS_GROUP
+END

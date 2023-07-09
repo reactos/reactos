@@ -1,0 +1,30 @@
+HKCR
+{
+	DEInsertTableParam.DEInsertTableParam.1 = s 'DEInsertTableParam Class'
+	{
+		CLSID = s '{47B0DFC7-B7A3-11D1-ADC5-006008A5848C}'
+	}
+	DEInsertTableParam.DEInsertTableParam = s 'DEInsertTableParam Class'
+	{
+		CurVer = s 'DEInsertTableParam.DEInsertTableParam.1'
+		CLSID = s '{47B0DFC7-B7A3-11D1-ADC5-006008A5848C}'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {47B0DFC7-B7A3-11D1-ADC5-006008A5848C} = s 'DEInsertTableParam Class'
+		{
+			ProgID = s 'DEInsertTableParam.DEInsertTableParam.1'
+			VersionIndependentProgID = s 'DEInsertTableParam.DEInsertTableParam'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'Version' = s '1.0'
+			'Implemented Categories'
+			{
+				'{7DD95801-9882-11CF-9FA9-00AA006C42C4}'
+			}
+		}
+	}
+}

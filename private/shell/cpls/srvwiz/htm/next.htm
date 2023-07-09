@@ -1,0 +1,45 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css"/>
+<TITLE>My First Server</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript">
+    function docontinue()
+    {
+        // setup my first server
+        srvwiz.SetupFirstServer();
+
+        // disable back and next button
+        back.disabled = true;
+        next.disabled = true;
+    }
+
+    function backup()
+    {
+        srvwiz.Home = 4;
+        self.location.href = "intro3.htm"
+    }
+</SCRIPT>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#cccccc" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top">
+            <P ID="para1">The setup process takes several minutes. When it finishes:
+            <UL>
+                <LI ID="para2">Your computer will restart.</LI>
+                <LI ID="para3">The Configure Server screen will appear; 
+                    from this page you can manage these services or learn more about them.
+                </LI>
+                <LI ID="para4">You can also configure this server with other services.</LI>
+            </UL>
+            <P>&nbsp;
+        </TD>
+    </TR>
+</TABLE>
+<P style="position:absolute; bottom:21px; right:37px"><BUTTON TYPE="button" ACCESSKEY="b" ID="back" ONCLICK="backup()"><U>B</U>ack</BUTTON>&nbsp;<BUTTON TYPE="button" ACCESSKEY="n" ID="next" ONCLICK="docontinue()"><U>N</U>ext</BUTTON>
+</BODY>
+</HTML>

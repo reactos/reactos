@@ -1,0 +1,88 @@
+#include "upedit.h"
+
+IDI_UPEICON	ICON	PRELOAD upedit.ico
+
+UPEMENU MENU    PRELOAD
+BEGIN
+    POPUP        "&File"
+    BEGIN
+        MENUITEM "&New",                     IDM_NEW
+        MENUITEM "&Open...",                 IDM_OPEN
+        MENUITEM "Save To &Current Profile", IDM_SAVECURRENT
+        MENUITEM "Save As &User Default",    IDM_SAVEDEFAULT
+        MENUITEM "Save As &System Default",  IDM_SAVESYSTEM
+        MENUITEM "Save &As File...",         IDM_SAVEAS
+	MENUITEM    SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",            IDM_EXIT
+    END
+    POPUP        "&Help"
+    BEGIN
+	MENUITEM    "&Contents",		IDM_HELPINDEX
+        MENUITEM    "&Search for Help on..."    IDM_HELPSEARCH
+	MENUITEM    "&How to Use Help",		IDM_HELPHELP
+	MENUITEM    SEPARATOR
+	MENUITEM    "&About...",                IDM_ABOUT
+    END
+END
+
+STRINGTABLE PRELOAD
+BEGIN
+    IDS_PROGRAMGROUPS,      "UNICODE Program Groups"  				
+    IDS_EXIT,	            "Exit User Profile Editor"
+    IDS_SAVEAS,             "Save As"
+    IDS_SAVESETTINGS,	    "Some profile changes have not been saved. \nDo you still wish to exit?"
+    IDS_ERRORSAVING,        "The settings could not be saved."
+    IDS_DEFEXT,	            "man"
+    IDS_FILTERS,            "All User Profiles#*.usr;*.man#Per-User Profile#*.usr#Mandatory Profile#*.man#"
+    IDS_NONE,               "(none)"
+    IDS_UPETITLE,           "User Profile Editor"
+    IDS_UPETITLE1,          "User Profile Editor - %s"
+    IDS_HELPERROR,          "Unable to show help information."
+    IDS_LOCKERROR,          "Could not lock the group '%s'."
+    IDS_RESETLOCKERROR,     "Could not reset the lock on the group '%s' of the current profile."
+    IDS_SAVEFILEMERROR,     "Could not save the network connection setting for the File Manager."
+    IDS_SAVEPRINTMERROR,    "Could not save the network connection setting for the Print Manager."
+    IDS_PRIVILEGEERROR,     "This program can only be used by Administrators."
+    IDS_EDITLEVEL0,         "Make Any Change"
+    IDS_EDITLEVEL1,         "Create/Delete/Change Program Items"
+    IDS_EDITLEVEL2,         "Change All Program Item Properties"
+    IDS_EDITLEVEL3,         "Change Program Item Properties Except Command Line"
+    IDS_OPENTITLE,          "Open"
+    IDS_OPENWARNING,        "Open - Warning"
+    IDS_OPENERROR,          "Open Error"
+    IDS_OPENWARNINGMSG,     "You will lose the changes you have made so far. Continue?"
+    IDS_COPYCURRENT,        "Copy of Current Profile"
+    IDS_BROWSERTITLE,       "User Browser"
+    IDS_OPENFAILED,         "This profile could not be opened."
+    IDS_OPENACCESSDENIED,   "Access to the profile is denied."
+    IDS_OPENBADFORMAT,      "This file is not in the proper format for a registry profile."
+    IDS_SELECTUSER,         "Permission for a user or a group must be set before saving the profile."
+    IDS_RESETPROTECTIONFAILED "Failed to reset the protection on the current user's profile."
+    IDS_SAVESYSTEM,         "Save As System Profile"
+    IDS_SAVEDEFAULT,        "Save As User Default Profile"
+    IDS_SAVECURRENT,        "Save To Current Profile"
+    IDS_SAVESYSFAILED,      "Failed to save the profile to the system profile."
+    IDS_SAVEDEFFAILED,      "Failed to save the profile to the user's default profile."
+    IDS_SAVECURFAILED,      "Failed to save the current profile."
+    IDS_PROTECTERROR,       "Failed to apply the proper protection on the profile.\nThe profile will not be saved."
+    IDS_NEWSYSTEMDEF,       "The System Default changes will only take effect after reboot."
+    IDS_BROWSERERROR,       "An error occurred while opening the User Browser."
+    IDS_ACCOUNTUNKNOWN,     "Account Unknown"
+    IDS_STARTUPNONE,        "A group titled 'startup' exists, the '(none)' selection will default to start that group."
+    IDS_SAVE,               "Save"
+    IDS_STARTUPGRP,         "startup"
+    IDS_INVALIDSID,         "The account is unknown, the profile will not be saved."
+
+END
+
+#include "upedit.dlg"
+
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_APP
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "User Profile Editor Applet"
+#define VER_INTERNALNAME_STR        "upedit\0"
+#define VER_ORIGINALFILENAME_STR    "UPEDIT.EXE"
+
+#include "common.ver"

@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdinmal
+
+TARGETNAME=kbdinmal
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdinmal.c kbdinmal.rc
+
+NTTARGETFILE0=kbdinmal.h kbdinmal.rc kbdinmal.def

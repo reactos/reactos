@@ -1,0 +1,33 @@
+PRODUCT = SITE
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE 
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## PROJECT_CFLAGS   : additional compilation flags for C compiler
+## PROJECT_CCPPFLAGS: additional compilation flags for C++ compiler
+## PROJECT_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+INCLUDES = \
+    $(SITEINCLUDES)   \
+    /vobs/build/mwsrc \
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%}
+
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+

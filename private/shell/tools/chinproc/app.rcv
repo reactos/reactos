@@ -1,0 +1,13 @@
+/********************************************************************/
+/*        APP.RCV                                                   */
+/********************************************************************/
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Change Inproc"
+#define VER_INTERNALNAME_STR            "chinproc"
+#define VER_ORIGINALFILENAME_STR        "CHINPROC.EXE"
+
+#include <common.ver>

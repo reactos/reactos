@@ -1,0 +1,61 @@
+#if DBG
+#define DEBUG
+#endif
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <nt.h>
+#include <ntrtl.h>
+#include <nturtl.h>
+#include <ntcsrsrv.h>
+#include <windows.h>
+#include <winuserk.h>   // temporary
+#include <conroute.h>
+#include <ntddvdeo.h>
+#include "shellapi.h"
+#include "shlobj.h"
+#include "shlwapi.h"
+#define NO_SHLWAPI_STRFCNS
+#define NO_SHLWAPI_PATH
+#define NO_SHLWAPI_REG
+#define NO_SHLWAPI_UALSTR
+#define NO_SHLWAPI_HTTP
+#define NO_SHLWAPI_INTERNAL
+#include "shlwapip.h"
+#include "shlobjp.h"
+#undef _DROPFILES
+#undef DROPFILES
+#undef LPDROPFILES
+#include "conapi.h"
+#include "conmsg.h"
+#include "usersrv.h"
+#include "server.h"
+#include "cmdline.h"
+#include "font.h"
+#include "heap.h"
+#include "consrv.h"
+#include "directio.h"
+#include "globals.h"
+#include "menu.h"
+#include "stream.h"
+#include "winuserp.h"
+#include "winconp.h"
+#include "winbasep.h"
+//#define NOEXTAPI
+//#include <wdbgexts.h>
+//#include <ntdbg.h>
+#ifndef WIN32
+#define WIN32
+#endif
+#include <port1632.h>
+#if defined(FE_SB)
+#include "dbcs.h"
+#include "dispatch.h"
+#include "eudc.h"
+#include "foncache.h"
+#include "machine.h"
+#if defined(FE_IME)
+#include "conv.h"
+#include <immp.h>
+#endif
+#endif

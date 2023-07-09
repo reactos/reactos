@@ -1,0 +1,23 @@
+
+    setjmp
+    _setjmpex
+    _setjmpVfp
+    _setjmpexVfp
+    longjmp
+    RtlCaptureContext
+    RtlEqualMemory
+    RtlLookupFunctionEntry
+    RtlVirtualUnwind
+    __C_specific_handler
+    __C_ExecuteExceptionFilter
+    __C_ExecuteTerminationHandler
+    __jump_unwind
+    __ll_div
+    __ull_div
+    __ll_lshift
+    __ull_rshift
+    __ll_rshift
+    __ll_mul
+    __ull_rem
+    __ll_rem
+

@@ -1,0 +1,1 @@
+makeani -t "Hour Glass" -a "Microsoft Corporation, Copyright 1993" -o ..\hourglas.ani -r14 hrglss1 hrglss2 hrglss3 hrglss4 hrglss5 hrglss6 hrglss7 hrglss8 hrglss9 hrglss10 hrglss11 -r40 hrglss12 -r5 hrglss13 hrglss14 hrglss15

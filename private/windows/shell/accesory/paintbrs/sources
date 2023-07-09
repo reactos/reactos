@@ -1,0 +1,144 @@
+#
+#
+#
+#
+#
+#   DON'T BUILD THIS DIRECTORY... BUILD ..\OLE2PBSH INSTEAD!!!!!!
+#
+#
+#
+#
+#
+#
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=dummy
+
+TARGETPATH=obj
+
+# Pick one of the following and delete the others
+TARGETTYPE=LIBRARY
+
+TARGETLIBS=
+
+INCLUDES=..\..\userpri
+
+
+SOURCES=abortdlg.c \
+        abortprt.c \
+        airbrudp.c \
+        allocimg.c \
+        brushdlg.c \
+        brushdp.c  \
+        calcview.c \
+        calcwnds.c \
+        cleardlg.c \
+        coleradp.c \
+        colordlg.c \
+        colorwp.c  \
+        curvedp.c  \
+        dotparal.c \
+        dotpoly.c  \
+        dotrect.c  \
+        eraserdp.c \
+        filedlg.c  \
+        fixedpt.c  \
+        flippoly.c \
+        freeimg.c  \
+        freepick.c \
+        fullwp.c   \
+        getaspct.c \
+        getinfo.c  \
+        getprtdc.c \
+        gettanpt.c \
+        hidecsr.c  \
+        infodlg.c  \
+        initglob.c \
+        lcundodp.c \
+        linedp.c   \
+        loadbit.c  \
+        loadcolr.c \
+        loadimg.c  \
+        menucmd.c  \
+        message.c  \
+        metafile.c \
+        mousedlg.c \
+        newdlg.c   \
+        newpick.c  \
+        offspoly.c \
+        ovaldp.c   \
+        packbuff.c \
+        paintwp.c  \
+        parentwp.c \
+        pbserver.c \
+        polydp.c   \
+        polyrect.c \
+        polyto.c   \
+        pbrush.rc  \
+        printdlg.c \
+        printimg.c \
+        printdp.c  \
+        ptools.c   \
+        rectdp.c   \
+        rndrctdp.c \
+        rollerdp.c \
+        savebit.c  \
+        saveclip.c \
+        savecolr.c \
+        saveimg.c  \
+        scrolimg.c \
+        scrolmag.c \
+        setcurs.c  \
+        settitle.c \
+        shapelib.c \
+        shrgrodp.c \
+        sizewp.c   \
+        srvrinit.c \
+        textdp.c   \
+        tiltblt.c  \
+        tiltdp.c   \
+        toolwp.c   \
+        trcktool.c \
+        unpkbuff.c \
+        updatimg.c \
+        validhdr.c \
+        vtools.c   \
+        windata.c  \
+        wndinit.c  \
+        xorcsr.c   \
+        zoomindp.c \
+        zoominwp.c \
+        zoomotwp.c
+
+C_DEFINES= -DNT -DWIN32 -DW3 -DUNICODE -D_UNICODE
+#C_DEFINES= -DNT -DWIN32 -DW3
+#   USE_CL860_LARGE_MODEL=
+
+
+#
+# Next specify a kernel mode test (valid only in NTOS tree)
+#
+
+#
+# Next specify one or more user mode test programs and their type
+#
+
+UMTYPE=windows
+#UMTYPE=console
+#       $(BASEDIR)\public\sdk\lib\*\user32.lib    \
+#       $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+#        \
+
+UMENTRY=winmain
+UMAPPL=pbrush
+UMLIBS= $(BASEDIR)\public\sdk\lib\*\pwin32.lib    \
+       $(BASEDIR)\public\sdk\lib\*\ntdll.lib  \
+       $(BASEDIR)\public\sdk\lib\*\comdlg32.lib  \
+       $(BASEDIR)\public\sdk\lib\*\shell32.lib   \
+       $(BASEDIR)\public\sdk\lib\*\olesvr32.lib  \
+       $(BASEDIR)\public\sdk\lib\*\advapi32.lib  \
+       ..\..\userpri\lib\*\userpri.lib	  \
+       obj\*\dummy.lib                           \
+       obj\*\pbrush.res

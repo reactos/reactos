@@ -1,0 +1,52 @@
+#include <winuser.h>
+#include <winver.h>
+#include "resource.h"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    // Note to localizers:  it is desirable (though not absolutely necessary)
+    // to keep the following directory names synchronized with their counterparts
+    // in shell\shell32\shell32.rc.
+
+    IDS_CSIDL_PERSONAL        "My Documents"
+    IDS_CSIDL_MYPICTURES      "My Pictures"
+    IDS_CSIDL_APPDATA         "Application Data"
+    IDS_CSIDL_LOCAL_APPDATA   "Local Settings\\Application Data"
+    IDS_CSIDL_CACHE           "Local Settings\\Temporary Internet Files"
+    IDS_CSIDL_COOKIES         "Cookies"
+    IDS_CSIDL_HISTORY         "History"
+    IDS_CSIDL_COMMON_DOCUMENTS "Documents"
+    IDS_CSIDL_ADMINTOOLS       "Administrative Tools"
+END
+
+// localized .RC files provided by shusukeu
+
+#include "loc\br.rc"
+#include "loc\cn.rc"
+#include "loc\cs.rc"
+#include "loc\da.rc"
+#include "loc\de.rc"
+#include "loc\el.rc"
+#include "loc\es.rc"
+#include "loc\fi.rc"
+#include "loc\fr.rc"
+#include "loc\hu.rc"
+#include "loc\it.rc"
+#include "loc\ja.rc"
+#include "loc\ko.rc"
+#include "loc\nl.rc"
+#include "loc\no.rc"
+#include "loc\pl.rc"
+#include "loc\pt.rc"
+#include "loc\ru.rc"
+#include "loc\sv.rc"
+#include "loc\tr.rc"
+#include "loc\tw.rc"
+#include "loc\eu.rc"
+#include "loc\ca.rc"
+#include "loc\sk.rc"
+#include "loc\sl.rc"
+
+LANGUAGE 0x00, 0x00
+#include <folder.rcv>
+

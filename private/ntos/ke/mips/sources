@@ -1,0 +1,42 @@
+!IFNDEF USE_CRTDLL
+MIPS_OPTIONS=-nodwalign -float
+GPSIZE=32
+!ENDIF
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+MIPS_SOURCES=..\mips\alignem.c    \
+             ..\mips\allproc.c    \
+             ..\mips\apcuser.c    \
+             ..\mips\branchem.c   \
+             ..\mips\buserror.c   \
+             ..\mips\callback.c   \
+             ..\mips\callout.s    \
+             ..\mips\dmpstate.c   \
+             ..\mips\exceptn.c    \
+             ..\mips\floatem.c    \
+             ..\mips\flush.c      \
+             ..\mips\getsetrg.c   \
+             ..\mips\tb.s         \
+             ..\mips\thredini.c   \
+             ..\mips\timindex.s   \
+             ..\mips\xxapcint.s   \
+             ..\mips\xxclock.s    \
+             ..\mips\xxflshtb.c   \
+             ..\mips\xxintsup.s   \
+             ..\mips\xxirql.s     \
+             ..\mips\xxmiscs.s    \
+             ..\mips\x4mpipi.s    \
+             ..\mips\xxmpipi.c    \
+             ..\mips\xxregsv.s    \
+             ..\mips\xxspinlk.s   \
+             ..\mips\x4ctxsw.s    \
+             mips\sysstubs.s      \
+             mips\systable.s      \
+             ..\mips\x4trap.s     \
+             ..\mips\threadbg.s   \
+             ..\mips\initkr.c     \
+             ..\mips\intobj.c     \
+             ..\mips\x4start.s    \
+             ..\mips\x4sqrt.s     \
+             ..\mips\vdm.c

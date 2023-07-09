@@ -1,0 +1,62 @@
+; Microsoft Internet Explorer FTP Folder
+;
+; Copyright 1995-98 Microsoft Corporation.  All Rights Reserved.
+;
+
+[version]
+signature="$CHICAGO$"
+AdvancedINF=2.0
+
+[DestinationDirs]
+FTP_DllFiles=11          ; to Win95=X:\Windows\System  WinNT=%windir%\system32
+FTP_InfFiles=17          ; to Win95=X:\Windows\inf  WinNT=%windir%\inf
+FTP_WebFiles=25,Web      ; to Win95=X:\Windows\web  WinNT=%windir%\web
+
+
+;; Uninstall will be done through selfreg.inf.
+[DefaultInstall]
+CopyFiles=FTP_DllFiles,FTP_InfFiles,FTP_WebFiles
+AddReg=FTP_UnInstall
+RegisterOCXs=RegisterOCXSection
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[DefaultUnInstall]
+UnRegisterOCXs=RegisterOCXSection
+DelFiles=FTP_DllFiles,FTP_InfFiles,FTP_WebFiles
+DelReg=FTP_UnInstall
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+
+[RegisterOCXSection]
+%11%\msieftp.dll
+
+
+[FTP_DllFiles]
+msieftp.dll
+
+[FTP_InfFiles]
+msieftp.inf
+
+[FTP_WebFiles]
+ftp.htt
+
+[FTP_UnInstall]
+;;; Uninstall UI in Control Panel->Add/Remove Programs
+HKLM,"%UNINST%",,,
+HKLM,"%UNINST%","DisplayName",,"%DESC%"
+HKLM,"%UNINST%","UninstallString",,"rundll32.exe advpack.dll,LaunchINFSection %17%\msieftp.inf,DefaultUnInstall"
+
+[SourceDisksNames]
+1=%SetupFileCab%,,1
+
+[SourceDisksFiles]
+msieftp.dll=1
+msieftp.inf=1
+
+
+[Strings]
+ThisDll             = "msieftp.dll"
+SetupFileCab        = "Microsoft FTP Setup Files"
+ERR_NOSETUPAPI      = "Internet Explorer 4.0 needs to be installed for this product to be installed."
+UNINST              = "Software\Microsoft\Windows\CurrentVersion\Uninstall\MSIE FTP"
+DESC                = "Microsoft FTP Folder"

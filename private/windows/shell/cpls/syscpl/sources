@@ -1,0 +1,77 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+           ..\..\userpri\lib\*\userpri.lib
+           $(BASEDIR)\public\sdk\lib\*\lz32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\libc.lib     \
+           $(BASEDIR)\public\sdk\lib\*\ntdll.lib
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=syscpl
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+DLLENTRY=LibMain
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\version.lib
+
+INCLUDES=..\..\..\inc
+
+DLLBASE=0x70100000
+
+USE_CRTDLL=1
+
+NOT_LEAN_AND_MEAN=1
+
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+C_DEFINES= -DW3 -DUNICODE -D_UNICODE
+
+UMTYPE=windows
+
+SOURCES=arrow.c    \
+        cpl.c      \
+        prictl.c   \
+        syspart.c  \
+        system.c   \
+        util.c     \
+        virtual.c  \
+        hwprof.c   \
+        syscpl.rc
+
+
+

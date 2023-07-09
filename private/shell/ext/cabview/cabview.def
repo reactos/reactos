@@ -1,0 +1,8 @@
+LIBRARY CABVIEW
+
+EXPORTS
+        DllRegisterServer       PRIVATE
+        DllUnregisterServer     PRIVATE
+        DllGetClassObject       PRIVATE
+        DllCanUnloadNow         PRIVATE
+        Uninstall

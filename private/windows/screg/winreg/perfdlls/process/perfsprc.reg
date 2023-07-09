@@ -1,0 +1,13 @@
+REGEDIT4
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\PerfProc\Performance]
+"Library" = "perfproc.dll"
+"Open" = "OpenSysProcessObject"
+"Collect" = "CollectSysProcessObjectData"
+"Close" = "CloseSysProcessObject"
+"Object List" = "230 232 786 740 816 1408"
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Application\PerfProc]
+"EventMessageFile" = "%systemroot%\\system32\\perfproc.dll"
+"TypesSupported" = dword:00000007
+
+

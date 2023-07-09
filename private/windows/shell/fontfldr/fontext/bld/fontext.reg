@@ -1,0 +1,138 @@
+REGEDIT4
+
+; ------------------------------------------------------------------------
+;Put the Shell extension in the Explorer NameSpace so it shows up on 
+; "My Computer"
+;
+; [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{BD84B380-8CA2-1069-AB1D-08000948F534}]
+
+; ------------------------------------------------------------------------
+; Here's the basic REG entries to make the explorer extension work.
+;
+; All file locations should be given ABSOLUTE paths during the install process.
+;
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{BD84B380-8CA2-1069-AB1D-08000948F534}]
+@="Fonts"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{BD84B380-8CA2-1069-AB1D-08000948F534}\InProcServer32]
+@="fontext.dll"
+"ThreadingModel"="Apartment"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{BD84B380-8CA2-1069-AB1D-08000948F534}\DefaultIcon]
+@="fontext.dll,-1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{BD84B380-8CA2-1069-AB1D-08000948F534}\ShellFolder]
+"Attributes"=hex:40,01,00,00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{BD84B380-8CA2-1069-AB1D-08000948F534}\Hierarchical]
+@="0"
+
+; ------------------------------------------------------------------------
+; My shell extensions for .TTF files.
+;
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttffile\shellex]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttffile\shellex\ContextMenuHandlers]
+@="InstallMenu"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttffile\shellex\ContextMenuHandlers\InstallMenu]
+@="{BD84B380-8CA2-1069-AB1D-08000948F534}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttffile\shellex\PropertySheetHandlers]
+@="FontInfo"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttffile\shellex\PropertySheetHandlers\FontInfo]
+@="{BD84B380-8CA2-1069-AB1D-08000948F534}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttffile\shell]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttffile\shell\open]
+@="&Open"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttffile\shell\open\command]
+@="fontview.exe %1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttffile\shell\print]
+@="&Print"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttffile\shell\print\command]
+@="fontview.exe /p %1"
+
+
+; ------------------------------------------------------------------------
+; My shell extensions for .TTC files.
+;
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.ttc]
+@="ttcfile"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile]
+@="TrueType Font Collection"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\DefaultIcon]
+@="fontext.dll,-4"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\shellex]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\shellex\ContextMenuHandlers]
+@="InstallMenu"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\shellex\ContextMenuHandlers\InstallMenu]
+@="{BD84B380-8CA2-1069-AB1D-08000948F534}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\shellex\PropertySheetHandlers]
+@="FontInfo"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\shellex\PropertySheetHandlers\FontInfo]
+@="{BD84B380-8CA2-1069-AB1D-08000948F534}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\shell]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\shell\open]
+@="&Open"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\shell\open\command]
+@="fontview.exe %1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\shell\print]
+@="&Print"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\ttcfile\shell\print\command]
+@="fontview.exe /p %1"
+
+
+
+; ------------------------------------------------------------------------
+; My shell extensions to FON files
+;
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\fonfile\shellex]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\fonfile\shellex\ContextMenuHandlers]
+@="InstallMenu"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\fonfile\shellex\ContextMenuHandlers\InstallMenu]
+@="{BD84B380-8CA2-1069-AB1D-08000948F534}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\fonfile\shell]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\fonfile\shell\open]
+@="&Open"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\fonfile\shell\open\command]
+@="fontview.exe %1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\fonfile\shell\print]
+@="&Print"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\fonfile\shell\print\command]
+@="fontview.exe /p %1"
+
+; ------------------------------------------------------------------------
+; Add the PANOSE mapper.
+;
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{BD84B381-8CA2-1069-AB1D-08000948F534}]
+@="PANOSE Core Mapper"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{BD84B381-8CA2-1069-AB1D-08000948F534}\InprocServer32]
+@="panmap.dll"
+
+

@@ -1,0 +1,42 @@
+#ifndef _FONT_PDL_
+#define _FONT_PDL_ 1
+
+#include "element.pdl"
+
+file font.pdl
+
+import element.pdl
+
+interface IHTMLFontElement guid:3050f1d9-98b5-11cf-bb82-00aa00bdce0b
+    refprop CFontElement:color
+    refprop CFontElement:face
+    refprop CFontElement:size
+
+// Note the getaa attributes that ensure we generate GetAAX helpers for
+// the cascaded properties. We need these when we merge fonts
+tearoff CFontElement interface:IHTMLFontElement
+
+class CFontElement name:HTMLFontElement \
+            primaryinterface:IHTMLFontElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f27b-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f512-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLFontElement
+
+    property color caa atype:VARIANT  type:CColorValue \
+        get set setaahr getaa \
+        dispid:DISPID_A_COLOR   bindable displaybind default:VALUE_UNDEF maxstrlen:pdlColor
+    property face caa  atype:BSTR type:CStr  \
+        get set setaahr getaa \
+        dispid:DISPID_A_FONTFACE   bindable displaybind maxstrlen:pdlNoLimit
+    property size  caa atype:VARIANT  type:CUnitValue  \
+        dispid:DISPID_A_FONTSIZE  bindable displaybind  \
+        get set setaahr getaa   \
+        default:NULL_UNITVALUE  noassigndefault:MAKEUNITVALUE(3,UNIT_INTEGER) \
+        invalid=noassigndefault ppflags:PP_UV_FONT maxstrlen:pdlLength
+
+#endif _FONT_PDL_

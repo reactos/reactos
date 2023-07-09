@@ -1,0 +1,241 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:       urlmon.idl
+//
+//  Contents:   async moniker interfaces
+//
+//  Classes:
+//
+//  Functions:
+//
+//  History:    11-02-95   JohannP (Johann Posch)   Created
+//
+//----------------------------------------------------------------------------
+#include "urlmon.idl"
+cpp_quote("#define IID_IOInetBindClient     IID_IInternetBindClient  ")
+cpp_quote("#define IOInetBindClient     IInternetBindClient  ")
+
+interface IInternetBindClient;
+interface IInternetCache;
+
+//cpp_quote("#define IOInetCache          IInternetCache       ")
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IInternetCache interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPIINTERNETCACHE_DEFINED")
+cpp_quote("#define _LPIINTERNETCACHE_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eac9ea-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IInternetCache : IUnknown
+{
+        typedef [unique] IInternetCache *LPIINTERNETCACHE;
+
+}
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IInternetBindClient interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPIINTERNETBINDCLIENT")
+cpp_quote("#define _LPIINTERNETBINDCLIENT")
+
+[
+        local,
+        object,
+        uuid(79eac9e2-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IInternetBindClient : IInternetBindInfo
+{
+        typedef [unique] IInternetBindClient *LPIINTERNETBINDCLIENT;
+
+        HRESULT GetClassFileOrMime(
+            [in] LPBC pBC,
+            [in] LPCWSTR szFilename,
+            [in] LPVOID pBuffer,
+            [in] DWORD cbSize,
+            [in] LPCWSTR szMime,
+            [in] DWORD dwReserved,
+            [in,out] LPCLSID pclsid
+            );
+
+        HRESULT FindMimeFromData(
+            [in]  LPBC      pBC,
+            [in]  LPCWSTR   szFilename,
+            [in]  LPVOID    pBuffer,
+            [in]  DWORD     cbSize,
+            [in]  LPCWSTR   szMime,
+            [out] LPWSTR    pwzResult,
+            [in]  DWORD     cchResult,
+            [out] DWORD    *pcchResult,
+            [in]  DWORD     dwReserved
+            );
+}
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IBindStatusCallbackMsg interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPBINDSTATUSCALLBACKMSG_DEFINED")
+cpp_quote("#define _LPBINDSTATUSCALLBACKMSG_DEFINED")
+
+[
+        object,
+        uuid(79eac9d5-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IBindStatusCallbackMsg: IBindStatusCallback
+{
+        typedef [unique] IBindStatusCallbackMsg *LPBINDSTATUSCALLBACKMSG;
+
+        typedef enum tagMSGCALLTYPE
+        {
+             IBSCLEVEL_TOPLEVEL     = 1
+            ,IBSCLEVEL_NESTED       = 2
+
+        }   IBSCLEVEL;
+
+        typedef enum tagIBSCPENDINGMSG
+        {
+             IBSCPENDINGMSG_WAITDEFPROCESS   = 0
+            ,IBSCPENDINGMSG_WAITNOPROCESS    = 1
+            ,IBSCPENDINGMSG_CANCELCALL       = 2
+
+        }   IBSCPENDINGMSG;
+
+        HRESULT MessagePending(
+            [in] DWORD  dwPendingType,
+            [in] DWORD  dwPendingRecursion,
+            [in] DWORD  dwReserved
+            );
+
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IBindStatusCallbackHolder interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPBINDSTATUSCALLBACKHOLDER_DEFINED")
+cpp_quote("#define _LPBINDSTATUSCALLBACKHOLDER_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eac9cc-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IBindStatusCallbackHolder: IBindStatusCallback
+{
+        typedef [unique] IBindStatusCallbackHolder *LPBINDSTATUSCALLBACKHOLDER;
+
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IMediaHolder interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPMEDIAHOLDER_DEFINED")
+cpp_quote("#define _LPMEDIAHOLDER_DEFINED")
+
+[
+        object,
+        uuid(79eac9ce-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IMediaHolder : IUnknown
+{
+        typedef [unique] IMediaHolder *LPMEDIAHOLDER;
+
+        HRESULT RegisterClassMapping(
+            [in]                    DWORD   ctypes,
+            [in, size_is(ctypes)]   LPCSTR  rgszNames[],
+            [in, size_is(ctypes)]   CLSID   rgClsIDs[],
+            [in]                    DWORD   dwReserved
+            );
+
+        HRESULT FindClassMapping(
+            [in]    LPCSTR  szMime,
+            [out]   CLSID   *pClassID,
+            [in]    DWORD   dwReserved
+            );
+}
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   ITransactionData interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPTRANSACTIONDATA_DEFINED")
+cpp_quote("#define _LPTRANSACTIONDATA_DEFINED")
+
+[
+        object,
+        uuid(79eac9cf-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface ITransactionData : IUnknown
+{
+        typedef [unique] ITransactionData *LPTRANSACTIONDATA;
+
+        HRESULT GetTransactionData(
+            [in]  LPCWSTR szUrl,
+            [out] LPOLESTR *pszFilename,
+            [out] LPOLESTR *pszMime,
+            [out] DWORD  *pdwSizeTotal,
+            [out] DWORD  *pdwSizeAvailable,
+            [in]  DWORD  dwReserved
+            );
+
+}
+cpp_quote("#endif")
+
+
+
+
+//
+// internal bindf flags
+//
+#pragma midl_echo("#define BINDF_IGNOREMIMECLSID           0x80000000     ")    // used by office
+#pragma midl_echo("#define BINDF_COMPLETEDOWNLOAD          0x01000000     ")    // used by office
+
+
+

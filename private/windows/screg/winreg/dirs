@@ -1,0 +1,34 @@
+!IF 0
+
+Copyright (c) 1992  Microsoft Corporation
+
+Module Name:
+
+    dirs.
+
+Abstract:
+
+    This file specifies the subdirectories of the current directory that
+    contain component makefiles.
+
+Author:
+
+    David J. Gilman (davegi) 29-Jan-1992
+
+NOTE:   Commented description of this file is in \nt\bak\bin\dirs.tpl
+
+!ENDIF
+
+
+DIRS=           \
+     lib        \
+     prflbmsg   \
+     perflib    \
+     perfdlls   \
+     regconn	\
+     server     \
+     local      \
+     client     \
+     regsvc
+
+OPTIONAL_DIRS=tools

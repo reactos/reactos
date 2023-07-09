@@ -1,0 +1,20 @@
+MAJORCOMP=shell
+MINORCOMP=regedit
+
+#
+# NT 5's regedit is temporarily out of commission, so we're releasing
+# the NT 4 regedit binaries for now.  There are no sources to build here.
+#
+TARGETNAME=regedit
+TARGETPATH=obj
+TARGETTYPE=NOTARGET
+
+SOURCES=
+
+!IF $(386)
+MISCFILES=i386\regedit.exe
+!ENDIF
+
+!IF $(ALPHA)
+MISCFILES=alpha\regedit.exe
+!ENDIF

@@ -1,0 +1,83 @@
+<HTML>
+<HEAD>
+<LINK REL=STYLESHEET HREF="http://ie/CSS/master.css" TYPE="text/css">
+<META http-equiv="PICS-Label" content='(PICS-1.0 "http://www.rsac.org/ratingsv01.html" l gen true comment "RSACi North America Server" by "ratings@microsoft.com" on "1996.04.04T08:15-0500" r (n 0 s 0 v 0 l 0))'>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META DATE="Oct 24, 97"> 
+<META AUTHOR="Arul Kumaravel"> 
+<TITLE>Ftp Shell Extension Tests</TITLE> 
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF">
+
+<H2>Ftp Tests</H2>
+
+<H3> FTP HREFs</H3>
+<UL>
+<LI> <A HREF="ftp://rigel.cyberpass.net/pub/artgifts1-banner.gif"> Ftp File (Host In Place)</A> <BR>
+<LI> <A HREF="ftp://rigel.cyberpass.net/pub/programs/windows/winzip95.exe"> Ftp File (Launch/Save) </A> </LI>
+<LI> <A HREF="ftp://rigel.cyberpass.net/pub/programs/windows/Win95/"> Ftp Dir </A> </LI>
+</UL>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP HREFs Requiring Login </H3>(Domain: None, User: starbuck, Password: *******)
+<UL>
+<LI> <A HREF="ftp://starbuck:MyPassword@rigel.cyberpass.net/r1/user/starbuck/Test%20Dir1/Reading%20Railroad.txt"> Ftp File (Host In Place)</A>
+     (<A HREF="ftp://starbuck:MyPassword@rigel.cyberpass.net/Test%20Dir1/Reading%20Railroad.txt"> Correct URL </A>)<BR>
+<LI> <A HREF="ftp://starbuck:MyPassword@rigel.cyberpass.net/r1/user/starbuck/Test%20Dir1/My%20Batch%20File.bat"> Ftp File (Launch/Save) </A> 
+     (<A HREF="ftp://starbuck:MyPassword@rigel.cyberpass.net/r1/user/starbuck/Test%20Dir1/FTP%20Files/"> Correct URL </A>)<BR>
+<LI> <A HREF="ftp://starbuck:MyPassword@rigel.cyberpass.net/Test%20Dir1/FTP%20Files/"> Ftp Dir (ftp://bryanst2%5cjoemama:pass@bryanst2/SubDir1/)</A> <BR>
+</UL>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP Dir in IFRAMEs:</H3>
+<A HREF="ftp://rigel.cyberpass.net/pub/programs/windows/"> ftp://rigel.cyberpass.net/pub/programs/windows/ </A> <BR>
+<IFRAME SRC="ftp://rigel.cyberpass.net/pub/programs/windows/" WIDTH=90% HEIGHT=300px>
+</IFRAME>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP File in IFRAMEs:</H3>
+<A HREF="ftp://rigel.cyberpass.net/pub/artgifts1-banner.gif"> ftp://rigel.cyberpass.net/pub/artgifts1-banner.gif </A> <BR>
+<IFRAME SRC="ftp://rigel.cyberpass.net/pub/artgifts1-banner.gif" WIDTH=90% HEIGHT=300px>
+</IFRAME>
+<BR>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP Dir in IFRAMEs: (w/User Login) (Correct URL)</H3>
+<A HREF="ftp://starbuck:MyPassword@rigel.cyberpass.net/Test%20Dir1/FTP%20Files/"> ftp://starbuck:MyPassword@rigel.cyberpass.net/Test%20Dir1/FTP%20Files/ </A> <BR>
+<IFRAME SRC="ftp://starbuck:MyPassword@rigel.cyberpass.net/Test%20Dir1/FTP%20Files/" WIDTH=90% HEIGHT=300px>
+</IFRAME>
+<BR>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP Dir in IFRAMEs: (w/User Login) (Incorrect URL)</H3>
+<A HREF="ftp://starbuck:MyPassword@rigel.cyberpass.net/r1/user/starbuck/Test%20Dir1/FTP%20Files/"> ftp://starbuck:MyPassword@rigel.cyberpass.net/r1/user/starbuck/Test%20Dir1/FTP%20Files/ </A> <BR>
+<IFRAME SRC="ftp://starbuck:MyPassword@rigel.cyberpass.net/r1/user/starbuck/Test%20Dir1/FTP%20Files/" WIDTH=90% HEIGHT=300px>
+</IFRAME>
+<BR>
+<BR>
+<BR>
+<BR>
+
+<H3> FTP File in IFRAMEs: (w/User Login)</H3>
+<A HREF="ftp://starbuck:MyPassword@rigel.cyberpass.net/r1/user/starbuck/Test%20Dir1/Reading%20Railroad.txt"> ftp://starbuck:MyPassword@rigel.cyberpass.net/r1/user/starbuck/Test%20Dir1/Reading%20Railroad.txt </A> <BR>
+<IFRAME SRC="ftp://starbuck:MyPassword@rigel.cyberpass.net/r1/user/starbuck/Test%20Dir1/Reading%20Railroad.txt" WIDTH=90% HEIGHT=300px>
+</IFRAME>
+<BR>
+<BR>
+<BR>
+<BR>
+
+
+</BODY>
+</HTML>

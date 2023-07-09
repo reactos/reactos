@@ -1,0 +1,96 @@
+1 DLGINCLUDE "dialogs.h"
+
+
+IDD_CONTROL DIALOG 70, 80, 144, 76
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Winlogon generic control dialog"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_SHUTDOWN DIALOG 45, 22, 164, 52
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Shutdown Computer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "It is now safe to turn off your computer.", 302, 31, 13,
+                    132, 8
+    ICON            4, IDD_ICON, 6, 7, 18, 20
+    DEFPUSHBUTTON   "&Restart", 305, 62, 32, 40, 14
+END
+
+IDD_SHUTDOWN_WAIT DIALOG 0, 0, 0, 0
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Shutdown in Progress"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_FORCED_LOGOFF_WAIT DIALOG 94, 47, 146, 42
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Workstation Locked"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Please wait while the current user is logged off.", 101,
+                    7, 12, 137, 19
+END
+
+
+IDD_BAD_GINA_DIALOG DIALOG 58, 83, 231, 119
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "User Interface Failure"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "The Logon User Interface DLL msgina.dll Failed to load",
+                    IDD_BADGINA_LINE_1, 39, 16, 156, 24
+    LTEXT           "Contact your system administrator to replace the DLL, or restore the original DLL.",
+                    402, 39, 53, 151, 25
+    DEFPUSHBUTTON   "&Restart", IDOK, 80, 91, 68, 14
+END
+
+IDD_STARTING DIALOG 6, 18, 136, 22
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_POPUP | WS_CAPTION
+CAPTION "NetDDE Agent"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Starting NetDDE related services...", -1, 10, 6, 116,
+                    11
+END
+
+IDD_SUSPEND DIALOG 94, 47, 146, 42
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "System Standing By"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Please wait while the system prepares to stand by.", 101,
+                    7, 12, 137, 19
+END
+
+IDD_HIBERNATE DIALOG 94, 47, 146, 42
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "System Hibernating"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Please wait while the system prepares to hibernate.", 101,
+                    7, 12, 137, 19
+END
+
+IDD_ADMIN_PW DIALOG FIXED IMPURE  0, 0, 219, 116
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Logon Message"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDD_SB_ICON_PW,-1,7,9,21,20
+    LTEXT           "Please authorize this action by entering the password of an account with Administrator privileges.",
+                    IDC_TEXT_1,36,7,169,19
+    LTEXT           "&User:",IDC_TEXT_2,37,36,51,8
+    EDITTEXT        IDC_USER_NAME,82,34,123,12,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_TEXT_3,37,53,51,8
+    EDITTEXT        IDC_PASSWORD,82,51,123,12,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Domain:",IDC_TEXT_4,37,69,51,8
+    COMBOBOX        IDC_DOMAIN,82,67,123,79,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,54,95,47,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,117,95,47,14
+END

@@ -1,0 +1,6 @@
+MIPS_OPTIONS=-nodwalign
+GPSIZE=32
+
+MIPS_SOURCES=..\mips\psctxmip.c \
+             ..\mips\psldt.c    \
+             ..\mips\psvdm.c

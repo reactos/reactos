@@ -1,0 +1,32 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\dlay\dl=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=dl
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES= \
+    $(ROOT)\src\dlay\include; \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\external\inc; \
+    $(ROOT)\types\$(O); \
+    $(ROOT)\src\dlay\dl; \
+    $(ROOT)\src\site\base; \
+    $(ROOT)\src\site\include; \
+    $(ROOT)\src\site\ole; \
+    $(ROOT)\src\site\util; \
+    $(BASEDIR)\private\windows\inc;
+
+SOURCES= \
+    bookmark.cxx \
+    dbllink.cxx \
+    dlcursor.cxx
+
+PRECOMPILED_OPTION=/Yudlaypch.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

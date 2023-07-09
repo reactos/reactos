@@ -1,0 +1,57 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+!include ..\sources.inc
+
+386_STDCALL=1
+USE_NATIVE_EH=0
+USE_MSVCRT=1
+
+MAJORCOMP=dbg
+MINORCOMP=msvcmon
+
+TARGETNAME=memlist
+TARGETPATH=$(DEBUG_LIB)
+TARGETTYPE=LIBRARY
+
+
+INCLUDES = \
+		..\include;							\
+        $(LANGAPI_ROOT)\debugger;           \
+        $(IDE_ROOT)\debugger\od\include;    \
+        $(LANGAPI_ROOT)\include;            \
+        $(NONSHIP_INC_PATH)
+
+
+C_DEFINES = $(C_DEFINES) -DOSDEBUG4
+
+#   NOTE: ll.c and linklist.c seem to define the same set of functions
+#   I have chosen linklist.c over ll.c, which may be the wrong choice.
+
+SOURCES =   \
+        bm.c        \
+        cvwin32.c   \
+        linklist.c  \
+        mh.c        \
+        mm.c        \
+        wmalloc.c   \
+            
+
+TARGETLIBS=\
+        $(SDK_LIB_PATH)\user32.lib      \
+        $(SDK_LIB_PATH)\kernel32.lib
+

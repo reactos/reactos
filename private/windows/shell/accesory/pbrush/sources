@@ -1,0 +1,23 @@
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=pbrush
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+INCLUDES=.
+
+C_DEFINES=-DWIN32 -DNT
+
+SOURCES= pbrush.c pbrush.rc
+
+UMTYPE=windows
+UMENTRYABS=ModuleEntry
+
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib      
+
+
+
+

@@ -1,0 +1,41 @@
+HKCR
+{
+	DHTMLSafe.DHTMLSafe.1 = s 'DHTML Edit Control Safe for Scripting for IE5'
+	{
+		CLSID = s '{2D360201-FFF5-11d1-8D03-00A0C959BC0A}'
+	}
+	DHTMLSafe.DHTMLSafe = s 'DHTML Edit Control Safe for Scripting for IE5'
+	{
+		CurVer = s 'DHTMLSafe.DHTMLSafe.1'
+		CLSID = s '{2D360201-FFF5-11d1-8D03-00A0C959BC0A}'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {2D360201-FFF5-11d1-8D03-00A0C959BC0A} = s 'DHTML Edit Control Safe for Scripting for IE5'
+		{
+			ProgID = s 'DHTMLSafe.DHTMLSafe.1'
+			VersionIndependentProgID = s 'DHTMLSafe.DHTMLSafe'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			ForceRemove 'Control'
+			ForceRemove 'Programmable'
+			'ToolboxBitmap32' = s '%MODULE%, 2'
+			'MiscStatus' = s '0'
+			{
+			    '1' = s '131473'
+			}
+			'TypeLib' = s '{683364A1-B37D-11D1-ADC5-006008A5848C}'
+			'Version' = s '1.0'
+			'Implemented Categories'
+			{
+				'{7DD95801-9882-11CF-9FA9-00AA006C42C4}'
+			}
+			'Implemented Categories'
+			{
+				'{7DD95802-9882-11CF-9FA9-00AA006C42C4}'
+			}
+		}
+	}
+}

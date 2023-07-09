@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>IE/Shell ActiveX Document Hosting</title>
+</head>
+
+<body bgcolor="#80FFFF">
+
+<h2>IE 4.0 : ActiveX Document Hosting - Changes from IE 3.0</h2>
+
+<p>This document summarizes the changes we made to IE 4.0's
+ActiveX Document Hosting code. We made some changes to the
+hosting code to fix some bugs and improve the user's experience.
+Although those changes are carefully made so that it won't cause
+any compatibility problems (either for IE or existing ActiveX
+components on the market/web), we want to share this information
+so that programmers can write even better ActiveX components for
+IE4 while maintaining IE3 compatibility. </p>
+
+<ul>
+    <li><a href="#4-object-cache is eliminated">4-object-cache is
+        eliminated</a></li>
+    <li><a href="#Toolbar negotiation within a frame-set">Toolbar
+        negotiation within a frame-set</a></li>
+</ul>
+
+<h4><a name="4-object-cache is eliminated">4-Object-Cache Is
+Eliminated</a></h4>
+
+<p>Under IE 3.0, each browser frame has an 4-object-cache, which
+keeps references to four most recently accessed ActiveX document
+objects. This was a mechanism to (1) keep the OLE server
+running/loaded and (2) preserve the view state (such as the
+scroll position). We, however, found several problems with this
+implementation -- such as a problem with the &quot;onload&quot;
+event, a problem with &quot;post&quot; result page and etc. </p>
+
+<p>IE 4.0 no longer caches ActiveX document objects. When the
+user navigates away from that page, we immediately release the
+last reference count to that object. To keep the OLE server
+runnning/loaded for a while, we call IClassFactory::LockServer
+(see <a href="#Notes">notes</a> below). To preserve the view
+state, we introduced a new mechanism to persist view states for
+each pages (this mechanism works only with HTML pages -- the
+future version of IE may support for other types of documents). </p>
+
+<p>Please note that this change may affect the behavior of
+ActiveX controls in HTML pages as well. Under IE 3.0, controls on
+an HTML page were kept in memory while the parent page is in the
+4-object-cache. Under IE 4.0, those objects are destroyed and
+re-created. </p>
+
+<p><a name="Notes">Notes</a>: Although OLE's spec says calling
+IClassFactory::LockServer(TRUE) is sufficient to keep the OLE
+server running/loaded, we found many existing OLE servers are not
+implementing it correctly. Many out-of-process servers shutdown
+their server processes when we release the last reference count
+to their instances. To work around this problem, we put two
+special code in IE 4.0.</p>
+
+<p>(1) In addition to calling IClassFactory::LockServer(TRUE), we
+also call IClassFactory::CreateInstance and keeps the reference
+count to that object too. It solves this problem for most of OLE
+servers.</p>
+
+<p>(2) In addition to above, if the class has a <a
+href="browserf.htm">browser flag</a>, BROWSERFLAG_INITNEWTOKEEP
+(a new flag in IE 4.0), we create an empty IStorage and calls
+IPersistStorage::InitNew of the instance. </p>
+
+<h4><a name="Toolbar negotiation within a frame-set">Toolbar
+Negotiation Within a Frame-Set</a></h4>
+
+<hr>
+
+<p><a href="dochost.htm">Go back to the parent document</a>. </p>
+</body>
+</html>

@@ -1,0 +1,70 @@
+LIBRARY           SYNCENG
+HEAPSIZE          0
+
+SECTIONS
+   .text          EXECUTE READ            ;/* executable code and read-only data */
+   .bss           READ WRITE              ;/* uninitialized data */
+   .rdata         READ                    ;/* read-only data */
+   .data          READ WRITE              ;/* initialized data */
+   .rsrc          READ                    ;/* resources */
+   .idata         READ WRITE              ;/* imported address table */
+   .edata         READ                    ;/* exported function information */
+   .reloc         READ                    ;/* relocation information */
+   .instanc       READ WRITE              ;/* instance data */
+
+EXPORTS
+
+   ;/* briefcase interface */
+
+   OpenBriefcase
+   SaveBriefcase
+   CloseBriefcase
+   DeleteBriefcase
+   GetOpenBriefcaseInfo
+   ClearBriefcaseCache
+   FindFirstBriefcase
+   FindNextBriefcase
+   FindBriefcaseClose
+
+   ;/* twin interface */
+
+   AddObjectTwin
+   AddFolderTwin
+   ReleaseTwinHandle
+   DeleteTwin
+   GetObjectTwinHandle
+   IsFolderTwin
+   CreateFolderTwinList
+   DestroyFolderTwinList
+   GetFolderTwinStatus
+   IsOrphanObjectTwin
+   CountSourceFolderTwins
+   AnyTwins
+
+   ;/* twin list interface */
+
+   CreateTwinList
+   DestroyTwinList
+   AddTwinToTwinList
+   AddAllTwinsToTwinList
+   RemoveTwinFromTwinList
+   RemoveAllTwinsFromTwinList
+
+   ;/* reconciliation list interface */
+
+   CreateRecList
+   DestroyRecList
+   ReconcileItem
+   BeginReconciliation
+   EndReconciliation
+
+   ;/* volume ID interface */
+
+   IsPathOnVolume
+   GetVolumeDescription
+
+   ;/* file stamp interface */
+
+   GetFileStamp
+   CompareFileStamps
+

@@ -1,0 +1,45 @@
+# target crtdll.lib instead of libc.lib
+# USE_CRTDLL=1
+
+MAJORCOMP=o2base32
+MINORCOMP=o2032
+
+TARGETNAME=o2base32
+TARGETPATH=..\lib
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=.;..\inc;$(BASEDIR)\public\sdk\inc
+
+C_DEFINES=-DWIN32 -DUNICODE
+#C_DEFINES=-DWIN32 -DUNICODE
+
+SOURCES= \
+        stdfact.cxx  \
+        border.cxx   \
+        dvutils.cxx  \
+        fatstg.cxx   \
+        himetric.cxx \
+        ipborder.cxx \
+        iputils.cxx  \
+        memutils.cxx \
+        misc.cxx     \
+        rotutils.cxx \
+        status.cxx   \
+        stdenum.cxx  \
+        stgutils.cxx \
+        vwadvhld.cxx \
+        wutils.cxx   \
+	iconbar.cxx  \
+	cenum.cxx    \
+	cary.cxx     \
+        clsdesc.cxx  \
+        sctrl.cxx    \
+        sdv.cxx      \
+        sinpl.cxx
+
+UMTYPE=windows
+UMAPPL=
+UMENTRY=
+#UMLIBS=$(BASEDIR)\private\windows\shell\lib\*\o2base32
+UMLIBS=..\lib\*\o2base32

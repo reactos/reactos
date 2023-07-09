@@ -1,0 +1,2593 @@
+ABORTPROCYIELD                                        DAYTONA 31
+ACTIVATEKEYBOARDLAYOUT                                            WIN32S
+ACTIVATEKEYBOARDLAYOUT                                    DAYTONA 35
+ACTIVATEKEYBOARDLAYOUT                                DAYTONA 31
+ACTIVATEKEYBOARDLAYOUT                            CHICAGO
+ADJUSTWINDOWRECT                                                  WIN32S
+ADJUSTWINDOWRECT                                          DAYTONA 35
+ADJUSTWINDOWRECT                                      DAYTONA 31
+ADJUSTWINDOWRECT                                  CHICAGO
+ADJUSTWINDOWRECT                              WIN31
+ADJUSTWINDOWRECTEX                                                WIN32S
+ADJUSTWINDOWRECTEX                                        DAYTONA 35
+ADJUSTWINDOWRECTEX                                    DAYTONA 31
+ADJUSTWINDOWRECTEX                                CHICAGO
+ADJUSTWINDOWRECTEX		              WIN31
+ANSILOWER			              WIN31
+ANSILOWERBUFF		                      WIN31
+ANSINEXT			              WIN31
+ANSIPREV			              WIN31
+ANSIUPPER			              WIN31
+ANSIUPPERBUFF		                      WIN31
+ANYPOPUP                                                          WIN32S
+ANYPOPUP                                                  DAYTONA 35
+ANYPOPUP                                              DAYTONA 31
+ANYPOPUP                                          CHICAGO
+ANYPOPUP                                      WIN31
+APPENDMENU                                    WIN31
+APPENDMENUA                                                       WIN32S
+APPENDMENUA                                               DAYTONA 35
+APPENDMENUA                                           DAYTONA 31
+APPENDMENUA                                       CHICAGO
+APPENDMENUITEMA                                           DAYTONA 35
+APPENDMENUITEMW                                           DAYTONA 35
+APPENDMENUW                                                       WIN32S
+APPENDMENUW                                               DAYTONA 35
+APPENDMENUW                                           DAYTONA 31
+APPENDMENUW                                       CHICAGO
+ARRANGEICONICWINDOWS                                              WIN32S
+ARRANGEICONICWINDOWS                                      DAYTONA 35
+ARRANGEICONICWINDOWS                                  DAYTONA 31
+ARRANGEICONICWINDOWS                              CHICAGO
+ARRANGEICONICWINDOWS                          WIN31
+ATTACHTHREADINPUT                                                 WIN32S
+ATTACHTHREADINPUT                                         DAYTONA 35
+ATTACHTHREADINPUT                                     DAYTONA 31
+ATTACHTHREADINPUT                                 CHICAGO
+BEAR11 = SETSYSTEMTIMER	    ;INTERNAL         WIN31
+BEAR182=KILLSYSTEMTIMER	    ;INTERNAL         WIN31
+BEAR285=OLDSETDESKWALLPAPER     ;INTERNAL     WIN31
+BEAR306=MENUWINDOWPROC	    ;INTERNAL         WIN31
+BEAR51=ISTWOBYTECHARPREFIX      ;INTERNAL     WIN31
+BEAR86=ICONSIZE		    ;INTERNAL         WIN31
+BEGINDEFERWINDOWPOS                                               WIN32S
+BEGINDEFERWINDOWPOS                                       DAYTONA 35
+BEGINDEFERWINDOWPOS                                   DAYTONA 31
+BEGINDEFERWINDOWPOS                               CHICAGO
+BEGINDEFERWINDOWPOS                           WIN31
+BEGINPAINT                                                        WIN32S
+BEGINPAINT                                                DAYTONA 35
+BEGINPAINT                                            DAYTONA 31
+BEGINPAINT                                        CHICAGO
+BEGINPAINT                                    WIN31
+BOZOSLIVEHERE       	    ;INTERNAL         WIN31
+BRINGWINDOWTOTOP                                                  WIN32S
+BRINGWINDOWTOTOP                                          DAYTONA 35
+BRINGWINDOWTOTOP                                      DAYTONA 31
+BRINGWINDOWTOTOP                                  CHICAGO
+BRINGWINDOWTOTOP                              WIN31
+BROADCASTSYSTEMMESSAGE                            CHICAGO
+BUILDCOMMDCB                                  WIN31
+CALCCHILDSCROLL                                                   WIN32S
+CALCCHILDSCROLL                                           DAYTONA 35
+CALCCHILDSCROLL                                       DAYTONA 31
+CALCCHILDSCROLL                                   CHICAGO
+CALCCHILDSCROLL		    ;INTERNAL         WIN31
+CALLMSGFILTER                                                     WIN32S
+CALLMSGFILTER                                     CHICAGO
+CALLMSGFILTER                                 WIN31
+CALLMSGFILTER = CALLMSGFILTERA                            DAYTONA 35
+CALLMSGFILTER = CALLMSGFILTERA                        DAYTONA 31
+CALLMSGFILTERA                                                    WIN32S
+CALLMSGFILTERA                                            DAYTONA 35
+CALLMSGFILTERA                                        DAYTONA 31
+CALLMSGFILTERA = CALLMSGFILTER                    CHICAGO
+CALLMSGFILTERW                                                    WIN32S
+CALLMSGFILTERW                                            DAYTONA 35
+CALLMSGFILTERW                                        DAYTONA 31
+CALLMSGFILTERW                                    CHICAGO
+CALLNEXTHOOKEX                                                    WIN32S
+CALLNEXTHOOKEX                                            DAYTONA 35
+CALLNEXTHOOKEX                                        DAYTONA 31
+CALLNEXTHOOKEX                                    CHICAGO
+CALLNEXTHOOKEX		                      WIN31
+CALLWINDOWPROC                                WIN31
+CALLWINDOWPROCA                                                   WIN32S
+CALLWINDOWPROCA                                           DAYTONA 35
+CALLWINDOWPROCA                                       DAYTONA 31
+CALLWINDOWPROCA                                   CHICAGO
+CALLWINDOWPROCW                                                   WIN32S
+CALLWINDOWPROCW                                           DAYTONA 35
+CALLWINDOWPROCW                                       DAYTONA 31
+CALLWINDOWPROCW                                   CHICAGO
+CASCADECHILDWINDOWS                                               WIN32S
+CASCADECHILDWINDOWS                                       DAYTONA 35
+CASCADECHILDWINDOWS                                   DAYTONA 31
+CASCADECHILDWINDOWS                               CHICAGO
+CASCADECHILDWINDOWS 	    ;INTERNAL         WIN31
+CASCADEWINDOWS                                            DAYTONA 35
+CASCADEWINDOWS                                    CHICAGO
+CHANGECLIPBOARDCHAIN                                              WIN32S
+CHANGECLIPBOARDCHAIN                                      DAYTONA 35
+CHANGECLIPBOARDCHAIN                                  DAYTONA 31
+CHANGECLIPBOARDCHAIN                              CHICAGO
+CHANGECLIPBOARDCHAIN                          WIN31
+CHANGEMENU                                    WIN31
+CHANGEMENUA                                                       WIN32S
+CHANGEMENUA                                               DAYTONA 35
+CHANGEMENUA                                           DAYTONA 31
+CHANGEMENUA                                       CHICAGO
+CHANGEMENUW                                                       WIN32S
+CHANGEMENUW                                               DAYTONA 35
+CHANGEMENUW                                           DAYTONA 31
+CHANGEMENUW                                       CHICAGO
+CHARLOWERA                                                        WIN32S
+CHARLOWERA                                                DAYTONA 35
+CHARLOWERA                                            DAYTONA 31
+CHARLOWERA                                        CHICAGO
+CHARLOWERBUFFA                                                    WIN32S
+CHARLOWERBUFFA                                            DAYTONA 35
+CHARLOWERBUFFA                                        DAYTONA 31
+CHARLOWERBUFFA                                    CHICAGO
+CHARLOWERBUFFW                                                    WIN32S
+CHARLOWERBUFFW                                            DAYTONA 35
+CHARLOWERBUFFW                                        DAYTONA 31
+CHARLOWERBUFFW                                    CHICAGO
+CHARLOWERW                                                        WIN32S
+CHARLOWERW                                                DAYTONA 35
+CHARLOWERW                                            DAYTONA 31
+CHARLOWERW                                        CHICAGO
+CHARNEXTA                                                         WIN32S
+CHARNEXTA                                                 DAYTONA 35
+CHARNEXTA                                             DAYTONA 31
+CHARNEXTA                                         CHICAGO
+CHARNEXTEXA                                       CHICAGO
+CHARNEXTEXW                                       CHICAGO
+CHARNEXTW                                                         WIN32S
+CHARNEXTW                                                 DAYTONA 35
+CHARNEXTW                                             DAYTONA 31
+CHARNEXTW                                         CHICAGO
+CHARPREVA                                                         WIN32S
+CHARPREVA                                                 DAYTONA 35
+CHARPREVA                                             DAYTONA 31
+CHARPREVA                                         CHICAGO
+CHARPREVEXA                                       CHICAGO
+CHARPREVEXW                                       CHICAGO
+CHARPREVW                                                         WIN32S
+CHARPREVW                                                 DAYTONA 35
+CHARPREVW                                             DAYTONA 31
+CHARPREVW                                         CHICAGO
+CHARTOOEMA                                                        WIN32S
+CHARTOOEMA                                                DAYTONA 35
+CHARTOOEMA                                            DAYTONA 31
+CHARTOOEMA                                        CHICAGO
+CHARTOOEMBUFFA                                                    WIN32S
+CHARTOOEMBUFFA                                            DAYTONA 35
+CHARTOOEMBUFFA                                        DAYTONA 31
+CHARTOOEMBUFFA                                    CHICAGO
+CHARTOOEMBUFFW                                                    WIN32S
+CHARTOOEMBUFFW                                            DAYTONA 35
+CHARTOOEMBUFFW                                        DAYTONA 31
+CHARTOOEMBUFFW                                    CHICAGO
+CHARTOOEMW                                                        WIN32S
+CHARTOOEMW                                                DAYTONA 35
+CHARTOOEMW                                            DAYTONA 31
+CHARTOOEMW                                        CHICAGO
+CHARUPPERA                                                        WIN32S
+CHARUPPERA                                                DAYTONA 35
+CHARUPPERA                                            DAYTONA 31
+CHARUPPERA                                        CHICAGO
+CHARUPPERBUFFA                                                    WIN32S
+CHARUPPERBUFFA                                            DAYTONA 35
+CHARUPPERBUFFA                                        DAYTONA 31
+CHARUPPERBUFFA                                    CHICAGO
+CHARUPPERBUFFW                                                    WIN32S
+CHARUPPERBUFFW                                            DAYTONA 35
+CHARUPPERBUFFW                                        DAYTONA 31
+CHARUPPERBUFFW                                    CHICAGO
+CHARUPPERW                                                        WIN32S
+CHARUPPERW                                                DAYTONA 35
+CHARUPPERW                                            DAYTONA 31
+CHARUPPERW                                        CHICAGO
+CHECKDLGBUTTON                                                    WIN32S
+CHECKDLGBUTTON                                            DAYTONA 35
+CHECKDLGBUTTON                                        DAYTONA 31
+CHECKDLGBUTTON                                    CHICAGO
+CHECKDLGBUTTON                                WIN31
+CHECKMENUITEM                                                     WIN32S
+CHECKMENUITEM                                             DAYTONA 35
+CHECKMENUITEM                                         DAYTONA 31
+CHECKMENUITEM                                     CHICAGO
+CHECKMENUITEM                                 WIN31
+CHECKMENURADIOITEM                                        DAYTONA 35
+CHECKMENURADIOITEM                                CHICAGO
+CHECKRADIOBUTTON                                                  WIN32S
+CHECKRADIOBUTTON                                          DAYTONA 35
+CHECKRADIOBUTTON                                      DAYTONA 31
+CHECKRADIOBUTTON                                  CHICAGO
+CHECKRADIOBUTTON                              WIN31
+CHILDWINDOWFROMPOINT                                              WIN32S
+CHILDWINDOWFROMPOINT                                      DAYTONA 35
+CHILDWINDOWFROMPOINT                                  DAYTONA 31
+CHILDWINDOWFROMPOINT                              CHICAGO
+CHILDWINDOWFROMPOINT                          WIN31
+CHILDWINDOWFROMPOINTEX                            CHICAGO
+CLEARCOMMBREAK                                WIN31
+CLIENTTHREADCONNECT                                   DAYTONA 31
+CLIENTTHREADCONNECT                               CHICAGO
+CLIENTTHREADCONNECT         ; GDI CLIENT                  DAYTONA 35
+CLIENTTOSCREEN                                                    WIN32S
+CLIENTTOSCREEN                                            DAYTONA 35
+CLIENTTOSCREEN                                        DAYTONA 31
+CLIENTTOSCREEN                                    CHICAGO
+CLIENTTOSCREEN                                WIN31
+CLIPCURSOR                                                        WIN32S
+CLIPCURSOR                                                DAYTONA 35
+CLIPCURSOR                                            DAYTONA 31
+CLIPCURSOR                                        CHICAGO
+CLIPCURSOR                                    WIN31
+CLOSECLIPBOARD                                                    WIN32S
+CLOSECLIPBOARD                                            DAYTONA 35
+CLOSECLIPBOARD                                        DAYTONA 31
+CLOSECLIPBOARD                                    CHICAGO
+CLOSECLIPBOARD                                WIN31
+CLOSECOMM                                     WIN31
+CLOSEDESKTOP                                                      WIN32S
+CLOSEDESKTOP                                              DAYTONA 35
+CLOSEDESKTOP                                          DAYTONA 31
+CLOSEDESKTOP                                      CHICAGO
+CLOSEDRIVER                                   WIN31
+CLOSEWINDOW                                                       WIN32S
+CLOSEWINDOW                                               DAYTONA 35
+CLOSEWINDOW                                           DAYTONA 31
+CLOSEWINDOW                                       CHICAGO
+CLOSEWINDOW                                   WIN31
+CLOSEWINDOWSTATION                                        DAYTONA 35
+CONTROLPANELINFO                ;INTERNAL     WIN31
+COPYACCELERATORTABLEA                                             WIN32S
+COPYACCELERATORTABLEA                                     DAYTONA 35
+COPYACCELERATORTABLEA                                 DAYTONA 31
+COPYACCELERATORTABLEA = COPYACCELERATORTABLE      CHICAGO
+COPYACCELERATORTABLEW                                             WIN32S
+COPYACCELERATORTABLEW                                     DAYTONA 35
+COPYACCELERATORTABLEW                                 DAYTONA 31
+COPYACCELERATORTABLEW                             CHICAGO
+COPYCURSOR                                    WIN31
+COPYICON                                                          WIN32S
+COPYICON                                                  DAYTONA 35
+COPYICON                                              DAYTONA 31
+COPYICON                                          CHICAGO
+COPYICON                                      WIN31
+COPYIMAGE                                         CHICAGO
+COPYRECT                                                          WIN32S
+COPYRECT                                                  DAYTONA 35
+COPYRECT                                              DAYTONA 31
+COPYRECT                                          CHICAGO
+COPYRECT                                      WIN31
+COUNTCLIPBOARDFORMATS                                             WIN32S
+COUNTCLIPBOARDFORMATS                                     DAYTONA 35
+COUNTCLIPBOARDFORMATS                                 DAYTONA 31
+COUNTCLIPBOARDFORMATS                             CHICAGO
+COUNTCLIPBOARDFORMATS                         WIN31
+CREATEACCELERATORA                                                WIN32S
+CREATEACCELERATORTABLE                                            WIN32S
+CREATEACCELERATORTABLEA                                           WIN32S
+CREATEACCELERATORTABLEA                                   DAYTONA 35
+CREATEACCELERATORTABLEA                               DAYTONA 31
+CREATEACCELERATORTABLEA = CREATEACCELERATORTA     CHICAGO
+CREATEACCELERATORTABLEW                                           WIN32S
+CREATEACCELERATORTABLEW                                   DAYTONA 35
+CREATEACCELERATORTABLEW                               DAYTONA 31
+CREATEACCELERATORTABLEW                           CHICAGO
+CREATEACCELERATORW                                                WIN32S
+CREATECARET                                                       WIN32S
+CREATECARET                                               DAYTONA 35
+CREATECARET                                           DAYTONA 31
+CREATECARET                                       CHICAGO
+CREATECARET                                   WIN31
+CREATECURSOR                                                      WIN32S
+CREATECURSOR                                              DAYTONA 35
+CREATECURSOR                                          DAYTONA 31
+CREATECURSOR                                      CHICAGO
+CREATECURSOR		                      WIN31
+CREATECURSORICONINDIRECT        ;INTERNAL     WIN31
+CREATEDESKTOPA                                                    WIN32S
+CREATEDESKTOPA                                        DAYTONA 31
+CREATEDESKTOPW                                            DAYTONA 35
+CREATEDIALOG                                  WIN31
+CREATEDIALOGINDIRECT                          WIN31
+CREATEDIALOGINDIRECTPARAM                     WIN31
+CREATEDIALOGINDIRECTPARAMA                                        WIN32S
+CREATEDIALOGINDIRECTPARAMA                                DAYTONA 35
+CREATEDIALOGINDIRECTPARAMA                            DAYTONA 31
+CREATEDIALOGINDIRECTPARAMA                        CHICAGO
+CREATEDIALOGINDIRECTPARAMW                                        WIN32S
+CREATEDIALOGINDIRECTPARAMW                                DAYTONA 35
+CREATEDIALOGINDIRECTPARAMW                            DAYTONA 31
+CREATEDIALOGINDIRECTPARAMW                        CHICAGO
+CREATEDIALOGPARAM                             WIN31
+CREATEDIALOGPARAMA                                                WIN32S
+CREATEDIALOGPARAMA                                        DAYTONA 35
+CREATEDIALOGPARAMA                                    DAYTONA 31
+CREATEDIALOGPARAMA                                CHICAGO
+CREATEDIALOGPARAMW                                                WIN32S
+CREATEDIALOGPARAMW                                        DAYTONA 35
+CREATEDIALOGPARAMW                                    DAYTONA 31
+CREATEDIALOGPARAMW                                CHICAGO
+CREATEICON                                                        WIN32S
+CREATEICON                                                DAYTONA 35
+CREATEICON                                            DAYTONA 31
+CREATEICON                                        CHICAGO
+CREATEICON			              WIN31
+CREATEICONFROMRESOURCE                                            WIN32S
+CREATEICONFROMRESOURCE                                    DAYTONA 35
+CREATEICONFROMRESOURCE                                DAYTONA 31
+CREATEICONFROMRESOURCE                            CHICAGO
+CREATEICONFROMRESOURCEEX                          CHICAGO
+CREATEICONINDIRECT                                                WIN32S
+CREATEICONINDIRECT                                        DAYTONA 35
+CREATEICONINDIRECT                                    DAYTONA 31
+CREATEICONINDIRECT                                CHICAGO
+CREATEMDIWINDOWA                                                  WIN32S
+CREATEMDIWINDOWA                                          DAYTONA 35
+CREATEMDIWINDOWA                                      DAYTONA 31
+CREATEMDIWINDOWA                                  CHICAGO
+CREATEMDIWINDOWW                                                  WIN32S
+CREATEMDIWINDOWW                                          DAYTONA 35
+CREATEMDIWINDOWW                                      DAYTONA 31
+CREATEMDIWINDOWW                                  CHICAGO
+CREATEMENU                                                        WIN32S
+CREATEMENU                                                DAYTONA 35
+CREATEMENU                                            DAYTONA 31
+CREATEMENU                                        CHICAGO
+CREATEMENU                                    WIN31
+CREATEPOPUPMENU                                                   WIN32S
+CREATEPOPUPMENU                                           DAYTONA 35
+CREATEPOPUPMENU                                       DAYTONA 31
+CREATEPOPUPMENU                                   CHICAGO
+CREATEPOPUPMENU                               WIN31
+CREATEWINDOW                                  WIN31
+CREATEWINDOWEX		                      WIN31
+CREATEWINDOWEXA                                                   WIN32S
+CREATEWINDOWEXA                                           DAYTONA 35
+CREATEWINDOWEXA                                       DAYTONA 31
+CREATEWINDOWEXA                                   CHICAGO
+CREATEWINDOWEXW                                                   WIN32S
+CREATEWINDOWEXW                                           DAYTONA 35
+CREATEWINDOWEXW                                       DAYTONA 31
+CREATEWINDOWEXW                                   CHICAGO
+CREATEWINDOWEXWOWA                                    DAYTONA 31
+CREATEWINDOWSTATIONA                                              WIN32S
+CREATEWINDOWSTATIONA                                  DAYTONA 31
+CREATEWINDOWSTATIONW                                      DAYTONA 35
+CRITICALNULLCALL                                                  WIN32S
+CSDRAWTEXTA                                           DAYTONA 31
+CSDRAWTEXTW                                           DAYTONA 31
+CSFRAMERECT                                           DAYTONA 31
+CSTABBEDTEXTOUTA                                      DAYTONA 31
+CSTABBEDTEXTOUTW                                      DAYTONA 31
+CURRENT DAYTONA EXPORTS (3.5 BETA 2)                      DAYTONA 35
+CURRENTTASKLOCK                                           DAYTONA 35
+CURRENTTASKLOCK                                       DAYTONA 31
+DCHOOK			    ;INTERNAL         WIN31
+DDEABANDONTRANSACTION                                             WIN32S
+DDEABANDONTRANSACTION                                     DAYTONA 35
+DDEABANDONTRANSACTION                                 DAYTONA 31
+DDEABANDONTRANSACTION                             CHICAGO
+DDEACCESSDATA                                                     WIN32S
+DDEACCESSDATA                                             DAYTONA 35
+DDEACCESSDATA                                         DAYTONA 31
+DDEACCESSDATA                                     CHICAGO
+DDEADDDATA                                                        WIN32S
+DDEADDDATA                                                DAYTONA 35
+DDEADDDATA                                            DAYTONA 31
+DDEADDDATA                                        CHICAGO
+DDECLIENTTRANSACTION                                              WIN32S
+DDECLIENTTRANSACTION                                      DAYTONA 35
+DDECLIENTTRANSACTION                                  DAYTONA 31
+DDECLIENTTRANSACTION                              CHICAGO
+DDECMPSTRINGHANDLES                                               WIN32S
+DDECMPSTRINGHANDLES                                       DAYTONA 35
+DDECMPSTRINGHANDLES                                   DAYTONA 31
+DDECMPSTRINGHANDLES                               CHICAGO
+DDECONNECT                                                        WIN32S
+DDECONNECT                                                DAYTONA 35
+DDECONNECT                                            DAYTONA 31
+DDECONNECT                                        CHICAGO
+DDECONNECTLIST                                                    WIN32S
+DDECONNECTLIST                                            DAYTONA 35
+DDECONNECTLIST                                        DAYTONA 31
+DDECONNECTLIST                                    CHICAGO
+DDECREATEDATAHANDLE                                               WIN32S
+DDECREATEDATAHANDLE                                       DAYTONA 35
+DDECREATEDATAHANDLE                                   DAYTONA 31
+DDECREATEDATAHANDLE                               CHICAGO
+DDECREATESTRINGHANDLEA                                            WIN32S
+DDECREATESTRINGHANDLEA                                    DAYTONA 35
+DDECREATESTRINGHANDLEA                                DAYTONA 31
+DDECREATESTRINGHANDLEA                            CHICAGO
+DDECREATESTRINGHANDLEW                                            WIN32S
+DDECREATESTRINGHANDLEW                                    DAYTONA 35
+DDECREATESTRINGHANDLEW                                DAYTONA 31
+DDECREATESTRINGHANDLEW                            CHICAGO
+DDEDISCONNECT                                                     WIN32S
+DDEDISCONNECT                                             DAYTONA 35
+DDEDISCONNECT                                         DAYTONA 31
+DDEDISCONNECT                                     CHICAGO
+DDEDISCONNECTLIST                                                 WIN32S
+DDEDISCONNECTLIST                                         DAYTONA 35
+DDEDISCONNECTLIST                                     DAYTONA 31
+DDEDISCONNECTLIST                                 CHICAGO
+DDEENABLECALLBACK                                                 WIN32S
+DDEENABLECALLBACK                                         DAYTONA 35
+DDEENABLECALLBACK                                     DAYTONA 31
+DDEENABLECALLBACK                                 CHICAGO
+DDEFREEDATAHANDLE                                                 WIN32S
+DDEFREEDATAHANDLE                                         DAYTONA 35
+DDEFREEDATAHANDLE                                     DAYTONA 31
+DDEFREEDATAHANDLE                                 CHICAGO
+DDEFREESTRINGHANDLE                                               WIN32S
+DDEFREESTRINGHANDLE                                       DAYTONA 35
+DDEFREESTRINGHANDLE                                   DAYTONA 31
+DDEFREESTRINGHANDLE                               CHICAGO
+DDEGETCALLBACKINSTANCE                                DAYTONA 31
+DDEGETDATA                                                        WIN32S
+DDEGETDATA                                                DAYTONA 35
+DDEGETDATA                                            DAYTONA 31
+DDEGETDATA                                        CHICAGO
+DDEGETDATAHANDLEFORMAT                                DAYTONA 31
+DDEGETLASTERROR                                                   WIN32S
+DDEGETLASTERROR                                           DAYTONA 35
+DDEGETLASTERROR                                       DAYTONA 31
+DDEGETLASTERROR                                   CHICAGO
+DDEGETQUALITYOFSERVICE                                    DAYTONA 35
+DDEGETQUALITYOFSERVICE                                DAYTONA 31
+DDEIMPERSONATECLIENT                                              WIN32S
+DDEIMPERSONATECLIENT                                      DAYTONA 35
+DDEIMPERSONATECLIENT                                  DAYTONA 31
+DDEIMPERSONATECLIENT                              CHICAGO
+DDEINITIALIZEA                                                    WIN32S
+DDEINITIALIZEA                                            DAYTONA 35
+DDEINITIALIZEA                                        DAYTONA 31
+DDEINITIALIZEA                                    CHICAGO
+DDEINITIALIZEW                                                    WIN32S
+DDEINITIALIZEW                                            DAYTONA 35
+DDEINITIALIZEW                                        DAYTONA 31
+DDEINITIALIZEW                                    CHICAGO
+DDEISDATAHANDLEINITIALIZED                            DAYTONA 31
+DDEISDATAHANDLEREADONLY                               DAYTONA 31
+DDEKEEPSTRINGHANDLE                                               WIN32S
+DDEKEEPSTRINGHANDLE                                       DAYTONA 35
+DDEKEEPSTRINGHANDLE                                   DAYTONA 31
+DDEKEEPSTRINGHANDLE                               CHICAGO
+DDENAMESERVICE                                                    WIN32S
+DDENAMESERVICE                                            DAYTONA 35
+DDENAMESERVICE                                        DAYTONA 31
+DDENAMESERVICE                                    CHICAGO
+DDEPOSTADVISE                                                     WIN32S
+DDEPOSTADVISE                                             DAYTONA 35
+DDEPOSTADVISE                                         DAYTONA 31
+DDEPOSTADVISE                                     CHICAGO
+DDEQUERYCONVINFO                                                  WIN32S
+DDEQUERYCONVINFO                                          DAYTONA 35
+DDEQUERYCONVINFO                                      DAYTONA 31
+DDEQUERYCONVINFO                                  CHICAGO
+DDEQUERYNEXTSERVER                                                WIN32S
+DDEQUERYNEXTSERVER                                        DAYTONA 35
+DDEQUERYNEXTSERVER                                    DAYTONA 31
+DDEQUERYNEXTSERVER                                CHICAGO
+DDEQUERYSTRINGA                                                   WIN32S
+DDEQUERYSTRINGA                                           DAYTONA 35
+DDEQUERYSTRINGA                                       DAYTONA 31
+DDEQUERYSTRINGA                                   CHICAGO
+DDEQUERYSTRINGW                                                   WIN32S
+DDEQUERYSTRINGW                                           DAYTONA 35
+DDEQUERYSTRINGW                                       DAYTONA 31
+DDEQUERYSTRINGW                                   CHICAGO
+DDERECONNECT                                                      WIN32S
+DDERECONNECT                                              DAYTONA 35
+DDERECONNECT                                          DAYTONA 31
+DDERECONNECT                                      CHICAGO
+DDESETQUALITYOFSERVICE                                    DAYTONA 35
+DDESETQUALITYOFSERVICE                                DAYTONA 31
+DDESETQUALITYOFSERVICE                            CHICAGO
+DDESETUSERHANDLE                                                  WIN32S
+DDESETUSERHANDLE                                          DAYTONA 35
+DDESETUSERHANDLE                                      DAYTONA 31
+DDESETUSERHANDLE                                  CHICAGO
+DDEUNACCESSDATA                                                   WIN32S
+DDEUNACCESSDATA                                           DAYTONA 35
+DDEUNACCESSDATA                                       DAYTONA 31
+DDEUNACCESSDATA                                   CHICAGO
+DDEUNINITIALIZE                                                   WIN32S
+DDEUNINITIALIZE                                           DAYTONA 35
+DDEUNINITIALIZE                                       DAYTONA 31
+DDEUNINITIALIZE                                   CHICAGO
+DEFDLGPROC			              WIN31
+DEFDLGPROCA                                                       WIN32S
+DEFDLGPROCA                                               DAYTONA 35
+DEFDLGPROCA                                           DAYTONA 31
+DEFDLGPROCA                                       CHICAGO
+DEFDLGPROCW                                                       WIN32S
+DEFDLGPROCW                                               DAYTONA 35
+DEFDLGPROCW                                           DAYTONA 31
+DEFDLGPROCW                                       CHICAGO
+DEFDRIVERPROC                                 WIN31
+DEFERWINDOWPOS                                                    WIN32S
+DEFERWINDOWPOS                                            DAYTONA 35
+DEFERWINDOWPOS                                        DAYTONA 31
+DEFERWINDOWPOS                                    CHICAGO
+DEFERWINDOWPOS                                WIN31
+DEFFRAMEPROC		                      WIN31
+DEFFRAMEPROCA                                                     WIN32S
+DEFFRAMEPROCA                                             DAYTONA 35
+DEFFRAMEPROCA                                         DAYTONA 31
+DEFFRAMEPROCA                                     CHICAGO
+DEFFRAMEPROCW                                                     WIN32S
+DEFFRAMEPROCW                                             DAYTONA 35
+DEFFRAMEPROCW                                         DAYTONA 31
+DEFFRAMEPROCW                                     CHICAGO
+DEFHOOKPROC                                   WIN31
+DEFMDICHILDPROC		                      WIN31
+DEFMDICHILDPROCA                                                  WIN32S
+DEFMDICHILDPROCA                                          DAYTONA 35
+DEFMDICHILDPROCA                                      DAYTONA 31
+DEFMDICHILDPROCA                                  CHICAGO
+DEFMDICHILDPROCW                                                  WIN32S
+DEFMDICHILDPROCW                                          DAYTONA 35
+DEFMDICHILDPROCW                                      DAYTONA 31
+DEFMDICHILDPROCW                                  CHICAGO
+DEFWINDOWPROC                                 WIN31
+DEFWINDOWPROCA                                                    WIN32S
+DEFWINDOWPROCA                                            DAYTONA 35
+DEFWINDOWPROCA                                        DAYTONA 31
+DEFWINDOWPROCA                                    CHICAGO
+DEFWINDOWPROCW                                                    WIN32S
+DEFWINDOWPROCW                                            DAYTONA 35
+DEFWINDOWPROCW                                        DAYTONA 31
+DEFWINDOWPROCW                                    CHICAGO
+DELETEMENU                                                        WIN32S
+DELETEMENU                                                DAYTONA 35
+DELETEMENU                                            DAYTONA 31
+DELETEMENU                                        CHICAGO
+DELETEMENU                                    WIN31
+DESTROYACCELERATORTABLE                                           WIN32S
+DESTROYACCELERATORTABLE                                   DAYTONA 35
+DESTROYACCELERATORTABLE                               DAYTONA 31
+DESTROYACCELERATORTABLE                           CHICAGO
+DESTROYCARET                                                      WIN32S
+DESTROYCARET                                              DAYTONA 35
+DESTROYCARET                                          DAYTONA 31
+DESTROYCARET                                      CHICAGO
+DESTROYCARET                                  WIN31
+DESTROYCURSOR                                                     WIN32S
+DESTROYCURSOR                                             DAYTONA 35
+DESTROYCURSOR                                         DAYTONA 31
+DESTROYCURSOR                                     CHICAGO
+DESTROYCURSOR		                      WIN31
+DESTROYICON                                                       WIN32S
+DESTROYICON                                               DAYTONA 35
+DESTROYICON                                           DAYTONA 31
+DESTROYICON                                       CHICAGO
+DESTROYICON			              WIN31
+DESTROYMENU                                                       WIN32S
+DESTROYMENU                                               DAYTONA 35
+DESTROYMENU                                           DAYTONA 31
+DESTROYMENU                                       CHICAGO
+DESTROYMENU                                   WIN31
+DESTROYWINDOW                                                     WIN32S
+DESTROYWINDOW                                             DAYTONA 35
+DESTROYWINDOW                                         DAYTONA 31
+DESTROYWINDOW                                     CHICAGO
+DESTROYWINDOW                                 WIN31
+DIALOGBOX                                     WIN31
+DIALOGBOXINDIRECT                             WIN31
+DIALOGBOXINDIRECTPARAM                        WIN31
+DIALOGBOXINDIRECTPARAMA                                           WIN32S
+DIALOGBOXINDIRECTPARAMA                                   DAYTONA 35
+DIALOGBOXINDIRECTPARAMA                               DAYTONA 31
+DIALOGBOXINDIRECTPARAMA                           CHICAGO
+DIALOGBOXINDIRECTPARAMAORW          ; PRIVATE         DAYTONA 31
+DIALOGBOXINDIRECTPARAMW                                           WIN32S
+DIALOGBOXINDIRECTPARAMW                                   DAYTONA 35
+DIALOGBOXINDIRECTPARAMW                               DAYTONA 31
+DIALOGBOXINDIRECTPARAMW                           CHICAGO
+DIALOGBOXPARAM                                WIN31
+DIALOGBOXPARAMA                                                   WIN32S
+DIALOGBOXPARAMA                                           DAYTONA 35
+DIALOGBOXPARAMA                                       DAYTONA 31
+DIALOGBOXPARAMA                                   CHICAGO
+DIALOGBOXPARAMW                                                   WIN32S
+DIALOGBOXPARAMW                                           DAYTONA 35
+DIALOGBOXPARAMW                                       DAYTONA 31
+DIALOGBOXPARAMW                                   CHICAGO
+DIRECTEDYIELD                                         DAYTONA 31
+DISABLEOEMLAYER                 ;INTERNAL     WIN31
+DISPATCHMESSAGE                               WIN31
+DISPATCHMESSAGEA                                                  WIN32S
+DISPATCHMESSAGEA                                          DAYTONA 35
+DISPATCHMESSAGEA                                      DAYTONA 31
+DISPATCHMESSAGEA                                  CHICAGO
+DISPATCHMESSAGEW                                                  WIN32S
+DISPATCHMESSAGEW                                          DAYTONA 35
+DISPATCHMESSAGEW                                      DAYTONA 31
+DISPATCHMESSAGEW                                  CHICAGO
+DLGDIRLIST                                    WIN31
+DLGDIRLISTA                                                       WIN32S
+DLGDIRLISTA                                               DAYTONA 35
+DLGDIRLISTA                                           DAYTONA 31
+DLGDIRLISTA                                       CHICAGO
+DLGDIRLISTCOMBOBOX                            WIN31
+DLGDIRLISTCOMBOBOXA                                               WIN32S
+DLGDIRLISTCOMBOBOXA                                       DAYTONA 35
+DLGDIRLISTCOMBOBOXA                                   DAYTONA 31
+DLGDIRLISTCOMBOBOXA                               CHICAGO
+DLGDIRLISTCOMBOBOXW                                               WIN32S
+DLGDIRLISTCOMBOBOXW                                       DAYTONA 35
+DLGDIRLISTCOMBOBOXW                                   DAYTONA 31
+DLGDIRLISTCOMBOBOXW                               CHICAGO
+DLGDIRLISTW                                                       WIN32S
+DLGDIRLISTW                                               DAYTONA 35
+DLGDIRLISTW                                           DAYTONA 31
+DLGDIRLISTW                                       CHICAGO
+DLGDIRSELECT                                  WIN31
+DLGDIRSELECTCOMBOBOX                          WIN31
+DLGDIRSELECTCOMBOBOXEX                        WIN31
+DLGDIRSELECTCOMBOBOXEXA                                           WIN32S
+DLGDIRSELECTCOMBOBOXEXA                                   DAYTONA 35
+DLGDIRSELECTCOMBOBOXEXA                               DAYTONA 31
+DLGDIRSELECTCOMBOBOXEXA                           CHICAGO
+DLGDIRSELECTCOMBOBOXEXW                                           WIN32S
+DLGDIRSELECTCOMBOBOXEXW                                   DAYTONA 35
+DLGDIRSELECTCOMBOBOXEXW                               DAYTONA 31
+DLGDIRSELECTCOMBOBOXEXW                           CHICAGO
+DLGDIRSELECTEX                                WIN31
+DLGDIRSELECTEXA                                                   WIN32S
+DLGDIRSELECTEXA                                           DAYTONA 35
+DLGDIRSELECTEXA                                       DAYTONA 31
+DLGDIRSELECTEXA                                   CHICAGO
+DLGDIRSELECTEXW                                                   WIN32S
+DLGDIRSELECTEXW                                           DAYTONA 35
+DLGDIRSELECTEXW                                       DAYTONA 31
+DLGDIRSELECTEXW                                   CHICAGO
+DOLASTERROREXCEPT                                     DAYTONA 31
+DRAGDETECT                                                DAYTONA 35
+DRAGDETECT                                            DAYTONA 31
+DRAGDETECT                                        CHICAGO
+DRAGDETECT			    ;INTERNAL WIN31
+DRAGOBJECT                                                        WIN32S
+DRAGOBJECT                                                DAYTONA 35
+DRAGOBJECT                                            DAYTONA 31
+DRAGOBJECT                                        CHICAGO
+DRAGOBJECT			    ;INTERNAL WIN31
+DRAWANIMATEDRECTS                                 CHICAGO
+DRAWCAPTION                                       CHICAGO
+DRAWEDGE                                                  DAYTONA 35
+DRAWEDGE                                          CHICAGO
+DRAWFOCUSRECT                                                     WIN32S
+DRAWFOCUSRECT                                             DAYTONA 35
+DRAWFOCUSRECT                                         DAYTONA 31
+DRAWFOCUSRECT                                     CHICAGO
+DRAWFOCUSRECT		                      WIN31
+DRAWFRAME                                                 DAYTONA 35
+DRAWFRAME                                             DAYTONA 31
+DRAWFRAME                                         CHICAGO
+DRAWFRAMECONTROL                                          DAYTONA 35
+DRAWFRAMECONTROL                                  CHICAGO
+DRAWICON                                                          WIN32S
+DRAWICON                                                  DAYTONA 35
+DRAWICON                                              DAYTONA 31
+DRAWICON                                          CHICAGO
+DRAWICON                                      WIN31
+DRAWICONEX                                                DAYTONA 35
+DRAWICONEX                                        CHICAGO
+DRAWMENUBAR                                                       WIN32S
+DRAWMENUBAR                                               DAYTONA 35
+DRAWMENUBAR                                           DAYTONA 31
+DRAWMENUBAR                                       CHICAGO
+DRAWMENUBAR                                   WIN31
+DRAWSTATEA                                                DAYTONA 35
+DRAWSTATEA                                        CHICAGO
+DRAWSTATEW                                                DAYTONA 35
+DRAWSTATEW                                        CHICAGO
+DRAWTEXT                                      WIN31
+DRAWTEXTA                                                         WIN32S
+DRAWTEXTA                                                 DAYTONA 35
+DRAWTEXTA                                             DAYTONA 31
+DRAWTEXTA                                         CHICAGO
+DRAWTEXTEXA                                               DAYTONA 35
+DRAWTEXTEXA                                       CHICAGO
+DRAWTEXTEXW                                               DAYTONA 35
+DRAWTEXTEXW                                       CHICAGO
+DRAWTEXTW                                                         WIN32S
+DRAWTEXTW                                                 DAYTONA 35
+DRAWTEXTW                                             DAYTONA 31
+DRAWTEXTW                                         CHICAGO
+DUMPICON			    ;INTERNAL WIN31
+EDITWNDPROC                                               DAYTONA 35
+EDITWNDPROC                                           DAYTONA 31
+EDITWNDPROC                                       CHICAGO
+EMPTYCLIPBOARD                                                    WIN32S
+EMPTYCLIPBOARD                                            DAYTONA 35
+EMPTYCLIPBOARD                                        DAYTONA 31
+EMPTYCLIPBOARD                                    CHICAGO
+EMPTYCLIPBOARD                                WIN31
+ENABLECOMMNOTIFICATION                        WIN31
+ENABLEHARDWAREINPUT                           WIN31
+ENABLEMENUITEM                                                    WIN32S
+ENABLEMENUITEM                                            DAYTONA 35
+ENABLEMENUITEM                                        DAYTONA 31
+ENABLEMENUITEM                                    CHICAGO
+ENABLEMENUITEM                                WIN31
+ENABLEOEMLAYER                  ;INTERNAL     WIN31
+ENABLESCROLLBAR                                                   WIN32S
+ENABLESCROLLBAR                                           DAYTONA 35
+ENABLESCROLLBAR                                       DAYTONA 31
+ENABLESCROLLBAR                                   CHICAGO
+ENABLESCROLLBAR		                      WIN31
+ENABLEWINDOW                                                      WIN32S
+ENABLEWINDOW                                              DAYTONA 35
+ENABLEWINDOW                                          DAYTONA 31
+ENABLEWINDOW                                      CHICAGO
+ENABLEWINDOW                                  WIN31
+ENDDEFERWINDOWPOS                                                 WIN32S
+ENDDEFERWINDOWPOS                                         DAYTONA 35
+ENDDEFERWINDOWPOS                                     DAYTONA 31
+ENDDEFERWINDOWPOS                                 CHICAGO
+ENDDEFERWINDOWPOS                             WIN31
+ENDDIALOG                                                         WIN32S
+ENDDIALOG                                                 DAYTONA 35
+ENDDIALOG                                             DAYTONA 31
+ENDDIALOG                                         CHICAGO
+ENDDIALOG                                     WIN31
+ENDMENU                                                           WIN32S
+ENDMENU			    ;INTERNAL         WIN31
+ENDMENU             ; PRIVATE                         DAYTONA 31
+ENDPAINT                                                          WIN32S
+ENDPAINT                                                  DAYTONA 35
+ENDPAINT                                              DAYTONA 31
+ENDPAINT                                          CHICAGO
+ENDPAINT                                      WIN31
+ENDTASK                                                   DAYTONA 35
+ENDTASK                                               DAYTONA 31
+ENDTASK                                           CHICAGO
+ENUMCHILDWINDOWS                                                  WIN32S
+ENUMCHILDWINDOWS                                          DAYTONA 35
+ENUMCHILDWINDOWS                                      DAYTONA 31
+ENUMCHILDWINDOWS                                  CHICAGO
+ENUMCHILDWINDOWS                              WIN31
+ENUMCLIPBOARDFORMATS                                              WIN32S
+ENUMCLIPBOARDFORMATS                                      DAYTONA 35
+ENUMCLIPBOARDFORMATS                                  DAYTONA 31
+ENUMCLIPBOARDFORMATS                              CHICAGO
+ENUMCLIPBOARDFORMATS                          WIN31
+ENUMDISPLAYDEVICEMODESA                                   DAYTONA 35
+ENUMDISPLAYDEVICEMODESA                               DAYTONA 31
+ENUMDISPLAYDEVICEMODESW                                   DAYTONA 35
+ENUMDISPLAYDEVICEMODESW                               DAYTONA 31
+ENUMDISPLAYDEVICESA                                               WIN32S
+ENUMDISPLAYDEVICESA                                       DAYTONA 35
+ENUMDISPLAYDEVICESA                                   DAYTONA 31
+ENUMDISPLAYDEVICESW                                               WIN32S
+ENUMDISPLAYDEVICESW                                       DAYTONA 35
+ENUMDISPLAYDEVICESW                                   DAYTONA 31
+ENUMDISPLAYSETTINGSA                                      DAYTONA 35
+ENUMDISPLAYSETTINGSA                              CHICAGO
+ENUMDISPLAYSETTINGSW                                      DAYTONA 35
+ENUMDISPLAYSETTINGSW                              CHICAGO
+ENUMPROPS                                     WIN31
+ENUMPROPSA                                                        WIN32S
+ENUMPROPSA                                                DAYTONA 35
+ENUMPROPSA                                            DAYTONA 31
+ENUMPROPSA                                        CHICAGO
+ENUMPROPSEXA                                                      WIN32S
+ENUMPROPSEXA                                              DAYTONA 35
+ENUMPROPSEXA                                          DAYTONA 31
+ENUMPROPSEXA                                      CHICAGO
+ENUMPROPSEXW                                                      WIN32S
+ENUMPROPSEXW                                              DAYTONA 35
+ENUMPROPSEXW                                          DAYTONA 31
+ENUMPROPSEXW                                      CHICAGO
+ENUMPROPSW                                                        WIN32S
+ENUMPROPSW                                                DAYTONA 35
+ENUMPROPSW                                            DAYTONA 31
+ENUMPROPSW                                        CHICAGO
+ENUMTASKWINDOWS                               WIN31
+ENUMTHREADWINDOWS                                                 WIN32S
+ENUMTHREADWINDOWS                                         DAYTONA 35
+ENUMTHREADWINDOWS                                     DAYTONA 31
+ENUMTHREADWINDOWS                                 CHICAGO
+ENUMWINDOWS                                                       WIN32S
+ENUMWINDOWS                                               DAYTONA 35
+ENUMWINDOWS                                           DAYTONA 31
+ENUMWINDOWS                                       CHICAGO
+ENUMWINDOWS                                   WIN31
+EQUALRECT                                                         WIN32S
+EQUALRECT                                                 DAYTONA 35
+EQUALRECT                                             DAYTONA 31
+EQUALRECT                                         CHICAGO
+EQUALRECT                                     WIN31
+ESCAPECOMMFUNCTION                            WIN31
+EXCLUDEUPDATERGN                                                  WIN32S
+EXCLUDEUPDATERGN                                          DAYTONA 35
+EXCLUDEUPDATERGN                                      DAYTONA 31
+EXCLUDEUPDATERGN                                  CHICAGO
+EXCLUDEUPDATERGN                              WIN31
+EXITWINDOWS                                                       WIN32S
+EXITWINDOWS                                   WIN31
+EXITWINDOWSEX                                                     WIN32S
+EXITWINDOWSEX                                             DAYTONA 35
+EXITWINDOWSEX                                         DAYTONA 31
+EXITWINDOWSEX                                     CHICAGO
+EXITWINDOWSEXEC                               WIN31
+FCHILDVISIBLE                                         DAYTONA 31
+FILLRECT                                                          WIN32S
+FILLRECT                                                  DAYTONA 35
+FILLRECT                                              DAYTONA 31
+FILLRECT                                          CHICAGO
+FILLRECT                                      WIN31
+FILLWINDOW			    ;INTERNAL WIN31
+FINALUSERINIT		    ;INTERNAL         WIN31
+FINDNCHIT                                                 DAYTONA 35
+FINDNCHIT                                             DAYTONA 31
+FINDWINDOW                                    WIN31
+FINDWINDOWA                                                       WIN32S
+FINDWINDOWA                                               DAYTONA 35
+FINDWINDOWA                                           DAYTONA 31
+FINDWINDOWA                                       CHICAGO
+FINDWINDOWEXA                                     CHICAGO
+FINDWINDOWEXW                                     CHICAGO
+FINDWINDOWW                                                       WIN32S
+FINDWINDOWW                                               DAYTONA 35
+FINDWINDOWW                                           DAYTONA 31
+FINDWINDOWW                                       CHICAGO
+FLASHWINDOW                                                       WIN32S
+FLASHWINDOW                                               DAYTONA 35
+FLASHWINDOW                                           DAYTONA 31
+FLASHWINDOW                                       CHICAGO
+FLASHWINDOW                                   WIN31
+FLUSHCOMM                                     WIN31
+FRAMERECT                                                         WIN32S
+FRAMERECT                                                 DAYTONA 35
+FRAMERECT                                             DAYTONA 31
+FRAMERECT                                         CHICAGO
+FRAMERECT                                     WIN31
+FREEDDEDATA                                           DAYTONA 31
+FREEDDELPARAM                                                     WIN32S
+FREEDDELPARAM                                             DAYTONA 35
+FREEDDELPARAM                                         DAYTONA 31
+FREEDDELPARAM                                     CHICAGO
+GETACTIVEWINDOW                                                   WIN32S
+GETACTIVEWINDOW                                           DAYTONA 35
+GETACTIVEWINDOW                                       DAYTONA 31
+GETACTIVEWINDOW                                   CHICAGO
+GETACTIVEWINDOW                               WIN31
+GETAPPCOMPATFLAGS                                     DAYTONA 31
+GETAPPCOMPATFLAGS   ; GDI CLIENT NEEDS THIS               DAYTONA 35
+GETASYNCKEYSTATE                                                  WIN32S
+GETASYNCKEYSTATE                                          DAYTONA 35
+GETASYNCKEYSTATE                                      DAYTONA 31
+GETASYNCKEYSTATE                                  CHICAGO
+GETASYNCKEYSTATE                              WIN31
+GETCAPTURE                                                        WIN32S
+GETCAPTURE                                                DAYTONA 35
+GETCAPTURE                                            DAYTONA 31
+GETCAPTURE                                        CHICAGO
+GETCAPTURE                                    WIN31
+GETCARETBLINKTIME                                                 WIN32S
+GETCARETBLINKTIME                                         DAYTONA 35
+GETCARETBLINKTIME                                     DAYTONA 31
+GETCARETBLINKTIME                                 CHICAGO
+GETCARETBLINKTIME                             WIN31
+GETCARETPOS                                                       WIN32S
+GETCARETPOS                                               DAYTONA 35
+GETCARETPOS                                           DAYTONA 31
+GETCARETPOS                                       CHICAGO
+GETCARETPOS                                   WIN31
+GETCLASSINFO		                      WIN31
+GETCLASSINFOA                                                     WIN32S
+GETCLASSINFOA                                             DAYTONA 35
+GETCLASSINFOA                                         DAYTONA 31
+GETCLASSINFOA                                     CHICAGO
+GETCLASSINFOEXA                                   CHICAGO
+GETCLASSINFOEXW                                   CHICAGO
+GETCLASSINFOW                                                     WIN32S
+GETCLASSINFOW                                             DAYTONA 35
+GETCLASSINFOW                                         DAYTONA 31
+GETCLASSINFOW                                     CHICAGO
+GETCLASSLONG                                  WIN31
+GETCLASSLONGA                                                     WIN32S
+GETCLASSLONGA                                             DAYTONA 35
+GETCLASSLONGA                                         DAYTONA 31
+GETCLASSLONGA                                     CHICAGO
+GETCLASSLONGW                                                     WIN32S
+GETCLASSLONGW                                             DAYTONA 35
+GETCLASSLONGW                                         DAYTONA 31
+GETCLASSLONGW                                     CHICAGO
+GETCLASSNAME                                  WIN31
+GETCLASSNAMEA                                                     WIN32S
+GETCLASSNAMEA                                             DAYTONA 35
+GETCLASSNAMEA                                         DAYTONA 31
+GETCLASSNAMEA                                     CHICAGO
+GETCLASSNAMEW                                                     WIN32S
+GETCLASSNAMEW                                             DAYTONA 35
+GETCLASSNAMEW                                         DAYTONA 31
+GETCLASSNAMEW                                     CHICAGO
+GETCLASSWORD                                                      WIN32S
+GETCLASSWORD                                              DAYTONA 35
+GETCLASSWORD                                          DAYTONA 31
+GETCLASSWORD                                      CHICAGO
+GETCLASSWORD                                  WIN31
+GETCLASSWOWWORDS                                          DAYTONA 35
+GETCLASSWOWWORDS                                      DAYTONA 31
+GETCLIENTRECT                                                     WIN32S
+GETCLIENTRECT                                             DAYTONA 35
+GETCLIENTRECT                                         DAYTONA 31
+GETCLIENTRECT                                     CHICAGO
+GETCLIENTRECT                                 WIN31
+GETCLIPBOARDDATA                                                  WIN32S
+GETCLIPBOARDDATA                                          DAYTONA 35
+GETCLIPBOARDDATA                                      DAYTONA 31
+GETCLIPBOARDDATA                                  CHICAGO
+GETCLIPBOARDDATA                              WIN31
+GETCLIPBOARDFORMATNAME                        WIN31
+GETCLIPBOARDFORMATNAMEA                                           WIN32S
+GETCLIPBOARDFORMATNAMEA                                   DAYTONA 35
+GETCLIPBOARDFORMATNAMEA                               DAYTONA 31
+GETCLIPBOARDFORMATNAMEA                           CHICAGO
+GETCLIPBOARDFORMATNAMEW                                           WIN32S
+GETCLIPBOARDFORMATNAMEW                                   DAYTONA 35
+GETCLIPBOARDFORMATNAMEW                               DAYTONA 31
+GETCLIPBOARDFORMATNAMEW                           CHICAGO
+GETCLIPBOARDOWNER                                                 WIN32S
+GETCLIPBOARDOWNER                                         DAYTONA 35
+GETCLIPBOARDOWNER                                     DAYTONA 31
+GETCLIPBOARDOWNER                                 CHICAGO
+GETCLIPBOARDOWNER                             WIN31
+GETCLIPBOARDVIEWER                                                WIN32S
+GETCLIPBOARDVIEWER                                        DAYTONA 35
+GETCLIPBOARDVIEWER                                    DAYTONA 31
+GETCLIPBOARDVIEWER                                CHICAGO
+GETCLIPBOARDVIEWER                            WIN31
+GETCLIPCURSOR                                                     WIN32S
+GETCLIPCURSOR                                             DAYTONA 35
+GETCLIPCURSOR                                         DAYTONA 31
+GETCLIPCURSOR                                     CHICAGO
+GETCLIPCURSOR                                 WIN31
+GETCOMMERROR                                  WIN31
+GETCOMMEVENTMASK                              WIN31
+GETCOMMSTATE                                  WIN31
+GETCONTROLBRUSH		    ;INTERNAL         WIN31
+GETCURRENTTIME                                WIN31
+GETCURSOR                                                         WIN32S
+GETCURSOR                                                 DAYTONA 35
+GETCURSOR                                             DAYTONA 31
+GETCURSOR                                         CHICAGO
+GETCURSOR                                     WIN31
+GETCURSORINFO                                             DAYTONA 35
+GETCURSORINFO                                         DAYTONA 31
+GETCURSORPOS                                                      WIN32S
+GETCURSORPOS                                              DAYTONA 35
+GETCURSORPOS                                          DAYTONA 31
+GETCURSORPOS                                      CHICAGO
+GETCURSORPOS                                  WIN31
+GETDC                                                             WIN32S
+GETDC                                                     DAYTONA 35
+GETDC                                                 DAYTONA 31
+GETDC                                             CHICAGO
+GETDC                                         WIN31
+GETDCEX                                                           WIN32S
+GETDCEX                                                   DAYTONA 35
+GETDCEX                                               DAYTONA 31
+GETDCEX                                           CHICAGO
+GETDCEX			                      WIN31
+GETDESKTOPHWND		    ;INTERNAL         WIN31
+GETDESKTOPWINDOW                                                  WIN32S
+GETDESKTOPWINDOW                                          DAYTONA 35
+GETDESKTOPWINDOW                                      DAYTONA 31
+GETDESKTOPWINDOW                                  CHICAGO
+GETDESKTOPWINDOW		              WIN31
+GETDIALOGBASEUNITS                                                WIN32S
+GETDIALOGBASEUNITS                                        DAYTONA 35
+GETDIALOGBASEUNITS                                    DAYTONA 31
+GETDIALOGBASEUNITS                                CHICAGO
+GETDIALOGBASEUNITS                            WIN31
+GETDLGCTRLID                                                      WIN32S
+GETDLGCTRLID                                              DAYTONA 35
+GETDLGCTRLID                                          DAYTONA 31
+GETDLGCTRLID                                      CHICAGO
+GETDLGCTRLID		                      WIN31
+GETDLGITEM                                                        WIN32S
+GETDLGITEM                                                DAYTONA 35
+GETDLGITEM                                            DAYTONA 31
+GETDLGITEM                                        CHICAGO
+GETDLGITEM                                    WIN31
+GETDLGITEMINT                                                     WIN32S
+GETDLGITEMINT                                             DAYTONA 35
+GETDLGITEMINT                                         DAYTONA 31
+GETDLGITEMINT                                     CHICAGO
+GETDLGITEMINT                                 WIN31
+GETDLGITEMTEXT                                WIN31
+GETDLGITEMTEXTA                                                   WIN32S
+GETDLGITEMTEXTA                                           DAYTONA 35
+GETDLGITEMTEXTA                                       DAYTONA 31
+GETDLGITEMTEXTA                                   CHICAGO
+GETDLGITEMTEXTW                                                   WIN32S
+GETDLGITEMTEXTW                                           DAYTONA 35
+GETDLGITEMTEXTW                                       DAYTONA 31
+GETDLGITEMTEXTW                                   CHICAGO
+GETDOUBLECLICKTIME                                                WIN32S
+GETDOUBLECLICKTIME                                        DAYTONA 35
+GETDOUBLECLICKTIME                                    DAYTONA 31
+GETDOUBLECLICKTIME                                CHICAGO
+GETDOUBLECLICKTIME                            WIN31
+GETDRIVERINFO                                 WIN31
+GETDRIVERMODULEHANDLE                         WIN31
+GETFILEPORTNAME		    ;INTERNAL         WIN31
+GETFOCUS                                                          WIN32S
+GETFOCUS                                                  DAYTONA 35
+GETFOCUS                                              DAYTONA 31
+GETFOCUS                                          CHICAGO
+GETFOCUS                                      WIN31
+GETFOREGROUNDWINDOW                                               WIN32S
+GETFOREGROUNDWINDOW                                       DAYTONA 35
+GETFOREGROUNDWINDOW                                   DAYTONA 31
+GETFOREGROUNDWINDOW                               CHICAGO
+GETFREESYSTEMRESOURCES	                      WIN31
+GETFULLUSERHANDLE                                         DAYTONA 35
+GETFULLUSERHANDLE                                     DAYTONA 31
+GETICONID			    ;INTERNAL WIN31
+GETICONINFO                                                       WIN32S
+GETICONINFO                                               DAYTONA 35
+GETICONINFO                                           DAYTONA 31
+GETICONINFO                                       CHICAGO
+GETINPUTDESKTOP                                                   WIN32S
+GETINPUTDESKTOP                                           DAYTONA 35
+GETINPUTDESKTOP                                       DAYTONA 31
+GETINPUTDESKTOP                                   CHICAGO
+GETINPUTSTATE                                                     WIN32S
+GETINPUTSTATE                                             DAYTONA 35
+GETINPUTSTATE                                         DAYTONA 31
+GETINPUTSTATE                                     CHICAGO
+GETINPUTSTATE                                 WIN31
+GETINTERNALICONHEADER	    ;INTERNAL         WIN31
+GETINTERNALWINDOWPOS                                              WIN32S
+GETINTERNALWINDOWPOS                                      DAYTONA 35
+GETINTERNALWINDOWPOS                                  DAYTONA 31
+GETINTERNALWINDOWPOS                              CHICAGO
+GETINTERNALWINDOWPOS	    ;INTERNAL         WIN31
+GETKBCODEPAGE                                                     WIN32S
+GETKBCODEPAGE                                             DAYTONA 35
+GETKBCODEPAGE                                         DAYTONA 31
+GETKBCODEPAGE                                     CHICAGO
+GETKEYBOARDLAYOUT                                 CHICAGO
+GETKEYBOARDLAYOUTLIST                             CHICAGO
+GETKEYBOARDLAYOUTNAMEA                                            WIN32S
+GETKEYBOARDLAYOUTNAMEA                                    DAYTONA 35
+GETKEYBOARDLAYOUTNAMEA                                DAYTONA 31
+GETKEYBOARDLAYOUTNAMEA                            CHICAGO
+GETKEYBOARDLAYOUTNAMEW                                            WIN32S
+GETKEYBOARDLAYOUTNAMEW                                    DAYTONA 35
+GETKEYBOARDLAYOUTNAMEW                                DAYTONA 31
+GETKEYBOARDLAYOUTNAMEW                            CHICAGO
+GETKEYBOARDSTATE                                                  WIN32S
+GETKEYBOARDSTATE                                          DAYTONA 35
+GETKEYBOARDSTATE                                      DAYTONA 31
+GETKEYBOARDSTATE                                  CHICAGO
+GETKEYBOARDSTATE                              WIN31
+GETKEYBOARDTYPE                                                   WIN32S
+GETKEYBOARDTYPE                                           DAYTONA 35
+GETKEYBOARDTYPE                                       DAYTONA 31
+GETKEYBOARDTYPE                                   CHICAGO
+GETKEYNAMETEXTA                                                   WIN32S
+GETKEYNAMETEXTA                                           DAYTONA 35
+GETKEYNAMETEXTA                                       DAYTONA 31
+GETKEYNAMETEXTA                                   CHICAGO
+GETKEYNAMETEXTW                                                   WIN32S
+GETKEYNAMETEXTW                                           DAYTONA 35
+GETKEYNAMETEXTW                                       DAYTONA 31
+GETKEYNAMETEXTW                                   CHICAGO
+GETKEYSTATE                                                       WIN32S
+GETKEYSTATE                                               DAYTONA 35
+GETKEYSTATE                                           DAYTONA 31
+GETKEYSTATE                                       CHICAGO
+GETKEYSTATE                                   WIN31
+GETLASTACTIVEPOPUP                                                WIN32S
+GETLASTACTIVEPOPUP                                        DAYTONA 35
+GETLASTACTIVEPOPUP                                    DAYTONA 31
+GETLASTACTIVEPOPUP                                CHICAGO
+GETLASTACTIVEPOPUP		              WIN31
+GETMENU                                                           WIN32S
+GETMENU                                                   DAYTONA 35
+GETMENU                                               DAYTONA 31
+GETMENU                                           CHICAGO
+GETMENU                                       WIN31
+GETMENUCHECKMARKDIMENSIONS                                        WIN32S
+GETMENUCHECKMARKDIMENSIONS                                DAYTONA 35
+GETMENUCHECKMARKDIMENSIONS                            DAYTONA 31
+GETMENUCHECKMARKDIMENSIONS                        CHICAGO
+GETMENUCHECKMARKDIMENSIONS                    WIN31
+GETMENUCONTEXTHELPID                              CHICAGO
+GETMENUDEFAULTITEM                                        DAYTONA 35
+GETMENUDEFAULTITEM                                CHICAGO
+GETMENUINDEX            ; PRIVATE FOR WOW             DAYTONA 31
+GETMENUITEMCOUNT                                                  WIN32S
+GETMENUITEMCOUNT                                          DAYTONA 35
+GETMENUITEMCOUNT                                      DAYTONA 31
+GETMENUITEMCOUNT                                  CHICAGO
+GETMENUITEMCOUNT		              WIN31
+GETMENUITEMID                                                     WIN32S
+GETMENUITEMID                                             DAYTONA 35
+GETMENUITEMID                                         DAYTONA 31
+GETMENUITEMID                                     CHICAGO
+GETMENUITEMID		                      WIN31
+GETMENUITEMINFOA                                          DAYTONA 35
+GETMENUITEMINFOA                                  CHICAGO
+GETMENUITEMINFOW                                          DAYTONA 35
+GETMENUITEMINFOW                                  CHICAGO
+GETMENUITEMRECT                                   CHICAGO
+GETMENUSTATE                                                      WIN32S
+GETMENUSTATE                                              DAYTONA 35
+GETMENUSTATE                                          DAYTONA 31
+GETMENUSTATE                                      CHICAGO
+GETMENUSTATE                                  WIN31
+GETMENUSTRING                                 WIN31
+GETMENUSTRINGA                                                    WIN32S
+GETMENUSTRINGA                                            DAYTONA 35
+GETMENUSTRINGA                                        DAYTONA 31
+GETMENUSTRINGA                                    CHICAGO
+GETMENUSTRINGW                                                    WIN32S
+GETMENUSTRINGW                                            DAYTONA 35
+GETMENUSTRINGW                                        DAYTONA 31
+GETMENUSTRINGW                                    CHICAGO
+GETMESSAGE                                    WIN31
+GETMESSAGE2                     ;INTERNAL     WIN31
+GETMESSAGEA                                                       WIN32S
+GETMESSAGEA                                               DAYTONA 35
+GETMESSAGEA                                           DAYTONA 31
+GETMESSAGEA                                       CHICAGO
+GETMESSAGEEXTRAINFO                                               WIN32S
+GETMESSAGEEXTRAINFO                                       DAYTONA 35
+GETMESSAGEEXTRAINFO                                   DAYTONA 31
+GETMESSAGEEXTRAINFO                               CHICAGO
+GETMESSAGEEXTRAINFO		              WIN31
+GETMESSAGEPOS                                                     WIN32S
+GETMESSAGEPOS                                             DAYTONA 35
+GETMESSAGEPOS                                         DAYTONA 31
+GETMESSAGEPOS                                     CHICAGO
+GETMESSAGEPOS                                 WIN31
+GETMESSAGETIME                                                    WIN32S
+GETMESSAGETIME                                            DAYTONA 35
+GETMESSAGETIME                                        DAYTONA 31
+GETMESSAGETIME                                    CHICAGO
+GETMESSAGETIME                                WIN31
+GETMESSAGEW                                                       WIN32S
+GETMESSAGEW                                               DAYTONA 35
+GETMESSAGEW                                           DAYTONA 31
+GETMESSAGEW                                       CHICAGO
+GETMOUSEEVENTPROC               ;INTERNAL     WIN31
+GETNEXTDLGGROUPITEM                                               WIN32S
+GETNEXTDLGGROUPITEM                                       DAYTONA 35
+GETNEXTDLGGROUPITEM                                   DAYTONA 31
+GETNEXTDLGGROUPITEM                               CHICAGO
+GETNEXTDLGGROUPITEM                           WIN31
+GETNEXTDLGTABITEM                                                 WIN32S
+GETNEXTDLGTABITEM                                         DAYTONA 35
+GETNEXTDLGTABITEM                                     DAYTONA 31
+GETNEXTDLGTABITEM                                 CHICAGO
+GETNEXTDLGTABITEM                             WIN31
+GETNEXTDRIVER                                 WIN31
+GETNEXTQUEUEWINDOW                                        DAYTONA 35
+GETNEXTQUEUEWINDOW                                CHICAGO
+GETNEXTQUEUEWINDOW		    ;INTERNAL WIN31
+GETNEXTWINDOW                                 WIN31
+GETOPENCLIPBOARDWINDOW                                            WIN32S
+GETOPENCLIPBOARDWINDOW                                    DAYTONA 35
+GETOPENCLIPBOARDWINDOW                                DAYTONA 31
+GETOPENCLIPBOARDWINDOW                            CHICAGO
+GETOPENCLIPBOARDWINDOW                        WIN31
+GETPARENT                                                         WIN32S
+GETPARENT                                                 DAYTONA 35
+GETPARENT                                             DAYTONA 31
+GETPARENT                                         CHICAGO
+GETPARENT                                     WIN31
+GETPREFIXCOUNT                                        DAYTONA 31
+GETPRIORITYCLIPBOARDFORMAT                                        WIN32S
+GETPRIORITYCLIPBOARDFORMAT                                DAYTONA 35
+GETPRIORITYCLIPBOARDFORMAT                            DAYTONA 31
+GETPRIORITYCLIPBOARDFORMAT                        CHICAGO
+GETPRIORITYCLIPBOARDFORMAT	              WIN31
+GETPROCESSWINDOWSTATION                                           WIN32S
+GETPROCESSWINDOWSTATION                                   DAYTONA 35
+GETPROCESSWINDOWSTATION                               DAYTONA 31
+GETPROCESSWINDOWSTATION                           CHICAGO
+GETPROP                                       WIN31
+GETPROPA                                                          WIN32S
+GETPROPA                                                  DAYTONA 35
+GETPROPA                                              DAYTONA 31
+GETPROPA                                          CHICAGO
+GETPROPW                                                          WIN32S
+GETPROPW                                                  DAYTONA 35
+GETPROPW                                              DAYTONA 31
+GETPROPW                                          CHICAGO
+GETQUEUESTATUS                                                    WIN32S
+GETQUEUESTATUS                                            DAYTONA 35
+GETQUEUESTATUS                                        DAYTONA 31
+GETQUEUESTATUS                                    CHICAGO
+GETQUEUESTATUS		                      WIN31
+GETSCROLLINFO                                             DAYTONA 35
+GETSCROLLINFO                                     CHICAGO
+GETSCROLLPAGE                                             DAYTONA 35
+GETSCROLLPOS                                                      WIN32S
+GETSCROLLPOS                                              DAYTONA 35
+GETSCROLLPOS                                          DAYTONA 31
+GETSCROLLPOS                                      CHICAGO
+GETSCROLLPOS                                  WIN31
+GETSCROLLRANGE                                                    WIN32S
+GETSCROLLRANGE                                            DAYTONA 35
+GETSCROLLRANGE                                        DAYTONA 31
+GETSCROLLRANGE                                    CHICAGO
+GETSCROLLRANGE                                WIN31
+GETSHELLWINDOW                                            DAYTONA 35
+GETSHELLWINDOW                                    CHICAGO
+GETSUBMENU                                                        WIN32S
+GETSUBMENU                                                DAYTONA 35
+GETSUBMENU                                            DAYTONA 31
+GETSUBMENU                                        CHICAGO
+GETSUBMENU                                    WIN31
+GETSYSCOLOR                                                       WIN32S
+GETSYSCOLOR                                               DAYTONA 35
+GETSYSCOLOR                                           DAYTONA 31
+GETSYSCOLOR                                       CHICAGO
+GETSYSCOLOR                                   WIN31
+GETSYSCOLORBRUSH                                  CHICAGO
+GETSYSMODALWINDOW                             WIN31
+GETSYSTEMDEBUGSTATE                           WIN31
+GETSYSTEMMENU                                                     WIN32S
+GETSYSTEMMENU                                             DAYTONA 35
+GETSYSTEMMENU                                         DAYTONA 31
+GETSYSTEMMENU                                     CHICAGO
+GETSYSTEMMENU                                 WIN31
+GETSYSTEMMETRICS                                                  WIN32S
+GETSYSTEMMETRICS                                          DAYTONA 35
+GETSYSTEMMETRICS                                      DAYTONA 31
+GETSYSTEMMETRICS                                  CHICAGO
+GETSYSTEMMETRICS                              WIN31
+GETTABBEDTEXTEXTENT 	                      WIN31
+GETTABBEDTEXTEXTENTA                                              WIN32S
+GETTABBEDTEXTEXTENTA                                      DAYTONA 35
+GETTABBEDTEXTEXTENTA                                  DAYTONA 31
+GETTABBEDTEXTEXTENTA                              CHICAGO
+GETTABBEDTEXTEXTENTW                                              WIN32S
+GETTABBEDTEXTEXTENTW                                      DAYTONA 35
+GETTABBEDTEXTEXTENTW                                  DAYTONA 31
+GETTABBEDTEXTEXTENTW                              CHICAGO
+GETTHREADDESKTOP                                                  WIN32S
+GETTHREADDESKTOP                                          DAYTONA 35
+GETTHREADDESKTOP                                      DAYTONA 31
+GETTHREADDESKTOP                                  CHICAGO
+GETTICKCOUNT                                  WIN31
+GETTIMERRESOLUTION              ;INTERNAL     WIN31
+GETTOPWINDOW                                                      WIN32S
+GETTOPWINDOW                                              DAYTONA 35
+GETTOPWINDOW                                          DAYTONA 31
+GETTOPWINDOW                                      CHICAGO
+GETTOPWINDOW                                  WIN31
+GETUPDATERECT                                                     WIN32S
+GETUPDATERECT                                             DAYTONA 35
+GETUPDATERECT                                         DAYTONA 31
+GETUPDATERECT                                     CHICAGO
+GETUPDATERECT                                 WIN31
+GETUPDATERGN                                                      WIN32S
+GETUPDATERGN                                              DAYTONA 35
+GETUPDATERGN                                          DAYTONA 31
+GETUPDATERGN                                      CHICAGO
+GETUPDATERGN                                  WIN31
+GETUSERLOCALOBJTYPE		    ;INTERNAL WIN31
+GETUSEROBJECTSECURITY                                             WIN32S
+GETUSEROBJECTSECURITY                                     DAYTONA 35
+GETUSEROBJECTSECURITY                                 DAYTONA 31
+GETUSEROBJECTSECURITY                             CHICAGO
+GETWINDOW                                                         WIN32S
+GETWINDOW                                                 DAYTONA 35
+GETWINDOW                                             DAYTONA 31
+GETWINDOW                                         CHICAGO
+GETWINDOW                                     WIN31
+GETWINDOWCONTEXTHELPID                            CHICAGO
+GETWINDOWDC                                                       WIN32S
+GETWINDOWDC                                               DAYTONA 35
+GETWINDOWDC                                           DAYTONA 31
+GETWINDOWDC                                       CHICAGO
+GETWINDOWDC                                   WIN31
+GETWINDOWLONG                                 WIN31
+GETWINDOWLONGA                                                    WIN32S
+GETWINDOWLONGA                                            DAYTONA 35
+GETWINDOWLONGA                                        DAYTONA 31
+GETWINDOWLONGA                                    CHICAGO
+GETWINDOWLONGW                                                    WIN32S
+GETWINDOWLONGW                                            DAYTONA 35
+GETWINDOWLONGW                                        DAYTONA 31
+GETWINDOWLONGW                                    CHICAGO
+GETWINDOWPLACEMENT                                                WIN32S
+GETWINDOWPLACEMENT                                        DAYTONA 35
+GETWINDOWPLACEMENT                                    DAYTONA 31
+GETWINDOWPLACEMENT                                CHICAGO
+GETWINDOWPLACEMENT                            WIN31
+GETWINDOWRECT                                                     WIN32S
+GETWINDOWRECT                                             DAYTONA 35
+GETWINDOWRECT                                         DAYTONA 31
+GETWINDOWRECT                                     CHICAGO
+GETWINDOWRECT                                 WIN31
+GETWINDOWTASK                                 WIN31
+GETWINDOWTEXT                                 WIN31
+GETWINDOWTEXTA                                                    WIN32S
+GETWINDOWTEXTA                                            DAYTONA 35
+GETWINDOWTEXTA                                        DAYTONA 31
+GETWINDOWTEXTA                                    CHICAGO
+GETWINDOWTEXTLENGTH                           WIN31
+GETWINDOWTEXTLENGTHA                                              WIN32S
+GETWINDOWTEXTLENGTHA                                      DAYTONA 35
+GETWINDOWTEXTLENGTHA                                  DAYTONA 31
+GETWINDOWTEXTLENGTHA                              CHICAGO
+GETWINDOWTEXTLENGTHW                                              WIN32S
+GETWINDOWTEXTLENGTHW                                      DAYTONA 35
+GETWINDOWTEXTLENGTHW                                  DAYTONA 31
+GETWINDOWTEXTLENGTHW                              CHICAGO
+GETWINDOWTEXTW                                                    WIN32S
+GETWINDOWTEXTW                                            DAYTONA 35
+GETWINDOWTEXTW                                        DAYTONA 31
+GETWINDOWTEXTW                                    CHICAGO
+GETWINDOWTHREADPROCESSID                                          WIN32S
+GETWINDOWTHREADPROCESSID                                  DAYTONA 35
+GETWINDOWTHREADPROCESSID                              DAYTONA 31
+GETWINDOWTHREADPROCESSID                          CHICAGO
+GETWINDOWWORD                                                     WIN32S
+GETWINDOWWORD                                             DAYTONA 35
+GETWINDOWWORD                                         DAYTONA 31
+GETWINDOWWORD                                     CHICAGO
+GETWINDOWWORD                                 WIN31
+GETWOWAPPCOMPATFLAGS                                  DAYTONA 31
+GLOBALADDATOM                                 WIN31
+GLOBALDELETEATOM                              WIN31
+GLOBALFINDATOM                                WIN31
+GLOBALGETATOMNAME                             WIN31
+GRAYSTRING                                    WIN31
+GRAYSTRINGA                                                       WIN32S
+GRAYSTRINGA                                               DAYTONA 35
+GRAYSTRINGA                                           DAYTONA 31
+GRAYSTRINGA                                       CHICAGO
+GRAYSTRINGW                                                       WIN32S
+GRAYSTRINGW                                               DAYTONA 35
+GRAYSTRINGW                                           DAYTONA 31
+GRAYSTRINGW                                       CHICAGO
+HARDWARE_EVENT	    	                      WIN31
+HIDECARET                                                         WIN32S
+HIDECARET                                                 DAYTONA 35
+HIDECARET                                             DAYTONA 31
+HIDECARET                                         CHICAGO
+HIDECARET                                     WIN31
+HILITEMENUITEM                                                    WIN32S
+HILITEMENUITEM                                            DAYTONA 35
+HILITEMENUITEM                                        DAYTONA 31
+HILITEMENUITEM                                    CHICAGO
+HILITEMENUITEM                                WIN31
+HMVALIDATEHANDLE                                          DAYTONA 35
+HMVALIDATEHANDLE                                      DAYTONA 31
+HMVALIDATEHANDLENORIP                                     DAYTONA 35
+HMVALIDATEHANDLENORIP                                 DAYTONA 31
+IMPADDIMEA                                                        WIN32S
+IMPADDIMEW                                                        WIN32S
+IMPDELETEIMEA                                                     WIN32S
+IMPDELETEIMEW                                                     WIN32S
+IMPERSONATEDDECLIENTWINDOW                                DAYTONA 35
+IMPERSONATEDDECLIENTWINDOW                            DAYTONA 31
+IMPERSONATEDDECLIENTWINDOW                        CHICAGO
+IMPGETIMEA                                                        WIN32S
+IMPGETIMEW                                                        WIN32S
+IMPQUERYIMEA                                                      WIN32S
+IMPQUERYIMEW                                                      WIN32S
+IMPSETIMEA                                                        WIN32S
+IMPSETIMEW                                                        WIN32S
+INCGLOBALATOMCOUNT                                    DAYTONA 31
+INFLATERECT                                                       WIN32S
+INFLATERECT                                               DAYTONA 35
+INFLATERECT                                           DAYTONA 31
+INFLATERECT                                       CHICAGO
+INFLATERECT                                   WIN31
+INITAPP                                       WIN31
+INITSHAREDTABLE                                   CHICAGO
+INITTASK                                              DAYTONA 31
+INITTASK                                          CHICAGO
+INSENDMESSAGE                                                     WIN32S
+INSENDMESSAGE                                             DAYTONA 35
+INSENDMESSAGE                                         DAYTONA 31
+INSENDMESSAGE                                     CHICAGO
+INSENDMESSAGE                                 WIN31
+INSERTMENU                                    WIN31
+INSERTMENUA                                                       WIN32S
+INSERTMENUA                                               DAYTONA 35
+INSERTMENUA                                           DAYTONA 31
+INSERTMENUA                                       CHICAGO
+INSERTMENUITEMA                                           DAYTONA 35
+INSERTMENUITEMA                                   CHICAGO
+INSERTMENUITEMW                                           DAYTONA 35
+INSERTMENUITEMW                                   CHICAGO
+INSERTMENUW                                                       WIN32S
+INSERTMENUW                                               DAYTONA 35
+INSERTMENUW                                           DAYTONA 31
+INSERTMENUW                                       CHICAGO
+INTERNALGETWINDOWTEXT                                             WIN32S
+INTERNALGETWINDOWTEXT                                     DAYTONA 35
+INTERNALGETWINDOWTEXT                                 DAYTONA 31
+INTERNALGETWINDOWTEXT                             CHICAGO
+INTERSECTRECT                                                     WIN32S
+INTERSECTRECT                                             DAYTONA 35
+INTERSECTRECT                                         DAYTONA 31
+INTERSECTRECT                                     CHICAGO
+INTERSECTRECT                                 WIN31
+INVALIDATERECT                                                    WIN32S
+INVALIDATERECT                                            DAYTONA 35
+INVALIDATERECT                                        DAYTONA 31
+INVALIDATERECT                                    CHICAGO
+INVALIDATERECT                                WIN31
+INVALIDATERGN                                                     WIN32S
+INVALIDATERGN                                             DAYTONA 35
+INVALIDATERGN                                         DAYTONA 31
+INVALIDATERGN                                     CHICAGO
+INVALIDATERGN                                 WIN31
+INVERTRECT                                                        WIN32S
+INVERTRECT                                                DAYTONA 35
+INVERTRECT                                            DAYTONA 31
+INVERTRECT                                        CHICAGO
+INVERTRECT                                    WIN31
+ISCHARALPHA			              WIN31
+ISCHARALPHAA                                                      WIN32S
+ISCHARALPHAA                                              DAYTONA 35
+ISCHARALPHAA                                          DAYTONA 31
+ISCHARALPHAA                                      CHICAGO
+ISCHARALPHANUMERIC		              WIN31
+ISCHARALPHANUMERICA                                               WIN32S
+ISCHARALPHANUMERICA                                       DAYTONA 35
+ISCHARALPHANUMERICA                                   DAYTONA 31
+ISCHARALPHANUMERICA                               CHICAGO
+ISCHARALPHANUMERICW                                               WIN32S
+ISCHARALPHANUMERICW                                       DAYTONA 35
+ISCHARALPHANUMERICW                                   DAYTONA 31
+ISCHARALPHANUMERICW                               CHICAGO
+ISCHARALPHAW                                                      WIN32S
+ISCHARALPHAW                                              DAYTONA 35
+ISCHARALPHAW                                          DAYTONA 31
+ISCHARALPHAW                                      CHICAGO
+ISCHARLOWER			              WIN31
+ISCHARLOWERA                                                      WIN32S
+ISCHARLOWERA                                              DAYTONA 35
+ISCHARLOWERA                                          DAYTONA 31
+ISCHARLOWERA                                      CHICAGO
+ISCHARLOWERW                                                      WIN32S
+ISCHARLOWERW                                              DAYTONA 35
+ISCHARLOWERW                                          DAYTONA 31
+ISCHARLOWERW                                      CHICAGO
+ISCHARUPPER			              WIN31
+ISCHARUPPERA                                                      WIN32S
+ISCHARUPPERA                                              DAYTONA 35
+ISCHARUPPERA                                          DAYTONA 31
+ISCHARUPPERA                                      CHICAGO
+ISCHARUPPERW                                                      WIN32S
+ISCHARUPPERW                                              DAYTONA 35
+ISCHARUPPERW                                          DAYTONA 31
+ISCHARUPPERW                                      CHICAGO
+ISCHILD                                                           WIN32S
+ISCHILD                                                   DAYTONA 35
+ISCHILD                                               DAYTONA 31
+ISCHILD                                           CHICAGO
+ISCHILD                                       WIN31
+ISCLIPBOARDFORMATAVAILABLE                                        WIN32S
+ISCLIPBOARDFORMATAVAILABLE                                DAYTONA 35
+ISCLIPBOARDFORMATAVAILABLE                            DAYTONA 31
+ISCLIPBOARDFORMATAVAILABLE                        CHICAGO
+ISCLIPBOARDFORMATAVAILABLE	              WIN31
+ISDIALOGMESSAGE                                                   WIN32S
+ISDIALOGMESSAGE                                   CHICAGO
+ISDIALOGMESSAGE                               WIN31
+ISDIALOGMESSAGE = ISDIALOGMESSAGEA                        DAYTONA 35
+ISDIALOGMESSAGE = ISDIALOGMESSAGEA                    DAYTONA 31
+ISDIALOGMESSAGEA                                                  WIN32S
+ISDIALOGMESSAGEA                                          DAYTONA 35
+ISDIALOGMESSAGEA                                      DAYTONA 31
+ISDIALOGMESSAGEA = ISDIALOGMESSAGE                CHICAGO
+ISDIALOGMESSAGEW                                                  WIN32S
+ISDIALOGMESSAGEW                                          DAYTONA 35
+ISDIALOGMESSAGEW                                      DAYTONA 31
+ISDIALOGMESSAGEW                                  CHICAGO
+ISDLGBUTTONCHECKED                                                WIN32S
+ISDLGBUTTONCHECKED                                        DAYTONA 35
+ISDLGBUTTONCHECKED                                    DAYTONA 31
+ISDLGBUTTONCHECKED                                CHICAGO
+ISDLGBUTTONCHECKED                            WIN31
+ISHUNGTHREAD                                      CHICAGO
+ISICONIC                                                          WIN32S
+ISICONIC                                                  DAYTONA 35
+ISICONIC                                              DAYTONA 31
+ISICONIC                                          CHICAGO
+ISICONIC                                      WIN31
+ISMENU                                                            WIN32S
+ISMENU                                                    DAYTONA 35
+ISMENU                                                DAYTONA 31
+ISMENU                                            CHICAGO
+ISMENU			                      WIN31
+ISRECTEMPTY                                                       WIN32S
+ISRECTEMPTY                                               DAYTONA 35
+ISRECTEMPTY                                           DAYTONA 31
+ISRECTEMPTY                                       CHICAGO
+ISRECTEMPTY                                   WIN31
+ISUSERIDLE                      ;INTERNAL     WIN31
+ISWINDOW                                                          WIN32S
+ISWINDOW                                                  DAYTONA 35
+ISWINDOW                                              DAYTONA 31
+ISWINDOW                                          CHICAGO
+ISWINDOW                                      WIN31
+ISWINDOWENABLED                                                   WIN32S
+ISWINDOWENABLED                                           DAYTONA 35
+ISWINDOWENABLED                                       DAYTONA 31
+ISWINDOWENABLED                                   CHICAGO
+ISWINDOWENABLED                               WIN31
+ISWINDOWUNICODE                                                   WIN32S
+ISWINDOWUNICODE                                           DAYTONA 35
+ISWINDOWUNICODE                                       DAYTONA 31
+ISWINDOWUNICODE                                   CHICAGO
+ISWINDOWVISIBLE                                                   WIN32S
+ISWINDOWVISIBLE                                           DAYTONA 35
+ISWINDOWVISIBLE                                       DAYTONA 31
+ISWINDOWVISIBLE                                   CHICAGO
+ISWINDOWVISIBLE                               WIN31
+ISZOOMED                                                          WIN32S
+ISZOOMED                                                  DAYTONA 35
+ISZOOMED                                              DAYTONA 31
+ISZOOMED                                          CHICAGO
+ISZOOMED                                      WIN31
+KEYBD_EVENT                                                       WIN32S
+KEYBD_EVENT                                               DAYTONA 35
+KEYBD_EVENT                                               DAYTONA 35
+KEYBD_EVENT                                       CHICAGO
+KEYBD_EVENT 		                      WIN31
+KILLSYSTEMTIMER                                           DAYTONA 35
+KILLSYSTEMTIMER                                       DAYTONA 31
+KILLTIMER                                                         WIN32S
+KILLTIMER                                                 DAYTONA 35
+KILLTIMER                                             DAYTONA 31
+KILLTIMER                                         CHICAGO
+KILLTIMER                                     WIN31
+LOADACCELERATORS                              WIN31
+LOADACCELERATORSA                                                 WIN32S
+LOADACCELERATORSA                                         DAYTONA 35
+LOADACCELERATORSA                                     DAYTONA 31
+LOADACCELERATORSA                                 CHICAGO
+LOADACCELERATORSW                                                 WIN32S
+LOADACCELERATORSW                                         DAYTONA 35
+LOADACCELERATORSW                                     DAYTONA 31
+LOADACCELERATORSW                                 CHICAGO
+LOADBITMAP                                    WIN31
+LOADBITMAPA                                                       WIN32S
+LOADBITMAPA                                               DAYTONA 35
+LOADBITMAPA                                           DAYTONA 31
+LOADBITMAPA                                       CHICAGO
+LOADBITMAPW                                                       WIN32S
+LOADBITMAPW                                               DAYTONA 35
+LOADBITMAPW                                           DAYTONA 31
+LOADBITMAPW                                       CHICAGO
+LOADCURSOR                                    WIN31
+LOADCURSORA                                                       WIN32S
+LOADCURSORA                                               DAYTONA 35
+LOADCURSORA                                           DAYTONA 31
+LOADCURSORA                                       CHICAGO
+LOADCURSORFROMFILEA                                       DAYTONA 35
+LOADCURSORFROMFILEA                                   DAYTONA 31
+LOADCURSORFROMFILEA                               CHICAGO
+LOADCURSORFROMFILEW                                       DAYTONA 35
+LOADCURSORFROMFILEW                                   DAYTONA 31
+LOADCURSORFROMFILEW                               CHICAGO
+LOADCURSORICONHANDLER           ;INTERNAL     WIN31
+LOADCURSORW                                                       WIN32S
+LOADCURSORW                                               DAYTONA 35
+LOADCURSORW                                           DAYTONA 31
+LOADCURSORW                                       CHICAGO
+LOADDIBCURSORHANDLER            ;INTERNAL     WIN31
+LOADDIBICONHANDLER              ;INTERNAL     WIN31
+LOADICON                                      WIN31
+LOADICONA                                                         WIN32S
+LOADICONA                                                 DAYTONA 35
+LOADICONA                                             DAYTONA 31
+LOADICONA                                         CHICAGO
+LOADICONHANDLER		    ;INTERNAL         WIN31
+LOADICONW                                                         WIN32S
+LOADICONW                                                 DAYTONA 35
+LOADICONW                                             DAYTONA 31
+LOADICONW                                         CHICAGO
+LOADIMAGEA                                        CHICAGO
+LOADIMAGEW                                        CHICAGO
+LOADKEYBOARDLAYOUTA                                               WIN32S
+LOADKEYBOARDLAYOUTA                                       DAYTONA 35
+LOADKEYBOARDLAYOUTA                                   DAYTONA 31
+LOADKEYBOARDLAYOUTA                               CHICAGO
+LOADKEYBOARDLAYOUTW                                               WIN32S
+LOADKEYBOARDLAYOUTW                                       DAYTONA 35
+LOADKEYBOARDLAYOUTW                                   DAYTONA 31
+LOADKEYBOARDLAYOUTW                               CHICAGO
+LOADMENU                                      WIN31
+LOADMENUA                                                         WIN32S
+LOADMENUA                                                 DAYTONA 35
+LOADMENUA                                             DAYTONA 31
+LOADMENUA                                         CHICAGO
+LOADMENUINDIRECT                              WIN31
+LOADMENUINDIRECTA                                                 WIN32S
+LOADMENUINDIRECTA                                         DAYTONA 35
+LOADMENUINDIRECTA                                     DAYTONA 31
+LOADMENUINDIRECTA                                 CHICAGO
+LOADMENUINDIRECTW                                                 WIN32S
+LOADMENUINDIRECTW                                         DAYTONA 35
+LOADMENUINDIRECTW                                     DAYTONA 31
+LOADMENUINDIRECTW                                 CHICAGO
+LOADMENUW                                                         WIN32S
+LOADMENUW                                                 DAYTONA 35
+LOADMENUW                                             DAYTONA 31
+LOADMENUW                                         CHICAGO
+LOADSTRING                                    WIN31
+LOADSTRINGA                                                       WIN32S
+LOADSTRINGA                                               DAYTONA 35
+LOADSTRINGA                                           DAYTONA 31
+LOADSTRINGA                                       CHICAGO
+LOADSTRINGW                                                       WIN32S
+LOADSTRINGW                                               DAYTONA 35
+LOADSTRINGW                                           DAYTONA 31
+LOADSTRINGW                                       CHICAGO
+LOCKINPUT                                     WIN31
+LOCKMYTASK			    ;INTERNAL WIN31
+LOCKWINDOWSTATION                                                 WIN32S
+LOCKWINDOWSTATION                                     DAYTONA 31
+LOCKWINDOWSTATION                                 CHICAGO
+LOCKWINDOWUPDATE                                                  WIN32S
+LOCKWINDOWUPDATE                                          DAYTONA 35
+LOCKWINDOWUPDATE                                      DAYTONA 31
+LOCKWINDOWUPDATE                                  CHICAGO
+LOCKWINDOWUPDATE		              WIN31
+LOOKUPICONIDFROMDIRECTORY                                         WIN32S
+LOOKUPICONIDFROMDIRECTORY                                 DAYTONA 35
+LOOKUPICONIDFROMDIRECTORY                             DAYTONA 31
+LOOKUPICONIDFROMDIRECTORY                         CHICAGO
+LOOKUPICONIDFROMDIRECTORYEX                       CHICAGO
+LOOKUPMENUHANDLE		    ;INTERNAL WIN31
+LOOKUPMENUITEM                                            DAYTONA 35
+LOOKUPMENUITEM                                        DAYTONA 31
+LSTRCMP			                      WIN31
+LSTRCMPI			              WIN31
+MAPCLIENTNEUTERTOCLIENTPFN                            DAYTONA 31
+MAPDIALOGRECT                                                     WIN32S
+MAPDIALOGRECT                                             DAYTONA 35
+MAPDIALOGRECT                                         DAYTONA 31
+MAPDIALOGRECT                                     CHICAGO
+MAPDIALOGRECT                                 WIN31
+MAPSERVERTOCLIENTPFN                                  DAYTONA 31
+MAPVIRTUALKEY                                                     WIN32S
+MAPVIRTUALKEYA                                                    WIN32S
+MAPVIRTUALKEYA                                            DAYTONA 35
+MAPVIRTUALKEYA                                        DAYTONA 31
+MAPVIRTUALKEYA = MAPVIRTUALKEY      ;BUGBUG       CHICAGO
+MAPVIRTUALKEYEXA                                  CHICAGO
+MAPVIRTUALKEYW                                                    WIN32S
+MAPVIRTUALKEYW                                            DAYTONA 35
+MAPVIRTUALKEYW                                        DAYTONA 31
+MAPVIRTUALKEYW                                    CHICAGO
+MAPWINDOWPOINTS                                                   WIN32S
+MAPWINDOWPOINTS                                           DAYTONA 35
+MAPWINDOWPOINTS                                       DAYTONA 31
+MAPWINDOWPOINTS                                   CHICAGO
+MAPWINDOWPOINTS		                      WIN31
+MBTOWCSEX                                             DAYTONA 31
+MENUITEMFROMPOINT                                 CHICAGO
+MENUWINDOWPROCA     ; PRIVATE                         DAYTONA 31
+MENUWINDOWPROCW     ; PRIVATE                         DAYTONA 31
+MESSAGEBEEP                                                       WIN32S
+MESSAGEBEEP                                               DAYTONA 35
+MESSAGEBEEP                                           DAYTONA 31
+MESSAGEBEEP                                       CHICAGO
+MESSAGEBEEP                                   WIN31
+MESSAGEBOX                                    WIN31
+MESSAGEBOXA                                                       WIN32S
+MESSAGEBOXA                                               DAYTONA 35
+MESSAGEBOXA                                           DAYTONA 31
+MESSAGEBOXA                                       CHICAGO
+MESSAGEBOXEXA                                                     WIN32S
+MESSAGEBOXEXA                                             DAYTONA 35
+MESSAGEBOXEXA                                         DAYTONA 31
+MESSAGEBOXEXA                                     CHICAGO
+MESSAGEBOXEXW                                                     WIN32S
+MESSAGEBOXEXW                                             DAYTONA 35
+MESSAGEBOXEXW                                         DAYTONA 31
+MESSAGEBOXEXW                                     CHICAGO
+MESSAGEBOXINDIRECTA                               CHICAGO
+MESSAGEBOXINDIRECTW                               CHICAGO
+MESSAGEBOXW                                                       WIN32S
+MESSAGEBOXW                                               DAYTONA 35
+MESSAGEBOXW                                           DAYTONA 31
+MESSAGEBOXW                                       CHICAGO
+MODIFYACCESS                                      CHICAGO
+MODIFYMENU                                    WIN31
+MODIFYMENUA                                                       WIN32S
+MODIFYMENUA                                               DAYTONA 35
+MODIFYMENUA                                           DAYTONA 31
+MODIFYMENUA                                       CHICAGO
+MODIFYMENUW                                                       WIN32S
+MODIFYMENUW                                               DAYTONA 35
+MODIFYMENUW                                           DAYTONA 31
+MODIFYMENUW                                       CHICAGO
+MOUSE_EVENT                                                       WIN32S
+MOUSE_EVENT                                               DAYTONA 35
+MOUSE_EVENT                                               DAYTONA 35
+MOUSE_EVENT                                       CHICAGO
+MOUSE_EVENT 		                      WIN31
+MOVEWINDOW                                                        WIN32S
+MOVEWINDOW                                                DAYTONA 35
+MOVEWINDOW                                            DAYTONA 31
+MOVEWINDOW                                        CHICAGO
+MOVEWINDOW                                    WIN31
+MSGWAITFORMULTIPLEOBJECTS                                         WIN32S
+MSGWAITFORMULTIPLEOBJECTS                                 DAYTONA 35
+MSGWAITFORMULTIPLEOBJECTS                             DAYTONA 31
+MSGWAITFORMULTIPLEOBJECTS                         CHICAGO
+NULLCALL                                                          WIN32S
+OEMKEYSCAN                                                        WIN32S
+OEMKEYSCAN                                                DAYTONA 35
+OEMKEYSCAN                                            DAYTONA 31
+OEMKEYSCAN                                        CHICAGO
+OEMTOCHARA                                                        WIN32S
+OEMTOCHARA                                                DAYTONA 35
+OEMTOCHARA                                            DAYTONA 31
+OEMTOCHARA                                        CHICAGO
+OEMTOCHARBUFFA                                                    WIN32S
+OEMTOCHARBUFFA                                            DAYTONA 35
+OEMTOCHARBUFFA                                        DAYTONA 31
+OEMTOCHARBUFFA                                    CHICAGO
+OEMTOCHARBUFFW                                                    WIN32S
+OEMTOCHARBUFFW                                            DAYTONA 35
+OEMTOCHARBUFFW                                        DAYTONA 31
+OEMTOCHARBUFFW                                    CHICAGO
+OEMTOCHARW                                                        WIN32S
+OEMTOCHARW                                                DAYTONA 35
+OEMTOCHARW                                            DAYTONA 31
+OEMTOCHARW                                        CHICAGO
+OFFSETRECT                                                        WIN32S
+OFFSETRECT                                                DAYTONA 35
+OFFSETRECT                                            DAYTONA 31
+OFFSETRECT                                        CHICAGO
+OFFSETRECT                                    WIN31
+OLDEXITWINDOWS                  ;INTERNAL     WIN31
+OLDSETDESKPATTERN		    ;INTERNAL WIN31
+OPENCLIPBOARD                                                     WIN32S
+OPENCLIPBOARD                                             DAYTONA 35
+OPENCLIPBOARD                                         DAYTONA 31
+OPENCLIPBOARD                                     CHICAGO
+OPENCLIPBOARD                                 WIN31
+OPENCOMM                                      WIN31
+OPENDESKTOPA                                                      WIN32S
+OPENDESKTOPA                                          DAYTONA 31
+OPENDESKTOPW                                              DAYTONA 35
+OPENDRIVER                                    WIN31
+OPENICON                                                          WIN32S
+OPENICON                                                  DAYTONA 35
+OPENICON                                              DAYTONA 31
+OPENICON                                          CHICAGO
+OPENICON                                      WIN31
+OPENWINDOWSTATIONA                                                WIN32S
+OPENWINDOWSTATIONA                                    DAYTONA 31
+OPENWINDOWSTATIONW                                        DAYTONA 35
+PACKDDELPARAM                                                     WIN32S
+PACKDDELPARAM                                             DAYTONA 35
+PACKDDELPARAM                                         DAYTONA 31
+PACKDDELPARAM                                     CHICAGO
+PAINTDESKTOP                                              DAYTONA 35
+PAINTDESKTOP                                      CHICAGO
+PAINTRECT			    ;INTERNAL WIN31
+PEEKMESSAGE                                   WIN31
+PEEKMESSAGEA                                                      WIN32S
+PEEKMESSAGEA                                              DAYTONA 35
+PEEKMESSAGEA                                          DAYTONA 31
+PEEKMESSAGEA                                      CHICAGO
+PEEKMESSAGEW                                                      WIN32S
+PEEKMESSAGEW                                              DAYTONA 35
+PEEKMESSAGEW                                          DAYTONA 31
+PEEKMESSAGEW                                      CHICAGO
+PLAYSOUNDEVENT                                    CHICAGO
+POSTAPPMESSAGE                                WIN31
+POSTMESSAGE                                   WIN31
+POSTMESSAGEA                                                      WIN32S
+POSTMESSAGEA                                              DAYTONA 35
+POSTMESSAGEA                                          DAYTONA 31
+POSTMESSAGEA                                      CHICAGO
+POSTMESSAGEW                                                      WIN32S
+POSTMESSAGEW                                              DAYTONA 35
+POSTMESSAGEW                                          DAYTONA 31
+POSTMESSAGEW                                      CHICAGO
+POSTQUITMESSAGE                                                   WIN32S
+POSTQUITMESSAGE                                           DAYTONA 35
+POSTQUITMESSAGE                                       DAYTONA 31
+POSTQUITMESSAGE                                   CHICAGO
+POSTQUITMESSAGE                               WIN31
+POSTTHREADMESSAGEA                                                WIN32S
+POSTTHREADMESSAGEA                                        DAYTONA 35
+POSTTHREADMESSAGEA                                    DAYTONA 31
+POSTTHREADMESSAGEA                                CHICAGO
+POSTTHREADMESSAGEW                                                WIN32S
+POSTTHREADMESSAGEW                                        DAYTONA 35
+POSTTHREADMESSAGEW                                    DAYTONA 31
+POSTTHREADMESSAGEW                                CHICAGO
+PTINRECT                                                          WIN32S
+PTINRECT                                                  DAYTONA 35
+PTINRECT                                              DAYTONA 31
+PTINRECT                                          CHICAGO
+PTINRECT                                      WIN31
+QUERYSENDMESSAGE                              WIN31
+QUERYSENDMESSAGE                    ; PRIVATE         DAYTONA 31
+READCOMM                                      WIN31
+REALIZEPALETTE		                      WIN31
+REDRAWWINDOW                                                      WIN32S
+REDRAWWINDOW                                              DAYTONA 35
+REDRAWWINDOW                                          DAYTONA 31
+REDRAWWINDOW                                      CHICAGO
+REDRAWWINDOW		                      WIN31
+REGISTERCLASS                                 WIN31
+REGISTERCLASSA                                                    WIN32S
+REGISTERCLASSA                                            DAYTONA 35
+REGISTERCLASSA                                        DAYTONA 31
+REGISTERCLASSA                                    CHICAGO
+REGISTERCLASSEXA                                  CHICAGO
+REGISTERCLASSEXW                                  CHICAGO
+REGISTERCLASSW                                                    WIN32S
+REGISTERCLASSW                                            DAYTONA 35
+REGISTERCLASSW                                        DAYTONA 31
+REGISTERCLASSW                                    CHICAGO
+REGISTERCLASSWOWA                                         DAYTONA 35
+REGISTERCLASSWOWA                                     DAYTONA 31
+REGISTERCLIPBOARDFORMAT                       WIN31
+REGISTERCLIPBOARDFORMATA                                          WIN32S
+REGISTERCLIPBOARDFORMATA                                  DAYTONA 35
+REGISTERCLIPBOARDFORMATA                              DAYTONA 31
+REGISTERCLIPBOARDFORMATA                          CHICAGO
+REGISTERCLIPBOARDFORMATW                                          WIN32S
+REGISTERCLIPBOARDFORMATW                                  DAYTONA 35
+REGISTERCLIPBOARDFORMATW                              DAYTONA 31
+REGISTERCLIPBOARDFORMATW                          CHICAGO
+REGISTERHOTKEY                                                    WIN32S
+REGISTERHOTKEY                                            DAYTONA 35
+REGISTERHOTKEY                                        DAYTONA 31
+REGISTERHOTKEY                                    CHICAGO
+REGISTERLOGONPROCESS                                              WIN32S
+REGISTERLOGONPROCESS                                  DAYTONA 31
+REGISTERLOGONPROCESS                              CHICAGO
+REGISTERNETWORKCAPABILITIES                       CHICAGO
+REGISTERSYSTEMTHREAD                              CHICAGO
+REGISTERTASKLIST                                                  WIN32S
+REGISTERTASKLIST                                          DAYTONA 35
+REGISTERTASKLIST                                      DAYTONA 31
+REGISTERTASKLIST                                  CHICAGO
+REGISTERUSERHUNGAPPHANDLERS                               DAYTONA 35
+REGISTERUSERHUNGAPPHANDLERS                           DAYTONA 31
+REGISTERWINDOWMESSAGE                         WIN31
+REGISTERWINDOWMESSAGEA                                            WIN32S
+REGISTERWINDOWMESSAGEA                                    DAYTONA 35
+REGISTERWINDOWMESSAGEA                                DAYTONA 31
+REGISTERWINDOWMESSAGEA                            CHICAGO
+REGISTERWINDOWMESSAGEW                                            WIN32S
+REGISTERWINDOWMESSAGEW                                    DAYTONA 35
+REGISTERWINDOWMESSAGEW                                DAYTONA 31
+REGISTERWINDOWMESSAGEW                            CHICAGO
+RELEASECAPTURE                                                    WIN32S
+RELEASECAPTURE                                            DAYTONA 35
+RELEASECAPTURE                                        DAYTONA 31
+RELEASECAPTURE                                    CHICAGO
+RELEASECAPTURE                                WIN31
+RELEASEDC                                                         WIN32S
+RELEASEDC                                                 DAYTONA 35
+RELEASEDC                                             DAYTONA 31
+RELEASEDC                                         CHICAGO
+RELEASEDC                                     WIN31
+REMOVEMENU                                                        WIN32S
+REMOVEMENU                                                DAYTONA 35
+REMOVEMENU                                            DAYTONA 31
+REMOVEMENU                                        CHICAGO
+REMOVEMENU                                    WIN31
+REMOVEPROP                                    WIN31
+REMOVEPROPA                                                       WIN32S
+REMOVEPROPA                                               DAYTONA 35
+REMOVEPROPA                                           DAYTONA 31
+REMOVEPROPA                                       CHICAGO
+REMOVEPROPW                                                       WIN32S
+REMOVEPROPW                                               DAYTONA 35
+REMOVEPROPW                                           DAYTONA 31
+REMOVEPROPW                                       CHICAGO
+REPAINTSCREEN		                      WIN31
+REPLYMESSAGE                                                      WIN32S
+REPLYMESSAGE                                              DAYTONA 35
+REPLYMESSAGE                                          DAYTONA 31
+REPLYMESSAGE                                      CHICAGO
+REPLYMESSAGE                                  WIN31
+RESETDISPLAY                                      CHICAGO
+REUSEDDELPARAM                                                    WIN32S
+REUSEDDELPARAM                                            DAYTONA 35
+REUSEDDELPARAM                                        DAYTONA 31
+REUSEDDELPARAM                                    CHICAGO
+RIP                                                   DAYTONA 31
+RIPOUTPUT                                             DAYTONA 31
+RTLFREECURSORICONRESOURCE                             DAYTONA 31
+RTLGETEXPWINVER                                       DAYTONA 31
+RTLGETIDFROMDIRECTORY                                 DAYTONA 31
+RTLLOADCURSORICONRESOURCE                             DAYTONA 31
+RTLLOADSTRINGORERROR                                  DAYTONA 31
+RTLMBMESSAGEWPARAMCHARTOWCS                           DAYTONA 31
+RTLWCSMESSAGEWPARAMCHARTOMB                           DAYTONA 31
+SCREENTOCLIENT                                                    WIN32S
+SCREENTOCLIENT                                            DAYTONA 35
+SCREENTOCLIENT                                        DAYTONA 31
+SCREENTOCLIENT                                    CHICAGO
+SCREENTOCLIENT                                WIN31
+SCROLLCHILDREN                                            DAYTONA 35
+SCROLLCHILDREN                                        DAYTONA 31
+SCROLLCHILDREN		    ;INTERNAL         WIN31
+SCROLLDC                                                          WIN32S
+SCROLLDC                                                  DAYTONA 35
+SCROLLDC                                              DAYTONA 31
+SCROLLDC                                          CHICAGO
+SCROLLDC                                      WIN31
+SCROLLWINDOW                                                      WIN32S
+SCROLLWINDOW                                              DAYTONA 35
+SCROLLWINDOW                                          DAYTONA 31
+SCROLLWINDOW                                      CHICAGO
+SCROLLWINDOW                                  WIN31
+SCROLLWINDOWEX                                                    WIN32S
+SCROLLWINDOWEX                                            DAYTONA 35
+SCROLLWINDOWEX                                        DAYTONA 31
+SCROLLWINDOWEX                                    CHICAGO
+SCROLLWINDOWEX		                      WIN31
+SELECTPALETTE                                 WIN31
+SENDDLGITEMMESSAGE                            WIN31
+SENDDLGITEMMESSAGEA                                               WIN32S
+SENDDLGITEMMESSAGEA                                       DAYTONA 35
+SENDDLGITEMMESSAGEA                                   DAYTONA 31
+SENDDLGITEMMESSAGEA                               CHICAGO
+SENDDLGITEMMESSAGEW                                               WIN32S
+SENDDLGITEMMESSAGEW                                       DAYTONA 35
+SENDDLGITEMMESSAGEW                                   DAYTONA 31
+SENDDLGITEMMESSAGEW                               CHICAGO
+SENDDRIVERMESSAGE                             WIN31
+SENDIMEMESSAGEEXA                                                 WIN32S
+SENDIMEMESSAGEEXW                                                 WIN32S
+SENDMESSAGE                                   WIN31
+SENDMESSAGEA                                                      WIN32S
+SENDMESSAGEA                                              DAYTONA 35
+SENDMESSAGEA                                          DAYTONA 31
+SENDMESSAGEA                                      CHICAGO
+SENDMESSAGECALLBACKA                                              WIN32S
+SENDMESSAGECALLBACKA                                      DAYTONA 35
+SENDMESSAGECALLBACKA                                  DAYTONA 31
+SENDMESSAGECALLBACKA                              CHICAGO
+SENDMESSAGECALLBACKW                                              WIN32S
+SENDMESSAGECALLBACKW                                      DAYTONA 35
+SENDMESSAGECALLBACKW                                  DAYTONA 31
+SENDMESSAGECALLBACKW                              CHICAGO
+SENDMESSAGETIMEOUTA                                               WIN32S
+SENDMESSAGETIMEOUTA                                       DAYTONA 35
+SENDMESSAGETIMEOUTA                                   DAYTONA 31
+SENDMESSAGETIMEOUTA                               CHICAGO
+SENDMESSAGETIMEOUTW                                               WIN32S
+SENDMESSAGETIMEOUTW                                       DAYTONA 35
+SENDMESSAGETIMEOUTW                                   DAYTONA 31
+SENDMESSAGETIMEOUTW                               CHICAGO
+SENDMESSAGEW                                                      WIN32S
+SENDMESSAGEW                                              DAYTONA 35
+SENDMESSAGEW                                          DAYTONA 31
+SENDMESSAGEW                                      CHICAGO
+SENDNOTIFYMESSAGEA                                                WIN32S
+SENDNOTIFYMESSAGEA                                        DAYTONA 35
+SENDNOTIFYMESSAGEA                                    DAYTONA 31
+SENDNOTIFYMESSAGEA                                CHICAGO
+SENDNOTIFYMESSAGEW                                                WIN32S
+SENDNOTIFYMESSAGEW                                        DAYTONA 35
+SENDNOTIFYMESSAGEW                                    DAYTONA 31
+SENDNOTIFYMESSAGEW                                CHICAGO
+SERVERCREATEDIALOG                                    DAYTONA 31
+SERVERLOADCREATECURSORICON                            DAYTONA 31
+SERVERLOADCREATEMENU                                  DAYTONA 31
+SETACTIVEWINDOW                                                   WIN32S
+SETACTIVEWINDOW                                           DAYTONA 35
+SETACTIVEWINDOW                                       DAYTONA 31
+SETACTIVEWINDOW                                   CHICAGO
+SETACTIVEWINDOW                               WIN31
+SETCAPTURE                                                        WIN32S
+SETCAPTURE                                                DAYTONA 35
+SETCAPTURE                                            DAYTONA 31
+SETCAPTURE                                        CHICAGO
+SETCAPTURE                                    WIN31
+SETCARETBLINKTIME                                                 WIN32S
+SETCARETBLINKTIME                                         DAYTONA 35
+SETCARETBLINKTIME                                     DAYTONA 31
+SETCARETBLINKTIME                                 CHICAGO
+SETCARETBLINKTIME                             WIN31
+SETCARETPOS                                                       WIN32S
+SETCARETPOS                                               DAYTONA 35
+SETCARETPOS                                           DAYTONA 31
+SETCARETPOS                                       CHICAGO
+SETCARETPOS                                   WIN31
+SETCLASSLONG                                  WIN31
+SETCLASSLONGA                                                     WIN32S
+SETCLASSLONGA                                             DAYTONA 35
+SETCLASSLONGA                                         DAYTONA 31
+SETCLASSLONGA                                     CHICAGO
+SETCLASSLONGW                                                     WIN32S
+SETCLASSLONGW                                             DAYTONA 35
+SETCLASSLONGW                                         DAYTONA 31
+SETCLASSLONGW                                     CHICAGO
+SETCLASSWORD                                                      WIN32S
+SETCLASSWORD                                              DAYTONA 35
+SETCLASSWORD                                          DAYTONA 31
+SETCLASSWORD                                      CHICAGO
+SETCLASSWORD                                  WIN31
+SETCLIPBOARDDATA                                                  WIN32S
+SETCLIPBOARDDATA                                          DAYTONA 35
+SETCLIPBOARDDATA                                      DAYTONA 31
+SETCLIPBOARDDATA                                  CHICAGO
+SETCLIPBOARDDATA                              WIN31
+SETCLIPBOARDVIEWER                                                WIN32S
+SETCLIPBOARDVIEWER                                        DAYTONA 35
+SETCLIPBOARDVIEWER                                    DAYTONA 31
+SETCLIPBOARDVIEWER                                CHICAGO
+SETCLIPBOARDVIEWER                            WIN31
+SETCOMMBREAK                                  WIN31
+SETCOMMEVENTMASK                              WIN31
+SETCOMMSTATE                                  WIN31
+SETCURSOR                                                         WIN32S
+SETCURSOR                                                 DAYTONA 35
+SETCURSOR                                             DAYTONA 31
+SETCURSOR                                         CHICAGO
+SETCURSOR                                     WIN31
+SETCURSORCONTENTS                                         DAYTONA 35
+SETCURSORCONTENTS                                     DAYTONA 31
+SETCURSORCONTENTS                                 CHICAGO
+SETCURSORPOS                                                      WIN32S
+SETCURSORPOS                                              DAYTONA 35
+SETCURSORPOS                                          DAYTONA 31
+SETCURSORPOS                                      CHICAGO
+SETCURSORPOS                                  WIN31
+SETDEBUGERRORLEVEL                                                WIN32S
+SETDEBUGERRORLEVEL                                        DAYTONA 35
+SETDEBUGERRORLEVEL                                    DAYTONA 31
+SETDEBUGERRORLEVEL                                CHICAGO
+SETDESKTOPBITMAP                                      DAYTONA 31
+SETDESKTOPBITMAP                                  CHICAGO
+SETDESKWALLPAPER                                                  WIN32S
+SETDESKWALLPAPER                                          DAYTONA 35
+SETDESKWALLPAPER                                      DAYTONA 31
+SETDESKWALLPAPER                                  CHICAGO
+SETDLGITEMINT                                                     WIN32S
+SETDLGITEMINT                                             DAYTONA 35
+SETDLGITEMINT                                         DAYTONA 31
+SETDLGITEMINT                                     CHICAGO
+SETDLGITEMINT                                 WIN31
+SETDLGITEMTEXT                                WIN31
+SETDLGITEMTEXTA                                                   WIN32S
+SETDLGITEMTEXTA                                           DAYTONA 35
+SETDLGITEMTEXTA                                       DAYTONA 31
+SETDLGITEMTEXTA                                   CHICAGO
+SETDLGITEMTEXTW                                                   WIN32S
+SETDLGITEMTEXTW                                           DAYTONA 35
+SETDLGITEMTEXTW                                       DAYTONA 31
+SETDLGITEMTEXTW                                   CHICAGO
+SETDOUBLECLICKTIME                                                WIN32S
+SETDOUBLECLICKTIME                                        DAYTONA 35
+SETDOUBLECLICKTIME                                    DAYTONA 31
+SETDOUBLECLICKTIME                                CHICAGO
+SETDOUBLECLICKTIME                            WIN31
+SETEVENTHOOK                                  WIN31
+SETFOCUS                                                          WIN32S
+SETFOCUS                                                  DAYTONA 35
+SETFOCUS                                              DAYTONA 31
+SETFOCUS                                          CHICAGO
+SETFOCUS                                      WIN31
+SETFOREGROUNDWINDOW                                               WIN32S
+SETFOREGROUNDWINDOW                                       DAYTONA 35
+SETFOREGROUNDWINDOW                                   DAYTONA 31
+SETFOREGROUNDWINDOW                               CHICAGO
+SETINTERNALWINDOWPOS                                              WIN32S
+SETINTERNALWINDOWPOS                                      DAYTONA 35
+SETINTERNALWINDOWPOS                                  DAYTONA 31
+SETINTERNALWINDOWPOS                              CHICAGO
+SETINTERNALWINDOWPOS	    ;INTERNAL         WIN31
+SETKEYBOARDSTATE                                                  WIN32S
+SETKEYBOARDSTATE                                          DAYTONA 35
+SETKEYBOARDSTATE                                      DAYTONA 31
+SETKEYBOARDSTATE                                  CHICAGO
+SETKEYBOARDSTATE                              WIN31
+SETLASTERROREX                                            DAYTONA 35
+SETLASTERROREX                                    CHICAGO
+SETLASTERROREX      ; TO BE MOVED!!!                  DAYTONA 31
+SETLOGONNOTIFYWINDOW                                              WIN32S
+SETLOGONNOTIFYWINDOW                                  DAYTONA 31
+SETLOGONNOTIFYWINDOW                              CHICAGO
+SETMENU                                                           WIN32S
+SETMENU                                                   DAYTONA 35
+SETMENU                                               DAYTONA 31
+SETMENU                                           CHICAGO
+SETMENU                                       WIN31
+SETMENUCONTEXTHELPID                              CHICAGO
+SETMENUDEFAULTITEM                                        DAYTONA 35
+SETMENUDEFAULTITEM                                CHICAGO
+SETMENUITEMBITMAPS                                                WIN32S
+SETMENUITEMBITMAPS                                        DAYTONA 35
+SETMENUITEMBITMAPS                                    DAYTONA 31
+SETMENUITEMBITMAPS                                CHICAGO
+SETMENUITEMBITMAPS                            WIN31
+SETMENUITEMINFOA                                          DAYTONA 35
+SETMENUITEMINFOA                                  CHICAGO
+SETMENUITEMINFOW                                          DAYTONA 35
+SETMENUITEMINFOW                                  CHICAGO
+SETMESSAGEEXTRAINFO                               CHICAGO
+SETMESSAGEQUEUE                                                   WIN32S
+SETMESSAGEQUEUE                                           DAYTONA 35
+SETMESSAGEQUEUE                                       DAYTONA 31
+SETMESSAGEQUEUE                                   CHICAGO
+SETMESSAGEQUEUE                               WIN31
+SETPARENT                                                         WIN32S
+SETPARENT                                                 DAYTONA 35
+SETPARENT                                             DAYTONA 31
+SETPARENT                                         CHICAGO
+SETPARENT                                     WIN31
+SETPROCESSWINDOWSTATION                                           WIN32S
+SETPROCESSWINDOWSTATION                                   DAYTONA 35
+SETPROCESSWINDOWSTATION                               DAYTONA 31
+SETPROCESSWINDOWSTATION                           CHICAGO
+SETPROP                                       WIN31
+SETPROPA                                                          WIN32S
+SETPROPA                                                  DAYTONA 35
+SETPROPA                                              DAYTONA 31
+SETPROPA                                          CHICAGO
+SETPROPW                                                          WIN32S
+SETPROPW                                                  DAYTONA 35
+SETPROPW                                              DAYTONA 31
+SETPROPW                                          CHICAGO
+SETRECT                                                           WIN32S
+SETRECT                                                   DAYTONA 35
+SETRECT                                               DAYTONA 31
+SETRECT                                           CHICAGO
+SETRECT                                       WIN31
+SETRECTEMPTY                                                      WIN32S
+SETRECTEMPTY                                              DAYTONA 35
+SETRECTEMPTY                                          DAYTONA 31
+SETRECTEMPTY                                      CHICAGO
+SETRECTEMPTY                                  WIN31
+SETSCROLLINFO                                             DAYTONA 35
+SETSCROLLINFO                                     CHICAGO
+SETSCROLLPAGE                                             DAYTONA 35
+SETSCROLLPOS                                                      WIN32S
+SETSCROLLPOS                                              DAYTONA 35
+SETSCROLLPOS                                          DAYTONA 31
+SETSCROLLPOS                                      CHICAGO
+SETSCROLLPOS                                  WIN31
+SETSCROLLRANGE                                                    WIN32S
+SETSCROLLRANGE                                            DAYTONA 35
+SETSCROLLRANGE                                        DAYTONA 31
+SETSCROLLRANGE                                    CHICAGO
+SETSCROLLRANGE                                WIN31
+SETSERVERINFOPOINTER                                  DAYTONA 31
+SETSHELLWINDOW                                            DAYTONA 35
+SETSHELLWINDOW                                    CHICAGO
+SETSYSCOLORS                                                      WIN32S
+SETSYSCOLORS                                              DAYTONA 35
+SETSYSCOLORS                                          DAYTONA 31
+SETSYSCOLORS                                      CHICAGO
+SETSYSCOLORS                                  WIN31
+SETSYSCOLORSTEMP                                  CHICAGO
+SETSYSMODALWINDOW                             WIN31
+SETSYSTEMCURSOR                                           DAYTONA 35
+SETSYSTEMCURSOR                                       DAYTONA 31
+SETSYSTEMMENU                                             DAYTONA 35
+SETSYSTEMMENU                                         DAYTONA 31
+SETSYSTEMMENU		    ;INTERNAL         WIN31
+SETSYSTEMTIMER                                            DAYTONA 35
+SETSYSTEMTIMER                                        DAYTONA 31
+SETTHREADDESKTOP                                                  WIN32S
+SETTHREADDESKTOP                                          DAYTONA 35
+SETTHREADDESKTOP                                      DAYTONA 31
+SETTHREADDESKTOP                                  CHICAGO
+SETTIMER                                                          WIN32S
+SETTIMER                                                  DAYTONA 35
+SETTIMER                                              DAYTONA 31
+SETTIMER                                          CHICAGO
+SETTIMER                                      WIN31
+SETUSEROBJECTSECURITY                                             WIN32S
+SETUSEROBJECTSECURITY                                     DAYTONA 35
+SETUSEROBJECTSECURITY                                 DAYTONA 31
+SETUSEROBJECTSECURITY                             CHICAGO
+SETWINDOWCONTEXTHELPID                            CHICAGO
+SETWINDOWFULLSCREENSTATE                                          WIN32S
+SETWINDOWFULLSCREENSTATE                                  DAYTONA 35
+SETWINDOWFULLSCREENSTATE                              DAYTONA 31
+SETWINDOWFULLSCREENSTATE                          CHICAGO
+SETWINDOWLONG                                 WIN31
+SETWINDOWLONGA                                                    WIN32S
+SETWINDOWLONGA                                            DAYTONA 35
+SETWINDOWLONGA                                        DAYTONA 31
+SETWINDOWLONGA                                    CHICAGO
+SETWINDOWLONGW                                                    WIN32S
+SETWINDOWLONGW                                            DAYTONA 35
+SETWINDOWLONGW                                        DAYTONA 31
+SETWINDOWLONGW                                    CHICAGO
+SETWINDOWPLACEMENT                                                WIN32S
+SETWINDOWPLACEMENT                                        DAYTONA 35
+SETWINDOWPLACEMENT                                    DAYTONA 31
+SETWINDOWPLACEMENT                                CHICAGO
+SETWINDOWPLACEMENT                            WIN31
+SETWINDOWPOS                                                      WIN32S
+SETWINDOWPOS                                              DAYTONA 35
+SETWINDOWPOS                                          DAYTONA 31
+SETWINDOWPOS                                      CHICAGO
+SETWINDOWPOS                                  WIN31
+SETWINDOWSHOOK                                WIN31
+SETWINDOWSHOOKA                                                   WIN32S
+SETWINDOWSHOOKA                                           DAYTONA 35
+SETWINDOWSHOOKA                                       DAYTONA 31
+SETWINDOWSHOOKA                                   CHICAGO
+SETWINDOWSHOOKEX		              WIN31
+SETWINDOWSHOOKEXA                                                 WIN32S
+SETWINDOWSHOOKEXA                                         DAYTONA 35
+SETWINDOWSHOOKEXA                                     DAYTONA 31
+SETWINDOWSHOOKEXA                                 CHICAGO
+SETWINDOWSHOOKEXW                                                 WIN32S
+SETWINDOWSHOOKEXW                                         DAYTONA 35
+SETWINDOWSHOOKEXW                                     DAYTONA 31
+SETWINDOWSHOOKEXW                                 CHICAGO
+SETWINDOWSHOOKW                                                   WIN32S
+SETWINDOWSHOOKW                                           DAYTONA 35
+SETWINDOWSHOOKW                                       DAYTONA 31
+SETWINDOWSHOOKW                                   CHICAGO
+SETWINDOWTEXT                                 WIN31
+SETWINDOWTEXTA                                                    WIN32S
+SETWINDOWTEXTA                                            DAYTONA 35
+SETWINDOWTEXTA                                        DAYTONA 31
+SETWINDOWTEXTA                                    CHICAGO
+SETWINDOWTEXTW                                                    WIN32S
+SETWINDOWTEXTW                                            DAYTONA 35
+SETWINDOWTEXTW                                        DAYTONA 31
+SETWINDOWTEXTW                                    CHICAGO
+SETWINDOWWORD                                                     WIN32S
+SETWINDOWWORD                                             DAYTONA 35
+SETWINDOWWORD                                         DAYTONA 31
+SETWINDOWWORD                                     CHICAGO
+SETWINDOWWORD                                 WIN31
+SHOWCARET                                                         WIN32S
+SHOWCARET                                                 DAYTONA 35
+SHOWCARET                                             DAYTONA 31
+SHOWCARET                                         CHICAGO
+SHOWCARET                                     WIN31
+SHOWCURSOR                                                        WIN32S
+SHOWCURSOR                                                DAYTONA 35
+SHOWCURSOR                                            DAYTONA 31
+SHOWCURSOR                                        CHICAGO
+SHOWCURSOR                                    WIN31
+SHOWOWNEDPOPUPS                                                   WIN32S
+SHOWOWNEDPOPUPS                                           DAYTONA 35
+SHOWOWNEDPOPUPS                                       DAYTONA 31
+SHOWOWNEDPOPUPS                                   CHICAGO
+SHOWOWNEDPOPUPS		                      WIN31
+SHOWSCROLLBAR                                                     WIN32S
+SHOWSCROLLBAR                                             DAYTONA 35
+SHOWSCROLLBAR                                         DAYTONA 31
+SHOWSCROLLBAR                                     CHICAGO
+SHOWSCROLLBAR                                 WIN31
+SHOWSTARTGLASS                                        DAYTONA 31
+SHOWWINDOW                                                        WIN32S
+SHOWWINDOW                                                DAYTONA 35
+SHOWWINDOW                                            DAYTONA 31
+SHOWWINDOW                                        CHICAGO
+SHOWWINDOW                                    WIN31
+SHOWWINDOWASYNC                                   CHICAGO
+SHRED                                                 DAYTONA 31
+SIGNALPROC                      ;INTERNAL     WIN31
+SKIPWORD                                              DAYTONA 31
+STRINGFUNC			    ;INTERNAL WIN31
+SUBTRACTRECT                                                      WIN32S
+SUBTRACTRECT                                              DAYTONA 35
+SUBTRACTRECT                                          DAYTONA 31
+SUBTRACTRECT                                      CHICAGO
+SUBTRACTRECT                                  WIN31
+SWAPMOUSEBUTTON                                                   WIN32S
+SWAPMOUSEBUTTON                                           DAYTONA 35
+SWAPMOUSEBUTTON                                       DAYTONA 31
+SWAPMOUSEBUTTON                                   CHICAGO
+SWAPMOUSEBUTTON                               WIN31
+SWITCHDESKTOP                                                     WIN32S
+SWITCHDESKTOP                                             DAYTONA 35
+SWITCHDESKTOP                                         DAYTONA 31
+SWITCHDESKTOP                                     CHICAGO
+SWITCHTOTHISWINDOW                                                WIN32S
+SWITCHTOTHISWINDOW                                        DAYTONA 35
+SWITCHTOTHISWINDOW                                    DAYTONA 31
+SWITCHTOTHISWINDOW                                CHICAGO
+SWITCHTOTHISWINDOW		    ;INTERNAL WIN31
+SYSERRORBOX		                          CHICAGO
+SYSERRORBOX                     ;INTERNAL     WIN31
+SYSTEMPARAMETERSINFO	                      WIN31
+SYSTEMPARAMETERSINFOA                                             WIN32S
+SYSTEMPARAMETERSINFOA                                     DAYTONA 35
+SYSTEMPARAMETERSINFOA                                 DAYTONA 31
+SYSTEMPARAMETERSINFOA                             CHICAGO
+SYSTEMPARAMETERSINFOW                                             WIN32S
+SYSTEMPARAMETERSINFOW                                     DAYTONA 35
+SYSTEMPARAMETERSINFOW                                 DAYTONA 31
+SYSTEMPARAMETERSINFOW                             CHICAGO
+TABBEDTEXTOUT                                 WIN31
+TABBEDTEXTOUTA                                                    WIN32S
+TABBEDTEXTOUTA                                            DAYTONA 35
+TABBEDTEXTOUTA                                        DAYTONA 31
+TABBEDTEXTOUTA                                    CHICAGO
+TABBEDTEXTOUTW                                                    WIN32S
+TABBEDTEXTOUTW                                            DAYTONA 35
+TABBEDTEXTOUTW                                        DAYTONA 31
+TABBEDTEXTOUTW                                    CHICAGO
+TILECHILDWINDOWS                                                  WIN32S
+TILECHILDWINDOWS                                          DAYTONA 35
+TILECHILDWINDOWS                                      DAYTONA 31
+TILECHILDWINDOWS                                  CHICAGO
+TILECHILDWINDOWS		    ;INTERNAL WIN31
+TILEWINDOWS                                               DAYTONA 35
+TILEWINDOWS                                       CHICAGO
+TOASCII                                                           WIN32S
+TOASCII                                                   DAYTONA 35
+TOASCII                                               DAYTONA 31
+TOASCII                                           CHICAGO
+TOASCIIEX                                         CHICAGO
+TOUNICODE                                                         WIN32S
+TOUNICODE                                                 DAYTONA 35
+TOUNICODE                                             DAYTONA 31
+TOUNICODE                                         CHICAGO
+TRACKPOPUPMENU                                                    WIN32S
+TRACKPOPUPMENU                                            DAYTONA 35
+TRACKPOPUPMENU                                        DAYTONA 31
+TRACKPOPUPMENU                                    CHICAGO
+TRACKPOPUPMENU                                WIN31
+TRACKPOPUPMENUEX                                          DAYTONA 35
+TRACKPOPUPMENUEX                                  CHICAGO
+TRANSLATEACCELERATOR                                              WIN32S
+TRANSLATEACCELERATOR                              CHICAGO
+TRANSLATEACCELERATOR                          WIN31
+TRANSLATEACCELERATOR = TRANSLATEACCELERATORA              DAYTONA 35
+TRANSLATEACCELERATOR = TRANSLATEACCELERATORA          DAYTONA 31
+TRANSLATEACCELERATORA                                             WIN32S
+TRANSLATEACCELERATORA                                     DAYTONA 35
+TRANSLATEACCELERATORA                                 DAYTONA 31
+TRANSLATEACCELERATORA = TRANSLATEACCELERATOR      CHICAGO
+TRANSLATEACCELERATORW                                             WIN32S
+TRANSLATEACCELERATORW                                     DAYTONA 35
+TRANSLATEACCELERATORW                                 DAYTONA 31
+TRANSLATEACCELERATORW                             CHICAGO
+TRANSLATECHARSETINFO                              CHICAGO
+TRANSLATEMDISYSACCEL                                              WIN32S
+TRANSLATEMDISYSACCEL                                      DAYTONA 35
+TRANSLATEMDISYSACCEL                                  DAYTONA 31
+TRANSLATEMDISYSACCEL                              CHICAGO
+TRANSLATEMDISYSACCEL	                      WIN31
+TRANSLATEMESSAGE                                                  WIN32S
+TRANSLATEMESSAGE                                          DAYTONA 35
+TRANSLATEMESSAGE                                      DAYTONA 31
+TRANSLATEMESSAGE                                  CHICAGO
+TRANSLATEMESSAGE                              WIN31
+TRANSLATEMESSAGEA                                                 WIN32S
+TRANSLATEMESSAGEEX                  ; PRIVATE         DAYTONA 31
+TRANSMITCOMMCHAR                              WIN31
+UNGETCOMMCHAR                                 WIN31
+UNHOOKWINDOWSHOOK                                                 WIN32S
+UNHOOKWINDOWSHOOK                                         DAYTONA 35
+UNHOOKWINDOWSHOOK                                     DAYTONA 31
+UNHOOKWINDOWSHOOK                                 CHICAGO
+UNHOOKWINDOWSHOOK                             WIN31
+UNHOOKWINDOWSHOOKEX                                               WIN32S
+UNHOOKWINDOWSHOOKEX                                       DAYTONA 35
+UNHOOKWINDOWSHOOKEX                                   DAYTONA 31
+UNHOOKWINDOWSHOOKEX                               CHICAGO
+UNHOOKWINDOWSHOOKEX 	                      WIN31
+UNIONRECT                                                         WIN32S
+UNIONRECT                                                 DAYTONA 35
+UNIONRECT                                             DAYTONA 31
+UNIONRECT                                         CHICAGO
+UNIONRECT                                     WIN31
+UNLOADKEYBOARDLAYOUT                                              WIN32S
+UNLOADKEYBOARDLAYOUT                                      DAYTONA 35
+UNLOADKEYBOARDLAYOUT                                  DAYTONA 31
+UNLOADKEYBOARDLAYOUT                              CHICAGO
+UNLOCKWINDOWSTATION                                               WIN32S
+UNLOCKWINDOWSTATION                                   DAYTONA 31
+UNLOCKWINDOWSTATION                               CHICAGO
+UNPACKDDELPARAM                                                   WIN32S
+UNPACKDDELPARAM                                           DAYTONA 35
+UNPACKDDELPARAM                                       DAYTONA 31
+UNPACKDDELPARAM                                   CHICAGO
+UNREGISTERCLASS		                      WIN31
+UNREGISTERCLASSA                                                  WIN32S
+UNREGISTERCLASSA                                          DAYTONA 35
+UNREGISTERCLASSA                                      DAYTONA 31
+UNREGISTERCLASSA                                  CHICAGO
+UNREGISTERCLASSW                                                  WIN32S
+UNREGISTERCLASSW                                          DAYTONA 35
+UNREGISTERCLASSW                                      DAYTONA 31
+UNREGISTERCLASSW                                  CHICAGO
+UNREGISTERHOTKEY                                                  WIN32S
+UNREGISTERHOTKEY                                          DAYTONA 35
+UNREGISTERHOTKEY                                      DAYTONA 31
+UNREGISTERHOTKEY                                  CHICAGO
+UPDATEPERUSERSYSTEMPARAMETERS                         DAYTONA 31
+UPDATEWINDOW                                                      WIN32S
+UPDATEWINDOW                                              DAYTONA 35
+UPDATEWINDOW                                          DAYTONA 31
+UPDATEWINDOW                                      CHICAGO
+UPDATEWINDOW                                  WIN31
+USER32_UNSUPPORTEDAPIS                                    DAYTONA 35
+USERCLIENTDLLINITIALIZE                               DAYTONA 31
+USERCLIENTDLLINITIALIZE                           CHICAGO
+USERREALIZEPALETTE          ; GDI CLIENT                  DAYTONA 35
+USERREGISTERWOWHANDLERS             ; PRIVATE         DAYTONA 31
+USERSEEUSERDO                   ;INTERNAL     WIN31
+USERSIGNALPROC                                    CHICAGO
+USERYIELD                       ;INTERNAL     WIN31
+VALIDATERECT                                                      WIN32S
+VALIDATERECT                                              DAYTONA 35
+VALIDATERECT                                          DAYTONA 31
+VALIDATERECT                                      CHICAGO
+VALIDATERECT                                  WIN31
+VALIDATERGN                                                       WIN32S
+VALIDATERGN                                               DAYTONA 35
+VALIDATERGN                                           DAYTONA 31
+VALIDATERGN                                       CHICAGO
+VALIDATERGN                                   WIN31
+VKKEYSCANA                                                        WIN32S
+VKKEYSCANA                                                DAYTONA 35
+VKKEYSCANA                                            DAYTONA 31
+VKKEYSCANA                                        CHICAGO
+VKKEYSCANEXA                                      CHICAGO
+VKKEYSCANEXW                                      CHICAGO
+VKKEYSCANW                                                        WIN32S
+VKKEYSCANW                                                DAYTONA 35
+VKKEYSCANW                                            DAYTONA 31
+VKKEYSCANW                                        CHICAGO
+WAITFORINPUTIDLE                                                  WIN32S
+WAITFORINPUTIDLE                                          DAYTONA 35
+WAITFORINPUTIDLE                                      DAYTONA 31
+WAITFORINPUTIDLE                                  CHICAGO
+WAITMESSAGE                                                       WIN32S
+WAITMESSAGE                                               DAYTONA 35
+WAITMESSAGE                                           DAYTONA 31
+WAITMESSAGE                                       CHICAGO
+WAITMESSAGE                                   WIN31
+WCSTOMBEX                                             DAYTONA 31
+WEP				    ;INTERNAL WIN31
+WINDOWFROMDC                                                      WIN32S
+WINDOWFROMDC                                              DAYTONA 35
+WINDOWFROMDC                                          DAYTONA 31
+WINDOWFROMDC                                      CHICAGO
+WINDOWFROMPOINT                                                   WIN32S
+WINDOWFROMPOINT                                           DAYTONA 35
+WINDOWFROMPOINT                                       DAYTONA 31
+WINDOWFROMPOINT                                   CHICAGO
+WINDOWFROMPOINT                               WIN31
+WINHELP                                       WIN31
+WINHELPA                                                          WIN32S
+WINHELPA                                                  DAYTONA 35
+WINHELPA                                              DAYTONA 31
+WINHELPA                                          CHICAGO
+WINHELPW                                                          WIN32S
+WINHELPW                                                  DAYTONA 35
+WINHELPW                                              DAYTONA 31
+WINHELPW                                          CHICAGO
+WINNLSENABLEIME                                                   WIN32S
+WINNLSGETENABLESTATUS                                             WIN32S
+WINNLSGETIMEHANDLEA                                               WIN32S
+WINNLSGETIMEHANDLEW                                               WIN32S
+WINNLSGETIMEHOTKEY                                                WIN32S
+WINNLSGETIMESTATUS                                                WIN32S
+WINNLSGETKEYSTATE                                                 WIN32S
+WINNLSPOSTAPPMESSAGEA                                             WIN32S
+WINNLSPOSTAPPMESSAGEW                                             WIN32S
+WINNLSSENDAPPMESSAGEA                                             WIN32S
+WINNLSSENDAPPMESSAGEW                                             WIN32S
+WINNLSSENDSTRINGA                                                 WIN32S
+WINNLSSENDSTRINGW                                                 WIN32S
+WINNLSSETIMEHANDLEA                                               WIN32S
+WINNLSSETIMEHANDLEW                                               WIN32S
+WINNLSSETIMEHOTKEY                                                WIN32S
+WINNLSSETIMESTATUS                                                WIN32S
+WINNLSSETKEYSTATE                                                 WIN32S
+WINOLDAPPHACKOMATIC             ;INTERNAL     WIN31
+WNDPROC_CALLBACK                                  CHICAGO
+WNETABORTJOB		    ;INTERNAL         WIN31
+WNETADDCONNECTION		              WIN31
+WNETBROWSEDIALOG		    ;INTERNAL WIN31
+WNETCANCELCONNECTION	                      WIN31
+WNETCANCELJOB		    ;INTERNAL         WIN31
+WNETCLOSEJOB		    ;INTERNAL         WIN31
+WNETCONNECTDIALOG		    ;INTERNAL WIN31
+WNETCONNECTIONDIALOG	    ;INTERNAL         WIN31
+WNETDEVICEMODE		    ;INTERNAL         WIN31
+WNETDIRECTORYNOTIFY 	    ;INTERNAL         WIN31
+WNETDISABLE 		    ;INTERNAL         WIN31
+WNETDISCONNECTDIALOG	    ;INTERNAL         WIN31
+WNETENABLE			    ;INTERNAL WIN31
+WNETERRORTEXT		    ;INTERNAL         WIN31
+WNETGETCAPS 		    ;INTERNAL         WIN31
+WNETGETCONNECTION		              WIN31
+WNETGETDIRECTORYTYPE	    ;INTERNAL         WIN31
+WNETGETERROR		    ;INTERNAL         WIN31
+WNETGETERRORTEXT		    ;INTERNAL WIN31
+WNETGETPROPERTYTEXT 	    ;INTERNAL         WIN31
+WNETGETUSER 		    ;INTERNAL         WIN31
+WNETHOLDJOB 		    ;INTERNAL         WIN31
+WNETLOCKQUEUEDATA		    ;INTERNAL WIN31
+WNETOPENJOB 		    ;INTERNAL         WIN31
+WNETPROPERTYDIALOG		    ;INTERNAL WIN31
+WNETRELEASEJOB		    ;INTERNAL         WIN31
+WNETRESTORECONNECTION	    ;INTERNAL         WIN31
+WNETSETJOBCOPIES		    ;INTERNAL WIN31
+WNETUNLOCKQUEUEDATA 	    ;INTERNAL         WIN31
+WNETUNWATCHQUEUE		    ;INTERNAL WIN31
+WNETVIEWQUEUEDIALOG 	    ;INTERNAL         WIN31
+WNETWATCHQUEUE		    ;INTERNAL         WIN31
+WNETWRITEJOB		    ;INTERNAL         WIN31
+WOWCLEANUP                                            DAYTONA 31
+WOWFINDWINDOW                                         DAYTONA 31
+WOWGETIDFROMDIRECTORY                                 DAYTONA 31
+WOWLOADBITMAPA                                        DAYTONA 31
+WOWLOADCURSORICON                                     DAYTONA 31
+WRITECOMM                                     WIN31
+WSPRINTFA                                                         WIN32S
+WSPRINTFA                                                 DAYTONA 35
+WSPRINTFA                                                 DAYTONA 35
+WSPRINTFA                                         CHICAGO
+WSPRINTFW                                                         WIN32S
+WSPRINTFW                                                 DAYTONA 35
+WSPRINTFW                                                 DAYTONA 35
+WSPRINTFW  = WSPRINTFW                            CHICAGO
+WVSPRINTF			              WIN31
+WVSPRINTFA                                                        WIN32S
+WVSPRINTFA                                                DAYTONA 35
+WVSPRINTFA                                                DAYTONA 35
+WVSPRINTFA                                        CHICAGO
+WVSPRINTFW                                                        WIN32S
+WVSPRINTFW                                                DAYTONA 35
+WVSPRINTFW                                                DAYTONA 35
+WVSPRINTFW                                        CHICAGO
+YIELDTASK                                                         WIN32S
+YIELDTASK                                             DAYTONA 31
+YIELDTASK                                         CHICAGO
+_ADJUSTWINDOWRECTEX                                       DAYTONA 35
+_ANYPOPUP                                                 DAYTONA 35
+_CLIENTTOSCREEN                                           DAYTONA 35
+_FFFE_FARFRAME		    ;INTERNAL         WIN31
+_GETCLIENTRECT                                            DAYTONA 35
+_GETDESKTOPWINDOW                                         DAYTONA 35
+_GETKEYSTATE                                              DAYTONA 35
+_GETMENUITEMCOUNT                                         DAYTONA 35
+_GETMENUITEMID                                            DAYTONA 35
+_GETMENUSTATE                                             DAYTONA 35
+_GETPARENT                                                DAYTONA 35
+_GETSUBMENU                                               DAYTONA 35
+_GETTOPWINDOW                                             DAYTONA 35
+_GETWINDOW                                                DAYTONA 35
+_GETWINDOWLONG                                            DAYTONA 35
+_GETWINDOWRECT                                            DAYTONA 35
+_GETWINDOWWORD                                            DAYTONA 35
+_ISCHILD                                                  DAYTONA 35
+_ISICONIC                                                 DAYTONA 35
+_ISWINDOWENABLED                                          DAYTONA 35
+_ISWINDOWVISIBLE                                          DAYTONA 35
+_ISZOOMED                                                 DAYTONA 35
+_MAPWINDOWPOINTS                                          DAYTONA 35
+_SCREENTOCLIENT                                           DAYTONA 35
+_WSPRINTF			              WIN31
+_WSPRINTF           ; REMOVE                              DAYTONA 35
+__GP			    ;INTERNAL         WIN31
+

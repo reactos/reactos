@@ -1,0 +1,96 @@
+#ifndef _AREA_PDL_
+#define _AREA_PDL_ 1
+
+#include "element.pdl"
+
+file area.pdl
+
+import element.pdl
+
+/* New style element events w/ eventObject parameter: */
+event HTMLAreaEvents2  super:HTMLElementEvents2  guid:3050f611-98b5-11cf-bb82-00aa00bdce0b
+
+/* New style element events w/o eventObject parameter: */
+event HTMLAreaEvents super:HTMLElementEvents guid:3050f366-98b5-11cf-bb82-00aa00bdce0b
+
+interface IHTMLAreaElement guid:3050f265-98b5-11cf-bb82-00aa00bdce0b
+    refprop CAreaElement:shape
+    refprop CAreaElement:coords
+    refprop CAreaElement:href
+    refprop CAreaElement:target
+    refprop CAreaElement:alt
+    refprop CAreaElement:noHref
+    refprop CAreaElement:host
+    refprop CAreaElement:hostname
+    refprop CAreaElement:pathname
+    refprop CAreaElement:port
+    refprop CAreaElement:protocol
+    refprop CAreaElement:search
+    refprop CAreaElement:hash
+    refprop CAreaElement:onblur
+    refprop CAreaElement:onfocus
+    refprop CAreaElement:tabIndex
+
+    refmethod CAreaElement:focus
+    refmethod CAreaElement:blur
+
+
+tearoff CAreaElement interface:IHTMLElement2
+    tearmethod get_tabIndex         mapto:super::get_tabIndex
+
+tearoff CAreaElement interface:IHTMLAreaElement
+    tearmethod get_host             mapto:super::get_host
+    tearmethod get_hostname         mapto:super::get_hostname
+    tearmethod get_pathname         mapto:super::get_pathname
+    tearmethod get_port             mapto:super::get_port
+    tearmethod get_protocol         mapto:super::get_protocol
+    tearmethod get_search           mapto:super::get_search
+    tearmethod get_hash             mapto:super::get_hash
+    tearmethod put_host             mapto:super::put_host
+    tearmethod put_hostname         mapto:super::put_hostname
+    tearmethod put_pathname         mapto:super::put_pathname
+    tearmethod put_port             mapto:super::put_port
+    tearmethod put_protocol         mapto:super::put_protocol
+    tearmethod put_search           mapto:super::put_search
+    tearmethod put_hash             mapto:super::put_hash
+    tearmethod get_tabIndex         mapto:super::get_tabIndex
+
+class CAreaElement name:HTMLAreaElement \
+            super:CElement \
+            primaryinterface:IHTMLAreaElement \
+            events:HTMLAreaEvents \
+            nonprimaryevents:HTMLAreaEvents2 \
+            guid:3050f283-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f503-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLAreaElement
+
+    property shape    maxstrlen:pdlToken                    atype:BSTR          dispid:DISPID_AREA+1        get set method:shapeHelper vt:VT_BSTR
+    property coords   maxstrlen:pdlNoLimit                  atype:BSTR          dispid:DISPID_AREA+2        get set method:coordsHelper vt:VT_BSTR
+    property href     maxstrlen:pdlUrlLen       caa atype:BSTR          dispid:DISPID_VALUE         type:url   \
+        clearcaches updatecollection get set    setaahr baseimplementation
+    property target   maxstrlen:pdlNoLimit      caa atype:BSTR          dispid:DISPID_AREA+4        type:CStr           get set
+    property alt      maxstrlen:pdlNoLimit      caa atype:BSTR          dispid:DISPID_AREA+5        type:CStr           get set
+    property noHref                             caa atype:VARIANT_BOOL  dispid:DISPID_AREA+6        type:VARIANT_BOOL   get set
+
+    property host      abstract atype:BSTR          dispid:DISPID_AREA+7        get set vt:VT_BSTR nopersist    maxstrlen:pdlUrlLen
+    property hostname  abstract atype:BSTR          dispid:DISPID_AREA+8        get set vt:VT_BSTR nopersist    maxstrlen:pdlUrlLen
+    property pathname  abstract atype:BSTR          dispid:DISPID_AREA+9        get set vt:VT_BSTR nopersist    maxstrlen:pdlUrlLen
+    property port      abstract atype:BSTR          dispid:DISPID_AREA+10       get set vt:VT_BSTR nopersist    maxstrlen:pdlToken
+    property protocol  abstract atype:BSTR          dispid:DISPID_AREA+11       get set vt:VT_BSTR nopersist    maxstrlen:pdlNoLimit
+    property search    abstract atype:BSTR          dispid:DISPID_AREA+12       get set vt:VT_BSTR nopersist    maxstrlen:pdlUrlLen
+    property hash      abstract atype:BSTR          dispid:DISPID_AREA+13       get set vt:vt_BSTR nopersist    maxstrlen:pdlUrlLen
+
+    property onblur             atype:VARIANT       dispid:DISPID_EVPROP_ONBLUR  type:code \  
+        get set caa bindable displaybind scriptlet  maxstrlen:pdlEvent nopropdesc
+    property onfocus            atype:VARIANT       dispid:DISPID_EVPROP_ONFOCUS type:code \
+        get set caa bindable displaybind scriptlet  maxstrlen:pdlEvent nopropdesc
+    method HRESULT focus                            dispid:DISPID_AREA+14 nopropdesc
+    method HRESULT blur                             dispid:DISPID_AREA+15 nopropdesc
+
+    property tabIndex  atype:short  type:short default:htmlTabIndexNotSet  dispid:STDPROPID_XOBJ_TABINDEX \
+        dwFlags:0  caa get set bindable displaybind help:f3proTabIndex nopropdesc
+
+
+#endif _AREA_PDL_

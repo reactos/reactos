@@ -1,0 +1,19 @@
+NAME    SSMARQUE.SCR
+
+STUB    'WINSTUB.EXE'
+EXETYPE WINDOWS
+
+CODE    MOVEABLE
+DATA    MOVEABLE MULTIPLE
+
+HEAPSIZE  1024
+STACKSIZE 4096
+
+EXPORTS
+        ScreenSaverProc
+        ScreenSaverConfigureDialog
+        ShowTextProc
+        DlgChangePassword
+        DlgGetPassword
+        DlgInvalidPassword
+        ChooseFontHookProc

@@ -1,0 +1,52 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css">
+<TITLE>Web Server</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript">
+var L_IISErrorMsg_Text = "You must set up IIS before proceeding.";
+
+function iis()
+{
+    if (srvwiz.ServiceState("IISAdmin") == 1)
+    {
+        top.content.location.href = "iis.htm";
+    }
+    else
+    {
+        alert(L_IISErrorMsg_Text);
+    }
+}
+</SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("wbsrv_bg.gif");
+        background-repeat:no-repeat;
+        background-position:149 39;
+    }
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">Web Server</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Internet Information Services (IIS) is the Web service integrated with Windows 2000 Server. 
+            You can use IIS to set up a Web or FTP site on your corporate intranet, 
+            create large sites for the Internet, or develop component-based programs.</P>
+            
+            <P ID="para2">To set up IIS, use the Windows Components wizard. 
+            After you finish with the wizard, click <b>Next</b> to get started using IIS.
+            <P ID="para3"><A HREF="javascript:exec('sysocmgr.exe', '/x /i:%windir%/inf/sysoc.inf')"><IMG SRC="wiz.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Start</A> the Windows Components wizard. </P>
+            <P ID="para4"><A HREF="javascript:help('IIS.CHM::/iint1.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about Internet Information Services.</P>
+        </TD>
+    </TR>
+</TABLE>
+<button id="next" style="position:absolute; bottom:21px; right:37px" onclick="iis()">Next</button>
+<P>&nbsp;
+</BODY>
+</HTML>

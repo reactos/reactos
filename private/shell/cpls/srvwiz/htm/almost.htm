@@ -1,0 +1,78 @@
+<HTML>
+<HEAD>
+<link rel="stylesheet" type="text/css" href="win2000.css">
+<TITLE>Almost Finished</TITLE>
+<script language="javascript" src="util.js">
+</script>
+<script language="javascript">
+
+    function DoContinue()
+    {
+        srvwiz.Home = 7;
+        // self.location.href = "config.htm";
+        // top.menu.location.href = "menu.htm";
+    }
+
+</script>
+</HEAD>
+<body bgcolor="#CCCCCC" leftmargin="0" topmargin="0" bgproperties="fixed">
+<table width="425" border="0" bordercolor="#000000">
+    <tr>
+        <td style="width:8px">&nbsp
+    
+        <td valign="top"><p id="para1">You're almost done. You need to set the static IP address, authorize DHCP, and restart the server. After these steps are completed, Active Directory, DNS, and DHCP will be configured.
+
+        <p id="para2"><b>To configure a static IP address</b>
+            
+        <table border="0">
+            <tr>
+                <td valign="top" id="num1">1.</td>
+                <td id="para3">Right-click <b>My Network Places</b> and click <b>Properties</b>.</td>
+            </tr>
+            <tr>
+                <td valign="top" id="num2">2. </td>
+                <td id="para4">Right-click <b>Local Area Network Connection</b> and click <b>Properties</b>.</td>
+            </tr>
+            <tr>
+                <td valign="top" id="num3">3.</td>
+                <td id="para5">Click the TCP/IP component and click <b>Properties</b>.</td>
+            </tr>
+            <tr>
+                <td valign="top" id="num4">4. </td>
+                <td id="para6">Check <b>Use the Following IP Address</b>.</td>
+            </tr>
+            <tr>
+                <td valign="top" id="num5">5.</td>
+                <td id="para7">In the <b>IP Address</b> field, type:
+     			<br><b>10.10.1.1</b></td>
+            </tr>
+            <tr>
+                <td valign="top" id="num6">6. </td>
+                <td id="para8">In the <b>Subnet Mask</b> field, type:
+     			<br><b>255.0.0.0</b></td>
+            </tr>
+        </table>  
+	
+		<p id="para9"><b>To authorize the DHCP service</b>
+            
+        <table border="0">
+            <tr>
+                <td valign="top" id="num7">1.</td>
+                <td id="para10"><a href="javascript:exec('dhcpmgmt.msc')">Open</a> DHCP Manager.</td>
+            </tr>
+            <tr>
+                <td valign="top" id="num8">2.</td>
+                <td id="para11">Expand the DHCP server.</td>
+            </tr>
+            <tr>
+                <td valign="top" id="num9">3. </td>
+                <td id="para12">Right-click the server, point to <b>All Tasks</b>, and click <b>Authorize</b>.</td>
+            </tr>
+        </table>
+        <p id="para12">When you have completed the steps above, click <b>Ok</b>. You need to <B>reboot</B> the machine to complete your server configuration.
+		<p id="button" align="right"><input type="button" value="Ok" style="width:40px" onclick="DoContinue()">
+		</td>
+    </tr>
+</table>
+</body>
+</html>

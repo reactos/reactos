@@ -1,0 +1,5 @@
+#  The win95 dir might seem redundant, but it is necessary because
+#  the build lab's RISC machines have ~win95 added to their 
+#  BUILD_OPTIONS list.  We must respect that.
+
+DIRS    = win95

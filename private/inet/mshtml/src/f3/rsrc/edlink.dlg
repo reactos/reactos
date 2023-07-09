@@ -1,0 +1,469 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML id=dlgLink style="font-family: MS Shell Dlg; font-size: 8pt;
+width: 36.7em; height: 12.3em; ">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>Hyperlink</TITLE>
+
+<SCRIPT>
+
+#include "dialogs.dh"
+
+#define HELPFILE msoe.hlp
+
+//+-------------------------------------------------------------------------
+//
+//  This section contains code LOCAL to this particular dialog.
+//
+//--------------------------------------------------------------------------
+
+//+----------------------------------------------------------------------
+//
+//  global variables
+//
+var g_fOKEnabled = false;   // Whether or not the OK button is
+                            // disabled. Used for perf enhancement.
+var g_fURLLoaded = false;   // If the selection contained a link when the 
+                            // dialog was opened.
+    //
+    //  Synopsis:   Given a text range, returns an anchor element if that
+    //              element appears within or overlaps the range. If no
+    //              anchor exists, returns null.
+    //
+    //  Arguments:  range   The range we're looking for an element in.
+    //
+    //  Returns:    an anchor element if one is found, null if one is not.
+    //
+    //-----------------------------------------------------------------------
+
+    function findAnchor(range)
+    {
+        var rangeWorking;
+        var elmWorking;
+        var index;
+
+        //
+        //  First, look for the anchor as a parent element of the range
+        //  NOTE: This will only find an anchor under fairly special
+        //  circumstances (the first character of the range is part of an
+        //  anchor), but it's much faster than the method below.
+        //
+        elmWorking = range.parentElement()
+
+        while ("HTML" != elmWorking.tagName)
+        {
+            if ("A" == elmWorking.tagName)
+            {
+                return elmWorking;
+            }
+            else
+            {
+                elmWorking = elmWorking.parentElement
+            }
+        }
+
+        //
+        //  That didn't work, so let's walk through each character in the
+        //  range and see if there's an anchor somewhere.
+        //
+        rangeWorking = range.duplicate();
+
+        //
+        //  Reduce rangeWorking to one character
+        //
+        rangeWorking.collapse(true);
+        rangeWorking.moveEnd("character", 1);
+
+        while (rangeWorking.compareEndPoints("EndToEnd", range) < 0)
+        {
+            rangeWorking.move("Character");
+            //
+            //  "Wait!" you're saying. "You can't move rngWorking yet,
+            //  you'll miss the first character." If the first character
+            //  is part of an anchor, the section of code above will catch
+            //  it.
+            //
+            if (null != findAnchor(rangeWorking))
+            {
+                return findAnchor(rangeWorking);
+            }
+        }
+
+        //
+        //  Nothing yet found an anchor, so I guess there isn't one.
+        //
+        return null;
+    }   //  findAnchor
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Returns the protocol when given a URL.
+    //
+    //  Arguments:  strURL  The URL to get the protocol from
+    //
+    //  Returns:    a string that matches a protocol or null if no match is
+    //              found.
+    //
+    //----------------------------------------------------------------------
+
+    function getProtocolFromURL(strURL)
+    {
+        var index;
+        //
+        //  We're assuming that the protocol ends at the first colon.
+        //
+        return strURL.substring(0, strURL.indexOf(":") + 1);
+    }   // getProtocolFromURL
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Updates the protocol combo box based on the entry in
+    //              the URL text box
+    //
+    //  Arguments:  None
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function updateProtocolSel()
+    {
+        var index;
+        var strProtocol = getProtocolFromURL(txtURL.value);
+
+        //
+        //  Loop through the options in selProtocol to see if one matches
+        //
+        selProtocol.value = strProtocol;
+
+        //
+        //  No match was found. Select "other".
+        //
+        if (selProtocol.value != strProtocol)
+        {
+            selProtocol.value = "";
+        }
+    }   //  updateProtocolSel
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Updates the protocol portion of txtURL based on the
+    //              selection in selProtocol
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function updateProtocolTxt()
+    {
+        var strSlashProts   = " file:ftp:gopher:http:https:";
+                                                    //  Some protocols are
+                                                    //  followed by 2 slashes
+        var strProtocolTxt  = getProtocolFromURL(txtURL.value);
+        var strProtocolSel  = selProtocol.value;
+        var strTempURL;
+
+        //
+        //  If the protocol is followed by two slashes, append
+        //  them to the protocol
+        //
+        if ("//" == (txtURL.value.substring(strProtocolTxt.length,
+            strProtocolTxt.length + 2)))
+        {
+            strProtocolTxt = strProtocolTxt + "//";
+        }
+
+        //
+        //  Remove protocol from current URL
+        //
+        strTempURL = txtURL.value.substring(strProtocolTxt.length);
+
+        if (0 < strSlashProts.indexOf(strProtocolSel))
+        {
+            strProtocolSel = strProtocolSel + "//";
+        }
+
+        txtURL.value = strProtocolSel + strTempURL;
+
+    }   //  updateProtocolTxt
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Disables or enables the OK button depending in
+    //              whether there is text in txtURL.
+    //
+    //  Arguments:  fKeyPress   Whether or not the f'n was called by a
+    //                          onKeyUp event
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function setOKState(fKeyPress)
+    {
+        var htmlKeyAlt = 18;
+
+        //
+        //  If a URL was loaded when the dialog was opened, we don't 
+        //  disable the button
+        //
+        if (!g_fURLLoaded)
+        {
+            //
+            //  If the ALT key was pressed, an extended character may have been
+            //  entered. Wait before checking the state of the textbox.
+            //
+            if (!fKeyPress || htmlKeyAlt != event.keyCode)
+            {
+                if ((("" == txtURL.value) || (txtURL.value == selProtocol.value)
+                    ||(txtURL.value == selProtocol.value + "//"))
+                    == g_fOKEnabled)
+                {
+                    btnOK.disabled = g_fOKEnabled
+                    g_fOKEnabled = !g_fOKEnabled;
+                }
+            }
+            else
+            {
+                window.setTimeout("setOKState(false)", 10);
+            }
+        }
+    }   //  setOKState
+
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Initialize the dialog
+    //
+    //  Arguments:  None
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function bdyLoad()
+    {
+        var globalDoc = window.dialogArguments;
+
+        var rngMaster;
+        var rngLink;
+        var elmLink;
+
+        //
+        //  bind events
+        //
+        document.onhelp     = new 
+            Function("callHelp(window.event.srcElement)");
+        document.onmouseup  = new Function("mouseClick()");
+        selProtocol.onchange = new Function("updateProtocolTxt()");
+
+        btnOK.onclick = new Function("btnOKClick()");
+        btnCancel.onclick = new Function("btnCancelClick()");
+
+        txtURL.onfocus = new Function("txtURL.select()");
+        txtURL.onkeyup = new Function("setOKState(true)");
+        txtURL.onkeypress = new Function("txtDefaultESC()");
+
+        //
+        //  If the selection is a control, change it to a text selection
+        //  containing just the control
+        //
+        if ("Control" == globalDoc.selection.type)
+        {
+            rngMaster = globalDoc.selection.createRange();
+            //
+            //  Make sure the selection contains only one control
+            //
+            if (1 == rngMaster.length)
+            {
+                rngMaster = getTextRange(rngMaster(0));
+                rngMaster.select();
+            }
+        }
+
+        if (("Text" == globalDoc.selection.type) ||
+            ("None" == globalDoc.selection.type))
+        {
+            rngMaster = globalDoc.selection.createRange();
+            elmLink = findAnchor(rngMaster);
+
+            if (null != elmLink)
+            {
+                //
+                //  If the range contains an anchor, expand it to
+                //  encompass the anchor
+                //
+                rngLink = getTextRange(elmLink);
+
+                if (rngLink.compareEndPoints("StartToStart", rngMaster) < 0)
+                {
+                    rngMaster.setEndPoint("StartToStart", rngLink);
+                }
+                if (rngLink.compareEndPoints("EndToEnd", rngMaster) > 0)
+                {
+                    rngMaster.setEndPoint("EndToEnd", rngLink);
+                }
+                rngMaster.select();
+
+                //
+                //  Fill the dialog with info about the link
+                //
+                if ("" != elmLink.href)
+                {
+                    txtURL.value = elmLink.href;
+                    txtURL.href = elmLink.href;
+                    g_fURLLoaded = true;
+                    btnOK.disabled = false;
+                }
+                updateProtocolSel();
+            }
+
+        //
+        //  Set focus to the URL text box
+        //
+        txtURL.focus();
+        txtURL.select();
+        setOKState(false);
+        }
+    }   // bdyLoad
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Inserts a link in the document
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function btnOKClick()
+    {
+        var globalDoc = window.dialogArguments;
+
+        var cmdCreateLink   = "CreateLink";
+        var cmdUnlink       = "Unlink";
+
+        var range = globalDoc.selection.createRange();
+        var strSlashProts = " file:ftp:gopher:http:https:";
+                                                //  Some protocols are
+                                                //  followed by 2 slashes
+        var strProtocol = selProtocol.value;    //  The Protocol currently
+                                                //  selected
+        //
+        //  If txtURL is empty, remove the link and exit
+        //
+        if ("" == txtURL.value)
+        {
+            range.execCommand(cmdUnlink, false);
+            window.close();
+            return;
+        }
+
+        //
+        //  If the URL has not changed, just close
+        //
+        if (g_fURLLoaded && (txtURL.value == txtURL.href))
+        {
+            window.close();
+            return;
+        }
+        
+        updateProtocolSel();
+
+        if (0 < strSlashProts.indexOf(strProtocol))
+        {
+            strProtocol = strProtocol + "//";
+        }
+
+        // If no text is selected, insert the URL as the text
+        if (range.htmlText == "")
+        {
+            range.text = txtURL.value;
+        }
+
+        range.execCommand(cmdCreateLink, false, txtURL.value);
+
+        window.close();
+    }   //  btnOKClick
+
+</SCRIPT>
+
+</HEAD>
+
+#ifdef UNIX
+<BODY id=bdy style="font-family: MS Shell Dlg; font-size: 8pt;
+background: threedface; color: buttontext;"
+onLoad="bdyLoad()">
+#else
+<BODY id=bdy style="font-family: MS Shell Dlg; font-size: 8pt;
+background: threedface; color: windowtext;"
+onLoad="bdyLoad()">
+#endif
+
+<FIELDSET id=fldLink style="font-family: MS Shell Dlg; font-size: 8pt; 
+position: absolute; left: 0.98em; top: .8em; width: 25.76em; 
+height: 7.9em;">
+<LEGEND id=lgdLink>
+Hyperlink Information
+</LEGEND>
+</FIELDSET>
+
+    <DIV id=div2 style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+    left: 1.82em; top: 2.8899em; width: 2.66em; height: 1.2168em; ">
+    <LABEL id=lblProtocol FOR=selProtocol tabIndex=-1 helpid="35550" 
+    helpfile=HELPFILE>
+    <u>T</u>ype:
+    </LABEL>
+    </DIV>
+
+    <select id=selProtocol size=1 ACCESSKEY=t tabIndex=50
+    style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+    left: 5.04em; top: 2.7378em; width: 6.44em; height: 2.1294em; "
+    helpid="35550" helpfile=HELPFILE>
+    <OPTION id=optOther  value="">                 (other) </OPTION>
+    <OPTION id=optFile   value="file:">            file:   </OPTION>
+    <OPTION id=optFtp    value="ftp:">             ftp:    </OPTION>
+    <OPTION id=optGopher value="gopher:">          gopher: </OPTION>
+    <OPTION id=optHttp   value="http:" SELECTED>   http:   </OPTION>
+    <OPTION id=optHttps  value="https:">           https:  </OPTION>
+    <OPTION id=optMailto value="mailto:">          mailto: </OPTION>
+    <OPTION id=optNews   value="news:">            news:   </OPTION>
+    <OPTION id=optTelnet value="telnet:">          telnet: </OPTION>
+    <OPTION id=optWais   value="wais:">            wais:   </OPTION>
+    </select>
+
+    <DIV id=div3 style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+    left: 1.82em; top: 5.9319em; width: 2.52em; height: 1.2168em; ">
+    <LABEL id=lblURL FOR=txtURL tabIndex=-1 helpid="35550" 
+    helpfile=HELPFILE>
+    <u>U</u>RL:
+    </LABEL>
+    </DIV>
+
+    <input accesskey=u ID="txtURL" value="http://" type=text size=35
+    maxlength=1024 tabIndex=15 helpid="35550" helpfile=HELPFILE
+    style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+    left: 5.04em; top: 5.6277em; width: 20.72em; height: 2.1294em; ">
+
+<BUTTON id=btnOK tabIndex=35 DISABLED=1 helpid="28443" helpfile="windows.hlp"
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 28em; top: 1.521em; width: 7em; height: 2.2em; " type=submit>
+OK
+</BUTTON>
+
+<BUTTON id=btnCancel tabIndex=40 helpid="28444" helpfile="windows.hlp"
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 28em; top: 4.1067em; width: 7em; height: 2.2em; " type=reset>
+Cancel
+</BUTTON>
+
+</BODY>
+</HTML>

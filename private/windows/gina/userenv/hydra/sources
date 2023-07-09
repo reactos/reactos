@@ -1,0 +1,4 @@
+ALT_PROJECT=HYDRA
+ALT_PROJECT_TARGET=$(ALT_PROJECT)
+
+!include ..\sources.inc

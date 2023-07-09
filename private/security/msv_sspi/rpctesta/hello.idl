@@ -1,0 +1,8 @@
+[ uuid (12345678-1234-1234-1234-123456789ABC),
+  version(1.0),
+  pointer_default(unique)]
+interface hello
+{
+void HelloProc([in, string] char * pszString);
+void Shutdown(void);
+}

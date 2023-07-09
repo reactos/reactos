@@ -1,0 +1,5 @@
+winchat.obj wcinit.obj dialogs.obj dde.obj globals.obj
+winchat.exe
+winchat.map /al:16 /map/l
+slibcew libw shell mmsystem commdlg ddeml commctrl/NOD
+doswin.def

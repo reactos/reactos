@@ -1,0 +1,232 @@
+<html>
+<HEAD>
+<TITLE>Shell UI Control test/demo/sample page</TITLE>
+</HEAD>
+
+<body bgcolor="#80FFFF">
+
+<A name="top"></A>
+<H1>Shell UI Control test/demo/sample page</H1>
+
+Enter an URL to be used for all tests (except AddChannel):
+<input type=text name="aURL" value="http://ie40" size=50><br>
+Enter an URL to a CDF to be used for AddChannel:
+<input type=text name="aCDF" value="http://ohserv/users/julianj/msnbc.cdf" size=50><br>
+
+<!------------------------------------------------------------------->
+<OBJECT ID="ShellUIHelper" WIDTH=0 HEIGHT=0
+ CLASSID="CLSID:64AB4BB7-111E-11d1-8F79-00C04FC2FBE1">
+</OBJECT>
+
+<A HREF="#External">Using window.external</A><BR>
+<A HREF="#Object">Using object tag</A><BR>
+<A HREF="#ActiveX">Using new ActiveX()</A><BR>
+
+<hr>
+<A name="#External"></A>
+<H1>Using window.external</H1><P>
+<H3>Dispatch AddChannel</H3>
+Click <a target="_self" href="javascript:AddChannel(window.external, aCDF.value)">here</a>
+to test the "Test AddChannel" action.<P>
+
+<H3>Dispatch AddDesktopComponent</H3>
+Click <a target="_self" href="javascript:AddDesktopComponent(window.external, aURL.value, 'website')">here</a>
+to test the "Test AddDesktopComponent" action.<P>
+
+<H3>Dispatch AddDesktopComponent with locations</H3>
+Click <a target="_self" href="javascript:AddDesktopComponent(window.external, aURL.value, 'website', 200, 200, 100, 100)">here</a>
+to test the "Test AddDesktopComponent with coords" action.<P>
+
+<H3>Dispatch AddFavorite</H3>
+Click <a target="_self" href="javascript:AddFavorite(window.external, aURL.value, 'Test Add To Favs')">here</a>
+to test the "Test AddFavorites" action.<P>
+
+<H3>Dispatch AddFavorite no title</H3>
+Click <a target="_self" href="javascript:AddFavorite(window.external, aURL.value)">here</a>
+to test the "Test AddFavorite no title" action.<P>
+
+<H3>Dispatch ResetFirstBootMode</H3>
+Click <a target="_self" href="javascript:ResetFirstBootMode(window.external)">here</a>
+to test the "ResetFirstBootMode" action.<P>
+
+<H3>Dispatch ResetSafeMode</H3>
+Click <a target="_self" href="javascript:ResetSafeMode(window.external)">here</a>
+to test the "ResetSafeMode" action.<P>
+
+<H3>Dispatch RefreshOfflineDesktop</H3>
+Click <a target="_self" href="javascript:RefreshOfflineDesktop(window.external)">here</a>
+to test the "RefreshOfflineDesktop" action.<P>
+
+<H3>Dispatch IsSubscribed</H3>
+Click <a target="_self" href="javascript:IsSubscribed(aURL.value, window.external)">here</a>
+to test the "IsSubscribed" action.<P>
+
+<A HREF="#top">Back to top</A><BR>
+
+<hr>
+<A name="#Object"></A>
+<H1>Using Object Tag</H1><P>
+<H3>Dispatch AddChannel</H3>
+Click <a target="_self" href="javascript:AddChannel(ShellUIHelper, aCDF.value)">here</a>
+to test the "Test AddChannel" action.<P>
+
+<H3>Dispatch AddDesktopComponent</H3>
+Click <a target="_self" href="javascript:AddDesktopComponent(ShellUIHelper, aURL.value, 'website')">here</a>
+to test the "Test AddDesktopComponent" action.<P>
+
+<H3>Dispatch AddDesktopComponent with locations</H3>
+Click <a target="_self" href="javascript:AddDesktopComponent(ShellUIHelper, aURL.value, 'website', 200, 200, 100, 100)">here</a>
+to test the "Test AddDesktopComponent with coords" action.<P>
+
+<H3>Dispatch AddFavorite</H3>
+Click <a target="_self" href="javascript:AddFavorite(ShellUIHelper, aURL.value, 'Test Add To Favs')">here</a>
+to test the "Test AddFavorites" action.<P>
+
+<H3>Dispatch AddFavorite no title</H3>
+Click <a target="_self" href="javascript:AddFavorite(ShellUIHelper, aURL.value)">here</a>
+to test the "Test AddFavorite no title" action.<P>
+
+<H3>Dispatch ResetFirstBootMode</H3>
+Click <a target="_self" href="javascript:ResetFirstBootMode(ShellUIHelper)">here</a>
+to test the "ResetFirstBootMode" action.<P>
+
+<H3>Dispatch ResetSafeMode</H3>
+Click <a target="_self" href="javascript:ResetSafeMode(ShellUIHelper)">here</a>
+to test the "ResetSafeMode" action.<P>
+
+<H3>Dispatch RefreshOfflineDesktop</H3>
+Click <a target="_self" href="javascript:RefreshOfflineDesktop(ShellUIHelper)">here</a>
+to test the "RefreshOfflineDesktop" action.<P>
+<A HREF="#top">Back to top</A><BR>
+
+<H3>Dispatch IsSubscribed</H3>
+Click <a target="_self" href="javascript:IsSubscribed(aURL.value, ShellUIHelper)">here</a>
+to test the "IsSubscribed" action.<P>
+
+<hr>
+<A name="#ActiveX"></A>
+<H1>Using new ActiveX()</H1><P>
+<H3>Dispatch AddChannel</H3>
+Click <a target="_self" href="javascript:AddChannel(null, aCDF.value)">here</a>
+to test the "Test AddChannel" action.<P>
+
+<H3>Dispatch AddDesktopComponent</H3>
+Click <a target="_self" href="javascript:AddDesktopComponent(null, aURL.value, 'website')">here</a>
+to test the "Test AddDesktopComponent" action.<P>
+
+<H3>Dispatch AddDesktopComponent with locations</H3>
+Click <a target="_self" href="javascript:AddDesktopComponent(null, aURL.value, 'website', 200, 200, 100, 100)">here</a>
+to test the "Test AddDesktopComponent with coords" action.<P>
+
+<H3>Dispatch AddFavorite</H3>
+Click <a target="_self" href="javascript:AddFavorite(null, aURL.value, 'Test Add To Favs')">here</a>
+to test the "Test AddFavorites" action.<P>
+
+<H3>Dispatch AddFavorite no title</H3>
+Click <a target="_self" href="javascript:AddFavorite(null, aURL.value)">here</a>
+to test the "Test AddFavorite no title" action.<P>
+
+<H3>Dispatch ResetFirstBootMode</H3>
+Click <a target="_self" href="javascript:ResetFirstBootMode(null)">here</a>
+to test the "ResetFirstBootMode" action.<P>
+
+<H3>Dispatch ResetSafeMode</H3>
+Click <a target="_self" href="javascript:ResetSafeMode(null)">here</a>
+to test the "ResetSafeMode" action.<P>
+
+<H3>Dispatch RefreshOfflineDesktop</H3>
+Click <a target="_self" href="javascript:RefreshOfflineDesktop(null)">here</a>
+to test the "RefreshOfflineDesktop" action.<P>
+<A HREF="#top">Back to top</A><BR>
+
+<H3>Dispatch IsSubscribed</H3>
+Click <a target="_self" href="javascript:IsSubscribed(aURL.value, null)">here</a>
+to test the "IsSubscribed" action.<P>
+
+<script>
+function GetUIHelper(obj)
+{
+	var uih = obj;
+
+	if (uih == null)
+	{
+		uih = new ActiveXObject("Shell.UIHelper");
+	}
+
+	return uih;
+}
+
+function AddChannel(obj, url)
+{
+	var uih = GetUIHelper(obj);
+
+	uih.AddChannel(url);
+	
+	uih = null;
+}
+
+function AddDesktopComponent(obj, url, type, l, t, w, h)
+{
+	var uih = GetUIHelper(obj);
+
+	uih.AddDesktopComponent(url, type, l, t, w, h);
+
+	uih = null;
+}
+
+function AddFavorite(obj, url, title)
+{
+	var uih = GetUIHelper(obj);
+
+	uih.AddFavorite(url, title);
+
+	uih = null;
+}
+
+function ResetFirstBootMode(obj)
+{
+	var uih = GetUIHelper(obj);
+
+	uih.ResetFirstBootMode();
+
+	uih = null;
+}
+
+function ResetSafeMode(obj)
+{
+	var uih = GetUIHelper(obj);
+
+	uih.ResetSafeMode();
+	
+	uih = null;
+}
+
+function RefreshOfflineDesktop(obj)
+{
+	var uih = GetUIHelper(obj);
+
+	uih.RefreshOfflineDesktop();
+
+	uih = null;
+}
+
+function IsSubscribed(url, obj)
+{
+	var uih = GetUIHelper(obj);
+
+	if (uih.IsSubscribed(url))
+	{
+		alert("You are subscribed to " + url + "!");
+	}
+	else
+	{
+		alert("You are not subscribed to " + url + "!");
+	}
+
+	uih = null;
+}
+
+</script>
+
+</BODY>
+</html>

@@ -1,0 +1,15 @@
+WSPStartup(): should pass upcall table by reference, not by value.
+
+WSPGetProcTable(): lpProcTable should be "LPVOID FAR *" since it is used to
+    query multiple tables, not just the SPI table.
+
+WSPSelect(): should not pass nfds parameter, as this is ALWAYS ignored.
+
+Forcing SPI entrypoints to honor errors like WSAEINPROGRESS and
+    WSANOTINITIALISED means all service providers must maintain their own
+    per-thread state.
+
+For non-overlapped sockets, should they be _IO_ALERT or _IO_NONALERT?
+
+Use Reserved field of APC for flags sent to completion routine!
+

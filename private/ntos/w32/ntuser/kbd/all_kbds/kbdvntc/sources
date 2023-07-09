@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdvntc
+
+TARGETNAME=kbdvntc
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdvntc.c kbdvntc.rc
+
+NTTARGETFILE0=kbdvntc.h kbdvntc.rc kbdvntc.def

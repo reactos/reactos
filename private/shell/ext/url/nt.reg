@@ -1,0 +1,5 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved]
+"{FBF23B40-E3F0-101B-8488-00AA003E56F8}"="Internet shortcut extensions"
+

@@ -1,0 +1,153 @@
+LIBRARY		COMCTL32
+DESCRIPTION	'COMCTL32 - Custom controls 32-bit'
+
+SECTIONS
+    .bss    	READ WRITE SHARED	; initialized data
+    .data	READ WRITE SHARED
+    .idata	READ WRITE SHARED	; we only call other shared dlls
+    .rsrc 	READ SHARED		; resources
+
+EXPORTS
+;;=========================================================================
+;; Win31 and NT 3.1 compatible APIs exported by ordinal
+;;=========================================================================
+
+        MenuHelp                        @2
+        ShowHideMenuCtl                 @3
+        GetEffectiveClientRect          @4
+        DrawStatusText                  @5
+        CreateStatusWindow              @6
+        CreateToolbar                   @7
+        CreateMappedBitmap              @8
+;;      CreateHeaderWindowA             @9      ;; only in NT 3.1
+
+        MakeDragList                    @13
+        LBItemFromPt                    @14
+        DrawInsert                      @15
+        CreateUpDownControl             @16
+        InitCommonControls              @17
+
+;;=========================================================================
+;; these are public APIs that are exported by name
+;;=========================================================================
+
+        CreateToolbarEx
+        PropertySheet
+        CreatePropertySheetPage
+        DestroyPropertySheetPage
+
+;;=========================================================================
+;;  ImageList APIs, so many they get a custom comment!
+;;=========================================================================
+        ImageList_LoadImage
+        ImageList_Create
+        ImageList_Destroy
+        ImageList_GetImageCount
+        ImageList_SetBkColor
+        ImageList_GetBkColor
+        ImageList_Add
+        ImageList_AddIcon
+        ImageList_Replace
+        ImageList_ReplaceIcon
+        ImageList_Remove
+        ImageList_Draw
+        ImageList_DrawEx
+        ImageList_GetImageInfo
+        ImageList_GetImageRect
+        ImageList_Merge
+        ImageList_Write
+        ImageList_Read
+        ImageList_GetIcon
+        ImageList_AddMasked
+        ImageList_GetIconSize
+        ImageList_SetIconSize
+        ImageList_SetOverlayImage
+
+;;;;;;;;ImageList_StartDrag             ;Internal
+        ImageList_DragShowNolock
+        ImageList_BeginDrag
+        ImageList_EndDrag
+        ImageList_DragEnter
+        ImageList_DragMove
+        ImageList_DragLeave
+        ImageList_GetDragImage
+        ImageList_SetDragCursorImage
+
+;;=========================================================================
+;;  ANSI/UNICODE stuff
+;;=========================================================================
+
+        DrawStatusTextA         = DrawStatusText
+        CreateStatusWindowA     = CreateStatusWindow
+        PropertySheetA          = PropertySheet
+        CreatePropertySheetPageA= CreatePropertySheetPage
+        ImageList_LoadImageA    = ImageList_LoadImage
+
+        DrawStatusTextW
+        CreateStatusWindowW
+        PropertySheetW
+        CreatePropertySheetPageW
+        ImageList_LoadImageW
+
+;;=========================================================================
+;; these are internal APIs
+;; NOTE if you change these ordinals, you must change the ordinal defines
+;; in commctrl.h, because COMDLG32 does GetProcAddress() on a few of these
+;;=========================================================================
+
+        Cctl1632_ThunkData32                    ;Internal
+
+        Alloc                           @71     NONAME ;Internal
+        ReAlloc                         @72     NONAME ;Internal
+        Free                            @73     NONAME ;Internal
+        GetSize                         @74     NONAME ;Internal
+        Str_GetPtr                      @233    NONAME ;Internal
+        Str_SetPtr                      @234    NONAME ;Internal
+
+        CreateMRUList                   @151    NONAME ;Internal
+        FreeMRUList                     @152    NONAME ;Internal
+        AddMRUString                    @153    NONAME ;Internal
+        EnumMRUList                     @154    NONAME ;Internal
+        FindMRUString                   @155    NONAME ;Internal
+        DelMRUString                    @156    NONAME ;Internal
+
+        CreatePage                      @163    NONAME ;Internal
+        CreateProxyPage                 @164    NONAME ;Internal
+
+        AddMRUData                      @167    NONAME ;Internal
+        FindMRUData                     @169    NONAME ;Internal
+
+        DSA_Create                      @320    NONAME ;Internal
+        DSA_Destroy                     @321    NONAME ;Internal
+        DSA_GetItem                     @322    NONAME ;Internal
+        DSA_GetItemPtr                  @323    NONAME ;Internal
+        DSA_InsertItem                  @324    NONAME ;Internal
+        DSA_SetItem                     @325    NONAME ;Internal
+        DSA_DeleteItem                  @326    NONAME ;Internal
+        DSA_DeleteAllItems              @327    NONAME ;Internal
+
+        DPA_Create                      @328    NONAME ;Internal
+        DPA_Destroy                     @329    NONAME ;Internal
+        DPA_Grow                        @330    NONAME ;Internal
+        DPA_Clone                       @331    NONAME ;Internal
+        DPA_GetPtr                      @332    NONAME ;Internal
+        DPA_GetPtrIndex                 @333    NONAME ;Internal
+        DPA_InsertPtr                   @334    NONAME ;Internal
+        DPA_SetPtr                      @335    NONAME ;Internal
+        DPA_DeletePtr                   @336    NONAME ;Internal
+        DPA_DeleteAllPtrs               @337    NONAME ;Internal
+        DPA_Sort                        @338    NONAME ;Internal
+        DPA_Search                      @339    NONAME ;Internal
+        DPA_CreateEx                    @340    NONAME ;Internal
+
+        SendNotify                      @341    NONAME ;Internal
+
+        ; those string things
+        StrChr                          @350    NONAME ;Internal
+        StrRChr                         @351    NONAME ;Internal
+        StrCmpN                         @352    NONAME ;Internal
+        StrCmpNI                        @353    NONAME ;Internal
+        StrStr                          @354    NONAME ;Internal
+        StrStrI                         @355    NONAME ;Internal
+        StrCSpn                         @356    NONAME ;Internal
+        StrToInt                        @357    NONAME ;Internal

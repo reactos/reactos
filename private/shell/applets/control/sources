@@ -1,0 +1,33 @@
+NTLEANANDMEAN=
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=ctrllib
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+NOT_LEAN_AND_MEAN=1
+
+USE_LIBCMT=1
+
+C_DEFINES=-DUNICODE -D_UNICODE
+
+INCLUDES=$(BASEDIR)\private\shell\inc;$(BASEDIR)\private\windows\inc
+
+SOURCES= \
+         control.rc \
+         init.c
+
+UMTYPE=windows
+UMAPPL=control
+!IF $(386)
+UMENTRYABS=ModuleEntry@0
+!ELSE
+UMENTRYABS=ModuleEntry
+!ENDIF
+UMRES=$(O)\control.res
+UMLIBS= \
+        $(BASEDIR)\public\sdk\lib\*\imm32.lib    \
+        $(O)\ctrllib.lib

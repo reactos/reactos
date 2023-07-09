@@ -1,0 +1,10 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_DLL
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "LZ Expand/Compress API DLL"
+#define VER_INTERNALNAME_STR        "lz32\0"
+#define VER_ORIGINALFILENAME_STR    "LZ32.DLL"
+
+#include "common.ver"

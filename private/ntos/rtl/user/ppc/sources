@@ -1,0 +1,10 @@
+PPC_SOURCES= ..\ppc\chkstk.s   \
+             ..\ppc\context.c  \
+             ..\ppc\debugstb.s \
+             ..\ppc\exdsptch.c \
+             ..\ppc\getcalr.c  \
+             ..\ppc\largeint.s \
+             ..\ppc\lzntppc.s  \
+             ..\ppc\trampoln.s \
+             ..\ppc\xcptmisc.s \
+             ..\ppc\movemem.s

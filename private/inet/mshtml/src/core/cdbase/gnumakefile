@@ -1,0 +1,20 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+
+PRODUCT = CORE
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE INCLUDES
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+PROJECT_CFLAGS = \
+    ${INCLUDES:%=-I%} 
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+

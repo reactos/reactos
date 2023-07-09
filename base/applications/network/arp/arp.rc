@@ -1,6 +1,0 @@
-#define REACTOS_STR_FILE_DESCRIPTION   "ReactOS TCP/IPv4 Win32 arp"
-#define REACTOS_STR_INTERNAL_NAME      "arp"
-#define REACTOS_STR_ORIGINAL_FILENAME  "arp.exe"
-#define REACTOS_STR_ORIGINAL_COPYRIGHT "Ged Murphy (gedmurphy@gmail.com)"
-#include <reactos/version.rc>
-#include <arp_msg.rc>

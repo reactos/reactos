@@ -1,0 +1,4 @@
+ALT_PROJECT_TARGET=srvinf
+SERVER=1
+!include ..\sources.inc
+

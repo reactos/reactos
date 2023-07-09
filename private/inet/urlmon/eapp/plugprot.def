@@ -1,0 +1,49 @@
+#if 0
+
+  Microsoft Windows
+  Copyright (C) Microsoft Corporation, 1992 - 1992.
+  All rights reserved.
+
+  This .def file is preprocessed by the compiler to create the version for
+  the current build in the appropriate subdir.  Basically, whatever you
+  would have used in your code to control what is compiled when can be
+  used in this file for the same purpose.  The following defines are in
+  use at the time this file was written:
+
+     FLAT       - Used to indicate a NT/DOS7 build
+     i386       -   Intel i386/i486 build
+     MIPS       -   MIPS R3000/R4000 build
+     ALPHA      -   DEC Alpha build
+     PPC        -   PowerPC build
+     DBG        - Used to control Debug/Retail.  Set to 1 if Debug,
+                   0 if Retail.
+     WIN31      - Win16 build
+     __OS2__    - OS/2 build (used by CT mostly)
+
+  If none of these are used, it is assumed the entire file can be used
+  for all builds.
+
+#endif
+
+LIBRARY         plugprot 
+
+DESCRIPTION  'Microsoft (R) Component PlugProt 1.0 Base DLL 1.00'
+
+SECTIONS
+  SharedData       READ WRITE SHARED
+
+EXPORTS
+        DllRegisterServer           PRIVATE
+        DllUnregisterServer         PRIVATE
+
+        ; Standard Dll server/handler stuff
+        DllGetClassObject           PRIVATE
+        DllCanUnloadNow             PRIVATE
+
+#if DBG==1
+        RegisterDebugOut
+#endif // DBG == 1
+
+
+
+

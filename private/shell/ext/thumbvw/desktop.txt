@@ -1,0 +1,7 @@
+[ExtShellFolderViews]
+{8BEBB290-52D0-11d0-B7F4-00C04FD706EC}={8BEBB290-52D0-11d0-B7F4-00C04FD706EC}
+
+[{8BEBB290-52D0-11d0-B7F4-00C04FD706EC}]
+MenuName=Thumbnail View
+ToolTipText=Thumbnail View
+HelpText=Thumbnail View

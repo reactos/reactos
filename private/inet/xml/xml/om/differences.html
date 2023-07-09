@@ -1,0 +1,159 @@
+
+
+
+	<h3>Left bracket inside attribute value</h3>
+	<b>Type: </b>bug fix<br>
+	<b>Component: </b> Parser<br>
+	<b>Description: </b> The old parser allowed the &lt; character inside a quoted 
+        attribute value. The XML spec says this is illegal, and the new parser gives an error. <br>
+	<b>Impact: </b> Some erroneous files that used to parse will no longer parse. 
+
+
+
+	<h3>Omitted right bracket</h3>
+	<b>Type: </b>bug fix<br>
+	<b>Component: </b> Parser<br>
+	<b>Description: </b> The old parser allowed the right bracket closing a tag to be 
+        omitted. The new parser gives an error. <br>
+	<b>Impact: </b> Some erroneous files that used to parse will no longer parse. 
+
+
+
+	<h3>Illegal tag syntax</h3>
+	<b>Type: </b>bug fix<br>
+	<b>Component: </b> Parser<br>
+	<b>Description: </b> The old parser allowed a tag to be written as &lt;foo = "bar" &gt;. 
+        The new parser gives an error. <br>
+	<b>Impact: </b> Documents containing this illegal syntax will now receive a parse error. 
+
+
+
+	<h3>Illegal characters</h3>
+	<b>Type: </b>difference<br>
+	<b>Component: </b> Parser<br>
+	<b>Description: </b> Characters with codes in the range 0x80 to 0xBF are not legal UTF-8 
+        characters. However, the old parser replaced them with spaces instead of giving errors. 
+        Since some existing CDF files contain these characters, the new parser does not give an 
+        error either, but it leaves the incorrect character in the text instead of replacing it 
+        with a space. In the European code pages (e.g. windows-1252, windows-1254, etc.) this 
+        character range includes right and left quote characters, trademark symbols, etc. <br>
+	<b>Impact: </b> Some erroneous files will now work better than before. Nothing should break. 
+
+	<h3>Illegal PCDATA characters</h3>
+	<b>Type: </b>difference<br>
+	<b>Component: </b> Parser<br>
+	<b>Description: </b> The XML Spec says PCDATA must be 0x9, 0xA, 0xD, 0x20-0xD7FF, 0xE000-0xFFFD.
+        Anything not in this range is an error.  The old parser did not check this at all.
+	<b>Impact: </b> Some files containing this erroneous characters will break. 
+
+
+	<h3>Element text</h3>
+	<b>Type: </b>difference<br>
+	<b>Component: </b>IXMLElement::get_text<br>
+	<b>Description: </b> There were inconsistencies in what the old parser returned from get_text 
+        where there is no text. For a container element, it returned S_FALSE and null. For a leaf 
+        element, it returned S_OK and didn't alter the text pointer (bug!). The new parser returns 
+        S_OK and an empty string. <br>
+	<b>Impact: </b> Should not break any clients. 
+
+
+
+	<h3>Poorly formed attribute values</h3>
+	<b>Type: </b>bug fix<br>
+	<b>Component: </b>Parser<br>
+	<b>Description: </b> The old parser ignored extra tokens following in an element's opening tag. 
+        The new parser gives an error. <example> &lt;foo value="first" "second" 34 &gt; </example>
+	<br>
+	<b>Impact: </b> This change could cause files that previously parsed without errors to have errors. 
+
+
+
+	<h3>Processing instructions</h3>
+	<b>Type: </b>bug fix<br>
+	<b>Component: </b>Parser<br>
+	<b>Description: </b> There are three differences between the old parser and the new one related 
+        to processing instructions (PI's): <list>
+			<li>The old parser stored PI contents as upper case; the new one doesn't.</li>
+			<li>The old parser did not fold PI target names to upper case; the new one does.</li>
+		</list>
+	<br>
+	<b>Impact: </b> There is no change to which files parse or not, but the target names and text of 
+    PIs may be different. CDF should not be affected. 
+
+
+
+	<h3>Error reporting</h3>
+	<b>Type: </b>difference<br>
+	<b>Component: </b>IXMLError<br>
+	<b>Description: </b> The interface for reporting errors is bogus and not fully supported by 
+        the new parser. First, the string representing the line where the error occurred is not 
+        returned. In the worst case, the parsed file could consist of a single line of text, so 
+        there's no limit to how big this string could be. Since the parser does not keep the whole 
+        file in memory as it is being parsed, the string might not be available. Rather than keeping 
+        a copy of the text around in case it's needed for error reporting, the parser does not 
+        return the string if an error occurs. Second, the interface where an "expected token" and 
+        a "found token" are returned is not appropriate for all types of errors. For those types 
+        where it is appropriate, the new parser returns this information. Otherwise, it does not. 
+        There are three possible combinations of returned strings: <list>
+			<li>Both found and expected strings are returned.</li>
+			<li>Found string is returned and expected string is empty. This means there are several 
+            or many possible expected tokens.</li>
+			<li>Found string is empty. The expected string contains a descriptive error message.</li>
+		</list>
+	<br>
+	<b>Impact: </b> Some code that processes IXMLError information may not work as well as before. 
+
+
+
+	<h3>XML declaration attributes</h3>
+	<b>Type: </b>difference<br>
+	<b>Component: </b>Parser<br>
+	<b>Description: </b> The old parser ignored unrecognized attributes in the XML declaration. 
+        The new one gives an error. <br>
+	<b>Impact: </b> Some erroneous files that used to parse will no longer parse. Any files that 
+        contain the obsolete XML declaration attribute "RMD" will no longer parse. (The RMD 
+        attribute was never supported, so it should not be in use.) 
+
+
+
+	<h3>Normalizing attribute values</h3>
+	<b>Type: </b>bug fix<br>
+	<b>Component: </b>Parser<br>
+	<b>Description: </b> The old parser did not correctly normalize attribute values. The XML 
+        spec says that runs of white space should be replaced by a single space. The new parser 
+        does this correctly. <br>
+	<b>Impact: </b> Documents containing attributes whose values contain multiple white space 
+        sequences or newlines will be parsed differently. It's possible but unlikely that this 
+        will break any CDF files. 
+
+
+
+	<h3>CDATA now supported</h3>
+	<b>Type: </b>new feature<br>
+	<b>Component: </b>Parser<br>
+	<b>Description: </b> The old parser did not support CDATA; the new one does. If a document 
+        contains CDATA, the old parser will appear to process it (put_url appears to work), but 
+        get_root will then fail. <br>
+	<b>Impact: </b> Some documents that did not parse before will now parse. 
+
+
+
+	<h3>DOCTYPE name</h3>
+	<b>Type: </b>bug fix<br>
+	<b>Component: </b>IXMLDocument::get_doctype<br>
+	<b>Description: </b> The old parser did fold the DOCTYPE name to upper case; the new one does. <br>
+	<b>Impact: </b> Doctype was not used by the old parser, so the impact should be minimal. 
+
+
+
+	<h3>Version</h3>
+	<b>Type: </b>difference<br>
+	<b>Component: </b>IXMLDocument::get_version<br>
+	<b>Description: </b> The old parser returned S_FALSE for get_version if the document did 
+        not have an XML declaration. This was inconsistent with the behavior of get_encoding, 
+        which always returned S_OK, and returned "UTF-8" (the default) if there was no XML 
+        declaration. The new parser returns S_OK and "1.0" if there is no XML declaration. <br>
+	<b>Impact: </b> Should be minimal. 
+
+
+

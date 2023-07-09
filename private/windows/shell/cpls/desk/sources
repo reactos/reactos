@@ -1,0 +1,65 @@
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=desk
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+DLLENTRY=DllInitialize
+INCLUDES=..\..\inc;$(BASEDIR)\private\windows\inc;$(BASEDIR)\private\shell\inc
+
+NOT_LEAN_AND_MEAN=1
+
+C_DEFINES=-DWIN32 -DUNICODE -D_UNICODE
+
+# Make warnings equivalent to errors
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+USE_CRTDLL=1
+
+SOURCES=init.c      \
+        backdlg.c   \
+        globals.c   \
+        desk.c      \
+        pattern.c   \
+        backprev.c  \
+        ssdlg.c     \
+        exe.c       \
+        lookdlg.c   \
+        lookprev.c  \
+        color2.c    \
+        colorpic.c  \
+        desk.rc     \
+        setdrw.c    \
+        setinit.c   \
+        install2.c  \
+	dragsize.c  \
+        custfont.c  \
+        settings.cpp
+
+
+
+UMTYPE = windows
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32p.lib  \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(BASEDIR)\public\sdk\lib\*\syssetup.lib \
+           $(BASEDIR)\public\sdk\lib\*\setupapi.lib \
+           $(BASEDIR)\public\sdk\lib\*\cfgmgr32.lib \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+           $(BASEDIR)\public\sdk\lib\*\shell32p.lib \
+           $(BASEDIR)\public\sdk\lib\*\shlwapi.lib  \
+           $(BASEDIR)\public\sdk\lib\*\mpr.lib      \
+           $(BASEDIR)\public\sdk\lib\*\version.lib  \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+
+
+NTTARGETFILE0=setmsg.h setmsg.rc

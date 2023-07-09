@@ -1,0 +1,19 @@
+/********************************************************************/
+/*        CONTROL.RCV                                               */
+/*        Version control data generated from layouts.dat           */
+/********************************************************************/
+#ifdef WINNT
+#include <winver.h>
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Control Panel DLL"
+#define VER_INTERNALNAME_STR            "CONTROL"
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1995"
+#define VER_ORIGINALFILENAME_STR        "ACCESS.CPL"
+
+#include <common.ver>

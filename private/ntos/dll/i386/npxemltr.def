@@ -1,0 +1,15 @@
+;      SCCSID = @(#)npxemltr.def	13.2 89/11/15
+;
+;	 IBM/Microsoft Confidential
+;
+;	 Copyright (c) IBM Corporation 1987, 1989
+;	 Copyright (c) Microsoft Corporation 1987, 1989
+;
+;	 All Rights Reserved
+LIBRARY npxemltr
+
+DATA  NONE
+
+EXPORTS
+    NPXNPHandler
+    NPXFPDataSize

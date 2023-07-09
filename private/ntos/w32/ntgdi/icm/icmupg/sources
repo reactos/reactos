@@ -1,0 +1,73 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+!ifndef ICMROOT
+ICMROOT=$(BASEDIR)\private\ntos\w32\ntgdi\icm
+!endif
+
+#   Set this environment variable when building for Memphis
+#   This can be done on the build command line using the -nmake switch
+!IFDEF  MEMPHIS_BUILD
+
+!MESSAGE Building UPGRADE DLL for Memphis
+
+ANSI=1
+USE_MAPSYM=1
+MEMPHIS=1
+SUBSYSTEM_VERSION=4.00
+
+TARGETNAME=icmupg
+
+!ELSE
+
+!MESSAGE Building UPGRADE DLL for NT 5.0
+ANSI=1
+
+TARGETNAME=migrate
+UMTYPE=console
+UMLIBS=obj\*\migrate.lib
+
+ALT_PROJECT_TARGET=win9xmig\icm
+
+!ENDIF
+
+!include $(ICMROOT)\icmsrc.inc
+
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+DLLBASE=0x5e980000
+DLLENTRY=DllEntryPoint
+DLLDEF=migrate.def
+INCLUDES=.;$(ICMROOT)\inc;$(INCLUDES)
+
+NTLEGO=1
+NTKEEPRESOURCETMPFILES=1
+USE_CRTDLL=1
+
+
+SOURCES=icmupg.c icmupg.rc
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\winspool.lib \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+	   $(BASEDIR)\public\sdk\lib\*\setupapi.lib
+
+!IFDEF  MEMPHIS_BUILD
+TARGETLIBS=$(TARGETLIBS)                           \
+           $(BASEDIR)\public\sdk\lib\*\mscms.lib   
+!ENDIF
+
+PRECOMPILED_INCLUDE=icmupg.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj
+
+#
+# Defining NTTARGETFILE0 causes makefile.def to include .\makefile.inc
+#
+NTTARGETFILE0=msg.rc
+

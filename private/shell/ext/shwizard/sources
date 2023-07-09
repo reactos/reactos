@@ -1,0 +1,89 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = ..\..
+
+TARGET_BOTH     = 1
+#NOT_UNICODE     = 1
+
+!include $(CCSHELL_DIR)\common.inc
+
+#
+# Dont make a browser file
+#
+NO_BROWSER_FILE = 1
+
+
+USE_MSVCRT=1
+
+#
+# Common settings required by build.exe and makefile.def
+#
+
+
+# Need to renam to IESHWIZ in order to build
+#
+TARGETNAME      = ieshwiz
+
+TARGETPATH      = obj
+TARGETTYPE      = PROGRAM
+TARGETLIBS      = $(LIBRARY_PATH)\kernel32.lib      \
+                  $(LIBRARY_PATH)\user32.lib        \
+                  $(LIBRARY_PATH)\advapi32.lib      \
+                  $(LIBRARY_PATH)\shlwapi.lib       \
+                  $(LIBRARY_PATH)\shlwapip.lib      \
+                  $(LIBRARY_PATH)\comctl32.lib      \
+                  $(LIBRARY_PATH)\comctlp.lib      \
+                  $(LIBRARY_PATH)\shell32.lib       \
+                  $(LIBRARY_PATH)\shell32p.lib      \
+                  $(LIBRARY_PATH)\oleaut32.lib         \
+                  $(LIBRARY_PATH)\ole32.lib         \
+                  $(LIBRARY_PATH)\uuid.lib          \
+                  $(LIBRARY_PATH)\comdlg32.lib      \
+                  $(CCSHELL_DIR)\lib\$(O)\shguid.lib \
+                  $(CCSHELL_DIR)\lib\$(O)\shguidp.lib \
+                  $(CCSHELL_DIR)\lib\$(O)\stocklib.lib
+
+# bugbug: scousens.
+#         @0 needed because ModuleEntry is _stdcall.
+#         On mips _stdcall is mapped to nothing
+!if $(386)
+UMENTRYABS      = ModuleEntry@0
+!else
+UMENTRYABS      = ModuleEntry
+!endif
+
+
+#
+# List of sources
+#
+
+SOURCES         = shwizard.rc   \
+                  shwizard.cpp  \
+                  shwizutl.cpp  \
+                  strtpage.cpp  \
+                  pagea3.cpp    \
+                  paget1.cpp    \
+                  finisht.cpp   \
+                  pagermv.cpp   \
+                  comment.cpp   \
+                  finishr.cpp   \
+                  welcome.cpp   \
+                  common.cpp
+

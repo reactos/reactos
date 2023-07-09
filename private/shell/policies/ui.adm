@@ -1,0 +1,782 @@
+;;#if VERSION >= 3
+;
+;;;;;;;;;;;;;;;;;;
+CLASS USER ;;;;;;;
+;;;;;;;;;;;;;;;;;;
+
+
+CATEGORY !!WindowsNTUserSettings
+
+CATEGORY !!Arp
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Uninstall
+
+	POLICY !!ShowPostSetup
+		HELP !!ShowPostSetup_Help
+		VALUENAME ShowPostSetup
+	END POLICY
+	
+	POLICY !!NoAddRemovePrograms
+		HELP !!NoAddRemovePrograms_Help
+		VALUENAME NoAddRemovePrograms
+	END POLICY
+	
+	POLICY !!NoRemovePage
+		HELP !!NoRemovePage_Help
+		VALUENAME NoRemovePage
+	END POLICY
+	
+	POLICY !!NoAddPage
+		HELP !!NoAddPage_Help
+		VALUENAME NoAddPage
+	END POLICY
+	
+	POLICY !!NoWindowsSetupPage
+		HELP !!NoWindowsSetupPage_Help
+		VALUENAME NoWindowsSetupPage
+	END POLICY
+END CATEGORY ; ARP
+
+CATEGORY !!Comdlg
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Comdlg32
+        POLICY !!NoPlacesBar
+		HELP !!NoPlacesBar_Help 
+        	VALUENAME NoPlacesBar
+        END POLICY
+
+        POLICY !!NoBackButton 
+		HELP !!NoBackButton_Help
+	        VALUENAME NoBackButton
+        END POLICY
+
+        POLICY !!NoFileMRU 
+		HELP !!NoFileMRU_Help
+	        VALUENAME NoFileMru 
+        END POLICY
+	
+END CATEGORY ;;comdlg
+CATEGORY !!NetworkFolders
+  
+;CATEGORY !!CustomFolders
+   KEYNAME "Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
+	POLICY !!ShellName
+	      	HELP !!ShellName_Help
+		KEYNAME "Software\Microsoft\Windows NT\CurrentVersion\Winlogon"
+	     PART !!ShellNameInst         EDITTEXT REQUIRED
+            	VALUENAME "Shell"
+	     END PART	
+	END POLICY
+
+      	POLICY !!CustomFolders_Desktop
+        	HELP !!Desktop_Help
+             PART !!CustomFolders_DesktopPath                EDITTEXT REQUIRED  EXPANDABLETEXT
+	      	DEFAULT !!CustomFolders_DesktopDefault
+		VALUENAME "Desktop"
+             END PART
+      END POLICY
+      
+      	POLICY !!CustomFolders_Personal
+      	  	HELP !!Personal_Help
+            PART !!CustomFolders_PersonalPath                EDITTEXT REQUIRED  EXPANDABLETEXT
+        	DEFAULT !!CustomFolders_PersonalDefault
+		VALUENAME "Personal"
+            END PART
+      END POLICY
+
+      POLICY !!CustomFolders_StartMenu
+        HELP !!StartMenu_Help
+        PART !!CustomFolders_StartMenuPath              EDITTEXT REQUIRED  EXPANDABLETEXT
+        DEFAULT !!CustomFolders_StartMenuDefault
+		VALUENAME "Start Menu"
+            END PART
+      END POLICY
+
+      POLICY !!CustomFolders_Programs
+        HELP !!Programs_Help
+        PART !!CustomFolders_ProgramsPath               EDITTEXT REQUIRED EXPANDABLETEXT
+        DEFAULT !!CustomFolders_ProgramsDefault
+		VALUENAME "Programs"
+            END PART
+	END POLICY
+
+      POLICY !!CustomFolders_Startup
+        HELP !!Startup_Help
+        PART !!CustomFolders_StartupPath                EDITTEXT REQUIRED  EXPANDABLETEXT
+      	DEFAULT !!CustomFolders_StartupDefault
+		VALUENAME "Startup"
+      	END PART
+      END POLICY
+
+      POLICY !!CustomFolders_AppData
+        HELP !!AppData_Help
+        PART !!CustomFolders_AppDataPath                EDITTEXT REQUIRED  EXPANDABLETEXT
+        DEFAULT !!CustomFolders_AppDataDefault
+		VALUENAME "AppData"
+	END PART
+	
+
+
+     END POLICY
+
+     
+     POLICY !!CustomFolders_NetHood
+        HELP !!NetHood_Help
+        PART !!CustomFolders_NetHoodPath                EDITTEXT REQUIRED  EXPANDABLETEXT
+        DEFAULT !!CustomFolders_NetHoodDefault
+		VALUENAME "NetHood"
+            END PART
+     END POLICY
+
+;    END CATEGORY ;Custom Folders
+
+;    CATEGORY !!CustomSharedFolders
+;     KEYNAME "Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
+
+      POLICY !!CustomFolders_SharedPrograms
+        HELP !!CommonPrograms_Help
+        PART !!CustomFolders_SharedProgramsPath         EDITTEXT REQUIRED  EXPANDABLETEXT
+        DEFAULT !!CustomFolders_SharedProgramsDefault
+		VALUENAME "Common Programs"
+        END PART
+      END POLICY
+
+      POLICY !!CustomFolders_SharedDesktop
+        HELP !!CommonDesktop_Help
+        PART !!CustomFolders_SharedDesktopPath          EDITTEXT REQUIRED  EXPANDABLETEXT
+        DEFAULT !!CustomFolders_SharedDesktopDefault
+		VALUENAME "Common Desktop"
+        END PART
+     END POLICY
+
+      POLICY !!CustomFolders_SharedStartMenu
+        HELP !!CommonStartMenu_Help
+        PART !!CustomFolders_SharedStartMenuPath        EDITTEXT REQUIRED  EXPANDABLETEXT
+        DEFAULT !!CustomFolders_SharedStartMenuDefault
+		VALUENAME "Common Start Menu"
+        END PART
+      END POLICY
+
+      POLICY !!CustomFolders_SharedStartup
+        HELP !!CommonStartUP_Help
+        PART !!CustomFolders_SharedStartupPath          EDITTEXT REQUIRED  EXPANDABLETEXT
+            DEFAULT !!CustomFolders_SharedStartupDefault
+		VALUENAME "Common Startup"
+            END PART
+	END POLICY
+
+      POLICY !!HideStartMenuSubfolders
+      	KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+            	HELP !!NoStartMenuSubFolders_Help
+		VALUENAME NoStartMenuSubFolders
+                        PART !!HideStartMenuSubfolders_Tip1             TEXT  END PART
+                        PART !!HideStartMenuSubfolders_Tip2             TEXT  END PART
+      END POLICY
+
+;   END CATEGORY ; Shared Folders
+
+
+END CATEGORY ; Network Resident Folders
+
+CATEGORY !!DesktopDisplay
+CATEGORY !!Desktop
+
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+        POLICY !!NoSaveSettings		
+        	HELP !!NoSaveSettings_Help
+		VALUENAME "NoSaveSettings"
+	END POLICY
+	
+	POLICY !!DisablePersonalDirChange
+		HELP !!DisablePersonalDirChange_Help
+		VALUENAME DisablePersonalDirChange
+	END POLICY   
+
+        POLICY !!NoInternetIcon 
+        	HELP !!NoInternetIcon_Help
+		VALUENAME NoInternetIcon
+        END POLICY
+
+        POLICY !!NoNetHood 
+        	HELP !!NoNetHood_Help
+		VALUENAME NoNetHood
+        END POLICY
+
+  	POLICY !!sz_DB_DragDropClose 
+		HELP !!NoCloseDragDropBands_Help
+		VALUENAME "NoCloseDragDropBands" ;taken out of Policies\AD
+        END POLICY
+        
+	POLICY !!sz_DB_Moving 
+        	HELP !!NoMovingBands_Help
+	        VALUENAME "NoMovingBands"	;taken out of Policies\AD
+        END POLICY
+
+        POLICY !!NoDesktop 
+        	HELP !!NoDesktop_Help
+		VALUENAME NoDesktop
+        END POLICY
+
+END CATEGORY  	;Desktop Icons
+    
+   CATEGORY !!sz_ActiveDesktop_Title
+	KEYNAME "Software\Microsoft\Windows\CurrentVersion\Policies\ActiveDesktop"      
+        POLICY !!sz_ATC_NoComponents 
+            	HELP !!NoComponents_Help
+		VALUENAME "NoComponents"
+		PART !!NoComponents_Tip		TEXT	END PART
+        END POLICY
+        POLICY !!sz_ATC_DisableAdd
+		HELP !!NoAddingComponents_Help 
+            	VALUENAME "NoAddingComponents"
+        END POLICY
+
+        POLICY !!sz_ATC_DisableDel 
+            	HELP !!NoDeletingComponents_Help
+		VALUENAME "NoDeletingComponents"
+        END POLICY
+            
+        POLICY !!sz_ATC_DisableEdit 
+                HELP !!NoEditingComponents_Help
+		VALUENAME "NoEditingComponents"
+        END POLICY
+
+        POLICY !!sz_ATC_DisableClose 
+            	HELP !!NoClosingComponents_Help
+		VALUENAME "NoClosingComponents"
+        END POLICY
+
+
+	POLICY !!NoActiveDesktop
+        KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+	    	HELP !!NoActiveDesktop_Help
+		VALUENAME NoActiveDesktop
+		PART !!NoActiveDesktop_Tip	TEXT	END PART
+        END POLICY
+
+        POLICY !!NoActiveDesktopChanges 
+        KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+	  	HELP !!NoActiveDesktopChanges_Help
+		VALUENAME NoActiveDesktopChanges
+        END POLICY
+
+	
+
+   
+END CATEGORY ;ACTIVE DESKTOP
+
+    
+CATEGORY !!DISPLAY
+	KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\System
+			
+	POLICY !!CPL_Display_Disable 			
+		HELP !!NoDispCpl_Help
+		VALUENAME NoDispCPL
+	END POLICY
+
+	POLICY !!CPL_Display_HideBkgnd 			
+		HELP !!NoDispBackgroundPage_Help
+		VALUENAME NoDispBackgroundPage
+	END POLICY
+
+	POLICY !!CPL_Display_HideScrsav			
+		HELP !!NoDispScrSavPage_Help
+		VALUENAME NoDispScrSavPage
+	END POLICY
+
+	POLICY !!CPL_Display_HideAppearance 		
+		HELP !!NoDisAppearancePage_Help
+		VALUENAME NoDispAppearancePage
+	END POLICY
+
+	POLICY !!CPL_Display_HideSettings 		
+		HELP !!NoDispSettingsPage_Help
+		VALUENAME NoDispSettingsPage
+	END POLICY
+
+	POLICY !!sz_DWP_NoHTMLPaper 
+	KEYNAME "Software\Microsoft\Windows\CurrentVersion\Policies\ActiveDesktop"
+		HELP !!NoHTMLWallPaper_Help
+		VALUENAME "NoHTMLWallPaper"
+	END POLICY
+        
+	POLICY !!sz_DWP_DisableChanges
+	KEYNAME "Software\Microsoft\Windows\CurrentVersion\Policies\ActiveDesktop"
+	       	HELP !!NoChangingWallPaper_Help
+		VALUENAME "NoChangingWallPaper"
+        END POLICY
+
+	
+END CATEGORY ;Display
+
+END CATEGORY ; DesktopDisplay
+
+CATEGORY !!Explorer
+	KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+
+	POLICY !!ClassicShell 
+		HELP !!ClassicShell_Help
+		VALUENAME ClassicShell
+        END POLICY
+
+    	
+	POLICY !!NoOptions
+        	HELP !!NoOptions_Help
+		VALUENAME "NoOptions"
+        END POLICY
+
+        POLICY !!NoFileMenu 
+        	HELP !!NoFileMenu_Help
+		VALUENAME NoFileMenu
+        END POLICY
+        
+	POLICY !!NoViewContextMenu 
+        	HELP !!NoViewContextMenu_Help
+		VALUENAME NoViewContextMenu
+        END POLICY
+
+        POLICY !!EnforceShellExtensionSecurity 
+        	HELP !!EnforceShellExtensionSecurity_Help
+		VALUENAME EnforceShellExtensionSecurity
+        END POLICY
+
+        POLICY !!LinkResolveIgnoreLinkInfo 
+        	HELP !!LinkResolveIgnoreLinkInfo_Help
+		VALUENAME LinkResolveIgnoreLinkInfo
+        END POLICY
+
+        POLICY !!NoDrives 
+        	HELP !!NoDrives_Help
+		VALUEON NUMERIC 67108863    ; low 26 bits on (1 bit per drive)
+		
+	 END POLICY
+
+        POLICY !!NoNetConnectDisconnect 
+        	HELP !!NoNetConnectDisconnect_Help
+		VALUENAME NoNetConnectDisconnect
+        END POLICY
+        
+        POLICY !!NoChangeAnimation 
+        	HELP !!NoChangeAnimation_Help
+		VALUENAME NoChangeAnimation
+        END POLICY
+
+        POLICY !!NoChangeKeyboardNavigationIndicators 
+        	HELP !!NoChangeKeyboardNavigationIndicators_Help
+		VALUENAME NoChangeKeyboardNavigationIndicators
+        END POLICY
+    
+	;POLICY !!NoDFSTab
+
+
+	POLICY !!NoWorkgroupContents 
+	KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Network
+	  	HELP !!NoWorkgroupContents_Help
+		VALUENAME NoWorkgroupContents
+	END POLICY
+
+	POLICY !!NoEntireNetwork	
+	KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Network
+		HELP !!NoEntireNetwork_Help
+		VALUENAME "NoEntireNetwork"
+	END POLICY
+
+	POLICY !!MaxRecentDocs          
+                HELP !!MaxRecentDocs_Help
+        	PART !!MaxRecentDocs          NUMERIC REQUIRED
+		VALUENAME MaxRecentDocs
+        	DEFAULT 15
+        	END PART
+	END POLICY
+END CATEGORY ; Shell
+
+CATEGORY !!LogonLogoff
+        KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\System
+	POLICY !!DisableTaskMgr	
+        	HELP !!DisableTaskMgr_Help
+		VALUENAME "DisableTaskMgr"
+        END POLICY
+
+        POLICY !!DisableLockWorkstation 	
+		HELP !!DisableLockWorkstation_Help
+        	VALUENAME DisableLockWorkstation
+        END POLICY
+
+        POLICY !!DisableChangePassword	
+		HELP !!DisableChangePassword_Help
+	        VALUENAME DisableChangePassword
+        END POLICY
+
+	POLICY !!NoLogoff 
+      	KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+		HELP !!NoLogOff_Help
+		VALUENAME NoLogoff
+        END POLICY
+
+       POLICY !!DisableClose
+       KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+	 	HELP !!NoClose_Help
+		VALUENAME NoClose
+	 END POLICY
+
+END CATEGORY ; LogonLogoff
+
+
+
+CATEGORY !!StartMenu
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+    ;;POLICY !!StartMenu
+        POLICY !!NoFavoritesMenu 
+        	HELP !!NoFavoritesMenu_Help
+		VALUENAME NoFavoritesMenu
+        END POLICY
+
+        POLICY !!NoFind 
+        	HELP !!NoFind_Help
+		VALUENAME NoFind
+        END POLICY
+
+        POLICY !!NoRun
+		HELP !!NoRun_Help 
+        	VALUENAME NoRun
+        END POLICY
+
+         POLICY !!NoWindowsUpdate
+		HELP !!NoWindowsUpdate_Help 
+        	VALUENAME NoWindowsUpdate
+        END POLICY
+
+        POLICY !!NoChangeStartMenu 
+		HELP !!NoChangeStartMenu_Help
+        	VALUENAME NoChangeStartMenu
+        END POLICY
+
+        POLICY !!NoRecentDocsMenu
+		HELP !!NoRecentDocsMenu_Help 
+        	VALUENAME NoRecentDocsMenu
+        END POLICY
+
+        POLICY !!NoRecentDocsHistory 
+		HELP !!NoRecentDocsHistory_Help
+        	VALUENAME NoRecentDocsHistory
+        END POLICY
+
+        POLICY !!ClearRecentDocsOnExit
+		HELP !!ClearRecentDocsOnExit_Help 
+        	VALUENAME ClearRecentDocsOnExit
+        END POLICY
+
+        POLICY !!NoClose 
+		HELP !!NoClose_Help
+        	VALUENAME NoClose
+        END POLICY
+
+        POLICY !!NoSetFolders 
+		HELP !!NoSetFolders_Help
+        	VALUENAME NoSetFolders
+        END POLICY
+
+        POLICY !!NoControlPanel
+		HELP !!NoControlPanel_Help 
+        	VALUENAME NoControlPanel
+        END POLICY
+
+        POLICY !!NoSetTaskbar 
+		HELP !!NoSetTaskbar_Help
+        	VALUENAME NoSetTaskbar
+        END POLICY
+
+        POLICY !!NoTrayContextMenu 
+		HELP !!NoTrayContextMenu_Help
+        	VALUENAME NoTrayContextMenu
+        END POLICY
+
+        POLICY !!NoStartMenuSubFolders
+		HELP !!NoStartMenuSubFolders_Help 
+        	VALUENAME NoStartMenuSubFolders
+        END POLICY
+
+	POLICY !!NoCommonGroups 
+		HELP !!NoCommonGroups_Help
+	      	VALUENAME NoCommonGroups
+        END POLICY
+
+	POLICY !!NoInstrumentation
+		HELP !!NoInstrumentation_Help
+		VALUENAME NoInstrumentation
+	END POLICY
+
+        POLICY !!MemCheckBoxInRunDlg
+   	     	HELP !!MemCheckBoxInRunDlg_Help
+		VALUENAME MemCheckBoxInRunDlg
+        END POLICY
+
+END CATEGORY ; StartMenu
+
+CATEGORY !!Printers
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+    ;;POLICY !!Printers
+        POLICY !!NoDeletePrinter 
+        	HELP !!NoDeletePrinter_Help
+		VALUENAME NoDeletePrinter
+        END POLICY
+
+        POLICY !!NoAddPrinter 
+        	HELP !!NoAddPrinter_Help
+		VALUENAME NoAddPrinter
+        END POLICY
+END CATEGORY ; Printers
+
+END CATEGORY ; UserInterface
+
+
+[strings]
+;;Shelladm
+ClassicShell="Enable Classic Shell"
+ClearRecentDocsOnExit="Clear history of recent opened documents on exit"
+Comdlg="Common Open File Dialog"
+ComdlgSub="Common Open File Dialog Restrictions"
+Desktop="Desktop Icons/Toolbars"
+DesktopDisplay = "Desktop & Display
+DesktopSub="General Desktop"
+Display = "Display Control Panel"
+EnforceShellExtensionSecurity="Only allow approved Shell extensions"
+Explorer="Explorer"
+ExplorerWindow = "Explorer Window"
+LinkResolveIgnoreLinkInfo="Do not track Shell shortcuts during roaming"
+MaxRecentDocs="Maximum number of Recent documents"
+MemCheckBoxInRunDlg="Add Run Dialog CheckBox for New Memory Space."
+NoActiveDesktop="Disable Active Desktop"
+NoActiveDesktopChanges="Do not allow changes to Active Desktop"
+NoAddPrinter="Disable Addition of Printers"
+NoBackButton="Hide the common dialog back button"
+NoChangeAnimation="Disable UI to change menu animation setting"
+NoChangeKeyboardNavigationIndicators="Disable UI to change keyboard navigation indicator setting"
+NoChangeStartMenu="Disable drag and drop context menus on the Start Menu"
+NoClose="Disable Shut Down command"
+NoCommonGroups="Hide common program groups in Start Menu"
+NoControlPanel="Disable changes to Control Panel Settings"
+NoDeletePrinter="Disable Deletion of Printers"
+NoDesktop="Hide all icons on Desktop"
+NoDrives="Hide Floppy Drives in My Computer"
+NoFavoritesMenu="Remove Favorites menu from Start Menu"
+NoFileMenu="Disable File menu in Shell folders"
+NoFileMRU="Remove the common dialog MRU dropdown"
+NoFind="Remove Search menu from Start Menu"
+NoFolderOptions="Remove the Folder Options menu item from the Settings menu"
+NoInternetIcon="Hide Internet Explorer icon"
+NoLogoff="Disable Logoff"
+NoNetConnectDisconnect="Disable net connections/disconnections"
+NoNetHood="Hide My Network Places icon"
+NoPlacesBar="Hide the common dialog places bar"
+NoRecentDocsHistory="Do not keep history of recently opened documents"
+NoRecentDocsMenu="Remove Documents menu from Start Menu"
+NoRun="Remove Run menu from Start Menu"
+NoSetActiveDesktop="Remove the Active Desktop item from the Settings menu"
+NoSetFolders="Disable changes to Printers and Control Panel Settings"
+NoSetTaskbar="Disable changes to Taskbar and Start Menu Settings"
+NoStartMenuSubFolders="Disable user programs at the root of Start Menu"
+NoTrayContextMenu="Disable context menu for Taskbar"
+NoViewContextMenu="Disable context menu in Shell folders"
+NoWindowsUpdate="Remove the Windows Update item from the Settings menu"
+Printers="Printers"
+StartMenu="Start Menu"
+System="System Application Control"
+WindowsNTSystemSettings="Operating System Settings"
+WindowsNTUserSettings="User Interface"
+
+sz_Desktop_Title="Desktop Settings"
+;;;;;; Active Desktop Items
+sz_ActiveDesktop_Title="Active Desktop"
+sz_ATC_NoComponents="Disable ALL Active Desktop items"
+sz_ATC_DisableAdd="Disable adding ANY Active Desktop items"
+sz_ATC_DisableDel="Disable deleting ANY Active Desktop items"
+sz_ATC_DisableEdit="Disable editing ANY Active Desktop items"
+sz_ATC_DisableClose="Disable closing ANY Active Desktop items"
+
+;;;;;; Desktop Wall Paper
+sz_WallPaper_Title="Desktop WallPaper Settings"
+sz_DWP_NoHTMLPaper="No HTML wallpaper"
+sz_DWP_DisableChanges="Disable changing wallpaper"
+
+;;;;;; Desktop Bands
+sz_DeskBands_Title="Desktop Toolbars Settings"
+sz_DB_DragDropClose="Disable adding, dragging, dropping and closing ALL toolbars"
+sz_DB_Moving="Disable resizing ALL toolbars"
+
+
+;;common.adm
+ControlPanel="Control Panel"
+CPL_Display="Control Panel\Display Restrictions"
+CPL_Display_Restrict="Restrict display"
+CPL_Display_Disable="Deny access to display icon"
+CPL_Display_HideBkgnd="Hide Background tab"
+CPL_Display_HideScrsav="Hide Screen Saver tab"
+CPL_Display_HideAppearance="Hide Appearance tab"
+CPL_Display_HideSettings="Hide Settings tab"
+Desktop="Desktop"
+NoWorkgroupContents="No workgroup contents in My Network Places"
+NoEntireNetwork="No Entire Network in My Network Places"
+NoSaveSettings="Don't save settings at exit"
+
+
+;;;Winnt.adm
+CustomFolders_AppData="Custom: Application Data folder"
+CustomFolders_AppDataDefault="%USERPROFILE%\Application Data"
+CustomFolders_AppDataPath="Path to location of Application Data"
+CustomFolders_Desktop="Custom: Desktop icons"
+CustomFolders_DesktopDefault="%USERPROFILE%\Desktop"
+CustomFolders_DesktopPath="Path to location of desktop icons"
+CustomFolders_NetHood="Custom: My Network Places"
+CustomFolders_NetHoodDefault="Default: %USERPROFILE%\NetHood"
+CustomFolders_NetHoodPath="Path to location of "My Network Places" items"
+CustomFolders_Personal="Custom: My Documents folder"
+CustomFolders_PersonalDefault="%USERPROFILE%\Desktop\My Documents"
+CustomFolders_PersonalPath="Path to document storage location"
+CustomFolders_Programs="Custom: Programs folder"
+CustomFolders_ProgramsDefault="%USERPROFILE%\Start Menu\Programs"
+CustomFolders_ProgramsPath="Path to location of Programs items"
+CustomFolders_SharedDesktop="Custom Shared: Desktop icons"
+CustomFolders_SharedDesktopDefault="%ALLUSERSPROFILE%\Desktop"
+CustomFolders_SharedDesktopPath="Path to location of shared desktop icons"
+CustomFolders_SharedPrograms="Custom Shared: Programs folder"
+CustomFolders_SharedProgramsDefault="%ALLUSERSPROFILE%\Start Menu\Programs"
+CustomFolders_SharedProgramsPath="Path to location of shared Programs items"
+CustomFolders_SharedStartMenu="Custom Shared: Start menu"
+CustomFolders_SharedStartMenuDefault="%ALLUSERSPROFILE%\Start Menu"
+CustomFolders_SharedStartMenuPath="Path to location of shared Start menu items"
+CustomFolders_SharedStartup="Custom Shared: Startup folder"
+CustomFolders_SharedStartupDefault="%ALLUSERSPROFILE%\Start Menu\Programs\Startup"
+CustomFolders_SharedStartupPath="Path to location of shared Startup items"
+CustomFolders_StartMenu="Custom: Start menu"
+CustomFolders_StartMenuDefault="%USERPROFILE%\Start Menu"
+CustomFolders_StartMenuPath="Path to location of Start menu items"
+CustomFolders_Startup="Custom: Startup folder"
+CustomFolders_StartupDefault="%USERPROFILE%\Start Menu\Programs\Startup"
+CustomFolders_StartupPath="Path to location of Startup items"
+CustomFolders="Custom: User Folders"
+CustomSharedFolders="Custom All Users Folders"
+CustomShell="Custom user interface"
+DisableChangePassword="Disable Change Password"
+DisableClose="Remove Shut Down command from Start menu" 
+DisableLockWorkstation="Disable Lock Workstation"
+DisableLogoff="Disable Logoff"
+DisableTaskMgr="Disable Task Manager"
+HideStartMenuSubfolders_Tip1="Check this if you use a custom Programs folder"
+HideStartMenuSubfolders_Tip2="or custom desktop icons."
+HideStartMenuSubfolders="Hide Start menu subfolders"
+NoOptions="Remove View->Options menu from Explorer"
+NoResolveSearch="Do not use the search-based method when resolving shell shortcuts"
+NoResolveTrack="Do not use the tracking-based method when resolving shell shortcuts"
+ShellName="Custom: Shell"
+ShellNameInst="Shell name (eg: explorer.exe)"
+
+
+
+;;;NEW
+LogonLogoff = "Logon and Logoff "
+NetworkFolders="Customized Folders"
+ARP = "Add/Remove Programs"
+ShowPostSetup = "Hide the Windows Setup (Components) tab "
+NoAddRemovePrograms = "Hide Add New Programs page"
+NoRemovePage = "Hide Change or Remove Programs page"
+NoAddPage = "Hide Add New Programs page"
+NowindowsSetupPage = "Hide Windows Setup page"
+NoInstrumentation= "Prohibits users from enabling instrumentation"
+DisablePersonalDirChange = "Disallow changing Path of My Documents"
+NoActiveDesktop_Tip = "Disallows HTML and Jpg Wallpaper"
+NoComponents_Tip = "Still allows HTML and Jpg Wallpaper"
+
+;;Help files
+ShowPostSetup_Help="Help is under construction"
+NoAddRemovePrograms_Help="Help is under construction"
+NoRemovePage_Help="Help is under construction"
+NoAddPage_Help="Help is under construction"
+NoWindowsSetupPage_Help="Help is under construction"
+NoPlacesBar_Help="Help is under construction"
+NoBackButton_Help="Help is under construction"
+NoFileMRU_Help="Help is under construction"
+NoSaveSettings_Help="Help is under construction"
+NoInternetIcon_Help="Help is under construction"
+NoNetHood_Help="Help is under construction"
+NoEntireNetwork_Help="Help is under construction"
+NoWorkGroupContents_Help="Help is under construction"
+NoDesktop_Help="Help is under construction"
+ClassicShell_Help="Help is under construction"
+NoComponents_Help="Help is under construction"
+NoAddingComponents_Help="Help is under construction" 
+NoDeletingComponents_Help="Help is under construction"
+NoEditingComponents_Help="Help is under construction"
+NoClosingComponents_Help="Help is under construction"
+NoMovingBands_Help="Help is under construction"
+NoCloseDragDropBands_Help="Help is under construction"
+NoActiveDesktop_Help="Help is under construction"
+NoActiveDesktopChanges_Help="Help is under construction"
+NoDispCpl_Help="Help is under construction"
+NoDispBackgroundPage_Help="Help is under construction"
+NoDispScrSavPage_Help="Help is under construction"
+NoDisAppearancePage_Help="Help is under construction"
+NoDispSettingsPage_Help="Help is under construction"
+NoHTMLWallPaper_Help="Help is under construction"
+NoChangingWallPaper_Help="Help is under construction"
+Wallpaper_Help="Help is under construction"
+TileWallpaper_Help="Help is under construction"
+ColorScheme_Help="Help is under construction"
+NoOptions_Help="Help is under construction"
+NoFileMenu_Help="Help is under construction"
+NoViewContextMenu_Help="Help is under construction"
+EnforceShellExtensionSecurity_Help="Help is under construction"
+LinkResolveIgnoreLinkInfo_Help="Help is under construction"
+NoDrives_Help="Help is under construction"
+NoNetConnectDisconnect_Help="Help is under construction"
+NoChangeAnimation_Help="Help is under construction"
+NoChangeKeyboardNavigationIndicators_Help="Help is under construction"
+NoWorkgroupContents_Help="Help is under construction"
+MaxRecentDocs_Help="Help is under construction"
+DisableTaskMgr_Help="Help is under construction"
+DisableLockWorkstation_Help="Help is under construction"
+DisableChangePassword_Help="Help is under construction"
+NoLogOff_Help="Help is under construction"
+NoClose_Help="Help is under construction"
+ShellName_Help="Help is under construction"
+Desktop_Help="Help is under construction"
+Personal_Help="Help is under construction"
+StartMenu_Help="Help is under construction"
+Programs_Help="Help is under construction"
+Startup_Help="Help is under construction"
+AppData_Help="Help is under construction"
+NoStartMenuSubFolders_Help="Help is under construction"
+NetHood_Help="Help is under construction"
+CommonPrograms_Help="Help is under construction"
+CommonDesktop_Help="Help is under construction"
+CommonStartMenu_Help="Help is under construction"
+CommonStartUP_Help="Help is under construction"
+NoFavoritesMenu_Help="Help is under construction"
+NoFind_Help="Help is under construction"
+NoRun_Help="Help is under construction"
+NoSetActiveDesktop_Help="Help is under construction"
+NoWindowsUpdate_Help="Help is under construction" 
+NoChangeStartMenu_Help="Help is under construction"
+NoFolderOptions_Help="Help is under construction" 
+NoRecentDocsMenu_Help="Help is under construction" 
+NoRecentDocsHistory_Help="Help is under construction"
+ClearRecentDocsOnExit_Help="Help is under construction" 
+NoClose_Help="Help is under construction"
+NoSetFolders_Help="Help is under construction"
+NoControlPanel_Help="Help is under construction" 
+NoSetTaskbar_Help="Help is under construction"
+NoTrayContextMenu_Help="Help is under construction"
+NoStartMenuSubFolders_Help="Help is under construction"
+NoCommonGroups_Help="Help is under construction"
+NoInstrumentation_Help="Help is under construction"
+MemCheckBoxInRunDlg_Help="Help is under construction"
+NoDeletePrinter_Help="Help is under construction"
+NoAddPrinter_Help="Help is under construction"
+DisablePersonalDirChange_Help = "Help is under construction"
+
+
+
+
+
+
+
+
+

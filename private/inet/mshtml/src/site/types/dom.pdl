@@ -1,0 +1,83 @@
+#ifndef _DOM_PDL_
+#define _DOM_PDL_   1
+
+#include "types.pdl"
+#include "element.pdl"
+
+file dom.pdl
+
+import types.pdl
+import element.pdl
+
+
+interface IHTMLDOMNode super:IDispatch guid:3050f5da-98b5-11cf-bb82-00aa00bdce0b
+	refprop		CElement:nodeType
+	refprop		CElement:parentNode
+	refmethod   CElement:hasChildNodes
+	refprop		CElement:childNodes
+	refprop		CElement:attributes
+	refmethod	CElement:insertBefore
+	refmethod	CElement:removeChild
+	refmethod	CElement:replaceChild
+	refmethod	CElement:cloneNode
+	refmethod	CElement:removeNode 
+	refmethod	CElement:swapNode
+	refmethod	CElement:replaceNode
+	refmethod	CElement:appendChild
+	refprop		CElement:nodeName
+	refprop		CElement:nodeValue
+	refprop		CElement:firstChild
+	refprop		CElement:lastChild
+	refprop		CElement:previousSibling
+	refprop		CElement:nextSibling
+
+interface IHTMLDOMAttribute super:IDispatch guid:3050f4b0-98b5-11cf-bb82-00aa00bdce0b
+	refprop		CAttribute:nodeName
+	refprop		CAttribute:nodeValue
+	refprop		CAttribute:specified
+
+tearoff CAttribute interface:IHTMLDOMAttribute
+
+class CAttribute \
+        name:HTMLDOMAttribute \
+        super:CBase \
+        primaryinterface:IHTMLDOMAttribute \
+        guid:3050f4b2-98b5-11cf-bb82-00aa00bdce0b \
+        mondoguid:3050f564-98b5-11cf-bb82-00aa00bdce0b
+
+    implements IHTMLDOMAttribute
+
+    property nodeName       atype:BSTR         dispid:DISPID_DOMATTRIBUTE   type:CStr          abstract get
+    property nodeValue      atype:VARIANT      dispid:DISPID_VALUE       type:VARIANT       abstract get set maxstrlen:pdlNoLimit
+    property specified  atype:VARIANT_BOOL dispid:DISPID_DOMATTRIBUTE+1 type:VARIANT_BOOL  abstract get 
+
+interface IHTMLDOMTextNode super:IDispatch guid:3050f4b1-98b5-11cf-bb82-00aa00bdce0b
+	refprop		CDOMTextNode:data
+	refmethod   CDOMTextNode:toString
+	refprop		CDOMTextNode:length
+	refmethod	CDOMTextNode:splitText
+
+tearoff CDOMTextNode interface:IHTMLDOMTextNode
+tearoff CDOMTextNode interface:IHTMLDOMNode
+    
+tearoff CDOMTextNode interface:IObjectIdentity  
+    tearmethod IsEqualObject            mapto:IsEqualObject
+
+class CDOMTextNode \
+        name:HTMLDOMTextNode \
+        super:CBase \
+        primaryinterface:IHTMLDOMTextNode \
+        guid:3050f4ba-98b5-11cf-bb82-00aa00bdce0b \
+        mondoguid:3050f565-98b5-11cf-bb82-00aa00bdce0b
+
+    implements IHTMLDOMTextNode
+    implements IHTMLDOMNode
+	implements IObjectIdentity
+
+    property data       atype:BSTR         dispid:DISPID_DOMTEXTNODE    type:CStr          abstract get set maxstrlen:pdlNoLimit
+    method HRESULT toString    dispid:DISPID_DOMTEXTNODE+1  (out retval type:BSTR* arg:String)
+    property  length   atype:long        dispid:DISPID_DOMTEXTNODE+2    type:long      \
+                       dwFlags:0   abstract get 
+    method HRESULT splitText    dispid:DISPID_DOMTEXTNODE+3  (in type:long arg:offset out retval type:IHTMLDOMNode** arg:pRetNode)
+
+#endif //_DOM_PDL_

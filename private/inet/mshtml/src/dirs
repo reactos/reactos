@@ -1,0 +1,10 @@
+# root
+DIRS = \
+    core \
+    site \
+    dlay \
+    other \
+    f3 \
+    edit \
+    editres
+

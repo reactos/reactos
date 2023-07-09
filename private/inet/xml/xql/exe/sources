@@ -1,0 +1,77 @@
+ROOT=$(MAKEDIR:\xql\exe=)
+!include $(ROOT)\common.inc
+
+NO_NTDLL	= 1
+
+TARGETNAME=msxql
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=console
+
+# Make sure the component libs are built before this.
+SYNCHRONIZE_DRAIN=1
+
+SOURCES =     \
+    msxql.cxx \
+    crt0dat.c \
+    msxql.rc  \
+
+!if defined(_DEBUG)
+CLIB=libcmtd.lib
+!else
+CLIB=libcmt.lib
+!endif
+
+TARGETLIBS = \
+            $(SDK_LIB_PATH)\ole32.lib             \
+            $(SDK_LIB_PATH)\uuid.lib              \
+            $(SDK_LIB_PATH)\shlwapip.lib               \
+            $(SDK_LIB_PATH)\user32.lib            \
+            $(SDK_LIB_PATH)\oleaut32.lib          \
+            $(SDK_LIB_PATH)\version.lib	     \
+#endif
+
+LINKLIBS =    \
+    $(ROOT)\xql\om\$O\om.lib \
+    $(ROOT)\xql\query\$O\query.lib \
+    $(ROOT)\xql\parser\$O\xqlparse.lib \
+    $(ROOT)\core\include\$O\corepch.lib \
+    $(ROOT)\xql\include\$O\xqlpch.lib \
+    $(ROOT)\$(O)\msxml.lib    \
+    $(ROOT)\core\com\$O\com.lib \
+    $(ROOT)\core\base\$O\base.lib \
+    $(ROOT)\core\io\$O\io.lib \
+    $(ROOT)\core\lang\$O\lang.lib \
+    $(SDK_LIB_PATH)\urlmon.lib \
+    $(SDK_LIB_PATH)\$(CLIB) \
+    $(ROOT)\core\io\$O\io.lib \
+    $(ROOT)\core\util\$O\util.lib \
+    $(ROOT)\xml\util\$O\util.lib \
+# NOTE following libs are required only for Datatype support
+            $(ROOT)\xml\tokenizer\include\$O\xmltokpch.lib \
+            $(ROOT)\xml\tokenizer\base\$O\base.lib \
+            $(ROOT)\xml\tokenizer\xmlstream\$O\xmlstream.lib \
+            $(ROOT)\xml\tokenizer\encoder\$O\xmlencoder.lib \
+!IFDEF _DEBUG
+    $(ROOT)\external\lib\*\mshtmdbg.lib
+!endif
+
+INCLUDES= \
+	$(ROOT)\core\crt; \
+	$(ROOT)\include; \
+	$(ROOT)\xml\resource; \
+	$(ROOT); \
+    $(WINDOWS_INC_PATH)\
+
+# For RC to find msxql.tlb and msxml2.TLB
+INCLUDES = $(SDK_LIB_PATH);$(INCLUDES)
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+LINKER_FLAGS = $(LINKER_FLAGS) -FORCE:MULTIPLE
+

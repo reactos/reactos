@@ -1,0 +1,74 @@
+BUILD_WININET_TARGETS = world all depend
+MISC_WININET_TARGETS = clean install cscope tags
+
+OPTIONAL_DIRS =
+
+ifdef UNIX_BUILDS_AUTOPROXY_DETECT
+OPTIONAL_DIRS += \
+                 apdetect
+endif
+
+DIRS = inc      \
+       autoconf \
+       auth     \
+       common   \
+       debug    \
+       ftp      \
+       gopher   \
+       handles  \
+       http     \
+       inetui   \
+       urlcache \
+       ${OPTIONAL_DIRS} \
+       dll
+
+.NOTPARALLEL : ${BUILD_WININET_TARGETS} ${MISC_WININET_TARGETS}
+
+${BUILD_WININET_TARGETS} : inc autoconf wininet_dll
+
+inc :
+	@enterdir inc ${MAKE} ${MFLAGS}
+
+autoconf : wininet_dll
+	@enterdir autoconf ${MAKE} ${MFLAGS}
+
+wininet_dll : auth common debug ftp gopher handles http apdetect inetui urlcache dll
+	@enterdir dll ${MAKE} ${MFLAGS}
+
+auth :
+	@enterdir auth ${MAKE} ${MFLAGS}
+
+common :
+	@enterdir common ${MAKE} ${MFLAGS}
+
+debug :
+	@enterdir debug ${MAKE} ${MFLAGS}
+
+ftp :
+	@enterdir ftp ${MAKE} ${MFLAGS}
+
+gopher :
+	@enterdir gopher ${MAKE} ${MFLAGS}
+
+handles :
+	@enterdir handles ${MAKE} ${MFLAGS}
+
+http :
+	@enterdir http ${MAKE} ${MFLAGS}
+
+inetui :
+	@enterdir inetui ${MAKE} ${MFLAGS}
+
+apdetect :
+	@enterdir apdetect ${MAKE} ${MFLAGS}
+
+urlcache :
+	@enterdir urlcache ${MAKE} ${MFLAGS}
+
+${MISC_WININET_TARGETS} :
+	@for dir in ${DIRS}; do \
+		enterdir $$dir ${MAKE} ${MFLAGS} $@; \
+	done
+
+.PHONY : ${BUILD_WININET_TARGETS} ${MISC_WININET_TARGETS} ${DIRS}
+	

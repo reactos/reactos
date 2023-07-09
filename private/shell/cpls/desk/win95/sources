@@ -1,0 +1,7 @@
+
+FULL_DEBUG   = 1
+TARGET_WIN95 = 1
+TARGETNAME   = desk
+USE_CRTDLL   = 1
+
+!include ..\sources.inc

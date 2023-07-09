@@ -1,0 +1,11 @@
+LIBRARY         mydocs
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'My Documents Shell Extension'
+
+EXPORTS
+                DllRegisterServer       PRIVATE
+                DllUnregisterServer     PRIVATE
+                DllCanUnloadNow         PRIVATE
+                DllGetClassObject       PRIVATE
+                DllInstall              PRIVATE
+                PerUserInit             @ 7

@@ -1,0 +1,129 @@
+
+Here is the format for an FTP URL:
+----------------------------------
+ftp://<UserName>:<Password>@<ServerName>:<PortNum>/<Dir1>/...<SubDirs>/<FileName.txt>:type=<a|b>
+
+UserName - [Optional] On WinNT, this can include "domain\username" and the '\' is entered as "%5c" in escaped form to get past the URL format.
+Password - [Optional] Obvious.  Later I will handle displaying a dialog to enter the password when it wasn't given in the url.
+Server - [Required] Intranet Machine Name, Internet DNS Name, or IP addr.
+Port - [Optional] Defaults to 21.  You can test by changing IIS.
+SubDir - [Optional] Needs to end in a '/' or I assume it's a file. (Hitting the server is too expensive)  
+	Having a file extension will affect this.  This is always relative to the Virtual Root directory 
+	if the server has a Virtual Root for that user.  If you log into bryanst2 with bryanst2\JoeMama, 
+	your virtual Dir is (\user\JoeMama\).  ftp://bryanst2%5cJoeMama:pass@bryanst2/SubDir1/ will be 
+	/user/JoeMama/SubDir1/ on the server.  Original IE makes all SubDirs in the URL ralative to the
+	base (not Virtual Root), so these are incompatible.  I use the new way, because that follows the
+	FTP spec.  This is why I have "Correct Url" and "Incorrect Url" in the test web pages.  You will
+	find that IE4's original FTP support works correctly with URL w/o files (i.e. Directories).
+
+	Virtual Root = /Users/Sales/User1/
+	File /Users/Sales/User1/SubDir1/file.txt
+	New FTP File URL: ftp://User1:Pass@Serv/SubDir1/file.txt
+	New FTP Dir URL:  ftp://User1:Pass@Serv/SubDir1/
+	IE4 FTP File URL: ftp://User1:Pass@Serv/Users/Sales/User1/SubDir1/file.txt
+	IE4 FTP Dir URL:  ftp://User1:Pass@Serv/Users/Sales/User1/SubDir1/
+
+FileName - [Optional] Test files with and w/o extensions.
+Type - [Optional] A mean download in ASCII.  The other is either B[inary] or I[mage], which means download in binary.  Right now, I only support B, but I may also may be needed.
+
+
+Test Areas:
+===========
+1. Drag & Drop
+-------------------
+1.1 Successful single file, single folder, files and folders, files and folders recursively.
+1.2 Use Copy/Paste instead of Drag/Drop.
+1.3 Use these as Drop Targets: Email message, File System Folder, Ftp Folder on Same Server (SubDir), Ftp Folder
+        on another server, Internet Explorer (can display dropped html file), Name Space Extensions (like Fonts Folder,
+        ActiveX Control Cache, WinZip).
+1.4 Use the following as Drag Sources: Email Message, Internet Shortcuts on web page, gif from web page w/o HREF,
+    file system folder, UNC path, from my computer, brief case, recycle bin, WordPad (drag a scrap to an FTP Site).
+
+1.5 Error cases: Dest Dir Full, No Write, Full of connections, Proxy blocks action.
+1.6 Test using Exchange or similar drag target or drag source that doesn't use a file system for storage. (Outlook Express, Eudora?)
+
+
+2. Platforms
+-------------------
+2.1 Win95 w/IE 5 (Bld 201 or Newer) - Browser Only
+2.2 WinNT 4 w/IE 5 (Bld 201 or Newer) - Browser Only
+2.3 WinNT 5 w/IE 5 (Bld 201 or Newer) - Browser Only
+2.4 Win95 w/IE 5 (Bld 201 or Newer) - Shell Integration
+2.5 WinNT 4 w/IE 5 (Bld 201 or Newer) - Shell Integration
+2.6 WinNT 5 w/IE 5 (Bld 201 or Newer) - Shell Integration
+
+// TonyCi will have someone test the following
+2.10 Win95 w/IE 4 - Browser Only
+2.11 WinNT 4 w/IE 4 - Browser Only
+2.12 WinNT 5 w/IE 4 - Browser Only
+2.13 Win95 w/IE 4 - Shell Integration
+2.14 WinNT 4 w/IE 4 - Shell Integration
+2.15 WinNT 5 w/IE 4 - Shell Integration
+
+
+   
+3. Different Servers
+-------------------
+3.1 Unix
+3.1.1 Case Sensitivity
+3.1.2 Servers that use "ls -F"
+3.2 WinNT IIS
+3.2.1 Virtual Root w/Domain
+3.1 Server Name Limitations vary from Server to server.
+    From: raymondc@microsoft.com (Raymond Chen)
+    Date: Wed, 29 Nov 1995 23:27:47 -0800
+    Subject: The great thing about standards...
+    RFC959, the spec for FTP, says that the response to the "SYST" command must be
+    a string whose first token is on the list of operating systems maintained by the
+    Internet Assigned Numbers Authority (i.e., the people who are authorized to do
+    these sorts of things). Now, one of the official "operating systems" is called
+    WIN32, which means that "this FTP site follows WIN32 long file name semantics".
+    Not to be confused with "MSDOS", which means "FAT semantics", or "UNIX" which
+    means "case-sensitive, arbitrary length, only slashes disallowed" or "UNIX-BSD"
+    which means "case-sensitive, maximum 14 characters, only slashes disallowed",
+    or "TOPS20" which means "God help you".  If you ask ftp.microsoft.com what
+    operating system it is using, it reports "Windows_NT" instead of "WIN32". 
+    I go down the list of "official" operating systems, find that "Windows_NT"
+    isn't on the list, and assert "Unrecognized operating system on the other
+    end; assuming UNIX".  And then I think that the guy on the other side uses
+    case-sensitive filenames and get confused when it doesn't...  That's the
+    great thing about standards. By ignoring them, you make it impossible for
+    your own developers to write stuff that uses them... 
+
+
+4. Web Page Support
+-------------------
+4.1 Anchor w/HREF to FTP Dir, with Server Access
+4.2 Anchor w/HREF to FTP Browse In Place File, with Server Access
+4.3 Anchor w/HREF to FTP Launch/Save File, with Server Access
+4.4 Anchor w/HREF to FTP Dir, w/o Server Access (CERN Proxy)
+4.5 Anchor w/HREF to FTP Browse In Place File, w/o Server Access (CERN Proxy)
+4.6 Anchor w/HREF to FTP Launch/Save File, w/o Server Access (CERN Proxy)
+4.7 Anchor w/HREF to FTP Dir, with Server Access, w/User Login
+4.8 Anchor w/HREF to FTP Browse In Place File, with Server Access, w/User Login
+4.9 Anchor w/HREF to FTP Launch/Save File, with Server Access, w/User Login
+4.10 Anchor w/HREF to FTP Dir, w/o Server Access (CERN Proxy), w/User Login
+4.11 Anchor w/HREF to FTP Browse In Place File, w/o Server Access (CERN Proxy), w/User Login
+4.12 Anchor w/HREF to FTP Launch/Save File, w/o Server Access (CERN Proxy), w/User Login
+4.13 IFRAME w/HREF to FTP Dir, with Server Access
+4.14 IFRAME w/HREF to FTP Dir, with Server Access, w/User Login
+4.15 IFRAME w/HREF to FTP Dir, w/o Server Access (CERN Proxy)
+4.16 IFRAME w/HREF to FTP Dir, w/o Server Access (CERN Proxy), w/User Login
+4.17 All of the above entered directly into the AddressBar.
+
+
+
+10. Other Areas
+-------------------
+10.1 Proxie issues: Proxy rerendered FTP data as web page, non-default port, port specified in URL.
+10.2 URLs: non-default URLs, user name/password specified, username only specified.
+10.3 Download Type: Automatic detect, Binary, ASCII, Mac/UNIX/Win Text files (CR vs. CR LN vs. LN)
+10.4 Context Menus: Folder Background, Folder Item, File Item, Multiple Files.
+
+10.5 Test on different platforms: NT/95 (w/o IE), NT/95 w/IE3, NT/95 w/IE4.
+10.6 Test on different servers: Mac, WinNT IIS (UNIX & DOS Dir Styles), Unix
+10.7 Test virtual roots
+10.8 Test IFrame Security. (Zones Support)
+10.8 Test not being connected to the Internet, needing a connectoid to connect, 
+    and then trying to use FTP.  It should display the log-in dialog.
+

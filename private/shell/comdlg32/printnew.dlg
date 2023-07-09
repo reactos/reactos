@@ -1,0 +1,89 @@
+/*++
+
+Copyright (c) 1990-1998,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    printnew.dlg
+
+Abstract:
+
+    This module contains the resource descriptions for the Win32
+    property sheet print common dialogs.
+
+Revision History:
+
+    11-04-97    JulieB    Created.
+
+--*/
+
+
+
+//
+//  Include Files.
+//
+
+#include "printnew.h"
+
+
+
+
+#ifdef WINNT
+
+//
+//  Print Dialogs.
+//
+
+IDD_PRINT_GENERAL DIALOG DISCARDABLE  0, 0, 292, 198
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK | WS_CLIPCHILDREN
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_PRINTER_LIST, 14, 17, 264, 53,
+                    LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_HSCROLL |
+                    NOT WS_VISIBLE
+
+    LTEXT           "Status:", IDC_STATUS_TEXT, 14, 76, 35, 8, SS_NOPREFIX
+    LTEXT           "", IDC_STATUS, 50, 76, 164, 8, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Location:", IDC_LOCATION_TEXT, 14, 87, 35, 8, SS_NOPREFIX
+    LTEXT           "", IDC_LOCATION, 50, 87, 164, 8, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Comment:", IDC_COMMENT_TEXT, 14, 98, 35, 8, SS_NOPREFIX
+    LTEXT           "", IDC_COMMENT, 50, 98, 164, 8, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    AUTOCHECKBOX    "Print to &file", IDC_PRINT_TO_FILE, 231, 77, 47, 8, WS_GROUP
+
+    PUSHBUTTON      "Fin&d Printer...", IDC_FIND_PRINTER, 228, 91, 50, 14, WS_GROUP
+
+    GROUPBOX        "Select Printer", grp1, 7, 7, 278, 104, WS_GROUP | WS_CLIPSIBLINGS
+    GROUPBOX        "", grp2, 7, 118, 278, 73, WS_GROUP | NOT WS_VISIBLE | WS_CLIPSIBLINGS
+END
+
+IDD_PRINT_GENERAL_LARGE DIALOG DISCARDABLE  0, 0, 292, 218
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_PRINTER_LIST,14,17,264,53,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | NOT WS_VISIBLE | WS_HSCROLL
+    LTEXT           "Status:",IDC_STATUS_TEXT,14,76,35,8,SS_NOPREFIX
+    CONTROL         "",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | 
+                    WS_GROUP,50,76,164,8
+    LTEXT           "Location:",IDC_LOCATION_TEXT,14,87,35,8,SS_NOPREFIX
+    CONTROL         "",IDC_LOCATION,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | 
+                    WS_GROUP,50,86,164,8
+    LTEXT           "Comment:",IDC_COMMENT_TEXT,14,98,35,8,SS_NOPREFIX
+    CONTROL         "",IDC_COMMENT,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | 
+                    WS_GROUP,50,96,164,8
+    CONTROL         "Print to &file",IDC_PRINT_TO_FILE,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,231,77,47,8
+    PUSHBUTTON      "Fin&d Printer...",IDC_FIND_PRINTER,228,91,50,14,
+                    WS_GROUP
+
+    GROUPBOX        "Select Printer",grp1,7,7,278,104,WS_GROUP | WS_CLIPSIBLINGS
+    GROUPBOX        "",grp2,7,118,278,93,NOT WS_VISIBLE | WS_GROUP | WS_CLIPSIBLINGS
+END
+
+
+#endif   // WINNT

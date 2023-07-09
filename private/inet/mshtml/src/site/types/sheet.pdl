@@ -1,0 +1,85 @@
+#ifndef _SHEET_PDL_
+#define _SHEET_PDL_ 1
+
+#include "types.pdl"
+#include "element.pdl"
+#include "rulescol.pdl"
+
+file sheet.pdl
+
+import types.pdl
+import element.pdl
+import rulescol.pdl
+
+/*
+
+GUIDs reserved for CSS OM but currently unused:
+
+3050f3d1-98b5-11cf-bb82-00aa00bdce0b
+3050f3d2-98b5-11cf-bb82-00aa00bdce0b
+
+*/
+
+interface IHTMLStyleSheetsCollection
+
+interface IHTMLStyleSheet super:IDispatch guid:3050f2e3-98b5-11cf-bb82-00aa00bdce0b
+        refprop CStyleSheet:title
+    refprop CStyleSheet:parentStyleSheet
+    refprop CStyleSheet:owningElement
+    refprop CStyleSheet:disabled
+    refprop CStyleSheet:readOnly
+    refprop CStyleSheet:imports
+    refprop CStyleSheet:href
+    refprop CStyleSheet:type
+    refprop CStyleSheet:id
+    refmethod CStyleSheet:addImport
+    refmethod CStyleSheet:addRule
+    refmethod CStyleSheet:removeImport
+    refmethod CStyleSheet:removeRule
+    refprop CStyleSheet:media
+    refprop CStyleSheet:cssText
+    refprop CStyleSheet:rules
+
+tearoff CStyleSheet interface:IHTMLStyleSheet
+tearoff CStyleSheet interface:IDispatchEx BaseImpl:super::
+
+class CStyleSheet name:HTMLStyleSheet super:CBase primaryinterface:IHTMLStyleSheet \
+ guid:3050f2e4-98b5-11cf-bb82-00aa00bdce0b
+
+    property  title   atype:BSTR        dispid:DISPID_STYLESHEET+1 \
+         abstract get set maxstrlen:pdlNoLimit
+    property  parentStyleSheet   atype:IHTMLStyleSheet*        dispid:DISPID_STYLESHEET+2 \
+         abstract get
+    property  owningElement   atype:IHTMLElement*        dispid:DISPID_STYLESHEET+3 \
+         abstract get
+    property  disabled  atype:VARIANT_BOOL     dispid:STDPROPID_XOBJ_DISABLED \
+        vt:VT_BOOL abstract get set
+    property  readOnly  atype:VARIANT_BOOL     dispid:DISPID_STYLESHEET+4 \
+        vt:VT_BOOL abstract get
+    property  imports atype:IHTMLStyleSheetsCollection*   dispid:DISPID_STYLESHEET+5 \
+         abstract get
+    property  href atype:BSTR   dispid:DISPID_STYLESHEET+6 \
+         abstract get set maxstrlen:pdlUrlLen
+    property  type atype:BSTR   dispid:DISPID_STYLESHEET+7 \
+         abstract get 
+    property  id atype:BSTR   dispid:DISPID_STYLESHEET+8 \
+         abstract get
+    method HRESULT addImport  maxstrlen:pdlUrlLen   dispid:DISPID_STYLESHEET+9  (in type:BSTR arg:bstrURL, \
+                                                              in defaultvalue:-1 type:long arg:lIndex, \
+                                                              out retval type:long* arg:plIndex )
+    method HRESULT addRule    maxstrlen:pdlNoLimit  dispid:DISPID_STYLESHEET+10 (in type:BSTR arg:bstrSelector, \
+                                                              in type:BSTR arg:bstrStyle, \
+                                                              in defaultvalue:-1 type:long arg:lIndex, \
+                                                              out retval type:long* arg:plNewIndex )
+    method HRESULT removeImport  dispid:DISPID_STYLESHEET+11 (in type:long arg:lIndex )
+    method HRESULT removeRule    dispid:DISPID_STYLESHEET+12 (in type:long arg:lIndex )
+
+    property  media atype:BSTR   dispid:DISPID_STYLESHEET+13 \
+         abstract get set maxstrlen:pdlToken
+    property  cssText atype:BSTR   dispid:DISPID_STYLESHEET+14 \
+         abstract get set maxstrlen:pdlNoLimit
+    property  rules atype:IHTMLStyleSheetRulesCollection*   dispid:DISPID_STYLESHEET+15 \
+         abstract get
+
+
+#endif _SHEET_PDL_

@@ -1,0 +1,45 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\other\htmlapp=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=htmlapp
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES= \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\src\site\include; \
+    $(ROOT)\src\site\base; \
+    $(ROOT)\src\site\ole; \
+    $(ROOT)\src\site\util; \
+    $(ROOT)\src\site\style; \
+    $(ROOT)\src\site\view; \
+    $(ROOT)\src\site\display; \
+    $(ROOT)\src\site\text; \
+    $(ROOT)\src\other\include; \
+    $(ROOT)\external\inc; \
+    $(ROOT)\external\inc\msls; \
+    $(ROOT)\types\$(O); \
+    $(O); \
+    $(BASEDIR)\private\windows\inc;
+
+SOURCES= \
+    app.rc \
+    app.cxx \
+    factory.cxx \
+    server.cxx \
+    regkey.cxx \
+    client.cxx \
+    site.cxx \
+    frame.cxx \
+    peerfact.cxx \
+    peers.cxx \
+    main.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

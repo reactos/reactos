@@ -1,0 +1,44 @@
+#include "winlogon.h"
+#include <string.h>
+#include <stdio.h>
+#include <npapi.h>
+#include <sys\types.h>
+#include <sys\stat.h>
+#include <io.h>
+#include <fcntl.h>
+#include "mpr.h"
+#include <stddef.h>
+#include <lmcons.h>
+#include <lmerr.h>
+#include <lmmsg.h>
+#include <malloc.h>
+#include <stdlib.h>
+#include "sysshut.h"
+#include <winsvc.h>
+#include "crypt.h"
+#include <ntsam.h>
+#include <lmapibuf.h>
+#include <lmaccess.h>
+#include <wchar.h>
+
+#ifdef _X86_
+#include "os2ssrtl.h"
+#endif
+
+#include <stdarg.h>
+#include <errno.h>
+#include <ctype.h>
+#include "setup.h"
+#include "ntrpcp.h"
+#include <rpc.h>
+#include <winreg.h>
+#include <userenv.h>
+#include <userenvp.h>
+#include <profmapp.h>
+#include <wincrypt.h>
+#include <autoenr.h>
+#include <autoenrl.h>
+#include <certca.h>
+#include <dsgetdc.h>
+#include <safeboot.h>
+#include <dsrole.h>

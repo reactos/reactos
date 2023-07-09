@@ -1,0 +1,23 @@
+:Base hypertrm.hlp>proc4
+:Title HyperTerminal Private Edition Help
+:Index HyperTerminal Help =hypertrm.hlp
+1 Calling Another Computer
+2 Setting up a new connection=TERM_NEW_CONNECTION
+2 Calling a remote computer=TERM_CALL_REMOTE
+2 Waiting for calls=TERM_WAITING
+1 Transferring Files
+2 Sending a file to a remote computer=TERM_SEND_FILE
+2 Receiving a file from a remote computer=TERM_RECEIVE_FILE
+1 Changing Communication Settings
+2 Changing the modem's port settings=TERM_CHANGE_PORT
+2 Changing the settings for making a call=TERM_CHANGE_CALL_SETTINGS
+1 Using HyperTerminal as a telnet client
+2 To change the settings for a telnet connection=TERM_TELNET
+1 Using HyperTerminal with the Minitel Service
+2 Setting up HyperTerminal to work with Minitel=TERM_MINITEL
+2 Function keys for Minitel emulation=MINITEL_KEYS
+1 Tips and Tricks
+2 Adjusting the HyperTerminal window's size=TERM_SNAP
+2 Saving a HyperTerminal session to a text file=TERM_CAPTURE
+1 Troubleshooting
+2 If you have trouble using your modem=IDH_DIAL_WHAT_WRONG@windows.hlp>PROC4

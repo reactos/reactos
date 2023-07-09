@@ -1,0 +1,24 @@
+HKCR
+{
+	HomePage.HomePage.1 = s 'HomePage Class'
+	{
+		CLSID = s '{7E8BC44E-AEFF-11D1-89C2-00C04FB6BFC4}'
+	}
+	HomePage.HomePage = s 'HomePage Class'
+	{
+		CurVer = s 'HomePage.HomePage.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {7E8BC44E-AEFF-11D1-89C2-00C04FB6BFC4} = s 'HomePage Class'
+		{
+			ProgID = s 'HomePage.HomePage.1'
+			VersionIndependentProgID = s 'HomePage.HomePage'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

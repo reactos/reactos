@@ -1,0 +1,11 @@
+#include <windows.h>
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define	VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft WinSNMP v2.0 Manager API"
+#define VER_INTERNALNAME_STR        "wsnmp32.dll"
+#define VER_ORIGINALFILENAME_STR    "wsnmp32.dll"
+
+#include "common.ver"

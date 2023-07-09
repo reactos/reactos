@@ -1,0 +1,56 @@
+;
+; CL.DEF - Default .def file for C Windows applications
+;
+; Copyright (C) Microsoft Corp 1992.  All rights reserved.
+;
+
+NAME 
+
+;
+; The NAME statement tells the linker that a Windows application is being
+; built. The linker supplies the actual name of the application from the
+; base name of the executable file. If a dynamic-link library (DLL) is being
+; built the NAME statement should be replaced by a LIBARY statement.
+;
+
+EXETYPE        WINDOWS
+
+;
+; The EXETYPE statement tells the linker to build a Windows executable
+; file.  This statement should be used in all applications built with
+; Visual C++ for Windows.
+;
+
+CODE           PRELOAD MOVABLE DISCARDABLE
+DATA           PRELOAD MOVABLE
+
+;
+; The CODE and DATA statements set the attributes of the applications CODE and
+; DATA segments.
+;
+
+HEAPSIZE       1024
+STACKSIZE      8096
+
+;
+; The HEAPSIZE and STACKSIZE statements set the applications near heap and
+; stack sizes.  The values specified are recomended for QuickWin applications.
+;
+
+;
+; Uncomment these lines for DLL module definition file model.
+;
+;EXPORTS
+;WEP           PRIVATE
+;
+;SEGMENTS 'WEP_TEXT' FIXED PRELOAD
+;
+;
+; The above section should be uncommented if this .DEF file is to be used as
+; a model for a Visual C++ dynamic-link library (DLL) .DEF file. The WEP
+; routine is included in the Visual C++ startup code, but the symbol must
+; be explicitly exported. If a DLL already has a user-defined WEP routine,
+; the routine should be renamed _WEP.  The startup code will call _WEP,
+; if present, during DLL termination. For additional information concerning
+; the WEP function, see the Visual C++ and Windows 3.1 SDK documentation.
+;

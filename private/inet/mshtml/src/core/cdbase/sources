@@ -1,0 +1,39 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\core\cdbase=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=cdbase
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=\
+    $(COREINCLUDES) \
+    $(ROOT)\src\site\include;
+
+SOURCES= \
+    base.cxx \
+    baseerr.cxx \
+    basemso.cxx \
+    baseprop.cxx \
+    cache.cxx \
+    cnct.cxx \
+    connect.cxx \
+    ipobj2.cxx \
+    ippaint.cxx \
+    olectrl.cxx \
+    prophelp.cxx \
+    recalchlp.cxx \
+    sctrl.cxx \
+    sdocobj.cxx \
+    sdv.cxx \
+    sinpl.cxx \
+    undo.cxx \
+    verb.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

@@ -1,0 +1,20 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\CLSID\{1f2e5c40-9550-11ce-99d2-00aa006e086c}]
+@="Remote Administration Shell Extension"
+
+[HKEY_CLASSES_ROOT\CLSID\{1f2e5c40-9550-11ce-99d2-00aa006e086c}\InProcServer32]
+@="rshx32.dll"
+"ThreadingModel"="Apartment"
+
+[HKEY_CLASSES_ROOT\*\shellex\PropertySheetHandlers\{1f2e5c40-9550-11ce-99d2-00aa006e086c}]
+@=""
+
+[HKEY_CLASSES_ROOT\Drive\shellex\PropertySheetHandlers\{1f2e5c40-9550-11ce-99d2-00aa006e086c}]
+@=""
+
+[HKEY_CLASSES_ROOT\Directory\shellex\PropertySheetHandlers\{1f2e5c40-9550-11ce-99d2-00aa006e086c}]
+@=""
+
+[HKEY_CLASSES_ROOT\Microsoft_Network\shellex\PropertySheetHandlers\{1f2e5c40-9550-11ce-99d2-00aa006e086c}]
+@=""

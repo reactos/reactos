@@ -1,0 +1,76 @@
+#include <windows.h>
+#include "profile.h"
+
+ID_ICON ICON PRELOAD MOVEABLE DISCARDABLE PROFILE.ICO
+
+STRINGTABLE PRELOAD MOVEABLE DISCARDABLE
+    BEGIN
+        IDS_NAME,               "Profile"
+        IDS_INFO,               "Configures your personal profile"
+        IDS_UNABLETOSAVE,       "Unable to save your profile settings"
+        IDS_BASEERRORMSG,       "You are unable to save the profile settings because:\n\n%s\n\nContinue without saving?"
+        IDS_NAMEINDONTLIST,     "You can not save changes from a computer which is in the ""Do Not Save Profile"" list."
+        IDS_NONAMEANDDONOTSAVE, "This computer does not have ""Save"" privileges (it is not in the list of machines to save changes from, and the default setting is to not save changes on an ""Unlisted"" computer)."
+        IDS_LOGOFFNOTICE,       "Your profile settings have been successfully saved.\n\nIn order for the changes to take effect:\n\n1)  Log off any other computers you are using, then\n2)  Log off of this computer."
+        IDS_DUPLICATENAME,      "One or more computer names are in both the ""Save Profile"" list and the ""Do Not Save Profile"" list."
+        IDS_ADDNAME,            "Would you like to add the new computer name before exiting?"
+        IDS_UNKNOWN,            "Unknown"
+        IDS_FORMAT,             "Profile Storage Location for %s\\%s:"
+    END
+
+IDD_PROFILE DIALOG 56, 26, 302, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Personal Profile Configuration"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 240, 10, 55, 15, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 240, 30, 55, 15, WS_TABSTOP
+    PUSHBUTTON      "&Help", IDD_HELP, 240, 50, 55, 15, WS_TABSTOP
+    LTEXT           "", IDD_USERNAME, 10, 10, 220, 8, WS_GROUP
+    LTEXT           "", IDD_PATH, 10, 20, 220, 8
+    LTEXT           "Local Computer Name:", -1, 10, 38, 79, 8
+    LTEXT           "", IDD_COMPUTERNAME, 90, 39, 139, 8
+    GROUPBOX        "&Computer Names", -2, 10, 55, 220, 96
+    LTEXT           "Save Profile On:", -3, 20, 72, 85, 8
+    LISTBOX         IDD_SAVELIST, 20, 83, 85, 40, LBS_NOTIFY | LBS_SORT | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "Ch&ange...", IDD_SAVECHANGE, 35, 130, 50, 14, WS_TABSTOP
+    LTEXT           "Do Not Save Profile On:", -4, 128, 72, 85, 8
+    LISTBOX         IDD_DONTSAVELIST, 128, 83, 85, 40, LBS_NOTIFY | LBS_SORT | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "Chan&ge...", IDD_DONTSAVECHANGE, 145, 130, 49, 14, WS_TABSTOP
+    GROUPBOX        "&Default", -5, 10, 156, 220, 49
+    AUTORADIOBUTTON "&Save Profile on Unlisted Computer", IDD_DEFAULTSAVE,
+                    20, 172, 200, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Do &Not Save Profile on Unlisted Computer",
+                    IDD_DEFAULTDONTSAVE, 20, 187, 200, 10, WS_TABSTOP
+END
+
+
+
+IDD_COMPUTERNAMES DIALOG 60, 39, 170, 142
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Computer Names"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 125, 7, 40, 14, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 125, 25, 40, 14, WS_TABSTOP
+    PUSHBUTTON      "&Delete", IDD_DELETE, 125, 50, 40, 14, WS_TABSTOP
+    PUSHBUTTON      "&Clear All", IDD_CLEARALL, 125, 68, 40, 14, WS_TABSTOP
+    PUSHBUTTON      "&Help", IDD_NAMESHELP, 125, 93, 40, 14, WS_TABSTOP
+    PUSHBUTTON      "&Add", IDD_ADD, 125, 119, 40, 14, WS_TABSTOP
+    LISTBOX         IDD_NAMESLIST, 10, 10, 105, 102, LBS_SORT | LBS_EXTENDEDSEL |
+                    WS_VSCROLL | WS_TABSTOP | WS_GROUP
+    LTEXT           "&New Name:", -1, 10, 110, 105, 8
+    EDITTEXT        IDD_NEWNAME, 10, 120, 105, 12, ES_AUTOHSCROLL | WS_TABSTOP
+END
+
+#include <ntverp.h>
+
+#define	VER_FILETYPE	            VFT_DLL
+#define	VER_FILESUBTYPE	            VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Profile Applet for the Control Panel"
+#define VER_INTERNALNAME_STR        "profile.cpl"
+#define VER_ORIGINALFILENAME_STR    "profile.cpl"
+
+#include "common.ver"

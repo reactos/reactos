@@ -1,0 +1,42 @@
+#ifndef _OMRECT_PDL_
+#define _OMRECT_PDL_ 1
+
+#include "types.pdl"
+
+file omrect.pdl
+
+import types.pdl
+
+//
+// Rect Interface and class
+//---------------------------------------------------------------------------------
+
+interface IHTMLRect super:IDispatch guid:3050f4a3-98b5-11cf-bb82-00aa00bdce0b
+    refprop   COMRect:left
+    refprop   COMRect:top
+    refprop   COMRect:right
+    refprop   COMRect:bottom
+
+class COMRect name:HTMLRect  primaryinterface:IHTMLRect
+    property left   atype:long   dispid:DISPID_OMRECT+1  type:long dwflags:0  get set abstract
+    property top    atype:long   dispid:DISPID_OMRECT+2  type:long dwflags:0  get set abstract
+    property right  atype:long   dispid:DISPID_OMRECT+3  type:long dwflags:0  get set abstract
+    property bottom atype:long   dispid:DISPID_OMRECT+4  type:long dwflags:0  get set abstract
+
+interface IHTMLRectCollection  super:IDispatch  guid:3050f4a4-98b5-11cf-bb82-00aa00bdce0b
+    refprop    COMRectCollection:length 
+    refprop    COMRectCollection:_newEnum 
+    refmethod  COMRectCollection:item   
+
+tearoff COMRectCollection interface:IDispatchEx BaseImpl:super::
+
+class COMRectCollection name:HTMLRectCollection  primaryinterface:IHTMLRectCollection
+    property  length   atype:long        dispid:DISPID_COLLECTION   type:long    \
+                       dwFlags:0   abstract get
+    property  _newEnum atype:IUnknown*   dispid:DISPID_NEWENUM       type:IUnknown* \
+                       dwFlags:0   abstract get hidden restricted 
+    method HRESULT item maxstrlen:pdlNoLimit dispid:DISPID_VALUE  (in type:VARIANT* arg:pvarIndex, \
+                                                   out retval type:VARIANT* arg:pvarResult )
+
+
+#endif _OMRECT_PDL_

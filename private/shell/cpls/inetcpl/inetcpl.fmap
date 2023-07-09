@@ -1,0 +1,64 @@
+// This file is automagically generated.  Do not mess with it!
+
+#ifdef sparc_sunos5
+text = LOAD ?RXO;
+#define FUNCTION(name,fullobj,obj)      text: .text%name: fullobj;
+#define LIBFUNCTION(name,lib,obj)       test: .text%name: lib(obj);
+#endif
+
+// Undef common things that may be in paths.
+#undef unix
+#undef obj
+#undef objd
+
+#ifdef USE_FUNCTION_MAP
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/cachecpl.o,cachecpl.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/shassoc.o,shassoc.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/init.o,init.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/dlylddll.o,dlylddll.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/advanced.o,advanced.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/security.o,security.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/connectn.o,connectn.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/inethelp.o,inethelp.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/proxysup.o,proxysup.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/content.o,content.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/unixprog.o,unixprog.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/regutil.o,regutil.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/util.o,util.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/general.o,general.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/clsutil.o,clsutil.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/lang.o,lang.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/debug.o,debug.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/fonts.o,fonts.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/programs.o,programs.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sparc_sunos5_32_CC4_ts/mainwnd.o,mainwnd.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/cachecpl.o,cachecpl.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/shassoc.o,shassoc.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/init.o,init.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/dlylddll.o,dlylddll.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/advanced.o,advanced.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/security.o,security.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/connectn.o,connectn.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/inethelp.o,inethelp.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/proxysup.o,proxysup.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/content.o,content.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/unixprog.o,unixprog.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/regutil.o,regutil.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/util.o,util.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/general.o,general.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/clsutil.o,clsutil.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/lang.o,lang.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/debug.o,debug.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/fonts.o,fonts.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/programs.o,programs.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sparc_sunos5_32_CC4_ts/mainwnd.o,mainwnd.o)
+FUNCTION(__0FOCallRegInstallPc,obj/unix/sparc_sunos5_32_CC4_ts/util.o,util.o)
+FUNCTION(__0OnwUi,obj/unix/sparc_sunos5_32_CC4_ts/clsutil.o,clsutil.o)
+FUNCTION(__0OdlPv,obj/unix/sparc_sunos5_32_CC4_ts/clsutil.o,clsutil.o)
+FUNCTION(InternetSetOptionA,obj/unix/sparc_sunos5_32_CC4_ts/dlylddll.o,dlylddll.o)
+FUNCTION(URLSubRegQueryA,obj/unix/sparc_sunos5_32_CC4_ts/dlylddll.o,dlylddll.o)
+FUNCTION(CoInternetCreateSecurityManager,obj/unix/sparc_sunos5_32_CC4_ts/dlylddll.o,dlylddll.o)
+FUNCTION(strstr,obj/unix/sparc_sunos5_32_CC4_ts/proxysup.o,proxysup.o)
+FUNCTION(CreateURLMoniker,obj/unix/sparc_sunos5_32_CC4_ts/dlylddll.o,dlylddll.o)
+FUNCTION(GetUrlCacheConfigInfoA,obj/unix/sparc_sunos5_32_CC4_ts/dlylddll.o,dlylddll.o)
+#endif // COMPILE_OPTION

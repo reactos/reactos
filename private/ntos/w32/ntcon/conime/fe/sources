@@ -1,0 +1,15 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Dec-19-1996 v-HirShi Created
+#***************************************************************************/
+ALT_PROJECT=FE
+ALT_PROJECT_TARGET=$(ALT_PROJECT)
+!include ..\sources.inc
+
+SOURCES=$(SOURCES) 

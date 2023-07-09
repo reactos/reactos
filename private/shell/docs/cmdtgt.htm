@@ -1,0 +1,250 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>IE4.0</title>
+</head>
+
+<body bgcolor="#80FFFF">
+
+<h2>IE 3.0/4.0 Additional Command IDs</h2>
+
+<h2>IE 30 : Additional Command IDs</h2>
+
+<p>OLECMDID_UPDATECOMMANDS</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: up (the containee processes)</p>
+    <p><strong>Parameter</strong>: N/A</p>
+    <p>It indicates that at least one of command status (which
+    the container can query by calling ICT::QueryStatus) has been
+    changed. If the container has any UI (typically toolbar
+    buttons), it should query the status of all commands to
+    disable/enable them correctly.</p>
+</blockquote>
+
+<p>OLECMDID_REFRESH</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: down (the container processes)</p>
+    <p><strong>Parameter</strong>: One of following as VT_I4 -
+    Optional (default is OLECMDIDF_REFRESH_NORMAL)</p>
+    <blockquote>
+        <p>OLECMDIDF_REFRESH_NORMAL -- Normal refresh. If the
+        data is in the cache, use it. </p>
+        <p>OLECMDIDF_REFRESH_IFEXPIRED -- If the data in the
+        cache is expired, get it from the server.</p>
+        <p>OLECMDIDF_REFRESH_CONTINUE -- Continue stopped
+        rendering.</p>
+        <p>OLECMDIDF_REFRESH_COMPLETELY -- Don't get any data
+        from the cache.</p>
+    </blockquote>
+    <p>This command tells the Document to update the view. </p>
+</blockquote>
+
+<p>OLECMDID_STOP</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: up and down</p>
+    <p><strong>Parameter</strong>: N/A</p>
+    <p>When the container receives this command, it aborts the
+    pending navigation (a hyperlink navigation that the browser
+    is waiting for the server to respond) if any. When the
+    container receives this command, it stops any subsequent
+    download (such as embedded images) and other things <em><strong>[???
+    I don't remember -- what's the different from
+    OLECMDID_STOPDOWNLOAD ???]</strong></em>.</p>
+</blockquote>
+
+<p>OLECMDID_HIDETOOLBARS</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: down</p>
+    <p><strong>Parameter</strong>: N/A</p>
+    <p>When the containee receives this command, it toggles the
+    view state of its own toolbars. When IE is opening a document
+    in the browser window, it sends this command from within its
+    IOleInPlaceSite::OnUIActivate member. </p>
+</blockquote>
+
+<p>OLECMDID_SETPROGRESSMAX</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: up</p>
+    <p><strong>Parameter</strong>: uMax as VT_I4</p>
+    <p>This command is always used with OLECMDID_SETPROGRESSPOS.
+    The uMax specifies the scale of the progress bar (which is
+    displayed by the container).</p>
+</blockquote>
+
+<p>OLECMDID_SETPROGRESSPOS</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: up</p>
+    <p><strong>Parameter</strong>: uPos as VT_I4</p>
+    <p>This command is always used with OLECMDID_SETPROGRESSMAX.
+    The uPos specifies the current progress position relative to
+    uMax.</p>
+</blockquote>
+
+<p>OLECMDID_SETPROGRESSTEXT</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: up</p>
+    <p><strong>Parameter</strong>: bstrText as VT_BSTR</p>
+    <p>When the container receives this command, it displays the
+    specified text in its status bar. IE has two layers of text
+    field in its status bar, one for the &quot;status text&quot;
+    (which is set by IOleInPlaceFrame::SetStatusText) and another
+    for the &quot;progress text&quot; (specified by this
+    command). The &quot;status text&quot; is typically used for
+    menu help (which you see when you highlight a menuitem) or a
+    mouse help (which you see when you move a cursor over on a
+    certain item -- such as a hyperlink on HTML page). The
+    &quot;progress text&quot; is typically used for progress
+    notification, such as &quot;finding site...&quot;,
+    &quot;downloading image...&quot;, etc. The &quot;progress
+    text&quot; is visible only when the &quot;status text&quot;
+    is empty. </p>
+</blockquote>
+
+<p>OLECMDID_SETTITLE</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: up</p>
+    <p><strong>Parameter</strong>: bstrTitle as VT_I4</p>
+    <p>When the container receives this command, it puts the
+    specified text as the title of the document typically on the
+    title bar. IE displays URL until it receives this command. </p>
+</blockquote>
+
+<p>OLECMDID_SETDOWNLOADSTATE</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: up</p>
+    <p><strong>Parameter</strong>: bDownloading as VT_I4 or
+    VT_BOOL</p>
+    <p>When the continer receives this command, it turn on or off
+    a certain UI which indicates the &quot;downloading&quot;
+    state (the animated icon in the case of IE). If bDownloading
+    is non-zero, it turn on the UI. If bDownloading is zero, it
+    calls IOleCommandTarget::QueryStatus with
+    OLECMDID_STOPDOWNLOAD and turn off the UI only if it's
+    diabled (MSOCMDF_ENABLED is not set). </p>
+</blockquote>
+
+<p>OLECMDID_STOPDOWNLOAD</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: down</p>
+    <p><strong>Parameter</strong>: N/A</p>
+    <p>Stops the on going downloading on the page. </p>
+</blockquote>
+
+<h2>IE 40 : Additional Command IDs (draft)</h2>
+
+<p>OLECMDID_ONTOOLBARACTIVATED</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: down</p>
+    <p><strong>Parameter</strong>: N/A</p>
+    <p>This command will be sent from the container (the Internet
+    Explorer frame window) to the document object when one of
+    frame-owned toolbars (such as the address bar) got the input
+    focus. </p>
+</blockquote>
+
+<p>OLECMDID_FIND (reserved for future enhancement)</p>
+
+<p>OLECMDID_DELETE</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: T.B.F. [MattSq, SatoNa]</p>
+    <p><strong>Parameter</strong>: N/A</p>
+    <p>T. B. F. </p>
+</blockquote>
+
+<p>&nbsp;OLECMDID_HTTPEQUIV</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: up</p>
+    <p><strong>Parameter</strong>: bstrHttpEquiv as VT_BSTR</p>
+    <p>This command will be sent from the document object (HTML
+    viewer) to the container (the Internet Explorer) when the
+    parser fins &lt;META HTTP-EQUIV&gt; tag in it. The
+    bstrHttpEquiv contains the parameter to that meta tag, which
+    is equivalent to an HTTP header. The document object may send
+    this command more than once, but must send
+    OLECMDID_HTTPEQUIV_DONE after all the &lt;META HTTP-EQUIV&gt;
+    tags are processed. </p>
+</blockquote>
+
+<p>OLECMDID_HTTPEQUIV_DONE</p>
+
+<blockquote>
+    <p><strong>Direction</strong>: up</p>
+    <p><strong>Parameter</strong>: N/A</p>
+    <p>This command will be sent from the document object (HTML
+    viewer) to the container (the Internet Explorer) when the
+    parser knows there will be no other &lt;META HTTP-EQUIV&gt;
+    tag in that page. The document object must send this command
+    after sending one or more OLECMDID_HTTPEQUIV commands. </p>
+</blockquote>
+
+<p>OLECMDID_ENABLE_INTERACTION <em>(new in Beta-2)</em></p>
+
+<blockquote>
+    <p><strong>Direction</strong>: down</p>
+    <p><strong>Parameter</strong>: fEnable as VT_I4</p>
+    <p>This command will be sent from the container (typically a
+    browser frame) to the document (typically an HTML viewer) to
+    either pause (fEnable == 0) or resume (fEnable != 0) any
+    audio or animation on the document. IE 4.0 browser uses this
+    command to appropriately pause those activities when either
+    the browser window is minimized or totally covered by other
+    windows. </p>
+</blockquote>
+
+<p>OLECMDID_ONUNLOAD <em>(new in Beta-2)</em></p>
+
+<blockquote>
+    <p><strong>Direction</strong>: down</p>
+    <p><strong>Parameter</strong>: N/A</p>
+    <p><strong>Return Value</strong>: S_FALSE indicates that the
+    hyperlink operation or close operation should be canceled and
+    keep the current document accessible.</p>
+    <p>This command will be sent from the container (typically a
+    browser frame) to the document when either it's about to
+    initiate a hyperlinking operation (navigation) or close the
+    window. It gives the current document to save any
+    non-confirmed data (typically a data bound HTML page) back to
+    the server. The document usually ask the user either (1)
+    save, (2) don't save and continue or (3) cancel the
+    operation. When the user chooses to cancel the operation, the
+    document returns S_FALSE and the browser cancels the
+    operation. </p>
+    <p>It's important to recognize that this
+    &quot;non-confirmed&quot; state is different from a dirty
+    state (IPersistFile::IsDirty()) of the document, which
+    applies to the document itself. This state is the state of
+    fields filled by the user when the document is used as a form
+    (to input data to a database). </p>
+    <p>By the way, this command is sent to the document when the
+    user initiate the hyperlink operation (typically by clicking
+    a hyperlink on the page or typing an URL in the address bar).
+    Once the document returns S_OK to this command, the browser
+    does not send this command again even though the user
+    modifies some field before the new document became available
+    (notice that the navigation is an asynchronous operation and
+    the current document remains interactive while the browser is
+    waiting for the response from the server).</p>
+</blockquote>
+
+<hr>
+
+<p><a href="default.htm">Go to the home page</a></p>
+</body>
+</html>

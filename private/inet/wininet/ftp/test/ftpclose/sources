@@ -1,0 +1,14 @@
+!INCLUDE ..\..\..\..\place.inc
+
+MAJORCOMP=wininet
+MINORCOMP=ftpclose
+
+TARGETNAME=ftpclose
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+SOURCES=ftpclose.c
+
+UMAPPL=ftpclose
+UMTYPE=console
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\wininet.lib

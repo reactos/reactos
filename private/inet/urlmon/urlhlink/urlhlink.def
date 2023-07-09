@@ -1,0 +1,19 @@
+LIBRARY urlhlink
+EXPORTS
+	URLOpenPullStreamA
+	URLDownloadToFileA
+	URLOpenBlockingStreamA
+	URLOpenStreamA
+	URLOpenHttpStreamA
+	URLOpenPullStreamW
+	URLDownloadToFileW
+	URLOpenBlockingStreamW
+	URLOpenStreamW
+	URLOpenHttpStreamW
+
+	HlinkSimpleNavigateToString
+	HlinkSimpleNavigateToMoniker
+	HlinkGoBack
+	HlinkGoForward
+	HlinkNavigateString
+	HlinkNavigateMoniker

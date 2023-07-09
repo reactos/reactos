@@ -1,0 +1,58 @@
+DLGINCLUDE RCDATA DISCARDABLE
+BEGIN
+    "DIALOGS.H\0"
+END
+
+IDD_CONNECT DIALOG 3, 19, 241, 48
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Computer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Computer &Name:", 102, 6, 13, 55, 8
+    EDITTEXT        IDC_CONNECTNAME, 66, 12, 115, 12, ES_AUTOHSCROLL |
+                    ES_OEMCONVERT
+    PUSHBUTTON      "OK", IDOK, 193, 5, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 193, 23, 40, 14
+END
+
+IDD_KEEPASDLG DIALOG 9, 21, 234, 66
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Paste"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Page Name", 302, 10, 8, 39, 8
+    EDITTEXT        IDC_KEEPASEDIT, 57, 7, 118, 12, ES_AUTOHSCROLL | ES_OEMCONVERT
+    CONTROL         "&Share Item Now", IDC_SHARECHECKBOX, "Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 58, 31, 64, 10
+    DEFPUSHBUTTON   "OK", IDOK, 181, 7, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 181, 25, 40, 14
+    PUSHBUTTON      "&Help", IDHELP, 181, 43, 40, 14
+END
+
+IDD_SHAREDLG DIALOG 8, 18, 250, 174
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Share ClipBook Page"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Page Name:", -1, 6, 9, 41, 8
+    GROUPBOX        "Sharing Options:", -1, 7, 21, 192, 37, WS_GROUP
+    CONTROL	    "Start Application on &Connect", IDC_STARTAPP,
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 36, 134, 10
+    GROUPBOX        "Access Type:", -1, 7, 62, 192, 54, WS_GROUP
+    CONTROL         "&Read-Only", IDC_READONLY, "Button", BS_AUTORADIOBUTTON |
+                    WS_TABSTOP, 17, 78, 47, 10
+    CONTROL         "&Full", IDC_FULLACCESS, "Button", BS_AUTORADIOBUTTON,
+                    17, 89, 24, 10
+    CONTROL         "&Depends on Password", IDC_DEPENDSON, "Button",
+                    BS_AUTORADIOBUTTON, 17, 100, 85, 10
+    GROUPBOX        "Passwords:", 207, 7, 120, 192, 45, WS_GROUP
+    LTEXT           "R&ead-Only Password:", IDC_RDONLYTEXT, 13, 135, 71, 8
+    EDITTEXT        IDC_PASSWORD1, 103, 132, 75, 12, ES_UPPERCASE | ES_OEMCONVERT
+    LTEXT           "Fu&ll Access Password:", IDC_FULLACCESSTEXT, 13, 147,
+                    74, 8
+    EDITTEXT        IDC_PASSWORD2, 103, 147, 75, 12, ES_UPPERCASE | ES_OEMCONVERT
+    DEFPUSHBUTTON   "OK", IDOK, 204, 6, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 204, 23, 40, 14
+    PUSHBUTTON      "&Help", IDHELP, 204, 40, 40, 14
+    LTEXT           "", IDC_STATICSHARENAME, 51, 9, 147, 8
+END

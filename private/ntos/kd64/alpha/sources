@@ -1,0 +1,6 @@
+GPSIZE=32
+ALPHA_SOURCES=..\alpha\kdtrap.c \
+	     ..\alpha\kdreboot.c \
+	     ..\alpha\kdcpuapi.c \
+             ..\alpha\kdcmsup.c  \
+             ..\alpha\kdppcr.s

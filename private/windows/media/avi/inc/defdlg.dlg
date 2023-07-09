@@ -1,0 +1,48 @@
+/****************************************************
+ *
+ *	STANDARD DIALOG OPEN BOX TEMPLATE
+ *
+ *  Uses the control id's in the defdlg.h file,
+ *  as used by DefDlgOpenProc().
+ *
+ ****************************************************/
+
+#include "defdlg.h"	// this file is just #define's since the Windows
+			// dialog editor is stupid and can't deal with
+			// anything else in an include file.
+
+/* 
+ * DIALOG OPEN BOX TEMPLATE
+ * 
+ * Note that this dialog template has the following features:
+ * 
+ * - Uses no-integral-height listboxes, so that the listboxes will be
+ * the exact size you told them to be, but not an even multiple of
+ * the font size.  The LBS_NOINTEGRALHEIGHT flag controls this.
+ * 
+ * - Sets the dialog font to be 8 point helvetica.  This is the standard
+ * Windows3 applet style, but can be changed if desired by changing
+ * the FONT statement.
+ * 
+ * The following controls must be present for DefDlgOpenProc() to work:
+ * DLGOPEN_EDIT		editbox
+ * DLGOPEN_PATH		static text box
+ * DLGOPEN_FILE_LISTBOX	listbox - must be ownerdraw!
+ * DLGOPEN_DIR_LISTBOX	listbox
+ * 
+ * BUTTONS using the ids IDOK and IDCANCEL to allow the box to
+ * close itself or cancel.
+ * 
+ */
+DLGOPENBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 25, 22, 182, 110
+STYLE WS_BORDER | WS_CAPTION | DS_MODALFRAME | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | WS_POPUP
+FONT 8, "Helv"
+BEGIN
+	   CONTROL "", DLGOPEN_EDIT, "edit", ES_LEFT | ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_GROUP | WS_TABSTOP | WS_CHILD, 45, 7, 130, 12
+	   CONTROL "Path", DLGOPEN_PATH, "static", SS_LEFT | SS_NOPREFIX | WS_GROUP | WS_CHILD, 70, 26, 110, 9
+	   CONTROL "", DLGOPEN_FILE_LISTBOX, "listbox", LBS_NOTIFY | LBS_SORT | LBS_STANDARD | WS_BORDER | WS_VSCROLL | WS_GROUP | WS_TABSTOP | WS_CHILD | LBS_NOINTEGRALHEIGHT, 5, 26, 60, 75
+	   CONTROL "", DLGOPEN_DIR_LISTBOX, "listbox", LBS_NOTIFY | LBS_SORT | LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD | LBS_NOINTEGRALHEIGHT, 70, 42, 60, 59
+	   CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP | WS_CHILD, 135, 53, 40, 14
+	   CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON | WS_GROUP | WS_TABSTOP | WS_CHILD, 135, 75, 40, 14
+	   CONTROL "Filename:", -1, "static", SS_LEFT | WS_GROUP | WS_CHILD, 5, 7, 40, 12
+END

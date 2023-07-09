@@ -1,0 +1,64 @@
+What you need to have in order to make your system work
+
+A soundblaster card (or clone) installed, preferably in its
+default configuration. (Address 220, Interrupt 7, DMA channel 1)
+
+\NT\DRIVER\SNDBLST.SYS present
+
+\NT\CONFIG\SYSTEM.REG with the line SNDBLST.SYS
+This file should not end with CRLF.  The easy way to avoid
+this is to insert the SNDBLST.SYS line as the NEXT TO last line.
+
+C:\NT\WINDOWS\SYSTEM\MMDRV.DLL present
+
+C:\NT\WINDOWS\SYSTEM\WINMM.DLL present
+
+C:\NT\WINDOWS\SYSTEM\MCISEQ.DLL present (for MIDI)
+
+C:\NT\WINDOWS\SYSTEM\MCICDA.DLL present (for CD Audio)
+
+C:\NT\WINDOWS\SYSTEM\MPLAYER.EXE present (Media player)
+
+C:\NT\WINDOWS\SYSTEM\SOUNDREC.EXE present (Sound recorder)
+
+C:\NT\WINDOWS\SYSTEM\SOUND.CPL present (Control panel applet)
+
+system.ini containing:
+;-----------------------------------------------------------------
+;
+; This section associates a MCI media type with a MCI media driver
+;
+[MCI]
+    WaveAudio=mciwave.dll
+    Sequencer=mciseq.dll
+    CDAudio=mcicda.dll
+
+[drivers]
+    wave=mmdrv.dll
+    midi=mmdrv.dll
+    midimapper=midi.cpl
+;-----------------------------------------------------------------
+
+win.ini containing:
+;-----------------------------------------------------------------
+[MCI Extensions]
+    Wav=WaveAudio
+    rmi=Sequencer
+    Mid=Sequencer
+;-----------------------------------------------------------------
+
+In addition, you might want to
+ERASE c:\nt\windows\MPlayer.INI
+as MPlayer can somethimes think that it KNOWS that there are
+no drivers of a particular sort on the system, with the result
+that it fails to look.  A dose of enforced amnesia can help it.
+
+You might want to have some corresponding icons in PROGMAN
+(File; New; Program Item; etc)
+
+You do not need a MMDebug section to make your system go, but if
+you want to see debug output you could try (in Win.ini)
+[MMDebug]
+    SoundRec=3
+    MPlayer=3
+; choose a value in the range 0 (no output) to 4 (E-V-E-R-Y-T-H-I-N-G)

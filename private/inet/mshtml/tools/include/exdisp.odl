@@ -1,0 +1,345 @@
+#include <olectl.h>
+#include "exdispid.h"
+
+//
+// BUGBUG: headerfiles are screwy!!!
+//
+// Any changes (renames/additions/deletions) of IIDs, DIID,
+// or CLSIDs to this file needs to be reflected in nashsdk\inc\shlguid.w
+//
+
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright 1995 - 1996 Microsoft Corporation. All Rights Reserved.
+//
+//--------------------------------------------------------------------------
+
+//=--------------------------------------------------------------------------=
+// the libid for this type libray
+//
+[
+    uuid(EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B),
+    helpstring("Microsoft Internet Controls"), // VB has a maximum limit for this helpstring!
+    lcid(0x0000),
+    version(1.0)
+]
+library SHDocVw {
+
+    // standard imports
+    //
+    importlib(STDOLE_TLB);
+
+
+    //
+    // IWebBrowser
+    //
+
+
+    [
+        uuid(EAB22AC1-30C1-11CF-A7EB-0000C05BAE0B),
+        helpstring("Web Browser interface"),
+        helpcontext(0x0000),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IWebBrowser : IDispatch {
+        //
+        // Methods
+        //
+
+        [id(100), helpstring("Navigates to the previous item in the history list."), helpcontext(0x0000)]
+            HRESULT GoBack();
+        [id(101), helpstring("Navigates to the next item in the history list."), helpcontext(0x0000)]
+            HRESULT GoForward();
+        [id(102), helpstring("Go home/start page."), helpcontext(0x0000)]
+            HRESULT GoHome();
+        [id(103), helpstring("Go Search Page."), helpcontext(0x0000)]
+            HRESULT GoSearch();
+
+        [id(104), helpstring("Navigates to a URL or file."), helpcontext(0x0000)]
+            HRESULT Navigate([in] BSTR URL,
+                             [in, optional] VARIANT * Flags,
+                             [in, optional] VARIANT * TargetFrameName,
+                             [in, optional] VARIANT * PostData,
+                             [in, optional] VARIANT * Headers);
+
+            // Flags
+            typedef
+            [
+                uuid(14EE5380-A378-11cf-A731-00A0C9082637),
+                helpstring("Constants for WebBrowser navigation flags")
+            ]
+            enum BrowserNavConstants {
+                [helpstring("Open in new window")]          navOpenInNewWindow = 0x0001,
+                [helpstring("Exclude from history list")]   navNoHistory = 0x0002,
+                [helpstring("Don't read from cache")]       navNoReadFromCache = 0x0004,
+                [helpstring("Don't write from cache")]      navNoWriteToCache = 0x0008,
+            } BrowserNavConstants;
+
+        [id(DISPID_REFRESH), helpstring("Refresh the currently viewed page."), helpcontext(0x0000)]
+            HRESULT Refresh();
+
+        // The standard Refresh takes no parameters and we need some... use a new name
+        [id(105), helpstring("Refresh the currently viewed page."), helpcontext(0x0000)]
+            HRESULT Refresh2([in,optional] VARIANT * Level);
+
+            // Level
+            typedef
+            [
+                uuid(C317C261-A991-11cf-A731-00A0C9082637),
+                helpstring("Constants for Refresh")
+            ]
+            enum RefreshConstants {                                         // must map to these in sdk\inc\docobj.h
+                [helpstring("Refresh normal")]     REFRESH_NORMAL     = 0,  //== OLECMDIDF_REFRESH_NORMAL
+                [helpstring("Refresh if expired")] REFRESH_IFEXPIRED  = 1,  //== OLECMDIDF_REFRESH_IFEXPIRED
+                [helpstring("Refresh completely")] REFRESH_COMPLETELY = 3   //== OLECMDIDF_REFRESH_COMPLETELY
+            } RefreshConstants;
+
+        [id(106), helpstring("Stops opening a file."), helpcontext(0x0000)]
+            HRESULT Stop();
+
+        //
+        // Properties
+        //
+
+        // Automation heirarchy...
+        [id(200), propget, helpstring("Returns the application automation object if accessible, this automation object otherwise.."), helpcontext(0x0000)]
+            HRESULT Application([out,retval] IDispatch** ppDisp);
+
+        [id(201), propget, helpstring("Returns the automation object of the container/parent if one exists or this automation object."), helpcontext(0x0000)]
+            HRESULT Parent([out,retval] IDispatch** ppDisp);
+
+        [id(202), propget, helpstring("Returns the container/parent automation object, if any."), helpcontext(0x0000)]
+            HRESULT Container([out,retval] IDispatch** ppDisp);
+
+        [id(203), propget, helpstring("Returns the active Document automation object, if any."), helpcontext(0x0000)]
+            HRESULT Document([out,retval] IDispatch** ppDisp);
+
+        [id(204), propget, helpstring("Returns True if this is the top level object."), helpcontext(0x0000)]
+            HRESULT TopLevelContainer([out, retval] boolean* pBool);
+
+        [id(205), propget, helpstring("Returns the type of the contained document object."), helpcontext(0x0000)]
+            HRESULT Type([out,retval] BSTR* pbstrType);
+
+        // Window stuff...
+        [id(206), propget, helpstring("The horizontal position (pixels) of the frame window relative to the screen/container."), helpcontext(0x0000)]
+            HRESULT Left([out, retval] long *pl);
+        [id(206), propput]
+            HRESULT Left([in] long Left);
+        [id(207), propget, helpstring("The vertical position (pixels) of the frame window relative to the screen/container."), helpcontext(0x0000)]
+            HRESULT Top([out, retval] long *pl);
+        [id(207), propput]
+            HRESULT Top([in] long Top);
+        [id(208), propget, helpstring("The horizontal dimension (pixels) of the frame window/object."), helpcontext(0x0000)]
+            HRESULT Width([out, retval] long *pl);
+        [id(208), propput]
+            HRESULT Width([in] long Width);
+        [id(209), propget, helpstring("The vertical dimension (pixels) of the frame window/object."), helpcontext(0x0000)]
+            HRESULT Height([out, retval] long *pl);
+        [id(209), propput]
+            HRESULT Height([in] long Height);
+
+        // WebBrowser stuff...
+        [id(210), propget, helpstring("Gets the short (UI-friendly) name of the URL/file currently viewed."), helpcontext(0x0000)]
+            HRESULT LocationName([out,retval] BSTR * pbstrLocationName);
+
+        [id(211), propget, helpstring("Gets the full URL/path currently viewed."), helpcontext(0x0000)]
+            HRESULT LocationURL([out,retval] BSTR * pbstrLocationURL);
+
+        // Added a property to see if the viewer is currenly busy or not...
+        [id(212), propget, helpstring("Query to see if something is still in progress."), helpcontext(0x0000)]
+            HRESULT Busy([out,retval] boolean *pBool);
+    };
+
+    // event interface for IWebBrowser controls ...
+    //
+    [
+        uuid(EAB22AC2-30C1-11CF-A7EB-0000C05BAE0B),
+        helpstring("Event interface for Web Browser Control"),
+        hidden
+    ]
+    dispinterface DWebBrowserEvents {
+        properties:
+        methods:
+
+        [id(DISPID_BEFORENAVIGATE), helpstring("Fired when a new hyperlink is being navigated to."), helpcontext(0x0000)]
+            void BeforeNavigate([in] BSTR URL, long Flags, BSTR TargetFrameName, VARIANT * PostData, BSTR Headers, [in, out]boolean * Cancel);
+
+        [id(DISPID_NAVIGATECOMPLETE), helpstring("Fired when a new hyperlink is being navigated to."), helpcontext(0x0000)]
+            void NavigateComplete([in] BSTR URL );
+
+        [id(DISPID_STATUSTEXTCHANGE), helpstring("Statusbar text changed."), helpcontext(0x0000)]
+            void StatusTextChange([in]BSTR Text);
+
+        [id(DISPID_PROGRESSCHANGE), helpstring("Fired when download progress is updated."), helpcontext(0x0000)]
+            void ProgressChange([in] long Progress, [in] long ProgressMax);
+
+        [id(DISPID_DOWNLOADCOMPLETE), helpstring("Download of page complete."), helpcontext(0x0000)]
+            void DownloadComplete();
+
+        [id(DISPID_COMMANDSTATECHANGE), helpstring("The enabled state of a command changed"), helpcontext(0x0000)]
+            void CommandStateChange([in] long Command, [in] boolean Enable);
+
+        [id(DISPID_DOWNLOADBEGIN), helpstring("Download of a page started."), helpcontext(0x000)]
+            void DownloadBegin();
+
+        [id(DISPID_NEWWINDOW), helpstring("Fired when a new window should be created."), helpcontext(0x0000)]
+            void NewWindow([in] BSTR URL, [in] long Flags, [in] BSTR TargetFrameName, [in] VARIANT * PostData, [in] BSTR Headers, [in,out] BOOLEAN * Processed);
+
+        [id(DISPID_TITLECHANGE), helpstring("Document title changed."), helpcontext(0x0000)]
+            void TitleChange([in]BSTR Text);
+
+        [id(DISPID_FRAMEBEFORENAVIGATE), helpstring("Fired when a new hyperlink is being navigated to in a frame."), helpcontext(0x0000)]
+            void FrameBeforeNavigate([in] BSTR URL, long Flags, BSTR TargetFrameName, VARIANT * PostData, BSTR Headers, [in, out]boolean * Cancel);
+
+        [id(DISPID_FRAMENAVIGATECOMPLETE), helpstring("Fired when a new hyperlink is being navigated to in a frame."), helpcontext(0x0000)]
+            void FrameNavigateComplete([in] BSTR URL );
+
+        [id(DISPID_FRAMENEWWINDOW), helpstring("Fired when a new window should be created."), helpcontext(0x0000)]
+            void FrameNewWindow([in] BSTR URL, [in] long Flags, [in] BSTR TargetFrameName, [in] VARIANT * PostData, [in] BSTR Headers, [in,out] BOOLEAN * Processed);
+
+        // The following are IWebBrowserApp specific:
+        //
+        [id(DISPID_QUIT), helpstring("Fired when application is quiting."), helpcontext(0x0000)]
+            void Quit([in, out] boolean * Cancel);
+
+        [id(DISPID_WINDOWMOVE), helpstring("Fired when window has been moved."), helpcontext(0x0000)]
+            void WindowMove();
+
+        [id(DISPID_WINDOWRESIZE), helpstring("Fired when window has been sized."), helpcontext(0x0000)]
+            void WindowResize();
+
+        [id(DISPID_WINDOWACTIVATE), helpstring("Fired when window has been activated."), helpcontext(0x0000)]
+            void WindowActivate();
+
+        [id(DISPID_PROPERTYCHANGE), helpstring("Fired when the PutProperty method has been called."), helpcontext(0x0000)]
+            void PropertyChange([in] BSTR szProperty);
+
+
+    };
+
+    // Flags for DWebBrowserEvents::CommandStateChange
+    typedef
+    [
+        uuid(34A226E0-DF30-11CF-89A9-00A0C9054129),
+        helpstring("Constants for WebBrowser CommandStateChange")
+    ]
+    enum CommandStateChangeConstants {
+        [helpstring("Command Change")]      CSC_UPDATECOMMANDS  = 0xFFFFFFFF,
+        [helpstring("Navigate Forward")]    CSC_NAVIGATEFORWARD = 0x00000001,
+        [helpstring("Navigate Back")]       CSC_NAVIGATEBACK    = 0x00000002,
+    } CommandStateChangeConstants;
+
+
+    // CLSID_WebBrowser
+    [
+        uuid(EAB22AC3-30C1-11CF-A7EB-0000C05BAE0B),
+        helpstring("WebBrowser Control")
+    ]
+    coclass WebBrowser {
+        [default]         interface     IWebBrowser;
+        [default, source] dispinterface DWebBrowserEvents;
+    };
+
+
+    //
+    // IWebBrowserApp
+    //
+
+
+    [
+        uuid(0002DF05-0000-0000-C000-000000000046),
+        helpstring("Web Browser Application Interface."),
+        helpcontext(0x0000),
+        hidden,
+        oleautomation,
+        dual
+    ]
+    interface IWebBrowserApp: IWebBrowser
+    {
+        //
+        // Methods
+        //
+
+        [id(300), helpstring("Exits application and closes the open document."), helpcontext(0x0000)]
+            HRESULT Quit();
+
+        [id(301), helpstring("Converts client sizes into window sizes."), helpcontext(0x0000)]
+            HRESULT ClientToWindow([in,out] int* pcx, [in,out] int* pcy);
+
+        [id(302), helpstring("Associates vtValue with the name szProperty in the context of the object."), helpcontext(0x0000)]
+            HRESULT PutProperty([in] BSTR szProperty, [in] VARIANT vtValue);
+
+        [id(303), helpstring("Retrieve the Associated value for the property vtValue in the context of the object."), helpcontext(0x0000)]
+            HRESULT GetProperty([in] BSTR szProperty, [out, retval] VARIANT *pvtValue);
+
+        //
+        // Properties
+        //
+
+        [id(0), propget, helpstring("Returns name of the application."), helpcontext(0x0000)]
+            HRESULT Name([out,retval] BSTR* pbstrName);
+
+        [id(DISPID_HWND), propget, helpstring("Returns the HWND of the current IE window."), helpcontext(0x0000)]
+            HRESULT HWND([out,retval] long *pHWND);
+
+        [id(400), propget, helpstring("Returns file specification of the application, including path."), helpcontext(0x0000)]
+            HRESULT FullName([out,retval] BSTR* pbstrFullName);
+
+        [id(401), propget, helpstring("Returns the path to the application."), helpcontext(0x0000)]
+            HRESULT Path([out,retval] BSTR* pbstrPath);
+
+        [id(402), propget, helpstring("Determines whether the application is visible or hidden."), helpcontext(0x0000)]
+            HRESULT Visible([out, retval] boolean* pBool);
+        [id(402), propput, helpstring("Determines whether the application is visible or hidden."), helpcontext(0x0000)]
+            HRESULT Visible([in] boolean Value);
+
+        [id(403), propget, helpstring("Turn on or off the statusbar."), helpcontext(0x0000)]
+            HRESULT StatusBar([out, retval] boolean* pBool);
+        [id(403), propput, helpstring("Turn on or off the statusbar."), helpcontext(0x0000)]
+            HRESULT StatusBar([in] boolean Value);
+
+        [id(404), propget, helpstring("Text of Status window."), helpcontext(0x0000)]
+            HRESULT StatusText([out, retval] BSTR *pbstr);
+        [id(404), propput, helpstring("Text of Status window."), helpcontext(0x0000)]
+            HRESULT StatusText([in] BSTR bstr);
+
+        [id(405), propget, helpstring("Controls which toolbar is shown."), helpcontext(0x0000)]
+            HRESULT ToolBar([out, retval] int * pValue);
+        [id(405), propput, helpstring("Controls which toolbar is shown."), helpcontext(0x0000)]
+            HRESULT ToolBar([in] int Value);
+
+        [id(406), propget, helpstring("Controls whether menubar is shown."), helpcontext(0x0000)]
+            HRESULT MenuBar([out, retval] boolean * Value);
+        [id(406), propput, helpstring("Controls whether menubar is shown."), helpcontext(0x0000)]
+            HRESULT MenuBar([in] boolean Value);
+
+        [id(407), propget, helpstring("Maximizes window and turns off statusbar, toolbar, menubar, and titlebar."), helpcontext(0x0000)]
+            HRESULT FullScreen([out, retval] boolean * pbFullScreen);
+        [id(407), propput, helpstring("Maximizes window and turns off statusbar, toolbar, menubar, and titlebar."), helpcontext(0x0000)]
+            HRESULT FullScreen([in] boolean bFullScreen);
+
+    };
+
+
+    // event interface for IWebBrowserApp is the same as DWebBrowserEvents
+    // the old uuid for DInternetExplorerEvents was
+    //  uuid(0002DF06-0000-0000-C000-0000000000000046),
+
+
+    // CLSID_InternetExplorer
+    [
+        uuid(0002DF01-0000-0000-C000-000000000046),
+        helpstring("Internet Explorer Application."),
+    ]
+    coclass InternetExplorer
+    {
+        [default]         interface     IWebBrowserApp;
+        [default, source] dispinterface DWebBrowserEvents;
+    }
+
+};
+
+

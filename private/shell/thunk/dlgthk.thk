@@ -1,0 +1,107 @@
+__foldwin32sstuff __foldwin32sstuff;
+foldstyleinitialization = true;
+
+
+/*
+ * COMMDLG thunks for Win32s
+ */
+
+/*
+ * Open issues:
+ *
+ */
+
+enablemapdirect3216 = true;
+flatthunks = false;         /* BUGBUG [KevinR] 01-Sep-1993 */
+
+#include "..\types.thk"
+
+#include "..\dlgtypes.thk"
+
+/*
+ * Exported COMMDLG functions
+ *
+ * The functions are ordered as in the def files to make it easier to
+ * follow which functions are done, which are missing, etc.
+ */
+
+
+/**********************************************************************
+ *
+ *                            COMMDLG.DLL exports
+ *
+ **********************************************************************/
+
+/*
+ *  GetOpenFileName
+ *  GetSaveFileName
+ *  ChooseColor
+ *  ChooseFont
+ *  CommDlgExtendedError
+ *  GetFileTitle
+ */
+
+BOOL GetOpenFileName(LPOPENFILENAME lpOfn) =
+BOOL ThkGetOpenFileName(LPOPENFILENAME lpOfn)
+{
+    lpOfn = raw pack unpack;
+    Flags = local 4;
+}
+
+BOOL GetSaveFileName(LPOPENFILENAME lpOfn) =
+BOOL ThkGetSaveFileName(LPOPENFILENAME lpOfn)
+{
+    lpOfn = raw pack unpack;
+    Flags = local 4;
+}
+
+
+BOOL ChooseColor(LPCHOOSECOLOR lpcc) =
+BOOL ThkChooseColor(LPCHOOSECOLOR lpcc)
+{
+    lpcc = raw pack unpack;
+    Flags	      = local 4; /* Saves CHOOSECOLOR flags field */
+    lpCustColorsSeg   = local 4; /* Saves segment for lpCustColors */
+    lpTemplateNameSeg = local 4; /* Saves segment for lpTemplateName */
+}
+
+BOOL ChooseFont(LPCHOOSEFONT lpcf) =
+BOOL ThkChooseFont(LPCHOOSEFONT lpcf)
+{
+    lpcf = raw pack unpack;
+    Flags	       = local 4;
+    lpTemplateNameTemp = local 4;
+    lpszStyleTemp      = local 4;
+}
+
+DWORD CommDlgExtendedError() =
+DWORD ThkCommDlgExtendedError()
+{
+}
+
+int GetFileTitleI(LPSTR lpszFile, LPSTR lpszTitle, WORD wBufSize, DWORD dwFlags) =
+int GetFileTitleI(LPSTR lpszFile, LPSTR lpszTitle, WORD wBufSize, DWORD dwFlags)
+{
+    faulterrorcode = -1;
+}
+
+
+DWORD ParseFileFrom32(LPSTR lpszFile, DWORD dwFlags) =
+DWORD ThkParseFile(LPSTR lpszFile, DWORD dwFlags)
+{
+}
+
+DWORD PathQualify(LPSTR lpszFile) =
+DWORD ThkPathQualify(LPSTR lpszFile)
+{
+}
+
+/* Private API: COMDLG32 must run this thunk during its init routine.
+ *
+ * We declare pCB32Tab as DWORD, not POINTER. We want the linear
+ * address passed thru untouched.
+ */
+VOID DlgThunkInit(DWORD pCB32Tab) =
+VOID DlgThunkInit(DWORD pCB32Tab)
+{
+}

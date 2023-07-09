@@ -1,0 +1,27 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Unreg]
+DelReg=GIFFilt.Reg
+
+[Reg]
+AddReg=GIFFilt.Reg
+
+[GIFFilt.Reg]
+HKCR,CLSID\%CLSID_CoGIFFilter%,,,"CoGIFFilter Class"
+HKCR,CLSID\%CLSID_CoGIFFilter%\InProcServer32,,,%_MOD_PATH%
+HKCR,CLSID\%CLSID_CoGIFFilter%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_CoGIFFilter%\ProgID,,,"GIFFilter.CoGIFFilter.1"
+
+HKCR,GIFFilter.CoGIFFilter,,,"CoGIFFilter Class"
+HKCR,GIFFilter.CoGIFFilter\CLSID,,,%CLSID_CoGIFFilter%
+HKCR,GIFFilter.CoGIFFilter.1,,,"CoGIFFilter Class"
+HKCR,GIFFilter.CoGIFFilter.1\CLSID,,,%CLSID_CoGIFFilter%
+
+HKCR,"MIME\Database\Content Type\image/gif\Bits","0",1,04,00,00,00,FF,FF,FF,FF,47,49,46,38
+HKCR,"MIME\Database\Content Type\image/gif","Image Filter CLSID",,%CLSID_CoGIFFilter%
+
+[Strings]
+CLSID_CoGIFFilter={69dc5010-7312-11d0-97b0-00c04fd85a5d}
+
+[End]

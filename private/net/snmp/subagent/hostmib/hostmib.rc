@@ -1,0 +1,12 @@
+#include <windows.h>
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define	VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Host Resources MIB"
+#define VER_INTERNALNAME_STR        "hostmib.dll"
+#define VER_ORIGINALFILENAME_STR    "hostmib.dll"
+
+#include "common.ver"
+

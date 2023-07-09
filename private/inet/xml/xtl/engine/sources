@@ -1,0 +1,67 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=xtl
+MINORCOMP=engine
+
+ROOT=$(MAKEDIR:\xtl\engine=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=engine
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES= \
+    securitymanager.cxx \
+    oawrap.cxx \
+    runtime.cxx \
+    xtlkeywords.cxx \
+    action.cxx      \
+    copyaction.cxx  \
+    evalaction.cxx \
+    getitemaction.cxx \
+    nodenameaction.cxx \
+    ifaction.cxx \
+    repeataction.cxx \
+    scriptaction.cxx \
+    templateaction.cxx \
+    usetemplatesaction.cxx \
+    actionframe.cxx \
+    templateframe.cxx \
+    processor.cxx \
+    scriptengine.cxx \
+    scriptsite.cxx
+
+
+
+INCLUDES= \
+        $(ROOT); \
+        $(ROOT)\include; \
+        $(ROOT)\core\base; \
+        $(ROOT)\xql\query; \
+        $(ROOT)\xml\om; \
+        $(IDL_GENERATED_HEADERS); \
+        $(WINDOWS_INC_PATH)
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+

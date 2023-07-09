@@ -1,0 +1,16 @@
+LIBRARY mgmtapi
+
+HEAPSIZE  1024
+
+EXPORTS
+  SnmpMgrOpen
+  SnmpMgrCtl
+  SnmpMgrClose
+  SnmpMgrRequest
+  SnmpMgrTrapListen
+  SnmpMgrGetTrap
+  SnmpMgrGetTrapEx
+  SnmpMgrStrToOid
+  SnmpMgrOidToStr
+  SnmpMgrMIB2Disk
+  serverTrapThread

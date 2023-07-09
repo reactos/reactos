@@ -1,0 +1,38 @@
+LIBRARY     SYNCUI
+
+SECTIONS
+    .bss          READ WRITE         ; uninitialized data
+    .rdata        READ               ; read-only data
+    .data         READ WRITE         ; initialized data
+    .rsrc         READ               ; resources
+    .idata        READ WRITE         ; imported address table
+    .edata        READ               ; exported function information
+    .reloc        READ               ; relocation information
+    .instanc      READ WRITE         ; instance data
+
+; !! NB !! The MIPS linker doesn't support #ifdef WINNT.  This
+; was the original SECTIONS list for Win95, which due to this limitation
+; I can't leave in, even conditionally.
+
+;   SECTIONS
+;    .bss          READ WRITE     SHARED   ; uninitialized data
+;    .rdata        READ           SHARED   ; read-only data
+;    .data         READ WRITE     SHARED   ; initialized data
+;    .rsrc         READ           SHARED   ; resources
+;    .idata        READ WRITE              ; imported address table
+;    .edata        READ           SHARED   ; exported function information
+;    .reloc        READ           SHARED   ; relocation information
+;    .instanc      READ WRITE              ; instance data
+
+
+HEAPSIZE    1024                    ; BUGBUG: too big?
+
+EXPORTS
+    DllCanUnloadNow         @2    PRIVATE
+    DllGetClassObject       @3    PRIVATE
+
+    ; Briefcase functions
+    Briefcase_Create        @4                  ;Internal
+    Briefcase_Intro         @5                  ;Internal
+    Briefcase_CreateW       @6                  ;Internal
+    Briefcase_CreateA = Briefcase_Create  @7    ;Internal

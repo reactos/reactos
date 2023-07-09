@@ -1,0 +1,108 @@
+; Microsoft Internet Explorer FTP Folder
+;
+; Copyright 1995-99 Microsoft Corporation.  All Rights Reserved.
+;
+
+[Version]
+Signature="$CHICAGO$"
+AdvancedINF=2.0
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Warning: Because of the use of Backup/Restore
+;;          it's necessary for IE4 to be installed.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[FtpShellExtensionInstall]
+ComponentName=MSIEFTP
+ComponentVersion=1
+AdvOptions=36
+AddReg=RegFTP,!RegRollbackControls
+DelReg=RegFTPDel
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[FtpShellExtensionUninstall]
+ComponentName=MSIEFTP
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[FtpForceAssociations]
+AddReg=RegForceFTPAssoc
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Rollback Registration
+;
+;  These registry keys will kick off the RollBack during uninstall.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[!RegRollbackControls]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","MSIEFTP",0,""
+
+[RegFTP]
+HKCR,"CLSID\%FTP_GUID%",,,"%DESC%"
+HKCR,"CLSID\%FTP_GUID%\InProcServer32","",,"%THISDLL%"
+HKCR,"CLSID\%FTP_GUID%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%FTP_GUID%\DefaultIcon","",,"%THISDLL%,0"
+HKCR,"CLSID\%FTP_GUID%\ShellFolder","Attributes",1,34,00,00,a0
+HKCR,"CLSID\%FTP_GUID%\shellex\ExtShellFolderViews\%WEBVIEW_GUID%","PersistMoniker",0x00020000,"file://%25%\web\ftp.htt"
+
+HKCR,"ftp\DefaultIcon","",,"%THISDLL%,0"
+
+HKCR,"CLSID\%CLSID_CFtpWebView%",,,"%DESC_CFtpWebView%"
+HKCR,"CLSID\%CLSID_CFtpWebView%\InProcServer32",,0x00020000,"%THISDLL%"
+HKCR,"CLSID\%CLSID_CFtpWebView%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_CFtpWebView%\TypeLib",,,"%CFtpWebView_TYPELIB%"
+
+HKCR,"CLSID\%CLSID_CFtpInstaller%",,,"%DESC_CFtpInstaller%"
+HKCR,"CLSID\%CLSID_CFtpInstaller%\InProcServer32",,0x00020000,"%THISDLL%"
+HKCR,"CLSID\%CLSID_CFtpInstaller%\InProcServer32","ThreadingModel",,"Apartment"
+
+HKCR,"CLSID\%CLSID_FtpDataObject%",,,"%DESC_FtpDataObject%"
+HKCR,"CLSID\%CLSID_FtpDataObject%\InProcServer32",,0x00020000,"%THISDLL%"
+HKCR,"CLSID\%CLSID_FtpDataObject%\InProcServer32","ThreadingModel",,"Apartment"
+
+; Give users the options of using the OLD FTP UI
+HKLM,"SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\BROWSE\FTPUI","RegPath",,"Software\Microsoft\Ftp"
+HKLM,"SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\BROWSE\FTPUI","Text",,"%DESC_USENEWUI%"
+HKLM,"SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\BROWSE\FTPUI","Type",,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\BROWSE\FTPUI","CheckedValue",,"no"
+HKLM,"SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\BROWSE\FTPUI","UncheckedValue",,"yes"
+HKLM,"SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\BROWSE\FTPUI","ValueName",,"Use Web Based FTP"
+HKLM,"SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\BROWSE\FTPUI","DefaultValue",,"no"
+HKLM,"SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\BROWSE\FTPUI","HKeyRoot",65537,0x80000001
+HKLM,"SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\BROWSE\FTPUI","HelpID",,"iexplore.hlp#50560"
+
+;; Show that the feature has been installed.
+HKLM,"%ACTIVE_SETUP%\Installed Components\%CFtpJIT_Component%","KeyFileName",0,"%THISDLL%"
+
+; Don't over ride someone else setting
+HKCR,"ftp","ShellFolder",2,"%FTP_GUID%"
+
+
+[RegFTPDel]
+; These are now obsolete, so delete them.
+HKCR,"Interface\210DA8A1-7445-11d1-91F7-006097DF5BD4"
+
+
+[RegForceFTPAssoc]
+; In this case force the association
+HKCR,"ftp","ShellFolder",0,"%FTP_GUID%"
+
+
+
+[Strings]
+FTP_GUID            = "{63da6ec0-2e98-11cf-8d82-444553540000}"
+WEBVIEW_GUID        = "{5984FFE0-28D4-11CF-AE66-08002B2E1262}"
+CLSID_CFtpWebView   = "{210DA8A2-7445-11d1-91F7-006097DF5BD4}"
+CLSID_CFtpInstaller = "{1ABCFC13-2340-11d2-B601-006097DF5BD4}"
+CLSID_FtpDataObject = "{299D0193-6DAA-11d2-B679-006097DF5BD4}"
+CFtpWebView_TYPELIB = "{6E8CEDE1-746A-11d1-91F7-006097DF5BD4}"
+DESC                = "Microsoft FTP Folder"
+DESC_CFtpWebView    = "FTP Folder Web View Automation"
+DESC_CFtpInstaller  = "FTP Installer to handle FTP Associations"
+DESC_FtpDataObject  = "FTP IDataObject impl"
+ERR_NOSETUPAPI      = "Internet Explorer 5.0 needs to be installed for this product to be installed."
+DESC_USENEWUI       = "Enable folder view for FTP sites"
+CFtpJIT_Component   = "{630b1da0-b465-11d1-9948-00c04f98bbc9}"
+ACTIVE_SETUP        = "Software\Microsoft\Active Setup"

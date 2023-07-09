@@ -1,0 +1,81 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\text=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=text
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+!ifdef UNIX
+SOURCE_PLATFORM = \
+    quxcopy.cxx
+
+!else
+SOURCE_PLATFORM = \
+
+!endif
+
+SOURCES= \
+    $(SOURCE_PLATFORM) \
+    caret.cxx \
+    cglyph.cxx \
+    ctlrange.cxx \
+    disp.cxx \
+    rclclptr.cxx \
+    dobj.cxx \
+    doc.cxx \
+    doc2.cxx \
+    dxfrobj.cxx \
+    ebody.cxx \
+    flownode.cxx \
+    font.cxx \
+    hash.cxx \
+    irange.cxx \
+    keynav.cxx \
+    line.cxx \
+    linesrv.cxx \
+    lsbreak.cxx \
+    lscache.cxx \
+    lscomplx.cxx \
+    lsconst.cxx \
+    lsdraw.cxx \
+    lsfecbk.cxx \
+    lsm.cxx \
+    lsm2.cxx \
+    lsmisc.cxx \
+    lsobj.cxx \
+    lsrender.cxx \
+    lswidth.cxx \
+    onerun.cxx \
+    paste.cxx \
+    rel.cxx \
+    runptr.cxx \
+    selrensv.cxx \
+    seldrag.cxx \
+    sift.cxx \
+    splice.cxx \
+    text.cxx \
+    tinfo.cxx \
+    txtelems.cxx \
+    txtparse.cxx \
+    txtsaver.cxx \
+    txtsite.cxx \
+    util.cxx \
+    uuid.cxx \
+    uwrap.cxx \
+    fontlnk.cxx \
+    disp2.cxx \
+    treepos.cxx \
+    tpointer.cxx  \
+    rgncol.cxx \
+
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

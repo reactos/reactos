@@ -1,0 +1,43 @@
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETNAME=nclipps
+
+SYNCHRONIZE_BLOCK=1
+SYNCHRONIZE_DRAIN=1
+
+DLLBASE=0x33000000
+DLLENTRY=_DllMainCRTStartup
+USE_MSVCRT=1
+USE_NATIVE_EH=1
+NO_UNICODE=1
+
+C_DEFINES=$(C_DEFINES)              \
+            /DREGISTER_PROXY_DLL
+
+#!IF $(__FEATURE_SHELLEX)
+#C_DEFINES=$(C_DEFINES)              \
+#            /D_FEATURE_SHELLEX
+#!ENDIF
+
+SOURCES= \
+        nclipps.rc\
+        netclip_i.c\
+        netclip_p.c\
+        dlldata.c
+
+#!IF $(__FEATURE_SHELLEX)
+#SOURCES=$(SOURCES)\
+#        classfac.cpp\
+#        shellex.cpp\
+#        dlldatax.c
+#!ENDIF
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib\
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib\
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib\
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib\
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib

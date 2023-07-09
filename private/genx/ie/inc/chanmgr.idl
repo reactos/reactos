@@ -1,0 +1,148 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright 1995-1998 Microsoft Corporation. All Rights Reserved.
+//
+//--------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// chanmgr.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//---------------------------------------------------------------------------=")
+cpp_quote("// Channel Manager Interfaces.")
+cpp_quote("")
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+#endif
+
+interface IChannelMgr;
+interface IEnumChannels;
+
+
+//---------------------------------------------------------------
+//          Channel Manager
+//---------------------------------------------------------------
+[
+    uuid(4804f2e0-d16e-11d0-802b-00c04fd75d13),     // LIBID_CHANNELMGR
+    helpstring("Microsoft Channel Manager 1.0"),
+    lcid(0x0000),
+    version(1.0)
+]
+library CHANNELMGR
+{
+    // ChannelMgr interface
+    [
+        uuid(85BD8E82-0FBA-11d1-90C3-00C04FC2F568),  // IID_IChannelMgr
+        helpstring("Channel Manager interface"),
+        odl
+    ]
+    interface IChannelMgr : IUnknown
+    {
+        typedef struct _tagChannelShortcutInfo {
+            DWORD  cbSize;     // size of struct, must be specified
+            LPWSTR pszTitle;   // channel title
+            LPWSTR pszURL;     // required url to channel cdf
+            LPWSTR pszLogo;    // optional logo url
+            LPWSTR pszIcon;    // optional icon url
+            LPWSTR pszWideLogo;// optional wide logo url
+            BOOL   bIsSoftware;// is software update and lives in that folder (normally false)
+        } CHANNELSHORTCUTINFO;
+
+        typedef struct _tagChannelCategoryInfo {
+            DWORD  cbSize;     // size of struct, must be specified
+            LPWSTR pszTitle;   // category title
+            LPWSTR pszURL;     // optional url to category html
+            LPWSTR pszLogo;    // optional logo url
+            LPWSTR pszIcon;    // optional icon url
+            LPWSTR pszWideLogo;// optional wide logo url
+        } CHANNELCATEGORYINFO;
+
+        typedef enum _tagChannelEnumFlags {
+            CHANENUM_CHANNELFOLDER    = 0x00000001,
+            CHANENUM_SOFTUPDATEFOLDER = 0x00000002,
+            CHANENUM_DESKTOPFOLDER    = 0x00000004,
+            CHANENUM_TITLE            = 0x00010000,
+            CHANENUM_PATH             = 0x00020000,
+            CHANENUM_URL              = 0x00040000,
+            CHANENUM_SUBSCRIBESTATE   = 0x00080000
+        } CHANNELENUMFLAGS;
+
+cpp_quote("#define CHANENUM_ALLFOLDERS (CHANENUM_CHANNELFOLDER    |    \\")
+cpp_quote("                             CHANENUM_SOFTUPDATEFOLDER |    \\")
+cpp_quote("                             CHANENUM_DESKTOPFOLDER          )")
+cpp_quote("")
+cpp_quote("#define CHANENUM_ALLDATA    (CHANENUM_TITLE            |    \\")
+cpp_quote("                             CHANENUM_PATH             |    \\")
+cpp_quote("                             CHANENUM_URL              |    \\")
+cpp_quote("                             CHANENUM_SUBSCRIBESTATE         )")
+cpp_quote("")
+cpp_quote("#define CHANENUM_ALL        (CHANENUM_CHANNELFOLDER    |    \\")
+cpp_quote("                             CHANENUM_SOFTUPDATEFOLDER |    \\")
+cpp_quote("                             CHANENUM_DESKTOPFOLDER    |    \\")
+cpp_quote("                             CHANENUM_TITLE            |    \\")
+cpp_quote("                             CHANENUM_PATH             |    \\")
+cpp_quote("                             CHANENUM_URL              |    \\")
+cpp_quote("                             CHANENUM_SUBSCRIBESTATE         )")
+cpp_quote("")
+
+        HRESULT AddChannelShortcut([in]CHANNELSHORTCUTINFO *pChannelInfo);
+        HRESULT DeleteChannelShortcut([in]LPWSTR pszTitle);
+
+        HRESULT AddCategory([in]CHANNELCATEGORYINFO *pCategoryInfo);
+        HRESULT DeleteCategory([in]LPWSTR pszTitle);
+
+        HRESULT EnumChannels([in]DWORD dwEnumFlags,
+                             [in]LPCWSTR pszURL,  // optional cdf url
+                             [out]IEnumChannels** pIEnumChannels);
+    };
+
+    // EnumChannels interface
+    [
+        uuid(A4C65425-0F82-11d1-90C3-00C04FC2F568),  // IID_IEnumChannels
+        helpstring("Channel Enumerator interface"),
+        odl
+    ]
+    interface IEnumChannels : IUnknown
+    {
+        typedef enum _tagSubcriptionState{
+            SUBSTATE_NOTSUBSCRIBED,
+            SUBSTATE_PARTIALSUBSCRIPTION,
+            SUBSTATE_FULLSUBSCRIPTION
+        } SUBSCRIPTIONSTATE;
+
+        typedef struct _tagChannelInfo {
+            LPOLESTR          pszTitle;
+            LPOLESTR          pszPath;
+            LPOLESTR          pszURL;
+            SUBSCRIPTIONSTATE stSubscriptionState;
+        } CHANNELENUMINFO;
+
+        HRESULT Next(ULONG celt, CHANNELENUMINFO* rgChanInf,
+                     ULONG *pceltFetched);
+        HRESULT Skip(ULONG celt);
+        HRESULT Reset(void);
+        HRESULT Clone(IEnumChannels **ppenum);
+    };
+
+    // ChannelMgr class
+    [
+        uuid(b3cdae90-d170-11d0-802b-00c04fd75d13), // CLSID_ChannelMgr
+        helpstring("ChannelMgr class"),
+    ]
+    coclass ChannelMgr
+    {
+        [default] interface IChannelMgr;
+    }
+}
+

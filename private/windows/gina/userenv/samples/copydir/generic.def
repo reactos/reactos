@@ -1,0 +1,20 @@
+NAME          Generic
+EXETYPE       WINDOWS
+STUB         'WINSTUB.EXE'
+
+
+
+CODE  PRELOAD MOVEABLE DISCARDABLE
+
+
+DATA  PRELOAD MOVEABLE MULTIPLE
+
+HEAPSIZE     1024
+STACKSIZE    5120
+
+
+EXPORTS
+        WndProc           @1
+        About             @2
+        LUPDlgProc        @3
+        LogonDlgProc      @4

@@ -1,0 +1,63 @@
+
+PRODUCT = PNGZLIB
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES= \
+    adler32.c        \
+    compress.c       \
+    crc32.c          \
+    deflate.c        \
+    gzio.c           \
+    infblock.c       \
+    infcodes.c       \
+    inffast.c        \
+    inflate.c        \
+    inftrees.c       \
+    infutil.c        \
+    trees.c          \
+    uncompr.c        \
+    zutil.c
+
+# Windows DLL name:
+WLIB = pngzlib
+LIB  = lib${WLIB}.a
+
+LIBOBJS := ${SOURCES:%.C=%.o}
+LIBOBJS := ${LIBOBJS:%.cpp=%.o}
+LIBOBJS := ${LIBOBJS:%.cxx=%.o}
+LIBOBJS := ${LIBOBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+##
+
+PROJECT_CFLAGS = \
+	-I${SDK_DIR}/atl21
+
+#PROJECT_LIBS = -ladvapi32 -luuid -luser32 -loleaut32 -lgdi32 -lkernel32 -lversion -lole32 -lpngzlib -llibcmt
+#PROJECT_LIBS = -lurlmon -lolepro32 -loleaut32
+
+# 
+# Easy way to resolve circular interlibrary dependencies
+#
+
+#PROJECT_LIBFLAGS := \
+#	${PROJECT_LIBS} ${PROJECT_LIBS} ${PROJECT_LIBS}
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+

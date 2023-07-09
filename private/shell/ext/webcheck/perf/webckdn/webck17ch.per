@@ -1,0 +1,38 @@
+###############################################################################
+# webck17.per  
+#   
+# Perl script for creating webcheck download test CDF for Top17 workload
+#   
+# History:  
+#   07/24/97 vincentr	Created.
+#      
+# Copyright(C) 1996.  Microsoft Corporation.  All rights reserved.  
+###############################################################################
+
+$Server = "http://vincentr-iis";
+if( $ARGV[0] ne "" )
+{
+	$Server = $ARGV[0];
+}
+
+print STDOUT "<CHANNEL HREF=\"" . $Server . "/\">\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/dummy1/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/b5/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Cnet/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Cnn/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Dilbert/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Disney/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Espnet/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Infoseek/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Mindspring/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/MrShowBiz/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/MsTravel/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/NBA/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/NFL/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Pathfinder/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/W3C/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Web21/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Holodeck/default.htm\"></ITEM>\n";
+print STDOUT "    <ITEM HREF=\"" . $Server . "/top17/Microsoft/default.htm\"></ITEM>\n";
+print STDOUT "</CHANNEL>\n";
+

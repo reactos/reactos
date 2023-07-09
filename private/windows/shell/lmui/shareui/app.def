@@ -1,0 +1,5 @@
+LIBRARY         shareui
+EXPORTS
+    DllGetClassObject PRIVATE
+    DllCanUnloadNow   PRIVATE
+    UninstallW

@@ -1,0 +1,20 @@
+/****************************** Module Header ******************************\
+* Module Name: userexts.rc
+*
+* Copyright (c) 1985-93, Microsoft Corporation
+*
+* Constants
+*
+* History:
+* 22-Mar-1993 JerrySh   Created.
+\***************************************************************************/
+#include <windows.h>
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_DLL
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_INTERNALNAME_STR        "shlexts\0"
+
+#define VER_FILEDESCRIPTION_STR     "SHELL Debugger Extension"
+
+#include "common.ver"

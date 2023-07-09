@@ -1,0 +1,200 @@
+<HTML>
+<HEAD>
+	<TITLE>Welcome to the Active Desktop</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" 
+      HREF="tour.css" TITLE="Test">
+<SCRIPT LANGUAGE="Javascript">
+CurBull = 0;
+
+function doHead(){
+        headline.style.pixelWidth = 390;
+        headline.style.posLeft = bodytext.style.posLeft;
+	if(headline.filters.item(0).status != 2){
+		headline.filters.item(0).Apply();
+		headline.style.visibility="visible";
+		headline.filters.item(0).Play();
+	}
+}
+
+function doBody(){
+	if(bodytext.filters.item(0).status != 2){
+		bodytext.filters.item(0).Apply();
+		bodytext.style.visibility="visible";
+		bodytext.filters.item(0).Play();
+	}
+}
+
+function doArt(){
+	if(art.filters.item(0).status != 2){
+		art.filters.item(0).Apply();
+		art.style.visibility="visible";
+		art.filters.item(0).Play();
+	}
+}
+
+function doSwap(num, img){
+	if (num == CurBull){
+	
+	} else {
+		if (CurBull == 1){
+			list1.style.color = "#0099FF";
+			B1.style.display = "none";
+		}
+		else if (CurBull == 2){
+			list2.style.color = "#0099FF";
+			B2.style.display = "none";
+		}
+		else if (CurBull == 3){
+			list3.style.color = "#0099FF";
+			B3.style.display = "none";
+		}
+		else if (CurBull == 4){
+			list4.style.color = "#0099FF";
+			B4.style.display = "none";
+		}
+		else if (CurBull == 0){
+			textarea.style.display = "block";
+		}
+		
+		if (num == 1) {
+			list1.style.color = "#000000";
+			B1.style.display = "block";
+		}
+		else if (num == 2){
+			list2.style.color = "#000000";
+			B2.style.display = "block";
+		}
+		else if (num == 3){
+			list3.style.color = "#000000";
+			B3.style.display = "block";
+		}
+		else if (num == 4){
+			list4.style.color = "#000000";
+			B4.style.display = "block";
+		}
+
+                if (num == 2) 
+                    window.setTimeout( "B2.scrollIntoView( false );", 50 );
+                if (num == 4) 
+                    window.setTimeout( "B4.scrollIntoView( false );", 50 );
+
+		document.images("GIF1").setAttribute("src", img);
+		CurBull = num;
+		doRule(textarea);
+	}
+
+}
+
+function doRule(src){
+	line.style.top=(src.offsetHeight / 2) + src.offsetTop + src.offsetParent.offsetTop;
+}
+</SCRIPT>
+
+
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" LEFTMARGIN=0 RIGHTMARGIN=0 TOPMARGIN=0 BOTTOMMARGIN=0 onLoad="doHead();">
+
+<DIV ID="headline" CLASS="head2" STYLE="filter: revealTrans(Duration=0.8, Transition=6)" onFilterChange="doBody();">
+Welcome to the Active Desktop<sup style="position:relative; top:-8pt; font-size:6pt">TM</sup>
+</DIV>
+
+<DIV ID="art" CLASS="PageArt" STYLE="filter: revealTrans(Duration=0.8, Transition=1)">
+<IMG ID="GIF1" SRC="res://ie4tour.dll/2/adefault.bmp" BORDER=0 ALT="" ALIGN="LEFT">
+</DIV>
+
+<DIV ID="bodytext" CLASS="body" STYLE="filter: revealTrans(Duration=0.8, Transition=12)" onFilterChange="doArt();">
+Now you can make your desktop act like your own personal Web page. 
+You can display pieces of your favorite Web sites directly on
+your desktop and keep them up-to-date automatically.  For example,
+you could add a stock ticker or news summary page from the Web.
+<br><br>
+You can easily customize the Active Desktop at any time.  Just click the
+<b>Start</b> button, point to <b>Settings</b>, point to <b>Active Desktop</b>,
+and then click <b>Customize my Desktop</b>. Or, to turn the Active Desktop on or off, click <b>View as Web Page</b>.
+<br><br>
+Click a feature below, and scroll down to learn more about it.
+<BR><BR>
+
+
+
+<SPAN ID="list1" CLASS="listitem" style="display:none">
+<a href="javascript:window.external.ResetFirstBootMode();"
+	style="
+	font:			8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:    18pt;
+	color:			#FF6633;
+	text-decoration:underline;
+	cursor: hand;">
+Import my original wallpaper
+</a></SPAN><BR>
+
+<SPAN ID="list2" CLASS="listitem" onClick="doSwap(2, 'res://ie4tour.dll/2/aditems.bmp')">
+Add Web items to the Active Desktop</SPAN><BR>
+
+
+<SPAN ID="list3" CLASS="listitem">
+<a href="http://www.microsoft.com/isapi/redir.dll?prd=ie&clcid=0x0409&pver=4.0&ar=cust" target="_blank"
+	style="
+	font:			8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:    18pt;
+	color:			#FF6633;
+	text-decoration:underline;
+	cursor: hand;">
+Visit the Active Desktop Gallery</a></SPAN><BR>
+
+<SPAN ID="list4" CLASS="listitem" onClick="doSwap(4, 'res://ie4tour.dll/2/adwpaper.bmp')">
+Make a Web page (HTML) my wallpaper</a></SPAN><BR>
+
+
+<BR><BR>
+
+<DIV ID="textarea" CLASS="bubble">
+<table cellspacing=0 cellpadding=0>
+<tr>
+    <td style="height: 100%; border:solid 1 #FF6633; border-right:none;" ROWSPAN=3>&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="line-height: 10px">&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="height: 100%; border:solid 1 #FF6633; border-left:none;" ROWSPAN=3>&nbsp</td>
+</tr>
+<tr>
+    <td>
+<SPAN ID="B1" CLASS="CalloutText">
+</SPAN>
+
+<SPAN ID="B2" CLASS="CalloutText">
+The Active Desktop lets you put "active content" from an Active Channel or any Web site
+on your desktop.  Look for the Add To Active Desktop button on your favorite sites.
+You can also right-click any link on a Web page, and drag it onto your
+desktop.  Try it!
+</SPAN>
+
+<SPAN ID="B3" CLASS="CalloutText">
+</SPAN>
+
+<SPAN ID="B4" CLASS="CalloutText">
+You can now make any local Web (HTML) page your desktop wallpaper.  A sample HTML 
+wallpaper has been set up for you.  Customize your wallpaper from the Display properties in
+Control Panel, just as you have done in Windows.
+</SPAN>
+
+</td>
+</tr>
+<tr>
+    <td style="line-height: 10px">&nbsp</td>
+</tr>
+</table>
+</DIV>
+</DIV>
+
+<DIV ID="line" CLASS="rule">
+</DIV>
+
+<DIV CLASS="CalloutArt">
+<IMG SRC="res://ie4tour.dll/2/aditems.bmp" WIDTH=160 HEIGHT=188 BORDER=0 ALT="">
+<IMG SRC="res://ie4tour.dll/2/adwpaper.bmp" WIDTH=160 HEIGHT=369 BORDER=0 ALT="">
+</DIV>
+
+</BODY>
+</HTML>

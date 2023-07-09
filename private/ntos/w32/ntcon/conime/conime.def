@@ -1,0 +1,10 @@
+; Module definition file for 16-bit applications only.
+
+NAME         CONIME
+EXETYPE      WINDOWS
+STUB         'WINSTUB.EXE'
+HEAPSIZE     2048
+STACKSIZE    10240
+CODE         PRELOAD MOVEABLE DISCARDABLE
+DATA         PRELOAD MOVEABLE MULTIPLE
+

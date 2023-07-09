@@ -1,0 +1,120 @@
+
+;
+;  Control registration and DLL installation
+;
+;  Note the AddReg and DelReg keys have a maximum length of 255 characters.
+;  Only one AddReg and DelReg key per header section.
+;
+;  Because of the length limitations, we use shorthand names for the
+;  sections.
+;
+;  RegItems with %11% or %25% are substituted on NT with 
+;  %SystemRoot%\whatever. But this needs to be REGEXSZ!  Use the 
+;  token %REGEXSZ% (0x20000).
+;
+;  Any entries that go into the registry that contain 
+;  %_SYS_MOD_PATH%, %11%, %25% MUST have this flag set. (w95 ignores it).
+
+
+[Version]
+Signature="$CHICAGO$"
+AdvancedINF=2.0
+
+[RegDll]
+ComponentName=Shell.SrvWiz
+ComponentVersion=1.0
+AdvOptions=36
+
+AddReg=RegSrvWiz,!RegRollbackSrvWiz
+DelReg=DelRegSrvWiz
+BackupReg=RegBackupSettings
+
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnregDll]
+ComponentName=Shell.SrvWiz
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  General Unregistration
+;
+;  This section will be applied with the component's uninstall.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[DelRegSrvWiz]
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Rollback Registration
+;
+;  These registry keys will kick off the RollBack during uninstall.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[!RegRollbackSrvWiz]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","Shell.SrvWiz",0,""
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  General Registration
+;
+;  This section will be applied with the component's installtion and any existing
+;  settings will be backed up.  These backed up settings will be restored
+;  on uninstall.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[RegSrvWiz]
+
+;;;;;;;  Windows NT Server Solution
+; In: Shell5
+HKCR,"CLSID\%CLSID_SrvWiz%",,,"%DESC_SrvWiz%"
+HKCR,"CLSID\%CLSID_SrvWiz%\%IPS%",,,"%THISDLL%"
+HKCR,"CLSID\%CLSID_SrvWiz%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_SrvWiz%\%VIPID%",,,"%VIPID_SrvWiz%"
+HKCR,"CLSID\%CLSID_SrvWiz%\ProgID",,,"%PID_SrvWiz%"
+HKCR,"CLSID\%CLSID_SrvWiz%\Programmable",,,
+HKCR,"CLSID\%CLSID_SrvWiz%\TypeLib",,,"%LIBID_SrvWizLib%"
+
+HKCR,"%PID_SrvWiz%",,,"%DESC_SrvWiz%"
+HKCR,"%PID_SrvWiz%\CLSID",,,"%CLSID_SrvWiz%"
+HKCR,"%VIPID_SrvWiz%",,,"%DESC_SrvWiz%"
+HKCR,"%VIPID_SrvWiz%\CLSID",,,"%CLSID_SrvWiz%"
+HKCR,"%VIPID_SrvWiz%\CurVer",,,"%PID_SrvWiz%"
+
+; HKCR,"CLSID\%CLSID_SrvWiz%\TypeLib\1.0\0\win32",,,"%THISDLL%"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Backup Settings
+;
+;  This section will force several keys to be backed up so they can be
+;  restored on uninstall.  This will only work for the user that
+;  installs and uninstalls, but that is acceptable for now.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[RegBackupSettings]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Tokenized strings
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[Strings]
+IPS="InProcServer32"
+
+VIPID="VersionIndependentProgID"
+PID_SrvWiz="SrvWiz.Srvwiz.1"
+VIPID_SrvWiz="SrvWiz.Srvwiz"
+
+REGEXSZ=0x00020000
+REGDW=0x00010001
+
+SMWCS = "Software\Microsoft\Windows\CurrentVersion\SrvWiz"
+
+DESC_SrvWiz             = "Windows NT Server Solution"
+
+; GUIDs
+IID_ISrvWiz             = "{D857B811-5F40-11D2-B002-00C04FC30936}"
+CLSID_SrvWiz            = "{D857B813-5F40-11D2-B002-00C04FC30936}"
+LIBID_SrvWizLib         = "{D857B805-5F40-11D2-B002-00C04FC30936}"
+
+ERR_NOSETUPAPI="Can not register SrvWiz.DLL because SETUPAPI.DLL is missing."
+
+

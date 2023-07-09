@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>IE4.0</title>
+</head>
+
+<body bgcolor="#80FFFF">
+
+<h2>IE 4.0 : Discarable Browser Property</h2>
+
+<p>This document describes one of new features of IE 4.0, which
+is called &quot;discardable browser property&quot;, which allows
+ActiveX controls or documents to pass some information across
+pages or cache some data. This mechanism will be used in
+following cases:</p>
+
+<ul>
+    <li>An ActiveX control in an HTML page gathers some data
+        (such as a shopping list) from the user and passes it to
+        another control in the subsequent pages. </li>
+    <li>Two ActiveX controls in two different HTML pages wants to
+        coordinate and play a music or an animation continuously
+        when the user browse from one page to anotherl. </li>
+    <li>An ActiveX control which retrieves some large data
+        asynchronously from the server wants to cache it so that
+        it does not have to download the same data again when the
+        user visits the same or similar page.</li>
+</ul>
+
+<h3>How it works</h3>
+
+<p>IE 3.0 has a capability to store arbitrary data or objects
+(VARIANT) as properties of each browser window. Any programs
+which can access IWebBrowserApp interface can call its
+PutProperty and GetProperty member to store and retrieve those
+properties. This mechanism was not useful for ActiveX controls or
+documents because IE 3.0 browser did not have any capability to
+&quot;expire&quot; them. Once properties are added, it stays
+until the browser window is closed. To solve this problem, we
+added this mechanism which allows programmers to add discardable
+properties, which will be discarded automatically by the browser
+if it's not accessed for a certain amount of time. </p>
+
+<p>In order to add properties as discardable, programmers need to
+package the data into a COM object which supports
+IDiscardableBrowserProperty interface.
+IDiscardableBrowserProperty interface is a dummy interface which
+has no additional member to IUnknown. It does not even have the
+interface definition. The programmer just need to responds to
+QueryInteraface(IID_IDiscardableBrowserProperty) and returns its
+IUnknown pointer. </p>
+
+<p>When an ActiveX control store such a COM object as a
+discadable property, it should call PutProperty method with a
+GUID string to make it sure that the name is unique. When the
+same type of ActiveX control on the following page need to get
+that data, it should call GetProperty method with the same GUID
+string. If it's not expired, it will successfully return the COM
+object that is added by the first control. </p>
+
+<p>&nbsp;</p>
+</body>
+</html>

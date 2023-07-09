@@ -1,0 +1,16 @@
+TARGETNAME=chandir
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+USE_CRTDLL=1
+
+INCLUDES=..\..\makefile.inc
+
+SOURCES=chandir.cxx
+
+UMAPPL=chandir
+UMTYPE=console
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\ole32.lib         \
+       $(BASEDIR)\public\sdk\lib\*\oleaut32.lib      \
+       $(BASEDIR)\public\sdk\lib\*\user32.lib        \
+       $(BASEDIR)\public\sdk\lib\*\uuid.lib

@@ -1,0 +1,61 @@
+//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\
+//
+// cdfview.dlg
+//
+//   dialog resources for cdfview.dll
+//
+//   History:
+//
+//       6/26/97  tnoonan   Created.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+#define IDC_STATIC -1
+
+IDD_CHANNELREFRESH DIALOGEX 0, 0, 218, 106
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Channel Refresh"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_DOWNLOADANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY,7,7,204,40
+    CONTROL         "Progress1",IDC_DOWNLOADPROGRESS,"msctls_progress32",0x0,
+                    7,54,204,8,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,155,84,56,14
+    CTEXT           "Please wait while this channel is updated",IDC_STATIC,7,
+                    69,204,8
+END
+
+IDD_CHANNEL_PROP DIALOG DISCARDABLE  20, 20, 227, 200
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | 
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Web Document"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_ICONEX2,7,7,20,20
+    EDITTEXT        IDC_NAME,34,11,172,14,ES_AUTOHSCROLL | ES_READONLY | NOT 
+                    WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ | WS_GROUP,7,34,213,1
+    LTEXT           "&URL:",IDC_URL_TEXT,7,43,18,8
+    EDITTEXT        IDC_URL,57,43,163,8,ES_AUTOHSCROLL | ES_READONLY | NOT 
+                    WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Visits:",IDC_VISITS_TEXT,7,58,43,8
+    LTEXT           "",IDC_VISITS,57,58,163,8
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ | WS_GROUP,7,73,213,1
+#ifndef UNIX
+    CONTROL         "Make this page available &offline",IDC_MAKE_OFFLINE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,213,10
+#endif /* UNIX */
+    GROUPBOX        "Summary",IDC_SUMMARY,5,98,213,94
+    LTEXT           "Last Synchronization:",IDC_LAST_SYNC_TEXT,12,112,68,8
+    LTEXT           "",IDC_LAST_SYNC,94,112,119,8
+    LTEXT           "Download Size:",IDC_DOWNLOAD_SIZE_TEXT,12,127,68,8
+    LTEXT           "",IDC_DOWNLOAD_SIZE,94,127,119,8
+    LTEXT           "Download Result:",IDC_DOWNLOAD_RESULT_TEXT,12,142,68,8
+    EDITTEXT        IDC_DOWNLOAD_RESULT,94,142,119,22, ES_MULTILINE | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "To free hard disk space taken by this offline favorite, uncheck the box above.",
+                    IDC_FREE_SPACE_TEXT,12,167,203,21
+    CONTROL         "",-1,"NativeFontCtl",NFS_EDIT | NFS_STATIC,0,0,0,0
+END
+
+

@@ -1,0 +1,33 @@
+/****************************** Module Header ******************************\
+* Module Name: res.rc
+*
+* Copyright (c) 1985-91, Microsoft Corporation
+*
+* Constants
+*
+* History:
+* 09-20-90 ???????      Created.
+\***************************************************************************/
+#include "usersrv.h"
+
+1 11 MSG00001.BIN
+
+IDI_CONSOLE     ICON   connew.ico
+IDB_WARNING     BITMAP warning.bmp
+
+IDD_ENDTASK  DIALOG LOADONCALL MOVEABLE DISCARDABLE 20, 20, 232, 134
+CAPTION "End Program - "
+FONT 8, "MS Shell Dlg"
+STYLE DS_CENTER | WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+BEGIN
+    LTEXT           "", IDC_STATUSMSG, 36, 8, 185, 16
+    LTEXT           "To return to Windows and check the status of the program, click Cancel.",
+                    IDC_STATUSCANCEL, 36, 32, 185, 16
+    LTEXT           "If you choose to end the program immediately, you will lose any unsaved data. To end the program now, click End Now.",
+                    -1, 36, 60, 185, 30
+    PUSHBUTTON      "&End Now", IDC_ENDNOW, 123, 112, 46, 14
+    DEFPUSHBUTTON   "Cancel", IDCANCEL, 175, 112, 46, 14
+END
+
+
+

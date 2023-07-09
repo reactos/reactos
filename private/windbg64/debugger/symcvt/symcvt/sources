@@ -1,0 +1,46 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Wesley Witt (wesw)
+
+!ENDIF
+
+MAJORCOMP=windbg
+MINORCOMP=symcvt
+
+!include ..\..\sources.inc
+
+TARGETNAME=symcvt
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+SOURCES= \
+    cofftocv.c  \
+    cvcommon.c  \
+    file.c      \
+    symcvt.c    \
+    symtocv.c   \
+    symcvt.rc
+
+UMTYPE=windows
+
+INCLUDES=.\;..\include;$(DEBUG_INCLUDES)
+
+TARGETLIBS=$(SDK_LIB_PATH)\kernel32.lib   \
+           $(SDK_LIB_PATH)\user32.lib     \
+           $(NONSHIP_LIB_PATH)\dbghelp.lib

@@ -1,0 +1,17 @@
+// WARNING
+// non-localizable resources only
+// localizable resources should go in loadwclc.rc
+
+#include <winuser.h>
+#include <commctrl.h>
+#include <shlobj.h>
+#include "resource.h"
+
+#include <stubres.h>
+#include <inststub.rc>
+
+#ifndef MLUI_SUPPORT
+#include "loadwclc.rc"
+#else
+#include "loadwc.rcv"
+#endif

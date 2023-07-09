@@ -1,0 +1,510 @@
+'====================================================================='
+'=    PENAPI.TXT      Windows for Pens - Visual Basic Declarations   ='
+'=                                                                   ='
+'=                    Copyright (c) 1992-94, Microsoft Corp.         ='
+'=                    All rights reserved.                           ='
+'=                                                                   ='
+'====================================================================='
+
+'====================================================================='
+'=   Register Pen Applications                                       ='
+'====================================================================='
+Declare Function RegisterPenApps Lib "penwin.dll" (ByVal wFlags As Integer, ByVal fRegister As Integer) As Integer
+Declare Function IsPenAware Lib "penwin.dll" () As Integer
+Declare Function GetVersionPenWin Lib "penwin.dll" () As Integer
+
+'====================================================================='
+'=   ALC CODES                                                       ='
+'====================================================================='
+    ' These constants are used when defining the
+    ' CharSet property of HEdits and BEdits
+Global Const ALC_ALL = &H43FF
+Global Const ALC_DEFAULT = &H0
+Global Const ALC_LCALPHA = &H1
+Global Const ALC_UCALPHA = &H2
+Global Const ALC_ALPHA = &H3
+Global Const ALC_NUMERIC = &H4
+Global Const ALC_ALPHANUMERIC = &H7
+Global Const ALC_PUNC = &H8
+Global Const ALC_MATH = &H10
+Global Const ALC_MONETARY = &H20
+Global Const ALC_OTHER = &H40
+Global Const ALC_WHITE = &H100
+Global Const ALC_NONPRINT = &H200
+Global Const ALC_GESTURE = &H4000
+Global Const ALC_USEBITMAP = &H8000
+Global Const ALC_DBCS = &H400
+Global Const ALC_HIRAGANA = &H100000
+Global Const ALC_KATAKANA = &H200000
+Global Const ALC_KANJI = &H40000
+Global Const ALC_OEM = &HFF80000
+Global Const ALC_RESERVED = &H43FF
+Global Const ALC_NONPRIORITY = &H0
+Global Const ALC_SYSMINIMUM = (ALC_ALPHANUMERIC Or ALC_WHITE Or ALC_GESTURE)
+
+'====================================================================='
+'=   Point and Rectangle Structures                                  ='
+'====================================================================='
+Type POINTSHORT
+    x As Integer
+    y As Integer
+End Type
+
+Type RECTSHORT
+    left As Integer
+    top As Integer
+    right As Integer
+    bottom As Integer
+End Type
+
+'====================================================================='
+'=   Maniplating Pen Data                                            ='
+'====================================================================='
+Type PENDATAHEADER
+    wVersion As Integer         ' Pen Data format Version
+    cbSizeUsed As Integer       ' Size of Pen data memory block
+    cStrokes As Integer         ' Number of strokes
+    cPnt As Integer             ' Total number of points
+    cPntStrokeMax As Integer    ' Length of longest stroke in points
+    rectBound As RECTSHORT      ' Coordinates of bounding rectangle
+    wPndts As Integer           ' State of various PDTS_??? bits
+    nInkWidth As Integer        ' Ink Width
+    rgbInk As Long              ' Ink Color
+End Type
+
+Global Const PDTS_LOMETRIC = &H0        ' Each logical unit is mapped to 0.01mm. Positive X to right; Positive Y down.
+Global Const PDTS_HIMETRIC = &H1        ' Logical mapped to 0.001mm. X+ to right; Y+ down
+Global Const PDTS_HIENGLISH = &H2       ' Logical mapped to 0.001 inch. X+ to right; y+ is down
+Global Const PDTS_SCALEMAX = &H3        ' Maximum scaling allowed
+Global Const PDTS_DISPLAY = &H4         ' Logical mapped to display pixel.  X+ to right; Y+ is down
+Global Const PDTS_ARBITRARY = &H5       ' Arbitrary scale, application dependent
+Global Const PDTS_SCALEMASK = &HF       ' Mask for bits of scale
+Global Const PDTS_STANDARDSCALE = PDTS_HIENGLISH
+
+Global Const PDTS_NOPENINFO = &H100         ' No PENINFO structure
+Global Const PDTS_NOUPPOINTS = &H200        ' The data points on pen up have been removed
+Global Const PDTS_NOOEMDATA = &H400         ' No OEM data present
+Global Const PDTS_NOCOLINEAR = &H800
+Global Const PDTS_COMPRESSED = &H8000       ' The data is compressed
+Global Const PDTS_COMPRESSMETHOD = &HF0     ' Bits have been saved to encode which compression scheme was used
+Global Const PDTS_COMPRESS2NDDERIV = &H10   ' The second derivative betwen points is stored
+
+Global Const PDTT_DEFAULT = &H0                 ' reallocates memory block to fit data.  Should be run before GlobalSize(hpendata) is taken
+Global Const PDTT_PENINFO = PDTS_NOPENINFO      ' removes PenInfo from the header
+Global Const PDTT_UPPOINTS = PDTS_NOUPPOINTS    ' Throws away all data from points collected when pen is not in contact with the tablet.
+Global Const PDTT_OEMDATA = PDTS_NOOEMDATA      ' Removes All OEM Data that is not x,y (such as presure and angle)
+Global Const PDTT_COLINEAR = PDTS_NOCOLINEAR    ' Removes successive idetical points and colinear points from pendata
+Global Const PDTT_COMPRESS = PDTS_COMPRESSED    ' Compresses data without loss of any information.
+Global Const PDTT_DECOMPRESS = &H4000           ' Decompresses Data.  Cannot be used in conjunction with other timing options.
+Global Const PDTT_ALL = (PDTT_PENINFO Or PDTT_UPPOINTS Or PDTT_OEMDATA Or PDTT_COLINEAR)
+
+Global Const MAXOEMDATAWORDS = 6
+
+Type STROKEINFO
+    cPnts As Integer        ' Count of points in stroke
+    cbPnts As Integer       ' Count of bytes used for stroke
+    wPdk As Integer         ' State of stroke
+    dwTick As Long          ' Time of stroke
+End Type
+
+Type OEMPENINFO
+    wPdts As Integer
+    wValMax As Integer
+    wDistinct As Integer
+End Type
+
+Type PENINFO
+    cxRawWidth As Integer           ' Max x & width of tablet in 0.01 of inch
+    cyRawHeight As Integer          ' Max y & height of tablet " " " "
+    wDistinctWidth As Integer       ' Num of distinct X values returned by tablet
+    wDistinctHieght As Integer      ' Num of distinct Y values returned by tablet
+    nSamplingRate As Integer        ' Samples/second
+    nSamplingDist As Integer        ' Minimum distance moved in either direction
+    lPdc As Long                    ' Pen Device capabilities
+    cbOemData As Integer            ' Width of OEM Packet
+    rgoempeninfo(1 To MAXOEMDATAWORDS) As OEMPENINFO
+    rgwReserved(1 To 8) As Integer
+End Type
+
+Global Const PDT_NULL = 0
+Global Const PDT_PRESSURE = 1
+Global Const PDT_HEIGHT = 2
+Global Const PDT_ANGLEXY = 3
+Global Const PDT_ANGLEZ = 4
+Global Const PDT_BARRELROTATION = 5
+Global Const PDT_OEMSPECIFIC = 16
+
+Global Const PDC_INTEGRATED = &H1
+Global Const PDC_PROXIMITY = &H2
+Global Const PDC_RANGE = &H4
+Global Const PDC_INVERT = &H8
+Global Const PDC_RELATIVE = &H10
+Global Const PDC_BARREL1 = &H20
+Global Const PDC_BARREL2 = &H40
+Global Const PDC_BARREL3 = &H80
+
+Declare Function DuplicatePenData Lib "penwin.dll" (ByVal hPenData As Integer, ByVal gMemFlags As Integer) As Integer
+Declare Function CompactPenData Lib "penwin.dll" (ByVal hPenData As Integer, ByVal wTrimOptions As Integer) As Integer
+Declare Function BeginEnumStrokes Lib "penwin.dll" (ByVal hPenData As Integer) As Long
+Declare Function GetPenDataInfo Lib "penwin.dll" (ByVal hPenData As Integer, lppendataheader As PENDATAHEADER, lppeninfo As Any, ByVal dwReserve As Long) As Integer
+Declare Function GetPenDataStroke Lib "penwin.dll" (ByVal lppendata As Long, ByVal wStroke As Integer, lplpPoint As Any, lplpvOem As Any, lpsi As STROKEINFO) As Integer
+Declare Function GetPointsFromPenData Lib "penwin.dll" (ByVal hPenData As Integer, ByVal wStroke As Integer, ByVal wPnts As Integer, ByVal cPnts As Integer, lppoint As Any) As Integer
+Declare Function AddPointsPenData Lib "penwin.dll" (ByVal hPenData As Integer, lpPnt As Any, lpvOemData As Any, lpsiNew As Any) As Integer
+
+'====================================================================='
+'=   Symbol Graph Structures                                         ='
+'====================================================================='
+Global Const MAXHOTSPOT = 8
+
+'=== Symbol Character array =========================================='
+Type SYC
+    wStrokeFirst As Integer
+    wPntFirst As Integer
+    wStrokeLast As Integer
+    wPntLast As Integer
+    fLastSyc As Integer
+End Type
+
+'=== Symbol Graph element ============================================'
+Type SYG
+    rgpntHotSpotsArray(1 To MAXHOTSPOT) As POINTSHORT
+    cHotSpot As Integer
+    nFirstBox As Integer
+    lRecogVal As Long
+    lpSye As Long
+    cSye As Integer
+    lpSyc As Long
+    cSyc As Integer
+End Type
+
+'=== Symbol Element =================================================='
+Type SYE
+    Syv As Long
+    lRecogVal As Long
+    cl As Integer
+    iSyc As Integer
+End Type
+
+'=== SYV values with special meanings to Windows For Pens
+Global Const SYV_NULL = &H0
+Global Const SYV_UNKNOWN = &H1
+Global Const SYV_EMPTY = &H3
+Global Const SYV_BEGINOR = &H10
+Global Const SYV_ENDOR = &H11
+Global Const SYV_OR = &H12
+Global Const SYV_SOFTNEWLINE = &H20
+Global Const SYV_SPACENULL = &H10000
+
+'=== SYV values for gestures
+Global Const SYV_CLEAR = &H2FFD5
+Global Const SYV_EXTENDSELECT = &H2FFD8
+Global Const SYV_UNDO = &H2FFD9
+Global Const SYV_COPY = &H2FFDA
+Global Const SYV_CUT = &H2FFDB
+Global Const SYV_PASTE = &H2FFDC
+Global Const SYV_CLEARWORD = &H2FFDD
+Global Const SYV_USER = &H2FFDE
+Global Const SYV_CORRECT = &H2FFDF
+Global Const SYV_BACKSPACE = &H20008
+Global Const SYV_TAB = &H20009
+Global Const SYV_RETURN = &H2000D
+Global Const SYV_SPACE = &H20020
+
+'=== Application Specific gestures circle a-z and circle A-Z
+Global Const SYV_APPGESTUREMASK = &H20000
+Global Const SYV_CIRCLEUPA = &H224B6
+Global Const SYV_CIRCLEUPZ = &H224CF
+Global Const SYV_CIRCLELOA = &H224D0
+Global Const SYV_CIRCLELOZ = &H224E9
+
+'=== SYV for Shapes (if recognizer installed)
+Global Const SYV_SHAPELINE = &H40001
+Global Const SYV_SHAPEELLIPSE = &H40002
+Global Const SYV_SHAPERECT = &H40003
+Global Const SYV_SHAPEMIN = SYV_SHAPELINE
+Global Const SYV_SHAPEMAX = SYV_SHAPERECT
+
+'=== To detect if SYV is a particular type, let SyvHi=(syv\&H10000)
+'=== Compare SyvHi with below
+Global Const SYVHI_SPECIAL = 0
+Global Const SYVHI_ANSI = 1
+Global Const SYVHI_GESTURE = 2
+Global Const SYVHI_KANJI = 3
+Global Const SYVHI_SHAPE = 4
+Global Const SYVHI_UNICODE = 5
+Global Const SYVHI_VKEY = 6
+
+'====================================================================='
+'=   RcResult Structures                                             ='
+'====================================================================='
+Type RCRESULT
+    SYGraph As SYG
+    wResultsType As Integer
+    cSyv As Integer
+    lpsyv As Long
+    hSyv As Integer
+    nBaseLine As Integer
+    nMidLine As Integer
+    hPenData As Integer
+    rectboundink As RECTSHORT
+    pntEnd As POINTSHORT
+    lprc As Long
+End Type
+
+Global Const RCRT_DEFAULT = &H0
+Global Const RCRT_UNIDENTIFIED = &H1
+Global Const RCRT_GESTURE = &H2
+Global Const RCRT_NOSYMBOLMATCH = &H3
+Global Const RCRT_PRIVATE = &H4000
+Global Const RCRT_NORECOG = &H8000
+Global Const RCRT_ALREADYPROCESSED = &H8
+Global Const RCRT_GESTURETRANSLATED = &H10
+Global Const RCRT_GESTURETOKEYS = &H20
+
+Declare Function GetSymbolMaxLength Lib "penwin.dll" (lpsyg As Any) As Integer
+Declare Function GetSymbolCount Lib "penwin.dll" (lpsyg As Any) As Integer
+Declare Function SymbolToCharacter Lib "penwin.dll" (lpsyv As Any, ByVal cSyv As Any, ByVal lpstr As String, lpnCnvt As Any)
+
+'====================================================================='
+'=   RC (Recognition Context) Definitions                            ='
+'====================================================================='
+Global Const CL_NULL = 0
+Global Const CL_MINIMUM = 1
+Global Const CL_MAXIMUM = 100
+Global Const INKWIDTH_MINIMUM = 0
+Global Const INKWIDTH_MAXIMUM = 15
+Global Const ENUM_MINIMUM = 1
+Global Const ENUM_MAXIMUM = 4096
+Global Const MAXDICTIONARIES = 16
+
+Type GUIDE
+    xOrigin As Integer
+    yOrigin As Integer
+    cxBox As Integer
+    cyBox As Integer
+    cxBase  As Integer
+    cyBase As Integer
+    cHorzBox  As Integer
+    cVertBox  As Integer
+    cyMid As Integer
+End Type
+
+Global Const cbRcLanguageMax = 44
+Global Const cbRcUserMax = 32
+Global Const cbRcrgbfAlcMax = 32
+Global Const cwRcReservedMax = 8
+
+Type RC              ' Provided for Backward Compatibility Only
+    hRec As Integer
+    hWnd As Integer
+    wEventRef As Integer
+    wRcPreferences As Integer
+    lRcOptions As Long
+    lpfnYield As Long
+    lpUser As String * cbRcUserMax
+    wCountry As Integer
+    wIntlPreferences As Integer
+    lpLanguage As String * cbRcLanguageMax
+    rglpdf(1 To MAXDICTIONARIES) As Long
+    wTryDictinary As Integer
+    clErrorLevel As Integer
+    alc As Long
+    alcPriority As Long
+    rgbfAlc As String * cbRcrgbfAlcMax
+    wResultMode As Integer
+    wTimeOut As Integer
+    lPcm As Long
+    rectBound As RECTSHORT
+    rectExclude As RECTSHORT
+    guid As GUIDE
+    wRcOrient As Integer
+    wRcDirect As Integer
+    nInkWidth As Integer
+    rgbInk As Long
+    dwAppParam As Long
+    dwDictParam As Long
+    dwRecognizer As Long
+    rgwReserved(1 To cwRcReservedMax) As Integer
+End Type
+
+Declare Function InitRc Lib "penwin.dll" (ByVal hWnd As Integer, lpSrc As RC) As Integer
+Declare Function InstallRecognizer Lib "penwin.dll" (ByVal lpszRecogName As String) As Integer
+Declare Function UnInstallRecognizer Lib "penwin.dll" (ByVal hRec As Integer) As Integer
+Declare Function GetGlobalRC Lib "penwin.dll" (lprc As Any, ByVal lpDefRecog As String, ByVal lpDefRecog As String, ByVal cbDefDictMax As Integer) As Integer
+Declare Function SetGlobalRC Lib "penwin.dll" (lprc As Any, ByVal lpDefRecog As String, ByVal lpDefDict As String) As Integer
+
+Global Const GGRC_OK = 0
+Global Const GGRC_DICTBUFTOOSMALL = 1
+Global Const GGRC_PARAMERROR = 2
+Global Const SGRC_OK = &H0
+Global Const SGRC_USER = &H1
+Global Const SGRC_PARAMERROR = &H2
+Global Const SGRC_RC = &H4
+Global Const SGRC_RECOGNIZER = &H8
+Global Const SGRC_DICTIONARY = &H10
+Global Const SGRC_INIFILE = &H20
+
+'====================================================================='
+'=   Training And Correcting                                         ='
+'====================================================================='
+Declare Function TrainInk Lib "penwin.dll" (lprc As RC, ByVal hPenData As Integer, lpsyv As Any) As Integer
+Declare Function TrainContext Lib "penwin.dll" (lprcResult As RC, lpSye As Any, ByVal cSye As Integer, lpSyc As Any, ByVal cSyc As Integer) As Integer
+Declare Function CorrectWriting Lib "penwin.dll" (ByVal hWnd As Integer, ByVal lpstr As String, ByVal cBuf As Integer, lprc As RC, ByVal dwCwrFlags As Any, ByVal dwReserved As Any) As Integer
+
+Global Const CWR_STRIPCR = &H1
+Global Const CWR_STRIPLF = &H2
+Global Const CWR_STRIPTAB = &H4
+Global Const CWR_SINGLELINEEDIT = &H7
+Global Const CWR_TITLE = &H10
+
+'====================================================================='
+'=   Other Windows For Pens API's                                    ='
+'====================================================================='
+Declare Function BoundingRectFromPoints Lib "penwin.dll" (lpPnt As Any, ByVal cPnt, lprectBound As RECTSHORT) As Integer
+Declare Function TPtoDP Lib "penwin.dll" (lpPnts As Any, ByVal cPnts As Integer) As Integer
+Declare Function DPtoTP Lib "penwin.dll" (lpPnts As Any, ByVal cPnts As Integer) As Integer
+Declare Function DrawPenData Lib "penwin.dll" (ByVal hDC As Integer, lpRect As RECTSHORT, ByVal hPenData As Integer) As Integer
+Declare Function MetricScalePenData Lib "penwin.dll" (ByVal hPenData As Integer, ByVal wPdts) As Integer
+Declare Function OffsetPenData Lib "penwin.dll" (ByVal hPenData As Integer, ByVal dx As Integer, ByVal dy As Integer) As Integer
+Declare Function RecognizePenData Lib "penwin.dll" (lprc As RC, ByVal hPenData As Integer) As Integer
+Declare Function CreatePenData Lib "penwin.dll" (lppenifo As PENINFO, ByVal cbOemData As Integer, ByVal wPdtScal As Integer, ByVal gMemFlags As Integer) As Integer
+Declare Function ExecuteGesture Lib "penwin.dll" (ByVal hWnd As Integer, ByVal Syv As Long, lprcResult As RC)
+
+'=== Message Routines Constants ======================================'
+Global Const WM_PENWINFIRST = &H380                'Main Offset for Pen messages
+Global Const WM_RCRESULT = WM_PENWINFIRST + 1
+Global Const WM_HOOKRCRESULT = WM_PENWINFIRST + 2
+Global Const WM_GLOBALRCCHANGE = WM_PENWINFIRST + 3
+Global Const WM_SKB = WM_PENWINFIRST + 4
+Global Const WM_HEDITCTL = WM_PENWINFIRST + 5      'Configures HEdits and BEdits
+
+'== The constants below are used as wParam with WM_HEDITCTL message
+Global Const HE_GETRC = 3
+Global Const HE_SETRC = 4
+Global Const HE_GETINFLATE = 5
+Global Const HE_SETINFLATE = 6
+Global Const HE_GETUNDERLINE = 7
+Global Const HE_SETUNDERLINE = 8
+Global Const HE_GETINKHANDLE = 9
+Global Const HE_SETINKMODE = 10
+Global Const HE_STOPINKMODE = 11
+Global Const HE_GETRCRESULTCODE = 12
+Global Const HE_DEFAULTFONT = 13
+Global Const HE_CHARPOSITION = 14
+Global Const HE_CHAROFFSET = 15
+Global Const HE_GETRCRESULT = 22
+
+'====================================================================='
+'=   END WINDOWS FOR PENS API                                        ='
+'====================================================================='
+
+'====================================================================='
+'=  PENCNTRL.VBX Constants and Function Declarations                 ='
+'====================================================================='
+
+'==  Property Settings  =============================================='
+' AutoSize Property: IEdit control
+Global Const PEN_AUTOSIZE_NONE = 0           ' No AutoSizing occurs
+Global Const PEN_AUTOSIZE_STRETCHBITMAP = 1  ' Stretch Bitmap to fit Window
+Global Const PEN_AUTOSIZE_SIZEWINDOW = 2     ' Size Window to fit Bitmap
+Global Const PEN_AUTOSIZE_TILE = 3           ' Tile Bitmap
+Global Const PEN_AUTOSIZE_CENTER = 4         ' Center Bitmap
+
+' BorderStyle Property: BEdit, HEdit, and IEdit controls
+Global Const PEN_BORDERSTYLE_NONE = 0      ' No Border
+Global Const PEN_BORDERSTYLE_SINGLE = 1    ' Single Line Border
+Global Const PEN_BORDERSTYLE_UNDERLINE = 2 ' Underline: Valid for HEdit only
+
+' BoxCross Property: BEdit control only
+Global Const PEN_BOXCROSS_OFF = 0          ' BoxCross not displayed
+Global Const PEN_BOXCROSS_ON = 1           ' BoxCross displayed
+
+' CombStyle Property: BEdit control only
+Global Const PEN_COMBSTYLE_COMB = 0        ' Comb Style
+Global Const PEN_COMBSTYLE_BOX = 1         ' Box Style
+
+' FormatAttrb Property: IEdit control only
+Global Const PEN_FORMATATTRB_COLOR = 0     ' Set Stroke Color
+Global Const PEN_FORMATATTRB_WIDTH = 1     ' Set Stroke Width
+Global Const PEN_FORMATATTRB_BOTH = 2      ' Set both Stroke Color & Width
+
+' FormatItem Property: IEdit control only
+Global Const PEN_FORMATITEM_ALL = 0        ' Set Attributes for All Strokes
+Global Const PEN_FORMATITEM_SELECTION = 1  ' Set Attributes for Selected Strokes
+Global Const PEN_FORMATITEM_INDEX = 2      ' Set Attributes for Stroke specified by StrokeIndex
+
+' GestureSet Property: BEdit and HEdit controls
+Global Const PEN_GESTURESET_SELECTION = &H1      ' Selection and Lasso
+Global Const PEN_GESTURESET_CLIPBOARD = &H2      ' Cut, Copy, Paste
+Global Const PEN_GESTURESET_WHITECHARS = &H4     ' Space, Tab, Return
+Global Const PEN_GESTURESET_EDIT = &H10          ' Insert, Correct, Undo
+Global Const PEN_GESTURESET_CIRCLELOWER = &H100  ' Lowercase Circle Gestures
+Global Const PEN_GESTURESET_CIRCLEUPPER = &H200  ' Uppercase Circle Gestures
+
+' hInkGet/hInkSet Properties: IEdit control only
+Global Const PEN_HINKGET_ALL = 0           ' Get all the Ink in the IEdit
+Global Const PEN_HINKGET_SELECTION = 1     ' Get only the selected Ink
+
+' InkDataMode Property: BEdit, HEdit, and IEdit controls
+Global Const PEN_INKDATAMODE_REPLACE = 0   ' Existing Ink is replaced when new Ink is assigned to InkDataString
+Global Const PEN_INKDATAMODE_APPEND = 1    ' New ink is appended to existing Ink
+
+' InkingMode Property: IEdit control only
+Global Const PEN_INKINGMODE_READY = 0      ' Ready Mode
+Global Const PEN_INKINGMODE_ERASE = 1      ' Erasing Mode for erasing Ink
+Global Const PEN_INKINGMODE_LASSO = 2      ' Lasso Selection Mode
+
+' InkInput Property: IEdit control only
+Global Const PEN_INKINPUT_MOVE = 1         ' Ink will be Moved into IEdit
+Global Const PEN_INKINPUT_RESIZE = 2       ' Ink will be Resized to fit in IEdit
+Global Const PEN_INKINPUT_CROP = 4         ' Ink drawn outside IEdit will be cropped
+Global Const PEN_INKINPUT_DISCARD = 8      ' Ink will be discarded if any part of stroke is outside of IEdit
+
+' InkWidth Property: BEdit, HEdit, and IEdit controls
+Global Const PEN_INKWIDTH_DEFAULT = -1     ' Use system default Ink Width
+Global Const PEN_INKWIDTH_MIN = 0          ' Minimum Valid size; no Ink is displayed
+Global Const PEN_INKWIDTH_MAX = 15         ' Maximum Valid Ink Width (in Pixels)
+
+' Recog Property: IEdit control only
+Global Const PEN_RECOG_NONE = 0            ' No Recognition
+Global Const PEN_RECOG_GESTURES = 1        ' Recognize Gestures Only
+Global Const PEN_RECOG_ALL = 2             ' Recognize All
+
+' ScrollBars Property: BEdit and HEdit controls
+Global Const PEN_SCROLLBARS_NONE = 0        ' No ScrollBars
+Global Const PEN_SCROLLBARS_HORIZONTAL = 1  ' Horizontal ScrollBar: Not Valid for BEdit
+Global Const PEN_SCROLLBARS_VERTICAL = 2    ' Vertical ScrollBar
+Global Const PEN_SCROLLBARS_BOTH = 3        ' Both ScrollBars: Valid for HEdit only
+
+' Security Property: IEdit control only
+Global Const PEN_SECURITY_NOCOPY = &H1      ' Disable Copying Ink
+Global Const PEN_SECURITY_NOCUT = &H2       ' Disable Cutting Ink
+Global Const PEN_SECURITY_NOPASTE = &H4     ' Disable Pasting Ink
+Global Const PEN_SECURITY_NOUNDO = &H8      ' Disable Undo action
+Global Const PEN_SECURITY_NOINK = &H10      ' Disable Inking
+Global Const PEN_SECURITY_NOERASE = &H20    ' Disable Erasing Ink
+Global Const PEN_SECURITY_NOGET = &H40      ' Disable reading hInk property
+Global Const PEN_SECURITY_NOSET = &H80      ' Disable writing hInk property
+
+'==  Trappable Error Strings  ========================================'
+Global Const PENERR_INKWIDTH = 32001        ' InkWidth must be in range 0-15 or -1 for default
+Global Const PENERR_NEGCELLWIDTH = 32002    ' CellWidth must be greater than 0
+Global Const PENERR_CELLWIDTH = 32003       ' CellWidth must be greater than or equal to CombSpacing*2
+Global Const PENERR_NEGCELLHEIGHT = 32004   ' CellHeight must be greater than 0
+Global Const PENERR_CELLHEIGHT = 32005      ' CellHeight must be greater than or equal to CombBaseLine
+Global Const PENERR_COMBSPACING = 32006     ' CombSpacing out of range (0 - CellWidth/2)
+Global Const PENERR_COMBBASELINE = 32007    ' CombBaseLine out of range (0 - CellHeight)
+Global Const PENERR_BIGCOMBBASELINE = 32008 ' CombBaseLine must be greater than or equal to CombHeight and CombEndHeight
+Global Const PENERR_COMBHEIGHT = 32009      ' CombHeight out of range (0 - CombBaseLine)
+Global Const PENERR_COMBENDHEIGHT = 32010   ' CombEndHeight our of range (0 - CombBaseLine)
+Global Const PENERR_INFLATE = 32011         ' Inflate value must be greater than or equal to 0
+Global Const PENERR_INVALIDPICTURE = 32012  ' Picture format not supported
+Global Const PENERR_DISPLAYFAILED = 32013   ' Unable to display bitmap
+Global Const PENERR_AUTOSIZEHW = 32014      ' Cannot change Height or Width while AutoSize equals 2
+Global Const PENERR_MERGEFAILED = 32015     ' Unable to merge ink data
+Global Const PENERR_INVALIDINKDATA = 32016  ' Invalid InkDataString format
+
+'==  Functions Declarations  ========================================='
+Declare Sub VBTypeToCPointer Lib "pencntrl.vbx" (lpSrc As Any, ByVal lpDest As Long, ByVal cb As Integer)
+Declare Sub CPointerToVBType Lib "pencntrl.vbx" (ByVal lpSrc As Long, lpDest As Any, ByVal cb As Integer)
+'====================================================================='

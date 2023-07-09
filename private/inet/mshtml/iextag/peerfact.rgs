@@ -1,0 +1,24 @@
+HKCR
+{
+	PeerFactory.PeerFactory.1 = s 'PeerFactory Class'
+	{
+		CLSID = s '{3050F4CF-98B5-11CF-BB82-00AA00BDCE0B}'
+	}
+	PeerFactory.PeerFactory = s 'PeerFactory Class'
+	{
+		CurVer = s 'PeerFactory.PeerFactory.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {3050F4CF-98B5-11CF-BB82-00AA00BDCE0B} = s 'PeerFactory Class'
+		{
+			ProgID = s 'PeerFactory.PeerFactory.1'
+			VersionIndependentProgID = s 'PeerFactory.PeerFactory'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

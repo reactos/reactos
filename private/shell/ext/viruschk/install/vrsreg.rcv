@@ -1,0 +1,15 @@
+/*
+ * Oct 1996 inateeg
+ *
+ * Copyright (c)1994 Microsoft Corporation, All Rights Reserved
+ */
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Virus Scan Engine Registry installer"
+#define VER_INTERNALNAME_STR        "vrsreg"
+#define VER_ORIGINALFILENAME_STR    "VRSREG.EXE"
+#define VER_FILEOS                  VOS_NT_WINDOWS32
+
+#include <common.ver>

@@ -1,0 +1,64 @@
+// --------------------------------------------------------------------------------
+// MIMEEDIT.IDL
+// Copyright (c)1993-1998 Microsoft Corporation, All Rights Reserved
+// --------------------------------------------------------------------------------
+import "ocidl.idl";
+import "objidl.idl";
+
+#include "mimedisp.h"
+
+cpp_quote("// {6a98b73e-8c4d-11d1-bdff-00c04fa31009}")
+cpp_quote("DEFINE_GUID(IID_IMimeEdit, 0x6a98b73e, 0x8c4d, 0x11d1, 0xbd, 0xff, 0x00, 0xc0, 0x4f, 0xa3, 0x10, 0x09);")
+cpp_quote("// {1C82EAD8-508E-11d1-8DCF-00C04FB951F9}")
+cpp_quote("DEFINE_GUID(LIBID_MIMEEDIT, 0x1c82ead8, 0x508e, 0x11d1, 0x8d, 0xcf, 0x0, 0xc0, 0x4f, 0xb9, 0x51, 0xf9);")
+cpp_quote("")
+cpp_quote("")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// LIBID_MIMEEDIT")
+cpp_quote("// --------------------------------------------------------------------------------")
+[
+    uuid(1C82EAD8-508E-11d1-8DCF-00C04FB951F9),
+    helpstring("Microsoft MIMEEDIT Type Library 1.0"),
+    version(1.0)
+]
+library MIMEEDIT
+{
+    importlib("stdole2.tlb");
+
+    // ---------------------------------------------------------------------------------------
+    // IID_IMimeEdit
+    // ---------------------------------------------------------------------------------------
+    [
+        uuid(6a98b73e-8c4d-11d1-bdff-00c04fa31009),
+        odl,
+        oleautomation,
+        dual,
+        helpstring("IMimeEdit"),
+    ]
+    interface IMimeEdit : IDispatch
+    {
+        [propput, id(DISPID_IMIMEEDIT_SRC)] HRESULT src([in] BSTR bstr);
+        [propget, id(DISPID_IMIMEEDIT_SRC)] HRESULT src([retval,out] BSTR * pbstr);
+
+        [propput, id(DISPID_IMIMEEDIT_STYLE)] HRESULT header([in] LONG lStyle);
+        [propget, id(DISPID_IMIMEEDIT_STYLE)] HRESULT header([retval,out] LONG *plStyle);
+        [propput, id(DISPID_IMIMEEDIT_EDITMODE)] HRESULT editMode([in] VARIANT_BOOL b);
+        [propget, id(DISPID_IMIMEEDIT_EDITMODE)] HRESULT editMode([retval,out] VARIANT_BOOL *pbool);
+
+        [propget, id(DISPID_IMIMEEDIT_MSGSRC)] HRESULT messageSource([retval,out] BSTR * pbstr);
+        [propget, id(DISPID_IMIMEEDIT_TEXT)] HRESULT text([retval,out] BSTR * pbstr);
+        [propget, id(DISPID_IMIMEEDIT_HTML)] HRESULT html([retval,out] BSTR * pbstr);
+        [id(DISPID_IMIMEEDIT_CLEAR)] HRESULT clear();
+        [propget, id(DISPID_IMIMEEDIT_DOCUMENT)] HRESULT doc([retval,out] IDispatch **ppDoc);
+    }
+
+    [
+        uuid(6f5edc56-8c63-11d1-bdff-00c04fa31009),
+        helpstring("MimeEdit")
+    ]
+    coclass MimeEdit
+    {
+    [default] interface IMimeEdit;
+    };
+}

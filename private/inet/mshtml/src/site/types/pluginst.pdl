@@ -1,0 +1,61 @@
+#ifndef _PLUGINST_PDL_
+#define _PLUGINST_PDL_ 1
+
+#include "csite.pdl"
+#include "olesite.pdl"
+
+file pluginst.pdl
+import csite.pdl
+
+enum BoolValue
+	eval True string:true value:1
+	eval False string:false value:0
+
+interface IHTMLEmbedElement guid:3050f25f-98b5-11cf-bb82-00aa00bdce0b
+    refprop CPluginSite:hidden
+    refprop CPluginSite:palette
+    refprop CPluginSite:pluginspage
+    refprop CPluginSite:src
+    refprop CPluginSite:units
+    refprop CPluginSite:name
+    refprop CPluginSite:width
+    refprop CPluginSite:height
+
+tearoff CPluginSite interface:IHTMLEmbedElement
+
+class CPluginSite name:HTMLEmbed \
+            primaryinterface:IHTMLEmbedElement \
+            super:COleSite \
+            events:HTMLControlElementEvents \
+            nonprimaryevents:HTMLControlElementEvents2 \
+            guid:3050f25d-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f52e-98b5-11cf-bb82-00aa00bdce0b
+ 
+#include "basedom.pdl"
+    implements IHTMLControlElement
+    implements IHTMLEmbedElement
+
+    property hidden      dispid:DISPID_OBJECT+10             atype:BSTR   type:BoolValue noassigndefault:1  caa  get set  maxstrlen:pdlLength resize
+    property palette     dispid:DISPID_OBJECT+4              atype:BSTR   type:CStr          caa  get   maxstrlen:255
+    property pluginspage dispid:DISPID_OBJECT+5              atype:BSTR   type:CStr          caa  get   maxstrlen:255
+    property src         dispid:DISPID_OBJECT+6              atype:BSTR   type:CStr          caa  get set setaahr   maxstrlen:pdlUrlLen
+    property type        dispid:DISPID_OBJECT+7              atype:BSTR   type:CStr          caa  get set setaahr   maxstrlen:pdlToken
+    property units       dispid:DISPID_OBJECT+8              atype:BSTR   type:CStr          caa  get set    maxstrlen:pdlNoLimit
+
+    property height caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT \
+        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+
+    property width caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_WIDTH  \
+        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+
+
+    property name       dispid:STDPROPID_XOBJ_NAME atype:BSTR type:CStr	  \
+        method:nameHelper baseimplementation get set displaybind maxstrlen:pdlNoLimit
+    property codeBase   dispid:DISPID_OBJECT+9  atype:BSTR  type:CStr \
+        caa get set setaahr displaybind maxstrlen:pdlUrlLen
+    property BaseHref   dispid:DISPID_XOBJ_BASE+1   atype:BSTR  \
+        get abstract nopersist
+
+#endif _PLUGINS_PDL_

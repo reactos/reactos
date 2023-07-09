@@ -1,0 +1,22 @@
+/********************************************************************/
+/*        SHCOMPUI.RCV                                              */
+/********************************************************************/
+#ifdef WIN32
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Windows Shell Compression User Interface Dll"
+#define VER_INTERNALNAME_STR            "SHCOMPUI"
+#ifndef WIN32
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1995"
+#endif
+#define VER_ORIGINALFILENAME_STR        "SHCOMPUI.DLL"
+
+
+#include <common.ver>
+

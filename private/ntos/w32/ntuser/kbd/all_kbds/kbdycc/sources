@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdycc
+
+TARGETNAME=kbdycc
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdycc.c kbdycc.rc
+
+NTTARGETFILE0=kbdycc.h kbdycc.rc kbdycc.def

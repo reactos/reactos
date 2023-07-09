@@ -1,0 +1,45 @@
+PRODUCT = CORE
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES =  \
+    coreid.c \
+    coreidpr.c \
+    multimon.c \
+    objextid.c \
+    dbuuid.c
+
+WLIB	= coremisc
+LIB	= lib${WLIB}.a # target static library
+
+LIBOBJS := ${SOURCES:%.C=%.o}
+LIBOBJS := ${LIBOBJS:%.cpp=%.o}
+LIBOBJS := ${LIBOBJS:%.cxx=%.o}
+LIBOBJS := ${LIBOBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+INCLUDES = \
+    $(ROOT)/src/core/include \
+    $(ROOT)/src/f3/include \
+    $(ROOT)/external/inc \
+    $(ROOT)/types/$(O) \
+    $(ROOT)/src/core/include
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%}
+
+include $(MWHOME)/make.rules.simple
+

@@ -1,0 +1,31 @@
+LIBRARY MAIN.CPL
+
+EXPORTS
+        CommDlg
+        CPlApplet
+        DllInitialize
+        ColorDlg
+        FontDlg
+        MouseDlg
+        KeyboardDlg
+        DateTimeDlg
+        ShortCommDlg
+        DesktopDlg
+        ArrowControlProc
+        ArrowTimerProc
+        SaveScheme
+        RainbowDlg
+        WantArrows
+        PatternDlgProc
+        RemoveFontDlg
+        AdvancedPortDlg
+        FontHookProc
+        TrueTypeDlg
+        RestartDlg
+        IntlDlg
+        DateIntlDlg
+        TimeIntlDlg
+        NumIntlDlg
+        CurIntlDlg
+        SystemDlg
+        SysLBProc

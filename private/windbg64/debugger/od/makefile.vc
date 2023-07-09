@@ -1,0 +1,99 @@
+#
+# Set up debug and codeview defines to standard defaults.
+#
+
+!if "$(DEBUG)" == ""
+DEBUG = 1
+!endif
+
+!if "$(CODEVIEW)" == ""
+!if $(DEBUG)
+CODEVIEW = 1
+!else
+CODEVIEW = 0
+!endif
+!endif
+
+#
+# Debug vs Release things
+#
+!if $(DEBUG)
+dbg = -DDBG=1 -DDEVL=1
+opt = -Od -Z7
+d = d
+!else
+dbg = -DDBG=0 -DDEVL=1
+opt = -O2 -Gy -Z7
+d =
+!endif
+
+#
+# verbose or not
+#
+!if "$(verbose)" == ""
+verbose_c = -nologo
+!endif
+
+#
+# Set up some shortcuts
+#
+CC = cl
+c = -c -Zel -Zp8 -WX -W3 -MD $(opt)
+P = $(PROCESSOR_ARCHITECTURE)
+L = $(LANGAPI)
+O = obj$(d)\$P
+I = -I$L\debugger\osdebug4 -Iinclude -I$L\include
+
+!if "$(P)" == "MIPS"
+XFL = -DMIPSEL -DMIPS=1 -DR3000=1 -Gt0
+!elseif "$(P)" == "ALPHA"
+XFL = -DALPHA=1 -Gt0
+!elseif "$(P)" == "PowerPC"
+XFL = -DPPC=1 -Gt0
+!elseif "$(P)" == "i386"
+XFL = -Di386=1
+!endif
+
+CFL = -DWIN32_LEAN_AND_MEAN=1 -DCONDITION_HANDLING=1 -DNT_INST=0 -DNT_UP=1 \
+        -DNO_EXT_KEYS $(dbg) -DWIN32 -DHOST32 -D_$P_ $(XFL)
+
+LINK = link
+
+#
+# Inference rule for c builds
+#
+.c{$O}.obj :
+        @$(CC) @<<cl.rsp
+$(verbose_c)
+$c
+$I
+$(CFL)
+-Fo$O\ $<
+<<keep
+
+#
+# Main goal
+#
+all:    dir_tgt $O/odnt$d.obj
+
+$O/odnt$d.obj : $O/od.obj
+        copy $O\od.obj $O\odnt$d.obj
+
+#
+# Directory targets
+#
+dir_tgt: $O
+
+$O : obj objd
+        @-mkdir $O >nul 2>&1
+
+obj :
+        @-mkdir obj >nul 2>&1
+objd :
+        @-mkdir objd >nul 2>&1
+
+#
+# Clean goal
+#
+clean:
+        del /f /q $O\*

@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdhela2
+
+TARGETNAME=kbdhela2
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdhela2.c kbdhela2.rc
+
+NTTARGETFILE0=kbdhela2.h kbdhela2.rc kbdhela2.def

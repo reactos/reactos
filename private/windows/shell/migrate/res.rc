@@ -1,0 +1,15 @@
+#include "windows.h"
+#include <ntverp.h>
+#include "shmgdefs.h"
+
+STRINGTABLE
+BEGIN
+    IDS_HTML_HELP_DIR               "\\Microsoft\\HTML Help"
+END
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows NT User Data Migration Tool"
+#define VER_INTERNALNAME_STR        "shmgrate\0"
+
+#include "common.ver"

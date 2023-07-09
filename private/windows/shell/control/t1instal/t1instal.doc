@@ -1,0 +1,122 @@
+                                                              03/15/94
+
+
+
+        Notes on how to use the Type 1 Installer under Win32.
+        -----------------------------------------------------
+
+
+
+
+INTRODUCTION
+
+The Type 1 Installer exists in many different forms. This text
+describes the use of it as a Win32 DLL. The DLL acts as a compiler
+that parses an Adobe type 1 font format file and a metrics file (PFB
++ PFM), and then produces a TrueType font file.
+
+The DLL will interact with the event log and the registry, under
+certain conditions. The registry is always queried at the start of
+the conversion to verify if the copyright holder has agreed to have
+their font converted. The event log is used if an error occurs and if
+the "Log events" entry in the registry is not zero. The required
+entries in the registry is described in "t1instal.ini". Use
+regini.exe to load these settings.
+
+
+
+
+USING THE DLL
+
+There are two functions in the interface of the DLL. Use
+"t1instal.h" to get the prototypes for these functions, and to get
+the definitions of the values they return.
+
+
+IsType1A
+    This function determines if a file is a valid Printer Font
+    Metrics files (pfm), and returns the face name of the font. This
+    function will only return TRUE if there is a valid PFB file in
+    the same directory or in the parent directory.
+
+
+ConvertTypefaceA
+    This function takes the name of a PFM, a PFB and a TTF file as
+    parameters, that are used in the conversion.
+
+    This function will call a supplied callback function during the
+    conversion. The caller may thus display messages to the user
+    about the progress of the conversion. This function is called
+    with an integer that indicates the rate of the progress
+    (typically in the range 0-100), and a caller supplied argument.
+
+
+
+BUILDING THE DLL
+
+The DLL can be compiled with a number of features turned on or off.
+Define or undefine the following symbols when compiling the code to
+get the desired result:
+
+
+
+name                    Usage
+----                    -----
+DOT                     Replaces the period character in the converted
+                        font. Used to tag converted fonts such that
+                        they can be distinguished from the original
+                        fonts.
+
+NOMSGBOX                Causes the DLL to use stdio to report errors.
+
+NOCOPYRIGHTS            Disables the copyright checking.
+
+SHOWCOPYRIGHT           This casues the converter to store the
+                        encrypted copyright strings in the event log,
+                        without converting the font. Put this string
+                        in the appropriate place in the registry to
+                        enable the conversion of fonts from the
+                        fonts vendor of that font.
+
+RELATIVESTEMS           Enables a hint conversion features. Must be
+                        turned on.
+
+SYMETRICS_REDUCTION     Enables a hint conversion feature. Should not
+                        be turned on.
+
+NOANSIWINMAC            Causes glyhs that are not part of the Windows
+                        ANSI and MacIntosh character set to be
+                        filterd out. Turn this on if the OS is not
+                        supporting UNICODE, to get smaller fonts.
+
+
+By default, only the RELATIVESTEMS should be defined.
+
+
+SETTING UP THE REGISTRY
+
+Remove the comments from the t1instal.ini file and use regini utility
+to place new keys in registry for use.
+
+regini t1instal.ini
+
+
+
+
+
+---------------------------------------------------------------------- -------------------------------------------------
+	The message logging mechanism in the Type 1 Installer.
+
+
+Messages are recorded/displayed based on the severity of an error and based on the state of the "log events" key in the registry. There are three types of messages:
+- Errors		: A problem that cased the conversion to abort.
+- Warnings	: A non-fatal problem that the converter resolved.
+- Information	: Information that may be useful to trace the execution of the
+		conversion, such as the name of the font and the vendor.
+
+If an error occurs then a pop-up is presented to the user with the appropriate message. Note that this will always happened, regardless of the "log events" key. These strings are defined in the string table in the dll's resource file (t1instal.rc).
+
+The "log events" key is used for PSS and for debugging . It should not be used by the users. It should only be turned on when attempting to determine the cause of a failed conversion. This key causes all messages to be stored such that they are accessible by the Event Viewer. These strings are defined in the dll's message file (t1msg.mc). Note that warnings are being displayed in pop-up dialogs, in addition to errors, when "log events" is non zero.
+
+The motivation for this approach is that PSS may need to be able to remotely resolve a problem that a customer has when converting a type 1 font. PSS will be able to do this by instructing the user to turn on the "log events" feature and get immediate feed-back when an error or a warning pops up a message. A computer that is connected to a network can be accessed directly through the Event Viewer by the PSS engineer.
+

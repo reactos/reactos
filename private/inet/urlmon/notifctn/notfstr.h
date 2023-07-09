@@ -1,0 +1,5 @@
+
+#define  ID_SCHEDULE_GROUP_DAILY            20001
+#define  ID_SCHEDULE_GROUP_MONTHLY          20002
+#define  ID_SCHEDULE_GROUP_WEEKLY           20003
+#define  ID_SCHEDULE_GROUP_MANUAL           20004

@@ -1,0 +1,13 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Internet Explorer"
+#define VER_INTERNALNAME_STR            "iexplore"
+#define VER_ORIGINALFILENAME_STR        "IEXPLORE.EXE"
+
+#define VER_ANSICP
+#include <common.ver>

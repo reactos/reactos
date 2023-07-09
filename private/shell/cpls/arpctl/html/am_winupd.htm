@@ -1,0 +1,79 @@
+<HTML>
+
+<HEAD>
+    <LINK REL="stylesheet" TYPE="text/css" HREF="am.css">
+    <SCRIPT LANGUAGE="JavaScript">
+
+        //  oDSO - the data source object
+        function BtnOnClick(oDSO)
+        {   
+            switch(event.srcElement.id)
+            {
+            case "btnNTOptions":
+                oDSO.Exec("ntoptions", 0);
+                break;
+            case "btnWinUpdate":
+                // currently ignored
+                //oDSO.Exec("winupdate", 0);
+                break;
+            }
+        }
+    </SCRIPT>
+</HEAD>
+
+
+<BODY CLASS="CBody">
+    <OBJECT classid=clsid:3964D9A0-AC96-11D1-9851-00C04FD91972 id=adcWinUpdate>
+    </OBJECT>
+
+<!-- WINDOWS NT OPTIONS -->
+
+    <TABLE WIDTH=100% BORDER=0 CELLPADDING=5 CELLSPACING=0>
+        <TR>
+            <TD COLSPAN=2>
+                <DIV CLASS="CHeader" style="position:relative; left:0px;">
+                    Add or Remove Windows NT Options
+                </DIV>
+            </TD>
+        </TR>
+        <TR>
+            <TD WIDTH=60% VALIGN=TOP CLASS="CNormalText">
+                To add or remove built-in Windows NT 5.0 options, click NT Options.
+            </TD>
+            <TD ALIGN=RIGHT valign=BOTTOM>
+                <BUTTON ID="btnNTOptions" CLASS="CBtn" ONCLICK=BtnOnClick(adcWinUpdate)
+                    TITLE="Click here to add or remove Windows NT Options.">NT Options
+                </BUTTON>
+            </TD>
+        </TR>
+    </TABLE>
+
+<p>
+
+<!-- WINDOWS UPDATE 
+
+    <TABLE WIDTH=100% BORDER=0 CELLPADDING=5 CELLSPACING=0>
+        <TR>
+            <TD COLSPAN=2>
+                <DIV CLASS="CHeader" style="position:relative; left:0px;">
+                    Windows Update
+                </DIV>
+            </TD>
+        </TR>
+        <TR>
+            <TD WIDTH=60% VALIGN=TOP CLASS="CNormalText">
+                To connect to the Windows Update site and get the latest drivers and system components for your computer, click Windows Update. 
+            </TD>
+            <TD ALIGN=RIGHT valign=BOTTOM>
+                <BUTTON ID="btnWinUpdate" CLASS="CBtn" ONCLICK=BtnOnClick(adcWinUpdate)
+                    TITLE="Click here to connect to the Windows Update site. ">Windows Update
+                </BUTTON>
+            </TD>
+        </TR>
+    </TABLE>
+-->
+
+</BODY>
+</HTML>
+
+

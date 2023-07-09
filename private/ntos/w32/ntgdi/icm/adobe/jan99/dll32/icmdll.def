@@ -1,0 +1,15 @@
+LIBRARY  ICMDLL
+DESCRIPTION  'PS2 Image Color Matching Support'
+
+DATA PRELOAD  MOVEABLE SINGLE
+
+HEAPSIZE  8192
+EXPORTS
+        GetPS2ColorRenderingDictionary   @1
+        GetPS2ColorSpaceArray            @2   
+        GetPS2ColorRenderingIntent       @3
+        LoadCP32                         @4
+        FreeCP                           @5
+        MemAlloc                         @6
+        MemFree                          @7
+        GetPS2PreviewColorRenderingDictionary  @8

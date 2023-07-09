@@ -1,0 +1,35 @@
+MAJORCOMP=windows
+MINORCOMP=version
+
+TARGETNAME=version
+TARGETPATH=obj
+TARGETPATHLIB=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+DLLENTRY=LibMain
+
+LINKLIBS = \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\lz32.lib     \
+    $(BASEDIR)\public\sdk\lib\*\cabinet.lib  \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib
+
+W32_SB=1
+
+INCLUDES=.;..\..\inc
+
+C_DEFINES=-DWIN32 -DUNICODE
+
+USE_NTDLL=1
+
+SOURCES= \
+    ansi.c \
+    diamond.c \
+    filever.c \
+    ifhelp.c \
+    instfile.c \
+    version.c \
+    version.rc
+
+UMTYPE=windows

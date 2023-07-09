@@ -1,0 +1,76 @@
+feature,category,devOwner,testOwner,pmOwner,toolTip
+About Box,Usability,EricRoc,RossW,EricRoc,
+Accessibility,Usability,ReljaI; AndyP; KurtE,RossW,JoeB,Andy focuses on Desktop and Desktop Toolbars
+ActiveX Controls,Compat,AlanAu,RossW,JoeB,
+Address Band,Desktop Toolbars,BryanSt;ArulK,EricMil,RichSt,BryanSt owns Navigation and Parsing.  ArulK owns icons; drop down contents; and Drag & Drop.
+Admin Policies,Admin,ReljaI; NingZ; BryanSt,RossW,JoeB,BryanSt for Desktop Toolbar Admin Settings
+AOL/MSN/CS Clients,Compat,AlanAu,RossW,JoeB,
+App Compat,Compat,KurE; MattSq; CDTurner,RossW,JoeB,
+AutoComplete,Desktop Toolbars,MattSq; BryanSt,RossW,JoeB,BryanSt focuses on File System AutoComplete
+Automation,Compat,AlanAu; DavidDs; KurtE,RossW,JoeB,
+Briefcase,Folders,KurtE; DavidDs,RossW,JoeB,
+Browser Only,Compat,ScottH; KurtE,RossW,JoeB,
+Cache Folder (C:\windows),Folders,RajeevD,RossW,JoeB,
+Channel Bar,Channels,ChrisNy; CDTurner,RossW,JoeB,
+Channel Mode (Full Screen),Channels,ToddGre,RossW,JoeB,
+Channel Tutorial,Channels,ChristoB,RossW,ChristoB,
+Channels Folder (C:\windows),Folders,EdwardP,RossW,JoeB,
+ComboBoxEx,Common Controls,ArulK; CheeChew,RossW,ChristoB,
+Comctl32,Common Controls,CheeChew; ArulK; DLi, RossW,JoeB,DLi for Property Sheet; Multi-Workarea ListView
+Content,Content,ChristoB,RossW,JoeB,
+Darwin,Install,ChrisG,RossW,JoeB,
+DDE Support,Compat,MattSq,RossW,JoeB,
+Desktop,Desktop,MikeSch,RossW,JoeB,
+Desktop Admin Policies,Desktop,MattSq,RossW,TomY,
+Desktop Mover,Desktop,BryanSt; MikeSch,RickZ,ChristoB,BryanSt is the main owner.  MikeSh is backup.
+Desktop Toolbars,Desktop Toolbars,AndyP; NingZ; CheeChew; ToddGre,RossW,RichSt,
+Desktop WallPaper,Desktop,Sankar; RajeshG,RossW,RichSt,
+Display Control Panel,Control Panel,Sankar; MattSq; DLi,RossW,JoeB,DLi for Settings; ScreenSaver ; Appearance ; Sankar and MattSq for Web; WallPaper; and other.
+DocObj Hosting,Compat,ZekeL; AlanAu,RossW,JoeB,
+Downloaded Program Files Folder,Folders,SeanF,RossW,JoeB,
+Drag & Drop Desktop Components,Desktop,BryanSt; Lamadio; RajeshG,RossW,JoeB,BryanSt for HTML; Lamadio for Bitmaps
+Drag & Drop Other,Other,NingZ; CDTurner,RossW,JoeB,
+Explorer Bar,Explorer Bars,ChrisNy,RossW,JoeB,
+Favorites Bar,Favorites,ChrisNy,RossW,JoeB,
+Favorites Menu,Favorites,LAmadio; ScottH,RossW,JoeB,
+History Bar,Explorer Bars,ChrisNy,RossW,JoeB,
+History Folder (C:\window\history),Folders,JulianJ,RossW,JoeB,
+HTML Desktop,Desktop,Sankar; RajeshG; MikeSch,RossW,JoeB,
+HTML Help,Other,ChrisG,RossW,JoeB,
+International,Compat,Yutaka,RossW,JoeB,
+Internet Control Panel,Control Panel,ArulK,RossW,JoeB,
+Internet Temporary Files,Folders,RajeevD,RossW,JoeB,
+ISF Desktop Toolbar,Desktop Toolbars,NingZ; MikeSh,RossW,JoeB,QuickLaunch; QuickLinks; other
+Icon Overlays,Other, DLi, RossW, JoeB,
+Logo Rendering (Channel Bar/Channel Pane), Favorites, CDTurner, RossW, Touzts
+Menu.Go,Other,ZekeL,RossW,JoeB,
+Menu.View,Other,ChrisNy,RossW,JoeB,
+Menus,Other,Lamadio; ScottH,RossW,JoeB,
+Multiple Monitors, Other,DLi;RajeshG,RickZ,JoeB, DLi for General Shell(toolbars; listview; propsheets);RajeshG for Desktop Components
+NT 5,Compat,ReinerF,RossW,JoeB,
+Open/Save File Dialog,Common Controls,CheeChew,RossW,JoeB,
+Organize Favorites,Favorites,ScottH,RossW,JoeB,
+Palette Problems,Compat,CDTurner,RossW,JoeB,
+Perf,Other,DavidDs; ChrisG,RossW,JoeB,
+QuickLinks Desktop Toolbar,Desktop Toolbars,BryanSt,RickZ,RichSt,
+Ratings,Other,ChrisG,RossW,JoeB,
+Rooted Explorer,Compat,CDTurner; CheeChew; BryanSt,RossW,JoeB,
+SDK,Content,ChrisG,RossW,JoeB,
+Search Bar,Explorer Bars,ChrisNy,RossW,JoeB,
+Self-Registration,Install,ScottH; RaljaI; BryanSt,RossW,JoeB,
+Shell Folders (DefView),Folders,MikeSh; CDTurner,RossW,JoeB,
+Shell Security,Other,BryanSt;SanjayS,DougDob,JoeB,BryanSt for shell actions that need security checks.  See SanjayS for policy API or UI bugs.  ArulK for Control Panel UI.
+Shortcuts (File),Other,ScottH; ReinerF; KurtE,RossW,JoeB,
+Shortcuts (Internet),Other,NingZ; ScottH; ReinerF; KurtE,RossW,JoeB,
+Sizer Control,Common Controls,ArulK,RossW,JoeB,
+Start Menu,Other,Lamadio; ScottH,RossW,JoeB
+Stress/Stability,Other,ReinerF,RossW,JoeB
+TaskBar,Other,CheeChew; KurtE; ChrisG,RossW,JoeB
+Thumbnail View, Other, CDTurner, RossW, TOuzts
+Travel History (Back/Forward),Other,ZekeL,RossW,JoeB
+URLs,Other,ZekeL,RossW,JoeB
+WebBrowser OC,Compat,AlanAu,RossW,JoeB
+WebView,Folders,MikeSh; t-ashram,RossW,JoeB
+Wizard97,Other,DLi,RossW,JoeB
+StatusBar,Other,BryanSt;ChrisG,RossW,JoeB
+Ftp,Folders,BryanSt;MattSq,RossW,JoeB

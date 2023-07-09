@@ -1,0 +1,72 @@
+8 // This is the number of in register arguments
+//++
+//
+// Copyright (c) 1993  IBM Corporation and Microsoft Corporation
+//
+// Module Name:
+//
+//    systable.s
+//
+// Abstract:
+//
+//    This module implements the system service dispatch table.
+//
+// Author:
+//
+//    Rick Simpson  16-Sep-1993
+//
+//    based on MIPS version by David N. Cutler (davec) 29-Apr-1989
+//
+// Environment:
+//
+//    Kernel mode only.
+//
+// Revision History:
+//
+//--
+
+//
+// To add a system service simply add the name of the service to the below
+// table. If the system service has in memory arguments, then immediately
+// follow the name of the serice with a comma and following that the number
+// of bytes of in memory arguments, e.g. CreateObject,40.
+//
+
+#define TABLE_BEGIN1( t )       .rdata
+#define TABLE_BEGIN2( t )       .align  4
+#define TABLE_BEGIN3( t )       .globl  KiServiceTable
+#define TABLE_BEGIN4( t )       .long   .toc
+#define TABLE_BEGIN5( t ) KiServiceTable:
+#define TABLE_BEGIN6( t )
+#define TABLE_BEGIN7( t )
+#define TABLE_BEGIN8( t )
+
+#define TABLE_ENTRY(l,bias,numargs) \
+        .extern ..Nt##l           ;\
+        .word   ..Nt##l+bias
+
+#define TABLE_END( n )           \
+        .data                   ;\
+        .globl  KiServiceLimit  ;\
+KiServiceLimit:                 ;\
+        .word   n + 1
+
+#define ARGTBL_BEGIN             \
+        .rdata                  ;\
+        .align  4               ;\
+        .globl  KiArgumentTable ;\
+KiArgumentTable:
+
+#define ARGTBL_ENTRY(e0,e1,e2,e3,e4,e5,e6,e7)   .byte   e0,e1,e2,e3,e4,e5,e6,e7
+
+#define ARGTBL_END
+
+
+        TABLE_BEGIN1( "System Service Dispatch Table" )
+        TABLE_BEGIN2( "System Service Dispatch Table" )
+        TABLE_BEGIN3( "System Service Dispatch Table" )
+        TABLE_BEGIN4( "System Service Dispatch Table" )
+        TABLE_BEGIN5( "System Service Dispatch Table" )
+        TABLE_BEGIN6( "System Service Dispatch Table" )
+        TABLE_BEGIN7( "System Service Dispatch Table" )
+        TABLE_BEGIN8( "System Service Dispatch Table" )

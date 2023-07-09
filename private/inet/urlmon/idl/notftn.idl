@@ -1,0 +1,193 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:       notftn.idl
+//
+//  Contents:   wrapper idl for the notify.idl
+//              private interfaces are in this idl file
+//
+//  Classes:
+//
+//  Functions:
+//
+//  History:    1-09-1997   JohannP (Johann Posch)   Created
+//
+//----------------------------------------------------------------------------
+//#include "msnotify.idl";
+import "msnotify.idl";
+#pragma midl_echo("#include <msnotify.h>             ")
+
+typedef GUID PROCESSCOOKIE, *PPROCESSCOOKIE;
+
+
+typedef [unique] IEnumNotificationSinkItem *LPENUMNOTIFICATIONSINKITEM;
+
+///
+cpp_quote("#ifndef _LPNOTIFICATIONHELPER_DEFINED")
+cpp_quote("#define _LPNOTIFICATIONHELPER_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4ab-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface INotificationHelper : IUnknown
+{
+        typedef [unique] INotificationHelper *LPNOTIFICATIONHELPER;
+
+}
+cpp_quote("#endif")
+
+///
+cpp_quote("#ifndef _LPNOTIFICATIONPING_DEFINED")
+cpp_quote("#define _LPNOTIFICATIONPING_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4ac-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface INotificationPing : IUnknown
+{
+        typedef [unique] INotificationPing *LPNOTIFICATIONPING;
+
+}
+cpp_quote("#endif")
+
+///
+cpp_quote("#ifndef _LPNOTIFICATIONRUNNING_DEFINED")
+cpp_quote("#define _LPNOTIFICATIONRUNNING_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4ad-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface INotificationRunning : IUnknown
+{
+        typedef [unique] INotificationRunning *LPNOTIFICATIONRUNNING;
+
+}
+cpp_quote("#endif")
+
+
+typedef struct _tagNotificationSinkItem
+{
+    LPNOTIFICATIONSINK  pNotfctnSink;          // can be null - see mode
+    CLSID               NotificationDest;
+    NOTFSINKMODE        NotfctnSinkMode;
+    ULONG               cNotifications;
+    PNOTIFICATIONTYPE   pNotificationIDs;
+    NOTIFICATIONCOOKIE  RegisterCookie;
+    DWORD               dwReserved;
+
+} NOTIFICATIONSINKITEM, *LPNOTIFICATIONSINKITEM;
+
+cpp_quote("#ifndef _LPENUMSCHEDULEGROUP_DEFINED")
+cpp_quote("#define _LPENUMSCHEDULEGROUP_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4aa-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface IEnumNotificationSinkItem : IUnknown
+{
+        //typedef [unique] IEnumNotificationSinkItem *LPENUMNOTIFICATIONSINKITEM;
+
+    [local]
+    HRESULT Next(
+            [in] ULONG celt,
+            [out, size_is(celt), length_is(*pceltFetched)]
+            LPNOTIFICATIONSINKITEM *rgelt,
+            [out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT RemoteNext(
+            [in] ULONG celt,
+            [out, size_is(celt), length_is(*pceltFetched)]
+            LPNOTIFICATIONSINKITEM *rgelt,
+            [out] ULONG *pceltFetched);
+
+    HRESULT Skip(
+            [in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+            [out] IEnumNotificationSinkItem **ppenum);
+
+
+}
+cpp_quote("#endif")
+
+#if 0
+
+///
+cpp_quote("#ifndef _LPNOTIFICATIONPROCESSMGR_DEFINED")
+cpp_quote("#define _LPNOTIFICATIONPROCESSMGR_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4af-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface INotificationProcessMgr : IUnknown
+{
+        typedef [unique] INotificationProcessMgr *LPNOTIFICATIONPROCESSMGR;
+
+
+        typedef enum _tagNOTIFICATIONMGRMODE
+        {
+            // **** FLAGS OF THE NOTIFICATIONMGR ***
+            //
+            // the normal mode is to deliver imedialty
+            // and async (postmessage to enter thread
+            // of destination
+
+            // this process is the default process
+            NM_DEFAULT_PROCESS        = 0x00000001
+            
+            // set this thread as the default thread of this process
+           ,NM_DEFAULT_THREAD         = 0x00000002
+            
+        } _NOTIFICATIONMGRMODE;
+
+        typedef DWORD NOTIFICATIONMGRMODE;
+
+        HRESULT InitializeForProcess(
+            // the clsid of the process
+            [in]    REFCLSID                rClsID,
+            // initialization mode
+            [in]    DWORD                   initializeMode,
+            // a reserved again
+            [in]    DWORD                   dwReserved
+            );
+
+        HRESULT UninitializeForProcess(
+            // the clsid of the process
+            [in]    REFCLSID                rClsID,
+            // initialization mode
+            [in]    DWORD                   dwMode,
+            // a reserved again
+            [in]    DWORD                   dwReserved
+            );
+
+}
+cpp_quote("#endif")
+
+#endif // 0
+
+

@@ -1,0 +1,9 @@
+; Active Directory stub functions
+
+HRESULT WINAPI, E_FAIL, ADsGetObject@3, (LPWSTR lpszPathName, REFIID riid, void **ppObject)
+HRESULT WINAPI, E_FAIL, ADsBuildEnumerator@4, (IADsContainer *pADsContainer, IEnumVARIANT **ppEnumVariant)
+HRESULT WINAPI, E_FAIL, ADsFreeEnumerator@5, (IEnumVARIANT *pEnumVariant)
+HRESULT WINAPI, E_FAIL, ADsEnumerateNext@6, (IEnumVARIANT *pEnumVariant, ULONG cElements, VARIANT FAR *pvar, ULONG FAR *pcElementsFetched)
+HRESULT WINAPI, E_FAIL, ADsBuildVarArrayStr@7, (LPWSTR *lppPathNames, DWORD dwPathNames, VARIANT *pVar)
+HRESULT WINAPI, E_FAIL, ADsBuildVarArrayInt@8, (LPDWORD lpdwObjectTypes, DWORD dwObjectTypes, VARIANT *pVar)
+HRESULT WINAPI, E_FAIL, ADsOpenObject@9, (LPWSTR lpszPathName, LPWSTR lpszUserName, LPWSTR lpszPassword, DWORD  dwReserved, REFIID riid, void FAR * FAR * ppObject)

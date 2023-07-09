@@ -1,0 +1,56 @@
+MAJORCOMP=sdk
+MINORCOMP=resources
+
+TARGETNAME=rcdll
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETLIBS=$(SDK_LIB_PATH)\user32.lib       \
+            $(SDK_LIB_PATH)\advapi32.lib    \
+            $(SDK_LIB_PATH)\kernel32.lib
+
+DLLBASE=0x40000000
+DLLENTRY=_DllMainCRTStartup
+USE_CRTDLL=1
+
+INCLUDES=.
+
+C_DEFINES=-DUNICODE -D_UNICODE -DWINVER=0x400
+
+SOURCES=\
+        charmap.c       \
+        error.c         \
+        getflags.c      \
+        getmsg.c        \
+        globals.c       \
+        ltoa.c          \
+        p0expr.c        \
+        p0gettok.c      \
+        p0io.c          \
+        p0keys.c        \
+        p0macros.c      \
+        p0prepro.c      \
+        p1sup.c         \
+        rc.c            \
+        rcdll.c         \
+        rcfutil.c       \
+        rcl.c           \
+        rcmenu.c        \
+        rcp.c           \
+        rcpp.c          \
+        rcpputil.c      \
+        rcppx.c		\
+        rcstring.c      \
+        rctg.c          \
+        rctp.c          \
+        rcunicod.c      \
+        rcutil.c        \
+        rcx.c           \
+        scanner.c       \
+        tokens.c        \
+        rcdll.rc        \
+	rcmsgs.mc
+
+UMTYPE=console
+SUBSYSTEM_VERSION=4.0
+
+USECXX_FLAG=/Tp

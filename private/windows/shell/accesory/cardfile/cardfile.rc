@@ -1,0 +1,292 @@
+#define DEMO
+#include "precomp.h"
+//#include "ecda.h"               /* eCDA */
+
+/************************************************************************/
+/*                                                                      */
+/*  Windows Cardfile - Written by Mark Cliggett                         */
+/*  (c) Copyright Microsoft Corp. 1985, 1991 - All Rights Reserved      */
+/*                                                                      */
+/************************************************************************/
+
+/* Version Stamping */
+// #include "cardfile.rcv"
+
+INDEXICON  icon    CARDFILE.ICO
+
+rcinclude cardfile.dlg
+rcinclude font.dlg
+rcinclude ecda.dlg               /* eCDA */
+
+STRINGTABLE     DISCARDABLE
+BEGIN
+/* prompts and such */
+    IDELCURCARD,    "Delete ""%%""?"
+    IOKTOSAVE,      "%%\nThis file has changed.\n\nSave current changes?"
+    ICARDS,         " Cards"
+    ICARD,          " Card"
+    IONECARD,       " 1 Card"
+    IUNTITLED,      "(Untitled)"
+    ICARDDATA,      "Cardfile data"
+    IWARNING,       "Cardfile"
+    INOTE,          "Cardfile"
+    IPICKUPPHONE,   "Pick up the phone."
+    ICARDFILE,      "Cardfile"
+    IMARGINERR,     "Margin values are not within expected ranges.\n\
+                   Please verify that margin values are valid positive numbers."
+    ICARDVIEW       "Card View"
+    ILISTVIEW       "List View"
+    IHELPFILE       "cardfile.hlp"
+
+    IHEADER         "&f"
+    IFOOTER         "Page &p"
+
+    /** WARNING, DO NOT MODIFY THE DECIMAL CHARACTER.  INTL
+     *  CONSIDERATIONS ARE MADE WHEN LOADED!
+     */
+    ILEFT           ".75"
+    IRIGHT          ".75"
+    /* END OF WARNING. */
+
+    ITOP            "1.00"
+    IBOT            "1.00"
+
+    IDS_OBJECTCMD     "&Object" /* matches menuitem EDITOBJECT below */
+    IDS_OBJECTFMT     "Object"
+    IDS_PICTUREFMT    "Picture"
+    IDS_BITMAPFMT     "Bitmap"
+
+    /*
+        For localizing Edit.Object menu item: 'v'erb, 'c'lass, 'o'bject.
+        You can omit any word in the menu string by omitting the
+        character from the control string.  Both control strings *must* be
+        defined because each is used in different circumstances (single and
+        popup cases).   Any characters besides v,c, and o are interpreted
+        literally and are inserted into the menu string (spaces, hyphens, etc).
+    */
+    IDS_SingleVerb "v c o"
+    IDS_PopupVerbs "c o"
+
+    IDS_Edit      "Edit"  // also for Edit.Object menu string
+
+    /* STANDARD file dialog messages */
+    /* these filters must be in the same order as UNICODE_FILE, ANSI_FILE, and OLD_FORMAT */
+    IDS_FILTERSPEC    "Unicode Card File (*.CRD)"
+    IDS_FILTERSPEC2   "Card File (*.CRD)"
+    IDS_FILTERSPEC3   "3.0 Card File (*.CRD)"
+    IDS_FILTERSPEC4   "All Files (*.*)"
+    IDS_OPENDLGTITLE  "Open"
+    IDS_SAVEDLGTITLE  "Save As"
+    IDS_MERGEDLGTITLE "File Merge"
+    IDS_LINKTITLE     "Change Link"
+    IDS_VALIDATE      "&Validate"
+    IDS_OBJNAME       "Object #%d"
+    IDS_CANNOTQUIT    "Cannot exit Cardfile."
+    IDS_UPDATEEMBOBJECT "Update Embedded object?"
+    IDS_RETRYAFTERINSERT   "Insert Object is in progress.\n\nWait for Insert Object to be completed, and try again."
+    IDS_UPDATELINK       "This file contains links to other documents.\nThese links may need updating.\n\nUse the Edit, Link command to update links."
+
+/* errors */
+    ECANTDIAL,      "Cannot dial the number. Check Control Panel to see that the modem is installed properly, and check the modem cables to see that they are connected properly."
+    ECANTPRINTPICT, "Not enough memory to print picture.\nQuit one or more applications to increase available memory, and then try again."
+    EINSMEMORY,     "Not enough memory to perform this operation.\nQuit one or more applications to increase available memory, and then try again."
+    EINVALIDFILE,   "Filename not valid.\n\
+                   Please verify that a valid filename is given."
+    ECLIPEMPTYTEXT, "Cannot paste from Clipboard.\nPlease verify that the Clipboard contains text."
+    EDISKFULLFILE,  "Not enough disk space to save file.\nDelete one or more files to increase available disk space, and then try again."
+    ECANTMAKETEMP,  "Cannot create temporary file.\nDelete one or more files to increase available disk space, and then try again."
+    EINSMEMSAVE,    "Not enough memory to save card.\nQuit one or more applications to increase available memory, and then try again."
+    EDISKFULLSAVE,  "Not enough disk space to save the current card.\nDelete one or more files to increase available disk space, and then try again."
+    EOPENTEMPSAVE,  "Not enough disk space save card. Delete one or more files from the directory to which you are saving this card to increase the available disk space and then try again."
+    ECANTREADPICT,  "Not enough memory to read picture.\nClose one or more applications to increase available memory, and try again."
+    EINSMEMRUN,     "Not enough memory to run Cardfile.\nQuit one or more applications to increase available memory, and then try again."
+    ENOTVALIDFILE,  "The selected file is not in the correct format for use with Cardfile. Create a new file or open a file with the .CRD extension."
+    ECANTFIND,      "Cannot find %%."
+    EINSMEMREAD,    "Not enough memory to read card.\nClose one or more applications to increase available memory, and try again."
+    ECANTPRINT,     "Cannot print.\nBe sure that the printer is connected and set up properly."
+    ECLIPEMPTYPICT, "Cannot paste from Clipboard.\nPlease verify that the Clipboard contains a picture."
+    ENOMODEM,       "Cannot dial the number. Check Control Panel to see that the modem is installed properly, and check the modem cables to see that they are connected properly."
+    ENOPICTURES,    "There is not enough memory to print pictures, so Cardfile is only printing text. Quit one or more applications to free memory, and then try again."
+    ECANTMAKEFILE,  "%%\nCannot save this file."
+    E_FILESAVE      "Cannot save %s because %s cannot be created."
+    EMEMPRINT,      "Not enough memory to print.\nQuit one or more applications to increase available memory, and then try again."
+    EDISKPRINT,     "Not enough disk space to print.\nDelete one or more files to increase available disk space, and then try again."
+    E_CANT_REOPEN_FILE "Failed to reopen file %%"
+    E_FILEUPDATEFAILED "Cardfile cannot save %%."
+    E_FILEWRITEFAILED "Cardfile cannot save %%. Try using the Save As command to save the file to another filename. If this doesn't work, then the file cannot be saved."
+    E_FILECANTWRITE "%%\nCannot open this file for you to work in.\nFile is read-only or is being used by another application."
+    E_CANTSAVETOREADONLYFILE        "A read-only file cannot be changed and saved. If you want to save this version of %%, use the Save As command to save the file to a different file name."
+    E_FLOPPY_WITH_SOURCE_REMOVED "Cannot save file on a different disk in the same drive. Insert the disk that originally contained the file into the drive or change drives, and then save the file."
+    E_FLOPPY_WITH_SOURCE_REMOVED2 "Diskette has been removed or file damaged.\n\nPlease verify that the diskette with the file is in the correct drive."
+    E_PRINT_SETUP_ERROR "Unable to load printer driver. Either there is insufficient memory or Windows is unable to find the printer-driver file.  Use the Printers option in Control Panel to check the printer driver."
+    E_NOUNICODEFONT "Unable to load the Unicode Font '%s'.\n\nWill not be able to display certain characters."
+    E_UNICODETEXT   "This file contains extended character text.\nSome information will be lost.\n\n\tContinue?"
+
+    ISTRINGINSERT,  "%%"
+    IFILEEXTENSION, "CRD"
+
+/*  IDS_LETTERS     "fFpPtTdDcCrRlL"   Original US values. DO NOT TRANSLATE   */
+/*                  The order is: File, Page, Time, Date, Center, Right, Left */
+
+    IDS_LETTERS     "fFpPtTdDcCrRlL"    /* Localizers:  This will change the  */
+                                        /* letters used in Page Setup         */
+    W_OPENFILEFORREADONLY
+"A read-only file cannot be changed and saved.  If you want to save this version of %%, use the Save As command to save the file to a different file name or use the Properties command in File Manager to change the file attributes."
+    W_FREEBUSYSERVER "%s server is busy.  Wait until the server becomes available.  Or try to determine which application is busy, switch to it, and then complete or cancel the action which is causing it to be busy."
+    /* New eCDA error messages */
+    E_BITMAP_COPY_FAILED            "Not enough memory to copy the object. Quit one or more applications to increase available memory, and then try again."
+    E_BOUNDS_QUERY_FAILED           "Not enough memory to retrieve the object. Quit one or more applications to increase available memory, and then try again."
+    E_GET_FROM_CLIPBOARD_FAILED     "Not enough memory to retrieve the contents of the Clipboard. Quit one or more applications to increase available memory, and then try again."
+    E_FAILED_TO_FREEZE              "Not enough memory to cancel the link. Quit one or more applications to increase available memory, and then try again."
+    E_FAILED_TO_LAUNCH_SERVER       "The server application cannot be found. Make sure the directory containing the application is included in your PATH or try reinstalling the application."
+    E_FAILED_TO_READ_CARD           "This card cannot be viewed. Delete the card."
+    E_FAILED_TO_UPDATE
+"Link cannot be updated.\n\nThe link is broken or the server application cannot be found.  Recreate the link. If that doesn't work, make sure the directory containing the application is in your PATH or reinstall the application."
+    E_NEW_FILE_NOT_READABLE
+"Cannot open card file.  You are missing the necessary files to open this card file. Make sure that OLECLI.DLL and OLESVR.DLL are in your Windows SYSTEM directory.  If these files are missing, try reinstalling Windows NT."
+    E_SERVER_BUSY
+"Command cannot be processed because the server application is busy. Wait until the server becomes available.  Or try to determine which application is busy, switch to it, and then complete or cancel the action which is causing it to be busy."
+    E_ASYNCHRONOUS_OPERATION_FAILED "Asynchronous OLE operation failed."
+    E_FAILED_TO_UPDATE_LINK         "The linked information cannot be updated. Either delete the link and recreate it or use the Change Link button in the Link dialog box to redefine the source document for the link."
+    E_IMPROPER_LINK_OPTIONS         "Not enough memory to determine the link update setting. Quit one or more applications to increase available memory, and then try again."
+    E_FAILED_TO_DELETE_OBJECT
+"The object could not be deleted because the server application is busy.  Wait until the server becomes available.  Or try to determine which application is busy, switch to it, and then complete or cancel the action which is causing it to be busy."
+    E_FAILED_TO_RECONNECT_OBJECT
+"The object cannot be activated because the server application is busy.  Wait until the server becomes available. Or try to determine which application is busy, switch to it, and then complete or cancel the action which is causing it to be busy."
+
+    E_DRAG_DROP_FAILED
+"Package not created. Object Packager is not installed or there is not enough memory available to complete this action.  If Object Packager is installed, quit one or more applications to increase available memory, and then try again."
+    E_CLIPBOARD_LOCKED              "Failed to obtain Clipboard."
+    E_CREATEOBJECTFAILED
+"Object not created because server application could not be found.  Make sure that the application is setup on your system and that the directory containing the application is included in your PATH."
+    E_PASTEDTEXTTOOLONG             "Cannot paste text onto the card. The text on the Clipboard is too long to fit on a Cardfile card."
+
+    W_IMPROPER_LINK_OPTIONS         "Cannot verify the update setting for the linked object. Delete the card, and then create the link again."
+    W_SAVING_OLD_FORMAT             "Saving file in Cardfile 3.0 format."
+    W_STATIC_OBJECT                 "This is not an embedded or linked object. You cannot activate it."
+    W_FAILED_TO_CLONE_UNDO          "You will not be able to use the Undo command to undo this action."
+    W_FAILED_TO_NOTIFY              "You are missing the necessary files to complete this operation. Make sure that OLECLI.DLL and OLESVR.DLL are in your Windows SYSTEM directory. If these files are missing, try reinstalling Windows."
+    W_REPLACEOPENOBJECT  "You are trying to paste into a card that already contains an open embedded object. Before you can complete this paste operation, you must close the object by closing the server application."
+    W_DELETEOPENOBJECT   "This card contains an open embedded object. Before you can delete the object, you must close it by closing the server application."
+    W_WILLDELETEOBJECTS
+"Cardfile 3.0 did not support linked or embedded objects. If any linked or embedded objects exist in this file, they will be deleted or altered when you save this file in the 3.0 format.\n\nDo you want to save the file in the Cardfile 3.0 format?"
+
+    IDS_NOOLESERVERS     "There are no OLE servers registered."
+
+#ifdef JAPAN
+    IDS_SPACEISINCH  "余白(インチ単位)"
+    IDS_SPACEISCENTI  "余白(センチ単位)"
+#else
+    IDS_SPACEISINCH   " Margins in inches "
+    IDS_SPACEISCENTI  " Margins in centimeters "
+#endif
+
+END
+
+
+MTINDEX MENU
+BEGIN
+
+    POPUP   "&File"
+    BEGIN
+        MENUITEM    "&New",              NEW
+        MENUITEM    "&Open...",          OPEN
+        MENUITEM    "&Save",             SAVE
+        MENUITEM    "Save &As...",       SAVEAS
+        MENUITEM    "&Print",            PRINT
+        MENUITEM    "Print A&ll",        PRINTALL
+        MENUITEM    "Page Se&tup...",    PAGESETUP
+        MENUITEM    "P&rint Setup...",   PRINTSETUP
+        MENUITEM    "&Merge...",         MERGE
+        MENUITEM    SEPARATOR
+        MENUITEM    "E&xit",             EXIT
+    END
+
+    POPUP   "&Edit"
+    BEGIN
+        MENUITEM    "&Undo\tCtrl+Z",      UNDO
+        MENUITEM    SEPARATOR
+        MENUITEM    "Cu&t\tCtrl+X",       CUT
+        MENUITEM    "&Copy\tCtrl+C",      COPY
+        MENUITEM    "&Paste\tCtrl+V",     PASTE
+        MENUITEM    "Paste &Link",        PASTELINK
+        MENUITEM    "Paste &Special...",  IDM_PASTESPECIAL
+        MENUITEM    "&Index...\tF6",      HEADER
+        MENUITEM    "&Restore",           RESTORE
+        MENUITEM    SEPARATOR
+        MENUITEM    "Te&xt"               I_TEXT,  CHECKED
+        MENUITEM    "Pictur&e"            I_OBJECT
+        MENUITEM    SEPARATOR                         /* eCDA */
+        MENUITEM    "Lin&k..."            LINKSDIALOG
+        MENUITEM    "&Object"             EDITOBJECT
+        MENUITEM    "I&nsert Object..."   IDM_INSERTOBJECT
+        MENUITEM    SEPARATOR
+        MENUITEM    "Set &Font..."        IDM_SETFONT
+    END
+
+    POPUP "&View",
+    BEGIN
+        MENUITEM    "&Card"               CCARDFILE
+        MENUITEM    "&List"               PHONEBOOK
+    END
+
+
+    POPUP   "&Card"
+    BEGIN
+        MENUITEM    "&Add...\tF7",       ADD
+        MENUITEM    "&Delete",           CARDDELETE
+        MENUITEM    "Du&plicate",        DUPLICATE
+        MENUITEM    "Au&todial...\tF5",  DIAL
+    END
+    POPUP "&Search"
+    BEGIN
+        MENUITEM    "&Go To...\tF4",      GOTO
+        MENUITEM    "&Find...",      FIND
+        MENUITEM    "Find &Next\tF3",    FINDNEXT
+    END
+
+
+#ifndef NOHELP
+    POPUP "&Help"
+    BEGIN
+        MENUITEM        "&Contents",                    ID_INDEX
+        MENUITEM        "&Search for Help On...",       ID_SEARCH
+        MENUITEM        "&How to Use Help",             ID_USEHELP
+        MENUITEM        SEPARATOR
+        MENUITEM        "&About Cardfile...",           ABOUT
+    END
+#else
+    POPUP "&Info"
+    BEGIN
+        MENUITEM        "&About Cardfile...",      ABOUT
+    END
+#endif /*NOHELP*/
+END
+
+MAINACC ACCELERATORS
+BEGIN
+    VK_INSERT, COPY, VIRTKEY, CONTROL
+#ifndef NOHELP
+    VK_F1, ID_INDEX, VIRTKEY
+#endif /*NOHELP*/
+    VK_F3, FINDNEXT, VIRTKEY
+    VK_F4, GOTO, VIRTKEY
+    VK_F5, DIAL, VIRTKEY
+    VK_F6, HEADER, VIRTKEY
+    VK_F7, ADD, VIRTKEY
+    VK_BACK, UNDO, VIRTKEY, ALT
+    "Z",     UNDO,  VIRTKEY, CONTROL
+    "X",     CUT,   VIRTKEY, CONTROL
+    "C",     COPY,  VIRTKEY, CONTROL
+    "V",     PASTE, VIRTKEY, CONTROL
+END
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Cardfile Applet"
+#define VER_INTERNALNAME_STR        "cardfile"
+#define VER_ORIGINALFILENAME_STR    "cardfile.exe"
+
+#include "common.ver"

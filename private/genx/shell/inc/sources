@@ -1,0 +1,205 @@
+!IF 0
+
+Copyright (c) 1989-98  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+History:    6-05-96   scousens  (Scott Cousens)   Created
+            2-25-98   scotth    cleaned up and commented the heck out of it
+!ENDIF
+
+TARGETPATH      = obj
+TARGETTYPE      = NOTARGET
+
+CHECKED_ALT_DIR=1
+
+NO_BROWSER_FILE=1
+
+SYNCHRONIZE_BLOCK=1
+
+# These are used in makefile.def when building the idl files.
+PASS0_HEADERDIR = $(_OBJ_DIR)
+PASS0_SOURCEDIR = $(BASEDIR)\private\proxy\actxprxy
+
+MIDL_UUIDDIR    = $(BASEDIR)\private\genx\shell\uuid
+MIDL_NO_ROBUST  = 1
+# needs to run on Win95 and NT 3.51
+# specify -Oicf once
+MIDL_OPTIMIZATION=$(MIDL_OPTIMIZATION:-Oicf=) -Oicf
+
+C_DEFINES       = -DWIN32=300 -D_CAIRO_=300 -DREGISTER_PROXY_DLL
+
+!if !$(FREEBUILD)
+MKTYPLIB_FLAGS  = $(MKTYPLIB_FLAGS) -DDEBUG
+C_DEFINES       = $(C_DEFINES) -DDEBUG
+!endif
+
+MKTYPLIB_FLAGS  = $(MKTYPLIB_FLAGS) /OLD -DWINNT -h $*.h
+
+!undef PASS0ONLY
+
+
+# HOW TO ADD A FILE:
+#
+# You should simply add your files to the lists below according
+# to these instructions.  In most cases, you should not need to
+# add anything to makefile.inc.  The inference rules there cover
+# almost everything but the hole in the ozone layer.
+#
+# IDL FILES
+#
+#  To add foo.idl to the build (as an example):
+#
+#  1) add foo.idl to the SOURCES list.  This will create foo.tlb and obj\foo.h.
+#
+#  2) copy foo.idl, foo.tlb, and foo.h to their proper directories so external
+#     projects can use them.  Here's how:
+#
+#        a) foo.idl: add $(SDK_INC_PATH)\foo.idl to the NTTARGETFILE0 list.
+#           This will copy the idl file to \nt\public\sdk\inc before it is
+#           built.
+#
+#        b) foo.tlb: add $(SDK_LIB_PATH)\foo.tlb to the NTTARGETFILES list.
+#           This will copy the type library to \nt\public\sdk\lib\*.
+#
+#        a) foo.h: add $(SDK_INC_PATH)\foo.h or $(PRIVATE_INC_PATH)\foo.h (depending
+#           on where you want the header file propagated) to the NTTARGETFILES
+#           list.  This will copy the header file to \nt\public\sdk\inc
+#           or \nt\private\inc, so other projects can #include it.
+#
+#  3) Optional: to add your object library to ACTXPRXY.DLL, add entries
+#     to ..\..\..\proxy\actxprxy\sources and ..\..\..\proxy\actprxy\dlldatax.c.
+#
+#  4) Optional: to add your GUIDs to SHUUID.LIB, add an entry to
+#     ..\uuid\makefile.inc.
+#
+#
+
+#
+# To build files inside genx\shell\inc, add them to the SOURCES list.
+# For example, given foo.idl, the results will be:
+#
+#       genx\shell\inc\foo.tlb
+#       genx\shell\inc\obj\foo.h
+#
+
+
+# (Notice this is in alphabetical order.  Hint. Hint.)
+
+SOURCES= \
+    shappmgr.idl    \
+    shldisp.idl     \
+    shldispp.idl    \
+    webvw.idl
+
+
+#
+#  This happens BEFORE the SOURCES list is built.
+#
+#  To propagate files from genx\shell\inc or genx\shell\inc\obj to public\sdk or
+#  private\inc, add the destination file to NTTARGETFILE0.  The inference
+#  rules in makefile.inc will copy them to the right location.
+#
+
+
+# (Notice this is in alphabetical order and by type.  Hint. Hint.)
+
+NTTARGETFILE0=  \
+    $(SDK_INC_PATH)\cmnquery.h      \
+    $(PRIVATE_INC_PATH)\cmnquryp.h      \
+    $(SDK_INC_PATH)\color.dlg       \
+    $(SDK_INC_PATH)\commctrl.h      \
+    $(PRIVATE_INC_PATH)\comctrlp.h  \
+    $(SDK_INC_PATH)\commdlg.h       \
+    $(PRIVATE_INC_PATH)\commdlgp.h      \
+    $(SDK_INC_PATH)\cplext.h        \
+    $(SDK_INC_PATH)\dlgs.h          \
+    $(SDK_INC_PATH)\dsclient.h      \
+    $(PRIVATE_INC_PATH)\dsclintp.h      \
+    $(SDK_INC_PATH)\dsshell.h       \
+    $(PRIVATE_INC_PATH)\dsshellp.h      \
+    $(SDK_INC_PATH)\dsquery.h       \
+    $(PRIVATE_INC_PATH)\dsqueryp.h      \
+    $(SDK_INC_PATH)\fileopen.dlg    \
+    $(SDK_INC_PATH)\findtext.dlg    \
+    $(SDK_INC_PATH)\font.dlg        \
+    $(SDK_INC_PATH)\multimon.h      \
+    $(PRIVATE_INC_PATH)\multimop.h      \
+    $(SDK_INC_PATH)\prnsetup.dlg    \
+    $(SDK_INC_PATH)\prsht.h         \
+    $(PRIVATE_INC_PATH)\prshtp.h    \
+    $(SDK_INC_PATH)\shappmgr.idl    \
+    $(SDK_INC_PATH)\shdispid.h      \
+    $(SDK_INC_PATH)\shellapi.h      \
+    $(SDK_INC_PATH)\shellids.h      \
+    $(PRIVATE_INC_PATH)\shlapip.h   \
+    $(SDK_INC_PATH)\shldisp.idl     \
+    $(PRIVATE_INC_PATH)\shldispp.idl \
+    $(SDK_INC_PATH)\shlguid.h       \
+    $(PRIVATE_INC_PATH)\shlguidp.h  \
+    $(SDK_INC_PATH)\shlobj.h        \
+    $(PRIVATE_INC_PATH)\shlobjp.h   \
+    $(SDK_INC_PATH)\shlwapi.h       \
+    $(PRIVATE_INC_PATH)\shlwapip.h  \
+    $(PRIVATE_INC_PATH)\uastrfnc.h  \
+    $(SDK_INC_PATH)\webvw.idl       \
+    $(SDK_INC_PATH)\webvwid.h		\
+    $(SDK_INC_PATH)\shfolder.h
+
+
+#
+#  This happens AFTER the SOURCES list is built.
+#
+#  To propagate files from genx\shell or genx\shell\obj to public\sdk or
+#  windows\inc, add the destination file to NTTARGETFILES.  The inference
+#  rules in makefile.inc will copy them to the right location.
+#
+
+
+# (Notice this is in alphabetical order and by type.  Hint. Hint.)
+
+NTTARGETFILES=  \
+    $(SDK_INC_PATH)\shappmgr.h      \
+    $(SDK_LIB_PATH)\shappmgr.tlb    \
+    $(SDK_INC_PATH)\shldisp.h       \
+    $(SDK_LIB_PATH)\shldisp.tlb     \
+    $(PRIVATE_INC_PATH)\shldispp.h  \
+    $(BASEDIR)\private\lib\$(O)\shldispp.tlb \
+    $(PRIVATE_INC_PATH)\systrayp.h  \
+    $(SDK_INC_PATH)\webvw.h         \
+    $(SDK_LIB_PATH)\webvw.tlb       \
+    $(PRIVATE_INC_PATH)\w95wraps.h
+
+
+# List any file that is relocated.  For instance, shlwapip.h at one time
+# was built to private\windows\inc.  It's now in private\inc.  Adding
+# the original name to the RELOCATED_FILES macro will ensure it's deleted
+# from the old location during a clean build (hopefully avoiding bogus build
+# errors.  (See the clean rule in makefile.inc.)
+
+WIN_INC_PATH    = $(BASEDIR)\private\windows\inc
+
+RELOCATED_FILES = \
+    $(WIN_INC_PATH)\comctrlp.h      \
+    $(WIN_INC_PATH)\prshtp.h        \
+    $(WIN_INC_PATH)\shlguidp.h      \
+    $(WIN_INC_PATH)\shlobjp.h       \
+    $(WIN_INC_PATH)\shlwapip.h      \
+    $(WIN_INC_PATH)\cmnquryp.h      \
+    $(WIN_INC_PATH)\commdlgp.h      \
+    $(WIN_INC_PATH)\dsclintp.h      \
+    $(WIN_INC_PATH)\dsshellp.h      \
+    $(WIN_INC_PATH)\dsqueryp.h      \
+    $(WIN_INC_PATH)\multimop.h      \
+    $(WIN_INC_PATH)\systrayp.h      \
+    $(WIN_INC_PATH)\w95wraps.h
+    

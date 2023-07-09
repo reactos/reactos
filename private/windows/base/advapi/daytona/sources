@@ -1,0 +1,116 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Mark Lucovsky (markl) 18-Sep-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+!IF "$(ALT_PROJECT)" == ""
+ALT_PROJECT=DAYTONA
+ALT_PROJECT_TARGET=.
+!ENDIF
+
+MAJORCOMP=windows
+MINORCOMP=base
+
+TARGETNAME=advapi32
+TARGETPATH=obj
+TARGETPATHLIB=$(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)
+TARGETTYPE=DYNLINK
+SYNCHRONIZE_BLOCK=1		# wmistub needs the output lib
+DLLENTRY=DllInitialize
+DLLDEF=obj\*\advapi32.def
+
+LINKER_FLAGS = $(LINKER_FLAGS) /WX
+
+LINKLIBS=  \
+           $(BASEDIR)\public\sdk\lib\*\elfapi.lib \
+           $(BASEDIR)\private\security\lsa\common\obj\*\lsacomm.lib \
+           $(BASEDIR)\private\security\lsa\uclient\obj\*\lsaudll.lib \
+           $(BASEDIR)\private\security\lsa\crypt\dll\winnt\obj\*\sys003.lib \
+           $(BASEDIR)\public\sdk\lib\*\accsrc.lib \
+           ..\..\..\screg\sc\lib\obj\*\sclib.lib \
+           ..\..\..\screg\sc\client\$(ALT_PROJECT)\obj\*\svcctrl.lib \
+           ..\..\..\screg\winreg\local\$(ALT_PROJECT)\obj\*\localreg.lib \
+           ..\..\..\screg\winreg\perflib\$(ALT_PROJECT)\obj\*\perflib.lib \
+           ..\..\..\screg\winreg\client\obj\*\winreg.lib \
+           ..\..\..\screg\winreg\regconn\obj\*\regconn.lib \
+           ..\..\..\screg\winreg\lib\obj\*\wrlib.lib \
+           $(BASEDIR)\private\lib\*\rsa32.lib \
+           ..\..\..\gina\gpext\appmgmt\client\daytona\obj\*\appmgmt.lib \
+           ..\..\..\wmi\*\wmiclnt.lib
+
+
+INCLUDES=\
+    ..;\
+    ..\..\inc;\
+    $(BASEDIR)\private\windows\inc; \
+    ..\..\accctrl2\inc;\
+    $(BASEDIR)\public\sdk\inc\hydra;
+
+TARGETLIBS= \
+           $(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)\*\kernl32p.lib \
+           $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib   \
+           $(BASEDIR)\public\sdk\lib\*\rpcndr.lib   \
+           $(BASEDIR)\public\sdk\lib\*\rpcutil.lib  \
+           $(BASEDIR)\public\sdk\lib\*\lsadll.lib \
+           $(BASEDIR)\public\sdk\lib\*\winspool.lib
+
+USE_NTDLL=1
+
+!ifdef TEST_BUILD_EXPONENT
+! if "$(TEST_BUILD_EXPONENT)" == "$(TEST_BUILD_EXPONENT:0x=)"
+!  error TEST_BUILD_EXPONENT value must start with 0x
+! endif
+C_DEFINES=$(C_DEFINES) -DTEST_BUILD_EXPONENT=$(TEST_BUILD_EXPONENT)
+!endif
+
+!if "$(TARGET_DIRECTORY)" != "i386"
+C_DEFINES=$(C_DEFINES) -DMS_INTERNAL_KEY
+!endif
+
+C_DEFINES=$(C_DEFINES) -D_ADVAPI32_ -DNTCRYPTO
+
+MSC_WARNING_LEVEL=/W3 /WX
+SOURCES= ..\advapi32.rc \
+         ..\init.c      \
+         ..\eventapi.c  \
+         ..\pnpapi.c    \
+         ..\security.c  \
+         ..\username.c  \
+         ..\win31io.c   \
+         ..\group32.c   \
+         ..\group16.c   \
+         ..\isuni.c     \
+         ..\logon32.c   \
+         ..\cryptapi.c  \
+         ..\regdat16.c  \
+         ..\cseclogn.cxx \
+         ..\sitesids.cxx \
+         ..\efs.c       \
+         ..\sddl.c      \
+         ..\termutil.c
+
+UMTYPE=console
+OPTIONAL_UMTEST=tuser
+
+#
+# We need to build a private advapi32 library
+NTTARGETFILES=$(TARGETPATHLIB)\*\advapip.lib

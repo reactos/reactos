@@ -1,5 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "Windows Sockets 2 API"
-#define REACTOS_STR_INTERNAL_NAME     "wshtcpip"
-#define REACTOS_STR_ORIGINAL_FILENAME "wshtcpip.dll"
-#include <reactos/version.rc>

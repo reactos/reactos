@@ -1,0 +1,42 @@
+TARGETNAME=snmpapi
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+DLLENTRY=InitializeDLL
+USE_CRTDLL=1
+
+C_DEFINES=$(C_DEFINES) -D_SNMPDLL_
+#USER_C_FLAGS=-DUNICODE -D_UNICODE
+
+INCLUDES=\
+    $(BASEDIR)\public\sdk\inc\sockets;\
+    $(BASEDIR)\private\net\inc
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\ws2_32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+!IFDEF USE_CALLTREE
+LINKER_FLAGS=$(LINKER_FLAGS) -calltree
+!ENDIF
+
+SOURCES=\
+    snmpapi.rc \
+    uniconv.c \
+    snmpapi.c \
+    any.c \
+    dbg.c \
+    ipx.c \
+    mem.c \
+    octets.c \
+    oid.c \
+    print.c \
+    string.c \
+    sysoid.c \
+    uptime.c \
+    vb.c \
+    vbl.c \
+    snmptfx.c
+
+SYNCHONIZE_BLOCK=1

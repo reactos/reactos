@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdycl
+
+TARGETNAME=kbdycl
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdycl.c kbdycl.rc
+
+NTTARGETFILE0=kbdycl.h kbdycl.rc kbdycl.def

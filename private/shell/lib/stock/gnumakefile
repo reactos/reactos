@@ -1,0 +1,76 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling C++ application.
+COMPONENT = SHELL
+PRODUCT = STOCKLIB
+
+CUSTOM_RULES = ${MWROOT}/ie4/shell.template
+
+NO_BROWSER_FILE=1
+
+# Generated files will go here
+DIR_GENERATED = ${O}
+
+SOURCES_FILE =  sources
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME
+
+WLIB	= stocklib
+LIB	= lib${WLIB}.a # target static library
+
+## you may define variables specific to this sub-directory/target using PROJECT_XXX
+##
+WIN32_WINNT = -D_WIN32_WINNT=0x0400
+PROJECT_CFLAGS = -I.. -DWINDOWS_ME -DWINNT -DFE_IME -DDBCS \
+		 -DULTRAPRIVATE  -DUSE_PRIVATE_VERSION_NUMBER
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+
+## shstra.cpp and shstrw.cpp are being generated from shstr.cpp
+
+${O}/shstra.cpp: shstr.cpp
+	rm -f $@
+	echo "#ifdef UNICODE" >  $@
+	echo "#undef UNICODE" >> $@
+	echo "#endif"         >> $@
+	cat   $<              >> $@
+
+${O}/shstrw.cpp: shstr.cpp
+	rm -f $@
+	echo "#ifndef UNICODE" >  $@
+	echo "#define UNICODE" >> $@
+	echo "#endif"          >> $@       
+	cat   $<               >> $@
+
+## dkaa.cpp and dkaw.cpp are being generated from dka.cpp
+
+${O}/dkaa.cpp: dka.cpp
+	rm -f $@
+	echo "#ifdef UNICODE" >  $@
+	echo "#undef UNICODE" >> $@
+	echo "#endif"         >> $@
+	cat   $<              >> $@
+
+${O}/dkaw.cpp: dka.cpp
+	rm -f $@
+	echo "#ifndef UNICODE" >  $@
+	echo "#define UNICODE" >> $@
+	echo "#endif"          >> $@
+	cat   $<               >> $@
+
+## nativea.c and nativew.c are being generated from native.c
+
+${O}/nativea.cpp: native.cpp
+	rm -f $@
+	echo "#ifdef UNICODE" >  $@
+	echo "#undef UNICODE" >> $@
+	echo "#endif"         >> $@
+	cat   $<              >> $@
+
+${O}/nativew.cpp: native.cpp
+	rm -f $@
+	echo "#ifndef UNICODE" >  $@
+	echo "#define UNICODE" >> $@
+	echo "#endif"          >> $@
+	cat   $<               >> $@
+

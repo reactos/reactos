@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdhebx
+
+TARGETNAME=kbdhebx
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdhebx.c kbdhebx.rc
+
+NTTARGETFILE0=kbdhebx.h kbdhebx.rc kbdhebx.def

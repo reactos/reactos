@@ -1,0 +1,102 @@
+0 ; This is the number of in register arguments
+;++
+;
+; Copyright (c) 1989  Microsoft Corporation
+;
+; Module Name:
+;
+;    systable.asm
+;
+; Abstract:
+;
+;    This module implements the system service dispatch table.
+;
+; Author:
+;
+;    Shie-Lin Tzong (shielint) 6-Feb-1990
+;
+; Environment:
+;
+;    Kernel mode only.
+;
+; Revision History:
+;
+;--
+
+;
+; To add a system service simply add the name of the service to the below
+; table. If the system service has arguments, then immediately
+; follow the name of the serice with a comma and following that the number
+; of bytes of in memory arguments, e.g. CreateObject,40.
+;
+
+;ifdef i386
+
+.386p
+include callconv.inc
+TABLE_BEGIN1 macro t
+    TITLE t
+endm
+TABLE_BEGIN2 macro t
+_DATA	SEGMENT DWORD PUBLIC 'DATA'
+	ASSUME	DS:FLAT
+endm
+TABLE_BEGIN3 macro t
+    align 4
+endm
+TABLE_BEGIN4 macro t
+    public _KiServiceTable
+_KiServiceTable label dword
+endm
+TABLE_BEGIN5 macro t
+endm
+TABLE_BEGIN6 macro t
+endm
+TABLE_BEGIN7 macro t
+endm
+TABLE_BEGIN8 macro t
+endm
+
+TABLE_ENTRY macro l,bias,numargs
+        Local   Bytes
+
+        Bytes = numargs*4
+
+        EXTRNP  _Nt&l,&numargs
+IFDEF STD_CALL
+        ComposeInst <dd offset FLAT:>,_Nt,l,<@>,%(Bytes)
+ELSE
+        dd offset FLAT:_Nt&l
+ENDIF
+endm
+
+TABLE_END macro n
+    public _KiServiceLimit
+_KiServiceLimit dd n+1
+endm
+
+ARGTBL_BEGIN macro
+    public _KiArgumentTable
+_KiArgumentTable label dword
+endm
+
+ARGTBL_ENTRY macro e0,e1,e2,e3,e4,e5,e6,e7
+        db   e0,e1,e2,e3,e4,e5,e6,e7
+endm
+
+ARGTBL_END macro
+_DATA   ENDS
+        end
+endm
+
+;endif
+
+        TABLE_BEGIN1 <"System Service Dispatch Table">
+        TABLE_BEGIN2 <"System Service Dispatch Table">
+        TABLE_BEGIN3 <"System Service Dispatch Table">
+        TABLE_BEGIN4 <"System Service Dispatch Table">
+        TABLE_BEGIN5 <"System Service Dispatch Table">
+        TABLE_BEGIN6 <"System Service Dispatch Table">
+        TABLE_BEGIN7 <"System Service Dispatch Table">
+        TABLE_BEGIN8 <"System Service Dispatch Table">
+

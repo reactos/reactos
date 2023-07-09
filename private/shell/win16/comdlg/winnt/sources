@@ -1,0 +1,42 @@
+NTLEGO=1
+NTPROFILEINPUT=yes
+MAJORCOMP=shell
+MINORCOMP=comdlg32
+
+CAIRO_PRODUCT=1
+NOT_LEAN_AND_MEAN=1
+
+UMTYPE=windows
+
+TARGETNAME=comdlg32
+TARGETTYPE=DYNLINK
+TARGETPATH=$(_NTDRIVE)\nt\public\sdk\lib\cairo
+TARGETLIBS=$(_NTDRIVE)\nt\public\sdk\lib\*\kernel32.lib     \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\user32.lib       \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\user32p.lib      \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\shell32.lib      \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\gdi32.lib        \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\advapi32.lib     \
+           $(_NTDRIVE)\nt\public\sdk\lib\*\comctl32.lib
+
+DLLDEF=..\comdlg32.def
+
+DLLENTRY=LibMain
+
+INCLUDES=..;..\..\..\inc;..\..\..\..\inc;..\..\..\shell\inc
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+C_DEFINES=-DWIN32 -DNT -DWINNT -DNTBUG -DUNICODE -D_UNICODE -DSTRICT
+
+SOURCES= ..\dlgs.c      ..\data.c       ..\init.c   ..\comdlg32.rc   \
+         ..\fileopen.c  ..\filenew.cpp  ..\parse.c                   \
+         ..\color.c     ..\color2.c                                  \
+         ..\find.c                                                   \
+         ..\font.c                                                   \
+         ..\prnsetup.c
+
+

@@ -1,0 +1,215 @@
+#  File: D:\WACKER\common.mki (Created: 23-Nov-1993)
+#
+#  Copyright 1993 by Hilgraeve Inc. -- Monroe, MI
+#  All rights reserved
+#
+#  $Revision: 1.12 $
+#  $Date: 1998/07/21 15:14:41 $
+#
+
+#-------------------#
+
+all : makefile TARGETS
+
+#-------------------#
+
+# Shell commands use & instead of ; under NT
+#
+%if $(OS) == NT
+;=&
+%else
+;=;
+%endif
+
+#-------------------#
+
+VERSION         = WIN_DEBUG
+MACHINE         = i386
+SUBSYSTEM       = WINDOWS,4.0
+LANG            = USA
+
+#-------------------#
+
+%if ${LANG} == JAPANESE
+CHAR_ENBL = MBCS
+%else
+CHAR_ENBL = .
+%endif
+
+#-------------------#
+
+%if ${LANG} == USA
+TAGFILE = usa.tag
+
+%elseif ${LANG} == JAPANESE
+TAGFILE = japan.tag
+
+%else
+%abort [LANG=USA (default) | JAPANESE ]
+%endif
+
+#-------------------#
+
+%if %exists(\wacker\personal.cfg)
+%include \wacker\personal.cfg
+@echo including personal.cfg...
+%endif
+
+#-------------------#
+
+EXE_DIR = \WACKER\EXE
+WIN_D   = $(EXE_DIR)\WIN.DBG
+WIN_R   = $(EXE_DIR)\WIN.REL
+WIN_1R  = $(EXE_DIR)\WIN1.REL
+
+#-------------------#
+# Options build .pdb with debug info for debug & release builds. Simplifies
+# use of profilers, analyzers etc.
+
+CBASE =		  /nologo \
+			  /Zi \
+			  /W3 \
+			  /J \
+			  /Gz \
+			  /Gf \
+			  /Fo$(BD)/ \
+			  /I\wacker \
+              /I\wacker\nih \
+			  /D_WINDOWS \
+			  /D_WIN32 \
+			  /DSTRICT \
+			  /D$(BLD_VER) \
+			  /DNO_SMARTHEAP \
+			  /DEXCLUDE_PLATFORM_HEADER \
+			  /D$(LANG) \
+			  /YX \
+			  /Fp$(BD)\windows.pch \
+			  $(EXTRA_DEFS)
+
+CRELEASE                = /O1 /MD /GB /Gs /DNDEBUG $(CBASE)
+CDEBUG                  = /MDd /D_DEBUG /Od $(CBASE)
+
+#-------------------#
+
+MAP_OPTIONS     = /MAP
+
+# note: leave /DEBUG on for both release and debug builds so profilers, analyzers etc. work
+LBASE           = /SUBSYSTEM:$(SUBSYSTEM) /MACHINE:$(MACHINE) /NOLOGO /DEBUG \
+				  /INCREMENTAL:NO
+			  
+
+LRELEASE        = $(LBASE) /RELEASE /MAP /OPT:REF
+LDEBUG          = $(LBASE) /NOD:MSVCRT /NOD:MSVCRTD
+LDEBUGEXT       = $(LBASE)  
+
+#-------------------#
+
+%if $(VERSION) == WIN_DEBUG
+CFLAGS  = $(CDEBUG)
+LFLAGS  = $(LDEBUG)
+BD      = $(WIN_D)\$(CHAR_ENBL)
+BLD_VER = WIN_VERSION
+
+%elseif $(VERSION) == WIN_RELEASE
+CFLAGS  = $(CRELEASE)
+LFLAGS  = $(LRELEASE)
+BD              = $(WIN_R)\$(CHAR_ENBL)
+BLD_VER = WIN_VERSION
+
+%else
+%abort VERSION macro defined to unknown type.
+%endif
+
+# if you want to generate map and symbol files, define the MAP_AND_SYMBOLS
+# macro in your personal.cfg file or on the omake command line
+#
+%if defined(MAP_AND_SYMBOLS)
+LFLAGS += $(MAP_OPTIONS)
+%endif
+
+# --- Tell omake where to put built objects --- #
+
+.PATH.obj=$(BD)
+.PATH.lib=$(BD)
+.PATH.exp=$(BD)
+.PATH.dll=$(BD)
+.PATH.exe=$(BD)
+.PATH.res=$(BD)
+.PATH.sbr=$(BD)
+.PATH.bsc=$(BD)
+.PATH.sym=$(BD)
+.PATH.map=$(BD)
+
+# --- Some programs need all the memory they can get --- #
+
+.MEMSWAP: mapsym
+
+# --- Win32 tools use different response file formats --- #
+
+.RESPONSE.LINK:
+.RESPONSE.LIB:
+.RESPONSE.STD: link lib bscmake
+
+# --- Inference rule used to build all C files --- #
+
+%.obj .SILENT : %.c
+	$(CC) $(CFLAGS) /c {$(<,A) }
+
+%.obj .SILENT : %.cpp
+	$(CC) $(CFLAGS) /c {$(<,A) }
+
+# --- Inference rule to build import libraries --- #
+
+%.lib + %.exp .SILENT : %.def
+	lib -def:$< -machine:$(MACHINE) -subsystem:$(SUBSYSTEM) -out:$(@,1)
+
+# --- Inference rule to build makefiles --- #
+
+%makefile : %makefile.t
+	mkmf -t makefile.t
+	%restart
+
+#-------------------#
+
+.BEFORE :
+	%if !%exists(\wacker\rcsctrl)
+		%abort Must have an rcsctrl file!
+	%endif
+
+	%if %writable(\wacker\rcsctrl)
+		%abort *** rcsctrl is not read-only. ***
+	%endif
+
+	%if %exists(\wacker\fromrcs.zip) && $(FIRSTTARGET) != fromrcs
+		%abort *** fromrcs.zip exists.  Type OMAKE FROMRCS ***
+	%endif
+
+	%if !%exists($(EXE_DIR))
+		-mkdir $(EXE_DIR)
+	%endif
+
+	%if !%exists($(BD))
+		-mkdir $(BD)
+	%endif
+
+#-------------------#
+
+callmake :
+	%chdir $(dir)
+	%if !%exists(makefile) || %time(makefile) < %time(makefile.t)
+		mkmf -t makefile.t
+	%endif
+	$(MAKE) $(MFLAGS) $(MAKEMACROS) $(TARGET)
+	%chdir ..
+
+#-------------------#
+
+\wacker\rcsctrl .NOINFER : $(RCSFILES,N\\shared\\classes\\win32.+)
+	@echo .
+	@echo . Archiving $(CWD)
+	@echo .
+	%foreach file in $?
+		echo $(file,\wacker=.) >>\wacker\pkzip.rsp
+	%end
+
+#-------------------#

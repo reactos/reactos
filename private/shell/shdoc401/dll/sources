@@ -1,0 +1,86 @@
+#
+#
+#
+
+CCSHELL_DIR=$(MAKEDIR:\shdoc401\dll=)
+
+!include ..\shdoc401.inc
+SOURCES_USED    =  $(SOURCES_USED) ..\shdoc401.inc
+
+TARGETNAME      = shdoc401
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+NO_BROWSER_FILE = 1
+
+#TARGETPATHLIB   = $(LIBRARY_PLATFORM_PATH)
+
+# This file causes makefile.inc to get included
+NTTARGETFILES   =
+
+!if $(IA64) || $(AXP64)
+USE_LIBCMT      = 1
+DLLENTRY        = _DllMainCRTStartup
+!else
+USE_IERT        = 1
+DLLENTRY        = DllMain
+!endif
+
+# Wait for unicpp to finish building before proceeding
+SYNCHRONIZE_DRAIN = 1
+
+# NOTE!! We deliberately link to a Win95-compatible shell32.lib
+#        so shdoc401 can be loaded in the browser-only installations.
+#        (Which is its sole purpose for existing.)
+
+TARGETLIBS      = $(LIBRARY_PLATFORM_PATH)\*\gdi32.lib          \
+                  $(LIBRARY_PLATFORM_PATH)\*\user32.lib         \
+                  $(LIBRARY_PLATFORM_PATH)\*\kernel32.lib       \
+                  $(LIBRARY_PLATFORM_PATH)\*\advapi32.lib       \
+                  $(LIBRARY_PLATFORM_PATH)\*\mpr.lib            \
+                  $(LIBRARY_PATH)\ole32.lib                     \
+                  $(LIBRARY_PATH)\shlwapip.lib                  \
+!if $(386)
+                  $(BASEDIR)\private\lib\chicago\*\shell32.w95  \
+!else
+                  $(SDK_LIB_PATH)\shell32p.lib                  \
+!endif
+                  $(LIBRARY_PLATFORM_PATH)\*\comctlp.lib        \
+                  $(CCSHELL_DIR)\lib\$O\shguid.lib              \
+                  $(CCSHELL_DIR)\lib\$O\shguidp.lib             \
+                  $(LIBRARY_PATH)\uuid.lib                      \
+                  $(LIBRARY_PATH)\htmlhelp.lib                  \
+                  $(LIBRARY_PATH)\shdocvwp.lib                  \
+                  $(CCSHELL_DIR)\lib\$O\stock5.lib              \
+                  $(CCSHELL_DIR)\lib\$O\stocklib.lib
+
+LINKLIBS        = \
+                  ..\srcw\$O\srcw.lib \
+                  ..\unicpp\$O\unicpp.lib
+
+! if "$(DELAYLOAD)" != ""
+DELAYLOAD       = $(DELAYLOAD);mpr.dll
+! else
+DELAYLOAD       = mpr.dll
+! endif
+
+DLLDEF          = $O\shdoc401.def
+PRIVLIB         = shdc401p.lib
+PRIVDEFSRC      = ..\shdoc401.src
+PRIVDEF         = $O\shdc401p.def
+BUILD_PRIVLIB   = 1
+
+SOURCES         = \
+                  ..\sccls.c \
+                  ..\multimon.c \
+                  ..\shdup.cpp \
+                  ..\dllload.c \
+                  ..\cowsite.cpp \
+                  ..\debug.c \
+                  ..\filetypa.c \
+                  ..\dllreg.cpp \
+                  ..\fsmenu.cpp \
+                  ..\shdoc401.rc
+
+#PRECOMPILED_INCLUDE =
+DLLBASE         = 0x50000000

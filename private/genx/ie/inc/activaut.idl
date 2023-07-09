@@ -1,0 +1,309 @@
+//+---------------------------------------------------------------------------
+//
+//  (C) Copyright 1997 Microsoft Corporation. All Rights Reserved.
+//
+//  Contents:   Declarations for ActiveX Script Authoring
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// ActivAut.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1997 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("//")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("//")
+cpp_quote("// Declarations for ActiveX Script Authoring.")
+cpp_quote("//")
+
+cpp_quote("")
+cpp_quote("#ifndef __ActivAut_h")
+cpp_quote("#define __ActivAut_h")
+cpp_quote("")
+
+#ifndef DO_NO_IMPORTS
+import "ocidl.idl";
+import "oleidl.idl";
+import "oaidl.idl";
+#endif
+
+cpp_quote("/* GUIDs")
+cpp_quote(" ********/")
+cpp_quote("")
+
+cpp_quote("#ifndef _NO_AUTHOR_GUIDS")
+
+cpp_quote("// {0AEE2A92-BCBB-11d0-8C72-00C04FC2B085}")
+cpp_quote("DEFINE_GUID(CATID_ActiveScriptAuthor, 0xaee2a92, 0xbcbb, 0x11d0, 0x8c, 0x72, 0x0, 0xc0, 0x4f, 0xc2, 0xb0, 0x85);")
+cpp_quote("")
+
+cpp_quote("// {9C109DA0-7006-11d1-B36C-00A0C911E8B2}")
+cpp_quote("DEFINE_GUID(IID_IActiveScriptAuthor, 0x9c109da0, 0x7006, 0x11d1, 0xb3, 0x6c, 0x00, 0xa0, 0xc9, 0x11, 0xe8, 0xb2);")
+cpp_quote("")
+
+cpp_quote("// {0AEE2A94-BCBB-11d0-8C72-00C04FC2B085}")
+cpp_quote("DEFINE_GUID(IID_IScriptNode, 0xaee2a94, 0xbcbb, 0x11d0, 0x8c, 0x72, 0x0, 0xc0, 0x4f, 0xc2, 0xb0, 0x85);")
+cpp_quote("")
+
+cpp_quote("// {0AEE2A95-BCBB-11d0-8C72-00C04FC2B085}")
+cpp_quote("DEFINE_GUID(IID_IScriptEntry, 0xaee2a95, 0xbcbb, 0x11d0, 0x8c, 0x72, 0x0, 0xc0, 0x4f, 0xc2, 0xb0, 0x85);")
+cpp_quote("")
+
+cpp_quote("// {0AEE2A96-BCBB-11d0-8C72-00C04FC2B085}")
+cpp_quote("DEFINE_GUID(IID_IScriptScriptlet, 0xaee2a96, 0xbcbb, 0x11d0, 0x8c, 0x72, 0x0, 0xc0, 0x4f, 0xc2, 0xb0, 0x85);")
+cpp_quote("")
+
+cpp_quote("// {7E2D4B70-BD9A-11d0-9336-00A0C90DCAA9}")
+cpp_quote("DEFINE_GUID(IID_IActiveScriptAuthorProcedure, 0x7e2d4b70, 0xbd9a, 0x11d0, 0x93, 0x36, 0x0, 0xa0, 0xc9, 0xd, 0xca, 0xa9);")
+cpp_quote("")
+
+cpp_quote("#endif // _NO_AUTHOR_GUIDS")
+cpp_quote("")
+
+cpp_quote("/* Interfaces")
+cpp_quote(" *************/")
+cpp_quote("")
+
+cpp_quote("")
+cpp_quote("// Output flags for GetLanguageFlags")
+cpp_quote("const DWORD fasaPreferInternalHandler = 0x0001;")
+cpp_quote("const DWORD fasaSupportInternalHandler = 0x0002;")
+cpp_quote("const DWORD fasaCaseSensitive = 0x0004;")
+cpp_quote("")
+
+cpp_quote("// Flags for statement completion")
+cpp_quote("const DWORD SCRIPT_CMPL_NOLIST     = 0x0000;")
+cpp_quote("const DWORD SCRIPT_CMPL_MEMBERLIST = 0x0001;")
+cpp_quote("const DWORD SCRIPT_CMPL_ENUMLIST   = 0x0002;")
+cpp_quote("const DWORD SCRIPT_CMPL_PARAMTIP   = 0x0004;")
+cpp_quote("const DWORD SCRIPT_CMPL_GLOBALLIST = 0x0008;")
+cpp_quote("")
+cpp_quote("const DWORD SCRIPT_CMPL_ENUM_TRIGGER   = 0x0001;")
+cpp_quote("const DWORD SCRIPT_CMPL_MEMBER_TRIGGER = 0x0002;")
+cpp_quote("const DWORD SCRIPT_CMPL_PARAM_TRIGGER  = 0x0003;")
+cpp_quote("const DWORD SCRIPT_CMPL_COMMIT         = 0x0004;")
+cpp_quote("")
+cpp_quote("// Flags for getting attributes")
+cpp_quote("const DWORD GETATTRTYPE_NORMAL    = 0x0000;")
+cpp_quote("const DWORD GETATTRTYPE_DEPSCAN   = 0x0001;")
+cpp_quote("")
+cpp_quote("// GETATTRFLAG_THIS can be used with either GETATTRTYPE_NORMAL or GETATTRTYPE_DEPSCAN")
+cpp_quote("const DWORD GETATTRFLAG_THIS	     = 0x0100;")
+cpp_quote("const DWORD GETATTRFLAG_HUMANTEXT = 0x8000;")
+cpp_quote("")
+cpp_quote("// When the GETATTR_LOCALIZE flag is set the following bit will be")
+cpp_quote("// set for source attributes that should be considered localized")
+cpp_quote("const DWORD SOURCETEXT_ATTR_HUMANTEXT = 0x8000;")
+cpp_quote("")
+cpp_quote("// Valid attributes returned for GETATTR_DEPSCAN")
+cpp_quote("const DWORD SOURCETEXT_ATTR_IDENTIFIER     = 0x0100;")
+cpp_quote("const DWORD SOURCETEXT_ATTR_MEMBERLOOKUP   = 0x0200;")
+cpp_quote("")
+cpp_quote("// When the GETATTRFLAG_THIS flag is set the following bit will be")
+cpp_quote("// set for the this pointer (JS) or me pointer (VBS)")
+cpp_quote("const DWORD SOURCETEXT_ATTR_THIS           = 0x0400;")
+
+interface IActiveScriptAuthor;
+interface IScriptNode;
+interface IScriptEntry;
+interface IScriptScriptlet;
+
+typedef WORD SOURCE_TEXT_ATTR;
+
+[
+	uuid(0AEE2A94-BCBB-11d0-8C72-00C04FC2B085),
+	pointer_default(unique)
+]
+interface IScriptNode : IUnknown
+	{
+	HRESULT Alive(void);
+	HRESULT Delete(void);
+
+	HRESULT GetParent([out] IScriptNode **ppsnParent);
+	HRESULT GetIndexInParent([out] ULONG *pisn);
+
+	HRESULT GetCookie([out] DWORD *pdwCookie);
+
+	HRESULT GetNumberOfChildren([out] ULONG *pcsn);
+	HRESULT GetChild([in] ULONG isn, [out] IScriptNode **ppsn);
+
+	HRESULT GetLanguage([out] BSTR *pbstr);
+
+	HRESULT CreateChildEntry(
+		[in] ULONG isn,
+		[in] DWORD dwCookie,
+		[in] LPCOLESTR pszDelimiter,
+		[out] IScriptEntry **ppse);
+	HRESULT CreateChildHandler(
+		[in] LPCOLESTR pszDefaultName,
+		[in, size_is(cpszNames)] LPCOLESTR *prgpszNames,
+		[in] ULONG cpszNames,
+		[in] LPCOLESTR pszEvent,
+		[in] LPCOLESTR pszDelimiter,
+		[in] ITypeInfo* ptiSignature,
+		[in] ULONG iMethodSignature,
+		[in] ULONG isn,
+		[in] DWORD dwCookie,
+		[out] IScriptEntry **ppse);
+	}
+
+
+[
+	uuid(0AEE2A95-BCBB-11d0-8C72-00C04FC2B085),
+	pointer_default(unique)
+]
+interface IScriptEntry : IScriptNode
+	{
+	HRESULT GetText([out] BSTR *pbstr);
+	HRESULT SetText([in] LPCOLESTR psz);
+
+	HRESULT GetBody([out] BSTR *pbstr);
+	HRESULT SetBody([in] LPCOLESTR psz);
+
+	HRESULT GetName([out] BSTR *pbstr);
+	HRESULT SetName([in] LPCOLESTR psz);
+
+	HRESULT GetItemName([out] BSTR *pbstr);
+	HRESULT SetItemName([in] LPCOLESTR psz);
+
+	HRESULT GetSignature([out] ITypeInfo **ppti, [out] ULONG *piMethod);
+	HRESULT SetSignature([in] ITypeInfo *pti, [in] ULONG iMethod);
+
+	HRESULT GetRange([out] ULONG *pichMin, [out] ULONG *pcch);
+	}
+
+
+[
+	uuid(0AEE2A96-BCBB-11d0-8C72-00C04FC2B085),
+	pointer_default(unique)
+]
+interface IScriptScriptlet : IScriptEntry
+	{
+	HRESULT GetSubItemName([out] BSTR *pbstr);
+	HRESULT SetSubItemName([in] LPCOLESTR psz);
+
+	HRESULT GetEventName([out] BSTR *pbstr);
+	HRESULT SetEventName([in] LPCOLESTR psz);
+
+	HRESULT GetSimpleEventName([out] BSTR *pbstr);
+	HRESULT SetSimpleEventName([in] LPCOLESTR psz);
+	}
+
+
+[
+	uuid(9C109DA0-7006-11d1-B36C-00A0C911E8B2),
+	pointer_default(unique)
+]
+interface IActiveScriptAuthor : IUnknown
+	{
+	HRESULT AddNamedItem(
+		[in] LPCOLESTR pszName,
+		[in] DWORD dwFlags,
+		[in] IDispatch *pdisp);
+
+	HRESULT AddScriptlet(
+		[in] LPCOLESTR pszDefaultName,
+		[in] LPCOLESTR pszCode,
+		[in] LPCOLESTR pszItemName,
+		[in] LPCOLESTR pszSubItemName,
+		[in] LPCOLESTR pszEventName,
+		[in] LPCOLESTR pszDelimiter,
+		[in] DWORD dwCookie,
+		[in] DWORD dwFlags);
+
+	HRESULT ParseScriptText(
+		[in] LPCOLESTR pszCode,
+		[in] LPCOLESTR pszItemName,
+		[in] LPCOLESTR pszDelimiter,
+		[in] DWORD dwCookie,
+		[in] DWORD dwFlags);
+
+	HRESULT GetScriptTextAttributes(
+		[in, size_is(cch)] LPCOLESTR pszCode,
+		[in] ULONG cch,
+		[in] LPCOLESTR pszDelimiter,
+		[in] DWORD dwFlags,
+		[in, out, size_is(cch)] SOURCE_TEXT_ATTR *pattr);
+
+	HRESULT GetScriptletTextAttributes(
+		[in, size_is(cch)] LPCOLESTR pszCode,
+		[in] ULONG cch,
+		[in] LPCOLESTR pszDelimiter,
+		[in] DWORD dwFlags,
+		[in, out, size_is(cch)] SOURCE_TEXT_ATTR *pattr);
+
+	HRESULT GetRoot([out] IScriptNode **ppsp);
+
+	HRESULT GetLanguageFlags([out] DWORD *pgrfasa);
+
+	HRESULT GetEventHandler(
+		[in] IDispatch* pdisp,
+		[in] LPCOLESTR pszItem,
+		[in] LPCOLESTR pszSubItem,
+		[in] LPCOLESTR pszEvent,
+		[out] IScriptEntry **ppse);
+
+	HRESULT RemoveNamedItem(
+		[in] LPCOLESTR pszName);
+
+    HRESULT AddTypeLib(
+        [in] REFGUID rguidTypeLib,
+        [in] DWORD dwMajor,
+        [in] DWORD dwMinor,
+        [in] DWORD dwFlags);
+        
+    HRESULT RemoveTypeLib(
+        [in] REFGUID rguidTypeLib,
+        [in] DWORD dwMajor,
+        [in] DWORD dwMinor);
+
+	// Statement completion functions
+
+	HRESULT  GetChars(
+		[in]  DWORD fRequestedList,	// The list of characters requested
+		[out] BSTR * pbstrChars);	// The characters for this flag
+	
+	HRESULT  GetInfoFromContext(
+		[in]  LPCOLESTR  pszCode,					// The text from the block that is being edited.
+		[in]  ULONG      cchCode,       			// The length of the code block
+		[in]  ULONG      ichCurrentPosition,		// Offset from the beginning of the block
+		[in]  DWORD      dwListTypesRequested,		// The type of list requested
+		[out] DWORD *    pdwListTypesProvided,		// The type of list provided
+		[out] ULONG *    pichListAnchorPosition,	// The offset of the anchor position for the list
+		[out] ULONG *    pichFuncAnchorPosition,	// The offset of the anchor position for  a function call
+		[out] MEMBERID * pmemid,					// The memid of the function for a param tip.
+		[out] LONG *     piCurrentParameter,		// The index of the current parameter, -1 for symbol
+		[out] IUnknown * * ppunk);					// The information from which to build the list
+		
+	HRESULT IsCommitChar(
+		[in] OLECHAR ch, 	// The character that might be a commit char
+		[out] BOOL * pfcommit);
+	}
+
+
+[
+	uuid(7E2D4B70-BD9A-11d0-9336-00A0C90DCAA9),
+	pointer_default(unique)
+]
+interface IActiveScriptAuthorProcedure : IUnknown
+	{
+	HRESULT ParseProcedureText(
+		[in] LPCOLESTR pszCode,
+		[in] LPCOLESTR pszFormalParams,
+		[in] LPCOLESTR pszProcedureName,
+		[in] LPCOLESTR pszItemName,
+		[in] LPCOLESTR pszDelimiter,
+		[in] DWORD dwCookie,
+		[in] DWORD dwFlags,
+		[in] IDispatch *pdispFor);
+	}
+
+cpp_quote("")
+cpp_quote("#endif  // __ActivAut_h")
+cpp_quote("")

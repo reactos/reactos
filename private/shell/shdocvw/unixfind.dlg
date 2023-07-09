@@ -1,0 +1,751 @@
+<HTML id=dlgFind STYLE="font-family: ms sans serif; font-size: 8pt;
+width: 30.8em; height: 15.2em">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE id=dialogTitle>
+Find
+</TITLE>
+
+<SCRIPT LANGUAGE="JavaScript" defer>
+
+#include "unixdialogs.dh"
+
+//Find Text dialog box
+#define IDH_FIND_WHOLE                  50022 // was 0x3063
+#define IDH_FIND_CASE                   50023 // was 0x3064
+#define IDH_FIND_UP                     50025 // was 0x3065
+#define IDH_FIND_DOWN                   50024 // was 0x3066
+#define IDH_FIND_NEXT                   50026 // was 0x3067
+#define IDH_FIND_WHAT                   50027 // was 0x3068
+
+setState(Find, btnFind, txtFindText)
+
+//
+//  global variables
+//
+var g_fFindEnabled = false;   // Whether or not the find button is
+                              // disabled. Used for perf enhancement.
+var g_docLastFound;  // the document we last searched through
+var g_fFrameset = false;    // Are we in a frameset?
+var g_arrFrames = new Array();  // Array of path through framesets
+var g_fSearchTopFrame = false;   // Should we search the doc of
+                                // the top frame? 
+var g_fFollowIframes = true;     // Should we walk down iframes?
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Checks the status of the appropriate checkboxes and
+//              sets the flags for the findText method.
+//
+//  Arguments:  none
+//
+//  returns:    a number representing the flags for the findText
+//              method. (See OM spec for more info.)
+//
+//----------------------------------------------------------------------
+
+function findFlags()
+{
+    var htmlMatchWord = 2;
+    var htmlMatchCase = 4;
+
+    return (htmlMatchWord * document.all.chkWholeWord.checked)
+        | (htmlMatchCase * document.all.chkMatchCase.checked)
+}   //  findFlags
+
+
+//
+//  Frameset navigation functions
+//
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Follows the path in g_arrFrames
+//
+//  Arguments:  none
+//
+//  Returns:    window object at end of frameset path
+//
+//----------------------------------------------------------------------
+
+function CrawlPath()
+{
+    var win = window.dialogArguments.unsecuredWindowOfDocument;
+    var i = 0;
+
+    //
+    //  Special case if top doc has iframe
+    //
+    if (g_fSearchTopFrame)
+    {
+        return win;
+    }
+
+    while (g_arrFrames[i] >= 0)
+    {
+        win = win.frames[g_arrFrames[i]];
+        i++;
+    }
+    return win;
+}   //  CrawlPath
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Whether or not the end of the current path is
+//              at another frameset
+//
+//  Arguments:  none
+//
+//  Returns:    0 if false, non-zero if true
+//
+//----------------------------------------------------------------------
+
+function AtFrameset()
+{
+    var win = CrawlPath();
+
+    return win.frames.length;
+}   //  AtFrameset
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Whether or not the end of the current path is
+//              at a document with iframes
+//
+//  Arguments:  none
+//
+//  Returns:    0 if false, non-zero if true
+//
+//----------------------------------------------------------------------
+
+function AtIframe()
+{
+    var win = CrawlPath();
+
+    return win.document.all.tags("IFRAME").length;
+}   //  AtIFrame
+
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   gets the position in the current frameset
+//
+//  Arguments:  none
+//
+//  Returns:    0-based integer representing position
+//
+//----------------------------------------------------------------------
+
+function GetCurrentPos()
+{
+    var i = GetCurrentDepth();
+
+    return g_arrFrames[i];
+}   //  GetCurrentPos
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Tells how many frames deep we're currently at
+//
+//  Arguments:  none
+//
+//  Returns:    0-based integer representing depth
+//
+//----------------------------------------------------------------------
+
+function GetCurrentDepth()
+{
+    var i = 0;
+
+    while (g_arrFrames[i] >= 0)
+    {
+        i++;
+    }
+
+    return i-1;
+
+}   //  GetCurrentDepth
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Can we move forward in the current frameset?
+//
+//  Arguments:  fForward    Whether we're trying to move forwards or
+//                          backwards
+//
+//  Returns:    0 if false, non-zero if true
+//
+//----------------------------------------------------------------------
+
+function MovePossible(fForward)
+{
+    var intCurPos = GetCurrentPos();
+    var win = CrawlPath();
+    var winParent = win.parent;
+
+    if (fForward)
+    {
+        return winParent.frames.length - intCurPos - 1;
+    }
+    else
+    {
+        return (intCurPos != 0);
+    }
+
+}   //  MovePossible
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Moves up in the frameset
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//----------------------------------------------------------------------
+
+function MoveUpFrameset()
+{
+    var i = GetCurrentDepth();
+    g_arrFrames[i] = -1;
+}   //  MoveUpFrameset
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Moves down in the frameset
+//
+//  Arguments:  fForward    Whether we're trying to move forwards or 
+//                          backwards
+//
+//  Returns:    nothing
+//
+//----------------------------------------------------------------------
+
+function MoveDownFrameset(fForward)
+{
+    var i = GetCurrentDepth();
+    var win = CrawlPath();
+
+    g_arrFrames[i+1] = fForward ? 0 : win.frames.length - 1;
+    g_arrFrames[i+2] = -1;
+
+}   //  MoveDownFrameset
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   moves one window in the current frameset
+//
+//  Arguments:  fForward    Whether we're trying to move forwards or
+//                          backwards
+//
+//  Returns:    nothing
+//
+//----------------------------------------------------------------------
+
+function MoveWin(fForward)
+{
+    var intDepth = GetCurrentDepth();
+    var intPos = GetCurrentPos();
+
+    g_arrFrames[intDepth] = fForward ? ++intPos : --intPos;
+
+}   //  MoveWin
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Moves to the next document
+//
+//  Arguments:  fForward    Whether we're trying to move forwards or
+//                          backwards
+//
+//  Returns:    true if sucessful or false if fails
+//
+//----------------------------------------------------------------------
+
+function MoveDoc(fForward)
+{
+    //
+    //  Special case of top document contains an iframe.
+    //
+    if (g_fSearchTopFrame)  // special case forward
+    { 
+        if (fForward)
+        {
+            g_fSearchTopFrame = false;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    //  special case backwards
+    if (!fForward && (g_arrFrames[0] == 0) && (g_arrFrames[1] < 0)
+        && window.dialogArguments.document.all.tags("IFRAME").length)
+    {
+        g_fSearchTopFrame = true;
+        return true;
+    }
+
+    if (g_fFollowIframes && AtIframe())
+    {
+        MoveDownFrameset(fForward);
+
+        while (!AtIframe() && AtFrameset())
+        {
+            MoveDownFrameset(fForward);
+        }
+
+        return true;
+    }
+
+    if (MovePossible(fForward))
+    {
+        MoveWin(fForward);
+        g_fFollowIframes = true;
+        
+        while (!AtIframe() && AtFrameset())
+        {
+            MoveDownFrameset(fForward);
+        }
+
+        return true;
+    }
+    else
+    {
+        if (GetCurrentDepth() > 0)
+        {
+            MoveUpFrameset();
+
+            while (AtIframe() && !MovePossible(fForward)
+                && (GetCurrentDepth() >= 0))
+            {
+                MoveUpFrameset();
+            }
+
+            if (AtIframe() && MovePossible(fForward))
+            {
+                g_fFollowIframes = false;
+            }
+
+            return MoveDoc(fForward);
+        }
+    }
+
+    return false;
+
+}   //  MoveDoc
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   walks to first document
+//
+//  Arguments:  none
+//
+//  Returns:    document object
+//
+//----------------------------------------------------------------------
+
+function GetFirstDoc()
+{
+    var win;
+    var doc = window.dialogArguments.document;
+
+    //
+    //  If the main document conttains an iframe, we need to special
+    //  case it.
+    //
+    if (doc.all.tags("IFRAME").length)
+    {
+        g_fSearchTopFrame = true;
+        return doc;
+    }
+
+    while (!AtIframe() && AtFrameset())
+    {
+        MoveDownFrameset(true);
+    }
+
+    win = CrawlPath();
+    return win.document;
+
+}   //  GetFirstDoc
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Three steps:
+//              1. Make sure there's something to find.
+//              2. Determine the direction and how far to search.
+//              3. Find and select the text.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function btnFindClick()
+{
+    var docSearch; 
+    var L_FinishedDocument_Text = "Finished searching the document.";
+    var intDirection;       //  What direction to search 
+    var rngWorking;         //  The range we're going to search
+    var rngFoundText;       //  The found text
+    var fFoundText = false; //  If the text has already been found
+
+    var index;
+
+    //
+    //  Are we in a frameset?
+    //
+    if (g_fFrameset)
+    {
+        var win;
+        
+        //
+        //  Check to see if we're still in a frameset. 
+        //  (This could happen if there's a frameset in an 
+        //  inline frame.)
+        //
+        if (!AtIframe() && AtFrameset())
+        {
+            MoveDownFrameset(!radDirection[0].checked);
+
+            while (!AtIframe() && AtFrameset())
+            {
+                MoveDownFrameset(!radDirection[0].checked);
+            }
+        }
+        
+        win = CrawlPath();
+        docSearch = win.document;
+    }
+    else
+    {
+        docSearch = window.dialogArguments.document;
+    }
+    
+    //
+    //  If we're in browse mode and noting is selected, 
+    //  set the range to the entire body.
+    //
+    if (docSearch.queryCommandState("BrowseMode")
+        && docSearch.selection.type != "Text")
+    {
+        if (docSearch.body == null)
+            return;
+        
+        rngWorking = docSearch.body.createTextRange();
+    }
+    else
+    {
+        rngWorking = docSearch.selection.createRange();
+    }
+    //
+    //  If there's a current selection, we'll start from the 
+    //  selection
+    //
+    fFoundText = (docSearch.selection.type == "Text");
+
+    //
+    //  rngWorking starts as the entire body, and is then narrowed
+    //  down by the 'set direction' code.
+    //
+
+    //
+    //  Set direction
+    //
+    if (radDirection[0].checked)    //  Search backwards
+    {
+        //
+        //  set range to search
+        //
+        if (fFoundText)
+        {
+            //
+            //  Search from the end of the current selection
+            //  minus 1 so we don't find the text we just found
+            //
+            rngWorking.moveEnd("character" , -1);
+        }
+        //
+        //  Move the beginning of the range to the beginning 
+        //  of the document
+        //
+        while (0 != rngWorking.moveStart("textedit", -1))
+        {
+        }
+                
+        intDirection = -1000000;
+    }
+    else                            //  Search forwards
+    {
+        //
+        //  set range to search
+        //
+        if (fFoundText)
+        {
+            //
+            //  Search from the start of the current selection plus
+            //  one so we don't find the text we just found
+            //
+            rngWorking.moveStart("character", 1);
+        }
+
+        //
+        //  Move the end of the range to the end
+        //  of the document
+        //
+        while (0 != rngWorking.moveEnd("textedit", 1))
+        {
+        }
+
+        intDirection = 1000000; 
+    }
+
+    //
+    //  Here's where we do the dirty work (step 3) ...
+    //
+
+    rngFoundText = rngWorking.duplicate();
+    success = rngFoundText.findText(txtFindText.value, 
+        intDirection, findFlags());
+
+    if (!success)   //  Text was not found
+    {
+        if (g_fFrameset)
+        {
+            if (MoveDoc(!radDirection[0].checked))
+            {
+                btnFindClick();
+                return;
+            }
+        }
+
+        alert(L_FinishedDocument_Text);
+        txtFindText.focus();
+    }
+    else                        //  Text was found
+    {
+        //
+        //  If we're in a frameset, we have to unselect 
+        //  the previously searched document
+        //
+        if (g_fFrameset)
+        {
+            g_docLastFound.execCommand("Unselect", false);
+            g_docLastFound = docSearch;
+        }
+        rngFoundText.select();
+        rngFoundText.scrollIntoView(true);
+    }
+}   //  btnFindClick
+
+
+//----------------------------------------------------------------------
+//
+//  Synopsis:   Save the last search, then discard the user's 
+//              changes and dismiss the dialog.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//----------------------------------------------------------------------
+
+function btnCancelClick2()
+{
+    window.dialogArguments.findText = txtFindText.value;
+    window.close();
+}   //  btnCancelClick2
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Sets the focus to the find button. Also determines
+//              whether something is selected in the document.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function loadBdy()
+{
+    var win = window.dialogArguments.unsecuredWindowOfDocument;
+    var doc = window.dialogArguments.document;
+
+
+    //
+    //  Bind events to controls. This is done here to load the dialog
+    //  quicker.
+    //
+    btnFind.onclick     = new 
+        Function("btnFindClick()");
+    btnCancel.onclick   = new Function("btnCancelClick2()");
+
+    document.onhelp     = new Function("callHelp(window.event.srcElement)");
+    document.onmouseup  = new Function("mouseClick()");
+
+    txtFindText.onpropertychange = new Function("setFindState(true)");
+    txtFindText.onfocus = new Function("txtFindText.select()");
+    txtFindText.onkeypress = new Function("txtDefaultESC()");
+
+    //
+    //  Are we in a frameset?
+    //
+    if (win.frames.length)
+    {
+        var win2;
+
+        g_fFrameset = true;
+        g_arrFrames[0] = 0;
+        g_arrFrames[1] = -1;
+
+        //
+        //  Search through the frameset for a selection
+        //
+        win2 = CrawlPath();
+        doc2 = win2.document;
+        while (doc2.selection.type == "None")
+        {
+            if (MoveDoc(true))
+            {
+                win2 = CrawlPath();
+                doc2 = win2.document;
+            }
+            else    // no selection. reset search
+            {
+                g_arrFrames[0] = 0;
+                g_arrFrames[1] = -1;
+                break;
+            }
+        }
+        doc = CrawlPath().document;
+        g_docLastFound = doc;
+    }
+
+
+    //
+    //  if a control is selected, select it as a text range
+    //
+    if (doc.selection.type == "Control")
+    {
+        var r = doc.selection.createRange();
+        r = getTextRange(r(0));
+        r.select();
+    }
+    if ("" != window.dialogArguments.findText) 
+    {
+         txtFindText.value = window.dialogArguments.findText;
+    }
+    txtFindText.focus();
+    txtFindText.select();
+}   //  loadBdy
+
+</SCRIPT>
+
+</HEAD>
+<BODY ID=bdy onLoad="loadBdy()" style="font-family: 'ms sans serif';
+font-size: 8pt; background: threedface; color: buttontext;" topmargin=0 scroll=no>
+
+<BUTTON id=btnFind ACCESSKEY=f DISABLED=1 tabIndex=55 helpid=IDH_FIND_NEXT
+helpfile="iexplore.hlp"
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+left: 5em; top: 11em; width: 7.2em; height: 3em; " type=submit>
+<U>F</U>ind Next
+</BUTTON>
+
+<DIV align=absMiddle
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+left: 0.98em; top: 1.3168em; width: 6.0em; height: 1.2168em; ">
+<LABEL FOR=txtFindText ID=lblFindText tabIndex=-1 helpid=IDH_FIND_WHAT
+helpfile="iexplore.hlp">
+Fi<U>n</U>d what:
+</LABEL>
+</DIV>
+
+<INPUT type=text id=txtFindText ACCESSKEY=n tabIndex=15 helpid=IDH_FIND_WHAT
+helpfile="iexplore.hlp"
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+left: 7.56em; top: 1.0647em; width: 22.00em; height: 2.1294em; ">
+
+<BUTTON id=btnCancel tabIndex=60 helpid="0x6F1C" helpfile="windows.hlp"
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+left: 18em; top: 11em; width: 7em; height: 3em; " type=reset>
+Cancel
+</BUTTON>
+
+<INPUT id=chkWholeWord ACCESSKEY=w type=checkbox tabIndex=25 
+helpfile="iexplore.hlp" helpid=IDH_FIND_WHOLE
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+left: 0.68em; top: 5.6235em; width: 1em; height: 1em; ">
+
+<INPUT ACCESSKEY=c type=checkbox tabIndex=35 helpid=IDH_FIND_CASE
+helpfile="iexplore.hlp"
+id=chkMatchCase style="font-family: ms sans serif; font-size: 8pt;
+position: absolute; left: 0.68em; top: 7.6235em; width: 1em;
+height: 1em; ">
+
+<DIV
+style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+left: 2.6em; top: 5.3235em; width: 14.46em; height: 1.521em; ">
+<LABEL FOR=chkWholeWord ID=lblWholeWord tabIndex=-1 helpid=IDH_FIND_WHOLE
+helpfile="iexplore.hlp">
+Match <U>w</U>hole word only
+</LABEL>
+</DIV>
+
+<DIV style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+left: 2.6em; top: 7.3235em; width: 7.42em; height: 1.521em; ">
+<LABEL FOR=chkMatchCase ID=lblMatchCase tabIndex=-1 helpid=IDH_FIND_CASE
+helpfile="iexplore.hlp">
+Match <U>c</U>ase
+</LABEL>
+</DIV>
+
+<FIELDSET id=fldDirection style="font-family: ms sans serif; font-size: 8pt; 
+position: absolute; left: 22.52em; top: 3.5em; width: 6.0em; 
+height: 6.5em;">
+<LEGEND>
+Direction
+</LEGEND>
+</FIELDSET>
+
+        <INPUT id=radDirectionUp type=radio name=radDirection ACCESSKEY=u
+        tabIndex=42 helpid=IDH_FIND_UP helpfile="iexplore.hlp"
+        style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+        left: 23.08em; top: 5.6235em; width: 1em; height: 1em; ">
+        <DIV style="font-family: ms sans serif; font-size: 8pt;
+        position: absolute; left: 25.02em; top: 5.3235em; width: 3.5em;
+        height: 1.521em; ">
+        <LABEL ID=lblDirectionUp style="font-family: 'ms sans serif'; font-size: 8pt"
+        FOR=radDirectionUp
+        helpid=IDH_FIND_UP
+        helpfile="iexplore.hlp"> <U>U</U>p </LABEL>
+        </DIV>
+        <INPUT id=radDirectionDown type=radio CHECKED name=radDirection
+        ACCESSKEY=d tabIndex=47 helpid=IDH_FIND_DOWN helpfile="iexplore.hlp"
+        style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+        left: 23.08em; top: 7.6235em; width: 1em; height: 1em; ">
+        <DIV style="font-family: ms sans serif; font-size: 8pt;
+        position: absolute; left: 25.02em; top: 7.3235em; width: 4.9em;
+        height: 1.521em; ">
+        <LABEL ID=lblDirectionDown style="font-family: 'ms sans serif'; font-size: 8pt"
+        FOR=radDirectionDown helpid=IDH_FIND_DOWN helpfile="iexplore.hlp"
+        > <U>D</U>own </LABEL>
+        </DIV>
+</BODY>
+</HTML>

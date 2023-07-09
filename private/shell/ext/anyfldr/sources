@@ -1,0 +1,60 @@
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+
+NOT_UNICODE     = 1
+TARGET_BOTH     = 1
+
+!include $(CCSHELL_DIR)\common.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+TARGETNAME      = anyfldr
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+# NOTE!! We deliberately link to an NT4 compatible shell32.lib
+#        so shdocvw can be loaded in the browser-only installations.
+#        We use the NT version because it contains lego info.
+#        The debug version of shdocvw links to the Win95 version
+#        of shell32.lib simply so we can verify that we load in the
+#        browser-only installations on Win95.
+
+TARGETLIBS      = $(LIBRARY_PATH)\gdi32.lib     \
+                  $(LIBRARY_PATH)\user32.lib    \
+                  $(LIBRARY_PATH)\kernel32.lib  \
+                  $(LIBRARY_PATH)\ole32.lib     \
+                  $(LIBRARY_PATH)\uuid.lib      \
+                  $(LIBRARY_PATH)\shlwapi.lib  \
+!if $(386)
+! if !$(FREEBUILD)
+                  $(BASEDIR)\private\lib\chicago\*\shell32.w95  \
+! else
+                  $(BASEDIR)\private\lib\*\shell32.nt4  \
+! endif
+!else
+                  $(LIBRARY_PATH)\shell32p.lib        \
+!endif
+                  $(CCSHELL_DIR)\lib\$(O)\shguid.lib        \
+                  $(CCSHELL_DIR)\lib\$(O)\shguidp.lib        \
+                  $(LIBRARY_PATH)\comctl32.lib  \
+                  $(LIBRARY_PATH)\wininet.lib  \
+                  $(LIBRARY_PATH)\advapi32.lib  \
+                  $(CCSHELL_DIR)\lib\$O\stocklib.lib
+
+
+USE_LIBCMT      = 1
+
+DLLDEF          = $(O)\anyfldr.def
+DLLBASE         = 0x71300000
+
+DLLENTRY        = DllMain
+
+SOURCES         = anyfldr.rc    \
+	          defclsf.c	\
+                  anyfldr.c
+
+
+PRECOMPILED_INCLUDE = anyfldrl.h
+PRECOMPILED_PCH = precomp.pch
+PRECOMPILED_OBJ = precomp.obj

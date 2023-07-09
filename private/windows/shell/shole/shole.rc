@@ -1,0 +1,70 @@
+#include <windows.h>
+#include <ids.h>
+
+IDI_ICON ICON       DISCARDABLE "bookmk.ico"
+
+IDR_FANCYERR RCDATA
+BEGIN
+    STG_E_LOCKVIOLATION
+    STG_E_LOCKVIOLATION
+    STG_E_LOCKVIOLATION
+    MK_E_NOOBJECT
+    MK_E_NOOBJECT
+    MK_E_NOOBJECT
+    MK_E_NOOBJECT
+    MK_E_NOOBJECT
+    MK_E_NOOBJECT
+    NOERROR
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FANCYERR        "Windows was unable to open this file because it is already "
+    (IDS_FANCYERR+1)    "opened by another program (or multiple programs).\n"
+    (IDS_FANCYERR+2)    "You should close all the other programs that open this file and retry."
+
+    (IDS_FANCYERR+3)    "Windows was unable to open this shortcut because the "
+    (IDS_FANCYERR+4)    "target file or data that it refers to does not exist. "
+    (IDS_FANCYERR+5)    "You should delete this shortcut file and create a new "
+    (IDS_FANCYERR+6)    "shortcut based on the new location of the target data.\n\n"
+    (IDS_FANCYERR+7)    "Note: Some applications require you to save the file "
+    (IDS_FANCYERR+8)    "after creating a shortcut to part of the file's contents."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TITLE               "Shell Scrap/Document Shorcut viewer"
+    IDS_TITLE_ERR           "Problem with Scrap/Document Shortcut"
+    IDS_ERR_DOVERB          "Unable to open %1\n\n%2%3"
+    IDS_ERR_DOVERB_F        "Unable to open %1\n\Error (%4!x!)%3"
+    IDS_ERR_COMMIT          "Unable to save scrap/shortcut\n\n%2%3"
+    IDS_ERR_COMMIT_F        "Unable to save scrap/shortcut\n\nError (%4!x!)%3"
+    IDS_ERR_SCRAPSAVE       "Unable to create and store scrap/shortcut object\n\n%2%3"
+    IDS_ERR_SCRAPSAVE_F     "Unable to create and store scrap/shortcut object\n\nError (%4!x!)%3"
+    IDS_ERR_CREATESTORAGE   "Unable to create a storage in a file %1\n\n%2%3"
+    IDS_ERR_CREATESTORAGE_F "Unable to create a storage in a file %1\n\nError (%4!x!)%3"
+    IDS_ERR_CREATEDOCFILE   "Unable to create a scrap/shortcut file %1\n\n%2%3"
+    IDS_ERR_CREATEDOCFILE_F "Unable to create a scrap/shortcut file %1\n\nError (%4!x!)%3"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BOOKMARK_S          "shct.shb"
+    IDS_BOOKMARK_L          "Document Shortcut.shb"
+    IDS_SCRAP_S             "scrp.shs"
+    IDS_SCRAP_L             "Scrap.shs"
+    IDS_TEMPSCRAP           "%s Scrap '%s...'.shs"
+    IDS_TEMPLINK            "%s Shortcut '%s...'.shb"
+
+    IDS_WOULDYOUSAVEAS      "You have opened a read-only scrap file.\nDo you want to save it to a new scrap file?"
+    IDS_MOVEFAILED          "Can't save a scrap file to the specified location. Do you want to pick another location?"
+    IDS_SCRAPFILTER         "Scrap Files\0*.shs\0"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HRES_INVALID_SCRAPFILE     "This is not a valid scrap/document shortcut file."
+END
+
+#include "shole.rcv"
+

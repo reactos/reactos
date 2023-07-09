@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdarmw
+
+TARGETNAME=kbdarmw
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdarmw.c kbdarmw.rc
+
+NTTARGETFILE0=kbdarmw.h kbdarmw.rc kbdarmw.def

@@ -1,0 +1,157 @@
+#ifndef _IMG_PDL_
+#define _IMG_PDL_
+
+#include "csite.pdl"
+
+file img.pdl
+import csite.pdl               
+
+interface IHTMLImgElement guid:3050f240-98b5-11cf-bb82-00aa00bdce0b
+    refprop CImgElement:isMap
+    refprop CImgElement:useMap
+    refprop CImgElement:mimeType
+    refprop CImgElement:fileSize
+    refprop CImgElement:fileCreatedDate
+    refprop CImgElement:fileModifiedDate
+    refprop CImgElement:fileUpdatedDate
+    refprop CImgElement:protocol
+    refprop CImgElement:href
+    refprop CImgElement:nameProp
+    refprop CImgElement:border
+    refprop CImgElement:vSpace
+    refprop CImgElement:hSpace
+    refprop CImgElement:alt
+    refprop CImgElement:src
+    refprop CImgElement:lowSrc
+    refprop CImgElement:vrml
+    refprop CImgElement:dynSrc
+    refprop CImgElement:readyState
+    refprop CImgElement:complete
+    refprop CImgElement:loop
+    refprop CImgElement:align
+    refprop CImgElement:onload
+    refprop CImgElement:onerror
+    refprop CImgElement:onabort
+    refprop CImgElement:name
+    refprop CImgElement:width
+    refprop CImgElement:height
+    refprop CImgElement:start
+
+
+/* New style element events w/ eventObject parameter: */
+event HTMLImgEvents2 super:HTMLControlElementEvents2 guid:3050f616-98b5-11cf-bb82-00aa00bdce0b
+    method void onload (in type:IHTMLEventObj* arg:pEvtObj)  \
+           dispid:DISPID_EVMETH_ONLOAD
+    method void onerror (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONERROR
+    method void onabort (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONABORT
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLImgEvents super:HTMLControlElementEvents guid:3050f25b-98b5-11cf-bb82-00aa00bdce0b
+    method void onload      dispid:DISPID_EVMETH_ONLOAD ()
+    method void onerror     dispid:DISPID_EVMETH_ONERROR ()
+    method void onabort     dispid:DISPID_EVMETH_ONABORT ()
+
+tearoff CImgElement interface:IDispatchEx BaseImpl:super::
+    tearmethod InvokeEx         mapto:ContextThunk_InvokeExReady
+
+tearoff CImgElement interface:IHTMLImgElement
+    tearmethod readyState        mapto:readyState
+
+tearoff CImgElement interface:IHTMLElement2
+    tearmethod readyState           mapto:readyState
+    tearmethod get_readyStateValue  mapto:get_readyStateValue
+    tearmethod get_tabIndex         mapto:super::get_tabIndex
+
+class CImgElement name:HTMLImg \
+        primaryinterface:IHTMLImgElement \
+        super:CSite \
+        events:HTMLImgEvents \
+        nonprimaryevents:HTMLImgEvents2 \
+        guid:3050f241-98b5-11cf-bb82-00aa00bdce0b \
+        mondoguid:3050f51c-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLImgElement
+
+    property align      atype:BSTR     dispid:STDPROPID_XOBJ_CONTROLALIGN   type:htmlControlAlign  \
+        caa get set displaybind maxstrlen:pdlToken
+    property alt        atype:BSTR           dispid:DISPID_IMGBASE+2           type:CStr          \
+        caa get set displaybind    remeasure   maxstrlen:pdlNoLimit
+    property src        atype:BSTR           dispid:DISPID_IMGBASE+3           type:url           \
+        caa get set setaahr displaybind baseimplementation maxstrlen:pdlUrlLen
+
+    property height baseimplementation caa get set atype:long type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT \
+        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH_OR_PERCENT
+
+    property width baseimplementation caa get set atype:long type:CUnitValue dispid:STDPROPID_XOBJ_WIDTH  \
+        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH_OR_PERCENT
+
+    // Note the  switchdefaults here -
+    // If border not present value = default
+    // If border present, but unassigned, value = default
+    // If border present, but invalid, value = noassigndefault
+    property border atype:VARIANT dispid:DISPID_IMGBASE+4            type:CUnitValue    caa  \
+        get set displaybind  remeasure min:MAKE_PIXEL_UNITVALUE(0) clearcaches \
+        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(0)  invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH maxstrlen:pdlToken
+    property vspace     atype:long           dispid:DISPID_IMGBASE+5           type:long \
+        caa get set displaybind    remeasure min:0 clearcaches
+    property hspace     atype:long	         dispid:DISPID_IMGBASE+6           type:long \
+        caa get set baseimplementation displaybind    remeasure min:0 default:-1 clearcaches
+    property lowsrc     atype:BSTR           dispid:DISPID_IMGBASE+7           type:CStr \
+        caa get set displaybind maxstrlen:pdlUrlLen
+    property vrml       atype:BSTR           dispid:DISPID_IMGBASE+8           type:CStr \
+        caa get set displaybind    remeasure   maxstrlen:pdlUrlLen
+    property dynsrc     atype:BSTR           dispid:DISPID_IMGBASE+9           type:CStr \
+        caa get set displaybind    remeasure   maxstrlen:pdlUrlLen
+    property readyState aType:BSTR           dispid:DISPID_A_READYSTATE type:CStr \
+        abstract   get nopropdesc:nameonly
+    property complete   aType:VARIANT_BOOL   dispid:DISPID_IMGBASE+10          type:VARIANT_BOOL \
+        caa get setaahr                   nopersist vt:VT_BOOL
+    property loop       atype:VARIANT        dispid:DISPID_IMGBASE+11          type:long  enum:htmlLoop  \
+        caa get set displaybind     default:1   maxstrlen:pdlLength
+    property start      atype:BSTR           dispid:DISPID_IMGBASE+13          type:htmlStart  \
+        caa get set displaybind     default:htmlStartfileopen   maxstrlen:pdlToken
+
+    property onload     atype:VARIANT   dispid:DISPID_EVPROP_ONLOAD   type:code \
+        scriptlet get set caa baseimplementation displaybind maxstrlen:pdlEvent
+
+    property onerror    atype:VARIANT   dispid:DISPID_EVPROP_ONERROR  type:code \
+        scriptlet get set caa displaybind maxstrlen:pdlEvent
+    property onabort    atype:VARIANT   dispid:DISPID_EVPROP_ONABORT  type:code \
+        scriptlet get set caa displaybind maxstrlen:pdlEvent
+    property name       atype:BSTR   dispid:STDPROPID_XOBJ_NAME  type:CStr \
+        get set   method:nameHelper baseimplementation displaybind  maxstrlen:pdlNoLimit
+
+    property isMap      atype:VARIANT_BOOL   dispid:DISPID_IMG+2           type:VARIANT_BOOL  \
+        caa get set displaybind    dwFlags:0                       default:0 vt:VT_BOOL
+    property useMap     atype:BSTR           dispid:DISPID_IMG+8           type:CStr          \
+        caa get set displaybind maxstrlen:pdlUrlLen
+    property mimeType          atype:BSTR  dispid:DISPID_IMG+10 vt:VT_BSTR get abstract
+    property fileSize          atype:BSTR  dispid:DISPID_IMG+11 vt:VT_BSTR get abstract
+    property fileCreatedDate   atype:BSTR  dispid:DISPID_IMG+12 vt:VT_BSTR get abstract
+    property fileModifiedDate  atype:BSTR  dispid:DISPID_IMG+13 vt:VT_BSTR get abstract
+    property fileUpdatedDate   atype:BSTR  dispid:DISPID_IMG+14 vt:VT_BSTR get abstract
+    property protocol          atype:BSTR  dispid:DISPID_IMG+15 vt:VT_BSTR get abstract
+    property href              atype:BSTR  dispid:DISPID_IMG+16 vt:VT_BSTR get abstract
+    property nameProp          atype:BSTR  dispid:DISPID_IMG+17 vt:VT_BSTR get abstract
+
+    property cache             atype:VARIANT_BOOL	dispid:DISPID_IMG+18	type:VARIANT_BOOL \
+    caa get default:0 vt:VT_BOOL
+
+
+interface IHTMLImageElementFactory super:IDispatch guid:3050f38e-98b5-11cf-bb82-00aa00bdce0b
+    refmethod CImageElementFactory:create
+
+tearoff CImageElementFactory interface:IHTMLImageElementFactory
+class CImageElementFactory name:HTMLImageElementFactory primaryinterface:IHTMLImageElementFactory \
+        guid:3050f38f-98b5-11cf-bb82-00aa00bdce0b
+    method HRESULT create dispid:DISPID_VALUE maxstrlen:pdlNoLimit \
+        ( in optional type:VARIANT arg:width, in optional type:VARIANT arg:height, out retval type:IHTMLImgElement** ) 
+
+#endif // _IMG_PDL_

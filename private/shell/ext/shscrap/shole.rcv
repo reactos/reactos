@@ -1,0 +1,21 @@
+/*
+ * May 1994, satona
+ *
+ * Copyright (c)1994 Microsoft Corporation, All Rights Reserved
+ */
+#ifdef WIN32
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Shell scrap object handler"
+#define VER_INTERNALNAME_STR        "shole"
+#ifndef WIN32
+#define VER_LEGALCOPYRIGHT_YEARS    "1991-1999"
+#endif
+#define VER_ORIGINALFILENAME_STR    "SHSCRAP.DLL"
+
+#include <common.ver>

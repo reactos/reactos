@@ -1,0 +1,24 @@
+TARGETNAME=snmputil
+TARGETPATH=obj
+TARGETTYPE=UMAPPL_NOLIB
+
+USE_CRTDLL=1
+
+SOURCES=snmputil.rc
+
+UMTYPE=console
+UMAPPL=snmputil
+
+!IFDEF USE_CALLTREE
+LINKER_FLAGS=$(LINKER_FLAGS) -calltree
+!ENDIF
+
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\mgmtapi.lib \
+       $(BASEDIR)\Public\Sdk\Lib\*\kernel32.lib \
+       $(BASEDIR)\Public\Sdk\Lib\*\advapi32.lib \
+       $(BASEDIR)\Public\Sdk\Lib\*\wsock32.lib \
+       $(BASEDIR)\public\sdk\lib\*\snmpapi.lib
+
+UMRES=obj\*\snmputil.res
+
+SYNCHRONIZE_DRAIN=1

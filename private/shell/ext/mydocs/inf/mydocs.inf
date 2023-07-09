@@ -1,0 +1,78 @@
+[Version]
+signature = $CHICAGO$
+
+
+[DefaultInstall]
+CopyFiles=mydocs.dll, mydocs.inf
+AddReg=mydocs.reg
+
+
+[DefaultInstall.ntx86]
+CopyFiles=mydocs.x86, mydocs.inf
+AddReg=mydocs.reg
+
+[DefaultInstall.ntalpha]
+CopyFiles=mydocs.ntalpha, mydocs.inf
+AddReg=mydocs.reg
+
+
+[mydocs.x86]
+mydocs.dll,mydocs.x86
+
+[mydocs.alpha]
+mydocs.dll,mydocs.alpha
+
+
+; Uninstall - remove the DLL and the registry entries
+[DefaultUninstall]
+DelFiles=mydocs.inf, mydocs.dll
+DelReg=mydocs.reg
+
+[mydocs.dll]
+mydocs.dll,,,1
+
+; Miscellaneous
+
+[mydocs.inf]
+mydocs.inf
+
+[DestinationDirs]
+DefaultDestDir=11
+mydocs.inf=17
+
+[SourceDisksNames]
+55=%DISPLAY_NAME%,"",1
+
+[SourceDisksFiles]
+mydocs.x86=55
+mydocs.alpha=55
+mydocs.dll=55
+
+[mydocs.reg]
+HKCR,CLSID\{%CLSID00%},,,%DISPLAY_NAME%
+HKCR,CLSID\{%CLSID00%},"TraceMask",0x00010001,00
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\explore\command,,,"Explorer.exe /e,/idlist,%I,/L"
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\explore\ddeexec,,,"[ExploreFolder(%l, %I, %S)]"
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\explore\ddeexec,"NoActivateHandler",,
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\explore\ddeexec\application,,,"Folders"
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\explore\ddeexec\ifexec,,,"[]"
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\explore\ddeexec\topic,,,"AppProperties"
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\open\command,,,"Explorer.exe /idlist,%I,/L"
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\open\ddeexec,,,"[ViewFolder(%l, %I, %S)]"
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\open\ddeexec,"NoActivateHandler",,
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\open\ddeexec\application,,,"Folders"
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\open\ddeexec\ifexec,,,"[]"
+HKCR,CLSID\{%CLSID00%}\AllSpecialItems\shell\open\ddeexec\topic,,,"AppProperties"
+HKCR,CLSID\{%CLSID00%}\DefaultIcon,,,"mydocs.dll,0"
+HKCR,CLSID\{%CLSID00%}\InProcServer32,,,"mydocs.dll"
+HKCR,CLSID\{%CLSID00%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CLSID00%}\ShellFolder,"Attributes",0x00010001,37,01,00,b0
+HKLM,%EXPLORER_KEY%\Desktop\NameSpace\{%CLSID00%},,,%DISPLAY_NAME%
+HKCU,%EXPLORER_KEY%\Documents\"Published Documents","DefaultIcon",,"mydocs.dll,1"
+HKCU,%EXPLORER_KEY%\Documents\"Published Documents","RealPath",,"\\scratch\scratch\ricktu"
+HKCU,%EXPLORER_KEY%\"Shell Folders","Personal",,"C:\My Documents"
+
+[Strings]
+CLSID00=450d8fba-ad25-11d0-98a8-0800361b1103
+DISPLAY_NAME="My Documents"
+EXPLORER_KEY="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer

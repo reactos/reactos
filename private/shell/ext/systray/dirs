@@ -1,0 +1,6 @@
+DIRS= \
+    dll        \
+    exestub
+
+OPTIONAL_DIRS= \
+    test       \

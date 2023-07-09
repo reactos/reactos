@@ -1,0 +1,6 @@
+AXP64_SOURCES=..\axp64\iniaxp64.c \
+              ..\axp64\dataxp64.c \
+              ..\axp64\debugsup.c \
+              ..\axp64\hypermap.c \
+              ..\axp64\setdirty.c \
+              ..\axp64\physsect.c

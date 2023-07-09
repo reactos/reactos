@@ -1,0 +1,80 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+$$IF(Icon)
+		ForceRemove {$$IconGUID$$} = s '$$Class Type$$ Icon Extractor'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+$$ENDIF
+$$IF(IContextMenu)
+		ForceRemove {$$ContextMenuGUID$$} = s '$$Class Type$$ ContextMenu'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+       }
+$$ENDIF
+$$IF(PropertySheet)
+		ForceRemove {$$PropertySheetGUID$$} = s '$$Class Type$$ Property Sheet'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+        }
+$$ENDIF
+$$IF(InfoTip)
+		ForceRemove {$$InfoTipGUID$$} = s '$$Class Type$$ InfoTip'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+        }
+$$ENDIF
+	}
+
+    val .$$Extension$$ = s '$$Class Type$$'
+
+    ForceRemove $$Class Type$$
+    {
+$$IF(Icon)
+        DefaultIcon = s '%%1'
+$$ENDIF
+        shellex
+        {
+$$IF(Icon)
+            IconHandler = s {$$IconGUID$$}
+$$ENDIF
+$$IF(IContextMenu)
+            ContextMenuHandlers
+            {
+                $$ClassType$$CM = s {$$ContextMenuGUID$$}
+            }
+$$IF(DragAndDrop)
+            DragAndDropHandlers
+            {
+                $$ClassType$$DND = s {$$ContextMenuGUID$$}
+            }
+$$ENDIF
+$$ENDIF
+$$IF(PropertySheet)
+            PropertySheetHandlers
+            {
+                $$ClassType$$PS = s {$$PropertySheetGUID$$}
+            }
+$$ENDIF
+
+$$IF(InfoTip)
+            '{00021500-0000-0000-C000-000000000046}' = s '{$$InfoTipGUID$$}'
+$$ENDIF
+        }
+
+    }
+}

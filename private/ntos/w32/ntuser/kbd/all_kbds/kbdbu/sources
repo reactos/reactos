@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdbu
+
+TARGETNAME=kbdbu
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdbu.c kbdbu.rc
+
+NTTARGETFILE0=kbdbu.h kbdbu.rc kbdbu.def

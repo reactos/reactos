@@ -1,0 +1,37 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=msxml
+MINORCOMP=xmlencoder
+
+ROOT=$(MAKEDIR:\xml\tokenizer\encoder=)
+TOK_ROOT=$(MAKEDIR:\encoder=)
+
+!include $(TOK_ROOT)\common.inc
+
+TARGETNAME=xmlencoder
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES= \
+	charencoder.cxx\
+	encodingstream.cxx
+
+
+INCLUDES= \
+    $(XML_TOKENIZER_INCLUDES)
+

@@ -1,0 +1,56 @@
+MINORCOMP=apilib_a
+TARGETNAME=setup9x
+
+ANSI_SETUPAPI=1
+
+!if !$(386)
+# Do nothing for non-x86 platforms
+
+TARGETPATH=obj
+TARGETTYPE=NOTARGET
+
+!else
+
+!include ..\sources.inc
+
+TARGETTYPE=DYNLINK
+
+USE_LIBCMT=1
+
+C_DEFINES=-D_MBCS -D_SETUPAPI_ -DASSERTS_ON=1 -DANSI_SETUPAPI=1
+# To enable asserts, add: -DASSERTS_ON=1
+
+SUBSYSTEM_VERSION=4.00
+CHICAGO_PRODUCT=1
+
+TARGETLIBS=                                                     \
+            $(BASEDIR)\public\sdk\lib\chicago\*\kernel32.lib    \
+            $(BASEDIR)\public\sdk\lib\chicago\*\advapi32.lib    \
+            $(BASEDIR)\public\sdk\lib\*\comctl32.lib    \
+            $(BASEDIR)\public\sdk\lib\*\comdlg32.lib    \
+            $(BASEDIR)\public\sdk\lib\chicago\*\gdi32.lib       \
+            $(BASEDIR)\public\sdk\lib\*\lz32.lib                \
+            $(BASEDIR)\public\sdk\lib\chicago\*\mpr.lib         \
+            $(BASEDIR)\public\sdk\lib\*\ole32.lib               \
+            $(BASEDIR)\public\sdk\lib\*\rpcndr.lib              \
+            $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib              \
+            $(BASEDIR)\public\sdk\lib\*\rpcutil.lib             \
+            $(BASEDIR)\public\sdk\lib\*\shell32p.lib    \
+            $(BASEDIR)\public\sdk\lib\chicago\*\user32.lib      \
+            $(BASEDIR)\public\sdk\lib\*\version.lib             \
+            $(BASEDIR)\public\sdk\lib\chicago\*\winspool.lib    \
+            $(BASEDIR)\public\sdk\lib\*\cabinet.lib             \
+            $(BASEDIR)\public\sdk\lib\*\dload.lib               \
+            ..\..\setuplog\obj\*\setuplga.lib                   \
+            ..\ansi\cfgmgr32.lib
+
+DLLDEF=setup9x.def
+
+!endif
+
+i386_SOURCES=$(SOURCES)
+SOURCES=
+
+
+
+

@@ -1,0 +1,174 @@
+// This file contains directives for how to order the functions.
+#include "shdocvw.fmap"
+
+libshdocvw.so.1
+{
+    global:
+
+    DllCanUnloadNow;
+    DllGetClassObject;
+    DllRegisterServer;
+    DllUnregisterServer;
+    DllGetVersion;
+    DllInstall;
+    DllMain;
+
+    URLQualifyA;
+    URLQualifyW;
+    OpenURL;
+
+    IEWinMain;
+
+    CreateShortcutInDirA;
+    CreateShortcutInDirW;
+    CreateShortcutInDirEx;
+//    WhichPlatform;
+
+    DllRegisterWindowClasses;
+
+    DoFileDownload;
+    DoFileDownloadEx;
+
+    HlinkFrameNavigate;
+    HlinkFrameNavigateNHL;
+    HlinkFindFrame;
+    DoAddToFavDlg;
+    DoOrganizeFavDlg;
+    IEWriteErrorLog;
+    AddUrlToFavorites;
+
+    SoftwareUpdateMessageBox;
+
+    WinList_Init;
+    WinList_Terminate;
+
+    CreateFromDesktop;
+
+    DDEHandleViewFolderNotify;
+//    ShellDDEInit;
+//    SHCreateDesktop;
+//    SHDesktopMessageLoop;
+    
+//    StopWatchMode;
+//    StopWatchFlush;
+//    StopWatch;
+
+//    Code to run install/uninstall stubs.  A separate copy of the code is
+//    used in loadwc.exe in browser-only mode;  the first of these exports
+//    is called from explorer.exe in integrated shell mode (loaded by ordinal).
+//    ActiveSetup calls the other one to execute a specific install stub.
+
+    RunInstallUninstallStubs;
+    RunInstallUninstallStubs2;
+
+    SetQueryNetSessionCount;
+
+//   BUGBUG Should we really export this for everyone?
+    SHGetIDispatchForFolder;
+
+//  Splash screen is being removed from IEUNIX
+//  SHCreateSplashScreen;
+
+    IsFileUrl                   ;
+    IsFileUrlW                  ;
+    PathIsFilePath              ;
+    URLSubLoadString            ;
+    OpenPidlOrderStream         ;
+    DragDrop                    ;
+    IEInvalidateImageList       ;
+    IEMapPIDLToSystemImageListIndex ;
+    ILIsWeb                     ;
+    IEGetAttributesOf           ;
+    IEBindToObject              ;
+    IEMaybeHasLocationSpec      ;
+    IEGetDisplayName            ;
+    ILRemoveLocation            ;
+    _GetStdLocation             ;
+
+    CShellUIHelper_CreateInstance2 ;
+    IsURLChild                  ;
+
+    // ;; Export restrictions for webcheck and cdfview^M
+    SHRestricted2A              ;
+    SHRestricted2W              ;
+
+    // ;; Debug memory Leak detection API^M
+
+    GetLeakDetectionFunctionTable ;
+
+    // ;; BUGBUG: get rid of this, Helper function for CDFView^M
+    CDDEAuto_Navigate           ;
+
+    // ;; Export of add/activate channel/favorite to webcheck (SubscriptionMgr^M
+    // ;; is the official access point for this functionality)^M
+    SHAddSubscribeFavorite      ;
+
+    // Freind function cannot be exported.
+    // ResetProfileSharing ;
+
+    // ;; called from browseui^M
+    // ;; temporary till after the split^M
+    URLSubstitution         ;
+    IsIEDefaultBrowser          ;
+    ParseURLFromOutsideSourceA     ;
+    ParseURLFromOutsideSourceW     ;
+    _DeletePidlDPA                 ;
+    IURLQualify                    ;
+    SHIsRestricted                 ;
+    SHIsGlobalOffline              ;
+    DetectAndFixAssociations       ;
+    EnsureWebViewRegSettings       ;
+    WinList_NotifyNewLocation      ;
+    WinList_FindFolderWindow       ;
+    WinList_GetShellWindows        ;
+    WinList_RegisterPending        ;
+    WinList_Revoke                 ;
+    SHMapNbspToSp                  ;
+    UrlHitsNet                     ;
+    FireEvent_Quit                 ;
+    SHGetThreadModelessCount       ;
+    SHDGetPageLocation             ;
+    SHIEErrorMsgBox                 ;
+    IEGetDisplayNameW               ;
+    SHRunIndirectRegClientCommand   ;
+    SHIsRegisteredClient            ;
+    SHGetHistoryPIDL                ;
+    IsPidlFromURLShellExt           ;
+    IECleanUpAutomationObject       ;
+    IEOnFirstBrowserCreation        ;
+    IEDDE_WindowDestroyed           ;
+    IEDDE_NewWindow                 ;
+    IsErrorUrl                      ;
+    SHInitRoot                      ;
+
+    // ;; very temporary... until raymond moves the prop sheet code^M
+    // ;; (raymond removed the propsheet code; I dunno what SHGetViewStream is)^M
+    SHGetViewStream                 ;
+
+    // ;; called from shell32^M
+    // ;; temporary till after the split; these start at 200 to avoid^M
+    // ;; colliding with the temporary browseui functions^M
+    NavToUrlUsingIEA            ;
+    NavToUrlUsingIEW            ;
+    // DownloadIconForShortcut     ;
+    SearchForElementInHead      ;
+    JITCoCreateInstance         ;
+    UrlHitsNetW;
+    IEAboutBox;
+    URLSubRegQueryA;
+
+    CoCreateInternetExplorer;
+    _UnixSendDocToOE;
+    CheckAndExecNewsScript;
+    OEHandlesMail;
+    SelectMotifMenu;
+    UnixAdjustWindowSize;
+    PaintUnixMenuArrow;
+    UnixSendDocToMailRecipient;
+
+    _____shdocvw_initDLL;
+    
+    local :
+    *;
+};
+

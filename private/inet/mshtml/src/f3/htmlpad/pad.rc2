@@ -1,0 +1,44 @@
+#include "pad.rcv"
+#include "padrc2.h"
+
+#define IDS_TOOLTIP(idm)  (20000 + (idm))
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TOOLTIP(IDM_PAD_GOTO)             "Go to a different folder"
+    IDS_TOOLTIP(IDM_PAD_HOME)             "Home"
+    IDS_TOOLTIP(IDM_PAD_FIND)             "Find"
+    IDS_TOOLTIP(IDM_PAD_STOP)             "Stop"
+    IDS_TOOLTIP(IDM_PAD_REFRESH)          "Refresh"
+    IDS_TOOLTIP(IDM_PAD_FONTINC)          "Larger"
+    IDS_TOOLTIP(IDM_PAD_FONTDEC)          "Smaller"
+    IDS_TOOLTIP(IDM_PAD_CUT)              "Cut"
+    IDS_TOOLTIP(IDM_PAD_COPY)             "Copy"
+    IDS_TOOLTIP(IDM_PAD_PASTE)            "Paste"
+    IDS_TOOLTIP(IDM_PAD_PRINT)            "Print"
+    IDS_TOOLTIP(IDM_PAD_BACK)             "Back"
+    IDS_TOOLTIP(IDM_PAD_FORWARD)          "Forward"
+    IDS_TOOLTIP(IDM_PAD_OPENFAVORITE)     "Favorites"
+    IDS_TOOLTIP(IDM_PAD_EDIT)             "Edit Document"
+    IDS_TOOLTIP(IDM_PAD_BROWSE)           "Browse Document"
+    IDS_TOOLTIP(IDM_MESSAGE_MOVE)         "Move Item"  
+    IDS_TOOLTIP(IDM_MESSAGE_PRINT)        "Print"       
+    IDS_TOOLTIP(IDM_MESSAGE_DELETE)       "Delete"  
+    IDS_TOOLTIP(IDM_MESSAGE_SUBMIT)       "Send"  
+    IDS_TOOLTIP(IDM_MESSAGE_REPLY)        "Reply to Sender"  
+    IDS_TOOLTIP(IDM_MESSAGE_REPLY_ALL)    "Reply to All"  
+    IDS_TOOLTIP(IDM_MESSAGE_FORWARD)      "Forward"  
+    IDS_TOOLTIP(IDM_VIEW_ITEMABOVE)       "Next"  
+    IDS_TOOLTIP(IDM_VIEW_ITEMBELOW)       "Previous"  
+    IDS_TOOLTIP(IDM_PAD_ABOUT)            "Help"  
+    IDS_TOOLTIP(IDM_PAD_HOSTSHDOCVW)      "Host Shdocvw In Pad"  
+    IDS_TOOLTIP(IDM_PAD_UNHOSTSHDOCVW)    "Switch To Regular Pad"  
+
+
+END
+
+1 typelib pad.tlb
+
+IDF_CFG_FILE    FILERESOURCE msg.cfg
+IDF_SMALL_ICON  FILERESOURCE padsmall.ico
+IDF_LARGE_ICON  FILERESOURCE padicon.ico

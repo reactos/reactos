@@ -1,0 +1,285 @@
+<HTML id=dlgError STYLE="font-family: ms sans serif; font-size: 8pt;
+width: 42em; height: 27em">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE id=dialogTitle>
+Internet Explorer Script Error
+</TITLE>
+<SCRIPT LANGUAGE="JavaScript" defer>
+
+window.onerror = HandleError
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   Turns off error messages in dialogs
+//
+//  Arguments:  none
+//
+//  returns:    true (tells browser not to handle message)
+//
+//--------------------------------------------------------------------
+
+function HandleError(message, url, line)
+{
+    var L_Dialog_ErrorMessage = "An error has occurred in this dialog.";
+    var L_ErrorNumber_Text = "Error: ";
+
+    var str = L_Dialog_ErrorMessage + "\n\n" 
+        + L_ErrorNumber_Text + line + "\n"
+        + message;
+
+    alert (str);
+    window.close();
+
+    return true;
+}
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Binds events to controls, determines if the script 
+//              debugger is loaded and formats the dialog appropriately
+//
+//  Arguments:  none.
+//
+//  Returns:    nothing.
+//  
+//-----------------------------------------------------------------------
+
+function loadBdy()
+{
+    var L_ContinueScript_Message = "Do you want to debug the current page?";
+    var objOptions = window.dialogArguments;    // Options holder
+    
+    //
+    //  Bind event to controls
+    //
+    btnNo.onclick  = new Function("btnOKClick()");
+    btnNo.onkeydown  = new Function("SwitchFocus()");
+    btnYes.onclick = new Function("btnYesClick()");
+    btnYes.onkeydown = new Function("SwitchFocus()");
+    document.onkeypress = new Function("docKeypress()");
+
+    //
+    //  Fill the dialog with error information
+    //
+    spnLine.innerText       = objOptions.errorLine;
+    spnCharacter.innerText  = objOptions.errorCharacter;
+    spnError.innerText      = objOptions.errorMessage;
+    spnCode.innerText       = objOptions.errorCode;
+    txaURL.innerText        = objOptions.errorUrl;
+
+    //
+    //  If the script debugger is installed, display the text and
+    //  yes/no buttons
+    //
+    if (objOptions.errorDebug)
+    {
+        divDebug.innerText = L_ContinueScript_Message;
+    }
+
+    btnYes.focus();
+}   // loadBdy
+
+
+//+-----------------------------------------------------------------------
+//
+//  Sysopsis:   If an arrow key is pressed, switch focus to the other
+//              button
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//------------------------------------------------------------------------
+
+function SwitchFocus()
+{
+    var HTML_KEY_ARROWLEFT = 37;
+    var HTML_KEY_ARROWDOWN = 40;
+
+    var iCode = event.keyCode;
+    var strSourceID = event.srcElement.id;
+
+    if (iCode < HTML_KEY_ARROWLEFT || iCode > HTML_KEY_ARROWDOWN)
+        return;
+
+    if (strSourceID == "btnYes")
+    {
+        btnNo.focus();
+    }
+    else
+    {
+        btnYes.focus();
+    }
+}   // SwitchFocus
+
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   Closes the dialog doing nothing.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//---------------------------------------------------------------------
+
+function btnOKClick()
+{
+    window.close();
+}   // btnOKClick
+
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   Closes the dialog and launches the script debugger
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//--------------------------------------------------------------------
+
+function btnYesClick()
+{
+    //
+    //  Setting returnValue = true will launch the script debugger when
+    //  the dialog is dismissed.
+    //
+    window.returnValue = true;
+    window.close();
+}   // btnYesClick
+
+
+//+--------------------------------------------------------------------
+//
+//  Synopsis:   Checks to see if Y or N key (or other keys if
+//              localized) has been pressed.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//---------------------------------------------------------------------
+
+function docKeypress()
+{
+    var L_AffirmativeKeyCodeLowerCase_Number    = 121;
+    var L_AffirmativeKeyCodeUpperCase_Number    = 89;
+    var L_NegativeKeyCodeLowerCase_Number       = 110;
+    var L_NegativeKeyCodeUpperCase_Number       = 78;
+
+    var intKeyCode = window.event.keyCode;
+
+    if (intKeyCode == L_AffirmativeKeyCodeLowerCase_Number
+        || intKeyCode == L_AffirmativeKeyCodeUpperCase_Number)
+    {
+        btnYesClick();
+    }
+
+    if (intKeyCode == L_NegativeKeyCodeLowerCase_Number
+        || intKeyCode == L_NegativeKeyCodeUpperCase_Number)
+    {
+        btnOKClick();
+    }
+
+}   //  docKeypress
+
+</SCRIPT>
+
+</HEAD>
+<BODY ID=bdy onLoad="loadBdy()" style="font-family: 'ms sans serif';
+font-size: 8pt; background: threedface; color: windowtext;" topmargin=0>
+
+<CENTER id=ctrErrorMessage>
+<table id=tbl1 cellPadding=3 cellspacing=3 border=0 
+style="background: buttonface; font-family: ms sans serif; font-size: 8pt;">
+
+<TR>
+
+<TD id=tdImage>
+<img id=imgWarning src=warning.gif width=36 height=38 border=0 align=middle>
+</TD>
+<TD id=tdErrorMessage>
+An error has occurred in the script on this page.
+</TD>
+</TR>
+</TABLE>
+
+</CENTER>
+<DIV id=divTop style="background: threedface; font-family: ms sans serif; 
+font-size: 8pt; margin-left: 1.5em">
+
+<TABLE border=0 id=tbl2
+style="background: buttonface; font-family: ms sans serif; font-size: 8pt;
+margin-left: 1em;">
+<TBODY>
+<TR valign=top>
+<TD id=tdLine nowrap>
+Line:&nbsp;&nbsp;&nbsp;&nbsp;
+</TD>
+<TD id=tdSpanLine>
+<SPAN id=spnLine></SPAN>
+</TD>
+</TR>
+<TR valign=top>
+<TD id=tdChar nowrap>
+Char:&nbsp;&nbsp;&nbsp;&nbsp;
+</TD>
+<TD id=tdSpanCharacter>
+<SPAN id=spnCharacter></SPAN>
+</TD>
+</TR>
+<TR valign=top>
+<TD id=tdError nowrap>
+Error:&nbsp;&nbsp;&nbsp;&nbsp;
+</TD>
+<TD id=tdSpanError>
+<DIV id=spnError style="background: threedface;
+font-family: ms sans serif; font-size: 8pt; width: 31em;"></DIV>
+</TD>
+</TR>
+<TR valign=top>
+<TD id=tdCode nowrap>
+Code:&nbsp;&nbsp;&nbsp;&nbsp;
+</TD>
+<TD id=tdSpanCode>
+<SPAN id=spnCode></SPAN>
+</TD>
+</TR>
+<TR valign=top>
+<TD id=tdURL nowrap>
+URL:&nbsp;&nbsp;&nbsp;&nbsp;
+</TD>
+<TD id=tdSpanURL>
+<TEXTAREA id=txaURL style="font-family: MS Shell Dlg; font-size: 8pt;  
+background: buttonface; overflow: hidden; width: 28em; height: 3.9em; 
+border: 0px;" readonly wrap=physical tabindex=-1>
+</TEXTAREA>
+</TD>
+</TR>
+</TBODY>
+</TABLE>
+</DIV>
+<DIV id=divDebug style="background: threedface; position: absolute;
+font-family: ms sans serif; font-size: 8pt; top: 17em;
+text-align: center; width=100%;">
+Do you want to continue running scripts on this page?
+</DIV>
+<DIV id=divButttons style="background: buttonface; position: absolute;
+font-family: ms sans serif; font-size: 8pt; top: 20em; width: 100%">
+<CENTER id=ctrButtons>
+<BUTTON ID=btnYes style="font-family: ms sans serif; font-size: 8pt;
+width: 3.8em; height: 2.2em;" type=submit accesskey=y>
+<U id=undYes>Y</U>es
+</BUTTON>
+
+<BUTTON ID=btnNo style="font-family: ms sans serif; font-size: 8pt;
+width: 3.8em; height: 2.2em" type=reset accesskey=n>
+<U id=undNo>N</U>o
+</BUTTON>
+</CENTER>
+</DIV>
+</BODY>
+</HTML>

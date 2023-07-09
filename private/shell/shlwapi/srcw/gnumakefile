@@ -1,0 +1,42 @@
+# This makefile was generated automatically by mwgenmake.
+COMPONENT = SHELL
+PRODUCT = SHLWUNI
+
+CUSTOM_RULES = ${MWROOT}/ie4/shell.template
+
+# Generated files will go here
+DIR_GENERATED = ${O}
+
+SOURCES_FILE =  sources
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME
+
+WLIB	= shlwuni
+LIB	= lib${WLIB}.a # target static library
+
+## you may define the following variables
+PROJECT_CFLAGS = -I.. -DDBCS -DUNICODE_SHDOCVW
+
+include $(MWHOME)/make.rules.simple
+
+## pathw.c is now being generated from path.c
+${O}/pathw.c:../path.c
+	rm -f $@
+	echo "#ifndef UNICODE " >  $@
+	echo "#define UNICODE " >> $@
+	echo "#endif          " >> $@
+	cat  $<                 >> $@
+
+${O}/nativew.cpp:../native.cpp
+	rm -f $@
+	echo "#ifndef UNICODE " >  $@
+	echo "#define UNICODE " >> $@
+	echo "#endif          " >> $@
+	cat  $<                 >> $@
+
+${O}/assocapw.cpp:../assocapi.cpp
+	rm -f $@
+	echo "#ifndef UNICODE " >  $@
+	echo "#define UNICODE " >> $@
+	echo "#endif          " >> $@
+	cat  $<                 >> $@
+

@@ -1,0 +1,6 @@
+INCLUDES=$(INCLUDES);..\..\mm
+IA64_SOURCES=..\ia64\psctxi64.c \
+             ..\ia64\psldt.c    \
+             ..\ia64\psvdm.c    \
+             ..\ia64\pswrap.s
+

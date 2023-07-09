@@ -1,0 +1,39 @@
+#----------------------------------------------------------------------------
+#
+# Description:
+#
+#       sources file for test program for cryptapi
+#
+# History:
+#
+#       11/29/94 larrys created
+#
+#----------------------------------------------------------------------------
+
+MAJORCOMP=stress
+MINORCOMP=EXE
+
+TARGETNAME=stress
+TARGETPATH=..\bin
+TARGETTYPE=PROGRAM
+
+INCLUDES=..\..\inc;
+
+!if "$(NTDEBUG)" != ""
+C_DEFINES= -DTEST_VERSION $(C_DEFINES)
+!else
+C_DEFINES= $(C_DEFINES)
+!endif
+
+TARGETLIBS=\
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+
+
+SOURCES=\
+        stress.c   \
+        stress.rc
+
+USE_MSVCRT=1
+
+UMTYPE=console
+UMENTRY=main

@@ -1,0 +1,12 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE             VFT_DLL
+#define VER_FILESUBTYPE          VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR  "Windows Volume Tracking"
+#define VER_INTERNALNAME_STR     "LINKINFO"
+#define VER_LEGALCOPYRIGHT_YEARS "1994-1999"
+#define VER_ORIGINALFILENAME_STR "LINKINFO.DLL"
+
+#include <common.ver>
+

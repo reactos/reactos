@@ -1,0 +1,9 @@
+The OSDebug component configuration info will be stored as a set of name/value strings
+in the "current" workspace.  The "current" workspace will contain the key name of
+the component's "option" registry area.  Configuration info will be saved immediately
+in that option area.
+
+The "load" and "save" phases of TLSetup and EMSetup will be performed on the
+strings in the current workspace.
+
+

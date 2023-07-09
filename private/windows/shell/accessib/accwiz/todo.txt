@@ -1,0 +1,37 @@
+
+
+Add New Page with Min Legible Text and owner Draw
+Remove high contrast page - just set the value
+Remove 'Notification', and just set it.
+Add 2 icon pages
+
+
+Implement Cancel Button NO
+RESTORE EVERYTHING TO DEFAULTS
+ - Should restore current user and default user to defaults
+
+Support Small Icon size changes
+
+Add sample space to type on all keyboard pages and apply immediately
+
+For FilterKeys, read from registry last settings for disabled feature
+
+
+
+***************************
+NOT FOR USABILITY TEST:
+***************************
+NOTE: MAKE TITLE/SUBTITLE accessible via Screen Readers
+Search for all MessageBox()'s
+Search for all literal strings
+REMOVE deskid.h
+Only support single instance.
+Sound Sentry MUST have '0' for effects when run on NT 4.0
+
+
+
+***************************
+DONE:
+***************************
+Add New Page with second type of Acc Time Out
+Remove 'status indicators'

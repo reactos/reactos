@@ -1,0 +1,134 @@
+#include <olectl.h>
+// webvw.idl : IDL source for webvw.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (webvw.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+#include "webvwid.h"
+
+    // IThumbCtl interface
+    [
+        object,
+        uuid(e8accae0-23e6-11d1-9e88-00c04fdcab92),
+        dual,
+        helpstring("IThumbCtl Interface"),
+        pointer_default(unique)
+    ]
+    interface IThumbCtl : IDispatch
+    {
+        [id(1), helpstring("method displayFile")] HRESULT displayFile(BSTR bsFileName, [retval, out] VARIANT_BOOL *);
+        [id(2), helpstring("method haveThumbnail")] HRESULT haveThumbnail([retval, out] VARIANT_BOOL *);
+        [propget, id(3), helpstring("property freeSpace")] HRESULT freeSpace([retval, out] BSTR *);
+        [propget, id(4), helpstring("property usedSpace")] HRESULT usedSpace([retval, out] BSTR *);
+        [propget, id(5), helpstring("property totalSpace")] HRESULT totalSpace([retval, out] BSTR *);
+    };
+
+    // IWebView interface
+    [
+        object,
+        uuid(BCFD624C-705A-11d2-A2AF-00C04FC30871),
+        dual,
+        helpstring("IWebView Interface"),
+        pointer_default(unique)
+    ]
+    interface IWebView : IDispatch
+    {
+        [id(1), helpstring("method OnCSCClick")] HRESULT OnCSCClick();
+        [id(2), helpstring("method CSCSynchronize")] HRESULT CSCSynchronize();
+        [id(3), helpstring("method OnCSCMouseOver")] HRESULT OnCSCMouseOver();
+        [id(4), helpstring("method OnCSCMouseOut")] HRESULT OnCSCMouseOut();
+    };
+
+    // IWebViewFolderIcon interface
+    [
+        object,
+        uuid(99DB2085-323A-11d2-A1D4-00A0C9A63FD0),
+        dual,
+        helpstring("IWebViewFolderIcon Interface"),
+        pointer_default(unique)
+    ]
+
+    interface IWebViewFolderIcon : IDispatch
+    {
+        [id(DISPID_PROP_WVFOLDERICON_SCALE), propget, helpstring("property scale")] HRESULT scale([retval, out] BSTR *);
+        [id(DISPID_PROP_WVFOLDERICON_SCALE), propput, helpstring("property scale")] HRESULT scale([in] BSTR);
+        [id(DISPID_PROP_WVFOLDERICON_PATH), propget, helpstring("property path")] HRESULT path([retval, out] BSTR *);
+        [id(DISPID_PROP_WVFOLDERICON_PATH), propput, helpstring("property path")] HRESULT path([in] BSTR);
+        [id(DISPID_PROP_WVFOLDERICON_VIEW), propget, helpstring("property view")] HRESULT view([retval, out] BSTR *);
+        [id(DISPID_PROP_WVFOLDERICON_VIEW), propput, helpstring("property view")] HRESULT view([in] BSTR);
+		[id(DISPID_PROP_WVFOLDERICON_ADVPROPERTY), propget, helpstring("advanced properties")] 
+			HRESULT advproperty([retval, out] VARIANT_BOOL *);
+		[id(DISPID_PROP_WVFOLDERICON_ADVPROPERTY), propput, helpstring("advanced properties")] 
+			HRESULT advproperty([in] VARIANT_BOOL);
+    };
+
+    // IWebViewFolderIcon2 interface
+    [
+        object,
+        uuid(224AFAC1-3145-11d2-A1D3-00A0C9A63FD0),
+        helpstring("IWebViewFolderIcon2 Interface"),
+        pointer_default(unique),
+		dual
+    ]
+    interface IWebViewFolderIcon2 : IWebViewFolderIcon
+    {
+		[id(5), helpstring("method setSlice")] 
+			HRESULT setSlice([in]int index, VARIANT varHiBytes, VARIANT varLoBytes, VARIANT varColorref);
+    };
+
+
+// WebView Libraryc
+[
+    uuid(cd603fc0-1f11-11d1-9e88-00c04fdcab92),                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+    version(1.0),
+    helpstring("webvw 1.0 Type Library")
+]
+library WEBVWLib
+{
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
+
+    // ThumbCtl
+    [
+        uuid(58d6f4b0-181d-11d1-9e88-00c04fdcab92),     // DIID_DThumbCtlEvents
+        helpstring("Event interface for ThumbCtl")
+    ]
+    dispinterface DThumbCtlEvents
+    {
+    properties:
+    methods:
+        [id(DISPID_ONTHUMBNAILREADY), helpstring("The Thumbnail is ready to be displayed."), helpcontext(0x0000)]
+        void OnThumbnailReady();
+    }
+
+    [
+        uuid(1d2b4f40-1f10-11d1-9e88-00c04fdcab92),
+        helpstring("ThumbCtl Class")
+    ]
+    coclass ThumbCtl
+    {
+        [default] interface IThumbCtl;
+        [default, source] dispinterface DThumbCtlEvents;
+    };
+
+    [
+        uuid(BCFD624E-705A-11d2-A2AF-00C04FC30871),
+        helpstring("WebView Class")
+    ]
+    coclass WebView
+    {
+        [default] interface IWebView;
+    };
+
+    [
+        uuid(e5df9d10-3b52-11d1-83e8-00a0c90dc849),
+        helpstring("WebViewFolderIcon Class")
+    ]
+    coclass WebViewFolderIcon
+    {
+        [default] interface IWebViewFolderIcon2;
+    };
+};

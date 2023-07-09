@@ -1,0 +1,23 @@
+HKCR
+{
+	MSPropertyTree.AVPropServer.1 = s 'AVPropServer Class'
+	{
+		CLSID = s '{E14BB48F-3183-11D2-BE3C-3078302C2030}'
+	}
+	MSPropertyTree.AVPropServer = s 'AVPropServer Class'
+	{
+		CurVer = s 'MSPropertyTree.AVPropServer.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {E14BB48F-3183-11D2-BE3C-3078302C2030} = s 'AVPropServer Class'
+		{
+			ProgID = s 'MSPropertyTree.AVPropServer.1'
+			VersionIndependentProgID = s 'MSPropertyTree.AVPropServer'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

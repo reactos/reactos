@@ -1,0 +1,5 @@
+MIPS_SOURCES=..\mips\initmips.c \
+             ..\mips\datamips.c \
+             ..\mips\debugsup.c \
+             ..\mips\hypermap.c \
+             ..\mips\setdirty.c

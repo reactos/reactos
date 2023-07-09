@@ -1,0 +1,61 @@
+[Version]
+Signature="$CHICAGO$"
+AdvancedINF=2.0
+[FtpShellExtensionInstall]
+ComponentName=IE40.FtpShellExt
+ComponentVersion=1
+AdvOptions=36
+AddReg=RegIntern
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+[FtpShellExtensionUninstall]
+ComponentName=IE40.FtpShellExt
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+[RegIntern]
+HKCR,"CLSID\%CLSID_ExeDllColumnProvider%",,,"%DESC_ExeDllColumnProvider%"
+HKCR,"CLSID\%CLSID_ExeDllColumnProvider%\DefaultIcon",,%RES%,"%_SYS_MOD_PATH%,7"
+HKCR,"CLSID\%CLSID_ExeDllColumnProvider%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ExeDllColumnProvider%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ExeDllColumnProvider%",,"%DESC_ExeDllColumnProvider%"
+HKCR,"Folder\ShellEx\ColumnHandlers\%CLSID_ExeDllColumnProvider%",,,"%DESC_ExeDllColumnProvider%"
+
+HKCR,"CLSID\%CLSID_FolderShortcutMenu%",,,"%DESC_FolderShortcutMenu%"
+HKCR,"CLSID\%CLSID_FolderShortcutMenu%\DefaultIcon",,%RES%,"%_SYS_MOD_PATH%,7"
+HKCR,"CLSID\%CLSID_FolderShortcutMenu%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_FolderShortcutMenu%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_FolderShortcutMenu%",,"%DESC_FolderShortcutMenu%"
+HKCR,"CLSID\%CLSID_FolderShortcut%\ShellEx\ContextMenuHandlers\ConversionMenu",,,"%CLSID_FolderShortcutMenu%"
+
+HKCR,"CLSID\%CLSID_ShortcutMenu%",,,"%DESC_ShortcutMenu%"
+HKCR,"CLSID\%CLSID_ShortcutMenu%\DefaultIcon",,%RES%,"%_SYS_MOD_PATH%,7"
+HKCR,"CLSID\%CLSID_ShortcutMenu%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShortcutMenu%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ShortcutMenu%",,"%DESC_ShortcutMenu%"
+HKCR,"lnkfile\ShellEx\ContextMenuHandlers\ShortcutMenu",,,"%CLSID_ShortcutMenu%"
+
+
+HKCR,"CLSID\%CLSID_FolderInfoTip%",,,"%DESC_FolderInfoTip%"
+HKCR,"CLSID\%CLSID_FolderInfoTip%\DefaultIcon",,%RES%,"%_SYS_MOD_PATH%,7"
+HKCR,"CLSID\%CLSID_FolderInfoTip%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_FolderInfoTip%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_FolderInfoTip%",,"%DESC_FolderInfoTip%"
+HKCR,"Directory\ShellEx\{00021500-0000-0000-C000-000000000046}",,,"%CLSID_FolderInfoTip%"
+
+[Strings]
+RES= 0x00020000
+IPS="InProcServer32"
+SMWCVSEA      = "Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"
+CLSID_ExeDllColumnProvider                      = "{66742402-F9B9-11d1-A202-0000F81FEDEE}"
+DESC_ExeDllColumnProvider                       =""
+CLSID_FolderShortcutMenu                        = "{C73B96C1-0155-11d2-A206-0000F81FEDEE}"
+DESC_FolderShortcutMenu                         =""
+CLSID_ShortcutMenu                              = "{43B4B851-062D-11d2-A206-0000F81FEDEE}"
+DESC_ShortcutMenu                               =""
+
+CLSID_FolderInfoTip								= "{F4360CEA-11F7-11d3-BDE4-00C04F490585}"
+DESC_FolderInfoTip								= ""
+
+
+CLSID_FolderShortcut				="{0AFACED1-E828-11D1-9187-B532F1E9575D}"
+
+ERR_NOSETUPAPI = "Internet Explorer 4.0 needs to be installed for this product to be installed."

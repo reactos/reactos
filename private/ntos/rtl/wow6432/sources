@@ -1,0 +1,95 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+SYNCHRONIZE_BLOCK=1
+
+MAJORCOMP=ntos
+MINORCOMP=rtl
+
+TARGETNAME=rtl6432
+TARGETPATH=..\obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=..;..\..\inc;..\..\..\inc
+
+NT_UP=0
+
+C_DEFINES=$(C_DEFINES) -D_NTSYSTEM_ -DBUILD_WOW6432
+ASM_DEFINES = $(ASM_DEFINES) -DBUILD_WOW6432
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=..\acledit.c   \
+        ..\assert.c    \
+        ..\atom.c      \
+        ..\bitmap.c    \
+        ..\compress.c  \
+        ..\cnvint.c    \
+        ..\debug.c     \
+        ..\eballoc.c   \
+        ..\environ.c   \
+        ..\error.c     \
+        ..\excptdbg.c  \
+        ..\gentable.c  \
+        ..\gen8dot3.c  \
+        ..\guid.c      \
+        ..\handle.c    \
+        ..\heap.c      \
+        ..\heapdll.c   \
+        ..\heapdbg.c   \
+        ..\heappage.c  \
+        ..\imagedir.c  \
+        ..\checksum.c  \
+        ..\ldrrsrc.c   \
+        ..\ldrreloc.c  \
+        ..\lookasid.c  \
+        ..\lznt1.c     \
+        ..\message.c   \
+        ..\nls.c       \
+        ..\pctohdr.c   \
+        ..\prefix.c    \
+        ..\prodtype.c  \
+        ..\random.c    \
+        ..\range.c     \
+        ..\registry.c  \
+        ..\regutil.c   \
+        ..\rtlassig.c  \
+        ..\rtldata.c   \
+        ..\rtlexec.c   \
+        ..\rxact.c     \
+        ..\sertl.c     \
+        ..\splay.c     \
+        ..\string.c    \
+        ..\stktrace.c  \
+        ..\time.c      \
+        ..\tracedb.c   \
+	..\nlsxlat.c   \
+	..\threads.c \
+	..\version.c
+
+NTTARGETFILE0=..\error.h
+
+UMTEST=
+UMTYPE=console
+UMLIBS=obj\*\bitmap.obj obj\*\stktrace.obj obj\*\stkwalk.obj \nt\public\sdk\lib\*\ntdll.lib

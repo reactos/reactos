@@ -1,0 +1,10 @@
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+TARGET_WIN95    = 1
+
+MYLIBDIR=win95
+
+!include $(CCSHELL_DIR)\ext\mydocs2\sources.inc
+
+SOURCES_USED = $(SOURCES_USED) $(CCSHELL_DIR)\ext\mydocs2\sources.inc
+

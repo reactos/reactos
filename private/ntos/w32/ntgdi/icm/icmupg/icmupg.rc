@@ -1,0 +1,23 @@
+
+#include <windows.h>
+
+/********************************************************************
+
+    Version stamp
+
+********************************************************************/
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Migrate Win9x Image Color Management"
+#define VER_INTERNALNAME_STR        "icmupg.dll"
+#define VER_ORIGINALFILENAME_STR    "icmupg"
+
+#include "common.ver"
+
+#include "msg.rc"
+
+
+

@@ -1,0 +1,11 @@
+
+CCSHELL_DIR = $(BASEDIR)\private\shell
+
+MYLIBDIR = winnt
+
+C_DEFINES = -DUNICODE -D_UNICODE
+
+!include $(CCSHELL_DIR)\ext\mydocs2\sources.inc
+
+SOURCES_USED = $(SOURCES_USED) $(CCSHELL_DIR)\ext\mydocs2\sources.inc
+

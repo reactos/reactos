@@ -1,0 +1,10 @@
+/********************************************************************/
+/*        NOTEPAD.RCV                                               */
+/*        Version control data generated from layouts.dat           */
+/********************************************************************/
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Notepad"
+#define VER_INTERNALNAME_STR            "Notepad"
+#define VER_ORIGINALFILENAME_STR        "NOTEPAD.EXE"

@@ -1,0 +1,8 @@
+index file read write indb input fixmenu +
+indos + card + print + main + indos2 + find + 
+lstrfns + init + register + object + dial + 
+picture + dragdrop
+cardfile.exe
+cardfile.map
+libw mlibcew olecli commdlg /NOE/NOD /M
+cardfile.def

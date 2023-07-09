@@ -1,0 +1,13 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Welcome to Internet Explorer 4.0"
+#define VER_INTERNALNAME_STR            "welcome"
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1999"
+#define VER_ORIGINALFILENAME_STR        "welcome.exe"
+
+#include <common.ver>

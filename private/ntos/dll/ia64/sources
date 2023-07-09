@@ -1,0 +1,6 @@
+IA64_DLLLIBOBJECTS=$(BASEDIR)\private\ntos\rtl\user\obj\ia64\chkstk.obj
+
+IA64_SOURCES=..\ia64\critsect.s \
+             ..\ia64\ldrthunk.s \
+             ..\ia64\ldrctx.c  \
+             ia64\usrstubs.s

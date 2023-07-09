@@ -1,0 +1,31 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\dlay\include=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=dlaypch
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SYNCHRONIZE_BLOCK=1
+
+INCLUDES= \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\external\inc; \
+    $(ROOT)\types\$(O); \
+    $(ROOT)\src\dlay\include; \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\src\form\include; \
+    $(ROOT)\src\ctrl\include; \
+    $(BASEDIR)\private\windows\inc;
+
+SOURCES= \
+    empty.cxx
+
+PRECOMPILED_INCLUDE=dlaypch.hxx
+PRECOMPILED_PCH=headers.pch
+PRECOMPILED_CXX=1

@@ -1,0 +1,73 @@
+#############################################################
+#
+#  Copyright (c) 1994  Microsoft Corporation
+#
+#    This is a template for constructing the sources file for any dsys
+#    subdirectory. Remove this comment when creating the sources file
+#    from this template.
+#
+#    Items enclosed in <...> represent things you must edit.
+#    Replace all instances of <to_root> with sufficient number of
+#    "..\"s to reach the root of the DSYS subtree.
+#    Lines preceded with ?<explanation> should be removed if inappropriate
+#    or edited if required
+#
+#############################################################
+
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Mike Swift (mikesw) 2-16-94
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+!INCLUDE $(_NTROOT)\private\security\security.mk
+
+
+TARGETNAME=ntlmtst
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+
+UMTYPE=console
+
+INCLUDES=.;..;..\..\inc;$(BASEDIR)\private\net\inc;$(BASEDIR)\private\inc
+
+TARGETLIBS= \
+       $(DSLIBRARY)\*\netlib.lib \
+       $(DSLIBRARY)\*\security.lib \
+       $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+       $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+       $(BASEDIR)\public\sdk\lib\*\netapi32.lib \
+       $(BASEDIR)\public\sdk\lib\*\user32.lib \
+       $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib \
+       $(BASEDIR)\public\sdk\lib\*\ntdll.lib
+
+
+#USE_LIBCMT=1
+USE_CRTDLL=1
+
+
+C_DEFINES=$(C_DEFINES) -DSECURITY_WIN32
+
+SOURCES=        ssptest.c
+
+
+

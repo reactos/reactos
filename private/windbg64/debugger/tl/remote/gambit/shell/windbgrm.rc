@@ -1,0 +1,44 @@
+#include "windows.h"
+#include "resource.h"
+#include <ntverp.h>
+
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Remote WinDbg Target Module"
+#define VER_INTERNALNAME_STR        "WinDbgRm\0"
+
+#include "common.ver"
+
+
+WinDbgRm MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP   "&Options"
+    {
+        MENUITEM "&Transport DLL...",   IDM_OPTIONS_DEBUG_DLLS
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",               IDM_OPTIONS_EXIT
+    }
+    POPUP   "&Help"
+    {
+        MENUITEM "&Contents",           IDM_HELP_CONTENTS
+        MENUITEM "&About WinDbgRm...",  IDM_HELP_ABOUT
+    }
+END
+
+WinDbgRm ACCELERATORS
+BEGIN
+        VK_F1,  IDM_HELP_CONTENTS,      VIRTKEY
+END
+
+#include "windbgrm.dlg"
+
+WindbgRmIcon     ICON PRELOAD DISCARDABLE "windbgrm.ico"
+CONNECTING_ICON  ICON PRELOAD DISCARDABLE "connect.ico"
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    IDS_APPNAME,    "WinDbgRm"
+    IDS_Usage,      "windbgrm -c -p<proc num> -e<event num> -s<short name>\n"
+    IDS_Version,    "0010"
+END

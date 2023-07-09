@@ -1,0 +1,4 @@
+.NOTPARALLEL:
+
+world all clean install depend:
+	@enterdir inetcpl     	${MAKE} ${MFLAGS} $@

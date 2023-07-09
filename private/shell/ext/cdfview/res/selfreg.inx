@@ -1,0 +1,199 @@
+;
+; Registry entries for cdfview.dll
+;
+
+
+[Version]
+Signature="$CHICAGO$"
+
+[Reg]
+AddReg=CdfView.Reg
+
+[Unreg]
+DelReg=CdfView.Unreg
+
+[CdfView.Reg]
+
+;
+; Class id registration for the cdf files COM object.
+;
+
+HKCR,CLSID\%CLSID_CDFVIEW%,,,"Channel"
+HKCR,CLSID\%CLSID_CDFVIEW%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CDFVIEW%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_CDFVIEW%\ProgID,,,"ChannelFile"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CDFVIEW%",,"%CHANNEL_FILE%"
+
+;
+; Class id registration for the ChannelMgr COM object.
+;
+
+HKCR,CLSID\%CLSID_ChannelMgr%,,,"Channel Mgr"
+HKCR,CLSID\%CLSID_ChannelMgr%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_ChannelMgr%\InProcServer32,"ThreadingModel",,"Apartment"
+
+;
+; Class id registration for the cdf shortcuts COM object.
+;
+
+HKCR,CLSID\%CLSID_CDFINI%,,,"%CHANNEL_SHORTCUT%"
+HKCR,CLSID\%CLSID_CDFINI%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CDFINI%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_CDFINI%\ProgID,,,"ChannelShortcut"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CDFINI%",,"%CHANNEL_SHORTCUT%"
+
+;
+; Class id registration for the cdf handler COM object.
+;
+
+HKCR,CLSID\%CLSID_CDFICONHANDLER%,,,"%DESC_CDFICONHANDLER%"
+HKCR,CLSID\%CLSID_CDFICONHANDLER%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CDFICONHANDLER%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CDFICONHANDLER%",,"%DESC_CDFICONHANDLER%"
+
+;
+; Class id registration for the cdf menu handler COM object.
+;
+
+HKCR,CLSID\%CLSID_CDFMENUHANDLER%,,,"Channel Menu Handler Object"
+HKCR,CLSID\%CLSID_CDFMENUHANDLER%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CDFMENUHANDLER%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CDFMENUHANDLER%",,"Channel Menu"
+
+;
+; Class id registration for the cdf property page COM object.
+;
+
+HKCR,CLSID\%CLSID_CDFPROPPAGES%,,,"Channel Shortcut Property Pages"
+HKCR,CLSID\%CLSID_CDFPROPPAGES%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CDFPROPPAGES%\InProcServer32,"ThreadingModel",,"Apartment"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CDFPROPPAGES%",,"Channel Properties"
+
+;
+; ".cdf" file extension registration.
+;
+
+HKCR,.cdf,,,"ChannelFile"
+HKCR,.cdf,%CONTENT_TYPE%,,"application/x-cdf"
+
+;
+; Channel file
+;
+
+;
+; Do NOT change the "ChannelFile" reg entry name.  Shdocvw has an 'App Hack'
+; that depends on this name!
+;
+
+HKCR,ChannelFile,,,%CHANNEL_FILE%
+HKCR,ChannelFile,"EditFlags",1,00,00,01,00
+HKCR,ChannelFile\CLSID,,,%CLSID_CDFVIEW%
+HKCR,ChannelFile\DefaultIcon,,,"%1"
+HKCR,ChannelFile\Shell,,,Subscribe
+HKCR,ChannelFile\Shell\Subscribe,,,"%SUBSCRIBE%"
+HKCR,ChannelFile\Shell\Subscribe\Command,,,"rundll32 %CDFVIEW_DLL%,Subscribe %L"
+HKCR,ChannelFile\Shell\Edit,,,"%EDIT%"
+HKCR,ChannelFile\Shell\Edit\Command,,,"notepad.exe %1"
+HKCR,ChannelFile\Shell\Open\Command,,,"explorer /root,%CLSID_CDFVIEW%,%L"
+HKCR,ChannelFile\Shell\Explore\Command,,,"explorer /e,/root,%CLSID_CDFVIEW%,%L"
+HKCR,ChannelFile\Shell\OpenChannel,,,"%OPEN_CHANNEL%"
+HKCR,ChannelFile\Shell\OpenChannel\Command,,,"rundll32 %CDFVIEW_DLL%,OpenChannel %L"
+HKCR,ChannelFile\ShellEx\IconHandler,,,"%CLSID_CDFICONHANDLER%"
+HKCR,ChannelFile\ShellEx\%IID_IExtractImage%,,,%CLSID_CDFICONHANDLER%
+HKCR,ChannelFile\ShellEx\%IID_IShellLink%,,,%CLSID_CDFICONHANDLER%
+HKCR,ChannelFile\ShellEx\%IID_IQueryInfo%,,,%CLSID_CDFICONHANDLER%
+HKCR,ChannelFile\ShellFolder,"Attributes",1,a0,01,00,A0
+
+;
+; Channel shortcut
+;
+
+HKCR,ChannelShortcut,,,%CHANNEL_SHORTCUT%
+HKCR,ChannelShortcut\CLSID,,,%CLSID_CDFINI%
+HKCR,ChannelShortcut\DefaultIcon,,,"%1"
+HKCR,ChannelShortcut\Shell,,,"%OPEN_CHANNEL%"
+HKCR,ChannelShortcut\Shell\OpenChannel,,,"%OPEN_CHANNEL%"
+HKCR,ChannelShortcut\Shell\OpenChannel\Command,,,"rundll32 %CDFVIEW_DLL%,OpenChannel %L"
+HKCR,ChannelShortcut\ShellEx\IconHandler,,,"%CLSID_CDFICONHANDLER%"
+HKCR,ChannelShortcut\ShellEx\ContextMenuHandlers\%CLSID_CDFMENUHANDLER%
+HKCR,ChannelShortcut\ShellEx\PropertySheetHandlers\%CLSID_CDFPROPPAGES%
+HKCR,ChannelShortcut\ShellEx\%IID_IExtractImage%,,,%CLSID_CDFICONHANDLER%
+HKCR,ChannelShortcut\ShellEx\%IID_IExtractLogo%,,,%CLSID_CDFICONHANDLER%
+HKCR,ChannelShortcut\ShellEx\%IID_IShellLink%,,,%CLSID_CDFICONHANDLER%
+HKCR,ChannelShortcut\ShellEx\%IID_IQueryInfo%,,,%CLSID_CDFICONHANDLER%
+HKCR,ChannelShortcut\ShellFolder,"Attributes",1,a0,01,00,A0
+
+;
+; MIME type registration.
+;
+
+HKCR,MIME\Database\%CONTENT_TYPE%\application/x-cdf,"Extension",,".cdf"
+HKCR,MIME\Database\%CONTENT_TYPE%\application/cdf,"Extension",,".cdf"
+
+;
+; Unregistration entries.
+;
+
+[CdfView.Unreg]
+HKCR,CLSID\%CLSID_CDFVIEW%
+HKCR,CLSID\%CLSID_ChannelMgr%
+HKCR,CLSID\%CLSID_CDFINI%
+HKCR,CLSID\%CLSID_CDFICONHANDLER%
+HKCR,CLSID\%CLSID_CDFMENUHANDLER%
+HKCR,CLSID\%CLSID_CDFPROPPAGES%
+HKCR,.cdf
+HKCR,ChannelFile
+HKCR,ChannelShortcut
+HKCR,MIME\Database\%CONTENT_TYPE%\application/x-cdf
+HKCR,MIME\Database\%CONTENT_TYPE%\application/cdf
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CDFVIEW%"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CDFINI%"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CDFICONHANDLER%"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CDFMENUHANDLER%"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CDFPROPPAGES%"
+
+
+;
+; No longer used entries that should be cleaned up.  After a sufficient ammount
+; of time these entries can be removed.  
+;
+
+;From ~build 0802 to build 0813
+;HKCR,MIME\Database\ContentType
+
+;From build 0810 to build 0813
+;HKCR,MIME\Database\%CONTENT_TYPE%\text/x-cdf
+
+;From build 0617 to build 0813
+;HKCR,CDFFolder
+
+;
+; Strings used in registration.
+;
+
+[Strings]
+CLSID_CDFVIEW={f39a0dc0-9cc8-11d0-a599-00c04fd64433}
+CLSID_CDFINI={f3aa0dc0-9cc8-11d0-a599-00c04fd64434}
+CLSID_CDFICONHANDLER={f3ba0dc0-9cc8-11d0-a599-00c04fd64435}
+CLSID_ChannelMgr={b3cdae90-d170-11d0-802b-00c04fd75d13}
+CLSID_CDFMENUHANDLER={f3da0dc0-9cc8-11d0-a599-00c04fd64437}
+CLSID_CDFPROPPAGES={f3ea0dc0-9cc8-11d0-a599-00c04fd64438}
+IID_IExtractImage={BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}
+IID_IExtractLogo={D4029EC0-0920-11d1-9A0B-00C04FC2D6C1}
+IID_IShellLink={000214EE-0000-0000-C000-000000000046}
+IID_IQueryInfo={00021500-0000-0000-C000-000000000046}
+CONTENT_TYPE="Content Type"
+CDFVIEW_DLL="cdfview.dll"
+
+;
+; Localizable strings.
+;
+
+CHANNEL_FILE="Channel File"
+CHANNEL_SHORTCUT="Channel Shortcut"
+DESC_CDFICONHANDLER="Channel Handler Object"
+OPEN_CHANNEL="Open Channel"
+SUBSCRIBE="Make Available Offline"
+EDIT="Edit"
+
+[End]

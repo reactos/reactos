@@ -1,0 +1,24 @@
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Add/Remove Programs'
+
+EXPORTS
+;;=========================================================================
+;; these are public APIs that are exported by name
+;;=========================================================================
+
+        DllGetVersion = CCDllGetVersion         PRIVATE
+        DllGetClassObject                       PRIVATE
+        DllCanUnloadNow                         PRIVATE
+        DllInstall                              PRIVATE
+        DllRegisterServer                       PRIVATE
+        DllUnregisterServer                     PRIVATE
+        
+        CPlApplet
+        AppWizard
+
+        SingleMSDOSWizard
+        NewLinkHere
+        NewLinkHereW
+        NewLinkHereA = NewLinkHere
+
+        ConfigStartMenu

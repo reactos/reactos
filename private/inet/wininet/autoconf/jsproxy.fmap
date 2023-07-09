@@ -1,0 +1,29 @@
+// This file is automagically generated.  Do not mess with it!
+
+#ifdef sparc_sunos5
+text = LOAD ?RXO;
+#define FUNCTION(name,fullobj,obj)      text: .text%name: fullobj;
+#define LIBFUNCTION(name,lib,obj)       test: .text%name: lib(obj);
+#endif
+
+// Undef common things that may be in paths.
+#undef unix
+#undef obj
+#undef objd
+#undef sunos5
+
+#ifdef USE_FUNCTION_MAP
+FUNCTION(__0DH_STDES_v,obj/unix/sunos5/jsproxy.o,jsproxy.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sunos5/unxutil.o,unxutil.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sunos5/dllmain.o,dllmain.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sunos5/utils.o,utils.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sunos5/regexp.o,regexp.o)
+FUNCTION(__0DH_STDES_v,obj/unix/sunos5/cscpsite.o,cscpsite.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sunos5/jsproxy.o,jsproxy.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sunos5/unxutil.o,unxutil.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sunos5/dllmain.o,dllmain.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sunos5/utils.o,utils.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sunos5/regexp.o,regexp.o)
+FUNCTION(__0CH_STCON_v,obj/unix/sunos5/cscpsite.o,cscpsite.o)
+FUNCTION(InternetInitializeAutoProxyDll,obj/unix/sunos5/dllmain.o,dllmain.o)
+#endif // COMPILE_OPTION

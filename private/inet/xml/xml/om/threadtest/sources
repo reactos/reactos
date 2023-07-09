@@ -1,0 +1,28 @@
+ROOT=$(MAKEDIR:\xml\om\threadtest=)
+!include $(ROOT)\common.inc
+
+USE_LIBCMT	= 1
+
+TARGETNAME=ttest
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=console
+
+USE_CRTDLL=1
+
+INCLUDES=
+
+!IFDEF FULL_DEBUG
+C_DEFINES=$(C_DEFINES) -D_DEBUG -DFULL_DEBUG
+DEBUG_CRTS=1
+!ENDIF
+
+SOURCES=ttest.cxx\
+        ttest.rc
+
+UMLIBS=$(SDK_LIB_PATH)\ole32.lib         \
+       $(SDK_LIB_PATH)\oleaut32.lib      \
+       $(SDK_LIB_PATH)\urlmon.lib \
+       $(SDK_LIB_PATH)\uuid.lib 
+       
+

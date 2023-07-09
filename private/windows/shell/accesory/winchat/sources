@@ -1,0 +1,60 @@
+!IF 0
+/*---------------------------------------------------------------------------*\
+| APPLICATION BUILD FILE
+|   This module builds the sources for WIN32.
+|
+| FLAGS
+|   -DDEBUG  : enable debug output
+|   -DASSERT : enable assert output
+|
+|
+| created: 29-Dec-92
+| history: 29-Dec-92 <chriswil> created.
+|          19-Oct-93 <chriswil> unicode enabled.
+|
+\*---------------------------------------------------------------------------*/
+!ENDIF
+
+MAJORCOMP=windows
+MINORCOMP=winchat
+
+NTTARGETFILES=copyexe
+
+TARGETNAME=winchat
+TARGETPATH=bin
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+TARGETENTRY=WinMain
+
+C_DEFINES=-DNT -DWIN32 -DDDEMLBUG  -DPROTOCOL_NEGOTIATE -DUNICODE -D_UNICODE -DWINVER=0x0400
+
+
+INCLUDES=.;$(BASEDIR)\public\sdk\inc;$(APPSROOT)\inc;$(BASEDIR)\private\windows\inc;..\..\userpri;$(BASEDIR)\private\inc
+
+
+SOURCES=            \
+        DDE.C       \
+        DIALOGS.C   \
+        WCINIT.C    \
+        WINCHAT.C   \
+        GLOBALS.C   \
+        WINCHAT.rc
+
+
+
+UMTYPE=windows
+UMAPPL=winchat
+UMENTRY=winmain
+UMLIBS=                                          \
+       $(BASEDIR)\public\sdk\lib\*\comdlg32.lib  \
+       $(BASEDIR)\public\sdk\lib\*\shell32.lib   \
+       $(BASEDIR)\public\sdk\lib\*\comctl32.lib  \
+       $(BASEDIR)\public\sdk\lib\*\winmm.lib     \
+       $(BASEDIR)\public\sdk\lib\*\ntlanman.lib  \
+       $(BASEDIR)\public\sdk\lib\*\htmlhelp.lib  \
+       $(BASEDIR)\public\sdk\lib\*\mpr.lib       \
+!if !$(AXP64) && !$(IA64)
+       $(BASEDIR)\public\sdk\lib\*\nddeapi.lib   \
+!endif
+       bin\*\winchat.lib                         \
+       obj\*\winchat.res

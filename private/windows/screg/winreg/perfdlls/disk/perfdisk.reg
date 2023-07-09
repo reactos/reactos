@@ -1,0 +1,13 @@
+REGEDIT4
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\PerfDisk\Performance]
+"Library" = "perfdisk.dll"
+"Open" = "OpenDiskObject"
+"Collect" = "CollectDiskObjectData"
+"Close" = "CloseDiskObject"
+"Object List" = "234 236"
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Application\PerfDisk]
+"EventMessageFile" = "%systemroot%\\system32\\perfdisk.dll"
+"TypesSupported" = dword:00000007
+
+

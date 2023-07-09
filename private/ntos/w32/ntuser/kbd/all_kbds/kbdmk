@@ -1,0 +1,34 @@
+
+# If you want to add a new kbd (let's say kbdxxx):
+# - run "nmake /f kbdmk KBDNEW=kbdxxx"
+#   This command will generate a new kbdxx directory under all_kbds
+#   and will populate it with the "build" files: makefile, makefile.inc, and sources.
+# - addfile the new generated kbdxxx directory and its "build" files
+# - add kbdxxx to all_kbds\dirs
+
+$(KBDNEW):
+    -md $@
+    copy makefile.tpl $(@B)\makefile
+    type << > $@\makefile._xx
+$(@B).c $(@B).h $(@B).rc $(@B).def: ..\..\txt\$(@B).txt
+    kbdtool ^$**
+<<
+    type << > $@\sources._xx
+
+MAJORCOMP=user
+MINORCOMP=$(@B)
+
+TARGETNAME=$(@B)
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+^!INCLUDE ..\..\sources.inc
+
+SOURCES=$(@B).c $(@B).rc
+
+NTTARGETFILE0=$(@B).h $(@B).rc $(@B).def
+<<
+    sed "s/\^//" $@\makefile._xx > $@\makefile.inc
+    del /f $@\makefile._xx
+    sed "s/^\^//" $@\sources._xx > $@\sources
+    del /f $@\sources._xx

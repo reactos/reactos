@@ -1,0 +1,44 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+
+TARGETNAME=cryptscn
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+UMTYPE=console
+
+INCLUDES=   $(BASEDIR)\private\windows\base\ntcrypto\inc;
+
+SOURCES= cryptscn.c
+
+TARGETLIBS= \
+       $(BASEDIR)\private\lib\*\rsa32.lib \
+       $(BASEDIR)\public\sdk\lib\*\user32.lib \
+       $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+
+C_DEFINES=$(C_DEFINES) -DRPC_NO_WINDOWS_H -DUNICODE
+
+#USE_CRTDLL=1
+

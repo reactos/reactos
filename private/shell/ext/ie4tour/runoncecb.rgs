@@ -1,0 +1,24 @@
+HKCR
+{
+	RunOnceCheckBox.RunOnceCheckBox.1 = s 'RunOnceCheckBox Class'
+	{
+		CLSID = s '{D81A5542-0F4E-11D1-9671-00A0C9054168}'
+	}
+	RunOnceCheckBox.RunOnceCheckBox = s 'RunOnceCheckBox Class'
+	{
+		CurVer = s 'RunOnceCheckBox.RunOnceCheckBox.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {D81A5542-0F4E-11D1-9671-00A0C9054168} = s 'RunOnceCheckBox Class'
+		{
+			ProgID = s 'RunOnceCheckBox.RunOnceCheckBox.1'
+			VersionIndependentProgID = s 'RunOnceCheckBox.RunOnceCheckBox'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

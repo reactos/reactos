@@ -1,0 +1,18 @@
+TARGETNAME=fixlinks
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+INCLUDES=..\ztools\inc
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=fixlinks.c fixlinks.rc
+
+C_DEFINES=-D_OS2_20_=0 -Dnear= -Dfar= -Dpascal=
+
+UMTYPE=console
+UMLIBS=$(SDK_LIB_PATH)\setargv.obj  \
+       $(SDK_LIB_PATH)\shell32.lib  \
+       $(SDK_LIB_PATH)\ole32.lib    \
+       $(SDK_LIB_PATH)\uuid.lib     \
+       $(SDK_LIB_PATH)\user32.lib

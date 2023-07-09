@@ -1,0 +1,7 @@
+DIRS=\
+    cmn    \
+    ctl    \
+    srv    \
+    avprop \
+    ext    
+

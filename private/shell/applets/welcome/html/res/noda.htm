@@ -1,0 +1,45 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>DA Sample</TITLE>
+<LINK REL=stylesheet HREF=styles.css TYPE="text/css">
+<style>
+#topimage
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index:20;
+}
+</style>
+<script LANGUAGE=JScript src=welcome.js></script>
+<script LANGUAGE=JScript FOR=window EVENT=OnLoad>
+  window.onerror = EatErrors;
+  ReturnToDefault();
+  SetContentHeight();
+</script>
+</HEAD>
+<!-- HACK NOTE: the property "basedir" is dynamically set on the body tag by the container.
+     This property contains the windows directory path without a trailing slash (eg "c:\winnt"). -->
+<BODY scroll=no>
+<img ID=banner src="title.gif">
+<img ID=topimage src="top.gif">
+<div ID=contents>
+ <img ID=fadebar src="bar.jpg">
+ <div ID=leftpanel>
+  <div ID=cmdlist onmouseout="TimedSelect();">
+  </div>
+  <table ID=checkboxarea>
+    <tr>
+      <td><input accesskey=s ID=showmecheck type=checkbox checked ONFOCUS="ReturnToDefault();"></td>
+      <td><LABEL for=showmecheck><u>S</u>how this screen at startup.</LABEL></td>
+    </tr>
+  </table>
+ </div>
+ <div id=rightpanel>
+  <div id=header></div>
+  <div id=description></div>
+ </div>
+</div>
+</BODY>
+</HTML>

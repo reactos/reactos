@@ -1,0 +1,28 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\table=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=table
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+    ltable.cxx\
+    ltablekb.cxx\
+    ltableom.cxx\
+    ltcalc.cxx\
+    ltdata.cxx\
+    ltdraw.cxx\
+    ltpos.cxx\
+    ltcell.cxx\
+    ltrowcol.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

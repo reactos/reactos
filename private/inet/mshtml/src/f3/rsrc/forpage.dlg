@@ -1,0 +1,401 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML>
+<HEAD>
+<TITLE>
+Page
+</TITLE>
+
+<!--
+Blocking issues:
+    1.  No color picker available - raid 9692
+    2.  Need browse dialog - raid 9698
+    3.  Can't add BASE and BASEFONT tags to a document through OM - raid 9745
+    4.  Can't put 2d DIV inside BUTTON - raid 9614
+    5.  No ACCESSKEY for BUTTON tag - raid 8847
+    6.  Show modal dialog not working - raid 9281
+    7.  No tab index
+    8.  No font list - raid 9693
+
+To do:
+    1.  localization
+    2.  Once raid 9614 is fixed, the color button needs to be changed to have a 2d div inside it
+        instead of on top of it.
+-->
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    //  Set dialog dimensions
+    window.dialogLeft = 50;
+    window.dialogTop = 100;
+    window.dialogWidth = 390;
+    window.dialogHeight = 335;
+
+    //  Constants
+    var htmlNotSet = "";
+    var htmlBGPropertiesFixed = "fixed";
+
+    var htmlKeyReturn = 13;
+    var htmlKeyEscape = 27;
+
+    //  Global variables
+    var gdocPage;     //  The document we're modifying the background of.
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=document EVENT="keyPress(scrElement)">
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Looks for the ENTER and ESC keypresses and runs the
+    //              appropriate action.
+    //
+    //-----------------------------------------------------------------------
+
+        var dummy;
+
+        if (event.keyCode == htmlKeyReturn)                     //  Enter
+        {
+            btnOKClick();
+            btnOK.focus();
+        }
+
+        else if (event.keyCode == htmlKeyEscape)     //  Esc
+        {
+            btnCancelClick();
+        }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function btnCancelClick()
+    {
+        window.close();
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=VBScript>
+
+        function elmCount()
+                dim gdocPage
+                set gdocPage = window.dialogArguments
+                elmCount = gdocPage.all.count
+        end function
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function bdyLoad()
+    {
+
+    //+-----------------------------------------------------------------------------------------------
+    //
+    //  Synopsis:   Looks at the settings for the current document and fills the dialog box
+    //              accordingly.
+    //
+    //-------------------------------------------------------------------------------------------------
+
+        var elm;                        //      Element holding variable
+                var index;
+
+                gdocPage = window.dialogArguments;
+
+                selFont.selectedIndex = 2       //      Sets base font size to 0
+
+                //
+                //      Get base URL BUGBUG For some reason, document.all.count and document.all.tags("base")
+                //      don't work from JavaScript.
+                //
+                elm = gdocPage.all;
+                for (index = 0; index < elmCount(); index++)
+                {
+                        if (elm[index].tagName == "base")
+                        {
+                                txtBaseURL.value = elm[index].href;
+                                break;
+                        }
+                }
+
+                //
+                //      Get title
+                //
+                txtTitle.value = gdocPage.title
+
+                //
+                //      Get margins BUGBUG Value property of margins may go away.
+                //
+                txtTop.value = gdocPage.body.topMargin.value
+                txtLeft.value = gdocPage.body.leftMargin.value
+                txtBottom.value = gdocPage.body.bottomMargin.value
+                txtRight.value = gdocPage.body.rightMargin.value
+
+                //
+                // Get Base font info BUGBUG For some reason, document.all.count and document.all.tags("base")
+                //      don't work from JavaScript.
+                //
+                for (index = 0; index < elmCount(); index++)
+                {
+                        if (elm[index].tagName == "basefont")
+                        {
+                                // BUGBUG Can't set face until a font list is available
+                                selFont.selectedIndex = (elm[index].size + 2);
+                                tdColor.bgcolor = elm[index].color;
+                                break;
+                        }
+                }
+
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+        function btnColorClick()
+        {
+                alert("No color picker available yet.");
+        }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+        function btnLinkClick()
+        {
+                alert("No link dialog available yet.");
+        }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+        function btnMetaClick()
+        {
+                alert("No meta dialog available yet.");
+        }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+        function btnOKClick()
+
+        //+---------------------------------------------------------------------------------
+        //
+        //      Synopsis:       Goes through the settings on the dialog and updates the
+        //                              page accordingly.
+    //
+    //----------------------------------------------------------------------------------
+
+        {
+
+        var elm;    //  Element holding variable
+        var index;
+
+        //
+        //  The title:
+        //
+        gdocPage.title = txtTitle.value;
+
+        //
+        //  The margins: BUGBUG The value property for margins may go away.
+        //
+        with (gdocPage.body)
+        {
+            topMargin.value = txtTop.value;
+            leftMargin.value = txtLeft.value;
+            bottomMargin.value = txtBottom.value;
+            rightMargin.value = txtRight.value;
+        }
+
+        //
+        //  The base font: BUGBUG I can't figure out how to add this tag if
+        //  it doesn't already exist. BUGBUG For some reason, document.all.count
+        //  and document.all.tags("base") don't work from JavaScript.
+        //
+        elm = gdocPage.all
+        for (index = 0; index < elmCount(); index++)
+        {
+            if (elm[index].tagName == "basefont")
+            {
+                //  BUGBUG Can't set face until font list is available
+                elm[index].color = tdColor.bgcolor;
+                elm[index].size = (selFont.selectedIndex - 2);
+                break;
+            }
+        }
+
+        //
+        //  The base URL: BUGBUG I can't figure out how to add this tag if
+        //  it doesn't already exist. BUGBUG For some reason, document.all.count
+        //  and document.all.tags("base") don't work from JavaScript.
+        //
+        for (index = 0; index < elmCount(); index++)
+        {
+            if (elm[index].tagName == "base")
+            {
+                elm[index].href = txtBaseURL.value;
+                break;
+            }
+        }
+
+
+        window.close();
+
+        }
+
+</SCRIPT>
+
+</HEAD>
+<BODY BACKGROUND="waves.gif" onload="bdyLoad()">
+<DIV style=" WIDTH: 367px; HEIGHT: 297px">
+
+<TABLE style="position: absolute; LEFT: 38; TOP: 190; WIDTH: 30; HEIGHT: 15">
+<TR>
+<TD ID=tdcolor BGCOLOR="black" onclick="btnColorClick()">
+<DIV style="position: absolute; WIDTH: 30; HEIGHT: 15">
+</DIV>
+</TD>
+</TR>
+</TABLE>
+
+<DIV style="position: absolute; LEFT: 0px; TOP: 32px; WIDTH: 136px; HEIGHT: 16px">
+<LABEL FOR=txtBaseURL ACCESSKEY=a>
+B<U>a</U>se URL (optional):
+</LABEL>
+</DIV>
+<INPUT type=text id=txtBaseURL
+style="LEFT: 0px; TOP: 48px; WIDTH: 360px; HEIGHT: 17px" value="">
+<DIV
+style="position: absolute; LEFT: 8px; TOP: 80px; WIDTH: 56px; HEIGHT: 16px">Margin:
+</DIV>
+<DIV
+style="position: absolute; LEFT: 16px; TOP: 104px; WIDTH: 40px; HEIGHT: 16px">
+<LABEL FOR=txtTop ACCESSKEY=o>
+T<U>o</U>p:
+<LABEL>
+</DIV>
+<DIV
+style="position: absolute; LEFT: 88px; TOP: 104px; WIDTH: 40px; HEIGHT: 16px">
+<LABEL FOR=txtLeft ACCESSKEY=l>
+<U>L</U>eft:
+<LABEL>
+</DIV>
+<DIV
+style="position: absolute; LEFT: 176px; TOP: 104px; WIDTH: 56px; HEIGHT: 16px">
+<LABEL FOR=txtBottom ACCESSKEY=b>
+<U>B</U>ottom:
+</LABEL>
+</DIV>
+<DIV
+style="position: absolute; LEFT: 280px; TOP: 104px; WIDTH: 40px; HEIGHT: 16px">
+<LABEL FOR=txtRight ACCESSKEY=r>
+<U>R</U>ight:
+</LABEL>
+</DIV>
+<INPUT type=text id=txtTop
+style="LEFT: 16px; TOP: 120px; WIDTH: 64px; HEIGHT: 17px" value="">
+<INPUT type=text id=txtLeft
+style="LEFT: 88px; TOP: 120px; WIDTH: 72px; HEIGHT: 17px" value="">
+<INPUT type=text id=txtBottom
+style="LEFT: 176px; TOP: 120px; WIDTH: 72px; HEIGHT: 17px" value="">
+<INPUT type=text id=txtRight
+style="LEFT: 280px; TOP: 120px; WIDTH: 56px; HEIGHT: 17px" value="">
+<DIV
+style="position: absolute; LEFT: 8px; TOP: 152px; WIDTH: 64px; HEIGHT: 16px">Basefont:
+</DIV>
+<DIV
+style="position: absolute; LEFT: 16px; TOP: 176px; WIDTH: 48px; HEIGHT: 16px">
+<LABEL FOR=btnColor ACCESSKEY=c>
+<U>C</U>olor:
+</LABEL>
+</DIV>
+<DIV
+style="position: absolute; LEFT: 96px; TOP: 176px; WIDTH: 40px; HEIGHT: 16px">
+<LABEL FOR=selFace ACCESSKEY=e>
+Fac<U>e</U>:
+</LABEL>
+</DIV>
+<DIV
+style="position: absolute; LEFT: 248px; TOP: 176px; WIDTH: 40px; HEIGHT: 16px">
+<LABEL FOR=selFont ACCESSKEY=n>
+Fo<U>n</U>t:
+</LABEL>
+</DIV>
+
+<!--
+<INPUT id=btnColor style="LEFT: 16px; TOP: 192px; WIDTH: 72px; HEIGHT: 23px"
+type=button value="" onclick="btnColorClick()">
+-->
+<BUTTON id=btnColor style="LEFT: 16px; TOP: 192px; WIDTH: 72px; HEIGHT: 23px"
+onclick="btnColorClick()">
+</BUTTON>
+
+<SELECT id=selFace style="LEFT: 96px; TOP: 192px; WIDTH: 143px; HEIGHT: 25px">
+<OPTION>No font list available</OPTION>
+</SELECT>
+
+<SELECT id=selFont style="LEFT: 248px; TOP: 192px; WIDTH: 96px; HEIGHT: 27px">
+<OPTION>-2</OPTION>
+<OPTION>-1</OPTION>
+<OPTION>0</OPTION>
+<OPTION>1</OPTION>
+<OPTION>2</OPTION>
+<OPTION>3</OPTION>
+<OPTION>4</OPTION>
+</SELECT>
+
+<!--
+<INPUT id=btnMeta style="LEFT: 8px; TOP: 232px; WIDTH: 95px; HEIGHT: 23px"
+type=button value=Meta onclick="btnMetaClick()">
+-->
+<DIV style="position: absolute; LEFT: 8px; TOP: 232px; WIDTH: 95px; HEIGHT: 23px">
+<BUTTON id=btnMeta onclick="btnMetaClick()" ACCESSKEY=m>
+<U>M</U>eta
+</BUTTON>
+</DIV>
+
+<!--
+<INPUT id=btnLink style="LEFT: 112px; TOP: 232px; WIDTH: 95px; HEIGHT: 23px"
+type=button value=Link onclick="btnLinkClick()">
+-->
+<DIV style="position: absolute; LEFT: 112px; TOP: 232px; WIDTH: 95px; HEIGHT: 23px">
+<BUTTON id=btnLink onclick="btnLinkClick()" ACCESSKEY=l>
+<U>L</U>ink
+</BUTTON>
+</DIV>
+
+<!--
+<INPUT id=btnCancel style="LEFT: 264px; TOP: 264px; WIDTH: 95px; HEIGHT: 23px"
+type=button name="" value=Cancel onclick="btnCancelClick()">
+-->
+<DIV style="position: absolute; LEFT: 264px; TOP: 264px; WIDTH: 95px; HEIGHT: 23px">
+<BUTTON id=btnCancel onclick="btnCancelClick()">
+Cancel
+</BUTTON>
+</DIV>
+
+<!--
+<INPUT id=btnOK style="LEFT: 160px; TOP: 264px; WIDTH: 95px; HEIGHT: 23px"
+type=button value=OK onclick="btnOKClick()">
+-->
+<DIV style="position: absolute; LEFT: 160px; TOP: 264px; WIDTH: 95px; HEIGHT: 23px">
+<BUTTON id=btnOK onclick="btnOKClick()">
+OK
+</BUTTON>
+</DIV>
+
+<INPUT type=text id=txtTitle
+style="LEFT: 48px; TOP: 8px; WIDTH: 312px; HEIGHT: 17px" value="">
+<DIV style="position: absolute; LEFT: 0px; TOP: 8px; WIDTH: 88px; HEIGHT: 16px">
+<LABEL FOR=txtTitle ACCESSKEY=t>
+<U>T</U>itle:
+</LABEL>
+</DIV>
+
+<IMG SRC="authfla.gif" style="LEFT: 0px; TOP: 255px">
+
+</DIV>
+
+</BODY></HTML>

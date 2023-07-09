@@ -1,0 +1,236 @@
+user assistance
+980227
+andyp, lamadio, et. al.
+
+- abstract
+...
+
+- contents
+...
+    overview
+    ...
+    events
+    sessions, counts, and aging
+    aging
+    (todo)
+    testing: hooks, utils, etc.
+    testing: scenarios
+    testing: specifics
+    testing: anomalies
+
+- overview
+...
+
+uassist events
+intelli-menu
+app mgmt
+
+- ...
+...
+
+- events
+IUserAssist
+    FireEvent(pguidGrp, eCmd, dword, wP, lP)
+    Set/QueryEvent(..., puai)
+
+    guid,cmd,dword,wP,lP
+
+events
+    standard: UI*, RUN*, etc.
+    user: USER+n (NYI)
+
+logging
+    guid,cmd,wP,lP
+    typically encoded as "cmd:wP,lP"
+        RUNPIDL:%csidl2%/vb/readme.lnk
+        RUNPIDL:%csidl2%/command prompt.lnk
+        RUNWMCMD:0xff,1f8
+
+instrumentation
+    beta-only (but must test!)
+    just like logging, but...            
+        not aged
+        "UserAssist2" not UserAssist
+    regkey Instrument = DWORD 1
+
+registry
+    set uassist=$HKCU/sw/msft/win/cv/explorer/UserAssist
+    $uassist/{guid}/Count/...
+
+compression and encryption
+    NYI
+
+- sessions, counts, and aging
+we have several records:
+    ctlsession      qtMru, sidCur
+    ctlcount:ctor   sidMru, cCnt
+    foo             sidMru, cCnt
+
+each daily login to windows defines (roughly) a session.  a logged item
+consists of a 'decayed' count and a MRU session time.  there is a magic
+default 'ctor' item which serves as a proxy for not-yet-created items.
+
+a UASession has a session id, and a timestamp for the last update to that id.
+sidCur is updated at shutdown time *if* 12 hours have passed since the last
+incr.
+
+the time is a UATIME, stored in 1-minute (approx) increments (we take a
+system time, turn it into a file time, and shift it by >> 29).  we chose
+this to fit in a DWORD, last forever, be easy to compute, and (ideally)
+be in 'intuitive' units.  (given that we only store it in one place this
+may not be necessary; originally the time was stored in many places,
+hence the constraints).
+
+a UACount has a count cCnt and a session id sidMru for the last update
+to that count.
+
+there is a special count, ctlcount:ctor, which we return on a Query for
+a non-existent entry.  for correctness and perf, we don't want to create
+an entry on a Query (menu reference), only on a Set (menu leaf invoke).
+however we want the Query's to behave *as if* they started out w/ a count
+of 1 and then were aged.  'inheriting' ctlcount:ctor lets us do this.
+
+note that count:ctor is used for *all* counts: menus, app mgmt, etc.  so
+once it ages down to 0, everyone who refs it will look like 0.
+
+BUGBUG this may cause pblms for app installs (if you install an app but
+haven't yet used it, it will look like its unused).  there is a way to
+tell if a count came from a default or not, so probably that should be
+used in this case.
+
+similar issues exist when changing (adding/moving) menu items.  should
+changing an item increment its count?  if not, untouched things which
+are moved after count:ctor ages to 0 
+
+the sidMru's are kept around for aging.  read on...
+
+- sessions
+a session is defined as a logoff *plus* a minimum time interval.  that is,
+one can logon/off many times, but only 1 session will pass each 12 hours.
+
+we also have an idle timer.  going idle for 12 hours forces a session.  note
+however that we only force one such session (so if one is idle for a 1 week
+vacation, it is still just 1 session).
+
+'idle' means no keyboard or mouse changes.
+
+on nt5 our idle detection is exact.  on nt4 we must simulate some things,
+causing as much as a 2x error.  (todo: checking for IdleTime more frequently,
+e.g. at 0.25*SessionTime, could reduce this error considerably).
+
+- aging
+aging is done lazily.
+
+(Query is really a GetCount, Set is really an IncCount)
+
+the cCnt in a UACount is (usually) unaged.  it, together w/ the sidMru
+give an 'aged' count.  on a Query, we age cCnt w.r.t. sidMru to give
+a 'real' count.  a Query does not update the UACount; it simply computes
+what it 'should' be and returns the result.
+
+the only time we actually update a UACount is when we Set it.  in that
+case, we age it (per Query), add 1, and then store back out the new
+(aged) cCnt and the new (now!) sidMru.
+
+we currently don't delete a UACount when it ages to 0 (on Query).
+BUGBUG we probably should.
+
+we currently don't scavenge UACounts which would be aged to 0 if queried.
+BUGBUG we probably should.
+
+- registry keys
+we support the following registry keys (currently just for debugging):
+    $uassist/Settings/
+        SessionTime         (12 hrs) min time (mins) between sessions
+        IdleTime            (12 hrs) min idle time (mins) before force session
+        Backup              (0) rename keys to "del.xxx" rather than deleting
+        NoPurge             (0) don't auto-delete keys when they decay to 0
+        NoEncrypt           (0) don't encrypt keys
+        NoLog               (0) turn off all logging
+        Instrument          (0) turn on instrumentation (UserAssist2, no decay)
+
+while these could be exposed if we see fit, we should not do so w/o signoff
+from PM, dev, qa, and docs (since all would be impacted).
+
+the keys are read once on explorer startup.  thus if they're changed you
+must restart explorer (e.g. logoff/logon).
+
+- todo (BUGBUG)
+version # in UserAssist section!  done.
+naming: uem* -> ua*
+
+- testing: hooks, utils, etc.
+we have several hooks/etc. for testing.
+    force a new session immediately (simulate a reboot and a 12-hour delay)
+        set 'SessionTime' regkey to 0 minutes between sessions
+        alt+F4 to shutdown windows
+        cancel
+    force the menus to refresh (simulate a reboot)
+        turn off intelli-menus
+        turn back on
+        'new session' (above) also does this
+    turn off all logging (to measure perf hit)
+        set 'NoLog' regkey to 1
+        BUGBUG this is obsolescent; fix this!
+
+(NYI: in progress)
+there are utils to dump IDMs, etc.  these can form the basis for a dump
+utility which prints the UAssist data in symbolic form.
+
+- testing: scenarios
+...
+
+- testing: specifics
+post-install
+    - everything should look like it has a count of 1
+    - after a few sessions, everything which hasn't been clicked since
+    install should disappear (since the 'default' count will age to 0)
+
+count aging: does it happen correctly
+
+time/count wrap: what happens when various counts wrap
+    - session id and MRU time
+    - item count and MRU session
+    - ctlsession gets deleted/recreated to sid=0, so other counts reference
+    bigger sids and math goes < 0 (like wrap?)
+
+default counts
+
+missing entries
+    clicking on a leaf should create entries for it and all grand-parents
+
+extra entries
+    querying an item should *not* create *any* reg entries
+
+top-level menu should never go away (e.g. docs, pgms, help, etc.).
+
+NYI: regkey should be deleted when count ages down to 0 (to keep size down).
+
+NYI: registry should be scavenged periodically to find 0's.
+
+NYI: reentrancy.  e.g. browse in separate process!
+
+NYI: versioning.
+
+NYI: don't up session id on shutdown if it's not already there (for PSS).
+
+- testing: anomalies
+this section describes known 'weirdness' in the spec and/or implementation.
+it remains to be decided if they're bugs or features.
+
+1. parent not aged, all kids aged, kids come up blank (chevron only).  we've
+been debating what to do about this (and how frequent it will be).  right
+now we're punting (i.e. we're calling this a feature).
+
+2. installing a program doesn't do anything to the counts.  so you can
+install office, then bring up the start menu and not see office!
+
+2b. OEM install is potentially even worse...
+
+3. (and 2c) moving a menu item leaves the old count orphaned, and creates
+no new item.
+
+4. we're currently using office's definition of a 'session'.  we probably
+need something better tailored to windows.
+
+5. logging *must* be off in Germany.

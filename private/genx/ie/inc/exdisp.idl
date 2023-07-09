@@ -1,0 +1,804 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright 1995-1998 Microsoft Corporation. All Rights Reserved.
+//
+//--------------------------------------------------------------------------
+
+import "ocidl.idl";
+import "docobj.idl";
+
+#include <olectl.h>
+#include "exdispid.h"
+
+[
+    uuid(EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B), // LIBID_ShDocVw
+    helpstring("Microsoft Internet Controls"),
+    lcid(0x0000),
+    version(1.1)
+]
+library SHDocVw {
+
+    importlib("stdole2.tlb");
+
+    [
+        uuid(EAB22AC1-30C1-11CF-A7EB-0000C05BAE0B), // IID_IWebBrowser
+        helpstring("Web Browser interface"),
+        helpcontext(0x0000),
+        hidden,
+        dual,
+        oleautomation,
+        odl
+    ]
+    interface IWebBrowser : IDispatch
+    {
+        [id(100), helpstring("Navigates to the previous item in the history list."), helpcontext(0x0000)]
+        HRESULT GoBack();
+        [id(101), helpstring("Navigates to the next item in the history list."), helpcontext(0x0000)]
+        HRESULT GoForward();
+        [id(102), helpstring("Go home/start page."), helpcontext(0x0000)]
+        HRESULT GoHome();
+        [id(103), helpstring("Go Search Page."), helpcontext(0x0000)]
+        HRESULT GoSearch();
+
+        [id(104), helpstring("Navigates to a URL or file."), helpcontext(0x0000)]
+        HRESULT Navigate([in] BSTR URL,
+                         [in, optional] VARIANT * Flags,
+                         [in, optional] VARIANT * TargetFrameName,
+                         [in, optional] VARIANT * PostData,
+                         [in, optional] VARIANT * Headers);
+        typedef
+        [
+            uuid(14EE5380-A378-11cf-A731-00A0C9082637),
+            helpstring("Constants for WebBrowser navigation flags")
+        ]
+        enum BrowserNavConstants {
+            [helpstring("Open in new window")]          navOpenInNewWindow = 0x0001,
+            [helpstring("Exclude from history list")]   navNoHistory = 0x0002,
+            [helpstring("Don't read from cache")]       navNoReadFromCache = 0x0004,
+            [helpstring("Don't write from cache")]      navNoWriteToCache = 0x0008,
+            [helpstring("Try other sites on failure")]  navAllowAutosearch = 0x0010,
+            [helpstring("OpenBrowserBar")]              navBrowserBar = 0x0020,
+        } BrowserNavConstants;
+
+        [id(DISPID_REFRESH), helpstring("Refresh the currently viewed page."), helpcontext(0x0000)]
+        HRESULT Refresh();
+
+        // The standard Refresh takes no parameters and we need some... use a new name
+        [id(105), helpstring("Refresh the currently viewed page."), helpcontext(0x0000)]
+        HRESULT Refresh2([in,optional] VARIANT * Level);
+
+        typedef
+        [
+            uuid(C317C261-A991-11cf-A731-00A0C9082637),
+            helpstring("Constants for Refresh")
+        ]
+        enum RefreshConstants {                                         // must map to these in sdk\inc\docobj.h
+            [helpstring("Refresh normal")]     REFRESH_NORMAL     = 0,  //== OLECMDIDF_REFRESH_NORMAL
+            [helpstring("Refresh if expired")] REFRESH_IFEXPIRED  = 1,  //== OLECMDIDF_REFRESH_IFEXPIRED
+            [helpstring("Refresh completely")] REFRESH_COMPLETELY = 3   //== OLECMDIDF_REFRESH_COMPLETELY
+        } RefreshConstants;
+
+        [id(106), helpstring("Stops opening a file."), helpcontext(0x0000)]
+        HRESULT Stop();
+
+        // Automation heirarchy...
+        [id(200), propget, helpstring("Returns the application automation object if accessible, this automation object otherwise.."), helpcontext(0x0000)]
+        HRESULT Application([out,retval] IDispatch** ppDisp);
+
+        [id(201), propget, helpstring("Returns the automation object of the container/parent if one exists or this automation object."), helpcontext(0x0000)]
+        HRESULT Parent([out,retval] IDispatch** ppDisp);
+
+        [id(202), propget, helpstring("Returns the container/parent automation object, if any."), helpcontext(0x0000)]
+        HRESULT Container([out,retval] IDispatch** ppDisp);
+
+        [id(203), propget, helpstring("Returns the active Document automation object, if any."), helpcontext(0x0000)]
+        HRESULT Document([out,retval] IDispatch** ppDisp);
+
+        [id(204), propget, helpstring("Returns True if this is the top level object."), helpcontext(0x0000)]
+        HRESULT TopLevelContainer([out, retval] VARIANT_BOOL* pBool);
+
+        [id(205), propget, helpstring("Returns the type of the contained document object."), helpcontext(0x0000)]
+        HRESULT Type([out,retval] BSTR* Type);
+
+        // Window stuff...
+        [id(206), propget, helpstring("The horizontal position (pixels) of the frame window relative to the screen/container."), helpcontext(0x0000)]
+        HRESULT Left([out, retval] long *pl);
+        [id(206), propput]
+        HRESULT Left([in] long Left);
+        [id(207), propget, helpstring("The vertical position (pixels) of the frame window relative to the screen/container."), helpcontext(0x0000)]
+        HRESULT Top([out, retval] long *pl);
+        [id(207), propput]
+        HRESULT Top([in] long Top);
+        [id(208), propget, helpstring("The horizontal dimension (pixels) of the frame window/object."), helpcontext(0x0000)]
+        HRESULT Width([out, retval] long *pl);
+        [id(208), propput]
+        HRESULT Width([in] long Width);
+        [id(209), propget, helpstring("The vertical dimension (pixels) of the frame window/object."), helpcontext(0x0000)]
+        HRESULT Height([out, retval] long *pl);
+        [id(209), propput]
+        HRESULT Height([in] long Height);
+
+        // WebBrowser stuff...
+        [id(210), propget, helpstring("Gets the short (UI-friendly) name of the URL/file currently viewed."), helpcontext(0x0000)]
+        HRESULT LocationName([out,retval] BSTR *LocationName);
+
+        [id(211), propget, helpstring("Gets the full URL/path currently viewed."), helpcontext(0x0000)]
+        HRESULT LocationURL([out,retval] BSTR * LocationURL);
+
+        // Added a property to see if the viewer is currenly busy or not...
+        [id(212), propget, helpstring("Query to see if something is still in progress."), helpcontext(0x0000)]
+        HRESULT Busy([out,retval] VARIANT_BOOL *pBool);
+    }
+
+    [
+        uuid(EAB22AC2-30C1-11CF-A7EB-0000C05BAE0B), // DIID_DWebBrowserEvents
+        helpstring("Web Browser Control Events (old)"),
+        hidden
+    ]
+    dispinterface DWebBrowserEvents
+    {
+        properties:
+        methods:
+        [id(DISPID_BEFORENAVIGATE), helpstring("Fired when a new hyperlink is being navigated to."), helpcontext(0x0000)]
+        void BeforeNavigate([in] BSTR URL, long Flags, BSTR TargetFrameName, VARIANT * PostData, BSTR Headers, [in, out]VARIANT_BOOL * Cancel);
+
+        [id(DISPID_NAVIGATECOMPLETE), helpstring("Fired when the document being navigated to becomes visible and enters the navigation stack."), helpcontext(0x0000)]
+        void NavigateComplete([in] BSTR URL );
+
+        [id(DISPID_STATUSTEXTCHANGE), helpstring("Statusbar text changed."), helpcontext(0x0000)]
+        void StatusTextChange([in]BSTR Text);
+
+        [id(DISPID_PROGRESSCHANGE), helpstring("Fired when download progress is updated."), helpcontext(0x0000)]
+        void ProgressChange([in] long Progress, [in] long ProgressMax);
+
+        [id(DISPID_DOWNLOADCOMPLETE), helpstring("Download of page complete."), helpcontext(0x0000)]
+        void DownloadComplete();
+
+        [id(DISPID_COMMANDSTATECHANGE), helpstring("The enabled state of a command changed"), helpcontext(0x0000)]
+        void CommandStateChange([in] long Command, [in] VARIANT_BOOL Enable);
+
+        [id(DISPID_DOWNLOADBEGIN), helpstring("Download of a page started."), helpcontext(0x000)]
+        void DownloadBegin();
+
+        [id(DISPID_NEWWINDOW), helpstring("Fired when a new window should be created."), helpcontext(0x0000)]
+        void NewWindow([in] BSTR URL, [in] long Flags, [in] BSTR TargetFrameName, [in] VARIANT * PostData, [in] BSTR Headers, [in,out] VARIANT_BOOL * Processed);
+
+        [id(DISPID_TITLECHANGE), helpstring("Document title changed."), helpcontext(0x0000)]
+        void TitleChange([in]BSTR Text);
+
+        [id(DISPID_FRAMEBEFORENAVIGATE), helpstring("Fired when a new hyperlink is being navigated to in a frame."), helpcontext(0x0000)]
+        void FrameBeforeNavigate([in] BSTR URL, long Flags, BSTR TargetFrameName, VARIANT * PostData, BSTR Headers, [in, out]VARIANT_BOOL * Cancel);
+
+        [id(DISPID_FRAMENAVIGATECOMPLETE), helpstring("Fired when a new hyperlink is being navigated to in a frame."), helpcontext(0x0000)]
+        void FrameNavigateComplete([in] BSTR URL );
+
+        [id(DISPID_FRAMENEWWINDOW), helpstring("Fired when a new window should be created."), helpcontext(0x0000)]
+        void FrameNewWindow([in] BSTR URL, [in] long Flags, [in] BSTR TargetFrameName, [in] VARIANT * PostData, [in] BSTR Headers, [in,out] VARIANT_BOOL * Processed);
+
+        // The following are IWebBrowserApp specific:
+        //
+        [id(DISPID_QUIT), helpstring("Fired when application is quiting."), helpcontext(0x0000)]
+        void Quit([in, out] VARIANT_BOOL * Cancel);
+
+        [id(DISPID_WINDOWMOVE), helpstring("Fired when window has been moved."), helpcontext(0x0000)]
+        void WindowMove();
+
+        [id(DISPID_WINDOWRESIZE), helpstring("Fired when window has been sized."), helpcontext(0x0000)]
+        void WindowResize();
+
+        [id(DISPID_WINDOWACTIVATE), helpstring("Fired when window has been activated."), helpcontext(0x0000)]
+        void WindowActivate();
+
+        [id(DISPID_PROPERTYCHANGE), helpstring("Fired when the PutProperty method has been called."), helpcontext(0x0000)]
+        void PropertyChange([in] BSTR Property);
+    }
+
+    typedef
+    [
+        uuid(34A226E0-DF30-11CF-89A9-00A0C9054129),
+        helpstring("Constants for WebBrowser CommandStateChange")
+    ]
+    enum CommandStateChangeConstants {
+        [helpstring("Command Change")]      CSC_UPDATECOMMANDS  = 0xFFFFFFFF,
+        [helpstring("Navigate Forward")]    CSC_NAVIGATEFORWARD = 0x00000001,
+        [helpstring("Navigate Back")]       CSC_NAVIGATEBACK    = 0x00000002,
+    } CommandStateChangeConstants;
+
+    [
+        uuid(0002DF05-0000-0000-C000-000000000046), // IID_IWebBrowserApp
+        helpstring("Web Browser Application Interface."),
+        helpcontext(0x0000),
+        hidden,
+        oleautomation,
+        dual
+    ]
+    interface IWebBrowserApp : IWebBrowser
+    {
+        [id(300), helpstring("Exits application and closes the open document."), helpcontext(0x0000)]
+        HRESULT Quit();
+
+        [id(301), helpstring("Converts client sizes into window sizes."), helpcontext(0x0000)]
+        HRESULT ClientToWindow([in,out] int* pcx, [in,out] int* pcy);
+
+        [id(302), helpstring("Associates vtValue with the name szProperty in the context of the object."), helpcontext(0x0000)]
+        HRESULT PutProperty([in] BSTR Property, [in] VARIANT vtValue);
+
+        [id(303), helpstring("Retrieve the Associated value for the property vtValue in the context of the object."), helpcontext(0x0000)]
+        HRESULT GetProperty([in] BSTR Property, [out, retval] VARIANT *pvtValue);
+
+        [id(0), propget, helpstring("Returns name of the application."), helpcontext(0x0000)]
+        HRESULT Name([out,retval] BSTR* Name);
+
+        [id(DISPID_HWND), propget, helpstring("Returns the HWND of the current IE window."), helpcontext(0x0000)]
+        HRESULT HWND([out,retval] long *pHWND);
+
+        [id(400), propget, helpstring("Returns file specification of the application, including path."), helpcontext(0x0000)]
+        HRESULT FullName([out,retval] BSTR* FullName);
+
+        [id(401), propget, helpstring("Returns the path to the application."), helpcontext(0x0000)]
+        HRESULT Path([out,retval] BSTR* Path);
+
+        [id(402), propget, helpstring("Determines whether the application is visible or hidden."), helpcontext(0x0000)]
+        HRESULT Visible([out, retval] VARIANT_BOOL* pBool);
+        [id(402), propput, helpstring("Determines whether the application is visible or hidden."), helpcontext(0x0000)]
+        HRESULT Visible([in] VARIANT_BOOL Value);
+
+        [id(403), propget, helpstring("Turn on or off the statusbar."), helpcontext(0x0000)]
+        HRESULT StatusBar([out, retval] VARIANT_BOOL* pBool);
+        [id(403), propput, helpstring("Turn on or off the statusbar."), helpcontext(0x0000)]
+        HRESULT StatusBar([in] VARIANT_BOOL Value);
+
+        [id(404), propget, helpstring("Text of Status window."), helpcontext(0x0000)]
+        HRESULT StatusText([out, retval] BSTR *StatusText);
+        [id(404), propput, helpstring("Text of Status window."), helpcontext(0x0000)]
+        HRESULT StatusText([in] BSTR StatusText);
+
+        [id(405), propget, helpstring("Controls which toolbar is shown."), helpcontext(0x0000)]
+        HRESULT ToolBar([out, retval] int * Value);
+        [id(405), propput, helpstring("Controls which toolbar is shown."), helpcontext(0x0000)]
+        HRESULT ToolBar([in] int Value);
+
+        [id(406), propget, helpstring("Controls whether menubar is shown."), helpcontext(0x0000)]
+        HRESULT MenuBar([out, retval] VARIANT_BOOL * Value);
+        [id(406), propput, helpstring("Controls whether menubar is shown."), helpcontext(0x0000)]
+        HRESULT MenuBar([in] VARIANT_BOOL Value);
+
+        [id(407), propget, helpstring("Maximizes window and turns off statusbar, toolbar, menubar, and titlebar."), helpcontext(0x0000)]
+        HRESULT FullScreen([out, retval] VARIANT_BOOL * pbFullScreen);
+        [id(407), propput, helpstring("Maximizes window and turns off statusbar, toolbar, menubar, and titlebar."), helpcontext(0x0000)]
+        HRESULT FullScreen([in] VARIANT_BOOL bFullScreen);
+    }
+
+    [
+        uuid(D30C1661-CDAF-11d0-8A3E-00C04FC9E26E), // IID_IWebBrowser2
+        helpstring("Web Browser Interface for IE4."),
+        helpcontext(0x0000),
+        hidden,
+        oleautomation,
+        dual
+    ]
+    interface IWebBrowser2 : IWebBrowserApp
+    {
+        [id(500), helpstring("Navigates to a URL or file or pidl."), helpcontext(0x0000)]
+        HRESULT Navigate2([in] VARIANT * URL,
+                          [in, optional] VARIANT * Flags,
+                          [in, optional] VARIANT * TargetFrameName,
+                          [in, optional] VARIANT * PostData,
+                          [in, optional] VARIANT * Headers);
+
+
+        [id(501), helpstring("IOleCommandTarget::QueryStatus"), helpcontext(0x0000)]
+        HRESULT QueryStatusWB([in] OLECMDID cmdID, [out, retval] OLECMDF * pcmdf);
+        [id(502), helpstring("IOleCommandTarget::Exec"), helpcontext(0x0000)]
+        HRESULT ExecWB([in] OLECMDID cmdID, [in] OLECMDEXECOPT cmdexecopt, [in, optional] VARIANT * pvaIn, [out, in, optional] VARIANT * pvaOut);
+        [id(503), helpstring("Set BrowserBar to Clsid"), helpcontext(0x0000)]
+        HRESULT ShowBrowserBar( [in] VARIANT * pvaClsid,
+                                [in, optional] VARIANT * pvarShow,
+                                [in, optional] VARIANT * pvarSize );
+
+        [id(DISPID_READYSTATE), propget, bindable]
+        HRESULT ReadyState([retval, out] READYSTATE * plReadyState);
+
+        [id(550), propget, helpstring("Controls if the frame is offline (read from cache)"), helpcontext(0x0000)]
+        HRESULT Offline([out, retval] VARIANT_BOOL * pbOffline);
+        [id(550), propput, helpstring("Controls if the frame is offline (read from cache)"), helpcontext(0x0000)]
+        HRESULT Offline([in] VARIANT_BOOL bOffline);
+
+        [id(551), propget, helpstring("Controls if any dialog boxes can be shown"), helpcontext(0x0000)]
+        HRESULT Silent([out, retval] VARIANT_BOOL * pbSilent);
+        [id(551), propput, helpstring("Controls if any dialog boxes can be shown"), helpcontext(0x0000)]
+        HRESULT Silent([in] VARIANT_BOOL bSilent);
+
+        [id(552), propget, helpstring("Registers OC as a top-level browser (for target name resolution)"), helpcontext(0x0000)]
+        HRESULT RegisterAsBrowser([out, retval] VARIANT_BOOL * pbRegister);
+        [id(552), propput, helpstring("Registers OC as a top-level browser (for target name resolution)"), helpcontext(0x0000)]
+        HRESULT RegisterAsBrowser([in] VARIANT_BOOL bRegister);
+
+        [id(553), propget, helpstring("Registers OC as a drop target for navigation"), helpcontext(0x0000)]
+        HRESULT RegisterAsDropTarget([out, retval] VARIANT_BOOL * pbRegister);
+        [id(553), propput, helpstring("Registers OC as a drop target for navigation"), helpcontext(0x0000)]
+        HRESULT RegisterAsDropTarget([in] VARIANT_BOOL bRegister);
+
+        [id(554), propget, helpstring("Controls if the browser is in theater mode"), helpcontext(0x0000)]
+        HRESULT TheaterMode([out, retval] VARIANT_BOOL * pbRegister);
+        [id(554), propput, helpstring("Controls if the browser is in theater mode"), helpcontext(0x0000)]
+        HRESULT TheaterMode([in] VARIANT_BOOL bRegister);
+
+        [id(555), propget, helpstring("Controls whether address bar is shown"), helpcontext(0x0000)]
+        HRESULT AddressBar([out, retval] VARIANT_BOOL * Value);
+        [id(555), propput, helpstring("Controls whether address bar is shown"), helpcontext(0x0000)]
+        HRESULT AddressBar([in] VARIANT_BOOL Value);
+
+        [id(556), propget, helpstring("Controls whether the window is resizable"), helpcontext(0x0000)]
+        HRESULT Resizable([out, retval] VARIANT_BOOL * Value);
+        [id(556), propput, helpstring("Controls whether the window is resizable"), helpcontext(0x0000)]
+        HRESULT Resizable([in] VARIANT_BOOL Value);
+    }
+
+    [
+        uuid(34A715A0-6587-11D0-924A-0020AFC7AC4D), // IID_DWebBrowserEvents2
+        helpstring("Web Browser Control events interface"),
+        hidden
+    ]
+    dispinterface DWebBrowserEvents2
+    {
+        properties:
+        methods:
+        [id(DISPID_STATUSTEXTCHANGE), helpstring("Statusbar text changed."), helpcontext(0x0000)]
+        void StatusTextChange([in]BSTR Text);
+
+        [id(DISPID_PROGRESSCHANGE), helpstring("Fired when download progress is updated."), helpcontext(0x0000)]
+        void ProgressChange([in] long Progress, [in] long ProgressMax);
+
+        [id(DISPID_COMMANDSTATECHANGE), helpstring("The enabled state of a command changed."), helpcontext(0x0000)]
+        void CommandStateChange([in] long Command, [in] VARIANT_BOOL Enable);
+
+        [id(DISPID_DOWNLOADBEGIN), helpstring("Download of a page started."), helpcontext(0x000)]
+        void DownloadBegin();
+
+        [id(DISPID_DOWNLOADCOMPLETE), helpstring("Download of page complete."), helpcontext(0x0000)]
+        void DownloadComplete();
+
+        [id(DISPID_TITLECHANGE), helpstring("Document title changed."), helpcontext(0x0000)]
+        void TitleChange([in] BSTR Text);
+
+        [id(DISPID_PROPERTYCHANGE), helpstring("Fired when the PutProperty method has been called."), helpcontext(0x0000)]
+        void PropertyChange([in] BSTR szProperty);
+
+        // New events for IE40:
+        //
+        [id(DISPID_BEFORENAVIGATE2), helpstring("Fired before navigate occurs in the given WebBrowser (window or frameset element). The processing of this navigation may be modified."), helpcontext(0x0000)]
+        void BeforeNavigate2([in] IDispatch* pDisp,
+                             [in] VARIANT * URL, [in] VARIANT * Flags, [in] VARIANT * TargetFrameName, [in] VARIANT * PostData, [in] VARIANT * Headers,
+                             [in,out] VARIANT_BOOL * Cancel);
+
+        [id(DISPID_NEWWINDOW2), helpstring("A new, hidden, non-navigated WebBrowser window is needed."), helpcontext(0x0000)]
+        void NewWindow2([in, out] IDispatch** ppDisp, [in, out] VARIANT_BOOL * Cancel);
+
+        [id(DISPID_NAVIGATECOMPLETE2), helpstring("Fired when the document being navigated to becomes visible and enters the navigation stack."), helpcontext(0x0000)]
+        void NavigateComplete2([in] IDispatch* pDisp, [in] VARIANT * URL );
+
+        [id(DISPID_DOCUMENTCOMPLETE), helpstring("Fired when the document being navigated to reaches ReadyState_Complete."), helpcontext(0x0000)]
+        void DocumentComplete([in] IDispatch* pDisp, [in] VARIANT * URL );
+
+        [id(DISPID_ONQUIT), helpstring("Fired when application is quiting."), helpcontext(0x0000)]
+        void OnQuit();
+
+        [id(DISPID_ONVISIBLE), helpstring("Fired when the window should be shown/hidden"), helpcontext(0x0000)]
+        void OnVisible([in] VARIANT_BOOL Visible);
+
+        [id(DISPID_ONTOOLBAR), helpstring("Fired when the toolbar  should be shown/hidden"), helpcontext(0x0000)]
+        void OnToolBar([in] VARIANT_BOOL ToolBar);
+
+        [id(DISPID_ONMENUBAR), helpstring("Fired when the menubar should be shown/hidden"), helpcontext(0x0000)]
+        void OnMenuBar([in] VARIANT_BOOL MenuBar);
+
+        [id(DISPID_ONSTATUSBAR), helpstring("Fired when the statusbar should be shown/hidden"), helpcontext(0x0000)]
+        void OnStatusBar([in] VARIANT_BOOL StatusBar);
+
+        [id(DISPID_ONFULLSCREEN), helpstring("Fired when fullscreen mode should be on/off"), helpcontext(0x0000)]
+        void OnFullScreen([in] VARIANT_BOOL FullScreen);
+
+        [id(DISPID_ONTHEATERMODE), helpstring("Fired when theater mode should be on/off"), helpcontext(0x0000)]
+        void OnTheaterMode([in] VARIANT_BOOL TheaterMode);
+    }
+
+    [
+        uuid(EAB22AC3-30C1-11CF-A7EB-0000C05BAE0B), // v.1 clsid CLSID_WebBrowser_V1
+        control,
+        helpstring("WebBrowser Control")
+    ]
+    coclass WebBrowser_V1
+    {
+                          interface     IWebBrowser2;
+        [default]         interface     IWebBrowser;
+        [source]          dispinterface DWebBrowserEvents2;
+        [default, source] dispinterface DWebBrowserEvents;
+    }
+
+    [
+        uuid(8856F961-340A-11D0-A96B-00C04FD705A2), // v.2 clsid CLSID_WebBrowser
+        control,
+        helpstring("WebBrowser Control")
+    ]
+    coclass WebBrowser
+    {
+        [default]         interface     IWebBrowser2;
+                          interface     IWebBrowser;
+        [default, source] dispinterface DWebBrowserEvents2;
+        [source]          dispinterface DWebBrowserEvents;
+    }
+
+    [
+        uuid(0002DF01-0000-0000-C000-000000000046), // CLSID_InternetExplorer
+        helpstring("Internet Explorer Application."),
+    ]
+    coclass InternetExplorer
+    {
+        [default]         interface     IWebBrowser2;
+                          interface     IWebBrowserApp;
+        [default, source] dispinterface DWebBrowserEvents2;
+        [source]          dispinterface DWebBrowserEvents;
+    }
+
+    [
+        uuid(c08afd90-f2a1-11d1-8455-00a0c91f3880), // CLSID_ShellBrowser
+        helpstring("Shell Browser Window."),
+        hidden,
+    ]
+    coclass ShellBrowserWindow
+    {
+        [default]         interface     IWebBrowser2;
+                          interface     IWebBrowserApp;
+        [default, source] dispinterface DWebBrowserEvents2;
+        [source]          dispinterface DWebBrowserEvents;
+    }
+
+
+    typedef
+    [
+        uuid(F41E6981-28E5-11d0-82B4-00A0C90C29C5),
+        helpstring("Constants for ShellWindows registration")
+    ]
+    enum ShellWindowTypeConstants {
+        [helpstring("Explorer")]                    SWC_EXPLORER    = 0x0,
+        [helpstring("Various Browsing Windows")]    SWC_BROWSER     = 0x00000001,
+        [helpstring("3rd Party Browsers")]          SWC_3RDPARTY    = 0x00000002,
+        [helpstring("Creation Callback")]           SWC_CALLBACK    = 0x00000004,
+    } ShellWindowTypeConstants;
+
+    typedef
+    [
+        uuid(7716a370-38ca-11d0-a48b-00a0c90a8f39),
+        helpstring("Options for ShellWindows FindWindow"),
+        hidden
+    ]
+    enum ShellWindowFindWindowOptions {
+        [helpstring("Need Dispatch")]           SWFO_NEEDDISPATCH   = 0x00000001,
+        [helpstring("Include Pending")]         SWFO_INCLUDEPENDING = 0x00000002,
+        [helpstring("Cookie Passed")]           SWFO_COOKIEPASSED   = 0x00000004,
+    } ShellWindowFindWindowOptions;
+
+    [
+        uuid(fe4106e0-399a-11d0-a48c-00a0c90a8f39), // DIID_DShellWindowsEvents
+        helpstring("Event interface for IShellWindows"),
+    ]
+    dispinterface DShellWindowsEvents
+    {
+        properties:
+        methods:
+        [id(DISPID_WINDOWREGISTERED), helpstring("A new window was registered."), helpcontext(0x0000)]
+        void WindowRegistered([in] long lCookie);
+
+        [id(DISPID_WINDOWREVOKED), helpstring("A new window was revoked."), helpcontext(0x0000)]
+        void WindowRevoked([in] long lCookie);
+    }
+
+    [
+        uuid(85CB6900-4D95-11CF-960C-0080C7F4EE85),     // IID_IShellWindows
+        helpstring("Definition of interface IShellWindows"),
+        oleautomation,
+        dual,
+        odl,
+    ]
+    interface IShellWindows : IDispatch
+    {
+        //Properties
+        [propget, helpstring("Get count of open Shell windows")]
+        HRESULT Count([out, retval] long *Count);
+
+        //Methods
+        [id(0), helpstring("Return the shell window for the given index")]
+        HRESULT Item([in,optional] VARIANT index, [out, retval]IDispatch **Folder);
+
+        [id(-4), helpstring("Enumerates the figures")]
+        HRESULT _NewEnum([out, retval] IUnknown **ppunk);
+
+        // Some private hidden members to allow shell windows to add and
+        // remove themself from the list.  We mark them hidden to keep
+        // random VB apps from trying to Register...
+        [helpstring("Register a window with the list"), hidden]
+        HRESULT Register([in] IDispatch *pid,
+                         [in] long hwnd,
+                         [in] int swClass,
+                         [out]long *plCookie);
+
+        [helpstring("Register a pending open with the list"), hidden]
+        HRESULT RegisterPending([in] long lThreadId,
+                         [in] VARIANT* pvarloc,     // will hold pidl that is being opened.
+                         [in] VARIANT* pvarlocRoot, // Optional root pidl
+                         [in] int swClass,
+                         [out]long *plCookie);
+
+        [helpstring("Remove a window from the list"), hidden]
+        HRESULT Revoke([in]long lCookie);
+        // As an optimization, each window notifies the new location
+        // only when
+        //  (1) it's being deactivated
+        //  (2) getFullName is called (we overload it to force update)
+        [helpstring("Notifies the new location"), hidden]
+        HRESULT OnNavigate([in]long lCookie, [in] VARIANT* pvarLoc);
+        [helpstring("Notifies the activation"), hidden]
+        HRESULT OnActivated([in]long lCookie, [in] VARIANT_BOOL fActive);
+        [helpstring("Find the window based on the location"), hidden]
+        HRESULT FindWindow([in] VARIANT* pvarLoc,
+                           [in] VARIANT* pvarLocRoot,
+                           [in] int swClass,
+                           [out] long * phwnd,
+                           [in] int swfwOptions,
+                           [out,retval] IDispatch** ppdispOut);
+        [helpstring("Notifies on creation and frame name set"), hidden]
+        HRESULT OnCreated([in]long lCookie,[in] IUnknown *punk);
+
+        [helpstring("Used by IExplore to register different processes"), hidden]
+        HRESULT ProcessAttachDetach([in] VARIANT_BOOL fAttach);
+    }
+
+    [
+        uuid(9BA05972-F6A8-11CF-A442-00A0C90A8F39),     // CLSID_ShellWindows
+        helpstring("ShellDispatch Load in Shell Context")
+    ]
+    coclass ShellWindows
+    {
+        [default] interface IShellWindows;
+        [default, source] dispinterface DShellWindowsEvents;
+    }
+
+    [
+        uuid(729FE2F8-1EA8-11d1-8F85-00C04FC2FBE1),     // IID_IShellUIHelper
+        helpstring("Shell UI Helper Control Interface"),
+        oleautomation, dual
+    ]
+    interface IShellUIHelper : IDispatch
+    {
+        [hidden, id(DISPID_RESETFIRSTBOOTMODE)] HRESULT ResetFirstBootMode();
+        [hidden, id(DISPID_RESETSAFEMODE)] HRESULT ResetSafeMode();
+        [hidden, id(DISPID_REFRESHOFFLINEDESKTOP)] HRESULT RefreshOfflineDesktop();
+        [id(DISPID_ADDFAVORITE)] HRESULT AddFavorite([in] BSTR URL, [optional, in] VARIANT *Title);
+        [id(DISPID_ADDCHANNEL)] HRESULT AddChannel([in] BSTR URL);
+        [id(DISPID_ADDDESKTOPCOMPONENT)] HRESULT AddDesktopComponent([in] BSTR URL, [in] BSTR Type,
+            [optional, in] VARIANT *Left,
+            [optional, in] VARIANT *Top,
+            [optional, in] VARIANT *Width,
+            [optional, in] VARIANT *Height);
+        [id(DISPID_ISSUBSCRIBED)] HRESULT IsSubscribed([in] BSTR URL, [out,retval] VARIANT_BOOL* pBool);
+        [id(DISPID_NAVIGATEANDFIND)] HRESULT NavigateAndFind([in] BSTR URL, [in] BSTR strQuery, [in] VARIANT* varTargetFrame);
+        [id(DISPID_IMPORTEXPORTFAVORITES)] HRESULT ImportExportFavorites([in] VARIANT_BOOL fImport, [in] BSTR strImpExpPath);
+        [id(DISPID_AUTOCOMPLETESAVEFORM)] HRESULT AutoCompleteSaveForm([optional, in] VARIANT *Form);
+        [id(DISPID_AUTOSCAN)] HRESULT AutoScan([in] BSTR strSearch, [in] BSTR strFailureUrl, [optional, in] VARIANT* pvarTargetFrame);
+        [hidden, id(DISPID_AUTOCOMPLETEATTACH)] HRESULT AutoCompleteAttach([optional, in] VARIANT *Reserved);
+        [id(DISPID_SHOWBROWSERUI)] HRESULT ShowBrowserUI([in] BSTR bstrName, [in] VARIANT *pvarIn, [out, retval] VARIANT *pvarOut);
+    }
+    [
+        uuid(64AB4BB7-111E-11d1-8F79-00C04FC2FBE1)  // CLSID_ShellUIHelper
+    ]
+    coclass ShellUIHelper
+    {
+        [default] interface IShellUIHelper;
+    }
+
+    [
+        uuid(55136806-B2DE-11D1-B9F2-00A0C98BC547)      //DIID_DShellFavoritesNameSpaceEvents
+    ]
+    dispinterface _ShellFavoritesNameSpaceEvents
+    {
+        properties:
+        methods:
+            [id(1)] void FavoritesSelectionChange([in] long cItems, [in] long hItem, [in] BSTR strName,
+                             [in] BSTR strUrl, [in] long cVisits, [in] BSTR strDate,
+                             [in] BOOL fAvailableOffline);
+    }
+    [
+        object,
+        uuid(55136804-B2DE-11D1-B9F2-00A0C98BC547),     //IID_IShellFavoritesNameSpace
+        dual,
+        helpstring("IShellFavoritesNameSpace Interface"),
+        pointer_default(unique)
+    ]
+    interface IShellFavoritesNameSpace : IDispatch
+    {
+        [hidden, id(1), helpstring("method MoveSelectionUp")] HRESULT MoveSelectionUp();
+        [hidden, id(2), helpstring("method MoveSelectionDown")] HRESULT MoveSelectionDown();
+        [hidden, id(3), helpstring("method ResetSort")] HRESULT ResetSort();
+        [hidden, id(4), helpstring("method NewFolder")] HRESULT NewFolder();
+        [hidden, id(5), helpstring("method Synchronize")] HRESULT Synchronize();
+        [hidden, id(6), helpstring("method Import")] HRESULT Import();
+        [hidden, id(7), helpstring("method Export")] HRESULT Export();
+        [hidden, id(8), helpstring("method InvokeContextMenuCommand")] HRESULT InvokeContextMenuCommand([in] BSTR strCommand);
+        [hidden, id(9), helpstring("method MoveSelectionTo")] HRESULT MoveSelectionTo();
+        [hidden, propget, id(10), helpstring("Query to see if offline pack is installed")]
+            HRESULT FOfflinePackInstalled([out, retval] VARIANT_BOOL *pBool);
+        [hidden, id(11), helpstring("method CreateSubscriptionForSelection")] HRESULT CreateSubscriptionForSelection([out, retval] VARIANT_BOOL *pBool);
+        [hidden, id(12), helpstring("method DeleteSubscriptionForSelection")] HRESULT DeleteSubscriptionForSelection([out, retval] VARIANT_BOOL *pBool);
+        [hidden, id(13), helpstring("method SetRoot")] HRESULT SetRoot([in] BSTR bstrFullPath);
+    }
+
+    [
+        uuid(55136805-B2DE-11D1-B9F2-00A0C98BC547)      //CLSID_ShellFavoritesNameSpace
+    ]
+    coclass ShellFavoritesNameSpace
+    {
+        [default] interface IShellFavoritesNameSpace;
+        [default, source] dispinterface _ShellFavoritesNameSpaceEvents;
+    };
+
+    [
+        uuid(F3470F24-15FD-11d2-BB2E-00805FF7EFCA), // IID_IScriptErrorList
+        helpstring("Script Error List Interface"),
+        oleautomation,
+        hidden,
+        dual
+    ]
+    interface IScriptErrorList : IDispatch
+    {
+        // navigation through list of errors
+        [id(DISPID_ADVANCEERROR)] HRESULT advanceError();
+        [id(DISPID_RETREATERROR)] HRESULT retreatError();
+        [id(DISPID_CANADVANCEERROR)] HRESULT canAdvanceError([out, retval] BOOL * pfCanAdvance);
+        [id(DISPID_CANRETREATERROR)] HRESULT canRetreatError([out, retval] BOOL * pfCanRetreat);
+
+        // data access for the current error in the error list
+        [id(DISPID_GETERRORLINE)] HRESULT getErrorLine([out, retval] LONG * plLine);
+        [id(DISPID_GETERRORCHAR)] HRESULT getErrorChar([out, retval] LONG * plChar);
+        [id(DISPID_GETERRORCODE)] HRESULT getErrorCode([out, retval] LONG * plCode);
+        [id(DISPID_GETERRORMSG)] HRESULT getErrorMsg([out, retval] BSTR * pstr);
+        [id(DISPID_GETERRORURL)] HRESULT getErrorUrl([out, retval] BSTR * pstr);
+
+        [id(DISPID_GETALWAYSSHOWLOCKSTATE)] HRESULT getAlwaysShowLockState([out, retval] BOOL * pfAlwaysShowLocked);
+        [id(DISPID_GETDETAILSSTATE)] HRESULT getDetailsPaneOpen([out, retval] BOOL * pfDetailsPaneOpen);
+        [id(DISPID_SETDETAILSSTATE)] HRESULT setDetailsPaneOpen(BOOL fDetailsPaneOpen);
+        [id(DISPID_GETPERERRSTATE)] HRESULT getPerErrorDisplay([out, retval] BOOL * pfPerErrorDisplay);
+        [id(DISPID_SETPERERRSTATE)] HRESULT setPerErrorDisplay(BOOL fPerErrorDisplay);
+    }
+    [
+        uuid(EFD01300-160F-11d2-BB2E-00805FF7EFCA),  // CLSID_ScriptErrorList
+        hidden
+    ]
+    coclass CScriptErrorList
+    {
+        [default] interface IScriptErrorList;
+    }
+
+    [
+        uuid(ba9239a4-3dd5-11d2-bf8b-00c04fb93661), // IID_ISearch
+        helpstring("Enumerated Search"),
+        hidden,
+        oleautomation,
+        dual,
+        odl,
+    ]
+    interface ISearch : IDispatch
+    {
+        [propget, helpstring("Get search title")]
+        HRESULT Title([out, retval] BSTR *pbstrTitle);
+
+        [propget, helpstring("Get search guid")]
+        HRESULT Id([out, retval] BSTR *pbstrId);
+
+        [propget, helpstring("Get search url")]
+        HRESULT Url([out, retval] BSTR *pbstrUrl);
+    }
+
+    [
+        uuid(47c922a2-3dd5-11d2-bf8b-00c04fb93661), // IID_ISearches
+        helpstring("Searches Enum"),
+        hidden,
+        oleautomation,
+        dual,
+        odl,
+    ]
+    interface ISearches : IDispatch
+    {
+        [propget, helpstring("Get the count of searches")]
+        HRESULT Count([out, retval] long *plCount);
+
+        [propget, helpstring("Get the default search name")]
+        HRESULT Default([out, retval] BSTR *pbstrDefault);
+
+        [helpstring("Return the specified search")]
+        HRESULT Item([in,optional] VARIANT index, [out, retval]ISearch **ppid);
+
+        [id(-4), helpstring("Enumerates the searches")]
+        HRESULT _NewEnum([out, retval] IUnknown **ppunk);
+    }
+
+    [
+        object,
+        uuid(72423E8F-8011-11d2-BE79-00A0C9A83DA1),
+        hidden,
+        dual,
+        helpstring("ISearchAssistantOC Interface"),
+        pointer_default(unique)
+    ]
+    interface ISearchAssistantOC : IDispatch
+    {
+        [id(1)] HRESULT AddNextMenuItem([in] BSTR bstrText, [in] long idItem);
+        [id(2)] HRESULT SetDefaultSearchUrl([in] BSTR bstrUrl);
+        [id(3)] HRESULT NavigateToDefaultSearch();
+        [id(4)] HRESULT IsRestricted([in] BSTR bstrGuid, [out, retval] VARIANT_BOOL *pVal);
+        [propget, id(5), helpstring("property ShellFeaturesEnabled")] HRESULT ShellFeaturesEnabled([out, retval] VARIANT_BOOL *pVal);
+        [propget, id(6), helpstring("property SearchAssistantDefault")] HRESULT SearchAssistantDefault([out, retval] VARIANT_BOOL *pVal);
+        [propget, id(7), helpstring("Get searches")] HRESULT Searches([out, retval] ISearches **ppid);
+        [propget, id(8), helpstring("Returns true if the current folder is web folder")] HRESULT InWebFolder([out, retval] VARIANT_BOOL *pVal);
+        [id(9)] HRESULT PutProperty([in] VARIANT_BOOL bPerLocale, [in] BSTR bstrName, [in] BSTR bstrValue);
+        [id(10)] HRESULT GetProperty([in] VARIANT_BOOL bPerLocale, [in] BSTR bstrName, [out, retval] BSTR *pbstrValue);
+        [propput, id(11)] HRESULT EventHandled([in] VARIANT_BOOL bHandled);
+        [id(12)] HRESULT ResetNextMenu();
+        [id(13)] HRESULT FindOnWeb() ;
+        [id(14)] HRESULT FindFilesOrFolders() ;
+        [id(15)] HRESULT FindComputer() ;
+        [id(16)] HRESULT FindPrinter() ;
+        [id(17)] HRESULT FindPeople() ;
+        [id(18)] HRESULT GetSearchAssistantURL([in] VARIANT_BOOL bSubstitute, [in] VARIANT_BOOL bCustomize, [out, retval] BSTR *pbstrValue);
+        [id(19)] HRESULT NotifySearchSettingsChanged();
+        [propput, id(20)] HRESULT ASProvider([in] BSTR Provider);
+        [propget, id(20)] HRESULT ASProvider([out, retval] BSTR *pProvider);
+        [propput, id(21)] HRESULT ASSetting([in] int Setting);
+        [propget, id(21)] HRESULT ASSetting([out, retval] int *pSetting);
+        [id(22)] HRESULT NETDetectNextNavigate();
+        [id(23)] HRESULT PutFindText([in] BSTR FindText);
+        [propget, id(24)] HRESULT Version([out, retval] int *pVersion);
+        [id(25)] HRESULT EncodeString([in] BSTR bstrValue, [in] BSTR bstrCharSet, [in] VARIANT_BOOL bUseUTF8, [out, retval] BSTR *pbstrResult);
+
+    };
+
+    [
+        object,
+        uuid(72423E8F-8011-11d2-BE79-00A0C9A83DA2),
+        hidden,
+        dual,
+        helpstring("ISearchAssistantOC2 Interface"),
+        pointer_default(unique)
+    ]
+    interface ISearchAssistantOC2 : ISearchAssistantOC
+    {
+        [propget, id(26)] HRESULT ShowFindPrinter([out, retval] VARIANT_BOOL *pbShowFindPrinter);
+    };
+
+
+    [
+        uuid(1611FDDA-445B-11d2-85DE-00C04FA35C89),
+        hidden
+    ]
+    dispinterface _SearchAssistantEvents
+    {
+        properties:
+        methods:
+            [id(1)] void OnNextMenuSelect([in] long idItem);
+            [id(2)] void OnNewSearch();
+    };
+
+    [
+        uuid(B45FF030-4447-11D2-85DE-00C04FA35C89),
+        helpstring("SearchAssistantOC Class"),
+        hidden
+    ]
+    coclass SearchAssistantOC
+    {
+        [default] interface ISearchAssistantOC2;
+        [default, source] dispinterface _SearchAssistantEvents;
+    };
+
+
+};  // SHDocVw library

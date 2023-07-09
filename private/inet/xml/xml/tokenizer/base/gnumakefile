@@ -1,0 +1,68 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+
+CUSTOM_RULES = ${MWROOT}/ie4/xml.template
+
+
+SOURCES_FILE    = sources
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME
+
+INCLUDES += \
+    ${MSXML}/xml/tokenizer/base \
+    ${MSXML}/xml/tokenizer \
+    ${MSXML}/idl/$(O) \
+    ${MSXML}/include \
+    ${MSXML}/xml/tokenizer/parser/objd/unix/sunos5 \
+    ${MSXML}/xml/tokenizer/xmlstream \
+    ${MSXML} \
+    ${MSXML}/core/base \
+    ${MSXML}/xql/om/objd/unix/sunos5 \
+    ${MSXMLDBG}
+
+
+DEFINES += -DWIN32=300 -D_CAIRO_=300 -DREGISTER_PROXY_DLL -DSTRICT -D_WIN32_LEAN_AND_MEAN -DINC_OLE2 -DDllMain=msxml_DllMain
+
+DEFINES += -DSTD_CALL -DCONDITION_HANDLING=1 -DNT_UP=1  -DNT_INST=0 -DWIN32=100 -D_NT1X_=100 -DWINNT=1 -D_WIN32_WINNT=0x0400 -DWINVER=0x0400 -D_WIN32_IE=0x0500    -DWIN32_LEAN_AND_MEAN=1 -DDEVL=1 -DFPO=0 -DSTRICT  -DUNICODE  -D_UNICODE  -DOLEDBVER=0x0200 -DNASHVILLE  
+
+ifndef COMPILE_OPTION
+  COMPILE_OPTION = debug
+endif
+
+ifeq (${COMPILE_OPTION}, debug)
+DEFINES += -DDBG=1 -DACTIVEX_DEBUG -D_DEBUG=1 -DNDEBUG
+endif
+
+WLIB = ${TARGETNAME}
+LIB	= lib${TARGETNAME}.a # target static library
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+LIBOBJS = ${CPP_OBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+APP_CFLAGS += ${XML_CFLAGS} ${INCLUDES:%=-I%} ${DEFINES}
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+
+
+
+
+
+
+

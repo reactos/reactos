@@ -1,0 +1,20 @@
+// vsscan.idl : IDL source for vsscan.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (vsscan.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(B47B6341-CE34-11D0-BD3D-00AA00B92AF1),
+	version(1.0),
+	helpstring("vsscan 1.0 Type Library")
+]
+library VSSCANLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+};

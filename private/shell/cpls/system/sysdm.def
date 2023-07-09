@@ -1,0 +1,5 @@
+LIBRARY     SYSDM
+
+EXPORTS
+            CPlApplet
+            DllInitialize

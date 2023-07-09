@@ -1,0 +1,16 @@
+MAJORCOMP=os2pgms
+MINORCOMP=makeini
+
+TARGETNAME=makeini
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+INCLUDES=..\;
+
+SOURCES=makeini.c        \
+        parse.c          \
+        makeini.rc
+
+C_DEFINES=-D_OS2_20_=$(_OS2_20_) -DNO_EXT_KEYS -Dnear= -Dfar= -DNT
+
+UMTYPE=console

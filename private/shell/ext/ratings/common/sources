@@ -1,0 +1,98 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+!include ..\ratings.inc
+
+NO_BROWSER_FILE = 1
+
+# Since mslocusr uses common.lib as a LINKLIB to avoid getting crts
+SYNCHRONIZE_BLOCK = 1
+
+TARGETNAME=npcommon
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+PRECOMPILED_INCLUDE=npcommon.h
+PRECOMPILED_PCH=npcommon.pch
+PRECOMPILED_OBJ=npcommon.obj
+PRECOMPILED_CXX=1
+
+INCLUDES= \
+        ..\inc; \
+        ..\..\inc; \
+        $(BASEDIR)\private\shell\inc; \
+        $(BASEDIR)\private\windows\inc; \
+        $(INCLUDES)
+
+SOURCES=  \
+        bufbase.cpp  \
+        buffer.cpp   \
+        npassert.cpp \
+        alloc.cpp    \
+        strcmp.cpp   \
+        strupr.cpp   \
+        stratol.cpp  \
+        strassgn.cpp \
+        strncpy.cpp  \
+        strrchr.cpp  \
+        stricmp.cpp  \
+        strspn.cpp   \
+        stris.cpp    \
+        string.cpp   \
+        strnchar.cpp \
+        strload.cpp  \
+        strprof.cpp  \
+        strrss.cpp   \
+        strchr.cpp   \
+        strcat.cpp   \
+        strmisc.cpp  \
+        strnicmp.cpp \
+        strcspn.cpp  \
+        strdss.cpp   \
+        strtok.cpp   \
+        strinsrt.cpp \
+        strstr.cpp   \
+        stristr.cpp  \
+        stratoi.cpp  \
+        strqss.cpp   \
+        strncmp.cpp  \
+        istr.cpp     \
+        istraux.cpp  \
+        strparty.cpp \
+        npmsg.cpp    \
+        npgenerr.cpp \
+        iconlbox.cpp \
+        regentry.cpp \
+        convtime.cpp \
+        dostime.cpp  \
+        timedata.cpp \
+        purecall.cpp \
+        sched.cpp    \
+        str.cpp      \
+        chr.cpp      \
+        cmp.cpp      \
+        spn.cpp      \
+        upr.cpp      \
+        cpycat.cpp   \
+        initstr.cpp

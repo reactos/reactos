@@ -1,0 +1,5 @@
+
+
+
+typedef LPVOID LPV;
+

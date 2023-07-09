@@ -1,0 +1,42 @@
+MAJORCOMP = winnls
+MINORCOMP = nlstest
+
+TARGETNAME = nlstest
+TARGETPATH = obj
+TARGETTYPE = LIBRARY
+
+INCLUDES = ..\..\..\inc
+
+C_DEFINES = -DUNICODE
+
+SOURCES = mbtest.c     \
+          wctest.c     \
+          cpitest.c    \
+          cstest.c     \
+          gsttest.c    \
+          fstest.c     \
+          mstest.c     \
+          glitest.c    \
+          slitest.c    \
+          gcitest.c    \
+          scitest.c    \
+          gtftest.c    \
+          gdftest.c    \
+          gnftest.c    \
+          gcftest.c    \
+          dbtest.c     \
+          gettest.c    \
+          euiltest.c   \
+          eslgtest.c   \
+          elgltest.c   \
+          esltest.c    \
+          escptest.c   \
+          ecitest.c    \
+          etftest.c    \
+          edftest.c    \
+          nlstest.c
+
+UMTYPE = console
+UMAPPL = nlstest
+UMLIBS = \nt\public\sdk\lib\*\kernel32.lib \
+         obj\*\nlstest.lib

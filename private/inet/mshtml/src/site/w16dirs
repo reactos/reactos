@@ -1,0 +1,16 @@
+# site
+DIRS = \
+    include \
+    misc \
+    util \
+    base \
+    print \
+    style \
+    text \
+    ole \
+    builtin \
+    download \
+    miscelem \
+    miscsite \
+    encode
+

@@ -1,0 +1,105 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+INDENTED_DIRECTIVES=1
+
+MAJORCOMP=filesync
+MINORCOMP=synceng
+
+TARGETNAME=synceng
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+DLLENTRY=LibMain
+
+NOT_LEAN_AND_MEAN=1
+
+C_DEFINES=-DWINNT -DEXPV -DPRIVATE_HEAP -DUNICODE
+
+!IF "$(SHELLDBG)"=="1"
+C_DEFINES=$(C_DEFINES) -DDEBUG
+!ENDIF
+
+CONDITIONAL_INCLUDES=\
+    synceng.rcv
+
+INCLUDES=..\..\inc;\
+    $(BASEDIR)\private\shell\inc;\
+    $(BASEDIR)\private\windows\inc;\
+    $(BASEDIR)\private\inc
+
+SOURCES= \
+    brfcase.c\
+    clsiface.c\
+    comc.c\
+    copy.c\
+    db.c\
+    debug.c\
+    dllinit.c\
+    expandft.c\
+    fcache.c\
+    findbc.c\
+    foldtwin.c\
+    guids.c\
+    hndtrans.c\
+    inifile.c\
+    init.c\
+    irecinit.c\
+    list.c\
+    memmgr.c\
+    merge.c\
+    olepig.c\
+    oleutil.c\
+    path.c\
+    ptrarray.c\
+    reclist.c\
+    recon.c\
+    resstr.c\
+    serial.c\
+    sortsrch.c\
+    storage.c\
+    string.c\
+    stub.c\
+    subcycle.c\
+    twin.c\
+    twinlist.c\
+    util.c\
+    volume.c\
+    valid.c \
+    synceng.rc
+
+UMTYPE=windows
+EXPECTED_WINVER=4.0
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib \
+           $(BASEDIR)\public\sdk\lib\*\linkinfo.lib \
+           $(BASEDIR)\public\sdk\lib\*\shlwapip.lib \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib \
+           $(BASEDIR)\public\sdk\lib\*\shlwapi.lib
+
+PRECOMPILED_INCLUDE=project.h
+PRECOMPILED_PCH=project.pch
+PRECOMPILED_OBJ=project.obj

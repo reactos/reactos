@@ -1,0 +1,123 @@
+//#if !defined(__FARRAY_H__)
+//#define __FARRAY_H__
+
+
+//$DECLARE_TEMPLATE
+////////////////////////////////////////////////////////////////////////////
+const int kNotFound = -1;
+
+template <class T> class CIVector {
+public:
+   CIVector(int iSize);
+   ~CIVector();
+
+   int bInit();
+
+   // The real array functions.
+   //
+   int   iCount(void);
+   int   bAdd(const T * t);
+   T *   poDetach(int idx);
+   int   bDelete(int idx);
+   int   bDelete(T * t);
+   void  vDeleteAll();
+   int   iFind(const T * t);
+
+private:
+   T **  m_pData;
+   int   m_iSize;
+   int   m_iCount;
+};
+
+//$IMPLEMENT_TEMPLATE_INLINES
+//
+
+//$IMPLEMENT_TEMPLATE
+////////////////////////////////////////////////////////////////////////////
+template <class T> CIVector<T>::CIVector(int iSize)
+   :  m_pData(0),
+      m_iSize(iSize),
+      m_iCount(0)
+{}
+
+template <class T> CIVector<T>::~CIVector()
+{
+   vDeleteAll();
+   delete [] m_pData;
+}
+
+template <class T> int CIVector<T>::bInit()
+{
+   int   iRet = 0;
+
+   if(m_iSize && !m_iCount) {
+
+      m_pData = new T * [m_iSize];
+      if( m_pData )
+         iRet = 1;
+   }
+
+   return iRet;
+}
+
+template <class T> int CIVector<T>::iCount(void)
+{
+   return m_iCount;
+}
+
+template <class T> int CIVector<T>::bAdd(const T * t)
+{
+   int   iRet = 0;
+   
+   if ( m_iCount < m_iSize ) {
+      m_pData[m_iCount++] = t;
+      return 1;
+   }
+
+   return 0;
+}
+
+template <class T> T * CIVector::poDetach(int idx)
+{
+   if( idx >=0 && idx < m_iCount ) {
+      return m_pData[idx];
+   }
+
+   return (T *)0;
+}
+
+template <class T> int CIVector::bDelete(int idx)
+{
+   if (idx >= 0 && idx < m_iCount ) {
+      delete *m_pData[idx];
+
+      // Move the last one down
+      m_pData[idx] = m_pData[--m_iCount];
+      return 1;
+   }
+
+   return 0;
+}
+
+template <class T> int CIVector::bDelete(T * t)
+{
+   return bDelete( iFind(t) );
+}
+
+template <class T> void CIVector::vDeleteAll()
+{
+   while(m_iCount)
+      bDelete(0);
+}
+
+template <class T> int CIVector::iFind(T * t)
+{
+   for( int i = 0; i < m_iCount; i++) {
+      if( m_pData[i] == t )
+         return i;
+   }
+
+   return kNotFound;
+}
+
+// #endif // __FARRAY_H__

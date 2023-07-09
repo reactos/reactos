@@ -1,0 +1,90 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=mmsys
+TARGETEXT=cpl
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLENTRY=DllInitialize
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\version.lib  \
+           $(_NTBINDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\shell32.lib  \
+           $(_NTBINDIR)\public\sdk\lib\*\shell32p.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\comctl32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\setupapi.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\ole32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\cfgmgr32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\devmgr.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\wmip.lib \
+		   $(_NTBINDIR)\public\sdk\lib\*\ksguid.lib
+
+INCLUDES=..\..\..\inc;..\h;..\main;$(BASEDIR)\private\shell\inc;..\multimed;$(BASEDIR)\private\inc
+
+USE_NTDLL=1
+
+#
+# Retail
+#
+C_DEFINES=/DFIX_BUG_15451 /DUNICODE /D_UNICODE
+
+#
+# Debug (please comment out, don't remove)
+#
+#C_DEFINES=/DDEBUG
+#NTDEBUG=ntsd
+#NTDEBUGTYPE=both
+#MSC_OPTIMIZATION=/Od /Zi /WX
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+LINKER_FLAGS=$(LINKER_FLAGS) -merge:PAGECONST=.text -merge:.edata=.data
+
+SOURCES=mmcpl.c    \
+        scheme.c   \
+        sound.c    \
+        sndfile.c  \
+        sndsel.c   \
+        mmse.c     \
+        utils.c    \
+        dib.c      \
+        dispfram.c \
+        video.c    \
+        cdaudio.c  \
+        midi.c     \
+        class.c    \
+        msacmcpl.c \
+        drivers.c  \
+        mmdriver.c \
+        install.c  \
+        remove.c   \
+        add.c      \
+        infparse.c \
+        copy.c     \
+        filecopy.c \
+        advaudio.cpp \
+        dslevel.cpp \
+        perfpage.cpp \
+        speakers.cpp \
+        roland.cpp \
+        dmproppg.c \
+        trayvol.c  \
+        legcyinf.c \
+        speech.cpp  \
+        debug.c     \
+        mmse.rc

@@ -1,0 +1,12 @@
+MIPS_SOURCES=\
+             fdengine.c      \
+             memory.c        \
+             almisc.c        \
+             fmtexp.c        \
+             low.c           \
+             nlsboot.c       \
+             partit.c        \
+             jzcrap.c        \
+             arcinst.c
+
+NTTARGETFILES=obj\mips\arcinst.exe

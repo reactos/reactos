@@ -1,0 +1,110 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+Author:   Ramesh G    06-07-96
+
+!ENDIF
+
+
+ROOT=$(MAKEDIR:\imgfilt\imgutil\daytona=)
+!include $(ROOT)\common.inc
+
+TARGETPATH= obj
+TARGETTYPE= DYNLINK
+TARGETNAME= ImgUtil
+TARGETTEXT= dll
+
+TARGETPATHLIB= $(BASEDIR)\public\sdk\lib
+
+DLLDEF= ..\ImgUtil.def
+!IF $(FREEBUILD)
+DLLENTRY= DllMain
+!ELSE
+DLLENTRY= _DllMainCRTStartup
+!ENDIF
+DLLBASE= @..\..\base.txt,imgutil
+
+NTTARGETFILES =
+
+PRECOMPILED_INCLUDE=..\StdAfx.H
+PRECOMPILED_PCH=StdAfx.pch
+PRECOMPILED_OBJ=StdAfx.obj
+PRECOMPILED_CXX=1
+
+PASS0_HEADERDIR=$(SDK_INC_PATH)
+
+ACTVEXINC=..\..\..\inc
+
+WIN32_WINNT_VERSION=0x0400
+WIN32_WIN95_VERSION=0x0400
+
+UMTYPE=       windows
+
+INCLUDES=$(ACTVEXINC);..\include;..;..\..
+
+C_DEFINES= \
+   /D_ATL_NO_CONNECTION_POINTS \
+   /D_ATL_NO_SECURITY \
+#   /D_MERGE_PROXYSTUB \
+   /D_ATL_DLL_SERVER \
+#   /DMINSUPPORT     \
+   /DNASHVILLE
+
+# comment out cddsurf, CDith8, CDithTbl, Dithers to build minimal version       
+
+SOURCES= \
+        ..\ImgUtil.Cpp           \
+        ..\CMapMIME.Cpp           \
+        ..\CMIMEID.Cpp          \
+        ..\CSnfStrm.Cpp             \
+   ..\APIs.Cpp                      \
+        ..\DllDataX.C                   \
+        ..\cddsurf.cpp \
+        ..\CDith8.Cpp       \
+        ..\CDithTbl.Cpp     \
+        ..\Dithers.Cpp      \
+   ..\ImgUtil.rc
+
+
+# LINKER_FLAGS= /VERBOSE
+
+TARGETLIBS=     \
+   $(BASEDIR)\public\sdk\lib\*\advapi32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib           \
+    $(BASEDIR)\public\sdk\lib\*\urlmon.lib         \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+    $(BASEDIR)\public\sdk\lib\*\gdi32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\version.lib        \
+    $(BASEDIR)\public\sdk\lib\*\wininet.lib        \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\oleaut32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\rpcndr.lib         \
+    $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib         \
+    $(BASEDIR)\public\sdk\lib\*\rpcns4.lib
+
+!IF $(FREEBUILD) == 1
+LINKLIBS= $(LINKLIBS) $(BASEDIR)\public\sdk\lib\*\libcmt.lib
+!ELSE
+LINKLIBS= $(LINKLIBS) $(BASEDIR)\public\sdk\lib\*\libcmtd.lib
+!ENDIF
+
+# include files that are inside ifdef blocks - prevents build warnings
+
+CONDITIONAL_INCLUDES=   \
+   $(CONDITIONAL_INCLUDES) \
+   alloc.h  \
+   macocidl.h \
+   include\imgutil_p.c

@@ -1,0 +1,102 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1993 - 1996.
+//
+//  File: propbag2.idl
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1993 - 1996.")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+#ifndef DO_NO_IMPORTS
+import "objidl.idl";
+import "oleidl.idl";
+import "servprov.idl";
+
+//import "unknwn.idl";
+import "ocidl.idl";
+#endif
+
+interface IPersistPropertyBag2;
+interface IPropertyBag2;
+
+[object, uuid(22F55881-280B-11d0-A8A9-00A0C90C2004), pointer_default(unique)]
+interface IPersistPropertyBag2 : IPersist
+{
+	typedef [unique] IPersistPropertyBag2 *LPPERSISTPROPERTYBAG2;
+
+	HRESULT InitNew();
+
+	HRESULT Load(
+	        [in]IPropertyBag2 * pPropBag,
+                [in]IErrorLog * pErrLog);
+	HRESULT Save(
+	        [in]IPropertyBag2 * pPropBag,
+                [in]BOOL fClearDirty,
+                [in]BOOL fSaveAllProperties);
+
+	HRESULT IsDirty();
+}
+
+
+[object, uuid(22F55882-280B-11d0-A8A9-00A0C90C2004), pointer_default(unique)]
+interface IPropertyBag2 : IUnknown
+{
+
+typedef enum _tagPROPBAG2_TYPE
+{
+	PROPBAG2_TYPE_UNDEFINED = 0,
+	PROPBAG2_TYPE_DATA      = 1,	// Value is simple data
+	PROPBAG2_TYPE_URL       = 2,	// Value is a URL reference
+	PROPBAG2_TYPE_OBJECT    = 3,	// Value is an object
+	PROPBAG2_TYPE_STREAM    = 4,	// Value is a stream
+	PROPBAG2_TYPE_STORAGE   = 5,	// Value is a storage
+	PROPBAG2_TYPE_MONIKER   = 6	// Value is a moniker
+} PROPBAG2_TYPE;
+
+typedef struct _tagPROPBAG2
+{
+	DWORD		dwType;		// Property type (from PROPBAG2_TYPE)
+	VARTYPE		vt;		// VARIANT property type
+	CLIPFORMAT	cfType;		// Clipboard format (aka MIME-type)
+	DWORD		dwHint;		// Property name hint
+	LPOLESTR	pstrName;	// Property name
+	CLSID		clsid;		// CLSID (for PROPBAG2_TYPE_OBJECT)
+} PROPBAG2;
+
+	typedef [unique]IPropertyBag2 *LPPROPERTYBAG2;
+
+	HRESULT Read(
+			[in]	ULONG cProperties,
+			[in]	PROPBAG2 * pPropBag,
+			[in]  	IErrorLog * pErrLog,
+			[out] 	VARIANT * pvarValue,
+			[out]   HRESULT * phrError);
+
+	HRESULT Write(
+			[in]	ULONG cProperties,
+			[in] 	PROPBAG2 * pPropBag,
+			[in] 	VARIANT * pvarValue);
+
+    HRESULT CountProperties(
+			[out] 	ULONG * pcProperties);
+			
+	HRESULT GetPropertyInfo(
+			[in]  	ULONG iProperty,
+			[in]  	ULONG cProperties,
+			[out] 	PROPBAG2 * pPropBag,
+			[out] 	ULONG * pcProperties);
+			
+	HRESULT LoadObject(
+			[in]	LPCOLESTR pstrName,
+			[in]	DWORD dwHint,
+			[in]	IUnknown * pUnkObject,
+			[in]	IErrorLog * pErrLog);
+}
+

@@ -1,1 +1,0 @@
-@ stdcall SfcGetFiles(ptr ptr)

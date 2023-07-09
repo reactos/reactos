@@ -1,0 +1,29 @@
+
+#ifdef _WIN32
+
+#include <ntverp.h>
+
+#define VER_FILETYPE              VFT_DLL
+#define VER_FILESUBTYPE           VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR   "Microsoft Video for Windows DLL"
+#define VER_INTERNALNAME_STR      "msvfw32.dll"
+#define VER_ORIGINALFILENAME_STR  "msvfw32.dll"
+
+#include <common.ver>
+
+#else
+#include <ver.h>
+#include <verinfo.h>
+
+#ifdef _WIN32
+#define VERSIONNAME               "msvfw32.dll\0"
+#else
+#define VERSIONNAME               "msvideo.dll\0"
+#endif
+#define VERSIONDESCRIPTION        "Microsoft Video for Windows DLL\0"
+#define VERSIONTYPE               VFT_DLL
+#define VERSIONSUBTYPE            VFT2_UNKNOWN
+
+#include <verinfo.ver>
+#endif
+

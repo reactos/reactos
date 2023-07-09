@@ -1,0 +1,50 @@
+#include <windows.h>
+;                        #include <mmsysver.h>
+#include <cphelp.h>
+#include "snd.h"
+;                        #include "snd.rcv"
+
+ID_ICON ICON PRELOAD MOVEABLE DISCARDABLE SND.ICO
+
+DLG_SOUND DIALOG 119, 43, 241, 110
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Sound"
+//FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", ID_DIR, "static", SS_LEFT | WS_CHILD, 115, 95, 75, 8
+    CONTROL "&Events:", -1, "static", SS_LEFT | WS_CHILD, 5, 6, 102, 8
+    CONTROL "", LB_NAMES, "listbox", LBS_NOTIFY | LBS_SORT | LBS_STANDARD | LBS_USETABSTOPS | WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD, 5, 20, 102, 70
+    CONTROL "&Files:", -1, "static", SS_LEFT | WS_CHILD, 115, 6, 75, 8
+    CONTROL "", LB_FILES, "listbox", LBS_NOTIFY | LBS_SORT | LBS_STANDARD | LBS_USETABSTOPS | WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD, 115, 20, 75, 65
+    CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_CHILD, 196, 6, 40, 14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 196, 23, 40, 14
+    CONTROL "&Test", ID_PLAY, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 196, 40, 40, 14
+    CONTROL "&Help", IDH_CHILD_SND, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 196, 57, 40, 14
+    CONTROL "E&nable System Sounds", ID_BEEP, "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_CHILD, 5, 95, 102, 10
+END
+
+STRINGTABLE PRELOAD MOVEABLE DISCARDABLE
+    BEGIN
+        IDS_NAME, "Sound"
+        IDS_INFO, "Assigns sounds to system events"
+        IDS_UNABLETITLE, "Sound"
+        IDS_UNABLEMESSAGE, "Unable to play sound"
+        IDS_WARNINGTITLE, "Sound: Sound Change Warning"
+        IDS_WARNINGMESSAGE, "Another application has also changed the Sounds.  OK will overwrite those changes."
+        IDS_NONE, "<none>"
+        IDS_APPNAME, "Sound"
+        IDS_HELPFILE, "control.hlp"
+        IDS_NODEVICE, "No suitable wave output device available"
+        IDS_WRITEERR, "An error occurred when writing the sounds to disk.  Error %ld."
+    END
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Control Panel Sound"
+#define VER_INTERNALNAME_STR        "snd"
+#define VER_ORIGINALFILENAME_STR    "sound.dll"
+
+#include "common.ver"

@@ -1,0 +1,26 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\dlay\std=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=std
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES= \
+    $(ROOT)\src\dlay\include; \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\external\inc; \
+    $(ROOT)\types\$(O); \
+    $(ROOT)\src\dlay\std; \
+    $(BASEDIR)\private\windows\inc; \
+
+SOURCES= \
+    arrayi.cxx
+
+PRECOMPILED_OPTION=/Yudlaypch.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

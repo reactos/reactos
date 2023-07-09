@@ -1,0 +1,16 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1996 - 1999
+//
+//  File:       aclui.src
+//
+//--------------------------------------------------------------------------
+
+LIBRARY ACLUI
+EXPORTS
+    CreateSecurityPage          @1
+    EditSecurity                @2
+
+    IID_ISecurityInformation    @16

@@ -1,0 +1,65 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+
+    Created 12-Sep-1991 by Richard L Firth (rfirth)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+
+USE_NOLIBS=1
+TARGETNAME=wsock32n
+
+USER_C_FLAGS=$(USER_C_FLAGS) -Opi
+
+!INCLUDE ..\wininet.inc
+
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+
+DLLENTRY=DllMain
+
+MINORCOMP=dll
+
+TARGETTYPE=DYNLINK
+TARGETPATH=$(_OBJ_DIR)
+
+SUBSYSTEM_VERSION=3.50
+
+INCLUDES=..\inc
+
+SOURCES=  wsock32.c \
+	      wsock32.rc
+
+NTTARGETFILE0=wsock32.rc
+
+LINKLIBS=
+
+# If we are building for X86 we use w95fiber.dll or NT kernel fibers.
+!IF "$(PROCESSOR_ARCHITECTURE)"=="x86"
+LINKLIBS=$(LINKLIBS)
+!ENDIF
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib      \
+    $(BASEDIR)\public\sdk\lib\*\mpr.lib         \
+    $(BASEDIR)\public\sdk\lib\*\wininet.lib

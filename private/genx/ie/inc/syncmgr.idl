@@ -1,0 +1,539 @@
+//****************************************************************************
+//
+//  Copyright (C) Microsoft Corporation, 1997.
+//
+//  File:       syncmgr.idl
+//
+//  Contents:   Interfaces for Synchronization Manager
+//
+//****************************************************************************
+
+#ifndef DO_NO_IMPORTS
+import "objidl.idl";
+import "oleidl.idl";
+import "mstask.idl";
+#endif
+
+interface ISyncMgrSynchronize;
+interface ISyncMgrSynchronizeCallback;
+interface ISyncMgrEnumItems;
+interface ISyncMgrSynchronizeInvoke;
+interface ISyncMgrRegister;
+interface ISyncScheduleMgr;
+interface IEnumSyncSchedules;
+interface ISyncSchedule;
+interface IEnumSyncItems;
+
+typedef GUID SYNCMGRITEMID;
+typedef REFGUID REFSYNCMGRITEMID;
+typedef GUID SYNCMGRERRORID;
+typedef REFGUID REFSYNCMGRERRORID;
+typedef GUID SYNCSCHEDULECOOKIE;
+
+
+// {6295DF27-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(CLSID_SyncMgr,0x6295df27, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF29-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_ISyncMgrSynchronize,0x6295df28, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF28-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_ISyncMgrSynchronizeCallback,0x6295df29, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF2A-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_ISyncMgrEnumItems,0x6295df2a, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF2C-35EE-11d1-8707-00C04FD93327} 
+cpp_quote("DEFINE_GUID(IID_ISyncMgrSynchronizeInvoke,0x6295df2c, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {894D8C55-BDDF-11d1-B85D-00C04FB93981}
+cpp_quote("DEFINE_GUID(IID_ISyncMgrRegister,0x894d8c55, 0xbddf, 0x11d1, 0xb8, 0x5d, 0x0, 0xc0, 0x4f, 0xb9, 0x39, 0x81);")
+
+// {F0E15897-A700-11d1-9831-00C04FD910DD}
+cpp_quote("DEFINE_GUID(IID_ISyncScheduleMgr,0xf0e15897, 0xa700, 0x11d1, 0x98, 0x31, 0x0, 0xc0, 0x4f, 0xd9, 0x10, 0xdd);")
+
+// {F0E15898-A700-11d1-9831-00C04FD910DD}
+cpp_quote("DEFINE_GUID(IID_IEnumSyncSchedules,0xf0e15898, 0xa700, 0x11d1, 0x98, 0x31, 0x0, 0xc0, 0x4f, 0xd9, 0x10, 0xdd);")
+
+// {F0E15899-A700-11d1-9831-00C04FD910DD}
+cpp_quote("DEFINE_GUID(IID_ISyncSchedule,0xf0e15899, 0xa700, 0x11d1, 0x98, 0x31, 0x0, 0xc0, 0x4f, 0xd9, 0x10, 0xdd);")
+
+// {F0E1589A-A700-11d1-9831-00C04FD910DD}
+cpp_quote("DEFINE_GUID(IID_IEnumSyncItems,0xf0e1589a, 0xa700, 0x11d1, 0x98, 0x31, 0x0, 0xc0, 0x4f, 0xd9, 0x10, 0xdd);")
+
+
+// Success codes specific to SyncMgr interfaces
+cpp_quote("#define S_SYNCMGR_MISSINGITEMS	MAKE_SCODE(SEVERITY_SUCCESS,FACILITY_ITF,0x0201)")
+cpp_quote("#define S_SYNCMGR_RETRYSYNC		MAKE_SCODE(SEVERITY_SUCCESS,FACILITY_ITF,0x0202)")
+cpp_quote("#define S_SYNCMGR_CANCELITEM		MAKE_SCODE(SEVERITY_SUCCESS,FACILITY_ITF,0x0203)")
+cpp_quote("#define S_SYNCMGR_CANCELALL		MAKE_SCODE(SEVERITY_SUCCESS,FACILITY_ITF,0x0204)")
+
+// Error codes specific to SyncMgr interfaces
+cpp_quote("#define SYNCMGR_E_NAME_IN_USE	MAKE_SCODE(SEVERITY_ERROR,FACILITY_ITF,0x0201)")
+cpp_quote("#define SYNCMGR_E_ITEM_UNREGISTERED	MAKE_SCODE(SEVERITY_ERROR,FACILITY_ITF,0x0202)")
+
+[
+    local,
+    object,
+    uuid(6295DF28-35EE-11d1-8707-00C04FD93327)  // IID_ISyncMgrSynchronize
+]
+interface ISyncMgrSynchronize: IUnknown
+{
+    typedef [unique] ISyncMgrSynchronize *LPSYNCMGRSYNCHRONIZE;
+
+	typedef enum _tagSYNCMGRFLAG { 	// flags for Synchronization Event
+		SYNCMGRFLAG_CONNECT				=	0x0001,	// Sync was invoked by a network connect
+		SYNCMGRFLAG_PENDINGDISCONNECT	=	0x0002,	// Sync was invoked by a pending network disconnect
+		SYNCMGRFLAG_MANUAL				=	0x0003,	// Sync was invoked manually
+		SYNCMGRFLAG_IDLE				=	0x0004,	// Sync was programmatically invokd
+		SYNCMGRFLAG_INVOKE				=	0x0005,	// Sync was programmatically invokd
+		SYNCMGRFLAG_SCHEDULED			=	0x0006,	// Sync was invoked by a scheduled update
+		SYNCMGRFLAG_EVENTMASK			=	0x00FF,	
+
+		SYNCMGRFLAG_SETTINGS			=	0x0100,	// Sync was invoked for configuration only
+		SYNCMGRFLAG_MAYBOTHERUSER		=	0x0200,	// Interaction with the user is permitted
+	} SYNCMGRFLAG;
+
+
+	const USHORT MAX_SYNCMGRHANDLERNAME = 32;
+
+	typedef enum _tagSYNCMGRHANDLERFLAGS {   // flags that apply to this handler.
+	    SYNCMGRHANDLER_HASPROPERTIES	=	0x01,	// have a properties dialog for this handler
+	} SYNCMGRHANDLERFLAGS;
+
+    typedef struct _tagSYNCMGRHANDLERINFO {
+	   DWORD	    cbSize;
+	   HICON	    hIcon;
+	   DWORD 	    SyncMgrHandlerFlags;
+	   WCHAR	    wszHandlerName[MAX_SYNCMGRHANDLERNAME];
+    } SYNCMGRHANDLERINFO, *LPSYNCMGRHANDLERINFO;
+
+	cpp_quote("#define   SYNCMGRITEMSTATE_UNCHECKED    0x0000")
+	cpp_quote("#define   SYNCMGRITEMSTATE_CHECKED      0x0001")
+	cpp_quote("")
+
+    typedef enum _tagSYNCMGRSTATUS {
+		SYNCMGRSTATUS_STOPPED		=   0x0000,
+		SYNCMGRSTATUS_SKIPPED		=   0x0001,
+		SYNCMGRSTATUS_PENDING		=   0x0002,
+		SYNCMGRSTATUS_UPDATING		=   0x0003,
+		SYNCMGRSTATUS_SUCCEEDED		=   0x0004,
+		SYNCMGRSTATUS_FAILED		=   0x0005,
+		SYNCMGRSTATUS_PAUSED		=   0x0006,
+		SYNCMGRSTATUS_RESUMING		=   0x0007,
+    } SYNCMGRSTATUS;
+
+
+	HRESULT Initialize(
+		[in] DWORD dwReserved,
+		[in] DWORD dwSyncMgrFlags,
+		[in] DWORD cbCookie,
+		[in] BYTE const*lpCookie);
+
+	HRESULT GetHandlerInfo(
+		[out] LPSYNCMGRHANDLERINFO *ppSyncMgrHandlerInfo);
+
+	HRESULT EnumSyncMgrItems(
+		[out] ISyncMgrEnumItems **ppSyncMgrEnumItems);
+
+
+	HRESULT GetItemObject(
+		[in] REFSYNCMGRITEMID ItemID,
+		[in] REFIID riid,
+		[out] void** ppv);
+
+	HRESULT ShowProperties(
+		[in] HWND hWndParent,
+		[in] REFSYNCMGRITEMID ItemID);
+
+	HRESULT SetProgressCallback(
+		[in] ISyncMgrSynchronizeCallback *lpCallBack);
+
+	HRESULT PrepareForSync(
+		[in] ULONG cbNumItems,
+		[in] SYNCMGRITEMID* pItemIDs,
+		[in] HWND hWndParent,
+		[in] DWORD dwReserved);
+
+	HRESULT Synchronize(
+		[in] HWND hWndParent);
+
+	HRESULT SetItemStatus(
+		[in] REFSYNCMGRITEMID pItemID,
+		[in] DWORD dwSyncMgrStatus);
+		 
+	HRESULT ShowError(
+		[in] HWND hWndParent,
+		[in] REFSYNCMGRERRORID ErrorID,
+		[out] ULONG *pcbNumItems,
+		[out] SYNCMGRITEMID **ppItemIDs);
+
+}
+
+[
+    local,
+    object,
+    uuid(6295DF29-35EE-11d1-8707-00C04FD93327)  // IID_ISyncMgrSynchronizeCallback
+]
+interface ISyncMgrSynchronizeCallback: IUnknown
+{
+    typedef [unique] ISyncMgrSynchronizeCallback *LPSYNCMGRSYNCHRONIZECALLBACK;
+
+    cpp_quote("#define   SYNCMGRPROGRESSITEM_STATUSTEXT		0x0001")
+    cpp_quote("#define   SYNCMGRPROGRESSITEM_STATUSTYPE		0x0002")
+    cpp_quote("#define   SYNCMGRPROGRESSITEM_PROGVALUE	    0x0004")
+    cpp_quote("#define   SYNCMGRPROGRESSITEM_MAXVALUE	    0x0008")
+    cpp_quote("")
+
+    typedef struct _tagSYNCMGRPROGRESSITEM {
+		DWORD	    cbSize;
+		UINT		mask;
+		const WCHAR* 		lpcStatusText;
+		DWORD		dwStatusType;
+		INT 		iProgValue;
+		INT 		iMaxValue;
+    } SYNCMGRPROGRESSITEM, *LPSYNCMGRPROGRESSITEM;
+
+    typedef enum _tagSYNCMGRLOGLEVEL {
+		SYNCMGRLOGLEVEL_INFORMATION		=   0x0001,  
+		SYNCMGRLOGLEVEL_WARNING			=   0x0002,  
+		SYNCMGRLOGLEVEL_ERROR			=   0x0003, 
+    } SYNCMGRLOGLEVEL;
+
+
+    cpp_quote("#define   SYNCMGRLOGERROR_ERRORFLAGS			0x0001")
+    cpp_quote("#define   SYNCMGRLOGERROR_ERRORID			0x0002")
+    cpp_quote("#define   SYNCMGRLOGERROR_ITEMID				0x0004")
+	cpp_quote("")
+
+	typedef enum _tagSYNCMGRERRORFLAGS {   // flags that apply to the error.
+	    SYNCMGRERRORFLAG_ENABLEJUMPTEXT	=	0x01,	// ShowErrors should be called on this item.
+	} SYNCMGRERRORFLAGS;
+
+
+    typedef struct _tagSYNCMGRLOGERRORINFO {
+		DWORD			cbSize;
+		DWORD			mask;
+		DWORD			dwSyncMgrErrorFlags;
+		SYNCMGRERRORID	ErrorID;
+		SYNCMGRITEMID 	ItemID;
+    } SYNCMGRLOGERRORINFO, *LPSYNCMGRLOGERRORINFO;
+
+
+    HRESULT Progress(
+	    [in] REFSYNCMGRITEMID pItemID,
+	    [in] LPSYNCMGRPROGRESSITEM lpSyncProgressItem);
+
+	HRESULT PrepareForSyncCompleted(HRESULT hr);
+
+	HRESULT SynchronizeCompleted(HRESULT hr);
+
+    HRESULT  EnableModeless( 
+	    [in] BOOL fEnable); 
+
+    HRESULT  LogError( 
+	    [in] DWORD dwErrorLevel,
+	    [in] const WCHAR *lpcErrorText,
+	    [in] LPSYNCMGRLOGERRORINFO lpSyncLogError);
+
+	HRESULT DeleteLogError(
+		[in] REFSYNCMGRERRORID ErrorID,
+		[in] DWORD dwReserved);
+
+}
+
+[
+    local,
+    object,
+    uuid(6295DF2A-35EE-11d1-8707-00C04FD93327), // IID_ISyncMgrEnumItems
+    pointer_default(unique)
+]
+interface ISyncMgrEnumItems : IUnknown
+{
+    typedef [unique] ISyncMgrEnumItems *LPSYNCMGRENUMITEMS;
+
+	const USHORT MAX_SYNCMGRITEMNAME = 128;
+	const USHORT MAX_SYNCMGRITEMSTATUS = 128;
+
+	typedef enum _tagSYNCMGRITEMFLAGS {   // flags for this SyncMgr Item
+	    SYNCMGRITEM_HASPROPERTIES		=	0x01,	// have a properties dialog for this item
+	    SYNCMGRITEM_TEMPORARY		=	0x02,	// remove any stored preferences for this item
+	    SYNCMGRITEM_ROAMINGUSER		=	0x04,	// This item should roam with the User
+	} SYNCMGRITEMFLAGS;
+
+
+    typedef struct _tagSYNCMGRITEM {
+	   DWORD	    cbSize;
+	   DWORD	    dwFlags;
+	   SYNCMGRITEMID  ItemID;
+	   DWORD	    dwItemState;	
+	   HICON	    hIcon;
+	   WCHAR	    wszItemName[MAX_SYNCMGRITEMNAME];
+	   WCHAR	    wszStatus[MAX_SYNCMGRITEMSTATUS];
+    } SYNCMGRITEM, *LPSYNCMGRITEM;
+
+    HRESULT Next(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched)]
+        LPSYNCMGRITEM rgelt,
+        [out] ULONG *pceltFetched);
+
+    HRESULT Skip(
+        [in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+        [out] ISyncMgrEnumItems **ppenum);
+}
+
+
+
+[
+    local,
+    object,
+    uuid(6295DF2C-35EE-11d1-8707-00C04FD93327), // IID_ISyncMgrSynchronizeInvoke
+    pointer_default(unique)
+]
+interface ISyncMgrSynchronizeInvoke : IUnknown
+{
+
+    typedef [unique] ISyncMgrSynchronizeInvoke *LPSYNCMGRSYNCHRONIZEINVOKE;
+
+    typedef enum _tagSYNCMGRINVOKEFLAGS {   // flags for how SyncMgr should be invoked.
+	    SYNCMGRINVOKE_STARTSYNC =	0x02,	// Immediately start the sync without displaying choices
+	    SYNCMGRINVOKE_MINIMIZED =	0x04,	// Dialog should be minimized by default
+    } SYNCMGRINVOKEFLAGS;
+
+
+    HRESULT UpdateItems(
+		[in] DWORD dwInvokeFlags,
+		[in] REFCLSID rclsid,
+		[in] DWORD cbCookie,
+		[in, unique, size_is(cbCookie)] const BYTE *lpCookie);
+
+    HRESULT UpdateAll();
+}	
+
+
+[
+    local,
+    object,
+    uuid(894D8C55-BDDF-11d1-B85D-00C04FB93981), // IID_ISyncMgrSynchronizeRegister
+    pointer_default(unique)
+]
+interface ISyncMgrRegister : IUnknown
+{
+
+    typedef [unique] ISyncMgrRegister *LPSYNCMGRREGISTER;
+
+
+    HRESULT RegisterSyncMgrHandler(
+		[in] REFCLSID rclsidHandler,
+		[in] DWORD dwReserved);
+
+    HRESULT UnregisterSyncMgrHandler(
+		[in] REFCLSID rclsidHandler,
+		[in] DWORD dwReserved);
+}	
+
+[
+uuid(6295DF27-35EE-11d1-8707-00C04FD93327),
+helpstring("Common Synchronization UI service")
+]
+coclass SyncMgr
+{
+    [default, source]   interface ISyncMgrSynchronizeInvoke;
+};
+
+
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_MASK		 0x0FFF")
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_READONLY	 0x0001")
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_AUTOCONNECT	 0x0002")
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_HIDDEN		 0x0004")
+
+cpp_quote("#define   SYNCSCHEDWIZARD_SHOWALLHANDLERITEMS 0x1000")
+cpp_quote("")
+
+
+[
+    local,
+    object,
+    uuid(F0E15897-A700-11d1-9831-00C04FD910DD), // IID_ISyncScheduleMgr
+    pointer_default(unique)
+]
+interface ISyncScheduleMgr : IUnknown
+{
+    typedef [unique] ISyncScheduleMgr *LPSYNCSCHEDULEMGR;
+
+	HRESULT CreateSchedule(
+		[in]	 LPCWSTR pwszScheduleName,
+		[in]	 DWORD dwFlags,
+		[in,out] SYNCSCHEDULECOOKIE *pSyncSchedCookie,		
+		[out]	 ISyncSchedule **ppSyncSchedule);
+
+	HRESULT LaunchScheduleWizard(
+		[in]	  HWND hParent,
+		[in]	  DWORD dwFlags,
+		[in, out] SYNCSCHEDULECOOKIE *pSyncSchedCookie,		
+		[out]	  ISyncSchedule   ** ppSyncSchedule);
+
+	HRESULT OpenSchedule(
+		[in]	SYNCSCHEDULECOOKIE *pSyncSchedCookie,		
+		[in]	DWORD dwFlags,
+		[out]	ISyncSchedule **ppSyncSchedule);
+
+	HRESULT RemoveSchedule( 
+		[in]	SYNCSCHEDULECOOKIE *pSyncSchedCookie);
+
+	HRESULT EnumSyncSchedules(
+		[out]	IEnumSyncSchedules **ppEnumSyncSchedules);
+
+}
+
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_CONNECTION_LAN  0x0000")
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_CONNECTION_WAN  0x0001")
+
+[
+    local,
+    object,
+    uuid(F0E15898-A700-11d1-9831-00C04FD910DD), // IID_IEnumSyncSchedules
+    pointer_default(unique)
+]
+interface IEnumSyncSchedules : IUnknown
+{
+	HRESULT Next(
+		[in]	ULONG celt, 
+		[out, size_is(celt), length_is(*pceltFetched)]
+		SYNCSCHEDULECOOKIE *pSyncSchedCookie,
+		[out]	ULONG *pceltFetched);
+
+	HRESULT Skip(
+		[in]	ULONG celt);
+
+	HRESULT Reset(void);
+
+	HRESULT Clone(
+		[out]	IEnumSyncSchedules **ppEnumSyncSchedules);
+
+}
+typedef struct _tagSYNC_HANDLER_ITEM_INFO
+{
+	GUID 		handlerID;
+	SYNCMGRITEMID 	itemID;
+   	HICON	    	hIcon;
+	WCHAR	    	wszItemName[MAX_SYNCMGRITEMNAME];
+	DWORD 		dwCheckState;
+} SYNC_HANDLER_ITEM_INFO, *LPSYNC_HANDLER_ITEM_INFO;
+
+[
+    local,
+    object,
+    uuid(F0E15899-A700-11d1-9831-00C04FD910DD), // IID_ISyncSchedule
+    pointer_default(unique)
+]
+interface ISyncSchedule : IUnknown
+{
+
+	HRESULT GetFlags(
+		[out] DWORD *pdwFlags);
+
+	HRESULT SetFlags(
+		[in] DWORD dwFlags);
+
+	HRESULT GetConnection(
+		[in, out] DWORD *pcbSize,
+		[out] LPWSTR pwszConnectionName,
+		[out] DWORD *pdwConnType);
+
+	HRESULT SetConnection(
+ 		[in] LPCWSTR pwszConnectionName,
+		[in] DWORD dwConnType);
+
+	HRESULT GetScheduleName(
+		[in, out] DWORD *pcbSize,
+		[out] LPWSTR pwszScheduleName);
+
+	HRESULT SetScheduleName(
+ 		[in] LPCWSTR pwszScheduleName);
+
+	HRESULT GetScheduleCookie(
+		[out] SYNCSCHEDULECOOKIE *pSyncSchedCookie);
+
+	HRESULT SetAccountInformation(
+		[in] LPCWSTR pwszAccountName,
+		[in] LPCWSTR pwszPassword);
+
+	HRESULT GetAccountInformation(
+		[in, out] DWORD *pcbSize,
+		[out] LPWSTR pwszAccountName);
+
+	HRESULT GetTrigger(
+ 		[out] ITaskTrigger ** ppTrigger);
+
+	HRESULT GetNextRunTime(
+		[out] SYSTEMTIME * pstNextRun);
+
+	HRESULT GetMostRecentRunTime(
+		[out] SYSTEMTIME * pstRecentRun);
+
+	HRESULT EditSyncSchedule(
+	    [in] HWND  hParent,
+		[in] DWORD dwReserved);
+
+	HRESULT AddItem(
+        	[in] LPSYNC_HANDLER_ITEM_INFO pHandlerItemInfo);
+
+	HRESULT RegisterItems(
+		[in]	REFCLSID pHandlerID,
+		[in]	SYNCMGRITEMID *pItemID);
+
+	HRESULT UnregisterItems(
+		[in]	REFCLSID pHandlerID,
+		[in]	SYNCMGRITEMID *pItemID);
+
+	HRESULT SetItemCheck(
+		[in] 	REFCLSID pHandlerID,
+		[in]    SYNCMGRITEMID *pItemID, 
+		[in] 	DWORD dwCheckState);
+
+	HRESULT GetItemCheck(
+		[in]	REFCLSID pHandlerID,
+		[in]	SYNCMGRITEMID *pItemID, 
+		[out] 	DWORD *pdwCheckState);
+
+	HRESULT EnumItems(
+		[in] REFCLSID pHandlerID,
+		[in] IEnumSyncItems  **ppEnumItems);
+
+	HRESULT Save();
+
+	HRESULT GetITask(
+ 		[out] ITask ** ppITask);
+}
+
+
+[
+    local,
+    object,
+    uuid(F0E1589A-A700-11d1-9831-00C04FD910DD), // IID_IEnumSyncItems
+    pointer_default(unique)
+]
+interface IEnumSyncItems : IUnknown
+{
+
+	HRESULT Next(
+		[in]	ULONG celt,
+        	[out, size_is(celt), length_is(*pceltFetched)]
+		LPSYNC_HANDLER_ITEM_INFO rgelt,
+		[out]	ULONG * pceltFetched);
+
+	HRESULT Skip(
+		[in]	ULONG celt);
+
+	HRESULT Reset(void);
+
+	HRESULT Clone(
+	    [out]	IEnumSyncItems ** ppEnumSyncItems);
+
+}

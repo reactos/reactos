@@ -1,0 +1,61 @@
+[OPTIONS]
+;INDEX=main_index
+TITLE=Access Utility Help 
+FORCEFONT=Helv
+MAPFONTSIZE=12-24:18
+
+[FILES]
+access35.rtf
+
+[BITMAPS]
+
+[MAP]
+main_index 0xFFFF
+#define         screen_10                       550
+#define         screen_20                       551
+#define         screen_30                       552
+#define         screen_40                       553
+#define         screen_50                       554
+#define         screen_60                       555
+#define         screen_70                       556
+#define         screen_80                       557
+#define         serial_step_0                   560
+#define         serial_step_1                   561
+#define         serial_step_2                   562
+#define         serial_step_3                   563
+#define         serial_step_4                   564
+#define         serial_step_5                   565
+#define         serial_step_6                   566
+#define         serial_step_7                   567
+#define         serial_step_8                   568
+#define         serial_step_9                   569
+#define         serial_step_10          570
+#define         serial_step_11          571
+#define         serial_step_12          572
+#define         serial_step_13          573
+#define         serial_step_14          574
+#define         serial_step_15          575
+#define         serial_step_16          576
+#define         serial_step_17          577
+#define         serial_step_18          578
+#define         serial_step_19          579
+#define         serial_step_20          580
+#define         serial_step_21          581
+
+
+
+#define         HELPID_SAVE_TO_WIN_INI          523
+#define         HELPID_EXIT                     524
+#define         HELPID_ABOUT            525
+#define         HELPID_HELP                     526
+#define         HELPID_SAVE_DEFAULT             527
+
+
+#define         IDM_HELP_STICKYKEYS             511
+#define         IDM_HELP_FILTERKEYS             512
+#define         IDM_HELP_MOUSEKEYS              513
+#define         IDM_HELP_TOGGLEKEYS             514
+#define         IDM_HELP_SERIALKEYS             515
+#define         IDM_HELP_TIMEOUT                516
+#define         IDM_HELP_SHOWSOUNDS             517
+#define         IDM_HELP_SOUNDSENTRY            518

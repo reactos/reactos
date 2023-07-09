@@ -1,0 +1,47 @@
+MAJORCOMP = opengl
+MINORCOMP = scrnsave
+TARGETNAME = ssmaze
+TARGETPATH = obj
+ALT_PROJECT_TARGET=Nashvile\Win95
+TARGETTYPE = LIBRARY
+UMTYPE = windows
+UMAPPL = ssmaze
+
+INCLUDES = ..; ..\..\common; \
+           $(BASEDIR)\private\windows\opengl\toolkits\libaux
+
+#SSDEV = 1
+!if "$(SSDEV)" != ""
+C_DEFINES = $(C_DEFINES) -DSS_DEBUG
+!else
+UMAPPLEXT = .scr
+!endif
+
+UMLIBS = \
+       $(BASEDIR)\public\sdk\lib\*\gdi32.lib \
+       $(BASEDIR)\public\sdk\lib\*\user32.lib \
+       $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+       $(BASEDIR)\public\sdk\lib\*\opengl32.lib \
+       $(BASEDIR)\public\sdk\lib\*\glaux.lib \
+       $(BASEDIR)\public\sdk\lib\*\glu32.lib \
+       $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+       obj\*\ssmaze.lib \
+       obj\*\maze.res \
+       ..\..\common\win95\obj\*\sscommon.lib
+
+SOURCES = \
+	..\genmaze.c\
+	..\glmaze.c\
+	..\ssmaze.c\
+	..\slvmaze.c \
+    ..\dialog.cxx \
+    ..\maze.rc
+
+
+C_DEFINES = $(C_DEFINES) -DFX_SINGLE -DWINVER=0x0400
+
+!IF "$(NTNOPCH)" == ""
+PRECOMPILED_INCLUDE=..\pch.c
+PRECOMPILED_PCH=pch.pch
+PRECOMPILED_OBJ=pch.obj
+!ENDIF

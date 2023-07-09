@@ -1,0 +1,3 @@
+LIBRARY         PRTQ32
+
+EXPORTS         EditQACL2

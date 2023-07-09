@@ -1,0 +1,61 @@
+//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\
+//
+// menus.rcm 
+//
+//   Menu resources for cdfview.dll
+//
+//   History:
+//
+//       5/6/97  edwardp   Created.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+IDM_CONTEXTMENU MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Open",                   IDM_OPEN
+//        MENUITEM "&Properties"            IDM_PROPERTIES
+    END
+END
+
+IDM_SUBSCRIBEDMENU MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        //  I don't know why this extra separator is needed but it works
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Make available offline",  IDM_UNSUBSCRIBE, CHECKED
+        MENUITEM "Synchronize",             IDM_UPDATESUBSCRIPTION
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh",                 IDM_REFRESHCHANNEL
+        MENUITEM "View Source",             IDM_VIEWSOURCE
+    END
+END
+
+IDM_UNSUBSCRIBEDMENU MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        //  I don't know why this extra separator is needed but it works
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Make available offline",  IDM_SUBSCRIBE
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh",                 IDM_REFRESHCHANNEL
+        MENUITEM "View Source",             IDM_VIEWSOURCE
+    END
+END
+
+IDM_NOSUBSCRIBEMENU MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh",                 IDM_REFRESHCHANNEL
+        MENUITEM "View Source",             IDM_VIEWSOURCE
+    END
+END
+

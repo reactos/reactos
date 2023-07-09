@@ -1,0 +1,83 @@
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table - Non-Localizable strings are here
+// Copyright (c)1997-1999 Microsoft Corporation, All Rights Reserved
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HTML                "HTML"
+    IDS_IEXP3               "HTML - IE 3.0"
+    IDR_HTML                "\nPage\nHTML Page\nHTML Files (*.htm;*.html;*.stm;*.stml;*.alx)\n.htm"
+    IDS_RFC1866             "HTML 2.0 (RFC 1866)"
+    IDR_ASP                 "\nASPage\nActive Server Page\nActive Server Pages (*.asp)\n.asp\n"
+    IDS_GLYPHTABLE1         "%%form^^%%res://!/formbgn.gif^^%%0^^%%3^^%%3^^%%4^^%%43^^%%14^^%%43^^%%14^^**"
+    IDS_GLYPHTABLE2         "%%form^^%%res://!/formend.gif^^%%1^^%%3^^%%3^^%%4^^%%43^^%%14^^%%43^^%%14^^**"    
+    IDS_GLYPHTABLE3         "%%form^^%%res://!/anchor.gif^^%%0^^%%3^^%%1^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE4         "%%form^^%%res://!/anchor.gif^^%%0^^%%3^^%%2^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE5         "%%img^^%%res://!/anchor.gif^^%%2^^%%0^^%%3^^%%4^^%%20^^%%15^^%%20^^%%15^^**"    
+    IDS_GLYPHTABLE6         "%%img^^%%res://!/anchor.gif^^%%2^^%%2^^%%3^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE7         "%%script^^%%res://!/cltscrpt.gif^^%%2^^%%3^^%%3^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE8         "%%style^^%%res://!/style.gif^^%%2^^%%3^^%%3^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE9         "%%comment^^%%res://!/comments.gif^^%%2^^%%3^^%%3^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE10        "%%25^^%%res://!/comments.gif^^%%2^^%%3^^%%3^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE11        "%%div^^%%res://!/divbgn.gif^^%%0^^%%3^^%%3^^%%4^^%%43^^%%14^^%%43^^%%14^^**"
+    IDS_GLYPHTABLE12        "%%div^^%%res://!/divend.gif^^%%1^^%%3^^%%3^^%%4^^%%43^^%%14^^%%43^^%%14^^**"
+    IDS_GLYPHTABLE13        "%%div^^%%res://!/anchor.gif^^%%0^^%%3^^%%1^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE14        "%%div^^%%res://!/anchor.gif^^%%0^^%%3^^%%2^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE15        "%%p^^%%res://!/pbgn.gif^^%%0^^%%3^^%%3^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE16        "%%p^^%%res://!/pend.gif^^%%1^^%%3^^%%3^^%%4^^%%20^^%%15^^%%20^^%%15^^**"    
+    IDS_GLYPHTABLE17        "%%span^^%%res://!/spanbgn.gif^^%%0^^%%3^^%%3^^%%4^^%%43^^%%14^^%%43^^%%14^^**"
+    IDS_GLYPHTABLE18        "%%span^^%%res://!/spanend.gif^^%%1^^%%3^^%%3^^%%4^^%%43^^%%14^^%%43^^%%14^^**"
+    IDS_GLYPHTABLE19        "%%span^^%%res://!/anchor.gif^^%%0^^%%3^^%%1^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE20        "%%span^^%%res://!/anchor.gif^^%%0^^%%3^^%%2^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE21        "%% ^^%%res://!/unknown.gif^^%%2^^%%3^^%%3^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE22        "%%br^^%%res://!/br.gif^^%%2^^%%3^^%%3^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE23        "%%TAGID_NULL^^%%res://!/anchor.gif^^%%2^^%%3^^%%1^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+    IDS_GLYPHTABLE24        "%%TAGID_NULL^^%%res://!/anchor.gif^^%%2^^%%3^^%%2^^%%4^^%%20^^%%15^^%%20^^%%15^^**"
+END
+
+// Glyph resources
+anchor.gif          HTML    "anchor.gif"
+br.gif              HTML    "br.gif"
+cltscrpt.gif        HTML    "cltscrpt.gif"
+comments.gif        HTML    "comments.gif"
+divbgn.gif          HTML    "divbgn.gif"
+divend.gif          HTML    "divend.gif"
+formbgn.gif         HTML    "formbgn.gif"
+formend.gif         HTML    "formend.gif"
+pbgn.gif            HTML    "pbgn.gif"
+pend.gif            HTML    "pend.gif"
+spanbgn.gif         HTML    "spanbgn.gif"
+spanend.gif         HTML    "spanend.gif"
+style.gif           HTML    "style.gif"
+unknown.gif         HTML    "unknown.gif"
+
+// #include <vers.h>		// devbin\vs\v6\include
+#include <version.h>
+#include <vidstamp.h>		// vsdev\pkgs\vid\include
+
+///////////////////////////////////////////
+//
+// Set up the defines for use in common.ver
+//
+
+// defines for the VS_VERSION block
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE 		VFT2_UNKNOWN
+
+
+// strings for the "StringFileInfo" block
+
+#define VER_LEGALCOPYRIGHT_YEARS	"1995-1998"
+#define VER_FILEDESCRIPTION_STR 	"Microsoft (R) HTML Editing Component"
+#define VER_INTERNALNAME_STR		"TRIEDIT"
+#define VER_ORIGINALFILENAME_STR	"TRIEDIT.DLL"
+
+#ifdef VER_PRODUCTNAME_STR
+#undef VER_PRODUCTNAME_STR
+#endif
+#define VER_PRODUCTNAME_STR		"DHTML Editing Component"
+
+#include <vidcomn.ver>		// vsdev\pkgs\vid\include

@@ -1,0 +1,97 @@
+USE_NATIVE_EH=1
+CHECKED_ALT_DIR=1
+
+!if !$(FREEBUILD)
+!if "$(BUILD_PRODUCT)" != "NT"
+DEBUG_CRTS=1
+!endif
+!endif
+
+ROOT=$(MAKEDIR:\msaahtml=)
+
+!undef NO_BROWSER_FILE
+
+C_DEFINES = \
+    /D_MBCS               \
+    /D__AOMMGR_ENABLETEXT \
+    /DNASHVILLE
+
+USE_LIBCMT=1
+USE_ATL=1
+WIN32_WINNT_VERSION=0x0400
+WIN32_IE_VERSION=0x0300
+
+
+TARGETNAME=msaahtml
+TARGETPATH=$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+DLLENTRY=_DllMainCRTStartup
+UMTYPE=windows 
+
+
+DLLDEF=msaahtml.def
+# BUG: we definitely need to check that this BASE address is OK... -jkl
+DLLBASE=0x50000000
+
+INCLUDES=$(O); \
+    .; \
+    $(O); \
+    $(ROOT)\external\inc; \
+    $(SDK_LIB_PATH); \
+    $(SDK_INC_PATH);
+
+
+PASS0_HEADERDIR=$(O)
+PASS0_SOURCEDIR=$(O)
+
+SOURCES= \
+    msaahtml.rc \
+    memblk.cpp \
+    memmgr.cpp \
+    anchor.cpp \
+    aommgr.cpp \
+    area.cpp \
+    button.cpp \
+    checkbox.cpp \
+    control.cpp \
+    div.cpp \
+    document.cpp \
+    editfld.cpp \
+    enumvar.cpp \
+    event.cpp \
+    frame.cpp \
+    guid.cpp \
+    image.cpp \
+    imgbtn.cpp \
+    map.cpp \
+    marquee.cpp \
+    msaahtml.cpp \
+    optnbtn.cpp \
+    plugin.cpp \
+    prxymgr.cpp \
+    radiobtn.cpp \
+    select.cpp \
+    sound.cpp \
+    table.cpp \
+    tablcell.cpp \
+    text.cpp \
+    trid_ae.cpp \
+    trid_ao.cpp \
+    utils.cpp \
+    window.cpp
+
+
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\oleaut32.lib \
+    $(SDK_LIB_PATH)\gdi32.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+
+PRECOMPILED_INCLUDE=stdafx.h
+PRECOMPILED_SOURCEFILE=stdafx.cpp
+PRECOMPILED_CXX=1
+
+NTTARGETFILES=

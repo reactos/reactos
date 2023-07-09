@@ -1,0 +1,52 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\util=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=util
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+    altfont.cxx \
+    array.cpp \
+    cfpf.cxx \
+    clrngprs.cxx \
+    collbase.cxx \
+    collect.cxx \
+    dimm.cxx \
+    datcache.cxx \
+    domcoll.cxx \
+    eventobj.cxx  \
+    fontinfo.cxx \
+    filtcol.cxx   \
+    intl.cxx \
+    mime64.cpp \
+    numconv.cxx \
+    omrect.cxx \
+    optshold.cxx \
+    postdata.cxx \
+    propbag.cxx \
+    recalc.cxx \
+    sbbase.cxx \
+    sbutil.cxx \
+    shape.cxx \
+    strbuf.cxx \
+    switches.cxx \
+    textxfrm.cxx \
+    unipart.cxx \
+    unisid.cxx \
+    uniwbk.cxx \
+    unidir.cxx \
+    uniprop.cxx \
+    xmlns.cxx \
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1
+

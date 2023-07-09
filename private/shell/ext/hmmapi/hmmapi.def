@@ -1,0 +1,37 @@
+// -----------------------------------------------------------------------------
+// hmmapi.def
+// Copyright (c)1998 Microsoft Corporation, All Rights Reserved
+// -----------------------------------------------------------------------------
+LIBRARY     HMMAPI
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION "Microsoft HTTP Mail Simple MAPI Stub"
+
+EXPORTS
+
+        MAPIFreeBuffer      @16
+        MAPISendDocuments   @208
+        MAPILogon           @209
+        MAPILogoff          @210
+        MAPISendMail        @211
+        MAPISaveMail        @212
+        MAPIReadMail        @213
+        MAPIFindNext        @214
+        MAPIDeleteMail      @215
+        MAPIAddress         @217
+        MAPIDetails         @218
+        MAPIResolveName     @219
+        BMAPISendMail       @220
+        BMAPISaveMail       @221
+        BMAPIReadMail       @222
+        BMAPIGetReadMail    @223
+        BMAPIFindNext       @224
+        BMAPIAddress        @225
+        BMAPIGetAddress     @226
+        BMAPIDetails        @227
+        BMAPIResolveName    @228
+		MailToProtocolHandler	@300
+		OpenInboxHandler		@301
+		AddService				@302
+		RemoveService			@303
+		DllRegisterServer       @304	PRIVATE
+		DllUnregisterServer     @305	PRIVATE

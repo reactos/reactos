@@ -1,0 +1,27 @@
+
+
+USE_CRTDLL=1
+NOT_LEAN_AND_MEAN=1
+
+MAJORCOMP=
+MINORCOMP=
+
+NTTARGETFILE0=copysource
+
+TARGETNAME=EXT2
+TARGETTYPE=LIBRARY
+TARGETPATH=..\bin
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib
+
+LINKLIBS=
+INCLUDES=.;..
+
+SOURCES=    defclsf.c \
+            pageext.c \
+            fspage.c

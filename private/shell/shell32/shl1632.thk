@@ -1,0 +1,134 @@
+//
+//  SHELL.DLL -> SHELL32.DLL thunks
+//
+//  these routines are exported from shell.dll (16) and
+//  implemented in shell32.dll (32)
+//
+__foldwin32sstuff __foldwin32sstuff;
+//foldstyleinitialization = true;
+
+
+win31compat = true;  //Defers unloading of shell32 until process exit
+
+enablemapdirect1632 = true;
+
+//
+// 16 -> 32 thunks
+//
+// these routines are exported from shell.dll (16) and
+// implemented in shell32.dll (32)
+//
+//
+
+#include "..\types.thk"
+
+typedef HANDLE  HINSTANCE;
+typedef HANDLE  HMODULE;
+typedef LPSTR   LPCSTR;
+
+int PickIconDlg(HWND hwnd, LPSTR pszIconPath, UINT cbIconPath, LPINT piIconIndex)
+{
+    pszIconPath = inout;
+    piIconIndex = inout;
+}
+
+int RestartDialog(HWND hwnd, LPSTR lpPrompt, DWORD dwReturn)
+{
+}
+
+// EXTRACT.C
+//
+HICON ExtractIcon(HINSTANCE hInst, LPSTR lpszExeFileName, int nIconIndex)
+{
+    target = ExtractIconA;
+}
+
+UINT ExtractIconExA(LPCSTR lpszExeFileName, int nIconIndex, LPUINT phiconLarge, LPUINT phiconSmall, int nIcons)
+{
+    phiconLarge = output;
+    phiconSmall = output;
+}
+
+/*
+HANDLE InternalExtractIcon(HINSTANCE hInst, LPCSTR lpszExeFileName, int nIconIndex, UINT nIcons)
+{
+    target = InternalExtractIconA;
+}
+*/
+
+HICON ExtractAssociatedIcon(HANDLE hInst, LPSTR lpIconPath, LPINT lpiIcon)
+{
+    target = ExtractAssociatedIconA;
+    lpIconPath = inout;
+    lpiIcon = inout;
+}
+
+HANDLE ShellExecute( HWND hwnd, LPSTR lpszOp, LPSTR lpszFile, LPSTR lpszParams, LPSTR lpszDir, int wShowCmd)
+{
+    target = ShellExecuteA;
+}
+
+INT ShellAbout( HWND hWnd, LPSTR szApp, LPSTR szOtherStuff, HICON hIcon)
+{
+    target = ShellAboutA;
+}
+
+/********
+BOOL GetFileNameFromBrowse(HWND hwnd, LPSTR szFilePath, UINT cbFilePath, LPSTR szWorkingDir, LPSTR szDefExt, LPSTR szFilters, LPSTR szTitle)
+{
+    szFilePath = inout;
+}
+*********/
+
+HANDLE FindExecutable(LPSTR lpFile, LPSTR lpDirectory, LPSTR lpResult)
+{
+    target = FindExecutableA;
+    lpResult = inout;
+}
+
+int DriveType(int iDrive)
+{
+}
+
+//BUGBUG we should fix this structure not to require structure packing.
+
+typedef struct _SHFILEINFO
+{
+        HICON       hIcon;                      // out icon
+        int         iIcon;                      // out icon index
+        DWORD       dwAttributes;               // in/out SFGAO_ flags
+        char        szDisplayName[260];         // out display name (or path)
+        char        szTypeName[80];             // out
+} SHFILEINFO;
+
+DWORD SHGetFileInfoA(LPSTR pszPath, DWORD dwFileAttributes, SHFILEINFO * psfi, UINT cbFileInfo, UINT uFlags) 
+{
+    psfi = inout;
+}
+
+typedef struct _HFILEINFO
+{
+        HICON       hIcon;                      // out icon
+        int i;
+        DWORD       dwAttributes;               // in/out SFGAO_ flags
+        char        szDisplayName[260];         // out display name (or path)
+        char        szTypeName[80];             // out
+} HFILEINFO;
+
+DWORD HGetFileInfo(LPSTR pszPath, DWORD dwFileAttributes, SHFILEINFO * hfi, UINT cbFileInfo, UINT uFlags) =
+DWORD SHGetFileInfoA(LPSTR pszPath, DWORD dwFileAttributes, SHFILEINFO * psfi, UINT cbFileInfo, UINT uFlags) 
+{
+    hfi = inout;
+}
+
+
+// Thunk to allow 16 bit code to do device IOCTLS from 32 bit side with
+// the win16 mutex being released.
+BOOL SH16To32DriveIOCTL(int iDrive, int cmd, LPVOID pv)
+{
+}
+
+int SH16To32Int2526(int iDrive, int iInt, LPVOID lpbuf, WORD count, DWORD ssector)
+{
+}
+

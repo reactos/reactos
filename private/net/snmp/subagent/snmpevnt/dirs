@@ -1,0 +1,5 @@
+DIRS=\
+    EVNTAGNT    \
+    EVNTCMD     \
+    EVNTWIN
+

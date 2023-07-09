@@ -1,0 +1,24 @@
+#ifndef _TEXTAREA_PDL_
+#define _TEXTAREA_PDL_ 1
+
+#include "csite.pdl"
+#include "olesite.pdl"
+
+file txtarea.pdl
+
+import csite.pdl
+
+interface ITextAreaElement super:IControlElement            guid:3050f1fa-98b5-11cf-bb82-00aa00bdce0b
+    refprop CTextAreaElement:cols
+    refprop CTextAreaElement:rows
+    refprop CTextAreaElement:wrap
+    refprop CTextAreaElement:align
+
+class CTextAreaElement name:TextArea super:COleSiteConcrete Interface:ITextAreaElement tearoff guid:3050f247-98b5-11cf-bb82-00aa00bdce0b
+    property cols       atype:long         dispid:DISPID_TXTAREA+2      type:long          get set caa bindable displaybind default:20
+    property rows       atype:long         dispid:DISPID_TXTAREA+3      type:long          get set caa bindable displaybind default:1
+    property name       atype:BSTR         dispid:STDPROPID_XOBJ_NAME   type:CStr          get set caa bindable displaybind
+    property wrap       atype:htmlWrap     dispid:DISPID_TXTAREA+5      type:htmlWrap      get set caa bindable displaybind
+    property align      atype:htmlControlAlign  type:htmlControlAlign   dispid:STDPROPID_XOBJ_CONTROLALIGN      dwFlags:ELEMCHNG_CLEARCACHES    get set caa bindable displaybind  default:htmlControlAlignNotSet 
+
+#endif _TEXTAREA_PDL_

@@ -1,0 +1,16 @@
+/********************************************************************/
+/*        CLEANMGR.RCV                                              */
+/********************************************************************/
+
+#include <winver.h>
+#include <ntverp.h>
+//#include <version.h>
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Disk Space Cleaner for Windows"
+#define VER_INTERNALNAME_STR            "DATACLEN"
+#define VER_LEGALCOPYRIGHT_YEARS        "1998-1999"
+#define VER_ORIGINALFILENAME_STR        "DATACLEN.DLL"
+
+#include <common.ver>

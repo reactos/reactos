@@ -1,0 +1,60 @@
+//+---------------------------------------------------------------------------
+//
+//  Copyright 1995-1998 Microsoft Corporation. All Rights Reserved.
+//
+//  Contents:   Url Tracking interfaces
+//
+//  File    :   UrlTrack.idl
+//
+//----------------------------------------------------------------------------
+
+//import "objidl.idl";
+import "oleidl.idl";
+//import "oaidl.idl";
+//import "servprov.idl";
+
+interface IUrlTrackingStg;
+
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//  User click stream tracking object")
+cpp_quote("")
+cpp_quote("EXTERN_C const GUID CLSID_CUrlTrackingStg          ;")
+cpp_quote("")
+cpp_quote("//  IUrlTrackingStg Interface Definitions")
+
+
+cpp_quote("#ifndef _LPURLTRACKSTG")
+cpp_quote("#define _LPURLTRACKSTG")
+
+typedef enum tagBRMODE
+{
+    BM_NORMAL       = 0,
+    BM_SCREENSAVER  = 1,
+    BM_DESKTOP      = 2,
+    BM_THEATER      = 3,
+    BM_UNKNOWN      = 4
+} BRMODE;
+
+
+//----------------------------------------------------------------------------
+[
+	local,
+	uuid(f2f8cbb3-b040-11d0-bb16-00c04fb66f63)         //IID_IUrlTrackingStg
+]
+interface IUrlTrackingStg : IUnknown
+{
+
+    HRESULT      OnLoad(
+			[in] LPCTSTR lpszUrl,
+						[in] BRMODE  ContextMode,
+						[in] BOOL    fUseCache);
+
+    HRESULT      OnUnload(
+			[in] LPCTSTR lpszUrl);
+	
+}
+
+cpp_quote("#endif")
+
+

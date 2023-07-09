@@ -1,0 +1,42 @@
+!ifndef SHOW_DBG_OUTPUT
+SHOW_DBG_OUTPUT=0
+!endif
+
+!if $(SHOW_DBG_OUTPUT)
+MFC_DEFINES=-D_DBG_PRINT_INSTANCES=1
+!endif
+
+TARGETNAME=perfdisk
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+USE_CRTDLL=1
+
+DLLBASE=0x60000000
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib     \
+	   $(BASEDIR)\public\sdk\lib\*\advapip.lib         \
+           ..\common\obj\*\perfutil.obj
+
+INCLUDES=.;..\common
+
+GPSIZE=0        
+
+DLLENTRY=DllInit
+
+SOURCES=diskmsg.mc  \
+        dataphys.c  \
+        datalogi.c  \
+        perfdisk.c  \
+        physdisk.c  \
+        logidisk.c  \
+        diskutil.cpp \
+        perfdisk.rc
+    
+
+PASS0_HEADERDIR=.
+PASS0_SOURCEDIR=.
+
+C_DEFINES= -DWIN32 -DSTRICT
+
+

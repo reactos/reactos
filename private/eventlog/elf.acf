@@ -1,0 +1,7 @@
+[strict_context_handle, implicit_handle( handle_t eventlog_handle )]
+interface eventlog
+{
+#if defined(_PPC_)
+[optimize( "s" )] ElfrChangeNotify();
+#endif
+}

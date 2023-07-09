@@ -1,0 +1,24 @@
+#ifndef _FONTFACE_PDL_
+#define _FONTFACE_PDL_ 1
+
+#include "types.pdl"
+
+file fontface.pdl
+
+import types.pdl
+
+interface IHTMLStyleFontFace super:IDispatch      guid:3050f3d5-98b5-11cf-bb82-00aa00bdce0b
+    refprop CFontFace:fontsrc
+
+tearoff CFontFace interface:IHTMLStyleFontFace
+
+class CFontFace name:HTMLStyleFontFace \
+            primaryinterface:IHTMLStyleFontFace \
+            super:CBase keepnopersist \
+            noaamethods \
+            guid:3050f3d4-98b5-11cf-bb82-00aa00bdce0b
+
+    property fontsrc		atype:BSTR  dispid:DISPID_A_FONTFACESRC        type:CStyleComponent \
+			get set caa  displaybind siteredraw szattribute:SRC maxstrlen:pdlNoLimit
+
+#endif _FONTFACE_PDL_

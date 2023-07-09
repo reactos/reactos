@@ -1,0 +1,52 @@
+#if !defined(WIN16) && !defined(UNIX)
+#ifndef _MAC
+1 DLGINCLUDE "pagedefs.h"
+#else
+2 DLGINCLUDE "pagedefs.h"
+#endif
+#endif
+
+#ifdef PRODUCT_96
+
+IDD_GENERICPAGE DIALOG DISCARDABLE 150, 40, 170, 154
+//Comment the Language ,Because the Localization tools complains this
+//LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+STYLE WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN | WS_POPUP
+CAPTION "Properties"
+#ifndef _MAC
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "&Apply", IDB_APPLY, 2, 2, 30, 12,
+#else
+FONT 9, "geneva"
+BEGIN
+    PUSHBUTTON      "&Apply", IDB_APPLY, 2, 0, 30, 15,
+#endif
+                        BS_DEFPUSHBUTTON | WS_TABSTOP
+    EDITTEXT        IDE_PROPVALUE, 34, 2, 134, 12,
+                        ES_AUTOHSCROLL | WS_TABSTOP | WS_BORDER
+    LISTBOX         IDC_PROPNAME, 2, 16, 166, 136,
+                        LBS_SORT | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS |
+                        LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+#else
+
+IDD_GENERICPAGE DIALOG DISCARDABLE 0, 0, 170, 54
+//Comment the Language ,Because the Localization tools complains this
+//LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+STYLE WS_CHILD | WS_CLIPCHILDREN
+#ifndef _MAC
+FONT 8, "MS Shell Dlg"
+#else
+FONT 9, "geneva"
+#endif
+BEGIN
+    EDITTEXT        IDE_PROPVALUE, 2, 2, 152, 12,
+                        ES_AUTOHSCROLL | WS_TABSTOP | WS_BORDER
+    LISTBOX         IDC_PROPNAME, 2, 16, 166, 36,
+                        LBS_SORT | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS |
+                        WS_VSCROLL | WS_TABSTOP
+END
+
+#endif

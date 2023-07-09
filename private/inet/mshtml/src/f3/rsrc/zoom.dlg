@@ -1,0 +1,206 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML>
+<HEAD>
+<META NAME=GENERATOR CONTENT="Trident 3411">
+<TITLE>Zoom</TITLE>
+
+<!-- TO DO
+    * Make sure that htmlText is copied back and forth accurately
+    * Tab order (TASK #2)
+-->
+
+<SCRIPT LANGUAGE=VBScript>
+<!-- // Hide script from non-extended browsers
+    sub alert (strMessage)
+        ' BUGBUG: Remove when window.alert( ) is implemented.
+
+        msgbox strMessage, , "Bookmark Alert"
+    end sub
+// -->
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>  
+<!-- // Hide script from non-extended browsers
+
+    //  Constants
+
+
+    //
+    //  BEGIN PHONY CONSTANTS
+    //  Once constants are implemented, this section can be removed.
+    //
+
+    var htmlShiftMask           = 1;
+    var htmlCtrlMask            = 2;
+
+    var htmlKeyReturn           = 13;
+    var htmlKeyEscape           = 27;
+
+    // END PHONY CONSTANTS
+
+    // Global variables
+
+// -->
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>  
+<!-- // Hide script from non-extended browsers
+
+    //  Set dialog position and dimensions
+    window.dialogLeft        =  50;
+    window.dialogTop         = 100;
+    window.dialogWidth       = 600;
+    window.dialogHeight      = 400;
+
+// -->
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript> 
+<!-- // Hide script from non-extended browsers
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Returns the document object for the page that was active
+    //              when the dialog was displayed.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    Document object of the invoking document
+    //
+    //----------------------------------------------------------------------
+
+    function    documentGet( )
+    {
+        return window.dialogArguments;
+    }   //      documentGet
+// -->
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript> 
+<!-- // Hide script from non-extended browsers
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Creates a range that reflects the selection in the 
+    //              active page.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    A range object
+    //
+    //----------------------------------------------------------------------
+
+    function    rangeGetSelected( )
+    {
+        return documentGet( ).selection.createRange( );
+    }   //      rangeGetSelected
+// -->
+</SCRIPT>
+
+<SCRIPT 
+    LANGUAGE=JavaScript>
+    
+    function onCmdOk( )
+    {
+        var doc = documentGet( );
+        var rng = doc.divWork.createTextRange( );
+
+        rng.htmlText = txtLink.value;
+
+    }   //  onCmdOk
+
+</SCRIPT>
+
+<SCRIPT 
+    LANGUAGE=JavaScript 
+    FOR=btnOk 
+    EVENT="onclick( )">  
+<!-- // Hide script from non-extended browsers
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Dismiss the dialog without altering the calling document
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        onCmdOk( );
+        window.close( );
+    }   // btnOk_onclick
+
+// -->
+</SCRIPT>
+
+<SCRIPT 
+    LANGUAGE=JavaScript 
+    FOR=btnCancel 
+    EVENT="onclick( )">  
+<!-- // Hide script from non-extended browsers
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Dismiss the dialog without altering the calling document
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    {
+        window.close( );
+    }   // btnCancel_onclick
+
+// -->
+</SCRIPT>
+
+<SCRIPT 
+    LANGUAGE=JavaScript >
+<!-- // Hide script from non-extended browsers
+
+    //----------------------------------------------------------------------
+    //
+    //  Synopsis:   Initialize the dialog
+    //
+    //  Arguments:  None
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function onBodyLoad( )
+    {
+
+        var doc = documentGet( );
+        var rngDoc;
+        var elDoc;
+
+
+        // Copy the HTML text for the anchor being edited
+        // BUGBUG: Can htmlText be copied or must link be copied?
+        rngWork = doc.divWork.createTextRange( );
+        txtLink.value = rngWork.htmlText;
+
+    }   // onBodyLoad
+
+// -->
+</SCRIPT>
+</HEAD>
+<BODY  style="LAYOUT: Fixed" onLoad="onBodyLoad( )">
+
+<TEXTAREA id=txtLink style="LEFT: 16; TOP: 8; WIDTH: 568; HEIGHT: 330">
+</TEXTAREA>
+<INPUT id=btnOk style="LEFT: 426; TOP: 346; WIDTH: 75; HEIGHT: 25" type=button value=OK >
+<INPUT id=btnCancel style="LEFT: 509; TOP: 346; WIDTH: 75; HEIGHT: 25" type=button value=Cancel >
+
+
+<IMG src="authfla.gif" style="LEFT: 1; TOP: 350; HEIGHT: 30">
+<IMG src="waves.gif" style="LEFT: 0; TOP: 0; HEIGHT: 400">
+
+</BODY >
+</HTML>

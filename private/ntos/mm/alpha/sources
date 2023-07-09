@@ -1,0 +1,6 @@
+ALPHA_SOURCES=..\alpha\inialpha.c \
+              ..\alpha\datalpha.c \
+              ..\alpha\debugsup.c \
+              ..\alpha\hypermap.c \
+              ..\alpha\setdirty.c \
+              ..\alpha\physsect.c

@@ -1,0 +1,25 @@
+# This makefile was generated automatically by mwgenmakeC.
+
+.NOTPARALLEL: world all clean install depend
+
+world all clean install depend:
+	@enterdir include ${MAKE} ${MFLAGS} $@
+	@enterdir display ${MAKE} ${MFLAGS} $@
+	@enterdir misc ${MAKE} ${MFLAGS} $@
+	@enterdir util ${MAKE} ${MFLAGS} $@
+	@enterdir base ${MAKE} ${MFLAGS} $@
+	@enterdir print ${MAKE} ${MFLAGS} $@
+	@enterdir style ${MAKE} ${MFLAGS} $@
+	@enterdir text ${MAKE} ${MFLAGS} $@
+	@enterdir ole ${MAKE} ${MFLAGS} $@
+	@enterdir builtin ${MAKE} ${MFLAGS} $@
+	@enterdir download ${MAKE} ${MFLAGS} $@
+	@enterdir miscelem ${MAKE} ${MFLAGS} $@
+	@enterdir miscsite ${MAKE} ${MFLAGS} $@
+	@enterdir dbind ${MAKE} ${MFLAGS} $@
+	@enterdir encode ${MAKE} ${MFLAGS} $@
+	@enterdir layout ${MAKE} ${MFLAGS} $@
+	@enterdir table ${MAKE} ${MFLAGS} $@
+	@enterdir view ${MAKE} ${MFLAGS} $@
+	@enterdir acc ${MAKE} ${MFLAGS} $@
+

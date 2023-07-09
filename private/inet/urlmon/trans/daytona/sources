@@ -1,0 +1,91 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+Author:   Johann Posch
+
+!ENDIF
+
+MAJORCOMP   = urlmon
+MINORCOMP   = trans
+
+#
+# This is the name of the target built from the source files specified
+# below.  The name should include neither the path nor the file extension.
+#
+
+TARGETNAME=   trans
+
+#
+# This specifies where the target is to be built.  A private target of
+# type LIBRARY or DYNLINK should go to obj, whereas a public target of
+# type LIBRARY or DYNLINK should go to $(BASEDIR)\public\sdk\lib.
+#
+
+TARGETPATH=   obj
+
+#
+# This specifies the type of the target, such as PROGRAM, DYNLINK, LIBRARY,
+# etc.
+#
+
+TARGETTYPE=   LIBRARY
+
+
+#
+# The following includes a global include file defined at the
+# base of the project for all components
+#
+
+
+!include ..\..\daytona.inc
+
+INCLUDES=     ..\..\inc; $(BASEDIR)\private\windows\inc;..\..\download\
+
+
+
+C_DEFINES=    \
+              $(C_DEFINES)          \
+
+
+SOURCES=      \
+              ..\cbinding.cxx   \
+              ..\transact.cxx   \
+              ..\prothndl.cxx   \
+              ..\oinet.cxx      \
+              ..\protmgr.cxx    \
+              ..\bindctx.cxx    \
+              ..\modallp.cxx    \
+              ..\ibsc.cxx       \
+              ..\transdat.cxx   \
+              ..\datasnif.cxx   \
+              ..\transapi.cxx   \
+              ..\urlmon.cxx     \
+              ..\urlmarsh.cxx   \
+              ..\transmgr.cxx   
+
+UMTYPE=       windows
+UMAPPL=
+UMTEST=
+UMLIBS=
+
+# precompiled headers
+!include ..\precomp1.inc
+
+CONDITIONAL_INCLUDES = \
+	winwlm.h \
+	macwin32.h \
+	new
+
+

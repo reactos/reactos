@@ -1,0 +1,1207 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1998.
+//
+//  File: xmldom.idl
+//
+//--------------------------------------------------------------------------
+
+#ifdef UNIX
+import "ocidl.idl";
+#endif
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1998.")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+#include "xmldomdid.h"
+#include <idispids.h>
+
+interface IXMLDOMImplementation;
+interface IXMLDOMNode;
+interface IXMLDOMDocumentFragment;
+interface IXMLDOMDocument;
+interface IXMLDOMNodeList;
+interface IXMLDOMNamedNodeMap;
+interface IXMLDOMCharacterData;
+interface IXMLDOMAttribute;
+interface IXMLDOMElement;
+interface IXMLDOMText;
+interface IXMLDOMComment;
+interface IXMLDOMProcessingInstruction;
+interface IXMLDOMCDATASection;
+interface IXMLDOMDocumentType;
+interface IXMLDOMNotation;
+interface IXMLDOMEntity;
+interface IXMLDOMEntityReference;
+interface IXMLDOMParseError;
+interface IXTLRuntime;
+
+
+
+typedef [
+helpstring("Constants that define a node's type")
+] enum tagDOMNodeType 
+{  
+    NODE_INVALID, // = 0
+    NODE_ELEMENT, // = 1
+    NODE_ATTRIBUTE, // = 2
+    NODE_TEXT, // = 3
+    NODE_CDATA_SECTION, // = 4
+    NODE_ENTITY_REFERENCE, // = 5
+    NODE_ENTITY, // = 6
+    NODE_PROCESSING_INSTRUCTION, // = 7
+    NODE_COMMENT, // = 8
+    NODE_DOCUMENT, // = 9
+    NODE_DOCUMENT_TYPE, // = 10
+    NODE_DOCUMENT_FRAGMENT, // = 11
+    NODE_NOTATION // = 12
+} DOMNodeType; 
+
+[
+    local, object,
+    uuid(2933BF80-7B36-11d2-B20E-00C04F983E60), // IID_INode
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    helpstring("Core DOM node interface"),
+    pointer_default(unique)
+]
+interface IXMLDOMNode : IDispatch
+{
+    // readonly attribute  wstring              nodeName;
+    [propget, id(DISPID_DOM_NODE_NODENAME), 
+     helpstring("name of the node")]
+    HRESULT nodeName(
+        [out, retval] BSTR * name);
+
+    //          attribute  wstring              nodeValue;
+    [propget, id(DISPID_DOM_NODE_NODEVALUE), 
+     helpstring("value stored in the node")]
+    HRESULT nodeValue(
+        [out, retval] VARIANT * value);
+
+    [propput, id(DISPID_DOM_NODE_NODEVALUE), 
+     helpstring("value stored in the node")]
+    HRESULT nodeValue(
+        [in] VARIANT value);
+
+    // readonly attribute  unsigned short       nodeType;
+    [propget, id(DISPID_DOM_NODE_NODETYPE), 
+     helpstring("the node's type")]
+    HRESULT nodeType(
+        [out, retval] DOMNodeType * type);
+
+    // readonly attribute  Node                 parentNode;
+    [propget, id(DISPID_DOM_NODE_PARENTNODE), 
+     helpstring("parent of the node")]
+    HRESULT parentNode(
+        [out, retval] IXMLDOMNode ** parent);
+
+    // readonly attribute  NodeList             childNodes;
+    [propget, id(DISPID_DOM_NODE_CHILDNODES), 
+     helpstring("the collection of the node's children")]
+    HRESULT childNodes(
+        [out, retval] IXMLDOMNodeList ** childList);
+
+    // readonly attribute  Node                 firstChild;
+    [propget,id(DISPID_DOM_NODE_FIRSTCHILD),
+     helpstring("first child of the node")]
+    HRESULT firstChild(
+        [out, retval] IXMLDOMNode ** firstChild);
+
+    // readonly attribute  Node                 lastChild;
+    [propget,id(DISPID_DOM_NODE_LASTCHILD),
+     helpstring("first child of the node")]
+    HRESULT lastChild(
+        [out, retval] IXMLDOMNode ** lastChild);
+
+    // readonly attribute  Node                 previousSibling;
+    [propget,id(DISPID_DOM_NODE_PREVIOUSSIBLING),
+     helpstring("left sibling of the node")]
+    HRESULT previousSibling(
+        [out, retval] IXMLDOMNode ** previousSibling);
+
+    // readonly attribute  Node                 nextSibling;
+    [propget,id(DISPID_DOM_NODE_NEXTSIBLING),
+     helpstring("right sibling of the node")]
+    HRESULT nextSibling(
+        [out, retval] IXMLDOMNode ** nextSibling);
+
+    // readonly attribute  NamedNodeMap         attributes;
+    [propget, id(DISPID_DOM_NODE_ATTRIBUTES), 
+     helpstring("the collection of the node's attributes")]
+    HRESULT attributes(
+        [out, retval] IXMLDOMNamedNodeMap ** attributeMap);
+
+
+    // Node                      insertBefore(in Node newChild, 
+    //                                        in Node refChild)
+    //                                        raises(DOMException);
+    [id(DISPID_DOM_NODE_INSERTBEFORE),
+     helpstring("insert a child node")]
+    HRESULT insertBefore(
+        [in] IXMLDOMNode * newChild,
+        [in] VARIANT refChild,
+        [out, retval] IXMLDOMNode ** outNewChild);
+
+    // Node                      replaceChild(in Node newChild, 
+    //                                        in Node oldChild)
+    //                                        raises(DOMException);
+    [id(DISPID_DOM_NODE_REPLACECHILD),
+     helpstring("replace a child node")]
+    HRESULT replaceChild(
+        [in] IXMLDOMNode * newChild,
+        [in] IXMLDOMNode * oldChild,
+        [out, retval] IXMLDOMNode ** outOldChild);
+  
+    // Node                      removeChild(in Node childNode)
+    //                                       raises(DOMException);
+    [id(DISPID_DOM_NODE_REMOVECHILD),
+     helpstring("remove a child node")]
+    HRESULT removeChild(
+        [in] IXMLDOMNode * childNode,
+        [out, retval] IXMLDOMNode ** oldChild);
+
+    // Node                      appendChild(in Node newChild);
+    [id(DISPID_DOM_NODE_APPENDCHILD),
+     helpstring("append a child node")]
+    HRESULT appendChild(
+        [in] IXMLDOMNode * newChild,
+        [out, retval] IXMLDOMNode ** outNewChild);
+
+    // boolean                   hasChildNodes();
+    [id(DISPID_DOM_NODE_HASCHILDNODES),
+     helpstring("")]
+    HRESULT hasChildNodes(
+        [out, retval] VARIANT_BOOL * hasChild);
+
+    // readonly attribute  Node                 ownerDocument;
+    [propget, id(DISPID_DOM_NODE_OWNERDOC), 
+     helpstring("document that contains the node")]
+    HRESULT ownerDocument(
+        [out, retval] IXMLDOMDocument ** DOMDocument);
+
+    // Node                      cloneNode(in boolean deep);
+    [id(DISPID_DOM_NODE_CLONENODE),
+     helpstring("")]
+    HRESULT cloneNode(
+        [in] VARIANT_BOOL deep,
+        [out, retval] IXMLDOMNode ** cloneRoot);
+
+    [propget, id(DISPID_XMLDOM_NODE_STRINGTYPE),
+     helpstring("the type of node in string form")] 
+    HRESULT nodeTypeString(
+        [retval, out] BSTR * nodeType);
+
+    [propget, id(DISPID_XMLDOM_NODE_TEXT),
+     helpstring("text content of the node and subtree")] 
+    HRESULT text(
+        [retval, out] BSTR * text);
+
+    [propput, id(DISPID_XMLDOM_NODE_TEXT),
+     helpstring("text content of the node and subtree")] 
+    HRESULT text(
+        [in] BSTR text);
+
+    [propget, id(DISPID_XMLDOM_NODE_SPECIFIED),
+     helpstring("indicates whether node is a default value")]
+    HRESULT specified(
+        [out, retval] VARIANT_BOOL * isSpecified);
+
+    // DTD Navigation.
+    [propget, id(DISPID_XMLDOM_NODE_DEFINITION), 
+     helpstring("pointer to the definition of the node in the DTD or schema")] 
+    HRESULT definition(
+        [retval,out] IXMLDOMNode ** definitionNode);
+
+    [propget, id(DISPID_XMLDOM_NODE_NODETYPEDVALUE), 
+     helpstring("get the strongly typed value of the node")] 
+    HRESULT nodeTypedValue(
+        [retval, out] VARIANT * typedValue);
+
+    [propput, id(DISPID_XMLDOM_NODE_NODETYPEDVALUE), 
+     helpstring("get the strongly typed value of the node")] 
+    HRESULT nodeTypedValue(
+        [in] VARIANT typedValue);
+
+    [propget, id(DISPID_XMLDOM_NODE_DATATYPE), 
+     helpstring("the data type of the node")] 
+    HRESULT dataType(
+        [retval, out] VARIANT * dataTypeName); // BSTR or VT_NULL
+
+    [propput, id(DISPID_XMLDOM_NODE_DATATYPE), 
+     helpstring("the data type of the node")] 
+    HRESULT dataType(
+        [in] BSTR dataTypeName);
+
+    [propget, id(DISPID_XMLDOM_NODE_XML), 
+     helpstring("return the XML source for the node and each of its descendants")] 
+    HRESULT xml(
+        [retval, out] BSTR * xmlString);
+
+    [id(DISPID_XMLDOM_NODE_TRANSFORMNODE), 
+     helpstring("apply the stylesheet to the subtree")] 
+    HRESULT transformNode(
+        [in] IXMLDOMNode * stylesheet,
+        [retval, out] BSTR * xmlString);
+
+    [id(DISPID_XMLDOM_NODE_SELECTNODES), 
+     helpstring("execute query on the subtree")]
+    HRESULT selectNodes(
+        [in] BSTR queryString,
+        [retval, out] IXMLDOMNodeList** resultList);
+
+    [id(DISPID_XMLDOM_NODE_SELECTSINGLENODE), 
+     helpstring("execute query on the subtree")]
+    HRESULT selectSingleNode(
+        [in] BSTR queryString,
+        [retval, out] IXMLDOMNode** resultNode);
+
+    [propget,id(DISPID_XMLDOM_NODE_PARSED), 
+     helpstring("has sub-tree been completely parsed")]
+	HRESULT parsed(
+        [retval, out] VARIANT_BOOL * isParsed);
+
+    [propget, id(DISPID_XMLDOM_NODE_NAMESPACE), 
+     helpstring("the URI for the namespace applying to the node")] 
+    HRESULT namespaceURI(
+        [retval, out] BSTR * namespaceURI);
+
+    [propget, id(DISPID_XMLDOM_NODE_PREFIX), 
+     helpstring("the prefix for the namespace applying to the node")] 
+    HRESULT prefix(
+        [retval, out] BSTR * prefixString);
+
+    [propget, id(DISPID_XMLDOM_NODE_BASENAME), 
+     helpstring("the base name of the node (nodename with the prefix stripped off)")] 
+    HRESULT baseName(
+        [retval, out] BSTR * nameString);
+
+    [id(DISPID_XMLDOM_NODE_TRANSFORMNODETOOBJECT), 
+     helpstring("apply the stylesheet to the subtree, returning the result through a document or a stream")] 
+    HRESULT transformNodeToObject(
+        [in] IXMLDOMNode * stylesheet,
+        [in] VARIANT outputObject);
+
+};
+
+[
+    local, object,
+    uuid(2933BF81-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMDocument
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMDocument : IXMLDOMNode 
+{
+    // readonly attribute  DocumentType         doctype;
+    [propget, id(DISPID_DOM_DOCUMENT_DOCTYPE),
+     helpstring("node corresponding to the DOCTYPE")]
+    HRESULT doctype(
+        [out, retval] IXMLDOMDocumentType ** documentType); 
+
+    // readonly attribute  DOMImplementation    implementation;
+    [propget, id(DISPID_DOM_DOCUMENT_IMPLEMENTATION),
+     helpstring("info on this DOM implementation")]
+    HRESULT implementation(
+        [out, retval] IXMLDOMImplementation ** impl);
+
+    // attribute  Element              documentElement;
+    [propget, id(DISPID_DOM_DOCUMENT_DOCUMENTELEMENT),
+     helpstring("the root of the tree")]
+    HRESULT documentElement(
+        [out, retval] IXMLDOMElement ** DOMElement);
+
+    [propputref, id(DISPID_DOM_DOCUMENT_DOCUMENTELEMENT),
+     helpstring("the root of the tree")]
+    HRESULT documentElement(
+        [in] IXMLDOMElement * DOMElement);
+
+    // Element                   createElement(in wstring tagName);
+    [id(DISPID_DOM_DOCUMENT_CREATEELEMENT),
+     helpstring("create an Element node")]
+    HRESULT createElement(
+        [in] BSTR tagName,
+        [out, retval] IXMLDOMElement ** element);
+
+    // DocumentFragment          createDocumentFragment();
+    [id(DISPID_DOM_DOCUMENT_CREATEDOCUMENTFRAGMENT),
+     helpstring("create a DocumentFragment node")]
+    HRESULT createDocumentFragment(
+        [out, retval] IXMLDOMDocumentFragment ** docFrag );
+
+    // Text                      createTextNode(in wstring data);
+    [id(DISPID_DOM_DOCUMENT_CREATETEXTNODE),
+     helpstring("create a text node")]
+    HRESULT createTextNode(
+        [in] BSTR data,
+        [out, retval] IXMLDOMText ** text);
+
+    // Comment                   createComment(in wstring data);
+    [id(DISPID_DOM_DOCUMENT_CREATECOMMENT),
+     helpstring("create a comment node")]
+    HRESULT createComment(
+        [in] BSTR data,
+        [out, retval] IXMLDOMComment ** comment);
+
+    // CDATASection              createCDATASection(in wstring data);
+    [id(DISPID_DOM_DOCUMENT_CREATECDATASECTION),
+     helpstring("create a CDATA section node")]
+    HRESULT createCDATASection(
+        [in] BSTR data,
+        [out, retval] IXMLDOMCDATASection ** cdata);
+
+    // ProcessingInstruction     createProcessingInstruction(in wstring target, 
+    //                                                       in wstring data);
+    [id(DISPID_DOM_DOCUMENT_CREATEPROCESSINGINSTRUCTION),
+     helpstring("create a processing instruction node")]
+    HRESULT createProcessingInstruction(
+        [in] BSTR target,
+        [in] BSTR data,
+        [out, retval] IXMLDOMProcessingInstruction ** pi);
+
+    // Attribute                 createAttribute(in wstring name);
+    [id(DISPID_DOM_DOCUMENT_CREATEATTRIBUTE),
+     helpstring("create an attribute node")]
+    HRESULT createAttribute(
+        [in] BSTR name,
+        [out, retval] IXMLDOMAttribute ** attribute);
+
+    // EntityReference           createEntityReference(in wstring name);
+    [id(DISPID_DOM_DOCUMENT_CREATEENTITYREFERENCE),
+     helpstring("create an entity reference node")]
+    HRESULT createEntityReference(
+        [in] BSTR name,
+        [out, retval] IXMLDOMEntityReference ** entityRef);
+
+    // NodeList                  getElementsByTagName(in wstring tagname);
+    [id(DISPID_DOM_DOCUMENT_GETELEMENTSBYTAGNAME),
+     helpstring("build a list of elements by name")]
+    HRESULT getElementsByTagName(
+        [in] BSTR tagName,
+        [out, retval] IXMLDOMNodeList ** resultList);
+
+    [id(DISPID_XMLDOM_DOCUMENT_CREATENODE), 
+     helpstring("create a node of the specified node type and name")] 
+    HRESULT createNode(
+        [in] VARIANT Type, 
+        [in] BSTR name, 
+        [in] BSTR namespaceURI,
+        [retval, out] IXMLDOMNode ** node);
+
+    [id(DISPID_XMLDOM_DOCUMENT_NODEFROMID), 
+     helpstring("retrieve node from it's ID")]
+    HRESULT nodeFromID( 
+        [in] BSTR idString,
+        [retval, out] IXMLDOMNode ** node);
+
+    [id(DISPID_XMLDOM_DOCUMENT_LOAD), 
+     helpstring("load document from the specified XML source")] 
+    HRESULT load(
+        [in] VARIANT xmlSource,
+        [out, retval] VARIANT_BOOL * isSuccessful);
+
+    [propget, id(DISPID_READYSTATE), 
+     helpstring("get the state of the XML document")] 
+    HRESULT readyState(
+        [retval, out] long * value);
+
+    [propget, id(DISPID_XMLDOM_DOCUMENT_PARSEERROR), 
+     helpstring("get the last parser error")] 
+    HRESULT parseError(
+        [retval, out] IXMLDOMParseError ** errorObj);
+
+    [propget, id(DISPID_XMLDOM_DOCUMENT_URL), 
+     helpstring("get the URL for the loaded XML document")] 
+    HRESULT url(
+        [retval, out] BSTR * urlString);
+
+    [propget, id(DISPID_XMLDOM_DOCUMENT_ASYNC), 
+     helpstring("flag for asynchronous download")] 
+    HRESULT async(
+        [retval, out] VARIANT_BOOL * isAsync);
+
+    [propput, id(DISPID_XMLDOM_DOCUMENT_ASYNC), 
+     helpstring("flag for asynchronous download")] 
+    HRESULT async(
+        [in] VARIANT_BOOL isAsync);
+
+    [id(DISPID_XMLDOM_DOCUMENT_ABORT), 
+     helpstring("abort an asynchronous download")] 
+    HRESULT abort();
+
+    [id(DISPID_XMLDOM_DOCUMENT_LOADXML), 
+     helpstring("load the document from a string")] 
+    HRESULT loadXML( 
+        [in] BSTR bstrXML,
+        [out, retval] VARIANT_BOOL * isSuccessful);
+
+    [id(DISPID_XMLDOM_DOCUMENT_SAVE), 
+     helpstring("save the document to a specified desination")] 
+    HRESULT save( 
+        [in] VARIANT desination);
+
+    [propget, id(DISPID_XMLDOM_DOCUMENT_VALIDATE), 
+     helpstring("indicates whether the parser performs validation")] 
+    HRESULT validateOnParse(
+        [retval, out] VARIANT_BOOL * isValidating);
+
+    [propput, id(DISPID_XMLDOM_DOCUMENT_VALIDATE), 
+     helpstring("indicates whether the parser performs validation")] 
+    HRESULT validateOnParse(
+        [in] VARIANT_BOOL isValidating);
+
+    [propget, id(DISPID_XMLDOM_DOCUMENT_RESOLVENAMESPACE),
+     helpstring("indicates whether the parser resolves references to external DTD/Entities/Schema")]
+    HRESULT resolveExternals(
+        [retval,out] VARIANT_BOOL * isResolving);
+
+    [propput, id(DISPID_XMLDOM_DOCUMENT_RESOLVENAMESPACE),
+     helpstring("indicates whether the parser resolves references to external DTD/Entities/Schema")]
+    HRESULT resolveExternals(
+        [in] VARIANT_BOOL isResolving);
+
+    [propget, id(DISPID_XMLDOM_DOCUMENT_PRESERVEWHITESPACE),
+     helpstring("indicates whether the parser preserves whitespace")]
+    HRESULT preserveWhiteSpace(
+        [retval,out] VARIANT_BOOL * isPreserving);
+
+    [propput, id(DISPID_XMLDOM_DOCUMENT_PRESERVEWHITESPACE),
+     helpstring("indicates whether the parser preserves whitespace")]
+    HRESULT preserveWhiteSpace(
+        [in] VARIANT_BOOL isPreserving);
+
+    [propput, id(DISPID_XMLDOM_DOCUMENT_ONREADYSTATECHANGE), 
+     helpstring("register a readystatechange event handler")]
+    HRESULT onreadystatechange(
+        [in] VARIANT readystatechangeSink);
+ 
+    [propput, id(DISPID_XMLDOM_DOCUMENT_ONDATAAVAILABLE), 
+     helpstring("register an ondataavailable event handler")]
+    HRESULT ondataavailable(
+        [in] VARIANT ondataavailableSink);
+
+    [propput, id(DISPID_XMLDOM_DOCUMENT_ONTRANSFORMNODE), 
+     helpstring("register an ontransformnode event handler")]
+    HRESULT ontransformnode(
+        [in] VARIANT ontransformnodeSink);
+};
+
+
+[
+    local, object,
+    uuid(2933BF82-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMNodeList
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMNodeList : IDispatch
+{
+    // Node                      item(in unsigned long index);
+    [propget, id(DISPID_VALUE),
+     helpstring("collection of nodes")]
+    HRESULT item(
+        [in] long index,
+        [out, retval] IXMLDOMNode ** listItem);
+
+    // readonly attribute  unsigned long        length;
+    [propget, id(DISPID_DOM_NODELIST_LENGTH),
+     helpstring("number of nodes in the collection")]
+    HRESULT length(
+        [out, retval] long * listLength);
+
+    [id(DISPID_XMLDOM_NODELIST_NEXTNODE),
+     helpstring("get next node from iterator")]
+    HRESULT nextNode(
+        [out, retval] IXMLDOMNode ** nextItem);
+
+    [id(DISPID_XMLDOM_NODELIST_RESET),
+     helpstring("reset the position of iterator")]
+    HRESULT reset();
+
+    [propget, restricted, hidden, 
+     id(DISPID_NEWENUM)] 
+    HRESULT _newEnum(
+        [retval, out] IUnknown ** ppUnk);
+};
+
+
+[
+    local, object,
+    uuid(2933BF83-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMNamedNodeMap
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMNamedNodeMap : IDispatch
+{
+    // Node                      getNamedItem(in wstring name);
+    [id(DISPID_DOM_NAMEDNODEMAP_GETNAMEDITEM),
+     helpstring("lookup item by name")]
+    HRESULT getNamedItem(
+        [in] BSTR name,
+        [out, retval] IXMLDOMNode ** namedItem);
+
+    // void                      setNamedItem(in Node arg);
+    [id(DISPID_DOM_NAMEDNODEMAP_SETNAMEDITEM),
+     helpstring("set item by name")]
+    HRESULT setNamedItem(
+        [in] IXMLDOMNode * newItem,
+        [out, retval] IXMLDOMNode ** nameItem);
+
+    // Node                      removeNamedItem(in wstring name);
+    [id(DISPID_DOM_NAMEDNODEMAP_REMOVENAMEDITEM),
+     helpstring("remove item by name")]
+    HRESULT removeNamedItem(
+        [in] BSTR name,
+        [out, retval] IXMLDOMNode ** namedItem);
+
+    // Node                      item(in unsigned long index);
+    [propget, id(DISPID_VALUE),
+     helpstring("collection of nodes")]
+    HRESULT item(
+        [in] long index,
+        [out, retval] IXMLDOMNode ** listItem);
+
+    // readonly attribute  unsigned long        length;
+    [propget, id(DISPID_DOM_NODELIST_LENGTH),
+     helpstring("number of nodes in the collection")]
+    HRESULT length(
+        [out, retval] long * listLength);
+
+    // Node                      getQualifiedItem(in wstring name,in Node namespace);
+    [id(DISPID_XMLDOM_NAMEDNODEMAP_GETQUALIFIEDITEM),
+     helpstring("lookup the item by name and namespace")]
+    HRESULT getQualifiedItem(
+        [in] BSTR baseName,
+        [in] BSTR namespaceURI,
+        [out, retval] IXMLDOMNode ** qualifiedItem);
+
+    // Node                      removeQualifiedItem(in wstring name,in Node namespace);
+    [id(DISPID_XMLDOM_NAMEDNODEMAP_REMOVEQUALIFIEDITEM),
+     helpstring("remove the item by name and namespace")]
+    HRESULT removeQualifiedItem(
+        [in] BSTR baseName,
+        [in] BSTR namespaceURI,
+        [out, retval] IXMLDOMNode ** qualifiedItem);
+
+    [id(DISPID_XMLDOM_NAMEDNODEMAP_NEXTNODE),
+     helpstring("get next node from iterator")]
+    HRESULT nextNode(
+        [out, retval] IXMLDOMNode ** nextItem);
+
+    [id(DISPID_XMLDOM_NAMEDNODEMAP_RESET),
+     helpstring("reset the position of iterator")]
+    HRESULT reset();
+
+    [propget, restricted, hidden, 
+     id(DISPID_NEWENUM)] 
+    HRESULT _newEnum(
+        [retval, out] IUnknown ** ppUnk);
+};
+
+
+[
+    local, object,
+    uuid(3efaa413-272f-11d2-836f-0000f87a7782), // IID_IXMLDOMDocumentFragment
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMDocumentFragment : IXMLDOMNode 
+{
+};
+
+
+[
+    local, object,
+    uuid(2933BF84-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMCharacterData
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMCharacterData : IXMLDOMNode 
+{
+    //          attribute  wstring              data;
+    [propget, id(DISPID_DOM_DATA_DATA),
+     helpstring("value of the node")]
+    HRESULT data(
+        [out, retval] BSTR * data);
+
+    [propput, id(DISPID_DOM_DATA_DATA),
+     helpstring("value of the node")]
+    HRESULT data(
+        [in] BSTR data);
+    
+    // readonly attribute  unsigned long        length;
+    [propget, id(DISPID_DOM_DATA_LENGTH),
+     helpstring("number of characters in value")]
+    HRESULT length(
+        [out, retval] long * dataLength);
+
+    // wstring                   substring(in unsigned long offset, 
+    //                                     in unsigned long count)
+    //                                     raises(DOMException);
+    [id(DISPID_DOM_DATA_SUBSTRING),
+     helpstring("retrieve substring of value")]
+    HRESULT substringData(
+        [in] long offset,
+        [in] long count,
+        [out, retval] BSTR * data);
+
+    // void                      append(in wstring arg);
+    [id(DISPID_DOM_DATA_APPEND),
+     helpstring("append string to value")]
+    HRESULT appendData(
+        [in] BSTR data);
+
+    // void                      insert(in unsigned long offset, 
+    //                                  in wstring arg)
+    //                                  raises(DOMException);
+    [id(DISPID_DOM_DATA_INSERT),
+     helpstring("insert string into value")]
+    HRESULT insertData(
+        [in] long offset,
+        [in] BSTR data);
+
+    // void                      delete(in unsigned long offset, 
+    //                                  in unsigned long count)
+    //                                  raises(DOMException);
+    [id(DISPID_DOM_DATA_DELETE),
+     helpstring("delete string within the value")]
+    HRESULT deleteData(
+        [in] long offset,
+        [in] long count);
+
+    // void                      replace(in unsigned long offset, 
+    //                                   in unsigned long count, 
+    //                                   in wstring arg)
+    //                                   raises(DOMException);
+    [id(DISPID_DOM_DATA_REPLACE),
+     helpstring("replace string within the value")]
+    HRESULT replaceData(
+        [in] long offset,
+        [in] long count,
+        [in] BSTR data);
+};
+
+
+[
+    local, object,
+    uuid(2933BF85-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMAttribute
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMAttribute : IXMLDOMNode 
+{
+    // wstring                   name;
+    [propget, id(DISPID_DOM_ATTRIBUTE_GETNAME),
+     helpstring("get name of the attribute")]
+    HRESULT name(
+        [out, retval] BSTR * attributeName);
+
+    //         attribute  boolean              specified;
+    // ! This is defined as an extended property on IXMLDOMNode
+
+    // attribute wstring                   value;
+    [propget, id(DISPID_DOM_ATTRIBUTE_VALUE),
+     helpstring("string value of the attribute")]
+    HRESULT value(
+        [out, retval] VARIANT * attributeValue);
+
+    [propput, id(DISPID_DOM_ATTRIBUTE_VALUE),
+     helpstring("string value of the attribute")]
+    HRESULT value(
+        [in] VARIANT attributeValue);
+};
+
+
+[
+    local, object,
+    uuid(2933BF86-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMElement
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMElement : IXMLDOMNode 
+{
+    // readonly attribute wstring                   tagName;
+    [propget, id(DISPID_DOM_ELEMENT_GETTAGNAME),
+     helpstring("get the tagName of the element")]
+    HRESULT tagName(
+        [out, retval] BSTR * tagName);
+
+    // wstring                   getAttribute(in wstring name);
+    [id(DISPID_DOM_ELEMENT_GETATTRIBUTE),
+     helpstring("look up the string value of an attribute by name")]
+    HRESULT getAttribute(
+        [in] BSTR name,
+        [out, retval] VARIANT * value);
+
+    // void                      setAttribute(in string name, 
+    //                                        in string value);
+    [id(DISPID_DOM_ELEMENT_SETATTRIBUTE),
+     helpstring("set the string value of an attribute by name")]
+    HRESULT setAttribute(
+        [in] BSTR name,
+        [in] VARIANT value);
+
+    // void                      removeAttribute(in wstring name);
+    [id(DISPID_DOM_ELEMENT_REMOVEATTRIBUTE),
+     helpstring("remove an attribute by name")]
+    HRESULT removeAttribute(
+        [in] BSTR name);
+
+    // Attribute                 getAttributeNode(in wstring name);
+    [id(DISPID_DOM_ELEMENT_GETATTRIBUTENODE),
+     helpstring("look up the attribute node by name")]
+    HRESULT getAttributeNode(
+        [in] BSTR name,
+        [out, retval] IXMLDOMAttribute ** attributeNode);
+
+    // void                      setAttributeNode(in Attribute newAttr);
+    [id(DISPID_DOM_ELEMENT_SETATTRIBUTENODE),
+     helpstring("set the specified attribute on the element")]
+    HRESULT setAttributeNode(
+        [in] IXMLDOMAttribute * DOMAttribute,
+        [out, retval] IXMLDOMAttribute ** attributeNode);
+
+    // void                      removeAttributeNode(in Attribute oldAttr);
+    [id(DISPID_DOM_ELEMENT_REMOVEATTRIBUTENODE),
+     helpstring("remove the specified attribute")]
+    HRESULT removeAttributeNode(
+        [in] IXMLDOMAttribute * DOMAttribute,
+        [out, retval] IXMLDOMAttribute ** attributeNode);
+
+    // NodeList                  getElementsByTagName(in wstring tagname);
+    [id(DISPID_DOM_ELEMENT_GETELEMENTSBYTAGNAME),
+     helpstring("build a list of elements by name")]
+    HRESULT getElementsByTagName(
+        [in] BSTR tagName,
+        [out, retval] IXMLDOMNodeList ** resultList);
+
+    // void                      normalize();
+    [id(DISPID_DOM_ELEMENT_NORMALIZE),
+     helpstring("collapse all adjacent text nodes in sub-tree")]
+    HRESULT normalize();
+};
+
+
+[
+    local, object,
+    uuid(2933BF87-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMText
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMText : IXMLDOMCharacterData 
+{
+    // Text                      splitText(in unsigned long offset);
+    [id(DISPID_DOM_TEXT_SPLITTEXT),
+     helpstring("split the text node into two text nodes at the position specified")]
+    HRESULT splitText(
+        [in] long offset,
+        [out, retval] IXMLDOMText ** rightHandTextNode);
+};
+
+
+[
+    local, object,
+    uuid(2933BF88-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMComment
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMComment : IXMLDOMCharacterData 
+{
+};
+
+
+[
+    local, object,
+    uuid(2933BF89-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMProcessingInstruction
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMProcessingInstruction : IXMLDOMNode 
+{
+    //         read-only attribute  wstring              target;
+    [propget, id(DISPID_DOM_PI_TARGET),
+     helpstring("the target")]
+    HRESULT target(
+        [out, retval] BSTR * name);
+
+    //         attribute  wstring              data;
+    [propget, id(DISPID_DOM_PI_DATA),
+     helpstring("the data")]
+    HRESULT data(
+        [out, retval] BSTR * value);
+
+    [propput, id(DISPID_DOM_PI_DATA),
+     helpstring("the data")]
+    HRESULT data(
+        [in] BSTR value);
+};
+
+
+[
+    local, object,
+    uuid(2933BF8A-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMCDATASection
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMCDATASection : IXMLDOMText 
+{
+};
+
+
+[
+    local, object,
+    uuid(2933BF8B-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMDocumentType
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMDocumentType : IXMLDOMNode 
+{
+    //          readonly attribute  wstring              name;
+    [propget, id(DISPID_DOM_DOCUMENTTYPE_NAME),
+     helpstring("name of the document type (root of the tree)")]
+    HRESULT name(
+        [out, retval] BSTR * rootName);
+
+    // readonly attribute  NamedNodeMap         entities;
+    [propget, id(DISPID_DOM_DOCUMENTTYPE_ENTITIES),
+     helpstring("a list of entities in the document")]
+    HRESULT entities(
+        [out, retval] IXMLDOMNamedNodeMap ** entityMap);
+
+    // readonly attribute  NamedNodeMap         notations;
+    [propget, id(DISPID_DOM_DOCUMENTTYPE_NOTATIONS),
+     helpstring("a list of notations in the document")]
+    HRESULT notations(
+        [out, retval] IXMLDOMNamedNodeMap ** notationMap);
+};
+
+
+[
+    local, object,
+    uuid(2933BF8C-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMNotation
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMNotation : IXMLDOMNode 
+{
+    //         attribute  wstring              publicId;
+    [propget, id(DISPID_DOM_NOTATION_PUBLICID),
+     helpstring("the public ID")]
+    HRESULT publicId(
+        [out, retval] VARIANT * publicID);
+
+    //         attribute  wstring              systemId;
+    [propget, id(DISPID_DOM_NOTATION_SYSTEMID),
+     helpstring("the system ID")]
+    HRESULT systemId(
+        [out, retval] VARIANT * systemID);
+};
+
+
+[
+    local, object,
+    uuid(2933BF8D-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMEntity
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMEntity : IXMLDOMNode 
+{
+    //         attribute  wstring              publicId;
+    [propget, id(DISPID_DOM_ENTITY_PUBLICID),
+     helpstring("the public ID")]
+    HRESULT publicId(
+        [out, retval] VARIANT * publicID);
+
+    //         attribute  wstring              systemId;
+    [propget, id(DISPID_DOM_ENTITY_SYSTEMID),
+     helpstring("the system ID")]
+    HRESULT systemId(
+        [out, retval] VARIANT * systemID);
+
+    //         attribute  wstring              notationName;
+    [propget, id(DISPID_DOM_ENTITY_NOTATIONNAME),
+     helpstring("the name of the notation")]
+    HRESULT notationName(
+        [out, retval] BSTR * name);
+};
+
+
+[
+    local, object,
+    uuid(2933BF8E-7B36-11d2-B20E-00C04F983E60), // IID_IXMLDOMEntityReference
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IXMLDOMEntityReference : IXMLDOMNode 
+{
+};
+
+[
+    local, object,
+    nonextensible,
+    pointer_default(unique),
+    odl,
+    oleautomation,
+    dual,
+    uuid(2933BF8F-7B36-11d2-B20E-00C04F983E60) // IID_IXMLDOMImplementation
+]
+interface IXMLDOMImplementation : IDispatch
+{
+    //  boolean                   hasFeature(in wstring feature, 
+    //                                   in wstring version);
+    [id(DISPID_DOM_IMPLEMENTATION_HASFEATURE)]
+    HRESULT hasFeature(
+        [in] BSTR feature,
+        [in] BSTR version,
+        [out, retval] VARIANT_BOOL * hasFeature);
+};
+
+
+[
+    local, object,
+    uuid(3efaa425-272f-11d2-836f-0000f87a7782), // IID_IXTLRuntime
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    helpstring("XTL runtime object"),
+    pointer_default(unique)
+]
+interface IXTLRuntime : IXMLDOMNode 
+{
+    [id(DISPID_XTLRUNTIME_UNIQUEID),
+     helpstring("")] 
+    HRESULT uniqueID(
+        [in]IXMLDOMNode *pNode, 
+        [out,retval]long *pID);
+
+    [id(DISPID_XTLRUNTIME_DEPTH),
+     helpstring("")]
+    HRESULT depth(
+        [in] IXMLDOMNode *pNode, 
+        [out,retval]long * pDepth);
+
+    [id(DISPID_XTLRUNTIME_CHILDNUMBER),
+     helpstring("")] 
+    HRESULT childNumber(
+        [in]IXMLDOMNode *pNode, 
+        [out,retval] long *pNumber);
+
+    [id(DISPID_XTLRUNTIME_ANCESTORCHILDNUMBER),
+     helpstring("")] 
+    HRESULT ancestorChildNumber(
+        [in]BSTR bstrNodeName, 
+        [in]IXMLDOMNode *pNode, 
+        [out,retval]long *pNumber);
+
+    [id(DISPID_XTLRUNTIME_ABSOLUTECHILDNUMBER),
+     helpstring("")] 
+    HRESULT absoluteChildNumber(
+        [in]IXMLDOMNode *pNode, 
+        [out,retval]long *pNumber);
+
+    [id(DISPID_XTLRUNTIME_FORMATINDEX),
+     helpstring("")] 
+	HRESULT formatIndex(
+        [in] long lIndex, 
+        [in] BSTR bstrFormat, 
+        [out, retval]BSTR *pbstrFormattedString);
+
+    [id(DISPID_XTLRUNTIME_FORMATNUMBER),
+     helpstring("")] 
+	HRESULT formatNumber(
+        [in] double dblNumber, 
+        [in] BSTR bstrFormat, 
+        [out, retval]BSTR *pbstrFormattedString);
+
+    [id(DISPID_XTLRUNTIME_FORMATDATE),
+     helpstring("")] 
+	HRESULT formatDate(
+        [in] VARIANT varDate, 
+        [in] BSTR bstrFormat, 
+        [in,optional] VARIANT varDestLocale,
+        [out, retval]BSTR *pbstrFormattedString);
+
+    [id(DISPID_XTLRUNTIME_FORMATTIME),
+     helpstring("")] 
+	HRESULT formatTime(
+        [in] VARIANT varTime, 
+        [in] BSTR bstrFormat, 
+        [in,optional] VARIANT varDestLocale,
+        [out, retval]BSTR *pbstrFormattedString);
+};
+
+[
+    local, object,
+    uuid(3efaa426-272f-11d2-836f-0000f87a7782), // IID_IXMLDOMParseError
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    helpstring("structure for reporting parser errors"),
+    pointer_default(unique)
+]
+interface IXMLDOMParseError : IDispatch
+{
+    [propget, id(DISPID_VALUE), 
+     helpstring("the error code")] 
+    HRESULT errorCode(
+        [retval, out] long * errorCode);
+
+    [propget, id(DISPID_DOM_ERROR_URL), 
+     helpstring("the URL of the XML document containing the error")] 
+    HRESULT url(
+        [retval, out] BSTR * urlString);
+
+    [propget, id(DISPID_DOM_ERROR_REASON), 
+     helpstring("the cause of the error")] 
+    HRESULT reason(
+        [retval, out] BSTR * reasonString);
+
+    [propget, id(DISPID_DOM_ERROR_SRCTEXT), 
+     helpstring("the data where the error occurred")] 
+    HRESULT srcText(
+        [retval, out] BSTR * sourceString);
+
+    [propget, id(DISPID_DOM_ERROR_LINE), 
+     helpstring("the line number in the XML document where the error occurred")] 
+    HRESULT line(
+        [retval, out] long * lineNumber);
+
+    [propget, id(DISPID_DOM_ERROR_LINEPOS),
+     helpstring("the character position in the line containing the error")] 
+    HRESULT linepos(
+        [retval, out] long * linePosition);
+
+    [propget, id(DISPID_DOM_ERROR_FILEPOS), 
+     helpstring("the absolute file position in the XML document containing the error")]
+    HRESULT filepos(
+        [retval, out] long * filePosition);
+};
+
+// DOM event interface
+[
+    hidden,
+    uuid(3efaa427-272f-11d2-836f-0000f87a7782), // IID_IXMLDOMEvent
+]
+dispinterface XMLDOMDocumentEvents 
+{
+    properties:
+    methods:
+    [id (DISPID_XMLDOMEVENT_ONDATAAVAILABLE)]  
+    HRESULT ondataavailable(void);
+ 
+    [id (DISPID_XMLDOMEVENT_ONREADYSTATECHANGE)] 
+    HRESULT onreadystatechange(void);
+};
+
+
+ // DOM Document rental-model co-Class 
+[
+    uuid(2933BF90-7B36-11d2-B20E-00C04F983E60), // CLSID_DOMDocument
+    helpstring("W3C-DOM XML Document")
+]
+coclass DOMDocument
+{
+    [default] interface IXMLDOMDocument;
+    [default, source] dispinterface XMLDOMDocumentEvents;
+};
+
+ // DOM Document free-threaded co-Class
+[
+    uuid(2933BF91-7B36-11d2-B20E-00C04F983E60), // CLSID_DOMDocument
+    helpstring("W3C-DOM XML Document (Apartment)")
+]
+coclass DOMFreeThreadedDocument
+{
+    [default] interface IXMLDOMDocument;
+    [default, source] dispinterface XMLDOMDocumentEvents;
+};
+
+
+[
+	object,
+	uuid(ED8C108D-4349-11D2-91A4-00C04F7969E8),
+	odl,
+	dual,
+	oleautomation,
+	helpstring("IXMLHttpRequest Interface"),
+	pointer_default(unique)
+]
+interface IXMLHttpRequest : IDispatch
+{
+	[id(1), helpstring("Open HTTP connection")] HRESULT open([in] BSTR bstrMethod, [in] BSTR bstrUrl, [in,optional] VARIANT varAsync, [in,optional] VARIANT bstrUser, [in,optional] VARIANT bstrPassword);
+	[id(2), helpstring("Add HTTP request header")] HRESULT setRequestHeader([in] BSTR bstrHeader, [in] BSTR bstrValue);
+	[id(3), helpstring("Get HTTP response header")] HRESULT getResponseHeader([in] BSTR bstrHeader, [out, retval] BSTR * pbstrValue);
+	[id(4), helpstring("Get all HTTP response headers")] HRESULT getAllResponseHeaders([out, retval] BSTR * pbstrHeaders);
+	[id(5), helpstring("Send HTTP request")] HRESULT send([in, optional] VARIANT varBody);
+	[id(6), helpstring("Abort HTTP request")] HRESULT abort();
+	[propget, id(7),  helpstring("Get HTTP status code")] HRESULT status([out, retval] long * plStatus);
+	[propget, id(8),  helpstring("Get HTTP status text")] HRESULT statusText([out, retval] BSTR * pbstrStatus);
+	[propget, id(9),  helpstring("Get response body")] HRESULT responseXML([out, retval] IDispatch ** ppBody);
+	[propget, id(10),  helpstring("Get response body")] HRESULT responseText([out, retval] BSTR * pbstrBody);
+	[propget, id(11), helpstring("Get response body")] HRESULT responseBody([out, retval] VARIANT * pvarBody);
+	[propget, id(12), helpstring("Get response body")] HRESULT responseStream([out, retval] VARIANT * pvarBody);
+	[propget, id(13), helpstring("Get ready state")] HRESULT readyState([out, retval] long * plState);
+	[propput, id(14), helpstring("Register a complete event handler")] HRESULT onreadystatechange([in] IDispatch * pReadyStateSink);
+};
+
+// XML HTTP Request Class
+[
+    uuid(ED8C108E-4349-11D2-91A4-00C04F7969E8), // CLSID_XMLHTTPRequest
+    helpstring("XML HTTP Request class.")
+]
+coclass XMLHTTPRequest
+{
+    [default] interface IXMLHttpRequest;
+};

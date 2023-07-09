@@ -1,0 +1,33 @@
+LIBRARY         WS2HELP
+
+SECTIONS
+    .WS2HELP_SHARED READ WRITE SHARED
+
+EXPORTS
+
+        WahOpenApcHelper
+        WahCloseApcHelper
+        WahOpenCurrentThread
+        WahCloseThread
+        WahQueueUserApc
+
+        WahOpenHandleHelper
+        WahCloseHandleHelper
+        WahCreateSocketHandle
+        WahCloseSocketHandle
+        WahCompleteRequest
+        WahEnableNonIFSHandleSupport
+        WahDisableNonIFSHandleSupport
+
+        WahOpenNotificationHandleHelper
+        WahCloseNotificationHandleHelper
+        WahCreateNotificationHandle
+        WahWaitForNotification
+        WahNotifyAllProcesses
+
+        WahCreateHandleContextTable
+        WahDestroyHandleContextTable
+        WahReferenceContextByHandle
+        WahInsertHandleContext
+        WahRemoveHandleContext
+        WahEnumerateHandleContexts

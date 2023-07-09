@@ -1,0 +1,9 @@
+LIBRARY   SHCOMPUI
+
+HEAPSIZE  512
+STACKSIZE 4096
+
+EXPORTS
+   DllCanUnloadNow                  PRIVATE
+   DllGetClassObject                PRIVATE
+   ShellChangeCompressionAttribute

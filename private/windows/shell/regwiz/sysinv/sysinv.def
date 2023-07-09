@@ -1,0 +1,4 @@
+LIBRARY		SysInv
+EXPORTS
+	GetSystemInventoryA		@1
+	GetSystemInventoryW		@2

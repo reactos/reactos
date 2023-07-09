@@ -1,0 +1,48 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css" />    
+<TITLE>Streaming Media</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript">
+// for localization
+var L_SMSError_Text = "You must set up Windows Media Services using the Windows Components Wizard before proceeding.";
+
+function sms()
+{
+	if (srvwiz.ServiceState("NetShow") != 1)
+    {
+        alert(L_SMSError_Text);
+    }
+    else
+    {
+        self.location.href = "sms.htm";
+    }
+}
+</SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("wbsrv_bg.gif");
+        background-repeat:no-repeat;
+        background-position:149 39;
+    }
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#cccccc" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">Streaming Media Server</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Windows Media Services helps you create and publish streaming multimedia presentations to your intranet or the Internet. You can also provide real-time audio and video presentations. 
+            <p id="para2">To set up Windows Media Services, use the Windows Components wizard. After you finish with the wizard, click <b>Next</b> to get started using streaming media.
+        <p id="para3"><a href="javascript:exec('sysocmgr.exe', '/x /i:%windir%/inf/sysoc.inf')"><img src="wiz.gif" width=24 height=24 alt="" border="0" align="middle" hspace="5">Start</a> the Windows Components Wizard. 
+        <p id="para4"><a href="javascript:help('NTSHowTo.chm::/app_netshow.htm')"><img src="help.gif" width=24 height=24 alt="" border="0" align="middle" hspace="5">Learn more</a> about Windows Media Services. 
+        </TD>
+    </TR>
+</TABLE>
+<button id="next" style="position:absolute; bottom:21px; right:37px" onclick="sms()">Next</button>
+</BODY>
+</HTML>

@@ -1,0 +1,49 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=windows
+MINORCOMP=shell
+
+TARGETNAME=poltest
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=\nt\private\windows\inc
+
+C_DEFINES= -DWIN32 -DUNICODE -D_UNICODE
+
+SOURCES=poltest.c   \
+        gpcheck.cpp \
+	poltest.rc
+
+UMTYPE=windows
+UMENTRY=winmain
+UMAPPL=poltest
+UMLIBS=\
+       $(BASEDIR)\public\sdk\lib\*\userenv.lib  \
+       $(BASEDIR)\public\sdk\lib\*\secur32.lib  \
+       $(BASEDIR)\public\sdk\lib\*\netapi32.lib \
+       $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+       $(BASEDIR)\public\sdk\lib\*\gpedit.lib   \
+       $(BASEDIR)\public\sdk\lib\*\ole32.lib    \
+       $(BASEDIR)\public\sdk\lib\*\oleaut32.lib \
+       $(BASEDIR)\public\sdk\lib\*\activeds.lib \
+       $(BASEDIR)\public\sdk\lib\*\adsiid.lib   \
+       $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+       obj\*\poltest.lib \
+       obj\*\poltest.res

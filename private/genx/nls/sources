@@ -1,0 +1,21 @@
+!if 0
+
+   Sources file for private\genx\nls
+
+   Created Aug 14 1998 by Jay Gray (a-jaygr)
+
+!endif
+
+TARGETNAME=nlshdrs
+TARGETPATH=obj
+TARGETTYPE=NOTARGET
+
+SOURCES=ntstatus.mc
+PASS0_HEADERDIR=$(O)
+PASS0_SOURCEDIR=$(O)
+
+NTTARGETFILE0=$(SDK_INC_PATH)\ntstatus.h
+
+# Remove the -A switch to revert to UNICODE message table.
+
+MC_FLAGS=-x $(SDK_INC_PATH) -v

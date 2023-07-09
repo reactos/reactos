@@ -1,0 +1,1472 @@
+;  Control registration and DLL installation
+;
+;  Note the AddReg and DelReg keys have a maximum length of 255 characters.
+;  Only one AddReg and DelReg key per header section.
+;
+;  Because of the length limitations, we use shorthand names for the
+;  sections.
+;
+;  RegItems with %11% or %25% are substituted on NT with
+;  %SystemRoot%\whatever. But this needs to be REGEXSZ!  Use the
+;  token %REGEXSZ% (0x20000).
+;
+;  Any entries that go into the registry that contain
+;  %_SYS_MOD_PATH%, %11%, %25% MUST have this flag set. (w95 ignores it).
+;
+;  Do not do any HKCU registration here.  If you are trying to set
+;  defaults for the current user, set them in HKLM and use
+;  the SHRegXXXUSValue functions
+
+// Turn on and off folder tooltip feature.  See foldertip.h
+#include "foldertip.h"
+
+[Version]
+Signature="$CHICAGO$"
+
+[RegDll]
+ComponentName=Shell.Shell32
+ComponentVersion=5.0
+AdvOptions=44
+AddReg=RegShellNamespace, RegShellObjects, RegShellViews, RegShellOther, RegAdvancedOptions, RegNoOpenWithList, RegFileTypes, RegExternal
+DelReg=DelRegShell, !DelRegShell
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+NoBackupPlatform=NT5
+
+[RegDllNT]
+ComponentName=Shell.Shell32
+ComponentVersion=5.0
+AdvOptions=44
+AddReg=RegShellNT
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+NoBackupPlatform=NT5
+
+[RegDllNTServer]
+ComponentName=Shell.Shell32
+ComponentVersion=5.0
+AdvOptions=44
+AddReg=RegShellNTServer
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnregDll]
+ComponentName=Shell.Shell32
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[CleanupOldRollback1]
+ComponentName=IE40.Shell
+ComponentVersion=5.0
+AdvOptions=44
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[CleanupOldRollback2]
+ComponentName=Shell.Shell32.NT
+ComponentVersion=5.0
+DelReg=!DelRegOldRollback
+AdvOptions=44
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+NoBackupPlatform=NT5
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Shell32 General Registration
+;
+;  This is broken up into chunks so there's some sanity to these
+;  sections.
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;
+; Some things moved to new locations, or disappeared entirely:
+;
+[DelRegShell]
+HKLM,"%PATH_EXPLORER%\AlwaysUnloadDll"
+
+; Shell searches are no longer HTML based: kill URL entries.
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\1\SearchGUID\Url"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\2\SearchGUID\Url"
+
+; Remove the Web and Background PropertySheet Extensions Handler from the old location
+HKLM,"%SMWCV%\Controls Folder\Display\shellex\PropertySheetHandlers\DeskHtmlExt"
+
+; Remove the old "Find Files" regsitration from the start menu
+HKLM,"%PATH_EXPLORER%\FindExtensions\ShellFind"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellFind" ; installed on pre-beta2 machines
+
+; Remove the old win98/IE4 recycle bin registry info
+; after NT5 ships, we should only nuke this key if we are NOT upgrading from NT5.
+HKLM,"%PATH_EXPLORER%\BitBucket"
+
+HKLM,"%ADV_FOLDER%\MapNetDrvBtn"
+HKLM,"%ADV_FOLDER%\ShowAttribCol"
+HKLM,"%ADV_FOLDER%\DontPrettyPath"
+HKLM,"%ADV_FOLDER%\Hidden\NOHIDORSYS"
+HKCR,"CLSID\%CLSID_OverlayIdentifier_SlowFile%"
+
+// We need to clean up this entry from Beta 3 of Windows 2000.
+HKLM,"%ADV_STARTMENU%\IntelliMenus"
+
+; These are now in the "Effects" tab - daviddv (8/18/98)
+HKLM,"%ADV_VISUAL%\DragFullWin"
+HKLM,"%ADV_VISUAL%\FontSmooth"
+; The hideicons is in the ActiveDesktop context menu - sankar (11/16/98)
+HKLM,"%ADV_VISUAL%\HideIcons"
+HKLM,"%ADV_VISUAL%"
+
+; These regitems are removed from My Computer, they will now live in Control Panel
+HKLM,"%PATH_EXPLORER%\MyComputer\NameSpace\%CLSID_TaskScheduler%"
+HKLM,"%PATH_EXPLORER%\MyComputer\NameSpace\%CLSID_NetworkConnections%"
+HKLM,"%PATH_EXPLORER%\MyComputer\NameSpace\%DESC_Printers%"
+
+; BUGBUG: Remove this after a few build, this is for upgrade only (now = shellcabs 1305)
+; Admin tools used to be relative to Common Programs CSIDL, now use Common Admin Tools
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%\Instance\InitPropertyBag","Target"
+
+; Remove this, now handled in netplwiz.dll
+HKLM,"%PATH_EXPLORER%\NetworkNeighborhood\NameSpace\%CLSID_NewPlaceRegItem%"
+
+; remove url key so we can cocreate the context menu handler instead of navigating search pane to an url
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\0\SearchGUID\Url"
+
+; no more context menu for edit menu
+HKCR,"AllFilesystemEditObjects\shellex\ContextMenuHandlers\Copy To",,,"%CLSID_CopyToMenu%"
+HKCR,"AllFilesystemEditObjects\shellex\ContextMenuHandlers\Move To",,,"%CLSID_MoveToMenu%"
+
+; remove old Fonts and Admin Tools Folder FolderShortcut init reg entries
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%\Instance\InitRCStream"
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%\Instance\InitRCStream"
+
+; Remove quickview since we no longer support it
+HKCR,"CLSID\%CLSID_ShellViewerExt%"
+
+; cleanup the "New Microsoft Data Link" turd
+HKCR,".UDL\ShellNew"
+
+; remove the old shcompui.dll compression reg goo
+HKCR,"ClSID\{764BF0E1-F219-11ce-972D-00AA00A14F56}"
+HKCR,"*\shellex\ContextMenuHandlers\ExplorerCompressionMenu"
+HKCR,"Directory\shellex\ContextMenuHandlers\ExplorerCompressionMenu"
+HKCR,"Drive\shellex\ContextMenuHandlers\ExplorerCompressionMenu"
+HKLM,"Software\Microsoft\Windows\CurrentVersion\ShellExtensions\Approved",,,"{764BF0E1-F219-11ce-972D-00AA00A14F56}"
+
+; We no longer need these
+; In: IE5
+HKCR,"CLSID\%CLSID_UpDownOC%",,,"%DESC_UpDownOC%"
+HKCR,"CLSID\%CLSID_UpDownOC%\Control",,,""
+HKCR,"CLSID\%CLSID_UpDownOC%\%IPS%",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_UpDownOC%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_UpDownOC%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_UpDownOC%\MiscStatus\1",,,"20191"
+HKCR,"CLSID\%CLSID_UpDownOC%\ProgID",,,"Shell.UpDownControl.1"
+HKCR,"CLSID\%CLSID_UpDownOC%\ToolboxBitmap32",,,"%_MOD_PATH%, 260"
+HKCR,"CLSID\%CLSID_UpDownOC%\TypeLib",,,"%CLSID_Shell32TypeLib%"
+HKCR,"CLSID\%CLSID_UpDownOC%\Version",,,"1.0"
+HKCR,"CLSID\%CLSID_UpDownOC%\VersionIndependentProgID",,,"Shell.UpDownControl"
+HKCR,"CLSID\%CLSID_UpDownOC%\Implemented Categories\%CATID_SafeForInitializing%",,,""
+HKCR,"CLSID\%CLSID_UpDownOC%\Implemented Categories\%CATID_SafeForScripting%",,,""
+HKCR,"Shell.UpDownControl",,,"%DESC_UpDownOC%"
+HKCR,"Shell.UpDownControl\CLSID",,,"%CLSID_UpDownOC%"
+HKCR,"Shell.UpDownControl\CurVer",,,"Shell.UpDownControl.1"
+HKCR,"Shell.UpDownControl.1",,,"%DESC_UpDownOC%"
+HKCR,"Shell.UpDownControl.1\CLSID",,,"%CLSID_UpDownOC%"
+
+; In: IE5
+HKCR,"CLSID\%CLSID_DateTimePickerOC%",,,"%DESC_DateTimePickerOC%"
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\Control",,,""
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\%IPS%",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\MiscStatus\1",,,"20191"
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\ProgID",,,"Shell.DateTimePickerControl.1"
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\ToolboxBitmap32",,,"%_MOD_PATH%, 260"
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\TypeLib",,,"%CLSID_Shell32TypeLib%"
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\Version",,,"1.0"
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\VersionIndependentProgID",,,"Shell.DateTimePickerControl"
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\Implemented Categories\%CATID_SafeForInitializing%",,,""
+HKCR,"CLSID\%CLSID_DateTimePickerOC%\Implemented Categories\%CATID_SafeForScripting%",,,""
+HKCR,"Shell.DateTimePickerControl",,,"%DESC_DateTimePickerOC%"
+HKCR,"Shell.DateTimePickerControl\CLSID",,,"%CLSID_DateTimePickerOC%"
+HKCR,"Shell.DateTimePickerControl\CurVer",,,"Shell.DateTimePickerControl.1"
+HKCR,"Shell.DateTimePickerControl.1",,,"%DESC_DateTimePickerOC%"
+HKCR,"Shell.DateTimePickerControl.1\CLSID",,,"%CLSID_DateTimePickerOC%"
+
+; In: IE5
+; Remove OC registration on shell search band:
+HKCR,"CLSID\%CLSID_FileSearchBand%\Control" 
+HKCR,"CLSID\%CLSID_FileSearchBand%\Implemented Categories\%CATID_SafeForInitializing%"
+HKCR,"CLSID\%CLSID_FileSearchBand%\Implemented Categories\%CATID_SafeForScripting%"
+
+[!DelRegShell]
+; Old view PersistFile format. This wasn't used in ie4 and we tried
+; to nuke it, but it was still in a register section, so nuke it now.
+HKCR,"CLSID\%CLSID_ShellDesktop%\%EXTVIEW%\%VID_WebView%","PersistFile"
+
+;
+; Namespace related objects and their assiciated registrations
+;
+[RegShellNamespace]
+;;;;;;;  Favorites_reg
+; In: IE4
+HKCR,"CLSID\%CLSID_FavoritesFolder%",,2,"%DESC_Favorites%"
+HKCR,"CLSID\%CLSID_FavoritesFolder%\DefaultIcon",,%REGEXSZ%,"%11%\shell32.dll,-173"
+HKCR,"CLSID\%CLSID_FavoritesFolder%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_FavoritesFolder%\%IPS%","ThreadingModel",2,"Apartment"
+HKCR,"CLSID\%CLSID_FavoritesFolder%\ShellFolder","Attributes",%REGDW%,0x70000100
+HKLM,"%SMWCVSEA%","%CLSID_FavoritesFolder%",,"%DESC_Favorites%"
+
+;;;;;;;  DocFindFolder_reg
+; In: IE5
+HKCR,"CLSID\%CLSID_DocFindFolder%",,,"%DESC_DocFindFolder%"
+HKCR,"CLSID\%CLSID_DocFindFolder%\DefaultIcon",,%REGEXSZ%,"%11%\shell32.dll,-134"
+HKCR,"CLSID\%CLSID_DocFindFolder%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DocFindFolder%\%IPS%","ThreadingModel",2,"Apartment"
+HKCR,"CLSID\%CLSID_DocFindFolder%\ShellFolder","Attributes",%REGDW%,0x20180000
+
+HKLM,"%PATH_EXPLORER%\Desktop\NameSpace\%CLSID_DocFindFolder%",,,"%DESC_DocFindFolder%"
+
+HKCR,"CLSID\%CLSID_ComputerFindFolder%",,,"%DESC_ComputerFindFolder%"
+HKCR,"CLSID\%CLSID_ComputerFindFolder%\DefaultIcon",,%REGEXSZ%,"%11%\shell32.dll,-135"
+HKCR,"CLSID\%CLSID_ComputerFindFolder%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ComputerFindFolder%\%IPS%","ThreadingModel",2,"Apartment"
+HKCR,"CLSID\%CLSID_ComputerFindFolder%\ShellFolder","Attributes",%REGDW%,0x20180000
+HKLM,"%PATH_EXPLORER%\Desktop\NameSpace\%CLSID_ComputerFindFolder%",,,"%DESC_ComputerFindFolder%"
+
+HKCR,"CLSID\%CLSID_DocFindCommand%",,2,"%DESC_DocFindCommand%"
+HKCR,"CLSID\%CLSID_DocFindCommand%\DefaultIcon",,%REGEXSZ%,"%11%\shell32.dll,-173"
+HKCR,"CLSID\%CLSID_DocFindCommand%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DocFindCommand%\%IPS%","ThreadingModel",2,"Apartment"
+
+HKCR,"CLSID\%CLSID_DocFindPersistHistory%",,2,"%DESC_DocFindPersistHistory%"
+HKCR,"CLSID\%CLSID_DocFindPersistHistory%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DocFindPersistHistory%\%IPS%","ThreadingModel",2,"Apartment"
+
+HKCR,"CLSID\%CLSID_DefViewPersistHistory%",,2,"%DESC_DefViewPersistHistory%"
+HKCR,"CLSID\%CLSID_DefViewPersistHistory%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DefViewPersistHistory%\%IPS%","ThreadingModel",2,"Apartment"
+
+; CLSID_NetworkPlaces
+HKCR,"CLSID\%CLSID_NetworkPlaces%",,,"%DESC_NetworkPlaces%"
+HKCR,"CLSID\%CLSID_NetworkPlaces%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_NetworkPlaces%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_NetworkPlaces%","InfoTip",,"%NETWORKNEIGHBORHOOD_IT%"
+HKCR,"CLSID\%CLSID_NetworkPlaces%\DefaultIcon",,%REGEXSZ%,"%11%\shell32.dll,17"
+HKCR,"CLSID\%CLSID_NetworkPlaces%\shell",,,"none"
+HKCR,"CLSID\%CLSID_NetworkPlaces%\shell\find",,,"%NETHOOD_FINDCOMPUTER%"
+HKCR,"CLSID\%CLSID_NetworkPlaces%\shell\find\command",,%REGEXSZ%,"%25%\Explorer.exe"
+HKCR,"CLSID\%CLSID_NetworkPlaces%\shell\find\ddeexec",,,"[FindFolder(""%l"", %I)]"
+HKCR,"CLSID\%CLSID_NetworkPlaces%\shell\find\ddeexec\application",,,"Folders"
+HKCR,"CLSID\%CLSID_NetworkPlaces%\shell\find\ddeexec\topic",,,"AppProperties"
+
+; CLSID_MyComputer
+HKCR,"CLSID\%CLSID_MyComputer%",,,"%DESC_MyComputer%"
+HKCR,"CLSID\%CLSID_MyComputer%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_MyComputer%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_MyComputer%\DefaultIcon",,%REGEXSZ%,"%25%\Explorer.exe,0"
+HKCR,"CLSID\%CLSID_MyComputer%\shell",,,"none"
+HKCR,"CLSID\%CLSID_MyComputer%\shell\find",,,"%MYCOMP_FIND%"
+HKCR,"CLSID\%CLSID_MyComputer%\shell\find\command",,%REGEXSZ%,"%25%\Explorer.exe"
+HKCR,"CLSID\%CLSID_MyComputer%\shell\find\ddeexec",,,"[FindFolder(""%l"", %I)]"
+HKCR,"CLSID\%CLSID_MyComputer%\shell\find\ddeexec\application",,,"Folders"
+HKCR,"CLSID\%CLSID_MyComputer%\shell\find\ddeexec\topic",,,"AppProperties"
+HKLM,"%SMWCVSEA%","%CLSID_MyComputer%",,"%DESC_MyComputer%"
+
+; CLSID_BriefcaseFolder
+HKCR,"CLSID\%CLSID_BriefcaseFolder%",,,"%DESC_BriefcaseFolder%"
+HKCR,"CLSID\%CLSID_BriefcaseFolder%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_BriefcaseFolder%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_BriefcaseFolder%",,"%DESC_BriefcaseFolder%"
+
+HKCR,"CLSID\%CLSID_Briefcase%\ShellFolder","Attributes",%REGDW%,0x70000136
+
+; CLSID_ShellFSFolder
+HKCR,"CLSID\%CLSID_ShellFSFolder%",,,"%DESC_ShellFSFolder%"
+HKCR,"CLSID\%CLSID_ShellFSFolder%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellFSFolder%\%IPS%","ThreadingModel",,"Apartment"
+
+HKCR,"CLSID\%CLSID_ExeDropTarget%",,,".exe drop target"
+HKCR,"CLSID\%CLSID_ExeDropTarget%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ExeDropTarget%\%IPS%","ThreadingModel",,"Apartment"
+
+; Column handler for FSFolders
+HKCR,"CLSID\%CLSID_DocObjColumnProvider%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DocObjColumnProvider%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"Folder\ShellEx\ColumnHandlers\%CLSID_DocObjColumnProvider%",,,
+
+; Column handler for FSFolders
+HKCR,"CLSID\%CLSID_URLColumnProvider%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_URLColumnProvider%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"Folder\ShellEx\ColumnHandlers\%CLSID_URLColumnProvider%",,,
+
+; Column handler for FSFolders
+HKCR,"CLSID\%CLSID_FileSysColumnProvider%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_FileSysColumnProvider%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"Folder\ShellEx\ColumnHandlers\%CLSID_FileSysColumnProvider%",,,
+
+; CLSID_FolderShortcut
+HKCR,"CLSID\%CLSID_FolderShortcut%",,,"%DESC_FolderShortcut%"
+HKCR,"CLSID\%CLSID_FolderShortcut%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_FolderShortcut%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_FolderShortcut%\shellex\IconHandler",,,%CLSID_FolderShortcut%
+HKCR,"CLSID\%CLSID_FolderShortcut%\shellex\%IID_IQueryInfo%",,,%CLSID_FolderShortcut%
+HKCR,"CLSID\%CLSID_FolderShortcut%\ShellFolder","Attributes",%REGDW%,0x60410137
+HKCR,"CLSID\%CLSID_FolderShortcut%\ShellFolder","CallForAttributes",%REGDW%,0xf0000000
+HKCR,"CLSID\%CLSID_FolderShortcut%\ShellEx\%IID_IShellLinkA%",,,%CLSID_FolderShortcut%
+HKCR,"CLSID\%CLSID_FolderShortcut%\ShellEx\%IID_IShellLinkW%",,,%CLSID_FolderShortcut%
+
+HKLM,"%SMWCVSEA%","%CLSID_FolderShortcut%",,"%DESC_FolderShortcut%"
+
+; CLSID_MountedVolume
+HKCR,"CLSID\%CLSID_MountedVolume%",,,"%DESC_MountedVolume%"
+HKCR,"CLSID\%CLSID_MountedVolume%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_MountedVolume%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_MountedVolume%",,"%DESC_MountedVolume%"
+
+;;;;;;;  NameSpace InfoTips
+HKCR,"CLSID\%CLSID_ControlPanel%","InfoTip",,"%CONTROLPANEL_IT%"
+HKCR,"CLSID\%CLSID_Printers%","InfoTip",,"%PRINTERS_IT%"
+HKCR,"CLSID\%CLSID_MyComputer%","InfoTip",,"%MYCOMPUTER_IT%"
+HKCR,"CLSID\%CLSID_Briefcase%","InfoTip",,"%BRIEFCASE_IT%"
+HKCR,"CLSID\%CLSID_TaskScheduler%","InfoTip",,"%TASKSCHEDULER_IT%"
+HKCR,"CLSID\%CLSID_RecycleBin%","InfoTip",,"%RECYCLEBIN_IT%"
+HKCR,"CLSID\%CLSID_RecycleBin%",SortOrderIndex,%REGDW%,0x00000060
+
+;;;;;;;  Localized Strings
+HKCR,"CLSID\%CLSID_MyDocuments%","LocalizedString",%REGEXSZ%,"@%11%\shell32.dll,-9227"
+HKCR,"CLSID\%CLSID_MyComputer%","LocalizedString",%REGEXSZ%,"@%11%\shell32.dll,-9216"
+HKCR,"CLSID\%CLSID_NetworkPlaces%","LocalizedString",%REGEXSZ%,"@%11%\shell32.dll,-9217"
+HKCR,"CLSID\%CLSID_RecycleBin%","LocalizedString",%REGEXSZ%,"@%11%\shell32.dll,-8964"
+
+;;;;;;;  RecentDocs ViewStream for ComDlg32
+;;;;;;;    this inits the folder to always be in details with only MTime
+HKLM,"%PATH_EXPLORER%\RecentDocs","ViewStream",1,\
+  1C,00,00,00,04,00,00,00,\
+  00,00,00,00,00,00,58,00,\
+  03,00,00,00,01,00,00,00,\
+  03,00,00,00,F0,F0,F0,F0,\
+  14,00,03,00,58,00,00,00,\
+  00,00,00,00,30,00,00,00,\
+  FD,DF,DF,FD,0E,00,02,00,\
+  18,00,10,00,1C,00,00,00,\
+  00,00,00,00,01,00,00,00,\
+  78,00,78,00,00,00,00,00,\
+  03,00,00,00,FF,FF,FF,FF
+
+; ControlPanel NameSpace
+; These regitems used to live in My Computer NameSpace
+HKLM,"%PATH_EXPLORER%\ControlPanel\NameSpace\%CLSID_TaskScheduler%",,,"%DESC_TaskScheduler%"
+
+;   BaseClass'es for NameSpace Objects
+HKCR,"AudioCD","BaseClass",,"Drive"
+HKCR,"DVD","BaseClass",,"Drive"
+
+; Hide the web folders object
+HKLM,%POLICIES_NONENUM%,%CLSID_WebFolders%,%REGDW%,1
+
+;
+;
+; Other shell cocreateinstance()able objects, including activex controls
+;
+[RegShellObjects]
+; In: IE4
+HKCR,"CLSID\%CLSID_CFSIconOverlayManager%",,2,"%DESC_CFSIconOverlayManager%"
+HKCR,"CLSID\%CLSID_CFSIconOverlayManager%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CFSIconOverlayManager%\%IPS%","ThreadingModel",2,"Both"
+HKCR,"CLSID\%CLSID_CFSIconOverlayManager%\%IPS%","LoadWithoutCom",2,""
+
+; CLSID_ShellDrvDefExt
+HKCR,"CLSID\%CLSID_ShellDrvDefExt%",,,"%DESC_ShellDrvDefExt%"
+HKCR,"CLSID\%CLSID_ShellDrvDefExt%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellDrvDefExt%\%IPS%","ThreadingModel",,"Apartment"
+
+; CLSID_ShellFileDefExt
+HKCR,"CLSID\%CLSID_ShellFileDefExt%",,,"%DESC_ShellFileDefExt%"
+HKCR,"CLSID\%CLSID_ShellFileDefExt%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellFileDefExt%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ShellFileDefExt%",,"%DESC_ShellFileDefExt%"
+
+; CLSID_ShellNetDefExt
+HKCR,"CLSID\%CLSID_ShellNetDefExt%",,,"%DESC_ShellNetDefExt%"
+HKCR,"CLSID\%CLSID_ShellNetDefExt%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellNetDefExt%\%IPS%","ThreadingModel",,"Apartment"
+
+; FileTypes property page (shdoc401 also registers this for non NT5)
+; In: IE5
+HKCR,"CLSID\%CLSID_FileTypes%",,,"%DESC_FileType%"
+HKCR,"CLSID\%CLSID_FileTypes%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_FileTypes%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_FileTypes%",,"%DESC_FileType%"
+
+; FileTypes Hook property page (explorer uses calls this)
+; In: IE3, IE4
+HKCR,"CLSID\%CLSID_MIMEFileTypesHook%",,,"%DESC_FileTypeHook%"
+HKCR,"CLSID\%CLSID_MIMEFileTypesHook%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_MIMEFileTypesHook%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_MIMEFileTypesHook%",,"%DESC_FileTypeHook%"
+
+; Shell Search Band (FileSearchBand).
+; In: IE5
+; to expose the FileSearchBand as an OC, uncomment the following line and 
+; remove the corresponding line in the [DelRegShell] section.
+; HKCR,"CLSID\%CLSID_FileSearchBand%\Control",,,"" 
+
+HKCR,"CLSID\%CLSID_FileSearchBand%",,,"%DESC_FileSearchBand%"
+HKCR,"CLSID\%CLSID_FileSearchBand%","MenuText",,""
+HKCR,"CLSID\%CLSID_FileSearchBand%","HelpText",,""
+HKCR,"CLSID\%CLSID_FileSearchBand%","DefaultIcon",%REGEXSZ%,"%11%\shell32.dll,-135"
+HKCR,"CLSID\%CLSID_FileSearchBand%\%IPS%",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_FileSearchBand%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_FileSearchBand%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_FileSearchBand%\MiscStatus\1",,,"20191"
+HKCR,"CLSID\%CLSID_FileSearchBand%\ProgID",,,"Shell.FileSearchBand.1"
+HKCR,"CLSID\%CLSID_FileSearchBand%\ToolboxBitmap32",,,"%_MOD_PATH%, 260"
+HKCR,"CLSID\%CLSID_FileSearchBand%\TypeLib",,,"%CLSID_Shell32TypeLib%"
+HKCR,"CLSID\%CLSID_FileSearchBand%\Version",,,"1.0"
+HKCR,"CLSID\%CLSID_FileSearchBand%\VersionIndependentProgID",,,"Shell.FileSearchBand"
+HKCR,"CLSID\%CLSID_FileSearchBand%\Implemented Categories\%CATID_InfoBand%",,,""
+HKCR,"Shell.FileSearchBand",,,"%DESC_FileSearchBand%"
+HKCR,"Shell.FileSearchBand\CLSID",,,"%CLSID_FileSearchBand%"
+HKCR,"Shell.FileSearchBand\CurVer",,,"Shell.FileSearchBand.1"
+HKCR,"Shell.FileSearchBand.1",,,"%DESC_FileSearchBand%"
+HKCR,"Shell.FileSearchBand.1\CLSID",,,"%CLSID_FileSearchBand%"
+
+; CopyTo Menu
+; In: IE4 (Memphis)
+HKCR,"CLSID\%CLSID_CopyToMenu%",,,"%DESC_CopyToMenu%"
+HKCR,"CLSID\%CLSID_CopyToMenu%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CopyToMenu%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_CopyToMenu%","flags",%REGDW%,0x00000001
+HKLM,"%SMWCVSEA%","%CLSID_CopyToMenu%",,"%DESC_CopyToMenu%"
+
+; MoveTo Menu
+; In: IE4 (Memphis)
+HKCR,"CLSID\%CLSID_MoveToMenu%",,,"%DESC_MoveToMenu%"
+HKCR,"CLSID\%CLSID_MoveToMenu%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_MoveToMenu%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_MoveToMenu%","flags",%REGDW%,0x00000001
+HKLM,"%SMWCVSEA%","%CLSID_MoveToMenu%",,"%DESC_MoveToMenu%"
+
+; In: IE4
+; Shell Automation classes
+HKCR,"CLSID\%CLSID_Shell%",,,"%DESC_ShellApp%"
+HKCR,"CLSID\%CLSID_Shell%\%IPS%",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_Shell%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_Shell%\ProgID",,,"Shell.Application.1"
+HKCR,"CLSID\%CLSID_Shell%\TypeLib",,,"%CLSID_Shell32TypeLib%"
+HKCR,"CLSID\%CLSID_Shell%\Version",,,"1.1"
+HKCR,"CLSID\%CLSID_Shell%\VersionIndependentProgID",,,"Shell.Application"
+HKLM,"%SMWCVSEA%","%CLSID_Shell%",,"%DESC_ShellApp%"
+HKCR,"Shell.Application",,,"%DESC_ShellApp%"
+HKCR,"Shell.Application\CLSID",,,"%CLSID_Shell%"
+HKCR,"Shell.Application\CurVer",,,"Shell.Application.1"
+HKCR,"Shell.Application.1",,,"%DESC_ShellApp%"
+HKCR,"Shell.Application.1\CLSID",,,"%CLSID_Shell%"
+
+; In: IE4
+HKCR,"CLSID\%CLSID_ShellFolderView%",,,"%DESC_ShellFolderView%"
+HKCR,"CLSID\%CLSID_ShellFolderView%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellFolderView%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ShellFolderView%",,"%DESC_ShellFolderView%"
+
+; In: IE4
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%",,,"%DESC_ShellFolderViewOC%"
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%\Control",,,""
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%\%IPS%",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%\MiscStatus\1",,,"17408"
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%\ProgID",,,"Shell.FolderView.1"
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%\ToolboxBitmap32",,,"%_MOD_PATH%, 260"
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%\TypeLib",,,"%CLSID_Shell32TypeLib%"
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%\Version",,,"1.1"
+HKCR,"CLSID\%CLSID_ShellFolderViewOC%\VersionIndependentProgID",,,"Shell.FolderView"
+HKCR,"Shell.FolderView",,,"%DESC_ShellFolderViewOC%"
+HKCR,"Shell.FolderView\CLSID",,,"%CLSID_ShellFolderViewOC%"
+HKCR,"Shell.FolderView\CurVer",,,"Shell.FolderView.1"
+HKCR,"Shell.FolderView.1",,,"%DESC_ShellFolderViewOC%"
+HKCR,"Shell.FolderView.1\CLSID",,,"%CLSID_ShellFolderViewOC%"
+
+; CLSID_CDefViewOC
+; In: IE4
+HKCR,"CLSID\%CLSID_CDefViewOC%",,,"%DESC_DefViewOC%"
+HKCR,"CLSID\%CLSID_CDefViewOC%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CDefViewOC%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_CDefViewOC%\TypeLib",,,"%CLSID_Shell32TypeLib%"
+HKCR,"CLSID\%CLSID_CDefViewOC%\Implemented Categories\%CATID_SafeForScripting%",,,""
+HKCR,"CLSID\%CLSID_CDefViewOC%\Implemented Categories\%CATID_SafeForInitializing%",,,""
+
+; CLSID_StartMenu
+; In: IE4
+HKCR,"CLSID\%CLSID_StartMenu%",,,"%DESC_StartMenu%"
+HKCR,"CLSID\%CLSID_StartMenu%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_StartMenu%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_StartMenu%",,"%DESC_StartMenu%"
+
+; CLSID_CWebViewMimeFilter and associated template registration
+; In: IE4
+HKCR,"CLSID\%CLSID_CWebViewMimeFilter%",,,"%DESC_WebViewMimeFilter%"
+HKCR,"CLSID\%CLSID_CWebViewMimeFilter%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CWebViewMimeFilter%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"PROTOCOLS\Filter\text/webviewhtml",,,"%DESC_WebViewMimeFilter%"
+HKCR,"PROTOCOLS\Filter\text/webviewhtml","CLSID",,"%CLSID_CWebViewMimeFilter%"
+HKCR,"MIME\Database\Content Type\text/webviewhtml","CLSID",,"%CLSID_Mshtml%"
+HKCR,"MIME\Database\Content Type\text/webviewhtml","Extension",,".htt"
+HKCR,".htt",,2,"HTTfile"
+HKCR,".htt","Content Type",,"text/webviewhtml"
+HKCR,"HTTfile",,2,%HYPERTEXT_TEM%
+HKCR,"HTTfile",EditFlags,%REGDW%,0x00010000
+HKCR,"HTTfile\DefaultIcon",,%REGEXSZ%,"%_MOD_PATH%,-178"
+
+; DeskMovr OCX registration and unregistration
+HKCR,"CLSID\%CLSID_DeskMovr%",,,"%DESC_DeskMovr%"
+HKCR,"CLSID\%CLSID_DeskMovr%\%IPS%",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DeskMovr%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_DeskMovr%\Programmable",,,""
+HKCR,"CLSID\%CLSID_DeskMovr%\Implemented Categories\%CATID_SafeForScripting%",,,""
+HKCR,"CLSID\%CLSID_DeskMovr%\Implemented Categories\%CATID_SafeForInitializing%",,,""
+
+; CLSID_StartMenuTask
+; In: IE4
+HKCR,"CLSID\%CLSID_StartMenuTask%",,,"%DESC_StartMenuTask%"
+HKCR,"CLSID\%CLSID_StartMenuTask%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_StartMenuTask%\%IPS%","ThreadingModel",,"Both"
+
+; CLSID_DesktopTask
+; In: IE4
+HKCR,"CLSID\%CLSID_DesktopTask%",,,"%DESC_DesktopTask%"
+HKCR,"CLSID\%CLSID_DesktopTask%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DesktopTask%\%IPS%","ThreadingModel",,"Both"
+
+; SendTo Menu
+; In: IE4
+HKCR,"CLSID\%CLSID_SendToMenu%",,,"%DESC_SendToMenu%"
+HKCR,"CLSID\%CLSID_SendToMenu%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_SendToMenu%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_SendToMenu%","flags",%REGDW%,0x00000001
+HKLM,"%SMWCVSEA%","%CLSID_SendToMenu%",,"%DESC_SendToMenu%"
+HKCR,"AllFilesystemObjects\shellex\ContextMenuHandlers\Send To",,,"%CLSID_SendToMenu%"
+
+; New Menu
+; In: IE4
+HKCR,"CLSID\%CLSID_NewMenu%",,,"%DESC_NewMenu%"
+HKCR,"CLSID\%CLSID_NewMenu%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_NewMenu%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_NewMenu%","flags",%REGDW%,0x00000000
+HKLM,"%SMWCVSEA%","%CLSID_NewMenu%",,"%DESC_NewMenu%"
+HKCR,"Directory\Background\shellex\ContextMenuHandlers\New",,,"%CLSID_NewMenu%"
+
+; "Unknown" associations have default verb of "openas", which allows us to
+; query the class store in cases where apps pass null for the lpClass param to shellexecute.
+HKCR,"Unknown\shell",,,"openas"
+
+; OpenWith Menu
+; In: IE5
+HKCR,"CLSID\%CLSID_OpenWithMenu%",,,"%DESC_OpenWithMenu%"
+HKCR,"CLSID\%CLSID_OpenWithMenu%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_OpenWithMenu%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_OpenWithMenu%\shellex",,,
+HKCR,"CLSID\%CLSID_OpenWithMenu%\shellex\MayChangeDefaultMenu",,,
+HKCR,"*\ShellEx\ContextMenuHandlers\Open With",,,"%CLSID_OpenWithMenu%"
+HKLM,"%SMWCVSEA%","%CLSID_OpenWithMenu%",,"%DESC_OpenWithMenu%"
+; File Association stuff
+HKLM, "%SMWCVEFA%","KillList",,"%OpenWithKillList%"
+HKLM, "%SMWCVEFA%","CutList",%REGMULSZ%,"Application File","MFC Application"
+
+; Keys required to configure the Active Desktop
+; In: IE4 (B?)
+HKCR,"CLSID\%CLSID_DeskHtmlProp%",,,"%DESC_DeskHtmlProp%"
+HKCR,"CLSID\%CLSID_DeskHtmlProp%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DeskHtmlProp%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_DeskHtmlProp%",,"%DESC_DeskHtmlProp%"
+;Change location to register in, DelRegShell section removes old entry
+;HKLM,"%SMWCV%\Controls Folder\Display\shellex\PropertySheetHandlers\DeskHtmlExt",,,"%CLSID_DeskHtmlProp%"
+HKLM,"%SMWCV%\Controls Folder\Desk\shellex\PropertySheetHandlers\DeskHtmlExt",,,"%CLSID_DeskHtmlProp%"
+
+HKCR,"CLSID\%CLSID_ActiveDesktop%",,,"%DESC_ActiveDesktop%"
+HKCR,"CLSID\%CLSID_ActiveDesktop%\%IPS%",,%REGEXSZ%,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ActiveDesktop%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ActiveDesktop%",,"%DESC_ActiveDesktop%"
+
+; CLSID_ShellFldSetExt - folder options property page extension
+; In: IE5
+HKCR,"CLSID\%CLSID_ShellFldSetExt%",,,"%DESC_ShellFldSetExt%"
+HKCR,"CLSID\%CLSID_ShellFldSetExt%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellFldSetExt%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ShellFldSetExt%",,"%DESC_ShellFldSetExt%"
+
+; CLSID_CmdFileIcon
+; In: IE4
+HKCR,"CLSID\%CLSID_CmdFileIcon%",,,"%DESC_CmdFileIcon%"
+HKCR,"CLSID\%CLSID_CmdFileIcon%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CmdFileIcon%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_CmdFileIcon%",,"%DESC_CmdFileIcon%"
+
+;;;;;;;  Register recylce bin cleaner
+HKCR,"CLSID\%CLSID_RecycleBinCleaner%",,,"%DESC_RecycleBinCleaner%"
+HKCR,"CLSID\%CLSID_RecycleBinCleaner%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_RecycleBinCleaner%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_RecycleBinCleaner%\DefaultIcon",,%REGEXSZ%,"%_SYS_MOD_PATH%,-33"
+HKLM,"%PATH_EXPLORER%\VolumeCaches\Recycle Bin",,,"%CLSID_RecycleBinCleaner%"
+
+;;;;;;;  Register shell file system tree walker
+HKCR,"CLSID\%CLSID_ShellTreeWalker%",,,"%DESC_ShellTreeWalker%"
+HKCR,"CLSID\%CLSID_ShellTreeWalker%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellTreeWalker%\%IPS%","ThreadingModel",,"Apartment"
+
+; CLSID_DragImages
+; In: NT5 Only
+HKCR,"CLSID\%CLSID_DragImages%",,,"%DESC_DragImages%"
+HKCR,"CLSID\%CLSID_DragImages%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DragImages%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_DragImages%",,"%DESC_DragImages%"
+
+; CLSID_CShellMonikerHelper
+; In: NT5 Only
+HKCR,"CLSID\%CLSID_CShellMonikerHelper%",,,"%DESC_CShellMonikerHelper%"
+HKCR,"CLSID\%CLSID_CShellMonikerHelper%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CShellMonikerHelper%\%IPS%","ThreadingModel",,"Apartment"
+
+;
+; webview and thumbnail view related stuff
+; NOTE: this section should probably move to webvw.dll
+;
+[RegShellViews]
+
+; Install Thumbview
+HKLM,"%SMWCV%\ExtShellViews\%VID_ThumbView%","MenuName",,"%DESC_ThumbView_MenuName%"
+HKLM,"%SMWCV%\ExtShellViews\%VID_ThumbView%","HelpText",,"%DESC_ThumbView_HelpText%"
+HKLM,"%SMWCV%\ExtShellViews\%VID_ThumbView%","TooltipText",,"%DESC_ThumbView_TooltipText%"
+HKCR,"Directory\%EXTVIEW%\%VID_ThumbView%","Attributes",%REGDW%, 0x60000000
+HKCR,"Directory\%EXTVIEW%\%VID_ThumbView%","ISV",%REGEXSZ%, "%VID_ThumbView%"
+
+; Install Web View
+HKLM,"%SMWCV%\ExtShellViews\%VID_WebView%","MenuName",,"%DESC_WebView_MenuName%"
+HKLM,"%SMWCV%\ExtShellViews\%VID_WebView%","HelpText",,"%DESC_WebView_HelpText%"
+HKLM,"%SMWCV%\ExtShellViews\%VID_WebView%","TooltipText",,"%DESC_WebView_TooltipText%"
+HKCR,"CLSID\%CLSID_ShellDesktop%\%EXTVIEW%\%VID_WebView%","PersistMoniker",%REGEXSZ%,"file://%%userappdata%%\Microsoft\Internet Explorer\Desktop.htt"
+
+
+[RegShellOther]
+HKCR,Directory,InfoTip,,"prop:Comment"
+HKCR,*,InfoTip,,"prop:Type;Author;Title;Subject;Comment;Size"
+HKCR,*,AlwaysShowExt
+
+;HKCR,"sysfile\ShellEx\%IID_IQueryInfo%",,,%CLSID_ShellLink%
+;HKCR,.sys,InfoTip,,"This is a system file"
+HKCR,sysfile,NoOpen
+HKCR,dllfile,NoOpen
+HKCR,vxdfile,NoOpen
+HKCR,ocxfile,NoOpen,,"%NOOPEN_OCXFILE%"
+HKCR,drvfile,NoOpen
+HKCR,.bin,NoOpen
+HKCR,.dos,NoOpen
+HKCR,.dat,NoOpen
+HKCR,.nls,NoOpen
+
+; default Recycle Bin registry settings
+; BUGBUG (reinerf) - after NT5 ships we should make sure this stuff dosent clobber
+; any pre-existing settings
+HKLM,"%PATH_EXPLORER%\BitBucket","UseGlobalSettings",%REGDW%,0x00000001
+HKLM,"%PATH_EXPLORER%\BitBucket","Percent",%REGDW%,0x0000000a
+HKLM,"%PATH_EXPLORER%\BitBucket","NukeOnDelete",%REGDW%,0x00000000
+
+; CLSID_ShellLink
+HKCR,".lnk\ShellNew",Command,,"rundll32.exe appwiz.cpl,NewLinkHere %1"
+HKCR,".lnk\ShellEx\%IID_IQueryInfo%",,,%CLSID_ShellLink%
+HKCR,".lnk\ShellEx\%IID_IShellLinkA%",,,%CLSID_ShellLink%
+HKCR,".lnk\ShellEx\%IID_IShellLinkW%",,,%CLSID_ShellLink%
+HKCR,"CLSID\%CLSID_ShellLink%\PersistentAddinsRegistered\{89BCB740-6119-101A-BCB7-00DD010655AF}",,,%CLSID_ShellLink%
+HKCR,"CLSID\%CLSID_ShellLink%\PersistentHandler",,,%CLSID_ShellLink%
+
+; Standard shell namespace settings
+; In: IE4 Shell Integrated
+HKCR,"Folder\shell\open\ddeexec",NoActivateHandler
+HKCR,"Folder\shell\explore\ddeexec",NoActivateHandler
+HKCR,"Drive\shell\find\ddeexec",NoActivateHandler
+HKCR,"Directory\shell\find\ddeexec",NoActivateHandler
+HKCR,"Drive\shell",,,"none"
+HKCR,"Directory\shell",,,"none"
+
+HKCR,".scf",,,"SHCmdFile"
+HKCR,"SHCmdFile",NeverShowExt
+HKCR,"SHCmdFile",,,"Windows Explorer Command"
+HKCR,"SHCmdFile","InfoTip",,"prop:Description"
+HKCR,"SHCmdFile\CLSID",,,"{57651662-CE3E-11D0-8D77-00C04FC99D61}"
+HKCR,"SHCmdFile\shellex\IconHandler",,,"{57651662-CE3E-11D0-8D77-00C04FC99D61}"
+HKCR,"SHCmdFile\shell\open\command",,,"explorer.exe"
+HKCR,"SHCmdFile\shell\open\ddeexec",,,"[ShellFile(""%1"",""%1"",%S)]"
+HKCR,"SHCmdFile\shell\open\ddeexec",NoActivateHandler
+HKCR,"SHCmdFile\shell\open\ddeexec\Topic",,,"AppProperties"
+HKCR,"SHCmdFile\shell\open\ddeexec\Application",,,"Folders"
+
+; Start.Search registration (the rest of ShellSearch is registered in browseui.dll)
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch",,,"%CLSID_ShellSearchExt%"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\0",,,"%SEARCH_FILES_FOLDER%"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\0\DefaultIcon",,%REGEXSZ%,"%11%\shell32.dll,-134"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\0\DefaultIcon","HotIcon",%REGEXSZ%,"%11%\shell32.dll,-50"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\0\DefaultIcon","GrayIcon",%REGEXSZ%,"%11%\shell32.dll,-51"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\0\HelpText",,,"%SEARCH_FILES_FOLDER_HELP%"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\0\SearchGUID",,,"%CLSID_ShellSearchExt%"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\0","RunInProcess",,"1"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\0\SearchGUID\UrlNavNew",,%REGEXSZ%,"::%CLSID_DocFindFolder%"
+
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch",,,"%CLSID_ShellSearchExt%"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\1",,,"%FIND_COMPUTER%"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\1\DefaultIcon",,%REGEXSZ%,"%11%\shell32.dll,-135"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\1\DefaultIcon","HotIcon",%REGEXSZ%,"%11%\shell32.dll,-52"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\1\DefaultIcon","GrayIcon",%REGEXSZ%,"%11%\shell32.dll,-53"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\1\HelpText",,,"%FIND_COMPUTER_HELP%"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\1\SearchGUID",,,"{996E1EB1-B524-11d1-9120-00A0C98BA67D}"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\1\SearchGUID\UrlNavNew",,%REGEXSZ%,"::%CLSID_ComputerFindFolder%"
+
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch",,,"%CLSID_ShellSearchExt%"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\2",,,"%FIND_PRINTER%"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\2\DefaultIcon",,%REGEXSZ%,"%11%\shell32.dll,-135"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\2\HelpText",,,"%FIND_PRINTER_HELP%"
+HKLM,"%PATH_EXPLORER%\FindExtensions\Static\ShellSearch\2\SearchGUID",,,"{D515F311-B78B-11d1-9123-00A0C98BA67D}"
+
+HKLM,"%PATH_EXPLORER%\MyComputer\cleanuppath",,%REGEXSZ%,"%11%\cleanmgr.exe /D %c"
+
+
+; default toolbars (taskbar, deskbars, and any other toolbars)
+;
+; as of 970212 (ie4, beta-1):
+; - taskbar: has ISF band "ie 4.0" no title no text, and task band
+; - toolbars: none
+; - (machine name is ie_500, disk name is ie_500_c, profile is ie500.000)
+; In: IE4 (B1, B2)
+HKLM,"%PATH_EXPLORER%\Streams\Desktop","Default Taskbar",1,\
+  0c,00,00,00,08,00,00,00,02,00,00,00,00,00,00,00,b0,e2,2b,\
+  d8,64,57,d0,11,a9,6e,00,c0,4f,d7,05,a2,22,00,1c,00,0a,01,00,00,1a,00,00,00,\
+  01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,4c,00,00,00,01,14,02,00,00,\
+  00,00,00,c0,00,00,00,00,00,00,46,83,00,00,00,10,00,00,00,a0,b0,48,5e,89,8d,\
+  bd,01,00,d8,9e,e4,2a,8d,bd,01,00,45,fe,5e,89,8d,bd,01,00,00,00,00,00,00,00,\
+  00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,13,01,14,00,1f,0f,e0,4f,\
+  d0,20,ea,3a,69,10,a2,d8,08,00,2b,30,30,9d,19,00,23,44,3a,5c,00,00,00,00,00,\
+  00,00,00,00,00,00,00,00,00,00,00,00,cd,97,15,00,31,00,00,00,00,00,af,24,5c,\
+  b9,10,80,57,69,6e,6e,74,00,00,20,00,31,00,00,00,00,00,af,24,a3,b9,10,00,50,\
+  72,6f,66,69,6c,65,73,00,50,52,4f,46,49,4c,45,53,00,19,00,31,00,00,00,00,00,\
+  c1,24,08,92,10,00,69,65,35,30,30,2e,30,30,30,00,00,28,00,31,00,00,00,00,00,\
+  c1,24,08,92,10,00,41,70,70,6c,69,63,61,74,69,6f,6e,20,44,61,74,61,00,41,50,\
+  50,4c,49,43,7e,31,00,21,00,31,00,00,00,00,00,c5,22,9d,91,10,00,4d,69,63,72,\
+  6f,73,6f,66,74,00,4d,49,43,52,4f,53,7e,31,00,29,00,31,00,00,00,00,00,d3,22,\
+  32,a6,10,00,49,6e,74,65,72,6e,65,74,20,45,78,70,6c,6f,72,65,72,00,49,4e,54,\
+  45,52,4e,7e,31,00,24,00,31,00,00,00,00,00,db,22,76,ba,10,00,51,75,69,63,6b,\
+  20,4c,61,75,6e,63,68,00,51,55,49,43,4b,4c,7e,31,00,00,00,8d,00,00,00,1c,00,\
+  00,00,01,00,00,00,1c,00,00,00,36,00,00,00,0d,f0,ad,ba,8c,00,00,00,1a,00,00,\
+  00,03,00,00,00,e7,18,2d,23,10,00,00,00,49,45,35,30,30,5f,58,31,43,00,43,3a,\
+  5c,57,49,4e,4e,54,5c,50,72,6f,66,69,6c,65,73,5c,49,45,35,30,30,2e,30,30,30,\
+  5c,41,70,70,6c,69,63,61,74,69,6f,6e,20,44,61,74,61,5c,4d,69,63,72,6f,73,6f,\
+  66,74,5c,49,6e,74,65,72,6e,65,74,20,45,78,70,6c,6f,72,65,72,5c,51,75,69,63,\
+  6b,20,4c,61,75,6e,63,68,00,00,10,00,00,00,05,00,00,a0,1a,00,00,00,a3,00,00,\
+  00,00,00,00,00,08,00,00,00,02,00,00,00,cc,00,00,00,01,00,00,00,03,00,00,00,\
+  4a,00,00,00,01,00,00,00,40,00,32,00,e6,01,00,00,c4,24,15,9f,20,00,4c,61,75,\
+  6e,63,68,20,49,6e,74,65,72,6e,65,74,20,45,78,70,6c,6f,72,65,72,20,42,72,6f,\
+  77,73,65,72,2e,6c,6e,6b,00,4c,41,55,4e,43,48,7e,32,2e,4c,4e,4b,00,00,00,40,\
+  00,00,00,02,00,00,00,36,00,32,00,48,02,00,00,c4,24,15,9f,20,00,4c,61,75,6e,\
+  63,68,20,4f,75,74,6c,6f,6f,6b,20,45,78,70,72,65,73,73,2e,6c,6e,6b,00,4c,41,\
+  55,4e,43,48,7e,31,2e,4c,4e,4b,00,00,00,36,00,00,00,00,00,00,00,2c,00,32,00,\
+  51,00,00,00,ec,22,46,39,20,00,53,68,6f,77,20,44,65,73,6b,74,6f,70,2e,73,63,\
+  66,00,53,48,4f,57,44,45,7e,31,2e,53,43,46,00,00,00,52,00,00,00,e0,00,00,00,\
+  00,00,00,00,16,00,00,00,00,00,00,00,00,00,00,00,16,00,00,00,00,00,00,00,01,\
+  00,00,00,01,00,00,00,aa,4f,28,68,48,6a,d0,11,8c,78,00,c0,4f,d9,18,b4,37,02,\
+  00,00,e0,00,00,00,00,00,00,00,16,00,00,00,00,00,00,00,00,00,00,00,16,00,00,\
+  00,00,00,00,00,01,00,00,00
+
+HKLM,"%PATH_EXPLORER%\Streams\Desktop","Default Toolbars",1,\
+  11,00,00,00,00,00,00,00
+
+
+
+[RegNoOpenWithList]
+HKCR,"Applications\accwiz.exe","NoOpenWith",,
+HKCR,"Applications\ARTGALRY.EXE","NoOpenWith",,
+HKCR,"Applications\awdvstub.exe","NoOpenWith",,
+HKCR,"Applications\cag.exe","NoOpenWith",,
+HKCR,"Applications\CChat.exe","NoOpenWith",,
+HKCR,"Applications\cdfview.dll","NoOpenWith",,
+HKCR,"Applications\cdplayer.exe","NoOpenWith",,
+HKCR,"Applications\clipbrd.exe","NoOpenWith",,
+HKCR,"Applications\CMMGR32.EXE","NoOpenWith",,
+HKCR,"Applications\cryptext.dll","NoOpenWith",,
+HKCR,"Applications\datainst.exe","NoOpenWith",,
+HKCR,"Applications\depends.exe","NoOpenWith",,
+HKCR,"Applications\drwatson.exe","NoOpenWith",,
+HKCR,"Applications\explorer.exe","NoOpenWith",,
+HKCR,"Applications\faxcover.exe","NoOpenWith",,
+HKCR,"Applications\finder.exe","NoOpenWith",,
+HKCR,"Applications\fontview.exe","NoOpenWith",,
+HKCR,"Applications\fpidcwiz.exe","NoOpenWith",,
+HKCR,"Applications\graflink.exe","NoOpenWith",,
+HKCR,"Applications\grpconv.exe","NoOpenWith",,
+HKCR,"Applications\hh.exe","NoOpenWith",,
+HKCR,"Applications\HYPERTRM.EXE","NoOpenWith",,
+HKCR,"Applications\inetcpl.cpl","NoOpenWith",,
+HKCR,"Applications\ISIGNUP.EXE","NoOpenWith",,
+HKCR,"Applications\MMC.exe","NoOpenWith",,
+HKCR,"Applications\mnyimprt.exe","NoOpenWith",,
+HKCR,"Applications\msconf.dll","NoOpenWith",,
+HKCR,"Applications\mshta.exe","NoOpenWith",,
+HKCR,"Applications\msiexec.exe","NoOpenWith",,
+HKCR,"Applications\msimn.exe","NoOpenWith",,
+HKCR,"Applications\MSInfo32.exe","NoOpenWith",,
+HKCR,"Applications\msrating.dll","NoOpenWith",,
+HKCR,"Applications\ntbackup.exe","NoOpenWith",,
+HKCR,"Applications\oledb32.dll","NoOpenWith",,
+HKCR,"Applications\ORGCHART.EXE","NoOpenWith",,
+HKCR,"Applications\OSA.EXE","NoOpenWith",,
+HKCR,"Applications\Outlook.EXE","NoOpenWith",,
+HKCR,"Applications\perfmon.exe","NoOpenWith",,
+HKCR,"Applications\rasphone.exe","NoOpenWith",,
+HKCR,"Applications\regedit.exe","NoOpenWith",,
+HKCR,"Applications\shdocvw.dll","NoOpenWith",,
+HKCR,"Applications\shell32.dll","NoOpenWith",,
+HKCR,"Applications\shscrap.dll","NoOpenWith",,
+HKCR,"Applications\snapview.exe","NoOpenWith",,
+HKCR,"Applications\Ttxmpc97.exe","NoOpenWith",,
+HKCR,"Applications\themes.exe","NoOpenWith",,
+HKCR,"Applications\wab.exe","NoOpenWith",,
+HKCR,"Applications\WB32.EXE","NoOpenWith",,
+HKCR,"Applications\winhlp32.exe","NoOpenWith",,
+HKCR,"Applications\wltmime.exe","NoOpenWith",,
+HKCR,"Applications\wpnpinst.exe","NoOpenWith",,
+HKCR,"Applications\WScript.exe","NoOpenWith",,
+HKCR,"Applications\zipfldr.dll","NoOpenWith",,
+
+;
+; we will gradually move file type registration from NT setup
+; \\orville\razzle\src\setup\inf\win4\inf\hivecls to shell
+;
+[RegFileTypes]
+
+HKCR,".vxd",,0x00000002,"vxdfile"
+HKCR,".386",,0x00000002,"vxdfile"
+HKCR,"vxdfile",,0x00000002,"%DESC_VXD%"
+HKCR,"vxdfile","AlwaysShowExt",0x00000002,
+HKCR,"vxdfile","EditFlags",0x00030003,01,00,00,00
+HKCR,"vxdfile\DefaultIcon",,0x00020002,"%11%\shell32.dll,-154"
+
+HKCR,".ocx",,0x00000002,"ocxfile"
+HKCR,"ocxfile",,0x00000002,"%DESC_OCX%"
+HKCR,"ocxfile","AlwaysShowExt",0x00000002,
+HKCR,"ocxfile","EditFlags",0x00030003,01,00,00,00
+HKCR,"ocxfile\DefaultIcon",,0x00020002,"%11%\shell32.dll,-154"
+
+HKCR,"exefile\shell\runas\command",,,"""%1"" %*"
+HKCR,"exefile\shell\runas","Extended",,
+HKCR,"exefile\shellex\DropHandler",,,"%CLSID_ExeDropTarget%"
+
+HKCR,"batfile\shellex\DropHandler",,,"%CLSID_ExeDropTarget%"
+HKCR,"cmdfile\shellex\DropHandler",,,"%CLSID_ExeDropTarget%"
+HKCR,"comfile\shellex\DropHandler",,,"%CLSID_ExeDropTarget%"
+HKCR,"piffile\shellex\DropHandler",,,"%CLSID_ExeDropTarget%"
+HKCR,"scrfile\shellex\DropHandler",,,"%CLSID_ExeDropTarget%"
+HKCR,"SHCmdFile\shellex\DropHandler",,,"%CLSID_ExeDropTarget%"
+
+HKCR,"regfile",EditFlags,%REGDW%,0x00100000
+
+;
+; settings that apps didnt know they needed...
+;
+[RegExternal]
+HKLM,"%APP_PATHS%\table30.exe","UseShortName",,
+HKLM,"%APP_PATHS%\pbrush.exe",,%REGEXSZ%,"%11%\mspaint.exe"
+HKLM,"%APP_PATHS%\pbrush.exe","Path",%REGEXSZ%,"%11%"
+; for runext.dll which ships with NT ResKit
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Objects\{2AD91900-A873-11cf-9A80-00AA00C16E65}",CTXMENU_LIMITEDQI,,
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Objects\{DB8DC413-C0AA-11D0-9545-080009B1C2F3}",NOTAFILESYSTEM,,
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Objects\{DB8DC413-C0AA-11D0-9545-080009B1C2F3}",COCREATESHELLFOLDERONLY,,
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\cutftp32.exe",Version,,"3.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\cutftp32.exe",OLDREGITEMGDN,,
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\DiskJockey.exe",Version,,"2,*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\DiskJockey.exe",OLDREGITEMGDN,,
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\sesapp.exe",Version,,"3.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\sesapp.exe",OLDREGITEMGDN,,
+
+;
+; Advanced Options tab
+;
+; For advanced settings that override SHELLSTATE bits, if
+; the DefaultValue is *different* from the SHELLSTATE default value,
+; then you need to tweak the update code in SHRefreshSettings.
+;
+; NOTE: if you add new entries here, then you MUST also add a help id.
+; Grab the next free one from \genx\shell\inc\shellids.h
+; 
+[RegAdvancedOptions]
+HKLM,"%ADV_FOLDER%","Type",,"group"
+HKLM,"%ADV_FOLDER%","Text",,%DESC_FileFolder%
+HKLM,"%ADV_FOLDER%","Bitmap",,"%_MOD_PATH%,4"
+HKLM,"%ADV_FOLDER%","HelpID",,"%SHELL_HLP%#51140"
+; in ie4
+HKLM,"%ADV_FOLDER%\Hidden","Text",,"%DESC_HiddenFiles%"
+HKLM,"%ADV_FOLDER%\Hidden","Type",,"group"
+HKLM,"%ADV_FOLDER%\Hidden","Bitmap",,"%_MOD_PATH%,4"
+HKLM,"%ADV_FOLDER%\Hidden","HelpID",,"%SHELL_HLP%#51131"
+; in ie4
+HKLM,"%ADV_FOLDER%\Hidden\SHOWALL","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_FOLDER%\Hidden\SHOWALL","Text",,"%DESC_ShowAll%"
+HKLM,"%ADV_FOLDER%\Hidden\SHOWALL","Type",,"radio"
+HKLM,"%ADV_FOLDER%\Hidden\SHOWALL","CheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\Hidden\SHOWALL","ValueName",,"Hidden"
+HKLM,"%ADV_FOLDER%\Hidden\SHOWALL","DefaultValue",%REGDW%,0x00000002
+HKLM,"%ADV_FOLDER%\Hidden\SHOWALL","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_FOLDER%\Hidden\SHOWALL","HelpID",,"%SHELL_HLP%#51105"
+; in ie4
+HKLM,"%ADV_FOLDER%\Hidden\NOHIDDEN","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_FOLDER%\Hidden\NOHIDDEN","Text",,"%DESC_NoHidden%"
+HKLM,"%ADV_FOLDER%\Hidden\NOHIDDEN","Type",,"radio"
+HKLM,"%ADV_FOLDER%\Hidden\NOHIDDEN","CheckedValue",%REGDW%,0x00000002
+HKLM,"%ADV_FOLDER%\Hidden\NOHIDDEN","ValueName",,"Hidden"
+HKLM,"%ADV_FOLDER%\Hidden\NOHIDDEN","DefaultValue",%REGDW%,0x00000002
+HKLM,"%ADV_FOLDER%\Hidden\NOHIDDEN","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_FOLDER%\Hidden\NOHIDDEN","HelpID",,"%SHELL_HLP%#51104"
+
+; in ie4
+HKLM,"%ADV_FOLDER%\ShowInfoTip","Type",,"checkbox"
+HKLM,"%ADV_FOLDER%\ShowInfoTip","Text",,%DESC_ShowInfoTip%
+HKLM,"%ADV_FOLDER%\ShowInfoTip","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_FOLDER%\ShowInfoTip","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_FOLDER%\ShowInfoTip","ValueName",,"ShowInfoTip"
+HKLM,"%ADV_FOLDER%\ShowInfoTip","CheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\ShowInfoTip","UncheckedValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\ShowInfoTip","DefaultValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\ShowInfoTip","HelpID",,"%SHELL_HLP%#51102"
+
+; in ie4
+HKLM,"%ADV_FOLDER%\HideFileExt","Type",,"checkbox"
+HKLM,"%ADV_FOLDER%\HideFileExt","Text",,%DESC_HideFileExt%
+HKLM,"%ADV_FOLDER%\HideFileExt","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_FOLDER%\HideFileExt","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_FOLDER%\HideFileExt","ValueName",,"HideFileExt"
+HKLM,"%ADV_FOLDER%\HideFileExt","CheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\HideFileExt","UncheckedValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\HideFileExt","DefaultValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\HideFileExt","HelpID",,"%SHELL_HLP%#51101"
+; in ie4
+HKLM,"%ADV_FOLDER%\ShowFullPath","Type",,"checkbox"
+HKLM,"%ADV_FOLDER%\ShowFullPath","Text",,%DESC_ShowFullPath%
+HKLM,"%ADV_FOLDER%\ShowFullPath","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_FOLDER%\ShowFullPath","RegPath",,"%PATH_EXPLORER%\CabinetState"
+HKLM,"%ADV_FOLDER%\ShowFullPath","ValueName",,"FullPath"
+HKLM,"%ADV_FOLDER%\ShowFullPath","CheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\ShowFullPath","UncheckedValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\ShowFullPath","DefaultValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\ShowFullPath","HelpID",,"%SHELL_HLP%#51100"
+
+; in ie5
+HKLM,"%ADV_FOLDER%\ShowFullPathAddress","Type",,"checkbox"
+HKLM,"%ADV_FOLDER%\ShowFullPathAddress","Text",,%DESC_ShowFullPathAddress%
+HKLM,"%ADV_FOLDER%\ShowFullPathAddress","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_FOLDER%\ShowFullPathAddress","RegPath",,"%PATH_EXPLORER%\CabinetState"
+HKLM,"%ADV_FOLDER%\ShowFullPathAddress","ValueName",,"FullPathAddress"
+HKLM,"%ADV_FOLDER%\ShowFullPathAddress","CheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\ShowFullPathAddress","UncheckedValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\ShowFullPathAddress","DefaultValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\ShowFullPathAddress","HelpID",,"%SHELL_HLP%#51107"
+
+; in ie4
+HKLM,"%ADV_FOLDER%\ClassicViewState","Type",,"checkbox"
+HKLM,"%ADV_FOLDER%\ClassicViewState","Text",,%DESC_ClassicViewState%
+HKLM,"%ADV_FOLDER%\ClassicViewState","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_FOLDER%\ClassicViewState","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_FOLDER%\ClassicViewState","ValueName",,"ClassicViewState"
+HKLM,"%ADV_FOLDER%\ClassicViewState","CheckedValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\ClassicViewState","UncheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\ClassicViewState","DefaultValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\ClassicViewState","HelpID",,"%SHELL_HLP%#51076"
+
+HKLM,"%ADV_FOLDER%\DesktopProcess","Type",,"checkbox"
+HKLM,"%ADV_FOLDER%\DesktopProcess","Text",,%DESC_DesktopProcess%
+HKLM,"%ADV_FOLDER%\DesktopProcess","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_FOLDER%\DesktopProcess","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_FOLDER%\DesktopProcess","ValueName",,"SeparateProcess"
+HKLM,"%ADV_FOLDER%\DesktopProcess","CheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\DesktopProcess","UncheckedValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\DesktopProcess","DefaultValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\DesktopProcess","HelpID",,"%SHELL_HLP%#51079"
+HKLM,"%ADV_FOLDER%\DesktopProcess\Policy\SeparateProcess"
+
+HKLM,"%ADV_FOLDER%\SuperHidden","Type",,"checkbox"
+HKLM,"%ADV_FOLDER%\SuperHidden","Text",,%DESC_SuperHidden%
+HKLM,"%ADV_FOLDER%\SuperHidden","WarningIfNotDefault",,"@shell32.dll,-28964"
+HKLM,"%ADV_FOLDER%\SuperHidden","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_FOLDER%\SuperHidden","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_FOLDER%\SuperHidden","ValueName",,"ShowSuperHidden"
+HKLM,"%ADV_FOLDER%\SuperHidden","CheckedValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\SuperHidden","UncheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\SuperHidden","DefaultValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\SuperHidden","HelpID",,"%SHELL_HLP%#51103"
+HKLM,"%ADV_FOLDER%\SuperHidden\Policy\DontShowSuperHidden"
+
+HKLM,"%ADV_STARTMENU%","Type",,"group"
+HKLM,"%ADV_STARTMENU%","Text",,%DESC_StartMenuSettings%
+HKLM,"%ADV_STARTMENU%","Bitmap",,"%_MOD_PATH%,40"
+HKLM,"%ADV_STARTMENU%","HelpID",,"%WINDOWS_HLP%#51132"
+HKLM,"%ADV_STARTMENU%\Policy\NoChangeStartMenu"
+
+HKLM,"%ADV_STARTMENU%\StartMenuFavorites","Type",,"checkbox"
+HKLM,"%ADV_STARTMENU%\StartMenuFavorites","Text",,%DESC_StartMenuFavorites%
+HKLM,"%ADV_STARTMENU%\StartMenuFavorites","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_STARTMENU%\StartMenuFavorites","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_STARTMENU%\StartMenuFavorites","ValueName",,"StartMenuFavorites"
+HKLM,"%ADV_STARTMENU%\StartMenuFavorites","CheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_STARTMENU%\StartMenuFavorites","UncheckedValue",%REGDW%,"0"
+HKLM,"%ADV_STARTMENU%\StartMenuFavorites","DefaultValue",,"0"
+HKLM,"%ADV_STARTMENU%\StartMenuFavorites","HelpID",,"%WINDOWS_HLP%#51134"
+HKLM,"%ADV_STARTMENU%\StartMenuFavorites\Policy\NoFavoritesMenu"
+
+HKLM,"%ADV_STARTMENU%\StartMenuLogoff","Type",,"checkbox"
+HKLM,"%ADV_STARTMENU%\StartMenuLogoff","Text",,%DESC_StartMenuLogoff%
+HKLM,"%ADV_STARTMENU%\StartMenuLogoff","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_STARTMENU%\StartMenuLogoff","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_STARTMENU%\StartMenuLogoff","ValueName",,"StartMenuLogoff"
+HKLM,"%ADV_STARTMENU%\StartMenuLogoff","CheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_STARTMENU%\StartMenuLogoff","UncheckedValue",%REGDW%,"0"
+HKLM,"%ADV_STARTMENU%\StartMenuLogoff","DefaultValue",,"0"
+HKLM,"%ADV_STARTMENU%\StartMenuLogoff","HelpID",,"%WINDOWS_HLP%#51133"
+HKLM,"%ADV_STARTMENU%\StartMenuLogoff\Policy\StartMenuLogoff"
+
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel","Type",,"checkbox"
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel","Text",,%DESC_CascadeControlPanel%
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel","ValueName",,"CascadeControlPanel"
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel","CheckedValue",%REGEXSZ%,"YES"
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel","UncheckedValue",%REGEXSZ%,"NO"
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel","DefaultValue",,"NO"
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel","HelpID",,"%WINDOWS_HLP%#51135"
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel\Policy\NoSetFolders"
+HKLM,"%ADV_STARTMENU%\CascadeControlPanel\Policy\NoControlPanel"
+
+HKLM,"%ADV_STARTMENU%\CascadeMyDocuments","Type",,"checkbox"
+HKLM,"%ADV_STARTMENU%\CascadeMyDocuments","Text",,%DESC_CascadeMyDocuments%
+HKLM,"%ADV_STARTMENU%\CascadeMyDocuments","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_STARTMENU%\CascadeMyDocuments","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_STARTMENU%\CascadeMyDocuments","ValueName",,"CascadeMyDocuments"
+HKLM,"%ADV_STARTMENU%\CascadeMyDocuments","CheckedValue",%REGEXSZ%,"YES"
+HKLM,"%ADV_STARTMENU%\CascadeMyDocuments","UncheckedValue",%REGEXSZ%,"NO"
+HKLM,"%ADV_STARTMENU%\CascadeMyDocuments","DefaultValue",,"NO"
+HKLM,"%ADV_STARTMENU%\CascadeMyDocuments","HelpID",,"%WINDOWS_HLP%#51136"
+
+HKLM,"%ADV_STARTMENU%\CascadePrinters","Type",,"checkbox"
+HKLM,"%ADV_STARTMENU%\CascadePrinters","Text",,%DESC_CascadePrinters%
+HKLM,"%ADV_STARTMENU%\CascadePrinters","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_STARTMENU%\CascadePrinters","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_STARTMENU%\CascadePrinters","ValueName",,"CascadePrinters"
+HKLM,"%ADV_STARTMENU%\CascadePrinters","CheckedValue",%REGEXSZ%,"YES"
+HKLM,"%ADV_STARTMENU%\CascadePrinters","UncheckedValue",%REGEXSZ%,"NO"
+HKLM,"%ADV_STARTMENU%\CascadePrinters","DefaultValue",,"NO"
+HKLM,"%ADV_STARTMENU%\CascadePrinters","HelpID",,"%WINDOWS_HLP%#51137"
+HKLM,"%ADV_STARTMENU%\CascadePrinters\Policy\NoSetFolders"
+
+HKLM,"%ADV_STARTMENU%\StartMenuScrollPrograms","Type",,"checkbox"
+HKLM,"%ADV_STARTMENU%\StartMenuScrollPrograms","Text",,%DESC_StartMenuScrollPrograms%
+HKLM,"%ADV_STARTMENU%\StartMenuScrollPrograms","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_STARTMENU%\StartMenuScrollPrograms","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_STARTMENU%\StartMenuScrollPrograms","ValueName",,"StartMenuScrollPrograms"
+HKLM,"%ADV_STARTMENU%\StartMenuScrollPrograms","CheckedValue",%REGEXSZ%,"YES"
+HKLM,"%ADV_STARTMENU%\StartMenuScrollPrograms","UncheckedValue",%REGEXSZ%,"NO"
+HKLM,"%ADV_STARTMENU%\StartMenuScrollPrograms","DefaultValue",,"NO"
+HKLM,"%ADV_STARTMENU%\StartMenuScrollPrograms","HelpID",,"%WINDOWS_HLP%#51138"
+
+HKLM,"%ADV_STARTMENU%\AdminTools","Type",,"checkbox"
+HKLM,"%ADV_STARTMENU%\AdminTools","Text",,%DESC_StartMenuAdminTools%
+HKLM,"%ADV_STARTMENU%\AdminTools","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_STARTMENU%\AdminTools","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_STARTMENU%\AdminTools","ValueName",,"StartMenuAdminTools"
+HKLM,"%ADV_STARTMENU%\AdminTools","CheckedValue",%REGEXSZ%,"YES"
+HKLM,"%ADV_STARTMENU%\AdminTools","UncheckedValue",%REGEXSZ%,"NO"
+HKLM,"%ADV_STARTMENU%\AdminTools","DefaultValue",,"NO"
+HKLM,"%ADV_STARTMENU%\AdminTools","HelpID",,"%WINDOWS_HLP%#51140"
+
+HKLM,"%ADV_STARTMENU%\NetConnect","Type",,"checkbox"
+HKLM,"%ADV_STARTMENU%\NetConnect","Text",,%DESC_CascadeNetConnect%
+HKLM,"%ADV_STARTMENU%\NetConnect","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_STARTMENU%\NetConnect","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_STARTMENU%\NetConnect","ValueName",,"CascadeNetworkConnections"
+HKLM,"%ADV_STARTMENU%\NetConnect","CheckedValue",%REGEXSZ%,"YES"
+HKLM,"%ADV_STARTMENU%\NetConnect","UncheckedValue",%REGEXSZ%,"NO"
+HKLM,"%ADV_STARTMENU%\NetConnect","DefaultValue",,"NO"
+HKLM,"%ADV_STARTMENU%\NetConnect","HelpID",,"%WINDOWS_HLP%#51141"
+HKLM,"%ADV_STARTMENU%\NetConnect\Policy\NoSetFolders"
+HKLM,"%ADV_STARTMENU%\NetConnect\Policy\NoNetworkConnections"
+
+;; System Programs that needs to be recognized by the shell
+;; currently this is only used when the user deletes a shortcut, we should not
+;; prompt them for "Add/Remove Programs"
+
+HKLM,"%APP_MANAGEMENT%\System Programs", "dialer",,"dialer.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "hypertrm",,"hypertrm.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "wordpad",,"wordpad.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "kodakimg",,"kodakimg.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "kodakprv",,"kodakprv.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "wangimg",,"wangimg.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "pinball",,"pinball.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "mlset32",,"mlset32.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "msscrdbg",,"msscrdbg.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "cchat",,"cchat.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "msimn",,"msimn.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "mplayer2",,"mplayer2.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "wab",,"wab.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "iexplore",,"iexplore.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "conf",,"conf.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "icwconn1",,"icwconn1.exe"
+HKLM,"%APP_MANAGEMENT%\System Programs", "mstsc",,"mstsc.exe"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; NT Specific stuff
+;
+; General assumption should be that any new shell32 feature goes to ALL
+; platforms.  So don't put anything in this section.
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[RegShellNT]
+; This is an NT-specific Advanced Options settings
+HKLM,"%ADV_FOLDER%\ShowCompColor","Type",,"checkbox"
+HKLM,"%ADV_FOLDER%\ShowCompColor","Text",,%DESC_ShowCompColor%
+HKLM,"%ADV_FOLDER%\ShowCompColor","HKeyRoot",%REGDW%,0x80000001
+HKLM,"%ADV_FOLDER%\ShowCompColor","RegPath",,"%PATH_EXPLORER%\Advanced"
+HKLM,"%ADV_FOLDER%\ShowCompColor","ValueName",,"ShowCompColor"
+HKLM,"%ADV_FOLDER%\ShowCompColor","CheckedValue",%REGDW%,0x00000001
+HKLM,"%ADV_FOLDER%\ShowCompColor","UncheckedValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\ShowCompColor","DefaultValue",%REGDW%,0x00000000
+HKLM,"%ADV_FOLDER%\ShowCompColor","HelpID",,"%SHELL_HLP%#51130"
+
+; This is needed for the NT5 class Store support, this key allows us
+; to know when we are dealing with the "Unknown" progid.
+HKCR,"Unknown","QueryClassStore",,""
+
+;
+; BUGBUG - these keys should be written on NT5 only (no runas support on NT4!)
+;
+#ifdef WINNT
+; Run as support for control panel applets and setup executables
+HKCR,"cplfile\shell\runas\command",,,"rundll32.exe shell32.dll,Control_RunDLLAsUser %1,%*"
+
+; This is the list of .exe's that we want to bring up the "Run As..." dialog for when a non-administrative user
+; is trying to run them
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\setup.exe","RunAsOnNonAdminInstall",%REGDW%,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\install.exe","RunAsOnNonAdminInstall",%REGDW%,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\winnt32.exe","RunAsOnNonAdminInstall",%REGDW%,0x00000001
+
+; This is the list of .exe's that we want to block from running on a Terminal Server machine unless the machine
+; has been put in install mode.
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\setup.exe","BlockOnTSNonInstallMode",%REGDW%,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\install.exe","BlockOnTSNonInstallMode",%REGDW%,0x00000001
+
+; Suppression of static verbs via policy
+
+HKCR, "CLSID\%CLSID_MyComputer%\shell\Manage","SuppressionPolicy",%REGDW%,0x4000003C
+
+#endif  //WINNT
+
+; Network Connections is an NT5 only feature
+HKLM,"%PATH_EXPLORER%\ControlPanel\NameSpace\%CLSID_NetworkConnections%",,,"%DESC_NetworkConnections%"
+
+; The new Printers folder in control panel needs to be NT5 only unless we want to change main.cpl on Win9x
+HKLM,"%PATH_EXPLORER%\ControlPanel\NameSpace\%DESC_Printers%",,,"%CLSID_Printers%"
+
+; The new Fonts folder in control panel needs to be NT5 only unless we want to change main.cpl on Win9x
+;CLSID_FontsFolderShortcut
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%",,,"%DESC_FontsFolderShortcut%"
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%","InfoTip",,"%FONTSFOLDERSHORTCUT_IT%"
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%\DefaultIcon",,%REGEXSZ%,"%11%\main.cpl,9"
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%\InProcServer32",,%REGEXSZ%,"%11%\shdocvw.dll"
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%\ShellFolder","Attributes",%REGDW%,0x60000000
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%\ShellFolder","WantsFORPARSING",2,""
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%\Instance","CLSID",,"%CLSID_FolderShortcut%"
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%\Instance\InitPropertyBag","TargetSpecialFolder",,"0x0024"
+HKCR,"CLSID\%CLSID_FontsFolderShortcut%\Instance\InitPropertyBag","Target",,"Fonts"
+HKLM,"%PATH_EXPLORER%\ControlPanel\NameSpace\%CLSID_FontsFolderShortcut%",,,"%DESC_FontsFolderShortcut%"
+
+; The new Admin Folder is NT5 only
+;CLSID_AdminFolderShortcut
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%",,,"%DESC_AdminFolderShortcut%"
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%","InfoTip",,"%ADMINFOLDERSHORTCUT_IT%"
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%\DefaultIcon",,%REGEXSZ%,"%11%\main.cpl,10"
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%\InProcServer32",,%REGEXSZ%,"%11%\shdocvw.dll"
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%\ShellFolder","Attributes",%REGDW%,0x60000100
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%\ShellFolder","WantsFORPARSING",2,""
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%\Instance","CLSID",,"%CLSID_FolderShortcut%"
+HKCR,"CLSID\%CLSID_AdminFolderShortcut%\Instance\InitPropertyBag","TargetSpecialFolder",,"0x002f"
+HKLM,"%PATH_EXPLORER%\ControlPanel\NameSpace\%CLSID_AdminFolderShortcut%",,,"%DESC_AdminFolderShortcut%"
+
+#ifdef FEATURE_FOLDER_INFOTIP
+HKCR,"CLSID\%CLSID_FolderInfoTip%",,,"%DESC_FolderInfoTip%"
+HKCR,"CLSID\%CLSID_FolderInfoTip%\InProcServer32",,%REGEXSZ%,"%11%\shell32.dll"
+HKCR,"CLSID\%CLSID_FolderInfoTip%\InProcServer32","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_FolderInfoTip%",,"%DESC_FolderInfoTip%"
+
+;; You don't want this because it overrides shell32.
+;; This will be taken out after we correctly assimilate
+HKCR,"Directory\ShellEx\%IID_IQueryInfo%",,,"%CLSID_FolderInfoTip%"
+#endif
+
+#ifdef WINNT 
+HKCR,"CLSID\%CLSID_EncryptionContextMenuHandler%",,,"%DESC_EncryptionContextMenuHandler%"
+HKCR,"CLSID\%CLSID_EncryptionContextMenuHandler%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_EncryptionContextMenuHandler%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_EncryptionContextMenuHandler%",,"%DESC_EncryptionContextMenuHandler%"
+HKCR,"*\ShellEx\ContextMenuHandlers\Open With EncryptionMenu",,,"%CLSID_EncryptionContextMenuHandler%"
+HKCR,"Directory\ShellEx\ContextMenuHandlers\Open With EncryptionMenu",,,"%CLSID_EncryptionContextMenuHandler%"
+#endif //WINNT
+
+; The "don't put anything here" comment holds doubly true for NTServer
+[RegShellNTServer]
+HKLM,"%POLICIES_EXPLORER%","ShowSuperHidden",%REGDW%,0x00000001
+
+[!DelRegOldRollback]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","Shell.Shell32.NT5"
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","Shell.Shell32.CurrentUser"
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; And finally, our string section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[Strings]
+
+; These lines compress the file -- do not localize
+SMWCV         = "Software\Microsoft\Windows\CurrentVersion"
+SMWCVSEA      = "Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"
+SMWCVEFA      = "Software\Microsoft\Windows\CurrentVersion\Explorer\FileAssociation"
+PATH_EXPLORER = "Software\Microsoft\Windows\CurrentVersion\Explorer"
+POLICIES_EXPLORER = "Software\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+POLICIES_NONENUM = "Software\Microsoft\Windows\CurrentVersion\Policies\NonEnum"
+ADV_FOLDER    = "Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder"
+ADV_VISUAL    = "Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Visual"
+ADV_STARTMENU = "Software\Microsoft\Windows\CurrentVersion\Explorer\StartMenu"
+APP_MANAGEMENT= "Software\Microsoft\Windows\CurrentVersion\App Management"
+APP_PATHS     = "Software\Microsoft\Windows\CurrentVersion\App Paths"
+EXTVIEW="shellex\ExtShellFolderViews"
+IPS="InProcServer32"
+; (REG_EXPAND_SZ << 16)
+REGEXSZ=0x00020000
+; (REG_DWORD << 16)
+REGDW=0x00010001
+REGMULSZ=0x00010000
+; -- end of compression section --
+
+; View related stuff:
+VID_ThumbView            = "{8BEBB290-52D0-11d0-B7F4-00C04FD706EC}"
+VID_WebView              = "{5984FFE0-28D4-11CF-AE66-08002B2E1262}"
+HYPERTEXT_TEM            = "HyperText Template"
+DESC_WebView_MenuName    = "as &Web Page"
+DESC_WebView_HelpText    = "Displays items in Web View"
+DESC_WebView_TooltipText = "Web"
+DESC_ThumbView_MenuName         = "T&humbnails"
+DESC_ThumbView_HelpText         = "Displays items using thumbnail view."
+DESC_ThumbView_TooltipText      = "Thumbnails"
+#ifdef FEATURE_FOLDER_INFOTIP
+DESC_FolderInfoTip              = "Include a folder's size and the filenames of top level items in folder tooltip"
+#endif
+
+; net hood and my computer context menu items
+NETHOOD_FINDCOMPUTER            = "Search for &Computers..."
+MYCOMP_FIND                     = "S&earch..."
+
+; Start.Find stuff:
+SEARCH_FILES_FOLDER             = "For &Files or Folders..."
+SEARCH_FILES_FOLDER_HELP        = "Search for files or folders"
+FIND_COMPUTER                   = "For &Computers"
+FIND_COMPUTER_HELP              = "Search for computers on the network"
+FIND_PRINTER                    = "For &Printer"
+FIND_PRINTER_HELP               = "Search for a printer"
+
+; InfoTip Strings
+CONTROLPANEL_IT                 = "Customizes the appearance of your desktop and configures your computer"
+PRINTERS_IT                     = "Adds, removes, and configures local and network printers"
+MYCOMPUTER_IT                   = "Displays the files and folders on your computer"
+NETWORKNEIGHBORHOOD_IT          = "Displays the computers on your network"
+RECYCLEBIN_IT                   = "Stores deleted items until you permanently remove them from your computer"
+BRIEFCASE_IT                    = "Synchronizes files when you use two computers"
+TASKSCHEDULER_IT                = "Schedules computer tasks to run automatically"
+FONTSFOLDERSHORTCUT_IT          = "Displays and manages fonts on your computer"
+ADMINFOLDERSHORTCUT_IT          = "Configures administrative settings for your computer"
+
+; CLSIDs
+CLSID_ControlPanel              = "{21EC2020-3AEA-1069-A2DD-08002B30309D}"
+CLSID_Printers                  = "{2227A280-3AEA-1069-A2DE-08002B30309D}"
+CLSID_MyDocuments               = "{450D8FBA-AD25-11D0-98A8-0800361B1103}"
+CLSID_MyComputer                = "{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
+CLSID_NetworkPlaces             = "{208D2C60-3AEA-1069-A2D7-08002B30309D}"
+CLSID_RecycleBin                = "{645FF040-5081-101B-9F08-00AA002F954E}"
+CLSID_Briefcase                 = "{85BBD920-42A0-1069-A2E4-08002B30309D}"
+CLSID_BriefcaseFolder           = "{86747AC0-42A0-1069-A2E6-08002B30309D}"
+CLSID_TaskScheduler             = "{D6277990-4C6A-11CF-8D87-00AA0060F5BF}"
+CLSID_RecycleBinCleaner         = "{5ef4af3a-f726-11d0-b8a2-00c04fc309a4}"
+CLSID_FavoritesFolder           = "{1A9BA3A0-143A-11CF-8350-444553540000}"
+CLSID_ShellViewerExt            = "{84F26EA0-42A0-1069-A2E3-08002B30309D}"
+CLSID_ShellDrvDefExt            = "{5F5295E0-429F-1069-A2E2-08002B30309D}"
+CLSID_ShellFSFolder             = "{F3364BA0-65B9-11CE-A9BA-00AA004AE837}"
+CLSID_ShellFileDefExt           = "{21B22460-3AEA-1069-A2DC-08002B30309D}"
+CLSID_FileTypes                 = "{B091E540-83E3-11CF-A713-0020AFD79762}"
+CLSID_MIMEFileTypesHook         = "{FBF23B41-E3F0-101B-8488-00AA003E56F8}"
+CLSID_DocFindFolder             = "{e17d4fc0-5564-11d1-83f2-00a0c90dc849}"
+CLSID_ComputerFindFolder        = "{1f4de370-d627-11d1-ba4f-00a0c91eedba}"
+CLSID_DocFindCommand            = "{B005E690-678D-11d1-B758-00A0C90564FE}"
+CLSID_DocFindPersistHistory     = "{bab33640-1280-11d2-aa30-00a0c91eedba}"
+CLSID_DefViewPersistHistory     = "{7febaf7c-18cf-11d2-993f-00a0c91f3880}"
+; this is the old shell find guy that we no longer need, but registration
+; for this must occur inside nt's base registration.  what a pain...
+CLSID_ShellFindExt              = "{61E218E0-65D3-101B-9F08-061CEAC3D50D}"
+CLSID_ShellSearchExt            = "{169A0691-8DF9-11d1-A1C4-00C04FD75D13}"
+CLSID_ShellTreeWalker           = "{95CE8412-7027-11D1-B879-006008059382}"
+CLSID_DocObjColumnProvider      = "{24F14F01-7B1C-11d1-838f-0000F80461CF}"
+CLSID_URLColumnProvider         = "{24F14F02-7B1C-11d1-838f-0000F80461CF}"
+CLSID_FileSysColumnProvider     = "{0D2E74C4-3C34-11d2-A27E-00C04FC30871}"
+CLSID_UpDownOC                  = "{659D96E1-A19D-11d1-9237-006097DF5BD4}"
+CLSID_DateTimePickerOC          = "{130919A1-A32A-11d1-923C-006097DF5BD4}"
+CLSID_RecentNameSpaceOC         = "{05F44172-AC85-11d1-BCFA-006097DF5BD4}"
+CLSID_FileSearchBand              = "{C4EE31F3-4768-11D2-BE5C-00A0C9A83DA1}"
+CLSID_ShellNetDefExt            = "{86422020-42A0-1069-A2E5-08002B30309D}"
+CLSID_CFSIconOverlayManager     = "{63B51F81-C868-11D0-999C-00C04FD655E1}"
+CLSID_CopyToMenu        = "{C2FBB630-2971-11d1-A18C-00C04FD75D13}"
+CLSID_MoveToMenu        = "{C2FBB631-2971-11d1-A18C-00C04FD75D13}"
+CLSID_StartMenuTask     = "{DDB008FE-048D-11d1-B9CD-00C04FC2C1D2}"
+CLSID_DesktopTask       = "{E7D3DB4E-199C-11d1-9828-00C04FD91972}"
+CLSID_CWebViewMimeFilter = "{733AC4CB-F1A4-11d0-B951-00A0C90312E1}"
+CLSID_DeskMovr          = "{72267F6A-A6F9-11D0-BC94-00C04FB67863}"
+CLSID_DeskHtmlProp      = "{3FC0B520-68A9-11D0-8D77-00C04FD70822}"
+CLSID_ActiveDesktop     = "{75048700-EF1F-11D0-9888-006097DEACF9}"
+CLSID_Shell             = "{13709620-C279-11CE-A49E-444553540000}"
+CLSID_CDefViewOC        = "{1820FED0-473E-11D0-A96C-00C04FD705A2}"
+CLSID_ShellFolderView   = "{62112AA1-EBE4-11cf-A5FB-0020AFE7292D}"
+CLSID_ShellFolderViewOC = "{9BA05971-F6A8-11CF-A442-00A0C90A8F39}"
+CLSID_Mshtml            = "{25336920-03F9-11CF-8FD0-00AA00686F13}"
+CLSID_ShellFldSetExt    = "{6D5313C0-8C62-11D1-B2CD-006097DF8C11}"
+CLSID_StartMenu         = "{4622AD11-FF23-11d0-8D34-00A0C90F2719}"
+CLSID_CmdFileIcon       = "{57651662-CE3E-11D0-8D77-00C04FC99D61}"
+CLSID_ShellDesktop      = "{00021400-0000-0000-C000-000000000046}"
+CLSID_SendToMenu        = "{7BA4C740-9E81-11CF-99D3-00AA004AE837}"
+CLSID_NewMenu           = "{D969A300-E7FF-11d0-A93B-00A0C90F2719}"
+CLSID_OpenWithMenu      = "{09799AFB-AD67-11d1-ABCD-00C04FC30936}"
+CLSID_OverlayIdentifier_SlowFile = "{7D688A77-C613-11D0-999B-00C04FD655E1}"
+CLSID_WebFolders        = "{BDEADF00-C265-11D0-BCED-00A0C90AB50F}"
+
+CLSID_Shell32TypeLib    = "{50a7e9b0-70ef-11d1-b75a-00a0c90564fe}"
+CLSID_FolderShortcut    = "{0AFACED1-E828-11D1-9187-B532F1E9575D}"
+CLSID_MountedVolume     = "{12518493-00B2-11d2-9FA5-9E3420524153}"
+CLSID_ShellLink         = "{00021401-0000-0000-C000-000000000046}"
+
+CLSID_NetworkConnections = "{7007ACC7-3202-11D1-AAD2-00805FC1270E}"
+CLSID_FontsFolderShortcut = "{D20EA4E1-3957-11d2-A40B-0C5020524152}"
+CLSID_AdminFolderShortcut = "{D20EA4E1-3957-11d2-A40B-0C5020524153}"
+
+CLSID_DragImages        = "{4657278A-411B-11d2-839A-00C04FD918D0}"
+CLSID_ExeDropTarget     = "{86C86720-42A0-1069-A2E8-08002B30309D}"
+CLSID_CShellMonikerHelper = "{679d9e37-f8f9-11d2-8deb-00c04f6837d5}"
+#ifdef FEATURE_FOLDER_INFOTIP
+CLSID_FolderInfoTip     = "{F4360CEA-11F7-11d3-BDE4-00C04F490585}"
+#endif
+
+CLSID_EncryptionContextMenuHandler              ="{A470F8CF-A1E8-4f65-8335-227475AA5C46}"
+DESC_EncryptionContextMenuHandler               ="Add encryption item to context menus in explorer" 
+
+IID_IShellLinkA         = "{000214EE-0000-0000-C000-000000000046}"
+IID_IShellLinkW         = "{000214F9-0000-0000-C000-000000000046}"
+IID_IQueryInfo          = "{00021500-0000-0000-C000-000000000046}"
+
+; These are not displayed in UI -- do not localize
+DESC_CShellMonikerHelper        = "Helper for IMoniker support in legacy code"
+DESC_ShellDrvDefExt             = "Drive Property Page Extension"
+DESC_ShellFSFolder              = "Shell File System Folder"
+DESC_ShellFileDefExt            = "File Property Page Extension"
+DESC_FileType                   = "File Types Page"
+DESC_FileTypeHook               = "MIME File Types Hook"
+DESC_OpenWithMenu               = "Open With Context Menu Handler"
+DESC_MyComputer                 = "My Computer"
+DESC_BriefcaseFolder            = "Briefcase Folder"
+DESC_NetworkPlaces              = "My Network Places"
+
+DESC_UpDownOC                   = "UpDown ActiveX Control"
+DESC_DateTimePickerOC           = "Date Time Picker ActiveX Control"
+DESC_RecentNameSpaceOC          = "Recent Folder Name Space ActiveX Control"
+DESC_FileSearchBand             = "File and Folders Search ActiveX Control"
+
+DESC_ShellNetDefExt             = "Network Context Menu Extension"
+
+DESC_CFSIconOverlayManager      = "Shell Icon Overlay Manager"
+DESC_SendToMenu         = "Microsoft SendTo Service"
+DESC_NewMenu            = "Microsoft New Object Service"
+DESC_CopyToMenu         = "Microsoft CopyTo Service"
+DESC_MoveToMenu         = "Microsoft MoveTo Service"
+DESC_StartMenuTask      = "Start Menu Task"
+DESC_DesktopTask        = "Desktop Task"
+DESC_WebViewMimeFilter  = "WebView MIME Filter"
+DESC_DeskMovr           = "Active Desktop Mover"
+DESC_DeskHtmlProp       = "Display Control Panel HTML Extensions"
+DESC_ActiveDesktop      = "ActiveDesktop"
+DESC_ShellFldSetExt     = "Folder Options Property Page Extension"
+DESC_ShellApp           = "Shell Automation Service"
+DESC_DefViewOC          = "Shell DefView"
+DESC_ShellFolderView    = "Shell Automation Folder View"
+DESC_ShellFolderViewOC  = "Microsoft Shell Folder View Router"
+DESC_StartMenu          = "Start Menu"
+DESC_CmdFileIcon        = "CmdFileIcon"
+DESC_Favorites          = "Shell Favorite Folder"
+DESC_ShellTreeWalker    = "Shell Tree Walker"
+DESC_DocFindFolder      = "Search Results"
+DESC_ComputerFindFolder = "Search Results - Computers"
+DESC_DocFindCommand     = "DocFind Command"
+DESC_DocFindPersistHistory = "DocFind Persistent history"
+DESC_DefViewPersistHistory = "DefView Persistent history"
+DESC_RecycleBinCleaner  = "Recycle Bin Cleaner"
+DESC_TaskScheduler      = "Scheduled Tasks"
+DESC_NetworkConnections = "Network Connections"
+DESC_Printers           = "Printers"
+DESC_FontsFolderShortcut = "Fonts"
+DESC_AdminFolderShortcut = "Administrative Tools"
+; -- end of "do not localize" section --
+
+; File type descriptions
+DESC_VXD        = "Virtual device driver"
+DESC_OCX        = "ActiveX Control"
+
+; Advanced option descriptions:
+DESC_FileFolder         = "Files and Folders"
+DESC_ShowInfoTip        = "Show pop-up description for folder and desktop items"
+DESC_Visual             = "Visual Settings"
+DESC_DragFullWin        = "Show window contents while dragging"
+DESC_FontSmooth         = "Smooth edges of screen fonts"
+DESC_HideIcons          = "Hide icons when desktop is viewed as Web page"
+DESC_HideFileExt        = "Hide file extensions for known file types"
+DESC_HiddenFiles        = "Hidden files and folders"
+DESC_ShowAll            = "Show hidden files and folders"
+DESC_NoHidden           = "Do not show hidden files and folders"
+DESC_SuperHidden        = "Hide protected operating system files (Recommended)"
+DESC_ShowFullPath       = "Display the full path in title bar"
+DESC_ShowFullPathAddress = "Display the full path in the address bar"
+DESC_ShowCompColor      = "Display compressed files and folders with alternate color"
+DESC_ClassicViewState   = "Remember each folder's view settings"
+DESC_DesktopProcess     = "Launch folder windows in a separate process"
+DESC_FolderShortcut     = "Folder Shortcut"
+DESC_StartMenuSettings  = "Start Menu Settings"
+DESC_MountedVolume      = "Mounted Volume"
+DESC_StartMenuScrollPrograms = "Scroll the Programs menu"
+DESC_StartMenuFavorites = "Display Favorites"
+DESC_StartMenuLogoff    = "Display Logoff"
+DESC_StartMenuAdminTools= "Display Administrative Tools"
+DESC_CascadeMyDocuments = "Expand My Documents"
+DESC_CascadeControlPanel= "Expand Control Panel"
+DESC_CascadePrinters    = "Expand Printers"
+DESC_CascadeNetConnect  = "Expand Network and Dial-Up Connections"
+DESC_DragImages         = "Shell Drag and Drop helper"
+
+; End of Advanced option descriptions
+
+CATID_SafeForInitializing       = "{7DD95801-9882-11CF-9FA9-00AA006C42C4}"
+CATID_SafeForScripting          = "{7DD95802-9882-11CF-9FA9-00AA006C42C4}"
+CATID_InfoBand                  = "{00021493-0000-0000-C000-000000000046}"
+
+; File Association strings
+; Do not localize OpenWithKillList
+OpenWithKillList        = "%1;explorer.exe;dvdplay.exe;mplay32.exe;msohtmed.exe;quikview.exe;rundll.exe;rundll32.exe;taskman.exe;bck32api.dll"
+NOOPEN_OCXFILE          = "These files are small helper programs that can be used by other programs. Modifying them could make your computer less functional."
+
+SHELL_HLP = "shell.hlp"
+WINDOWS_HLP = "windows.hlp"
+ERR_NOSETUPAPI="Can not register SHELL32.DLL because SETUPAPI.DLL is missing."

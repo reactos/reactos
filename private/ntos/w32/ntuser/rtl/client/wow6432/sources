@@ -1,0 +1,29 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Feb-14-1996 GerardoB Created
+#***************************************************************************/
+
+W32_SB=1
+
+ALT_PROJECT=WOW6432
+ALT_PROJECT_TARGET=WOW6432
+
+# Change to the new 386 compiler for _ptr64 
+# Disable optimizations since the compiler has bugs.
+!if "$(TARGET_DIRECTORY)" == "i386"
+PATH=..\..\..\..\tools\i386_cl;$(PATH)
+MSC_OPTIMIZATION=/Odi
+!endif
+
+!include ..\sources.inc
+
+C_DEFINES=$(C_DEFINES) -DBUILD_WOW6432
+
+
+

@@ -1,0 +1,105 @@
+;
+;  Goo swiped from shdocvw, sortof.
+;
+;  WARNINGS:
+;  Note the AddReg and DelReg keys have a maximum length of 255 characters.
+;  Only one AddReg and DelReg key per header section.
+;
+;  RegItems with %11% or %25% are substituted on NT with 
+;  %SystemRoot%\whatever. But this needs to be REG_EXPAND_SZ!  Use the 
+;  token %RES% (0x20000).
+;
+;  Any entries that go into the registry that contain 
+;  %_SYS_MOD_PATH%, %11%, %25% MUST have this flag set. (w95 ignores it).
+
+[Version]
+Signature="$CHICAGO$"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Integrated Shell Registration (Integrated Shell Only)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[RegDll]
+ComponentName=IE40.Shdoc401
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=RegShell32Part2
+DelReg=RegShell32Part2.Del ; temporary for Beta2
+BackupReg=RegBackupSettings
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[RegDllAlways]
+ComponentName=IE40.Shdoc401
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=RegDllAlways.Add
+;BackupReg=RegBackupSettings ; rjc BUGBUG what is this for?
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+; IEB1 didn't uninstall this section.  Probably won't hurt anything.
+[RegDllAlways.Add]
+; FileTypes property page (shell32 also registers this on NT5)
+; In: IE5
+HKCR,"CLSID\%CLSID_FileTypes%",,,"%DESC_FileType%"
+HKCR,"CLSID\%CLSID_FileTypes%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_FileTypes%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_FileTypes%",,"%DESC_FileType%"
+
+; FileTypes Hook property page (explorer uses calls this)
+; In: IE3, IE4
+HKCR,"CLSID\%CLSID_MIMEFileTypesHook%",,,"%DESC_FileTypeHook%"
+HKCR,"CLSID\%CLSID_MIMEFileTypesHook%\%IPS%",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_MIMEFileTypesHook%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_MIMEFileTypesHook%",,"%DESC_FileTypeHook%"
+
+
+[RegDllNT]
+AddReg=RegShell32NT
+
+[UnregDll]
+ComponentName=IE40.Shdoc401
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+#if 0
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Rollback Registration
+;
+;  These registry keys will kick off the per-user RollBack during uninstall.
+;  But there's no reason to back up HKCU stuff anyway, even though IE4
+;  did so.  Besides, the code doesn't register this section...
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[RegDllCurrentUser]
+ComponentName=IE40.Shdoc401.CurrentUser
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=!RegRollbackShell32
+BackupReg=RegBackupSettings
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[!RegRollbackShell32]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","IE40.Shdoc401.CurrentUser",0,""
+
+[RegBackupSettings]
+HKCU,"%PATH_EXPLORER%",,,"ShellState"
+HKCU,"%PATH_EXPLORER%\CabinetState"
+HKCU,"%PATH_EXPLORER%\StuckRects"
+HKCU,"%PATH_EXPLORER%\DesktopStreams\4"
+#endif // 0
+
+#include "unicpp\selfreg.inc"
+
+ERR_NOSETUPAPI="Can not register shdoc401.dll because setupapi.dll is missing."
+IPS="InProcServer32"
+REGEXSZ=0x00020000
+REGDW=0x00010001
+
+CLSID_Shell32TypeLib            = "{50a7e9b0-70ef-11d1-b75a-00a0c90564fe}"
+CLSID_FileTypes                 = "{B091E540-83E3-11CF-A713-0020AFD79762}"
+CLSID_MIMEFileTypesHook         = "{FBF23B41-E3F0-101B-8488-00AA003E56F8}"
+CATID_SafeForInitializing       = "{7DD95801-9882-11CF-9FA9-00AA006C42C4}"
+CATID_SafeForScripting          = "{7DD95802-9882-11CF-9FA9-00AA006C42C4}"
+
+DESC_FileType                   = "File Types Page"
+DESC_FileTypeHook               = "MIME File Types Hook"

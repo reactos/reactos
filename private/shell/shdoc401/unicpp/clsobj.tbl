@@ -1,0 +1,21 @@
+    // Table of CoCreateInstance()able objects that moved from IE4 SHDOCVW to IE5 SHELL32
+    //
+    { &c_CFVtbl, &CLSID_ActiveDesktop,          CActiveDesktop_CreateInstance, 0 },
+    { &c_CFVtbl, &CLSID_DeskMovr,               CDeskMovr_CreateInstance, OBJ_AGGREGATABLE },
+    { &c_CFVtbl, &CLSID_CopyToMenu,             CCopyToMenu_CreateInstance, 0 },
+    { &c_CFVtbl, &CLSID_MoveToMenu,             CMoveToMenu_CreateInstance, 0 },
+    { &c_CFVtbl, &CLSID_CWebViewMimeFilter,     CWebViewMimeFilter_CreateInstance, 0 },
+    { &c_CFVtbl, &CLSID_CDeskHtmlProp,          CDeskHtmlProp_CreateInstance, 0 },
+    { &c_CFVtbl, &CLSID_ShellFldSetExt,         CFolderOptionsPsx_CreateInstance, 0 },
+    { &c_CFVtbl, &CLSID_Shell,                  CShellDispatch_CreateInstance, 0 },
+    { &c_CFVtbl, &CLSID_ShellFolderView,        CShellFolderView_CreateInstance, 0 },
+    { &c_CFVtbl, &CLSID_ShellFolderViewOC,      CShellFolderViewOC_CreateInstance, OBJ_AGGREGATABLE },
+    { &c_CFVtbl, &CLSID_WebViewFolderContents,  CWebViewFolderContents_CreateInstance, OBJ_AGGREGATABLE },
+    { &c_CFVtbl, &CLSID_StartMenu,              CStartMenu_CreateInstance, 0 },
+    { &c_CFVtbl, &CLSID_CmdFileIcon,            CCmdFileIcon_CreateInstance, 0 },
+    { &c_CFVtbl, &CLSID_NewMenu,                CNewMenu_CreateInstance, 0},
+    { &c_CFVtbl, &CLSID_SendToMenu,             CSendToMenu_CreateInstance, 0},
+    { &c_CFVtbl, &CLSID_StartMenuTask,             CStartMenuTask_CreateInstance, 0},
+    { &c_CFVtbl, &CLSID_DesktopTask,               CDesktopTask_CreateInstance, 0},
+
+

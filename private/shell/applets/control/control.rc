@@ -1,0 +1,9 @@
+#include "control.h"
+#include "rcids.h"
+#include "control.rcv"
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    IDS_CONTROLPANEL			"Control Panel"
+END
+

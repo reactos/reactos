@@ -1,0 +1,23 @@
+!IF 0
+Sources file for building hexedit.lib & he.exe
+
+Author: kenr
+!ENDIF
+
+MAJORCOMP=sdktools
+MINORCOMP=he
+
+TARGETNAME=test
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=.
+
+SOURCES=
+
+i386_SOURCES=i386\test.c        \
+             i386\testa.asm
+
+UMTYPE=console
+UMAPPL=test
+UMLIBS=\nt\public\sdk\lib\*\libcmt.lib  \nt\public\sdk\lib\*\ntdll.lib obj\*\test.lib

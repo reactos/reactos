@@ -1,0 +1,61 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css" />
+<TITLE>DNS</TITLE>
+<STYLE>
+    BODY
+    {
+        background-image:url("ntwrk_bg.gif");
+        background-repeat:no-repeat;
+        background-position:147 46;
+    }
+	.defdiv {background-color:ffffff; visibility:hidden; position:absolute; top:1px; border:1px solid black;}
+	.defspan {font-size:8pt; border:1px solid #cccccc; padding:10px}
+</STYLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="popups.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript">
+    function InstallDNS()
+    {
+        srvwiz.InstallService("DNS");
+    }
+
+	var L_DNSError_Text = "You must set up DNS before proceeding.";
+
+	function dns()
+	{
+        if (srvwiz.ServiceState("DNS") != 1)
+            alert(L_DNSError_Text);
+        else
+            top.content.location.href = "dns.htm";
+	}
+</SCRIPT>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" id="body">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">DNS</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Windows DNS uses the Domain Name System protocol to map host names 
+            to their corresponding <A HREF="javascript:nothing()" onclick="popup(1)">IP addresses</A>. 
+            Active Directory uses DNS to locate domain controllers.
+            
+.
+            <P ID="para3"><A HREF="javascript:InstallDNS()"><IMG SRC="wiz.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Set up DNS</A>.
+			<P ID="para2">After you set up DNS click <b>Next</b> to create names databases&nbsp;&#151;&nbsp;called zones&nbsp;&#151;&nbsp;on the server.
+            <P ID="para4"><A HREF="javascript:help('DNSconcepts.chm::/sag_DNStopnode.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about DNS.</P>
+        </TD>
+    </TR>
+</TABLE>
+<button id="next" style="position:absolute; bottom:21px; right:37px" onclick="dns()">Next</button>
+<!--definition for IP addresses-->
+<DIV class="defdiv" ID="popup1">
+    <span class="defspan" onblur="popOff(1)" ID="def1">Used to identify a node on a network and to specify routing information. Each node on the network must be assigned a unique IP address, which is made up of the network ID, plus a unique host ID assigned by the network administrator. This address is typically represented in dotted-decimal notation, with the decimal value of each octet separated by a period (for example, 138.57.7.27).
+    </span>            
+</DIV>
+<div id="shadow" style="background:url(shadow.gif); filter:alpha(opacity=50); height:1px; width:1px; position:absolute; top:1px; visibility:hidden"></div>
+</BODY>
+</HTML>

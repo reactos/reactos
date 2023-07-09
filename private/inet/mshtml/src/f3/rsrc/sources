@@ -1,0 +1,42 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\f3\rsrc=)
+!include $(ROOT)\common.inc
+
+# Make sure bscmake isn't run here (there's nothing for bscmake to do here).
+!undef BROWSER_INFO
+NO_BROWSER_INFO=1
+
+# binplace selfreg_mshtml.inf
+!if "$(BUILD_PRODUCT)"=="NT"
+MISCFILES=$(MISCFILES) $(O)\selfreg_mshtml.inf
+!endif
+
+#TARGETNAME=mshtmenu
+TARGETPATH=..\..\..\$(_OBJ_DIR)
+TARGETPATHLIB=$(_OBJ_DIR)
+TARGETTYPE=NOTARGET
+
+ROOTDIR=..\..\..
+SRCDIR=..\..
+
+INCLUDES= \
+    $O; \
+    $(ROOTDIR)\types\$(O); \
+    $(ROOTDIR)\external\inc; \
+    $(SRCDIR)\core\include; \
+    $(SRCDIR)\core\cdutil; \
+    $(SRCDIR)\other\include; \
+    $(SRCDIR)\ctrl\include; \
+    $(SRCDIR)\dlay\include; \
+    $(SRCDIR)\site\include; \
+    $(SRCDIR)\f3\include;
+
+SOURCES= \
+    forms3r.rc
+
+NTTARGETFILES=$(O)\forms3r.res

@@ -1,0 +1,22 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\include=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=sitepch
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SYNCHRONIZE_BLOCK=1
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+    empty.cxx
+
+PRECOMPILED_INCLUDE=headers.hxx
+PRECOMPILED_CXX=1

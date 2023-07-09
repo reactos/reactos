@@ -1,0 +1,182 @@
+GatewayServer-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+                enterprises,
+                OBJECT-TYPE,
+                Counter
+                        FROM RFC1155-SMI
+                InternetServer
+                        FROM inetsrv;
+
+--      microsoft       OBJECT IDENTIFIER ::= { enterprises 311 }
+--      software        OBJECT IDENTIFIER ::= { microsoft 1 }
+--      InternetServer  OBJECT IDENTIFIER ::= { software 7 }
+        GatewayServer      OBJECT IDENTIFIER ::= { InternetServer 5 }
+        GatewayStatistics  OBJECT IDENTIFIER ::= { GatewayServer 1 }
+
+-- Gateway Server Statistics
+
+        TotalBytesSent_HighWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the high 32-bits of the total number of
+                        of BYTEs sent by the Gateway Server"
+                ::= { GatewayStatistics 1 }
+
+        TotalBytesSent_LowWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the low 32-bits of the total number of
+                        of BYTEs sent by the Gateway Server"
+                ::= { GatewayStatistics 2 }
+
+        TotalBytesReceived_HighWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the high 32-bits of the total number of
+                        of BYTEs received by the Gateway Server"
+                ::= { GatewayStatistics 3 }
+
+        TotalBytesReceived_LowWord OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the low 32-bits of the total number of
+                        of BYTEs received by the Gateway Server"
+                ::= { GatewayStatistics 4 }
+
+        TotalFilesSent OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of files sent by this
+                        Gateway Server"
+                ::= { GatewayStatistics 5 }
+
+        TotalFilesReceived OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of files received by this
+                        Gateway Server"
+                ::= { GatewayStatistics 6 }
+
+        CurrentUsers OBJECT-TYPE
+                SYNTAX  Integer
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of users currently connected
+                        to the Gateway Server"
+                ::= { GatewayStatistics 7 }
+
+        TotalUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the total number of users that have
+                        ever connected to the Gateway Server"
+                ::= { GatewayStatistics 8  }
+
+        MaxUsers OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of users
+                        simultaneously connected to the Gateway Server"
+                ::= { GatewayStatistics 9 }
+
+        CurrentConnections OBJECT-TYPE
+                SYNTAX  Integer
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the current number of connections to the
+                        Gateway Server"
+                ::= { GatewayStatistics 10 }
+
+        MaxConnections OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the maximum number of simultaneous
+                        connections to the Gateway Server"
+                ::= { GatewayStatistics 11 }
+
+        ConnectionAttempts OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of connection attempts that
+                        have been made to the Gateway Server"
+                ::= { GatewayStatistics 12 }
+
+        FtpRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of Ftp requests that have
+                        been made to this Gateway Server"
+                ::= { GatewayStatistics 13 }
+
+        GopherRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of Gopher requests that have
+                        been made to this Gateway Server"
+                ::= { GatewayStatistics 14 }
+
+        HttpRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of Http requests that have
+                        been made to this Gateway Server"
+                ::= { GatewayStatistics 15 }
+
+        TotalInternetRequests OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of requests using the GET method
+                        that have been made to this Gateway Server"
+                ::= { GatewayStatistics 16 }
+
+        TotalInternetFetches OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of Internet fetches for the Internet
+                        requests that have been made to this Gateway Server"
+                ::= { GatewayStatistics 17 }
+
+        TotalCacheFetches OBJECT-TYPE
+                SYNTAX  Counter
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "This is the number of Cache fetches for the Internet 
+                        requests that have been made to this Gateway Server"
+                ::= { GatewayStatistics 18 }
+
+END
+

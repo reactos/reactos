@@ -1,0 +1,74 @@
+STDMETHOD(method)       virtual HRESULT STDMETHODCALLTYPE method
+STDMETHOD_(type,method) virtual type STDMETHODCALLTYPE method
+PURE                    = 0
+THIS                    void
+THIS_
+far
+FAR
+LPVOID			void *
+__RPC_FAR
+DECLARE_INTERFACE(iface)    interface iface
+DECLARE_INTERFACE_(iface, baseiface)    interface iface : public baseiface
+END_INTERFACE_PART(localClass) 	} m_x##localClass; friend class X##localClass;
+BEGIN_INTERFACE_PART(localClass, baseClass) class X##localClass : public baseClass 	{ public: BEGIN_COM_MAP(X##localClass, localClass) COM_INTERFACE_ENTRY (baseClass) END_COM_MAP() public: virtual ULONG STDMETHODCALLTYPE AddRef(); virtual ULONG S
+TDMETHODCALLTYPE Release(); virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void * * ppvObj);
+BEGIN_CONNECTION_PART(theClass, localClass) class X##localClass : public CConnectionPoint { public: X##localClass() { m_nOffset = offsetof(theClass, m_x##localClass); }
+CONNECTION_IID(iid) REFIID GetIID() { return iid; }
+END_CONNECTION_PART(localClass) } m_x##localClass; friend class X##localClass;
+STDMETHODIMP_(type)     type STDMETHODCALLTYPE
+STDMETHODIMP	HRESULT STDMETHODCALLTYPE
+BEGIN_DUAL_INTERFACE_PART(localClass, baseClass) class X##localClass : public baseClass 	{ public: BEGIN_COM_MAP(X##localClass, localClass) COM_INTERFACE_ENTRY (baseClass) END_COM_MAP()
+END_DUAL_INTERFACE_PART(localClass) 	} m_x##localClass; friend class X##localClass;
+DELEGATE_DUAL_INTERFACE(objectClass, dualClass) 
+DECLARE_HANDLE(x)
+DECLARE_HANDLE32(x)  
+DECLARE_DYNAMIC(class_name)
+DECLARE_DYNCREATE(class_name)
+DECLARE_OPAQUE32(x)
+DECLARE_SERIAL(class_name)
+DECLARE_OLECREATE(class_name)
+DECLARE_OLECREATE_EX(class_name)
+DECLARE_OLETYPELIB(class_name)
+DECLARE_OLECTLTYPE(class_name)
+DECLARE_DUAL_ERRORINFO()
+DECLARE_PROPPAGEIDS(class_name)
+IMPLEMENT_DYNAMIC(class_name, base_class_name)
+IMPLEMENT_DYNCREATE(class_name, base_class_name)
+IMPLEMENT_SERIAL(class_name, base_class_name, wSchema)
+IMPLEMENT_OLECREATE(class_name, external_name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8)
+IMPLEMENT_OLECREATE_EX(class_name, external_name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8)
+IMPLEMENT_OLETYPELIB(class_name, tlid, wVerMajor, wVerMinor)
+IMPLEMENT_OLECTLTYPE(class_name, idsUserTypeName, dwOleMisc)
+INIT_INTERFACE_PART(theClass, localClass)
+IMPLEMENT_DUAL_ERRORINFO(objectClass, riidSource)
+#if __FE_PARSER__
+AFXAPI __stdcall
+PASCAL
+ATL_NO_VTABLE __declspec(novtable)
+// Hack a rama for ATL
+BEGIN_COM_MAP(x) class __HACK__##x : public COM {
+END_COM_MAP() };
+BEGIN_CONNECTION_POINT_MAP(x) class __HACK__##x : public CONNECTION_POINT {
+END_CONNECTION_POINT_MAP() };
+BEGIN_MSG_MAP(x) class __HACK__##x : public MSG {
+END_MSG_MAP() };
+BEGIN_OBJECT_MAP(x) class __HACK__##x : public OBJECT {
+END_OBJECT_MAP() };
+BEGIN_PROPPAGE_MAP(x) class __HACK__##x : public PROPPAGE {
+END_PROPPAGE_MAP() };
+// Hack a rama for MFC
+BEGIN_CONNECTION_MAP(x,y) class __HACK__##x : public CONNECTION {
+END_CONNECTION_MAP() };
+BEGIN_DISPATCH_MAP(x,y) class __HACK__##x : public DISPATCH {
+END_DISPATCH_MAP() };
+BEGIN_EVENT_MAP(x,y) class __HACK__##x : public EVENT {
+END_EVENT_MAP() };
+BEGIN_EVENTSINK_MAP(x,y) class __HACK__##x : public EVENTSINK {
+END_EVENTSINK_MAP() };
+BEGIN_MESSAGE_MAP(x,y) class __HACK__##x : public MESSAGE {
+END_MESSAGE_MAP() };
+BEGIN_OLECMD_MAP(x,y) class __HACK__##x : public OLECMD {
+END_OLECMD_MAP() };
+BEGIN_PARSE_MAP(x,y) class __HACK__##x : public PARSE {
+END_PARSE_MAP() };
+#endif	// __FE_PARSER__

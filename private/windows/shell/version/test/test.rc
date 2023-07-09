@@ -1,0 +1,25 @@
+#include <windows.h>
+#include "test.h"
+
+IDM_VERSION MENU
+BEGIN
+    POPUP        "&File"
+    BEGIN
+	MENUITEM   "E&xit",		IDM_EXIT
+	MENUITEM   SEPARATOR
+	MENUITEM   "&About ResDump...", IDM_ABOUT
+    END
+    POPUP        "&Version"
+    BEGIN
+	MENUITEM   "&Language...",	IDM_LANG
+	MENUITEM   SEPARATOR
+	MENUITEM   "&Information...",	IDM_INFO
+	MENUITEM   "&Query...",		IDM_QUERY
+	MENUITEM   "&Done",		IDM_FREE
+	MENUITEM   SEPARATOR
+	MENUITEM   "&Find...",		IDM_FIND
+	MENUITEM   "In&stall...",	IDM_INSTALL
+    END
+END
+
+#include "test.dlg"

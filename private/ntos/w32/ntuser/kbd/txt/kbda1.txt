@@ -1,0 +1,171 @@
+KBD     A1      "Arabic_English_101"
+
+                // LCID     : 0401
+                // CodePage : 1256
+
+                // Created  : 06/12/96 17:55:55
+
+                // Source   : kbdA1.kbd
+                //   Date   : 08/03/95 14:27:08
+
+
+VERSION 1.0
+
+
+SHIFTSTATE
+
+  0             // Column 4 :
+  1             // Column 5 : Shft
+  2             // Column 6 :      Ctrl
+  3             // Column 7 : Shft Ctrl
+
+LAYOUT
+
+//SC  VK_        Cap    0       1       2       3
+//--  ---------- ---    ----    ----    ----    ----
+  29  OEM_3      0      0630    0651                    // Ð ø [Thal] [Shadda]
+  02  1          0      1       !       -1      200d    // Zero Width Joiner
+  03  2          0      2       @       -1      200c    // Zero Width Non-Joiner
+  04  3          0      3       #       -1      200e    // LTR
+  05  4          0      4       $       -1      200f    // RTL
+  06  5          0      5       %
+  07  6          0      6       ^       -1      001e
+  08  7          0      7       &
+  09  8          0      8       *
+  0a  9          0      9       )
+  0b  0          0      0       (
+  0c  OEM_MINUS  0      -       _       -1      001f
+  0d  OEM_PLUS   0      =       +
+//--  ---------- ---    ----    ----    ----    ----
+  10  Q          0      0636    064e                    // Ö ó [Dad] [Fatha]
+  11  W          0      0635    064b                    // Õ ð [Sad] [Fathatan]
+  12  E          0      062b    064f                    // Ë õ [Theh] [Damma]
+  13  R          0      0642    064c                    // Þ ñ [Qaf] [Dammatan]
+  14  T          0      0641    %%                      // Ý á [Feh] [Lam with AlefHamzaBelow]
+  15  Y          0      063a    0625                    // Û Å [Ghain] [AlefHamzaBelow]
+  16  U          0      0639    2018                    // Ú ‘ [Ain] [LeftSingleQuote]
+  17  I          0      0647    00f7                    // å ÷ [Heh] [DivisionSign]
+  18  O          0      062e    00d7                    // Î × [Khah] [MultiplySign]
+  19  P          0      062d    061b                    // Í º [Hah] [ArabicSemicolon]
+  1a  OEM_4      0      062c    <       001b            // Ì   [Jeem]
+  1b  OEM_6      0      062f    >       001d            // Ï   [Dal]
+  2b  OEM_5      0      \       |       001c
+//--  ---------- ---    ----    ----    ----    ----
+  1e  A          0      0634    0650                    // Ô ö [Sheen] [Kasra]
+  1f  S          0      0633    064d                    // Ó ò [Seen] [Kasratan]
+  20  D          0      064a    ]                       // í   [Yeh]
+  21  F          0      0628    [                       // È   [Beh]
+  22  G          0      0644    %%                      // á á [Lam] [Lam with AlefHamzaAbove]
+  23  H          0      0627    0623                    // Ç Ã [Alef] [AlefHamzaAbove]
+  24  J          0      062a    0640                    // Ê Ü [Teh] [Tatweel]
+  25  K          0      0646    060c                    // ä ¡ [Noon] [ArabicComma]
+  26  L          0      0645    /                       // ã   [Meem]
+  27  OEM_1      0      0643    :                       // ß   [Kaf]
+  28  OEM_7      0      0637    "       001c            // Ø   [Tah]
+//--  ---------- ---    ----    ----    ----    ----
+  2c  Z          0      0626    ~                       // Æ   [YehHamzaAbove]
+  2d  X          0      0621    0652                    // Á ú [Hamza] [Sukun]
+  2e  C          0      0624    }                       // Ä   [WawHamzaAbove]
+  2f  V          0      0631    {                       // Ñ   [Reh]
+  30  B          0      %%      %%                      // á á [Lam Alef] [Lam with AlefMaddaAbove]
+  31  N          0      0649    0622                    // ì Â [AlefMaksura] [AlefMaddaAbove]
+  32  M          0      0629    2019                    // É ’ [TehMarbuta] [RightSingleQuote]
+  33  OEM_COMMA  0      0648    ,                       // æ   [Waw]
+  34  OEM_PERIOD 0      0632    .                       // Ò   [Zain]
+  35  OEM_2      0      0638    061f                    // Ù ¿ [Zah] [ArabicQuestionMark]
+  56  OEM_102    0      \       |
+//--  ---------- ---    ----    ----    ----    ----
+  53  DECIMAL    0      .       .
+//--  ---------- ---    ----    ----    ----    ----
+//SC  VK_        Cap    0       1       2       3
+
+LIGATURE
+
+//VK_        Mod#  Char0  Char1  Char2  Char3  Char4
+//---------- ----  -----  -----  -----  -----  -----
+  B          0     0644   0627                          // [Lam Alef]
+  B          1     0644   0622                          // [Lam with AlefMaddaAbove]
+  G          1     0644   0623                          // [Lam with AlefHamzaAbove]
+  T          1     0644   0625                          // [Lam with AlefHamzaBelow]
+
+KEYNAME
+
+ 01     Esc
+ 0e     Backspace
+ 0f     Tab
+ 1c     Enter
+ 1d     Ctrl
+ 2a     Shift
+ 36     "Right Shift"
+ 37     "Num *"
+ 38     Alt
+ 39     Space
+ 3a     "Caps Lock"
+ 3b     F1
+ 3c     F2
+ 3d     F3
+ 3e     F4
+ 3f     F5
+ 40     F6
+ 41     F7
+ 42     F8
+ 43     F9
+ 44     F10
+ 45     Pause
+ 46     "Scroll Lock"
+ 47     "Num 7"
+ 48     "Num 8"
+ 49     "Num 9"
+ 4a     "Num -"
+ 4b     "Num 4"
+ 4c     "Num 5"
+ 4d     "Num 6"
+ 4e     "Num +"
+ 4f     "Num 1"
+ 50     "Num 2"
+ 51     "Num 3"
+ 52     "Num 0"
+ 53     "Num Del"
+ 54     "Sys Req"
+ 57     F11
+ 58     F12
+ 7c     F13
+ 7d     F14
+ 7e     F15
+ 7f     F16
+ 80     F17
+ 81     F18
+ 82     F19
+ 83     F20
+ 84     F21
+ 85     F22
+ 86     F23
+ 87     F24
+
+KEYNAME_EXT
+
+ 1c     "Num Enter"
+ 1d     "Right Control"
+ 35     "Num /"
+ 37     "Prnt Scrn"
+ 38     "Right Alt"
+ 45     "Num Lock"
+ 46     Break
+ 47     Home
+ 48     Up
+ 49     "Page Up"
+ 4b     Left
+ 4d     Right
+ 4f     End
+ 50     Down
+ 51     "Page Down"
+ 52     Insert
+ 53     Delete
+ 54     <00>
+ 56     Help
+ 5b     "Left Windows"
+ 5c     "Right Windows"
+ 5d     Application
+
+ENDKBD
+

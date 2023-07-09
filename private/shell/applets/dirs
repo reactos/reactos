@@ -1,0 +1,13 @@
+DIRS    = \
+          autorun     \
+          bnt4exe     \
+          cleanup     \
+          control     \
+          discover    \
+          grpconv     \
+          smtidy      \
+          taskmgr     \
+          welcome
+
+OPTIONAL_DIRS=
+

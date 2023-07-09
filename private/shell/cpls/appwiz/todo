@@ -1,0 +1,2 @@
+1. Get rid of duplicate code in this dir (uninstall and stuff)
+2. bWx86Enabled is not needed on NT5, always turned on on NT5. 

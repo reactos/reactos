@@ -1,0 +1,81 @@
+//++
+//
+// Copyright (c) 1993  IBM Corporation and Microsoft Corporation
+//
+// Module Name:
+//
+//    sysstubs.s
+//
+// Abstract:
+//
+//    This module implements the system service dispatch stub procedures.
+//
+// Author:
+//
+//    Rick Simpson   16-Sep-1993
+//
+//    Based on MIPS version by David N. Cutler (davec) 29-Apr-1989
+//
+// Environment:
+//
+//    User or kernel mode.
+//
+// Revision History:
+//
+//--
+
+#include <kxppc.h>
+
+	.text
+	.align	5
+
+	SPECIAL_ENTRY(_SysCallGlue)
+	stw	r.31, 4(r.sp)
+	mflr	r.31
+	stw	r.2, 8(r.sp)
+	PROLOGUE_END(_SysCallGlue)
+	ori	r.2, r.0, 0
+	bl	..ZwSysCallInstr
+	mtlr	r.31
+	lwz	r.31, 4(r.sp)
+	lwz	r.2, 8(r.sp)
+	SPECIAL_EXIT(_SysCallGlue)
+
+#define STUBS_BEGIN1( t )       .text
+#define STUBS_BEGIN2( t )       .align  2
+#define STUBS_BEGIN3( t )       .globl  ..ZwSysCallInstr
+#define STUBS_BEGIN4( t ) ..ZwSysCallInstr:
+#define STUBS_BEGIN5( t )       sc
+#define STUBS_BEGIN6( t )       blr
+#define STUBS_BEGIN7( t )       .reldata
+#define STUBS_BEGIN8( t )       .align  2
+
+#define STUBS_END
+
+#define SYSSTUBS_ENTRY1( ServiceNumber, Name, NumArgs )         .globl  Zw##Name, ..Zw##Name
+#define SYSSTUBS_ENTRY2( ServiceNumber, Name, NumArgs )         .reldata
+#define SYSSTUBS_ENTRY3( ServiceNumber, Name, NumArgs ) Zw##Name: .long   ..ZwSysCallInstr
+#define SYSSTUBS_ENTRY4( ServiceNumber, Name, NumArgs )         .long   ServiceNumber
+#define SYSSTUBS_ENTRY5( ServiceNumber, Name, NumArgs )         .text
+#define SYSSTUBS_ENTRY6( ServiceNumber, Name, NumArgs ) ..Zw##Name:
+#define SYSSTUBS_ENTRY7( ServiceNumber, Name, NumArgs )          li r.2, ServiceNumber
+#define SYSSTUBS_ENTRY8( ServiceNumber, Name, NumArgs )          sc
+
+#define USRSTUBS_ENTRY1( ServiceNumber, Name, NumArgs)  .reldata
+#define USRSTUBS_ENTRY2( ServiceNumber, Name, NumArgs)  .globl  Zw##Name, Nt##Name, ..Nt##Name, ..Zw##Name
+#define USRSTUBS_ENTRY3( ServiceNumber, Name, NumArgs) Zw##Name:
+#define USRSTUBS_ENTRY4( ServiceNumber, Name, NumArgs) Nt##Name: .long   ..ZwSysCallInstr, ServiceNumber
+#define USRSTUBS_ENTRY5( ServiceNumber, Name, NumArgs)  .text
+#define USRSTUBS_ENTRY6( ServiceNumber, Name, NumArgs) ..Zw##Name:
+#define USRSTUBS_ENTRY7( ServiceNumber, Name, NumArgs) ..Nt##Name: li r.0, ServiceNumber
+#define USRSTUBS_ENTRY8( ServiceNumber, Name, NumArgs)              b .._SysCallGlue
+
+
+        STUBS_BEGIN1( "System Service Stub Procedures" )
+        STUBS_BEGIN2( "System Service Stub Procedures" )
+        STUBS_BEGIN3( "System Service Stub Procedures" )
+        STUBS_BEGIN4( "System Service Stub Procedures" )
+        STUBS_BEGIN5( "System Service Stub Procedures" )
+        STUBS_BEGIN6( "System Service Stub Procedures" )
+        STUBS_BEGIN7( "System Service Stub Procedures" )
+        STUBS_BEGIN8( "System Service Stub Procedures" )

@@ -1,0 +1,42 @@
+<HTML>
+<TITLE>Add/Remove Programs</TITLE>
+<HEAD>
+<SCRIPT LANGUAGE="JavaScript"> 
+    function FramesOnLoad()
+    {
+        // This is the default page
+        // Set the Remove menu item to be Remove
+        parent.frames.menu.document.all["idMenuRemove"].click();
+    }
+</SCRIPT>
+</HEAD>
+<!--
+This is the beginning page of Add/Remove Programs.  The general layout
+consists of four frames and looks like this:
+
+    +-------------------------------------+
+    | menu  |                             |
+    |       |                             |
+    |       |                             |
+    |       |       main                  |
+    |       |                             |
+    +-------+                             |
+    |       |                             |
+    |  pie  |                             |
+    +-------+-----------------------------+
+
+NOTE: top is now gone.
+
+-->
+
+<FRAMESET ONLOAD="FramesOnLoad()" COLS="158,*" FRAMEBORDER=0 BORDER=0 FRAMESPACING=0>
+    <FRAMESET ROWS="*,186" FRAMEBORDER=0>
+        <FRAME NAME="menu" SRC="am_menu.htm" SCROLLING=NO MARGINHEIGHT=0 MARGINWIDTH=0 NORESIZE FRAMEBORDER=0>
+        <FRAME NAME="pie" SRC="am_pie.htm" SCROLLING=NO MARGINHEIGHT=0 MARGINWIDTH=0 NORESIZE FRAMEBORDER=0>
+    </FRAMESET>
+    <FRAME NAME="main" SRC="" SCROLLING=NO MARGINHEIGHT=0 MARGINWIDTH=0 NORESIZE FRAMEBORDER=0>
+</FRAMESET>
+
+</HTML>
+
+

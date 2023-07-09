@@ -1,0 +1,14 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft WinSock Extension APIs"
+#define VER_INTERNALNAME_STR        "mswsock.dll"
+#define VER_ORIGINALFILENAME_STR    "mswsock.dll"
+
+#include "common.ver"
+
+LANGUAGE 0x9,0x1
+1 11 MSG00001.BIN
+

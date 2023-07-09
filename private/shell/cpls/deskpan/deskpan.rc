@@ -1,0 +1,26 @@
+/******************************************************************************
+
+  Source File:  Deskpan.rc
+
+  Configure panning for the display
+
+  Copyright (c) 1997-1998 by Microsoft Corporation
+
+  Change History:
+
+  12-01-97 AndreVa - Created It
+
+******************************************************************************/
+
+#include    <windows.h>
+#include    "resource.h"
+
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Advanced display panning properties"
+#define VER_INTERNALNAME_STR        "deskpan.dll"
+
+#include "common.ver"

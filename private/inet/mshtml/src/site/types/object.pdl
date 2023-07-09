@@ -1,0 +1,155 @@
+#ifndef _OBJECT_PDL_
+#define _OBJECT_PDL_ 1
+
+#include "csite.pdl"
+#include "olesite.pdl"
+
+file object.pdl
+import csite.pdl
+
+interface IHTMLObjectElement guid:3050f24f-98b5-11cf-bb82-00aa00bdce0b
+    refprop CObjectElement:object
+    refprop CObjectElement:classid2
+    refprop CObjectElement:data2
+    refprop CObjectElement:recordset
+    refprop COleSite:align
+    refprop CObjectElement:name
+    refprop CObjectElement:codeBase
+    refprop CObjectElement:codeType
+    refprop CObjectElement:code
+    refprop CObjectElement:BaseHref
+    refprop CObjectElement:type
+    refprop CSite:form
+    refprop CObjectElement:width
+    refprop CObjectElement:height
+    refprop CObjectElement:readyState
+    refprop CObjectElement:onreadystatechange
+    refprop CObjectElement:onerror
+    refprop CObjectElement:altHtml
+    refprop CObjectElement:vspace
+    refprop CObjectElement:hspace               
+
+interface IHTMLObjectElement2 super:IDispatch guid:3050f4cd-98b5-11cf-bb82-00aa00bdce0b
+    refmethod CObjectElement:namedRecordset
+    refprop CObjectElement:classid
+    refprop CObjectElement:data
+
+/* New style element events w/ eventObject parameter: */
+event HTMLObjectElementEvents2 super:IDispatch guid:3050f620-98b5-11cf-bb82-00aa00bdce0b
+    method VARIANT_BOOL onbeforeupdate (in type:IHTMLEventObj* arg:pEvtObj)      bubbling cancelable \
+           dispid:DISPID_EVMETH_ONBEFOREUPDATE
+    method void         onafterupdate (in type:IHTMLEventObj* arg:pEvtObj)       bubbling \
+           dispid:DISPID_EVMETH_ONAFTERUPDATE
+    method VARIANT_BOOL onerrorupdate (in type:IHTMLEventObj* arg:pEvtObj)       bubbling cancelable \
+           dispid:DISPID_EVMETH_ONERRORUPDATE
+    method VARIANT_BOOL onrowexit (in type:IHTMLEventObj* arg:pEvtObj)           bubbling cancelable abstract \
+           dispid:DISPID_EVMETH_ONROWEXIT
+    method void         onrowenter (in type:IHTMLEventObj* arg:pEvtObj)          bubbling abstract \
+           dispid:DISPID_EVMETH_ONROWENTER
+    method void         ondatasetchanged (in type:IHTMLEventObj* arg:pEvtObj)    bubbling abstract \
+           dispid:DISPID_EVMETH_ONDATASETCHANGED
+    method void         ondataavailable (in type:IHTMLEventObj* arg:pEvtObj)     bubbling abstract \
+           dispid:DISPID_EVMETH_ONDATAAVAILABLE
+    method void         ondatasetcomplete (in type:IHTMLEventObj* arg:pEvtObj)   bubbling abstract \
+           dispid:DISPID_EVMETH_ONDATASETCOMPLETE
+    method VARIANT_BOOL onerror (in type:IHTMLEventObj* arg:pEvtObj)             abstract cancelable \
+           dispid:DISPID_XOBJ_BASE+19
+    method void         onrowsdelete (in type:IHTMLEventObj* arg:pEvtObj)        bubbling abstract \
+           dispid:DISPID_EVMETH_ONROWSDELETE
+    method void         onrowsinserted (in type:IHTMLEventObj* arg:pEvtObj)      bubbling abstract \
+           dispid:DISPID_EVMETH_ONROWSINSERTED
+    method void         oncellchange (in type:IHTMLEventObj* arg:pEvtObj)        bubbling abstract \
+           dispid:DISPID_EVMETH_ONCELLCHANGE
+    method void         onreadystatechange (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_XOBJ_BASE+20
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLObjectElementEvents super:IDispatch guid:3050f3c4-98b5-11cf-bb82-00aa00bdce0b
+    method VARIANT_BOOL onbeforeupdate      bubbling cancelable             dispid:DISPID_EVMETH_ONBEFOREUPDATE ()
+    method void         onafterupdate       bubbling                        dispid:DISPID_EVMETH_ONAFTERUPDATE ()
+    method VARIANT_BOOL onerrorupdate       bubbling cancelable             dispid:DISPID_EVMETH_ONERRORUPDATE ()
+    method VARIANT_BOOL onrowexit           bubbling cancelable abstract    dispid:DISPID_EVMETH_ONROWEXIT ()
+    method void         onrowenter          bubbling abstract               dispid:DISPID_EVMETH_ONROWENTER ()
+    method void         ondatasetchanged    bubbling abstract               dispid:DISPID_EVMETH_ONDATASETCHANGED ()
+    method void         ondataavailable     bubbling abstract               dispid:DISPID_EVMETH_ONDATAAVAILABLE ()
+    method void         ondatasetcomplete   bubbling abstract               dispid:DISPID_EVMETH_ONDATASETCOMPLETE ()
+    method VARIANT_BOOL onerror             abstract cancelable             dispid:DISPID_XOBJ_BASE+19 ()
+    method void         onrowsdelete        bubbling abstract               dispid:DISPID_EVMETH_ONROWSDELETE ()
+    method void         onrowsinserted      bubbling abstract               dispid:DISPID_EVMETH_ONROWSINSERTED ()
+    method void         oncellchange        bubbling abstract               dispid:DISPID_EVMETH_ONCELLCHANGE ()
+    method void         onreadystatechange                                  dispid:DISPID_XOBJ_BASE+20 ()
+
+tearoff CObjectElement interface:IDispatchEx BaseImpl:super::
+    tearmethod InvokeEx             mapto:ContextThunk_InvokeExReady
+    tearmethod GetNameSpaceParent   mapto:CElement::GetNameSpaceParent
+
+tearoff CObjectElement interface:IHTMLObjectElement
+	tearmethod get_readyState			mapto:get_readyState
+
+tearoff CObjectElement interface:IHTMLObjectElement2
+
+tearoff CObjectElement interface:IHTMLElement2
+    tearmethod get_readyState           mapto:get_readyState
+    tearmethod get_tabIndex             mapto:super::get_tabIndex
+
+class CObjectElement name:HTMLObjectElement \
+            primaryinterface:IHTMLObjectElement \
+            super:COleSite \
+            events:HTMLObjectElementEvents \
+            nonprimaryevents:HTMLObjectElementEvents2 \
+            noconnectionpoints \
+            guid:3050f24e-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f529-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLObjectElement
+    implements IHTMLObjectElement2
+
+    property object     dispid:DISPID_OBJECT+1  atype:IDispatch*    \
+        abstract get hidden help:f3proObject
+    property classid2    dispid:DISPID_OBJECT+2  atype:BSTR  type:CStr   \ 
+        caa get hidden maxstrlen:pdlToken szInterfaceExpose:classid nopropdesc:nameonly
+    property classid    dispid:DISPID_OBJECT+2  atype:BSTR  type:CStr   \ 
+        caa get set hidden maxstrlen:pdlToken baseimplementation
+    property data2      dispid:DISPID_OBJECT+3  atype:BSTR  type:CStr   \
+        caa get hidden setaahr maxstrlen:pdlUrlLen szInterfaceExpose:data nopropdesc:nameonly
+    property data       dispid:DISPID_OBJECT+3  atype:BSTR  type:CStr   \
+        caa get set hidden setaahr maxstrlen:pdlNoLimit
+    property recordset  dispid:DISPID_OBJECT+5              atype:IDispatch*    \
+        type:IDispatch* abstract get set hidden
+    property height caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT \
+        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+    property width caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_WIDTH  \
+        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+    property name       dispid:STDPROPID_XOBJ_NAME          atype:BSTR  type:CStr   \
+        method:nameHelper baseimplementation get set displaybind noassigndefault:"" maxstrlen:pdlNoLimit
+    property codeBase   dispid:DISPID_OBJECT+6  atype:BSTR  type:CStr \
+        caa get set setaahr displaybind maxstrlen:pdlUrlLen
+    property codeType   dispid:DISPID_OBJECT+7  atype:BSTR  type:CStr \
+        caa get set displaybind maxstrlen:pdlNoLimit baseimplementation
+    property code       dispid:DISPID_OBJECT+8  atype:BSTR  type:CStr \
+        caa get set displaybind maxstrlen:pdlUrlLen
+    property BaseHref   dispid:STDPROPID_XOBJ_BASEHREF atype:BSTR  \
+        get abstract nopersist
+    property type       dispid:DISPID_OBJECT+9  atype:BSTR  type:CStr \
+        caa get set displaybind maxstrlen:pdlToken baseimplementation 
+    property  readyState atype:long   dispid:DISPID_OBJECT+10 \
+        get abstract nopersist hidden nopropdesc:nameonly
+    property onreadystatechange atype:VARIANT type:code dispid:DISPID_EVPROP_ONREADYSTATECHANGE \
+        caa scriptlet get set bindable displaybind maxstrlen:pdlEvent nopropdesc
+    property onerror    atype:VARIANT   dispid:DISPID_EVPROP_ONERROR  type:code \
+        caa scriptlet get set  displaybind maxstrlen:pdlEvent
+    property altHtml    dispid:DISPID_OBJECT+11 atype:BSTR  type:CStr \
+        caa setaahr get set nopersist maxstrlen:pdlNoLimit
+    property vspace     dispid:DISPID_OBJECT+12 atype:long  type:long \
+        caa get set clearcaches default:0 min:0
+    property hspace     dispid:DISPID_OBJECT+13 atype:long  type:long \
+        caa get set clearcaches default:0 min:0 
+    method    HRESULT   namedRecordset maxstrlen:pdlNoLimit dispid:DISPID_OBJECT+14 \
+        (in type:BSTR arg:dataMember, optional in type:VARIANT* arg:hierarchy \
+        out retval type:IDispatch** arg:ppRecordset)
+
+#endif _OBJECT_PDL_

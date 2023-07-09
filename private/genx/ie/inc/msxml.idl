@@ -1,0 +1,238 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992-1998. 
+//
+//  File: msxml.idl
+//
+//--------------------------------------------------------------------------
+
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1997-1998.")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+
+#include "msxmldid.h"
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+import "wtypes.idl";
+import "objidl.idl";
+import "oaidl.idl";
+#endif
+
+typedef struct _xml_error {
+    unsigned        _nLine;         // line number
+    BSTR            _pchBuf;        // current input buffer
+    unsigned        _cchBuf;        // number of chars in buffer
+    unsigned        _ich;           // index of the char when error occurred
+    BSTR            _pszFound;      // token found
+    BSTR            _pszExpected;   // token expected
+    DWORD           _reserved1;     // reserved
+    DWORD           _reserved2;     // reserved
+} XML_ERROR;
+
+[
+    uuid(d63e0ce2-a0a2-11d0-9c02-00c04fc99c8e),     // LIBID_MSXML
+    helpstring("Microsoft XML, version 2.0"),
+    lcid(0x0000),
+    version(2.0)
+]
+
+library MSXML
+{
+
+importlib("stdole32.tlb");
+importlib("stdole2.tlb");
+
+#include "xmldom.idl"
+#include "xmldso.idl"
+
+
+interface IXMLElementCollection;
+interface IXMLDocument;
+interface IXMLDocument2;
+interface IXMLElement;
+interface IXMLElement2;
+interface IXMLAttribute;
+interface IXMLError;
+interface IXMLElementNotificationSink;
+
+typedef [
+helpstring("Constants that define types for IXMLElement.")
+] enum tagXMLEMEM_TYPE
+{
+    XMLELEMTYPE_ELEMENT,
+    XMLELEMTYPE_TEXT,
+    XMLELEMTYPE_COMMENT,
+    XMLELEMTYPE_DOCUMENT,
+    XMLELEMTYPE_DTD,
+    XMLELEMTYPE_PI,
+    XMLELEMTYPE_OTHER
+} XMLELEM_TYPE;
+
+[
+    local, object,
+    uuid(65725580-9B5D-11d0-9BFE-00C04FC99C8E), // IID_IXMLElementCollection
+    odl, 
+	dual,
+	oleautomation,
+	hidden, // replaced by IDOMNodeList
+	helpstring("IXMLElementCollection helps to enumerate through a XML document tree.")
+]
+interface IXMLElementCollection : IDispatch
+{
+    [propput, restricted, hidden, id(DISPID_XMLELEMENTCOLLECTION_LENGTH)] HRESULT length([in] long v);
+    [propget, id(DISPID_XMLELEMENTCOLLECTION_LENGTH), helpstring("get number of elements in this IXMLElementCollection.")] HRESULT length([retval, out] long * p);
+    [propget, restricted, hidden, id(DISPID_XMLELEMENTCOLLECTION_NEWENUM)] HRESULT _newEnum([retval, out] IUnknown ** ppUnk);
+    [id(DISPID_XMLELEMENTCOLLECTION_ITEM), helpstring("get current item, or (optional) by index and name.")] HRESULT item([optional, in] VARIANT var1,[optional, in] VARIANT var2,[retval, out] IDispatch ** ppDisp);
+};
+
+
+[
+    local, object,
+    uuid(F52E2B61-18A1-11d1-B105-00805F49916B), // IID_IXMLDocument
+    odl, 
+	dual,
+	oleautomation,
+	hidden, // replaced by IDOMDocument 
+	helpstring("IXMLDocument loads and saves XML document. This is obsolete. You should use IDOMDocument or IXMLDOMDocument.")
+]
+interface IXMLDocument : IDispatch
+{
+    [propget, id(DISPID_XMLDOCUMENT_ROOT), helpstring("get root IXMLElement of the XML document.")] HRESULT root ([retval, out] IXMLElement * * p);
+    [propget, restricted, hidden, id(DISPID_XMLDOCUMENT_FILESIZE)] HRESULT fileSize([retval, out] BSTR * p);
+    [propget, restricted, hidden, id(DISPID_XMLDOCUMENT_FILEMODIFIEDDATE)] HRESULT fileModifiedDate([retval, out] BSTR * p);
+    [propget, restricted, hidden, id(DISPID_XMLDOCUMENT_FILEUPDATEDDATE)] HRESULT fileUpdatedDate([retval, out] BSTR * p);
+    [propget, id(DISPID_XMLDOCUMENT_URL), helpstring("set URL to load an XML document from the URL.")] HRESULT URL([retval, out] BSTR * p);
+    [propput, id(DISPID_XMLDOCUMENT_URL), helpstring("get url.")] HRESULT URL([in] BSTR p);
+    [propget, restricted, hidden, id(DISPID_XMLDOCUMENT_MIMETYPE)] HRESULT mimeType([retval, out] BSTR * p);
+    [propget, id(DISPID_XMLDOCUMENT_READYSTATE), helpstring("get ready state.")] HRESULT readyState([retval, out]long *pl);
+    [propget, id(DISPID_XMLDOCUMENT_CHARSET), helpstring("get encoding.")]  HRESULT charset([retval, out]BSTR *p);
+    [propput, id(DISPID_XMLDOCUMENT_CHARSET), helpstring("set encoding.")]  HRESULT charset([in]BSTR p);
+    [propget, id(DISPID_XMLDOCUMENT_VERSION), helpstring("get XML version number.")]  HRESULT version([retval, out]BSTR *p);
+    [propget, id(DISPID_XMLDOCUMENT_DOCTYPE), helpstring("get document type.")]  HRESULT doctype([retval, out]BSTR *p);
+    [propget, restricted, hidden, id(DISPID_XMLDOCUMENT_DTDURL)]   HRESULT dtdURL([retval, out]BSTR *p);
+    [id(DISPID_XMLDOCUMENT_CREATEELEMENT), helpstring("create different types of IXMLElements.")] HRESULT createElement([in] VARIANT vType, [optional, in] VARIANT var1, [retval, out] IXMLElement * * ppElem);
+};
+
+
+[
+    local, object,
+    uuid(2B8DE2FE-8D2D-11d1-B2FC-00C04FD915A9), // IID_IXMLDocument2
+    hidden  // Because that this interface is the default interface of coclass XMLDocument
+]
+interface IXMLDocument2 : IDispatch
+{
+    [propget, id(DISPID_XMLDOCUMENT_ROOT), helpstring("get root IXMLElement of the XML document.")] HRESULT root ([retval, out] IXMLElement2 * * p);
+    [propget, restricted, hidden, id(DISPID_XMLDOCUMENT_FILESIZE)] HRESULT fileSize([retval, out] BSTR * p);
+    [propget, restricted, hidden, id(DISPID_XMLDOCUMENT_FILEMODIFIEDDATE)] HRESULT fileModifiedDate([retval, out] BSTR * p);
+    [propget, restricted, hidden, id(DISPID_XMLDOCUMENT_FILEUPDATEDDATE)] HRESULT fileUpdatedDate([retval, out] BSTR * p);
+    [propget, id(DISPID_XMLDOCUMENT_URL), helpstring("set URL to load an XML document from the URL.")] HRESULT URL([retval, out] BSTR * p);
+    [propput, id(DISPID_XMLDOCUMENT_URL), helpstring("get url.")] HRESULT URL([in] BSTR p);
+    [propget, restricted, hidden, id(DISPID_XMLDOCUMENT_MIMETYPE)] HRESULT mimeType([retval, out] BSTR * p);
+    [propget, id(DISPID_XMLDOCUMENT_READYSTATE), helpstring("get ready state.")] HRESULT readyState([retval, out]long *pl);
+    [propget, id(DISPID_XMLDOCUMENT_CHARSET), helpstring("get encoding.")]  HRESULT charset([retval, out]BSTR *p);
+    [propput, id(DISPID_XMLDOCUMENT_CHARSET), helpstring("set encoding.")]  HRESULT charset([in]BSTR p);
+    [propget, id(DISPID_XMLDOCUMENT_VERSION), helpstring("get XML version number.")]  HRESULT version([retval, out]BSTR *p);
+    [propget, id(DISPID_XMLDOCUMENT_DOCTYPE), helpstring("get document type.")]  HRESULT doctype([retval, out]BSTR *p);
+    [propget, restricted, hidden, id(DISPID_XMLDOCUMENT_DTDURL)]   HRESULT dtdURL([retval, out]BSTR *p);
+    [id(DISPID_XMLDOCUMENT_CREATEELEMENT), helpstring("create different types of IXMLElements.")] HRESULT createElement([in] VARIANT vType, [optional, in] VARIANT var1, [retval, out] IXMLElement2 * * ppElem);
+    [propget, id(DISPID_XMLDOCUMENT_ASYNC), helpstring("get asynchronous loading flag.")] HRESULT async([retval, out] VARIANT_BOOL * pf);
+    [propput, id(DISPID_XMLDOCUMENT_ASYNC), helpstring("set flag to turn on/off asynchronous loading.")] HRESULT async([in] VARIANT_BOOL f);
+};
+
+[
+    local, object,
+    uuid(3F7F31AC-E15F-11d0-9C25-00C04FC99C8E), // IID_IXMLElement
+    odl, 
+	dual,
+	oleautomation,
+	hidden, // replaced by IDOMNode
+	helpstring("IXMLElement represents an element in the XML document tree.")
+]
+interface IXMLElement : IDispatch
+{
+    [propget, id(DISPID_XMLELEMENT_TAGNAME), helpstring("get tag name.")] HRESULT tagName([retval, out] BSTR * p);
+    [propput, id(DISPID_XMLELEMENT_TAGNAME), helpstring("set tag name.")] HRESULT tagName([in] BSTR p);
+    [propget, id(DISPID_XMLELEMENT_PARENT), helpstring("get parent IXMLElement.")] HRESULT parent([retval, out]IXMLElement **ppParent);
+    [id(DISPID_XMLELEMENT_SETATTRIBUTE), helpstring("set attribute.")] HRESULT setAttribute([in] BSTR strPropertyName,[in] VARIANT PropertyValue);
+    [id(DISPID_XMLELEMENT_GETATTRIBUTE), helpstring("get attribute.")] HRESULT getAttribute([in] BSTR strPropertyName,[retval, out] VARIANT* PropertyValue);
+    [id(DISPID_XMLELEMENT_REMOVEATTRIBUTE), helpstring("remove attribute.")] HRESULT removeAttribute([in] BSTR strPropertyName);
+    [propget, id(DISPID_XMLELEMENT_CHILDREN), helpstring("get a IXMLElementCollection of children.")] HRESULT children([retval, out] IXMLElementCollection * * pp);
+    [propget, id(DISPID_XMLELEMENT_TYPE), helpstring("get type of this IXMLElement.")] HRESULT type([retval, out] long *plType);
+    [propget, id(DISPID_XMLELEMENT_TEXT), helpstring("get text.")] HRESULT text([retval, out] BSTR *p);
+    [propput, id(DISPID_XMLELEMENT_TEXT), helpstring("set text.")] HRESULT text([in] BSTR p);
+    [id(DISPID_XMLELEMENT_ADDCHILD), helpstring("add a child.")] HRESULT addChild([in] IXMLElement *pChildElem, long lIndex, long lReserved); // lReserved must be -1
+    [id(DISPID_XMLELEMENT_REMOVECHILD), helpstring("remove a child.")] HRESULT removeChild([in]IXMLElement *pChildElem);
+}
+
+
+[
+    local, object,
+    uuid(2B8DE2FF-8D2D-11d1-B2FC-00C04FD915A9), // IID_IXMLElement2
+    odl, 
+	dual,
+	oleautomation,
+	hidden, // replaced by IDOMNode
+	helpstring("IXMLElement2 extends IXMLElement.")
+]
+interface IXMLElement2 : IDispatch
+{
+    [propget, id(DISPID_XMLELEMENT_TAGNAME), helpstring("get tag name.")] HRESULT tagName([retval, out] BSTR * p);
+    [propput, id(DISPID_XMLELEMENT_TAGNAME), helpstring("set tag name.")] HRESULT tagName([in] BSTR p);
+    [propget, id(DISPID_XMLELEMENT_PARENT), helpstring("get parent IXMLElement.")] HRESULT parent([retval, out]IXMLElement2 **ppParent);
+    [id(DISPID_XMLELEMENT_SETATTRIBUTE), helpstring("set attribute.")] HRESULT setAttribute([in] BSTR strPropertyName,[in] VARIANT PropertyValue);
+    [id(DISPID_XMLELEMENT_GETATTRIBUTE), helpstring("get attribute.")] HRESULT getAttribute([in] BSTR strPropertyName,[retval, out] VARIANT* PropertyValue);
+    [id(DISPID_XMLELEMENT_REMOVEATTRIBUTE), helpstring("remove attribute.")] HRESULT removeAttribute([in] BSTR strPropertyName);
+    [propget, id(DISPID_XMLELEMENT_CHILDREN), helpstring("get a IXMLElementCollection of all children.")] HRESULT children([retval, out] IXMLElementCollection * * pp);
+    [propget, id(DISPID_XMLELEMENT_TYPE), helpstring("get type of this IXMLElement.")] HRESULT type([retval, out] long *plType);
+    [propget, id(DISPID_XMLELEMENT_TEXT), helpstring("get text.")] HRESULT text([retval, out] BSTR *p);
+    [propput, id(DISPID_XMLELEMENT_TEXT), helpstring("set text.")] HRESULT text([in] BSTR p);
+    [id(DISPID_XMLELEMENT_ADDCHILD), helpstring("add a child.")] HRESULT addChild([in] IXMLElement2 *pChildElem, long lIndex, long lReserved); // lReserved must be -1
+    [id(DISPID_XMLELEMENT_REMOVECHILD), helpstring("remove a child.")] HRESULT removeChild([in]IXMLElement2 *pChildElem);
+    [propget, id(DISPID_XMLELEMENT_ATTRIBUTES), helpstring("get a IXMLElementCollection of all attributes.")] HRESULT attributes([retval, out] IXMLElementCollection ** pp); 
+}
+
+[
+    local, object,
+    uuid(D4D4A0FC-3B73-11d1-B2B4-00C04FB92596), // IID_IXMLAttribute
+    odl, 
+	dual,
+	oleautomation,
+	hidden, // replaced by IDOMNode
+	helpstring("IXMLAttribute allows to get attributes of an IXMLElement.")
+]
+interface IXMLAttribute : IDispatch
+{
+    [propget, id(DISPID_XMLATTRIBUTE_NAME), helpstring("get attribute name.")] HRESULT name([retval, out] BSTR* n);
+    [propget, id(DISPID_XMLATTRIBUTE_VALUE), helpstring("get attribute value.")] HRESULT value([retval, out] BSTR* v);
+};
+
+[
+    local, object,
+    uuid(948C5AD3-C58D-11d0-9C0B-00C04FC99C8E), // IID_IXMLError
+    odl, 
+    hidden, // this is not scriptable.
+	helpstring("Gets error info.")
+]
+interface IXMLError : IUnknown
+{
+    HRESULT GetErrorInfo(XML_ERROR *pErrorReturn);
+}
+
+ // XML Document Class
+[
+    uuid(CFC399AF-D876-11d0-9C10-00C04FC99C8E), // CLSID_XMLDocument
+    helpstring("XMLDocument extends IXML Document.  It is obsolete.  You should use DOMDocument.  This object should not be confused with the XMLDocument property on the XML data island.")
+]
+coclass XMLDocument
+{
+    [default] interface IXMLDocument2;
+}
+
+}

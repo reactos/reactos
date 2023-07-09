@@ -1,0 +1,24 @@
+HKCR
+{
+	userData.userData.1 = s 'userData Class'
+	{
+		CLSID = s '{3050f48e-98b5-11cf-bb82-00aa00bdce0b}'
+	}
+	userData.userData = s 'userData Class'
+	{
+		CurVer = s 'userData.userData.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {3050f48e-98b5-11cf-bb82-00aa00bdce0b} = s 'userData Class'
+		{
+			ProgID = s 'userData.userData.1'
+			VersionIndependentProgID = s 'userData.userData'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

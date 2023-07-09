@@ -1,0 +1,55 @@
+#ifndef _CAPTION_PDL_
+#define _CAPTION_PDL_ 1
+
+#include "csite.pdl"
+
+#include "txtedit.pdl"
+
+file caption.pdl
+
+import csite.pdl
+import txtedit.pdl
+
+
+enum htmlCaptionAlign prefix:htmlCaptionAlign guid:3050f2ea-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet  string: 
+    eval Left    string:left
+    eval Center  string:center 
+    eval Right   string:right
+    eval Justify string:justify
+    eval Top     string:top
+    eval Bottom  string:bottom
+
+
+enum htmlCaptionVAlign prefix:htmlCaptionVAlign guid:3050f2ed-98b5-11cf-bb82-00aa00bdce0b 
+    eval NotSet   string: 
+    eval Top      string:top   
+    eval Bottom   string:bottom 
+
+
+interface IHTMLTableCaption guid:3050f2eb-98b5-11cf-bb82-00aa00bdce0b
+    refprop CTableCaption:align           
+    refprop CTableCaption:vAlign          
+
+
+tearoff CTableCaption interface:IHTMLTableCaption
+
+class CTableCaption name:HTMLTableCaption \
+            super:CTxtSite \
+            primaryinterface:IHTMLTableCaption \
+            events:HTMLTextContainerEvents \
+            nonprimaryevents:HTMLTextContainerEvents2 \
+            guid:3050f2ec-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f508-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLTableCaption
+
+    property align      atype:BSTR  type:htmlCaptionAlign dispid:STDPROPID_XOBJ_BLOCKALIGN \ 
+        get set caa default:htmlCaptionAlignNotSet      maxstrlen:pdlToken
+    property vAlign     atype:BSTR   type:htmlCaptionVAlign dispid:DISPID_A_TABLEVALIGN \
+        get set caa default:htmlCaptionVAlignNotSet     maxstrlen:pdlToken
+
+#endif _CAPTION_PDL_

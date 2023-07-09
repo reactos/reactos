@@ -1,0 +1,250 @@
+;Copyright (c) 1994-1995 Microsoft Corp.
+
+[version]
+LayoutFile=layout.inf
+signature="$CHICAGO$"
+SetupClass=BASE
+
+[DestinationDirs]
+shell.files.hlp        = 18            ; LDID_HELP
+shell.files.win.shared = 25            ; LDID_SHARED
+shell.files.sys        = 11            ; LDID_SYS
+shell.files.templates  = 25,ShellNew
+templates.CopyFiles    = 25,ShellNew   ; LDID_SHARED + Subfolder - pretty arbitrary
+templates.OldFiles     = 25,Template   ; REVIEW
+template_reg.CopyFiles = 17            ; LDID_INF
+shell.files.cur        = 25,Cursors
+basebitmaps.files  = 25    ; LDID_SHARED
+shlold.files           = 25    ; LDID_SHARED
+
+[DefaultInstall]
+AddReg  = shell.reg
+
+
+[shell.reg]
+
+; Shell DocObject Viewer
+HKCR,CLSID\{%CLSID_CShellDocFolder%},,,%DESC_SHDOCV%
+HKCR,CLSID\{%CLSID_CShellDocFolder%}\InProcServer32,,,"%11%\shdocvw.dll"
+HKCR,CLSID\{%CLSID_CShellDocFolder%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CLSID_CShellDocFolder%}\ShellFolder,"Attributes",1,50,00,00,A0
+
+; URL folder
+HKCR,CLSID\{%CLSID_CURLRoot%},,,%DESC_URLROOT%
+HKCR,CLSID\{%CLSID_CURLRoot%}\InProcServer32,,,"shdocvw.dll"
+HKCR,CLSID\{%CLSID_CURLRoot%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CLSID_CURLRoot%}\ShellFolder,"Attributes",1,50,00,00,A4
+HKCR,CLSID\{%CLSID_CURLRoot%}\DefaultIcon,,2,"%11%\mshtml.dll,0"
+;HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\explorer\Desktop\NameSpace\{%CLSID_CURLRoot%},,,%DESC_URLROOT%
+
+; Shell Explorer (Shell Browser)
+HKCR,CLSID\{%CLSID_ShellBrowser%},,,%DESC_SHELLBROWSER%
+HKCR,CLSID\{%CLSID_ShellBrowser%}\Control
+HKCR,CLSID\{%CLSID_ShellBrowser%}\InProcServer32,,,"%11%\shdocvw.dll"
+HKCR,CLSID\{%CLSID_ShellBrowser%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CLSID_ShellBrowser%}\Insertable
+HKCR,CLSID\{%CLSID_ShellBrowser%}\MiscStatus,,,"0"
+HKCR,CLSID\{%CLSID_ShellBrowser%}\MiscStatus\1,,,"131473"
+HKCR,CLSID\{%CLSID_ShellBrowser%}\ProgID,,,"Shell.Explorer.1"
+HKCR,CLSID\{%CLSID_ShellBrowser%}\ToolboxBitmap32,,,"%11%\shdocvw.dll, 257"
+HKCR,CLSID\{%CLSID_ShellBrowser%}\TypeLib,,,"{%CLSID_SHDocVwTypeLib%}"
+HKCR,CLSID\{%CLSID_ShellBrowser%}\Version,,,"1.0"
+HKCR,CLSID\{%CLSID_ShellBrowser%}\VersionIndependentProgID,,,"Shell.Explorer"
+HKCR,Shell.Explorer,,,%DESC_SHELLBROWSER%
+HKCR,Shell.Explorer\CLSID,,,"%CLSID_ShellBrowser%"
+HKCR,Shell.Explorer\CurVer,,,"shdocvw.ShellExplorer.1"
+HKCR,Shell.Explorer.1,,,%DESC_SHELLBROWSER%
+HKCR,Shell.Explorer.1\CLSID,,,"%CLSID_ShellBrowser%"
+
+; Shell Item
+HKCR,CLSID\{%CLSID_ShellItem%},,,%DESC_SHELLITEM%
+HKCR,CLSID\{%CLSID_ShellItem%}\Control
+HKCR,CLSID\{%CLSID_ShellItem%}\InProcServer32,,,"%11%\shdocvw.dll"
+HKCR,CLSID\{%CLSID_ShellItem%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CLSID_ShellItem%}\Insertable
+HKCR,CLSID\{%CLSID_ShellItem%}\MiscStatus,,,"0"
+HKCR,CLSID\{%CLSID_ShellItem%}\MiscStatus\1,,,"131473"
+HKCR,CLSID\{%CLSID_ShellItem%}\ProgID,,,"Shell.Item.1"
+HKCR,CLSID\{%CLSID_ShellItem%}\ToolboxBitmap32,,,"%11%\shdocvw.dll, 258"
+HKCR,CLSID\{%CLSID_ShellItem%}\TypeLib,,,"{%CLSID_SHDocVwTypeLib%}"
+HKCR,CLSID\{%CLSID_ShellItem%}\Version,,,"1.0"
+HKCR,CLSID\{%CLSID_ShellItem%}\VersionIndependentProgID,,,"Shell.Item"
+HKCR,Shell.Item,,,%DESC_SHELLITEM%
+HKCR,Shell.Item\CLSID,,,"%CLSID_ShellItem%"
+HKCR,Shell.Item\CurVer,,,"shdocvw.SHItemOC.1"
+HKCR,Shell.Item.1,,,%DESC_SHELLITEM%
+HKCR,Shell.Item.1\CLSID,,,"%CLSID_ShellItem%"
+
+; shdocvw TypeLib
+HKCR,TypeLib\{%CLSID_SHDocVwTypeLib%}\1.0,,,"%DESC_SHDOCVW%"
+HKCR,TypeLib\{%CLSID_SHDocVwTypeLib%}\1.0\0\win32,,,"%11%\shdocvw.dll"
+HKCR,TypeLib\{%CLSID_SHDocVwTypeLib%}\1.0\0\FLAGS,,,"0"
+; BUGBUG: we don't have anything here yet...???
+;HKCR,TypeLib\{%CLSID_SHDocVwTypeLib%}\1.0\0\HELPDIR,,,"%11%"
+
+; Activate HyperText View
+
+HKCR,CLSID\{%CLSID_CPreProcHTML%},,,%DESC_CPreProcHTML%
+HKCR,CLSID\{%CLSID_CPreProcHTML%}\InProcServer32,,,"%11%\shdocvw.dll"
+HKCR,CLSID\{%CLSID_CPreProcHTML%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CLSID_CPreProcHTML%}\FilterView,,,{%CLSID_Viewer%}
+
+
+; COMPOBJs
+
+HKCR,CLSID\{21B22460-3AEA-1069-A2DC-08002B30309D},,,%DESC_FILESYSATTR%
+HKCR,CLSID\{21B22460-3AEA-1069-A2DC-08002B30309D}\InProcServer32,,,shell32.dll
+HKCR,CLSID\{21B22460-3AEA-1069-A2DC-08002B30309D}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\{86747AC0-42A0-1069-A2E6-08002B30309D},,,%DESC_SHELLMONIKER%
+HKCR,CLSID\{86747AC0-42A0-1069-A2E6-08002B30309D}\InProcServer32,,,shell32.dll
+HKCR,CLSID\{86747AC0-42A0-1069-A2E6-08002B30309D}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\{86F19A00-42A0-1069-A2E9-08002B30309D},,,%DESC_PIFPAGE%
+HKCR,CLSID\{86F19A00-42A0-1069-A2E9-08002B30309D}\InProcServer32,,,shell32.dll
+HKCR,CLSID\{86F19A00-42A0-1069-A2E9-08002B30309D}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\{217FC9C0-3AEA-1069-A2DB-08002B30309D},,,%COPY_HOOK%
+HKCR,CLSID\{217FC9C0-3AEA-1069-A2DB-08002B30309D}\InProcServer32,,,shell32.dll
+HKCR,CLSID\{217FC9C0-3AEA-1069-A2DB-08002B30309D}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\{00021400-0000-0000-C000-000000000046},,,%DESC_DESKTOP%
+HKCR,CLSID\{00021400-0000-0000-C000-000000000046}\InProcServer32,,,shell32.dll
+HKCR,CLSID\{00021400-0000-0000-C000-000000000046}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\{00021401-0000-0000-C000-000000000046},,,%DESC_LNK%
+HKCR,CLSID\{00021401-0000-0000-C000-000000000046}\InProcServer32,,,shell32.dll
+HKCR,CLSID\{00021401-0000-0000-C000-000000000046}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\{00021401-0000-0000-C000-000000000046}\shellex\MayChangeDefaultMenu
+HKCR,CLSID\{86F19A00-42A0-1069-A2EB-08002B30309D},,,%DESC_PIFFILE%
+HKCR,CLSID\{86F19A00-42A0-1069-A2EB-08002B30309D}\InProcServer32,,,shell32.dll
+HKCR,CLSID\{86F19A00-42A0-1069-A2EB-08002B30309D}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\{3EA48300-8CF6-101B-84FB-666CCB9BCD32},,,%DESC_DOCPROP%
+HKCR,CLSID\{3EA48300-8CF6-101B-84FB-666CCB9BCD32}\InProcServer32,,,"%11%\docprop.dll"
+HKCR,CLSID\{3EA48300-8CF6-101B-84FB-666CCB9BCD32}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,Folder\%ExtViews%,"%ExtViewFile%",,"%25%\Web\folder.htm"
+HKCR,Directory\%ExtViews%,"%ExtViewFile%",,"%25%\Web\directry.htm"
+HKCR,CLSID\{%CLSID_ShellNetwork%}\%ExtViews%,"%ExtViewFile%",,"%25%\Web\NetHood.htm"
+HKCR,Microsoft_Network\%ExtViews%,"%ExtViewFile%",,"%25%\Web\MSNet.htm"
+HKCR,NetDomain\%ExtViews%,"%ExtViewFile%",,"%25%\Web\Domain.htm"
+HKCR,Microsoft_Network\Domain\%ExtViews%,"%ExtViewFile%",,"%25%\Web\MSDomain.htm"
+HKCR,NetServer\%ExtViews%,"%ExtViewFile%",,"%25%\Web\Server.htm"
+HKCR,Microsoft_Network\Server\%ExtViews%,"%ExtViewFile%",,"%25%\Web\MSServer.htm"
+HKCR,Network\%ExtViews%,"%ExtViewFile%",,"%25%\Web\fullnet.htm"
+HKCR,CLSID\{%CLSID_ShellBitBucket%}\%ExtViews%,"%ExtViewFile%",,"%25%\Web\Recycle.htm"
+HKCR,CLSID\{%CLSID_ShellDrives%}\%ExtViews%,"%ExtViewFile%",,"%25%\Web\MyComp.htm"
+HKCR,CLSID\{%CLSID_CControls%}\%ExtViews%,"%ExtViewFile%",,"%25%\Web\Control.htm"
+HKCR,CLSID\{%CLSID_CPrinters%}\%ExtViews%,"%ExtViewFile%",,"%25%\Web\Printer.htm"
+HKCR,CLSID\{%CLSID_Briefcase%}\%ExtViews%,"%ExtViewFile%",,"%25%\Web\BrfCase.htm"
+HKCR,CLSID\{%CLSID_ShellDesktop%}\%ExtViews%,"%ExtViewFile%",,"%25%\Web\Desktop.htm"
+
+; Make it not activate the tray when going through DDE
+HKCR,Folder\shell\open\ddeexec,NoActivateHandler
+HKCR,Folder\shell\explore\ddeexec,NoActivateHandler
+
+
+[Strings]
+;Non-Localizable Strings:
+KEY_OPTIONAL="Software\Microsoft\Windows\CurrentVersion\Setup\OptionalComponents"
+KEY_TIPS="Software\Microsoft\Windows\CurrentVersion\Explorer\Tips"
+KEY_RENAME="Software\Microsoft\Windows\CurrentVersion\RenameFiles"
+KEY_CURRENT="Software\Microsoft\Windows\CurrentVersion"
+
+;Localizable Strings:
+
+DESC_PIF        = "Shortcut to MS-DOS Program"
+DESC_REG 	= "Registration Entries"
+DESC_APP 	= "Application"
+DESC_BAT 	= "MS-DOS Batch File"
+DESC_COM 	= "MS-DOS Application"
+DESC_SCR 	= "Screen Saver"
+DESC_LNK 	= "Shortcut"
+DESC_FND        = "Saved Search"
+DESC_HLP 	= "Help File"
+DESC_TXT 	= "Text Document"
+DESC_INI 	= "Configuration Settings"
+DESC_INF 	= "Setup Information"
+DESC_RTF        = "Rich Text File"
+DESC_DLL        = "Application Extension"
+DESC_SYS        = "System file"
+DESC_VXD        = "Virtual device driver"
+DESC_DRV        = "Device driver"
+DESC_CPL        = "Control Panel extension"
+;HACK Asymetrix Compel has .CPL data files and registers an open verb
+;make our verb explicitly different so that when Compel is installed the
+;user can use both types of CPL files but Compel's will be the default
+DESC_VERB_CPLOPEN = "Open with Control Panel"
+DESC_FON        = "Font file"
+DESC_TTF        = "TrueType Font file"
+DESC_ICO        = "Icon"
+DESC_CUR        = "Cursor"
+DESC_ANI        = "Animated Cursor"
+DESC_BMK        = "Shortcut into a document"
+DESC_SCRAP	= "Scrap object"
+DESC_SHDOCV     = "Shell DocObject Viewer"
+DESC_URLROOT    = "Internet"
+DESC_DOCOBJMENUEXT = "Shell DocObject Context Menu Extension"
+DESC_SHELLBROWSER  = "Microsoft Shell Explorer"
+DESC_SHELLITEM     = "Microsoft Shell Item"
+DESC_CPreProcHTML  = "HyperText"
+DESC_SHDOCVW       = "Microsoft Internet and Shell Controls"
+CLSID_SHDocVwTypeLib  = EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B
+CLSID_ShellBrowser    = EAB22AC3-30C1-11CF-A7EB-0000C05BAE0B
+CLSID_ShellItem       = EAB22AC6-30C1-11CF-A7EB-0000C05BAE0B
+CLSID_CShellDocFolder = E7E4BC40-E76A-11CE-A9BB-00AA004AE837
+CLSID_CScrapExt       = 6FF4A4E0-DBC4-11CE-A9BB-00AA004AE837
+CLSID_CDocObjMenuExt  = 6667E240-0F9D-11CF-A9BB-00AA004AE837
+CLSID_CURLRoot        = 3DC7A020-0ACD-11CF-A9BB-00AA004AE837
+CLSID_Viewer          = 25336920-03F9-11cf-8FD0-00AA00686F13
+CLSID_CPreProcHTML    = 5984FFE0-28D4-11CF-AE66-08002B2E1262
+
+DESC_PACKAGE 	= "Package"
+DESC_CONTROLS 	= "Control Panel"
+DESC_PRINTERS 	= "Printers"
+DESC_SHELLMONIKER = "Shell Moniker"
+DESC_FILESYSATTR = "File system attributes"
+DESC_PIFPAGE    = ".PIF file property pages"
+DESC_PIFFILE    = ".PIF file handler"
+DESC_DOCPROP	= "OLE Docfile Property Page"
+DESC_RECYCLEBIN = "Recycle Bin"
+DESC_DESKTOP	= "Desktop"
+DESK_MYCOMP	= "My Computer"
+DESK_NETHOOD	= "Network Neighborhood"
+
+;disk performance templates
+DiskPerfDesktop = "Desktop computer"
+DiskPerfMobile  = "Mobile or docking system"
+DiskPerfServer  = "Network server"
+
+;icon spacing factor
+IconSpacingFactor = "100" ;Set to 100 for English, change for other languages
+
+;REVIEW: we may be able to remove these since we special case opne and print verbs
+V_EDIT      = "&Edit"
+V_PLAY      = "&Play"
+V_MERGE     = "Mer&ge"
+V_CONNECT   = "&Connect"
+V_TEST      = "T&est"
+V_ACTIVATE  = "&Activate Contents"
+V_EDITPACKAGE = "&Edit Package"
+V_CONFIGURE = "C&onfigure"
+V_INSTALL   = "&Install"
+V_FINDCOMP  = "&Find Computer..."
+
+DRIVE			= "Drive"
+FOLDER			= "Folder"
+FSFOLDER                = "File Folder"
+AUDIOCD                       = "AudioCD"
+
+;BUGBUG puting this on all folders is too much clutter
+;ROOTEXPLORE                 = "Explore from Here"
+
+; Web-like Shell GUIDS
+CLSID_ShellNetwork    = "208D2C60-3AEA-1069-A2D7-08002B30309D"
+CLSID_ShellBitBucket  = "645FF040-5081-101B-9F08-00AA002F954E"
+CLSID_ShellDrives     = "20D04FE0-3AEA-1069-A2D8-08002B30309D"
+CLSID_CControls       = "21EC2020-3AEA-1069-A2DD-08002B30309D"
+CLSID_CPrinters       = "2227A280-3AEA-1069-A2DE-08002B30309D"
+CLSID_Briefcase       = "85BBD920-42A0-1069-A2E4-08002B30309D"
+CLSID_ShellDesktop    = "00021400-0000-0000-C000-000000000046"
+
+; Web-like Shell Descriptions
+ExtViews    = "shellex\ExtShellFolderViews\{5984FFE0-28D4-11CF-AE66-08002B2E1262}"
+ExtViewFile = "PersistFile"
+
+

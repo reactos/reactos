@@ -1,0 +1,37 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Reg]
+AddReg=Msxql.Reg
+
+[Unreg]
+DelReg=Msxql.Reg
+
+[Msxql.Reg]
+
+HKCR,CLSID\%CLSID_XQL%,,,"Microsoft XQL, version 1.0"
+HKCR,CLSID\%CLSID_XQL%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_XQL%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_XQL%\ProgID,,,"Microsoft.XQL.1.0"
+HKCR,CLSID\%CLSID_XQL%\VersionIndependentProgID,,,"Microsoft.XQL"
+HKCR,CLSID\%CLSID_XQL%\Version,,, "1.0"
+HKCR,CLSID\%CLSID_XQL%\TypeLib,,,%TypeLibID%
+HKCR,CLSID\%CLSID_XQL%\%IMPLCATEGORIES%
+HKCR,CLSID\%CLSID_XQL%\%IMPLCATEGORIES%\{7DD95801-9882-11CF-9FA9-00AA006C42C4}
+HKCR,CLSID\%CLSID_XQL%\%IMPLCATEGORIES%\{7DD95802-9882-11CF-9FA9-00AA006C42C4}
+
+
+HKCR,Microsoft.XQL,,,"Microsoft XQL, version 1.0"
+HKCR,Microsoft.XQL\CLSID,,,%CLSID_XQL%
+HKCR,Microsoft.XQL\CurVer,,,"Microsoft.XQL.1.0"
+
+; Other keys that we nuke when we get unregistered
+HKCU,%MSXQL_PATH%,,,"1.0"
+
+[Strings]
+TypeLibID ="{135A1550-E45C-11d1-9712-0000F87A390A}"
+
+CLSID_XQL ="{135A1553-E45C-11d1-9712-0000F87A390A}"
+MSXQL_PATH="Software\Microsoft\Windows\CurrentVersion\Microsoft.XQL"
+IMPLCATEGORIES="Implemented Categories"
+[End]

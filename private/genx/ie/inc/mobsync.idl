@@ -1,0 +1,453 @@
+//****************************************************************************
+//
+//  Copyright (C) Microsoft Corporation, 1997.
+//
+//  File:       syncmgr.idl
+//
+//  Contents:   Interfaces for Synchronization Manager
+//
+//****************************************************************************
+
+#ifndef DO_NO_IMPORTS
+import "objidl.idl";
+import "oleidl.idl";
+#endif
+
+interface ISyncMgrSynchronize;
+interface ISyncMgrSynchronizeCallback;
+interface ISyncMgrEnumItems;
+interface ISyncMgrSynchronizeInvoke;
+interface ISyncMgrRegister;
+
+typedef GUID SYNCMGRITEMID;
+typedef REFGUID REFSYNCMGRITEMID;
+typedef GUID SYNCMGRERRORID;
+typedef REFGUID REFSYNCMGRERRORID;
+
+
+// {6295DF27-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(CLSID_SyncMgr,0x6295df27, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF40-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_ISyncMgrSynchronize,0x6295df40, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF41-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_ISyncMgrSynchronizeCallback,0x6295df41, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF42-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_ISyncMgrRegister, 0x6295df42, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF2A-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_ISyncMgrEnumItems,0x6295df2a, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF2C-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_ISyncMgrSynchronizeInvoke,0x6295df2c, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+
+
+// Success codes specific to SyncMgr interfaces
+cpp_quote("#define S_SYNCMGR_MISSINGITEMS       MAKE_SCODE(SEVERITY_SUCCESS,FACILITY_ITF,0x0201)")
+cpp_quote("#define S_SYNCMGR_RETRYSYNC          MAKE_SCODE(SEVERITY_SUCCESS,FACILITY_ITF,0x0202)")
+cpp_quote("#define S_SYNCMGR_CANCELITEM         MAKE_SCODE(SEVERITY_SUCCESS,FACILITY_ITF,0x0203)")
+cpp_quote("#define S_SYNCMGR_CANCELALL          MAKE_SCODE(SEVERITY_SUCCESS,FACILITY_ITF,0x0204)")
+
+// success codes that may be returned in ShowPropertiesCompleted.
+cpp_quote("#define S_SYNCMGR_ITEMDELETED        MAKE_SCODE(SEVERITY_SUCCESS,FACILITY_ITF,0x0210)")
+cpp_quote("#define S_SYNCMGR_ENUMITEMS          MAKE_SCODE(SEVERITY_SUCCESS,FACILITY_ITF,0x0211)")
+
+
+[
+    local,
+    object,
+    uuid(6295DF40-35EE-11d1-8707-00C04FD93327)  // IID_ISyncMgrSynchronize
+]
+interface ISyncMgrSynchronize: IUnknown
+{
+    typedef [unique] ISyncMgrSynchronize *LPSYNCMGRSYNCHRONIZE;
+
+    typedef enum _tagSYNCMGRFLAG {      // flags for Synchronization Event
+        SYNCMGRFLAG_CONNECT             =       0x0001, // Sync was invoked by a network connect
+        SYNCMGRFLAG_PENDINGDISCONNECT   =       0x0002, // Sync was invoked by a pending network disconnect
+        SYNCMGRFLAG_MANUAL              =       0x0003, // Sync was invoked manually
+        SYNCMGRFLAG_IDLE                =       0x0004, // Sync was invoked by an idle event
+        SYNCMGRFLAG_INVOKE              =       0x0005, // Sync was programmatically invoked by handler
+        SYNCMGRFLAG_SCHEDULED           =       0x0006, // Sync was invoked by a scheduled update
+        SYNCMGRFLAG_EVENTMASK           =       0x00FF,
+
+        SYNCMGRFLAG_SETTINGS            =       0x0100, // Sync was invoked for configuration only
+        SYNCMGRFLAG_MAYBOTHERUSER       =       0x0200, // Interaction with the user is permitted
+    } SYNCMGRFLAG;
+
+
+    const USHORT MAX_SYNCMGRHANDLERNAME = 32;
+    cpp_quote("#define SYNCMGRHANDLERFLAG_MASK 0x07")
+    cpp_quote("")
+
+    typedef enum _tagSYNCMGRHANDLERFLAGS {   // flags that apply to this handler.
+        SYNCMGRHANDLER_HASPROPERTIES          = 0x01,   // have a properties dialog for this handler
+        SYNCMGRHANDLER_MAYESTABLISHCONNECTION = 0x02,   // may call callback EstablishConnection method
+        SYNCMGRHANDLER_ALWAYSLISTHANDLER      = 0x04,   // Show Handler in Choice even if not items    
+    } SYNCMGRHANDLERFLAGS;
+
+    typedef struct _tagSYNCMGRHANDLERINFO {
+       DWORD        cbSize;
+       HICON        hIcon;
+       DWORD        SyncMgrHandlerFlags;
+       WCHAR        wszHandlerName[MAX_SYNCMGRHANDLERNAME];
+    } SYNCMGRHANDLERINFO, *LPSYNCMGRHANDLERINFO;
+
+    cpp_quote("#define   SYNCMGRITEMSTATE_UNCHECKED    0x0000")
+    cpp_quote("#define   SYNCMGRITEMSTATE_CHECKED      0x0001")
+    cpp_quote("")
+
+    typedef enum _tagSYNCMGRSTATUS {
+        SYNCMGRSTATUS_STOPPED           =   0x0000,
+        SYNCMGRSTATUS_SKIPPED           =   0x0001,
+        SYNCMGRSTATUS_PENDING           =   0x0002,
+        SYNCMGRSTATUS_UPDATING          =   0x0003,
+        SYNCMGRSTATUS_SUCCEEDED         =   0x0004,
+        SYNCMGRSTATUS_FAILED            =   0x0005,
+        SYNCMGRSTATUS_PAUSED            =   0x0006,
+        SYNCMGRSTATUS_RESUMING          =   0x0007,
+
+        SYNCMGRSTATUS_DELETED           =   0x0100, // send to indicate to item that the item has been deleted.
+    } SYNCMGRSTATUS;
+
+
+    HRESULT Initialize(
+        [in] DWORD dwReserved,
+        [in] DWORD dwSyncMgrFlags,
+        [in] DWORD cbCookie,
+        [in, unique, size_is(cbCookie)] BYTE const*lpCookie);
+
+    HRESULT GetHandlerInfo(
+        [out] LPSYNCMGRHANDLERINFO *ppSyncMgrHandlerInfo);
+
+    HRESULT EnumSyncMgrItems(
+        [out] ISyncMgrEnumItems **ppSyncMgrEnumItems);
+
+
+    HRESULT GetItemObject(
+        [in] REFSYNCMGRITEMID ItemID,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void** ppv);
+
+    HRESULT ShowProperties(
+        [in] HWND hWndParent,
+        [in] REFSYNCMGRITEMID ItemID);
+
+    HRESULT SetProgressCallback(
+        [in,unique] ISyncMgrSynchronizeCallback *lpCallBack);
+
+    HRESULT PrepareForSync(
+        [in] ULONG cbNumItems,
+        [in, size_is(cbNumItems)] SYNCMGRITEMID* pItemIDs,
+        [in] HWND hWndParent,
+        [in] DWORD dwReserved);
+
+    HRESULT Synchronize(
+        [in] HWND hWndParent);
+
+    HRESULT SetItemStatus(
+        [in] REFSYNCMGRITEMID pItemID,
+        [in] DWORD dwSyncMgrStatus);
+
+    HRESULT ShowError(
+        [in] HWND hWndParent,
+        [in] REFSYNCMGRERRORID ErrorID);
+
+}
+
+[
+    local,
+    object,
+    uuid(6295DF41-35EE-11d1-8707-00C04FD93327)  // IID_ISyncMgrSynchronizeCallback
+]
+interface ISyncMgrSynchronizeCallback: IUnknown
+{
+    typedef [unique] ISyncMgrSynchronizeCallback *LPSYNCMGRSYNCHRONIZECALLBACK;
+
+    cpp_quote("#define   SYNCMGRPROGRESSITEM_STATUSTEXT         0x0001")
+    cpp_quote("#define   SYNCMGRPROGRESSITEM_STATUSTYPE         0x0002")
+    cpp_quote("#define   SYNCMGRPROGRESSITEM_PROGVALUE      0x0004")
+    cpp_quote("#define   SYNCMGRPROGRESSITEM_MAXVALUE       0x0008")
+    cpp_quote("")
+
+    typedef struct _tagSYNCMGRPROGRESSITEM {
+        DWORD           cbSize;
+        UINT            mask;
+        LPCWSTR   	lpcStatusText;
+        DWORD           dwStatusType;
+        INT             iProgValue;
+        INT             iMaxValue;
+    } SYNCMGRPROGRESSITEM, *LPSYNCMGRPROGRESSITEM;
+
+    typedef enum _tagSYNCMGRLOGLEVEL {
+        SYNCMGRLOGLEVEL_INFORMATION             =   0x0001,
+        SYNCMGRLOGLEVEL_WARNING                 =   0x0002,
+        SYNCMGRLOGLEVEL_ERROR                   =   0x0003,
+    } SYNCMGRLOGLEVEL;
+
+
+    cpp_quote("#define   SYNCMGRLOGERROR_ERRORFLAGS                     0x0001")
+    cpp_quote("#define   SYNCMGRLOGERROR_ERRORID                        0x0002")
+    cpp_quote("#define   SYNCMGRLOGERROR_ITEMID                         0x0004")
+    cpp_quote("")
+
+    typedef enum _tagSYNCMGRERRORFLAGS {   // flags that apply to the error.
+        SYNCMGRERRORFLAG_ENABLEJUMPTEXT =       0x01,   // ShowErrors should be called on this item.
+    } SYNCMGRERRORFLAGS;
+
+
+    typedef struct _tagSYNCMGRLOGERRORINFO {
+        DWORD           cbSize;
+        DWORD           mask;
+        DWORD           dwSyncMgrErrorFlags;
+        SYNCMGRERRORID  ErrorID;
+        SYNCMGRITEMID   ItemID;
+    } SYNCMGRLOGERRORINFO, *LPSYNCMGRLOGERRORINFO;
+
+
+    HRESULT ShowPropertiesCompleted(
+        [in] HRESULT hr);
+
+    HRESULT PrepareForSyncCompleted(
+        [in] HRESULT hr);
+
+    HRESULT SynchronizeCompleted(
+        [in] HRESULT hr);
+
+    HRESULT ShowErrorCompleted(
+        [in] HRESULT hr,
+        [in] ULONG cbNumItems,
+        [in,unique,size_is(cbNumItems)] SYNCMGRITEMID *pItemIDs);
+
+    HRESULT  EnableModeless(
+        [in] BOOL fEnable);
+
+    HRESULT Progress(
+        [in] REFSYNCMGRITEMID pItemID,
+        [in,unique] LPSYNCMGRPROGRESSITEM lpSyncProgressItem);
+
+    HRESULT  LogError(
+        [in] DWORD dwErrorLevel,
+        [in] LPCWSTR lpcErrorText,
+        [in,unique] LPSYNCMGRLOGERRORINFO lpSyncLogError);
+
+    HRESULT DeleteLogError(
+        [in] REFSYNCMGRERRORID ErrorID,
+        [in] DWORD dwReserved);
+
+    HRESULT EstablishConnection(
+        [in,unique] LPCWSTR lpwszConnection,
+        [in] DWORD dwReserved);
+}
+
+[
+    local,
+    object,
+    uuid(6295DF2A-35EE-11d1-8707-00C04FD93327), // IID_ISyncMgrEnumItems
+    pointer_default(unique)
+]
+interface ISyncMgrEnumItems : IUnknown
+{
+    typedef [unique] ISyncMgrEnumItems *LPSYNCMGRENUMITEMS;
+
+    cpp_quote("#define SYNCMGRITEM_ITEMFLAGMASK  0x1F")
+    const USHORT MAX_SYNCMGRITEMNAME = 128;
+ 
+    typedef enum _tagSYNCMGRITEMFLAGS {   // flags for this SyncMgr Item
+        SYNCMGRITEM_HASPROPERTIES       =       0x01,   // have a properties dialog for this item
+        SYNCMGRITEM_TEMPORARY           =       0x02,   // remove any stored preferences for this item
+        SYNCMGRITEM_ROAMINGUSER         =       0x04,   // This item should roam with the User
+        SYNCMGRITEM_LASTUPDATETIME      =       0x08,   // Indicates lastUpdateTime Field is valid
+        SYNCMGRITEM_MAYDELETEITEM       =       0x10,   // Indicates Item can be deleted fron SyncMgr UI
+    } SYNCMGRITEMFLAGS;
+
+
+    typedef struct _tagSYNCMGRITEM {
+        DWORD       cbSize;
+        DWORD       dwFlags;
+        SYNCMGRITEMID  ItemID;
+        DWORD       dwItemState;
+        HICON       hIcon;
+        WCHAR       wszItemName[MAX_SYNCMGRITEMNAME];
+        FILETIME    ftLastUpdate;
+    } SYNCMGRITEM, *LPSYNCMGRITEM;
+
+    HRESULT Next(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched)]
+        LPSYNCMGRITEM rgelt,
+        [out] ULONG *pceltFetched);
+
+    HRESULT Skip(
+        [in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+        [out] ISyncMgrEnumItems **ppenum);
+}
+
+
+
+[
+    local,
+    object,
+    uuid(6295DF2C-35EE-11d1-8707-00C04FD93327), // IID_ISyncMgrSynchronizeInvoke
+    pointer_default(unique)
+]
+interface ISyncMgrSynchronizeInvoke : IUnknown
+{
+
+    typedef [unique] ISyncMgrSynchronizeInvoke *LPSYNCMGRSYNCHRONIZEINVOKE;
+
+    typedef enum _tagSYNCMGRINVOKEFLAGS {   // flags for how SyncMgr should be invoked.
+        SYNCMGRINVOKE_STARTSYNC =       0x02,   // Immediately start the sync without displaying choices
+        SYNCMGRINVOKE_MINIMIZED =       0x04,   // Dialog should be minimized by default
+    } SYNCMGRINVOKEFLAGS;
+
+
+    HRESULT UpdateItems(
+        [in] DWORD dwInvokeFlags,
+        [in] REFCLSID rclsid,
+        [in] DWORD cbCookie,
+        [in, unique, size_is(cbCookie)] const BYTE *lpCookie);
+
+    HRESULT UpdateAll();
+}
+
+
+[
+    local,
+    object,
+    uuid(6295DF42-35EE-11d1-8707-00C04FD93327), // IID_ISyncMgrSynchronizeRegister
+    pointer_default(unique)
+]
+interface ISyncMgrRegister : IUnknown
+{
+
+    typedef [unique] ISyncMgrRegister *LPSYNCMGRREGISTER;
+
+    cpp_quote("#define SYNCMGRREGISTERFLAGS_MASK  0x07")
+    cpp_quote("")
+ 
+    typedef enum _tagSYNCMGRREGISTERFLAGS {   
+        SYNCMGRREGISTERFLAG_CONNECT             =  0x01, // Register to receive Connect Events
+        SYNCMGRREGISTERFLAG_PENDINGDISCONNECT   =  0x02, // Register to receive PendingDisconnect Events
+        SYNCMGRREGISTERFLAG_IDLE                =  0x04, // Register to receive Idle Events
+    } SYNCMGRREGISTERFLAGS;
+
+    HRESULT RegisterSyncMgrHandler(
+        [in] REFCLSID rclsidHandler,
+        [in,unique] LPCWSTR pwszDescription,
+        [in] DWORD dwSyncMgrRegisterFlags);
+
+    HRESULT UnregisterSyncMgrHandler(
+        [in] REFCLSID rclsidHandler,
+        [in] DWORD dwReserved);
+
+    HRESULT GetHandlerRegistrationInfo(
+        [in] REFCLSID rclsidHandler,
+        [in,out] LPDWORD pdwSyncMgrRegisterFlags);
+}
+
+[
+uuid(6295DF27-35EE-11d1-8707-00C04FD93327),
+helpstring("Common Synchronization UI service")
+]
+coclass SyncMgr
+{
+    [default, source]   interface ISyncMgrSynchronizeInvoke;
+};
+
+
+cpp_quote("")
+cpp_quote("// Declarations for Conflict resolution dialog      ")
+cpp_quote("")
+
+cpp_quote("// Flags                                            ")
+cpp_quote("#define RFCF_APPLY_ALL           0x0001             ")
+cpp_quote("")
+
+// If we require any of the elements in the dialog box, we can call the
+// caller back via the callback function and specify what we want
+cpp_quote("// Parameter values for RFCCM_NEEDELEMENT (unimplemented)")
+cpp_quote("#define RFCD_NAME                0x0001             ")
+cpp_quote("#define RFCD_KEEPBOTHICON        0x0002             ")
+cpp_quote("#define RFCD_KEEPLOCALICON       0x0004             ")
+cpp_quote("#define RFCD_KEEPSERVERICON      0x0008             ")
+cpp_quote("#define RFCD_NETWORKMODIFIEDBY   0x0010             ")
+cpp_quote("#define RFCD_NETWORKMODIFIEDON   0x0020             ")
+cpp_quote("#define RFCD_LOCALMODIFIEDBY     0x0040             ")
+cpp_quote("#define RFCD_LOCALMODIFIEDON     0x0080             ")
+cpp_quote("#define RFCD_NEWNAME             0x0100             ")
+cpp_quote("#define RFCD_LOCATION            0x0200             ")
+cpp_quote("#define RFCD_ALL                 0x03FF             ")
+cpp_quote("")
+
+// User clicks the view button. This is the message sent to the caller
+// via the callback
+cpp_quote("// Callback Messages                                ")
+cpp_quote("#define RFCCM_VIEWLOCAL          0x0001             ")
+cpp_quote("#define RFCCM_VIEWNETWORK        0x0002             ")
+cpp_quote("#define RFCCM_NEEDELEMENT        0x0003             ")
+cpp_quote("")
+
+cpp_quote("// Return values                                  ")
+cpp_quote("#define RFC_CANCEL               0x00             ")
+cpp_quote("#define RFC_KEEPBOTH             0x01             ")
+cpp_quote("#define RFC_KEEPLOCAL            0x02             ")
+cpp_quote("#define RFC_KEEPNETWORK          0x03             ")
+cpp_quote("#define RFC_APPLY_TO_ALL         0x10             ")
+cpp_quote("")
+
+cpp_quote("typedef BOOL (WINAPI *PFNRFCDCALLBACK)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);")
+cpp_quote("")
+cpp_quote("typedef struct tagRFCDLGPARAMW {                                                 ")
+cpp_quote("    DWORD    dwFlags;               // RFCF_*                                    ")
+cpp_quote("    LPCWSTR  pszFilename;           // File name of the file conflicted          ")
+cpp_quote("    LPCWSTR  pszLocation;           // Location of the file                      ")
+cpp_quote("    LPCWSTR  pszNewName;            // The  new name to give the file            ")
+cpp_quote("    LPCWSTR  pszNetworkModifiedBy;  // Name of person who changed the net doc    ")
+cpp_quote("    LPCWSTR  pszLocalModifiedBy;    // Name of person who changed the local doc  ")
+cpp_quote("    LPCWSTR  pszNetworkModifiedOn;  // When the net doc was changed              ")
+cpp_quote("    LPCWSTR  pszLocalModifiedOn;    // When the local doc was changed            ")
+cpp_quote("    HICON 	hIKeepBoth;            // Icon                                      ")
+cpp_quote("    HICON	hIKeepLocal;           //                                           ")
+cpp_quote("    HICON 	hIKeepNetwork;         //                                           ")
+cpp_quote("    PFNRFCDCALLBACK pfnCallBack;    // Callback                                  ")
+cpp_quote("    LPARAM  lCallerData;            // Place where the caller can keep some context data")
+cpp_quote("} RFCDLGPARAMW;")
+cpp_quote("")
+cpp_quote("typedef struct tagRFCDLGPARAMA {")
+cpp_quote("    DWORD   dwFlags;                // RFCF_*                                    ")
+cpp_quote("    LPCSTR  pszFilename;            // File name of the file conflicted          ")
+cpp_quote("    LPCSTR  pszLocation;            // Location of the file                      ")
+cpp_quote("    LPCSTR  pszNewName;             // The  new name to give the file            ")
+cpp_quote("    LPCSTR  pszNetworkModifiedBy;   // Name of person who changed the net doc    ")
+cpp_quote("    LPCSTR  pszLocalModifiedBy;     // Name of person who changed the local doc  ")
+cpp_quote("    LPCSTR  pszNetworkModifiedOn;   // When the net doc was changed              ")
+cpp_quote("    LPCSTR  pszLocalModifiedOn;     // When the local doc was changed            ")
+cpp_quote("    HICON   hIKeepBoth;             // Icon                                      ")
+cpp_quote("    HICON   hIKeepLocal;            //                                           ")
+cpp_quote("    HICON   hIKeepNetwork;          //                                           ")
+cpp_quote("    PFNRFCDCALLBACK pfnCallBack;    // Callback                                  ")
+cpp_quote("    LPARAM  lCallerData;            // Place where the caller can keep some context data")
+cpp_quote("} RFCDLGPARAMA;")
+cpp_quote("")
+
+cpp_quote("")
+cpp_quote("int WINAPI SyncMgrResolveConflictW(HWND hWndParent, RFCDLGPARAMW *pdlgParam);")
+cpp_quote("int WINAPI SyncMgrResolveConflictA(HWND hWndParent, RFCDLGPARAMA *pdlgParam);")
+cpp_quote("")
+
+cpp_quote("#ifdef UNICODE                                                       ")
+cpp_quote("#define SyncMgrResolveConflict SyncMgrResolveConflictW               ")
+cpp_quote("#define RFCDLGPARAM RFCDLGPARAMW                                     ")
+cpp_quote("#else                                                                ")
+cpp_quote("#define SyncMgrResolveConflict SyncMgrResolveConflictA               ")
+cpp_quote("#define RFCDLGPARAM RFCDLGPARAMA                                     ")
+cpp_quote("#endif // !UNICODE                                                   ")
+cpp_quote("")

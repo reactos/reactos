@@ -1,0 +1,168 @@
+KBD	INTEL	"Telugu"
+
+	//LCID	044a
+
+VERSION	1.0
+
+SHIFTSTATE
+
+	0	//Column 4:
+	1	//Column 5:	Shift
+	6	//Column 6: 		Control	Alt
+	3	//Column 7: 	Shift	Control
+	7	//Column 8:	Shift	Control	Alt
+	2	//Column 9: 		Control
+
+LAYOUT
+
+//SC	VK_        Cap	0	1	6	3	7	2
+//--	---------- ---	----	----	----	----	----	----
+  29	OEM_3      0	0C4A	0C12				//Telugu Vowel Sign O, Telugu Letter O
+  02	1          0	1	-1	0C67	200d		//1, Telugu Digit One, ZWJ
+  03	2          0	2	-1	0C68	200c		//2, Telugu Digit Two, ZWNJ
+  04	3          0	3	%%	0C69			//3, 0C4D+0C30, Telugu Digit Three
+  05	4          0	4	-1	0C6A			//4, Telugu Digit Four
+  06	5          0	5	%%	0C6B			//5, 0C1C+0C4D+0C1E, Telugu Digit Five
+  07	6          0	6	%%	0C6C			//6, 0C24+0C4D+0C30, Telugu Digit Six
+  08	7          0	7	%%	0C6D			//7, 0C15+0C4D+0C37, Telugu Digit Seven
+  09	8          0	8	%%	0C6E			//8, 0C36+0C4D+0C30, Telugu Digit Eight
+  0a	9          0	9	0028	0C6F			//9, Telugu Digit Nine
+  0b	0          0	0	0029	0C66			//0, Telugu Digit Zero
+  0c	OEM_MINUS  0	-	0C03
+  0d	OEM_PLUS   0	0C43	0C0B	0c44		0c60	//Telugu Vowel Sign Vocalic Rr,	Telugu Letter Vocalic Rr
+//--	---------- ---	----	----	----	----	----	----
+  10	Q          0	0C4C	0C14				//Telugu Vowel Sign Au, Telugu Letter Au
+  11	W          0	0C48	0C10	0C56			//Telugu Vowel Sign Ai, Telugu Letter Ai
+  12	E          0	0C3e	0C06				//Telugu Vowel Sign AA, Telugu Letter Aa
+  13	R          0	0C40	0C08	-1	-1	0C61	//Telugu Vowel Sign Ii, Telugu Letter Ii, Vocalic Ll
+  14	T          0	0C42	0C0A				//Telugu Vowel Sign Uu, Telugu Letter Uu
+  15	Y          0	0C2C	-1				//Telugu Letter Ba
+  16	U          0	0C39	0C19				//Telugu Letter Ha, Telugu Letter Nga
+  17	I          0	0C17	0C18				//Telugu Letter Ga, Telugu Letter Gha
+  18	O          0	0C26	0C27				//Telugu Letter Da, Telugu Letter Dha
+  19	P          0	0C1C	0C1D				//Telugu Letter Ja, Telugu Letter Jha
+  1a	OEM_4      0	0C21	0C22				//Telugu Letter Dda, Telugu Letter Ddha
+  1b	OEM_6      0	-1	0C1E				//Telugu Letter Nya
+  2b	OEM_5      0	-1	-1
+//--	---------- ---	----	----	----	----	----	----
+  1e	A          0	0C4b	0C13				//Telugu Vowel Sign Oo, Telugu Letter Oo
+  1f	S          0	0C47	0C0F	0C55			//Telugu Vowel Sign Ee, Telugu Letter Ee
+  20	D          0	0C4D	0C05				//Telugu Sign Virama, Telugu Letter A
+  21	F          0	0C3F	0C07	-1	-1	0c0c	//Telugu Vowel Sign I, Telugu Letter I, Vocalic L
+  22	G          0	0C41	0C09				//Telugu Vowel Sign U, Telugu Letter U
+  23	H          0	0C2A	0C2B				//Telugu Letter Pa, Telugu Letter Pha
+  24	J          0	0C30	0C31				//Telugu Letter Ra, Telugu Letter Rra
+  25	K          0	0C15	0C16				//Telugu Letter Ka, Telugu Letter Kha
+  26	L          0	0C24	0C25				//Telugu Letter Ta, Telugu Letter Tha
+  27	OEM_1      0	0C1A	0C1B				//Telugu Letter Ca, Telugu Letter Cha
+  28	OEM_7      0	0C1F	0C20				//Telugu Letter Tta, Telugu Letter Ttha
+//--	---------- ---	----	----	----	----	----	----
+  2c	Z          0	0C46	0C0E				//Telugu Vowel Sign E, Telugu Letter E
+  2d	X          0	0C02	0C01				//Telugu Sign Anusvara, Telugu Sign Candrabindu
+  2e	C          0	0C2E	0C23				//Telugu Letter Ma, Telugu Letter Nna
+  2f	V          0	0C28	0C28				//Telugu Letter Na
+  30	B          0	0C35	-1				//Telugu Letter Va
+  31	N          0	0C32	0C33				//Telugu Letter La, Telugu Letter Lla
+  32	M          0	0C38	0C36				//Telugu Letter Sa, Telugu Letter Sha
+  33	OEM_COMMA  0	002C	0C37				//Telugu Letter Ssa
+  34	OEM_PERIOD 0	002E	-1
+  35	OEM_2      0	0C2F	-1				//Telugu Letter Ya
+  56	OEM_102    0	-1	-1
+//--	---------- ---	----	----	----	----	----	----
+  53	DECIMAL    0	.	.
+//--	---------- ---	----	----	----	----	----	----
+//SC	VK_        Cap	0	1	6	3	7	2
+
+
+LIGATURE
+
+//VK_	Mod#	Char0	Char1	Char2
+//---	----	-----	-----	-----
+3	1	0C4D	0C30		//Telugu Sign Virama, Telugu Letter Ra
+5	1	0C1C	0C4D	0C1E	//Telugu Letter Ja, Telugu Sign Virama, Telugu Letter Nya
+6	1	0C24	0C4D	0C30	//Telugu Letter Ta, Telugu Sign Virama, Telugu Letter Ra
+7	1	0C15	0C4D	0C37	//Telugu Letter Ka, Telugu Sign Virama, Telugu Letter Ssa
+8	1	0C36	0C4D	0C30	//Telugu Letter Sha, Telugu Sign Virama, Telugu Letter Ra
+
+
+KEYNAME
+
+  01    Esc
+  0e    Backspace
+  0f    Tab
+  1c    Enter
+  1d    Ctrl
+  2a    Shift
+  36    "Right Shift"
+  37    "Num *"
+  38    Alt
+  39    Space
+  3a    "Caps Lock"
+  3b    F1
+  3c    F2
+  3d    F3
+  3e    F4
+  3f    F5
+  40    F6
+  41    F7
+  42    F8
+  43    F9
+  44    F10
+  45    Pause
+  46    "Scroll Lock"
+  47    "Num 7"
+  48    "Num 8"
+  49    "Num 9"
+  4a    "Num -"
+  4b    "Num 4"
+  4c    "Num 5"
+  4d    "Num 6"
+  4e    "Num +"
+  4f    "Num 1"
+  50    "Num 2"
+  51    "Num 3"
+  52    "Num 0"
+  53    "Num Del"
+  54    "Sys Req"
+  57    F11
+  58    F12
+  7c    F13
+  7d    F14
+  7e    F15
+  7f    F16
+  80    F17
+  81    F18
+  82    F19
+  83    F20
+  84    F21
+  85    F22
+  86    F23
+  87    F24
+
+KEYNAME_EXT
+
+  1c    "Num Enter"
+  1d    "Right Control"
+  35    "Num /"
+  37    "Prnt Scrn"
+  38    "Right Alt"
+  45    "Num Lock"
+  46    Break
+  47    Home
+  48    Up
+  49    "Page Up"
+  4b    Left
+  4d    Right
+  4f    End
+  50    Down
+  51    "Page Down"
+  52    Insert
+  53    Delete
+  54    <00>
+  56    Help
+  5b    "Left Windows"
+  5c    "Right Windows"
+  5d    Application
+
+ENDKBD
+

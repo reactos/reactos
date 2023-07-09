@@ -1,0 +1,14 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#include <ntverp.h>
+
+#define VER_FILETYPE			VFT_APP
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Welcome to Windows NT"
+#define VER_INTERNALNAME_STR		"Welcome"
+#define VER_LEGALCOPYRIGHT_YEARS	"1998-1999"
+#define VER_ORIGINALFILENAME_STR	"WELCOME.EXE"
+
+#include <common.ver>
+

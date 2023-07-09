@@ -1,0 +1,45 @@
+!IF 0
+
+Copyright (c) 1994  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1989
+
+
+Revision History:
+
+!ENDIF
+
+!INCLUDE ..\wininet.inc
+
+MINORCOMP=apdetect
+
+TARGETNAME=apdetect
+TARGETTYPE=LIBRARY
+
+INCLUDES=..\inc
+
+SOURCES=sockreg.cxx  \
+        ipconfig.cxx \
+        protocol.cxx \
+        optreg.cxx   \
+        apdetect.cxx
+
+#PRECOMPILED_INCLUDE=aproxp.h
+#PRECOMPILED_PCH=aproxp.pch
+#PRECOMPILED_OBJ=aproxp.obj
+#PRECOMPILED_CXX=1
+

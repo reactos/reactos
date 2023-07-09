@@ -1,0 +1,25 @@
+# Nmake macros for building Windows 32-Bit apps
+
+!include <ntwin32.mak>
+
+# This line allows NMAKE to work as well
+
+all: fontview.exe
+
+# Update the resource if necessary
+
+res.res: res.rc fontview.h
+    rc -r -fo res.tmp res.rc
+    cvtres -$(CPU) res.tmp -o res.res
+    del res.tmp
+
+# Update the object file if necessary
+
+fontview.obj: fontview.c fontview.h
+    $(cc) $(cflags) $(cvars) fontview.c
+    $(cvtobj) fontview.obj
+
+# Update the executable file if necessary, and if so, add the resource back in.
+
+fontview.exe: fontview.obj res.res fontview.def
+    $(link) $(guiflags) -out:fontview.exe fontview.obj res.res $(guilibs)

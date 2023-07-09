@@ -1,0 +1,56 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1998.
+//
+//  File: xmldocnf.idl
+//
+//--------------------------------------------------------------------------
+
+import "objidl.idl";
+#ifdef UNIX
+import "ocidl.idl";
+#endif
+
+cpp_quote(
+"//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1998.")
+cpp_quote("//")
+cpp_quote(
+"//--------------------------------------------------------------------------")
+
+
+typedef
+enum tagXMLNotifyReason 
+{  
+	XML_REASON_TextChanged,
+	XML_REASON_NodeAdded,
+	XML_REASON_NodeRemoved
+} XMLNotifyReason;
+
+typedef
+enum tagXMLNotifyPhase 
+{  
+	XML_PHASE_AboutToDo,
+	XML_PHASE_FailedToDo,
+	XML_PHASE_DidEvent,
+} XMLNotifyPhase;
+
+
+[
+    uuid(53BE4F42-3602-11d2-801B-0000F87A6CDF),
+    odl, 
+    oleautomation,
+]
+interface IXMLDocumentNotify : IUnknown
+{
+    HRESULT OnNodeChange(
+        [in] XMLNotifyReason eReason,
+        [in] XMLNotifyPhase ePhase,
+        [in] IUnknown *pNode,
+        [in] IUnknown *pNodeParent,
+        [in] IUnknown *pNodeBefore);
+};
+

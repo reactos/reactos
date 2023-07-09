@@ -1,0 +1,214 @@
+KBD	USX	"US Multinational"
+
+VERSION	1.0
+
+SHIFTSTATE
+
+ 0	;Column 4 :
+ 1	;Column 5 : Shift
+ 6	;Column 6 :       Control Alt
+ 7	;Column 7 : Shift Control Alt
+ 2	;Column 8 :       Control
+ 3	;Column 9 : Shift Control
+
+LAYOUT		;an extra '@' at the end is a dead key
+
+;SC  VK_         Cap	0	1	6	7	2	3
+
+ 29  OEM_3       0	`@	~@
+ 02  1           0	1	!	00a1	00b9
+ 03  2           0	2	@	00b2	-1	-1	0000
+ 04  3           0	3	#	00b3
+ 05  4           0	4	$	00a4	00a3
+ 06  5           0	5	%	20ac
+ 07  6           0	6	^@	00bc	-1	-1	001e
+ 08  7           0	7	&	00bd
+ 09  8           0	8	*	00be
+ 0a  9           0	9	(	2018
+ 0b  0           0	0	)	2019
+ 0c  OEM_MINUS   0	-	_	00a5	-1	-1	001f
+ 0d  OEM_PLUS    0	=	+	00d7	00f7
+ 10  Q           5	q	Q	00e4	00c4
+ 11  W           5	w	W	00e5	00c5
+ 12  E           5	e	E	00e9	00c9
+ 13  R           1	r	R	00ae
+ 14  T           5	t	T	00fe	00de
+ 15  Y           5	y	Y	00fc	00dc
+ 16  U           5	u	U	00fa	00da
+ 17  I           5	i	I	00ed	00cd
+ 18  O           5	o	O	00f3	00d3
+ 19  P           5	p	P	00f6	00d6
+ 1a  OEM_4       0	[	{	00ab	-1	001b
+ 1b  OEM_6       0	]	}	00bb	-1	001d
+ 2b  OEM_5       0	\	|	00ac	00a6	001c
+ 1e  A           5	a	A	00e1	00c1
+ 1f  S           1	s	S	00df	00a7
+ 20  D           5	d	D	00f0	00d0
+ 21  F           1	f	F
+ 22  G           1	g	G
+ 23  H           1	h	H
+ 24  J           1	j	J
+ 25  K           1	k	K
+ 26  L           5	l	L	00f8	00d8
+ 27  OEM_1       0	;	:	00b6	00b0
+ 28  OEM_7       0	'@	"@	00b4	00a8
+ 2c  Z           5	z	Z	00e6	00c6
+ 2d  X           1	x	X
+ 2e  C           1	c	C	00a9	00a2
+ 2f  V           1	v	V
+ 30  B           1	b	B
+ 31  N           5	n	N	00f1	00d1
+ 32  M           1	m	M	00b5
+ 33  OEM_COMMA   4	,	<	00e7	00c7
+ 34  OEM_PERIOD  0	.	>
+ 35  OEM_2       0	/	?	00bf
+ 56  OEM_102     0	\	|	-1	-1	001c
+ 53  DECIMAL     0	.	.
+
+DEADKEY	0027	
+
+ 0061	00e1
+ 0065	00e9
+ 0069	00ed
+ 006f	00f3
+ 0075	00fa
+ 0079	00fd
+ 0041	00c1
+ 0045	00c9
+ 0049	00cd
+ 004f	00d3
+ 0055	00da
+ 0059	00dd
+ 0020	0027
+ 0063	00e7
+ 0043	00c7
+
+DEADKEY	0022	
+
+ 0061	00e4
+ 0065	00eb
+ 0069	00ef
+ 006f	00f6
+ 0075	00fc
+ 0079	00ff
+ 0041	00c4
+ 0045	00cb
+ 0049	00cf
+ 004f	00d6
+ 0055	00dc
+ 0020	0022
+
+DEADKEY	005e	
+
+ 0061	00e2
+ 0065	00ea
+ 0069	00ee
+ 006f	00f4
+ 0075	00fb
+ 0041	00c2
+ 0045	00ca
+ 0049	00ce
+ 004f	00d4
+ 0055	00db
+ 0020	005e
+
+DEADKEY	0060	
+
+ 0061	00e0
+ 0065	00e8
+ 0069	00ec
+ 006f	00f2
+ 0075	00f9
+ 0041	00c0
+ 0045	00c8
+ 0049	00cc
+ 004f	00d2
+ 0055	00d9
+ 0020	0060
+
+DEADKEY	007e	
+
+ 0061	00e3
+ 006f	00f5
+ 006e	00f1
+ 0041	00c3
+ 004f	00d5
+ 004e	00d1
+ 0020	007e
+
+KEYNAME
+
+ 01	ESC
+ 0e	BACKSPACE
+ 0f	TAB
+ 1c	ENTER
+ 1d	CTRL
+ 2a	SHIFT
+ 36	"RIGHT SHIFT"
+ 37	NUMMULT
+ 38	ALT
+ 39	SPACE
+ 3a	CAPSLOCK
+ 3b	F1
+ 3c	F2
+ 3d	F3
+ 3e	F4
+ 3f	F5
+ 40	F6
+ 41	F7
+ 42	F8
+ 43	F9
+ 44	F10
+ 45	Pause
+ 46	"SCROLL LOCK"
+ 47	"NUM 7"
+ 48	"NUM 8"
+ 49	"NUM 9"
+ 4a	"NUM SUB"
+ 4b	"NUM 4"
+ 4c	"NUM 5"
+ 4d	"NUM 6"
+ 4e	"NUM PLUS"
+ 4f	"NUM 1"
+ 50	"NUM 2"
+ 51	"NUM 3"
+ 52	"NUM 0"
+ 53	"NUM DECIMAL"
+ 57	F11
+ 58	F12
+
+KEYNAME_EXT
+
+ 1c	"NUM ENTER"
+ 1d	"Right Ctrl"
+ 35	"NUM DIVIDE"
+ 37	"Prnt Scrn"
+ 38	"RIGHT ALT"
+ 45	"Num Lock"
+ 46	Break
+ 47	HOME
+ 48	UP
+ 49	PGUP
+ 4b	LEFT
+ 4d	RIGHT
+ 4f	END
+ 50	DOWN
+ 51	PGDOWN
+ 52	INSERT
+ 53	DELETE
+ 54	<00>
+ 56	Help
+ 5b	"Left Windows"
+ 5c	"Right Windows"
+ 5d	Application
+
+KEYNAME_DEAD
+
+ 0027	ACUTE/CEDILLA
+ 0060	GRAVE
+ 005e	CIRCUMFLEX
+ 0022	UMLAUT
+ 007e	TILDE
+
+ENDKBD
+

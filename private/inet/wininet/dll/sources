@@ -1,0 +1,108 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+
+    Created 12-Sep-1991 by Richard L Firth (rfirth)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+TARGETNAME=wininet
+UMTYPE=windows
+
+!INCLUDE ..\wininet.inc
+
+MINORCOMP=dll
+
+TARGETTYPE=DYNLINK
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+
+# Make sure the component libs are built before this.
+SYNCHRONIZE_DRAIN=1
+
+DLLENTRY=_DllMainCRTStartup
+DLLORDER=$(BASEDIR)\private\prf\wininet.prf
+
+#INCLUDES=..\inc;..\..\..\schannel\sspi;$(BASEDIR)\private\windows\inc
+INCLUDES=..\inc;$(BASEDIR)\private\windows\inc
+
+SOURCES=autodial.cxx    \
+        blocklst.cxx    \
+        certcach.cxx    \
+        cliauth.cxx     \
+        cookimp.cxx     \
+        cookexp.cxx		\
+        dllentry.cxx    \
+        globals.cxx     \
+        inetapia.cxx    \
+        inetapiu.cxx    \
+        inetapiw.cxx    \
+        options.cxx     \
+        parseurl.cxx    \
+        proxreg.cxx     \
+        rashelp.cxx     \
+        readhtml.cxx    \
+        registry.cxx    \
+        thrdinfo.cxx    \
+        wininet.rc
+
+NTTARGETFILE0=$(BASEDIR)\public\sdk\inc\inetmsg.h inetmsg.rc \
+               selfreg_wininet.inf
+
+!if "$(BUILD_PRODUCT)" == "NT"
+MISCFILES = $(MISCFILES) selfreg_wininet.inf
+!endif
+
+LINKLIBS=\
+    $(LIBDIR)\*\debug.lib       \
+    $(LIBDIR)\*\dummy.lib       \
+    $(LIBDIR)\*\common.lib      \
+    $(LIBDIR)\*\ftp.lib         \
+    $(LIBDIR)\*\gopher.lib      \
+    $(LIBDIR)\*\hndlobj.lib     \
+    $(LIBDIR)\*\http.lib        \
+    $(LIBDIR)\*\httpauth.lib    \
+    $(LIBDIR)\*\urlcache.lib    \
+    $(LIBDIR)\*\inetui.lib      \
+    $(LIBDIR)\*\apdetect.lib 
+!IF "$(PROCESSOR_ARCHITECTURE)"=="x86"
+LINKLIBS=$(LINKLIBS)    \
+    ..\lib\vxdcalls.lib
+!ENDIF
+
+DELAYLOAD=crypt32.dll; ole32.dll; version.dll
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\shlwapip.lib    \
+    $(BASEDIR)\public\sdk\lib\*\crypt32.lib     \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib      \
+    $(BASEDIR)\public\sdk\lib\*\htmlhelp.lib	\
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib        \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\gdi32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\version.lib
+    
+!IF "$(PROCESSOR_ARCHITECTURE)" == "x86"
+
+#NTTARGETFILES=$(TARGETNAME).sym
+
+!ENDIF
+

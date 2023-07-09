@@ -1,0 +1,80 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1997 - 1999
+
+Module Name:
+
+    sources.
+
+!ENDIF
+
+MAJORCOMP=devmgr
+MINORCOMP=snapin
+
+# before changing the DLL name, resolve the references in applib\domthred.cxx
+TARGETPATH=obj
+TARGETNAME=devmgr
+TARGETTYPE=DYNLINK
+INCLUDES=$(BASEDIR)\private\windows\inc
+TARGETPATHLIB=$(BASEDIR)\public\sdk\lib
+DLLENTRY=_DllMainCRTStartup
+USE_NATIVE_EH=1
+USE_MSVCRT=1
+UMTYPE=windows
+C_DEFINES = -DUNICODE
+
+PRECOMPILED_CXX=1
+PRECOMPILED_INCLUDE=devmgr.h
+PRECOMPILED_OBJ=precomp.obj
+
+TARGETLIBS=\
+           $(BASEDIR)\public\sdk\lib\*\mmc.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+           $(BASEDIR)\public\sdk\lib\*\objsel.lib \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib          \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib \
+           $(BASEDIR)\public\sdk\lib\*\comctlp.lib   \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\cfgmgr32.lib \
+           $(BASEDIR)\public\sdk\lib\*\setupapi.lib \
+           $(BASEDIR)\public\sdk\lib\*\version.lib \
+           $(BASEDIR)\public\sdk\lib\*\shell32p.lib \
+           $(BASEDIR)\public\sdk\lib\*\wmip.lib \
+           $(BASEDIR)\public\sdk\lib\*\mpr.lib \
+           $(BASEDIR)\public\sdk\lib\*\ActiveDs.lib \
+           $(BASEDIR)\public\sdk\lib\*\htmlhelp.lib \
+           $(BASEDIR)\public\sdk\lib\*\wintrust.lib \
+           $(BASEDIR)\public\sdk\lib\*\crypt32.lib
+
+SOURCES= devmgr.cpp     \
+         about.cpp      \
+         tsmisc.cpp     \
+         tswizard.cpp   \
+         devpopg.cpp    \
+         sysinfo.cpp    \
+         prndlg.cpp     \
+         printer.cpp    \
+         compdata.cpp   \
+         componet.cpp   \
+         factory.cpp    \
+         utils.cpp      \
+         globals.cpp    \
+         cfolder.cpp    \
+         cnode.cpp      \
+         machine.cpp    \
+         dataobj.cpp    \
+         events.cpp     \
+         genpage.cpp    \
+         clsgenpg.cpp   \
+         devgenpg.cpp   \
+         hwprof.cpp     \
+         cdriver.cpp    \
+         devdrvpg.cpp   \
+         devrmdlg.cpp   \
+         api.cpp        \
+         proppage.cpp   \
+         hwtab.cpp      \
+         devmgr.rc

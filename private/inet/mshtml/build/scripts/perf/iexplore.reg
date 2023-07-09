@@ -1,0 +1,115 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\.htm]
+@="htmlfile"
+"Content Type"="text/html"
+
+[HKEY_CLASSES_ROOT\.html]
+@="htmlfile"
+"Content Type"="text/html"
+
+[HKEY_CLASSES_ROOT\htmlfile\CLSID]
+@="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type]
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/fractals]
+"Extension"=".fif"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/mac-binhex40]
+"Extension"=".hqx"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/postscript]
+"Extension"=".ps"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/x-compress]
+"Extension"=".z"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/x-compressed]
+"Extension"=".tgz"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/x-gzip]
+"Extension"=".gz"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/x-latex]
+"Extension"=".latex"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/x-stuffit]
+"Extension"=".sit"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/x-tar]
+"Extension"=".tar"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/x-troff-man]
+"Extension"=".man"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/x-zip-compressed]
+"Extension"=".zip"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\audio/aiff]
+"Extension"=".aiff"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\audio/basic]
+"Extension"=".au"
+"CLSID"="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\audio/wav]
+"Extension"=".wav"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\audio/x-aiff]
+"Extension"=".aiff"
+"CLSID"="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\audio/x-pn-realaudio]
+"Extension"=".ram"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\audio/x-wav]
+"Extension"=".wav"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\image/gif]
+"Extension"=".gif"
+"CLSID"="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\image/jpeg]
+"Extension"=".jpeg"
+"CLSID"="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\image/pjpeg]
+"Extension"=".jpeg"
+"CLSID"="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\image/tiff]
+"Extension"=".tiff"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\image/x-xbitmap]
+"Extension"=".xbm"
+"CLSID"="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\image/xbm]
+"Extension"=".xbm"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\text/html]
+"Extension"=".html"
+"Encoding"=hex:08,00,00,00
+"CLSID"="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\text/plain]
+"Extension"=".txt"
+"Encoding"=hex:07,00,00,00
+"CLSID"="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\video/avi]
+"Extension"=".avi"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\video/mpeg]
+"Extension"=".mpeg"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\video/quicktime]
+"Extension"=".qt"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\video/x-msvideo]
+"Extension"=".avi"
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\video/x-sgi-movie]
+"Extension"=".movie"
+

@@ -1,0 +1,13 @@
+/********************************************************************/
+/*        SHLWAPI.RCV                                               */
+/********************************************************************/
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Shell Light-weight Utility Library"
+#define VER_INTERNALNAME_STR            "SHLWAPI"
+#define VER_ORIGINALFILENAME_STR        "SHLWAPI.DLL"
+
+#include <common.ver>

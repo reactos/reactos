@@ -1,0 +1,36 @@
+#----------------------------------------------------------------------------
+#
+# Description:
+#
+#       sources file for Software Crypto Provider
+#
+# History:
+#
+#       03/15/95 raymondm added conditional link to capi.lib
+#   07/18/95 philh changed ACT_BUILD option to only generate a lib
+#
+#
+#----------------------------------------------------------------------------
+
+
+MINORCOMP=sadvapi
+
+TARGETNAME=sadvapi
+
+TARGETTYPE=LIBRARY
+TARGETPATH=$(_OBJ_DIR)
+
+C_DEFINES= $(C_DEFINES)
+
+INCLUDES=     $(NTINCLUDES); \
+              $(BASEDIR)\private\inc\crypto; \
+              ..\inc;
+
+
+SOURCES=\
+    sadvapi.cpp 
+
+UMTYPE=console
+
+NO_NTDLL=1
+BINPLACE_FLAGS=$(BINPLACE_FLAGS) -c

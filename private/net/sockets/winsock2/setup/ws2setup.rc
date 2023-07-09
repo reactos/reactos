@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows Socket 1.1 to 2.0 Setup Migration"
+#define VER_INTERNALNAME_STR        "ws2setup.exe"
+#define VER_ORIGINALFILENAME_STR    "ws2setup.exe"
+
+#include <common.ver>
+

@@ -1,0 +1,190 @@
+1 DLGINCLUDE "dialogs.h"
+
+800 DIALOG 11, 17, 170, 134
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "StickyKeys Options"
+BEGIN
+    RADIOBUTTON     "O&ff", ID_OFF, 9, 7, 25, 10, WS_TABSTOP
+    RADIOBUTTON     "O&n", ID_ON, 9, 18, 25, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Hotkey activation", ID_HOTKEY_ACTIVATION, 9, 34, 156,
+                    10
+    AUTOCHECKBOX    "&Sound when turned on or off", ID_ON_OFF_FEEDBACK, 9, 
+                    47, 160, 10
+    AUTOCHECKBOX    "Sound when &Pressing a StickyKey", ID_STATE_FEEDBACK,
+                    9, 59, 160, 10
+    AUTOCHECKBOX    "Turn off when pressing &Two keys at once", 
+                    ID_TWOKEYS_TURNOFF, 9, 71, 160, 10
+    AUTOCHECKBOX    "&Lock MOD key when MOD key pressed twice", ID_TRISTATE, 
+                    9, 83, 160, 10
+    LTEXT           "MOD = SHIFT, CONTROL and ALTERNATE keys", -1, 9, 99, 
+                    160, 10
+    PUSHBUTTON      "OK", IDOK, 34, 112, 32, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 98, 112, 32, 14
+END
+
+801 DIALOG 14, 30, 205, 208
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SlowKeys, RepeatKeys and BounceKeys Options"
+BEGIN
+    RADIOBUTTON     "O&ff", ID_OFF, 10, 2, 27, 10, WS_TABSTOP
+    RADIOBUTTON     "O&n", ID_ON, 10, 13, 27, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Sound when turned on or off", ID_ON_OFF_FEEDBACK, 74, 
+                    13, 117, 12
+    AUTOCHECKBOX    "Click when a key is &Pressed", ID_ON_OFF_CLICK, 74, 24, 
+                    114, 12
+    LTEXT           "SLOWKEYS", ID_KB_ACCEPT_0, 9, 41, 45, 8, NOT WS_GROUP
+    LTEXT           "&Acceptance Delay (sec) =", ID_KB_ACCEPT_1, 74, 41, 94, 
+                    9, NOT WS_GROUP
+    LTEXT           "", ID_KB_ACCEPT_TEXT, 174, 41, 16, 9, NOT WS_GROUP
+    SCROLLBAR       ID_KB_ACCEPT_3, 29, 51, 160, 9, WS_TABSTOP
+    LTEXT           "Short", ID_KB_ACCEPT_4, 29, 61, 21, 8, NOT WS_GROUP
+    LTEXT           "Long", ID_KB_ACCEPT_5, 170, 61, 19, 9, NOT WS_GROUP
+    LTEXT           "REPEATKEYS ", ID_KB_DELAY_0, 9, 71, 55, 8, NOT WS_GROUP
+    LTEXT           "&Delay until Repeat (sec) =", ID_KB_DELAY_1, 74, 71, 96, 
+                    10, NOT WS_GROUP
+    LTEXT           "", ID_KB_DELAY_TEXT, 175, 71, 16, 8, NOT WS_GROUP
+    SCROLLBAR       ID_KB_DELAY_3, 29, 81, 160, 9, WS_TABSTOP
+    LTEXT           "Short", ID_KB_DELAY_4, 29, 91, 22, 8, NOT WS_GROUP
+    LTEXT           "Long", ID_KB_DELAY_5, 169, 91, 22, 9, NOT WS_GROUP
+    LTEXT           "&Repeat Rate (sec/char) =", ID_KB_RATE_0, 74, 101, 94, 
+                    9, NOT WS_GROUP
+    LTEXT           "", ID_KB_RATE_TEXT, 175, 101, 16, 8, NOT WS_GROUP
+    SCROLLBAR       ID_KB_RATE_2, 29, 111, 160, 9, WS_TABSTOP
+    LTEXT           "Short", ID_KB_RATE_3, 29, 121, 22, 8, NOT WS_GROUP
+    LTEXT           "Long", ID_KB_RATE_4, 170, 121, 19, 8, NOT WS_GROUP
+    LTEXT           "BOUNCEKEYS ", ID_KB_BOUNCE_0, 9, 131, 57, 8, NOT 
+                    WS_GROUP
+    LTEXT           "De&bounce Time (sec) =", ID_KB_BOUNCE_1, 74, 131, 86, 8, 
+                    NOT WS_GROUP
+    LTEXT           "", ID_KB_BOUNCE_TEXT, 175, 131, 16, 8, NOT WS_GROUP
+    SCROLLBAR       ID_KB_BOUNCE_3, 29, 141, 160, 9, WS_TABSTOP
+    LTEXT           "Short", ID_KB_BOUNCE_4, 29, 151, 23, 8, NOT WS_GROUP
+    LTEXT           "Long", ID_KB_BOUNCE_5, 170, 151, 19, 8, NOT WS_GROUP
+    LTEXT           "&TEST Keyboard Response Group", ID_KB_TEST_0, 9, 160, 
+                    123, 8, NOT WS_GROUP
+    EDITTEXT        ID_KB_TEST_1, 29, 169, 160, 13, ES_AUTOHSCROLL
+    PUSHBUTTON      "OK", IDOK, 49, 187, 42, 12
+    PUSHBUTTON      "Cancel", IDCANCEL, 134, 187, 42, 12
+    AUTOCHECKBOX    "&Hotkey activation", ID_HOTKEY_ACTIVATION, 74, 3, 127,
+                    10
+END
+
+802 DIALOG 10, 12, 145, 151
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "MouseKeys Options"
+BEGIN
+    RADIOBUTTON     "O&ff", ID_OFF, 13, 7, 27, 10, WS_TABSTOP
+    RADIOBUTTON     "O&n", ID_ON, 13, 18, 27, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Sound when turned on or off", ID_ON_OFF_FEEDBACK, 13, 
+                    46, 119, 10
+    LTEXT           "&Mouse Speed (pix/sec) = ", ID_MK_SPEED_3, 21, 60, 93, 
+                    9, NOT WS_GROUP
+    CTEXT           "0", ID_MK_SPEED_TEXT, 113, 60, 19, 9, NOT WS_GROUP
+    SCROLLBAR       ID_MK_SPEED_1, 13, 71, 118, 9, WS_TABSTOP
+    LTEXT           "Slow", ID_MK_SPEED_4, 13, 81, 19, 8, NOT WS_GROUP
+    LTEXT           "Fast", ID_MK_SPEED_5, 115, 81, 26, 8, NOT WS_GROUP
+    LTEXT           "&Time to Max Speed (sec) =", ID_MK_TIME_3, 17, 95, 100, 
+                    9, NOT WS_GROUP
+    CTEXT           "0", ID_MK_TIME_TEXT, 113, 95, 19, 9, NOT WS_GROUP
+    SCROLLBAR       ID_MK_TIME_1, 13, 106, 118, 9, WS_TABSTOP
+    LTEXT           "Slow", ID_MK_TIME_4, 13, 116, 21, 8, NOT WS_GROUP
+    LTEXT           "Fast", ID_MK_TIME_5, 115, 116, 30, 8, NOT WS_GROUP
+    PUSHBUTTON      "OK", IDOK, 29, 129, 32, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 86, 129, 32, 14
+    AUTOCHECKBOX    "&Hotkey activation", ID_HOTKEY_ACTIVATION, 13, 33, 103,
+                    10
+END
+
+803 DIALOG 10, 5, 141, 138
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SerialKeys Options"
+BEGIN
+    RADIOBUTTON     "O&ff", ID_OFF, 6, 6, 27, 10, WS_TABSTOP
+    RADIOBUTTON     "O&n", ID_ON, 6, 15, 27, 10, WS_TABSTOP
+    GROUPBOX        "Serial &Port", -1, 6, 33, 57, 72
+    RADIOBUTTON     "COM1", ID_COM1, 12, 45, 42, 10, WS_TABSTOP
+    RADIOBUTTON     "COM2", ID_COM2, 12, 54, 36, 10, WS_TABSTOP
+    RADIOBUTTON     "COM3", ID_COM3, 12, 63, 42, 10, WS_TABSTOP
+    RADIOBUTTON     "COM4", ID_COM4, 12, 72, 36, 10, WS_TABSTOP
+    GROUPBOX        "&Baud Rate", -1, 72, 33, 60, 72
+    RADIOBUTTON     "300 baud", ID_BAUD_300, 78, 45, 48, 10, WS_TABSTOP
+    RADIOBUTTON     "600 baud", ID_BAUD_600, 78, 54, 51, 10, WS_TABSTOP
+    RADIOBUTTON     "1200 baud", ID_BAUD_1200, 78, 63, 48, 10, WS_TABSTOP
+    RADIOBUTTON     "2400 baud", ID_BAUD_2400, 78, 72, 51, 10, WS_TABSTOP
+    RADIOBUTTON     "4800 baud", ID_BAUD_4800, 78, 81, 51, 10, WS_TABSTOP
+    RADIOBUTTON     "9600 baud", ID_BAUD_9600, 78, 90, 48, 10, WS_TABSTOP
+    PUSHBUTTON      "OK", IDOK, 27, 117, 32, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 75, 117, 32, 14
+END
+
+804 DIALOG 10, 5, 171, 100
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "TimeOut Options"
+BEGIN
+    RADIOBUTTON     "O&ff", ID_OFF, 6, 45, 171, 9, WS_TABSTOP
+    RADIOBUTTON     "O&n", ID_ON, 6, 54, 171, 9, WS_TABSTOP
+    AUTOCHECKBOX    "&Sound when turned off", ID_ON_OFF_FEEDBACK, 6, 65, 171, 
+                    9
+    LTEXT           "Allow ACCESS Options to Turn Off if unused for:", -1, 6, 
+                    1, 171, 9, NOT WS_GROUP
+    RADIOBUTTON     "5 minutes", ID_TIMEOUT_1, 66, 9, 81, 10, WS_TABSTOP
+    RADIOBUTTON     "10 minutes", ID_TIMEOUT_2, 66, 18, 96, 10, WS_TABSTOP
+    RADIOBUTTON     "15 minutes", ID_TIMEOUT_3, 66, 27, 99, 10, WS_TABSTOP
+    RADIOBUTTON     "30 minutes", ID_TIMEOUT_4, 66, 36, 102, 10, WS_TABSTOP
+    PUSHBUTTON      "OK", IDOK, 42, 80, 32, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 105, 80, 32, 14
+END
+
+805 DIALOG 10, 23, 118, 81
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ToggleKeys Options"
+BEGIN
+    RADIOBUTTON     "O&ff", ID_OFF, 9, 3, 27, 12, WS_TABSTOP
+    RADIOBUTTON     "O&n", ID_ON, 9, 15, 27, 12, WS_TABSTOP
+    AUTOCHECKBOX    "&Sound when turned on or off", ID_ON_OFF_FEEDBACK, 9, 
+                    42, 105, 12
+    PUSHBUTTON      "OK", IDOK, 21, 60, 32, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 66, 60, 32, 14
+    AUTOCHECKBOX    "&Hotkey activation", ID_HOTKEY_ACTIVATION, 9, 30, 101,
+                    10
+END
+
+806 DIALOG 6, 22, 190, 121
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "SoundSentry Options"
+BEGIN
+    AUTORADIOBUTTON "O&ff", ID_OFF, 11, 8, 39, 10
+    AUTORADIOBUTTON "O&n", ID_ON, 11, 19, 39, 10
+    LTEXT           "&Windows:",       101, 12, 41, 46, 8
+    COMBOBOX        ID_SS_WINDOWS, 67, 38, 103, 50, CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Text Mode:",     102, 11, 59, 46, 8
+    COMBOBOX        ID_SS_TEXTMODE, 67, 56, 103, 40, CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Graphics Mode:", 103, 11, 77, 65, 8
+    COMBOBOX        ID_SS_GRAPHICSMODE, 67, 74, 103, 50, CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "OK", IDOK, 34, 99, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 106, 99, 40, 14
+END
+
+809 DIALOG 5, 19, 190, 83
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "SoundSentry Options"
+BEGIN
+    AUTORADIOBUTTON "O&ff", ID_OFF, 11, 8, 39, 10
+    AUTORADIOBUTTON "O&n", ID_ON, 11, 19, 39, 10
+    LTEXT           "&Windows:", 101, 12, 41, 46, 8
+    COMBOBOX        ID_SS_WINDOWS, 67, 38, 103, 50, CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "OK", IDOK, 34, 60, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 106, 60, 40, 14
+END

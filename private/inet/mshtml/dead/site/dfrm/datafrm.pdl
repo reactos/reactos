@@ -1,0 +1,19 @@
+#ifndef _DATAFRM_PDL_
+#define _DATAFRM_PDL_ 1
+
+#ifndef _BASEFRM_PDL_
+#   include "basefrm.pdl"
+#endif 
+
+file datafrm.pdl
+
+import basefrm.pdl
+
+interface IDataFrameExpert super:IUnknown guid:73687490-d82b-11ce-8136-00aa00611080 midl
+    method HRESULT CreateListbox (in type:IUnknown* arg:pRowSet in type:OLE_COLOR arg:olecolorBack in type:OLE_COLOR arg:olecolorFore in type:IDispatch* arg:pFontObject in type:fmListBoxStyles arg:listStyle in type:fmScrollBars arg:scrollbarStyle in type:int arg:iColumnCount in type:int arg:iListRows in type:VARIANT_BOOL arg:fIntegralHeight in type:VARIANT_BOOL arg:fColumnHeads in type:int* arg:piColumnWidths in type:int arg:c in type:DWORD arg:dwCookie)
+    method HRESULT SetControlProperty (in type:DISPID arg:dispid in type:VARIANT* arg:pVariant);
+    method HRESULT ComputeExtent (in type:int* arg:piColumnWidths in type:int arg:c in type:void* arg:pTransform in type:SIZEL* arg:pszlProposed out type:SIZEL* arg:pszlComputed)
+
+class CDataFrame super:CBaseFrame interface:IDataFrame guid:3050f1c4-98b5-11cf-bb82-00aa00bdce0b
+
+#endif // _DATAFRM_PDL_

@@ -1,0 +1,24 @@
+HKCR
+{
+	TriEditDocument.TriEditDocument.1 = s 'TriEditDocument Class'
+	{
+		CLSID = s '{438DA5E0-F171-11D0-984E-0000F80270F8}'
+	}
+	TriEditDocument.TriEditDocument = s 'TriEditDocument Class'
+	{
+		CurVer = s 'TriEditDocument.TriEditDocument.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {438DA5E0-F171-11D0-984E-0000F80270F8} = s 'TriEditDocument Class'
+		{
+			ProgID = s 'TriEditDocument.TriEditDocument.1'
+			VersionIndependentProgID = s 'TriEditDocument.TriEditDocument'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

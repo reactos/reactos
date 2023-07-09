@@ -1,0 +1,2442 @@
+BugChecks and what to do about them:
+
+Bugchecks with no descriptions are either checked builds
+only or very rare.  If you get one of these and a kernel
+debugger is available do the following
+    kb
+    !process 0 7
+    !vm
+    !errlog
+
+APC_INDEX_MISMATCH               (0x1)
+This is a kernel internal error which can occur on a checked build.
+The most common reason to see such a bugcheck would occur when a
+filesystem had a mismatched number of KeEnterCriticalRegion calls compared
+to KeLeaveCriticalRegion calls.
+
+DEVICE_QUEUE_NOT_BUSY            (0x2)
+
+INVALID_AFFINITY_SET             (0x3)
+
+INVALID_DATA_ACCESS_TRAP         (0x4)
+
+INVALID_PROCESS_ATTACH_ATTEMPT   (0x5)
+
+INVALID_PROCESS_DETACH_ATTEMPT   (0x6)
+
+INVALID_SOFTWARE_INTERRUPT       (0x7)
+
+IRQL_NOT_DISPATCH_LEVEL          (0x8)
+
+IRQL_NOT_GREATER_OR_EQUAL        (0x9)
+
+IRQL_NOT_LESS_OR_EQUAL           (0xA)
+        1 - memory referenced
+        2 - IRQL
+        3 - value 0 = read operation, 1 = write operation
+        4 - address which referenced memory
+
+An attempt was made to touch pagable memory at a process
+internal request level (IRQL) too high.  This is usually
+caused by drivers using improper addresses.
+
+If kernel debugger is available get stack backtrace.
+
+
+NO_EXCEPTION_HANDLING_SUPPORT    (0xB)
+
+MAXIMUM_WAIT_OBJECTS_EXCEEDED    (0xC)
+
+MUTEX_LEVEL_NUMBER_VIOLATION     (0xD)
+    1 - The current thread's mutex level
+    2 - The mutex level that we are attempting to acquire
+
+Try to identify the mutexes using the ntos\ex\exlevels.h header file. This
+usually will pinpoint the mutexes that are getting acquired in an incorrect
+sequence.
+
+NO_USER_MODE_CONTEXT             (0xE)
+
+SPIN_LOCK_ALREADY_OWNED          (0xF)
+
+SPIN_LOCK_NOT_OWNED              (0x10)
+
+THREAD_NOT_MUTEX_OWNER           (0x11)
+
+TRAP_CAUSE_UNKNOWN               (0x12)
+
+EMPTY_THREAD_REAPER_LIST         (0x13)
+
+CREATE_DELETE_LOCK_NOT_LOCKED    (0x14)
+
+LAST_CHANCE_CALLED_FROM_KMODE    (0x15)
+
+CID_HANDLE_CREATION              (0x16)
+
+CID_HANDLE_DELETION              (0x17)
+
+REFERENCE_BY_POINTER             (0x18)
+
+BAD_POOL_HEADER                  (0x19)
+
+The pool is already corrupt at the time of the current request.
+This may or may not be due to the caller.
+The internal pool links must be walked to figure out a possible cause of
+the problem, and then special pool applied to the suspect tags or the driver
+verifier to a suspect driver.
+
+    3 - the pool freelist is corrupt.  parameter 2 is the pool entry being
+        checked, 4/5 are the read back flink/blink freelist values.  The values
+        are supposed to be the same parameter 2.
+
+    5 - the adjacent pool block headers are corrupt.  parameter 2 and 4 are
+        the entries whose headers are not consistent.  parameter 3 is the line
+        number inside pool.c (generally not useful).
+
+MEMORY_MANAGEMENT                (0x1A)
+
+    #n, where # denotes the bugcheck parameter
+
+    #1 - The subtype of the bugcheck:
+
+            1 - The fork clone block reference count is corrupt.  Only occurs
+                on checked builds.
+
+    # Any other values for parameter 1 must be individually examined.
+
+PFN_SHARE_COUNT                  (0x1B)
+
+PFN_REFERENCE_COUNT              (0x1C)
+
+NO_SPIN_LOCK_AVAILABLE           (0x1D)
+
+KMODE_EXCEPTION_NOT_HANDLED      (0x1E)
+    1 - The exception code that was not handled
+    2 - The address that the exception occured at
+    3 - Parameter 0 of the exception
+    4 - Parameter 1 of the exception
+
+This is a very common bugcheck.  Usually the exception address pinpoints
+the driver/function that caused the problem.  Always note this address
+as well as the link date of the driver/image that contains this address.
+Some common problems are exception code 0x80000003.  This means a hard
+coded breakpoint or assertion was hit, but this system was booted
+/NODEBUG.  This should not happen, but I am positive you will see this.
+If it happens repeatedly, make sure a debugger gets connected, and the
+system is booted /DEBUG.  This will let us see why this breakpoint is
+happening.
+
+On MIPs systems if the address of the exception is 0XBFC0304, then bugcheck is
+the result of a cache parity error on the CPU.  If the problem reoccurs
+frequently, the hardware manufactor should be contacted.
+
+SHARED_RESOURCE_CONV_ERROR       (0x1F)
+
+KERNEL_APC_PENDING_DURING_EXIT   (0x20)
+    1 - The address of the APC found pending during exit.
+    2 - The thread's APC disable count
+    3 - The current IRQL
+
+The key data items are the thread's APC disable count.
+If this is non-zero, then this is the source of the problem.
+A negative value indicates that a filesystem has called
+FsRtlEnterFileSystem more than FsRtlExitFileSystem.  A positive value
+indicates that the reverse is true.  If you ever see this, be very very
+suspicious of all file systems installed on the machine.  Third party
+redirectors (like Novell) are especially suspicious since they do not
+receive the heavy duty testing that NTFS, FAT, HPFS, and RDR receive.
+
+This current IRQL should also be 0.  If it is not, that a driver's
+cancelation routine can cause this bugcheck by returning at an elevated
+IRQL.  Always attempt to not what the customer was doing/closing at the
+time of the crash, and note all of the installed drivers at the time of
+the crash.  This symptom is usually a severe bug in a third party
+driver.
+
+QUOTA_UNDERFLOW                  (0x21)
+
+FILE_SYSTEM                      (0x22)
+
+FAT_FILE_SYSTEM                  (0x23)
+    All file system bug checks have encoded in their first ULONG
+    the source file and the line within the source file that generated
+    the bugcheck.  The high 16-bits contains a number to identify the
+    file and low 16-bits is the source line within the file where
+    the bug check call occurs.  For example, 0x00020009 indicates
+    that the FAT file system bugcheck occurred in source file #2 and
+    line #9.
+
+    The file system calls bug check in multiple places and this will
+    help us identify the actual source line that generated the bug
+    check.  The only thing that can be done right now is to collect
+    any bug check information in a database and pass on the output
+    to a developer who can look in the sources and hopefully identify
+    the cause of the bug check.
+
+NTFS_FILE_SYSTEM                 (0x24)
+    See the comment for FAT_FILE_SYSTEM
+    If you see NtfsExceptionFilter on the stack then the 2nd and 3rd parameters are the
+    exception record and context record. Do a !cxr on the 3rd parameter and then !kb to
+    obtain a more informative stack trace.
+
+
+NPFS_FILE_SYSTEM                 (0x25)
+    See the comment for FAT_FILE_SYSTEM
+
+CDFS_FILE_SYSTEM                 (0x26)
+    See the comment for FAT_FILE_SYSTEM
+
+RDR_FILE_SYSTEM                  (0x27)
+
+CORRUPT_ACCESS_TOKEN             (0x28)
+
+SECURITY_SYSTEM                  (0x29)
+
+INCONSISTENT_IRP                 (0x2A)
+    1 - Address of the IRP that was found to be inconsistent
+
+An IRP was encountered that was in an inconsistent state; i.e., some field
+or fields of the IRP were inconsistent w/the remaining state of the IRP.
+An example would be an IRP that was being completed, but was still marked
+as being queued to a driver's device queue.  This bugcheck code is not
+currently being used in the system, but exists for debugging purposes.
+
+PANIC_STACK_SWITCH               (0x2B)
+This error indicates that the kernel mode stack was overrun. This normally
+occurs when a kernel-mode driver uses too much stack space.  It can also
+occur when serious data corruption occurs in the kernel.
+
+PORT_DRIVER_INTERNAL             (0x2C)
+
+SCSI_DISK_DRIVER_INTERNAL        (0x2D)
+
+DATA_BUS_ERROR                   (0x2E)
+This bugcheck is normally caused by a parity error in the system memory.
+        1. Virtual address that caused the fault
+        2. Physical address that caused
+        3. Processor status register (PSR)
+        4. Faulting instruction register (FIR)
+This error can also be caused by a driver accessing a 0x8XXXXXXX address
+that does not exist.
+
+INSTRUCTION_BUS_ERROR            (0x2F)
+
+SET_OF_INVALID_CONTEXT           (0x30)
+
+PHASE0_INITIALIZATION_FAILED     (0x31)
+
+    System init failed early on.  Debugger is required to make sense of this
+    since the bugcheck tells you almost nothing.
+
+PHASE1_INITIALIZATION_FAILED     (0x32)
+    1 - NT Status code that describes why the system thinks initialization failed.
+    2 - Indicates location within init.c where phase 1 initialization failure occured
+
+UNEXPECTED_INITIALIZATION_CALL   (0x33)
+
+CACHE_MANAGER                    (0x34)
+    See the comment for FAT_FILE_SYSTEM
+
+NO_MORE_IRP_STACK_LOCATIONS      (0x35)
+    1 - Address of the IRP
+
+A higher level driver has attempted to call a lower level driver through
+the IoCallDriver() interface, but there are no more stack locations in the
+packet, hence, the lower level driver would not be able to access its
+parameters, as there are no parameters for it.  This is a disasterous
+situation, since the higher level driver "thinks" it has filled in the
+parameters for the lower level driver (something it MUST do before it calls
+it), but since there is no stack location for the latter driver, the former
+has written off of the end of the packet.  This means that some other memory
+has probably been trashed at this point.
+
+DEVICE_REFERENCE_COUNT_NOT_ZERO  (0x36)
+    1 - Address of the device object
+
+A device driver has attempted to delete one of its device objects from the
+system but the reference count for that object was non-zero, meaning that
+there are still outstanding references to the device.  (The reference count
+indicates the number of reasons why this device object cannot be deleted.)
+This is a bug in the calling device driver.
+
+FLOPPY_INTERNAL_ERROR            (0x37)
+
+SERIAL_DRIVER_INTERNAL           (0x38)
+
+SYSTEM_EXIT_OWNED_MUTEX          (0x39)
+
+SYSTEM_UNWIND_PREVIOUS_USER      (0x3A)
+
+SYSTEM_SERVICE_EXCEPTION         (0x3B)
+
+INTERRUPT_UNWIND_ATTEMPTED       (0x3C)
+
+INTERRUPT_EXCEPTION_NOT_HANDLED  (0x3D)
+
+MULTIPROCESSOR_CONFIGURATION_NOT_SUPPORTED (0x3E)
+The system has multiple processors, but they are asymmetric in relation
+to one another.  In order to be symmetric all processors must be of
+the same type and level.  For example, trying to mix a Pentium level
+processor with an 80486 would cause this bugcheck.  Additionally, on x86
+systems all processors must either have floating point capabilities, or
+none should.
+
+
+NO_MORE_SYSTEM_PTES              (0x3F)
+        1 - PTE Type (0 - system expansion, 1 nonpaged pool expansion)
+        2 - Requested size
+        3 - Total free system PTEs
+        4 - Total system PTEs
+
+No System PTEs left.  Usually caused by a driver not cleaning up
+properly.  If kernel debugger available get stack trace and
+"!sysptes 3".
+
+Set HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Mamagement\TrackPtes to a DWORD 1 value and reboot.  Then the system will save stack traces
+so the guilty driver can be identified.  There is no other way to find out
+which driver is neglecting to clean up the I/Os.  A bugcheck DRIVER_USED_EXCESSIVE_PTES will then occur if the system runs out of PTEs again and the offending
+driver's name will be printed.
+
+TARGET_MDL_TOO_SMALL             (0x40)
+
+A driver has called the IoBuildPartialMdl() function and passed it an MDL
+to map part of a source MDL, but the target MDL is not large enough to map
+the entire range of addresses requested.  This is a driver bug.  The source
+and target MDLs, as well as the address range length to be mapped are the
+arguments to the IoBuildPartialMdl() function, i.e.;
+
+    IoBuildPartialMdl(
+        IN PMDL SourceMdl,
+        IN OUT PMDL TargetMdl,
+        IN PVOID VirtualAddress,
+        IN ULONG Length
+        )
+
+MUST_SUCCEED_POOL_EMPTY          (0x41)
+
+        1 - size of the request that could not be satisfied
+        2 - number of pages used of nonpaged pool
+        3 - number of > PAGE_SIZE requests from nonpaged pool
+        4 - number of pages available
+
+If debugger available, !vm command lists various sizes.  Then do !poolused 2.
+
+ATDISK_DRIVER_INTERNAL           (0x42)
+
+NO_SUCH_PARTITION                (0x43)
+
+MULTIPLE_IRP_COMPLETE_REQUESTS   (0x44)
+    1 - Address of the IRP
+
+A driver has requested that an IRP be completed (IoCompleteRequest()), but
+the packet has already been completed.  This is a tough bug to find because
+the easiest case, a driver actually attempted to complete its own packet
+twice, is generally not what happened.  Rather, two separate drivers each
+believe that they own the packet, and each attempts to complete it.  The
+first actually works, and the second fails.  Tracking down which drivers
+in the system actually did this is difficult, generally because the trails
+of the first driver have been covered by the second.  However, the driver
+stack for the current request can be found by examining the DeviceObject
+fields in each of the stack locations.
+
+INSUFFICIENT_SYSTEM_MAP_REGS     (0x45)
+
+DEREF_UNKNOWN_LOGON_SESSION      (0x46)
+
+REF_UNKNOWN_LOGON_SESSION        (0x47)
+
+CANCEL_STATE_IN_COMPLETED_IRP    (0x48)
+    1 - Pointer to the IRP
+
+This bugcheck indicates that an I/O Request Packet (IRP) that is to be
+cancelled, has a cancel routine specified in it -- meaning that the packet
+is in a state in which the packet can be cancelled -- however, the packet
+no longer belongs to a driver, as it has entered I/O completion.  This is
+either a driver bug, or more than one driver is accessing the same packet,
+which is not likely and much more difficult to find.
+
+PAGE_FAULT_WITH_INTERRUPTS_OFF   (0x49)
+
+    Means exactly what it says, treat it as a case of 0x0A above.
+
+IRQL_GT_ZERO_AT_SYSTEM_SERVICE   (0x4A)
+
+STREAMS_INTERNAL_ERROR           (0x4B)
+
+FATAL_UNHANDLED_HARD_ERROR       (0x4C)
+
+If a hard error occurs during system booting before windows is up, and
+the hard error is a real error, the system will blue screen crash.
+
+Some common cases are:
+
+    x218 - This means a necessary registry hive file could not be
+           loaded.  The obvious reason is if it is corrupt or missing.
+           In this case, either the Emergency Repair Disk or a
+           reinstall is required.
+
+           Some less obvious reasons are that the driver has corrupted
+           the registry data while loading into memory, or the memory
+           where the registry file was loaded is not actually memory.
+           In particular, AST EISA machines with 16MB or more of memory
+           must have access to the memory above 16MB ENABLED in the
+           Eisa Config Utility, or else a registry file is liable to get
+           loaded in this spot, but will return just 0xffffffff when
+           we look at the memory.
+
+    x21a - This means that either winlogon, or csrss (windows) died
+           unexpectedly.  The exit code tells more information.  Usually
+           it is c0000005 meaning that an unhandled exception crashed
+           either of these processes.  There is not much you can do
+           unless this becomes a persistent problem.
+
+    x221 - This means that a driver is corrupt, or a system DLL was
+           detected to be corrupt.  We do our best to integrety check
+           drivers and important system DLLs, and if they are corrupt,
+           the blue screen the name of the corrupt file.  This prevents
+           crashes from occuring when we stumble into the corruption
+           later.  Boot an alternate OS, or reinstall if no alternate
+           exists.  Make sure the on disk file that is listed as bad
+           matches the version on CD and replace if necessary.  In some
+           cases, random corruption can mean that there is a hardware
+           problem in our I/O path to the file.
+
+NO_PAGES_AVAILABLE               (0x4D)
+        1 - Total number of dirty pages
+        2 - Number of dirty pages destined for the pagefile(s).
+        3 - Nonpaged pool available at time of bugcheck (in pages).
+        4 - Number of transition pages that are currently stranded.
+
+No free pages available to continue operations.
+If kernel debugger available "!vm" followed by "!poolused 2" and "!process 8 7"
+
+        This bugcheck can occur for the following reasons:
+
+        1.  A driver has blocked, deadlocking the modified or mapped
+            page writers.  Examples of this include mutex deadlocks or
+            accesses to paged out memory in filesystem drivers, filter
+            drivers, etc.  This indicates a driver bug.
+
+            If parameter 1 or 2 is large, then this is a possibility.  Type
+            "!process 8 7" in the kernel debugger.
+    
+        2.  The storage driver(s) are not processing requests.  Examples
+            of this are stranded queues, non-responding drives, etc.  This
+            indicates a driver bug.
+    
+            If parameter 1 or 2 is large, then this is a possibility.  Type
+            "!process 8 7" in the kernel debugger.
+    
+        3.  Not enough pool is available for the storage stack to write out
+            modified pages.  This indicates a driver bug.
+    
+            If parameter 3 is small, then this is a possibility.  Type
+            "!vm" and "!poolused 2" in the kernel debugger.
+    
+        4.  A high priority realtime thread has starved the balance set
+            manager from trimming pages and/or starved the modified writer
+            from writing them out.  This indicates a bug in the component
+            that created this thread.
+
+            This one is hard to determine, try "!ready"
+    
+        5.  All the processes have been trimmed to their minimums and all
+            modified pages written, but still no memory is available.  The
+            freed memory must be stuck in transition pages with non-zero
+            reference counts - thus they cannot be put on the freelist.
+            A driver is neglecting to unlock the pages preventing the
+            reference counts from going to zero which would free the pages.
+            This may be due to transfers that never finish and the driver
+            never aborts or other driver bugs.
+
+            If parameter 4 is large, then this is a possibility.  But it
+            is very hard to find the driver.  Try "!process 0 1" and look
+            for any that have a lot of locked pages.
+    
+PFN_LIST_CORRUPT                 (0x4E)
+        1 - value 1
+        2 - ListHead value which was corrupt
+        3 - number of pages available
+        4 - 0
+
+        1 - value 2
+        2 - entry in list being removed
+        3 - highest physical page number
+        4 - reference count of entry being removed
+
+Caused by corrupting I/O driver structures.  If kernel debugger
+available get stack trace.
+
+
+NDIS_INTERNAL_ERROR              (0x4F)
+
+PAGE_FAULT_IN_NONPAGED_AREA      (0x50)
+        1 - memory referenced.
+        2 - value 0 = read operation, 1 = write operation.
+        3 - If non-zero, the instruction address which referenced the bad memory
+            address.
+        4 - Mm internal code.
+
+Invalid system memory was referenced.  This cannot be protected by try-except, it must be protected by a Probe.  Typically the address is just plain bad or it is pointing at freed memory.
+
+REGISTRY_ERROR                   (0x51)
+        1 - value 1 (indicates where we bugchecked)
+        2 - value 2 (indicates where we bugchecked)
+        3 - depends on where it bugchecked, may be pointer to hive
+        4 - depends on where it bugchecked, may be return code of
+            HvCheckHive if the hive is corrupt.
+
+Something has gone horribly wrong with the registry.  If a kernel debugger
+is available, get a stack trace.
+
+If the stack trace indicates we are in a system worker thread (CmpWorker
+will be on the call list) do the following kernel debugger commands:
+
+    dd CmpRegistryMutex+18 L1
+    !thread <whatever value the above command printed out>
+
+This will give you the thread and stacktrace that made the registry call.
+
+It can also indicate that the registry got an I/O error while trying to
+read one of its files, so it can be caused by hardware problems or
+filesystem corruption.
+
+It may occur due to a failure in a refresh operation, which is used only
+in by the security system, and then only when resource limits are encountered.
+When you see this bugcode, be sure to ask if the machine is a PDC or BDC,
+and how many accounts are in its sam, whether it might be a replication target,
+and whether the volume where the hive files reside is nearly full.
+
+MAILSLOT_FILE_SYSTEM             (0x52)
+
+NO_BOOT_DEVICE                   (0x53)
+
+LM_SERVER_INTERNAL_ERROR         (0x54)
+
+DATA_COHERENCY_EXCEPTION         (0x55)
+
+INSTRUCTION_COHERENCY_EXCEPTION  (0x56)
+
+XNS_INTERNAL_ERROR               (0x57)
+
+FTDISK_INTERNAL_ERROR            (0x58)
+
+The system was booted from a revived primary partition so
+the hives say the mirror is ok, when in fact it is not.
+The "real" image of the hives are on the shadow.
+The user must boot from the shadow.
+
+PINBALL_FILE_SYSTEM              (0x59)
+    See the comment for FAT_FILE_SYSTEM
+
+CRITICAL_SERVICE_FAILED          (0x5A)
+
+SET_ENV_VAR_FAILED               (0x5B)
+
+HAL_INITIALIZATION_FAILED        (0x5C)
+
+UNSUPPORTED_PROCESSOR            (0x5D)
+    386 - System failed because the processor is only a 386 or
+    compatible.  The system requires a 486 compatible or better processor.
+
+HEAP_INITIALIZATION_FAILED       (0x5D)
+
+OBJECT_INITIALIZATION_FAILED     (0x5E)
+
+SECURITY_INITIALIZATION_FAILED   (0x5F)
+
+PROCESS_INITIALIZATION_FAILED    (0x60)
+
+HAL1_INITIALIZATION_FAILED       (0x61)
+
+OBJECT1_INITIALIZATION_FAILED    (0x62)
+
+SECURITY1_INITIALIZATION_FAILED  (0x63)
+
+SYMBOLIC_INITIALIZATION_FAILED   (0x64)
+
+MEMORY1_INITIALIZATION_FAILED    (0x65)
+
+CACHE_INITIALIZATION_FAILED      (0x66)
+
+CONFIG_INITIALIZATION_FAILED     (0x67)
+    1 - 5
+    2 - indicates location in ntos\config\cmsysini that failed
+
+This means the registry couldn't allocate the pool needed to contain the
+registry files.  This should never happen, since it is early enough in
+system initialization that there is always plenty of paged pool available.
+
+FILE_INITIALIZATION_FAILED       (0x68)
+
+IO1_INITIALIZATION_FAILED        (0x69)
+
+Initialization of the I/O system failed for some reason.  There is
+practically no other information available.  In general, setup really made
+some bad decisions about the installation of the system, or the user has
+reconfigured the system.
+
+LPC_INITIALIZATION_FAILED        (0x6A)
+
+PROCESS1_INITIALIZATION_FAILED   (0x6B)
+    1 - Indicates the status code that tripped us into thinking that
+        initialization failed.
+    2 - Indicates the location in ntos\ps\psinit.c where the failure
+        was detected.
+
+REFMON_INITIALIZATION_FAILED     (0x6C)
+
+SESSION1_INITIALIZATION_FAILED   (0x6D)
+    1 - Indicates the NT status code that tripped us into thinking
+        that initialization failed.
+
+The bugcheck code (SESSION1 - SESSION5) indicates the location in
+ntos\init\init.c where the failure was detected.
+
+SESSION2_INITIALIZATION_FAILED   (0x6E)
+    1 - Indicates the NT status code that tripped us into thinking
+        that initialization failed.
+
+The bugcheck code (SESSION1 - SESSION5) indicates the location in
+ntos\init\init.c where the failure was detected.
+
+SESSION3_INITIALIZATION_FAILED   (0x6F)
+    1 - Indicates the NT status code that tripped us into thinking
+        that initialization failed.
+
+The bugcheck code (SESSION1 - SESSION5) indicates the location in
+ntos\init\init.c where the failure was detected.
+
+SESSION4_INITIALIZATION_FAILED   (0x70)
+    1 - Indicates the NT status code that tripped us into thinking
+        that initialization failed.
+
+The bugcheck code (SESSION1 - SESSION5) indicates the location in
+ntos\init\init.c where the failure was detected.
+
+SESSION5_INITIALIZATION_FAILED   (0x71)
+    1 - Indicates the NT status code that tripped us into thinking
+        that initialization failed.
+
+The bugcheck code (SESSION1 - SESSION5) indicates the location in
+ntos\init\init.c where the failure was detected.
+
+ASSIGN_DRIVE_LETTERS_FAILED      (0x72)
+
+CONFIG_LIST_FAILED               (0x73)
+
+        1 - 5
+        2 - 2
+        3 - index of hive in list
+        4 - pointer to UNICODE_STRING containing filename of hive
+
+Indicates that one of the core system hives is corrupt or
+unreadable.  This can be either SOFTWARE, SECURITY or SAM.
+
+BAD_SYSTEM_CONFIG_INFO           (0x74)
+
+Can indicate that the SYSTEM hive loaded by the osloader/NTLDR
+was corrupt.  This is unlikely, since the osloader will check
+a hive to make sure it isn't corrupt after loading it.
+
+It can also indicate that some critical registry keys and values
+are not present.  (i.e. somebody used regedt32 to delete something
+that they shouldn't have)  Booting from LastKnownGood may fix
+the problem, but if someone is persistent enough in mucking with
+the registry they will need to reinstall or use the Emergency
+Repair Disk.
+
+CANNOT_WRITE_CONFIGURATION       (0x75)
+
+This will result if the SYSTEM hive files (SYSTEM and SYSTEM.ALT)
+cannot be grown to accomodate additional data written into it
+between registry initialization and phase one initialization
+(when the filesystems are available)
+
+It usually means there are 0 bytes of free space available on the
+drive.
+
+You cannot store the registry on a read-only device.
+
+PROCESS_HAS_LOCKED_PAGES         (0x76)
+        1 - 0
+        2 - process address
+        3 - number of locked pages
+        4 - pointer to driver stacks (if enabled) or 0 if not.
+
+Caused by a driver not cleaning up completely after an I/O.  Set
+HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\TrackLockedPages to a DWORD 1 value and reboot.  Then the system will save stack traces
+so the guilty driver can be identified.  There is no other way to find out
+which driver is neglecting to clean up the I/Os.  When you enable this flag,
+if the driver commits the error again you will see a different
+bugcheck - DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS - which can identify the
+offending driver(s).
+
+KERNEL_STACK_INPAGE_ERROR        (0x77)
+        1 - 0 (page was retrieved from page cache)
+        2 - value found in stack where signature should be
+        3 - 0
+        4 - address of signature on kernel stack
+
+        1 - 1 (page was retrieved from disk)
+        2 - value found in stack where signature should be
+        3 - 0
+        4 - address of signature on kernel stack
+
+        1 - 2 (page was retrieved from disk, storage stack returned SUCCESS,
+            but the Status.Information != PAGE_SIZE)
+        2 - value found in stack where signature should be
+        3 - 0
+        4 - address of signature on kernel stack
+
+        1 - status code
+        2 - i/o status code
+        3 - page file number
+        4 - offset into page file
+
+The requested page of kernel data could not be read in.  Caused by
+bad block in paging file or disk controller error.
+
+This can also be caused by running out of resources, specifically,
+nonpaged pool with status of c0000009a (STATUS_INSUFFICIENT_RESOURCES).
+In this case, do !vm to see which pool has been overused, and then do
+!poolused x to sort the pool allocators.  Then give the failure to the
+component that has the most pool.
+
+In the case when the first and second arguments are 0, the stack signature
+in the kernel stack was not found.  Again, bad hardware.
+
+An I/O status of c000009c (STATUS_DEVICE_DATA_ERROR) or
+C000016AL (STATUS_DISK_OPERATION_FAILED)  normally indicates
+the data could not be read from the disk due to a bad
+block.  Upon reboot autocheck willl run and attempt to map out the bad
+sector.  If the status is C0000185 (STATUS_IO_DEVICE_ERROR) and the paging
+file is on a SCSI disk device, then the cabling and termination should be
+checked.  See the knowledge base article on SCSI termination.
+
+PHASE0_EXCEPTION                 (0x78)
+
+MISMATCHED_HAL                   (0x79)
+    1 - type of mismatch
+        type 1:
+            The PRCB release levels mismatch.  (something is out of date)
+            2 - Major PRCB level of ntoskrnl.exe
+            3 - Major PRCB level of hal.dll
+
+        type 2:
+            The build types mismatch.
+            2 - Build type of ntoskrnl.exe
+            3 - Build type of hal.dll
+
+                Build type
+                    0 = Free multiprocessor enabled build
+                    1 = Checked multiprocessor enabled build
+                    2 = Free uniprocessor build
+
+        type 3:
+            Microchannel computers require a micro-channel specific hal.
+            This type would means that there is a mis-match.
+            2 - Machine type as detected by ntdetect.com
+                A value of a 2 would mean the computer is MCA
+            3 - Machine type which hal supports:
+                A value of a 2 would mean the hal is built for MCA
+
+The HAL revision level and HAL configuration type does not match that
+of the kernel or the machine type.  This would probably happen if the
+user has manually updated either ntoskrnl.exe or hal.dll and managed to
+get a conflict.
+
+You have an MP (multi-processor) Hal and a UP (uni-processor) Kernel,
+or the reverse.
+
+
+
+KERNEL_DATA_INPAGE_ERROR         (0x7A)
+        1 - lock type that was held (value 1,2,3, or PTE address)
+        2 - error status (normally i/o status code)
+        3 - current process (virtual address for lock type 3, or PTE)
+        4 - virtual address that could not be in-paged
+
+The requested page of kernel data could not be read in.  Caused by
+bad block in paging file or disk controller error. Also see
+KERNEL_STACK_INPAGE_ERROR.
+
+If the error status is 0xC000000E, 0xC000009C, 0xC000009D or 0xC0000185,
+it means the disk subsystem has experienced a failure.
+ntmsd is the best alias to take care of these types of failures.
+
+If the error status is 0xC000009A, then it means the request failed because
+memory could not be allocated.  Type !vm and then !poolused 2 in the kernel
+debugger to find which tags are leaking memory and then have the owning driver
+fix their leaks.
+
+
+
+
+INACCESSIBLE_BOOT_DEVICE         (0x7B)
+    1 - Pointer to the device object or Unicode string of ARC name
+
+During the initialization of the I/O system, it is possible that the driver
+for the boot device failed to initialize the device that the system is
+attempting to boot from, or it is possible for the file system that is
+supposed to read that device to either fail its initialization or to simply
+not recognize the data on the boot device as a file system structure that
+it recognizes.  In the former case, the argument (#1) is the address of a
+Unicode string data structure that is the ARC name of the device from which
+the boot was being attempted.  In the latter case, the argument (#1) is the
+address of the device object that could not be mounted.
+
+If this is the initial setup of the system, then this error can occur if
+the system was installed on an unsupported disk or SCSI controller.  Note
+that some controllers are supported only by drivers which are in the Windows
+Driver Library (WDL) which requires the user to do a custom install.  See
+the Windows Driver Library for more information.
+
+This error can also be caused by the installation of a new SCSI adapter or
+disk controller or repartitioning the disk with the system partition.  If
+this is the case, on x86 systems the boot.ini file must be edited or on ARC
+systems setup must be run.  See the "Advanced Server System Administrator's
+User Guide" for information on changing boot.ini.
+
+If the argument is a pointer to an ARC name string, then the format of the
+first two (and in this case only) longwords will be:
+
+    USHORT Length;
+    USHORT MaximumLength;
+    PVOID Buffer;
+
+That is, the first longword will contain something like 00800020 where 20
+is the actual length of the Unicode string, and the next longword will
+contain the address of buffer.  This address will be in system space, so
+the high order bit will be set.
+
+If the argument is a pointer to a device object, then the format of the first
+word will be:
+
+    USHORT Type;
+
+That is, the first word will contain a 0003, where the Type code will ALWAYS
+be 0003.
+
+Note that this makes it immediately obvious whether the argument is a pointer
+to an ARC name string or a device object, since a Unicode string can never
+have an odd number of bytes, and a device object will always have a Type
+code of 3.
+
+BUGCODE_PSS_MESSAGE              (0x7C)
+
+INSTALL_MORE_MEMORY              (0x7D)
+        1 - Number of physical pages found
+        2 - Lowest physical page
+        3 - Highest physical page
+        4 - 0
+
+Not enough memory to boot NT (needs 5mb).
+
+WINDOWS_NT_BANNER                (0x4000007E)
+
+UNEXPECTED_KERNEL_MODE_TRAP      (0x7F)
+
+This means a trap occured in kernel mode, and it's a trap of a kind
+that the kernel isn't allowed to have/catch (bound trap) or that
+is always instant death (double fault).  The first number in the
+bugcheck parens is the number of the trap (8 = double fault, etc)
+Consult an Intel x86 family manual to learn more about what these
+traps are.
+
+A kb and !trap on the appropriate frame (which will be the ebp that
+goes with a procedure named KiTrap...) (at least on x86) will
+show where the trap was taken.
+
+
+NMI_HARDWARE_FAILURE             (0x80)
+
+Hopefully MS PSS will never hear about this.  The HAL is supposed
+to report whatever specific data it has, and to tell the user to
+call their HARDWARE vendor for support.
+
+SPIN_LOCK_INIT_FAILURE           (0x81)
+
+DFS_FILE_SYSTEM                  (0x82)
+
+SETUP_FAILURE                    (0x85)
+
+(NOTE:  Textmode setup no longer uses bugchecks to bail out of serious
+error conditions.  Therefore, you will never encounter a bugcheck 0x85.
+All bugchecks have been replaced with friendlier and (where possible)
+more descriptive error messages.  Some of the former bugchecks, however,
+have simply been replaced by our own bugcheck screen, and the codes for
+these error conditions are the same as before.  These are documented below.)
+
+The first extended bugcheck field is a code indicating what the
+problem is, and the other fields are used differently depending on
+that value.
+
+    1 -
+        0:  The oem hal font is not a valid .fon format file, and so setup
+            is unable to display text.
+            This indicates that vgaxxx.fon on the boot floppy or CD-ROM
+            is damaged.
+
+        1:  Video initialization failed.  NO LONGER A BUGCHECK CODE.
+            This error now has its own error screen, and the user is only
+            presented with the two relevant parameters detailed below.
+
+            This may indicate that the disk containing vga.sys
+            (or other video driver appropriate to the machine)
+            is damaged or that machine has video hardware that
+            we cannot communicate with.
+
+            2 - What failed:
+                0: NtCreateFile of \device\video0
+                1: IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES
+                2: IOCTL_VIDEO_QUERY_AVAIL_MODES
+                3: Desired video mode not supported.  This is indicative of
+                   an internal setup error.
+                4: IOCTL_VIDEO_SET_CURRENT_MODE (unable to set video mode)
+                5: IOCTL_VIDEO_MAP_VIDEO_MEMORY
+                6: IOCTL_VIDEO_LOAD_AND_SET_FONT
+
+            3 - Status code from NT API call, if appropriate.
+
+        2:  Out of memory.  NO LONGER A BUGCHECK CODE.
+            This error now uses a more friendly error screen that works regardless
+            of how far along in setup we are.
+
+        3:  Keyboard initialization failed.  NO LONGER A BUGCHECK CODE.
+            There are now 2 error screens for the two different possible errors
+            we can get here.
+            This may indicate that the disk containing the keyboard driver
+            (i8042prt.sys or kbdclass.sys) is damaged or that machine has
+            keyboard hardware we cannot communicate with.
+
+            It may also mean that the keyboard layout dll could not be loaded.
+
+            2 - What failed:
+                0: NtCreateFile of \device\KeyboardClass0 failed.
+                   "Setup did not find a keyboard connected to your computer."
+                1: Unable to load keyboard layout dll.
+                   "Setup could not load the keyboard layout file <filename>."
+                   Indicates that the cd or floppy is missing a file (kbdus.dll
+                   for us release, other layout dlls for localized ones).
+
+        4:  Setup was unable to resolve the ARC device pathname of
+            the device from which setup was started. This is an internal
+            Setup error.
+
+        5:  Partitioning sanity check failed.  This indicates a bug in
+            a disk driver.  The parameters are meaningful only to the setup
+            group.
+
+MBR_CHECKSUM_MISMATCH            (0x8B)
+
+This message occurs during the boot process when the MBR checksum the system
+calculates does not match the checksum passed in by the loader. This is usually
+an indication of a virus. There are many forms of viruses and not all can be
+detected. The newer ones usually can only be detected by a virus scanner that
+has recently been upgraded. Boot a write-protected disk containing a virus
+scanner and attempt to clean out the infection.
+
+KerBugCheckEx parameters:
+
+    1 - Disk Signature from MBR.
+    2 - MBR checksum calculated by osloader.
+    3 - MBR checksum calculated by system.
+
+PP0_INITIALIZATION_FAILED        (0x8F)
+
+This message occurs if phase 0 initialization of the kernel-mode Plug and
+Play Manager failed.  There's really nothing going on here that could cause
+a failure.
+
+PP1_INITIALIZATION_FAILED        (0x90)
+
+This message occurs if phase 1 initialization of the kernel-mode Plug and
+Play Manager failed.  This is where we do most of our initialization,
+including setting up the environment (registry, etc.) for drivers to
+subsequently call during I/O init.
+
+
+UP_DRIVER_ON_MP_SYSTEM           (0x92)
+
+This message occurs if a UNIPROCESSOR only driver is loaded on a MultiProcessor
+system with more than one active processor.
+
+KeBugCheckEx parameters:
+
+    1 - The Base address of the driver.
+
+INVALID_KERNEL_HANDLE           (0x93)
+
+This message occurs if kernel code (server, redirector, other driver, etc.) attempts
+to close a handle that is not a valid handle.
+
+    1 - The handle that NtClose was called with.
+
+    2 - 0 means a protected handle was closed.
+        1 means an invalid handle was closed.
+
+KERNEL_STACK_LOCKED_AT_EXIT     (0x94)
+
+This message occurs when a thread exits while it's kernel stack is
+marked as not swapable
+
+INVALID_WORK_QUEUE_ITEM         (0x96)
+
+This message occurs when KeRemoveQueue removes a queue entry whose flink
+or blink field is null.  This is almost always called by code misusing
+worker thread work items, but any queue misuse can caus this.  The rule
+is that an entry on a queue may only be inserted on the list once. When an
+item is removed from a queue, it's flink field is set to NULL. This bugcheck
+occurs when remove queue attempts to remove an entry, but the flink or blink field
+is NULL. In order to debug this problem, you need to know the queue being referenced.
+If the queue is one of the EX worker queues (ExWorkerQueue), then the item being
+removed is a WORK_QUEUE_ITEM (see ex.h). This bugcheck assumes that this is the case.
+The bugcheck ex parameters are designed to help identify the driver misusing the queue
+item.
+
+BOUND_IMAGE_UNSUPPORTED         (0x97)
+
+MmLoadSystemImage was called to load a bound image.
+This is not supported in the kernel.  Make sure bind.exe was not run on the
+image.
+
+
+KeBugCheckEx parameters:
+
+    1 - The address of the queue entry whose flink/blink field is NULL
+    2 - The address of the queue being references. Usually this is one
+        of the ExWorkerQueues.
+    3 - The base address of the ExWorkerQueue array. This will help determine if
+        the queue in question is an ExWorkerQueue and if so, the offset from this
+        parameter will isolate the queue.
+    4 - If this is an ExWorkerQueue (which it usually is), this is the address of the
+        worker routine that would have been called if the work item was valid. This
+        can be used to isolate the driver that is misusing the work queue.
+
+
+END_OF_NT_EVALUATION_PERIOD     (0x98)
+
+Your NT System is an evaluation unit with an expiration date. The trial period is over.
+
+KeBugCheckEx parameters:
+
+    1 - The low order 32 bits of your instalation date
+    2 - The high order 32 bits of your instalation date
+    3 - The trial period in minutes
+
+INVALID_REGION_OR_SEGMENT       (0x99)
+
+ExInitializeRegion or ExInterlockedExtendRegion was called with an invalid
+set of parameters.
+
+SYSTEM_LICENSE_VIOLATION        (x9a)
+
+A violation of the software license agreement has occurred. This can be due to either
+attempting to change the product type of an offline system, or an attempt to change
+the trial period of an evaluation unit of NT.
+
+    1 - 0 means that offline product type changes were attempted
+            2 - if 1, product should be LanmanNT or ServerNT. If 0, should be WinNT
+            3 - partial serial number
+            4 - first two characters of product type from product options.
+
+        1 means that offline changes to the nt evaluation unit time period
+            2 - registered evaluation time from source 1
+            3 - partial serial number
+            4 - registered evaluation time from alternate source
+
+
+        2 means that the setup key could not be opened
+            2 - status code associated with the open failure
+
+        3 - The SetupType value from the setup key is missing so gui setup
+            mode could not be detected
+            2 - status code associated with the key lookup failure
+
+        4 - The SystemPrefix value from the setup key is missing
+            2 - status code associated with the key lookup failure
+
+        4 - The SystemPrefix value from the setup key is missing
+
+        5 - means that offline changes were made to the number of licensed processors
+            2 - see setup code
+            3 - invalid value found in licensed processors
+            4 - officially licensed number of processors
+
+        6 - means that ProductOptions key could not be opened
+            2 - status code associated with the open failure
+
+        7 - means that ProductType value could not be read
+            2 - status code associated with the read failure
+
+        8 - means that Change Notify on ProductOptions failed
+            2 - status code associated with the change notify failure
+
+        9 - means that Change Notify on SystemPrefix failed
+            2 - status code associated with the change notify failure
+
+        10 - Looks like an NTW system was converted to an NTS system
+
+        11 - Reference of setup key failed
+            2 - status code associated with the change failure
+
+        12 - Reference of product options key failed
+            2 - status code associated with the change failure
+
+        13 - Open of ProductOptions in worker thread failed
+            2 - status code associated with the failure
+
+        16 - Failure occured in the setup key worker thread
+            2 - status code associated with the failure
+            3 - 0 means set value failed, 1 means change notify failed
+
+        17 - Failure occured in the product options key worker thread
+            2 - status code associated with the failure
+            3 - 0 means set value failed, 1 means change notify failed
+
+        18 - Could not open the LicenseInfoSuites key for the suite
+            2 - status code associated with the failure
+
+        19 - Could not query the LicenseInfoSuites key for the suite
+            2 - status code associated with the failure
+
+        20 - Could not allocate memory
+            2 - size of memory alllocation
+
+        21 - Could not re-set the ConcurrentLimit value for the suite key
+            2 - status code associated with the failure
+
+        22 - Could not open the license key for a suite product
+            2 - status code associated with the failure
+
+        23 - Could not re-set the ConsurrentLimit value for a suite product
+            2 - status code associated with the failure
+
+        24 - Could not start the change notify for the LicenseInfoSuites
+            2 - status code associated with the open failure
+
+        25 - A suite is running on a system that must be pdc
+
+        26 - Failure occurred when enumerating the suites
+            2 - status code associated with the failure
+
+
+KeBugCheckEx parameters;
+
+    1 - The segment address which must reside on a quadword boundary.
+    2 - The segment size which must be greater than the block size plus
+        the size of a segment header.
+    3 - The block size which must be a multiple of eight and smaller than
+        the segment size minus the size of the segment header.
+
+UDFS_FILE_SYSTEM              (0x9B)
+    See the comment for FAT_FILE_SYSTEM
+
+MACHINE_CHECK_EXCEPTION         (0x9C)
+
+A fatal Machine Check Exception has occurred.
+
+KeBugCheckEx parameters;
+
+    x86 Processors
+        If the processor has ONLY MCE feature available (For example Intel Pentium),
+        the parameters are:
+
+        1 - Low  32 bits of P5_MC_TYPE MSR
+        2 -
+        3 - High 32 bits of P5_MC_ADDR MSR
+        4 - Low  32 bits of P5_MC_ADDR MSR
+
+        If the processor also has MCA feature available (For example Intel
+        Pentium Pro), the parameters are:
+
+        1 - Bank number
+        2 - Address field of MCi_ADDR MSR for the MCA bank that had the error
+        3 - High 32 bits of MCi_STATUS MSR for the MCA bank that had the error
+        4 - Low  32 bits of MCi_STATUS MSR for the MCA bank that had the error
+
+    Alpha Processors
+        1 - Platform-specific data, where available
+        2 -
+        3 - Pointer to Alpha system Logout Frame, where available.
+        4 - Pointer to Uncorrectable Error frame.
+
+DRIVER_POWER_STATE_FAILURE      (0x9F)
+
+The driver lead to an inconsitent power state
+
+Parameters:
+
+     Value 1:
+        1   - The device object is being freed which still has an
+              outstanding power request which it has not completed
+
+               2 - pointer to the device object
+
+
+        2   - The device object completed the irp for the system power
+              state request, but failed to call PoStartNextPowerIrp
+
+               2 - pointer to the target device object
+               3 - pointer to the device object
+
+        3   - The device driver did not properly set the irp pending
+              or complete the irp
+
+               2 - pointer to the target device object
+               3 - pointer to the device object
+               4 - the irp
+
+        100 - The device objects in the devnode were inconsistent
+              in their use of DO_POWER_PAGABLE
+
+               2 - pointer to the non-paged device object
+               3 - pointer to the target device object
+               4 - pointer to the device object to notify
+
+        101 - A parent device object has detected that a child device
+              has not set the DO_POWER_PAGABLE bit.
+               2 - child device object (FDO)
+               3 - child device object (PDO)
+               4 - parent device object
+
+PCI_BUS_DRIVER_INTERNAL          (0xA1)
+
+The PCI Bus driver detected (theoretically impossible) inconsistency
+problems in its internal structures and could not continue.
+
+
+MEMORY_IMAGE_CORRUPT            (0xA2)
+On a system wake operation, various regions of memory may be CRCed to
+gaurd against memory failures.
+
+    Value 1:
+        2   - Table page check failure
+                2 - the page number in of the table page which failed
+                3 - 0
+
+                2 - the page number with the failing page run index
+                3 - non-zero, the index which failed to match the run
+
+        3   - The checksum for the range of memory listed is incorrect
+                2 - starting physical page # of the range
+                3 - length (in pages) of the range
+                4 - the page number of the table page containing this run
+
+ACPI_DRIVER_INTERNAL            (0xA3)
+
+The ACPI Driver detected an internal inconsistency. The inconsistency is
+so severe that continuing to run would cause serious problems.
+
+The ACPI driver calls this when the state is so inconsistent that proceeding
+would actually be dangerous. The problem may or may not be a bios issue, but
+we cannot actually tell.
+
+To find the place where the driver died, look at the 2nd parameter. The high
+word corresponds to an entry in wdm\acpi\driver\nt\debug.h. The low word
+corresponds to a line number.
+
+
+CNSS_FILE_SYSTEM_FILTER          (0xA4)
+    See the comment for FAT_FILE_SYSTEM
+
+ACPI_BIOS_ERROR                 (0xA5)
+
+The ACPI Bios in the system is not fully compliant to the ACPI specification.
+The first value indicates where the incompatibility lies:
+
+  Plug & Play and Power Management related incompatibilities:
+        
+    0x1 --- ACPI_ROOT_RESOURCES_FAILURE
+      ACPI cannot find the SCI Interrupt vector in the resources handed
+      to it when ACPI is started.
+        Argument 0  - ACPI's deviceExtension
+        Argument 1  - ACPI's ResourceList
+        Argument 2  - 0 <- Means no resource list found
+        Argument 2  - 1 <- Means no IRQ resource found in list
+
+    0x2 --- ACPI_ROOT_PCI_RESOURCE_FAILURE
+      ACPI could not process the resource list for the PCI root buses
+      There is an White Paper on the Web Site about this problem
+        Argument 0  - The ACPI Extension for the PCI bus
+        Argument 1  - 0
+          Argument 2  - Pointer to the QUERY_RESOURCES irp
+        Argument 1  - 1
+          Argument 2  - Pointer to the QUERY_RESOURCE_REQUIREMENTS irp
+        Argument 1  - 2
+          Argument 2  - 0 <- Indicates that we found an empty resource list
+        Argument 1  - 3 <- Could not find the current bus number in the CRS
+          Argument 2  - Pointer to the PNP CRS descriptor
+        Argument 1  - Pointer to the Resource List for PCI
+          Argument 2  - Number of errors/conflicts found in the resource list
+
+    0x3 --- ACPI_FAILED_MUST_SUCCEED_METHOD
+      ACPI tried to run a control method while creating device extensions
+      to represent the ACPI namespace, but this control method failed
+        Argument 0  - The ACPI Object that was being run
+        Argument 1  - return value from the interpreter
+        Argument 2  - Name of the control method (in ULONG format)
+
+    0x4 --- ACPI_PRW_PACKAGE_EXPECTED_INTEGER
+      ACPI evaluated a _PRW and expected to find an integer as a
+      package element
+        Argument 0  - The ACPI Extension for which the _PRW belongs to
+        Argument 1  - Pointer to the method
+        Argument 2  - The DataType returned (see amli.h)
+
+    0x5 --- ACPI_PRW_PACKAGE_TOO_SMALL
+      ACPI evaluated a _PRW and the package that came back failed to
+      contain at least 2 elements. The ACPI specification requires that
+      two elements to always be present in a _PRW.
+        Argument 0  - The ACPI Extension for which the _PRW belongs to
+        Argument 1  - Pointer to the _PRW
+        Argument 2  - Number of elements in the _PRW
+
+    0x6 --- ACPI_PRx_CANNOT_FIND_OBJECT
+      ACPI tried to find a named object named, but could not find it.
+        Argument 0  - The ACPI Extension for which the _PRx belongs to
+        Argument 1  - Pointer to the _PRx
+        Argument 2  - Pointer to the name of the object to look for
+
+    0x7 --- ACPI_EXPECTED_BUFFER
+      ACPI evaluated a method and expected to receive a Buffer in return.
+      However, the method returned some other data type
+        Argument 0  - The ACPI Extension for which the method belongs to
+        Argument 1  - Pointer to the method
+        Argument 2  - The DataType returned (see amli.h)
+
+    0x8 --- ACPI_EXPECTED_INTEGER
+      ACPI evaluated a method and expected to receive an Integer in return.
+      However, the method returned some other data type
+        Argument 0  - The ACPI Extension for which the method belongs to
+        Argument 1  - Pointer to the method
+        Argument 2  - The DataType returned (see amli.h)
+
+    0x9 --- ACPI_EXPECTED_PACKAGE
+      ACPI evaluated a method and expected to receive a Package in return.
+      However, the method returned some other data type
+        Argument 0  - The ACPI Extension for which the method belongs to
+        Argument 1  - Pointer to the method
+        Argument 2  - The DataType returned (see amli.h)
+
+    0xA --- ACPI_EXPECTED_STRING
+      ACPI evaluated a method and expected to receive a String in return.
+      However, the method returned some other data type
+        Argument 0  - The ACPI Extension for which the method belongs to
+        Argument 1  - Pointer to the method
+        Argument 2  - The DataType returned (see amli.h)
+
+    0xB --- ACPI_EJD_CANNOT_FIND_OBJECT
+      ACPI cannot find the object referenced to by an _EJD string
+        Argument 0  - The ACPI Extension for which which the _EJD belongs to
+        Argument 1  - The status returned by the interpreter
+        Argument 2  - Name of the object we are trying to find
+
+    0xC --- ACPI_CLAIMS_BOGUS_DOCK_SUPPORT
+      ACPI provides faulty/insufficient information for dock support
+        Argument 0  - The ACPI Extension for which ACPI found a dock device
+        Argument 1  - Pointer to the _EJD method
+        Argument 2  - 0 <- Bios does not claim system is dockage
+                      1 <- Duplicate device extensions for dock device
+                
+    0xD --- ACPI_REQUIRED_METHOD_NOT_PRESENT
+      ACPI could not find a required method/object in the namespace
+      This is the bugcheck that is used if a vendor does not have an
+      _HID or _ADR present
+         Argument 0  - The ACPI Extension that we need the object for
+         Argument 1  - The (ULONG) name of the method we looked for
+         Argument 2  - 0 <- Base Case
+         Argument 2  - 1 <- Conflict
+
+    0xE --- ACPI_POWER_NODE_REQUIRED_METHOD_NOT_PRESENT
+      ACPI could not find a requird method/object in the namespace for
+      a power resource (or entity other than a "device"). This is the
+      bugcheck used if a vendor does not have an _ON, _OFF, or _STA present
+      for a power resource
+        Argument 0  - The NS PowerResource that we need the object for
+        Argument 1  - The (ULONG) name of the method we looked for
+        Argument 2  - 0 <- Base Case
+
+    0xF --- ACPI_PNP_RESOURCE_LIST_BUFFER_TOO_SMALL
+      ACPI could not parse the resource descriptor
+        Argument 0  - The current buffer that ACPI was parsing
+        Argument 1  - The buffer's tag
+        Argument 2  - The specified length of the buffer
+
+    0x10 --- ACPI_CANNOT_MAP_SYSTEM_TO_DEVICE_STATES
+      ACPI could not map determine the system to device state mapping
+      correctly. There is a very long white paper about this topic
+        Argument 0  - The ACPI Extension for which are trying to do the mapping
+        Argument 1  - 0 The _PRx mapped back to a non-supported S-state
+          Argument 2  - The DEVICE_POWER_STATE (ie: x+1)
+        Argument 1  - 1 We cannot find a D-state to associate with the S-state
+          Argument 2  - The SYSTEM_POWER_STATE that is causing us grief
+        Argument 1  - 2 The device claims to support wake from this s-state but
+                        the s-state is not supported by the system
+          Argument 2  - The SYSTEM_POWER_STATE that is causing us grief
+
+    0x11 --- ACPI_SYSTEM_CANNOT_START_ACPI
+      The system could not enter ACPI mode
+        Argument 0  - 0 <- System could not initialize AML interpreter
+        Argument 0  - 1 <- System could not find RSDT
+        Argument 0  - 2 <- System could not allocate critical driver structures
+        Argument 0  - 3 <- System could not load RSDT
+        Argument 0  - 4 <- System could not load DDBs
+        Argument 0  - 5 <- System cannot connect Interrupt vector
+        Argument 0  - 6 <- SCI_EN never becomes set in PM1 Control Register
+        Argument 0  - 7 <- Table checksum is incorrect
+          Argument 1  - Pointer to the table that had a bad checksum
+          Argument 2  - Creator Revision
+        Argument 0  - 8 <- Failed to load DDB
+          Argument 1  - Pointer to the table that we failed to load
+          Argument 2  - Creator Revision
+
+  Interrupt Routing Failures/Incompatibilities:
+
+  A _PRT is the ACPI BIOS object that specifies how all the
+  PCI devices are connected to the interrupt controllers.  PRT
+  stands for PCI Routing Table.  A machine with multiple PCI
+  busses may have multiple _PRTs. A _PRT can be displayed using the
+  command !acpikd.nsobj <address of _PRT object>
+
+  Report any failures in this section to PatrickF.
+
+    0x2001 --- ACPI_FAILED_PIC_METHOD
+      ACPI tried to evaluate the PIC control method and but failed
+        Argument 0  - InterruptModel (Integer)
+        Argument 1  - return value from interpreter
+        Argument 2  - Pointer to the PIC control method
+
+    0x10001 --- ACPI_CANNOT_ROUTE_INTERRUPTS
+      ACPI tried to do interrupt routing, but failed
+        Argument 0  - Pointer to the device object
+        Argument 1  - Pointer to the parent of the device object
+        Argument 2  - Pointer to the PRT
+
+    0x10002 --- ACPI_PRT_CANNOT_FIND_LINK_NODE
+      ACPI could not find the link node referenced in a _PRT
+        Argument 0  - Pointer to the device object
+        Argument 1  - Pointer to the string name we are looking for, but
+                      could not find.
+        Argument 2  - Pointer to the PRT.
+                      Dump this with !acpikd.nsobj <argument 2>
+
+    0x10003 --- ACPI_PRT_CANNOT_FIND_DEVICE_ENTRY
+      ACPI could not find a mapping in the _PRT package for a device
+        Argument 0  - Pointer to the device object
+        Argument 1  - The Device ID / Function Number. This DWORD is encoded
+                      as follows: Bits 5:0 are the PCI Device Number,
+                      Bits 8:6 are the PCI function number.
+        Argument 2  - Pointer to the PRT.
+                      Dump this with !acpikd.nsobj <argument 2>
+
+    0x10005 --- ACPI_PRT_HAS_INVALID_FUNCTION_NUMBERS
+      ACPI found an entry in the _PRT for which the function ID isn't
+      all F's. The Win98 behaviour is to bugcheck if it see this condition,
+      so we do so all well. The generic format for a _PRT entry is such
+      that the device number is specified, but the function number isn't.
+      If it isn't done this way, then the machine vendor can introduce
+      dangerous ambiguities
+        Argument 0  - Pointer to the PRT object.
+                      Dump this with !acpikd.nsobj <argument 2>
+        Argument 1  - Pointer to the current PRT Element. This is an index into
+                      the PRT.
+        Argument 2  - The DeviceID/FunctionID of the element. This DWORD is
+                      encoded. Bits 15:0 are the PCI Function Number.
+                      Bits 31:16 are the PCI Device Number.
+
+    0x10006 --- ACPI_LINK_NODE_CANNOT_BE_DISABLED
+      ACPI found a link node, but cannot disable it. Link nodes must
+      be disable to allow for reprogramming
+        Argument 0  - Pointer to the link node. This device is missing the
+                      _DIS method.
+
+
+    0x10007 ---
+      The _PRT contained a reference to a vector not described in the
+      I/O APIC entries MAPIC table.
+        Argument 0 - The vector that couldn't be found
+
+  Other Failures/Incompatibilities:
+
+    0x20000 ---
+      The PM_TMR_BLK entry in the Fixed ACPI Description Table doesn't point
+      to a working ACPI timer block.
+        Argument 0 - The I/O port in the Fixed Table
+
+BAD_EXHANDLE                    (0xA7)
+
+The kernel mode handle table detected an inconsistent handle table
+entry state.
+
+SESSION_HAS_VALID_POOL_ON_EXIT  (0xAB)
+        1 - session ID
+        2 - number of paged pool bytes that are leaking
+        3 - number of nonpaged pool bytes that are leaking
+        4 - total number of paged and nonpaged allocations that are leaking.
+            paged allocations are in the upper half of this word,
+            nonpaged allocations are in the lower half of this word.
+
+Caused by a session driver not freeing its pool allocations prior to a
+session unload.  This happens only on Terminal Server systems and usually
+indicates a bug in win32k.sys, atmfd.dll, rdpdd.dll or a video driver.
+
+HAL_MEMORY_ALLOCATION           (0xAC)
+
+The HAL was unable to obtain allocate memory (from the system Non Paged
+pool) for a system critical requirement.   These allocations are made
+early in system initialization and such a failure is not expected.  It
+probably indicates some other critical error such as pool corruption or
+massive consumption.
+
+        1 - Allocation size.
+        2 - 0
+        3 - Pointer to string containing file name.
+        4 - Line number of call to KeBugCheckEx.
+
+VIDEO_DRIVER_INIT_FAILURE       (0xB4)
+
+The system was not able to go into graphics mode because no display drivers
+were able to start.  This usually occurs if no video miniport drivers load
+successfully.
+
+ATTEMPTED_SWITCH_FROM_DPC       (0xB8)
+
+A wait operation, attach process, or yield was attempted from a DPC routine.
+This is not a legal operation and the stack track will lead to the offending
+code and original DPC routine.
+
+CHIPSET_DETECTED_ERROR          (0xB9)
+This bug code is normally caused by a parity error in the system memory or buses.
+This error can also be caused by a device driver accessing a 0x8XXXXXXX address
+that does not exist.
+    1 - Platform-specific data, where available
+    2 -
+    3 - Pointer to Alpha system Logout Frame, where available.
+    4 - Pointer to Uncorrectable Error frame.
+
+SESSION_HAS_VALID_VIEWS_ON_EXIT  (0xBA)
+        1 - session ID
+        2 - number of mapped views that are leaking
+        3 - address of this session's mapped views table
+        4 - size of this session's mapped views table.
+
+Caused by a session driver not unmapping its mapped views prior to a
+session unload.  This happens only on Terminal Server systems and usually
+indicates a bug in win32k.sys, atmfd.dll, rdpdd.dll or a video driver.
+
+NETWORK_BOOT_INITIALIZATION_FAILED  (0xBB)
+    1 - the part of network initialization that failed
+    2 - the failure status
+Caused if we are booting off the network, and a critical function fails during
+IO initialization. Currently the codes for the first value are:
+1 - updating the registry.
+2 - starting the network stack - send IOCTLs to the redirector and datagram
+    receiver, then wait for the redirector to be ready. If it is not ready
+    within a certain period of time, we fail.
+3 - failed sending the DHCP IOCTL to TCP - this is how we inform the
+    transport of its IP adress.
+
+NETWORK_BOOT_DUPLICATE_ADDRESS  (0xBC)
+    1 - the IP address, show as a hex DWORD. So an address aa.bb.cc.dd will
+        appear as 0xddccbbaa.
+    2/3/4 - the hardware address of the other machine. For ethernet, a MAC address
+        of aa-bb-cc-dd-ee-ff will be indicated by the second parameter containing
+        0xaabbccdd, the third parameter containing 0xeeff0000, and the fourth
+        parameter containing 0x00000000.
+This indicates that when TCP/IP sent out an ARP for its IP address, it got
+a response from another machine, indicating a duplicate IP address. When we
+are booting off the network this is a fatal error.
+
+INVALID_HIBERNATED_STATE    (0xBD)
+The hibernated memory image does not match the current hardware configuration.
+This bugcheck occurs when a system resumes from hibernate and discovers that the
+hardware has been changed while the system was hibernated.
+    1 - hardware that was invalid
+        1 - Number of installed processors is less than before the hibernation
+            2 - number of processors before hibernation
+            3 - number of processors after hibernation
+
+ATTEMPTED_WRITE_TO_READONLY_MEMORY    (0xBE)
+An attempt was made to write to readonly memory.  The guilty driver is on the stack trace (and is typically the current instruction pointer).
+
+    1 - Virtual address for the attempted write.
+    2 - PTE contents.
+    3 - Unique internal Mm information.
+    4 - Unique internal Mm code.
+
+When possible, the guilty driver's name (Unicode string) is printed on
+the bugcheck screen and saved in KiBugCheckDriver.
+
+MUTEX_ALREADY_OWNED             (0xBF)
+
+This thread is attempting to acquire ownership of a mutex it already owns.
+
+        1 - Address of Mutex
+        2 - Thread
+        3 - 0
+        4 - Unique value to help development isolate the instance.
+
+SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION     (0xC1)
+
+Special pool has detected memory corruption.  Typically the current thread's stack bactrace will reveal the guilty party.
+
+    4 - subclass of driver violation.
+        0x30 - caller is trying to allocate pool from an incorrect IRQL level, 1 == current IRQL, 2 == pool type, 3 == number of bytes
+
+        0x20 - caller is trying to free pool which is not allocated, 1 == address trying to free, 2 == Mm internal code, 3 == 0.
+
+        0x31 - caller is trying to free pool from an incorrect IRQL level, 1 == current IRQL, 2 == pool type, 3 == address trying to free
+
+        0x21 - caller is trying to free a bad address, 1 == address trying to free, 2 == bytes requested, 3 == bytes calculated
+
+        0x22 - caller is trying to free a bad address, 1 == address trying to free, 2 == bytes requested, 3 == bytes calculated
+
+        0x23 - caller is freeing an address where nearby bytes within the same page have been corrupted, 1 == address trying to free, 2 == address where bits are corrupted, 3 == unique internal Mm pattern
+
+        0x24 - caller is freeing an address where bytes after the end of the allocation have been overwritten, 1 == address trying to free, 2 == address where bits are corrupted, 3 == unique internal Mm pattern
+
+BAD_POOL_CALLER                             (0xC2)
+
+The current thread is making a bad pool request.  Typically this is at a bad IRQL level or double freeing the same allocation, etc.
+
+    1 - type of pool violation the caller is guilty of.
+        6 - the pool address being freed is already free.
+        7 - the pool address being freed is already free.
+        8 - parameter 2 is the IRQL allocating at, parameter 3 is the pool type
+        9 - parameter 2 is the IRQL freeing at, parameter 3 is the pool type
+
+Parameter 1 = 0x1, 0x2, or 0x4 :  Pool header has been corrupted
+        Parameter 2 = Pointer to pool header
+        Parameter 3 = First part of pool header contents
+        Parameter 4 = 0
+
+Parameter 1 = 0x6 :    Attempt to free pool which was already freed
+        Parameter 2 = Reserved (__LINE__)
+        Parameter 3 = Pointer to pool header
+        Parameter 4 = Pool header contents
+
+Parameter 1 = 0x7 :    Attempt to free pool which was already freed
+        Parameter 2 = Reserved (__LINE__)
+        Parameter 3 = Pointer to pool header
+        Parameter 4 = 0
+
+Parameter 1 = 0x8 :    Attempt to allocate pool at invalid IRQL
+        Parameter 2 = Current IRQL
+        Parameter 3 = Pool type
+        Parameter 4 = Size of allocation
+
+Parameter 1 = 0x9 :    Attempt to free pool at invalid IRQL
+        Parameter 2 = Current IRQL
+        Parameter 3 = Pool type
+        Parameter 4 = Address of pool
+
+Parameter 1 = 0x40 :    Attempt to free usermode address to kernel pool
+        Parameter 2 = Starting address
+        Parameter 3 = Start of system address space
+        Parameter 4 = 0
+
+Parameter 1 = 0x41 :    Attempt to free a non-allocated nonpaged pool address
+        Parameter 2 = Starting address
+        Parameter 3 = physical page frame
+        Parameter 4 = highest physical page frame
+
+Parameter 1 = 0x50 :    Attempt to free a non-allocated paged pool address
+        Parameter 2 = Starting address
+        Parameter 3 = Start offset in pages from beginning of paged pool
+        Parameter 4 = Size in bytes of paged pool
+
+Parameter 1 = 0x99 :    Attempt to free pool with invalid address  (or corruption in pool header)
+        Parameter 2 = Address being freed
+        Parameter 3 = 0
+        Parameter 4 = 0
+
+DRIVER_VERIFIER_DETECTED_VIOLATION         (0xC4)
+
+A device driver attempting to corrupt the system has been caught.  This is
+because the driver was specified in the registry as being suspect (by the
+administrator) and the kernel has enabled substantial checking of this driver.
+If the driver attempts to corrupt the system, bugchecks 0xC4, 0xC1 and 0xA will
+be the most commonly seen crashes.
+
+    1 - subclass of driver violation.
+        0x00 - caller is trying to allocate zero bytes, 2 == current IRQL, 3 == pool type, 4 == number of bytes
+
+        0x01 - caller is trying to allocate paged pool at DISPATCH_LEVEL or above, 2 == current IRQL, 3 == pool type, 4 == number of bytes
+
+        0x02 - caller is trying to allocate nonpaged pool at an IRQL above DISPATCH_LEVEL, 2 == current IRQL, 3 == pool type, 4 == number of bytes
+
+        0x03 - caller is trying to allocate more than one page of mustsucceed pool, but one page is the maximum allowed by this API.
+
+        0x10 - caller is freeing a bad pool address, 2 == bad pool address
+
+        0x11 - caller is trying to free paged pool at DISPATCH_LEVEL or above, 2 == current IRQL, 3 == pool type, 4 == pool address
+
+        0x12 - caller is trying to free nonpaged pool at an IRQL above DISPATCH_LEVEL, 2 == current IRQL, 3 == pool type, 4 == pool address
+
+        0x13 - the pool the caller is trying to free is already free.  2 == line number, 3 == pool header, 4 == pool header contents
+
+        0x14 - the pool the caller is trying to free is already free.  2 == line number, 3 == pool header, 4 == pool header contents
+
+        0x15 - the pool the caller is trying to free contains an active timer.  2 == timer entry, 3 == pool type, 4 == pool address being freed
+
+        0x16 - the pool the caller is trying to free is a bad address.  2 == line number, 3 == pool address, 4 == 0
+
+        0x17 - the pool the caller is trying to free contains an active ERESOURCE.  2 == resource entry, 3 == pool type, 4 == pool address being freed
+
+        0x30 - raising IRQL to an invalid level, 2 == current IRQL, 3 == new IRQL
+        0x31 - lowering IRQL to an invalid level, 2 == current IRQL, 3 == new IRQL
+        0x32 - releasing a spinlock when not at DISPATCH_LEVEL.  2 == current IRQL, 3 == spinlock address
+
+        0x33 - acquiring a fast mutex when not at APC_LEVEL or below.  2 == current IRQL, 3 == fast mutex address
+
+        0x34 - releasing a fast mutex when not at APC_LEVEL.  2 == current IRQL, 3 == thread APC disable count, 4 == fast mutex address
+
+        0x35 - kernel is releasing a spinlock when not at DISPATCH_LEVEL.  2 == current IRQL, 3 == spinlock address, 4 == old irql.
+
+        0x36 - kernel is releasing a queued spinlock when not at DISPATCH_LEVEL.  2 == current IRQL, 3 == spinlock number, 4 == old irql.
+
+        0x37 - a resource is being acquired but APCs are not disabled. 2 == current IRQL, 3 == thread APC disable count, 4 == resource.
+
+        0x38 - a resource is being released but APCs are not disabled. 2 == current IRQL, 3 == thread APC disable count, 4 == resource.
+
+        0x39 - a mutex is being acquired unsafe, but irql is not APC_LEVEL on entry. 2 == current IRQL, 3 == thread APC disable count, 4 == mutex.
+
+        0x3A - a mutex is being released unsafe, but irql is not APC_LEVEL on entry. 2 == current IRQL, 3 == thread APC disable count, 4 == mutex.
+
+        0x40 - acquiring a spinlock when not at DISPATCH_LEVEL.  2 == current IRQL, 3 == spinlock address
+
+        0x41 - releasing a spinlock when not at DISPATCH_LEVEL.  2 == current IRQL, 3 == spinlock address
+
+        0x42 - acquiring a spinlock when caller is already above DISPATCH_LEVEL.  2 == current IRQL, 3 == spinlock address
+
+        0x51 - freeing memory where the caller has written past the end of the allocation overwriting our stored bytecount.  2 == base address of the allocation, 3 == corrupt address, 4 == charged bytes.
+
+        0x52 - freeing memory where the caller has written past the end of the allocation overwriting our stored virtual address.  2 == base address of the allocation, 3 == hash entry, 4 == charged bytes.
+
+        0x53 - freeing memory where the caller has written past the end of the allocation overwriting our stored virtual address.  2 == base address of the allocation, 3 == header, 4 = internal verifier pointer.
+
+        0x54 - freeing memory where the caller has written past the end of the allocation overwriting our stored virtual address.  2 == base address of the allocation, 3 == pool hash size, 4 = listindex.
+
+        0x59 - freeing memory where the caller has written past the end of the allocation overwriting our stored virtual address.  2 == base address of the allocation, 3 == listindex, 4 == internal verifier pointer.
+
+        0x60 - A driver has forgotten to free its pool allocations prior to unloading.  2 == paged bytes, 3 = nonpaged bytes, 4 == total # of (paged+nonpaged) allocations that weren't freed.
+
+            In the kernel debugger, type:
+                kd> dc ViBadDriver l1; dc @$p+4 l1; du @$p
+
+                This gives you the name of the driver.
+                Then type !verifier 3 drivername.sys for info on the allocations
+                that were leaked that caused the bugcheck.
+
+            Assign the bug to the driver owner found above.
+
+        0x61 - A driver is unloading and allocating memory (in another thread) at the same time.  2 == paged bytes, 3 = nonpaged bytes, 4 == total # of (paged+nonpaged) allocations that weren't freed.
+
+            In the kernel debugger, type:
+                kd> dc ViBadDriver l1; dc @$p+4 l1; du @$p
+
+                This gives you the name of the driver.
+                Then type !verifier 3 drivername.sys for info on the allocations
+                that were leaked that caused the bugcheck.
+
+            Assign the bug to the driver owner found above.
+
+        0x70 - MmProbeAndLockPages called when not at DISPATCH_LEVEL or below.
+               2 == current IRQL
+               3 == MDL address
+               4 == access mode
+
+        0x71 - MmProbeAndLockProcessPages called when not at DISPATCH_LEVEL or below.
+               2 == current IRQL
+               3 == MDL address
+               4 == process address
+
+        0x72 - MmProbeAndLockSelectedPages called when not at DISPATCH_LEVEL or below.
+               2 == current IRQL
+               3 == MDL address
+               4 == process address
+
+        0x73 - MmMapIoSpace called when not at DISPATCH_LEVEL or below.
+               2 == current IRQL
+               3 == low 32 bits of the physical address (full 64 on Win64)
+               4 == number of bytes
+
+        0x74 - MmMapLockedPages called when not at DISPATCH_LEVEL or below.
+               2 == current IRQL
+               3 == MDL address
+               4 == access mode
+
+        0x75 - MmMapLockedPages called when not at APC_LEVEL or below.
+               2 == current IRQL
+               3 == MDL address
+               4 == access mode
+
+        0x76 - MmMapLockedPagesSpecifyCache called when not at DISPATCH_LEVEL or below.
+               2 == current IRQL
+               3 == MDL address
+               4 == access mode
+
+        0x77 - MmMapLockedPagesSpecifyCache called when not at APC_LEVEL or below.
+               2 == current IRQL
+               3 == MDL address
+               4 == access mode
+
+        0x78 - MmUnlockPages called when not at DISPATCH_LEVEL or below.
+               2 == current IRQL
+               3 == MDL address
+               4 == 0
+
+        0x79 - MmUnmapLockedPages called when not at DISPATCH_LEVEL or below.
+               2 == current IRQL
+               3 == virtual address being unmapped
+               4 == MDL address
+
+        0x7A - MmUnmapLockedPages called when not at APC_LEVEL or below.
+               2 == current IRQL
+               3 == virtual address being unmapped
+               4 == MDL address
+
+        0x7B - MmUnmapIoSpace called when not at APC_LEVEL or below.
+               2 == current IRQL
+               3 == virtual address being unmapped
+               4 == number of bytes
+
+        0x7C - MmUnlockPages called with an MDL whose pages were never successfully locked.
+               2 == MDL address
+               3 == MDL flags
+               4 == 0
+
+        0x7D - MmUnlockPages called with an MDL whose pages are from nonpaged pool - these should never be unlocked.
+               2 == MDL address
+               3 == MDL flags
+               4 == 0
+
+        0x80 - KeSetEvent called when not at DISPATCH_LEVEL or below.
+               2 == current IRQL
+               3 == event address
+               4 == 0
+
+DRIVER_CORRUPTED_EXPOOL           (0xC5)
+        1 - memory referenced
+        2 - IRQL
+        3 - value 0 = read operation, 1 = write operation
+        4 - address which referenced memory
+
+An attempt was made to touch invalid memory at a process
+internal request level (IRQL) too high.  This is almost always
+caused by drivers that have corrupted the system pool.  Run the driver
+verifier against any new (or suspect) drivers, and if that doesn't turn up
+the culprit, then use gflags to enable special pool.
+
+DRIVER_CAUGHT_MODIFYING_FREED_POOL           (0xC6)
+        1 - memory referenced
+        2 - value 0 = read operation, 1 = write operation
+        3 - previous mode.
+        4 - 4.
+
+An attempt was made to access freed pool memory.  The faulty component is
+displayed in the current kernel stack.
+
+TIMER_OR_DPC_INVALID                                    (0xC7)
+
+A kernel timer or DPC was found in memory which must not contain such items.
+Usually this is memory being freed.  This is usually caused by a device driver
+that has not cleaned up properly before freeing memory.
+
+        1 - What kind of object
+            0   Timer Object
+            1   DPC Object
+            2   DPC Routine
+        2 - Address of object
+        3 - Start of range being checked
+        4 - End of range being checked
+
+IRQL_UNEXPECTED_VALUE                                   (0xC8)
+
+The processor's IRQL is not what it should be at this time.  This is
+usually caused by a lower level routine changing IRQL for some period
+and not restoring IRQL at the end of that period (eg acquires spinlock
+but doesn't release it).
+
+        1 - (Current IRQL << 16) | (Expected IRQL << 8) | UniqueValue
+        if UniqueValue is 0 or 1
+            2 - APC->KernelRoutine
+            3 - APC
+            4 - APC->NormalRoutine
+
+DRIVER_VERIFIER_IOMANAGER_VIOLATION                     (0xC9)
+The IO manager has caught a misbehaving driver.
+        1 - Code that specifies the violation
+            1. Invalid IRP passed to IoFreeIrp
+		2 - the IRP passed in
+		3/4 - 0 
+            2. IRP still associated with a thread at IoFreeIrp
+		2 - the IRP passed in
+		3/4 - 0 
+            3. Invalid IRP passed to IoCallDriver
+		2 - the IRP passed in
+		3/4 - 0 
+            4. Invalid Device object passed to IoCallDriver
+		2 - the Device object
+		3/4 - 0 
+            5. Irql not equal across call to the driver dispatch routine
+		2 - the device object associated with the offending driver
+		3 - the Irql before the call
+		4 - the Irql after the call
+            6. IRP passed to IoCompleteRequest contains invalid status
+		2 - the status
+		3 - the IRP
+		4 - 0 
+            7. IRP passed to IoCompleteRequest still has cancel routine set
+		2 - the cancel routine pointer
+		3 - the IRP
+		4 - 0 
+	    8. Call to IoBuildAsynchronousFsdRequest threw an exception
+		2 - the Device object
+		3 - the IRP major function
+		4 - the exception status
+	    9. Call to IoBuildDeviceIoControlRequest threw an exception
+		2 - the Device object
+		3 - the IoControlCode
+		4 - the exception status
+	   10. Reinitialization of Device object timer
+		2 - the Device object
+		3/4 - 0
+	   11. Unused
+	   12. Invalid IOSB in IRP at APC IopCompleteRequest (appears to be on
+		stack that was unwound)
+	        2 - the IOSB pointer
+		3/4 - 0
+	   13. Invalid UserEvent in IRP at APC IopCompleteRequest (appears to be on
+		stack that was unwound)
+	        2 - the UserEvent pointer
+		3/4 - 0
+	   14. Irql > DPC at IoCompleteRequest
+		2 - the current Irql
+		3 - the IRP
+		4 - 0 
+
+PNP_DETECTED_FATAL_ERROR                    (0xCA)
+
+PnP encountered a severe error, either as a result of a problem in a driver or
+a problem in PnP itself.  The first argument describes the nature of the
+problem, the second argument is the address of the PDO.  The other arguments
+vary depending on argument 1.
+
+        1 - Type of error.
+        2 - Address of PDO.
+        3 - Varies depending on argument 1
+        4 - Varies depending on argument 1
+
+Argument 1 - defined error types:
+
+        1 - Duplicate PDO
+
+                A specific instance of a driver has enumerated multiple PDOs with
+                identical device id and unique ids.
+
+                Arguments:
+
+                2 - Newly reported PDO.
+
+                3 - PDO of which it is a duplicate.
+
+        2 - Invalid PDO
+
+                An API which requires a PDO has been called with either an FDO, a PDO
+                which hasn't been initialized yet (returned to PnP in a
+                QueryDeviceRelation/BusRelations), or some random piece of memory.
+
+                Arguments:
+
+                2 - Purported PDO.
+
+        3 - Invalid ID
+
+		An enumerator has returned an ID which contains illegal characters or
+		isn't properly terminated.  IDs must only contain characters in the
+		range 0x20-7F inclusive with the exception of 0x2C (comma) which is
+		illegal.
+
+                2 - PDO whose IDs were queried
+
+                3 - Address of ID buffer
+
+                4 - Type of ID
+
+                        1 = DeviceID
+                        2 = UniqueID
+                        3 = HardwareIDs
+                        4 = CompatibleIDs
+
+	4 - Invalid enumeration of deleted PDO
+
+		An enumerator has returned a PDO which it has previously deleted using
+		IoDeleteDevice.
+
+		2 - PDO with DOE_DELETE_PENDING set.
+
+	5 - PDO freed while still linked in devnode tree.
+
+		The object manager reference count on a PDO dropped to zero while the
+		devnode was still linked in the tree.  This usually indicates that the
+		driver is not adding a reference when returning the PDO in a query IRP.
+
+		2 - PDO.
+
+
+
+DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS     (0xCB)
+        1 - The calling address in the driver that locked the pages.
+        2 - The caller of the calling address in the driver that locked the pages.
+        3 - A pointer to the MDL containing the locked pages.
+        4 - The guilty driver's name (Unicode string).
+
+Caused by a driver not cleaning up completely after an I/O.  The bad driver's
+name is printed on the bugcheck screen and is available for re-dumping as
+parameter 4 in the bugcheck data.
+The broken driver's name is displayed on the screen.
+
+PAGE_FAULT_IN_FREED_SPECIAL_POOL        (0xCC)
+        1 - memory referenced
+        2 - value 0 = read operation, 1 = write operation
+        3 - if non-zero, the address which referenced memory.
+        4 - Mm internal code.
+
+Memory was referenced after it was freed.
+This cannot be protected by try-except.
+
+When possible, the guilty driver's name (Unicode string) is printed on
+the bugcheck screen and saved in KiBugCheckDriver.
+
+PAGE_FAULT_BEYOND_END_OF_ALLOCATION     (0xCD)
+        1 - memory referenced
+        2 - value 0 = read operation, 1 = write operation
+        3 - if non-zero, the address which referenced memory.
+        4 - Mm internal code.
+
+N bytes of memory was allocated and more than N bytes are being referenced.
+This cannot be protected by try-except.
+
+When possible, the guilty driver's name (Unicode string) is printed on
+the bugcheck screen and saved in KiBugCheckDriver.
+
+DRIVER_UNLOADED_WITHOUT_CANCELLING_PENDING_OPERATIONS      (0xCE)
+
+A driver unloaded without cancelling timers, DPCs, worker threads, etc.
+The broken driver's name is displayed on the screen.
+        1 - memory referenced
+        2 - value 0 = read operation, 1 = write operation
+        3 - If non-zero, the instruction address which referenced the bad memory
+            address.
+        4 - Mm internal code.
+
+TERMINAL_SERVER_DRIVER_MADE_INCORRECT_MEMORY_REFERENCE     (0xCF)
+        1 - memory referenced
+        2 - value 0 = read operation, 1 = write operation
+        3 - If non-zero, the instruction address which referenced the bad memory
+            address.
+        4 - Mm internal code.
+
+A driver has been incorrectly ported to Terminal Server.  It is referencing
+session space addresses from the system process context.  Probably from
+queueing an item to a system worker thread.
+The broken driver's name is displayed on the screen.
+
+DRIVER_CORRUPTED_MMPOOL     (0xD0)
+        1 - memory referenced
+        2 - IRQL
+        3 - value 0 = read operation, 1 = write operation
+        4 - address which referenced memory
+
+An attempt was made to touch invalid memory at a process
+internal request level (IRQL) too high.  This is almost always
+caused by drivers that have corrupted the system pool.  Run the driver
+verifier against any new (or suspect) drivers, and if that doesn't turn up
+the culprit, then use gflags to enable special pool.  You can also set
+HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Mamagement\ProtectNonPagedPool to a DWORD 1 value and reboot.  Then the system will unmap freed nonpaged pool, preventing drivers (although not DMA-hardware) from corrupting
+the pool.
+
+DRIVER_IRQL_NOT_LESS_OR_EQUAL           (0xD1)
+        1 - memory referenced
+        2 - IRQL
+        3 - value 0 = read operation, 1 = write operation
+        4 - address which referenced memory
+
+An attempt was made to touch pagable memory at a process
+internal request level (IRQL) too high.  This is usually
+caused by drivers using improper addresses.
+
+If kernel debugger is available get stack backtrace.
+
+DRIVER_PORTION_MUST_BE_NONPAGED         (0xD3)
+        1 - memory referenced
+        2 - IRQL
+        3 - value 0 = read operation, 1 = write operation
+            If this value is non-zero and is equal to parameter 1, then
+            The bugcheck indicates that a worker routine returned at raised
+            IRQL.Parameter 1 and 3 are the address of the work routine, and
+            parameter 4 is the workitem
+        4 - address which referenced memory
+
+When possible, the guilty driver's name (Unicode string) is printed on
+the bugcheck screen and saved in KiBugCheckDriver.
+
+An attempt was made to touch pagable memory at a process
+internal request level (IRQL) too high.  This is usually
+caused by drivers marking code or data as pagable when it should be
+marked nonpaged.
+
+If kernel debugger is available get stack backtrace.
+
+SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD    (0xD4)
+
+A driver unloaded without cancelling lookaside lists, DPCs, worker threads, etc.
+The broken driver's name is displayed on the screen.
+
+        1 - memory referenced
+        2 - IRQL
+        3 - value 0 = read operation, 1 = write operation
+            If this value is non-zero and is equal to parameter 1, then
+            The bugcheck indicates that a worker routine returned at raised
+            IRQL.Parameter 1 and 3 are the address of the work routine, and
+            parameter 4 is the workitem
+        4 - address which referenced memory
+
+When possible, the guilty driver's name (Unicode string) is printed on
+the bugcheck screen and saved in KiBugCheckDriver.
+
+An attempt was made to access the driver at raised IRQL after it unloaded.
+
+If kernel debugger is available get stack backtrace.
+
+DRIVER_PAGE_FAULT_IN_FREED_SPECIAL_POOL        (0xD5)
+        1 - memory referenced
+        2 - value 0 = read operation, 1 = write operation
+        3 - if non-zero, the address which referenced memory.
+        4 - Mm internal code.
+
+Memory was referenced after it was freed.
+This cannot be protected by try-except.
+
+When possible, the guilty driver's name (Unicode string) is printed on
+the bugcheck screen and saved in KiBugCheckDriver.
+
+DRIVER_PAGE_FAULT_BEYOND_END_OF_ALLOCATION     (0xD6)
+        1 - memory referenced
+        2 - value 0 = read operation, 1 = write operation
+        3 - if non-zero, the address which referenced memory.
+        4 - Mm internal code.
+
+N bytes of memory was allocated and more than N bytes are being referenced.
+This cannot be protected by try-except.
+
+When possible, the guilty driver's name (Unicode string) is printed on
+the bugcheck screen and saved in KiBugCheckDriver.
+
+DRIVER_UNMAPPING_INVALID_VIEW                  (0xD7)
+        1 - virtual address to unmap.
+        2 - 1 if system is Terminal Server, 0 if not.
+        3 - 0.
+        4 - 0.
+
+A driver (usually win32k.sys, but can be determined from the stack trace for
+certain) is trying to unmap an address that was not mapped.
+
+DRIVER_USED_EXCESSIVE_PTES                      (0xD8)
+        1 - If non-null, the guilty driver's name (Unicode string).
+        2 - If parameter 1 non-null, the number of PTEs used by the guilty driver.
+        3 - Total free system PTEs
+        4 - Total system PTEs
+
+No System PTEs left.  Usually caused by a driver not cleaning up
+properly.  If non-null, the second parameter shows the name of the driver
+who is consuming the most PTEs.  The calling stack also shows the name of
+the driver which bugchecked.  Both drivers need to be fixed and/or the number
+of PTEs increased.
+
+When possible, the guilty driver's name (Unicode string) is printed on
+the bugcheck screen and saved in KiBugCheckDriver.
+
+LOCKED_PAGES_TRACKER_CORRUPTION                 (0xD9)
+
+        1 - Type of error.
+        2 - Varies depending on argument 1.
+        3 - Varies depending on argument 1.
+        4 - Varies depending on argument 1.
+
+Argument 1 - defined error types:
+
+        1 - The MDL is being inserted twice on the same process list.
+
+                Arguments:
+
+                2 - Address of internal lock tracking structure.
+                3 - Address of memory descriptor list.
+                4 - Number of pages locked for the current process.
+
+        2 - The MDL is being inserted twice on the systemwide list.
+
+                Arguments:
+
+                2 - Address of internal lock tracking structure.
+                3 - Address of memory descriptor list.
+                4 - Number of pages locked for the current process.
+
+        3 - The MDL was found twice in the process list when being freed.
+
+                Arguments:
+
+                2 - Address of first internal tracking structure found.
+                3 - Address of internal lock tracking structure.
+                4 - Address of memory descriptor list.
+
+
+        4 - The MDL was found in the systemwide list on free after it was removed.
+
+                Arguments:
+
+                2 - Address of internal lock tracking structure.
+                3 - Address of memory descriptor list.
+                4 - 0.
+
+SYSTEM_PTE_MISUSE                               (0xDA)
+
+The stack trace identifies the guilty driver.
+
+        1 - Type of error.
+        2 - Varies depending on argument 1.
+        3 - Varies depending on argument 1.
+        4 - Varies depending on argument 1.
+
+Argument 1 - defined error types:
+
+        1 - The PTE mapping being freed is a duplicate.
+
+                Arguments:
+
+                2 - Address of internal lock tracking structure.
+                3 - Address of memory descriptor list.
+                4 - Address of duplicate internal lock tracking structure.
+
+        2 - The number of PTE mappings being freed is incorrect.
+
+                Arguments:
+
+                2 - Address of internal lock tracking structure.
+                3 - Number of PTEs the system thinks should be freed.
+                4 - Number of PTEs the driver is requesting to free.
+
+        3 - The PTE mapping address being freed is incorrect.
+
+                Arguments:
+
+                2 - Address of first internal tracking structure found.
+                3 - The PTE address the system thinks should be freed.
+                4 - The PTE address the driver is requesting to free.
+
+        4 - The first page of the mapped MDL has changed since the MDL was mapped.
+
+                Arguments:
+
+                2 - Address of internal lock tracking structure.
+                3 - Page frame number the system thinks should be first in the MDL.
+                4 - Page frame number that is currently first in the MDL.
+
+        5 - The start virtual address in the MDL being freed has changed since
+        the MDL was mapped.
+
+                Arguments:
+
+                2 - Address of first internal tracking structure found.
+                3 - The virtual address the system thinks should be freed.
+                4 - The virtual address the driver is requesting to free.
+
+        6 - The MDL being freed was never (or is currently not) mapped.
+
+                Arguments:
+
+                2 - The MDL specified by the driver.
+                3 - The virtual address specified by the driver.
+                4 - The number of PTEs to free (specified by the driver).
+
+        7 - The PTE range is being double allocated.
+
+                Arguments:
+
+                2 - Starting PTE.
+                3 - Number of PTEs.
+                4 - Caller Id (system internal).
+
+        8 - The caller is asking to free an incorrect number of PTEs.
+
+                Arguments:
+
+                2 - Starting PTE.
+                3 - Number of PTEs the caller is freeing.
+                4 - Number of PTEs the system thinks should be freed.
+
+        9 - The caller is asking to free PTEs where one of them is not allocated.
+
+                Arguments:
+
+                2 - Starting PTE.
+                3 - Number of PTEs the caller is freeing.
+                4 - PTE index that the system thinks is already free.
+
+        0xA - The caller is asking to allocate 0 PTEs.
+
+                Arguments:
+
+                2 - Bugcheck on failure parameter.
+                3 - Number of PTEs the caller is allocating.
+                4 - Type of PTE pool requested.
+
+        0xB - The PTE list is already corrupted at the time of this allocation.
+          The corrupt PTE is below the lowest possible PTE address.
+
+                Arguments:
+
+                2 - Corrupt PTE.
+                3 - Number of PTEs the caller is allocating.
+                4 - Type of PTE pool requested.
+
+        0xC - The PTE list is already corrupted at the time of this allocation.
+          The corrupt PTE is above the lowest possible PTE address.
+
+                Arguments:
+
+                2 - Corrupt PTE.
+                3 - Number of PTEs the caller is allocating.
+                4 - Type of PTE pool requested.
+
+        0xD - The caller is trying to free 0 PTEs.
+
+                Arguments:
+
+                2 - Starting PTE.
+                3 - Number of PTEs the caller is freeing.
+                4 - Type of PTE pool.
+
+        0xE - The caller is trying to free PTEs and the guard PTE has been overwritten.
+
+                Arguments:
+
+                2 - Starting PTE.
+                3 - Number of PTEs the caller is freeing.
+                4 - Type of PTE pool.
+
+        0xF - The caller is trying to free a bogus PTE.
+          The bogus PTE is below the lowest possible PTE address.
+
+                Arguments:
+
+                2 - Bogus PTE.
+                3 - Number of PTEs the caller is trying to free.
+                4 - Type of PTE pool being freed.
+
+        0x10 - The caller is trying to free a bogus PTE.
+           The bogus PTE is above the highest possible PTE address.
+
+                Arguments:
+
+                2 - Bogus PTE.
+                3 - Number of PTEs the caller is trying to free.
+                4 - Type of PTE pool being freed.
+
+        0x11 - The caller is trying to free a bogus PTE.
+           The bogus PTE is at the base of the PTE address space.
+
+                Arguments:
+
+                2 - Bogus PTE.
+                3 - Number of PTEs the caller is trying to free.
+                4 - Type of PTE pool being freed.
+
+DRIVER_CORRUPTED_SYSPTES           (0xDB)
+        1 - memory referenced
+        2 - IRQL
+        3 - value 0 = read operation, 1 = write operation
+        4 - address which referenced memory
+
+An attempt was made to touch invalid memory at a process
+internal request level (IRQL) too high.  This is almost always
+caused by drivers that have corrupted system PTEs.  Set
+HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Mamagement\TrackPtes to a DWORD 1 value and reboot.  Then the system will save stack traces and
+perform validity checks so the guilty driver can be identified.
+There is no other way to find out which driver did this.  When you enable
+this flag, if the driver commits the error again you will see a different
+bugcheck - SYSTEM_PTE_MISUSE - and the stack trace will identify the offending
+driver(s).
+
+DRIVER_INVALID_STACK_ACCESS                   (0xDC)
+
+A driver accessed a stack address that lies below the stack pointer of the
+stack's thread.
+
+POOL_CORRUPTION_IN_FILE_AREA                  (0xDE)
+
+A driver corrupted pool memory used for holding pages destined for disk.
+This was discovered by the memory manager when dereferencing the file.
+
+WORKER_THREAD_RETURNED_AT_BAD_IRQL            (0xE1)
+        1 - address of worker routine (do ln on this to find guilty driver)
+        2 - IRQL returned at (should have been 0, but isn't).
+        3 - workitem parameter
+        4 - workitem address
+
+MANUALLY_INITIATED_CRASH                      (0xE2)
+
+The user manually initiated this crash dump.  
+
+RESOURCE_NOT_OWNED                            (0xE3)
+
+A thread tried to release a resource it did not own.
+
+	1 - Address of resource
+	2 - Address of thread
+	3 - Address of owner table if there is one
+
+WORKER_INVALID                                (0xE4)
+
+A executive worker item was found in memory which must not contain such
+items.  Usually this is memory being freed.  This is usually caused by
+a device driver that has not cleaned up properly before freeing memory.
+
+	1 - Code position indicator
+	2 - Address of worker item
+	3 - Start of pool block
+	4 - End of pool block
+
+BUGCHECK C000026C                       (0xC000026C)
+
+A driver image (xxx.sys) is missing or otherwise corrupt.  In many cases
+this is a newly hand-copied image where there was operator or media error.
+ie: putting an Alpha driver on an x86 machine, etc.
+
+        1 - pointer to a Unicode string containing the bad driver image name.
+
+            In the kernel debugger, type:
+                kd> dc KiBugCheckData+4 l1  (dq KiBugCheckData+8 on Win64)
+                kd> du $@p l2
+
+                This gives you the filename of the broken driver image.
+
+        2 - actual cause of the error (look this up in ntstatus.h).
+
+            Some common ones are :
+
+                C0000221 == image checksum mismatch
+                C000007B == the image format is invalid (bad image header).
+                C0000034 == the image was not found
+                C000000E == no such device (send mail to ntmsd)
+
+IMPERSONATING_WORKER_THREAD
+
+A workitem forgot to disable impersonation before it completed.
+
+    1 - Worker Routine that caused this bugcheck.
+    2 - Parameter passed to this worker routine.
+    3 - Pointer to the Workitem.

@@ -1,0 +1,155 @@
+#if 0
+
+  Microsoft Windows
+  Copyright (C) Microsoft Corporation, 1992 - 1992.
+  All rights reserved.
+
+  This .def file is preprocessed by the compiler to create the version for
+  the current build in the appropriate subdir.  Basically, whatever you
+  would have used in your code to control what is compiled when can be
+  used in this file for the same purpose.  The following defines are in
+  use at the time this file was written:
+
+     FLAT       - Used to indicate a NT/DOS7 build
+     i386       -   Intel i386/i486 build
+     MIPS       -   MIPS R3000/R4000 build
+     ALPHA      -   DEC Alpha build
+     PPC        -   PowerPC build
+     DBG        - Used to control Debug/Retail.  Set to 1 if Debug,
+                   0 if Retail.
+     WIN31      - Win16 build
+     __OS2__    - OS/2 build (used by CT mostly)
+
+  If none of these are used, it is assumed the entire file can be used
+  for all builds.
+
+#endif
+
+LIBRARY         urlmon
+
+;
+;  No security under Win95, take advantage of shared data segments.
+;
+SECTIONS
+  SharedData       READ WRITE SHARED
+
+EXPORTS
+        DllRegisterServer           PRIVATE
+        DllUnregisterServer         PRIVATE
+        DllRegisterServerEx         PRIVATE
+        DllInstall                  PRIVATE
+
+        ; Standard Dll server/handler stuff
+        UrlMkBuildVersion
+        DllGetClassObject           PRIVATE
+        DllCanUnloadNow             PRIVATE
+
+        CreateURLMoniker
+        GetClassURL
+        MkParseDisplayNameEx
+        BindAsyncMoniker
+        RegisterBindStatusCallback
+        RevokeBindStatusCallback
+        CreateFormatEnumerator
+        RegisterFormatEnumerator
+        RevokeFormatEnumerator
+        RegisterMediaTypes
+        FindMediaType
+        RegisterMediaTypeClass
+        FindMediaTypeClass
+        CreateAsyncBindCtx
+        IsAsyncMoniker
+        GetClassFileOrMime
+        IsValidURL
+        UrlMkSetSessionOption
+        UrlMkGetSessionOption
+        CoGetClassObjectFromURL
+        CreateAsyncBindCtxEx
+        FindMimeFromData
+        ObtainUserAgentString
+
+        CoInternetGetSession
+        CoInternetParseUrl
+        CoInternetCombineUrl
+        CoInternetCompareUrl
+        CoInternetGetSecurityUrl
+        CoInternetQueryInfo
+        CoInternetCreateSecurityManager
+        CoInternetCreateZoneManager
+        CoInternetGetProtocolFlags
+                
+        ; security zones private helper exposed for the IEAK.
+        ZonesReInit PRIVATE
+
+        ; added for setup guys
+        Extract
+        
+        ; urlmon "easy" api
+        URLDownloadW
+        URLDownloadA
+        URLOpenPullStreamA
+        URLOpenPullStreamW
+        URLDownloadToFileA
+        URLDownloadToFileW
+        URLDownloadToCacheFileA
+        URLDownloadToCacheFileW
+        URLOpenBlockingStreamA
+        URLOpenBlockingStreamW
+        URLOpenStreamA
+        URLOpenStreamW
+        HlinkSimpleNavigateToString
+        HlinkSimpleNavigateToMoniker
+        HlinkGoBack
+        HlinkGoForward
+        HlinkNavigateString
+        HlinkNavigateMoniker
+
+        IsLoggingEnabledA
+        IsLoggingEnabledW
+        WriteHitLogging
+
+        ; private exported functions for testing
+        ; - will be removed
+        ;CreateBindProtocol
+        ;StgOpenAsyncDocfileOnIFillLockBytes
+        ;StgGetIFillLockBytesOnILockBytes
+        ;StgGetIFillLockBytesOnFile
+#if DBG==1
+        RegisterDebugOut
+        ;StgGetDebugFileLockBytes
+#endif // DBG == 1
+
+
+        ; private exported functions for DCOM
+        AsyncGetClassBits   PRIVATE
+        AsyncInstallDistributionUnit   PRIVATE
+
+        ; JIT APIs 
+        FaultInIEFeature
+                GetComponentIDFromCLSSPEC
+        IsJITInProgress
+
+        ; private exported for NT5 class store
+        PrivateCoInstall               PRIVATE
+        
+        ; Public export that parallel's NT's class store API
+        ; made this also private to avoid have both urlmon
+        ; and ole32 export the same API.
+        CoInstall                       PRIVATE
+
+        ; Public export to provide software update info
+        GetSoftwareUpdateInfo
+        SetSoftwareUpdateAdvertisementState
+
+        ; private exported function for occache and regcanon
+        CDLGetLongPathNameA PRIVATE
+        CDLGetLongPathNameW PRIVATE
+
+        CopyBindInfo
+        CopyStgMedium
+        ReleaseBindInfo
+
+        ; private export to help shdocvw mark saved web pages s.t.
+        ; the hack in the security mgr recognizes them as having been
+        ; saved from the Web.
+        GetMarkOfTheWeb PRIVATE

@@ -1,0 +1,147 @@
+#ifndef _TYPES_PDL_
+#define _TYPES_PDL_ 1
+
+// Recyleable GUID 3050f292-98b5-11cf-bb82-00aa00bdce0b Used to be htmlDocUnits
+// 570c03e0-f797-11ce-b9ec-00aa006b1a69 used to be fmAction
+
+file types.pdl
+
+import oaidl.pdl
+import oleidl.pdl
+import ocidl.pdl
+
+interface IPicture abstract:1
+
+enum htmlDesignMode prefix:htmlDesignMode guid:C63BD250-BCAA-11ce-B64D-00AA004CD6D8
+    eval Inherit value:-2
+    eval On value:-1
+    eval Off value:0
+
+enum htmlZOrder prefix:htmlZOrder guid:14c73c30-1612-11ce-9e98-00aa00574a4f 
+    eval Front value:0
+    eval Back value:1
+
+enum htmlClear prefix:htmlClear              guid:3050f1db-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet string:
+    eval All    string:all
+    eval Left   string:left
+    eval Right  string:right
+    eval Both   string:both
+    eval None   string:none
+
+
+// Note that the gloabal htmlAlign enum needs to be kept in sync with these two pdl enums
+
+enum htmlControlAlign prefix:htmlControlAlign guid:3050f1d5-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet    string:          value:0  
+    eval Left      string:left      value:1
+	eval Center    string:center    value:2
+    eval Right     string:right     value:3
+    eval TextTop   string:textTop   value:4 
+    eval AbsMiddle string:absMiddle value:5 
+    eval Baseline  string:baseline  value:6 
+    eval AbsBottom string:absBottom value:7 
+    eval Bottom    string:bottom    value:8 
+    eval Middle    string:middle    value:9 
+    eval Top       string:top       value:10
+
+
+
+enum htmlBlockAlign prefix:htmlBlockAlign    guid:3050f2a2-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet string:             value:0 
+    eval Left   string:left         value:1
+    eval Center string:center       value:2
+    eval Right  string:right        value:3
+    eval Justify  string:justify    value:4
+
+enum htmlReadyState prefix:htmlReadyState guid:3050f3bf-98b5-11cf-bb82-00aa00bdce0b
+    eval uninitialized  string:uninitialized   value:0
+    eval loading      string:loading       value:1
+    eval loaded       string:loaded        value:2
+    eval interactive  string:interactive   value:3
+    eval complete     string:complete      value:4 
+#ifdef VSTUDIO7
+    eval quickdone    string:quickdone     value:5 
+#endif //VSTUDIO7
+
+interface IDispatchEx super:IDispatch abstract guid:A6EF9860-C720-11d0-9337-00A0C90DCAA9
+    method  HRESULT GetDispID                                               \
+        (in type:BSTR arg:bstrName, in type:DWORD arg:grfdex, out type:DISPID* arg:pid)
+        
+    method HRESULT InvokeEx                                                 \
+        (in type:DISPID arg:id, in type:LCID arg:lcid,                      \
+         in type:WORD arg:wFlags, in type:DISPPARAMS* arg:pdp,              \
+         out type:VARIANT* arg:pvarRes, out type:EXCEPINFO* arg:pei,        \
+         in type:IServiceProvider* arg:pspCaller)
+        
+    method HRESULT DeleteMemberByName                                       \
+        (in type:BSTR arg:bstr, in type:DWORD arg:grfdex)
+        
+    method HRESULT DeleteMemberByDispID                                     \
+        (in type:DISPID arg:id)
+        
+    method HRESULT GetMemberProperties                                      \
+        (in type:DISPID arg:id, in type:DWORD arg:grfdexFetch,              \
+         out type:DWORD* arg:pgrfdex)
+        
+    method HRESULT GetMemberName                                            \
+        (in type:DISPID arg:id, out type:BSTR* arg:pbstrName)
+        
+    method HRESULT GetNextDispID                                            \
+        (in type:DWORD arg:grfdex, in type:DISPID arg:id,                   \
+         out type:DISPID* arg:pid)
+        
+    method HRESULT GetNameSpaceParent                                       \
+        (out type:IUnknown** arg:ppunk)
+
+interface IObjectIdentity super:IUnknown abstract guid:CA04B7E6-0D21-11d1-8CC5-00C04FC2B085
+    method HRESULT IsEqualObject   (in type:IUnknown* arg:punk)
+
+interface IPerPropertyBrowsing super:IUnknown abstract guid:376BD3AA-3845-101B-84ED-08002B2EC713
+    method HRESULT GetDisplayString (in type:DISPID arg:dispid, out type:BSTR* arg:pBstr)
+    method HRESULT MapPropertyToPage (in type:DISPID arg:dispid, out type:CLSID* arg:pClsid)
+    method HRESULT GetPredefinedStrings (in type:DISPID arg:dispid, \
+                     out type:CALPOLESTR* arg:pCaStringsOut, out type:CADWORD* arg:pCaCookiesOut)
+    method HRESULT GetPredefinedValue (in type:DISPID arg:dispid, \
+                     in type:DWORD arg:dwCookie, out type:VARIANT* arg:pVarOut)
+
+class CBase primaryinterface:IDispatch
+    method    HRESULT       setAttribute        maxstrlen:pdlNoLimit   dispid:DISPID_HTMLOBJECT+1  \
+        (in type:BSTR arg:strAttributeName in type:VARIANT arg:AttributeValue, \
+                     in type:LONG default:1 arg:lFlags) 
+    
+    method    HRESULT       getAttribute        maxstrlen:pdlNoLimit   dispid:DISPID_HTMLOBJECT+2  \
+        (in type:BSTR arg:strAttributeName \
+                     in type:LONG default:0 arg:lFlags \
+                        out retval type:VARIANT* arg:AttributeValue ) 
+    
+    method    HRESULT       removeAttribute     maxstrlen:pdlNoLimit   dispid:DISPID_HTMLOBJECT+3 \
+        ( in type:BSTR arg:strAttributeName \
+                     in type:LONG default:1 arg:lFlags \
+                        out retval type:VARIANT_BOOL* arg:pfSuccess )
+
+    method    HRESULT       setExpression       maxstrlen:pdlNoLimit   dispid:DISPID_HTMLOBJECT+4 \
+        (in type:BSTR arg:propname, in type:BSTR arg:expression, in type:BSTR arg:language default:"")
+
+    method    HRESULT       getExpression       maxstrlen:pdlNoLimit   dispid:DISPID_HTMLOBJECT+5 \
+        (in type:BSTR arg:propname, out retval type:VARIANT* arg:expression )
+
+    method    HRESULT       removeExpression    maxstrlen:pdlNoLimit   dispid:DISPID_HTMLOBJECT+6 \
+        (in type:BSTR arg:propname, out retval type:VARIANT_BOOL* arg:pfSuccess)
+
+    method HRESULT   attachEvent dispid:DISPID_HTMLOBJECT+7	\
+    	(in type:BSTR arg:event,							\
+    	 in type:IDispatch* arg:pDisp,						\
+    	 out retval type:VARIANT_BOOL* arg:pfResult) maxstrlen:pdlToken 
+    method HRESULT   detachEvent dispid:DISPID_HTMLOBJECT+8  (in type:BSTR arg:event, in type:IDispatch* arg:pDisp) maxstrlen:pdlToken
+
+    
+enum htmlLoop   prefix:htmlLoop         guid:3050f2e0-98b5-11cf-bb82-00aa00bdce0b
+    eval LoopInfinite   string:infinite value:-1
+
+tearoff CFunctionPointer interface:IDispatchEx BaseImpl:super::
+    tearmethod InvokeEx         mapto:InvokeEx
+
+class CFunctionPointer primaryinterface:IDispatch abstract
+
+#endif //_TYPES_PDL_

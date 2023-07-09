@@ -1,0 +1,58 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=midimap
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLDEF=midi.def
+DLLENTRY=LibMain
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib  \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib\
+           $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib  \
+           $(_NTBINDIR)\public\sdk\lib\*\pwin32.lib  \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib
+
+INCLUDES=..\h;..\main;..\multimed
+
+#
+# Retail Only
+# 
+C_DEFINES=-DWIN32
+
+#
+# Debug Only (this should be commented out, don't remove)
+#
+#C_DEFINES=-DWIN32 -DDEBUG
+#NTDEBUG=ntsd
+#NTDEBUGTYPE=both
+#MSC_OPTIMIZATION=/Od /Zi /WX
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+SOURCES=midi.c      \
+        midi.rc     \
+        lengths.c   \
+        map.c       \
+        mapcopy.c   \
+        midimap.c   \
+        propbox.c   \
+        key.c       \
+        patch.c     \
+        setup.c     \
+        cparrow.c
+
+DLLBASE=0x6B700000
+
+MISCFILES=midimap.cfg

@@ -1,9 +1,0 @@
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_NTOBJFLD_NAME "Przestrzeń nazw obiektów NT"
-    IDS_REGISTRY_NAME "Rejestr systemu"
-    IDS_NTOBJFLD_COMMENT "Umożliwia przeglądanie przestrzeni nazw obiektów NT"
-    IDS_REGISTRY_COMMENT "Umożliwia przeglądanie rejestru systemu"
-END

@@ -1,0 +1,492 @@
+/*
+ * MIDI.RC
+ *
+ * Copyright (C) 1990 Microsoft Corporation.
+ *
+ * Resource definition file for MIDI control panel.
+ */
+
+#include        "preclude.h"
+#include        <windows.h>
+#include        "midi.h"
+#include        "cphelp.h"
+#include        "cparrow.h"
+#include        "midi.rcv"
+
+/********************************************************
+ *                                                      *
+ *      C O M M O N   R E S O U R C E S                 *
+ *                                                      *
+ ********************************************************/
+
+ID_ICON ICON midi.ico
+
+STRINGTABLE MOVEABLE DISCARDABLE
+BEGIN
+        IDS_NAME,                       "MIDI Mapp&er"
+        IDS_TITLE,                      "MIDI Mapper"
+        IDS_MIDIMAPPER,                 "Microsoft MIDI Mapper"
+        IDS_VANILLANAME,                "Vanilla"
+        IDS_VANILLADESC,                "Vanilla setup definition"
+        IDS_SETUP,                      "Setup"
+        IDS_PATCH,                      "Patch Map"
+        IDS_KEY,                        "Key Map"
+        IDS_SETUPPLURAL,                "Setups"
+        IDS_PATCHPLURAL,                "Patch Maps"
+        IDS_KEYPLURAL,                  "Key Maps"
+        IDS_CLOSE                       "Close"
+        IDS_NONE,                       "[ None ]"
+        IDS_ERROR,                      "[ Error ]"
+        IDS_MIDIMAPCFG,                 "\\MIDIMAP.CFG"
+        IDS_HELPFILE,                   "control.hlp"
+        IDS_NOENTRIES,                  "[ No entries found ]"
+        IDS_SETUPS,                     "MIDI Setup: '%s'"
+        IDS_PATCHES,                    "MIDI Patch Map: '%s'"
+        IDS_KEYS,                       "MIDI Key Map: '%s'"
+        IDS_NEW_KEY                     "New MIDI Key Map ..."
+        IDS_NEW_SETUP                   "New MIDI Setup ..."
+        IDS_NEW_PATCH                   "New MIDI Patch Map ..."
+        IDS_SAVE,                       "Save MIDI %s As..."
+        IDS_DELETE,                     "Delete MIDI %s"
+        IDS_MMAPERR_SUCCESS,            "Success?"
+//      IDS_MMAPERR_FILENOTFOUND,       "File not found."
+//      IDS_MMAPERR_INVALIDFLAG,        "Internal error."
+//      IDS_MMAPERR_INVALIDPORT,        "Internal error."
+        IDS_MMAPERR_INVALIDSETUP,
+        "The setup name in the MIDIMAP.CFG file is invalid. There may be a problem with this file. Copy the original MIDIMAP.CFG file to your Windows SYSTEM directory, or check with the device manufacturer about obtaining a new file."
+
+        IDS_MMAPERR_INVALIDPATCH,
+        "The patch map name in the MIDIMAP.CFG file is invalid. There may be a problem with this file. Copy the original MIDIMAP.CFG file to your Windows SYSTEM directory, or check with the device manufacturer about obtaining a new file."
+
+        IDS_MMAPERR_INVALIDKEY,
+        "The key map name in the MIDIMAP.CFG file is invalid. There may be a problem with this file. Copy the original MIDIMAP.CFG file to your Windows SYSTEM directory, or check with the device manufacturer about obtaining a new file."
+
+
+        IDS_MMAPERR_MEMORY,             "Not enough available memory to perform this operation.\n\nQuit one or more applications to increase available memory, and then try again."
+        IDS_MMAPERR_READ,               "Cannot read the MIDIMAP.CFG file. The file may be damaged or missing. Copy the original MIDIMAP.CFG file to your Windows SYSTEM directory, or check with the device manufacturer about obtaining a new file."
+        IDS_MMAPERR_WRITE,              "Cannot write to the MIDIMAP.CFG file. Make sure that:\n - The file is in the Windows SYSTEM directory.\n - You are connected to the network.\n - You have enough disk space."
+        IDS_MMAPERR_OPEN,               "Cannot open the MIDIMAP.CFG file. Make sure the file is available."
+        IDS_MMAPERR_OPEN_READONLY,      "The MIDIMAP.CFG file is read-only. Use the Properties command in File Manager to change the file attributes, and then try again."
+        IDS_MMAPERR_CREATE,             "Cannot create the MIDIMAP.CFG file. There may be a problem with your disk. Check your disk, correct the problem and then try again."
+//      IDS_MMAPERR_UNDEFINED,          "Internal error."
+        IDS_MMAPERR_FULL,               "The map table is full. Delete a map of the same type you were trying to save or change, and then try again."
+        IDS_FCERR_ERROR,                "MIDI Mapper Error"
+        IDS_FCERR_WARN,                 "MIDI Mapper Warning"
+        IDS_FCERR_NOSRC,
+        "Cannot find the MIDIMAP.CFG or temporary file. These files are required to start and quit MIDI Mapper. Copy the original file to your Windows SYSTEM directory, and try again. CAUTION: if you are quitting MIDI mapper you will lose any changes."
+
+        IDS_FCERR_NODEST,
+        "Cannot find the MIDIMAP.CFG or temporary file. These files are required to start and quit MIDI Mapper. Copy the original file to your Windows SYSTEM directory, and then try again. CAUTION: if you are quitting MIDI you will lose any changes."
+
+        IDS_FCERR_DISKFULL,             "Not enough disk space to perform this operation. Delete any unwanted files to increase available disk space, and then try again."
+        IDS_FCERR_LOMEM,                "Not enough memory available for this operation. \n\nQuit one or more applications to increase available memory, and then try again."
+        IDS_FCERR_WRITE,                "Cannot write to the disk. There may be a problem with your disk or network connection. Check your disk or network connection, correct the problem, and then try again."
+        IDS_FCERR_DISK,                 "Unable to determine how much available disk space is left. There may be a problem with your system. Contact your system administrator."
+        IDS_FCERR_READONLY,             "The MIDIMAP.CFG file is read-only. All changes will be ignored unless you change the file attributes. To do this, use the Properties command in File Manager."
+        IDS_INFO,                       "Selects a MIDI setup and changes MIDI settings"
+        IDS_CREATE_QUESTION,            "MIDI Mapper could not find a valid MIDIMAP.CFG file in your Windows SYSTEM directory. It cannot run without this file.  Do you want to create and initialize a new MIDIMAP.CFG file?"
+        IDS_NEW_QUESTION,               "Do you want to save '%s' as a new %s?"
+        IDS_CHANGE_QUESTION,            "The %s '%s' has changed.\nDo you want to save the changes?"
+        IDS_SAVE_CHANGES,               "Save Changes..."
+        IDS_RESERVED,                   "Reserved"
+        IDS_SOURCEKEY,                  "Src Key"
+        IDS_SOURCEKEYNAME,              "Src Key Name"
+        IDS_PATCHNUMBER,                "&%d based patches"
+        IDS_SOURCEPATCH,                "Src Patch"
+        IDS_SOURCEPATCHNAME,            "Src Patch Name"
+        IDS_INVALIDDESTINATION,         "Specify a number between 1 and 16 for the destination channel."
+        IDS_USERERROR,                  "Error"
+        IDS_SOURCEMNUMONIC,             "&A"
+        IDS_SOURCECHANNEL,              "Src Chan"
+
+//      IDS_NOCHANGEINUSE,              "The current MIDI setup will not be changed because the MIDI mapper is being used by another application."
+//      IDS_NOEDITINUSE,                "You cannot edit this %s because the MIDI mapper is being used by another application."
+        IDS_NODELISCURRENT,             "You cannot delete setup '%s'\nbecause it is currently in use."
+        IDS_NODELISREFERENCED,          "You cannot delete %s '%s'\nbecause it is referenced by %d %s.\n\nChange the setup or patch map references, and then try again."
+        IDS_VERIFYDELETE,               "Are you sure you want to\ndelete %s '%s'?"
+        IDS_INVALIDPORT,                "The current MIDI setup references\na MIDI device which is not installed on your\nsystem. Do you want to continue?"
+        IDS_DUPLICATE,                  "The specified %s already exists.\nDo you want to overwrite it?"
+        IDS_READONLYMODE,               "You will not be able to change any settings because the MIDI Mapper is currently being used by another application.\n\nIf you want to change settings, wait until the application is finished, and then try again."
+        IDS_ACTIVETITLE,                "&Active"
+END
+
+
+ID_MAINBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 2, 1, 226, 87
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME | DS_NOIDLEMSG
+FONT 8, "MS Shell Dlg"
+BEGIN
+        GROUPBOX "Show", -1,                            6, 3, 168, 25
+        AUTORADIOBUTTON "&Setups", ID_MAINSETUP,             10, 13, 35, 12,
+                WS_GROUP
+        AUTORADIOBUTTON "&Patch Maps", ID_MAINPATCH,         60, 13, 50, 12
+        AUTORADIOBUTTON "&Key Maps", ID_MAINKEY,             120, 13, 45, 12
+        LTEXT "N&ame:", ID_MAINNAME,                    6, 34, 40, 12
+        COMBOBOX ID_MAINSETUPCOMBO,                     54, 32, 120, 72,
+                CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP | WS_VSCROLL
+        COMBOBOX ID_MAINPATCHCOMBO,                     54, 32, 120, 72,
+                CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP | WS_VSCROLL
+        COMBOBOX ID_MAINKEYCOMBO,                       54, 32, 120, 72,
+                CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP | WS_VSCROLL
+
+        LTEXT "Description:", -1,                       6, 50, 40, 12
+        LTEXT "",ID_MAINDESC,                           54, 50, 120, 12,
+                SS_NOPREFIX
+        PUSHBUTTON "&Edit...", ID_MAINEDIT,             67, 67, 40, 14,
+                WS_GROUP
+        PUSHBUTTON "&New...", ID_MAINNEW,               119, 67, 40, 14
+        DEFPUSHBUTTON "Cancel", IDOK,                   180, 3, 40, 14,
+                WS_GROUP
+        PUSHBUTTON "&Delete", ID_MAINDELETE,            180, 20, 40, 14
+        PUSHBUTTON "&Help", IDH_CHILD_MIDI,             180, 37, 40, 14
+END
+
+ID_PROPBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE       2, 1, 176, 60
+STYLE WS_CAPTION | WS_POPUP | DS_MODALFRAME | DS_NOIDLEMSG
+FONT 8, "MS Shell Dlg"
+BEGIN
+        LTEXT "&Name:", -1,                             6, 8, 40, 8
+        EDITTEXT        ID_PROPNAME                     50, 6, 120, 12,
+                ES_AUTOHSCROLL
+        LTEXT "&Description:", -1,                      6, 26, 40, 8
+        EDITTEXT        ID_PROPDESC                     50, 24, 120, 12
+        DEFPUSHBUTTON "OK", IDOK,                       18, 42, 40, 14
+        PUSHBUTTON "Cancel", IDCANCEL,                  68, 42, 40, 14
+        PUSHBUTTON "&Help", IDH_DLG_MIDI_NEW,           118, 42, 40, 14
+END
+
+/********************************************************
+ *                                                      *
+ *      S E T U P   R E S O U R C E S                   *
+ *                                                      *
+ ********************************************************/
+
+DLG_SETUPEDIT DIALOG LOADONCALL MOVEABLE DISCARDABLE    4, 8, 275, 255
+STYLE   WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME | DS_NOIDLEMSG
+FONT 8, "MS Shell Dlg"
+BEGIN
+        /* ghost edit box to enable tabbing from row to row */
+        EDITTEXT                ID_SETUPGHOSTEDITFIRST, 0, -12, 10, 10
+
+        LISTBOX                 ID_SETUPPORTLIST        0, 0, 0, 0
+
+        LTEXT   "&Dest Chan",   ID_SETUPDESTMNEM,       0, 0, 36, 8
+        EDITTEXT                ID_SETUPEDIT,           0, 0, 20, 12
+        CONTROL "",             ID_SETUPARROW,          "cparrow",
+                WS_CHILD,                               0, 0, 10, 12
+
+        LTEXT   "&Port Name",   ID_SETUPPORTMNEM,       0, 0, 36, 8
+        COMBOBOX                ID_SETUPPORTCOMBO,      0, 0, 0, 0,
+                CBS_DROPDOWNLIST | WS_TABSTOP | WS_VSCROLL
+
+        LTEXT   "Patch &Map Name", ID_SETUPPATCHMNEM,   0, 0, 52, 8
+        COMBOBOX                ID_SETUPPATCHCOMBO,     0, 0, 0, 0,
+                CBS_DROPDOWNLIST | WS_TABSTOP | WS_VSCROLL
+
+        CONTROL "&A",           ID_SETUPCHECK,          "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 1,      "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 2,      "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 3,      "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 4,      "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 5,      "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 6,      "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 7,      "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 8,      "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 9,      "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 10,     "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 11,     "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 12,     "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 13,     "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 14,     "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+        CONTROL "",             ID_SETUPCHECK + 15,     "button",
+                WS_CHILD | BS_3STATE,                   0, 0, 8, 8
+
+        CONTROL "OK",           IDOK,                   "button",
+                WS_CHILD | BS_DEFPUSHBUTTON, 0, 0, 40, 14
+
+        CONTROL "Cancel",       IDCANCEL,               "button",
+                WS_CHILD | BS_PUSHBUTTON, 0, 0, 40, 14
+
+        CONTROL "&Help",        IDH_DLG_MIDI_SETUPEDIT, "button",
+                WS_CHILD | BS_PUSHBUTTON, 0, 0, 40, 14
+
+        /* ghost edit box to enable tabbing from row to row */
+        EDITTEXT                ID_SETUPGHOSTEDITLAST,  10, -12, 10, 10
+END
+
+/********************************************************
+ *                                                      *
+ *      P A T C H M A P   R E S O U R C E S             *
+ *                                                      *
+ ********************************************************/
+
+DLG_PATCHEDIT DIALOG LOADONCALL MOVEABLE DISCARDABLE    4, 8, 300, 255
+STYLE   WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME | DS_NOIDLEMSG
+FONT 8, "MS Shell Dlg"
+BEGIN
+        CONTROL "",             ID_PATCHBASED,          "button",
+                BS_PUSHBUTTON | WS_CHILD,               0, 0, 70, 14
+
+        /* ghost edit box to enable tabbing from row to row */
+        EDITTEXT                ID_PATCHGHOSTEDITFIRST, 0, -12, 10, 10
+
+        LTEXT "&Dest Patch",    ID_PATCHDESTMNEM,       0, 0, 48, 8
+        EDITTEXT                ID_PATCHNUMEDIT,        0, 0, 0, 0
+        CONTROL "",             ID_PATCHNUMARROW,       "cparrow",
+                WS_CHILD,                               0, 0, 0, 0
+
+        LTEXT "&Volume %",      ID_PATCHVOLMNEM,        0, 0, 32, 8
+        CONTROL "",             ID_PATCHVOLARROW,       "cparrow",
+                WS_CHILD,                               0, 0, 0, 0
+        EDITTEXT                ID_PATCHVOLEDIT,        0, 0, 0, 0
+
+        LTEXT "Key &Map Name",  ID_PATCHKEYMNEM,        0, 0, 44, 8
+        COMBOBOX                ID_PATCHCOMBO,          0, 0, 0, 0,
+                CBS_DROPDOWNLIST | WS_TABSTOP | WS_VSCROLL
+
+        SCROLLBAR               ID_PATCHSCROLL          0, 0, 0, 0,
+                SBS_VERT
+
+        CONTROL "OK",           IDOK,                   "button",
+                WS_CHILD | BS_DEFPUSHBUTTON, 0, 0, 40, 14
+
+        CONTROL "Cancel",       IDCANCEL,               "button",
+                WS_CHILD | BS_PUSHBUTTON, 0, 0, 40, 14
+
+        CONTROL "&Help",        IDH_DLG_MIDI_PATCHEDIT,         "button",
+                WS_CHILD | BS_PUSHBUTTON, 0, 0, 40, 14
+
+        /* ghost edit box to enable tabbing from row to row */
+        EDITTEXT                ID_PATCHGHOSTEDITLAST,  10, -12, 10, 10
+END
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+        IDS_PATCHMAP_BASE + 1,       "Acoustic Grand Piano"
+        IDS_PATCHMAP_BASE + 2,       "Bright Acoustic Piano"
+        IDS_PATCHMAP_BASE + 3,       "Electric Grand Piano"
+        IDS_PATCHMAP_BASE + 4,       "Honky-tonk Piano"
+        IDS_PATCHMAP_BASE + 5,       "Rhodes Piano"
+        IDS_PATCHMAP_BASE + 6,       "Chorused Piano"
+        IDS_PATCHMAP_BASE + 7,       "Harpsichord"
+        IDS_PATCHMAP_BASE + 8,       "Clavinet"
+        IDS_PATCHMAP_BASE + 9,       "Celesta"
+        IDS_PATCHMAP_BASE + 10,      "Glockenspiel"
+        IDS_PATCHMAP_BASE + 11,      "Music Box"
+        IDS_PATCHMAP_BASE + 12,      "Vibraphone"
+        IDS_PATCHMAP_BASE + 13,      "Marimba"
+        IDS_PATCHMAP_BASE + 14,      "Xylophone"
+        IDS_PATCHMAP_BASE + 15,      "Tubular Bells"
+        IDS_PATCHMAP_BASE + 16,      "Dulcimer"
+        IDS_PATCHMAP_BASE + 17,      "Hammond Organ"
+        IDS_PATCHMAP_BASE + 18,      "Percussive Organ"
+        IDS_PATCHMAP_BASE + 19,      "Rock Organ"
+        IDS_PATCHMAP_BASE + 20,      "Church Organ"
+        IDS_PATCHMAP_BASE + 21,      "Reed Organ"
+        IDS_PATCHMAP_BASE + 22,      "Accordion"
+        IDS_PATCHMAP_BASE + 23,      "Harmonica"
+        IDS_PATCHMAP_BASE + 24,      "Tango Accordion"
+        IDS_PATCHMAP_BASE + 25,      "Acoustic Guitar (nylon)"
+        IDS_PATCHMAP_BASE + 26,      "Acoustic Guitar (steel)"
+        IDS_PATCHMAP_BASE + 27,      "Electric Guitar (jazz)"
+        IDS_PATCHMAP_BASE + 28,      "Electric Guitar (clean)"
+        IDS_PATCHMAP_BASE + 29,      "Electric Guitar (muted)"
+        IDS_PATCHMAP_BASE + 30,      "Overdriven Guitar"
+        IDS_PATCHMAP_BASE + 31,      "Distortion Guitar"
+        IDS_PATCHMAP_BASE + 32,      "Guitar Harmonics"
+        IDS_PATCHMAP_BASE + 33,      "Acoustic Bass"
+        IDS_PATCHMAP_BASE + 34,      "Electric Bass (fingered)"
+        IDS_PATCHMAP_BASE + 35,      "Electric Bass (picked)"
+        IDS_PATCHMAP_BASE + 36,      "Fretless Bass"
+        IDS_PATCHMAP_BASE + 37,      "Slap Bass 1"
+        IDS_PATCHMAP_BASE + 38,      "Slap Bass 2"
+        IDS_PATCHMAP_BASE + 39,      "Synth Bass 1"
+        IDS_PATCHMAP_BASE + 40,      "Synth Bass 2"
+        IDS_PATCHMAP_BASE + 41,      "Violin"
+        IDS_PATCHMAP_BASE + 42,      "Viola"
+        IDS_PATCHMAP_BASE + 43,      "Cello"
+        IDS_PATCHMAP_BASE + 44,      "Contrabass"
+        IDS_PATCHMAP_BASE + 45,      "Tremolo Strings"
+        IDS_PATCHMAP_BASE + 46,      "Pizzicato Strings"
+        IDS_PATCHMAP_BASE + 47,      "Orchestral Harp"
+        IDS_PATCHMAP_BASE + 48,      "Timpani"
+        IDS_PATCHMAP_BASE + 49,      "String Ensemble 1"
+        IDS_PATCHMAP_BASE + 50,      "String Ensemble 2"
+        IDS_PATCHMAP_BASE + 51,      "Synth Strings 1"
+        IDS_PATCHMAP_BASE + 52,      "Synth Strings 2"
+        IDS_PATCHMAP_BASE + 53,      "Choir Aahs"
+        IDS_PATCHMAP_BASE + 54,      "Voice Oohs"
+        IDS_PATCHMAP_BASE + 55,      "Synth Voice"
+        IDS_PATCHMAP_BASE + 56,      "Orchestra Hit"
+        IDS_PATCHMAP_BASE + 57,      "Trumpet"
+        IDS_PATCHMAP_BASE + 58,      "Trombone"
+        IDS_PATCHMAP_BASE + 59,      "Tuba"
+        IDS_PATCHMAP_BASE + 60,      "Muted Trumpet"
+        IDS_PATCHMAP_BASE + 61,      "French Horn"
+        IDS_PATCHMAP_BASE + 62,      "Brass Section"
+        IDS_PATCHMAP_BASE + 63,      "Synth Brass 1"
+        IDS_PATCHMAP_BASE + 64,      "Synth Brass 2"
+        IDS_PATCHMAP_BASE + 65,      "Soprano Sax"
+        IDS_PATCHMAP_BASE + 66,      "Alto Sax"
+        IDS_PATCHMAP_BASE + 67,      "Tenor Sax"
+        IDS_PATCHMAP_BASE + 68,      "Baritone Sax"
+        IDS_PATCHMAP_BASE + 69,      "Oboe"
+        IDS_PATCHMAP_BASE + 70,      "English Horn"
+        IDS_PATCHMAP_BASE + 71,      "Bassoon"
+        IDS_PATCHMAP_BASE + 72,      "Clarinet"
+        IDS_PATCHMAP_BASE + 73,      "Piccolo"
+        IDS_PATCHMAP_BASE + 74,      "Flute"
+        IDS_PATCHMAP_BASE + 75,      "Recorder"
+        IDS_PATCHMAP_BASE + 76,      "Pan Flute"
+        IDS_PATCHMAP_BASE + 77,      "Blown Bottle"
+        IDS_PATCHMAP_BASE + 78,      "Shakuhachi"
+        IDS_PATCHMAP_BASE + 79,      "Whistle"
+        IDS_PATCHMAP_BASE + 80,      "Ocarina"
+        IDS_PATCHMAP_BASE + 81,      "Lead 1 (square)"
+        IDS_PATCHMAP_BASE + 82,      "Lead 2 (sawtooth)"
+        IDS_PATCHMAP_BASE + 83,      "Lead 3 (calliope)"
+        IDS_PATCHMAP_BASE + 84,      "Lead 4 (chiff)"
+        IDS_PATCHMAP_BASE + 85,      "Lead 5 (charang)"
+        IDS_PATCHMAP_BASE + 86,      "Lead 6 (voice)"
+        IDS_PATCHMAP_BASE + 87,      "Lead 7 (fifths)"
+        IDS_PATCHMAP_BASE + 88,      "Lead 8 (bass + lead)"
+        IDS_PATCHMAP_BASE + 89,      "Pad 1 (new age)"
+        IDS_PATCHMAP_BASE + 90,      "Pad 2 (warm)"
+        IDS_PATCHMAP_BASE + 91,      "Pad 3 (polysynth)"
+        IDS_PATCHMAP_BASE + 92,      "Pad 4 (choir)"
+        IDS_PATCHMAP_BASE + 93,      "Pad 5 (bowed)"
+        IDS_PATCHMAP_BASE + 94,      "Pad 6 (metallic)"
+        IDS_PATCHMAP_BASE + 95,      "Pad 7 (halo)"
+        IDS_PATCHMAP_BASE + 96,      "Pad 8 (sweep)"
+        IDS_PATCHMAP_BASE + 97,      "FX 1 (rain)"
+        IDS_PATCHMAP_BASE + 98,      "FX 2 (soundtrack)"
+        IDS_PATCHMAP_BASE + 99,      "FX 3 (crystal)"
+        IDS_PATCHMAP_BASE + 100,     "FX 4 (atmosphere)"
+        IDS_PATCHMAP_BASE + 101,     "FX 5 (brightness)"
+        IDS_PATCHMAP_BASE + 102,     "FX 6 (goblins)"
+        IDS_PATCHMAP_BASE + 103,     "FX 7 (echoes)"
+        IDS_PATCHMAP_BASE + 104,     "FX 8 (sci-fi)"
+        IDS_PATCHMAP_BASE + 105,     "Sitar"
+        IDS_PATCHMAP_BASE + 106,     "Banjo"
+        IDS_PATCHMAP_BASE + 107,     "Shamisen"
+        IDS_PATCHMAP_BASE + 108,     "Koto"
+        IDS_PATCHMAP_BASE + 109,     "Kalimba"
+        IDS_PATCHMAP_BASE + 110,     "Bagpipe"
+        IDS_PATCHMAP_BASE + 111,     "Fiddle"
+        IDS_PATCHMAP_BASE + 112,     "Shanai"
+        IDS_PATCHMAP_BASE + 113,     "Tinkle Bell"
+        IDS_PATCHMAP_BASE + 114,     "Agogo"
+        IDS_PATCHMAP_BASE + 115,     "Steel Drums"
+        IDS_PATCHMAP_BASE + 116,     "Woodblock"
+        IDS_PATCHMAP_BASE + 117,     "Taiko Drum"
+        IDS_PATCHMAP_BASE + 118,     "Melodic Tom"
+        IDS_PATCHMAP_BASE + 119,     "Synth Drum"
+        IDS_PATCHMAP_BASE + 120,     "Reverse Cymbal"
+        IDS_PATCHMAP_BASE + 121,     "Guitar Fret Noise"
+        IDS_PATCHMAP_BASE + 122,     "Breath Noise"
+        IDS_PATCHMAP_BASE + 123,     "Seashore"
+        IDS_PATCHMAP_BASE + 124,     "Bird Tweet"
+        IDS_PATCHMAP_BASE + 125,     "Telephone Ring"
+        IDS_PATCHMAP_BASE + 126,     "Helicopter"
+        IDS_PATCHMAP_BASE + 127,     "Applause"
+        IDS_PATCHMAP_BASE + 128,     "Gunshot"
+END
+
+/********************************************************
+ *                                                      *
+ *      K E Y M A P   R E S O U R C E S                 *
+ *                                                      *
+ ********************************************************/
+
+DLG_KEYEDIT DIALOG LOADONCALL MOVEABLE DISCARDABLE      4, 8, 120, 255
+STYLE   WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME | DS_NOIDLEMSG
+FONT 8, "MS Shell Dlg"
+BEGIN
+        /* ghost edit box to enable tabbing from row to row */
+        EDITTEXT                ID_KEYGHOSTEDITFIRST, 0, -12, 10, 10
+
+        LTEXT "&Dest Key",      ID_KEYDESTMNEM,         0, 0, 40, 8
+        EDITTEXT                ID_KEYEDIT,             0, 0, 0, 0
+        CONTROL "",             ID_KEYARROW, "cparrow",
+                WS_CHILD,                               0, 0, 0, 0
+
+        SCROLLBAR               ID_KEYSCROLL            0, 0, 0, 0,
+                SBS_VERT
+
+        CONTROL "OK",           IDOK,                   "button",
+                WS_CHILD | BS_DEFPUSHBUTTON, 0, 0, 40, 14
+
+        CONTROL "Cancel",       IDCANCEL,               "button",
+                WS_CHILD | BS_PUSHBUTTON, 0, 0, 40, 14
+
+        CONTROL "&Help",        IDH_DLG_MIDI_KEYEDIT,           "button",
+                WS_CHILD | BS_PUSHBUTTON, 0, 0, 40, 14
+
+        /* ghost edit box to enable tabbing from row to row */
+        EDITTEXT                ID_KEYGHOSTEDITLAST,  10, -12, 10, 10
+END
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+        IDS_KEYMAP_BASE + 35,     "Acoustic Bass Drum"
+        IDS_KEYMAP_BASE + 36,     "Bass Drum 1"
+        IDS_KEYMAP_BASE + 37,     "Side Stick"
+        IDS_KEYMAP_BASE + 38,     "Acoustic Snare"
+        IDS_KEYMAP_BASE + 39,     "Hand Clap"
+        IDS_KEYMAP_BASE + 40,     "Electric Snare"
+        IDS_KEYMAP_BASE + 41,     "Low Floor Tom"
+        IDS_KEYMAP_BASE + 42,     "Closed Hi Hat"
+        IDS_KEYMAP_BASE + 43,     "High Floor Tom"
+        IDS_KEYMAP_BASE + 44,     "Pedal Hi Hat"
+        IDS_KEYMAP_BASE + 45,     "Low Tom"
+        IDS_KEYMAP_BASE + 46,     "Open Hi Hat"
+        IDS_KEYMAP_BASE + 47,     "Low-Mid Tom"
+        IDS_KEYMAP_BASE + 48,     "High-Mid Tom"
+        IDS_KEYMAP_BASE + 49,     "Crash Cymbal 1"
+        IDS_KEYMAP_BASE + 50,     "High Tom"
+        IDS_KEYMAP_BASE + 51,     "Ride Cymbal 1"
+        IDS_KEYMAP_BASE + 52,     "Chinese Cymbal"
+        IDS_KEYMAP_BASE + 53,     "Ride Bell"
+        IDS_KEYMAP_BASE + 54,     "Tambourine"
+        IDS_KEYMAP_BASE + 55,     "Splash Cymbal"
+        IDS_KEYMAP_BASE + 56,     "Cowbell"
+        IDS_KEYMAP_BASE + 57,     "Crash Cymbal 2"
+        IDS_KEYMAP_BASE + 58,     "Vibraslap"
+        IDS_KEYMAP_BASE + 59,     "Ride Cymbal 2"
+        IDS_KEYMAP_BASE + 60,     "High Bongo"
+        IDS_KEYMAP_BASE + 61,     "Low Bongo"
+        IDS_KEYMAP_BASE + 62,     "Mute High Conga"
+        IDS_KEYMAP_BASE + 63,     "Open High Conga"
+        IDS_KEYMAP_BASE + 64,     "Low Conga"
+        IDS_KEYMAP_BASE + 65,     "High Timbale"
+        IDS_KEYMAP_BASE + 66,     "Low Timbale"
+        IDS_KEYMAP_BASE + 67,     "High Agogo"
+        IDS_KEYMAP_BASE + 68,     "Low Agogo"
+        IDS_KEYMAP_BASE + 69,     "Cabase"
+        IDS_KEYMAP_BASE + 70,     "Maracas"
+        IDS_KEYMAP_BASE + 71,     "Short Whistle"
+        IDS_KEYMAP_BASE + 72,     "Long Whistle"
+        IDS_KEYMAP_BASE + 73,     "Short Guiro"
+        IDS_KEYMAP_BASE + 74,     "Long Guiro"
+        IDS_KEYMAP_BASE + 75,     "Claves"
+        IDS_KEYMAP_BASE + 76,     "High Wood Block"
+        IDS_KEYMAP_BASE + 77,     "Low Wood Block"
+        IDS_KEYMAP_BASE + 78,     "Mute Cuica"
+        IDS_KEYMAP_BASE + 79,     "Open Cuica"
+        IDS_KEYMAP_BASE + 80,     "Mute Triangle"
+        IDS_KEYMAP_BASE + 81,     "Open Triangle"
+END

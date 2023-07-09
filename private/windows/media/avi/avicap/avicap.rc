@@ -1,0 +1,130 @@
+/****************************************************************************
+ *
+ *   avicap.rc
+ *
+ *   Resources
+ *
+ *   Microsoft Video for Windows Sample Capture Class
+ *
+ *   Copyright (c) 1992, 1993 Microsoft Corporation.  All Rights Reserved.
+ *
+ *    You have a royalty-free right to use, modify, reproduce and
+ *    distribute the Sample Files (and/or any modified version) in
+ *    any way you find useful, provided that you agree that
+ *    Microsoft has no warranty obligations or liability for any
+ *    Sample Application Files which are modified.
+ *
+ ***************************************************************************/
+
+#include <windows.h>
+//#include <verinfo.h>
+#include "avicap.h"
+#include "msvideo.h"
+#include "avicap.rcv"
+
+
+STRINGTABLE
+BEGIN
+    DV_ERR_OK               "No Error."
+    DV_ERR_NONSPECIFIC      "Unspecified error."
+    DV_ERR_BADFORMAT        "Unsupported video format."
+    			
+    DV_ERR_STILLPLAYING     "Device is still playing."
+    			
+    DV_ERR_UNPREPARED       "Unprepared header."
+    			
+    DV_ERR_SYNC             "Sync error."
+    			
+    DV_ERR_TOOMANYCHANNELS  "Device already in use."
+    			
+    DV_ERR_NOTDETECTED	    "Capture device was not detected."
+    DV_ERR_BADINSTALL	    "Capture driver is not installed properly."
+    DV_ERR_CREATEPALETTE    "Palette creation error."	
+    DV_ERR_SIZEFIELD	    "Structure size incorrect."
+    DV_ERR_PARAM1	    "Param1 invalid."	
+    DV_ERR_PARAM2	    "Param2 invalid."	
+    DV_ERR_CONFIG1	    "Configuration parameter 1 invalid."
+    DV_ERR_CONFIG2	    "Configuration parameter 2 invalid."	
+    DV_ERR_FLAGS	    "Flags parameter invalid."
+    DV_ERR_13		    "Error 13."
+
+    DV_ERR_NOTSUPPORTED     "Unsupported function."
+    DV_ERR_NOMEM            "Out of memory."
+    DV_ERR_ALLOCATED        "Device is already in use."
+    DV_ERR_BADDEVICEID      "Invalid device ID."
+    DV_ERR_INVALHANDLE      "Invalid handle."
+    DV_ERR_BADERRNUM        "Invalid error number."
+    DV_ERR_NO_BUFFERS       "No buffers are available."
+
+    DV_ERR_MEM_CONFLICT     "Memory conflict / problem detected."
+    DV_ERR_IO_CONFLICT      "I/O address conflict detected."
+    DV_ERR_DMA_CONFLICT     "DMA conflict detected."
+    DV_ERR_INT_CONFLICT     "Interrupt conflict / problem detected."
+    DV_ERR_PROTECT_ONLY     "Driver cannot run in Standard mode, requires Enhanced mode."
+
+        IDS_CAP_BEGIN               "Capture Start"
+        IDS_CAP_END                 "Capture End"
+        IDS_CAP_INFO                "%s"
+        IDS_CAP_DEFAVIEXT           "avi"
+        IDS_CAP_DEFPALEXT           "pal"
+        IDS_CAP_ERRORPALOPEN        "Error opening palette '%s'"
+        IDS_CAP_ERRORPALSAVE        "Error saving palette '%s'"
+        IDS_CAP_ERRORDIBSAVE        "Error saving frame '%s'"
+        IDS_CAP_CANTOPEN            "Cannot open '%s'"
+        IDS_CAP_OUTOFMEM            "Out of memory"
+        IDS_CAP_FILEEXISTS          "File '%s' exists -- overwrite it?"
+        IDS_CAP_VIDEDITERR          "An error occurred while trying to run VidEdit."
+        IDS_CAP_READONLYFILE        "The file '%s' is a read-only file."
+        IDS_CAP_WRITEERROR          "Unable to write to file '%s'.\nDisk may be full."
+        IDS_CAP_NODISKSPACE         "There is no space to create a capture file on the specified device."
+        IDS_CAP_SETFILESIZE         "Set File Size"
+        IDS_CAP_SAVEASPERCENT       "SaveAs: %2ld%%  Hit Escape to abort."
+
+        IDS_CAP_WAVE_OPEN_ERROR     "Error: Cannot open the wave input device.\nCheck sample size, frequency, and channels."
+        IDS_CAP_WAVE_ALLOC_ERROR    "Error: Out of memory for wave buffers."
+        IDS_CAP_WAVE_PREPARE_ERROR  "Error: Cannot prepare wave buffers."
+        IDS_CAP_WAVE_ADD_ERROR      "Error: Cannot add wave buffers."
+        IDS_CAP_WAVE_SIZE_ERROR     "Error: Bad wave size."
+
+        IDS_CAP_VIDEO_OPEN_ERROR    "Error: Cannot open the video input device."
+        IDS_CAP_VIDEO_ALLOC_ERROR   "Error: Out of memory for video buffers."
+        IDS_CAP_VIDEO_PREPARE_ERROR "Error: Cannot prepare video buffers."
+        IDS_CAP_VIDEO_ADD_ERROR     "Error: Cannot add video buffers."
+        IDS_CAP_VIDEO_SIZE_ERROR    "Error: Bad video size."
+
+        IDS_CAP_FILE_OPEN_ERROR     "Error: Cannot open capture file."
+        IDS_CAP_FILE_WRITE_ERROR    "Error: Cannot write to capture file.  Disk may be full."
+        IDS_CAP_RECORDING_ERROR     "Error: Cannot write to capture file.  Data rate too high or disk full."
+        IDS_CAP_RECORDING_ERROR2    "Error while recording"
+        IDS_CAP_NO_FRAME_CAP_ERROR  "Warning: No frames captured.\nConfirm that vertical sync interrupts\nare configured and enabled."
+        IDS_CAP_NO_PALETTE_WARN     "Warning: Using default palette."
+        IDS_CAP_MCI_CONTROL_ERROR   "Error: Unable to access MCI device."
+        IDS_CAP_MCI_CANT_STEP_ERROR "Error: Unable to step MCI device."
+        IDS_CAP_NO_AUDIO_CAP_ERROR  "Error: No audio data captured.\nCheck audio card settings."
+        IDS_CAP_AVI_INIT_ERROR      "Error: Unable to initialize for capture."
+        IDS_CAP_AVI_DRAWDIB_ERROR   "Error: Unable to draw this data format."
+        IDS_CAP_COMPRESSOR_ERROR    "Error: Unable to initialize compressor."
+        IDS_CAP_AUDIO_DROP_ERROR    "Error: Audio data was lost during capture, reduce capture rate."
+
+        /* status */
+        IDS_CAP_STAT_LIVE_MODE      "Live window"
+        IDS_CAP_STAT_OVERLAY_MODE   "Overlay window"
+        IDS_CAP_STAT_CAP_INIT       "Setting up for capture - Please wait"
+        IDS_CAP_STAT_CAP_FINI       "Finished capture, now writing frame %ld"
+        IDS_CAP_STAT_PALETTE_BUILD  "Building palette map"
+        IDS_CAP_STAT_OPTPAL_BUILD   "Computing optimal palette"
+        IDS_CAP_STAT_I_FRAMES       "%d frames"
+        IDS_CAP_STAT_L_FRAMES       "%ld frames"
+        IDS_CAP_STAT_CAP_L_FRAMES   "Captured %ld frames"
+        IDS_CAP_STAT_CAP_AUDIO      "Capturing audio"
+        IDS_CAP_STAT_VIDEOCURRENT   "Captured %ld frames (%ld dropped) %d.%03d sec."
+        IDS_CAP_STAT_VIDEOAUDIO     "Captured %d.%03d sec.  %ld frames (%ld dropped) (%d.%03d fps).  %ld audio bytes (%d,%03d sps)"
+        IDS_CAP_STAT_VIDEOONLY      "Captured %d.%03d sec.  %ld frames (%ld dropped) (%d.%03d fps)"
+        IDS_CAP_STAT_FRAMESDROPPED  "Dropped %ld of %ld frames (%d.%1d%%) during capture."
+
+        /* capture dialog strings */
+        IDS_CAP_SEQ_MSGSTART        "Select OK to start capture\nof video sequence\nto %s."
+        IDS_CAP_SEQ_MSGSTOP         "Hit ESCAPE or click to end capture"
+
+END
+

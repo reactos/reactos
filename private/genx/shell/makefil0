@@ -1,0 +1,7 @@
+#
+# Make sure shguids.obj is deleted when building clean
+#
+!INCLUDE $(NTMAKEENV)\makefile.plt
+
+clean:
+    rd /s /q uuid\$(_OBJ_DIR)

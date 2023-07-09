@@ -1,0 +1,61 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+!include $(CCSHELL_DIR)\browseui\browseui.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\browseui\browseui.inc
+
+NO_BROWSER_FILE = 1
+
+# WARNING: *all* files will get these (not just evtmon stuff)
+# if we want to change this we'll need to use explicit actions in makefile.inc
+C_DEFINES       = $(C_DEFINES) $(EM_DEFINES)
+INCLUDES        = $(EM_INCLUDES);$(INCLUDES)
+
+# ierules.rul gens emeval.c (etc.), which is included in libem.c
+!if 0
+NTTARGETFILE0   = $(O)\emeval.c
+!endif
+# Include makefile.inc
+NTTARGETFILES   =
+
+TARGETNAME      = emclient
+TARGETPATH      = obj
+TARGETTYPE      = LIBRARY
+
+!if 0
+                  libem.c      
+!endif
+SOURCES         = \
+                  regdb.cpp    \
+                  uacount.cpp  \
+                  uemapp.cpp   \
+
+
+#PRECOMPILED_CXX = 1
+# PRECOMPILED_INCLUDE = local.h
+

@@ -1,0 +1,1371 @@
+MSIPRIP2-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Microsoft(R) RIP Version 2 for Internet Protocol MIB
+--
+-- This MIB defines the management information for the Routing Information 
+-- Protocol Version 2 ( RIP v2).  The information in this MIB is divided
+-- into 3 groups:
+--		
+-- 1. Global Group
+--		Contains the global information and statistics for the RIP protocol
+--		Information contained in this group is independent of the interfaces
+--		over which the protocol is enabled.
+--
+-- 2. Interface Group
+--		Contains RIP configuration information and statistics specific 
+--		to each interface.
+--
+-- 3. Peer Group
+--		Contains statistics pertaining to RIP peers.  
+--
+
+IMPORTS
+        enterprises, OBJECT-TYPE, 
+        TimeTicks, Counter, IpAddress 
+            FROM RFC1155-SMI
+        microsoft, software
+            FROM MSFT-MIB;
+
+-- MSIPRIP2
+
+-- microsoft   OBJECT IDENTIFIER ::= { enterprises 311 }
+-- software    OBJECT IDENTIFIER ::= { microsoft 1 }
+
+msiprip2    OBJECT IDENTIFIER ::= { software 11 }
+
+--
+-- groups in MSIPRIP2
+--
+
+global      OBJECT IDENTIFIER ::= { msiprip2 1 }
+interface   OBJECT IDENTIFIER ::= { msiprip2 2 }
+peer        OBJECT IDENTIFIER ::= { msiprip2 3 }
+
+
+--
+-- RIP Global Group
+--
+--		Contains the global information and statistics for the RIP protocol
+--		Information contained in this group is independent of the interfaces
+--		over which the protocol is enabled.
+--
+--		Global information consists of scalar variables which can be 
+--		updated and a peer filter table
+--
+--		Global information also contains global RIP statitics
+--
+
+globalSystemRouteChanges OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of changes RIP has made to the system routing tables."
+        
+    ::= { global 1 }
+    
+
+globalTotalResponseSends OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of request messages for which responses have been sent."
+        
+    ::= { global 2 }
+
+
+globalLoggingLevel OBJECT-TYPE
+    SYNTAX INTEGER {
+                none(1),
+                error(2),
+                warning(3),
+                information(4)
+           }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Information logged can be None, Error only, Error + Warning, 
+         Error + Warn + Logging.  This variable controls the amount
+         of information logged"
+         
+    ::= { global 3 }
+
+
+globalMaxRecQueueSize OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Maximum size to use for queueing incoming packets."
+        
+    ::= { global 4 }
+
+
+globalMaxSendQueueSize OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Maximum size to use for queueing outgoing packets."
+        
+    ::= { global 5 }
+
+
+globalMinTriggeredUpdateInterval OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Minimum lag time before sending a triggered update.  Used to 
+         consolidate updates to the route table and reduce number of 
+         updates sent."
+         
+    ::= { global 6 }
+
+
+globalPeerFilterMode OBJECT-TYPE
+    SYNTAX  INTEGER {
+                        disable(1),
+                        include(2),
+		    			exclude(3)
+    		}
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Controls the use of update messages from the list of peers in the peer 
+         filter table.  
+
+         If set to include 
+         routes will be only be accepted if they are from the routers in the 
+         peer array.  
+
+         If set to exclude
+         routes will be rejected that come from the routers whose addresses are 
+         in the peer array, and all other routers will be accepted."
+         
+    ::= { global 7 }
+
+
+globalPeerFilterCount OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of entries in the peer filter table"
+        
+    ::= { global 8}
+
+
+--
+-- the Peer filter Table
+--
+--
+-- Entries in the peer filter table are IP addresses of routers that 
+-- interact with this router via RIP.  The use of the entries in this table 
+-- is controlled by the global variable "globalPeerFilterMode"
+--
+
+globalPeerFilterTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF GlobalPeerFilterEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Table of peer routers communicating with this router via RIP"
+        
+    ::= { global 9 }
+
+
+globalPeerFilterEntry OBJECT-TYPE
+    SYNTAX  GlobalPeerFilterEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Peer router entry. Contains the IP address of peer router"
+
+    INDEX   { globalPFAddr }
+    
+    ::= { globalPeerFilterTable 1 }
+
+
+GlobalPeerFilterEntry ::=
+    SEQUENCE {
+        globalPFAddr
+            IpAddress,
+        globalPFTag
+        	INTEGER
+    }
+
+
+globalPFAddr OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "IP Address of peer router"
+        
+    ::= { globalPeerFilterEntry 1 }
+
+globalPFTag OBJECT-TYPE
+	SYNTAX	INTEGER {	
+        		create(1),
+        		delete(2)
+        	}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION	
+		"create : Creates an entry in the Global Peer Filter table
+		 delete	: Deletes an entry in the Global Peer Filter table
+		"
+	::= { globalPeerFilterEntry 2 }
+
+--
+-- RIP Interface group
+--
+-- 		Contains RIP interface configuration information, RIP interface 
+--		statistics and RIP interface binding information.  Each type of
+--		information is stored in a table with one entry for each 
+--		interface over which RIP is enabled. 
+--
+--		Asscociated with each entry in the Interface Config table is a
+--		list of entries in the 
+--			Unicast peer table			: List of peers to which the update 
+--										  message is unicast.
+--			Accept Route Filter Table 	: List of routes used to filter the 
+--										  accepted routes.
+--			Announce Route Filter Table	: List of routes used to filter the
+--										  annouced routes 
+--			
+--		Asscociated with each entry in the Interface binding table is a
+--		list of entries in the 
+--
+--			Interface Address Table		: List of address bound to an interface
+--
+
+--
+-- Interface Statistics Table.
+--
+
+--
+-- 	RIP statistics for each interface.  Statistics include 
+--		number of requests/responses sent/received, 
+--		number of send/receive failures
+--		number of triggered updates sent
+--		number of bad packet/entries revceived.
+--
+
+ifStatsTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfStatsEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Table of RIP statistics for interfaces"
+        
+    ::= { interface 1 }
+
+
+ifStatsEntry OBJECT-TYPE
+    SYNTAX  IfStatsEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "RIP interface statistics entry. 
+         Each entry contains counts of send/receive failures, requests/resposes
+         sent/received, bad packets/entries reveived and triggered updates sent"
+        
+    INDEX   { ifSEIndex }
+    
+    ::= { ifStatsTable 1 }
+
+
+IfStatsEntry ::=
+    SEQUENCE {
+        ifSEIndex
+            INTEGER,
+        ifSEState
+            INTEGER,
+        ifSESendFailures
+            Counter,
+        ifSEReceiveFailures
+            Counter,
+        ifSERequestSends
+            Counter,
+        ifSERequestReceiveds
+            Counter,
+        ifSEResponseSends
+            Counter,
+        ifSEResponseReceiveds
+            Counter,
+        ifSEBadResponsePacketReceiveds
+            Counter,
+        ifSEBadResponseEntriesReceiveds
+            Counter,
+        ifSETriggeredUpdateSends
+            Counter
+    }
+
+
+ifSEIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Index for the RIP interface Statistics table"
+        
+    ::= { ifStatsEntry 1 } 
+
+    
+ifSEState OBJECT-TYPE
+    SYNTAX  INTEGER {
+                enabled(1),
+                bound(2)
+            }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Current state of RIP on this interface."
+        
+    ::= { ifStatsEntry 2 }
+
+
+ifSESendFailures OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of times a failure occurred while attempting to send a 
+         packet on this interface."
+
+    ::= { ifStatsEntry 3 }
+
+
+ifSEReceiveFailures OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of times a failure occurred while attempting to receive
+         a packet on this interface."
+
+    ::= { ifStatsEntry 4 }
+
+
+ifSERequestSends OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of RIP REQUEST packets sent on this interface."
+
+    ::= { ifStatsEntry 5 }
+
+
+ifSERequestReceiveds OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of RIP REQUEST packets received on this interface."
+        
+    ::= { ifStatsEntry 6 }
+
+
+ifSEResponseSends OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of RIP RESPONSE packets sent on this interface."
+        
+    ::= { ifStatsEntry 7 }
+
+
+ifSEResponseReceiveds OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of RIP RESPONSE packets received on this interface."
+        
+    ::= { ifStatsEntry 8 }
+
+
+ifSEBadResponsePacketReceiveds OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of RIP RESPONSE packets discarded due to errors in the header."
+        
+    ::= { ifStatsEntry 9 }
+
+
+ifSEBadResponseEntriesReceiveds OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of RIP RESPONSE routes ignored due to errors in the entry."
+        
+    ::= { ifStatsEntry 10 }
+
+
+ifSETriggeredUpdateSends OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Count of triggered updates sent. "
+        
+    ::= { ifStatsEntry 11 }
+
+
+--
+-- RIP Interface Configuration Table.
+--
+
+--
+-- 	RIP Interface config includes the interface setting for :
+--
+--  	update, annouce and accept modes, 
+--		full update, route expiration and route removal intervals, 
+--		Unicast peer, accept/annouce filter counts and 
+--		authentication information.
+--
+--		Associated with each interface entry in this table, there are a
+--		set of entries in 
+--
+--			RIP Unicast Peer Table
+--			RIP Announce Fitler Table
+-- 			RIP Accept Filter Table.
+--
+--		The use of the entries in each of the above tables is controlled
+--		by the value of the respective modes in the interface config setting
+--
+
+ifConfigTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfConfigEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "RIP Interface configuration table.  List of subnets that require
+         separate configuration in RIP."
+        
+    ::= { interface 2 }
+
+
+ifConfigEntry OBJECT-TYPE
+    SYNTAX  IfConfigEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "RIP configuration entry for an interface. A single routing domain in a
+         single subnet."
+        
+    INDEX   { ifCEIndex }
+    
+    ::= { ifConfigTable 1 }
+
+
+IfConfigEntry ::=
+    SEQUENCE {
+        ifCEIndex
+            INTEGER,
+        ifCEState
+            INTEGER,
+        ifCEMetric
+            INTEGER,
+        ifCEUpdateMode
+            INTEGER,
+        ifCEAcceptMode
+            INTEGER,
+        ifCEAnnounceMode
+            INTEGER,
+        ifCEProtocolFlags
+            INTEGER,
+        ifCERouteExpirationInterval
+            TimeTicks,
+        ifCERouteRemovalInterval
+            TimeTicks,
+        ifCEFullUpdateInterval
+            TimeTicks,
+        ifCEAuthenticationType
+            INTEGER,
+        ifCEAuthenticationKey
+            OCTET STRING,
+        ifCERouteTag
+            INTEGER,
+        ifCEUnicastPeerMode
+            INTEGER,
+        ifCEAcceptFilterMode
+            INTEGER,
+        ifCEAnnounceFilterMode
+            INTEGER,
+        ifCEUnicastPeerCount
+            INTEGER,
+        ifCEAcceptFilterCount
+            INTEGER,
+        ifCEAnnounceFilterCount
+            INTEGER
+    }
+
+
+ifCEIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Index for RIP interface config. table."
+        
+    ::= { ifConfigEntry 1 }
+
+
+ifCEState OBJECT-TYPE
+    SYNTAX  INTEGER {
+                enabled(1),
+                bound(2)
+            }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Current state of RIP on this interface."
+        
+    ::= { ifConfigEntry 2 }
+
+
+ifCEMetric OBJECT-TYPE
+    SYNTAX  INTEGER (0..16)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Metric for the network connected to this interface."
+        
+	DEFVAL { 1 }        
+
+    ::= { ifConfigEntry 3 }
+
+
+ifCEUpdateMode OBJECT-TYPE
+    SYNTAX  INTEGER {
+                periodic(1),
+                demand(2)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Mode for sending update messages.  If set to periodic, then messages 
+         are sent based on the value of ifCEFullUpdateInterval.  Otherwise 
+         update messages are sent only on demand."
+        
+	DEFVAL { periodic }
+	
+    ::= { ifConfigEntry 4 }
+
+
+ifCEAcceptMode OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disable(1),
+                rip1(2),
+                rip1Compat(3),
+                rip2(4)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Specifies the type of RIP messages that will be accepted by this router
+         	disable		: No RIP messages wil be accepted
+         	rip1		: Only RIP-1 messages will be accepted
+         	rip1Compat	: Both RIP-1 and RIP-2 messages will be accepted
+         	rip2		: Only RIP-2 messages will be accepted"
+         	
+    DEFVAL { rip1Compat }
+
+    ::= { ifConfigEntry 5 }
+
+
+ifCEAnnounceMode OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disable(1),
+                rip1(2),
+                rip1Compat(3),
+                rip2(4)
+            }        
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Specifies the type of RIP messages that will be sent by this router.
+         	disable		: No RIP messages wil be sent
+         	rip1		: Only RIP-1 messages will be sent in compliance with 
+         				  RFC 1058.
+         	rip1Compat	: RIP-2 messages will be broadcast using RFC 1058
+         				  subsumption rules.
+         	rip2		: RIP-2 messages will be multicast"
+         	
+	DEFVAL { rip1Compat }        
+	
+    ::= { ifConfigEntry 6 }
+
+
+ifCEProtocolFlags OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    	"Options for control of RIP operation.  These options can be used in
+    	 combination.
+    	
+			Option								value
+		--------------------------------------------------
+		1.	ACCEPT_HOST_ROUTES           		0x00000001
+		2.	ANNOUNCE_HOST_ROUTES         		0x00000002
+		3.	ACCEPT_DEFAULT_ROUTES        		0x00000004
+		4.	ANNOUNCE_DEFAULT_ROUTES      		0x00000008
+		5.	SPLIT_HORIZON                		0x00000010
+		6.	POISON_REVERSE               		0x00000020
+		7.	GRACEFUL_SHUTDOWN            		0x00000040
+		8.	TRIGGERED_UPDATES            		0x00000080
+		9.	OVERWRITE_STATIC_ROUTES      		0x00000100 "
+		
+	DEFVAL { 240 }        
+
+    ::= { ifConfigEntry 7 }
+
+
+ifCERouteExpirationInterval OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Interval after which route is marked for deletion."
+        
+	DEFVAL { 180 }
+	
+    ::= { ifConfigEntry 8 }
+
+
+ifCERouteRemovalInterval OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Interval after which a route marked for deletion is removed."
+        
+    DEFVAL { 120 }
+
+    ::= { ifConfigEntry 9 }
+
+
+ifCEFullUpdateInterval OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Interval between route table annoucements."
+
+	DEFVAL { 30 }        
+
+    ::= { ifConfigEntry 10 }
+
+
+ifCEAuthenticationType OBJECT-TYPE
+    SYNTAX  INTEGER {
+                noAuthentication(1),
+                simplePassword(2),
+                md5(3)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Type of authentication to be used on this interface."
+        
+    DEFVAL{ noAuthentication }
+    
+    ::= { ifConfigEntry 11 }
+
+
+ifCEAuthenticationKey OBJECT-TYPE
+    SYNTAX  OCTET STRING (SIZE (0..16))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "The value to be used as the Authentication key whenever the 
+         corresponding instance of ifCEAuthenticationType has a value 
+         other than noAuthentication.   A modification of the 
+         corresponding instance of ifCEAuthentiationType does not modify 
+         the ifCEAuthenticationKey value.  If a string shorter than 16 
+         octects is supplied, it will be left-justified and padded to 16 
+         octects, on the right with nulls (0x00).
+
+         Reading this object always results in an OCTET STRING of length
+         zero; authentication may not be bypasssed by reading the MIB
+         object"
+
+    DEFVAL { ''h }
+    
+    ::= { ifConfigEntry 12 }
+
+
+ifCERouteTag OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Value inserted into the Routing Domain field of all RIP packets
+         sent on this interface."
+        
+	DEFVAL { 0 }
+	
+    ::= { ifConfigEntry 13 }
+
+
+ifCEUnicastPeerMode OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disable(1),
+                peerAlso(2),
+                peerOnly(3)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Determines the unicast behavior when route update messages are sent.
+        
+         If set to peerAlso, updates are sent to those peers in the 
+         RIP unicast peer table corresponding to this interace as well as 
+         being sent via broadcast/multicast.  
+
+         If set to peerOnly, updates are sent only those peers listed in
+         in the RIP Unicast peer table corresponding to this interface."
+
+	DEFVAL{ disable }
+	
+    ::= { ifConfigEntry 14 }
+
+
+ifCEAcceptFilterMode OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disable(1),
+                include(2),
+                exclude(3)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Determines the accept behaviour of the RIP router.  
+
+         If set to include
+         the entries in the Accept Filter Table corresponding to this interface 
+         specify the routes to be included.  All other routes are excluded. 
+
+         If set to exclude
+         the entries in the Accept Filter Table corresponding to this interface
+         specify the routes to be excluded."
+         
+	DEFVAL { disable }        
+	
+    ::= { ifConfigEntry 15 }
+
+
+ifCEAnnounceFilterMode OBJECT-TYPE
+    SYNTAX  INTEGER {
+                disable(1),
+                include(2),
+                exclude(3)
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Determines the annouce behaviour of the RIP router.  
+
+         If set to include
+         the entries in the Announce Filter Table corresponding to this 
+         interface specify the routes to be included.  All other routes 
+         are excluded. 
+
+		 If set to exclude
+         the entries in the Announce Filter Table corresponding to this 
+         interface specify the routes to be excluded."
+
+	DEFVAL { disable }        
+
+    ::= { ifConfigEntry 16 }
+
+
+ifCEUnicastPeerCount OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of entries in the Unicast Peer Table corresponding to
+         this interface entry."
+         
+	DEFVAL { 0 }        
+	
+    ::= { ifConfigEntry 17 }
+
+
+ifCEAcceptFilterCount OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of entries in the Accept Filter Table corresponding to
+         this interface entry."
+         
+	DEFVAL { 0 }        
+        
+    ::= { ifConfigEntry 18 }
+
+
+ifCEAnnounceFilterCount OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of entries in the Announce Filter Table corresponding to
+         this interface entry."
+
+	DEFVAL { 0 }        
+
+    ::= { ifConfigEntry 19 }
+
+
+--
+-- Unicast Peer Table
+--
+
+--
+-- For each interface a list of peers to which update messages are 
+-- unicast is maintained in this table.  The use of the entries 
+-- corresponding to an interface is controlled by the 
+-- ifCEUnicastPeerMode variable in the interface configuration.  
+--
+-- This table is indexed by an interface number and a peer router address.
+--
+
+ifUnicastPeersTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfUnicastPeersEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Table of the peers routers to which update messages need 
+         to be unicast"
+         
+    ::= { interface 3 }
+
+
+ifUnicastPeersEntry OBJECT-TYPE
+    SYNTAX  IfUnicastPeersEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    	"Entry for a peer router for an interface"
+    	
+    INDEX   { ifUPIfIndex, ifUPAddress }
+    
+    ::= { ifUnicastPeersTable 1 }
+
+
+IfUnicastPeersEntry ::=
+    SEQUENCE {
+    	ifUPIfIndex
+            INTEGER,
+        ifUPAddress
+            IpAddress,
+        ifUPTag
+        	INTEGER
+    }
+
+
+ifUPIfIndex OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Interface index corresponding to the interface with which this 
+		 peer router is associated."
+		 
+	::= { ifUnicastPeersEntry 1 }
+	
+
+ifUPAddress OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    	"IP Address of a peer router."
+    	
+    ::= { ifUnicastPeersEntry 2 }
+
+
+ifUPTag	OBJECT-TYPE
+	SYNTAX	INTEGER {	
+        		create(1),
+        		delete(2)
+        	}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION	
+		"create : Creates an entry in the unicast peer table
+		 delete	: Deletes an entry in the unicast peer table
+		"
+	::= { ifUnicastPeersEntry 3 }
+
+--
+-- Accept Route Filter Table
+--
+
+--
+-- For each interface the list of routes to be used to filter the set
+-- of routes to be accepted over that interface is maintained in this
+-- table.  The use of the routes corresponding to an interface is 
+-- determined by the setting of the ifCEAcceptRouteFilterMode in the
+-- interface configuration.
+--
+-- This table is indexed by an interface number and a peer router address.
+--
+
+ifAcceptRouteFilterTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfAcceptRouteFilterEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Table of the route filters used to filter the set of routes 
+         accepted over an interface."
+         
+    ::= { interface 4 }
+
+
+ifAcceptRouteFilterEntry OBJECT-TYPE
+    SYNTAX  IfAcceptRouteFilterEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Entry for a route filter for an interface"
+        
+    INDEX { ifAcceptRFIfIndex, 
+    		ifAcceptRFLoAddress, 
+    		ifAcceptRFHiAddress,
+    		ifAcceptRFTag }
+    		
+    ::= { ifAcceptRouteFilterTable 1 }
+
+
+IfAcceptRouteFilterEntry ::=
+    SEQUENCE {
+    	ifAcceptRFIfIndex
+            INTEGER,
+        ifAcceptRFLoAddress
+            IpAddress,
+        ifAcceptRFHiAddress
+            IpAddress,
+        ifAcceptRFTag
+        	INTEGER
+	}
+
+
+ifAcceptRFIfIndex OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-write
+	STATUS mandatory
+	DESCRIPTION
+        "Interface index corresponding to the interface to which this route
+         filter entry corresponds"
+        
+	::= { ifAcceptRouteFilterEntry 1 }
+
+	
+ifAcceptRFLoAddress OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Lowest address in the range of routes covered by this filter."
+
+    ::= { ifAcceptRouteFilterEntry 2 }
+
+ifAcceptRFHiAddress OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Higher address in the range routes covered by this filter."
+
+    ::= { ifAcceptRouteFilterEntry 3 }
+
+ifAcceptRFTag	OBJECT-TYPE
+	SYNTAX	INTEGER {	
+        		create(1),
+        		delete(2)
+        	}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION	
+		"create : Creates an entry in the Accept Route Filter table
+		 delete	: Deletes an entry in the Accept Route Filter table
+		"
+	::= { ifAcceptRouteFilterEntry 4 }
+
+--
+-- Announce Route Filter Table
+--
+
+--
+-- For each interface the list of routes to be used to filter the set
+-- of routes to be annouced over that interface is maintained in this
+-- table.  The use of the routes corresponding to an interface is 
+-- determined by the setting of the ifCEAnnounceRouteFilterMode in the
+-- interface configuration.
+--
+-- This table is indexed by an interface number and a peer router address.
+--
+
+ifAnnounceRouteFilterTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfAnnounceRouteFilterEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Table of the route filters used to filter the set of routes 
+         annouced over an interface."
+         
+    ::= { interface 5 }
+
+
+ifAnnounceRouteFilterEntry OBJECT-TYPE
+    SYNTAX  IfAnnounceRouteFilterEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Entry for a route filter for an interface."
+        
+    INDEX   { ifAnnounceRFIfIndex, ifAnnounceRFLoAddress, ifAnnounceRFHiAddress }
+    
+    ::= { ifAnnounceRouteFilterTable 1 }
+
+
+IfAnnounceRouteFilterEntry ::=
+    SEQUENCE {
+    	ifAnnounceRFIfIndex
+            INTEGER,
+        ifAnnounceRFLoAddress
+            IpAddress,
+        ifAnnounceRFHiAddress
+            IpAddress,
+        ifAnnounceRFTag
+        	INTEGER
+}
+
+
+ifAnnounceRFIfIndex OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-write
+	STATUS mandatory
+	DESCRIPTION
+        "Interface index corresponding to the interface to which this route
+         filter entry corresponds"
+
+	::= { ifAnnounceRouteFilterEntry 1 }
+
+	
+ifAnnounceRFLoAddress OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Lowest address in the range of routes covered by this filter."
+    ::= { ifAnnounceRouteFilterEntry 2 }
+
+
+ifAnnounceRFHiAddress OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "Higher address in the range routes covered by this filter."
+    ::= { ifAnnounceRouteFilterEntry 3 }
+
+
+ifAnnounceRFTag	OBJECT-TYPE
+	SYNTAX	INTEGER {	
+        		create(1),
+        		delete(2)
+        	}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION	
+		"create : Creates an entry in the Announce Route Filter table
+		 delete	: Deletes an entry in the Announce Route Filter table
+		"
+	::= { ifAnnounceRouteFilterEntry 4 }
+
+--
+-- Interface Binding Table.
+--
+
+--
+-- This table stores information pertaining to the binding state and the 
+-- number of IP addresses bound to an interface.
+--
+-- The list of IP address bound to an interface is maintained in the 
+-- Interface Address Table
+--
+
+
+ifBindingTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfBindingEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Table containing binding information for each interface."
+        
+    ::= { interface 6 }
+
+
+ifBindingEntry OBJECT-TYPE
+    SYNTAX  IfBindingEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    	"Binding information entry for an interface"
+    	
+    INDEX   { ifBindingIndex }
+    
+    ::= { ifBindingTable 1 }
+
+
+IfBindingEntry ::=
+    SEQUENCE {
+        ifBindingIndex
+            INTEGER,
+        ifBindingState
+            INTEGER,
+        ifBindingCounts
+            Counter
+    }
+
+
+ifBindingIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    	"Index corresponding to an interface entry in the binding table"
+    	
+    ::= { ifBindingEntry 1 }
+
+
+ifBindingState OBJECT-TYPE
+    SYNTAX  INTEGER {
+                enabled(1),
+                bound(2)
+            }        
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "State of the interface binding"
+        
+    ::= { ifBindingEntry 2 }
+
+
+ifBindingCounts OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Number of IP address bound to this interface.  This is also the 
+         number of entries in the Interface Address Table corresponding
+         to this interface."
+        
+    ::= { ifBindingEntry 3 }
+
+
+--
+-- Interface Address Table
+--
+
+--
+-- The Interface Address Table contains the list of address bound to
+-- each interface.
+--
+-- This table is indexed by an interface number and an IP address.
+--
+
+ifAddressTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfAddressEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    	"Table of IP addresses bound to interfaces"
+    	
+    ::= { interface 7 }
+
+
+ifAddressEntry OBJECT-TYPE
+    SYNTAX  IfAddressEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    	"Entry for an IP address for an interface"
+    	
+    INDEX   { ifAEIfIndex, ifAEAddress, ifAEMask }
+    
+    ::= { ifAddressTable 1 }
+
+
+IfAddressEntry ::=
+    SEQUENCE {
+    	ifAEIfIndex
+    		INTEGER,
+        ifAEAddress
+            IpAddress,
+        ifAEMask
+            IpAddress
+    }
+
+
+ifAEIfIndex OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS mandatory
+	DESCRIPTION
+		"Index corresponding to the Interface with which this entry 
+		 is associated."
+
+	::= { ifAddressEntry 1 }
+
+	
+ifAEAddress OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Ip address bound to the associated interface."
+        
+    ::= { ifAddressEntry 2 }
+
+
+ifAEMask OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Address Mask associated with the IP address contained in the 
+         corresponding ifAEAddress field."
+         
+    ::= { ifAddressEntry 3 }
+
+
+--
+-- Peer Statistics Table.
+--
+
+--
+-- This table contains statistics for each peer router that commnicates
+-- with this router via RIP.  
+--
+-- This table is indexed by the IP address of the peer router.
+--
+
+ifPeerStatsTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF IfPeerStatsEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Table of peer router statistics"
+        
+    ::= { peer 1}
+
+
+ifPeerStatsEntry OBJECT-TYPE
+    SYNTAX  IfPeerStatsEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "Entry corresponding to a peer router."
+        
+    INDEX   { ifPSAddress }
+    
+    ::= { ifPeerStatsTable 1 }
+
+
+IfPeerStatsEntry ::=
+    SEQUENCE {
+        ifPSAddress
+            IpAddress,
+        ifPSLastPeerRouteTag
+            INTEGER,
+        ifPSLastPeerUpdateTickCount
+            TimeTicks,
+        ifPSLastPeerUpdateVersion
+            INTEGER,
+        ifPSPeerBadResponsePackets
+            Counter,
+        ifPSPeerBadResponseEntries
+            Counter
+    }
+
+
+ifPSAddress OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "IP Address that the peer is using as its source address."
+
+    ::= { ifPeerStatsEntry 1 }
+    
+
+ifPSLastPeerRouteTag OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The route-tag of the last route in the last RIP RESPONSE received
+         from this peer."
+         
+	::= { ifPeerStatsEntry 2 }
+
+
+ifPSLastPeerUpdateTickCount OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The tick-count in milliseconds at the time of the last RIP RESPONSE
+         received from this peer."
+         
+    ::= { ifPeerStatsEntry 3 }
+
+
+ifPSLastPeerUpdateVersion OBJECT-TYPE
+    SYNTAX  INTEGER ( 0..255 )
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The update version of the last RIP RESPONSE received from this peer."
+        
+    ::= { ifPeerStatsEntry 4 }
+
+
+ifPSPeerBadResponsePackets OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The number of RIP RESPONSE packets which were received from this peer
+         and subsequently discarded."
+         
+    ::= { ifPeerStatsEntry 5 }
+
+
+ifPSPeerBadResponseEntries OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The number of routes in RIP RESPONSE packets which were received
+         from this peer and subsequently discarded."
+         
+    ::= { ifPeerStatsEntry 6 }
+        
+END

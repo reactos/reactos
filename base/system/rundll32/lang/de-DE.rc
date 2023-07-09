@@ -1,9 +1,0 @@
-/* German Translation by Rouven Wessling 2005 pentiumforever@gmail.com */
-
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "LoadLibrary konnte '%s' nicht laden"
-    IDS_MissingEntry "Fehlender Eintrag:%s\nIn %s"
-END

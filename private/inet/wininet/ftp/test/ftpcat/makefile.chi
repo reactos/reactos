@@ -1,0 +1,13 @@
+!IFNDEF ROOT
+ROOT        = ..\..\..\..
+!ENDIF
+
+IS_OEM      = TRUE
+IS_32       = TRUE
+WANT_C932   = TRUE
+BUILD_COFF  = TRUE
+
+VERSIONLIST = debug retail
+COMMONMKFILE= ftpcat.mk
+
+!INCLUDE $(ROOT)\dev\master.mk

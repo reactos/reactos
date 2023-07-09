@@ -1,0 +1,45 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling C++ application.
+COMPONENT = SHELL
+PRODUCT = SHLWAPI
+
+CUSTOM_RULES = ${MWROOT}/ie4/shell.template
+
+NO_BROWSER_FILE=1
+
+SOURCES_FILE    = sources
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME DLLENTRY 
+
+DLLDEF_SRC = ../shlwapi.src
+
+DLLDEF_EXPORTS = \
+     _____shlwapi_initDLL\
+	ualstrcpynW\
+	ualstrcmpiW\
+	ualstrcmpW\
+	ualstrlenW\
+	ualstrcpyW\
+	HtmlHelpA\
+	HtmlHelpW\
+	g_lpHalftone
+
+
+# Warning: DLL based on MFC (compiled with _USRDLL flag) is not supported yet.
+# This makefile is just for demo purpose.
+## Original Windows DLL name:
+WDLL = shlwapi
+## Target Unix shared library:
+DLL	= lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+## you may define the following variables
+## 
+NO_UNICODE = 1
+PROJECT_CFLAGS = -DDBCS -DUNICODE_SHDOCVW -I..
+
+PROJECT_DLLFLAGS = -lshlwuni -lshlwansi -lshlwccpp -lstocklib -lstocklib5 -lstocklib -ladvapi32 -luuid -lshlwuni -lshlwansi -lapithk
+
+__cplusplus = true
+
+#MAPFILE.sunos5 = shlwapi.map
+
+include $(MWHOME)/make.rules.simple

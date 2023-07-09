@@ -1,0 +1,51 @@
+//+------------------------------------------------------------------------
+//
+//  IProgSink interface
+//
+//  Copyright (C) Microsoft Corporation, 1996-1998.
+//
+//  File:       prgsnk.idl
+//
+//-------------------------------------------------------------------------
+
+import "oaidl.idl";
+import "oleidl.idl";
+
+[
+        object,
+        uuid(3050f371-98b5-11cf-bb82-00aa00bdce0b),
+        pointer_default(unique),
+        local
+]
+interface IProgSink : IUnknown
+{
+    HRESULT AddProgress([in] DWORD dwClass, [out] DWORD * pdwCookie);
+    HRESULT SetProgress([in] DWORD dwCookie, [in] DWORD dwFlags,
+        [in] DWORD dwState, [in] LPCTSTR pchText, [in] DWORD dwIds,
+        [in] DWORD dwPos, [in] DWORD dwMax);
+    HRESULT DelProgress([in] DWORD dwCookie);
+}
+
+cpp_quote("#define PROGSINK_CLASS_FORWARDED    0x80000000")
+cpp_quote("#define PROGSINK_CLASS_NOSPIN       0x40000000")
+cpp_quote("#define PROGSINK_CLASS_HTML         0x00000000")
+cpp_quote("#define PROGSINK_CLASS_MULTIMEDIA   0x00000001")
+cpp_quote("#define PROGSINK_CLASS_CONTROL      0x00000002")
+cpp_quote("#define PROGSINK_CLASS_DATABIND     0x00000003")
+cpp_quote("#define PROGSINK_CLASS_OTHER        0x00000004")
+cpp_quote("#define PROGSINK_CLASS_NOREMAIN     0x00000005")
+cpp_quote("#define PROGSINK_CLASS_FRAME        0x00000006")
+cpp_quote("")
+
+cpp_quote("#define PROGSINK_STATE_IDLE         0x00000000")
+cpp_quote("#define PROGSINK_STATE_FINISHING    0x00000001")
+cpp_quote("#define PROGSINK_STATE_CONNECTING   0x00000002")
+cpp_quote("#define PROGSINK_STATE_LOADING      0x00000003")
+cpp_quote("")
+
+cpp_quote("#define PROGSINK_SET_STATE          0x00000001")
+cpp_quote("#define PROGSINK_SET_TEXT           0x00000002")
+cpp_quote("#define PROGSINK_SET_IDS            0x00000004")
+cpp_quote("#define PROGSINK_SET_POS            0x00000008")
+cpp_quote("#define PROGSINK_SET_MAX            0x00000010")
+cpp_quote("")

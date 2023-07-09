@@ -1,0 +1,80 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+TARGET_BOTH     = 1
+NOT_UNICODE     = 1
+PRECOMPILED_CXX = 1
+
+!include $(CCSHELL_DIR)\common.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+TARGETNAME      = msident
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+TARGETLIBS      = $(LIBRARY_PATH)\kernel32.lib      \
+                  $(LIBRARY_PATH)\user32.lib        \
+                  $(LIBRARY_PATH)\uuid.lib          \
+                  $(LIBRARY_PATH)\ole32.lib         \
+                  $(LIBRARY_PATH)\shell32.lib       \
+                  $(LIBRARY_PATH)\advapi32.lib      \
+                  $(LIBRARY_PATH)\comctl32.lib      \
+                  $(LIBRARY_PATH)\version.lib       \
+                  $(LIBRARY_PATH)\shlwapip.lib
+
+MISCFILES       = ..\msident.hlp \
+                  ..\msident.chm \
+!IF "$(BUILD_PRODUCT)" == "IE"
+                  ..\ident.hlp
+!ENDIF
+
+USE_LIBCMT      = 1
+
+DLLDEF          = $O\msident.def
+DLLBASE         = 0x77800000
+DLLENTRY        = LibMain
+
+# Include makefile.inc
+NTTARGETFILES   =
+
+# In alphabetical order
+SOURCES         = \
+                  ..\dllload.cpp       \
+                  ..\factory.cpp       \
+                  ..\ident.cpp         \
+                  ..\identmgr.cpp      \
+                  ..\idenum.cpp        \
+                  ..\msident.cpp       \
+                  ..\multiusr.cpp      \
+                  ..\multiutl.cpp      \
+                  ..\multiui.cpp       \
+                  ..\msidstub.rc 
+
+PRECOMPILED_CXX = 1
+PRECOMPILED_INCLUDE = ..\private.h
+PRECOMPILED_OBJ=precomp.obj

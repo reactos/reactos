@@ -1,0 +1,56 @@
+//*********************************************************************
+//*                  Microsoft Windows                               **
+//*            Copyright(c) Microsoft Corp., 1996-1998               **
+//*********************************************************************
+
+midl_pragma warning(disable:2362)   // too many methods in the interface, requires Windows NT 4.0 SP3 or greater
+
+#include <mshtmdid.h>
+#include <mshtmcid.h>
+#include <olectl.h>
+
+import "ocidl.idl";
+
+import "dimm.idl";
+
+cpp_quote("#include <olectl.h>")
+cpp_quote("EXTERN_C const GUID CMDSETID_Forms3;")
+cpp_quote("EXTERN_C const GUID CLSID_MHTMLDocument;")
+cpp_quote("EXTERN_C const GUID CLSID_HTMLApplication;")
+cpp_quote("EXTERN_C const GUID CLSID_HTMLPluginDocument;")
+
+cpp_quote("#define SID_SHTMLWindow IID_IHTMLWindow2")
+cpp_quote("#define SID_SElementBehaviorFactory IID_IElementBehaviorFactory")
+
+[
+    lcid(0x0000),    // lcid =0; locale independent.
+    helpstring("Microsoft HTML Object Library"),
+    version(4.00),  //  WARNING: This version must match VERSION in dllreg.cxx.
+    uuid(3050f1c5-98b5-11cf-bb82-00aa00bdce0b)
+]
+
+library MSHTML
+{
+    #ifndef _MAC
+    importlib("stdole2.tlb");
+    #else
+    importlib("mstdole.tlb");
+    #endif
+
+    import "ocidl.idl";
+    #include <olectl.h>
+
+	// Forward definitions:
+	interface IHTMLEventObj;
+    enum BEHAVIOR_EVENT;
+    enum BEHAVIOR_EVENT_FLAGS;
+    enum BEHAVIOR_RENDER_INFO;
+    enum BEHAVIOR_RELATION;
+    interface IElementBehaviorSite;
+    interface IElementBehavior;
+    interface IElementBehaviorFactory;
+    interface IElementBehaviorSiteOM;
+    interface IElementBehaviorRender;
+    interface IElementBehaviorSiteRender;
+
+

@@ -1,0 +1,50 @@
+#
+# This is the MIDL compile phase of the build process.
+#
+# The following is where you put the name of your .idl file without
+# the .idl extension:
+#
+
+!INCLUDE $(NTMAKEENV)\makefile.plt
+
+IDL_NAME = regrpc
+
+SDKINC = $(BASEDIR)\public\sdk\inc
+SDKCRTINC = $(BASEDIR)\public\sdk\inc\crt
+
+INCS  = -I$(SDKINC)  -I$(SDKCRTINC) -I$(BASEDIR)\private\windows\inc -I$(BASEDIR)\private\inc
+
+TARGETS =   client\$(IDL_NAME)_c.c  \
+            server\$(IDL_NAME)_s.c  \
+            .\$(IDL_NAME).h
+
+EXTRN_DEPENDS = $(SDKINC)\windef.h  \
+                $(IDL_NAME).acf     \
+                imports.idl         \
+                imports.h
+
+CPP = -cpp_cmd "$(MIDL_CPP)" $(MIDL_FLAGS) $(C_DEFINES)
+
+#
+# Define Products and Dependencies
+#
+
+all:    $(TARGETS) $(EXTRN_DEPENDS)
+!IF "$(BUILDMSG)" != ""
+    @ech ; $(BUILDMSG) ;
+!ENDIF
+
+clean: delsrc all
+
+delsrc:
+    erase $(TARGETS)
+
+#
+# MIDL COMPILE
+#
+
+$(TARGETS) : .\$(IDL_NAME).idl $(EXTRN_DEPENDS)
+    midl $(MIDL_OPTIMIZATION) -oldnames -ms_ext -c_ext $(CPP) .\$(IDL_NAME).idl $(INCS)
+    IF EXIST $(IDL_NAME)_c.c copy $(IDL_NAME)_c.c .\client & del  $(IDL_NAME)_c.c
+    IF EXIST $(IDL_NAME)_s.c copy $(IDL_NAME)_s.c .\server & del  $(IDL_NAME)_s.c
+

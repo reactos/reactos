@@ -1,0 +1,3446 @@
+//+----------------------------------------------------------------------------
+//
+// File:        MEASURE.C
+//
+// Contents:    CMeasurer and CMeasurer classes
+//
+// Authors:
+//              Original RichEdit code: David R. Fulmer <nl>
+//              Christian Fortini, Murray Sargent, Rick Sailor
+//
+//  Copyright (c) 1995-1996 Microsoft Corporation. All rights reserved.
+//
+//-----------------------------------------------------------------------------
+
+#include "texthdrs.hxx"
+#include "_measure.h"
+#include "_font.h"
+#include "_disp.h"
+#include "_edit.h"
+#include "malloc.h"
+#include "numconv.hxx"
+#include "_clasfyc.h"
+#include "einput.hxx"
+
+#ifdef FONTLINKING
+#include "_fontlnk.h"
+#endif
+
+#pragma warning (disable: 4702)
+
+
+#define DEF_FRAMEMARGIN     0 // LXTODX(TWIPS_FROM_POINTS(3))
+
+// BUGBUG (cthrash) Unlike RichEdit, Trident uses three different types of
+// bullet characters.  When we call MeasureSymbol, we always use the bullet
+// character defined below.  This is tolerable, provided the user has
+// WingDings, but should be fixed.  Also, from an i18n perspective, we should
+// consider how sound it is to use the L' or _T notation on non-ASCII chars.
+
+#ifdef UNICODE
+WCHAR chBullet = 0x0178;
+#else
+CHAR chBullet = '\0x9f';
+#endif
+
+// (srinib) - Trident uses special symbols to show the postion of
+// left and right aligned objects in the text stream
+TCHAR chWordBreak = L'[';
+TCHAR chLeftAlign = 0x00DB;
+TCHAR chRightAlign = 0x00DC;
+
+const INT   MAX_SAVED_WIDTHS = 31;  // power of 2 - 1
+
+// test if the given char is considered as a white space char
+INLINE BOOL IsWhite(
+    TCHAR ch)
+{
+#ifdef UNICODE
+    // (cthrash) 2000-200b are EM/EN space; 3000 is Ideograph space
+    return IsSyntheticBreakChar ( ch ) || ch == TEXT(' ') ||
+           ch <= TEXT('\r') && ch >= TEXT('\t') ||
+           ch== 0x3000 || (ch >= 0x2000 && ch <= 0x200b) ||
+           ch == WCH_TXTSITEBREAK;
+#else
+    return IsSyntheticBreakChar ( ch ) || ch == TEXT(' ') ||
+        ch <= TEXT('\r') && ch >= TEXT('\t');
+#endif
+}
+
+CMeasurer::CMeasurer (const CDisplay* const pdp, CFormDrawInfo *pDI) :
+    CRchTxtPtr (pdp->GetTxtSite())
+{
+    _fLastWasBreak = FALSE;
+    _yAfterSpace = _lPrevLineHeightAdj = 0;
+    _pdp = pdp;
+    _pccs = _pccsChunk = NULL;
+    _hdc = NULL;
+    _pPF = NULL;
+    _iCharFormat = -1;
+    _fMeasuringSitesAtBeginningOfLine = FALSE;
+    _pDI = pDI;
+    if (!_pDI)
+    {
+        _DI.Init(_pdp->GetTxtSite());
+        _pDI = &_DI;
+    }
+
+    _pdp->GetTxtSite()->GetPasswordCh(&_chPassword);
+}
+
+CMeasurer::CMeasurer (const CDisplay* const pdp,
+                      const CRchTxtPtr &tp,
+                      CFormDrawInfo * pDI) :
+    CRchTxtPtr(tp)
+{
+    _fLastWasBreak = FALSE;
+    _yAfterSpace = _lPrevLineHeightAdj = 0;
+    _pdp = pdp;
+    _pccs = _pccsChunk = NULL;
+    _hdc = NULL;
+    _pDI = pDI;
+    _fMeasuringSitesAtBeginningOfLine = FALSE;
+    if (!_pDI)
+    {
+        _DI.Init(_pdp->GetTxtSite());
+        _pDI = &_DI;
+    }
+
+    _pdp->GetTxtSite()->GetPasswordCh(&_chPassword);
+}
+
+CMeasurer::~CMeasurer()
+{
+#ifdef FONTLINKING
+    int iIndex;
+
+    // Release all the fonts.
+    for (iIndex=0; iIndex < _aryLinkFonts.Size(); iIndex++)
+    {
+        CCcs *pccs = DYNCAST(CCcs, _aryLinkFonts[iIndex]);
+        pccs->Release();
+    }
+#endif
+
+    if(_pccsChunk)
+        _pccsChunk->Release();
+
+}
+
+//+----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::InitPrevAfter ()
+//
+// Synopsis:    Initializes the after spacing of the previous line's paragraph
+//
+//
+//-----------------------------------------------------------------------------
+//
+void CMeasurer::InitPrevAfter (CLinePtr & rpOld)
+{
+    int oldLine;
+
+    // Now initialize the linebreak stuff.
+    oldLine = rpOld;
+    if (rpOld.PrevLine(TRUE, FALSE))
+    {
+        // If we encounter a break in the previous line, then we
+        // need to remember that for the accumulation to work.
+        if (rpOld->_fHasBreak)
+        {
+            _fLastWasBreak = TRUE;
+        }
+        _lPrevLineHeightAdj = rpOld->_yAfterSpace;
+    }
+    else
+    {
+        _lPrevLineHeightAdj = 0;
+    }
+
+    rpOld = oldLine;
+}
+
+//+----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::InitLineSpace ()
+//
+// Synopsis:    Initializes a measurer object to have the same
+//              line spacing state as the given one.
+//
+//
+//-----------------------------------------------------------------------------
+//
+void
+CMeasurer::InitLineSpace(const CMeasurer *pMe, CLinePtr &rpOld)
+{
+    // Zero it all out.
+    NewLine(FALSE);
+
+    // Set up the current cache from the given measurer.
+    _fLastWasBreak   = pMe->_fLastWasBreak;
+    _lPrevLineHeightAdj = pMe->_lPrevLineHeightAdj;
+
+    // Flags given separately.
+    _dwFlags = rpOld->_dwFlags;
+
+    // Make sure the line knows how many characters are on it.
+    _cch = rpOld->_cch;
+
+    // Always get the paraformat from a non-empty run.
+    while (AdjustForward());
+
+    _pPF = (_fHasNestedRunOwner
+                ? GetRunOwnerPF(_pdp->GetTxtSite())
+                : GetPF(_pdp->GetTxtSite()));
+}
+
+//+----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::NewLine (fFirstInPara)
+//
+// Synopsis:    Initialize this measurer at the start of a new line
+//
+//-----------------------------------------------------------------------------
+
+void CMeasurer::NewLine(
+    BOOL fFirstInPara)
+{
+    CLine::Init();                      // Zero all members
+
+    if(fFirstInPara)
+        _fFirstInPara = TRUE;       // Need to know if first in para
+
+    // Can't calculate xLeft till we get an HDC.
+    _xLeft = 0;
+
+    // We're getting max, so start really small.
+    _lMaxLineHeight = LONG_MIN;
+    _yAfterSpace = 0;
+}
+
+//+----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::NewLine (&li)
+//
+// Synopsis:    Initialize this measurer at the start of a new line
+//
+//-----------------------------------------------------------------------------
+
+void CMeasurer::NewLine(
+    const CLine &li)
+{
+    *this       = li;
+    _cch        = 0;
+    _cchWhite   = 0;
+    _xWidth     = 0;
+
+    // Can't calculate xLeft till we get an HDC
+    _xLeft      = 0;
+
+    // We're getting max, so start really small.
+    _lMaxLineHeight = LONG_MIN;
+}
+
+//+----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::MaxWidth()
+//
+// Synopsis:    Get the max width of the line
+//
+//-----------------------------------------------------------------------------
+
+LONG CMeasurer::MaxWidth()
+{
+    LONG xWidth = _pdp->GetWordWrap()
+        ? _pdp->GetMaxPixelWidth() - _xRight - _xLeft - _pdp->GetCaret()
+        : lMaximumWidth;
+
+    return (xWidth > 0) ? xWidth : 0;
+}
+
+//+----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::MeasureText (cch)
+//
+// Synopsis:    Measure a stretch of text from current running position.
+//
+// Returns:     width of text (in device units), < 0 if failed
+//
+//-----------------------------------------------------------------------------
+
+LONG CMeasurer::MeasureText(
+    LONG cch)       // Number of characters to measure
+{
+    LONG xWidth = _xWidth;
+
+    if (Measure(0x7fffffff, cch, MEASURE_DONTMOVEOBJECTS, 0, 0) == MRET_FAILED)
+        return -1;
+    else
+        return _xWidth - xWidth;
+}
+
+//+----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::MeasureLine (xWidthMax, cchMax, uiFlags, pliTarget)
+//
+// Synopsis:    Measure a line of text from current cp and determine line break.
+//              On return *this contains line metrics for _pdd device.
+//
+// Returns:     TRUE if success, FALSE if failed
+//
+//-----------------------------------------------------------------------------
+
+BOOL CMeasurer::MeasureLine(
+    LONG xWidthMax,     // max width to process (-1 uses CDisplay width)
+    LONG cchMax,        // Max chars to process (-1 if no limit)
+    UINT uiFlags,       // Flags controlling the process (see Measure())
+    BOOL fHasLeftMargin,     // Flags controlling the process (see Measure())
+    BOOL fHasRightMargin,
+    CLine *pliTarget,   // Returns target-device line metrics (optional)
+    LONG *pxMinLine)    // returns min line width required for tables(optional)
+{
+    LONG                lRet;
+    DWORD               cp        = GetCp();
+    CFormDrawInfo *     pDI       = NULL;
+
+    // Compute line break
+    lRet = Measure(xWidthMax, cchMax, uiFlags, fHasLeftMargin, fHasRightMargin, pxMinLine);
+
+    // Stop here if failed
+    if(lRet == MRET_FAILED)
+        return FALSE;
+
+    // Return target metrics if requested
+    if(pliTarget)
+    {
+        *pliTarget = *this;
+    }
+
+    // Recompute metrics on rendering device
+    if(lRet == MRET_NOWIDTH)
+    {
+        LONG    cch = _cch;
+        SHORT   cchWhite = _cchWhite;
+        LONG    xLeft = _xLeft;
+        LONG    xRight = _xRight;
+
+        // Save the flags for this line because at least the EOP flag gets
+        // screwed up in the recalc and none of the flags will change based
+        // on the second recalc of the line.
+        DWORD dwFlagsSave = _dwFlags;
+
+        *this -= _cch;      // move back to BOL
+        NewLine(uiFlags & MEASURE_FIRSTINPARA);
+
+        _xLeft = xLeft;
+        _xRight = xRight;
+
+        lRet = Measure(0x7fffffff, cch - cchWhite,
+                        MEASURE_NCHARS |
+                        (uiFlags & (MEASURE_FIRSTINPARA | MEASURE_FIRSTLINE)),
+                        fHasLeftMargin, fHasRightMargin);
+
+        if(lRet != 0)
+        {
+            Assert(lRet != MRET_NOWIDTH);
+            return FALSE;
+        }
+
+        // Restore the flags.
+        _dwFlags = dwFlagsSave;
+
+        Assert((LONG)_cch == cch - cchWhite);
+        _cchWhite = cchWhite;
+        _cch = cch;             // account for the white stuff at EOL
+        *this += cchWhite;      // skip white stuff that we did not remeasure
+    }
+
+    // (srinib) If there are aligned images at the Beginning of the line, measurer
+    // bails out so do not compute _xLeft
+    if(!_fMeasuringSitesAtBeginningOfLine && _fForceNewLine)
+    {
+        // Now that we know the line width, compute line shift due
+        // to alignment, and add it to the left position
+        if (!(uiFlags & (MEASURE_MINWIDTH|MEASURE_MAXWIDTH)))
+            _xLeft += MeasureLineShift(cp == GetCp(), xWidthMax);
+    }
+
+    return TRUE;
+}
+
+
+//-----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::RecalcLineHeight ()
+//
+// Synopsis:    Reset the height of the the line we are measuring if the new
+//              run of text is taller than the current maximum in the line.
+//
+//-----------------------------------------------------------------------------
+void CMeasurer::RecalcLineHeight()
+{
+    SHORT   yAscent = _pccs->_yHeight + _pccs->_yOffset - _pccs->_yDescent;
+    SHORT   yDescent = _pccs->_yDescent - _pccs->_yOffset;
+
+    if(yAscent < _yHeight - _yDescent)
+        yAscent = _yHeight - _yDescent;
+    if(yDescent > _yDescent)
+        _yDescent = yDescent;
+
+    _yHeight = yAscent + _yDescent;
+
+    Assert(_yHeight >= 0);
+}
+
+
+LONG
+CMeasurer::ResetFontCache(const CCharFormat *pCF)
+{
+    LONG lRet = 0;
+
+    // New CF run or format for this line not yet initialized
+    ResetCachedFormats();
+
+    // If the format has changed,we release our old Format cache
+    if( _pccsChunk != NULL )
+    {
+        // Release previous char cache if this is a new CF run
+        _pccsChunk->Release();
+    }
+
+    _pccs = _pccsChunk = fc().GetCcs(_pDI, pCF == NULL ? (_fHasNestedRunOwner
+                            ? GetRunOwnerCF(_pdp->GetTxtSite())
+                            : GetCF(_pdp->GetTxtSite()))
+                            : pCF);
+    
+    // If we couldn't get one, we are dead.
+    if(!_pccsChunk)
+    {
+        AssertSz(FALSE, "CMeasurer::Measure could not get _pccs");
+        lRet = MRET_FAILED;
+        goto cleanup;
+    }
+
+cleanup:
+
+    return lRet;
+}
+
+//+----------------------------------------------------------------------------
+// Member:      TestForClear
+//
+// Synopsis:    Test if the current run being measured has CLEAR flags set and
+//              if so, any margins are to be cleared. Set's _fClearLeft or
+//              _fClearRight based on the margins and clear flags.
+//
+// Return:      TRUE, if the current line has _fClearLeft or _fClearRight
+//
+//-----------------------------------------------------------------------------
+
+inline void
+CMeasurer::TestForClear(const CCharFormat * pCF)
+{
+    if(!_fClearLeft)
+        _fClearLeft = pCF->_fClearLeft;
+    if(!_fClearRight)
+        _fClearRight = pCF->_fClearRight;
+}
+
+//+----------------------------------------------------------------------------
+// Member:      MeasureSite()
+//
+// Synopsis:    Measure width and height of a embedded site
+//
+//-----------------------------------------------------------------------------
+int
+CMeasurer::MeasureSite(
+    CSite * pSite,
+    LONG    xWidthMax,
+    UINT    uiFlags,
+    SIZE *  psizeObj,
+    int *   pxMinWidth)
+{
+    LONG lRet = 0;
+    LONG lGrabSize = pSite->GetExternalGrabSize();
+
+    if (uiFlags & MEASURE_BREAKATWORD)
+    {
+        CSite::SIZEMODE smMode;
+
+        if (uiFlags & MEASURE_MINWIDTH)
+        {
+            smMode = CSite::SIZEMODE_MINWIDTH;
+        }
+        else if (uiFlags & MEASURE_MAXWIDTH)
+        {
+            smMode = CSite::SIZEMODE_MAXWIDTH;
+        }
+        else
+        {
+            smMode = CSite::SIZEMODE_NATURAL;
+        }
+
+        // BUGBUG until we can set the _sizeParent at a higher level (istvanc)
+        // (alexa) Since in the edit mode we adjust the view width of the display 
+        // by 1 pixel (GetCaret()), we should set the parent size without caret
+        // since we want to be able to display the caret and don't want the inner 
+        // site to take up all the width.
+        _pDI->_sizeParent.cx = _pdp->GetViewWidthForChild(_pDI, lGrabSize);
+        _pDI->_sizeParent.cy = _pdp->GetViewHeightForChild(_pDI, lGrabSize); 
+
+        // set available size in sizeObj
+        psizeObj->cx = xWidthMax - 2 * lGrabSize;
+        psizeObj->cy = _pDI->_sizeParent.cy - 2 * lGrabSize;
+
+        pSite->_fSizeThis = (pSite->_fSizeThis ||
+                            (_pdp->GetViewChanged() && (pSite->_fHeightPercent ||
+                                                        pSite->_fWidthPercent)));
+        pSite->CalcSize(_pDI,
+                        smMode,
+                        _pDI->_dwScratch | (uiFlags & MEASURE_FORCE
+                                                 ? CSite::LAYOUT_FORCE
+                                                 : 0),
+                        psizeObj);
+
+        if (pSite->Tag() == ETAG_TABLE)
+        {
+            // BUGBUG (brendand) for now we reset the font cache only after the table
+            // later we should get this information from the site
+            lRet = ResetFontCache();
+            if (lRet)
+                goto cleanup;
+        }
+
+        if (smMode == CSite::SIZEMODE_MAXWIDTH)
+        {
+            if (pSite->Tag() == ETAG_TABLE)
+            {
+                // BUGBUG only table handles this for now (brendand)
+                *pxMinWidth = _pDI->_xMinWidth;
+            }
+            else
+            {
+                SIZE sizeMin;
+
+                pSite->CalcSize(_pDI, CSite::SIZEMODE_MINWIDTH, _pDI->_dwScratch, &sizeMin);
+                *pxMinWidth = sizeMin.cx;
+            }
+        }
+    }
+    else
+    {
+        psizeObj->cx = pSite->_rc.right - pSite->_rc.left;
+        psizeObj->cy = pSite->_rc.bottom - pSite->_rc.top;
+    }
+
+cleanup:
+    return lRet;
+}
+
+
+//+----------------------------------------------------------------------------
+//
+// Member:      TransformText
+//
+// Synopsis:    CSS Attribute TextTransform.  Takes an input string and
+//              performs capitalization based on CCharFormat->bTransform, as
+//              was specified in the style.
+//
+//-----------------------------------------------------------------------------
+void
+CMeasurer::TransformText(CStr &str, const TCHAR **ppch, LONG iCh, const CCharFormat *pCF)
+{
+    HRESULT hr=S_OK;
+
+    Assert(ppch);
+
+    if (   pCF &&
+          (pCF->_bTextTransform != styleTextTransformNotSet) &&
+           iCh>0)
+    {
+        // scan the chunk for any block break characters
+        // and do not transform them
+        int     cch = iCh;
+        TCHAR   ch;
+
+        while (cch && IsSyntheticChar((ch = *(*ppch + cch - 1))))
+            cch--;
+
+        if(cch)
+        {
+            switch (pCF->_bTextTransform)
+            {
+            case styleTextTransformLowercase:
+                hr = str.Set(*ppch, cch);
+                if (hr)
+                    goto Cleanup;
+                CharLower(str);
+                if (iCh - cch)
+                {
+                    str.Append(*ppch + cch, iCh - cch);
+                }
+                *ppch = str;
+                break;
+            case styleTextTransformUppercase:
+                hr = str.Set(*ppch, cch);
+                if (hr)
+                    goto Cleanup;
+                CharUpper(str);
+                if (iCh - cch)
+                {
+                    str.Append(*ppch + cch, iCh - cch);
+                }
+                *ppch = str;
+                break;
+            case styleTextTransformCapitalize:
+                hr = str.Set(*ppch, cch);
+                if (hr)
+                    goto Cleanup;
+                {
+                    TCHAR *pszChar = CharLower(str);
+                    BOOL fCapitalizeNext = TRUE;
+
+                    while ( *pszChar )
+                    {
+                        if ( _istspace( *pszChar ) )
+                            fCapitalizeNext = TRUE;
+                        else if ( ( WCH_WORDBREAK != *pszChar ) && !IsSyntheticBreakChar( *pszChar ) && fCapitalizeNext )
+                        {
+                            *pszChar = (TCHAR) CharUpper( (LPTSTR)(DWORD) (WORD) (*pszChar) );
+                            fCapitalizeNext = FALSE;
+                        }
+                        pszChar++;
+                    }
+                }
+
+                if (iCh - cch)
+                {
+                    str.Append(*ppch + cch, iCh - cch);
+                }
+                *ppch = str;
+
+                break;
+            default:
+                break;
+            }
+        }
+    }
+Cleanup:
+    return;
+}
+
+//+----------------------------------------------------------------------------
+// Function:    CMeasure::MeasureHiddenChunk
+//
+// Synopsis:    Process the hidden characters in the current chunk and
+//              determine if we reached the end of line.
+//
+// Arguments:   cchChunk    -   no of characters in the current chunk
+//              pch         -   characters in the current chunk
+//              cchHidden   -   no of hidden characters in the current line
+//
+// Returns:     TRUE if end of line is reached else FALSE
+//
+//-----------------------------------------------------------------------------
+BOOL
+CMeasurer::MeasureHiddenChunk(LONG cchChunk, const TCHAR * pch, LONG cchHidden)
+{
+    long    cchTemp = cchChunk;
+    BOOL    fBreak = FALSE;
+    BOOL    fBlockBreak = FALSE;
+
+    // Hidden chars are treated as 0 width whitespace,
+    // so update _cchWhiteAtBeginningOfLine, if we haven't seen any real char's
+    if(_cch == long(_cAlignedSitesAtBeginningOfLine +
+                            _cchWhiteAtBeginningOfLine))
+    {
+        _cchWhiteAtBeginningOfLine += cchChunk;
+    }
+
+    // update the no of chars in the line
+    _cch += cchChunk;
+    _cchHidden += cchChunk;
+
+    // examine the char in the chunk for eol
+    while(cchTemp && !fBreak)
+    {
+        switch(*pch++)
+        {
+        case WCH_BLOCKBREAK:
+            fBlockBreak = TRUE;
+        case WCH_LINEBREAK:
+        case _T('\r'):
+        case _T('\n'):
+            fBreak = TRUE;
+            break;
+        }
+        cchTemp--;
+    }
+
+    // If eol
+    if(fBreak)
+    {
+        // eol does not advance measurer so advance
+        if(cchChunk)
+            Advance(cchChunk);
+        else
+            while(AdjustForward());
+
+        if(_cch == cchHidden)
+        {
+            _fForceNewLine = FALSE;
+            _fHidden = TRUE;
+        }
+        if(fBlockBreak)
+        {
+            _fHasEOP = TRUE;
+        }
+        else
+        {
+            _fHasBreak = TRUE;
+        }
+        return TRUE; // goto eol
+    }
+    return FALSE; // goto next run
+}
+
+#ifdef FONTLINKING
+//+----------------------------------------------------------------------------
+// Function:    CMeasure::FontLinking
+//
+// Synopsis:    Manage a list of fonts to use when the official font
+//              for the chunk doesn't have the appropriate glyph.
+BOOL
+CMeasurer::FontLinking(TCHAR ch, CCharFormat *pCF)
+{
+    DWORD dwLangBits = GetLangBits(ch);
+    CCcs *pccs=NULL;
+    int iIndex;
+
+    // First, try to match against the default font for the chunk.
+    // This is always the first thing we try.
+    AssertSz(_pccsChunk, "No default font for chunk.");
+    if (dwLangBits & _pccsChunk->_dwLangBits)
+    {
+        _pccs = _pccsChunk;
+        return TRUE;
+    }
+
+    // Find the first font in the list that can display this character.
+    // This has the important property that we won't switch to, say,
+    // a shift-JIS font (from ISO Latin) to display a Kanji glyph and
+    // then never leave because the shift-JIS also happens to include
+    // Roman glyphs.
+    for (iIndex=0; iIndex < _aryLinkFonts.Size(); iIndex++)
+    {
+        pccs = DYNCAST(CCcs, _aryLinkFonts[iIndex]);
+        if (dwLangBits & pccs->_dwLangBits)
+            break;
+        pccs = NULL;
+    }   
+            
+    // pccs of NULL indicates that we don't have a font that contains
+    // this glyph yet. Look for one.
+    if (pccs == NULL)
+    {
+        CCharFormat cf;
+        
+        // In case the user didn't supply a char format.
+        if (pCF == NULL)
+        {
+            pCF = &cf;
+        }
+
+        // Build a char format, get a new name to try.
+        *pCF = *((CCharFormat *)GetCF(_pdp->GetTxtSite()));
+        GetFontLinkFontName (dwLangBits, 0/* Lang param */,
+                             &_pccs->_lf, pCF->_szFaceName);
+        pCF->_bCharSet = DEFAULT_CHARSET;   // Might need DefaultFontInfoFromCodepage.
+        pCF->_bCrcFont = pCF->ComputeFontCrc();
+        pccs = fc().GetCcs(_pDI, pCF);
+
+        // We have a new fontcache entry.
+        if (pccs != NULL)
+        {
+            CCcs **ppccs;
+
+            // Store it in the list.
+            ppccs = _aryLinkFonts.Append();
+            if (ppccs)
+            {
+                *ppccs = pccs;
+            }
+
+            // If we didn't have memory for the whole operation,
+            // don't try to work, just give up.
+            else
+                pccs = NULL;
+        }
+    }
+    else if (pCF != NULL)
+    {
+        *pCF = *((CCharFormat *)GetCF(_pdp->GetTxtSite()));
+    }
+    
+    // We have a font, change our current font to the one in the stack.
+    if (pccs != NULL)
+    {
+        _fHasFontLink = TRUE;
+        _pccs = pccs;
+    }
+
+    // Return TRUE if we found a font that can display the character.
+    return (pccs != NULL);
+}
+#endif
+
+//+----------------------------------------------------------------------------
+// Function:    CMeasure::Measure
+//
+// Synopsis:    Measure the width of text and the number of characters of text
+//              that fits on a line based on the flags. Store the number of
+//              characters in _cch.
+//
+// Arguments:   xWidthMax   -   max width of the line
+//              cchMax      -   max chars to process (-1 if no limit)
+//              uiFlags     -   flags controlling the process, which mean
+//
+//                  MEASURE_FIRSTINPARA     this is first line of paragraph
+//                  MEASURE_BREAKATWORD     break out on a word break
+//                  MEASURE_BREAKATWIDTH    break closest possible before
+//                                          xWidthMax
+//                  MEASURE_BREAKNEARWIDTH  break closest possible to xWidthMax
+//                  MEASURE_MIN_MAX         measure both min and max size of
+//                                          possible line size
+// Return:      Return      -   o for success
+//                          -   MRET_FAILED if failed
+//                          -   MRET_NOWIDTH if a second pass is needed to
+//                              compute correct width
+//
+//-----------------------------------------------------------------------------
+
+LONG CMeasurer::Measure(
+    LONG    xWidthMaxIn,
+    LONG    cchMax,
+    UINT    uiFlags,
+    BOOL    fHasLeftMargin,
+    BOOL    fHasRightMargin,
+    LONG *  pxMinLineWidth)
+{
+    const TCHAR     chEmbedding = WCH_EMBEDDING;
+
+    struct {
+        LONG        width;
+        LONG        xLineOverhang;
+        LONG        yHeight;
+        LONG        yDescent;
+    } savedWidths[MAX_SAVED_WIDTHS+1];
+
+    CUnitValue              cuvLetterSpacing;
+    const CCharFormat *     pCF;
+    unsigned long           cInlinedSites = 0;
+
+    CSite *     pRunOwner;
+    CTxtSite *  pTxtSite = _pdp->GetTxtSite();
+    long        iRunCur;
+
+    TCHAR   ch;                     // Temporary char
+    LONG    xWidthMax=xWidthMaxIn;
+    LONG    cch;                    // cchChunk count down
+    LONG    cchChunk;               // cch of cst-format contiguous run
+    LONG    cchNonWhite;            // cch of last nonwhite char in line
+    LONG    cchFirstNBSP = -1;      // cch of first NBSP char
+    LONG    lRet = 0;
+    LONG    xAdd;                   // Character width
+    LONG    xWidthNonWhite;         // xWidth for last nonwhite char in line
+    LONG    xWidthMaxOverhang;      // The max with the current run's overhang
+                                    // taken into consideration.
+    LONG    widthAdjust = 0;        // Over/under hang adjustment across a run.
+    LONG    xMinLine = 0;
+    LONG    xWordWidth = 0;         // word width used in computing the min
+                                    // line width for tables.
+
+    BOOL    fTableInCurLine = FALSE;
+    BOOL    fFirstInPara = uiFlags & MEASURE_FIRSTINPARA;
+    BOOL    fOwnLine = FALSE;
+    BOOL    fBreakMinWidth;
+    BOOL    fOverflowedOnce = uiFlags & MEASURE_NCHARS;
+    BOOL    fSeenWordBreak = FALSE; // Used ONLY for MEASURE_MINWIDTH
+    BOOL    fHitTesting = uiFlags & (MEASURE_BREAKWORDS | MEASURE_DONTMOVEOBJECTS);
+    BOOL    fFoundBreakChar  = FALSE;
+    BOOL    fFoundSiteBreak  = FALSE;
+    BOOL    fCantBreakHere;             // if CF._fNoBreak is currently TRUE
+    BOOL    fCouldBreakEarlier = FALSE; // if CF._fNoBreak was ever TRUE
+    BOOL    fSawWbr = FALSE;
+    BOOL    fSawTxtSiteBreak = FALSE;
+    BOOL    fIsWhite;
+    BOOL    fCurrSiteInlined;
+    BOOL    fBrowseMode = pTxtSite->IsInBrowseMode();
+
+    INT     i, index, iSavedWidths = 0;
+    LONG    xLetterSpacing = 0;
+    LONG    xLeftFrameMargin = 0;
+    LONG    xRightFrameMargin = 0;
+    long    cchSites = 0;
+    long    cchHidden = 0;
+    enum    KINSOKUCLASS   akcTable[MAX_CLASSIFY_CHARS];
+    enum    KINSOKUCLASS   kcThis = KC_UNDEFINED, kcLast = KC_UNDEFINED;
+    int     ikc = 0;
+    int     ckc = 0;
+
+    _xWhite = 0;
+
+    // Always force a newline by default
+    _fForceNewLine = TRUE;
+    _cchHidden = 0;
+
+#ifdef FONTLINKING
+    // Lines with font links are rare.
+    _fHasFontLink = FALSE;
+#endif
+
+    // If we are measuring sites at the Beginning of line, we went through
+    // Measure at least once for the current line, so do not clear the count
+    // of aligned sites ...
+    if(!_fMeasuringSitesAtBeginningOfLine)
+    {
+        _cAlignedSites = 0;
+        _cAlignedSitesAtBeginningOfLine = 0;
+        _cchWhiteAtBeginningOfLine = 0;
+    }
+
+    // make sure we dont return a wrong min width if there is an error
+    if(pxMinLineWidth)
+        *pxMinLineWidth = 0;
+
+    // For hit detction, we want to break at the current char, so we
+    // always assume that we have seen a break for hit detection.
+    fSeenWordBreak = fHitTesting;
+
+    // position the measurer at a non empty run
+    while (AdjustForward());
+
+    // Get the current para format
+    pRunOwner = GetRunOwner(pTxtSite);
+    _pPF = (pRunOwner != pTxtSite && !pRunOwner->IsPed()
+                ? GetRunOwnerPF(pTxtSite)
+                : GetPF(pTxtSite));
+
+    // Init FirstInPara flag for new line
+    if(fFirstInPara)
+    {
+        _fFirstInPara = TRUE;
+    }
+
+    // Get the device context
+    if(!_hdc)
+    {
+        _hdc = _pDI->_hdc;
+
+        if(!_hdc)
+        {
+            AssertSz(FALSE, "CMeasurer::Measure could not get DC");
+            return MRET_FAILED;
+        }
+    }
+
+    // For hit testing we dont need to do any of the following, _xLeft
+    // is computed is computed and available in the line.
+
+    // Compute width to break out at
+
+    if (uiFlags & (MEASURE_BREAKATWORD | MEASURE_NCHARS))
+    {
+        // Adjust left indent
+        if (uiFlags & MEASURE_BREAKATWORD)
+            MeasureLeftIndent( );
+
+        if(fHasLeftMargin)
+        {
+            xLeftFrameMargin = DEF_FRAMEMARGIN;
+        }
+
+        if(fHasRightMargin)
+        {
+            xRightFrameMargin = DEF_FRAMEMARGIN;
+        }
+
+        if (_pdp->GetWordWrap())
+        {
+            xWidthMax -= _xRight + _xLeft + _pdp->GetCaret() +
+                            xLeftFrameMargin + xRightFrameMargin;
+        }
+        else
+        {
+            xWidthMax = lMaximumWidth;
+        }
+    }
+
+    // Compute max number of characters to process
+    if(cchMax < 0)
+        cchMax = GetLastCp() - (LONG)(*this);
+
+    cchNonWhite     = _cch;                         // Default nonwhite parms
+    xWidthNonWhite  = _xWidth;
+
+    //
+    // This loop makes sure that we don't process more chars than cchMax
+    //
+
+    CStr  strTransformedText;
+    const TCHAR *pch;
+    const TCHAR *pch0;
+    long  cchValid;
+    long  cchLeftRun;
+
+    // Assume runs are owned by the associated CTxtSite
+    pRunOwner = pTxtSite;
+    iRunCur   = -1;
+
+    while(cchMax > 0)                               // Measure up to cchMax
+    {                                               //  chars
+
+        // First, skip over all empty runs
+        while (AdjustForward());
+
+        // If advancing to a new run, get the owning CSite
+        if (iRunCur != GetIRun())
+        {
+            iRunCur   = GetIRun();
+            pRunOwner = GetRunOwner(pTxtSite);
+            //_fHasNestedRunOwner = FALSE;            // Assume no nested run owner
+
+            // Treat runs underneath a nested CTxtEdit (that is, a CTxtSite using
+            // another instance of CTxtStory) as still owned by this CTxtSite
+            if (pRunOwner->IsPed())
+            {
+                pRunOwner = pTxtSite;
+            }
+
+            // Otherwise, note that the line contains runs owned by another site
+            else if (pRunOwner != pTxtSite)
+            {
+                _fHasNestedRunOwner = TRUE;
+            }
+        }
+
+        // Get the paragraph format
+        if (pRunOwner == pTxtSite)
+        {
+            _pPF = GetPF(pTxtSite);
+            pCF  = GetCF(pTxtSite);
+        }
+        else
+        {
+            _pPF = GetRunOwnerPF(pTxtSite);
+            pCF  = GetRunOwnerCF(pTxtSite);
+        }
+
+        // Determine the number of characters to process at this time
+        // For runs owned by this site, process as many as possible
+        if (pRunOwner == pTxtSite)
+        {
+            //
+            // Here we determine the largest number of chars which are available
+            // in a contigous string (cchValid), which have the same properties
+            // (the length of chars left in the current run: _rpEGetCchLeft()) and
+            // are less than the max number of characters we are currently allowed
+            // to process (cchMax).
+            //
+
+            cchLeftRun = GetCchRemaining();
+
+            Assert( cchLeftRun >= 0 );
+
+            pch = _rpTX.GetPch( cchValid );
+
+            //
+            // We should never get back a null pointer if there were valid chars
+            //
+
+            Assert( cchValid == 0 || pch );
+
+            //
+            // Note:
+            //
+            // cchChunk could be 0 here.  The advance, further ahead, will make
+            // sure that progress is made agains the zero length run.
+            //
+
+            cch = cchChunk = min( cchLeftRun, min( cchMax, cchValid ) );
+        }
+        // For nested elements which own runs, process all the characters under
+        // the element as if it were an embedded site
+        else
+        {
+            Assert(pRunOwner);
+
+            cch      =
+            cchChunk = min( cchMax, GetElementRuns().GetElementCch(pRunOwner) );
+            cchValid = 1;
+            pch      = &chEmbedding;
+        }
+
+        // skip the chunk if it is hidden
+        if (pCF->_fDisplayNone && fBrowseMode)
+        {
+            cchHidden += cchChunk;
+            if(MeasureHiddenChunk(cchChunk, pch, cchHidden))
+                goto eol;
+            else
+                goto NextRun;
+        }
+
+        // if _chPassword is not null we measure on _chPassword
+        // in this case pch should not be modified!!!
+        if (_chPassword && pch)
+        {
+            Assert(pRunOwner == pTxtSite);
+            pch = &_chPassword;
+        }
+        else if (uiFlags & (MEASURE_MAXWIDTH | MEASURE_MINWIDTH))
+        {
+            ckc = min( cchValid, MAX_CLASSIFY_CHARS );
+            BatchKinsokuClassify( pch, ckc, NULL, akcTable );
+            ikc = 0;
+        }
+
+        // test if we have clear flags set on the para format, if so set the
+        // clear bits on the line
+        if(uiFlags & MEASURE_BREAKATWORD)
+        {
+            TestForClear(pCF);
+        }
+
+        //
+        // Here we make sure there is an up-to-date _pccs.  If there is a
+        // different char format for this sequence of characters, then we
+        // need to update it.
+        //
+
+        // Check if new character format run or whether we don't yet have
+        // a font.
+
+        if ( !_pccsChunk || FormatsHaveChanged() )
+        {
+            SHORT sOverhangAdjust;
+            SHORT sOldOverhang = (_pccs == NULL || _xWidth == 0
+                                        ? 0
+                                        : _pccs->_xOverhangAdjust);
+
+            lRet = ResetFontCache();
+            if (lRet)
+                goto cleanup;
+
+            // If we're switching from an overhanging font
+            // to one with no overhang, nudge the text forward
+            // a bit to avoid overlapping the characters.
+            sOverhangAdjust = max(0, sOldOverhang - _pccs->_xOverhangAdjust);
+            _xWidth += sOverhangAdjust;
+        }
+
+        _xLineOverhang = _pccs->_xOverhangAdjust;
+
+        // Overhang reduces max.
+        xWidthMaxOverhang = max(0, xWidthMax - _xLineOverhang);
+
+        fCantBreakHere = !!(GetCharFormat( _iCharFormat )->_fNoBreak);
+        fCouldBreakEarlier |= !fCantBreakHere;
+
+        // Adjust line height, capitalization, and spacing
+        if (pRunOwner == pTxtSite)
+        {
+            // Set the flag on the line if the current pf or chunk has a background
+            // image or color
+            if(!_fHasBackground && &CurrBranch() != pTxtSite &&
+                (_pPF->_lBgUrlImgCtxCacheCookie != -1  ||
+                    _pPF->_ccvBackColor.IsDefined() ||
+                    pCF->_lBgUrlImgCtxCacheCookie != -1 ||
+                    pCF->_ccvBackColor.IsDefined()))
+            {
+                _fHasBackground = TRUE;
+            }
+
+            // Adjust line height for new format run
+            if (cch > 0 && *pch)
+            {
+                // Determine if the current run is the tallest text on this
+                // line and if so, increase the height of the line.
+
+                // WARNING: RecalLineHeight assumes that _pccs has been set up
+                //          properly, which has been done above...
+
+                RecalcLineHeight();
+            }
+
+            //Transform to correct capitalization
+            TransformText(strTransformedText, &pch, cch, GetCharFormat( _iCharFormat) );
+
+            //CSSAttribute Letter Spacing
+            cuvLetterSpacing = GetCharFormat( _iCharFormat )->_cuvLetterSpacing;
+            switch (cuvLetterSpacing.GetUnitType())
+            {
+                case CUnitValue::UNIT_INTEGER:
+                    xLetterSpacing = cuvLetterSpacing.GetUnitValue();
+                    break;
+                case CUnitValue::UNIT_ENUM:
+                    xLetterSpacing = 0;     // the only allowable enum value for l-s is normal=0
+                    break;
+                default:
+                    xLetterSpacing = cuvLetterSpacing.XGetPixelValue(
+                                                              _pDI,
+                                                              0,
+                                                              pTxtSite->GetFontHeightInTwips(&cuvLetterSpacing));
+            }
+        }
+        pch0 = pch;
+
+        //
+        // The following loop is designed to scan chunked characters using
+        // only local variables (cch, pch, cchMax) without using the rich text
+        // pointer.  Scanning a chunked sequence is faster then scanning using
+        // the rich text pointer, fetching one character at a time.
+        //
+
+        while(cch > 0)
+        {
+            xAdd = 0;                               // Default zero width
+            ch   = *pch;                            // Process next character
+            fBreakMinWidth   = FALSE;
+            fCurrSiteInlined = FALSE;
+
+            fIsWhite = IsWhite(ch);
+
+            if (uiFlags & (MEASURE_MAXWIDTH | MEASURE_MINWIDTH))
+            {
+                kcLast = kcThis;
+                if (0 == _chPassword)
+                {
+                    if (ckc == ikc)
+                    {
+                        ckc = min( long(cchValid - (pch - pch0)),
+                                   MAX_CLASSIFY_CHARS );
+                        BatchKinsokuClassify( pch, ckc, NULL, akcTable );
+                        ikc = 0;
+                    }
+                    kcThis = akcTable[ ikc++ ];
+                }
+            }
+            
+            // Keep track of the line heights specified in all the
+            // runs so that we can adjust the line height at the end.
+            else if (cch == cchChunk && ch != WCH_EMBEDDING)
+            {
+                RememberLineHeight (pCF);
+            }
+
+            if( ch == WCH_EMBEDDING )
+            {
+                htmlControlAlign    atSite;
+                SIZE                sizeObj;
+                int                 xMin;
+                CSite *             pSite     = (pRunOwner != pTxtSite
+                                                        ? pRunOwner
+                                                        : CurrBranch().GetSite());
+                LONG                cGrabSize = pSite->GetExternalGrabSize();
+
+                // Keep track of the number of characters "owned" by sites
+                // (This is used later on to determine if the line only contained sites)
+                cchSites += (pRunOwner != pTxtSite
+                                ? cchChunk
+                                : 1);
+
+                // Need the alignment to determine how to break the line.
+                atSite = pSite->GetSiteAlign( pTxtSite );
+
+                // Tables and other block elements are aligned left and right
+                // like images. HRs always break lines and alignment is like
+                // paragraph alignment. By turning off the fOwnLine flag here
+                // we cause left and right aligned tables to be treated like
+                // right and left aligned images.
+                if(pSite->HasFlag(TAGDESC_OWNLINE) &&
+                    !(pSite->HasFlag(TAGDESC_BLOCKELEMENT) &&
+                        (atSite == htmlControlAlignRight || atSite == htmlControlAlignLeft)))
+                {
+                    fOwnLine = TRUE;
+
+                    // If we find a table or a hr we break the line to force
+                    // the table or hr to be on its own line
+                    if((_cch != 0 || _xWidth != 0))
+                    {
+                        // For actual embeddings, advance the tp to the correct position
+                        // (For faux embeddings, elements which own their own runs, the
+                        //  tp is already correctly positioned)
+                        if (pRunOwner == pTxtSite)
+                        {
+                            (*this) += cchChunk - cch; // Position tp at break
+                        }
+                        _fHasBreak = TRUE;
+                        if(_cAlignedSitesAtBeginningOfLine &&
+                           _cch == long(_cAlignedSitesAtBeginningOfLine +
+                                    _cchWhiteAtBeginningOfLine))
+                        {
+                            _fForceNewLine = FALSE;
+                        }
+                        goto eol;
+                    }
+                    if(pSite->Tag() == ETAG_TABLE)
+                        fTableInCurLine = TRUE;
+                }
+
+                // if we are measuring for min width break before
+                // site if there were characters...
+                if (_cch && (uiFlags & MEASURE_MINWIDTH) && _pdp->GetWordWrap())
+                {
+                    // force line break
+                    goto overflow;
+                }
+
+                if (!pSite->IsInlinedSite(atSite))
+                {
+                    // All aligned aites are positioned by AlignObjects in
+                    // Recalcmargins
+                    // If we are in browse mode
+                    if(fBrowseMode) //GetAmbientBool(DISPID_AMBIENT_USERMODE, TRUE))
+                    {
+                        xAdd = 0;
+                    }
+                    else
+                    {
+                        LONG ySymbolHeight;
+
+                        MeasureSymbol(chLeftAlign, &xAdd, &ySymbolHeight);
+
+                        if(_yHeight - _yDescent < ySymbolHeight)
+                        {
+                            _yHeight = ySymbolHeight + _yDescent;
+                        }
+                    }
+
+                    xMin = xAdd;
+                    _fHasAligned = TRUE;
+
+                    if(_cch == long(_cAlignedSitesAtBeginningOfLine +
+                                    _cchWhiteAtBeginningOfLine))
+                    {
+                        _cAlignedSitesAtBeginningOfLine++;
+
+                        if(uiFlags & MEASURE_BREAKATWORD ||
+                            uiFlags & MEASURE_DONTMOVEOBJECTS)
+                        {
+                            _fMeasuringSitesAtBeginningOfLine = TRUE;
+
+                            // If we're really measuring, return. If we're
+                            // measuring for hit testing, just accumulate
+                            // the aligned sites at the beginning.
+                            if (!(uiFlags & MEASURE_DONTMOVEOBJECTS))
+                                return lRet;
+                        }
+                    }
+                    _fMeasuringSitesAtBeginningOfLine = FALSE;
+                    _cAlignedSites++;
+                }
+                else
+                {
+                    fCurrSiteInlined = TRUE;
+
+                    if(fBrowseMode && !pSite->_fVisible)
+                    {
+                        xMin = xAdd = 0;
+                        if(_cch == long(_cAlignedSitesAtBeginningOfLine +
+                                    _cchWhiteAtBeginningOfLine))
+                        {
+                            // BUGBUG: FLATRUN - Should this advance differently when
+                            //                   measuring a nested run owner? (e.g.,
+                            //                   advance by cchChunk?) (brendand)
+                            _cchWhiteAtBeginningOfLine++;
+                        }
+                    }
+                    else
+                    {
+                        // Measure the site
+                        lRet = MeasureSite(pSite,
+                                           xWidthMaxOverhang,
+                                           uiFlags,
+                                           &sizeObj,
+                                           &xMin);
+
+                        if (lRet)
+                            goto cleanup;
+
+                        xAdd = sizeObj.cx + (2 * cGrabSize);
+                    }
+
+                    // If we are not in hit detection mode, check to see if the
+                    // current image fits on the current line or not. If it fits
+                    // then set the proposed
+                    if (!fHitTesting &&
+                        ((uiFlags & (MEASURE_BREAKATWORD | MEASURE_NCHARS)) &&
+                            (_xWidth == 0 || (_xWidth != 0 && _xWidth + xAdd <= xWidthMaxOverhang))))
+                    {
+                        // Set proposed position relative to the line
+                        pSite->_ptProposed.y = cGrabSize;
+                        pSite->_ptProposed.x = cGrabSize + _xWidth;
+                    }
+                }
+
+                // Only break on a character if we've processed another
+                // character. This means that we're willing to break
+                // on an image, but only if we've encountered something else
+                // on the line first.
+                //fBreakMinWidth = (uiFlags & MEASURE_MINWIDTH) && fSeenWordBreak;
+                fBreakMinWidth = !fCantBreakHere && _cch > 0;
+
+                // make sure that line knows it has sites in it.
+                _fHasEmbedOrWbr = TRUE;
+
+                if(pxMinLineWidth)
+                {
+                    // just add to the word width if we cannot break
+                    if (fCantBreakHere)
+                    {
+                        xWordWidth += xMin;
+                    }
+                    else
+                    {
+                        // we have seen a word and seen an emmbeded site before we
+                        // saw whitespace, so terminate the word and update the min
+                        // line width
+                        xMinLine = max(xMinLine, (_xLeft + xWordWidth + (LONG)_xLineOverhang));
+                        // treat this as white space, so it should reset the word width
+                        xWordWidth = 0;
+
+                        xMinLine = max(xMinLine, (_xLeft + (LONG)xMin + _xRight));
+                    }
+                }
+            }
+
+            // To optimize the switch.
+            else if ( !fIsWhite && ch != WCH_WORDBREAK &&
+                      !IsSyntheticBreakChar ( ch ) && ch > TEXT(' ') )
+            {
+text:
+#ifdef FONTLINKING
+                // Special case ISO Latin1 characters so that we're 
+                // not hideously inefficient on European language web pages.
+                // This small perk of cultural imperialism brought by
+                // request of the performance team, Arye.
+                if ( !(_pccs == _pccsChunk &&
+                       (_pccsChunk->_dwLangBits & SBITS_LATIN1) &&
+                       ch < 256) )
+                {
+                    // Can't show synthetic characters, ever.
+                    if (!IsSyntheticChar(ch))
+                    {
+                        FontLinking(ch, NULL);
+                    }
+                }
+#endif
+
+                // If object, may come here
+                if ( !_pccs->Include(ch, xAdd) )
+                {
+                    AssertSz(FALSE, "CMeasurer::Measure char not in font");
+                    lRet = MRET_FAILED;
+                    goto cleanup;
+                }
+                // Don't count interline break characters in the line width.
+                if (!IsSyntheticBreakChar (ch) && ch != WCH_TXTSITEBREAK)
+                    xAdd += xLetterSpacing;
+                else
+                    xAdd = 0;
+
+                // fBreakMinWidth is TRUE for a character boundary at which
+                // we can break, or *before* any whitespace.  The distinction
+                // is necessary since ordinarily we're only interested in
+                // where you can break, not the where you can break minus
+                // leading whitespace.
+
+                fSeenWordBreak = !fCantBreakHere && kcLast != KC_UNDEFINED &&
+                                 CanBreak( kcLast, kcThis );
+
+                fBreakMinWidth = fBreakMinWidth || fSeenWordBreak;
+
+                // If we encounter an NBSP, duely note this fact.
+                if (ch == WCH_NBSP)
+                {
+                    if (cchFirstNBSP == -1)
+                    {
+                        // If we backup past the first NBSP in overflow,
+                        // we can set _fHasNBSPs back to FALSE.
+
+                        _fHasNBSPs = TRUE;
+                        cchFirstNBSP = _cch + (cchChunk - cch);
+                    }
+
+                    // HACK (cthrash) CanBreak( NBSP, * ) returns TRUE due
+                    // to space constraints in the Kinsoku table.  It really
+                    // should return FALSE; setting it to KC_UNDEFINED will
+                    // do the trick.
+
+                    kcThis = KC_UNDEFINED;
+                }
+            }
+            else
+            {
+                switch(ch) //  (for CR, LF)
+                {
+#ifdef UNICODE
+                    // NB (cthrash) For IE3/NS compatibility, we've elected
+                    // to keep non-0x0020 spaces.  These will not contribute
+                    // to _cchWhiteAtBeginningOfLine, and will be rendered.
+                    
+                case 0x2000:            // En Quad
+                case 0x2001:            // Em Quad
+                case 0x2002:            // En Space
+                case 0x2003:            // Em Space
+                case 0x2004:            // Three-Per-Em Space
+                case 0x2005:            // Four-Per-Em Space
+                case 0x2006:            // Six-Per-Em Space
+                case 0x2007:            // Figure Space
+                case 0x2008:            // Punctuation Space
+                case 0x2009:            // Thin Space
+                case 0x200a:            // Hair Space
+                case 0x200b:            // Zero-width Space
+                case 0x3000:            // Ideographic Space
+                    fBreakMinWidth = !fCantBreakHere;
+                    goto text;
+#endif
+                case TEXT(' '):
+                    fBreakMinWidth = !fCantBreakHere;
+                    if(!_pPF->_fPre && _cch == long(_cAlignedSitesAtBeginningOfLine +
+                                                    _cchWhiteAtBeginningOfLine))
+                    {
+                        ++_cchWhiteAtBeginningOfLine;
+                        xAdd = 0;
+                        break;
+                    }
+                    goto text;
+
+                case TEXT('\t'):
+                    _fHasTabs = TRUE;
+
+                    if( !fCantBreakHere )
+                    {
+                        fSeenWordBreak = TRUE;
+                        fBreakMinWidth = TRUE;
+                    }
+
+                    if(!_pPF->_fPre && _cch == long(_cAlignedSitesAtBeginningOfLine +
+                                                    _cchWhiteAtBeginningOfLine))
+                    {
+                        ++_cchWhiteAtBeginningOfLine;
+                        xAdd = 0;
+                    }
+                    else
+                    {
+                        // BUGBUG (cthrash) shouldn't we include xLetterSpacing?
+                        xAdd = MeasureTab();
+                    }
+                    break;
+
+                case WCH_WORDBREAK:
+                    if (pTxtSite->IsInBrowseMode()) //GetAmbientBool(DISPID_AMBIENT_USERMODE, TRUE))
+                    {
+                        xAdd = 0;
+                    }
+                    else
+                    {
+                        LONG ySymbolHeight;
+
+                        MeasureSymbol( chWordBreak, & xAdd, & ySymbolHeight );
+
+                        if (_yHeight - _yDescent < ySymbolHeight)
+                        {
+                            _yHeight = ySymbolHeight + _yDescent;
+                        }
+                    }
+                    fSawWbr = TRUE;
+                    fSeenWordBreak = TRUE;
+                    fBreakMinWidth = TRUE;
+                    _fHasEmbedOrWbr = TRUE;
+                    break;
+
+                case WCH_BLOCKBREAK:
+
+                    // This hack allows us to ignore paragraphs
+                    // that have only aligned sites in them.
+                    // bug 2224. Note the hackery for ignoring
+                    // whitespace on the line. This won't be necessary
+                    // when we stop turning CRs at the end of paragraphs
+                    // into white space.
+                    if (_cAlignedSitesAtBeginningOfLine &&
+                        _cch == long(_cAlignedSitesAtBeginningOfLine +
+                                _cchWhiteAtBeginningOfLine) &&
+                        !_fLastWasBreak)
+                    {
+                        _fForceNewLine = FALSE;
+                    }
+
+                    fFoundBreakChar = TRUE;
+                    _fHasEOP = TRUE;
+                    _cch++;
+                    cch--;
+                    (*this) += cchChunk - cch; // Position tp at break
+
+                    if ( !_pccs->Include(TEXT(' '), xAdd) )
+                    {
+                        AssertSz(FALSE, "CMeasurer::Measure char not in font");
+                        lRet = MRET_FAILED;
+                        goto cleanup;
+                    }
+                    _xWidth += xAdd;
+                    goto eol;
+
+                // For support of PRE and non-HTML stuff.
+                case TEXT('\r'):
+                case TEXT('\n'):
+                    fFoundBreakChar = TRUE;
+                    _fHasBreak = TRUE;
+                    _cch++;
+                    cch--;
+                    (*this) += cchChunk - cch; // Position tp at break
+
+                    if ( !_pccs->Include(TEXT(' '), xAdd) )
+                    {
+                        AssertSz(FALSE, "CMeasurer::Measure char not in font");
+                        lRet = MRET_FAILED;
+                        goto cleanup;
+                    }
+                    
+                    _xWidth += xAdd;
+                    goto eol;
+
+
+                case WCH_TXTSITEBREAK:
+                    fSawTxtSiteBreak = TRUE;
+                    // If we have a txtsite break char only in the line
+                    if(!_cch)
+                    {
+                        _fForceNewLine = FALSE;
+                        _fHasEOP = fFirstInPara ? TRUE : FALSE;
+                        // width of this char is 0
+                        _cch++;
+                        cch--;
+                        (*this) += cchChunk - cch; // Position tp at break
+
+                        goto eol;
+                    }
+                    break;
+
+                // This is now effectively our linebreak character.
+                case WCH_LINEBREAK :
+                {
+                    CElement *pEBR = SearchBranchForTag( ETAG_BR );
+
+                    // Don't break on the first BR you find unless
+                    if (_fLastWasBreak || pEBR->_fBreakOnEmpty ||
+                        !BRsToPara ())
+                    {
+                        fFoundBreakChar = TRUE;
+                        _fHasBreak = TRUE;
+                        _cch++;
+                        cch--;
+                        (*this) += cchChunk - cch; // Position tp at break
+
+                        if ( !_pccs->Include(TEXT(' '), xAdd) )
+                        {
+                            AssertSz(FALSE, "CMeasurer::Measure char nbot in font");
+                            lRet = MRET_FAILED;
+                            goto cleanup;
+                        }
+                        _xWidth += xAdd;
+                        goto eol;
+                    }
+                    else
+                        _fLastWasBreak = TRUE;
+                }
+                    // Deliberate fall through.
+                default:
+                    goto text;
+                }       // switch(ch)
+            }
+
+            //
+            // Here we same delta information .... why?
+            //
+
+            index = iSavedWidths++ & MAX_SAVED_WIDTHS;
+            savedWidths[ index ].width = xAdd;
+            savedWidths[ index ].xLineOverhang = _xLineOverhang;
+            savedWidths[ index ].yHeight = _yHeight;
+            savedWidths[ index ].yDescent = _yDescent;
+            _xWidth += xAdd;
+
+            // We've found a non-line break character, this means
+            // that we can get out of the special mode for
+            // handling consecutive break tags at the end of a
+            // paragraph.
+            if (ch != WCH_LINEBREAK)
+                _fLastWasBreak = FALSE;
+
+            // if we are measuring for minimum width break after site or white space
+            // otherwise break
+            if (_cch && fBreakMinWidth && (uiFlags & MEASURE_MINWIDTH) &&
+                _pdp->GetWordWrap())
+            {
+                goto overflow;
+            }
+
+            // Don't break words
+            if (_xWidth > xWidthMaxOverhang)
+            {
+
+                // Note that we don't break lines on white space, unless
+                // we're simply trying to compute a cp from an xpos
+                // fCouldBreakEarlier would be FALSE if all of our chars
+                // were under a NOBR were in a TEXTAREA, for example.
+                if(fHitTesting || ((fCouldBreakEarlier || fSawWbr) &&
+                   ((_cch > 0 && (uiFlags & MEASURE_BREAKATWORD) && !fOverflowedOnce) ||
+                    // Always put at least one character on a line
+                   ((uiFlags & MEASURE_BREAKLONGLINES) && _cch > 0)) &&
+                   (!fIsWhite || (uiFlags & MEASURE_BREAKNEARWIDTH))))
+                {
+                    goto overflow;
+                }
+
+                // if we didn't find a word break or cannot break lines then,
+                // check to see if there are any margins around (to prevent
+                // text overwriting the aligned images), clear the margins and
+                // try to fit in the text (except for tables to fix bug 10747).
+proceed:        if((fHasLeftMargin || fHasRightMargin) &&
+                    !fIsWhite && !fTableInCurLine &&
+                    (ch != WCH_EMBEDDING || fCurrSiteInlined))
+                {
+                    Advance(-long(_cch - cchChunk + cch -
+                                  (_cAlignedSitesAtBeginningOfLine +
+                                   _cchWhiteAtBeginningOfLine)));
+                    _xWidth = 0;
+                    _cchWhite = 0;
+                    _cch = _cAlignedSitesAtBeginningOfLine + _cchWhiteAtBeginningOfLine;
+                    cInlinedSites = 0;
+                    goto done;
+                }
+            }
+
+            // If we've seen a site, break at the earliest convenience
+            if (WCH_EMBEDDING == *pch)
+            {
+                if(fCurrSiteInlined)
+                    cInlinedSites++;
+
+                // If we encounter a site, we want to enable line wrapping,
+                // but we NEVER want to turn it off, or we'll break hit
+                // testing in the first word following a line.
+                if( !fCantBreakHere )
+                    fSeenWordBreak = TRUE;
+            }
+
+            // Increment the count of characters associated with this line
+            // (Skip this for faux sites (elements which own their own runs)
+            //  since the current positioned is correctly advanced while measuring
+            //  the site)
+            if (pRunOwner == pTxtSite)
+            {
+                _cch++;
+
+                // Consume one character from the local buffer pointer.
+                // If a password char don't advance
+                if (0 == _chPassword)
+                {
+                    pch++;
+                }
+                cch--;
+            }
+
+            // If measuring a faux site (an element which owns its own runs),
+            // Advance to the end of the characters underneath the element
+            else
+            {
+                _cch += cchChunk;
+                cch  -= cchChunk;
+            }
+
+            // Some tags are always on their own line, so we force a line
+            // break immediately afterwards.
+            if (fOwnLine)
+            {
+                BOOL    fLastInPara;
+
+                // Let code dealing with the line array know that
+                // this is a single site line.
+                _fSingleSite = TRUE;
+
+                // We don't want to break if there is a block break character
+                // in our run (and thus generated by a following paragraph),
+                // There would be too much space. This fixes bug 2062.
+                // Note that we DO want to break if there is a line break
+                // character.
+                fLastInPara = LastInPara(cchChunk);
+                if (!fLastInPara || (pRunOwner != pTxtSite))
+                {
+                    (*this) += cchChunk - cch;          // Position tp at break
+                    cchNonWhite     = _cch;             //  update nonwhitespace
+                    xWidthNonWhite  = _xWidth;          //  count and width
+                    if (fLastInPara)
+                    {
+                        _fHasEOP     = TRUE;
+                        cchNonWhite -= 1;
+                    }
+                    goto eol;
+                }
+            }
+
+            if (fBreakMinWidth && pxMinLineWidth)
+            {
+                // we encountered a wordbreak, so terminate the word and
+                // update min line width
+                xMinLine = max(xMinLine, (_xLeft + xWordWidth +
+                                          (LONG)_xLineOverhang + _xRight));
+                xWordWidth = 0;
+            }
+
+            if(!fIsWhite) // If not whitespace char,
+            {
+                if(pxMinLineWidth && ch != WCH_EMBEDDING)
+                {
+                    xWordWidth += xAdd;
+                }
+                cchNonWhite     = _cch;             //  update nonwhitespace
+                xWidthNonWhite  = _xWidth;          //  count and width
+            }
+            else if (fCantBreakHere)
+            {
+                xWordWidth += xAdd;
+            }
+        }                                           // while(cch > 0)
+
+NextRun:
+        // Advance the number of characters processed (or move over the empty run)
+        if(cchChunk)
+        {
+            Advance( cchChunk );
+            cchMax -= cchChunk;                         // Subtract chunk count
+        }
+        else
+        {
+            while (AdjustForward());
+        }
+
+        // Re-set default run owner to this site
+        pRunOwner = pTxtSite;
+
+    }   // while(cchMax > 0)
+
+eol:
+    if(uiFlags & MEASURE_BREAKATWORD)
+    {
+        if(_cch && _cch == _cchHidden)
+        {
+            _fForceNewLine = FALSE;
+            _fHidden = TRUE;
+        }
+
+        if (pxMinLineWidth && xWordWidth)
+        {
+            // we encountered white space, so terminate the word and
+            // update min line width
+            xMinLine = max(xMinLine, (_xLeft + xWordWidth + (LONG)_xLineOverhang -
+                (_xWidth - xWidthNonWhite) + _xRight));
+        }
+        // Compute number of whitespace characters at EOL
+        if (_pPF->_fInclEOLWhite)
+        {
+            _cchWhite = 0;
+            _xWhite   = 0;
+        }
+        else
+        {
+            _cchWhite = (SHORT)(_cch - cchNonWhite);
+            _xWhite   = (SHORT)(_xWidth - xWidthNonWhite);
+            _xWidth   = xWidthNonWhite;
+        }
+    }
+
+    goto done;
+
+overflow:
+    --iSavedWidths;
+    _xWidth -= xAdd; // Went past max width for line
+    _xLineOverhang = savedWidths[ iSavedWidths & MAX_SAVED_WIDTHS ].xLineOverhang;
+    (*this) += cchChunk - cch;              // Position *this at overflow position
+
+    if( (uiFlags & MEASURE_BREAKATWORD) )
+    {                                             //  word boundary
+        LONG cchBackup;
+
+        // We should not have the EOP flag set here.  The case to watch out for
+        // is when we re-use a line that used to have an EOP.  It is the
+        // responsibility of the measurer to clear this flag as appropriate.
+
+        Assert(!(_fHasEOP) );
+
+        _fHasEOP = FALSE;
+
+        if (WCH_EMBEDDING == ch || '\t' == ch)
+        {
+            // if the character we are we are working on is a tab,
+            // we want it on the next line to allow tabbing off
+            // the end of lines. This follows the behavior of word.
+            // we also want the character on the next line if the
+            // preceeding character is an object
+
+            // If the site or tab is preceeded by a nbsp, we can't
+            // automatically break here.
+
+            CTxtPtr tp(_rpTX);
+
+            if (tp.PrevChar() != WCH_NBSP)
+                goto done;
+        }
+
+        LONG cpStop = (LONG)*this;
+
+        Assert((LONG)*this == cpStop);
+
+        if (!(fCantBreakHere && fSawWbr))
+        {
+            cchBackup = -FindWordBreakEx(WB_LEFTBREAK, _cch+1, TRUE);
+
+            // If we didn't find any break we must take action.
+            if (    (cchBackup >= _cch)
+                 && !(uiFlags & MEASURE_BREAKLONGLINES))
+            {
+                // We've been instructed to not break words.  This
+                // line shall extend to the end of this word.
+
+                (*this) += cchBackup;
+                cchBackup = FindWordBreakEx(WB_RIGHTBREAK, -1, TRUE);
+
+                // MOVEWORDRIGHT stops before synthbreaks.  We want them to
+                // be part of this current line, so bump up as necessary.
+                if (IsSyntheticBreakChar( GetChar() ))
+                {
+                    // BUGBUG (cthrash) This breaks the <BR><BR><P> case.
+                    if (Advance(1))
+                        cchBackup++;
+                }
+
+                // Restore information
+                _xWidth += xAdd;
+                _xLineOverhang = savedWidths[ iSavedWidths++ & MAX_SAVED_WIDTHS ].xLineOverhang;
+
+                // Move the rtp back to the beginning of the chunk, and set up
+                // cch and cchMax such that loops will terminate correctly.
+                cchMax = cchBackup + (cchChunk - cch);
+                (*this) -= cchMax;
+
+                // If we're bailing out in the middle of the current chunk, we need to tweak
+                // our loop variables.
+                if (cchBackup < cch)
+                {
+                    cchChunk = cchMax;
+                    cch = cchMax = cchBackup;
+                }
+
+                // We shouldn't enter overflow again.
+                fOverflowedOnce = TRUE;
+                goto proceed;
+            }
+        }
+        else
+        {
+            CTxtPtr txtPtr ( this->_rpTX );
+
+            cchBackup = 0;
+            if (txtPtr.GetChar() != WCH_WORDBREAK)
+            {
+                while ( txtPtr.PrevChar() != WCH_WORDBREAK )
+                    cchBackup++;
+            }
+
+            Advance( -cchBackup );
+
+            Assert(IsRunOwner(pTxtSite));
+        }
+
+        Assert(cchBackup >= 0);
+
+        if(cchBackup < (LONG)_cch)
+        {
+            _cch -= cchBackup;
+        }
+        else
+            SetCp((DWORD)cpStop);
+
+        // If we've backed up past the first NBSP, note this fact.
+        _fHasNBSPs = _fHasNBSPs && _cch >= cchFirstNBSP;
+
+        // Now search at start of word to figure how many white chars at EOL
+        // TKTK: if break on whitespace, can use cchNonWhite, xWidthNonWhite
+        if(long(GetCp()) < GetLastCp())
+        {
+            cch = 0;
+
+            if(pTxtSite->_pfnWB(PUNCT_OBJ (TCHAR*)*this, 0, sizeof(TCHAR), WB_ISDELIMITER))
+            {
+                cch = FindWordBreak(WB_RIGHT);
+                Assert(cch >= 0);
+            }
+
+            _cchWhite = (SHORT)cch;
+            _cch += cch;
+
+            if( _rpTX.IsAfterEOP())
+            {
+                _fHasEOP = TRUE;
+                goto done;
+            }
+        }
+
+        i = cpStop - (LONG)*this;
+        if ( i >= 0 )
+            i += _cchWhite;
+
+        if ( i >= 0 && i < MAX_SAVED_WIDTHS && i < iSavedWidths )
+        {
+            Assert(_cch > 0);
+            if (_pPF->_fInclEOLWhite)
+            {
+                _cchWhite = 0;
+                _xWhite = 0;
+            }
+            else
+            {
+                long xWidthOld = _xWidth;
+                while (--i >= 0)
+                {
+                    _xWidth -= savedWidths[--iSavedWidths & MAX_SAVED_WIDTHS].width;
+                }
+                _xWhite = xWidthOld - _xWidth;
+            }
+
+            _xLineOverhang = savedWidths[iSavedWidths & MAX_SAVED_WIDTHS].xLineOverhang;
+            _yHeight = savedWidths[iSavedWidths & MAX_SAVED_WIDTHS].yHeight;
+            _yDescent = savedWidths[iSavedWidths & MAX_SAVED_WIDTHS].yDescent;
+            Assert(_yHeight >= 0);
+        }
+        else if (i != -_cchWhite)
+        {
+            // Need to recompute width from scratch.
+            _xWidth = -1;
+            lRet = MRET_NOWIDTH;
+        }
+    }
+    else if (uiFlags & MEASURE_BREAKNEARWIDTH)
+    {
+        if (_pPF->_fInclEOLWhite)
+        {
+            _cchWhite = 0;
+            _xWhite = 0;
+        }
+        else
+        {
+            _xWhite = _xWidth - xWidthNonWhite;
+        }
+        // Breaks at character closest to target width
+        if (xAdd && xWidthMax - _xWidth >= xAdd / 2)
+        {
+            _cch += WCH_EMBEDDING == ch ? cchChunk : 1;
+            _xWidth += xAdd;
+            (*this) += WCH_EMBEDDING == ch ? cchChunk : 1;
+        }
+    }
+
+done:
+
+    if(_cch == 0 || _cch == 1 && fFoundBreakChar)
+    {
+        // Get a standard line height. For some reason, lines created by <BR> tags
+        // have the standard height no matter what their font is.
+        const CCharFormat *pCF = GetPed()->GetCharFormat(NULL);
+        lRet = ResetFontCache(pCF);
+        if (lRet)
+            goto cleanup;
+        _yHeight = _pccs->_yHeight;
+        _yDescent = _pccs->_yDescent;
+        _lMaxLineHeight = _yHeight;
+
+        Assert(_yHeight >= 0);
+    }
+
+    // This paragraph is empty except for a break tag. For Netscape compatibility
+    // (bug 9234) we give it a height of zero.
+    else if (fFoundBreakChar && _cch == 2 &&
+              _fFirstInPara && _fLastWasBreak)
+    {
+        _yHeight = _yDescent = _lMaxLineHeight = 0;
+    }
+
+    _yTxtDescent = _yDescent;
+
+    // Allow last minute adjustment to line height
+    AdjustLineHeight( uiFlags );
+
+    if(cInlinedSites && uiFlags & (MEASURE_BREAKATWORD | MEASURE_NCHARS))
+    {
+        // Assume there are only sites in the line if the number of characters
+        // is less than the number of characters given to sites, plus those
+        // given to whitespace, plus break characters. (A less than comparison
+        // is used since whitespace which occurs at the end of the line is not
+        // counted in the cch for the line.)
+        VerticalAlignObjects(cInlinedSites + _cAlignedSites,
+                             (_cch <= (cchSites + _cchWhite + (_fHasEOP        ||
+                                                               _fHasBreak      ||
+                                                               _fLastWasBreak  ||
+                                                               fSawTxtSiteBreak ))));
+    }
+
+    if(pxMinLineWidth)
+        *pxMinLineWidth = xMinLine;
+
+    if (!lRet && _cch && _fForceNewLine)
+    {
+        _xLeft  += xLeftFrameMargin;
+        _xRight += xRightFrameMargin;
+    }
+cleanup:
+
+    return lRet;
+}
+
+//+------------------------------------------------------------------------
+//
+//  Member:     VerticalAlignObjects
+//
+//  Synopsis:   Process all vertically aligned objects and adjust the line
+//              height
+//
+//  Arguments:  [pMe]              --  measurer used to recalc lines
+//              [pli]              --  Current line with aligned objects
+//
+//-------------------------------------------------------------------------
+void
+CMeasurer::VerticalAlignObjects(unsigned long cSites, BOOL fOnlySites)
+{
+    const CCharFormat * pCF;
+    LONG        cch;
+    LONG        cchAdvance;
+    LONG        yTxtAscent  = _yHeight - _yDescent - _yBeforeSpace;
+    LONG        yTxtDescent = _yDescent;
+    LONG        yDescent    = _yDescent;
+    LONG        yAscent     = yTxtAscent;
+    LONG        yAbsHeight  = 0;
+    LONG        yTmpAscent  = 0;
+    LONG        yTmpDescent = 0;
+    CTxtSite *  pTxtSite    = _pdp->GetTxtSite();
+    BOOL        fBrowseMode = pTxtSite->IsInBrowseMode();
+    CSite *     pRunOwner;
+    CSite *     pSite;
+    long        iRun;
+
+    htmlControlAlign    atAbs = htmlControlAlignNotSet;
+
+    // if there are only sites in the line, then we dont want to include
+    // the text ascent or descent
+    if (fOnlySites)
+    {
+        if (!_fHasBulletOrNum)
+        {
+            yTxtAscent = 0;
+            yTxtDescent = 0;
+            yAscent = 0;
+        }
+        yDescent = 0;
+    }
+
+    // first pass we measure the line baseline and height
+    cch = _cch;
+    Advance(-cch);
+    AdvanceToNonEmpty();
+
+    pRunOwner = pTxtSite;
+    iRun      = -1;
+
+    while (cch)
+    {
+        // Get the site over the current branch, if any
+        // If this CTxtSite does not own the run, then the site is the run owner
+        // Otherwise, it is whatever site is above the run
+        if (_fHasNestedRunOwner && iRun != GetIRun())
+        {
+            iRun      = GetIRun();
+            pRunOwner = GetRunOwner(pTxtSite);
+
+            // Treat runs underneath a nested CTxtEdit (that is, a CTxtSite using
+            // another instance of CTxtStory) as still owned by this CTxtSite
+            if (pRunOwner->IsPed())
+            {
+                pRunOwner = pTxtSite;
+            }
+        }
+        Assert((pRunOwner == pTxtSite) || _fHasNestedRunOwner);
+
+        pSite = (pRunOwner != pTxtSite
+                        ? pRunOwner
+                        : CurrBranch().IsSite());
+
+        // If the current branch is a site and not the current CTxtSite
+        if (pSite && pSite != pTxtSite &&
+            (pCF = pSite->GetCharFormat(pTxtSite)) &&
+            (!fBrowseMode || !pCF->_fDisplayNone))
+        {
+            htmlControlAlign    atSite;
+            BOOL                fOwnLine;
+            LONG                lGrabSize;
+            LONG                yObjHeight;
+            ELEMENT_TAG         etag = pSite->Tag();
+
+            atSite = pSite->GetSiteAlign( pTxtSite );
+            fOwnLine = pSite->HasFlag (TAGDESC_OWNLINE);
+
+            if(pSite->IsInlinedSite(atSite))
+            {
+                if(etag == ETAG_HR)
+                    lGrabSize = GRABSIZE;
+                else
+                    lGrabSize  = pSite->GetExternalGrabSize();
+
+                yObjHeight = pSite->_sizeProposed.cy + (2 * lGrabSize);
+
+                switch (atSite)
+                {
+                // align to the baseline of the text
+                case htmlControlAlignNotSet:
+                    if(etag != ETAG_IFRAME && !pSite->_fImgBase)
+                    {
+                        // + 1 for round off errors
+                        yTmpAscent = (yObjHeight + 1 + yTxtAscent - yTxtDescent) / 2;
+                        yTmpDescent = (yObjHeight - yTxtAscent + yTxtDescent) / 2;
+                        break;
+                    }
+                case htmlControlAlignBottom:
+                case htmlControlAlignBaseline:
+                    yTmpDescent = lGrabSize;
+                    yTmpAscent  = yObjHeight - lGrabSize;
+                    break;
+
+                // align to the top of the text
+                case htmlControlAlignTextTop:
+                    yTmpAscent  = yTxtAscent + lGrabSize;
+                    yTmpDescent = yObjHeight - yTxtAscent - lGrabSize;
+                    break;
+
+                // center of the image aligned to the baseline of the text
+                case htmlControlAlignMiddle:
+                case htmlControlAlignCenter:
+                    yTmpAscent  = (yObjHeight + 1)/2; // + 1 for round off
+                    yTmpDescent = yObjHeight/2;
+                    break;
+
+                // align to the top, absmiddle and absbottom of the line, doesn't really
+                // effect the ascent and descent directly, so we store the
+                // absolute height of the object and recompute the ascent
+                // and descent at the end.
+                case htmlControlAlignAbsMiddle:
+                case htmlControlAlignTop:
+                case htmlControlAlignAbsBottom:
+                    yTmpAscent = 0;
+                    yTmpDescent = 0;
+                    if(yObjHeight > yAbsHeight)
+                    {
+                        yAbsHeight = yObjHeight;
+                        atAbs = atSite;
+                    }
+                    break;
+
+                default:        // we don't want to do anything for
+                    if(fOwnLine)
+                    {
+                        yTmpDescent = lGrabSize;
+                        yTmpAscent  = yObjHeight - lGrabSize;
+                    }
+                    break;      // left/center/right aligned objects
+                }
+                if(yTmpAscent > yAscent)
+                    yAscent = yTmpAscent;
+                if(yTmpDescent > yDescent)
+                    yDescent = yTmpDescent;
+            }
+        }
+        // For true sites, those marked by a WCH_EMBEDDING character,
+        // just skip over the embedding character
+        // For faux embeddings, nested sites which own their own runs,
+        // skip over all the characters under the influence of the site
+        cchAdvance = (pRunOwner != pTxtSite
+                            ? GetElementRuns().GetElementCch(pRunOwner)
+                            : max( 1L, GetCchRemaining() ));
+        cchAdvance = min( cchAdvance, cch );
+        cch -= cchAdvance;
+        Advance(cchAdvance);
+        AdvanceToNonEmpty();
+    }
+
+    // If we have ALIGN_TYPEABSBOTTOM or ALIGN_TYPETOP, they do not contribute
+    // to ascent or descent based on the baseline
+    if(yAbsHeight > yAscent + yDescent)
+    {
+        if(atAbs == htmlControlAlignAbsMiddle)
+        {
+            LONG yDiff = yAbsHeight - yAscent - yDescent;
+            yAscent += (yDiff + 1) / 2;
+            yDescent += yDiff / 2;
+        }
+        else if(atAbs == htmlControlAlignAbsBottom)
+        {
+            yAscent = yAbsHeight - yDescent;
+        }
+        else
+        {
+            yDescent = yAbsHeight - yAscent;
+        }
+    }
+
+    // now update the line height
+    _yHeight = yAscent + yDescent + _yBeforeSpace;
+    _yDescent = yDescent;
+    Assert(_yHeight >= 0);
+
+    // Second pass we position the objects
+    cch = _cch;
+    Advance(-cch);
+    AdvanceToNonEmpty();
+
+    pRunOwner = pTxtSite;
+    iRun      = -1;
+
+    while (cch)
+    {
+        // Get the site over the current branch, if any
+        // If this CTxtSite does not own the run, then the site is the run owner
+        // Otherwise, it is whatever site is above the run
+        if (_fHasNestedRunOwner && iRun != GetIRun())
+        {
+            iRun      = GetIRun();
+            pRunOwner = GetRunOwner(pTxtSite);
+
+            // Treat runs underneath a nested CTxtEdit (that is, a CTxtSite using
+            // another instance of CTxtStory) as still owned by this CTxtSite
+            if (pRunOwner->IsPed())
+            {
+                pRunOwner = pTxtSite;
+            }
+        }
+        Assert((pRunOwner == pTxtSite) || _fHasNestedRunOwner);
+
+        pSite = (pRunOwner != pTxtSite
+                        ? pRunOwner
+                        : CurrBranch().IsSite());
+
+        // If the current branch is a site and not the current CTxtSite
+        if (pSite && pSite != pTxtSite &&
+            (pCF = pSite->GetCharFormat(pTxtSite)) &&
+            (!fBrowseMode || !pCF->_fDisplayNone))
+        {
+            htmlControlAlign    atSite;
+            LONG                lGrabSize;
+            LONG                yObjHeight;
+            BOOL                fOwnLine;
+            ELEMENT_TAG         etag = pSite->Tag();
+
+            atSite = pSite->GetSiteAlign( pTxtSite );
+            fOwnLine = pSite->HasFlag (TAGDESC_OWNLINE);
+
+            if(pSite->IsInlinedSite(atSite))
+            {
+                if(etag == ETAG_HR)
+                    lGrabSize = GRABSIZE;
+                else
+                    lGrabSize  = pSite->GetExternalGrabSize();
+
+                yObjHeight = pSite->_sizeProposed.cy + (2 * lGrabSize);
+
+                pSite->_ptProposed.y = _yBeforeSpace;
+
+                switch (atSite)
+                {
+                // align to the baseline of the text
+                case htmlControlAlignNotSet:
+                    if(etag != ETAG_IFRAME && !pSite->_fImgBase)
+                    {
+                        pSite->_ptProposed.y += yAscent -
+                                    (yObjHeight + 1 + yTxtAscent - yTxtDescent) / 2 +
+                                    lGrabSize;
+                        break;
+                    }
+                case htmlControlAlignBottom:
+                case htmlControlAlignBaseline:
+                    pSite->_ptProposed.y += yAscent - yObjHeight + 2 * lGrabSize;
+                    break;
+
+                // align to the top of the text
+                case htmlControlAlignTextTop:
+                    pSite->_ptProposed.y += yAscent - yTxtAscent + lGrabSize;
+                    break;
+
+                // align to the middle of the text
+                case htmlControlAlignAbsMiddle:
+                    pSite->_ptProposed.y += (yAscent + yDescent - yObjHeight - 1) / 2 + lGrabSize;
+                    break;
+
+                    // center of the image aligned to the baseline of the text
+                case htmlControlAlignMiddle:
+                case htmlControlAlignCenter:
+                    pSite->_ptProposed.y += yAscent - (yObjHeight + 1) / 2 + lGrabSize;
+                    break;
+
+                    // aligned to the top of the line
+                case htmlControlAlignTop:
+                    pSite->_ptProposed.y += lGrabSize;
+                    break;
+
+                    // aligned to the bottom of the line
+                case htmlControlAlignAbsBottom:
+                    pSite->_ptProposed.y += yAscent + yDescent - yObjHeight + lGrabSize;
+                    break;
+
+                default:
+                    if (fOwnLine)
+                    {
+                        pSite->_ptProposed.y += yAscent -  yObjHeight + lGrabSize;
+                    }
+                    break;
+                }
+            }
+        }
+        // For true sites, those marked by a WCH_EMBEDDING character,
+        // just skip over the embedding character
+        // For faux embeddings, nested sites which own their own runs,
+        // skip over all the characters under the influence of the site
+        cchAdvance = (pRunOwner != pTxtSite
+                            ? GetElementRuns().GetElementCch(pRunOwner)
+                            : max( 1L, GetCchRemaining() ));
+        cchAdvance = min( cchAdvance, cch );
+        cch -= cchAdvance;
+        Advance(cchAdvance);
+        AdvanceToNonEmpty();
+    }
+}
+
+
+//+----------------------------------------------------------------------------
+//  Member:     CMeasurer::AdjustLineHeight()
+//
+//  Synopsis:   Adjust for space before/after and line spacing rules.
+//
+//-----------------------------------------------------------------------------
+
+void CMeasurer::AdjustLineHeight( UINT uiFlags )
+{
+    // This had better be true.
+    Assert (_yHeight >= 0);
+
+    // Only do this if there is a line height used somewhere.
+    if (_lMaxLineHeight != LONG_MIN)
+    {
+        // Note that the adjustment happens in the before space.
+        // This enables us to determine where the text height is.
+        long yDelta = _lMaxLineHeight - _yHeight;
+        long yAdj = yDelta / 2;
+
+        _yBeforeSpace += yAdj;
+        _yAfterSpace = yDelta - yAdj;
+    }
+
+    // Finally, combine with the previous lines after space.
+    _yBeforeSpace += (short)_lPrevLineHeightAdj;
+    _lPrevLineHeightAdj = _yAfterSpace;
+
+    _yHeight  += (LONG)_yBeforeSpace;   // Add in any space before
+}
+
+//+----------------------------------------------------------------------------
+//  Member:     CMeasurer::AccountForPAtEnd
+//
+//  Synopsis:   Set bit to ensure extra line spacing if previous line
+//              ended in an empty P tag.
+//
+//  Returns:    TRUE if we're right after an empty P tag.
+//
+//-----------------------------------------------------------------------------
+
+// BUGBUG (Arye): This should probably use the actual spacing for the tag,
+// rather than simply returning a BOOL.
+BOOL
+CMeasurer::AccountForPAtEnd (LONG iRun)
+{
+    BOOL fRet = FALSE;
+
+    while (iRun >= 0 && GetElementRuns().Elem(iRun)->_cch == 0)
+    {
+        CElement *pElement;
+
+        // Netscape's streaming model uses the prespacing for tags encountered,
+        // even if they have no content. Thus, empty tags force pre spacing
+        // when empty.
+        pElement = SearchBranchForBlockElement( iRun );
+        if (pElement->Tag() != ETAG_BODY &&
+            pElement->Tag() != ETAG_ADDRESS)
+        {
+            LONG iRunStart, iRunEnd;
+
+            GetElementRuns().GetElementScope( iRun,
+                                              pElement, &iRunStart, &iRunEnd );
+
+            // could be multiple null runs.
+            fRet = TRUE;
+            for (iRun=iRunEnd; iRun>=iRunStart; --iRun)
+            {
+                if (GetElementRuns().Elem(iRun)->_cch)
+                {
+                    fRet = FALSE;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            --iRun;
+        }
+    }
+    return fRet;
+}
+
+
+//+----------------------------------------------------------------------------
+//  Member:     CMeasurer::LastInPara()
+//
+//  Synopsis:   Determine if the current character is the last
+//              character in the line/paragraph by virtue of a
+//              deliberate break character.
+//
+//-----------------------------------------------------------------------------
+BOOL CMeasurer::LastInPara (LONG cchChunk)
+{
+    CRchTxtPtr rtp(*this);
+
+    // Is the character a break character?
+    if (rtp.Advance(1))
+    {
+        if (rtp._rpTX.GetChar() == WCH_BLOCKBREAK)
+            return TRUE;
+    }
+
+    return (FALSE);
+}
+
+//+----------------------------------------------------------------------------
+//  Member:     CMeasurer::BRsToPara()
+//
+//  Synopsis:   Return TRUE if there is nothing between the current
+//              cp and the end of the para but BRs.
+//
+//-----------------------------------------------------------------------------
+BOOL
+CMeasurer::BRsToPara ()
+{
+    CRchTxtPtr rtp(*this);
+    TCHAR ch;
+    BOOL fRet = TRUE;
+
+    // Is the character a break character?
+    while (rtp.Advance(1))
+    {
+        ch = rtp._rpTX.GetChar();
+
+        // Found an end of paragraph. Note that we treat the end
+        // of the document the same as the end of a paragraph. This
+        // is so that trailling BRs in table cells don't cause extra
+        // lines.
+        if (ch == WCH_BLOCKBREAK || ch == 0)
+        {
+            break;
+        }
+
+        // If we've found something that's not a line break, we need to break.
+        else if (ch != WCH_LINEBREAK)
+        {
+            fRet = FALSE;
+            break;
+        }
+    }
+
+    return fRet;
+}
+
+
+// Wrapper to tell if an element is a list item or not.
+inline BOOL
+IsListItem (CElement *pElement)
+{
+    return !!pElement->HasFlag(TAGDESC_LISTITEM);
+}
+
+
+//+----------------------------------------------------------------------------
+//  Member:     CMeasurer::FigureInterBlockSpacing
+//
+//  Synopsis:   Figure the space to put between two block elements
+//              by looking at which tags have gone in and out of scope.
+//
+//-----------------------------------------------------------------------------
+void
+CMeasurer::FigureInterBlockSpacing (UINT uiFlags, BOOL fFirstParaInListItem,
+                                    LONG lPrevLineRun)
+{
+    LONG            iRun = GetIRun();
+    CElementRuns &  eruns = GetElementRuns();
+    LONG            lPosSpace=0, lNegSpace=0;
+    BOOL            fForceBeforeSpace=FALSE;
+    CTxtSite *      pTxtSite  = _pdp->GetTxtSite();
+    LONG            iRunFirst = pTxtSite->GetFirstRun();
+
+    // See if we were preceded by an empty <P> tag. In that
+    // case we need to add some extra spacing.
+    if (! (uiFlags & MEASURE_FIRSTLINE) )
+        fForceBeforeSpace = AccountForPAtEnd (iRun-1);
+
+    // If we have a previous line, see which block elements
+    // have gone in and out of scope between the two lines.
+    // We will ultimately set the spacing to the max of the
+    // available spacings, but for now we just need to determine
+    // whether to force before/after spacing or supress it.
+    if (iRun > iRunFirst && lPrevLineRun >= iRunFirst)
+    {
+        CElement *  pElement;
+        CElement *  pElementScope;
+        CElement *  pElementBlock     = SearchBranchForBlockElement(iRun, pTxtSite);
+        CElement *  pElementBlockPrev = SearchBranchForBlockElement(lPrevLineRun, pTxtSite);
+
+        // First, clear all the mark bits in the branch above the
+        // previous and next lines.
+        // Note that the initialization of pElement skips past any
+        // site peds.
+        for (pElement = pElementBlock;
+             pElement;
+             pElement = pElement->EParent())
+        {
+            pElementScope = pElement->Scope();
+            if (pElementScope->IsTxtSite() == pTxtSite)
+                break;
+            pElementScope->_fMark1 = 0;
+            pElementScope->_fMark2 = 0;
+        }
+        for (pElement = pElementBlockPrev;
+             pElement;
+             pElement = pElement->EParent())
+        {
+            pElementScope = pElement->Scope();
+            if (pElementScope->IsTxtSite() == pTxtSite)
+                break;
+            pElementScope->_fMark1 = 0;
+            pElementScope->_fMark2 = 0;
+        }
+
+        // Now, mark the elements that are present in each line, mark1 is
+        // for the previous line, mark2 is for the current line.
+        for (pElement = pElementBlockPrev;
+             pElement;
+             pElement = pElement->EParent())
+        {
+            pElementScope = pElement->Scope();
+            if (pElementScope->IsTxtSite() == pTxtSite)
+                break;
+            pElementScope->_fMark1 = 1;
+        }
+        for (pElement = pElementBlock;
+             pElement;
+             pElement = pElement->EParent())
+        {
+            pElementScope = pElement->Scope();
+            if (pElementScope->IsTxtSite() == pTxtSite)
+                break;
+            pElementScope->_fMark2 = 1;
+        }
+
+
+        // Now, run up the current line and determine if there is any
+        // pre spacing.
+        for (pElement = pElementBlock;
+             pElement;
+             pElement = pElement->EParent())
+        {
+            pElementScope = pElement->Scope();
+            if (pElementScope->IsTxtSite() == pTxtSite)
+                break;
+
+            // We've just come into scope.
+            if (!pElementScope->_fMark1)
+            {
+                long lTemp;
+                CUnitValue cuvSB = pElementScope->GetFancyFormat()->_cuvSpaceBefore;
+
+                // List items turn off pre spacing for all other
+                // items that just came into scope.
+                if (fFirstParaInListItem &&
+                    pElementScope->HasFlag(TAGDESC_LISTITEM))
+                {
+                    lPosSpace = 0;
+                    lNegSpace = 0;
+                }
+
+                lTemp = cuvSB.YGetPixelValue(_pDI,
+                                             _pDI->_sizeParent.cy,
+                                             pElementScope->GetFontHeightInTwips(&cuvSB)),
+
+                // Maintain the positives.
+                lPosSpace = max(lTemp, lPosSpace);
+
+                // Keep the negatives separately.
+                lNegSpace =  min(lTemp, lNegSpace);
+            }
+        }
+
+        // Now, run up the previous lines branch to determine who has gone
+        // out of scope.
+        for (pElement = pElementBlockPrev;
+             pElement;
+             pElement = pElement->EParent())
+        {
+            pElementScope = pElement->Scope();
+            if (pElementScope->IsTxtSite() == pTxtSite)
+                break;
+
+            // We've gone out of scope.
+            if (!pElementScope->_fMark2)
+            {
+                long lTemp;
+                CUnitValue cuvSA = pElementScope->GetFancyFormat()->_cuvSpaceAfter;
+
+                lTemp = cuvSA.YGetPixelValue(_pDI,
+                                             _pDI->_sizeParent.cy,
+                                             pElementScope->GetFontHeightInTwips(&cuvSA));
+
+                lPosSpace = max(lTemp, lPosSpace);
+                lNegSpace = min(lTemp, lNegSpace);
+            }
+        }
+
+        // BUGBUG Arye: It's not clear that this works well with
+        // style top and bottom margins. This is set in the case
+        // where we have an empty <P> tag immediately preceding the
+        // current paragraph.
+        if (fForceBeforeSpace && lPosSpace == 0)
+            lPosSpace = LYTODY(DEFAULT_VERTICAL_SPACE_TWIPS);
+    }
+
+    // We need to set the before space to the top margin for the first line.
+    if (uiFlags & MEASURE_FIRSTLINE)
+    {
+        // BUGBUG Arye: Not sure that we really want to add in the
+        // largest negative space here. Need to ask Chris Wilson.
+        _yBeforeSpace = _pdp->GetTopMargin(_pDI) + lNegSpace;
+    }
+
+    // Add the most positive and the most negative of our
+    // possible spacings together.
+    else
+    {
+        _yBeforeSpace = lPosSpace + lNegSpace;
+    }
+}
+
+
+// (srinib) - we are storing para format in the element directly
+// we can't get any state information related to bullets from the
+// run. So Let's figure out if the current line requires a bullet.
+BOOL
+CMeasurer::FirstParaInListItem (ELEMENT_TAG etag1, ELEMENT_TAG etag2,
+                                BOOL fOrderedList)
+{
+    CElementRuns & eruns = GetElementRuns();
+    CElement *  pLI = _fHasNestedRunOwner
+                        ? eruns.SearchBranchForTag(GetRunOwner(_pdp->GetTxtSite())->EParent(), etag1)
+                        : SearchBranchForTag( etag1 );
+    LONG        iRunLiStart, iRunLiFinish;
+    LONG        iRun = GetIRun();
+    CElement *  pListElement;
+    BOOL fFirstParaInLi;
+
+    // If we couldn't find the first tag type, try the second.
+    if (pLI == NULL && etag1 != etag2)
+    {
+        pLI = _fHasNestedRunOwner
+                        ? eruns.SearchBranchForTag(GetRunOwner(_pdp->GetTxtSite())->EParent(), etag2)
+                        : SearchBranchForTag( etag2 );
+    }
+    Assert(pLI);
+
+    eruns.GetElementScope(iRun, pLI, &iRunLiStart, &iRunLiFinish);
+
+    Assert(iRun >= iRunLiStart);
+
+    // Skip all the null runs before the current run and check
+    // to see if it is the first run of the LI
+    while(iRunLiStart < iRun)
+    {
+        if(iRun && !eruns.Elem(iRun - 1)->_cch)
+            iRun--;
+        else
+            break;
+    }
+    fFirstParaInLi = iRun == iRunLiStart;
+
+    // If this is an ordered list of some sort (a list with a bullet, really).
+    if (fOrderedList && fFirstParaInLi)
+    {
+        BOOL fNewList=TRUE;
+        LONG iRunListStart;
+
+        // We definitely have a bullet.
+        _fHasBulletOrNum = TRUE;
+
+        // pListElement is the list container of the current LI,
+        // which is not necessarily the lowest list container in
+        // the branch (you could have a DL underneath the LI, or
+        // you could have some text inside the list but outside
+        // of the LI).
+        pListElement = eruns.FindMyListContainer( pLI );
+        if (pListElement && pListElement->Tag() != ETAG_DL)
+        {
+            // Determine if we also need to set the _fNewList bit.
+
+            // Run backwards and see if there's an LI that's under
+            // the influence of the current list container.  If there
+            // are none, we have a new list.
+            eruns.GetElementScope( iRunLiStart,
+                                   pListElement, & iRunListStart, NULL );
+
+            for (iRun = iRunLiStart;
+                 fNewList && --iRun >= iRunListStart; )
+            {
+                CElement * pLI2 = SearchBranchForTag( ETAG_LI, iRun );
+
+                fNewList = !(pLI2 &&
+                             SameScope(
+                                       pListElement,
+                                       eruns.FindMyListContainer( pLI2) ));
+            }
+
+        }
+
+        _fNewList = fNewList;
+    }
+
+    return (fFirstParaInLi);
+}
+
+
+//+----------------------------------------------------------------------------
+//
+//  Member:     CMeasurer::MeasureParagraphSpacing
+//
+//  Synopsis:   Compute paragraph spacing for the current line
+//
+//-----------------------------------------------------------------------------
+void CMeasurer::MeasureParagraphSpacing(
+    UINT uiFlags,
+    const CParaFormat *pPF,
+    long lPrevLineRun)
+{
+    // For convenience.
+    _pPF = pPF;
+
+    // no bullet on the line
+    _fHasBulletOrNum = _fNewList = FALSE;
+
+    // Only interesting for the first line of a paragraph.
+    if (_fFirstInPara)
+    {
+
+        BOOL fFirstInParaInLI = FALSE;
+
+        if(_pPF->_wNumbering & (PFN_BULLET | PFN_NUMBERING))
+            fFirstInParaInLI = FirstParaInListItem (ETAG_LI, ETAG_LI, TRUE);
+
+        // Now that we know how we stand in the list department ..
+        FigureInterBlockSpacing (uiFlags, fFirstInParaInLI, lPrevLineRun);
+    }
+    // Not at the beginning of a paragraph, we have no interline spacing.
+    else
+    {
+        _yBeforeSpace = 0;
+    }
+}
+
+//+----------------------------------------------------------------------------
+//  Member:     CMeasurer::MeasureLeftIndent()
+//
+//  Synopsis:   Compute and left of line in device units
+//
+//-----------------------------------------------------------------------------
+
+void CMeasurer::MeasureLeftIndent()
+{
+    LONG    dxOffset = 0;
+    LONG    yBulletHeight;
+    LONG    dxPFOffset = _pPF->GetLeftOffset(GetDrawInfo());
+
+    if (_pPF->_wNumbering & PFN_NUMBERING)
+    {
+        MeasureNumber(_pPF, &dxOffset, &yBulletHeight);
+        dxOffset = max(dxOffset, LXTODX(LIST_FIRST_REDUCTION_TWIPS));
+    }
+    else if (_pPF->_wNumbering & PFN_BULLET)
+    {
+        MeasureSymbol(chBullet, &dxOffset, &yBulletHeight);
+        dxOffset = max(dxOffset, LXTODX(LIST_FIRST_REDUCTION_TWIPS));
+    }
+
+    // Adjust the line height if the current line has a bullet or number
+    if(_fHasBulletOrNum && _yHeight - _yDescent < yBulletHeight)
+    {
+        _yHeight = yBulletHeight + _yDescent;
+    }
+
+    if(dxOffset > dxPFOffset)
+        _xLeft += dxOffset - dxPFOffset;
+}
+
+//+----------------------------------------------------------------------------
+// Member:      CMeasurer::MeasureTab()
+//
+// Synopsis:    Computes and returns the width from the current position to the
+//              next tab stop (in device units).
+//
+//------------------------------------------------------------------------------
+
+LONG CMeasurer::MeasureTab()
+{
+    LONG xWidth;
+
+    // First check if this paragraphs allow tabs to be rendered as tabs.
+
+    if (_pPF->_fTabStops)
+    {
+        LONG            xCur = _xWidth + _xLeft;
+        const CParaFormat * pPF = _pPF;
+        LONG            cTab = pPF->_cTabCount;
+        LONG            dxDefaultTab = lDefaultTab;
+        LONG            dxOffset = pPF->GetLeftOffset(GetDrawInfo());
+        LONG            dxIndent = pPF->GetLeftIndent(GetDrawInfo()) +
+                                    dxOffset;
+        LONG const *    pl = pPF->_rgxTabs;
+        LONG            xT;
+        LONG            xTab;
+
+        AssertSz(cTab >= 0 || cTab <= MAX_TAB_STOPS,
+                 "RM::MeasureTab: illegal tab count");
+
+        if(cTab)
+        {
+            for(xTab = 0; cTab--; pl++)             // Try explicit tab stops 1st
+            {
+                xT = pPF->GetTabPos(*pl);
+                xT = LXTODX(xT);                    // (upper 8 are for type/style)
+
+                if(xT > _pdp->GetMaxPixelWidth() )  // Ignore tabs wider than
+                    break;                          //  display
+
+                if(xT > xCur)
+                {                                   // Explicit tab in a hanging
+                    if(dxOffset > 0 &&         //  indent takes precedence
+                       xT < dxIndent)
+                    {
+                        return xT - xCur;
+                    }
+                    xTab = xT;
+                    break;
+                }
+            }
+
+            if(dxOffset > 0 && xCur < dxIndent)// If no tab before hanging
+                return dxIndent;                    //  indent, tab to indent
+
+            if(xTab)                                // Else use tab position
+                return xTab - xCur;
+
+            if(pPF->_cTabCount)
+                dxDefaultTab = pPF->_rgxTabs[0];
+        }
+
+        AssertSz(dxDefaultTab > 0, "Default tab is bad");
+
+        dxDefaultTab = LXTODX(dxDefaultTab);
+
+        // Round up to nearest
+
+        xWidth = dxDefaultTab ? (dxDefaultTab - xCur%dxDefaultTab) : 0;
+    }
+    else
+    {
+        // We've found a tab, but we're in a paragraph that should be
+        // rendering tabs as spaces.  Note that if saved and reloaded,
+        // this tab will be turned into a space.
+
+        _pccs->Include(L' ', xWidth);
+    }
+
+    return xWidth;
+}
+
+
+//+----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::MeasureLineShift (fZeroLengthLine)
+//
+// Synopsis:    Computes and returns the line x shift due to alignment
+//
+//-----------------------------------------------------------------------------
+
+LONG CMeasurer::MeasureLineShift(
+    BOOL fZeroLengthLine, LONG xWidthMax)
+{
+    htmlAlign atAlign;
+    LONG xShift = 0;
+
+    if(!fZeroLengthLine)
+    {
+        // If the line we processed actually has characters,
+        // then the run we are might be the next one since
+        // we are bumping the cp when we cycle through the text.
+        while(AdjustBackward());
+    }
+
+    atAlign = (htmlAlign) (_fHasNestedRunOwner
+                                ? GetRunOwnerPF(_pdp->GetTxtSite())->_bBlockAlign
+                                : GetPF(_pdp->GetTxtSite())->_bBlockAlign);           // Get the alignment
+
+    if(!fZeroLengthLine)
+    {
+        // Don't leave _rpPF at that EOR if we adjusted its value
+        while(AdjustForward());              // Now go to next line
+    }
+
+    if(atAlign == htmlAlignRight || atAlign == htmlAlignCenter)
+    {
+        xShift = xWidthMax - _xLineOverhang - _xWidth -
+                    _xLeft - _xRight - _pdp->GetCaret();
+
+        xShift = max(xShift, 0L);           // Don't allow alignment to go < 0
+                                            // Can happen with a target device
+        if(atAlign == htmlAlignCenter)
+            xShift /= 2;
+    }
+    else
+    {
+        Assert( atAlign == htmlAlignLeft || atAlign == htmlAlignNotSet );
+    }
+
+    return xShift;
+}
+
+//+----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::MeasureNumber(pxWidth, pyHeight)
+//
+// Synopsis:    Computes number width and height (if any)
+//
+// Returns:     number width and height
+//
+//-----------------------------------------------------------------------------
+
+void CMeasurer::MeasureNumber(
+    const CParaFormat *ppf,
+    LONG *pxWidth,      // Pointer to hold number width returned
+    LONG *pyHeight)     // Pointer to hold number height returned
+{
+    CCcs *pccs = GetCcsNumber((_fHasNestedRunOwner
+                                        ? GetElementRuns().SearchBranchForTag(GetRunOwner(
+                                                    _pdp->GetTxtSite())->EParent(), ETAG_LI)
+                                        : SearchBranchForTag(ETAG_LI))->GetCharFormat(_pdp->GetTxtSite()));
+
+    AssertSz(pxWidth || pyHeight,
+        "CMeasurer::MeasureSymbol: invalid arg(s)");
+
+    Assert(pccs);
+
+    if(pxWidth)
+    {
+        // BUGBUG (cthrash) Currently we employ Netscape-sytle numbering.
+        // This means we don't adjust for the size of the index value,
+        // keeping the offset constant regardless of the size of the index value
+        // string.
+        *pxWidth = 0;
+    }
+
+    if(pyHeight)
+        *pyHeight = pccs ? pccs->_yHeight: 0;
+
+    if (pccs)
+    {
+        pccs->Release();
+    }
+}
+
+//+----------------------------------------------------------------------------
+//
+// Member:      CMeasurer::GetCcsSymbol() (used for symbols & bullets)
+//
+// Synopsis:    Get CCcs for symbol font
+//
+// Returns:     ptr to symbol font CCcs
+//
+//-----------------------------------------------------------------------------
+
+// Default character format for a bullet
+static CCharFormat s_cfBullet;
+static CCharFormat s_cfAlignedImage;
+
+CCcs * CMeasurer::GetCcsSymbol(TCHAR chSymbol, const CCharFormat *pcf, CCharFormat *pcfRet)
+{
+    CCcs *             pccs = NULL;
+
+    CCharFormat         cf;
+    CCharFormat *       pcfUsed = (pcfRet != NULL) ? pcfRet : &cf;
+    static BOOL         s_fBullet = FALSE;
+
+    if (!s_fBullet)
+    {
+        // N.B. (johnv) For some reason, Win95 does not render the Windings font properly
+        //  for certain characters at less than 7 points.  Do not go below that size!
+        s_cfBullet.SetHeightInTwips( TWIPS_FROM_POINTS ( 7 ) );
+        s_cfBullet._bCharSet = SYMBOL_CHARSET;
+        s_cfBullet._bPitchAndFamily = (BYTE) FF_DONTCARE;
+        _tcscpy(s_cfBullet._szFaceName, _T("Wingdings"));
+        s_cfBullet._bCrcFont = s_cfBullet.ComputeFontCrc();
+
+        s_cfAlignedImage = s_cfBullet;
+        s_cfAlignedImage.SetHeightInTwips( TWIPS_FROM_POINTS( 10 ) );
+        s_cfAlignedImage._bCrcFont = s_cfAlignedImage.ComputeFontCrc();
+
+        s_fBullet = TRUE;
+    }
+
+    if( chSymbol == chLeftAlign || chSymbol == chRightAlign )
+    {
+        // Use a special char format for left and right aligned images.
+        *pcfUsed = s_cfAlignedImage;
+    }
+    else
+    {
+        // Construct bullet CCharFormat for the bullet.
+        *pcfUsed = s_cfBullet;
+    }
+
+    pcfUsed->_ccvTextColor    = pcf->_ccvTextColor;
+
+    // Since we always cook up the bullet character format, we don't need
+    // to cache it.
+    pccs = fc().GetCcs(_pDI, pcfUsed);
+
+#if DEBUG
+    if(!pccs)
+    {
+        TraceTag((tagError, "CRchMeasurer::GetCcsBullet(): no CCcs"));
+    }
+#endif // DEBUG
+
+    return pccs;
+}
+
+//+----------------------------------------------------------------------------
+//
+//  Member:     CMeasurer::GetCcsNumber()
+//
+//  Synopsis:   Get CCcs for numbering font
+//
+//  Returns:    ptr to numbering CCcs
+//
+//  Comment:    The font for the number could change with every instance of a
+//              number, because it is subject to the implied formatting of the
+//              LI.
+//
+//-----------------------------------------------------------------------------
+
+CCcs *
+CMeasurer::GetCcsNumber ( const CCharFormat * pCF )
+{
+    CCharFormat cf = *pCF;
+
+    cf._fSubscript = cf._fSuperscript = FALSE;
+    cf._bCrcFont = cf.ComputeFontCrc();
+
+    return fc().GetCcs( _pDI, &cf );
+}
+
+//+----------------------------------------------------------------------------
+//
+//  Member:     CMeasurer::GetListIndexString()
+//
+//  Synopsis:   Returns the appropriate list index string, based on
+//              paragraph and character formating
+//
+//-----------------------------------------------------------------------------
+
+TCHAR *
+CMeasurer::GetListIndexString(
+    TCHAR achNumbering[NUMCONV_STRLEN] )
+{
+    struct CListIndex LI;
+
+    GetListIndex(&LI);
+
+    // (cthrash) Use of the L construct is pretty doubious here.  I for one
+    // don't know what code page is used to convert these characters into
+    // wide chars.  You can be sure that they get converted back to wide chars
+    // in CP_ACP, which is of course locale-dependent.
+    // Also note that if you change any of these values, you need to make a
+    // corresponding in change in ReExtTextOut (ack!) so you'll actually get
+    // bullet chars instead of something funky.
+
+    switch ( LI.style )
+    {
+        case htmlListTypeNotSet:
+            *achNumbering = L'\0';
+            break;
+        case htmlListTypeLargeAlpha:
+            NumberToAlphaUpper(LI.lValue, achNumbering);
+            break;
+        case htmlListTypeSmallAlpha:
+            NumberToAlphaLower(LI.lValue, achNumbering);
+            break;
+        case htmlListTypeLargeRoman:
+            NumberToRomanUpper(LI.lValue, achNumbering);
+            break;
+        case htmlListTypeSmallRoman:
+            NumberToRomanLower(LI.lValue, achNumbering);
+            break;
+        case htmlListTypeNumbers:
+            NumberToNumeral(LI.lValue, achNumbering);
+            break;
+#ifdef UNICODE
+        case htmlListTypeDisc:
+            achNumbering[0] = 0x006C;
+            achNumbering[1] = L'\0';
+            break;
+        case htmlListTypeCircle:
+            achNumbering[0] = 0x00a1;
+            achNumbering[1] = L'\0';
+            break;
+        case htmlListTypeSquare:
+            achNumbering[0] = 0x006E;
+            achNumbering[1] = L'\0';
+#else
+        case htmlListTypeDisc:
+            achNumbering[0] = '\x6C';
+            achNumbering[1] = '\0';
+            break;
+        case htmlListTypeCircle:
+            achNumbering[0] = '\xA1';
+            achNumbering[1] = '\0';
+            break;
+        case htmlListTypeSquare:
+            achNumbering[0] = '\x6E';
+            achNumbering[1] = '\0';
+#endif
+            break;
+        default:
+            AssertSz(0, "Unknown numbering style.");
+    }
+
+    return achNumbering;
+}
+
+//+------------------------------------------------------------------------
+//
+//  Member:     NegotiateSplit()
+//
+//  Purpose:    Negotiate with the sites in the line to see if they are
+//              willing to split.  If they are, find out the clipping
+//              point.
+//
+//  Returns:    TRUE if all sites on the line are willing to split.
+//              *pyUsed contains the yOffset if sites are splitting.
+//
+//-------------------------------------------------------------------------
+
+BOOL
+CMeasurer::NegotiateSplit(
+    const cch,
+    CLine & li,
+    const LONG yPage,
+    const LONG yRemaining,
+    LONG * pyUsed )
+{
+    BOOL fSplit = FALSE;
+    long  cchValid;
+    const TCHAR * pchStart = GetPch( cchValid );
+    const TCHAR * pchStop = pchStart + cch;
+    const TCHAR * pch;
+    LONG cpStart = GetCp();
+    BOOL fFirstSite;
+    LONG yUsed = yRemaining;
+
+    Assert(cch>0);
+    Assert((cpStart + cch) <= GetLastCp());
+
+    // Check for the sites in the current line,
+    // negotiate the splitting point.
+
+top:
+    fFirstSite = TRUE;
+    for (pch = pchStart; pch < pchStop; pch++)
+    {
+        if (WCH_EMBEDDING == *pch)
+        {
+            CSite * pSite = CurrBranch().GetSite();
+            LONG  ySiteUsed;
+            HRESULT hr;
+
+            Assert(pSite);
+
+            // S_OK means the site was willing to split.  Any other value
+            // implies the site was unwilling to split.
+
+            hr = THR( pSite->NegotiateSplit( yUsed, yPage, &ySiteUsed ) );
+
+            fSplit = S_OK == hr;
+            if (!fSplit)
+            {
+                break;
+            }
+
+            // If the site wasn't willing to split at the page edge,
+            //
+            if (ySiteUsed < yUsed)
+            {
+                // If this is the first site, just use the new value as
+                // the 'yRemaining'.  Otherwise, go back to the other
+                // sites and renegotiate.
+
+                yUsed = ySiteUsed;
+
+                if (!fFirstSite)
+                {
+                    if (yRemaining)
+                    {
+                        Advance( pchStart - pch );
+                        goto top;
+                    }
+                    else
+                    {
+                        // no more space left on the page, bail.
+
+                        fSplit = FALSE;
+                        break;
+                    }
+                }
+            }
+
+            fFirstSite = FALSE;
+        }
+
+        Advance(1);
+    }
+
+    // Restore CRchTxtPtr
+
+    Advance( pchStop - pch );
+
+    Assert( pyUsed );
+
+    *pyUsed = yUsed;
+
+    return fSplit;
+}
+
+//+----------------------------------------------------------------------------
+//  Member:     CMeasurer::MeasureSymbol(TCHAR chSymbol)
+//
+//  Synopsis:   Measures the special character in WingDings
+//
+//  Returns:    TRUE if this method succeeded
+//
+// Note:        that this function returns ascent of the font
+//              rather than the entire height. This means that the
+//              selected symbol (bullet) character should NOT have a descender.
+//
+//-----------------------------------------------------------------------------
+void CMeasurer::MeasureSymbol( TCHAR chSymbol,
+    LONG *pxWidth,      // Pointer to hold symbol width returned
+    LONG *pyHeight)     // Pointer to hold symbol height returned
+{
+    LONG xWidthTemp;
+
+    CCcs *pccs = GetCcsSymbol(chSymbol,
+                             ((chSymbol == chBullet)
+                                    ? _fHasNestedRunOwner
+                                        ? GetElementRuns().SearchBranchForTag(GetRunOwner(_pdp->GetTxtSite())->EParent(), ETAG_LI)
+                                        : SearchBranchForTag(ETAG_LI)
+                                    : _fHasNestedRunOwner
+                                            ? GetRunOwner(_pdp->GetTxtSite())
+                                            : &CurrBranch())->GetCharFormat(_pdp->GetTxtSite()));
+
+    AssertSz(pxWidth || pyHeight,
+        "CMeasurer::MeasureSymbol: invalid arg(s)");
+
+    if(pxWidth)
+    {
+        xWidthTemp = 0;
+
+        if(pccs)
+        {
+            if(!pccs->Include(chSymbol, xWidthTemp))
+            {
+                TraceTag((tagError,
+                    "CMeasurer::MeasureSymbol(): Error filling CCcs"));
+            }
+
+            xWidthTemp += pccs->_xUnderhang + pccs->_xOverhangAdjust;
+        }
+
+        *pxWidth = xWidthTemp;
+    }
+
+    if(pyHeight)
+        *pyHeight = pccs ? pccs->_yHeight - pccs->_yDescent : 0;
+
+    if (pccs)
+    {
+        pccs->Release();
+    }
+}
+
+INLINE void
+CMeasurer::RememberLineHeight (const CCharFormat *pCF)
+{           
+    long lAdjLineHeight;
+    CUnitValue cuv;
+    const CUnitValue *pcuvUseThis = &pCF->_cuvLineHeight;
+
+    if (pCF->_cuvLineHeight.GetUnitType() == CUnitValue::UNIT_FLOAT)
+    {
+        cuv.SetValue( pCF->_cuvLineHeight.GetUnitValue() / 1000, CUnitValue::UNIT_EM );
+        pcuvUseThis = &cuv;
+    }
+
+    // If there's no height set, get out quick.
+    if (pCF->_cuvLineHeight.IsNull())
+    {
+        lAdjLineHeight = _pccs->_yHeight + abs(_pccs->_yOffset);
+    }
+
+    // Apply the CSS Attribute LINE_HEIGHT
+    else if (pCF->_cuvLineHeight.GetUnitType() == CUnitValue::UNIT_PERCENT)
+    {
+        lAdjLineHeight = pCF->_cuvLineHeight.GetPercent();
+        lAdjLineHeight = MulDivQuick(lAdjLineHeight, _pccs->_yHeight + abs(_pccs->_yOffset), 100);
+    }
+    else
+    {
+        lAdjLineHeight = pcuvUseThis->YGetPixelValue(_pDI,
+                                                0, pCF->_yHeight);
+    }   
+    _lMaxLineHeight = max(_lMaxLineHeight, lAdjLineHeight);
+}

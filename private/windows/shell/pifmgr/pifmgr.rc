@@ -1,0 +1,85 @@
+/*-----------------------------
+   DEFINE VERSION RESOURCE
+  -----------------------------*/
+#include <windows.h>
+#include <ntverp.h>
+
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ * The strings don't need a '\0', since common.ver has them.
+ */
+#define VER_FILETYPE    VFT_DLL
+/* possible values:             VFT_UNKNOWN
+                                VFT_APP
+                                VFT_DLL
+                                VFT_DRV
+                                VFT_FONT
+                                VFT_VXD
+                                VFT_STATIC_LIB
+*/
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+/* possible values              VFT2_UNKNOWN
+                                VFT2_DRV_PRINTER
+                                VFT2_DRV_KEYBOARD
+                                VFT2_DRV_LANGUAGE
+                                VFT2_DRV_DISPLAY
+                                VFT2_DRV_MOUSE
+                                VFT2_DRV_NETWORK
+                                VFT2_DRV_SYSTEM
+                                VFT2_DRV_INSTALLABLE
+                                VFT2_DRV_SOUND
+                                VFT2_DRV_COMM
+*/
+#define VER_FILEDESCRIPTION_STR     "Windows NT PIF Manager Icon Resources Library"
+#define VER_INTERNALNAME_STR        "PIFMGR.DLL"
+#define VER_ORIGINALFILENAME_STR    "PIFMGR.DLL"
+#include "common.ver"
+
+/*-----------------------------
+   DEFINE ICON RESOURCES
+  -----------------------------*/
+
+
+1  ICON MSDOS.ICO
+2  ICON DOS01.ICO
+3  ICON DOS02.ICO
+4  ICON DOS03.ICO
+5  ICON DOS04.ICO
+6  ICON DOS05.ICO
+7  ICON DOS06.ICO
+8  ICON DOS07.ICO
+9  ICON DOS08.ICO
+11 ICON DOS09.ICO
+12 ICON DOS10.ICO
+13 ICON DOS11.ICO
+14 ICON DOS12.ICO
+15 ICON DOS13.ICO
+16 ICON DOS14.ICO
+17 ICON DOS15.ICO
+18 ICON DOS16.ICO
+19 ICON DOS17.ICO
+20 ICON DOS18.ICO
+21 ICON DOS19.ICO
+22 ICON DOS20.ICO
+23 ICON DOS21.ICO
+24 ICON DOS22.ICO
+25 ICON DOS23.ICO
+26 ICON DOS24.ICO
+27 ICON DOS25.ICO
+28 ICON DOS26.ICO
+29 ICON DOS27.ICO
+30 ICON DOS28.ICO
+31 ICON DOS29.ICO
+32 ICON DOS30.ICO
+33 ICON DOS31.ICO
+34 ICON DOS32.ICO
+35 ICON DOS33.ICO
+36 ICON DOS34.ICO
+37 ICON DOS35.ICO
+38 ICON DOS36.ICO
+39 ICON DOS37.ICO
+

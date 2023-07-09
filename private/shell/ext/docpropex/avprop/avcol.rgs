@@ -1,0 +1,34 @@
+HKCR
+{
+    NoRemove Folder
+    {
+        NoRemove shellEx
+        {
+            NoRemove ColumnHandlers
+            {
+                ForceRemove {884EA37B-37C0-11d2-BE3F-00A0C9A83DA1}
+            }
+        }
+    }
+
+    ShAvColumnProvider.Ext.1 = s 'ShAVColumnProvider class'
+    {
+        CLSID = s '{884EA37B-37C0-11d2-BE3F-00A0C9A83DA1}'
+    }
+    ShAVColumnProvider.Ext   = s 'ShAVColumnProvider class'
+    {
+        CurVer = s 'ShAVColumnProvider.Ext.1'
+    }
+	NoRemove CLSID
+	{
+		ForceRemove {884EA37B-37C0-11d2-BE3F-00A0C9A83DA1} = s 'ShAVColumnProvider class'
+		{
+			ProgID = s 'ShAVColumnProvider.Ext.1'
+			VersionIndependentProgID = s 'ShAVColumnProvider.Ext'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

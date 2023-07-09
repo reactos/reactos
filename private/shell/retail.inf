@@ -1,0 +1,63 @@
+;
+; mini shell installer for debugging
+;
+; right click.install this file in the shell, reboot
+;
+
+[version]
+signature="$CHICAGO$"
+SetupClass=BASE
+
+[DefaultInstall]
+CopyFiles=shell.sys.install,shell.win.install
+
+[shell.sys.install]
+shell32.dll
+shell32.sym
+shlwapi.dll
+shlwapi.sym
+comctl32.dll
+comctl32.sym
+shdocvw.dll
+shdocvw.sym
+shlwapi.dll
+shlwapi.sym
+
+[shell.win.install]
+explorer.exe,explorer.exe
+explorer.sym,explorer.sym
+
+[DestinationDirs]
+shell.sys.install=11 ; to System
+shell.win.install=25 ; to Windows
+
+[SourceDisksNames]
+55="Shell32","",1,       shell32\win95\obj\i386
+57="ComCtl32","",1,     comctl32\win95\obj\i386
+59="Explorer","",1,     explorer\win95\obj\i386
+60="SHDocVw","",1,         shdocvw\dll\obj\i386
+61="SHLWAPI","",1,         shlwapi\dll\obj\i386
+
+[SourceDisksNames.NTx86]
+55="Shell32","",1,       shell32\winnt\obj\i386
+57="ComCtl32","",1,     comctl32\winnt\obj\i386
+59="Explorer","",1,     explorer\winnt\obj\i386
+60="SHDocVw","",1,         shdocvw\dll\obj\i386
+61="SHLWAPI","",1,         shlwapi\dll\obj\i386
+
+
+[SourceDisksFiles]
+shell32.dll=55
+shell32.sym=55
+
+comctl32.dll=57
+comctl32.sym=57
+
+explorer.exe=59
+explorer.sym=59
+
+shdocvw.dll=60
+shdocvw.sym=60
+
+shlwapi.dll=61
+shlwapi.sym=61

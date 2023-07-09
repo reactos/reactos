@@ -1,0 +1,58 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+
+!ENDIF
+
+NOT_LEAN_AND_MEAN=1
+
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=plustab
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLENTRY=DllMain
+INCLUDES=..\..\inc;..\..\..\inc;..\..\..\prsinf;..\..\..\inc16
+
+!IF 0
+C_DEFINES=-DWIN32 -DWINNT -DW3 -DUNICODE -D_UNICODE -DWINVER=0x0400
+!ELSE
+C_DEFINES=-DWIN32 -DWINNT -DW3 -DWINVER=0x0400
+!ENDIF
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+USE_CRTDLL=1
+
+SOURCES= plustab.rc     \
+         clssfact.cpp   \
+         pickicon.cpp   \
+         plustab.cpp    \
+         propsext.cpp   \
+         regutils.cpp
+
+
+
+UMTYPE = windows
+
+EXPECTED_WINVER=4.0
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(BASEDIR)\public\sdk\lib\*\UUID.LIB     \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+
+
+
+DLLBASE=0x1000000

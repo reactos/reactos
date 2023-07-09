@@ -1,0 +1,104 @@
+<html>
+
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+  <head>
+    <title>XML DSO Control: Example 4</title>
+    <style>
+      td    {font-size:80%;}
+      xmp   {font-size:120%; background:yellow}
+    </style>
+  </head>
+  
+<script src=DOMformatter.js></script>
+<OBJECT width=0 height=0
+    classid="clsid:550dda30-0541-11d2-9ca9-0060b0ec3d39"
+    id="xmldso">
+</OBJECT>
+<SCRIPT for=window event=onload>
+    var doc = xmldso.XMLDocument;
+    doc.load("books.xml");
+    if (doc.documentElement == null)
+    {
+        error.innerText = doc.parseError.reason;
+    }
+    Total.innerHTML = CalcTotal();
+</SCRIPT>
+<SCRIPT>
+function CalcTotal()
+{
+    var rs = xmldso.recordset;
+    rs.MoveFirst();
+    var total = 0;
+    while (! rs.eof)
+    {
+        var price = rs("PRICE");
+        total += parseFloat(price);
+        rs.MoveNext();
+    }
+    return parseInt(total*100)/100;
+}
+</SCRIPT>
+
+<BODY TOPMARGIN=0 LEFTMARGIN=40 BGCOLOR=#ffffff LINK="#000066" VLINK="#666666" TEXT="#000000">
+<FONT FACE="verdana,arial,helvetica" SIZE=2>
+
+<table align=right>
+<tr><td bgcolor=black><a href="Example3.htm">
+    <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Previous<b></font></a>
+    <td bgcolor=black><a href="xmldso.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Home<b></font></a>
+    <td bgcolor=black><a href="Example5.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Next<b></font></a>
+</table>
+
+<h2>XML DSO Control</h2>
+<h3>Example 4</h3>
+<P>
+This example shows that the XML can also be modified when the
+data is bound to text input fields. In this case, the PRICE
+field is editable.  Make some changes and then click the Show XML
+Data button to see the changes. <i>The changes are saved when you
+tab to or click on the next field.</i>
+<p>
+<table id=table border=2 width=100% datasrc=#xmldso cellpadding=5>
+<thead style="background-color:yellow" align=left>
+	<th>Author
+	<th>Title
+	<th>Publisher
+	<th>Price
+</thead>
+<tr>
+  <td valign=top><div datafld=AUTHOR dataformatas=HTML></td>
+  <td valign=top><div datafld=TITLE dataformatas=HTML></td>
+  <td valign=top><div datafld=PUBLISHER dataformatas=HTML></td>
+  <td valign=top><input type=text size=10 datafld=PRICE dataformatas=HTML
+                        onblur="Total.innerHTML = CalcTotal();"></td>
+</tr>
+<tfoot style="background-color:yellow" align=left>
+	<th>
+	<th>
+	<th>Total
+	<th><span id=Total></span>
+</tfoot>
+</table>
+<xmp id=error></xmp>
+<P>
+<input type=button value="Show XML Data" 
+    onclick='ShowXML(xmldso.XMLDocument);'>
+
+
+<!--DocFooterStart-->
+<P>
+</FONT>
+<FONT FACE="MS SANS SERIF" SIZE="1" COLOR="BLACK">
+&copy;  <A HREF="http://www.microsoft.com/misc/cpyright.htm" TARGET="_top">1997 Microsoft Corporation. All rights reserved. Terms of use</A>.<P>
+</FONT>
+
+
+  </body>
+</html>

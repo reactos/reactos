@@ -1,0 +1,27 @@
+#ifndef _BR_PDL_
+#define _BR_PDL_ 1
+
+#include "element.pdl"
+
+file br.pdl
+
+import element.pdl
+
+interface IHTMLBRElement guid:3050f1f0-98b5-11cf-bb82-00aa00bdce0b
+    refprop CBRElement:clear
+
+tearoff CBRElement interface:IHTMLBRElement
+
+class CBRElement name:HTMLBRElement \
+            super:CElement primaryinterface:IHTMLBRElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f280-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f53a-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLBRElement
+
+    property clear        atype:BSTR      dispid:DISPID_A_CLEAR  type:htmlClear    dwflags:0    get set caa bindable displaybind    maxstrlen:pdlLength
+
+#endif _BR_PDL_

@@ -1,0 +1,47 @@
+# Directories marked with {32} have yet to be converted to Win64.
+#
+DIRS    = \
+    cabs     \
+    cabview  \
+    cdfview  \
+    cscui    \
+    diskcopy \
+    brfcase  \
+    docprop  \
+    docpropex \
+    dsui     \
+    ftp      \
+    ie4tour  \
+    inetfind \
+    internat \
+    hmmapi   \
+    loadwc   \
+    userstub \
+    mlang    \
+    msidle   \
+    msident  \
+    mydocs2  \
+    netplwiz \
+    occache  \
+    qlaunch  \
+    ratings  \
+    sendmail \
+    shimgvw  \
+    shscrap  \
+    shwizard \
+    srchasst \
+    thumbvw  \
+    url      \
+    viruschk \
+    webcheck \
+    shfolder \
+    webfldrs \
+    webvw    \
+    systray
+
+# Zip builds only on x86 because it contains a binary drop from a vendor
+OPTIONAL_DIRS= \
+    pack       \
+    settings   \
+    zip{x86}
+

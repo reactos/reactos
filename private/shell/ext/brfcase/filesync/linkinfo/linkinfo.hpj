@@ -1,0 +1,9 @@
+[options]
+Title=LinkInfo API
+
+[config]
+BrowseButtons()
+
+[files]
+docs\linkinfo.rtf
+

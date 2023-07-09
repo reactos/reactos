@@ -1,0 +1,58 @@
+1 DLGINCLUDE "dialogs.h"
+
+IDD_CONNECT DIALOG 3, 19, 241, 48
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Computer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Computer &Name:", 102, 6, 13, 55, 8
+    EDITTEXT        IDC_CONNECTNAME, 66, 12, 115, 12, ES_AUTOHSCROLL
+    PUSHBUTTON      "OK", IDOK, 193, 5, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 193, 23, 40, 14
+END
+
+IDD_KEEPASDLG DIALOG 9, 21, 234, 66
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Paste"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Page Name", 302, 10, 8, 39, 8
+    EDITTEXT        IDC_KEEPASEDIT, 57, 7, 118, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX    "&Share Item Now", IDC_SHARECHECKBOX, 58, 31, 64, 10,
+                    WS_GROUP
+    DEFPUSHBUTTON   "OK", IDOK, 181, 7, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 181, 25, 40, 14
+END
+
+IDD_SHAREDLG DIALOG 88, 142, 211, 75
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Share ClipBook Page"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Page Name:", -1, 6, 9, 41, 8
+    LTEXT           "New", IDC_STATICSHARENAME, 51, 9, 92, 9, NOT WS_GROUP
+    GROUPBOX        "Sharing Options:", 207, 6, 20, 137, 51, WS_GROUP
+    AUTOCHECKBOX    "&Start Application on Connect", IDC_STARTAPP, 18, 36,
+                    106, 10
+    AUTOCHECKBOX    "&Run Minimized", IDC_MINIMIZED, 18, 50, 59, 10
+    DEFPUSHBUTTON   "OK", IDOK, 153, 6, 54, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 153, 23, 54, 14
+    PUSHBUTTON      "&Permissions...", IDC_PERMISSIONS, 153, 57, 54, 14
+END
+
+
+IDD_PROPERTYDLG DIALOG 88, 142, 211, 75
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "ClipBook Page Properties"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Page Name:", -1, 6, 9, 41, 8
+    LTEXT           "New", IDC_STATICSHARENAME, 51, 9, 92, 9, NOT WS_GROUP
+    GROUPBOX        "Sharing Options:", 207, 6, 20, 137, 51, WS_GROUP
+    AUTOCHECKBOX    "&Start Application on Connect", IDC_STARTAPP, 18, 36,
+                    106, 10
+    AUTOCHECKBOX    "&Run Minimized", IDC_MINIMIZED, 18, 50, 59, 10
+    DEFPUSHBUTTON   "OK", IDOK, 153, 6, 54, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 153, 23, 54, 14
+    PUSHBUTTON      "&Permissions...", IDC_PERMISSIONS, 153, 57, 54, 14
+END

@@ -1,0 +1,78 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+PRODUCT = F3
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES = \
+	dllcrt0.c				\
+	qsort.c                                 \
+        dllmain1.cxx				\
+	strutil.cxx
+
+WIN32_SOURCES = \
+	${SOURCES}				\
+	sbheap.c				\
+        crt0dat.cxx				\
+        atexit.cxx				\
+        atox.cxx				\
+        strtol.cxx				\
+        wcstok.cxx				\
+        wcstol.cxx				\
+	bsearch.c				\
+	lfind.c					\
+	qsort.c					\
+	strchr.c				\
+	strncmp.c				\
+	strrchr.c				\
+	ti_utils.c				\
+	wcscat.c				\
+	wcschr.c				\
+	wcslen.c				\
+	wcsncpy.c				\
+	wcspbrk.c				\
+	wcsrchr.c				\
+	wcsrev.c				\
+	wcsspn.c				\
+	wcsstr.c				\
+	wtox.c					\
+	xtoa.c					\
+	xtow.c					\
+	memmove.c 
+
+INCLUDES= \
+    $(ROOT)/types/$(O) \
+    $(ROOT)/external/inc \
+    $(ROOT)/src/core/include \
+    $(BASEDIR)/private/windows/inc
+
+WLIB	= crt
+LIB	= lib${WLIB}.a # target static library
+
+LIBOBJS := ${SOURCES:%.cxx=%.o}
+LIBOBJS := ${LIBOBJS:%.C=%.o}
+LIBOBJS := ${LIBOBJS:%.cpp=%.o}
+LIBOBJS := ${LIBOBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+PROJECT_CFLAGS = \
+    ${INCLUDES:%=-I%}
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+

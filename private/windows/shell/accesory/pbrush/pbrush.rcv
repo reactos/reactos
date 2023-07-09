@@ -1,0 +1,16 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#ifndef NT
+#include <version.h>
+#else
+#include <ntverp.h>
+#endif
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Windows Paintbrush"
+#define VER_INTERNALNAME_STR            "Pbrush"
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1995"
+#define VER_ORIGINALFILENAME_STR        "PBRUSH.EXE"
+
+#include <common.ver>

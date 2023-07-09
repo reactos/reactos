@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<META http-equiv="PICS-Label" content='(PICS-1.0 "http://www.rsac.org/ratingsv01.html" l gen true comment "RSACi North America Server" by "ratings@microsoft.com" on
+"1996.04.04T08:15-0500" r (n 0 s 0 v 0 l 0))'>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<title>Shell Explorer</title>
+<BASE TARGET="dataframe">
+<script language=JavaScript>
+function clickHandler()
+{
+  var targetId, srcElement, targetElement;
+  srcElement = window.event.srcElement;
+  if (srcElement.className == "Outline")
+  {
+     targetId = srcElement.id + "_Div";
+
+     targetElement = document.all(targetId);
+     if (targetElement.style.display == "none")
+     {
+        targetElement.style.display = "";
+        srcElement.src = "ofolder.gif";
+     }
+     else
+     {
+        targetElement.style.display = "none";
+        srcElement.src = "folder.gif";
+     }
+  }
+}
+
+document.onclick = clickHandler;
+
+</script>
+
+</head>
+<BODY BGCOLOR=#FFFFFF>
+<CENTER><B>Shell Feature Owners</B></CENTER>
+<HR>
+
+<BR>
+If this document is not correct, edit <A HREF="file:features/features.csv">\nt\private\shell\docs\features\features.csv</A>.
+<BR>
+<BR>
+
+<SCRIPT FOR=cboFeature EVENT=onchange>
+   var oElement = window.event.srcElement;
+   var strValue = cboFeature.options(cboFeature.selectedIndex).value
+   if (strValue == "All")
+      ID_TDC_Features.object.Filter = "";
+   else
+      ID_TDC_Features.object.Filter = "category=" + strValue;
+
+   ID_TDC_Features.Reset();
+</SCRIPT>
+
+<B> Types: </B>
+<SELECT ID=cboFeature>
+    <OPTION VALUE="All" SELECTED>All Features
+    <OPTION VALUE="Admin">Admin
+    <OPTION VALUE="Channels">Channels
+    <OPTION VALUE="Common Controls">Common Controls
+    <OPTION VALUE="Compat">Compat
+    <OPTION VALUE="Content">Content
+    <OPTION VALUE="Control Panel">Control Panel
+    <OPTION VALUE="Desktop">Desktop
+    <OPTION VALUE="Desktop Toolbars">Desktop Toolbars
+    <OPTION VALUE="Explorer Bars">Explorer Bars
+    <OPTION VALUE="Favorites">Favorites
+    <OPTION VALUE="Folders">Folders
+    <OPTION VALUE="Install">Install
+    <OPTION VALUE="Other">Other
+    <OPTION VALUE="Usability">Usability
+</SELECT>
+
+<BR>
+<BR>
+
+<TABLE datasrc=#ID_TDC_Features>
+<THEAD><TR STYLE="font-weight:bold">
+   <TD NOWRAP>Feature</TD><TD NOWRAP>Dev(s)</TD><TD NOWRAP>Tester(s)</TD><TD NOWRAP>PM(s)</TD><TD NOWRAP>Notes</TD>
+   </TR>
+</THEAD>
+<TBODY>
+<TR NOWRAP>
+   
+   <TD NOWRAP><FONT SIZE=2><SPAN datafld="feature"></SPAN></FONT></TD>
+   <TD NOWRAP><FONT SIZE=2><SPAN datafld="devOwner"></SPAN></FONT></TD>
+   <TD NOWRAP><FONT SIZE=2><SPAN datafld="testOwner"></SPAN></FONT></TD>
+   <TD NOWRAP><FONT SIZE=2><SPAN datafld="pmOwner"></SPAN></FONT></TD>
+   <TD NOWRAP><FONT SIZE=2><SPAN datafld="toolTip"></SPAN></FONT></TD>
+   
+</TR>
+</TBODY>
+
+</TABLE>
+<BR>
+
+<OBJECT id=ID_TDC_Features CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+	<PARAM NAME="DataURL" VALUE="features.csv">								  
+	<PARAM NAME="UseHeader" VALUE="True">
+	<PARAM NAME="TextQualifier" VALUE="'">
+	<PARAM NAME="Sort" VALUE="feature;">
+</OBJECT>
+
+</body>
+</HTML>

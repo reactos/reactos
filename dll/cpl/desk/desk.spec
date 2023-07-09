@@ -1,6 +1,0 @@
-@ stdcall CPlApplet(ptr long ptr ptr)
-@ stdcall DisplayClassInstaller(long ptr ptr)
-@ stdcall DisplaySaveSettings(ptr ptr)
-@ stdcall InstallScreenSaverW(long long ptr long)
-@ stdcall InstallScreenSaverA(long long ptr long)
-@ stdcall MonitorClassInstaller(long ptr ptr)

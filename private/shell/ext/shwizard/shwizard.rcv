@@ -1,0 +1,14 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "IE 4 Customize Folder Wizard"
+#define VER_INTERNALNAME_STR        "SHWIZARD2"
+#define VER_ORIGINALFILENAME_STR    "IESHWIZ.EXE"
+
+#include <winver.h>
+#include <common.ver>
+

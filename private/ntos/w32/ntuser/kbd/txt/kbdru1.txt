@@ -1,0 +1,156 @@
+KBD	RU1	"Russia(Typewriter)"
+		// Created  : 11/27/95 17:01:34
+
+		// Source   : kbdru1.kbd
+		// Date     : 08/03/95 14:24:36
+		// LCID     : 0419
+		// CodePage : 1251
+
+
+VERSION	1.0
+
+
+SHIFTSTATE	4
+
+  0		// Column 4 :
+  1		// Column 5 : Shft
+  2		// Column 6 :      Ctrl
+  3		// Column 7 : Shft Ctrl
+
+
+LAYOUT
+
+//SC  VK_        Cap	0	1	2	3
+
+  29  OEM_3      0	|	+
+  02  1          0	2116	1
+  03  2          0	-	2
+  04  3          0	/	3
+  05  4          0	"	4
+  06  5          0	:	5
+  07  6          0	,	6	-1	001e
+  08  7          0	.	7
+  09  8          0	_	8
+  0a  9          0	?	9
+  0b  0          0	%	0
+  0c  OEM_MINUS  0	!	=	001f
+  0d  OEM_PLUS   0	;	\
+  10  Q          1	0439	0419
+  11  W          1	0446	0426
+  12  E          1	0443	0423
+  13  R          1	043a	041a
+  14  T          1	0435	0415
+  15  Y          1	043d	041d
+  16  U          1	0433	0413
+  17  I          1	0448	0428
+  18  O          1	0449	0429
+  19  P          1	0437	0417
+  1a  OEM_4      1	0445	0425
+  1b  OEM_6      1	044a	042a	001b
+  2b  OEM_5      0	)	(	001c
+  1e  A          1	0444	0424
+  1f  S          1	044b	042b
+  20  D          1	0432	0412
+  21  F          1	0430	0410
+  22  G          1	043f	041f
+  23  H          1	0440	0420
+  24  J          1	043e	041e
+  25  K          1	043b	041b
+  26  L          1	0434	0414
+  27  OEM_1      1	0436	0416	001d
+  28  OEM_7      1	044d	042d
+  2c  Z          1	044f	042f
+  2d  X          1	0447	0427
+  2e  C          1	0441	0421
+  2f  V          1	043c	041c
+  30  B          1	0438	0418
+  31  N          1	0442	0422
+  32  M          1	044c	042c
+  33  OEM_COMMA  1	0431	0411
+  34  OEM_PERIOD 1	044e	042e
+  35  OEM_2      1	0451	0401
+  56  OEM_102    0	)	(	001c
+  53  DECIMAL    0	,	,
+
+//SC  VK_        Cap	0	1	2	3
+
+KEYNAME
+
+  01	Esc
+  0e	Backspace
+  0f	Tab
+  1c	Enter
+  1d	Ctrl
+  2a	Shift
+  36	"Right Shift"
+  37	"Num *"
+  38	Alt
+  39	Space
+  3a	"Caps Lock"
+  3b	F1
+  3c	F2
+  3d	F3
+  3e	F4
+  3f	F5
+  40	F6
+  41	F7
+  42	F8
+  43	F9
+  44	F10
+  45	Pause
+  46	"Scroll Lock"
+  47	"Num 7"
+  48	"Num 8"
+  49	"Num 9"
+  4a	"Num -"
+  4b	"Num 4"
+  4c	"Num 5"
+  4d	"Num 6"
+  4e	"Num +"
+  4f	"Num 1"
+  50	"Num 2"
+  51	"Num 3"
+  52	"Num 0"
+  53	"Num Del"
+  54	"Sys Req"
+  57	F11
+  58	F12
+  7c	F13
+  7d	F14
+  7e	F15
+  7f	F16
+  80	F17
+  81	F18
+  82	F19
+  83	F20
+  84	F21
+  85	F22
+  86	F23
+  87	F24
+
+KEYNAME_EXT
+
+  1c	"Num Enter"
+  1d	"Right Control"
+  35	"Num /"
+  37	"Prnt Scrn"
+  38	"Right Alt"
+  45	"Num Lock"
+  46	Break
+  47	Home
+  48	Up
+  49	"Page Up"
+  4b	Left
+  4d	Right
+  4f	End
+  50	Down
+  51	"Page Down"
+  52	Insert
+  53	Delete
+  54	<00>
+  56	Help
+  5b	"Left Windows"
+  5c	"Right Windows"
+  5d	Application
+
+ENDKBD

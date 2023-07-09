@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+
+<html>
+
+<head>
+<title>DocObject: Edit menu command dispatching</title>
+<meta name="GENERATOR" content="Microsoft FrontPage 1.1">
+</head>
+
+<body bgcolor="#80FFFF">
+<h1>DocObject: Edit menu command dispatching</h1>
+<p align=center>Last updated 20 Aug 1996 -- Satoshi Nakajima (satona)</p>
+<p>This document describes a mechanism (no longer a proposal -- we have already implemented in IE 4.0) to solve an UI 
+problem in IE 3.0. When the user selects something in the address bar (the edit box on the Internet toolbar) and pull 
+down the Edit menu, the user expects that clipboard commands (cut, edit and paste) works with the selection in the 
+address bar. It, however, does act on the selection in the client area (HTML Viewer). This is due to the fact that Edit 
+menu is provided by the DocObject. OLE's menu negotiation scheme is not sufficient to handle this case. </p>
+<p>This mechanism is based on a private mechanism for WordMail (&quot;Word as an e-mail editor) between WinWord and 
+Exchange. We formalize that mechanism so that any DocObject servers and containers can participate. This mechanism 
+requires some changes in both DocObject server side and the DocObject container side, but both remains compatible 
+with old server/container.</p>
+<h3>Code to be added to the DocObject server</h3>
+<p>It keeps track of whether or not it should process the Edit-&gt;Cut/Copy/Paste commands. It should essentially keeps 
+track of who has the input focus. If the DocObject itself (including one of DocObject toolbars or one of its children 
+such as embeddings or OCs) has the input focus, those commands should be processed by the DocObject (assuming 
+DocObject dispatches down to appropriate child). Otherwise (i.e., if one of the frame's toolbar has the focus), it should 
+be processed by the the frame (i.e., DocObject container). </p>
+<p>You might think it can be easily achieved by checking the focused window (by calling GetFocus()). It, unfortunately, 
+does not work. When OLE set a window hook on the frame window (for menu dispatching), it sets the focus to the 
+frame during the menu loop (and restores at the end). Therefore, GetFocus() while processing 
+WM_ININTMENUPOPUP always returns the window handle of the frame window and DocObject can't tell anything 
+from it. </p>
+<p>To help the DocObject to keep track of the input focus correctly, the DocObject container notifies with 
+OLECMDID_ONTOOLBARACTIVATED (a new command defined in docobj.odl) via IOleCommandTarget::Exec 
+when one of its toolbar gets the focus. The DocObject typically sets an internal flag (let's call it 
+<em>fDispathEditCommand</em>) indicating those clipboard commands should be dispatched to the frame when it receives one 
+of them. It's strongly recommended to (1) UIDeactivate any child object and (2) hide the selection in the client area so 
+that the user won't see two selections (one in the toolbar and another in the client area) at the same time. This flag will 
+be reset by the DocObject itself when it (or one of its own toolbar or child windows) gets the focus back. Notice that 
+we don't have OLECMDID_ONTOOLBARINACTIVATED because there is no way to distinguish 
+WM_KILLFOCUS caused by OLE's window procedure hook (when the menu loop starts) from others. </p>
+<p>Once it knows the state, the rest is easy. When it receives WM_INITMENUPOPUP for the Edit menu or 
+WM_COMMAND for Cut/Copy/Paste commands while <em>fDispatchEditCommand</em> is set, it will get the 
+IOleCommandTarget interface of the DocObject container (to be QI'ed from IOleInPlaceFrame) and call either 
+QueryStatus or Exec appropriately (to enable/disable menu items or executes) with 
+OLECMDID_CUT/COPY/PASTE. If the DocObject has Cut/Copy/Paste buttons on its own toolbar, it should 
+enable/disable based on the same logic as well. Notice that the accelerators will be handled correctly via 
+WM_COMMAND message dispatching. </p>
+<h3>Code to be added to the DocObject container</h3>
+<p>The container needs to do two things -- (1) sending OLECMDID_ONTOOLBARACTIVATED when one of its own 
+toolbars (don't be confused with toolbars added by the DocObject) got the focus and (2) processing 
+OLECMDID_CUT/COPY/PASTE in its IOleCommandTarget::Exec. Unlike OLECMD_PRINT, it should not call 
+back the DocObject's IOleCommandTarget under any circumstance. If it has more than one (frame-owned) toolbars, it 
+should keep track of which one has the focus last (again, remember that we can't rely on WM_KILLFOCUS) and 
+dispatch commands to it. </p>
+<h3>Header file change</h3>
+<p>DocObj.H</p>
+<p>#define OLECMDID_ONTOOLBARACTIVATED	31</p>
+<hr>
+<p>(Internal memo -- not intended to be published in SDK)</p>
+<p><strong>UI Notes:</strong> IOleCommandTarget has four more commands we could dispatch with this mechanism -- Undo, Redo, 
+SelectAll and ClearSelection. We should carefully analyze the UI impact on this and do it only if it makes sense. </p>
+<p><strong>Implementation Notes (MSHTML):</strong> To maintain <em>fDispatchEditCommand</em> flag correctly, the HTML viewer should 
+do two things. When it receives OLECMDID_ONTOOLBARACTIVATED, it should make the top-level HTML 
+document active (to UIDeactivate the currently active one), hide the selection and set the <em>fDispatchEditCommand</em> 
+flag. HTML viewer should reset the <em>fDispatchEditCommand</em> flag either when it receives the WM_SETFOCUS 
+message or when its OnUIActivate is called (by one of its child).</p>
+<p><strong>Implementation Notes (SHDOCVW): </strong>To support multiple toolbars correctly, the IE frame should have a mechanism 
+to dispatch IOleCommandTarget correctly. I took a very straightforward implementation. I have added the 
+IOleCommandTarget interface to the toolbar(s) (in addition to IDockingWindow) and dispatching those commands to the 
+one which currently has the input focus (the last one which called the IDockingWindowSite::OnFocusChange). Each toolbar 
+just calls IDockingWindowSite::OnFocusChange when it got the input focus.</p>
+<hr>
+<p><a href="default.htm">Go to the home page</a></p>
+</body>
+
+</html>

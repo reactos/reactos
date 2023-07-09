@@ -1,0 +1,295 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1997.
+//
+//  Contents:   IDispatchEx description
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// DispEx.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1997 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//---------------------------------------------------------------------------=")
+cpp_quote("// IDispatchEx Interfaces.")
+cpp_quote("//")
+cpp_quote("")
+cpp_quote("#ifndef DISPEX_H_")
+cpp_quote("#define DISPEX_H_")
+cpp_quote("")
+
+interface IDispatchEx;
+interface IDispError;
+interface IVariantChangeType;
+
+#ifndef DO_NO_IMPORTS
+import "ocidl.idl";
+import "oleidl.idl";
+import "oaidl.idl";
+import "servprov.idl";
+#endif
+
+cpp_quote("")
+cpp_quote("#include \"servprov.h\"")
+cpp_quote("")
+cpp_quote("#ifndef _NO_DISPATCHEX_GUIDS")
+cpp_quote("")
+cpp_quote("// {A6EF9860-C720-11d0-9337-00A0C90DCAA9}")
+cpp_quote("DEFINE_GUID(IID_IDispatchEx, 0xa6ef9860, 0xc720, 0x11d0, 0x93, 0x37, 0x0, 0xa0, 0xc9, 0xd, 0xca, 0xa9);")
+cpp_quote("")
+cpp_quote("// {A6EF9861-C720-11d0-9337-00A0C90DCAA9}")
+cpp_quote("DEFINE_GUID(IID_IDispError, 0xa6ef9861, 0xc720, 0x11d0, 0x93, 0x37, 0x0, 0xa0, 0xc9, 0xd, 0xca, 0xa9);")
+cpp_quote("")
+cpp_quote("// {A6EF9862-C720-11d0-9337-00A0C90DCAA9}")
+cpp_quote("DEFINE_GUID(IID_IVariantChangeType, 0xa6ef9862, 0xc720, 0x11d0, 0x93, 0x37, 0x0, 0xa0, 0xc9, 0xd, 0xca, 0xa9);")
+cpp_quote("")
+cpp_quote("// {1F101481-BCCD-11d0-9336-00A0C90DCAA9}")
+cpp_quote("DEFINE_GUID(SID_VariantConversion, 0x1f101481, 0xbccd, 0x11d0, 0x93, 0x36, 0x0, 0xa0, 0xc9, 0xd, 0xca, 0xa9);")
+cpp_quote("")
+cpp_quote("// {4717CC40-BCB9-11d0-9336-00A0C90DCAA9}")
+cpp_quote("DEFINE_GUID(SID_GetCaller, 0x4717cc40, 0xbcb9, 0x11d0, 0x93, 0x36, 0x0, 0xa0, 0xc9, 0xd, 0xca, 0xa9);")
+cpp_quote("")
+cpp_quote("// {CA04B7E6-0D21-11d1-8CC5-00C04FC2B085}")
+cpp_quote("DEFINE_GUID(IID_IObjectIdentity, 0xca04b7e6, 0xd21, 0x11d1, 0x8c, 0xc5, 0x0, 0xc0, 0x4f, 0xc2, 0xb0, 0x85);")
+cpp_quote("")
+#if VER5
+cpp_quote("// {c5598e60-b307-11d1-b27d-006008c3fbfb}")
+cpp_quote("DEFINE_GUID(IID_ICanHandleException, 0xc5598e60, 0xb307, 0x11d1, 0xb2, 0x7d, 0x0, 0x60, 0x08, 0xc3, 0xfb, 0xfb);")
+cpp_quote("")
+#endif //VER5
+cpp_quote("#define SID_GetScriptSite IID_IActiveScriptSite")
+cpp_quote("")
+cpp_quote("#endif // _NO_DISPATCHEX_GUIDS")
+cpp_quote("")
+
+cpp_quote("")
+cpp_quote("#ifndef _NO_DISPATCHEX_CONSTS")
+cpp_quote("")
+cpp_quote("// Input flags for GetDispID")
+cpp_quote("#define fdexNameCaseSensitive       0x00000001L")
+cpp_quote("#define fdexNameEnsure              0x00000002L")
+cpp_quote("#define fdexNameImplicit            0x00000004L")
+cpp_quote("#define fdexNameCaseInsensitive     0x00000008L")
+cpp_quote("#define fdexNameInternal            0x00000010L")
+cpp_quote("#define fdexNameNoDynamicProperties 0x00000020L")
+cpp_quote("")
+cpp_quote("// Output flags for GetMemberProperties")
+cpp_quote("#define fdexPropCanGet              0x00000001L")
+cpp_quote("#define fdexPropCannotGet           0x00000002L")
+cpp_quote("#define fdexPropCanPut              0x00000004L")
+cpp_quote("#define fdexPropCannotPut           0x00000008L")
+cpp_quote("#define fdexPropCanPutRef           0x00000010L")
+cpp_quote("#define fdexPropCannotPutRef        0x00000020L")
+cpp_quote("#define fdexPropNoSideEffects       0x00000040L")
+cpp_quote("#define fdexPropDynamicType         0x00000080L")
+cpp_quote("#define fdexPropCanCall             0x00000100L")
+cpp_quote("#define fdexPropCannotCall          0x00000200L")
+cpp_quote("#define fdexPropCanConstruct        0x00000400L")
+cpp_quote("#define fdexPropCannotConstruct     0x00000800L")
+cpp_quote("#define fdexPropCanSourceEvents     0x00001000L")
+cpp_quote("#define fdexPropCannotSourceEvents  0x00002000L")
+cpp_quote("")
+cpp_quote("#define grfdexPropCanAll \\")
+cpp_quote("       (fdexPropCanGet | fdexPropCanPut | fdexPropCanPutRef | \\")
+cpp_quote("        fdexPropCanCall | fdexPropCanConstruct | fdexPropCanSourceEvents)")
+cpp_quote("#define grfdexPropCannotAll \\")
+cpp_quote("       (fdexPropCannotGet | fdexPropCannotPut | fdexPropCannotPutRef | \\")
+cpp_quote("        fdexPropCannotCall | fdexPropCannotConstruct | fdexPropCannotSourceEvents)")
+cpp_quote("#define grfdexPropExtraAll \\")
+cpp_quote("       (fdexPropNoSideEffects | fdexPropDynamicType)")
+cpp_quote("#define grfdexPropAll \\")
+cpp_quote("       (grfdexPropCanAll | grfdexPropCannotAll | grfdexPropExtraAll)")
+cpp_quote("")
+cpp_quote("// Input flags for GetNextDispID")
+cpp_quote("#define fdexEnumDefault             0x00000001L")
+cpp_quote("#define fdexEnumAll                 0x00000002L")
+cpp_quote("")
+cpp_quote("// Additional flags for Invoke - when object member is")
+cpp_quote("// used as a constructor.")
+cpp_quote("#define DISPATCH_CONSTRUCT 0x4000")
+cpp_quote("")
+cpp_quote("// Standard DISPIDs")
+cpp_quote("#define DISPID_THIS (-613)")
+cpp_quote("#define DISPID_STARTENUM DISPID_UNKNOWN")
+cpp_quote("")
+cpp_quote("#endif //_NO_DISPATCHEX_CONSTS")
+cpp_quote("")
+
+[
+	object,
+	uuid(A6EF9860-C720-11d0-9337-00A0C90DCAA9),
+	pointer_default(unique)
+]
+interface IDispatchEx : IDispatch
+	{
+	// NOTES:
+	// (*) grfdex can contain any subset of the bits
+	//     { fdexNameCaseSensitive, fdexNameEnsure, fdexNameImplicit, fdexNameCaseSensitive }.
+	HRESULT GetDispID(
+		[in] BSTR bstrName,
+		[in] DWORD grfdex,
+		[out] DISPID *pid);
+
+	// NOTES:
+	// (*) pvarRes, pei and pspCaller may be NULL.
+	// (*) When DISPATCH_METHOD is set in wFlags, there may be a "named
+	//     parameter" for the "this" value. The dispID will be DISPID_THIS and
+	//     it must be the first named parameter.
+	// (*) There is a new value for wFlags: DISPATCH_CONSTRUCT. This indicates
+	//     that the item is being used as a constructor.
+	// (*) The legal values for wFlags are:
+	//     DISPATCH_PROPERTYGET
+	//     DISPATCH_METHOD
+	//     DISPATCH_PROPERTYGET | DISPATCH_METHOD
+	//     DISPATCH_PROPERTYPUT
+	//     DISPATCH_PROPERTYPUTREF
+	//     DISPATCH_PROPERTYPUT | DISPATCH_PROPERTYPUTREF
+	//     DISPATCH_CONSTRUCT
+	// (*) IDispatchEx::Invoke should support the same values that
+	//     IDispatchEx::InvokeEx supports (eg, DISPID_THIS, DISPATCH_CONSTRUCT).
+	[local]
+	HRESULT InvokeEx(
+		[in] DISPID id,
+		[in] LCID lcid,
+		[in] WORD wFlags,
+		[in] DISPPARAMS *pdp,
+		[out] VARIANT *pvarRes,	// Can be NULL.
+		[out] EXCEPINFO *pei,	// Can be NULL.
+		[in, unique] IServiceProvider *pspCaller); // Can be NULL.
+
+	[call_as(InvokeEx)]
+	HRESULT RemoteInvokeEx(
+		[in] DISPID id,
+		[in] LCID lcid,
+		[in] DWORD dwFlags, 	// Hiword used for private marshalling flags.
+		[in] DISPPARAMS *pdp,
+		[out] VARIANT *pvarRes,
+		[out] EXCEPINFO *pei,
+		[in, unique] IServiceProvider *pspCaller,
+		[in] UINT cvarRefArg,
+		[in, size_is(cvarRefArg)] UINT *rgiRefArg,
+		[in, out, size_is(cvarRefArg)] VARIANT *rgvarRefArg);
+
+	// NOTES:
+	// (*) grfdex may contain fdexNameCaseSensitive or fdexNameCaseInsensitive
+	// (*) If the member doesn't exist, return S_OK.
+	// (*) If the member exists but can't be deleted, return S_FALSE.
+	// (*) If the member is deleted, the DISPID still needs to be valid for
+	//     GetNextDispID and if a member of the same name is recreated, the
+	//     dispID should be the same.
+	HRESULT DeleteMemberByName([in] BSTR bstrName, [in] DWORD grfdex);
+
+	// NOTES:
+	// (*) If the member doesn't exist, return S_OK.
+	// (*) If the member exists but can't be deleted, return S_FALSE.
+	// (*) If the member is deleted, the DISPID still needs to be valid for
+	//     GetNextDispID and if a member of the same name is recreated, the
+	//     dispID should be the same.
+	HRESULT DeleteMemberByDispID([in] DISPID id);
+
+	HRESULT GetMemberProperties(
+		[in] DISPID id,
+		[in] DWORD grfdexFetch,
+		[out] DWORD *pgrfdex);
+
+	HRESULT GetMemberName(
+		[in] DISPID id,
+		[out] BSTR *pbstrName);
+
+	HRESULT GetNextDispID(
+		[in] DWORD grfdex,
+		[in] DISPID id,
+		[out] DISPID *pid);
+
+	HRESULT GetNameSpaceParent([out] IUnknown **ppunk);
+	};
+
+
+[
+	object,
+	uuid(A6EF9861-C720-11d0-9337-00A0C90DCAA9),
+	pointer_default(unique)
+]
+interface IDispError : IUnknown
+	{
+	HRESULT QueryErrorInfo(
+		[in] GUID guidErrorType,
+		[out] IDispError **ppde);
+
+	HRESULT GetNext([out] IDispError **ppde);
+
+	// EXCEPINFO information
+	HRESULT GetHresult([out] HRESULT *phr);
+	HRESULT GetSource([out] BSTR *pbstrSource);
+	HRESULT GetHelpInfo([out] BSTR *pbstrFileName, [out] DWORD *pdwContext);
+	HRESULT GetDescription([out] BSTR *pbstrDescription);
+	};
+
+
+[
+	object,
+	uuid(A6EF9862-C720-11d0-9337-00A0C90DCAA9),
+	pointer_default(unique)
+]
+interface IVariantChangeType : IUnknown
+	{
+	// NOTES:
+	// (*) pvarDst and pvarSrc may be equal.
+	// (*) pvarDst should be initialized to a valid variant value.
+	//     VariantClear will be called on it.
+	HRESULT ChangeType(
+		[in, out, unique] VARIANT *pvarDst,
+		[in, unique] VARIANT *pvarSrc,
+		[in] LCID lcid,
+		[in] VARTYPE vtNew);
+	};
+
+
+[
+        object,
+        uuid(CA04B7E6-0D21-11d1-8CC5-00C04FC2B085),
+        pointer_default(unique)
+]
+interface IObjectIdentity : IUnknown
+{
+		HRESULT IsEqualObject( 
+				[in] IUnknown *punk
+		);
+};
+
+#if VER5
+[
+	object,
+	uuid(c5598e60-b307-11d1-b27d-006008c3fbfb),
+	pointer_default(unique)
+]
+interface ICanHandleException : IUnknown
+	{
+	//If a call to InvokeEx, or similar, results in an exception, the
+	//called method can use this interface to determine if the caller
+	//is capable of dealing with the exception. The first parameter is
+	//an EXCEPINFO structure containing the information that will be reported
+	//to the host if no error handlers are found. The second 
+	//parameter is a value associated with the exception, such as the value
+	//thrown by a throw statement. This parameter may be NULL.
+
+	//These values can be used by the caller to decide whether or
+	//not it can handle the exception. If the caller can handle the exception
+	//the function returns S_OK. Otherwise it returns E_FAIL.
+
+	HRESULT CanHandleException([in] EXCEPINFO *pExcepInfo, [in] VARIANT *pvar);
+	};
+#endif //VER5
+
+cpp_quote("#endif //DISPEX_H_")
+

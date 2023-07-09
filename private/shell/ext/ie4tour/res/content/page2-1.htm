@@ -1,0 +1,383 @@
+<HTML>
+<HEAD>
+
+	<TITLE>Welcome to Channels</TITLE>
+
+<STYLE>
+
+.CalloutArt{
+	position: absolute;
+	left:	  -800px;
+        width:400px;
+}
+
+.head{
+	position:	absolute;
+	top:	20px;
+	left:	220px;
+        width:  390px;
+	font: 16pt Verdana, Arial, Helvetica, Sans-serif;
+	color:	#0099FF;
+	font-weight:	bold;
+	visibility:	hidden;
+}
+
+.PageArt{
+	position:	absolute;
+	left:	    20px;
+	width:	    160px;
+    float:      right;
+    text-align: right;
+	visibility:	hidden;
+	margin-top: 5px;
+	font:       8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:18pt;
+	color:	    #FF6633;
+	text-decoration:	underline;
+	cursor:	    hand;
+}
+
+.body{
+	position:	absolute;
+	top:	80px;
+	left:	220px;
+	width:	390px;
+	font: 8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:	12pt;
+	color:	#000000;
+	visibility:	hidden;
+	margin: 0;
+    clip:none;
+}
+
+.bubble{
+	display: none;
+}
+
+
+SPAN.CalloutText{
+	font: 8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:	10pt;
+	color:	#000000;
+	font-weight:	bold;
+	display:	none;
+	padding:	5em;
+    clear:none;
+}
+
+.rule{
+	position:	absolute;
+	top:	-20px;
+	left:	190px;
+	width:	30px;
+	border-top: 1px solid #FF6633;
+}
+</STYLE>
+
+</HEAD>
+
+<BODY VLINK="#0099FF ALINK="#FF6633" onLoad="InitializeNavigation();">
+
+<!--tokens for www.microsoft.com site maintenance -->
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+
+<DIV ID="headline" CLASS="head" STYLE="filter: revealTrans(Duration=0.8, Transition=6)" onFilterChange="doBody();">
+Welcome to Active Channels<sup style="position:relative; top:-8pt; font-size:6pt">TM</sup>
+</DIV>
+
+<DIV ID="art" CLASS="PageArt" STYLE="visibility: visible; width:180px; top: 35px; float: right; filter: revealTrans(Duration=0.8, Transition=1)">
+<IMG SRC="res://ie4tour.dll/2/channels.bmp" WIDTH=138 HEIGHT=129 BORDER=0 ALT=""></IMG>
+</DIV>
+
+<DIV ID="bodytext" CLASS="body" STYLE="filter: revealTrans(Duration=0.8, Transition=12)" onFilterChange="doArt();">
+<b>Active Channels</b> are Web sites specially designed for Internet Explorer 4.0.
+These sites use the new features of Internet Explorer to bring you a faster and
+more exciting Web experience.
+<BR><BR>
+Active Channels are designed so you can view them even when you are not connected to the
+Internet.  For example, you can easily set up your favorite Active Channels
+to be downloaded to your computer at night, so you can browse them the next
+morning or while you travel.
+<BR><BR><BR>
+
+<DIV ID="textarea" CLASS="bubble">
+<table cellspacing=0 cellpadding=1>
+<tr>
+    <td style="height: 100%; border:solid 1 #FF6633; border-right:none;" ROWSPAN=3>&nbsp</td>
+    <td style="line-height: 3px">&nbsp</td>
+    <td style="height: 100%; border:solid 1 #FF6633; border-left:none;" ROWSPAN=3>&nbsp</td>
+</tr>
+<tr><td>
+
+<IMG ID=CalloutImage SRC="" BORDER=0 ALT="" STYLE="float:right; margin-left:10px"></IMG>
+
+<SPAN ID="Callout1" CLASS="CalloutText">
+The page you are viewing is an example of a full-screen window, which is a new way to
+view Active Channels or any Web site you want.
+<BR><BR>
+You can close a channel by clicking in the top-right corner, or disable Full Screen by using the toolbar.
+</SPAN>
+
+<SPAN ID="Callout2" CLASS="CalloutText">
+The Channel bar slides offscreen when you use a full-screen window, to give you more room. 
+Point to the left edge of the screen to get it back.
+<br><br>
+Click the pushpin icon on the Channel bar to stop the bar from sliding.
+</SPAN>
+
+<SPAN ID="Callout3" CLASS="CalloutText">
+To start using a channel, just click its button in the Channel bar. 
+<BR><BR>
+Internet Explorer 4.0 comes with a set of Active Channels already installed. You decide which channels 
+you want, what to download and when, and how you want the information delivered.  
+</SPAN>
+
+<SPAN ID="Callout4" CLASS="CalloutText">
+To add any channel to your Channel bar or customize one, just click the <b>Add Active Channel</b> button on your favorite Web sites.
+<br><br>
+You can also drag links to your favorite sites onto the Channel bar.  Try it!
+
+</SPAN>
+
+<SPAN ID="Callout5" CLASS="CalloutText">
+Click the <B>Channel Guide</B> button to see an up-to-date list of available channels.
+The Channel Guide lets you preview new channels and add your favorites to the Channel bar.
+<BR><BR>
+New channels are arriving every day!
+</SPAN>
+
+
+</td></tr>
+<tr>
+    <td style="line-height: 3px">&nbsp</td>
+</tr>
+</table>
+</div>
+</DIV>
+
+<DIV ID="line" CLASS="rule">
+</DIV>
+
+<DIV CLASS="CalloutArt">
+<IMG id=img1 SRC="res://ie4tour.dll/2/chanfull.bmp" BORDER=0 ALT=""></IMG>
+<IMG id=img2 SRC="res://ie4tour.dll/2/chanbar.bmp" BORDER=0 ALT=""></IMG>
+<IMG id=img3 SRC="res://ie4tour.dll/2/chanview.bmp"  BORDER=0 ALT=""></IMG>
+<IMG id=img4 SRC="res://ie4tour.dll/2/chanadd.bmp"  BORDER=0 ALT=""></IMG>
+<IMG id=img5 SRC="res://ie4tour.dll/2/guide.bmp"  BORDER=0 ALT=""></IMG>
+</DIV>
+
+<DIV ID="bullet1" CLASS="PageArt" onClick="doSwap(1); EndScreenSaver();">
+Full Screen
+</DIV>
+<DIV ID="bullet2" CLASS="PageArt" onClick="doSwap(2); EndScreenSaver();">
+Channel Bar
+</DIV>
+<DIV ID="bullet3" CLASS="PageArt" onClick="doSwap(3); EndScreenSaver();">
+Start Viewing a Channel
+</DIV>
+<DIV ID="bullet4" CLASS="PageArt" onClick="doSwap(4); EndScreenSaver();">
+Add New Channels
+</DIV>
+<DIV ID="bullet5" CLASS="PageArt" onClick="doSwap(5); EndScreenSaver();">
+Channel Guide
+</DIV>
+
+<DIV id=altTitle style="display:none">
+Get the Web the Way You Want It with Active Channels<sup style="position:relative; top:-8pt; font-size:6pt">TM</sup>
+</DIV>
+
+
+</BODY>
+
+<SCRIPT LANGUAGE="Javascript">
+CurBull = 0;
+document.AutoTimeout = null;
+
+function doHead(){
+    if( document.IsInsideTour )
+    {
+    headline.innerHTML = altTitle.innerHTML;
+    }
+
+	if(document.all.headline.filters.item(0).status != 2){
+		document.all.headline.filters.item(0).Apply();
+		document.all.headline.style.visibility="visible";
+		document.all.headline.filters.item(0).Play();
+	}
+}
+
+function doBody(){
+	if(bodytext.filters.item(0).status != 2){
+		bodytext.filters.item(0).Apply();
+		bodytext.style.visibility="visible";
+		bodytext.filters.item(0).Play();
+	}
+}
+
+function doArt(){
+	if(art.filters.item(0).status != 2){
+		art.filters.item(0).Apply();
+		art.style.visibility="visible";
+		art.filters.item(0).Play();
+	}
+    targetTop = document.all.bodytext.offsetTop + document.all.textarea.offsetTop;
+    bullet1.targetTop = targetTop;  targetTop += 20;
+    bullet2.targetTop = targetTop;  targetTop += 20;
+    bullet3.targetTop = targetTop;  targetTop += 20;
+    bullet4.targetTop = targetTop;  targetTop += 20;
+    bullet5.targetTop = targetTop;  targetTop += 20;
+    bullet1.style.visibility = "hidden";
+    bullet2.style.visibility = "hidden";
+    bullet3.style.visibility = "hidden";
+    bullet4.style.visibility = "hidden";
+    bullet5.style.visibility = "hidden";
+
+    var timeout =  document.IsInsideTour ? 200 : 6000;
+    window.setTimeout( "doBullets();", timeout );
+}
+
+// first group of functions handles the initial animations
+function TuneCurrentAnimation()
+{
+    // tune the animation
+    var newTick = (new Date()).getTime();
+    if( newTick - document.AnimationLastTick > document.AnimationTimeout * 5 )
+    {
+        document.AnimationTimeout  = document.AnimationTimeout  * 120 / 100;
+        document.AnimationStepSize = document.AnimationStepSize * 120 / 100;
+    }
+    document.AnimationLastTick = newTick;
+}
+function AnimateTheBullet(index)
+{
+    var bullet = document.all.item("bullet" + index, 0);
+
+    // set it all up
+    if( index==0 )
+    {
+        document.AnimationStepSize = 25;
+        document.AnimationTimeout  = 30;
+        document.AnimationLastTick = (new Date()).getTime();
+        index=5;
+    }
+    // step 1: show the bullet
+    else if( bullet.style.visibility == "hidden" )
+    {
+        document.AnimationRestingPos = bullet.targetTop;
+        bullet.style.pixelTop   = 160;
+        bullet.style.visibility = "visible";
+    }
+    // step 2: slide it step by step (tune as we go)
+    else if( (bullet.style.pixelTop + document.AnimationStepSize) < document.AnimationRestingPos )
+    {
+        bullet.style.pixelTop += document.AnimationStepSize;
+        TuneCurrentAnimation();
+    }
+    // step 3: lock it into place
+    else
+    {
+
+        bullet.style.pixelTop = document.AnimationRestingPos;
+        --index;
+        document.AnimationStepSize = document.AnimationStepSize * 6 / 7;
+    }
+
+    if( index > 0 )
+    {
+        window.setTimeout( "AnimateTheBullet("+index+");", document.AnimationTimeout );
+    }
+    else
+    {
+        BeginScreenSaver();
+    }
+}
+function doBullets()
+{
+    AnimateTheBullet(0);
+}
+function BeginScreenSaver()
+{
+    document.AutoTimeout = window.setTimeout( "OnTimeoutAuto(1);", 100 );
+}
+function EndScreenSaver()
+{
+    if( document.AutoTimeout )
+        window.clearTimeout( document.AutoTimeout );
+    document.AutoTimeout = window.setTimeout( "BeginScreenSaver();", 30000 );
+}
+
+function OnTimeoutAuto(index)
+{
+    doSwap(index);
+    ++index;
+    if( index > 5 )
+        index = 1;
+    document.AutoTimeout = window.setTimeout( "OnTimeoutAuto("+index+");", 10000 );
+}
+
+function doSwap(num)
+{
+    if (num == CurBull)
+        return;
+	
+    if (CurBull == 0)
+    {
+        textarea.style.display = "block";
+        CalloutImage.style.display="block";
+    }
+    else
+    {
+        var oldBullet  = document.all.item( "bullet"  + CurBull, 0 );
+        var oldCallout = document.all.item( "Callout" + CurBull, 0 );
+
+		oldBullet.style.color = "#0099FF";
+        oldCallout.style.display = "none";
+    }
+
+    var newBullet  = document.all.item( "bullet"  + num, 0 );
+    var newCallout = document.all.item( "Callout" + num, 0 );
+		
+    newBullet.style.color = "#000000";
+    newCallout.style.display = "block";
+
+    CalloutImage.src = document.all.item( "img"+num, 0 ).src;
+    CurBull = num;
+
+    doRule(newBullet);
+}
+
+function doRule(src){
+	line.style.top=(src.offsetHeight / 2) + src.offsetTop + src.offsetParent.offsetTop;
+}
+
+
+function GetHashParameter( name )
+{
+    var hash = location.hash;
+    var key  = "#" + name + "=";
+    if( ( iLeft=hash.indexOf( key ) )>=0 )
+    {
+        if( ( iRight=hash.indexOf( "#", iLeft+1 ) )<0 )
+            iRight=hash.length;
+        value = parseInt( hash.substring( iLeft+key.length, iRight ) );
+        if( !isNaN( value ) )
+            return value;
+    }
+
+    return null;
+}
+function InitializeNavigation()
+{
+    // window defaults
+    document.IsInsideTour    = 0;
+    tour        = GetHashParameter( "IsInsideTour" );
+    if( tour!=null )      document.IsInsideTour  = tour;
+
+    doHead();
+}
+
+</SCRIPT>
+
+</HTML>

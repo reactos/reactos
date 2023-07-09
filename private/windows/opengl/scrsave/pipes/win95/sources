@@ -1,0 +1,40 @@
+MAJORCOMP=opengl
+MINORCOMP=scrnsave
+TARGETNAME=sspipes
+TARGETPATH=obj
+ALT_PROJECT_TARGET=Nashvile\Win95
+TARGETTYPE=LIBRARY
+LINKLIBS=$(_NTDRIVE)\nt\public\sdk\lib\*\opengl32.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\comdlg32.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\comctl32.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\glaux.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\glu32.lib
+
+
+INCLUDES=..\..\inc; ..\..\common; \
+         $(_NTDRIVE)\nt\private\windows\opengl\toolkits\libaux
+
+SOURCES=..\dialog.c    \
+        ..\sspipes.cxx \
+        ..\state.cxx   \
+        ..\nstate.cxx  \
+        ..\fstate.cxx  \
+        ..\pipe.cxx    \
+        ..\npipe.cxx   \
+        ..\fpipe.cxx   \
+        ..\view.cxx    \
+        ..\node.cxx    \
+        ..\objects.cxx \
+        ..\eval.cxx    \
+        ..\xc.cxx      \
+        ..\sspipes.rc
+
+C_DEFINES=$(C_DEFINES) -DWINVER=0x0400
+
+UMTYPE=windows
+UMAPPL=sspipes
+UMAPPLEXT=.scr
+UMLIBS= \
+       obj\*\sspipes.lib \
+       obj\*\sspipes.res \
+       ..\..\common\win95\obj\*\sscommon.lib
