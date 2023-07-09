@@ -598,7 +598,7 @@ public:
             CombinedPath.Combine(BaseDirectory, Name);
 
             // SHPathPrepareForWrite does not handle '/'
-            CStringW strCombined = CombinedPath;
+            CStringW& strCombined = static_cast<CStringW&>(CombinedPath);
             strCombined.Replace(L'/', L'\\');
 
             // Build a full path
