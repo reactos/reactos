@@ -1,17 +1,13 @@
 ﻿/*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/gui.cpp
  * PURPOSE:     GUI classes for RAPPS
- * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov   (sanchaez@reactos.org)
+ * COPYRIGHT:   Copyright 2015 David Quintana (gigaherz@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
  */
-#include "rapps.h"
-
 #include "rapps.h"
 #include "rosui.h"
 #include "crichedit.h"
-
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 
@@ -371,10 +367,10 @@ public:
             {  7, ID_EXIT,      TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
         };
 
-        LoadStringW(hInst, IDS_INSTALL, szInstallBtn, _countof(szInstallBtn));
-        LoadStringW(hInst, IDS_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
-        LoadStringW(hInst, IDS_MODIFY, szModifyBtn, _countof(szModifyBtn));
-        LoadStringW(hInst, IDS_SELECT_ALL, szSelectAll, _countof(szSelectAll));
+        LoadStringW(hInst, IDS_TOOLTIP_INSTALL, szInstallBtn, _countof(szInstallBtn));
+        LoadStringW(hInst, IDS_TOOLTIP_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
+        LoadStringW(hInst, IDS_TOOLTIP_MODIFY, szModifyBtn, _countof(szModifyBtn));
+        LoadStringW(hInst, IDS_TOOLTIP_SELECT_ALL, szSelectAll, _countof(szSelectAll));
 
         m_hWnd = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL,
                                  WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_LIST,
@@ -797,9 +793,6 @@ private:
 
         szText.LoadStringW(IDS_APP_DESCRIPTION);
         m_ListView->AddColumn(3, szText, 300, LVCFMT_LEFT);
-
-        // Unnesesary since the list updates on every TreeView selection
-        // UpdateApplicationsList(ENUM_ALL_COMPONENTS);
     }
 
     VOID InitCategoriesList()
@@ -1152,7 +1145,7 @@ private:
 
         case WM_NOTIFY:
         {
-            LPNMHDR data = (LPNMHDR) lParam;
+            LPNMHDR data = (LPNMHDR)lParam;
 
             switch (data->code)
             {
@@ -1389,7 +1382,7 @@ private:
 
         case WM_SIZING:
         {
-            LPRECT pRect = (LPRECT) lParam;
+            LPRECT pRect = (LPRECT)lParam;
 
             if (pRect->right - pRect->left < 565)
                 pRect->right = pRect->left + 565;
@@ -1586,7 +1579,6 @@ private:
                 {
                     UpdateApplicationsList(-1);
                 }
-
             }
             break;
 
@@ -1913,8 +1905,7 @@ VOID ShowMainWindow(INT nShowCmd)
     {
         if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
         {
-            if (Msg.message == WM_CHAR &&
-                Msg.wParam == VK_TAB)
+            if (Msg.message == WM_CHAR && Msg.wParam == VK_TAB)
             {
                 // Move backwards if shift is held down
                 int direction = (GetKeyState(VK_SHIFT) & 0x8000) ? -1 : 1;

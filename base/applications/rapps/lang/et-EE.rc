@@ -1,9 +1,6 @@
 /*
- * PROJECT:     RAPPS for ReactOS
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/lang/et-EE.rc
- * PURPOSE:     Estonian Language resource file
- * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
+ * TRANSLATOR:  Joann Mõndresku <joannmondresku@gmail.com>
  */
 
 LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
@@ -113,6 +110,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Installi"
     IDS_TOOLTIP_UNINSTALL "Desinstalli"
     IDS_TOOLTIP_MODIFY "Muuda"
+    IDS_TOOLTIP_SELECT_ALL "Vali/Tühista kõik"
     IDS_TOOLTIP_SETTINGS "Sätted"
     IDS_TOOLTIP_REFRESH "Värskenda"
     IDS_TOOLTIP_UPDATE_DB "Uuenda andmebaasi"
@@ -184,13 +182,10 @@ BEGIN
     IDS_APPTITLE "ReactOS'i Rakenduste Haldur"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Otsi…"
-    IDS_INSTALL "Installi"
-    IDS_UNINSTALL "Desinstalli"
-    IDS_MODIFY "Muuda"
     IDS_APPS_COUNT "Rakenduste arv: %d; Valitud: %d"
     IDS_WELCOME_TITLE "Tere tulemast ReactOS'i Rakenduste Haldurisse!\n\n"
     IDS_WELCOME_TEXT "Vali vasakult teema, siis vali paremalt rakendusi mida soovid installida või desinstallida.\nReactOS'i veebileht: "
-    IDS_WELCOME_URL "https://reactos.org/"
+    IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "Installitud"
     IDS_AVAILABLEFORINST "Installimiseks saadaval"
     IDS_UPDATES "Uuendused"
@@ -208,7 +203,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "Pakend ei läbinud tervikluse testi, pakend võib olla vigane või omavoliliselt muudetud olla keset allalaadimist. Tarkvara kasutamist ei ole soovitatud."
     IDS_INTERRUPTED_DOWNLOAD "Allalaadimist katkestati. Kontrolli interneti ühendust."
     IDS_UNABLE_TO_WRITE "Kettale kirjutamine ebaõnnetus. Ketas võib täis olla."
-    IDS_SELECT_ALL "Vali/Tühista kõik"
     IDS_INSTALL_SELECTED "Installi valitud"
     IDS_SELECTEDFORINST "Installimiseks valitud"
     IDS_MISMATCH_CERT_INFO "Kasutatud sertifikaat on tundmatu:\nSubject: %s\nIssuer: %s\nKas soovid siiski jätkata?"

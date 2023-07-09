@@ -1,10 +1,6 @@
 /*
- * PROJECT: ReactOS Applications Manager (RAPPS)
- * FILE:    base/applications/rapps/lang/ro-RO.rc
- * PURPOSE: Romanian Translation for RAPPS
- * TRANSLATORS:
- *          Ștefan Fulea (stefan dot fulea at mail dot com)
- *          Bișoc George (fraizeraust99 at gmail dot com)
+ * TRANSLATORS: Stefan Fulea <stefan.fulea@mail.com>
+ *              George Bisoc
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -100,7 +96,7 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "În curs de descărcare %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -114,6 +110,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Instalează"
     IDS_TOOLTIP_UNINSTALL "Dezinstalează"
     IDS_TOOLTIP_MODIFY "Modifică"
+    IDS_TOOLTIP_SELECT_ALL "Selectează/Deselectează Toate"
     IDS_TOOLTIP_SETTINGS "Preferințe"
     IDS_TOOLTIP_REFRESH "Împrospătează"
     IDS_TOOLTIP_UPDATE_DB "Actualizează baza de date"
@@ -185,13 +182,10 @@ BEGIN
     IDS_APPTITLE "Gestionar de programe"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Căutare…"
-    IDS_INSTALL "Instalează"
-    IDS_UNINSTALL "Dezinstalează"
-    IDS_MODIFY "Modifică"
     IDS_APPS_COUNT "Numărul de programe: %d; Selectate: %d"
     IDS_WELCOME_TITLE "Bun venit la gestionarul de programe ReactOS!\n\n"
     IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
-    IDS_WELCOME_URL "https://reactos.org/"
+    IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "Instalate"
     IDS_AVAILABLEFORINST "Disponibile pentru instalare"
     IDS_UPDATES "Actualizări"
@@ -209,7 +203,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Utilizarea programului nu este recomandată."
     IDS_INTERRUPTED_DOWNLOAD "Descărcarea a fost întreruptă. Verificați conexiunea la Internet."
     IDS_UNABLE_TO_WRITE "Eșec la scrierea pe disc. Una din cauze poate fi atingerea limitei de capacitate."
-    IDS_SELECT_ALL "Selectează/Deselectează Toate"
     IDS_INSTALL_SELECTED "Instalează selecționate"
     IDS_SELECTEDFORINST "Selectate pentru instalare"
     IDS_MISMATCH_CERT_INFO "Certificatul în uz este necunoscut:\nSubiect: %s\nEmitent: %s\nVreți să continuați oricum?"

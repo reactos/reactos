@@ -1,4 +1,4 @@
-/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (August, 2011) */
+/* TRANSLATOR: 2011 mkbu95 <mkbu95@gmail.com> */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -6,7 +6,7 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Arquivo"
     BEGIN
-        MENUITEM "Confi&gurações", ID_SETTINGS
+        MENUITEM "&Definições", ID_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "Sa&ir", ID_EXIT
     END
@@ -16,7 +16,7 @@ BEGIN
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remover do Registro", ID_REGREMOVE
+        MENUITEM "&Remover do Registo", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Actualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
@@ -46,7 +46,7 @@ BEGIN
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remover do Registro", ID_REGREMOVE
+        MENUITEM "&Remover do Registo", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Actualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
@@ -61,7 +61,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Geral", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Salvar posição da janela", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Actualizar esta lista de programas ao iniciar", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Actualizar a lista de programas ao iniciar", IDC_UPDATE_AVLIST, 15, 29, 222, 12
     AUTOCHECKBOX "&Registo de instalação e remoção de programas", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "A carregar", -1, 4, 65, 240, 51
     LTEXT "Pasta de download:", -1, 16, 75, 100, 9
@@ -86,14 +86,14 @@ CAPTION "Instalação do programa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
-    AUTORADIOBUTTON "&Instalar com uma mídia (CD ou DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Instalar de (CD ou DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Carregar e instalar", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "Download %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -107,7 +107,8 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Instalar"
     IDS_TOOLTIP_UNINSTALL "Desinstalar"
     IDS_TOOLTIP_MODIFY "Modificar"
-    IDS_TOOLTIP_SETTINGS "Configurações"
+    IDS_TOOLTIP_SELECT_ALL "Select/Deselect todos"
+    IDS_TOOLTIP_SETTINGS "Definições"
     IDS_TOOLTIP_REFRESH "Actualizar"
     IDS_TOOLTIP_UPDATE_DB "Actualizar Database"
     IDS_TOOLTIP_EXIT "Sair"
@@ -178,13 +179,10 @@ BEGIN
     IDS_APPTITLE "Central de Aplicativos ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Procurar…"
-    IDS_INSTALL "Instalar"
-    IDS_UNINSTALL "Desinstalar"
-    IDS_MODIFY "Modificar"
     IDS_APPS_COUNT "Número de aplicativos: %d; Seleccionados: %d"
     IDS_WELCOME_TITLE "Bem-vindo(a) a Central de Aplicativos ReactOS!\n\n"
     IDS_WELCOME_TEXT "Escolha uma categoria à esquerda, então escolha um aplicativo para instalar ou desinstalar.\nWeb Site ReactOS: "
-    IDS_WELCOME_URL "https://reactos.org/"
+    IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "Instalado"
     IDS_AVAILABLEFORINST "Disponível para instalação"
     IDS_UPDATES "Actualizações"
@@ -202,7 +200,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "O pacote não passou na verificação de integridade, pode ter sido corrompido ou adulterado durante o download. A execução do software não é recomendada."
     IDS_INTERRUPTED_DOWNLOAD "O download foi interrompido. Verifique a ligação com a Internet."
     IDS_UNABLE_TO_WRITE "Não é possível gravar no disco. O disco pode estar cheio."
-    IDS_SELECT_ALL "Select/Deselect todos"
     IDS_INSTALL_SELECTED "Instalar selecção"
     IDS_SELECTEDFORINST "Seleccionados para instalação"
     IDS_MISMATCH_CERT_INFO "O certificado usado é desconhecido:\nAssunto: %s\nIssuer: %s\nDeseja continuar mesmo assim?"
