@@ -11,15 +11,10 @@
 
 BOOL FileExists(LPCSTR FileName)
 {
-    FILE *fp = NULL;
+    DWORD Attribute = GetFileAttributes(FileName);
 
-    fp = fopen(FileName, "r");
-    if (fp != NULL)
-    {
-        fclose(fp);
-        return TRUE;
-    }
-    return FALSE;
+    return (Attribute != INVALID_FILE_ATTRIBUTES && 
+            !(Attribute & FILE_ATTRIBUTE_DIRECTORY));
 }
 
 BOOL ResourceToFile(INT i, LPCSTR FileName)
