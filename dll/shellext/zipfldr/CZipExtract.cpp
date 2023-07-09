@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include <atlpath.h>
 
 class CZipExtract :
     public IZip
@@ -593,16 +594,16 @@ public:
             bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
             // Build a combined path
-            CStringW CombinedPath = BaseDirectory;
-            if (CombinedPath.GetLength() > 0 && CombinedPath[CombinedPath.GetLength() - 1] != L'\\')
-                CombinedPath += L'\\';
-            CombinedPath += Name;
+            CPathW CombinedPath;
+            CombinedPath.Combine(BaseDirectory, Name);
 
-            CombinedPath.Replace(L'/', L'\\'); // SHPathPrepareForWrite does not handle '/'
+            // SHPathPrepareForWrite does not handle '/'
+            CStringW strCombined = CombinedPath;
+            strCombined.Replace(L'/', L'\\');
 
             // Build a full path
             CStringW FullPath;
-            DWORD cchFullPath = ::GetFullPathName(CombinedPath, 0, NULL, NULL);
+            DWORD cchFullPath = ::GetFullPathName(strCombined, 0, NULL, NULL);
             ::GetFullPathName(CombinedPath, cchFullPath, FullPath.GetBuffer(cchFullPath), NULL);
             FullPath.ReleaseBuffer();
 
