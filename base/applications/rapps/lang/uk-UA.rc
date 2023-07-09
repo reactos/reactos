@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Ukraianian resource file
+ * PURPOSE:     Ukrainian resource file
  * TRANSLATORS: Copyright 2010 Sakara Yevhen <eresid@gmail.com>
  *              Copyright 2010 Igor Paliychuk <igor-hkr@mail.ru>
  *              Copyright 2017 Alexander Shaposhnikov <sanchaez@reactos.org>
@@ -195,7 +195,7 @@ BEGIN
     IDS_APPS_COUNT "Kількість додатків: %d; Обрано: %d"
     IDS_WELCOME_TITLE "Ласкаво просимо в Менеджер додатків ReactOS!\n\n"
     IDS_WELCOME_TEXT "Виберіть категорію зліва, а потім виберіть програми для встановлення чи видалення.\nСторінка ReactOS: "
-    IDS_WELCOME_URL "https://reactos.org/"
+    IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "Встановлені"
     IDS_AVAILABLEFORINST "Доступні для встановлення"
     IDS_UPDATES "Оновлення"
