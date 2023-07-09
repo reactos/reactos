@@ -1,3 +1,15 @@
+/*
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2009 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2015-2016 Kudratov Olimjon <olim98@bk.ru>
+ *              Copyright 2016 Sergey Stopkin <stopkin.sergey@gmail.com>
+ *              Copyright 2016 Nikolay Burshtyn <amber8706@mail.ru>
+ *              Copyright 2017 Alexander Shaposhnikov <sanchaez@reactos.org>
+ *              Copyright 2019-2023 Stanislav Motylkov <binarymaster@mail.ru>
+ */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
@@ -109,7 +121,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Установить"
     IDS_TOOLTIP_UNINSTALL "Удалить"
     IDS_TOOLTIP_MODIFY "Изменить"
-    IDS_TOOLTIP_SELECT_ALL "Выбрать все"
+    IDS_TOOLTIP_SELECT_ALL "Выбрать/Снять все"
     IDS_TOOLTIP_SETTINGS "Параметры"
     IDS_TOOLTIP_REFRESH "Обновить"
     IDS_TOOLTIP_UPDATE_DB "Обновить базу данных"

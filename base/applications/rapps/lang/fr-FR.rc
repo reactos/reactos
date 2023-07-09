@@ -1,3 +1,13 @@
+/*
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATORS: Copyright 2011 Jason Toscano (JanusMagnus) <jasongenie@gmail.com>
+ *              Copyright 2011 Pierre Schweitzer <pierre@reactos.org>
+ *              Copyright 2015 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2020-2022 Kyle Katarn <contact@kcsoftwares.com>
+ */
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
