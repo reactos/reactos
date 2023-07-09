@@ -13,7 +13,7 @@ BOOL FileExists(LPCSTR FileName)
 {
     DWORD Attribute = GetFileAttributes(FileName);
 
-    return (Attribute != INVALID_FILE_ATTRIBUTES && 
+    return (Attribute != INVALID_FILE_ATTRIBUTES &&
             !(Attribute & FILE_ATTRIBUTE_DIRECTORY));
 }
 
@@ -64,43 +64,55 @@ BOOL ResourceToFile(INT i, LPCSTR FileName)
 static struct
 {
     PCWSTR FilePath;
-    UINT cIcons;        // Return value from PrivateExtractIconsW
-    UINT cTotIcons;     // Return value of Total Icons in File
+    UINT cIcons;        // Return value of PrivateExtractIconsW with one icon group requested
+    UINT cTotalIcons;   // Return value of total icon groups in file
     BOOL bhIconValid;   // Whether or not the returned icon handle is not NULL.
 } IconTests[] =
 {
-    /* Executables with icons */
+    /* Executables with just one icon group */
     {L"notepad.exe", 1, 1, TRUE},
     {L"%SystemRoot%\\System32\\cmd.exe", 1, 1, TRUE},
 
-    /* Executable without icon */
+    /* Executable without icon groups */
     {L"%SystemRoot%\\System32\\autochk.exe", 0, 0, FALSE},
 
-    /* Existing file 233 is ROS Only */
+    /* Existing file (shell32 has 233 icon groups in ReactOS only) */
     {L"%SystemRoot%\\System32\\shell32.dll", 1, 233, TRUE},
 
     /* Non-existing files */
     {L"%SystemRoot%\\non-existent-file.sdf", 0xFFFFFFFF, 0, FALSE},
-    /* Multiple icons in the same EXE file (18 icons) */
+
+    /* Executable with 18 icon groups */
     {L"%SystemRoot%\\explorer.exe", 1, 18, TRUE},
 
-    /* Multiple icons in the same ICO file (6 icons) */
+    /* Icon group file containing 6 icons */
     {L"%SystemRoot%\\bin\\sysicon.ico", 1, 1, TRUE},
 
-    /* ICO file with both normal and PNG icons */
+    /* Icon group file containing one PNG icon and one normal icon */
     {L"%SystemRoot%\\bin\\ROS.ico", 1, 1, TRUE},
+};
+
+static struct
+{
+    PCSTR FileName;
+    INT ResourceId;
+} IconFiles[] =
+{
+    {"ROS.ico", IDR_ICONS_PNG},
+    {"sysicon.ico", IDR_ICONS_NORMAL},
 };
 
 START_TEST(PrivateExtractIcons)
 {
     HICON ahIcon;
-    UINT i, aIconId, cIcons, cTotIcons;
-    CHAR FileName[2][13] = { "ROS.ico", "sysicon.ico" };
+    UINT i, aIconId, cIcons, cIcoTotal;
 
-    if (!ResourceToFile(1, FileName[0]))
-        return;
-    if (!ResourceToFile(2, FileName[1]))
-        return;
+    /* Extract icons */
+    for (i = 0; i < _countof(IconFiles); ++i)
+    {
+        if (!ResourceToFile(IconFiles[i].ResourceId, IconFiles[i].FileName))
+            goto Cleanup;
+    }
 
     for (i = 0; i < _countof(IconTests); ++i)
     {
@@ -108,18 +120,17 @@ START_TEST(PrivateExtractIcons)
         ahIcon = (HICON)UlongToHandle(0xdeadbeef);
         aIconId = 0xdeadbeef;
 
-        /* Get total number of icons in file.
+        /* Get total number of icon groups in file.
          * None of the hard numbers in the function matter since we have
-         * the two NULL's for the Icon Handle and Count to be set. */
-        cTotIcons = PrivateExtractIconsW(IconTests[i].FilePath, 0, 16, 16, NULL, NULL, 0, 0);
-        if (i != 3) // not shell32.dll
-            ok(cTotIcons == IconTests[i].cTotIcons, "PrivateExtractIconsW(%u): "
-               "got %u, expected %u\n", i, cTotIcons, IconTests[i].cTotIcons);
-        else /* ROS is 233, W2K2SP2 is 239 */
-            ok(cTotIcons > 232 && cTotIcons < 240, "PrivateExtractIconsW(%u): "
-               "got %u, expected %u\n", i, cTotIcons, IconTests[i].cTotIcons);
+         * two NULLs for the Icon Handle and Count to be set. */
+        cIcoTotal = PrivateExtractIconsW(IconTests[i].FilePath, 0, 16, 16, NULL, NULL, 0, 0);
+        ok((i == 3 ?
+              cIcoTotal > 232 && cIcoTotal < 240 :    /* shell32 case: ROS has 233, W2K2SP2 has 239 icon groups. */
+              cIcoTotal == IconTests[i].cTotalIcons),
+           "PrivateExtractIconsW(%u): "
+           "got %u, expected %u\n", i, cIcoTotal, IconTests[i].cTotalIcons);
 
-        /* Get count of icons requested  which is 1, unless error. */
+        /* Get count of icon groups requested which should be 1, unless error. */
         cIcons = PrivateExtractIconsW(IconTests[i].FilePath, 0, 16, 16, &ahIcon, &aIconId, 1, 0);
         ok(cIcons == IconTests[i].cIcons, "PrivateExtractIconsW(%u): got %u, expected %u\n", i, cIcons, IconTests[i].cIcons);
         ok(ahIcon != (HICON)UlongToHandle(0xdeadbeef), "PrivateExtractIconsW(%u): icon not set\n", i);
@@ -140,6 +151,9 @@ START_TEST(PrivateExtractIcons)
             DestroyIcon(ahIcon);
     }
 
-    DeleteFileA(FileName[0]);
-    DeleteFileA(FileName[1]);
+Cleanup:
+    for (i = 0; i < _countof(IconFiles); ++i)
+    {
+        DeleteFileA(IconFiles[i].FileName);
+    }
 }
