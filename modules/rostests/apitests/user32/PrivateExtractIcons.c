@@ -86,10 +86,10 @@ static struct
     {L"%SystemRoot%\\explorer.exe", 1, 18, TRUE},
 
     /* Icon group file containing 6 icons */
-    {L"%SystemRoot%\\bin\\sysicon.ico", 1, 1, TRUE},
+    {L"%temp%\\sysicon.ico", 1, 1, TRUE},
 
     /* Icon group file containing one PNG icon and one normal icon */
-    {L"%SystemRoot%\\bin\\ROS.ico", 1, 1, TRUE},
+    {L"%temp%\\ROS.ico", 1, 1, TRUE},
 };
 
 static struct
@@ -98,19 +98,22 @@ static struct
     INT ResourceId;
 } IconFiles[] =
 {
-    {"ROS.ico", IDR_ICONS_PNG},
-    {"sysicon.ico", IDR_ICONS_NORMAL},
+    {"%temp%\\ROS.ico", IDR_ICONS_PNG},
+    {"%temp%\\sysicon.ico", IDR_ICONS_NORMAL},
 };
 
 START_TEST(PrivateExtractIcons)
 {
     HICON ahIcon;
     UINT i, aIconId, cIcons, cIcoTotal;
+    CHAR PathBuffer[MAX_PATH];
 
     /* Extract icons */
     for (i = 0; i < _countof(IconFiles); ++i)
     {
-        if (!ResourceToFile(IconFiles[i].ResourceId, IconFiles[i].FileName))
+        ExpandEnvironmentStringsA(IconFiles[i].FileName, PathBuffer, _countof(PathBuffer));
+
+        if (!ResourceToFile(IconFiles[i].ResourceId, PathBuffer))
             goto Cleanup;
     }
 
@@ -154,6 +157,7 @@ START_TEST(PrivateExtractIcons)
 Cleanup:
     for (i = 0; i < _countof(IconFiles); ++i)
     {
-        DeleteFileA(IconFiles[i].FileName);
+        ExpandEnvironmentStringsA(IconFiles[i].FileName, PathBuffer, _countof(PathBuffer));
+        DeleteFileA(PathBuffer);
     }
 }
