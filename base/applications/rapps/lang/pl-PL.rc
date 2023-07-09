@@ -1,9 +1,6 @@
 /*
- *    Translated by Caemyr - Olaf Siejka (Aug, 2009)
- *    Use ReactOS forum PM or IRC to contact me
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
- *    https://reactos.org
- *    IRC: irc.freenode.net #reactos-pl;
+ * TRANSLATORS: 2009 Olaf Siejka
+ *              2011 Adam Stachowicz <saibamenppl@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -98,8 +95,8 @@ BEGIN
     PUSHBUTTON "Anuluj", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "Pobierz %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -183,10 +180,7 @@ BEGIN
     IDS_APPTITLE "Menedżer aplikacji ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Szukaj…"
-    IDS_INSTALL "Instaluj"
-    IDS_UNINSTALL "Odinstaluj"
-    IDS_MODIFY "Modyfikuj"
-    IDS_APPS_COUNT "Licznik aplikacji: %d"
+    IDS_APPS_COUNT "Liczba aplikacji: %d"
     IDS_WELCOME_TITLE "Witamy w Menedżerze aplikacji ReactOS!\n\n"
     IDS_WELCOME_TEXT "Z listy po lewej wybierz kategorię, a następnie aplikację, by ją zainstalować lub odinstalować.\nStrona projektu ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
@@ -207,9 +201,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "Pakiet nie przeszedł kontroli integralności, mógł zostać uszkodzony lub naruszony podczas pobierania. Uruchamianie tego programu nie jest zalecane."
     IDS_INTERRUPTED_DOWNLOAD "Pobieranie zostało przerwane. Sprawdź połączenie z siecią"
     IDS_UNABLE_TO_WRITE "Nie można zapisać na dysku. Dysk może być pełny."
-    IDS_SELECT_ALL "Zaznacz/Odznacz Wszystko"
-    IDS_INSTALL_SELECTED "Instaluj Zaznaczone"
-    IDS_SELECTEDFORINST "Wybrane do instalacji"
     IDS_MISMATCH_CERT_INFO "Użyty certyfikat jest nieznany:\nSubject: %s\nIssuer: %s\nCzy chcesz mimo to kontynuować?"
 END
 

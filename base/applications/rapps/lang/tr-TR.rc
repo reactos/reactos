@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+/* TRANSLATORS: 2013-2016 Erdem Ersoy <erdemersoy@erdemersoy.net>, 2018 Ercan Ersoy <ercanersoy@ercanersoy.net> */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -12,8 +12,8 @@ BEGIN
     END
     POPUP "Y&azılım"
     BEGIN
-        MENUITEM "&Kur\tCtrl+Giriş", ID_INSTALL
-        MENUITEM "K&aldır\tCtrl+Sil", ID_UNINSTALL
+        MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
+        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Girişi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
@@ -42,8 +42,8 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Kur\tCtrl+Giriş", ID_INSTALL
-        MENUITEM "K&aldır\tCtrl+Sil", ID_UNINSTALL
+        MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
+        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Girişi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
@@ -62,7 +62,7 @@ BEGIN
     GROUPBOX "Genel", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Pencere Konumunu Sakla", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "&Başlangıçta Erişilebilir Programların Listesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Programların Kuruluşlarını ve Kaldırılışlarını Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "P&rogramların Kurulma ve Kaldırma Günlüğünü Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "İndirme", -1, 4, 65, 240, 51
     LTEXT "İndirme Dizini:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -75,7 +75,7 @@ BEGIN
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "Şunun İçin Vekil Sunucu Yok", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "Ön Tanımlılar", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "Varsayılanlar", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
     DEFPUSHBUTTON "Tamam", IDOK, 116, 195, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 181, 195, 60, 14
 END
@@ -93,7 +93,7 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "İndiriliyor %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -136,7 +136,7 @@ BEGIN
     IDS_INFO_COMMENTS "\nYorumlar: "
     IDS_INFO_INSTLOCATION "\nKurulum Konumu: "
     IDS_INFO_INSTALLSRC "\nKurulum Kaynağı: "
-    IDS_INFO_UNINSTALLSTR "\nKaldırma Sözcesi: "
+    IDS_INFO_UNINSTALLSTR "\nKaldırma Dizesi: "
     IDS_INFO_MODIFYPATH "\nDeğiştirme Yolu: "
     IDS_INFO_INSTALLDATE "\nKurulum Zamanı: "
 END
@@ -165,7 +165,7 @@ BEGIN
     IDS_CAT_GRAPHICS "Grafik"
     IDS_CAT_INTERNET "Ağ"
     IDS_CAT_LIBS "Kitaplıklar"
-    IDS_CAT_OFFICE "Büro"
+    IDS_CAT_OFFICE "Ofis"
     IDS_CAT_OTHER "Diğer"
     IDS_CAT_SCIENCE "Bilim"
     IDS_CAT_TOOLS "Araçlar"
@@ -177,20 +177,17 @@ BEGIN
     IDS_APPTITLE "ReactOS Uygulama Yöneticisi"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Ara"
-    IDS_INSTALL "Kur"
-    IDS_UNINSTALL "Kaldır"
-    IDS_MODIFY "Değiştir"
-    IDS_APPS_COUNT "Uygulama Sayısı: %d; Seçili: %d"
+    IDS_APPS_COUNT "Uygulama Sayısı: %d"
     IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz.\n\n"
     IDS_WELCOME_TEXT "Solda bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
     IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "Kurulanlar"
-    IDS_AVAILABLEFORINST "Kurulum İçin Bulunanlar"
+    IDS_AVAILABLEFORINST "Kurulabilir Uygulamalar"
     IDS_UPDATES "Güncelleştirmeler"
     IDS_APPLICATIONS "Uygulamalar"
     IDS_CHOOSE_FOLDER_TEXT "İndirilenlerin saklanacağı bir dizin seçiniz:"
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
-    IDS_APP_REG_REMOVE "Kurulan programın girişini değer defterinden silmek istediğinizden emin misiniz?"
+    IDS_APP_REG_REMOVE "Kurulan programın girdiyi kayıt defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"
     IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! İnternet bağlantınızı yoklayınız!"
@@ -201,9 +198,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veya indirme esnasında oynanmış olabilir. Yazılımı çalıştırmak önerilmez."
     IDS_INTERRUPTED_DOWNLOAD "İndirme kesildi. İnternet bağlantınızı denetleyiniz."
     IDS_UNABLE_TO_WRITE "Diske yazılamıyor. Disk dolu olabilir."
-    IDS_SELECT_ALL "Tümünü Seç/Seçileni Kaldır"
-    IDS_INSTALL_SELECTED "Seçileni Kur"
-    IDS_SELECTEDFORINST "Kurulum için seçildi"
     IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de sürdürmek istiyor musunuz?"
 END
 

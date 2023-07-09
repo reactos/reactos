@@ -1,5 +1,5 @@
-/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
-/* Imporved by Li Keqing <auroracloud4096@gmail.com>, Luo Yufan (njlyf2011@hotmail.com) */
+/* TRANSLATORS: Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ *              Li Keqing <auroracloud4096@gmail.com>, Luke Luo <njlyf2011@hotmail.com> */
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDR_MAINMENU MENU
@@ -70,7 +70,7 @@ BEGIN
     AUTOCHECKBOX "在安装程序完成后删除安装程序(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "代理服务器", -1, 4, 116, 240, 76
     CONTROL "使用系统代理设置", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "直连 (无代理）", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "直连 无代理）", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
     CONTROL "代理服务器", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "为...不使用代理", -1, 27, 175, 64, 10
@@ -92,8 +92,8 @@ BEGIN
     PUSHBUTTON "取消", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "正在下载 %ls…"
 FONT 9, "宋体"
 BEGIN
@@ -177,10 +177,7 @@ BEGIN
     IDS_APPTITLE "ReactOS 程序管理器"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "搜索…"
-    IDS_INSTALL "安装"
-    IDS_UNINSTALL "卸载"
-    IDS_MODIFY "修改"
-    IDS_APPS_COUNT "程序数量：%d；已选：%d"
+    IDS_APPS_COUNT "程序数量：%d"
     IDS_WELCOME_TITLE "欢迎使用 ReactOS 程序管理器！\n\n"
     IDS_WELCOME_TEXT "从左栏选择一个类别，然后选择要安装或卸载的程序。\nReactOS 网站："
     IDS_WELCOME_URL "https://reactos.org"
@@ -201,10 +198,7 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "这个包没有通过完整性验证，它可能在下载过程中损坏或被人为篡改了。不推荐运行这个程序。"
     IDS_INTERRUPTED_DOWNLOAD "下载中断。请检查网络连接。"
     IDS_UNABLE_TO_WRITE "无法写入磁盘。磁盘可能已满。"
-    IDS_SELECT_ALL "全选/全反选"
-    IDS_INSTALL_SELECTED "安装已选中的"
-    IDS_SELECTEDFORINST "选中以安装"
-    IDS_MISMATCH_CERT_INFO "所使用的证书未知:\n主题: %s\n发行方: %s\n您是否仍然想继续？"
+    IDS_MISMATCH_CERT_INFO "所使用的证书未知:\n主题: %s\n发行方: %s\n是否仍要继续？"
 END
 
 STRINGTABLE

@@ -1,5 +1,5 @@
-/* Spanish Language resource file.
- * Translated by: ?? and Ismael Ferreras Morezuelas (Swyter) <2014-11-07> */
+/*
+ * TRANSLATOR: 2014 Ismael Ferreras Morezuelas (Swyter) */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -94,12 +94,12 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "Descargando %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
-    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_DISABLED | NOT WS_BORDER, 0
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
     PUSHBUTTON "Cancelar", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
@@ -178,10 +178,7 @@ BEGIN
     IDS_APPTITLE "Administrador de aplicaciones de ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Buscar…"
-    IDS_INSTALL "Instalar"
-    IDS_UNINSTALL "Desinstalar"
-    IDS_MODIFY "Modificar"
-    IDS_APPS_COUNT "Número de aplicaciones: %d; Selected: %d"
+    IDS_APPS_COUNT "Nº de aplicaciones: %d"
     IDS_WELCOME_TITLE "Bienvenido al Administrador de aplicaciones de ReactOS.\n\n"
     IDS_WELCOME_TEXT "Seleccione una categoría a la izquierda, para más tarde seleccionar la aplicación a instalar o desinstalar.\nWeb de ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
@@ -202,9 +199,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "El paquete no ha pasado la comprobación de integridad, puede haber sido alterado o estar corrupto. No se recomienda ejecutarlo."
     IDS_INTERRUPTED_DOWNLOAD "Se ha interrumpido la descarga por un error de red. Comprueba la conexión a Internet."
     IDS_UNABLE_TO_WRITE "No se ha podido escribir en el disco duro, es posible que no quede espacio libre."
-    IDS_SELECT_ALL "Select/Deselect All"
-    IDS_INSTALL_SELECTED "Install Selected"
-    IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
