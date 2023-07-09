@@ -84,9 +84,6 @@
 /* Strings */
 #define IDS_APPTITLE             100
 #define IDS_SEARCH_TEXT          101
-#define IDS_INSTALL              102
-#define IDS_UNINSTALL            103
-#define IDS_MODIFY               104
 #define IDS_APPS_COUNT           105
 #define IDS_WELCOME_TITLE        106
 #define IDS_WELCOME_TEXT         107
@@ -107,7 +104,6 @@
 #define IDS_INTEG_CHECK_FAIL     123
 #define IDS_INTERRUPTED_DOWNLOAD 124
 #define IDS_UNABLE_TO_WRITE      125
-#define IDS_SELECT_ALL           126
 #define IDS_INSTALL_SELECTED     127
 #define IDS_UNABLE_TO_INSTALL    128
 #define IDS_SELECTEDFORINST      129
@@ -118,10 +114,11 @@
 #define IDS_TOOLTIP_INSTALL      200
 #define IDS_TOOLTIP_UNINSTALL    201
 #define IDS_TOOLTIP_MODIFY       202
-#define IDS_TOOLTIP_SETTINGS     203
-#define IDS_TOOLTIP_REFRESH      204
-#define IDS_TOOLTIP_EXIT         205
-#define IDS_TOOLTIP_UPDATE_DB    206
+#define IDS_TOOLTIP_SELECT_ALL   203
+#define IDS_TOOLTIP_SETTINGS     204
+#define IDS_TOOLTIP_REFRESH      205
+#define IDS_TOOLTIP_EXIT         206
+#define IDS_TOOLTIP_UPDATE_DB    207
 
 /* Columns info */
 #define IDS_APP_NAME             250
