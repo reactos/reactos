@@ -1,8 +1,5 @@
 /*
- * PROJECT:    ReactOS ReactOS Applications Manager
  * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/rapps/lang/uk-UA.rc
- * PURPOSE:    Ukraianian Language File for ReactOS ReactOS Applications Manager
  * TRANSLATOR: Sakara Yevhen, Igor Paliychuk, Yaroslav Kibysh
  */
 
@@ -99,7 +96,7 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
-STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "Завантаження %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -113,6 +110,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Встановити"
     IDS_TOOLTIP_UNINSTALL "Видалити"
     IDS_TOOLTIP_MODIFY "Змінити"
+    IDS_TOOLTIP_SELECT_ALL "Вибрати все"
     IDS_TOOLTIP_SETTINGS "Налаштування"
     IDS_TOOLTIP_REFRESH "Оновити"
     IDS_TOOLTIP_UPDATE_DB "Оновити список програм"
@@ -184,9 +182,6 @@ BEGIN
     IDS_APPTITLE "Менеджер додатків ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Пошук…"
-    IDS_INSTALL "Встановити"
-    IDS_UNINSTALL "Видалити"
-    IDS_MODIFY "Змінити"
     IDS_APPS_COUNT "Kількість додатків: %d; Обрано: %d"
     IDS_WELCOME_TITLE "Ласкаво просимо в Менеджер додатків ReactOS!\n\n"
     IDS_WELCOME_TEXT "Виберіть категорію зліва, а потім виберіть програми для встановлення чи видалення.\nСторінка ReactOS: "
@@ -208,7 +203,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "Додаток не пройшов перевірку цілістності, його молги пошкодити чи замінити. Запуск додатку не рекомендується."
     IDS_INTERRUPTED_DOWNLOAD "Завантаження перервано. Перевірте підключення до мережі Інтернет."
     IDS_UNABLE_TO_WRITE "Записк на диск неможливий. Можливо, на диску недостатньо містця."
-    IDS_SELECT_ALL "Вибрати все"
     IDS_INSTALL_SELECTED "Встановити обране"
     IDS_SELECTEDFORINST "Обрані для встановлення"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"

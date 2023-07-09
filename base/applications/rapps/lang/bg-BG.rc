@@ -1,7 +1,3 @@
-/* Превод на Български/ Bulgarian translation */
-/* https://reactos.org/wiki/Bulgarian_translation */
-/* LOCATION: base/applications/rapps/lang */
-
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
@@ -95,7 +91,7 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "Сваляне %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -109,6 +105,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Слагане"
     IDS_TOOLTIP_UNINSTALL "Махане"
     IDS_TOOLTIP_MODIFY "Промяна"
+    IDS_TOOLTIP_SELECT_ALL "Select/Deselect All"
     IDS_TOOLTIP_SETTINGS "Настройки"
     IDS_TOOLTIP_REFRESH "Опресняване"
     IDS_TOOLTIP_UPDATE_DB "Update Database"
@@ -180,9 +177,6 @@ BEGIN
     IDS_APPTITLE "Управителят за приложения на РеактОС"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Търсене"
-    IDS_INSTALL "Слагане"
-    IDS_UNINSTALL "Махане"
-    IDS_MODIFY "Промяна"
     IDS_APPS_COUNT "Брой приложения: %d; Selected: %d"
     IDS_WELCOME_TITLE "Управителят на приложенията на РеактОС ви приветства"
     IDS_WELCOME_TEXT "Изберете раздел от лявата страна, след което изберете приложение за слагане или премахване.\nСтраницата на РеактОС: "
@@ -204,7 +198,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
-    IDS_SELECT_ALL "Select/Deselect All"
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"

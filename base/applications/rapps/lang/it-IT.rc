@@ -91,7 +91,7 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "Scaricamento in corso %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -105,6 +105,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Installa"
     IDS_TOOLTIP_UNINSTALL "Rimuovi"
     IDS_TOOLTIP_MODIFY "Modifica"
+    IDS_TOOLTIP_SELECT_ALL "Seleziona/Deseleziona Tutte"
     IDS_TOOLTIP_SETTINGS "Impostazioni"
     IDS_TOOLTIP_REFRESH "Aggiorna"
     IDS_TOOLTIP_UPDATE_DB "Aggiorna Database"
@@ -176,9 +177,6 @@ BEGIN
     IDS_APPTITLE "ReactOS Gestione applicazioni"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Cerca…"
-    IDS_INSTALL "Installa"
-    IDS_UNINSTALL "Rimuovi"
-    IDS_MODIFY "Modifica"
     IDS_APPS_COUNT "Numero applicazioni: %d; Selezionate: %d"
     IDS_WELCOME_TITLE "Benvenuto!\n\n"
     IDS_WELCOME_TEXT "Scegliere una categoria a sinistra, poi scegliere una applicazione da installare o disinstallare.\nReactOS Web Site: "
@@ -200,7 +198,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "Il pacchetto non ha superato il controllo di integrità, potrebbe essere stato danneggiato o manomesso durante lo scaricamento. L'esecuzione del software non è raccomandata."
     IDS_INTERRUPTED_DOWNLOAD "Lo scaricamento è stato interrotto. Verificare la connessione a Internet."
     IDS_UNABLE_TO_WRITE "Impossibile scrivere su disco: lo spazio libero potrebbe essere esaurito."
-    IDS_SELECT_ALL "Seleziona/Deseleziona Tutte"
     IDS_INSTALL_SELECTED "Installa le selezionate"
     IDS_SELECTEDFORINST "Selezionate per l'installazione"
     IDS_MISMATCH_CERT_INFO "Il certificato in uso è sconosciuto:\nSoggetto: %s\nEmittente: %s\nVuoi continuare comunque?"
