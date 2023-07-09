@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Tasklist Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Displays a list of currently running processes on the computer.
- * COPYRIGHT:   Copyright 2021 He Yang (1160386205@qq.com)
+ * COPYRIGHT:   Copyright 2021 He Yang <1160386205@qq.com>
  */
 
 #include "tasklist.h"

@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Tasklist
+ * PROJECT:     ReactOS Tasklist Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     The tool shows the list of tasks
- * COPYRIGHT:   Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ * PURPOSE:     Romanian resource file
+ * TRANSLATOR:  Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL

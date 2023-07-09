@@ -1,3 +1,13 @@
+/*
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2009-2010 Matthias Kupfer <mkupfer@reactos.org>
+ *              Copyright 2010 Sven Knurr (tux.) <forenkrams@tuxproject.de>
+ *              Copyright 2017 Joachim Henze <joachim.henze@reactos.org>
+ *              Copyright 2021 Robert Naumann <gonzomdx@gmail.com>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU

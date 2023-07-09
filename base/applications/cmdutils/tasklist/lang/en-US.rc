@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Tasklist Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     English (United States) resource file
+ * TRANSLATOR:  Copyright 2021 He Yang <1160386205@qq.com>
+ */
+
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE

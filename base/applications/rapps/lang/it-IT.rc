@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Italian resource file
+ * TRANSLATORS: Copyright 2010 Paolo Devoti <devotip@tiscali.it>
+ *              Copyright 2016 Carlo Bramini <carlo.bramix@libero.it>
+ *              Copyright 2017-2018 George Bișoc <george.bisoc@reactos.org>
+ */
+
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU

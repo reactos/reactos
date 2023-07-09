@@ -4,6 +4,7 @@
  * PURPOSE:     Ukraianian resource file
  * TRANSLATORS: Copyright 2010 Sakara Yevhen <eresid@gmail.com>
  *              Copyright 2010 Igor Paliychuk <igor-hkr@mail.ru>
+ *              Copyright 2017 Alexander Shaposhnikov <sanchaez@reactos.org>
  *              Copyright 2021 Yaroslav Kibysh <yanet.prod@gmail.com>
  */
 
@@ -118,7 +119,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Встановити"
     IDS_TOOLTIP_UNINSTALL "Видалити"
     IDS_TOOLTIP_MODIFY "Змінити"
-    IDS_TOOLTIP_SELECT_ALL "Вибрати все"
+    IDS_TOOLTIP_SELECT_ALL "Вибрати/Зняти все"
     IDS_TOOLTIP_SETTINGS "Налаштування"
     IDS_TOOLTIP_REFRESH "Оновити"
     IDS_TOOLTIP_UPDATE_DB "Оновити список програм"
