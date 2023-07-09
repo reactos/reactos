@@ -1,17 +1,13 @@
 ﻿/*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/gui.cpp
  * PURPOSE:     GUI classes for RAPPS
- * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov   (sanchaez@reactos.org)
+ * COPYRIGHT:   Copyright 2015 David Quintana (gigaherz@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
  */
-#include "rapps.h"
-
 #include "rapps.h"
 #include "rosui.h"
 #include "crichedit.h"
-
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 
@@ -214,7 +210,6 @@ class CMainToolbar :
     WCHAR szInstallBtn[MAX_STR_LEN];
     WCHAR szUninstallBtn[MAX_STR_LEN];
     WCHAR szModifyBtn[MAX_STR_LEN];
-    WCHAR szSelectAll[MAX_STR_LEN];
 
     VOID AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex)
     {
@@ -252,7 +247,6 @@ class CMainToolbar :
         AddImageToImageList(hImageList, IDI_INSTALL);
         AddImageToImageList(hImageList, IDI_UNINSTALL);
         AddImageToImageList(hImageList, IDI_MODIFY);
-        AddImageToImageList(hImageList, IDI_CHECK_ALL);
         AddImageToImageList(hImageList, IDI_REFRESH);
         AddImageToImageList(hImageList, IDI_UPDATE_DB);
         AddImageToImageList(hImageList, IDI_SETTINGS);
@@ -310,19 +304,17 @@ public:
             {  0, ID_INSTALL,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szInstallBtn      },
             {  1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szUninstallBtn    },
             {  2, ID_MODIFY,    TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szModifyBtn       },
-            {  3, ID_CHECK_ALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szSelectAll       },
             { -1, 0,            TBSTATE_ENABLED, BTNS_SEP,                    { 0 }, 0, 0                           },
-            {  4, ID_REFRESH,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
-            {  5, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+            {  3, ID_REFRESH,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+            {  4, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
             { -1, 0,            TBSTATE_ENABLED, BTNS_SEP,                    { 0 }, 0, 0                           },
-            {  6, ID_SETTINGS,  TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
-            {  7, ID_EXIT,      TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+            {  5, ID_SETTINGS,  TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+            {  6, ID_EXIT,      TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
         };
 
-        LoadStringW(hInst, IDS_INSTALL, szInstallBtn, _countof(szInstallBtn));
-        LoadStringW(hInst, IDS_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
-        LoadStringW(hInst, IDS_MODIFY, szModifyBtn, _countof(szModifyBtn));
-        LoadStringW(hInst, IDS_SELECT_ALL, szSelectAll, _countof(szSelectAll));
+        LoadStringW(hInst, IDS_TOOLTIP_INSTALL, szInstallBtn, _countof(szInstallBtn));
+        LoadStringW(hInst, IDS_TOOLTIP_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
+        LoadStringW(hInst, IDS_TOOLTIP_MODIFY, szModifyBtn, _countof(szModifyBtn));
 
         m_hWnd = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL,
                                  WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_LIST,
@@ -387,33 +379,14 @@ class CAppsListView :
         INT iSubItem;
     };
 
-    BOOL bHasAllChecked;
     BOOL bIsAscending;
-    BOOL bHasCheckboxes;
-
     INT nLastHeaderID;
 
 public:
     CAppsListView() :
-        bHasAllChecked(FALSE),
         bIsAscending(TRUE),
-        bHasCheckboxes(FALSE),
         nLastHeaderID(-1)
     {
-    }
-
-    VOID SetCheckboxesVisible(BOOL bIsVisible)
-    {
-        if (bIsVisible)
-        {
-            SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
-        }
-        else
-        {
-            SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
-        }
-
-        bHasCheckboxes = bIsVisible;
     }
 
     VOID ColumnClick(LPNMLISTVIEW pnmv)
@@ -549,78 +522,7 @@ public:
         HMENU menu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_APPLICATIONMENU)), 0);
 
         HWND hwnd = CListView::Create(hwndParent, r, NULL, style, WS_EX_CLIENTEDGE, menu);
-
-        if (hwnd)
-        {
-            SetCheckboxesVisible(FALSE);
-        }
-
         return hwnd;
-    }
-
-    BOOL GetCheckState(INT item)
-    {
-        return (BOOL) (GetItemState(item, LVIS_STATEIMAGEMASK) >> 12) - 1;
-    }
-
-    VOID SetCheckState(INT item, BOOL fCheck)
-    {
-        if (bHasCheckboxes)
-        {
-            SetItemState(item, INDEXTOSTATEIMAGEMASK((fCheck) ? 2 : 1), LVIS_STATEIMAGEMASK);
-            SetSelected(item, fCheck);
-        }
-    }
-
-    VOID SetSelected(INT item, BOOL value)
-    {
-        if (item < 0)
-        {
-            for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
-            {
-                CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(i);
-                if (pAppInfo)
-                {
-                    pAppInfo->m_IsSelected = value;
-                }
-            }
-        }
-        else
-        {
-            CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(item);
-            if (pAppInfo)
-            {
-                pAppInfo->m_IsSelected = value;
-            }
-        }
-    }
-
-    VOID CheckAll()
-    {
-        if (bHasCheckboxes)
-        {
-            bHasAllChecked = !bHasAllChecked;
-            SetCheckState(-1, bHasAllChecked);
-        }
-    }
-
-    ATL::CSimpleArray<CAvailableApplicationInfo> GetCheckedItems()
-    {
-        if (!bHasCheckboxes)
-        {
-            return ATL::CSimpleArray<CAvailableApplicationInfo>();
-        }
-
-        ATL::CSimpleArray<CAvailableApplicationInfo> list;
-        for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
-        {
-            if (GetCheckState(i) != FALSE)
-            {
-                CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(i);
-                list.Add(*pAppInfo);
-            }
-        }
-        return list;
     }
 
     CAvailableApplicationInfo* GetSelectedData()
@@ -767,9 +669,6 @@ private:
 
         szText.LoadStringW(IDS_APP_DESCRIPTION);
         m_ListView->AddColumn(3, szText, 300, LVCFMT_LEFT);
-
-        // Unnesesary since the list updates on every TreeView selection
-        // UpdateApplicationsList(ENUM_ALL_COMPONENTS);
     }
 
     HTREEITEM AddCategory(HTREEITEM hRootItem, UINT TextIndex, UINT IconIndex)
@@ -784,8 +683,6 @@ private:
         hRootItemInstalled = AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
         AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
         AddCategory(hRootItemInstalled, IDS_UPDATES, IDI_APPUPD);
-
-        AddCategory(TVI_ROOT, IDS_SELECTEDFORINST, IDI_SELECTEDFORINST);
 
         hRootItemAvailable = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
         AddCategory(hRootItemAvailable, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
@@ -1050,7 +947,7 @@ private:
 
         case WM_NOTIFY:
         {
-            LPNMHDR data = (LPNMHDR) lParam;
+            LPNMHDR data = (LPNMHDR)lParam;
 
             switch (data->code)
             {
@@ -1135,10 +1032,6 @@ private:
                     case IDS_CAT_VIDEO:
                         UpdateApplicationsList(ENUM_CAT_VIDEO);
                         break;
-
-                    case IDS_SELECTEDFORINST:
-                        UpdateApplicationsList(ENUM_CAT_SELECTED);
-                        break;
                     }
                 }
 
@@ -1208,27 +1101,6 @@ private:
                         if (IsAvailableEnum(SelectedEnumType))
                             CAvailableAppView::ShowAvailableAppInfo(ItemIndex);
                     }
-                    /* Check if the item is checked */
-                    if ((pnic->uNewState & LVIS_STATEIMAGEMASK) && !bUpdating)
-                    {
-                        BOOL checked = m_ListView->GetCheckState(pnic->iItem);
-                        /* FIXME: HAX!
-                        - preventing decremention below zero as a safeguard for ReactOS
-                          In ReactOS this action is triggered whenever user changes *selection*, but should be only when *checkbox* state toggled
-                          Maybe LVIS_STATEIMAGEMASK is set incorrectly
-                        */
-                        nSelectedApps +=
-                            (checked)
-                            ? 1
-                            : ((nSelectedApps > 0)
-                               ? -1
-                               : 0);
-
-                        /* Update item's selection status */
-                        m_ListView->SetSelected(pnic->iItem, checked);
-
-                        UpdateStatusBarText();
-                    }
                 }
             }
             break;
@@ -1289,7 +1161,7 @@ private:
 
         case WM_SIZING:
         {
-            LPRECT pRect = (LPRECT) lParam;
+            LPRECT pRect = (LPRECT)lParam;
 
             if (pRect->right - pRect->left < 565)
                 pRect->right = pRect->left + 565;
@@ -1469,6 +1341,10 @@ private:
             PostMessageW(WM_CLOSE, 0, 0);
             break;
 
+        case ID_SEARCH:
+            ::SetFocus(m_SearchBar->m_hWnd);
+            break;
+
         case ID_INSTALL:
             if (IsAvailableEnum(SelectedEnumType))
             {
@@ -1481,7 +1357,6 @@ private:
                 {
                     UpdateApplicationsList(-1);
                 }
-
             }
             break;
 
@@ -1514,10 +1389,6 @@ private:
 
         case ID_ABOUT:
             ShowAboutDlg();
-            break;
-
-        case ID_CHECK_ALL:
-            m_ListView->CheckAll();
             break;
         }
     }
@@ -1613,7 +1484,6 @@ private:
 
         Index = ListViewAddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM) Info);
         ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
-
         ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(Info->m_szVersion.GetString()));
         ListView_SetItemText(hListView, Index, 2, const_cast<LPWSTR>(Info->m_szDesc.GetString()));
         ListView_SetCheckState(hListView, Index, Info->m_IsSelected);
@@ -1627,7 +1497,7 @@ private:
         {
             ATL::CStringW szBuffer;
 
-            szBuffer.Format(IDS_APPS_COUNT, m_ListView->GetItemCount(), nSelectedApps);
+            szBuffer.Format(IDS_APPS_COUNT, m_ListView->GetItemCount());
             m_StatusBar->SetText(szBuffer);
         }
     }
@@ -1668,11 +1538,6 @@ private:
 
         if (IsInstalledEnum(EnumType))
         {
-            if (!bWasInInstalled)
-            {
-                m_ListView->SetCheckboxesVisible(FALSE);
-            }
-
             HICON hIcon = (HICON) LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
             ImageList_AddIcon(hImageListView, hIcon);
             DestroyIcon(hIcon);
@@ -1683,11 +1548,6 @@ private:
         }
         else if (IsAvailableEnum(EnumType))
         {
-            if (bWasInInstalled)
-            {
-                m_ListView->SetCheckboxesVisible(TRUE);
-            }
-
             // Enum available applications
             m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc);
         }
