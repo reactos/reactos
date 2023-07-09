@@ -1631,8 +1631,13 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             /*
              * If this mouse signal is not a button-down action
              * then this is the last one being ignored.
+             * Keep ignoring WM_MOUSEMOVE while the mouse button is down.
              */
-            GuiData->IgnoreNextMouseSignal = FALSE;
+            const UINT mousebtns = MK_LBUTTON|MK_RBUTTON|MK_XBUTTON1|MK_XBUTTON2;
+            if (msg == WM_MOUSEMOVE)
+			    GuiData->IgnoreNextMouseSignal = wParam & mousebtns;
+            else
+			    GuiData->IgnoreNextMouseSignal = FALSE;
         }
         else
         {
@@ -2452,9 +2457,6 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             if (DefWindowProcW(hWnd /*GuiData->hWindow*/, WM_NCHITTEST, 0, lParam) == HTCLIENT)
             {
-                /* Don't display the context menu if QuickEdit is enabled */
-                if (Console->QuickEdit) break;
-                
                 HMENU hMenu = CreatePopupMenu();
                 if (hMenu != NULL)
                 {
