@@ -64,7 +64,7 @@ BOOL ResourceToFile(INT i, LPCSTR FileName)
 static struct
 {
     PCWSTR FilePath;
-    UINT cIcons;        // Return value of PrivateExtractIconsW with one icon group requested
+    UINT cIcons;        // Return value of the first icon group extracted (should be 1 if no error)
     UINT cTotalIcons;   // Return value of total icon groups in file
     BOOL bhIconValid;   // Whether or not the returned icon handle is not NULL.
 } IconTests[] =
@@ -119,10 +119,6 @@ START_TEST(PrivateExtractIcons)
 
     for (i = 0; i < _countof(IconTests); ++i)
     {
-        /* Always test extraction of the FIRST icon (index 0) */
-        ahIcon = (HICON)UlongToHandle(0xdeadbeef);
-        aIconId = 0xdeadbeef;
-
         /* Get total number of icon groups in file.
          * None of the hard numbers in the function matter since we have
          * two NULLs for the Icon Handle and Count to be set. */
@@ -133,7 +129,9 @@ START_TEST(PrivateExtractIcons)
            "PrivateExtractIconsW(%u): "
            "got %u, expected %u\n", i, cIcoTotal, IconTests[i].cTotalIcons);
 
-        /* Get count of icon groups requested which should be 1, unless error. */
+        /* Always test extraction of the FIRST icon (index 0) */
+        ahIcon = (HICON)UlongToHandle(0xdeadbeef);
+        aIconId = 0xdeadbeef;
         cIcons = PrivateExtractIconsW(IconTests[i].FilePath, 0, 16, 16, &ahIcon, &aIconId, 1, 0);
         ok(cIcons == IconTests[i].cIcons, "PrivateExtractIconsW(%u): got %u, expected %u\n", i, cIcons, IconTests[i].cIcons);
         ok(ahIcon != (HICON)UlongToHandle(0xdeadbeef), "PrivateExtractIconsW(%u): icon not set\n", i);
