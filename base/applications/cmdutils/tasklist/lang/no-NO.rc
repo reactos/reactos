@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Tasklist Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Norwegian resource file
+ * TRANSLATOR:  
+ */
+
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
