@@ -1,4 +1,4 @@
-/* Translated by Baruch Rutman */
+/* TRANSLATOR: Baruch Rutman */
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
@@ -33,8 +33,8 @@ IDR_LINKMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "פתיחת הקישור בדפדפן", ID_OPEN_LINK
-        MENUITEM "העתקת הקישור", ID_COPY_LINK
+        MENUITEM "פתח קישור בדפדפן", ID_OPEN_LINK
+        MENUITEM "העתק קישור", ID_COPY_LINK
     END
 END
 
@@ -95,7 +95,7 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "הורדה %ls…"
 FONT 8, "MS Shell Dlg"
@@ -128,7 +128,7 @@ BEGIN
     IDS_INFO_VERSION "\nגרסה: "
     IDS_INFO_DESCRIPTION "\nתאור: "
     IDS_INFO_PUBLISHER "\nמפרסם: "
-    IDS_INFO_HELPLINK "\nקקישור תמיכה: "
+    IDS_INFO_HELPLINK "\nקישור תמיכה: "
     IDS_INFO_HELPPHONE "\nטלפון תמיכה: "
     IDS_INFO_README "\nקרא אותי: "
     IDS_INFO_REGOWNER "\nבעלים רשומים: "
@@ -158,7 +158,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CAT_AUDIO "צלילים"
+    IDS_CAT_AUDIO "שמע"
     IDS_CAT_DEVEL "פיתוח"
     IDS_CAT_DRIVERS "מנהלי התקנים"
     IDS_CAT_EDU "בידור"
@@ -169,7 +169,7 @@ BEGIN
     IDS_CAT_INTERNET "אינטרנט ורשת"
     IDS_CAT_LIBS "ספריות"
     IDS_CAT_OFFICE "משרד"
-    IDS_CAT_OTHER "אחרים"
+    IDS_CAT_OTHER "אחר"
     IDS_CAT_SCIENCE "מדע"
     IDS_CAT_TOOLS "כלים"
     IDS_CAT_VIDEO "וידאו"
@@ -180,10 +180,7 @@ BEGIN
     IDS_APPTITLE "מנהל היישומים של ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "חפש…"
-    IDS_INSTALL "התקנה"
-    IDS_UNINSTALL "הסרה"
-    IDS_MODIFY "שינוי"
-    IDS_APPS_COUNT "ספירת יישומים: %d; Selected: %d"
+    IDS_APPS_COUNT "ספירת יישומים: %d"
     IDS_WELCOME_TITLE "ברוכים הבאים למנהל היישומים של ReactOS!\n\n"
     IDS_WELCOME_TEXT "Choose a category on the left, then choose an application to install or uninstall.\nReactOS Web Site: "
     IDS_WELCOME_URL "https://reactos.org"
@@ -204,9 +201,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
-    IDS_SELECT_ALL "Select/Deselect All"
-    IDS_INSTALL_SELECTED "Install Selected"
-    IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
@@ -219,7 +213,7 @@ BEGIN
     IDS_STATUS_DOWNLOADING "מוריד..."
     IDS_STATUS_INSTALLING "מתקין..."
     IDS_STATUS_WAITING "מחכה להתקנה..."
-    IDS_STATUS_FINISHED "הסתיים"
+    IDS_STATUS_FINISHED "סיים"
 END
 
 STRINGTABLE

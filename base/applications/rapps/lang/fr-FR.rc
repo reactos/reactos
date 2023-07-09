@@ -91,7 +91,7 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "Téléchargement %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -175,10 +175,7 @@ BEGIN
     IDS_APPTITLE "ReactOS Applications Manager"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Chercher…"
-    IDS_INSTALL "Installer"
-    IDS_UNINSTALL "Désinstaller"
-    IDS_MODIFY "Modifier"
-    IDS_APPS_COUNT "Nombre d'applications : %d ; Sélectionnées : %d"
+    IDS_APPS_COUNT "Nombre d'applications : %d"
     IDS_WELCOME_TITLE "Bienvenue dans ReactOS Applications Manager !\n\n"
     IDS_WELCOME_TEXT "Choisissez une catégorie à gauche, ensuite choisissez une application à installer ou désinstaller.\nSite internet de ReactOS : "
     IDS_WELCOME_URL "https://reactos.org"
@@ -199,9 +196,6 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "Le contrôle d'intégrité du paquet a échoué, il se peut qu'il ait été corrompu ou altéré au cours du téléchargement. L'exécution du programme n'est pas recommandée."
     IDS_INTERRUPTED_DOWNLOAD "Le téléchargement a été interrompu. Vérifiez votre connexion à Internet."
     IDS_UNABLE_TO_WRITE "Impossible d'écrire sur le disque. Votre disque pourrait être plein."
-    IDS_SELECT_ALL "Sélectionner/Désélectionner tout"
-    IDS_INSTALL_SELECTED "Installer la sélection"
-    IDS_SELECTEDFORINST "Sélectionnées pour installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 

@@ -12,8 +12,6 @@
 #define IDI_APPUPD               18
 #define IDI_CATEGORY             19
 #define IDI_UPDATE_DB            20
-#define IDI_CHECK_ALL            21
-#define IDI_SELECTEDFORINST      22
 
 /* Icons for categories */
 #define IDI_CAT_AUDIO            50
@@ -78,13 +76,11 @@
 #define ID_REGREMOVE             560
 #define ID_RESETDB               561
 #define ID_CHECK_ALL             562
+#define ID_SEARCH                563
 
 /* Strings */
 #define IDS_APPTITLE             100
 #define IDS_SEARCH_TEXT          101
-#define IDS_INSTALL              102
-#define IDS_UNINSTALL            103
-#define IDS_MODIFY               104
 #define IDS_APPS_COUNT           105
 #define IDS_WELCOME_TITLE        106
 #define IDS_WELCOME_TEXT         107
@@ -105,10 +101,7 @@
 #define IDS_INTEG_CHECK_FAIL     123
 #define IDS_INTERRUPTED_DOWNLOAD 124
 #define IDS_UNABLE_TO_WRITE      125
-#define IDS_SELECT_ALL           126
-#define IDS_INSTALL_SELECTED     127
 #define IDS_UNABLE_TO_INSTALL    128
-#define IDS_SELECTEDFORINST      129
 #define IDS_MISMATCH_CERT_INFO   130
 #define IDS_APP_AUTHORS          132
 
