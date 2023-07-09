@@ -506,6 +506,7 @@ HalpInitBusHandlers(
     VOID
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 HaliInitPnpDriver(
@@ -583,7 +584,6 @@ extern LARGE_INTEGER HalpPerfCounter;
 extern KAFFINITY HalpActiveProcessors;
 
 extern BOOLEAN HalDisableFirmwareMapper;
-extern PWCHAR HalHardwareIdString;
 extern PWCHAR HalName;
 
 extern KAFFINITY HalpDefaultInterruptAffinity;

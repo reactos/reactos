@@ -52,6 +52,8 @@ typedef struct _PDO_EXTENSION
 
 PDRIVER_OBJECT HalpDriverObject;
 
+static WCHAR HalHardwareIdString[] = L"acpipic_up";
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS
@@ -901,6 +903,7 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
     return Status;
 }
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 HaliInitPnpDriver(VOID)
