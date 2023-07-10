@@ -9,15 +9,15 @@
 #include "precomp.h"
 #include <stdio.h>
 
-BOOL FileExists(LPCSTR FileName)
+BOOL FileExists(LPCWSTR FileName)
 {
-    DWORD Attribute = GetFileAttributes(FileName);
+    DWORD Attribute = GetFileAttributesW(FileName);
 
     return (Attribute != INVALID_FILE_ATTRIBUTES &&
             !(Attribute & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-BOOL ResourceToFile(INT i, LPCSTR FileName)
+BOOL ResourceToFile(INT i, LPCWSTR FileName)
 {
     FILE *fout;
     HGLOBAL hData;
@@ -27,7 +27,7 @@ BOOL ResourceToFile(INT i, LPCSTR FileName)
 
     if (FileExists(FileName))
     {
-        skip("'%s' already exists. Exiting now\n", FileName);
+        skip("'%S' already exists. Exiting now\n", FileName);
         return FALSE;
     }
 
@@ -55,7 +55,7 @@ BOOL ResourceToFile(INT i, LPCSTR FileName)
         return FALSE;
     }
 
-    fout = fopen(FileName, "wb");
+    fout = _wfopen(FileName, L"wb");
     fwrite(lpResLock, iSize, 1, fout);
     fclose(fout);
     return TRUE;
@@ -94,24 +94,24 @@ static struct
 
 static struct
 {
-    PCSTR FileName;
+    PCWSTR FileName;
     INT ResourceId;
 } IconFiles[] =
 {
-    {"%temp%\\ROS.ico", IDR_ICONS_PNG},
-    {"%temp%\\sysicon.ico", IDR_ICONS_NORMAL},
+    {L"%temp%\\ROS.ico", IDR_ICONS_PNG},
+    {L"%temp%\\sysicon.ico", IDR_ICONS_NORMAL},
 };
 
 START_TEST(PrivateExtractIcons)
 {
     HICON ahIcon;
     UINT i, aIconId, cIcons, cIcoTotal;
-    CHAR PathBuffer[MAX_PATH];
+    WCHAR PathBuffer[MAX_PATH];
 
     /* Extract icons */
     for (i = 0; i < _countof(IconFiles); ++i)
     {
-        ExpandEnvironmentStringsA(IconFiles[i].FileName, PathBuffer, _countof(PathBuffer));
+        ExpandEnvironmentStringsW(IconFiles[i].FileName, PathBuffer, _countof(PathBuffer));
 
         if (!ResourceToFile(IconFiles[i].ResourceId, PathBuffer))
             goto Cleanup;
@@ -155,7 +155,7 @@ START_TEST(PrivateExtractIcons)
 Cleanup:
     for (i = 0; i < _countof(IconFiles); ++i)
     {
-        ExpandEnvironmentStringsA(IconFiles[i].FileName, PathBuffer, _countof(PathBuffer));
-        DeleteFileA(PathBuffer);
+        ExpandEnvironmentStringsW(IconFiles[i].FileName, PathBuffer, _countof(PathBuffer));
+        DeleteFileW(PathBuffer);
     }
 }
