@@ -9,7 +9,7 @@
 #include "precomp.h"
 #include <stdio.h>
 
-BOOL FileExists(LPCWSTR FileName)
+BOOL FileExists(PCWSTR FileName)
 {
     DWORD Attribute = GetFileAttributesW(FileName);
 
@@ -17,12 +17,12 @@ BOOL FileExists(LPCWSTR FileName)
             !(Attribute & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-BOOL ResourceToFile(INT i, LPCWSTR FileName)
+BOOL ResourceToFile(INT i, PCWSTR FileName)
 {
     FILE *fout;
     HGLOBAL hData;
     HRSRC hRes;
-    LPVOID lpResLock;
+    PVOID pResLock;
     UINT iSize;
 
     if (FileExists(FileName))
@@ -48,15 +48,15 @@ BOOL ResourceToFile(INT i, LPCWSTR FileName)
     }
 
     // Lock the resource into global memory.
-    lpResLock = LockResource(hData);
-    if (lpResLock == NULL)
+    pResLock = LockResource(hData);
+    if (pResLock == NULL)
     {
         skip("Could not lock resource (%d). Exiting now\n", i);
         return FALSE;
     }
 
     fout = _wfopen(FileName, L"wb");
-    fwrite(lpResLock, iSize, 1, fout);
+    fwrite(pResLock, iSize, 1, fout);
     fclose(fout);
     return TRUE;
 }
