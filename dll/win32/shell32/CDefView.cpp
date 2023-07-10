@@ -175,7 +175,7 @@ class CDefView :
         HRESULT OnDefaultCommand();
         HRESULT OnStateChange(UINT uFlags);
         void UpdateStatusbarInner();
-        void UpdateStatusbarAsync();
+        void UpdateStatusbar();
         void CheckToolbar();
         BOOL CreateList();
         void UpdateListColors();
@@ -634,7 +634,7 @@ static unsigned __stdcall UpdateStatusProc(void *args)
     return 0;
 }
 
-void CDefView::UpdateStatusbarAsync()
+void CDefView::UpdateStatusbar()
 {
     HANDLE hOldThread = m_hUpdateStatusbarThread;
     m_hUpdateStatusbarThread = (HANDLE)_beginthreadex(NULL, 0, UpdateStatusProc, this, 0,
@@ -1334,7 +1334,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         _ForceStatusBarResize();
     }
 
-    UpdateStatusbarAsync();
+    UpdateStatusbar();
 
     return S_OK;
 }
@@ -1774,7 +1774,7 @@ LRESULT CDefView::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled
     _DoFolderViewCB(SFVM_SIZE, 0, 0);
 
     _HandleStatusBarResize(wWidth);
-    UpdateStatusbarAsync();
+    UpdateStatusbar();
 
     return 0;
 }
@@ -2160,7 +2160,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         case LVN_ITEMCHANGED:
             TRACE("-- LVN_ITEMCHANGED %p\n", this);
             OnStateChange(CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
-            UpdateStatusbarAsync();
+            UpdateStatusbar();
             _DoFolderViewCB(SFVM_SELECTIONCHANGED, NULL/* FIXME */, NULL/* FIXME */);
             break;
 
@@ -2585,7 +2585,7 @@ HRESULT WINAPI CDefView::UIActivate(UINT uState)
         _ForceStatusBarResize();
 
         /* Set the text for the status bar */
-        UpdateStatusbarAsync();
+        UpdateStatusbar();
     }
 
     return S_OK;
