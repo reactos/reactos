@@ -155,7 +155,7 @@ class CDefView :
 
         HICON                     m_hMyComputerIcon;
         HANDLE                    m_hUpdateStatusbarThread;
-        unsigned                  m_uUpdateStatusbarThreadId;
+        unsigned int              m_uUpdateStatusbarThreadId;
 
     private:
         HRESULT _MergeToolbar();
