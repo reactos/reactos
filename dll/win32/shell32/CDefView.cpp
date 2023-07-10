@@ -433,6 +433,7 @@ CDefView::CDefView() :
     m_isEditing(FALSE),
     m_isParentFolderSpecial(FALSE),
     m_Destroyed(FALSE),
+    m_hMyComputerIcon(::LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_COMPUTER_DESKTOP))),
     m_hUpdateStatusbarThread(NULL),
     m_uUpdateStatusbarThreadId(0)
 {
@@ -443,8 +444,6 @@ CDefView::CDefView() :
     m_viewinfo_data.clrText = GetSysColor(COLOR_WINDOWTEXT);
     m_viewinfo_data.clrTextBack = GetSysColor(COLOR_WINDOW);
     m_viewinfo_data.hbmBack = NULL;
-
-    m_hMyComputerIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_COMPUTER_DESKTOP));
 }
 
 CDefView::~CDefView()
