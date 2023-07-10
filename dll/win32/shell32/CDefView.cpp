@@ -597,13 +597,12 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
         /* Don't show the file size text if there is 0 bytes in the folder
          * OR we only have folders selected. */
         if ((cSelectedItems && !bIsOnlyFoldersSelected) || uTotalFileSize)
-        {
             StrFormatByteSizeW(uTotalFileSize, szPartText, _countof(szPartText));
-        }
         else
-        {
             *szPartText = 0;
-        }
+
+        if (hThread != m_hUpdateStatusbarThread)
+            return;
 
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
 
