@@ -154,8 +154,9 @@ class CDefView :
         SFVM_CUSTOMVIEWINFO_DATA  m_viewinfo_data;
 
         HICON                     m_hMyComputerIcon;
+
+    public:
         HANDLE                    m_hUpdateStatusbarThread;
-        unsigned int              m_uUpdateStatusbarThreadId;
 
     private:
         HRESULT _MergeToolbar();
@@ -174,7 +175,7 @@ class CDefView :
         HRESULT IncludeObject(PCUITEMID_CHILD pidl);
         HRESULT OnDefaultCommand();
         HRESULT OnStateChange(UINT uFlags);
-        void UpdateStatusbarInner();
+        void UpdateStatusbarWorker(HANDLE hThread);
         void UpdateStatusbar();
         void CheckToolbar();
         BOOL CreateList();
@@ -434,8 +435,7 @@ CDefView::CDefView() :
     m_isParentFolderSpecial(FALSE),
     m_Destroyed(FALSE),
     m_hMyComputerIcon(::LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_COMPUTER_DESKTOP))),
-    m_hUpdateStatusbarThread(NULL),
-    m_uUpdateStatusbarThreadId(0)
+    m_hUpdateStatusbarThread(NULL)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
     ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
@@ -544,12 +544,11 @@ void CDefView::CheckToolbar()
     }
 }
 
-void CDefView::UpdateStatusbarInner()
+void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 {
     WCHAR szFormat[MAX_PATH] = {0};
     WCHAR szPartText[MAX_PATH] = {0};
     UINT cSelectedItems;
-    DWORD dwThreadId = ::GetCurrentThreadId();
 
     cSelectedItems = m_ListView.GetSelectedCount();
     if (cSelectedItems)
@@ -583,7 +582,7 @@ void CDefView::UpdateStatusbarInner()
 
         while ((nItem = m_ListView.GetNextItem(nItem, uFileFlags)) >= 0)
         {
-            if (dwThreadId != m_uUpdateStatusbarThreadId)
+            if (hThread != m_hUpdateStatusbarThread)
                 return;
 
             PCUITEMID_CHILD pidl = _PidlByItem(nItem);
@@ -607,7 +606,7 @@ void CDefView::UpdateStatusbarInner()
             *szPartText = 0;
         }
 
-        if (dwThreadId != m_uUpdateStatusbarThreadId)
+        if (hThread != m_hUpdateStatusbarThread)
             return;
 
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
@@ -619,7 +618,7 @@ void CDefView::UpdateStatusbarInner()
             pIcon = (LPARAM)m_hMyComputerIcon;
         }
 
-        if (dwThreadId != m_uUpdateStatusbarThreadId)
+        if (hThread != m_hUpdateStatusbarThread)
             return;
 
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
@@ -629,15 +628,17 @@ void CDefView::UpdateStatusbarInner()
 
 static unsigned __stdcall UpdateStatusbarProc(void *args)
 {
-    static_cast<CDefView*>(args)->UpdateStatusbarInner();
+    CDefView* pView = static_cast<CDefView*>(args);
+    HANDLE hThread = pView->m_hUpdateStatusbarThread;
+    pView->UpdateStatusbarWorker(hThread);
     return 0;
 }
 
 void CDefView::UpdateStatusbar()
 {
     HANDLE hOldThread = m_hUpdateStatusbarThread;
-    m_hUpdateStatusbarThread = reinterpret_cast<HANDLE>(
-        _beginthreadex(NULL, 0, UpdateStatusbarProc, this, 0, &m_uUpdateStatusbarThreadId));
+    m_hUpdateStatusbarThread =
+        reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, UpdateStatusbarProc, this, 0, NULL));
     if (hOldThread)
         ::CloseHandle(hOldThread);
 }
@@ -2612,12 +2613,12 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
 {
     TRACE("(%p)\n", this);
 
-    m_uUpdateStatusbarThreadId = 0;
     if (m_hUpdateStatusbarThread)
     {
-        ::WaitForSingleObject(m_hUpdateStatusbarThread, INFINITE);
-        ::CloseHandle(m_hUpdateStatusbarThread);
+        HANDLE hOldThread = m_hUpdateStatusbarThread;
         m_hUpdateStatusbarThread = NULL;
+        ::WaitForSingleObject(hOldThread, INFINITE);
+        ::CloseHandle(hOldThread);
     }
 
     /* Make absolutely sure all our UI is cleaned up */
