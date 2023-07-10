@@ -173,7 +173,7 @@ class CDefView :
         HRESULT IncludeObject(PCUITEMID_CHILD pidl);
         HRESULT OnDefaultCommand();
         HRESULT OnStateChange(UINT uFlags);
-        static unsigned __stdcall UpdateStatusbarProc(void *args);
+        static unsigned __stdcall _UpdateStatusbarProc(void *args);
         void UpdateStatusbarWorker(HANDLE hThread);
         void UpdateStatusbar();
         void CheckToolbar();
@@ -625,7 +625,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
     }
 }
 
-unsigned __stdcall CDefView::UpdateStatusbarProc(void *args)
+unsigned __stdcall CDefView::_UpdateStatusbarProc(void *args)
 {
     CDefView* pView = static_cast<CDefView*>(args);
     pView->UpdateStatusbarWorker(pView->m_hUpdateStatusbarThread);
@@ -639,7 +639,7 @@ void CDefView::UpdateStatusbar()
     // We have to initialize m_hUpdateStatusbarThread before the thread starts up.
     // Thus, we use CREATE_SUSPENDED.
     m_hUpdateStatusbarThread =
-        reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, UpdateStatusbarProc, this,
+        reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, _UpdateStatusbarProc, this,
                                                 CREATE_SUSPENDED, NULL));
     ::ResumeThread(m_hUpdateStatusbarThread);
 
