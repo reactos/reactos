@@ -634,14 +634,17 @@ void CDefView::UpdateStatusbar()
     HANDLE hOldThread = m_hUpdateStatusbarThread;
 
     // We have to initialize m_hUpdateStatusbarThread before the thread starts up.
-    // Thus, we use CREATE_SUSPENDED.
-    m_hUpdateStatusbarThread =
-        reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, _UpdateStatusbarProc, this,
-                                                CREATE_SUSPENDED, NULL));
-    ::ResumeThread(m_hUpdateStatusbarThread);
+    // So, we use CREATE_SUSPENDED.
+    HANDLE hNewThread = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, _UpdateStatusbarProc,
+                                                                this, CREATE_SUSPENDED, NULL));
+    if (hNewThread)
+    {
+        m_hUpdateStatusbarThread = hNewThread;
+        ::ResumeThread(hNewThread);
 
-    if (hOldThread)
-        ::CloseHandle(hOldThread);
+        if (hOldThread)
+            ::CloseHandle(hOldThread);
+    }
 }
 
 /**********************************************************
