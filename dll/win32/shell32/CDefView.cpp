@@ -605,9 +605,6 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
             *szPartText = 0;
         }
 
-        if (hThread != m_hUpdateStatusbarThread)
-            return;
-
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
 
         /* If we are in a Recycle Bin folder then show no text for the location part. */
