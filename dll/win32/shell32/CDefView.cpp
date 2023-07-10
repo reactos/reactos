@@ -545,9 +545,7 @@ void CDefView::CheckToolbar()
 
 void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 {
-    WCHAR szFormat[MAX_PATH] = {0};
-    WCHAR szPartText[MAX_PATH] = {0};
-    WCHAR szPartText2[MAX_PATH] = {0};
+    WCHAR szFormat[MAX_PATH], szPartText[MAX_PATH], szPartText2[MAX_PATH];
     UINT cSelectedItems;
 
     cSelectedItems = m_ListView.GetSelectedCount();
@@ -576,9 +574,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 
         /* If we have something selected then only count selected file sizes. */
         if (cSelectedItems)
-        {
             uFileFlags = LVNI_SELECTED;
-        }
 
         while ((nItem = m_ListView.GetNextItem(nItem, uFileFlags)) >= 0)
         {
