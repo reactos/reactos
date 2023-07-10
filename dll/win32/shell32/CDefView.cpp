@@ -154,8 +154,6 @@ class CDefView :
         SFVM_CUSTOMVIEWINFO_DATA  m_viewinfo_data;
 
         HICON                     m_hMyComputerIcon;
-
-    public:
         HANDLE                    m_hUpdateStatusbarThread;
 
     private:
