@@ -175,6 +175,7 @@ class CDefView :
         HRESULT IncludeObject(PCUITEMID_CHILD pidl);
         HRESULT OnDefaultCommand();
         HRESULT OnStateChange(UINT uFlags);
+        static unsigned __stdcall UpdateStatusbarProc(void *args);
         void UpdateStatusbarWorker(HANDLE hThread);
         void UpdateStatusbar();
         void CheckToolbar();
@@ -626,7 +627,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
     }
 }
 
-static unsigned __stdcall UpdateStatusbarProc(void *args)
+unsigned __stdcall CDefView::UpdateStatusbarProc(void *args)
 {
     CDefView* pView = static_cast<CDefView*>(args);
     HANDLE hThread = pView->m_hUpdateStatusbarThread;
