@@ -627,7 +627,7 @@ void CDefView::UpdateStatusbarInner()
     }
 }
 
-static unsigned __stdcall UpdateStatusProc(void *args)
+static unsigned __stdcall UpdateStatusbarProc(void *args)
 {
     static_cast<CDefView*>(args)->UpdateStatusbarInner();
     return 0;
@@ -637,7 +637,7 @@ void CDefView::UpdateStatusbar()
 {
     HANDLE hOldThread = m_hUpdateStatusbarThread;
     m_hUpdateStatusbarThread = reinterpret_cast<HANDLE>(
-        _beginthreadex(NULL, 0, UpdateStatusProc, this, 0, &m_uUpdateStatusbarThreadId));
+        _beginthreadex(NULL, 0, UpdateStatusbarProc, this, 0, &m_uUpdateStatusbarThreadId));
     if (hOldThread)
         ::CloseHandle(hOldThread);
 }
