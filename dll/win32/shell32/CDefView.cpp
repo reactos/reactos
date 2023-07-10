@@ -36,6 +36,7 @@ TODO:
 
 #include "precomp.h"
 
+#include <process.h>
 #include <atlwin.h>
 #include <ui/rosctrls.h>
 
@@ -153,6 +154,8 @@ class CDefView :
         SFVM_CUSTOMVIEWINFO_DATA  m_viewinfo_data;
 
         HICON                     m_hMyComputerIcon;
+        HANDLE                    m_hUpdateStatusbarThread;
+        DWORD                     m_dwUpdateStatusbarThreadId;
 
     private:
         HRESULT _MergeToolbar();
@@ -171,7 +174,8 @@ class CDefView :
         HRESULT IncludeObject(PCUITEMID_CHILD pidl);
         HRESULT OnDefaultCommand();
         HRESULT OnStateChange(UINT uFlags);
-        void UpdateStatusbar();
+        void UpdateStatusbarInner();
+        void UpdateStatusbarAsync();
         void CheckToolbar();
         BOOL CreateList();
         void UpdateListColors();
@@ -428,7 +432,9 @@ CDefView::CDefView() :
     m_cScrollDelay(0),
     m_isEditing(FALSE),
     m_isParentFolderSpecial(FALSE),
-    m_Destroyed(FALSE)
+    m_Destroyed(FALSE),
+    m_hUpdateStatusbarThread(NULL),
+    m_dwUpdateStatusbarThreadId(0)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
     ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
@@ -539,11 +545,12 @@ void CDefView::CheckToolbar()
     }
 }
 
-void CDefView::UpdateStatusbar()
+void CDefView::UpdateStatusbarInner()
 {
     WCHAR szFormat[MAX_PATH] = {0};
     WCHAR szPartText[MAX_PATH] = {0};
     UINT cSelectedItems;
+    DWORD dwThreadId = ::GetCurrentThreadId();
 
     cSelectedItems = m_ListView.GetSelectedCount();
     if (cSelectedItems)
@@ -577,6 +584,9 @@ void CDefView::UpdateStatusbar()
 
         while ((nItem = m_ListView.GetNextItem(nItem, uFileFlags)) >= 0)
         {
+            if (dwThreadId != m_dwUpdateStatusbarThreadId)
+                return;
+
             PCUITEMID_CHILD pidl = _PidlByItem(nItem);
 
             uTotalFileSize += _ILGetFileSize(pidl, NULL, 0);
@@ -598,6 +608,9 @@ void CDefView::UpdateStatusbar()
             *szPartText = 0;
         }
 
+        if (dwThreadId != m_dwUpdateStatusbarThreadId)
+            return;
+
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
 
         /* If we are in a Recycle Bin folder then show no text for the location part. */
@@ -607,9 +620,31 @@ void CDefView::UpdateStatusbar()
             pIcon = (LPARAM)m_hMyComputerIcon;
         }
 
+        if (dwThreadId != m_dwUpdateStatusbarThreadId)
+            return;
+
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
     }
+}
+
+static unsigned __stdcall UpdateStatusProc(void *args)
+{
+    CDefView* pDefView = (CDefView*)args;
+    pDefView->UpdateStatusbarInner();
+    return 0;
+}
+
+void CDefView::UpdateStatusbarAsync()
+{
+    HANDLE hOldThread = m_hUpdateStatusbarThread;
+    unsigned thread_id;
+    HANDLE hNewThread = (HANDLE)_beginthreadex(NULL, 0, UpdateStatusProc, this, CREATE_SUSPENDED, &thread_id);
+    m_hUpdateStatusbarThread = hNewThread;
+    m_dwUpdateStatusbarThreadId = thread_id;
+    ::ResumeThread(hNewThread);
+    if (hOldThread)
+        ::CloseHandle(hOldThread);
 }
 
 /**********************************************************
@@ -1303,7 +1338,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         _ForceStatusBarResize();
     }
 
-    UpdateStatusbar();
+    UpdateStatusbarAsync();
 
     return S_OK;
 }
@@ -1743,7 +1778,7 @@ LRESULT CDefView::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled
     _DoFolderViewCB(SFVM_SIZE, 0, 0);
 
     _HandleStatusBarResize(wWidth);
-    UpdateStatusbar();
+    UpdateStatusbarAsync();
 
     return 0;
 }
@@ -2129,7 +2164,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         case LVN_ITEMCHANGED:
             TRACE("-- LVN_ITEMCHANGED %p\n", this);
             OnStateChange(CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
-            UpdateStatusbar();
+            UpdateStatusbarAsync();
             _DoFolderViewCB(SFVM_SELECTIONCHANGED, NULL/* FIXME */, NULL/* FIXME */);
             break;
 
@@ -2554,7 +2589,7 @@ HRESULT WINAPI CDefView::UIActivate(UINT uState)
         _ForceStatusBarResize();
 
         /* Set the text for the status bar */
-        UpdateStatusbar();
+        UpdateStatusbarAsync();
     }
 
     return S_OK;
@@ -2581,6 +2616,15 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
 HRESULT WINAPI CDefView::DestroyViewWindow()
 {
     TRACE("(%p)\n", this);
+
+    HANDLE hThread = m_hUpdateStatusbarThread;
+    m_hUpdateStatusbarThread = NULL;
+    m_dwUpdateStatusbarThreadId = 0;
+    if (hThread)
+    {
+        ::WaitForSingleObject(hThread, INFINITE);
+        ::CloseHandle(hThread);
+    }
 
     /* Make absolutely sure all our UI is cleaned up */
     UIActivate(SVUIA_DEACTIVATE);
