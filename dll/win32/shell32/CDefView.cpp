@@ -635,10 +635,14 @@ unsigned __stdcall CDefView::UpdateStatusbarProc(void *args)
 void CDefView::UpdateStatusbar()
 {
     HANDLE hOldThread = m_hUpdateStatusbarThread;
+
+    // We have to initialize m_hUpdateStatusbarThread before the thread starts up.
+    // Thus, we use CREATE_SUSPENDED.
     m_hUpdateStatusbarThread =
         reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, UpdateStatusbarProc, this,
                                                 CREATE_SUSPENDED, NULL));
     ::ResumeThread(m_hUpdateStatusbarThread);
+
     if (hOldThread)
         ::CloseHandle(hOldThread);
 }
