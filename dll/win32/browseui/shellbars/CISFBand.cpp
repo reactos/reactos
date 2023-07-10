@@ -353,7 +353,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
                     case NM_RCLICK:
                     {
                         HRESULT hr;
-                        POINT pt = ((LPNMMOUSE)lParam)->pt;
+                        POINT pt = ((LPNMMOUSE)lParam)->pt; // Already in screen coordinates
                         CComPtr<IContextMenu> picm;
                         HMENU fmenu = CreatePopupMenu();
                         TBBUTTON tb;
@@ -363,7 +363,6 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
                         if (chk)
                         {
-                            ClientToScreen(&pt);
                             hr = m_pISF->GetUIObjectOf(m_hWnd, 1, &pidl, IID_NULL_PPV_ARG(IContextMenu, &picm));
                             if (FAILED_UNEXPECTEDLY(hr))
                                 return hr;
