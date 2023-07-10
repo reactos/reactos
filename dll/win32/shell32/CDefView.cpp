@@ -638,7 +638,9 @@ void CDefView::UpdateStatusbar()
 {
     HANDLE hOldThread = m_hUpdateStatusbarThread;
     m_hUpdateStatusbarThread =
-        reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, UpdateStatusbarProc, this, 0, NULL));
+        reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, UpdateStatusbarProc, this,
+                                                CREATE_SUSPENDED, NULL));
+    ::ResumeThread(m_hUpdateStatusbarThread);
     if (hOldThread)
         ::CloseHandle(hOldThread);
 }
