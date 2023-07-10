@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Font Text
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian translation for FONTEXT
- * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
+ * TRANSLATORS: Copyright 2018 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -14,20 +15,20 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COL_NAME "Name"
+    IDS_COL_NAME "Nume"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COL_FILENAME "Filename"
-    IDS_COL_SIZE "Size"
-    IDS_COL_MODIFIED "Modified"
-    IDS_COL_ATTR "Attributes"
+    IDS_COL_FILENAME "Numele fișierului"
+    IDS_COL_SIZE "Mărime"
+    IDS_COL_MODIFIED "Modificat"
+    IDS_COL_ATTR "Atribuții"
     IDS_COL_ATTR_LETTERS "RHSAC"
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_FONT_PREVIEW "Preview"
+    IDS_FONT_PREVIEW "Previzualizează"
 END
