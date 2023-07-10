@@ -116,6 +116,10 @@ FindEffectiveProc(HWND hwnd, LPARAM lParam)
     if (!IsWindowVisible(hwnd) || IsIconic(hwnd))
         return TRUE;    // continue
 
+    DWORD dwExStyle = ::GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    if (dwExStyle & WS_EX_TOPMOST)
+        return TRUE;    // continue
+
     if (pei->hTrayWnd == hwnd || pei->hwndDesktop == hwnd ||
         pei->hwndProgman == hwnd)
     {
@@ -159,13 +163,6 @@ IsThereAnyEffectiveWindow(BOOL bMustBeInMonitor)
     ei.bMustBeInMonitor = bMustBeInMonitor;
 
     EnumWindows(FindEffectiveProc, (LPARAM)&ei);
-    if (ei.hwndFound && FALSE)
-    {
-        WCHAR szClass[64], szText[64];
-        GetClassNameW(ei.hwndFound, szClass, _countof(szClass));
-        GetWindowTextW(ei.hwndFound, szText, _countof(szText));
-        MessageBoxW(NULL, szText, szClass, 0);
-    }
     return ei.hwndFound != NULL;
 }
 
@@ -3262,7 +3259,8 @@ HandleTrayContextMenu:
                 return TRUE;
         }
 
-        if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
+        DWORD dwExStyle = (DWORD)::GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+        if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && !(dwExStyle & WS_EX_TOPMOST))
         {
             MINWNDPOS mwp;
             mwp.hwnd = hwnd;
