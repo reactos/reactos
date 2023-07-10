@@ -436,7 +436,7 @@ BEGIN
     IDS_MSG_UNABLEDEBUGPROCESS "Impossible de déboguer le processus."
     IDS_MSG_WARNINGDEBUG "ATTENTION : Déboguer ce processus peut entraîner une perte de données.\nÊtes-vous sûrs de vouloir le déboguer ?"
     IDS_MSG_TASKMGRWARNING "Avertissement du Gestionnaire des tâches"
-    IDS_MSG_WARNINGTERMINATING "ATTENTION : Terminer un processus peut causer des effets indésirables\nincluant une perte de donnée ou une instabilité du système.\nLe processus n'aura pas la chance de sauvegarder son état\nou les données avant de terminer.\nÊtes-vous sûr de vouloir terminer le processus ?"
+    IDS_MSG_WARNINGTERMINATING "ATTENTION : Terminer un processus peut engendrer une perte de données ou une instabilité du système.\nLe processus n'aura pas la chance de sauvegarder son état ou ses données avant de terminer.\nVoulez-vous vraiment terminer le processus ?"
     IDS_MSG_UNABLETERMINATEPRO "Impossible de terminer le processus"
     IDS_MSG_CLOSESYSTEMPROCESS "C'est un processus critique du système. Le gestionnaire de tâche ne le terminera pas."
     IDS_MSG_UNABLECHANGEPRIORITY "Impossible de changer la priorité"
