@@ -2614,13 +2614,13 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
 {
     TRACE("(%p)\n", this);
 
-    HANDLE hThread = m_hUpdateStatusbarThread;
+    HANDLE hOldThread = m_hUpdateStatusbarThread;
     m_hUpdateStatusbarThread = NULL;
     m_uUpdateStatusbarThreadId = 0;
-    if (hThread)
+    if (hOldThread)
     {
-        ::WaitForSingleObject(hThread, INFINITE);
-        ::CloseHandle(hThread);
+        ::WaitForSingleObject(hOldThread, INFINITE);
+        ::CloseHandle(hOldThread);
     }
 
     /* Make absolutely sure all our UI is cleaned up */
