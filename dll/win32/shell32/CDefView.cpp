@@ -630,8 +630,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 unsigned __stdcall CDefView::UpdateStatusbarProc(void *args)
 {
     CDefView* pView = static_cast<CDefView*>(args);
-    HANDLE hThread = pView->m_hUpdateStatusbarThread;
-    pView->UpdateStatusbarWorker(hThread);
+    pView->UpdateStatusbarWorker(pView->m_hUpdateStatusbarThread);
     return 0;
 }
 
