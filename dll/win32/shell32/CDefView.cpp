@@ -547,6 +547,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 {
     WCHAR szFormat[MAX_PATH] = {0};
     WCHAR szPartText[MAX_PATH] = {0};
+    WCHAR szPartText2[MAX_PATH] = {0};
     UINT cSelectedItems;
 
     cSelectedItems = m_ListView.GetSelectedCount();
@@ -594,30 +595,29 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
             }
         }
 
+        szPartText[0] = szPartText2[0] = UNICODE_NULL;
+
         /* Don't show the file size text if there is 0 bytes in the folder
          * OR we only have folders selected. */
         if ((cSelectedItems && !bIsOnlyFoldersSelected) || uTotalFileSize)
             StrFormatByteSizeW(uTotalFileSize, szPartText, _countof(szPartText));
-        else
-            *szPartText = 0;
 
         if (hThread != m_hUpdateStatusbarThread)
             return;
 
-        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
-
         /* If we are in a Recycle Bin folder then show no text for the location part. */
         if (!_ILIsBitBucket(m_pidlParent))
         {
-            LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText, _countof(szPartText));
+            LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText2, _countof(szPartText2));
             pIcon = (LPARAM)m_hMyComputerIcon;
         }
 
         if (hThread != m_hUpdateStatusbarThread)
             return;
 
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
-        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText2, &lResult);
     }
 }
 
