@@ -3289,7 +3289,7 @@ HandleTrayContextMenu:
 
             info->pMinimizedAll->Add(mwp);
 
-            ::ShowWindowAsync(hwnd, SW_MINIMIZE);
+            ::ShowWindowAsync(hwnd, SW_SHOWMINNOACTIVE);
         }
 
         return TRUE;
