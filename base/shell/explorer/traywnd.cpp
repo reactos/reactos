@@ -3338,9 +3338,7 @@ HandleTrayContextMenu:
         {
             HWND hwnd = g_MinimizedAll[i].hwnd;
             if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
-            {
                 ::SetWindowPlacement(hwnd, &g_MinimizedAll[i].wndpl);
-            }
         }
 
         g_MinimizedAll.RemoveAll();
