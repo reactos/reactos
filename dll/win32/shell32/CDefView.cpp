@@ -615,7 +615,6 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 unsigned __stdcall CDefView::_UpdateStatusbarProc(void *args)
 {
     CDefView* pView = static_cast<CDefView*>(args);
-    pView->AddRef();
     pView->UpdateStatusbarWorker(pView->m_hUpdateStatusbarThread);
     pView->Release();
     return 0;
@@ -624,6 +623,8 @@ unsigned __stdcall CDefView::_UpdateStatusbarProc(void *args)
 void CDefView::UpdateStatusbar()
 {
     HANDLE hOldThread = m_hUpdateStatusbarThread;
+
+    AddRef();
 
     // We have to initialize m_hUpdateStatusbarThread before the target thread begins.
     // So, we use CREATE_SUSPENDED.
@@ -636,6 +637,10 @@ void CDefView::UpdateStatusbar()
 
         if (hOldThread)
             ::CloseHandle(hOldThread);
+    }
+    else
+    {
+        Release();
     }
 }
 
