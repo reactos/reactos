@@ -3287,19 +3287,19 @@ HandleTrayContextMenu:
         if (ShouldMinimize(hwnd))
         {
             MINWNDPOS mwp = { hwnd, { sizeof(mwp.wndpl) } };
-            if (::GetWindowPlacement(hwnd, &mwp.wndpl)) // Save the position and status
+            if (::GetWindowPlacement(hwnd, &mwp.wndpl) && // Save the position and status
+                ::ShowWindowAsync(hwnd, SW_SHOWMINNOACTIVE)) // Minimize
             {
                 info->pMinimizedAll->Add(mwp);
-                ::ShowWindowAsync(hwnd, SW_SHOWMINNOACTIVE);
             }
         }
         else if (CanDialogSysMinimize(hwnd))
         {
             MINWNDPOS mwp = { hwnd, { sizeof(mwp.wndpl) } };
-            if (::GetWindowPlacement(hwnd, &mwp.wndpl)) // Save the position and status
+            if (::GetWindowPlacement(hwnd, &mwp.wndpl) && // Save the position and status
+                ::PostMessageW(hwnd, WM_SYSCOMMAND, SC_MINIMIZE, -1)) // Minimize
             {
                 info->pMinimizedAll->Add(mwp);
-                ::SendMessageW(hwnd, WM_SYSCOMMAND, SC_MINIMIZE, -1);
             }
         }
 
