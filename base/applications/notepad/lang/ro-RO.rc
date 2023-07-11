@@ -74,7 +74,7 @@ BEGIN
     BEGIN
         MENUITEM "&Manual…", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&Despre carnețel", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Despre Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
