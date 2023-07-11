@@ -99,13 +99,17 @@ VOID RestoreWindowPos()
     g_WindowPosBackup.RemoveAll();
 }
 
+BOOL CanDialogSysMinimize(HWND hwnd)
+{
+    if (::GetClassLongPtrW(hwnd, GCW_ATOM) != (ULONG_PTR)WC_DIALOG)
+        return FALSE;
+    return (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd));
+}
+
 BOOL ShouldMinimize(HWND hwnd)
 {
     if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd))
     {
-        if (::GetClassLongPtrW(hwnd, GCW_ATOM) == (ULONG_PTR)WC_DIALOG)
-            return TRUE;
-
         DWORD style = static_cast<DWORD>(::GetWindowLongPtrW(hwnd, GWL_STYLE));
         if (style & WS_MINIMIZEBOX)
         {
@@ -138,7 +142,7 @@ FindEffectiveProc(HWND hwnd, LPARAM lParam)
 {
     EFFECTIVE_INFO *pei = (EFFECTIVE_INFO *)lParam;
 
-    if (!ShouldMinimize(hwnd))
+    if (!ShouldMinimize(hwnd) && !CanDialogSysMinimize(hwnd))
         return TRUE;    // continue
 
     if (pei->hTrayWnd == hwnd || pei->hwndDesktop == hwnd ||
@@ -3282,14 +3286,21 @@ HandleTrayContextMenu:
 
         if (ShouldMinimize(hwnd))
         {
-            MINWNDPOS mwp;
-            mwp.hwnd = hwnd;
-            mwp.wndpl.length = sizeof(mwp.wndpl);
-            ::GetWindowPlacement(hwnd, &mwp.wndpl); // Save the position and status
-
-            info->pMinimizedAll->Add(mwp);
-
-            ::ShowWindowAsync(hwnd, SW_SHOWMINNOACTIVE);
+            MINWNDPOS mwp = { hwnd, { sizeof(mwp.wndpl) } };
+            if (::GetWindowPlacement(hwnd, &mwp.wndpl)) // Save the position and status
+            {
+                info->pMinimizedAll->Add(mwp);
+                ::ShowWindowAsync(hwnd, SW_SHOWMINNOACTIVE);
+            }
+        }
+        else if (CanDialogSysMinimize(hwnd))
+        {
+            MINWNDPOS mwp = { hwnd, { sizeof(mwp.wndpl) } };
+            if (::GetWindowPlacement(hwnd, &mwp.wndpl)) // Save the position and status
+            {
+                info->pMinimizedAll->Add(mwp);
+                ::SendMessageW(hwnd, WM_SYSCOMMAND, SC_MINIMIZE, -1);
+            }
         }
 
         return TRUE;
