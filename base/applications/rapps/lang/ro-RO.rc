@@ -238,8 +238,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_LICENSE_OPENSOURCE "Sursă deschisă"
-    IDS_LICENSE_FREEWARE "Gratuit"
-    IDS_LICENSE_TRIAL "Variantă de încercare/Demo"
+    IDS_LICENSE_FREEWARE "Gratuită"
+    IDS_LICENSE_TRIAL "Variantă de încercare/Demonstrație"
 END
 
 STRINGTABLE
@@ -265,7 +265,7 @@ BEGIN
     IDS_CMD_NEED_PACKAGE_NAME "Eroare: opțiunea %1 așteaptă unul sau mai multe nume de pachete.\n"
     IDS_CMD_NEED_FILE_NAME "Eroare: opțiunea %1 așteaptă un nume de fișier.\n"
     IDS_CMD_NEED_PARAMS "Eroare: opțiunea %1 așteaptă unul sau mai mulți parametri.\n"
-    IDS_CMD_INVALID_OPTION "Eroare: opțiune de linie de comandă specificată fie necunoscută, fie nevalidă.\n"
+    IDS_CMD_INVALID_OPTION "Eroare: opțiunea de linie de comandă specificată este necunoscută sau nevalidă.\n"
     IDS_CMD_FIND_RESULT_FOR "Rezultatele căutării pentru %1:\n"
     IDS_CMD_PACKAGE_NOT_FOUND "Nu a putut fi găsit pachetul %1.\n"
     IDS_CMD_PACKAGE_INFO "Informații despre pachet %1:\n"
