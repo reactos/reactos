@@ -74,7 +74,7 @@ BEGIN
     BEGIN
         MENUITEM "&Manual…", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&Despre Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Despre Carnețel", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -140,7 +140,7 @@ BEGIN
 END
 
 DIALOG_PRINTING DIALOG 0, 0, 160, 100
-CAPTION "Acum este imprimată"
+CAPTION "În curs de imprimare"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -185,8 +185,8 @@ Păstrați modificările aduse?"
     STRING_PRINTERROR "Fișierul „%s” nu a putut fi imprimat.\n\nAsigurați-vă că imprimanta este pornită și configurată corespunzător."
     STRING_DEFAULTFONT "Lucida Console"
     STRING_LINE_NUMBER_OUT_OF_RANGE "Linia specificată este în afara intervalului."
-    STRING_NOWPRINTING "Pagina este imprimată acum..."
-    STRING_PRINTCANCELING "Sarcina de imprimare a fost anulată..."
+    STRING_NOWPRINTING "În curs de imprimare..."
+    STRING_PRINTCANCELING "Sarcina de imprimare este în curs de anulare..."
     STRING_PRINTCOMPLETE "Imprimarea a fost realizată cu succes."
     STRING_PRINTCANCELED "Imprimarea a fost anulată."
     STRING_PRINTFAILED "Imprimare eșuată."
