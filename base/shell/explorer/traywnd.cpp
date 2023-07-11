@@ -101,7 +101,7 @@ VOID RestoreWindowPos()
 
 BOOL CanDialogSysMinimize(HWND hwnd)
 {
-    if (::GetClassLongPtrW(hwnd, GCW_ATOM) != (ULONG_PTR)WC_DIALOG)
+    if (::GetClassLongPtrW(hwnd, GCW_ATOM) != reinterpret_cast<ULONG_PTR>(WC_DIALOG))
         return FALSE;
     return (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd));
 }
@@ -140,7 +140,7 @@ struct EFFECTIVE_INFO
 static BOOL CALLBACK
 FindEffectiveProc(HWND hwnd, LPARAM lParam)
 {
-    EFFECTIVE_INFO *pei = (EFFECTIVE_INFO *)lParam;
+    EFFECTIVE_INFO *pei = reinterpret_cast<EFFECTIVE_INFO*>(lParam);
 
     if (!ShouldMinimize(hwnd) && !CanDialogSysMinimize(hwnd))
         return TRUE;    // continue
@@ -3271,7 +3271,7 @@ HandleTrayContextMenu:
 
     static BOOL CALLBACK MinimizeWindowsProc(HWND hwnd, LPARAM lParam)
     {
-        MINIMIZE_INFO *info = (MINIMIZE_INFO *)lParam;
+        MINIMIZE_INFO *info = reinterpret_cast<MINIMIZE_INFO*>(lParam);
         if (hwnd == info->hwndDesktop || hwnd == info->hTrayWnd || hwnd == info->hwndProgman)
             return TRUE; // Ignore special windows
 
