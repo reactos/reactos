@@ -594,12 +594,11 @@ public:
             bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
             // Build a combined path
-            CPathW CombinedPath;
-            CombinedPath.Combine(BaseDirectory, Name);
+            CPathW CombinedPath = BaseDirectory;
+            BaseDirectory += Name;
 
             // SHPathPrepareForWrite does not handle '/', even on MS Windows
-            CStringW& FullPath = CombinedPath.m_strPath;
-            FullPath.Replace(L'/', L'\\');
+            CombinedPath.m_strPath.Replace(L'/', L'\\');
 
         Retry:
             eZipExtractError Result = ExtractSingle(hDlg, FullPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
