@@ -99,6 +99,31 @@ VOID RestoreWindowPos()
     g_WindowPosBackup.RemoveAll();
 }
 
+BOOL ShouldMinimize(HWND hwnd)
+{
+    if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd))
+    {
+        if (::GetClassLongPtrW(hwnd, GCW_ATOM) == (ULONG_PTR)WC_DIALOG)
+            return TRUE;
+
+        DWORD style = static_cast<DWORD>(::GetWindowLongPtrW(hwnd, GWL_STYLE));
+        if (style & WS_MINIMIZEBOX)
+        {
+            if ((style & (WS_CAPTION | WS_SYSMENU)) == (WS_CAPTION | WS_SYSMENU))
+            {
+                HMENU hSysMenu = ::GetSystemMenu(hwnd, FALSE);
+                if (hSysMenu)
+                    return !(::GetMenuState(hSysMenu, SC_MINIMIZE, MF_BYCOMMAND) & MF_DISABLED);
+            }
+            else
+            {
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
 struct EFFECTIVE_INFO
 {
     HWND hwndFound;
@@ -113,11 +138,7 @@ FindEffectiveProc(HWND hwnd, LPARAM lParam)
 {
     EFFECTIVE_INFO *pei = (EFFECTIVE_INFO *)lParam;
 
-    if (!IsWindowVisible(hwnd) || IsIconic(hwnd))
-        return TRUE;    // continue
-
-    DWORD dwExStyle = ::GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-    if (dwExStyle & WS_EX_TOPMOST)
+    if (!ShouldMinimize(hwnd))
         return TRUE;    // continue
 
     if (pei->hTrayWnd == hwnd || pei->hwndDesktop == hwnd ||
@@ -3259,8 +3280,7 @@ HandleTrayContextMenu:
                 return TRUE;
         }
 
-        DWORD dwExStyle = (DWORD)::GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-        if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && !(dwExStyle & WS_EX_TOPMOST))
+        if (ShouldMinimize(hwnd))
         {
             MINWNDPOS mwp;
             mwp.hwnd = hwnd;
