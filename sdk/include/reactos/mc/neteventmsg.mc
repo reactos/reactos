@@ -23,7 +23,8 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
 LanguageNames=(English=0x409:MSG00409
                Russian=0x419:MSG00419
                French=0x040c:MSG0040c
-               Polish=0x415:MSG00415)
+               Polish=0x415:MSG00415
+               Romanian=0x418:MSG00418)
 
 ;
 ; message definitions
@@ -51,6 +52,9 @@ Le fichier de journalisation %1 est plein.
 Language=Polish
 Plik dziennika %1 jest zapełniony.
 .
+Language=Romanian
+Fișierul de jurnalizare %1 e plin.
+.
 
 MessageId=6001
 Severity=Warning
@@ -67,6 +71,9 @@ Le fichier de journalisation %1 ne peut pas être ouvert.
 .
 Language=Polish
 Nie można otworzyć pliku dziennika %1.
+.
+Language=Romanian
+Fișierul de jurnalizare %1 nu poate fi deschis.
 .
 
 MessageId=6002
@@ -85,6 +92,9 @@ Le fichier de journalisation %1 est corrompu et doit être vidé.
 Language=Polish
 Plik dziennika "%1" jest uszkodzony i zostanie wyczyszczony.
 .
+Language=Romanian
+Fișierul de jurnalizare %1 este corupt și va fi golit.
+.
 
 MessageId=6003
 Severity=Warning
@@ -101,6 +111,9 @@ Le fichier de journalisation des application ne peut pas être ouvert. %1 sera u
 .
 Language=Polish
 Nie można otworzyć pliku dziennika aplikacji. Jako domyślny plik dziennika zostanie użyty plik %1.
+.
+Language=Romanian
+Fișierul de jurnalizare al aplicației nu a putut fi deschis.  %1 va fi folosit ca fișier de jurnalizare implicit.
 .
 
 MessageId=6004
@@ -119,6 +132,9 @@ Un paquet de pilote reçu par le sous-système IO était invalide. La donnée es
 Language=Polish
 Pakiet sterownika otrzymany z podsystemu wejścia/wyjścia jest niepoprawny. Przedstawione dane to otrzymany pakiet.
 .
+Language=Romanian
+Un pachet primit al modulului pilot din subsistemul de intrare/ieșire a fost nevalid. Datele sunt pachetul însuși.
+.
 
 MessageId=6005
 Severity=Warning
@@ -136,6 +152,9 @@ Le service de journalisation des évènements a été démarré.
 Language=Polish
 Uruchomiono usługę Dziennik zdarzeń.
 .
+Language=Romanian
+Serviciul fișierului de jurnalizare al evenimentelor a fost pornit.
+.
 
 MessageId=6006
 Severity=Warning
@@ -152,6 +171,9 @@ Le service de journalisation des évènements a été arrêté.
 .
 Language=Polish
 Zatrzymano usługę Dziennik zdarzeń.
+.
+Language=Romanian
+Serviciul fișierului de jurnalizare al evenimentelor a fost oprit.
 .
 
 MessageId=6007
@@ -179,6 +201,9 @@ Service de journalisation des évènements %0
 Language=Polish
 Usługa Dziennik zdarzeń "%0"
 .
+Language=Romanian
+Serviciul fișierului de jurnalizare %0
+.
 
 MessageId=6008
 Severity=Warning
@@ -195,6 +220,9 @@ L'arrêt précédent du système à %1 le %2 n'était pas prévu.
 .
 Language=Polish
 Poprzednie zamknięcie systemu o godzinie %1 na %2 było nieoczekiwane.
+.
+Language=Romanian
+Închiderea anterioară a sistemului la %1 pe %2 a fost neașteptată.
 .
 
 MessageId=6009
@@ -213,6 +241,9 @@ ReactOS %1 %2 %3 %4.
 Language=Polish
 ReactOS %1 %2 %3 %4.
 .
+Language=Romanian
+ReactOS %1 %2 %3 %4.
+.
 
 MessageId=6010
 Severity=Error
@@ -229,6 +260,9 @@ Le service %1 n'a pas réussi à installer une source d'évènement.
 .
 Language=Polish
 Usługa %1 nie mogła skonfigurować źródła zdarzenia.
+.
+Language=Romanian
+Serviciul %1 nu a putut configura o sursă de eveniment.
 .
 
 MessageId=6011
