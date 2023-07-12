@@ -2618,7 +2618,7 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
     {
         HANDLE hOldThread = m_hUpdateStatusbarThread;
 
-        // Assigning NULL to m_hUpdateStatusbarThread will terminate the target thread immediately
+        // Assigning NULL to m_hUpdateStatusbarThread will terminate the target thread
         m_hUpdateStatusbarThread = NULL;
         ::WaitForSingleObject(hOldThread, INFINITE);
 
