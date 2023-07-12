@@ -30,6 +30,89 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 
+CODE_SEG("INIT")
+VOID
+KiCalculateCpuFrequency(
+    IN PKPRCB Prcb)
+{
+    if (Prcb->FeatureBits & KF_RDTSC)
+    {
+        ULONG Sample = 0;
+        CPU_INFO CpuInfo;
+        KI_SAMPLE_MAP Samples[10];
+        PKI_SAMPLE_MAP CurrentSample = Samples;
+
+        /* Start sampling loop */
+        for (;;)
+        {
+            /* Do a dummy CPUID to start the sample */
+            KiCpuId(&CpuInfo, 0);
+
+            /* Fill out the starting data */
+            CurrentSample->PerfStart = KeQueryPerformanceCounter(NULL);
+            CurrentSample->TSCStart = __rdtsc();
+            CurrentSample->PerfFreq.QuadPart = -50000;
+
+            /* Sleep for this sample */
+            KeStallExecutionProcessor(CurrentSample->PerfFreq.QuadPart * -1 / 10);
+
+            /* Do another dummy CPUID */
+            KiCpuId(&CpuInfo, 0);
+
+            /* Fill out the ending data */
+            CurrentSample->PerfEnd =
+                KeQueryPerformanceCounter(&CurrentSample->PerfFreq);
+            CurrentSample->TSCEnd = __rdtsc();
+
+            /* Calculate the differences */
+            CurrentSample->PerfDelta = CurrentSample->PerfEnd.QuadPart -
+                                       CurrentSample->PerfStart.QuadPart;
+            CurrentSample->TSCDelta = CurrentSample->TSCEnd -
+                                      CurrentSample->TSCStart;
+
+            /* Compute CPU Speed */
+            CurrentSample->MHz = (ULONG)((CurrentSample->TSCDelta *
+                                          CurrentSample->
+                                          PerfFreq.QuadPart + 500000) /
+                                         (CurrentSample->PerfDelta *
+                                          1000000));
+
+            /* Check if this isn't the first sample */
+            if (Sample)
+            {
+                /* Check if we got a good precision within 1MHz */
+                if ((CurrentSample->MHz == CurrentSample[-1].MHz) ||
+                    (CurrentSample->MHz == CurrentSample[-1].MHz + 1) ||
+                    (CurrentSample->MHz == CurrentSample[-1].MHz - 1))
+                {
+                    /* We did, stop sampling */
+                    break;
+                }
+            }
+
+            /* Move on */
+            CurrentSample++;
+            Sample++;
+
+            if (Sample == RTL_NUMBER_OF(Samples))
+            {
+                /* No luck. Average the samples and be done */
+                ULONG TotalMHz = 0;
+                while (Sample--)
+                {
+                    TotalMHz += Samples[Sample].MHz;
+                }
+                CurrentSample[-1].MHz = TotalMHz / RTL_NUMBER_OF(Samples);
+                DPRINT1("Sampling CPU frequency failed. Using average of %lu MHz\n", CurrentSample[-1].MHz);
+                break;
+            }
+        }
+
+        /* Save the CPU Speed */
+        Prcb->MHz = CurrentSample[-1].MHz;
+    }
+}
+
 VOID
 NTAPI
 KiInitializeHandBuiltThread(
@@ -104,6 +187,9 @@ KiSystemStartupBootStack(VOID)
             KeBugCheck(HAL_INITIALIZATION_FAILED);
         }
     }
+
+    /* Calculate the CPU frequency */
+    KiCalculateCpuFrequency(Prcb);
 
     /* Raise to Dispatch */
     KfRaiseIrql(DISPATCH_LEVEL);
