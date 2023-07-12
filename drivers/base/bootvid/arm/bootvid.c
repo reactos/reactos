@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Boot Video Driver for ARM devices
+ * LICENSE:     BSD - See COPYING.ARM in root directory
+ * PURPOSE:     Main file
+ * COPYRIGHT:   Copyright 2008 ReactOS Portable Systems Group <ros.arm@reactos.org>
+ */
+
 #include "precomp.h"
 
 #define NDEBUG
