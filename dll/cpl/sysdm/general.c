@@ -412,7 +412,7 @@ static VOID MakeFloatValueString(DOUBLE* dFloatValue, LPTSTR szOutput, LPTSTR sz
     }
 }
 
-static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
+static BOOL SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
 {
     TCHAR szBuf[64], szHz[16];
     DWORD BufSize = sizeof(DWORD);
@@ -432,7 +432,7 @@ static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
         {
             if (!LoadString(hApplet, IDS_MEGAHERTZ, szHz, _countof(szHz)))
             {
-                return;
+                return FALSE;
             }
             StringCchPrintf(szBuf, _countof(szBuf), _T("%lu %s"), ppi.CurrentMhz, szHz);
         }
@@ -441,13 +441,16 @@ static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
             double flt = ppi.CurrentMhz / 1000.0;
             if (!LoadString(hApplet, IDS_GIGAHERTZ, szHz, _countof(szHz)))
             {
-                return;
+                return FALSE;
             }
             MakeFloatValueString(&flt, szBuf, szHz);
         }
 
         SetDlgItemText(hwnd, uID, szBuf);
+        return TRUE;
     }
+
+    return FALSE;
 }
 
 static VOID GetSystemInformation(HWND hwnd)
@@ -511,8 +514,8 @@ static VOID GetSystemInformation(HWND hwnd)
                                                 CurMachineLine + 1);
         }
 
-        SetProcSpeed(hwnd, hKey, _T("~MHz"), CurMachineLine);
-        CurMachineLine++;
+        if (SetProcSpeed(hwnd, hKey, _T("~MHz"), CurMachineLine))
+            CurMachineLine++;
         RegCloseKey(hKey);
     }
 
