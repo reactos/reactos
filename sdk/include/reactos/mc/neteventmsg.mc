@@ -281,6 +281,9 @@ Le nom NetBIOS et le nom d'hôte DNS de cette machine ont été changés de %1 �
 Language=Polish
 Nazwa NetBIOS i nazwa hosta DNS tego komputera została zmieniona z %1 na %2.
 .
+Language=Romanian
+Numele NetBIOS și numele gazdei DNS de pe acest calculator a fost schimbat din %1 în %2.
+.
 
 MessageId=6012
 Severity=Error
@@ -297,6 +300,9 @@ Le domaine DNS assigné à cet ordinateur a été changé de %1 à %2.
 .
 Language=Polish
 Domena DNS przydzielona do tego komputera uległa zmianie z %1 na %2.
+.
+Language=Romanian
+Domeniul DNS atribuit acestui calculator a fost schimbat din %1 în %2.
 .
 
 
@@ -320,6 +326,9 @@ Un pilote spécifique monoprocesseur a été chargé sur un système multiproces
 Language=Polish
 Próbowano załadować sterownik jednoprocesorowy na komputerze wieloprocesorowym. Nie można załadować sterownika.
 .
+Language=Romanian
+Un modul pilot specific unui uniprocesor a fost încărcat într-un sistem de tip multiprocesor. Modulul pilot nu a putut fi încărcat.
+.
 
 
 ;
@@ -342,6 +351,9 @@ Le service %1 n'a pas pu démarrer en raison de l'erreur suivante : %n%2
 Language=Polish
 Nie można uruchomić usługi %1 z powodu następującego błędu: %n%2
 .
+Language=Romanian
+Serviciul %1 nu a putut porni din cauza următoarei erori: %n%2
+.
 
 MessageId=7001
 Severity=Error
@@ -358,6 +370,9 @@ Le serveur %1 dépend du service %2 qui n'a pas pu démarrer en raison de l'erre
 .
 Language=Polish
 Usługa %1 zależy od usługi %2, której nie można uruchomić z powodu następującego błędu: %n%3
+.
+Language=Romanian
+Serviciul %1 depinde de serviciul %2 care nu a putut porni din cauza următoarei erori: %n%3
 .
 
 MessageId=7002
@@ -376,6 +391,9 @@ Le service %1 dépend du groupe %2 et aucun membre de ce groupe n'a démarré.
 Language=Polish
 Usługa %1 zależy od grupy %2, a nie uruchomiono żadnego członka tej grupy.
 .
+Language=Romanian
+Serviciul %1 depinde de grupul %2 și niciun membru al acestui grup nu a pornit.
+.
 
 MessageId=7003
 Severity=Error
@@ -392,6 +410,9 @@ Le service %1 dépend du service non existant suivant : %2
 .
 Language=Polish
 Usługa %1 zależy od następującej nieistniejącej usługi: %2
+.
+Language=Romanian
+Serviciul %1 depinde de următorul serviciu neexistent: %2
 .
 
 MessageId=7005
@@ -410,6 +431,9 @@ L'appel %1 a échoué avec l'erreur suivante : %n%2
 Language=Polish
 Wywołanie %1 nie powiodło się i wystąpił następujący błąd: %n%2
 .
+Language=Romanian
+Apelul %1 a eșuat cu următoarea eroare: %n%2
+.
 
 MessageId=7006
 Severity=Error
@@ -426,6 +450,9 @@ L'appel %1 a échoué pour %2 avec l'erreur suivante : %n%3
 .
 Language=Polish
 Wywołanie %1 dla %2 nie powiodło się i wystąpił następujący błąd: %n%3
+.
+Language=Romanian
+Apelul %1 a eșuat pentru %2 cu următoarea eroare: %n%3
 .
 
 MessageId=7007
@@ -444,6 +471,9 @@ Le système a restauré sa dernière bonne configuration connue. Le système red
 Language=Polish
 System powrócił do ostatniej znanej dobrej konfiguracji. Trwa ponowne uruchamianie systemu...
 .
+Language=Romanian
+Sistemul a revenit la cea mai bună configurație anterioară. Sistemul repornește....
+.
 
 MessageId=7008
 Severity=Error
@@ -461,6 +491,9 @@ Aucun backslash n'est présent dans le nom de compte.
 Language=Polish
 W nazwie konta brak znaku ukośnika odwrotnego.
 .
+Language=Romanian
+Nu există bară oblică inversă în numele contului.
+.
 
 MessageId=7009
 Severity=Error
@@ -477,6 +510,9 @@ Expiration du délai (%1 millisecondes) lors de l'attente du service %2 pour se 
 .
 Language=Polish
 Upłynął limit czasu (%1 milisekund) podczas oczekiwania na połączenie się z usługą %2.
+.
+Language=Romanian
+Pauza (%1 (de) milisecundă(e)) așteaptă pentru serviciul %2 pentru conectare.
 .
 
 MessageId=7010
