@@ -38,3 +38,4 @@ Narzędzie automatycznych testów systemu ReactOS pomyślnie zakończyło dział
 Language=Romanian
 Utilitarul de testare automată ReactOS a avut succes.
 .
+
