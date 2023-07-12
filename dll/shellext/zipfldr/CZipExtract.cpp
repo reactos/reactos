@@ -595,7 +595,7 @@ public:
 
             // Build a combined path
             CPathW CombinedPath = BaseDirectory;
-            BaseDirectory += Name;
+            CombinedPath += Name;
 
             // SHPathPrepareForWrite does not handle '/', even on MS Windows
             CombinedPath.m_strPath.Replace(L'/', L'\\');
