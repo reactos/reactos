@@ -597,7 +597,9 @@ public:
             CPathW FullPath(BaseDirectory);
             FullPath += Name;
 
-            // SHPathPrepareForWrite does not handle '/', even on MS Windows
+            // We use SHPathPrepareForWrite for this path.
+            // SHPathPrepareForWrite will prepare the necessary directories.
+            // Windows and ReactOS SHPathPrepareForWrite do not support '/'.
             FullPath.m_strPath.Replace(L'/', L'\\');
 
         Retry:
