@@ -594,14 +594,14 @@ public:
             bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
             // Build a combined path
-            CPathW CombinedPath(BaseDirectory);
-            CombinedPath += Name;
+            CPathW FullPath(BaseDirectory);
+            FullPath += Name;
 
             // SHPathPrepareForWrite does not handle '/', even on MS Windows
-            CombinedPath.m_strPath.Replace(L'/', L'\\');
+            FullPath.m_strPath.Replace(L'/', L'\\');
 
         Retry:
-            eZipExtractError Result = ExtractSingle(hDlg, CombinedPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
+            eZipExtractError Result = ExtractSingle(hDlg, FullPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
             if (Result != eDirectoryError)
                 CurrentFile++;
             switch (Result)
@@ -620,7 +620,7 @@ public:
                 {
                     WCHAR StrippedPath[MAX_PATH] = { 0 };
 
-                    StrCpyNW(StrippedPath, CombinedPath, _countof(StrippedPath));
+                    StrCpyNW(StrippedPath, FullPath, _countof(StrippedPath));
                     if (!is_dir)
                         PathRemoveFileSpecW(StrippedPath);
                     PathStripPathW(StrippedPath);
@@ -632,7 +632,7 @@ public:
 
                 case eFileError:
                 {
-                    int Result = ShowExtractError(hDlg, CombinedPath, err, eFileError);
+                    int Result = ShowExtractError(hDlg, FullPath, err, eFileError);
                     switch (Result)
                     {
                     case IDABORT:
@@ -654,7 +654,7 @@ public:
                         Info.compression_method != Z_DEFLATED &&
                         Info.compression_method != Z_BZIP2ED)
                     {
-                        if (ShowExtractError(hDlg, CombinedPath, Info.compression_method, eOpenError) == IDYES)
+                        if (ShowExtractError(hDlg, FullPath, Info.compression_method, eOpenError) == IDYES)
                             break;
                     }
                     Close();
