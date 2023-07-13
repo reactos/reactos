@@ -133,7 +133,7 @@ Language=Polish
 Pakiet sterownika otrzymany z podsystemu wejścia/wyjścia jest niepoprawny. Przedstawione dane to otrzymany pakiet.
 .
 Language=Romanian
-Un pachet primit al modulului pilot din subsistemul de In/Ex a fost nevalid. Datele sunt pachetul însuși.
+Un pachet al modulului pilot primit de la subsistemul de In/Ex a fost nevalid. Datele sunt pachetul însuși.
 .
 
 MessageId=6005
@@ -282,7 +282,7 @@ Language=Polish
 Nazwa NetBIOS i nazwa hosta DNS tego komputera została zmieniona z %1 na %2.
 .
 Language=Romanian
-Numele NetBIOS și numele gazdei DNS de pe acest calculator a fost schimbat din %1 în %2.
+Numele NetBIOS și numele gazdei DNS de la acest calculator au fost schimbate din %1 în %2.
 .
 
 MessageId=6012
@@ -492,7 +492,7 @@ Language=Polish
 W nazwie konta brak znaku ukośnika odwrotnego.
 .
 Language=Romanian
-Lipsește solidusul inversat din numele contului.
+Lipsește solidusul întors din numele contului.
 .
 
 MessageId=7009
@@ -512,7 +512,7 @@ Language=Polish
 Upłynął limit czasu (%1 milisekund) podczas oczekiwania na połączenie się z usługą %2.
 .
 Language=Romanian
-Pauza (de %1 (de) milisecundă(e)) așteaptă pentru serviciul %2 pentru conectare.
+Pauza (de %1 (de) milisecundă(e)) așteaptă serviciul %2 pentru conectare.
 .
 
 MessageId=7010
@@ -592,7 +592,7 @@ Language=Polish
 Próba logowania za pomocą aktualnego hasła nie powiodła się; wystąpił następujący błąd: %n%1
 .
 Language=Romanian
-Încercare de autentificare cu parola curentă a eșuat cu următoarea eroare: %n%1
+Încercarea de autentificare cu parola curentă a eșuat cu următoarea eroare: %n%1
 .
 
 MessageId=7014
@@ -612,7 +612,7 @@ Language=Polish
 Druga próba logowania za pomocą starego hasła także się nie powiodła; wystąpił następujący błąd: %n%1
 .
 Language=Romanian
-A doua încercare de logare cu parola veche a eșuat de asemenea, cu următoarea eroare: %n%1
+A doua încercare de autentificare cu parola veche a eșuat de asemenea, cu următoarea eroare: %n%1
 .
 
 MessageId=7015
@@ -632,7 +632,7 @@ Language=Polish
 Sterowniki startu rozruchowego oraz systemowego (%1) nie mogą zależeć od usługi.
 .
 Language=Romanian
-Modulul pilot de pornire a inițializării sau al sistemului (%1) nu trebuie să depindă de serviciu.
+Modulul pilot de pornire a inițializării sau al sistemului (%1) nu trebuie să depindă de un serviciu.
 .
 
 MessageId=7016
@@ -652,7 +652,7 @@ Language=Polish
 Usługa %1 zaraportowała nieprawidłowy stan bieżący %2.
 .
 Language=Romanian
-Serviciul %1 a raportat un stadiu curent nevalid %2.
+Serviciul %1 a raportat o stare curentă nevalidă %2.
 .
 
 MessageId=7017
@@ -672,7 +672,7 @@ Language=Polish
 Wykryte zależności cykliczne wymagają uruchomienia %1.
 .
 Language=Romanian
-Au fost detectate cereri de dependințe circulare, începând cu %1.
+A fost detectată o cerere de dependențe circulare, începând cu %1.
 .
 
 MessageId=7018
@@ -692,7 +692,7 @@ Language=Polish
 Wykryto automatycznie uruchamiane usługi zależności cyklicznych.
 .
 Language=Romanian
-Au fost detectate servicii de pornire automată de dependințe circulare.
+Au fost detectate servicii de pornire automată de dependențe circulare.
 .
 
 MessageId=7019
@@ -892,7 +892,7 @@ Language=Polish
 Klucz Rejestru %1 nie przyznał dostępu do programów konta SYSTEM, w związku z czym Menedżer sterowania usługami przejął ten klucz na własność.
 .
 Language=Romanian
-Cheia de regiștrii %1 a blocat accesul la programele contului de sistem (SYSTEM), astfel încât Administratorul de control al serviciului a obținut permisiunea la cheia de regiștrii.
+Cheia de registru %1 a blocat accesul la programele contului de sistem (SYSTEM), astfel încât Administratorul de control al serviciului a preluat proprietatea la cheia de registru.
 .
 
 MessageId=7029
@@ -952,7 +952,7 @@ Language=Polish
 Usługa %1 niespodziewanie zakończyła pracę. Wystąpiło to razy: %2. W przeciągu %3 milisekund zostanie podjęta następująca czynność korekcyjna: %5.
 .
 Language=Romanian
-Serviciul %1 a fost închis în mod neanunțat. Acest lucru a fost făcut (de) %2 dată(ori). Următoarea măsură corectivă va fi luată în %3 milisecondă(e): %5.
+Serviciul %1 a fost închis în mod neașteptat. Acest lucru a fost făcut (de) %2 dată(ori). Următoarea măsură corectivă va fi luată în %3 milisecondă(e): %5.
 .
 
 MessageId=7032
@@ -1204,7 +1204,7 @@ Language=Polish
 Typ startowy usługi %1 został zmieniony z %2 do %3.
 .
 Language=Romanian
-Tipul de pornire al serviciului %1 a fost schimbat din %2 în %3.
+Modul de pornire al serviciului %1 a fost schimbat din %2 în %3.
 .
 
 MessageId=7041
@@ -1339,7 +1339,7 @@ Language=Polish
 Usługa %1 nie została poprawnie wyłączona po otrzymaniu kodu sterownika przed zamknięciem systemu.
 .
 Language=Romanian
-Serviciul %1 nu a fost oprit corect după primirea controlului de preoprire.
+Serviciul %1 s-a oprit corect după primirea controlului de preoprire.
 .
 
 ;
@@ -1363,7 +1363,7 @@ Language=Polish
 %2: nie można zarejestrować w otoce NDIS.
 .
 Language=Romanian
-%2-ul însuși nu a putut fi înregistrat cu emulatorul NDIS.
+%2 s-a putut înregistra cu emulatorul NDIS.
 .
 
 MessageId=9006
