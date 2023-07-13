@@ -811,6 +811,9 @@ Le service %1 s'est terminé avec une erreur spécifique au service %2.
 Language=Polish
 Usługa %1 zakończyła działanie; wystąpił specyficzny dla niej błąd %2.
 .
+Language=Romanian
+Serviciul %1 a fost terminat cu o eroare specifică unui serviciu %2.
+.
 
 MessageId=7025
 Severity=Error
@@ -827,6 +830,9 @@ Au moins un service ou pilote a échoué durant le démarrage du système. Utili
 .
 Language=Polish
 Przynajmniej jedna usługa lub jeden sterownik nie dały się uruchomić podczas uruchamiania systemu. Użyj Podglądu zdarzeń, aby znaleźć szczegółowe informacje w dzienniku zdarzeń.
+.
+Language=Romanian
+Cel puțin un serviciu sau un modul pilot a eșuat, în timpul pornirii sistemului. Folosiți Vizualizatorul de evenimente pentru a examina jurnalul pentru detalii.
 .
 
 MessageId=7026
@@ -845,6 +851,9 @@ Le pilote au démarrage ou système suivant n'a pas pu être chargé : %1
 Language=Polish
 Nie można załadować następujących sterowników startu rozruchowego lub systemowego: %1
 .
+Language=Romanian
+Următorul(oarele) modul(e) pilot de pornire sau de pornire a sistemului nu a(u)putut fi încărcat(e): %1
+.
 
 MessageId=7027
 Severity=Error
@@ -861,6 +870,9 @@ ReactOS n'a pas pu démarrer tel que configuré. Une précédente configuration 
 .
 Language=Polish
 Nie można uruchomić systemu ReactOS zgodnie z aktualną konfiguracją. Zamiast niej użyto poprzedniej działającej konfiguracji.
+.
+Language=Romanian
+ReactOS nu a putut fi pornit după configurație. În locul ei, a fost folosită o configurație funcțională anterioară.
 .
 
 MessageId=7028
@@ -879,6 +891,9 @@ La clé de registre %1 a refusé l'accès aux programmes du compte SYSTEM. Le ge
 Language=Polish
 Klucz Rejestru %1 nie przyznał dostępu do programów konta SYSTEM, w związku z czym Menedżer sterowania usługami przejął ten klucz na własność.
 .
+Language=Romanian
+Cheia de regiștrii %1 a blocat accesul la programele contului de sistem (SYSTEM), astfel încât Administratorul de control al serviciului a obținut permisiunea la cheia de regiștrii.
+.
 
 MessageId=7029
 Severity=Error
@@ -895,6 +910,9 @@ Gestionnaire de contrôle des services %0
 .
 Language=Polish
 Menedżer sterowania usługami %0
+.
+Language=Romanian
+Administratorul de control al serviciului %0
 .
 
 MessageId=7030
@@ -913,6 +931,9 @@ Le service %1 est marqué comme service interactif. Cependant, le système est c
 Language=Polish
 Usługa %1 jest oznaczona jako usługa interakcyjna. System jest jednak skonfigurowany tak, aby nie zezwalać na usługi interakcyjne, dlatego ta usługa może nie działać właściwie.
 .
+Language=Romanian
+Serviciul %1 este marcat ca un serviciu inactiv. Totuși, sistemul este configurat să nu permită serviciile interactive. Acest serviciu nu poate funcționa corespunzător.
+.
 
 MessageId=7031
 Severity=Error
@@ -930,6 +951,9 @@ Le service %1 s'est terminée de façon non prévue. Il l'a fait %2 fois. L'acti
 Language=Polish
 Usługa %1 niespodziewanie zakończyła pracę. Wystąpiło to razy: %2. W przeciągu %3 milisekund zostanie podjęta następująca czynność korekcyjna: %5.
 .
+Language=Romanian
+Serviciul %1 a fost închis în mod neanunțat. Acest lucru a fost făcut (de) %2 dată(ori). Următoarea măsură corectivă va fi luată în %3 milisecondă(e): %5.
+.
 
 MessageId=7032
 Severity=Error
@@ -946,6 +970,9 @@ Le gestionnaire de contrôle des services a tenté de prendre une action correct
 .
 Language=Polish
 Menedżer sterowania usługami próbował podjąć akcję korekcyjną (%2) po nieoczekiwanym zakończeniu usługi %3, ale ta akcja nie powiodła się przy następującym błędzie: %n%4.
+.
+Language=Romanian
+Administratorul de control al serviciului a încercat să ia o acțiune corectivă (%2) după o închidere neanunțată a serviciului %3, dar această acțiune a eșuat cu următoarea eroare: %n%4
 .
 
 MessageId=7033
@@ -971,6 +998,11 @@ Language=Polish
 Menedżer sterowania usługami nie został zainicjowany pomyślnie. Nie udało się zainicjować serwera
 konfiguracji zabezpieczeń (scesrv.dll) z powodu błędu %1. Trwa ponowne uruchamianie systemu...
 .
+Language=Romanian
+Administratorul de control al serviciului nu a putut fi inițializat cu succes. Securitatea
+servitorului de configurație (scesrv.dll) nu a putut fi inițializat cu eroare %1.
+Sistemul repornește...
+.
 
 MessageId=7034
 Severity=Error
@@ -987,6 +1019,9 @@ Le service %1 s'est terminée de façon non prévue. Il l'a fait %2 fois.
 .
 Language=Polish
 Usługa %1 niespodziewanie zakończyła pracę. Wystąpiło to razy: %2.
+.
+Language=Romanian
+Serviciul %1 a fost închis în mod neașteptat. Acest lucru a fost făcut %2 dată(ori).
 .
 
 MessageId=7035
@@ -1005,6 +1040,9 @@ Le contrôle %2 a été envoyé avec succès au service %1.
 Language=Polish
 Do usługi %1 został pomyślnie wysłany kod sterowania %2.
 .
+Language=Romanian
+Serviciul %1 a trimis cu succes un control %2.
+.
 
 MessageId=7036
 Severity=Informational
@@ -1021,6 +1059,9 @@ Le service %1 est entré dans l'état %2.
 .
 Language=Polish
 Usługa %1 weszła w stan %2.
+.
+Language=Romanian
+Serviciul %1 a intrat în stadiul %2.
 .
 
 MessageId=7037
@@ -1062,6 +1103,14 @@ Jeśli ta konfiguracja nie zostanie naprawiona, ponowne uruchomienie usługi
 że usługa jest skonfigurowana właściwie, użyj przystawki Usługi w programie
 ReactOS Management Console (MMC).
 .
+Language=Romanian
+Administratorul de control al serviciului a întâlnit o eraore în încercarea de a anula o schimbare de configurație
+la serviciul %1. %2-ul serviciului este deocamdată într-un stadiu neprevăzut.
+
+Dacă nu corectați această configurație, nu veți putea reporni serviciul %1
+sau veți întâmpina alte erori. Pentru a vă asigura că serviciul este configurat
+corect, folosiți Administratorul de servicii în Consola de administrare (MMC).
+.
 
 MessageId=7038
 Severity=Error
@@ -1090,6 +1139,12 @@ Usługa %1 nie mogła zalogować się jako %2 z aktualnie skonfigurowanym
 hasłem z powodu następującego błędu: %n%3%n%nAby upewnić się, że usługa
 jest skonfigurowana właściwie, użyj przystawki Usługi w programie
 ReactOS Management Console (MMC).
+.
+Language=Romanian
+Serviciul %1 nu a putut fi logat la %2 cu parola configurată din prezent,
+din cauza următoarei erori: %n%3%n%nPentru a vă asigura că serviciul este
+configurat în mod corespunzător, folosiți Administratorul de servicii în Consola de
+administrare (MMC).
 .
 
 MessageId=7039
@@ -1124,6 +1179,13 @@ proces %2, a połączył się proces %3.%n%n
 
 Jeśli ta usługa jest skonfigurowana do uruchomienia z debugerem, takie zachowanie jest oczekiwane.
 .
+Language=Romanian
+Serviciul procesează altceva decât ceea ce este pornit în Administratorul de control al serviciilor
+conectat când este pornit serviciul %1. Administratorul de control al serviciilor a lansat
+în schimb, procesul %2 și procesul %3 conectat.%n%n
+
+Rețineți că, dacă acest serviciu este configurat să pornească sub un depanator, acest comportament este de așteptat.
+.
 
 MessageId=7040
 Severity=Informational
@@ -1140,6 +1202,9 @@ Le type de démarrage du service %1 a été changé de %2 à %3.
 .
 Language=Polish
 Typ startowy usługi %1 został zmieniony z %2 do %3.
+.
+Language=Romanian
+Tipul de pornire al serviciului %1 a fost schimbat din %2 în %3.
 .
 
 MessageId=7041
@@ -1210,6 +1275,22 @@ i prawo użytkownika wygląda na usunięte, obiekt zasad grupy powiązany z tym
 węzłem może usuwać to prawo. Skontaktuj się z administratorem domeny by sprawdzić,
 czy to się dokonuje.
 .
+Language=Romanian
+Serviciul %1 nu a putut fi logat ca %2 cu parola configurată în prezent, din cauza următoarei erori:%n
+Logare eșuată: utilizatorului nu i-a fost acordat tipul de conectare solicitat la acest computer.%n%n
+Serviciu: %1%n
+Domeniu sau cont: %2%n%n
+Acest cont de serviciu nu are drepturile de utilizator necesare "Logare ca un serviciu."%n%n
+Acțiunea utilizatorului%n%n
+Atribuiți "Logare ca un serviciu" la contul serviciului de pe acest calculator. Pentru a face asta
+puteți folosi Setările de securitate locale (Secpol.msc). Dacă acest calculator este un
+nod dintr-un grup, verificați dacă drepturile de utilizator sunt atribuite în
+Grupul de conturi de serviciu pe toate nodurile din grup.%n%n
+Dacă deja ați atribuit acest drept de utilizator la contul serviciului și
+dreptul utilizatorului apare ca fiind șters, un obiect asociat Politicii grupului cu acest
+nod poate fi ștergerea dreptului. Verificați cu domeniul dumneavoastră de administrator pentru
+a afla dacă se întâmplă acest lucru.
+.
 
 MessageId=7042
 Severity=Informational
@@ -1235,6 +1316,11 @@ Do usługi %1 został pomyślnie wysłany kod sterowania %2.%n%n
 Powód: %3 [%4]%n%n
 Komentarz: %5
 .
+Language=Romanian
+Serviciul %1 a trimis cu succes un control %2.%n%n
+Motivul specificat a fost: %3 [%4]%n%n
+Comentariu: %5
+.
 
 MessageId=7043
 Severity=Error
@@ -1251,6 +1337,9 @@ Le service %1 ne s'est pas arrêté proprement après avoir reçu un contrôle d
 .
 Language=Polish
 Usługa %1 nie została poprawnie wyłączona po otrzymaniu kodu sterownika przed zamknięciem systemu.
+.
+Language=Romanian
+Serviciul %1 nu a fost oprit corect după primirea controlului de preoprire.
 .
 
 ;
@@ -1273,6 +1362,9 @@ Language=French
 Language=Polish
 %2: nie można zarejestrować w otoce NDIS.
 .
+Language=Romanian
+%2-ul însuși nu a putut fi înregistrat cu învelitoarea NDIS.
+.
 
 MessageId=9006
 Severity=Error
@@ -1289,4 +1381,7 @@ Language=French
 .
 Language=Polish
 %2: nie można odnaleźć karty %3.
+.
+Language=Romanian
+%2 nu a putut găsi adaptorul %3.
 .
