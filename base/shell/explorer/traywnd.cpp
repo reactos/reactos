@@ -99,30 +99,18 @@ VOID RestoreWindowPos()
     g_WindowPosBackup.RemoveAll();
 }
 
-BOOL CanDialogSysMinimize(HWND hwnd)
-{
-    if (::GetClassLongPtrW(hwnd, GCW_ATOM) != (ULONG_PTR)WC_DIALOG)
-        return FALSE;
-    return (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd));
-}
-
-BOOL ShouldMinimize(HWND hwnd)
+BOOL HasToBeMinimized(HWND hwnd)
 {
     if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd))
     {
+        if (::GetClassLongPtrW(hwnd, GCW_ATOM) == (ULONG_PTR)WC_DIALOG)
+            return TRUE;
+
         DWORD style = (DWORD)::GetWindowLongPtrW(hwnd, GWL_STYLE);
-        if ((style & WS_CAPTION) == WS_CAPTION)
+        if (style & WS_MINIMIZEBOX)
         {
-            if (style & WS_SYSMENU)
-            {
-                HMENU hSysMenu = ::GetSystemMenu(hwnd, FALSE);
-                if (hSysMenu)
-                    return !(::GetMenuState(hSysMenu, SC_MINIMIZE, MF_BYCOMMAND) & MF_DISABLED);
-            }
-            else
-            {
+            if ((style & WS_CAPTION) == WS_CAPTION)
                 return TRUE;
-            }
         }
     }
     return FALSE;
@@ -142,7 +130,7 @@ FindEffectiveProc(HWND hwnd, LPARAM lParam)
 {
     EFFECTIVE_INFO *pei = (EFFECTIVE_INFO *)lParam;
 
-    if (!ShouldMinimize(hwnd) && !CanDialogSysMinimize(hwnd))
+    if (!HasToBeMinimized(hwnd))
         return TRUE;    // continue
 
     if (pei->hTrayWnd == hwnd || pei->hwndDesktop == hwnd ||
@@ -3284,20 +3272,11 @@ HandleTrayContextMenu:
                 return TRUE;
         }
 
-        if (ShouldMinimize(hwnd))
+        if (HasToBeMinimized(hwnd))
         {
             MINWNDPOS mwp = { hwnd, { sizeof(mwp.wndpl) } };
             if (::GetWindowPlacement(hwnd, &mwp.wndpl) && // Save the position and status
                 ::ShowWindowAsync(hwnd, SW_SHOWMINNOACTIVE)) // Minimize
-            {
-                info->pMinimizedAll->Add(mwp);
-            }
-        }
-        else if (CanDialogSysMinimize(hwnd))
-        {
-            MINWNDPOS mwp = { hwnd, { sizeof(mwp.wndpl) } };
-            if (::GetWindowPlacement(hwnd, &mwp.wndpl) && // Save the position and status
-                ::PostMessageW(hwnd, WM_SYSCOMMAND, SC_MINIMIZE, -1)) // Minimize
             {
                 info->pMinimizedAll->Add(mwp);
             }
