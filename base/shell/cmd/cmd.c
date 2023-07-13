@@ -1158,11 +1158,9 @@ GetEnhancedVar(
         if (hFind != INVALID_HANDLE_VALUE)
         {
             PTSTR FixedComponent = w32fd.cFileName;
-            if (*w32fd.cAlternateFileName &&
-                ((Modifiers & M_SHORT) || !_tcsicmp(In, w32fd.cAlternateFileName)))
-            {
+            if ((Modifiers & M_SHORT) && *w32fd.cAlternateFileName)
                 FixedComponent = w32fd.cAlternateFileName;
-            }
+
             FindClose(hFind);
 
             if (Out + _tcslen(FixedComponent) + 1 >= &FixedPath[ARRAYSIZE(FixedPath)])
