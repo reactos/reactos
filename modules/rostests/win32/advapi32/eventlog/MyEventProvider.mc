@@ -109,7 +109,7 @@ od serwera i spróbuj ponownie później.
 .
 Language=Romanian
 Au fost %1 reîncercări cu %2 succes(e)! Deconectați-vă de la
-server și încercați din nou, mai târziu.
+servitor și încercați din nou, mai târziu.
 .
 
 MessageId=0x103
