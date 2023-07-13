@@ -155,8 +155,8 @@ SaferComputeTokenFromLevel(
     _Inout_opt_ PVOID pReserved)
 {
     FIXME("(%p, %p, %p, 0x%lx, %p) stub\n", LevelHandle, InAccessToken, OutAccessToken, dwFlags, pReserved);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    *OutAccessToken = (dwFlags & SAFER_TOKEN_NULL_IF_EQUAL) ? NULL : UlongToHandle(0xdeadf00d);
+    return TRUE;
 }
 
 
