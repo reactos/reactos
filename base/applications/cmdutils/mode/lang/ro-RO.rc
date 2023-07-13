@@ -33,7 +33,7 @@ Rata de repetiție la menținerea unei taste apăsate:\n\
     IDS_QUERY_PRINTER_FOUND "Depistat dispozitiv de imprimare - %s\n"
     IDS_QUERY_PARALLEL_FOUND "Depistat dispozitiv la portul paralel - %s\n"
     IDS_QUERY_DOSDEV_FOUND "Depistat dispozitiv de tip DOS - %s\n"
-    // IDS_QUERY_MISC_FOUND "Nu a fost găsit alt dispozitiv - %s\n"
+    // IDS_QUERY_MISC_FOUND "A fost găsit alt dispozitiv - %s\n"
 
     // IDS_QUERY_DEVICE_FOUND "A fost găsit dispozitivul %s - %s\n"
     // IDS_SERIAL  "serial"
