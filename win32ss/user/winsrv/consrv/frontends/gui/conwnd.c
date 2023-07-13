@@ -1778,6 +1778,29 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 DoDefault = TRUE; // FALSE;
                 break;
         }
+
+        /*
+         * HACK FOR CORE-8394 (Part 1):
+         *
+         * It appears that when running ReactOS on VBox with Mouse Integration
+         * enabled, the next mouse event coming after a button-down action is
+         * a mouse-move. However it is NOT always a rule, so that we cannot use
+         * the IgnoreNextMouseEvent flag to just "ignore" the next mouse event,
+         * thinking it would always be a mouse-move event.
+         *
+         * To work around this problem (that should really be fixed in Win32k),
+         * we use a second flag to ignore this possible next mouse move event.
+         */
+        switch (msg)
+        {
+            case WM_LBUTTONDOWN:
+            case WM_MBUTTONDOWN:
+            case WM_RBUTTONDOWN:
+            case WM_XBUTTONDOWN:
+                GuiData->HackCORE8394IgnoreNextMove = TRUE;
+            default:
+                break;
+        }
     }
     else if (GetConsoleInputBufferMode(Console) & ENABLE_MOUSE_INPUT)
     {
@@ -1920,15 +1943,14 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
         /*
          * HACK FOR CORE-8394 (Part 1):
          *
-         * It appears that depending on which VM ReactOS runs, the next mouse
-         * signal coming after a button-down action can be a mouse-move (e.g.
-         * on VBox, whereas on QEMU it is not the case). However it is NOT a
-         * rule, so that we cannot use the IgnoreNextMouseSignal flag to just
-         * "ignore" the next mouse event, thinking it would always be a mouse-
-         * move signal.
+         * It appears that when running ReactOS on VBox with Mouse Integration
+         * enabled, the next mouse event coming after a button-down action is
+         * a mouse-move. However it is NOT always a rule, so that we cannot use
+         * the IgnoreNextMouseEvent flag to just "ignore" the next mouse event,
+         * thinking it would always be a mouse-move event.
          *
          * To work around this problem (that should really be fixed in Win32k),
-         * we use a second flag to ignore this possible next mouse move signal.
+         * we use a second flag to ignore this possible next mouse move event.
          */
         switch (msg)
         {
