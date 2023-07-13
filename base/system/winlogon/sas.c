@@ -365,15 +365,16 @@ PlayLogonSound(
         CloseHandle(hThread);
 }
 
+/* NOTE: Shutdown sound plays synchronously */
 static
 VOID
-PlayLogoffSound(
+PlayShutdownSound(
     _In_ PWLSESSION Session)
 {
     if (!ImpersonateLoggedOnUser(Session->UserToken))
         return;
 
-    PlaySoundRoutine(L"WindowsLogoff", FALSE, SND_ALIAS | SND_NODEFAULT);
+    PlaySoundRoutine(L"SystemExit", FALSE, SND_ALIAS | SND_NODEFAULT);
 
     RevertToSelf();
 }
@@ -786,8 +787,8 @@ DestroyLogoffSecurityAttributes(
 static
 NTSTATUS
 HandleLogoff(
-    IN OUT PWLSESSION Session,
-    IN UINT Flags)
+    _Inout_ PWLSESSION Session,
+    _In_ DWORD wlxAction)
 {
     PLOGOFF_SHUTDOWN_DATA LSData;
     PSECURITY_ATTRIBUTES psa;
@@ -802,7 +803,7 @@ HandleLogoff(
         ERR("Failed to allocate mem for thread data\n");
         return STATUS_NO_MEMORY;
     }
-    LSData->Flags = Flags;
+    LSData->Flags = EWX_LOGOFF;
     LSData->Session = Session;
 
     Status = CreateLogoffSecurityAttributes(&psa);
@@ -842,7 +843,8 @@ HandleLogoff(
 
     SwitchDesktop(Session->WinlogonDesktop);
 
-    PlayLogoffSound(Session);
+    if (WLX_SHUTTINGDOWN(wlxAction))
+        PlayShutdownSound(Session);
 
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
@@ -1066,7 +1068,7 @@ DoGenericAction(
             {
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
                     break;
-                if (!NT_SUCCESS(HandleLogoff(Session, EWX_LOGOFF)))
+                if (!NT_SUCCESS(HandleLogoff(Session, wlxAction)))
                 {
                     RemoveStatusMessage(Session);
                     break;
