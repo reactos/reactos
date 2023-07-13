@@ -36,6 +36,6 @@ Language=Polish
 Wywołano usunięcie programu "%1".
 .
 Language=Romanian
-Este apelată ștergerea programului "%1".
+Este apelată îndepărtarea programului "%1".
 .
 
