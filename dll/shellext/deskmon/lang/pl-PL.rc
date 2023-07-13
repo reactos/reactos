@@ -19,7 +19,7 @@ BEGIN
     LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
     PUSHBUTTON "&Właściwości", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
     GROUPBOX "Ustawienia monitora", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
-    LTEXT "&Częstotliwośći odświeżania ekranu:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
+    LTEXT "&Częstotliwości odświeżania ekranu:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
     AUTOCHECKBOX "&Ukryj tryby, których ten monitor nie może wyświetlić", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END

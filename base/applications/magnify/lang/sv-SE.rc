@@ -38,7 +38,7 @@ BEGIN
     LTEXT "Forstorings &nivå:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Spårning", IDC_STATIC, 7, 25, 139, 59
-    GROUPBOX "Precentation", IDC_STATIC, 7, 87, 139, 57
+    GROUPBOX "Presentation", IDC_STATIC, 7, 87, 139, 57
     CONTROL "Följ &muspekaren", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
     CONTROL "Följ tangentmar&kören", IDC_FOLLOWKEYBOARDCHECK, "Button",
