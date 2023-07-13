@@ -99,7 +99,7 @@ VOID RestoreWindowPos()
     g_WindowPosBackup.RemoveAll();
 }
 
-BOOL HasToBeMinimized(HWND hwnd)
+BOOL CanBeMinimized(HWND hwnd)
 {
     if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd))
     {
@@ -130,7 +130,7 @@ FindEffectiveProc(HWND hwnd, LPARAM lParam)
 {
     EFFECTIVE_INFO *pei = (EFFECTIVE_INFO *)lParam;
 
-    if (!HasToBeMinimized(hwnd))
+    if (!CanBeMinimized(hwnd))
         return TRUE;    // continue
 
     if (pei->hTrayWnd == hwnd || pei->hwndDesktop == hwnd ||
@@ -3272,7 +3272,7 @@ HandleTrayContextMenu:
                 return TRUE;
         }
 
-        if (HasToBeMinimized(hwnd))
+        if (CanBeMinimized(hwnd))
         {
             MINWNDPOS mwp = { hwnd, { sizeof(mwp.wndpl) } };
             if (::GetWindowPlacement(hwnd, &mwp.wndpl) && // Save the position and status
