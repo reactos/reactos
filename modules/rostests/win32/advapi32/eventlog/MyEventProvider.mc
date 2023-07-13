@@ -17,7 +17,8 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
               )
 
 LanguageNames=(English=0x409:MSG00409
-               Polish=0x415:MSG00415)
+               Polish=0x415:MSG00415
+               Romanian=0x418:MSG00418)
 
 
 ; // The following are the categories of events.
@@ -32,6 +33,9 @@ Network Events
 Language=Polish
 Zdarzenia sieciowe
 .
+Language=Romanian
+Evenimante de rețea
+.
 
 MessageId=0x2
 SymbolicName=DATABASE_CATEGORY
@@ -41,6 +45,9 @@ Database Events
 Language=Polish
 Zdarzenia bazy danych
 .
+Language=Romanian
+Evenimente de baze de date
+.
 
 MessageId=0x3
 SymbolicName=UI_CATEGORY
@@ -49,6 +56,9 @@ UI Events
 .
 Language=Polish
 Zdarzenia interfejsu użytkownika
+.
+Language=Romanian
+Evenimente de interfață grafică (UI)
 .
 
 
@@ -66,6 +76,9 @@ The command is not valid.
 Language=Polish
 To polecenie jest nieprawidłowe.
 .
+Language=Romanian
+Comanda nu este validă.
+.
 
 
 MessageId=0x101
@@ -77,6 +90,9 @@ File %1 contains content that is not valid.
 .
 Language=Polish
 Plik %1 ma nieprawidłową zawartość.
+.
+Language=Romanian
+Fișierul %1 are conținut ce nu este valid.
 .
 
 MessageId=0x102
@@ -91,6 +107,10 @@ Language=Polish
 Podjęto %1 ponownych prób, %2 zakończyło się sukcesem! Odłącz
 od serwera i spróbuj ponownie później.
 .
+Language=Romanian
+Au fost %1 reîncercări cu %2 succes(e)! Deconectați-vă de la
+servitor și încercați din nou, mai târziu.
+.
 
 MessageId=0x103
 Severity=Informational
@@ -100,6 +120,9 @@ Language=English
 %1 %%4096 = %2 %%4097.
 .
 Language=Polish
+%1 %%4096 = %2 %%4097.
+.
+Language=Romanian
 %1 %%4096 = %2 %%4097.
 .
 
@@ -117,6 +140,9 @@ quarts%0
 Language=Polish
 kwarty%0
 .
+Language=Romanian
+pinte%0
+.
 
 MessageId=0x1001
 Severity=Success
@@ -127,5 +153,8 @@ gallons%0
 .
 Language=Polish
 galony%0
+.
+Language=Romanian
+galoane%0
 .
 
