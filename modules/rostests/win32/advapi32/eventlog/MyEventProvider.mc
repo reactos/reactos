@@ -141,7 +141,7 @@ Language=Polish
 kwarty%0
 .
 Language=Romanian
-litre%0
+pinte%0
 .
 
 MessageId=0x1001
