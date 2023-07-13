@@ -101,7 +101,7 @@ VOID RestoreWindowPos()
 
 BOOL CanDialogSysMinimize(HWND hwnd)
 {
-    if (::GetClassLongPtrW(hwnd, GCW_ATOM) != reinterpret_cast<ULONG_PTR>(WC_DIALOG))
+    if (::GetClassLongPtrW(hwnd, GCW_ATOM) != (ULONG_PTR)WC_DIALOG)
         return FALSE;
     return (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd));
 }
@@ -110,7 +110,7 @@ BOOL ShouldMinimize(HWND hwnd)
 {
     if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd))
     {
-        DWORD style = static_cast<DWORD>(::GetWindowLongPtrW(hwnd, GWL_STYLE));
+        DWORD style = (DWORD)::GetWindowLongPtrW(hwnd, GWL_STYLE);
         if ((style & WS_MINIMIZEBOX) && (style & WS_CAPTION) == WS_CAPTION)
         {
             if (style & WS_SYSMENU)
@@ -140,7 +140,7 @@ struct EFFECTIVE_INFO
 static BOOL CALLBACK
 FindEffectiveProc(HWND hwnd, LPARAM lParam)
 {
-    EFFECTIVE_INFO *pei = reinterpret_cast<EFFECTIVE_INFO*>(lParam);
+    EFFECTIVE_INFO *pei = (EFFECTIVE_INFO *)lParam;
 
     if (!ShouldMinimize(hwnd) && !CanDialogSysMinimize(hwnd))
         return TRUE;    // continue
@@ -2711,7 +2711,7 @@ ChangePos:
 
     LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        COPYDATASTRUCT *pCopyData = reinterpret_cast<COPYDATASTRUCT *>(lParam);
+        COPYDATASTRUCT *pCopyData = (COPYDATASTRUCT *)lParam;
         switch (pCopyData->dwData)
         {
             case TABDMC_APPBAR:
@@ -3271,7 +3271,7 @@ HandleTrayContextMenu:
 
     static BOOL CALLBACK MinimizeWindowsProc(HWND hwnd, LPARAM lParam)
     {
-        MINIMIZE_INFO *info = reinterpret_cast<MINIMIZE_INFO*>(lParam);
+        MINIMIZE_INFO *info = (MINIMIZE_INFO *)lParam;
         if (hwnd == info->hwndDesktop || hwnd == info->hTrayWnd || hwnd == info->hwndProgman)
             return TRUE; // Ignore special windows
 
