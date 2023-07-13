@@ -1,10 +1,6 @@
-/* 
- * Simplified Chinese resource for appwiz (dll/cpl/appwiz/lang/zh-CN.rc)
- *
- * TRANSLATOR:  Jingjing Fu (jingjingf AT 188.com)
- *              Luo Yufan (njlyf2011@hotmail.com)
- * CREATED:     2009-04-25
- * UPDATED:     2018-12-03
+/*
+ * TRANSLATORS: 2009 Jingjing Fu <jingjingf@188.com>
+ *              2018 Luke Luo <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -53,7 +49,7 @@ END
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "删除快捷方式/文件夹"
-FONT 8, "宋体"
+FONT 9, "宋体"
 BEGIN
     LTEXT "从「开始」菜单中删除项目，选择项目并单击删除。(&T)", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
