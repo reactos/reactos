@@ -111,7 +111,7 @@ BOOL ShouldMinimize(HWND hwnd)
     if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd))
     {
         DWORD style = (DWORD)::GetWindowLongPtrW(hwnd, GWL_STYLE);
-        if ((style & WS_MINIMIZEBOX) && (style & WS_CAPTION) == WS_CAPTION)
+        if ((style & WS_CAPTION) == WS_CAPTION)
         {
             if (style & WS_SYSMENU)
             {
