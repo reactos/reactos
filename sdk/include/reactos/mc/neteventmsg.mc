@@ -512,7 +512,7 @@ Language=Polish
 Upłynął limit czasu (%1 milisekund) podczas oczekiwania na połączenie się z usługą %2.
 .
 Language=Romanian
-Pauza (%1 (de) milisecundă(e)) așteaptă pentru serviciul %2 pentru conectare.
+Pauza (de %1 (de) milisecundă(e)) așteaptă pentru serviciul %2 pentru conectare.
 .
 
 MessageId=7010
@@ -531,6 +531,9 @@ Expiration du délai (%1 millisecondes) lors de l'attente de ReadFile.
 Language=Polish
 Upłynął limit czasu (%1 milisekund) podczas oczekiwania na operację ReadFile.
 .
+Language=Romanian
+Pauza (de %1 (de) milisecundă(e)) așteaptă pentru fișierul de citire ReadFile.
+.
 
 MessageId=7011
 Severity=Error
@@ -547,6 +550,9 @@ Expiration du délai (%1 millisecondes) lors de l'attente pour une transaction r
 .
 Language=Polish
 Upłynął limit czasu (%1 milisekund) podczas oczekiwania na odpowiedź transakcji z usługi %2.
+.
+Language=Romanian
+Pauza (de %1 (de) milisecundă(e)) așteaptă pentru un răspuns de tranzacție de la serviciul %2.
 .
 
 MessageId=7012
@@ -565,6 +571,9 @@ Le message retourné dans la transaction a une taille incorrecte.
 Language=Polish
 Wiadomość zwrócona w transakcji ma niepoprawny rozmiar.
 .
+Language=Romanian
+Mesajul returnat în tranzacție are o dimensiune incorectă.
+.
 
 MessageId=7013
 Severity=Error
@@ -581,6 +590,9 @@ La tentative de connexion avec le mot de passe actuel a échoué avec l'erreur s
 .
 Language=Polish
 Próba logowania za pomocą aktualnego hasła nie powiodła się; wystąpił następujący błąd: %n%1
+.
+Language=Romanian
+Încercare de logare cu parola curentă a eșuat cu următoarea eroare: %n%1
 .
 
 MessageId=7014
@@ -599,6 +611,9 @@ La seconde tentative de connexion avec l'ancien mot de passe a également échou
 Language=Polish
 Druga próba logowania za pomocą starego hasła także się nie powiodła; wystąpił następujący błąd: %n%1
 .
+Language=Romanian
+A doua încercare de logare cu parola veche a eșuat de asemenea, cu următoarea eroare: %n%1
+.
 
 MessageId=7015
 Severity=Error
@@ -615,6 +630,9 @@ Un pilote au démarrage ou système (%1) ne doit pas dépendre d'un service.
 .
 Language=Polish
 Sterowniki startu rozruchowego oraz systemowego (%1) nie mogą zależeć od usługi.
+.
+Language=Romanian
+Modulul pilot de pornire sau de pornire al sistemului (%1) nu trebuie să depindă de serviciu.
 .
 
 MessageId=7016
@@ -633,6 +651,9 @@ Le service %1 a reporté un état courant invalide %2.
 Language=Polish
 Usługa %1 zaraportowała nieprawidłowy stan bieżący %2.
 .
+Language=Romanian
+Serviciul %1 a raportat un stadiu curent nevalid %2.
+.
 
 MessageId=7017
 Severity=Error
@@ -649,6 +670,9 @@ Dépendances circulaires détectées lors du démarrage de %1.
 .
 Language=Polish
 Wykryte zależności cykliczne wymagają uruchomienia %1.
+.
+Language=Romanian
+Au fost detectate cereri de dependințe circulare, începând cu %1.
 .
 
 MessageId=7018
@@ -667,6 +691,9 @@ Dépendances circulaires détectées lors du démarrage automatique des services
 Language=Polish
 Wykryto automatycznie uruchamiane usługi zależności cyklicznych.
 .
+Language=Romanian
+Au fost detectate servicii de pornire automată de dependințe circulare.
+.
 
 MessageId=7019
 Severity=Error
@@ -683,6 +710,9 @@ Dépendance circulaire : le service %1 dépend d'un service dans un groupe qui d
 .
 Language=Polish
 Zależność cykliczna: usługa %1 zależy od usługi z grupy uruchamianej później.
+.
+Language=Romanian
+Dependență circulară: Serviciul %1 depinde de un serviciu dintr-un grup ce pornește mai târziu.
 .
 
 MessageId=7020
@@ -701,6 +731,9 @@ Dépendance circulaire : le service %1 dépend d'un groupe qui démarre plus tar
 Language=Polish
 Zależność cykliczna: usługa %1 zależy od grupy uruchamianej później.
 .
+Language=Romanian
+Dependență circulară: Serviciul %1 depinde de un grup ce pornește mai târziu.
+.
 
 MessageId=7021
 Severity=Error
@@ -717,6 +750,9 @@ Sur le point de revenir à la dernière bonne configuration connue car le servic
 .
 Language=Polish
 System powróci do ostatniej znanej dobrej konfiguracji, ponieważ uruchomienie usługi %1 nie powiodło się.
+.
+Language=Romanian
+Sunteți pe cale să anulați revenirea la ultima configurație bună cunoscută din cauză că serviciul %1 nu a putut porni.
 .
 
 MessageId=7022
@@ -735,6 +771,9 @@ Le serveur %1 service s'est gelé au démarrage.
 Language=Polish
 Usługa %1 zawiesiła się podczas uruchamiania.
 .
+Language=Romanian
+Serviciul %1 a fost blocat la pornire.
+.
 
 MessageId=7023
 Severity=Error
@@ -751,6 +790,9 @@ Le service %1 s'est terminé avec l'erreur suivante : %n%2
 .
 Language=Polish
 Usługa %1 zakończyła działanie; wystąpił następujący błąd: %n%2
+.
+Language=Romanian
+Serviciul %1 a fost închis cu următoarea eroare: %n%2
 .
 
 MessageId=7024
