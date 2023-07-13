@@ -133,7 +133,7 @@ Language=Polish
 Pakiet sterownika otrzymany z podsystemu wejścia/wyjścia jest niepoprawny. Przedstawione dane to otrzymany pakiet.
 .
 Language=Romanian
-Un pachet primit al modulului pilot din subsistemul de intrare/ieșire a fost nevalid. Datele sunt pachetul însuși.
+Un pachet primit al modulului pilot din subsistemul de In/Ex a fost nevalid. Datele sunt pachetul însuși.
 .
 
 MessageId=6005
@@ -262,7 +262,7 @@ Language=Polish
 Usługa %1 nie mogła skonfigurować źródła zdarzenia.
 .
 Language=Romanian
-Serviciul %1 nu a putut configura o sursă de eveniment.
+Serviciul %1 nu a putut configura o sursă a evenimentului.
 .
 
 MessageId=6011
@@ -472,7 +472,7 @@ Language=Polish
 System powrócił do ostatniej znanej dobrej konfiguracji. Trwa ponowne uruchamianie systemu...
 .
 Language=Romanian
-Sistemul a revenit la cea mai bună configurație anterioară. Sistemul repornește....
+Sistemul a revenit la cea mai bună configurație anterioară. Se repornește sistemul....
 .
 
 MessageId=7008
@@ -492,7 +492,7 @@ Language=Polish
 W nazwie konta brak znaku ukośnika odwrotnego.
 .
 Language=Romanian
-Nu există bară oblică inversă în numele contului.
+Lipsește solidusul inversat din numele contului.
 .
 
 MessageId=7009
@@ -592,7 +592,7 @@ Language=Polish
 Próba logowania za pomocą aktualnego hasła nie powiodła się; wystąpił następujący błąd: %n%1
 .
 Language=Romanian
-Încercare de logare cu parola curentă a eșuat cu următoarea eroare: %n%1
+Încercare de autentificare cu parola curentă a eșuat cu următoarea eroare: %n%1
 .
 
 MessageId=7014
@@ -632,7 +632,7 @@ Language=Polish
 Sterowniki startu rozruchowego oraz systemowego (%1) nie mogą zależeć od usługi.
 .
 Language=Romanian
-Modulul pilot de pornire sau de pornire al sistemului (%1) nu trebuie să depindă de serviciu.
+Modulul pilot de pornire a inițializării sau al sistemului (%1) nu trebuie să depindă de serviciu.
 .
 
 MessageId=7016
@@ -812,7 +812,7 @@ Language=Polish
 Usługa %1 zakończyła działanie; wystąpił specyficzny dla niej błąd %2.
 .
 Language=Romanian
-Serviciul %1 a fost terminat cu o eroare specifică unui serviciu %2.
+Serviciul %1 s-a terminat cu o eroare specifică unui serviciu %2.
 .
 
 MessageId=7025
@@ -999,9 +999,9 @@ Menedżer sterowania usługami nie został zainicjowany pomyślnie. Nie udało s
 konfiguracji zabezpieczeń (scesrv.dll) z powodu błędu %1. Trwa ponowne uruchamianie systemu...
 .
 Language=Romanian
-Administratorul de control al serviciului nu a putut fi inițializat cu succes. Securitatea
-servitorului de configurație (scesrv.dll) nu a putut fi inițializat cu eroare %1.
-Sistemul repornește...
+Administratorul de control al serviciului s-a putut inițializa cu succes. Securitatea
+servitorului de configurație (scesrv.dll) s-a putut inițializa cu eroarea %1.
+Se repornește sistemul...
 .
 
 MessageId=7034
@@ -1104,7 +1104,7 @@ Jeśli ta konfiguracja nie zostanie naprawiona, ponowne uruchomienie usługi
 ReactOS Management Console (MMC).
 .
 Language=Romanian
-Administratorul de control al serviciului a întâlnit o eraore în încercarea de a anula o schimbare de configurație
+Administratorul de control al serviciului a întâlnit o eroare în încercarea de a anula o schimbare de configurație
 la serviciul %1. %2-ul serviciului este deocamdată într-un stadiu neprevăzut.
 
 Dacă nu corectați această configurație, nu veți putea reporni serviciul %1
@@ -1180,9 +1180,9 @@ proces %2, a połączył się proces %3.%n%n
 Jeśli ta usługa jest skonfigurowana do uruchomienia z debugerem, takie zachowanie jest oczekiwane.
 .
 Language=Romanian
-Serviciul procesează altceva decât ceea ce este pornit în Administratorul de control al serviciilor
-conectat când este pornit serviciul %1. Administratorul de control al serviciilor a lansat
-în schimb, procesul %2 și procesul %3 conectat.%n%n
+Procesul serviciului, altul decât ceea ce este pornit în Administratorul de control al serviciilor
+e conectat odată cu pornirea serviciului %1. Administratorul de control al serviciilor a lansat, în schimb
+procesul %2 și procesul %3 conectat.%n%n
 
 Rețineți că, dacă acest serviciu este configurat să pornească sub un depanator, acest comportament este de așteptat.
 .
@@ -1277,7 +1277,7 @@ czy to się dokonuje.
 .
 Language=Romanian
 Serviciul %1 nu a putut fi logat ca %2 cu parola configurată în prezent, din cauza următoarei erori:%n
-Logare eșuată: utilizatorului nu i-a fost acordat tipul de conectare solicitat la acest computer.%n%n
+Logare eșuată: utilizatorului nu i-a fost acordat tipul de conectare solicitat la acest calculatorn%n
 Serviciu: %1%n
 Domeniu sau cont: %2%n%n
 Acest cont de serviciu nu are drepturile de utilizator necesare "Logare ca un serviciu."%n%n
@@ -1363,7 +1363,7 @@ Language=Polish
 %2: nie można zarejestrować w otoce NDIS.
 .
 Language=Romanian
-%2-ul însuși nu a putut fi înregistrat cu învelitoarea NDIS.
+%2-ul însuși nu a putut fi înregistrat cu emulatorul NDIS.
 .
 
 MessageId=9006
