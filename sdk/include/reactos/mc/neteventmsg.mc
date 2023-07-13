@@ -1287,7 +1287,7 @@ puteți folosi Setările de securitate locale (Secpol.msc). Dacă acest calculat
 nod dintr-un grup, verificați dacă drepturile de utilizator sunt atribuite în
 Grupul de conturi de serviciu pe toate nodurile din grup.%n%n
 Dacă deja ați atribuit acest drept de utilizator la contul serviciului și
-dreptul utilizatorului apare ca fiind șters, un obiect asociat Politicii grupului cu acest
+dreptul utilizatorului apare ca fiind șters, un obiect al Politicii grupului asociat cu acest
 nod poate fi ștergerea dreptului. Verificați cu domeniul dumneavoastră de administrator pentru
 a afla dacă se întâmplă acest lucru.
 .
