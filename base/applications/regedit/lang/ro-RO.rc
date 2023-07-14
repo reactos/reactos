@@ -33,7 +33,8 @@ Opțiuni:\n\
                  Compatibil cu orice alt comutator. Ignorat.\n\
   /C             Importă conținutul unui fișier de regiștri.\n\
   /D             Șterge o cheie de registru specificată.\n\
-  /E             Exportă conținutul unei chei de registru specificată într-un fișier.\n\
+  /E             Exportă conținutul unei chei de registru specificată într-un fișier.\n
+                 Este exportat întregul registru într-un fișier.\n\
                  Dacă nu este nicio cheie specificată, toți regiștrii sunt exportați.\n\
   /S             Modul silențios. Nu sunt afișate mesaje.\n\
   /V             Lansează interfața grafică (GUI) în modul avansat. Ignorat.\n\
