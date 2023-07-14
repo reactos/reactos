@@ -1363,7 +1363,7 @@ Language=Polish
 %2: nie można zarejestrować w otoce NDIS.
 .
 Language=Romanian
-%2 s-a putut înregistra cu emulatorul NDIS.
+%2 nu s-a putut înregistra cu emulatorul NDIS.
 .
 
 MessageId=9006
