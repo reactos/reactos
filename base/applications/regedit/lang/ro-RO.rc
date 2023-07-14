@@ -31,16 +31,16 @@ Opțiuni:\n\
                  Compatibil cu orice alt comutator. Ignorat.\n\
   /R:user.dat    Locația fișierului user.dat urmează să fie modificată.\n\
                  Compatibil cu orice alt comutator. Ignorat.\n\
-  /C             Importă conținutul unui fișier de regiștri. Este importat întregul registru dintr-un fișier.\n\
+  /C             Importă conținutul unui fișier de registru.\n\
   /D             Șterge o cheie de registru specificată.\n\
-  /E             Exportă conținutul unei chei de registru specificată într-un fișier. Este exportat întregul registru într-un fișier.\n\
-                 Dacă nu este nicio cheie specificată, toți regiștrii sunt exportați.\n\
+  /E             Exportă conținutul unei chei de registru specificată într-un fișier.\n\
+                 Dacă nu este nicio cheie specificată, este exportat întregul registru.\n\
   /S             Modul silențios. Nu sunt afișate mesaje.\n\
   /V             Lansează interfața grafică (GUI) în modul avansat. Ignorat.\n\
   /?             Afișează informații și părăsește programul.\n\
-  [filename]     Este importat întregul registru dintr-un fișier. Locația fișierului ce conține informații despre regiștri ce urmează\n\
-                 să fie importați. Când e folosit cu [/E], această opțiune specifică\n\
-                 locația fișierului în care informațiile despre regiștri vor fi exportate.\n\
+  [filename]     Este importat întregul registru dintr-un fișier. Locația fișierului ce conține informații despre registrul ce urmează\n\
+                 să fie importat. Când e folosit cu [/E], această opțiune specifică\n\
+                 locația fișierului în care informațiile despre registru vor fi exportate.\n\
   [reg_key]      Cheie de registru ce urmează să fie modificată.\n\
 \n\
 Exemple de utilizări:\n\
@@ -608,7 +608,7 @@ END
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS "Deschide Ajutor pentru Editorul de regiștri."
+ *    ID_HELP_HELPTOPICS "Deschide Ajutor pentru Editorul de registru."
  *    ID_HELP_ABOUT "Afișează informații despre program, numărul versiunii și marca înregistrată."
  *END
  */
