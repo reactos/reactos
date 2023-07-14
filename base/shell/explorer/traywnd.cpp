@@ -106,12 +106,9 @@ BOOL CanBeMinimized(HWND hwnd)
         if (::GetClassLongPtrW(hwnd, GCW_ATOM) == (ULONG_PTR)WC_DIALOG)
             return TRUE;
 
-        DWORD style = (DWORD)::GetWindowLongPtrW(hwnd, GWL_STYLE);
-        if (style & WS_MINIMIZEBOX)
-        {
-            if ((style & WS_CAPTION) == WS_CAPTION)
-                return TRUE;
-        }
+        DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+        if (!(exstyle & WS_EX_TOPMOST))
+            return TRUE;
     }
     return FALSE;
 }
