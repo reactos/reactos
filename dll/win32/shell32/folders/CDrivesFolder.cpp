@@ -572,16 +572,6 @@ static const shvheader MyComputerSFHeader[] = {
     {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 10},
 };
 
-enum drives_columns
-{
-    DRIVES_COL_NAME,
-    DRIVES_COL_TYPE,
-    DRIVES_COL_TOTAL_SIZE,
-    DRIVES_COL_FREE_SIZE,
-    DRIVES_COL_COMMENTS,
-    DRIVES_COL_COUNT
-};
-
 static const DWORD dwComputerAttributes =
     SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
     SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
@@ -760,28 +750,29 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
     if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
         return m_regFolder->CompareIDs(lParam, pidl1, pidl2);
 
-    if (!_ILIsDrive(pidl1) || !_ILIsDrive(pidl2) || LOWORD(lParam) >= DRIVES_COL_COUNT)
+    UINT iColumn = LOWORD(lParam);
+    if (!_ILIsDrive(pidl1) || !_ILIsDrive(pidl2) || iColumn >= _countof(MyComputerSFHeader))
         return E_INVALIDARG;
 
     CHAR* pszDrive1 = _ILGetDataPointer(pidl1)->u.drive.szDriveName;
     CHAR* pszDrive2 = _ILGetDataPointer(pidl2)->u.drive.szDriveName;
 
     int result;
-    switch(LOWORD(lParam))
+    switch (MyComputerSFHeader[iColumn].colnameid)
     {
-        case DRIVES_COL_NAME:
+        case IDS_SHV_COLUMN_NAME:
         {
             result = stricmp(pszDrive1, pszDrive2);
             hres = MAKE_COMPARE_HRESULT(result);
             break;
         }
-        case DRIVES_COL_TYPE:
+        case IDS_SHV_COLUMN_TYPE:
         {
             /* We want to return immediately because SHELL32_CompareDetails also compares children. */
             return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
         }
-        case DRIVES_COL_TOTAL_SIZE:
-        case DRIVES_COL_FREE_SIZE:
+        case IDS_SHV_COLUMN_DISK_CAPACITY:
+        case IDS_SHV_COLUMN_DISK_AVAILABLE:
         {
             ULARGE_INTEGER Drive1Available, Drive1Total, Drive2Available, Drive2Total;
 
@@ -804,11 +795,9 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
             hres = MAKE_COMPARE_HRESULT(Diff.QuadPart);
             break;
         }
-        case DRIVES_COL_COMMENTS:
+        case IDS_SHV_COLUMN_COMMENTS:
             hres = MAKE_COMPARE_HRESULT(0);
             break;
-        default:
-            return E_INVALIDARG;
     }
 
     if (HRESULT_CODE(hres) == 0)
@@ -1125,7 +1114,7 @@ HRESULT WINAPI CDrivesFolder::GetDefaultColumnState(UINT iColumn, DWORD * pcsFla
 {
     TRACE ("(%p)\n", this);
 
-    if (!pcsFlags || iColumn >= DRIVES_COL_COUNT)
+    if (!pcsFlags || iColumn >= _countof(MyComputerSFHeader))
         return E_INVALIDARG;
     *pcsFlags = MyComputerSFHeader[iColumn].pcsFlags;
     return S_OK;
@@ -1143,7 +1132,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
 
     TRACE ("(%p)->(%p %i %p)\n", this, pidl, iColumn, psd);
 
-    if (!psd || iColumn >= DRIVES_COL_COUNT)
+    if (!psd || iColumn >= _countof(MyComputerSFHeader))
         return E_INVALIDARG;
 
     if (!pidl)
@@ -1154,15 +1143,15 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
     }
     else if (!_ILIsDrive(pidl))
     {
-        switch (iColumn)
+        switch (MyComputerSFHeader[iColumn].colnameid)
         {
-            case DRIVES_COL_NAME:
-            case DRIVES_COL_TYPE:
+            case IDS_SHV_COLUMN_NAME:
+            case IDS_SHV_COLUMN_TYPE:
                 return m_regFolder->GetDetailsOf(pidl, iColumn, psd);
-            case DRIVES_COL_TOTAL_SIZE:
-            case DRIVES_COL_FREE_SIZE:
+            case IDS_SHV_COLUMN_DISK_CAPACITY:
+            case IDS_SHV_COLUMN_DISK_AVAILABLE:
                 return SHSetStrRet(&psd->str, "");               /* blank col */
-            case DRIVES_COL_COMMENTS:
+            case IDS_SHV_COLUMN_COMMENTS:
                 return m_regFolder->GetDetailsOf(pidl, 2, psd);  /* 2 = comments */
         }
     }
@@ -1174,19 +1163,19 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
         if (DriveType > DRIVE_RAMDISK)
             DriveType = DRIVE_FIXED;
 
-        switch (iColumn)
+        switch (MyComputerSFHeader[iColumn].colnameid)
         {
-            case DRIVES_COL_NAME:
+            case IDS_SHV_COLUMN_NAME:
                 hr = GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
-            case DRIVES_COL_TYPE:
+            case IDS_SHV_COLUMN_TYPE:
                 if (DriveType == DRIVE_REMOVABLE && !IsDriveFloppyA(pszDrive))
                     hr = SHSetStrRet(&psd->str, IDS_DRIVE_REMOVABLE);
                 else
                     hr = SHSetStrRet(&psd->str, iDriveTypeIds[DriveType]);
                 break;
-            case DRIVES_COL_TOTAL_SIZE:
-            case DRIVES_COL_FREE_SIZE:
+            case IDS_SHV_COLUMN_DISK_CAPACITY:
+            case IDS_SHV_COLUMN_DISK_AVAILABLE:
                 psd->str.cStr[0] = 0x00;
                 psd->str.uType = STRRET_CSTR;
                 if (GetVolumeInformationA(pszDrive, NULL, 0, NULL, NULL, NULL, NULL, 0))
@@ -1199,7 +1188,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
                 }
                 hr = S_OK;
                 break;
-            case DRIVES_COL_COMMENTS:
+            case IDS_SHV_COLUMN_COMMENTS:
                 hr = SHSetStrRet(&psd->str, "");   /* FIXME: comments */
                 break;
         }
