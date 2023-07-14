@@ -38,7 +38,7 @@ Opțiuni:\n\
   /S             Modul silențios. Nu sunt afișate mesaje.\n\
   /V             Lansează interfața grafică (GUI) în modul avansat. Ignorat.\n\
   /?             Afișează informații și părăsește programul.\n\
-  [filename]     Este importat întregul registru dintr-un fișier. Locația fișierului ce conține informații despre registrul ce urmează\n\
+  [filename]     Locația fișierului ce conține informații despre registrul ce urmează\n\
                  să fie importat. Când e folosit cu [/E], această opțiune specifică\n\
                  locația fișierului în care informațiile despre registru vor fi exportate.\n\
   [reg_key]      Cheie de registru ce urmează să fie modificată.\n\
