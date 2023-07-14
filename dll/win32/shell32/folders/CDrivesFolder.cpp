@@ -1146,6 +1146,10 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
     }
     else if (!_ILIsDrive(pidl))
     {
+        if (iColumn == 2 || iColumn == 3)
+            return SHSetStrRet(&psd->str, "");
+        if (iColumn == 4)
+            iColumn = 2;
         return m_regFolder->GetDetailsOf(pidl, iColumn, psd);
     }
     else
