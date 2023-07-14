@@ -262,7 +262,7 @@ Language=Polish
 Usługa %1 nie mogła skonfigurować źródła zdarzenia.
 .
 Language=Romanian
-Serviciul %1 nu a putut configura o sursă a unui eveniment.
+Serviciul %1 nu a putut configura o sursă de evenimente.
 .
 
 MessageId=6011
@@ -1180,7 +1180,7 @@ proces %2, a połączył się proces %3.%n%n
 Jeśli ta usługa jest skonfigurowana do uruchomienia z debugerem, takie zachowanie jest oczekiwane.
 .
 Language=Romanian
-Un proces al serviciului, altul decât ceea ce este pornit în Administratorul de control al serviciilor
+Un proces de tip serviciu, altul decât ceea ce este pornit în Administratorul de control al serviciilor
 s-a conectat odată cu pornirea serviciului %1. Administratorul de control al serviciilor a lansat
 procesul %2 și în schimb, s-a conectat procesul %3. %n%n
 
