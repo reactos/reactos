@@ -262,7 +262,7 @@ Language=Polish
 Usługa %1 nie mogła skonfigurować źródła zdarzenia.
 .
 Language=Romanian
-Serviciul %1 nu a putut configura o sursă a evenimentului.
+Serviciul %1 nu a putut configura o sursă a unui eveniment.
 .
 
 MessageId=6011
@@ -972,7 +972,7 @@ Language=Polish
 Menedżer sterowania usługami próbował podjąć akcję korekcyjną (%2) po nieoczekiwanym zakończeniu usługi %3, ale ta akcja nie powiodła się przy następującym błędzie: %n%4.
 .
 Language=Romanian
-Administratorul de control al serviciului a încercat să ia o acțiune corectivă (%2) după o închidere neanunțată a serviciului %3, dar această acțiune a eșuat cu următoarea eroare: %n%4
+Administratorul de control al serviciului a încercat să ia o acțiune corectivă (%2) după o închidere neașteptată a serviciului %3, dar această acțiune a eșuat cu următoarea eroare: %n%4
 .
 
 MessageId=7033
@@ -999,8 +999,8 @@ Menedżer sterowania usługami nie został zainicjowany pomyślnie. Nie udało s
 konfiguracji zabezpieczeń (scesrv.dll) z powodu błędu %1. Trwa ponowne uruchamianie systemu...
 .
 Language=Romanian
-Administratorul de control al serviciului s-a putut inițializa cu succes. Securitatea
-servitorului de configurație (scesrv.dll) s-a putut inițializa cu eroarea %1.
+Administratorul de control al serviciului nu s-a putut inițializa cu succes. Securitatea
+servitorului de configurație (scesrv.dll) a eșuat să se inițializeze cu eroarea %1.
 Se repornește sistemul...
 .
 
@@ -1180,9 +1180,9 @@ proces %2, a połączył się proces %3.%n%n
 Jeśli ta usługa jest skonfigurowana do uruchomienia z debugerem, takie zachowanie jest oczekiwane.
 .
 Language=Romanian
-Procesul serviciului, altul decât ceea ce este pornit în Administratorul de control al serviciilor
-e conectat odată cu pornirea serviciului %1. Administratorul de control al serviciilor a lansat, în schimb
-procesul %2 și procesul %3 conectat.%n%n
+Un proces al serviciului, altul decât ceea ce este pornit în Administratorul de control al serviciilor
+s-a conectat odată cu pornirea serviciului %1. Administratorul de control al serviciilor a lansat
+procesul %2 și în schimb, s-a conectat procesul %3. %n%n
 
 Rețineți că, dacă acest serviciu este configurat să pornească sub un depanator, acest comportament este de așteptat.
 .
@@ -1276,7 +1276,7 @@ węzłem może usuwać to prawo. Skontaktuj się z administratorem domeny by spr
 czy to się dokonuje.
 .
 Language=Romanian
-Serviciul %1 nu a putut fi logat ca %2 cu parola configurată în prezent, din cauza următoarei erori:%n
+Serviciul %1 nu a putut fi autentificat ca %2 cu parola configurată în prezent, din cauza următoarei erori:%n
 Autentificare eșuată: utilizatorului nu i-a fost acordat tipul de conectare solicitat la acest calculatorn%n
 Serviciu: %1%n
 Domeniu sau cont: %2%n%n
