@@ -107,7 +107,8 @@ ARP -a [inet_addr] [-N if_addr]
                 este permanentă.
   eth_addr      Specifică adresa fizică.
   if_addr       Dacă e prezent, acesta specifică adresa de Internet a
-                interfeței al cărei tabel de traducere a adreselor ar trebui modificat.
+            					interfeței al cărei tabel de traducere a adreselor ar trebui
+                modificat.
                 Dacă nu e prezentă, va fi folosită prima interfață aplicabilă.
 Exemplu:
   > arp -s 157.55.85.212   00-aa-00-62-c6-09  .... Adaugă o intrare statică.
