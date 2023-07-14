@@ -532,7 +532,7 @@ Language=Polish
 Upłynął limit czasu (%1 milisekund) podczas oczekiwania na operację ReadFile.
 .
 Language=Romanian
-Pauza (de %1 (de) milisecundă(e)) așteaptă pentru fișierul de citire ReadFile.
+Pauza (de %1 (de) milisecundă(e)) așteaptă fișierul de citire ReadFile.
 .
 
 MessageId=7011
@@ -552,7 +552,7 @@ Language=Polish
 Upłynął limit czasu (%1 milisekund) podczas oczekiwania na odpowiedź transakcji z usługi %2.
 .
 Language=Romanian
-Pauza (de %1 (de) milisecundă(e)) așteaptă pentru un răspuns de tranzacție de la serviciul %2.
+Pauza (de %1 (de) milisecundă(e)) așteaptă un răspuns de tranzacție de la serviciul %2.
 .
 
 MessageId=7012
