@@ -1277,12 +1277,12 @@ czy to się dokonuje.
 .
 Language=Romanian
 Serviciul %1 nu a putut fi logat ca %2 cu parola configurată în prezent, din cauza următoarei erori:%n
-Logare eșuată: utilizatorului nu i-a fost acordat tipul de conectare solicitat la acest calculatorn%n
+Autentificare eșuată: utilizatorului nu i-a fost acordat tipul de conectare solicitat la acest calculatorn%n
 Serviciu: %1%n
 Domeniu sau cont: %2%n%n
-Acest cont de serviciu nu are drepturile de utilizator necesare "Logare ca un serviciu."%n%n
+Acest cont de serviciu nu are drepturile de utilizator necesare "Autentificare ca un serviciu."%n%n
 Acțiunea utilizatorului%n%n
-Atribuiți "Logare ca un serviciu" la contul serviciului de pe acest calculator. Pentru a face asta
+Atribuiți "Autentificare ca un serviciu" la contul serviciului de pe acest calculator. Pentru a face asta
 puteți folosi Setările de securitate locale (Secpol.msc). Dacă acest calculator este un
 nod dintr-un grup, verificați dacă drepturile de utilizator sunt atribuite în
 Grupul de conturi de serviciu pe toate nodurile din grup.%n%n
