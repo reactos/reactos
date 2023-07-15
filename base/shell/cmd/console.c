@@ -329,34 +329,6 @@ BOOL ConSetScreenColor(HANDLE hOutput, WORD wColor, BOOL bFill)
 }
 #endif
 
-BOOL ConIsDoubleWidthChar(WCHAR wch)
-{
-    if (0x20 <= wch && wch <= 0x7E)
-        return FALSE;
-
-    if ((0x3041 <= wch && wch <= 0x3094) || (0x30A1 <= wch && wch <= 0x30F6) ||
-        (0x3105 <= wch && wch <= 0x312C) || (0x3131 <= wch && wch <= 0x318E) ||
-        (0xAC00 <= wch && wch <= 0xD7A3) || (0xFF01 <= wch && wch <= 0xFF5E))
-    {
-        return TRUE;
-    }
-
-    if ((0xFF61 <= wch && wch <= 0xFF9F) || (0xFFA0 <= wch && wch <= 0xFFBE) ||
-        (0xFFC2 <= wch && wch <= 0xFFC7) || (0xFFCA <= wch && wch <= 0xFFCF) ||
-        (0xFFD2 <= wch && wch <= 0xFFD7) || (0xFFDA <= wch && wch <= 0xFFDC))
-    {
-        return FALSE;
-    }
-
-    if ((0xFFE0 <= wch && wch <= 0xFFE6) || (0x4E00 <= wch && wch <= 0x9FA5) ||
-        (0xF900 <= wch && wch <= 0xFA2D))
-    {
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
 #include <cjkcode.h>
 #include "wcwidth.c"
 
