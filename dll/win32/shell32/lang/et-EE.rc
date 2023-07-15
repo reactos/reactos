@@ -441,7 +441,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Kaustavaated", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Selle kausta puhul kasutatud vaadet (nt Üksikasjad\nvõi Paanid) võid rakendada kõigile kaustadele.", -1, 60, 20, 180, 20
+    LTEXT "Selle kausta puhul kasutatud vaadet (nt Üksikasjad või Paanid) võid rakendada kõigile kaustadele.", -1, 60, 20, 180, 20
     PUSHBUTTON "&Rakenda kõigile kaustadele", IDC_VIEW_APPLY_TO_ALL, 60, 50, 90, 14, WS_TABSTOP
     PUSHBUTTON "&Lähtesta kõik kaustad", IDC_VIEW_RESET_ALL, 160, 50, 80, 14, WS_TABSTOP
     LTEXT "Täpsemad sätted:", -1, 7, 80, 100, 10
