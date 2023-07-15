@@ -33,7 +33,7 @@
 #define SHIFTJIS_CHARSET    128
 #define HANGEUL_CHARSET     129
 #define HANGUL_CHARSET      129 // HANGEUL_CHARSET
-#if(WINVER >= 0x0400)
+#if (WINVER >= 0x0400)
 #define JOHAB_CHARSET       130
 #endif /* WINVER */
 #define GB2312_CHARSET      134
