@@ -31,17 +31,19 @@ Opțiuni:\n\
                  Compatibil cu orice alt comutator. Ignorat.\n\
   /R:user.dat    Locația fișierului user.dat urmează să fie modificată.\n\
                  Compatibil cu orice alt comutator. Ignorat.\n\
-  /C             Importă conținutul unui fișier de regiștri.\n\
-  /D             Șterge o cheie de regiștrii specificată.\n\
-  /E             Exportă conținutul unei cheie de regiștri specificată într-un fișier.\n\
-                 Dacă nu este nicio cheie specificată, toți regiștrii sunt exportați.\n\
+  /C             Importă conținutul unui fișier de registru.\n\
+  /D             Șterge o cheie de registru specificată.\n\
+  /E             Exportă conținutul unei chei de registru specificată într-un\n\
+                 fișier. Dacă nu este nicio cheie specificată, este exportat\n\
+                 întregul registru.\n\
   /S             Modul silențios. Nu sunt afișate mesaje.\n\
   /V             Lansează interfața grafică (GUI) în modul avansat. Ignorat.\n\
   /?             Afișează informații și părăsește programul.\n\
-  [filename]     Locația fișierului ce conține informații despre regiștri ce urmează\n\
-                 să fie importați. Când e folosit cu [/E], această opțiune specifică\n\
-                 locația fișierului în care informațiile despre regiștri vor fi exportate.\n\
-  [reg_key]      Cheie de regiștri ce urmează să fie modificată.\n\
+  [filename]     Locația fișierului ce conține informații despre registrul ce\n\
+                 urmează să fie importat. Când e folosit cu [/E], această\n\
+                 opțiune specifică locația fișierului în care informațiile\n\
+                 despre registru vor fi exportate.\n\
+  [reg_key]      Cheie de registru ce urmează să fie modificată.\n\
 \n\
 Exemple de utilizări:\n\
   regedit ""import.reg""\n\
@@ -50,7 +52,7 @@ Exemple de utilizări:\n\
     STRING_INVALID_SWITCH "regedit: Comutatorul este nevalid sau nerecunoscut [%1]\n"
     STRING_HELP "Scrieți ""regedit /?"" pentru ajutor.\n"
     STRING_NO_FILENAME "regedit: Niciun nume de fișier nu a fost specificat.\n"
-    STRING_NO_REG_KEY "regedit: Nicio cheie de regiștri nu a fost specificată pentru ștergere.\n"
+    STRING_NO_REG_KEY "regedit: Nicio cheie de registru nu a fost specificată pentru ștergere.\n"
     STRING_FILE_NOT_FOUND "regedit: Fișierul '%1' nu a fost găsit.\n"
     STRING_CANNOT_OPEN_FILE "regedit: Fișierul '%1' nu a putut fi deschis.\n"
     STRING_UNHANDLED_ACTION "regedit: Acțiune necontrolată.\n"
@@ -58,16 +60,16 @@ Exemple de utilizări:\n\
     STRING_INVALID_HEX "regedit: Valoare hexazecimală nevalidă.\n"
     STRING_CSV_HEX_ERROR "regedit: Datele hexazecimale nu au putut fi transformate. O valoare nevalidă a fost întâlnită la '%1'.\n"
     STRING_ESCAPE_SEQUENCE "regedit: Secvență de evadare nerecunoscută [\\%1!c!]\n"
-    STRING_UNKNOWN_DATA_FORMAT "regedit: Tipul de date de regiștri [0x%1!x!] nesuportat\n"
+    STRING_UNKNOWN_DATA_FORMAT "regedit: Tipul de date de registru [0x%1!x!] e nesuportat\n"
     STRING_UNEXPECTED_EOL "regedit: Capăt de linie neașteptat în '%1'.\n"
     STRING_UNRECOGNIZED_LINE "regedit: Linia '%1' nu a fost recunoscută.\n"
-    STRING_SETVALUE_FAILED "regedit: Valoarea de regiștri '%1' nu a putut fi adăugată la '%2'.\n"
-    STRING_OPEN_KEY_FAILED "regedit: Cheia de regiștri '%1' nu a putut fi deschisă.\n"
-    STRING_UNSUPPORTED_TYPE "regedit: Tipul de date de regiștri [0x%1!x!] nesuportat a apărut în '%2'.\n"
-    STRING_EXPORT_AS_BINARY "regedit: Valoarea de regiștri '%1' va fi exportată ca date binare.\n"
+    STRING_SETVALUE_FAILED "regedit: Valoarea de registru '%1' nu a putut fi adăugată la '%2'.\n"
+    STRING_OPEN_KEY_FAILED "regedit: Cheia de registru '%1' nu a putut fi deschisă.\n"
+    STRING_UNSUPPORTED_TYPE "regedit: Tipul de date de registru [0x%1!x!] nesuportat a apărut în '%2'.\n"
+    STRING_EXPORT_AS_BINARY "regedit: Valoarea de registru '%1' va fi exportată ca date binare.\n"
     STRING_INVALID_SYSTEM_KEY "regedit: Cheia de sistem [%1] este nevalidă\n"
-    STRING_REG_KEY_NOT_FOUND "regedit: '%1' nu a putut fi exportat. Cheia de regiștri specificată nu a fost găsită.\n"
-    STRING_DELETE_FAILED "regedit: Cheia de regiștri nu a putut fi ștearsă '%1'.\n"
+    STRING_REG_KEY_NOT_FOUND "regedit: '%1' nu a putut fi exportat. Cheia de registru specificată nu a fost găsită.\n"
+    STRING_DELETE_FAILED "regedit: Cheia de registru nu a putut fi ștearsă '%1'.\n"
     STRING_UNKNOWN_TYPE "Tip necunoscut"
     STRING_INVALID_LINE_SYNTAX, "regedit: Linia conține sintaxă nevalidă.\n"
 END
@@ -608,7 +610,7 @@ END
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS "Deschide Ajutor pentru Editorul de regiștri."
+ *    ID_HELP_HELPTOPICS "Deschide Ajutor pentru Editorul de registru."
  *    ID_HELP_ABOUT "Afișează informații despre program, numărul versiunii și marca înregistrată."
  *END
  */
