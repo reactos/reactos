@@ -1,0 +1,7 @@
+@ stdcall MatchEnumTag(ptr wstr long ptr ptr)
+@ stdcall MatchToken(wstr wstr)
+@ varargs PrintError(ptr long)
+@ varargs PrintMessage(wstr)
+@ varargs PrintMessageFromModule(ptr long)
+@ stdcall RegisterContext(ptr)
+@ stdcall RegisterHelper(ptr ptr)
