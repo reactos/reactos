@@ -35,14 +35,14 @@ Opțiuni:\n\
   /D             Șterge o cheie de registru specificată.\n\
   /E             Exportă conținutul unei chei de registru specificată într-un\n\
                  fișier. Dacă nu este nicio cheie specificată, este exportat\n\
-				 întregul registru.\n\
+                 întregul registru.\n\
   /S             Modul silențios. Nu sunt afișate mesaje.\n\
   /V             Lansează interfața grafică (GUI) în modul avansat. Ignorat.\n\
   /?             Afișează informații și părăsește programul.\n\
   [filename]     Locația fișierului ce conține informații despre registrul ce\n\
                  urmează să fie importat. Când e folosit cu [/E], această\n\
                  opțiune specifică locația fișierului în care informațiile\n\
-				 despre registru vor fi exportate.\n\
+                 despre registru vor fi exportate.\n\
   [reg_key]      Cheie de registru ce urmează să fie modificată.\n\
 \n\
 Exemple de utilizări:\n\
