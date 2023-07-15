@@ -666,7 +666,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
             else if (_ILIsSpecialFolder(pidlTemp))
                 m_regFolder->GetAttributesOf(1, &pidlTemp, pdwAttributes);
             else
-                ERR("Got an unkown pidl here!\n");
+                ERR("Got an unknown pidl here!\n");
         }
     }
 

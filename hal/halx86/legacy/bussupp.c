@@ -355,7 +355,7 @@ HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
         default:
 
             /* Invalid type */
-            DbgPrint("HAL: Unnkown PCI type\n");
+            DbgPrint("HAL: Unknown PCI type\n");
     }
 
     /* Return the bus handler */

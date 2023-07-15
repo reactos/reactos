@@ -510,7 +510,7 @@ HRESULT WINAPI CRegFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apid
         if (_ILIsSpecialFolder(*apidl))
             GetGuidItemAttributes(*apidl, rgfInOut);
         else
-            ERR("Got an unkown pidl here!\n");
+            ERR("Got an unknown pidl here!\n");
         apidl++;
         cidl--;
     }

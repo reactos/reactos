@@ -411,7 +411,7 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_A
             else if (_ILIsSpecialFolder(*apidl))
                 m_regFolder->GetAttributesOf(1, apidl, rgfInOut);
             else
-                ERR("Got an unkown pidl here!\n");
+                ERR("Got an unknown pidl here!\n");
             apidl++;
             cidl--;
         }
