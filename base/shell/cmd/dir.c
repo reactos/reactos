@@ -981,9 +981,8 @@ DirPrintWideList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
         else
         {
             cxWidth = ConGetTextWidth(ptrFiles[i]->stFindInfo.cFileName);
-            if (cxWidth > iLongestName)
-                iLongestName = cxWidth;
         }
+        iLongestName = max(iLongestName, cxWidth);
     }
 
     /* Count the highest number of columns */
