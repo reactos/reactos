@@ -17,12 +17,12 @@ In addition, in order to avoid coming off as rude to helpful contributors, pleas
 
 Before merging a PR, make sure it follows the [contributing rules](CONTRIBUTING.md#rules-and-recommendations), but more importantly:
 - If PR contains the code or translations:
-  - Make sure the author have not specified a nickname or alias, but a full legal name in all PR commits
-  - Make sure the author have the same full name set in GitHub profile that matches one in commits
+  - Make sure the author has not specified a nickname or alias, but a full legal name in all PR commits
+  - Make sure the author has the same full name set in GitHub profile that matches one in commits
 - If PR contains the media (wallpapers, themes, icons, sounds) or out-of-code documentation:
-  - Make sure the author have specified the name or alias in all PR commits
-  - Make sure the author have the same name or alias set in GitHub profile that matches one in commits
+  - Make sure the author has specified the name or alias in all PR commits
+  - Make sure the author has the same name or alias set in GitHub profile that matches one in commits
 - If PR contains mixed code with media changes, handle it as PR with code
-- Make sure the author have specified a real e-mail in all PR commits
+- Make sure the author has specified a real e-mail in all PR commits
 - By pressing "Squash and merge" button in a PR you can make sure the author does not use no-reply e-mail -
   under the commit message there will be a text label saying: `This commit will be authored by <address@email.com>`
