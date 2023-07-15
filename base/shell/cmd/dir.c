@@ -141,6 +141,7 @@
  */
 
 #include "precomp.h"
+#include <cjkcode.h>
 
 #ifdef INCLUDE_CMD_DIR
 
@@ -965,6 +966,8 @@ DirPrintWideList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
     DWORD i;
     DWORD j;
     DWORD temp;
+    BOOL bCJK = IsCJKCodePage(OutputCodePage);
+    SIZE_T cxWidth;
 
     /* Calculate longest name */
     iLongestName = 1;
@@ -973,13 +976,15 @@ DirPrintWideList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
         if (ptrFiles[i]->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             /* Directories need 2 additional characters for brackets */
-            if ((_tcslen(ptrFiles[i]->stFindInfo.cFileName) + 2) > iLongestName)
-                iLongestName = _tcslen(ptrFiles[i]->stFindInfo.cFileName) + 2;
+            cxWidth = ConGetTextWidth(ptrFiles[i]->stFindInfo.cFileName) + 2;
+            if (cxWidth > iLongestName)
+                iLongestName = cxWidth;
         }
         else
         {
-            if (_tcslen(ptrFiles[i]->stFindInfo.cFileName) > iLongestName)
-                iLongestName = _tcslen(ptrFiles[i]->stFindInfo.cFileName);
+            cxWidth = ConGetTextWidth(ptrFiles[i]->stFindInfo.cFileName);
+            if (cxWidth > iLongestName)
+                iLongestName = cxWidth;
         }
     }
 
@@ -1019,7 +1024,15 @@ DirPrintWideList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
             else
                 _stprintf(szTempFname, _T("%s"), ptrFiles[temp]->stFindInfo.cFileName);
 
-            DirPrintf(lpFlags, _T("%-*s"), iLongestName + 1, szTempFname);
+            if (bCJK)
+            {
+                cxWidth = ConGetTextWidth(szTempFname);
+                DirPrintf(lpFlags, _T("%s%*s"), szTempFname, iLongestName + 1 - cxWidth, _T(""));
+            }
+            else
+            {
+                DirPrintf(lpFlags, _T("%-*s"), iLongestName + 1, szTempFname);
+            }
         }
 
         /* Add a new line after the last item in the column */
