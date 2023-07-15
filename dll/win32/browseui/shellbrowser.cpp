@@ -787,10 +787,8 @@ HRESULT CShellBrowser::Initialize()
 
     fToolbarProxy.Initialize(m_hWnd, clientBar);
 
-    if(fStatusBarVisible)
-    {
+    if (fStatusBarVisible)
         CreateStatusBar();
-    }
 
     ShowWindow(SW_SHOWNORMAL);
     UpdateWindow();
@@ -3660,7 +3658,7 @@ LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND
 {
     fStatusBarVisible = !fStatusBarVisible;
     
-    if(fStatusBarVisible)
+    if (fStatusBarVisible)
         CreateStatusBar();
 
     ::ShowWindow(fStatusBar, fStatusBarVisible ? SW_SHOW : SW_HIDE);
@@ -3679,11 +3677,11 @@ LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND
 
 LRESULT CShellBrowser::CreateStatusBar()
 {
-    if(!fStatusBar)
+    if (!fStatusBar)
     {
         fStatusBar = CreateWindow(STATUSCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-                    SBT_NOBORDERS | SBT_TOOLTIPS, 0, 0, 500, 20, m_hWnd, (HMENU)0xa001,
-                    _AtlBaseModule.GetModuleInstance(), 0);
+                                  SBT_NOBORDERS | SBT_TOOLTIPS, 0, 0, 500, 20, m_hWnd, (HMENU)0xa001,
+                                  _AtlBaseModule.GetModuleInstance(), 0);
     }
     return 0;
 }
