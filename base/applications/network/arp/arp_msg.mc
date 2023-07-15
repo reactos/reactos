@@ -93,8 +93,8 @@ ARP -a [inet_addr] [-N if_addr]
   -a            Afișează intrările ARP actuale interogând datele protocolului
                 actual. Dacă inet_addr e specificat, adresele IP și fizică
                 sunt afișate numai pentru calculatorul specificat. Dacă
-                mai mult de o interfață de rețea folosește ARP, sunt afișate intrările
-                pentru fiecare tabel ARP.
+                mai mult de o interfață de rețea folosește ARP, sunt
+                afișate intrările pentru fiecare tabel ARP.
   -g            La fel ca la -a.
   inet_addr     Specifică o adresă de internet.
   -N if_addr    Afișează intrările ARP pentru interfața de rețea specificată
@@ -103,12 +103,13 @@ ARP -a [inet_addr] [-N if_addr]
                 marcat cu caracterul special * pentru a șterge toate gazdele.
   -s            Adaugă gazda și asociază adresa de Internet inet_addr
                 cu adresa fizică eth_addr. Adresa fizică este
-                reprezentată ca 6 octeți hexazecimali separați de cratime. Intrarea
-                este permanentă.
+                reprezentată ca 6 octeți hexazecimali separați de cratime.
+                Intrarea este permanentă.
   eth_addr      Specifică adresa fizică.
   if_addr       Dacă e prezent, acesta specifică adresa de Internet a
-           		interfeței al cărei tabel de traducere a adreselor ar trebui
-                modificat. Dacă nu e prezentă, va fi folosită prima interfață aplicabilă.
+                interfeței al cărei tabel de traducere a adreselor ar trebui
+                modificat. Dacă nu e prezentă, va fi folosită prima interfață
+                aplicabilă.
 
 Exemplu:
   > arp -s 157.55.85.212   00-aa-00-62-c6-09  .... Adaugă o intrare statică.
