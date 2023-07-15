@@ -798,6 +798,7 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
         case IDS_SHV_COLUMN_COMMENTS:
             hres = MAKE_COMPARE_HRESULT(0);
             break;
+        DEFAULT_UNREACHABLE;
     }
 
     if (HRESULT_CODE(hres) == 0)
@@ -1150,9 +1151,10 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
                 return m_regFolder->GetDetailsOf(pidl, iColumn, psd);
             case IDS_SHV_COLUMN_DISK_CAPACITY:
             case IDS_SHV_COLUMN_DISK_AVAILABLE:
-                return SHSetStrRet(&psd->str, "");               /* blank col */
+                return SHSetStrRet(&psd->str, ""); /* blank col */
             case IDS_SHV_COLUMN_COMMENTS:
-                return m_regFolder->GetDetailsOf(pidl, 2, psd);  /* 2 = comments */
+                return m_regFolder->GetDetailsOf(pidl, 2, psd); /* 2 = comments */
+            DEFAULT_UNREACHABLE;
         }
     }
     else
@@ -1189,8 +1191,9 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
                 hr = S_OK;
                 break;
             case IDS_SHV_COLUMN_COMMENTS:
-                hr = SHSetStrRet(&psd->str, "");   /* FIXME: comments */
+                hr = SHSetStrRet(&psd->str, ""); /* FIXME: comments */
                 break;
+            DEFAULT_UNREACHABLE;
         }
     }
 
