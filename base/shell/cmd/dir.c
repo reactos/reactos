@@ -977,8 +977,6 @@ DirPrintWideList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
         {
             /* Directories need 2 additional characters for brackets */
             cxWidth = ConGetTextWidth(ptrFiles[i]->stFindInfo.cFileName) + 2;
-            if (cxWidth > iLongestName)
-                iLongestName = cxWidth;
         }
         else
         {
