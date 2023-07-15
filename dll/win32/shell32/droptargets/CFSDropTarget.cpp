@@ -72,7 +72,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
 
     TRACE ("(%p)->(%p,%u,%p)\n", this, pSFFrom, cidl, apidl);
 
-    STRRET strretFrom;
+    STRRET strretFrom = { 0 }; // Initialize strretFrom.pOleStr to NULL
     hr = pSFFrom->GetDisplayNameOf(NULL, SHGDN_FORPARSING, &strretFrom);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
