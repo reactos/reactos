@@ -3679,9 +3679,10 @@ LRESULT CShellBrowser::CreateStatusBar()
 {
     if (!fStatusBar)
     {
-        fStatusBar = CreateWindow(STATUSCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-                                  SBT_NOBORDERS | SBT_TOOLTIPS, 0, 0, 500, 20, m_hWnd, (HMENU)0xa001,
-                                  _AtlBaseModule.GetModuleInstance(), 0);
+        fStatusBar = CreateWindowExW(0, STATUSCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE |
+                                     WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS,
+                                     0, 0, 500, 20, m_hWnd, (HMENU)FCIDM_TB_UPFOLDER,
+                                     _AtlBaseModule.GetModuleInstance(), 0);
     }
     return 0;
 }
