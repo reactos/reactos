@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS header
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:     The encoding, charsets and codepages for Chinese, Japanese and Korean (CJK)
+ * PURPOSE:     Encoding, charsets and codepages for Chinese, Japanese and Korean (CJK)
  * COPYRIGHT:   Copyright 2017-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
                 Copyright 2017-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
