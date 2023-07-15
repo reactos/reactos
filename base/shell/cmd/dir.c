@@ -1024,6 +1024,7 @@ DirPrintWideList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
             if (bCJK)
             {
                 cxWidth = ConGetTextWidth(szTempFname);
+                /* Print string and add space padding */
                 DirPrintf(lpFlags, _T("%s%*s"), szTempFname, iLongestName + 1 - cxWidth, _T(""));
             }
             else
