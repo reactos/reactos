@@ -1,10 +1,9 @@
 /*
  * PROJECT:     ReactOS Shell
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Spanish locale file
  * COPYRIGHT:   Ismael Ferreras Morezuelas
  *              Julio Carchi Ruiz
- *              Julen Urizar Compains (2020)
+ *              2020 Julen Urizar Compains
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -144,7 +143,7 @@ BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
-    LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT "Copyright 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " El equipo de ReactOS\0", IDC_STATIC, 105, 75, 100, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX

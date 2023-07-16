@@ -1,7 +1,7 @@
 /*
     Translators:
     Kudratov Olimjon (olim98@bk.ru)
-    Abdulganiev Rafael (abdulganiev.rafael[at]gmail.com)
+    Abdulganiev Rafael (abdulganiev.rafael@gmail.com)
     Stanislav Motylkov (binarymaster@mail.ru)
 */
 
@@ -142,7 +142,7 @@ BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
-    LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT "Copyright 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " Команда ReactOS\0", IDC_STATIC, 105, 75, 65, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
