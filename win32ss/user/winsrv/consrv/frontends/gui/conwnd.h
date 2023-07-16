@@ -69,7 +69,7 @@ typedef struct _GUI_CONSOLE_DATA
 /*** The following may be put per-screen-buffer !! ***/
     HCURSOR hCursor;            /* Handle to the mouse cursor */
     INT  MouseCursorRefCount;   /* The reference counter associated with the mouse cursor. >= 0 and the cursor is shown; < 0 and the cursor is hidden. */
-    BOOL IgnoreNextMouseSignal; /* Used when we need to not process a mouse signal */
+    BOOL IgnoreNextMouseEvent;  /* Used when we need to not process a mouse event */
 
     BOOL HackCORE8394IgnoreNextMove; /* HACK FOR CORE-8394. See conwnd.c!OnMouse for more details. */
 

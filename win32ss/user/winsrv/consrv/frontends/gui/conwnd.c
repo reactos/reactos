@@ -747,12 +747,12 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
     }
 
     /*
-     * Ignore the next mouse signal when we are going to be enabled again via
+     * Ignore the next mouse event when we are going to be enabled again via
      * the mouse, in order to prevent, e.g. when we are in Edit mode, erroneous
      * mouse actions from the user that could spoil text selection or copy/pastes.
      */
     if (ActivationState == WA_CLICKACTIVE)
-        GuiData->IgnoreNextMouseSignal = TRUE;
+        GuiData->IgnoreNextMouseEvent = TRUE;
 }
 
 static VOID
@@ -1621,7 +1621,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
     // and whether we are or not in edit mode, in order to know if we need
     // to deal with the mouse.
 
-    if (GuiData->IgnoreNextMouseSignal)
+    if (GuiData->IgnoreNextMouseEvent)
     {
         if (msg != WM_LBUTTONDOWN &&
             msg != WM_MBUTTONDOWN &&
@@ -1629,15 +1629,15 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             msg != WM_XBUTTONDOWN)
         {
             /*
-             * If this mouse signal is not a button-down action
+             * If this mouse event is not a button-down action
              * then this is the last one being ignored.
              */
-            GuiData->IgnoreNextMouseSignal = FALSE;
+            GuiData->IgnoreNextMouseEvent = FALSE;
         }
         else
         {
             /*
-             * This mouse signal is a button-down action.
+             * This mouse event is a button-down action.
              * Ignore it and perform default action.
              */
             DoDefault = TRUE;
@@ -1739,8 +1739,8 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                     GuiData->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
                     UpdateSelection(GuiData, &cL, &cR);
 
-                    /* Ignore the next mouse move signal */
-                    GuiData->IgnoreNextMouseSignal = TRUE;
+                    /* Ignore the next mouse move event */
+                    GuiData->IgnoreNextMouseEvent = TRUE;
 #undef IS_WORD_SEP
                 }
 
@@ -1759,8 +1759,8 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                     Copy(GuiData);
                 }
 
-                /* Ignore the next mouse move signal */
-                GuiData->IgnoreNextMouseSignal = TRUE;
+                /* Ignore the next mouse move event */
+                GuiData->IgnoreNextMouseEvent = TRUE;
                 break;
             }
 

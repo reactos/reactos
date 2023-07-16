@@ -530,8 +530,8 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     GuiData->hCursor = ghDefaultCursor;
     GuiData->MouseCursorRefCount = 0;
 
-    /* A priori don't ignore mouse signals */
-    GuiData->IgnoreNextMouseSignal = FALSE;
+    /* A priori don't ignore mouse events */
+    GuiData->IgnoreNextMouseEvent = FALSE;
     /* Initialize HACK FOR CORE-8394. See conwnd.c!OnMouse for more details. */
     GuiData->HackCORE8394IgnoreNextMove = FALSE;
 
