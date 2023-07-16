@@ -3662,8 +3662,11 @@ LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND
 {
     fStatusBarVisible = !fStatusBarVisible;
     
-    ::ShowWindow(fStatusBar, fStatusBarVisible ? SW_SHOW : SW_HIDE);
-    RepositionBars();
+    if (fStatusBar)
+    {
+        ::ShowWindow(fStatusBar, fStatusBarVisible ? SW_SHOW : SW_HIDE);
+        RepositionBars();
+    }
     
     DWORD dwStatusBarVisible = fStatusBarVisible;
     SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
