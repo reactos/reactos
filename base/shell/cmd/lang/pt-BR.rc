@@ -185,7 +185,7 @@ parâmetro - por exemplo, /-W.\n"
     STRING_DIR_HELP3 " Volume na unidade %c não tem rótulo.\n"
     STRING_DIR_HELP4 " Número de série do volume é %04X-%04X\n"
     STRING_DIR_HELP5 "\n     Total de arquivos listados:\n%16i arquivo(s) %14s bytes\n"
-    STRING_DIR_HELP6 "%16i Dir(s) %15s bytes livres\n"
+    STRING_DIR_HELP6 "%16i Dir(s)     %14s bytes livres\n"
     STRING_DIR_HELP7 "\n Diretório de %s\n\n"
     STRING_DIR_HELP8 "%16i arquivo(s) %14s bytes\n"
     STRING_DIRSTACK_HELP1 "Armazena o diretório atual para uso pelo comando POPD, de\n\
