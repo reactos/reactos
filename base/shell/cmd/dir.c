@@ -973,15 +973,12 @@ DirPrintWideList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
     iLongestName = 1;
     for (i = 0; i < dwCount; i++)
     {
+        cxWidth = ConGetTextWidth(ptrFiles[i]->stFindInfo.cFileName);
+
+        /* Directories need 2 additional characters for brackets */
         if (ptrFiles[i]->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        {
-            /* Directories need 2 additional characters for brackets */
-            cxWidth = ConGetTextWidth(ptrFiles[i]->stFindInfo.cFileName) + 2;
-        }
-        else
-        {
-            cxWidth = ConGetTextWidth(ptrFiles[i]->stFindInfo.cFileName);
-        }
+            cxWidth += 2;
+
         iLongestName = max(iLongestName, cxWidth);
     }
 
