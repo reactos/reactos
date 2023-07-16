@@ -3251,12 +3251,16 @@ IsValidPath(
     // TODO: Add check for 8.3 too.
 
     /* Path must be at least 2 characters long */
-//    if (Length < 2)
-//        return FALSE;
+    if (Length < 2)
+        return FALSE;
 
     /* Path must start with a backslash */
-//    if (InstallDir[0] != L'\\')
-//        return FALSE;
+    if (InstallDir[0] != L'\\')
+        return FALSE;
+
+    /* ISO-9660 filenames longer than 31 may cause buffer overflows in the OS. */
+    if (Length > 31)
+        return FALSE;
 
     /* Path must not end with a backslash */
     if (InstallDir[Length - 1] == L'\\')
