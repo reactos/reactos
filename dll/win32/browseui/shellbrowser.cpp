@@ -788,9 +788,12 @@ HRESULT CShellBrowser::Initialize()
 
 
     // create status bar
-    fStatusBar = CreateWindow(STATUSCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-                    SBT_NOBORDERS | SBT_TOOLTIPS, 0, 0, 500, 20, m_hWnd, (HMENU)0xa001,
-                    _AtlBaseModule.GetModuleInstance(), 0);
+    DWORD dwStatusStyle = WS_CHILD | WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS;
+    if (fStatusBarVisible)
+        dwStatusStyle |= WS_VISIBLE;
+    fStatusBar = ::CreateWindowExW(0, STATUSCLASSNAMEW, NULL, dwStatusStyle,
+                                   0, 0, 500, 20, m_hWnd, (HMENU)IDC_STATUSBAR,
+                                   _AtlBaseModule.GetModuleInstance(), 0);
 
     ShowWindow(SW_SHOWNORMAL);
     UpdateWindow();
@@ -1878,7 +1881,7 @@ bool IUnknownIsEqual(IUnknown *int1, IUnknown *int2)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetBorderDW(IUnknown *punkObj, LPRECT prcBorder)
 {
-    static const INT excludeItems[] = { 1, 1, 1, 0xa001, 0, 0 };
+    static const INT excludeItems[] = { 1, 1, 1, IDC_STATUSBAR, 0, 0 };
 
     RECT availableBounds;
 
@@ -1985,7 +1988,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatus(const GUID *pguidCmdGroup,
         {
             switch (prgCmds->cmdID)
             {
-                case 0xa022:    // up level
+                case IDM_GOTO_UPONELEVEL:
                     prgCmds->cmdf = OLECMDF_SUPPORTED;
                     if (fCurrentDirectoryPIDL->mkid.cb != 0)
                         prgCmds->cmdf |= OLECMDF_ENABLED;
@@ -3473,7 +3476,7 @@ LRESULT CShellBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 {
     CComPtr<IDockingWindow>                 dockingWindow;
     RECT                                    availableBounds;
-    static const INT                        excludeItems[] = {1, 1, 1, 0xa001, 0, 0};
+    static const INT                        excludeItems[] = {1, 1, 1, IDC_STATUSBAR, 0, 0};
     HRESULT                                 hResult;
 
     if (wParam != SIZE_MINIMIZED)
