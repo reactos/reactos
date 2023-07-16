@@ -336,11 +336,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Controllo errori", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "Questa opzione controllerà questo volume\nper verificare l'assenza di errori.", -1, 40, 25, 160, 20
+    LTEXT "Questa opzione controllerà questo volume per verificare l'assenza di errori.", -1, 40, 25, 160, 20
     PUSHBUTTON "Controlla...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Deframmentazione", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "Questa opzione deframmenterà i file di questo volume", -1, 40, 85, 160, 20
+    LTEXT "Questa opzione deframmenterà i file di questo volume.", -1, 40, 85, 160, 20
     PUSHBUTTON "Deframmenta...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Salvataggio", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
@@ -434,7 +434,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Vista delle cartelle", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Potete applicare la modalità di visualizzazione attuale\na tutte le cartelle.", -1, 60, 20, 180, 20
+    LTEXT "Potete applicare la modalità di visualizzazione attuale a tutte le cartelle.", -1, 60, 20, 180, 20
     PUSHBUTTON "Applicare a &tutte le cartelle", IDC_VIEW_APPLY_TO_ALL, 40, 50, 100, 14, WS_TABSTOP
     PUSHBUTTON "&Ripristina tutte le cartelle", IDC_VIEW_RESET_ALL, 150, 50, 100, 14, WS_TABSTOP
     LTEXT "Impostazioni avanzate:", -1, 7, 80, 100, 10

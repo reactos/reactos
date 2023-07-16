@@ -336,11 +336,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Felkontroll", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "Det här valet kontrollerar enheten efter\nfel.", -1, 40, 25, 160, 20
+    LTEXT "Det här valet kontrollerar enheten efter fel.", -1, 40, 25, 160, 20
     PUSHBUTTON "Kontrollera nu...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentering", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "Det här valet defragmenterar filer på enheten", -1, 40, 85, 160, 20
+    LTEXT "Det här valet defragmenterar filer på enheten.", -1, 40, 85, 160, 20
     PUSHBUTTON "Defragmentera nu...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Säkerhetskopiering", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
@@ -434,7 +434,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Mappvyer", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Du kan använda den nuvarande vyn (t.ex. detaljer)\nsom används i den här mappen för alla mappar.", -1, 60, 20, 180, 20
+    LTEXT "Du kan använda den nuvarande vyn (t.ex. detaljer) som används i den här mappen för alla mappar.", -1, 60, 20, 180, 20
     PUSHBUTTON "Använd för a&lla mappar", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Återställ alla mappar", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Avancerade inställningar:", -1, 7, 80, 100, 10

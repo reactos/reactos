@@ -336,11 +336,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Análise de erros", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "Esta opção irá analisar erros no\nvolume.", -1, 40, 25, 160, 20
+    LTEXT "Esta opção irá analisar erros no volume.", -1, 40, 25, 160, 20
     PUSHBUTTON "Analisar Agora...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Desfragmentação", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "Esta opção irá desfragmentar os arquivos no volume", -1, 40, 85, 160, 20
+    LTEXT "Esta opção irá desfragmentar os arquivos no volume.", -1, 40, 85, 160, 20
     PUSHBUTTON "Desfragmentar Agora...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Backup", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
@@ -434,7 +434,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Visualização de pastas", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Você pode aplicar a visualização (como Detalhes ou Exibição) que\nvocê está usando nesta pasta para todas as pastas.", -1, 60, 20, 180, 20
+    LTEXT "Você pode aplicar a visualização (como Detalhes ou Exibição) que você está usando nesta pasta para todas as pastas.", -1, 60, 20, 180, 20
     PUSHBUTTON "Aplicar a &Todas as Pastas", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Resetar Todas as Pastas", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Configurações avançadas:", -1, 7, 80, 100, 10

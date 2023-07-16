@@ -336,7 +336,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Feilsøking", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "Dette alternativet vil kontrollere volumet for\nfeil.", -1, 40, 25, 160, 20
+    LTEXT "Dette alternativet vil kontrollere volumet for feil.", -1, 40, 25, 160, 20
     PUSHBUTTON "Kontroller nå...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentering", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
@@ -434,7 +434,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Mappe visning", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Du kan bruke visning (slik som detalj eller Tiles) som\ndu bruker for denne mappen til alle mappene.", -1, 60, 20, 180, 20
+    LTEXT "Du kan bruke visning (slik som detalj eller Tiles) som du bruker for denne mappen til alle mappene.", -1, 60, 20, 180, 20
     PUSHBUTTON "Bruk til a&lle mappene", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Gjenopprett alle mapper", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Avanserte innstillinger:", -1, 7, 80, 100, 10
