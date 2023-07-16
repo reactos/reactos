@@ -2076,11 +2076,13 @@ MUI_ERROR ptPTErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Nome de direct\242rio inv\240lido.\n"
         "\n"
-        "  * Pressione qualquer tecla para continuar."
+        "O tamanho m\240ximo para o nome do direct\242rio \202 de 31 caracteres.\n"
+        "\n"
+        "  * Pressione 'Enter' para continuar."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "A parti\207\306o selecionada n\306o \202 grande o suficiente para instalar o ReactOS.\n"
+        "A parti\207\306o seleccionada n\306o \202 grande o suficiente para instalar o ReactOS.\n"
         "A parti\207\306o de instala\207\306o deve ter um tamanho de pelo menos %lu MB.\n"
         "\n"
         "  * Pressione qualquer tecla para continuar.",

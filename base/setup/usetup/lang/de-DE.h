@@ -2058,7 +2058,9 @@ MUI_ERROR deDEErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Unzul\204ssiger Verzeichnisname.\n"
         "\n"
-        "  * Eine beliebige Taste zum Fortsetzen dr\201cken."
+        "The maximum length for the directory name is 31 characters.\n"
+        "\n"
+        "  * Press Enter to continue."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

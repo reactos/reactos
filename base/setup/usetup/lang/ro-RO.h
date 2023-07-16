@@ -2107,7 +2107,9 @@ MUI_ERROR roROErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Numele de director este nevalid.\n"
         "\n"
-        "  * Tasta\376i pentru a continua."
+        "The maximum length for the directory name is 31 characters.\n"
+        "\n"
+        "  * Press Enter to continue."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

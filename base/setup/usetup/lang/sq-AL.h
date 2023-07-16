@@ -2066,7 +2066,9 @@ MUI_ERROR sqALErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
-        "  * Press any key to continue."
+        "The maximum length for the directory name is 31 characters.\n"
+        "\n"
+        "  * Press Enter to continue."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

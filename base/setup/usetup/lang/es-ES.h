@@ -2059,7 +2059,9 @@ MUI_ERROR esESErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Nombre de carpeta no v\240lido.\n"
         "\n"
-        "  * Pulse una tecla para continuar."
+        "The maximum length for the directory name is 31 characters.\n"
+        "\n"
+        "  * Pulse Enter para continuar."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

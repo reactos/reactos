@@ -2056,7 +2056,9 @@ MUI_ERROR jaJPErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "\314\276\262 \305 \303\336\250\332\270\304\330 \322\262 \303\336\275\241\n"
         "\n"
-        "  * \277\336\257\272\263 \275\331 \306\312 \305\306\266 \267\260 \246 \265\274\303 \270\300\336\273\262\241"
+        "The maximum length for the directory name is 31 characters.\n"
+        "\n"
+        "  * Press Enter to continue."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

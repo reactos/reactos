@@ -2077,7 +2077,9 @@ MUI_ERROR hrHRErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Neva\247e\206e ime direktorija.\n"
         "\n"
-        "  * Pritisnite bilo koju tipku da biste nastavili."
+        "The maximum length for the directory name is 31 characters.\n"
+        "\n"
+        "  * Press Enter to continue."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

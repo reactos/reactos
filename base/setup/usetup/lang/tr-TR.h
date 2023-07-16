@@ -2030,7 +2030,9 @@ MUI_ERROR trTRErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Ge\207ersiz dizin ad\215.\n"
         "\n"
-        "  * Devam etmek i\207in bir tu\237a bas\215n\215z."
+        "The maximum length for the directory name is 31 characters.\n"
+        "\n"
+        "  * Press Enter to continue."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
