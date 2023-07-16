@@ -790,9 +790,9 @@ HRESULT CShellBrowser::Initialize()
     DWORD dwStatusStyle = WS_CHILD | WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS;
     if (fStatusBarVisible)
         dwStatusStyle |= WS_VISIBLE;
-    fStatusBar = CreateWindowExW(0, STATUSCLASSNAMEW, NULL, dwStatusStyle,
-                                 0, 0, 500, 20, m_hWnd, (HMENU)FCIDM_TB_UPFOLDER,
-                                 _AtlBaseModule.GetModuleInstance(), 0);
+    fStatusBar = ::CreateWindowExW(0, STATUSCLASSNAMEW, NULL, dwStatusStyle,
+                                   0, 0, 500, 20, m_hWnd, (HMENU)FCIDM_TB_UPFOLDER,
+                                   _AtlBaseModule.GetModuleInstance(), 0);
 
     ShowWindow(SW_SHOWNORMAL);
     UpdateWindow();
