@@ -181,7 +181,7 @@ DELAY [/m]n\n\n\
     STRING_DIR_HELP5 "\n     Всего:\n%16i файл(ов)% 14s байт\n"
     STRING_DIR_HELP6 "%16i каталог(ов) %14s байт свободно\n"
     STRING_DIR_HELP7 "\n каталог %s\n\n"
-    STRING_DIR_HELP8 "%16i файл(ов) %14s байт\n"
+    STRING_DIR_HELP8 "%16i файл(ов)    %14s байт\n"
     STRING_DIRSTACK_HELP1 "Сохраняет текущую директорию для использования командой POPD, затем\n\
 изменяет ее на указанную.\n\n\
 PUSHD [путь | ..]\n\n\
