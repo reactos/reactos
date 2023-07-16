@@ -624,7 +624,6 @@ public:
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     HRESULT OnSearch();
-    LRESULT CreateStatusBar();
 
     static ATL::CWndClassInfo& GetWndClassInfo()
     {
@@ -787,8 +786,13 @@ HRESULT CShellBrowser::Initialize()
 
     fToolbarProxy.Initialize(m_hWnd, clientBar);
 
+    // create status bar
+    DWORD dwStatusStyle = WS_CHILD | WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS;
     if (fStatusBarVisible)
-        CreateStatusBar();
+        dwStatusStyle |= WS_VISIBLE;
+    fStatusBar = CreateWindowExW(0, STATUSCLASSNAMEW, NULL, dwStatusStyle,
+                                 0, 0, 500, 20, m_hWnd, (HMENU)FCIDM_TB_UPFOLDER,
+                                 _AtlBaseModule.GetModuleInstance(), 0);
 
     ShowWindow(SW_SHOWNORMAL);
     UpdateWindow();
@@ -3658,9 +3662,6 @@ LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND
 {
     fStatusBarVisible = !fStatusBarVisible;
     
-    if (fStatusBarVisible)
-        CreateStatusBar();
-
     ::ShowWindow(fStatusBar, fStatusBarVisible ? SW_SHOW : SW_HIDE);
     RepositionBars();
     
@@ -3672,18 +3673,6 @@ LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND
                      sizeof(dwStatusBarVisible),
                      SHREGSET_FORCE_HKCU);
     
-    return 0;
-}
-
-LRESULT CShellBrowser::CreateStatusBar()
-{
-    if (!fStatusBar)
-    {
-        fStatusBar = CreateWindowExW(0, STATUSCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE |
-                                     WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS,
-                                     0, 0, 500, 20, m_hWnd, (HMENU)FCIDM_TB_UPFOLDER,
-                                     _AtlBaseModule.GetModuleInstance(), 0);
-    }
     return 0;
 }
 
