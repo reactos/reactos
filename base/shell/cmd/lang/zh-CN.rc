@@ -169,10 +169,10 @@ DELAY [/m]n\n\n\
     STRING_DIR_HELP2 " 驱动器 %c 中的卷是 %s\n"
     STRING_DIR_HELP3 " 驱动器 %c 中的卷没有卷标。\n"
     STRING_DIR_HELP4 " 卷的序列号是 %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     总计：\n%16i 个文件共占据 % 14s 字节\n"
-    STRING_DIR_HELP6 "%16i 个目录 % 15s 字节空闲\n"
+    STRING_DIR_HELP5 "\n     总计：\n%16i 个文件共占据 %14s 字节\n"
+    STRING_DIR_HELP6 "%16i 个目录 %14s 字节空闲\n"
     STRING_DIR_HELP7 "\n %s 的目录\n\n"
-    STRING_DIR_HELP8 "%16i 个文件 % 14s 字节\n"
+    STRING_DIR_HELP8 "%16i 个文件 %14s 字节\n"
     STRING_DIRSTACK_HELP1 "将当前目录存储以便 POPD 命令使用，然后切换到指定的目录。\n\n\
 PUSHD [路径 | ..]\n\n\
   路径          指定要切换到的目录。\n"

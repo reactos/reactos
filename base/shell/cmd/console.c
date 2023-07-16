@@ -329,4 +329,44 @@ BOOL ConSetScreenColor(HANDLE hOutput, WORD wColor, BOOL bFill)
 }
 #endif
 
+#include <cjkcode.h>
+#include "wcwidth.c"
+
+// NOTE: The check against 0x80 is to avoid calling the helper function
+// for characters that we already know are not full-width.
+#define IS_FULL_WIDTH(wch)  \
+    (((USHORT)(wch) >= 0x0080) && (mk_wcwidth_cjk(wch) == 2))
+
+SIZE_T ConGetTextWidthW(PCWSTR pszText)
+{
+    SIZE_T ich, cxWidth;
+
+    if (!IsCJKCodePage(OutputCodePage))
+        return _tcslen(pszText);
+
+    for (ich = cxWidth = 0; pszText[ich]; ++ich)
+    {
+        if (IS_FULL_WIDTH(pszText[ich]))
+            cxWidth += 2;
+        else
+            ++cxWidth;
+    }
+
+    return cxWidth;
+}
+
+SIZE_T ConGetTextWidthA(PCSTR pszText)
+{
+    int cchMax;
+    PWSTR pszWide;
+    SIZE_T cxWidth;
+
+    cchMax = MultiByteToWideChar(OutputCodePage, 0, pszText, -1, NULL, 0);
+    pszWide = cmd_alloc(cchMax * sizeof(WCHAR));
+    MultiByteToWideChar(OutputCodePage, 0, pszText, -1, pszWide, cchMax);
+    cxWidth = ConGetTextWidthW(pszWide);
+    cmd_free(pszWide);
+    return cxWidth;
+}
+
 /* EOF */

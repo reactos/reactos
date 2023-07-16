@@ -170,10 +170,10 @@ förinställda växlar med ett bindestreck (-) före, till exempel, /-W.\n"
     STRING_DIR_HELP2 " Volumen i enhet %c är %s\n"
     STRING_DIR_HELP3 " Volumet i enhet %c är utan namn.\n"
     STRING_DIR_HELP4 " Volymens serienummer är %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Totalt filer listet:\n%16i fil(är)% 14s byte\n"
-    STRING_DIR_HELP6 "%16i mapp(ar)% 15s byte ledigt\n"
+    STRING_DIR_HELP5 "\n     Totalt filer listet:\n%16i fil(är)  %14s byte\n"
+    STRING_DIR_HELP6 "%16i mapp(ar) %14s byte ledigt\n"
     STRING_DIR_HELP7 "\n mapp av %s\n\n"
-    STRING_DIR_HELP8 "%16i fil(er)% 14s byte\n"
+    STRING_DIR_HELP8 "%16i fil(er)  %14s byte\n"
     STRING_DIRSTACK_HELP1 "Sparar aktuell mapp for användning av POPD kommandot, och\n\
 ändrar därefter till angiven mapp.\n\n\
 PUSHD [mapp | ..]\n\n\

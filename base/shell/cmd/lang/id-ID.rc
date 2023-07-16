@@ -172,10 +172,10 @@ preset dengan mengawali setiap saklar dengan - (minus)--contohnya, /-W.\n"
     STRING_DIR_HELP2 " Volume di drive %c adalah %s\n"
     STRING_DIR_HELP3 " Volume di drive %c tidak berlabel.\n"
     STRING_DIR_HELP4 " Nomor Seri Volume adalah %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Total File Didaftar:\n%16i File% 14s byte\n"
-    STRING_DIR_HELP6 "%16i Dir% 15s byte tersisa\n"
+    STRING_DIR_HELP5 "\n     Total File Didaftar:\n%16i File %14s byte\n"
+    STRING_DIR_HELP6 "%16i Dir  %14s byte tersisa\n"
     STRING_DIR_HELP7 "\n Direktori %s\n\n"
-    STRING_DIR_HELP8 "%16i File% 14s byte\n"
+    STRING_DIR_HELP8 "%16i File %14s byte\n"
     STRING_DIRSTACK_HELP1 "Menyimpan direktori sekarang untuk digunakan oleh perintah POPD, lalu\n\
 mengubah ke direktori yang ditetapkan.\n\n\
 PUSHD [path | ..]\n\n\

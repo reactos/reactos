@@ -170,10 +170,10 @@ forhåndsinnstilte brytere ved å sette en bindestrek (-) foran, for eksempel, /
     STRING_DIR_HELP2 " Volumet i stasjon %c er %s\n"
     STRING_DIR_HELP3 " Volumet i stasjon %c er uten navn.\n"
     STRING_DIR_HELP4 " Volumserienummeret er %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Totalt filer listet:\n%16i fil(er)% 14s byte\n"
-    STRING_DIR_HELP6 "%16i mappe(r)% 15s byte ledig\n"
+    STRING_DIR_HELP5 "\n     Totalt filer listet:\n%16i fil(er)  %14s byte\n"
+    STRING_DIR_HELP6 "%16i mappe(r) %14s byte ledig\n"
     STRING_DIR_HELP7 "\n mappe av %s\n\n"
-    STRING_DIR_HELP8 "%16i fil(er)% 14s byte\n"
+    STRING_DIR_HELP8 "%16i fil(er)  %14s byte\n"
     STRING_DIRSTACK_HELP1 "Lagrer gjeldende mappe for bruk av POPD kommando, og\n\
 endrer deretter til spesifisert mappe.\n\n\
 PUSHD [mappe | ..]\n\n\

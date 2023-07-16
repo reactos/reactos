@@ -169,10 +169,10 @@ DELAY [/m]n\n\n\
     STRING_DIR_HELP2 " 磁碟機 %c 中的磁碟區標籤是 %s\n"
     STRING_DIR_HELP3 " 磁碟機 %c 中的磁碟區沒有標籤。\n"
     STRING_DIR_HELP4 " 磁碟區的序列號是 %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     總計：\n%16i 個檔案共佔據 % 14s 位元組\n"
-    STRING_DIR_HELP6 "%16i 個目錄 % 15s 位元組的可用空間\n"
+    STRING_DIR_HELP5 "\n     總計：\n%16i 個檔案共佔據 %14s 位元組\n"
+    STRING_DIR_HELP6 "%16i 個目錄 %14s 位元組的可用空間\n"
     STRING_DIR_HELP7 "\n %s 的目錄\n\n"
-    STRING_DIR_HELP8 "%16i 個檔案 % 14s 位元組\n"
+    STRING_DIR_HELP8 "%16i 個檔案 %14s 位元組\n"
     STRING_DIRSTACK_HELP1 "將目前的目錄存儲以便 POPD 命令使用，然後切換到指定的目錄。\n\n\
 PUSHD [路徑 | ..]\n\n\
   路徑          指定要切換到的目錄。\n"

@@ -173,10 +173,10 @@ bir anahtarın önüne - (tire) koyarak ön ayarlı anahtarları geçersiz kıl�
     STRING_DIR_HELP2 " %c sürücüsündeki birimin etiketi %s\n"
     STRING_DIR_HELP3 " %c sürücüsündeki birimin etiketi yok.\n"
     STRING_DIR_HELP4 " Birimin Seri Numarası: %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Toplam Listelenen Dosya Miktarı:\n%16i dosya(lar)% 14s bayt değerinde\n"
-    STRING_DIR_HELP6 "%16i dizin %15s bayt boş\n"
+    STRING_DIR_HELP5 "\n     Toplam Listelenen Dosya Miktarı:\n%16i dosya(lar) %14s bayt değerinde\n"
+    STRING_DIR_HELP6 "%16i dizin      %14s bayt boş\n"
     STRING_DIR_HELP7 "\n %s'nın dizini\n\n"
-    STRING_DIR_HELP8 "%16i dosya(lar)% 14s bayt\n"
+    STRING_DIR_HELP8 "%16i dosya(lar) %14s bayt\n"
     STRING_DIRSTACK_HELP1 "Şimdiki dizini POPD komutu tarafından kullanılmak üzere depolar,\n\
 ardından belirtilen dizine değiştirir.\n\n\
 PUSHD [yol | ..]\n\n\

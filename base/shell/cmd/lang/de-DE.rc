@@ -170,10 +170,10 @@ Optionen können in der Umgebungsvariablen DIRCMD voreingestellt werden.\n\
     STRING_DIR_HELP2 " Datenträger in Laufwerk %c ist %s\n"
     STRING_DIR_HELP3 " Datenträger in Laufwerk %c hat keine Bezeichnung\n"
     STRING_DIR_HELP4 " Volumeseriennummer: %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Anzahl der angezeigten Dateien:\n%16i Datei(en)% 15s Bytes\n"
-    STRING_DIR_HELP6 "%16i Verzeichnis(se), % 15s Bytes frei\n"
+    STRING_DIR_HELP5 "\n     Anzahl der angezeigten Dateien:\n%16i Datei(en)        %14s Bytes\n"
+    STRING_DIR_HELP6 "%16i Verzeichnis(se), %14s Bytes frei\n"
     STRING_DIR_HELP7 "\n Verzeichnis von %s\n\n"
-    STRING_DIR_HELP8 "%16i Datei(en)% 14s Bytes\n"
+    STRING_DIR_HELP8 "%16i Datei(en)        %14s Bytes\n"
     STRING_DIRSTACK_HELP1 "Speichert das aktuelle Verzeichnis für den POPD-Befehl und\n\
 wechselt dann in das festgelegte Verzeichnis.\n\n\
 PUSHD [path | ..]\n\n\

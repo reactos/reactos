@@ -174,10 +174,10 @@ ndryshimet prezente duke vënë përpara një ndryshim me - (hyphen)--për shemb
     STRING_DIR_HELP2 " Volumi në drive %c is %s\n"
     STRING_DIR_HELP3 " Volumi në drive %c has no label.\n"
     STRING_DIR_HELP4 " Volumi Serial dhe Numberi është %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Lista e dokumentave total:\n%16i File(s)% 14s bytes\n"
-    STRING_DIR_HELP6 "%16i Dir(s)% 15s bytes free\n"
+    STRING_DIR_HELP5 "\n     Lista e dokumentave total:\n%16i File(s) %14s bytes\n"
+    STRING_DIR_HELP6 "%16i Dir(s)  %14s bytes free\n"
     STRING_DIR_HELP7 "\n Directory of %s\n\n"
-    STRING_DIR_HELP8 "%16i File(s)% 14s bytes\n"
+    STRING_DIR_HELP8 "%16i File(s) %14s bytes\n"
     STRING_DIRSTACK_HELP1 "Ndryshimet mund të jenë paraprakisht në variablin e mjedisit DIRCMD\n\
 dhe skedes specifike.\n\n\
 PUSHD [rrugë | ..]\n\n\

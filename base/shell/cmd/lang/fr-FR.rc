@@ -183,10 +183,10 @@ Modifier les paramètres mémorisés avec un - (tiret)--par exemple, /-W.\n"
     STRING_DIR_HELP2 " Le nom de volume du lecteur %c est %s\n"
     STRING_DIR_HELP3 " Le lecteur %c n'a pas de nom de volume\n"
     STRING_DIR_HELP4 " Le numéro de série du volume est %04X-%04X\n"
-    STRING_DIR_HELP5 "\n   Total de fichiers listés :\n%16i Fichier(s)% 14s octets\n"
-    STRING_DIR_HELP6 "%16i Rép(s)% 15s octets libres\n"
+    STRING_DIR_HELP5 "\n   Total de fichiers listés :\n%16i Fichier(s) %14s octets\n"
+    STRING_DIR_HELP6 "%16i Rép(s)     %14s octets libres\n"
     STRING_DIR_HELP7 "\n Répertoire de %s\n\n"
-    STRING_DIR_HELP8 "%16i Fichier(s)% 14s octets\n"
+    STRING_DIR_HELP8 "%16i Fichier(s) %14s octets\n"
     STRING_DIRSTACK_HELP1 "Stocke le répertoire courant pour utilisation avec la commande POPD,\n\
 ensuite change de répertoire vers le répertoire spécifié.\n\n\
 PUSHD [chemin | ..]\n\n\

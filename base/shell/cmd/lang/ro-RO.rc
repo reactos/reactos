@@ -190,10 +190,10 @@ De exemplu /-W.\n"
     STRING_DIR_HELP2 " Volumul unității %c este etichetat ca %s\n"
     STRING_DIR_HELP3 " Volumul unității %c nu este etichetat.\n"
     STRING_DIR_HELP4 " Numărul de serie al volumului este %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Numărul de fișiere enumerate:\n%16i fișier(e)% 14s octeți\n"
-    STRING_DIR_HELP6 "%16i dir-re% 15s octeți liberi\n"
+    STRING_DIR_HELP5 "\n     Numărul de fișiere enumerate:\n%16i fișier(e) %14s octeți\n"
+    STRING_DIR_HELP6 "%16i dir-re    %14s octeți liberi\n"
     STRING_DIR_HELP7 "\n Directorul %s\n\n"
-    STRING_DIR_HELP8 "%16i fișiere% 14s octeți\n"
+    STRING_DIR_HELP8 "%16i fișier(e) %14s octeți\n"
     STRING_DIRSTACK_HELP1 "Înregistrează directorul curent în stivă, pentru a-l accesa\n\
 ulterior prin comanda POPD, apoi schimbă directorul curent cu cel specificat.\n\n\
 PUSHD [cale | ..]\n\n\

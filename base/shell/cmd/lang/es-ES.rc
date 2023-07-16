@@ -174,10 +174,10 @@ ajustes previos anteponiendo a cualquier modificador - (hyphen)--por ejemplo, /-
     STRING_DIR_HELP2 " El volumen en la unidad %c es %s\n"
     STRING_DIR_HELP3 " El volumen en la unidad %c no tiene etiqueta.\n"
     STRING_DIR_HELP4 " El volumen Serial Number is %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Total de archivos mostrados:\n%16i archivo(s)% 14s bytes\n"
-    STRING_DIR_HELP6 "%16i Directorio(s)% 15s bytes libres\n"
+    STRING_DIR_HELP5 "\n     Total de archivos mostrados:\n%16i archivo(s)    %14s bytes\n"
+    STRING_DIR_HELP6 "%16i Directorio(s) %14s bytes libres\n"
     STRING_DIR_HELP7 "\n Directorio %s\n\n"
-    STRING_DIR_HELP8 "%16i archivo(s)% 14s bytes\n"
+    STRING_DIR_HELP8 "%16i archivo(s)    %14s bytes\n"
     STRING_DIRSTACK_HELP1 "Almacena el directorio actual para usarlo por el comando,\n\
 entonces cambia al directorio especificado.\n\n\
 PUSHD [ruta | ..]\n\n\

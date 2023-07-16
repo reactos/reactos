@@ -181,10 +181,10 @@ DELAY [/m]n\n\n\
     STRING_DIR_HELP2 " Том в пристрої %c має мiтку %s\n"
     STRING_DIR_HELP3 " Том в пристрої %c не має мiтки.\n"
     STRING_DIR_HELP4 " Серiйний номер тому: %04X-%04X\n"
-    STRING_DIR_HELP5 "\n     Всього:\n%16i Файл(iв)% 14s байт\n"
-    STRING_DIR_HELP6 "%16i Dir(s)% 15s bytes free\n"
+    STRING_DIR_HELP5 "\n     Всього:\n%16i Файл(iв) %14s байт\n"
+    STRING_DIR_HELP6 "%16i Dir(s)   %14s bytes free\n"
     STRING_DIR_HELP7 "\n Directory of %s\n\n"
-    STRING_DIR_HELP8 "%16i Файл(iв)% 14s байт\n"
+    STRING_DIR_HELP8 "%16i Файл(iв) %14s байт\n"
     STRING_DIRSTACK_HELP1 "Зберiгає поточну директорiю для використання командою POPD, потiм\n\
 замiнює її на вказану.\n\n\
 PUSHD [path | ..]\n\n\
