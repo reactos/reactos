@@ -294,6 +294,7 @@ private:
             return;
         }
 
+        // NOTE: This has a failure.
         int cchMax = WideCharToMultiByte(nConvertCodePage, 0, psz, -1, NULL, 0, NULL, NULL);
         if (cchMax <= (int)_countof(m_szBuffer))
         {
