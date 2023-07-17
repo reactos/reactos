@@ -230,7 +230,7 @@ private:
         int cchMax = lstrlenA(psz) + 1;
         if (cchMax <= (int)_countof(m_szBuffer))
         {
-            // Re-use the static buffer
+            // Use the static buffer
             m_psz = m_szBuffer;
             cchMax = _countof(m_szBuffer);
         }
@@ -293,7 +293,7 @@ private:
         int cchMax = (lstrlenW(psz) + 1) * 2;
         if (cchMax <= (int)_countof(m_szBuffer))
         {
-            // Re-use the static buffer
+            // Use the static buffer
             m_psz = m_szBuffer;
             cchMax = _countof(m_szBuffer);
         }
