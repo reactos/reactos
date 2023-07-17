@@ -226,7 +226,7 @@ private:
             m_szBuffer[0] = 0;
             return;
         }
-        int cchMax = MultiByteToWideChar(nCodePage, 0, psz, -1, NULL, 0);
+        int cchMax = lstrlenA(psz) + 1; // calculation of MultiByteToWideChar is slow
         if (cchMax <= (int)_countof(m_szBuffer))
         {
             // Re-use the static buffer
@@ -288,7 +288,7 @@ private:
             m_szBuffer[0] = 0;
             return;
         }
-        int cchMax = WideCharToMultiByte(nConvertCodePage, 0, psz, -1, NULL, 0, NULL, NULL);
+        int cchMax = (lstrlenW(psz) + 1) * 2; // calculation of WideCharToMultiByte is slow
         if (cchMax <= (int)_countof(m_szBuffer))
         {
             // Re-use the static buffer
