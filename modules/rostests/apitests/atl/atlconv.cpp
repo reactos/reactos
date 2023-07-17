@@ -38,18 +38,22 @@ START_TEST(atlconv)
         CA2A a2a(NULL);
         ok_ptr((LPSTR)a2a, NULL);
         ok_ptr(a2a.m_psz, NULL);
+        ok_int(a2a.m_szBuffer[0], 0);
 
         CW2A w2a(NULL);
         ok_ptr((LPSTR)w2a, NULL);
         ok_ptr(w2a.m_psz, NULL);
+        ok_int(w2a.m_szBuffer[0], 0);
 
         CA2W a2w(NULL);
         ok_ptr((LPWSTR)a2w, NULL);
         ok_ptr(a2w.m_psz, NULL);
+        ok_int(a2w.m_szBuffer[0], 0);
 
         CW2W w2w(NULL);
         ok_ptr((LPWSTR)w2w, NULL);
         ok_ptr(w2w.m_psz, NULL);
+        ok_int(w2w.m_szBuffer[0], 0);
     }
 
     //
