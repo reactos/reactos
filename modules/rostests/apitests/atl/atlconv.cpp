@@ -32,6 +32,27 @@ START_TEST(atlconv)
     dataW[_countof(dataW) - 1] = 0;
 
     //
+    // The NULL strings
+    //
+    {
+        CA2A a2a(NULL);
+        ok_ptr((LPSTR)a2a, NULL);
+        ok_ptr(a2a.m_psz, NULL);
+
+        CW2A w2a(NULL);
+        ok_ptr((LPSTR)w2a, NULL);
+        ok_ptr(w2a.m_psz, NULL);
+
+        CA2W a2w(NULL);
+        ok_ptr((LPWSTR)a2w, NULL);
+        ok_ptr(a2w.m_psz, NULL);
+
+        CW2W w2w(NULL);
+        ok_ptr((LPWSTR)w2w, NULL);
+        ok_ptr(w2w.m_psz, NULL);
+    }
+
+    //
     // The short strings
     //
     {

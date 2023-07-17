@@ -22,9 +22,9 @@ class CA2CAEX
 public:
     LPCSTR m_psz;
 
-    CA2CAEX(_In_z_ LPCSTR psz) { }
+    CA2CAEX(_In_z_ LPCSTR psz) : m_psz(psz) { }
 
-    CA2CAEX(_In_z_ LPCSTR psz, _In_ UINT nCodePage)
+    CA2CAEX(_In_z_ LPCSTR psz, _In_ UINT nCodePage) : m_psz(psz)
     {
         UNREFERENCED_PARAMETER(nCodePage);
     }
@@ -46,9 +46,9 @@ class CW2CWEX
 public:
     LPCWSTR m_psz;
 
-    CW2CWEX(_In_z_ LPCWSTR psz) { }
+    CW2CWEX(_In_z_ LPCWSTR psz) : m_psz(psz) { }
 
-    CW2CWEX(_In_z_ LPCWSTR psz, _In_ UINT nCodePage)
+    CW2CWEX(_In_z_ LPCWSTR psz, _In_ UINT nCodePage) : m_psz(psz)
     {
         UNREFERENCED_PARAMETER(nCodePage);
     }
@@ -102,6 +102,7 @@ private:
         if (!psz)
         {
             m_psz = NULL;
+            m_szBuffer[0] = 0;
             return;
         }
         int cchMax = lstrlenA(psz) + 1;
@@ -162,6 +163,7 @@ private:
         if (!psz)
         {
             m_psz = NULL;
+            m_szBuffer[0] = 0;
             return;
         }
         int cchMax = lstrlenW(psz);
@@ -221,6 +223,7 @@ private:
         if (!psz)
         {
             m_psz = NULL;
+            m_szBuffer[0] = 0;
             return;
         }
         int cchMax = MultiByteToWideChar(nCodePage, 0, psz, -1, NULL, 0);
@@ -282,6 +285,7 @@ private:
         if (!psz)
         {
             m_psz = NULL;
+            m_szBuffer[0] = 0;
             return;
         }
         int cchMax = WideCharToMultiByte(nConvertCodePage, 0, psz, -1, NULL, 0, NULL, NULL);
