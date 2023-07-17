@@ -29,18 +29,22 @@ START_TEST(atlconv)
     CA2A a2a("TEST123");
     ok_str((LPSTR)a2a, "TEST123");
     ok_str(a2a.m_psz, "TEST123");
+    ok_ptr(a2a.m_psz, a2a.m_szBuffer);
 
     CW2A w2a(L"TEST123");
     ok_str((LPSTR)w2a, "TEST123");
     ok_str(w2a.m_psz, "TEST123");
+    ok_ptr(w2a.m_psz, w2a.m_szBuffer);
 
     CA2W a2w("TEST123");
     ok_wstr((LPWSTR)a2w, L"TEST123");
     ok_wstr(a2w.m_psz, L"TEST123");
+    ok_ptr(a2w.m_psz, a2w.m_szBuffer);
 
     CW2W w2w(L"TEST123");
     ok_wstr((LPWSTR)w2w, L"TEST123");
     ok_wstr(w2w.m_psz, L"TEST123");
+    ok_ptr(w2w.m_psz, w2w.m_szBuffer);
 
     CA2A a2a2(dataA);
     ok_str((LPSTR)a2a2, dataA);
