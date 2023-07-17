@@ -292,8 +292,7 @@ private:
         }
 
         // Calculation of WideCharToMultiByte is slow. Use lstrlenW instead.
-        int cch = lstrlenW(psz);
-        int cchMax = (cch * 2) + 1; // Optimized for double-byte strings (like Shift_JIS)
+        int cchMax = (lstrlenW(psz) * 2) + 1; // Optimized for double-byte strings
         if (cchMax <= (int)_countof(m_szBuffer))
         {
             // Use the static buffer
@@ -322,7 +321,7 @@ private:
             }
 
             // A complex UTF-8 string might come here
-            cchMax = 4 * cch + 1;
+            cchMax = WideCharToMultiByte(nConvertCodePage, 0, psz, -1, NULL, 0, NULL, NULL);
             LPSTR pszResized = (LPSTR)realloc(m_psz, cchMax * sizeof(CHAR));
             if (!pszResized)
             {
