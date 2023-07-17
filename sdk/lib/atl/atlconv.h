@@ -292,7 +292,8 @@ private:
         }
 
         // Calculation of WideCharToMultiByte is slow. Use lstrlenW instead.
-        int cchMax = (lstrlenW(psz) + 1) * 2;
+        int cch = lstrlenW(psz);
+        int cchMax = (cch * 2) + 1; // Optimized for double-byte strings (like Shift_JIS)
         if (cchMax <= (int)_countof(m_szBuffer))
         {
             // Use the static buffer
@@ -306,6 +307,29 @@ private:
             m_psz = (LPSTR)malloc(cchMax * sizeof(CHAR));
             if (!m_psz)
                 AtlThrow(E_OUTOFMEMORY);
+
+            // 1st try
+            if (WideCharToMultiByte(nConvertCodePage, 0, psz, -1, m_psz, cchMax, NULL, NULL))
+            {
+                m_psz[cchMax - 1] = 0;
+                return; // Success
+            }
+
+            if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            {
+                m_psz = m_szBuffer;
+                return; // Failed
+            }
+
+            // A complex UTF-8 string might come here
+            cchMax = 3 * cch + 1;
+            LPSTR pszResized = (LPSTR)realloc(m_psz, cchMax * sizeof(CHAR));
+            if (!pszResized)
+            {
+                m_psz[0] = 0;
+                AtlThrow(E_OUTOFMEMORY); // Failed
+            }
+            m_psz = pszResized;
         }
 
         WideCharToMultiByte(nConvertCodePage, 0, psz, -1, m_psz, cchMax, NULL, NULL);
