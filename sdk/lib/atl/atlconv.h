@@ -227,8 +227,13 @@ private:
             return;
         }
 
+#if 1
+        // This is slow
+        int cchMax = MultiByteToWideChar(nCodePage, 0, psz, -1, NULL, 0);
+#else
         // Calculation of MultiByteToWideChar is slow. Use lstrlenA instead.
         int cchMax = lstrlenA(psz) + 1;
+#endif
         if (cchMax <= (int)_countof(m_szBuffer))
         {
             // Use the static buffer
@@ -291,8 +296,13 @@ private:
             return;
         }
 
+#if 1
+        // This is slow and has a test failure
+        int cchMax = WideCharToMultiByte(nConvertCodePage, 0, psz, -1, NULL, 0, NULL, NULL);
+#else
         // Calculation of WideCharToMultiByte is slow. Use lstrlenW instead.
         int cchMax = (lstrlenW(psz) * 2) + 1; // Optimized for double-byte strings
+#endif
         if (cchMax <= (int)_countof(m_szBuffer))
         {
             // Use the static buffer
@@ -307,6 +317,7 @@ private:
             if (!m_psz)
                 AtlThrow(E_OUTOFMEMORY);
 
+#if 0
             // 1st try
             if (WideCharToMultiByte(nConvertCodePage, 0, psz, -1, m_psz, cchMax, NULL, NULL))
             {
@@ -329,6 +340,7 @@ private:
                 AtlThrow(E_OUTOFMEMORY); // Failed
             }
             m_psz = pszResized;
+#endif
         }
 
         WideCharToMultiByte(nConvertCodePage, 0, psz, -1, m_psz, cchMax, NULL, NULL);
