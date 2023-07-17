@@ -16,13 +16,15 @@ In addition, in order to avoid coming off as rude to helpful contributors, pleas
 - Merging with the intention to rewrite that code soon after
 
 Before merging a PR, make sure it follows the [contributing rules](CONTRIBUTING.md#rules-and-recommendations), but more importantly:
-- If PR contains the code or translations:
-  - Make sure the author has not specified a nickname or alias, but a full legal name in all PR commits
-  - Make sure the author has the same full name set in GitHub profile that matches one in commits
-- If PR contains the media (wallpapers, themes, icons, sounds) or out-of-code documentation:
-  - Make sure the author has specified the name or alias in all PR commits
-  - Make sure the author has the same name or alias set in GitHub profile that matches one in commits
-- If PR contains mixed code with media changes, handle it as PR with code
 - Make sure the author has specified a real e-mail in all PR commits
-- By pressing "Squash and merge" button in a PR you can make sure the author does not use no-reply e-mail -
+- If PR contains code or translations, make sure the author has not specified a nickname or alias, but a full legal name in all PR commits
+- If PR contains media (wallpapers, themes, icons, sounds) or out-of-code documentation, make sure the author has specified the name or alias in all PR commits
+- If PR contains mixed code with media changes, handle it as PR with code
+- Important notes before using "Squash and merge" strategy on a PR:
+  - Make sure the author's name in GitHub profile matches one in commits. If this is not the case, ask the author to set it accordingly.
+  - If the author does not want to set the name in GitHub profile:
+    - "no squash merge" label needs to be added to a PR.
+	- Make sure every commit message is formatted correctly as in [.gitmessage](https://github.com/reactos/reactos/blob/master/.gitmessage).
+	- Finally in this case a PR has to be merged either using "Rebase and merge" strategy or manually.
+  - By pressing "Squash and merge" button in a PR you can make sure the author does not use no-reply e-mail -
   under the commit message there will be a text label saying: `This commit will be authored by <address@email.com>`

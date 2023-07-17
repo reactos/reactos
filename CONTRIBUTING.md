@@ -64,10 +64,10 @@ Our commit style is defined in a __[commit template]__. Use it as a reference or
 ### Rules and Recommendations
 
 - *Use your __real name__ and __real email__.* We do not accept anonymous code contributions!
-  - Every commit that changes the code or translations should have author's full legal name (in latin letters, diacritics allowed).
-  - Same applies to the author's GitHub profile, it should have full name set (in the [Name field here][GitHub Profile Settings]) that matches one specified in the commits.
-- There is an exception for media changes, such as changes of the art (wallpapers, themes, icons, sounds) and out-of-code documentation.
-  - In these specific cases it's allowed to use a nickname or alias, however the artist name (in the [Name field here][GitHub Profile Settings]) should match one specified in the commits.
+  - Every commit that changes code or translations should have author's full legal name (in latin letters, diacritics allowed).
+  - It's recommended to have the same full name set in GitHub profile (in the [Name field here][GitHub Profile Settings]) that matches one specified in commits.
+- There is an exception for media changes, such as changes of art (wallpapers, themes, icons, sounds) and out-of-code documentation.
+  - In these specific cases it's allowed to use a nickname or alias as author's name, and it's recommended to have the same name set in GitHub profile (in the [Name field here][GitHub Profile Settings]) matching one specified in commits.
 - In any case the author must use a real e-mail address, this includes git commits (`user.email` setting) and GitHub [e-mail settings][GitHub Email Settings] - the checkbox "Keep my email addresses private" must be unchecked there.
   - In order to *keep your privacy*, select appropriate "Primary email address" that will be applied to your commits in GitHub [e-mail settings][GitHub Email Settings].
 - *Ensure your contribution is properly described.* Include the relevant issue number if applicable.
