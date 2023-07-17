@@ -138,8 +138,8 @@ public:
 
     CW2WEX(_In_z_ LPCWSTR psz, _In_ UINT nCodePage)
     {
-        Init(psz);
         UNREFERENCED_PARAMETER(nCodePage);
+        Init(psz);
     }
 
     ~CW2WEX() throw()
