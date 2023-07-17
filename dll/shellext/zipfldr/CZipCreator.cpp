@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Create a zip file
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
- *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2019-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -11,6 +11,8 @@
 #include "minizip/zip.h"
 #include "minizip/iowin32.h"
 #include <process.h>
+
+#define PACK_AS_UTF8_ZIP
 
 static CStringW DoGetZipName(PCWSTR filename)
 {
@@ -34,10 +36,10 @@ static CStringW DoGetZipName(PCWSTR filename)
     return ret;
 }
 
-static CStringA DoGetAnsiName(PCWSTR filename)
+static CStringA DoGetAnsiName(PCWSTR filename, UINT nCodePage)
 {
     CHAR buf[MAX_PATH];
-    WideCharToMultiByte(CP_ACP, 0, filename, -1, buf, _countof(buf), NULL, NULL);
+    WideCharToMultiByte(nCodePage, 0, filename, -1, buf, _countof(buf), NULL, NULL);
     return buf;
 }
 
@@ -65,7 +67,11 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename)
 
     ret.Replace(L'\\', L'/');
 
-    return DoGetAnsiName(ret);
+#ifdef PACK_AS_UTF8_ZIP
+    return DoGetAnsiName(ret, CP_UTF8);
+#else
+    return DoGetAnsiName(ret, CP_ACP);
+#endif
 }
 
 static BOOL
@@ -299,7 +305,7 @@ unsigned CZipCreatorImpl::JustDoIt()
         }
 
         CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile);
-        err = zipOpenNewFileInZip3_64(zf,
+        err = zipOpenNewFileInZip4_64(zf,
                                       strNameInZip,
                                       &zi,
                                       NULL,
@@ -315,6 +321,12 @@ unsigned CZipCreatorImpl::JustDoIt()
                                       Z_DEFAULT_STRATEGY,
                                       password,
                                       crc,
+                                      36,
+#ifdef PACK_AS_UTF8_ZIP
+                                      MINIZIP_UTF8_FLAG,
+#else
+                                      0,
+#endif
                                       zip64);
         if (err)
         {
