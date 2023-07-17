@@ -34,8 +34,8 @@ public:
 
 private:
     // CA2CAEX is not copyable
-    CA2CAEX(_In_ const CA2CAEX&) throw();
-    CA2CAEX& operator=(_In_ const CA2CAEX&) throw();
+    CA2CAEX(_In_ const CA2CAEX&) throw() = delete;
+    CA2CAEX& operator=(_In_ const CA2CAEX&) throw() = delete;
 };
 
 template <int t_nBufferLength = 128>
@@ -57,8 +57,8 @@ public:
 
 private:
     // CW2CWEX is not copyable
-    CW2CWEX(_In_ const CW2CWEX&) throw();
-    CW2CWEX& operator=(_In_ const CW2CWEX&) throw();
+    CW2CWEX(_In_ const CW2CWEX&) throw() = delete;
+    CW2CWEX& operator=(_In_ const CW2CWEX&) throw() = delete;
 };
 
 template <int t_nBufferLength = 128>
@@ -92,8 +92,8 @@ public:
 
 private:
     // CA2AEX is not copyable
-    CA2AEX(_In_ const CA2AEX &) throw();
-    CA2AEX& operator=(_In_ const CA2AEX &) throw();
+    CA2AEX(_In_ const CA2AEX &) throw() = delete;
+    CA2AEX& operator=(_In_ const CA2AEX &) throw() = delete;
 
     void Init(_In_z_ LPCSTR psz)
     {
@@ -147,8 +147,8 @@ public:
 
 private:
     // CW2WEX is not copyable
-    CW2WEX(_In_ const CW2WEX&) throw();
-    CW2WEX& operator=(_In_ const CW2WEX&) throw();
+    CW2WEX(_In_ const CW2WEX&) throw() = delete;
+    CW2WEX& operator=(_In_ const CW2WEX&) throw() = delete;
 
     void Init(_In_z_ LPCWSTR psz)
     {
@@ -201,8 +201,8 @@ public:
 
 private:
     // CA2WEX is not copyable
-    CA2WEX(_In_ const CA2WEX&) throw();
-    CA2WEX& operator=(_In_ const CA2WEX&) throw();
+    CA2WEX(_In_ const CA2WEX&) throw() = delete;
+    CA2WEX& operator=(_In_ const CA2WEX&) throw() = delete;
 
     void Init(_In_z_ LPCSTR psz, _In_ UINT nCodePage)
     {
@@ -255,8 +255,8 @@ public:
 
 private:
     // CW2AEX is not copyable
-    CW2AEX(_In_ const CW2AEX&) throw();
-    CW2AEX& operator=(_In_ const CW2AEX&) throw();
+    CW2AEX(_In_ const CW2AEX&) throw() = delete;
+    CW2AEX& operator=(_In_ const CW2AEX&) throw() = delete;
 
     void Init(_In_z_ LPCWSTR psz, _In_ UINT nConvertCodePage)
     {
