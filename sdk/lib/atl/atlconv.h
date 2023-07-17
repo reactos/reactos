@@ -322,7 +322,7 @@ private:
             }
 
             // A complex UTF-8 string might come here
-            cchMax = 3 * cch + 1;
+            cchMax = 4 * cch + 1;
             LPSTR pszResized = (LPSTR)realloc(m_psz, cchMax * sizeof(CHAR));
             if (!pszResized)
             {
