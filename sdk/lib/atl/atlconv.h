@@ -22,7 +22,12 @@ public:
     LPCSTR m_psz;
 
     CA2CAEX(_In_z_ LPCSTR psz) : m_psz(psz) { }
-    CA2CAEX(_In_z_ LPCSTR psz, _In_ UINT nCodePage) : m_psz(psz) { }
+
+    CA2CAEX(_In_z_ LPCSTR psz, _In_ UINT nCodePage) : m_psz(psz)
+    {
+        UNREFERENCED_PARAMETER(nCodePage);
+    }
+
     ~CA2CAEX() throw() { }
 
     _Ret_z_ operator LPCSTR() const throw() { return m_psz; }
@@ -40,7 +45,12 @@ public:
     LPCWSTR m_psz;
 
     CW2CWEX(_In_z_ LPCWSTR psz) : m_psz(psz) { }
-    CW2CWEX(_In_z_ LPCWSTR psz, _In_ UINT nCodePage) : m_psz(psz) { }
+
+    CW2CWEX(_In_z_ LPCWSTR psz, _In_ UINT nCodePage) : m_psz(psz)
+    {
+        UNREFERENCED_PARAMETER(nCodePage);
+    }
+
     ~CW2CWEX() throw() { }
 
     _Ret_z_ operator LPCWSTR() const throw() { return m_psz; }
@@ -66,6 +76,7 @@ public:
     CA2AEX(_In_z_ LPCSTR psz, _In_ UINT nCodePage)
     {
         Init(psz);
+        UNREFERENCED_PARAMETER(nCodePage);
     }
 
     ~CA2AEX() throw()
@@ -120,6 +131,7 @@ public:
     CW2WEX(_In_z_ LPCWSTR psz, _In_ UINT nCodePage)
     {
         Init(psz);
+        UNREFERENCED_PARAMETER(nCodePage);
     }
 
     ~CW2WEX() throw()
