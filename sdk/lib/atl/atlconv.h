@@ -226,6 +226,7 @@ private:
             m_szBuffer[0] = 0;
             return;
         }
+
         // Calculation of MultiByteToWideChar is slow. Use lstrlenA instead.
         int cchMax = lstrlenA(psz) + 1;
         if (cchMax <= (int)_countof(m_szBuffer))
@@ -289,6 +290,7 @@ private:
             m_szBuffer[0] = 0;
             return;
         }
+
         // Calculation of WideCharToMultiByte is slow. Use lstrlenW instead.
         int cchMax = (lstrlenW(psz) + 1) * 2;
         if (cchMax <= (int)_countof(m_szBuffer))
