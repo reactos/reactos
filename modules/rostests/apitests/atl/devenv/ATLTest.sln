@@ -31,7 +31,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPath", "CPath.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AtlObjMap", "AtlObjMap.vcxproj", "{B628C42A-A38E-488E-8512-2B997B75E95C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atlconv", "atlconv\atlconv.vcxproj", "{85194CA3-A828-4270-962A-333743E2BF83}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atlconv", "atlconv.vcxproj", "{85194CA3-A828-4270-962A-333743E2BF83}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

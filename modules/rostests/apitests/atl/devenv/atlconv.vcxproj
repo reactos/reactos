@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\atlconv.cpp" />
+    <ClCompile Include="..\atlconv.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{85194CA3-A828-4270-962A-333743E2BF83}</ProjectGuid>

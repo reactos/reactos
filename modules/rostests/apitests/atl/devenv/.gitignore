@@ -5,6 +5,7 @@
 x64/
 .vs/
 ipch/
+atlconv/
 CAtlArray/
 CAtlFileMapping/
 CAtlList/
