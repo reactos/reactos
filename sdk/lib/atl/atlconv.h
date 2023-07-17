@@ -98,6 +98,7 @@ private:
             return;
         }
 
+        m_szBuffer[0] = 0;
         m_psz = _strdup(psz);
         if (!m_psz)
             AtlThrow(E_OUTOFMEMORY);
@@ -151,6 +152,7 @@ private:
             return;
         }
 
+        m_szBuffer[0] = 0;
         m_psz = _wcsdup(psz);
         if (!m_psz)
             AtlThrow(E_OUTOFMEMORY);
@@ -201,6 +203,7 @@ private:
             return;
         }
 
+        m_szBuffer[0] = 0;
         m_psz = (LPWSTR)malloc(cchMax * sizeof(WCHAR));
         if (!m_psz)
             AtlThrow(E_OUTOFMEMORY);
@@ -255,6 +258,7 @@ private:
             return;
         }
 
+        m_szBuffer[0] = 0;
         m_psz = (LPSTR)malloc(cchMax * sizeof(CHAR));
         if (!m_psz)
             AtlThrow(E_OUTOFMEMORY);
