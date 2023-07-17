@@ -15,6 +15,7 @@
 namespace ATL
 {
 
+// This class does not own the string
 template <int t_nBufferLength = 128>
 class CA2CAEX
 {
@@ -28,7 +29,7 @@ public:
         UNREFERENCED_PARAMETER(nCodePage);
     }
 
-    ~CA2CAEX() throw() { }
+    ~CA2CAEX() throw() { } // There is nothing to free here
 
     _Ret_z_ operator LPCSTR() const throw() { return m_psz; }
 
@@ -38,6 +39,7 @@ private:
     CA2CAEX& operator=(_In_ const CA2CAEX&) throw() = delete;
 };
 
+// This class does not own the string
 template <int t_nBufferLength = 128>
 class CW2CWEX
 {
@@ -51,7 +53,7 @@ public:
         UNREFERENCED_PARAMETER(nCodePage);
     }
 
-    ~CW2CWEX() throw() { }
+    ~CW2CWEX() throw() { } // There is nothing to free here
 
     _Ret_z_ operator LPCWSTR() const throw() { return m_psz; }
 
