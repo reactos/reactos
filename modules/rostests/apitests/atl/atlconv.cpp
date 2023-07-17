@@ -70,11 +70,13 @@ START_TEST(atlconv)
     ok_wstr(w2w2.m_szBuffer, L"");
     ok(w2w2.m_psz != w2w2.m_szBuffer, "w2w2.m_psz == w2w2.m_szBuffer\n");
 
-    CA2CA a2ca("TEST123");
-    ok_str((LPCSTR)a2ca, "TEST123");
-    ok_str(a2ca.m_psz, "TEST123");
+    CA2CA a2ca(dataA);
+    ok_str((LPCSTR)a2ca, dataA);
+    ok_str(a2ca.m_psz, dataA);
+    ok_ptr(const_cast<char*>(a2ca.m_psz), dataA);
 
-    CW2CW w2cw(L"TEST123");
-    ok_wstr((LPCWSTR)w2cw, L"TEST123");
-    ok_wstr(w2cw.m_psz, L"TEST123");
+    CW2CW w2cw(dataW);
+    ok_wstr((LPCWSTR)w2cw, dataW);
+    ok_wstr(w2cw.m_psz, dataW);
+    ok_ptr(const_cast<wchar_t*>(w2cw.m_psz), dataW);
 }
