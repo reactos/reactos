@@ -57,6 +57,35 @@ START_TEST(atlconv)
     }
 
     //
+    // The zero-length strings
+    //
+    {
+        CA2A a2a("");
+        ok_str((LPSTR)a2a, "");
+        ok_str(a2a.m_psz, "");
+        ok_int(a2a.m_szBuffer[0], 0);
+        ok_ptr(a2a.m_psz, a2a.m_szBuffer);
+
+        CW2A w2a(L"");
+        ok_str((LPSTR)w2a, "");
+        ok_str(w2a.m_psz, "");
+        ok_int(w2a.m_szBuffer[0], 0);
+        ok_ptr(w2a.m_psz, w2a.m_szBuffer);
+
+        CA2W a2w("");
+        ok_wstr((LPWSTR)a2w, L"");
+        ok_wstr(a2w.m_psz, L"");
+        ok_int(a2w.m_szBuffer[0], 0);
+        ok_ptr(a2w.m_psz, a2w.m_szBuffer);
+
+        CW2W w2w(L"");
+        ok_wstr((LPWSTR)w2w, L"");
+        ok_wstr(w2w.m_psz, L"");
+        ok_int(w2w.m_szBuffer[0], 0);
+        ok_ptr(w2w.m_psz, w2w.m_szBuffer);
+    }
+
+    //
     // The short strings
     //
     {
