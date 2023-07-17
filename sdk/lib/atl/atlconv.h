@@ -228,11 +228,9 @@ private:
         }
 
 #if 1
-        // This is slow
-        int cchMax = MultiByteToWideChar(nCodePage, 0, psz, -1, NULL, 0);
+        int cchMax = lstrlenA(psz) + 1; // This is 3 times faster
 #else
-        // Calculation of MultiByteToWideChar is slow. Use lstrlenA instead.
-        int cchMax = lstrlenA(psz) + 1;
+        int cchMax = MultiByteToWideChar(nCodePage, 0, psz, -1, NULL, 0); // It's slow
 #endif
         if (cchMax <= (int)_countof(m_szBuffer))
         {
@@ -296,13 +294,7 @@ private:
             return;
         }
 
-#if 1
-        // This is slow and has a test failure
         int cchMax = WideCharToMultiByte(nConvertCodePage, 0, psz, -1, NULL, 0, NULL, NULL);
-#else
-        // Calculation of WideCharToMultiByte is slow. Use lstrlenW instead.
-        int cchMax = (lstrlenW(psz) * 2) + 1; // Optimized for double-byte strings
-#endif
         if (cchMax <= (int)_countof(m_szBuffer))
         {
             // Use the static buffer
@@ -316,31 +308,6 @@ private:
             m_psz = (LPSTR)malloc(cchMax * sizeof(CHAR));
             if (!m_psz)
                 AtlThrow(E_OUTOFMEMORY);
-
-#if 0
-            // 1st try
-            if (WideCharToMultiByte(nConvertCodePage, 0, psz, -1, m_psz, cchMax, NULL, NULL))
-            {
-                m_psz[cchMax - 1] = 0;
-                return; // Success
-            }
-
-            if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-            {
-                m_psz = m_szBuffer;
-                return; // Failed
-            }
-
-            // A complex UTF-8 string might come here
-            cchMax = WideCharToMultiByte(nConvertCodePage, 0, psz, -1, NULL, 0, NULL, NULL);
-            LPSTR pszResized = (LPSTR)realloc(m_psz, cchMax * sizeof(CHAR));
-            if (!pszResized)
-            {
-                m_psz[0] = 0;
-                AtlThrow(E_OUTOFMEMORY); // Failed
-            }
-            m_psz = pszResized;
-#endif
         }
 
         WideCharToMultiByte(nConvertCodePage, 0, psz, -1, m_psz, cchMax, NULL, NULL);
