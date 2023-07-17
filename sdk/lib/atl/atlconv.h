@@ -209,18 +209,20 @@ private:
     void Init(_In_z_ LPCSTR psz, _In_ UINT nCodePage)
     {
         int cchMax = MultiByteToWideChar(nCodePage, 0, psz, -1, NULL, 0);
-        if (cchMax <= t_nBufferLength)
+        if (cchMax <= (int)_countof(m_szBuffer))
         {
-            MultiByteToWideChar(nCodePage, 0, psz, -1, m_szBuffer, _countof(m_szBuffer));
-            m_szBuffer[_countof(m_szBuffer) - 1] = 0;
+            // Re-use the static buffer
             m_psz = m_szBuffer;
-            return;
+            cchMax = _countof(m_szBuffer);
         }
-
-        m_szBuffer[0] = 0;
-        m_psz = (LPWSTR)malloc(cchMax * sizeof(WCHAR));
-        if (!m_psz)
-            AtlThrow(E_OUTOFMEMORY);
+        else
+        {
+            // Allocate a new buffer
+            m_szBuffer[0] = 0;
+            m_psz = (LPWSTR)malloc(cchMax * sizeof(WCHAR));
+            if (!m_psz)
+                AtlThrow(E_OUTOFMEMORY);
+        }
 
         MultiByteToWideChar(nCodePage, 0, psz, -1, m_psz, cchMax);
         m_psz[cchMax - 1] = 0;
@@ -263,19 +265,20 @@ private:
     void Init(_In_z_ LPCWSTR psz, _In_ UINT nConvertCodePage)
     {
         int cchMax = WideCharToMultiByte(nConvertCodePage, 0, psz, -1, NULL, 0, NULL, NULL);
-        if (cchMax <= t_nBufferLength)
+        if (cchMax <= (int)_countof(m_szBuffer))
         {
-            WideCharToMultiByte(nConvertCodePage, 0, psz, -1, m_szBuffer, _countof(m_szBuffer),
-                                NULL, NULL);
-            m_szBuffer[_countof(m_szBuffer) - 1] = 0;
+            // Re-use the static buffer
             m_psz = m_szBuffer;
-            return;
+            cchMax = _countof(m_szBuffer);
         }
-
-        m_szBuffer[0] = 0;
-        m_psz = (LPSTR)malloc(cchMax * sizeof(CHAR));
-        if (!m_psz)
-            AtlThrow(E_OUTOFMEMORY);
+        else
+        {
+            // Allocate a new buffer
+            m_szBuffer[0] = 0;
+            m_psz = (LPSTR)malloc(cchMax * sizeof(CHAR));
+            if (!m_psz)
+                AtlThrow(E_OUTOFMEMORY);
+        }
 
         WideCharToMultiByte(nConvertCodePage, 0, psz, -1, m_psz, cchMax, NULL, NULL);
         m_psz[cchMax - 1] = 0;
