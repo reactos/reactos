@@ -305,12 +305,12 @@ private:
     }
 };
 
-using CA2A = CA2AEX<>;
-using CW2A = CW2AEX<>;
-using CA2W = CA2WEX<>;
-using CW2W = CW2WEX<>;
-using CA2CA = CA2CAEX<>;
-using CW2CW = CW2CWEX<>;
+typedef CA2AEX<> CA2A;
+typedef CW2AEX<> CW2A;
+typedef CA2WEX<> CA2W;
+typedef CW2WEX<> CW2W;
+typedef CA2CAEX<> CA2CA;
+typedef CW2CWEX<> CW2CW;
 
 #ifdef UNICODE
     #define CA2CTEX CA2WEX
