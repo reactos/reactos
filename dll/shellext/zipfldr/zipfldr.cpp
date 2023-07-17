@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     zipfldr entrypoint
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -47,8 +48,15 @@ static void init_zlib()
     fill_win32_filefunc64W(&g_FFunc);
 }
 
+void Utf8ToWide(const CStringA& strUtf8, CStringW& strWide)
+{
+    INT cchWide = MultiByteToWideChar(CP_UTF8, 0, strUtf8, -1, NULL, 0);
+    MultiByteToWideChar(CP_UTF8, 0, strUtf8, -1, strWide.GetBuffer(cchWide), cchWide);
+    strWide.ReleaseBuffer();
+}
+
 static BOOL
-CreateEmptyFile(LPCWSTR pszFile)
+CreateEmptyFile(PCWSTR pszFile)
 {
     HANDLE hFile;
     hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
@@ -62,7 +70,7 @@ CreateEmptyFile(LPCWSTR pszFile)
 }
 
 static HRESULT
-CreateSendToZip(LPCWSTR pszSendTo)
+CreateSendToZip(PCWSTR pszSendTo)
 {
     WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
 
@@ -80,7 +88,7 @@ CreateSendToZip(LPCWSTR pszSendTo)
 }
 
 static HRESULT
-GetDefaultUserSendTo(LPWSTR pszPath)
+GetDefaultUserSendTo(PWSTR pszPath)
 {
     return SHGetFolderPathW(NULL, CSIDL_SENDTO, INVALID_HANDLE_VALUE,
                             SHGFP_TYPE_DEFAULT, pszPath);
@@ -154,7 +162,7 @@ BOOL WINAPI
 RouteTheCall(
     IN HWND hWndOwner,
     IN HINSTANCE hInstance,
-    IN LPCSTR lpStringArg,
+    IN PCWSTR lpStringArg,
     IN INT Show)
 {
     CStringW path = lpStringArg;

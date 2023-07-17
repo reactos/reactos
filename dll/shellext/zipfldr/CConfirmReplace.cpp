@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Ask the user to replace a file
  * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -10,10 +11,9 @@
 class CConfirmReplace : public CDialogImpl<CConfirmReplace>
 {
 private:
-    CStringA m_Filename;
+    CStringW m_Filename;
 public:
-
-    CConfirmReplace(const char* filename)
+    CConfirmReplace(PCWSTR filename)
         : m_Filename(filename)
     {
     }
@@ -25,9 +25,9 @@ public:
         HICON hIcon = LoadIcon(NULL, IDI_EXCLAMATION);
         SendDlgItemMessage(IDC_EXCLAMATION_ICON, STM_SETICON, (WPARAM)hIcon);
 
-        CStringA message;
+        CStringW message;
         message.FormatMessage(IDS_OVERWRITEFILE_TEXT, m_Filename.GetString());
-        ::SetDlgItemTextA(m_hWnd, IDC_MESSAGE, message);
+        ::SetDlgItemTextW(m_hWnd, IDC_MESSAGE, message);
 
         return TRUE;
     }
@@ -50,10 +50,9 @@ public:
     END_MSG_MAP()
 };
 
-
-eZipConfirmResponse _CZipAskReplace(HWND hDlg, PCSTR FullPath)
+eZipConfirmResponse _CZipAskReplace(HWND hDlg, PCWSTR FullPath)
 {
-    PCSTR Filename = PathFindFileNameA(FullPath);
+    PCWSTR Filename = PathFindFileNameW(FullPath);
     CConfirmReplace confirm(Filename);
     INT_PTR Result = confirm.DoModal(hDlg);
     switch (Result)

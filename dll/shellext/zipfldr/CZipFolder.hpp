@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Main class
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 struct FolderViewColumns
@@ -37,7 +38,7 @@ class CZipFolder :
     public IZip
 {
     CStringW m_ZipFile;
-    CStringA m_ZipDir;
+    CStringW m_ZipDir;
     CComHeapPtr<ITEMIDLIST> m_CurDir;
     unzFile m_UnzipFile;
 
@@ -99,7 +100,7 @@ public:
         return E_NOTIMPL;
     }
     // Adapted from CFileDefExt::GetFileTimeString
-    BOOL _GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cchResult)
+    BOOL _GetFileTimeString(LPFILETIME lpFileTime, PWSTR pwszResult, UINT cchResult)
     {
         SYSTEMTIME st;
 
@@ -107,7 +108,7 @@ public:
             return FALSE;
 
         size_t cchRemaining = cchResult;
-        LPWSTR pwszEnd = pwszResult;
+        PWSTR pwszEnd = pwszResult;
         int cchWritten = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, pwszEnd, cchRemaining);
         if (cchWritten)
             --cchWritten; // GetDateFormatW returns count with terminating zero
@@ -158,9 +159,9 @@ public:
             return GetDisplayNameOf(pidl, 0, &psd->str);
         case 1: /* Type */
         {
-            SHFILEINFOA shfi;
+            SHFILEINFOW shfi;
             DWORD dwAttributes = isDir ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
-            ULONG_PTR firet = SHGetFileInfoA(zipEntry->Name, dwAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME);
+            ULONG_PTR firet = SHGetFileInfoW(zipEntry->Name, dwAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME);
             if (!firet)
                 return E_FAIL;
             return SHSetStrRet(&psd->str, shfi.szTypeName);
@@ -226,7 +227,7 @@ public:
     {
         if (riid == IID_IShellFolder)
         {
-            CStringA newZipDir = m_ZipDir;
+            CStringW newZipDir = m_ZipDir;
             PCUIDLIST_RELATIVE curpidl = pidl;
             while (curpidl->mkid.cb)
             {
@@ -236,7 +237,7 @@ public:
                     return E_FAIL;
                 }
                 newZipDir += zipEntry->Name;
-                newZipDir += '/';
+                newZipDir += L'/';
 
                 curpidl = ILGetNext(curpidl);
             }
@@ -262,7 +263,7 @@ public:
         if (zipEntry1->ZipType != zipEntry2->ZipType)
             result = zipEntry1->ZipType - zipEntry2->ZipType;
         else
-            result = stricmp(zipEntry1->Name, zipEntry2->Name);
+            result = _wcsicmp(zipEntry1->Name, zipEntry2->Name);
 
         if (!result && zipEntry1->ZipType == ZIP_PIDL_DIRECTORY)
         {
@@ -392,14 +393,8 @@ public:
             const ZipPidlEntry* zipEntry = _ZipFromIL(*apidl);
             if (zipEntry)
             {
-                CComHeapPtr<WCHAR> pathW;
-
-                int len = MultiByteToWideChar(CP_ACP, 0, zipEntry->Name, -1, NULL, 0);
-                pathW.Allocate(len);
-                MultiByteToWideChar(CP_ACP, 0, zipEntry->Name, -1, pathW, len);
-
                 DWORD dwAttributes = (zipEntry->ZipType == ZIP_PIDL_DIRECTORY) ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
-                return SHCreateFileExtractIconW(pathW, dwAttributes, riid, ppvOut);
+                return SHCreateFileExtractIconW(zipEntry->Name, dwAttributes, riid, ppvOut);
             }
         }
         else if (riid == IID_IContextMenu && cidl >= 0)
@@ -444,7 +439,7 @@ public:
         if (!zipEntry)
             return E_FAIL;
 
-        return SHSetStrRet(strRet, (LPCSTR)zipEntry->Name);
+        return SHSetStrRet(strRet, zipEntry->Name);
     }
     STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
     {
@@ -479,7 +474,7 @@ public:
         case GCS_VERBA:
             return StringCchCopyA(pszName, cchMax, EXTRACT_VERBA);
         case GCS_VERBW:
-            return StringCchCopyW((LPWSTR)pszName, cchMax, EXTRACT_VERBW);
+            return StringCchCopyW((PWSTR)pszName, cchMax, EXTRACT_VERBW);
         case GCS_HELPTEXTA:
         {
             CStringA helpText(MAKEINTRESOURCEA(IDS_HELPTEXT));
@@ -488,7 +483,7 @@ public:
         case GCS_HELPTEXTW:
         {
             CStringW helpText(MAKEINTRESOURCEA(IDS_HELPTEXT));
-            return StringCchCopyW((LPWSTR)pszName, cchMax, helpText);
+            return StringCchCopyW((PWSTR)pszName, cchMax, helpText);
         }
         case GCS_VALIDATEA:
         case GCS_VALIDATEW:
@@ -621,7 +616,7 @@ public:
     }
 
 
-    STDMETHODIMP Initialize(PCWSTR zipFile, PCSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl)
+    STDMETHODIMP Initialize(PCWSTR zipFile, PCWSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl)
     {
         m_ZipFile = zipFile;
         m_ZipDir = zipDir;

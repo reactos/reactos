@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     CZipEnumerator
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 struct CZipEnumerator
@@ -10,7 +11,7 @@ struct CZipEnumerator
 private:
     CComPtr<IZip> m_Zip;
     bool m_First;
-    CAtlList<CStringA> m_Returned;
+    CAtlList<CStringW> m_Returned;
 public:
     CZipEnumerator()
         :m_First(true)
@@ -33,15 +34,15 @@ public:
         return true;
     }
 
-    bool next_unique(const char* prefix, CStringA& name, bool& folder, unz_file_info64& info)
+    bool next_unique(PCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info)
     {
-        size_t len = strlen(prefix);
-        CStringA tmp;
+        size_t len = wcslen(prefix);
+        CStringW tmp;
         while (next(tmp, info))
         {
-            if (!_strnicmp(tmp, prefix, len))
+            if (!_wcsnicmp(tmp, prefix, len))
             {
-                int pos = tmp.Find('/', len);
+                int pos = tmp.Find(L'/', len);
                 if (pos < 0)
                 {
                     name = tmp.Mid(len);
@@ -66,7 +67,7 @@ public:
         return false;
     }
 
-    bool next(CStringA& name, unz_file_info64& info)
+    bool next(CStringW& name, unz_file_info64& info)
     {
         int err;
 
@@ -84,10 +85,16 @@ public:
         err = unzGetCurrentFileInfo64(uf, &info, NULL, 0, NULL, 0, NULL, 0);
         if (err == UNZ_OK)
         {
-            PSTR buf = name.GetBuffer(info.size_filename);
-            err = unzGetCurrentFileInfo64(uf, NULL, buf, name.GetAllocLength(), NULL, 0, NULL, 0);
-            name.ReleaseBuffer(info.size_filename);
-            name.Replace('\\', '/');
+            CStringA nameA;
+            PSTR buf = nameA.GetBuffer(info.size_filename);
+            err = unzGetCurrentFileInfo64(uf, NULL, buf, nameA.GetAllocLength(), NULL, 0, NULL, 0);
+            nameA.ReleaseBuffer(info.size_filename);
+            nameA.Replace('\\', '/');
+
+            if (info.flag & MINIZIP_UTF8_FLAG)
+                Utf8ToWide(nameA, name);
+            else
+                name = CStringW(nameA);
         }
         return err == UNZ_OK;
     }

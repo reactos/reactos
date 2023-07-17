@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Ask the user for a password
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -10,10 +11,10 @@
 class CZipPassword : public CDialogImpl<CZipPassword>
 {
 private:
-    CStringA m_Filename;
+    CStringW m_Filename;
     CStringA* m_pPassword;
 public:
-    CZipPassword(const char* filename, CStringA* Password)
+    CZipPassword(PCWSTR filename, CStringA* Password)
         :m_pPassword(Password)
     {
         if (filename != NULL)
@@ -27,15 +28,15 @@ public:
         /* No filename, so this is the question before starting to extract */
         if (m_Filename.IsEmpty())
         {
-            CStringA message(MAKEINTRESOURCE(IDS_PASSWORD_ZIP_TEXT));
-            ::SetDlgItemTextA(m_hWnd, IDC_MESSAGE, message);
+            CStringW message(MAKEINTRESOURCEW(IDS_PASSWORD_ZIP_TEXT));
+            ::SetDlgItemTextW(m_hWnd, IDC_MESSAGE, message);
             ::ShowWindow(GetDlgItem(IDSKIP), SW_HIDE);
         }
         else
         {
-            CStringA message;
+            CStringW message;
             message.FormatMessage(IDS_PASSWORD_FILE_TEXT, m_Filename.GetString());
-            ::SetDlgItemTextA(m_hWnd, IDC_MESSAGE, message);
+            ::SetDlgItemTextW(m_hWnd, IDC_MESSAGE, message);
         }
         return TRUE;
     }
@@ -64,10 +65,10 @@ public:
     END_MSG_MAP()
 };
 
-eZipPasswordResponse _CZipAskPassword(HWND hDlg, const char* filename, CStringA& Password)
+eZipPasswordResponse _CZipAskPassword(HWND hDlg, PCWSTR filename, CStringA& Password)
 {
     if (filename)
-        filename = PathFindFileNameA(filename);
+        filename = PathFindFileNameW(filename);
     CZipPassword password(filename, &Password);
     INT_PTR Result = password.DoModal(hDlg);
     switch (Result)

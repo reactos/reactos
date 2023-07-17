@@ -3,9 +3,11 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Zip extraction
  * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
+#include <atlpath.h>
 
 class CZipExtract :
     public IZip
@@ -204,7 +206,7 @@ public:
         struct browse_info
         {
             HWND hWnd;
-            LPCWSTR Directory;
+            PCWSTR Directory;
         };
 
         static INT CALLBACK s_BrowseCallbackProc(HWND hWnd, UINT uMsg, LPARAM lp, LPARAM pData)
@@ -370,10 +372,10 @@ public:
 
     eZipExtractError ExtractSingle(
         HWND hDlg,
-        LPCSTR FullPath,
+        PCWSTR FullPath,
         bool is_dir,
         unz_file_info64* Info,
-        CStringA Name,
+        CStringW Name,
         CStringA Password,
         bool* bOverwriteAll,
         const bool* bCancel,
@@ -383,7 +385,7 @@ public:
         int err;
         BYTE Buffer[2048];
         DWORD dwFlags = SHPPFW_DIRCREATE | (is_dir ? SHPPFW_NONE : SHPPFW_IGNOREFILENAME);
-        HRESULT hr = SHPathPrepareForWriteA(hDlg, NULL, FullPath, dwFlags);
+        HRESULT hr = SHPathPrepareForWriteW(hDlg, NULL, FullPath, dwFlags);
         if (FAILED_UNEXPECTEDLY(hr))
         {
             *ErrorCode = hr;
@@ -439,7 +441,7 @@ public:
             return eOpenError;
         }
 
-        HANDLE hFile = CreateFileA(FullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE hFile = CreateFileW(FullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
         {
             DWORD dwErr = GetLastError();
@@ -467,7 +469,7 @@ public:
 
                 if (bOverwrite)
                 {
-                    hFile = CreateFileA(FullPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    hFile = CreateFileW(FullPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
                     if (hFile == INVALID_HANDLE_VALUE)
                     {
                         dwErr = GetLastError();
@@ -482,7 +484,7 @@ public:
             if (hFile == INVALID_HANDLE_VALUE)
             {
                 unzCloseCurrentFile(uf);
-                DPRINT1("ERROR, CreateFileA: 0x%x (%s)\n", dwErr, *bOverwriteAll ? "Y" : "N");
+                DPRINT1("ERROR, CreateFile: 0x%x (%s)\n", dwErr, *bOverwriteAll ? "Y" : "N");
                 *ErrorCode = dwErr;
                 return eFileError;
             }
@@ -493,9 +495,9 @@ public:
             if (*bCancel)
             {
                 CloseHandle(hFile);
-                BOOL deleteResult = DeleteFileA(FullPath);
+                BOOL deleteResult = DeleteFileW(FullPath);
                 if (!deleteResult)
-                    DPRINT1("ERROR, DeleteFileA: 0x%x\n", GetLastError());
+                    DPRINT1("ERROR, DeleteFile: 0x%x\n", GetLastError());
                 return eExtractAbort;
             }
 
@@ -575,8 +577,8 @@ public:
         Progress.SendMessage(PBM_SETRANGE32, 0, gi.number_entry);
         Progress.SendMessage(PBM_SETPOS, 0, 0);
 
-        CStringA BaseDirectory = m_Directory;
-        CStringA Name;
+        CStringW BaseDirectory = m_Directory;
+        CStringW Name;
         CStringA Password = m_Password;
         unz_file_info64 Info;
         int CurrentFile = 0;
@@ -591,10 +593,15 @@ public:
 
             bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
-            char CombinedPath[MAX_PATH * 2] = { 0 };
-            PathCombineA(CombinedPath, BaseDirectory, Name);
-            CStringA FullPath = CombinedPath;
-            FullPath.Replace('/', '\\');    /* SHPathPrepareForWriteA does not handle '/' */
+            // Build a combined path
+            CPathW FullPath(BaseDirectory);
+            FullPath += Name;
+
+            // We use SHPathPrepareForWrite for this path.
+            // SHPathPrepareForWrite will prepare the necessary directories.
+            // Windows and ReactOS SHPathPrepareForWrite do not support '/'.
+            FullPath.m_strPath.Replace(L'/', L'\\');
+
         Retry:
             eZipExtractError Result = ExtractSingle(hDlg, FullPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
             if (Result != eDirectoryError)
@@ -613,13 +620,13 @@ public:
 
                 case eDirectoryError:
                 {
-                    char StrippedPath[MAX_PATH] = { 0 };
+                    WCHAR StrippedPath[MAX_PATH] = { 0 };
 
-                    StrCpyNA(StrippedPath, FullPath, _countof(StrippedPath));
+                    StrCpyNW(StrippedPath, FullPath, _countof(StrippedPath));
                     if (!is_dir)
-                        PathRemoveFileSpecA(StrippedPath);
-                    PathStripPathA(StrippedPath);
-                    if (ShowExtractError(hDlg, (LPCSTR)&StrippedPath, err, eDirectoryError) == IDRETRY)
+                        PathRemoveFileSpecW(StrippedPath);
+                    PathStripPathW(StrippedPath);
+                    if (ShowExtractError(hDlg, StrippedPath, err, eDirectoryError) == IDRETRY)
                         goto Retry;
                     Close();
                     return false;
@@ -665,11 +672,11 @@ public:
         return true;
     }
 
-    int ShowExtractError(HWND hDlg, LPCSTR path, int Error, eZipExtractError ErrorType)
+    int ShowExtractError(HWND hDlg, PCWSTR path, int Error, eZipExtractError ErrorType)
     {
-        CStringA strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
-        CStringA strErr, strText;
-        PSTR Win32ErrorString;
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
+        CStringW strErr, strText;
+        PWSTR Win32ErrorString;
 
         if (ErrorType == eFileError || ErrorType == eOpenError)
             strText.LoadString(IDS_CANTEXTRACTFILE);
@@ -680,9 +687,9 @@ public:
 
         if (ErrorType == eFileError || HRESULT_FACILITY(Error) == FACILITY_WIN32)
         {
-            if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+            if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                                NULL, ErrorType == eFileError ? Error : HRESULT_CODE(Error), 0,
-                               (PSTR)&Win32ErrorString, 0, NULL) != 0)
+                               (PWSTR)&Win32ErrorString, 0, NULL) != 0)
             {
                 strErr.SetString(Win32ErrorString);
                 LocalFree(Win32ErrorString);
@@ -693,7 +700,7 @@ public:
         else if (strErr.GetLength() == 0)
             strErr.Format(IDS_UNKNOWNERROR, Error);
 
-        strText.Append("\r\n\r\n" + strErr);
+        strText.Append(L"\r\n\r\n" + strErr);
 
         UINT mbFlags = MB_ICONWARNING;
         if (ErrorType == eDirectoryError)
@@ -703,7 +710,7 @@ public:
         else if (ErrorType == eOpenError)
             mbFlags |= MB_YESNO;
 
-        return MessageBoxA(hDlg, strText, strTitle, mbFlags);
+        return MessageBoxW(hDlg, strText, strTitle, mbFlags);
     }
 };
 
