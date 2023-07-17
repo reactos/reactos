@@ -77,8 +77,8 @@ public:
 
     CA2AEX(_In_z_ LPCSTR psz, _In_ UINT nCodePage)
     {
-        Init(psz);
         UNREFERENCED_PARAMETER(nCodePage);
+        Init(psz);
     }
 
     ~CA2AEX() throw()
