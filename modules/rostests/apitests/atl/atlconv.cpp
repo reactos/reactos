@@ -19,6 +19,9 @@ START_TEST(atlconv)
     wchar_t dataW[MAX_PATH];
     using namespace ATL;
 
+    //
+    // Initialize long data
+    //
     FillMemory(dataA, sizeof(dataA), 'A');
     dataA[_countof(dataA) - 1] = 0;
 
@@ -26,6 +29,9 @@ START_TEST(atlconv)
         dataW[i] = L'A';
     dataW[_countof(dataW) - 1] = 0;
 
+    //
+    // The short strings
+    //
     CA2A a2a("TEST123");
     ok_str((LPSTR)a2a, "TEST123");
     ok_str(a2a.m_psz, "TEST123");
@@ -46,6 +52,9 @@ START_TEST(atlconv)
     ok_wstr(w2w.m_psz, L"TEST123");
     ok_ptr(w2w.m_psz, w2w.m_szBuffer);
 
+    //
+    // The long strings
+    //
     CA2A a2a2(dataA);
     ok_str((LPSTR)a2a2, dataA);
     ok_str(a2a2.m_psz, dataA);
@@ -74,6 +83,9 @@ START_TEST(atlconv)
     ok(w2w2.m_psz != dataW, "w2w2.m_psz == dataW\n");
     ok(w2w2.m_psz != w2w2.m_szBuffer, "w2w2.m_psz == w2w2.m_szBuffer\n");
 
+    //
+    // The const strings
+    //
     CA2CA a2ca(dataA);
     ok_str((LPCSTR)a2ca, dataA);
     ok_str(a2ca.m_psz, dataA);
