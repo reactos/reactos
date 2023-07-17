@@ -50,24 +50,28 @@ START_TEST(atlconv)
     ok_str((LPSTR)a2a2, dataA);
     ok_str(a2a2.m_psz, dataA);
     ok_str(a2a2.m_szBuffer, "");
+    ok(a2a2.m_psz != dataA, "a2a2.m_psz == dataA\n");
     ok(a2a2.m_psz != a2a2.m_szBuffer, "a2a2.m_psz == a2a2.m_szBuffer\n");
 
     CW2A w2a2(dataW);
     ok_str((LPSTR)w2a2, dataA);
     ok_str(w2a2.m_psz, dataA);
     ok_str(w2a2.m_szBuffer, "");
+    ok(w2a2.m_psz != dataA, "w2a2.m_psz == dataA\n");
     ok(w2a2.m_psz != w2a2.m_szBuffer, "w2a2.m_psz == w2a2.m_szBuffer\n");
 
     CA2W a2w2(dataA);
     ok_wstr((LPWSTR)a2w2, dataW);
     ok_wstr(a2w2.m_psz, dataW);
     ok_wstr(a2w2.m_szBuffer, L"");
+    ok(a2w2.m_psz != dataW, "a2w2.m_psz == dataW\n");
     ok(a2w2.m_psz != a2w2.m_szBuffer, "a2w2.m_psz == a2w2.m_szBuffer\n");
 
     CW2W w2w2(dataW);
     ok_wstr((LPWSTR)w2w2, dataW);
     ok_wstr(w2w2.m_psz, dataW);
     ok_wstr(w2w2.m_szBuffer, L"");
+    ok(w2w2.m_psz != dataW, "w2w2.m_psz == dataW\n");
     ok(w2w2.m_psz != w2w2.m_szBuffer, "w2w2.m_psz == w2w2.m_szBuffer\n");
 
     CA2CA a2ca(dataA);
