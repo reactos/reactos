@@ -279,10 +279,11 @@ IntVideoPortFindAdapter(
    IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
    IN PDEVICE_OBJECT DeviceObject);
 
-PVOID NTAPI
+PVOID
+NTAPI
 IntVideoPortGetProcAddress(
-   IN PVOID HwDeviceExtension,
-   IN PUCHAR FunctionName);
+    _In_ PVOID HwDeviceExtension,
+    _In_ PUCHAR FunctionName);
 
 NTSTATUS NTAPI
 IntVideoPortEnumerateChildren(
