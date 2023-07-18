@@ -801,6 +801,20 @@ HRESULT CShellBrowser::Initialize()
     return S_OK;
 }
 
+BOOL _ILIsSpecialFolder(LPCITEMIDLIST pidl, int CSIDL)
+{
+    LPITEMIDLIST                            SpecialFolder;
+    CComPtr<IShellFolder>                   ShellFolder;
+    HRESULT                                 hr;
+
+    hr = SHBindToFolder(pidl, &ShellFolder);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return false;
+    SHGetSpecialFolderLocation(0, CSIDL, &SpecialFolder);
+    hr = ShellFolder->CompareIDs(NULL, pidl, SpecialFolder);
+    return SUCCEEDED(hr) && HRESULT_CODE(hr) == 0;
+}
+
 HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
 {
     CComPtr<IShellFolder>                   newFolder;
@@ -813,7 +827,11 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    newFolderSettings.ViewMode = FVM_ICON;
+    if (_ILIsSpecialFolder(pidl, CSIDL_DRIVES) || _ILIsSpecialFolder(pidl, CSIDL_CONTROLS)
+        || _ILIsSpecialFolder(pidl, CSIDL_DESKTOP))
+        newFolderSettings.ViewMode = FVM_ICON;
+    else
+        newFolderSettings.ViewMode = FVM_DETAILS;
     newFolderSettings.fFlags = 0;
     hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
     if (FAILED_UNEXPECTEDLY(hResult))
