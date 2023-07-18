@@ -1,4 +1,5 @@
-;// Romanian translation by Ștefan Fulea (stefan dot fulea at mail dot com)
+;// Romanian translation by 2011-2019 Ștefan Fulea (stefan.fulea@mail.com)
+;// Romanian translation by 2023 Andrei Miloiu (miloiuandrei@gmail.com)
 ;// Russian translation by Kudratov Olimjon (olim98@bk.ru)
 ;// Spanish translation by Ismael Ferreras Morezuelas <2014-11-07>
 ;// Turkish translation by 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
@@ -187,26 +188,28 @@ NET ACCOUNTS să aibă efect.
                                deautentificări forțate la expirarea contului
                                sau a numărului valid de ore de autentificare.
                                NO (implicit) previne deautentificarea forțată.
-/MINPWLEN:length               Sets the minimum number of characters for
-                               a password. The range is 0-14 characters;
-                               the default is 6 characters.
-/MAXPWAGE:{days | UNLIMITED}   Sets the maximum numer of days that a
-                               password is valid. No limit is specified
-                               by using UNLIMITED. /MAXPWAGE cannot be less
-                               than /MINPWAGE. The range is 1-999; the
-                               default is to leave the value unchanged.
-/MINPWAGE:days                 Sets the minimum number of days that must
-                               pass before a user can change a password.
-                               A value of 0 sets no minimum time. The range
-                               is 0-999; the default is 0 days. /MINPWAGE
-                               cannot be more than /MAXPWAGE.
-/UNIQUEPW:number               Requires that a users passwords be unique
-                               through the specified number of password
-                               changes. The maximum value is 24.
-/DOMAIN                        Performs the operation on a domain
-                               controller of the current domain. Otherwise,
-                               the operation is performed on the local
-                               computer.
+/MINPWLEN:length               Setează numărul minim de caractere pentru
+                               o parolă. Intervalul e de 0-14 caractere;
+                               implicit, sunt 6 caractere.
+/MAXPWAGE:{days | UNLIMITED}   Setează numărul maxim de zile pentru care o
+                               parolă e validă. Prin parametrul UNLIMITED nu e
+                               specificată nicio limită. Valoarea parametrului
+                               /MAXPWAGE nu poate fi mai mică decât valoarea
+                               parametrului /MINPWAGE. Intervalul e 1-999;
+                               implicit înseamnă lăsarea valorii neschimbate.
+/MINPWAGE:days                 Setează numărul maxim de zile ce trebuie să
+                               treacă înainte ca utilizatorul să-și schimbe
+                               parola. Valoarea 0 nu stabilește un timp minim.
+                               Intervalul e 0-999; valoarea implică e de 0
+                               zile. Valoarea parametrului /MINPWAGE nu poate
+                               fi mai mare decât valoarea parametrului
+                               /MAXPWAGE.
+/UNIQUEPW:number               Necesită ca parolele utilizatorilor să fie unice
+                               prin numărul de schimbări de parolă specificate.
+                               Valoarea maximă e 24.
+/DOMAIN                        Efectuează operația pe un controlor de domeniu
+                               al domeniului curent. Altfel, operațiunea este
+                               efectuată la calculatorul local.
 
 NET HELP comandă | MORE (pentru afișare paginată).
 .
@@ -438,7 +441,7 @@ Language=Polish
 NET COMPUTER \\nazwa_komputera {/ADD | /DEL}
 .
 Language=Romanian
-NET COMPUTER \\computername {/ADD | /DEL}
+NET COMPUTER \\numele calculatorului {/ADD | /DEL}
 .
 Language=Russian
 NET COMPUTER \\computername {/ADD | /DEL}
@@ -480,13 +483,14 @@ To polecenie jest dostępne tylko na serwerowych systemach opoeracyjnych.
 /DEL                Usuwa określony komputer z domeny.
 .
 Language=Romanian
-NET COMPUTER adds or deletes computers from a domain database. This
-command is available only on server operating systems.
+NET COMPUTER adaugă sau șterge calculatoare dintr-o bază de date a unui
+domeniu. Această comandă este disponibilă numai pentru sistemele de operare
+pentru servitoare.
 
-\\computername   Specifies the computer to add or delete from
-                 the domain.
-/ADD             Adds the specified computer to the domain.
-/DEL             Removes the specified computer from the domain.
+\\computername   Specifică ce calculator trebuie adăugat sau șters din
+                 domeniu.
+/ADD             Adaugă calculatorul specificat în domeniu.
+/DEL             Șterge calculatorul specificat din domeniu.
 .
 Language=Russian
 NET COMPUTER adds or deletes computers from a domain database. This
