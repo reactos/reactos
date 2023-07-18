@@ -39,7 +39,7 @@ extern LONG g_ModuleRefCnt;
 
 WCHAR* guid2string(REFCLSID iid);
 
-
+#define MINIZIP_COMPATIBLE_VERSION 36
 #define MINIZIP_PASSWORD_FLAG   1
 #define MINIZIP_UTF8_FLAG       (1 << 11)
 

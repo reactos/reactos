@@ -12,8 +12,6 @@
 #include "minizip/iowin32.h"
 #include <process.h>
 
-#define PACK_AS_UTF8_ZIP
-
 static CStringW DoGetZipName(PCWSTR filename)
 {
     WCHAR szPath[MAX_PATH];
@@ -36,7 +34,7 @@ static CStringW DoGetZipName(PCWSTR filename)
     return ret;
 }
 
-static CStringA DoGetAnsiName(PCWSTR filename, UINT nCodePage)
+static CStringA EncodeName(PCWSTR filename, UINT nCodePage)
 {
     CHAR buf[MAX_PATH];
     WideCharToMultiByte(nCodePage, 0, filename, -1, buf, _countof(buf), NULL, NULL);
@@ -53,7 +51,7 @@ static CStringW DoGetBaseName(PCWSTR filename)
 }
 
 static CStringA
-DoGetNameInZip(const CStringW& basename, const CStringW& filename)
+DoGetNameInZip(const CStringW& basename, const CStringW& filename, BOOL bUtf8)
 {
     CStringW basenameI = basename, filenameI = filename;
     basenameI.MakeUpper();
@@ -67,16 +65,11 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename)
 
     ret.Replace(L'\\', L'/');
 
-#ifdef PACK_AS_UTF8_ZIP
-    return DoGetAnsiName(ret, CP_UTF8);
-#else
-    return DoGetAnsiName(ret, CP_ACP);
-#endif
+    return EncodeName(ret, (bUtf8 ? CP_UTF8 : CP_ACP));
 }
 
 static BOOL
-DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents,
-                zip_fileinfo *pzi)
+DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents, zip_fileinfo *pzi)
 {
     contents.RemoveAll();
 
@@ -285,6 +278,7 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     int err = 0;
     CStringW strTarget, strBaseName = DoGetBaseName(m_items[0]);
+    const BOOL bUtf8 = TRUE;
     for (INT iFile = 0; iFile < files.GetSize(); ++iFile)
     {
         const CStringW& strFile = files[iFile];
@@ -304,7 +298,7 @@ unsigned CZipCreatorImpl::JustDoIt()
             // TODO: crc = ...;
         }
 
-        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile);
+        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, bUtf8);
         err = zipOpenNewFileInZip4_64(zf,
                                       strNameInZip,
                                       &zi,
@@ -321,12 +315,8 @@ unsigned CZipCreatorImpl::JustDoIt()
                                       Z_DEFAULT_STRATEGY,
                                       password,
                                       crc,
-                                      36,
-#ifdef PACK_AS_UTF8_ZIP
-                                      MINIZIP_UTF8_FLAG,
-#else
-                                      0,
-#endif
+                                      MINIZIP_COMPATIBLE_VERSION,
+                                      (bUtf8 ? MINIZIP_UTF8_FLAG : 0),
                                       zip64);
         if (err)
         {
