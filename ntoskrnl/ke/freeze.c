@@ -15,9 +15,37 @@
 
 /* GLOBALS ********************************************************************/
 
+extern KSPIN_LOCK KiFreezeExecutionLock;
+
 /* Freeze data */
 KIRQL KiOldIrql;
 ULONG KiFreezeFlag;
+
+/* PRIVATE FUNCTIONS ***********************************************************/
+
+VOID
+NTAPI
+KiFreezeTargetExecution(_In_ PKTRAP_FRAME TrapFrame,
+                        _In_ PKEXCEPTION_FRAME ExceptionFrame)
+{
+    PKPRCB Prcb;
+
+    Prcb = KeGetCurrentPrcb();
+    Prcb->IpiFrozen = IPI_FROZEN_HALTED;
+
+    /* Wait for triggering AP to give the go ahead to thaw */
+    while (Prcb->IpiFrozen == IPI_FROZEN_HALTED)
+    {
+        YieldProcessor();
+        KeMemoryBarrier();
+    }
+
+    /* Cleanup CPU caches */
+    KeFlushCurrentTb();
+
+    /* Notify AP we're running once again */
+    InterlockedExchange((LONG*)&Prcb->IpiFrozen, IPI_FROZEN_RUNNING);
+}
 
 /* FUNCTIONS ******************************************************************/
 
@@ -26,6 +54,14 @@ NTAPI
 KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
                   IN PKEXCEPTION_FRAME ExceptionFrame)
 {
+#ifdef CONFIG_SMP
+    KAFFINITY TargetAffinity;
+    PKPRCB TargetPrcb;
+    KAFFINITY Current;
+    PKPRCB Prcb;
+    LONG i;
+#endif
+
     BOOLEAN Enable;
     KIRQL OldIrql;
 
@@ -49,7 +85,30 @@ KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
 #endif
 
 #ifdef CONFIG_SMP
-    // TODO: Add SMP support.
+    InterlockedBitTestAndSet((PLONG)&KiFreezeExecutionLock, 1);
+    while (*(volatile PKSPIN_LOCK*)&KiFreezeExecutionLock == (PVOID)0);
+
+    Prcb = KeGetCurrentPrcb();
+    TargetAffinity = KeActiveProcessors;
+    TargetAffinity &= ~Prcb->SetMember;
+    if (TargetAffinity)
+    {
+        KiIpiSend(TargetAffinity, IPI_FREEZE);
+        for (i = 0, Current = 1; i < KeNumberProcessors; i++, Current <<= 1)
+        {
+            if (TargetAffinity & Current)
+            {
+                /* stop target processor */
+                TargetPrcb = KiProcessorBlock[i];
+
+                /* Await for this processor to be frozen*/
+                while (TargetPrcb->IpiFrozen != IPI_FROZEN_HALTED)
+                {
+                    YieldProcessor();
+                }
+            }
+        }
+    }
 #endif
 
     /* Save the old IRQL to be restored on unfreeze */
@@ -64,7 +123,36 @@ NTAPI
 KeThawExecution(IN BOOLEAN Enable)
 {
 #ifdef CONFIG_SMP
-    // TODO: Add SMP support.
+    KAFFINITY TargetAffinity;
+    PKPRCB TargetPrcb;
+    KAFFINITY Current;
+    PKPRCB Prcb;
+    LONG i;
+
+    Prcb = KeGetCurrentPrcb();
+    TargetAffinity = KeActiveProcessors;
+    TargetAffinity &= ~Prcb->SetMember;
+
+    /* Loop through every processor */
+    for (i = 0, Current = 1; i < KeNumberProcessors; i++, Current <<= 1)
+    {
+        if (TargetAffinity & Current)
+        {
+            TargetPrcb = KiProcessorBlock[i];
+
+            /* Multiple processors can write this value */
+            InterlockedExchange((LONG*)&TargetPrcb->IpiFrozen, IPI_FROZEN_THAWING);
+
+            while (Prcb->IpiFrozen != IPI_FROZEN_RUNNING)
+            {
+                YieldProcessor();
+            }
+        }
+    }
+
+
+    InterlockedBitTestAndSet((PLONG)&KiFreezeExecutionLock, 0);
+    while (*(volatile PKSPIN_LOCK*)&KiFreezeExecutionLock == (PVOID)1);
 #endif
 
     /* Clear the freeze flag */

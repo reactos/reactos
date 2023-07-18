@@ -11,6 +11,11 @@ extern "C"
 
 /* INTERNAL KERNEL TYPES ****************************************************/
 
+/* Matches windbg expectation */
+#define IPI_FROZEN_RUNNING 0
+#define IPI_FROZEN_HALTED 2
+#define IPI_FROZEN_THAWING 3
+
 typedef struct _WOW64_PROCESS
 {
   PVOID Wow64;
