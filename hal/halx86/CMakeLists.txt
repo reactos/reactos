@@ -23,9 +23,9 @@ function(add_hal _halname)
         ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
 
     if(${_halname} STREQUAL "hal")
-        target_link_libraries(${_halname} libcntpr arbiter)
+        target_link_libraries(${_halname} libcntpr arbiter fast486)
     else()
-        target_link_libraries(${_halname} libcntpr)
+        target_link_libraries(${_halname} libcntpr fast486)
     endif()
 
     add_importlibs(${_halname} ntoskrnl)
@@ -71,13 +71,7 @@ if(ARCH STREQUAL "i386")
 
 elseif(ARCH STREQUAL "amd64")
 
-    list(APPEND HAL_SOURCE
-        amd64/x86bios.c)
-
     add_hal(hal SOURCES ${HAL_SOURCE} COMPONENTS generic acpi up apic)
-    target_link_libraries(hal fast486)
-
     add_hal(halmp SOURCES ${HAL_SOURCE} COMPONENTS generic acpi smp apic)
-    target_link_libraries(halmp fast486)
 
 endif()

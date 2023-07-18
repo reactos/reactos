@@ -555,8 +555,6 @@ HalpInitializeClockPc98(VOID);
 extern ULONG PIT_FREQUENCY;
 #endif /* SARCH_PC98 */
 
-#ifdef _M_AMD64
-
 VOID
 NTAPI
 HalInitializeBios(
@@ -564,6 +562,7 @@ HalInitializeBios(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+#ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #define KiEnterInterruptTrap(TrapFrame) /* We do all neccessary in asm code */
 #define KiEoiHelper(TrapFrame) return /* Just return to the caller */
