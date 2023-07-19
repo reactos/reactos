@@ -558,7 +558,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
         m_dwTotalSize = 0; // Don't calculate file size
         m_bIsOnlyFoldersSelected = false;
 
-        // Here is in a non-main thread. To communicate GUI parts, use posting message
+        // Here is in a non-main thread. To communicate with GUI parts, use posting message
         PostMessage(SHV_UPDATE_STATUSBAR, 0, 0);
         return;
     }
@@ -605,7 +605,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
     m_dwTotalSize = uTotalFileSize;
     m_bIsOnlyFoldersSelected = bIsOnlyFoldersSelected;
 
-    // Here is in a non-main thread. To communicate GUI parts, use posting message
+    // Here is in a non-main thread. To communicate with GUI parts, use posting message
     PostMessage(SHV_UPDATE_STATUSBAR, 0, 0);
 }
 
