@@ -234,6 +234,7 @@ WelcomeDlgProc(HWND hwndDlg,
     LPPSHNOTIFY lppsn;
     WCHAR szPath[MAX_PATH * 2];
     WCHAR szDesc[100];
+    WCHAR szTitle[100];
     BROWSEINFOW brws;
     LPITEMIDLIST pidllist;
     LPWSTR pch;
@@ -265,10 +266,12 @@ WelcomeDlgProc(HWND hwndDlg,
             switch(LOWORD(wParam))
             {
                 case IDC_SHORTCUT_BROWSE:
+                    LoadStringW(hApplet, IDS_BROWSE_FOR_TARGET, szTitle, _countof(szTitle));
                     ZeroMemory(&brws, sizeof(brws));
                     brws.hwndOwner = hwndDlg;
                     brws.pidlRoot = NULL;
                     brws.pszDisplayName = szPath;
+                    brws.lpszTitle = szTitle;
                     brws.ulFlags = BIF_BROWSEINCLUDEFILES | BIF_RETURNONLYFSDIRS |
                                    BIF_NEWDIALOGSTYLE | BIF_SHAREABLE;
                     brws.lpfn = NULL;
