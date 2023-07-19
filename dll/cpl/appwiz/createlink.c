@@ -269,7 +269,8 @@ WelcomeDlgProc(HWND hwndDlg,
                     brws.hwndOwner = hwndDlg;
                     brws.pidlRoot = NULL;
                     brws.pszDisplayName = szPath;
-                    brws.ulFlags = BIF_BROWSEINCLUDEFILES;
+                    brws.ulFlags = BIF_BROWSEINCLUDEFILES | BIF_RETURNONLYFSDIRS |
+                                   BIF_NEWDIALOGSTYLE | BIF_SHAREABLE;
                     brws.lpfn = NULL;
                     pidllist = SHBrowseForFolderW(&brws);
                     if (!pidllist)
@@ -281,6 +282,11 @@ WelcomeDlgProc(HWND hwndDlg,
                         SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, WM_SETFOCUS, 0, 0);
                         SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
                     }
+                    else
+                    {
+                        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, NULL);
+                    }
+
                     /* Free memory, if possible */
                     CoTaskMemFree(pidllist);
                     break;
