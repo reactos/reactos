@@ -271,7 +271,8 @@ WelcomeDlgProc(HWND hwndDlg,
                     brws.hwndOwner = hwndDlg;
                     brws.pidlRoot = NULL;
                     brws.pszDisplayName = szPath;
-                    brws.ulFlags = BIF_BROWSEINCLUDEFILES | BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+                    brws.ulFlags = BIF_BROWSEINCLUDEFILES | BIF_RETURNONLYFSDIRS |
+                                   BIF_NEWDIALOGSTYLE | BIF_SHAREABLE;
                     brws.lpfn = NULL;
                     brws.lpszTitle = szTitle;
                     pidllist = SHBrowseForFolderW(&brws);
