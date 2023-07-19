@@ -36,7 +36,6 @@ TODO:
 
 #include "precomp.h"
 
-#include <process.h>
 #include <atlwin.h>
 #include <ui/rosctrls.h>
 
@@ -154,7 +153,6 @@ class CDefView :
         SFVM_CUSTOMVIEWINFO_DATA  m_viewinfo_data;
 
         HICON                     m_hMyComputerIcon;
-        HANDLE                    m_hUpdateStatusbarThread;
 
     private:
         HRESULT _MergeToolbar();
@@ -173,8 +171,6 @@ class CDefView :
         HRESULT IncludeObject(PCUITEMID_CHILD pidl);
         HRESULT OnDefaultCommand();
         HRESULT OnStateChange(UINT uFlags);
-        static unsigned __stdcall _UpdateStatusbarProc(void *args);
-        void UpdateStatusbarWorker(HANDLE hThread);
         void UpdateStatusbar();
         void CheckToolbar();
         BOOL CreateList();
@@ -432,9 +428,7 @@ CDefView::CDefView() :
     m_cScrollDelay(0),
     m_isEditing(FALSE),
     m_isParentFolderSpecial(FALSE),
-    m_Destroyed(FALSE),
-    m_hMyComputerIcon(::LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_COMPUTER_DESKTOP))),
-    m_hUpdateStatusbarThread(NULL)
+    m_Destroyed(FALSE)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
     ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
@@ -443,6 +437,8 @@ CDefView::CDefView() :
     m_viewinfo_data.clrText = GetSysColor(COLOR_WINDOWTEXT);
     m_viewinfo_data.clrTextBack = GetSysColor(COLOR_WINDOW);
     m_viewinfo_data.hbmBack = NULL;
+
+    m_hMyComputerIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_COMPUTER_DESKTOP));
 }
 
 CDefView::~CDefView()
@@ -543,9 +539,10 @@ void CDefView::CheckToolbar()
     }
 }
 
-void CDefView::UpdateStatusbarWorker(HANDLE hThread)
+void CDefView::UpdateStatusbar()
 {
-    WCHAR szFormat[MAX_PATH], szPartText[MAX_PATH];
+    WCHAR szFormat[MAX_PATH] = {0};
+    WCHAR szPartText[MAX_PATH] = {0};
     UINT cSelectedItems;
 
     cSelectedItems = m_ListView.GetSelectedCount();
@@ -574,13 +571,12 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 
         /* If we have something selected then only count selected file sizes. */
         if (cSelectedItems)
+        {
             uFileFlags = LVNI_SELECTED;
+        }
 
         while ((nItem = m_ListView.GetNextItem(nItem, uFileFlags)) >= 0)
         {
-            if (hThread != m_hUpdateStatusbarThread)
-                return;
-
             PCUITEMID_CHILD pidl = _PidlByItem(nItem);
 
             uTotalFileSize += _ILGetFileSize(pidl, NULL, 0);
@@ -593,14 +589,18 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 
         /* Don't show the file size text if there is 0 bytes in the folder
          * OR we only have folders selected. */
-        szPartText[0] = UNICODE_NULL;
         if ((cSelectedItems && !bIsOnlyFoldersSelected) || uTotalFileSize)
+        {
             StrFormatByteSizeW(uTotalFileSize, szPartText, _countof(szPartText));
+        }
+        else
+        {
+            *szPartText = 0;
+        }
 
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
 
         /* If we are in a Recycle Bin folder then show no text for the location part. */
-        szPartText[0] = UNICODE_NULL;
         if (!_ILIsBitBucket(m_pidlParent))
         {
             LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText, _countof(szPartText));
@@ -609,38 +609,6 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
-    }
-}
-
-unsigned __stdcall CDefView::_UpdateStatusbarProc(void *args)
-{
-    CDefView* pView = static_cast<CDefView*>(args);
-    pView->UpdateStatusbarWorker(pView->m_hUpdateStatusbarThread);
-    pView->Release();
-    return 0;
-}
-
-void CDefView::UpdateStatusbar()
-{
-    HANDLE hOldThread = m_hUpdateStatusbarThread;
-
-    AddRef();
-
-    // We have to initialize m_hUpdateStatusbarThread before the target thread begins.
-    // So, we use CREATE_SUSPENDED.
-    HANDLE hNewThread = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, _UpdateStatusbarProc,
-                                                                this, CREATE_SUSPENDED, NULL));
-    if (hNewThread)
-    {
-        m_hUpdateStatusbarThread = hNewThread;
-        ::ResumeThread(hNewThread);
-
-        if (hOldThread)
-            ::CloseHandle(hOldThread);
-    }
-    else
-    {
-        Release();
     }
 }
 
@@ -2613,17 +2581,6 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
 HRESULT WINAPI CDefView::DestroyViewWindow()
 {
     TRACE("(%p)\n", this);
-
-    if (m_hUpdateStatusbarThread)
-    {
-        HANDLE hOldThread = m_hUpdateStatusbarThread;
-
-        // Assigning NULL to m_hUpdateStatusbarThread will terminate the target thread
-        m_hUpdateStatusbarThread = NULL;
-        ::WaitForSingleObject(hOldThread, INFINITE);
-
-        ::CloseHandle(hOldThread);
-    }
 
     /* Make absolutely sure all our UI is cleaned up */
     UIActivate(SVUIA_DEACTIVATE);
