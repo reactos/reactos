@@ -801,34 +801,31 @@ HRESULT CShellBrowser::Initialize()
     return S_OK;
 }
 
-BOOL _ILIsSpecialFolder(LPCITEMIDLIST pidl, int CSIDL)
-{
-    LPITEMIDLIST                            SpecialFolder;
-    CComPtr<IShellFolder>                   ShellFolder;
-    HRESULT                                 hr;
-
-    hr = SHBindToFolder(pidl, &ShellFolder);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return false;
-    SHGetSpecialFolderLocation(0, CSIDL, &SpecialFolder);
-    hr = ShellFolder->CompareIDs(NULL, pidl, SpecialFolder);
-    return SUCCEEDED(hr) && HRESULT_CODE(hr) == 0;
-}
-
 HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
 {
     CComPtr<IShellFolder>                   newFolder;
     FOLDERSETTINGS                          newFolderSettings;
     HRESULT                                 hResult;
+    IPersist                                *pp;
+    BOOL                                    HasIconViewType;
 
     // called by shell view to browse to new folder
     // also called by explorer band to navigate to new folder
     hResult = SHBindToFolder(pidl, &newFolder);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+    
+    hResult = newFolder->QueryInterface(IID_PPV_ARG(IPersist, &pp));
+    if (SUCCEEDED(hResult))
+    {
+        CLSID pclsid;
+        hResult = pp->GetClassID(&pclsid);
+        pp->Release();
+        HasIconViewType = pclsid == CLSID_MyComputer || pclsid == CLSID_ControlPanel
+                          || pclsid == CLSID_ShellDesktop;
+    }
 
-    if (_ILIsSpecialFolder(pidl, CSIDL_DRIVES) || _ILIsSpecialFolder(pidl, CSIDL_CONTROLS)
-        || _ILIsSpecialFolder(pidl, CSIDL_DESKTOP))
+    if (HasIconViewType)
         newFolderSettings.ViewMode = FVM_ICON;
     else
         newFolderSettings.ViewMode = FVM_DETAILS;
