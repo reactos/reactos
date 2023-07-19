@@ -2346,46 +2346,43 @@ LRESULT CDefView::OnUpdateStatusBar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     // Here is in the main thread. We can operate GUI parts directly
     LRESULT lResult;
-    WCHAR szFormat[MAX_PATH], szPartText[MAX_PATH];
+    CStringW szFormat, szPartText;
     LPARAM pIcon = NULL;
 
     UINT cSelectedItems = m_ListView.GetSelectedCount();
     if (cSelectedItems > 0)
-    {
-        LoadStringW(shell32_hInstance, IDS_OBJECTS_SELECTED, szFormat, _countof(szFormat));
-        StringCchPrintfW(szPartText, _countof(szPartText), szFormat, cSelectedItems);
-    }
+        szFormat.Format(IDS_OBJECTS_SELECTED, cSelectedItems);
     else
-    {
-        LoadStringW(shell32_hInstance, IDS_OBJECTS, szFormat, _countof(szFormat));
-        StringCchPrintfW(szPartText, _countof(szPartText), szFormat, m_ListView.GetItemCount());
-    }
+        szFormat.Format(IDS_OBJECTS, m_ListView.GetItemCount());
 
     // Update statusbar index-0 part
-    m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)szPartText, &lResult);
+    m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)(LPCWSTR)szPartText, &lResult);
 
     if (!m_isParentFolderSpecial) // It's not a special folder
     {
         // Don't show the file size text if there is 0 bytes in the folder OR
         // we only have folders selected.
-        szPartText[0] = UNICODE_NULL;
+        szPartText.Empty();
         if ((cSelectedItems > 0 && !m_bIsOnlyFoldersSelected) || m_dwTotalSize > 0)
-            StrFormatByteSizeW(m_dwTotalSize, szPartText, _countof(szPartText));
+        {
+            StrFormatByteSizeW(m_dwTotalSize, szPartText.GetBuffer(MAX_PATH), MAX_PATH);
+            szPartText.ReleaseBuffer();
+        }
 
         // Update statusbar index-1 part
-        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)szPartText, &lResult);
 
         // If we are in a Recycle Bin folder then show no text for the location part.
-        szPartText[0] = UNICODE_NULL;
+        szPartText.Empty();
         if (!_ILIsBitBucket(m_pidlParent))
         {
-            LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText, _countof(szPartText));
+            szPartText.LoadString(IDS_MYCOMPUTER);
             pIcon = (LPARAM)m_hMyComputerIcon;
         }
 
         // Update statusbar index-2 part
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
-        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)(LPCWSTR)szPartText, &lResult);
     }
 
     return 0;
