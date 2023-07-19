@@ -234,7 +234,6 @@ WelcomeDlgProc(HWND hwndDlg,
     LPPSHNOTIFY lppsn;
     WCHAR szPath[MAX_PATH * 2];
     WCHAR szDesc[100];
-    WCHAR szTitle[120];
     BROWSEINFOW brws;
     LPITEMIDLIST pidllist;
     LPWSTR pch;
