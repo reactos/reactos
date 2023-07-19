@@ -157,9 +157,9 @@ class CDefView :
         SFVM_CUSTOMVIEWINFO_DATA  m_viewinfo_data;
 
         HICON                     m_hMyComputerIcon;
-        HANDLE                    m_hUpdateStatusbarThread;
-        DWORD                     m_dwTotalSize;
-        bool                      m_bIsOnlyFoldersSelected;
+        HANDLE                    m_hUpdateStatusbarThread; // Used to update statusbar
+        DWORD                     m_dwTotalSize;            // Used to update statusbar
+        bool                      m_bIsOnlyFoldersSelected; // Used to update statusbar
 
     private:
         HRESULT _MergeToolbar();
@@ -2340,6 +2340,7 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
 
 LRESULT CDefView::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    // Here is the main thread. We can use GUI parts directly
     LRESULT lResult;
     WCHAR szFormat[MAX_PATH], szPartText[MAX_PATH];
     LPARAM pIcon = NULL;
@@ -2360,7 +2361,7 @@ LRESULT CDefView::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
             StringCchPrintfW(szPartText, _countof(szPartText), szFormat, m_ListView.GetItemCount());
         }
 
-        // Update statusbar index 0 part
+        // Update statusbar index-0 part
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)szPartText, &lResult);
 
         if (!m_isParentFolderSpecial)
@@ -2371,6 +2372,7 @@ LRESULT CDefView::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
             if ((cSelectedItems > 0 && !m_bIsOnlyFoldersSelected) || m_dwTotalSize > 0)
                 StrFormatByteSizeW(m_dwTotalSize, szPartText, _countof(szPartText));
 
+            // Update statusbar index-1 part
             m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
 
             // If we are in a Recycle Bin folder then show no text for the location part.
@@ -2381,7 +2383,7 @@ LRESULT CDefView::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
                 pIcon = (LPARAM)m_hMyComputerIcon;
             }
 
-            // Update statusbar index 2 part
+            // Update statusbar index-2 part
             m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
             m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
         }
