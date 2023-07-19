@@ -49,7 +49,10 @@ typedef struct
     INT     nLastHeaderID;
 } LISTVIEW_SORT_INFO, *LPLISTVIEW_SORT_INFO;
 
-#define SHV_CHANGE_NOTIFY WM_USER + 0x1111
+#define SHV_CHANGE_NOTIFY (WM_USER + 0x1111)
+
+#define TIMERID_UPDATE_STATUSBAR 9999
+#define UPDATE_STATUSBAR_DELAY 100
 
 /* For the context menu of the def view, the id of the items are based on 1 because we need
    to call TrackPopupMenu and let it use the 0 value as an indication that the menu was canceled */
@@ -155,6 +158,9 @@ class CDefView :
 
         HICON                     m_hMyComputerIcon;
         HANDLE                    m_hUpdateStatusbarThread;
+        DWORD                     m_dwTotalSize;
+        bool                      m_bIsOnlyFoldersSelected;
+
 
     private:
         HRESULT _MergeToolbar();
@@ -321,6 +327,7 @@ class CDefView :
         LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+        LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -368,6 +375,7 @@ class CDefView :
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(SHV_CHANGE_NOTIFY, OnChangeNotify)
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_DRAWITEM, OnCustomItem)
         MESSAGE_HANDLER(WM_MEASUREITEM, OnCustomItem)
@@ -434,7 +442,9 @@ CDefView::CDefView() :
     m_isParentFolderSpecial(FALSE),
     m_Destroyed(FALSE),
     m_hMyComputerIcon(::LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_COMPUTER_DESKTOP))),
-    m_hUpdateStatusbarThread(NULL)
+    m_hUpdateStatusbarThread(NULL),
+    m_dwTotalSize(0),
+    m_bIsOnlyFoldersSelected(false)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
     ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
@@ -545,71 +555,62 @@ void CDefView::CheckToolbar()
 
 void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 {
-    WCHAR szFormat[MAX_PATH], szPartText[MAX_PATH];
-    UINT cSelectedItems;
+    KillTimer(TIMERID_UPDATE_STATUSBAR);
 
-    cSelectedItems = m_ListView.GetSelectedCount();
-    if (cSelectedItems)
+    if (m_isParentFolderSpecial) // It's a special folder!
     {
-        LoadStringW(shell32_hInstance, IDS_OBJECTS_SELECTED, szFormat, _countof(szFormat));
-        StringCchPrintfW(szPartText, _countof(szPartText), szFormat, cSelectedItems);
-    }
-    else
-    {
-        LoadStringW(shell32_hInstance, IDS_OBJECTS, szFormat, _countof(szFormat));
-        StringCchPrintfW(szPartText, _countof(szPartText), szFormat, m_ListView.GetItemCount());
+        m_dwTotalSize = 0; // Don't calculate file size
+        m_bIsOnlyFoldersSelected = false;
+
+        // It's different from the main thread. To communicate GUI parts, use timer
+        SetTimer(TIMERID_UPDATE_STATUSBAR, UPDATE_STATUSBAR_DELAY, NULL);
+        return;
     }
 
-    LRESULT lResult;
-    m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)szPartText, &lResult);
-
-    /* Don't bother with the extra processing if we only have one StatusBar part. */
-    if (!m_isParentFolderSpecial)
+    // Sending message from the different thread to get the number of items
+    DWORD_PTR dwResult = 0;
+    if (!::SendMessageTimeoutW(m_ListView, LVM_GETSELECTEDCOUNT, 0, 0,
+                               SMTO_ABORTIFHUNG | SMTO_BLOCK, 1000, &dwResult))
     {
-        DWORD uTotalFileSize = 0;
-        WORD uFileFlags = LVNI_ALL;
-        LPARAM pIcon = NULL;
-        INT nItem = -1;
-        bool bIsOnlyFoldersSelected = true;
+        return;
+    }
+    UINT cSelectedItems = (INT)dwResult;
 
-        /* If we have something selected then only count selected file sizes. */
-        if (cSelectedItems)
-            uFileFlags = LVNI_SELECTED;
+    // If we have something selected then only count selected file sizes.
+    WORD uFileFlags = (cSelectedItems ? LVNI_SELECTED : LVNI_ALL);
 
-        while ((nItem = m_ListView.GetNextItem(nItem, uFileFlags)) >= 0)
+    DWORD uTotalFileSize = 0;
+    bool bIsOnlyFoldersSelected = true;
+    for (INT nItem = -1;;)
+    {
+        if (hThread != m_hUpdateStatusbarThread)
+            return;
+
+        // Sending message from the different thread to get the next item
+        dwResult = (DWORD)-1;
+        if (!::SendMessageTimeoutW(m_ListView, LVM_GETNEXTITEM, nItem, uFileFlags,
+                                   SMTO_ABORTIFHUNG | SMTO_BLOCK, 1000, &dwResult))
         {
-            if (hThread != m_hUpdateStatusbarThread)
-                return;
-
-            PCUITEMID_CHILD pidl = _PidlByItem(nItem);
-
-            uTotalFileSize += _ILGetFileSize(pidl, NULL, 0);
-
-            if (!_ILIsFolder(pidl))
-            {
-                bIsOnlyFoldersSelected = false;
-            }
+            return;
         }
 
-        /* Don't show the file size text if there is 0 bytes in the folder
-         * OR we only have folders selected. */
-        szPartText[0] = UNICODE_NULL;
-        if ((cSelectedItems && !bIsOnlyFoldersSelected) || uTotalFileSize)
-            StrFormatByteSizeW(uTotalFileSize, szPartText, _countof(szPartText));
+        nItem = (INT)dwResult;
+        if (nItem < 0)
+            break;
 
-        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
+        PCUITEMID_CHILD pidl = _PidlByItem(nItem);
 
-        /* If we are in a Recycle Bin folder then show no text for the location part. */
-        szPartText[0] = UNICODE_NULL;
-        if (!_ILIsBitBucket(m_pidlParent))
-        {
-            LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText, _countof(szPartText));
-            pIcon = (LPARAM)m_hMyComputerIcon;
-        }
+        uTotalFileSize += _ILGetFileSize(pidl, NULL, 0);
 
-        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
-        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
+        if (!_ILIsFolder(pidl))
+            bIsOnlyFoldersSelected = false;
     }
+
+    m_dwTotalSize = uTotalFileSize;
+    m_bIsOnlyFoldersSelected = bIsOnlyFoldersSelected;
+
+    // It's different from the main thread. To communicate GUI parts, use timer
+    SetTimer(TIMERID_UPDATE_STATUSBAR, UPDATE_STATUSBAR_DELAY, NULL);
 }
 
 unsigned __stdcall CDefView::_UpdateStatusbarProc(void *args)
@@ -2336,6 +2337,58 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
     ILFree(pidl2Clone);
 
     return FALSE;
+}
+
+LRESULT CDefView::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    LRESULT lResult;
+    WCHAR szFormat[MAX_PATH], szPartText[MAX_PATH];
+    LPARAM pIcon = NULL;
+
+    if (wParam == TIMERID_UPDATE_STATUSBAR)
+    {
+        KillTimer(wParam);
+
+        UINT cSelectedItems = m_ListView.GetSelectedCount();
+        if (cSelectedItems > 0)
+        {
+            LoadStringW(shell32_hInstance, IDS_OBJECTS_SELECTED, szFormat, _countof(szFormat));
+            StringCchPrintfW(szPartText, _countof(szPartText), szFormat, cSelectedItems);
+        }
+        else
+        {
+            LoadStringW(shell32_hInstance, IDS_OBJECTS, szFormat, _countof(szFormat));
+            StringCchPrintfW(szPartText, _countof(szPartText), szFormat, m_ListView.GetItemCount());
+        }
+
+        // Update statusbar index 0 part
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)szPartText, &lResult);
+
+        if (!m_isParentFolderSpecial)
+        {
+            // Don't show the file size text if there is 0 bytes in the folder OR
+            // we only have folders selected.
+            szPartText[0] = UNICODE_NULL;
+            if ((cSelectedItems > 0 && !m_bIsOnlyFoldersSelected) || m_dwTotalSize > 0)
+                StrFormatByteSizeW(m_dwTotalSize, szPartText, _countof(szPartText));
+
+            m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
+
+            // If we are in a Recycle Bin folder then show no text for the location part.
+            szPartText[0] = UNICODE_NULL;
+            if (!_ILIsBitBucket(m_pidlParent))
+            {
+                LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText, _countof(szPartText));
+                pIcon = (LPARAM)m_hMyComputerIcon;
+            }
+
+            // Update statusbar index 2 part
+            m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
+            m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
+        }
+    }
+
+    return 0;
 }
 
 /**********************************************************
