@@ -2337,7 +2337,7 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
 
 LRESULT CDefView::OnUpdateStatusBar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    // Here is the main thread. We can use GUI parts directly
+    // Here is in the main thread. We can operate GUI parts directly
     LRESULT lResult;
     WCHAR szFormat[MAX_PATH], szPartText[MAX_PATH];
     LPARAM pIcon = NULL;
