@@ -552,6 +552,7 @@ void CDefView::CheckToolbar()
     }
 }
 
+// This function is used in non-main thread.
 void CDefView::UpdateStatusbarWorker(HANDLE hThread)
 {
     KillTimer(TIMERID_UPDATE_STATUSBAR);
@@ -561,7 +562,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
         m_dwTotalSize = 0; // Don't calculate file size
         m_bIsOnlyFoldersSelected = false;
 
-        // It's different from the main thread. To communicate GUI parts, use timer
+        // It's a non-main thread. To communicate GUI parts, use timer
         SetTimer(TIMERID_UPDATE_STATUSBAR, UPDATE_STATUSBAR_DELAY, NULL);
         return;
     }
