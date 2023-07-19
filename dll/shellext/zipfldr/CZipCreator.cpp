@@ -69,7 +69,8 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename, BOOL bUtf8)
 }
 
 static BOOL
-DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents, zip_fileinfo *pzi)
+DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents,
+                zip_fileinfo *pzi)
 {
     contents.RemoveAll();
 
