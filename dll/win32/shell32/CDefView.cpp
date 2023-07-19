@@ -49,7 +49,7 @@ typedef struct
     INT     nLastHeaderID;
 } LISTVIEW_SORT_INFO, *LPLISTVIEW_SORT_INFO;
 
-#define SHV_CHANGE_NOTIFY (WM_USER + 0x1111)
+#define SHV_CHANGE_NOTIFY WM_USER + 0x1111
 
 #define TIMERID_UPDATE_STATUSBAR 9999
 #define UPDATE_STATUSBAR_DELAY 100
@@ -160,7 +160,6 @@ class CDefView :
         HANDLE                    m_hUpdateStatusbarThread;
         DWORD                     m_dwTotalSize;
         bool                      m_bIsOnlyFoldersSelected;
-
 
     private:
         HRESULT _MergeToolbar();
