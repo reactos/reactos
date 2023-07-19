@@ -110,6 +110,8 @@ add_library(shell32 MODULE
 if(MSVC)
     # error C4311: 'type cast': pointer truncation from 'HANDLE' to 'INT'
     remove_target_compile_option(shell32 "/we4311")
+    # volatile is MS volatile
+    target_compile_options(shell32 PRIVATE "/volatile:ms")
 endif()
 
 add_typelib(shell32_shldisp.idl)
