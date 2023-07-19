@@ -93,4 +93,5 @@ BEGIN
     IDS_NO_DIRECTORY "No directory given!"
     IDS_INVALID_PATH "The given path is invalid!"
     IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
+    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
 END

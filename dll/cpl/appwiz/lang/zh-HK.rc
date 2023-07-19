@@ -94,4 +94,5 @@ BEGIN
     IDS_NO_DIRECTORY "沒有指定路徑。"
     IDS_INVALID_PATH "指定的路徑無效。"
     IDS_INVALID_NAME "您輸入的捷徑名稱太長，或包含不能在檔案名稱中使用的字元。"
+    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
 END

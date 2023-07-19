@@ -96,4 +96,5 @@ BEGIN
     IDS_NO_DIRECTORY "No se ha especificado directorio alguno"
     IDS_INVALID_PATH "La ruta proporcionada es inválida"
     IDS_INVALID_NAME "El nombre del acceso directo que has introducido contiene o bien caracteres inválidos, o su nombre es demasiado largo."
+    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
 END

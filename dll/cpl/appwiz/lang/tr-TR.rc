@@ -88,4 +88,5 @@ BEGIN
     IDS_NO_DIRECTORY "Hiç dizin verilmedi!"
     IDS_INVALID_PATH "Verilen yol geçersiz!"
     IDS_INVALID_NAME "Girdiğiniz kısayol adı, ya geçersiz karakterler içeriyor ya dosya adları için geçersiz ya da çok uzun."
+    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
 END
