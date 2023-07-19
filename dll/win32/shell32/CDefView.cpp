@@ -627,10 +627,11 @@ void CDefView::UpdateStatusbar()
                                                                 this, CREATE_SUSPENDED, NULL));
     if (hNewThread)
     {
-        // Clear some parts at beginning
+        // Clear parts at beginning
         LRESULT lResult;
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)L"", &lResult);
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)L"", &lResult);
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)L"", &lResult);
 
         HANDLE hOldThread = ::InterlockedExchangePointer(&m_hUpdateStatusbarThread, hNewThread);
 
@@ -2670,7 +2671,8 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
         hOldThread = ::InterlockedExchangePointer(&m_hUpdateStatusbarThread, hOldThread);
         ::WaitForSingleObject(hOldThread, 3000);
 
-        ::CloseHandle(hOldThread);
+        if (hOldThread)
+            ::CloseHandle(hOldThread);
     }
 
     /* Make absolutely sure all our UI is cleaned up */
