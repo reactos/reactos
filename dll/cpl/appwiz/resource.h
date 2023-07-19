@@ -29,7 +29,6 @@
 #define IDS_NO_DIRECTORY            2027
 #define IDS_INVALID_PATH            2028
 #define IDS_INVALID_NAME            2029
-#define IDS_BROWSE_FOR_TARGET       2030
 
 #define IDS_DOWNLOADING        14
 #define IDS_INSTALLING         15

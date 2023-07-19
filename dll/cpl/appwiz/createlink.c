@@ -266,7 +266,6 @@ WelcomeDlgProc(HWND hwndDlg,
             switch(LOWORD(wParam))
             {
                 case IDC_SHORTCUT_BROWSE:
-                    LoadStringW(hApplet, IDS_BROWSE_FOR_TARGET, szTitle, _countof(szTitle));
                     ZeroMemory(&brws, sizeof(brws));
                     brws.hwndOwner = hwndDlg;
                     brws.pidlRoot = NULL;
@@ -274,7 +273,6 @@ WelcomeDlgProc(HWND hwndDlg,
                     brws.ulFlags = BIF_BROWSEINCLUDEFILES | BIF_RETURNONLYFSDIRS |
                                    BIF_NEWDIALOGSTYLE | BIF_SHAREABLE;
                     brws.lpfn = NULL;
-                    brws.lpszTitle = szTitle;
                     pidllist = SHBrowseForFolderW(&brws);
                     if (!pidllist)
                         break;
