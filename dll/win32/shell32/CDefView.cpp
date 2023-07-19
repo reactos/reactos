@@ -2364,7 +2364,7 @@ LRESULT CDefView::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
         // Update statusbar index-0 part
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)szPartText, &lResult);
 
-        if (!m_isParentFolderSpecial)
+        if (!m_isParentFolderSpecial) // It's not a special folder
         {
             // Don't show the file size text if there is 0 bytes in the folder OR
             // we only have folders selected.
