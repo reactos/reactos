@@ -566,7 +566,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
     // Sending a message from a non-main thread to get the number of selected items
     DWORD_PTR dwResult = 0;
     if (!::SendMessageTimeoutW(m_ListView, LVM_GETSELECTEDCOUNT, 0, 0,
-                               SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, &dwResult))
+                               SMTO_ABORTIFHUNG | SMTO_BLOCK, 300, &dwResult))
     {
         return;
     }
@@ -585,7 +585,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
         // Sending a message from a non-main thread to get the next item
         dwResult = (DWORD)-1;
         if (!::SendMessageTimeoutW(m_ListView, LVM_GETNEXTITEM, nItem, uFileFlags,
-                                   SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, &dwResult))
+                                   SMTO_ABORTIFHUNG | SMTO_BLOCK, 300, &dwResult))
         {
             return;
         }
@@ -627,7 +627,14 @@ void CDefView::UpdateStatusbar()
                                                                 this, CREATE_SUSPENDED, NULL));
     if (hNewThread)
     {
+        // Clear some parts at beginning
+        LRESULT lResult;
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)L"", &lResult);
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)L"", &lResult);
+
         HANDLE hOldThread = ::InterlockedExchangePointer(&m_hUpdateStatusbarThread, hNewThread);
+
+        // Restart the thread
         ::ResumeThread(hNewThread);
 
         if (hOldThread)
