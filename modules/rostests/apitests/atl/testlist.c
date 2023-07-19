@@ -2,6 +2,7 @@
 #include <apitest.h>
 
 extern void func_AtlObjMap(void);
+extern void func_atlconv(void);
 extern void func_atltypes(void);
 extern void func_CAtlFileMapping(void);
 extern void func_CAtlArray(void);
@@ -23,6 +24,7 @@ extern void func_SubclassWindow(void);
 const struct test winetest_testlist[] =
 {
     { "AtlObjMap", func_AtlObjMap },
+    { "atlconv", func_atlconv },
     { "atltypes", func_atltypes },
     { "CAtlFileMapping", func_CAtlFileMapping },
     { "CAtlArray", func_CAtlArray },

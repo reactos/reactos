@@ -3,6 +3,7 @@ add_definitions(-DINITGUID -DWINETEST_USE_DBGSTR_LONGLONG)
 
 list(APPEND SOURCE
     AtlObjMap.cpp
+    atlconv.cpp
     atltypes.cpp
     CAtlFileMapping.cpp
     CAtlArray.cpp
