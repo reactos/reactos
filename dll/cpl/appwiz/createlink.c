@@ -15,7 +15,6 @@
 #include <shellapi.h>
 #include <strsafe.h>
 #include <shlwapi_undoc.h>
-#include <undocshell.h>
 
 BOOL
 IsShortcut(HKEY hKey)
