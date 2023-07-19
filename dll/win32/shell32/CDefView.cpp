@@ -622,8 +622,6 @@ unsigned __stdcall CDefView::_UpdateStatusbarProc(void *args)
 
 void CDefView::UpdateStatusbar()
 {
-    HANDLE hOldThread = m_hUpdateStatusbarThread;
-
     AddRef();
 
     // We have to initialize m_hUpdateStatusbarThread before the target thread begins.
@@ -632,7 +630,7 @@ void CDefView::UpdateStatusbar()
                                                                 this, CREATE_SUSPENDED, NULL));
     if (hNewThread)
     {
-        m_hUpdateStatusbarThread = hNewThread;
+        HANDLE hOldThread = ::InterlockedExchangePointer(&m_hUpdateStatusbarThread, hNewThread);
         ::ResumeThread(hNewThread);
 
         if (hOldThread)
@@ -2616,11 +2614,11 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
 
     if (m_hUpdateStatusbarThread)
     {
-        HANDLE hOldThread = m_hUpdateStatusbarThread;
+        HANDLE hOldThread = NULL;
 
         // Assigning NULL to m_hUpdateStatusbarThread will terminate the target thread
-        m_hUpdateStatusbarThread = NULL;
-        ::WaitForSingleObject(hOldThread, INFINITE);
+        hOldThread = ::InterlockedExchangePointer(&m_hUpdateStatusbarThread, hOldThread);
+        ::WaitForSingleObject(hOldThread, 3000);
 
         ::CloseHandle(hOldThread);
     }
