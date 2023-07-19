@@ -563,7 +563,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
         return;
     }
 
-    // Send a message from a non-main thread to get the number of items
+    // Sending a message from a non-main thread to get the number of selected items
     DWORD_PTR dwResult = 0;
     if (!::SendMessageTimeoutW(m_ListView, LVM_GETSELECTEDCOUNT, 0, 0,
                                SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, &dwResult))
@@ -582,7 +582,7 @@ void CDefView::UpdateStatusbarWorker(HANDLE hThread)
         if (hThread != m_hUpdateStatusbarThread)
             return;
 
-        // Send a message from a non-main thread to get the next item
+        // Sending a message from a non-main thread to get the next item
         dwResult = (DWORD)-1;
         if (!::SendMessageTimeoutW(m_ListView, LVM_GETNEXTITEM, nItem, uFileFlags,
                                    SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, &dwResult))
