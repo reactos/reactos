@@ -814,7 +814,6 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     hResult = SHBindToFolder(pidl, &newFolder);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    
     hResult = newFolder->QueryInterface(IID_PPV_ARG(IPersist, &pp));
     if (SUCCEEDED(hResult))
     {
