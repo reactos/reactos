@@ -327,25 +327,22 @@ WelcomeDlgProc(HWND hwndDlg,
                 /* Find the file */
                 WCHAR szFound[MAX_PATH];
                 StringCchCopyW(szFound, _countof(szFound), szPath);
-                if (!PathFindOnPathExW(szFound, NULL, WHICH_DEFAULT))
+                if (!PathFindOnPathExW(szFound, NULL, WHICH_DEFAULT) &&
+                    FindExecutableW(szPath, NULL, szFound) <= (HINSTANCE)(INT_PTR)32)
                 {
-                    /* Find by using "App Paths" registry */
-                    if (FindExecutableW(szPath, NULL, szFound) <= (HINSTANCE)(INT_PTR)32)
-                    {
-                        /* Not found */
-                        SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
+                    /* Not found */
+                    SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
 
-                        LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, _countof(szDesc));
-                        LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, _countof(szPath));
+                    LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, _countof(szDesc));
+                    LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, _countof(szPath));
 
-                        WCHAR szError[MAX_PATH + 100];
-                        StringCchPrintfW(szError, _countof(szError), szPath, pContext->szTarget);
-                        MessageBoxW(hwndDlg, szError, szDesc, MB_ICONERROR);
+                    WCHAR szError[MAX_PATH + 100];
+                    StringCchPrintfW(szError, _countof(szError), szPath, pContext->szTarget);
+                    MessageBoxW(hwndDlg, szError, szDesc, MB_ICONERROR);
 
-                        /* Prevent the wizard to go next */
-                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
-                        return TRUE;
-                    }
+                    /* Prevent the wizard to go next */
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
+                    return TRUE;
                 }
 
                 /* Rebuild target */
