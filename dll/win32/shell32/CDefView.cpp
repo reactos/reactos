@@ -156,9 +156,9 @@ class CDefView :
 
         HICON                     m_hMyComputerIcon;
         // NOTE: We cannot use std::atomic yet. std::atomic is better than volatile+Interlocked.
-        volatile HANDLE           m_hUpdateStatusbarThread; // Used to update statusbar
-        DWORD                     m_dwTotalSize;            // Used to update statusbar
-        bool                      m_bIsOnlyFoldersSelected; // Used to update statusbar
+        alignas(8) volatile HANDLE m_hUpdateStatusbarThread; // Used to update statusbar
+        DWORD                      m_dwTotalSize;            // Used to update statusbar
+        bool                       m_bIsOnlyFoldersSelected; // Used to update statusbar
 
     private:
         HRESULT _MergeToolbar();
