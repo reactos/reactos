@@ -13,7 +13,8 @@ list(APPEND HAL_GENERIC_SOURCE
     generic/pic.c
     generic/reboot.c
     generic/sysinfo.c
-    generic/usage.c)
+    generic/usage.c
+    generic/x86bios.c)
 
 if(ARCH STREQUAL "i386")
     list(APPEND HAL_GENERIC_SOURCE

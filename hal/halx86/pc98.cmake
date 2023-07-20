@@ -19,7 +19,8 @@ list(APPEND HAL_PC98_SOURCE
     generic/nmi.c
     generic/portio.c
     generic/sysinfo.c
-    generic/usage.c)
+    generic/usage.c
+    generic/x86bios.c)
 
 list(APPEND HAL_PC98_ASM_SOURCE
     generic/v86.S)

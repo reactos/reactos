@@ -21,6 +21,7 @@ list(APPEND HAL_XBOX_SOURCE
     generic/usage.c
     generic/bios.c
     generic/portio.c
+    generic/x86bios.c
     legacy/bus/bushndlr.c
     legacy/bus/cmosbus.c
     legacy/bus/isabus.c
