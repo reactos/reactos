@@ -806,7 +806,7 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     CComPtr<IShellFolder>                   newFolder;
     FOLDERSETTINGS                          newFolderSettings;
     HRESULT                                 hResult;
-    IPersist                                *pp;
+    CLSID                                   clsid;
     BOOL                                    HasIconViewType;
 
     // called by shell view to browse to new folder
@@ -814,15 +814,9 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     hResult = SHBindToFolder(pidl, &newFolder);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = newFolder->QueryInterface(IID_PPV_ARG(IPersist, &pp));
-    if (SUCCEEDED(hResult))
-    {
-        CLSID pclsid;
-        hResult = pp->GetClassID(&pclsid);
-        pp->Release();
-        HasIconViewType = pclsid == CLSID_MyComputer || pclsid == CLSID_ControlPanel
-                          || pclsid == CLSID_ShellDesktop;
-    }
+    IUnknown_GetClassID(newFolder, &clsid);
+    HasIconViewType = clsid == CLSID_MyComputer || clsid == CLSID_ControlPanel
+                      || clsid == CLSID_ShellDesktop;
 
     if (HasIconViewType)
         newFolderSettings.ViewMode = FVM_ICON;
