@@ -328,7 +328,7 @@ WelcomeDlgProc(HWND hwndDlg,
                 WCHAR szFound[MAX_PATH];
                 StringCchCopyW(szFound, _countof(szFound), szPath);
                 if (!PathFindOnPathExW(szFound, NULL, WHICH_DEFAULT) &&
-                    ::FindExecutableW(szPath, NULL, szFound) <= (HINSTANCE)(INT_PTR)32)
+                    FindExecutableW(szPath, NULL, szFound) <= (HINSTANCE)(INT_PTR)32)
                 {
                     /* Not found */
                     SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
