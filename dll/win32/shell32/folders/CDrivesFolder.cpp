@@ -55,6 +55,17 @@ static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
                                 IDS_DRIVE_FIXED        /* DRIVE_RAMDISK*/
                                 };
 
+BOOL _ILGetDriveType(LPCITEMIDLIST pidl)
+{
+    char szDrive[8];
+    if (!_ILGetDrive(pidl, szDrive, _countof(szDrive)))
+    {
+        ERR("pidl %p is not a drive\n", pidl);
+        return DRIVE_UNKNOWN;
+    }
+    return ::GetDriveTypeA(szDrive);
+}
+
 /***********************************************************************
 *   IShellFolder implementation
 */
@@ -607,14 +618,6 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     return hr;
 }
 
-// Is it a CD-ROM drive?
-bool _ILIsCDRomDrive(LPCITEMIDLIST pidl)
-{
-    char szDrive[8];
-    return (_ILGetDrive(pidl, szDrive, _countof(szDrive)) &&
-            ::GetDriveTypeA(szDrive) == DRIVE_CDROM);
-}
-
 /**************************************************************************
 *    CDrivesFolder::ParseDisplayName
 */
@@ -671,7 +674,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
             {
                 *pdwAttributes &= dwDriveAttributes;
 
-                if (_ILIsCDRomDrive(pidlTemp))
+                if (_ILGetDriveType(pidlTemp) == DRIVE_CDROM)
                     *pdwAttributes &= ~SFGAO_CANRENAME; // CD-ROM drive cannot rename
             }
             else if (_ILIsSpecialFolder(pidlTemp))
@@ -893,7 +896,7 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
             {
                 *rgfInOut &= dwDriveAttributes;
 
-                if (_ILIsCDRomDrive(apidl[i]))
+                if (_ILGetDriveType(apidl[i]) == DRIVE_CDROM)
                     *rgfInOut &= ~SFGAO_CANRENAME; // CD-ROM drive cannot rename
             }
             else if (_ILIsControlPanel(apidl[i]))
