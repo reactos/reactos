@@ -815,8 +815,8 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     IUnknown_GetClassID(newFolder, &clsid);
-    HasIconViewType = clsid == CLSID_MyComputer || clsid == CLSID_ControlPanel
-                      || clsid == CLSID_ShellDesktop;
+    HasIconViewType = clsid == CLSID_MyComputer || clsid == CLSID_ControlPanel ||
+                      clsid == CLSID_ShellDesktop;
 
     if (HasIconViewType)
         newFolderSettings.ViewMode = FVM_ICON;
