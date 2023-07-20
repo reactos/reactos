@@ -660,7 +660,17 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
         if (pdwAttributes && *pdwAttributes)
         {
             if (_ILIsDrive(pidlTemp))
+            {
                 *pdwAttributes &= dwDriveAttributes;
+
+                // CD-ROM cannot rename
+                char szDrive[8];
+                if (_ILGetDrive(pidlTemp, szDrive, sizeof(szDrive)) &&
+                    GetDriveTypeA(szDrive) == DRIVE_CDROM)
+                {
+                    *pdwAttributes &= ~SFGAO_CANRENAME;
+                }
+            }
             else if (_ILIsSpecialFolder(pidlTemp))
                 m_regFolder->GetAttributesOf(1, &pidlTemp, pdwAttributes);
             else
@@ -877,7 +887,17 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
         for (UINT i = 0; i < cidl; ++i)
         {
             if (_ILIsDrive(apidl[i]))
+            {
                 *rgfInOut &= dwDriveAttributes;
+
+                // CD-ROM cannot rename
+                char szDrive[8];
+                if (_ILGetDrive(apidl[0], szDrive, sizeof(szDrive)) &&
+                    GetDriveTypeA(szDrive) == DRIVE_CDROM)
+                {
+                    *rgfInOut &= ~SFGAO_CANRENAME;
+                }
+            }
             else if (_ILIsControlPanel(apidl[i]))
                 *rgfInOut &= dwControlPanelAttributes;
             else if (_ILIsSpecialFolder(*apidl))
