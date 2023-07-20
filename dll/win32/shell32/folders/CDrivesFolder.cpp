@@ -611,7 +611,7 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
 bool _ILIsCDRomDrive(LPCITEMIDLIST pidl)
 {
     char szDrive[8];
-    return (_ILGetDrive(pidl, szDrive, sizeof(szDrive)) &&
+    return (_ILGetDrive(pidl, szDrive, _countof(szDrive)) &&
             ::GetDriveTypeA(szDrive) == DRIVE_CDROM);
 }
 
