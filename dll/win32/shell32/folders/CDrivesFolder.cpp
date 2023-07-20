@@ -607,6 +607,14 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     return hr;
 }
 
+// Is it a CD-ROM drive?
+bool _ILIsCDRomDrive(LPCITEMIDLIST pidl)
+{
+    char szDrive[8];
+    return (_ILGetDrive(pidl, szDrive, sizeof(szDrive)) &&
+            ::GetDriveTypeA(szDrive) == DRIVE_CDROM);
+}
+
 /**************************************************************************
 *    CDrivesFolder::ParseDisplayName
 */
@@ -663,13 +671,8 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
             {
                 *pdwAttributes &= dwDriveAttributes;
 
-                // CD-ROM cannot rename
-                char szDrive[8];
-                if (_ILGetDrive(pidlTemp, szDrive, sizeof(szDrive)) &&
-                    GetDriveTypeA(szDrive) == DRIVE_CDROM)
-                {
-                    *pdwAttributes &= ~SFGAO_CANRENAME;
-                }
+                if (_ILIsCDRomDrive(pidlTemp))
+                    *pdwAttributes &= ~SFGAO_CANRENAME; // CD-ROM drive cannot rename
             }
             else if (_ILIsSpecialFolder(pidlTemp))
                 m_regFolder->GetAttributesOf(1, &pidlTemp, pdwAttributes);
@@ -890,13 +893,8 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
             {
                 *rgfInOut &= dwDriveAttributes;
 
-                // CD-ROM cannot rename
-                char szDrive[8];
-                if (_ILGetDrive(apidl[0], szDrive, sizeof(szDrive)) &&
-                    GetDriveTypeA(szDrive) == DRIVE_CDROM)
-                {
-                    *rgfInOut &= ~SFGAO_CANRENAME;
-                }
+                if (_ILIsCDRomDrive(apidl[i]))
+                    *rgfInOut &= ~SFGAO_CANRENAME; // CD-ROM drive cannot rename
             }
             else if (_ILIsControlPanel(apidl[i]))
                 *rgfInOut &= dwControlPanelAttributes;
