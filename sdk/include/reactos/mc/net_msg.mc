@@ -598,15 +598,16 @@ WORKSTATION   Wyświetla informacje o konfiguracji usługi Stacja robocza.
 NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
-NET CONFIG displays coniguration information of the Workstation or
-Server service. When used without the WORKSTATION or SERVER switch,
-it displays a list of configurable services. To get help with
-configuring a service, type NET HELP CONFIG service.
+NET CONFIG afișează informații de configurații ale serviciului stației de lucru
+sau a servitorului. Când este folosit fără comutatorul stației de lucru sau servitorului,
+se afișează a listă a serviciilor configurabile. Pentru a obține ajutor legat
+de configurarea unui serviciu, tastați serviciul NET HELP CONFIG.
 
-SERVER        Displays information about the configuration of the
-              Server service.
-WORKSTATION   Displays information about the configuration of the
-              Workstation service.
+
+SERVER        Afișează informații despre configurarea
+              serviciului servitorului.
+WORKSTATION   Afișează informații despre configurarea
+              serviciului stației de lucru.
 
 NET HELP comandă | MORE (pentru afișare paginată).
 .
@@ -690,7 +691,7 @@ NET CONFIG SERVER [/AUTODISCONNECT:czas] [/SRVCOMMENT:"tekst"]
                   [/HIDDEN:{YES | NO}]
 .
 Language=Romanian
-NET CONFIG SERVER [/AUTODISCONNECT:time] [/SRVCOMMENT:"text"]
+NET CONFIG SERVER [/AUTODISCONNECT:timp] [/SRVCOMMENT:"text"]
                   [/HIDDEN:{YES | NO}]
 .
 Language=Russian
@@ -761,22 +762,23 @@ wpisz NET CONFIG SERVER bez parametrów.
 NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
-NET CONFIG SERVER displays or changes settings for the Server service.
+NET CONFIG SERVER afișează sau schimbă configurații pentru serviciul
+                  servitorului.
 
-/AUTODISCONNECT:time    Sets the maximum number of minutes a user's
-                        session can be inactive before it is disconected.
-                        You can specify -1 to never disconnect. The range
-                        is -1-65535 minutes; the default is 15.
-/SRVCOMMENT:"text"      Adds a comment for the server that is displayed on
-                        screen and with the NET VIEW command.
-                        Enclose the text in quotation marks.
-/HIDDEN:{YES | NO}      Specifies whether the server's computer name
-                        appears on displays listings of servers. Note that
-                        hiding a serverdoes not alter the permissions
-                        on that server. The default is NO.
+/AUTODISCONNECT:timp    Setează numărul maxim de minute ale unei sesiuni a
+                        utilizatorului ce poate fi inactivă înainte de a fi
+						deconectată. Puteți specifica -1 pentru a nu o deconecta niciodată.
+						Intervalul este de -1-65535 (de) minute; valoare implicită este 15.
+/SRVCOMMENT:"text"      Adaugă un comentariu pentru servitor ce este afișat pe
+                        ecran și cu comanda NET VIEW. Introduceți textul între
+						ghilimele.
+/HIDDEN:{YES | NO}      Specifică dacă numele calculatorului servitorului apare
+                        în listările de servitoare de pe ecran. Rețineți că
+						listările de servitoare de pe ecran nu modifică permisiunile din acel
+						servitor. Valoarea implicită este NO (NU).
 
-To display the current configuration for the Server service,
-type NET CONFIG SERVER without parameters.
+Pentru a afișa configurația actuală pentru serviciul servitorului, tastați
+NET CONFIG SERVER fără parametri.
 
 NET HELP comandă | MORE (pentru afișare paginată).
 .
@@ -944,10 +946,10 @@ usługa              Wstrzymana usługa
 NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
-NET CONTINUE reactivates a service that has been suspended by NET PAUSE.
+Comanda NET CONTINUE reactivează un serviciu ce a fost suspendat de NET PAUSE.
 
-service             Is the paused service
-                    For example, one of the following:
+serviciu            Este serviciul pauzat
+                    De exemplu, unul dintre următoarele:
                     NET LOGON
                     NT LM SECURITY SUPPORT PROVIDER
                     SCHEDULE
@@ -1033,7 +1035,7 @@ Language=Polish
 NET FILE [identyfikator [/CLOSE]]
 .
 Language=Romanian
-NET FILE [id [/CLOSE]]
+NET FILE [identificator (id) [/CLOSE]]
 .
 Language=Russian
 NET FILE [id [/CLOSE]]
@@ -1180,21 +1182,24 @@ nazwa_użytkownika[ ...]  Lista zawierająca nazwy jednego lub kilku
 NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
-NET GROUP adds, displays or modifies global groups on servers. When
-used without parameters, it displays the groupnames on the server.
+Comanda NET GROUP adaugă, afișează sau modifică grupurile globale ale
+servitoarelor. Când e folosită fără parametrii, se afișează numele de grup pe
+servitoare.
 
-groupname        Is the name of the group to add, expand, or delete.
-                 Supply only a groupname to view a list of users
-                 in a group.
-/COMMENT:"text"  Adds a comment for a new or existing group.
-                 Enclose the text in quotation marks.
-/DOMAIN          Performs the operation on a domain controller
-                 of the current domain. Otherwise, the operation is
-                 performed on the local computer.
-username[ ...]   List one or more usernames to add to or remove from
-                 a group. Separate multiple username entries with a space.
-/ADD             Adds a group, or adds a username to a group.
-/DELETE          Removes a group, or removes a username from a group.
+nume de grup     Este numele grupului de adăugat, de extins sau de șters.
+                 Furnizează doar un nume de grup pentru a vedea o listă de
+				 utilizatori dintr-un grup.
+/COMMENT:"text"  Adaugă un comentariu pentru un grup nou sau existent.
+                 Introduce textul între ghilimele.
+/DOMAIN          Efectuați operațiunea pe un controlor de domeniu
+                 al domeniului curent. Altfel, operațiunea este
+                 efectuată la un calculator local.
+nume de          Listează unul sau mai multe nume de utilizator pentru a le
+utilizator[ ...] adăuga sau a le șterge dintr-un grup. Separați mai multe
+                 intrări ale numelor de utilizator cu spațiu.
+/ADD             Adaugă un grup sau adaugă un nume de utilizator la un grup.
+/DELETE          Șterge un grup sau șterge  un nume de utilizator dintr-un
+                 grup.
 
 NET HELP comandă | MORE (pentru afișare paginată).
 .
@@ -1478,7 +1483,7 @@ Language=Polish
 NET HELPMSG komunikat#
 .
 Language=Romanian
-NET HELPMSG <Error Code>
+NET HELPMSG <Cod de eroare>
 .
 Language=Russian
 NET HELPMSG <Код ошибки>
@@ -1518,12 +1523,13 @@ objaśni komunikat i zasugeruje rozwiązanie problemu.
 komunikat#   Numeryczny błąd systemu, o którym chcesz uzyskać informacje.
 .
 Language=Romanian
-NET HELPMSG displays information about network messages (such as
-error, warning and alert messages). When you type NET HELPMSG and the numeric
-error (for example, "net helpmsg 2182"), you will get information about the
-message and suggested actions you can take to solve the problem.
+Comanda NET HELPMSG afișează informații despre mesajele de rețea (precum,
+mesaje de eroare, de atenționare și de alertă). Când tastați NET HELPMSG și
+eroarea numerică (de exemplu, "net helpmsg 2182"), veți obține informații
+despre mesaj și despre acțiunile sugerate pe care le luați ca să rezolvați
+problema.
 
-message#   Is the numerical error with which you need help.
+mesaj#   Este eroarea numerică cu care aveți nevoie de ajutor.
 .
 Language=Russian
 NET HELPMSG displays information about network messages (such as
@@ -1670,27 +1676,29 @@ nazwa[ ...]       Lista zawierająca nazwy jednego lub kilku użytkowników
 NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
-NET LOCALGROUP adds, displays or modifies local groups on computers. When
-used without parameters, it displays the local groups on the computer.
+Comanda NET LOCALGROUP adaugă, afișează sau modifică grupurile locale din
+calculatoare. Când este folosit fără parametri, se afișează grupurile locale
+din calculator.
 
-groupname        Is the name of the local group to add, expand, or
-                 delete. Supply only a groupname to view a list of
-                 users or global groups in a local group.
-/COMMENT:"text"  Adds a comment for a new or existing group.
-                 Enclose the text in quotation marks.
-/DOMAIN          Performs the operation on a domain controller
-                 of the current domain. Otherwise, the operation is
-                 performed on the local computer.
-name[ ...]       List one or more usernames or groupnams to add to or
-                 remove from a local group. Separate multiple entries with
-                 a space. Names may be users or global groups, but not
-                 other local groups. If a user is from another doamin,
-                 preface the username with the domain name (for
-                 example, SALES\RALPHR).
-/ADD             Adds a groupname or username to a local group. An account
-                 must be established for users or global groups added to a
-                 local group with this command.
-/DELETE          Removes a groupname or username from a local group.
+nume de grup     Este numele grupului local ce urmează să fie adăugat, extins
+sau șters. Furnizează numai numele grupului pentru a vizualiza o listă a
+utilizatorilor sau a grupurilor globale într-un grup local.
+/COMMENT:"text"  Adaugă un comentariu pentru un grup nou sau pentru unul existent.
+                 Introduceți textul între ghilimele.
+/DOMAIN          Efectuează operațiunea pe un controlor al domeniului curent.
+                 Altfel, operațiunea este efectuată la
+				 calculatorul local.
+nume[ ...]       Listează unul sau mai multe nume de utilizatori sau nume de
+                 grup pentru a le adăuga sau a le șterge din grupul local.
+				 Separă mai multe intrări cu un spațiu. Numele pot fi utilizatori sau
+				 grupuri globale, dar nu alte grupuri locale. Dacă un utilizator este
+				 dintr-un alt domeniu, adăugați numele domeniului în fața numelui
+				 utilizatorului (de exemplu, VÂNZĂRI\ANDREI).
+/ADD             Adaugă un nume de grup sau un nume de utilizator la grupul
+                 local. Un cont trebuie să fie stabilit pentru utilizatori sau
+				 pentru grupurile globale adăugate la un grup local cu această comandă.
+/DELETE          Șterge un nume de grup sau un nume de utilizator dintr-un grup
+                 local.
 
 NET HELP comandă | MORE (pentru afișare paginată).
 .
@@ -1870,9 +1878,9 @@ usługa   Nazwa wstrzymywanej usługi.
 NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
-NET PAUSE suspends a service. Pausing a service puts it on hold.
+NET PAUSE suspendă un serviciu. Pauzarea unui serviciu îl pune în așteptare.
 
-service   The name of the service to be paused.
+serviciu  Numele serviciului de pauzat.
 
 NET HELP comandă | MORE (pentru afișare paginată).
 .
@@ -2005,14 +2013,14 @@ NET SHARE nazwa_udziału=dysk:ścieżka [/GRANT:użytkownik,[READ | CHANGE | FUL
           {nazwa_udziału | nazwa_urządzenia | dysk:ścieżka} /DELETE
 .
 Language=Romanian
-NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
-                               [/USERS:number | /UNLIMITED]
+NET SHARE sharename=disc:cale  [/GRANT:utilizator,[READ | CHANGE | FULL]]
+                               [/USERS:număr | /UNLIMITED]
                                [/REMARK:"text"]
                                [/CACHE:Manual | Documents| Programs | None]
-          sharename [/USERS:number | /UNLIMITED]
+          sharename [/USERS:număr | /UNLIMITED]
                     [/REMARK:"text"]
                     [/CACHE:Manual | Documents | Programs | None]
-          {sharename | devicename | drive:path} /DELETE
+          {numele de partajare | numele dispozitivului | disc:cale} /DELETE
 .
 Language=Russian
 NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
@@ -2149,13 +2157,14 @@ nazwa_urządzenia
 NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Romanian
-NET SHARE makes a server's resources available to network users. When
-used without options, it lists information about all resources being
-shared on the computer. For each resource, Windows reports the
-devicename(s) or pathname(s) and a descriptive comment associated with it.
+Comanda NET SHARE face resursele servitorului valabile utilizatorilor rețelei.
+Când e folosită fără opțiuni, se listează informațiile despre toate resursele
+ce sunt partajate la calculator. Pentru fiecare resursă Windows raportează
+numele dispozitivului(elor) sau numele căii(ilor) și un comentariu descriptiv
+asociat cu el.
 
-sharename          Is the network name of the shared resource. Type
-                   NET SHARE with a sharename only to display information
+numele de          Is the network name of the shared resource. Type
+partajare          NET SHARE with a sharename only to display information
                    about that share.
 drive:path         Specifies the absolute path of the directory to
                    be shared.
