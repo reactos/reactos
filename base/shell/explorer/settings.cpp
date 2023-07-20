@@ -62,7 +62,7 @@ BOOL TaskbarSettings::Load()
     dwRet = SHGetValueW(hkExplorer, L"StuckRects2", L"Settings", NULL, &sr, &cbSize);
 
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarSmallIcons", NULL, &dwValue, &cbSize);
-    bSmallIcons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE; /* This is an opt-out setting */
+    bSmallIcons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE;
 
     /* Make sure we have correct values here */
     if (dwRet != ERROR_SUCCESS || sr.cbSize != sizeof(sr) || cbSize != sizeof(sr))
