@@ -35,6 +35,8 @@ add_typelib(ieframe_v1.idl)
 list(APPEND ieframe_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/ieframe.rgs
     ${CMAKE_CURRENT_SOURCE_DIR}/ieframe_v1.rgs
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/ietoolbar.bmp
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/pages.ico
     ${CMAKE_CURRENT_BINARY_DIR}/ieframe_v1.tlb)
 
 set_source_files_properties(ieframe.rc PROPERTIES OBJECT_DEPENDS "${ieframe_rc_deps}")

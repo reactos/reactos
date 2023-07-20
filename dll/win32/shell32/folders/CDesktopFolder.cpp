@@ -129,6 +129,7 @@ class CDesktopFolderEnum :
             LPITEMIDLIST pidl;
 
             static const WCHAR MyDocumentsClassString[] = L"{450D8FBA-AD25-11D0-98A8-0800361B1103}";
+            static const WCHAR InternetClassString[] = L"{871C5380-42A0-1069-A2EA-08002B30309D}";
 
             TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
 
@@ -138,6 +139,8 @@ class CDesktopFolderEnum :
                 AddToEnumList(_ILCreateMyComputer());
                 if (IsNamespaceExtensionHidden(MyDocumentsClassString) < 1)
                     AddToEnumList(_ILCreateMyDocuments());
+                if (IsNamespaceExtensionHidden(InternetClassString) < 1)
+                    AddToEnumList(_ILCreateIExplore());
 
                 DWORD dwFetched;
                 while((S_OK == pRegEnumerator->Next(1, &pidl, &dwFetched)) && dwFetched)
