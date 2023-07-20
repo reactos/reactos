@@ -105,7 +105,12 @@ void WINAPI FileProtocolHandlerA(HWND hWnd, HINSTANCE hInst, LPCSTR pszUrl, int 
  */
 void WINAPI OpenURLA(HWND hwnd, HINSTANCE inst, LPCSTR cmdline, INT show)
 {
+#ifdef __REACTOS__
+    TRACE("(%p, %p, %s, %d)\n", hwnd, inst, debugstr_a(cmdline), show);
+    ShellExecuteA(hwnd, NULL, cmdline, NULL, NULL, show);
+#else
     FIXME("(%p, %p, %s, %d): stub!\n", hwnd, inst, debugstr_a(cmdline), show);
+#endif
 }
 
 /***********************************************************************
