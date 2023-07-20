@@ -92,7 +92,7 @@ public:
             nameA.Replace('\\', '/');
 
             if (info.flag & MINIZIP_UTF8_FLAG)
-                Utf8ToWide(nameA, name);
+                name = CA2WEX<MAX_PATH>(nameA, CP_UTF8);
             else
                 name = CStringW(nameA);
         }

@@ -34,13 +34,6 @@ static CStringW DoGetZipName(PCWSTR filename)
     return ret;
 }
 
-static CStringA EncodeName(PCWSTR filename, UINT nCodePage)
-{
-    CHAR buf[MAX_PATH];
-    WideCharToMultiByte(nCodePage, 0, filename, -1, buf, _countof(buf), NULL, NULL);
-    return buf;
-}
-
 static CStringW DoGetBaseName(PCWSTR filename)
 {
     WCHAR szBaseName[MAX_PATH];
@@ -65,7 +58,10 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename, BOOL bUtf8)
 
     ret.Replace(L'\\', L'/');
 
-    return EncodeName(ret, (bUtf8 ? CP_UTF8 : CP_ACP));
+    if (bUtf8)
+        return CStringA(CW2AEX<MAX_PATH>(ret, CP_UTF8));
+    else
+        return CStringA(ret);
 }
 
 static BOOL

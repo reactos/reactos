@@ -48,13 +48,6 @@ static void init_zlib()
     fill_win32_filefunc64W(&g_FFunc);
 }
 
-void Utf8ToWide(const CStringA& strUtf8, CStringW& strWide)
-{
-    INT cchWide = MultiByteToWideChar(CP_UTF8, 0, strUtf8, -1, NULL, 0);
-    MultiByteToWideChar(CP_UTF8, 0, strUtf8, -1, strWide.GetBuffer(cchWide), cchWide);
-    strWide.ReleaseBuffer();
-}
-
 static BOOL
 CreateEmptyFile(PCWSTR pszFile)
 {
