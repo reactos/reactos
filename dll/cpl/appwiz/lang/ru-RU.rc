@@ -85,6 +85,6 @@ BEGIN
     IDS_NO_MEMORY "Невозможно выделить память."
     IDS_NO_DIRECTORY "Не указано ни одного каталога!"
     IDS_INVALID_PATH "Указанный путь неверен!"
-    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_INVALID_NAME "Заданное имя ярлыка содержит символы, недопустимые в именах файлов, или имеет слишком большую длину."
+    IDS_BROWSE_FOR_TARGET "Укажите объект для ярлыка:"
 END
