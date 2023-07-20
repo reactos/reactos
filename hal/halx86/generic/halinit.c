@@ -142,7 +142,7 @@ HalInitSystem(IN ULONG BootPhase,
         /* Do some HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);
 
-        /* Initialize Phase 0 of the 16-bit emulator */
+        /* Initialize Phase 0 of the x86 emulator */
         HalInitializeBios(0, LoaderBlock);
     }
     else if (BootPhase == 1)
@@ -153,7 +153,7 @@ HalInitSystem(IN ULONG BootPhase,
         /* Do some HAL-specific initialization */
         HalpInitPhase1();
 
-        /* Initialize Phase 1 of the 16-bit emulator */
+        /* Initialize Phase 1 of the x86 emulator */
         HalInitializeBios(1, LoaderBlock);
     }
 
