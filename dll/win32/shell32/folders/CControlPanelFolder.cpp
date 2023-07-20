@@ -489,7 +489,12 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
 HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     if (!pidl)
+    {
+        /* Take care of setting return value even with bad input. */
+        *strRet = { 0 };
+        TRACE("PIDL is NULL.\n");
         return S_FALSE;
+    }
 
     PIDLCPanelStruct *pCPanel = _ILGetCPanelPointer(pidl);
 
