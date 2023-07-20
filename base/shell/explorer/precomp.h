@@ -210,6 +210,7 @@ struct TaskbarSettings
     BOOL bShowSeconds;
     BOOL bPreferDate;
     BOOL bHideInactiveIcons;
+    BOOL bSmallIcons;
     TW_STRUCKRECTS2 sr;
 
     BOOL Load();
