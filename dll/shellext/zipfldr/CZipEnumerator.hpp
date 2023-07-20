@@ -12,15 +12,18 @@ private:
     CComPtr<IZip> m_Zip;
     bool m_First;
     CAtlList<CStringW> m_Returned;
+    UINT m_nCodePage;
 public:
     CZipEnumerator()
-        :m_First(true)
+        : m_First(true)
+        , m_nCodePage(CP_ACP)
     {
     }
 
-    bool initialize(IZip* zip)
+    bool initialize(IZip* zip, UINT nCodePage)
     {
         m_Zip = zip;
+        m_nCodePage = nCodePage;
         return reset();
     }
 
@@ -94,7 +97,7 @@ public:
             if (info.flag & MINIZIP_UTF8_FLAG)
                 name = CA2WEX<MAX_PATH>(nameA, CP_UTF8);
             else
-                name = CStringW(nameA);
+                name = CA2WEX<MAX_PATH>(nameA, m_nCodePage);
         }
         return err == UNZ_OK;
     }

@@ -44,7 +44,7 @@ static CStringW DoGetBaseName(PCWSTR filename)
 }
 
 static CStringA
-DoGetNameInZip(const CStringW& basename, const CStringW& filename, BOOL bUtf8)
+DoGetNameInZip(const CStringW& basename, const CStringW& filename, UINT nCodePage)
 {
     CStringW basenameI = basename, filenameI = filename;
     basenameI.MakeUpper();
@@ -58,10 +58,7 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename, BOOL bUtf8)
 
     ret.Replace(L'\\', L'/');
 
-    if (!bUtf8)
-        return CStringA(ret);
-
-    return CStringA(CW2AEX<MAX_PATH>(ret, CP_UTF8));
+    return CStringA(CW2AEX<MAX_PATH>(ret, nCodePage));
 }
 
 static BOOL
@@ -275,7 +272,7 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     int err = 0;
     CStringW strTarget, strBaseName = DoGetBaseName(m_items[0]);
-    const BOOL bUtf8 = TRUE;
+    UINT uCodePage = GetZipCodePage(FALSE);
     for (INT iFile = 0; iFile < files.GetSize(); ++iFile)
     {
         const CStringW& strFile = files[iFile];
@@ -295,7 +292,7 @@ unsigned CZipCreatorImpl::JustDoIt()
             // TODO: crc = ...;
         }
 
-        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, bUtf8);
+        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, uCodePage);
         err = zipOpenNewFileInZip4_64(zf,
                                       strNameInZip,
                                       &zi,
@@ -313,7 +310,7 @@ unsigned CZipCreatorImpl::JustDoIt()
                                       password,
                                       crc,
                                       MINIZIP_COMPATIBLE_VERSION,
-                                      (bUtf8 ? MINIZIP_UTF8_FLAG : 0),
+                                      (uCodePage == CP_UTF8 ? MINIZIP_UTF8_FLAG : 0),
                                       zip64);
         if (err)
         {

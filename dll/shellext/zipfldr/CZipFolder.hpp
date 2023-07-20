@@ -221,7 +221,9 @@ public:
     }
     STDMETHODIMP EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
     {
-        return _CEnumZipContents_CreateInstance(this, dwFlags, m_ZipDir, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
+        UINT nCodePage = GetZipCodePage(TRUE);
+        return _CEnumZipContents_CreateInstance(this, dwFlags, m_ZipDir, nCodePage,
+                                                IID_PPV_ARG(IEnumIDList, ppEnumIDList));
     }
     STDMETHODIMP BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
     {

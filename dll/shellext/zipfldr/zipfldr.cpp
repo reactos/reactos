@@ -87,6 +87,29 @@ GetDefaultUserSendTo(PWSTR pszPath)
                             SHGFP_TYPE_DEFAULT, pszPath);
 }
 
+UINT GetZipCodePage(BOOL bUnZip)
+{
+    WCHAR szValue[32];
+    DWORD dwType, cbValue = sizeof(szValue);
+    UINT uCodePage = (bUnZip ? 0 : CP_UTF8);
+
+    LONG error = SHGetValueW(HKEY_CURRENT_USER, L"Software\\ReactOS",
+                             (bUnZip ? L"UnZipCodePage" : L"ZipCodePage"),
+                             &dwType, szValue, &cbValue);
+    if (error != ERROR_SUCCESS)
+        return uCodePage;
+
+    szValue[_countof(szValue) - 1] = UNICODE_NULL;
+
+    if (cbValue == sizeof(DWORD) && (dwType == REG_DWORD || dwType == REG_BINARY))
+        return *(DWORD*)szValue;
+
+    if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
+        return uCodePage;
+
+    return wcstoul(szValue, NULL, 0);
+}
+
 EXTERN_C
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
