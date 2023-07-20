@@ -156,7 +156,7 @@ x86BiosAllocateBuffer(
     /* Check if the system is initialized and the buffer is large enough */
     if (!x86BiosIsInitialized || (*Size > PAGE_SIZE))
     {
-        /* Something was wrong, fail! */
+        /* Something was wrong, fail */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -405,6 +405,9 @@ x86IntAck (
     return 0;
 }
 
+static ULONG HalpBiosCallCount = 0;
+static BOOLEAN HalpBiosDisplayInReset = FALSE;
+
 BOOLEAN
 NTAPI
 x86BiosCall(
@@ -413,8 +416,35 @@ x86BiosCall(
 {
     const ULONG StackBase = 0x2000;
     FAST486_STATE EmulatorContext;
+    BOOLEAN Success = FALSE;
+    ULONG Count;
     ULONG FlatIp;
     PUCHAR InstructionPointer;
+
+    /*
+     * Check for concurrent calls and error if so. The exception to this
+     * rule is when e.g. a bugcheck occurs while an INT 10h operation was
+     * taking place, and the display needs to be forcibly reset with an
+     * INT 10h call, see HalpBiosDisplayReset().
+     */
+    Count = (ULONG)InterlockedIncrement((PLONG)&HalpBiosCallCount);
+    if ((Count > 1) && !HalpBiosDisplayInReset)
+    {
+#define ERROR_MSG                                    \
+    "\n*** Concurrent BIOS calls\n"                  \
+    "    This is a BUG in a driver or the kernel!\n" \
+    "    The BIOS call will be ignored.\n"
+#if DBG
+        NT_ASSERTMSG(ERROR_MSG
+                     "    Perform a stack trace to find the culprit.\n"
+                     "    Use 'cont' (KDBG) or 'gh' (WinDbg) to continue.\n",
+                     FALSE);
+#else
+        DbgPrint("Error at %s(%d): %s\n", __FILE__, __LINE__, ERROR_MSG);
+#endif
+#undef ERROR_MSG
+        goto Quit;
+    }
 
     /* Initialize the emulator context */
     Fast486Initialize(&EmulatorContext,
@@ -466,8 +496,8 @@ x86BiosCall(
         /* Make sure we haven't left the allowed memory range */
         if (FlatIp >= 0x100000)
         {
-            DPRINT1("x86BiosCall: invalid IP (0x%lx) during BIOS execution\n", FlatIp);
-            return FALSE;
+            DPRINT1("x86BiosCall: Invalid IP (0x%lx) during BIOS execution\n", FlatIp);
+            goto Quit;
         }
 
         /* Check if we returned from our int stub */
@@ -491,7 +521,11 @@ x86BiosCall(
     Registers->SegDs = EmulatorContext.SegmentRegs[FAST486_REG_DS].Selector;
     Registers->SegEs = EmulatorContext.SegmentRegs[FAST486_REG_ES].Selector;
 
-    return TRUE;
+    Success = TRUE;
+
+Quit:
+    InterlockedDecrement((PLONG)&HalpBiosCallCount);
+    return Success;
 }
 
 #ifdef _M_AMD64
@@ -501,15 +535,22 @@ HalpBiosDisplayReset(VOID)
 {
     X86_BIOS_REGISTERS Registers;
     ULONG OldEflags;
-    BOOLEAN Success;
+    BOOLEAN Success, InReset;
 
     /* Save flags and disable interrupts */
     OldEflags = __readeflags();
     _disable();
 
+    /* Set the display-in-reset flag */
+    InReset = HalpBiosDisplayInReset;
+    HalpBiosDisplayInReset = TRUE;
+
     /* Call INT 0x10, AH = 0 (Set video mode), AL = 0x12 (640x480x16 VGA) */
     Registers.Eax = 0x0012;
     Success = x86BiosCall(0x10, &Registers);
+
+    /* Restore the flag */
+    HalpBiosDisplayInReset = InReset;
 
     /* Restore previous flags */
     __writeeflags(OldEflags);
