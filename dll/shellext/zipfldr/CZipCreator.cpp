@@ -58,10 +58,10 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename, BOOL bUtf8)
 
     ret.Replace(L'\\', L'/');
 
-    if (bUtf8)
-        return CStringA(CW2AEX<MAX_PATH>(ret, CP_UTF8));
-    else
+    if (!bUtf8)
         return CStringA(ret);
+
+    return CStringA(CW2AEX<MAX_PATH>(ret, CP_UTF8));
 }
 
 static BOOL
