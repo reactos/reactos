@@ -78,6 +78,7 @@ public:
         return E_NOTIMPL;
     }
 
+
 public:
     DECLARE_NOT_AGGREGATABLE(CEnumZipContents)
     DECLARE_PROTECT_FINAL_CONSTRUCT()

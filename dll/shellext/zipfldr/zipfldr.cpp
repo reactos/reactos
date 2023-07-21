@@ -91,7 +91,7 @@ UINT GetZipCodePage(BOOL bUnZip)
 {
     WCHAR szValue[32];
     DWORD dwType, cbValue = sizeof(szValue);
-    UINT nDefaultCodePage = (bUnZip ? 0 : CP_UTF8);
+    UINT nDefaultCodePage = (bUnZip ? CP_ACP : CP_UTF8);
 
     LONG error = SHGetValueW(HKEY_CURRENT_USER, L"Software\\ReactOS",
                              (bUnZip ? L"UnZipCodePage" : L"ZipCodePage"),
