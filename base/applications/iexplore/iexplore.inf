@@ -18,7 +18,7 @@ HKCR,"CLSID\%CLSID_InternetExplorer%\VersionIndependentProgID",,,"InternetExplor
 
 ; FIXME: Implement CLSID_Internet in ieframe.dll (see CORE-18625)
 ; https://git.reactos.org/?p=reactos.git;a=blob;f=modules/rostests/apitests/com/ieframe.c;hb=bf2cec186cc7655e062ec0e53ccfac860bcae70d#l35
-HKCR,"CLSID\%CLSID_Internet%",,,"Internet Browser"
+HKCR,"CLSID\%CLSID_Internet%",,,"Internet"
 HKCR,"CLSID\%CLSID_Internet%","InfoTip",0x00020000,"@%SystemRoot%\system32\ieframe.dll,-881"
 HKCR,"CLSID\%CLSID_Internet%","LocalizedString",0x00020000,"@%SystemRoot%\system32\ieframe.dll,-880"
 HKCR,"CLSID\%CLSID_Internet%\DefaultIcon",,0x00020000,"%SystemRoot%\system32\shell32.dll,-14"
