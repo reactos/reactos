@@ -89,7 +89,7 @@ GetDefaultUserSendTo(PWSTR pszPath)
 
 UINT GetZipCodePage(BOOL bUnZip)
 {
-    WCHAR szValue[32];
+    WCHAR szValue[16];
     DWORD dwType, cbValue = sizeof(szValue);
     UINT nDefaultCodePage = (bUnZip ? CP_ACP : CP_UTF8);
 
@@ -99,14 +99,13 @@ UINT GetZipCodePage(BOOL bUnZip)
     if (error != ERROR_SUCCESS)
         return nDefaultCodePage;
 
-    szValue[_countof(szValue) - 1] = UNICODE_NULL;
-
     if (cbValue == sizeof(DWORD) && (dwType == REG_DWORD || dwType == REG_BINARY))
         return *(DWORD*)szValue;
 
     if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
         return nDefaultCodePage;
 
+    szValue[_countof(szValue) - 1] = UNICODE_NULL;
     return wcstoul(szValue, NULL, 0);
 }
 
