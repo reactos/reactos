@@ -261,8 +261,12 @@ static HRESULT WINAPI InstallCallback_OnStartBinding(IBindStatusCallback *iface,
         DWORD dwReserved, IBinding *pib)
 {
     set_status(IDS_DOWNLOADING);
+
     IBinding_AddRef(pib);
+
+    EnterCriticalSection(&csLock);
     download_binding = pib;
+    LeaveCriticalSection(&csLock);
 
     return S_OK;
 }
