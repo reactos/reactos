@@ -193,7 +193,7 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
         else if (IsEqualGUID(*riid, CLSID_NetworkPlaces))
             initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_NETWORK_PLACES);
         else if (IsEqualGUID(*riid, CLSID_Internet))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_ENTIRE_NETWORK);
+            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_WEB_BROWSER);
         else
             initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_FOLDER);
     }
