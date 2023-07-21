@@ -350,6 +350,7 @@ public:
     HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
+    void LoadSettings();
 
 /*    // *** IDockingWindowFrame methods ***
     virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
@@ -709,10 +710,6 @@ CShellBrowser::CShellBrowser()
     fCurrentShellViewWindow = NULL;
     fCurrentDirectoryPIDL = NULL;
     fStatusBar = NULL;
-    fStatusBarVisible = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
-                                             L"StatusBarOther",
-                                             FALSE,
-                                             FALSE);
     fCurrentMenuBar = NULL;
     fHistoryObject = NULL;
     fHistoryStream = NULL;
@@ -786,6 +783,7 @@ HRESULT CShellBrowser::Initialize()
 
     fToolbarProxy.Initialize(m_hWnd, clientBar);
 
+    LoadSettings();
 
     // create status bar
     DWORD dwStatusStyle = WS_CHILD | WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS;
@@ -1508,6 +1506,19 @@ void CShellBrowser::RepositionBars()
     ::SetWindowPos(fCurrentShellViewWindow, NULL, clientRect.left, clientRect.top,
                         clientRect.right - clientRect.left,
                         clientRect.bottom - clientRect.top, SWP_NOOWNERZORDER | SWP_NOZORDER);
+}
+
+void CShellBrowser::LoadSettings()
+{
+    fStatusBarVisible = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
+                                             L"StatusBarOther",
+                                             FALSE,
+                                             FALSE);
+
+    fCabinetState.fFullPathTitle = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState",
+                                                        L"FullPath",
+                                                        FALSE,
+                                                        FALSE);
 }
 
 HRESULT CShellBrowser::FireEvent(DISPID dispIdMember, int argCount, VARIANT *arguments)
