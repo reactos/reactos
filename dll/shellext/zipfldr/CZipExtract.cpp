@@ -566,8 +566,7 @@ public:
         }
 
         CZipEnumerator zipEnum;
-        UINT nCodePage = GetZipCodePage(FALSE);
-        if (!zipEnum.initialize(this, nCodePage))
+        if (!zipEnum.initialize(this))
         {
             DPRINT1("ERROR, zipEnum.initialize\n");
             Close();

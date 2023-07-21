@@ -22,11 +22,11 @@ public:
     {
     }
 
-    STDMETHODIMP Initialize(IZip* zip, DWORD flags, PCWSTR prefix, UINT nCodePage)
+    STDMETHODIMP Initialize(IZip* zip, DWORD flags, PCWSTR prefix)
     {
         dwFlags = flags;
         m_Prefix = prefix;
-        if (mEnumerator.initialize(zip, nCodePage))
+        if (mEnumerator.initialize(zip))
             return S_OK;
         return E_FAIL;
     }
@@ -88,8 +88,8 @@ public:
 };
 
 
-HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, PCWSTR prefix, UINT nCodePage, REFIID riid, LPVOID * ppvOut)
+HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, PCWSTR prefix, REFIID riid, LPVOID * ppvOut)
 {
-    return ShellObjectCreatorInit<CEnumZipContents>(zip, flags, prefix, nCodePage, riid, ppvOut);
+    return ShellObjectCreatorInit<CEnumZipContents>(zip, flags, prefix, riid, ppvOut);
 }
 

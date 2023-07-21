@@ -52,7 +52,7 @@ extern zlib_filefunc64_def g_FFunc;
 #include "zippidl.hpp"
 #include "IZip.hpp"
 
-HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, PCWSTR prefix, UINT nCodePage, REFIID riid, LPVOID * ppvOut);
+HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, PCWSTR prefix, REFIID riid, LPVOID * ppvOut);
 HRESULT _CExplorerCommandProvider_CreateInstance(IContextMenu* zipObject, REFIID riid, LPVOID * ppvOut);
 HRESULT _CFolderViewCB_CreateInstance(REFIID riid, LPVOID * ppvOut);
 void _CZipExtract_runWizard(PCWSTR Filename);

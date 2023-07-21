@@ -272,7 +272,7 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     int err = 0;
     CStringW strTarget, strBaseName = DoGetBaseName(m_items[0]);
-    UINT uCodePage = GetZipCodePage(FALSE);
+    UINT nCodePage = GetZipCodePage(FALSE);
     for (INT iFile = 0; iFile < files.GetSize(); ++iFile)
     {
         const CStringW& strFile = files[iFile];
@@ -292,7 +292,7 @@ unsigned CZipCreatorImpl::JustDoIt()
             // TODO: crc = ...;
         }
 
-        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, uCodePage);
+        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, nCodePage);
         err = zipOpenNewFileInZip4_64(zf,
                                       strNameInZip,
                                       &zi,
@@ -310,7 +310,7 @@ unsigned CZipCreatorImpl::JustDoIt()
                                       password,
                                       crc,
                                       MINIZIP_COMPATIBLE_VERSION,
-                                      (uCodePage == CP_UTF8 ? MINIZIP_UTF8_FLAG : 0),
+                                      (nCodePage == CP_UTF8 ? MINIZIP_UTF8_FLAG : 0),
                                       zip64);
         if (err)
         {

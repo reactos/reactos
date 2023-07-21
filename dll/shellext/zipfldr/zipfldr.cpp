@@ -91,13 +91,13 @@ UINT GetZipCodePage(BOOL bUnZip)
 {
     WCHAR szValue[32];
     DWORD dwType, cbValue = sizeof(szValue);
-    UINT uCodePage = (bUnZip ? 0 : CP_UTF8);
+    UINT nDefaultCodePage = (bUnZip ? 0 : CP_UTF8);
 
     LONG error = SHGetValueW(HKEY_CURRENT_USER, L"Software\\ReactOS",
                              (bUnZip ? L"UnZipCodePage" : L"ZipCodePage"),
                              &dwType, szValue, &cbValue);
     if (error != ERROR_SUCCESS)
-        return uCodePage;
+        return nDefaultCodePage;
 
     szValue[_countof(szValue) - 1] = UNICODE_NULL;
 
@@ -105,7 +105,7 @@ UINT GetZipCodePage(BOOL bUnZip)
         return *(DWORD*)szValue;
 
     if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
-        return uCodePage;
+        return nDefaultCodePage;
 
     return wcstoul(szValue, NULL, 0);
 }

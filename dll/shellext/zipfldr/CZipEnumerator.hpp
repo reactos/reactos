@@ -16,14 +16,13 @@ private:
 public:
     CZipEnumerator()
         : m_First(true)
-        , m_nCodePage(CP_ACP)
+        , m_nCodePage(GetZipCodePage(TRUE))
     {
     }
 
-    bool initialize(IZip* zip, UINT nCodePage)
+    bool initialize(IZip* zip)
     {
         m_Zip = zip;
-        m_nCodePage = nCodePage;
         return reset();
     }
 
