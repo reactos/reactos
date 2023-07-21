@@ -5323,22 +5323,83 @@ HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LP
 
 #ifdef __REACTOS__
 /**************************************************************************
- *  SHPropertyBag_WriteLONG (SHLWAPI.497)
- *
- * This function asks a property bag to write a named property as a LONG.
- *
- * PARAMS
- *  ppb: a IPropertyBag interface
- *  pszPropName:  Unicode string that names the property
- *  lValue: address to receive the property value as a 32-bit signed integer
- *
- * RETURNS
- *  HRESULT codes
+ *  SHPropertyBag_WriteBOOL (SHLWAPI.499)
  */
-HRESULT WINAPI SHPropertyBag_WriteLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LONG lValue)
+HRESULT WINAPI SHPropertyBag_WriteBOOL(IPropertyBag *ppb, LPCOLESTR pszPropName, BOOL bValue)
 {
-	UNIMPLEMENTED;
-	return E_NOTIMPL;
+    VARIANT vari;
+
+    TRACE("%p %s %d\n", ppb, debugstr_w(pszPropName), bValue);
+
+    if (!ppb || !pszPropName)
+    {
+        ERR("%p %s\n", ppb, debugstr_w(pszPropName));
+        return E_INVALIDARG;
+    }
+
+    V_VT(&vari) = VT_BOOL;
+    V_BOOL(&vari) = (VARIANT_BOOL)-bValue;
+    return ppb->lpVtbl->Write(ppb, pszPropName, &vari);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_WriteSHORT (SHLWAPI.528)
+ */
+HRESULT WINAPI SHPropertyBag_WriteSHORT(IPropertyBag *ppb, LPCOLESTR pszPropName, SHORT sValue)
+{
+    VARIANT vari;
+
+    TRACE("%p %s %d\n", ppb, debugstr_w(pszPropName), sValue);
+
+    if (!ppb || !pszPropName)
+    {
+        ERR("%p %s\n", ppb, debugstr_w(pszPropName));
+        return E_INVALIDARG;
+    }
+
+    V_VT(&vari) = VT_UI2;
+    V_UI2(&vari) = sValue;
+    return ppb->lpVtbl->Write(ppb, pszPropName, &vari);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_WriteLONG (SHLWAPI.497)
+ */
+HRESULT WINAPI SHPropertyBag_WriteLONG(IPropertyBag *ppb, LPCOLESTR pszPropName, LONG lValue)
+{
+    VARIANT vari;
+
+    TRACE("%p %s %ld\n", ppb, debugstr_w(pszPropName), lValue);
+
+    if (!ppb || !pszPropName)
+    {
+        ERR("%p %s\n", ppb, debugstr_w(pszPropName));
+        return E_INVALIDARG;
+    }
+
+    V_VT(&vari) = VT_I4;
+    V_I4(&vari) = lValue;
+    return ppb->lpVtbl->Write(ppb, pszPropName, &vari);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_WriteDWORD (SHLWAPI.508)
+ */
+HRESULT WINAPI SHPropertyBag_WriteDWORD(IPropertyBag *ppb, LPCOLESTR pszPropName, DWORD dwValue)
+{
+    VARIANT vari;
+
+    TRACE("%p %s %lu\n", ppb, debugstr_w(pszPropName), dwValue);
+
+    if (!ppb || !pszPropName)
+    {
+        ERR("%p %s\n", ppb, debugstr_w(pszPropName));
+        return E_INVALIDARG;
+    }
+
+    V_VT(&vari) = VT_UI4;
+    V_UI4(&vari) = dwValue;
+    return ppb->lpVtbl->Write(ppb, pszPropName, &vari);
 }
 
 /**************************************************************************
