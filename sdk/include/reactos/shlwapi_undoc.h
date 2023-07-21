@@ -99,6 +99,13 @@ HRESULT WINAPI SHGetPerScreenResName(OUT LPWSTR lpResName,
                                      IN DWORD dwReserved);
 
 HRESULT WINAPI SHPropertyBag_ReadStream(IPropertyBag*,LPCWSTR,IStream**);
+HRESULT WINAPI SHPropertyBag_WriteBOOL(IPropertyBag *ppb, LPCOLESTR pszPropName, BOOL bValue);
+HRESULT WINAPI SHPropertyBag_WriteSHORT(IPropertyBag *ppb, LPCOLESTR pszPropName, SHORT sValue);
+HRESULT WINAPI SHPropertyBag_WriteLONG(IPropertyBag *ppb, LPCOLESTR pszPropName, LONG lValue);
+HRESULT WINAPI SHPropertyBag_WriteDWORD(IPropertyBag *ppb, LPCOLESTR pszPropName, DWORD dwValue);
+HRESULT WINAPI SHPropertyBag_WriteStr(IPropertyBag *ppb, LPCOLESTR pszPropName, LPCWSTR pszValue);
+HRESULT WINAPI SHPropertyBag_WriteGUID(IPropertyBag *ppb, LPCOLESTR pszPropName, const GUID *pguid);
+HRESULT WINAPI SHPropertyBag_WriteStream(IPropertyBag *ppb, LPCOLESTR pszPropName, IStream *pStream);
 
 HWND WINAPI SHCreateWorkerWindowA(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle,
                                   DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra);
