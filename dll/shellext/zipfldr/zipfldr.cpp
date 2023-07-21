@@ -106,7 +106,7 @@ UINT GetZipCodePage(BOOL bUnZip)
         return nDefaultCodePage;
 
     szValue[_countof(szValue) - 1] = UNICODE_NULL;
-    return wcstol(szValue, NULL, 0);
+    return (UINT)wcstol(szValue, NULL, 0);
 }
 
 EXTERN_C
