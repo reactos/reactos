@@ -86,5 +86,5 @@ BEGIN
     IDS_NO_DIRECTORY "ディレクトリが与えられてません!"
     IDS_INVALID_PATH "与えられたパスは無効です!"
     IDS_INVALID_NAME "入力したショートカット名にファイル名としては無効な文字が含まれているか長すぎます。"
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_BROWSE_FOR_TARGET "ショートカットの参照先を下からお選び下さい:"
 END
