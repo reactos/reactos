@@ -74,7 +74,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
 
     STRRET strretFrom;
     hr = pSFFrom->GetDisplayNameOf(NULL, SHGDN_FORPARSING, &strretFrom);
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (hr != S_OK)
         return hr;
 
     pszSrcList = BuildPathsList(strretFrom.pOleStr, cidl, apidl);
