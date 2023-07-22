@@ -851,7 +851,7 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
     RtlInitUnicodeString(&UNCServerName, lpUNCServerName);
 
     Status = ElfOpenBackupEventLogW(&UNCServerName, &FileName, &hEventLog);
-    
+
     if (FileName.Buffer != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
 
