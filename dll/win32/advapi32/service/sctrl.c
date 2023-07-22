@@ -669,7 +669,7 @@ ScServiceDispatcher(HANDLE hPipe,
                         break;
 
                     default:
-                        TRACE("Command %lu received", ControlPacket->dwControl);
+                        TRACE("Cmd %lu received\n", ControlPacket->dwControl);
                         dwError = ScControlService(lpService, ControlPacket);
                         break;
                 }
