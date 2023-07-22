@@ -45,6 +45,9 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
+    IDS_INTERNET "Internet Browser"
+    IDS_INTERNET_DESCRIPTION "Opens a Web browser and displays information on the Internet."
+
     IDS_TB_BACK             "Zpět"
     IDS_TB_FORWARD          "Vpřed"
     IDS_TB_STOP             "Stop"

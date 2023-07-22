@@ -185,12 +185,15 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
     }
     else
     {
+        // FIXME: Delete these hacks and make HCR_GetIconW and registry working
         if (IsEqualGUID(*riid, CLSID_MyComputer))
             initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_COMPUTER);
         else if (IsEqualGUID(*riid, CLSID_MyDocuments))
             initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_DOCUMENTS);
         else if (IsEqualGUID(*riid, CLSID_NetworkPlaces))
             initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_NETWORK_PLACES);
+        else if (IsEqualGUID(*riid, CLSID_Internet))
+            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_WEB_BROWSER);
         else
             initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_FOLDER);
     }
