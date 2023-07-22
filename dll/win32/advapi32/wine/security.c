@@ -17,6 +17,10 @@
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 static BOOL ParseStringSidToSid(LPCWSTR StringSid, PSID pSid, LPDWORD cBytes);
+#ifdef __REACTOS__
+VOID WINAPI QuerySecurityAccessMask(SECURITY_INFORMATION,LPDWORD);
+VOID WINAPI SetSecurityAccessMask(SECURITY_INFORMATION,LPDWORD);
+#endif
 
 typedef struct _ACEFLAG
 {

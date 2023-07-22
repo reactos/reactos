@@ -218,8 +218,7 @@ ScConnectControlPipe(HANDLE *hPipe)
           hPipe);
 
     /* Get the service number and create the named pipe */
-    RtlZeroMemory(&QueryTable,
-                  sizeof(QueryTable));
+    RtlZeroMemory(&QueryTable, sizeof(QueryTable));
 
     QueryTable[0].Name = L"";
     QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
@@ -632,7 +631,7 @@ ScServiceDispatcher(HANDLE hPipe,
                         break;
 
                     default:
-                        TRACE("Command %lu received", ControlPacket->dwControl);
+                        TRACE("Cmd %lu received\n", ControlPacket->dwControl);
                         dwError = ScControlService(lpService, ControlPacket);
                         break;
                 }
