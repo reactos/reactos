@@ -59,6 +59,7 @@ static const addon_info_t addons_info[] = {
 static const addon_info_t *addon;
 
 static HWND install_dialog = NULL;
+static CRITICAL_SECTION csLock;
 static IBinding *download_binding = NULL;
 
 static WCHAR GeckoUrl[] = L"https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi";
@@ -260,8 +261,12 @@ static HRESULT WINAPI InstallCallback_OnStartBinding(IBindStatusCallback *iface,
         DWORD dwReserved, IBinding *pib)
 {
     set_status(IDS_DOWNLOADING);
+
     IBinding_AddRef(pib);
+
+    EnterCriticalSection(&csLock);
     download_binding = pib;
+    LeaveCriticalSection(&csLock);
 
     return S_OK;
 }
@@ -294,10 +299,12 @@ static HRESULT WINAPI InstallCallback_OnProgress(IBindStatusCallback *iface, ULO
 static HRESULT WINAPI InstallCallback_OnStopBinding(IBindStatusCallback *iface,
         HRESULT hresult, LPCWSTR szError)
 {
+    EnterCriticalSection(&csLock);
     if(download_binding) {
         IBinding_Release(download_binding);
         download_binding = NULL;
     }
+    LeaveCriticalSection(&csLock);
 
     if(FAILED(hresult)) {
         if(hresult == E_ABORT)
@@ -401,12 +408,14 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
     case WM_COMMAND:
         switch(wParam) {
         case IDCANCEL:
+            EnterCriticalSection(&csLock);
             if(download_binding) {
                 IBinding_Abort(download_binding);
             }
             else {
                 EndDialog(hwnd, 0);
             }
+            LeaveCriticalSection(&csLock);
             return FALSE;
 
         case ID_DWL_INSTALL:
@@ -436,6 +445,8 @@ BOOL install_addon(addon_t addon_type, HWND hwnd_parent)
 
     addon = addons_info + addon_type;
 
+    InitializeCriticalSection(&csLock);
+
     /*
      * Try to find addon .msi file in following order:
      * - directory stored in $dir_config_key value of HKCU/Wine/Software/$config_key key
@@ -443,6 +454,8 @@ BOOL install_addon(addon_t addon_type, HWND hwnd_parent)
      */
     if (install_from_registered_dir() == INSTALL_NEXT)
         DialogBoxW(hApplet, addon->dialog_template, hwnd_parent, installer_proc);
+
+    DeleteCriticalSection(&csLock);
 
     return TRUE;
 }
