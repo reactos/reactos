@@ -12,9 +12,11 @@ private:
     CComPtr<IZip> m_Zip;
     bool m_First;
     CAtlList<CStringW> m_Returned;
+    UINT m_nCodePage;
 public:
     CZipEnumerator()
-        :m_First(true)
+        : m_First(true)
+        , m_nCodePage(GetZipCodePage(TRUE))
     {
     }
 
@@ -92,9 +94,9 @@ public:
             nameA.Replace('\\', '/');
 
             if (info.flag & MINIZIP_UTF8_FLAG)
-                Utf8ToWide(nameA, name);
+                name = CA2WEX<MAX_PATH>(nameA, CP_UTF8);
             else
-                name = CStringW(nameA);
+                name = CA2WEX<MAX_PATH>(nameA, m_nCodePage);
         }
         return err == UNZ_OK;
     }

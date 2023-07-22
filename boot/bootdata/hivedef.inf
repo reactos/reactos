@@ -1978,6 +1978,10 @@ HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP",
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP","SPMajorVersion",0x00010001,0x00000001
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP","SPMinorVersion",0x00010001,0x00000000
 
+; Zip/UnZip codepages
+HKCU,"SOFTWARE\ReactOS","ZipCodePage",0x00000000,"65001" ; CP_UTF8
+HKCU,"SOFTWARE\ReactOS","UnZipCodePage",0x00000000,"0"   ; CP_ACP
+
 ; DEBUG: Windows Messages SPY configuration
 HKCU,"SOFTWARE\ReactOS\Debug","SpyInclude",0x00020000,"INCLUDEALL"
 ;HKCU,"SOFTWARE\ReactOS\Debug","SpyExclude",0x00020000,""

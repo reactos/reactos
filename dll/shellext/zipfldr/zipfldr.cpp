@@ -48,13 +48,6 @@ static void init_zlib()
     fill_win32_filefunc64W(&g_FFunc);
 }
 
-void Utf8ToWide(const CStringA& strUtf8, CStringW& strWide)
-{
-    INT cchWide = MultiByteToWideChar(CP_UTF8, 0, strUtf8, -1, NULL, 0);
-    MultiByteToWideChar(CP_UTF8, 0, strUtf8, -1, strWide.GetBuffer(cchWide), cchWide);
-    strWide.ReleaseBuffer();
-}
-
 static BOOL
 CreateEmptyFile(PCWSTR pszFile)
 {
@@ -92,6 +85,28 @@ GetDefaultUserSendTo(PWSTR pszPath)
 {
     return SHGetFolderPathW(NULL, CSIDL_SENDTO, INVALID_HANDLE_VALUE,
                             SHGFP_TYPE_DEFAULT, pszPath);
+}
+
+UINT GetZipCodePage(BOOL bUnZip)
+{
+    WCHAR szValue[16];
+    DWORD dwType, cbValue = sizeof(szValue);
+    UINT nDefaultCodePage = (bUnZip ? CP_ACP : CP_UTF8);
+
+    LONG error = SHGetValueW(HKEY_CURRENT_USER, L"Software\\ReactOS",
+                             (bUnZip ? L"UnZipCodePage" : L"ZipCodePage"),
+                             &dwType, szValue, &cbValue);
+    if (error != ERROR_SUCCESS)
+        return nDefaultCodePage;
+
+    if (cbValue == sizeof(DWORD) && (dwType == REG_DWORD || dwType == REG_BINARY))
+        return *(DWORD*)szValue;
+
+    if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
+        return nDefaultCodePage;
+
+    szValue[_countof(szValue) - 1] = UNICODE_NULL;
+    return (UINT)wcstol(szValue, NULL, 0);
 }
 
 EXTERN_C

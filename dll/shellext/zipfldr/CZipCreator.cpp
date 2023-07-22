@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Create a zip file
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
- *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2019-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -34,13 +34,6 @@ static CStringW DoGetZipName(PCWSTR filename)
     return ret;
 }
 
-static CStringA DoGetAnsiName(PCWSTR filename)
-{
-    CHAR buf[MAX_PATH];
-    WideCharToMultiByte(CP_ACP, 0, filename, -1, buf, _countof(buf), NULL, NULL);
-    return buf;
-}
-
 static CStringW DoGetBaseName(PCWSTR filename)
 {
     WCHAR szBaseName[MAX_PATH];
@@ -51,7 +44,7 @@ static CStringW DoGetBaseName(PCWSTR filename)
 }
 
 static CStringA
-DoGetNameInZip(const CStringW& basename, const CStringW& filename)
+DoGetNameInZip(const CStringW& basename, const CStringW& filename, UINT nCodePage)
 {
     CStringW basenameI = basename, filenameI = filename;
     basenameI.MakeUpper();
@@ -65,7 +58,7 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename)
 
     ret.Replace(L'\\', L'/');
 
-    return DoGetAnsiName(ret);
+    return CStringA(CW2AEX<MAX_PATH>(ret, nCodePage));
 }
 
 static BOOL
@@ -279,6 +272,7 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     int err = 0;
     CStringW strTarget, strBaseName = DoGetBaseName(m_items[0]);
+    UINT nCodePage = GetZipCodePage(FALSE);
     for (INT iFile = 0; iFile < files.GetSize(); ++iFile)
     {
         const CStringW& strFile = files[iFile];
@@ -298,8 +292,8 @@ unsigned CZipCreatorImpl::JustDoIt()
             // TODO: crc = ...;
         }
 
-        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile);
-        err = zipOpenNewFileInZip3_64(zf,
+        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, nCodePage);
+        err = zipOpenNewFileInZip4_64(zf,
                                       strNameInZip,
                                       &zi,
                                       NULL,
@@ -315,6 +309,8 @@ unsigned CZipCreatorImpl::JustDoIt()
                                       Z_DEFAULT_STRATEGY,
                                       password,
                                       crc,
+                                      MINIZIP_COMPATIBLE_VERSION,
+                                      (nCodePage == CP_UTF8 ? MINIZIP_UTF8_FLAG : 0),
                                       zip64);
         if (err)
         {
