@@ -494,7 +494,7 @@ public:
 #define GET_ICON(type) \
     SendMessageTimeout(hwnd, WM_GETICON, (type), 0, SMTO_NOTIMEOUTIFNOTHUNG, 100, (PDWORD_PTR)&hIcon)
 
-        LRESULT bAlive = GET_ICON((g_TaskbarSettings.bSmallIcons) ? ICON_SMALL2 : ICON_BIG);
+        LRESULT bAlive = GET_ICON(g_TaskbarSettings.bSmallIcons ? ICON_SMALL2 : ICON_BIG);
         if (hIcon)
             return hIcon;
 
@@ -507,7 +507,7 @@ public:
 
         if (bAlive)
         {
-            GET_ICON((g_TaskbarSettings.bSmallIcons) ? ICON_BIG : ICON_SMALL2);
+            GET_ICON(g_TaskbarSettings.bSmallIcons ? ICON_BIG : ICON_SMALL2);
             if (hIcon)
                 return hIcon;
         }
@@ -1262,12 +1262,12 @@ public:
         /* Update the size of the image list if needed */
         int cx, cy;
         ImageList_GetIconSize(m_ImageList, &cx, &cy);
-        if (cx != GetSystemMetrics((g_TaskbarSettings.bSmallIcons) ? SM_CXSMICON : SM_CXICON) ||
-            cy != GetSystemMetrics((g_TaskbarSettings.bSmallIcons) ? SM_CYSMICON : SM_CYICON))
+        if (cx != GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON) ||
+            cy != GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CYSMICON : SM_CYICON))
         {
             ImageList_SetIconSize(m_ImageList,
-                                  GetSystemMetrics((g_TaskbarSettings.bSmallIcons) ? SM_CXSMICON : SM_CXICON),
-                                  GetSystemMetrics((g_TaskbarSettings.bSmallIcons) ? SM_CYSMICON : SM_CYICON));
+                                  GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON),
+                                  GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CYSMICON : SM_CYICON));
 
             /* SetIconSize removes all icons so we have to reinsert them */
             PTASK_ITEM TaskItem = m_TaskItems;
@@ -1433,8 +1433,8 @@ public:
 
         SetWindowTheme(m_TaskBar.m_hWnd, L"TaskBand", NULL);
 
-        m_ImageList = ImageList_Create(GetSystemMetrics((g_TaskbarSettings.bSmallIcons) ? SM_CXSMICON : SM_CXICON),
-                                       GetSystemMetrics((g_TaskbarSettings.bSmallIcons) ? SM_CYSMICON : SM_CYICON),
+        m_ImageList = ImageList_Create(GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON),
+                                       GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CYSMICON : SM_CYICON),
                                        ILC_COLOR32 | ILC_MASK, 0, 1000);
         m_TaskBar.SetImageList(m_ImageList);
 
