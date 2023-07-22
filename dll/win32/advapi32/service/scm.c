@@ -297,7 +297,7 @@ ChangeServiceConfigA(SC_HANDLE hService,
     LPWSTR lpPasswordW = NULL;
     LPBYTE lpEncryptedPassword = NULL;
 
-    TRACE("ChangeServiceConfigA(%p %lu %lu %lu %s %s %p %s %s %s %s)\n",
+    TRACE("ChangeServiceConfigA(%lu %lu %lu %s %s %p %s %s %s %s)\n",
           dwServiceType, dwStartType, dwErrorControl, debugstr_a(lpBinaryPathName),
           debugstr_a(lpLoadOrderGroup), lpdwTagId, debugstr_a(lpDependencies),
           debugstr_a(lpServiceStartName), debugstr_a(lpPassword), debugstr_a(lpDisplayName));
@@ -400,7 +400,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
     DWORD dwPasswordLength = 0;
     LPBYTE lpEncryptedPassword = NULL;
 
-    TRACE("ChangeServiceConfigW(%p %lu %lu %lu %s %s %p %s %s %s %s)\n",
+    TRACE("ChangeServiceConfigW(%lu %lu %lu %s %s %p %s %s %s %s)\n",
           dwServiceType, dwStartType, dwErrorControl, debugstr_w(lpBinaryPathName),
           debugstr_w(lpLoadOrderGroup), lpdwTagId, debugstr_w(lpDependencies),
           debugstr_w(lpServiceStartName), debugstr_w(lpPassword), debugstr_w(lpDisplayName));

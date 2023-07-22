@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/advapi32/misc/sysfun.c
  * PURPOSE:         advapi32.dll system functions (undocumented)
  * PROGRAMMER:      Emanuele Aliberti
  * UPDATE HISTORY:
