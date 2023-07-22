@@ -31,8 +31,8 @@ BOOL TaskbarSettings::Save()
     BOOL bAllowSizeMove = !bLock;
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSizeMove", REG_DWORD, &bAllowSizeMove, sizeof(bAllowSizeMove));
     sr.cbSize = sizeof(sr);
-    SHSetValueW(hkExplorer, L"StuckRects2", L"Settings", REG_BINARY, &sr, sizeof(sr));
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSmallIcons", REG_DWORD, &bSmallIcons, sizeof(bSmallIcons));
+    SHSetValueW(hkExplorer, L"StuckRects2", L"Settings", REG_BINARY, &sr, sizeof(sr));
 
     /* TODO: AutoHide writes something to HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Desktop\Components\0 figure out what and why */
     return TRUE;
