@@ -11,6 +11,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /* GLOBALS *****************************************************************/
 
+static const CHAR AdvapiTokenSourceName[] = "Advapi  ";
+C_ASSERT(sizeof(AdvapiTokenSourceName) == RTL_FIELD_SIZE(TOKEN_SOURCE, SourceName) + 1);
+
 HANDLE LsaHandle = NULL;
 ULONG AuthenticationPackage = 0;
 
@@ -635,7 +638,9 @@ LogonUserExW(
                                         SE_GROUP_ENABLED_BY_DEFAULT;
 
     /* Set the token source */
-    strncpy(TokenSource.SourceName, "Advapi  ", sizeof(TokenSource.SourceName));
+    RtlCopyMemory(TokenSource.SourceName,
+                  AdvapiTokenSourceName,
+                  sizeof(TokenSource.SourceName));
     AllocateLocallyUniqueId(&TokenSource.SourceIdentifier);
 
     Status = LsaLogonUser(LsaHandle,
