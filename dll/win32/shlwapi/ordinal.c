@@ -5444,7 +5444,7 @@ HRESULT WINAPI SHPropertyBag_WriteGUID(IPropertyBag *ppb, LPCWSTR pszPropName, c
 
     if (!ppb || !pszPropName || !pguid)
     {
-        ERR("%p %s\n", ppb, debugstr_w(pszPropName));
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
         return E_INVALIDARG;
     }
 
