@@ -868,7 +868,7 @@ MmDeleteKernelStack(PVOID Stack,
 
 /* balance.c / pagefile.c******************************************************/
 
-inline VOID UpdateTotalCommittedPages(LONG Delta)
+FORCEINLINE VOID UpdateTotalCommittedPages(LONG Delta)
 {
     /*
      * Add up all the used "Committed" memory + pagefile.
@@ -880,7 +880,7 @@ inline VOID UpdateTotalCommittedPages(LONG Delta)
                                MiMemoryConsumers[MC_USER].PagesUsed +
                                MiUsedSwapPages;
      */
-    
+
     /* Update Commitment */
     SIZE_T TotalCommittedPages = InterlockedExchangeAddSizeT(&MmTotalCommittedPages, Delta) + Delta;
 
