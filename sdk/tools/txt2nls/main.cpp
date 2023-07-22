@@ -11,6 +11,7 @@
 #include <vector>
 #include <cstring>
 #include <string>
+#include <cstdint>
 
 static const char whitespaces[] = " \t\f\v\n\r";
 static long line_number = -1;
