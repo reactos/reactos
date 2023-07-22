@@ -5438,7 +5438,7 @@ HRESULT WINAPI SHPropertyBag_WriteStr(IPropertyBag *ppb, LPCWSTR pszPropName, LP
  */
 HRESULT WINAPI SHPropertyBag_WriteGUID(IPropertyBag *ppb, LPCWSTR pszPropName, const GUID *pguid)
 {
-    OLECHAR szBuff[64];
+    WCHAR szBuff[64];
 
     TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
 
