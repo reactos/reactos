@@ -42,7 +42,7 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
-    IDS_INTERNET "Internet Browser"
+    IDS_INTERNET "Navigatorul de internet"
     IDS_INTERNET_DESCRIPTION "Opens a Web browser and displays information on the Internet."
 
     IDS_TB_BACK             "Înapoi"
