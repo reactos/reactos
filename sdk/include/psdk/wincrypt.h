@@ -97,7 +97,7 @@ typedef struct _HMAC_INFO {
   BYTE*  pbOuterString;
   DWORD  cbOuterString;
 } HMAC_INFO, *PHMAC_INFO;
-		
+
 typedef struct _CRYPTOAPI_BLOB {
   DWORD    cbData;
   BYTE*    pbData;
@@ -2192,7 +2192,7 @@ static const WCHAR MS_ENH_RSA_AES_PROV_XP_W[] = { 'M','i','c','r','o','s','o','f
 #define CRYPT_MODE_OFB          3
 #define CRYPT_MODE_CFB          4
 
-#define CRYPT_ENCRYPT           0x0001 
+#define CRYPT_ENCRYPT           0x0001
 #define CRYPT_DECRYPT           0x0002
 #define CRYPT_EXPORT            0x0004
 #define CRYPT_READ              0x0008
@@ -2353,10 +2353,10 @@ static const WCHAR MS_ENH_RSA_AES_PROV_XP_W[] = { 'M','i','c','r','o','s','o','f
 #define CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH \
  L"Software\\Policies\\Microsoft\\SystemCertificates"
 #else
-static const WCHAR CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH[] = 
+static const WCHAR CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH[] =
  {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
   'S','y','s','t','e','m','C','e','r','t','i','f','i','c','a','t','e','s',0 };
-static const WCHAR CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH[] = 
+static const WCHAR CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH[] =
  {'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',
   'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',
   't','i','f','i','c','a','t','e','s',0 };
@@ -2616,7 +2616,7 @@ static const WCHAR CRYPT_OID_REG_FLAGS_VALUE_NAME[] =
 # define CERT_PHYSICAL_STORE_AUTH_ROOT_NAME \
  L".AuthRoot"
 #else
-static const WCHAR CERT_PHYSICAL_STORE_DEFAULT_NAME[] = 
+static const WCHAR CERT_PHYSICAL_STORE_DEFAULT_NAME[] =
  {'.','D','e','f','a','u','l','t','0'};
 static const WCHAR CERT_PHYSICAL_STORE_GROUP_POLICY_NAME[] =
  {'.','G','r','o','u','p','P','o','l','i','c','y',0};
@@ -4393,11 +4393,7 @@ CryptImportKey(
   _In_ DWORD dwFlags,
   _Out_ HCRYPTKEY *phKey);
 
-#if (NTDDI_VERSION >= NTDDI_WINXP)
 WINADVAPI BOOL WINAPI CryptReleaseContext(_In_ HCRYPTPROV, _In_ DWORD);
-#else
-WINADVAPI BOOL WINAPI CryptReleaseContext(_In_ HCRYPTPROV, _In_ ULONG_PTR);
-#endif
 
 WINADVAPI
 BOOL
