@@ -240,7 +240,7 @@ SetSecurityDescriptorControl(PSECURITY_DESCRIPTOR pSecurityDescriptor,
                              SECURITY_DESCRIPTOR_CONTROL ControlBitsToSet)
 {
     NTSTATUS Status;
-    
+
     Status = RtlSetControlSecurityDescriptor(pSecurityDescriptor,
                                              ControlBitsOfInterest,
                                              ControlBitsToSet);

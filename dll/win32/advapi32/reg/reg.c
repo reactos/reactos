@@ -1108,9 +1108,6 @@ RegCreateKeyExW(
 
     TRACE("RegCreateKeyExW() called\n");
 
-    if (lpSecurityAttributes && lpSecurityAttributes->nLength != sizeof(SECURITY_ATTRIBUTES))
-        return ERROR_INVALID_USER_BUFFER;
-
     /* get the real parent key */
     Status = MapDefaultKey(&ParentKey,
                            hKey);
