@@ -24,6 +24,8 @@
 
 /* INCLUDES ******************************************************************/
 
+#define CHSTRING_BUILD
+
 #include <chstring.h>
 #define NDEBUG
 #include <debug.h>

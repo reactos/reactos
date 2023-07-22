@@ -196,7 +196,7 @@ inline BOOL operator>=(const CHString& s1, CHSTRING_LPCWSTR s2) { return s1.Comp
 inline BOOL operator>=(const CHString& s1, const CHString& s2) { return s1.Compare(s2) >= 0; }
 
 /* Have GCC link to the symbols exported by framedyn.dll */
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(CHSTRING_BUILD)
 
 #define DEFINE_FRAMEDYN_ALIAS(alias, orig) __asm__(".set " #alias ", \"" #orig "\"");
 
