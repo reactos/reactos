@@ -5448,7 +5448,7 @@ HRESULT WINAPI SHPropertyBag_WriteGUID(IPropertyBag *ppb, LPCWSTR pszPropName, c
         return E_INVALIDARG;
     }
 
-    SHStringFromGUIDW(pguid, szBuff, 64);
+    SHStringFromGUIDW(pguid, szBuff, _countof(szBuff));
     return SHPropertyBag_WriteStr(ppb, pszPropName, szBuff);
 }
 
