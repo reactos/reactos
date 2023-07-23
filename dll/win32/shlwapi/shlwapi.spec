@@ -496,16 +496,16 @@
 496 stdcall -noname SHPropertyBag_ReadLONG(ptr wstr ptr)
 497 stdcall -noname SHPropertyBag_WriteLONG(ptr wstr long)
 498 stub -noname SHPropertyBag_ReadBOOLOld
-499 stub -noname SHPropertyBag_WriteBOOL
+499 stdcall -noname SHPropertyBag_WriteBOOL(ptr wstr long)
 500 stdcall AssocGetPerceivedType(wstr ptr ptr ptr)
 501 stdcall AssocIsDangerous(wstr)
 502 stdcall AssocQueryKeyA(long long str str ptr)
 503 stdcall AssocQueryKeyW(long long wstr wstr ptr)
 504 stdcall AssocQueryStringA(long long str str ptr ptr)
 505 stub -noname SHPropertyBag_ReadGUID
-506 stub -noname SHPropertyBag_WriteGUID
+506 stdcall -noname SHPropertyBag_WriteGUID(ptr wstr ptr)
 507 stdcall -stub -noname SHPropertyBag_ReadDWORD(ptr ptr ptr)
-508 stub -noname SHPropertyBag_WriteDWORD
+508 stdcall -noname SHPropertyBag_WriteDWORD(ptr wstr long)
 509 stdcall -noname IUnknown_OnFocusChangeIS(ptr ptr long)
 510 stdcall -noname SHLockSharedEx(ptr long long)
 511 stdcall -stub -noname PathFileExistsDefExtAndAttributesW(wstr long ptr)
@@ -525,11 +525,11 @@
 525 stub -noname SHPropertyBag_ReadPOINTS
 526 stub -noname SHPropertyBag_WritePOINTS
 527 stub -noname SHPropertyBag_ReadSHORT
-528 stub -noname SHPropertyBag_WriteSHORT
+528 stdcall -noname SHPropertyBag_WriteSHORT(ptr wstr long)
 529 stub -noname SHPropertyBag_ReadInt
 530 stub -noname SHPropertyBag_WriteInt
 531 stub -noname SHPropertyBag_ReadStream
-532 stub -noname SHPropertyBag_WriteStream
+532 stdcall -noname SHPropertyBag_WriteStream(ptr wstr ptr)
 533 stub -noname SHGetPerScreenResName
 534 stub -noname SHPropertyBag_ReadBOOL
 535 stub -noname SHPropertyBag_Delete
