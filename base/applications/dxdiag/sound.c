@@ -167,7 +167,7 @@ SetDeviceDetails(HWND hwndDlg, LPCGUID classGUID, LPCWSTR lpcstrDescription)
                 SendDlgItemMessageW(hwndDlg, IDC_STATIC_ADAPTER_PROVIDER, WM_SETTEXT, 0, (LPARAM)szText);
 
             /* FIXME
-             * we currently enumerate only the first adapter 
+             * we currently enumerate only the first adapter
              */
             hDlgCtrls[0] = GetDlgItem(hwndDlg, IDC_STATIC_DSOUND_DRIVER);
             hDlgCtrls[1] = GetDlgItem(hwndDlg, IDC_STATIC_DSOUND_VERSION);
@@ -282,7 +282,7 @@ void InitializeDirectSoundPage(PDXDIAG_CONTEXT pContext)
 INT_PTR CALLBACK
 SoundPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message) 
+    switch (message)
     {
         case WM_INITDIALOG:
         {
