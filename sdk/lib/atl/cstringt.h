@@ -102,28 +102,28 @@ public:
         _In_z_ LPCWSTR pszSource,
         _In_z_ LPCWSTR pszSub)
     {
-        return ::wcsstr(pszSource, pszSub);
+        return const_cast<LPWSTR>(::wcsstr(pszSource, pszSub));
     }
 
     static LPWSTR __cdecl FindChar(
         _In_z_ LPCWSTR pszSource,
         _In_ WCHAR ch)
     {
-        return ::wcschr(pszSource, ch);
+        return const_cast<LPWSTR>(::wcschr(pszSource, ch));
     }
 
     static LPWSTR __cdecl FindCharReverse(
         _In_z_ LPCWSTR pszSource,
         _In_ WCHAR ch)
     {
-        return ::wcsrchr(pszSource, ch);
+        return const_cast<LPWSTR>(::wcsrchr(pszSource, ch));
     }
 
     static LPWSTR __cdecl FindOneOf(
         _In_z_ LPCWSTR pszSource,
         _In_z_ LPCWSTR pszCharSet)
     {
-        return ::wcspbrk(pszSource, pszCharSet);
+        return const_cast<LPWSTR>(::wcspbrk(pszSource, pszCharSet));
     }
 
     static int __cdecl Compare(
@@ -265,28 +265,28 @@ public:
         _In_z_ LPCSTR pszSource,
         _In_z_ LPCSTR pszSub)
     {
-        return ::strstr(pszSource, pszSub);
+        return const_cast<LPSTR>(::strstr(pszSource, pszSub));
     }
 
     static LPSTR __cdecl FindChar(
         _In_z_ LPCSTR pszSource,
         _In_ CHAR ch)
     {
-        return ::strchr(pszSource, ch);
+        return const_cast<LPSTR>(::strchr(pszSource, ch));
     }
 
     static LPSTR __cdecl FindCharReverse(
         _In_z_ LPCSTR pszSource,
         _In_ CHAR ch)
     {
-        return ::strrchr(pszSource, ch);
+        return const_cast<LPSTR>(::strrchr(pszSource, ch));
     }
 
     static LPSTR __cdecl FindOneOf(
         _In_z_ LPCSTR pszSource,
         _In_z_ LPCSTR pszCharSet)
     {
-        return ::strpbrk(pszSource, pszCharSet);
+        return const_cast<LPSTR>(::strpbrk(pszSource, pszCharSet));
     }
 
     static int __cdecl Compare(
