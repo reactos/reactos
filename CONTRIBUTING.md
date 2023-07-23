@@ -63,13 +63,19 @@ Our commit style is defined in a __[commit template]__. Use it as a reference or
 
 ### Rules and Recommendations
 
-- *Use your __real name__ and __real email__.* We do not accept anonymous contributions!
+- *Use your __real name__ and __real email__.* We do not accept anonymous code contributions!
+  - Every commit that changes code or translations should have author's full legal name (in latin letters, diacritics allowed).
+  - It's recommended to have the same full name set in GitHub profile (in the [Name field here][GitHub Profile Settings]) that matches one specified in commits.
+- There is an exception for media changes, such as changes of art (wallpapers, themes, icons, sounds) and out-of-code documentation.
+  - In these specific cases it's allowed to use a nickname or alias as author's name, and it's recommended to have the same name set in GitHub profile (in the [Name field here][GitHub Profile Settings]) matching one specified in commits.
+- In any case the author must use a real e-mail address, this includes git commits (`user.email` setting) and GitHub [e-mail settings][GitHub Email Settings] - the checkbox "Keep my email addresses private" must be unchecked there.
+  - In order to *keep your privacy*, select appropriate "Primary email address" that will be applied to your commits in GitHub [e-mail settings][GitHub Email Settings].
 - *Ensure your contribution is properly described.* Include the relevant issue number if applicable.
 - *Put only related changes.* It will make reviewing easier as the reviewer needs to recall less information about the existing source code that is changed.
 - *Search for similar pull requests/patches before submitting.* It may be that a similar pull request or issue was opened previously. Comment and review on that one instead.
 - *Keep your contribution small and focused on the topic.* It can be tempting to fix existing issues as you come across them while reading the source code. Resist the temptation and put in a note in the source code instead, or (even better) put the issue in the issue tracking system.
 - *Respect our __[Coding Style]__ and __[Programming Guidelines]__.*
-- *Do not be afraid to ask questions.* Ask our developers on JIRA or [IRC] channel.
+- *Do not be afraid to ask questions.* Ask our developers in the [chat].
 
 To amend your commit with your name and e-mail (in any case you've forgot to set your name/e-mail) please take a look at this [guide](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Amending_your_commit_with_name.2FE-mail). To set your name/e-mail globally for future commits that you push, [read this](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Assign_commits_with_your_name_.26_E-mail_automatically).
 
@@ -79,7 +85,7 @@ Finding a good project to start with can be a challenge, because when starting o
 
 - Find a test that fails, and try to make it succeed: <https://reactos.org/testman/>
 - Look around in JIRA, and if you have problems finding nice projects to start with, there is a label for this: <https://jira.reactos.org/issues/?jql=labels%20%3D%20starter-project>
-- Ask for help on [IRC]
+- Ask for help in the [chat]
 - Additionally, there are some tests that cause crashes/hangs, but these might be slightly harder: <https://jira.reactos.org/browse/ROSTESTS-125>
 
   [clean room reverse engineering]:                              https://en.wikipedia.org/wiki/Clean_room_design
@@ -90,12 +96,14 @@ Finding a good project to start with can be a challenge, because when starting o
   [migration to GitHub]:                                         https://reactos.org/project-news/reactos-repository-migrated-github/
   [humans are terrible at tracking large amount of information]: https://www.eurekalert.org/pub_releases/2005-03/aps-hmc030805.php
   [Pull requests]:                                               https://help.github.com/articles/about-pull-requests/
+  [GitHub Profile Settings]:                                     https://github.com/settings/profile
+  [GitHub Email Settings]:                                       https://github.com/settings/emails
   [tips for reviewing patches]:                                  https://www.drupal.org/patch/review
   [missing functionality]:                                       https://reactos.org/wiki/Missing_ReactOS_Functionality
   [patch]:                                                       https://git-scm.com/docs/git-format-patch
   [Submitting Patches]:                                          https://reactos.org/wiki/Submitting_Patches
   [Coding Style]:                                                https://reactos.org/wiki/Coding_Style
-  [IRC]:                                                         https://reactos.org/wiki/Connect_to_the_ReactOS_IRC_Channels
+  [chat]:                                                        https://reactos.org/wiki/Mattermost
   [Programming Guidelines]:                                      https://reactos.org/wiki/Programming_Guidelines
   [3rd Party Files.txt]:                                         /media/doc/3rd_Party_Files.txt
   [README.WINE]:                                                 /media/doc/README.WINE
