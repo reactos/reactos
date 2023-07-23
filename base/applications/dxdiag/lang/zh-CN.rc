@@ -1,8 +1,6 @@
 /*
- * PROJECT:    ReactOS ReactX-Diagnostic program
+ * PROJECT:    ReactX Diagnosis Tool
  * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/dxdiag/lang/zh-CN.rc
- * PURPOSE:    Chinese (Simplified) Language File for ReactX-Diagnostic program
  * TRANSLATOR: Elton Chung <elton328@gmail.com>
  */
 
@@ -26,7 +24,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "宋体"
 BEGIN
     LTEXT "此工具会报告安装在您系统的ReactX 元件和驱动程式的详细资料。", IDC_STATIC, 5, 0, 443, 17
-    LTEXT "如果你知道那个区域造成问题，单击上面相应的标签。否则，你可以使用「下一页」按钮来顺序访问每一页。 ", IDC_STATIC, 5, 15, 443, 25
+    LTEXT "如果你知道那个区域造成问题，单击上面相应的标签。否则，你可以使用「下一页」按钮来顺序访问每一页。", IDC_STATIC, 5, 15, 443, 25
     GROUPBOX "系统资讯", IDC_STATIC, 5, 35, 452, 150, SS_RIGHT
     LTEXT "目前日期/时间:", IDC_STATIC, 70, 50, 80, 10, SS_RIGHT
     LTEXT "电脑名称:", IDC_STATIC, 70, 60, 80, 10, SS_RIGHT
