@@ -1,7 +1,7 @@
 /*
  * FILE:        base/applications/dxdiag/lang/ro-RO.rc
  *              ReactOS Project (https://reactos.org)
- * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
+ * TRANSLATOR:  Stefan Fulea
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL

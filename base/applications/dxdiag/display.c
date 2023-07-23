@@ -188,7 +188,7 @@ DisplayPageSetDeviceDetails(HWND * hDlgCtrls, LPCGUID classGUID, LPGUID * device
                 SendMessageW(hDlgCtrls[1], WM_SETTEXT, 0, (LPARAM)szText);
 
             /* FIXME
-             * we currently enumerate only the first adapter 
+             * we currently enumerate only the first adapter
              */
             EnumerateDrivers(&hDlgCtrls[2], hInfo, &InfoData);
             break;
@@ -367,7 +367,7 @@ DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     RECT rect;
     PDXDIAG_CONTEXT pContext = (PDXDIAG_CONTEXT)GetWindowLongPtr(hDlg, DWLP_USER);
-    switch (message) 
+    switch (message)
     {
         case WM_INITDIALOG:
         {
