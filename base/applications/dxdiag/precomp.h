@@ -23,7 +23,6 @@
 #include <devguid.h>
 #include <strsafe.h>
 #include <udmihelp.h>
-#include <dmilib.h>
 
 #include "resource.h"
 

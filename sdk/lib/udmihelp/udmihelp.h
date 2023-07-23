@@ -7,6 +7,12 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <../dmilib/dmilib.h>
+
 PVOID
 LoadSMBiosData(
     _Inout_updates_(ID_STRINGS_MAX) PCHAR * Strings);
@@ -25,3 +31,7 @@ GetSMBiosStringW(
 VOID
 FreeSMBiosData(
     _In_ PVOID Buffer);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

@@ -1,7 +1,6 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/udmihelp
-    ${REACTOS_SOURCE_DIR}/sdk/lib/dmilib)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/udmihelp)
 
 add_executable(systeminfo systeminfo.c systeminfo.rc)
 set_module_type(systeminfo win32cui)
