@@ -599,10 +599,9 @@ NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET CONFIG afișează informații de configurații ale serviciului stației de lucru
-sau a servitorului. Când este folosit fără comutatorul stației de lucru sau servitorului,
-se afișează a listă a serviciilor configurabile. Pentru a obține ajutor legat
-de configurarea unui serviciu, tastați serviciul NET HELP CONFIG.
-
+sau a servitorului. Când este folosit fără comutatorul stației de lucru sau
+servitorului, se afișează a listă a serviciilor configurabile. Pentru a obține
+ajutor legat de configurarea unui serviciu, tastați serviciul NET HELP CONFIG.
 
 SERVER        Afișează informații despre configurarea
               serviciului servitorului.
@@ -762,9 +761,8 @@ wpisz NET CONFIG SERVER bez parametrów.
 NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
-NET CONFIG SERVER afișează sau schimbă configurații pentru serviciul
-                  servitorului.
-
+NET CONFIG SERVER       afișează sau schimbă configurații pentru serviciul
+                        servitorului.
 /AUTODISCONNECT:timp    Setează numărul maxim de minute ale unei sesiuni a
                         utilizatorului ce poate fi inactivă înainte de a fi
 						deconectată. Puteți specifica -1 pentru a nu o deconecta niciodată.
@@ -1681,8 +1679,9 @@ calculatoare. Când este folosit fără parametri, se afișează grupurile local
 din calculator.
 
 nume de grup     Este numele grupului local ce urmează să fie adăugat, extins
-sau șters. Furnizează numai numele grupului pentru a vizualiza o listă a
-utilizatorilor sau a grupurilor globale într-un grup local.
+                 sau șters. Furnizează numai numele grupului pentru a vizualiza
+                 o listă a utilizatorilor sau a grupurilor globale într-un grup
+				 local.
 /COMMENT:"text"  Adaugă un comentariu pentru un grup nou sau pentru unul existent.
                  Introduceți textul între ghilimele.
 /DOMAIN          Efectuează operațiunea pe un controlor al domeniului curent.
@@ -2163,30 +2162,34 @@ ce sunt partajate la calculator. Pentru fiecare resursă Windows raportează
 numele dispozitivului(elor) sau numele căii(ilor) și un comentariu descriptiv
 asociat cu el.
 
-numele de          Is the network name of the shared resource. Type
-partajare          NET SHARE with a sharename only to display information
-                   about that share.
-drive:path         Specifies the absolute path of the directory to
-                   be shared.
-/GRANT:user,perm   Creates the share with a security descriptor that gives
-                   the requested permissions to the specified user. This
-                   option may be used more than once to give share permissions
-                   to multiple users.
-/USERS:number      Sets the maximum number of users who can
-                   simultaneously access the shared resource.
-/UNLIMITED         Specifies an unlimited number of users can
-                   simultaneously access the shared resource.
-/REMARK:"text"     Adds a descriptive comment about the resource.
-                   Enclose the text in quotation marks.
-devicename         Is one or more printers (LPT1: through LPT9:)
-                   shared by sharename.
-/DELETE            Stops sharing the resource.
-/CACHE:Manual      Enables manual client caching of programs and documents
-                   from this share.
-/CACHE:Documents   Enables automatic caching of documents from this share.
-/CACHE:Programs    Enables automatic caching of documents and programs
-                   from this share.
-/CACHE:None        Disables caching from this share.
+numele de  partajare 
+                   Este numele rețelei resurselor partajate. Tastați comanda
+                   NET SHARE cu un nume de partajare numai ca să afișați
+                   informații despre acea partajare.
+disc:cale          Precizează calea absolută a directorului ce urmează
+                   să fie partajat.
+/GRANT:utilizator, permisiune
+                   Crează partajarea cu un descriptor de securitate ce oferă
+                   permisiunile cerute utilizatorului specificat. Această
+				   opțiune poate fi folosită mai mult decât o dată pentru a da permisiuni
+				   de partajare mai multor utilizatori.           
+/USERS:număr       Setează numărul maxim al utilizatorilor ce pot accesa
+                   simultan resursele partajate.
+/UNLIMITED         Specifică un număr nelimitat de utilizatori ce pot accesa
+                   simultan resursele partajate.
+/REMARK:"text"     Adaugă un comentariu descriptiv despre resursă.
+                   Introduceți textul între ghilimele.
+numele dispozitivului
+                   Reprezintă una sau mai multe imprimante (de la LPT1: până la
+                   LPT9:) partajate de un nume de partajare.
+/DELETE            Oprește partajarea de resurse.
+/CACHE:Manual      Activează depozitarea manuală a programelor și documentelor
+                   clientului din această partajare.
+/CACHE:Documents   Activează depozitarea automată a documentelor din această
+                   partajare.
+/CACHE:Programs    Activează depozitarea automată a documentelor și programelor
+                   din această partajare.
+/CACHE:None        Dezactivează depozitarea din această partajare.
 
 NET HELP command | MORE displays Help one screen at a time.
 .
@@ -2368,7 +2371,7 @@ Language=Polish
 NET START [usługa]
 .
 Language=Romanian
-NET START [service]
+NET START [serviciu]
 .
 Language=Russian
 NET START [service]
@@ -2414,13 +2417,13 @@ NET START "NET LOGON" uruchamia usługę logowania w sieci.
 NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
-NET START starts services or lists running services.
+Comanda NET START pornește serviciile sau listează serviciile pornite.
 
-service   The name of the service to be started.
+serviciu  Numele serviciului ce urmează să fie pornit.
 
-When typed at the command prompt, service name of two words or more must
-be enclosed in quotation marks. For example, NET START "NET LOGON"
-starts the net logon service.
+Când este tastat la linia de comandă, numele serviciului de două sau mai multe
+cuvinte trebuie să fie să fie introdus între ghilimele. De exemplu, comanda
+NET START "NET LOGON" pornește serviciul de autentificare.
 
 NET HELP comandă | MORE (pentru afișare paginată).
 .
@@ -2536,12 +2539,12 @@ WORKSTATION   Wyświetla statystykę usługi Stacja robocza.
 NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
-NET STATISTICS displays the statisticslog for the local Workstation or
-Server service. Used without parameters, NET STATISTICS displays
-the services for which statistics are available.
+Comanda NET STATISTICS afișează jurnalul de statistici pentru serviciul stației
+de lucru locale sau pentru servitor. Folosită fără parametri, comanda NET
+STATISTICS afișează serviciile pentru care sunt disponibile statistici.
 
-SERVER        Displays the Server service statistics.
-WORKSTATION   Displays the Workstation service statistics.
+SERVER        Afișează statisticile serviciului servitorului.
+WORKSTATION   Afișează statisticile serviciului stației de lucru.
 
 NET HELP comandă | MORE (pentru afișare paginată).
 .
@@ -2654,13 +2657,13 @@ może też zatrzymać inne. Niektóre usługi nie mogą być zatrzymane.
 NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
-NET STOP stops services.
+Comanda NET STOP oprește serviciile.
 
-service   The name of the service to be stopped.
+serviciu  Numele serviciului ce urmează să fie oprit.
 
-Stopping a service cancels any network connection the service is
-using. Also, some services are dependent on others. Stopping one
-service can stop others. Some services cannot be stopped.
+Oprind un serviciu se anulează orice conexiune de rețea pe care îl folosește
+serviciul. De asemenea, câteva servicii sunt dependente de altele. Oprind un
+serviciu se pot opri și celelalte. Câteva servicii nu pot fi oprite.
 
 NET HELP comandă | MORE (pentru afișare paginată).
 .
@@ -3082,59 +3085,61 @@ Opcje      Polecenie posiada następujące opcje:
 NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Romanian
-NET USER creates and modifies user accounts on computers. When used
-without switches, it lists the user accounts for the computer. The
-user account information is stored in the user accounts database.
+Comanda NET USER crează și modifică conturile de utilizator din calculatoare.
+Când este folosit fără comutatoare, se listează conturile de utilizator pentru
+calculator. Informațiile contului utilizatorului sunt stocate în baza de date a
+conturilor utilizatorului.
 
-username     Is the name of the user account to add, delete, modify, or
-             view. The name of the user account can have as many as
-             20 characters.
-password     Assigns or changes a password for the user's account.
-             A password must satisfy the minimum length set with the
-             /MINPWLEN option of the NET ACCOUNTS command. It can have as
-             many as 14 characters.
-*            Produces a prompt for the password. The password is not
-             displayed when you type it at a password prompt.
-/DOMAIN      Performs the operation on a domain controller of
-             the current domain.
-/ADD         Adds a user account to the user accounts database.
-/DELETE      Removes a user account from the user accounts database.
+cont de utilizator
+             Este numele contului de utilizator de adăugat, de șters, de
+             modificat sau de văzut. Numele contului utilizatorului poate avea
+             până la 20 de caractere.
+parolă       Atribuie sau schimbă o parolă pentru contul utilizatorului.
+             O parolă trebuie să satisfacă lungimea minimă stabilită cu
+			 opțiunea /MINPWLEN a comenzii NET ACCOUNTS. Poate avea până la 14
+			 caractere.
+*            Produce o solicitare pentru parolă. Parola nu este afișată atunci
+             când o scrieți în formularul de solicitare a parolei.
+/DOMAIN      Efectuează operațiunea pe un controlor de domeniu a controlorului
+             actual.
+/ADD         Adaugă un cont de utilizator în baza de date a conturilor de
+             utilizatori.
+/DELETE      Șterge un cont de utilizator în baza de date a conturilor de
+             utilizatori.
 
-Options      Are as follows:
+Opțiuni      Sunt după cum urmează:
 
-   Options                    Description
+   Opțiuni                    Descriere
    --------------------------------------------------------------------
-   /ACTIVE:{YES | NO}         Activates or deactivates the account. If
-                              the account is not active, the user cannot
-                              access the server. The default is YES.
-   /COMMENT:"text"            Provides a descriptive comment about the
-                              user's account.  Enclose the text in
-                              quotation marks.
-   /COUNTRYCODE:nnn           Uses the operating system country code to
-                              implement the specified language files for a
-                              user's help and error messages. A value of
-                              0 signifies the default country code.
-   /EXPIRES:{date | NEVER}    Causes the account to expire if date is
-                              set. NEVER sets no time limit on the
-                              account. An expiration date is in the
-                              form mm/dd/yy(yy). Months can be a number,
-                              spelled out, or abbreviated with three
-                              letters. Year can be two or four numbers.
-                              Use slashes(/) (no spaces) to separate
-                              parts of the date.
-   /FULLNAME:"name"           Is a user's full name (rather than a
+   /ACTIVE:{YES | NO}         Activează sau dezactivează contul. Dacă contul nu
+                              e activ, utilizatorul nu poate accesa servitorul.
+							  Implicit este DA (YES).
+   /COMMENT:"text"            Furnizează un comentariu descriptiv despre contul
+                              utilizatorului. Introduceți textul între
+							  ghilimele.
+   /COUNTRYCODE:nnn           Folosește codul de țară al sistemului de operare
+                              pentru a implementa fișierele de limbă
+							  specificate pentru ajutorul utilizatorului și pentru mesajele de
+							  eroare. Valoarea 0 înseamnă codul de țară implicit.
+   /EXPIRES:{dată | NEVER}    Determină expirarea contului dacă data este
+                              setată. Niciodată (NEVER) nu setează nicio limită
+							  de timp pentru cont. O dată de expirare este de forma lună/zi/an
+							  (întreg). Lunile pot fi un număr precizat sau abreviat cu trei litere.
+							  Anul poate fi format din două sau patru cifre. 
+							  Folosiți bare oblice (/) (fără spații) pentru a separa părțile datei.
+   /FULLNAME:"nume"           Is a user's full name (rather than a
                               username). Enclose the name in quotation
                               marks.
-   /HOMEDIR:pathname          Sets the path for the user's home directory.
+   /HOMEDIR:numele căii       Sets the path for the user's home directory.
                               The path must exist.
    /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
                               own password. The default is YES.
    /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
                               a password. The default is YES.
-   /PROFILEPATH[:path]        Sets a path for the user's logon profile.
-   /SCRIPTPATH:pathname       Is the location of the user's logon
+   /PROFILEPATH[:cale]        Sets a path for the user's logon profile.
+   /SCRIPTPATH:numele căii    Is the location of the user's logon
                               script.
-   /TIMES:{times | ALL}       Is the logon hours. TIMES is expressed as
+   /TIMES:{ori | ALL}         Is the logon hours. TIMES is expressed as
                               day[-day][,day[-day]],time[-time][,time
                               [-time]], limited to 1-hour increments.
                               Days can be spelled out or abbreviated.
@@ -3147,13 +3152,13 @@ Options      Are as follows:
                               entries with a semicolon.
    /USERCOMMENT:"text"        Lets an administrator add or change the User
                               Comment for the account.
-   /WORKSTATIONS:{computername[,...] | *}
+   /WORKSTATIONS:{numele calculatorului[,...] | *}
                               Lists as many as eight computers from
                               which a user can log on to the network. If
                               /WORKSTATIONS has no list or if the list is *,
                               the user can log on from any computer.
 
-NET HELP command | MORE displays Help one screen at a time.
+NET HELP comandă | MORE afișează Help pentru afișare paginată.
 .
 Language=Russian
 NET USER creates and modifies user accounts on computers. When used
