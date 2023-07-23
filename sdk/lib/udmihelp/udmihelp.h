@@ -5,8 +5,7 @@
  * COPYRIGHT:   Copyright 2018 Stanislav Motylkov
  */
 
-#ifndef UDMIHELP_H
-#define UDMIHELP_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,4 +36,3 @@ FreeSMBiosData(
 } // extern "C"
 #endif
 
-#endif /* UDMIHELP_H */

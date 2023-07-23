@@ -1,13 +1,11 @@
 /*
  * PROJECT:     ReactOS DMI/SMBIOS Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dmilib.h
  * PURPOSE:     SMBIOS table parsing functions
  * PROGRAMMERS: Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-#ifndef DMILIB_H
-#define DMILIB_H
+#pragma once
 
 enum _ID_STRINGS
 {
@@ -35,5 +33,3 @@ ParseSMBiosTables(
     _In_reads_bytes_(TableSize) PVOID SMBiosTables,
     _In_ ULONG TableSize,
     _Inout_updates_(ID_STRINGS_MAX) PCHAR * Strings);
-
-#endif /* DMILIB_H */
