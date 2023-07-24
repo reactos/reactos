@@ -469,7 +469,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling WarmSocketConnection(FCB).\n"));
 	        if (FCB->State ==  SOCKET_STATE_CREATED) 
             { 
-        	    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: SOCKET_STATE_CREATED is true.\n"));
+        	    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: SOCKET_STATE_CREATED is true\n"));
            	    if (FCB->LocalAddress)
            	    {
            		    ExFreePoolWithTag(FCB->LocalAddress, TAG_AFD_TRANSPORT_ADDRESS);
