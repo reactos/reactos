@@ -386,6 +386,7 @@ NTSTATUS TCPConnect
         if (AllocatedPort == (UINT) -1)
         {
             DbgPrint("ERR: No more ports available.\n");
+            UnlockObject(Connection);
             return STATUS_TOO_MANY_ADDRESSES;
         }
         Connection->AddressFile->Port = AllocatedPort;
