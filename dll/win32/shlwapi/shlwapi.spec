@@ -519,11 +519,11 @@
 519 stdcall -noname SKAllocValueW(long wstr wstr ptr ptr ptr)
 520 stub -noname SHPropertyBag_ReadBSTR
 521 stub -noname SHPropertyBag_ReadPOINTL
-522 stub -noname SHPropertyBag_WritePOINTL
+522 stdcall -noname SHPropertyBag_WritePOINTL(ptr wstr ptr)
 523 stub -noname SHPropertyBag_ReadRECTL
-524 stub -noname SHPropertyBag_WriteRECTL
+524 stdcall -noname SHPropertyBag_WriteRECTL(ptr wstr ptr)
 525 stub -noname SHPropertyBag_ReadPOINTS
-526 stub -noname SHPropertyBag_WritePOINTS
+526 stdcall -noname SHPropertyBag_WritePOINTS(ptr wstr ptr)
 527 stub -noname SHPropertyBag_ReadSHORT
 528 stdcall -noname SHPropertyBag_WriteSHORT(ptr wstr long)
 529 stub -noname SHPropertyBag_ReadInt
@@ -532,7 +532,7 @@
 532 stdcall -noname SHPropertyBag_WriteStream(ptr wstr ptr)
 533 stub -noname SHGetPerScreenResName
 534 stub -noname SHPropertyBag_ReadBOOL
-535 stub -noname SHPropertyBag_Delete
+535 stdcall -noname SHPropertyBag_Delete(ptr wstr)
 536 stdcall -stub -noname IUnknown_QueryServicePropertyBag(ptr long ptr ptr)
 537 stub -noname SHBoolSystemParametersInfo
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)

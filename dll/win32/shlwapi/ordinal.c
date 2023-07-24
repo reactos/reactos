@@ -5323,6 +5323,25 @@ HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LP
 
 #ifdef __REACTOS__
 /**************************************************************************
+ *  SHPropertyBag_Delete (SHLWAPI.535)
+ */
+HRESULT WINAPI SHPropertyBag_Delete(IPropertyBag *ppb, LPCOLESTR pszPropName)
+{
+    VARIANT vari;
+
+    TRACE("%p %s\n", ppb, debugstr_w(pszPropName));
+
+    if (!ppb || !pszPropName)
+    {
+        ERR("%p %s\n", ppb, debugstr_w(pszPropName));
+        return E_INVALIDARG;
+    }
+
+    V_VT(&vari) = VT_EMPTY;
+    return IPropertyBag_Write(ppb, pszPropName, &vari);
+}
+
+/**************************************************************************
  *  SHPropertyBag_WriteBOOL (SHLWAPI.499)
  */
 HRESULT WINAPI SHPropertyBag_WriteBOOL(IPropertyBag *ppb, LPCWSTR pszPropName, BOOL bValue)
@@ -5470,6 +5489,124 @@ HRESULT WINAPI SHPropertyBag_WriteStream(IPropertyBag *ppb, LPCWSTR pszPropName,
     V_VT(&vari) = VT_UNKNOWN;
     V_UNKNOWN(&vari) = (IUnknown*)pStream;
     return IPropertyBag_Write(ppb, pszPropName, &vari);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_WritePOINTL (SHLWAPI.522)
+ */
+HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName, const POINT *ppt)
+{
+    HRESULT hr;
+    int cch, cch2;
+    WCHAR *pch, szBuff[MAX_PATH];
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), ppt);
+
+    if (!ppb || !pszPropName || !ppt)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), ppt);
+        return E_INVALIDARG;
+    }
+
+    StrCpyNW(szBuff, pszPropName, _countof(szBuff));
+
+    cch = lstrlenW(szBuff);
+    cch2 = _countof(szBuff) - cch;
+    if (cch2 < 3)
+        return E_FAIL;
+
+    pch = &szBuff[cch];
+
+    StrCpyNW(pch, L".x", cch2);
+    hr = SHPropertyBag_WriteLONG(ppb, szBuff, ppt->x);
+    if (FAILED(hr))
+        return hr;
+
+    StrCpyNW(pch, L".y", cch2);
+    hr = SHPropertyBag_WriteLONG(ppb, szBuff, ppt->y);
+    if (SUCCEEDED(hr))
+        return hr;
+
+    StrCpyNW(pch, L".x", cch2);
+    return SHPropertyBag_Delete(ppb, szBuff);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_WritePOINTS (SHLWAPI.526)
+ */
+HRESULT WINAPI SHPropertyBag_WritePOINTS(IPropertyBag *ppb, LPCWSTR pszPropName, const POINTS *pts)
+{
+    POINT pt;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pts);
+
+    if (!ppb || !pszPropName || !pts)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pts);
+        return E_INVALIDARG;
+    }
+   
+    pt.x = pts->x;
+    pt.y = pts->y;
+    return SHPropertyBag_WritePOINTL(ppb, pszPropName, &pt);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_WriteRECTL (SHLWAPI.524)
+ */
+HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, const RECTL *prcl)
+{
+    HRESULT hr;
+    int cch, cch2;
+    WCHAR *pch, szBuff[MAX_PATH];
+
+    if (!ppb || !pszPropName || !prcl)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), prcl);
+        return E_INVALIDARG;
+    }
+
+    StrCpyNW(szBuff, pszPropName, _countof(szBuff));
+
+    cch = lstrlenW(szBuff);
+    cch2 = _countof(szBuff) - cch;
+    if (cch2 < 8)
+        return E_FAIL;
+
+    pch = &szBuff[cch];
+
+    StrCpyNW(pch, L".left", cch2);
+    hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->left);
+    if (FAILED(hr))
+    {
+        ERR("0x%08X: %p %s %p\n", hr, ppb, debugstr_w(pszPropName), prcl);
+        return hr;
+    }
+
+    StrCpyNW(pch, L".top", cch2);
+    hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->top);
+    if (SUCCEEDED(hr))
+    {
+        StrCpyNW(pch, L".right", cch2);
+        hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->right);
+        if (SUCCEEDED(hr))
+        {
+            StrCpyNW(pch, L".bottom", cch2);
+            hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->bottom);
+            if (SUCCEEDED(hr))
+                return hr;
+        }
+        StrCpyNW(pch, L".right", cch2);
+        SHPropertyBag_Delete(ppb, szBuff);
+    }
+
+    ERR("0x%08X: %p %s %p\n", hr, ppb, debugstr_w(pszPropName), prcl);
+
+    StrCpyNW(pch, L".top", cch2);
+    SHPropertyBag_Delete(ppb, szBuff);
+
+    StrCpyNW(pch, L".left", cch2);
+    return SHPropertyBag_Delete(ppb, szBuff);
 }
 #endif
 
