@@ -497,7 +497,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 	ExFreePoolWithTag(FCB->ConnectReturnInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
 	         	}
 
-               	AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling TdiBuildconnectionInfo with RemoteAddress.\n"));
+               	AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling TdiBuildconnectionInfo with RemoteAddress\n"));
                 Status = TdiBuildConnectionInfo( &FCB->ConnectReturnInfo, &ConnectReq->RemoteAddress );
 
             	if( NT_SUCCESS(Status) )
