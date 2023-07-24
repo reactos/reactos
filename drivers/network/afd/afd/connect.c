@@ -520,7 +520,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                    	}
                	}
 	        } 
-            AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: FCB update code complete.\n"));
+            AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: FCB update code complete\n"));
             Status = STATUS_SUCCESS;
         }
         return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
