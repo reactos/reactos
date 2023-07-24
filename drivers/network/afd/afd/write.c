@@ -643,7 +643,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    	Status = TdiBuildConnectionInfo(&TargetAddress, ((PTRANSPORT_ADDRESS)FCB->ConnectCallInfo->RemoteAddress));
 	    } else {
 		    if (FCB->ConnectReturnInfo) {
-    			AFD_DbgPrint(MID_TRACE,("AfdPacketSocketWriteData: setting TargetAddress from ConnectReturnInfo->RemoteAddress.\n"));
+    			AFD_DbgPrint(MID_TRACE,("AfdPacketSocketWriteData: setting TargetAddress from ConnectReturnInfo->RemoteAddress\n"));
 			    Status = TdiBuildConnectionInfo(&TargetAddress, ((PTRANSPORT_ADDRESS)FCB->ConnectReturnInfo->RemoteAddress));
 		    }
 	    }
