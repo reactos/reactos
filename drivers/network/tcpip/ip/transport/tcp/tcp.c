@@ -413,7 +413,7 @@ NTSTATUS TCPConnect
     if (Status != STATUS_SUCCESS && Status != STATUS_PENDING)
     { 
     	TI_DbgPrint(DEBUG_TCP,
-                    ("no pcb from LibTCPConnect, clear ConnectRequest.\n")); 
+                    ("No pcb from LibTCPConnect, clear ConnectRequest\n")); 
     	LockObject(Connection);
     	RemoveTailList(&Connection->ConnectRequest); 
     	UnlockObject(Connection);
