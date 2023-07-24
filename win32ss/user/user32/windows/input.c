@@ -704,7 +704,7 @@ LoadKeyboardLayoutA(LPCSTR pszKLID,
     return LoadKeyboardLayoutW(wszKLID, Flags);
 }
 
-inline BOOL IsValidKLID(_In_ LPCWSTR pwszKLID)
+static inline BOOL IsValidKLID(_In_ LPCWSTR pwszKLID)
 {
     return (pwszKLID != NULL) && (wcsspn(pwszKLID, L"0123456789ABCDEFabcdef") == (KL_NAMELENGTH - 1));
 }
