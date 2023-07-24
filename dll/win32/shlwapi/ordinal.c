@@ -5527,11 +5527,13 @@ HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName,
 
     StrCpyNW(pch, L".y", cch2);
     hr = SHPropertyBag_WriteLONG(ppb, szBuff, ppt->y);
-    if (SUCCEEDED(hr))
-        return hr;
+    if (FAILED(hr))
+    {
+        StrCpyNW(pch, L".x", cch2);
+        return SHPropertyBag_Delete(ppb, szBuff);
+    }
 
-    StrCpyNW(pch, L".x", cch2);
-    return SHPropertyBag_Delete(ppb, szBuff);
+    return hr;
 }
 
 /**************************************************************************
