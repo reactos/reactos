@@ -5494,7 +5494,7 @@ HRESULT WINAPI SHPropertyBag_WriteStream(IPropertyBag *ppb, LPCWSTR pszPropName,
 /**************************************************************************
  *  SHPropertyBag_WritePOINTL (SHLWAPI.522)
  */
-HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName, const POINT *ppt)
+HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName, const POINTL *ppt)
 {
     HRESULT hr;
     int cch, cch2;
@@ -5541,7 +5541,7 @@ HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName,
  */
 HRESULT WINAPI SHPropertyBag_WritePOINTS(IPropertyBag *ppb, LPCWSTR pszPropName, const POINTS *pts)
 {
-    POINT pt;
+    POINTL pt;
 
     TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pts);
 
