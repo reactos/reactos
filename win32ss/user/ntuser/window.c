@@ -593,8 +593,6 @@ LRESULT co_UserFreeWindow(PWND Window,
    Window->style &= ~WS_VISIBLE;
    Window->head.pti->cVisWindows--;
 
-   WndSetOwner(Window, NULL);
-
    /* remove the window already at this point from the thread window list so we
       don't get into trouble when destroying the thread windows while we're still
       in co_UserFreeWindow() */
@@ -732,6 +730,12 @@ LRESULT co_UserFreeWindow(PWND Window,
       TRACE("Window->PropListItems %lu\n",Window->PropListItems);
       ASSERT(Window->PropListItems==0);
    }
+
+   /* Kill any reference to linked windows. Prev & Next are taken care of in IntUnlinkWindow */
+   WndSetOwner(Window, NULL);
+   WndSetParent(Window, NULL);
+   WndSetChild(Window, NULL);
+   WndSetLastActive(Window, NULL);
 
    UserReferenceObject(Window);
    UserMarkObjectDestroy(Window);
@@ -948,27 +952,27 @@ IntLinkWindow(
         return;
     }
 
-    Wnd->spwndPrev = WndInsertAfter;
+    WndSetPrev(Wnd, WndInsertAfter);
     if (Wnd->spwndPrev)
     {
         /* Link after WndInsertAfter */
         ASSERT(Wnd != WndInsertAfter->spwndNext);
-        Wnd->spwndNext = WndInsertAfter->spwndNext;
+        WndSetNext(Wnd, WndInsertAfter->spwndNext);
         if (Wnd->spwndNext)
-            Wnd->spwndNext->spwndPrev = Wnd;
+            WndSetPrev(Wnd->spwndNext, Wnd);
 
         ASSERT(Wnd != Wnd->spwndPrev);
-        Wnd->spwndPrev->spwndNext = Wnd;
+        WndSetNext(Wnd->spwndPrev, Wnd);
     }
     else
     {
         /* Link at the top */
         ASSERT(Wnd != Wnd->spwndParent->spwndChild);
-        Wnd->spwndNext = Wnd->spwndParent->spwndChild;
+        WndSetNext(Wnd, Wnd->spwndParent->spwndChild);
         if (Wnd->spwndNext)
-            Wnd->spwndNext->spwndPrev = Wnd;
+            WndSetPrev(Wnd->spwndNext, Wnd);
 
-        Wnd->spwndParent->spwndChild = Wnd;
+        WndSetChild(Wnd->spwndParent, Wnd);
     }
 }
 
@@ -1220,7 +1224,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
       Wnd->ExStyle2 &= ~WS_EX2_LINKED;
 
       /* Set the new parent */
-      Wnd->spwndParent = WndNewParent;
+      WndSetParent(Wnd, WndNewParent);
 
       if ( Wnd->style & WS_CHILD &&
            Wnd->spwndOwner &&
@@ -1352,15 +1356,16 @@ IntUnlinkWindow(PWND Wnd)
     ASSERT(Wnd != Wnd->spwndPrev);
 
     if (Wnd->spwndNext)
-        Wnd->spwndNext->spwndPrev = Wnd->spwndPrev;
+        WndSetPrev(Wnd->spwndNext, Wnd->spwndPrev);
 
     if (Wnd->spwndPrev)
-        Wnd->spwndPrev->spwndNext = Wnd->spwndNext;
+        WndSetNext(Wnd->spwndPrev, Wnd->spwndNext);
 
     if (Wnd->spwndParent && Wnd->spwndParent->spwndChild == Wnd)
-        Wnd->spwndParent->spwndChild = Wnd->spwndNext;
+        WndSetChild(Wnd->spwndParent, Wnd->spwndNext);
 
-    Wnd->spwndPrev = Wnd->spwndNext = NULL;
+    WndSetPrev(Wnd, NULL);
+    WndSetNext(Wnd, NULL);
 }
 
 // Win: ExpandWindowList
@@ -1876,10 +1881,10 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
     * Fill out the structure describing it.
     */
    /* Remember, pWnd->head is setup in object.c ... */
-   pWnd->spwndParent = ParentWindow;
+   WndSetParent(pWnd, ParentWindow);
    WndSetOwner(pWnd, OwnerWindow);
    pWnd->fnid = 0;
-   pWnd->spwndLastActive = pWnd;
+   WndSetLastActive(pWnd, pWnd);
    // Ramp up compatible version sets.
    if ( dwVer >= WINVER_WIN31 )
    {
@@ -2932,7 +2937,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
          pwndTemp = pwndTemp->spwndOwner;
 
       if (pwndTemp->spwndLastActive == Window)
-         pwndTemp->spwndLastActive = Window->spwndOwner;
+         WndSetLastActive(pwndTemp, Window->spwndOwner);
    }
 
    if (Window->spwndParent && IntIsWindow(UserHMGetHandle(Window)))
