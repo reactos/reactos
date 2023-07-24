@@ -5494,17 +5494,17 @@ HRESULT WINAPI SHPropertyBag_WriteStream(IPropertyBag *ppb, LPCWSTR pszPropName,
 /**************************************************************************
  *  SHPropertyBag_WritePOINTL (SHLWAPI.522)
  */
-HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName, const POINTL *ppt)
+HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName, const POINTL *pptl)
 {
     HRESULT hr;
     int cch, cch2;
     WCHAR *pch, szBuff[MAX_PATH];
 
-    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), ppt);
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pptl);
 
-    if (!ppb || !pszPropName || !ppt)
+    if (!ppb || !pszPropName || !pptl)
     {
-        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), ppt);
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pptl);
         return E_INVALIDARG;
     }
 
@@ -5521,12 +5521,12 @@ HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName,
     pch = &szBuff[cch];
 
     StrCpyNW(pch, L".x", cch2);
-    hr = SHPropertyBag_WriteLONG(ppb, szBuff, ppt->x);
+    hr = SHPropertyBag_WriteLONG(ppb, szBuff, pptl->x);
     if (FAILED(hr))
         return hr;
 
     StrCpyNW(pch, L".y", cch2);
-    hr = SHPropertyBag_WriteLONG(ppb, szBuff, ppt->y);
+    hr = SHPropertyBag_WriteLONG(ppb, szBuff, pptl->y);
     if (FAILED(hr))
     {
         StrCpyNW(pch, L".x", cch2);
@@ -5539,20 +5539,20 @@ HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName,
 /**************************************************************************
  *  SHPropertyBag_WritePOINTS (SHLWAPI.526)
  */
-HRESULT WINAPI SHPropertyBag_WritePOINTS(IPropertyBag *ppb, LPCWSTR pszPropName, const POINTS *pts)
+HRESULT WINAPI SHPropertyBag_WritePOINTS(IPropertyBag *ppb, LPCWSTR pszPropName, const POINTS *ppts)
 {
     POINTL pt;
 
-    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pts);
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), ppts);
 
-    if (!ppb || !pszPropName || !pts)
+    if (!ppb || !pszPropName || !ppts)
     {
-        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pts);
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), ppts);
         return E_INVALIDARG;
     }
 
-    pt.x = pts->x;
-    pt.y = pts->y;
+    pt.x = ppts->x;
+    pt.y = ppts->y;
     return SHPropertyBag_WritePOINTL(ppb, pszPropName, &pt);
 }
 
