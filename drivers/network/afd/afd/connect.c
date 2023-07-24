@@ -483,7 +483,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
            		    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling WarmSocketForBind\n"));
 	       	        Status = WarmSocketForBind( FCB, AFD_SHARE_WILDCARD );
            		    if( NT_SUCCESS(Status) ) {
-           			    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: setting SOCKET_STATE_BOUND.\n"));
+           			    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: setting SOCKET_STATE_BOUND\n"));
                		    FCB->State = SOCKET_STATE_BOUND;  // <=== send REQUIRES THIS TO USE FCB->RemoteAddress
 	    	        }
 	            }    
