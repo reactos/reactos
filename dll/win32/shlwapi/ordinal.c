@@ -5561,7 +5561,7 @@ HRESULT WINAPI SHPropertyBag_WritePOINTS(IPropertyBag *ppb, LPCWSTR pszPropName,
  */
 HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, const RECTL *prcl)
 {
-    HRESULT hr, hr2;
+    HRESULT hr;
     int cch, cch2;
     WCHAR *pch, szBuff[MAX_PATH];
 
@@ -5584,19 +5584,19 @@ HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, 
     pch = &szBuff[cch];
 
     StrCpyNW(pch, L".left", cch2);
-    hr2 = hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->left);
+    hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->left);
     if (SUCCEEDED(hr))
     {
         StrCpyNW(pch, L".top", cch2);
-        hr2 = hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->top);
+        hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->top);
         if (SUCCEEDED(hr))
         {
             StrCpyNW(pch, L".right", cch2);
-            hr2 = hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->right);
+            hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->right);
             if (SUCCEEDED(hr))
             {
                 StrCpyNW(pch, L".bottom", cch2);
-                hr2 = hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->bottom);
+                hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->bottom);
                 if (SUCCEEDED(hr))
                     return hr; /* All successful */
 
@@ -5618,7 +5618,6 @@ HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, 
             return hr;
     }
 
-    ERR("0x%08X: %p %s %p\n", hr2, ppb, debugstr_w(pszPropName), prcl);
     return hr;
 }
 #endif
