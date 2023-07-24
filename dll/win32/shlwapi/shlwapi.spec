@@ -527,7 +527,7 @@
 527 stub -noname SHPropertyBag_ReadSHORT
 528 stdcall -noname SHPropertyBag_WriteSHORT(ptr wstr long)
 529 stub -noname SHPropertyBag_ReadInt
-530 stub -noname SHPropertyBag_WriteInt
+530 stdcall -noname SHPropertyBag_WriteInt(ptr wstr long) shlwapi.SHPropertyBag_WriteLong
 531 stub -noname SHPropertyBag_ReadStream
 532 stdcall -noname SHPropertyBag_WriteStream(ptr wstr ptr)
 533 stub -noname SHGetPerScreenResName
