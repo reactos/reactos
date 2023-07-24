@@ -477,7 +477,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
            	    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: setting FCB->LocalAddress.\n"));
 
-           	    FCB->LocalAddress = TaBuildNullTransportAddress( ConnectReq->RemoteAddress.Address[0].AddressType );
+           	    FCB->LocalAddress = TaBuildNullTransportAddress(ConnectReq->RemoteAddress.Address[0].AddressType);
 
            	    if( FCB->LocalAddress ) {
            		    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling WarmSocketForBind.\n"));
