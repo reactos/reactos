@@ -5565,6 +5565,8 @@ HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, 
     int cch, cch2;
     WCHAR *pch, szBuff[MAX_PATH];
 
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), prcl);
+
     if (!ppb || !pszPropName || !prcl)
     {
         ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), prcl);
