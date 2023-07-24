@@ -475,7 +475,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
            		    ExFreePoolWithTag(FCB->LocalAddress, TAG_AFD_TRANSPORT_ADDRESS);
            	    }
 
-           	    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: setting FCB->LocalAddress.\n"));
+           	    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: setting FCB->LocalAddress\n"));
 
            	    FCB->LocalAddress = TaBuildNullTransportAddress(ConnectReq->RemoteAddress.Address[0].AddressType);
 
