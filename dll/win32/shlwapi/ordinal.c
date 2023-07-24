@@ -5577,41 +5577,38 @@ HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, 
 
     StrCpyNW(pch, L".left", cch2);
     hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->left);
-    if (FAILED(hr))
-    {
-        ERR("0x%08X: %p %s %p\n", hr, ppb, debugstr_w(pszPropName), prcl);
-        return hr;
-    }
-
-    StrCpyNW(pch, L".top", cch2);
-    hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->top);
     if (SUCCEEDED(hr))
     {
-        StrCpyNW(pch, L".right", cch2);
-        hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->right);
+        StrCpyNW(pch, L".top", cch2);
+        hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->top);
         if (SUCCEEDED(hr))
         {
-            StrCpyNW(pch, L".bottom", cch2);
-            hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->bottom);
+            StrCpyNW(pch, L".right", cch2);
+            hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->right);
             if (SUCCEEDED(hr))
-                return hr;
+            {
+                StrCpyNW(pch, L".bottom", cch2);
+                hr = SHPropertyBag_WriteLONG(ppb, szBuff, prcl->bottom);
+                if (SUCCEEDED(hr))
+                    return hr;
+
+                StrCpyNW(pch, L".right", cch2);
+                if (SUCCEEDED(SHPropertyBag_Delete(ppb, szBuff)))
+                    return S_OK;
+            }
+
+            StrCpyNW(pch, L".top", cch2);
+            if (SUCCEEDED(SHPropertyBag_Delete(ppb, szBuff)))
+                return S_OK;
         }
 
-        StrCpyNW(pch, L".right", cch2);
-        hr = SHPropertyBag_Delete(ppb, szBuff);
-        if (SUCCEEDED(hr))
-            return hr;
+        StrCpyNW(pch, L".left", cch2);
+        if (SUCCEEDED(SHPropertyBag_Delete(ppb, szBuff)))
+            return S_OK;
     }
 
     ERR("0x%08X: %p %s %p\n", hr, ppb, debugstr_w(pszPropName), prcl);
-
-    StrCpyNW(pch, L".top", cch2);
-    hr = SHPropertyBag_Delete(ppb, szBuff);
-    if (SUCCEEDED(hr))
-        return hr;
-
-    StrCpyNW(pch, L".left", cch2);
-    return SHPropertyBag_Delete(ppb, szBuff);
+    return hr;
 }
 #endif
 
