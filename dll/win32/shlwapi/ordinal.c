@@ -5545,7 +5545,7 @@ HRESULT WINAPI SHPropertyBag_WritePOINTS(IPropertyBag *ppb, LPCWSTR pszPropName,
         ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pts);
         return E_INVALIDARG;
     }
-   
+
     pt.x = pts->x;
     pt.y = pts->y;
     return SHPropertyBag_WritePOINTL(ppb, pszPropName, &pt);
