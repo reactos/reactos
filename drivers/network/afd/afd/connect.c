@@ -516,7 +516,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 	    FCB->ConnectCallInfo->UserDataLength = FCB->ConnectDataSize;
                 	    FCB->ConnectCallInfo->Options = FCB->ConnectOptions;
                     	FCB->ConnectCallInfo->OptionsLength = FCB->ConnectOptionsSize;
-                   		AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: new ConnectCallInfo placed in FCB.\n"));
+                   		AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: new ConnectCallInfo placed in FCB\n"));
                    	}
                	}
 	        } 
