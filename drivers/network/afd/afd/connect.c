@@ -502,7 +502,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
             	if( NT_SUCCESS(Status) )
                 {
-                   	AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectReturnInfo placed in FCB.\n"));
+                   	AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectReturnInfo placed in FCB\n"));
                    	if (FCB->ConnectCallInfo)
                    	{
             		    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectCallInfo set, dispose allocated obect.\n"));
