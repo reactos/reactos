@@ -410,8 +410,8 @@ NTSTATUS TCPConnect
     Status = TCPTranslateError(LibTCPConnect(Connection,
                                                 &connaddr,
                                                 RemotePort));
-    
-    if ((Status != STATUS_SUCCESS) && (Status != STATUS_PENDING)) { 
+    if (Status != STATUS_SUCCESS && Status != STATUS_PENDING)
+    { 
     	TI_DbgPrint(DEBUG_TCP,
                     ("no pcb from LibTCPConnect, clear ConnectRequest.\n")); 
     	LockObject(Connection);
