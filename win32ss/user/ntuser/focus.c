@@ -242,7 +242,7 @@ IntDeactivateWindow(PTHREADINFO pti, HANDLE tid)
    if ( pti->MessageQueue->spwndActive )
    {
       pwndPrev = pti->MessageQueue->spwndActive;
-      ptiPrev = pwndPrev->head.pti; 
+      ptiPrev = pwndPrev->head.pti;
 
       if (!co_IntSendDeactivateMessages(UserHMGetHandle(pwndPrev), 0, TRUE))
       {
@@ -403,7 +403,7 @@ IntActivateWindow(PWND Wnd, PTHREADINFO pti, HANDLE tid, DWORD Type)
       {
            Wnd = pmq->spwndActive; // Use active window from current queue.
 
-           UserRefObjectCo(Wnd, &Ref);                 
+           UserRefObjectCo(Wnd, &Ref);
 
            co_IntSendMessage( UserHMGetHandle(Wnd), WM_NCACTIVATE, TRUE, 0);
 
@@ -433,7 +433,7 @@ co_IntMakeWindowActive(PWND Window)
       {
          spwndOwner = spwndOwner->spwndOwner;
       }
-      spwndOwner->spwndLastActive = Window;
+      WndSetLastActive(spwndOwner, Window);
       return TRUE;
    }
    ERR("MakeWindowActive Failed!\n");
@@ -830,7 +830,7 @@ co_IntSetForegroundMessageQueue(
               MsqPostMessage(ptiPrev, &Msg, FALSE, QS_EVENT, POSTEVENT_DAW, (LONG_PTR)tid);
           }
       }
-      
+
       pumqChg = NULL;
       if ( ptiChg && !(ptiChg->TIF_flags & TIF_INCLEANUP) )
       {

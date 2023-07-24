@@ -127,21 +127,64 @@ VOID FASTCALL IntCheckImeShowStatusInThread(PWND pImeWnd);
 
 static inline
 VOID
+ReplaceWndPtr(_Inout_ PWND* ppwnd, _In_opt_ PWND pwndNew)
+{
+    /* First reference the new one */
+    if (pwndNew != NULL)
+    {
+        UserReferenceObject(pwndNew);
+    }
+
+    /* Then dereference the previous one */
+    if (*ppwnd != NULL)
+    {
+        UserDereferenceObject(*ppwnd);
+    }
+
+    /* And set */
+    *ppwnd = pwndNew;
+}
+
+static inline
+VOID
 WndSetOwner(_Inout_ PWND pwnd, _In_opt_ PWND pwndOwner)
 {
-    /* First reference the new owner window */
-    if (pwndOwner != NULL)
-    {
-        UserReferenceObject(pwndOwner);
-    }
+    ReplaceWndPtr(&pwnd->spwndOwner, pwndOwner);
+}
 
-    /* Now dereference the previous owner window */
-    if (pwnd->spwndOwner != NULL)
-    {
-        UserDereferenceObject(pwnd->spwndOwner);
-    }
+static inline
+VOID
+WndSetParent(_Inout_ PWND pwnd, _In_opt_ PWND pwndParent)
+{
+    ReplaceWndPtr(&pwnd->spwndParent, pwndParent);
+}
 
-    pwnd->spwndOwner = pwndOwner;
+static inline
+VOID
+WndSetChild(_Inout_ PWND pwnd, _In_opt_ PWND pwndChild)
+{
+    ReplaceWndPtr(&pwnd->spwndChild, pwndChild);
+}
+
+static inline
+VOID
+WndSetNext(_Inout_ PWND pwnd, _In_opt_ PWND pwndNext)
+{
+    ReplaceWndPtr(&pwnd->spwndNext, pwndNext);
+}
+
+static inline
+VOID
+WndSetPrev(_Inout_ PWND pwnd, _In_opt_ PWND pwndPrev)
+{
+    ReplaceWndPtr(&pwnd->spwndPrev, pwndPrev);
+}
+
+static inline
+VOID
+WndSetLastActive(_Inout_ PWND pwnd, _In_opt_ PWND pwndLastActive)
+{
+    ReplaceWndPtr(&pwnd->spwndLastActive, pwndLastActive);
 }
 
 /* EOF */
