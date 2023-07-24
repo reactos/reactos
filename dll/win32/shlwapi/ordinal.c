@@ -5596,14 +5596,19 @@ HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, 
             if (SUCCEEDED(hr))
                 return hr;
         }
+
         StrCpyNW(pch, L".right", cch2);
-        SHPropertyBag_Delete(ppb, szBuff);
+        hr = SHPropertyBag_Delete(ppb, szBuff);
+        if (SUCCEEDED(hr))
+            return hr;
     }
 
     ERR("0x%08X: %p %s %p\n", hr, ppb, debugstr_w(pszPropName), prcl);
 
     StrCpyNW(pch, L".top", cch2);
-    SHPropertyBag_Delete(ppb, szBuff);
+    hr = SHPropertyBag_Delete(ppb, szBuff);
+    if (SUCCEEDED(hr))
+        return hr;
 
     StrCpyNW(pch, L".left", cch2);
     return SHPropertyBag_Delete(ppb, szBuff);
