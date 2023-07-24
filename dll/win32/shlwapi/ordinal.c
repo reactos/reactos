@@ -5325,7 +5325,7 @@ HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LP
 /**************************************************************************
  *  SHPropertyBag_Delete (SHLWAPI.535)
  */
-HRESULT WINAPI SHPropertyBag_Delete(IPropertyBag *ppb, LPCOLESTR pszPropName)
+HRESULT WINAPI SHPropertyBag_Delete(IPropertyBag *ppb, LPCWSTR pszPropName)
 {
     VARIANT vari;
 

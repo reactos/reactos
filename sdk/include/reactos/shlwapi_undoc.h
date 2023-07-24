@@ -99,7 +99,7 @@ HRESULT WINAPI SHGetPerScreenResName(OUT LPWSTR lpResName,
                                      IN DWORD dwReserved);
 
 HRESULT WINAPI SHPropertyBag_ReadStream(IPropertyBag*,LPCWSTR,IStream**);
-HRESULT WINAPI SHPropertyBag_Delete(IPropertyBag *ppb, LPCOLESTR pszPropName);
+HRESULT WINAPI SHPropertyBag_Delete(IPropertyBag *ppb, LPCWSTR pszPropName);
 HRESULT WINAPI SHPropertyBag_WriteBOOL(IPropertyBag *ppb, LPCWSTR pszPropName, BOOL bValue);
 HRESULT WINAPI SHPropertyBag_WriteSHORT(IPropertyBag *ppb, LPCWSTR pszPropName, SHORT sValue);
 HRESULT WINAPI SHPropertyBag_WriteLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LONG lValue);
