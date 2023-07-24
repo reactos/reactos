@@ -5513,7 +5513,10 @@ HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName,
     cch = lstrlenW(szBuff);
     cch2 = _countof(szBuff) - cch;
     if (cch2 < 3)
+    {
+        ERR("%s is too long\n", debugstr_w(pszPropName));
         return E_FAIL;
+    }
 
     pch = &szBuff[cch];
 
@@ -5571,7 +5574,10 @@ HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, 
     cch = lstrlenW(szBuff);
     cch2 = _countof(szBuff) - cch;
     if (cch2 < 8)
+    {
+        ERR("%s is too long\n", debugstr_w(pszPropName));
         return E_FAIL;
+    }
 
     pch = &szBuff[cch];
 
