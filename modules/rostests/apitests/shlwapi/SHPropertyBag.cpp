@@ -16,7 +16,7 @@ static LPCWSTR s_pszPropNames[4] = { NULL, NULL, NULL, NULL };
 static VARTYPE s_vt;
 static INT s_cWrite = 0;
 
-static void Reset(VARTYPE vt,
+static void ResetTest(VARTYPE vt,
                   LPCWSTR pszName0 = NULL, LPCWSTR pszName1 = NULL,
                   LPCWSTR pszName2 = NULL, LPCWSTR pszName3 = NULL)
 {
@@ -88,62 +88,62 @@ static void SHPropertyBag_WriteTest(void)
     HRESULT hr;
     CDummyWritePropertyBag dummy;
 
-    Reset(VT_EMPTY, L"EMPTY1");
+    ResetTest(VT_EMPTY, L"EMPTY1");
     hr = SHPropertyBag_Delete(&dummy, s_pszPropNames[0]);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 1);
 
-    Reset(VT_BOOL, L"BOOL1");
+    ResetTest(VT_BOOL, L"BOOL1");
     hr = SHPropertyBag_WriteBOOL(&dummy, s_pszPropNames[0], TRUE);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 1);
 
-    Reset(VT_UI2, L"SHORT1");
+    ResetTest(VT_UI2, L"SHORT1");
     hr = SHPropertyBag_WriteSHORT(&dummy, s_pszPropNames[0], 1);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 1);
 
-    Reset(VT_I4, L"LONG1");
+    ResetTest(VT_I4, L"LONG1");
     hr = SHPropertyBag_WriteLONG(&dummy, s_pszPropNames[0], 1);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 1);
 
-    Reset(VT_UI4, L"DWORD1");
+    ResetTest(VT_UI4, L"DWORD1");
     hr = SHPropertyBag_WriteDWORD(&dummy, s_pszPropNames[0], 1);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 1);
 
-    Reset(VT_BSTR, L"Str1");
+    ResetTest(VT_BSTR, L"Str1");
     hr = SHPropertyBag_WriteStr(&dummy, s_pszPropNames[0], L"1");
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 1);
 
-    Reset(VT_I4, L"POINTL1.x", L"POINTL1.y");
+    ResetTest(VT_I4, L"POINTL1.x", L"POINTL1.y");
     POINTL ptl = { 0xEEEE, 0xDDDD };
     hr = SHPropertyBag_WritePOINTL(&dummy, L"POINTL1", &ptl);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 2);
 
-    Reset(VT_I4, L"POINTS1.x", L"POINTS1.y");
+    ResetTest(VT_I4, L"POINTS1.x", L"POINTS1.y");
     POINTS pts = { 0x2222, 0x3333 };
     hr = SHPropertyBag_WritePOINTS(&dummy, L"POINTS1", &pts);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 2);
 
-    Reset(VT_I4, L"RECTL1.left", L"RECTL1.top", L"RECTL1.right", L"RECTL1.bottom");
+    ResetTest(VT_I4, L"RECTL1.left", L"RECTL1.top", L"RECTL1.right", L"RECTL1.bottom");
     RECTL rcl = { 123, 456, 789, 101112 };
     hr = SHPropertyBag_WriteRECTL(&dummy, L"RECTL1", &rcl);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 4);
 
-    Reset(VT_I4, L"RECTL2.left", L"RECTL2.top", L"RECTL2.right", L"RECTL2.bottom");
+    ResetTest(VT_I4, L"RECTL2.left", L"RECTL2.top", L"RECTL2.right", L"RECTL2.bottom");
     hr = SHPropertyBag_WriteRECTL(&dummy, L"RECTL2", &rcl);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 5);
 
     GUID guid;
     ZeroMemory(&guid, sizeof(guid));
-    Reset(VT_BSTR, L"GUID1");
+    ResetTest(VT_BSTR, L"GUID1");
     hr = SHPropertyBag_WriteGUID(&dummy, L"GUID1", &guid);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 1);
