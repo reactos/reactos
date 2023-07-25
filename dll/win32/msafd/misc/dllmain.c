@@ -233,7 +233,7 @@ WSPSocket(int AddressFamily,
     Socket->RemoteAddress = &Socket->SharedData->WSRemoteAddress;
     Socket->SanData = NULL;
     RtlCopyMemory(&Socket->ProtocolInfo, lpProtocolInfo, sizeof(Socket->ProtocolInfo));
-    if (SharedData)
+    if ((SharedData) && (Socket->Handle != INVALID_SOCKET)) { // if we have SharedDate and the value sent in is valid jump
         goto ok;
 
     /* Packet Size */
@@ -406,6 +406,24 @@ ok:
     SocketListHead = Socket;
     LeaveCriticalSection(&SocketListLock);
 
+    if (lpProtocolInfo->dwProviderReserved) 
+    { // inherited sockets in Windows must have the same handle value
+	    Socket2 = HeapAlloc(GlobalHeap, 0, sizeof(*Socket2));
+	    if (!Socket2)
+	    {
+    		DbgPrint("WSPSocket: failed allocating space for socket2 data\n");  
+	        //Status = WSAENOBUFS; goto error;
+	    }
+	    RtlZeroMemory(Socket2, sizeof(*Socket2));
+	    RtlCopyMemory (Socket2, Socket, sizeof(*Socket2));
+	    Socket2->Handle = lpProtocolInfo->dwProviderReserved;
+    	/* Save our patched up socket in Process Sockets List */ 
+        EnterCriticalSection(&SocketListLock);
+        Socket2->NextSocket = SocketListHead;
+        SocketListHead = Socket2;
+        LeaveCriticalSection(&SocketListLock);
+    }
+        
     /* Create the Socket Context */
     CreateContext(Socket);
 
