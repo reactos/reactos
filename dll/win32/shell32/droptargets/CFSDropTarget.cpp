@@ -34,26 +34,27 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
                                   LPCITEMIDLIST * apidl, BOOL bCopy)
 {
     HRESULT ret;
-    WCHAR wszDstPath[MAX_PATH + 1];
-    WCHAR *wszSrcPathsList = (WCHAR *) HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) * cidl + 1);
-    WCHAR *wszListPos = wszSrcPathsList;
+    WCHAR wszDstPath[MAX_PATH + 1] = {0};
+    PWCHAR pwszSrcPathsList = (PWCHAR) HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) * cidl + 1);
+    PWCHAR pwszListPos = pwszSrcPathsList;
     STRRET strretFrom;
     SHFILEOPSTRUCTW fop;
 
     /* Build a double null terminated list of C strings from source paths */
-    for (UINT i = 0; i < cidl; i++) {
+    for (UINT i = 0; i < cidl; i++)
+    {
         ret = pSFFrom->GetDisplayNameOf(apidl[i], SHGDN_FORPARSING, &strretFrom);
         if (FAILED(ret))
             goto cleanup;
 
-        ret = StrRetToBufW(&strretFrom, NULL, wszListPos, MAX_PATH);
+        ret = StrRetToBufW(&strretFrom, NULL, pwszListPos, MAX_PATH);
         if (FAILED(ret))
             goto cleanup;
 
-        wszListPos += lstrlenW(wszListPos) + 1;
+        pwszListPos += lstrlenW(pwszListPos) + 1;
     }
     /* Append the final null. */
-    *wszListPos=0;
+    *pwszListPos = L'\0';
 
     /* Build a double null terminated target (this path) */
     lstrcpynW(wszDstPath, m_sPathTarget, MAX_PATH);
@@ -62,18 +63,19 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     ZeroMemory(&fop, sizeof(fop));
     fop.hwnd = m_hwndSite;
     fop.wFunc = bCopy ? FO_COPY : FO_MOVE;
-    fop.pFrom = wszSrcPathsList;
+    fop.pFrom = pwszSrcPathsList;
     fop.pTo = wszDstPath;
     fop.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
     ret = S_OK;
 
-    if(SHFileOperationW(&fop)) {
+    if (SHFileOperationW(&fop))
+    {
         ERR("SHFileOperationW failed\n");
         ret = E_FAIL;
     }
 
 cleanup:
-    HeapFree(GetProcessHeap(), 0, wszSrcPathsList);
+    HeapFree(GetProcessHeap(), 0, pwszSrcPathsList);
     return ret;
 }
 
