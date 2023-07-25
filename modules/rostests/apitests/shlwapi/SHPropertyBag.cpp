@@ -77,7 +77,7 @@ public:
     }
 };
 
-START_TEST(SHPropertyBag)
+static void SHPropertyBag_WriteTest(void)
 {
     HRESULT hr;
     CDummyWritePropertyBag dummy;
@@ -153,4 +153,9 @@ START_TEST(SHPropertyBag)
     hr = SHPropertyBag_WriteGUID(&dummy, s_pszPropName0, &guid);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 1);
+}
+
+START_TEST(SHPropertyBag)
+{
+    SHPropertyBag_WriteTest();
 }
