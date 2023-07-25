@@ -30,4 +30,6 @@
 
 #include "resource.h"
 
+HRESULT VariantChangeTypeForRead(IN OUT VARIANTARG *pvarg, IN VARTYPE vt);
+
 #endif /* !_SHLWAPI_PCH_ */

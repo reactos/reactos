@@ -92,7 +92,6 @@ BOOL WINAPI SHExpandEnvironmentStringsForUserW(HANDLE, LPCWSTR, LPWSTR, DWORD);
 
 BOOL WINAPI SHIsEmptyStream(IStream*);
 HRESULT WINAPI SHInvokeDefaultCommand(HWND,IShellFolder*,LPCITEMIDLIST);
-HRESULT VariantChangeTypeForRead(IN OUT VARIANTARG *pvarg, IN VARTYPE vt);
 HRESULT WINAPI
 SHPropertyBag_ReadType(IPropertyBag *ppb, LPCWSTR pszPropName, VARIANTARG *pvarg, VARTYPE vt);
 HRESULT WINAPI SHPropertyBag_ReadBOOL(IPropertyBag *ppb, LPCWSTR pszPropName, BOOL *pbValue);
