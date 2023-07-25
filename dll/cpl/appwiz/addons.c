@@ -321,8 +321,23 @@ static HRESULT WINAPI InstallCallback_OnStopBinding(IBindStatusCallback *iface,
 static HRESULT WINAPI InstallCallback_GetBindInfo(IBindStatusCallback *iface,
         DWORD* grfBINDF, BINDINFO* pbindinfo)
 {
-    /* FIXME */
+    DWORD cbSize;
+
+    cbSize = pbindinfo->cbSize;
+    ZeroMemory(pbindinfo, sizeof(*pbindinfo));
+    pbindinfo->cbSize = cbSize;
+
     *grfBINDF = 0;
+
+    EnterCriticalSection(&csLock);
+    if (!download_binding)
+    {
+        LeaveCriticalSection(&csLock);
+        ERR("\n");
+        return E_NOTIMPL;
+    }
+    LeaveCriticalSection(&csLock);
+
     return S_OK;
 }
 
