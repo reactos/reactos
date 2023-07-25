@@ -5290,7 +5290,7 @@ HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
 }
 
 #ifdef __REACTOS__
-HRESULT VariantChangeTypeForRead(IN OUT VARIANTARG *pvarg, IN VARTYPE vt)
+HRESULT VariantChangeTypeForRead(_Inout_ VARIANTARG *pvarg, _In_ VARTYPE vt)
 {
     HRESULT hr;
     VARIANTARG vargTemp;
