@@ -188,23 +188,23 @@ NET ACCOUNTS să aibă efect.
                                deautentificări forțate la expirarea contului
                                sau a numărului valid de ore de autentificare.
                                NO (implicit) previne deautentificarea forțată.
-/MINPWLEN:length               Setează numărul minim de caractere pentru
+/MINPWLEN:lungime              Setează numărul minim de caractere pentru
                                o parolă. Intervalul e de 0-14 caractere;
                                implicit, sunt 6 caractere.
-/MAXPWAGE:{days | UNLIMITED}   Setează numărul maxim de zile pentru care o
+/MAXPWAGE:{zile | UNLIMITED}   Setează numărul maxim de zile pentru care o
                                parolă e validă. Prin parametrul UNLIMITED nu e
                                specificată nicio limită. Valoarea parametrului
                                /MAXPWAGE nu poate fi mai mică decât valoarea
                                parametrului /MINPWAGE. Intervalul e 1-999;
                                implicit înseamnă lăsarea valorii neschimbate.
-/MINPWAGE:days                 Setează numărul maxim de zile ce trebuie să
+/MINPWAGE:zile                 Setează numărul maxim de zile ce trebuie să
                                treacă înainte ca utilizatorul să-și schimbe
                                parola. Valoarea 0 nu stabilește un timp minim.
                                Intervalul e 0-999; valoarea implică e de 0
                                zile. Valoarea parametrului /MINPWAGE nu poate
                                fi mai mare decât valoarea parametrului
                                /MAXPWAGE.
-/UNIQUEPW:number               Necesită ca parolele utilizatorilor să fie unice
+/UNIQUEPW:număr                Necesită ca parolele utilizatorilor să fie unice
                                prin numărul de schimbări de parolă specificate.
                                Valoarea maximă e 24.
 /DOMAIN                        Efectuează operația pe un controlor de domeniu
@@ -487,7 +487,8 @@ NET COMPUTER adaugă sau șterge calculatoare dintr-o bază de date a unui
 domeniu. Această comandă este disponibilă numai pentru sistemele de operare
 pentru servitoare.
 
-\\computername   Specifică ce calculator trebuie adăugat sau șters din
+\\numele calculatorului   
+                 Specifică ce calculator trebuie adăugat sau șters din
                  domeniu.
 /ADD             Adaugă calculatorul specificat în domeniu.
 /DEL             Șterge calculatorul specificat din domeniu.
@@ -1105,9 +1106,9 @@ NET GROUP [nazwa_grupy [/COMMENT:"tekst"]] [/DOMAIN]
           nazwa_grupy nazwa_użytkownika [...] {/ADD | /DELETE} [/DOMAIN]
 .
 Language=Romanian
-NET GROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
-          groupname {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
-          groupname username [...] {/ADD | /DELETE} [/DOMAIN]
+NET GROUP [numele grupului [/COMMENT:"text"]] [/DOMAIN]
+          numele grupului {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+          numele grupului numele utilizatorului [...] {/ADD | /DELETE} [/DOMAIN]
 .
 Language=Russian
 NET GROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
@@ -1184,7 +1185,7 @@ Comanda NET GROUP adaugă, afișează sau modifică grupurile globale ale
 servitoarelor. Când e folosită fără parametrii, se afișează numele de grup pe
 servitoare.
 
-nume de grup     Este numele grupului de adăugat, de extins sau de șters.
+numele grupului  Este numele grupului de adăugat, de extins sau de șters.
                  Furnizează doar un nume de grup pentru a vedea o listă de
 				 utilizatori dintr-un grup.
 /COMMENT:"text"  Adaugă un comentariu pentru un grup nou sau existent.
@@ -1192,8 +1193,10 @@ nume de grup     Este numele grupului de adăugat, de extins sau de șters.
 /DOMAIN          Efectuați operațiunea pe un controlor de domeniu
                  al domeniului curent. Altfel, operațiunea este
                  efectuată la un calculator local.
-nume de          Listează unul sau mai multe nume de utilizator pentru a le
-utilizator[ ...] adăuga sau a le șterge dintr-un grup. Separați mai multe
+				 
+numele utilizatorului[ ...]
+                 Listează unul sau mai multe nume de utilizator pentru a le
+                 adăuga sau a le șterge dintr-un grup. Separați mai multe
                  intrări ale numelor de utilizator cu spațiu.
 /ADD             Adaugă un grup sau adaugă un nume de utilizator la un grup.
 /DELETE          Șterge un grup sau șterge  un nume de utilizator dintr-un
@@ -1586,9 +1589,9 @@ NET LOCALGROUP [nazwa_grupy [/COMMENT:"tekst"]] [/DOMAIN]
                nazwa_grupy nazwa [...] {/ADD | /DELETE} [/DOMAIN]
 .
 Language=Romanian
-NET LOCALGROUP [nume-de-grup [/COMMENT:"text"]] [/DOMAIN]
-               nume-de-grup {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
-               nume-de-grup nume [...] {/ADD | /DELETE} [/DOMAIN]
+NET LOCALGROUP [nume de grup [/COMMENT:"text"]] [/DOMAIN]
+               nume de grup {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+               nume de grup nume [...] {/ADD | /DELETE} [/DOMAIN]
 .
 Language=Russian
 NET LOCALGROUP [имя_группы [/COMMENT:"текст"]] [/DOMAIN]
@@ -1678,7 +1681,7 @@ Comanda NET LOCALGROUP adaugă, afișează sau modifică grupurile locale din
 calculatoare. Când este folosit fără parametri, se afișează grupurile locale
 din calculator.
 
-nume de grup     Este numele grupului local ce urmează să fie adăugat, extins
+numele grupului  Este numele grupului local ce urmează să fie adăugat, extins
                  sau șters. Furnizează numai numele grupului pentru a vizualiza
                  o listă a utilizatorilor sau a grupurilor globale într-un grup
 				 local.
@@ -3127,36 +3130,38 @@ Opțiuni      Sunt după cum urmează:
 							  (întreg). Lunile pot fi un număr precizat sau abreviat cu trei litere.
 							  Anul poate fi format din două sau patru cifre. 
 							  Folosiți bare oblice (/) (fără spații) pentru a separa părțile datei.
-   /FULLNAME:"nume"           Is a user's full name (rather than a
-                              username). Enclose the name in quotation
-                              marks.
-   /HOMEDIR:numele căii       Sets the path for the user's home directory.
-                              The path must exist.
-   /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
-                              own password. The default is YES.
-   /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
-                              a password. The default is YES.
-   /PROFILEPATH[:cale]        Sets a path for the user's logon profile.
-   /SCRIPTPATH:numele căii    Is the location of the user's logon
-                              script.
-   /TIMES:{ori | ALL}         Is the logon hours. TIMES is expressed as
-                              day[-day][,day[-day]],time[-time][,time
-                              [-time]], limited to 1-hour increments.
-                              Days can be spelled out or abbreviated.
-                              Hours can be 12- or 24-hour notation. For
-                              12-hour notation, use am, pm, a.m., or
-                              p.m. ALL means a user can always log on,
-                              and a blank value means a user can never
-                              log on. Separate day and time entries with
-                              a comma, and separate multiple day and time
-                              entries with a semicolon.
-   /USERCOMMENT:"text"        Lets an administrator add or change the User
-                              Comment for the account.
+   /FULLNAME:"nume"           Este numele întreg al utilizatorului (mai degrabă
+                              decât un nume de utilizator). Introduceți numele
+							  între ghilimele.
+   /HOMEDIR:numele căii       Setează calea directorului de acasă al
+                              utilizatorului. Calea trebuie să existe.
+   /PASSWORDCHG:{YES | NO}    Specifică dacă utilizatorii își pot schimba
+                              parola. Implicit este DA (YES).
+   /PASSWORDREQ:{YES | NO}    Specifică dacă un cont de utilizator trebuie
+                              să aibă o parolă. Implicit este DA (YES).
+   /PROFILEPATH[:cale]        Setează o cale pentru profilul de autentificare
+                              a utilizatorului.
+   /SCRIPTPATH:numele căii    E locația scriptului de autentificare
+                              a utilizatorului.
+   /TIMES:{ori | ALL}         Reprezintă orele de autentificare. Valoarea
+                              TIMES (ORI) este exprimată ca zi[-day][,
+                              zi[-day]],timp[-time][,timp[-time]], limitate la
+                              incrementări de o oră. Zilele pot fi scrise sau
+                              prescurtate. Orele pot fi în notație de 12 sau de
+                              24 de ore. Pentru notația de 12 ore, folosiți am,
+                              pm, a.m. sau p.m. ALL (TOATE) înseamnă că un
+							  utilizator se poate autentifica oricând iar o valoare goală înseamnă
+							  că un utilizator nu se poate autentifica niciodată. Separați intrările
+                              de zi și de timp cu o virgulă și separați
+							  intrările de mai multe zile și de timp cu punct și virgulă.
+   /USERCOMMENT:"text"        Lasă un administrator să adauge sau să schimbe
+                              Comentariul utilizatorului pentru cont.
+							  
    /WORKSTATIONS:{numele calculatorului[,...] | *}
-                              Lists as many as eight computers from
-                              which a user can log on to the network. If
-                              /WORKSTATIONS has no list or if the list is *,
-                              the user can log on from any computer.
+                              Listează până la opt calculatoare din care
+							  un utilizator se poate conecta la rețea. Dacă comanda /WORKSTATIONS
+							  nu are nicio listă sau dacă lista este *, utilizatorul se poate
+							  autentifica din orice calculator.
 
 NET HELP comandă | MORE afișează Help pentru afișare paginată.
 .
@@ -3715,33 +3720,34 @@ Do opisu składni poleceń użyto następujących zasad:
 .
 Language=Romanian
 SYNTAX
-The following conventions are used to indicate command syntax:
+Convențiile următoare sunt folosite pentru a indica sintaxa comenzilor:
 
--  Capital letters represent words that must be typed as shown. Lower-
-   case letters represent names of items that may vary, such as filenames.
+-  Majusculele reprezintă cuvinte ce trebuie tastate așa cum sunt arătate.
+   Literele mici reprezintă numele articolelor ce pot varia, precum numele de
+   fișiere.
 
--  The [ and ] characters surround optional items that can be supplied
-   with the command.
+-  Caracterele [ și ] înconjoară elementele opționale care pot fi furnizate
+   împreună cu comanda.
 
--  The { and } characters surround lists of items. You must supply one
-   of the items with the command.
+-  Caracterele { și } înconjoară liste de articole. Trebuie să furnizați
+   una dintre articole cu comanda.
 
--  The | character separates items in a list. Only one of the items can
-   be supplied with the command.
+-  Caracterul | separă articolele într-o listă. Numai unul dintre articole
+   poate fi furnizat de comandă.
 
-   For example, in the following syntax, you must type NET COMMAND and
-   either SWITCH1 or SWITCH2. Supplying a name is optional.
-       NET COMMAND [name] {SWITCH1 | SWITCH2}
+   De exemplu, în sintaxa următoare, trebuie să tastați NET COMMAND și
+   fie SWITCH1, fie SWITCH2. Furnizând un nume este opțional.
+       NET COMMAND [nume] {SWITCH1 | SWITCH2}
 
--  The [...] characters mean you can repeat the previous item.
-   Separate items with spaces.
+-  Caracterele [...] înseamnă că puteți repeta articolul anterior.
+   Separați articolele cu spații.
 
--  The [,...] characters mean you can repeat the previous item, but
-   you must separate items with commas or semicolons, not spaces.
+-  Caracterele [,...] înseamnă că puteți repeta articolul anterior, dar trebuie
+   să separați articolele cu virgule sau cu puncte și virgule, nu cu spații.
 
--  When typed at the command prompt, service names of two words or
-   more must be enclosed in quotation marks. For example,
-   NET START "COMPUTER BROWSER" starts the computer browser service.
+-  Când sunt tastate în panoul de comandă, numele de servicii a două sau mai
+   multe cuvinte trebuie cuprinse între ghilimele. De exemplu,
+   NET START "COMPUTER BROWSER" începe cu serviciul navigatorului calculatorului.
 .
 Language=Russian
 SYNTAX
