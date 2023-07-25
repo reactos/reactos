@@ -71,12 +71,13 @@
     #define INPORT_MODE_IRQ    0x01
     #define INPORT_MODE_BASE   0x10
     #define INPORT_MODE_HOLD   0x20
+    #define INPORT_HAS_MOVED   0x40
 
 #define MS_INPORT_SIGNATURE  0x02
 
-#define MS_BUTTON_MIDDLE   0x01
-#define MS_BUTTON_LEFT     0x02
-#define MS_BUTTON_RIGHT    0x04
+#define MS_BUTTON_RIGHT    0x01
+#define MS_BUTTON_MIDDLE   0x02
+#define MS_BUTTON_LEFT     0x04
 
 /*
  * Logitech
@@ -270,14 +271,23 @@ InPortIsr(
             WRITE_MOUSE(DeviceExtension, MS_INPORT_DATA,
                         INPORT_MODE_HOLD | INPORT_MODE_IRQ | INPORT_MODE_BASE);
 
-            WRITE_MOUSE(DeviceExtension, MS_INPORT_CONTROL, INPORT_REG_X);
-            DeltaX = READ_MOUSE(DeviceExtension, MS_INPORT_DATA);
-
-            WRITE_MOUSE(DeviceExtension, MS_INPORT_CONTROL, INPORT_REG_Y);
-            DeltaY = READ_MOUSE(DeviceExtension, MS_INPORT_DATA);
-
             WRITE_MOUSE(DeviceExtension, MS_INPORT_CONTROL, INPORT_REG_BTNS);
             Buttons = READ_MOUSE(DeviceExtension, MS_INPORT_DATA);
+
+            if (Buttons & INPORT_HAS_MOVED)
+            {
+                WRITE_MOUSE(DeviceExtension, MS_INPORT_CONTROL, INPORT_REG_X);
+                DeltaX = READ_MOUSE(DeviceExtension, MS_INPORT_DATA);
+
+                WRITE_MOUSE(DeviceExtension, MS_INPORT_CONTROL, INPORT_REG_Y);
+                DeltaY = READ_MOUSE(DeviceExtension, MS_INPORT_DATA);
+            }
+            else
+            {
+                DeltaX = 0;
+                DeltaY = 0;
+            }
+
             Buttons &= (MS_BUTTON_MIDDLE | MS_BUTTON_LEFT | MS_BUTTON_RIGHT);
 
             WRITE_MOUSE(DeviceExtension, MS_INPORT_CONTROL, INPORT_REG_MODE);
