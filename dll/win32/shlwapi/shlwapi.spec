@@ -490,12 +490,12 @@
 490 stdcall -noname GlobalFindAtomWrapW(wstr) kernel32.GlobalFindAtomW
 491 stdcall -noname SHGetShellKey(long long long)
 492 stub -noname PrettifyFileDescriptionW
-493 stub -noname SHPropertyBag_ReadType
+493 stdcall -noname SHPropertyBag_ReadType(ptr wstr ptr long)
 494 stub -noname SHPropertyBag_ReadStr
 495 stdcall -noname SHPropertyBag_WriteStr(ptr wstr wstr)
 496 stdcall -noname SHPropertyBag_ReadLONG(ptr wstr ptr)
 497 stdcall -noname SHPropertyBag_WriteLONG(ptr wstr long)
-498 stub -noname SHPropertyBag_ReadBOOLOld
+498 stdcall -noname SHPropertyBag_ReadBOOLOld(ptr wstr long)
 499 stdcall -noname SHPropertyBag_WriteBOOL(ptr wstr long)
 500 stdcall AssocGetPerceivedType(wstr ptr ptr ptr)
 501 stdcall AssocIsDangerous(wstr)
@@ -504,7 +504,7 @@
 504 stdcall AssocQueryStringA(long long str str ptr ptr)
 505 stub -noname SHPropertyBag_ReadGUID
 506 stdcall -noname SHPropertyBag_WriteGUID(ptr wstr ptr)
-507 stdcall -stub -noname SHPropertyBag_ReadDWORD(ptr ptr ptr)
+507 stdcall -noname SHPropertyBag_ReadDWORD(ptr wstr ptr)
 508 stdcall -noname SHPropertyBag_WriteDWORD(ptr wstr long)
 509 stdcall -noname IUnknown_OnFocusChangeIS(ptr ptr long)
 510 stdcall -noname SHLockSharedEx(ptr long long)
@@ -524,14 +524,14 @@
 524 stdcall -noname SHPropertyBag_WriteRECTL(ptr wstr ptr)
 525 stub -noname SHPropertyBag_ReadPOINTS
 526 stdcall -noname SHPropertyBag_WritePOINTS(ptr wstr ptr)
-527 stub -noname SHPropertyBag_ReadSHORT
+527 stdcall -noname SHPropertyBag_ReadSHORT(ptr wstr ptr)
 528 stdcall -noname SHPropertyBag_WriteSHORT(ptr wstr long)
 529 stub -noname SHPropertyBag_ReadInt
 530 stdcall -noname SHPropertyBag_WriteInt(ptr wstr long) SHPropertyBag_WriteLONG
 531 stub -noname SHPropertyBag_ReadStream
 532 stdcall -noname SHPropertyBag_WriteStream(ptr wstr ptr)
 533 stub -noname SHGetPerScreenResName
-534 stub -noname SHPropertyBag_ReadBOOL
+534 stdcall -noname SHPropertyBag_ReadBOOL(ptr wstr ptr)
 535 stdcall -noname SHPropertyBag_Delete(ptr wstr)
 536 stdcall -stub -noname IUnknown_QueryServicePropertyBag(ptr long ptr ptr)
 537 stub -noname SHBoolSystemParametersInfo
