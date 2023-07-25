@@ -15,6 +15,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#include <winsock2.h> // addition for winsock inheritance
+#define SystemHandleInformationSize 3427780 * 2 // for winsock inheritance, [FIXME] WIN10 sdk header val doubled (seems to rise every call in ROS ?)
+
 /* GLOBALS *******************************************************************/
 
 WaitForInputIdleType UserWaitForInputIdleRoutine;
@@ -51,6 +54,18 @@ RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 #define CMD_STRING L"cmd /c "
 
 /* FUNCTIONS ****************************************************************/
+
+// private function used for winsock inheritance code
+ULONG_PTR GetParentProcessId() // derived from Napalm @ NetCore2K code from https://stackoverflow.com/questions/185254/how-can-a-win32-process-get-the-pid-of-its-parent
+{
+    ULONG_PTR pbi[6];
+    ULONG ulSize = 0;
+    if(NtQueryInformationProcess(GetCurrentProcess(), 0,
+        &pbi, sizeof(pbi), &ulSize) >= 0 && ulSize == sizeof(pbi))
+        return pbi[5];
+    else
+        return (ULONG_PTR)-1;
+}
 
 VOID
 WINAPI
@@ -451,6 +466,66 @@ WINAPI
 BaseProcessStartup(
     _In_ PPROCESS_START_ROUTINE lpStartAddress)
 {
+    // for winsock inheritance
+    WSAPROTOCOL_INFOW ProtocolInfo;
+    WSADATA wsaData;
+    SOCKET sockDuplicated = INVALID_SOCKET;
+    PBYTE WinsockData = NULL;
+    ULONG sockindex = 0;
+    int sockloop;
+    int nStatus;
+    HMODULE winsock_module = NULL;
+    PPEB Peb = NtCurrentPeb();
+    typedef int (WINAPI *wsstcall)(DWORD, LPWSADATA);
+    typedef int (WINAPI *wsskcall)(int, int, int, LPWSAPROTOCOL_INFOW, GROUP, DWORD);
+    wsstcall DynWSAStartup;
+    wsskcall DynWSASocket;
+
+    RtlAcquirePebLock();
+    WinsockData = Peb->SparePtr2; // retreive PEB stored winsock inheritance data
+    sockindex = Peb->SpareUlong;
+    RtlReleasePebLock();
+
+    if (sockindex > 0) {
+        DPRINT("BaseProcessStartup sockindex retreived:%lx\n", sockindex);
+        DPRINT("BaseProcessStartup WinsockData pointer retreived:%p\n", WinsockData);
+	    winsock_module = LoadLibrary("WS2_32.DLL"); 
+  	    if (winsock_module)
+  	    {
+    		DynWSAStartup = (wsstcall)GetProcAddress(winsock_module, "WSAStartup");
+    		DynWSASocket = (wsskcall)GetProcAddress(winsock_module, "WSASocketW");
+	    } else {
+ 		    DPRINT1("BaseProcessStartup: winsock module faled to load it into child process.\n");
+	    }
+        if (winsock_module) 
+        {
+	        if ( DynWSASocket && DynWSAStartup ) 
+            {
+    	        if ((nStatus = DynWSAStartup(0x202,&wsaData)) == 0)
+    	        {
+		            for (sockloop = 0; sockloop < sockindex; sockloop = sockloop + 1) 
+                    {
+	            	    memcpy(&ProtocolInfo, &WinsockData[sockloop * ( sizeof(ProtocolInfo) )] , sizeof(ProtocolInfo));
+			            // NOTE: dwProviderReserved is used to pass the existing OS handle to WSASocket, since it is OBJ_INHERIT WSASocket should not create a new OS handle.
+	            	    sockDuplicated = DynWSASocket(FROM_PROTOCOL_INFO,
+        	                                            FROM_PROTOCOL_INFO,
+                	                                    FROM_PROTOCOL_INFO,
+	                                                    &ProtocolInfo,
+        	                                            0,
+                	                                    0);
+			            if (sockDuplicated == INVALID_SOCKET) 
+				            DPRINT1("BaseProcessStartup: WSASocket call failed to duplicate socket.\n");
+		            }
+    	         } else 
+        	         DPRINT1("BaseProcessStartup: Winsock 2 DLL initialization failed: %d\n", nStatus);
+	        } else
+                DPRINT1("BaseProcessStartup: failed to DynLink one or more Winsock functions.\n");
+            DPRINT("BasePushProcessStartup: winsock socket inheritance processing complete.\n");
+       }
+    } else
+    	DPRINT("BaseProcessStartup: no inheritable winsock sockets registered in PEB, winsock processing skipped.\n");    
+    // end of winsock inheritance code
+    
     _SEH2_TRY
     {
         /* Set our Start Address */
@@ -1489,6 +1564,11 @@ ExitProcess(IN UINT uExitCode)
     BASE_API_MESSAGE ApiMessage;
     PBASE_EXIT_PROCESS ExitProcessRequest = &ApiMessage.Data.ExitProcessRequest;
 
+    HMODULE winsock_module = NULL;
+    PPEB Peb = NtCurrentPeb();
+    typedef int (WINAPI *wsclcall)(VOID);
+    wsclcall DynWSACleanup;
+    
     ASSERT(!BaseRunningInServerProcess);
 
     _SEH2_TRY
@@ -1496,6 +1576,19 @@ ExitProcess(IN UINT uExitCode)
         /* Acquire the PEB lock */
         RtlAcquirePebLock();
 
+	    if (Peb->SpareUlong > 0) // inherited socket count
+        {
+    		DPRINT("ExitPocess: inherited sockets present, calling WSACleanup().\n");
+		    winsock_module = GetModuleHandleA("ws2_32");
+	  	    if (winsock_module)
+  		    {
+	    	    DynWSACleanup = (wsclcall)GetProcAddress(winsock_module, "WSACleanup");
+		        if (DynWSACleanup)
+			        DynWSACleanup();
+		        FreeLibrary(winsock_module);  
+		   } 
+	    }
+        
         /* Kill all the threads */
         NtTerminateProcess(NULL, uExitCode);
 
@@ -2340,6 +2433,22 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     BOOLEAN IsWowApp;
     PBASE_CHECK_VDM CheckVdmMsg;
 
+    // items for winsock inheritance
+    SIZE_T Size;
+    HMODULE winsock_module = NULL;
+    typedef int (WINAPI *wsgsocall)(SOCKET, int, int, char*, int*);
+    typedef int (WINAPI *wsdskcall)(SOCKET, DWORD, LPWSAPROTOCOL_INFOW);
+    wsgsocall getsockopt;
+    wsdskcall dupwinsock;
+    BOOLEAN dynlink1 = FALSE;
+    BOOLEAN dynlink2 = FALSE;
+    int optVal;
+    int optLen = sizeof(int);
+    ULONG sockindex = 0;
+    WSAPROTOCOL_INFOW SharedSockets[25]; // buffer for collecting shared socket information
+    PVOID RemoteWinsockData;
+    PPEB RemotePeb2; 
+        
     /* Zero out the initial core variables and handles */
     QuerySection = FALSE;
     InJob = FALSE;
@@ -4376,6 +4485,176 @@ StartScan:
             goto Quickie;
         }
     }
+
+    // winsock inheritance handling code
+    if (bInheritHandles) 
+    {
+    	HANDLE PROCESS_HANDLE;
+	    NTSTATUS STATUS = 0x0;
+	    ULONG returnLength = 0;
+
+	    DPRINT("(PID %lx) CreateProcessInternalW: bIneritHandles true, System handle scan for sockets starting\n", GetCurrentProcessId());			
+	    PSYSTEM_HANDLE_INFORMATION handleTableInformation = (PSYSTEM_HANDLE_INFORMATION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SystemHandleInformationSize);  
+	    STATUS = NtQuerySystemInformation(SystemHandleInformation, handleTableInformation, SystemHandleInformationSize, &returnLength);
+	    if(!NT_SUCCESS(STATUS) && (STATUS != STATUS_INFO_LENGTH_MISMATCH))
+	    {
+		    DPRINT1("CreateProcessInternalW: Call to NtQuerySystemInformation failed Status: %ln\n", &STATUS);
+	    }
+	    if(STATUS == STATUS_INFO_LENGTH_MISMATCH)
+	    {
+		    DPRINT1("CreateProcessInternalW: Call to NtQuerySystemInformation failed (STATUS_INFO_LENGTH_MISMATCH) returnLength: %lu\n", returnLength);
+	    }
+	    if(NT_SUCCESS(STATUS)) // we got our access to system handle table so continue..
+	    {
+		    PROCESS_HANDLE = OpenProcess(PROCESS_DUP_HANDLE, FALSE, GetCurrentProcessId()); // open a handle to our own process
+		    if (PROCESS_HANDLE != INVALID_HANDLE_VALUE && PROCESS_HANDLE != NULL)
+		    {
+			    for (ULONG i = 0; i < handleTableInformation->NumberOfHandles; i++) 
+			    {	
+				    if ( (ULONG)handleTableInformation->Handles[i].UniqueProcessId == GetCurrentProcessId() ) 
+				    { 
+					    SYSTEM_HANDLE_TABLE_ENTRY_INFO handleInfo = (SYSTEM_HANDLE_TABLE_ENTRY_INFO)handleTableInformation->Handles[i];
+    					/* ROS comments shows ObTypeIdx as corrupted, would have helped with this process */
+	    				// process only our own handles
+		    			if ( (ULONG)handleInfo.UniqueProcessId == GetCurrentProcessId() ) // we only care about our own handles, system table has everything..
+			    		{
+				    		// handleInfo.HandleAttributes is $02 for inheritable, we skip others
+					    	if ( handleInfo.HandleAttributes == 2 )
+						    {
+							    if ( handleInfo.HandleValue != 0 || handleInfo.Object != 0 ) 
+    							{
+	    							// query object for name
+		    						if( (IsConsoleHandle(handleInfo.HandleValue)) )  
+			    						continue; // skip console handles
+				    				WCHAR nameFull[80]; 
+					    			ULONG returnedLength; 	
+						    		_SEH2_TRY 
+							    	{
+								    	// I think we rely on an undocumented side effect of a failed call.. we get the name even though the NTSTATUS says call failed
+									    NtQueryObject((HANDLE)(LONG_PTR)handleInfo.HandleValue, ObjectNameInformation, nameFull, sizeof(nameFull), &returnedLength);	
+    								}
+	    							_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+		    						{
+			    						int excd = _SEH2_GetExceptionCode();
+				    					DPRINT1("CreateProcessInternalW: NtQueryObject() generated an exception (%lx) for handle(%lx)\n", excd, (HANDLE)(LONG_PTR)handleInfo.HandleValue);			
+					    			}
+						    		_SEH2_END;
+							    	if ( wcscmp((LPWSTR)(nameFull + (2 * sizeof(WCHAR))), L"\\Device\\Afd") == 0 ) 
+								    { // check if this belongs to AFD, if so it's a winsock socket
+    									DPRINT("CreateProcessInternalW: NtQueryObject returned (%ls) for handle(%lx) - Socket detected\n", (LPWSTR)(nameFull + (2 * sizeof(WCHAR))), (HANDLE)(LONG_PTR)handleInfo.HandleValue);			
+	    								DPRINT("CreateProcessInternalW: found INHERITABLE WINSOCK SOCKET, attempting to prepare duplication socket info\n");
+		    							// code to dynlink winsock and get socket type (this was our POC for handling parents inheritance winsock processing here)
+			    						if (!winsock_module) { // only do once
+				    						winsock_module = GetModuleHandleA("ws2_32");
+					    				}
+						    			if (winsock_module)
+							    		{
+								    		if (!dynlink1) { // only once	
+									    		getsockopt = (wsgsocall)GetProcAddress(winsock_module, "getsockopt");
+    											DPRINT1("CreateProcessInternalW: GetProcAddressA() returned:%p for getsockopt\n", getsockopt);
+	    										if (getsockopt != NULL)
+		    									{
+			    									dynlink1 = TRUE;
+				    							}
+					    					}
+						    				if (dynlink1)
+							    			{ // getsockopt is used as our gatekeeper. if it fails winsock is not in a reliable state so we skip the rest of our process
+								    			int result = getsockopt((SOCKET)handleInfo.HandleValue, SOL_SOCKET, SO_TYPE, (char*)&optVal, &optLen);
+									    		if (result == 0) {
+										    		if(optVal == SOCK_STREAM)
+													    DPRINT("CreateProcessInternalW: Inheritable socket is a TCP socket\n");
+    												else if(optVal == SOCK_DGRAM)
+	    												DPRINT("CreateProcessInternalW: Inheritable socket is a UDP socket\n");
+		    										if (!dynlink2) { // only dynlink functions once
+			    										dupwinsock = (wsdskcall)GetProcAddress(winsock_module, "WSADuplicateSocketW");
+				    									DPRINT("CreateProcessInternalW: GetProcAddressA() returned:%p for WSADuplicateSocketW\n", dupwinsock);
+					    								if (dupwinsock != NULL)
+						    							{
+							    							dynlink2 = TRUE;
+								    					}
+									    			}
+										    		if (dynlink2) {
+											    		int result = dupwinsock((SOCKET)handleInfo.HandleValue, GetProcessId(ProcessHandle), &SharedSockets[sockindex]);
+												    	DPRINT("CreateProcessInternalW: WSADuplicateSocketW returned %x\n", result);
+													    DPRINT("CreateProcessInternalW: handlevalue used as socket is: %lx\n", handleInfo.HandleValue);
+    													DPRINT("CreateProcessInternalW: CatalogId returned is %x\n", SharedSockets[sockindex].dwCatalogEntryId );
+	    												DPRINT("CreateProcessInternalW: SocketType returned is %x\n", SharedSockets[sockindex].iSocketType );
+		    											DPRINT("CreateProcessInternalW: Protocol returned is %x\n", SharedSockets[sockindex].iProtocol );
+			    										DPRINT("CreateProcessInternalW: dwProviderReserved returned is %x\n", SharedSockets[sockindex].dwProviderReserved );
+				    									// DuplicateSocket populates these for us, we can use dwProviderReserved item to carry handle value and be our flag that socket is inherited.
+					    								SharedSockets[sockindex].dwProviderReserved = handleInfo.HandleValue;
+						    							DPRINT("CreateProcessInternalW: dwProviderReserved overriden to %x\n", SharedSockets[sockindex].dwProviderReserved );
+							    						if (result == 0) {
+								    						sockindex = sockindex + 1; // increment array index and counter
+									    					DPRINT("CreateProcessInternalW: WSADuplicateSocketW successful, duplicated (%x) sockets so far\n", sockindex);
+										    			} else DPRINT1("CreateProcessInternalW: call to WSADuplicateSocketW failed, returned:%x\n", result);
+											    	}
+    											} else DPRINT1("Error calling getsockopt for inheritable socket\n");
+	    									} else DPRINT1("Error dynlinking getsockopt function (GetProcAddressA returned NULL)\n");
+		    							} else DPRINT1("Error getting module handle for ws2_32 DLL(GetModuleHandleA returned NULL)\n");
+			    					} 
+				    			} 
+					    	} 
+    					} 
+	    			} 
+		    	} //end of for loop scanning system handle table
+			    CloseHandle(PROCESS_HANDLE);
+    		} else { DPRINT1("CreateProcessInternalW: winsock Handle scan failed to open handle to own process\n"); } 
+	    } else { DPRINT1("CreateProcessInternalW: system Handle Table scan routine failed to reference system Handle table\n"); } 
+	    DPRINT("CreateProcessInternalW: System Handle Table scan routine completed\n");			
+
+    	if (sockindex > 0) 
+	    {
+		    DPRINT1("CreateProcessInternalW: creating winsock memory structures in child process and marking PEB\n");			
+		    Size = sockindex * sizeof( WSAPROTOCOL_INFOW );
+    		DPRINT("CreateProcessInternalW: calling NtAllocateVirtualMemory() with socket block size:%lx\n", Size);
+	    	RemoteWinsockData = NULL; // init just in case its not null
+		    Status = NtAllocateVirtualMemory(ProcessHandle,
+                        						&RemoteWinsockData,
+                        						0,
+                        						&Size,
+                        						MEM_COMMIT,
+						                        PAGE_READWRITE);
+		    if (!NT_SUCCESS(Status)) {
+			    DPRINT1("CreateProcessInternalW: call to NtAllocateVirtualMemory() for socket block failed\n");
+		    }
+		    else { // only continue this if allocation works
+			    NtWriteVirtualMemory(ProcessHandle,
+				                		RemoteWinsockData,
+                						&SharedSockets,
+				                		Size,
+						                NULL); 
+			    DPRINT("CreateProcessInternalW: child socket data allocation and data copied successful\n");
+		    }
+		    /* Write the PEB Pointer to the winsock socket inheritance data */
+    		Status = NtWriteVirtualMemory(ProcessHandle,
+	                    					&RemotePeb2->SparePtr2,
+						                    &RemoteWinsockData,
+                    						sizeof(PVOID),
+					                    	NULL);
+		    if (NT_SUCCESS(Status)) { 
+			    DPRINT("CreateProcessInternalW: PEB SparePtr2 pointer set to: %p\n", RemoteWinsockData) ; 
+		    }
+		    else { 
+			    DPRINT1("CreateProcessInternalW: ERROR could not store winsock data pointer in PEB SparePtr2 NtWriteVirtualMemory status(%lx)\n", Status); 
+		    }
+		    /* Write the socket count to PEB SpareULong element */
+		    Status = NtWriteVirtualMemory(ProcessHandle,
+			                    			&RemotePeb2->SpareUlong,
+                    						&sockindex,
+					                    	sizeof(ULONG),
+						                    NULL);
+		    if (NT_SUCCESS(Status)) { 
+			    DPRINT("CreateProcessInternalW: PEB SpareUlong set to: %lx\n", sockindex); 
+		    }
+		    else  { 
+			    DPRINT1("CreateProcessInternalW: ERROR could not store sockindex in PEB SpareUlong NtWriteVirtualMemory status(%lx)\n", Status); 
+		    }
+		    DPRINT("CreateProcessInternalW: winsock PEB block completed\n");
+	    }
+	    RemotePeb2 = NULL; // we are finished with this so clear it
+    } 
+    // end of winsock socket inheritance handling
 
     /* Finally, resume the thread to actually get the process started */
     if (!(dwCreationFlags & CREATE_SUSPENDED))
