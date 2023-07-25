@@ -5435,6 +5435,7 @@ HRESULT WINAPI SHPropertyBag_ReadSHORT(IPropertyBag *ppb, LPCWSTR pszPropName, S
     return hr;
 }
 #endif
+
 /**************************************************************************
  *  SHPropertyBag_ReadLONG (SHLWAPI.496)
  *
