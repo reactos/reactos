@@ -34,8 +34,8 @@ LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
         PCWSTR pSrvName = ServerName->Buffer;
         if (pSrvName[0] == '\\' && pSrvName[1] == '\\')
             pSrvName += 2;
-        Result = !lstrcmpW(pSrvName, buf); 
-    } 
+        Result = !lstrcmpW(pSrvName, buf);
+    }
     HeapFree(GetProcessHeap(), 0, buf);
 
     return Result;
