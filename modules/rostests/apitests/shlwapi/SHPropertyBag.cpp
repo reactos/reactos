@@ -61,17 +61,24 @@ public:
 
     STDMETHODIMP Write(LPCWSTR pszPropName, VARIANT *pvari) override
     {
-        for (INT i = 0; i < 4; ++i)
+        ++s_cWrite;
+        ok_int(s_vt, V_VT(pvari));
+        for (size_t i = 0; i < _countof(s_pszPropNames); ++i)
         {
             if (s_pszPropNames[i])
             {
                 ok_wstr(pszPropName, s_pszPropNames[i]);
                 s_pszPropNames[i] = NULL;
+                if (lstrcmpiW(pszPropName, L"RECTL2.bottom") == 0)
+                {
+                    s_vt = VT_EMPTY;
+                    ZeroMemory(&s_pszPropNames, sizeof(s_pszPropNames));
+                    s_pszPropNames[0] = L"RECTL2.right";
+                    return E_FAIL;
+                }
                 break;
             }
         }
-        ok_int(s_vt, V_VT(pvari));
-        ++s_cWrite;
         return S_OK;
     }
 };
@@ -128,6 +135,11 @@ static void SHPropertyBag_WriteTest(void)
     hr = SHPropertyBag_WriteRECTL(&dummy, L"RECTL1", &rcl);
     ok_long(hr, S_OK);
     ok_int(s_cWrite, 4);
+
+    Reset(VT_I4, L"RECTL2.left", L"RECTL2.top", L"RECTL2.right", L"RECTL2.bottom");
+    hr = SHPropertyBag_WriteRECTL(&dummy, L"RECTL2", &rcl);
+    ok_long(hr, S_OK);
+    ok_int(s_cWrite, 5);
 
     GUID guid;
     ZeroMemory(&guid, sizeof(guid));
