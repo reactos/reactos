@@ -49,7 +49,7 @@ IDR_BROWSE_MAIN_MENU MENU
 STRINGTABLE
 {
     IDS_INTERNET "Navigatorul de Internet"
-    IDS_INTERNET_DESCRIPTION "Deschide navigatorul de rețea și afișează informații de pe Internet."
+    IDS_INTERNET_DESCRIPTION "Deschide navigatorul de rețea și afișează informații din Internet."
 
     IDS_TB_BACK             "Înapoi"
     IDS_TB_FORWARD          "Înainte"
