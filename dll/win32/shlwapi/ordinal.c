@@ -5293,26 +5293,26 @@ HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
 HRESULT VariantChangeTypeForRead(IN OUT VARIANTARG *pvarg, IN VARTYPE vt)
 {
     HRESULT hr;
-    VARIANTARG varg;
-    VARIANT vari;
+    VARIANTARG vargTemp;
+    VARIANT variTemp;
 
     if (V_VT(pvarg) == vt || vt == VT_EMPTY)
         return S_OK;
 
-    varg = *pvarg;
+    vargTemp = *pvarg;
 
-    if (V_VT(&varg) != VT_BSTR || vt <= VT_NULL)
+    if (V_VT(&vargTemp) != VT_BSTR || vt <= VT_NULL)
         goto DoDefault;
 
     if (vt == VT_I1 || vt == VT_I2 || vt == VT_I4)
     {
-        if (!StrToIntExW(V_BSTR(&varg), STIF_SUPPORT_HEX, &V_I4(&vari)))
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, &V_I4(&variTemp)))
             goto DoDefault;
 
-        V_VT(&vari) = VT_INT;
+        V_VT(&variTemp) = VT_INT;
         VariantInit(pvarg);
-        hr = VariantChangeType(pvarg, &vari, 0, vt);
-        VariantClear(&varg);
+        hr = VariantChangeType(pvarg, &variTemp, 0, vt);
+        VariantClear(&vargTemp);
         return hr;
     }
 
@@ -5321,32 +5321,32 @@ HRESULT VariantChangeTypeForRead(IN OUT VARIANTARG *pvarg, IN VARTYPE vt)
 
     if (vt == VT_UI1 || vt == VT_UI2 || vt == VT_UI4)
     {
-        if (!StrToIntExW(V_BSTR(&varg), STIF_SUPPORT_HEX, (LPINT)&V_UI4(&vari)))
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, (LPINT)&V_UI4(&variTemp)))
             goto DoDefault;
 
-        V_VT(&vari) = VT_UINT;
+        V_VT(&variTemp) = VT_UINT;
         VariantInit(pvarg);
-        hr = VariantChangeType(pvarg, &vari, 0, vt);
-        VariantClear(&varg);
+        hr = VariantChangeType(pvarg, &variTemp, 0, vt);
+        VariantClear(&vargTemp);
         return hr;
     }
 
     if (vt == VT_INT || vt == VT_UINT)
     {
-        if (!StrToIntExW(V_BSTR(&varg), STIF_SUPPORT_HEX, &V_INT(&vari)))
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, &V_INT(&variTemp)))
             goto DoDefault;
 
-        V_VT(&vari) = VT_UINT;
+        V_VT(&variTemp) = VT_UINT;
         VariantInit(pvarg);
-        hr = VariantChangeType(pvarg, &vari, 0, vt);
-        VariantClear(&varg);
+        hr = VariantChangeType(pvarg, &variTemp, 0, vt);
+        VariantClear(&vargTemp);
         return hr;
     }
 
 DoDefault:
     VariantInit(pvarg);
-    hr = VariantChangeType(pvarg, &varg, 0, vt);
-    VariantClear(&varg);
+    hr = VariantChangeType(pvarg, &vargTemp, 0, vt);
+    VariantClear(&vargTemp);
     return hr;
 }
 
