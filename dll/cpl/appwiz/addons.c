@@ -324,7 +324,7 @@ static HRESULT WINAPI InstallCallback_GetBindInfo(IBindStatusCallback *iface,
     DWORD cbSize;
 
     cbSize = pbindinfo->cbSize;
-    ZeroMemory(pbindinfo, sizeof(*pbindinfo));
+    ZeroMemory(pbindinfo, cbSize);
     pbindinfo->cbSize = cbSize;
 
     *grfBINDF = 0;
