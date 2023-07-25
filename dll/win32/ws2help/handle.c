@@ -179,7 +179,7 @@ WahCreateSocketHandle(IN HANDLE HelperHandle,
     RtlInitUnicodeString(&Name, L"\\Device\\WS2IFSL\\NifsSct");
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
-                               0,
+                               OBJ_INHERIT, // make handle inherit following windows defaults
                                NULL,
                                NULL);
 
