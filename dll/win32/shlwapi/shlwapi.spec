@@ -491,7 +491,7 @@
 491 stdcall -noname SHGetShellKey(long long long)
 492 stub -noname PrettifyFileDescriptionW
 493 stdcall -noname SHPropertyBag_ReadType(ptr wstr ptr long)
-494 stub -noname SHPropertyBag_ReadStr
+494 stdcall -noname SHPropertyBag_ReadStr(ptr wstr ptr long)
 495 stdcall -noname SHPropertyBag_WriteStr(ptr wstr wstr)
 496 stdcall -noname SHPropertyBag_ReadLONG(ptr wstr ptr)
 497 stdcall -noname SHPropertyBag_WriteLONG(ptr wstr long)
@@ -517,12 +517,12 @@
 517 stdcall -noname SKSetValueW(long wstr wstr long ptr long)
 518 stdcall -noname SKDeleteValueW(long wstr wstr)
 519 stdcall -noname SKAllocValueW(long wstr wstr ptr ptr ptr)
-520 stub -noname SHPropertyBag_ReadBSTR
-521 stub -noname SHPropertyBag_ReadPOINTL
+520 stdcall -noname SHPropertyBag_ReadBSTR(ptr wstr ptr)
+521 stdcall -noname SHPropertyBag_ReadPOINTL(ptr wstr ptr)
 522 stdcall -noname SHPropertyBag_WritePOINTL(ptr wstr ptr)
-523 stub -noname SHPropertyBag_ReadRECTL
+523 stdcall -noname SHPropertyBag_ReadRECTL(ptr wstr ptr)
 524 stdcall -noname SHPropertyBag_WriteRECTL(ptr wstr ptr)
-525 stub -noname SHPropertyBag_ReadPOINTS
+525 stdcall -noname SHPropertyBag_ReadPOINTS(ptr wstr ptr)
 526 stdcall -noname SHPropertyBag_WritePOINTS(ptr wstr ptr)
 527 stdcall -noname SHPropertyBag_ReadSHORT(ptr wstr ptr)
 528 stdcall -noname SHPropertyBag_WriteSHORT(ptr wstr long)
