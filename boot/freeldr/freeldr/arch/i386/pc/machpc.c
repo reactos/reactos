@@ -38,6 +38,20 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 /* Mouse Systems Mouse */
 #define MOUSE_TYPE_MOUSESYSTEMS    4
 
+#define INPORT_REGISTER_CONTROL    0x00
+#define INPORT_REGISTER_DATA       0x01
+#define INPORT_REGISTER_SIGNATURE  0x02
+
+#define INPORT_REG_MODE            0x07
+#define INPORT_RESET               0x80
+#define INPORT_MODE_BASE           0x10
+#define INPORT_TEST_IRQ            0x16
+#define INPORT_SIGNATURE           0xDE
+
+#define PIC1_CONTROL_PORT          0x20
+#define PIC1_DATA_PORT             0x21
+#define PIC2_CONTROL_PORT          0xA0
+#define PIC2_DATA_PORT             0xA1
 
 /* PS2 stuff */
 
@@ -1291,6 +1305,203 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
     }
 }
 
+#if defined(_M_IX86)
+static VOID
+CreateBusMousePeripheralKey(
+    _Inout_ PCONFIGURATION_COMPONENT_DATA BusKey,
+    _In_ ULONG IoBase,
+    _In_ ULONG Irq)
+{
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCONFIGURATION_COMPONENT_DATA ControllerKey;
+    PCONFIGURATION_COMPONENT_DATA PeripheralKey;
+    ULONG Size;
+
+    /* Set 'Configuration Data' value */
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[2]);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+    if (PartialResourceList == NULL)
+    {
+        ERR("Failed to allocate resource descriptor\n");
+        return;
+    }
+
+    /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
+    PartialResourceList->Version = 1;
+    PartialResourceList->Revision = 1;
+    PartialResourceList->Count = 2;
+
+    /* Set IO Port */
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
+    PartialDescriptor->Type = CmResourceTypePort;
+    PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+    PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
+    PartialDescriptor->u.Port.Start.LowPart = IoBase;
+    PartialDescriptor->u.Port.Start.HighPart = 0;
+    PartialDescriptor->u.Port.Length = 4;
+
+    /* Set Interrupt */
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[1];
+    PartialDescriptor->Type = CmResourceTypeInterrupt;
+    PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+    PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+    PartialDescriptor->u.Interrupt.Level = Irq;
+    PartialDescriptor->u.Interrupt.Vector = Irq;
+    PartialDescriptor->u.Interrupt.Affinity = (KAFFINITY)-1;
+
+    /* Create controller key */
+    FldrCreateComponentKey(BusKey,
+                           ControllerClass,
+                           PointerController,
+                           Input,
+                           0,
+                           0xFFFFFFFF,
+                           NULL,
+                           PartialResourceList,
+                           Size,
+                           &ControllerKey);
+
+    /* Set 'Configuration Data' value */
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+    if (PartialResourceList == NULL)
+    {
+        ERR("Failed to allocate resource descriptor\n");
+        return;
+    }
+
+    /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
+    PartialResourceList->Version = 1;
+    PartialResourceList->Revision = 1;
+    PartialResourceList->Count = 0;
+
+    /* Create peripheral key */
+    FldrCreateComponentKey(ControllerKey,
+                           ControllerClass,
+                           PointerPeripheral,
+                           Input,
+                           0,
+                           0xFFFFFFFF,
+                           "MICROSOFT INPORT MOUSE",
+                           PartialResourceList,
+                           Size,
+                           &PeripheralKey);
+}
+
+extern KIDTENTRY DECLSPEC_ALIGN(4) i386Idt[32];
+VOID __cdecl HwIrqHandler(VOID);
+extern volatile ULONG HwIrqCount;
+
+static ULONG
+DetectBusMouseTestIrq(
+    _In_ ULONG IoBase,
+    _In_ ULONG Irq)
+{
+    USHORT OldOffset, OldExtendedOffset;
+    ULONG Vector, i;
+
+    HwIrqCount = 0;
+
+    /* Reset the device */
+    WRITE_PORT_UCHAR((PUCHAR)IoBase + INPORT_REGISTER_CONTROL, INPORT_RESET);
+    WRITE_PORT_UCHAR((PUCHAR)IoBase + INPORT_REGISTER_CONTROL, INPORT_REG_MODE);
+
+    Vector = Irq + 8;
+
+    /* Save the old interrupt vector and replace it by ours */
+    OldOffset = i386Idt[Vector].Offset;
+    OldExtendedOffset = i386Idt[Vector].ExtendedOffset;
+
+    i386Idt[Vector].Offset = (ULONG)HwIrqHandler & 0xFFFF;
+    i386Idt[Vector].ExtendedOffset = (ULONG)HwIrqHandler >> 16;
+
+    /* Enable the requested IRQ on the master PIC */
+    WRITE_PORT_UCHAR((PUCHAR)PIC1_DATA_PORT, ~(1 << Irq));
+
+    _enable();
+
+    /* Configure the device to generate interrupts */
+    for (i = 0; i < 15; i++)
+    {
+        WRITE_PORT_UCHAR((PUCHAR)IoBase + INPORT_REGISTER_DATA, INPORT_MODE_BASE);
+        WRITE_PORT_UCHAR((PUCHAR)IoBase + INPORT_REGISTER_DATA, INPORT_TEST_IRQ);
+    }
+
+    /* Disable the device */
+    WRITE_PORT_UCHAR((PUCHAR)IoBase + INPORT_REGISTER_DATA, 0);
+
+    _disable();
+
+    i386Idt[Vector].Offset = OldOffset;
+    i386Idt[Vector].ExtendedOffset = OldExtendedOffset;
+
+    return (HwIrqCount != 0) ? Irq : 0;
+}
+
+static ULONG
+DetectBusMouseIrq(
+    _In_ ULONG IoBase)
+{
+    UCHAR Mask1, Mask2;
+    ULONG Irq, Result;
+
+    /* Save the current interrupt mask */
+    Mask1 = READ_PORT_UCHAR(PIC1_DATA_PORT);
+    Mask2 = READ_PORT_UCHAR(PIC2_DATA_PORT);
+
+    /* Mask the interrupts on the slave PIC */
+    WRITE_PORT_UCHAR(PIC2_DATA_PORT, 0xFF);
+
+    /* Process IRQ detection: IRQ 5, 4, 3 */
+    for (Irq = 5; Irq >= 3; Irq--)
+    {
+        Result = DetectBusMouseTestIrq(IoBase, Irq);
+        if (Result != 0)
+            break;
+    }
+
+    /* Restore the mask */
+    WRITE_PORT_UCHAR(PIC1_DATA_PORT, Mask1);
+    WRITE_PORT_UCHAR(PIC2_DATA_PORT, Mask2);
+
+    return Result;
+}
+
+static VOID
+DetectBusMouse(
+    _Inout_ PCONFIGURATION_COMPONENT_DATA BusKey)
+{
+    ULONG IoBase, Irq, Signature1, Signature2, Signature3;
+
+    /*
+     * The bus mouse lives at one of these addresses: 0x230, 0x234, 0x238, 0x23C.
+     * The 0x23C port is the most common I/O setting.
+     */
+    for (IoBase = 0x23C; IoBase >= 0x230; IoBase -= 4)
+    {
+        Signature1 = READ_PORT_UCHAR((PUCHAR)IoBase + INPORT_REGISTER_SIGNATURE);
+        Signature2 = READ_PORT_UCHAR((PUCHAR)IoBase + INPORT_REGISTER_SIGNATURE);
+        if (Signature1 == Signature2)
+            continue;
+        if (Signature1 != INPORT_SIGNATURE && Signature2 != INPORT_SIGNATURE)
+            continue;
+
+        Signature3 = READ_PORT_UCHAR((PUCHAR)IoBase + INPORT_REGISTER_SIGNATURE);
+        if (Signature1 != Signature3)
+            continue;
+
+        Irq = DetectBusMouseIrq(IoBase);
+        if (Irq == 0)
+            continue;
+
+        CreateBusMousePeripheralKey(BusKey, IoBase, Irq);
+        break;
+    }
+}
+#endif /* _M_IX86 */
 
 // Implemented in pcvesa.c, returns the VESA version
 USHORT  BiosIsVesaSupported(VOID);
@@ -1393,6 +1604,9 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     DetectParallelPorts(BusKey);
     DetectKeyboardController(BusKey);
     DetectPS2Mouse(BusKey);
+#if defined(_M_IX86)
+    DetectBusMouse(BusKey);
+#endif
     DetectDisplayController(BusKey);
 
     /* FIXME: Detect more ISA devices */

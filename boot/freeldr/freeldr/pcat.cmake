@@ -42,6 +42,7 @@ if(ARCH STREQUAL "i386")
         arch/i386/drvmap.S
         arch/i386/entry.S
         arch/i386/int386.S
+        arch/i386/irqsup.S
         arch/i386/pnpbios.S
         # arch/i386/i386trap.S
         arch/i386/linux.S)
