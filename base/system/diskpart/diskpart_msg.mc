@@ -125,26 +125,27 @@ Example:
     ACTIVE
 .
 Language=Romanian
-    On disks with master boot record (MBR) disk formatting, marks
-    the partition with focus as active.
+    Pe discurile cu înregistrarea de inițializare de maestru (MBR) formatarea
+    discului marchează partiția cu centrare activă.
 
-Syntax:  ACTIVE
+Sintaxă:  ACTIVE
 
-    Writes a value to the disk which is read by the basic input/output
-    system (BIOS) at boot. This value specifies that the partition is
-    a valid system partition.
+    Scrie o valoare pe disc care este citită de sistemul de bază de 
+    intrare/ieșire (BIOS) la inițializare. Această valoare specifică faptul că
+    partiția este o partiție de sistem validă.
 
-    A partition must be selected for this operation to succeed.
+    Pentru a avea succes o partiție trebuie să fie selectată pentru această
+	operațiune.
 
-    Caution:
+    Atenție:
 
-        DiskPart verifies only that the partition is capable of containing the
-        operating system startup files. DiskPart does not check the contents of
-        the partition. If you mistakenly mark a partition as active and it does
-        not contain the operating system startup files, your computer might not
-        start.
+        DiskPart verifică doar dacă partiția este capabilă să conțină fișierele
+		de pornire ale sistemului de operare. DiskPart nu verifică coținutul
+		partiției. Dacă ați marcat în mod eronat o partiție ca activă și nu conține
+		fișierele de pornire ale sistemului de operare, calculatorul dumneavostră
+		ar putea să nu pornească.
 
-Example:
+De exemplu:
 
     ACTIVE
 .
@@ -285,7 +286,7 @@ Language=Portugese
 <Add ADD command help text here>
 .
 Language=Romanian
-<Add ADD command help text here>
+<Adăugați aici textul de ajutor pentru comanda ADD>
 .
 Language=Russian
 <Add ADD command help text here>
@@ -321,7 +322,7 @@ Language=Portugese
 <Add ASSIGN command help text here>
 .
 Language=Romanian
-<Add ASSIGN command help text here>
+<Adăugați aici textul de ajutor pentru comanda ASSIGN>
 .
 Language=Russian
 <Add ASSIGN command help text here>
@@ -357,7 +358,7 @@ Language=Portugese
 <Add ATTACH command help text here>
 .
 Language=Romanian
-<Add ATTACH command help text here>
+<Adăugați aici textul de ajutor pentru comanda ATTACH>
 .
 Language=Russian
 <Add ATTACH command help text here>
@@ -393,7 +394,7 @@ Language=Portugese
 <Add ATTRIBUTES command help text here>
 .
 Language=Romanian
-<Add ATTRIBUTES command help text here>
+<Adăugați aici textul de ajutor pentru comanda ATTRIBUTES>
 .
 Language=Russian
 <Add ATTRIBUTES command help text here>
@@ -429,7 +430,7 @@ Language=Portugese
 <Add AUTOMOUNT command help text here>
 .
 Language=Romanian
-<Add AUTOMOUNT command help text here>
+<Adăugați aici textul de ajutor pentru comanda AUTOMOUNT>
 .
 Language=Russian
 <Add AUTOMOUNT command help text here>
@@ -466,7 +467,7 @@ Language=Portugese
 <Add BREAK command help text here>
 .
 Language=Romanian
-<Add BREAK command help text here>
+<Adăugați aici textul de ajutor pentru comanda BREAK>
 .
 Language=Russian
 <Add BREAK command help text here>
