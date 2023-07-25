@@ -14,6 +14,7 @@ list(APPEND SOURCE
     SHAreIconsEqual.c
     SHLoadIndirectString.c
     SHLoadRegUIString.c
+    SHPropertyBag.cpp
     StrFormatByteSizeW.c
     testdata.rc
     testlist.c)
