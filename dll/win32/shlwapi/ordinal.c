@@ -5289,6 +5289,153 @@ HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
     return IUnknown_QueryService(lpUnknown,&IID_IWebBrowserApp,riid,lppOut);
 }
 
+#ifdef __REACTOS__
+HRESULT VariantChangeTypeForRead(_Inout_ VARIANTARG *pvarg, _In_ VARTYPE vt)
+{
+    HRESULT hr;
+    VARIANTARG vargTemp;
+    VARIANT variTemp;
+
+    if (V_VT(pvarg) == vt || vt == VT_EMPTY)
+        return S_OK;
+
+    vargTemp = *pvarg;
+
+    if (V_VT(&vargTemp) != VT_BSTR || vt <= VT_NULL)
+        goto DoDefault;
+
+    if (vt == VT_I1 || vt == VT_I2 || vt == VT_I4)
+    {
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, &V_I4(&variTemp)))
+            goto DoDefault;
+
+        V_VT(&variTemp) = VT_INT;
+        VariantInit(pvarg);
+        hr = VariantChangeType(pvarg, &variTemp, 0, vt);
+        VariantClear(&vargTemp);
+        return hr;
+    }
+
+    if (vt <= VT_DECIMAL)
+        goto DoDefault;
+
+    if (vt == VT_UI1 || vt == VT_UI2 || vt == VT_UI4)
+    {
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, (LPINT)&V_UI4(&variTemp)))
+            goto DoDefault;
+
+        V_VT(&variTemp) = VT_UINT;
+        VariantInit(pvarg);
+        hr = VariantChangeType(pvarg, &variTemp, 0, vt);
+        VariantClear(&vargTemp);
+        return hr;
+    }
+
+    if (vt == VT_INT || vt == VT_UINT)
+    {
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, &V_INT(&variTemp)))
+            goto DoDefault;
+
+        V_VT(&variTemp) = VT_UINT;
+        VariantInit(pvarg);
+        hr = VariantChangeType(pvarg, &variTemp, 0, vt);
+        VariantClear(&vargTemp);
+        return hr;
+    }
+
+DoDefault:
+    VariantInit(pvarg);
+    hr = VariantChangeType(pvarg, &vargTemp, 0, vt);
+    VariantClear(&vargTemp);
+    return hr;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadType (SHLWAPI.493)
+ */
+HRESULT WINAPI
+SHPropertyBag_ReadType(IPropertyBag *ppb, LPCWSTR pszPropName, VARIANTARG *pvarg, VARTYPE vt)
+{
+    HRESULT hr;
+
+    VariantInit(pvarg);
+    V_VT(pvarg) = vt;
+
+    hr = IPropertyBag_Read(ppb, pszPropName, pvarg, NULL);
+    if (FAILED(hr))
+    {
+        ERR("%p %s\n", ppb, debugstr_w(pszPropName));
+        VariantInit(pvarg);
+        return hr;
+    }
+
+    return VariantChangeTypeForRead(pvarg, vt);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadBOOL (SHLWAPI.534)
+ */
+HRESULT WINAPI SHPropertyBag_ReadBOOL(IPropertyBag *ppb, LPCWSTR pszPropName, BOOL *pbValue)
+{
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pbValue);
+
+    if (!ppb || !pszPropName || !pbValue)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pbValue);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_BOOL);
+    if (SUCCEEDED(hr))
+        *pbValue = (V_BOOL(&varg) == VARIANT_TRUE);
+
+    return hr;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadBOOLOld (SHLWAPI.498)
+ */
+BOOL WINAPI SHPropertyBag_ReadBOOLOld(IPropertyBag *ppb, LPCWSTR pszPropName, BOOL bDefValue)
+{
+    VARIANTARG varg;
+    HRESULT hr;
+
+    TRACE("%p %s %d\n", ppb, debugstr_w(pszPropName), bDefValue);
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_BOOL);
+    if (FAILED(hr))
+        return bDefValue;
+
+    return V_BOOL(&varg) == VARIANT_TRUE;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadSHORT (SHLWAPI.527)
+ */
+HRESULT WINAPI SHPropertyBag_ReadSHORT(IPropertyBag *ppb, LPCWSTR pszPropName, SHORT *psValue)
+{
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), psValue);
+
+    if (!ppb || !pszPropName || !psValue)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), psValue);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_UI2);
+    if (SUCCEEDED(hr))
+        *psValue = V_UI2(&varg);
+
+    return hr;
+}
+#endif
+
 /**************************************************************************
  *  SHPropertyBag_ReadLONG (SHLWAPI.496)
  *
@@ -5304,6 +5451,22 @@ HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
  */
 HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LPLONG pValue)
 {
+#ifdef __REACTOS__
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pValue);
+
+    if (!ppb || !pszPropName || !pValue)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pValue);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_I4);
+    if (SUCCEEDED(hr))
+        *pValue = V_I4(&varg);
+#else
     VARIANT var;
     HRESULT hr;
     TRACE("%p %s %p\n", ppb,debugstr_w(pszPropName),pValue);
@@ -5318,10 +5481,34 @@ HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LP
         else
             hr = DISP_E_BADVARTYPE;
     }
+#endif
     return hr;
 }
 
 #ifdef __REACTOS__
+/**************************************************************************
+ *  SHPropertyBag_ReadDWORD (SHLWAPI.507)
+ */
+HRESULT WINAPI SHPropertyBag_ReadDWORD(IPropertyBag *ppb, LPCWSTR pszPropName, DWORD *pdwValue)
+{
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pdwValue);
+
+    if (!ppb || !pszPropName || !pdwValue)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pdwValue);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_UI4);
+    if (SUCCEEDED(hr))
+        *pdwValue = V_UI4(&varg);
+
+    return hr;
+}
+
 /**************************************************************************
  *  SHPropertyBag_Delete (SHLWAPI.535)
  */
