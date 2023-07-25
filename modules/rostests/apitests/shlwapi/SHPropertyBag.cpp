@@ -14,6 +14,7 @@
 
 static LPCWSTR s_pszPropNames[4] = { NULL, NULL, NULL, NULL };
 static VARTYPE s_vt;
+static INT s_cRead = 0;
 static INT s_cWrite = 0;
 
 static void ResetTest(VARTYPE vt,
@@ -21,12 +22,60 @@ static void ResetTest(VARTYPE vt,
                   LPCWSTR pszName2 = NULL, LPCWSTR pszName3 = NULL)
 {
     s_vt = vt;
-    s_cWrite = 0;
+    s_cRead = s_cWrite = 0;
     s_pszPropNames[0] = pszName0;
     s_pszPropNames[1] = pszName1;
     s_pszPropNames[2] = pszName2;
     s_pszPropNames[3] = pszName3;
 }
+
+class CDummyReadPropertyBag : public IPropertyBag
+{
+public:
+    CDummyReadPropertyBag()
+    {
+    }
+
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override
+    {
+        ok_int(0, 1);
+        return S_OK;
+    }
+    STDMETHODIMP_(ULONG) AddRef() override
+    {
+        ok_int(0, 1);
+        return S_OK;
+    }
+    STDMETHODIMP_(ULONG) Release() override
+    {
+        ok_int(0, 1);
+        return S_OK;
+    }
+
+    // IPropertyBag
+    STDMETHODIMP Read(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog) override
+    {
+        ++s_cRead;
+        ok_int(s_vt, V_VT(pvari));
+        for (size_t i = 0; i < _countof(s_pszPropNames); ++i)
+        {
+            if (s_pszPropNames[i])
+            {
+                ok_wstr(pszPropName, s_pszPropNames[i]);
+                s_pszPropNames[i] = NULL;
+                break;
+            }
+        }
+        return S_OK;
+    }
+
+    STDMETHODIMP Write(LPCWSTR pszPropName, VARIANT *pvari) override
+    {
+        ok_int(0, 1);
+        return S_OK;
+    }
+};
 
 class CDummyWritePropertyBag : public IPropertyBag
 {
@@ -82,6 +131,36 @@ public:
         return S_OK;
     }
 };
+
+static void SHPropertyBag_ReadTest(void)
+{
+    HRESULT hr;
+    CDummyReadPropertyBag dummy;
+    BOOL bValue = 0xDEADFACE;
+    SHORT sValue = 0xDEAD;
+    LONG lValue = 0xDEADDEAD;
+    DWORD dwValue = 0xFEEDF00D;
+
+    ResetTest(VT_BOOL, L"BOOL1");
+    hr = SHPropertyBag_ReadBOOL(&dummy, s_pszPropNames[0], &bValue);
+    ok_long(hr, S_OK);
+    ok_int(s_cRead, 1);
+
+    ResetTest(VT_UI2, L"SHORT1");
+    hr = SHPropertyBag_ReadSHORT(&dummy, s_pszPropNames[0], &sValue);
+    ok_long(hr, S_OK);
+    ok_int(s_cRead, 1);
+
+    ResetTest(VT_I4, L"LONG1");
+    hr = SHPropertyBag_ReadLONG(&dummy, s_pszPropNames[0], &lValue);
+    ok_long(hr, S_OK);
+    ok_int(s_cRead, 1);
+
+    ResetTest(VT_UI4, L"DWORD1");
+    hr = SHPropertyBag_ReadDWORD(&dummy, s_pszPropNames[0], &dwValue);
+    ok_long(hr, S_OK);
+    ok_int(s_cRead, 1);
+}
 
 static void SHPropertyBag_WriteTest(void)
 {
@@ -151,5 +230,6 @@ static void SHPropertyBag_WriteTest(void)
 
 START_TEST(SHPropertyBag)
 {
+    SHPropertyBag_ReadTest();
     SHPropertyBag_WriteTest();
 }
