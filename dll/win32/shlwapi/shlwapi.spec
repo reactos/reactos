@@ -526,7 +526,7 @@
 526 stdcall -noname SHPropertyBag_WritePOINTS(ptr wstr ptr)
 527 stdcall -noname SHPropertyBag_ReadSHORT(ptr wstr ptr)
 528 stdcall -noname SHPropertyBag_WriteSHORT(ptr wstr long)
-529 stub -noname SHPropertyBag_ReadInt
+529 stdcall -noname SHPropertyBag_ReadInt(ptr wstr ptr) SHPropertyBag_ReadLONG
 530 stdcall -noname SHPropertyBag_WriteInt(ptr wstr long) SHPropertyBag_WriteLONG
 531 stub -noname SHPropertyBag_ReadStream
 532 stdcall -noname SHPropertyBag_WriteStream(ptr wstr ptr)
