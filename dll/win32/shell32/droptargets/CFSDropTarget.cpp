@@ -24,82 +24,57 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-/****************************************************************************
- * BuildPathsList
- *
- * Builds a list of paths like the one used in SHFileOperation from a table of
- * PIDLs relative to the given base folder
- */
-static WCHAR* BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls)
-{
-    WCHAR *pwszPathsList = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) * cidl + 1);
-    WCHAR *pwszListPos = pwszPathsList;
-
-    for (int i = 0; i < cidl; i++)
-    {
-        FileStructW* pDataW = _ILGetFileStructW(pidls[i]);
-        if (!pDataW)
-        {
-            ERR("Mistreating a pidl:\n");
-            pdump_always(pidls[i]);
-            continue;
-        }
-
-        PathCombineW(pwszListPos, wszBasePath, pDataW->wszName);
-        pwszListPos += wcslen(pwszListPos) + 1;
-    }
-    *pwszListPos = 0;
-    return pwszPathsList;
-}
 
 /****************************************************************************
  * CFSDropTarget::_CopyItems
  *
- * copies items to this folder
- * FIXME: We should not ask the parent folder: 'What is your path', and then manually build paths assuming everything is a simple pidl!
- * We should be asking the parent folder: Give me a full name for this pidl (for each child!)
+ * copies or moves items to this folder
  */
 HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
                                   LPCITEMIDLIST * apidl, BOOL bCopy)
 {
-    LPWSTR pszSrcList;
-    HRESULT hr;
-    WCHAR wszTargetPath[MAX_PATH + 1];
-
-    wcscpy(wszTargetPath, m_sPathTarget);
-    //Double NULL terminate.
-    wszTargetPath[wcslen(wszTargetPath) + 1] = '\0';
-
-    TRACE ("(%p)->(%p,%u,%p)\n", this, pSFFrom, cidl, apidl);
-
+    HRESULT ret;
+    WCHAR wszDstPath[MAX_PATH+1];
+    WCHAR *wszSrcPathsList = (WCHAR *) HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) * cidl + 1);
+    WCHAR *wszListPos = wszSrcPathsList;
     STRRET strretFrom;
-    hr = pSFFrom->GetDisplayNameOf(NULL, SHGDN_FORPARSING, &strretFrom);
-    if (hr != S_OK)
-        return hr;
+    SHFILEOPSTRUCTW fop;
 
-    pszSrcList = BuildPathsList(strretFrom.pOleStr, cidl, apidl);
-    TRACE("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(m_sPathTarget), bCopy);
-    CoTaskMemFree(strretFrom.pOleStr);
-    if (!pszSrcList)
-        return E_OUTOFMEMORY;
+    /* Build a double null terminated list of C strings from source paths */
+    for (UINT i = 0; i < cidl; i++) {
+        ret = pSFFrom->GetDisplayNameOf(apidl[i], SHGDN_FORPARSING, &strretFrom);
+        if (FAILED(ret))
+            goto cleanup;
 
-    SHFILEOPSTRUCTW op = {0};
-    op.pFrom = pszSrcList;
-    op.pTo = wszTargetPath;
-    op.hwnd = m_hwndSite;
-    op.wFunc = bCopy ? FO_COPY : FO_MOVE;
-    op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+        ret = StrRetToBufW(&strretFrom, NULL, wszListPos, MAX_PATH);
+        if (FAILED(ret))
+            goto cleanup;
 
-    int res = SHFileOperationW(&op);
-
-    HeapFree(GetProcessHeap(), 0, pszSrcList);
-
-    if (res)
-    {
-        ERR("SHFileOperationW failed with 0x%x\n", res);
-        return E_FAIL;
+        wszListPos += lstrlenW(wszListPos) + 1;
     }
-    return S_OK;
+    /* Append the final null. */
+    *wszListPos=0;
+
+    /* Build a double null terminated target (this path) */
+    lstrcpynW(wszDstPath, m_sPathTarget, MAX_PATH);
+    wszDstPath[wcslen(wszDstPath) + 1] = '\0';
+
+    ZeroMemory(&fop, sizeof(fop));
+    fop.hwnd = m_hwndSite;
+    fop.wFunc = bCopy ? FO_COPY : FO_MOVE;
+    fop.pFrom = wszSrcPathsList;
+    fop.pTo = wszDstPath;
+    fop.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+    ret = S_OK;
+
+    if(SHFileOperationW(&fop)) {
+        ERR("SHFileOperationW failed\n");
+        ret = E_FAIL;
+    }
+
+cleanup:
+    HeapFree(GetProcessHeap(), 0, wszSrcPathsList);
+    return ret;
 }
 
 CFSDropTarget::CFSDropTarget():
