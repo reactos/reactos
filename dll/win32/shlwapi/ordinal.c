@@ -5527,7 +5527,7 @@ HRESULT WINAPI SHPropertyBag_ReadBSTR(IPropertyBag *ppb, LPCWSTR pszPropName, BS
 
     hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_BSTR);
     if (FAILED(hr))
-        *pbstr = 0;
+        *pbstr = NULL;
     else
         *pbstr = V_BSTR(&varg);
 
