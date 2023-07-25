@@ -94,5 +94,5 @@ BEGIN
     IDS_NO_DIRECTORY "Nu a fost dat niciun director!"
     IDS_INVALID_PATH "Calea dată este nevalidă!"
     IDS_INVALID_NAME "Numele comenzii rapide pe care l-ați introdus conținea fie caractere nevalide pentru numele fișierelor, fie era prea lung."
-    IDS_BROWSE_FOR_TARGET "Vă rugăm să selectați ținta comenzii rapide de mai jos:"
+    IDS_BROWSE_FOR_TARGET "Selectați ținta comenzii rapide de mai jos:"
 END
