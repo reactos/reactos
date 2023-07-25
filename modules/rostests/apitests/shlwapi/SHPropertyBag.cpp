@@ -67,6 +67,7 @@ public:
             {
                 ok_wstr(pszPropName, s_pszPropNames[i]);
                 s_pszPropNames[i] = NULL;
+                break;
             }
         }
         ok_int(s_vt, V_VT(pvari));
