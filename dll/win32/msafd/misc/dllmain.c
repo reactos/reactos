@@ -491,26 +491,38 @@ WSPDuplicateSocket(
         Socket->SharedData = pSharedData;
         HeapFree(GlobalHeap, 0, pOldSharedData);
     }
-    /* Duplicate the handles for the new process */
-    bDuplicated = DuplicateHandle(GetCurrentProcess(),
+    /* Duplicate the handles for the new process - revised to not call DuplicateHandle*/
+    Status = NtDuplicateObject(GetCurrentProcess(),
                                   Socket->SharedDataHandle,
                                   hProcess,
                                   (LPHANDLE)&hDuplicatedSharedData,
                                   0,
-                                  FALSE,
+                                  FALSE, // DLB this turned off inheritability on all duplicated sockets. Is this correct ??   bInheritHandle ? OBJ_INHERIT : 0,
                                   DUPLICATE_SAME_ACCESS);
+    if (NT_SUCCESS(Status)) {
+        bDuplicated = TRUE;
+    } else {
+        bDuplicated = FALSE;
+	WSASetLastError(Status); 
+    }
     if (!bDuplicated)
     {
         NtClose(hProcess);
         return MsafdReturnWithErrno(STATUS_ACCESS_DENIED, lpErrno, 0, NULL);
     }
-    bDuplicated = DuplicateHandle(GetCurrentProcess(),
+    Status = NtDuplicateObject(GetCurrentProcess(),
                                   (HANDLE)Socket->Handle,
                                   hProcess,
                                   (LPHANDLE)&hDuplicatedHandle,
                                   0,
-                                  FALSE,
+                                  FALSE, // DLB this turned off inheritability on all duplicated sockets. Is this correct ??   bInheritHandle ? OBJ_INHERIT : 0,
                                   DUPLICATE_SAME_ACCESS);
+    if (NT_SUCCESS(Status)) {
+        bDuplicated = TRUE;
+    } else {
+        bDuplicated = FALSE;
+	    WSASetLastError(Status); 
+    }
     NtClose(hProcess);
     if( !bDuplicated )
         return MsafdReturnWithErrno(STATUS_ACCESS_DENIED, lpErrno, 0, NULL);
