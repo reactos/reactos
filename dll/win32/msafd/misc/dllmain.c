@@ -499,14 +499,10 @@ WSPDuplicateSocket(
                                   0,
                                   FALSE, // DLB this turned off inheritability on all duplicated sockets. Is this correct ??   bInheritHandle ? OBJ_INHERIT : 0,
                                   DUPLICATE_SAME_ACCESS);
-    if (NT_SUCCESS(Status)) {
-        bDuplicated = TRUE;
-    } else {
-        bDuplicated = FALSE;
-	WSASetLastError(Status); 
-    }
+    bDuplicated = NT_SUCCESS(Status);
     if (!bDuplicated)
     {
+        WSASetLastError(Status);
         NtClose(hProcess);
         return MsafdReturnWithErrno(STATUS_ACCESS_DENIED, lpErrno, 0, NULL);
     }
