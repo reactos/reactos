@@ -313,7 +313,6 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                 _SEH2_END;		
             }
             DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true.\n");									
-            return TRUE;																
         } else {
             if (isSocket && !canDupe) 
             {
