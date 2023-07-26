@@ -349,9 +349,10 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                 }
                 DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true.\n");							
             } else DPRINT1("DuplicateHandle: SOCKET DUPLICATION SKIPPED (no ws2_32), returning true and source handle. (NOIMPL FIXME)\n");					
-            return TRUE;																			
         }
-    } else DPRINT("DuplicateHandle: handle is not a socket, proceeding with NtDuplicateObject.\n");						
+        return TRUE;
+    }
+    DPRINT("DuplicateHandle: handle is not a socket, proceeding with NtDuplicateObject\n");
     
     Status = NtDuplicateObject(hSourceProcessHandle,
                                hSourceHandle,
