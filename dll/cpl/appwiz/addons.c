@@ -321,9 +321,7 @@ static HRESULT WINAPI InstallCallback_OnStopBinding(IBindStatusCallback *iface,
 static HRESULT WINAPI InstallCallback_GetBindInfo(IBindStatusCallback *iface,
         DWORD* grfBINDF, BINDINFO* pbindinfo)
 {
-    /* FIXME */
-    *grfBINDF = 0;
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI InstallCallback_OnDataAvailable(IBindStatusCallback *iface, DWORD grfBSCF,
