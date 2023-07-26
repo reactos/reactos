@@ -23,7 +23,7 @@ LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
     DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
     BOOL Result;
     LPWSTR buf;
-    PCWSTR pSrvName; 
+    PCWSTR pSrvName;
 
     if (ServerName == NULL || ServerName->Length == 0 || ServerName->Buffer == NULL)
         return TRUE;
