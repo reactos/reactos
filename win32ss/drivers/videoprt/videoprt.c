@@ -570,29 +570,56 @@ Failure:
     return Status;
 }
 
-VOID
+/**
+ * @brief
+ * Attach the current thread to the CSRSS process. The caller must detach from
+ * the process by invoking IntDetachFromCSRSS() after operating in its context.
+ *
+ * @param[out]  CallingProcess
+ * Pointer to a PKPROCESS variable that receives the current process.
+ *
+ * @param[out]  ApcState
+ * Pointer to a caller-provided KAPC_STATE structure that will be initialized.
+ *
+ * @return
+ * TRUE if attachment succeeded (the CSRSS process exists); FALSE if not.
+ **/
+BOOLEAN
 FASTCALL
 IntAttachToCSRSS(
-    PKPROCESS *CallingProcess,
-    PKAPC_STATE ApcState)
+    _Outptr_ PKPROCESS* CallingProcess,
+    _Out_ PKAPC_STATE ApcState)
 {
+    if (!CsrProcess)
+        return FALSE;
+
     *CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     if (*CallingProcess != CsrProcess)
-    {
         KeStackAttachProcess(CsrProcess, ApcState);
-    }
+    return TRUE;
 }
 
+/**
+ * @brief
+ * Detach the current thread from the CSRSS process. This routine is
+ * to be invoked after a previous successful IntAttachToCSRSS() call.
+ *
+ * @param[in]   CallingProcess
+ * The calling process that previously invoked IntAttachToCSRSS().
+ *
+ * @param[in]   ApcState
+ * Pointer to the KAPC_STATE structure that was initialized by a
+ * previous IntAttachToCSRSS() call.
+ **/
 VOID
 FASTCALL
 IntDetachFromCSRSS(
-    PKPROCESS *CallingProcess,
-    PKAPC_STATE ApcState)
+    _In_ PKPROCESS CallingProcess,
+    _In_ PKAPC_STATE ApcState)
 {
-    if (*CallingProcess != CsrProcess)
-    {
+    ASSERT(CsrProcess);
+    if (CallingProcess != CsrProcess)
         KeUnstackDetachProcess(ApcState);
-    }
 }
 
 VOID
@@ -1154,7 +1181,7 @@ VideoPortGetRomImage(
     TRACE_(VIDEOPRT, "VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
            HwDeviceExtension, Length);
 
-    /* If the length is zero then free the existing buffer. */
+    /* If the length is zero then free the existing buffer */
     if (Length == 0)
     {
         if (RomImageBuffer != NULL)
@@ -1168,28 +1195,31 @@ VideoPortGetRomImage(
     {
         /*
          * The DDK says we shouldn't use the legacy C0000 method but get the
-         * rom base address from the corresponding pci or acpi register but
+         * ROM base address from the corresponding PCI or ACPI register but
          * lets ignore that and use C0000 anyway. We have already mapped the
-         * bios area into memory so we'll copy from there.
+         * BIOS area into memory so we'll copy from there.
          */
 
-        /* Copy the bios. */
+        /* Copy the BIOS */
         Length = min(Length, 0x10000);
         if (RomImageBuffer != NULL)
-        {
             ExFreePool(RomImageBuffer);
-        }
 
         RomImageBuffer = ExAllocatePool(PagedPool, Length);
         if (RomImageBuffer == NULL)
-        {
             return NULL;
+
+        /* Perform the copy in the CSRSS context */
+        if (IntAttachToCSRSS(&CallingProcess, &ApcState))
+        {
+            RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
+            IntDetachFromCSRSS(CallingProcess, &ApcState);
         }
-
-        IntAttachToCSRSS(&CallingProcess, &ApcState);
-        RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
-        IntDetachFromCSRSS(&CallingProcess, &ApcState);
-
+        else
+        {
+            ExFreePool(RomImageBuffer);
+            RomImageBuffer = NULL;
+        }
         return RomImageBuffer;
     }
 }

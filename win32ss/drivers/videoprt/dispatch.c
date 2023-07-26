@@ -43,7 +43,7 @@ VideoPortWin32kCallout(
     if (!Win32kCallout)
         return;
 
-    /* Perform the call in the context of CSRSS */
+    /* Perform the call in the CSRSS context */
     if (!CsrProcess)
         return;
 
@@ -378,10 +378,8 @@ IntVideoPortDispatchOpen(
 
     if (!CsrProcess)
     {
-        /*
-         * We know the first open call will be from the CSRSS process
-         * to let us know its handle.
-         */
+        /* We know the first open call is from the CSRSS process.
+         * Get a reference to it for Int10 support. */
         INFO_(VIDEOPRT, "Referencing CSRSS\n");
         CsrProcess = (PKPROCESS)PsGetCurrentProcess();
         ObReferenceObject(CsrProcess);
