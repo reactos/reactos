@@ -385,10 +385,10 @@ IntVideoPortDispatchOpen(
         ObReferenceObject(CsrProcess);
         INFO_(VIDEOPRT, "CsrProcess 0x%p\n", CsrProcess);
 
-        Status = IntInitializeVideoAddressSpace();
+        Status = IntInitializeInt10();
         if (!NT_SUCCESS(Status))
         {
-            ERR_(VIDEOPRT, "IntInitializeVideoAddressSpace() failed: 0x%lx\n", Status);
+            ERR_(VIDEOPRT, "IntInitializeInt10() failed: 0x%lx\n", Status);
             ObDereferenceObject(CsrProcess);
             CsrProcess = NULL;
             return Status;
