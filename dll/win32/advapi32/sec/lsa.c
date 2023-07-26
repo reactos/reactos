@@ -23,19 +23,16 @@ LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
     DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
     BOOL Result;
     LPWSTR buf;
+    PCWSTR pSrvName = ServerName->Buffer;
 
     if (ServerName == NULL || ServerName->Length == 0 || ServerName->Buffer == NULL)
         return TRUE;
 
     buf = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
     Result = GetComputerNameW(buf, &dwSize);
-    if (Result)
-    {
-        PCWSTR pSrvName = ServerName->Buffer;
-        if (pSrvName[0] == '\\' && pSrvName[1] == '\\')
-            pSrvName += 2;
-        Result = !lstrcmpW(pSrvName, buf);
-    }
+    if (Result && (pSrvName[0] == L'\\') && (pSrvName[1] == L'\\'))
+        pSrvName += 2;
+    Result = Result && !lstrcmpW(pSrvName, buf);
     HeapFree(GetProcessHeap(), 0, buf);
 
     return Result;
