@@ -814,6 +814,7 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     hResult = SHBindToFolder(pidl, &newFolder);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+    // HACK & FIXME: Get view mode from shellbag when fully implemented.
     IUnknown_GetClassID(newFolder, &clsid);
     HasIconViewType = clsid == CLSID_MyComputer || clsid == CLSID_ControlPanel ||
                       clsid == CLSID_ShellDesktop;
