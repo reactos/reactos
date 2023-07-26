@@ -213,7 +213,7 @@ public:
 
             ::SetWindowPos(m_hwndClock,
                 NULL,
-                g_TaskbarSettings.bSmallIcons ? ptClock.x : ptClock.x + 5,
+                ptClock.x,
                 ptClock.y,
                 szClock.cx,
                 szClock.cy,
