@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -94,5 +94,5 @@ BEGIN
     IDS_NO_DIRECTORY "Nu a fost dat niciun director!"
     IDS_INVALID_PATH "Calea dată este nevalidă!"
     IDS_INVALID_NAME "Numele comenzii rapide pe care l-ați introdus conținea fie caractere nevalide pentru numele fișierelor, fie era prea lung."
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_BROWSE_FOR_TARGET "Selectați ținta comenzii rapide de mai jos:"
 END
