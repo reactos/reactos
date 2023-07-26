@@ -321,26 +321,13 @@ static HRESULT WINAPI InstallCallback_OnStopBinding(IBindStatusCallback *iface,
 static HRESULT WINAPI InstallCallback_GetBindInfo(IBindStatusCallback *iface,
         DWORD* grfBINDF, BINDINFO* pbindinfo)
 {
-    DWORD cbSize;
-    BOOL bCanceled;
-
-    cbSize = pbindinfo->cbSize;
+    DWORD cbSize = pbindinfo->cbSize;
     ZeroMemory(pbindinfo, cbSize);
     pbindinfo->cbSize = cbSize;
 
     *grfBINDF = 0;
 
-    EnterCriticalSection(&csLock);
-    bCanceled = !download_binding;
-    LeaveCriticalSection(&csLock);
-
-    if (bCanceled)
-    {
-        ERR("Canceled\n");
-        return E_FAIL;
-    }
-
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI InstallCallback_OnDataAvailable(IBindStatusCallback *iface, DWORD grfBSCF,
