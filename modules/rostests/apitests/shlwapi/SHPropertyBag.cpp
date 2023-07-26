@@ -65,9 +65,8 @@ public:
                 ok_wstr(pszPropName, s_pszPropNames[i]);
                 s_pszPropNames[i] = NULL;
                 if (lstrcmpiW(pszPropName, L"RECTL2.top") == 0)
-                {
                     return E_FAIL;
-                }
+
                 goto Skip1;
             }
         }
@@ -110,7 +109,7 @@ static void SHPropertyBag_ReadTest(void)
     SHORT sValue = 0xDEAD;
     LONG lValue = 0xDEADDEAD;
     DWORD dwValue = 0xFEEDF00D;
-    WCHAR szStr[MAX_PATH];
+    BSTR bstr = NULL;
     POINTL ptl = { 0xEEEE, 0xDDDD };
     POINTS pts = { 0x2222, 0x3333 };
     RECTL rcl = { 123, 456, 789, 101112 };
@@ -140,10 +139,11 @@ static void SHPropertyBag_ReadTest(void)
     ok_int(s_cWrite, 0);
 
     ResetTest(VT_BSTR, L"Str1");
-    hr = SHPropertyBag_ReadStr(&dummy, s_pszPropNames[0], szStr, _countof(szStr));
+    hr = SHPropertyBag_ReadBSTR(&dummy, s_pszPropNames[0], &bstr);
     ok_long(hr, S_OK);
     ok_int(s_cRead, 1);
     ok_int(s_cWrite, 0);
+    SysFreeString(bstr);
 
     ResetTest(VT_I4, L"POINTL1.x", L"POINTL1.y");
     hr = SHPropertyBag_ReadPOINTL(&dummy, L"POINTL1", &ptl);
@@ -164,8 +164,8 @@ static void SHPropertyBag_ReadTest(void)
     ok_int(s_cWrite, 0);
 
     ResetTest(VT_I4, L"RECTL2.left", L"RECTL2.top", L"RECTL2.right", L"RECTL2.bottom");
-    hr = SHPropertyBag_WriteRECTL(&dummy, L"RECTL2", &rcl);
-    ok_long(hr, S_OK);
+    hr = SHPropertyBag_ReadRECTL(&dummy, L"RECTL2", &rcl);
+    ok_long(hr, E_FAIL);
     ok_int(s_cRead, 2);
     ok_int(s_cWrite, 0);
 }
