@@ -28,8 +28,8 @@ ULONG_PTR hGetParentProcessId() // derived form Napalm @ NetCore2K from https://
 	if(NtQueryInformationProcess(GetCurrentProcess(), 0,
 				&pbi, sizeof(pbi), &ulSize) >= 0 && ulSize == sizeof(pbi))
 		return pbi[5];
-	else
-		return (ULONG_PTR)-1;
+
+    return (ULONG_PTR)-1;
 }
 // end of private functions for winsock handle duplication
 
