@@ -267,6 +267,10 @@ WORD CTrayClockWnd::GetMinimumSize(IN BOOL Horizontal, IN OUT PSIZE pSize)
     if (!LinesMeasured)
         return 0;
 
+    /* Prevents the date from being cut off when the day of the week is shorter than the date. */
+    if (g_TaskbarSettings.bPreferDate)
+        szMax.cx = LineSizes[CLOCKWND_FORMAT_DATE].cx;
+
     for (i = 0; i < CLOCKWND_FORMAT_COUNT; i++)
     {
         if (LineSizes[i].cx != 0)

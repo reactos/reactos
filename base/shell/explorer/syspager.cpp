@@ -1256,6 +1256,11 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
     tbm.cyBarPad = 1;
     tbm.cxButtonSpacing = 1;
     tbm.cyButtonSpacing = 1;
+    if (!g_TaskbarSettings.bSmallIcons)
+    {
+        tbm.cxPad = GetSystemMetrics(SM_CYSMICON) * 0.5;
+        tbm.cyPad = GetSystemMetrics(SM_CYSMICON) * 0.5;
+    }
     SetMetrics(&tbm);
 
     SetButtonSize(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
@@ -1398,10 +1403,18 @@ void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
     INT cyButton = GetSystemMetrics(SM_CYSMICON) + 2;
     INT cxButton = GetSystemMetrics(SM_CXSMICON) + 2;
     int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
+    if (!g_TaskbarSettings.bSmallIcons)
+    {
+        cyButton = GetSystemMetrics(SM_CYSMICON) * 1.5;
+        cxButton = GetSystemMetrics(SM_CXSMICON) * 1.5;
+    }
 
     if (IsHorizontal)
     {
-        rows = max(size->cy / cyButton, 1);
+        if (g_TaskbarSettings.bSmallIcons)
+            rows = max(size->cy / cyButton, 1);
+        else
+            rows = max(size->cy / (cyButton * 1.5), 1);
         columns = (VisibleButtonCount + rows - 1) / rows;
     }
     else
