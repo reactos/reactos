@@ -23,11 +23,12 @@ LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
     DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
     BOOL Result;
     LPWSTR buf;
-    PCWSTR pSrvName = ServerName->Buffer;
+    PCWSTR pSrvName;
 
     if (ServerName == NULL || ServerName->Length == 0 || ServerName->Buffer == NULL)
         return TRUE;
 
+    pSrvName = ServerName->Buffer;
     buf = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
     Result = GetComputerNameW(buf, &dwSize);
     if (Result && (pSrvName[0] == L'\\') && (pSrvName[1] == L'\\'))
