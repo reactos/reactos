@@ -266,57 +266,54 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
         } else DPRINT1("Error GetModuleHandleA() could not find WS2_32 module handle.\n");
         // NOTE: currently this code duplicates the handle/socket but DOES NOT CHAGE THE HANDLE ACCESS OR OPTIONS IN ANY WAY (ignores dwOption and access rights changes)
         // TODO: revise code to respect access changes requested in parameters
-        if (isSocket && GetCurrentProcessId() == GetProcessId(hSourceProcessHandle)) 
-        {
-            canDupe = TRUE; // this is the only case that is fairly certain to work
-        }
-        else if (isSocket && hGetParentProcessId() == GetProcessId(hSourceProcessHandle)) { // handle is from parent process, it can be directly duplicated if inheritable
-            // check if handle has inheritance set
-            if (GetHandleInformation(hSourceHandle, &handleFlags)) { // get flags for handle
-                if (handleFlags & HANDLE_FLAG_INHERIT) { // need to check if it's winsock.. or not.. also if access is changing or inheritance is changing, thos would require dupe
-                    if (dwOptions & DUPLICATE_SAME_ACCESS) {
-                        DPRINT("DuplicateHandle: winsock inherited handle with same access, duplicating handle.\n");			
-                    } else {
-                        DPRINT("DuplicateHandle: winsock inherited handle with differing access, duplicating handle and ignoring access/dwOptions (PART IMPL FIXME).\n");										
-                    }
-                    canDupe = TRUE;
-                }
-            } else {
-                DPRINT1("DuplicateHandle: GetHandleInformation failed for parent owned handle(%lx) getlasterror is (%lx).\n", hSourceHandle, GetLastError());			
+        if (isSocket) {
+            if (GetCurrentProcessId() == GetProcessId(hSourceProcessHandle)) {
+                canDupe = TRUE; // this is the only case that is fairly certain to work
             }
-        }
-        if(canDupe) 
-        { 
-            SOCKET targetSocket;
-            *lpTargetHandle = hSourceHandle; // if we fail we just return the handle we were given HACK TODO: Fix this
-            if (dupwinsock) 
-            { // if we didn't dynlink this gets skipped
-                _SEH2_TRY 
-                {			
-                    int result = dupwinsock((SOCKET)hSourceHandle, GetCurrentProcessId(), &SharedSocketInfo); // was GetProcessId(ProcessHandle)
-                    if (result != 0) {
-                        DPRINT1("DuplicateHandle: IN Process call to WSADuplicateSocketW failed, returned:%x.\n", result);
-                    } else {
-                        // now call wsasocket to finish the process and create new socket
-                        targetSocket = DynWSASocket(SharedSocketInfo.iAddressFamily, SharedSocketInfo.iSocketType, SharedSocketInfo.iProtocol, &SharedSocketInfo, 0, WSA_FLAG_OVERLAPPED); 
-                        // 	not sure we want overlapped set, it's the default for winsock 1.x but winsock 2 stopped setting it by default	
-                        if (targetSocket != INVALID_SOCKET) {
-                            DPRINT("DuplicateHandle: winsock socket handle succesfully duplicated, returning handle(%lx).\n", targetSocket);
-                            *lpTargetHandle = (HANDLE)targetSocket;							
-                        } else DPRINT1("DuplicateHandle: WSASocketW on cross process call returned INVALID_SOCKET, returning input handle(%lx) (BADIMPL FIXME).\n", hSourceHandle);						
+            else if (hGetParentProcessId() == GetProcessId(hSourceProcessHandle)) { // handle is from parent process, it can be directly duplicated if inheritable
+                // check if handle has inheritance set
+                if (GetHandleInformation(hSourceHandle, &handleFlags)) { // get flags for handle
+                    if (handleFlags & HANDLE_FLAG_INHERIT) { // need to check if it's winsock.. or not.. also if access is changing or inheritance is changing, thos would require dupe
+                        if (dwOptions & DUPLICATE_SAME_ACCESS) {
+                            DPRINT("DuplicateHandle: winsock inherited handle with same access, duplicating handle.\n");			
+                        } else {
+                            DPRINT("DuplicateHandle: winsock inherited handle with differing access, duplicating handle and ignoring access/dwOptions (PART IMPL FIXME).\n");										
+                        }
+                        canDupe = TRUE;
                     }
-                }			
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    DPRINT1("DuplicateHandle: SOCKET DUPLICATION exception (%lx) for duplicating handle(%lx) returning source handle (BADIMPL FIXME).\n", _SEH2_GetExceptionCode(), hSourceHandle);			
+                } else {
+                    DPRINT1("DuplicateHandle: GetHandleInformation failed for parent owned handle(%lx) getlasterror is (%lx).\n", hSourceHandle, GetLastError());			
                 }
-                _SEH2_END;		
             }
-            DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true.\n");									
-        } else {
-            if (isSocket && !canDupe) 
-            {
-                // winsock handle, but not from self or parent process, THIS WILL PROBABLY FAIL (FIXME)
+            if(canDupe) 
+            { 
+                SOCKET targetSocket;
+                *lpTargetHandle = hSourceHandle; // if we fail we just return the handle we were given HACK TODO: Fix this
+                if (dupwinsock) 
+                { // if we didn't dynlink this gets skipped
+                    _SEH2_TRY 
+                    {			
+                        int result = dupwinsock((SOCKET)hSourceHandle, GetCurrentProcessId(), &SharedSocketInfo); // was GetProcessId(ProcessHandle)
+                        if (result != 0) {
+                            DPRINT1("DuplicateHandle: IN Process call to WSADuplicateSocketW failed, returned:%x.\n", result);
+                        } else {
+                            // now call wsasocket to finish the process and create new socket
+                            targetSocket = DynWSASocket(SharedSocketInfo.iAddressFamily, SharedSocketInfo.iSocketType, SharedSocketInfo.iProtocol, &SharedSocketInfo, 0, WSA_FLAG_OVERLAPPED); 
+                            // 	not sure we want overlapped set, it's the default for winsock 1.x but winsock 2 stopped setting it by default	
+                            if (targetSocket != INVALID_SOCKET) {
+                                DPRINT("DuplicateHandle: winsock socket handle succesfully duplicated, returning handle(%lx).\n", targetSocket);
+                                *lpTargetHandle = (HANDLE)targetSocket;							
+                            } else DPRINT1("DuplicateHandle: WSASocketW on cross process call returned INVALID_SOCKET, returning input handle(%lx) (BADIMPL FIXME).\n", hSourceHandle);						
+                        }
+                    }			
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        DPRINT1("DuplicateHandle: SOCKET DUPLICATION exception (%lx) for duplicating handle(%lx) returning source handle (BADIMPL FIXME).\n", _SEH2_GetExceptionCode(), hSourceHandle);			
+                    }
+                    _SEH2_END;		
+                }
+                DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true.\n");									
+            } else { // !canDupe - winsock handle, but not from self or parent process, THIS WILL PROBABLY FAIL (FIXME)
                 DPRINT("DuplicateHandle: canDupe is false, attempting CROSS-PROCESS socket duplication.\n");			
                 SOCKET targetSocket;
                 *lpTargetHandle = hSourceHandle; // if we fail we just return the handle we were given which will work but may result in closing twice or prematurely
@@ -346,10 +343,10 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                     }
                     _SEH2_END;	
                 }
-                DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true.\n");							
-            } else DPRINT1("DuplicateHandle: SOCKET DUPLICATION SKIPPED (no ws2_32), returning true and source handle. (NOIMPL FIXME)\n");					
+                DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true.\n");									
+            }
+            return TRUE;
         }
-        return TRUE;
     }
     DPRINT("DuplicateHandle: handle is not a socket, proceeding with NtDuplicateObject\n");
     
