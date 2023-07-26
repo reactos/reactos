@@ -82,7 +82,6 @@ typedef struct _TASK_ITEM
     PTASK_GROUP Group;
     INT Index;
     INT IconIndex;
-    WINDOWPLACEMENT wndpl;
 
     union
     {
@@ -1113,8 +1112,6 @@ public:
                 TaskItem->hWnd = hWnd;
                 TaskItem->Index = -1;
                 TaskItem->Group = AddToTaskGroup(hWnd);
-                TaskItem->wndpl.length = sizeof(TaskItem->wndpl);
-                ::GetWindowPlacement(hWnd, &TaskItem->wndpl);
 
                 if (!m_IsDestroying)
                 {
@@ -1602,16 +1599,12 @@ public:
 
             if (!bIsMinimized && bIsActive)
             {
-                TaskItem->wndpl.length = sizeof(TaskItem->wndpl);
-                ::GetWindowPlacement(TaskItem->hWnd, &TaskItem->wndpl);
-
                 ::ShowWindowAsync(TaskItem->hWnd, SW_MINIMIZE);
                 TRACE("Valid button clicked. App window Minimized.\n");
             }
             else
             {
                 ::SwitchToThisWindow(TaskItem->hWnd, TRUE);
-                ::SetWindowPlacement(TaskItem->hWnd, &TaskItem->wndpl);
 
                 TRACE("Valid button clicked. App window Restored.\n");
             }
