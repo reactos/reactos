@@ -270,7 +270,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
         {
             canDupe = TRUE; // this is the only case that is fairly certain to work
         }
-        if (isSocket && hGetParentProcessId() == GetProcessId(hSourceProcessHandle)) { // handle is from parent process, it can be directly duplicated if inheritable
+        else if (isSocket && hGetParentProcessId() == GetProcessId(hSourceProcessHandle)) { // handle is from parent process, it can be directly duplicated if inheritable
             // check if handle has inheritance set
             if (GetHandleInformation(hSourceHandle, &handleFlags)) { // get flags for handle
                 if (handleFlags & HANDLE_FLAG_INHERIT) { // need to check if it's winsock.. or not.. also if access is changing or inheritance is changing, thos would require dupe
