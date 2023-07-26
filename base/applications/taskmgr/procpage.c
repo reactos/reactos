@@ -16,6 +16,8 @@
 #define CMP(x1, x2)\
     (x1 < x2 ? -1 : (x1 > x2 ? 1 : 0))
 
+#define CONST_STR_LEN(str) (_countof(str) - 1)
+
 typedef struct
 {
     ULONG ProcessId;
@@ -994,7 +996,7 @@ DevicePathToDosPath(
     WCHAR szDeviceName[MAX_PATH];
 
     /* Check if lpDevicePath is a device path */
-    if (_wcsnicmp(lpDevicePath, L"\\Device\\", _countof(L"\\Device\\")-1) != 0)
+    if (_wcsnicmp(lpDevicePath, L"\\Device\\", CONST_STR_LEN(L"\\Device\\")) != 0)
     {
         return 0;
     }
@@ -1150,7 +1152,7 @@ GetProcessExecutablePathById(
         if (GetSystemDirectoryW(pszSystemDir, uLength) != 0)
         {
             /* Get the required length, including the NULL terminator */
-            dwRet = uLength + _countof(szKernelExe) - 1;
+            dwRet = uLength + CONST_STR_LEN(szKernelExe);
 
             if (lpExePath && (dwLength >= dwRet))
             {
@@ -1238,11 +1240,11 @@ void ProcessPage_OnOpenFileLocation(void)
         goto Cleanup;
 
     /* Build the shell command line */
-    pszCmdLine = HeapAlloc(GetProcessHeap(), 0, (dwLength + 10) * sizeof(WCHAR));
+    pszCmdLine = HeapAlloc(GetProcessHeap(), 0, (dwLength + CONST_STR_LEN(L"/select,\"\"")) * sizeof(WCHAR));
     if (!pszCmdLine)
         goto Cleanup;
 
-    StringCchPrintfW(pszCmdLine, dwLength + 10, L"/select,\"%s\"", pszExePath);
+    StringCchPrintfW(pszCmdLine, dwLength + CONST_STR_LEN(L"/select,\"\""), L"/select,\"%s\"", pszExePath);
 
     /* Call the shell to open the file location and select it */
     ShellExecuteW(NULL, L"open", L"explorer.exe", pszCmdLine, NULL, SW_SHOWNORMAL);
