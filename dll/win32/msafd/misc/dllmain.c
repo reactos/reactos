@@ -455,7 +455,6 @@ WSPDuplicateSocket(
     HANDLE hProcess, hDuplicatedSharedData, hDuplicatedHandle;
     PSOCKET_INFORMATION Socket;
     PSOCK_SHARED_INFO pSharedData, pOldSharedData;
-    //BOOL bDuplicated;
     NTSTATUS Status;
 
     if (Handle == INVALID_SOCKET)
