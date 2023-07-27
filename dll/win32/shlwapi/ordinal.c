@@ -5362,7 +5362,7 @@ BOOL VariantToBuffer(const VARIANT *varIn, void *pv, UINT cb)
         if (SafeArrayGetDim(pArray) == 1 &&
             SUCCEEDED(SafeArrayGetLBound(pArray, 1, &lBound)) &&
             SUCCEEDED(SafeArrayGetUBound(pArray, 1, &uBound)) &&
-            (uBound - lBound + 1 >= cb) &&
+            (cb <= uBound - lBound + 1) &&
             SUCCEEDED(SafeArrayAccessData(pArray, &pvData)))
         {
             CopyMemory(pv, pvData, cb);
