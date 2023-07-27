@@ -175,7 +175,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
     NTSTATUS Status;
     HANDLE hTargetHandle;
 
-    // added for winsock code
+    // added for winsock
     HMODULE winsock_module = NULL;
     typedef int (WINAPI *wsstcall)(DWORD, LPWSADATA);
     typedef int (WINAPI *wsskcall)(int, int, int, LPWSAPROTOCOL_INFOW, GROUP, DWORD);
