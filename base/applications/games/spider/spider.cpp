@@ -365,7 +365,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                     return 0;
 
                 case IDM_HELP_ABOUT:
-                    MessageBox(hwnd, MsgAbout, szAppName, MB_OK|MB_ICONINFORMATION);
+                    HICON hIcon;
+                    hIcon = LoadIconW(hInstance, MAKEINTRESOURCE(IDI_SPIDER));
+                    ShellAboutW(hwnd, szAppName, MsgAbout, hIcon);
+                    DeleteObject(hIcon);
                     return 0;
 
                 case IDM_GAME_EXIT:

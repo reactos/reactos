@@ -56,7 +56,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Pasiență"
-    IDS_SOL_ABOUT "Pasiență de J Brown\nTradus de Petru Dimitriu\nCardLib versiunea 1.0."
+    IDS_SOL_ABOUT "Pasiență de J Brown; Tradus de Petru Dimitriu\nCardLib versiunea 1.0."
     IDS_SOL_QUIT "Abandonați jocul curent?"
     IDS_SOL_WIN "Felicitări, ați câștigat!"
     IDS_SOL_DEAL "O nouă rundă?"
