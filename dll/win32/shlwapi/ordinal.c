@@ -5730,7 +5730,7 @@ HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GU
     }
 
     if (V_VT(&vari) == (VT_UI1 | VT_ARRAY)) /* Byte Array */
-        bRet = VariantToGUID(&vari, pguid);
+        bRet = VariantToBuffer(&vari, pguid, sizeof(*pguid));
     else if (V_VT(&vari) == VT_BSTR)
         bRet = GUIDFromStringW(V_BSTR(&vari), pguid);
     else
