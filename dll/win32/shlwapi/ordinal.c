@@ -5353,16 +5353,16 @@ DoDefault:
 BOOL VariantToBuffer(const VARIANT *varIn, void *pv, UINT cb)
 {
     void *pvData;
-    LONG lBound, uBound;
+    LONG LowerBound, UpperBound;
     SAFEARRAY *pArray;
 
     if (varIn && V_VT(varIn) == (VT_ARRAY | VT_UI1))
     {
         pArray = V_ARRAY(varIn);
         if (SafeArrayGetDim(pArray) == 1 &&
-            SUCCEEDED(SafeArrayGetLBound(pArray, 1, &lBound)) &&
-            SUCCEEDED(SafeArrayGetUBound(pArray, 1, &uBound)) &&
-            (cb <= uBound - lBound + 1) &&
+            SUCCEEDED(SafeArrayGetLBound(pArray, 1, &LowerBound)) &&
+            SUCCEEDED(SafeArrayGetUBound(pArray, 1, &UpperBound)) &&
+            (cb <= UpperBound - LowerBound + 1) &&
             SUCCEEDED(SafeArrayAccessData(pArray, &pvData)))
         {
             CopyMemory(pv, pvData, cb);
