@@ -5727,7 +5727,7 @@ HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GU
     else if (V_VT(&vari) == VT_BSTR)
         bRet = GUIDFromStringW(V_BSTR(&vari), pguid);
     else
-        bRet = TRUE;
+        bRet = TRUE; /* This is by design */
 
     if (!bRet)
         ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
