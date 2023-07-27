@@ -5350,7 +5350,7 @@ DoDefault:
     return hr;
 }
 
-BOOL VariantToBuffer(const VARIANT *varIn, void *pv, UINT cb)
+BOOL VariantToBuffer(const VARIANT *varIn, void *pvDest, UINT cb)
 {
     void *pvData;
     LONG LowerBound, UpperBound;
@@ -5365,7 +5365,7 @@ BOOL VariantToBuffer(const VARIANT *varIn, void *pv, UINT cb)
             (cb <= UpperBound - LowerBound + 1) &&
             SUCCEEDED(SafeArrayAccessData(pArray, &pvData)))
         {
-            CopyMemory(pv, pvData, cb);
+            CopyMemory(pvDest, pvData, cb);
             SafeArrayUnaccessData(pArray);
             return TRUE;
         }
