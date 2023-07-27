@@ -5356,7 +5356,7 @@ BOOL VariantToBuffer(const VARIANT *varIn, void *pvDest, UINT cb)
     LONG LowerBound, UpperBound;
     SAFEARRAY *pArray;
 
-    if (varIn && V_VT(varIn) == (VT_ARRAY | VT_UI1))
+    if (varIn && V_VT(varIn) == (VT_ARRAY | VT_UI1)) /* Byte Array */
     {
         pArray = V_ARRAY(varIn);
         if (SafeArrayGetDim(pArray) == 1 &&
