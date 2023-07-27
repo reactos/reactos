@@ -5362,6 +5362,7 @@ VariantToBuffer(
 
     if (varIn && V_VT(varIn) == (VT_UI1 | VT_ARRAY)) /* Byte Array */
     {
+        /* Boundary check and access */
         pArray = V_ARRAY(varIn);
         if (SafeArrayGetDim(pArray) == 1 &&
             SUCCEEDED(SafeArrayGetLBound(pArray, 1, &LowerBound)) &&
@@ -5371,11 +5372,11 @@ VariantToBuffer(
         {
             CopyMemory(pvDest, pvData, cbSize);
             SafeArrayUnaccessData(pArray);
-            return TRUE;
+            return TRUE; /* Success */
         }
     }
 
-    return FALSE;
+    return FALSE; /* Failure */
 }
 
 /**************************************************************************
