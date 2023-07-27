@@ -415,7 +415,7 @@ NTSTATUS TCPConnect
     	TI_DbgPrint(DEBUG_TCP,
                     ("No pcb from LibTCPConnect, clear ConnectRequest\n")); 
     	LockObject(Connection);
-    	RemoveTailList(&Connection->ConnectRequest); 
+    	RemoveEntryList(&Bucket->Entry);
     	UnlockObject(Connection);
 	    ExFreeToNPagedLookasideList(&TdiBucketLookasideList, Bucket);
     }
