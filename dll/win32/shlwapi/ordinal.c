@@ -5354,20 +5354,24 @@ BOOL VariantToBuffer(const VARIANT *varIn, void *pv, UINT cb)
 {
     void *pvData;
     LONG lBound, uBound;
+    SAFEARRAY *pArray;
 
-    if (!varIn || V_VT(varIn) != (VT_ARRAY | VT_UI1) ||
-        SafeArrayGetDim(V_ARRAY(varIn)) != 1 ||
-        FAILED(SafeArrayGetLBound(V_ARRAY(varIn), 1, &lBound)) ||
-        FAILED(SafeArrayGetUBound(V_ARRAY(varIn), 1, &uBound)) ||
-        (uBound - lBound + 1 < cb) ||
-        FAILED(SafeArrayAccessData(V_ARRAY(varIn), &pvData)))
+    if (varIn && V_VT(varIn) == (VT_ARRAY | VT_UI1))
     {
-        return FALSE;
+        pArray = V_ARRAY(varIn);
+        if (SafeArrayGetDim(pArray) == 1 &&
+            SUCCEEDED(SafeArrayGetLBound(pArray, 1, &lBound)) &&
+            SUCCEEDED(SafeArrayGetUBound(pArray, 1, &uBound)) &&
+            (uBound - lBound + 1 >= cb) &&
+            SUCCEEDED(SafeArrayAccessData(pArray, &pvData)))
+        {
+            CopyMemory(pv, pvData, cb);
+            SafeArrayUnaccessData(pArray);
+            return TRUE;
+        }
     }
 
-    CopyMemory(pv, pvData, cb);
-    SafeArrayUnaccessData(V_ARRAY(varIn));
-    return TRUE;
+    return FALSE;
 }
 
 BOOL VariantToGUID(const VARIANT *varIn, GUID *pguid)
