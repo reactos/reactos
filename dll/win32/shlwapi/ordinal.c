@@ -5510,6 +5510,167 @@ HRESULT WINAPI SHPropertyBag_ReadDWORD(IPropertyBag *ppb, LPCWSTR pszPropName, D
 }
 
 /**************************************************************************
+ *  SHPropertyBag_ReadBSTR (SHLWAPI.520)
+ */
+HRESULT WINAPI SHPropertyBag_ReadBSTR(IPropertyBag *ppb, LPCWSTR pszPropName, BSTR *pbstr)
+{
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pbstr);
+
+    if (!ppb || !pszPropName || !pbstr)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pbstr);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_BSTR);
+    if (FAILED(hr))
+        *pbstr = NULL;
+    else
+        *pbstr = V_BSTR(&varg);
+
+    return hr;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadStr (SHLWAPI.494)
+ */
+HRESULT WINAPI SHPropertyBag_ReadStr(IPropertyBag *ppb, LPCWSTR pszPropName, LPWSTR pszDst, int cchMax)
+{
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p %d\n", ppb, debugstr_w(pszPropName), pszDst, cchMax);
+
+    if (!ppb || !pszPropName || !pszDst)
+    {
+        ERR("%p %s %p %d\n", ppb, debugstr_w(pszPropName), pszDst, cchMax);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_BSTR);
+    if (FAILED(hr))
+        return E_FAIL;
+
+    StrCpyNW(pszDst, V_BSTR(&varg), cchMax);
+    VariantClear(&varg);
+    return hr;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadPOINTL (SHLWAPI.521)
+ */
+HRESULT WINAPI SHPropertyBag_ReadPOINTL(IPropertyBag *ppb, LPCWSTR pszPropName, POINTL *pptl)
+{
+    HRESULT hr;
+    int cch, cch2;
+    WCHAR *pch, szBuff[MAX_PATH];
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pptl);
+
+    if (!ppb || !pszPropName || !pptl)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pptl);
+        return E_INVALIDARG;
+    }
+
+    StrCpyNW(szBuff, pszPropName, _countof(szBuff));
+
+    cch = lstrlenW(szBuff);
+    cch2 = _countof(szBuff) - cch;
+    if (cch2 < _countof(L".x"))
+    {
+        ERR("%s is too long\n", debugstr_w(pszPropName));
+        return E_FAIL;
+    }
+
+    pch = &szBuff[cch];
+
+    StrCpyNW(pch, L".x", cch2);
+    hr = SHPropertyBag_ReadLONG(ppb, szBuff, &pptl->x);
+    if (FAILED(hr))
+        return hr;
+
+    StrCpyNW(pch, L".y", cch2);
+    return SHPropertyBag_ReadLONG(ppb, szBuff, &pptl->y);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadPOINTS (SHLWAPI.525)
+ */
+HRESULT WINAPI SHPropertyBag_ReadPOINTS(IPropertyBag *ppb, LPCWSTR pszPropName, POINTS *ppts)
+{
+    HRESULT hr;
+    POINTL ptl;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), ppts);
+
+    if (!ppb || !pszPropName || !ppts)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), ppts);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadPOINTL(ppb, pszPropName, &ptl);
+    if (FAILED(hr))
+        return hr;
+
+    ppts->x = ptl.x;
+    ppts->y = ptl.y;
+    return hr;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadRECTL (SHLWAPI.523)
+ */
+HRESULT WINAPI SHPropertyBag_ReadRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, RECTL *prcl)
+{
+    HRESULT hr;
+    int cch, cch2;
+    WCHAR *pch, szBuff[MAX_PATH];
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), prcl);
+
+    if (!ppb || !pszPropName || !prcl)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), prcl);
+        return E_INVALIDARG;
+    }
+
+    StrCpyNW(szBuff, pszPropName, _countof(szBuff));
+
+    cch = lstrlenW(szBuff);
+    cch2 = _countof(szBuff) - cch;
+    if (cch2 < _countof(L".bottom"))
+    {
+        ERR("%s is too long\n", debugstr_w(pszPropName));
+        return E_FAIL;
+    }
+
+    pch = &szBuff[cch];
+
+    StrCpyNW(pch, L".left", cch2);
+    hr = SHPropertyBag_ReadLONG(ppb, szBuff, &prcl->left);
+    if (FAILED(hr))
+        return hr;
+
+    StrCpyNW(pch, L".top", cch2);
+    hr = SHPropertyBag_ReadLONG(ppb, szBuff, &prcl->top);
+    if (FAILED(hr))
+        return hr;
+
+    StrCpyNW(pch, L".right", cch2);
+    hr = SHPropertyBag_ReadLONG(ppb, szBuff, &prcl->right);
+    if (FAILED(hr))
+        return hr;
+
+    StrCpyNW(pch, L".bottom", cch2);
+    return SHPropertyBag_ReadLONG(ppb, szBuff, &prcl->bottom);
+}
+
+/**************************************************************************
  *  SHPropertyBag_Delete (SHLWAPI.535)
  */
 HRESULT WINAPI SHPropertyBag_Delete(IPropertyBag *ppb, LPCWSTR pszPropName)
