@@ -5353,12 +5353,12 @@ DoDefault:
 BOOL
 VariantToBuffer(
     _In_ const VARIANT *varIn,
-    _Out_writes_(cb) void *pvDest,
+    _Out_writes_(cb) LPVOID pvDest,
     _In_ SIZE_T cbSize)
 {
-    void *pvData;
+    LPVOID pvData;
     LONG LowerBound, UpperBound;
-    SAFEARRAY *pArray;
+    LPSAFEARRAY pArray;
 
     if (varIn && V_VT(varIn) == (VT_UI1 | VT_ARRAY)) /* Byte Array */
     {
