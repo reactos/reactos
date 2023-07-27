@@ -5353,7 +5353,7 @@ DoDefault:
 BOOL
 VariantToBuffer(
     _In_ const VARIANT *varIn,
-    _Out_writes_(cb) LPVOID pvDest,
+    _Out_writes_(cbSize) LPVOID pvDest,
     _In_ SIZE_T cbSize)
 {
     LPVOID pvData;
