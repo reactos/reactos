@@ -943,6 +943,7 @@ public:
         return nCount;
     }
 
+
     CStringT Tokenize(_In_z_ PCXSTR pszTokens, _Inout_ int& iStart) const
     {
         ATLASSERT(iStart >= 0);
