@@ -36,6 +36,9 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     HRESULT ret;
     WCHAR wszDstPath[MAX_PATH + 1] = {0};
     PWCHAR pwszSrcPathsList = (PWCHAR) HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) * cidl + 1);
+    if (!pwszSrcPathsList)
+        return E_OUTOFMEMORY;
+
     PWCHAR pwszListPos = pwszSrcPathsList;
     STRRET strretFrom;
     SHFILEOPSTRUCTW fop;
