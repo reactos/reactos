@@ -5350,7 +5350,11 @@ DoDefault:
     return hr;
 }
 
-BOOL VariantToBuffer(const VARIANT *varIn, void *pvDest, UINT cb)
+BOOL
+VariantToBuffer(
+    _In_ const VARIANT *varIn,
+    _Out_writes_(cb) void *pvDest,
+    _In_ UINT cb)
 {
     void *pvData;
     LONG LowerBound, UpperBound;
