@@ -5354,22 +5354,22 @@ BOOL
 VariantToBuffer(
     _In_ const VARIANT *varIn,
     _Out_writes_(cb) void *pvDest,
-    _In_ UINT cb)
+    _In_ SIZE_T cbSize)
 {
     void *pvData;
     LONG LowerBound, UpperBound;
     SAFEARRAY *pArray;
 
-    if (varIn && V_VT(varIn) == (VT_ARRAY | VT_UI1)) /* Byte Array */
+    if (varIn && V_VT(varIn) == (VT_UI1 | VT_ARRAY)) /* Byte Array */
     {
         pArray = V_ARRAY(varIn);
         if (SafeArrayGetDim(pArray) == 1 &&
             SUCCEEDED(SafeArrayGetLBound(pArray, 1, &LowerBound)) &&
             SUCCEEDED(SafeArrayGetUBound(pArray, 1, &UpperBound)) &&
-            (cb <= UpperBound - LowerBound + 1) &&
+            ((LONG)cbSize <= UpperBound - LowerBound + 1) &&
             SUCCEEDED(SafeArrayAccessData(pArray, &pvData)))
         {
-            CopyMemory(pvDest, pvData, cb);
+            CopyMemory(pvDest, pvData, cbSize);
             SafeArrayUnaccessData(pArray);
             return TRUE;
         }
