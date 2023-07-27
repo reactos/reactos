@@ -5714,12 +5714,20 @@ HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GU
     BOOL bRet;
     VARIANT vari;
 
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
+
     if (!ppb || !pszPropName || !pguid)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
         return E_INVALIDARG;
+    }
 
     hr = SHPropertyBag_ReadType(ppb, pszPropName, &vari, VT_EMPTY);
     if (FAILED(hr))
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
         return hr;
+    }
 
     if (V_VT(&vari) == (VT_UI1 | VT_ARRAY)) /* Byte Array */
         bRet = VariantToGUID(&vari, pguid);
@@ -5727,6 +5735,9 @@ HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GU
         bRet = GUIDFromStringW(V_BSTR(&vari), pguid);
     else
         bRet = TRUE;
+
+    if (!bRet)
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
 
     VariantClear(&vari);
     return (bRet ? S_OK : E_FAIL);
@@ -5740,8 +5751,13 @@ HRESULT WINAPI SHPropertyBag_ReadStream(IPropertyBag *ppb, LPCWSTR pszPropName, 
     HRESULT hr;
     VARIANT vari;
 
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), ppStream);
+
     if (!ppb || !pszPropName || !ppStream)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), ppStream);
         return E_INVALIDARG;
+    }
 
     hr = SHPropertyBag_ReadType(ppb, pszPropName, &vari, VT_UNKNOWN);
     if (FAILED(hr))
