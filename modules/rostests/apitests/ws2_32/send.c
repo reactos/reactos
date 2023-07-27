@@ -162,6 +162,18 @@ test_sendto(void)
     ok(ret == bufferSize, "sendto returned %d\n", ret);
     ok(error == 0, "error = %d\n", error);
 
+    // case for testing sendto() with null target after initial connect CORE-17521
+    // it may seem an odd sequence, but yes connect call on UDP sockets are valid
+    ret = connect(sock, (const struct sockaddr *) &addr, sizeof(addr));
+    error = WSAGetLastError();
+    ok(ret == 0, "connect returned %d\n", ret);
+    ok(error == 0, "error = %d\n", error);
+
+    ret = sendto(sock, buffer, bufferSize, 0 , NULL, 0);
+    error = WSAGetLastError();
+    ok(ret == bufferSize, "sendto returned %d\n", ret);
+    ok(error == 0, "error = %d\n", error);  
+    
     closesocket(sock);
 
     FreeReadOnly(buffer);
