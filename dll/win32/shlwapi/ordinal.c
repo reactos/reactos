@@ -5350,6 +5350,37 @@ DoDefault:
     return hr;
 }
 
+BOOL VariantToBuffer(const VARIANT *varIn, void *pv, UINT cb)
+{
+    void *pvData;
+    LONG lBound, uBound;
+
+    if (!varIn || V_VT(varIn) != (VT_ARRAY | VT_UI1) ||
+        SafeArrayGetDim(V_ARRAY(varIn)) != 1 ||
+        FAILED(SafeArrayGetLBound(V_ARRAY(varIn), 1, &lBound)) ||
+        FAILED(SafeArrayGetUBound(V_ARRAY(varIn), 1, &uBound)) ||
+        (uBound - lBound + 1 < cb) ||
+        FAILED(SafeArrayAccessData(V_ARRAY(varIn), &pvData)))
+    {
+        return FALSE;
+    }
+
+    CopyMemory(pv, pvData, cb);
+    SafeArrayUnaccessData(V_ARRAY(varIn));
+    return TRUE;
+}
+
+BOOL VariantToGUID(const VARIANT *varIn, GUID *pguid)
+{
+    if (VariantToBuffer(varIn, pguid, sizeof(*pguid)))
+        return TRUE;
+
+    if (varIn && V_VT(varIn) == VT_BSTR && V_BSTR(varIn))
+        return GUIDFromStringW(V_BSTR(varIn), pguid);
+
+    return FALSE;
+}
+
 /**************************************************************************
  *  SHPropertyBag_ReadType (SHLWAPI.493)
  */
