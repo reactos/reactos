@@ -5671,6 +5671,54 @@ HRESULT WINAPI SHPropertyBag_ReadRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, R
 }
 
 /**************************************************************************
+ *  SHPropertyBag_ReadGUID (SHLWAPI.505)
+ */
+HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GUID *pguid)
+{
+    HRESULT hr;
+    BOOL bRet;
+    VARIANT vari;
+
+    if (!ppb || !pszPropName || !pguid)
+        return E_INVALIDARG;
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &vari, VT_EMPTY);
+    if (FAILED(hr))
+        return hr;
+
+    if (V_VT(&vari) == (VT_UI1 | VT_ARRAY)) /* Byte Array */
+        bRet = VariantToGUID(&vari, pguid);
+    else if (V_VT(&vari) == VT_BSTR)
+        bRet = GUIDFromStringW(V_BSTR(&vari), pguid);
+    else
+        bRet = TRUE;
+
+    VariantClear(&vari);
+    return (bRet ? S_OK : E_FAIL);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadStream (SHLWAPI.531)
+ */
+HRESULT WINAPI SHPropertyBag_ReadStream(IPropertyBag *ppb, LPCWSTR pszPropName, IStream **ppStream)
+{
+    HRESULT hr;
+    VARIANT vari;
+
+    if (!ppb || !pszPropName || !ppStream)
+        return E_INVALIDARG;
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &vari, VT_UNKNOWN);
+    if (FAILED(hr))
+        return hr;
+
+    hr = IUnknown_QueryInterface(V_UNKNOWN(&vari), &IID_IStream, (void **)ppStream);
+    IUnknown_Release(V_UNKNOWN(&vari));
+
+    return hr;
+}
+
+/**************************************************************************
  *  SHPropertyBag_Delete (SHLWAPI.535)
  */
 HRESULT WINAPI SHPropertyBag_Delete(IPropertyBag *ppb, LPCWSTR pszPropName)

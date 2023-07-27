@@ -64,8 +64,16 @@ public:
             {
                 ok_wstr(pszPropName, s_pszPropNames[i]);
                 s_pszPropNames[i] = NULL;
+
                 if (lstrcmpiW(pszPropName, L"RECTL2.top") == 0)
                     return E_FAIL;
+
+                if (lstrcmpiW(pszPropName, L"GUID1") == 0)
+                {
+                    V_VT(pvari) = VT_BSTR;
+                    V_BSTR(pvari) = SysAllocString(L"{00000000-0000-0000-C000-000000000046}");
+                    return S_OK;
+                }
 
                 goto Skip1;
             }
@@ -113,6 +121,7 @@ static void SHPropertyBag_ReadTest(void)
     POINTL ptl = { 0xEEEE, 0xDDDD };
     POINTS pts = { 0x2222, 0x3333 };
     RECTL rcl = { 123, 456, 789, 101112 };
+    GUID guid = { 0 };
 
     ResetTest(VT_BOOL, L"BOOL1");
     hr = SHPropertyBag_ReadBOOL(&dummy, s_pszPropNames[0], &bValue);
@@ -167,6 +176,12 @@ static void SHPropertyBag_ReadTest(void)
     hr = SHPropertyBag_ReadRECTL(&dummy, L"RECTL2", &rcl);
     ok_long(hr, E_FAIL);
     ok_int(s_cRead, 2);
+    ok_int(s_cWrite, 0);
+
+    ResetTest(VT_EMPTY, L"GUID1");
+    hr = SHPropertyBag_ReadGUID(&dummy, L"GUID1", &guid);
+    ok_long(hr, S_OK);
+    ok_int(s_cRead, 1);
     ok_int(s_cWrite, 0);
 }
 
