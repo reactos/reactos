@@ -5374,17 +5374,6 @@ BOOL VariantToBuffer(const VARIANT *varIn, void *pvDest, UINT cb)
     return FALSE;
 }
 
-BOOL VariantToGUID(const VARIANT *varIn, GUID *pguid)
-{
-    if (VariantToBuffer(varIn, pguid, sizeof(*pguid)))
-        return TRUE;
-
-    if (varIn && V_VT(varIn) == VT_BSTR && V_BSTR(varIn))
-        return GUIDFromStringW(V_BSTR(varIn), pguid);
-
-    return FALSE;
-}
-
 /**************************************************************************
  *  SHPropertyBag_ReadType (SHLWAPI.493)
  */
