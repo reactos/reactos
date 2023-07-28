@@ -488,8 +488,8 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
 */
 HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    if (!pidl)
-        return S_FALSE;
+    if (!strRet || !pidl)
+        return E_INVALIDARG;
 
     PIDLCPanelStruct *pCPanel = _ILGetCPanelPointer(pidl);
 
