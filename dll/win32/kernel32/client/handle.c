@@ -238,7 +238,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
         DPRINT1("DuplicateHandle: NtQueryObject generated an exception (%lx) for handle(%lx)\n", excd, hSourceHandle);			
     }
     _SEH2_END;
-    if ( wcscmp((LPWSTR)(nameFull + (2 * sizeof(WCHAR))), L"\\Device\\Afd") == 0 ) 
+    if (wcscmp((LPWSTR)(nameFull + (2 * sizeof(WCHAR))), L"\\Device\\Afd") == 0)
     { // check if this belongs to AFD, if so it's a winsock socket
         //DPRINT("DuplicateHandle: NtQueryObject returned (%ls) for handle(%lx).\n", (LPWSTR)(nameFull + (2 * sizeof(WCHAR))), hSourceHandle);			
         DPRINT("DuplicateHandle: NtQueryObject winsock socket device(AFD) detected for handle(%lx).\n", hSourceHandle);				
