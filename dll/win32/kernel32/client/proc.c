@@ -523,7 +523,7 @@ BaseProcessStartup(
             DPRINT("BasePushProcessStartup: winsock socket inheritance processing complete\n");
        }
     } else
-    	DPRINT("BaseProcessStartup: no inheritable winsock sockets registered in PEB, winsock processing skipped.\n");    
+    	DPRINT("BaseProcessStartup: no inheritable winsock sockets registered in PEB, winsock processing skipped\n");
     // end of winsock inheritance code
     
     _SEH2_TRY
