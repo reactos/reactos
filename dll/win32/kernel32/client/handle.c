@@ -227,7 +227,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
     ULONG returnedLength;
     BOOLEAN isSocket = FALSE;
     BOOLEAN canDupe = FALSE;
-    _SEH2_TRY 
+    _SEH2_TRY
     {
         // technically think we rely on a side effect of a failed call.. we get the name even though call failed
         NtQueryObject(hSourceHandle, ObjectNameInformation, nameFull, sizeof(nameFull), &returnedLength);	
