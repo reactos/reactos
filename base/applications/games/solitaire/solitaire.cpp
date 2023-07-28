@@ -739,8 +739,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 return 0;
 
             case IDM_HELP_ABOUT:
-                ShellAboutW(hwnd, szAppName, MsgAbout,
-                            LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_SOLITAIRE)));
+                ShellAbout(hwnd, szAppName, MsgAbout,
+                           LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SOLITAIRE)));
                 return 0;
 
             case IDM_GAME_EXIT:
