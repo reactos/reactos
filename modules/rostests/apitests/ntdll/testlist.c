@@ -7,6 +7,7 @@ extern void func_LdrEnumResources(void);
 extern void func_load_notifications(void);
 extern void func_NtAcceptConnectPort(void);
 extern void func_NtAccessCheckByType(void);
+extern void func_NtAccessCheckByTypeResultList(void);
 extern void func_NtAdjustGroupsToken(void);
 extern void func_NtAdjustPrivilegesToken(void);
 extern void func_NtAllocateVirtualMemory(void);
@@ -101,6 +102,7 @@ const struct test winetest_testlist[] =
     { "load_notifications",             func_load_notifications },
     { "NtAcceptConnectPort",            func_NtAcceptConnectPort },
     { "NtAccessCheckByType",            func_NtAccessCheckByType },
+    { "NtAccessCheckByTypeResultList",  func_NtAccessCheckByTypeResultList },
     { "NtAdjustGroupsToken",            func_NtAdjustGroupsToken },
     { "NtAdjustPrivilegesToken",        func_NtAdjustPrivilegesToken },
     { "NtAllocateVirtualMemory",        func_NtAllocateVirtualMemory },
