@@ -123,6 +123,27 @@ ValidatePort(
 
         // CHECKME!
         case 0x3B6: return (Size <= 2);
+
+//
+// INVESTIGATE: It is known (Geoff Chappell) that the x86 BIOS emulator
+// also handles those ports separately. Check whether we can find some
+// video hardware ROMs that use them...
+//
+        case 0x70: case 0x71:
+            DPRINT1("*** Accessing CMOS port 0x%x, size %u, %s\n", Port, Size, IsWrite ? "write" : "read");
+            return TRUE;
+
+        case 0xB1: case 0xB2:
+            DPRINT1("*** Accessing port 0x%x, size %u, %s\n", Port, Size, IsWrite ? "write" : "read");
+            return TRUE;
+
+        case 0x0CF8: case 0x0CF9: case 0x0CFA: case 0x0CFB:
+            DPRINT1("*** Accessing PCI address port 0x%x, size %u, %s\n", Port, Size, IsWrite ? "write" : "read");
+            return TRUE; // FIXME: We may need to do more and call HAL PCI functions.
+
+        case 0x0CFC: case 0x0CFD: case 0x0CFE: case 0x0CFF:
+            DPRINT1("*** Accessing PCI data port 0x%x, size %u, %s\n", Port, Size, IsWrite ? "write" : "read");
+            return TRUE; // FIXME: We may need to do more and call HAL PCI functions.
     }
 
     /* Allow but report unknown ports, we trust the BIOS for now */
