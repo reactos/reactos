@@ -281,7 +281,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                         canDupe = TRUE;
                     }
                 } else {
-                    DPRINT1("DuplicateHandle: GetHandleInformation failed for parent owned handle(%lx) getlasterror is (%lx).\n", hSourceHandle, GetLastError());			
+                    DPRINT1("DuplicateHandle: GetHandleInformation failed for parent owned handle(%lx) getlasterror is (%lx)\n", hSourceHandle, GetLastError());
                 }
             }
             if(canDupe) 
