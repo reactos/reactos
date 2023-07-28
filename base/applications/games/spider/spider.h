@@ -2,7 +2,6 @@
 #define _SPIDER_PCH_
 
 #include <cardlib.h>
-#include <shellapi.h>
 
 #include "resource.h"
 

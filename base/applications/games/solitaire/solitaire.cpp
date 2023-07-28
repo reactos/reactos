@@ -2,6 +2,7 @@
 
 #include <winreg.h>
 #include <commctrl.h>
+#include <shellapi.h>
 #include <tchar.h>
 
 #include "resource.h"

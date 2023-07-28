@@ -9,6 +9,7 @@
 #include "spider.h"
 
 #include <commctrl.h>
+#include <shellapi.h>
 #include <tchar.h>
 
 TCHAR szHelpPath[MAX_PATH];
