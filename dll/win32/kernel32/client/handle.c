@@ -302,7 +302,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                             if (targetSocket != INVALID_SOCKET) {
                                 DPRINT("DuplicateHandle: winsock socket handle succesfully duplicated, returning handle(%lx)\n", targetSocket);
                                 *lpTargetHandle = (HANDLE)targetSocket;							
-                            } else DPRINT1("DuplicateHandle: WSASocketW on cross process call returned INVALID_SOCKET, returning input handle(%lx) (BADIMPL FIXME).\n", hSourceHandle);						
+                            } else DPRINT1("DuplicateHandle: WSASocketW on cross process call returned INVALID_SOCKET, returning input handle(%lx) (BADIMPL FIXME)\n", hSourceHandle);
                         }
                     }			
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
