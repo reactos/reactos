@@ -4516,7 +4516,7 @@ StartScan:
 					    SYSTEM_HANDLE_TABLE_ENTRY_INFO handleInfo = (SYSTEM_HANDLE_TABLE_ENTRY_INFO)handleTableInformation->Handles[i];
     					/* ROS comments shows ObTypeIdx as corrupted, would have helped with this process */
 	    				// process only our own handles
-		    			if ( (ULONG)handleInfo.UniqueProcessId == GetCurrentProcessId() ) // we only care about our own handles, system table has everything..
+		    			if ((ULONG)handleInfo.UniqueProcessId == GetCurrentProcessId()) // we only care about our own handles, system table has everything
 			    		{
 				    		// handleInfo.HandleAttributes is $02 for inheritable, we skip others
 					    	if ( handleInfo.HandleAttributes == 2 )
