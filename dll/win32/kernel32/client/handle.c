@@ -274,7 +274,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                 if (GetHandleInformation(hSourceHandle, &handleFlags)) { // get flags for handle
                     if (handleFlags & HANDLE_FLAG_INHERIT) { // need to check if it's winsock.. or not.. also if access is changing or inheritance is changing, thos would require dupe
                         if (dwOptions & DUPLICATE_SAME_ACCESS) {
-                            DPRINT("DuplicateHandle: winsock inherited handle with same access, duplicating handle.\n");			
+                            DPRINT("DuplicateHandle: winsock inherited handle with same access, duplicating handle\n");
                         } else {
                             DPRINT("DuplicateHandle: winsock inherited handle with differing access, duplicating handle and ignoring access/dwOptions (PART IMPL FIXME).\n");										
                         }
