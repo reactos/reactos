@@ -300,7 +300,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                             targetSocket = DynWSASocket(SharedSocketInfo.iAddressFamily, SharedSocketInfo.iSocketType, SharedSocketInfo.iProtocol, &SharedSocketInfo, 0, WSA_FLAG_OVERLAPPED); 
                             // not sure we want overlapped set, it's the default for winsock 1.x but winsock 2 stopped setting it by default
                             if (targetSocket != INVALID_SOCKET) {
-                                DPRINT("DuplicateHandle: winsock socket handle succesfully duplicated, returning handle(%lx).\n", targetSocket);
+                                DPRINT("DuplicateHandle: winsock socket handle succesfully duplicated, returning handle(%lx)\n", targetSocket);
                                 *lpTargetHandle = (HANDLE)targetSocket;							
                             } else DPRINT1("DuplicateHandle: WSASocketW on cross process call returned INVALID_SOCKET, returning input handle(%lx) (BADIMPL FIXME).\n", hSourceHandle);						
                         }
