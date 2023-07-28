@@ -250,7 +250,7 @@ static void SHPropertyBag_ReadTest(void)
     BOOL bEqual = TRUE;
     for (DWORD i = 0; i < sizeof(guid); ++i)
     {
-        if (LPBYTE(&guid)[i] != 0x55)
+        if (((LPBYTE)&guid)[i] != 0x55)
         {
             bEqual = FALSE;
             break;
