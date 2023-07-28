@@ -240,7 +240,6 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
     _SEH2_END;
     if (wcscmp((LPWSTR)(nameFull + (2 * sizeof(WCHAR))), L"\\Device\\Afd") == 0)
     { // check if this belongs to AFD, if so it's a winsock socket
-        //DPRINT("DuplicateHandle: NtQueryObject returned (%ls) for handle(%lx).\n", (LPWSTR)(nameFull + (2 * sizeof(WCHAR))), hSourceHandle);			
         DPRINT("DuplicateHandle: NtQueryObject winsock socket device(AFD) detected for handle(%lx).\n", hSourceHandle);				
         // DynLink the winsock routines we need for this work.
         DPRINT("DuplicateHandle: calling GetModuleHandleA(\"ws2_32\").\n");
