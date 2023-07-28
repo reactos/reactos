@@ -1578,7 +1578,7 @@ ExitProcess(IN UINT uExitCode)
 
 	    if (Peb->SpareUlong > 0) // inherited socket count
         {
-    		DPRINT("ExitPocess: inherited sockets present, calling WSACleanup().\n");
+            DPRINT("ExitPocess: inherited sockets present, calling WSACleanup()\n");
 		    winsock_module = GetModuleHandleA("ws2_32");
 	  	    if (winsock_module)
   		    {
