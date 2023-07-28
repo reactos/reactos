@@ -4606,7 +4606,7 @@ StartScan:
     	if (sockindex > 0) 
 	    {
 		    DPRINT1("CreateProcessInternalW: creating winsock memory structures in child process and marking PEB\n");			
-		    Size = sockindex * sizeof( WSAPROTOCOL_INFOW );
+		    Size = sockindex * sizeof(WSAPROTOCOL_INFOW);
     		DPRINT("CreateProcessInternalW: calling NtAllocateVirtualMemory() with socket block size:%lx\n", Size);
 	    	RemoteWinsockData = NULL; // init just in case its not null
 		    Status = NtAllocateVirtualMemory(ProcessHandle,
