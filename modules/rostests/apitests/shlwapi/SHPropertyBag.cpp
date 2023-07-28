@@ -30,7 +30,7 @@ static void ResetTest(VARTYPE vt,
     s_pszPropNames[3] = pszName3;
 }
 
-static SAFEARRAY* CreateByteArray(LPCVOID pvData, DWORD cbSize)
+static SAFEARRAY* CreateByteArray(LPCVOID pvSrc, DWORD cbSize)
 {
     SAFEARRAYBOUND Bound;
     Bound.lLbound = 0;
@@ -40,18 +40,15 @@ static SAFEARRAY* CreateByteArray(LPCVOID pvData, DWORD cbSize)
     if (!pArray)
         return NULL;
 
-    BYTE HUGEP *pb;
-    HRESULT hr = SafeArrayAccessData(pArray, (void HUGEP **)&pb);
+    void HUGEP *pvData;
+    HRESULT hr = SafeArrayAccessData(pArray, &pvData);
     if (FAILED(hr))
     {
         SafeArrayDestroy(pArray);
         return NULL;
     }
 
-    for (DWORD i = 0; i < cbSize; i++)
-    {
-        pb[i] = ((const BYTE*)pvData)[i];
-    }
+    CopyMemory(pvData, pvSrc, cbSize);
     SafeArrayUnaccessData(pArray);
 
     return pArray;
