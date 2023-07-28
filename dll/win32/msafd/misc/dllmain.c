@@ -233,7 +233,7 @@ WSPSocket(int AddressFamily,
     Socket->RemoteAddress = &Socket->SharedData->WSRemoteAddress;
     Socket->SanData = NULL;
     RtlCopyMemory(&Socket->ProtocolInfo, lpProtocolInfo, sizeof(Socket->ProtocolInfo));
-    if ((SharedData) && (Socket->Handle != INVALID_SOCKET)) { // if we have SharedDate and the value sent in is valid jump
+    if (SharedData && (Socket->Handle != INVALID_SOCKET)) { // if we have SharedDate and the value sent in is valid jump
         goto ok;
 
     /* Packet Size */
