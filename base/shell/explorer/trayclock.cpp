@@ -571,8 +571,8 @@ VOID CTrayClockWnd::PaintLine(IN HDC hDC, IN OUT RECT *rcClient, IN UINT LineNum
     if (LineSizes[LineNumber].cx == 0)
         return;
 
-    INT HShift = g_TaskbarSettings.bSmallIcons ||
-                 g_TaskbarSettings.bCompactTrayIcons ? 0 : TRAY_CLOCK_WND_SPACING_X;
+    INT HShift = ((g_TaskbarSettings.bSmallIcons ||
+                   g_TaskbarSettings.bCompactTrayIcons) ? 0 : TRAY_CLOCK_WND_SPACING_X);
 
     TextOut(hDC,
             ((rcClient->right - LineSizes[szLinesIndex].cx) / 2) + HShift,
