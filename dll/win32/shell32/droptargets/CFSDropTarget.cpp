@@ -60,8 +60,11 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     *pwszListPos = L'\0';
 
     /* Build a double null terminated target (this path) */
-    lstrcpynW(wszDstPath, m_sPathTarget, MAX_PATH);
-    wszDstPath[wcslen(wszDstPath) + 1] = '\0';
+    ret = StringCchCopyW(wszDstPath, MAX_PATH, m_sPathTarget);
+    if (FAILED(ret))
+        goto cleanup;
+
+    wszDstPath[lstrlenW(wszDstPath) + 1] = L'\0';
 
     ZeroMemory(&fop, sizeof(fop));
     fop.hwnd = m_hwndSite;
