@@ -495,7 +495,7 @@ BaseProcessStartup(
     		DynWSAStartup = (wsstcall)GetProcAddress(winsock_module, "WSAStartup");
     		DynWSASocket = (wsskcall)GetProcAddress(winsock_module, "WSASocketW");
 	    } else {
- 		    DPRINT1("BaseProcessStartup: winsock module faled to load it into child process.\n");
+ 		    DPRINT1("BaseProcessStartup: winsock module faled to load it into child process\n");
 	    }
         if (winsock_module) 
         {
