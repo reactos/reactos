@@ -235,7 +235,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         int excd = _SEH2_GetExceptionCode();
-        DPRINT1("DuplicateHandle: NtQueryObject generated an exception (%lx) for handle(%lx).\n", excd, hSourceHandle);			
+        DPRINT1("DuplicateHandle: NtQueryObject generated an exception (%lx) for handle(%lx)\n", excd, hSourceHandle);			
     }
     _SEH2_END;
     if ( wcscmp((LPWSTR)(nameFull + (2 * sizeof(WCHAR))), L"\\Device\\Afd") == 0 ) 
