@@ -577,23 +577,23 @@ Example:
     CLEAN
 .
 Language=Romanian
-    Removes any and all partition or volume formatting from the disk with
-    focus.
+    Îndepărtează orice sau toate format(ele) de partiție sau de volum de pe
+    disc cu focalizare.
 
-Syntax:  CLEAN [ALL]
+Sintaxă:  CLEAN [ALL]
 
-    ALL         Specifies that each and every byte\sector on the disk is set to
-                zero, which completely deletes all data contained on the disk.
+    ALL         Specifică faptul că fiecare octet/sector de pe disc este setat
+                pe zero, ceea ce șterge complet toate datele conținute pe disc.
 
-    On master boot record (MBR) disks, only the MBR partitioning information
-    and hidden sector information are overwritten. On GUID partition table
-    (GPT) disks, the GPT partitioning information, including the Protective
-    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
-    and the last 1MB of the disk are zeroed. This erases any disk formatting 
-    that had been previously applied to the disk. The disk's state after 
-    cleaning the disk is 'UNINITIALIZED'.
+    Pe discurile de inițializare de maestru (MBR), sunt suprascrise numai
+	informațiile despre partiționarea MBR și informațiile despre sectoarele
+	ascunse. Pe discurile cu tabel de partiție GUID (GPT), informațiile de
+	partiționare GPT, incluzând MBR protectiv, sunt suprascrise. Dacă parametrul
+	ALL nu e folosit, primul 1MO și ultimul 1MO al discului sunt puse la valoarea
+	zero. Aceasta șterge orice formatare a discului ce a fost aplicată anterior
+	discului. Starea discului după ce este curățat discul este 'NEINIȚIALIZAT'.
 
-Example:
+De exemplu:
 
     CLEAN
 .
@@ -719,7 +719,7 @@ Language=Portugese
 <Add COMPACT command help text here>
 .
 Language=Romanian
-<Add COMPACT command help text here>
+<Adăugați aici textul de ajutor pentru comanda COMPACT>
 .
 Language=Russian
 <Add COMPACT command help text here>
@@ -755,7 +755,7 @@ Language=Portugese
 <Add CONVERT command help text here>
 .
 Language=Romanian
-<Add CONVERT command help text here>
+<Adăugați aici textul de ajutor pentru comanda CONVERT>
 .
 Language=Russian
 <Add CONVERT command help text here>
@@ -791,7 +791,7 @@ Language=Portugese
 <Add CREATE PARTITION EFI command help text here>
 .
 Language=Romanian
-<Add CREATE PARTITION EFI command help text here>
+<Adăugați aici textul de ajutor pentru comanda CREATE PARTITION EFI>
 .
 Language=Russian
 <Add CREATE PARTITION EFI command help text here>
@@ -973,39 +973,39 @@ Example:
     CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Romanian
-    Creates an extended partition on the disk with focus.
-    Applies to master boot record (MBR) disks only.
+    Crează o partiție extinsă pe discul cu focalizare..
+    Se aplică doar la discurile cu înregistrarea de inițializare de maestru (MBR).
 
-Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
-                given, the partition continues until there is no more free
-                space in the extended partition.
+    SIZE=<N>    Mărimea partiției în megaocteți (MB). Dacă nu este dată nicio
+	            mărime, partiția continuă pânăcând nu mai este spațiu liber în
+				partiția extinsă.
 
-    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
-                created. If no offset is given, the partition will start
-                at the beginning of the first free space on the disk that
-                is large enough to hold the new partition.
+    OFFSET=<N>  Decalajul, în kiloocteți (KB), la care partiția este creată.
+	            Dacă nu este dat niciun decalaj, partiția va începe de la
+				începutul primului spațiu liber de pe disc ce este suficient de mare ca
+				să țină noua partiție.
 
-    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
-                arrays to improve performance. The partition offset will be
-                a multiple of <N>. If the OFFSET parameter is specified, it
-                will be rounded to the closest multiple of <N>.
+    ALIGN=<N>   Folosit de obicei cu dispozitiv cu matrici de Număr de unitate
+	            logică RAID (LUN) pentru a îmbunătăți performanța. Decalajul
+				partiției va fi un multiplu de <N>. Dacă este specificat parametrul OFFSET,
+				va fi rotunjit la cel mai apropiat multiplu al lui <N>.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
+	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
+				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă cu un cod
+				de eroare.
 
-    After the partition has been created, the focus automatically shifts to the
-    new partition. Only one extended partition can be created per disk. This
-    command fails if you attempt to create an extended partition within another
-    extended partition. You must create an extended partition before you can
-    create logical partitions.
+    După ce a fost creată partiția, focalizarea se schimbă automat pe noua
+	partiție. Doar o singură partiție extinsă poate fi creată pe un disc. Această
+	comandă eșuează dacă încercați să creați o partiție extinsă într-o altă
+	partiție extinsă. Trebuie să creați o partiție extinsă înainte de a crea
+	partițiile logice.
 
-    A basic MBR disk must be selected for this operation to succeed.
+    Un disc MBR de bază trebuie să fie selectat pentru ca această operațiune să aibă succes.
 
-Example:
+De exemplu:
 
     CREATE PARTITION EXTENDED SIZE=1000
 .
@@ -1573,7 +1573,7 @@ Language=Portugese
 <Add CREATE PARTITION MSR command help text here>
 .
 Language=Romanian
-<Add CREATE PARTITION MSR command help text here>
+<Adăugați aici textul de ajutor pentru comanda CREATE PARTITION MSR>
 .
 Language=Russian
 <Add CREATE PARTITION MSR command help text here>
