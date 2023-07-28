@@ -514,7 +514,7 @@ BaseProcessStartup(
         	                                            0,
                 	                                    0);
 			            if (sockDuplicated == INVALID_SOCKET) 
-				            DPRINT1("BaseProcessStartup: WSASocket call failed to duplicate socket.\n");
+				            DPRINT1("BaseProcessStartup: WSASocket call failed to duplicate socket\n");
 		            }
     	         } else
         	         DPRINT1("BaseProcessStartup: Winsock 2 DLL initialization failed: %d\n", nStatus);
