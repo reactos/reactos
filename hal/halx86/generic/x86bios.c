@@ -43,6 +43,160 @@ DbgDumpPage(PUCHAR MemBuffer, USHORT Segment)
     }
 }
 
+
+static
+VOID
+FASTCALL
+x86MemRead(
+    PFAST486_STATE State,
+    ULONG Address,
+    PVOID Buffer,
+    ULONG Size)
+{
+    /* Validate the address range */
+    if (((ULONG64)Address + Size) < 0x100000)
+    {
+        RtlCopyMemory(Buffer, x86BiosMemoryMapping + Address, Size);
+    }
+    else
+    {
+        RtlFillMemory(Buffer, Size, 0xCC);
+        DPRINT1("x86MemRead: invalid read at 0x%lx (size 0x%lx)\n", Address, Size);
+    }
+}
+
+static
+VOID
+FASTCALL
+x86MemWrite(
+    PFAST486_STATE State,
+    ULONG Address,
+    PVOID Buffer,
+    ULONG Size)
+{
+    /* Validate the address range */
+    if (((ULONG64)Address + Size) < 0x100000)
+    {
+        RtlCopyMemory(x86BiosMemoryMapping + Address, Buffer, Size);
+    }
+    else
+    {
+        DPRINT1("x86MemWrite: invalid write at 0x%lx (size 0x%lx)\n", Address, Size);
+    }
+}
+
+static
+BOOLEAN
+ValidatePort(
+    USHORT Port,
+    UCHAR Size,
+    BOOLEAN IsWrite)
+{
+    switch (Port)
+    {
+        // VGA: https://wiki.osdev.org/VGA_Hardware#Port_0x3C0
+        case 0x3C0: return (Size == 1) && IsWrite;
+        case 0x3C1: return (Size == 1) && !IsWrite;
+        case 0x3C2: return (Size == 1) && IsWrite;
+        case 0x3C4: return IsWrite;
+        case 0x3C5: return (Size <= 2);
+        case 0x3C7: return (Size == 1) && IsWrite;
+        case 0x3CC: return (Size == 1) && !IsWrite;
+        case 0x3CE: return IsWrite;
+        case 0x3CF: return (Size <= 2);
+        case 0x3D4: return IsWrite;
+        case 0x3D5: return (Size <= 2);
+        case 0x3C6: return (Size == 1);
+        case 0x3C8: return (Size == 1) && IsWrite;
+        case 0x3C9: return (Size == 1);
+        case 0x3DA: return (Size == 1) && !IsWrite;
+
+        // OVMF debug messages used by VBox / QEMU
+        // https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/EFI/Firmware/OvmfPkg/README
+        case 0x402: return (Size == 1) && IsWrite;
+
+        // BOCHS VBE: https://forum.osdev.org/viewtopic.php?f=1&t=14639
+        case 0x1CE: return (Size == 1) && IsWrite;
+        case 0x1CF: return (Size == 1);
+
+        // CHECKME!
+        case 0x3B6: return (Size <= 2);
+    }
+
+    /* Allow but report unknown ports, we trust the BIOS for now */
+    DPRINT1("Unknown port 0x%x, size %u, %s\n", Port, Size, IsWrite ? "write" : "read");
+    return TRUE;
+}
+
+static
+VOID
+FASTCALL
+x86IoRead(
+    PFAST486_STATE State,
+    USHORT Port,
+    PVOID Buffer,
+    ULONG DataCount,
+    UCHAR DataSize)
+{
+    /* Validate the port */
+    if (!ValidatePort(Port, DataSize, FALSE))
+    {
+        DPRINT1("Invalid IO port read access (port: 0x%x, count: 0x%x)\n", Port, DataSize);
+    }
+
+    switch (DataSize)
+    {
+        case 1: READ_PORT_BUFFER_UCHAR((PUCHAR)(ULONG_PTR)Port, Buffer, DataCount); return;
+        case 2: READ_PORT_BUFFER_USHORT((PUSHORT)(ULONG_PTR)Port, Buffer, DataCount); return;
+        case 4: READ_PORT_BUFFER_ULONG((PULONG)(ULONG_PTR)Port, Buffer, DataCount); return;
+    }
+}
+
+static
+VOID
+FASTCALL
+x86IoWrite(
+    PFAST486_STATE State,
+    USHORT Port,
+    PVOID Buffer,
+    ULONG DataCount,
+    UCHAR DataSize)
+{
+    /* Validate the port */
+    if (!ValidatePort(Port, DataSize, TRUE))
+    {
+        DPRINT1("Invalid IO port write access (port: 0x%x, count: 0x%x)\n", Port, DataSize);
+    }
+
+    switch (DataSize)
+    {
+        case 1: WRITE_PORT_BUFFER_UCHAR((PUCHAR)(ULONG_PTR)Port, Buffer, DataCount); return;
+        case 2: WRITE_PORT_BUFFER_USHORT((PUSHORT)(ULONG_PTR)Port, Buffer, DataCount); return;
+        case 4: WRITE_PORT_BUFFER_ULONG((PULONG)(ULONG_PTR)Port, Buffer, DataCount); return;
+    }
+}
+
+static
+VOID
+FASTCALL
+x86BOP(
+    PFAST486_STATE State,
+    UCHAR BopCode)
+{
+    ASSERT(FALSE);
+}
+
+static
+UCHAR
+FASTCALL
+x86IntAck(
+    PFAST486_STATE State)
+{
+    ASSERT(FALSE);
+    return 0;
+}
+
+
 VOID
 NTAPI
 HalInitializeBios(
@@ -251,158 +405,6 @@ x86BiosWriteMemory(
 
     /* Return success */
     return STATUS_SUCCESS;
-}
-
-static
-VOID
-FASTCALL
-x86MemRead(
-    PFAST486_STATE State,
-    ULONG Address,
-    PVOID Buffer,
-    ULONG Size)
-{
-    /* Validate the address range */
-    if (((ULONG64)Address + Size) < 0x100000)
-    {
-        RtlCopyMemory(Buffer, x86BiosMemoryMapping + Address, Size);
-    }
-    else
-    {
-        RtlFillMemory(Buffer, Size, 0xCC);
-        DPRINT1("x86MemRead: invalid read at 0x%lx (size 0x%lx)\n", Address, Size);
-    }
-}
-
-static
-VOID
-FASTCALL
-x86MemWrite(
-    PFAST486_STATE State,
-    ULONG Address,
-    PVOID Buffer,
-    ULONG Size)
-{
-    /* Validate the address range */
-    if (((ULONG64)Address + Size) < 0x100000)
-    {
-        RtlCopyMemory(x86BiosMemoryMapping + Address, Buffer, Size);
-    }
-    else
-    {
-        DPRINT1("x86MemWrite: invalid write at 0x%lx (size 0x%lx)\n", Address, Size);
-    }
-}
-
-static
-BOOLEAN
-ValidatePort(
-    USHORT Port,
-    UCHAR Size,
-    BOOLEAN IsWrite)
-{
-    switch (Port)
-    {
-        // VGA: https://wiki.osdev.org/VGA_Hardware#Port_0x3C0
-        case 0x3C0: return (Size == 1) && IsWrite;
-        case 0x3C1: return (Size == 1) && !IsWrite;
-        case 0x3C2: return (Size == 1) && IsWrite;
-        case 0x3C4: return IsWrite;
-        case 0x3C5: return (Size <= 2);
-        case 0x3C7: return (Size == 1) && IsWrite;
-        case 0x3CC: return (Size == 1) && !IsWrite;
-        case 0x3CE: return IsWrite;
-        case 0x3CF: return (Size <= 2);
-        case 0x3D4: return IsWrite;
-        case 0x3D5: return (Size <= 2);
-        case 0x3C6: return (Size == 1);
-        case 0x3C8: return (Size == 1) && IsWrite;
-        case 0x3C9: return (Size == 1);
-        case 0x3DA: return (Size == 1) && !IsWrite;
-
-        // OVMF debug messages used by VBox / QEMU
-        // https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/EFI/Firmware/OvmfPkg/README
-        case 0x402: return (Size == 1) && IsWrite;
-
-        // BOCHS VBE: https://forum.osdev.org/viewtopic.php?f=1&t=14639
-        case 0x1CE: return (Size == 1) && IsWrite;
-        case 0x1CF: return (Size == 1);
-
-        // CHECKME!
-        case 0x3B6: return (Size <= 2);
-    }
-
-    /* Allow but report unknown ports, we trust the BIOS for now */
-    DPRINT1("Unknown port 0x%x, size %d, write %d\n", Port, Size, IsWrite);
-    return TRUE;
-}
-
-static
-VOID
-FASTCALL
-x86IoRead(
-    PFAST486_STATE State,
-    USHORT Port,
-    PVOID Buffer,
-    ULONG DataCount,
-    UCHAR DataSize)
-{
-    /* Validate the port */
-    if (!ValidatePort(Port, DataSize, FALSE))
-    {
-        DPRINT1("Invalid IO port read access (port: 0x%x, count: 0x%x)\n", Port, DataSize);
-    }
-
-    switch (DataSize)
-    {
-        case 1: READ_PORT_BUFFER_UCHAR((PUCHAR)(ULONG_PTR)Port, Buffer, DataCount); return;
-        case 2: READ_PORT_BUFFER_USHORT((PUSHORT)(ULONG_PTR)Port, Buffer, DataCount); return;
-        case 4: READ_PORT_BUFFER_ULONG((PULONG)(ULONG_PTR)Port, Buffer, DataCount); return;
-    }
-}
-
-static
-VOID
-FASTCALL
-x86IoWrite(
-    PFAST486_STATE State,
-    USHORT Port,
-    PVOID Buffer,
-    ULONG DataCount,
-    UCHAR DataSize)
-{
-    /* Validate the port */
-    if (!ValidatePort(Port, DataSize, TRUE))
-    {
-        DPRINT1("Invalid IO port write access (port: 0x%x, count: 0x%x)\n", Port, DataSize);
-    }
-
-    switch (DataSize)
-    {
-        case 1: WRITE_PORT_BUFFER_UCHAR((PUCHAR)(ULONG_PTR)Port, Buffer, DataCount); return;
-        case 2: WRITE_PORT_BUFFER_USHORT((PUSHORT)(ULONG_PTR)Port, Buffer, DataCount); return;
-        case 4: WRITE_PORT_BUFFER_ULONG((PULONG)(ULONG_PTR)Port, Buffer, DataCount); return;
-    }
-}
-
-static
-VOID
-FASTCALL
-x86BOP(
-    PFAST486_STATE State,
-    UCHAR BopCode)
-{
-    ASSERT(FALSE);
-}
-
-static
-UCHAR
-FASTCALL
-x86IntAck (
-    PFAST486_STATE State)
-{
-    ASSERT(FALSE);
-    return 0;
 }
 
 static ULONG HalpBiosCallCount = 0;
