@@ -224,7 +224,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
     // winsock socket handles code currently only dupes from self or inherited sockets from parent are implemented
     // TODO: add socket duplication from arbitrary source process (works in Windows 2003)
     WCHAR nameFull[80];
-    ULONG returnedLength; 	
+    ULONG returnedLength;
     BOOLEAN isSocket = FALSE;
     BOOLEAN canDupe = FALSE;
     _SEH2_TRY 
