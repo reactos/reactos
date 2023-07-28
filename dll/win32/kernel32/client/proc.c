@@ -4583,7 +4583,7 @@ StartScan:
 			    										DPRINT("CreateProcessInternalW: dwProviderReserved returned is %x\n", SharedSockets[sockindex].dwProviderReserved);
 				    									// DuplicateSocket populates these for us, we can use dwProviderReserved item to carry handle value and be our flag that socket is inherited.
 					    								SharedSockets[sockindex].dwProviderReserved = handleInfo.HandleValue;
-						    							DPRINT("CreateProcessInternalW: dwProviderReserved overriden to %x\n", SharedSockets[sockindex].dwProviderReserved );
+						    							DPRINT("CreateProcessInternalW: dwProviderReserved overriden to %x\n", SharedSockets[sockindex].dwProviderReserved);
 							    						if (result == 0) {
 								    						sockindex = sockindex + 1; // increment array index and counter
 									    					DPRINT("CreateProcessInternalW: WSADuplicateSocketW successful, duplicated (%x) sockets so far\n", sockindex);
