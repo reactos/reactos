@@ -307,7 +307,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                     }			
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        DPRINT1("DuplicateHandle: SOCKET DUPLICATION exception (%lx) for duplicating handle(%lx) returning source handle (BADIMPL FIXME).\n", _SEH2_GetExceptionCode(), hSourceHandle);			
+                        DPRINT1("DuplicateHandle: SOCKET DUPLICATION exception (%lx) for duplicating handle(%lx) returning source handle (BADIMPL FIXME)\n", _SEH2_GetExceptionCode(), hSourceHandle);
                     }
                     _SEH2_END;		
                 }
