@@ -804,14 +804,23 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     CComPtr<IShellFolder>                   newFolder;
     FOLDERSETTINGS                          newFolderSettings;
     HRESULT                                 hResult;
+    CLSID                                   clsid;
+    BOOL                                    HasIconViewType;
 
     // called by shell view to browse to new folder
     // also called by explorer band to navigate to new folder
     hResult = SHBindToFolder(pidl, &newFolder);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+    // HACK & FIXME: Get view mode from shellbag when fully implemented.
+    IUnknown_GetClassID(newFolder, &clsid);
+    HasIconViewType = clsid == CLSID_MyComputer || clsid == CLSID_ControlPanel ||
+                      clsid == CLSID_ShellDesktop;
 
-    newFolderSettings.ViewMode = FVM_ICON;
+    if (HasIconViewType)
+        newFolderSettings.ViewMode = FVM_ICON;
+    else
+        newFolderSettings.ViewMode = FVM_DETAILS;
     newFolderSettings.fFlags = 0;
     hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
     if (FAILED_UNEXPECTEDLY(hResult))
