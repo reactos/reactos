@@ -489,7 +489,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	            }    
 	        }
 
-	        if (FCB->State ==  SOCKET_STATE_BOUND) 
+	        if (FCB->State == SOCKET_STATE_BOUND)
             { // THIS CODE SECTION EXECUTES AND HANDLES STORING TARGET ADDRESS
 	     	    if (FCB->ConnectReturnInfo)
 	     	    {
