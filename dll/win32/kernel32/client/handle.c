@@ -229,7 +229,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
     BOOLEAN canDupe = FALSE;
     _SEH2_TRY
     {
-        // technically think we rely on a side effect of a failed call.. we get the name even though call failed
+        // we rely on a side effect of a failed call.. we get the name even though call failed
         NtQueryObject(hSourceHandle, ObjectNameInformation, nameFull, sizeof(nameFull), &returnedLength);	
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
