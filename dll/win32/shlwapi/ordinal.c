@@ -5351,8 +5351,8 @@ DoDefault:
 }
 
 BOOL
-VariantToBuffer(
-    _In_ const VARIANT *varIn,
+VariantArrayToBuffer(
+    _In_ const VARIANT *pvarIn,
     _Out_writes_(cbSize) LPVOID pvDest,
     _In_ SIZE_T cbSize)
 {
@@ -5360,20 +5360,20 @@ VariantToBuffer(
     LONG LowerBound, UpperBound;
     LPSAFEARRAY pArray;
 
-    if (varIn && V_VT(varIn) == (VT_UI1 | VT_ARRAY)) /* Byte Array */
+    if (!pvarIn || V_VT(pvarIn) != (VT_UI1 | VT_ARRAY)) /* Not a Byte Array? */
+        return FALSE; /* Failure */
+
+    /* Boundary check and access */
+    pArray = V_ARRAY(pvarIn);
+    if (SafeArrayGetDim(pArray) == 1 &&
+        SUCCEEDED(SafeArrayGetLBound(pArray, 1, &LowerBound)) &&
+        SUCCEEDED(SafeArrayGetUBound(pArray, 1, &UpperBound)) &&
+        ((LONG)cbSize <= UpperBound - LowerBound + 1) &&
+        SUCCEEDED(SafeArrayAccessData(pArray, &pvData)))
     {
-        /* Boundary check and access */
-        pArray = V_ARRAY(varIn);
-        if (SafeArrayGetDim(pArray) == 1 &&
-            SUCCEEDED(SafeArrayGetLBound(pArray, 1, &LowerBound)) &&
-            SUCCEEDED(SafeArrayGetUBound(pArray, 1, &UpperBound)) &&
-            ((LONG)cbSize <= UpperBound - LowerBound + 1) &&
-            SUCCEEDED(SafeArrayAccessData(pArray, &pvData)))
-        {
-            CopyMemory(pvDest, pvData, cbSize);
-            SafeArrayUnaccessData(pArray);
-            return TRUE; /* Success */
-        }
+        CopyMemory(pvDest, pvData, cbSize);
+        SafeArrayUnaccessData(pArray);
+        return TRUE; /* Success */
     }
 
     return FALSE; /* Failure */
@@ -5724,7 +5724,7 @@ HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GU
     }
 
     if (V_VT(&vari) == (VT_UI1 | VT_ARRAY)) /* Byte Array */
-        bRet = VariantToBuffer(&vari, pguid, sizeof(*pguid));
+        bRet = VariantArrayToBuffer(&vari, pguid, sizeof(*pguid));
     else if (V_VT(&vari) == VT_BSTR)
         bRet = GUIDFromStringW(V_BSTR(&vari), pguid);
     else
