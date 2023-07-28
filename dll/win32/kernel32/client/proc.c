@@ -4633,7 +4633,7 @@ StartScan:
                     						sizeof(PVOID),
 					                    	NULL);
 		    if (NT_SUCCESS(Status)) { 
-			    DPRINT("CreateProcessInternalW: PEB SparePtr2 pointer set to: %p\n", RemoteWinsockData) ; 
+			    DPRINT("CreateProcessInternalW: PEB SparePtr2 pointer set to: %p\n", RemoteWinsockData);
 		    }
 		    else { 
 			    DPRINT1("CreateProcessInternalW: ERROR could not store winsock data pointer in PEB SparePtr2 NtWriteVirtualMemory status(%lx)\n", Status); 
