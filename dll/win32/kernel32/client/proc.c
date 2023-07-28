@@ -4519,7 +4519,7 @@ StartScan:
 		    			if ((ULONG)handleInfo.UniqueProcessId == GetCurrentProcessId()) // we only care about our own handles, system table has everything
 			    		{
 				    		// handleInfo.HandleAttributes is $02 for inheritable, we skip others
-					    	if ( handleInfo.HandleAttributes == 2 )
+					    	if (handleInfo.HandleAttributes == 2)
 						    {
 							    if ( handleInfo.HandleValue != 0 || handleInfo.Object != 0 ) 
     							{
