@@ -66,6 +66,7 @@ typedef struct _TASK_GROUP
     DWORD dwTaskCount;
     DWORD dwProcessId;
     INT Index;
+    INT IconIndex;
     union
     {
         DWORD dwFlags;
@@ -73,6 +74,8 @@ typedef struct _TASK_GROUP
         {
 
             DWORD IsCollapsed : 1;
+            DWORD IsRightClick : 1;
+            DWORD IsTextInited : 1;
         };
     };
 } TASK_GROUP, *PTASK_GROUP;
@@ -84,6 +87,7 @@ typedef struct _TASK_ITEM
     INT Index;
     INT GroupIndex;
     INT IconIndex;
+    INT GroupIconIndex;
 
     union
     {
@@ -380,6 +384,8 @@ class CTaskSwitchWnd :
 
     SIZE m_ButtonSize;
 
+    HIMAGELIST m_TaskGroupImageList;
+
     UINT m_uHardErrorMsg;
     CHardErrorThread m_HardErrorThread;
 
@@ -403,7 +409,8 @@ public:
         m_ImageList(NULL),
         m_IsGroupingEnabled(FALSE),
         m_IsDestroying(FALSE),
-        m_CloseTaskGroupOpen(FALSE)
+        m_CloseTaskGroupOpen(FALSE),
+        m_TaskGroupImageList(NULL)
     {
         ZeroMemory(&m_ButtonSize, sizeof(m_ButtonSize));
         m_uHardErrorMsg = RegisterWindowMessageW(L"HardError");
@@ -533,10 +540,14 @@ public:
     }
 
     VOID RegenerateTaskGroupMenu(PTASK_GROUP TaskGroup) {
-        if(TaskGroupOpened != -1) {
+        DPRINTF("ASA\n");
+
+        if(TaskGroupOpened != -1 || TaskGroup == NULL) {
             CloseOpenedTaskGroup(FALSE);
             TaskGroupOpened = -1;
         }
+
+        if(m_IsDestroying) return;
 
         HMENU hMenu;
         if ((hMenu = CreatePopupMenu()) == NULL)
@@ -597,6 +608,8 @@ public:
             if (FAILED_UNEXPECTEDLY(hr))
                 return;
 
+            TaskGroupOpened = TaskGroup->Index;
+
             pCallback->AddRef();
             pCallback->Initialize(shellMenu, hMenu, this); //TODO
 
@@ -614,25 +627,112 @@ public:
             if (SUCCEEDED(hr))
                 pIo->Initialize();
         } else {
-            menuPopup->OnSelect(MPOS_CANCELLEVEL);
+            TaskGroupOpened = TaskGroup->Index;
 
-            shellMenu->SetMenu(hMenu, NULL, SMSET_TOP);
+            menuPopup->OnSelect(MPOS_FULLCANCEL);
+
+            shellMenu->SetMenu(hMenu, NULL, SMSET_BOTTOM);
         }
 
-        DPRINTF("Oh yes :D %d %d\n", test.left, test.top);
+        CComPtr<IDeskBand> pIDB;
+        hr = shellMenu->QueryInterface(IID_PPV_ARG(IDeskBand, &pIDB));
+        if(!SUCCEEDED(hr))
+            return;
 
-        //TODO
+        HWND hWnd;
+        if (!SUCCEEDED(pIDB->GetWindow(&hWnd)))
+            return;
+
+        ::PostMessageW(hWnd, TB_SETIMAGELIST, 0, (LPARAM)m_TaskGroupImageList);
+
         POINTL p = {test.left + test2.left,test.top};
-        menuPopup->Popup(&p, &test, MPPF_TOP);
+        menuPopup->Popup(&p, &test, MPPF_TOP | MPPF_SETFOCUS);
+
+        m_ActiveTaskItem = NULL;
 
         m_TaskBar.CheckButton(TaskGroup->Index, TRUE);
+    }
 
-        TaskGroupOpened = TaskGroup->Index;
+    INT GetTaskGroupItemIconIndex(IN INT Index) {
+        if (shellMenu == NULL)
+            return -1;
+
+        PTASK_ITEM TaskItem, LastTaskItem = NULL;
+
+        TaskItem = m_TaskItems;
+        LastTaskItem = TaskItem + m_TaskItemCount;
+
+        while (TaskItem != LastTaskItem)
+        {
+            if (TaskItem->Group->Index == TaskGroupOpened && TaskItem->GroupIndex == Index)
+            {
+                if (TaskItem->GroupIconIndex < 0)
+                {
+                    HICON icon = GetWndIcon(TaskItem->hWnd);
+                    if (!icon)
+                        icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
+
+                    TaskItem->GroupIconIndex = ImageList_ReplaceIcon(m_TaskGroupImageList, -1, icon);
+                }
+
+                return TaskItem->GroupIconIndex;
+            }
+
+            TaskItem++;
+        }
+
+        return -1;
     }
 
     INT UpdateTaskGroupButton(IN PTASK_GROUP TaskGroup)
     {
         ASSERT(TaskGroup->Index >= 0);
+
+        TBBUTTONINFO tbbi = { 0 };
+        HICON icon;
+        WCHAR windowText[255];
+
+        /* Open process to retrieve the filename of the executable */
+        HANDLE hTaskProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, TaskGroup->dwProcessId);
+        if(hTaskProc != NULL) {
+            WCHAR ExePath[MAX_PATH] = {};
+
+            if(GetModuleFileNameExW(hTaskProc, NULL, ExePath, _countof(ExePath)) && GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText))) {
+                tbbi.pszText = windowText;
+            }
+
+            if (ExtractIconExW(ExePath, 0, NULL, &icon, 1) <= 0)
+                icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
+
+            CloseHandle(hTaskProc);
+        }
+
+        tbbi.cbSize = sizeof(tbbi);
+        tbbi.dwMask = TBIF_BYINDEX | TBIF_STATE | TBIF_TEXT | TBIF_IMAGE;
+        tbbi.fsState = TBSTATE_ENABLED;
+        if ((m_ActiveTaskItem != NULL && m_ActiveTaskItem->Group == TaskGroup) || TaskGroup->IsRightClick)
+            tbbi.fsState |= TBSTATE_CHECKED;
+
+        /* Check if we're updating a button that is the last one in the
+           line. If so, we need to set the TBSTATE_WRAP flag! */
+        if (!m_Tray->IsHorizontal() || (m_ButtonsPerLine != 0 &&
+            (TaskGroup->Index + 1) % m_ButtonsPerLine == 0))
+        {
+            tbbi.fsState |= TBSTATE_WRAP;
+        }
+
+        TaskGroup->IconIndex = ImageList_ReplaceIcon(m_ImageList, TaskGroup->IconIndex, icon);
+        tbbi.iImage = TaskGroup->IconIndex;
+
+        TaskGroup->IsTextInited = TRUE;
+
+        if (!m_TaskBar.SetButtonInfo(TaskGroup->Index, &tbbi))
+        {
+            TaskGroup->Index = -1;
+            return -1;
+        }
+
+        TRACE("Updated button %d for task group 0x%p\n", TaskGroup->Index, TaskGroup);
 
         return TaskGroup->Index;
     }
@@ -927,12 +1027,15 @@ public:
                 tbBtn.iString = (DWORD_PTR) windowText;
             }
 
+            if (ExtractIconExW(ExePath, -1, NULL, &icon, 1) <= 0)
+                icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
+
             CloseHandle(hTaskProc);
         }
 
-        icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
+        TaskGroup->IconIndex = ImageList_ReplaceIcon(m_ImageList, -1, icon);
 
-        tbBtn.iBitmap = ImageList_ReplaceIcon(m_ImageList, -1, icon); //TODO
+        tbBtn.iBitmap = TaskGroup->IconIndex;
         tbBtn.fsState = TBSTATE_ENABLED | TBSTATE_ELLIPSES;
         tbBtn.fsStyle = BTNS_CHECK | BTNS_NOPREFIX | BTNS_SHOWTEXT | BTNS_DROPDOWN | BTNS_WHOLEDROPDOWN;
         tbBtn.dwData = -1;
@@ -1145,6 +1248,15 @@ public:
             return NULL;
         }
 
+        WCHAR ItemExePath[MAX_PATH] = {0};
+
+        HANDLE hTaskProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwProcessId);
+        if (hTaskProc != NULL)
+        {
+            GetModuleFileNameExW(hTaskProc, NULL, ItemExePath, _countof(ItemExePath));
+            CloseHandle(hTaskProc);
+        }
+
         /* Try to find an existing task group */
         TaskGroup = m_TaskGroups;
         PrevLink = &m_TaskGroups;
@@ -1154,6 +1266,22 @@ public:
             {
                 TaskGroup->dwTaskCount++;
                 return TaskGroup;
+            }
+            else
+            {
+                WCHAR ExePath[MAX_PATH] = {0};
+                hTaskProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, TaskGroup->dwProcessId);
+                if (hTaskProc != NULL)
+                {
+                    GetModuleFileNameExW(hTaskProc, NULL, ExePath, _countof(ExePath));
+                    CloseHandle(hTaskProc);
+                }
+
+                if(!lstrcmpW(ExePath, ItemExePath))
+                {
+                    TaskGroup->dwTaskCount++;
+                    return TaskGroup;
+                }
             }
 
             PrevLink = &TaskGroup->Next;
@@ -1392,6 +1520,9 @@ public:
             TaskGroup != NULL &&
             TaskGroup->IsCollapsed)
         {
+            m_ActiveTaskItem = TaskItem;
+
+            UpdateTaskGroupButton(TaskGroup);
             /* FIXME */
             return;
         }
@@ -1412,7 +1543,11 @@ public:
                 if (CurrentTaskGroup == TaskGroup)
                     return;
 
-                /* FIXME */
+                m_ActiveTaskItem = NULL;
+                if (CurrentTaskGroup->Index >= 0) // Just to be sure
+                {
+                    UpdateTaskGroupButton(CurrentTaskGroup);
+                }
             }
             else
             {
@@ -1505,6 +1640,7 @@ public:
                 TaskItem->Index = -1;
                 TaskItem->GroupIndex = -1;
                 TaskItem->Group = AddToTaskGroup(hWnd);
+                TaskItem->GroupIconIndex = -1;
 
                 if (!m_IsDestroying)
                 {
@@ -1812,8 +1948,11 @@ public:
                         tbbi.fsState |= TBSTATE_WRAP;
                     }
 
-                    if (m_ActiveTaskItem != NULL &&
-                        m_ActiveTaskItem->Index == (INT)ui)
+                    PTASK_GROUP TaskGroup = FindTaskGroupByIndex((INT)ui);
+
+                    if ((TaskGroup != NULL && TaskGroup->IsRightClick) ||
+                        (m_ActiveTaskItem != NULL &&
+                        m_ActiveTaskItem->Index == (INT)ui))
                     {
                         tbbi.fsState |= TBSTATE_CHECKED;
                     }
@@ -1883,6 +2022,8 @@ public:
                                        ILC_COLOR32 | ILC_MASK, 0, 1000);
         m_TaskBar.SetImageList(m_ImageList);
 
+        m_TaskGroupImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);
+
         /* Set proper spacing between buttons */
         m_TaskBar.UpdateTbButtonSpacing(m_Tray->IsHorizontal(), m_Theme != NULL);
 
@@ -1906,6 +2047,9 @@ public:
 
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        menuPopup->OnSelect(MPOS_FULLCANCEL);
+        shellMenu->SetMenu(NULL, NULL, NULL);
+
         m_IsDestroying = TRUE;
 
         /* Unregister the shell hook */
@@ -2062,6 +2206,7 @@ public:
 
     VOID HandleTaskGroupClick(IN OUT PTASK_GROUP TaskGroup)
     {
+        DPRINTF("Hola\n");
         if(m_CloseTaskGroupOpen) {
             m_CloseTaskGroupOpen = FALSE;
 
@@ -2140,7 +2285,8 @@ public:
             }
 
             // Avoid a stack overflow
-            menuPopup->OnSelect(MPOS_CANCELLEVEL);
+            menuPopup->OnSelect(MPOS_FULLCANCEL);
+            shellMenu->SetMenu(NULL, NULL, NULL);
         } else {
             m_CloseTaskGroupOpen = TRUE;
         }
@@ -2209,6 +2355,83 @@ public:
     VOID HandleTaskGroupRightClick(IN OUT PTASK_GROUP TaskGroup)
     {
         /* TODO: Show task group right click menu */
+        PTASK_ITEM TaskItem, LastTaskItem = NULL;
+        BOOL bEnableMinimizeButton = FALSE;
+        HMENU hMenu;
+
+        hMenu = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_TASKGRP));
+        if(!hMenu)
+            return;
+
+        // Check if all windows are minimized
+
+        TaskItem = m_TaskItems;
+        LastTaskItem = TaskItem + m_TaskItemCount;
+
+        while (TaskItem != LastTaskItem)
+        {
+            if (TaskItem->Group == TaskGroup && ::IsWindow(TaskItem->hWnd) &&
+                !::IsIconic(TaskItem->hWnd))
+                bEnableMinimizeButton = TRUE;
+
+            TaskItem++;
+        }
+
+        if (!bEnableMinimizeButton)
+        {
+            EnableMenuItem(hMenu, ID_SHELL_CMD_MINIMIZE_GRP, MF_DISABLED | MF_GRAYED);
+        }
+
+        // Check the button
+        TaskGroup->IsRightClick = TRUE;
+        UpdateTaskGroupButton(TaskGroup);
+
+        POINT pt;
+        GetCursorPos(&pt);
+
+        SetForegroundWindow(m_hWnd);
+
+        INT iSelection = TrackPopupMenuEx(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                               pt.x, pt.y, m_hWnd, NULL);
+
+        TaskGroup->IsRightClick = FALSE;
+        UpdateTaskGroupButton(TaskGroup);
+
+        if(!iSelection) return;
+
+        CSimpleArray<HWND> kids;
+
+        TaskItem = m_TaskItems;
+
+        while (TaskItem != LastTaskItem)
+        {
+            if (TaskItem->Group == TaskGroup)
+            {
+                if (iSelection != ID_SHELL_CMD_MINIMIZE_GRP && iSelection != ID_SHELL_CMD_CLOSE_GRP)
+                {
+                    ::ShowWindowAsync(TaskItem->hWnd, SW_RESTORE);
+                    kids.Add(TaskItem->hWnd);
+                }
+                else if (iSelection == ID_SHELL_CMD_MINIMIZE_GRP &&
+                    ::IsWindow(TaskItem->hWnd) && !::IsIconic(TaskItem->hWnd))
+                {
+                    ::ShowWindowAsync(TaskItem->hWnd, SW_MINIMIZE);
+                }
+                else
+                {
+                    ::PostMessageW(TaskItem->hWnd, WM_CLOSE, NULL, NULL);
+                }
+            }
+
+            TaskItem++;
+        }
+
+        if (iSelection == ID_SHELL_CMD_CASCADE_WND)
+            CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, kids.GetSize(), kids.GetData());
+        else if (iSelection == ID_SHELL_CMD_TILE_WND_H)
+            TileWindows(NULL, MDITILE_HORIZONTAL, NULL, kids.GetSize(), kids.GetData());
+        else if (iSelection == ID_SHELL_CMD_TILE_WND_V)
+            TileWindows(NULL, MDITILE_VERTICAL, NULL, kids.GetSize(), kids.GetData());
     }
 
     BOOL HandleButtonRightClick(IN WORD wIndex)
@@ -2275,7 +2498,151 @@ public:
         }
         else if (TaskGroup != NULL)
         {
-            /* FIXME: Implement painting for task groups */
+            Ret = CDRF_SKIPDEFAULT;
+            /* Make the entire button flashing if necessary */
+            if (nmtbcd->nmcd.uItemState & CDIS_MARKED)
+            {
+                if (!m_Theme)
+                {
+                    SelectObject(nmtbcd->nmcd.hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
+                    Rectangle(nmtbcd->nmcd.hdc,
+                        nmtbcd->nmcd.rc.left,
+                        nmtbcd->nmcd.rc.top,
+                        nmtbcd->nmcd.rc.right,
+                        nmtbcd->nmcd.rc.bottom);
+                }
+                else
+                {
+                    DrawThemeBackground(m_Theme, nmtbcd->nmcd.hdc, TDP_FLASHBUTTONGROUPMENU, 0, &nmtbcd->nmcd.rc, 0);
+                }
+                nmtbcd->clrText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+            }
+
+            WCHAR buttonText[256];
+
+            TBBUTTONINFOW btni;
+            btni.cbSize = sizeof(TBBUTTONINFOW);
+            btni.dwMask = TBIF_STATE | TBIF_TEXT;
+            btni.cchText = 256;
+            btni.pszText = buttonText;
+            m_TaskBar.GetButtonInfo(TaskGroup->Index, &btni);
+
+            DWORD padding = m_TaskBar.GetPadding();
+            WORD paddingCy = HIWORD(padding);
+            WORD paddingCx = LOWORD(padding);
+            INT bitmapWidth;
+            INT bitmapHeight;
+
+            ImageList_GetIconSize(m_ImageList, &bitmapWidth, &bitmapHeight);
+
+            if (!m_Theme)
+            {
+                if (nmtbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED))
+                    DrawEdge (nmtbcd->nmcd.hdc, &nmtbcd->nmcd.rc, EDGE_SUNKEN, BF_RECT | BF_MIDDLE);
+                else
+                    DrawEdge (nmtbcd->nmcd.hdc, &nmtbcd->nmcd.rc, EDGE_RAISED,
+                    BF_SOFT | BF_RECT | BF_MIDDLE);
+            }
+
+            RECT rcText = nmtbcd->nmcd.rc;
+            RECT rcBitmap = nmtbcd->nmcd.rc;
+            RECT rcArrow = nmtbcd->nmcd.rc;
+            InflateRect(&rcText, -GetSystemMetrics(SM_CXEDGE), 0);
+            rcText.left += bitmapWidth + 6; //TODO Default list gap
+
+            if(btni.fsState & (TBSTATE_PRESSED | TBSTATE_CHECKED))
+                OffsetRect(&rcText, 1, 1);
+
+            rcBitmap.left += GetSystemMetrics(SM_CXEDGE) + paddingCx / 2;
+            rcBitmap.top += paddingCy / 2;
+
+            if(nmtbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED))
+            {
+                rcBitmap.left++;
+                rcBitmap.top++;
+            }
+
+            rcArrow.left = max(rcArrow.left, rcArrow.right - 13);
+            rcText.right = rcArrow.left;
+
+            ImageList_Draw(m_ImageList, TaskGroup->Index, nmtbcd->nmcd.hdc, rcBitmap.left, rcBitmap.top, (btni.fsState & CDIS_MARKED) ? ILD_BLEND50 | ILD_TRANSPARENT : ILD_TRANSPARENT);
+
+            WCHAR TaskCountText[20];
+            StringCbPrintfW(TaskCountText, 20, L"(%d)", TaskGroup->dwTaskCount);
+            DPRINTF("Hola: %ls\n", TaskCountText);
+
+            NONCLIENTMETRICS ncm = {sizeof(ncm)};
+            if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, FALSE))
+                return Ret;
+
+            ncm.lfCaptionFont.lfWeight = FW_BOLD;
+            HFONT newFont = CreateFontIndirect(&ncm.lfCaptionFont);
+
+            HFONT normalFont = m_TaskBar.GetFont();
+
+            int oldBkMode = SetBkMode(nmtbcd->nmcd.hdc, nmtbcd->nStringBkMode);
+
+            HGDIOBJ oldFont = NULL;
+            if (!m_Theme)
+            {
+                oldFont = SelectObject(nmtbcd->nmcd.hdc, newFont);
+
+                SIZE TaskCountTextWidth;
+                GetTextExtentPoint32W(nmtbcd->nmcd.hdc, TaskCountText, wcslen(TaskCountText), &TaskCountTextWidth);
+
+                DrawTextW(nmtbcd->nmcd.hdc, TaskCountText, -1, &rcText, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+                rcText.left += TaskCountTextWidth.cx + paddingCx;
+
+                if(!(btni.fsState & (TBSTATE_PRESSED | TBSTATE_CHECKED)))
+                    SelectObject(nmtbcd->nmcd.hdc, normalFont);
+
+                DrawTextW(nmtbcd->nmcd.hdc, buttonText, -1, &rcText, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+            }
+            else
+            {
+                RECT textRect;
+                GetThemeTextExtent(m_Theme, nmtbcd->nmcd.hdc, TDP_GROUPCOUNT, 0, TaskCountText, -1, DT_LEFT | DT_VCENTER | DT_SINGLELINE, &rcText, &textRect);
+
+                DrawThemeText(m_Theme, nmtbcd->nmcd.hdc, TDP_GROUPCOUNT, 0, TaskCountText, -1, DT_LEFT | DT_VCENTER | DT_SINGLELINE, 0, &rcText);
+
+                // Shrink the text rect
+                rcText.left += textRect.right - textRect.left + paddingCx;
+
+                if(btni.fsState & (TBSTATE_PRESSED | TBSTATE_CHECKED))
+                    oldFont = SelectObject(nmtbcd->nmcd.hdc, newFont);
+                else
+                    oldFont = SelectObject(nmtbcd->nmcd.hdc, normalFont);
+
+                DrawTextW(nmtbcd->nmcd.hdc, buttonText, -1, &rcText, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+            }
+            SetBkMode(nmtbcd->nmcd.hdc, oldBkMode);
+
+            if(oldFont != NULL)
+                SelectObject(nmtbcd->nmcd.hdc, oldFont);
+
+            DeleteObject(newFont);
+
+            {
+                INT x, y;
+                HPEN hPen, hOldPen;
+
+                if (!(hPen = CreatePen( PS_SOLID, 1, nmtbcd->clrText)))
+                    return Ret;
+
+                hOldPen = (HPEN)SelectObject(nmtbcd->nmcd.hdc, hPen);
+                INT offset = (nmtbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED)) ? 1 : 0;
+                x = rcArrow.left + offset + 2;
+                y = rcArrow.top + offset + (rcArrow.bottom - rcArrow.top - 3) / 2;
+                MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
+                LineTo(nmtbcd->nmcd.hdc, x+5, y++); x++;
+                MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
+                LineTo(nmtbcd->nmcd.hdc, x+3, y++); x++;
+                MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
+                LineTo(nmtbcd->nmcd.hdc, x+1, y);
+                SelectObject(nmtbcd->nmcd.hdc, hOldPen);
+                DeleteObject(hPen);
+            }
         }
         return Ret;
     }
@@ -2605,7 +2972,19 @@ HRESULT STDMETHODCALLTYPE CShellMenuCallback::CallbackSM(
             }
         case SMC_GETOBJECT:
             {
-                OnGetObject(psmd, *reinterpret_cast<IID *>(wParam), reinterpret_cast<void **>(lParam));
+                return OnGetObject(psmd, *reinterpret_cast<IID *>(wParam), reinterpret_cast<void **>(lParam));
+            }
+        case SMC_GETINFO:
+            {
+                SMINFO *pInfo = reinterpret_cast<SMINFO *>(lParam);
+
+                if ((pInfo->dwMask & SMIM_TYPE) != 0)
+                    pInfo->dwType = SMIT_STRING;
+                if ((pInfo->dwMask & SMIM_FLAGS) != 0)
+                    pInfo->dwFlags = SMIF_ICON;
+                if ((pInfo->dwMask & SMIM_ICON) != 0)
+                    pInfo->iIcon = pTaskSwitchWnd->GetTaskGroupItemIconIndex(psmd->uId);
+
                 return S_OK;
             }
     }
