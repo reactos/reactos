@@ -4539,7 +4539,7 @@ StartScan:
 				    					DPRINT1("CreateProcessInternalW: NtQueryObject() generated an exception (%lx) for handle(%lx)\n", excd, (HANDLE)(LONG_PTR)handleInfo.HandleValue);			
 					    			}
 						    		_SEH2_END;
-							    	if ( wcscmp((LPWSTR)(nameFull + (2 * sizeof(WCHAR))), L"\\Device\\Afd") == 0 ) 
+							    	if (wcscmp((LPWSTR)(nameFull + (2 * sizeof(WCHAR))), L"\\Device\\Afd") == 0)
 								    { // check if this belongs to AFD, if so it's a winsock socket
     									DPRINT("CreateProcessInternalW: NtQueryObject returned (%ls) for handle(%lx) - Socket detected\n", (LPWSTR)(nameFull + (2 * sizeof(WCHAR))), (HANDLE)(LONG_PTR)handleInfo.HandleValue);			
 	    								DPRINT("CreateProcessInternalW: found INHERITABLE WINSOCK SOCKET, attempting to prepare duplication socket info\n");
