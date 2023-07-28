@@ -311,7 +311,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                     }
                     _SEH2_END;		
                 }
-                DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true.\n");									
+                DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true\n");
             } else { // !canDupe - winsock handle, but not from self or parent process, THIS WILL PROBABLY FAIL (FIXME)
                 DPRINT("DuplicateHandle: canDupe is false, attempting CROSS-PROCESS socket duplication.\n");			
                 SOCKET targetSocket;
