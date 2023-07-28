@@ -479,7 +479,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
            	    FCB->LocalAddress = TaBuildNullTransportAddress(ConnectReq->RemoteAddress.Address[0].AddressType);
 
-           	    if( FCB->LocalAddress ) {
+           	    if (FCB->LocalAddress) {
            		    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling WarmSocketForBind\n"));
 	       	        Status = WarmSocketForBind( FCB, AFD_SHARE_WILDCARD );
            		    if( NT_SUCCESS(Status) ) {
