@@ -255,7 +255,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                 if (result == 0) 
                 {
                     if(optVal == SOCK_STREAM)
-                        DPRINT("(PID %lx) DuplicateHandle: socket is a TCP socket.\n");
+                        DPRINT("(PID %lx) DuplicateHandle: socket is a TCP socket\n");
                     else if(optVal == SOCK_DGRAM)
                         DPRINT("DuplicateHandle: socket is a UDP socket.\n");
                     dupwinsock = (wsdskcall)GetProcAddress(winsock_module, "WSADuplicateSocketW");
