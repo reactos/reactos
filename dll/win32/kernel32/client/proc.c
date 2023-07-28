@@ -4521,7 +4521,7 @@ StartScan:
 				    		// handleInfo.HandleAttributes is $02 for inheritable, we skip others
 					    	if (handleInfo.HandleAttributes == 2)
 						    {
-							    if ( handleInfo.HandleValue != 0 || handleInfo.Object != 0 ) 
+							    if (handleInfo.HandleValue != 0 || handleInfo.Object != 0)
     							{
 	    							// query object for name
 		    						if (IsConsoleHandle(handleInfo.HandleValue))
