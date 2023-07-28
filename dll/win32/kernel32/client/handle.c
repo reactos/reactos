@@ -276,7 +276,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                         if (dwOptions & DUPLICATE_SAME_ACCESS) {
                             DPRINT("DuplicateHandle: winsock inherited handle with same access, duplicating handle\n");
                         } else {
-                            DPRINT("DuplicateHandle: winsock inherited handle with differing access, duplicating handle and ignoring access/dwOptions (PART IMPL FIXME).\n");										
+                            DPRINT("DuplicateHandle: winsock inherited handle with differing access, duplicating handle and ignoring access/dwOptions (PART IMPL FIXME)\n");
                         }
                         canDupe = TRUE;
                     }
