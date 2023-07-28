@@ -284,7 +284,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                     DPRINT1("DuplicateHandle: GetHandleInformation failed for parent owned handle(%lx) getlasterror is (%lx)\n", hSourceHandle, GetLastError());
                 }
             }
-            if(canDupe) 
+            if(canDupe)
             { 
                 SOCKET targetSocket;
                 *lpTargetHandle = hSourceHandle; // if we fail we just return the handle we were given HACK TODO: Fix this
