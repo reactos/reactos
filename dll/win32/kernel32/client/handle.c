@@ -259,7 +259,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                     else if(optVal == SOCK_DGRAM)
                         DPRINT("DuplicateHandle: socket is a UDP socket\n");
                     dupwinsock = (wsdskcall)GetProcAddress(winsock_module, "WSADuplicateSocketW");
-                    isSocket = TRUE; // we set this here which makes sockets fall back to normal handle duplication if we cannot dynlink
+                    isSocket = TRUE; // makes sockets fall back to normal handle duplication if we cannot dynlink
                 } else DPRINT1("Error calling getsockopt for inheritable socket.\n");
             } else DPRINT1("Error GetProcAddressA() could not Dynlink getsockopt!\n");			
         } else DPRINT1("Error GetModuleHandleA() could not find WS2_32 module handle.\n");
