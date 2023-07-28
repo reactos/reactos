@@ -4524,7 +4524,7 @@ StartScan:
 							    if ( handleInfo.HandleValue != 0 || handleInfo.Object != 0 ) 
     							{
 	    							// query object for name
-		    						if( (IsConsoleHandle(handleInfo.HandleValue)) )  
+		    						if (IsConsoleHandle(handleInfo.HandleValue))
 			    						continue; // skip console handles
 				    				WCHAR nameFull[80]; 
 					    			ULONG returnedLength; 	
