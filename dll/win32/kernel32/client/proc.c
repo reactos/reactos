@@ -519,7 +519,7 @@ BaseProcessStartup(
     	         } else
         	         DPRINT1("BaseProcessStartup: Winsock 2 DLL initialization failed: %d\n", nStatus);
 	        } else
-                DPRINT1("BaseProcessStartup: failed to DynLink one or more Winsock functions.\n");
+                DPRINT1("BaseProcessStartup: failed to DynLink one or more Winsock functions\n");
             DPRINT("BasePushProcessStartup: winsock socket inheritance processing complete.\n");
        }
     } else
