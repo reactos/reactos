@@ -233,7 +233,7 @@ static void SHPropertyBag_ReadTest(void)
     ok(IsEqualGUID(guid, IID_IUnknown), "guid was wrong.\n");
 
     ResetTest(VT_EMPTY, L"GUID3");
-    FillMemory(&guid, sizeof(guid), 0x55);
+    guid = IID_IExtractIcon;
     hr = SHPropertyBag_ReadGUID(&dummy, L"GUID3", &guid);
 
     if (IsWindowsVistaOrGreater())
@@ -243,17 +243,7 @@ static void SHPropertyBag_ReadTest(void)
 
     ok_int(s_cRead, 1);
     ok_int(s_cWrite, 0);
-
-    BOOL bEqual = TRUE;
-    for (DWORD i = 0; i < sizeof(guid); ++i)
-    {
-        if (((LPBYTE)&guid)[i] != 0x55)
-        {
-            bEqual = FALSE;
-            break;
-        }
-    }
-    ok_int(bEqual, TRUE);
+    ok(IsEqualGUID(guid, IID_IExtractIcon), "guid was wrong.\n");
 }
 
 static void SHPropertyBag_WriteTest(void)
