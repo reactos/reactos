@@ -294,7 +294,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                     {			
                         int result = dupwinsock((SOCKET)hSourceHandle, GetCurrentProcessId(), &SharedSocketInfo); // was GetProcessId(ProcessHandle)
                         if (result != 0) {
-                            DPRINT1("DuplicateHandle: IN Process call to WSADuplicateSocketW failed, returned:%x.\n", result);
+                            DPRINT1("DuplicateHandle: IN Process call to WSADuplicateSocketW failed, returned:%x\n", result);
                         } else {
                             // now call wsasocket to finish the process and create new socket
                             targetSocket = DynWSASocket(SharedSocketInfo.iAddressFamily, SharedSocketInfo.iSocketType, SharedSocketInfo.iProtocol, &SharedSocketInfo, 0, WSA_FLAG_OVERLAPPED); 
