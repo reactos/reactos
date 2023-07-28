@@ -467,7 +467,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	        /* original datagram code set STATUS_SUCCESS and exited here
             // THIS CODE WAS COPIED FROM STREAM CODE BELOW, IT SHOULD BE SAFE AND 'CORRECT', BUT MAY NOT BE OPTIMAL. */
             AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling WarmSocketConnection(FCB)\n"));
-	        if (FCB->State ==  SOCKET_STATE_CREATED) 
+	        if (FCB->State == SOCKET_STATE_CREATED)
             { 
         	    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: SOCKET_STATE_CREATED is true\n"));
            	    if (FCB->LocalAddress)
