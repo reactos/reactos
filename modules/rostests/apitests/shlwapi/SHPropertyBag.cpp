@@ -9,6 +9,7 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <shlwapi_undoc.h>
+#include <versionhelpers.h>
 
 #include <pseh/pseh2.h>
 
@@ -27,6 +28,33 @@ static void ResetTest(VARTYPE vt,
     s_pszPropNames[1] = pszName1;
     s_pszPropNames[2] = pszName2;
     s_pszPropNames[3] = pszName3;
+}
+
+static SAFEARRAY* CreateByteArray(LPCVOID pvData, DWORD cbSize)
+{
+    SAFEARRAYBOUND Bound;
+    Bound.lLbound = 0;
+    Bound.cElements = cbSize;
+
+    SAFEARRAY* pArray = SafeArrayCreate(VT_UI1, 1, &Bound);
+    if (!pArray)
+        return NULL;
+
+    BYTE HUGEP *pb;
+    HRESULT hr = SafeArrayAccessData(pArray, (void HUGEP **)&pb);
+    if (FAILED(hr))
+    {
+        SafeArrayDestroy(pArray);
+        return NULL;
+    }
+
+    for (DWORD i = 0; i < cbSize; i++)
+    {
+        pb[i] = ((const BYTE*)pvData)[i];
+    }
+    SafeArrayUnaccessData(pArray);
+
+    return pArray;
 }
 
 class CDummyPropertyBag : public IPropertyBag
@@ -70,8 +98,23 @@ public:
 
                 if (lstrcmpiW(pszPropName, L"GUID1") == 0)
                 {
+                    V_VT(pvari) = (VT_UI1 | VT_ARRAY);
+                    V_ARRAY(pvari) = CreateByteArray(&IID_IShellLink, sizeof(IID));
+                    return S_OK;
+                }
+
+                if (lstrcmpiW(pszPropName, L"GUID2") == 0)
+                {
                     V_VT(pvari) = VT_BSTR;
-                    V_BSTR(pvari) = SysAllocString(L"{00000000-0000-0000-C000-000000000046}");
+                    V_BSTR(pvari) =
+                        SysAllocString(L"{00000000-0000-0000-C000-000000000046}"); // IID_IUnknown
+                    return S_OK;
+                }
+
+                if (lstrcmpiW(pszPropName, L"GUID3") == 0)
+                {
+                    V_VT(pvari) = VT_EMPTY;
+                    V_UI4(pvari) = 0xDEADFACE;
                     return S_OK;
                 }
 
@@ -183,6 +226,37 @@ static void SHPropertyBag_ReadTest(void)
     ok_long(hr, S_OK);
     ok_int(s_cRead, 1);
     ok_int(s_cWrite, 0);
+    ok(IsEqualGUID(guid, IID_IShellLink), "guid was wrong.\n");
+
+    ResetTest(VT_EMPTY, L"GUID2");
+    hr = SHPropertyBag_ReadGUID(&dummy, L"GUID2", &guid);
+    ok_long(hr, S_OK);
+    ok_int(s_cRead, 1);
+    ok_int(s_cWrite, 0);
+    ok(IsEqualGUID(guid, IID_IUnknown), "guid was wrong.\n");
+
+    ResetTest(VT_EMPTY, L"GUID3");
+    FillMemory(&guid, sizeof(guid), 0x55);
+    hr = SHPropertyBag_ReadGUID(&dummy, L"GUID3", &guid);
+
+    if (IsWindowsVistaOrGreater())
+        ok_long(hr, E_INVALIDARG);
+    else
+        ok_long(hr, S_OK);
+
+    ok_int(s_cRead, 1);
+    ok_int(s_cWrite, 0);
+
+    BOOL bEqual = TRUE;
+    for (DWORD i = 0; i < sizeof(guid); ++i)
+    {
+        if (LPBYTE(&guid)[i] != 0x55)
+        {
+            bEqual = FALSE;
+            break;
+        }
+    }
+    ok_int(bEqual, TRUE);
 }
 
 static void SHPropertyBag_WriteTest(void)
