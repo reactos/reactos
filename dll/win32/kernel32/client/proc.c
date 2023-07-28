@@ -505,7 +505,7 @@ BaseProcessStartup(
     	        {
 		            for (sockloop = 0; sockloop < sockindex; sockloop = sockloop + 1) 
                     {
-	            	    memcpy(&ProtocolInfo, &WinsockData[sockloop * ( sizeof(ProtocolInfo) )] , sizeof(ProtocolInfo));
+	            	    memcpy(&ProtocolInfo, &WinsockData[sockloop * sizeof(ProtocolInfo)], sizeof(ProtocolInfo));
 			            // NOTE: dwProviderReserved is used to pass the existing OS handle to WSASocket, since it is OBJ_INHERIT WSASocket should not create a new OS handle.
 	            	    sockDuplicated = DynWSASocket(FROM_PROTOCOL_INFO,
         	                                            FROM_PROTOCOL_INFO,
