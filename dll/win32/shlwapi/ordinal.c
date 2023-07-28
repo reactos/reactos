@@ -5360,8 +5360,9 @@ VariantArrayToBuffer(
     LONG LowerBound, UpperBound;
     LPSAFEARRAY pArray;
 
-    if (!pvarIn || V_VT(pvarIn) != (VT_UI1 | VT_ARRAY)) /* Not a Byte Array? */
-        return FALSE; /* Failure */
+    /* Only supports byte array */
+    if (!pvarIn || V_VT(pvarIn) != (VT_UI1 | VT_ARRAY))
+        return FALSE;
 
     /* Boundary check and access */
     pArray = V_ARRAY(pvarIn);
