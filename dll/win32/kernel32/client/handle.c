@@ -313,7 +313,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                 }
                 DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true\n");
             } else { // !canDupe - winsock handle, but not from self or parent process, THIS WILL PROBABLY FAIL (FIXME)
-                DPRINT("DuplicateHandle: canDupe is false, attempting CROSS-PROCESS socket duplication.\n");			
+                DPRINT("DuplicateHandle: canDupe is false, attempting CROSS-PROCESS socket duplication\n");
                 SOCKET targetSocket;
                 *lpTargetHandle = hSourceHandle; // if we fail we just return the handle we were given which will work but may result in closing twice or prematurely
                 // Try to duplicate the socket
