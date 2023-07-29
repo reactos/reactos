@@ -34,7 +34,7 @@ jobs:
     - name: Install LLVM
       if: ${{ matrix.compiler == 'clang' }}
       run: |
-        export LLVM_VERSION=13
+        export LLVM_VERSION=14
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh $LLVM_VERSION
@@ -225,7 +225,7 @@ jobs:
       run: choco install -y ninja
     - name: Install LLVM
       run: |
-        choco install -y --allow-downgrade llvm --version 13.0.1
+        choco install -y --allow-downgrade llvm --version 14.0.6
         echo "LLVM_PATH=${env:PROGRAMFILES}\llvm\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Install Flex & Bison
       run: |
