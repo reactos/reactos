@@ -19,7 +19,6 @@ START_TEST(GetDisplayNameOf)
 
     hr = CoCreateInstance(CLSID_ControlPanel, NULL, CLSCTX_ALL,
                           IID_PPV_ARG(IShellFolder, &spPanel));
-
     ok_hr(hr, S_OK);
     if (SUCCEEDED(hr))
     {
@@ -29,6 +28,7 @@ START_TEST(GetDisplayNameOf)
         memset(&ret, 'a', sizeof(ret));
         memset(&expected, 'a', sizeof(expected));
         hr = spPanel->GetDisplayNameOf(NULL, SHGDN_NORMAL, &ret);
+        /* This verifies that the return value is 'S_FALSE' */
         ok_hex(hr, S_FALSE);
         ok(memcmp(&ret, &expected, sizeof(ret)) == 0, "Data was changed!\n");
         memset(&ret, 'a', sizeof(ret));
