@@ -9,6 +9,11 @@
 
 BrowseUISettings gSettings;
 
+BrowseUISettings::BrowseUISettings()
+{
+    this->Load();
+}
+
 BOOL BrowseUISettings::Save()
 {
     SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"StatusBarOther",

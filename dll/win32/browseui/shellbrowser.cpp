@@ -713,7 +713,6 @@ CShellBrowser::CShellBrowser()
     fHistoryObject = NULL;
     fHistoryStream = NULL;
     fHistoryBindContext = NULL;
-    gSettings.Load();
 }
 
 CShellBrowser::~CShellBrowser()
