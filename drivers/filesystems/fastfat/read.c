@@ -87,7 +87,7 @@ FatOverflowPagingFileRead (
         RtlZeroMemory((AT), (BYTE_COUNT));                         \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {                    \
          FatRaiseStatus( IrpContext, STATUS_INVALID_USER_BUFFER ); \
-    } _SEH2_END                                                    \
+    } _SEH2_END;                                                   \
 }
 
 //
