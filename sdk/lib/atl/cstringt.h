@@ -99,6 +99,12 @@ public:
     }
 
     static LPWSTR __cdecl FindString(
+        _In_z_ LPWSTR pszSource,
+        _In_z_ LPCWSTR pszSub)
+    {
+        return ::wcsstr(pszSource, pszSub);
+    }
+    static LPCWSTR __cdecl FindString(
         _In_z_ LPCWSTR pszSource,
         _In_z_ LPCWSTR pszSub)
     {
@@ -106,6 +112,12 @@ public:
     }
 
     static LPWSTR __cdecl FindChar(
+        _In_z_ LPWSTR pszSource,
+        _In_ WCHAR ch)
+    {
+        return ::wcschr(pszSource, ch);
+    }
+    static LPCWSTR __cdecl FindChar(
         _In_z_ LPCWSTR pszSource,
         _In_ WCHAR ch)
     {
@@ -113,6 +125,12 @@ public:
     }
 
     static LPWSTR __cdecl FindCharReverse(
+        _In_z_ LPWSTR pszSource,
+        _In_ WCHAR ch)
+    {
+        return ::wcsrchr(pszSource, ch);
+    }
+    static LPCWSTR __cdecl FindCharReverse(
         _In_z_ LPCWSTR pszSource,
         _In_ WCHAR ch)
     {
@@ -120,6 +138,12 @@ public:
     }
 
     static LPWSTR __cdecl FindOneOf(
+        _In_z_ LPWSTR pszSource,
+        _In_z_ LPCWSTR pszCharSet)
+    {
+        return ::wcspbrk(pszSource, pszCharSet);
+    }
+    static LPCWSTR __cdecl FindOneOf(
         _In_z_ LPCWSTR pszSource,
         _In_z_ LPCWSTR pszCharSet)
     {
@@ -262,6 +286,12 @@ public:
     }
 
     static LPSTR __cdecl FindString(
+        _In_z_ LPSTR pszSource,
+        _In_z_ LPCSTR pszSub)
+    {
+        return ::strstr(pszSource, pszSub);
+    }
+    static LPCSTR __cdecl FindString(
         _In_z_ LPCSTR pszSource,
         _In_z_ LPCSTR pszSub)
     {
@@ -269,6 +299,12 @@ public:
     }
 
     static LPSTR __cdecl FindChar(
+        _In_z_ LPSTR pszSource,
+        _In_ CHAR ch)
+    {
+        return ::strchr(pszSource, ch);
+    }
+    static LPCSTR __cdecl FindChar(
         _In_z_ LPCSTR pszSource,
         _In_ CHAR ch)
     {
@@ -276,6 +312,12 @@ public:
     }
 
     static LPSTR __cdecl FindCharReverse(
+        _In_z_ LPSTR pszSource,
+        _In_ CHAR ch)
+    {
+        return ::strrchr(pszSource, ch);
+    }
+    static LPCSTR __cdecl FindCharReverse(
         _In_z_ LPCSTR pszSource,
         _In_ CHAR ch)
     {
@@ -283,6 +325,12 @@ public:
     }
 
     static LPSTR __cdecl FindOneOf(
+        _In_z_ LPSTR pszSource,
+        _In_z_ LPCSTR pszCharSet)
+    {
+        return ::strpbrk(pszSource, pszCharSet);
+    }
+    static LPCSTR __cdecl FindOneOf(
         _In_z_ LPCSTR pszSource,
         _In_z_ LPCSTR pszCharSet)
     {
@@ -876,7 +924,7 @@ public:
 
     int Replace(XCHAR chOld, XCHAR chNew)
     {
-        PCXSTR pszString = CThisSimpleString::GetString();
+        PXSTR pszString = CThisSimpleString::GetString();
         PXSTR pszFirst = StringTraits::FindChar(pszString, chOld);
         if (!pszFirst)
             return 0;
