@@ -1902,6 +1902,7 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","ShowSuperHid
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CabinetState",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CabinetState","FullPath",0x00010003,0
 HKCU,"SOFTWARE\Microsoft\Internet Explorer\Main","StatusBarOther",0x00010003,1
+HKCU,"SOFTWARE\Microsoft\Internet Explorer\Toolbar","Locked",0x00010003,1
 
 ; ComDlg32
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32",,0x00000012

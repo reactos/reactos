@@ -292,7 +292,6 @@ private:
     CComPtr<IShellView>                     fCurrentShellView;          //
     LPITEMIDLIST                            fCurrentDirectoryPIDL;      //
     HWND                                    fStatusBar;
-    bool                                    fStatusBarVisible;
     CToolbarProxy                           fToolbarProxy;
     barInfo                                 fClientBars[3];
     CComPtr<ITravelLog>                     fTravelLog;
@@ -350,7 +349,7 @@ public:
     HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
-    void LoadSettings();
+    void LoadCabinetState();
 
 /*    // *** IDockingWindowFrame methods ***
     virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
@@ -714,6 +713,7 @@ CShellBrowser::CShellBrowser()
     fHistoryObject = NULL;
     fHistoryStream = NULL;
     fHistoryBindContext = NULL;
+    gSettings.Load();
 }
 
 CShellBrowser::~CShellBrowser()
@@ -783,11 +783,11 @@ HRESULT CShellBrowser::Initialize()
 
     fToolbarProxy.Initialize(m_hWnd, clientBar);
 
-    LoadSettings();
+    LoadCabinetState();
 
     // create status bar
     DWORD dwStatusStyle = WS_CHILD | WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS;
-    if (fStatusBarVisible)
+    if (gSettings.fStatusBarVisible)
         dwStatusStyle |= WS_VISIBLE;
     fStatusBar = ::CreateWindowExW(0, STATUSCLASSNAMEW, NULL, dwStatusStyle,
                                    0, 0, 500, 20, m_hWnd, (HMENU)IDC_STATUSBAR,
@@ -1449,7 +1449,7 @@ void CShellBrowser::RepositionBars()
 
     GetClientRect(&clientRect);
 
-    if (fStatusBarVisible && fStatusBar)
+    if (gSettings.fStatusBarVisible && fStatusBar)
     {
         ::GetWindowRect(fStatusBar, &statusRect);
         ::SetWindowPos(fStatusBar, NULL, clientRect.left, clientRect.bottom - (statusRect.bottom - statusRect.top),
@@ -1517,13 +1517,8 @@ void CShellBrowser::RepositionBars()
                         clientRect.bottom - clientRect.top, SWP_NOOWNERZORDER | SWP_NOZORDER);
 }
 
-void CShellBrowser::LoadSettings()
+void CShellBrowser::LoadCabinetState()
 {
-    fStatusBarVisible = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
-                                             L"StatusBarOther",
-                                             FALSE,
-                                             FALSE);
-
     fCabinetState.fFullPathTitle = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState",
                                                         L"FullPath",
                                                         FALSE,
@@ -1757,7 +1752,7 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
         menuItemInfo.hSubMenu = toolbarMenu;
         SetMenuItemInfo(theMenu, IDM_VIEW_TOOLBARS, FALSE, &menuItemInfo);
     }
-    SHCheckMenuItem(theMenu, IDM_VIEW_STATUSBAR, fStatusBarVisible ? TRUE : FALSE);
+    SHCheckMenuItem(theMenu, IDM_VIEW_STATUSBAR, gSettings.fStatusBarVisible ? TRUE : FALSE);
 }
 
 HRESULT CShellBrowser::BuildExplorerBandMenu()
@@ -3681,21 +3676,14 @@ LRESULT CShellBrowser::OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWnd
 
 LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    fStatusBarVisible = !fStatusBarVisible;
+    gSettings.fStatusBarVisible = !gSettings.fStatusBarVisible;
     if (fStatusBar)
     {
-        ::ShowWindow(fStatusBar, fStatusBarVisible ? SW_SHOW : SW_HIDE);
+        ::ShowWindow(fStatusBar, gSettings.fStatusBarVisible ? SW_SHOW : SW_HIDE);
         RepositionBars();
     }
-    
-    DWORD dwStatusBarVisible = fStatusBarVisible;
-    SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
-                     L"StatusBarOther",
-                     REG_DWORD,
-                     &dwStatusBarVisible,
-                     sizeof(dwStatusBarVisible),
-                     SHREGSET_FORCE_HKCU);
-    
+
+    gSettings.Save();
     return 0;
 }
 

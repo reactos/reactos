@@ -36,7 +36,8 @@ list(APPEND SOURCE
     utility.cpp
     CProgressDialog.cpp
     CUserAssist.cpp
-    CUserAssist.h)
+    CUserAssist.h
+    settings.cpp)
 
 list(APPEND PCH_SKIP_SOURCE
     dllinstall.c)
