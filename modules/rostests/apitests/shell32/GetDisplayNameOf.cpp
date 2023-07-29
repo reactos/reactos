@@ -7,7 +7,7 @@
  */
 
 #include "shelltest.h"
-#include <cstdio>
+#include <stdio.h>
 #include <shellutils.h>
 
 START_TEST(GetDisplayNameOf)
