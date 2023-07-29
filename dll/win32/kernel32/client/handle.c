@@ -23,11 +23,11 @@
 
 ULONG_PTR hGetParentProcessId() // derived form Napalm @ NetCore2K from https://stackoverflow.com/questions/185254/how-can-a-win32-process-get-the-pid-of-its-parent
 {
-	ULONG_PTR pbi[6];
-	ULONG ulSize = 0;
-	if(NtQueryInformationProcess(GetCurrentProcess(), 0,
-				&pbi, sizeof(pbi), &ulSize) >= 0 && ulSize == sizeof(pbi))
-		return pbi[5];
+    ULONG_PTR pbi[6];
+    ULONG ulSize = 0;
+    if(NtQueryInformationProcess(GetCurrentProcess(), 0,
+                &pbi, sizeof(pbi), &ulSize) >= 0 && ulSize == sizeof(pbi))
+        return pbi[5];
 
     return (ULONG_PTR)-1;
 }
@@ -180,7 +180,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
     typedef int (WINAPI *wsstcall)(DWORD, LPWSADATA);
     typedef int (WINAPI *wsskcall)(int, int, int, LPWSAPROTOCOL_INFOW, GROUP, DWORD);
     typedef int (WINAPI *wsgsocall)(SOCKET, int, int, char*, int*);
-    typedef int (WINAPI *wsdskcall)(SOCKET, DWORD, LPWSAPROTOCOL_INFOW);	
+    typedef int (WINAPI *wsdskcall)(SOCKET, DWORD, LPWSAPROTOCOL_INFOW);
     wsgsocall getsockopt;
     wsdskcall dupwinsock;
     typedef int (WINAPI *wsskcall)(int, int, int, LPWSAPROTOCOL_INFOW, GROUP, DWORD);
@@ -190,7 +190,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
     WSAPROTOCOL_INFOW SharedSocketInfo; // our buffer for collecting shared socket information
     DWORD handleFlags;
     // end of winsock code items
-    
+
     hSourceHandle = TranslateStdHandle(hSourceHandle);
 
     if ((IsConsoleHandle(hSourceHandle)) &&
@@ -235,12 +235,12 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         int excd = _SEH2_GetExceptionCode();
-        DPRINT1("DuplicateHandle: NtQueryObject generated an exception (%lx) for handle(%lx)\n", excd, hSourceHandle);			
+        DPRINT1("DuplicateHandle: NtQueryObject generated an exception (%lx) for handle(%lx)\n", excd, hSourceHandle);
     }
     _SEH2_END;
     if (wcscmp((LPWSTR)(nameFull + (2 * sizeof(WCHAR))), L"\\Device\\Afd") == 0)
     { // check if this belongs to AFD, if so it's a winsock socket
-        DPRINT("DuplicateHandle: NtQueryObject winsock socket device(AFD) detected for handle(%lx)\n", hSourceHandle);				
+        DPRINT("DuplicateHandle: NtQueryObject winsock socket device(AFD) detected for handle(%lx)\n", hSourceHandle);
         // DynLink the winsock routines we need for this work.
         DPRINT("DuplicateHandle: calling GetModuleHandleA ws2_32\n");
         winsock_module = GetModuleHandleA("ws2_32");
@@ -248,11 +248,11 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
         {
             DynWSASocket = (wsskcall)GetProcAddress(winsock_module, "WSASocketW");
             getsockopt = (wsgsocall)GetProcAddress(winsock_module, "getsockopt");
-            if (getsockopt) 
+            if (getsockopt)
             {
                 // getsockopt is our gatekeeper. if it fails winsock access is not in a reliable state
                 int result = getsockopt((SOCKET)hSourceHandle, SOL_SOCKET, SO_TYPE, (char*)&optVal, &optLen);
-                if (result == 0) 
+                if (result == 0)
                 {
                     if(optVal == SOCK_STREAM)
                         DPRINT("(PID %lx) DuplicateHandle: socket is a TCP socket\n");
@@ -285,31 +285,31 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                 }
             }
             if(canDupe)
-            { 
+            {
                 SOCKET targetSocket;
                 *lpTargetHandle = hSourceHandle; // if we fail we just return the handle we were given HACK TODO: Fix this
-                if (dupwinsock) 
+                if (dupwinsock)
                 { // if we didn't dynlink this gets skipped
-                    _SEH2_TRY 
-                    {			
+                    _SEH2_TRY
+                    {
                         int result = dupwinsock((SOCKET)hSourceHandle, GetCurrentProcessId(), &SharedSocketInfo); // was GetProcessId(ProcessHandle)
                         if (result != 0) {
                             DPRINT1("DuplicateHandle: IN Process call to WSADuplicateSocketW failed, returned:%x\n", result);
                         } else {
                             // now call wsasocket to finish the process and create new socket
-                            targetSocket = DynWSASocket(SharedSocketInfo.iAddressFamily, SharedSocketInfo.iSocketType, SharedSocketInfo.iProtocol, &SharedSocketInfo, 0, WSA_FLAG_OVERLAPPED); 
+                            targetSocket = DynWSASocket(SharedSocketInfo.iAddressFamily, SharedSocketInfo.iSocketType, SharedSocketInfo.iProtocol, &SharedSocketInfo, 0, WSA_FLAG_OVERLAPPED);
                             // not sure we want overlapped set, it's the default for winsock 1.x but winsock 2 stopped setting it by default
                             if (targetSocket != INVALID_SOCKET) {
                                 DPRINT("DuplicateHandle: winsock socket handle succesfully duplicated, returning handle(%lx)\n", targetSocket);
-                                *lpTargetHandle = (HANDLE)targetSocket;							
+                                *lpTargetHandle = (HANDLE)targetSocket;
                             } else DPRINT1("DuplicateHandle: WSASocketW on cross process call returned INVALID_SOCKET, returning input handle(%lx) (BADIMPL FIXME)\n", hSourceHandle);
                         }
-                    }			
+                    }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
                         DPRINT1("DuplicateHandle: SOCKET DUPLICATION exception (%lx) for duplicating handle(%lx) returning source handle (BADIMPL FIXME)\n", _SEH2_GetExceptionCode(), hSourceHandle);
                     }
-                    _SEH2_END;		
+                    _SEH2_END;
                 }
                 DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true\n");
             } else { // !canDupe - winsock handle, but not from self or parent process, THIS WILL PROBABLY FAIL (FIXME)
@@ -317,30 +317,30 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
                 SOCKET targetSocket;
                 *lpTargetHandle = hSourceHandle; // if we fail we just return the handle we were given which will work but may result in closing twice or prematurely
                 // Try to duplicate the socket
-                if (dupwinsock) 
-                { // we didn't dynlink this gets skipped		
-                    _SEH2_TRY 
-                    {			
+                if (dupwinsock)
+                { // we didn't dynlink this gets skipped
+                    _SEH2_TRY
+                    {
                         int result = dupwinsock((SOCKET)hSourceHandle, GetProcessId(hSourceProcessHandle), &SharedSocketInfo); // was GetProcessId(ProcessHandle)
-                        if (result != 0) 
+                        if (result != 0)
                         {
                             DPRINT1("DuplicateHandle: CROSS Process call to WSADuplicateSocketW failed, returned:%x.\n", result);
                         } else {
                             // now call wsasocket to finish the process and create new socket for us
-                            targetSocket = DynWSASocket(SharedSocketInfo.iAddressFamily, SharedSocketInfo.iSocketType, SharedSocketInfo.iProtocol, &SharedSocketInfo, 0, WSA_FLAG_OVERLAPPED); 
-                            // 	not sure we want overlapped set, it's the default for winsock 1.x but winsock 2 stopped setting it by default	
-                            if (targetSocket != INVALID_SOCKET) 
+                            targetSocket = DynWSASocket(SharedSocketInfo.iAddressFamily, SharedSocketInfo.iSocketType, SharedSocketInfo.iProtocol, &SharedSocketInfo, 0, WSA_FLAG_OVERLAPPED);
+                            //  not sure we want overlapped set, it's the default for winsock 1.x but winsock 2 stopped setting it by default
+                            if (targetSocket != INVALID_SOCKET)
                             {
                                 DPRINT("DuplicateHandle: winsock socket handle succesfully duplicated, returning handle(%lx)\n", targetSocket);
-                                *lpTargetHandle = (HANDLE)targetSocket;							
+                                *lpTargetHandle = (HANDLE)targetSocket;
                             } else DPRINT1("DuplicateHandle: WSASocketW on cross process call returned INVALID_SOCKET, returning input handle(%lx) (BADIMPL FIXME)\n", hSourceHandle);
                         }
-                    }			
+                    }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
                         DPRINT1("DuplicateHandle: CROSS PROCESS SOCKET DUPLICATION exception (%lx) for duplicating handle(%lx) returning source handle\n", _SEH2_GetExceptionCode(), hSourceHandle);
                     }
-                    _SEH2_END;	
+                    _SEH2_END;
                 }
                 DPRINT("DuplicateHandle: SOCKET DUPLICATION completed, returning true\n");
             }
@@ -348,7 +348,7 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
         }
     }
     DPRINT("DuplicateHandle: handle is not a socket, proceeding with NtDuplicateObject\n");
-    
+
     Status = NtDuplicateObject(hSourceProcessHandle,
                                hSourceHandle,
                                hTargetProcessHandle,
