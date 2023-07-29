@@ -648,7 +648,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		    }
 	    }
     }
-    
+
     /* Check the size of the Address given ... */
 
     if( NT_SUCCESS(Status) ) {

@@ -172,8 +172,8 @@ test_sendto(void)
     ret = sendto(sock, buffer, bufferSize, 0 , NULL, 0);
     error = WSAGetLastError();
     ok(ret == bufferSize, "sendto returned %d\n", ret);
-    ok(error == 0, "error = %d\n", error);  
-    
+    ok(error == 0, "error = %d\n", error);
+
     closesocket(sock);
 
     FreeReadOnly(buffer);

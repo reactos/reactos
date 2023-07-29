@@ -468,7 +468,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             // THIS CODE WAS COPIED FROM STREAM CODE BELOW, IT SHOULD BE SAFE AND 'CORRECT', BUT MAY NOT BE OPTIMAL. */
             AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling WarmSocketConnection(FCB)\n"));
 	        if (FCB->State == SOCKET_STATE_CREATED)
-            { 
+            {
         	    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: SOCKET_STATE_CREATED is true\n"));
            	    if (FCB->LocalAddress)
            	    {
@@ -486,7 +486,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
            			    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: setting SOCKET_STATE_BOUND\n"));
                		    FCB->State = SOCKET_STATE_BOUND; // send REQUIRES THIS TO USE FCB->RemoteAddress
 	    	        }
-	            }    
+	            }
 	        }
 
 	        if (FCB->State == SOCKET_STATE_BOUND)
@@ -519,7 +519,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                    		AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: new ConnectCallInfo placed in FCB\n"));
                    	}
                	}
-	        } 
+	        }
             AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: FCB update code complete\n"));
             Status = STATUS_SUCCESS;
         }
