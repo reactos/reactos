@@ -569,6 +569,8 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_SEND_INFO_UDP SendReq;
     KPROCESSOR_MODE LockMode;
+    INT FullSendLen, LoopIdx; // accumulator for full packet length
+    char pktbuf[4096];  // local packet assembly buffer
 
     UNREFERENCED_PARAMETER(DeviceObject);
 
@@ -645,22 +647,55 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_SEND);
         if (Status == STATUS_PENDING)
         {
-            Status = TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
-                                     FCB->AddressFile.Object,
-                                     SendReq->BufferArray[0].buf,
-                                     SendReq->BufferArray[0].len,
-                                     TargetAddress,
-                                     PacketSocketSendComplete,
-                                     FCB);
-            if (Status != STATUS_PENDING)
-            {
-                NT_VERIFY(RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]) == &Irp->Tail.Overlay.ListEntry);
-                Irp->IoStatus.Status = Status;
-                Irp->IoStatus.Information = 0;
-                (void)IoSetCancelRoutine(Irp, NULL);
-                UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
-                UnlockRequest(Irp, IoGetCurrentIrpStackLocation(Irp));
-                IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+            if (SendReq->BufferCount > 1) {
+                AFD_DbgPrint(MID_TRACE,("Assembling local packet buffer from %u Buffer Array elements, clearing buffer\n", SendReq->BufferCount));
+                RtlZeroMemory((&pktbuf[0]), 4096 );
+                FullSendLen = 0;
+                for (LoopIdx = 0; LoopIdx < SendReq->BufferCount; LoopIdx++) {
+                    _SEH2_TRY {
+                        RtlCopyMemory((PCHAR)((&pktbuf[0]) + FullSendLen), SendReq->BufferArray[LoopIdx].buf, SendReq->BufferArray[LoopIdx].len );
+                    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+                        AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer data from userland (%p %p), returning NULL\n", SendReq->BufferArray[LoopIdx].buf, SendReq->BufferArray[LoopIdx].len ));
+                        _SEH2_YIELD(return STATUS_NO_MEMORY);
+                    } _SEH2_END;
+                    FullSendLen = FullSendLen + SendReq->BufferArray[LoopIdx].len;
+                }
+                AFD_DbgPrint(MID_TRACE,("local packet buffer ready, Data length is %u\n", FullSendLen));
+                Status = TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
+                                         FCB->AddressFile.Object,
+                                         &pktbuf[0], 
+                                         FullSendLen,
+                                         TargetAddress,
+                                         PacketSocketSendComplete,
+                                         FCB);
+                if (Status != STATUS_PENDING)
+                {
+                    NT_VERIFY(RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]) == &Irp->Tail.Overlay.ListEntry);
+                    Irp->IoStatus.Status = Status;
+                    Irp->IoStatus.Information = 0;
+                    (void)IoSetCancelRoutine(Irp, NULL);
+                    UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
+                    UnlockRequest(Irp, IoGetCurrentIrpStackLocation(Irp));
+                    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+                }                        
+            } else {            
+                Status = TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
+                                         FCB->AddressFile.Object,
+                                         SendReq->BufferArray[0].buf,
+                                         SendReq->BufferArray[0].len,
+                                         TargetAddress,
+                                         PacketSocketSendComplete,
+                                         FCB);
+                if (Status != STATUS_PENDING)
+                {
+                    NT_VERIFY(RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]) == &Irp->Tail.Overlay.ListEntry);
+                    Irp->IoStatus.Status = Status;
+                    Irp->IoStatus.Information = 0;
+                    (void)IoSetCancelRoutine(Irp, NULL);
+                    UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
+                    UnlockRequest(Irp, IoGetCurrentIrpStackLocation(Irp));
+                    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+                }
             }
         }
 
