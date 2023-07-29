@@ -11,7 +11,7 @@ BrowseUISettings gSettings;
 
 BrowseUISettings::BrowseUISettings()
 {
-    this->Load();
+    Load();
 }
 
 BOOL BrowseUISettings::Save()
