@@ -148,7 +148,7 @@ WahCreateSocketHandle(IN HANDLE HelperHandle,
     CHAR EaBuffer[sizeof(*Ea) + sizeof(*EaData)];
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
-	PWAH_HELPER_CONTEXT	Context = (PWAH_HELPER_CONTEXT)HelperHandle;
+    PWAH_HELPER_CONTEXT Context = (PWAH_HELPER_CONTEXT)HelperHandle;
 
     /* Enter the prolog, make sure we're initialized */
     ErrorCode = WS2HELP_PROLOG();
@@ -350,78 +350,78 @@ WahOpenHandleHelper(OUT PHANDLE HelperHandle)
     if (Context)
     {
         /* Create the special request thread */
-		Context->ThreadHandle = CreateThread(NULL,
+        Context->ThreadHandle = CreateThread(NULL,
                                              0,
                                              (PVOID)ApcThread,
                                              Context,
                                              CREATE_SUSPENDED,
                                              &Tid);
-		if (Context->ThreadHandle)
+        if (Context->ThreadHandle)
         {
             /* Create the attributes for the driver open */
-			RtlInitUnicodeString(&Name,  L"\\Device\\WS2IFSL\\NifsPvd");
-			InitializeObjectAttributes(&ObjectAttributes,
-								       &Name,
+            RtlInitUnicodeString(&Name,  L"\\Device\\WS2IFSL\\NifsPvd");
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &Name,
                                        0,
                                        NULL,
                                        NULL);
 
             /* Setup the EA */
-			Ea->NextEntryOffset = 0;
-			Ea->Flags = 0;
-			Ea->EaNameLength = sizeof("NifsPvd");
-			Ea->EaValueLength = sizeof(*EaData);
-			RtlCopyMemory(Ea->EaName, "NifsPvd", Ea->EaNameLength);
+            Ea->NextEntryOffset = 0;
+            Ea->Flags = 0;
+            Ea->EaNameLength = sizeof("NifsPvd");
+            Ea->EaValueLength = sizeof(*EaData);
+            RtlCopyMemory(Ea->EaName, "NifsPvd", Ea->EaNameLength);
 
             /* Get our EA data */
             EaData = (PWAH_EA_DATA2)(Ea + 1);
 
             /* Fill out the EA Data */
-			EaData->ThreadHandle = Context->ThreadHandle;
-			EaData->RequestRoutine = DoSocketRequest;
-			EaData->CancelRoutine = DoSocketCancel;
-			EaData->ApcContext = Context;
-			EaData->Reserved = 0;
+            EaData->ThreadHandle = Context->ThreadHandle;
+            EaData->RequestRoutine = DoSocketRequest;
+            EaData->CancelRoutine = DoSocketCancel;
+            EaData->ApcContext = Context;
+            EaData->Reserved = 0;
 
             /* Call the driver */
-			Status = NtCreateFile(&Context->FileHandle,
-								  FILE_ALL_ACCESS,
-								  &ObjectAttributes,
-								  &IoStatusBlock,
-								  NULL,
-								  FILE_ATTRIBUTE_NORMAL,
-								  0,
-								  FILE_OPEN_IF,
-								  0,
-								  Ea,
-								  sizeof(*Ea) + sizeof(*EaData));
+            Status = NtCreateFile(&Context->FileHandle,
+                                  FILE_ALL_ACCESS,
+                                  &ObjectAttributes,
+                                  &IoStatusBlock,
+                                  NULL,
+                                  FILE_ATTRIBUTE_NORMAL,
+                                  0,
+                                  FILE_OPEN_IF,
+                                  0,
+                                  Ea,
+                                  sizeof(*Ea) + sizeof(*EaData));
 
             /* Check for success */
             if (NT_SUCCESS(Status))
             {
                 /* Resume the thread and return a handle to the context */
                 ResumeThread(Context->ThreadHandle);
-				*HelperHandle = (HANDLE)Context;
-				return ERROR_SUCCESS;
-			}
-		    else
+                *HelperHandle = (HANDLE)Context;
+                return ERROR_SUCCESS;
+            }
+            else
             {
                 /* Get the error code */
-			    ErrorCode = RtlNtStatusToDosError(Status);
+                ErrorCode = RtlNtStatusToDosError(Status);
             }
 
             /* We failed, mark us as such */
             Context->FileHandle = NULL;
             ResumeThread(Context->ThreadHandle);
         }
-		else
+        else
         {
             /* Get the error code */
-			ErrorCode = GetLastError();
-		}
+            ErrorCode = GetLastError();
+        }
 
         /* If we got here, we failed, so free the context */
-		HeapFree(GlobalHeap, 0, Context);
+        HeapFree(GlobalHeap, 0, Context);
     }
     else
     {
