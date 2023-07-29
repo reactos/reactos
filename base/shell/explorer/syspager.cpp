@@ -1252,7 +1252,7 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
     tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING | TBMF_PAD;
     tbm.cxPad = 1;
     tbm.cyPad = 1;
-    if (!g_TaskbarSettings.bSmallIcons && !g_TaskbarSettings.bCompactTrayIcons)
+    if (!g_TaskbarSettings.bCompactTrayIcons)
     {
         tbm.cxPad = GetSystemMetrics(SM_CXSMICON) / 2;
         tbm.cyPad = GetSystemMetrics(SM_CYSMICON) / 2;
@@ -1402,7 +1402,7 @@ void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
     INT columns = 0;
     INT cyButton = GetSystemMetrics(SM_CYSMICON) + 2;
     INT cxButton = GetSystemMetrics(SM_CXSMICON) + 2;
-    if (!g_TaskbarSettings.bSmallIcons && !g_TaskbarSettings.bCompactTrayIcons)
+    if (!g_TaskbarSettings.bCompactTrayIcons)
     {
         cyButton = MulDiv(GetSystemMetrics(SM_CYSMICON), 3, 2);
         cxButton = MulDiv(GetSystemMetrics(SM_CXSMICON), 3, 2);
@@ -1411,7 +1411,7 @@ void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
 
     if (IsHorizontal)
     {
-        if (!g_TaskbarSettings.bSmallIcons && !g_TaskbarSettings.bCompactTrayIcons)
+        if (!g_TaskbarSettings.bCompactTrayIcons)
             rows = max(size->cy / MulDiv(cyButton, 3, 2), 1);
         else
             rows = max(size->cy / cyButton, 1);

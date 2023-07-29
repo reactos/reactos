@@ -268,7 +268,7 @@ WORD CTrayClockWnd::GetMinimumSize(IN BOOL Horizontal, IN OUT PSIZE pSize)
         return 0;
 
     /* Prevents the date from being cut off when the day of the week is shorter than the date. */
-    if (g_TaskbarSettings.bPreferDate)
+    if (VisibleLines > 1 && g_TaskbarSettings.bPreferDate)
         szMax.cx = LineSizes[CLOCKWND_FORMAT_DATE].cx;
 
     for (i = 0; i < CLOCKWND_FORMAT_COUNT; i++)
@@ -571,8 +571,8 @@ VOID CTrayClockWnd::PaintLine(IN HDC hDC, IN OUT RECT *rcClient, IN UINT LineNum
     if (LineSizes[LineNumber].cx == 0)
         return;
 
-    INT HShift = ((g_TaskbarSettings.bSmallIcons ||
-                   g_TaskbarSettings.bCompactTrayIcons) ? 0 : TRAY_CLOCK_WND_SPACING_X);
+    INT HShift = ((IsHorizontal && (VisibleLines <= 1 ||
+                   g_TaskbarSettings.bCompactTrayIcons)) ? 0 : TRAY_CLOCK_WND_SPACING_X);
 
     TextOut(hDC,
             ((rcClient->right - LineSizes[szLinesIndex].cx) / 2) + HShift,

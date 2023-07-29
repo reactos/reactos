@@ -63,7 +63,7 @@ BOOL TaskbarSettings::Load()
     bSmallIcons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE;
 
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"CompactTrayIcons", NULL, &dwValue, &cbSize);
-    bCompactTrayIcons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE;
+    bCompactTrayIcons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : bSmallIcons;
 
     cbSize = sizeof(sr);
     dwRet = SHGetValueW(hkExplorer, L"StuckRects2", L"Settings", NULL, &sr, &cbSize);
