@@ -5729,7 +5729,11 @@ HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GU
     else if (V_VT(&vari) == VT_BSTR)
         bRet = GUIDFromStringW(V_BSTR(&vari), pguid);
     else
-        bRet = TRUE; /* This is by design in WinXP/Win2k3. FALSE in Win10. */
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+        bRet = FALSE;
+#else
+        bRet = TRUE; /* This is by design in WinXP/Win2k3. */
+#endif
 
     if (!bRet)
         ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
