@@ -464,62 +464,62 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             Status = STATUS_NO_MEMORY;
         else
         {
-	        /* original datagram code set STATUS_SUCCESS and exited here
+            /* original datagram code set STATUS_SUCCESS and exited here
             // THIS CODE WAS COPIED FROM STREAM CODE BELOW, IT SHOULD BE SAFE AND 'CORRECT', BUT MAY NOT BE OPTIMAL. */
             AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling WarmSocketConnection(FCB)\n"));
-	        if (FCB->State == SOCKET_STATE_CREATED)
+            if (FCB->State == SOCKET_STATE_CREATED)
             {
-        	    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: SOCKET_STATE_CREATED is true\n"));
-           	    if (FCB->LocalAddress)
-           	    {
-           		    ExFreePoolWithTag(FCB->LocalAddress, TAG_AFD_TRANSPORT_ADDRESS);
-           	    }
+                AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: SOCKET_STATE_CREATED is true\n"));
+                if (FCB->LocalAddress)
+                {
+                    ExFreePoolWithTag(FCB->LocalAddress, TAG_AFD_TRANSPORT_ADDRESS);
+                }
 
-           	    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: setting FCB->LocalAddress\n"));
+                AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: setting FCB->LocalAddress\n"));
 
-           	    FCB->LocalAddress = TaBuildNullTransportAddress(ConnectReq->RemoteAddress.Address[0].AddressType);
+                FCB->LocalAddress = TaBuildNullTransportAddress(ConnectReq->RemoteAddress.Address[0].AddressType);
 
-           	    if (FCB->LocalAddress) {
-           		    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling WarmSocketForBind\n"));
-	       	        Status = WarmSocketForBind(FCB, AFD_SHARE_WILDCARD);
-           		    if (NT_SUCCESS(Status)) {
-           			    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: setting SOCKET_STATE_BOUND\n"));
-               		    FCB->State = SOCKET_STATE_BOUND; // send REQUIRES THIS TO USE FCB->RemoteAddress
-	    	        }
-	            }
-	        }
+                if (FCB->LocalAddress) {
+                    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling WarmSocketForBind\n"));
+                    Status = WarmSocketForBind(FCB, AFD_SHARE_WILDCARD);
+                    if (NT_SUCCESS(Status)) {
+                        AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: setting SOCKET_STATE_BOUND\n"));
+                        FCB->State = SOCKET_STATE_BOUND; // send REQUIRES THIS TO USE FCB->RemoteAddress
+                    }
+                }
+            }
 
-	        if (FCB->State == SOCKET_STATE_BOUND)
+            if (FCB->State == SOCKET_STATE_BOUND)
             { // THIS CODE SECTION EXECUTES AND HANDLES STORING TARGET ADDRESS
-	     	    if (FCB->ConnectReturnInfo)
-	     	    {
-            		AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectReturnInfo set, dispose allocated object\n"));
-                	ExFreePoolWithTag(FCB->ConnectReturnInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
-	         	}
+                if (FCB->ConnectReturnInfo)
+                {
+                    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectReturnInfo set, dispose allocated object\n"));
+                    ExFreePoolWithTag(FCB->ConnectReturnInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
+                }
 
-               	AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling TdiBuildconnectionInfo with RemoteAddress\n"));
+                AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling TdiBuildconnectionInfo with RemoteAddress\n"));
                 Status = TdiBuildConnectionInfo(&FCB->ConnectReturnInfo, &ConnectReq->RemoteAddress);
 
-            	if (NT_SUCCESS(Status))
+                if (NT_SUCCESS(Status))
                 {
-                   	AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectReturnInfo placed in FCB\n"));
-                   	if (FCB->ConnectCallInfo)
-                   	{
-            		    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectCallInfo set, dispose allocated object\n"));
-                    	ExFreePoolWithTag(FCB->ConnectCallInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
+                    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectReturnInfo placed in FCB\n"));
+                    if (FCB->ConnectCallInfo)
+                    {
+                        AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectCallInfo set, dispose allocated object\n"));
+                        ExFreePoolWithTag(FCB->ConnectCallInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
                     }
-                   	AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling TdiBuildconnectionInfo with RemoteAddress\n"));
-                   	Status = TdiBuildConnectionInfo(&FCB->ConnectCallInfo, &ConnectReq->RemoteAddress);
-                   	if (NT_SUCCESS(Status)) {
-                   		AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: TdiBuildconnectionInfo succeeded, populating FCB\n"));
-                   		FCB->ConnectCallInfo->UserData = FCB->ConnectData;
-                	    FCB->ConnectCallInfo->UserDataLength = FCB->ConnectDataSize;
-                	    FCB->ConnectCallInfo->Options = FCB->ConnectOptions;
-                    	FCB->ConnectCallInfo->OptionsLength = FCB->ConnectOptionsSize;
-                   		AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: new ConnectCallInfo placed in FCB\n"));
-                   	}
-               	}
-	        }
+                    AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: calling TdiBuildconnectionInfo with RemoteAddress\n"));
+                    Status = TdiBuildConnectionInfo(&FCB->ConnectCallInfo, &ConnectReq->RemoteAddress);
+                    if (NT_SUCCESS(Status)) {
+                        AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: TdiBuildconnectionInfo succeeded, populating FCB\n"));
+                        FCB->ConnectCallInfo->UserData = FCB->ConnectData;
+                        FCB->ConnectCallInfo->UserDataLength = FCB->ConnectDataSize;
+                        FCB->ConnectCallInfo->Options = FCB->ConnectOptions;
+                        FCB->ConnectCallInfo->OptionsLength = FCB->ConnectOptionsSize;
+                        AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: new ConnectCallInfo placed in FCB\n"));
+                    }
+                }
+            }
             AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: FCB update code complete\n"));
             Status = STATUS_SUCCESS;
         }

@@ -638,15 +638,15 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                             ((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress) );
 
     if (!NT_SUCCESS(Status)) {
-    	if (FCB->ConnectCallInfo) {
-    		AFD_DbgPrint(MID_TRACE,("AfdPacketSocketWriteData: setting TargetAddress from ConnectCallInfo->RemoteAddress\n"));
-	    	Status = TdiBuildConnectionInfo(&TargetAddress, ((PTRANSPORT_ADDRESS)FCB->ConnectCallInfo->RemoteAddress));
-	    } else {
-		    if (FCB->ConnectReturnInfo) {
-    			AFD_DbgPrint(MID_TRACE,("AfdPacketSocketWriteData: setting TargetAddress from ConnectReturnInfo->RemoteAddress\n"));
-			    Status = TdiBuildConnectionInfo(&TargetAddress, ((PTRANSPORT_ADDRESS)FCB->ConnectReturnInfo->RemoteAddress));
-		    }
-	    }
+        if (FCB->ConnectCallInfo) {
+            AFD_DbgPrint(MID_TRACE,("AfdPacketSocketWriteData: setting TargetAddress from ConnectCallInfo->RemoteAddress\n"));
+            Status = TdiBuildConnectionInfo(&TargetAddress, ((PTRANSPORT_ADDRESS)FCB->ConnectCallInfo->RemoteAddress));
+        } else {
+            if (FCB->ConnectReturnInfo) {
+                AFD_DbgPrint(MID_TRACE,("AfdPacketSocketWriteData: setting TargetAddress from ConnectReturnInfo->RemoteAddress\n"));
+                Status = TdiBuildConnectionInfo(&TargetAddress, ((PTRANSPORT_ADDRESS)FCB->ConnectReturnInfo->RemoteAddress));
+            }
+        }
     }
 
     /* Check the size of the Address given ... */
