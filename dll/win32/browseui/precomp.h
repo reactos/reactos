@@ -67,7 +67,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 
 struct BrowseUISettings
 {
-    BOOL fAlwaysShowMenus;
     BOOL fLocked;
     BOOL fShowGoButton;
     BOOL fStatusBarVisible;
