@@ -663,7 +663,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 AFD_DbgPrint(MID_TRACE,("local packet buffer ready, Data length is %u\n", FullSendLen));
                 Status = TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
                                          FCB->AddressFile.Object,
-                                         &pktbuf[0], 
+                                         &pktbuf[0],
                                          FullSendLen,
                                          TargetAddress,
                                          PacketSocketSendComplete,
@@ -677,8 +677,8 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                     UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
                     UnlockRequest(Irp, IoGetCurrentIrpStackLocation(Irp));
                     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-                }                        
-            } else {            
+                }
+            } else {
                 Status = TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
                                          FCB->AddressFile.Object,
                                          SendReq->BufferArray[0].buf,
