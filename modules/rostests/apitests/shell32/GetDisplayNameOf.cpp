@@ -37,5 +37,4 @@ START_TEST(GetDisplayNameOf)
         ok_hex(hr, S_FALSE);
         ok(memcmp(&ret, &expected, sizeof(ret)) == 0, "Data was changed!\n");
     }
-
 }
