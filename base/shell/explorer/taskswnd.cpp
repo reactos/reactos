@@ -528,7 +528,6 @@ public:
     }
 
     VOID RegenerateTaskGroupMenu(PTASK_GROUP TaskGroup) {
-        DPRINTF("ASA\n");
 
         if(TaskGroupOpened != -1 || TaskGroup == NULL) {
             CloseOpenedTaskGroup(FALSE);
@@ -540,7 +539,7 @@ public:
         HMENU hMenu;
         if ((hMenu = CreatePopupMenu()) == NULL)
         {
-            DPRINTF("Oh no :C x2\n");
+            TRACE("Failed to create Taskbar popup menu(CreatePopupMenu)\n");
             return;
         }
 
@@ -582,7 +581,7 @@ public:
 
             if(!shellMenu || !menuPopup || !SUCCEEDED(hr))
             {
-                DPRINTF("Oh no :C\n");
+                TRACE("Failed to create Taskbar popup menu(CoCreateInstance)\n");
                 return;
             }
 
@@ -2194,7 +2193,6 @@ public:
 
     VOID HandleTaskGroupClick(IN OUT PTASK_GROUP TaskGroup)
     {
-        DPRINTF("Hola\n");
         if(m_CloseTaskGroupOpen) {
             m_CloseTaskGroupOpen = FALSE;
 
@@ -2557,7 +2555,6 @@ public:
 
             WCHAR TaskCountText[20];
             StringCbPrintfW(TaskCountText, 20, L"(%d)", TaskGroup->dwTaskCount);
-            DPRINTF("Hola: %ls\n", TaskCountText);
 
             NONCLIENTMETRICS ncm = {sizeof(ncm)};
             if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, FALSE))
@@ -2934,7 +2931,6 @@ HRESULT CShellMenuCallback::OnGetObject(
     void ** pv)
 {
     if(IsEqualIID(iid, IID_IContextMenu) && psmd->uId >= 0) {
-        DPRINTF("Right click hack\n");
         PTASK_ITEM pItem = pTaskSwitchWnd->FindTaskItemOnOpenedGroup(psmd->uId);
 
         if(pItem != NULL)
@@ -2950,7 +2946,6 @@ HRESULT STDMETHODCALLTYPE CShellMenuCallback::CallbackSM(
         WPARAM wParam,
         LPARAM lParam)
 {
-    DPRINTF("New message: 0x%x\n", uMsg);
     switch(uMsg) {
         case SMC_EXEC:
             {
