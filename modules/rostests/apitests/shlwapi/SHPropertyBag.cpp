@@ -223,14 +223,14 @@ static void SHPropertyBag_ReadTest(void)
     ok_long(hr, S_OK);
     ok_int(s_cRead, 1);
     ok_int(s_cWrite, 0);
-    ok(IsEqualGUID(guid, IID_IShellLink), "guid was wrong.\n");
+    ok_int(IsEqualGUID(guid, IID_IShellLink), TRUE);
 
     ResetTest(VT_EMPTY, L"GUID2");
     hr = SHPropertyBag_ReadGUID(&dummy, L"GUID2", &guid);
     ok_long(hr, S_OK);
     ok_int(s_cRead, 1);
     ok_int(s_cWrite, 0);
-    ok(IsEqualGUID(guid, IID_IUnknown), "guid was wrong.\n");
+    ok_int(IsEqualGUID(guid, IID_IUnknown), TRUE);
 
     ResetTest(VT_EMPTY, L"GUID3");
     guid = IID_IExtractIcon;
@@ -243,7 +243,7 @@ static void SHPropertyBag_ReadTest(void)
 
     ok_int(s_cRead, 1);
     ok_int(s_cWrite, 0);
-    ok(IsEqualGUID(guid, IID_IExtractIcon), "guid was wrong.\n");
+    ok_int(IsEqualGUID(guid, IID_IExtractIcon), TRUE);
 }
 
 static void SHPropertyBag_WriteTest(void)
