@@ -1,6 +1,6 @@
 /*
- * PROJECT:     ReactOS Explorer
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PROJECT:     ReactOS BrowseUI
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Stores settings for the file explorer UI.
  * COPYRIGHT:   Copyright 2023 Carl Bialorucki <cbialo2@outlook.com>
  */

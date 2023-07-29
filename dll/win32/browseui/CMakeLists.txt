@@ -30,14 +30,14 @@ list(APPEND SOURCE
     internettoolbar.cpp
     parsecmdline.cpp
     regtreeoptions.cpp
+    settings.cpp
     shellbrowser.cpp
     toolsband.cpp
     travellog.cpp
     utility.cpp
     CProgressDialog.cpp
     CUserAssist.cpp
-    CUserAssist.h
-    settings.cpp)
+    CUserAssist.h)
 
 list(APPEND PCH_SKIP_SOURCE
     dllinstall.c)
