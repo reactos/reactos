@@ -23,7 +23,7 @@ static FN_RtlMultipleFreeHeap g_free = NULL;
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { \
         threw = _SEH2_GetExceptionCode(); \
     } \
-    _SEH2_END \
+    _SEH2_END; \
     ok((ret) == (ret_expected), "ret excepted %d, but %d\n", (ret_expected), (ret)); \
     ok((err) == (err_expected), "err excepted %d, but %d\n", (err_expected), (err)); \
     ok((threw) == (threw_excepted), "threw excepted %d, but %d\n", (threw_excepted), (threw));
@@ -37,7 +37,7 @@ static FN_RtlMultipleFreeHeap g_free = NULL;
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { \
         threw = _SEH2_GetExceptionCode(); \
     } \
-    _SEH2_END \
+    _SEH2_END; \
     ok((err) == (err_expected), "err excepted %d, but %d", (err_expected), (err)); \
     ok((threw) == (threw_excepted), "threw excepted %d, but %d\n", (threw_excepted), (threw));
 
@@ -50,7 +50,7 @@ static FN_RtlMultipleFreeHeap g_free = NULL;
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { \
         threw = _SEH2_GetExceptionCode(); \
     } \
-    _SEH2_END \
+    _SEH2_END; \
     ok((ret) == (ret_expected), "ret excepted %d, but %d\n", (ret_expected), (ret)); \
     ok((err) == (err_expected), "err excepted %d, but %d\n", (err_expected), (err)); \
     ok((threw) == (threw_excepted), "threw excepted %d, but %d\n", (threw_excepted), (threw));
