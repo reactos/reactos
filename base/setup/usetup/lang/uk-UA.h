@@ -2062,9 +2062,7 @@ MUI_ERROR ukUAErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "\215\245\257\340\240\242\250\253\354\255\240 \255\240\247\242\240 \244\250\340\245\252\342\256\340i\365.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * \215\240\342\250\341\255i\342\354 \241\343\244\354-\357\252\343 \252\253\240\242i\350\343 \244\253\357 \257\340\256\244\256\242\246\245\255\255\357."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

@@ -2090,9 +2090,7 @@ MUI_ERROR frFRErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Nom de r\202pertoire invalide.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * Appuyer sur une touche pour continuer."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

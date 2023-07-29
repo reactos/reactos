@@ -2053,9 +2053,7 @@ MUI_ERROR bnBDErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * Press any key to continue."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

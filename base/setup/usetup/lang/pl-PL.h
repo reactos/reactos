@@ -2065,9 +2065,7 @@ MUI_ERROR plPLErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Nieprawid\210owa nazwa katalogu.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * Naci\230nij dowolny klawisz, aby kontynuowa\206."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

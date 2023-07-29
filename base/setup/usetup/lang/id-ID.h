@@ -2053,9 +2053,7 @@ MUI_ERROR idIDErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Nama direktori tidak sah.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * Tekan tombol apapun untuk lanjut."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

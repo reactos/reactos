@@ -2059,9 +2059,7 @@ MUI_ERROR itITErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Nome della cartella non valido.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * Premere un tasto qualsiasi per continuare."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

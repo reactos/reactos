@@ -2054,9 +2054,7 @@ MUI_ERROR euESErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Direktorio izena baliogabe.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * Sakatu tekla batzuk jarraitzeko."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

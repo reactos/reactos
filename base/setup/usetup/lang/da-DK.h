@@ -2055,9 +2055,7 @@ MUI_ERROR daDKErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Ubrugligt mappenavn.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * Tryk p\206 en vilk\206rligtast for at forts\221tte."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

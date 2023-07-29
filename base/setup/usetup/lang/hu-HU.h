@@ -1948,9 +1948,7 @@ MUI_ERROR huHUErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "\220rv\202nytelen mappa n\202v.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * Nyomjon meg egy gombot a folytat\240shoz."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

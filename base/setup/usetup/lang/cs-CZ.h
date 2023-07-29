@@ -2061,9 +2061,7 @@ MUI_ERROR csCZErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Neplatn\354 n\240zev adres\240\375e.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * Pokra\237ujte stisknut\241m libovoln\202 kl\240vesy."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

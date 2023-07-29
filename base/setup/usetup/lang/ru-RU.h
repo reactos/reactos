@@ -2076,9 +2076,7 @@ MUI_ERROR ruRUErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "\215\245\242\245\340\255\256\245 \255\240\247\242\240\255\250\245 \244\250\340\245\252\342\256\340\250\250.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * \215\240\246\254\250\342\245 \253\356\241\343\356 \252\253\240\242\250\350\343 \244\253\357 \257\340\256\244\256\253\246\245\255\250\357."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

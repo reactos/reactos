@@ -2055,9 +2055,7 @@ MUI_ERROR heILErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         ".\211\227\205\207 \200\214 \204\211\211\227\211\232 \215\231\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        ".\212\211\231\216\204\214 \211\203\213 \231\227\216 \214\222 \225\207\214 *  "
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

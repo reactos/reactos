@@ -2071,9 +2071,7 @@ MUI_ERROR bgBGErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "\215\245\242\240\253\250\244\255\256 \250\254\245 \255\240 \244\250\340\245\252\342\256\340\250\357\342\240.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * \215\240\342\250\341\255\245\342\245 \257\340\256\250\247\242\256\253\245\255 \252\253\240\242\250\350, \247\240 \244\240 \257\340\256\244\352\253\246\250\342\245."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,

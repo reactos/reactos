@@ -2054,9 +2054,7 @@ MUI_ERROR etEEErrorEntries[] =
         //ERROR_DIRECTORY_NAME,
         "Sobimatu kausta nimi.\n"
         "\n"
-        "The maximum length for the directory name is 31 characters.\n"
-        "\n"
-        "  * Press Enter to continue."
+        "  * Vajuta mis tahes klahvi, et j\204tkata."
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
