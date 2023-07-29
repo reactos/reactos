@@ -3670,12 +3670,15 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     {
         PMM_SECTION_SEGMENT Segment = MemoryArea->SectionData.Segment;
         PMMVAD Vad = &MemoryArea->VadNode;
+        PCONTROL_AREA ControlArea  = Vad->ControlArea;
         PFILE_OBJECT FileObject;
         SIZE_T ViewSize;
         LARGE_INTEGER ViewOffset;
         ViewOffset.QuadPart = MemoryArea->SectionData.ViewOffset;
-        
+
         InterlockedIncrement64(Segment->ReferenceCount);
+
+        ViewSize = PAGE_SIZE + ((Vad->EndingVpn - Vad->StartingVpn) << PAGE_SHIFT);
 
         Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
         if (!NT_SUCCESS(Status))
@@ -3684,6 +3687,10 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
                     BaseAddress, Process, Status);
             ASSERT(NT_SUCCESS(Status));
         }
+
+        /* These might be deleted now */
+        Vad = NULL;
+        MemoryArea = NULL;
 
         if (FlagOn(*Segment->Flags, MM_PHYSICALMEMORY_SEGMENT))
         {
@@ -3706,11 +3713,10 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
 
         /*
          * Flush only when last mapping is deleted.
-         * FIXME: Why Vad->ControlArea == NULL?
+         * FIXME: Why ControlArea == NULL? Or rather: is ControlArea ever not NULL here?
          */
-        if (Vad->ControlArea == NULL || Vad->ControlArea->NumberOfMappedViews == 1)
+        if (ControlArea == NULL || ControlArea->NumberOfMappedViews == 1)
         {
-            ViewSize = PAGE_SIZE + ((Vad->EndingVpn - Vad->StartingVpn) << PAGE_SHIFT);
             while (ViewSize > 0)
             {
                 ULONG FlushSize = min(ViewSize, PAGE_ROUND_DOWN(MAXULONG));
