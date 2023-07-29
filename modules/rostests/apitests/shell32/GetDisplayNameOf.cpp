@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS API tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test for GetDisplayNameOf
- * COPYRIGHT:       Copyright 2023 Mark Jansen <mark.jansen@reactos.org>
- *                  Copyright 2023 Doug Lyons <douglyons@douglyons.com>
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Test for GetDisplayNameOf
+ * COPYRIGHT:   Copyright 2023 Mark Jansen <mark.jansen@reactos.org>
+ *              Copyright 2023 Doug Lyons <douglyons@douglyons.com>
  */
 
 #include "shelltest.h"
