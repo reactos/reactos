@@ -493,7 +493,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             { // THIS CODE SECTION EXECUTES AND HANDLES STORING TARGET ADDRESS
 	     	    if (FCB->ConnectReturnInfo)
 	     	    {
-            		AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectReturnInfo set, dispose allocated obect\n"));
+            		AFD_DbgPrint(MID_TRACE,("AfdStreamSocketConnect: ConnectReturnInfo set, dispose allocated object\n"));
                 	ExFreePoolWithTag(FCB->ConnectReturnInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
 	         	}
 
