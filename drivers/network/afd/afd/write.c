@@ -10,6 +10,8 @@
 
 #include "afd.h"
 
+#define PAD_BUFFER 2048;
+
 static IO_COMPLETION_ROUTINE SendComplete;
 static NTSTATUS NTAPI SendComplete
 ( PDEVICE_OBJECT DeviceObject,
@@ -570,7 +572,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_SEND_INFO_UDP SendReq;
     KPROCESSOR_MODE LockMode;
     INT FullSendLen, LoopIdx; // accumulator for full packet length
-    char pktbuf[4096];  // local packet assembly buffer
+    char pktbuf[PAD_BUFFER];  // local packet assembly buffer
 
     UNREFERENCED_PARAMETER(DeviceObject);
 
@@ -641,7 +643,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     /* Check the size of the Address given ... */
 
-    if( NT_SUCCESS(Status) ) {
+    if(NT_SUCCESS(Status)) {
         FCB->PollState &= ~AFD_EVENT_SEND;
 
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_SEND);
@@ -650,7 +652,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             if (SendReq->BufferCount > 1) {
                 AFD_DbgPrint(MID_TRACE,("Assembling packet buffer from %u elements\n", 
                                         SendReq->BufferCount));
-                RtlZeroMemory((&pktbuf[0]), 4096 );
+                RtlZeroMemory((&pktbuf[0]), PAD_BUFFER);
                 FullSendLen = 0;
                 for (LoopIdx = 0; LoopIdx < SendReq->BufferCount; LoopIdx++) {
                     _SEH2_TRY {
