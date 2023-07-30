@@ -102,9 +102,11 @@ public:
 
                 if (lstrcmpiW(pszPropName, L"GUID2") == 0)
                 {
+                    WCHAR szText[50];
+                    StringFromGUID2(IID_IUnknown, szText, _countof(szText));
+
                     V_VT(pvari) = VT_BSTR;
-                    V_BSTR(pvari) =
-                        SysAllocString(L"{00000000-0000-0000-C000-000000000046}"); // IID_IUnknown
+                    V_BSTR(pvari) = SysAllocString(szText);
                     return S_OK;
                 }
 
