@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Messages
- * FILE:             win32ss/user/ntuser/message.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -788,7 +787,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
        }
        case WM_ASYNC_DESTROYWINDOW:
        {
-          ERR("WM_ASYNC_DESTROYWINDOW\n");
+          TRACE("WM_ASYNC_DESTROYWINDOW\n");
           if (pWnd->style & WS_CHILD)
              return co_UserFreeWindow(pWnd, PsGetCurrentProcessWin32Process(), PsGetCurrentThreadWin32Thread(), TRUE);
           else
@@ -1697,12 +1696,12 @@ co_IntSendMessageNoWait(HWND hWnd,
                         LPARAM lParam)
 {
     ULONG_PTR Result = 0;
-    return co_IntSendMessageWithCallBack( hWnd,
-                                          Msg,
-                                          wParam,
-                                          lParam,
-                                          NULL,
-                                          0,
+    return co_IntSendMessageWithCallBack(hWnd,
+                                         Msg,
+                                         wParam,
+                                         lParam,
+                                         NULL,
+                                         0,
                                          &Result);
 }
 /* MSDN:
@@ -1713,7 +1712,7 @@ co_IntSendMessageNoWait(HWND hWnd,
    process the message and the sender will free the memory before it is used.
 */
 LRESULT FASTCALL
-co_IntSendMessageWithCallBack( HWND hWnd,
+co_IntSendMessageWithCallBack(HWND hWnd,
                               UINT Msg,
                               WPARAM wParam,
                               LPARAM lParam,
@@ -1734,7 +1733,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
-        TRACE("SendMessageWithCallBack: Invalid handle 0x%p!\n",hWnd);
+        TRACE("SendMessageWithCallBack: Invalid handle 0x%p\n",hWnd);
         RETURN(FALSE);
     }
 
@@ -1743,29 +1742,26 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     if (Window->state & WNDS_DESTROYED)
     {
         /* FIXME: last error? */
-        ERR("Attempted to send message to window %p that is being destroyed!\n", hWnd);
+        ERR("Attempted to send message to window %p that is being destroyed\n", hWnd);
         RETURN(FALSE);
     }
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
-    if (Win32Thread == NULL ||
-        Win32Thread->TIF_flags & TIF_INCLEANUP)
-    {
+    if (Win32Thread == NULL || Win32Thread->TIF_flags & TIF_INCLEANUP)
         RETURN(FALSE);
-    }
 
     ptiSendTo = IntSendTo(Window, Win32Thread, Msg);
 
     if (Msg & 0x80000000 &&
         !ptiSendTo)
     {
-       if (Win32Thread->TIF_flags & TIF_INCLEANUP) RETURN( FALSE);
+        if (Win32Thread->TIF_flags & TIF_INCLEANUP) RETURN(FALSE);
 
-       TRACE("SMWCB: Internal Message!\n");
-       Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
-       if (uResult) *uResult = Result;
-       RETURN( TRUE);
+        TRACE("SMWCB: Internal Message\n");
+        Result = (ULONG_PTR)handle_internal_message(Window, Msg, wParam, lParam);
+        if (uResult) *uResult = Result;
+        RETURN(TRUE);
     }
 
     /* See if this message type is present in the table */
@@ -1780,14 +1776,14 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         if (!lParamBufferSize) lParamBufferSize = -1;
     }
 
-    if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, !!ptiSendTo)))
+    if (!NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, !!ptiSendTo)))
     {
         ERR("Failed to pack message parameters\n");
-        RETURN( FALSE);
+        RETURN(FALSE);
     }
 
     /* If it can be sent now, then send it. */
-    if ( !ptiSendTo )
+    if (!ptiSendTo)
     {
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
         {
@@ -1796,9 +1792,9 @@ co_IntSendMessageWithCallBack( HWND hWnd,
             RETURN(FALSE);
         }
 
-        IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
+        IntCallWndProc(Window, hWnd, Msg, wParam, lParam);
 
-        if ( Window->state & WNDS_SERVERSIDEWINDOWPROC )
+        if (Window->state & WNDS_SERVERSIDEWINDOWPROC)
         {
            TRACE("SMWCB: Server Side Window Procedure\n");
            switch(Window->fnid)
@@ -1807,28 +1803,28 @@ co_IntSendMessageWithCallBack( HWND hWnd,
                 DoCallBack = !DesktopWindowProc(Window, Msg, wParam, lParamPacked, (LRESULT*)&Result);
                 break;
               case FNID_MESSAGEWND:
-                DoCallBack = !UserMessageWindowProc(Window, Msg, wParam, lParam,(LRESULT*)&Result);
+                DoCallBack = !UserMessageWindowProc(Window, Msg, wParam, lParam, (LRESULT*)&Result);
                 break;
               case FNID_MENU:
-                DoCallBack = !PopupMenuWndProc( Window, Msg, wParam, lParam,(LRESULT*)&Result);
+                DoCallBack = !PopupMenuWndProc(Window, Msg, wParam, lParam, (LRESULT*)&Result);
                 break;
            }
         }
 
         if (DoCallBack)
-        Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
-                                                  !Window->Unicode,
-                                                  hWnd,
-                                                  Msg,
-                                                  wParam,
-                                                  lParamPacked,
-                                                  lParamBufferSize );
+        Result = (ULONG_PTR)co_IntCallWindowProc(Window->lpfnWndProc,
+                                                 !Window->Unicode,
+                                                 hWnd,
+                                                 Msg,
+                                                 wParam,
+                                                 lParamPacked,
+                                                 lParamBufferSize);
         if(uResult)
         {
             *uResult = Result;
         }
 
-        IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
+        IntCallWndProcRet(Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
         if (CompletionCallback)
         {
@@ -1840,9 +1836,9 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         }
     }
 
-    if ( !ptiSendTo)
+    if (!ptiSendTo)
     {
-        if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
+        if (!NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
             ERR("Failed to unpack message parameters\n");
         }
@@ -1851,8 +1847,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     if(!(Message = AllocateUserMessage(FALSE)))
     {
-        ERR("MsqSendMessage(): Not enough memory to allocate a message");
-        RETURN( FALSE);
+        ERR("Failed to allocate message\n");
+        RETURN(FALSE);
     }
 
     Message->Msg.hwnd = hWnd;
@@ -1863,7 +1859,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->lResult = 0;
     Message->QS_Flags = 0;
     Message->ptiReceiver = ptiSendTo;
-    Message->ptiSender = NULL; // mjmartin, you are right! This is null.
+    Message->ptiSender = NULL;
     Message->ptiCallBackSender = Win32Thread;
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
@@ -1873,9 +1869,9 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->flags = SMF_RECEIVERFREE;
 
     if (Msg & 0x80000000) // Higher priority event message!
-       InsertHeadList(&ptiSendTo->SentMessagesListHead, &Message->ListEntry);
+        InsertHeadList(&ptiSendTo->SentMessagesListHead, &Message->ListEntry);
     else
-       InsertTailList(&ptiSendTo->SentMessagesListHead, &Message->ListEntry);
+        InsertTailList(&ptiSendTo->SentMessagesListHead, &Message->ListEntry);
     MsqWakeQueue(ptiSendTo, QS_SENDMESSAGE, TRUE);
 
     RETURN(TRUE);
@@ -3094,14 +3090,12 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
        Timeout.QuadPart = (LONGLONG) dwMilliseconds * (LONGLONG) -10000;
 
     KeStackAttachProcess(&Process->Pcb, &ApcState);
-
     W32Process->W32PF_flags |= W32PF_WAITFORINPUTIDLE;
     for (pti = W32Process->ptiList; pti; pti = pti->ptiSibling)
     {
        pti->TIF_flags |= TIF_WAITFORINPUTIDLE;
        pti->pClientInfo->dwTIFlags = pti->TIF_flags;
     }
-
     KeUnstackDetachProcess(&ApcState);
 
     TRACE("WFII: ppi %p\n", W32Process);
@@ -3160,12 +3154,15 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
     while (TRUE);
 
 WaitExit:
+    KeStackAttachProcess(&Process->Pcb, &ApcState);
     for (pti = W32Process->ptiList; pti; pti = pti->ptiSibling)
     {
        pti->TIF_flags &= ~TIF_WAITFORINPUTIDLE;
        pti->pClientInfo->dwTIFlags = pti->TIF_flags;
     }
     W32Process->W32PF_flags &= ~W32PF_WAITFORINPUTIDLE;
+    KeUnstackDetachProcess(&ApcState);
+
     IntDereferenceProcessInfo(W32Process);
     ObDereferenceObject(Process);
     UserLeave();
