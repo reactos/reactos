@@ -411,7 +411,7 @@ NTSTATUS TCPConnect
                                                 &connaddr,
                                                 RemotePort));
     if (!NT_SUCCESS(Status))
-    { 
+    {
         LockObject(Connection);
         RemoveEntryList(&Bucket->Entry);
         UnlockObject(Connection);
