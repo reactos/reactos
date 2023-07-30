@@ -64,17 +64,17 @@ public:
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override
     {
-        ok_int(0, 1); // Failure
+        ok(FALSE, "Unexpected call\n");
         return S_OK;
     }
     STDMETHODIMP_(ULONG) AddRef() override
     {
-        ok_int(0, 1); // Failure
+        ok(FALSE, "Unexpected call\n");
         return S_OK;
     }
     STDMETHODIMP_(ULONG) Release() override
     {
-        ok_int(0, 1); // Failure
+        ok(FALSE, "Unexpected call\n");
         return S_OK;
     }
 
@@ -118,7 +118,7 @@ public:
                 goto Skip1;
             }
         }
-        ok_int(0, 1); // Failure
+        ok(FALSE, "Unexpected call\n");
 Skip1:
         return S_OK;
     }
@@ -143,7 +143,7 @@ Skip1:
                 goto Skip2;
             }
         }
-        ok_int(0, 1); // Failure
+        ok(FALSE, "Unexpected call\n");
 Skip2:
         return S_OK;
     }
