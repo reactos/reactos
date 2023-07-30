@@ -648,19 +648,26 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         if (Status == STATUS_PENDING)
         {
             if (SendReq->BufferCount > 1) {
-                AFD_DbgPrint(MID_TRACE,("Assembling local packet buffer from %u Buffer Array elements, clearing buffer\n", SendReq->BufferCount));
+                AFD_DbgPrint(MID_TRACE,("Assembling packet buffer from %u elements\n", 
+                                        SendReq->BufferCount));
                 RtlZeroMemory((&pktbuf[0]), 4096 );
                 FullSendLen = 0;
                 for (LoopIdx = 0; LoopIdx < SendReq->BufferCount; LoopIdx++) {
                     _SEH2_TRY {
-                        RtlCopyMemory((PCHAR)((&pktbuf[0]) + FullSendLen), SendReq->BufferArray[LoopIdx].buf, SendReq->BufferArray[LoopIdx].len );
+                        RtlCopyMemory((PCHAR)((&pktbuf[0]) + FullSendLen), 
+                                      SendReq->BufferArray[LoopIdx].buf, 
+                                      SendReq->BufferArray[LoopIdx].len);
                     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-                        AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer data from userland (%p %p), returning NULL\n", SendReq->BufferArray[LoopIdx].buf, SendReq->BufferArray[LoopIdx].len ));
+                        AFD_DbgPrint(MIN_TRACE,(
+                                     "Access violation copying userland data (%p %p)\n", 
+                                     SendReq->BufferArray[LoopIdx].buf, 
+                                     SendReq->BufferArray[LoopIdx].len));
                         _SEH2_YIELD(return STATUS_NO_MEMORY);
                     } _SEH2_END;
                     FullSendLen = FullSendLen + SendReq->BufferArray[LoopIdx].len;
                 }
-                AFD_DbgPrint(MID_TRACE,("local packet buffer ready, Data length is %u\n", FullSendLen));
+                AFD_DbgPrint(MID_TRACE,("local packet buffer ready, length is %u\n", 
+                                        FullSendLen));
                 Status = TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
                                          FCB->AddressFile.Object,
                                          &pktbuf[0],
