@@ -545,8 +545,6 @@ public:
         using namespace Gdiplus;
         ATLASSERT(m_hbm);
 
-        // TODO & FIXME: set parameters (m_rgbTransColor etc.)
-
         // convert the file name string into Unicode
         CStringW pszNameW(pszFileName);
 
