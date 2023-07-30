@@ -255,34 +255,36 @@ CreateDIBSection(
     HBITMAP hBitmap = NULL;
     PVOID bmBits = NULL;
 
-    pConvertedInfo = ConvertBitmapInfo(BitmapInfo, Usage, &ConvertedInfoSize,
-    FALSE);
-
+    pConvertedInfo = ConvertBitmapInfo(BitmapInfo,
+                                       Usage,
+                                       &ConvertedInfoSize,
+                                       FALSE);
     if (pConvertedInfo)
     {
         // Verify header due to converted may == info.
         if (pConvertedInfo->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
         {
-            if (pConvertedInfo->bmiHeader.biCompression == BI_JPEG
-                || pConvertedInfo->bmiHeader.biCompression == BI_PNG)
+            if (pConvertedInfo->bmiHeader.biCompression == BI_JPEG ||
+                pConvertedInfo->bmiHeader.biCompression == BI_PNG)
             {
                 SetLastError(ERROR_INVALID_PARAMETER);
                 return NULL;
             }
         }
-        bmBits = Bits;
-        hBitmap = NtGdiCreateDIBSection(hDC, hSection, dwOffset, pConvertedInfo, Usage,
-            ConvertedInfoSize, 0, // fl
-            0, // dwColorSpace
-            &bmBits);
+        hBitmap = NtGdiCreateDIBSection(hDC,
+                                        hSection,
+                                        dwOffset,
+                                        pConvertedInfo,
+                                        Usage,
+                                        ConvertedInfoSize,
+                                        0, // fl
+                                        0, // dwColorSpace
+                                        &bmBits);
+        if (!hBitmap)
+            bmBits = NULL;
 
         if (BitmapInfo != pConvertedInfo)
             RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
-
-        if (!hBitmap)
-        {
-            bmBits = NULL;
-        }
     }
 
     if (Bits)
