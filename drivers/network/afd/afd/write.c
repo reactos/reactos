@@ -10,7 +10,7 @@
 
 #include "afd.h"
 
-#define PAD_BUFFER 2048;
+#define PAD_BUFFER 2048
 
 static IO_COMPLETION_ROUTINE SendComplete;
 static NTSTATUS NTAPI SendComplete
