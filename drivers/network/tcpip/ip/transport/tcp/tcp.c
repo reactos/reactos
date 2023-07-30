@@ -417,7 +417,6 @@ NTSTATUS TCPConnect
         UnlockObject(Connection);
         ExFreeToNPagedLookasideList(&TdiBucketLookasideList, Bucket);
     }
-    
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPConnect] Leaving. Status = 0x%x\n", Status));
 
     return Status;
