@@ -71,7 +71,6 @@ struct BrowseUISettings
     BOOL fShowGoButton;
     BOOL fStatusBarVisible;
 
-    BrowseUISettings();
     BOOL Load();
     BOOL Save();
 };

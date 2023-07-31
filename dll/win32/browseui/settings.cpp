@@ -7,12 +7,7 @@
 
 #include "precomp.h"
 
-BrowseUISettings gSettings;
-
-BrowseUISettings::BrowseUISettings()
-{
-    Load();
-}
+BrowseUISettings gSettings = {};
 
 BOOL BrowseUISettings::Save()
 {
