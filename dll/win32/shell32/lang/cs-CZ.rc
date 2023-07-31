@@ -1018,7 +1018,7 @@ BEGIN
     IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
     IDS_NEWEXT_NEW "<New>"
     IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
+    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to unassociate %s with %s and create a new File Type for it?"
     IDS_NEWEXT_EXT_IN_USE "Extension is in use"
 
     IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
