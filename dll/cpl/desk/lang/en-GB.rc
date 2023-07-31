@@ -26,7 +26,7 @@ BEGIN
     PUSHBUTTON "&Colour...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "&Placement", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "Customise &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
@@ -246,9 +246,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Display"
-    IDS_CPLDESCRIPTION "Customizes the desktop display and screen saver."
+    IDS_CPLDESCRIPTION "Customises the desktop display and screen saver."
     IDS_NONE "(None)"
-    IDS_CENTER "Center"
+    IDS_CENTER "Centre"
     IDS_STRETCH "Stretch"
     IDS_TILE "Tile"
     IDS_FIT "Fit"
