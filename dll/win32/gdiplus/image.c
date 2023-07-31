@@ -4886,26 +4886,7 @@ static const struct image_codec codecs[NUM_CODECS] = {
         decode_image_gif,
         select_frame_gif
     },
-    {
-        { /* TIFF */
-            /* Clsid */              { 0x557cf405, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
-            /* FormatID */           { 0xb96b3cb1U, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
-            /* CodecName */          tiff_codecname,
-            /* DllName */            NULL,
-            /* FormatDescription */  tiff_format,
-            /* FilenameExtension */  tiff_extension,
-            /* MimeType */           tiff_mimetype,
-            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsEncoder | ImageCodecFlagsSupportBitmap | ImageCodecFlagsBuiltin,
-            /* Version */            1,
-            /* SigCount */           2,
-            /* SigSize */            4,
-            /* SigPattern */         tiff_sig_pattern,
-            /* SigMask */            tiff_sig_mask,
-        },
-        encode_image_tiff,
-        decode_image_tiff,
-        select_frame_wic
-    },
+#ifdef __REACTOS__
     {
         { /* EMF */
             /* Clsid */              { 0x557cf403, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
@@ -4946,6 +4927,69 @@ static const struct image_codec codecs[NUM_CODECS] = {
         decode_image_wmf,
         NULL
     },
+#endif
+    {
+        { /* TIFF */
+            /* Clsid */              { 0x557cf405, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+            /* FormatID */           { 0xb96b3cb1U, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+            /* CodecName */          tiff_codecname,
+            /* DllName */            NULL,
+            /* FormatDescription */  tiff_format,
+            /* FilenameExtension */  tiff_extension,
+            /* MimeType */           tiff_mimetype,
+            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsEncoder | ImageCodecFlagsSupportBitmap | ImageCodecFlagsBuiltin,
+            /* Version */            1,
+            /* SigCount */           2,
+            /* SigSize */            4,
+            /* SigPattern */         tiff_sig_pattern,
+            /* SigMask */            tiff_sig_mask,
+        },
+        encode_image_tiff,
+        decode_image_tiff,
+        select_frame_wic
+    },
+#ifndef __REACTOS__
+    {
+        { /* EMF */
+            /* Clsid */              { 0x557cf403, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+            /* FormatID */           { 0xb96b3cacU, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+            /* CodecName */          emf_codecname,
+            /* DllName */            NULL,
+            /* FormatDescription */  emf_format,
+            /* FilenameExtension */  emf_extension,
+            /* MimeType */           emf_mimetype,
+            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsSupportVector | ImageCodecFlagsBuiltin,
+            /* Version */            1,
+            /* SigCount */           1,
+            /* SigSize */            4,
+            /* SigPattern */         emf_sig_pattern,
+            /* SigMask */            emf_sig_mask,
+        },
+        NULL,
+        decode_image_emf,
+        NULL
+    },
+    {
+        { /* WMF */
+            /* Clsid */              { 0x557cf404, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+            /* FormatID */           { 0xb96b3cadU, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+            /* CodecName */          wmf_codecname,
+            /* DllName */            NULL,
+            /* FormatDescription */  wmf_format,
+            /* FilenameExtension */  wmf_extension,
+            /* MimeType */           wmf_mimetype,
+            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsSupportVector | ImageCodecFlagsBuiltin,
+            /* Version */            1,
+            /* SigCount */           1,
+            /* SigSize */            2,
+            /* SigPattern */         wmf_sig_pattern,
+            /* SigMask */            wmf_sig_mask,
+        },
+        NULL,
+        decode_image_wmf,
+        NULL
+    },
+#endif
     {
         { /* PNG */
             /* Clsid */              { 0x557cf406, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
