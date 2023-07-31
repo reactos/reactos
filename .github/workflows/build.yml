@@ -182,6 +182,9 @@ jobs:
     - name: Build rosapps
       if: ${{ matrix.arch == 'arm' }}
       run: cmake --build build --target modules/rosapps/all
+    - name: Build subsystems
+      if: ${{ matrix.arch == 'arm' }}
+      run: cmake --build build --target subsystems/all
     - name: Build some applications (arm64)
       if: ${{ matrix.arch == 'arm64' }}
       run: cmake --build build --target calc magnify mstsc notepad osk regedit taskmgr winmine wordpad base/applications/screensavers/all -- -k0
@@ -193,6 +196,7 @@ jobs:
           build/base
           build/dll/cpl
           build/modules/rosapps
+          build/subsystems
           !**/CMakeFiles
           !**/cmake_install.cmake
           !**/*.asm
