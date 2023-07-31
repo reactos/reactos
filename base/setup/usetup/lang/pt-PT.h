@@ -1885,6 +1885,21 @@ MUI_ERROR ptPTErrorEntries[] =
         "F3=Sair  ENTER=Continuar"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Falha ao criar os caminhos para o direct\242rio de instala\207\306o do ReactOS!\n"
+        "ENTER = Reiniciar o computador"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "N\306o pode excluir a parti\207\306o que cont\202m a fonte de instala\207\306o!\n"
+        "ENTER = Reiniciar o computador"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "N\306o pode instalar o ReactOS dentro do direct\242rio de origem da instala\207\306o!\n"
+        "ENTER = Reiniciar o computador"
+    },
+    {
         // ERROR_NO_HDD
         "N\306o foi poss\241vel localizar um disco r\241digo.\n",
         "ENTER=Reiniciar"
