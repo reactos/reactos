@@ -63,8 +63,7 @@ ULONG_PTR GetParentProcessId() // derived from Napalm @ NetCore2K code from http
     if(NtQueryInformationProcess(GetCurrentProcess(), 0,
         &pbi, sizeof(pbi), &ulSize) >= 0 && ulSize == sizeof(pbi))
         return pbi[5];
-    else
-        return (ULONG_PTR)-1;
+    return (ULONG_PTR)-1;
 }
 
 VOID
@@ -499,7 +498,7 @@ BaseProcessStartup(
         }
         if (winsock_module)
         {
-            if ( DynWSASocket && DynWSAStartup )
+            if (DynWSASocket && DynWSAStartup)
             {
                 if ((nStatus = DynWSAStartup(0x202,&wsaData)) == 0)
                 {
