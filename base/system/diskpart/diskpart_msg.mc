@@ -973,7 +973,7 @@ Example:
     CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Romanian
-    Crează o partiție extinsă pe discul cu focalizare..
+    Crează o partiție extinsă pe discul cu focalizare.
     Se aplică doar la discurile cu Înregistrarea de inițializare de maestru (MBR).
 
 Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
