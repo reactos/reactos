@@ -1564,7 +1564,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, L
     }
     msg->lParam = MAKELONG( pt.x, pt.y );
 
-    /* translate double clicks */
+    /* translate double-clicks */
 
     if ((msg->message == WM_LBUTTONDOWN) ||
         (msg->message == WM_RBUTTONDOWN) ||
@@ -1573,7 +1573,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, L
     {
         BOOL update = *RemoveMessages;
 
-        /* translate double clicks -
+        /* translate double-clicks -
          * note that ...MOUSEMOVEs can slip in between
          * ...BUTTONDOWN and ...BUTTONDBLCLK messages */
 
@@ -1592,7 +1592,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, L
                message += (WM_LBUTTONDBLCLK - WM_LBUTTONDOWN);
                if (update)
                {
-                   MessageQueue->msgDblClk.message = 0;  /* clear the double click conditions */
+                   MessageQueue->msgDblClk.message = 0;  /* clear the double-click conditions */
                    update = FALSE;
                }
            }
@@ -1604,7 +1604,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, L
             return FALSE;
         }
 
-        /* update static double click conditions */
+        /* update static double-click conditions */
         if (update) MessageQueue->msgDblClk = *msg;
     }
     else

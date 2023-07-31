@@ -373,7 +373,7 @@ static BOOL CC_MouseCheckColorGraph( HWND hDlg, int dlgitem, int *hori, int *ver
 }
 /***********************************************************************
  *                  CC_MouseCheckResultWindow                 [internal]
- *                  test if double click one of the result colors
+ *                  test if double-click one of the result colors
  */
 static BOOL CC_MouseCheckResultWindow( HWND hDlg, LPARAM lParam )
 {

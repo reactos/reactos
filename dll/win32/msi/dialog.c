@@ -3094,7 +3094,7 @@ static UINT msi_dialog_directory_list( msi_dialog *dialog, MSIRECORD *rec )
     prop = MSI_RecordGetString( rec, 9 );
     control->property = msi_dialog_dup_property( dialog, prop, FALSE );
 
-    /* double click to activate an item in the list */
+    /* double-click to activate an item in the list */
     SendMessageW( control->hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE,
                   0, LVS_EX_TWOCLICKACTIVATE );
 

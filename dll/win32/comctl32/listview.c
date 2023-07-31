@@ -9584,7 +9584,7 @@ static BOOL LISTVIEW_DrawTrackLine(const LISTVIEW_INFO *infoPtr)
 /***
  * DESCRIPTION:
  * Called when an edit control should be displayed. This function is called after
- * we are sure that there was a single click - not a double click (this is a TIMERPROC).
+ * we are sure that there was a single click - not a double-click (this is a TIMERPROC).
  *
  * PARAMETER(S):
  * [I] hwnd : Handle to the listview
@@ -10263,7 +10263,7 @@ static LRESULT LISTVIEW_KillFocus(LISTVIEW_INFO *infoPtr)
 
 /***
  * DESCRIPTION:
- * Processes double click messages (left mouse button).
+ * Processes double-click messages (left mouse button).
  *
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure
@@ -10530,7 +10530,7 @@ static LRESULT LISTVIEW_LButtonUp(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, INT 
     /* if we clicked on a selected item, edit the label */
     if(lvHitTestInfo.iItem == infoPtr->nEditLabelItem && (lvHitTestInfo.flags & LVHT_ONITEMLABEL))
     {
-        /* we want to make sure the user doesn't want to do a double click. So we will
+        /* we want to make sure the user doesn't want to do a double-click. So we will
          * delay the edit. WM_LBUTTONDBLCLICK will cancel the timer
          */
         infoPtr->itemEdit.fEnabled = TRUE;
@@ -10932,7 +10932,7 @@ static LRESULT LISTVIEW_PrintClient(LISTVIEW_INFO *infoPtr, HDC hdc, DWORD optio
 
 /***
  * DESCRIPTION:
- * Processes double click messages (right mouse button).
+ * Processes double-click messages (right mouse button).
  *
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure

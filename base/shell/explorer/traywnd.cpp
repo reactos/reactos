@@ -3138,7 +3138,7 @@ HandleTrayContextMenu:
 
     LRESULT OnNcLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        /* Let the clock handle the double click */
+        /* Let the clock handle the double-click */
         ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
 
         /* We "handle" this message so users can't cause a weird maximize/restore
