@@ -1901,7 +1901,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_NO_HDD
-        "N\306o foi poss\241vel localizar um disco r\241digo.\n",
+        "N\306o foi poss\241vel localizar um disco r\241gido.\n",
         "ENTER=Reiniciar"
     },
     {
