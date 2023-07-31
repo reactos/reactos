@@ -319,7 +319,7 @@ protected:
     union {
         //
         // This field is set when the object is being contructed or before
-        // Commit() and from then on is read only.
+        // Commit() and from then on is read-only.
         //
         // FxDeviceBase* is used by the core object state machine.  Derived
         // objects might need the fuller FxDevice* (and they can safely get at
