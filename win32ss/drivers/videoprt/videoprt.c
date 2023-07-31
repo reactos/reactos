@@ -437,8 +437,6 @@ IntVideoPortFindAdapter(
     ConfigInfo.DriverRegistryPath = DriverExtension->RegistryPath.Buffer;
     ConfigInfo.VideoPortGetProcAddress = IntVideoPortGetProcAddress;
     ConfigInfo.SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
-    ConfigInfo.BusInterruptLevel = DeviceExtension->InterruptLevel;
-    ConfigInfo.BusInterruptVector = DeviceExtension->InterruptVector;
 
     Status = ZwQuerySystemInformation(SystemBasicInformation,
                                       &SystemBasicInfo,
@@ -525,6 +523,9 @@ IntVideoPortFindAdapter(
         Status = STATUS_UNSUCCESSFUL;
         goto Failure;
     }
+
+    ConfigInfo.BusInterruptLevel = DeviceExtension->InterruptLevel;
+    ConfigInfo.BusInterruptVector = DeviceExtension->InterruptVector;
 
     /*
      * Now we know the device is present, so let's do all additional tasks
