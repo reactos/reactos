@@ -973,7 +973,7 @@ Example:
     CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Romanian
-    Crează o partiție extinsă pe discul cu focalizare.
+    Crează o partiție extinsă pe discul cu focalizare..
     Se aplică doar la discurile cu Înregistrarea de inițializare de maestru (MBR).
 
 Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
@@ -994,8 +994,8 @@ Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
     NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
-				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă cu un cod
-				de eroare.
+				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
+				cu un cod de eroare.
 
     După ce a fost creată partiția, focalizarea se mută automat pe noua
 	partiție. Doar o singură partiție extinsă poate fi creată pe un disc. Această
@@ -1366,8 +1366,8 @@ Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 			
     NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
-				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă cu un cod
-				de eroare.
+				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
+				cu un cod de eroare.
 
     După ce a fost creată partiția, focalizarea se mută automat pe
     noua partiție logică.
@@ -2079,8 +2079,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
 
                 Pentru discurile cu tabelul de partiție GUID (GPT) puteți
 				specifica un tip de partiție GUID pentru partiția pe care vreți
-				să o creați.
-                GUID-urile recunoscut includ:
+				să o creați. GUID-urile recunoscute includ:
 
                     Partiția de sistem EFI:
                         c12a7328-f81f-11d2-ba4b-00a0c93ec93b
@@ -2125,8 +2124,8 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
 			
     NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
-				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă cu un cod
-				de eroare.
+				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
+				cu un cod de eroare.
 
     După ce ați creat partiția, focalizarea se mută automat pe noua partiție
 	logică.Partiția nu primește nicio literă de disc. Trebuie să folosiți comanda
@@ -2825,8 +2824,8 @@ Sintaxă:  DELETE PARTITION [NOERR] [OVERRIDE]
 
     NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
-				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă cu un cod
-				de eroare.
+				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
+				cu un cod de eroare.
 
     OVERRIDE    Permite DiskPart să șteargă orice partiție, în ciuda tipului
                 său. De obicei, DiskPart vă permite doar să ștergeți partițiile
@@ -2836,7 +2835,7 @@ Sintaxă:  DELETE PARTITION [NOERR] [OVERRIDE]
 	altă partiție ce conține un fișier de paginație activ sau un depozit de
 	crăpare (depozit de memorie) scris într-un fișier.
 
-    O partiție trebuie selectată pentru ca acestă operație să reușească.
+    O partiție trebuie selectată pentru ca acestă operațiune să reușească.
 
     Partițiile nu pot fi șterse de pe discurile dinamice sau create
 	pe discurile dinamice.
@@ -4036,8 +4035,8 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
 			
     NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
-				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă cu un cod
-				de eroare.
+				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
+				cu un cod de eroare.
 
     Un volum trebuie să fie selectat pentru ca această operațiune să reușească.
 
@@ -6171,15 +6170,14 @@ Sintaxă: SELECT DISK=<N>
 				un ESP sau calculatorul este inițializat din Windows PE, comanda va eșua.
 
     DISK=NEXT
-                Once a disk is selected, this command is used to iterate
-                over all disks in the disk list. The next disk in the list
-                will receive focus. If the next disk is the start of the
-                enumeration, the command will fail and no disk will have
-                focus.
+                Odată ce discul e selectat, această comandă este folosită
+				pentru a se repeta peste toate discurile din lista de discuri. Următorul
+				disc din listă va primi focalizare. Dacă următorul disc este începutul
+				enumerării, comanda va eșua și niciun disc nu va trebui să se focalizeze.
 
-    If no options are specified, the select command lists the disk that
-    currently has the focus. You can view the DiskPart index numbers
-    for all disks on the computer by using the LIST DISK command.
+    Dacă nicio opțiune nu este specificată, comanda SELECT va lista discul
+	care este focalizat în prezent. Puteți vizualiza numerele de index pentru
+	toate discurile din calculator folosind comanda LIST DISK.
 
 De exemplu:
 
@@ -6482,23 +6480,20 @@ Example:
     SELECT PARTITION=1
 .
 Language=Romanian
-    Selects the specified partition and shifts the focus to it.
-
-Syntax:  SELECT PARTITION=<N>
+    Selectează partiția specificată și mută focalizarea pe ea.
+	
+Sintaxă:  SELECT PARTITION=<N>
 
     PARTITION=<N>
 
-                The number of the partition to receive the focus.
+                Numărul partiției ce urmează să primească focalizare.
 
-    If no partition is specified, the select command lists the current
-    partition with focus. You can specify the partition by its number. You can
-    view the numbers of all partitions on the current disk by using the list
-    partition command.
-
-    You must first select a disk using the DiskPart select disk command before
-    you can select a partition.
-
-Example:
+     Dacă nicio partiție nu este specificată, comanda SELECT va lista partiția
+	focalizată în prezent. Puteți specifica partiția prin numărul său. Puteți
+	vizualiza numerele tuturor partițiilor de pe discul actual folosind comanda
+	LIST PARTITION.
+	
+De exemplu:
 
     SELECT PARTITION=1
 .
@@ -6704,22 +6699,22 @@ Example:
     SELECT VOLUME=C:\\MountH
 .
 Language=Romanian
-    Selects the specified volume and shifts the focus to it.
+    Selectează volumul specificat și mută focalizarea pe el.
 
-Syntax:  SELECT VOLUME={<N> | <D>}
+Sintaxă:  SELECT VOLUME={<N> | <D>}
 
-    VOLUME=<N>  The number of the volume to receive the focus.
+    VOLUME=<N>  Numărul volumului care urmează să primească focalizare.
 
-    VOLUME=<D>  The drive letter or mounted folder path of the volume
-                to receive the focus.
+    VOLUME=<D>  Litera discului sau calea dosarului montat al volumului
+                ce urmează să primească focalizare.
 
-    If no volume is specified, the select command lists the current volume with
-    focus. You can specify the volume by number, drive letter, or mounted folder
-    path. On a basic disk, selecting a volume also gives the corresponding
-    partition focus. You can view the numbers of all volumes on the computer by
-    using the list volume command.
+    Dacă niciun volum nu e specificat, comanda SELECT listează volumul actual
+	cu focalizare. Puteți specififca volumul după număr, litera discului sau calea
+	dosarului montat. Pe un disc de bază, selectarea unui volum oferă, de
+	asemenea, focalizarea corespunzătoare pe partiție. Puteți vizualiza numărul
+	tuturor volumelor din calculator folosind comanda LIST VOLUME.
 
-Example:
+De exemplu:
 
     SELECT VOLUME=1
     SELECT VOLUME=C
@@ -7224,84 +7219,83 @@ Example:
     SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 .
 Language=Romanian
-    Changes the partition type field for the partition with focus.
+    Schimbă câmpul tipului partiției pentru partiția cu focalizare.
 
-Syntax:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
+Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
 
     ID={<BYTE> | <GUID>}
 
-                Specifies the new partition type.
-                For master boot record (MBR) disks, you can specify a partition
-                type byte, in hexadecimal form, for the partition. Any
-                partition type byte can be specified with this parameter except
-                for type 0x42 (LDM partition). Note that the leading '0x' is 
-                omitted when specifying the hexadecimal partition type.
+                Specifică noul tip al partiției.
+                Pentru discurile cu Înregistrarea de inițializare de maestru
+				(MBR), puteți speciifica o partiție de tip octet, în formă hexazecimală,
+				pentru partiție. Orice partiție de tip octet poate fi specificată cu acest
+				parametru, exceptând pentru tipul 0x42 (partiție LDM). Rețineți că primul
+				'0x' este omis când se specifică partiții de tip hexazecimal.
+				
+				Pentru discurile cu tabelul de partiție GUID (GPT) puteți
+				specifica un tip de partiție GUID pentru partiția pe care vreți
+				să o creați. GUID-urile recunoscute includ:
 
-                For GUID partition table (GPT) disks you can specify a
-                partition type GUID for the partition. Recognized GUIDs
-                include:
-
-                    EFI System partition:
+                    Partiția de sistem EFI:
                         c12a7328-f81f-11d2-ba4b-00a0c93ec93b
 
-                    Basic data partition:
+                    Partiția de date de bază:
                         ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 
-                Any partition type GUID can be specified with this parameter
-                except for the following:
+                Orice partiție de tip GUID poate fi specificată cu acest
+                parametru exceptând următoarele:
 
-                    Microsoft Reserved partition:
+                    Partiția rezervată Microsoft:
                         e3c9e316-0b5c-4db8-817d-f92df00215a
 
-                    LDM Metadata partition on a dynamic disk:
+                    Partiția de metadate LDM pe un disc dinamic:
                         5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
 
-                    LDM Data partition on a dynamic disk:
+                    Partiția de date LDM pe un disc dinamic:
                         af9b60a0-1431-4f62-bc68-3311714a69ad
 
-                    Cluster Metadata partition:
+                    Partiția de metadate a grupului:
                         db97dba9-0840-4bae-97f0-ffb9a327c7e1
 
 
-                Other than the limitations mentioned, DiskPart otherwise does
-                not check the partition type for validity except to ensure that
-                it is a byte in hexadecimal form or a GUID.
+				În afară de limitările menționate, DiskPart nu verifică valabilitatea
+				tipului de partiție decât pentru a se asigura că este un octet în formă
+				hexazecimală sau un GUID.
 
-    OVERRIDE    Enables DiskPart to force the file system on the volume to
-                dismount before changing the partition type. When changing
-                the partition type, DiskPart will attempt to lock and dismount
-                the file system on the volume. If this parameter is not specified,
-                and the call to lock the file system fails, (because some other
-                application has an open handle to the volume), the entire
-                operation will fail. When this parameter is specified, the
-                dismount is forced even if the call to lock the file system
-                fails. When a file system is dismounted, all opened handles to
-                the volume will become invalid.
+    OVERRIDE    Activează DiskPart pentru a forța sistemul de fișiere pe volum
+	            să demonteze tipul de partiție înainte de a-l schimba. Când se
+				schimbă tipul de partiție, DiskPart va încerca să blocheze și să demonteze
+				sistemul de fișiere pe volum. Dacă acest parametru nu este specificat și
+				apelarea blocării sistemului de fișiere eșuează, (deoarece alte câteva
+				aplicații nu au un mâner deschis pentru volum), întreaga operațiune
+				va eșua. Când acest parametru este specificat, demontarea e forțată chiar
+				dacă apelarea blocării sistemului de fișiere eșuează. Când un sistem de
+				fișiere e demontat, toate mânerele deschise volumului vor deveni nevalide.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
+	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
+				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
+				cu un cod de eroare.
 
-    Intended for Original Equipment Manufacturer (OEM) use only.
+    Destinat numai pentru utilizarea producătorilor de echipamente originale (OEM).
 
-    A partition must be selected for this operation to succeed.
+    O partiție trebuie selectată pentru ca acestă operațiune să reușească.
+	
+    Atenție:
 
-    Caution:
+        Creând partiții cu acest parametru poate cauza
+		calculatorului dumneavoastră să eșueaze sau să nu mai poată porni.
+		Dacă nu sunteți un OEM sau un profesionist cu experiență în discuri GPT,
+		nu creați partiții pe discuri GPT folosind acest parametru. În schimb,
+		folosiți întotdeauna comanda CREATE PARTITION EFI ca să creați partiții de
+		sistem EFI, comanda CREATE PARTITION MSR ca să creați partiții rezervate
+		Microsoft, și comanda CREATE PARTITION PRIMARY fără acest parametru
+		ca să creați partiții primare pe discuri GPT.
 
-        Changing partition type fields with this parameter might cause your
-        computer to fail or be unable to start up. Unless you are an OEM or an
-        IT professional experienced with GPT disks, do not change partition
-        type fields on GPT disks using this parameter. Instead, always use the
-        CREATE PARTITION EFI command to create EFI System partitions, the
-        CREATE PARTITION MSR command to create Microsoft Reserved partitions,
-        and the CREATE PARTITION PRIMARY command without the ID parameter to
-        create primary partitions on GPT disks.
+    Această comandă nu funcționează nici pe discuri dinamice, nici pe
+	Partiții rezervate Microsoft.
 
-    This command does not work on dynamic disks nor on Microsoft Reserved
-    partitions.
-
-Example:
+De exemplu:
     SET ID=07 OVERRIDE
     SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 .
@@ -7861,27 +7855,27 @@ Example:
     UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Romanian
-    Displays or sets the GUID partition table (GPT) identifier or master boot
-    record (MBR) signature for the disk with focus.
+    Afișează sau setează identificatorul tabelului de partiție GUID (GPT) sau
+	semnătura Înregistrării de inițializare de maestru (MBR) pentru discul
+	cu focalizare.
 
-Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+Sintaxă:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
 
     ID={<DWORD> | <GUID>}
 
-                For MBR disks, you can specify a four-byte (DWORD) value in
-                hexadecimal form for the signature.
+                Pentru discurile MBR, puteți specifica o valoare de patru
+				octeți (DWORD) formă hexazecimală pentru semnătură.
 
-                For GPT disks, specify a GUID for the identifier.
+                Pentru discurile GPT, specificați un GUID pentru identificator.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
+	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
+				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
+				cu un cod de eroare.
 
-    A disk must be selected for this operation to succeed.  This command works
-    on basic and dynamic disks.
+    Un disc trebuie să fie selectat pentru ca această operațiune să reușească.
 
-Example:
+De exemplu:
 
     UNIQUEID DISK
     UNIQUEID DISK ID=5f1b2c36
