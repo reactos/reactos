@@ -10,7 +10,10 @@ Angelus_02_ROSWP_4-3_1024x768.jpg   | See above                                 
 grass.jpg                           | See above                                      | See above
 clouds.jpg                          | Andreas Bjerkeholt (harteex@gmail.com)         | https://reactos.org/forum/viewtopic.php?p=17732#p17732
 lake.jpg                            | Andreas Bjerkeholt (harteex@gmail.com)         | https://reactos.org/forum/viewtopic.php?p=17732#p17732
-ReactOS_CirclesBlue_1.jpg           | Forum user "henrytang5247" (Henry Tang)        | https://reactos.org/forum/viewtopic.php?p=109529#p109529
+Underwater.jpg                      | GitHub User "user0-tb"                         |
+https://github.com/user0-tb
+ReactOS_CirclesBlue_1.jpg           | Forum user "henrytang5247" (Henry Tang)        | 
+https://reactos.org/forum/viewtopic.php?p=109529#p109529
 ReactOS_CirclesBlue_2.jpg           | See above                                      | See above
 ReactOS_CirclesGold_1.jpg           | See above                                      | See above
 ReactOS_CirclesGold_2.jpg           | See above                                      | See above
