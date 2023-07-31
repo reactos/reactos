@@ -44,7 +44,7 @@ Where:\n\
 [/P]  Prompts on each source file before copying.\n\
 [/N]  Copy using short names.\n\
 [/U]  Copy only files which already exist in destination.\n\
-[/R]  Overwrite any read only files.\n\
+[/R]  Overwrite any read-only files.\n\
 [/H]  Include hidden and system files in the copy.\n\
 [/C]  Continue even if an error occurs during the copy.\n\
 [/A]  Only copy files with archive attribute set.\n\

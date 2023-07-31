@@ -1226,7 +1226,7 @@ If the target drive does not have a drive letter, this command also
 assigns a local drive letter (see '%1!s!HELP LINK') using the first
 available letter.
 
-Read only files, NTFS encrypted/compressed files and ZIP compressed
+Read-only files, NTFS encrypted/compressed files and ZIP compressed
 image files (such as WinImage IMZ file) cannot be mounted directly
 and must be opened in RAM mode.
 
@@ -1374,7 +1374,7 @@ OPTIONS:
             The trailing ':' is optional.
             The drive 0 is used if not specified.
 
-  /ON       Enables the drive write protect - the drive becomes read only.
+  /ON       Enables the drive write protect - the drive becomes read-only.
 
   /OFF      Disables the drive write protect - the drive becomes writable.
 

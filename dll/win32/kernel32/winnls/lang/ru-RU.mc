@@ -8853,7 +8853,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_WMI_READ_ONLY
 Language=Russian
-ERROR_WMI_READ_ONLY - The WMI data item or data block is read only.
+ERROR_WMI_READ_ONLY - The WMI data item or data block is read-only.
 .
 
 MessageId=4214
@@ -10189,7 +10189,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FILE_READ_ONLY
 Language=Russian
-ERROR_FILE_READ_ONLY - The specified file is read only.
+ERROR_FILE_READ_ONLY - The specified file is read-only.
 .
 
 MessageId=6010

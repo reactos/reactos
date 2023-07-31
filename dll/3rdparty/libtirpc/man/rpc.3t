@@ -222,7 +222,7 @@ struct svc_req {
     rpcvers_t    rq_vers;    /* service protocol version */
     rpcproc_t    rq_proc;    /* the desired procedure */
     struct opaque_auth    rq_cred;    /* raw creds from the wire */
-    caddr_t    rq_clntcred;    /* read only cooked cred */
+    caddr_t    rq_clntcred;    /* read-only cooked cred */
     SVCXPRT    *rq_xprt;    /* associated transport */
 };
 .Ed

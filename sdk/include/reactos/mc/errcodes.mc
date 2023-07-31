@@ -18781,16 +18781,16 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_WMI_READ_ONLY
 Language=English
-The WMI data item or data block is read only.
+The WMI data item or data block is read-only.
 .
 Language=Russian
-The WMI data item or data block is read only.
+The WMI data item or data block is read-only.
 .
 Language=Polish
 Element danych WMI lub blok danych są tylko do odczytu.
 .
 Language=Romanian
-The WMI data item or data block is read only.
+The WMI data item or data block is read-only.
 .
 
 MessageId=4214
@@ -21620,16 +21620,16 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FILE_READ_ONLY
 Language=English
-The specified file is read only.
+The specified file is read-only.
 .
 Language=Russian
-The specified file is read only.
+The specified file is read-only.
 .
 Language=Polish
 Podany plik jest tylko do odczytu.
 .
 Language=Romanian
-The specified file is read only.
+The specified file is read-only.
 .
 
 MessageId=6010

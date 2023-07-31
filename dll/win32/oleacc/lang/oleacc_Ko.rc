@@ -96,7 +96,7 @@ STRINGTABLE
     IDS_STATE_PRESSED           "pressed"
     IDS_STATE_CHECKED           "checked"
     IDS_STATE_MIXED             "mixed"
-    IDS_STATE_READONLY          "read only"
+    IDS_STATE_READONLY          "read-only"
     IDS_STATE_HOTTRACKED        "hot tracked"
     IDS_STATE_DEFAULT           "default"
     IDS_STATE_EXPANDED          "expanded"
