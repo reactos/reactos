@@ -524,7 +524,7 @@ IntVideoPortFindAdapter(
         goto Failure;
     }
 
-    if(DriverExtension->InitializationData.HwInterrupt != NULL)
+    if (DriverExtension->InitializationData.HwInterrupt != NULL)
     {
         ConfigInfo.BusInterruptLevel = DeviceExtension->InterruptLevel;
         ConfigInfo.BusInterruptVector = DeviceExtension->InterruptVector;
