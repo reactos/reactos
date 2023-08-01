@@ -91,7 +91,7 @@ UINT
 WINAPI
 RegisterClipboardFormatA(LPCSTR lpszFormat)
 {
-    UINT ret = 0;
+    UINT ret;
     UNICODE_STRING usFormat = {0};
 
     if (lpszFormat == NULL)
@@ -100,19 +100,17 @@ RegisterClipboardFormatA(LPCSTR lpszFormat)
         return 0;
     }
 
-    /* check for "" */
     if (*lpszFormat == 0) //NULL
     {
         SetLastError(ERROR_INVALID_NAME);
         return 0;
     }
 
-    ret = RtlCreateUnicodeStringFromAsciiz(&usFormat, lpszFormat);
-    if (ret)
-    {
-        ret = NtUserRegisterWindowMessage(&usFormat); //(LPCWSTR)
-        RtlFreeUnicodeString(&usFormat);
-    }
+    if (!RtlCreateUnicodeStringFromAsciiz(&usFormat, lpszFormat))
+        return 0;
+
+    ret = NtUserRegisterWindowMessage(&usFormat); //(LPCWSTR)
+    RtlFreeUnicodeString(&usFormat);
 
     return ret;
 }
@@ -124,7 +122,6 @@ UINT
 WINAPI
 RegisterClipboardFormatW(LPCWSTR lpszFormat)
 {
-    UINT ret = 0;
     UNICODE_STRING usFormat = {0};
 
     if (lpszFormat == NULL)
@@ -133,7 +130,6 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
         return 0;
     }
 
-    /* check for "" */
     if (*lpszFormat == 0) //NULL
     {
         SetLastError(ERROR_INVALID_NAME);
@@ -141,9 +137,7 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
     }
 
     RtlInitUnicodeString(&usFormat, lpszFormat);
-    ret = NtUserRegisterWindowMessage(&usFormat);
-
-    return ret;
+    return NtUserRegisterWindowMessage(&usFormat);
 }
 
 static PVOID WINAPI
