@@ -7,7 +7,14 @@
 
 #include "precomp.h"
 
-BrowseUISettings gSettings = BrowseUISettings();
+BrowseUISettings gSettings;
+
+BrowseUISettings::BrowseUISettings()
+{
+    fStatusBarVisible = FALSE;
+    fShowGoButton = TRUE;
+    fLocked = TRUE;
+}
 
 BOOL BrowseUISettings::Save()
 {
