@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/config/cmsysini.c
  * PURPOSE:         Configuration Manager - System Initialization Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu (alex.ionescu@reactos.org)
@@ -873,7 +872,6 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     UNICODE_STRING KeyName;
     PCMHIVE SystemHive = NULL;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
-    BOOLEAN Success;
 
     PAGED_CODE();
 
@@ -921,12 +919,8 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Set the hive filename */
-    Success = RtlCreateUnicodeString(&SystemHive->FileFullPath,
-                                     L"\\SystemRoot\\System32\\Config\\SYSTEM");
-    if (!Success)
-    {
+    if (!RtlCreateUnicodeString(&SystemHive->FileFullPath, L"\\SystemRoot\\System32\\Config\\SYSTEM"))
         return FALSE;
-    }
 
     /* Manually set the hive as volatile, if in Live CD mode */
     if (HiveBase && CmpShareSystemHives)
