@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/gdi/ntgdi/freetype.c
  * PURPOSE:         FreeType font engine interface
  * PROGRAMMERS:     Copyright 2001 Huw D M Davies for CodeWeavers.
  *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.
@@ -520,7 +519,6 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
     BYTE                            CharSets[FONTSUBST_FROM_AND_TO];
     LPWSTR                          pch;
     PFONTSUBST_ENTRY                pEntry;
-    BOOLEAN                         Success;
 
     /* the FontSubstitutes registry key */
     static UNICODE_STRING FontSubstKey =
@@ -565,8 +563,7 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
         pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
         Length = pInfo->NameLength / sizeof(WCHAR);
         pInfo->Name[Length] = UNICODE_NULL;   /* truncate */
-        Success = RtlCreateUnicodeString(&FromW, pInfo->Name);
-        if (!Success)
+        if (!RtlCreateUnicodeString(&FromW, pInfo->Name))
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
             DPRINT("RtlCreateUnicodeString failed\n");
@@ -588,8 +585,7 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
         pch = (LPWSTR)((PUCHAR)pInfo + pInfo->DataOffset);
         Length = pInfo->DataLength / sizeof(WCHAR);
         pch[Length] = UNICODE_NULL; /* truncate */
-        Success = RtlCreateUnicodeString(&ToW, pch);
-        if (!Success)
+        if (!RtlCreateUnicodeString(&ToW, pch))
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
             DPRINT("RtlCreateUnicodeString failed\n");
@@ -1692,7 +1688,6 @@ IntLoadFontsInRegistry(VOID)
     LPBYTE                          InfoBuffer;
     PKEY_VALUE_FULL_INFORMATION     pInfo;
     LPWSTR                          pchPath;
-    BOOLEAN                         Success;
     WCHAR                           szPath[MAX_PATH];
     INT                             nFontCount = 0;
     DWORD                           dwFlags;
@@ -1759,8 +1754,7 @@ IntLoadFontsInRegistry(VOID)
         pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
         Length = pInfo->NameLength / sizeof(WCHAR);
         pInfo->Name[Length] = UNICODE_NULL;   /* truncate */
-        Success = RtlCreateUnicodeString(&FontTitleW, pInfo->Name);
-        if (!Success)
+        if (!RtlCreateUnicodeString(&FontTitleW, pInfo->Name))
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
             DPRINT1("RtlCreateUnicodeString failed\n");
