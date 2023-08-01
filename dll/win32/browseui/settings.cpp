@@ -12,8 +12,8 @@ BrowseUISettings gSettings;
 BrowseUISettings::BrowseUISettings()
 {
     fStatusBarVisible = FALSE;
-    fShowGoButton = TRUE;
-    fLocked = TRUE;
+    fShowGoButton = FALSE;
+    fLocked = FALSE;
 }
 
 BOOL BrowseUISettings::Save()
