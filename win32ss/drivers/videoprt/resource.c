@@ -1189,7 +1189,7 @@ VideoPortGetBusData(
    if (BusDataType != Cmos)
    {
       /* Legacy vs. PnP behaviour */
-      if (DeviceExtension->PhysicalDeviceObject != NULL)
+      if (DeviceExtension->PhysicalDeviceObject == NULL)
          SlotNumber = DeviceExtension->SystemIoSlotNumber;
    }
 
@@ -1224,7 +1224,7 @@ VideoPortSetBusData(
    if (BusDataType != Cmos)
    {
       /* Legacy vs. PnP behaviour */
-      if (DeviceExtension->PhysicalDeviceObject != NULL)
+      if (DeviceExtension->PhysicalDeviceObject == NULL)
          SlotNumber = DeviceExtension->SystemIoSlotNumber;
    }
 

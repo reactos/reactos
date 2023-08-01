@@ -524,8 +524,11 @@ IntVideoPortFindAdapter(
         goto Failure;
     }
 
-    ConfigInfo.BusInterruptLevel = DeviceExtension->InterruptLevel;
-    ConfigInfo.BusInterruptVector = DeviceExtension->InterruptVector;
+    if(DriverExtension->InitializationData.HwInterrupt != NULL)
+    {
+        ConfigInfo.BusInterruptLevel = DeviceExtension->InterruptLevel;
+        ConfigInfo.BusInterruptVector = DeviceExtension->InterruptVector;
+    }
 
     /*
      * Now we know the device is present, so let's do all additional tasks
