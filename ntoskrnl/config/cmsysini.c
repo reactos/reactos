@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/config/cmsysini.c
  * PURPOSE:         Configuration Manager - System Initialization Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu (alex.ionescu@reactos.org)
@@ -412,7 +411,7 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                NULL,
                                NULL);
     Status = NtOpenKey(&KeyHandle, KEY_WRITE, &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) goto Quickie;
+    if (!NT_SUCCESS(Status)) goto Quit;
 
     /* Key opened, now write to the key */
     RtlInitUnicodeString(&KeyName, L"SystemStartOptions");
@@ -422,7 +421,7 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                            REG_SZ,
                            CmpLoadOptions.Buffer,
                            CmpLoadOptions.Length);
-    if (!NT_SUCCESS(Status)) goto Quickie;
+    if (!NT_SUCCESS(Status)) goto Quit;
 
     /* Setup value name for system boot device in ARC format */
     RtlInitUnicodeString(&KeyName, L"SystemBootDevice");
@@ -434,7 +433,7 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                            ValueName.Buffer,
                            ValueName.Length);
 
-Quickie:
+Quit:
     /* Free the buffers */
     RtlFreeUnicodeString(&ValueName);
 
@@ -872,7 +871,6 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     UNICODE_STRING KeyName;
     PCMHIVE SystemHive = NULL;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
-    BOOLEAN Success;
 
     PAGED_CODE();
 
@@ -920,12 +918,8 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Set the hive filename */
-    Success = RtlCreateUnicodeString(&SystemHive->FileFullPath,
-                                     L"\\SystemRoot\\System32\\Config\\SYSTEM");
-    if (!Success)
-    {
+    if (!RtlCreateUnicodeString(&SystemHive->FileFullPath, L"\\SystemRoot\\System32\\Config\\SYSTEM"))
         return FALSE;
-    }
 
     /* Manually set the hive as volatile, if in Live CD mode */
     if (HiveBase && CmpShareSystemHives)
