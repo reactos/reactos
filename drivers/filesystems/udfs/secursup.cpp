@@ -934,9 +934,9 @@ UDFCheckAccessRights(
     )
 {
     NTSTATUS RC;
-    BOOLEAN SecurityCheck = TRUE;
     BOOLEAN ROCheck = FALSE;
 #ifdef UDF_ENABLE_SECURITY
+    BOOLEAN SecurityCheck;
     PSECURITY_DESCRIPTOR SecDesc;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     ACCESS_MASK LocalAccessMask;
@@ -1011,8 +1011,7 @@ treat_as_ro:
         } else
 #endif //UDF_ENABLE_SECURITY
         if(DesiredAccess & ACCESS_SYSTEM_SECURITY) {
-            SecurityCheck = SeSinglePrivilegeCheck(SeExports->SeSecurityPrivilege, UserMode);
-            if(!SecurityCheck)
+            if (!SeSinglePrivilegeCheck(SeExports->SeSecurityPrivilege, UserMode))
                 return STATUS_ACCESS_DENIED;
             Ccb->PreviouslyGrantedAccess |= ACCESS_SYSTEM_SECURITY;
         }

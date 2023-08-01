@@ -602,7 +602,6 @@ extern KEVENT ObpDefaultObject;
 extern KGUARDED_MUTEX ObpDeviceMapLock;
 extern POBJECT_TYPE ObpTypeObjectType;
 extern POBJECT_TYPE ObSymbolicLinkType;
-extern POBJECT_TYPE ObpTypeObjectType;
 extern POBJECT_DIRECTORY ObpRootDirectoryObject;
 extern POBJECT_DIRECTORY ObpTypeDirectoryObject;
 extern PHANDLE_TABLE ObpKernelHandleTable;
