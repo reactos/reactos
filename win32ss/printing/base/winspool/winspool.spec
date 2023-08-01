@@ -40,7 +40,7 @@
 139 stub ConnectToPrinterDlg
 140 stub ConvertAnsiDevModeToUnicodeDevmode
 141 stub ConvertUnicodeDevModeToAnsiDevmode
-142 stdcall -stub CreatePrinterIC(ptr ptr)
+142 stdcall CreatePrinterIC(ptr ptr)
 143 stdcall DEVICECAPABILITIES(str str long ptr ptr) DeviceCapabilitiesA
 144 stdcall DEVICEMODE(ptr ptr str ptr) DeviceMode
 145 stdcall DeleteFormA(ptr str)
@@ -64,7 +64,7 @@
 163 stdcall DeletePrinterDriverExA(str str str long long)
 164 stdcall DeletePrinterDriverExW(wstr wstr wstr long long)
 165 stdcall DeletePrinterDriverW(wstr wstr wstr)
-166 stdcall -stub DeletePrinterIC(ptr)
+166 stdcall DeletePrinterIC(ptr)
 167 stdcall DeletePrinterKeyA(ptr str)
 168 stdcall DeletePrinterKeyW(ptr wstr)
 169 stdcall DevQueryPrint(ptr ptr ptr)
@@ -72,7 +72,7 @@
 171 stdcall DeviceCapabilities(str str long ptr ptr) DeviceCapabilitiesA
 172 stdcall DeviceCapabilitiesA(str str long ptr ptr)
 173 stdcall DeviceCapabilitiesW(wstr wstr long ptr ptr)
-174 stdcall -stub DeviceMode(ptr ptr str ptr)
+174 stdcall DeviceMode(ptr ptr str ptr)
 175 stdcall DevicePropertySheets(ptr long)
 176 stdcall DocumentEvent(ptr ptr long long ptr long ptr)
 177 stdcall DocumentPropertiesA(ptr ptr str ptr ptr long)
@@ -134,7 +134,7 @@
 233 stdcall EnumPrinterKeyW(ptr wstr wstr long ptr)
 234 stdcall EnumPrintersA(long ptr long ptr long ptr ptr)
 235 stdcall EnumPrintersW(long ptr long ptr long ptr ptr)
-236 stdcall -stub ExtDeviceMode(ptr ptr ptr str str ptr str long)
+236 stdcall ExtDeviceMode(ptr ptr ptr str str ptr str long)
 237 stub FindClosePrinterChangeNotification
 238 stub FindFirstPrinterChangeNotification
 239 stub FindNextPrinterChangeNotification
@@ -161,7 +161,7 @@
 260 stdcall IsValidDevmodeW(ptr long)
 261 stdcall OpenPrinterA(str ptr ptr)
 262 stdcall OpenPrinterW(wstr ptr ptr)
-263 stdcall -stub PlayGdiScriptOnPrinterIC(ptr ptr long ptr long long)
+263 stdcall PlayGdiScriptOnPrinterIC(ptr ptr long ptr long long)
 264 stdcall PrinterMessageBoxA(ptr long ptr str str long)
 265 stdcall PrinterMessageBoxW(ptr long ptr wstr wstr long)
 266 stdcall PrinterProperties(ptr ptr)
