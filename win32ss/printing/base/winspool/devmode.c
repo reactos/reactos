@@ -364,3 +364,30 @@ void RosConvertUnicodeDevModeToAnsiDevmode(PDEVMODEW pDevModeInput, PDEVMODEA pD
     memcpy( pDevModeOutput, pTmp, pTmp->dmSize + pTmp->dmDriverExtra); // Copy into a Wide char (Larger) buffer.
     HeapFree(hProcessHeap, 0, pTmp);
 }
+
+VOID
+WINAPI
+DeviceMode(
+    PVOID param_1,
+    PVOID param_2,
+    PCHAR param_3,
+    PVOID param_4)
+{
+    UNIMPLEMENTED;
+}
+
+LONG
+WINAPI
+ExtDeviceMode(
+    HWND hWnd,
+    HANDLE hInst,
+    LPDEVMODEA pDevModeOutput,
+    LPSTR pDeviceName,
+    LPSTR pPort,
+    LPDEVMODEA pDevModeInput,
+    LPSTR pProfile,
+    DWORD fMode)
+{
+    UNIMPLEMENTED;
+    return 0;
+}

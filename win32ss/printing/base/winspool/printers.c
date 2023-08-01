@@ -4059,3 +4059,36 @@ Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }
+
+HANDLE
+WINAPI
+CreatePrinterIC(
+    _In_ HANDLE hPrinter,
+    _In_opt_ LPDEVMODEW pDevMode)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+BOOL
+WINAPI
+DeletePrinterIC(
+    _In_ HANDLE hPrinterIC)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+PlayGdiScriptOnPrinterIC(
+    _In_ HANDLE hPrinterIC,
+    _In_reads_bytes_(cIn) LPBYTE pIn,
+    _In_ DWORD cIn,
+    _Out_writes_bytes_(cOut) LPBYTE pOut,
+    _In_ DWORD cOut,
+    _In_ DWORD ul)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
