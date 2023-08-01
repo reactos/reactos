@@ -872,10 +872,11 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
 NTSTATUS
 NTAPI
-ObQueryTypeInfo(IN POBJECT_TYPE ObjectType,
-                OUT POBJECT_TYPE_INFORMATION ObjectTypeInfo,
-                IN ULONG Length,
-                OUT PULONG ReturnLength)
+ObQueryTypeInfo(
+    IN POBJECT_TYPE ObjectType,
+    OUT POBJECT_TYPE_INFORMATION ObjectTypeInfo,
+    IN ULONG Length,
+    OUT PULONG ReturnLength)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PWSTR InfoBuffer;
@@ -887,7 +888,7 @@ ObQueryTypeInfo(IN POBJECT_TYPE ObjectType,
         *ReturnLength += sizeof(*ObjectTypeInfo) +
                          ALIGN_UP(ObjectType->Name.MaximumLength, ULONG);
 
-        /* Check if thats too much though. */
+        /* Check if that is too much */
         if (Length < *ReturnLength)
         {
             _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH);
@@ -1036,6 +1037,7 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
         /* Release the Capture Info, we don't need it */
         ObpFreeObjectCreateInformation(ObjectCreateInfo);
         if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
+        return Status;
     }
 
     /* We failed, so release the Buffer */
@@ -1427,9 +1429,8 @@ NtMakePermanentObject(IN HANDLE ObjectHandle)
     PAGED_CODE();
 
     /* Make sure that the caller has SeCreatePermanentPrivilege */
-    Status = SeSinglePrivilegeCheck(SeCreatePermanentPrivilege,
-                                    PreviousMode);
-    if (!NT_SUCCESS(Status)) return STATUS_PRIVILEGE_NOT_HELD;
+    if (!SeSinglePrivilegeCheck(SeCreatePermanentPrivilege, PreviousMode))
+        return STATUS_PRIVILEGE_NOT_HELD;
 
     /* Reference the object */
     Status = ObReferenceObjectByHandle(ObjectHandle,
