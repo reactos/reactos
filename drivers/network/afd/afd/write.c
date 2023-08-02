@@ -337,7 +337,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     UINT TotalBytesCopied = 0, i, SpaceAvail = 0, BytesCopied, SendLength;
     KPROCESSOR_MODE LockMode;
     INT FullSendLen, LoopIdx; // accumulator for full packet length
-    char pktbuf[PAD_BUFFER];  // local packet assembly buffer   
+    char pktbuf[PAD_BUFFER];  // local packet assembly buffer
 
     UNREFERENCED_PARAMETER(DeviceObject);
     UNREFERENCED_PARAMETER(Short);
