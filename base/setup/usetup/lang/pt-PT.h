@@ -2027,7 +2027,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_CABINET_MISSING,
-        "N\306o foi poss\241vel econtrar o ficheiro cab.\n",
+        "N\306o foi poss\241vel encontrar o ficheiro cab.\n",
         "ENTER=Reiniciar"
     },
     {
