@@ -1932,11 +1932,6 @@ ChangePos:
             }
         }
 
-        if (!g_TaskbarSettings.bShowDesktopButton)
-            ::DestroyWindow(m_ShowDesktopButton.m_hWnd);
-        else if (!m_ShowDesktopButton.IsWindow())
-            m_ShowDesktopButton.DoCreate(m_hWnd);
-
         if (m_ShowDesktopButton.m_hWnd)
         {
             // Get rectangle from rcClient
@@ -3525,6 +3520,10 @@ HandleTrayContextMenu:
         if (newSettings->bShowDesktopButton != g_TaskbarSettings.bShowDesktopButton)
         {
             g_TaskbarSettings.bShowDesktopButton = newSettings->bShowDesktopButton;
+            if (!g_TaskbarSettings.bShowDesktopButton)
+                ::DestroyWindow(m_ShowDesktopButton.m_hWnd);
+            else if (!m_ShowDesktopButton.IsWindow())
+                m_ShowDesktopButton.DoCreate(m_hWnd);
             AlignControls(NULL);
         }
 
