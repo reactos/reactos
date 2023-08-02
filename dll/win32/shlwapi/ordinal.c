@@ -5350,6 +5350,36 @@ DoDefault:
     return hr;
 }
 
+BOOL
+VariantArrayToBuffer(
+    _In_ const VARIANT *pvarIn,
+    _Out_writes_(cbSize) LPVOID pvDest,
+    _In_ SIZE_T cbSize)
+{
+    LPVOID pvData;
+    LONG LowerBound, UpperBound;
+    LPSAFEARRAY pArray;
+
+    /* Only supports byte array */
+    if (!pvarIn || V_VT(pvarIn) != (VT_UI1 | VT_ARRAY))
+        return FALSE;
+
+    /* Boundary check and access */
+    pArray = V_ARRAY(pvarIn);
+    if (SafeArrayGetDim(pArray) == 1 &&
+        SUCCEEDED(SafeArrayGetLBound(pArray, 1, &LowerBound)) &&
+        SUCCEEDED(SafeArrayGetUBound(pArray, 1, &UpperBound)) &&
+        ((LONG)cbSize <= UpperBound - LowerBound + 1) &&
+        SUCCEEDED(SafeArrayAccessData(pArray, &pvData)))
+    {
+        CopyMemory(pvDest, pvData, cbSize);
+        SafeArrayUnaccessData(pArray);
+        return TRUE; /* Success */
+    }
+
+    return FALSE; /* Failure */
+}
+
 /**************************************************************************
  *  SHPropertyBag_ReadType (SHLWAPI.493)
  */
@@ -5668,6 +5698,74 @@ HRESULT WINAPI SHPropertyBag_ReadRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, R
 
     StrCpyNW(pch, L".bottom", cch2);
     return SHPropertyBag_ReadLONG(ppb, szBuff, &prcl->bottom);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadGUID (SHLWAPI.505)
+ */
+HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GUID *pguid)
+{
+    HRESULT hr;
+    BOOL bRet;
+    VARIANT vari;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
+
+    if (!ppb || !pszPropName || !pguid)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &vari, VT_EMPTY);
+    if (FAILED(hr))
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
+        return hr;
+    }
+
+    if (V_VT(&vari) == (VT_UI1 | VT_ARRAY)) /* Byte Array */
+        bRet = VariantArrayToBuffer(&vari, pguid, sizeof(*pguid));
+    else if (V_VT(&vari) == VT_BSTR)
+        bRet = GUIDFromStringW(V_BSTR(&vari), pguid);
+    else
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+        bRet = FALSE;
+#else
+        bRet = TRUE; /* This is by design in WinXP/Win2k3. */
+#endif
+
+    if (!bRet)
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
+
+    VariantClear(&vari);
+    return (bRet ? S_OK : E_FAIL);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadStream (SHLWAPI.531)
+ */
+HRESULT WINAPI SHPropertyBag_ReadStream(IPropertyBag *ppb, LPCWSTR pszPropName, IStream **ppStream)
+{
+    HRESULT hr;
+    VARIANT vari;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), ppStream);
+
+    if (!ppb || !pszPropName || !ppStream)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), ppStream);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &vari, VT_UNKNOWN);
+    if (FAILED(hr))
+        return hr;
+
+    hr = IUnknown_QueryInterface(V_UNKNOWN(&vari), &IID_IStream, (void **)ppStream);
+    IUnknown_Release(V_UNKNOWN(&vari));
+
+    return hr;
 }
 
 /**************************************************************************

@@ -502,7 +502,7 @@
 502 stdcall AssocQueryKeyA(long long str str ptr)
 503 stdcall AssocQueryKeyW(long long wstr wstr ptr)
 504 stdcall AssocQueryStringA(long long str str ptr ptr)
-505 stub -noname SHPropertyBag_ReadGUID
+505 stdcall -noname SHPropertyBag_ReadGUID(ptr wstr ptr)
 506 stdcall -noname SHPropertyBag_WriteGUID(ptr wstr ptr)
 507 stdcall -noname SHPropertyBag_ReadDWORD(ptr wstr ptr)
 508 stdcall -noname SHPropertyBag_WriteDWORD(ptr wstr long)
@@ -528,7 +528,7 @@
 528 stdcall -noname SHPropertyBag_WriteSHORT(ptr wstr long)
 529 stdcall -noname SHPropertyBag_ReadInt(ptr wstr ptr) SHPropertyBag_ReadLONG
 530 stdcall -noname SHPropertyBag_WriteInt(ptr wstr long) SHPropertyBag_WriteLONG
-531 stub -noname SHPropertyBag_ReadStream
+531 stdcall -noname SHPropertyBag_ReadStream(ptr wstr ptr)
 532 stdcall -noname SHPropertyBag_WriteStream(ptr wstr ptr)
 533 stub -noname SHGetPerScreenResName
 534 stdcall -noname SHPropertyBag_ReadBOOL(ptr wstr ptr)
