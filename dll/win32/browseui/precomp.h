@@ -67,11 +67,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 
 struct BrowseUISettings
 {
-    BOOL fLocked;
-    BOOL fShowGoButton;
-    BOOL fStatusBarVisible;
+    BOOL fLocked = FALSE;
+    BOOL fShowGoButton = FALSE;
+    BOOL fStatusBarVisible = FALSE;
 
-    BrowseUISettings();
     BOOL Load();
     BOOL Save();
 };

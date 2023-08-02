@@ -9,13 +9,6 @@
 
 BrowseUISettings gSettings;
 
-BrowseUISettings::BrowseUISettings()
-{
-    fStatusBarVisible = FALSE;
-    fShowGoButton = FALSE;
-    fLocked = FALSE;
-}
-
 BOOL BrowseUISettings::Save()
 {
     SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"StatusBarOther",
