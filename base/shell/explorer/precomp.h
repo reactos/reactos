@@ -211,6 +211,7 @@ struct TaskbarSettings
     BOOL bPreferDate;
     BOOL bHideInactiveIcons;
     BOOL bSmallIcons;
+    BOOL bShowDesktopButton;
     TW_STRUCKRECTS2 sr;
 
     BOOL Load();

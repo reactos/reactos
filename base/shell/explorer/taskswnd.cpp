@@ -1855,6 +1855,13 @@ public:
             UpdateButtonsSize(FALSE);
         }
 
+        if (newSettings->bSmallIcons != g_TaskbarSettings.bSmallIcons)
+        {
+            g_TaskbarSettings.bSmallIcons = newSettings->bSmallIcons;
+            RefreshWindowList();
+            UpdateButtonsSize(FALSE);
+        }
+
         return 0;
     }
 
