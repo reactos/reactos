@@ -815,6 +815,12 @@ Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
 
     SetWindowTextW(applet->hWnd, applet->info[index].name);
 
+    /* Set large icon for the taskbar button */
+    if (applet->info[index].icon)
+    {
+        SendMessageW(applet->hWnd, WM_SETICON, ICON_BIG, (LPARAM)applet->info[index].icon);
+    }
+
     /* Try loading the small icon for the taskbar button */
     hSmallIcon = (HICON)LoadImageW(applet->hModule,
                                    MAKEINTRESOURCEW(applet->info[index].idIcon),
