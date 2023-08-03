@@ -139,7 +139,7 @@ Sintaxă:  ACTIVE
 
     Atenție:
 
-        DiskPart verifică doar dacă partiția este capabilă să conțină fișierele
+        DiskPart doar verifică dacă partiția este capabilă să conțină fișierele
 		de pornire ale sistemului de operare. DiskPart nu verifică coținutul
 		partiției. Dacă ați marcat în mod eronat o partiție ca activă și nu conține
 		fișierele de pornire ale sistemului de operare, calculatorul dumneavostră
@@ -577,8 +577,8 @@ Example:
     CLEAN
 .
 Language=Romanian
-    Îndepărtează orice sau toate format(ele) de partiție sau de volum de pe
-    disc cu focalizare.
+    Șterge orice și întreaga formatare a partiției sau a volumului din
+    discul în cauză.
 
 Sintaxă:  CLEAN [ALL]
 
