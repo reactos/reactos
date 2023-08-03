@@ -457,7 +457,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     RegPacket.RH_DisableIrq = XHCI_RH_DisableIrq;
     RegPacket.RH_EnableIrq = XHCI_RH_EnableIrq;
 
+    RegPacket.MiniPortVersion = USB_MINIPORT_VERSION_XHCI;
     RegPacket.MiniPortFlags = USB_MINIPORT_FLAGS_MEMORY_IO;
+
     RegPacket.MiniPortResourcesSize = sizeof(XHCI_HC_RESOURCES);
 
     return USBPORT_RegisterUSBPortDriver(DriverObject,
