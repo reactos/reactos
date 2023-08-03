@@ -55,7 +55,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
-    IDS_SOL_ABOUT "Solitaire door J Brown\n\nCardLib versie 1.0."
+    IDS_SOL_ABOUT "Solitaire door J Brown\nCardLib versie 1.0"
     IDS_SOL_QUIT "Het huidige spel afsluiten?"
     IDS_SOL_WIN "Gefeliciteerd, u heeft gewonnen!"
     IDS_SOL_DEAL "Nogmaals spelen?"

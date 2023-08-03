@@ -49,7 +49,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Spider Solitaire"
-    IDS_SPI_ABOUT "Spider Solitaire, Gregor Schneider tarafından yazılmıştır.\n\nCardLib sürümü: 1.0"
+    IDS_SPI_ABOUT "Spider Solitaire, Gregor Schneider tarafından yazılmıştır.\nCardLib sürümü: 1.0"
     IDS_SPI_QUIT "Şimdiki oyundan çıkılsın mı?"
     IDS_SPI_WIN "Tebrikler, kazandınız!"
     IDS_SPI_DEAL "Yeniden dağıtılsın mı?"
