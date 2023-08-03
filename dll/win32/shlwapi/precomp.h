@@ -28,6 +28,10 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
+#ifdef __REACTOS__
+EXTERN_C HRESULT VariantChangeTypeForRead(_Inout_ VARIANTARG *pvarg, _In_ VARTYPE vt);
+#endif
+
 #include "resource.h"
 
 #endif /* !_SHLWAPI_PCH_ */
