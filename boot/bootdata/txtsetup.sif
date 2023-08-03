@@ -116,6 +116,7 @@ usbport.sys  = 1,,,,,,,4,,,,1,4
 usbuhci.sys  = 1,,,,,,x,4,,,,1,4
 usbohci.sys  = 1,,,,,,x,4,,,,1,4
 usbehci.sys  = 1,,,,,,x,4,,,,1,4
+usbxhci.sys  = 1,,,,,,x,4,,,,1,4
 usbstor.sys  = 1,,,,,,x,4,,,,1,4
 kbdhid.sys   = 1,,,,,,,4,,,,1,4
 kbdclass.sys = 1,,,,,,x,4,,,,1,4
@@ -168,6 +169,7 @@ USB\ROOT_HUB20 = usbhub
 PCI\CC_0C0300 = usbuhci
 PCI\CC_0C0310 = usbohci
 PCI\CC_0C0320 = usbehci
+PCI\CC_0C0330 = usbxhci
 USB\Class_08&SubClass_06&Prot_50 = usbstor
 USB\Class_08&SubClass_05&Prot_50 = usbstor
 HID_DEVICE_SYSTEM_KEYBOARD = kbdhid,{4D36E96B-E325-11CE-BFC1-08002BE10318}
@@ -186,6 +188,7 @@ pci = pci.sys
 isapnp = isapnp.sys
 
 [InputDevicesSupport.Load]
+usbxhci = usbxhci.sys
 usbehci = usbehci.sys
 usbohci = usbohci.sys
 usbuhci = usbuhci.sys

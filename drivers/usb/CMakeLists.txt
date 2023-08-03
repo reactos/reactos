@@ -1,5 +1,6 @@
 add_subdirectory(usbccgp)
 add_subdirectory(usbd)
+add_subdirectory(usbxhci)
 add_subdirectory(usbehci)
 add_subdirectory(usbhub)
 add_subdirectory(usbohci)
