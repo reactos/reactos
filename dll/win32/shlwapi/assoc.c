@@ -19,7 +19,7 @@
  */
 #ifdef __REACTOS__
     #undef _WIN32_WINNT
-    #define _WIN32_WINNT 0x600
+    #define _WIN32_WINNT _WIN32_WINNT_VISTA /* for RegGetValueW */
 #endif
 #include <stdarg.h>
 #include <assert.h>
