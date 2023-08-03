@@ -48,7 +48,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Пас’янс Паук"
-    IDS_SPI_ABOUT "Пас’янс Паук, Gregor Schneider\n\nCardLib версії 1.0"
+    IDS_SPI_ABOUT "Пас’янс Паук, Gregor Schneider\nCardLib версії 1.0"
     IDS_SPI_QUIT "Вийти з поточної гри?"
     IDS_SPI_WIN "Вітаємо, ви виграли!"
     IDS_SPI_DEAL "Спробувати знову?"
