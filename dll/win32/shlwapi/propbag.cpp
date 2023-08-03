@@ -234,6 +234,7 @@ CMemPropertyBag::Write(
  *                Vista+ rejects IID_IPropertyBag2.
  * @param ppvObj  Receives an IPropertyBag pointer.
  * @return        An HRESULT value. S_OK on success, non-zero on failure.
+ * @see           http://undoc.airesoft.co.uk/shlwapi.dll/SHCreatePropertyBagOnMemory.php
  */
 EXTERN_C HRESULT WINAPI
 SHCreatePropertyBagOnMemory(_In_ DWORD dwMode, _In_ REFIID riid, _Out_ void **ppvObj)
