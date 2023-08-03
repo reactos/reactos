@@ -125,17 +125,17 @@ Example:
     ACTIVE
 .
 Language=Romanian
-    Pe discurile cu Înregistrarea de inițializare de maestru (MBR) formatarea
-    discului marchează partiția cu centrare activă.
+    Pe discurile cu Registrul principal de inițializare (MBR) formatarea
+    discului marchează partiția în cauză ca activă.
 
 Sintaxă:  ACTIVE
 
-    Scrie o valoare pe disc care este citită de sistemul de bază de 
-    intrare/ieșire (BIOS) la inițializare. Această valoare specifică faptul că
-    partiția este o partiție de sistem validă.
+    Scrie o valoare pe disc care este citită de Sistemul de 
+    intrare/ieșire de bază (BIOS) la inițializare. Această valoare specifică
+    faptul că partiția este o partiție de sistem validă.
 
-    Pentru a avea succes o partiție trebuie să fie selectată pentru această
-	operațiune.
+    O partiție trebuie să fie selectată pentru această operațiune să fie cu
+    succes.
 
     Atenție:
 
