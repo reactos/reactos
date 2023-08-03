@@ -350,6 +350,7 @@ public:
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
     void LoadCabinetState();
+    void RefreshGlobalUISettings();
 
 /*    // *** IDockingWindowFrame methods ***
     virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
@@ -821,6 +822,7 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
         newFolderSettings.ViewMode = FVM_ICON;
     else
         newFolderSettings.ViewMode = FVM_DETAILS;
+    RefreshGlobalUISettings();
     newFolderSettings.fFlags = 0;
     hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -1523,6 +1525,15 @@ void CShellBrowser::LoadCabinetState()
                                                         L"FullPath",
                                                         FALSE,
                                                         FALSE);
+}
+
+void CShellBrowser::RefreshGlobalUISettings()
+{
+    if (fStatusBar)
+    {
+        ::ShowWindow(fStatusBar, gSettings.fStatusBarVisible ? SW_SHOW : SW_HIDE);
+        RepositionBars();
+    }
 }
 
 HRESULT CShellBrowser::FireEvent(DISPID dispIdMember, int argCount, VARIANT *arguments)
@@ -3677,12 +3688,7 @@ LRESULT CShellBrowser::OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWnd
 LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     gSettings.fStatusBarVisible = !gSettings.fStatusBarVisible;
-    if (fStatusBar)
-    {
-        ::ShowWindow(fStatusBar, gSettings.fStatusBarVisible ? SW_SHOW : SW_HIDE);
-        RepositionBars();
-    }
-
+    CShellBrowser::RefreshGlobalUISettings();
     gSettings.Save();
     return 0;
 }
