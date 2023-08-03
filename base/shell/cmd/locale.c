@@ -68,7 +68,7 @@ GetDateString(VOID)
     return szDate;
 }
 
-/* Return time in hh:mm:ss.xx format. Used for $T in prompt and %TIME% */
+/* Return time in H:mm:ss.SS format. Used for $T in prompt and %TIME% */
 LPTSTR
 GetTimeString(VOID)
 {
