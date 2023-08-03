@@ -5487,7 +5487,7 @@ HRESULT WINAPI SHPropertyBag_ReadSHORT(IPropertyBag *ppb, LPCWSTR pszPropName, S
  * RETURNS
  *  HRESULT codes
 #ifdef __REACTOS__
- * https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readlong.htm
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readlong.htm
 #endif
  */
 HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LPLONG pValue)
