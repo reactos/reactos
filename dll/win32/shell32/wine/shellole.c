@@ -811,6 +811,7 @@ HRESULT WINAPI SHCreateQueryCancelAutoPlayMoniker(IMoniker **moniker)
     return CreateClassMoniker(&CLSID_QueryCancelAutoPlay, moniker);
 }
 
+#ifdef __REACTOS__
 /*************************************************************************
  *  SHIsBadInterfacePtr [SHELL32.84]
  */
@@ -820,3 +821,4 @@ BOOL WINAPI SHIsBadInterfacePtr(IUnknown *punk, UINT cbVtbl)
             IsBadReadPtr(punk->lpVtbl, cbVtbl) ||
             IsBadCodePtr((FARPROC)punk->lpVtbl->Release));
 }
+#endif
