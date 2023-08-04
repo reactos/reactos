@@ -152,7 +152,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
     KEVENT Event;
-    UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
+    UCHAR MdlBase[sizeof(MDL) + sizeof(PFN_NUMBER)];
     PMDL Mdl = (PMDL)MdlBase;
 
     DPRINT("MmWriteToSwapPage\n");
@@ -217,7 +217,7 @@ MiReadPageFile(
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
     KEVENT Event;
-    UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
+    UCHAR MdlBase[sizeof(MDL) + sizeof(PFN_NUMBER)];
     PMDL Mdl = (PMDL)MdlBase;
     PMMPAGING_FILE PagingFile;
 

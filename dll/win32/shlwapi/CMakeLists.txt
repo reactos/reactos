@@ -1,9 +1,6 @@
 
 project(SHELL)
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(
     -D__WINESRC__
     -D_SHLWAPI_)
@@ -11,7 +8,6 @@ add_definitions(
 spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    assoc.c
     clist.c
     istream.c
     msgbox.c
@@ -27,6 +23,7 @@ list(APPEND SOURCE
     url.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    assoc.c
     wsprintf.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c)
 

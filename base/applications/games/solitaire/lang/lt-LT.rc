@@ -55,7 +55,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
-    IDS_SOL_ABOUT "Solitaire\n\nSukurta J Brown\n\nCardLib version 1.0."
+    IDS_SOL_ABOUT "Solitaire sukurta J Brown\nCardLib version 1.0"
     IDS_SOL_QUIT "Baigti žaidimą?"
     IDS_SOL_WIN "Sveikiname, jūs laimėjote!!"
     IDS_SOL_DEAL "Dalinti vėl?"

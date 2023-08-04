@@ -82,7 +82,6 @@ typedef struct _TASK_ITEM
     PTASK_GROUP Group;
     INT Index;
     INT IconIndex;
-    WINDOWPLACEMENT wndpl;
 
     union
     {
@@ -491,6 +490,8 @@ public:
     HICON GetWndIcon(HWND hwnd)
     {
         HICON hIcon = NULL;
+
+        /* Retrieve icon by sending a message */
 #define GET_ICON(type) \
     SendMessageTimeout(hwnd, WM_GETICON, (type), 0, SMTO_NOTIMEOUTIFNOTHUNG, 100, (PDWORD_PTR)&hIcon)
 
@@ -513,11 +514,12 @@ public:
         }
 #undef GET_ICON
 
-        hIcon = (HICON)GetClassLongPtr(hwnd, GCLP_HICONSM);
+        /* If we failed, retrieve icon from the window class */
+        hIcon = (HICON)GetClassLongPtr(hwnd, g_TaskbarSettings.bSmallIcons ? GCLP_HICONSM : GCLP_HICON);
         if (hIcon)
             return hIcon;
 
-        return (HICON)GetClassLongPtr(hwnd, GCLP_HICON);
+        return (HICON)GetClassLongPtr(hwnd, g_TaskbarSettings.bSmallIcons ? GCLP_HICON : GCLP_HICONSM);
     }
 
     INT UpdateTaskItemButton(IN PTASK_ITEM TaskItem)
@@ -1113,8 +1115,6 @@ public:
                 TaskItem->hWnd = hWnd;
                 TaskItem->Index = -1;
                 TaskItem->Group = AddToTaskGroup(hWnd);
-                TaskItem->wndpl.length = sizeof(TaskItem->wndpl);
-                ::GetWindowPlacement(hWnd, &TaskItem->wndpl);
 
                 if (!m_IsDestroying)
                 {
@@ -1602,16 +1602,12 @@ public:
 
             if (!bIsMinimized && bIsActive)
             {
-                TaskItem->wndpl.length = sizeof(TaskItem->wndpl);
-                ::GetWindowPlacement(TaskItem->hWnd, &TaskItem->wndpl);
-
                 ::ShowWindowAsync(TaskItem->hWnd, SW_MINIMIZE);
                 TRACE("Valid button clicked. App window Minimized.\n");
             }
             else
             {
                 ::SwitchToThisWindow(TaskItem->hWnd, TRUE);
-                ::SetWindowPlacement(TaskItem->hWnd, &TaskItem->wndpl);
 
                 TRACE("Valid button clicked. App window Restored.\n");
             }

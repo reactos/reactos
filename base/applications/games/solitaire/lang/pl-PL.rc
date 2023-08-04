@@ -58,7 +58,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Pasjans"
-    IDS_SOL_ABOUT "Pasjans - autor: J. Brown\n\nCardLib wersja 1.0."
+    IDS_SOL_ABOUT "Pasjans - autor: J. Brown\nCardLib wersja 1.0"
     IDS_SOL_QUIT "Zakończyć aktualną grę?"
     IDS_SOL_WIN "Gratulacje, wygrałeś!"
     IDS_SOL_DEAL "Nowe rozdanie?"

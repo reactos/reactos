@@ -40,7 +40,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Fekete özvegy"
-    IDS_SPI_ABOUT "Fekete Özvegy, készítette Gregor Schneider\n\nCardLib verzió 1.0"
+    IDS_SPI_ABOUT "Fekete Özvegy, készítette Gregor Schneider\nCardLib verzió 1.0"
     IDS_SPI_QUIT "Kilépés ebből a játékból?"
     IDS_SPI_WIN "Gratulálok, Ön nyert!"
     IDS_SPI_DEAL "Új leosztás?"

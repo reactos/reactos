@@ -358,6 +358,10 @@ public:
         return GetData()->nDataLength;
     }
 
+    PXSTR GetString() throw()
+    {
+        return m_pszData;
+    }
     PCXSTR GetString() const throw()
     {
         return m_pszData;

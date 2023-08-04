@@ -54,7 +54,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "ソリティア"
-    IDS_SOL_ABOUT "J Brown によるソリティア\n\nCardLib バージョン 1.0。"
+    IDS_SOL_ABOUT "J Brown によるソリティア\nCardLib バージョン 1.0"
     IDS_SOL_QUIT "現在のゲームを終了しますか?"
     IDS_SOL_WIN "おめでとう、あなたの勝ちです!"
     IDS_SOL_DEAL "もう一度カードを配りますか?"

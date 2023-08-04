@@ -623,7 +623,8 @@ MmAllocPage(ULONG Type)
     PfnOffset = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
     if (!PfnOffset)
     {
-        KeBugCheck(NO_PAGES_AVAILABLE);
+        MiReleasePfnLock(OldIrql);
+        return 0;
     }
 
     DPRINT("Legacy allocate: %lx\n", PfnOffset);

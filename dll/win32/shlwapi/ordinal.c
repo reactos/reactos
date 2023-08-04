@@ -5289,6 +5289,191 @@ HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
     return IUnknown_QueryService(lpUnknown,&IID_IWebBrowserApp,riid,lppOut);
 }
 
+#ifdef __REACTOS__
+HRESULT VariantChangeTypeForRead(_Inout_ VARIANTARG *pvarg, _In_ VARTYPE vt)
+{
+    HRESULT hr;
+    VARIANTARG vargTemp;
+    VARIANT variTemp;
+
+    if (V_VT(pvarg) == vt || vt == VT_EMPTY)
+        return S_OK;
+
+    vargTemp = *pvarg;
+
+    if (V_VT(&vargTemp) != VT_BSTR || vt <= VT_NULL)
+        goto DoDefault;
+
+    if (vt == VT_I1 || vt == VT_I2 || vt == VT_I4)
+    {
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, &V_I4(&variTemp)))
+            goto DoDefault;
+
+        V_VT(&variTemp) = VT_INT;
+        VariantInit(pvarg);
+        hr = VariantChangeType(pvarg, &variTemp, 0, vt);
+        VariantClear(&vargTemp);
+        return hr;
+    }
+
+    if (vt <= VT_DECIMAL)
+        goto DoDefault;
+
+    if (vt == VT_UI1 || vt == VT_UI2 || vt == VT_UI4)
+    {
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, (LPINT)&V_UI4(&variTemp)))
+            goto DoDefault;
+
+        V_VT(&variTemp) = VT_UINT;
+        VariantInit(pvarg);
+        hr = VariantChangeType(pvarg, &variTemp, 0, vt);
+        VariantClear(&vargTemp);
+        return hr;
+    }
+
+    if (vt == VT_INT || vt == VT_UINT)
+    {
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, &V_INT(&variTemp)))
+            goto DoDefault;
+
+        V_VT(&variTemp) = VT_UINT;
+        VariantInit(pvarg);
+        hr = VariantChangeType(pvarg, &variTemp, 0, vt);
+        VariantClear(&vargTemp);
+        return hr;
+    }
+
+DoDefault:
+    VariantInit(pvarg);
+    hr = VariantChangeType(pvarg, &vargTemp, 0, vt);
+    VariantClear(&vargTemp);
+    return hr;
+}
+
+BOOL
+VariantArrayToBuffer(
+    _In_ const VARIANT *pvarIn,
+    _Out_writes_(cbSize) LPVOID pvDest,
+    _In_ SIZE_T cbSize)
+{
+    LPVOID pvData;
+    LONG LowerBound, UpperBound;
+    LPSAFEARRAY pArray;
+
+    /* Only supports byte array */
+    if (!pvarIn || V_VT(pvarIn) != (VT_UI1 | VT_ARRAY))
+        return FALSE;
+
+    /* Boundary check and access */
+    pArray = V_ARRAY(pvarIn);
+    if (SafeArrayGetDim(pArray) == 1 &&
+        SUCCEEDED(SafeArrayGetLBound(pArray, 1, &LowerBound)) &&
+        SUCCEEDED(SafeArrayGetUBound(pArray, 1, &UpperBound)) &&
+        ((LONG)cbSize <= UpperBound - LowerBound + 1) &&
+        SUCCEEDED(SafeArrayAccessData(pArray, &pvData)))
+    {
+        CopyMemory(pvDest, pvData, cbSize);
+        SafeArrayUnaccessData(pArray);
+        return TRUE; /* Success */
+    }
+
+    return FALSE; /* Failure */
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadType (SHLWAPI.493)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readtype.htm
+ */
+HRESULT WINAPI
+SHPropertyBag_ReadType(IPropertyBag *ppb, LPCWSTR pszPropName, VARIANTARG *pvarg, VARTYPE vt)
+{
+    HRESULT hr;
+
+    VariantInit(pvarg);
+    V_VT(pvarg) = vt;
+
+    hr = IPropertyBag_Read(ppb, pszPropName, pvarg, NULL);
+    if (FAILED(hr))
+    {
+        ERR("%p %s\n", ppb, debugstr_w(pszPropName));
+        VariantInit(pvarg);
+        return hr;
+    }
+
+    return VariantChangeTypeForRead(pvarg, vt);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadBOOL (SHLWAPI.534)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readbool.htm
+ */
+HRESULT WINAPI SHPropertyBag_ReadBOOL(IPropertyBag *ppb, LPCWSTR pszPropName, BOOL *pbValue)
+{
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pbValue);
+
+    if (!ppb || !pszPropName || !pbValue)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pbValue);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_BOOL);
+    if (SUCCEEDED(hr))
+        *pbValue = (V_BOOL(&varg) == VARIANT_TRUE);
+
+    return hr;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadBOOLOld (SHLWAPI.498)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readboolold.htm
+ */
+BOOL WINAPI SHPropertyBag_ReadBOOLOld(IPropertyBag *ppb, LPCWSTR pszPropName, BOOL bDefValue)
+{
+    VARIANTARG varg;
+    HRESULT hr;
+
+    TRACE("%p %s %d\n", ppb, debugstr_w(pszPropName), bDefValue);
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_BOOL);
+    if (FAILED(hr))
+        return bDefValue;
+
+    return V_BOOL(&varg) == VARIANT_TRUE;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadSHORT (SHLWAPI.527)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readshort.htm
+ */
+HRESULT WINAPI SHPropertyBag_ReadSHORT(IPropertyBag *ppb, LPCWSTR pszPropName, SHORT *psValue)
+{
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), psValue);
+
+    if (!ppb || !pszPropName || !psValue)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), psValue);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_UI2);
+    if (SUCCEEDED(hr))
+        *psValue = V_UI2(&varg);
+
+    return hr;
+}
+#endif
+
 /**************************************************************************
  *  SHPropertyBag_ReadLONG (SHLWAPI.496)
  *
@@ -5301,9 +5486,28 @@ HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
  *
  * RETURNS
  *  HRESULT codes
+#ifdef __REACTOS__
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readlong.htm
+#endif
  */
 HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LPLONG pValue)
 {
+#ifdef __REACTOS__
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pValue);
+
+    if (!ppb || !pszPropName || !pValue)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pValue);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_I4);
+    if (SUCCEEDED(hr))
+        *pValue = V_I4(&varg);
+#else
     VARIANT var;
     HRESULT hr;
     TRACE("%p %s %p\n", ppb,debugstr_w(pszPropName),pValue);
@@ -5318,12 +5522,283 @@ HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LP
         else
             hr = DISP_E_BADVARTYPE;
     }
+#endif
     return hr;
 }
 
 #ifdef __REACTOS__
 /**************************************************************************
+ *  SHPropertyBag_ReadDWORD (SHLWAPI.507)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readdword.htm
+ */
+HRESULT WINAPI SHPropertyBag_ReadDWORD(IPropertyBag *ppb, LPCWSTR pszPropName, DWORD *pdwValue)
+{
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pdwValue);
+
+    if (!ppb || !pszPropName || !pdwValue)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pdwValue);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_UI4);
+    if (SUCCEEDED(hr))
+        *pdwValue = V_UI4(&varg);
+
+    return hr;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadBSTR (SHLWAPI.520)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readbstr.htm
+ */
+HRESULT WINAPI SHPropertyBag_ReadBSTR(IPropertyBag *ppb, LPCWSTR pszPropName, BSTR *pbstr)
+{
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pbstr);
+
+    if (!ppb || !pszPropName || !pbstr)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pbstr);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_BSTR);
+    if (FAILED(hr))
+        *pbstr = NULL;
+    else
+        *pbstr = V_BSTR(&varg);
+
+    return hr;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadStr (SHLWAPI.494)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readstr.htm
+ */
+HRESULT WINAPI SHPropertyBag_ReadStr(IPropertyBag *ppb, LPCWSTR pszPropName, LPWSTR pszDst, int cchMax)
+{
+    HRESULT hr;
+    VARIANTARG varg;
+
+    TRACE("%p %s %p %d\n", ppb, debugstr_w(pszPropName), pszDst, cchMax);
+
+    if (!ppb || !pszPropName || !pszDst)
+    {
+        ERR("%p %s %p %d\n", ppb, debugstr_w(pszPropName), pszDst, cchMax);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &varg, VT_BSTR);
+    if (FAILED(hr))
+        return E_FAIL;
+
+    StrCpyNW(pszDst, V_BSTR(&varg), cchMax);
+    VariantClear(&varg);
+    return hr;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadPOINTL (SHLWAPI.521)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readpointl.htm
+ */
+HRESULT WINAPI SHPropertyBag_ReadPOINTL(IPropertyBag *ppb, LPCWSTR pszPropName, POINTL *pptl)
+{
+    HRESULT hr;
+    int cch, cch2;
+    WCHAR *pch, szBuff[MAX_PATH];
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pptl);
+
+    if (!ppb || !pszPropName || !pptl)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pptl);
+        return E_INVALIDARG;
+    }
+
+    StrCpyNW(szBuff, pszPropName, _countof(szBuff));
+
+    cch = lstrlenW(szBuff);
+    cch2 = _countof(szBuff) - cch;
+    if (cch2 < _countof(L".x"))
+    {
+        ERR("%s is too long\n", debugstr_w(pszPropName));
+        return E_FAIL;
+    }
+
+    pch = &szBuff[cch];
+
+    StrCpyNW(pch, L".x", cch2);
+    hr = SHPropertyBag_ReadLONG(ppb, szBuff, &pptl->x);
+    if (FAILED(hr))
+        return hr;
+
+    StrCpyNW(pch, L".y", cch2);
+    return SHPropertyBag_ReadLONG(ppb, szBuff, &pptl->y);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadPOINTS (SHLWAPI.525)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readpoints.htm
+ */
+HRESULT WINAPI SHPropertyBag_ReadPOINTS(IPropertyBag *ppb, LPCWSTR pszPropName, POINTS *ppts)
+{
+    HRESULT hr;
+    POINTL ptl;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), ppts);
+
+    if (!ppb || !pszPropName || !ppts)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), ppts);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadPOINTL(ppb, pszPropName, &ptl);
+    if (FAILED(hr))
+        return hr;
+
+    ppts->x = ptl.x;
+    ppts->y = ptl.y;
+    return hr;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadRECTL (SHLWAPI.523)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readrectl.htm
+ */
+HRESULT WINAPI SHPropertyBag_ReadRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, RECTL *prcl)
+{
+    HRESULT hr;
+    int cch, cch2;
+    WCHAR *pch, szBuff[MAX_PATH];
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), prcl);
+
+    if (!ppb || !pszPropName || !prcl)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), prcl);
+        return E_INVALIDARG;
+    }
+
+    StrCpyNW(szBuff, pszPropName, _countof(szBuff));
+
+    cch = lstrlenW(szBuff);
+    cch2 = _countof(szBuff) - cch;
+    if (cch2 < _countof(L".bottom"))
+    {
+        ERR("%s is too long\n", debugstr_w(pszPropName));
+        return E_FAIL;
+    }
+
+    pch = &szBuff[cch];
+
+    StrCpyNW(pch, L".left", cch2);
+    hr = SHPropertyBag_ReadLONG(ppb, szBuff, &prcl->left);
+    if (FAILED(hr))
+        return hr;
+
+    StrCpyNW(pch, L".top", cch2);
+    hr = SHPropertyBag_ReadLONG(ppb, szBuff, &prcl->top);
+    if (FAILED(hr))
+        return hr;
+
+    StrCpyNW(pch, L".right", cch2);
+    hr = SHPropertyBag_ReadLONG(ppb, szBuff, &prcl->right);
+    if (FAILED(hr))
+        return hr;
+
+    StrCpyNW(pch, L".bottom", cch2);
+    return SHPropertyBag_ReadLONG(ppb, szBuff, &prcl->bottom);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadGUID (SHLWAPI.505)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readguid.htm
+ */
+HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GUID *pguid)
+{
+    HRESULT hr;
+    BOOL bRet;
+    VARIANT vari;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
+
+    if (!ppb || !pszPropName || !pguid)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &vari, VT_EMPTY);
+    if (FAILED(hr))
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
+        return hr;
+    }
+
+    if (V_VT(&vari) == (VT_UI1 | VT_ARRAY)) /* Byte Array */
+        bRet = VariantArrayToBuffer(&vari, pguid, sizeof(*pguid));
+    else if (V_VT(&vari) == VT_BSTR)
+        bRet = GUIDFromStringW(V_BSTR(&vari), pguid);
+    else
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+        bRet = FALSE;
+#else
+        bRet = TRUE; /* This is by design in WinXP/Win2k3. */
+#endif
+
+    if (!bRet)
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
+
+    VariantClear(&vari);
+    return (bRet ? S_OK : E_FAIL);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadStream (SHLWAPI.531)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/readstream.htm
+ */
+HRESULT WINAPI SHPropertyBag_ReadStream(IPropertyBag *ppb, LPCWSTR pszPropName, IStream **ppStream)
+{
+    HRESULT hr;
+    VARIANT vari;
+
+    TRACE("%p %s %p\n", ppb, debugstr_w(pszPropName), ppStream);
+
+    if (!ppb || !pszPropName || !ppStream)
+    {
+        ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), ppStream);
+        return E_INVALIDARG;
+    }
+
+    hr = SHPropertyBag_ReadType(ppb, pszPropName, &vari, VT_UNKNOWN);
+    if (FAILED(hr))
+        return hr;
+
+    hr = IUnknown_QueryInterface(V_UNKNOWN(&vari), &IID_IStream, (void **)ppStream);
+    IUnknown_Release(V_UNKNOWN(&vari));
+
+    return hr;
+}
+
+/**************************************************************************
  *  SHPropertyBag_Delete (SHLWAPI.535)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/delete.htm
  */
 HRESULT WINAPI SHPropertyBag_Delete(IPropertyBag *ppb, LPCWSTR pszPropName)
 {
@@ -5343,6 +5818,8 @@ HRESULT WINAPI SHPropertyBag_Delete(IPropertyBag *ppb, LPCWSTR pszPropName)
 
 /**************************************************************************
  *  SHPropertyBag_WriteBOOL (SHLWAPI.499)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/writebool.htm
  */
 HRESULT WINAPI SHPropertyBag_WriteBOOL(IPropertyBag *ppb, LPCWSTR pszPropName, BOOL bValue)
 {
@@ -5363,6 +5840,8 @@ HRESULT WINAPI SHPropertyBag_WriteBOOL(IPropertyBag *ppb, LPCWSTR pszPropName, B
 
 /**************************************************************************
  *  SHPropertyBag_WriteSHORT (SHLWAPI.528)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/writeshort.htm
  */
 HRESULT WINAPI SHPropertyBag_WriteSHORT(IPropertyBag *ppb, LPCWSTR pszPropName, SHORT sValue)
 {
@@ -5385,6 +5864,8 @@ HRESULT WINAPI SHPropertyBag_WriteSHORT(IPropertyBag *ppb, LPCWSTR pszPropName, 
  *  SHPropertyBag_WriteLONG (SHLWAPI.497)
  *
  * This function asks a property bag to write a named property as a LONG.
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/writelong.htm
  */
 HRESULT WINAPI SHPropertyBag_WriteLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LONG lValue)
 {
@@ -5405,6 +5886,8 @@ HRESULT WINAPI SHPropertyBag_WriteLONG(IPropertyBag *ppb, LPCWSTR pszPropName, L
 
 /**************************************************************************
  *  SHPropertyBag_WriteDWORD (SHLWAPI.508)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/writedword.htm
  */
 HRESULT WINAPI SHPropertyBag_WriteDWORD(IPropertyBag *ppb, LPCWSTR pszPropName, DWORD dwValue)
 {
@@ -5427,6 +5910,8 @@ HRESULT WINAPI SHPropertyBag_WriteDWORD(IPropertyBag *ppb, LPCWSTR pszPropName, 
  *  SHPropertyBag_WriteStr (SHLWAPI.495)
  *
  * This function asks a property bag to write a string as the value of a named property.
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/writestr.htm
  */
 HRESULT WINAPI SHPropertyBag_WriteStr(IPropertyBag *ppb, LPCWSTR pszPropName, LPCWSTR pszValue)
 {
@@ -5454,6 +5939,8 @@ HRESULT WINAPI SHPropertyBag_WriteStr(IPropertyBag *ppb, LPCWSTR pszPropName, LP
 
 /**************************************************************************
  *  SHPropertyBag_WriteGUID (SHLWAPI.506)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/writeguid.htm
  */
 HRESULT WINAPI SHPropertyBag_WriteGUID(IPropertyBag *ppb, LPCWSTR pszPropName, const GUID *pguid)
 {
@@ -5473,6 +5960,8 @@ HRESULT WINAPI SHPropertyBag_WriteGUID(IPropertyBag *ppb, LPCWSTR pszPropName, c
 
 /**************************************************************************
  *  SHPropertyBag_WriteStream (SHLWAPI.532)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/writestream.htm
  */
 HRESULT WINAPI SHPropertyBag_WriteStream(IPropertyBag *ppb, LPCWSTR pszPropName, IStream *pStream)
 {
@@ -5493,6 +5982,8 @@ HRESULT WINAPI SHPropertyBag_WriteStream(IPropertyBag *ppb, LPCWSTR pszPropName,
 
 /**************************************************************************
  *  SHPropertyBag_WritePOINTL (SHLWAPI.522)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/writepointl.htm
  */
 HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName, const POINTL *pptl)
 {
@@ -5538,6 +6029,8 @@ HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName,
 
 /**************************************************************************
  *  SHPropertyBag_WritePOINTS (SHLWAPI.526)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/writepoints.htm
  */
 HRESULT WINAPI SHPropertyBag_WritePOINTS(IPropertyBag *ppb, LPCWSTR pszPropName, const POINTS *ppts)
 {
@@ -5558,6 +6051,8 @@ HRESULT WINAPI SHPropertyBag_WritePOINTS(IPropertyBag *ppb, LPCWSTR pszPropName,
 
 /**************************************************************************
  *  SHPropertyBag_WriteRECTL (SHLWAPI.524)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/writerectl.htm
  */
 HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, const RECTL *prcl)
 {

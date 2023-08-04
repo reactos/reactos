@@ -15,6 +15,10 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include <mm/ARM3/miarm.h>
 
+VOID
+NTAPI
+MmRebalanceMemoryConsumersAndWait(VOID);
+
 /* GLOBALS ********************************************************************/
 
 #define HYDRA_PROCESS (PEPROCESS)1
@@ -653,7 +657,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     ASSERT(PointerPte->u.Hard.Valid == 0);
 
     /* Assert we have enough pages */
-    ASSERT(MmAvailablePages >= 32);
+    //ASSERT(MmAvailablePages >= 32);
 
 #if MI_TRACE_PFNS
     if (UserPdeFault) MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
@@ -696,6 +700,12 @@ MiResolveDemandZeroFault(IN PVOID Address,
             /* No need to zero-fill it */
             NeedZero = FALSE;
         }
+    }
+
+    if (PageFrameNumber == 0)
+    {
+        MiReleasePfnLock(OldIrql);
+        return STATUS_NO_MEMORY;
     }
 
     /* Initialize it */
@@ -920,6 +930,10 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     /* Get any page, it will be overwritten */
     Color = MI_GET_NEXT_PROCESS_COLOR(CurrentProcess);
     Page = MiRemoveAnyPage(Color);
+    if (Page == 0)
+    {
+        return STATUS_NO_MEMORY;
+    }
 
     /* Initialize this PFN */
     MiInitializePfn(Page, PointerPte, StoreInstruction);
@@ -1230,6 +1244,11 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
             Color = MI_GET_NEXT_COLOR();
 
         PageFrameIndex = MiRemoveAnyPage(Color);
+        if (PageFrameIndex == 0)
+        {
+            MiReleasePfnLock(OldIrql);
+            return STATUS_NO_MEMORY;
+        }
 
         /* Perform the copy */
         MiCopyPfn(PageFrameIndex, ProtoPageFrameIndex);
@@ -1669,9 +1688,9 @@ MiDispatchFault(IN ULONG FaultCode,
     }
 
     //
-    // Generate an access fault
+    // Return status
     //
-    return STATUS_ACCESS_VIOLATION;
+    return Status;
 }
 
 NTSTATUS
@@ -1925,7 +1944,7 @@ _WARN("Session space stuff is not implemented yet!")
                 return STATUS_IN_PAGE_ERROR | 0x10000000;
             }
         }
-
+RetryKernel:
         /* Acquire the working set lock */
         KeRaiseIrql(APC_LEVEL, &LockIrql);
         MiLockWorkingSet(CurrentThread, WorkingSet);
@@ -2092,6 +2111,12 @@ _WARN("Session space stuff is not implemented yet!")
         MiUnlockWorkingSet(CurrentThread, WorkingSet);
         KeLowerIrql(LockIrql);
 
+        if (Status == STATUS_NO_MEMORY)
+        {
+            MmRebalanceMemoryConsumersAndWait();
+            goto RetryKernel;
+        }
+
         /* We are done! */
         DPRINT("Fault resolved with status: %lx\n", Status);
         return Status;
@@ -2126,11 +2151,15 @@ UserFault:
         }
 
         /* Resolve a demand zero fault */
-        MiResolveDemandZeroFault(PointerPpe,
+        Status = MiResolveDemandZeroFault(PointerPpe,
                                  PointerPxe,
                                  MM_EXECUTE_READWRITE,
                                  CurrentProcess,
                                  MM_NOIRQL);
+        if (!NT_SUCCESS(Status))
+        {
+            goto ExitUser;
+        }
 
         /* We should come back with a valid PXE */
         ASSERT(PointerPxe->u.Hard.Valid == 1);
@@ -2160,11 +2189,15 @@ UserFault:
         }
 
         /* Resolve a demand zero fault */
-        MiResolveDemandZeroFault(PointerPde,
+        Status = MiResolveDemandZeroFault(PointerPde,
                                  PointerPpe,
                                  MM_EXECUTE_READWRITE,
                                  CurrentProcess,
                                  MM_NOIRQL);
+        if (!NT_SUCCESS(Status))
+        {
+            goto ExitUser;
+        }
 
         /* We should come back with a valid PPE */
         ASSERT(PointerPpe->u.Hard.Valid == 1);
@@ -2203,11 +2236,16 @@ UserFault:
         }
 
         /* Resolve a demand zero fault */
-        MiResolveDemandZeroFault(PointerPte,
+        Status = MiResolveDemandZeroFault(PointerPte,
                                  PointerPde,
                                  MM_EXECUTE_READWRITE,
                                  CurrentProcess,
                                  MM_NOIRQL);
+        if (!NT_SUCCESS(Status))
+        {
+            goto ExitUser;
+        }
+
 #if _MI_PAGING_LEVELS >= 3
         MiIncrementPageTableReferences(PointerPte);
 #endif
@@ -2254,6 +2292,12 @@ UserFault:
 
                 /* Allocate a new page and copy it */
                 PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_PROCESS_COLOR(CurrentProcess));
+                if (PageFrameIndex == 0)
+                {
+                    MiReleasePfnLock(LockIrql);
+                    Status = STATUS_NO_MEMORY;
+                    goto ExitUser;
+                }
                 OldPageFrameIndex = PFN_FROM_PTE(&TempPte);
 
                 MiCopyPfn(PageFrameIndex, OldPageFrameIndex);
@@ -2308,11 +2352,15 @@ UserFault:
         (TempPte.u.Long == (MM_EXECUTE_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)))
     {
         /* Resolve the fault */
-        MiResolveDemandZeroFault(Address,
+        Status = MiResolveDemandZeroFault(Address,
                                  PointerPte,
                                  TempPte.u.Soft.Protection,
                                  CurrentProcess,
                                  MM_NOIRQL);
+        if (!NT_SUCCESS(Status))
+        {
+            goto ExitUser;
+        }
 
 #if MI_TRACE_PFNS
         /* Update debug info */
@@ -2410,7 +2458,7 @@ UserFault:
             OldIrql = MiAcquirePfnLock();
 
             /* Make sure we have enough pages */
-            ASSERT(MmAvailablePages >= 32);
+            //ASSERT(MmAvailablePages >= 32);
 
             /* Try to get a zero page */
             MI_SET_USAGE(MI_USAGE_PEB_TEB);
@@ -2421,10 +2469,15 @@ UserFault:
             {
                 /* Grab a page out of there. Later we should grab a colored zero page */
                 PageFrameIndex = MiRemoveAnyPage(Color);
-                ASSERT(PageFrameIndex);
 
                 /* Release the lock since we need to do some zeroing */
                 MiReleasePfnLock(OldIrql);
+
+                if (PageFrameIndex == 0)
+                {
+                    Status = STATUS_NO_MEMORY;
+                    goto ExitUser;
+                }
 
                 /* Zero out the page, since it's for user-mode */
                 MiZeroPfn(PageFrameIndex);
@@ -2568,9 +2621,18 @@ UserFault:
                              TrapInformation,
                              Vad);
 
+ExitUser:
+
     /* Return the status */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
     MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+
+    if (Status == STATUS_NO_MEMORY)
+    {
+        MmRebalanceMemoryConsumersAndWait();
+        goto UserFault;
+    }
+
     return Status;
 }
 

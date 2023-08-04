@@ -99,7 +99,8 @@ HalHandleNMI(
 
     /* Enter the debugger if possible */
     KiBugCheckData[0] = (ULONG_PTR)KeServiceDescriptorTable; /* NMI Corruption? */
-    //if (!(KdDebuggerNotPresent) && (KdDebuggerEnabled)) KeEnterKernelDebugger();
+    if (!KdDebuggerNotPresent && KdDebuggerEnabled)
+        KeEnterKernelDebugger();
 #endif /* !_MINIHAL_ */
 
     /* Freeze the system */
