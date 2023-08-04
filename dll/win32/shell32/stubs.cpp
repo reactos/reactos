@@ -51,6 +51,10 @@ static BOOL CALLBACK _FindTheEditBox(HWND hwndEdit, LPARAM lParam)
 
 /*************************************************************************
  *  SHLimitInputCombo [SHELL32.748]
+ *
+ * Sets limits on valid characters for a combobox control.
+ * This function works like SHLimitInputEdit, but the target is a combobox
+ * instead of a textbox.
  */
 EXTERN_C BOOL
 WINAPI
