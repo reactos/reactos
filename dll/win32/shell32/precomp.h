@@ -153,4 +153,37 @@ public:
     END_MSG_MAP()
 };
 
+EXTERN_C VOID WINAPI
+SHPropertyBag_ReadIntDef(
+    IPropertyBag *ppb,
+    LPCWSTR pszPropName,
+    LPINT pnValue,
+    INT nDefaultValue);
+
+EXTERN_C VOID WINAPI
+SHPropertyBag_ReadDWORDDef(
+    IPropertyBag *ppb,
+    LPCWSTR pszPropName,
+    LPDWORD pdwValue,
+    DWORD dwDefaultValue);
+
+EXTERN_C VOID WINAPI
+SHPropertyBag_ReadBOOLDef(
+    IPropertyBag *ppb,
+    LPCWSTR pszPropName,
+    LPBOOL pbValue,
+    BOOL bDefaultValue);
+
+EXTERN_C BOOL WINAPI
+SHPropertyBag_ReadBOOLDefRet(
+    IPropertyBag *ppb,
+    LPCWSTR pszPropName,
+    BOOL bDefaultValue);
+
+EXTERN_C HRESULT WINAPI
+SHPropertyBag_WritePunk(
+    IPropertyBag *ppb,
+    LPCWSTR pszPropName,
+    IUnknown *punk);
+
 #endif /* _PRECOMP_H__ */
