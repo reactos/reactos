@@ -25,15 +25,34 @@ ShortSizeFormatW(LONGLONG llNumber)
     return NULL;
 }
 
-/*
- * Unimplemented
+/*************************************************************************
+ *  SHFindComputer [SHELL32.91]
+ *
+ * Invokes the shell search in My Computer. Used in SHFindFiles.
+ * Two parameters are ignored.
  */
 EXTERN_C BOOL
 WINAPI
 SHFindComputer(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
-    FIXME("SHFindComputer() stub\n");
-    return FALSE;
+    UNREFERENCED_PARAMETER(pidl1);
+    UNREFERENCED_PARAMETER(pidl2);
+
+    TRACE("%p %p\n", pidl1, pidl2);
+
+    IContextMenu *pCM;
+    HRESULT hr = CoCreateInstance(CLSID_ShellSearchExt, 0, CLSCTX_INPROC_SERVER,
+                                  IID_IContextMenu, (void **)&pCM);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CMINVOKECOMMANDINFO InvokeInfo = { sizeof(InvokeInfo) };
+    InvokeInfo.lpParameters = "{996E1EB1-B524-11D1-9120-00A0C98BA67D}";
+    InvokeInfo.nShow = SW_SHOWNORMAL;
+    hr = pCM->InvokeCommand(&InvokeInfo);
+    pCM->Release();
+
+    return SUCCEEDED(hr);
 }
 
 /*
