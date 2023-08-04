@@ -2824,8 +2824,7 @@ SHLimitInputEdit(HWND hWnd, IShellFolder *psf)
  * This function works like SHLimitInputEdit, but the target is a combobox
  * instead of a textbox.
  */
-EXTERN_C BOOL
-WINAPI
+HRESULT WINAPI
 SHLimitInputCombo(HWND hWnd, IShellFolder *psf)
 {
     HWND hwndEdit;
