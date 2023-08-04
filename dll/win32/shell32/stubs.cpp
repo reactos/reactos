@@ -36,19 +36,6 @@ SHFindComputer(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     return FALSE;
 }
 
-struct LIMIT_INPUT_COMBO
-{
-    HRESULT hr;
-    IShellFolder *psf;
-};
-
-static BOOL CALLBACK _FindTheEditBox(HWND hwndEdit, LPARAM lParam)
-{
-    LIMIT_INPUT_COMBO *pLimitInput = (LIMIT_INPUT_COMBO *)lParam;
-    pLimitInput->hr = SHLimitInputEdit(hwndEdit, pLimitInput->psf);
-    return FALSE;
-}
-
 /*************************************************************************
  *  SHLimitInputCombo [SHELL32.748]
  *
@@ -60,9 +47,12 @@ EXTERN_C BOOL
 WINAPI
 SHLimitInputCombo(HWND hWnd, IShellFolder *psf)
 {
-    LIMIT_INPUT_COMBO LimitInput = { E_FAIL, psf };
-    EnumChildWindows(hWnd, _FindTheEditBox, (LPARAM)&LimitInput);
-    return LimitInput.hr;
+    TRACE("%p %p\n", hWnd, psf);
+    HWND hwndEdit = GetTopWindow(hWnd);
+    if (!hwndEdit)
+        return E_FAIL;
+
+    return SHLimitInputEdit(hwndEdit, psf);
 }
 
 /*
