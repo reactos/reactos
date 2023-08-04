@@ -2,6 +2,7 @@
 
 #include <winreg.h>
 #include <commctrl.h>
+#include <shellapi.h>
 #include <tchar.h>
 
 #include "resource.h"
@@ -738,7 +739,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 return 0;
 
             case IDM_HELP_ABOUT:
-                MessageBox(hwnd, MsgAbout, szAppName, MB_OK|MB_ICONINFORMATION);
+                ShellAbout(hwnd, szAppName, MsgAbout,
+                           LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SOLITAIRE)));
                 return 0;
 
             case IDM_GAME_EXIT:

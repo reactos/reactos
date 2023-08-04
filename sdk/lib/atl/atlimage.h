@@ -387,14 +387,10 @@ public:
             return E_FAIL;
         }
 
-        // TODO & FIXME: get parameters (m_rgbTransColor etc.)
-
         // get bitmap handle
         HBITMAP hbm = NULL;
         Color color(0xFF, 0xFF, 0xFF);
-        Gdiplus::Status status;
-        status = GetCommon().CreateHBITMAPFromBitmap(
-            pBitmap, &hbm, color.GetValue());
+        Status status = GetCommon().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
 
         // delete GpBitmap
         GetCommon().DisposeImage(pBitmap);
@@ -414,14 +410,10 @@ public:
             return E_FAIL;
         }
 
-        // TODO & FIXME: get parameters (m_rgbTransColor etc.)
-
         // get bitmap handle
         HBITMAP hbm = NULL;
         Color color(0xFF, 0xFF, 0xFF);
-        Gdiplus::Status status;
-        status = GetCommon().CreateHBITMAPFromBitmap(
-            pBitmap, &hbm, color.GetValue());
+        Status status = GetCommon().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
 
         // delete Bitmap
         GetCommon().DisposeImage(pBitmap);
@@ -525,10 +517,13 @@ public:
         using namespace Gdiplus;
         ATLASSERT(m_hbm);
 
-        // TODO & FIXME: set parameters (m_rgbTransColor etc.)
-        CLSID clsid;
-        if (!GetClsidFromFileType(&clsid, guidFileType))
-            return E_FAIL;
+        // Get encoders
+        UINT cEncoders = 0;
+        ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
+
+        // Get Codec
+        CLSID clsid = FindCodecForFileType(*guidFileType, pEncoders, cEncoders);
+        delete[] pEncoders;
 
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
@@ -550,31 +545,32 @@ public:
         using namespace Gdiplus;
         ATLASSERT(m_hbm);
 
-        // TODO & FIXME: set parameters (m_rgbTransColor etc.)
-
         // convert the file name string into Unicode
         CStringW pszNameW(pszFileName);
 
+        // Get encoders
+        UINT cEncoders = 0;
+        ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
+
         // if the file type is null, get the file type from extension
-        const GUID *FileType = &guidFileType;
+        CLSID clsid;
         if (::IsEqualGUID(guidFileType, GUID_NULL))
         {
-            LPCWSTR pszExt = GetFileExtension(pszNameW);
-            FileType = FileTypeFromExtension(pszExt);
+            CString strExt(GetFileExtension(pszNameW));
+            clsid = FindCodecForExtension(strExt, pEncoders, cEncoders);
         }
-
-        // get CLSID from file type
-        CLSID clsid;
-        if (!GetClsidFromFileType(&clsid, FileType))
-            return E_FAIL;
+        else
+        {
+            clsid = FindCodecForFileType(guidFileType, pEncoders, cEncoders);
+        }
+        delete[] pEncoders;
 
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
         GetCommon().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
 
         // save to file
-        Status status;
-        status = GetCommon().SaveImageToFile(pBitmap, pszNameW, &clsid, NULL);
+        Status status = GetCommon().SaveImageToFile(pBitmap, pszNameW, &clsid, NULL);
 
         // destroy GpBitmap
         GetCommon().DisposeImage(pBitmap);
@@ -714,73 +710,96 @@ public:
         excludeDefaultSave  = excludeIcon | excludeEMF | excludeWMF
     };
 
-    struct FILTER_DATA {
-        DWORD dwExclude;
-        const TCHAR *title;
-        const TCHAR *extensions;
-        const GUID *guid;
-    };
-
 protected:
-    static HRESULT GetCommonFilterString(
+    static bool ShouldExcludeFormat(REFGUID guidFileType, DWORD dwExclude)
+    {
+        if (::IsEqualGUID(guidFileType, Gdiplus::ImageFormatGIF))
+            return !!(dwExclude & excludeGIF);
+        if (::IsEqualGUID(guidFileType, Gdiplus::ImageFormatBMP))
+            return !!(dwExclude & excludeBMP);
+        if (::IsEqualGUID(guidFileType, Gdiplus::ImageFormatEMF))
+            return !!(dwExclude & excludeEMF);
+        if (::IsEqualGUID(guidFileType, Gdiplus::ImageFormatWMF))
+            return !!(dwExclude & excludeWMF);
+        if (::IsEqualGUID(guidFileType, Gdiplus::ImageFormatJPEG))
+            return !!(dwExclude & excludeJPEG);
+        if (::IsEqualGUID(guidFileType, Gdiplus::ImageFormatPNG))
+            return !!(dwExclude & excludePNG);
+        if (::IsEqualGUID(guidFileType, Gdiplus::ImageFormatTIFF))
+            return !!(dwExclude & excludeTIFF);
+        if (::IsEqualGUID(guidFileType, Gdiplus::ImageFormatIcon))
+            return !!(dwExclude & excludeIcon);
+        return ((dwExclude & excludeOther) == excludeOther);
+    }
+
+    static HRESULT BuildCodecFilterString(
+        const Gdiplus::ImageCodecInfo* pCodecs,
+        UINT cCodecs,
         CSimpleString& strFilter,
         CSimpleArray<GUID>& aguidFileTypes,
         LPCTSTR pszAllFilesDescription,
         DWORD dwExclude,
         TCHAR chSeparator)
     {
-        static const FILTER_DATA table[] =
+        if (!pCodecs || !cCodecs)
         {
-            {excludeBMP, TEXT("BMP"), TEXT("*.BMP;*.DIB;*.RLE"), &Gdiplus::ImageFormatBMP},
-            {excludeJPEG, TEXT("JPEG"), TEXT("*.JPG;*.JPEG;*.JPE;*.JFIF"), &Gdiplus::ImageFormatJPEG},
-            {excludeGIF, TEXT("GIF"), TEXT("*.GIF"), &Gdiplus::ImageFormatGIF},
-            {excludeEMF, TEXT("EMF"), TEXT("*.EMF"), &Gdiplus::ImageFormatEMF},
-            {excludeWMF, TEXT("WMF"), TEXT("*.WMF"), &Gdiplus::ImageFormatWMF},
-            {excludeTIFF, TEXT("TIFF"), TEXT("*.TIF;*.TIFF"), &Gdiplus::ImageFormatTIFF},
-            {excludePNG, TEXT("PNG"), TEXT("*.PNG"), &Gdiplus::ImageFormatPNG},
-            {excludeIcon, TEXT("ICO"), TEXT("*.ICO"), &Gdiplus::ImageFormatIcon}
-        };
+            strFilter += chSeparator;
+            return E_FAIL;
+        }
 
         if (pszAllFilesDescription)
         {
             strFilter += pszAllFilesDescription;
-            strFilter += chSeparator;
 
             BOOL bFirst = TRUE;
-            for (size_t i = 0; i < _countof(table); ++i)
+            CString extensions;
+            for (UINT i = 0; i < cCodecs; ++i)
             {
-                if ((dwExclude & table[i].dwExclude) != 0)
+                if (ShouldExcludeFormat(pCodecs[i].FormatID, dwExclude))
                     continue;
 
                 if (bFirst)
                     bFirst = FALSE;
                 else
-                    strFilter += TEXT(';');
+                    extensions += TEXT(';');
 
-                strFilter += table[i].extensions;
+                CString ext(pCodecs[i].FilenameExtension);
+                extensions += ext;
             }
+            extensions.MakeLower();
+
+            strFilter += TEXT(" (");
+            strFilter += extensions;
+            strFilter += TEXT(")");
+            strFilter += chSeparator;
+
+            strFilter += extensions;
             strFilter += chSeparator;
 
             aguidFileTypes.Add(GUID_NULL);
         }
 
-        for (size_t i = 0; i < _countof(table); ++i)
+        for (UINT i = 0; i < cCodecs; ++i)
         {
-            if ((dwExclude & table[i].dwExclude) != 0)
+            if (ShouldExcludeFormat(pCodecs[i].FormatID, dwExclude))
                 continue;
-            strFilter += table[i].title;
+
+            CString extensions(pCodecs[i].FilenameExtension);
+            extensions.MakeLower();
+
+            CString desc(pCodecs[i].FormatDescription);
+            strFilter += desc;
             strFilter += TEXT(" (");
-            strFilter += table[i].extensions;
+            strFilter += extensions;
             strFilter += TEXT(")");
             strFilter += chSeparator;
-            strFilter += table[i].extensions;
+            strFilter += extensions;
             strFilter += chSeparator;
 
-            aguidFileTypes.Add(*table[i].guid);
+            aguidFileTypes.Add(pCodecs[i].FormatID);
         }
 
         strFilter += chSeparator;
-
         return S_OK;
     }
 
@@ -792,11 +811,17 @@ public:
         DWORD dwExclude = excludeDefaultLoad,
         TCHAR chSeparator = TEXT('|'))
     {
-        return GetCommonFilterString(strImporters,
-                                     aguidFileTypes,
-                                     pszAllFilesDescription,
-                                     dwExclude,
-                                     chSeparator);
+        UINT cDecoders = 0;
+        Gdiplus::ImageCodecInfo* pDecoders = _getAllDecoders(cDecoders);
+        HRESULT hr = BuildCodecFilterString(pDecoders,
+                                            cDecoders,
+                                            strImporters,
+                                            aguidFileTypes,
+                                            pszAllFilesDescription,
+                                            dwExclude,
+                                            chSeparator);
+        delete[] pDecoders;
+        return hr;
     }
 
     static HRESULT GetExporterFilterString(
@@ -806,30 +831,27 @@ public:
         DWORD dwExclude = excludeDefaultSave,
         TCHAR chSeparator = TEXT('|'))
     {
-        return GetCommonFilterString(strExporters,
-                                     aguidFileTypes,
-                                     pszAllFilesDescription,
-                                     dwExclude,
-                                     chSeparator);
+        UINT cEncoders = 0;
+        Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
+        HRESULT hr = BuildCodecFilterString(pEncoders,
+                                            cEncoders,
+                                            strExporters,
+                                            aguidFileTypes,
+                                            pszAllFilesDescription,
+                                            dwExclude,
+                                            chSeparator);
+        delete[] pEncoders;
+        return hr;
     }
 
 protected:
     // an extension of BITMAPINFO
-    struct MYBITMAPINFOEX
+    struct MYBITMAPINFOEX : BITMAPINFO
     {
-        BITMAPINFOHEADER bmiHeader;
-        RGBQUAD bmiColors[256];
-        BITMAPINFO *get()
-        {
-            return reinterpret_cast<BITMAPINFO *>(this);
-        }
-        const BITMAPINFO *get() const
-        {
-            return reinterpret_cast<const BITMAPINFO *>(this);
-        }
+        RGBQUAD bmiColorsExtra[256 - 1];
     };
 
-    // abbreviations of GDI+ basic types
+    // abbreviations of GDI+ basic types. FIXME: Delete us
     typedef Gdiplus::GpStatus St;
     typedef Gdiplus::GpBitmap Bm;
     typedef Gdiplus::GpImage Im;
@@ -837,69 +859,45 @@ protected:
     // The common data of atlimage
     struct COMMON
     {
-        // abbreviations of GDI+ basic types
-        typedef Gdiplus::ImageCodecInfo ICI;
-        typedef Gdiplus::EncoderParameters EncParams;
-        typedef Gdiplus::ARGB ARGB;
-        typedef HBITMAP HBM;
-        typedef Gdiplus::GdiplusStartupInput GSI;
-        typedef Gdiplus::GdiplusStartupOutput GSO;
-
         // GDI+ function types
-#undef API
-#undef CST
-#define API WINGDIPAPI
-#define CST GDIPCONST
-        typedef St (WINAPI *STARTUP)(ULONG_PTR *, const GSI *, GSO *);
-        typedef void (WINAPI *SHUTDOWN)(ULONG_PTR);
-        typedef St (API *GETIMAGEENCODERSSIZE)(UINT *, UINT *);
-        typedef St (API *GETIMAGEENCODERS)(UINT, UINT, ICI *);
-        typedef St (API *CREATEBITMAPFROMFILE)(CST WCHAR*, Bm **);
-        typedef St (API *CREATEHBITMAPFROMBITMAP)(Bm *, HBM *, ARGB);
-        typedef St (API *CREATEBITMAPFROMSTREAM)(IStream *, Bm **);
-        typedef St (API *CREATEBITMAPFROMHBITMAP)(HBM, HPALETTE, Bm **);
-        typedef St (API *SAVEIMAGETOSTREAM)(Im *, IStream *, CST CLSID *,
-                                            CST EncParams *);
-        typedef St (API *SAVEIMAGETOFILE)(Im *, CST WCHAR *, CST CLSID *,
-                                          CST EncParams *);
-        typedef St (API *DISPOSEIMAGE)(Im*);
-#undef API
-#undef CST
+        using FUN_Startup = decltype(&Gdiplus::GdiplusStartup);
+        using FUN_Shutdown = decltype(&Gdiplus::GdiplusShutdown);
+        using FUN_GetImageEncoderSize = decltype(&Gdiplus::DllExports::GdipGetImageEncodersSize);
+        using FUN_GetImageEncoder = decltype(&Gdiplus::DllExports::GdipGetImageEncoders);
+        using FUN_GetImageDecoderSize = decltype(&Gdiplus::DllExports::GdipGetImageDecodersSize);
+        using FUN_GetImageDecoder = decltype(&Gdiplus::DllExports::GdipGetImageDecoders);
+        using FUN_CreateBitmapFromFile = decltype(&Gdiplus::DllExports::GdipCreateBitmapFromFile);
+        using FUN_CreateHBITMAPFromBitmap = decltype(&Gdiplus::DllExports::GdipCreateHBITMAPFromBitmap);
+        using FUN_CreateBitmapFromStream = decltype(&Gdiplus::DllExports::GdipCreateBitmapFromStream);
+        using FUN_CreateBitmapFromHBITMAP = decltype(&Gdiplus::DllExports::GdipCreateBitmapFromHBITMAP);
+        using FUN_SaveImageToStream = decltype(&Gdiplus::DllExports::GdipSaveImageToStream);
+        using FUN_SaveImageToFile = decltype(&Gdiplus::DllExports::GdipSaveImageToFile);
+        using FUN_DisposeImage = decltype(&Gdiplus::DllExports::GdipDisposeImage);
 
         // members
-        int                     count;
-        HINSTANCE               hinstGdiPlus;
-        ULONG_PTR               gdiplusToken;
+        int                     count = 0;
+        HINSTANCE               hinstGdiPlus = NULL;
+        ULONG_PTR               gdiplusToken = 0;
 
         // GDI+ functions
-        STARTUP                 Startup;
-        SHUTDOWN                Shutdown;
-        GETIMAGEENCODERSSIZE    GetImageEncodersSize;
-        GETIMAGEENCODERS        GetImageEncoders;
-        CREATEBITMAPFROMFILE    CreateBitmapFromFile;
-        CREATEHBITMAPFROMBITMAP CreateHBITMAPFromBitmap;
-        CREATEBITMAPFROMSTREAM  CreateBitmapFromStream;
-        CREATEBITMAPFROMHBITMAP CreateBitmapFromHBITMAP;
-        SAVEIMAGETOSTREAM       SaveImageToStream;
-        SAVEIMAGETOFILE         SaveImageToFile;
-        DISPOSEIMAGE            DisposeImage;
+        FUN_Startup                 Startup                     = NULL;
+        FUN_Shutdown                Shutdown                    = NULL;
+        FUN_GetImageEncoderSize     GetImageEncodersSize        = NULL;
+        FUN_GetImageEncoder         GetImageEncoders            = NULL;
+        FUN_GetImageDecoderSize     GetImageDecodersSize        = NULL;
+        FUN_GetImageDecoder         GetImageDecoders            = NULL;
+        FUN_CreateBitmapFromFile    CreateBitmapFromFile        = NULL;
+        FUN_CreateHBITMAPFromBitmap CreateHBITMAPFromBitmap     = NULL;
+        FUN_CreateBitmapFromStream  CreateBitmapFromStream      = NULL;
+        FUN_CreateBitmapFromHBITMAP CreateBitmapFromHBITMAP     = NULL;
+        FUN_SaveImageToStream       SaveImageToStream           = NULL;
+        FUN_SaveImageToFile         SaveImageToFile             = NULL;
+        FUN_DisposeImage            DisposeImage                = NULL;
 
         COMMON()
         {
-            count = 0;
-            hinstGdiPlus = NULL;
-            Startup = NULL;
-            Shutdown = NULL;
-            GetImageEncodersSize = NULL;
-            GetImageEncoders = NULL;
-            CreateBitmapFromFile = NULL;
-            CreateHBITMAPFromBitmap = NULL;
-            CreateBitmapFromStream = NULL;
-            CreateBitmapFromHBITMAP = NULL;
-            SaveImageToStream = NULL;
-            SaveImageToFile = NULL;
-            DisposeImage = NULL;
         }
+
         ~COMMON()
         {
             FreeLib();
@@ -915,11 +913,13 @@ protected:
         }
 
         // get procedure address of the DLL
-        template <typename TYPE>
-        TYPE AddrOf(const char *name)
+        template <typename FUN_T>
+        FUN_T _getFUN(FUN_T& fun, const char *name)
         {
-            FARPROC proc = ::GetProcAddress(hinstGdiPlus, name);
-            return reinterpret_cast<TYPE>(proc);
+            if (fun)
+                return fun;
+            fun = reinterpret_cast<FUN_T>(::GetProcAddress(hinstGdiPlus, name));
+            return fun;
         }
 
         HINSTANCE LoadLib()
@@ -929,24 +929,19 @@ protected:
 
             hinstGdiPlus = ::LoadLibraryA("gdiplus.dll");
 
-            // get procedure addresses from the DLL
-            Startup = AddrOf<STARTUP>("GdiplusStartup");
-            Shutdown = AddrOf<SHUTDOWN>("GdiplusShutdown");
-            GetImageEncodersSize =
-                AddrOf<GETIMAGEENCODERSSIZE>("GdipGetImageEncodersSize");
-            GetImageEncoders = AddrOf<GETIMAGEENCODERS>("GdipGetImageEncoders");
-            CreateBitmapFromFile =
-                AddrOf<CREATEBITMAPFROMFILE>("GdipCreateBitmapFromFile");
-            CreateHBITMAPFromBitmap =
-                AddrOf<CREATEHBITMAPFROMBITMAP>("GdipCreateHBITMAPFromBitmap");
-            CreateBitmapFromStream =
-                AddrOf<CREATEBITMAPFROMSTREAM>("GdipCreateBitmapFromStream");
-            CreateBitmapFromHBITMAP =
-                AddrOf<CREATEBITMAPFROMHBITMAP>("GdipCreateBitmapFromHBITMAP");
-            SaveImageToStream =
-                AddrOf<SAVEIMAGETOSTREAM>("GdipSaveImageToStream");
-            SaveImageToFile = AddrOf<SAVEIMAGETOFILE>("GdipSaveImageToFile");
-            DisposeImage = AddrOf<DISPOSEIMAGE>("GdipDisposeImage");
+            _getFUN(Startup, "GdiplusStartup");
+            _getFUN(Shutdown, "GdiplusShutdown");
+            _getFUN(GetImageEncodersSize, "GdipGetImageEncodersSize");
+            _getFUN(GetImageEncoders, "GdipGetImageEncoders");
+            _getFUN(GetImageDecodersSize, "GdipGetImageDecodersSize");
+            _getFUN(GetImageDecoders, "GdipGetImageDecoders");
+            _getFUN(CreateBitmapFromFile, "GdipCreateBitmapFromFile");
+            _getFUN(CreateHBITMAPFromBitmap, "GdipCreateHBITMAPFromBitmap");
+            _getFUN(CreateBitmapFromStream, "GdipCreateBitmapFromStream");
+            _getFUN(CreateBitmapFromHBITMAP, "GdipCreateBitmapFromHBITMAP");
+            _getFUN(SaveImageToStream, "GdipSaveImageToStream");
+            _getFUN(SaveImageToFile, "GdipSaveImageToFile");
+            _getFUN(DisposeImage, "GdipDisposeImage");
 
             if (hinstGdiPlus && Startup)
             {
@@ -966,6 +961,8 @@ protected:
                 Shutdown = NULL;
                 GetImageEncodersSize = NULL;
                 GetImageEncoders = NULL;
+                GetImageDecodersSize = NULL;
+                GetImageDecoders = NULL;
                 CreateBitmapFromFile = NULL;
                 CreateHBITMAPFromBitmap = NULL;
                 CreateBitmapFromStream = NULL;
@@ -1024,96 +1021,143 @@ protected:
         return RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);
     }
 
-    struct EXTENSION_ENTRY
+    static CLSID
+    FindCodecForExtension(LPCTSTR dotext, const Gdiplus::ImageCodecInfo *pCodecs, UINT nCodecs)
     {
-        LPCWSTR pszExt;
-        GUID guid;
-    };
+        for (UINT i = 0; i < nCodecs; ++i)
+        {
+            CString strSpecs(pCodecs[i].FilenameExtension);
+            int ichOld = 0, ichSep;
+            for (;;)
+            {
+                ichSep = strSpecs.Find(TEXT(';'), ichOld);
 
-    const GUID *FileTypeFromExtension(LPCWSTR pszExt) const
-    {
-        static const EXTENSION_ENTRY table[] =
-        {
-            {L".jpg", Gdiplus::ImageFormatJPEG},
-            {L".png", Gdiplus::ImageFormatPNG},
-            {L".bmp", Gdiplus::ImageFormatBMP},
-            {L".gif", Gdiplus::ImageFormatGIF},
-            {L".tif", Gdiplus::ImageFormatTIFF},
-            {L".jpeg", Gdiplus::ImageFormatJPEG},
-            {L".jpe", Gdiplus::ImageFormatJPEG},
-            {L".jfif", Gdiplus::ImageFormatJPEG},
-            {L".dib", Gdiplus::ImageFormatBMP},
-            {L".rle", Gdiplus::ImageFormatBMP},
-            {L".tiff", Gdiplus::ImageFormatTIFF}
-        };
-        const size_t count = _countof(table);
-        for (size_t i = 0; i < count; ++i)
-        {
-            if (::lstrcmpiW(table[i].pszExt, pszExt) == 0)
-                return &table[i].guid;
+                CString strSpec;
+                if (ichSep < 0)
+                    strSpec = strSpecs.Mid(ichOld);
+                else
+                    strSpec = strSpecs.Mid(ichOld, ichSep - ichOld);
+
+                int ichDot = strSpec.ReverseFind(TEXT('.'));
+                if (ichDot >= 0)
+                    strSpec = strSpec.Mid(ichDot);
+
+                if (!dotext || strSpec.CompareNoCase(dotext) == 0)
+                    return pCodecs[i].Clsid;
+
+                if (ichSep < 0)
+                    break;
+
+                ichOld = ichSep + 1;
+            }
         }
+        return CLSID_NULL;
+    }
+
+    // Deprecated. Don't use this
+    static const GUID *FileTypeFromExtension(LPCTSTR dotext)
+    {
+        UINT cEncoders = 0;
+        Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
+
+        for (UINT i = 0; i < cEncoders; ++i)
+        {
+            CString strSpecs(pEncoders[i].FilenameExtension);
+            int ichOld = 0, ichSep;
+            for (;;)
+            {
+                ichSep = strSpecs.Find(TEXT(';'), ichOld);
+
+                CString strSpec;
+                if (ichSep < 0)
+                    strSpec = strSpecs.Mid(ichOld);
+                else
+                    strSpec = strSpecs.Mid(ichOld, ichSep - ichOld);
+
+                int ichDot = strSpec.ReverseFind(TEXT('.'));
+                if (ichDot >= 0)
+                    strSpec = strSpec.Mid(ichDot);
+
+                if (!dotext || strSpec.CompareNoCase(dotext) == 0)
+                {
+                    static GUID s_guid;
+                    s_guid = pEncoders[i].FormatID;
+                    delete[] pEncoders;
+                    return &s_guid;
+                }
+
+                if (ichSep < 0)
+                    break;
+
+                ichOld = ichSep + 1;
+            }
+        }
+
+        delete[] pEncoders;
         return NULL;
     }
 
-    struct FORMAT_ENTRY
+    static CLSID
+    FindCodecForFileType(REFGUID guidFileType, const Gdiplus::ImageCodecInfo *pCodecs, UINT nCodecs)
     {
-        GUID guid;
-        LPCWSTR mime;
-    };
-
-    bool GetClsidFromFileType(CLSID *clsid, const GUID *guid) const
-    {
-        static const FORMAT_ENTRY table[] =
+        for (UINT iInfo = 0; iInfo < nCodecs; ++iInfo)
         {
-            {Gdiplus::ImageFormatJPEG, L"image/jpeg"},
-            {Gdiplus::ImageFormatPNG, L"image/png"},
-            {Gdiplus::ImageFormatBMP, L"image/bmp"},
-            {Gdiplus::ImageFormatGIF, L"image/gif"},
-            {Gdiplus::ImageFormatTIFF, L"image/tiff"}
-        };
-        const size_t count = _countof(table);
-        for (size_t i = 0; i < count; ++i)
-        {
-            if (::IsEqualGUID(table[i].guid, *guid))
-            {
-                int num = GetEncoderClsid(table[i].mime, clsid);
-                if (num >= 0)
-                {
-                    return true;
-                }
-            }
+            if (::IsEqualGUID(pCodecs[iInfo].FormatID, guidFileType))
+                return pCodecs[iInfo].Clsid;
         }
-        return false;
+        return CLSID_NULL;
     }
 
-    int GetEncoderClsid(LPCWSTR mime, CLSID *clsid) const
+    // Deprecated. Don't use this
+    static bool GetClsidFromFileType(CLSID *clsid, const GUID *guid)
     {
-        UINT count = 0, total_size = 0;
-        GetCommon().GetImageEncodersSize(&count, &total_size);
+        UINT cEncoders = 0;
+        Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
+        *clsid = FindCodecForFileType(*guid, pEncoders, cEncoders);
+        delete[] pEncoders;
+        return true;
+    }
+
+    static Gdiplus::ImageCodecInfo* _getAllEncoders(UINT& cEncoders)
+    {
+        CImage image; // Initialize common
+
+        UINT total_size = 0;
+        GetCommon().GetImageEncodersSize(&cEncoders, &total_size);
         if (total_size == 0)
-            return -1;  // failure
+            return NULL;  // failure
 
-        Gdiplus::ImageCodecInfo *pInfo;
-        BYTE *pb = new BYTE[total_size];
-        ATLASSERT(pb);
-        pInfo = reinterpret_cast<Gdiplus::ImageCodecInfo *>(pb);
-        if (pInfo == NULL)
-            return -1;  // failure
-
-        GetCommon().GetImageEncoders(count, total_size, pInfo);
-
-        for (UINT iInfo = 0; iInfo < count; ++iInfo)
+        Gdiplus::ImageCodecInfo *ret;
+        ret = new Gdiplus::ImageCodecInfo[total_size / sizeof(ret[0])];
+        if (ret == NULL)
         {
-            if (::lstrcmpiW(pInfo[iInfo].MimeType, mime) == 0)
-            {
-                *clsid = pInfo[iInfo].Clsid;
-                delete[] pb;
-                return iInfo;  // success
-            }
+            cEncoders = 0;
+            return NULL;  // failure
         }
 
-        delete[] pb;
-        return -1;  // failure
+        GetCommon().GetImageEncoders(cEncoders, total_size, ret);
+        return ret; // needs delete[]
+    }
+
+    static Gdiplus::ImageCodecInfo* _getAllDecoders(UINT& cDecoders)
+    {
+        CImage image; // Initialize common
+
+        UINT total_size = 0;
+        GetCommon().GetImageDecodersSize(&cDecoders, &total_size);
+        if (total_size == 0)
+            return NULL;  // failure
+
+        Gdiplus::ImageCodecInfo *ret;
+        ret = new Gdiplus::ImageCodecInfo[total_size / sizeof(ret[0])];
+        if (ret == NULL)
+        {
+            cDecoders = 0;
+            return NULL;  // failure
+        }
+
+        GetCommon().GetImageDecoders(cDecoders, total_size, ret);
+        return ret; // needs delete[]
     }
 
     void AttachInternal(HBITMAP hBitmap, DIBOrientation eOrientation,
@@ -1186,9 +1230,7 @@ protected:
         // create a DIB section
         HDC hDC = ::CreateCompatibleDC(NULL);
         ATLASSERT(hDC);
-        LPVOID pvBits;
-        HBITMAP hbm = ::CreateDIBSection(hDC, bi.get(), DIB_RGB_COLORS,
-                                         &pvBits, NULL, 0);
+        HBITMAP hbm = ::CreateDIBSection(hDC, &bi, DIB_RGB_COLORS, NULL, NULL, 0);
         ATLASSERT(hbm);
         ::DeleteDC(hDC);
 

@@ -9,6 +9,7 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <shlwapi_undoc.h>
+#include <versionhelpers.h>
 
 #include <pseh/pseh2.h>
 
@@ -29,6 +30,30 @@ static void ResetTest(VARTYPE vt,
     s_pszPropNames[3] = pszName3;
 }
 
+static SAFEARRAY* CreateByteArray(LPCVOID pvSrc, DWORD cbSize)
+{
+    SAFEARRAYBOUND Bound;
+    Bound.lLbound = 0;
+    Bound.cElements = cbSize;
+
+    SAFEARRAY* pArray = SafeArrayCreate(VT_UI1, 1, &Bound);
+    if (!pArray)
+        return NULL;
+
+    void HUGEP *pvData;
+    HRESULT hr = SafeArrayAccessData(pArray, &pvData);
+    if (FAILED(hr))
+    {
+        SafeArrayDestroy(pArray);
+        return NULL;
+    }
+
+    CopyMemory(pvData, pvSrc, cbSize);
+    SafeArrayUnaccessData(pArray);
+
+    return pArray;
+}
+
 class CDummyPropertyBag : public IPropertyBag
 {
 public:
@@ -39,17 +64,17 @@ public:
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override
     {
-        ok_int(0, 1);
+        ok(FALSE, "Unexpected call\n");
         return S_OK;
     }
     STDMETHODIMP_(ULONG) AddRef() override
     {
-        ok_int(0, 1);
+        ok(FALSE, "Unexpected call\n");
         return S_OK;
     }
     STDMETHODIMP_(ULONG) Release() override
     {
-        ok_int(0, 1);
+        ok(FALSE, "Unexpected call\n");
         return S_OK;
     }
 
@@ -64,13 +89,38 @@ public:
             {
                 ok_wstr(pszPropName, s_pszPropNames[i]);
                 s_pszPropNames[i] = NULL;
+
                 if (lstrcmpiW(pszPropName, L"RECTL2.top") == 0)
                     return E_FAIL;
+
+                if (lstrcmpiW(pszPropName, L"GUID1") == 0)
+                {
+                    V_VT(pvari) = (VT_UI1 | VT_ARRAY);
+                    V_ARRAY(pvari) = CreateByteArray(&IID_IShellLink, sizeof(IID));
+                    return S_OK;
+                }
+
+                if (lstrcmpiW(pszPropName, L"GUID2") == 0)
+                {
+                    WCHAR szText[50];
+                    StringFromGUID2(IID_IUnknown, szText, _countof(szText));
+
+                    V_VT(pvari) = VT_BSTR;
+                    V_BSTR(pvari) = SysAllocString(szText);
+                    return S_OK;
+                }
+
+                if (lstrcmpiW(pszPropName, L"GUID3") == 0)
+                {
+                    V_VT(pvari) = VT_EMPTY;
+                    V_UI4(pvari) = 0xDEADFACE;
+                    return S_OK;
+                }
 
                 goto Skip1;
             }
         }
-        ok_int(0, 1);
+        ok(FALSE, "Unexpected call\n");
 Skip1:
         return S_OK;
     }
@@ -95,7 +145,7 @@ Skip1:
                 goto Skip2;
             }
         }
-        ok_int(0, 1);
+        ok(FALSE, "Unexpected call\n");
 Skip2:
         return S_OK;
     }
@@ -113,6 +163,7 @@ static void SHPropertyBag_ReadTest(void)
     POINTL ptl = { 0xEEEE, 0xDDDD };
     POINTS pts = { 0x2222, 0x3333 };
     RECTL rcl = { 123, 456, 789, 101112 };
+    GUID guid = { 0 };
 
     ResetTest(VT_BOOL, L"BOOL1");
     hr = SHPropertyBag_ReadBOOL(&dummy, s_pszPropNames[0], &bValue);
@@ -168,6 +219,33 @@ static void SHPropertyBag_ReadTest(void)
     ok_long(hr, E_FAIL);
     ok_int(s_cRead, 2);
     ok_int(s_cWrite, 0);
+
+    ResetTest(VT_EMPTY, L"GUID1");
+    hr = SHPropertyBag_ReadGUID(&dummy, L"GUID1", &guid);
+    ok_long(hr, S_OK);
+    ok_int(s_cRead, 1);
+    ok_int(s_cWrite, 0);
+    ok_int(IsEqualGUID(guid, IID_IShellLink), TRUE);
+
+    ResetTest(VT_EMPTY, L"GUID2");
+    hr = SHPropertyBag_ReadGUID(&dummy, L"GUID2", &guid);
+    ok_long(hr, S_OK);
+    ok_int(s_cRead, 1);
+    ok_int(s_cWrite, 0);
+    ok_int(IsEqualGUID(guid, IID_IUnknown), TRUE);
+
+    ResetTest(VT_EMPTY, L"GUID3");
+    guid = IID_IExtractIcon;
+    hr = SHPropertyBag_ReadGUID(&dummy, L"GUID3", &guid);
+
+    if (IsWindowsVistaOrGreater())
+        ok_long(hr, E_INVALIDARG);
+    else
+        ok_long(hr, S_OK);
+
+    ok_int(s_cRead, 1);
+    ok_int(s_cWrite, 0);
+    ok_int(IsEqualGUID(guid, IID_IExtractIcon), TRUE);
 }
 
 static void SHPropertyBag_WriteTest(void)

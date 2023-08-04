@@ -481,8 +481,11 @@ MiRemoveAnyPage(IN ULONG Color)
 
     /* Make sure PFN lock is held and we have pages */
     MI_ASSERT_PFN_LOCK_HELD();
-    ASSERT(MmAvailablePages != 0);
     ASSERT(Color < MmSecondaryColors);
+    if (MmAvailablePages == 0)
+    {
+        return 0;
+    }
 
     /* Check the colored free list */
     PageIndex = MmFreePagesByColor[FreePageList][Color].Flink;
@@ -514,6 +517,7 @@ MiRemoveAnyPage(IN ULONG Color)
 
     /* Remove the page from its list */
     PageIndex = MiRemovePageByColor(PageIndex, Color);
+    ASSERT(PageIndex != 0);
 
     /* Sanity checks */
     Pfn1 = MI_PFN_ELEMENT(PageIndex);
@@ -538,8 +542,11 @@ MiRemoveZeroPage(IN ULONG Color)
 
     /* Make sure PFN lock is held and we have pages */
     MI_ASSERT_PFN_LOCK_HELD();
-    ASSERT(MmAvailablePages != 0);
     ASSERT(Color < MmSecondaryColors);
+    if (MmAvailablePages == 0)
+    {
+        return 0;
+    }
 
     /* Check the colored zero list */
     PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
@@ -583,6 +590,7 @@ MiRemoveZeroPage(IN ULONG Color)
 
     /* Remove the page from its list */
     PageIndex = MiRemovePageByColor(PageIndex, Color);
+    ASSERT(PageIndex != 0);
     ASSERT(Pfn1 == MI_PFN_ELEMENT(PageIndex));
 
     /* Zero it, if needed */
@@ -1221,11 +1229,22 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
 
 VOID
 NTAPI
+MmDereferencePage(PFN_NUMBER Pfn);
+
+VOID
+NTAPI
 MiDecrementReferenceCount(IN PMMPFN Pfn1,
                           IN PFN_NUMBER PageFrameIndex)
 {
     /* PFN lock must be held */
     MI_ASSERT_PFN_LOCK_HELD();
+
+    /* Handle RosMm PFNs here, too (in case they got locked/unlocked by ARM3) */
+    if (MI_IS_ROS_PFN(Pfn1))
+    {
+        MmDereferencePage(PageFrameIndex);
+        return;
+    }
 
     /* Sanity checks on the page */
     if (PageFrameIndex > MmHighestPhysicalPage ||

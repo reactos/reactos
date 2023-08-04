@@ -223,7 +223,16 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
             if (PFN_FROM_SSE(Entry) != PFN_FROM_SSE(OldEntry))
             {
                 MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
+
+                /* This has to be done before setting the new section association
+                   to prevent a race condition with the paging out path */
+                PageTable->PageEntries[PageIndex] = Entry;
+
                 MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
+            }
+            else
+            {
+                PageTable->PageEntries[PageIndex] = Entry;
             }
         }
         else
@@ -232,6 +241,7 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
              * We're switching to a valid entry from an invalid one.
              * Add the Rmap and take a ref on the segment.
              */
+            PageTable->PageEntries[PageIndex] = Entry;
             MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
 
             if (Offset->QuadPart >= (Segment->LastPage << PAGE_SHIFT))
@@ -242,6 +252,7 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
     {
         /* We're switching to an invalid entry from a valid one */
         MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
+        PageTable->PageEntries[PageIndex] = Entry;
 
         if (Offset->QuadPart == ((Segment->LastPage - 1ULL) << PAGE_SHIFT))
         {
@@ -256,8 +267,11 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
             }
         }
     }
+    else
+    {
+        PageTable->PageEntries[PageIndex] = Entry;
+    }
 
-    PageTable->PageEntries[PageIndex] = Entry;
     return STATUS_SUCCESS;
 }
 
@@ -364,6 +378,8 @@ MmGetSectionAssociation(PFN_NUMBER Page,
     PMM_SECTION_SEGMENT Segment = NULL;
     PCACHE_SECTION_PAGE_TABLE PageTable;
 
+    KIRQL OldIrql = MiAcquirePfnLock();
+
     PageTable = MmGetSegmentRmap(Page, &RawOffset);
     if (PageTable)
     {
@@ -373,6 +389,8 @@ MmGetSectionAssociation(PFN_NUMBER Page,
         ASSERT(PFN_FROM_SSE(PageTable->PageEntries[RawOffset]) == Page);
         InterlockedIncrement64(Segment->ReferenceCount);
     }
+
+    MiReleasePfnLock(OldIrql);
 
     return Segment;
 }

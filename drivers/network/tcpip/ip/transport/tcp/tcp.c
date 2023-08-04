@@ -386,6 +386,7 @@ NTSTATUS TCPConnect
         if (AllocatedPort == (UINT) -1)
         {
             DbgPrint("ERR: No more ports available.\n");
+            UnlockObject(Connection);
             return STATUS_TOO_MANY_ADDRESSES;
         }
         Connection->AddressFile->Port = AllocatedPort;
@@ -410,7 +411,13 @@ NTSTATUS TCPConnect
     Status = TCPTranslateError(LibTCPConnect(Connection,
                                                 &connaddr,
                                                 RemotePort));
-
+    if (!NT_SUCCESS(Status))
+    {
+        LockObject(Connection);
+        RemoveEntryList(&Bucket->Entry);
+        UnlockObject(Connection);
+        ExFreeToNPagedLookasideList(&TdiBucketLookasideList, Bucket);
+    }
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPConnect] Leaving. Status = 0x%x\n", Status));
 
     return Status;

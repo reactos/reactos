@@ -509,3 +509,7 @@ CcRosVacbDecRefCount(
 }
 #define CcRosVacbGetRefCount(vacb) InterlockedCompareExchange((PLONG)&(vacb)->ReferenceCount, 0, 0)
 #endif
+
+BOOLEAN
+CcRosFreeOneUnusedVacb(
+    VOID);

@@ -1135,6 +1135,14 @@ MmCreateVirtualMappingUnsafe(
     PFN_NUMBER Page
 );
 
+NTSTATUS
+NTAPI
+MmCreatePhysicalMapping(
+    _Inout_opt_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _In_ ULONG flProtect,
+    _In_ PFN_NUMBER Page);
+
 ULONG
 NTAPI
 MmGetPageProtect(
@@ -1291,9 +1299,18 @@ MmGetExecuteOptions(IN PULONG ExecuteOptions);
 _Success_(return)
 BOOLEAN
 MmDeleteVirtualMapping(
-    _In_opt_ PEPROCESS Process,
+    _Inout_opt_ PEPROCESS Process,
     _In_ PVOID Address,
     _Out_opt_ BOOLEAN* WasDirty,
+    _Out_opt_ PPFN_NUMBER Page
+);
+
+_Success_(return)
+BOOLEAN
+MmDeletePhysicalMapping(
+    _Inout_opt_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _Out_opt_ BOOLEAN * WasDirty,
     _Out_opt_ PPFN_NUMBER Page
 );
 

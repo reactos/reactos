@@ -469,7 +469,9 @@ MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
 {
     PCACHE_SECTION_PAGE_TABLE Result = NULL;
     PMM_RMAP_ENTRY current_entry;//, previous_entry;
-    KIRQL OldIrql = MiAcquirePfnLock();
+
+    /* Must hold the PFN lock */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
     //previous_entry = NULL;
     current_entry = MmGetRmapListHeadPage(Page);
@@ -481,16 +483,15 @@ MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
             *RawOffset = (ULONG_PTR)current_entry->Address & ~RMAP_SEGMENT_MASK;
             if (*Result->Segment->Flags & MM_SEGMENT_INDELETE)
             {
-                MiReleasePfnLock(OldIrql);
                 return NULL;
             }
-            MiReleasePfnLock(OldIrql);
+
             return Result;
         }
         //previous_entry = current_entry;
         current_entry = current_entry->Next;
     }
-    MiReleasePfnLock(OldIrql);
+
     return NULL;
 }
 
