@@ -1282,7 +1282,18 @@ IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
     /* Get the Device Object */
     StackPtr->DeviceObject = DeviceObject;
 
-    /* Call it */
+    /*
+     * For Query/Set Power IRPs we must handle these on
+     * a special case, aka we must poke the Power Manager.
+     */
+    if (StackPtr->MajorFunction == IRP_MJ_POWER &&
+        (StackPtr->MinorFunction == IRP_MN_SET_POWER ||
+         StackPtr->MinorFunction == IRP_MN_QUERY_POWER))
+    {
+        return PoHandlePowerIrp(Irp);
+    }
+
+    /* Otherwise call the function of the driver */
     return DriverObject->MajorFunction[StackPtr->MajorFunction](DeviceObject,
                                                                 Irp);
 }

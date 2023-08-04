@@ -1,13 +1,20 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/internal/po.h
-* PURPOSE:         Internal header for the Power Manager
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*/
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Internal header for the Power Manager
+ * COPYRIGHT:   Copyright 2006 Alex Ionescu <alex.ionescu@reactos.org>
+ *              Copyright 2023 George Bișoc <george.bisoc@reactos.org>
+ */
 
 #include <guiddef.h>
 #include <poclass.h>
+
+//
+// Power Manager Dependencies
+//
+#include "pep.h"
+#include "pofx.h"
+#include "ppm.h"
 
 //
 // Define this if you want debugging support
@@ -18,6 +25,20 @@
 // These define the Debug Masks Supported
 //
 #define PO_STATE_DEBUG                                  0x01
+#define PO_HIBER_DEBUG                                  0x02
+#define PO_THERMAL_DEBUG                                0x04
+#define PO_THROTTLE_DEBUG                               0x06
+#define PO_POWER_ACTION_DEBUG                           0x08
+#define PO_VOLUME_DOPE_DEBUG                            0x10
+#define PO_BATTERY_MGR_DEBUG                            0x12
+#define PO_IRP_DEBUG                                    0x14
+#define PO_NOTIFY_DEBUG                                 0x16
+#define PO_SHUTDOWN_DEBUG                               0x18
+#define PO_POLICY_DEBUG                                 0x20
+#define PO_IDLE_STATE_DEBUG                             0x40
+#define PO_NT_SYSCALL_DEBUG                             0x60
+#define PO_MISC_DEBUG                                   0x80
+#define PO_INIT_SUBSYSTEM_DEBUG                         0x100
 
 //
 // Debug/Tracing support
@@ -33,19 +54,72 @@
 #define POTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
-typedef enum _POP_POLICY_DEVICE_TYPE
-{
-    PolicyDeviceSystemButton = 0,
-    PolicyDeviceThermalZone = 1,
-    PolicyDeviceBattery = 2,
-    PolicyDeviceMemory = 3,
-    PolicyInitiatePowerActionAPI = 4,
-    PolicySetPowerStateAPI = 5,
-    PolicyImmediateDozeS4 = 6,
-    PolicySystemIdle = 7,
-    PolicyDeviceMax = 8,
-} POP_POLICY_DEVICE_TYPE;
+//
+// Device Power Failure Triage (0x9F) Signature
+//
+#define POP_9F_TRIAGE_SIGNATURE             0x8000
 
+//
+// Device Power Failure Triage (0x9F) Revision
+//
+#define POP_9F_TRIAGE_REVISION_V1           1
+
+//
+// IRP watchdog duetime in seconds (600 s = 10 min)
+//
+#define POP_IRP_WATCHDOG_DUETIME            600
+
+//
+// Maximum number of IRP dispatch worker threads the system can create
+//
+#define POP_MAX_IRP_WORKERS_COUNT           10
+
+//
+// Maximum number of IRPs that can be queued
+//
+#define POP_MAX_IRP_QUEUE_LIST              100
+#define POP_MAX_INRUSH_IRP_QUEUE_LIST       60
+
+//
+// IRP worker system thread priority
+//
+#define POP_IRP_WORKER_PRIORITY_HIGH        12
+#define POP_WORKER_THREAD_PRIORITY          (POP_IRP_WORKER_PRIORITY_HIGH + 1)
+
+//
+// PEXTENDED_DEVOBJ_EXTENSION power flags
+//
+#define POP_DOE_SYSTEM_IRP_ACTIVE           0x2
+#define POP_DOE_DEVICE_IRP_ACTIVE           0x4
+#define POP_DOE_INRUSH_IRP_ACTIVE           0x6
+#define POP_DOE_PENDING_PROCESS             0x8
+#define POP_DOE_INRUSH_DEVICE               0x10
+
+//
+// Power system device context flag
+//
+#define POP_SYS_CONTEXT_SYSTEM_IRP              0xA
+#define POP_SYS_CONTEXT_DEVICE_PWR_REQUEST      0xC
+#define POP_SYS_CONTEXT_WAKE_REQUEST            0xD
+#define POP_SYS_CONTEXT_WOKE_SYSTEM             (POP_SYS_CONTEXT_WAKE_REQUEST | 1)
+
+//
+// Processor throttling constants
+//
+#define POP_CURRENT_THROTTLE_MAX            100
+
+//
+// Device idle type enumeration
+//
+typedef enum _POP_DEVICE_IDLE_TYPE
+{
+    DeviceIdleNormal,
+    DeviceIdleDisk
+} POP_DEVICE_IDLE_TYPE;
+
+//
+// Hibernation performance counters
+//
 typedef struct _PO_HIBER_PERF
 {
     ULONGLONG IoTicks;
@@ -61,34 +135,45 @@ typedef struct _PO_HIBER_PERF
     ULONG BytesCopied;
     ULONG DumpCount;
     ULONG FileRuns;
+    ULONGLONG ResumeAppStartTime;
+    ULONGLONG ResumeAppEndTime;
+    ULONGLONG HiberFileResumeTime;
 } PO_HIBER_PERF, *PPO_HIBER_PERF;
 
+//
+// Power hibernation metadata image file
+//
 typedef struct _PO_MEMORY_IMAGE
 {
     ULONG Signature;
-    ULONG Version;
+    ULONG ImageType;
     ULONG CheckSum;
     ULONG LengthSelf;
-    PFN_NUMBER PageSelf;
+    ULONG PageSelf;
     ULONG PageSize;
-    ULONG ImageType;
     LARGE_INTEGER SystemTime;
     ULONGLONG InterruptTime;
     ULONG FeatureFlags;
     UCHAR HiberFlags;
     UCHAR spare[3];
     ULONG NoHiberPtes;
-    ULONG_PTR HiberVa;
-    PHYSICAL_ADDRESS HiberPte;
+    ULONG HiberVa;
+    LARGE_INTEGER HiberPte;
     ULONG NoFreePages;
     ULONG FreeMapCheck;
     ULONG WakeCheck;
-    PFN_NUMBER TotalPages;
-    PFN_NUMBER FirstTablePage;
-    PFN_NUMBER LastFilePage;
+    ULONG TotalPages;
+    ULONG FirstTablePage;
+    ULONG LastFilePage;
     PO_HIBER_PERF PerfInfo;
+    ULONG NoBootLoaderLogPages;
+    ULONG BootLoaderLogPages[8];
+    ULONG TotalPhysicalMemoryCount;
 } PO_MEMORY_IMAGE, *PPO_MEMORY_IMAGE;
 
+//
+// Hibernation memory array range
+//
 typedef struct _PO_MEMORY_RANGE_ARRAY_RANGE
 {
     PFN_NUMBER PageNo;
@@ -97,6 +182,9 @@ typedef struct _PO_MEMORY_RANGE_ARRAY_RANGE
     ULONG CheckSum;
 } PO_MEMORY_RANGE_ARRAY_RANGE;
 
+//
+// Hibernation memory array linkage
+//
 typedef struct _PO_MEMORY_RANGE_ARRAY_LINK
 {
     struct _PO_MEMORY_RANGE_ARRAY *Next;
@@ -105,6 +193,9 @@ typedef struct _PO_MEMORY_RANGE_ARRAY_LINK
     ULONG EntryCount;
 } PO_MEMORY_RANGE_ARRAY_LINK;
 
+//
+// Hibernation memory array
+//
 typedef struct _PO_MEMORY_RANGE_ARRAY
 {
     union
@@ -114,6 +205,9 @@ typedef struct _PO_MEMORY_RANGE_ARRAY
     };
 } PO_MEMORY_RANGE_ARRAY, *PPO_MEMORY_RANGE_ARRAY;
 
+//
+// Hibernation context data
+//
 typedef struct _POP_HIBER_CONTEXT
 {
     BOOLEAN WriteToFile;
@@ -122,53 +216,53 @@ typedef struct _POP_HIBER_CONTEXT
     BOOLEAN VerifyOnWake;
     BOOLEAN Reset;
     UCHAR HiberFlags;
-    BOOLEAN LinkFile;
-    HANDLE LinkFileHandle;
-    PKSPIN_LOCK Lock;
+    BOOLEAN WroteHiberFile;
+    BOOLEAN Lock;
     BOOLEAN MapFrozen;
     RTL_BITMAP MemoryMap;
+    RTL_BITMAP DiscardedMemoryPages;
     LIST_ENTRY ClonedRanges;
     ULONG ClonedRangeCount;
     PLIST_ENTRY NextCloneRange;
-    PFN_NUMBER NextPreserve;
+    ULONG NextPreserve;
     PMDL LoaderMdl;
-    PMDL Clones;
-    PUCHAR NextClone;
-    ULONG NoClones;
-    PMDL Spares;
+    PMDL AllocatedMdl;
     ULONGLONG PagesOut;
-    PVOID IoPage;
+    PVOID IoPages;
     PVOID CurrentMcb;
-    PVOID DumpStack;
+    PDUMP_STACK_CONTEXT DumpStack;
     PKPROCESSOR_STATE WakeState;
-    ULONG NoRanges;
-    ULONG_PTR HiberVa;
-    PHYSICAL_ADDRESS HiberPte;
+    ULONG HiberVa;
+    LARGE_INTEGER HiberPte;
     NTSTATUS Status;
     PPO_MEMORY_IMAGE MemoryImage;
     PPO_MEMORY_RANGE_ARRAY TableHead;
-    PVOID CompressionWorkspace;
+    PUCHAR CompressionWorkspace;
     PUCHAR CompressedWriteBuffer;
     PULONG PerformanceStats;
     PVOID CompressionBlock;
     PVOID DmaIO;
     PVOID TemporaryHeap;
     PO_HIBER_PERF PerfInfo;
+    PMDL BootLoaderLogMdl;
 } POP_HIBER_CONTEXT, *PPOP_HIBER_CONTEXT;
 
+//
+// Power notification order level
+//
 typedef struct _PO_NOTIFY_ORDER_LEVEL
 {
-    KEVENT LevelReady;
     ULONG DeviceCount;
     ULONG ActiveCount;
     LIST_ENTRY WaitSleep;
     LIST_ENTRY ReadySleep;
-    LIST_ENTRY Pending;
-    LIST_ENTRY Complete;
     LIST_ENTRY ReadyS0;
     LIST_ENTRY WaitS0;
 } PO_NOTIFY_ORDER_LEVEL, *PPO_NOTIFY_ORDER_LEVEL;
 
+//
+// Power shutdown bugcheck reasoning
+//
 typedef struct _POP_SHUTDOWN_BUG_CHECK
 {
     HANDLE ThreadHandle;
@@ -181,46 +275,43 @@ typedef struct _POP_SHUTDOWN_BUG_CHECK
     ULONG_PTR Parameter4;
 } POP_SHUTDOWN_BUG_CHECK, *PPOP_SHUTDOWN_BUG_CHECK;
 
-typedef struct _POP_DEVICE_POWER_IRP
-{
-    SINGLE_LIST_ENTRY Free;
-    PIRP Irp;
-    PPO_DEVICE_NOTIFY Notify;
-    LIST_ENTRY Pending;
-    LIST_ENTRY Complete;
-    LIST_ENTRY Abort;
-    LIST_ENTRY Failed;
-} POP_DEVICE_POWER_IRP, *PPOP_DEVICE_POWER_IRP;
-
+//
+// Power device notification order
+//
 typedef struct _PO_DEVICE_NOTIFY_ORDER
 {
-    ULONG DevNodeSequence;
+    BOOLEAN Locked;
     PDEVICE_OBJECT *WarmEjectPdoPointer;
     PO_NOTIFY_ORDER_LEVEL OrderLevel[8];
 } PO_DEVICE_NOTIFY_ORDER, *PPO_DEVICE_NOTIFY_ORDER;
 
+//
+// Power device system state
+//
 typedef struct _POP_DEVICE_SYS_STATE
 {
     UCHAR IrpMinor;
     SYSTEM_POWER_STATE SystemState;
-    PKEVENT Event;
     KSPIN_LOCK SpinLock;
     PKTHREAD Thread;
+    PKEVENT AbortEvent;
+    PKSEMAPHORE ReadySemaphore;
+    PKSEMAPHORE FinishedSemaphore;
     BOOLEAN GetNewDeviceList;
     PO_DEVICE_NOTIFY_ORDER Order;
+    LIST_ENTRY Pending;
     NTSTATUS Status;
     PDEVICE_OBJECT FailedDevice;
     BOOLEAN Waking;
     BOOLEAN Cancelled;
     BOOLEAN IgnoreErrors;
     BOOLEAN IgnoreNotImplemented;
-    BOOLEAN _WaitAny;
-    BOOLEAN _WaitAll;
-    LIST_ENTRY PresentIrpQueue;
-    POP_DEVICE_POWER_IRP Head;
-    POP_DEVICE_POWER_IRP PowerIrpState[20];
+    BOOLEAN TimeRefreshLockAcquired;
 } POP_DEVICE_SYS_STATE, *PPOP_DEVICE_SYS_STATE;
 
+//
+// Power actions
+//
 typedef struct _POP_POWER_ACTION
 {
     UCHAR Updates;
@@ -230,44 +321,90 @@ typedef struct _POP_POWER_ACTION
     SYSTEM_POWER_STATE LightestState;
     ULONG Flags;
     NTSTATUS Status;
+    POWER_POLICY_DEVICE_TYPE DeviceType;
+    ULONG DeviceTypeFlags;
     UCHAR IrpMinor;
+    BOOLEAN Waking;
     SYSTEM_POWER_STATE SystemState;
     SYSTEM_POWER_STATE NextSystemState;
+    SYSTEM_POWER_STATE EffectiveSystemState;
+    SYSTEM_POWER_STATE CurrentSystemState;
     PPOP_SHUTDOWN_BUG_CHECK ShutdownBugCode;
     PPOP_DEVICE_SYS_STATE DevState;
     PPOP_HIBER_CONTEXT HiberContext;
     ULONGLONG WakeTime;
     ULONGLONG SleepTime;
+    SYSTEM_POWER_CONDITION WakeAlarmSignaled;
+    struct
+    {
+        ULONGLONG ProgrammedTime;
+        struct _DIAGNOSTIC_BUFFER* TimeInfo;
+    } WakeAlarm[3];
+    SYSTEM_POWER_CAPABILITIES FilteredCapabilities;
 } POP_POWER_ACTION, *PPOP_POWER_ACTION;
 
-typedef enum _POP_DEVICE_IDLE_TYPE
+//
+// Power waitable trigger
+//
+typedef struct _POP_TRIGGER_WAIT
 {
-    DeviceIdleNormal,
-    DeviceIdleDisk,
-} POP_DEVICE_IDLE_TYPE, *PPOP_DEVICE_IDLE_TYPE;
+    KEVENT Event;
+    NTSTATUS Status;
+    LIST_ENTRY Link;
+    struct _POP_ACTION_TRIGGER* Trigger;
+} POP_TRIGGER_WAIT, *PPOP_TRIGGER_WAIT;
 
-typedef struct _POWER_CHANNEL_SUMMARY
+//
+// Power action trigger
+//
+typedef struct _POP_ACTION_TRIGGER
 {
-    ULONG Signature;
-    ULONG TotalCount;
-    ULONG D0Count;
-    LIST_ENTRY NotifyList;
-} POWER_CHANNEL_SUMMARY, *PPOWER_CHANNEL_SUMMARY;
+    POWER_POLICY_DEVICE_TYPE Type;
+    ULONG Flags;
+    PPOP_TRIGGER_WAIT Wait;
+    union
+    {
+        struct
+        {
+            ULONG Level;
+        } Battery;
+        struct
+        {
+            ULONG Type;
+        } Button;
+    } DUMMYUNIONNAME;
+} POP_ACTION_TRIGGER, *PPOP_ACTION_TRIGGER;
 
+//
+// Device object power extensions (DOPE)
+//
 typedef struct  _DEVICE_OBJECT_POWER_EXTENSION
 {
-    ULONG IdleCount;
+    volatile ULONG IdleCount;
+    volatile ULONG BusyCount;
+    volatile ULONG BusyReference;
+    ULONG TotalBusyCount;
     ULONG ConservationIdleTime;
     ULONG PerformanceIdleTime;
     PDEVICE_OBJECT DeviceObject;
     LIST_ENTRY IdleList;
-    DEVICE_POWER_STATE State;
-    LIST_ENTRY NotifySourceList;
-    LIST_ENTRY NotifyTargetList;
-    POWER_CHANNEL_SUMMARY PowerChannelSummary;
+    POP_DEVICE_IDLE_TYPE IdleType;
+    DEVICE_POWER_STATE IdleState;
+    DEVICE_POWER_STATE CurrentState;
     LIST_ENTRY Volume;
+    union
+    {
+        struct
+        {
+            ULONG IdleTime;
+            ULONG NonIdleTime;
+        } Disk;
+    } Specific;
 } DEVICE_OBJECT_POWER_EXTENSION, *PDEVICE_OBJECT_POWER_EXTENSION;
 
+//
+// Power shutdown wait entry list
+//
 typedef struct _POP_SHUTDOWN_WAIT_ENTRY
 {
     struct _POP_SHUTDOWN_WAIT_ENTRY *NextEntry;
@@ -275,47 +412,90 @@ typedef struct _POP_SHUTDOWN_WAIT_ENTRY
 } POP_SHUTDOWN_WAIT_ENTRY, *PPOP_SHUTDOWN_WAIT_ENTRY;
 
 //
+// Power flush volumes
+//
+typedef struct _POP_FLUSH_VOLUME
+{
+    LIST_ENTRY List;
+    LONG Count;
+    KEVENT Wait;
+} POP_FLUSH_VOLUME, *PPOP_FLUSH_VOLUME;
+
+//
+// Power system idle
+//
+typedef struct _POP_SYSTEM_IDLE
+{
+    LONG AverageIdleness;
+    LONG LowestIdleness;
+    ULONG Time;
+    ULONG Timeout;
+    ULONG LastUserInput;
+    POWER_ACTION_POLICY Action;
+    SYSTEM_POWER_STATE MinState;
+    ULONG SystemRequired;
+    UCHAR IdleWorker;
+    UCHAR Sampling;
+    ULONGLONG LastTick;
+    ULONG LastSystemRequiredTime;
+} POP_SYSTEM_IDLE, *PPOP_SYSTEM_IDLE;
+
+//
+// Power thermal zone
+//
+typedef struct _POP_THERMAL_ZONE
+{
+    LIST_ENTRY Link;
+    UCHAR State;
+    UCHAR Flags;
+    UCHAR Mode;
+    BOOLEAN PendingMode;
+    BOOLEAN ActivePoint;
+    BOOLEAN PendingActivePoint;
+    LONG Throttle;
+    ULONGLONG LastTime;
+    ULONG SampleRate;
+    ULONG LastTemp;
+    KTIMER PassiveTimer;
+    KDPC PassiveDpc;
+    POP_ACTION_TRIGGER OverThrottled;
+    PIRP Irp;
+    THERMAL_INFORMATION_EX Info;
+} POP_THERMAL_ZONE, *PPOP_THERMAL_ZONE;
+
+//
+// IRP watchdog database
+//
+typedef struct _POP_IRP_WATCHDOG_DATABASE
+{
+    LIST_ENTRY Link;
+    KTIMER WatchdogTimer;
+    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp;
+} POP_IRP_WATCHDOG_DATABASE, *PPOP_IRP_WATCHDOG_DATABASE;
+
+//
 // Initialization routines
 //
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-PoInitSystem(
-    IN ULONG BootPhase
-);
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-PoInitializePrcb(
-    IN PKPRCB Prcb
-);
-
 VOID
 NTAPI
 PopInitShutdownList(
     VOID
 );
 
-//
-// I/O Routines
-//
-VOID
+CODE_SEG("INIT")
+BOOLEAN
 NTAPI
-PoInitializeDeviceObject(
-    IN OUT PDEVOBJ_EXTENSION DeviceObjectExtension
+PoInitSystem(
+    _In_ ULONG BootPhase
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
-PoVolumeDevice(
-    IN PDEVICE_OBJECT DeviceObject
+PoInitializePrcb(
+    _In_ PKPRCB Prcb
 );
-
-VOID
-NTAPI
-PoRemoveVolumeDevice(
-    IN PDEVICE_OBJECT DeviceObject);
 
 //
 // Power State routines
@@ -323,25 +503,25 @@ PoRemoveVolumeDevice(
 NTSTATUS
 NTAPI
 PopSetSystemPowerState(
-    SYSTEM_POWER_STATE PowerState,
-    POWER_ACTION PowerAction
+    _In_ SYSTEM_POWER_STATE PowerState,
+    _In_ POWER_ACTION PowerAction
 );
 
 VOID
 NTAPI
 PopCleanupPowerState(
-    IN PPOWER_STATE PowerState
+    _In_ PPOWER_STATE PowerState
 );
 
 NTSTATUS
 NTAPI
 PopAddRemoveSysCapsCallback(
-    IN PVOID NotificationStructure,
-    IN PVOID Context
+    _In_ PVOID NotificationStructure,
+    _In_ PVOID Context
 );
 
 //
-// Notifications
+// Notification routines
 //
 VOID
 NTAPI
@@ -361,22 +541,135 @@ PopReadShutdownPolicy(
 VOID
 NTAPI
 PopGracefulShutdown(
-    IN PVOID Context
+    _In_ PVOID Context
+);
+
+//
+// IRP routines
+//
+NTSTATUS
+NTAPI
+PopRequestPowerIrp(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ UCHAR MinorFunction,
+    _In_ POWER_STATE PowerState,
+    _In_ BOOLEAN IsFxDevice,
+    _In_opt_ PREQUEST_POWER_COMPLETE CompletionFunction,
+    _In_opt_ __drv_aliasesMem PVOID Context,
+    _Outptr_opt_ PIRP *Irp);
+
+_Function_class_(KSTART_ROUTINE)
+VOID
+NTAPI
+PopMasterDispatchIrp(
+    _In_ PVOID StartContext);
+
+NTSTATUS
+NTAPI
+PopCreateIrpWorkerThread(
+    _In_ PKSTART_ROUTINE WorkerRoutine);
+
+NTSTATUS
+FASTCALL
+PoHandlePowerIrp(
+    _In_ PIRP Irp);
+
+//
+// Volume and device object power extension (DOPE) routines
+//
+VOID
+NTAPI
+PopFlushVolumes(
+    _In_ BOOLEAN ShuttingDown
 );
 
 VOID
 NTAPI
-PopFlushVolumes(
-    IN BOOLEAN ShuttingDown
+PoVolumeDevice(
+    _In_ PDEVICE_OBJECT DeviceObject
 );
+
+VOID
+NTAPI
+PoInitializeDeviceObject(
+    _Inout_ PDEVOBJ_EXTENSION DeviceObjectExtension
+);
+
+VOID
+NTAPI
+PoRemoveVolumeDevice(
+    _In_ PDEVICE_OBJECT DeviceObject);
+
+//
+// Miscellaneous routines
+//
+PVOID
+NTAPI
+PopAllocatePool(
+    _In_ SIZE_T PoolSize,
+    _In_ BOOLEAN Paged,
+    _In_ ULONG Tag);
+
+VOID
+NTAPI
+PopFreePool(
+    _In_ _Post_invalid_ PVOID PoolBuffer,
+    _In_ ULONG Tag);
 
 //
 // Global data inside the Power Manager
 //
-extern PDEVICE_NODE PopSystemPowerDeviceNode;
+
+/* Power Manager synchronization objects */
 extern KGUARDED_MUTEX PopVolumeLock;
-extern LIST_ENTRY PopVolumeDevices;
 extern KSPIN_LOCK PopDopeGlobalLock;
+extern KGUARDED_MUTEX PopShutdownListMutex;
+extern KSPIN_LOCK PopIrpLock;
+extern KSEMAPHORE PopIrpDispatchMasterSemaphore;
+
+/* Power Manager Policy constructs */
+extern ULONG PopFlushPolicy;
+extern ULONG PopShutdownPowerOffPolicy;
+
+/* Power Manager Shutdown constructs */
+extern BOOLEAN PopShutdownListAvailable;
+extern WORK_QUEUE_ITEM PopShutdownWorkItem;
+extern KEVENT PopShutdownEvent;
+extern PPOP_SHUTDOWN_WAIT_ENTRY PopShutdownThreadList;
+extern LIST_ENTRY PopShutdownQueue;
+
+/* Power Manager Callbacks */
+extern PCALLBACK_OBJECT SetSystemTimeCallback;
+
+/* Power Manager Volumes & Device Nodes */
+extern PDEVICE_NODE PopSystemPowerDeviceNode;
+extern LIST_ENTRY PopVolumeDevices;
+
+/* Power Manager Centralized Actions & Capabilities */
 extern POP_POWER_ACTION PopAction;
 extern SYSTEM_POWER_CAPABILITIES PopCapabilities;
+extern ADMINISTRATOR_POWER_POLICY PopAdminPowerPolicy;
 
+/* Power Manager IRP constructs */
+extern LIST_ENTRY PopDispatchWorkerIrpList;
+extern LIST_ENTRY PopQueuedIrpList;
+extern LIST_ENTRY PopQueuedInrushIrpList;
+extern LIST_ENTRY PopIrpWatchdogList;
+extern LIST_ENTRY PopOutstandingIrpList;
+extern LIST_ENTRY PopIrpThreadWorkerList;
+extern PIRP PopInrushIrp;
+extern ULONG PopPendingIrpDispatcWorkerCount;
+extern ULONG PopIrpDispatchWorkerCount;
+extern PKTHREAD PopIrpOwnerLockThread;
+extern KEVENT PopIrpDispatchPendingEvent;
+extern BOOLEAN PopIrpDispatchWorkerPending;
+
+/* Power Manager miscellaneous constructs */
+extern BOOLEAN PopAcpiPresent;
+
+//
+// Inlined functions
+//
+#include "po_x.h"
+
+/* EOF */
