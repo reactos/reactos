@@ -20,6 +20,18 @@ static void test_SheRemoveQuotesA(void)
     CHAR sz1[] = "\"Test\"";
     CHAR sz2[] = "\"Test\"123";
 
+    BOOL bGotException = FALSE;
+    _SEH2_TRY
+    {
+        pSheRemoveQuotesA(NULL);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bGotException = TRUE;
+    }
+    _SEH2_END;
+    ok_int(bGotException, TRUE);
+
     ok_ptr(pSheRemoveQuotesA(sz0), sz0);
     ok_str(sz0, "A\"Test\"");
 
@@ -35,6 +47,18 @@ static void test_SheRemoveQuotesW(void)
     WCHAR sz0[] = L"A\"Test\"";
     WCHAR sz1[] = L"\"Test\"";
     WCHAR sz2[] = L"\"Test\"123";
+
+    BOOL bGotException = FALSE;
+    _SEH2_TRY
+    {
+        pSheRemoveQuotesW(NULL);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bGotException = TRUE;
+    }
+    _SEH2_END;
+    ok_int(bGotException, TRUE);
 
     ok_ptr(pSheRemoveQuotesW(sz0), sz0);
     ok_wstr(sz0, L"A\"Test\"");
