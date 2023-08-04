@@ -44,7 +44,7 @@ struct LIMIT_INPUT_COMBO
 
 static BOOL CALLBACK _FindTheEditBox(HWND hwndEdit, LPARAM lParam)
 {
-    LIMIT_INPUT_COMBO *pLimitInput = (LIMIT_INPUT *)lParam;
+    LIMIT_INPUT_COMBO *pLimitInput = (LIMIT_INPUT_COMBO *)lParam;
     pLimitInput->hr = SHLimitInputEdit(hwndEdit, pLimitInput->psf);
     return FALSE;
 }
