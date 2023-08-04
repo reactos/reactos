@@ -142,7 +142,6 @@ XHCI_ResetController(IN PXHCI_HC_OPER_REGS OperRegisters)
     EndTime.QuadPart += XHCI_POLL_TIME_SET(25);
     IsPolling = TRUE;
 
-    (VOID)Status;
     while (IsPolling)
     {
         Status.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbStatus.AsULONG);
