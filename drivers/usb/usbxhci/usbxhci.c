@@ -10,7 +10,50 @@
 #define NDEBUG
 #include <debug.h>
 
+#define XHCI_POLL_TIME_SET(Milliseconds) (Milliseconds * 10000)
+
+/* Status codes for XHCI_PollCheck() */
+#define POLL_STATUS_DONE     0      // Done polling successfully
+#define POLL_STATUS_CONTINUE 1      // Nothing happened, continue polling
+#define POLL_STATUS_TIMEOUT  2      // Timeout occurred
+
+typedef LONG POLLSTATUS;
+
 USBPORT_REGISTRATION_PACKET RegPacket;
+
+/**
+ * XHCI_PollTimeout - Poll with timeout
+ *
+ * This function polls `PollValue` until set or a timeout
+ * happens.
+ *
+ * @CurrentTime: Used to see how far we are.
+ * @EndTime: Max amount of time to wait, must be set by caller.
+ * @Condition: Condition to test.
+ */
+POLLSTATUS
+NTAPI
+XHCI_PollTimeout(
+    IN PLARGE_INTEGER CurrentTime,
+    IN PLARGE_INTEGER EndTime,
+    IN BOOLEAN Condition)
+{
+    /* Reload the current time */
+    KeQuerySystemTime(CurrentTime);
+
+    if (Condition)
+    {
+        return POLL_STATUS_DONE;
+    }
+
+    if (CurrentTime->QuadPart >= EndTime->QuadPart)
+    {
+        return POLL_STATUS_TIMEOUT;
+    }
+
+    return MP_STATUS_ERROR;
+}
+
 
 MPSTATUS
 NTAPI
@@ -20,6 +63,7 @@ XHCI_HaltController(IN PXHCI_HC_OPER_REGS OperRegisters)
     XHCI_USB_COMMAND Command;
     LARGE_INTEGER EndTime;
     LARGE_INTEGER CurrentTime;
+    BOOLEAN IsPolling;
 
     /* Don't halt if Status.HCHalted is set */
     Status.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbStatus.AsULONG);
@@ -47,23 +91,20 @@ XHCI_HaltController(IN PXHCI_HC_OPER_REGS OperRegisters)
      * XXX: Should probably handle quirks
      */
     KeQuerySystemTime(&EndTime);
-    EndTime.QuadPart += 24 * 10000;     // 24ms
-    while (TRUE)
+    EndTime.QuadPart += XHCI_POLL_TIME_SET(24);
+    IsPolling = TRUE;
+
+    while (IsPolling)
     {
-        KeQuerySystemTime(&CurrentTime);
-
         Status.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbStatus.AsULONG);
-
-        /* See if the HC is halted yet */
-        if (Status.HcHalted)
+        switch (XHCI_PollTimeout(&CurrentTime, &EndTime, Status.HcHalted))
         {
-            break;
-        }
-
-        if (CurrentTime.QuadPart >= EndTime.QuadPart)
-        {
-            DPRINT1("XHCI_HaltController: Timeout while halting HC\n");
-            return MP_STATUS_ERROR;
+            case POLL_STATUS_DONE:
+                IsPolling = FALSE;
+                break;
+            case POLL_STATUS_TIMEOUT:
+                DPRINT1("XHCI_HaltController: Timeout while halting HC\n");
+                return MP_STATUS_ERROR;
         }
     }
 
@@ -79,6 +120,7 @@ XHCI_ResetController(IN PXHCI_HC_OPER_REGS OperRegisters)
     XHCI_USB_STATUS Status;
     LARGE_INTEGER EndTime;
     LARGE_INTEGER CurrentTime;
+    BOOLEAN IsPolling;
 
     Command.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbCmd.AsULONG);
     Command.HcReset = 1;
@@ -97,21 +139,21 @@ XHCI_ResetController(IN PXHCI_HC_OPER_REGS OperRegisters)
      * 25ms should suffice.
      */
     KeQuerySystemTime(&EndTime);
-    EndTime.QuadPart += 25 * 10000;     // 25ms
-    while (TRUE)
+    EndTime.QuadPart += XHCI_POLL_TIME_SET(25);
+    IsPolling = TRUE;
+
+    (VOID)Status;
+    while (IsPolling)
     {
-        KeQuerySystemTime(&CurrentTime);
         Status.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbStatus.AsULONG);
-
-        if (!Status.ControllerNotReady)
+        switch (XHCI_PollTimeout(&CurrentTime, &EndTime, !Status.ControllerNotReady))
         {
-            break;
-        }
-
-        if (CurrentTime.QuadPart >= EndTime.QuadPart)
-        {
-            DPRINT1("XHCI_ResetController: Timeout while resetting HC\n");
-            return MP_STATUS_ERROR;
+            case POLL_STATUS_DONE:
+                IsPolling = FALSE;
+                break;
+            case POLL_STATUS_TIMEOUT:
+                DPRINT1("XHCI_ResetController: Timeout while resetting HC\n");
+                return MP_STATUS_ERROR;
         }
     }
 
