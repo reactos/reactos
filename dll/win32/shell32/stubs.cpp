@@ -899,17 +899,6 @@ DDECreatePostNotify(LPVOID lpUnknown)
  */
 EXTERN_C BOOL
 WINAPI
-SHIsBadInterfacePtr(LPVOID pv, UINT ucb)
-{
-    FIXME("SHIsBadInterfacePtr() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
 Activate_RunDLL(DWORD dwProcessId, LPVOID lpUnused1, LPVOID lpUnused2, LPVOID lpUnused3)
 {
     FIXME("Activate_RunDLL() stub\n");

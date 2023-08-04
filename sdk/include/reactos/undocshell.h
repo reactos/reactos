@@ -562,6 +562,8 @@ typedef struct
 BOOL WINAPI
 RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf);
 
+BOOL WINAPI SHIsBadInterfacePtr(IUnknown *punk, UINT cbVtbl);
+
 /* SHWaitForFileToOpen flags */
 #define SHWFF_ADD     0x01
 #define SHWFF_REMOVE  0x02
