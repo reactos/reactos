@@ -40,112 +40,112 @@ typedef struct _XHCI_EXTENSION {
 MPSTATUS
 NTAPI
 XHCI_RH_ChirpRootPort(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 VOID
 NTAPI
 XHCI_RH_GetRootHubData(
-  IN PVOID XhciExtension,
-  IN PVOID rootHubData);
+  _In_ PVOID XhciExtension,
+  _In_ PVOID rootHubData);
 
 MPSTATUS
 NTAPI
 XHCI_RH_GetStatus(
-  IN PVOID XhciExtension,
-  IN PUSHORT Status);
+  _In_ PVOID XhciExtension,
+  _In_ PUSHORT Status);
 
 MPSTATUS
 NTAPI
 XHCI_RH_GetPortStatus(
-  IN PVOID XhciExtension,
-  IN USHORT Port,
-  IN PUSB_PORT_STATUS_AND_CHANGE PortStatus);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port,
+  _In_ PUSB_PORT_STATUS_AND_CHANGE PortStatus);
 
 MPSTATUS
 NTAPI
 XHCI_RH_GetHubStatus(
-  IN PVOID XhciExtension,
-  IN PUSB_HUB_STATUS_AND_CHANGE HubStatus);
+  _In_ PVOID XhciExtension,
+  _In_ PUSB_HUB_STATUS_AND_CHANGE HubStatus);
 
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortReset(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortPower(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortEnable(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortSuspend(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortEnable(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortPower(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortSuspend(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortEnableChange(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortConnectChange(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortResetChange(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortSuspendChange(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortOvercurrentChange(
-  IN PVOID XhciExtension,
-  IN USHORT Port);
+  _In_ PVOID XhciExtension,
+  _In_ USHORT Port);
 
 VOID
 NTAPI
 XHCI_RH_DisableIrq(
-  IN PVOID XhciExtension);
+  _In_ PVOID XhciExtension);
 
 VOID
 NTAPI
 XHCI_RH_EnableIrq(
-    IN PVOID XhciExtension);
+    _In_ PVOID XhciExtension);

@@ -13,8 +13,8 @@
 MPSTATUS
 NTAPI
 XHCI_RH_ChirpRootPort(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_ChirpRootPort: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -23,8 +23,8 @@ XHCI_RH_ChirpRootPort(
 VOID
 NTAPI
 XHCI_RH_GetRootHubData(
-    IN PVOID XhciExtension,
-    IN PVOID RootHubData)
+    _In_ PVOID XhciExtension,
+    _In_ PVOID RootHubData)
 {
     PUSBPORT_ROOT_HUB_DATA RH_Data;
     PXHCI_EXTENSION XhciExt;
@@ -39,8 +39,8 @@ XHCI_RH_GetRootHubData(
 MPSTATUS
 NTAPI
 XHCI_RH_GetStatus(
-    IN PVOID XhciExtension,
-    IN PUSHORT Status)
+    _In_ PVOID XhciExtension,
+    _In_ PUSHORT Status)
 {
     DPRINT("XHCI_RH_GetStatus: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -49,9 +49,9 @@ XHCI_RH_GetStatus(
 MPSTATUS
 NTAPI
 XHCI_RH_GetPortStatus(
-    IN PVOID XhciExtension,
-    IN USHORT Port,
-    IN PUSB_PORT_STATUS_AND_CHANGE PortStatus)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port,
+    _In_ PUSB_PORT_STATUS_AND_CHANGE PortStatus)
 {
     DPRINT("XHCI_RH_GetPortStatus: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -60,8 +60,8 @@ XHCI_RH_GetPortStatus(
 MPSTATUS
 NTAPI
 XHCI_RH_GetHubStatus(
-    IN PVOID XhciExtension,
-    IN PUSB_HUB_STATUS_AND_CHANGE HubStatus)
+    _In_ PVOID XhciExtension,
+    _In_ PUSB_HUB_STATUS_AND_CHANGE HubStatus)
 {
     DPRINT("XHCI_RH_GetHubStatus: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -70,8 +70,8 @@ XHCI_RH_GetHubStatus(
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortReset(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_SetFeaturePortReset: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -80,8 +80,8 @@ XHCI_RH_SetFeaturePortReset(
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortPower(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_SetFeaturePortPower: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -90,8 +90,8 @@ XHCI_RH_SetFeaturePortPower(
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortEnable(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_SetFeaturePortEnable: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -100,8 +100,8 @@ XHCI_RH_SetFeaturePortEnable(
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortSuspend(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_SetFeaturePortSuspend: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -110,8 +110,8 @@ XHCI_RH_SetFeaturePortSuspend(
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortPower(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_SetFeaturePortPower: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -120,8 +120,8 @@ XHCI_RH_ClearFeaturePortPower(
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortSuspend(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_ClearFeaturePortSuspend: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -130,8 +130,8 @@ XHCI_RH_ClearFeaturePortSuspend(
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortEnable(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -140,8 +140,8 @@ XHCI_RH_ClearFeaturePortEnable(
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortEnableChange(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_ClearFeaturePortEnableChange: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -150,8 +150,8 @@ XHCI_RH_ClearFeaturePortEnableChange(
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortConnectChange(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_ClearFeaturePortConnectChange: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -160,8 +160,8 @@ XHCI_RH_ClearFeaturePortConnectChange(
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortResetChange(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_ClearFeaturePortResetChange: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -170,8 +170,8 @@ XHCI_RH_ClearFeaturePortResetChange(
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortSuspendChange(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_ClearFeaturePortSuspend: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -180,8 +180,8 @@ XHCI_RH_ClearFeaturePortSuspendChange(
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortOvercurrentChange(
-    IN PVOID XhciExtension,
-    IN USHORT Port)
+    _In_ PVOID XhciExtension,
+    _In_ USHORT Port)
 {
     DPRINT("XHCI_RH_ClearFeaturePortOvercurrentChange: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -189,14 +189,14 @@ XHCI_RH_ClearFeaturePortOvercurrentChange(
 
 VOID
 NTAPI
-XHCI_RH_DisableIrq(IN PVOID XhciExtension)
+XHCI_RH_DisableIrq(_In_ PVOID XhciExtension)
 {
     DPRINT("XHCI_RH_DisableIrq: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
-XHCI_RH_EnableIrq(IN PVOID XhciExtension)
+XHCI_RH_EnableIrq(_In_ PVOID XhciExtension)
 {
     DPRINT("XHCI_RH_EnableIrq: UNIMPLEMENTED. FIXME\n");
 }
