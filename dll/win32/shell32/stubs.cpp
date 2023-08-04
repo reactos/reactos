@@ -36,25 +36,6 @@ SHFindComputer(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     return FALSE;
 }
 
-/*************************************************************************
- *  SHLimitInputCombo [SHELL32.748]
- *
- * Sets limits on valid characters for a combobox control.
- * This function works like SHLimitInputEdit, but the target is a combobox
- * instead of a textbox.
- */
-EXTERN_C BOOL
-WINAPI
-SHLimitInputCombo(HWND hWnd, IShellFolder *psf)
-{
-    TRACE("%p %p\n", hWnd, psf);
-    HWND hwndEdit = GetTopWindow(hWnd);
-    if (!hwndEdit)
-        return E_FAIL;
-
-    return SHLimitInputEdit(hwndEdit, psf);
-}
-
 /*
  * Unimplemented
  */
