@@ -122,12 +122,24 @@ XHCI_ResetController(IN PXHCI_HC_OPER_REGS OperRegisters)
 MPSTATUS
 NTAPI
 XHCI_InitController(IN PXHCI_HC_OPER_REGS OperRegisters,
-                    IN ULONG_PTR BaseVA,
-                    IN ULONG BasePA)
+                    IN PUSBPORT_RESOURCES Resources,
+                    IN PVOID XhciExtension,
+                    IN PXHCI_HC_CAPABILITY_REGISTERS CapabilityRegisters,
+                    IN UCHAR CapLength)
 {
     PXHCI_HC_RESOURCES HcResources;
+    PXHCI_EXTENSION XhciExt;
+    XHCI_HC_STRUCTURAL_PARAMS1 StructParams1;
+    XHCI_HC_CONFIG Config;
     ULONG DcbaaBasePA;
     ULONG CommandRingBasePA;
+    ULONG_PTR BaseVA;
+    ULONG_PTR BasePA;
+    UCHAR MaxDeviceSlots;
+    MPSTATUS RetStatus;
+
+    BaseVA = Resources->StartVA;
+    BasePA = Resources->StartPA;
 
     HcResources = (PXHCI_HC_RESOURCES)BaseVA;
     DcbaaBasePA = (ULONG)BasePA + FIELD_OFFSET(XHCI_HC_RESOURCES, Dcbaa);
@@ -147,44 +159,10 @@ XHCI_InitController(IN PXHCI_HC_OPER_REGS OperRegisters,
     WRITE_REGISTER_ULONG(&OperRegisters->DcbaaPtr, DcbaaBasePA);
     WRITE_REGISTER_ULONG(&OperRegisters->CmdRingControl, CommandRingBasePA);
 
-    /* TODO: There is much more to do */
-
-    return MP_STATUS_SUCCESS;
-}
-
-MPSTATUS
-NTAPI
-XHCI_StartController(IN PVOID XhciExtension,
-                     IN PUSBPORT_RESOURCES Resources)
-{
-    PXHCI_HC_CAPABILITY_REGISTERS CapabilityRegisters;
-    PXHCI_HC_OPER_REGS OperRegisters;
-    XHCI_HC_STRUCTURAL_PARAMS1 StructParams1;
-    XHCI_HC_CONFIG Config;
-    PXHCI_EXTENSION XhciExt;
-    UCHAR CapLength;
-    UCHAR MaxDeviceSlots;
-    MPSTATUS RetStatus;
-
-    DPRINT("XHCI_StartController: Starting...\n");
-    if ((Resources->ResourcesTypes & (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)) !=
-                                     (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT))
-    {
-        DPRINT1("XHCI_StartController: Controller does not meet resource requirements (have %x)...\n",
-                Resources->ResourcesTypes);
-
-        return MP_STATUS_ERROR;
-    }
-
-    CapabilityRegisters = (PXHCI_HC_CAPABILITY_REGISTERS)Resources->ResourceBase;
-    CapLength = READ_REGISTER_UCHAR(&CapabilityRegisters->CapLength);
-
     XhciExt = (PXHCI_EXTENSION)XhciExtension;
 
     StructParams1.AsULONG = READ_REGISTER_ULONG(&CapabilityRegisters->StructParams1.AsULONG);
     MaxDeviceSlots = StructParams1.MaxDeviceSlots;
-    OperRegisters = (PXHCI_HC_OPER_REGS)((ULONG_PTR)CapabilityRegisters +
-                                                    CapLength);
 
     DPRINT("XHCI_StartController: CapabilityRegisters - %p\n", CapabilityRegisters);
     DPRINT("XHCI_StartController: OperRegisters - %p\n", OperRegisters);
@@ -207,9 +185,44 @@ XHCI_StartController(IN PVOID XhciExtension,
 
     WRITE_REGISTER_ULONG(&OperRegisters->Config.AsULONG, Config.AsULONG);
 
+    /* TODO: There is much more to do */
+
+    return MP_STATUS_SUCCESS;
+}
+
+MPSTATUS
+NTAPI
+XHCI_StartController(IN PVOID XhciExtension,
+                     IN PUSBPORT_RESOURCES Resources)
+{
+    PXHCI_HC_OPER_REGS OperRegisters;
+    PXHCI_HC_CAPABILITY_REGISTERS CapabilityRegisters;
+
+    MPSTATUS RetStatus;
+    UCHAR CapLength;
+
+    DPRINT("XHCI_StartController: Starting...\n");
+
+    /* Check resources */
+    if ((Resources->ResourcesTypes & (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)) !=
+                                     (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT))
+    {
+        DPRINT1("XHCI_StartController: Controller does not meet resource requirements (have %x)...\n",
+                Resources->ResourcesTypes);
+
+        return MP_STATUS_ERROR;
+    }
+
+    CapabilityRegisters = (PXHCI_HC_CAPABILITY_REGISTERS)Resources->ResourceBase;
+    CapLength = READ_REGISTER_UCHAR(&CapabilityRegisters->CapLength);
+    OperRegisters = (PXHCI_HC_OPER_REGS)((ULONG_PTR)CapabilityRegisters +
+                                                    CapLength);
+
     RetStatus = XHCI_InitController(OperRegisters,
-                                    Resources->StartVA,
-                                    Resources->StartPA);
+                                    Resources,
+                                    XhciExtension,
+                                    CapabilityRegisters,
+                                    CapLength);
 
     if (RetStatus != MP_STATUS_SUCCESS)
     {
