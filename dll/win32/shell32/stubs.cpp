@@ -148,6 +148,8 @@ GetFileDescriptor(FILEGROUPDESCRIPTOR *pFileGroupDesc, BOOL bUnicode, INT iIndex
  */
 EXTERN_C BOOL WINAPI SHIsTempDisplayMode(VOID)
 {
+    TRACE("\n");
+
     if (GetSystemMetrics(SM_REMOTESESSION) || GetSystemMetrics(SM_REMOTECONTROL))
         return FALSE;
 
