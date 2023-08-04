@@ -243,12 +243,12 @@ SHCreatePropertyBagOnMemory(_In_ DWORD dwMode, _In_ REFIID riid, _Out_ void **pp
 
     *ppvObj = NULL;
 
-    CMemPropertyBag* pMemBag = new CMemPropertyBag(dwMode);
+    CComPtr<CMemPropertyBag> pMemBag;
+    pMemBag.Attach(new CMemPropertyBag(dwMode));
 
     HRESULT hr = pMemBag->QueryInterface(riid, ppvObj);
     if (FAILED(hr))
         ERR("0x%08X %s\n", hr, debugstr_guid(&riid));
 
-    pMemBag->Release();
     return hr;
 }
