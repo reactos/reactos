@@ -23,6 +23,7 @@ list(APPEND SOURCE
     SHCreateDataObject.cpp
     SHCreateFileDataObject.cpp
     SHCreateFileExtractIconW.cpp
+    She.cpp
     SHParseDisplayName.cpp
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
