@@ -7,7 +7,7 @@
 
 #include "usbxhci.h"
 
-// #define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 USBPORT_REGISTRATION_PACKET RegPacket;
@@ -224,7 +224,7 @@ NTAPI
 XHCI_StopController(IN PVOID XhciExtension,
                     IN BOOLEAN DisableInterrupts)
 {
-    DPRINT1("XHCI_StopController: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_StopController: UNIMPLEMENTED. FIXME\n");
 }
 
 MPSTATUS
@@ -233,7 +233,7 @@ XHCI_OpenEndpoint(IN PVOID XhciExtension,
                   IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProps,
                   IN PVOID Endpoint)
 {
-    DPRINT1("XHCI_OpenEndpoint: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_OpenEndpoint: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_FAILURE;
 }
 
@@ -243,21 +243,21 @@ XHCI_QueryEndpointRequirements(IN PVOID XhciExtension,
                                IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProps,
                                IN PUSBPORT_ENDPOINT_REQUIREMENTS EndpointRequirements)
 {
-    DPRINT1("XHCI_QueryEndpointRequirements: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_QueryEndpointRequirements: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 XHCI_SuspendController(IN PVOID XhciExtension)
 {
-    DPRINT1("XHCI_SuspendController: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_SuspendController: UNIMPLEMENTED. FIXME\n");
 }
 
 MPSTATUS
 NTAPI
 XHCI_ResumeController(IN PVOID XhciExtension)
 {
-    DPRINT1("XHCI_SuspendController: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_SuspendController: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
 }
 
@@ -265,7 +265,7 @@ BOOLEAN
 NTAPI
 XHCI_InterruptService(IN PVOID XhciExtension)
 {
-    DPRINT1("XHCI_InterruptService: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_InterruptService: UNIMPLEMENTED. FIXME\n");
     return FALSE;
 }
 
@@ -274,7 +274,7 @@ NTAPI
 XHCI_InterruptDpc(IN PVOID XhciExtension,
                   IN BOOLEAN EnableInterrupts)
 {
-    DPRINT1("XHCI_InterruptDpc: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_InterruptDpc: UNIMPLEMENTED. FIXME\n");
 }
 
 MPSTATUS
@@ -285,7 +285,7 @@ XHCI_SubmitTransfer(IN PVOID XhciExtension,
                     IN PVOID XhciTransfer,
                     IN PUSBPORT_SCATTER_GATHER_LIST SgList)
 {
-    DPRINT1("XHCI_SubmitTransfer: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_SubmitTransfer: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
 }
 
@@ -297,7 +297,7 @@ XHCI_SubmitIsoTransfer(IN PVOID XhciExtension,
                        IN PVOID XhciTransfer,
                        IN PVOID isoParameters)
 {
-    DPRINT1("XHCI_SubmitIsoTransfer: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_SubmitIsoTransfer: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
 }
 
@@ -308,7 +308,7 @@ XHCI_AbortTransfer(IN PVOID XhciExtension,
                    IN PVOID XhciTransfer,
                    IN PULONG CompletedLength)
 {
-    DPRINT1("XHCI_AbortTransfer: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_AbortTransfer: UNIMPLEMENTED. FIXME\n");
 }
 
 ULONG
@@ -316,7 +316,7 @@ NTAPI
 XHCI_GetEndpointState(IN PVOID XhciExtension,
                       IN PVOID XhciEndpoint)
 {
-    DPRINT1("XHCI_GetEndpointState: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_GetEndpointState: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -326,7 +326,7 @@ XHCI_SetEndpointState(IN PVOID XhciExtension,
                       IN PVOID XhciEndpoint,
                       IN ULONG EndpointState)
 {
-    DPRINT1("XHCI_SetEndpointState: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_SetEndpointState: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
@@ -334,21 +334,21 @@ NTAPI
 XHCI_PollEndpoint(IN PVOID XhciExtension,
                   IN PVOID XhciEndpoint)
 {
-    DPRINT1("XHCI_PollEndpoint: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_PollEndpoint: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 XHCI_CheckController(IN PVOID XhciExtension)
 {
-    DPRINT1("XHCI_CheckController: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_CheckController: UNIMPLEMENTED. FIXME\n");
 }
 
 ULONG
 NTAPI
 XHCI_Get32BitFrameNumber(IN PVOID XhciExtension)
 {
-    DPRINT1("XHCI_Get32BitFrameNumber: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_Get32BitFrameNumber: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -356,28 +356,28 @@ VOID
 NTAPI
 XHCI_InterruptNextSOF(IN PVOID XhciExtension)
 {
-    DPRINT1("XHCI_InterruptNextSOF: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_InterruptNextSOF: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 XHCI_EnableInterrupts(IN PVOID XhciExtension)
 {
-    DPRINT1("XHCI_EnableInterrupts: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_EnableInterrupts: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 XHCI_DisableInterrupts(IN PVOID XhciExtension)
 {
-    DPRINT1("XHCI_DisableInterrupts: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_DisableInterrupts: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 XHCI_PollController(IN PVOID XhciExtension)
 {
-    DPRINT1("XHCI_PollController: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_PollController: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
@@ -386,7 +386,7 @@ XHCI_SetEndpointDataToggle(IN PVOID XhciExtension,
                            IN PVOID XhciEndpoint,
                            IN ULONG DataToggle)
 {
-    DPRINT1("XHCI_SetEndpointDataToggle: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_SetEndpointDataToggle: UNIMPLEMENTED. FIXME\n");
 }
 
 ULONG
@@ -394,7 +394,7 @@ NTAPI
 XHCI_GetEndpointStatus(IN PVOID XhciExtension,
                        IN PVOID XhciEndpoint)
 {
-    DPRINT1("XHCI_GetEndpointStatus: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_GetEndpointStatus: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -404,7 +404,7 @@ XHCI_SetEndpointStatus(IN PVOID XhciExtension,
                        IN PVOID XhciEndpoint,
                        IN ULONG EndpointStatus)
 {
-    DPRINT1("XHCI_SetEndpointStatus: UNIMPLEMENTED. FIXME\n");
+    DPRINT("XHCI_SetEndpointStatus: UNIMPLEMENTED. FIXME\n");
 }
 
 NTSTATUS
