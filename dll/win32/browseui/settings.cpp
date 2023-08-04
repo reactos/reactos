@@ -8,6 +8,7 @@
 #include "precomp.h"
 
 BrowseUISettings gSettings;
+CSimpleArray<HWND> OpenWindows;
 
 BOOL BrowseUISettings::Save()
 {
@@ -20,6 +21,8 @@ BOOL BrowseUISettings::Save()
     SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Toolbar", L"Locked",
                      REG_DWORD, &fLocked, sizeof(fLocked), SHREGSET_FORCE_HKCU);
 
+    PropagateSettingChange();
+
     return TRUE;
 }
 
@@ -29,10 +32,16 @@ BOOL BrowseUISettings::Load()
                                              L"StatusBarOther", FALSE, FALSE);
 
     fShowGoButton = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
-                                   L"ShowGoButton", FALSE, TRUE);
+                                         L"ShowGoButton", FALSE, TRUE);
 
     fLocked = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Toolbar",
                                    L"Locked", FALSE, TRUE);
 
     return TRUE;
+}
+
+void PropagateSettingChange()
+{
+    for (int i = 0; i < OpenWindows.GetSize(); i++)
+        ::SendMessageW(OpenWindows[i], BWM_SETTINGCHANGE, 0, 0);
 }

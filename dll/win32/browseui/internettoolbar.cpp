@@ -710,38 +710,40 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
 
 HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
 {
-    REBARBANDINFOW                          rebarBandInfo;
-    int                                     bandCount;
-    CDockSite                               *dockSite;
-    HRESULT                                 hResult;
-
     if (locked != gSettings.fLocked)
     {
         gSettings.fLocked = locked;
         gSettings.Save();
-
-        rebarBandInfo.cbSize = sizeof(rebarBandInfo);
-        rebarBandInfo.fMask = RBBIM_STYLE | RBBIM_LPARAM;
-        bandCount = (int)SendMessage(fMainReBar, RB_GETBANDCOUNT, 0, 0);
-        for (INT x  = 0; x < bandCount; x++)
-        {
-            SendMessage(fMainReBar, RB_GETBANDINFOW, x, (LPARAM)&rebarBandInfo);
-            dockSite = reinterpret_cast<CDockSite *>(rebarBandInfo.lParam);
-            if (dockSite != NULL)
-            {
-                rebarBandInfo.fStyle &= ~(RBBS_NOGRIPPER | RBBS_GRIPPERALWAYS);
-                if (dockSite->fFlags & CDockSite::ITF_NOGRIPPER || gSettings.fLocked)
-                    rebarBandInfo.fStyle |= RBBS_NOGRIPPER;
-                if (dockSite->fFlags & CDockSite::ITF_GRIPPERALWAYS && !gSettings.fLocked)
-                    rebarBandInfo.fStyle |= RBBS_GRIPPERALWAYS;
-                SendMessage(fMainReBar, RB_SETBANDINFOW, x, (LPARAM)&rebarBandInfo);
-            }
-        }
-        hResult = ReserveBorderSpace(0);
-
+        RefreshLockedToolbarState();
         // TODO: refresh view menu?
     }
     return S_OK;
+}
+
+void CInternetToolbar::RefreshLockedToolbarState()
+{
+    REBARBANDINFOW                          rebarBandInfo;
+    int                                     bandCount;
+    CDockSite                               *dockSite;
+
+    rebarBandInfo.cbSize = sizeof(rebarBandInfo);
+    rebarBandInfo.fMask = RBBIM_STYLE | RBBIM_LPARAM;
+    bandCount = (int)SendMessage(fMainReBar, RB_GETBANDCOUNT, 0, 0);
+    for (INT x  = 0; x < bandCount; x++)
+    {
+        SendMessage(fMainReBar, RB_GETBANDINFOW, x, (LPARAM)&rebarBandInfo);
+        dockSite = reinterpret_cast<CDockSite *>(rebarBandInfo.lParam);
+        if (dockSite != NULL)
+        {
+            rebarBandInfo.fStyle &= ~(RBBS_NOGRIPPER | RBBS_GRIPPERALWAYS);
+            if (dockSite->fFlags & CDockSite::ITF_NOGRIPPER || gSettings.fLocked)
+                rebarBandInfo.fStyle |= RBBS_NOGRIPPER;
+            if (dockSite->fFlags & CDockSite::ITF_GRIPPERALWAYS && !gSettings.fLocked)
+                rebarBandInfo.fStyle |= RBBS_GRIPPERALWAYS;
+            SendMessage(fMainReBar, RB_SETBANDINFOW, x, (LPARAM)&rebarBandInfo);
+        }
+    }
+    ReserveBorderSpace(0);
 }
 
 HRESULT CInternetToolbar::SetState(const GUID *pguidCmdGroup, long commandID, OLECMD* pcmd)
@@ -1914,4 +1916,12 @@ LRESULT CInternetToolbar::OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam
         return 0;
 
     return lres;
+}
+
+LRESULT CInternetToolbar::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    /* Refresh toolbar locked state */
+    RefreshLockedToolbarState();
+
+    return 0;
 }

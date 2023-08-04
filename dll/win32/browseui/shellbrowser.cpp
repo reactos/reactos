@@ -350,7 +350,6 @@ public:
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
     void LoadCabinetState();
-    void RefreshGlobalUISettings();
 
 /*    // *** IDockingWindowFrame methods ***
     virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
@@ -624,6 +623,7 @@ public:
     LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     HRESULT OnSearch();
 
     static ATL::CWndClassInfo& GetWndClassInfo()
@@ -674,6 +674,7 @@ public:
         COMMAND_RANGE_HANDLER(IDM_GOTO_TRAVEL_FIRSTTARGET, IDM_GOTO_TRAVEL_LASTTARGET, OnGoTravel)
         COMMAND_RANGE_HANDLER(IDM_EXPLORERBAND_BEGINCUSTOM, IDM_EXPLORERBAND_ENDCUSTOM, OnExplorerBar)
         MESSAGE_HANDLER(WM_COMMAND, RelayCommands)
+        MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnBrowseUISettingChanged)
     END_MSG_MAP()
 
     BEGIN_CONNECTION_POINT_MAP(CShellBrowser)
@@ -796,6 +797,7 @@ HRESULT CShellBrowser::Initialize()
 
     ShowWindow(SW_SHOWNORMAL);
     UpdateWindow();
+    OpenWindows.Add(m_hWnd);
 
     return S_OK;
 }
@@ -822,7 +824,6 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
         newFolderSettings.ViewMode = FVM_ICON;
     else
         newFolderSettings.ViewMode = FVM_DETAILS;
-    RefreshGlobalUISettings();
     newFolderSettings.fFlags = 0;
     hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -1436,6 +1437,7 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     pThis->m_pCurrentMsg = previousMessage;
     if (previousMessage == NULL && (pThis->m_dwState & WINSTATE_DESTROYED) != 0)
     {
+        OpenWindows.Remove(pThis->m_hWnd);
         pThis->m_dwState &= ~WINSTATE_DESTROYED;
         pThis->m_hWnd = NULL;
         pThis->OnFinalMessage(hWnd);
@@ -1525,15 +1527,6 @@ void CShellBrowser::LoadCabinetState()
                                                         L"FullPath",
                                                         FALSE,
                                                         FALSE);
-}
-
-void CShellBrowser::RefreshGlobalUISettings()
-{
-    if (fStatusBar)
-    {
-        ::ShowWindow(fStatusBar, gSettings.fStatusBarVisible ? SW_SHOW : SW_HIDE);
-        RepositionBars();
-    }
 }
 
 HRESULT CShellBrowser::FireEvent(DISPID dispIdMember, int argCount, VARIANT *arguments)
@@ -3688,7 +3681,6 @@ LRESULT CShellBrowser::OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWnd
 LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     gSettings.fStatusBarVisible = !gSettings.fStatusBarVisible;
-    CShellBrowser::RefreshGlobalUISettings();
     gSettings.Save();
     return 0;
 }
@@ -3791,6 +3783,21 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 {
     if (HIWORD(wParam) == 0 && LOWORD(wParam) < FCIDM_SHVIEWLAST && fCurrentShellViewWindow != NULL)
         return SendMessage(fCurrentShellViewWindow, uMsg, wParam, lParam);
+    return 0;
+}
+
+LRESULT CShellBrowser::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    /* Refresh child windows */
+    SHPropagateMessage(m_hWnd, uMsg, wParam, lParam, TRUE);
+
+    /* Refresh status bar */
+    if (fStatusBar)
+    {
+        ::ShowWindow(fStatusBar, gSettings.fStatusBarVisible ? SW_SHOW : SW_HIDE);
+        RepositionBars();
+    }
+
     return 0;
 }
 

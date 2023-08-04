@@ -6,6 +6,7 @@
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
+#define BWM_SETTINGCHANGE (WM_USER + 300)
 
 #include <windef.h>
 #include <winbase.h>
@@ -76,5 +77,7 @@ struct BrowseUISettings
 };
 
 extern BrowseUISettings gSettings;
+extern CSimpleArray<HWND> OpenWindows;
+void PropagateSettingChange();
 
 #endif /* _BROWSEUI_PCH_ */
