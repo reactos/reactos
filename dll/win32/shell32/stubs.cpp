@@ -33,12 +33,12 @@ ShortSizeFormatW(LONGLONG llNumber)
  */
 EXTERN_C BOOL
 WINAPI
-SHFindComputer(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+SHFindComputer(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSavedSearch)
 {
-    UNREFERENCED_PARAMETER(pidl1);
-    UNREFERENCED_PARAMETER(pidl2);
+    UNREFERENCED_PARAMETER(pidlRoot);
+    UNREFERENCED_PARAMETER(pidlSavedSearch);
 
-    TRACE("%p %p\n", pidl1, pidl2);
+    TRACE("%p %p\n", pidlRoot, pidlSavedSearch);
 
     IContextMenu *pCM;
     HRESULT hr = CoCreateInstance(CLSID_ShellSearchExt, 0, CLSCTX_INPROC_SERVER,
