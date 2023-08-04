@@ -248,13 +248,11 @@ static int OnCommand(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case CMD_ABOUT:
         {
-            HICON hIcon;
             WCHAR szTitle[MAX_STRING_LEN];
 
-            hIcon = LoadIconW(Globals.hInstance, MAKEINTRESOURCE(CLIPBRD_ICON));
             LoadStringW(Globals.hInstance, STRING_CLIPBOARD, szTitle, ARRAYSIZE(szTitle));
-            ShellAboutW(Globals.hMainWnd, szTitle, NULL, hIcon);
-            DeleteObject(hIcon);
+            ShellAboutW(Globals.hMainWnd, szTitle, NULL,
+                        LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(CLIPBRD_ICON)));
             break;
         }
 

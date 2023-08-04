@@ -138,19 +138,14 @@ DWORD WINAPI OSK_WarningDlgThread(LPVOID lpParameter)
 VOID OSK_About(VOID)
 {
     WCHAR szAuthors[MAX_PATH];
-    HICON OSKIcon;
-
-    /* Load the icon */
-    OSKIcon = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
 
     /* Load the strings into the "About" dialog */
     LoadStringW(Globals.hInstance, IDS_AUTHORS, szAuthors, _countof(szAuthors));
 
+    /* Load the icon */
     /* Finally, execute the "About" dialog by using the Shell routine */
-    ShellAboutW(Globals.hMainWnd, Globals.szTitle, szAuthors, OSKIcon);
-
-    /* Once done, destroy the icon */
-    DestroyIcon(OSKIcon);
+    ShellAboutW(Globals.hMainWnd, Globals.szTitle, szAuthors,
+                LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
 }
 
 /***********************************************************************
