@@ -41,14 +41,14 @@ public:
         if (::IsEqualGUID(riid, IID_IPropertyBag2))
         {
             AddRef();
-            *ppvObject = dynamic_cast<IPropertyBag2*>(this);
+            *ppvObject = static_cast<IPropertyBag2*>(this);
             return S_OK;
         }
 #endif
         if (::IsEqualGUID(riid, IID_IUnknown) || ::IsEqualGUID(riid, IID_IPropertyBag))
         {
             AddRef();
-            *ppvObject = dynamic_cast<IPropertyBag*>(this);
+            *ppvObject = static_cast<IPropertyBag*>(this);
             return S_OK;
         }
         return E_NOTIMPL;
