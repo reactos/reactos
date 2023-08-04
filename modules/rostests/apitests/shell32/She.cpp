@@ -6,7 +6,6 @@
  */
 
 #include "shelltest.h"
-#include <versionhelpers.h>
 #include <undocshell.h>
 
 typedef LPSTR (WINAPI *FN_SheRemoveQuotesA)(LPSTR psz);
