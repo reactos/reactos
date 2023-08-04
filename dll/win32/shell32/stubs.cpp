@@ -41,17 +41,6 @@ SHFindComputer(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
  */
 EXTERN_C BOOL
 WINAPI
-SHLimitInputCombo(HWND hWnd, LPVOID lpUnknown)
-{
-    FIXME("SHLimitInputCombo() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
 PathIsEqualOrSubFolder(LPWSTR lpFolder, LPWSTR lpSubFolder)
 {
     FIXME("PathIsEqualOrSubFolder() stub\n");
