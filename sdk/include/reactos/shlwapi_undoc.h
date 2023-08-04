@@ -124,6 +124,56 @@ HRESULT WINAPI SHPropertyBag_WritePOINTL(IPropertyBag *ppb, LPCWSTR pszPropName,
 HRESULT WINAPI SHPropertyBag_WritePOINTS(IPropertyBag *ppb, LPCWSTR pszPropName, const POINTS *ppts);
 HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, const RECTL *prcl);
 
+static inline
+VOID WINAPI
+SHPropertyBag_ReadIntDef(
+    IPropertyBag *ppb,
+    LPCWSTR pszPropName,
+    LPINT pnValue,
+    INT nDefaultValue)
+{
+    HRESULT hr = SHPropertyBag_ReadInt(ppb, pszPropName, pnValue);
+    if (FAILED(hr))
+        *pnValue = nDefaultValue;
+}
+
+static inline
+VOID WINAPI
+SHPropertyBag_ReadDWORDDef(
+    IPropertyBag *ppb,
+    LPCWSTR pszPropName,
+    LPDWORD pdwValue,
+    DWORD dwDefaultValue)
+{
+    HRESULT hr = SHPropertyBag_ReadDWORD(ppb, pszPropName, pdwValue);
+    if (FAILED(hr))
+        *pdwValue = dwDefaultValue;
+}
+
+static inline
+VOID WINAPI
+SHPropertyBag_ReadBOOLDef(
+    IPropertyBag *ppb,
+    LPCWSTR pszPropName,
+    LPBOOL pbValue,
+    BOOL bDefaultValue)
+{
+    HRESULT hr = SHPropertyBag_ReadBOOL(ppb, pszPropName, pbValue);
+    if (FAILED(hr))
+        *pbValue = bDefaultValue;
+}
+
+static inline
+BOOL WINAPI
+SHPropertyBag_ReadBOOLDefRet(
+    IPropertyBag *ppb,
+    LPCWSTR pszPropName,
+    BOOL bDefaultValue)
+{
+    SHPropertyBag_ReadBOOLDef(ppb, pszPropName, &bDefaultValue, bDefaultValue);
+    return bDefaultValue;
+}
+
 HWND WINAPI SHCreateWorkerWindowA(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle,
                                   DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra);
 

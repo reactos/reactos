@@ -214,60 +214,14 @@ SHCreatePropertyBag(REFIID refIId, LPVOID *lpUnknown)
     return E_FAIL;
 }
 
-EXTERN_C VOID WINAPI
-SHPropertyBag_ReadIntDef(
-    IPropertyBag *ppb,
-    LPCWSTR pszPropName,
-    LPINT pnValue,
-    INT nDefaultValue)
-{
-    HRESULT hr = SHPropertyBag_ReadInt(ppb, pszPropName, pnValue);
-    if (FAILED(hr))
-        *pnValue = nDefaultValue;
-}
-
-EXTERN_C VOID WINAPI
-SHPropertyBag_ReadDWORDDef(
-    IPropertyBag *ppb,
-    LPCWSTR pszPropName,
-    LPDWORD pdwValue,
-    DWORD dwDefaultValue)
-{
-    HRESULT hr = SHPropertyBag_ReadDWORD(ppb, pszPropName, pdwValue);
-    if (FAILED(hr))
-        *pdwValue = dwDefaultValue;
-}
-
-EXTERN_C VOID WINAPI
-SHPropertyBag_ReadBOOLDef(
-    IPropertyBag *ppb,
-    LPCWSTR pszPropName,
-    LPBOOL pbValue,
-    BOOL bDefaultValue)
-{
-    HRESULT hr = SHPropertyBag_ReadBOOL(ppb, pszPropName, pbValue);
-    if (FAILED(hr))
-        *pbValue = bDefaultValue;
-}
-
-EXTERN_C BOOL WINAPI
-SHPropertyBag_ReadBOOLDefRet(
-    IPropertyBag *ppb,
-    LPCWSTR pszPropName,
-    BOOL bDefaultValue)
-{
-    SHPropertyBag_ReadBOOLDef(ppb, pszPropName, &bDefaultValue, bDefaultValue);
-    return bDefaultValue;
-}
-
-EXTERN_C HRESULT WINAPI
+EXTERN_C HRESULT
+WINAPI
 SHPropertyBag_WritePunk(
     IPropertyBag *ppb,
     LPCWSTR pszPropName,
     IUnknown *punk)
 {
     VARIANT vari;
-
     if (!ppb || !pszPropName)
         return E_INVALIDARG;
 
