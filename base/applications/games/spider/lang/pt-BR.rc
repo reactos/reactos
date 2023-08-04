@@ -40,7 +40,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Spider"
-    IDS_SPI_ABOUT "Paciência Spider por Gregor Schneider\n\nCardLib versão 1.0"
+    IDS_SPI_ABOUT "Paciência Spider por Gregor Schneider\nCardLib versão 1.0"
     IDS_SPI_QUIT "Desistir do jogo atual?"
     IDS_SPI_WIN "Parabéns, você venceu!"
     IDS_SPI_DEAL "Deseja jogar mais uma partida?"

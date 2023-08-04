@@ -48,7 +48,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "蜘蛛纸牌"
-    IDS_SPI_ABOUT "蜘蛛纸牌 作者：Gregor Schneider\n\n使用 CardLib 版本 1.0"
+    IDS_SPI_ABOUT "蜘蛛纸牌 作者：Gregor Schneider\n使用 CardLib 版本 1.0"
     IDS_SPI_QUIT "退出当前游戏吗？"
     IDS_SPI_WIN "祝贺您赢了！"
     IDS_SPI_DEAL "再来一次吗？"

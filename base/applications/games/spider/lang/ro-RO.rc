@@ -42,7 +42,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Pasiență-păianjen"
-    IDS_SPI_ABOUT "Pasiență-păianjen de Gregor Schneider\n\nCardLib versiune 1.0"
+    IDS_SPI_ABOUT "Pasiență-păianjen de Gregor Schneider\nCardLib versiune 1.0"
     IDS_SPI_QUIT "Abandonați jocul curent?"
     IDS_SPI_WIN "Felicitări, ați câștigat!"
     IDS_SPI_DEAL "O nouă rundă?"

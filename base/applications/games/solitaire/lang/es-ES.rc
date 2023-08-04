@@ -57,7 +57,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME  "Solitario"
-    IDS_SOL_ABOUT "Solitario por J Brown\n\nCardLib versión 1.0."
+    IDS_SOL_ABOUT "Solitario por J Brown\nCardLib versión 1.0"
     IDS_SOL_QUIT  "¿Salir del juego actual?"
     IDS_SOL_WIN   "¡Enhorabuena, has ganado!"
     IDS_SOL_DEAL  "¿Jugar de nuevo?"
