@@ -22,18 +22,22 @@ START_TEST(GetDisplayNameOf)
     ok_hr(hr, S_OK);
     if (SUCCEEDED(hr))
     {
-        /* We want to know if 'STRRET ret' data was changed when the first
-         * parameter of GetDisplayNameOf for the Control Panel is NULL */
         STRRET ret, expected;
+
         memset(&ret, 'a', sizeof(ret));
         memset(&expected, 'a', sizeof(expected));
         hr = spPanel->GetDisplayNameOf(NULL, SHGDN_NORMAL, &ret);
-        /* This verifies that the return value is 'S_FALSE' */
+
+        /* Return value is expected to be 'S_FALSE', which is out-of-spec behavior.
+         * The data after function call is expected to be unchanged. */
         ok_hex(hr, S_FALSE);
         ok(memcmp(&ret, &expected, sizeof(ret)) == 0, "Data was changed!\n");
+
+        /* Repeat the same test with SHGDN_FORPARSING */
         memset(&ret, 'a', sizeof(ret));
         memset(&expected, 'a', sizeof(expected));
         hr = spPanel->GetDisplayNameOf(NULL, SHGDN_FORPARSING, &ret);
+
         ok_hex(hr, S_FALSE);
         ok(memcmp(&ret, &expected, sizeof(ret)) == 0, "Data was changed!\n");
     }
