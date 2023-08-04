@@ -240,6 +240,11 @@ XHCI_StartController(
 {
     PXHCI_HC_OPER_REGS OperRegisters;
     PXHCI_HC_CAPABILITY_REGISTERS CapabilityRegisters;
+    XHCI_USB_COMMAND Command;
+    XHCI_USB_STATUS Status;
+    BOOLEAN IsPolling;
+    LARGE_INTEGER EndTime;
+    LARGE_INTEGER CurrentTime;
 
     MPSTATUS RetStatus;
     UCHAR CapLength;
@@ -261,6 +266,8 @@ XHCI_StartController(
     OperRegisters = (PXHCI_HC_OPER_REGS)((ULONG_PTR)CapabilityRegisters +
                                                     CapLength);
 
+    Command.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbCmd.AsULONG);
+
     RetStatus = XHCI_InitController(OperRegisters,
                                     Resources,
                                     XhciExtension,
@@ -270,6 +277,33 @@ XHCI_StartController(
     if (RetStatus != MP_STATUS_SUCCESS)
     {
         return RetStatus;
+    }
+
+    Command.RunStop = 1;
+    WRITE_REGISTER_ULONG(&OperRegisters->UsbCmd.AsULONG, Command.AsULONG);
+
+    /*
+     * Just to be safe, we will wait 16ms
+     * to allow the HC to start up
+     *
+     * XXX: Is it risky not to wait?
+     */
+    KeQuerySystemTime(&EndTime);
+    EndTime.QuadPart += XHCI_POLL_TIME_SET(16);
+
+    IsPolling = FALSE;
+    while (IsPolling)
+    {
+        Status.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbStatus.AsULONG);
+        switch (XHCI_PollTimeout(&CurrentTime, &EndTime, !Status.HcHalted))
+        {
+            case POLL_STATUS_DONE:
+                IsPolling = FALSE;
+                break;
+            case POLL_STATUS_TIMEOUT:
+                DPRINT1("XHCI_StartController: Timeout while starting HC\n");
+                return MP_STATUS_ERROR;
+        }
     }
 
     return MP_STATUS_SUCCESS;
