@@ -350,7 +350,7 @@ VOID
 DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
 {
     PROPSHEETHEADER psh;
-    HPROPSHEETPAGE hpsp[3];
+    CSimpleArray<HPROPSHEETPAGE> hpsp;
     CTaskBarSettingsPage tbSettingsPage(hwndTaskbar);
     CStartMenuSettingsPage smSettingsPage;
     CNotifySettingsPage naSettingsPage(hwndTaskbar);
@@ -358,9 +358,9 @@ DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
 
     caption.LoadStringW(IDS_TASKBAR_STARTMENU_PROP_CAPTION);
 
-    hpsp[0] = tbSettingsPage.Create();
-    hpsp[1] = smSettingsPage.Create();
-    hpsp[2] = naSettingsPage.Create();
+    hpsp.Add(tbSettingsPage.Create());
+    hpsp.Add(smSettingsPage.Create());
+    hpsp.Add(naSettingsPage.Create());
 
     ZeroMemory(&psh, sizeof(psh));
     psh.dwSize = sizeof(psh);
@@ -369,9 +369,9 @@ DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
     psh.hInstance = hExplorerInstance;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_STARTMENU);
     psh.pszCaption = caption.GetString();
-    psh.nPages = _countof(hpsp);
+    psh.nPages = hpsp.GetSize();
     psh.nStartPage = 0;
-    psh.phpage = hpsp;
+    psh.phpage = hpsp.GetData();
     psh.pfnCallback = PropSheetProc;
 
     PropertySheet(&psh);
