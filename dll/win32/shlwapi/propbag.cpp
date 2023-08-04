@@ -27,7 +27,7 @@ protected:
 
 public:
     CBasePropertyBag(DWORD dwMode)
-        : m_cRefs(1)
+        : m_cRefs(0)
         , m_dwMode(dwMode)
     {
     }
