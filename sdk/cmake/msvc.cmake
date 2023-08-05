@@ -312,7 +312,7 @@ function(fixup_load_config _target)
     # msvc knows how to generate a load_config so no hacks here
 endfunction()
 
-function(generate_import_lib _libname _dllname _spec_file)
+function(generate_import_lib _libname _dllname _spec_file __version_arg)
 
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
@@ -320,7 +320,7 @@ function(generate_import_lib _libname _dllname _spec_file)
     # Generate the def and asm stub files
     add_custom_command(
         OUTPUT ${_asm_stubs_file} ${_def_file}
-        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def --ms ${__version_arg} -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Compile the generated asm stub file
@@ -386,6 +386,8 @@ function(spec2def _dllname _spec_file)
 
     if(__spec2def_VERSION)
         set(__version_arg "--version=0x${__spec2def_VERSION}")
+    else()
+        set(__version_arg "--version=${DLL_EXPORT_VERSION}")
     endif()
 
     # Generate exports def and C stubs file for the DLL
@@ -395,7 +397,7 @@ function(spec2def _dllname _spec_file)
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     if(__spec2def_ADD_IMPORTLIB)
-        generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} "${__version_arg}")
         if(__spec2def_NO_PRIVATE_WARNINGS)
             set_property(TARGET lib${_file} APPEND PROPERTY STATIC_LIBRARY_OPTIONS /ignore:4104)
         endif()
