@@ -330,7 +330,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                 RtlInitEmptyUnicodeString(&Source, Data, (USHORT)Length);
                 Source.Length = Source.MaximumLength - sizeof(UNICODE_NULL);
 
-                /* Setup the desination string */
+                /* Setup the destination string */
                 RtlInitEmptyUnicodeString(&Destination, (PWCHAR)SpareData, 0);
 
                 /* Check if we're out of space */
