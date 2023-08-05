@@ -201,7 +201,7 @@ XHCI_InitController(
     WRITE_REGISTER_ULONG(&OperRegisters->DcbaaPtr, DcbaaBasePA);
     WRITE_REGISTER_ULONG(&OperRegisters->CmdRingControl, CommandRingBasePA);
 
-    XhciExt = (PXHCI_EXTENSION)XhciExtension;
+    XhciExt = XhciExtension;
 
     StructParams1.AsULONG = READ_REGISTER_ULONG(&CapabilityRegisters->StructParams1.AsULONG);
     MaxDeviceSlots = StructParams1.MaxDeviceSlots;
@@ -261,7 +261,7 @@ XHCI_StartController(
         return MP_STATUS_ERROR;
     }
 
-    CapabilityRegisters = (PXHCI_HC_CAPABILITY_REGISTERS)Resources->ResourceBase;
+    CapabilityRegisters = Resources->ResourceBase;
     CapLength = READ_REGISTER_UCHAR(&CapabilityRegisters->CapLength);
     OperRegisters = (PXHCI_HC_OPER_REGS)((ULONG_PTR)CapabilityRegisters +
                                                     CapLength);

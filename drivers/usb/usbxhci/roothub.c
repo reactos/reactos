@@ -29,10 +29,10 @@ XHCI_RH_GetRootHubData(
     PUSBPORT_ROOT_HUB_DATA RH_Data;
     PXHCI_EXTENSION XhciExt;
 
-    RH_Data = (PUSBPORT_ROOT_HUB_DATA)RootHubData;
+    RH_Data = RootHubData;
     RtlZeroMemory(RH_Data, sizeof(*RH_Data));
 
-    XhciExt = (PXHCI_EXTENSION)XhciExtension;
+    XhciExt = XhciExtension;
     RH_Data->NumberOfPorts = XhciExt->NumberOfPorts;
 }
 
