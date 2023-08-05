@@ -440,26 +440,44 @@ SheSetCurDrive(INT iIndex)
     return 1;
 }
 
-/*
- * Unimplemented
- */
 EXTERN_C LPWSTR
 WINAPI
-SheRemoveQuotesW(LPWSTR lpInput)
+SheRemoveQuotesW(LPWSTR psz)
 {
-    FIXME("SheRemoveQuotesW() stub\n");
-    return NULL;
+    PWCHAR pch;
+
+    if (*psz == L'"')
+    {
+        for (pch = psz + 1; *pch && *pch != L'"'; ++pch)
+        {
+            *(pch - 1) = *pch;
+        }
+
+        if (*pch == L'"')
+            *(pch - 1) = UNICODE_NULL;
+    }
+
+    return psz;
 }
 
-/*
- * Unimplemented
- */
 EXTERN_C LPSTR
 WINAPI
-SheRemoveQuotesA(LPSTR lpInput)
+SheRemoveQuotesA(LPSTR psz)
 {
-    FIXME("SheRemoveQuotesA() stub\n");
-    return NULL;
+    PCHAR pch;
+
+    if (*psz == '"')
+    {
+        for (pch = psz + 1; *pch && *pch != '"'; ++pch)
+        {
+            *(pch - 1) = *pch;
+        }
+
+        if (*pch == '"')
+            *(pch - 1) = ANSI_NULL;
+    }
+
+    return psz;
 }
 
 /*
