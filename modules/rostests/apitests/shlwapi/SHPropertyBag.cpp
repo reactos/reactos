@@ -325,8 +325,140 @@ static void SHPropertyBag_WriteTest(void)
     ok_int(s_cWrite, 1);
 }
 
+static void SHPropertyBag_OnMemory(void)
+{
+    HRESULT hr;
+    VARIANT vari;
+
+    IPropertyBag *pPropBag = NULL;
+    hr = SHCreatePropertyBagOnMemory(STGM_READWRITE, IID_IPropertyBag, (void**)&pPropBag);
+    ok_long(hr, S_OK);
+    if (pPropBag == NULL)
+    {
+        skip("pPropBag was NULL\n");
+        return;
+    }
+
+    VariantInit(&vari);
+    hr = pPropBag->Read(L"InvalidName", &vari, NULL);
+    ok_long(hr, E_FAIL);
+    VariantClear(&vari);
+
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UI4;
+    V_UI4(&vari) = 0xDEADFACE;
+    hr = pPropBag->Write(L"Name1", &vari);
+    ok_long(hr, S_OK);
+    VariantClear(&vari);
+
+    VariantInit(&vari);
+    hr = pPropBag->Read(L"Name1", &vari, NULL);
+    ok_long(hr, S_OK);
+    ok_long(V_VT(&vari), VT_UI4);
+    ok_long(V_UI4(&vari), 0xDEADFACE);
+    VariantClear(&vari);
+
+    pPropBag->Release();
+    pPropBag = NULL;
+
+    hr = SHCreatePropertyBagOnMemory(STGM_READ, IID_IPropertyBag, (void**)&pPropBag);
+    ok_long(hr, S_OK);
+
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UI4;
+    V_UI4(&vari) = 0xDEADFACE;
+    hr = pPropBag->Write(L"Name1", &vari);
+    ok_long(hr, (IsWindowsVistaOrGreater() ? S_OK : E_ACCESSDENIED));
+    VariantClear(&vari);
+
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UI4;
+    V_UI4(&vari) = 0xFEEDF00D;
+    hr = pPropBag->Read(L"Name1", &vari, NULL);
+    if (IsWindowsVistaOrGreater())
+    {
+        ok_long(hr, S_OK);
+        ok_int(V_VT(&vari), VT_UI4);
+        ok_long(V_UI4(&vari), 0xDEADFACE);
+    }
+    else
+    {
+        ok_long(hr, E_FAIL);
+        ok_int(V_VT(&vari), VT_EMPTY);
+        ok_long(V_UI4(&vari), 0xFEEDF00D);
+    }
+    VariantClear(&vari);
+
+    pPropBag->Release();
+    pPropBag = NULL;
+
+    hr = SHCreatePropertyBagOnMemory(STGM_WRITE, IID_IPropertyBag, (void**)&pPropBag);
+    ok_long(hr, S_OK);
+
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UI4;
+    V_UI4(&vari) = 0xDEADFACE;
+    hr = pPropBag->Write(L"Name1", &vari);
+    ok_long(hr, S_OK);
+    VariantClear(&vari);
+
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UI4;
+    V_UI4(&vari) = 0xFEEDF00D;
+    hr = pPropBag->Read(L"Name1", &vari, NULL);
+    if (IsWindowsVistaOrGreater())
+    {
+        ok_long(hr, S_OK);
+        ok_int(V_VT(&vari), VT_UI4);
+        ok_long(V_UI4(&vari), 0xDEADFACE);
+    }
+    else
+    {
+        ok_long(hr, E_ACCESSDENIED);
+        ok_int(V_VT(&vari), VT_EMPTY);
+        ok_long(V_UI4(&vari), 0xFEEDF00D);
+    }
+    VariantClear(&vari);
+
+    pPropBag->Release();
+
+    hr = SHCreatePropertyBagOnMemory(STGM_READWRITE, IID_IPropertyBag2, (void**)&pPropBag);
+    if (IsWindowsVistaOrGreater())
+    {
+        ok_long(hr, E_NOINTERFACE);
+    }
+    else
+    {
+        ok_long(hr, S_OK);
+        pPropBag->Release();
+    }
+
+    hr = SHCreatePropertyBagOnMemory(STGM_READ, IID_IPropertyBag2, (void**)&pPropBag);
+    if (IsWindowsVistaOrGreater())
+    {
+        ok_long(hr, E_NOINTERFACE);
+    }
+    else
+    {
+        ok_long(hr, S_OK);
+        pPropBag->Release();
+    }
+
+    hr = SHCreatePropertyBagOnMemory(STGM_WRITE, IID_IPropertyBag2, (void**)&pPropBag);
+    if (IsWindowsVistaOrGreater())
+    {
+        ok_long(hr, E_NOINTERFACE);
+    }
+    else
+    {
+        ok_long(hr, S_OK);
+        pPropBag->Release();
+    }
+}
+
 START_TEST(SHPropertyBag)
 {
     SHPropertyBag_ReadTest();
     SHPropertyBag_WriteTest();
+    SHPropertyBag_OnMemory();
 }
