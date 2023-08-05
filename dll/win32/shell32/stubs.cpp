@@ -460,7 +460,10 @@ SheRemoveQuotesW(LPWSTR psz)
     if (*psz == L'"')
     {
         for (pch = psz + 1; *pch && *pch != L'"'; ++pch)
+        {
             *(pch - 1) = *pch;
+        }
+
         if (*pch == L'"')
             *(pch - 1) = UNICODE_NULL;
     }
@@ -477,7 +480,10 @@ SheRemoveQuotesA(LPSTR psz)
     if (*psz == '"')
     {
         for (pch = psz + 1; *pch && *pch != '"'; ++pch)
+        {
             *(pch - 1) = *pch;
+        }
+
         if (*pch == '"')
             *(pch - 1) = ANSI_NULL;
     }
