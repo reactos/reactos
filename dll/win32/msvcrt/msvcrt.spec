@@ -241,7 +241,7 @@
 @ cdecl -arch=i386 -norelay __CxxFrameHandler2(ptr ptr ptr ptr) __CxxFrameHandler
 @ cdecl -version=0x600+ -arch=x86_64 -norelay __CxxFrameHandler2(ptr ptr ptr ptr) __CxxFrameHandler
 @ cdecl -arch=arm -norelay __CxxFrameHandler3(ptr ptr ptr ptr)
-@ cdecl -version=0x600+ -arch=i386,x86_64 -norelay __CxxFrameHandler3(ptr ptr ptr ptr)
+#@ cdecl -version=0x600+ -arch=i386,x86_64 -norelay -private __CxxFrameHandler3(ptr ptr ptr ptr) # Commented out for now, as it causes linker errors
 @ stdcall -arch=i386 __CxxLongjmpUnwind(ptr)
 @ cdecl -arch=i386 __CxxQueryExceptionSize()
 @ cdecl -arch=i386 __CxxRegisterExceptionObject()
@@ -1411,7 +1411,7 @@
 @ cdecl memchr(ptr long long)
 @ cdecl memcmp(ptr ptr long)
 @ cdecl memcpy(ptr ptr long)
-@ stub -version=0x600+ memcpy_s
+@ cdecl -version=0x600+ memcpy_s(ptr long)
 @ cdecl memmove(ptr ptr long)
 @ cdecl -version=0x600+ memmove_s(ptr long ptr long)
 @ cdecl memset(ptr long long)
