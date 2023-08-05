@@ -300,7 +300,7 @@ HRESULT CRegPropertyBag::Init(HKEY hKey, LPCWSTR lpSubKey)
         error = ::RegOpenKeyExW(hKey, lpSubKey, 0, nAccess, &m_hKey);
 
     if (error != ERROR_SUCCESS)
-        return (LOWORD(error) | 0x80070000); // FIXME: What is 0x80070000?
+        return HRESULT_FROM_WIN32(error);
 
     return S_OK;
 }
