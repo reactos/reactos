@@ -487,6 +487,7 @@ CRegPropertyBag::Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari)
         case VT_UI4:
         case VT_INT:
         case VT_UINT:
+        {
             hr = ::VariantChangeType(&vargTemp, pvari, 0, VT_UI4);
             if (FAILED(hr))
                 return hr;
