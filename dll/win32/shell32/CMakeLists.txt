@@ -94,7 +94,7 @@ list(APPEND PCH_SKIP_SOURCE
     wine/shellstring.c
     wine/shlmenu.c
     wine/shpolicy.c
-    misc.c
+    misc.cpp
     vista.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c)
 

@@ -1,10 +1,11 @@
 /*
  * PROJECT:     shell32
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
- * PURPOSE:     C language dependent functions
+ * PURPOSE:     C interface dependent functions
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
+#define CINTERFACE
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
@@ -18,7 +19,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 /*************************************************************************
  *  SHIsBadInterfacePtr [SHELL32.84]
  */
-BOOL WINAPI SHIsBadInterfacePtr(IUnknown *punk, UINT cbVtbl)
+EXTERN_C BOOL WINAPI SHIsBadInterfacePtr(IUnknown *punk, UINT cbVtbl)
 {
     return (IsBadReadPtr(punk, sizeof(LPVOID)) ||
             IsBadReadPtr(punk->lpVtbl, cbVtbl) ||
