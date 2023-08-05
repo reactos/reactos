@@ -498,6 +498,7 @@ CRegPropertyBag::Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari)
 
             ::VariantClear(&vargTemp);
             break;
+        }
 
         case VT_UNKNOWN:
         {
