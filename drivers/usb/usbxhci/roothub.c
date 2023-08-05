@@ -51,7 +51,7 @@ NTAPI
 XHCI_RH_GetPortStatus(
     _In_ PVOID XhciExtension,
     _In_ USHORT Port,
-    _In_ PUSB_PORT_STATUS_AND_CHANGE PortStatus)
+    _Out_ PUSB_PORT_STATUS_AND_CHANGE PortStatus)
 {
     DPRINT("XHCI_RH_GetPortStatus: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -61,7 +61,7 @@ MPSTATUS
 NTAPI
 XHCI_RH_GetHubStatus(
     _In_ PVOID XhciExtension,
-    _In_ PUSB_HUB_STATUS_AND_CHANGE HubStatus)
+    _Out_ PUSB_HUB_STATUS_AND_CHANGE HubStatus)
 {
     DPRINT("XHCI_RH_GetHubStatus: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
