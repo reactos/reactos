@@ -440,46 +440,6 @@ SheSetCurDrive(INT iIndex)
     return 1;
 }
 
-EXTERN_C LPWSTR
-WINAPI
-SheRemoveQuotesW(LPWSTR psz)
-{
-    PWCHAR pch;
-
-    if (*psz == L'"')
-    {
-        for (pch = psz + 1; *pch && *pch != L'"'; ++pch)
-        {
-            *(pch - 1) = *pch;
-        }
-
-        if (*pch == L'"')
-            *(pch - 1) = UNICODE_NULL;
-    }
-
-    return psz;
-}
-
-EXTERN_C LPSTR
-WINAPI
-SheRemoveQuotesA(LPSTR psz)
-{
-    PCHAR pch;
-
-    if (*psz == '"')
-    {
-        for (pch = psz + 1; *pch && *pch != '"'; ++pch)
-        {
-            *(pch - 1) = *pch;
-        }
-
-        if (*pch == '"')
-            *(pch - 1) = ANSI_NULL;
-    }
-
-    return psz;
-}
-
 /*
  * Unimplemented
  */
