@@ -5068,6 +5068,7 @@ free_sids:
     return psd;
 }
 
+#ifndef __REACTOS__ /* See propbag.cpp */
 /***********************************************************************
  *             SHCreatePropertyBagOnRegKey [SHLWAPI.471]
  *
@@ -5093,6 +5094,7 @@ HRESULT WINAPI SHCreatePropertyBagOnRegKey (HKEY hKey, LPCWSTR subkey,
 
     return E_NOTIMPL;
 }
+#endif
 
 /***********************************************************************
  *             SHGetViewStatePropertyBag [SHLWAPI.515]

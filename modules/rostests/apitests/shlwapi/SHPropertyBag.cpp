@@ -456,9 +456,129 @@ static void SHPropertyBag_OnMemory(void)
     }
 }
 
+static void SHPropertyBag_OnRegKey(void)
+{
+    HKEY hKey, hSubKey;
+    LONG error;
+    VARIANT vari;
+    WCHAR szText[MAX_PATH];
+
+    // Create HKCU\Software\ReactOS registry key
+    error = RegCreateKeyW(HKEY_CURRENT_USER, L"Software\\ReactOS", &hKey);
+    if (error)
+    {
+        skip("FAILED to create HKCU\\Software\\ReactOS\n");
+        return;
+    }
+
+    IPropertyBag *pPropBag;
+    HRESULT hr;
+
+    // Try to create new registry key
+    RegDeleteKeyW(hKey, L"PropBagTest");
+    hr = SHCreatePropertyBagOnRegKey(hKey, L"PropBagTest", 0,
+                                     IID_IPropertyBag, (void **)&pPropBag);
+    ok_long(hr, 0x80070002);
+
+    // Try to create new registry key
+    RegDeleteKeyW(hKey, L"PropBagTest");
+    hr = SHCreatePropertyBagOnRegKey(hKey, L"PropBagTest", STGM_READWRITE,
+                                     IID_IPropertyBag, (void **)&pPropBag);
+    ok_long(hr, 0x80070002);
+
+    // Create new registry key
+    RegDeleteKeyW(hKey, L"PropBagTest");
+    hr = SHCreatePropertyBagOnRegKey(hKey, L"PropBagTest", STGM_CREATE | STGM_READWRITE,
+                                     IID_IPropertyBag, (void **)&pPropBag);
+    if (FAILED(hr))
+    {
+        skip("SHCreatePropertyBagOnRegKey FAILED\n");
+        RegCloseKey(hKey);
+        return;
+    }
+
+    // Write UI4
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UI4;
+    V_UI4(&vari) = 0xDEADFACE;
+    hr = pPropBag->Write(L"Name1", &vari);
+    ok_long(hr, S_OK);
+    VariantClear(&vari);
+
+    // Read UI4
+    VariantInit(&vari);
+    hr = pPropBag->Read(L"Name1", &vari, NULL);
+    ok_long(hr, S_OK);
+    ok_long(V_VT(&vari), VT_UI4);
+    ok_long(V_UI4(&vari), 0xDEADFACE);
+    VariantClear(&vari);
+
+    // Write BSTR
+    VariantInit(&vari);
+    V_VT(&vari) = VT_BSTR;
+    V_BSTR(&vari) = SysAllocString(L"StrValue");
+    hr = pPropBag->Write(L"Name2", &vari);
+    ok_long(hr, S_OK);
+    VariantClear(&vari);
+
+    // Read BSTR
+    VariantInit(&vari);
+    V_VT(&vari) = VT_BSTR;
+    hr = pPropBag->Read(L"Name2", &vari, NULL);
+    ok_long(hr, S_OK);
+    ok_wstr(V_BSTR(&vari), L"StrValue");
+    VariantClear(&vari);
+
+    pPropBag->Release();
+
+    // Check registry
+    error = RegOpenKeyExW(hKey, L"PropBagTest", 0, KEY_READ, &hSubKey);
+    ok_long(error, ERROR_SUCCESS);
+    DWORD dwType, dwValue, cbValue = sizeof(dwValue);
+    error = RegQueryValueExW(hSubKey, L"Name1", NULL, &dwType, (BYTE*)&dwValue, &cbValue);
+    ok_long(error, ERROR_SUCCESS);
+    ok_long(dwType, REG_DWORD);
+    ok_long(dwValue, 0xDEADFACE);
+    ok_long(cbValue, sizeof(DWORD));
+    cbValue = sizeof(szText);
+    error = RegQueryValueExW(hSubKey, L"Name2", NULL, &dwType, (BYTE*)szText, &cbValue);
+    ok_long(error, ERROR_SUCCESS);
+    ok_long(dwType, REG_SZ);
+    ok_wstr(szText, L"StrValue");
+    RegCloseKey(hSubKey);
+
+    // Create as read-only
+    hr = SHCreatePropertyBagOnRegKey(hKey, L"PropBagTest", STGM_READ,
+                                     IID_IPropertyBag, (void **)&pPropBag);
+    ok_long(hr, S_OK);
+
+    // Read UI4
+    VariantInit(&vari);
+    hr = pPropBag->Read(L"Name1", &vari, NULL);
+    ok_long(hr, S_OK);
+    ok_long(V_VT(&vari), VT_UI4);
+    ok_long(V_UI4(&vari), 0xDEADFACE);
+    VariantClear(&vari);
+
+    // Write UI4
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UI4;
+    V_UI4(&vari) = 0xDEADFACE;
+    hr = pPropBag->Write(L"Name1", &vari);
+    ok_long(hr, E_ACCESSDENIED);
+    VariantClear(&vari);
+
+    pPropBag->Release();
+
+    // Clean up
+    RegDeleteKeyW(hKey, L"PropBagTest");
+    RegCloseKey(hKey);
+}
+
 START_TEST(SHPropertyBag)
 {
     SHPropertyBag_ReadTest();
     SHPropertyBag_WriteTest();
     SHPropertyBag_OnMemory();
+    SHPropertyBag_OnRegKey();
 }
