@@ -195,8 +195,8 @@ XHCI_InitController(
      * a 64-byte boundary or *weird*
      * things may happen.
      */
-    ASSERT((DcbaaBasePA & 0x3F) == 0 && "Dcbaa unaligned");
-    ASSERT((CommandRingBasePA & 0x3F) == 0 && "Command ring unaligned");
+    NT_ASSERTMSG("Dcbaa unaligned", (DcbaaBasePA & 0x3F) == 0);
+    NT_ASSERTMSG("Command ring unaligned", (CommandRingBasePA & 0x3F) == 0);
 
     WRITE_REGISTER_ULONG(&OperRegisters->DcbaaPtr, DcbaaBasePA);
     WRITE_REGISTER_ULONG(&OperRegisters->CmdRingControl, CommandRingBasePA);
