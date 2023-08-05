@@ -1060,7 +1060,6 @@ protected:
     static const GUID *FileTypeFromExtension(LPCTSTR dotext)
     {
         CImage dummy; // HACK: Initialize common
-
         UINT cEncoders = 0;
         Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
 
