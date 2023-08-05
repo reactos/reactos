@@ -125,7 +125,7 @@ set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 set_subsystem(kernel32 console)
 ################# END  HACK #################
 
-target_link_libraries(kernel32 kernel32_shared wine chkstk ${PSEH_LIB})
+target_link_libraries(kernel32 kernel32_vista_static kernel32_shared wine chkstk ${PSEH_LIB})
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)
