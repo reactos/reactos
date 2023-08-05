@@ -40,7 +40,7 @@ MPSTATUS
 NTAPI
 XHCI_RH_GetStatus(
     _In_ PVOID XhciExtension,
-    _In_ PUSHORT Status)
+    _Out_ PUSHORT Status)
 {
     DPRINT("XHCI_RH_GetStatus: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
