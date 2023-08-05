@@ -324,7 +324,7 @@ HRESULT CRegPropertyBag::_ReadString(LPCWSTR pszPropName, VARIANTARG *pvarg, UIN
         return E_OUTOFMEMORY;
 
     V_VT(pvarg) = VT_BSTR;
-    LONG error = SHGetValueW(m_hKey, NULL, pszPropName, NULL, bstr, &len);
+    LONG error = SHGetValueW(m_hKey, NULL, pszPropName, NULL, bstr, (LPDWORD)&len);
     if (error)
     {
         ::VariantClear(pvarg);
