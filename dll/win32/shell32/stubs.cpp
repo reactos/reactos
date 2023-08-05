@@ -25,36 +25,6 @@ ShortSizeFormatW(LONGLONG llNumber)
     return NULL;
 }
 
-/*************************************************************************
- *  SHFindComputer [SHELL32.91]
- *
- * Invokes the shell search in My Computer. Used in SHFindFiles.
- * Two parameters are ignored.
- */
-EXTERN_C BOOL
-WINAPI
-SHFindComputer(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSavedSearch)
-{
-    UNREFERENCED_PARAMETER(pidlRoot);
-    UNREFERENCED_PARAMETER(pidlSavedSearch);
-
-    TRACE("%p %p\n", pidlRoot, pidlSavedSearch);
-
-    IContextMenu *pCM;
-    HRESULT hr = CoCreateInstance(CLSID_ShellSearchExt, 0, CLSCTX_INPROC_SERVER,
-                                  IID_IContextMenu, (void **)&pCM);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    CMINVOKECOMMANDINFO InvokeInfo = { sizeof(InvokeInfo) };
-    InvokeInfo.lpParameters = "{996E1EB1-B524-11D1-9120-00A0C98BA67D}";
-    InvokeInfo.nShow = SW_SHOWNORMAL;
-    hr = pCM->InvokeCommand(&InvokeInfo);
-    pCM->Release();
-
-    return SUCCEEDED(hr);
-}
-
 /*
  * Unimplemented
  */
