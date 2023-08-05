@@ -67,7 +67,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
 
     wszDstPath[lstrlenW(wszDstPath) + 1] = UNICODE_NULL;
 
-    /* Set TRUE to bRenameOnCollision if necesssary */
+    /* Set bRenameOnCollision to TRUE if necesssary */
     if (bCopy)
     {
         WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
