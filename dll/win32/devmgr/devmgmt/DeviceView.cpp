@@ -135,7 +135,7 @@ CDeviceView::OnDoubleClick(
     GetCursorPos(&hitInfo.pt);
     ScreenToClient(m_hTreeView, &hitInfo.pt);
 
-    // Check if we are trying to double click an item
+    // Check if we are trying to double-click an item
     hItem = TreeView_HitTest(m_hTreeView, &hitInfo);
     if (hItem != NULL && (hitInfo.flags & (TVHT_ONITEM | TVHT_ONITEMICON)))
     {
