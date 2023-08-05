@@ -478,7 +478,7 @@ static void SHPropertyBag_OnRegKey(void)
     RegDeleteKeyW(hKey, L"PropBagTest");
     hr = SHCreatePropertyBagOnRegKey(hKey, L"PropBagTest", 0,
                                      IID_IPropertyBag, (void **)&pPropBag);
-    ok_long(hr, 0x80070002);
+    ok_long(hr, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND));
 
     // Try to create new registry key
     RegDeleteKeyW(hKey, L"PropBagTest");
