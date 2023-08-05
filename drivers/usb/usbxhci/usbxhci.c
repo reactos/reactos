@@ -187,7 +187,7 @@ XHCI_InitController(
     DcbaaBasePA = (ULONG)BasePA + FIELD_OFFSET(XHCI_HC_RESOURCES, Dcbaa);
     CommandRingBasePA = (ULONG)BasePA + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing);
 
-    RtlZeroMemory(HcResources, sizeof(XHCI_HC_RESOURCES));
+    RtlZeroMemory(HcResources, sizeof(*HcResources));
 
     /*
      * Ensure our Dcbaa + other
@@ -518,7 +518,7 @@ DriverEntry(
 {
     DPRINT("DriverEntry: DriverObject - %p, RegistryPath - %wZ\n", DriverObject, RegistryPath);
 
-    RtlZeroMemory(&RegPacket, sizeof(USBPORT_REGISTRATION_PACKET));
+    RtlZeroMemory(&RegPacket, sizeof(RegPacket));
     RegPacket.MiniPortVersion = USB_MINIPORT_VERSION_XHCI;
     RegPacket.StartController = XHCI_StartController;
     RegPacket.StopController = XHCI_StopController;
