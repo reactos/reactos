@@ -1,4 +1,5 @@
 #define WIN32_NO_STATUS
+#define _NTSYSTEM_
 #include <windef.h>
 
 #ifndef PRIx64
