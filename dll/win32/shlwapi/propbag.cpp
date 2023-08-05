@@ -318,7 +318,7 @@ HRESULT CRegPropertyBag::_ReadDword(LPCWSTR pszPropName, VARIANT *pvari)
 
 HRESULT CRegPropertyBag::_ReadString(LPCWSTR pszPropName, VARIANTARG *pvarg, UINT len)
 {
-    BSTR bstr = ::SysAllocStringByteLen(0, len);
+    BSTR bstr = ::SysAllocStringByteLen(NULL, len);
     V_BSTR(pvarg) = bstr;
     if (!bstr)
         return E_OUTOFMEMORY;
