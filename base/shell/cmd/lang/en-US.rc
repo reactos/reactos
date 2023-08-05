@@ -121,7 +121,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
   /S    Delete file from all sub directory\n\
   /A    Select files to be deleted based on attributes.\n\
         attributes\n\
-        R     Read Only files\n\
+        R     Read-only files\n\
         S     System files\n\
         A     Archiveable files\n\
         H     Hidden Files\n\
