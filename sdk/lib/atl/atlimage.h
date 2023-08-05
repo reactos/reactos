@@ -811,7 +811,7 @@ public:
         DWORD dwExclude = excludeDefaultLoad,
         TCHAR chSeparator = TEXT('|'))
     {
-        CImage dummy; // Initialize common
+        CImage dummy; // HACK: Initialize common
         UINT cDecoders = 0;
         Gdiplus::ImageCodecInfo* pDecoders = _getAllDecoders(cDecoders);
         HRESULT hr = BuildCodecFilterString(pDecoders,
@@ -832,7 +832,7 @@ public:
         DWORD dwExclude = excludeDefaultSave,
         TCHAR chSeparator = TEXT('|'))
     {
-        CImage dummy; // Initialize common
+        CImage dummy; // HACK: Initialize common
         UINT cEncoders = 0;
         Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
         HRESULT hr = BuildCodecFilterString(pEncoders,
@@ -1059,7 +1059,7 @@ protected:
     // Deprecated. Don't use this
     static const GUID *FileTypeFromExtension(LPCTSTR dotext)
     {
-        CImage dummy; // Initialize common
+        CImage dummy; // HACK: Initialize common
 
         UINT cEncoders = 0;
         Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
@@ -1115,7 +1115,7 @@ protected:
     // Deprecated. Don't use this
     static bool GetClsidFromFileType(CLSID *clsid, const GUID *guid)
     {
-        CImage dummy; // Initialize common
+        CImage dummy; // HACK: Initialize common
         UINT cEncoders = 0;
         Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
         *clsid = FindCodecForFileType(*guid, pEncoders, cEncoders);
