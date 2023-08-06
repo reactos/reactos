@@ -613,6 +613,7 @@ CInternetToolbar::CInternetToolbar()
     fMenuCallback = new CComObject<CMenuCallback>();
     fToolbarWindow = NULL;
     fAdviseCookie = 0;
+    pSettings = NULL;
 }
 
 CInternetToolbar::~CInternetToolbar()
@@ -970,7 +971,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ResizeBorderDW(LPCRECT prcBorder,
     ::GetWindowRect(fMainReBar, &availableBorderSpace);
     neededBorderSpace.left = 0;
     neededBorderSpace.top = availableBorderSpace.bottom - availableBorderSpace.top;
-    if (pSettings->fLocked && !pSettings->fLocked)
+    if (pSettings && !pSettings->fLocked)
         neededBorderSpace.top += 3;
     neededBorderSpace.right = 0;
     neededBorderSpace.bottom = 0;
