@@ -922,7 +922,7 @@ void QMyMainWindow::MemuClicked(int MenuID)
     rdp_send_input(0, RDP_INPUT_SCANCODE, RDP_KEYRELEASE, 0x1d, 0); // control
     rdp_send_input(0, RDP_INPUT_SCANCODE, RDP_KEYRELEASE, 0x38, 0); // alt
   }
-  else if (MenuID == 4) // double-click
+  else if (MenuID == 4) // double click
   {
     rdp_send_input(0, RDP_INPUT_MOUSE, MOUSE_FLAG_DOWN | MOUSE_FLAG_BUTTON1,
                    rd(c2sx(mx)), rd(c2sy(my)));
