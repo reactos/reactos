@@ -575,8 +575,24 @@ static void SHPropertyBag_OnRegKey(void)
                                      IID_IPropertyBag2, (void **)&pPropBag);
     ok_long(hr, S_OK);
 
-    if (pPropBag)
-        pPropBag->Release();
+    // Write UI4
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UI4;
+    V_UI4(&vari) = 0xDEADFACE;
+    hr = pPropBag->Write(L"Name3", &vari);
+    ok_long(hr, E_NOTIMPL);
+    VariantClear(&vari);
+
+    // Read UI4
+    VariantInit(&vari);
+    V_UI4(&vari) = 0xFEEDF00D;
+    hr = pPropBag->Read(L"Name3", &vari, NULL);
+    ok_long(hr, E_NOTIMPL);
+    ok_long(V_VT(&vari), VT_EMPTY);
+    ok_long(V_UI4(&vari), 0xFEEDF00D);
+    VariantClear(&vari);
+
+    pPropBag->Release();
 
     // Clean up
     RegDeleteKeyW(hKey, L"PropBagTest");
