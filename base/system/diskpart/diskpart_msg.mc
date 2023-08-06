@@ -140,10 +140,10 @@ Sintaxă:  ACTIVE
     Atenție:
 
         DiskPart doar verifică dacă partiția este capabilă să conțină fișierele
-		de pornire ale sistemului de operare. DiskPart nu verifică coținutul
-		partiției. Dacă ați marcat în mod eronat o partiție ca activă și nu conține
-		fișierele de pornire ale sistemului de operare, calculatorul dumneavostră
-		ar putea să nu pornească.
+        de pornire ale sistemului de operare. DiskPart nu verifică coținutul
+        partiției. Dacă ați marcat în mod eronat o partiție ca activă și nu
+        conține fișierele de pornire ale sistemului de operare, calculatorul
+        dumneavostră ar putea să nu pornească.
 
 De exemplu:
 
@@ -585,13 +585,14 @@ Sintaxă:  CLEAN [ALL]
     ALL         Specifică faptul că fiecare octet/sector de pe disc este setat
                 pe zero, ceea ce șterge complet toate datele conținute pe disc.
 
-    Pe discurile de inițializare de maestru (MBR), sunt suprascrise numai
-	informațiile despre partiționarea MBR și informațiile despre sectoarele
+    Pe discurile cu Registrul principal de inițializare (MBR), sunt suprascrise
+	numai informațiile despre partiționarea MBR și informațiile despre sectoarele
 	ascunse. Pe discurile cu tabel de partiție GUID (GPT), informațiile de
-	partiționare GPT, incluzând MBR protectiv, sunt suprascrise. Dacă parametrul
-	ALL nu e folosit, primul 1MO și ultimul 1MO al discului sunt puse la valoarea
-	zero. Aceasta șterge orice formatare a discului ce a fost aplicată anterior
-	discului. Starea discului după ce este curățat discul este 'NEINIȚIALIZAT'.
+    partiționare GPT, incluzând MBR protectiv, sunt suprascrise. Dacă
+    parametrul ALL nu e folosit, primul 1 Mo și ultimul 1 Mo al discului sunt
+    puse la valoarea zero. Aceasta șterge orice formatare a discului ce a fost
+    aplicată anterior discului. Starea discului după ce este curățat discul
+    este 'NEINIȚIALIZAT'.
 
 De exemplu:
 
@@ -973,35 +974,35 @@ Example:
     CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Romanian
-    Crează o partiție extinsă pe discul cu focalizare.
-    Se aplică doar la discurile cu Înregistrarea de inițializare de maestru (MBR).
+    Crează o partiție extinsă pe discul în cauză.
+    Se aplică doar la discurile cu Registrul principal de inițializare (MBR).
 
 Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    Mărimea partiției în megaocteți (MB). Dacă nu este dată nicio
-	            mărime, partiția continuă pânăcând nu mai este spațiu liber în
-				partiția extinsă.
+    SIZE=<N>    Mărimea partiției în megaocteți (Mo). Dacă nu este dată nicio
+                mărime, partiția continuă până când nu mai este spațiu liber
+                în partiția extinsă.
 
     OFFSET=<N>  Decalajul, în kiloocteți (KB), la care partiția este creată.
 	            Dacă nu este dat niciun decalaj, partiția va începe de la
-				începutul primului spațiu liber de pe disc ce este suficient de mare ca
+				primul spațiu liber de pe disc ce este suficient de mare ca
 				să țină noua partiție.
 
-    ALIGN=<N>   Folosit de obicei cu dispozitiv cu matrici de Număr de unitate
+    ALIGN=<N>   Folosit de obicei cu matrici de dispozitive cu Număr de unitate
 	            logică RAID (LUN) pentru a îmbunătăți performanța. Decalajul
 				partiției va fi un multiplu a lui <N>. Dacă este specificat parametrul
 				OFFSET, va fi rotunjit la cel mai apropiat multiplu a lui <N>.
 
-    NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
-	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
-				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
-				cu un cod de eroare.
+    NOERR       Doar pentru scriere de automatizări. Când apare o eroare,
+	            DiskPart continuă să proceseze comenzi ca și când eroarea nu ar fi
+                apărut. Fără parametrul NOERR, o eroare cauzează DiskPart
+                să se închidă cu un cod de eroare.
 
-    După ce a fost creată partiția, focalizarea se mută automat pe noua
-	partiție. Doar o singură partiție extinsă poate fi creată pe un disc. Această
-	comandă eșuează dacă încercați să creați o partiție extinsă într-o altă
-	partiție extinsă. Trebuie să creați o partiție extinsă înainte de a crea
-	partițiile logice.
+    După ce a fost creată partiția, marcajul se mută automat pe noua
+    partiție. Doar o singură partiție extinsă poate fi creată pe un disc.
+	Această comandă eșuează dacă încercați să creați o partiție extinsă
+	înainte de a crea partițiile logice într-o altă partiție extinsă.
+    Trebuie să creați o partiție extinsă.
 
     Un disc MBR de bază trebuie să fie selectat pentru ca această operațiune să aibă succes.
 
