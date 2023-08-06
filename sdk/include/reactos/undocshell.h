@@ -653,6 +653,9 @@ BOOL WINAPI GUIDFromStringW(
     _Out_  LPGUID pguid
     );
 
+LPSTR WINAPI SheRemoveQuotesA(LPSTR psz);
+LPWSTR WINAPI SheRemoveQuotesW(LPWSTR psz);
+
 /*****************************************************************************
  * Shell32 resources
  */

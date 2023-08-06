@@ -1940,7 +1940,7 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
             {
                 size_t cchFrom = PathAddBackslashW(szFrom) - szFrom;
                 size_t cchTo = PathAddBackslashW(szTo) - szTo;
-                if (cchFrom <= cchTo)
+                if (cchFrom < cchTo)
                 {
                     WCHAR ch = szTo[cchFrom];
                     szTo[cchFrom] = 0;

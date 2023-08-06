@@ -443,28 +443,6 @@ SheSetCurDrive(INT iIndex)
 /*
  * Unimplemented
  */
-EXTERN_C LPWSTR
-WINAPI
-SheRemoveQuotesW(LPWSTR lpInput)
-{
-    FIXME("SheRemoveQuotesW() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C LPSTR
-WINAPI
-SheRemoveQuotesA(LPSTR lpInput)
-{
-    FIXME("SheRemoveQuotesA() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C INT
 WINAPI
 SheGetPathOffsetW(LPWSTR lpPath)

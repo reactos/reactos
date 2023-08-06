@@ -24,82 +24,80 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-/****************************************************************************
- * BuildPathsList
- *
- * Builds a list of paths like the one used in SHFileOperation from a table of
- * PIDLs relative to the given base folder
- */
-static WCHAR* BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls)
-{
-    WCHAR *pwszPathsList = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) * cidl + 1);
-    WCHAR *pwszListPos = pwszPathsList;
-
-    for (int i = 0; i < cidl; i++)
-    {
-        FileStructW* pDataW = _ILGetFileStructW(pidls[i]);
-        if (!pDataW)
-        {
-            ERR("Mistreating a pidl:\n");
-            pdump_always(pidls[i]);
-            continue;
-        }
-
-        PathCombineW(pwszListPos, wszBasePath, pDataW->wszName);
-        pwszListPos += wcslen(pwszListPos) + 1;
-    }
-    *pwszListPos = 0;
-    return pwszPathsList;
-}
 
 /****************************************************************************
  * CFSDropTarget::_CopyItems
  *
- * copies items to this folder
- * FIXME: We should not ask the parent folder: 'What is your path', and then manually build paths assuming everything is a simple pidl!
- * We should be asking the parent folder: Give me a full name for this pidl (for each child!)
+ * copies or moves items to this folder
  */
 HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
                                   LPCITEMIDLIST * apidl, BOOL bCopy)
 {
-    LPWSTR pszSrcList;
-    HRESULT hr;
-    WCHAR wszTargetPath[MAX_PATH + 1];
-
-    wcscpy(wszTargetPath, m_sPathTarget);
-    //Double NULL terminate.
-    wszTargetPath[wcslen(wszTargetPath) + 1] = '\0';
-
-    TRACE ("(%p)->(%p,%u,%p)\n", this, pSFFrom, cidl, apidl);
-
-    STRRET strretFrom;
-    hr = pSFFrom->GetDisplayNameOf(NULL, SHGDN_FORPARSING, &strretFrom);
-    if (hr != S_OK)
-        return hr;
-
-    pszSrcList = BuildPathsList(strretFrom.pOleStr, cidl, apidl);
-    TRACE("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(m_sPathTarget), bCopy);
-    CoTaskMemFree(strretFrom.pOleStr);
-    if (!pszSrcList)
+    HRESULT ret;
+    WCHAR wszDstPath[MAX_PATH + 1] = {0};
+    PWCHAR pwszSrcPathsList = (PWCHAR) HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) * cidl + 1);
+    if (!pwszSrcPathsList)
         return E_OUTOFMEMORY;
 
-    SHFILEOPSTRUCTW op = {0};
-    op.pFrom = pszSrcList;
-    op.pTo = wszTargetPath;
-    op.hwnd = m_hwndSite;
-    op.wFunc = bCopy ? FO_COPY : FO_MOVE;
-    op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+    PWCHAR pwszListPos = pwszSrcPathsList;
+    STRRET strretFrom;
+    SHFILEOPSTRUCTW fop;
+    BOOL bRenameOnCollision = FALSE;
 
-    int res = SHFileOperationW(&op);
-
-    HeapFree(GetProcessHeap(), 0, pszSrcList);
-
-    if (res)
+    /* Build a double null terminated list of C strings from source paths */
+    for (UINT i = 0; i < cidl; i++)
     {
-        ERR("SHFileOperationW failed with 0x%x\n", res);
-        return E_FAIL;
+        ret = pSFFrom->GetDisplayNameOf(apidl[i], SHGDN_FORPARSING, &strretFrom);
+        if (FAILED(ret))
+            goto cleanup;
+
+        ret = StrRetToBufW(&strretFrom, NULL, pwszListPos, MAX_PATH);
+        if (FAILED(ret))
+            goto cleanup;
+
+        pwszListPos += lstrlenW(pwszListPos) + 1;
     }
-    return S_OK;
+    /* Append the final null. */
+    *pwszListPos = L'\0';
+
+    /* Build a double null terminated target (this path) */
+    ret = StringCchCopyW(wszDstPath, MAX_PATH, m_sPathTarget);
+    if (FAILED(ret))
+        goto cleanup;
+
+    wszDstPath[lstrlenW(wszDstPath) + 1] = UNICODE_NULL;
+
+    /* Set bRenameOnCollision to TRUE if necesssary */
+    if (bCopy)
+    {
+        WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+        GetFullPathNameW(pwszSrcPathsList, _countof(szPath1), szPath1, NULL);
+        GetFullPathNameW(wszDstPath, _countof(szPath2), szPath2, NULL);
+        PathRemoveFileSpecW(szPath1);
+        if (_wcsicmp(szPath1, szPath2) == 0)
+            bRenameOnCollision = TRUE;
+    }
+
+    ZeroMemory(&fop, sizeof(fop));
+    fop.hwnd = m_hwndSite;
+    fop.wFunc = bCopy ? FO_COPY : FO_MOVE;
+    fop.pFrom = pwszSrcPathsList;
+    fop.pTo = wszDstPath;
+    fop.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+    if (bRenameOnCollision)
+        fop.fFlags |= FOF_RENAMEONCOLLISION;
+
+    ret = S_OK;
+
+    if (SHFileOperationW(&fop))
+    {
+        ERR("SHFileOperationW failed\n");
+        ret = E_FAIL;
+    }
+
+cleanup:
+    HeapFree(GetProcessHeap(), 0, pwszSrcPathsList);
+    return ret;
 }
 
 CFSDropTarget::CFSDropTarget():

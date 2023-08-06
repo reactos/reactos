@@ -24,6 +24,7 @@ list(APPEND SOURCE
 
 list(APPEND PCH_SKIP_SOURCE
     assoc.c
+    propbag.cpp
     wsprintf.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c)
 
@@ -36,7 +37,9 @@ add_library(shlwapi MODULE
 
 # our C++ atlbase.h conflicts with the one from wine, so only use wine includes for C
 # Unfortunately, we can't use different includes for C & C++ in VS generator, so use an object library to achieve this
-target_include_directories(shlwapi BEFORE PRIVATE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+target_include_directories(shlwapi BEFORE PRIVATE
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 add_library(shlwapi_autocomp OBJECT autocomp.cpp)
 target_link_libraries(shlwapi_autocomp PRIVATE atl_classes)
