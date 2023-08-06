@@ -250,11 +250,11 @@ HRESULT CDockSite::GetRBBandInfo(REBARBANDINFOW &bandInfo)
         bandInfo.fStyle |= RBBS_BREAK;
     if (fDeskBandInfo.dwModeFlags & DBIMF_TOPALIGN)
         bandInfo.fStyle |= RBBS_TOPALIGN;
-    if (fFlags & ITF_NOGRIPPER || gSettings.fLocked)
+    if (fFlags & ITF_NOGRIPPER || (fToolbar->pSettings && fToolbar->pSettings->fLocked))
         bandInfo.fStyle |= RBBS_NOGRIPPER;
     if (fFlags & ITF_NOTITLE)
         bandInfo.fStyle |= RBBS_HIDETITLE;
-    if (fFlags & ITF_GRIPPERALWAYS && !gSettings.fLocked)
+    if (fFlags & ITF_GRIPPERALWAYS && (fToolbar->pSettings && !fToolbar->pSettings->fLocked))
         bandInfo.fStyle |= RBBS_GRIPPERALWAYS;
     if (fFlags & ITF_FIXEDSIZE)
         bandInfo.fStyle |= RBBS_FIXEDSIZE;
@@ -710,10 +710,10 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
 
 HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
 {
-    if (locked != gSettings.fLocked)
+    if (locked != pSettings->fLocked)
     {
-        gSettings.fLocked = locked;
-        gSettings.Save();
+        pSettings->fLocked = locked;
+        pSettings->Save();
         RefreshLockedToolbarState();
         // TODO: refresh view menu?
     }
@@ -736,9 +736,9 @@ void CInternetToolbar::RefreshLockedToolbarState()
         if (dockSite != NULL)
         {
             rebarBandInfo.fStyle &= ~(RBBS_NOGRIPPER | RBBS_GRIPPERALWAYS);
-            if (dockSite->fFlags & CDockSite::ITF_NOGRIPPER || gSettings.fLocked)
+            if (dockSite->fFlags & CDockSite::ITF_NOGRIPPER || pSettings->fLocked)
                 rebarBandInfo.fStyle |= RBBS_NOGRIPPER;
-            if (dockSite->fFlags & CDockSite::ITF_GRIPPERALWAYS && !gSettings.fLocked)
+            if (dockSite->fFlags & CDockSite::ITF_GRIPPERALWAYS && !pSettings->fLocked)
                 rebarBandInfo.fStyle |= RBBS_GRIPPERALWAYS;
             SendMessage(fMainReBar, RB_SETBANDINFOW, x, (LPARAM)&rebarBandInfo);
         }
@@ -971,7 +971,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ResizeBorderDW(LPCRECT prcBorder,
     ::GetWindowRect(fMainReBar, &availableBorderSpace);
     neededBorderSpace.left = 0;
     neededBorderSpace.top = availableBorderSpace.bottom - availableBorderSpace.top;
-    if (!gSettings.fLocked)
+    if (pSettings->fLocked && !pSettings->fLocked)
         neededBorderSpace.top += 3;
     neededBorderSpace.right = 0;
     neededBorderSpace.bottom = 0;
@@ -1136,7 +1136,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGrou
                     break;
                 case ITID_TOOLBARLOCKED:    // lock toolbars
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
-                    if (gSettings.fLocked)
+                    if (pSettings->fLocked)
                         prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 default:
@@ -1175,7 +1175,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::Exec(const GUID *pguidCmdGroup, DWOR
                 // run customize
                 return S_OK;
             case ITID_TOOLBARLOCKED:
-                return LockUnlockToolbars(!gSettings.fLocked);
+                return LockUnlockToolbars(!pSettings->fLocked);
         }
     }
     return E_FAIL;
@@ -1717,8 +1717,8 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_ADDRESSBAR, IsBandVisible(ITBBID_ADDRESSBAND) == S_OK);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
-    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, gSettings.fLocked);
-    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_GOBUTTON, gSettings.fShowGoButton);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, pSettings->fLocked);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_GOBUTTON, pSettings->fShowGoButton);
 
     // TODO: use GetSystemMetrics(SM_MENUDROPALIGNMENT) to determine menu alignment
     command = TrackPopupMenu(contextMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
@@ -1734,7 +1734,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
         case IDM_TOOLBARS_LINKSBAR: // links
             break;
         case IDM_TOOLBARS_LOCKTOOLBARS: // lock the toolbars
-            LockUnlockToolbars(!gSettings.fLocked);
+            LockUnlockToolbars(!pSettings->fLocked);
             break;
         case IDM_TOOLBARS_CUSTOMIZE:    // customize
             SendMessage(fToolbarWindow, TB_CUSTOMIZE, 0, 0);
@@ -1839,7 +1839,7 @@ LRESULT CInternetToolbar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 LRESULT CInternetToolbar::OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     bHandled = FALSE;
-    if (gSettings.fLocked)
+    if (pSettings->fLocked)
         return 0;
 
     if (wParam & MK_CONTROL)
@@ -1920,6 +1920,9 @@ LRESULT CInternetToolbar::OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam
 
 LRESULT CInternetToolbar::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (!pSettings)
+        pSettings = (BrowseUISettings*)lParam;
+
     /* Refresh toolbar locked state */
     RefreshLockedToolbarState();
 

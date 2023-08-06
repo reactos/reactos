@@ -92,6 +92,7 @@ public:
     BOOL                                    fSizing;
     POINT                                   fStartPosition;
     LONG                                    fStartHeight;
+    BrowseUISettings                        *pSettings;
 public:
     CInternetToolbar();
     virtual ~CInternetToolbar();

@@ -318,14 +318,14 @@ public:
         return CComObjectRootEx<CComMultiThreadModelNoCS>::InternalRelease();
     }
 #endif
-
+    BrowseUISettings m_settings;
     CShellBrowser();
     ~CShellBrowser();
     HRESULT Initialize();
 public:
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
-        FOLDERSETTINGS *folderSettings, long flags);
+                         FOLDERSETTINGS *folderSettings, long flags);
     HRESULT GetMenuBand(REFIID riid, void **shellMenu);
     HRESULT GetBaseBar(bool vertical, REFIID riid, void **theBaseBar);
     BOOL IsBandLoaded(const CLSID clsidBand, bool verticali, DWORD *pdwBandID);
@@ -715,7 +715,7 @@ CShellBrowser::CShellBrowser()
     fHistoryObject = NULL;
     fHistoryStream = NULL;
     fHistoryBindContext = NULL;
-    gSettings.Load();
+    m_settings.Load();
 }
 
 CShellBrowser::~CShellBrowser()
@@ -786,10 +786,11 @@ HRESULT CShellBrowser::Initialize()
     fToolbarProxy.Initialize(m_hWnd, clientBar);
 
     LoadCabinetState();
+    ::SendMessage(fClientBars[BIInternetToolbar].hwnd, BWM_SETTINGCHANGE, 0, (LPARAM)&m_settings);
 
     // create status bar
     DWORD dwStatusStyle = WS_CHILD | WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS;
-    if (gSettings.fStatusBarVisible)
+    if (m_settings.fStatusBarVisible)
         dwStatusStyle |= WS_VISIBLE;
     fStatusBar = ::CreateWindowExW(0, STATUSCLASSNAMEW, NULL, dwStatusStyle,
                                    0, 0, 500, 20, m_hWnd, (HMENU)IDC_STATUSBAR,
@@ -797,7 +798,6 @@ HRESULT CShellBrowser::Initialize()
 
     ShowWindow(SW_SHOWNORMAL);
     UpdateWindow();
-    OpenWindows.Add(m_hWnd);
 
     return S_OK;
 }
@@ -1437,7 +1437,6 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     pThis->m_pCurrentMsg = previousMessage;
     if (previousMessage == NULL && (pThis->m_dwState & WINSTATE_DESTROYED) != 0)
     {
-        OpenWindows.Remove(pThis->m_hWnd);
         pThis->m_dwState &= ~WINSTATE_DESTROYED;
         pThis->m_hWnd = NULL;
         pThis->OnFinalMessage(hWnd);
@@ -1453,7 +1452,7 @@ void CShellBrowser::RepositionBars()
 
     GetClientRect(&clientRect);
 
-    if (gSettings.fStatusBarVisible && fStatusBar)
+    if (m_settings.fStatusBarVisible && fStatusBar)
     {
         ::GetWindowRect(fStatusBar, &statusRect);
         ::SetWindowPos(fStatusBar, NULL, clientRect.left, clientRect.bottom - (statusRect.bottom - statusRect.top),
@@ -1756,7 +1755,7 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
         menuItemInfo.hSubMenu = toolbarMenu;
         SetMenuItemInfo(theMenu, IDM_VIEW_TOOLBARS, FALSE, &menuItemInfo);
     }
-    SHCheckMenuItem(theMenu, IDM_VIEW_STATUSBAR, gSettings.fStatusBarVisible ? TRUE : FALSE);
+    SHCheckMenuItem(theMenu, IDM_VIEW_STATUSBAR, m_settings.fStatusBarVisible ? TRUE : FALSE);
 }
 
 HRESULT CShellBrowser::BuildExplorerBandMenu()
@@ -3680,8 +3679,9 @@ LRESULT CShellBrowser::OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWnd
 
 LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    gSettings.fStatusBarVisible = !gSettings.fStatusBarVisible;
-    gSettings.Save();
+    m_settings.fStatusBarVisible = !m_settings.fStatusBarVisible;
+    m_settings.Save();
+    ::SendMessage(m_hWnd, BWM_SETTINGCHANGE, 0, 0);
     return 0;
 }
 
@@ -3789,12 +3789,12 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CShellBrowser::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     /* Refresh child windows */
-    SHPropagateMessage(m_hWnd, uMsg, wParam, lParam, TRUE);
+    ::SendMessage(fClientBars[BIInternetToolbar].hwnd, BWM_SETTINGCHANGE, 0, (LPARAM)&m_settings);
 
     /* Refresh status bar */
     if (fStatusBar)
     {
-        ::ShowWindow(fStatusBar, gSettings.fStatusBarVisible ? SW_SHOW : SW_HIDE);
+        ::ShowWindow(fStatusBar, m_settings.fStatusBarVisible ? SW_SHOW : SW_HIDE);
         RepositionBars();
     }
 

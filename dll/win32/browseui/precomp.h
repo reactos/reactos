@@ -37,6 +37,7 @@
 #include <wine/debug.h>
 
 #include "resource.h"
+struct BrowseUISettings;
 
 #include "ACLCustomMRU.h"
 #include "aclhistory.h"
@@ -72,12 +73,8 @@ struct BrowseUISettings
     BOOL fShowGoButton = FALSE;
     BOOL fStatusBarVisible = FALSE;
 
-    BOOL Load();
     BOOL Save();
+    BOOL Load();
 };
-
-extern BrowseUISettings gSettings;
-extern CSimpleArray<HWND> OpenWindows;
-void PropagateSettingChange();
 
 #endif /* _BROWSEUI_PCH_ */
