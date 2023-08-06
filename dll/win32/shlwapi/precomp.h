@@ -20,7 +20,6 @@
 #include <wingdi.h>
 #include <wincon.h>
 #include <winternl.h>
-#define NO_SHLWAPI_STREAM
 #define NO_SHLWAPI_USER
 #include <shlwapi.h>
 #include <shlobj.h>

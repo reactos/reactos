@@ -468,7 +468,7 @@
 468 stub -noname RunIndirectRegCommand
 469 stub -noname RunRegCommand
 470 stub -noname IUnknown_ProfferServiceOld
-471 stdcall -noname SHCreatePropertyBagOnRegKey(long wstr long ptr ptr)
+471 stdcall -noname SHCreatePropertyBagOnRegKey(ptr wstr long ptr ptr)
 472 stub -noname SHCreatePropertyBagOnProfileSelection
 473 stub -noname SHGetIniStringUTF7W
 474 stub -noname SHSetIniStringUTF7W
