@@ -219,6 +219,12 @@ Used Version: 4.1
 License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
 URL: https://github.com/dosfstools/dosfstools
 
+Title: Microsoft Windows Driver Frameworks (WDF)
+Path: sdk/lib/drivers/wdf
+Used Version: git commit d9c6040
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://github.com/microsoft/Windows-Driver-Frameworks
+
 Title: libmpg123 (used by winemp3.acm)
 Path: sdk/lib/3rdparty/libmpg123
 Used Version: 1.26.1
