@@ -247,11 +247,7 @@ SHCreatePropertyBagOnMemory(_In_ DWORD dwMode, _In_ REFIID riid, _Out_ void **pp
 
     CComPtr<CMemPropertyBag> pMemBag(new CMemPropertyBag(dwMode));
 
-    HRESULT hr = pMemBag->QueryInterface(riid, ppvObj);
-    if (FAILED(hr))
-        ERR("0x%08X %s\n", hr, debugstr_guid(&riid));
-
-    return hr;
+    return pMemBag->QueryInterface(riid, ppvObj);
 }
 
 class CRegPropertyBag : public CBasePropertyBag
