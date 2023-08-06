@@ -34,19 +34,19 @@ USBPORT_REGISTRATION_PACKET RegPacket;
 POLLSTATUS
 NTAPI
 XHCI_PollTimeout(
-    _In_ PLARGE_INTEGER CurrentTime,
     _In_ PLARGE_INTEGER EndTime,
     _In_ BOOLEAN Condition)
 {
-    /* Reload the current time */
-    KeQuerySystemTime(CurrentTime);
+    LARGE_INTEGER CurrentTime;
+
+    KeQuerySystemTime(&CurrentTime);
 
     if (Condition)
     {
         return POLL_STATUS_DONE;
     }
 
-    if (CurrentTime->QuadPart >= EndTime->QuadPart)
+    if (CurrentTime.QuadPart >= EndTime->QuadPart)
     {
         return POLL_STATUS_TIMEOUT;
     }
@@ -62,7 +62,6 @@ XHCI_HaltController(_In_ PXHCI_HC_OPER_REGS OperRegisters)
     XHCI_USB_STATUS Status;
     XHCI_USB_COMMAND Command;
     LARGE_INTEGER EndTime;
-    LARGE_INTEGER CurrentTime;
     BOOLEAN IsPolling;
 
     /* Don't halt if Status.HCHalted is set */
@@ -97,7 +96,7 @@ XHCI_HaltController(_In_ PXHCI_HC_OPER_REGS OperRegisters)
     while (IsPolling)
     {
         Status.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbStatus.AsULONG);
-        switch (XHCI_PollTimeout(&CurrentTime, &EndTime, Status.HcHalted))
+        switch (XHCI_PollTimeout(&EndTime, Status.HcHalted))
         {
             case POLL_STATUS_DONE:
                 IsPolling = FALSE;
@@ -119,7 +118,6 @@ XHCI_ResetController(_In_ PXHCI_HC_OPER_REGS OperRegisters)
     XHCI_USB_COMMAND Command;
     XHCI_USB_STATUS Status;
     LARGE_INTEGER EndTime;
-    LARGE_INTEGER CurrentTime;
     BOOLEAN IsPolling;
 
     Command.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbCmd.AsULONG);
@@ -145,7 +143,7 @@ XHCI_ResetController(_In_ PXHCI_HC_OPER_REGS OperRegisters)
     while (IsPolling)
     {
         Status.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbStatus.AsULONG);
-        switch (XHCI_PollTimeout(&CurrentTime, &EndTime, !Status.ControllerNotReady))
+        switch (XHCI_PollTimeout(&EndTime, !Status.ControllerNotReady))
         {
             case POLL_STATUS_DONE:
                 IsPolling = FALSE;
@@ -244,7 +242,6 @@ XHCI_StartController(
     XHCI_USB_STATUS Status;
     BOOLEAN IsPolling;
     LARGE_INTEGER EndTime;
-    LARGE_INTEGER CurrentTime;
 
     MPSTATUS RetStatus;
     UCHAR CapLength;
@@ -295,7 +292,7 @@ XHCI_StartController(
     while (IsPolling)
     {
         Status.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbStatus.AsULONG);
-        switch (XHCI_PollTimeout(&CurrentTime, &EndTime, !Status.HcHalted))
+        switch (XHCI_PollTimeout(&EndTime, !Status.HcHalted))
         {
             case POLL_STATUS_DONE:
                 IsPolling = FALSE;
