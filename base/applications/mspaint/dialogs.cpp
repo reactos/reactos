@@ -74,7 +74,7 @@ LRESULT CMirrorRotateDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 
 LRESULT CMirrorRotateDialog::OnRadioButton3(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    if (!IsDlgButtonChecked(IDD_MIRRORROTATERB3) != BST_CHECKED)
+    if (IsDlgButtonChecked(IDD_MIRRORROTATERB3) != BST_CHECKED)
         return 0;
 
     ::EnableWindow(GetDlgItem(IDD_MIRRORROTATERB4), TRUE);
@@ -85,8 +85,8 @@ LRESULT CMirrorRotateDialog::OnRadioButton3(WORD wNotifyCode, WORD wID, HWND hWn
 
 LRESULT CMirrorRotateDialog::OnRadioButton12(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    if (!IsDlgButtonChecked(IDD_MIRRORROTATERB1) != BST_CHECKED &&
-        !IsDlgButtonChecked(IDD_MIRRORROTATERB2) != BST_CHECKED)
+    if (IsDlgButtonChecked(IDD_MIRRORROTATERB1) != BST_CHECKED &&
+        IsDlgButtonChecked(IDD_MIRRORROTATERB2) != BST_CHECKED)
     {
         return 0;
     }
