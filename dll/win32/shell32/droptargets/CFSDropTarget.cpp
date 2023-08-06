@@ -42,6 +42,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     PWCHAR pwszListPos = pwszSrcPathsList;
     STRRET strretFrom;
     SHFILEOPSTRUCTW fop;
+    BOOL bRenameOnCollision = FALSE;
 
     /* Build a double null terminated list of C strings from source paths */
     for (UINT i = 0; i < cidl; i++)
@@ -64,7 +65,18 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     if (FAILED(ret))
         goto cleanup;
 
-    wszDstPath[lstrlenW(wszDstPath) + 1] = L'\0';
+    wszDstPath[lstrlenW(wszDstPath) + 1] = UNICODE_NULL;
+
+    /* Set bRenameOnCollision to TRUE if necesssary */
+    if (bCopy)
+    {
+        WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+        GetFullPathNameW(pwszSrcPathsList, _countof(szPath1), szPath1, NULL);
+        GetFullPathNameW(wszDstPath, _countof(szPath2), szPath2, NULL);
+        PathRemoveFileSpecW(szPath1);
+        if (_wcsicmp(szPath1, szPath2) == 0)
+            bRenameOnCollision = TRUE;
+    }
 
     ZeroMemory(&fop, sizeof(fop));
     fop.hwnd = m_hwndSite;
@@ -72,6 +84,9 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     fop.pFrom = pwszSrcPathsList;
     fop.pTo = wszDstPath;
     fop.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+    if (bRenameOnCollision)
+        fop.fFlags |= FOF_RENAMEONCOLLISION;
+
     ret = S_OK;
 
     if (SHFileOperationW(&fop))
