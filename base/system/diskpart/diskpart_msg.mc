@@ -1002,9 +1002,11 @@ Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
     partiție. Doar o singură partiție extinsă poate fi creată pe un disc.
 	Această comandă eșuează dacă încercați să creați o partiție extinsă
 	înainte de a crea partițiile logice într-o altă partiție extinsă.
-    Trebuie să creați o partiție extinsă.
+    Trebuie să creați o partiție extinsă înainte de a crea
+	partițiile logice.
 
-    Un disc MBR de bază trebuie să fie selectat pentru ca această operațiune să aibă succes.
+    Un disc MBR de bază trebuie să fie selectat pentru ca această operațiune
+    să aibă succes.
 
 De exemplu:
 
@@ -4019,10 +4021,10 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
 
     COMPRESS    Numai pentru formatul NTFS: Fișierele create pe noul volum
 	            vor fi comprimate în mod implicit.
-    OVERRIDE    Forțează sistemul de fișiere to scoată primul dacă e necesar.
+    OVERRIDE    Forțează sistemul de fișiere să scoată primul dacă e necesar.
                 Toate mânerele deschise ale volumului nu ar mai fi valabile.
 
-    DUPLICATE   Numai pentru formatul UDF: Acest steag se aplică formatului
+    DUPLICATE   Numai pentru formatul UDF: Această etichetă se aplică formatului
                 UDF, versiunea 2.5 sau mai nouă. Acest steag intruiește
 				operațiunea de formatare sau dubleze metadatele sistemului de fișiere la
 				cel de al doilea set de sectoare de pe disc. Metadatele dublate sunt
@@ -6482,7 +6484,7 @@ Example:
 .
 Language=Romanian
     Selectează partiția specificată și mută focalizarea pe ea.
-	
+
 Sintaxă:  SELECT PARTITION=<N>
 
     PARTITION=<N>
@@ -6704,16 +6706,17 @@ Language=Romanian
 
 Sintaxă:  SELECT VOLUME={<N> | <D>}
 
-    VOLUME=<N>  Numărul volumului care urmează să primească focalizare.
+    VOLUME=<N>  Numărul volumului care urmează să primească marcaj.
 
     VOLUME=<D>  Litera discului sau calea dosarului montat al volumului
-                ce urmează să primească focalizare.
+                ce urmează să primească marcaj.
 
     Dacă niciun volum nu e specificat, comanda SELECT listează volumul actual
-	cu focalizare. Puteți specififca volumul după număr, litera discului sau calea
-	dosarului montat. Pe un disc de bază, selectarea unui volum oferă, de
-	asemenea, focalizarea corespunzătoare pe partiție. Puteți vizualiza numărul
-	tuturor volumelor din calculator folosind comanda LIST VOLUME.
+	cu marcaj. Puteți specififca volumul după număr, după litera discului sau
+	după calea dosarului montat. Pe un disc de bază, selectarea unui volum
+	oferă, de asemenea, focalizarea corespunzătoare pe partiție. Puteți
+	vizualiza numărul tuturor volumelor din calculator folosind comanda
+    LIST VOLUME.
 
 De exemplu:
 
