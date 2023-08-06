@@ -19,6 +19,13 @@ list(APPEND SOURCE
     uxthemep.h
     ${CMAKE_CURRENT_BINARY_DIR}/uxtheme_stubs.c)
 
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    add_definitions(-DENABLE_PNG_SUPPORT)
+
+    list(APPEND SOURCE
+        pngsup.cpp)
+endif()
+
 add_library(uxtheme MODULE
     ${SOURCE}
     version.rc
@@ -27,6 +34,10 @@ add_library(uxtheme MODULE
 set_module_type(uxtheme win32dll)
 target_link_libraries(uxtheme wine)
 add_delay_importlibs(uxtheme msimg32)
-add_importlibs(uxtheme user32 advapi32 gdi32 msvcrt kernel32 ntdll)
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    add_importlibs(uxtheme user32 advapi32 gdiplus gdi32 shlwapi msvcrt kernel32 ntdll)
+else()
+    add_importlibs(uxtheme user32 advapi32 gdi32 msvcrt kernel32 ntdll)
+endif()
 add_pch(uxtheme uxthemep.h SOURCE)
 add_cd_file(TARGET uxtheme DESTINATION reactos/system32 FOR all)

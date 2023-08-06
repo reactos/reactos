@@ -115,6 +115,20 @@ PUXINI_FILE MSSTYLES_GetThemeIni(PTHEME_FILE tf);
 PTHEME_PARTSTATE MSSTYLES_FindPartState(PTHEME_CLASS tc, int iPartId, int iStateId, PTHEME_CLASS *tcNext);
 PTHEME_PROPERTY MSSTYLES_FindProperty(PTHEME_CLASS tc, int iPartId, int iStateId, int iPropertyPrimitive, int iPropertyId);
 PTHEME_PROPERTY MSSTYLES_FindMetric(PTHEME_FILE tf, int iPropertyPrimitive, int iPropertyId);
+#ifdef ENABLE_PNG_SUPPORT
+EXTERN_C
+BOOL
+MSSTYLES_TryLoadPng(
+    _In_ HINSTANCE hTheme,
+    _In_ LPCWSTR szFile,
+    _In_ LPCWSTR type,
+    _Out_ HBITMAP *phBitmap);
+EXTERN_C
+BOOL
+prepare_png_alpha(
+    _In_ HBITMAP png,
+    _Out_ BOOL* hasAlpha);
+#endif /* ENABLE_PNG_SUPPORT */
 HBITMAP MSSTYLES_LoadBitmap(PTHEME_CLASS tc, LPCWSTR lpFilename, BOOL* hasAlpha);
 
 HRESULT MSSTYLES_GetPropertyBool(PTHEME_PROPERTY tp, BOOL *pfVal);
