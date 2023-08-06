@@ -175,3 +175,37 @@ typedef struct _XHCI_COMMAND_TRB {
     DWORD Meta;
     DWORD Control;
 } XHCI_COMMAND_TRB;
+
+/*
+ * See section 5.4.8 (PORTSC), table 5-27 of
+ * the xHCI spec for more information.
+ */
+typedef union _XHCI_PORT_SC {
+    struct {
+        ULONG CurrentConnectStatus      : 1;
+        ULONG PortEnabled               : 1;
+        ULONG Rsvd                      : 1;
+        ULONG OvercurrentActive         : 1;
+        ULONG PortReset                 : 1;
+        ULONG PortLinkState             : 4;
+        ULONG PortPower                 : 1;
+        ULONG PortSpeed                 : 4;
+        ULONG PortIndicatorControl      : 2;
+        ULONG LWS                       : 1;    // Port link state write strobe
+        ULONG ConnectStatusChange       : 1;    // Port enabled/disabled change
+        ULONG PEC                       : 1;
+        ULONG WarmPortResetChange       : 1;
+        ULONG OvercurrentChange         : 1;
+        ULONG PortResetChange           : 1;
+        ULONG PortLinkStateChange       : 1;
+        ULONG PortConfigErrorChange     : 1;
+        ULONG ColdAttachStatus          : 1;
+        ULONG WakeOnConnectEnable       : 1;
+        ULONG WakeOnDisconnectEnable    : 1;
+        ULONG WakeOnOvercurrentEnable   : 1;
+        ULONG Rsvd1                     : 2;
+        ULONG DeviceRemovable           : 1;
+        ULONG WarmPortReset             : 1;
+    };
+    ULONG AsULONG;
+} XHCI_PORTSC, *PXHCI_PORTSC;
