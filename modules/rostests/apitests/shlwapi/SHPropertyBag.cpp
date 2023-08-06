@@ -570,6 +570,14 @@ static void SHPropertyBag_OnRegKey(void)
 
     pPropBag->Release();
 
+    // Create as write-only IPropertyBag2
+    hr = SHCreatePropertyBagOnRegKey(hKey, L"PropBagTest", STGM_WRITE,
+                                     IID_IPropertyBag2, (void **)&pPropBag);
+    ok_long(hr, S_OK);
+
+    if (pPropBag)
+        pPropBag->Release();
+
     // Clean up
     RegDeleteKeyW(hKey, L"PropBagTest");
     RegCloseKey(hKey);
