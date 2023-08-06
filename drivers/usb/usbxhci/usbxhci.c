@@ -12,6 +12,18 @@
 
 #define XHCI_POLL_TIME_SET(Milliseconds) (Milliseconds * 10000)
 
+/*
+ * Do not use this directly!!! Use XHCI_GetPortSc()
+ * instead.
+ *
+ * The spec states that the address of port status
+ * and control (which can be many as many ports exist)
+ * is Operational Base + (400h + (10h * (n–1)))
+ * where: n = Port Number (Valid values are 1, 2, 3, ...MaxPorts
+ */
+#define XHCI_PORTSC(OperationalBase, PortNo) \
+    (PVOID)((ULONG)OperationalBase + (0x400 + (0x10 * (PortNo - 1))))
+
 /* Status codes for XHCI_PollCheck() */
 #define POLL_STATUS_DONE     0      // Done polling successfully
 #define POLL_STATUS_CONTINUE 1      // Nothing happened, continue polling
@@ -54,6 +66,61 @@ XHCI_PollTimeout(
     return MP_STATUS_ERROR;
 }
 
+PXHCI_PORTSC
+NTAPI
+XHCI_GetPortSc(
+    _In_ PXHCI_HC_OPER_REGS OperRegs,
+    _In_ DWORD PortNo,
+    _In_ PVOID XhciExtension)
+{
+    PXHCI_EXTENSION XhciExt;
+
+    XhciExt = XhciExtension;
+
+    NT_ASSERTMSG("Invalid port number of '0'", PortNo != 0);
+    NT_ASSERTMSG("Port number too high!", PortNo <= XhciExt->NumberOfPorts);
+
+    return XHCI_PORTSC(OperRegs, PortNo);
+}
+
+/**
+ * XHCI_InitPorts - Initialize USB ports
+ *
+ * @OperRegs: Operational registers
+ * @XhciExtension: XhciExtension instance
+ *
+ * TODO: All this function does for now is give debugging
+ *       information about each port. Implement logic to
+ *       reset ports and initialize them.
+ */
+VOID
+NTAPI
+XHCI_InitPorts(
+    _In_ PXHCI_HC_OPER_REGS OperRegs,
+    _In_ PVOID XhciExtension)
+{
+    PXHCI_EXTENSION XhciExt;
+    PXHCI_PORTSC PortScPtr;
+    XHCI_PORTSC PortSc;
+
+    XhciExt = XhciExtension;
+
+    for (DWORD i = 1; i <= XhciExt->NumberOfPorts; ++i)
+    {
+        PortScPtr = XHCI_GetPortSc(OperRegs, i, XhciExtension);
+        PortSc.AsULONG = READ_REGISTER_ULONG(&PortScPtr->AsULONG);
+
+        /* XXX: Maybe remove this? */
+        if (PortSc.CurrentConnectStatus && PortSc.DeviceRemovable)
+        {
+            DPRINT("Port %d has removable device connected\n", i);
+        }
+        else if (PortSc.CurrentConnectStatus)
+        {
+            DPRINT("Port %d has non-removable device connected\n", i);
+        }
+    }
+}
 
 MPSTATUS
 NTAPI
@@ -302,6 +369,9 @@ XHCI_StartController(
                 return MP_STATUS_ERROR;
         }
     }
+
+    /* Startup the ports now */
+    XHCI_InitPorts(OperRegisters, XhciExtension);
 
     return MP_STATUS_SUCCESS;
 }
