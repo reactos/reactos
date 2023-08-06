@@ -51,6 +51,8 @@ public:
             *ppvObject = static_cast<IPropertyBag*>(this);
             return S_OK;
         }
+
+        ERR("%p: %s: E_NOTIMPL\n", this, debugstr_guid(&riid));
         return E_NOTIMPL;
     }
     STDMETHODIMP_(ULONG) AddRef() override
@@ -581,9 +583,5 @@ SHCreatePropertyBagOnRegKey(
     if (FAILED(hr))
         return hr;
 
-    hr = pRegBag->QueryInterface(riid, ppvObj);
-    if (FAILED(hr))
-        ERR("0x%08X %s\n", hr, debugstr_guid(&riid));
-
-    return hr;
+    return pRegBag->QueryInterface(riid, ppvObj);
 }
