@@ -545,13 +545,21 @@ static void SHPropertyBag_OnRegKey(void)
     VariantInit(&vari);
     V_VT(&vari) = VT_EMPTY;
     hr = pPropBag->Read(L"Name4", &vari, NULL);
-    ok_long(hr, S_OK);
-    ok_long(V_VT(&vari), VT_UNKNOWN);
-    pStream = (IStream*)V_UNKNOWN(&vari);
-    FillMemory(&guid, sizeof(guid), 0xEE);
-    hr = pStream->Read(&guid, sizeof(guid), NULL);
-    ok_long(hr, S_OK);
-    ok_int(::IsEqualGUID(guid, IID_IShellLinkW), TRUE);
+    if (IsWindowsVistaOrGreater())
+    {
+        ok_long(hr, S_OK);
+        ok_long(V_VT(&vari), VT_UNKNOWN);
+        pStream = (IStream*)V_UNKNOWN(&vari);
+        FillMemory(&guid, sizeof(guid), 0xEE);
+        hr = pStream->Read(&guid, sizeof(guid), NULL);
+        ok_long(hr, S_OK);
+        ok_int(::IsEqualGUID(guid, IID_IShellLinkW), TRUE);
+    }
+    else // XP/2k3 Read is buggy
+    {
+        ok_long(hr, E_FAIL);
+        ok_long(V_VT(&vari), VT_EMPTY);
+    }
     VariantClear(&vari);
 
     pPropBag->Release();
