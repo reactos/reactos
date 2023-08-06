@@ -96,7 +96,7 @@ public:
                 if (lstrcmpiW(pszPropName, L"GUID1") == 0)
                 {
                     V_VT(pvari) = (VT_UI1 | VT_ARRAY);
-                    V_ARRAY(pvari) = CreateByteArray(&IID_IShellLink, sizeof(IID));
+                    V_ARRAY(pvari) = CreateByteArray(&IID_IShellLinkW, sizeof(IID));
                     return S_OK;
                 }
 
@@ -225,7 +225,7 @@ static void SHPropertyBag_ReadTest(void)
     ok_long(hr, S_OK);
     ok_int(s_cRead, 1);
     ok_int(s_cWrite, 0);
-    ok_int(IsEqualGUID(guid, IID_IShellLink), TRUE);
+    ok_int(IsEqualGUID(guid, IID_IShellLinkW), TRUE);
 
     ResetTest(VT_EMPTY, L"GUID2");
     hr = SHPropertyBag_ReadGUID(&dummy, L"GUID2", &guid);
@@ -462,6 +462,9 @@ static void SHPropertyBag_OnRegKey(void)
     LONG error;
     VARIANT vari;
     WCHAR szText[MAX_PATH];
+    IStream *pStream;
+    GUID guid;
+    BYTE guid_and_extra[sizeof(GUID) + sizeof(GUID)];
 
     // Create HKCU\Software\ReactOS registry key
     error = RegCreateKeyW(HKEY_CURRENT_USER, L"Software\\ReactOS", &hKey);
@@ -526,7 +529,29 @@ static void SHPropertyBag_OnRegKey(void)
     V_VT(&vari) = VT_BSTR;
     hr = pPropBag->Read(L"Name2", &vari, NULL);
     ok_long(hr, S_OK);
+    ok_long(V_VT(&vari), VT_BSTR);
     ok_wstr(V_BSTR(&vari), L"StrValue");
+    VariantClear(&vari);
+
+    // Write GUID
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UNKNOWN;
+    V_UNKNOWN(&vari) = SHCreateMemStream((BYTE*)&IID_IShellLinkW, sizeof(IID_IShellLinkW));
+    hr = pPropBag->Write(L"Name4", &vari);
+    ok_long(hr, S_OK);
+    VariantClear(&vari);
+
+    // Read GUID
+    VariantInit(&vari);
+    V_VT(&vari) = VT_EMPTY;
+    hr = pPropBag->Read(L"Name4", &vari, NULL);
+    ok_long(hr, S_OK);
+    ok_long(V_VT(&vari), VT_UNKNOWN);
+    pStream = (IStream*)V_UNKNOWN(&vari);
+    FillMemory(&guid, sizeof(guid), 0xEE);
+    hr = pStream->Read(&guid, sizeof(guid), NULL);
+    ok_long(hr, S_OK);
+    ok_int(::IsEqualGUID(guid, IID_IShellLinkW), TRUE);
     VariantClear(&vari);
 
     pPropBag->Release();
@@ -545,6 +570,12 @@ static void SHPropertyBag_OnRegKey(void)
     ok_long(error, ERROR_SUCCESS);
     ok_long(dwType, REG_SZ);
     ok_wstr(szText, L"StrValue");
+    cbValue = sizeof(guid_and_extra);
+    error = RegQueryValueExW(hSubKey, L"Name4", NULL, &dwType, (BYTE*)&guid_and_extra, &cbValue);
+    ok_long(error, ERROR_SUCCESS);
+    ok_long(dwType, REG_BINARY);
+    ok_int(memcmp(&guid_and_extra, &GUID_NULL, sizeof(GUID)), 0);
+    ok_int(memcmp(&guid_and_extra[sizeof(GUID)], &IID_IShellLinkW, sizeof(GUID)), 0);
     RegCloseKey(hSubKey);
 
     // Create as read-only
@@ -588,7 +619,7 @@ static void SHPropertyBag_OnRegKey(void)
     V_UI4(&vari) = 0xFEEDF00D;
     hr = pPropBag->Read(L"Name3", &vari, NULL);
     ok_long(hr, E_NOTIMPL);
-    ok_long(V_VT(&vari), VT_EMPTY);
+    ok_int(V_VT(&vari), VT_EMPTY);
     ok_long(V_UI4(&vari), 0xFEEDF00D);
     VariantClear(&vari);
 
