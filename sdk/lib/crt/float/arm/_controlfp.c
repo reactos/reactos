@@ -68,16 +68,3 @@ unsigned int CDECL _control87(unsigned int newval, unsigned int mask)
     return flags;
 }
 
-int CDECL _controlfp_s(unsigned int *cur, unsigned int newval, unsigned int mask)
-{
-    unsigned int val;
-
-    if (!MSVCRT_CHECK_PMT( !(newval & mask & ~(_MCW_EM | _MCW_RC | _MCW_DN)) ))
-    {
-        if (cur) *cur = _controlfp(0, 0);  /* retrieve it anyway */
-        return EINVAL;
-    }
-    val = _controlfp(newval, mask);
-    if (cur) *cur = val;
-    return 0;
-}
