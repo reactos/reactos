@@ -5,6 +5,10 @@
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
+#include "precomp.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
 /*************************************************************************
  *                SheRemoveQuotesA (SHELL32.@)
  */
