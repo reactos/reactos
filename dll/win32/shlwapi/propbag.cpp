@@ -402,8 +402,13 @@ CRegPropertyBag::Read(
     _Inout_ VARIANT *pvari,
     _Inout_opt_ IErrorLog *pErrorLog)
 {
+    UNREFERENCED_PARAMETER(pErrorLog);
+
+    TRACE("%p: %s %p %p\n", this, debugstr_w(pszPropName), pvari, pErrorLog);
+
     if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) == STGM_WRITE)
     {
+        ERR("%p: 0x%X\n", this, m_dwMode);
         ::VariantInit(pvari);
         return E_ACCESSDENIED;
     }
@@ -427,13 +432,17 @@ CRegPropertyBag::Read(
 
     if (FAILED(hr))
     {
+        ERR("%p: 0x%08X %ld: %s %p\n", this, hr, dwType, debugstr_w(pszPropName), pvari);
         ::VariantInit(pvari);
         return hr;
     }
 
     hr = ::VariantChangeTypeForRead(pvari, vt);
     if (FAILED(hr))
+    {
+        ERR("%p: 0x%08X %ld: %s %p\n", this, hr, dwType, debugstr_w(pszPropName), pvari);
         ::VariantInit(pvari);
+    }
 
     return hr;
 }
@@ -465,8 +474,13 @@ CRegPropertyBag::_WriteStream(LPCWSTR pszPropName, IStream *pStream)
 STDMETHODIMP
 CRegPropertyBag::Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari)
 {
+    TRACE("%p: %s %p\n", this, debugstr_w(pszPropName), pvari);
+
     if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) == STGM_READ)
+    {
+        ERR("%p: 0x%X\n", this, m_dwMode);
         return E_ACCESSDENIED;
+    }
 
     HRESULT hr;
     LONG error;
