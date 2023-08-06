@@ -786,7 +786,7 @@ HRESULT CShellBrowser::Initialize()
     fToolbarProxy.Initialize(m_hWnd, clientBar);
 
     LoadCabinetState();
-    ::SendMessage(fClientBars[BIInternetToolbar].hwnd, BWM_SETTINGCHANGE, 0, (LPARAM)&m_settings);
+    ::SendMessageW(fClientBars[BIInternetToolbar].hwnd, BWM_SETTINGCHANGE, 0, (LPARAM)&m_settings);
 
     // create status bar
     DWORD dwStatusStyle = WS_CHILD | WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS;
@@ -3681,7 +3681,7 @@ LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND
 {
     m_settings.fStatusBarVisible = !m_settings.fStatusBarVisible;
     m_settings.Save();
-    ::SendMessage(m_hWnd, BWM_SETTINGCHANGE, 0, 0);
+    SendMessageW(BWM_SETTINGCHANGE, 0, (LPARAM)&m_settings);
     return 0;
 }
 
@@ -3789,7 +3789,7 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CShellBrowser::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     /* Refresh child windows */
-    ::SendMessage(fClientBars[BIInternetToolbar].hwnd, BWM_SETTINGCHANGE, 0, (LPARAM)&m_settings);
+    ::SendMessageW(fClientBars[BIInternetToolbar].hwnd, uMsg, wParam, lParam);
 
     /* Refresh status bar */
     if (fStatusBar)
