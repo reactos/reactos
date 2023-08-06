@@ -300,7 +300,10 @@ HRESULT CRegPropertyBag::Init(HKEY hKey, LPCWSTR lpSubKey)
         error = ::RegOpenKeyExW(hKey, lpSubKey, 0, nAccess, &m_hKey);
 
     if (error != ERROR_SUCCESS)
+    {
+        ERR("%p %s 0x%08X\n", hKey, debugstr_w(lpSubKey), error);
         return HRESULT_FROM_WIN32(error);
+    }
 
     return S_OK;
 }
@@ -576,10 +579,7 @@ SHCreatePropertyBagOnRegKey(
 
     HRESULT hr = pRegBag->Init(hKey, pszSubKey);
     if (FAILED(hr))
-    {
-        ERR("0x%08X %s\n", hr, debugstr_guid(&riid));
         return hr;
-    }
 
     hr = pRegBag->QueryInterface(riid, ppvObj);
     if (FAILED(hr))
