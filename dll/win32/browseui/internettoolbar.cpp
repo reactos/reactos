@@ -715,7 +715,6 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
         pSettings->fLocked = locked;
         pSettings->Save();
         RefreshLockedToolbarState();
-        // TODO: refresh view menu?
     }
     return S_OK;
 }
