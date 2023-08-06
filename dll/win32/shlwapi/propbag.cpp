@@ -555,7 +555,6 @@ CRegPropertyBag::Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari)
  * @param pszSubKey  The path of the sub-key.
  * @param dwMode     The combination of STGM_READ, STGM_WRITE, STGM_READWRITE, and STGM_CREATE.
  * @param riid       Specifies either IID_IUnknown, IID_IPropertyBag or IID_IPropertyBag2.
- *                   Vista+ rejects IID_IPropertyBag2.
  * @param ppvObj     Receives an IPropertyBag pointer.
  * @return           An HRESULT value. S_OK on success, non-zero on failure.
  * @see              https://source.winehq.org/WineAPI/SHCreatePropertyBagOnRegKey.html
