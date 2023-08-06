@@ -776,6 +776,7 @@ IUnknown_QueryService(
 // These functions are only included in this file starting with the Windows 7 Platform SDK
 #if (_WIN32_IE >= _WIN32_IE_IE501)
 
+#ifndef __WINESRC__
 #if !defined(__cplusplus) && defined(COBJMACROS)
 #undef IStream_Read
 #undef IStream_Write
@@ -783,6 +784,8 @@ IUnknown_QueryService(
 
 HRESULT WINAPI IStream_Read(_In_ IStream* pstm, _Out_writes_bytes_all_(cb) LPVOID pv, _In_ ULONG cb);
 HRESULT WINAPI IStream_Write(_In_ IStream* pstm, _In_reads_bytes_(cb) const void* pv, _In_ ULONG cb);
+#endif /* !__WINESRC__ */
+
 HRESULT WINAPI IStream_Reset(_In_ IStream* pstm);
 HRESULT WINAPI IStream_Size(_In_ IStream* pstm, _Out_ ULARGE_INTEGER* pui);
 
