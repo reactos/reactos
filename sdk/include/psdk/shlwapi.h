@@ -31,9 +31,8 @@ extern "C" {
 
 #include <pshpack8.h>
 
-#ifndef NO_SHLWAPI_REG
-
 /* Registry functions */
+#ifndef NO_SHLWAPI_REG
 
 DWORD WINAPI SHDeleteEmptyKeyA(_In_ HKEY, _In_opt_ LPCSTR);
 DWORD WINAPI SHDeleteEmptyKeyW(_In_ HKEY, _In_opt_ LPCWSTR);
@@ -743,6 +742,9 @@ BOOL WINAPI AssocIsDangerous(_In_ LPCWSTR);
 
 #endif /* NO_SHLWAPI_REG */
 
+
+#if (_WIN32_IE >= _WIN32_IE_IE501)
+
 void WINAPI IUnknown_Set(_Inout_ IUnknown **ppunk, _In_opt_ IUnknown *punk);
 void WINAPI IUnknown_AtomicRelease(_Inout_opt_ IUnknown **punk);
 HRESULT WINAPI IUnknown_GetWindow(_In_ IUnknown *punk, _Out_ HWND *phwnd);
@@ -767,6 +769,52 @@ IUnknown_QueryService(
   _In_ REFGUID guidService,
   _In_ REFIID riid,
   _Outptr_ void **ppvOut);
+
+#endif /* (_WIN32_IE >= _WIN32_IE_IE501) */
+
+
+// These functions are only included in this file starting with the Windows 7 Platform SDK
+#if (_WIN32_IE >= _WIN32_IE_IE501)
+
+#if !defined(__cplusplus) && defined(COBJMACROS)
+#undef IStream_Read
+#undef IStream_Write
+#endif
+
+HRESULT WINAPI IStream_Read(_In_ IStream* pstm, _Out_writes_bytes_all_(cb) LPVOID pv, _In_ ULONG cb);
+HRESULT WINAPI IStream_Write(_In_ IStream* pstm, _In_reads_bytes_(cb) const void* pv, _In_ ULONG cb);
+HRESULT WINAPI IStream_Reset(_In_ IStream* pstm);
+HRESULT WINAPI IStream_Size(_In_ IStream* pstm, _Out_ ULARGE_INTEGER* pui);
+
+// From auto-generated ocidl.h
+#ifndef __IConnectionPoint_FWD_DEFINED__
+#define __IConnectionPoint_FWD_DEFINED__
+typedef interface IConnectionPoint IConnectionPoint;
+#ifdef __cplusplus
+interface IConnectionPoint;
+#endif
+#endif /* __IConnectionPoint_FWD_DEFINED__ */
+
+HRESULT WINAPI ConnectToConnectionPoint(_In_opt_ IUnknown* punk, _In_ REFIID riid, _In_ BOOL fConnect, _In_ IUnknown* punkTarget, _Out_ LPDWORD pdwCookie, _Outptr_opt_ IConnectionPoint** ppcpOut);
+
+#endif /* (_WIN32_IE >= _WIN32_IE_IE501) */
+
+#if (_WIN32_IE >= _WIN32_IE_IE60)
+
+HRESULT WINAPI IStream_ReadPidl(_In_ IStream* pstm, _Outptr_ PIDLIST_RELATIVE* ppidlOut);
+HRESULT WINAPI IStream_WritePidl(_In_ IStream* pstm, _In_ PCUIDLIST_RELATIVE pidlWrite);
+
+#endif /* (_WIN32_IE >= _WIN32_IE_IE60) */
+
+#if (_WIN32_IE >= _WIN32_IE_IE70)
+
+HRESULT WINAPI IStream_ReadStr(_In_ IStream* pstm, _Outptr_ PWSTR* ppsz);
+HRESULT WINAPI IStream_WriteStr(_In_ IStream* pstm, _In_ PCWSTR psz);
+
+HRESULT WINAPI IStream_Copy(_In_ IStream* pstmFrom, _In_ IStream* pstmTo, _In_ DWORD cb);
+
+#endif /* (_WIN32_IE >= _WIN32_IE_IE70) */
+
 
 /* Path functions */
 #ifndef NO_SHLWAPI_PATH
@@ -1801,7 +1849,7 @@ BOOL WINAPI IsInternetESCEnabled(void);
 /* Stream functions */
 #ifndef NO_SHLWAPI_STREAM
 
-struct IStream *
+struct IStream*
 WINAPI
 SHOpenRegStreamA(
   _In_ HKEY,
@@ -1809,7 +1857,7 @@ SHOpenRegStreamA(
   _In_opt_ LPCSTR,
   _In_ DWORD);
 
-struct IStream *
+struct IStream*
 WINAPI
 SHOpenRegStreamW(
   _In_ HKEY,
@@ -1819,7 +1867,7 @@ SHOpenRegStreamW(
 
 #define SHOpenRegStream WINELIB_NAME_AW(SHOpenRegStream2) /* Uses version 2 */
 
-struct IStream *
+struct IStream*
 WINAPI
 SHOpenRegStream2A(
   _In_ HKEY,
@@ -1827,7 +1875,7 @@ SHOpenRegStream2A(
   _In_opt_ LPCSTR,
   _In_ DWORD);
 
-struct IStream *
+struct IStream*
 WINAPI
 SHOpenRegStream2W(
   _In_ HKEY,
@@ -1853,11 +1901,17 @@ SHCreateStreamOnFileW(
 
 #define SHCreateStreamOnFile WINELIB_NAME_AW(SHCreateStreamOnFile)
 
+#if (_WIN32_IE >= _WIN32_IE_IE501)
+
 struct IStream*
 WINAPI
 SHCreateMemStream(
   _In_reads_bytes_opt_(cbInit) const BYTE *pInit,
   _In_ UINT cbInit);
+
+#endif /* (_WIN32_IE >= _WIN32_IE_IE501) */
+
+#if (_WIN32_IE >= 0x0600)
 
 HRESULT
 WINAPI
@@ -1869,13 +1923,14 @@ SHCreateStreamOnFileEx(
   _In_opt_ struct IStream*,
   _Outptr_ struct IStream**);
 
+#endif /* (_WIN32_IE >= 0x0600) */
+
 HRESULT WINAPI SHCreateStreamWrapper(LPBYTE,DWORD,DWORD,struct IStream**);
 
 #endif /* NO_SHLWAPI_STREAM */
 
+// These functions are only included in this file starting with the Windows 7 Platform SDK
 #ifndef NO_SHLWAPI_SHARED
-
-// These functions are only included in this file starting with the Windows 7 platform SDK
 
 HANDLE
 WINAPI
@@ -2012,6 +2067,7 @@ SHGetViewStatePropertyBag(
 
 
 /* IsOS definitions */
+#ifndef NO_SHLWAPI_ISOS
 
 #define OS_WIN32SORGREATER        0x00
 #define OS_NT                     0x01
@@ -2052,6 +2108,9 @@ SHGetViewStatePropertyBag(
 #define OS_APPLIANCE              0x24
 
 BOOL WINAPI IsOS(DWORD);
+
+#endif /* NO_SHLWAPI_ISOS */
+
 
 /* SHSetTimerQueueTimer definitions */
 #define TPS_EXECUTEIO    0x00000001
