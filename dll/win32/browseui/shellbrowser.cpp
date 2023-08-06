@@ -305,6 +305,7 @@ private:
     IBindCtx                                *fHistoryBindContext;
     HDSA menuDsa;
     HACCEL m_hAccel;
+    BrowseUISettings m_settings;
 public:
 #if 0
     ULONG InternalAddRef()
@@ -318,7 +319,6 @@ public:
         return CComObjectRootEx<CComMultiThreadModelNoCS>::InternalRelease();
     }
 #endif
-    BrowseUISettings m_settings;
     CShellBrowser();
     ~CShellBrowser();
     HRESULT Initialize();
