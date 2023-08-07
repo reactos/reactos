@@ -26,10 +26,10 @@ VOID GetDlgItemTextAlloc(HWND hwndDlg, INT nDlgItem, LPTSTR *ppsz)
 
 VOID GetComboBoxLBTextAlloc(HWND hwndDlg, INT nDlgItem, INT nIndex, LPTSTR *ppsz)
 {
-    INT nLength = (INT)SendDlgItemMessage(hwndDlg, nIndex, CB_GETLBTEXTLEN, nIndex, 0);
+    INT nLength = (INT)SendDlgItemMessage(hwndDlg, nDlgItem, CB_GETLBTEXTLEN, nIndex, 0);
     *ppsz = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
     if (*ppsz)
-        SendDlgItemMessage(hwndDlg, nIndex, CB_GETLBTEXT, nIndex, (LPARAM)*ppsz);
+        SendDlgItemMessage(hwndDlg, nDlgItem, CB_GETLBTEXT, nIndex, (LPARAM)*ppsz);
 }
 
 /* Applets */
