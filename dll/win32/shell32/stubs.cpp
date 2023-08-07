@@ -185,18 +185,6 @@ SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags)
  */
 EXTERN_C HRESULT
 WINAPI
-SHCreatePropertyBag(REFIID refIId, LPVOID *lpUnknown)
-{
-    /* Call SHCreatePropertyBagOnMemory() from shlwapi.dll */
-    FIXME("SHCreatePropertyBag() stub\n");
-    return E_FAIL;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C HRESULT
-WINAPI
 SHCopyMonikerToTemp(IMoniker *pMoniker, LPCWSTR lpInput, LPWSTR lpOutput, INT cchMax)
 {
     /* Unimplemented in XP SP3 */

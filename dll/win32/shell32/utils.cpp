@@ -10,6 +10,16 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /*************************************************************************
+ *                SHCreatePropertyBag (SHELL32.715)
+ */
+EXTERN_C HRESULT
+WINAPI
+SHCreatePropertyBag(REFIID riid, void **ppvObj)
+{
+    return SHCreatePropertyBagOnMemory(STGM_READWRITE, riid, ppvObj);
+}
+
+/*************************************************************************
  *                SheRemoveQuotesA (SHELL32.@)
  */
 EXTERN_C LPSTR
