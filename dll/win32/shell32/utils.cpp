@@ -14,7 +14,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
  */
 EXTERN_C HRESULT
 WINAPI
-SHCreatePropertyBag(REFIID riid, void **ppvObj)
+SHCreatePropertyBag(_In_ REFIID riid, _Out_ void **ppvObj)
 {
     return SHCreatePropertyBagOnMemory(STGM_READWRITE, riid, ppvObj);
 }
