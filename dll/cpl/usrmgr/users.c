@@ -60,7 +60,6 @@ ChangePasswordDlgProc(HWND hwndDlg,
                       LPARAM lParam)
 {
     PUSER_INFO_1003 userInfo;
-    INT nLength;
 
     UNREFERENCED_PARAMETER(wParam);
 
@@ -80,9 +79,7 @@ ChangePasswordDlgProc(HWND hwndDlg,
                     if (CheckPasswords(hwndDlg, IDC_EDIT_PASSWORD1, IDC_EDIT_PASSWORD2))
                     {
                         /* Store the password */
-                        nLength = SendDlgItemMessage(hwndDlg, IDC_EDIT_PASSWORD1, WM_GETTEXTLENGTH, 0, 0);
-                        userInfo->usri1003_password = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_EDIT_PASSWORD1, userInfo->usri1003_password, nLength + 1);
+                        GetDlgItemTextAlloc(hwndDlg, IDC_EDIT_PASSWORD1, &userInfo->usri1003_password);
 
                         EndDialog(hwndDlg, IDOK);
                     }
@@ -246,24 +243,16 @@ NewUserDlgProc(HWND hwndDlg,
                     }
 
                     /* Store the user name */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
-                    userInfo->usri3_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                    GetDlgItemText(hwndDlg, IDC_USER_NEW_NAME, userInfo->usri3_name, nLength + 1);
+                    GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_NAME, &userInfo->usri3_name);
 
                     /* Store the full user name */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_FULL_NAME, WM_GETTEXTLENGTH, 0, 0);
-                    userInfo->usri3_full_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                    GetDlgItemText(hwndDlg, IDC_USER_NEW_FULL_NAME, userInfo->usri3_full_name, nLength + 1);
+                    GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_FULL_NAME, &userInfo->usri3_full_name);
 
                     /* Store the description */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_DESCRIPTION, WM_GETTEXTLENGTH, 0, 0);
-                    userInfo->usri3_comment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                    GetDlgItemText(hwndDlg, IDC_USER_NEW_DESCRIPTION, userInfo->usri3_comment, nLength + 1);
+                    GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_DESCRIPTION, &userInfo->usri3_comment);
 
                     /* Store the password */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_PASSWORD1, WM_GETTEXTLENGTH, 0, 0);
-                    userInfo->usri3_password = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                    GetDlgItemText(hwndDlg, IDC_USER_NEW_PASSWORD1, userInfo->usri3_password, nLength + 1);
+                    GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_PASSWORD1, &userInfo->usri3_password);
 
                     EndDialog(hwndDlg, IDOK);
                     break;

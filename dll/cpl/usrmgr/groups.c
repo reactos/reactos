@@ -156,14 +156,10 @@ NewGroupDlgProc(HWND hwndDlg,
                     }
 
                     /* Get Name */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
-                    groupInfo->lgrpi1_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                    GetDlgItemText(hwndDlg, IDC_GROUP_NEW_NAME, groupInfo->lgrpi1_name, nLength + 1);
+                    GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_NEW_NAME, &groupInfo->lgrpi1_name);
 
                     /* Get Description */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_DESCRIPTION, WM_GETTEXTLENGTH, 0, 0);
-                    groupInfo->lgrpi1_comment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                    GetDlgItemText(hwndDlg, IDC_GROUP_NEW_DESCRIPTION, groupInfo->lgrpi1_comment, nLength + 1);
+                    GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_NEW_DESCRIPTION, &groupInfo->lgrpi1_comment);
 
                     EndDialog(hwndDlg, IDOK);
                     break;

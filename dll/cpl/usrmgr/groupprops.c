@@ -494,16 +494,11 @@ SetGeneralGroupData(HWND hwndDlg,
                     PGENERAL_GROUP_DATA pGroupData)
 {
     LOCALGROUP_INFO_1 groupInfo;
-    LPTSTR pszComment = NULL;
-    INT nLength;
     NET_API_STATUS status;
     DWORD dwIndex;
 
     /* Get the group description */
-    nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_GROUP_GENERAL_DESCRIPTION));
-    pszComment = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
-    GetDlgItemText(hwndDlg, IDC_GROUP_GENERAL_DESCRIPTION, pszComment, nLength + 1);
-    groupInfo.lgrpi1_comment = pszComment;
+    GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_GENERAL_DESCRIPTION, &groupInfo.lgrpi1_comment);
 
     status = NetLocalGroupSetInfo(NULL, pGroupData->szGroupName, 1, (LPBYTE)&groupInfo, &dwIndex);
     if (status != NERR_Success)
@@ -511,8 +506,8 @@ SetGeneralGroupData(HWND hwndDlg,
         ERR("NetLocalGroupSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
     }
 
-    if (pszComment)
-        HeapFree(GetProcessHeap(), 0, pszComment);
+    if (&groupInfo.lgrpi1_comment)
+        HeapFree(GetProcessHeap(), 0, &groupInfo.lgrpi1_comment);
 
     return TRUE;
 }

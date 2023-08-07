@@ -15,6 +15,22 @@ static LONG APIENTRY UsrmgrApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lP
 
 HINSTANCE hApplet = 0;
 
+VOID GetDlgItemTextAlloc(HWND hwndDlg, INT nDlgItem, LPTSTR *ppsz)
+{
+    INT nLength = GetWindowTextLength(GetDlgItem(hwndDlg, nDlgItem));
+    *ppsz = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+    if (*ppsz)
+        GetDlgItemText(hwndDlg, nDlgItem, *ppsz, nLength + 1);
+}
+
+VOID GetComboBoxLBTextAlloc(HWND hwndDlg, INT nDlgItem, INT nIndex, LPTSTR *ppsz)
+{
+    INT nLength = (INT)SendDlgItemMessage(hwndDlg, nIndex, CB_GETLBTEXTLEN, nIndex, 0);
+    *ppsz = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+    if (*ppsz)
+        SendDlgItemMessage(hwndDlg, nIndex, CB_GETLBTEXT, nIndex, (LPARAM)*ppsz);
+}
+
 /* Applets */
 APPLET Applets[NUM_APPLETS] =
 {
@@ -25,7 +41,6 @@ APPLET Applets[NUM_APPLETS] =
         UsrmgrApplet
     }
 };
-
 
 static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
