@@ -974,21 +974,21 @@ Example:
     CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Romanian
-    Crează o partiție extinsă pe discul în cauză.
+    Crează o partiție expandată pe discul în cauză.
     Se aplică doar la discurile cu Registrul principal de inițializare (MBR).
 
 Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
     SIZE=<N>    Mărimea partiției în megaocteți (Mo). Dacă nu este dată nicio
                 mărime, partiția continuă până când nu mai este spațiu liber
-                în partiția extinsă.
+                în partiția expandată.
 
     OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția este creată.
 	            Dacă nu este dat niciun decalaj, partiția va începe de la
 				primul spațiu liber de pe disc ce este suficient de mare ca
 				să țină noua partiție.
 
-    ALIGN=<N>   Folosit de obicei, cu matrici de dispozitive cu Număr de unitate
+    ALIGN=<N>   De obicei, folosit cu matrici de dispozitive cu Număr de unitate
 	            logică RAID (LUN) pentru a îmbunătăți performanța. Decalajul
 				partiției va fi un multiplu a lui <N>. Dacă este specificat parametrul
 				OFFSET, va fi rotunjit la cel mai apropiat multiplu a lui <N>.
@@ -999,10 +999,10 @@ Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 să se închidă cu un cod de eroare.
 
     După ce a fost creată partiția, marcajul se mută automat pe noua
-    partiție. Doar o singură partiție extinsă poate fi creată pe un disc.
-	Această comandă eșuează dacă încercați să creați o partiție extinsă
-	înainte de a crea partițiile logice într-o altă partiție extinsă.
-    Trebuie să creați o partiție extinsă înainte de a crea
+    partiție. Doar o partiție expandată poate fi creată pe un disc.
+	Această comandă eșuează dacă încercați să creați o partiție expandată
+	înainte de a crea partițiile logice în altă partiție expandată.
+    Trebuie să creați o partiție expandată înainte de a crea
 	partițiile logice.
 
     Un disc MBR de bază trebuie să fie selectat pentru ca această operațiune
@@ -2082,7 +2082,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                         0xFE
                         0xA0
 
-                Pentru discurile cu tabelul de partiție GUID (GPT) puteți
+                Pentru discurile cu tabel de partiție GUID (GPT) puteți
 				specifica un tip de partiție GUID pentru partiția pe care vreți
 				să o creați. GUID-urile recunoscute includ:
 
@@ -2105,23 +2105,24 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                         de94bba4-06d1-4d40-a16a-bfd50179d6ac
 
                 Dacă acest parametru nu este specificat pentru un disc GPT,
-				comanda crează o partiție de bază pentru date.
+                comanda crează o partiție de bază pentru date.
 
                 Orice partiție de tip octet sau GUID poate fi specificată cu
-				acest parametru. DiskPart nu verifică tipul partiției pentru validitate,
-				cu excepția faptului că este un octet cu valoare în format hexazecimal
-                sau un GUID.
+                acest parametru. DiskPart nu verifică tipul partiției pentru
+                validitate, cu excepția faptului că este un octet cu valoare
+                în format hexazecimal sau un GUID.
 
                 Atenție:
 
                     Creând partiții cu acest parametru poate cauza
-					calculatorului dumneavoastră să eșueaze sau să nu mai poată porni.
-					Dacă nu sunteți un OEM sau un profesionist cu experiență în discuri GPT,
-					nu creați partiții pe discuri GPT folosind acest parametru. În schimb,
-					folosiți întotdeauna comanda CREATE PARTITION EFI ca să creați partiții de
-					sistem EFI, comanda CREATE PARTITION MSR ca să creați partiții rezervate
-					Microsoft, și comanda CREATE PARTITION PRIMARY fără acest parametru
-					ca să creați partiții primare pe discuri GPT.
+					calculatorului dumneavoastră să nu mai funcționeze bine sau să nu mai
+                    poată porni. Dacă nu sunteți un OEM sau un profesionist cu experiență
+                    în discuri GPT, nu creați partiții pe discuri GPT folosind acest
+                    parametru. În schimb, folosiți întotdeauna comanda
+                    CREATE PARTITION EFI ca să creați partiții de sistem EFI,
+                    comanda CREATE PARTITION MSR ca să creați partiții rezervate
+                    Microsoft, și comanda CREATE PARTITION PRIMARY fără acest
+                    parametru ca să creați partiții primare pe discuri GPT.
 
     ALIGN=<N>   Folosită deobicei cu Numărul unității logice RAID (LUN)
 	            a șirurilor de dispozitive pentru a îmbunătăți performanța.
@@ -2838,8 +2839,8 @@ Sintaxă:  DELETE PARTITION [NOERR] [OVERRIDE]
                 de date cunoscute.
 
     Nu puteți șterge partiția de sistem, partiția de inițializare sau orice
-	altă partiție ce conține un fișier de paginație activ sau un depozit de
-	crăpare (depozit de memorie) scris într-un fișier.
+	altă partiție ce conține un fișier de paginație activ sau un registru
+	de colaps operațional (registru de memorie) solicitat.
 
     O partiție trebuie selectată pentru ca acestă operațiune să reușească.
 
