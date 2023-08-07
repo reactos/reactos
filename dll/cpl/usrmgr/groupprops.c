@@ -506,7 +506,7 @@ SetGeneralGroupData(HWND hwndDlg,
         ERR("NetLocalGroupSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
     }
 
-    HeapFree(GetProcessHeap(), 0, &groupInfo.lgrpi1_comment);
+    HeapFree(GetProcessHeap(), 0, groupInfo.lgrpi1_comment);
 
     return TRUE;
 }
