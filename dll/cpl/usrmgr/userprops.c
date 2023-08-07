@@ -94,26 +94,26 @@ SetUserProfileData(HWND hwndDlg,
     NetUserGetInfo(NULL, pUserData->szUserName, 3, (LPBYTE*)&pUserInfo);
 
     /* Get the profile path */
-    GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_PATH, &pUserInfo->usri3_profile);
+    pUserInfo->usri3_profile = GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_PATH);
 
     /* Get the script path */
-    GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_SCRIPT, &pUserInfo->usri3_script_path);
+    pUserInfo->usri3_script_path = GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_SCRIPT);
 
     if (IsDlgButtonChecked(hwndDlg, IDC_USER_PROFILE_LOCAL) == BST_CHECKED)
     {
         /* Local home directory */
-        GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_LOCAL_PATH, &pUserInfo->usri3_home_dir);
+        pUserInfo->usri3_home_dir = GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_LOCAL_PATH);
     }
     else
     {
         /* Remote home directory */
-        GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_REMOTE_PATH, &pUserInfo->usri3_home_dir);
+        pUserInfo->usri3_home_dir = GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_REMOTE_PATH);
 
         nIndex = SendMessage(GetDlgItem(hwndDlg, IDC_USER_PROFILE_DRIVE), CB_GETCURSEL, 0, 0);
         if (nIndex != CB_ERR)
         {
-            GetComboBoxLBTextAlloc(hwndDlg, IDC_USER_PROFILE_DRIVE, nIndex,
-                                   &pUserInfo->usri3_home_dir_drive);
+            pUserInfo->usri3_home_dir_drive =
+                GetComboBoxLBTextAlloc(hwndDlg, IDC_USER_PROFILE_DRIVE, nIndex);
         }
         else
         {
@@ -713,10 +713,10 @@ SetUserGeneralData(HWND hwndDlg,
     pUserInfo->usri3_password_expired = pUserData->dwPasswordExpired;
 
     /* Get full name */
-    GetDlgItemTextAlloc(hwndDlg, IDC_USER_GENERAL_FULL_NAME, &pUserInfo->usri3_full_name);
+    pUserInfo->usri3_full_name = GetDlgItemTextAlloc(hwndDlg, IDC_USER_GENERAL_FULL_NAME);
 
     /* Get desciption */
-    GetDlgItemTextAlloc(hwndDlg, IDC_USER_GENERAL_DESCRIPTION, &pUserInfo->usri3_comment);
+    pUserInfo->usri3_comment = GetDlgItemTextAlloc(hwndDlg, IDC_USER_GENERAL_DESCRIPTION);
 
     status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
     if (status != NERR_Success)

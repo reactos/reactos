@@ -79,7 +79,8 @@ ChangePasswordDlgProc(HWND hwndDlg,
                     if (CheckPasswords(hwndDlg, IDC_EDIT_PASSWORD1, IDC_EDIT_PASSWORD2))
                     {
                         /* Store the password */
-                        GetDlgItemTextAlloc(hwndDlg, IDC_EDIT_PASSWORD1, &userInfo->usri1003_password);
+                        userInfo->usri1003_password =
+                            GetDlgItemTextAlloc(hwndDlg, IDC_EDIT_PASSWORD1);
 
                         EndDialog(hwndDlg, IDOK);
                     }
@@ -243,16 +244,16 @@ NewUserDlgProc(HWND hwndDlg,
                     }
 
                     /* Store the user name */
-                    GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_NAME, &userInfo->usri3_name);
+                    userInfo->usri3_name = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_NAME);
 
                     /* Store the full user name */
-                    GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_FULL_NAME, &userInfo->usri3_full_name);
+                    userInfo->usri3_full_name = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_FULL_NAME);
 
                     /* Store the description */
-                    GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_DESCRIPTION, &userInfo->usri3_comment);
+                    userInfo->usri3_comment = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_DESCRIPTION);
 
                     /* Store the password */
-                    GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_PASSWORD1, &userInfo->usri3_password);
+                    userInfo->usri3_password = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_PASSWORD1);
 
                     EndDialog(hwndDlg, IDOK);
                     break;

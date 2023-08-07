@@ -156,10 +156,10 @@ NewGroupDlgProc(HWND hwndDlg,
                     }
 
                     /* Get Name */
-                    GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_NEW_NAME, &groupInfo->lgrpi1_name);
+                    groupInfo->lgrpi1_name = GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_NEW_NAME);
 
                     /* Get Description */
-                    GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_NEW_DESCRIPTION, &groupInfo->lgrpi1_comment);
+                    groupInfo->lgrpi1_comment = GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_NEW_DESCRIPTION);
 
                     EndDialog(hwndDlg, IDOK);
                     break;

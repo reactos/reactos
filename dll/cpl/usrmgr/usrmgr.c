@@ -16,20 +16,22 @@ static LONG APIENTRY UsrmgrApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lP
 
 HINSTANCE hApplet = 0;
 
-VOID GetDlgItemTextAlloc(HWND hwndDlg, INT nDlgItem, LPTSTR *ppsz)
+LPTSTR GetDlgItemTextAlloc(HWND hwndDlg, INT nDlgItem)
 {
     INT nLength = GetWindowTextLength(GetDlgItem(hwndDlg, nDlgItem));
-    *ppsz = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
-    if (*ppsz)
-        GetDlgItemText(hwndDlg, nDlgItem, *ppsz, nLength + 1);
+    LPTSTR psz = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+    if (psz)
+        GetDlgItemText(hwndDlg, nDlgItem, psz, nLength + 1);
+    return psz;
 }
 
-VOID GetComboBoxLBTextAlloc(HWND hwndDlg, INT nDlgItem, INT nIndex, LPTSTR *ppsz)
+LPTSTR GetComboBoxLBTextAlloc(HWND hwndDlg, INT nDlgItem, INT nIndex)
 {
     INT nLength = (INT)SendDlgItemMessage(hwndDlg, nDlgItem, CB_GETLBTEXTLEN, nIndex, 0);
-    *ppsz = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
-    if (*ppsz)
-        SendDlgItemMessage(hwndDlg, nDlgItem, CB_GETLBTEXT, nIndex, (LPARAM)*ppsz);
+    LPTSTR psz = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+    if (psz)
+        SendDlgItemMessage(hwndDlg, nDlgItem, CB_GETLBTEXT, nIndex, (LPARAM)psz);
+    return psz;
 }
 
 /* Applets */

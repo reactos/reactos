@@ -498,7 +498,7 @@ SetGeneralGroupData(HWND hwndDlg,
     DWORD dwIndex;
 
     /* Get the group description */
-    GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_GENERAL_DESCRIPTION, &groupInfo.lgrpi1_comment);
+    groupInfo.lgrpi1_comment = GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_GENERAL_DESCRIPTION);
 
     status = NetLocalGroupSetInfo(NULL, pGroupData->szGroupName, 1, (LPBYTE)&groupInfo, &dwIndex);
     if (status != NERR_Success)
