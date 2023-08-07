@@ -47,7 +47,6 @@ WINE_DECLARE_DEBUG_CHANNEL(pidl);
 
 #ifdef __REACTOS__
 #include <comctl32_undoc.h>
-#include <shlguid_undoc.h>
 #else
 /* FIXME: !!! move CREATEMRULIST and flags to header file !!! */
 /*        !!! it is in both here and comctl32undoc.c      !!! */
@@ -2216,42 +2215,6 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
 
 	return hRes;
 }
-
-#ifdef __REACTOS__
-/*************************************************************************
- *  SHFindComputer [SHELL32.91]
- *
- * Invokes the shell search in My Computer. Used in SHFindFiles.
- * Two parameters are ignored.
- */
-EXTERN_C BOOL
-WINAPI
-SHFindComputer(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSavedSearch)
-{
-    IContextMenu *pCM;
-    CMINVOKECOMMANDINFO InvokeInfo = { sizeof(InvokeInfo) };
-
-    UNREFERENCED_PARAMETER(pidlRoot);
-    UNREFERENCED_PARAMETER(pidlSavedSearch);
-
-    TRACE("%p %p\n", pidlRoot, pidlSavedSearch);
-
-    HRESULT hr = CoCreateInstance(&CLSID_ShellSearchExt, 0, CLSCTX_INPROC_SERVER,
-                                  &IID_IContextMenu, (void **)&pCM);
-    if (FAILED(hr))
-    {
-        ERR("0x%08X\n", hr);
-        return hr;
-    }
-
-    InvokeInfo.lpParameters = "{996E1EB1-B524-11D1-9120-00A0C98BA67D}";
-    InvokeInfo.nShow = SW_SHOWNORMAL;
-    hr = IContextMenu_InvokeCommand(pCM, &InvokeInfo);
-    IUnknown_Release(pCM);
-
-    return SUCCEEDED(hr);
-}
-#endif
 
 /*************************************************************************
  *		SHFindFiles (SHELL32.90)
