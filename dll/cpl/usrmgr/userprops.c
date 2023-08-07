@@ -117,8 +117,8 @@ SetUserProfileData(HWND hwndDlg,
         }
         else
         {
-            pUserInfo->usri3_home_dir_drive = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                                                        sizeof(TCHAR));
+            pUserInfo->usri3_home_dir_drive =
+                HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR));
         }
     }
 
