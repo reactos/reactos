@@ -135,17 +135,6 @@ GetFileDescriptor(FILEGROUPDESCRIPTOR *pFileGroupDesc, BOOL bUnicode, INT iIndex
  */
 EXTERN_C BOOL
 WINAPI
-SHIsTempDisplayMode(VOID)
-{
-    FIXME("SHIsTempDisplayMode() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
 MakeShellURLFromPathW(LPCWSTR lpPath, LPWSTR lpUrl, INT cchMax)
 {
     FIXME("MakeShellURLFromPathW() stub\n");

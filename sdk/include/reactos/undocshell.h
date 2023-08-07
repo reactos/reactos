@@ -189,6 +189,8 @@ DWORD WINAPI SHNetConnectionDialog(
     LPCWSTR lpstrRemoteName,
     DWORD dwType);
 
+BOOL WINAPI SHIsTempDisplayMode(VOID);
+
 /****************************************************************************
  * Cabinet Window Messages
  */
