@@ -112,12 +112,13 @@ SetUserProfileData(HWND hwndDlg,
         nIndex = SendMessage(GetDlgItem(hwndDlg, IDC_USER_PROFILE_DRIVE), CB_GETCURSEL, 0, 0);
         if (nIndex != CB_ERR)
         {
-            GetComboBoxLBTextAlloc(hwndDlg, IDC_USER_PROFILE_DRIVE, nIndex, &pUserInfo->usri3_home_dir_drive);
+            GetComboBoxLBTextAlloc(hwndDlg, IDC_USER_PROFILE_DRIVE, nIndex,
+                                   &pUserInfo->usri3_home_dir_drive);
         }
         else
         {
-            HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_home_dir_drive);
-            pUserInfo->usri3_home_dir_drive = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR));;
+            pUserInfo->usri3_home_dir_drive = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                                                        sizeof(TCHAR));
         }
     }
 
