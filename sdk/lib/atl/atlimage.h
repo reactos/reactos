@@ -1056,50 +1056,6 @@ protected:
         return CLSID_NULL;
     }
 
-    // Deprecated. Don't use this
-    static const GUID *FileTypeFromExtension(LPCTSTR dotext)
-    {
-        CImage dummy; // HACK: Initialize common
-        UINT cEncoders = 0;
-        Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
-
-        for (UINT i = 0; i < cEncoders; ++i)
-        {
-            CString strSpecs(pEncoders[i].FilenameExtension);
-            int ichOld = 0, ichSep;
-            for (;;)
-            {
-                ichSep = strSpecs.Find(TEXT(';'), ichOld);
-
-                CString strSpec;
-                if (ichSep < 0)
-                    strSpec = strSpecs.Mid(ichOld);
-                else
-                    strSpec = strSpecs.Mid(ichOld, ichSep - ichOld);
-
-                int ichDot = strSpec.ReverseFind(TEXT('.'));
-                if (ichDot >= 0)
-                    strSpec = strSpec.Mid(ichDot);
-
-                if (!dotext || strSpec.CompareNoCase(dotext) == 0)
-                {
-                    static GUID s_guid;
-                    s_guid = pEncoders[i].FormatID;
-                    delete[] pEncoders;
-                    return &s_guid;
-                }
-
-                if (ichSep < 0)
-                    break;
-
-                ichOld = ichSep + 1;
-            }
-        }
-
-        delete[] pEncoders;
-        return NULL;
-    }
-
     static CLSID
     FindCodecForFileType(REFGUID guidFileType, const Gdiplus::ImageCodecInfo *pCodecs, UINT nCodecs)
     {
@@ -1109,17 +1065,6 @@ protected:
                 return pCodecs[iInfo].Clsid;
         }
         return CLSID_NULL;
-    }
-
-    // Deprecated. Don't use this
-    static bool GetClsidFromFileType(CLSID *clsid, const GUID *guid)
-    {
-        CImage dummy; // HACK: Initialize common
-        UINT cEncoders = 0;
-        Gdiplus::ImageCodecInfo* pEncoders = _getAllEncoders(cEncoders);
-        *clsid = FindCodecForFileType(*guid, pEncoders, cEncoders);
-        delete[] pEncoders;
-        return true;
     }
 
     static Gdiplus::ImageCodecInfo* _getAllEncoders(UINT& cEncoders)

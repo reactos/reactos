@@ -141,6 +141,16 @@ void CMainWindow::saveImage(BOOL overwrite)
 {
     canvasWindow.finishDrawing();
 
+    // Is the extension not supported?
+    PWCHAR pchDotExt = PathFindExtensionW(g_szFileName);
+    if (pchDotExt && *pchDotExt && !CImageDx::IsExtensionSupported(pchDotExt))
+    {
+        // Remove the extension
+        PathRemoveExtensionW(g_szFileName);
+        // No overwrite
+        overwrite = FALSE;
+    }
+
     if (g_isAFile && overwrite)
     {
         imageModel.SaveImage(g_szFileName);
