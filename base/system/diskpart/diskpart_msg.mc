@@ -1367,7 +1367,7 @@ Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 				Decalajul partiției va fi un multiplu a lui <N>. Dacă parametrul OFFSET
 				este specificat, va fi rotunjit la cel mai apropiat multiplu a lui <N>.
 			
-    NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
+    NOERR       Doar pentru automatizare. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
 				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
 				cu un cod de eroare.
@@ -2128,7 +2128,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
 				Decalajul partiției va fi un multiplu a lui <N>. Dacă parametrul OFFSET
 				este specificat, va fi rotunjit la cel mai apropiat multiplu a lui <N>.
 			
-    NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
+    NOERR       Doar pentru automatizare. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
 				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
 				cu un cod de eroare.
@@ -2828,7 +2828,7 @@ Language=Romanian
 
 Sintaxă:  DELETE PARTITION [NOERR] [OVERRIDE]
 
-    NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
+    NOERR       Doar pentru automatizare. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
 				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
 				cu un cod de eroare.
@@ -4040,7 +4040,7 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
 	            de formatare este încă în progres. Dacă NOWAIT nu este specificat,
 				DiskPart va afișa progesul formatării în procente format.
 			
-    NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
+    NOERR       Doar pentru automatizare. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
 				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
 				cu un cod de eroare.
@@ -7280,7 +7280,7 @@ Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
 				dacă apelarea blocării sistemului de fișiere eșuează. Când un sistem de
 				fișiere e demontat, toate mânerele deschise volumului vor deveni nevalide.
 
-    NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
+    NOERR       Doar pentru automatizare. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
 				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
 				cu un cod de eroare.
@@ -7876,7 +7876,7 @@ Sintaxă:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
 
                 Pentru discurile GPT, specificați un GUID pentru identificator.
 
-    NOERR       Doar pentru scriere de scripturi. Când apare o eroare, DiskPart
+    NOERR       Doar pentru automatizare. Când apare o eroare, DiskPart
 	            continuă să proceseze comenzi ca și când eroarea nu ar fi apărut.
 				Fără parametrul NOERR, o eroare cauzează DiskPart să se închidă
 				cu un cod de eroare.
