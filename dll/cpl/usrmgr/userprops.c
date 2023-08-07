@@ -128,17 +128,10 @@ SetUserProfileData(HWND hwndDlg,
         ERR("NetUserSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
     }
 
-    if (pUserInfo->usri3_profile)
-        HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_profile);
-
-    if (pUserInfo->usri3_script_path)
-        HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_script_path);
-
-    if (pUserInfo->usri3_home_dir)
-        HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_home_dir);
-
-    if (pUserInfo->usri3_home_dir_drive)
-        HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_home_dir_drive);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_profile);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_script_path);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_home_dir);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_home_dir_drive);
 
     NetApiBufferFree(pUserInfo);
 
@@ -724,11 +717,8 @@ SetUserGeneralData(HWND hwndDlg,
         ERR("NetUserSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
     }
 
-    if (pUserInfo->usri3_full_name)
-        HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_full_name);
-
-    if (pUserInfo->usri3_comment)
-        HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_comment);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_full_name);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_comment);
 
     NetApiBufferFree(pUserInfo);
 
