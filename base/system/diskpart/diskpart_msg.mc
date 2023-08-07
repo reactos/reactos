@@ -983,12 +983,12 @@ Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 mărime, partiția continuă până când nu mai este spațiu liber
                 în partiția extinsă.
 
-    OFFSET=<N>  Decalajul, în kiloocteți (KB), la care partiția este creată.
+    OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția este creată.
 	            Dacă nu este dat niciun decalaj, partiția va începe de la
 				primul spațiu liber de pe disc ce este suficient de mare ca
 				să țină noua partiție.
 
-    ALIGN=<N>   Folosit de obicei cu matrici de dispozitive cu Număr de unitate
+    ALIGN=<N>   Folosit de obicei, cu matrici de dispozitive cu Număr de unitate
 	            logică RAID (LUN) pentru a îmbunătăți performanța. Decalajul
 				partiției va fi un multiplu a lui <N>. Dacă este specificat parametrul
 				OFFSET, va fi rotunjit la cel mai apropiat multiplu a lui <N>.
@@ -1350,17 +1350,18 @@ Language=Romanian
     Crează o partiție logică într-o partiție extinsă.
     Se aplică doar la discurile cu Înregistrarea de inițializare de maestru (MBR).
 
-Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    Mărimea partiție în megaocteți (MB). Partiția e cel puțin
-	            la fel de mare în octeți ca numărul specificat de N. Dacă
-				specificați o dimensiune pentru partiția logică, aceasta trebuie să fie
-				mai mică decât partiția logică. Dacă nu este dată nicio mărime, partiția
-				continuă până când nu mai este spațiu liber pe partiția extinsă.
+    SIZE=<N>    Mărimea partiție în megaocteți (Mo). Partiția e cel puțin
+                la fel de mare în octeți ca numărul specificat de N. Dacă
+                specificați o dimensiune pentru partiția logică, aceasta
+                trebuie să fie mai mică decât partiția logică. Dacă nu este
+                dată nicio mărime, partiția continuă până când nu mai este
+                spațiu liber pe partiția extinsă.
 
     OFFSET=<N>  Decalajul, în kiloocteți (KB), la care partiția e creată.
                 Dacă nu este dat niciun decalaj, partiția e plasată pe prima
-				extindere a discului ce e suficient de mare ca să o țină.
+				expansiune a discului ce e suficient de mare ca să o țină.
 
     ALIGN=<N>   Folosită deobicei cu Numărul unității logice RAID (LUN)
 	            a șirurilor de dispozitive pentru a îmbunătăți performanța.
@@ -2041,7 +2042,7 @@ Example:
     CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Romanian
-    Crează o partiție primară pe discul de bază cu focalizare.
+    Crează o partiție primară pe discul de bază în cauză.
 
 Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
             [ALIGN=<N>] [NOERR]
@@ -2061,11 +2062,12 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                 Destinat numai pentru folosirea producătorilor de echipamente
 				originale (OEM).
 
-                Pentru discurile cu Înregistrarea de inițializare de maestru
-				(MBR), puteți specifica partiția de tip octet, în formă hexazecimală,
-				pentru partiție. Dacă acest parametru nu e specificat pentru un disc MBR,
-				comanda crează o partiție de tipul 0x06 (menționează că nu este niciun
-				sistem de fișier instalat).
+                Pentru discurile cu Registrul principal de inițializare
+				(MBR), puteți specifica o partiție de tip octet, cu valoare
+                în format hexazecimal, pentru partiție. Dacă acest parametru
+                nu e specificat pentru un disc MBR, comanda crează o partiție
+                de tipul 0x06 (menționează că nu este niciun sistem de fișier
+                instalat).
 
                     Partiția de date LDM:
                         0x42
@@ -2103,11 +2105,12 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                         de94bba4-06d1-4d40-a16a-bfd50179d6ac
 
                 Dacă acest parametru nu este specificat pentru un disc GPT,
-				comanda crează o partiție de date de bază.
+				comanda crează o partiție de bază pentru date.
 
                 Orice partiție de tip octet sau GUID poate fi specificată cu
 				acest parametru. DiskPart nu verifică tipul partiției pentru validitate,
-				cu excepția faptului că este un octet în formă hexazecimală sau un GUID.
+				cu excepția faptului că este un octet cu valoare în format hexazecimal
+                sau un GUID.
 
                 Atenție:
 
@@ -4025,8 +4028,8 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 Toate mânerele deschise ale volumului nu ar mai fi valabile.
 
     DUPLICATE   Numai pentru formatul UDF: Această etichetă se aplică formatului
-                UDF, versiunea 2.5 sau mai nouă. Acest steag intruiește
-				operațiunea de formatare sau dubleze metadatele sistemului de fișiere la
+                UDF, versiunea 2.5 sau mai nouă. Această etichetă intruiește
+				operațiunea de formatare să dubleze metadatele sistemului de fișiere la
 				cel de al doilea set de sectoare de pe disc. Metadatele dublate sunt
 				folosite de aplicații, de exemplu de aplicații de reparare și de
 				recuperare. Dacă sectoarele primare de metadate sunt găsite ca și corupte,
@@ -6166,7 +6169,7 @@ Sintaxă: SELECT DISK=<N>
                 Calea locației discului care urmează să primească focalizarea.
 
     DISK=SYSTEM
-                La calculatoarele cu BIOS, discul BIOS 0 va primi focalizare.
+                La calculatoarele cu BIOS, discul 0 din BIOS va fi marcat.
                 La calculatoarele EFI, discul care conține partiția ESP
                 folosită pentru inițializarea curentă va primi focalizare.
 				La calculatoarele EFI, dacă nu este ESP sau este prezent mai mult decât
