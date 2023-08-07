@@ -5,6 +5,7 @@
  * PURPOSE:         Main functions
  *
  * PROGRAMMERS:     Eric Kohl
+ *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "usrmgr.h"
@@ -14,6 +15,24 @@
 static LONG APIENTRY UsrmgrApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
 HINSTANCE hApplet = 0;
+
+LPTSTR GetDlgItemTextAlloc(HWND hwndDlg, INT nDlgItem)
+{
+    INT nLength = GetWindowTextLength(GetDlgItem(hwndDlg, nDlgItem));
+    LPTSTR psz = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+    if (psz)
+        GetDlgItemText(hwndDlg, nDlgItem, psz, nLength + 1);
+    return psz;
+}
+
+LPTSTR GetComboBoxLBTextAlloc(HWND hwndDlg, INT nDlgItem, INT nIndex)
+{
+    INT nLength = (INT)SendDlgItemMessage(hwndDlg, nDlgItem, CB_GETLBTEXTLEN, nIndex, 0);
+    LPTSTR psz = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
+    if (psz)
+        SendDlgItemMessage(hwndDlg, nDlgItem, CB_GETLBTEXT, nIndex, (LPARAM)psz);
+    return psz;
+}
 
 /* Applets */
 APPLET Applets[NUM_APPLETS] =
@@ -25,7 +44,6 @@ APPLET Applets[NUM_APPLETS] =
         UsrmgrApplet
     }
 };
-
 
 static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)

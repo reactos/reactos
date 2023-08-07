@@ -155,19 +155,11 @@ NewGroupDlgProc(HWND hwndDlg,
                         break;
                     }
 
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        groupInfo->lgrpi1_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_GROUP_NEW_NAME, groupInfo->lgrpi1_name, nLength + 1);
-                    }
+                    /* Get Name */
+                    groupInfo->lgrpi1_name = GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_NEW_NAME);
 
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_GROUP_NEW_DESCRIPTION, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        groupInfo->lgrpi1_comment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_GROUP_NEW_DESCRIPTION, groupInfo->lgrpi1_comment, nLength + 1);
-                    }
+                    /* Get Description */
+                    groupInfo->lgrpi1_comment = GetDlgItemTextAlloc(hwndDlg, IDC_GROUP_NEW_DESCRIPTION);
 
                     EndDialog(hwndDlg, IDOK);
                     break;
@@ -228,11 +220,8 @@ GroupNew(HWND hwndDlg)
                              group.lgrpi1_comment);
     }
 
-    if (group.lgrpi1_name)
-        HeapFree(GetProcessHeap(), 0, group.lgrpi1_name);
-
-    if (group.lgrpi1_comment)
-        HeapFree(GetProcessHeap(), 0, group.lgrpi1_comment);
+    HeapFree(GetProcessHeap(), 0, group.lgrpi1_name);
+    HeapFree(GetProcessHeap(), 0, group.lgrpi1_comment);
 }
 
 

@@ -87,80 +87,38 @@ SetUserProfileData(HWND hwndDlg,
                    PPROFILE_USER_DATA pUserData)
 {
     PUSER_INFO_3 pUserInfo = NULL;
-    LPTSTR pszProfilePath = NULL;
-    LPTSTR pszScriptPath = NULL;
-    LPTSTR pszHomeDir = NULL;
-    LPTSTR pszHomeDrive = NULL;
     NET_API_STATUS status;
     DWORD dwIndex;
-    INT nLength;
     INT nIndex;
 
     NetUserGetInfo(NULL, pUserData->szUserName, 3, (LPBYTE*)&pUserInfo);
 
     /* Get the profile path */
-    nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_PROFILE_PATH));
-    if (nLength == 0)
-    {
-        pUserInfo->usri3_profile = NULL;
-    }
-    else
-    {
-        pszProfilePath = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
-        GetDlgItemText(hwndDlg, IDC_USER_PROFILE_PATH, pszProfilePath, nLength + 1);
-        pUserInfo->usri3_profile = pszProfilePath;
-    }
+    pUserInfo->usri3_profile = GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_PATH);
 
     /* Get the script path */
-    nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_PROFILE_SCRIPT));
-    if (nLength == 0)
-    {
-        pUserInfo->usri3_script_path = NULL;
-    }
-    else
-    {
-        pszScriptPath = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
-        GetDlgItemText(hwndDlg, IDC_USER_PROFILE_SCRIPT, pszScriptPath, nLength + 1);
-        pUserInfo->usri3_script_path = pszScriptPath;
-    }
+    pUserInfo->usri3_script_path = GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_SCRIPT);
 
     if (IsDlgButtonChecked(hwndDlg, IDC_USER_PROFILE_LOCAL) == BST_CHECKED)
     {
         /* Local home directory */
-        nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_PROFILE_LOCAL_PATH));
-        if (nLength == 0)
-        {
-            pUserInfo->usri3_home_dir = NULL;
-        }
-        else
-        {
-            pszHomeDir = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
-            GetDlgItemText(hwndDlg, IDC_USER_PROFILE_LOCAL_PATH, pszHomeDir, nLength + 1);
-            pUserInfo->usri3_home_dir = pszHomeDir;
-        }
+        pUserInfo->usri3_home_dir = GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_LOCAL_PATH);
     }
     else
     {
         /* Remote home directory */
-        nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_PROFILE_REMOTE_PATH));
-        if (nLength == 0)
-        {
-            pUserInfo->usri3_home_dir = NULL;
-        }
-        else
-        {
-            pszHomeDir = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
-            GetDlgItemText(hwndDlg, IDC_USER_PROFILE_REMOTE_PATH, pszHomeDir, nLength + 1);
-            pUserInfo->usri3_home_dir = pszHomeDir;
-        }
+        pUserInfo->usri3_home_dir = GetDlgItemTextAlloc(hwndDlg, IDC_USER_PROFILE_REMOTE_PATH);
 
         nIndex = SendMessage(GetDlgItem(hwndDlg, IDC_USER_PROFILE_DRIVE), CB_GETCURSEL, 0, 0);
         if (nIndex != CB_ERR)
         {
-            nLength = SendMessage(GetDlgItem(hwndDlg, IDC_USER_PROFILE_DRIVE), CB_GETLBTEXTLEN, nIndex, 0);
-            pszHomeDrive = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
-            SendMessage(GetDlgItem(hwndDlg, IDC_USER_PROFILE_DRIVE), CB_GETLBTEXT, nIndex, (LPARAM)pszHomeDrive);
-            pUserInfo->usri3_home_dir_drive = pszHomeDrive;
+            pUserInfo->usri3_home_dir_drive =
+                GetComboBoxLBTextAlloc(hwndDlg, IDC_USER_PROFILE_DRIVE, nIndex);
+        }
+        else
+        {
+            pUserInfo->usri3_home_dir_drive =
+                HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR));
         }
     }
 
@@ -170,17 +128,10 @@ SetUserProfileData(HWND hwndDlg,
         ERR("NetUserSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
     }
 
-    if (pszProfilePath)
-        HeapFree(GetProcessHeap(), 0, pszProfilePath);
-
-    if (pszScriptPath)
-        HeapFree(GetProcessHeap(), 0, pszScriptPath);
-
-    if (pszHomeDir)
-        HeapFree(GetProcessHeap(), 0, pszHomeDir);
-
-    if (pszHomeDrive)
-        HeapFree(GetProcessHeap(), 0, pszHomeDrive);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_profile);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_script_path);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_home_dir);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_home_dir_drive);
 
     NetApiBufferFree(pUserInfo);
 
@@ -743,11 +694,8 @@ SetUserGeneralData(HWND hwndDlg,
                    PGENERAL_USER_DATA pUserData)
 {
     PUSER_INFO_3 pUserInfo = NULL;
-    LPTSTR pszFullName = NULL;
-    LPTSTR pszComment = NULL;
     NET_API_STATUS status;
     DWORD dwIndex;
-    INT nLength;
 
     NetUserGetInfo(NULL, pUserData->szUserName, 3, (LPBYTE*)&pUserInfo);
 
@@ -757,29 +705,11 @@ SetUserGeneralData(HWND hwndDlg,
 
     pUserInfo->usri3_password_expired = pUserData->dwPasswordExpired;
 
-    nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_GENERAL_FULL_NAME));
-    if (nLength == 0)
-    {
-        pUserInfo->usri3_full_name = NULL;
-    }
-    else
-    {
-        pszFullName = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
-        GetDlgItemText(hwndDlg, IDC_USER_GENERAL_FULL_NAME, pszFullName, nLength + 1);
-        pUserInfo->usri3_full_name = pszFullName;
-    }
+    /* Get full name */
+    pUserInfo->usri3_full_name = GetDlgItemTextAlloc(hwndDlg, IDC_USER_GENERAL_FULL_NAME);
 
-    nLength = GetWindowTextLength(GetDlgItem(hwndDlg, IDC_USER_GENERAL_DESCRIPTION));
-    if (nLength == 0)
-    {
-        pUserInfo->usri3_full_name = NULL;
-    }
-    else
-    {
-        pszComment = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(TCHAR));
-        GetDlgItemText(hwndDlg, IDC_USER_GENERAL_DESCRIPTION, pszComment, nLength + 1);
-        pUserInfo->usri3_comment = pszComment;
-    }
+    /* Get desciption */
+    pUserInfo->usri3_comment = GetDlgItemTextAlloc(hwndDlg, IDC_USER_GENERAL_DESCRIPTION);
 
     status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
     if (status != NERR_Success)
@@ -787,11 +717,8 @@ SetUserGeneralData(HWND hwndDlg,
         ERR("NetUserSetInfo failed. Status: %lu  Index: %lu", status, dwIndex);
     }
 
-    if (pszFullName)
-        HeapFree(GetProcessHeap(), 0, pszFullName);
-
-    if (pszComment)
-        HeapFree(GetProcessHeap(), 0, pszComment);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_full_name);
+    HeapFree(GetProcessHeap(), 0, pUserInfo->usri3_comment);
 
     NetApiBufferFree(pUserInfo);
 

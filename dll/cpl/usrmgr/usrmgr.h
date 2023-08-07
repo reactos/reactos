@@ -35,10 +35,12 @@ typedef struct _APPLET
 
 extern HINSTANCE hApplet;
 
-
 INT_PTR CALLBACK UsersPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK GroupsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ExtraPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+LPTSTR GetDlgItemTextAlloc(HWND hwndDlg, INT nDlgItem);
+LPTSTR GetComboBoxLBTextAlloc(HWND hwndDlg, INT nDlgItem, INT nIndex);
 
 /* groupprops.c */
 BOOL

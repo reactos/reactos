@@ -60,7 +60,6 @@ ChangePasswordDlgProc(HWND hwndDlg,
                       LPARAM lParam)
 {
     PUSER_INFO_1003 userInfo;
-    INT nLength;
 
     UNREFERENCED_PARAMETER(wParam);
 
@@ -79,14 +78,9 @@ ChangePasswordDlgProc(HWND hwndDlg,
                 case IDOK:
                     if (CheckPasswords(hwndDlg, IDC_EDIT_PASSWORD1, IDC_EDIT_PASSWORD2))
                     {
-
                         /* Store the password */
-                        nLength = SendDlgItemMessage(hwndDlg, IDC_EDIT_PASSWORD1, WM_GETTEXTLENGTH, 0, 0);
-                        if (nLength > 0)
-                        {
-                            userInfo->usri1003_password = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                            GetDlgItemText(hwndDlg, IDC_EDIT_PASSWORD1, userInfo->usri1003_password, nLength + 1);
-                        }
+                        userInfo->usri1003_password =
+                            GetDlgItemTextAlloc(hwndDlg, IDC_EDIT_PASSWORD1);
 
                         EndDialog(hwndDlg, IDOK);
                     }
@@ -147,8 +141,7 @@ UserChangePassword(HWND hwndDlg)
         }
     }
 
-    if (user.usri1003_password)
-        HeapFree(GetProcessHeap(), 0, user.usri1003_password);
+    HeapFree(GetProcessHeap(), 0, user.usri1003_password);
 }
 
 
@@ -250,36 +243,16 @@ NewUserDlgProc(HWND hwndDlg,
                     }
 
                     /* Store the user name */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        userInfo->usri3_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_USER_NEW_NAME, userInfo->usri3_name, nLength + 1);
-                    }
+                    userInfo->usri3_name = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_NAME);
 
                     /* Store the full user name */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_FULL_NAME, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        userInfo->usri3_full_name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_USER_NEW_FULL_NAME, userInfo->usri3_full_name, nLength + 1);
-                    }
+                    userInfo->usri3_full_name = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_FULL_NAME);
 
                     /* Store the description */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_DESCRIPTION, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        userInfo->usri3_comment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_USER_NEW_DESCRIPTION, userInfo->usri3_comment, nLength + 1);
-                    }
+                    userInfo->usri3_comment = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_DESCRIPTION);
 
                     /* Store the password */
-                    nLength = SendDlgItemMessage(hwndDlg, IDC_USER_NEW_PASSWORD1, WM_GETTEXTLENGTH, 0, 0);
-                    if (nLength > 0)
-                    {
-                        userInfo->usri3_password = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
-                        GetDlgItemText(hwndDlg, IDC_USER_NEW_PASSWORD1, userInfo->usri3_password, nLength + 1);
-                    }
+                    userInfo->usri3_password = GetDlgItemTextAlloc(hwndDlg, IDC_USER_NEW_PASSWORD1);
 
                     EndDialog(hwndDlg, IDOK);
                     break;
@@ -351,17 +324,10 @@ UserNew(HWND hwndDlg)
                              user.usri3_comment);
     }
 
-    if (user.usri3_name)
-        HeapFree(GetProcessHeap(), 0, user.usri3_name);
-
-    if (user.usri3_full_name)
-        HeapFree(GetProcessHeap(), 0, user.usri3_full_name);
-
-    if (user.usri3_comment)
-        HeapFree(GetProcessHeap(), 0, user.usri3_comment);
-
-    if (user.usri3_password)
-        HeapFree(GetProcessHeap(), 0, user.usri3_password);
+    HeapFree(GetProcessHeap(), 0, user.usri3_name);
+    HeapFree(GetProcessHeap(), 0, user.usri3_full_name);
+    HeapFree(GetProcessHeap(), 0, user.usri3_comment);
+    HeapFree(GetProcessHeap(), 0, user.usri3_password);
 }
 
 
