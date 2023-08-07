@@ -5,6 +5,7 @@
  * PURPOSE:         Main functions
  *
  * PROGRAMMERS:     Eric Kohl
+ *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "usrmgr.h"
