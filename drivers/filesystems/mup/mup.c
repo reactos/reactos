@@ -1306,7 +1306,7 @@ MupRerouteOpen(PFILE_OBJECT FileObject,
     PWSTR FullPath;
     ULONG TotalLength;
 
-    DPRINT1("Rerouting %wZ with %wZ\n", &FileObject->FileName, &UncProvider->DeviceName);
+    DPRINT("Rerouting %wZ with %wZ\n", &FileObject->FileName, &UncProvider->DeviceName);
 
     /* Get the full path name (device name first, and requested file name appended) */
     TotalLength = UncProvider->DeviceName.Length + FileObject->FileName.Length;
@@ -1778,7 +1778,7 @@ QueryPathCompletionRoutine(PDEVICE_OBJECT DeviceObject,
                 Prefix->ExternalAlloc = TRUE;
 
                 /* Insert the accepted prefix in the table of known prefixes */
-                DPRINT1("%wZ accepted %wZ\n", &Prefix->UncProvider->DeviceName, &Prefix->AcceptedPrefix);
+                DPRINT("%wZ accepted %wZ\n", &Prefix->UncProvider->DeviceName, &Prefix->AcceptedPrefix);
                 ExAcquireResourceExclusiveLite(&MupPrefixTableLock, TRUE);
                 if (RtlInsertUnicodePrefix(&MupPrefixTable, &Prefix->AcceptedPrefix, &Prefix->PrefixTableEntry))
                 {
@@ -1897,7 +1897,7 @@ CreateRedirectedFile(PIRP Irp,
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
-    DPRINT1("Request for opening: %wZ\n", &FileObject->FileName);
+    DPRINT("Request for opening: %wZ\n", &FileObject->FileName);
 
     Referenced = FALSE;
     BreakOnFirst = TRUE;
@@ -2104,7 +2104,7 @@ CreateRedirectedFile(PIRP Irp,
                     ExReleaseResourceLite(&MasterQueryContext->QueryPathListLock);
 
                     /* Query the provider !*/
-                    DPRINT1("Requesting UNC provider: %wZ\n", &UncProvider->DeviceName);
+                    DPRINT("Requesting UNC provider: %wZ\n", &UncProvider->DeviceName);
                     DPRINT("Calling: %wZ\n", &UncProvider->DeviceObject->DriverObject->DriverName);
                     Status = IoCallDriver(UncProvider->DeviceObject, QueryIrp);
                 }
