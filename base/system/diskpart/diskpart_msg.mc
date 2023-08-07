@@ -999,11 +999,10 @@ Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 să se închidă cu un cod de eroare.
 
     După ce a fost creată partiția, marcajul se mută automat pe noua
-    partiție. Doar o partiție expandată poate fi creată pe un disc.
+    partiție. Doar o singură partiție expandată poate fi creată pe un disc.
 	Această comandă eșuează dacă încercați să creați o partiție expandată
-	înainte de a crea partițiile logice în altă partiție expandată.
-    Trebuie să creați o partiție expandată înainte de a crea
-	partițiile logice.
+	în altă partiție expandată. Trebuie să creați o partiție expandată
+    înainte de a crea partiții logice.
 
     Un disc MBR de bază trebuie să fie selectat pentru ca această operațiune
     să aibă succes.
@@ -4005,7 +4004,7 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 Specifică revizia sistemului de fișiere (dacă este aplicabil).
 
     RECOMMENDED Dacă este specificat, folosiți sistemul de fișiere recomandat
-	            și revizuirea în locul celui implicit dacă există recomandarea.
+	            și revizuirea în locul celui implicit dacă există o recomandare.
 				Sistemul de fișiere recomandat (dacă există unul) este afișat
 				de comanda FILESYSTEMS.
 
@@ -4026,7 +4025,8 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
     COMPRESS    Numai pentru formatul NTFS: Fișierele create pe noul volum
 	            vor fi comprimate în mod implicit.
     OVERRIDE    Forțează sistemul de fișiere să scoată primul dacă e necesar.
-                Toate mânerele deschise ale volumului nu ar mai fi valabile.
+                Toate identificatoarele de gestiune deschise ale volumului
+                nu ar mai fi valabile.
 
     DUPLICATE   Numai pentru formatul UDF: Această etichetă se aplică formatului
                 UDF, versiunea 2.5 sau mai nouă. Această etichetă intruiește
