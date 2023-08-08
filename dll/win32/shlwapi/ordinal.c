@@ -3408,7 +3408,7 @@ BOOL WINAPI SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str,
         return TRUE;
     }
 
-    /* This is not 7-bit clean. It needs UTF-7 encoding.
+    /* This is not 7-bit clean. It needs UTF-7 encoding in UTF-16.
        We write ".A" and ".W"-appended sections. */
 
     /* str --> szBuffA */
