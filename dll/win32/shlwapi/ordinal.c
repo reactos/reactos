@@ -48,7 +48,7 @@
 #include "mlang.h"
 #include "mshtmhst.h"
 #ifdef __REACTOS__
-    #include "shlwapi_undoc.h"
+    #include <shlwapi_undoc.h>
 #endif
 #include "wine/unicode.h"
 #include "wine/debug.h"
