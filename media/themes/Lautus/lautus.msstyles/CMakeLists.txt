@@ -1,4 +1,8 @@
 
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    add_definitions(-DUSE_PNG_IMAGES)
+endif()
+
 list(APPEND TEXTFILES
     textfiles/ExtraLargeNormal.INI
     textfiles/LargeFontsNormal.INI

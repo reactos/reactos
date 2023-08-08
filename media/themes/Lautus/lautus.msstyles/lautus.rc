@@ -92,7 +92,21 @@ NORMAL_SPINDOWNGLYPH_BMP BITMAP "bitmaps/NORMAL_SPINDOWNGLYPH.bmp"
 NORMAL_SPINLEFTGLYPH_BMP BITMAP "bitmaps/NORMAL_SPINLEFTGLYPH.bmp"
 NORMAL_SPINRIGHTGLYPH_BMP BITMAP "bitmaps/NORMAL_SPINRIGHTGLYPH.bmp"
 NORMAL_SPINUPGLYPH_BMP BITMAP "bitmaps/NORMAL_SPINUPGLYPH.bmp"
+#ifdef USE_PNG_IMAGES
+/* Resource ID ends in "BMP" both for BMP and PNG versions of this resource. This was
+ * done to keep the ImageFile paths the same, thus allowing the same INI file to be
+ * used to compile with or without using PNG resources. This is a workaround, and
+ * resource IDs ending with "PNG" do work and are preferable.
+ *
+ * This workaround is needed because preprocessor definitions only apply to code files.
+ * As more PNG resources are used, it might be best to some form of compile-time INI
+ * processing/generation, e.g. to conditionally assemble the final file from separate
+ * parts or something. This is far from a first priority task, though.
+ */
+NORMAL_STARTBUTTON_BMP IMAGE "bitmaps/NORMAL_STARTBUTTON.png"
+#else
 NORMAL_STARTBUTTON_BMP BITMAP "bitmaps/NORMAL_STARTBUTTON.bmp"
+#endif /* USE_PNG_IMAGES */
 NORMAL_STARTGROUPBACKGROUND_BMP BITMAP "bitmaps/NORMAL_STARTGROUPBACKGROUND.bmp"
 NORMAL_STARTGROUPNEWAPPBUTTON_BMP BITMAP "bitmaps/NORMAL_STARTGROUPNEWAPPBUTTON.bmp"
 NORMAL_STARTGROUPSEPERATOR_BMP BITMAP "bitmaps/NORMAL_STARTGROUPSEPERATOR.bmp"
