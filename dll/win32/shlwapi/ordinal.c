@@ -3389,7 +3389,7 @@ BOOL WINAPI SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str,
     TRACE("(%s, %p, %s, %s)\n", debugstr_w(appName), keyName, debugstr_w(str),
           debugstr_w(filename));
 
-    /* Write a normal profile string. If str was empty, then key will be deleted */
+    /* Write a normal profile string. If str was `NULL`, then key will be deleted */
     if (!WritePrivateProfileStringW(appName, keyName, str, filename))
         return FALSE;
 
