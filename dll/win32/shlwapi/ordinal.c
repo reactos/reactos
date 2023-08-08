@@ -47,6 +47,9 @@
 #include "commdlg.h"
 #include "mlang.h"
 #include "mshtmhst.h"
+#ifdef __REACTOS__
+    #include "shlwapi_undoc.h"
+#endif
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
@@ -3288,6 +3291,32 @@ BOOL WINAPI PlaySoundWrapW(LPCWSTR pszSound, HMODULE hmod, DWORD fdwSound)
 DWORD WINAPI SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out,
         DWORD outLen, LPCWSTR filename)
 {
+#ifdef __REACTOS__
+    WCHAR szSection[MAX_PATH + 2];
+    WCHAR szBuffW[512];
+    CHAR szBuffA[512];
+
+    TRACE("(%s,%s,%p,%08x,%s)\n", debugstr_w(appName), debugstr_w(keyName),
+          out, outLen, debugstr_w(filename));
+
+    if (outLen == 0)
+        return 0;
+
+    lstrcpynW(szSection, appName, _countof(szSection) - 2);
+    lstrcatW(szSection, L".W");
+
+    GetPrivateProfileStringW(szSection, keyName, L"\xFFFF", szBuffW, _countof(szBuffW), filename);
+    if (szBuffW[0] == 0xFFFF)
+        return GetPrivateProfileStringW(appName, keyName, NULL, out, outLen, filename);
+
+    /* szBuffW --> szBuffA */
+    SHUnicodeToAnsiCP(CP_ACP, szBuffW, szBuffA, _countof(szBuffA));
+    szBuffA[_countof(szBuffA) - 1] = ANSI_NULL;
+
+    /* szBuffA --> out */
+    SHAnsiToUnicodeCP(CP_UTF7, szBuffA, out, outLen);
+    out[outLen - 1] = UNICODE_NULL;
+#else
     INT ret;
     WCHAR *buf;
 
@@ -3310,9 +3339,23 @@ DWORD WINAPI SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out,
         *out = 0;
 
     HeapFree(GetProcessHeap(), 0, buf);
+#endif
 
     return strlenW(out);
 }
+
+#ifdef __REACTOS__
+static BOOL Is7BitClean(LPCWSTR psz)
+{
+    while (*psz)
+    {
+        if (*psz > 0x7F)
+            return FALSE;
+        ++psz;
+    }
+    return TRUE;
+}
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.295]
@@ -3333,10 +3376,59 @@ DWORD WINAPI SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out,
 BOOL WINAPI SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str,
         LPCWSTR filename)
 {
+#ifdef __REACTOS__
+    WCHAR szSection[MAX_PATH + 2];
+    WCHAR szBuffW[512];
+    CHAR szBuffA[512];
+
+    TRACE("(%s, %p, %s, %s)\n", debugstr_w(appName), keyName, debugstr_w(str),
+          debugstr_w(filename));
+
+    if (!WritePrivateProfileStringW(appName, keyName, str, filename))
+        return FALSE;
+
+    if (!str || Is7BitClean(str))
+    {
+        /* Delete .A */
+        lstrcpynW(szSection, appName, _countof(szSection) - 2);
+        lstrcatW(szSection, L".A");
+        WritePrivateProfileStringW(szSection, keyName, NULL, filename);
+
+        /* Delete .W */
+        lstrcpynW(szSection, appName, _countof(szSection) - 2);
+        lstrcatW(szSection, L".W");
+        WritePrivateProfileStringW(szSection, keyName, NULL, filename);
+
+        return TRUE;
+    }
+
+    /* str --> szBuffA */
+    SHUnicodeToAnsiCP(CP_UTF7, str, szBuffA, _countof(szBuffA));
+    szBuffA[_countof(szBuffA) - 1] = ANSI_NULL;
+
+    /* szBuffA --> szBuffW */
+    SHAnsiToUnicodeCP(CP_ACP, szBuffA, szBuffW, _countof(szBuffW));
+    szBuffW[_countof(szBuffW) - 1] = UNICODE_NULL;
+
+    /* Write .A */
+    lstrcpynW(szSection, appName, _countof(szSection) - 2);
+    lstrcatW(szSection, L".A");
+    if (!WritePrivateProfileStringW(szSection, keyName, str, filename))
+        return FALSE;
+
+    /* Write .W */
+    lstrcpynW(szSection, appName, _countof(szSection) - 2);
+    lstrcatW(szSection, L".W");
+    if (!WritePrivateProfileStringW(szSection, keyName, szBuffW, filename))
+        return FALSE;
+
+    return TRUE;
+#else
     TRACE("(%s, %p, %s, %s)\n", debugstr_w(appName), keyName, debugstr_w(str),
             debugstr_w(filename));
 
     return WritePrivateProfileStringW(appName, keyName, str, filename);
+#endif
 }
 
 /*************************************************************************
