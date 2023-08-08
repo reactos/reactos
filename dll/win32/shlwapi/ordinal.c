@@ -3293,8 +3293,8 @@ DWORD WINAPI SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out,
 {
 #ifdef __REACTOS__
     WCHAR szSection[MAX_PATH + 2];
-    WCHAR szBuffW[512];
-    CHAR szBuffA[512];
+    WCHAR szWideBuff[MAX_PATH];
+    CHAR szUtf7Buff[MAX_PATH];
 
     TRACE("(%s,%s,%p,%08x,%s)\n", debugstr_w(appName), debugstr_w(keyName),
           out, outLen, debugstr_w(filename));
@@ -3305,8 +3305,8 @@ DWORD WINAPI SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out,
     /* Try ".W"-appended section name. See also SHSetIniStringW. */
     lstrcpynW(szSection, appName, _countof(szSection) - 2);
     lstrcatW(szSection, L".W");
-    GetPrivateProfileStringW(szSection, keyName, NULL, szBuffW, _countof(szBuffW), filename);
-    if (szBuffW[0] == UNICODE_NULL) /* It's empty or not found */
+    GetPrivateProfileStringW(szSection, keyName, NULL, szWideBuff, _countof(szWideBuff), filename);
+    if (szWideBuff[0] == UNICODE_NULL) /* It's empty or not found */
     {
         /* Try the normal section name */
         return GetPrivateProfileStringW(appName, keyName, NULL, out, outLen, filename);
@@ -3314,12 +3314,12 @@ DWORD WINAPI SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out,
 
     /* Okay, now ".W" version is valid. Its value is a UTF-7 string in UTF-16 */
 
-    /* szBuffW --> szBuffA */
-    SHUnicodeToAnsiCP(CP_ACP, szBuffW, szBuffA, _countof(szBuffA));
-    szBuffA[_countof(szBuffA) - 1] = ANSI_NULL;
+    /* szWideBuff --> szUtf7Buff */
+    SHUnicodeToAnsiCP(CP_ACP, szWideBuff, szUtf7Buff, _countof(szUtf7Buff));
+    szUtf7Buff[_countof(szUtf7Buff) - 1] = ANSI_NULL;
 
-    /* szBuffA --> out */
-    SHAnsiToUnicodeCP(CP_UTF7, szBuffA, out, outLen);
+    /* szUtf7Buff --> out */
+    SHAnsiToUnicodeCP(CP_UTF7, szUtf7Buff, out, outLen);
     out[outLen - 1] = UNICODE_NULL;
 #else
     INT ret;
@@ -3352,6 +3352,9 @@ DWORD WINAPI SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out,
 #ifdef __REACTOS__
 static BOOL Is7BitClean(LPCWSTR psz)
 {
+    if (!psz)
+        return TRUE;
+
     while (*psz)
     {
         if (*psz > 0x7F)
@@ -3383,8 +3386,8 @@ BOOL WINAPI SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str,
 {
 #ifdef __REACTOS__
     WCHAR szSection[MAX_PATH + 2];
-    WCHAR szBuffW[512];
-    CHAR szBuffA[512];
+    WCHAR szWideBuff[MAX_PATH];
+    CHAR szUtf7Buff[MAX_PATH];
 
     TRACE("(%s, %p, %s, %s)\n", debugstr_w(appName), keyName, debugstr_w(str),
           debugstr_w(filename));
@@ -3393,7 +3396,7 @@ BOOL WINAPI SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str,
     if (!WritePrivateProfileStringW(appName, keyName, str, filename))
         return FALSE;
 
-    if (!str || Is7BitClean(str))
+    if (Is7BitClean(str))
     {
         /* Delete ".A" version */
         lstrcpynW(szSection, appName, _countof(szSection) - 2);
@@ -3411,13 +3414,13 @@ BOOL WINAPI SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str,
     /* Now str is not 7-bit clean. It needs UTF-7 encoding in UTF-16.
        We write ".A" and ".W"-appended sections. */
 
-    /* str --> szBuffA */
-    SHUnicodeToAnsiCP(CP_UTF7, str, szBuffA, _countof(szBuffA));
-    szBuffA[_countof(szBuffA) - 1] = ANSI_NULL;
+    /* str --> szUtf7Buff */
+    SHUnicodeToAnsiCP(CP_UTF7, str, szUtf7Buff, _countof(szUtf7Buff));
+    szUtf7Buff[_countof(szUtf7Buff) - 1] = ANSI_NULL;
 
-    /* szBuffA --> szBuffW */
-    SHAnsiToUnicodeCP(CP_ACP, szBuffA, szBuffW, _countof(szBuffW));
-    szBuffW[_countof(szBuffW) - 1] = UNICODE_NULL;
+    /* szUtf7Buff --> szWideBuff */
+    SHAnsiToUnicodeCP(CP_ACP, szUtf7Buff, szWideBuff, _countof(szWideBuff));
+    szWideBuff[_countof(szWideBuff) - 1] = UNICODE_NULL;
 
     /* Write ".A" version */
     lstrcpynW(szSection, appName, _countof(szSection) - 2);
@@ -3428,7 +3431,7 @@ BOOL WINAPI SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str,
     /* Write ".W" version */
     lstrcpynW(szSection, appName, _countof(szSection) - 2);
     lstrcatW(szSection, L".W");
-    if (!WritePrivateProfileStringW(szSection, keyName, szBuffW, filename))
+    if (!WritePrivateProfileStringW(szSection, keyName, szWideBuff, filename))
         return FALSE;
 
     return TRUE;
