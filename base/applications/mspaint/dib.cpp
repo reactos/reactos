@@ -262,7 +262,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
 
     // load the image
     CImageDx img;
-    float xDpi, yDpi;
+    float xDpi = 0, yDpi = 0;
     HRESULT hr = img.LoadDx(name, &xDpi, &yDpi);
     if (FAILED(hr))
     {
@@ -274,12 +274,16 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
     if (!fIsMainFile)
         return hBitmap;
 
+    if (xDpi <= 0 || yDpi <= 0)
+    {
+        HDC hDC = ::GetDC(NULL);
+        xDpi = ::GetDeviceCaps(hDC, LOGPIXELSX);
+        yDpi = ::GetDeviceCaps(hDC, LOGPIXELSY);
+        ::ReleaseDC(NULL, hDC);
+    }
+
     g_xDpi = xDpi;
     g_yDpi = yDpi;
-    if (g_xDpi <= 0)
-        g_xDpi = 96;
-    if (g_yDpi <= 0)
-        g_yDpi = 96;
 
     SetBitmapAndInfo(hBitmap, name, &find, TRUE);
     return hBitmap;
