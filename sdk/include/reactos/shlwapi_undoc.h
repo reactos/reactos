@@ -179,6 +179,12 @@ HRESULT WINAPI SHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD si
 #define SHLoadRegUIString  SHLoadRegUIStringA
 #endif
 
+DWORD WINAPI
+SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out, DWORD outLen, LPCWSTR filename);
+
+BOOL WINAPI
+SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str, LPCWSTR filename);
+
 int
 WINAPIV
 ShellMessageBoxWrapW(

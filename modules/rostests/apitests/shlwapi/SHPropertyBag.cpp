@@ -638,10 +638,60 @@ static void SHPropertyBag_OnRegKey(void)
     RegCloseKey(hKey);
 }
 
+static void SHPropertyBag_SHSetIniStringW(void)
+{
+    WCHAR szIniFile[MAX_PATH];
+    WCHAR szValue[MAX_PATH];
+    BOOL bRet;
+    DWORD dwRet;
+
+    ExpandEnvironmentStringsW(L"%TEMP%\\SHSetIniString.ini", szIniFile, _countof(szIniFile));
+
+    DeleteFileW(szIniFile);
+
+    trace("%ls\n", szIniFile);
+
+    bRet = SHSetIniStringW(L"TestSection", L"Key", L"Value", szIniFile);
+    ok_int(bRet, TRUE);
+
+    WritePrivateProfileStringW(NULL, NULL, NULL, szIniFile);
+
+    dwRet = SHGetIniStringW(L"TestSection", L"Key", szValue, _countof(szValue), szIniFile);
+    ok_long(dwRet, 5);
+    ok_wstr(szValue, L"Value");
+
+    bRet = SHSetIniStringW(L"TestSection", L"Key", NULL, szIniFile);
+    ok_int(bRet, TRUE);
+
+    WritePrivateProfileStringW(NULL, NULL, NULL, szIniFile);
+
+    dwRet = SHGetIniStringW(L"TestSection", L"Key", szValue, _countof(szValue), szIniFile);
+    ok_long(dwRet, 0);
+    ok_wstr(szValue, L"");
+
+    bRet = SHSetIniStringW(L"TestSection", L"Key", L"ABC\x3042\x3044\x3046\x2665", szIniFile);
+    ok_int(bRet, TRUE);
+
+    WritePrivateProfileStringW(NULL, NULL, NULL, szIniFile);
+
+    dwRet = SHGetIniStringW(L"TestSection", L"Key", szValue, _countof(szValue), szIniFile);
+    ok_long(dwRet, 7);
+    ok_wstr(szValue, L"ABC\x3042\x3044\x3046\x2665");
+
+    szValue[0] = 0x3000;
+    szValue[1] = UNICODE_NULL;
+    dwRet = SHGetIniStringW(L"TestSection", L"NotExistentKey", szValue, _countof(szValue), szIniFile);
+    ok_long(dwRet, 0);
+    ok_wstr(szValue, L"");
+
+    DeleteFileW(szIniFile);
+}
+
 START_TEST(SHPropertyBag)
 {
     SHPropertyBag_ReadTest();
     SHPropertyBag_WriteTest();
     SHPropertyBag_OnMemory();
     SHPropertyBag_OnRegKey();
+    SHPropertyBag_SHSetIniStringW();
 }
