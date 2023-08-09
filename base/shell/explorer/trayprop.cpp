@@ -78,8 +78,6 @@ private:
             uImageId = IDB_TASKBARPROP_NOLOCK_NOGROUP_QL;
         else if (!bLock && bGroup  && bShowQL)
             uImageId = IDB_TASKBARPROP_NOLOCK_GROUP_QL;
-        else
-            ASSERT(FALSE);
 
         SetBitmap(hwndTaskbarBitmap, &m_hbmpTaskbar, uImageId);
     }
@@ -260,8 +258,6 @@ private:
             uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK;
         else if (!bHideInactive && !bShowClock)
             uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK;
-        else
-            ASSERT(FALSE);
 
         SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
     }
