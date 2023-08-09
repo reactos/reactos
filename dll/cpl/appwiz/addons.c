@@ -299,13 +299,6 @@ static HRESULT WINAPI InstallCallback_OnProgress(IBindStatusCallback *iface, ULO
 static HRESULT WINAPI InstallCallback_OnStopBinding(IBindStatusCallback *iface,
         HRESULT hresult, LPCWSTR szError)
 {
-    EnterCriticalSection(&csLock);
-    if(download_binding) {
-        IBinding_Release(download_binding);
-        download_binding = NULL;
-    }
-    LeaveCriticalSection(&csLock);
-
     if(FAILED(hresult)) {
         if(hresult == E_ABORT)
             TRACE("Binding aborted\n");
@@ -411,12 +404,25 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 
     case WM_COMMAND:
         switch(wParam) {
-        case IDCANCEL:
+        case IDCANCEL: /* This message can come from download_proc */
             EnterCriticalSection(&csLock);
-            if(download_binding) {
+            if (download_binding)
+            {
                 IBinding_Abort(download_binding);
+
+                /*
+                 * https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/ms775068(v=vs.85)
+                 *
+                 * > After it aborts the bind operation, the client must release any pointers that
+                 * > were obtained during the binding.
+                 *
+                 * OnStopBinding is not the client.
+                 */
+                IUnknown_Release(download_binding);
+                download_binding = NULL;
             }
-            else {
+            else
+            {
                 EndDialog(hwnd, 0);
             }
             LeaveCriticalSection(&csLock);
