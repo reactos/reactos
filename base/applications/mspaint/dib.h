@@ -22,7 +22,7 @@ static inline HBITMAP CopyDIBImage(HBITMAP hbm, INT cx = 0, INT cy = 0)
 int GetDIBWidth(HBITMAP hbm);
 int GetDIBHeight(HBITMAP hbm);
 
-BOOL SaveDIBToFile(HBITMAP hBitmap, LPCWSTR FileName, BOOL fIsMainFile);
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPCWSTR FileName, BOOL fIsMainFile, REFGUID guidFileType = GUID_NULL);
 
 HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile);
 

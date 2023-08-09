@@ -7,10 +7,14 @@
 
 #include "precomp.h"
 
+#include <mapi.h>
+#include <mapicode.h>
+
 POINT g_ptStart, g_ptEnd;
 BOOL g_askBeforeEnlarging = FALSE;  // TODO: initialize from registry
 HINSTANCE g_hinstExe = NULL;
 TCHAR g_szFileName[MAX_LONG_PATH] = { 0 };
+WCHAR g_szMailTempFile[MAX_LONG_PATH] = { 0 };
 BOOL g_isAFile = FALSE;
 BOOL g_imageSaved = FALSE;
 BOOL g_showGrid = FALSE;
@@ -67,6 +71,116 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
     }
     return 0;
+}
+
+typedef ULONG (WINAPI *FN_MAPISendMail)(LHANDLE, ULONG_PTR, lpMapiMessage, FLAGS, ULONG);
+typedef ULONG (WINAPI *FN_MAPISendMailW)(LHANDLE, ULONG_PTR, lpMapiMessageW, FLAGS, ULONG);
+
+BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName)
+{
+    // Delete the temporary file if any
+    if (g_szMailTempFile[0])
+    {
+        ::DeleteFileW(g_szMailTempFile);
+        g_szMailTempFile[0] = UNICODE_NULL;
+    }
+
+    CStringW strFileTitle;
+    if (PathFileExistsW(pszPathName) && imageModel.IsImageSaved())
+    {
+        strFileTitle = PathFindFileNameW(pszPathName);
+    }
+    else // Not existing or not saved
+    {
+        // Get the name of a temporary file
+        WCHAR szTempDir[MAX_PATH];
+        ::GetTempPathW(_countof(szTempDir), szTempDir);
+        if (!::GetTempFileNameW(szTempDir, L"afx", 0, g_szMailTempFile))
+            return FALSE; // Failure
+
+        if (PathFileExistsW(g_szFileName))
+        {
+            // Set file title
+            strFileTitle = PathFindFileNameW(g_szFileName);
+
+            // Copy to the temporary file
+            if (!::CopyFileW(g_szFileName, g_szMailTempFile, FALSE))
+            {
+                g_szMailTempFile[0] = UNICODE_NULL;
+                return FALSE; // Failure
+            }
+        }
+        else
+        {
+            // Set file title
+            strFileTitle.LoadString(IDS_DEFAULTFILENAME);
+            strFileTitle += L".png";
+
+            // Save it to the temporary file
+            HBITMAP hbm = imageModel.CopyBitmap();
+            BOOL ret = SaveDIBToFile(hbm, g_szMailTempFile, FALSE, Gdiplus::ImageFormatPNG);
+            ::DeleteObject(hbm);
+            if (!ret)
+            {
+                g_szMailTempFile[0] = UNICODE_NULL;
+                return FALSE; // Failure
+            }
+        }
+
+        // Use the temporary file 
+        pszPathName = g_szMailTempFile;
+    }
+
+    // Load "mapi32.dll"
+    HINSTANCE hMAPI = LoadLibraryW(L"mapi32.dll");
+    if (!hMAPI)
+        return FALSE; // Failure
+
+    // Attachment
+    MapiFileDescW attachmentW = { 0 };
+    attachmentW.nPosition = (ULONG)-1;
+    attachmentW.lpszPathName = (LPWSTR)pszPathName;
+    attachmentW.lpszFileName = (LPWSTR)(LPCWSTR)strFileTitle;
+
+    // Message with attachment
+    MapiMessageW messageW = { 0 };
+    messageW.lpszSubject = NULL;
+    messageW.nFileCount = 1;
+    messageW.lpFiles = &attachmentW;
+
+    // First, try to open the mailer by the function of Unicode version
+    FN_MAPISendMailW pMAPISendMailW = (FN_MAPISendMailW)::GetProcAddress(hMAPI, "MAPISendMailW");
+    if (pMAPISendMailW)
+    {
+        pMAPISendMailW(0, (ULONG_PTR)hWnd, &messageW, MAPI_DIALOG | MAPI_LOGON_UI, 0);
+        ::FreeLibrary(hMAPI);
+        return TRUE; // MAPISendMailW will show an error message on failure
+    }
+
+    // Convert to ANSI strings
+    CStringA szPathNameA(pszPathName), szFileTitleA(strFileTitle);
+
+    MapiFileDesc attachment = { 0 };
+    attachment.nPosition = (ULONG)-1;
+    attachment.lpszPathName = (LPSTR)(LPCSTR)szPathNameA;
+    attachment.lpszFileName = (LPSTR)(LPCSTR)szFileTitleA;
+
+    MapiMessage message = { 0 };
+    message.lpszSubject = NULL;
+    message.nFileCount = 1;
+    message.lpFiles = &attachment;
+
+    // Try again but in ANSI version
+    FN_MAPISendMail pMAPISendMail = (FN_MAPISendMail)::GetProcAddress(hMAPI, "MAPISendMail");
+    if (pMAPISendMail)
+    {
+        pMAPISendMail(0, (ULONG_PTR)hWnd, &message, MAPI_DIALOG | MAPI_LOGON_UI, 0);
+        ::FreeLibrary(hMAPI);
+        return TRUE; // MAPISendMail will show an error message on failure
+    }
+
+    ::FreeLibrary(hMAPI);
+    return FALSE; // Failure
 }
 
 BOOL CMainWindow::GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
@@ -237,6 +351,9 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
 
     // Write back settings to registry
     registrySettings.Store();
+
+    if (g_szMailTempFile[0])
+        ::DeleteFileW(g_szMailTempFile);
 
     // Return the value that PostQuitMessage() gave
     return (INT)msg.wParam;

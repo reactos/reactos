@@ -47,3 +47,4 @@ BOOL zoomTo(int newZoom, int mouseX, int mouseY);
 BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1);
 void updateStartAndLast(LONG x, LONG y);
 void updateLast(LONG x, LONG y);
+BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName);
