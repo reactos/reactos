@@ -1389,7 +1389,7 @@ static MUI_ENTRY ptPTInstallDirectoryEntries[] =
     {
         6,
         8,
-        "O instalador ir\240 copiar os arquivos para a parti\207\306o seleccionada.",
+        "O instalador ir\240 copiar os ficheiros para a parti\207\306o seleccionada.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1455,7 +1455,7 @@ static MUI_ENTRY ptPTFileCopyEntries[] =
     {
         0,
         13,
-        "arquivos do ReactOS para a pasta de instala\207\306o.",
+        "ficheiros do ReactOS para a pasta de instala\207\306o.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1702,7 +1702,7 @@ static MUI_ENTRY ptPTPrepareCopyEntries[] =
     {
         6,
         8,
-        "O instalador est\240 a preparar o computador para copiar os arquivos",
+        "O instalador est\240 a preparar o computador para copiar os ficheiros",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1716,7 +1716,7 @@ static MUI_ENTRY ptPTPrepareCopyEntries[] =
     {
         0,
         0,
-        "A montar a lista de arquivos a serem copiados...",
+        "A montar a lista de ficheiros a serem copiados...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1741,7 +1741,7 @@ static MUI_ENTRY ptPTSelectFSEntries[] =
     {
         6,
         16,
-        "Seleccione um sistema de arquivos para a nova parti\207\306o na lista abaixo.",
+        "Seleccione um sistema de ficheiros para a nova parti\207\306o na lista abaixo.",
         0
     },
     {
@@ -1753,7 +1753,7 @@ static MUI_ENTRY ptPTSelectFSEntries[] =
     {
         6,
         18,
-        "sistema de arquivos desejado e pressione ENTER.",
+        "sistema de ficheiros desejado e pressione ENTER.",
         0
     },
     {
@@ -1885,8 +1885,23 @@ MUI_ERROR ptPTErrorEntries[] =
         "F3=Sair  ENTER=Continuar"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Falha ao criar os caminhos para o direct\242rio de instala\207\306o do ReactOS!\n"
+        "ENTER = Reiniciar o computador"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "N\306o pode excluir a parti\207\306o que cont\202m a fonte de instala\207\306o!\n"
+        "ENTER = Reiniciar o computador"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "N\306o pode instalar o ReactOS dentro do direct\242rio de origem da instala\207\306o!\n"
+        "ENTER = Reiniciar o computador"
+    },
+    {
         // ERROR_NO_HDD
-        "N\306o foi poss\241vel localizar um disco r\241digo.\n",
+        "N\306o foi poss\241vel localizar um disco r\241gido.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -1896,17 +1911,17 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_LOAD_TXTSETUPSIF
-        "N\306o foi poss\241vel carregar o arquivo TXTSETUP.SIF.\n",
+        "N\306o foi poss\241vel carregar o ficheiro TXTSETUP.SIF.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CORRUPT_TXTSETUPSIF
-        "O arquivos TXTSETUP.SIF est\240 corrompido.\n",
+        "O ficheiro TXTSETUP.SIF est\240 corrompido.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "O arquivo TXTSETUP.SIF est\240 com a assinatura incorrecta.\n",
+        "O ficheiro TXTSETUP.SIF est\240 com a assinatura incorrecta.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -1987,12 +2002,12 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_IMPORT_HIVE,
-        "N\306o foi poss\241vel importar o arquivo de estrutura.",
+        "N\306o foi poss\241vel importar o ficheiro de estrutura.",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_FIND_REGISTRY
-        "N\306o foi poss\241vel encontrar os arquivos do registo.",
+        "N\306o foi poss\241vel encontrar os ficheiros do registo.",
         "ENTER=Reiniciar"
     },
     {
@@ -2007,22 +2022,22 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_INVALID_CABINET_INF,
-        "O arquivo cab n\306o cont\202m um arquivo inf v\240lido.\n",
+        "O ficheiro cab n\306o cont\202m um ficheiro inf v\240lido.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_MISSING,
-        "N\306o foi poss\241vel econtrar o arquivo cab.\n",
+        "N\306o foi poss\241vel encontrar o ficheiro cab.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_SCRIPT,
-        "O arquivo cab n\306o cont\202m um script de instala\207\306o.\n",
+        "O ficheiro cab n\306o cont\202m um script de instala\207\306o.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_COPY_QUEUE,
-        "N\306o foi poss\241vel abrir a lista de arquivos para c\242pia.\n",
+        "N\306o foi poss\241vel abrir a lista de ficheiros para c\242pia.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -2033,13 +2048,13 @@ MUI_ERROR ptPTErrorEntries[] =
     {
         // ERROR_TXTSETUP_SECTION,
         "N\306o foi poss\241vel encontrar a sec\207\306o '%S' no\n"
-        "arquivo TXTSETUP.SIF.\n",
+        "ficheiro TXTSETUP.SIF.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_SECTION,
         "N\306o foi poss\241vel encontrar a sec\207\306o '%S' no\n"
-        "arquivo cab.\n",
+        "ficheiro cab.\n",
         "ENTER=Reiniciar"
     },
     {
