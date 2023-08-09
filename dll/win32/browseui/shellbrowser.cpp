@@ -319,13 +319,14 @@ public:
         return CComObjectRootEx<CComMultiThreadModelNoCS>::InternalRelease();
     }
 #endif
+
     CShellBrowser();
     ~CShellBrowser();
     HRESULT Initialize();
 public:
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
-                         FOLDERSETTINGS *folderSettings, long flags);
+        FOLDERSETTINGS *folderSettings, long flags);
     HRESULT GetMenuBand(REFIID riid, void **shellMenu);
     HRESULT GetBaseBar(bool vertical, REFIID riid, void **theBaseBar);
     BOOL IsBandLoaded(const CLSID clsidBand, bool verticali, DWORD *pdwBandID);
