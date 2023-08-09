@@ -172,6 +172,7 @@ class CDefView :
         HRESULT OnDefaultCommand();
         HRESULT OnStateChange(UINT uFlags);
         void UpdateStatusbar();
+        void DelayedUpdateStatusbar();
         void CheckToolbar();
         BOOL CreateList();
         void UpdateListColors();
@@ -320,6 +321,7 @@ class CDefView :
         LRESULT OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+        LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
         virtual VOID OnFinalMessage(HWND) override;
 
@@ -376,6 +378,7 @@ class CDefView :
         MESSAGE_HANDLER(CWM_GETISHELLBROWSER, OnGetShellBrowser)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
         END_MSG_MAP()
 
         BEGIN_COM_MAP(CDefView)
@@ -537,6 +540,18 @@ void CDefView::CheckToolbar()
         m_pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON,
                                       FCIDM_TB_REPORTVIEW, TRUE, &result);
     }
+}
+
+#define TIMERID_DELAYED_UPDATE_STATUSBAR 222
+
+void CDefView::DelayedUpdateStatusbar()
+{
+    KillTimer(TIMERID_DELAYED_UPDATE_STATUSBAR);
+
+    if (m_ListView.GetItemCount() >= 100)
+        SetTimer(TIMERID_DELAYED_UPDATE_STATUSBAR, 100, NULL);
+    else
+        UpdateStatusbar();
 }
 
 void CDefView::UpdateStatusbar()
@@ -2129,7 +2144,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         case LVN_ITEMCHANGED:
             TRACE("-- LVN_ITEMCHANGED %p\n", this);
             OnStateChange(CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
-            UpdateStatusbar();
+            DelayedUpdateStatusbar();
             _DoFolderViewCB(SFVM_SELECTIONCHANGED, NULL/* FIXME */, NULL/* FIXME */);
             break;
 
@@ -2413,6 +2428,16 @@ LRESULT CDefView::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
         UpdateListColors();
 
     return S_OK;
+}
+
+LRESULT CDefView::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (wParam == TIMERID_DELAYED_UPDATE_STATUSBAR)
+    {
+        KillTimer(wParam);
+        UpdateStatusbar();
+    }
+    return 0;
 }
 
 /**********************************************************
