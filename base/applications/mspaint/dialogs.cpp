@@ -42,7 +42,7 @@ LRESULT CMirrorRotateDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lPara
 {
     CheckDlgButton(IDD_MIRRORROTATERB1, BST_CHECKED);
     CheckDlgButton(IDD_MIRRORROTATERB4, BST_CHECKED);
-    return 0;
+    return TRUE;
 }
 
 LRESULT CMirrorRotateDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -74,6 +74,9 @@ LRESULT CMirrorRotateDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 
 LRESULT CMirrorRotateDialog::OnRadioButton3(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+    if (IsDlgButtonChecked(IDD_MIRRORROTATERB3) != BST_CHECKED)
+        return 0;
+
     ::EnableWindow(GetDlgItem(IDD_MIRRORROTATERB4), TRUE);
     ::EnableWindow(GetDlgItem(IDD_MIRRORROTATERB5), TRUE);
     ::EnableWindow(GetDlgItem(IDD_MIRRORROTATERB6), TRUE);
@@ -82,6 +85,12 @@ LRESULT CMirrorRotateDialog::OnRadioButton3(WORD wNotifyCode, WORD wID, HWND hWn
 
 LRESULT CMirrorRotateDialog::OnRadioButton12(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+    if (IsDlgButtonChecked(IDD_MIRRORROTATERB1) != BST_CHECKED &&
+        IsDlgButtonChecked(IDD_MIRRORROTATERB2) != BST_CHECKED)
+    {
+        return 0;
+    }
+
     ::EnableWindow(GetDlgItem(IDD_MIRRORROTATERB4), FALSE);
     ::EnableWindow(GetDlgItem(IDD_MIRRORROTATERB5), FALSE);
     ::EnableWindow(GetDlgItem(IDD_MIRRORROTATERB6), FALSE);
@@ -122,7 +131,7 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
         strRes.Format(IDS_PRINTRES, ROUND(PpcmFromDpi(g_xDpi)), ROUND(PpcmFromDpi(g_yDpi)));
 
     SetDlgItemText(IDD_ATTRIBUTESTEXT8, strRes);
-    return 0;
+    return TRUE;
 }
 
 LRESULT CAttributesDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -156,6 +165,9 @@ LRESULT CAttributesDialog::OnDefault(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 
 LRESULT CAttributesDialog::OnRadioButton1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+    if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1) != BST_CHECKED)
+        return 0;
+
     CString strNum;
     strNum.Format(_T("%.3lf"), newWidth / g_xDpi);
     SetDlgItemText(IDD_ATTRIBUTESEDIT1, strNum);
@@ -166,6 +178,9 @@ LRESULT CAttributesDialog::OnRadioButton1(WORD wNotifyCode, WORD wID, HWND hWndC
 
 LRESULT CAttributesDialog::OnRadioButton2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+    if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2) != BST_CHECKED)
+        return 0;
+
     CString strNum;
     strNum.Format(_T("%.3lf"), newWidth / PpcmFromDpi(g_xDpi));
     SetDlgItemText(IDD_ATTRIBUTESEDIT1, strNum);
@@ -176,6 +191,9 @@ LRESULT CAttributesDialog::OnRadioButton2(WORD wNotifyCode, WORD wID, HWND hWndC
 
 LRESULT CAttributesDialog::OnRadioButton3(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+    if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3) != BST_CHECKED)
+        return 0;
+
     SetDlgItemInt(IDD_ATTRIBUTESEDIT1, newWidth, FALSE);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT2, newHeight, FALSE);
     return 0;
@@ -239,7 +257,7 @@ LRESULT CStretchSkewDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam
     SetDlgItemInt(IDD_STRETCHSKEWEDITVSTRETCH, 100, FALSE);
     SetDlgItemInt(IDD_STRETCHSKEWEDITHSKEW, 0, FALSE);
     SetDlgItemInt(IDD_STRETCHSKEWEDITVSKEW, 0, FALSE);
-    return 0;
+    return TRUE;
 }
 
 LRESULT CStretchSkewDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
