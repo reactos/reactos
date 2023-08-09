@@ -142,11 +142,11 @@ GetDIBHeight(HBITMAP hBitmap)
     return bm.bmHeight;
 }
 
-BOOL SaveDIBToFile(HBITMAP hBitmap, LPCWSTR FileName, BOOL fIsMainFile)
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPCWSTR FileName, BOOL fIsMainFile, REFGUID guidFileType)
 {
     CImageDx img;
     img.Attach(hBitmap);
-    HRESULT hr = img.SaveDx(FileName, GUID_NULL, g_xDpi, g_yDpi);
+    HRESULT hr = img.SaveDx(FileName, guidFileType, g_xDpi, g_yDpi);
     img.Detach();
 
     if (FAILED(hr))

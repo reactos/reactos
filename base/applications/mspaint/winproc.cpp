@@ -667,6 +667,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (pd.hDevNames)
                 GlobalFree(pd.hDevNames);
             break;
+        case IDM_FILESEND:
+            canvasWindow.finishDrawing();
+            if (!OpenMailer(m_hWnd, g_szFileName))
+            {
+                ShowError(IDS_CANTSENDMAIL);
+            }
+            break;
         case IDM_FILEASWALLPAPERPLANE:
             RegistrySettings::SetWallpaper(g_szFileName, RegistrySettings::TILED);
             break;
