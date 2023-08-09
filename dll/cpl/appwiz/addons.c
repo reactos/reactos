@@ -425,6 +425,7 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             if (s_hThread)
             {
                 WaitForSingleObject(s_hThread, 5 * 1000);
+                CloseHandle(s_hThread);
                 s_hThread = NULL;
             }
             break;
