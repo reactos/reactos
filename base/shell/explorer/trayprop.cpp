@@ -50,7 +50,7 @@ private:
     HBITMAP m_hbmpTaskbar;
     HWND m_hwndTaskbar;
 
-    void UpdateDialog()
+    void _UpdateDialog()
     {
         BOOL bLock = IsDlgButtonChecked(IDC_TASKBARPROP_LOCK);
         BOOL bHide = IsDlgButtonChecked(IDC_TASKBARPROP_HIDE);
@@ -114,21 +114,20 @@ public:
         //CheckDlgButton(IDC_TASKBARPROP_SHOWQL, g_TaskbarSettings.bShowQuickLaunch ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_SMALLICONS, g_TaskbarSettings.bSmallIcons ? BST_CHECKED : BST_UNCHECKED);
 
-        UpdateDialog();
+        _UpdateDialog();
         return TRUE;
     }
 
     LRESULT OnCtrlCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
     {
-        UpdateDialog();
+        _UpdateDialog();
         SetModified(TRUE);
         return 0;
     }
 
     int OnApply()
     {
-        TaskbarSettings newSettings;
-        memcpy(&newSettings, &g_TaskbarSettings, sizeof(TaskbarSettings));
+        TaskbarSettings newSettings = g_TaskbarSettings;
 
         newSettings.bLock = IsDlgButtonChecked(IDC_TASKBARPROP_LOCK);
         newSettings.sr.AutoHide = IsDlgButtonChecked(IDC_TASKBARPROP_HIDE);
@@ -148,7 +147,7 @@ class CStartMenuSettingsPage : public CPropertyPageImpl<CStartMenuSettingsPage>
 private:
     HBITMAP m_hbmpStartBitmap;
 
-    void UpdateDialog()
+    void _UpdateDialog()
     {
         HWND hwndCustomizeClassic = GetDlgItem(IDC_TASKBARPROP_STARTMENUCLASSICCUST);
         HWND hwndCustomizeModern = GetDlgItem(IDC_TASKBARPROP_STARTMENUCUST);
@@ -209,7 +208,7 @@ public:
     {
         // fix me: start menu style (classic/modern) should be read somewhere from the registry.
         CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED); // HACK: This has to be read from registry!!!!!!!
-        UpdateDialog();
+        _UpdateDialog();
 
         return TRUE;
     }
@@ -233,7 +232,7 @@ private:
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
 
-    void UpdateDialog()
+    void _UpdateDialog()
     {
         BOOL bShowClock = IsDlgButtonChecked(IDC_TASKBARPROP_CLOCK);
         BOOL bShowSeconds = IsDlgButtonChecked(IDC_TASKBARPROP_SECONDS);
@@ -296,7 +295,7 @@ public:
         CheckDlgButton(IDC_TASKBARPROP_HIDEICONS, g_TaskbarSettings.bHideInactiveIcons ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_DESKTOP, g_TaskbarSettings.bShowDesktopButton ? BST_CHECKED : BST_UNCHECKED);
 
-        UpdateDialog();
+        _UpdateDialog();
         return TRUE;
     }
 
@@ -308,15 +307,14 @@ public:
 
     LRESULT OnCtrlCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
     {
-        UpdateDialog();
+        _UpdateDialog();
         SetModified(TRUE);
         return 0;
     }
 
     int OnApply()
     {
-        TaskbarSettings newSettings;
-        memcpy(&newSettings, &g_TaskbarSettings, sizeof(TaskbarSettings));
+        TaskbarSettings newSettings = g_TaskbarSettings;
 
         newSettings.sr.HideClock = !IsDlgButtonChecked(IDC_TASKBARPROP_CLOCK);
         newSettings.bShowSeconds = IsDlgButtonChecked(IDC_TASKBARPROP_SECONDS);
