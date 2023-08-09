@@ -382,7 +382,7 @@ ButtonProc(IN HWND hwndDlg,
                 /* Reset swap mouse button setting */
                 SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, pButtonData->g_OrigSwapMouseButtons, NULL, 0);
 
-                /* Reset double click speed setting */
+                /* Reset double-click speed setting */
                 SystemParametersInfo(SPI_SETDOUBLECLICKTIME, pButtonData->g_OrigDoubleClickSpeed, NULL, 0);
                 //SetDoubleClickTime(pButtonData->g_OrigDoubleClickSpeed);
             }

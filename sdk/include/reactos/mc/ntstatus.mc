@@ -4100,7 +4100,7 @@ Severity=Error
 Facility=System
 SymbolicName=STATUS_WMI_READ_ONLY
 Language=English
-The WMI data item or data block is read only.
+The WMI data item or data block is read-only.
 .
 
 MessageId=0x2c7
