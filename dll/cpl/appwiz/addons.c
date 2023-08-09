@@ -358,7 +358,9 @@ static DWORD WINAPI download_proc(PVOID arg)
 {
     WCHAR message[256];
     WCHAR tmp_dir[MAX_PATH], tmp_file[MAX_PATH];
-    HRESULT hres;
+    HRESULT hres, hrCoInit;
+
+    hrCoInit = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
     GetTempPathW(sizeof(tmp_dir)/sizeof(WCHAR), tmp_dir);
     GetTempFileNameW(tmp_dir, NULL, 0, tmp_file);
@@ -388,6 +390,10 @@ static DWORD WINAPI download_proc(PVOID arg)
 
     DeleteFileW(tmp_file);
     PostMessageW(install_dialog, WM_COMMAND, IDCANCEL, 0);
+
+    if (SUCCEEDED(hrCoInit))
+        CoUninitialize();
+
     return 0;
 }
 
