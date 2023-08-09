@@ -393,6 +393,7 @@ static DWORD WINAPI download_proc(PVOID arg)
 
 static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    static HANDLE s_hThread = NULL;
     HWND hwndProgress, hwndInstallButton;
     switch(msg) {
     case WM_INITDIALOG:
@@ -420,7 +421,13 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
                 EndDialog(hwnd, 0);
             }
             LeaveCriticalSection(&csLock);
-            return FALSE;
+
+            if (s_hThread)
+            {
+                WaitForSingleObject(s_hThread, 5 * 1000);
+                s_hThread = NULL;
+            }
+            break;
 
         case ID_DWL_INSTALL:
             ShowWindow(GetDlgItem(hwnd, ID_DWL_PROGRESS), SW_SHOW);
@@ -433,8 +440,8 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             }
             EnableWindow(hwndInstallButton, FALSE);
 
-            CloseHandle( CreateThread(NULL, 0, download_proc, NULL, 0, NULL));
-            return FALSE;
+            s_hThread = CreateThread(NULL, 0, download_proc, NULL, 0, NULL);
+            break;
         }
     }
 
