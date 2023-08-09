@@ -207,7 +207,7 @@ BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
     CHECKBOX "Run with different credentials", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
-    LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
+    LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorised program activity.", -1, 50, 60, 175, 40
     CHECKBOX "Run in seperate memory space", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Abort", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
@@ -362,7 +362,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
     CHECKBOX "Current User %s", 14000, 10, 45, 150, 10
-    LTEXT "Protect my computer and data from unauthorized program activity", -1, 25, 57, 200, 10, WS_DISABLED
+    LTEXT "Protect my computer and data from unauthorised program activity", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "This option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "The following user:", 14002, 10, 100, 90, 10
     LTEXT "User name:", -1, 20, 118, 54, 10
@@ -702,7 +702,7 @@ BEGIN
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
-CAPTION "Customize"
+CAPTION "Customise"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -770,7 +770,7 @@ BEGIN
 
     /* special folders descriptions */
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Customise the display of files and folders and change file associations."
     IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
     IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
 
@@ -1005,7 +1005,7 @@ BEGIN
     IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
     IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in colour"
     IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
