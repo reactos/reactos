@@ -469,13 +469,11 @@ CMainWindow::ShowAboutDlg()
 {
     CStringW szApp;
     CStringW szAuthors;
-    HICON hIcon;
 
     szApp.LoadStringW(IDS_APPTITLE);
     szAuthors.LoadStringW(IDS_APP_AUTHORS);
-    hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
-    ShellAboutW(m_hWnd, szApp, szAuthors, hIcon);
-    DestroyIcon(hIcon);
+    ShellAboutW(m_hWnd, szApp, szAuthors,
+                LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN)));
 }
 
 VOID

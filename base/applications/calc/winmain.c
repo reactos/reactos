@@ -1945,9 +1945,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
                     hInstance,
                     MAKEINTRESOURCE(IDI_CALC),
                     IMAGE_ICON,
-                    GetSystemMetrics(SM_CXICON),
-                    GetSystemMetrics(SM_CYICON),
-                    0);
+                    0,
+                    0,
+                    LR_DEFAULTSIZE | LR_SHARED);
 
     calc.hSmIcon = LoadImage(
                     hInstance,
@@ -1955,7 +1955,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
                     IMAGE_ICON,
                     GetSystemMetrics(SM_CXSMICON),
                     GetSystemMetrics(SM_CYSMICON),
-                    0);
+                    LR_SHARED);
 
     do {
         /* ignore hwnd: dialogs are already visible! */
@@ -1984,12 +1984,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
         save_config();
     } while (calc.action != IDC_STATIC);
-
-    if (calc.hBgIcon != NULL)
-        DestroyIcon(calc.hBgIcon);
-
-    if (calc.hSmIcon != NULL)
-        DestroyIcon(calc.hSmIcon);
 
     stop_rpn_engine();
 

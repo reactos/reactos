@@ -599,13 +599,12 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     {
         case IDM_HELPINFO:
         {
-            HICON paintIcon = LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON));
             TCHAR infotitle[100];
             TCHAR infotext[200];
             LoadString(g_hinstExe, IDS_INFOTITLE, infotitle, _countof(infotitle));
             LoadString(g_hinstExe, IDS_INFOTEXT, infotext, _countof(infotext));
-            ShellAbout(m_hWnd, infotitle, infotext, paintIcon);
-            DeleteObject(paintIcon);
+            ShellAbout(m_hWnd, infotitle, infotext,
+                       LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON)));
             break;
         }
         case IDM_HELPHELPTOPICS:

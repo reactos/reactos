@@ -3640,13 +3640,11 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case IDM_ABOUT:
                 {
-                    HICON hIcon;
                     WCHAR szCopyright[MAX_LOADSTRING];
 
-                    hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_EVENTVWR));
                     LoadStringW(hInst, IDS_COPYRIGHT, szCopyright, ARRAYSIZE(szCopyright));
-                    ShellAboutW(hWnd, szTitle, szCopyright, hIcon);
-                    DeleteObject(hIcon);
+                    ShellAboutW(hWnd, szTitle, szCopyright,
+                                LoadIconW(hInst, MAKEINTRESOURCEW(IDI_EVENTVWR)));
                     break;
                 }
 

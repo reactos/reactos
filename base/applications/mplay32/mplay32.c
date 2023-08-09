@@ -1439,9 +1439,8 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_ABOUT:
                 {
-                    HICON mplayIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
-                    ShellAbout(hwnd, szAppTitle, NULL, mplayIcon);
-                    DeleteObject(mplayIcon);
+                    ShellAbout(hwnd, szAppTitle, NULL,
+                               LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN)));
                     break;
                 }
 
