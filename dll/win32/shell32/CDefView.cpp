@@ -548,7 +548,7 @@ void CDefView::DelayedUpdateStatusbar()
 {
     KillTimer(TIMERID_DELAYED_UPDATE_STATUSBAR);
 
-    if (m_ListView.GetItemCount() >= 30)
+    if (m_ListView.GetItemCount() >= 50)
         SetTimer(TIMERID_DELAYED_UPDATE_STATUSBAR, 100, NULL);
     else
         UpdateStatusbar();
