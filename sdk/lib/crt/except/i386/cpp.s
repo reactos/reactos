@@ -5,6 +5,8 @@
 .code
 .align 4
 
+EXTERN _cxx_frame_handler:PROC
+
 MACRO(DEFINE_THISCALL_ALIAS, cxxname, target)
 #ifdef _USE_ML
     EXTERN ___thiscall&target:PROC
@@ -164,6 +166,20 @@ _call_handler:
     pop esi
     pop ebx
     pop ebp
+    ret
+
+
+PUBLIC ___CxxFrameHandler
+___CxxFrameHandler:
+    push 0
+    push 0
+    push eax
+    push[esp + 28]
+    push[esp + 28]
+    push[esp + 28]
+    push[esp + 28]
+    call _cxx_frame_handler
+    add esp, 28
     ret
 
 END

@@ -19,12 +19,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define __WINE_DEBUG_CHANNEL__
-#include <precomp.h>
-#include <assert.h>
+#include "config.h"
+#include "wine/port.h"
 
-#include <internal/wine/msvcrt.h>
-#include <internal/wine/cppexcept.h>
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "msvcrt.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
@@ -199,8 +202,7 @@ static BOOL str_array_push(struct parsed_symbol* sym, const char* ptr, int len,
             c = '>';
             if (i < a->start) c = '-';
             else if (i >= a->num) c = '}';
-            /* This check is as useless as the unused-but-set gcc warning that we want to silence here */
-            if (c != 0) TRACE("%p\t%d%c %s\n", a, i, c, debugstr_a(a->elts[i]));
+            TRACE("%p\t%d%c %s\n", a, i, c, debugstr_a(a->elts[i]));
         }
     }
 
