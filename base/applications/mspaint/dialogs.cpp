@@ -135,7 +135,6 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
         strRes.Format(IDS_PRINTRES, ROUND(PpcmFromDpi(g_xDpi)), ROUND(PpcmFromDpi(g_yDpi)));
 
     SetDlgItemText(IDD_ATTRIBUTESTEXT8, strRes);
-
     return TRUE;
 }
 

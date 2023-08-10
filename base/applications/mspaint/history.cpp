@@ -280,7 +280,6 @@ BOOL ImageModel::IsBlackAndWhite()
                 return FALSE;
         }
     }
-
     return TRUE;
 }
 
