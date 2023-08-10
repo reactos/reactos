@@ -71,6 +71,11 @@ public:
         return m_hbm;
     }
 
+    static void ReleaseGDIPlus()
+    {
+        GetInitGDIPlusInstance()->ReleaseGDIPlus();
+    }
+
 public:
     void Attach(HBITMAP hBitmap, DIBOrientation eOrientation = DIBOR_DEFAULT)
     {
