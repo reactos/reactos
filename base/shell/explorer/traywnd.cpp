@@ -2531,15 +2531,6 @@ ChangePos:
         return m_ContextMenu->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);
     }
 
-    BOOL IsShowDesktopButtonNeeded() // Read the registry value
-    {
-        return SHRegGetBoolUSValueW(
-            L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
-            L"TaskbarSd",
-            FALSE,
-            TRUE);
-    }
-
     /**********************************************************
      *    ##### message handling #####
      */
@@ -2556,7 +2547,7 @@ ChangePos:
         m_StartButton.Create(m_hWnd);
 
         /* Create the 'Show Desktop' button if necessary */
-        if (IsShowDesktopButtonNeeded())
+        if (g_TaskbarSettings.bShowDesktopButton)
             m_ShowDesktopButton.DoCreate(m_hWnd);
 
         /* Load the saved tray window settings */
@@ -3524,6 +3515,20 @@ HandleTrayContextMenu:
             HWND hWndInsertAfter = newSettings->sr.AlwaysOnTop ? HWND_TOPMOST : HWND_BOTTOM;
             SetWindowPos(hWndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         }
+
+        /* Toggle show desktop button */
+        if (newSettings->bShowDesktopButton != g_TaskbarSettings.bShowDesktopButton)
+        {
+            g_TaskbarSettings.bShowDesktopButton = newSettings->bShowDesktopButton;
+            if (!g_TaskbarSettings.bShowDesktopButton)
+                ::DestroyWindow(m_ShowDesktopButton.m_hWnd);
+            else if (!m_ShowDesktopButton.IsWindow())
+                m_ShowDesktopButton.DoCreate(m_hWnd);
+            AlignControls(NULL);
+        }
+
+        /* Adjust taskbar size */
+        CheckTrayWndPosition();
 
         g_TaskbarSettings.Save();
         return 0;

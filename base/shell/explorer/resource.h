@@ -87,6 +87,7 @@
 #define IDD_CLASSICSTART_CUSTOMIZE    9
 #define IDD_FILENAME_WARNING          20
 #define IDD_TASKBARPROP_STARTMENU     205
+#define IDD_TASKBARPROP_NOTIFY        206
 #define IDD_MODERNSTART_ADVANCED      1036
 #define IDD_MODERNSTART_GENERAL       1037
 
@@ -110,19 +111,15 @@
 \*******************************************************************************/
 
 /* Taskbar Page */
-#define IDC_TASKBARPROP_FIRST_CMD            1000
-#define IDC_TASKBARPROP_HIDEICONS            1000
-#define IDC_TASKBARPROP_ICONCUST             1007
-#define IDC_TASKBARPROP_ONTOP                1101
-#define IDC_TASKBARPROP_HIDE                 1102
-#define IDC_TASKBARPROP_CLOCK                1103
-#define IDC_TASKBARPROP_GROUP                1104
-#define IDC_TASKBARPROP_LOCK                 1105
-#define IDC_TASKBARPROP_SECONDS              1106
-#define IDC_TASKBARPROP_SHOWQL               1107
-#define IDC_TASKBARPROP_LAST_CMD             1107
-#define IDC_TASKBARPROP_TASKBARBITMAP        1111
-#define IDC_TASKBARPROP_NOTIFICATIONBITMAP   1112
+#define IDC_TASKBARPROP_FIRST_CMD            1114
+#define IDC_TASKBARPROP_ONTOP                1114
+#define IDC_TASKBARPROP_HIDE                 1115
+#define IDC_TASKBARPROP_GROUP                1116
+#define IDC_TASKBARPROP_LOCK                 1117
+#define IDC_TASKBARPROP_SHOWQL               1118
+#define IDC_TASKBARPROP_SMALLICONS           1119
+#define IDC_TASKBARPROP_LAST_CMD             1119
+#define IDC_TASKBARPROP_TASKBARBITMAP        1120
 
 /* Startmenu Page */
 #define IDC_TASKBARPROP_STARTMENUCLASSICCUST 1130
@@ -133,6 +130,16 @@
 #define IDC_TASKBARPROP_STARTMENUCLASSICTEXT 1142
 #define IDC_TASKBARPROP_STARTMENU_BITMAP     1134
 #define IDC_STARTBTN                         1140
+
+/* Notification Area Page */
+#define IDC_TASKBARPROP_NOTIFY_FIRST_CMD     1000
+#define IDC_TASKBARPROP_HIDEICONS            1000
+#define IDC_TASKBARPROP_ICONCUST             1007
+#define IDC_TASKBARPROP_CLOCK                1103
+#define IDC_TASKBARPROP_SECONDS              1106
+#define IDC_TASKBARPROP_NOTIFICATIONBITMAP   1112
+#define IDC_TASKBARPROP_DESKTOP              1113
+#define IDC_TASKBARPROP_NOTIFY_LAST_CMD      1113
 
 /* Customize Notifications Dialog */
 #define IDC_TASKBARPROP_NOTIREST             1402
