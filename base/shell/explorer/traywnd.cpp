@@ -3488,6 +3488,7 @@ HandleTrayContextMenu:
     LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
+        RECT *pTaskbarRect = &m_TrayRects[m_Position];
 
         /* Propagate the new settings to the children */
         ::SendMessageW(m_TaskSwitch, uMsg, wParam, lParam);
@@ -3527,7 +3528,10 @@ HandleTrayContextMenu:
             AlignControls(NULL);
         }
 
-        /* Adjust taskbar size */
+        /* Forces taskbar to use one line when using small icons. */
+        if (g_TaskbarSettings.bSmallIcons)
+            pTaskbarRect->top = pTaskbarRect->bottom;
+
         CheckTrayWndPosition();
 
         g_TaskbarSettings.Save();
