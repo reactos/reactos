@@ -386,7 +386,7 @@ public:
         // create a GpBitmap object from file
         using namespace Gdiplus;
         GpBitmap *pBitmap = NULL;
-        if (_common().CreateBitmapFromFile(pszNameW, &pBitmap) != Ok)
+        if (_gdiplus().CreateBitmapFromFile(pszNameW, &pBitmap) != Ok)
         {
             return E_FAIL;
         }
@@ -394,10 +394,10 @@ public:
         // get bitmap handle
         HBITMAP hbm = NULL;
         Color color(0xFF, 0xFF, 0xFF);
-        Status status = _common().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
+        Status status = _gdiplus().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
 
         // delete GpBitmap
-        _common().DisposeImage(pBitmap);
+        _gdiplus().DisposeImage(pBitmap);
 
         // attach it
         if (status == Ok)
@@ -412,7 +412,7 @@ public:
         // create GpBitmap from stream
         using namespace Gdiplus;
         GpBitmap *pBitmap = NULL;
-        if (_common().CreateBitmapFromStream(pStream, &pBitmap) != Ok)
+        if (_gdiplus().CreateBitmapFromStream(pStream, &pBitmap) != Ok)
         {
             return E_FAIL;
         }
@@ -420,10 +420,10 @@ public:
         // get bitmap handle
         HBITMAP hbm = NULL;
         Color color(0xFF, 0xFF, 0xFF);
-        Status status = _common().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
+        Status status = _gdiplus().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
 
         // delete Bitmap
-        _common().DisposeImage(pBitmap);
+        _gdiplus().DisposeImage(pBitmap);
 
         // attach it
         if (status == Ok)
@@ -527,14 +527,14 @@ public:
 
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
-        _common().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
+        _gdiplus().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
 
         // save to stream
         Status status;
-        status = _common().SaveImageToStream(pBitmap, pStream, &clsid, NULL);
+        status = _gdiplus().SaveImageToStream(pBitmap, pStream, &clsid, NULL);
 
         // destroy GpBitmap
-        _common().DisposeImage(pBitmap);
+        _gdiplus().DisposeImage(pBitmap);
 
         return (status == Ok ? S_OK : E_FAIL);
     }
@@ -570,13 +570,13 @@ public:
 
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
-        _common().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
+        _gdiplus().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
 
         // save to file
-        Status status = _common().SaveImageToFile(pBitmap, pszNameW, &clsid, NULL);
+        Status status = _gdiplus().SaveImageToFile(pBitmap, pszNameW, &clsid, NULL);
 
         // destroy GpBitmap
-        _common().DisposeImage(pBitmap);
+        _gdiplus().DisposeImage(pBitmap);
 
         return (status == Ok ? S_OK : E_FAIL);
     }
@@ -1027,7 +1027,7 @@ private:
         return GetInitGDIPlusInstance()->Init();
     }
 
-    static CInitGDIPlus& _common() throw()
+    static CInitGDIPlus& _gdiplus() throw()
     {
         return *GetInitGDIPlusInstance();
     }
@@ -1110,7 +1110,7 @@ private:
     static Gdiplus::ImageCodecInfo* _getAllEncoders(UINT& cEncoders)
     {
         UINT total_size = 0;
-        _common().GetImageEncodersSize(&cEncoders, &total_size);
+        _gdiplus().GetImageEncodersSize(&cEncoders, &total_size);
         if (total_size == 0)
             return NULL;  // failure
 
@@ -1122,14 +1122,14 @@ private:
             return NULL;  // failure
         }
 
-        _common().GetImageEncoders(cEncoders, total_size, ret);
+        _gdiplus().GetImageEncoders(cEncoders, total_size, ret);
         return ret; // needs delete[]
     }
 
     static Gdiplus::ImageCodecInfo* _getAllDecoders(UINT& cDecoders)
     {
         UINT total_size = 0;
-        _common().GetImageDecodersSize(&cDecoders, &total_size);
+        _gdiplus().GetImageDecodersSize(&cDecoders, &total_size);
         if (total_size == 0)
             return NULL;  // failure
 
@@ -1141,7 +1141,7 @@ private:
             return NULL;  // failure
         }
 
-        _common().GetImageDecoders(cDecoders, total_size, ret);
+        _gdiplus().GetImageDecoders(cDecoders, total_size, ret);
         return ret; // needs delete[]
     }
 
