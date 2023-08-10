@@ -949,7 +949,19 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (attributesDialog.DoModal(mainWindow.m_hWnd))
             {
-                imageModel.Crop(attributesDialog.newWidth, attributesDialog.newHeight, 0, 0);
+                if (attributesDialog.m_bMonochrome)
+                {
+                    HBITMAP hbm = imageModel.CopyBitmap();
+                    HBITMAP hbmMono = MakeMonochrome(hbm);
+                    imageModel.PushImageForUndo(hbmMono);
+                    ::DeleteObject(hbm);
+                }
+
+                if (imageModel.GetWidth() != attributesDialog.newWidth ||
+                    imageModel.GetHeight() != attributesDialog.newHeight)
+                {
+                    imageModel.Crop(attributesDialog.newWidth, attributesDialog.newHeight, 0, 0);
+                }
             }
             break;
         }

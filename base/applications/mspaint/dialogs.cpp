@@ -142,6 +142,7 @@ LRESULT CAttributesDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT CAttributesDialog::OnOk(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+    m_bMonochrome = (IsDlgButtonChecked(IDD_ATTRIBUTESRB4) == BST_CHECKED);
     EndDialog(1);
     return 0;
 }
