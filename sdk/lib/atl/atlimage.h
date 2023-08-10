@@ -12,8 +12,6 @@
 //       See rostest/apitests/atl/CImage_WIP.txt for test results.
 // !!!!
 
-// TODO: CImage::Load, CImage::Save
-
 #pragma once
 
 #include <atlcore.h>        // for ATL Core
