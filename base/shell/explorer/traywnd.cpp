@@ -3528,7 +3528,7 @@ HandleTrayContextMenu:
             AlignControls(NULL);
         }
 
-        /* Forces taskbar to use one line when using small icons. */
+        /* Force taskbar to use one line when using small icons */
         if (g_TaskbarSettings.bSmallIcons)
             pTaskbarRect->top = pTaskbarRect->bottom;
 
