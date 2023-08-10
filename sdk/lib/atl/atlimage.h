@@ -74,8 +74,7 @@ public:
         GetInitGDIPlusInstance()->ReleaseGDIPlus();
     }
 
-public:
-    void Attach(HBITMAP hBitmap, DIBOrientation eOrientation = DIBOR_DEFAULT)
+    void Attach(HBITMAP hBitmap, DIBOrientation eOrientation = DIBOR_DEFAULT) throw()
     {
         AttachInternal(hBitmap, eOrientation, -1);
     }
@@ -118,7 +117,6 @@ public:
         m_hDC = NULL;
     }
 
-public:
     BOOL AlphaBlend(HDC hDestDC,
         int xDest, int yDest, int nDestWidth, int nDestHeight,
         int xSrc, int ySrc, int nSrcWidth, int nSrcHeight,
@@ -690,7 +688,6 @@ public:
             rectSrc.bottom - rectSrc.top, crTransparent);
     }
 
-public:
     static BOOL IsTransparencySupported() throw()
     {
         return TRUE;
@@ -1144,7 +1141,7 @@ private:
     }
 
     void AttachInternal(HBITMAP hBitmap, DIBOrientation eOrientation,
-                        LONG iTransColor)
+                        LONG iTransColor) throw()
     {
         Destroy();
 
