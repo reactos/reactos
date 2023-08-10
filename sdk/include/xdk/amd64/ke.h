@@ -116,7 +116,11 @@ FORCEINLINE
 KIRQL
 KeRaiseIrqlToSynchLevel(VOID)
 {
+#ifdef CONFIG_SMP
     return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
+#else
+    return KfRaiseIrql(2); // SYNCH_LEVEL = DISPATCH_LEVEL
+#endif
 }
 
 FORCEINLINE
