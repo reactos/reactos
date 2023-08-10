@@ -1018,8 +1018,8 @@ private:
 
     static CInitGDIPlus* GetInitGDIPlusInstance()
     {
-        static CInitGDIPlus s_init;
-        return &s_init;
+        static CInitGDIPlus s_gdiplus;
+        return &s_gdiplus;
     }
 
     static bool InitGDIPlus() throw()
