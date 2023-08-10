@@ -885,7 +885,7 @@ private:
         LONG m_nCImageObjects;
         DWORD m_dwLastError;
 
-        void ClearFUNs() throw()
+        void _clear_funs() throw()
         {
             Startup = NULL;
             Shutdown = NULL;
@@ -932,7 +932,7 @@ private:
             , m_nCImageObjects(0)
             , m_dwLastError(ERROR_SUCCESS)
         {
-            ClearFUNs();
+            _clear_funs();
             ::InitializeCriticalSection(&m_sect);
         }
 
@@ -994,7 +994,7 @@ private:
                 ::FreeLibrary(m_hInst);
                 m_hInst = NULL;
             }
-            ClearFUNs();
+            _clear_funs();
             ::LeaveCriticalSection(&m_sect);
         }
 
