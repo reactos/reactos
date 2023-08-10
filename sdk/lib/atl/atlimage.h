@@ -55,13 +55,13 @@ public:
         m_rgbTransColor = CLR_INVALID;
         ZeroMemory(&m_ds, sizeof(m_ds));
 
-        GetInitGDIPlusInstance()->IncreaseCImageCount();
+        _gdiplus().IncreaseCImageCount();
     }
 
     virtual ~CImage() throw()
     {
         Destroy();
-        GetInitGDIPlusInstance()->DecreaseCImageCount();
+        _gdiplus().DecreaseCImageCount();
     }
 
     operator HBITMAP() throw()
@@ -71,7 +71,7 @@ public:
 
     static void ReleaseGDIPlus()
     {
-        GetInitGDIPlusInstance()->ReleaseGDIPlus();
+        _gdiplus().ReleaseGDIPlus();
     }
 
     void Attach(HBITMAP hBitmap, DIBOrientation eOrientation = DIBOR_DEFAULT) throw()
@@ -1011,20 +1011,15 @@ private:
         }
     };
 
-    static CInitGDIPlus* GetInitGDIPlusInstance()
+    static CInitGDIPlus& _gdiplus() throw()
     {
         static CInitGDIPlus s_gdiplus;
-        return &s_gdiplus;
+        return s_gdiplus;
     }
 
     static bool InitGDIPlus() throw()
     {
-        return GetInitGDIPlusInstance()->Init();
-    }
-
-    static CInitGDIPlus& _gdiplus() throw()
-    {
-        return *GetInitGDIPlusInstance();
+        return _gdiplus().Init();
     }
 
 private:
