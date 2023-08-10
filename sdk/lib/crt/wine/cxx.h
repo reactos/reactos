@@ -18,6 +18,9 @@
 
 #include "wine/asm.h"
 
+#ifdef _MSC_VER
+#define __ASM_VTABLE(name,funcs)
+#else
 #ifdef _WIN64
 
 #define VTABLE_ADD_FUNC(name) "\t.quad " THISCALL_NAME(name) "\n"
@@ -43,6 +46,7 @@
             funcs "\n\t.text")
 
 #endif /* _WIN64 */
+#endif // _MSC_VER
 
 #ifndef __x86_64__
 
@@ -264,4 +268,4 @@ extern void *vtbl_wrapper_48;
 
 #endif
 
-//exception* __thiscall MSVCRT_exception_ctor(exception*, const char**);
+exception* __thiscall MSVCRT_exception_ctor(exception*, const char**);
