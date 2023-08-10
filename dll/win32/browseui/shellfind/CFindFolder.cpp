@@ -455,6 +455,8 @@ DWORD WINAPI CFindFolder::SearchThreadProc(LPVOID lpParameter)
 {
     _SearchData *data = static_cast<_SearchData*>(lpParameter);
 
+    HRESULT hrCoInit = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
     data->pFindFolder->NotifyConnections(DISPID_SEARCHSTART);
 
     UINT uTotalFound = RecursiveFind(data->szPath, data);
@@ -468,6 +470,9 @@ DWORD WINAPI CFindFolder::SearchThreadProc(LPVOID lpParameter)
 
     CloseHandle(data->hStopEvent);
     delete data;
+
+    if (SUCCEEDED(hrCoInit))
+        CoUninitialize();
 
     return 0;
 }
