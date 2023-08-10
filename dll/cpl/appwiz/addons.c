@@ -413,8 +413,8 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
                 /*
                  * https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/ms775068(v=vs.85)
                  *
-                 * > After it aborts the bind operation, the client must release any pointers that
-                 * > were obtained during the binding.
+                 * > After it aborts the bind operation, the client must release
+                 * > any pointers that were obtained during the binding.
                  *
                  * OnStopBinding is not the client.
                  */
