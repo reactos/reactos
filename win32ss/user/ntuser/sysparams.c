@@ -1404,10 +1404,10 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.bFontSmoothing, fl);
 
         case SPI_SETFONTSMOOTHING:
-            gspv.bFontSmoothing = (uiParam == 2);
+            gspv.bFontSmoothing = !!uiParam;
             if (fl & SPIF_UPDATEINIFILE)
             {
-                SpiStoreSz(KEY_DESKTOP, VAL_FONTSMOOTHING, (uiParam == 2) ? L"2" : L"0");
+                SpiStoreSzInt(KEY_DESKTOP, VAL_FONTSMOOTHING, gspv.bFontSmoothing ? 2 : 0);
             }
             return (UINT_PTR)KEY_DESKTOP;
 
