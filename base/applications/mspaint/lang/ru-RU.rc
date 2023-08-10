@@ -267,4 +267,5 @@ BEGIN
     IDS_CANTPASTE "Не удалось вставить из буфера обмена. Формат данных либо некорректный, либо не поддерживается."
     IDS_SAVEERROR "Не удалось сохранить точечный рисунок в файл:\n\n%s"
     IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "Color information will be lost in this operation. Are you sure?"
 END

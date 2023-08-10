@@ -949,18 +949,21 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (attributesDialog.DoModal(mainWindow.m_hWnd))
             {
-                if (attributesDialog.m_bMonochrome)
+                if (attributesDialog.m_bBlackAndWhite && !imageModel.IsBlackAndWhite())
                 {
-                    HBITMAP hbm = imageModel.CopyBitmap();
-                    HBITMAP hbmMono = MakeMonochrome(hbm);
-                    imageModel.PushImageForUndo(hbmMono);
-                    ::DeleteObject(hbm);
+                    CString strText(MAKEINTRESOURCE(IDS_LOSECOLOR));
+                    CString strTitle(MAKEINTRESOURCE(IDS_PROGRAMNAME));
+                    INT id = MessageBox(strText, strTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
+                    if (id != IDYES)
+                        break;
+
+                    imageModel.PushBlackAndWhite();
                 }
 
                 if (imageModel.GetWidth() != attributesDialog.newWidth ||
                     imageModel.GetHeight() != attributesDialog.newHeight)
                 {
-                    imageModel.Crop(attributesDialog.newWidth, attributesDialog.newHeight, 0, 0);
+                    imageModel.Crop(attributesDialog.newWidth, attributesDialog.newHeight);
                 }
             }
             break;

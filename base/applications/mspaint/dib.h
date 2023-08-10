@@ -42,4 +42,3 @@ float PpcmFromDpi(float dpi);
 HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap);
 HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal);
 HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF);
-HBITMAP MakeMonochrome(HBITMAP hBitmap);
