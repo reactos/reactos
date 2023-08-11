@@ -602,17 +602,16 @@ SHGetIniStringW(
     if (outLen == 0)
         return 0;
 
-    // Allocate pszWideBuff
-    const INT cchWideMax = 4 * MAX_PATH; // UTF-7 needs 4 times length buffer.
-    CComHeapPtr<WCHAR> pszWideBuff;
-    if (!pszWideBuff.Allocate(cchWideMax * sizeof(WCHAR)))
-        return 0;
-
     // Try ".W"-appended section name. See also SHSetIniStringW
     CStringW szSection(appName);
     szSection += L".W";
-    GetPrivateProfileStringW(szSection, keyName, NULL, pszWideBuff, cchWideMax, filename);
-    if (pszWideBuff[0] == UNICODE_NULL) // It's empty or not found
+    CStringW pszWideBuff;
+    const INT cchWideMax = 4 * MAX_PATH; // UTF-7 needs 4 times length buffer.
+    GetPrivateProfileStringW(szSection, keyName, NULL,
+                             pszWideBuff.GetBuffer(cchWideMax), cchWideMax, filename);
+    pszWideBuff.ReleaseBuffer();
+
+    if (pszWideBuff.IsEmpty()) // It's empty or not found
     {
         // Try the normal section name
         return GetPrivateProfileStringW(appName, keyName, NULL, out, outLen, filename);
