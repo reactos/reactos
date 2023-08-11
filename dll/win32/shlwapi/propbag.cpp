@@ -12,7 +12,6 @@
 #include <atlstr.h>         // for CStringW
 #include <atlsimpcoll.h>    // for CSimpleMap
 #include <atlcomcli.h>      // for CComVariant
-#include <atlalloc.h>       // for CComHeapPtr
 #include <atlconv.h>        // for CA2W and CW2A
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
