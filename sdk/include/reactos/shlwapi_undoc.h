@@ -179,7 +179,7 @@ HRESULT WINAPI SHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD si
 #define SHLoadRegUIString  SHLoadRegUIStringA
 #endif
 
-EXTERN_C DWORD WINAPI
+DWORD WINAPI
 SHGetIniStringW(
     _In_z_ LPCWSTR appName,
     _In_z_ LPCWSTR keyName,
