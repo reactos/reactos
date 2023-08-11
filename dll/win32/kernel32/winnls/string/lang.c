@@ -32,6 +32,12 @@ DEBUG_CHANNEL(nls);
     #include "japanese.h"
 #endif
 
+#undef WINVER
+#define WINVER 0x600
+
+/* From winnls.h */
+#define LOCALE_NAME_USER_DEFAULT    NULL
+
 #define REG_SZ 1
 extern int wine_fold_string(int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen);
 extern int wine_get_sortkey(int flags, const WCHAR *src, int srclen, char *dst, int dstlen);

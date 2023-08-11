@@ -66,8 +66,10 @@
 @ stdcall CommandLineFromMsiDescriptor(wstr ptr ptr)
 @ stub ComputeAccessTokenFromCodeAuthzLevel
 @ stdcall ControlService(long long ptr)
-@ stdcall ControlTraceA(double str ptr long) ntdll.EtwControlTraceA
-@ stdcall ControlTraceW(double wstr ptr long) ntdll.EtwControlTraceW
+@ stdcall -version=0x502 ControlTraceA(double str ptr long) ntdll.EtwControlTraceA
+@ stdcall -stub -version=0x600+ ControlTraceA(double str ptr long)
+@ stdcall -version=0x502 ControlTraceW(double wstr ptr long) ntdll.EtwControlTraceW
+@ stdcall -stub -version=0x600+ ControlTraceW(double wstr ptr long)
 @ stub ConvertAccessToSecurityDescriptorA
 @ stub ConvertAccessToSecurityDescriptorW
 @ stub ConvertSDToStringSDRootDomainA
@@ -201,7 +203,8 @@
 @ stdcall ElfReportEventA(long long long long ptr long long ptr ptr long ptr ptr)
 @ stdcall ElfReportEventAndSourceW(long long ptr long long long ptr ptr long long ptr ptr long ptr ptr)
 @ stdcall ElfReportEventW(long long long long ptr long long ptr ptr long ptr ptr)
-@ stdcall EnableTrace(long long long ptr double) ntdll.EtwEnableTrace
+@ stdcall -version=0x502 EnableTrace(long long long ptr double) ntdll.EtwEnableTrace
+@ stdcall -stub -version=0x600+ EnableTrace(long long long ptr double)
 @ stdcall EncryptFileA(str)
 @ stdcall EncryptFileW(wstr)
 @ stub EncryptedFileKeyInfo
@@ -213,15 +216,18 @@
 @ stdcall EnumServicesStatusExA(long long long long ptr long ptr ptr ptr str)
 @ stdcall EnumServicesStatusExW(long long long long ptr long ptr ptr ptr wstr)
 @ stdcall EnumServicesStatusW(long long long ptr long ptr ptr ptr)
-@ stdcall EnumerateTraceGuids(ptr long ptr) ntdll.EtwEnumerateTraceGuids
+@ stdcall -version=0x502 EnumerateTraceGuids(ptr long ptr) ntdll.EtwEnumerateTraceGuids
+@ stdcall -stub -version=0x600+ EnumerateTraceGuids(ptr long ptr)
 @ stdcall EqualDomainSid(ptr ptr ptr)
 @ stdcall EqualPrefixSid(ptr ptr)
 @ stdcall EqualSid(ptr ptr)
 @ stdcall FileEncryptionStatusA(str ptr)
 @ stdcall FileEncryptionStatusW(wstr ptr)
 @ stdcall FindFirstFreeAce(ptr ptr)
-@ stdcall FlushTraceA(double str ptr) ntdll.EtwFlushTraceA
-@ stdcall FlushTraceW(double wstr ptr) ntdll.EtwFlushTraceW
+@ stdcall -version=0x502 FlushTraceA(double str ptr) ntdll.EtwFlushTraceA
+@ stdcall -stub -version=0x600+ FlushTraceA(double str ptr)
+@ stdcall -version=0x502 FlushTraceW(double wstr ptr) ntdll.EtwFlushTraceW
+@ stdcall -stub -version=0x600+ FlushTraceW(double wstr ptr)
 @ stub FreeEncryptedFileKeyInfo
 @ stdcall FreeEncryptionCertificateHashList(ptr)
 @ stdcall FreeInheritedFromArray(ptr long ptr)
@@ -439,8 +445,10 @@
 @ stdcall PrivilegedServiceAuditAlarmW(wstr wstr long ptr long)
 @ stub ProcessIdleTasks
 @ stdcall ProcessTrace(ptr long ptr ptr)
-@ stdcall QueryAllTracesA(ptr long ptr) ntdll.EtwQueryAllTracesA
-@ stdcall QueryAllTracesW(ptr long ptr) ntdll.EtwQueryAllTracesW
+@ stdcall -version=0x502 QueryAllTracesA(ptr long ptr) ntdll.EtwQueryAllTracesA
+@ stdcall -stub -version=0x600+ QueryAllTracesA(ptr long ptr)
+@ stdcall -version=0x502 QueryAllTracesW(ptr long ptr) ntdll.EtwQueryAllTracesW
+@ stdcall -stub -version=0x600+ QueryAllTracesW(ptr long ptr)
 @ stdcall QueryRecoveryAgentsOnEncryptedFile(wstr ptr)
 @ stdcall QueryServiceConfig2A(long long ptr long ptr)
 @ stdcall QueryServiceConfig2W(long long ptr long ptr)
@@ -451,8 +459,10 @@
 @ stdcall QueryServiceObjectSecurity(long long ptr long ptr)
 @ stdcall QueryServiceStatus(long ptr)
 @ stdcall QueryServiceStatusEx(long long ptr long ptr)
-@ stdcall QueryTraceA(double str ptr) ntdll.EtwQueryTraceA
-@ stdcall QueryTraceW(double str ptr) ntdll.EtwQueryTraceA
+@ stdcall -version=0x502 QueryTraceA(double str ptr) ntdll.EtwQueryTraceA
+@ stdcall -stub -version=0x600+ QueryTraceA(double str ptr)
+@ stdcall -version=0x502 QueryTraceW(double str ptr) ntdll.EtwQueryTraceW
+@ stdcall -stub -version=0x600+ QueryTraceW(double str ptr)
 @ stdcall QueryUsersOnEncryptedFile(wstr ptr)
 @ stdcall ReadEncryptedFileRaw(ptr ptr ptr)
 @ stdcall ReadEventLogA(long long long ptr long ptr ptr)
@@ -587,10 +597,14 @@
 @ stdcall StartServiceCtrlDispatcherA(ptr)
 @ stdcall StartServiceCtrlDispatcherW(ptr)
 @ stdcall StartServiceW(long long ptr)
-@ stdcall StartTraceA(ptr str ptr) ntdll.EtwStartTraceA
-@ stdcall StartTraceW(ptr wstr ptr) ntdll.EtwStartTraceW
-@ stdcall StopTraceA(double str ptr) ntdll.EtwStopTraceA
-@ stdcall StopTraceW(double wstr ptr) ntdll.EtwStopTraceA
+@ stdcall -version=0x502 StartTraceA(ptr str ptr) ntdll.EtwStartTraceA
+@ stdcall -stub -version=0x600+ StartTraceA(ptr str ptr)
+@ stdcall -version=0x502 StartTraceW(ptr wstr ptr) ntdll.EtwStartTraceW
+@ stdcall -stub -version=0x600+ StartTraceW(ptr wstr ptr)
+@ stdcall -version=0x502 StopTraceA(double str ptr) ntdll.EtwStopTraceA
+@ stdcall -stub -version=0x600+ StopTraceA(double str ptr)
+@ stdcall -version=0x502 StopTraceW(double wstr ptr) ntdll.EtwStopTraceW
+@ stdcall -stub -version=0x600+ StopTraceW(double wstr ptr)
 @ stdcall SystemFunction001(ptr ptr ptr)
 @ stdcall SystemFunction002(ptr ptr ptr)
 @ stdcall SystemFunction003(ptr ptr)
@@ -629,7 +643,8 @@
 @ stdcall SystemFunction036(ptr long) # RtlGenRandom
 @ stdcall SystemFunction040(ptr long long) # RtlEncryptMemory
 @ stdcall SystemFunction041(ptr long long) # RtlDecryptMemory
-@ stdcall TraceEvent(double ptr) ntdll.EtwTraceEvent
+@ stdcall -version=0x502 TraceEvent(double ptr) ntdll.EtwTraceEvent
+@ stdcall -stub -version=0x600+ TraceEvent(double ptr)
 @ stdcall TraceEventInstance(double ptr ptr ptr) ntdll.EtwTraceEventInstance
 @ varargs TraceMessage() ntdll.EtwTraceMessage
 @ stdcall TraceMessageVa() ntdll.EtwTraceMessageVa
@@ -641,8 +656,10 @@
 @ stdcall UnlockServiceDatabase(ptr)
 @ stub UnregisterIdleTask
 @ stdcall UnregisterTraceGuids(double) ntdll.EtwUnregisterTraceGuids
-@ stdcall UpdateTraceA(double str ptr) ntdll.EtwUpdateTraceA
-@ stdcall UpdateTraceW(double wstr ptr) ntdll.EtwUpdateTraceW
+@ stdcall -version=0x502 UpdateTraceA(double str ptr) ntdll.EtwUpdateTraceA
+@ stdcall -stub -version=0x600+ UpdateTraceA(double str ptr)
+@ stdcall -version=0x502 UpdateTraceW(double wstr ptr) ntdll.EtwUpdateTraceW
+@ stdcall -stub -version=0x600+ UpdateTraceW(double wstr ptr)
 @ stub WdmWmiServiceMain
 @ stub WmiCloseBlock
 @ stub WmiCloseTraceWithCursor
@@ -660,8 +677,10 @@
 @ stub WmiGetTraceHeader
 @ stub WmiMofEnumerateResourcesA
 @ stub WmiMofEnumerateResourcesW
-@ stdcall WmiNotificationRegistrationA(ptr long ptr long long) ntdll.EtwNotificationRegistrationA
-@ stdcall WmiNotificationRegistrationW(ptr long ptr long long) ntdll.EtwNotificationRegistrationW
+@ stdcall -version=0x502 WmiNotificationRegistrationA(ptr long ptr long long) ntdll.EtwNotificationRegistrationA
+@ stdcall -stub -version=0x600+ WmiNotificationRegistrationA(ptr long ptr long long)
+@ stdcall -version=0x502 WmiNotificationRegistrationW(ptr long ptr long long) ntdll.EtwNotificationRegistrationW
+@ stdcall -stub -version=0x600+ WmiNotificationRegistrationW(ptr long ptr long long)
 @ stub WmiOpenBlock
 @ stub WmiOpenTraceWithCursor
 @ stub WmiParseTraceEvent
@@ -674,8 +693,10 @@
 @ stub WmiQuerySingleInstanceMultipleA
 @ stub WmiQuerySingleInstanceMultipleW
 @ stub WmiQuerySingleInstanceW
-@ stdcall WmiReceiveNotificationsA(long long long long) ntdll.EtwReceiveNotificationsA
-@ stdcall WmiReceiveNotificationsW(long long long long) ntdll.EtwReceiveNotificationsW
+@ stdcall -version=0x502 WmiReceiveNotificationsA(long long long long) ntdll.EtwReceiveNotificationsA
+@ stdcall -stub -version=0x600+ WmiReceiveNotificationsA(long long long long)
+@ stdcall -version=0x502 WmiReceiveNotificationsW(long long long long) ntdll.EtwReceiveNotificationsW
+@ stdcall -stub -version=0x600+ WmiReceiveNotificationsW(long long long long)
 @ stub WmiSetSingleInstanceA
 @ stub WmiSetSingleInstanceW
 @ stub WmiSetSingleItemA
