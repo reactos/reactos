@@ -482,14 +482,23 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         TrayIcon_UpdateIcon();
         break;
 
+    case WM_INITMENUPOPUP:
+        /* Do not disable the status bar if we opened the system menu */
+        if (!HIWORD(lParam))
+            TaskManager_DisableStatusBar(hDlg);
+        else
+            TaskManager_EnableStatusBar(hDlg);
+        break;
     case WM_ENTERMENULOOP:
-        TaskManager_OnEnterMenuLoop(hDlg);
+        bInMenuLoop = TRUE;
         break;
     case WM_EXITMENULOOP:
-        TaskManager_OnExitMenuLoop(hDlg);
+        bInMenuLoop = FALSE;
+        TaskManager_EnableStatusBar(hDlg);
         break;
     case WM_MENUSELECT:
-        TaskManager_OnMenuSelect(hDlg, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
+        if (!(HIWORD(wParam) & MF_SYSMENU))
+            TaskManager_OnMenuSelect(hDlg, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
         break;
     case WM_SYSCOLORCHANGE:
         /* Forward WM_SYSCOLORCHANGE to common controls */
@@ -887,23 +896,20 @@ void TaskManager_OnRestoreMainWindow(void)
     SetWindowPos(hMainWnd, (OnTop ? HWND_TOPMOST : HWND_TOP), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
 }
 
-void TaskManager_OnEnterMenuLoop(HWND hWnd)
+void TaskManager_DisableStatusBar(HWND hWnd)
 {
     int nParts;
 
     /* Update the status bar pane sizes */
     nParts = -1;
     SendMessageW(hStatusWnd, SB_SETPARTS, 1, (LPARAM) (LPINT)&nParts);
-    bInMenuLoop = TRUE;
     SendMessageW(hStatusWnd, SB_SETTEXT, (WPARAM)0, (LPARAM)L"");
 }
 
-void TaskManager_OnExitMenuLoop(HWND hWnd)
+void TaskManager_EnableStatusBar(HWND hWnd)
 {
     RECT   rc;
     int    nParts[3];
-
-    bInMenuLoop = FALSE;
 
     /* Update the status bar pane sizes */
     GetClientRect(hWnd, &rc);
