@@ -7237,7 +7237,7 @@ Example:
     SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 .
 Language=Romanian
-    Schimbă câmpul tipului partiției pentru partiția în cauză.
+    Schimbă registru tipului partiției pentru partiția în cauză.
 
 Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
 
