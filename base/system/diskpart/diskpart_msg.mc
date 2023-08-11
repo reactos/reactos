@@ -1162,7 +1162,7 @@ Example:
 .
 Language=Taiwanese
     在已選擇的磁碟上建立一個延伸磁碟分割。
-                只適用於主開機記錄 (MBR) 磁碟。
+    只適用於主開機記錄 (MBR) 磁碟。
 
 語法:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
