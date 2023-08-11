@@ -37,6 +37,8 @@ public:
     void RotateNTimes90Degrees(int iN);
     void Clamp(POINT& pt) const;
     void NotifyImageChanged();
+    BOOL IsBlackAndWhite();
+    void PushBlackAndWhite();
 
 protected:
     HDC m_hDrawingDC; // The device context for this class

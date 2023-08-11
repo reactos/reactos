@@ -265,4 +265,5 @@ BEGIN
     IDS_CANTPASTE "クリップボードからの貼り付けに失敗しました。データ形式が間違っているか、未対応です。"
     IDS_SAVEERROR "次のファイルとして画像を保存するのに失敗しました:\n\n%s"
     IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
 END

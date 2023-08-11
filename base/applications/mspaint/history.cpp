@@ -267,3 +267,47 @@ HBITMAP ImageModel::CopyBitmap()
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]); // Re-select
     return ret;
 }
+
+BOOL ImageModel::IsBlackAndWhite()
+{
+    LONG cxWidth = GetWidth(), cyHeight = GetHeight();
+    for (LONG y = 0; y < cyHeight; ++y)
+    {
+        for (LONG x = 0; x < cxWidth; ++x)
+        {
+            COLORREF rgbColor = ::GetPixel(m_hDrawingDC, x, y);
+            if (rgbColor != RGB(0, 0, 0) && rgbColor != RGB(255, 255, 255))
+                return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+void ImageModel::PushBlackAndWhite()
+{
+    HBITMAP hNewBitmap = CopyBitmap();
+    if (!hNewBitmap)
+        return;
+
+    HDC hdc2 = ::CreateCompatibleDC(NULL);
+    HGDIOBJ hbm2Old = ::SelectObject(hdc2, hNewBitmap);
+    LONG cxWidth = GetWidth(), cyHeight = GetHeight();
+    for (LONG y = 0; y < cyHeight; ++y)
+    {
+        for (LONG x = 0; x < cxWidth; ++x)
+        {
+            COLORREF rgbColor = ::GetPixel(m_hDrawingDC, x, y);
+            BYTE Red = GetRValue(rgbColor);
+            BYTE Green = GetGValue(rgbColor);
+            BYTE Blue = GetBValue(rgbColor);
+            if ((Red + Green + Blue) / 3 >= 255 / 2)
+                ::SetPixelV(hdc2, x, y, RGB(255, 255, 255)); // White
+            else
+                ::SetPixelV(hdc2, x, y, RGB(0, 0, 0)); // Black
+        }
+    }
+    ::SelectObject(hdc2, hbm2Old);
+    ::DeleteDC(hdc2);
+
+    PushImageForUndo(hNewBitmap);
+}
