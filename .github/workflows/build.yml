@@ -76,7 +76,7 @@ jobs:
     - name: Upload ISOs
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
+        name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
           build/bootcd.iso
           build/livecd.iso
@@ -141,7 +141,7 @@ jobs:
     - name: Upload ISOs
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
+        name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
           build/bootcd.iso
           build/livecd.iso
@@ -149,7 +149,7 @@ jobs:
       if: ${{ matrix.config == 'Debug' }}
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
+        name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: build/msvc_pdb
 
   build-msvc-arm:
