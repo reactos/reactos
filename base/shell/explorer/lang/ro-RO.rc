@@ -79,7 +79,7 @@ BEGIN
     AUTOCHECKBOX "&Menține bara de activități deasupra celorlalte ferestre", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Grupează butoanele similare din bara de activități", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Afișează bara „&Lansări rapide”", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    AUTOCHECKBOX "Folosește iconițe mici", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+    AUTOCHECKBOX "&Folosește iconițe mici", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -110,7 +110,7 @@ BEGIN
     LTEXT "Selectați ce iconițe de sistem urmează să fie afișate mereu.", IDC_STATIC, 13, 113, 223, 8
     AUTOCHECKBOX "Afișează &ceas", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
     AUTOCHECKBOX "Afișează s&ecunde", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
-    AUTOCHECKBOX "&Desktop", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
+    AUTOCHECKBOX "&Birou", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
 END
 
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
