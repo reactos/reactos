@@ -266,6 +266,6 @@ BEGIN
     IDS_PRINTRES "%d x %d точек/см"
     IDS_CANTPASTE "Не удалось вставить из буфера обмена. Формат данных либо некорректный, либо не поддерживается."
     IDS_SAVEERROR "Не удалось сохранить точечный рисунок в файл:\n\n%s"
-    IDS_CANTSENDMAIL "Failed to send a mail."
-    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
+    IDS_CANTSENDMAIL "Не удалось отправить письмо."
+    IDS_LOSECOLOR "В результате этой операции сведения о цвете будут потеряны. Продолжить?"
 END
