@@ -265,4 +265,5 @@ BEGIN
     IDS_CANTPASTE "Nu a putut fi lipit din clipboard. Formatul de date este fie incorect, fie nesuportat."
     IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
     IDS_CANTSENDMAIL "Failed to send a mail."
+    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
 END

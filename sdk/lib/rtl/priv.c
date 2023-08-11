@@ -487,7 +487,7 @@ RtlAdjustPrivilege(IN ULONG Privilege,
     return STATUS_SUCCESS;
 }
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
 
 /**
  * @brief

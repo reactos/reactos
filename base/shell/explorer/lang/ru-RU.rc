@@ -82,7 +82,7 @@ BEGIN
     AUTOCHECKBOX "Отображать панель задач &поверх других окон", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Группировать схожие кнопки панели задач", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Отображать панель &быстрого запуска", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    AUTOCHECKBOX "Use small icons", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+    AUTOCHECKBOX "&Использовать маленькие значки", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -105,15 +105,15 @@ CAPTION "Область уведомлений"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 6, 229, 24
-    GROUPBOX "Icons", IDC_STATIC, 6, 36, 240, 56
+    GROUPBOX "Значки", IDC_STATIC, 6, 36, 240, 56
     LTEXT "Можно избежать загромождения области уведомлений, скрывая значки, которые давно не использовались.", IDC_STATIC, 13, 48, 223, 16
-    AUTOCHECKBOX "Скрывать &неиспользуемые значки", IDC_TASKBARPROP_HIDEICONS, 13, 70, 128, 10
+    AUTOCHECKBOX "&Скрывать неиспользуемые значки", IDC_TASKBARPROP_HIDEICONS, 13, 70, 128, 10
     PUSHBUTTON "&Настроить...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14
-    GROUPBOX "System icons", IDC_STATIC, 6, 99, 240, 56
-    LTEXT "Select which system icons to always show.", IDC_STATIC, 13, 113, 223, 8
+    GROUPBOX "Системные значки", IDC_STATIC, 6, 99, 240, 56
+    LTEXT "Выберите, какие системные значки показывать всегда.", IDC_STATIC, 13, 113, 223, 8
     AUTOCHECKBOX "Отображать &часы", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
-    AUTOCHECKBOX "Отображать &секунды", IDC_TASKBARPROP_SECONDS, 120, 127, 83, 10, WS_DISABLED
-    AUTOCHECKBOX "Desktop", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
+    AUTOCHECKBOX "Отображать секунды", IDC_TASKBARPROP_SECONDS, 120, 127, 84, 10, WS_DISABLED
+    AUTOCHECKBOX "&Рабочий стол", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
 END
 
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240

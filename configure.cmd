@@ -84,6 +84,8 @@ REM Parse command line parameters
             set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
         ) else if /I "%1" == "Makefiles" (
             set CMAKE_GENERATOR="MinGW Makefiles"
+        ) else if /I "%1" == "Ninja" (
+            set CMAKE_GENERATOR="Ninja"
         ) else if /I "%1" == "VSSolution" (
             echo. && echo Error: Creation of VS Solution files is not supported in a MinGW environment.
             echo Please run this command in a [Developer] Command Prompt for Visual Studio.
@@ -107,6 +109,8 @@ REM Parse command line parameters
             set CMAKE_GENERATOR="Eclipse CDT4 - NMake Makefiles"
         ) else if /I "%1" == "Makefiles" (
             set CMAKE_GENERATOR="NMake Makefiles"
+        ) else if /I "%1" == "Ninja" (
+            set CMAKE_GENERATOR="Ninja"
         ) else if /I "%1" == "clang" (
             set USE_CLANG_CL=1
         ) else if /I "%1" == "VSSolution" (

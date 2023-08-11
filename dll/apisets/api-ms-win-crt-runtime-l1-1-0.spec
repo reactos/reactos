@@ -37,7 +37,7 @@
 @ stdcall _endthread() msvcrt._endthread
 @ stdcall _endthreadex() msvcrt._endthreadex
 @ stdcall _errno() msvcrt._errno
-@ stub -version=0xA00+ _execute_onexit_table
+@ cdecl -stub -version=0xA00+ _execute_onexit_table(ptr)
 @ stdcall _exit() msvcrt._exit
 @ stdcall -arch=i386 _fpieee_flt() msvcrt._fpieee_flt
 @ stdcall -stub -arch=x86_64 _fpieee_flt() # ucrtbase._fpieee_flt (msvcrt x64 doesn't have this!)
@@ -53,18 +53,19 @@
 @ stub _get_thread_local_invalid_parameter_handler
 @ stub _get_wide_winmain_command_line
 @ stub _get_wpgmptr
-@ stdcall _getdllprocaddr() msvcrt._getdllprocaddr
+@ cdecl -arch=i386 _getdllprocaddr() msvcrt._getdllprocaddr
+@ cdecl -arch=x86_64 -version=0x502 _getdllprocaddr() msvcrt._getdllprocaddr
 @ stdcall _getpid() msvcrt._getpid
 @ stub _initialize_narrow_environment
-@ stub -version=0xA00+ _initialize_onexit_table
+@ cdecl -stub -version=0xA00+ _initialize_onexit_table(ptr)
 @ stub _initialize_wide_environment
 @ stdcall _initterm() msvcrt._initterm
-@ stub _initterm_e
+@ cdecl -version=0x600+ _initterm_e(ptr ptr) msvcrt._initterm_e
 @ stub _invalid_parameter_noinfo
 @ stub _invalid_parameter_noinfo_noreturn
 @ stub _invoke_watson
 @ stub _query_app_type
-@ stub -version=0xA00+ _register_onexit_function
+@ cdecl -stub -version=0xA00+ _register_onexit_function(ptr ptr)
 @ stub _register_thread_local_exe_atexit_callback
 @ stdcall _resetstkoflw() msvcrt._resetstkoflw
 @ cdecl -version=0xA00+ _seh_filter_dll() msvcrt.__CppXcptFilter

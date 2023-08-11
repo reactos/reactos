@@ -103,9 +103,13 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
     newHeight = imageModel.GetHeight();
 
     CheckDlgButton(IDD_ATTRIBUTESRB3, BST_CHECKED);
-    CheckDlgButton(IDD_ATTRIBUTESRB5, BST_CHECKED);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT1, newWidth, FALSE);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT2, newHeight, FALSE);
+
+    if (imageModel.IsBlackAndWhite())
+        CheckRadioButton(IDD_ATTRIBUTESRB4, IDD_ATTRIBUTESRB5, IDD_ATTRIBUTESRB4);
+    else
+        CheckRadioButton(IDD_ATTRIBUTESRB4, IDD_ATTRIBUTESRB5, IDD_ATTRIBUTESRB5);
 
     if (g_isAFile)
     {
@@ -142,6 +146,7 @@ LRESULT CAttributesDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT CAttributesDialog::OnOk(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+    m_bBlackAndWhite = (IsDlgButtonChecked(IDD_ATTRIBUTESRB4) == BST_CHECKED);
     EndDialog(1);
     return 0;
 }

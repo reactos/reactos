@@ -64,6 +64,7 @@ public:
 public:
     int newWidth;
     int newHeight;
+    BOOL m_bBlackAndWhite;
 };
 
 class CStretchSkewDialog : public CDialogImpl<CStretchSkewDialog>
