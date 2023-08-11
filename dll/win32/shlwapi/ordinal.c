@@ -3272,6 +3272,7 @@ BOOL WINAPI PlaySoundWrapW(LPCWSTR pszSound, HMODULE hmod, DWORD fdwSound)
     return PlaySoundW(pszSound, hmod, fdwSound);
 }
 
+#ifndef __REACTOS__ /* See propbag.cpp */
 /*************************************************************************
  *      @	[SHLWAPI.294]
  *
@@ -3291,37 +3292,6 @@ BOOL WINAPI PlaySoundWrapW(LPCWSTR pszSound, HMODULE hmod, DWORD fdwSound)
 DWORD WINAPI SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out,
         DWORD outLen, LPCWSTR filename)
 {
-#ifdef __REACTOS__
-    WCHAR szSection[MAX_PATH + 2];
-    WCHAR szWideBuff[MAX_PATH];
-    CHAR szUtf7Buff[MAX_PATH];
-
-    TRACE("(%s,%s,%p,%08x,%s)\n", debugstr_w(appName), debugstr_w(keyName),
-          out, outLen, debugstr_w(filename));
-
-    if (outLen == 0)
-        return 0;
-
-    /* Try ".W"-appended section name. See also SHSetIniStringW. */
-    lstrcpynW(szSection, appName, _countof(szSection) - 2);
-    lstrcatW(szSection, L".W");
-    GetPrivateProfileStringW(szSection, keyName, NULL, szWideBuff, _countof(szWideBuff), filename);
-    if (szWideBuff[0] == UNICODE_NULL) /* It's empty or not found */
-    {
-        /* Try the normal section name */
-        return GetPrivateProfileStringW(appName, keyName, NULL, out, outLen, filename);
-    }
-
-    /* Okay, now ".W" version is valid. Its value is a UTF-7 string in UTF-16 */
-
-    /* szWideBuff --> szUtf7Buff */
-    SHUnicodeToAnsiCP(CP_ACP, szWideBuff, szUtf7Buff, _countof(szUtf7Buff));
-    szUtf7Buff[_countof(szUtf7Buff) - 1] = ANSI_NULL;
-
-    /* szUtf7Buff --> out */
-    SHAnsiToUnicodeCP(CP_UTF7, szUtf7Buff, out, outLen);
-    out[outLen - 1] = UNICODE_NULL;
-#else
     INT ret;
     WCHAR *buf;
 
@@ -3344,27 +3314,12 @@ DWORD WINAPI SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out,
         *out = 0;
 
     HeapFree(GetProcessHeap(), 0, buf);
-#endif
 
     return strlenW(out);
 }
-
-#ifdef __REACTOS__
-static BOOL Is7BitClean(LPCWSTR psz)
-{
-    if (!psz)
-        return TRUE;
-
-    while (*psz)
-    {
-        if (*psz > 0x7F)
-            return FALSE;
-        ++psz;
-    }
-    return TRUE;
-}
 #endif
 
+#ifndef __REACTOS__ /* See propbag.cpp */
 /*************************************************************************
  *      @	[SHLWAPI.295]
  *
@@ -3384,64 +3339,12 @@ static BOOL Is7BitClean(LPCWSTR psz)
 BOOL WINAPI SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str,
         LPCWSTR filename)
 {
-#ifdef __REACTOS__
-    WCHAR szSection[MAX_PATH + 2];
-    WCHAR szWideBuff[MAX_PATH];
-    CHAR szUtf7Buff[MAX_PATH];
-
-    TRACE("(%s, %p, %s, %s)\n", debugstr_w(appName), keyName, debugstr_w(str),
-          debugstr_w(filename));
-
-    /* Write a normal profile string. If str was NULL, then key will be deleted */
-    if (!WritePrivateProfileStringW(appName, keyName, str, filename))
-        return FALSE;
-
-    if (Is7BitClean(str))
-    {
-        /* Delete ".A" version */
-        lstrcpynW(szSection, appName, _countof(szSection) - 2);
-        lstrcatW(szSection, L".A");
-        WritePrivateProfileStringW(szSection, keyName, NULL, filename);
-
-        /* Delete ".W" version */
-        lstrcpynW(szSection, appName, _countof(szSection) - 2);
-        lstrcatW(szSection, L".W");
-        WritePrivateProfileStringW(szSection, keyName, NULL, filename);
-
-        return TRUE;
-    }
-
-    /* Now str is not 7-bit clean. It needs UTF-7 encoding in UTF-16.
-       We write ".A" and ".W"-appended sections. */
-
-    /* str --> szUtf7Buff */
-    SHUnicodeToAnsiCP(CP_UTF7, str, szUtf7Buff, _countof(szUtf7Buff));
-    szUtf7Buff[_countof(szUtf7Buff) - 1] = ANSI_NULL;
-
-    /* szUtf7Buff --> szWideBuff */
-    SHAnsiToUnicodeCP(CP_ACP, szUtf7Buff, szWideBuff, _countof(szWideBuff));
-    szWideBuff[_countof(szWideBuff) - 1] = UNICODE_NULL;
-
-    /* Write ".A" version */
-    lstrcpynW(szSection, appName, _countof(szSection) - 2);
-    lstrcatW(szSection, L".A");
-    if (!WritePrivateProfileStringW(szSection, keyName, str, filename))
-        return FALSE;
-
-    /* Write ".W" version */
-    lstrcpynW(szSection, appName, _countof(szSection) - 2);
-    lstrcatW(szSection, L".W");
-    if (!WritePrivateProfileStringW(szSection, keyName, szWideBuff, filename))
-        return FALSE;
-
-    return TRUE;
-#else
     TRACE("(%s, %p, %s, %s)\n", debugstr_w(appName), keyName, debugstr_w(str),
             debugstr_w(filename));
 
     return WritePrivateProfileStringW(appName, keyName, str, filename);
-#endif
 }
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.313]
