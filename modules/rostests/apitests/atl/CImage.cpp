@@ -264,7 +264,7 @@ START_TEST(CImage)
                                          aguidFileTypes,
                                          TEXT("All Image Files"), 0);
     ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
-    ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 8, was %d.", aguidFileTypes.GetSize());
+    ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 9, was %d.", aguidFileTypes.GetSize());
     ok(IsEqualGUID(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
     ok(IsEqualGUID(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
     ok(IsEqualGUID(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
@@ -291,24 +291,21 @@ START_TEST(CImage)
                                          aguidFileTypes,
                                          TEXT("All Image Files"), 0);
     ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
-    ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 8, was %d.", aguidFileTypes.GetSize());
+    ok(aguidFileTypes.GetSize() == 6, "Expected aguidFileTypes.GetSize() to be 6, was %d.", aguidFileTypes.GetSize());
     ok(IsEqualGUID(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
     ok(IsEqualGUID(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
     ok(IsEqualGUID(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
     ok(IsEqualGUID(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
-    ok(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatEMF), "Expected aguidFileTypes[4] to be Gdiplus::ImageFormatEMF.\n");
-    ok(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatWMF), "Expected aguidFileTypes[5] to be Gdiplus::ImageFormatWMF.\n");
-    ok(IsEqualGUID(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
-    ok(IsEqualGUID(aguidFileTypes[7], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
-    ok(IsEqualGUID(aguidFileTypes[8], Gdiplus::ImageFormatIcon), "Expected aguidFileTypes[8] to be Gdiplus::ImageFormatIcon.\n");
+    ok(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
+    ok(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
 
     psz = strExporters.GetString();
 #ifdef UNICODE
     WideCharToMultiByte(CP_ACP, 0, psz, -1, szBuff, 512, NULL, NULL);
-    ok(lstrcmpA(szBuff, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
+    ok(lstrcmpA(szBuff, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG||") == 0,
        "The exporter filter string is bad, was: %s\n", szBuff);
 #else
-    ok(lstrcmpA(psz, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
+    ok(lstrcmpA(psz, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG||") == 0,
        "The exporter filter string is bad, was: %s\n", psz);
 #endif
 }
