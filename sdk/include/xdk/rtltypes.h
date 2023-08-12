@@ -296,7 +296,7 @@ typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
 #endif /* UNICODE */
 
 $endif (_WDMDDK_)
-$if (_NTDDK_)
+$if (_NTDDK_ || _WINNT_)
 
 #ifndef _RTL_RUN_ONCE_DEF
 #define _RTL_RUN_ONCE_DEF
@@ -308,6 +308,26 @@ $if (_NTDDK_)
 #define RTL_RUN_ONCE_INIT_FAILED    0x00000004UL
 
 #define RTL_RUN_ONCE_CTX_RESERVED_BITS 2
+
+typedef union _RTL_RUN_ONCE {
+  PVOID Ptr;
+} RTL_RUN_ONCE, *PRTL_RUN_ONCE;
+
+typedef
+_Function_class_(RTL_RUN_ONCE_INIT_FN)
+_IRQL_requires_same_
+ULONG
+NTAPI
+RTL_RUN_ONCE_INIT_FN(
+    _Inout_ PRTL_RUN_ONCE RunOnce,
+    _Inout_opt_ PVOID Parameter,
+    _Inout_opt_ PVOID* Context);
+typedef RTL_RUN_ONCE_INIT_FN* PRTL_RUN_ONCE_INIT_FN;
+
+#endif /* _RTL_RUN_ONCE_DEF */
+
+$endif(_NTDDK_ || _WINNT_)
+$if(_NTDDK_)
 
 #define RTL_HASH_ALLOCATED_HEADER            0x00000001
 
@@ -344,20 +364,6 @@ $if (_NTDDK_)
 #define VER_PLATFORM_WIN32s             0
 #define VER_PLATFORM_WIN32_WINDOWS      1
 #define VER_PLATFORM_WIN32_NT           2
-
-typedef union _RTL_RUN_ONCE {
-  PVOID Ptr;
-} RTL_RUN_ONCE, *PRTL_RUN_ONCE;
-
-_Function_class_(RTL_RUN_ONCE_INIT_FN)
-_IRQL_requires_same_
-typedef ULONG /* LOGICAL */
-(NTAPI *PRTL_RUN_ONCE_INIT_FN) (
-  _Inout_ PRTL_RUN_ONCE RunOnce,
-  _Inout_opt_ PVOID Parameter,
-  _Inout_opt_ PVOID *Context);
-
-#endif /* _RTL_RUN_ONCE_DEF */
 
 typedef enum _TABLE_SEARCH_RESULT {
   TableEmptyTree,
