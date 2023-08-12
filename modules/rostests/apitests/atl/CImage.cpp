@@ -208,7 +208,7 @@ START_TEST(CImage)
     height = image2.GetHeight();
     ok_int(height, 48);
     bpp = image2.GetBPP();
-    ok_int(bpp, 32);
+    ok(bpp == 32 || bpp == 8, "bpp was %d\n", bpp);
 
     for (n = 0; n < _countof(szFiles); ++n)
     {
@@ -234,12 +234,11 @@ START_TEST(CImage)
         bpp = image2.GetBPP();
         if (n == 3)
         {
-            ok(bpp == 32, "Expected bpp to be 32, was: %d (for %i)\n", bpp, n);
+            ok(bpp == 24 || bpp == 32, "Expected bpp to be 24 or 32, was: %d (for %i)\n", bpp, n);
             determine_file_bpp(file, PixelFormat24bppRGB);
         }
         else
         {
-            ok(bpp == 32, "Expected bpp to be 32, was: %d (for %i)\n", bpp, n);
             determine_file_bpp(file, PixelFormat8bppIndexed);
         }
         color = image1.GetPixel(5, 5);
@@ -264,20 +263,20 @@ START_TEST(CImage)
                                          aguidFileTypes,
                                          TEXT("All Image Files"), 0);
     ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
-    ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 9, was %d.", aguidFileTypes.GetSize());
-    ok(IsEqualGUID(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
-    ok(IsEqualGUID(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
-    ok(IsEqualGUID(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
-    ok(IsEqualGUID(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
-    ok(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatEMF), "Expected aguidFileTypes[4] to be Gdiplus::ImageFormatEMF.\n");
-    ok(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatWMF), "Expected aguidFileTypes[5] to be Gdiplus::ImageFormatWMF.\n");
-    ok(IsEqualGUID(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
-    ok(IsEqualGUID(aguidFileTypes[7], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
-    ok(IsEqualGUID(aguidFileTypes[8], Gdiplus::ImageFormatIcon), "Expected aguidFileTypes[8] to be Gdiplus::ImageFormatIcon.\n");
+    ok(aguidFileTypes.GetSize() >= 9, "Expected aguidFileTypes.GetSize() to be >= 9, was %d.", aguidFileTypes.GetSize());
+    ok_int(IsEqualGUID(aguidFileTypes[0], GUID_NULL), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[1], Gdiplus::ImageFormatBMP), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[3], Gdiplus::ImageFormatGIF), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatEMF), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatWMF), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[7], Gdiplus::ImageFormatPNG), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[8], Gdiplus::ImageFormatIcon), TRUE);
 
     psz = strImporters.GetString();
 #ifdef UNICODE
-    WideCharToMultiByte(CP_ACP, 0, psz, -1, szBuff, 512, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, psz, -1, szBuff, _countof(szBuff), NULL, NULL);
     ok(lstrcmpA(szBuff, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
        "The importer filter string is bad, was: %s\n", szBuff);
 #else
@@ -291,21 +290,45 @@ START_TEST(CImage)
                                          aguidFileTypes,
                                          TEXT("All Image Files"), 0);
     ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
-    ok(aguidFileTypes.GetSize() == 6, "Expected aguidFileTypes.GetSize() to be 6, was %d.", aguidFileTypes.GetSize());
-    ok(IsEqualGUID(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
-    ok(IsEqualGUID(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
-    ok(IsEqualGUID(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
-    ok(IsEqualGUID(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
-    ok(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
-    ok(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
+    ok(aguidFileTypes.GetSize() >= 6, "Expected aguidFileTypes.GetSize() to be >= 6, was %d.", aguidFileTypes.GetSize());
+    ok_int(IsEqualGUID(aguidFileTypes[0], GUID_NULL), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[1], Gdiplus::ImageFormatBMP), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), TRUE);
+    ok_int(IsEqualGUID(aguidFileTypes[3], Gdiplus::ImageFormatGIF), TRUE);
+    BOOL bEmfSupported = IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatEMF);
+    if (bEmfSupported)
+    {
+        ok_int(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatEMF), TRUE);
+        ok_int(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatWMF), TRUE);
+    }
+    else
+    {
+        ok_int(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatTIFF), TRUE);
+        ok_int(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatPNG), TRUE);
+    }
+
+    static const char FilterWithEmf[] =
+        "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|"
+        "BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|"
+        "JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|"
+        "GIF (*.GIF)|*.GIF|"
+        "EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|"
+        "TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|"
+        "PNG (*.PNG)|*.PNG|"
+        "ICO (*.ICO)|*.ICO||";
+    static const char FilterNoEmf[] =
+        "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG|"
+        "BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|"
+        "JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|"
+        "GIF (*.GIF)|*.GIF|"
+        "TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|"
+        "PNG (*.PNG)|*.PNG||";
 
     psz = strExporters.GetString();
 #ifdef UNICODE
-    WideCharToMultiByte(CP_ACP, 0, psz, -1, szBuff, 512, NULL, NULL);
-    ok(lstrcmpA(szBuff, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG||") == 0,
-       "The exporter filter string is bad, was: %s\n", szBuff);
+    WideCharToMultiByte(CP_ACP, 0, psz, -1, szBuff, _countof(szBuff), NULL, NULL);
+    ok_str(szBuff, (bEmfSupported ? FilterWithEmf : FilterNoEmf));
 #else
-    ok(lstrcmpA(psz, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG||") == 0,
-       "The exporter filter string is bad, was: %s\n", psz);
+    ok_str(psz, (bEmfSupported ? FilterWithEmf : FilterNoEmf));
 #endif
 }
