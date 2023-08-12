@@ -14,9 +14,11 @@
 #include <debug.h>
 
 VOID
+NTAPI
 RtlpInitializeKeyedEvent(VOID);
 
 VOID
+NTAPI
 RtlpCloseKeyedEvent(VOID);
 
 BOOL
