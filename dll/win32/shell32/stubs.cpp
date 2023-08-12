@@ -30,17 +30,6 @@ ShortSizeFormatW(LONGLONG llNumber)
  */
 EXTERN_C BOOL
 WINAPI
-SHFindComputer(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
-{
-    FIXME("SHFindComputer() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
 PathIsEqualOrSubFolder(LPWSTR lpFolder, LPWSTR lpSubFolder)
 {
     FIXME("PathIsEqualOrSubFolder() stub\n");
