@@ -776,10 +776,11 @@ CcRosCreateVacb (
     }
     KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
     InsertTailList(&VacbLruListHead, &current->VacbLruListEntry);
-    KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
 
     /* Reference it to allow release */
     CcRosVacbIncRefCount(current);
+
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
 
     return Status;
 }
