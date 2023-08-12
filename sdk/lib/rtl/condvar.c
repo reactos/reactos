@@ -456,6 +456,7 @@ InternalSleep(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
 }
 
 VOID
+NTAPI
 RtlpInitializeKeyedEvent(VOID)
 {
     ASSERT(CondVarKeyedEventHandle == NULL);
@@ -463,6 +464,7 @@ RtlpInitializeKeyedEvent(VOID)
 }
 
 VOID
+NTAPI
 RtlpCloseKeyedEvent(VOID)
 {
     ASSERT(CondVarKeyedEventHandle != NULL);
