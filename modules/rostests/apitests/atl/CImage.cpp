@@ -274,14 +274,23 @@ START_TEST(CImage)
     ok_int(IsEqualGUID(aguidFileTypes[7], Gdiplus::ImageFormatPNG), TRUE);
     ok_int(IsEqualGUID(aguidFileTypes[8], Gdiplus::ImageFormatIcon), TRUE);
 
+    static const char ImportFilter[] =
+        "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|"
+        "BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|"
+        "JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|"
+        "GIF (*.GIF)|*.GIF|"
+        "EMF (*.EMF)|*.EMF|"
+        "WMF (*.WMF)|*.WMF|"
+        "TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|"
+        "PNG (*.PNG)|*.PNG|"
+        "ICO (*.ICO)|*.ICO||";
+
     psz = strImporters.GetString();
 #ifdef UNICODE
     WideCharToMultiByte(CP_ACP, 0, psz, -1, szBuff, _countof(szBuff), NULL, NULL);
-    ok(lstrcmpA(szBuff, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
-       "The importer filter string is bad, was: %s\n", szBuff);
+    ok_str(szBuff, ImportFilter);
 #else
-    ok(lstrcmpA(psz, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
-       "The importer filter string is bad, was: %s\n", psz);
+    ok_str(psz, ImportFilter);
 #endif
 
     CSimpleString strExporters(mgr);
