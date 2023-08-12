@@ -26,7 +26,7 @@ jobs:
         wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
     - name: Get RosBE
       id: get_rosbe
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: RosBE-CI
         key: RosBE-CI-${{runner.os}}-${{steps.get_rosbe_spec.outputs.march-sha}}-${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}
@@ -50,7 +50,7 @@ jobs:
       with:
         path: src
     - name: Set up cache for ccache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ccache
         key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
