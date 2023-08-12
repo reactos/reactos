@@ -55,13 +55,13 @@ public:
         m_rgbTransColor = CLR_INVALID;
         ZeroMemory(&m_ds, sizeof(m_ds));
 
-        _gdiplus().IncreaseCImageCount();
+        s_gdiplus.IncreaseCImageCount();
     }
 
     virtual ~CImage() throw()
     {
         Destroy();
-        _gdiplus().DecreaseCImageCount();
+        s_gdiplus.DecreaseCImageCount();
     }
 
     operator HBITMAP() throw()
@@ -71,7 +71,7 @@ public:
 
     static void ReleaseGDIPlus()
     {
-        _gdiplus().ReleaseGDIPlus();
+        s_gdiplus.ReleaseGDIPlus();
     }
 
     void Attach(HBITMAP hBitmap, DIBOrientation eOrientation = DIBOR_DEFAULT) throw()
@@ -382,7 +382,7 @@ public:
         // create a GpBitmap object from file
         using namespace Gdiplus;
         GpBitmap *pBitmap = NULL;
-        if (_gdiplus().CreateBitmapFromFile(pszNameW, &pBitmap) != Ok)
+        if (s_gdiplus.CreateBitmapFromFile(pszNameW, &pBitmap) != Ok)
         {
             return E_FAIL;
         }
@@ -390,10 +390,10 @@ public:
         // get bitmap handle
         HBITMAP hbm = NULL;
         Color color(0xFF, 0xFF, 0xFF);
-        Status status = _gdiplus().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
+        Status status = s_gdiplus.CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
 
         // delete GpBitmap
-        _gdiplus().DisposeImage(pBitmap);
+        s_gdiplus.DisposeImage(pBitmap);
 
         // attach it
         if (status == Ok)
@@ -408,7 +408,7 @@ public:
         // create GpBitmap from stream
         using namespace Gdiplus;
         GpBitmap *pBitmap = NULL;
-        if (_gdiplus().CreateBitmapFromStream(pStream, &pBitmap) != Ok)
+        if (s_gdiplus.CreateBitmapFromStream(pStream, &pBitmap) != Ok)
         {
             return E_FAIL;
         }
@@ -416,10 +416,10 @@ public:
         // get bitmap handle
         HBITMAP hbm = NULL;
         Color color(0xFF, 0xFF, 0xFF);
-        Status status = _gdiplus().CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
+        Status status = s_gdiplus.CreateHBITMAPFromBitmap(pBitmap, &hbm, color.GetValue());
 
         // delete Bitmap
-        _gdiplus().DisposeImage(pBitmap);
+        s_gdiplus.DisposeImage(pBitmap);
 
         // attach it
         if (status == Ok)
@@ -523,14 +523,14 @@ public:
 
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
-        _gdiplus().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
+        s_gdiplus.CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
 
         // save to stream
         Status status;
-        status = _gdiplus().SaveImageToStream(pBitmap, pStream, &clsid, NULL);
+        status = s_gdiplus.SaveImageToStream(pBitmap, pStream, &clsid, NULL);
 
         // destroy GpBitmap
-        _gdiplus().DisposeImage(pBitmap);
+        s_gdiplus.DisposeImage(pBitmap);
 
         return (status == Ok ? S_OK : E_FAIL);
     }
@@ -566,13 +566,13 @@ public:
 
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
-        _gdiplus().CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
+        s_gdiplus.CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
 
         // save to file
-        Status status = _gdiplus().SaveImageToFile(pBitmap, pszNameW, &clsid, NULL);
+        Status status = s_gdiplus.SaveImageToFile(pBitmap, pszNameW, &clsid, NULL);
 
         // destroy GpBitmap
-        _gdiplus().DisposeImage(pBitmap);
+        s_gdiplus.DisposeImage(pBitmap);
 
         return (status == Ok ? S_OK : E_FAIL);
     }
@@ -1011,15 +1011,11 @@ private:
         }
     };
 
-    static CInitGDIPlus& _gdiplus() throw()
-    {
-        static CInitGDIPlus s_gdiplus;
-        return s_gdiplus;
-    }
+    static CInitGDIPlus s_gdiplus;
 
     static bool InitGDIPlus() throw()
     {
-        return _gdiplus().Init();
+        return s_gdiplus.Init();
     }
 
 private:
@@ -1100,7 +1096,7 @@ private:
     static Gdiplus::ImageCodecInfo* _getAllEncoders(UINT& cEncoders)
     {
         UINT total_size = 0;
-        _gdiplus().GetImageEncodersSize(&cEncoders, &total_size);
+        s_gdiplus.GetImageEncodersSize(&cEncoders, &total_size);
         if (total_size == 0)
             return NULL;  // failure
 
@@ -1112,14 +1108,14 @@ private:
             return NULL;  // failure
         }
 
-        _gdiplus().GetImageEncoders(cEncoders, total_size, ret);
+        s_gdiplus.GetImageEncoders(cEncoders, total_size, ret);
         return ret; // needs delete[]
     }
 
     static Gdiplus::ImageCodecInfo* _getAllDecoders(UINT& cDecoders)
     {
         UINT total_size = 0;
-        _gdiplus().GetImageDecodersSize(&cDecoders, &total_size);
+        s_gdiplus.GetImageDecodersSize(&cDecoders, &total_size);
         if (total_size == 0)
             return NULL;  // failure
 
@@ -1131,7 +1127,7 @@ private:
             return NULL;  // failure
         }
 
-        _gdiplus().GetImageDecoders(cDecoders, total_size, ret);
+        s_gdiplus.GetImageDecoders(cDecoders, total_size, ret);
         return ret; // needs delete[]
     }
 
@@ -1220,6 +1216,8 @@ private:
     CImage(const CImage&) = delete;
     CImage& operator=(const CImage&) = delete;
 };
+
+DECLSPEC_SELECTANY CImage::CInitGDIPlus CImage::s_gdiplus;
 
 }
 
