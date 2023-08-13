@@ -2123,6 +2123,18 @@ RtlCompareUnicodeString(
     BOOLEAN CaseInsensitive
 );
 
+_Must_inspect_result_
+NTSYSAPI
+LONG
+NTAPI
+RtlCompareUnicodeStrings(
+    _In_reads_(String1Length) PCWCH String1,
+    _In_ SIZE_T String1Length,
+    _In_reads_(String2Length) PCWCH String2,
+    _In_ SIZE_T String2Length,
+    _In_ BOOLEAN CaseInSensitive
+);
+
 NTSYSAPI
 VOID
 NTAPI
