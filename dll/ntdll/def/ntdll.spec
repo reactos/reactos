@@ -940,7 +940,7 @@
 @ stdcall RtlInitializeContext(ptr ptr ptr ptr ptr)
 @ stdcall RtlInitializeCriticalSection(ptr)
 @ stdcall RtlInitializeCriticalSectionAndSpinCount(ptr long)
-@ stub -version=0x600+ RtlInitializeCriticalSectionEx
+@ stdcall -version=0x600+ RtlInitializeCriticalSectionEx(ptr long long)
 @ stub -version=0x600+ -arch=i386 RtlInitializeExceptionChain
 @ stdcall RtlInitializeGenericTable(ptr ptr ptr ptr ptr)
 @ stdcall RtlInitializeGenericTableAvl(ptr ptr ptr ptr ptr)
