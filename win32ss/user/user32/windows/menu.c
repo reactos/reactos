@@ -42,14 +42,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(menu);
 #define IS_STRING_ITEM(flags) (MF_STRING == MENU_ITEM_TYPE(flags))
 #define IS_MAGIC_BITMAP(id) ((id) && ((INT_PTR)(id) < 12) && ((INT_PTR)(id) >= -1))
 
-#define IS_SYSTEM_MENU(MenuInfo)  \
-	(0 == ((MenuInfo)->fFlags & MNF_POPUP) && 0 != ((MenuInfo)->fFlags & MNF_SYSMENU))
-
-#define IS_SYSTEM_POPUP(MenuInfo) \
-	(0 != ((MenuInfo)->fFlags & MNF_POPUP) && 0 != ((MenuInfo)->fFlags & MNF_SYSMENU))
-
-#define IS_BITMAP_ITEM(flags) (MF_BITMAP == MENU_ITEM_TYPE(flags))
-
 /*********************************************************************
  * PopupMenu class descriptor
  */
