@@ -197,14 +197,14 @@ static void
 dhcp_handle_nak(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
-  LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_handle_nak(netif=%p) %c%c%"U16_F"\n", 
+  LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_handle_nak(netif=%p) %c%c%"U16_F"\n",
     (void*)netif, netif->name[0], netif->name[1], (u16_t)netif->num));
   /* Set the interface down since the address must no longer be used, as per RFC2131 */
   netif_set_down(netif);
   /* remove IP address from interface */
   netif_set_ipaddr(netif, IP_ADDR_ANY);
   netif_set_gw(netif, IP_ADDR_ANY);
-  netif_set_netmask(netif, IP_ADDR_ANY); 
+  netif_set_netmask(netif, IP_ADDR_ANY);
   /* Change to a defined state */
   dhcp_set_state(dhcp, DHCP_BACKING_OFF);
   /* We can immediately restart discovery */
@@ -373,7 +373,7 @@ dhcp_fine_tmr()
   while (netif != NULL) {
     /* only act on DHCP configured interfaces */
     if (netif->dhcp != NULL) {
-      /* timer is active (non zero), and is about to trigger now */      
+      /* timer is active (non zero), and is about to trigger now */
       if (netif->dhcp->request_timeout > 1) {
         netif->dhcp->request_timeout--;
       }
@@ -564,7 +564,7 @@ dhcp_handle_ack(struct netif *netif)
   if (dhcp_option_given(dhcp, DHCP_OPTION_IDX_ROUTER)) {
     ip4_addr_set_u32(&dhcp->offered_gw_addr, htonl(dhcp_get_option_value(dhcp, DHCP_OPTION_IDX_ROUTER)));
   }
-  
+
 #if LWIP_DNS
   /* DNS servers */
   n = 0;
@@ -670,7 +670,7 @@ dhcp_start(struct netif *netif)
     LWIP_ASSERT("pbuf p_out wasn't freed", dhcp->p_out == NULL);
     LWIP_ASSERT("reply wasn't freed", dhcp->msg_in == NULL );
   }
-    
+
   /* clear data structure */
   memset(dhcp, 0, sizeof(struct dhcp));
   /* dhcp_set_state(&dhcp, DHCP_OFF); */
@@ -1183,7 +1183,7 @@ dhcp_release(struct netif *netif)
   ip_addr_set_zero(&dhcp->offered_si_addr);
 #endif /* LWIP_DHCP_BOOTP_FILE */
   dhcp->offered_t0_lease = dhcp->offered_t1_renew = dhcp->offered_t2_rebind = 0;
-  
+
   /* create and initialize the DHCP message header */
   result = dhcp_create_msg(netif, dhcp, DHCP_RELEASE);
   if (result == ERR_OK) {
@@ -1207,7 +1207,7 @@ dhcp_release(struct netif *netif)
   netif_set_ipaddr(netif, IP_ADDR_ANY);
   netif_set_gw(netif, IP_ADDR_ANY);
   netif_set_netmask(netif, IP_ADDR_ANY);
-  
+
   return result;
 }
 
