@@ -87,7 +87,7 @@
 @ stdcall CompareFileTime(ptr ptr)
 @ stdcall CompareStringA(long long str long str long)
 @ stdcall -version=0x600+ CompareStringEx(wstr long wstr long wstr long ptr ptr ptr)
-@ stdcall -stub -version=0x600+ CompareStringOrdinal(wstr long wstr long long)
+@ stdcall -version=0x600+ CompareStringOrdinal(wstr long wstr long long)
 @ stdcall CompareStringW(long long wstr long wstr long)
 @ stdcall ConnectNamedPipe(long ptr)
 ;@ stdcall -arch=x86_64 ConsoleIMERoutine()
