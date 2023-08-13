@@ -592,7 +592,7 @@ Sintaxă:  CLEAN [ALL]
     suprascrise. Dacă parametrul ALL nu e folosit, primul 1 Mo și ultimul 1 Mo
     al discului sunt puse la valoarea zero. Aceasta șterge orice formatare a
     discului ce a fost aplicată anterior discului. Starea discului după ce
-    este curățat discul este 'NEINIȚIALIZAT'.
+    este curățat discul este 'UNINITIALIZED' (neinițializat).
 
 De exemplu:
 
@@ -974,14 +974,14 @@ Example:
     CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Romanian
-    Crează o partiție expandată pe discul în cauză.
+    Crează o partiție extinsă pe discul în cauză.
     Se aplică doar la discurile cu Registrul principal de inițializare (MBR).
 
 Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
     SIZE=<N>    Mărimea partiției în megaocteți (Mo). Dacă nu este dată nicio
                 mărime, partiția continuă până când nu mai este spațiu liber
-                în partiția expandată.
+                în partiția extinsă.
 
     OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția este creată.
                 Dacă nu este dat niciun decalaj, partiția va începe de la
@@ -1000,9 +1000,9 @@ Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 să se închidă cu un cod de eroare.
 
     După ce a fost creată partiția, marcajul se mută automat pe noua
-    partiție. Doar o singură partiție expandată poate fi creată pe un disc.
-    Această comandă eșuează dacă încercați să creați o partiție expandată
-    în altă partiție expandată. Trebuie să creați o partiție expandată
+    partiție. Doar o singură partiție extinsă poate fi creată pe un disc.
+    Această comandă eșuează dacă încercați să creați o partiție extinsă
+    în altă partiție extinsă. Trebuie să creați o partiție extinsă
     înainte de a crea partiții logice.
 
     Un disc MBR de bază trebuie să fie selectat pentru ca această operațiune
