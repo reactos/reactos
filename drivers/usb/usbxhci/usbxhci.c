@@ -119,6 +119,9 @@ XHCI_InitPorts(
         {
             DPRINT("Port %d has non-removable device connected\n", i);
         }
+
+        PortSc.PortReset = 1;
+        WRITE_REGISTER_ULONG(&PortScPtr->AsULONG, PortSc.AsULONG);
     }
 }
 
