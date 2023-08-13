@@ -60,8 +60,6 @@ BOOL fInEndMenu = FALSE;
 #define IS_SYSTEM_MENU(MenuInfo)  \
 	(!((MenuInfo)->fFlags & MNF_POPUP) && ((MenuInfo)->fFlags & MNF_SYSMENU))
 
-#define IS_BITMAP_ITEM(flags) (MF_BITMAP == MENU_ITEM_TYPE(flags))
-
 #define IS_MAGIC_BITMAP(id) ((id) && ((INT_PTR)(id) < 12) && ((INT_PTR)(id) >= -1))
 #define IS_STRING_ITEM(flags) (MF_STRING == MENU_ITEM_TYPE(flags))
 
