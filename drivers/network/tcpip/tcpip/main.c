@@ -473,10 +473,6 @@ TiDispatchInternal(
 }
 
 
-NTSTATUS NTAPI
-TiDispatch(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp)
 /*
  * FUNCTION: Dispatch routine for IRP_MJ_DEVICE_CONTROL requests
  * ARGUMENTS:
@@ -485,11 +481,15 @@ TiDispatch(
  * RETURNS:
  *     Status of the operation
  */
+NTSTATUS NTAPI
+TiDispatch(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp)
 {
   NTSTATUS Status;
   PIO_STACK_LOCATION IrpSp;
 
-  IrpSp  = IoGetCurrentIrpStackLocation(Irp);
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
   TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatch] Called. IRP is at (0x%X).\n", Irp));
 
@@ -541,7 +541,7 @@ TiDispatch(
 
   TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatch] Leaving. Status = (0x%X).\n", Status));
 
-  return IRPFinish( Irp, Status );
+  return IRPFinish(Irp, Status);
 }
 
 
