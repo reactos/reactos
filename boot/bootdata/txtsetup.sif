@@ -91,6 +91,7 @@ acpi.sys     = 1,,,,,,,4,1,,,1,4
 nmidebug.sys = 1,,,,,,x,4,,,,1,4
 sacdrv.sys   = 1,,,,,,x,4,,,,1,4
 uniata.sys   = 1,,,,,,x,4,,,,1,4
+nvme.sys   = 1,,,,,,x,4,,,,1,4
 buslogic.sys = 1,,,,,,x,4,,,,1,4
 blue.sys     = 1,,,,,,x,4,,,,1,4
 vgafonts.cab = 1,,,,,,,1,,,,1,1
@@ -157,6 +158,7 @@ PCI\CC_0601 = isapnp
 PCI\CC_0604 = pci
 PCI\VEN_104B&CC_0100 = buslogic
 PCI\CC_0101 = pciide
+PCI\CC_010802=nvme
 PCI\CC_0104 = uniata
 PCI\CC_0105 = uniata
 PCI\CC_0106 = uniata
@@ -202,6 +204,7 @@ i8042prt = i8042prt.sys
 pciide = pciide.sys
 
 [SCSI.Load]
+nvme = nvme.sys
 uniata = uniata.sys
 buslogic = buslogic.sys
 storahci = storahci.sys

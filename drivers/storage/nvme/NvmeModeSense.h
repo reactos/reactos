@@ -1,0 +1,6 @@
+#ifndef __NVME_MODE_SENSE_H__
+#define __NVME_MODE_SENSE_H__
+
+BOOLEAN
+NVMeExecuteModeSenseCaching(PSCSI_REQUEST_BLOCK pSrb, PNVME_DEVICE_EXTENSION pDevExt);
+#endif
