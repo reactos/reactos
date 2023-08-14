@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Decupează\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiază\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Li&pește\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Șt&erge selecția\tDel", IDM_EDITDELETESELECTION
         MENUITEM "In&versează selecția", IDM_EDITINVERTSELECTION
         MENUITEM "Selecte&ază tot\tCtrl+A", IDM_EDITSELECTALL
@@ -105,7 +105,7 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "T&aie\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Decupează\tCtrl+X", IDM_EDITCUT
         MENUITEM "Copiază\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Ște&rge selecția\tDel", IDM_EDITDELETESELECTION
@@ -114,8 +114,8 @@ BEGIN
         MENUITEM "C&opiază în...", IDM_EDITCOPYTO
         MENUITEM "Lipește &din...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotește/&Oglindește imaginea...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Î&ntide/Înclină imaginea...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "Rotește/&Oglindește...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Î&ntide/Înclină...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Inversează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
@@ -263,7 +263,7 @@ BEGIN
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixeli/cm"
     IDS_CANTPASTE "Nu a putut fi lipit din clipboard. Formatul de date este fie incorect, fie nesuportat."
-    IDS_SAVEERROR "Nu a putut fi salvată imaginea bitmap („hartă de biți”) în fișierul:\n\n%s"
-    IDS_CANTSENDMAIL "Nu a putut fi trimisă o scrisoare."
-    IDS_LOSECOLOR "Informațiile de culoare vor fi pierdute în această operațiune. Sunteți sigur că veți continua?"
+    IDS_SAVEERROR "Eșec în salvarea imaginii bitmap („hartă de biți”) în fișierul:\n\n%s"
+    IDS_CANTSENDMAIL "Eșect în trimiterea unei scrisori."
+    IDS_LOSECOLOR "În această operațiune va fi pierdută informația legată de culoare. Sunteți sigur că veți continua?"
 END
