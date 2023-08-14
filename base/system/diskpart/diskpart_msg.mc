@@ -989,12 +989,12 @@ Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 să țină noua partiție.
 
     ALIGN=<N>   De obicei, folosit cu matrici de dispozitive cu Număr de
-                unitate logică RAID (LUN) pentru a îmbunătăți performanța.
+                unitate logică (LUN) RAID pentru a îmbunătăți performanța.
                 Decalajul partiției va fi un multiplu a lui <N>. Dacă este
                 specificat parametrul OFFSET, va fi rotunjit la cel mai
                 apropiat multiplu a lui <N>.
 
-    NOERR       Doar pentru scriere de automatizări. Când apare o eroare,
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
                 DiskPart continuă să proceseze comenzi ca și când eroarea nu ar
                 fi apărut. Fără parametrul NOERR, o eroare cauzează DiskPart
                 să se închidă cu un cod de eroare.
@@ -1162,7 +1162,7 @@ Example:
 .
 Language=Taiwanese
     在已選擇的磁碟上建立一個延伸磁碟分割。
-    只適用於主開機記錄 (MBR) 磁碟。
+	只適用於主開機記錄 (MBR) 磁碟。
 
 語法:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
@@ -1359,7 +1359,7 @@ Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 dată nicio mărime, partiția continuă până când nu mai este
                 spațiu liber pe partiția extinsă.
 
-    OFFSET=<N>  Decalajul, în kiloocteți (KB), la care partiția e creată.
+    OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția e creată.
                 Dacă nu este dat niciun decalaj, partiția e plasată pe prima
                 expansiune a discului ce e suficient de mare ca să o țină.
 
@@ -1374,7 +1374,7 @@ Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 apărut. Fără parametrul NOERR, o eroare cauzează DiskPart să
                 se închidă cu un cod de eroare.
 
-    După ce a fost creată partiția, focalizarea se mută automat pe
+    După ce a fost creată partiția, marcajul se mută automat pe
     noua partiție logică.
 
     Un disc MBR de bază trebuie să fie selectat pentru ca această operațiune
@@ -2048,11 +2048,11 @@ Language=Romanian
 Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
             [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    Mărimea partiției în megaocteți (MB). Dacă nu e dată nicio
+    SIZE=<N>    Mărimea partiției în megaocteți (Mo). Dacă nu e dată nicio
                 mărime, partiția continuă până când nu mai este spațiu nealocat
                 în regiunea curentă.
 
-    OFFSET=<N>  Decalajul, în kiloocteți (KB), la care partiția este creată.
+    OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția este creată.
                 Dacă nu e dat niciun decalaj, partiția este plasată pe prima
                 expansiune de disc ce e suficient de mare ca să o țină.
 
@@ -2063,12 +2063,11 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                 Destinat numai pentru folosirea producătorilor de echipamente
                 originale (OEM).
 
-                Pentru discurile cu Registrul principal de inițializare
-                (MBR), puteți specifica o partiție de tip octet, cu valoare
-                în format hexazecimal, pentru partiție. Dacă acest parametru
-                nu e specificat pentru un disc MBR, comanda crează o partiție
-                de tipul 0x06 (menționează că nu este niciun sistem de fișier
-                instalat).
+                Pentru discurile cu Registrul principal de inițializare (MBR),
+                puteți specifica un octet, în format hexazecimal, pentru un tip
+                de partiție. Dacă acest parametru nu e specificat pentru
+                un disc MBR, comanda crează o partiție de tipul 0x06
+                (menționează că nu este niciun sistem de fișier instalat).
 
                     Partiția de date LDM:
                         0x42
@@ -2093,7 +2092,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                     Partiția rezervată Microsoft:
                         e3c9e316-0b5c-4db8-817d-f92df00215ae
 
-                    Partiția de date de bază:
+                    Partiția de bază de date:
                         ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 
                     Partiția de metadate LDM pe un disc dinamic:
@@ -2108,19 +2107,19 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                 Dacă acest parametru nu este specificat pentru un disc GPT,
                 comanda crează o partiție de bază pentru date.
 
-                Orice partiție de tip octet sau GUID poate fi specificată cu
-                acest parametru. DiskPart nu verifică tipul partiției pentru
-                validitate, cu excepția faptului că este un octet cu valoare
-                în format hexazecimal sau un GUID.
+                Orice octet care descrie tipul de partiție sau GUID poate fi
+                specificată cu acest parametru. DiskPart nu verifică tipul
+                partiției pentru validitate, cu excepția faptului că este
+                un octet cu valoare în format hexazecimal sau un GUID.
 
                 Atenție:
 
                     Creând partiții cu acest parametru poate cauza
-                    calculatorului dumneavoastră să nu mai funcționeze bine sau să nu mai
+                    calculatorului dumneavoastră să nu mai funcționeze bine sau
                     să nu mai poată porni. Dacă nu sunteți un OEM sau un
                     profesionist cu experiență în discuri GPT, nu creați
                     partiții pe discuri GPT folosind acest parametru.
-					În schimb, folosiți întotdeauna comanda CREATE PARTITION EFI ca să creați
+                    În schimb, folosiți întotdeauna comanda CREATE PARTITION EFI ca să creați
                     partiții de sistem EFI, comanda CREATE PARTITION MSR ca să
                     creați partiții rezervate Microsoft, și comanda
                     CREATE PARTITION PRIMARY fără acest parametru ca să creați
@@ -2137,7 +2136,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                 apărut. Fără parametrul NOERR, o eroare cauzează DiskPart
                 să se închidă cu un cod de eroare.
 
-    După ce ați creat partiția, focalizarea se mută automat pe noua partiție
+    După ce ați creat partiția, marcajul se mută automat pe noua partiție
     logică. Partiția nu primește nicio literă de disc. Trebuie să folosiți
     comanda de atribuire pentru a atribui partiției o literă de disc.
 
@@ -2145,7 +2144,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
     să reușească.
                 
     Dacă un tip de partiție nu e specificat, discul este neinițializat și
-    mărimea discului este mai mare de 2TB, va fi inițializat cu GPT.
+    mărimea discului este mai mare de 2To, va fi inițializat cu GPT.
 
 De exemplu:
 
@@ -2838,7 +2837,7 @@ Sintaxă:  DELETE PARTITION [NOERR] [OVERRIDE]
                 să se închidă cu un cod de eroare.
 
     OVERRIDE    Permite programului DiskPart să șteargă orice partiție,
-                în ciuda tipului său. De obicei, DiskPart vă permite doar
+                indiferent de tipul său. De obicei, DiskPart vă permite doar
                 să ștergeți partițiile de date cunoscute.
 
     Nu puteți șterge partiția de sistem, partiția de inițializare sau orice
@@ -4009,7 +4008,7 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 Specifică revizia sistemului de fișiere (dacă este aplicabil).
 
     RECOMMENDED Dacă este specificat, folosiți sistemul de fișiere recomandat
-                și revizuirea în locul celui implicit dacă există o
+                și revizia în locul celui implicit dacă există o
                 recomandare. Sistemul de fișiere recomandat (dacă există unul)
                 este afișat de comanda FILESYSTEMS.
 
@@ -4029,9 +4028,9 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
 
     COMPRESS    Numai pentru formatul NTFS: Fișierele create pe noul volum
                 vor fi comprimate în mod implicit.
-    OVERRIDE    Forțează sistemul de fișiere să scoată primul dacă e necesar.
-                Toate identificatoarele de gestiune deschise ale volumului
-                nu ar mai fi valabile.
+    OVERRIDE    Forțează mai întâi demontarea sistemului de fișiere, dacă e
+                necesar Toate identificatoarele de gestiune deschise ale
+                volumului nu ar mai fi valabile.
 
     DUPLICATE   Numai pentru formatul UDF: Această etichetă se aplică
                 formatului UDF, versiunea 2.5 sau mai nouă. Această etichetă
@@ -4044,7 +4043,7 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 duplicate.
 
     NOWAIT      Forțează comanda să se întoarcă imediat atât timp cât procesul
-                de formatare este încă în progres. Dacă NOWAIT nu este
+                de formatare este încă în curs. Dacă NOWAIT nu este
                 specificat, programul DiskPart va afișa progesul formatării
                 în procente.
                                                 
@@ -4967,7 +4966,7 @@ Sintaxă:  LIST DISK
     mărimea lor, cantitatea de spațiu liber disponibil, dacă discul este un
     disc static sau un disc dinamic și dacă discul folosește stilul de
     partiționare Registrul principal de inițializare (MBR) sau tabelul de
-    partiționare GUID (GPT). Discul marcat cu un asterisc (*) are focalizare.
+    partiționare GUID (GPT). Discul marcat cu un asterisc (*) are marcaj.
 
     Rețineți că coloana FREE nu afișează cantitatea totală de spațiu liber
     pe disc, dar mai degrabă cantitatea de spațiu liber utilizabil rămas pe
@@ -6163,7 +6162,7 @@ Example:
     SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Romanian
-    Selectează discul specificat și mută focalizarea pe el.
+    Selectează discul specificat și mută marcajul pe el.
 
 Sintaxă: SELECT DISK=<N>
          SELECT DISK=SYSTEM
@@ -6172,15 +6171,15 @@ Sintaxă: SELECT DISK=<N>
 
     DISK=<N>
                 Numărul indexului discului DiskPart al discului care urmează
-                să primească focalizarea.
+                să primească marcajul.
 
     DISK=<Cale>
-                Calea locației discului care urmează să primească focalizarea.
+                Calea locației discului care urmează să primească marcajul.
 
     DISK=SYSTEM
                 La calculatoarele cu BIOS, discul 0 din BIOS va fi marcat.
                 La calculatoarele EFI, discul care conține partiția ESP
-                folosită pentru inițializarea curentă va primi focalizare.
+                folosită pentru inițializarea curentă va primi marcaj.
                 La calculatoarele EFI, dacă nu este ESP sau este prezent
                 mai mult decât un ESP sau calculatorul este inițializat din
                 Windows PE, comanda va eșua.
@@ -6188,7 +6187,7 @@ Sintaxă: SELECT DISK=<N>
     DISK=NEXT
                 Odată ce discul e selectat, această comandă este folosită
                 pentru a se repeta peste toate discurile din lista de discuri.
-                Următorul disc din listă va primi focalizare. Dacă următorul
+                Următorul disc din listă va primi marcaj. Dacă următorul
                 disc este începutul enumerării, comanda va eșua și niciun disc
                 nu va trebui să se focalizeze.
 
@@ -6497,13 +6496,13 @@ Example:
     SELECT PARTITION=1
 .
 Language=Romanian
-    Selectează partiția specificată și mută focalizarea pe ea.
+    Selectează partiția specificată și mută marcajul pe ea.
 
 Sintaxă:  SELECT PARTITION=<N>
 
     PARTITION=<N>
 
-                Numărul partiției ce urmează să primească focalizare.
+                Numărul partiției ce urmează să primească marcaj.
 
      Dacă nicio partiție nu este specificată, comanda SELECT va lista partiția
      focalizată în prezent. Puteți specifica partiția prin numărul său. Puteți
@@ -6716,7 +6715,7 @@ Example:
     SELECT VOLUME=C:\\MountH
 .
 Language=Romanian
-    Selectează volumul specificat și mută focalizarea pe el.
+    Selectează volumul specificat și mută marcajul pe el.
 
 Sintaxă:  SELECT VOLUME={<N> | <D>}
 
@@ -6728,7 +6727,7 @@ Sintaxă:  SELECT VOLUME={<N> | <D>}
     Dacă niciun volum nu e specificat, comanda SELECT listează volumul actual
     cu marcaj. Puteți specififca volumul după număr, după litera discului sau
     după calea dosarului montat. Pe un disc de bază, selectarea unui volum
-    oferă, de asemenea, focalizarea corespunzătoare pe partiție. Puteți
+    oferă, de asemenea, marcajul corespunzătoare pe partiție. Puteți
     vizualiza numărul tuturor volumelor din calculator folosind comanda
     LIST VOLUME.
 
@@ -7237,7 +7236,7 @@ Example:
     SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 .
 Language=Romanian
-    Schimbă registru tipului partiției pentru partiția în cauză.
+    Schimbă registrul tipului partiției pentru partiția în cauză.
 
 Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
 
@@ -7245,11 +7244,12 @@ Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
 
                 Specifică noul tip al partiției.
                 Pentru discurile cu Registrul principal de inițializare (MBR),
-                puteți speciifica o partiție de tip octet, în formă
-                hexazecimală, pentru partiție. Orice partiție de tip octet
-                poate fi specificată cu acest parametru, exceptând pentru tipul
-                0x42 (partiție LDM). Rețineți că primul '0x' este omis când
-                se specifică partiții de tip hexazecimal.
+                puteți speciifica puteți specifica un octet, în format
+                hexazecimal, pentru un tip de partiție. Orice octet care
+                descrie tipul de partiție poate fi specificată cu acest
+                parametru, exceptând pentru tipul 0x42 (partiție LDM). Rețineți
+                că primul '0x' este omis când se specifică partiții de tip
+                hexazecimal.
                                                                 
                 Pentru discurile cu tabelul de partiție GUID (GPT) puteți
                 specifica un tip de partiție GUID pentru partiția pe care vreți
@@ -7258,7 +7258,7 @@ Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
                     Partiția de sistem EFI:
                         c12a7328-f81f-11d2-ba4b-00a0c93ec93b
 
-                    Partiția de date de bază:
+                    Partiția de bază de date:
                         ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 
                 Orice partiție de tip GUID poate fi specificată cu acest
@@ -7286,7 +7286,7 @@ Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
                 schimbă tipul de partiție, DiskPart va încerca să blocheze și
                 să demonteze sistemul de fișiere pe volum. Dacă acest parametru
                 nu este specificat și apelarea blocării sistemului de fișiere
-                eșuează, (deoarece alte câteva aplicații nu au un identificator
+                eșuează, (deoarece alte câteva aplicații au un identificator
                 de gestiune deschis pentru volum), întreaga operațiune va eșua.
                 Când acest parametru este specificat, demontarea e forțată
                 chiar dacă apelarea blocării sistemului de fișiere eșuează.
