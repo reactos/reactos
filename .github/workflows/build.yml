@@ -21,12 +21,12 @@ jobs:
       id: get_rosbe_spec
       run: |
         gcc -march=native -Q --help=target | grep "\-march= " | awk '{print $NF}'
-        echo ::set-output name=march-sha::$(gcc -march=native -Q --help=target | sha1sum | awk '{print $1}')
-        echo ::set-output name=git-sha::$(git ls-remote https://github.com/zefklop/RosBE.git | grep unix_amd64 | awk '{print $1}')
+        echo march-sha=$(gcc -march=native -Q --help=target | sha1sum | awk '{print $1}') >> $GITHUB_OUTPUT
+        echo git-sha=$(git ls-remote https://github.com/zefklop/RosBE.git | grep unix_amd64 | awk '{print $1}') >> $GITHUB_OUTPUT
         wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
     - name: Get RosBE
       id: get_rosbe
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: RosBE-CI
         key: RosBE-CI-${{runner.os}}-${{steps.get_rosbe_spec.outputs.march-sha}}-${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}
@@ -46,11 +46,11 @@ jobs:
         sudo ./llvm.sh $LLVM_VERSION
         echo "D_CLANG_VERSION=-DCLANG_VERSION=$LLVM_VERSION" >> $GITHUB_ENV
     - name: Source checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: src
     - name: Set up cache for ccache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ccache
         key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
@@ -74,7 +74,7 @@ jobs:
     - name: Print ccache statistics
       run: ccache -s
     - name: Upload ISOs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
@@ -129,7 +129,7 @@ jobs:
         arch: amd64
         toolset: ${{matrix.toolset}}
     - name: Source checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: src
     - name: Configure
@@ -139,7 +139,7 @@ jobs:
     - name: Generate ISOs
       run: cmake --build build --target bootcd --target livecd
     - name: Upload ISOs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
@@ -147,7 +147,7 @@ jobs:
           build/livecd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: build/msvc_pdb
@@ -183,7 +183,7 @@ jobs:
         arch: amd64_arm64
         toolset: ${{matrix.toolset}}
     - name: Source checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: src
     - name: Configure
@@ -204,7 +204,7 @@ jobs:
       if: ${{ matrix.arch == 'arm64' }}
       run: cmake --build build --target calc magnify mstsc notepad osk regedit taskmgr winmine wordpad base/applications/screensavers/all -- -k0
     - name: Upload compiled binaries
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
@@ -227,7 +227,7 @@ jobs:
           !**/*.tlb
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
@@ -268,7 +268,7 @@ jobs:
     - name: Add LLVM to PATH
       run: echo "${env:LLVM_PATH}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - name: Source checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         path: src
     - name: Configure
@@ -278,7 +278,7 @@ jobs:
     - name: Generate ISOs
       run: cmake --build build --target bootcd --target livecd
     - name: Upload ISOs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: reactos-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
@@ -286,7 +286,7 @@ jobs:
           build/livecd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: reactos-syms-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
@@ -307,7 +307,7 @@ jobs:
 #      uses: ilammy/msvc-dev-cmd@v1
 #      with:
 #        arch: amd64_x86
-#    - uses: actions/checkout@v2
+#    - uses: actions/checkout@v3
 #      with:
 #        path: src
 #    - name: Configure
