@@ -592,7 +592,7 @@ Sintaxă:  CLEAN [ALL]
     suprascrise. Dacă parametrul ALL nu e folosit, primul 1 Mo și ultimul 1 Mo
     al discului sunt puse la valoarea zero. Aceasta șterge orice formatare a
     discului ce a fost aplicată anterior discului. Starea discului după ce
-    este curățat discul este 'UNINITIALIZED' (neinițializat).
+    este curățat discul este „UNINITIALIZED” (neinițializat).
 
 De exemplu:
 
