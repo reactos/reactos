@@ -60,7 +60,7 @@ BEGIN
         MENUITEM "E&xecutare…", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "Sinc&ronizează", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "De&autentificare %s…", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "Dea&utentificare %s…", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "De&conectare…", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
         MENUITEM "D&etașare calculator", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
         MENUITEM "Î&nchidere calculator…", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
@@ -75,7 +75,7 @@ BEGIN
     GROUPBOX "Aspectul barei de activități", IDC_STATIC, 6, 6, 240, 120
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "Fixea&ză bara de activități", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
-    AUTOCHECKBOX "&Auto-ascunde bara de activități", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "Auto-ascun&de bara de activități", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
     AUTOCHECKBOX "Menține &bara de activități deasupra celorlalte ferestre", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "G&rupează butoanele similare din bara de activități", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Afișează bara „La&nsări rapide”", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
