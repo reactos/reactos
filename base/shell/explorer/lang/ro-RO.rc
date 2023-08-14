@@ -13,16 +13,16 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Modifică Data/Ora", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "&Personalizare notificări…", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM "Modifică &Data/Ora", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "P&ersonalizare notificări…", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
         MENUITEM "Aranjări în casca&dă", ID_SHELL_CMD_CASCADE_WND
         MENUITEM "Aranjări &orizontale", ID_SHELL_CMD_TILE_WND_H
         MENUITEM "Aranjări &verticale", ID_SHELL_CMD_TILE_WND_V
         MENUITEM "Afișează &biroul", ID_SHELL_CMD_SHOW_DESKTOP
-        MENUITEM "Des&face", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM "De&sface", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
-        MENUITEM "&Gestionar de activități", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "Gestio&nar de activități", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "Fi&xează bara de activități", ID_LOCKTASKBAR
         MENUITEM "P&referințe", ID_SHELL_CMD_PROPERTIES
@@ -74,11 +74,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Aspectul barei de activități", IDC_STATIC, 6, 6, 240, 120
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
-    AUTOCHECKBOX "Fi&xează bara de activități", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "Fixea&ză bara de activități", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "&Auto-ascunde bara de activități", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
-    AUTOCHECKBOX "&Menține bara de activități deasupra celorlalte ferestre", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
-    AUTOCHECKBOX "&Grupează butoanele similare din bara de activități", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
-    AUTOCHECKBOX "Afișează bara „&Lansări rapide”", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+    AUTOCHECKBOX "Menține &bara de activități deasupra celorlalte ferestre", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "G&rupează butoanele similare din bara de activități", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "Afișează bara „La&nsări rapide”", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
     AUTOCHECKBOX "Folo&sește pictograme mici", IDC_TASKBARPROP_SMALLICONS, 13, 110, 240, 10
 END
 
