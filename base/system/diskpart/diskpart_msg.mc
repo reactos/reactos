@@ -6192,7 +6192,7 @@ Sintaxă: SELECT DISK=<N>
                 nu va trebui să se marcheze.
 
     Dacă nicio opțiune nu este specificată, comanda SELECT va lista discul
-    care este focalizat în prezent. Puteți vizualiza numerele de index pentru
+    care este marcat în prezent. Puteți vizualiza numerele de index pentru
     toate discurile din calculator folosind comanda LIST DISK.
 
 De exemplu:
@@ -6505,7 +6505,7 @@ Sintaxă:  SELECT PARTITION=<N>
                 Numărul partiției ce urmează să primească marcajul.
 
      Dacă nicio partiție nu este specificată, comanda SELECT va lista partiția
-     focalizată în prezent. Puteți specifica partiția prin numărul său. Puteți
+     marcată în prezent. Puteți specifica partiția prin numărul său. Puteți
      vizualiza numerele tuturor partițiilor de pe discul actual folosind
      comanda LIST PARTITION.
                 
