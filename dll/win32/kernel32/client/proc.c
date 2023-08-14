@@ -4181,7 +4181,7 @@ StartScan:
 
     /* Create the Thread's Context */
     BaseInitializeContext(&Context,
-                          Peb,
+                          RemotePeb,
                           ImageInformation.TransferAddress,
                           InitialTeb.StackBase,
                           0);

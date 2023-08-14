@@ -3439,9 +3439,7 @@ static void test_SuspendProcessState(void)
 #endif
 
     ret = ReadProcessMemory( pi.hProcess, peb_ptr, &child_peb, sizeof(child_peb), NULL );
-    ros_skip_flaky
     ok( ret, "Failed to read PEB (%u)\n", GetLastError() );
-    ros_skip_flaky
     ok( child_peb.ImageBaseAddress == exe_base, "wrong base %p/%p\n",
         child_peb.ImageBaseAddress, exe_base );
     ok( entry_ptr == (char *)exe_base + nt_header.OptionalHeader.AddressOfEntryPoint,
