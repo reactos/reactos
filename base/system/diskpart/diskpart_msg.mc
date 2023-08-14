@@ -4970,12 +4970,12 @@ Sintaxă:  LIST DISK
 
     Rețineți că coloana FREE nu afișează cantitatea totală de spațiu liber
     pe disc, dar mai degrabă cantitatea de spațiu liber utilizabil rămas pe
-    disc. De exemplu, dacă aveți un disc de 10GB cu 4 partiții primare care
-    acoperă 5GB, nu este spațiu liber utilizabil rămas (nu mai pot fi create
-    alte partiții). Alt exemplu poate fi că aveți un disc de 10GB cu 3 partiții
-    primare și o partiție extinsă care acoperă 8GB. Partiția există are mărimea
-    de 3GB cu un disc logic demărime de 2GB. Discul va arăta numai 1GB ca
-    spațiu liber - spațiu liber de 1GB în partiția extinsă.
+    disc. De exemplu, dacă aveți un disc de 10Go cu 4 partiții primare care
+    acoperă 5Go, nu este spațiu liber utilizabil rămas (nu mai pot fi create
+    alte partiții). Alt exemplu poate fi că aveți un disc de 10Go cu 3 partiții
+    primare și o partiție extinsă care acoperă 8Go. Partiția există are mărimea
+    de 3GB cu un disc logic demărime de 2Go. Discul va arăta numai 1Go ca
+    spațiu liber - spațiu liber de 1Go în partiția extinsă.
 
 De exemplu:
 
@@ -6171,10 +6171,10 @@ Sintaxă: SELECT DISK=<N>
 
     DISK=<N>
                 Numărul indexului discului DiskPart al discului care urmează
-                să primească marcajul.
+                să primească marcajulul.
 
     DISK=<Cale>
-                Calea locației discului care urmează să primească marcajul.
+                Calea locației discului care urmează să primească marcajulul.
 
     DISK=SYSTEM
                 La calculatoarele cu BIOS, discul 0 din BIOS va fi marcat.
@@ -6189,7 +6189,7 @@ Sintaxă: SELECT DISK=<N>
                 pentru a se repeta peste toate discurile din lista de discuri.
                 Următorul disc din listă va primi marcaj. Dacă următorul
                 disc este începutul enumerării, comanda va eșua și niciun disc
-                nu va trebui să se focalizeze.
+                nu va trebui să se marcheze.
 
     Dacă nicio opțiune nu este specificată, comanda SELECT va lista discul
     care este focalizat în prezent. Puteți vizualiza numerele de index pentru
@@ -6502,7 +6502,7 @@ Sintaxă:  SELECT PARTITION=<N>
 
     PARTITION=<N>
 
-                Numărul partiției ce urmează să primească marcaj.
+                Numărul partiției ce urmează să primească marcajul.
 
      Dacă nicio partiție nu este specificată, comanda SELECT va lista partiția
      focalizată în prezent. Puteți specifica partiția prin numărul său. Puteți
@@ -6719,10 +6719,10 @@ Language=Romanian
 
 Sintaxă:  SELECT VOLUME={<N> | <D>}
 
-    VOLUME=<N>  Numărul volumului care urmează să primească marcaj.
+    VOLUME=<N>  Numărul volumului care urmează să primească marcajul.
 
     VOLUME=<D>  Litera discului sau calea dosarului montat al volumului
-                ce urmează să primească marcaj.
+                ce urmează să primească marcajul.
 
     Dacă niciun volum nu e specificat, comanda SELECT listează volumul actual
     cu marcaj. Puteți specififca volumul după număr, după litera discului sau
