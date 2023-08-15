@@ -85,6 +85,7 @@ public:
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnShowOptionsDlg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 DECLARE_WND_CLASS_EX(szProgmanClassName, CS_DBLCLKS, COLOR_DESKTOP)
 
@@ -98,6 +99,7 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
     MESSAGE_HANDLER(WM_DESKTOP_GET_CNOTIFY_SERVER, OnGetChangeNotifyServer)
+    MESSAGE_HANDLER(WM_USER+22, OnShowOptionsDlg)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CDesktopBrowser)
@@ -456,6 +458,22 @@ LRESULT CDesktopBrowser::OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARA
             return NULL;
     }
     return (LRESULT)m_hwndChangeNotifyServer;
+}
+
+extern VOID WINAPI ShowFolderOptionsDialog(UINT Page, BOOL Async);
+
+LRESULT CDesktopBrowser::OnShowOptionsDlg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    switch(wParam)
+    {
+    case 0:
+        ShowFolderOptionsDialog(0, true);
+        break;
+    case 1:
+        _NotifyTray(WM_COMMAND, TRAYCMD_TASKBAR_PROPERTIES, 0);
+        break;
+    }
+    return 0;
 }
 
 HRESULT CDesktopBrowser_CreateInstance(IShellDesktopTray *Tray, REFIID riid, void **ppv)
