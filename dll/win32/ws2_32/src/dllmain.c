@@ -24,6 +24,15 @@ DWORD GlobalTlsIndex = TLS_OUT_OF_INDEXES;
 
 /* FUNCTIONS *****************************************************************/
 
+#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+BOOL
+APIENTRY
+Ws2HelpDllMain(
+    HANDLE hModule,
+    DWORD  dwReason,
+    LPVOID lpReserved);
+#endif
+
 BOOL
 APIENTRY
 DllMain(HANDLE hModule,
@@ -31,6 +40,16 @@ DllMain(HANDLE hModule,
         LPVOID lpReserved)
 {
     PWSPROCESS WsProcess;
+
+#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+    /* Initialize ws2help */
+    if (!Ws2HelpDllMain(hModule, dwReason, lpReserved))
+    {
+        /* Should never happen */
+        ASSERT(FALSE);
+        return FALSE;
+    }
+#endif
 
     /* Main Entrypoint */
     switch (dwReason)

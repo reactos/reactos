@@ -120,9 +120,10 @@ Ws2helpInitialize(VOID)
 
 BOOL
 APIENTRY
-DllMain(HANDLE hModule,
-        DWORD  dwReason,
-        LPVOID lpReserved)
+Ws2HelpDllMain(
+    HANDLE hModule,
+    DWORD  dwReason,
+    LPVOID lpReserved)
 {
     switch (dwReason)
     {
