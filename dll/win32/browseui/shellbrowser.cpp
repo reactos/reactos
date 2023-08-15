@@ -625,6 +625,7 @@ public:
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnGetBrowseUISettings(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     HRESULT OnSearch();
 
     static ATL::CWndClassInfo& GetWndClassInfo()
@@ -676,6 +677,7 @@ public:
         COMMAND_RANGE_HANDLER(IDM_EXPLORERBAND_BEGINCUSTOM, IDM_EXPLORERBAND_ENDCUSTOM, OnExplorerBar)
         MESSAGE_HANDLER(WM_COMMAND, RelayCommands)
         MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnBrowseUISettingChanged)
+        MESSAGE_HANDLER(BWM_GETSETTINGS, OnGetBrowseUISettings)
     END_MSG_MAP()
 
     BEGIN_CONNECTION_POINT_MAP(CShellBrowser)
@@ -787,7 +789,6 @@ HRESULT CShellBrowser::Initialize()
     fToolbarProxy.Initialize(m_hWnd, clientBar);
 
     LoadCabinetState();
-    ::SendMessageW(fClientBars[BIInternetToolbar].hwnd, BWM_SETTINGCHANGE, 0, (LPARAM)&m_settings);
 
     // create status bar
     DWORD dwStatusStyle = WS_CHILD | WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS;
@@ -3800,6 +3801,11 @@ LRESULT CShellBrowser::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM
     }
 
     return 0;
+}
+
+LRESULT CShellBrowser::OnGetBrowseUISettings(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return (LRESULT)&m_settings;
 }
 
 HRESULT CShellBrowser_CreateInstance(REFIID riid, void **ppv)

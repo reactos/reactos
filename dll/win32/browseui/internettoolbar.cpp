@@ -250,11 +250,11 @@ HRESULT CDockSite::GetRBBandInfo(REBARBANDINFOW &bandInfo)
         bandInfo.fStyle |= RBBS_BREAK;
     if (fDeskBandInfo.dwModeFlags & DBIMF_TOPALIGN)
         bandInfo.fStyle |= RBBS_TOPALIGN;
-    if (fFlags & ITF_NOGRIPPER || (fToolbar->pSettings && fToolbar->pSettings->fLocked))
+    if (fFlags & ITF_NOGRIPPER || fToolbar->pSettings->fLocked)
         bandInfo.fStyle |= RBBS_NOGRIPPER;
     if (fFlags & ITF_NOTITLE)
         bandInfo.fStyle |= RBBS_HIDETITLE;
-    if (fFlags & ITF_GRIPPERALWAYS && (fToolbar->pSettings && !fToolbar->pSettings->fLocked))
+    if (fFlags & ITF_GRIPPERALWAYS && !fToolbar->pSettings->fLocked)
         bandInfo.fStyle |= RBBS_GRIPPERALWAYS;
     if (fFlags & ITF_FIXEDSIZE)
         bandInfo.fStyle |= RBBS_FIXEDSIZE;
@@ -1347,6 +1347,9 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
         if (ownerWindow == NULL)
             return E_FAIL;
 
+        //Get browseui settings from owner window
+        pSettings = (BrowseUISettings*)::SendMessageW(ownerWindow, BWM_GETSETTINGS, 0, 0);
+
         // create dock container
         fSite = pUnkSite;
         dockContainer = SHCreateWorkerWindowW(0, ownerWindow, 0,
@@ -1920,9 +1923,6 @@ LRESULT CInternetToolbar::OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam
 
 LRESULT CInternetToolbar::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (!pSettings)
-        pSettings = (BrowseUISettings*)lParam;
-
     /* Refresh toolbar locked state */
     RefreshLockedToolbarState();
 
