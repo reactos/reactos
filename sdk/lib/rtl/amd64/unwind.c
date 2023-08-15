@@ -413,7 +413,6 @@ RtlpTryToUnwindEpilog(
     /* Make sure this is really a ret instruction */
     if (*InstrPtr != 0xc3)
     {
-        ASSERT(FALSE);
         return FALSE;
     }
 
