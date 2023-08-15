@@ -254,15 +254,15 @@ static INT FindFilterItem(const TCHAR *filter, const TCHAR *item)
 {
     INT iFilter = 0;
     DWORD cbItem = lstrlen(item) * sizeof(TCHAR);
-    BOOL bFoundSep = TRUE;
+    BOOL bSep = TRUE;
 
     for (; *filter; ++filter)
     {
-        if (bFoundSep && memcmp(item, filter, cbItem) == 0)
+        if (bSep && memcmp(item, filter, cbItem) == 0)
             return (iFilter + 1) / 2;
 
-        bFoundSep = (*filter == TEXT('|'));
-        if (bFoundSep)
+        bSep = (*filter == TEXT('|'));
+        if (bSep)
             ++iFilter;
     }
 
