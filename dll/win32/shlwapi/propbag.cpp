@@ -693,3 +693,305 @@ SHSetIniStringW(
 
     return ret;
 }
+
+/**************************************************************************
+ *  SHGetIniStringUTF7W (SHLWAPI.473)
+ *
+ * Retrieves a string value from an INI file.
+ *
+ * @param lpAppName         The section name.
+ * @param lpKeyName         The key name.
+ *                          If this string begins from '@', the value will be interpreted as UTF-7.
+ * @param lpReturnedString  Receives a wide string value.
+ * @param nSize             The number of characters in lpReturnedString.
+ * @param lpFileName        The INI file.
+ * @return                  The number of characters copied to the buffer if succeeded.
+ */
+EXTERN_C DWORD WINAPI
+SHGetIniStringUTF7W(
+    _In_opt_z_ LPCWSTR lpAppName,
+    _In_z_ LPCWSTR lpKeyName,
+    _Out_writes_to_(nSize, return + 1) _Post_z_ LPWSTR lpReturnedString,
+    _In_ DWORD nSize,
+    _In_z_ LPCWSTR lpFileName)
+{
+    if (*lpKeyName == L'@') // UTF-7
+        return SHGetIniStringW(lpAppName, lpKeyName + 1, lpReturnedString, nSize, lpFileName);
+
+    return GetPrivateProfileStringW(lpAppName, lpKeyName, L"", lpReturnedString, nSize, lpFileName);
+}   
+
+/**************************************************************************
+ *  SHSetIniStringUTF7W (SHLWAPI.474)
+ *
+ * Sets a string value on an INI file.
+ *
+ * @param lpAppName   The section name.
+ * @param lpKeyName   The key name.
+ *                    If this begins from '@', the value will be stored as UTF-7.
+ * @param lpString    The wide string value to be set.
+ * @param lpFileName  The INI file.
+ * @return            TRUE if successful. FALSE if failed.
+ */
+EXTERN_C BOOL WINAPI
+SHSetIniStringUTF7W(
+    _In_z_ LPCWSTR lpAppName,
+    _In_z_ LPCWSTR lpKeyName,
+    _In_opt_z_ LPCWSTR lpString,
+    _In_z_ LPCWSTR lpFileName)
+{
+    if (*lpKeyName == L'@') // UTF-7
+        return SHSetIniStringW(lpAppName, lpKeyName + 1, lpString, lpFileName);
+
+    return WritePrivateProfileStringW(lpAppName, lpKeyName, lpString, lpFileName);
+}
+
+class CIniPropertyBag : public CBasePropertyBag
+{
+protected:
+    LPWSTR m_pszFileName;
+    LPWSTR m_pszSection;
+    BOOL m_bAlternateStream; // ADS (Alternate Data Stream)
+
+    static BOOL LooksLikeAnAlternateStream(LPCWSTR pszStart)
+    {
+        LPCWSTR pch = StrRChrW(pszStart, NULL, L'\\');
+        if (!pch)
+            pch = pszStart;
+        return StrChrW(pch, L':') != NULL;
+    }
+
+    HRESULT
+    _GetSectionAndName(
+        LPCWSTR pszStart,
+        LPWSTR pszSection,
+        UINT cchSectionMax,
+        LPWSTR pszName,
+        UINT cchNameMax);
+
+public:
+    CIniPropertyBag(DWORD dwMode)
+        : CBasePropertyBag(dwMode)
+        , m_pszFileName(NULL)
+        , m_pszSection(NULL)
+        , m_bAlternateStream(FALSE)
+    {
+    }
+
+    ~CIniPropertyBag() override
+    {
+        ::LocalFree(m_pszFileName);
+        ::LocalFree(m_pszSection);
+    }
+
+    HRESULT Init(LPCWSTR pszIniFile, LPCWSTR pszSection);
+
+    STDMETHODIMP Read(
+        _In_z_ LPCWSTR pszPropName,
+        _Inout_ VARIANT *pvari,
+        _Inout_opt_ IErrorLog *pErrorLog) override;
+
+    STDMETHODIMP Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari) override;
+};
+
+HRESULT CIniPropertyBag::Init(LPCWSTR pszIniFile, LPCWSTR pszSection)
+{
+    m_pszFileName = StrDupW(pszIniFile);
+    if (!m_pszFileName)
+        return E_OUTOFMEMORY;
+
+    // Is it an ADS (Alternate Data Stream) pathname?
+    m_bAlternateStream = LooksLikeAnAlternateStream(m_pszFileName);
+
+    if (pszSection)
+    {
+        m_pszSection = StrDupW(pszSection);
+        if (!m_pszSection)
+            return E_OUTOFMEMORY;
+    }
+
+    return S_OK;
+}
+
+HRESULT
+CIniPropertyBag::_GetSectionAndName(
+    LPCWSTR pszStart,
+    LPWSTR pszSection,
+    UINT cchSectionMax,
+    LPWSTR pszName,
+    UINT cchNameMax)
+{
+    LPCWSTR pchSep = StrChrW(pszStart, L'\\');
+    if (pchSep)
+    {
+        UINT cchSep = (UINT)(pchSep - pszStart + 1);
+        StrCpyNW(pszSection, pszStart, min(cchSep, cchSectionMax));
+        StrCpyNW(pszName, pchSep + 1, cchNameMax);
+        return S_OK;
+    }
+
+    if (m_pszSection)
+    {
+        StrCpyNW(pszSection, m_pszSection, cchSectionMax);
+        StrCpyNW(pszName, pszStart, cchNameMax);
+        return S_OK;
+    }
+
+    ERR("%p: %s\n", this, debugstr_w(pszStart));
+    return E_INVALIDARG;
+}
+
+STDMETHODIMP
+CIniPropertyBag::Read(
+    _In_z_ LPCWSTR pszPropName,
+    _Inout_ VARIANT *pvari,
+    _Inout_opt_ IErrorLog *pErrorLog)
+{
+    UNREFERENCED_PARAMETER(pErrorLog);
+
+    TRACE("%p: %s %p %p\n", this, debugstr_w(pszPropName), pvari, pErrorLog);
+
+    VARTYPE vt = V_VT(pvari);
+
+    ::VariantInit(pvari);
+
+    if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) == STGM_WRITE)
+    {
+        ERR("%p: 0x%X\n", this, m_dwMode);
+        return E_ACCESSDENIED;
+    }
+
+    WCHAR szSection[64], szName[64];
+    HRESULT hr =
+        _GetSectionAndName(pszPropName, szSection, _countof(szSection), szName, _countof(szName));
+    if (FAILED(hr))
+        return hr;
+
+    const INT cchBuffMax = 4 * MAX_PATH; // UTF-7 needs 4 times length buffer.
+    CComHeapPtr<WCHAR> pszBuff;
+    if (!pszBuff.Allocate(cchBuffMax * sizeof(WCHAR)))
+        return E_OUTOFMEMORY;
+
+    if (!SHGetIniStringUTF7W(szSection, szName, pszBuff, cchBuffMax, m_pszFileName))
+        return E_FAIL;
+
+    BSTR bstr = ::SysAllocString(pszBuff);
+    V_BSTR(pvari) = bstr;
+    if (!bstr)
+        return E_OUTOFMEMORY;
+
+    V_VT(pvari) = VT_BSTR;
+    return ::VariantChangeTypeForRead(pvari, vt);
+}
+
+STDMETHODIMP
+CIniPropertyBag::Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari)
+{
+    TRACE("%p: %s %p\n", this, debugstr_w(pszPropName), pvari);
+
+    if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) == STGM_READ)
+    {
+        ERR("%p: 0x%X\n", this, m_dwMode);
+        return E_ACCESSDENIED;
+    }
+
+    HRESULT hr;
+    BSTR bstr;
+    VARIANTARG vargTemp = { 0 };
+    switch (V_VT(pvari))
+    {
+        case VT_EMPTY:
+            bstr = NULL;
+            break;
+
+        case VT_BSTR:
+            bstr = V_BSTR(pvari);
+            break;
+
+        default:
+            hr = ::VariantChangeType(&vargTemp, pvari, 0, VT_BSTR);
+            if (FAILED(hr))
+                goto Quit;
+
+            bstr = V_BSTR(&vargTemp);
+            break;
+    }
+
+    WCHAR szSection[64], szName[64];
+    hr = _GetSectionAndName(pszPropName, szSection, _countof(szSection), szName, _countof(szName));
+    if (SUCCEEDED(hr))
+    {
+        if (SHSetIniStringUTF7W(szSection, szName, bstr, m_pszFileName))
+        {
+            if (!m_bAlternateStream)
+                SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, m_pszFileName, NULL);
+        }
+        else
+        {
+            hr = E_FAIL;
+        }
+    }
+
+Quit:
+    ::VariantClear(&vargTemp);
+    return hr;
+}
+
+/**************************************************************************
+ *  SHCreatePropertyBagOnProfileSection (SHLWAPI.472)
+ *
+ * Creates a property bag object on INI file.
+ *
+ * @param lpFileName  The INI filename.
+ * @param pszSection  The optional section name.
+ * @param dwMode      The combination of STGM_READ, STGM_WRITE, STGM_READWRITE, and STGM_CREATE.
+ * @param riid        Specifies either IID_IUnknown, IID_IPropertyBag or IID_IPropertyBag2.
+ * @param ppvObj      Receives an IPropertyBag pointer.
+ * @return            An HRESULT value. S_OK on success, non-zero on failure.
+ * @see               https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/createonprofilesection.htm
+ */
+EXTERN_C HRESULT WINAPI
+SHCreatePropertyBagOnProfileSection(
+    _In_z_ LPCWSTR lpFileName,
+    _In_opt_z_ LPCWSTR pszSection,
+    _In_ DWORD dwMode,
+    _In_ REFIID riid,
+    _Out_ void **ppvObj)
+{
+    HANDLE hFile;
+    PWCHAR pchFileTitle;
+    WCHAR szBuff[MAX_PATH];
+
+    if (dwMode & STGM_CREATE)
+    {
+        hFile = ::CreateFileW(lpFileName, 0, FILE_SHARE_DELETE, 0, CREATE_NEW,
+                              FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM, NULL);
+        if (hFile != INVALID_HANDLE_VALUE)
+        {
+            pchFileTitle = PathFindFileNameW(lpFileName);
+            if (lstrcmpiW(pchFileTitle, L"desktop.ini") == 0)
+            {
+                StrCpyNW(szBuff, lpFileName, _countof(szBuff));
+                if (PathRemoveFileSpecW(szBuff))
+                    PathMakeSystemFolderW(szBuff);
+            }
+            ::CloseHandle(hFile);
+        }
+    }
+
+    *ppvObj = NULL;
+
+    if (!PathFileExistsW(lpFileName))
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    CComPtr<CIniPropertyBag> pIniPB(new CIniPropertyBag(dwMode));
+
+    HRESULT hr = pIniPB->Init(lpFileName, pszSection);
+    if (FAILED(hr))
+    {
+        ERR("0x%08X\n", hr);
+        return hr;
+    }
+
+    return pIniPB->QueryInterface(riid, ppvObj);
+}

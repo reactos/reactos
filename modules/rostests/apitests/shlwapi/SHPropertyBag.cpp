@@ -8,6 +8,7 @@
 #include <apitest.h>
 #include <shlwapi.h>
 #include <shlobj.h>
+#include <stdio.h>
 #include <shlwapi_undoc.h>
 #include <versionhelpers.h>
 
@@ -687,6 +688,141 @@ static void SHPropertyBag_SHSetIniStringW(void)
     DeleteFileW(szIniFile);
 }
 
+void SHPropertyBag_OnIniFile(void)
+{
+    WCHAR szIniFile[MAX_PATH], szValue[MAX_PATH];
+    HRESULT hr;
+    IPropertyBag *pPropBag;
+    VARIANT vari;
+    DWORD dwRet;
+
+    ExpandEnvironmentStringsW(L"%TEMP%\\SHPropertyBag.ini", szIniFile, _countof(szIniFile));
+
+    DeleteFileW(szIniFile);
+    fclose(_wfopen(szIniFile, L"w"));
+
+    trace("%ls\n", szIniFile);
+
+    // read-write
+    hr = SHCreatePropertyBagOnProfileSection(
+        szIniFile,
+        L"TestSection",
+        STGM_READWRITE,
+        IID_IPropertyBag,
+        (void**)&pPropBag);
+    ok_long(hr, S_OK);
+    ok_int(PathFileExistsW(szIniFile), TRUE);
+
+    // Write UI4
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UI4;
+    V_UI4(&vari) = 0xDEADFACE;
+    hr = pPropBag->Write(L"Name1", &vari);
+    ok_long(hr, S_OK);
+    VariantClear(&vari);
+
+    // Write BSTR
+    VariantInit(&vari);
+    V_VT(&vari) = VT_BSTR;
+    V_BSTR(&vari) = SysAllocString(L"StrValue");
+    hr = pPropBag->Write(L"Name2", &vari);
+    ok_long(hr, S_OK);
+    VariantClear(&vari);
+
+    // Write BSTR (dirty UTF-7)
+    VariantInit(&vari);
+    V_VT(&vari) = VT_BSTR;
+    V_BSTR(&vari) = SysAllocString(L"ABC\x3042\x3044\x3046\x2665");
+    hr = pPropBag->Write(L"@Name3", &vari);
+    ok_long(hr, S_OK);
+    VariantClear(&vari);
+
+    // Write BSTR (clean UTF-7)
+    VariantInit(&vari);
+    V_VT(&vari) = VT_BSTR;
+    V_BSTR(&vari) = SysAllocString(L"1234abc");
+    hr = pPropBag->Write(L"@Name4", &vari);
+    ok_long(hr, S_OK);
+    VariantClear(&vari);
+
+    pPropBag->Release();
+
+    // Flush
+    WritePrivateProfileStringW(NULL, NULL, NULL, szIniFile);
+
+    // Check INI file
+    dwRet = GetPrivateProfileStringW(L"TestSection", L"Name1", L"BAD", szValue, _countof(szValue), szIniFile);
+    ok_long(dwRet, 10);
+    ok_wstr(szValue, L"3735943886");
+
+    dwRet = GetPrivateProfileStringW(L"TestSection", L"Name2", L"BAD", szValue, _countof(szValue), szIniFile);
+    ok_long(dwRet, 8);
+    ok_wstr(szValue, L"StrValue");
+
+    GetPrivateProfileStringW(L"TestSection", L"Name3", L"NotFound", szValue, _countof(szValue), szIniFile);
+    ok_int(memcmp(szValue, L"ABC", 3 * sizeof(WCHAR)), 0);
+
+    GetPrivateProfileStringW(L"TestSection.A", L"Name3", L"NotFound", szValue, _countof(szValue), szIniFile);
+    ok_int(memcmp(szValue, L"ABC", 3 * sizeof(WCHAR)), 0);
+
+    GetPrivateProfileStringW(L"TestSection.W", L"Name3", L"NotFound", szValue, _countof(szValue), szIniFile);
+    ok_wstr(szValue, L"ABC+MEIwRDBGJmU-"); // UTF-7
+
+    GetPrivateProfileStringW(L"TestSection", L"Name4", L"NotFound", szValue, _countof(szValue), szIniFile);
+    ok_wstr(szValue, L"1234abc");
+
+    GetPrivateProfileStringW(L"TestSection.A", L"Name4", L"NotFound", szValue, _countof(szValue), szIniFile);
+    ok_wstr(szValue, L"NotFound");
+
+    GetPrivateProfileStringW(L"TestSection.W", L"Name4", L"NotFound", szValue, _countof(szValue), szIniFile);
+    ok_wstr(szValue, L"NotFound");
+
+    // read-only
+    hr = SHCreatePropertyBagOnProfileSection(
+        szIniFile,
+        NULL,
+        STGM_READ,
+        IID_IPropertyBag,
+        (void**)&pPropBag);
+    ok_long(hr, S_OK);
+
+    // Read UI4
+    VariantInit(&vari);
+    V_VT(&vari) = VT_UI4;
+    hr = pPropBag->Read(L"TestSection\\Name1", &vari, NULL);
+    ok_long(hr, S_OK);
+    ok_long(V_UI4(&vari), 0xDEADFACE);
+    VariantClear(&vari);
+
+    // Read BSTR
+    VariantInit(&vari);
+    V_VT(&vari) = VT_BSTR;
+    hr = pPropBag->Read(L"TestSection\\Name2", &vari, NULL);
+    ok_long(hr, S_OK);
+    ok_wstr(V_BSTR(&vari), L"StrValue");
+    VariantClear(&vari);
+
+    // Read BSTR (dirty UTF-7)
+    VariantInit(&vari);
+    V_VT(&vari) = VT_BSTR;
+    hr = pPropBag->Read(L"TestSection\\@Name3", &vari, NULL);
+    ok_long(hr, S_OK);
+    ok_wstr(V_BSTR(&vari), L"ABC\x3042\x3044\x3046\x2665");
+    VariantClear(&vari);
+
+    // Read BSTR (clean UTF-7)
+    VariantInit(&vari);
+    V_VT(&vari) = VT_BSTR;
+    hr = pPropBag->Read(L"TestSection\\@Name4", &vari, NULL);
+    ok_long(hr, S_OK);
+    ok_wstr(V_BSTR(&vari), L"1234abc");
+    VariantClear(&vari);
+
+    pPropBag->Release();
+
+    DeleteFileW(szIniFile);
+}
+
 START_TEST(SHPropertyBag)
 {
     SHPropertyBag_ReadTest();
@@ -694,4 +830,5 @@ START_TEST(SHPropertyBag)
     SHPropertyBag_OnMemory();
     SHPropertyBag_OnRegKey();
     SHPropertyBag_SHSetIniStringW();
+    SHPropertyBag_OnIniFile();
 }

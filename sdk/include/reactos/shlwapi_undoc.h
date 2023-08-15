@@ -135,6 +135,14 @@ SHCreatePropertyBagOnRegKey(
     _In_ REFIID riid,
     _Out_ void **ppvObj);
 
+HRESULT WINAPI
+SHCreatePropertyBagOnProfileSection(
+    _In_z_ LPCWSTR lpFileName,
+    _In_opt_z_ LPCWSTR pszSection,
+    _In_ DWORD dwMode,
+    _In_ REFIID riid,
+    _Out_ void **ppvObj);
+
 HWND WINAPI SHCreateWorkerWindowA(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle,
                                   DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra);
 
@@ -193,6 +201,21 @@ SHSetIniStringW(
     _In_z_ LPCWSTR keyName,
     _In_opt_z_ LPCWSTR str,
     _In_z_ LPCWSTR filename);
+
+DWORD WINAPI
+SHGetIniStringUTF7W(
+    _In_opt_z_ LPCWSTR lpAppName,
+    _In_z_ LPCWSTR lpKeyName,
+    _Out_writes_to_(nSize, return + 1) _Post_z_ LPWSTR lpReturnedString,
+    _In_ DWORD nSize,
+    _In_z_ LPCWSTR lpFileName);
+
+BOOL WINAPI
+SHSetIniStringUTF7W(
+    _In_z_ LPCWSTR lpAppName,
+    _In_z_ LPCWSTR lpKeyName,
+    _In_opt_z_ LPCWSTR lpString,
+    _In_z_ LPCWSTR lpFileName);
 
 int
 WINAPIV
