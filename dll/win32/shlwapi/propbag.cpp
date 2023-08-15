@@ -12,6 +12,7 @@
 #include <atlstr.h>         // for CStringW
 #include <atlsimpcoll.h>    // for CSimpleMap
 #include <atlcomcli.h>      // for CComVariant
+#include <atlconv.h>        // for CA2W and CW2A
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -579,4 +580,116 @@ SHCreatePropertyBagOnRegKey(
         return hr;
 
     return pRegBag->QueryInterface(riid, ppvObj);
+}
+
+/**************************************************************************
+ *  SHGetIniStringW (SHLWAPI.294)
+ *
+ * @see https://source.winehq.org/WineAPI/SHGetIniStringW.html
+ */
+EXTERN_C DWORD WINAPI
+SHGetIniStringW(
+    _In_z_ LPCWSTR appName,
+    _In_z_ LPCWSTR keyName,
+    _Out_writes_to_(outLen, return + 1) LPWSTR out,
+    _In_ DWORD outLen,
+    _In_z_ LPCWSTR filename)
+{
+    TRACE("(%s,%s,%p,%08x,%s)\n", debugstr_w(appName), debugstr_w(keyName),
+          out, outLen, debugstr_w(filename));
+
+    if (outLen == 0)
+        return 0;
+
+    // Try ".W"-appended section name. See also SHSetIniStringW
+    CStringW szSection(appName);
+    szSection += L".W";
+    CStringW pszWideBuff;
+    const INT cchWideMax = 4 * MAX_PATH; // UTF-7 needs 4 times length buffer.
+    GetPrivateProfileStringW(szSection, keyName, NULL,
+                             pszWideBuff.GetBuffer(cchWideMax), cchWideMax, filename);
+    pszWideBuff.ReleaseBuffer();
+
+    if (pszWideBuff.IsEmpty()) // It's empty or not found
+    {
+        // Try the normal section name
+        return GetPrivateProfileStringW(appName, keyName, NULL, out, outLen, filename);
+    }
+
+    // Okay, now ".W" version is valid. Its value is a UTF-7 string in UTF-16
+    CW2A wide2utf7(pszWideBuff);
+    MultiByteToWideChar(CP_UTF7, 0, wide2utf7, -1, out, outLen);
+    out[outLen - 1] = UNICODE_NULL;
+
+    return lstrlenW(out);
+}
+
+static BOOL Is7BitClean(LPCWSTR psz)
+{
+    if (!psz)
+        return TRUE;
+
+    while (*psz)
+    {
+        if (*psz > 0x7F)
+            return FALSE;
+        ++psz;
+    }
+    return TRUE;
+}
+
+/**************************************************************************
+ *  SHSetIniStringW (SHLWAPI.295)
+ *
+ * @see https://source.winehq.org/WineAPI/SHSetIniStringW.html
+ */
+EXTERN_C BOOL WINAPI
+SHSetIniStringW(
+    _In_z_ LPCWSTR appName,
+    _In_z_ LPCWSTR keyName,
+    _In_opt_z_ LPCWSTR str,
+    _In_z_ LPCWSTR filename)
+{
+    TRACE("(%s, %p, %s, %s)\n", debugstr_w(appName), keyName, debugstr_w(str),
+          debugstr_w(filename));
+
+    // Write a normal profile string. If str was NULL, then key will be deleted
+    if (!WritePrivateProfileStringW(appName, keyName, str, filename))
+        return FALSE;
+
+    if (Is7BitClean(str))
+    {
+        // Delete ".A" version
+        CStringW szSection(appName);
+        szSection += L".A";
+        WritePrivateProfileStringW(szSection, keyName, NULL, filename);
+
+        // Delete ".W" version
+        szSection = appName;
+        szSection += L".W";
+        WritePrivateProfileStringW(szSection, keyName, NULL, filename);
+
+        return TRUE;
+    }
+
+    // Now str is not 7-bit clean. It needs UTF-7 encoding in UTF-16.
+    // We write ".A" and ".W"-appended sections
+    CW2A wide2utf7(str, CP_UTF7);
+    CA2W utf72wide(wide2utf7, CP_ACP);
+
+    BOOL ret = TRUE;
+
+    // Write ".A" version
+    CStringW szSection(appName);
+    szSection += L".A";
+    if (!WritePrivateProfileStringW(szSection, keyName, str, filename))
+        ret = FALSE;
+
+    // Write ".W" version
+    szSection = appName;
+    szSection += L".W";
+    if (!WritePrivateProfileStringW(szSection, keyName, utf72wide, filename))
+        ret = FALSE;
+
+    return ret;
 }

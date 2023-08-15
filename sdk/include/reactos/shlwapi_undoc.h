@@ -180,10 +180,19 @@ HRESULT WINAPI SHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD si
 #endif
 
 DWORD WINAPI
-SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out, DWORD outLen, LPCWSTR filename);
+SHGetIniStringW(
+    _In_z_ LPCWSTR appName,
+    _In_z_ LPCWSTR keyName,
+    _Out_writes_to_(outLen, return + 1) LPWSTR out,
+    _In_ DWORD outLen,
+    _In_z_ LPCWSTR filename);
 
 BOOL WINAPI
-SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str, LPCWSTR filename);
+SHSetIniStringW(
+    _In_z_ LPCWSTR appName,
+    _In_z_ LPCWSTR keyName,
+    _In_opt_z_ LPCWSTR str,
+    _In_z_ LPCWSTR filename);
 
 int
 WINAPIV
