@@ -250,10 +250,10 @@ static INT FindGUID(REFGUID rguid, const CSimpleArray<GUID>& guids)
     return -1;
 }
 
-static INT FindFilterItem(const WCHAR *filter, const WCHAR *item)
+static INT FindFilterItem(const TCHAR *filter, const TCHAR *item)
 {
     INT iFilter = 0;
-    size_t cbItem = wcslen(item) * sizeof(WCHAR);
+    DWORD cbItem = lstrlen(item) * sizeof(TCHAR);
     BOOL bFoundSep = TRUE;
     for (; *filter; ++filter)
     {
@@ -301,12 +301,12 @@ static void Test_Importer(void)
     ok(iEMF > 0, "iEMF was %d\n", iEMF);
     ok(iWMF > 0, "iWMF was %d\n", iWMF);
 
-    ok_int(memcmp(strImporters, L"All Image Files|", sizeof(L"All Image Files|") - sizeof(UNICODE_NULL)), 0);
-    ok_int(iBMP, FindFilterItem(strImporters, L"BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|"));
-    ok_int(iJPEG, FindFilterItem(strImporters, L"JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|"));
-    ok_int(iGIF, FindFilterItem(strImporters, L"GIF (*.GIF)|*.GIF|"));
-    ok_int(iPNG, FindFilterItem(strImporters, L"PNG (*.PNG)|*.PNG|"));
-    ok_int(iTIFF, FindFilterItem(strImporters, L"TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|"));
+    ok_int(memcmp(strImporters, TEXT("All Image Files|"), sizeof(TEXT("All Image Files|")) - sizeof(TCHAR)), 0);
+    ok_int(iBMP, FindFilterItem(strImporters, TEXT("BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|")));
+    ok_int(iJPEG, FindFilterItem(strImporters, TEXT("JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|")));
+    ok_int(iGIF, FindFilterItem(strImporters, TEXT("GIF (*.GIF)|*.GIF|")));
+    ok_int(iPNG, FindFilterItem(strImporters, TEXT("PNG (*.PNG)|*.PNG|")));
+    ok_int(iTIFF, FindFilterItem(strImporters, TEXT("TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|")));
 
     // Try importer without "All Image Files"
     aguidFileTypes.RemoveAll();
@@ -334,11 +334,11 @@ static void Test_Importer(void)
     ok(iEMF > 0, "iEMF was %d\n", iEMF);
     ok(iWMF > 0, "iWMF was %d\n", iWMF);
 
-    ok_int(iBMP, FindFilterItem(strImporters, L"BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|"));
-    ok_int(iJPEG, FindFilterItem(strImporters, L"JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|"));
-    ok_int(iGIF, FindFilterItem(strImporters, L"GIF (*.GIF)|*.GIF|"));
-    ok_int(iPNG, FindFilterItem(strImporters, L"PNG (*.PNG)|*.PNG|"));
-    ok_int(iTIFF, FindFilterItem(strImporters, L"TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|"));
+    ok_int(iBMP, FindFilterItem(strImporters, TEXT("BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|")));
+    ok_int(iJPEG, FindFilterItem(strImporters, TEXT("JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|")));
+    ok_int(iGIF, FindFilterItem(strImporters, TEXT("GIF (*.GIF)|*.GIF|")));
+    ok_int(iPNG, FindFilterItem(strImporters, TEXT("PNG (*.PNG)|*.PNG|")));
+    ok_int(iTIFF, FindFilterItem(strImporters, TEXT("TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|")));
 }
 
 static void Test_Exporter(void)
@@ -370,11 +370,11 @@ static void Test_Exporter(void)
     ok(iPNG > 0, "iPNG was %d\n", iPNG);
     ok(iTIFF > 0, "iTIFF was %d\n", iTIFF);
 
-    ok_int(iBMP, FindFilterItem(strExporters, L"BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|"));
-    ok_int(iJPEG, FindFilterItem(strExporters, L"JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|"));
-    ok_int(iGIF, FindFilterItem(strExporters, L"GIF (*.GIF)|*.GIF|"));
-    ok_int(iPNG, FindFilterItem(strExporters, L"PNG (*.PNG)|*.PNG|"));
-    ok_int(iTIFF, FindFilterItem(strExporters, L"TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|"));
+    ok_int(iBMP, FindFilterItem(strExporters, TEXT("BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|")));
+    ok_int(iJPEG, FindFilterItem(strExporters, TEXT("JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|")));
+    ok_int(iGIF, FindFilterItem(strExporters, TEXT("GIF (*.GIF)|*.GIF|")));
+    ok_int(iPNG, FindFilterItem(strExporters, TEXT("PNG (*.PNG)|*.PNG|")));
+    ok_int(iTIFF, FindFilterItem(strExporters, TEXT("TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|")));
 
     // Try exporter without "All Image Files"
     strExporters.Empty();
@@ -398,11 +398,11 @@ static void Test_Exporter(void)
     ok(iPNG > 0, "iPNG was %d\n", iPNG);
     ok(iTIFF > 0, "iTIFF was %d\n", iTIFF);
 
-    ok_int(iBMP, FindFilterItem(strExporters, L"BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|"));
-    ok_int(iJPEG, FindFilterItem(strExporters, L"JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|"));
-    ok_int(iGIF, FindFilterItem(strExporters, L"GIF (*.GIF)|*.GIF|"));
-    ok_int(iPNG, FindFilterItem(strExporters, L"PNG (*.PNG)|*.PNG|"));
-    ok_int(iTIFF, FindFilterItem(strExporters, L"TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|"));
+    ok_int(iBMP, FindFilterItem(strExporters, TEXT("BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|")));
+    ok_int(iJPEG, FindFilterItem(strExporters, TEXT("JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|")));
+    ok_int(iGIF, FindFilterItem(strExporters, TEXT("GIF (*.GIF)|*.GIF|")));
+    ok_int(iPNG, FindFilterItem(strExporters, TEXT("PNG (*.PNG)|*.PNG|")));
+    ok_int(iTIFF, FindFilterItem(strExporters, TEXT("TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|")));
 }
 
 START_TEST(CImage)
