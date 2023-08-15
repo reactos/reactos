@@ -192,10 +192,13 @@ HBITMAP CreateRadioMask(HDC hDC)
 
 // CMSGlobalFolderOptionsStub --- The owner window of Folder Options.
 // This window hides taskbar button of Folder Options.
+
+#define GlobalFolderOptionsClassName _T("MSGlobalFolderOptionsStub")
+
 class CMSGlobalFolderOptionsStub : public CWindowImpl<CMSGlobalFolderOptionsStub>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("MSGlobalFolderOptionsStub"), 0, COLOR_WINDOWTEXT)
+    DECLARE_WND_CLASS_EX(GlobalFolderOptionsClassName, 0, COLOR_WINDOWTEXT)
 
     BEGIN_MSG_MAP(CMSGlobalFolderOptionsStub)
     END_MSG_MAP()
@@ -222,8 +225,10 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
     return 0;
 }
 
-static VOID
-ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
+enum { PAGE_GENERAL, PAGE_VIEW, PAGE_FILETYPES };
+
+static DWORD CALLBACK
+ShowFolderOptionsDialogThreadProc(LPVOID param)
 {
     PROPSHEETHEADERW pinfo;
     HPROPSHEETPAGE hppages[3];
@@ -254,7 +259,7 @@ ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
     if (!stub.Create(NULL, NULL, NULL, style, exstyle))
     {
         ERR("stub.Create failed\n");
-        return;
+        return 0;
     }
 
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
@@ -266,10 +271,34 @@ ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
     pinfo.pszIcon = MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS);
     pinfo.pszCaption = szOptions;
     pinfo.pfnCallback = PropSheetProc;
+    pinfo.nStartPage = (UINT) param;
 
     PropertySheetW(&pinfo);
 
     stub.DestroyWindow();
+    return 0;
+}
+
+VOID WINAPI 
+ShowFolderOptionsDialog(UINT Page, BOOL Async = false)
+{
+    HWND hWnd = FindWindow(GlobalFolderOptionsClassName, NULL);
+    if (hWnd)
+    {
+        HWND hPop = GetLastActivePopup(hWnd);
+        if (hWnd == GetParent(hPop))
+        {
+            PostMessage(hPop, PSM_SETCURSEL, Page, 0);
+        }
+        SetForegroundWindow(hPop);
+        return ;
+    }
+    
+    LPVOID param = (LPVOID) Page;
+    if (Async)
+        SHCreateThread(ShowFolderOptionsDialogThreadProc, param, 0, 0);
+    else
+        ShowFolderOptionsDialogThreadProc(param); // Rundll32 caller cannot be async!
 }
 
 static VOID
@@ -278,13 +307,15 @@ Options_RunDLLCommon(HWND hWnd, HINSTANCE hInst, int fOptions, DWORD nCmdShow)
     switch(fOptions)
     {
         case 0:
-            ShowFolderOptionsDialog(hWnd, hInst);
+            ShowFolderOptionsDialog(PAGE_GENERAL);
             break;
 
-        case 1:
-            // show taskbar options dialog
-            FIXME("notify explorer to show taskbar options dlg\n");
-            //PostMessage(GetShellWindow(), WM_USER+22, fOptions, 0);
+        case 1: // Show taskbar options dialog
+            PostMessage(GetShellWindow(), WM_USER+22, fOptions, 0);
+            break;
+
+        case 7: // Windows 8, 10
+            ShowFolderOptionsDialog(PAGE_VIEW);
             break;
 
         default:
