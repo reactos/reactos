@@ -261,7 +261,7 @@ static INT FindFilterItem(const TCHAR *filter, const TCHAR *item)
         if (bFoundSep && memcmp(item, filter, cbItem) == 0)
             return (iFilter + 1) / 2;
 
-        bFoundSep = (*filter == L'|');
+        bFoundSep = (*filter == TEXT('|'));
         if (bFoundSep)
             ++iFilter;
     }
