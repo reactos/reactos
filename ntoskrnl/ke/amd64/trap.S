@@ -1213,19 +1213,18 @@ EXTERN KiSwitchKernelStack:PROC
 PUBLIC KeSwitchKernelStack
 FUNC KeSwitchKernelStack
 
+    /* Save rcx and allocate callee home space */
+    mov [rsp + P1Home], rcx
+    .savereg rcx, P1Home
     sub rsp, 40
     .allocstack 40
-
-    /* Save rcx */
-    mov [rsp], rcx
-    .savereg rcx, 0
     .endprolog
 
     /* Call the C handler, which returns the old stack in rax */
     call KiSwitchKernelStack
 
     /* Restore rcx (StackBase) */
-    mov rcx, [rsp]
+    mov rcx, [rsp + 40 + P1Home]
 
     /* Switch to new stack: RSP += (StackBase - OldStackBase) */
     sub rcx, rax
