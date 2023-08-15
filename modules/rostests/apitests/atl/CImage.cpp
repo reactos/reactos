@@ -255,6 +255,7 @@ static INT FindFilterItem(const TCHAR *filter, const TCHAR *item)
     INT iFilter = 0;
     DWORD cbItem = lstrlen(item) * sizeof(TCHAR);
     BOOL bFoundSep = TRUE;
+
     for (; *filter; ++filter)
     {
         if (bFoundSep && memcmp(item, filter, cbItem) == 0)
