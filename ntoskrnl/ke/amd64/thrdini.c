@@ -134,7 +134,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
 
     /* Set up the Context Switch Frame */
     CtxSwitchFrame->Return = (ULONG64)KiThreadStartup;
-    CtxSwitchFrame->ApcBypass = FALSE;
+    CtxSwitchFrame->ApcBypass = TRUE;
 
     StartFrame->P1Home = (ULONG64)StartRoutine;
     StartFrame->P2Home = (ULONG64)StartContext;
