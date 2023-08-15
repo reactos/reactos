@@ -134,7 +134,7 @@ static void determine_file_bpp(TCHAR* tfile, Gdiplus::PixelFormat expect_pf)
     Shutdown(gdiplusToken);
 }
 
-static void Test_SaveImage(void)
+static void Test_LoadSaveImage(void)
 {
     HRESULT hr;
     TCHAR* file;
@@ -144,12 +144,6 @@ static void Test_SaveImage(void)
     CImage image1, image2;
     COLORREF color;
     HDC hDC;
-
-#if 0
-    width = image1.GetWidth();
-    height = image1.GetHeight();
-    bpp = image1.GetBPP();
-#endif
 
     HINSTANCE hInst = GetModuleHandle(NULL);
     GetTempPath(MAX_PATH, szTempPath);
@@ -413,7 +407,7 @@ static void Test_Exporter(void)
 
 START_TEST(CImage)
 {
-    Test_SaveImage();
+    Test_LoadSaveImage();
     Test_Importer();
     Test_Exporter();
 }
