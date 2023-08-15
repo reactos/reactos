@@ -28,10 +28,7 @@ static	UConst char sccsid[] =
 #ifndef	HAVE_STRLCPY
 
 EXPORT size_t
-strlcpy(s1, s2, len)
-	register char		*s1;
-	register const char	*s2;
-	register size_t		len;
+strlcpy(char *s1, const char *s2, size_t len)
 {
 	const char		 *os2	= s2;
 

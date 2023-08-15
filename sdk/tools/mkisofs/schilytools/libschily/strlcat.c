@@ -29,10 +29,7 @@ static	UConst char sccsid[] =
 #ifndef	HAVE_STRLCAT
 
 EXPORT size_t
-strlcat(s1, s2, len)
-	register char		*s1;
-	register const char	*s2;
-	register size_t		len;
+strlcat(char *s1, const char *s2, size_t len)
 {
 	const char		*os1	= s1;
 		size_t		olen	= len;

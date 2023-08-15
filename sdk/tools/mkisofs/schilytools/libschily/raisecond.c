@@ -97,9 +97,7 @@ LOCAL	BOOL framehandle __PR((SIGBLK *, const char *, const char *, long));
  *	containing different handlers.
  */
 EXPORT void
-raisecond(signame, arg2)
-	const char	*signame;
-	long		arg2;
+raisecond(const char *signame, long arg2)
 {
 	register void	*vp = NULL;
 
@@ -142,11 +140,7 @@ raisecond(signame, arg2)
  *	The return value in the latter case depends on the called function.
  */
 LOCAL BOOL
-framehandle(sp, handlename, signame, arg2)
-	register SIGBLK *sp;
-	const char	*handlename;
-	const char	*signame;
-	long		arg2;
+framehandle(SIGBLK *sp, const char *handlename, const char *signame, long arg2)
 {
 	for (; sp; sp = sp->sb_signext) {
 		if (sp->sb_signame != NULL &&
@@ -163,8 +157,7 @@ framehandle(sp, handlename, signame, arg2)
 }
 
 LOCAL void
-raiseabort(signame)
-	const	char	*signame;
+raiseabort(const char *signame)
 {
 	eprints("Condition not caught: "); eprintl(signame); eprints(".\n");
 	abort();

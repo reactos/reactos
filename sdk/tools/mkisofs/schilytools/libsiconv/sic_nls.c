@@ -95,8 +95,7 @@ LOCAL siconvt_t	*glist = (siconvt_t *) NULL;
  * Insert a table into the global list and allow to reuse it
  */
 LOCAL siconvt_t *
-insert_sic(sip)
-	siconvt_t	*sip;
+insert_sic(siconvt_t *sip)
 {
 	siconvt_t	**sp = &glist;
 
@@ -120,8 +119,7 @@ insert_sic(sip)
  * Remove a table from the global list
  */
 LOCAL int
-remove_sic(sip)
-	siconvt_t	*sip;
+remove_sic(siconvt_t *sip)
 {
 	siconvt_t	**sp = &glist;
 
@@ -157,8 +155,7 @@ remove_sic(sip)
  * Open a new translation
  */
 EXPORT siconvt_t *
-sic_open(charset)
-	char	*charset;
+sic_open(char *charset)
 {
 	siconvt_t	*sip = glist;
 
@@ -183,7 +180,7 @@ sic_open(charset)
  * Open a new translation
  */
 EXPORT const char *
-sic_base()
+sic_base(void)
 {
 	if (ins_base == NULL) {
 		ins_base = searchfileinpath("lib/siconv/iso8859-1", R_OK,
@@ -201,8 +198,7 @@ sic_base()
  * Close a translation
  */
 EXPORT int
-sic_close(sip)
-	siconvt_t	*sip;
+sic_close(siconvt_t *sip)
 {
 	if (remove_sic(sip) < 0)
 		return (-1);
@@ -230,8 +226,7 @@ sic_close(sip)
  * List all possible translation files in the install directory.
  */
 EXPORT int
-sic_list(f)
-	FILE	*f;
+sic_list(FILE *f)
 {
 	char		path[1024];
 	DIR		*d;
@@ -265,8 +260,7 @@ sic_list(f)
  * Free a reverse (uncode -> char) translation table
  */
 LOCAL void
-freetbl(uni2cs)
-	UInt8_t	**uni2cs;
+freetbl(UInt8_t **uni2cs)
 {
 	int	i;
 
@@ -283,8 +277,7 @@ freetbl(uni2cs)
  * in the install directory.
  */
 LOCAL FILE *
-pfopen(name)
-	char	*name;
+pfopen(char *name)
 {
 	char	path[1024];
 	char	*p;
@@ -309,8 +302,7 @@ pfopen(name)
  * Create a new translation either from a file or from iconv_open()
  */
 LOCAL siconvt_t *
-create_sic(name)
-	char	*name;
+create_sic(char *name)
 {
 	UInt16_t	*cs2uni  = NULL;
 	UInt8_t		**uni2cs = NULL;
@@ -466,8 +458,7 @@ do_reverse:
  * Create a new translation from iconv_open()
  */
 LOCAL siconvt_t *
-create_iconv_sic(name)
-	char	*name;
+create_iconv_sic(char *name)
 {
 	siconvt_t	*sip;
 	iconv_t		to;
@@ -512,8 +503,7 @@ create_iconv_sic(name)
  * if we like to get the same translation again.
  */
 LOCAL siconvt_t *
-dup_iconv_sic(sip)
-	siconvt_t	*sip;
+dup_iconv_sic(siconvt_t sip)
 {
 	siconvt_t	*sp;
 	iconv_t		to;

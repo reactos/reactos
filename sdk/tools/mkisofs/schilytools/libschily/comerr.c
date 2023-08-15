@@ -55,9 +55,7 @@ LOCAL	ex_t	*exfuncs;
  * in other words: call order is the reverse order of registration.
  */
 EXPORT	int
-on_comerr(func, arg)
-	void	(*func) __PR((int, void *));
-	void	*arg;
+on_comerr(void (*func)(int, void*), void *arg)
 {
 	ex_t	*fp;
 
@@ -76,23 +74,12 @@ on_comerr(func, arg)
  * Fetch current errno, print a related message and exit(errno).
  */
 /* VARARGS1 */
-#ifdef	PROTOTYPES
 EXPORT void
 comerr(const char *msg, ...)
-#else
-EXPORT void
-comerr(msg, va_alist)
-	char	*msg;
-	va_dcl
-#endif
 {
 	va_list	args;
 
-#ifdef	PROTOTYPES
 	va_start(args, msg);
-#else
-	va_start(args);
-#endif
 	(void) _comerr(stderr, COMERR_EXIT, 0, geterrno(), msg, args);
 	/* NOTREACHED */
 	va_end(args);
@@ -102,24 +89,12 @@ comerr(msg, va_alist)
  * Fetch current errno, print a related message and exit(exc).
  */
 /* VARARGS2 */
-#ifdef	PROTOTYPES
 EXPORT void
 xcomerr(int exc, const char *msg, ...)
-#else
-EXPORT void
-xcomerr(exc, msg, va_alist)
-	int	exc;
-	char	*msg;
-	va_dcl
-#endif
 {
 	va_list	args;
 
-#ifdef	PROTOTYPES
 	va_start(args, msg);
-#else
-	va_start(args);
-#endif
 	(void) _comerr(stderr, COMERR_EXCODE, exc, geterrno(), msg, args);
 	/* NOTREACHED */
 	va_end(args);
@@ -129,24 +104,12 @@ xcomerr(exc, msg, va_alist)
  * Print a message related to err and exit(err).
  */
 /* VARARGS2 */
-#ifdef	PROTOTYPES
 EXPORT void
 comerrno(int err, const char *msg, ...)
-#else
-EXPORT void
-comerrno(err, msg, va_alist)
-	int	err;
-	char	*msg;
-	va_dcl
-#endif
 {
 	va_list	args;
 
-#ifdef	PROTOTYPES
 	va_start(args, msg);
-#else
-	va_start(args);
-#endif
 	(void) _comerr(stderr, COMERR_EXIT, 0, err, msg, args);
 	/* NOTREACHED */
 	va_end(args);
@@ -156,25 +119,12 @@ comerrno(err, msg, va_alist)
  * Print a message related to err and exit(exc).
  */
 /* VARARGS3 */
-#ifdef	PROTOTYPES
 EXPORT void
 xcomerrno(int exc, int err, const char *msg, ...)
-#else
-EXPORT void
-xcomerrno(exc, err, msg, va_alist)
-	int	exc;
-	int	err;
-	char	*msg;
-	va_dcl
-#endif
 {
 	va_list	args;
 
-#ifdef	PROTOTYPES
 	va_start(args, msg);
-#else
-	va_start(args);
-#endif
 	(void) _comerr(stderr, COMERR_EXCODE, exc, err, msg, args);
 	/* NOTREACHED */
 	va_end(args);
@@ -184,24 +134,13 @@ xcomerrno(exc, err, msg, va_alist)
  * Fetch current errno, print a related message and return(errno).
  */
 /* VARARGS1 */
-#ifdef	PROTOTYPES
 EXPORT int
 errmsg(const char *msg, ...)
-#else
-EXPORT int
-errmsg(msg, va_alist)
-	char	*msg;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	ret;
 
-#ifdef	PROTOTYPES
 	va_start(args, msg);
-#else
-	va_start(args);
-#endif
 	ret = _comerr(stderr, COMERR_RETURN, 0, geterrno(), msg, args);
 	va_end(args);
 	return (ret);
@@ -211,25 +150,13 @@ errmsg(msg, va_alist)
  * Print a message related to err and return(err).
  */
 /* VARARGS2 */
-#ifdef	PROTOTYPES
 EXPORT int
 errmsgno(int err, const char *msg, ...)
-#else
-EXPORT int
-errmsgno(err, msg, va_alist)
-	int	err;
-	char	*msg;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	ret;
 
-#ifdef	PROTOTYPES
 	va_start(args, msg);
-#else
-	va_start(args);
-#endif
 	ret = _comerr(stderr, COMERR_RETURN, 0, err, msg, args);
 	va_end(args);
 	return (ret);
@@ -256,13 +183,7 @@ errmsgno(err, msg, va_alist)
 #define	silent_error(e)		((e) < 0)
 #endif
 EXPORT int
-_comerr(f, exflg, exc, err, msg, args)
-	FILE		*f;	/* FILE * to print to */
-	int		exflg;	/* COMERR_RETURN, COMERR_EXIT, COMERR_EXCODE */
-	int		exc;	/* Use for exit() if exflg & COMERR_EXCODE */
-	int		err;	/* Errno for text, exit(err) if !COMERR_EXIT*/
-	const char	*msg;	/* printf() format */
-	va_list		args;	/* printf() args for format */
+_comerr(FILE *f, int exflg, int exc, int err, const char *msg, va_list args)
 {
 	char	errbuf[20];
 	char	*errnam;
@@ -291,8 +212,7 @@ _comerr(f, exflg, exc, err, msg, args)
 }
 
 LOCAL int
-_ex_clash(exc)
-	int	exc;
+_ex_clash(int exc)
 {
 	int	exmod = exc % 256;
 
@@ -328,8 +248,7 @@ _ex_clash(exc)
  * on_comerr().
  */
 EXPORT void
-comexit(err)
-	int	err;
+comexit(int err)
 {
 	while (exfuncs) {
 		ex_t	*fp;
@@ -349,8 +268,7 @@ comexit(err)
  * return NULL.
  */
 EXPORT char *
-errmsgstr(err)
-	int	err;
+errmsgstr(int err)
 {
 #ifdef	HAVE_STRERROR
 	/*

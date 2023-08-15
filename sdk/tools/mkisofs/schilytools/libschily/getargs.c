@@ -118,10 +118,7 @@ LOCAL	struct ga_props	props_default = { 0, 0, sizeof (struct ga_props) };
 LOCAL	struct ga_props	props_posix = { GAF_POSIX_DEFAULT, 0, sizeof (struct ga_props) };
 
 EXPORT int
-_getarginit(props, size, flags)
-	struct ga_props	*props;
-	size_t		size;
-	UInt32_t	flags;
+_getarginit(struct ga_props *props, size_t size, UInt32_t flags)
 {
 	if (size > sizeof (struct ga_props))
 		return (-1);
@@ -140,8 +137,7 @@ _getarginit(props, size, flags)
 }
 
 LOCAL struct ga_props *
-_getprops(props)
-	struct ga_props	*props;
+_getprops(struct ga_props *props)
 {
 	if (props == GA_NO_PROPS)
 		props = &props_default;
@@ -162,26 +158,13 @@ _getprops(props)
  *	get flags until a non flag type argument is reached (old version)
  */
 /* VARARGS3 */
-#ifdef	PROTOTYPES
 EXPORT int
 getargs(int *pac, char *const **pav, const char *fmt, ...)
-#else
-EXPORT int
-getargs(pac, pav, fmt, va_alist)
-	int	*pac;
-	char	**pav[];
-	char	*fmt;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	ret;
 
-#ifdef	PROTOTYPES
 	va_start(args, fmt);
-#else
-	va_start(args);
-#endif
 	ret = _getargs(pac, pav, (void *)fmt, SETARGS, GA_NO_PROPS, args);
 	va_end(args);
 	return (ret);
@@ -192,27 +175,13 @@ getargs(pac, pav, fmt, va_alist)
  *	get flags until a non flag type argument is reached (list version)
  */
 /* VARARGS4 */
-#ifdef	PROTOTYPES
 EXPORT int
 getlargs(int *pac, char *const **pav, struct ga_props *props, const char *fmt, ...)
-#else
-EXPORT int
-getlargs(pac, pav, props, fmt, va_alist)
-	int		*pac;
-	char		**pav[];
-	struct ga_props	*props;
-	char		*fmt;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	ret;
 
-#ifdef	PROTOTYPES
 	va_start(args, fmt);
-#else
-	va_start(args);
-#endif
 	ret = _getargs(pac, pav, (void *)fmt, SETARGS, props, args);
 	va_end(args);
 	return (ret);
@@ -223,11 +192,7 @@ getlargs(pac, pav, props, fmt, va_alist)
  *	get flags until a non flag type argument is reached (vector version)
  */
 EXPORT int
-getvargs(pac, pav, props, vfmt)
-	int	*pac;
-	char	* const *pav[];
-	struct ga_props	*props;
-	struct ga_flags *vfmt;
+getvargs(int *pac, char * const *pav[], struct ga_props *props, struct ga_flags *vfmt)
 {
 	return (_getargs(pac, pav, vfmt, SETARGS | ARGVECTOR, props, va_dummy));
 }
@@ -237,26 +202,13 @@ getvargs(pac, pav, props, vfmt)
  *	get all flags on the command line, do not stop on files (old version)
  */
 /* VARARGS3 */
-#ifdef	PROTOTYPES
 EXPORT int
 getallargs(int *pac, char *const **pav, const char *fmt, ...)
-#else
-EXPORT int
-getallargs(pac, pav, fmt, va_alist)
-	int	*pac;
-	char	**pav[];
-	char	*fmt;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	ret;
 
-#ifdef	PROTOTYPES
 	va_start(args, fmt);
-#else
-	va_start(args);
-#endif
 	for (; ; (*pac)--, (*pav)++) {
 		if ((ret = _getargs(pac, pav, (void *)fmt, SETARGS, GA_NO_PROPS, args)) < NOTAFLAG)
 			break;
@@ -270,27 +222,13 @@ getallargs(pac, pav, fmt, va_alist)
  *	get all flags on the command line, do not stop on files (list version)
  */
 /* VARARGS4 */
-#ifdef	PROTOTYPES
 EXPORT int
 getlallargs(int *pac, char *const **pav, struct ga_props *props, const char *fmt, ...)
-#else
-EXPORT int
-getlallargs(pac, pav, props, fmt, va_alist)
-	int		*pac;
-	char		**pav[];
-	struct ga_props	*props;
-	char		*fmt;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	ret;
 
-#ifdef	PROTOTYPES
 	va_start(args, fmt);
-#else
-	va_start(args);
-#endif
 	props = _getprops(props);
 	for (; ; (*pac)--, (*pav)++) {
 		if ((ret = _getargs(pac, pav, (void *)fmt, SETARGS, props, args)) < NOTAFLAG)
@@ -311,11 +249,7 @@ getlallargs(pac, pav, props, fmt, va_alist)
  *	get all flags on the command line, do not stop on files (vector version)
  */
 EXPORT int
-getvallargs(pac, pav, props, vfmt)
-	int	*pac;
-	char	* const *pav[];
-	struct ga_props	*props;
-	struct ga_flags *vfmt;
+getvallargs(int *pac, char * const *pav[], struct ga_props *props, struct ga_flags *vfmt)
 {
 	int	ret;
 
@@ -339,10 +273,7 @@ getvallargs(pac, pav, props, vfmt)
  *	getfiles() is a dry run getargs()
  */
 EXPORT int
-getfiles(pac, pav, fmt)
-	int		*pac;
-	char *const	*pav[];
-	const char	*fmt;
+getfiles(int *pac, char * const *pav[], const char *fmt)
 {
 	return (_getargs(pac, pav, (void *)fmt, SCANONLY, GA_NO_PROPS, va_dummy));
 }
@@ -353,11 +284,7 @@ getfiles(pac, pav, fmt)
  *	getlfiles() is a dry run getlargs()
  */
 EXPORT int
-getlfiles(pac, pav, props, fmt)
-	int		*pac;
-	char *const	*pav[];
-	struct ga_props	*props;
-	const char	*fmt;
+getlfiles(int *pac, char *const *pav[], struct ga_props *props, const char *fmt)
 {
 	return (_getargs(pac, pav, (void *)fmt, SCANONLY, props, va_dummy));
 }
@@ -368,11 +295,7 @@ getlfiles(pac, pav, props, fmt)
  *	getvfiles() is a dry run getvargs()
  */
 EXPORT int
-getvfiles(pac, pav, props, vfmt)
-	int		*pac;
-	char *const	*pav[];
-	struct ga_props	*props;
-	struct ga_flags	*vfmt;
+getvfiles(int *pac, char *const *pav[], struct ga_props *props, struct ga_flags *vfmt)
 {
 	return (_getargs(pac, pav, vfmt, SCANONLY | ARGVECTOR, props, va_dummy));
 }
@@ -392,13 +315,7 @@ getvfiles(pac, pav, props, vfmt)
  */
 /* LOCAL int */
 EXPORT int
-_getargs(pac, pav, vfmt, flags, props, args)
-	register int		*pac;
-	register char	*const	**pav;
-		void		*vfmt;
-		int		flags;
-		struct ga_props	*props;
-		va_list		args;
+_getargs(int *pac, char *const **pav, void *vfmt, int flags, struct ga_props *props, va_list args)
 {
 	const	char	*argp;
 		int	ret;
@@ -430,11 +347,7 @@ _getargs(pac, pav, vfmt, flags, props, args)
  * check if *pargp is a file type argument
  */
 LOCAL int
-dofile(pac, pav, pargp, props)
-	register int		*pac;
-	register char *const	**pav;
-		const char	**pargp;
-		struct ga_props	*props;
+dofile(int *pac, char * const **pav, const char **pargp, struct ga_props *props)
 {
 	register const char	*argp = *pargp;
 
@@ -499,13 +412,7 @@ dofile(pac, pav, pargp, props)
  *	va_list may be a dummy argument.
  */
 LOCAL int
-doflag(pac, pav, argp, vfmt, flags, oargs)
-		int		*pac;
-		char	*const	**pav;
-	register const char	*argp;
-		void		*vfmt;
-		int		flags;
-		va_list		oargs;
+doflag(int *pac, char * const **pav, const char *argp, void *vfmt, int flags, va_list oargs)
 {
 	register const char	*fmt = (const char *)vfmt;
 	struct ga_flags		*flagp = vfmt;
@@ -1032,13 +939,7 @@ typedef struct {
 } sflags;
 
 LOCAL int
-dosflags(argp, vfmt, pac, pav, flags, oargs)
-	register const char	*argp;
-		void		*vfmt;
-		int		*pac;
-		char	*const	**pav;
-		int		flags;
-		va_list		oargs;
+dosflags(const char *argp, void *vfmt, int *pac, char * const **pav, int flags, va_list oargs)
 {
 	register const char	*fmt = (const char *)vfmt;
 	struct ga_flags		*flagp = vfmt;
@@ -1294,8 +1195,7 @@ again:
  *	Otherwise raise the getarg_bad_format condition.
  */
 LOCAL int
-checkfmt(fmt)
-	const char	*fmt;
+checkfmt(const char *fmt)
 {
 	char	c;
 
@@ -1318,8 +1218,7 @@ checkfmt(fmt)
  *	contains a valid flag identifier.
  */
 LOCAL int
-checkeql(str)
-	register const char *str;
+checkeql(const char *str)
 {
 	register unsigned char c;
 
@@ -1332,8 +1231,7 @@ checkeql(str)
 }
 
 EXPORT char *
-getargerror(err)
-	int	err;
+getargerror(int err)
 {
 	if (err < RETMIN || err > RETMAX)
 		return ("Illegal arg error");

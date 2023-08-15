@@ -65,11 +65,11 @@ LOCAL	char 	*strbs2s		__PR((char *s));
  * Assume that the file is ... bin/../name.
  */
 EXPORT char *
-searchfileinpath(name, mode, file_mode, path)
-	char	*name;			/* Find <execname>/../name in PATH	*/
-	int	mode;			/* Mode for access() e.g. X_OK		*/
-	int	file_mode;		/* How to check files			*/
-	char	*path;			/* PATH to use if not NULL		*/
+searchfileinpath(char *name, int mode, int file_mode, char *path)
+	/* name			Find <execname>/../name in PATH	*/
+	/* mode			Mode for access() e.g. X_OK		*/
+	/* file_mode	How to check files */
+	/* path			PATH to use if not NULL */
 {
 	char	pbuf[NAMEMAX];
 	char	*nbuf = pbuf;
@@ -183,14 +183,14 @@ searchfileinpath(name, mode, file_mode, path)
 }
 
 LOCAL char *
-searchonefile(name, mode, plain_file, xn, nbuf, np, ep)
-	register char	*name;		/* Find <execname>/../name in PATH	*/
-		int	mode;		/* Mode for access() e.g. X_OK		*/
-		BOOL	plain_file;	/* Whether to check only plain files	*/
-		char	*xn;		/* The basename of the executable	*/
-	register char	*nbuf;		/* Name buffer base			*/
-	register char	*np;		/* Where to append name to path		*/
-	register char	*ep;		/* Point to last valid char in nbuf	*/
+searchonefile(char *name, int mode, BOOL plain_file, char *xn, char *nbuf, char *np, char*ep)
+	/* name				Find <execname>/../name in PATH	*/
+	/* mode				Mode for access() e.g. X_OK */
+	/* plain_file		Whether to check only plain files */
+	/* xn				The basename of the executable */
+	/* nbuf				Name buffer base */
+	/* np				Where to append name to path */
+	/* ep				Point to last valid char in nbuf */
 {
 	struct stat	sb;
 
@@ -228,8 +228,7 @@ searchonefile(name, mode, plain_file, xn, nbuf, np, ep)
 
 #ifdef __DJGPP__
 LOCAL char *
-strbs2s(s)
-	char	*s;
+strbs2s(char *s)
 {
 	char	*tmp = s;
 

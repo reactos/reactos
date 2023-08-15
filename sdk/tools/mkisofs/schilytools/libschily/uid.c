@@ -24,7 +24,7 @@
 #ifndef	HAVE_GETUID
 
 EXPORT uid_t
-getuid()
+getuid(void)
 {
 	return (0);
 }
@@ -34,7 +34,7 @@ getuid()
 #ifndef	HAVE_GETEUID
 
 EXPORT uid_t
-geteuid()
+geteuid(void)
 {
 	return (0);
 }
@@ -44,8 +44,7 @@ geteuid()
 #ifndef	HAVE_SETUID
 
 EXPORT int
-setuid(uid)
-	uid_t	uid;
+setuid(uid_t uid)
 {
 	return (0);
 }
@@ -55,8 +54,7 @@ setuid(uid)
 #ifndef	HAVE_SETEUID
 
 EXPORT int
-seteuid(uid)
-	uid_t	uid;
+seteuid(uid_t uid)
 {
 	return (0);
 }

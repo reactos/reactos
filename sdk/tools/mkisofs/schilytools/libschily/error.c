@@ -38,24 +38,13 @@
 #pragma	weak error =	js_error
 #else
 /* VARARGS1 */
-#ifdef	PROTOTYPES
 EXPORT int
 error(const char *fmt, ...)
-#else
-EXPORT int
-error(fmt, va_alist)
-	char	*fmt;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	ret;
 
-#ifdef	PROTOTYPES
 	va_start(args, fmt);
-#else
-	va_start(args);
-#endif
 	ret = js_fprintf(stderr, "%r", fmt, args);
 	va_end(args);
 	return (ret);
@@ -64,24 +53,13 @@ error(fmt, va_alist)
 #endif	/* NO_WEAK_SYMBOLS */
 
 /* VARARGS1 */
-#ifdef	PROTOTYPES
 EXPORT int
 js_error(const char *fmt, ...)
-#else
-EXPORT int
-js_error(fmt, va_alist)
-	char	*fmt;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	ret;
 
-#ifdef	PROTOTYPES
 	va_start(args, fmt);
-#else
-	va_start(args);
-#endif
 	ret = js_fprintf(stderr, "%r", fmt, args);
 	va_end(args);
 	return (ret);

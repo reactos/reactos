@@ -56,8 +56,7 @@ LOCAL int		stream_finished = 0;
  * Compute the size of the file
  */
 LOCAL int
-size_str_file(starting_extent)
-	UInt32_t	starting_extent;
+size_str_file(UInt32_t starting_extent)
 {
 	int	n;
 extern	int	dopad;
@@ -91,8 +90,7 @@ extern	int	dopad;
  * The size of the directory record - one sector
  */
 LOCAL int
-size_str_dir(starting_extent)
-	UInt32_t	starting_extent;
+size_str_dir(UInt32_t starting_extent)
 {
 	root->extent = last_extent;
 	last_extent += 1;
@@ -103,8 +101,7 @@ size_str_dir(starting_extent)
  * The size of the path tables - two sectors
  */
 LOCAL int
-size_str_path(starting_extent)
-	UInt32_t	starting_extent;
+size_str_path(UInt32_t starting_extent)
 {
 	path_table[0] = starting_extent;
 	path_table[1] = 0;
@@ -142,8 +139,7 @@ gen_str_path()
  * Write the file content
  */
 LOCAL int
-write_str_file(outfile)
-	FILE	*outfile;
+write_str_file(FILE *outfile)
 {
 	unsigned int	idx = 0;
 	unsigned int	iso_blocks;
@@ -186,8 +182,7 @@ write_str_file(outfile)
  * Generate and write the directory record data
  */
 LOCAL int
-write_str_dir(outfile)
-	FILE	*outfile;
+write_str_dir(FILE *outfile)
 {
 	int	reclen;
 	char	*buf;
@@ -239,8 +234,7 @@ write_str_dir(outfile)
  * Generate the path table data
  */
 LOCAL int
-write_str_path(outfile)
-	FILE	*outfile;
+write_str_path(FILE *outfile)
 {
 	xfwrite(l_path, SECTOR_SIZE, 1, outfile, 0, FALSE);
 	xfwrite(m_path, SECTOR_SIZE, 1, outfile, 0, FALSE);

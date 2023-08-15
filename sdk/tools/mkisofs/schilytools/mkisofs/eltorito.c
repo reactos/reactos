@@ -64,8 +64,7 @@ LOCAL	char				*bootcat_path; /* name of bootcatalog */
  * Make sure any existing boot catalog is excluded
  */
 EXPORT void
-init_boot_catalog(path)
-	const char	*path;
+init_boot_catalog(const char *path)
 {
 #ifdef	SORTING
 	struct eltorito_boot_entry_info	*cbe;
@@ -250,8 +249,7 @@ insert_boot_cat()
 }
 
 LOCAL void
-get_torito_desc(boot_desc)
-	struct eltorito_boot_descriptor	*boot_desc;
+get_torito_desc(struct eltorito_boot_descriptor *boot_desc)
 {
 	int			checksum;
 	unsigned char		*checksum_ptr;
@@ -387,9 +385,7 @@ get_torito_desc(boot_desc)
 } /* get_torito_desc(... */
 
 LOCAL void
-fill_boot_shdr(boot_shdr_entry, arch)
-	struct eltorito_sectionheader_entry	*boot_shdr_entry;
-	int					arch;
+fill_boot_shdr(struct eltorito_sectionheader_entry *boot_shdr_entry, int arch)
 {
 	memset(boot_shdr_entry, 0, sizeof (struct eltorito_sectionheader_entry));
 	boot_shdr_entry->header_id[0] = EL_TORITO_SHDR_ID_SHDR;
@@ -397,9 +393,7 @@ fill_boot_shdr(boot_shdr_entry, arch)
 }
 
 LOCAL void
-fill_boot_desc(boot_desc_entry, boot_entry)
-	struct eltorito_defaultboot_entry *boot_desc_entry;
-	struct eltorito_boot_entry_info *boot_entry;
+fill_boot_desc(struct eltorito_defaultboot_entry *boot_desc_entry, struct eltorito_boot_entry_info *boot_entry)
 {
 	struct directory_entry	*de;	/* Boot file */
 	int			bootmbr;
@@ -626,7 +620,7 @@ fill_boot_desc(boot_desc_entry, boot_entry)
 } /* fill_boot_desc(... */
 
 EXPORT void
-get_boot_entry()
+get_boot_entry(void)
 {
 	if (current_boot_entry)
 		return;
@@ -647,7 +641,7 @@ get_boot_entry()
 }
 
 EXPORT int
-new_boot_entry()
+new_boot_entry(void)
 {
 	current_boot_entry = NULL;
 	return (1);
@@ -657,9 +651,7 @@ new_boot_entry()
  * Exit with a boot no entry message.
  */
 EXPORT void
-ex_boot_enoent(msg, pname)
-	char	*msg;
-	char	*pname;
+ex_boot_enoent(char *msg, char *pname)
 {
 	comerrno(EX_BAD, _("Uh oh, I cant find the boot %s '%s' inside the target tree.\n"), msg, pname);
 	/* NOTREACHED */
@@ -669,8 +661,7 @@ ex_boot_enoent(msg, pname)
  * Function to write the EVD for the disc.
  */
 LOCAL int
-tvd_write(outfile)
-	FILE	*outfile;
+tvd_write(FILE *outfile)
 {
 	/* check the boot image is not NULL */
 	if (!boot_image) {

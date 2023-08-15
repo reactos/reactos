@@ -31,7 +31,7 @@
 #endif
 
 EXPORT int
-geterrno()
+geterrno(void)
 
 {
 	return (errno);

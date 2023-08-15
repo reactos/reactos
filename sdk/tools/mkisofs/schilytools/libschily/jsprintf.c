@@ -39,49 +39,26 @@
  */
 
 /* VARARGS1 */
-#ifdef	PROTOTYPES
 EXPORT int
 js_printf(const char *form, ...)
-#else
-EXPORT int
-js_printf(form, va_alist)
-	char	*form;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	ret;
 
-#ifdef	PROTOTYPES
 	va_start(args, form);
-#else
-	va_start(args);
-#endif
 	ret = fprformat(stdout, form, args);
 	va_end(args);
 	return (ret);
 }
 
 /* VARARGS2 */
-#ifdef	PROTOTYPES
 EXPORT int
 js_fprintf(FILE *file, const char *form, ...)
-#else
-EXPORT int
-js_fprintf(file, form, va_alist)
-	FILE	*file;
-	char	*form;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	ret;
 
-#ifdef	PROTOTYPES
 	va_start(args, form);
-#else
-	va_start(args);
-#endif
 	ret = fprformat(file, form, args);
 	va_end(args);
 	return (ret);
@@ -108,8 +85,7 @@ EXPORT	int	js_fprintf	__PR((FILE *, const char *, ...));
 EXPORT	int	js_printf	__PR((const char *, ...));
 
 LOCAL void
-_bflush(bp)
-	register BUF	bp;
+_bflush(BUF bp)
 {
 	bp->count += bp->ptr - bp->buf;
 	if (filewrite(bp->f, bp->buf, bp->ptr - bp->buf) < 0)
@@ -118,15 +94,8 @@ _bflush(bp)
 	bp->cnt = BFSIZ;
 }
 
-#ifdef	PROTOTYPES
 LOCAL void
 _bput(char c, void *l)
-#else
-LOCAL void
-_bput(c, l)
-		char	c;
-		void	*l;
-#endif
 {
 	register BUF	bp = (BUF)l;
 
@@ -136,15 +105,8 @@ _bput(c, l)
 }
 
 /* VARARGS1 */
-#ifdef	PROTOTYPES
 EXPORT int
 js_printf(const char *form, ...)
-#else
-EXPORT int
-js_printf(form, va_alist)
-	char	*form;
-	va_dcl
-#endif
 {
 	va_list	args;
 	_BUF	bb;
@@ -153,11 +115,7 @@ js_printf(form, va_alist)
 	bb.cnt = BFSIZ;
 	bb.count = 0;
 	bb.f = stdout;
-#ifdef	PROTOTYPES
 	va_start(args, form);
-#else
-	va_start(args);
-#endif
 	format(_bput, &bb, form, args);
 	va_end(args);
 	if (bb.cnt < BFSIZ)
@@ -166,16 +124,8 @@ js_printf(form, va_alist)
 }
 
 /* VARARGS2 */
-#ifdef	PROTOTYPES
 EXPORT int
 js_fprintf(FILE *file, const char *form, ...)
-#else
-EXPORT int
-js_fprintf(file, form, va_alist)
-	FILE	*file;
-	char	*form;
-	va_dcl
-#endif
 {
 	va_list	args;
 	_BUF	bb;
@@ -184,11 +134,7 @@ js_fprintf(file, form, va_alist)
 	bb.cnt = BFSIZ;
 	bb.count = 0;
 	bb.f = file;
-#ifdef	PROTOTYPES
 	va_start(args, form);
-#else
-	va_start(args);
-#endif
 	format(_bput, &bb, form, args);
 	va_end(args);
 	if (bb.cnt < BFSIZ)

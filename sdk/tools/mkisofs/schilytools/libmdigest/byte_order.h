@@ -140,8 +140,7 @@ static inline UInt32_t bswap_32(UInt32_t x) {
 #elif !defined(__STRICT_ANSI__)
 /* general bswap_32 definition */
 static inline UInt32_t bswap_32 __PR((UInt32_t x));
-static inline UInt32_t bswap_32(x)
-	UInt32_t	x;
+static inline UInt32_t bswap_32(UInt32_t x)
 {
 	x = ((x << 8) & 0xFF00FF00) | ((x >> 8) & 0x00FF00FF);
 	return ((x >> 16) | (x << 16));
@@ -157,8 +156,7 @@ static inline UInt32_t bswap_32(x)
 # define bswap_64(x) _byteswap_uint64((__int64)x)
 #elif !defined(__STRICT_ANSI__)
 static inline UInt64_t bswap_64 __PR((UInt64_t x));
-static inline UInt64_t bswap_64(x)
-	UInt64_t	x;
+static inline UInt64_t bswap_64(UInt64_t x)
 {
 	union {
 		UInt64_t ll;

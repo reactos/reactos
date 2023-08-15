@@ -28,16 +28,8 @@
 /*
  * fillbytes(to, cnt, val) is the same as memset(to, val, cnt)
  */
-#ifdef	PROTOTYPES
 EXPORT char *
 fillbytes(void *tov, ssize_t cnt, char val)
-#else
-EXPORT char *
-fillbytes(tov, cnt, val)
-	void	*tov;
-	ssize_t	cnt;
-	char	val;
-#endif
 {
 	register char	*to = (char *)tov;
 	register ssize_t n;

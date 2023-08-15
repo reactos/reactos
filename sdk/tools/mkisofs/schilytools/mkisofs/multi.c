@@ -110,16 +110,8 @@ char	er_id[256];
  * Anyways, this allows the use of a scsi-generics type of interface on
  * Solaris.
  */
-#ifdef	PROTOTYPES
 EXPORT int
 readsecs(UInt32_t startsecno, void *buffer, int sectorcount)
-#else
-EXPORT int
-readsecs(startsecno, buffer, sectorcount)
-	UInt32_t	startsecno;
-	void		*buffer;
-	int		sectorcount;
-#endif
 {
 	int		f = fileno(in_image);
 
@@ -136,10 +128,7 @@ readsecs(startsecno, buffer, sectorcount)
 #endif
 
 LOCAL void
-printasc(txt, p, len)
-	char		*txt;
-	unsigned char	*p;
-	int		len;
+printasc(char *txt, unsigned char *p, int len)
 {
 	int		i;
 
@@ -154,10 +143,7 @@ printasc(txt, p, len)
 }
 
 LOCAL void
-prbytes(txt, p, len)
-		char	*txt;
-	register Uchar	*p;
-	register int	len;
+prbytes(char *txt, Uchar *p, int len)
 {
 	error("%s", txt);
 	while (--len >= 0)
@@ -166,10 +152,7 @@ prbytes(txt, p, len)
 }
 
 unsigned char *
-parse_xa(pnt, lenp, dpnt)
-	unsigned char	*pnt;
-	int		*lenp;
-	struct directory_entry *dpnt;
+parse_xa(unsigned char *pnt, int *lenp, struct directory_entry *dpnt)
 {
 	struct iso_xa_dir_record *xadp;
 	int		len = *lenp;
@@ -222,10 +205,7 @@ static	int		did_xa = 0;
 }
 
 LOCAL BOOL
-find_rr(idr, pntp, lenp)
-	struct iso_directory_record *idr;
-	Uchar		**pntp;
-	int		*lenp;
+find_rr(struct iso_directory_record *idr, Uchar **pntp, int *lenp)
 {
 	struct iso_xa_dir_record *xadp;
 	int		len;
@@ -261,10 +241,7 @@ find_rr(idr, pntp, lenp)
 }
 
 LOCAL int
-parse_rrflags(pnt, len, cont_flag)
-	Uchar	*pnt;
-	int	len;
-	int	cont_flag;
+parse_rrflags(Uchar *pnt, int len, int cont_flag)
 {
 	int		ncount;
 	UInt32_t	cont_extent;
@@ -350,8 +327,7 @@ parse_rrflags(pnt, len, cont_flag)
 }
 
 int
-rr_flags(idr)
-	struct iso_directory_record *idr;
+rr_flags(struct iso_directory_record *idr)
 {
 	int		len;
 	unsigned char	*pnt;
@@ -367,10 +343,7 @@ rr_flags(idr)
  * Parse the RR attributes so we can find the file name.
  */
 LOCAL int
-parse_rr(pnt, len, dpnt)
-	unsigned char	*pnt;
-	int		len;
-	struct directory_entry *dpnt;
+parse_rr(unsigned char *pnt, int len, struct directory_entry *dpnt)
 {
 	UInt32_t	cont_extent;
 	UInt32_t	cont_offset;
@@ -450,11 +423,7 @@ parse_rr(pnt, len, dpnt)
  * Returns 0 if the two files differ
  */
 LOCAL int
-check_rr_dates(dpnt, current, statbuf, lstatbuf)
-	struct directory_entry *dpnt;
-	struct directory_entry *current;
-	struct stat	*statbuf;
-	struct stat	*lstatbuf;
+check_rr_dates(struct directory_entry *dpnt, struct directory_entry *current, struct stat *statbuf, struct stat *lstatbuf)
 {
 	UInt32_t	cont_extent;
 	UInt32_t	cont_offset;
@@ -564,10 +533,7 @@ check_rr_dates(dpnt, current, statbuf, lstatbuf)
 }
 
 LOCAL BOOL
-valid_iso_directory(idr, idr_off, space_left)
-	struct iso_directory_record	*idr;
-	int				idr_off;
-	size_t				space_left;
+valid_iso_directory(struct iso_directory_record *idr, int idr_off, size_t space_left)
 {
 	size_t	idr_length	= idr->length[0] & 0xFF;
 	size_t	idr_ext_length	= idr->ext_attr_length[0] & 0xFF;
@@ -661,9 +627,7 @@ valid_iso_directory(idr, idr_off, space_left)
 }
 
 LOCAL struct directory_entry **
-read_merging_directory(mrootp, nentp)
-	struct iso_directory_record *mrootp;
-	int		*nentp;
+read_merging_directory(struct iso_directory_record *mrootp, int *nentp)
 {
 	unsigned char	*cpnt;
 	unsigned char	*cpnt1;
@@ -1095,9 +1059,7 @@ read_merging_directory(mrootp, nentp)
  * Free any associated data related to the structures.
  */
 LOCAL int
-free_mdinfo(ptr, len)
-	struct directory_entry **ptr;
-	int		len;
+free_mdinfo(struct directory_entry **ptr, int len)
 {
 	int		i;
 	struct directory_entry **p;
@@ -1120,8 +1082,7 @@ free_mdinfo(ptr, len)
 }
 
 LOCAL void
-free_directory_entry(dirp)
-	struct directory_entry *dirp;
+free_directory_entry(struct directory_entry *dirp)
 {
 	if (dirp->name != NULL)
 		free(dirp->name);
@@ -1144,13 +1105,7 @@ free_directory_entry(dirp)
  * over so we don't bother to write it out to the new session.
  */
 int
-check_prev_session(ptr, len, curr_entry, statbuf, lstatbuf, odpnt)
-	struct directory_entry	**ptr;
-	int		len;
-	struct directory_entry *curr_entry;
-	struct stat	*statbuf;
-	struct stat	*lstatbuf;
-	struct directory_entry **odpnt;
+check_prev_session(struct directory_entry **ptr, int len, struct directory_entry *curr_entry, struct stat *statbuf, struct stat *lstatbuf, struct directory_entry **odpnt)
 {
 	int		i;
 	int		rr;
@@ -1263,8 +1218,7 @@ found_it:
  * but may be 3 or more in case of multi extent files.
  */
 LOCAL int
-iso_dir_ents(de)
-	struct directory_entry	*de;
+iso_dir_ents(struct directory_entry *de)
 {
 	struct directory_entry	*de2;
 	int	ret = 0;
@@ -1290,9 +1244,7 @@ iso_dir_ents(de)
  * we reuse the data extents from the file in the old session.
  */
 LOCAL void
-copy_mult_extent(se1, se2)
-	struct directory_entry	*se1;
-	struct directory_entry	*se2;
+copy_mult_extent(struct directory_entry *se1, struct directory_entry *se2)
 {
 	struct directory_entry	*curr_entry = se1;
 	int			len1;
@@ -1362,8 +1314,7 @@ copy_mult_extent(se1, se2)
  * open_merge_image:  Open an existing image.
  */
 int
-open_merge_image(path)
-	char	*path;
+open_merge_image(char *path)
 {
 #ifndef	USE_SCG
 	in_image = fopen(path, "rb");
@@ -1384,7 +1335,7 @@ open_merge_image(path)
  * close_merge_image:  Close an existing image.
  */
 int
-close_merge_image()
+close_merge_image(void)
 {
 #ifdef	USE_SCG
 	return (scsidev_close());
@@ -1398,8 +1349,7 @@ close_merge_image()
  * to the root directory for this image.
  */
 struct iso_directory_record *
-merge_isofs(path)
-	char	*path;
+merge_isofs(char *path)
 {
 	char		buffer[SECTOR_SIZE];
 	int		file_addr;
@@ -1487,10 +1437,7 @@ merge_isofs(path)
 }
 
 LOCAL void
-merge_remaining_entries(this_dir, pnt, n_orig)
-	struct directory *this_dir;
-	struct directory_entry **pnt;
-	int		n_orig;
+merge_remaining_entries(struct directory *this_dir, struct directory_entry **pnt, int n_orig)
 {
 	int		i;
 	struct directory_entry *s_entry;
@@ -1619,9 +1566,7 @@ merge_remaining_entries(this_dir, pnt, n_orig)
  * location.  FIXME(eric).
  */
 LOCAL int
-merge_old_directory_into_tree(dpnt, parent)
-	struct directory_entry	*dpnt;
-	struct directory *parent;
+merge_old_directory_into_tree(struct directory_entry *dpnt, struct directory *parent)
 {
 	struct directory_entry **contents = NULL;
 	int		i;
@@ -1748,8 +1693,7 @@ merge_old_directory_into_tree(dpnt, parent)
 char	*cdrecord_data = NULL;
 
 int
-get_session_start(file_addr)
-	int		*file_addr;
+get_session_start(int *file_addr)
 {
 	char		*pnt;
 
@@ -1808,11 +1752,7 @@ get_session_start(file_addr)
  * directory entries, so that we can determine how large each directory is.
  */
 int
-merge_previous_session(this_dir, mrootp, reloc_root, reloc_old_root)
-	struct directory *this_dir;
-	struct iso_directory_record *mrootp;
-	char *reloc_root;
-	char *reloc_old_root;
+merge_previous_session(struct directory *this_dir, struct iso_directory_record *mrootp, char *reloc_root, char *reloc_old_root)
 {
 	struct directory_entry **orig_contents = NULL;
 	struct directory_entry *odpnt = NULL;
@@ -2067,8 +2007,7 @@ static struct dir_extent_link	*cl_dirs = NULL;
 static struct dir_extent_link	*re_dirs = NULL;
 
 LOCAL void
-check_rr_relocation(de)
-	struct directory_entry *de;
+check_rr_relocation(struct directory_entry *de)
 {
 	unsigned char	sector[SECTOR_SIZE];
 	unsigned char	*pnt = de->rr_attributes;
@@ -2128,7 +2067,7 @@ check_rr_relocation(de)
 }
 
 void
-match_cl_re_entries()
+match_cl_re_entries(void)
 {
 	struct dir_extent_link *re = re_dirs;
 
@@ -2164,7 +2103,7 @@ match_cl_re_entries()
 }
 
 void
-finish_cl_pl_for_prev_session()
+finish_cl_pl_for_prev_session(void)
 {
 	struct dir_extent_link *re = re_dirs;
 

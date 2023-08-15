@@ -24,7 +24,7 @@
 #ifndef	HAVE_GETGID
 
 EXPORT gid_t
-getgid()
+getgid(void)
 {
 	return (0);
 }
@@ -34,7 +34,7 @@ getgid()
 #ifndef	HAVE_GETEGID
 
 EXPORT gid_t
-getegid()
+getegid(void)
 {
 	return (0);
 }
@@ -44,8 +44,7 @@ getegid()
 #ifndef	HAVE_SETGID
 
 EXPORT int
-setgid(gid)
-	gid_t	gid;
+setgid(gid_t gid)
 {
 	return (0);
 }
@@ -55,8 +54,7 @@ setgid(gid)
 #ifndef	HAVE_SETEGID
 
 EXPORT int
-setegid(gid)
-	gid_t	gid;
+setegid(gid_t gid)
 {
 	return (0);
 }

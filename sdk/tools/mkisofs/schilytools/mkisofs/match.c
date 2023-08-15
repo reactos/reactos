@@ -59,9 +59,7 @@ typedef struct sort_match sort_match;
 static sort_match	*s_mats;
 
 EXPORT int
-add_sort_match(fn, val)
-	char	*fn;
-	int	val;
+add_sort_match(char *fn, int val)
 {
 	sort_match *s_mat;
 
@@ -89,12 +87,7 @@ add_sort_match(fn, val)
 }
 
 EXPORT int
-add_sort_list(file, valp, pac, pav, opt)
-	const char	*file;
-	void		*valp;
-	int		*pac;
-	char	*const	**pav;
-	const char	*opt;
+add_sort_list(const char *file, void *valp, int *pac, char * const **pav, const char *opt)
 {
 	FILE	*fp;
 	char	name[4096];
@@ -141,9 +134,7 @@ extern	int	do_sort;
 }
 
 EXPORT int
-sort_matches(fn, val)
-	char	*fn;
-	int	val;
+sort_matches(char *fn, int val)
 {
 	register sort_match	*s_mat;
 		int		flags = FNM_PATHNAME;
@@ -160,7 +151,7 @@ sort_matches(fn, val)
 }
 
 EXPORT void
-del_sort()
+del_sort(void)
 {
 	register sort_match * s_mat, *s_mat1;
 
@@ -181,9 +172,7 @@ del_sort()
 
 
 EXPORT int
-gen_add_match(fn, n)
-	char	*fn;
-	int	n;
+gen_add_match(char *fn, int n)
 {
 	match	*mat;
 
@@ -211,8 +200,7 @@ gen_add_match(fn, n)
 }
 
 EXPORT int
-add_match(fn)
-	char	*fn;
+add_match(char *fn)
 {
 	int	ret = gen_add_match(fn, EXCLUDE);
 
@@ -222,8 +210,7 @@ add_match(fn)
 }
 
 EXPORT int
-i_add_match(fn)
-	char	*fn;
+i_add_match(char *fn)
 {
 	int	ret = gen_add_match(fn, I_HIDE);
 
@@ -233,8 +220,7 @@ i_add_match(fn)
 }
 
 EXPORT int
-h_add_match(fn)
-	char	*fn;
+h_add_match(char *fn)
 {
 	int	ret = gen_add_match(fn, H_HIDE);
 
@@ -245,8 +231,7 @@ h_add_match(fn)
 
 #ifdef	APPLE_HYB
 EXPORT int
-hfs_add_match(fn)
-	char	*fn;
+hfs_add_match(char *fn)
 {
 	int	ret = gen_add_match(fn, HFS_HIDE);
 
@@ -257,8 +242,7 @@ hfs_add_match(fn)
 #endif	/* APPLE_HYB */
 
 EXPORT int
-j_add_match(fn)
-	char	*fn;
+j_add_match(char *fn)
 {
 	int	ret = gen_add_match(fn, J_HIDE);
 
@@ -268,8 +252,7 @@ j_add_match(fn)
 }
 
 EXPORT int
-u_add_match(fn)
-	char	*fn;
+u_add_match(char *fn)
 {
 	int	ret = gen_add_match(fn, U_HIDE);
 
@@ -279,9 +262,7 @@ u_add_match(fn)
 }
 
 EXPORT void
-gen_add_list(file, n)
-	char	*file;
-	int	n;
+gen_add_list(char *file, int n)
 {
 	FILE	*fp;
 	char	name[4096];
@@ -309,40 +290,35 @@ gen_add_list(file, n)
 }
 
 EXPORT int
-add_list(fn)
-	char	*fn;
+add_list(char *fn)
 {
 	gen_add_list(fn, EXCLUDE);
 	return (1);
 }
 
 EXPORT int
-i_add_list(fn)
-	char	*fn;
+i_add_list(char *fn)
 {
 	gen_add_list(fn, I_HIDE);
 	return (1);
 }
 
 EXPORT int
-h_add_list(fn)
-	char	*fn;
+h_add_list(char *fn)
 {
 	gen_add_list(fn, H_HIDE);
 	return (1);
 }
 
 EXPORT int
-j_add_list(fn)
-	char	*fn;
+j_add_list(char *fn)
 {
 	gen_add_list(fn, J_HIDE);
 	return (1);
 }
 
 EXPORT int
-u_add_list(fn)
-	char	*fn;
+u_add_list(char *fn)
 {
 	gen_add_list(fn, U_HIDE);
 	return (1);
@@ -350,8 +326,7 @@ u_add_list(fn)
 
 #ifdef	APPLE_HYB
 EXPORT int
-hfs_add_list(fn)
-	char	*fn;
+hfs_add_list(char *fn)
 {
 	gen_add_list(fn, HFS_HIDE);
 	return (1);
@@ -359,9 +334,7 @@ hfs_add_list(fn)
 #endif	/* APPLE_HYB */
 
 EXPORT int
-gen_matches(fn, n)
-	char	*fn;
-	int	n;
+gen_matches(char *fn, int n)
 {
 	register match * mat;
 		int		flags = FNM_PATHNAME;
@@ -382,8 +355,7 @@ gen_matches(fn, n)
 }
 
 EXPORT int
-gen_ishidden(n)
-	int	n;
+gen_ishidden(int n)
 {
 	if (n >= MAX_MAT)
 		return (0);
@@ -392,8 +364,7 @@ gen_ishidden(n)
 }
 
 EXPORT void
-gen_del_match(n)
-	int	n;
+gen_del_match(int n)
 {
 	register match	*mat;
 	register match 	*mat1;

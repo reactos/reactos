@@ -206,13 +206,7 @@ out:							\
  */
 #if !defined(__WIDE_CHAR) && !defined(__MB_CHAR)
 EXPORT CHAR
-*opatmatch(pat, aux, str, soff, slen, alt)
-	const PCHAR	*pat;
-	const int	*aux;
-	const CHAR	*str;
-	int		soff;
-	int		slen;
-	int		alt;
+*opatmatch(const PCHAR *pat, const int *aux, const CHAR *str, int soff, int slen, int alt)
 {
 	int		state[MAXPAT];
 
@@ -227,14 +221,7 @@ EXPORT CHAR
  *	against the compiled pattern.
  */
 EXPORT CHAR *
-patmatch(pat, aux, str, soff, slen, alt, state)
-	const PCHAR	*pat;
-	const int	*aux;
-	const CHAR	*str;
-	int		soff;
-	int		slen;
-	int		alt;
-	int		state[];
+patmatch(const PCHAR *pat, const int *aux, const CHAR *str, int soff, int slen, int alt, int state[])
 {
 	register int	*sp;
 	register int	*n;
@@ -425,8 +412,7 @@ LOCAL	int	join	 __PR((int *, int, int));
  *	get the next item from pattern
  */
 LOCAL void
-nextitem(ap)
-	arg_t	*ap;
+nextitem(arg_t *ap)
 {
 	if (ap->Ch == QUOTE)
 		rch(ap);
@@ -437,8 +423,7 @@ nextitem(ap)
  *	parse a primary
  */
 LOCAL int
-prim(ap)
-	arg_t	*ap;
+prim(arg_t *ap)
 {
 	int	a  = ap->patp;
 	int	op = ap->Ch;
@@ -509,9 +494,7 @@ prim(ap)
  *	parse an expression (a sequence of primaries)
  */
 LOCAL int
-expr(ap, altp)
-	arg_t	*ap;
-	int	*altp;
+expr(arg_t *ap, int *altp)
 {
 	int	exits = ENDSTATE;
 	int	a;
@@ -539,10 +522,7 @@ expr(ap, altp)
  *	set all exits in a list to a specified value
  */
 LOCAL void
-setexits(aux, list, val)
-	int	*aux;
-	int	list;
-	int	val;
+setexits(int *aux, int list, int val)
 {
 	int	a;
 
@@ -557,10 +537,7 @@ setexits(aux, list, val)
  *	concatenate two lists
  */
 LOCAL int
-join(aux, a, b)
-	int	*aux;
-	int	a;
-	int	b;
+join(int *aux, int a, int b)
 {
 	int	t;
 
@@ -581,10 +558,7 @@ join(aux, a, b)
  *	Error is indicated by return of 0.
  */
 EXPORT int
-patcompile(pat, len, aux)
-	const PCHAR	*pat;
-	int		len;
-	int		*aux;
+patcompile(const PCHAR *pat, int len, int *aux)
 {
 	arg_t	a;
 	int	alt = ENDSTATE;

@@ -405,8 +405,7 @@ LOCAL	char	*parse_date	__PR((char *arg, struct tm *tp));
 LOCAL	int	get_ldate	__PR((char *opt_arg, void *valp));
 
 LOCAL int
-get_boot_image(opt_arg)
-	char	*opt_arg;
+get_boot_image(char *opt_arg)
 {
 	do_sort++;		/* We sort bootcat/botimage */
 	use_eltorito++;
@@ -422,8 +421,7 @@ get_boot_image(opt_arg)
 }
 
 LOCAL int
-get_hd_boot(opt_arg)
-	char	*opt_arg;
+get_hd_boot(char *opt_arg)
 {
 	use_eltorito++;
 	hard_disk_boot++;
@@ -433,8 +431,7 @@ get_hd_boot(opt_arg)
 }
 
 LOCAL int
-get_ne_boot(opt_arg)
-	char	*opt_arg;
+get_ne_boot(char *opt_arg)
 {
 	use_eltorito++;
 	no_emul_boot++;
@@ -444,8 +441,7 @@ get_ne_boot(opt_arg)
 }
 
 LOCAL int
-get_no_boot(opt_arg)
-	char	*opt_arg;
+get_no_boot(char *opt_arg)
 {
 	use_eltorito++;
 	not_bootable++;
@@ -455,8 +451,7 @@ get_no_boot(opt_arg)
 }
 
 LOCAL int
-get_boot_addr(opt_arg)
-	char	*opt_arg;
+get_boot_addr(char *opt_arg)
 {
 	long	val;
 	char	*ptr;
@@ -473,8 +468,7 @@ get_boot_addr(opt_arg)
 }
 
 LOCAL int
-get_boot_size(opt_arg)
-	char	*opt_arg;
+get_boot_size(char *opt_arg)
 {
 	long	val;
 	char	*ptr;
@@ -492,8 +486,7 @@ get_boot_size(opt_arg)
 }
 
 LOCAL int
-get_boot_platid(opt_arg)
-	char	*opt_arg;
+get_boot_platid(char *opt_arg)
 {
 	long	val;
 	char	*ptr;
@@ -531,8 +524,7 @@ get_boot_platid(opt_arg)
 }
 
 LOCAL int
-get_boot_table(opt_arg)
-	char	*opt_arg;
+get_boot_table(char *opt_arg)
 {
 	use_eltorito++;
 	boot_info_table++;
@@ -544,8 +536,7 @@ get_boot_table(opt_arg)
 #ifdef	APPLE_HYB
 #ifdef PREP_BOOT
 LOCAL int
-get_prep_boot(opt_arg)
-	char	*opt_arg;
+get_prep_boot(char *opt_arg)
 {
 	use_prep_boot++;
 	if (use_prep_boot > 4 - use_chrp_boot) {
@@ -562,8 +553,7 @@ get_prep_boot(opt_arg)
 }
 
 LOCAL int
-get_chrp_boot(opt_arg)
-	char	*opt_arg;
+get_chrp_boot(char *opt_arg)
 {
 	if (use_chrp_boot)
 		return (1);		/* silently allow duplicates */
@@ -578,8 +568,7 @@ get_chrp_boot(opt_arg)
 
 
 LOCAL int
-get_bsize(opt_arg)
-	char	*opt_arg;
+get_bsize(char *opt_arg)
 {
 	afe_size = atoi(opt_arg);
 	hfs_select |= DO_FEU;
@@ -588,35 +577,35 @@ get_bsize(opt_arg)
 }
 
 LOCAL int
-hfs_cap()
+hfs_cap(void)
 {
 	hfs_select |= DO_CAP;
 	return (1);
 }
 
 LOCAL int
-hfs_neta()
+hfs_neta(void)
 {
 	hfs_select |= DO_NETA;
 	return (1);
 }
 
 LOCAL int
-hfs_dbl()
+hfs_dbl(void)
 {
 	hfs_select |= DO_DBL;
 	return (1);
 }
 
 LOCAL int
-hfs_esh()
+hfs_esh(void)
 {
 	hfs_select |= DO_ESH;
 	return (1);
 }
 
 LOCAL int
-hfs_fe()
+hfs_fe(void)
 {
 	hfs_select |= DO_FEU;
 	hfs_select |= DO_FEL;
@@ -624,28 +613,28 @@ hfs_fe()
 }
 
 LOCAL int
-hfs_sgi()
+hfs_sgi(void)
 {
 	hfs_select |= DO_SGI;
 	return (1);
 }
 
 LOCAL int
-hfs_mbin()
+hfs_mbin(void)
 {
 	hfs_select |= DO_MBIN;
 	return (1);
 }
 
 LOCAL int
-hfs_sgl()
+hfs_sgl(void)
 {
 	hfs_select |= DO_SGL;
 	return (1);
 }
 
 LOCAL int
-hfs_dave()
+hfs_dave(void)
 {
 	hfs_select |= DO_DAVE;
 	return (1);
@@ -653,21 +642,21 @@ hfs_dave()
 
 
 LOCAL int
-hfs_sfm()
+hfs_sfm(void)
 {
 	hfs_select |= DO_SFM;
 	return (1);
 }
 
 LOCAL int
-hfs_xdbl()
+hfs_xdbl(void)
 {
 	hfs_select |= DO_XDBL;
 	return (1);
 }
 
 LOCAL int
-hfs_xhfs()
+hfs_xhfs(void)
 {
 #ifdef	IS_MACOS_X
 	hfs_select |= DO_XHFS;
@@ -679,7 +668,7 @@ hfs_xhfs()
 }
 
 LOCAL int
-hfs_nohfs()
+hfs_nohfs(void)
 {
 	no_apple_hyb = 1;
 	return (1);
@@ -688,17 +677,13 @@ hfs_nohfs()
 #endif	/* APPLE_HYB */
 
 LOCAL void
-ldate_error(arg)
-	char	*arg;
+ldate_error(char *arg)
 {
 	comerrno(EX_BAD, _("Ilegal date specification '%s'.\n"), arg);
 }
 
 LOCAL char *
-strntoi(p, n, ip)
-	char	*p;
-	int	n;
-	int	*ip;
+strntoi(char *p, int n, int *ip)
 {
 	int	i = 0;
 	int	digits = 0;
@@ -725,9 +710,7 @@ strntoi(p, n, ip)
 static int dmsize[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 LOCAL int
-mosize(y, m)
-	int	y;
-	int	m;
+mosize(int y, int m)
 {
 
 	if (m == 1 && dysize(y) == 366)
@@ -736,9 +719,7 @@ mosize(y, m)
 }
 
 LOCAL char *
-parse_date(arg, tp)
-	char	*arg;
-	struct tm *tp;
+parse_date(char *arg, struct tm *tp)
 {
 	char	*oarg = arg;
 	char	*p;
@@ -829,9 +810,7 @@ parse_date(arg, tp)
  * YYYY[MM[DD[HH[MM[SS]]]]][.hh][+-GHGM]
  */
 LOCAL int
-get_ldate(opt_arg, valp)
-	char	*opt_arg;
-	void	*valp;
+get_ldate(char *opt_arg, void *valp)
 {
 	time_t	t;
 	int	usec = 0;
@@ -895,11 +874,7 @@ get_ldate(opt_arg, valp)
 #ifdef	USE_FIND
 /* ARGSUSED */
 LOCAL int
-getfind(arg, valp, pac, pav)
-	char	*arg;
-	long	*valp;	/* Not used until we introduce a ptr to opt struct */
-	int	*pac;
-	char	*const	**pav;
+getfind(char *arg, long *valp, int *pac, char * const **pav)
 {
 	dofind = TRUE;
 	find_ac = *pac;
@@ -911,12 +886,7 @@ getfind(arg, valp, pac, pav)
 
 /* ARGSUSED */
 LOCAL int
-getH(arg, valp, pac, pav, opt)	/* Follow symlinks encountered on cmdline */
-	const char	*arg;
-	void		*valp;
-	int		*pac;
-	char	*const	**pav;
-	const char	*opt;
+getH(const char *arg, void *valp, int *pac, char * const **pav, const char *opt)	/* Follow symlinks encountered on cmdline */
 {
 /*error("getH\n");*/
 	if (opt[0] == '-' && opt[1] == 'H' && opt[2] == '\0') {
@@ -941,12 +911,7 @@ getH(arg, valp, pac, pav, opt)	/* Follow symlinks encountered on cmdline */
 
 /* ARGSUSED */
 LOCAL int
-getL(arg, valp, pac, pav, opt)	/* Follow all symlinks */
-	const char	*arg;
-	void		*valp;
-	int		*pac;
-	char	*const	**pav;
-	const char	*opt;
+getL(const char *arg, void *valp, int *pac, char * const **pav, const char *opt)	/* Follow all symlinks */
 {
 /*error("getL\n");*/
 	if (opt[0] == '-' && opt[1] == 'L' && opt[2] == '\0') {
@@ -970,12 +935,7 @@ getL(arg, valp, pac, pav, opt)	/* Follow all symlinks */
 
 /* ARGSUSED */
 LOCAL int
-getP(arg, valp, pac, pav, opt)	/* Do not follow symlinks */
-	const char	*arg;
-	void		*valp;
-	int		*pac;
-	char	*const	**pav;
-	const char	*opt;
+getP(const char *arg, void *valp, int *pac, char * const **pav, const char *opt)	/* Do not follow symlinks */
 {
 /*error("getP\n");*/
 	if (opt[0] == '-' && opt[1] == 'P' && opt[2] == '\0') {
@@ -999,12 +959,7 @@ getP(arg, valp, pac, pav, opt)	/* Do not follow symlinks */
 LOCAL struct ga_flags *gl_flags;
 /* ARGSUSED */
 LOCAL int
-dolegacy(arg, valp, pac, pav, opt)	/* Follow symlinks encountered on cmdline */
-	const char	*arg;
-	void		*valp;
-	int		*pac;
-	char	*const	**pav;
-	const char	*opt;
+dolegacy(const char *arg, void *valp, int *pac, char * const **pav, const char *opt)	/* Follow symlinks encountered on cmdline */
 {
 	legacy = TRUE;
 #ifdef	APPLE_HYB
@@ -1486,8 +1441,7 @@ LOCAL	void	ovstrcpy	__PR((char *p2, char *p1));
 LOCAL	void	checkarch	__PR((char *name));
 
 LOCAL void
-read_rcfile(appname)
-	char		*appname;
+read_rcfile(char *appname)
 {
 	FILE		*rcfile = (FILE *)NULL;
 	struct rcopts	*rco;
@@ -1645,8 +1599,7 @@ int	goof = 0;
 #endif
 
 LOCAL void
-susage(excode)
-	int		excode;
+susage(int excode)
 {
 	const char	*program_name = "mkisofs";
 
@@ -1688,8 +1641,7 @@ susage(excode)
 
 const char *optend	__PR((const char *fmt));
 const char *
-optend(fmt)
-	const char	*fmt;
+optend(const char *fmt)
 {
 	int		c;
 	const char	*ofmt = fmt;
@@ -1713,11 +1665,7 @@ optend(fmt)
 
 int	printopts	__PR((FILE *f, const char *fmt, const char *arg, int twod));
 int
-printopts(f, fmt, arg, twod)
-	FILE		*f;
-	const char	*fmt;
-	const char	*arg;
-	int		twod;
+printopts(FILE *f, const char *fmt, const char *arg, int twod)
 {
 	const char	*p;
 	int		len = 0;
@@ -1760,9 +1708,7 @@ printopts(f, fmt, arg, twod)
 
 const char	*docstr	__PR((const char *str, int *no_help));
 const char *
-docstr(str, no_help)
-	const char	*str;
-	int		*no_help;
+docstr(const char *str, int *no_help)
 {
 	if (no_help)
 		*no_help = 0;
@@ -1791,8 +1737,7 @@ docstr(str, no_help)
 }
 
 LOCAL void
-usage(excode)
-	int		excode;
+usage(int excode)
 {
 	const char	*program_name = "mkisofs";
 
@@ -1865,9 +1810,7 @@ usage(excode)
  * of this wrong for ages (mkisofs had it wrong too until February 1997).
  */
 EXPORT int
-iso9660_date(result, crtime)
-	char	*result;
-	time_t	crtime;
+iso9660_date(char *result, time_t crtime)
 {
 	struct tm	local;
 	struct tm	gmt;
@@ -1904,11 +1847,7 @@ iso9660_date(result, crtime)
  * -modification-date command line option.
  */
 EXPORT int
-iso9660_ldate(result, crtime, nsec, gmtoff)
-	char	*result;
-	time_t	crtime;
-	int	nsec;
-	int	gmtoff;
+iso9660_ldate(char *result, time_t crtime, int nsec, int gmtoff)
 {
 	struct tm	local;
 	struct tm	gmt;
@@ -1944,7 +1883,7 @@ iso9660_ldate(result, crtime, nsec, gmtoff)
 
 /* hide "./rr_moved" if all its contents are hidden */
 LOCAL void
-hide_reloc_dir()
+hide_reloc_dir(void)
 {
 	struct directory_entry *s_entry;
 
@@ -1966,13 +1905,7 @@ hide_reloc_dir()
  * get pathnames from the command line, and then from given file
  */
 LOCAL char *
-get_pnames(argc, argv, opt, pname, pnsize, fp)
-	int	argc;
-	char	* const *argv;
-	int	opt;
-	char	*pname;
-	int	pnsize;
-	FILE	*fp;
+get_pnames(int argc, char * const *argv, int opt, char *pname, int pnsize, FILE *fp)
 {
 	int	len;
 
@@ -2007,9 +1940,7 @@ get_pnames(argc, argv, opt, pname, pnsize, fp)
 }
 
 EXPORT int
-main(argc, argv)
-	int		argc;
-	char		*argv[];
+main(int argc, char *argv[])
 {
 	int	cac = argc;
 	char	* const *cav = argv;
@@ -3609,7 +3540,7 @@ path_done:
 }
 
 LOCAL void
-list_locales()
+list_locales(void)
 {
 	int	n;
 
@@ -3639,8 +3570,7 @@ list_locales()
  * Find unescaped equal sign in graft pointer string.
  */
 EXPORT char *
-findgequal(s)
-	char	*s;
+findgequal(char *s)
 {
 	char	*p = s;
 
@@ -3656,10 +3586,7 @@ findgequal(s)
  * Find unescaped equal sign in string.
  */
 LOCAL char *
-escstrcpy(to, tolen, from)
-	char	*to;
-	size_t	tolen;
-	char	*from;
+escstrcpy(char *to, size_t tolen, char *from)
 {
 	char	*p = to;
 
@@ -3687,14 +3614,7 @@ escstrcpy(to, tolen, from)
 }
 
 struct directory *
-get_graft(arg, graft_point, glen, nodename, nlen, short_namep, do_insert)
-	char		*arg;
-	char		*graft_point;
-	size_t		glen;
-	char		*nodename;
-	size_t		nlen;
-	char		**short_namep;
-	BOOL		do_insert;
+get_graft(char *arg, char *graft_point, size_t glen, char *nodename, size_t nlen, char **short_namep, BOOL do_insert)
 {
 	char		*node = NULL;
 	struct directory_entry de;
@@ -3918,8 +3838,7 @@ get_graft(arg, graft_point, glen, nodename, nlen, short_namep, do_insert)
 }
 
 EXPORT void *
-e_malloc(size)
-	size_t		size;
+e_malloc(size_t size)
 {
 	void		*pt = 0;
 
@@ -3938,8 +3857,7 @@ e_malloc(size)
 }
 
 EXPORT char *
-e_strdup(s)
-	const	char	*s;
+e_strdup(const char *s)
 {
 	char	*ret = strdup(s);
 
@@ -3952,17 +3870,14 @@ e_strdup(s)
  * A strcpy() that works with overlapping buffers
  */
 LOCAL void
-ovstrcpy(p2, p1)
-	register char	*p2;
-	register char	*p1;
+ovstrcpy(char *p2, char *p1)
 {
 	while ((*p2++ = *p1++) != '\0')
 		;
 }
 
 LOCAL void
-checkarch(name)
-	char	*name;
+checkarch(char *name)
 {
 	struct stat	stbuf;
 

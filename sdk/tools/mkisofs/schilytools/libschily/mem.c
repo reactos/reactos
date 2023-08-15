@@ -39,8 +39,7 @@ EXPORT	char	*___savestr	__PR((const char *s));
 LOCAL	int	mexval;
 
 EXPORT	int
-___mexval(exval)
-	int	exval;
+___mexval(int exval)
 {
 	int	ret = mexval;
 
@@ -50,9 +49,7 @@ ___mexval(exval)
 }
 
 EXPORT void *
-___malloc(size, msg)
-	size_t	size;
-	char	*msg;
+___malloc(size_t size, char *msg)
 {
 	void	*ret;
 
@@ -70,10 +67,7 @@ ___malloc(size, msg)
 }
 
 EXPORT void *
-___realloc(ptr, size, msg)
-	void	*ptr;
-	size_t	size;
-	char	*msg;
+___realloc(void *ptr, size_t size, char *msg)
 {
 	void	*ret;
 
@@ -94,8 +88,7 @@ ___realloc(ptr, size, msg)
 }
 
 EXPORT char *
-___savestr(s)
-	const char	*s;
+___savestr(const char *s)
 {
 	char	*ret = ___malloc(strlen(s)+1, "saved string");
 

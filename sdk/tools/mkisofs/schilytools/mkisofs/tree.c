@@ -111,8 +111,7 @@ struct stat	root_statbuf;		/* Stat buffer for root directory */
 struct directory *reloc_dir;
 
 LOCAL char *
-filetype(t)
-	int	t;
+filetype(int t)
 {
 	static	char	unkn[32];
 
@@ -162,9 +161,7 @@ filetype(t)
  * Check if s1 ends in strings s2
  */
 LOCAL char *
-rstr(s1, s2)
-	char	*s1;
-	char	*s2;
+rstr(char *s1, char *s2)
 {
 	int	l1;
 	int	l2;
@@ -180,8 +177,7 @@ rstr(s1, s2)
 }
 
 LOCAL void
-stat_fix(st)
-	struct stat	*st;
+stat_fix(struct stat *st)
 {
 	int adjust_modes = 0;
 
@@ -229,9 +225,7 @@ stat_fix(st)
 }
 
 EXPORT int
-stat_filter(path, st)
-	char		*path;
-	struct stat	*st;
+stat_filter(char *path, struct stat *st)
 {
 	int	result = stat(path, st);
 
@@ -241,9 +235,7 @@ stat_filter(path, st)
 }
 
 EXPORT int
-lstat_filter(path, st)
-	char		*path;
-	struct stat	*st;
+lstat_filter(char *path, struct stat *st)
 {
 	int	result = lstat(path, st);
 
@@ -253,8 +245,7 @@ lstat_filter(path, st)
 }
 
 LOCAL int
-sort_n_finish(this_dir)
-	struct directory	*this_dir;
+sort_n_finish(struct directory *this_dir)
 {
 	struct directory_entry *s_entry;
 	struct directory_entry *s_entry1;
@@ -902,10 +893,7 @@ generate_reloc_directory()
  *			we are creating.
  */
 EXPORT void
-attach_dot_entries(dirnode, this_stat, parent_stat)
-	struct directory	*dirnode;
-	struct stat		*this_stat;
-	struct stat		*parent_stat;
+attach_dot_entries(struct directory *dirnode, struct stat *this_stat, struct stat *parent_stat)
 {
 	struct directory_entry *s_entry;
 	struct directory_entry *orig_contents;
@@ -1004,10 +992,7 @@ attach_dot_entries(dirnode, this_stat, parent_stat)
 }
 
 EXPORT char *
-find_rr_attribute(pnt, len, attr_type)
-	unsigned char	*pnt;
-	int		len;
-	char		*attr_type;
+find_rr_attribute(unsigned char *pnt, int len, char *attr_type)
 {
 	pnt = parse_xa(pnt, &len, 0);
 	while (len >= 4) {
@@ -1033,7 +1018,7 @@ find_rr_attribute(pnt, len, attr_type)
 }
 
 EXPORT void
-finish_cl_pl_entries()
+finish_cl_pl_entries(void)
 {
 	struct directory_entry	*s_entry;
 	struct directory_entry	*s_entry1;
@@ -1115,10 +1100,7 @@ finish_cl_pl_entries()
 }
 
 LOCAL void
-dir_nesting_warn(this_dir, path, contflag)
-	struct directory	*this_dir;
-	char			*path;
-	int			contflag;
+dir_nesting_warn(struct directory *this_dir, char *path, int contflag)
 {
 	static	BOOL	did_hint = FALSE;
 
@@ -1144,10 +1126,7 @@ dir_nesting_warn(this_dir, path, contflag)
  * Notes:
  */
 EXPORT int
-scan_directory_tree(this_dir, path, de)
-	struct directory	*this_dir;
-	char			*path;
-	struct directory_entry	*de;
+scan_directory_tree(struct directory *this_dir, char *path, struct directory_entry *de)
 {
 	DIR		*current_dir;
 	char		whole_path[2*PATH_MAX];	/* Avoid stat buffer overflow */
@@ -1373,12 +1352,7 @@ extern	BOOL		nodesc;
 }
 
 LOCAL struct directory_entry *
-dup_relocated_dir(this_dir, s_entry, whole_path, short_name, statp)
-	struct directory	*this_dir;
-	struct directory_entry	*s_entry;
-	char			*whole_path;
-	char			*short_name;
-	struct stat		*statp;
+dup_relocated_dir(struct directory *this_dir, struct directory_entry *s_entry, char *whole_path, char *short_name, struct stat *statp)
 {
 	struct directory_entry *s_entry1;
 
@@ -1441,12 +1415,7 @@ dup_relocated_dir(this_dir, s_entry, whole_path, short_name, statp)
  * trees before we return.
  */
 EXPORT int
-insert_file_entry(this_dir, whole_path, short_name, statp, have_rsrc)
-	struct directory	*this_dir;
-	char			*whole_path;
-	char			*short_name;
-	struct stat		*statp;
-	int			have_rsrc;
+insert_file_entry(struct directory *this_dir, char *whole_path, char *short_name, struct stat *statp, int have_rsrc)
 {
 	struct stat	statbuf,
 			lstatbuf;
@@ -2426,8 +2395,7 @@ insert_file_entry(this_dir, whole_path, short_name, statp, have_rsrc)
 }
 
 EXPORT struct directory_entry *
-dup_directory_entry(s_entry)
-	struct directory_entry	*s_entry;
+dup_directory_entry(struct directory_entry *s_entry)
 {
 	struct directory_entry	*s_entry1;
 
@@ -2455,9 +2423,7 @@ dup_directory_entry(s_entry)
 }
 
 EXPORT void
-generate_iso9660_directories(node, outfile)
-	struct directory	*node;
-	FILE			*outfile;
+generate_iso9660_directories(struct directory *node, FILE *outfile)
 {
 	struct directory *dpnt;
 
@@ -2477,9 +2443,7 @@ generate_iso9660_directories(node, outfile)
  * XXX This may need some work for the MVS port.
  */
 LOCAL void
-set_de_path(parent, this)
-	struct directory	*parent;
-	struct directory	*this;
+set_de_path(struct directory *parent, struct directory *this)
 {
 	char	*p;
 	size_t	len;
@@ -2505,11 +2469,7 @@ set_de_path(parent, this)
  * Arguments:	parent & de are never NULL at the same time.
  */
 EXPORT struct directory *
-find_or_create_directory(parent, path, de, flag)
-	struct directory	*parent;
-	char			*path;
-	struct directory_entry	*de;
-	int			flag;
+find_or_create_directory(struct directory *parent, char *path, struct directory_entry *de, int flag)
 {
 	struct directory *child = 0;
 	struct directory *dpnt;
@@ -2798,9 +2758,7 @@ find_or_create_directory(parent, path, de, flag)
  * Arguments:
  */
 LOCAL void
-delete_directory(parent, child)
-	struct directory	*parent;
-	struct directory	*child;
+delete_directory(struct directory *parent, struct directory *child)
 {
 	struct directory *tdir;
 
@@ -2839,8 +2797,7 @@ delete_directory(parent, child)
 }
 
 EXPORT int
-sort_tree(node)
-	struct directory	*node;
+sort_tree(struct directory *node)
 {
 	struct directory *dpnt;
 	int		ret = 0;
@@ -2860,8 +2817,7 @@ sort_tree(node)
 }
 
 EXPORT void
-dump_tree(node)
-	struct directory *node;
+dump_tree(struct directory *node)
 {
 	struct directory *dpnt;
 
@@ -2882,9 +2838,7 @@ dump_tree(node)
  * directory entry for the desired file
  */
 EXPORT struct directory_entry *
-search_tree_file(node, filename)
-	struct directory *node;
-	char		*filename;
+search_tree_file(struct directory *node, char *filename)
 {
 	struct directory_entry *depnt;
 	struct directory *dpnt;
@@ -2971,7 +2925,7 @@ search_tree_file(node, filename)
 }
 
 EXPORT void
-init_fstatbuf()
+init_fstatbuf(void)
 {
 	struct timeval	current_time;
 

@@ -64,8 +64,7 @@ EXPORT	BOOL	errabort	__PR((int etype, const char *fname, BOOL doexit));
  * Read and parse error configuration file
  */
 EXPORT int
-errconfig(name)
-	char	*name;
+errconfig(char *name)
 {
 	char	line[8192];
 	FILE	*f;
@@ -90,8 +89,7 @@ errconfig(name)
 }
 
 LOCAL char *
-_endword(p)
-	char	*p;
+_endword(char *p)
 {
 	/*
 	 * Find end of word.
@@ -107,8 +105,7 @@ _endword(p)
 }
 
 LOCAL void
-parse_errctl(line)
-	char	*line;
+parse_errctl(char *line)
 {
 	int	plen;
 	char	*pattern;
@@ -189,9 +186,7 @@ LOCAL struct eflags {
  * Convert error condition string into flag word
  */
 LOCAL UInt32_t
-errflags(eflag, doexit)
-	char	*eflag;
-	BOOL	doexit;
+errflags(char *eflag, BOOL doexit)
 {
 	register char		*p = eflag;
 		char		*ef = _endword(eflag);
@@ -226,9 +221,7 @@ errflags(eflag, doexit)
 }
 
 LOCAL ec_t *
-_errptr(etype, fname)
-		int	etype;
-	const	char	*fname;
+_errptr(int etype, const char *fname)
 {
 	ec_t		*ep = ec_root;
 	char		*ret;
@@ -261,9 +254,7 @@ _errptr(etype, fname)
  * Check whether error condition should be ignored for file name.
  */
 EXPORT BOOL
-errhidden(etype, fname)
-		int	etype;
-	const	char	*fname;
+errhidden(int etype, const char *fname)
 {
 	ec_t		*ep;
 
@@ -279,9 +270,7 @@ errhidden(etype, fname)
  * Check whether error condition should not affect exit code for file name.
  */
 EXPORT BOOL
-errwarnonly(etype, fname)
-		int	etype;
-	const	char	*fname;
+errwarnonly(int etype, const char *fname)
 {
 	ec_t		*ep;
 
@@ -297,10 +286,7 @@ errwarnonly(etype, fname)
  * Check whether error condition should be fatal for file name.
  */
 EXPORT BOOL
-errabort(etype, fname, doexit)
-		int	etype;
-	const	char	*fname;
-		BOOL	doexit;
+errabort(int etype, const char *fname, BOOL doexit)
 {
 	ec_t	*ep;
 

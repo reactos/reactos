@@ -81,38 +81,31 @@ void SHA3_Update	__PR((SHA3_CTX *ctx,
 				size_t size));
 
 void
-SHA3_224_Init(ctx)
-	SHA3_CTX	*ctx;
+SHA3_224_Init(SHA3_CTX *ctx)
 {
 	rhash_sha3_224_init(ctx);
 }
 
 void
-SHA3_256_Init(ctx)
-	SHA3_CTX	*ctx;
+SHA3_256_Init(SHA3_CTX *ctx)
 {
 	rhash_sha3_256_init(ctx);
 }
 
 void
-SHA3_384_Init(ctx)
-	SHA3_CTX	*ctx;
+SHA3_384_Init(SHA3_CTX *ctx)
 {
 	rhash_sha3_384_init(ctx);
 }
 
 void
-SHA3_512_Init(ctx)
-	SHA3_CTX	*ctx;
+SHA3_512_Init(SHA3_CTX *ctx)
 {
 	rhash_sha3_512_init(ctx);
 }
 
 void
-SHA3_Update(ctx, msg, size)
-	SHA3_CTX	*ctx;
-	const unsigned char *msg;
-	size_t		size;
+SHA3_Update(SHA3_CTX *ctx, const unsigned char *msg, size_t size)
 {
 	rhash_sha3_update(ctx, msg, size);
 }
@@ -139,9 +132,7 @@ static UInt64_t keccak_round_constants[NumberOfRounds] = {
 
 /* Initializing a sha3 context for given number of output bits */
 static void
-rhash_keccak_init(ctx, bits)
-	sha3_ctx	*ctx;
-	unsigned	bits;
+rhash_keccak_init(sha3_ctx *ctx, unsigned bits)
 {
 	/* NB: The Keccak capacity parameter = bits * 2 */
 	unsigned rate = 1600 - bits * 2;
@@ -157,8 +148,7 @@ rhash_keccak_init(ctx, bits)
  * @param ctx context to initialize
  */
 void
-rhash_sha3_224_init(ctx)
-	sha3_ctx	*ctx;
+rhash_sha3_224_init(sha3_ctx *ctx)
 {
 	rhash_keccak_init(ctx, 224);
 }
@@ -169,8 +159,7 @@ rhash_sha3_224_init(ctx)
  * @param ctx context to initialize
  */
 void
-rhash_sha3_256_init(ctx)
-	sha3_ctx	*ctx;
+rhash_sha3_256_init(sha3_ctx *ctx)
 {
 	rhash_keccak_init(ctx, 256);
 }
@@ -181,8 +170,7 @@ rhash_sha3_256_init(ctx)
  * @param ctx context to initialize
  */
 void
-rhash_sha3_384_init(ctx)
-	sha3_ctx	*ctx;
+rhash_sha3_384_init(sha3_ctx *ctx)
 {
 	rhash_keccak_init(ctx, 384);
 }
@@ -193,16 +181,14 @@ rhash_sha3_384_init(ctx)
  * @param ctx context to initialize
  */
 void
-rhash_sha3_512_init(ctx)
-	sha3_ctx	*ctx;
+rhash_sha3_512_init(sha3_ctx *ctx)
 {
 	rhash_keccak_init(ctx, 512);
 }
 
 /* Keccak theta() transformation */
 static void
-keccak_theta(A)
-	UInt64_t	*A;
+keccak_theta(UInt64_t *A)
 {
 	unsigned int x;
 	UInt64_t C[5], D[5];
@@ -227,8 +213,7 @@ keccak_theta(A)
 
 /* Keccak pi() transformation */
 static void
-keccak_pi(A)
-	UInt64_t	*A;
+keccak_pi(UInt64_t *A)
 {
 	UInt64_t A1;
 	A1 = A[1];
@@ -261,8 +246,7 @@ keccak_pi(A)
 
 /* Keccak chi() transformation */
 static void
-keccak_chi(A)
-	UInt64_t	*A;
+keccak_chi(UInt64_t *A)
 {
 	int i;
 	for (i = 0; i < 25; i += 5) {
@@ -276,8 +260,7 @@ keccak_chi(A)
 }
 
 static void
-rhash_sha3_permutation(state)
-	UInt64_t	*state;
+rhash_sha3_permutation(UInt64_t *state)
 {
 	int round;
 	for (round = 0; round < NumberOfRounds; round++)
@@ -326,10 +309,7 @@ rhash_sha3_permutation(state)
  * @param block_size the size of the processed block in bytes
  */
 static void
-rhash_sha3_process_block(hash, block, block_size)
-	UInt64_t	hash[25];
-	const UInt64_t	*block;
-	size_t		block_size;
+rhash_sha3_process_block(UInt64_t hash[25], const UInt64_t *block, size_t block_size)
 {
 	/* expanded loop */
 	hash[ 0] ^= le2me_64(block[ 0]);
@@ -386,10 +366,7 @@ rhash_sha3_process_block(hash, block, block_size)
  * @param size length of the message chunk
  */
 void
-rhash_sha3_update(ctx, msg, size)
-	sha3_ctx		*ctx;
-	const unsigned char	*msg;
-	size_t			size;
+rhash_sha3_update(sha3_ctx *ctx, const unsigned char *msg, size_t size)
 {
 	size_t idx = (size_t)ctx->rest;
 	size_t block_size = (size_t)ctx->block_size;
@@ -441,9 +418,7 @@ rhash_sha3_update(ctx, msg, size)
  * @param result calculated hash in binary form
  */
 void
-rhash_sha3_final(ctx, result)
-	sha3_ctx	*ctx;
-	unsigned char	*result;
+rhash_sha3_final(sha3_ctx *ctx, unsigned char *result)
 {
 	size_t digest_length = 100 - ctx->block_size / 2;
 	const size_t block_size = ctx->block_size;
@@ -466,9 +441,7 @@ rhash_sha3_final(ctx, result)
 }
 
 void
-SHA3_Final(result, ctx)
-	UInt8_t		*result;
-	SHA3_CTX	*ctx;
+SHA3_Final(UInt8_t *result, SHA3_CTX *ctx)
 {
 	rhash_sha3_final(ctx, result);
 }

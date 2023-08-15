@@ -39,8 +39,7 @@ EXPORT	int		closedir __PR((DIR *));
 EXPORT	struct dirent	*readdir __PR((DIR *));
 
 EXPORT DIR *
-opendir(dname)
-	const char	*dname;
+opendir(const char *dname)
 {
 	char	path[PATH_MAX];
 	size_t	len;
@@ -100,8 +99,7 @@ opendir(dname)
 }
 
 EXPORT	int
-closedir(dp)
-	DIR	*dp;
+closedir(DIR *dp)
 {
 	int	ret = 0;
 
@@ -118,8 +116,7 @@ closedir(dp)
 }
 
 EXPORT struct dirent *
-readdir(dp)
-	DIR	*dp;
+readdir(DIR *dp)
 {
 	if (dp == NULL) {
 		seterrno(EFAULT);

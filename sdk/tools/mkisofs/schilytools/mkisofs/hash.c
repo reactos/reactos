@@ -103,7 +103,7 @@ LOCAL	unsigned char	*DIGEST_File	__PR((char *name, size_t size));
 
 #ifdef	HASH_DEBUG
 EXPORT void
-debug_hash()
+debug_hash(void)
 {
 	struct file_hash **p = hash_table;
 	int	i;
@@ -131,14 +131,13 @@ debug_hash()
 				minlen = k;
 		}
 	}
-	error("Unbenutzt: %d von %d Einträgen maxlen %d minlen %d total %d optmittel %d\n",
+	error("Unbenutzt: %d von %d Eintrï¿½gen maxlen %d minlen %d total %d optmittel %d\n",
 		j, NR_HASH, maxlen, minlen, tot, tot/NR_HASH);
 }
 #endif
 
 EXPORT void
-add_hash(spnt)
-	struct directory_entry	*spnt;
+add_hash(struct directory_entry *spnt)
 {
 	struct file_hash *s_hash;
 	unsigned int    hash_number = 0;
@@ -189,8 +188,7 @@ add_hash(spnt)
 }
 
 EXPORT struct file_hash *
-find_hash(spnt)
-	struct directory_entry	*spnt;
+find_hash(struct directory_entry *spnt)
 {
 	unsigned int    hash_number;
 	struct file_hash *s_hash;
@@ -237,7 +235,7 @@ find_hash(spnt)
  * file hash table.
  */
 EXPORT void
-flush_hash()
+flush_hash(void)
 {
 	struct file_hash	*fh;
 	struct file_hash	*fh1;
@@ -256,9 +254,7 @@ flush_hash()
 
 #ifdef	DUPLICATES_ONCE
 LOCAL struct directory_entry *
-compare_files(spnt1, spnt2)
-	struct directory_entry	*spnt1;
-	struct directory_entry	*spnt2;
+compare_files(struct directory_entry *spnt1, struct directory_entry *spnt2)
 {
 	if (spnt1->size != spnt2->size)
 		return (NULL);
@@ -303,9 +299,7 @@ compare_files(spnt1, spnt2)
 }
 
 LOCAL unsigned char *
-DIGEST_File(name, size)
-	char		*name;
-	size_t		size;
+DIGEST_File(char *name, size_t size)
 {
 	DIGEST_CTX	digest_ctx;
 	FILE		*infile;
@@ -338,15 +332,8 @@ DIGEST_File(name, size)
 
 static struct file_hash *directory_hash_table[NR_HASH];
 
-#ifdef	PROTOTYPES
 EXPORT void
 add_directory_hash(dev_t dev, ino_t inode)
-#else
-EXPORT void
-add_directory_hash(dev, inode)
-	dev_t	dev;
-	ino_t	inode;
-#endif
 {
 	struct file_hash *s_hash;
 	unsigned int    hash_number;
@@ -367,15 +354,8 @@ add_directory_hash(dev, inode)
 	directory_hash_table[hash_number] = s_hash;
 }
 
-#ifdef	PROTOTYPES
 EXPORT struct file_hash *
 find_directory_hash(dev_t dev, ino_t inode)
-#else
-EXPORT struct file_hash *
-find_directory_hash(dev, inode)
-	dev_t	dev;
-	ino_t	inode;
-#endif
 {
 	unsigned int    hash_number;
 	struct file_hash *spnt;
@@ -410,8 +390,7 @@ static struct name_hash *name_hash_table[NR_NAME_HASH] = {0, };
  * Find the hash bucket for this name.
  */
 LOCAL unsigned int
-name_hash(name)
-	const char	*name;
+name_hash(const char *name)
 {
 	unsigned int	hash = 0;
 	const char	*p;
@@ -433,8 +412,7 @@ name_hash(name)
 }
 
 EXPORT void
-add_file_hash(de)
-	struct directory_entry	*de;
+add_file_hash(struct directory_entry *de)
 {
 	struct name_hash	*new;
 	int			hash;
@@ -458,8 +436,7 @@ add_file_hash(de)
 }
 
 EXPORT struct directory_entry *
-find_file_hash(name)
-	register char			*name;
+find_file_hash(char *name)
 {
 	register char			*p1;
 	register char			*p2;
@@ -534,8 +511,7 @@ find_file_hash(name)
 		isoname_endsok(p))
 
 LOCAL BOOL
-isoname_endsok(name)
-	char	*name;
+isoname_endsok(char *name)
 {
 	int	i;
 	char	*p;
@@ -556,8 +532,7 @@ isoname_endsok(name)
 }
 
 EXPORT int
-delete_file_hash(de)
-	struct directory_entry	*de;
+delete_file_hash(struct directory_entry *de)
 {
 	struct name_hash	*nh;
 	struct name_hash	*prev;
@@ -581,7 +556,7 @@ delete_file_hash(de)
 }
 
 EXPORT void
-flush_file_hash()
+flush_file_hash(void)
 {
 	struct name_hash	*nh;
 	struct name_hash	*nh1;

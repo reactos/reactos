@@ -31,15 +31,8 @@ typedef struct {
 	int	count;
 } *BUF, _BUF;
 
-#ifdef	PROTOTYPES
 static void
 _cput(char c, void *l)
-#else
-static void
-_cput(c, l)
-	char	c;
-	void	*l;
-#endif
 {
 	register BUF	bp = (BUF)l;
 
@@ -54,17 +47,8 @@ _cput(c, l)
 }
 
 /* VARARGS2 */
-#ifdef	PROTOTYPES
 EXPORT int
 js_snprintf(char *buf, size_t maxcnt, const char *form, ...)
-#else
-EXPORT int
-js_snprintf(buf, maxcnt, form, va_alist)
-	char	*buf;
-	unsigned maxcnt;
-	char	*form;
-	va_dcl
-#endif
 {
 	va_list	args;
 	int	cnt;
@@ -73,11 +57,7 @@ js_snprintf(buf, maxcnt, form, va_alist)
 	bb.ptr = buf;
 	bb.count = maxcnt;
 
-#ifdef	PROTOTYPES
 	va_start(args, form);
-#else
-	va_start(args);
-#endif
 	cnt = format(_cput, &bb, form,  args);
 	va_end(args);
 	if (maxcnt > 0)

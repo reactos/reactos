@@ -37,9 +37,7 @@ const	Int64_t MS_FTIME_SECS	= 10000000LL;
 #endif
 
 EXPORT int
-gettimeofday(tp, dummy)
-	struct timeval	*tp;
-	void		*dummy;		/* tzp is unspecified by POSIX */
+gettimeofday(struct timeval *tp, void *dummy) /* tzp is unspecified by POSIX */
 {
 	FILETIME	ft;
 	Int64_t		T;
@@ -68,9 +66,7 @@ gettimeofday(tp, dummy)
 #include <schily/standard.h>
 
 EXPORT int
-gettimeofday(tp, dummy)
-	struct timeval	*tp;
-	void		*dummy;		/* tzp is unspecified by POSIX */
+gettimeofday(struct timeval *tp, void *dummy) /* tzp is unspecified by POSIX */
 {
 	time_t	t;
 

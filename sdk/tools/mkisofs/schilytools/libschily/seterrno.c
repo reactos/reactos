@@ -31,8 +31,7 @@
 #endif
 
 EXPORT int
-seterrno(err)
-	int	err;
+seterrno(int err)
 {
 	int	old = errno;
 

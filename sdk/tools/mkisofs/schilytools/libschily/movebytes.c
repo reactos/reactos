@@ -27,10 +27,7 @@
  * movebytes(from, to, cnt) is the same as memmove(to, from, cnt)
  */
 EXPORT char *
-movebytes(fromv, tov, cnt)
-	const void	*fromv;
-	void		*tov;
-	ssize_t		cnt;
+movebytes(const void *fromv, void *tov, ssize_t cnt)
 {
 	register const char	*from	= fromv;
 	register char		*to	= tov;

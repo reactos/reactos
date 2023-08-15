@@ -185,7 +185,7 @@ LOCAL	int	prbuf  __PR((const char *, f_args *));
 LOCAL	int	prc    __PR((char, f_args *));
 LOCAL	int	prstring __PR((const char *, f_args *));
 #ifdef	DEBUG
-LOCAL	void	dbg_print __PR((char *fmt, int a, int b, int c, int d, int e, int f, int g, int h, int i));
+LOCAL	void	dbg_print __PR((char *fmt, ...));
 #endif
 
 #ifdef	USE_NL_ARGS
@@ -203,9 +203,7 @@ extern	void	_fmtgetarg  __PR((const char *fmt, int num, va_lists_t *));
 LOCAL char	xflsbuf	__PR((int c, f_args *ap));
 
 LOCAL char
-xflsbuf(c, ap)
-	int	c;
-	f_args	*ap;
+xflsbuf(int c, f_args *ap)
 {
 	*ap->ptr++ = c;
 	if (filewrite((FILE *)ap->fp, ap->iobuf, ap->ptr - ap->iobuf) < 0)
@@ -240,20 +238,11 @@ xflsbuf(c, ap)
 #define	FARG		farg
 #endif
 
-#ifdef	PROTOTYPES
 EXPORT int
 FORMAT_FUNC_NAME(FORMAT_FUNC_PROTO_DECL
 			void *farg,
 			const char *fmt,
 			va_list oargs)
-#else
-EXPORT int
-FORMAT_FUNC_NAME(FORMAT_FUNC_KR_ARGS farg, fmt, oargs)
-	FORMAT_FUNC_KR_DECL
-	register void	*farg;
-	register char	*fmt;
-	va_list		oargs;
-#endif
 {
 #ifdef	FORMAT_LOW_MEM
 	char buf[512];
@@ -1041,10 +1030,7 @@ LOCAL	unsigned char	dtab[]  = "0123456789abcdef";
 LOCAL	unsigned char	udtab[] = "0123456789ABCDEF";
 
 LOCAL void
-prnum(val, base, fa)
-	register Ulong val;
-	register unsigned base;
-	f_args *fa;
+prnum(Ulong val, unsigned base, f_args *fa)
 {
 	register char *p = fa->bufp;
 
@@ -1057,9 +1043,7 @@ prnum(val, base, fa)
 }
 
 LOCAL void
-prdnum(val, fa)
-	register Ulong val;
-	f_args *fa;
+prdnum(Ulong val, f_args *fa)
 {
 	register char *p = fa->bufp;
 
@@ -1075,9 +1059,7 @@ prdnum(val, fa)
  * We may need to use division here too (PDP-11, non two's complement ...)
  */
 LOCAL void
-pronum(val, fa)
-	register Ulong val;
-	f_args *fa;
+pronum(Ulong val, f_args *fa)
 {
 	register char *p = fa->bufp;
 
@@ -1090,9 +1072,7 @@ pronum(val, fa)
 }
 
 LOCAL void
-prxnum(val, fa)
-	register Ulong val;
-	f_args *fa;
+prxnum(Ulong val, f_args *fa)
 {
 	register char *p = fa->bufp;
 
@@ -1105,9 +1085,7 @@ prxnum(val, fa)
 }
 
 LOCAL void
-prXnum(val, fa)
-	register Ulong val;
-	f_args *fa;
+prXnum(Ulong val, f_args *fa)
 {
 	register char *p = fa->bufp;
 
@@ -1121,10 +1099,7 @@ prXnum(val, fa)
 
 #ifdef	USE_LONGLONG
 LOCAL void
-prlnum(val, base, fa)
-	register Ullong val;
-	register unsigned base;
-	f_args *fa;
+prlnum(Ullong val, unsigned base, f_args *fa)
 {
 	register char *p = fa->bufp;
 
@@ -1137,9 +1112,7 @@ prlnum(val, base, fa)
 }
 
 LOCAL void
-prldnum(val, fa)
-	register Ullong val;
-	f_args *fa;
+prldnum(Ullong val, f_args *fa)
 {
 	register char *p = fa->bufp;
 
@@ -1152,9 +1125,7 @@ prldnum(val, fa)
 }
 
 LOCAL void
-prlonum(val, fa)
-	register Ullong val;
-	f_args *fa;
+prlonum(Ullong val, f_args *fa)
 {
 	register char *p = fa->bufp;
 
@@ -1167,9 +1138,7 @@ prlonum(val, fa)
 }
 
 LOCAL void
-prlxnum(val, fa)
-	register Ullong val;
-	f_args *fa;
+prlxnum(Ullong val, f_args *fa)
 {
 	register char *p = fa->bufp;
 
@@ -1182,9 +1151,7 @@ prlxnum(val, fa)
 }
 
 LOCAL void
-prlXnum(val, fa)
-	register Ullong val;
-	f_args *fa;
+prlXnum(Ullong val, f_args *fa)
 {
 	register char *p = fa->bufp;
 
@@ -1202,9 +1169,7 @@ prlXnum(val, fa)
  * Final buffer print out routine.
  */
 LOCAL int
-prbuf(s, fa)
-	register const char *s;
-	f_args *fa;
+prbuf(const char *s, f_args *fa)
 {
 	register int diff;
 	register int rfillc;
@@ -1259,18 +1224,9 @@ prbuf(s, fa)
  * Print out one char, allowing prc('\0')
  * Similar to prbuf()
  */
-#ifdef	PROTOTYPES
 
 LOCAL int
 prc(char c, f_args *fa)
-
-#else
-
-LOCAL int
-prc(c, fa)
-	char	c;
-	f_args *fa;
-#endif
 {
 	register int diff;
 	register int rfillc;
@@ -1305,9 +1261,7 @@ prc(c, fa)
  * If fa->signific is 0, print no characters.
  */
 LOCAL int
-prstring(s, fa)
-	register const char	*s;
-	f_args *fa;
+prstring(const char *s, f_args *fa)
 {
 	register char	*bp;
 	register int	signific;
@@ -1330,12 +1284,15 @@ prstring(s, fa)
 
 #ifdef	DEBUG
 LOCAL void
-dbg_print(fmt, a, b, c, d, e, f, g, h, i)
-char *fmt;
+dbg_print(char *fmt, ...)
 {
 	char	ff[1024];
 
-	sprintf(ff, fmt, a, b, c, d, e, f, g, h, i);
+	va_list ap;
+	va_start(ap, fmt)
+	vsprintf(ff, fmt, ap);
+	va_end(ap);
+
 	write(STDERR_FILENO, ff, strlen(ff));
 }
 #endif
@@ -1387,10 +1344,7 @@ static	const char	*digits = &skips[8];
  *		store the related va_list state in arglist[]
  */
 EXPORT void
-_fmtarglist(fmt, fargs, arglist)
-	const char	*fmt;
-	va_lists_t	fargs;
-	va_lists_t	arglist[];
+_fmtarglist(const char *fmt, va_lists_t fargs, va_lists_t arglist[])
 {
 	int	i;
 	int	argindex;
@@ -1688,10 +1642,7 @@ error sizeof (ptrdiff_t) is unknown
  * the current FMT_ARGMAX definition of 30.
  */
 EXPORT void
-_fmtgetarg(fmt, num, fargs)
-	const char	*fmt;
-	int		num;
-	va_lists_t	*fargs;
+_fmtgetarg(const char *fmt, int num, va_lists_t *fargs)
 {
 	const char	*sfmt = fmt;
 	int		i;

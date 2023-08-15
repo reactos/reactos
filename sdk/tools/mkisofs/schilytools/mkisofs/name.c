@@ -42,9 +42,7 @@ int	iso9660_file_length	__PR((const char *name,
 					int dirflag));
 
 void
-iso9660_check(idr, ndr)
-	struct iso_directory_record *idr;
-	struct directory_entry *ndr;
+iso9660_check(struct iso_directory_record *idr, struct directory_entry *ndr)
 {
 	int	nlen;
 	char	schar;
@@ -102,10 +100,7 @@ iso9660_check(idr, ndr)
  *		fix without going through the whole source.
  */
 int
-iso9660_file_length(name, sresult, dirflag)
-	const char	*name;			/* Not really const !!! */
-	struct directory_entry *sresult;
-	int		dirflag;
+iso9660_file_length(const char *name, struct directory_entry *sresult, int dirflag)
 {
 	char		c;
 	char		*cp;

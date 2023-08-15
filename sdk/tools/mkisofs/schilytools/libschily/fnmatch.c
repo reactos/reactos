@@ -97,10 +97,7 @@ static int fnmatch1 __PR((const char *, const char *, const char *, int,
 #pragma	weak fnmatch =	js_fnmatch
 #else
 int
-fnmatch(pattern, string, flags)
-	const char	*pattern;
-	const char	*string;
-	int		flags;
+fnmatch(const char *pattern, const char *string, int flags)
 {
 	return (js_fnmatch(pattern, string, flags));
 }
@@ -108,10 +105,7 @@ fnmatch(pattern, string, flags)
 #endif
 
 int
-js_fnmatch(pattern, string, flags)
-	const char	*pattern;
-	const char	*string;
-	int		flags;
+js_fnmatch(const char *pattern, const char *string, int flags)
 {
 	/*
 	 * SunPro C gives a warning if we do not initialize an object:
@@ -127,13 +121,7 @@ js_fnmatch(pattern, string, flags)
 }
 
 static int
-fnmatch1(pattern, string, stringstart, flags, patmbs, strmbs)
-	const char	*pattern;
-	const char	*string;
-	const char	*stringstart;
-	int		flags;
-	mbstate_t	patmbs;
-	mbstate_t	strmbs;
+fnmatch1(const char *pattern, const char *string, const char *stringstart, int flags, mbstate_t patmbs, mbstate_t strmbs)
 {
 	const char *bt_pattern, *bt_string;
 	mbstate_t bt_patmbs, bt_strmbs;
@@ -280,19 +268,9 @@ fnmatch1(pattern, string, stringstart, flags, patmbs, strmbs)
 	/* NOTREACHED */
 }
 
-#ifdef	PROTOTYPES
 static int
 rangematch(const char *pattern, wchar_t test, int flags, char **newp,
 	    mbstate_t *patmbs)
-#else
-static int
-rangematch(pattern, test, flags, newp, patmbs)
-	const char *pattern;
-	wchar_t test;
-	int flags;
-	char **newp;
-	mbstate_t *patmbs;
-#endif
 {
 	int negate, ok;
 	wchar_t c, c2;

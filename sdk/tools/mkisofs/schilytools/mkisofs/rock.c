@@ -101,12 +101,7 @@ LOCAL	int	reclimit;	/* Max. # of bytes usable in this area	*/
 
 /* if we are using converted filenames, we don't want the '/' character */
 LOCAL void
-rstrncpy(t, f, tlen, inls, onls)
-	char	*t;
-	char	*f;
-	size_t	tlen;		/* The to-length */
-	siconvt_t *inls;
-	siconvt_t *onls;
+rstrncpy(char *t, char *f, size_t tlen, siconvt_t *inls, siconvt_t *onls)
 {
 	size_t	flen = strlen(f);
 
@@ -124,9 +119,7 @@ rstrncpy(t, f, tlen, inls, onls)
 }
 
 LOCAL void
-add_CE_entry(field, line)
-	char	*field;
-	int	line;
+add_CE_entry(char *field, int line)
 {
 	if (MAYBE_ADD_CE_ENTRY(0)) {
 		errmsgno(EX_BAD,
@@ -158,14 +151,8 @@ add_CE_entry(field, line)
 	reclimit = SECTOR_SIZE - 8;	/* Limit to one sector */
 }
 
-#ifdef	PROTOTYPES
 LOCAL int
 gen_xa_attr(mode_t attr)
-#else
-LOCAL int
-gen_xa_attr(attr)
-	mode_t	attr;
-#endif
 {
 	int	ret = 0;
 
@@ -193,8 +180,7 @@ gen_xa_attr(attr)
 }
 
 LOCAL void
-gen_xa(lstatbuf)
-	struct stat	*lstatbuf;
+gen_xa(struct stat *lstatbuf)
 {
 		/*
 		 * Group ID
@@ -224,27 +210,12 @@ gen_xa(lstatbuf)
 
 }
 
-#ifdef PROTOTYPES
 EXPORT int
 generate_xa_rr_attributes(char *whole_name, char *name,
 			struct directory_entry *s_entry,
 			struct stat *statbuf,
 			struct stat *lstatbuf,
 			int deep_opt)
-#else
-EXPORT int
-generate_xa_rr_attributes(whole_name, name,
-			s_entry,
-			statbuf,
-			lstatbuf,
-			deep_opt)
-	char		*whole_name;
-	char		*name;
-	struct directory_entry *s_entry;
-	struct stat	*statbuf,
-			*lstatbuf;
-	int		deep_opt;
-#endif
 {
 	int		flagpos;
 	int		flagval;
@@ -900,11 +871,7 @@ xa_only:
  * Guaranteed to  return a single sector with the relevant info
  */
 EXPORT char *
-generate_rr_extension_record(id, descriptor, source, size)
-	char	*id;
-	char	*descriptor;
-	char	*source;
-	int	*size;
+generate_rr_extension_record(char *id, char *descriptor, char *source, int *size)
 {
 	int		lipnt = 0;
 	char		*pnt;

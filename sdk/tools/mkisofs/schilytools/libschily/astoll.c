@@ -53,18 +53,13 @@
 
 
 char *
-astoll(s, l)
-	register const char *s;
-	Llong *l;
+astoll(const char *s, Llong *l)
 {
 	return (astollb(s, l, 0));
 }
 
 char *
-astollb(s, l, base)
-	register const char *s;
-	Llong *l;
-	register int base;
+astollb(const char *s, Llong *l, int base)
 {
 	int neg = 0;
 	register ULlong ret = (ULlong)0;

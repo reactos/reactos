@@ -20,9 +20,7 @@
 #include <schily/schily.h>
 
 EXPORT int
-streql(a, b)
-	const char	*a;
-	const char	*b;
+streql(const char *a, const char *b)
 {
 	register const char	*s1 = a;
 	register const char	*s2 = b;

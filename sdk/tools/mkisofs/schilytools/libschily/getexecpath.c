@@ -52,7 +52,7 @@
 
 
 EXPORT char *
-getexecpath()
+getexecpath(void)
 {
 #ifdef	PATH_IMPL
 #ifdef	METHOD_SYMLINK

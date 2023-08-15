@@ -206,11 +206,7 @@ static	int	_ferr __PR((char *, double));
 #define	abs(i)	((i) < 0 ? -(i) : (i))
 
 EXPORT int
-ftoes(s, val, fieldwidth, ndigits)
-	register	char 	*s;
-			MDOUBLE	val;
-	register	int	fieldwidth;
-	register	int	ndigits;
+ftoes(char *s, MDOUBLE val, int fieldwidth, int ndigits)
 {
 	register	char	*b;
 	register	char	*rs;
@@ -287,11 +283,7 @@ ftoes(s, val, fieldwidth, ndigits)
 #endif
 
 EXPORT int
-ftofs(s, val, fieldwidth, ndigits)
-	register	char 	*s;
-			MDOUBLE	val;
-	register	int	fieldwidth;
-	register	int	ndigits;
+ftofs(char *s, MDOUBLE val, int fieldwidth, int ndigits)
 {
 	register	char	*b;
 	register	char	*rs;
@@ -394,9 +386,7 @@ ftofs(s, val, fieldwidth, ndigits)
 #endif	/* HAVE_LONGDOUBLE */
 
 LOCAL int
-_ferr(s, val)
-	char	*s;
-	double	val;
+_ferr(char *s, double val)
 {
 	if (isnan(val)) {
 		strcpy(s, _js_nan);

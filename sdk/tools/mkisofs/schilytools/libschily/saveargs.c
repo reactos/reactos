@@ -55,9 +55,7 @@ LOCAL	void	init_progname	__PR((void));
 LOCAL	void	init_arginfo	__PR((void));
 
 EXPORT void
-save_args(ac, av)
-	int	ac;
-	char	*av[];
+save_args(int ac, char *av[])
 {
 	ac_saved = ac;
 	av_saved = av;
@@ -65,8 +63,7 @@ save_args(ac, av)
 }
 
 LOCAL void
-save_av0(av0)
-	char	*av0;
+save_av0(char *av0)
 {
 	int	slen;
 	char	*p;
@@ -93,7 +90,7 @@ save_av0(av0)
 }
 
 EXPORT int
-saved_ac()
+saved_ac(void)
 {
 	if (av_saved == NULL)
 		init_arginfo();
@@ -102,7 +99,7 @@ saved_ac()
 }
 
 EXPORT char **
-saved_av()
+saved_av(void)
 {
 	if (av_saved == NULL)
 		init_arginfo();
@@ -111,7 +108,7 @@ saved_av()
 }
 
 EXPORT char *
-saved_av0()
+saved_av0(void)
 {
 	if (av0_saved == NULL)
 		init_arginfo();
@@ -120,8 +117,7 @@ saved_av0()
 }
 
 EXPORT void
-set_progname(name)
-	const char	*name;
+set_progname(const char *name)
 {
 	int	slen;
 	char	*p;
@@ -148,7 +144,7 @@ set_progname(name)
 }
 
 EXPORT char *
-get_progname()
+get_progname(void)
 {
 	if (progname_saved)
 		return (progname_saved);
@@ -160,7 +156,7 @@ get_progname()
 }
 
 EXPORT char *
-get_progpath()
+get_progpath(void)
 {
 	if (progpath_saved)
 		return (progpath_saved);
@@ -172,7 +168,7 @@ get_progpath()
 }
 
 LOCAL void
-init_progname()
+init_progname(void)
 {
 #if defined(HAVE_SCANSTACK) || defined(HAVE_GETPROGNAME)
 	char	*progname;
@@ -205,7 +201,7 @@ init_progname()
 }
 
 LOCAL void
-init_arginfo()
+init_arginfo(void)
 {
 #if defined(HAVE_DLINFO) && defined(HAVE_DLOPEN_IN_LIBC) && defined(RTLD_DI_ARGSINFO)
 	Dl_argsinfo	args;

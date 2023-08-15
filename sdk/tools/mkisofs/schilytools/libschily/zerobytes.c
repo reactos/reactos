@@ -27,9 +27,7 @@
  * zero(to, cnt)
  */
 EXPORT char *
-zerobytes(tov, cnt)
-	void	*tov;
-	ssize_t	cnt;
+zerobytes(void *tov, ssize_t cnt)
 {
 	register char	*to = (char *)tov;
 	register ssize_t n;

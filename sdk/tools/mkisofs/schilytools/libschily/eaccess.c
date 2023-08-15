@@ -32,9 +32,7 @@ static	UConst char sccsid[] =
 EXPORT	int	eaccess		__PR((const char *name, int mode));
 
 EXPORT int
-eaccess(name, mode)
-	const	char	*name;
-		int	mode;
+eaccess(const char *name, int mode)
 {
 #ifdef	HAVE_EUIDACCESS
 	return (euidaccess(name, mode));

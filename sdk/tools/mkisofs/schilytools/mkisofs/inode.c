@@ -52,8 +52,7 @@ LOCAL	int	update_dir_nlink	__PR((struct directory *dpnt));
  * Inode/hard link related stuff for non-directory type files.
  */
 EXPORT void
-do_inode(dpnt)
-	struct directory	*dpnt;
+do_inode(struct directory *dpnt)
 {
 	null_ino_high = null_inodes;
 
@@ -82,8 +81,7 @@ do_inode(dpnt)
  * Set the link count for directories to 2 + number of sub-directories.
  */
 EXPORT void
-do_dir_nlink(dpnt)
-	struct directory	*dpnt;
+do_dir_nlink(struct directory *dpnt)
 {
 	int	rootlinks;
 
@@ -110,8 +108,7 @@ do_dir_nlink(dpnt)
  * Assign inode numbers to files of zero size and to symlinks.
  */
 LOCAL void
-assign_inodes(dpnt)
-	struct directory	*dpnt;
+assign_inodes(struct directory *dpnt)
 {
 	struct directory_entry	*s_entry;
 	struct file_hash	*s_hash;
@@ -195,8 +192,7 @@ assign_inodes(dpnt)
  * Compute the link count for non-directory type files.
  */
 LOCAL void
-compute_linkcount(dpnt)
-	struct directory	*dpnt;
+compute_linkcount(struct directory *dpnt)
 {
 	struct directory_entry	*s_entry;
 	struct file_hash	*s_hash;
@@ -281,8 +277,7 @@ compute_linkcount(dpnt)
  * computed with compute_linkcount().
  */
 LOCAL void
-assign_linkcount(dpnt)
-	struct directory	*dpnt;
+assign_linkcount(struct directory *dpnt)
 {
 	struct directory_entry	*s_entry;
 	struct file_hash	*s_hash;
@@ -326,9 +321,7 @@ assign_linkcount(dpnt)
  * Rewrite the content of the RR inode field in the PX record.
  */
 LOCAL void
-update_inode(s_entry, value)
-	struct directory_entry	*s_entry;
-	int			value;
+update_inode(struct directory_entry *s_entry, int value)
 {
 	unsigned char	*pnt;
 	int		len;
@@ -366,9 +359,7 @@ update_inode(s_entry, value)
  * Rewrite the content of the RR nlink field in the PX record.
  */
 LOCAL void
-update_nlink(s_entry, value)
-	struct directory_entry	*s_entry;
-	int			value;
+update_nlink(struct directory_entry *s_entry, int value)
 {
 	unsigned char	*pnt;
 	int		len;
@@ -402,8 +393,7 @@ update_nlink(s_entry, value)
  * This is done here for all diresctories except for "/..".
  */
 LOCAL int
-update_dir_nlink(dpnt)
-	struct directory *dpnt;
+update_dir_nlink(struct directory *dpnt)
 {
 	struct directory *xpnt;
 	struct directory_entry *s_entry;

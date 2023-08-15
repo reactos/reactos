@@ -43,9 +43,7 @@ EXPORT	UInt32_t get_733	__PR((void *vp));
  * Set 16 bit unsigned int, store Least significant byte first
  */
 EXPORT void
-set_721(vp, i)
-	void		*vp;
-	UInt32_t	i;
+set_721(void *vp, UInt32_t i)
 {
 	Uchar	*p = vp;
 
@@ -58,9 +56,7 @@ set_721(vp, i)
  * Set 16 bit unsigned int, store Most significant byte first
  */
 EXPORT void
-set_722(vp, i)
-	void		*vp;
-	UInt32_t	i;
+set_722(void *vp, UInt32_t i)
 {
 	Uchar	*p = vp;
 
@@ -73,9 +69,7 @@ set_722(vp, i)
  * Set 16 bit unsigned int, store Both Byte orders
  */
 EXPORT void
-set_723(vp, i)
-	void		*vp;
-	UInt32_t	i;
+set_723(void *vp, UInt32_t i)
 {
 	Uchar	*p = vp;
 
@@ -88,9 +82,7 @@ set_723(vp, i)
  * Set 32 bit unsigned int, store Least significant byte first
  */
 EXPORT void
-set_731(vp, i)
-	void		*vp;
-	UInt32_t	i;
+set_731(void *vp, UInt32_t i)
 {
 	Uchar	*p = vp;
 
@@ -105,9 +97,7 @@ set_731(vp, i)
  * Set 32 bit unsigned int, store Most significant byte first
  */
 EXPORT void
-set_732(vp, i)
-	void		*vp;
-	UInt32_t	i;
+set_732(void *vp, UInt32_t i)
 {
 	Uchar	*p = vp;
 
@@ -122,9 +112,7 @@ set_732(vp, i)
  * Set 32 bit unsigned int, store Both Byte orders
  */
 EXPORT void
-set_733(vp, i)
-	void		*vp;
-	UInt32_t	i;
+set_733(void *vp, UInt32_t i)
 {
 	Uchar	*p = vp;
 
@@ -139,8 +127,7 @@ set_733(vp, i)
  * Get 8 bit unsigned int
  */
 EXPORT UInt32_t
-get_711(vp)
-	void	*vp;
+get_711(void *vp)
 {
 	Uchar	*p = vp;
 
@@ -152,8 +139,7 @@ get_711(vp)
  * Get 16 bit unsigned int, stored with Least significant byte first
  */
 EXPORT UInt32_t
-get_721(vp)
-	void	*vp;
+get_721(void *vp)
 {
 	Uchar	*p = vp;
 
@@ -166,8 +152,7 @@ get_721(vp)
  * Get 16 bit unsigned int, stored with Both Byte orders
  */
 EXPORT UInt32_t
-get_723(vp)
-	void	*vp;
+get_723(void *vp)
 {
 	Uchar	*p = vp;
 #if 0
@@ -184,8 +169,7 @@ get_723(vp)
  * Get 32 bit unsigned int, stored with Least significant byte first
  */
 EXPORT UInt32_t
-get_731(vp)
-	void	*vp;
+get_731(void *vp)
 {
 	Uchar	*p = vp;
 
@@ -200,8 +184,7 @@ get_731(vp)
  * Get 32 bit unsigned int, stored with Most significant byte first
  */
 EXPORT UInt32_t
-get_732(vp)
-	void	*vp;
+get_732(void *vp)
 {
 	Uchar	*p = vp;
 
@@ -216,8 +199,7 @@ get_732(vp)
  * Get 32 bit unsigned int, stored with Both Byte orders
  */
 EXPORT UInt32_t
-get_733(vp)
-	void	*vp;
+get_733(void *vp)
 {
 	Uchar	*p = vp;
 
