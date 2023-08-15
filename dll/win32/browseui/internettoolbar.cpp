@@ -1347,7 +1347,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
         if (ownerWindow == NULL)
             return E_FAIL;
 
-        //Get browseui settings from owner window
+        // Get browseui settings from owner window
         pSettings = (BrowseUISettings*)::SendMessageW(ownerWindow, BWM_GETSETTINGS, 0, 0);
 
         // create dock container
