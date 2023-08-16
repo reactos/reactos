@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Decupează\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiază\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Li&pește\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Șt&erge selecția\tDel", IDM_EDITDELETESELECTION
         MENUITEM "In&versează selecția", IDM_EDITINVERTSELECTION
         MENUITEM "Selecte&ază tot\tCtrl+A", IDM_EDITSELECTALL
@@ -263,7 +263,7 @@ BEGIN
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixeli/cm"
     IDS_CANTPASTE "Nu a putut fi lipit din clipboard. Formatul de date este fie incorect, fie nesuportat."
-    IDS_SAVEERROR "Eșec în salvarea imaginii bitmap („hartă de biți”) în fișierul:\n\n%s"
+    IDS_SAVEERROR "Eșec în păstrarea imaginii bitmap („hartă de biți”) în fișierul:\n\n%s"
     IDS_CANTSENDMAIL "Eșect în trimiterea unei scrisori."
-    IDS_LOSECOLOR "În această operațiune va fi pierdută informația legată de culoare. Sunteți sigur că veți continua?"
+    IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sigur veți continua?"
 END
