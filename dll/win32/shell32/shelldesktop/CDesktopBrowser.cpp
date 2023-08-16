@@ -467,7 +467,7 @@ LRESULT CDesktopBrowser::OnShowOptionsDlg(UINT uMsg, WPARAM wParam, LPARAM lPara
     switch (wParam)
     {
         case 0:
-            ShowFolderOptionsDialog(0, true);
+            ShowFolderOptionsDialog(0, TRUE);
             break;
         case 1:
             _NotifyTray(WM_COMMAND, TRAYCMD_TASKBAR_PROPERTIES, 0);
