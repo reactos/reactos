@@ -225,7 +225,11 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
     return 0;
 }
 
-enum { PAGE_GENERAL, PAGE_VIEW, PAGE_FILETYPES };
+enum {
+    PAGE_GENERAL,
+    PAGE_VIEW,
+    PAGE_FILETYPES
+};
 
 static DWORD CALLBACK
 ShowFolderOptionsDialogThreadProc(LPVOID param)
@@ -271,7 +275,7 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
     pinfo.pszIcon = MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS);
     pinfo.pszCaption = szOptions;
     pinfo.pfnCallback = PropSheetProc;
-    pinfo.nStartPage = (UINT) param;
+    pinfo.nStartPage = (UINT)param;
 
     PropertySheetW(&pinfo);
 
@@ -291,10 +295,10 @@ ShowFolderOptionsDialog(UINT Page, BOOL Async = false)
             PostMessage(hPop, PSM_SETCURSEL, Page, 0);
         }
         SetForegroundWindow(hPop);
-        return ;
+        return;
     }
     
-    LPVOID param = (LPVOID) Page;
+    LPVOID param = (LPVOID)Page;
     if (Async)
         SHCreateThread(ShowFolderOptionsDialogThreadProc, param, 0, 0);
     else

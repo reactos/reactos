@@ -464,14 +464,14 @@ extern VOID WINAPI ShowFolderOptionsDialog(UINT Page, BOOL Async);
 
 LRESULT CDesktopBrowser::OnShowOptionsDlg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    switch(wParam)
+    switch (wParam)
     {
-    case 0:
-        ShowFolderOptionsDialog(0, true);
-        break;
-    case 1:
-        _NotifyTray(WM_COMMAND, TRAYCMD_TASKBAR_PROPERTIES, 0);
-        break;
+        case 0:
+            ShowFolderOptionsDialog(0, true);
+            break;
+        case 1:
+            _NotifyTray(WM_COMMAND, TRAYCMD_TASKBAR_PROPERTIES, 0);
+            break;
     }
     return 0;
 }
