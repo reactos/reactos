@@ -971,7 +971,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ResizeBorderDW(LPCRECT prcBorder,
     ::GetWindowRect(fMainReBar, &availableBorderSpace);
     neededBorderSpace.left = 0;
     neededBorderSpace.top = availableBorderSpace.bottom - availableBorderSpace.top;
-    if (pSettings && !pSettings->fLocked)
+    if (!pSettings->fLocked)
         neededBorderSpace.top += 3;
     neededBorderSpace.right = 0;
     neededBorderSpace.bottom = 0;
@@ -1348,7 +1348,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
             return E_FAIL;
 
         // Get browseui settings from owner window
-        pSettings = (BrowseUISettings*)::SendMessageW(ownerWindow, BWM_GETSETTINGS, 0, 0);
+        ::SendMessageW(ownerWindow, BWM_GETSETTINGSPTR, 0, (LPARAM)&pSettings);
 
         // create dock container
         fSite = pUnkSite;

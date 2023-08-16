@@ -6,8 +6,6 @@
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#define BWM_SETTINGCHANGE (WM_USER + 300)
-#define BWM_GETSETTINGS (WM_USER + 301)
 
 #include <windef.h>
 #include <winbase.h>
@@ -38,6 +36,8 @@
 #include <wine/debug.h>
 
 #include "resource.h"
+#define BWM_SETTINGCHANGE (WM_USER + 300)
+#define BWM_GETSETTINGSPTR (WM_USER + 301)
 struct BrowseUISettings;
 
 #include "ACLCustomMRU.h"

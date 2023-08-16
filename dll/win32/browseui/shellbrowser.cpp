@@ -625,7 +625,7 @@ public:
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnGetBrowseUISettings(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnGetBrowseUISettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     HRESULT OnSearch();
 
     static ATL::CWndClassInfo& GetWndClassInfo()
@@ -677,7 +677,7 @@ public:
         COMMAND_RANGE_HANDLER(IDM_EXPLORERBAND_BEGINCUSTOM, IDM_EXPLORERBAND_ENDCUSTOM, OnExplorerBar)
         MESSAGE_HANDLER(WM_COMMAND, RelayCommands)
         MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnBrowseUISettingChanged)
-        MESSAGE_HANDLER(BWM_GETSETTINGS, OnGetBrowseUISettings)
+        MESSAGE_HANDLER(BWM_GETSETTINGSPTR, OnGetBrowseUISettingsPtr)
     END_MSG_MAP()
 
     BEGIN_CONNECTION_POINT_MAP(CShellBrowser)
@@ -3803,9 +3803,14 @@ LRESULT CShellBrowser::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM
     return 0;
 }
 
-LRESULT CShellBrowser::OnGetBrowseUISettings(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CShellBrowser::OnGetBrowseUISettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    return (LRESULT)&m_settings;
+     if (!lParam)
+        return ERROR_INVALID_PARAMETER;
+
+    *(BrowseUISettings**)lParam = &m_settings;
+
+    return NO_ERROR;
 }
 
 HRESULT CShellBrowser_CreateInstance(REFIID riid, void **ppv)
