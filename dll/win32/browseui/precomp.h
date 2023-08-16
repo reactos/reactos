@@ -36,7 +36,8 @@
 #include <wine/debug.h>
 
 #include "resource.h"
-#define BWM_SETTINGCHANGE (WM_USER + 300)
+
+#define BWM_SETTINGCHANGE  (WM_USER + 300)
 #define BWM_GETSETTINGSPTR (WM_USER + 301)
 struct BrowseUISettings;
 

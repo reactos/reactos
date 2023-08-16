@@ -3809,7 +3809,6 @@ LRESULT CShellBrowser::OnGetBrowseUISettingsPtr(UINT uMsg, WPARAM wParam, LPARAM
         return ERROR_INVALID_PARAMETER;
 
     *(BrowseUISettings**)lParam = &m_settings;
-
     return NO_ERROR;
 }
 
