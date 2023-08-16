@@ -294,8 +294,7 @@ WSPRecv(SOCKET Handle,
     /* Non-blocking sockets must wait until data is available*/
     if (Status == STATUS_PENDING && Socket->SharedData->NonBlocking)
     {
-        if (lpErrno)
-            *lpErrno = WSAEWOULDBLOCK;
+        if (lpErrno) *lpErrno = WSAEWOULDBLOCK;
         return SOCKET_ERROR;
     }
 
