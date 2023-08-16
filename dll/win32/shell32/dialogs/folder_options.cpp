@@ -284,7 +284,7 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
 }
 
 VOID WINAPI 
-ShowFolderOptionsDialog(UINT Page, BOOL Async = false)
+ShowFolderOptionsDialog(UINT Page, BOOL Async = FALSE)
 {
     HWND hWnd = FindWindow(GlobalFolderOptionsClassName, NULL);
     if (hWnd)
