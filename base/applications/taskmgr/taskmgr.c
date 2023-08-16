@@ -31,7 +31,7 @@ int  nMinimumHeight;             /* Minimum height of the dialog (OnSize()'s cy)
 int  nOldWidth;                  /* Holds the previous client area width */
 int  nOldHeight;                 /* Holds the previous client area height */
 
-BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
+BOOL bTrackMenu = FALSE;         /* Signals when we display menu hints */
 BOOL bWasKeyboardInput = FALSE;  /* TabChange by Keyboard or Mouse ? */
 
 TASKMANAGER_SETTINGS TaskManagerSettings;
@@ -482,24 +482,10 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         TrayIcon_UpdateIcon();
         break;
 
-    case WM_INITMENUPOPUP:
-        /* Do not disable the status bar if we opened the system menu */
-        if (!HIWORD(lParam))
-            TaskManager_DisableStatusBar(hDlg);
-        else
-            TaskManager_EnableStatusBar(hDlg);
-        break;
-    case WM_ENTERMENULOOP:
-        bInMenuLoop = TRUE;
-        break;
-    case WM_EXITMENULOOP:
-        bInMenuLoop = FALSE;
-        TaskManager_EnableStatusBar(hDlg);
-        break;
     case WM_MENUSELECT:
-        if (!(HIWORD(wParam) & MF_SYSMENU))
-            TaskManager_OnMenuSelect(hDlg, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
+        TaskManager_OnMenuSelect(hDlg, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
         break;
+
     case WM_SYSCOLORCHANGE:
         /* Forward WM_SYSCOLORCHANGE to common controls */
         SendMessage(hApplicationPageListCtrl, WM_SYSCOLORCHANGE, 0, 0);
@@ -569,7 +555,7 @@ BOOL OnCreate(HWND hWnd)
     nParts[0] = STATUS_SIZE1;
     nParts[1] = STATUS_SIZE2;
     nParts[2] = STATUS_SIZE3;
-    SendMessageW(hStatusWnd, SB_SETPARTS, 3, (LPARAM) (LPINT) nParts);
+    SendMessageW(hStatusWnd, SB_SETPARTS, _countof(nParts), (LPARAM)(LPINT)nParts);
 
     /* Create tab pages */
     hTabWnd = GetDlgItem(hWnd, IDC_TAB);
@@ -758,10 +744,8 @@ void OnSize( WPARAM nType, int cx, int cy )
 
     if (nType == SIZE_MINIMIZED)
     {
-        if(TaskManagerSettings.HideWhenMinimized)
-        {
-          ShowWindow(hMainWnd, SW_HIDE);
-        }
+        if (TaskManagerSettings.HideWhenMinimized)
+            ShowWindow(hMainWnd, SW_HIDE);
         return;
     }
 
@@ -775,10 +759,10 @@ void OnSize( WPARAM nType, int cx, int cy )
     SendMessageW(hStatusWnd, WM_SIZE, nType, MAKELPARAM(cx,rc.bottom - rc.top));
 
     /* Update the status bar pane sizes */
-    nParts[0] = bInMenuLoop ? -1 : STATUS_SIZE1;
+    nParts[0] = STATUS_SIZE1;
     nParts[1] = STATUS_SIZE2;
     nParts[2] = cx;
-    SendMessageW(hStatusWnd, SB_SETPARTS, bInMenuLoop ? 1 : 3, (LPARAM) (LPINT) nParts);
+    SendMessageW(hStatusWnd, SB_SETPARTS, _countof(nParts), (LPARAM)(LPINT)nParts);
 
     /* Resize the tab control */
     GetWindowRect(hTabWnd, &rc);
@@ -896,46 +880,43 @@ void TaskManager_OnRestoreMainWindow(void)
     SetWindowPos(hMainWnd, (OnTop ? HWND_TOPMOST : HWND_TOP), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
 }
 
-void TaskManager_DisableStatusBar(HWND hWnd)
-{
-    int nParts;
-
-    /* Update the status bar pane sizes */
-    nParts = -1;
-    SendMessageW(hStatusWnd, SB_SETPARTS, 1, (LPARAM) (LPINT)&nParts);
-    SendMessageW(hStatusWnd, SB_SETTEXT, (WPARAM)0, (LPARAM)L"");
-}
-
-void TaskManager_EnableStatusBar(HWND hWnd)
-{
-    RECT   rc;
-    int    nParts[3];
-
-    /* Update the status bar pane sizes */
-    GetClientRect(hWnd, &rc);
-    nParts[0] = STATUS_SIZE1;
-    nParts[1] = STATUS_SIZE2;
-    nParts[2] = rc.right;
-    SendMessageW(hStatusWnd, SB_SETPARTS, 3, (LPARAM) (LPINT) nParts);
-
-    /* trigger update of status bar columns and performance page asynchronously */
-    RefreshPerformancePage();
-}
-
 void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
 {
-    WCHAR  str[100];
+    WCHAR str[100] = L"";
 
-    wcscpy(str, L"");
-    if (LoadStringW(hInst, nItemID, str, 100)) {
-        /* load appropriate string */
-        LPWSTR lpsz = str;
-        /* first newline terminates actual string */
-        lpsz = wcschr(lpsz, '\n');
+    /*
+     * Reset the status bar if we close the current menu, or
+     * we open the system menu or hover above a menu separator.
+     * Adapted from comctl32!MenuHelp().
+     */
+    if ((LOWORD(nFlags) == 0xFFFF && hSysMenu == NULL) ||
+        (nFlags & (MF_SEPARATOR | MF_SYSMENU)))
+    {
+        /* Set the status bar for multiple-parts output */
+        SendMessageW(hStatusWnd, SB_SIMPLE, (WPARAM)FALSE, (LPARAM)0);
+        bTrackMenu = FALSE;
+
+        /* Trigger update of status bar columns and performance page asynchronously */
+        RefreshPerformancePage();
+        return;
+    }
+
+    /* Otherwise, retrieve the appropriate menu hint string */
+    if (LoadStringW(hInst, nItemID, str, _countof(str)))
+    {
+        /* First newline terminates actual string */
+        LPWSTR lpsz = wcschr(str, '\n');
         if (lpsz != NULL)
             *lpsz = '\0';
     }
-    SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)str);
+
+    /* Set the status bar for single-part output, if needed... */
+    if (!bTrackMenu)
+        SendMessageW(hStatusWnd, SB_SIMPLE, (WPARAM)TRUE, (LPARAM)0);
+    bTrackMenu = TRUE;
+
+    /* ... and display the menu hint */
+    SendMessageW(hStatusWnd, SB_SETTEXT, SB_SIMPLEID | SBT_NOBORDERS, (LPARAM)str);
 }
 
 void TaskManager_OnViewUpdateSpeed(DWORD dwSpeed)

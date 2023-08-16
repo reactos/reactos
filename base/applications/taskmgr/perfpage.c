@@ -8,8 +8,6 @@
 #include "precomp.h"
 #include <shlwapi.h>
 
-extern BOOL bInMenuLoop;        /* Tells us if we are in the menu loop - from taskmgr.c */
-
 TM_GRAPH_CONTROL PerformancePageCpuUsageHistoryGraph;
 TM_GRAPH_CONTROL PerformancePageMemUsageHistoryGraph;
 
@@ -328,6 +326,8 @@ DWORD WINAPI PerformancePageRefreshThread(PVOID Parameter)
 
     while (1)
     {
+        extern BOOL bTrackMenu; // From taskmgr.c
+
         int nBarsUsed1;
         int nBarsUsed2;
 
@@ -361,7 +361,7 @@ DWORD WINAPI PerformancePageRefreshThread(PVOID Parameter)
                                szChargeLimitFormat,
                                ARRAYSIZE(szChargeLimitFormat));
 
-            if (!bInMenuLoop)
+            if (!bTrackMenu)
             {
                 wsprintfW(Text, szMemUsage, szChargeTotalFormat, szChargeLimitFormat,
                     (CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0));
@@ -406,7 +406,7 @@ DWORD WINAPI PerformancePageRefreshThread(PVOID Parameter)
             SetWindowTextW(hTotalsThreadCountEdit, Text);
             _ultow(TotalProcesses, Text, 10);
             SetWindowTextW(hTotalsProcessCountEdit, Text);
-            if (!bInMenuLoop)
+            if (!bTrackMenu)
             {
                 wsprintfW(Text, szProcesses, TotalProcesses);
                 SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)Text);
@@ -424,7 +424,7 @@ DWORD WINAPI PerformancePageRefreshThread(PVOID Parameter)
             CpuUsage = PerfDataGetProcessorUsage();
             CpuKernelUsage = PerfDataGetProcessorSystemUsage();
 
-            if (!bInMenuLoop)
+            if (!bTrackMenu)
             {
                 wsprintfW(Text, szCpuUsage, CpuUsage);
                 SendMessageW(hStatusWnd, SB_SETTEXT, 1, (LPARAM)Text);
