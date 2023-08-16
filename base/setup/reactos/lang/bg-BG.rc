@@ -70,7 +70,7 @@ BEGIN
     LTEXT "Размер:", IDC_STATIC, 13, 24, 27, 9
     EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "ГБ", IDC_UNIT, 117, 24, 14, 9
-    LTEXT "Файлова уредба:", IDC_STATIC, 13, 46, 42, 9
+    LTEXT "Файлова система:", IDC_STATIC, 13, 46, 42, 9
     CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
     PUSHBUTTON "&Добре", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Отказ", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
@@ -147,7 +147,7 @@ BEGIN
     IDS_DEVICESUBTITLE "Настройка на екрана и клавиатурата."
     IDS_DRIVETITLE "Приготвяне на дял за слагане и системна папка"
     IDS_DRIVESUBTITLE "Приготвяне на дял за слагане, системна папка и зареждач."
-    IDS_PROCESSTITLE "Подготвяне на дял, презапис на файлове и настройване на уредбата"
+    IDS_PROCESSTITLE "Подготвяне на дял, презапис на файлове и настройване на системата"
     IDS_PROCESSSUBTITLE "Създаване и оразмеряване на дял, презапис на файлове, слагане и настройка на зареждач"
     IDS_RESTARTTITLE "Първата степен на настройването приключи"
     IDS_RESTARTSUBTITLE "Първата степен приключи, презапуснете, за да продължите към втора степен"

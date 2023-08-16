@@ -33,7 +33,7 @@ BEGIN
     STRING_YES_NO_FAQ "YN"
     STRING_VERIFYING "Проверка"
     STRING_FAST_FMT "Бързо оразмеряване"
-    STRING_CREATE_FSYS "Създаване на структурата на файловата уредба.\n"
+    STRING_CREATE_FSYS "Създаване на структурата на файловата система.\n"
     STRING_FMT_COMPLETE "Оразмеряването приключи.\n"
     STRING_VOL_COMPRESS "Томът не поддържа сбиване.\n"
     STRING_ENTER_LABEL "Етикет (11 знака или Enter за нищо)? "
