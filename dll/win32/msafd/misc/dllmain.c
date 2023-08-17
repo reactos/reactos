@@ -1785,8 +1785,6 @@ WSPAccept(
 
     AcceptSocketInfo->SharedData->State = SocketConnected;
     AcceptSocketInfo->SharedData->ConnectTime = GetCurrentTimeInSeconds();
-
-    /* Inherit non-blocking state to new socket */
     AcceptSocketInfo->SharedData->NonBlocking = Socket->SharedData->NonBlocking;
 
     /* Return Address in SOCKADDR FORMAT */
