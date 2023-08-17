@@ -3555,7 +3555,7 @@ StartScan:
 
     /* If the process is being debugged, only read IFEO if the PEB says so */
     if (!(dwCreationFlags & (DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS)) ||
-        (NtCurrentPeb()->ReadImageFileExecOptions))
+        (Peb->ReadImageFileExecOptions))
     {
         /* Let's do this! Attempt to open IFEO */
         IFEOStatus = LdrOpenImageFileOptionsKey(&PathName, 0, &KeyHandle);
