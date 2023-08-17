@@ -1352,7 +1352,7 @@ Language=Romanian
 
 Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    Mărimea partiție în megaocteți (Mo). Partiția e cel puțin
+    SIZE=<N>    Mărimea partiției în megaocteți (Mo). Partiția e cel puțin
                 la fel de mare în octeți ca numărul specificat de N. Dacă
                 specificați o dimensiune pentru partiția logică, aceasta
                 trebuie să fie mai mică decât partiția logică. Dacă nu este
@@ -1363,7 +1363,7 @@ Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 Dacă nu este dat niciun decalaj, partiția e plasată pe prima
                 expansiune a discului ce e suficient de mare ca să o țină.
 
-    ALIGN=<N>   Folosită deobicei cu Numărul unității logice RAID (LUN)
+    ALIGN=<N>   Folosită de obicei cu Numărul unității logice RAID (LUN)
                 a șirurilor de dispozitive pentru a îmbunătăți performanța.
                 Decalajul partiției va fi un multiplu a lui <N>. Dacă
                 parametrul OFFSET este specificat, va fi rotunjit la cel mai
@@ -2060,7 +2060,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
 
                 Specifică tipul partiției.
 
-                Destinat numai pentru folosirea producătorilor de echipamente
+                Destinat numai pentru uzul producătorilor de echipamente
                 originale (OEM).
 
                 Pentru discurile cu Registrul principal de inițializare (MBR),
@@ -2092,7 +2092,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                     Partiția rezervată Microsoft:
                         e3c9e316-0b5c-4db8-817d-f92df00215ae
 
-                    Partiția de bază de date:
+                    Partiția de bază pentru date:
                         ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 
                     Partiția de metadate LDM pe un disc dinamic:
@@ -2108,7 +2108,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                 comanda crează o partiție de bază pentru date.
 
                 Orice octet care descrie tipul de partiție sau GUID poate fi
-                specificată cu acest parametru. DiskPart nu verifică tipul
+                specificat cu acest parametru. DiskPart nu verifică tipul
                 partiției pentru validitate, cu excepția faptului că este
                 un octet cu valoare în format hexazecimal sau un GUID.
 
@@ -2119,13 +2119,14 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                     să nu mai poată porni. Dacă nu sunteți un OEM sau un
                     profesionist cu experiență în discuri GPT, nu creați
                     partiții pe discuri GPT folosind acest parametru.
-                    În schimb, folosiți întotdeauna comanda CREATE PARTITION EFI ca să creați
-                    partiții de sistem EFI, comanda CREATE PARTITION MSR ca să
-                    creați partiții rezervate Microsoft, și comanda
-                    CREATE PARTITION PRIMARY fără acest parametru ca să creați
-                    partiții primare pe discuri GPT.
+                    În schimb, folosiți întotdeauna comanda
+                    CREATE PARTITION EFI ca să creați partiții de sistem EFI,
+                    comanda CREATE PARTITION MSR ca să creați partiții
+                    rezervate Microsoft, și comanda CREATE PARTITION PRIMARY
+                    fără acest parametru ca să creați partiții primare pe
+                    discuri GPT.
 
-    ALIGN=<N>   Folosită deobicei cu Numărul unității logice RAID (LUN)
+    ALIGN=<N>   Folosită deobicei cu Numărul unității logice (LUN) RAID
                 a șirurilor de dispozitive pentru a îmbunătăți performanța.
                 Decalajul partiției va fi un multiplu a lui <N>. Dacă
                 parametrul OFFSET este specificat, va fi rotunjit la cel mai
@@ -4029,7 +4030,7 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
     COMPRESS    Numai pentru formatul NTFS: Fișierele create pe noul volum
                 vor fi comprimate în mod implicit.
     OVERRIDE    Forțează mai întâi demontarea sistemului de fișiere, dacă e
-                necesar Toate identificatoarele de gestiune deschise ale
+                necesar. Toate identificatoarele de gestiune deschise ale
                 volumului nu ar mai fi valabile.
 
     DUPLICATE   Numai pentru formatul UDF: Această etichetă se aplică
@@ -6170,11 +6171,11 @@ Sintaxă: SELECT DISK=<N>
          SELECT DISK=<Cale>
 
     DISK=<N>
-                Numărul indexului discului DiskPart al discului care urmează
-                să primească marcajulul.
+                Numărul indexului discului pentru programul DiskPart care
+                urmează să primească marcajul.
 
     DISK=<Cale>
-                Calea locației discului care urmează să primească marcajulul.
+                Calea locației discului care urmează să primească marcajul.
 
     DISK=SYSTEM
                 La calculatoarele cu BIOS, discul 0 din BIOS va fi marcat.
@@ -6189,7 +6190,7 @@ Sintaxă: SELECT DISK=<N>
                 pentru a se repeta peste toate discurile din lista de discuri.
                 Următorul disc din listă va primi marcaj. Dacă următorul
                 disc este începutul enumerării, comanda va eșua și niciun disc
-                nu va trebui să se marcheze.
+                nu va trebui să fie marcat
 
     Dacă nicio opțiune nu este specificată, comanda SELECT va lista discul
     care este marcat în prezent. Puteți vizualiza numerele de index pentru
@@ -7258,7 +7259,7 @@ Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
                     Partiția de sistem EFI:
                         c12a7328-f81f-11d2-ba4b-00a0c93ec93b
 
-                    Partiția de bază de date:
+                    Partiția de bază pentru date:
                         ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 
                 Orice partiție de tip GUID poate fi specificată cu acest
