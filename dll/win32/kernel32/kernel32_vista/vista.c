@@ -732,7 +732,7 @@ GetUserPreferredUILanguages(
 /*
  * @unimplemented
  */
-#if 0 // Tis is Windows 7+
+#if 0 // This is Windows 7+
 BOOL
 WINAPI
 SetProcessPreferredUILanguages(

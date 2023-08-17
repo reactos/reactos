@@ -1,5 +1,5 @@
-@ stdcall -version=0x600+ AcquireSRWLockExclusive(ptr) NTDLL.RtlAcquireSRWLockExclusive
-@ stdcall -version=0x600+ AcquireSRWLockShared(ptr) NTDLL.RtlAcquireSRWLockShared
+@ stdcall -version=0x600+ AcquireSRWLockExclusive(ptr) ntdll.RtlAcquireSRWLockExclusive
+@ stdcall -version=0x600+ AcquireSRWLockShared(ptr) ntdll.RtlAcquireSRWLockShared
 @ stdcall ActivateActCtx(ptr ptr)
 @ stdcall AddAtomA(str)
 @ stdcall AddAtomW(wstr)
@@ -565,6 +565,7 @@
 @ stdcall GetProcessId(long)
 @ stdcall GetProcessIdOfThread(ptr)
 @ stdcall GetProcessIoCounters(long ptr)
+# @ stdcall -version=0x601+ GetProcessPreferredUILanguages(long ptr wstr ptr)
 @ stdcall GetProcessPriorityBoost(long ptr)
 @ stdcall GetProcessShutdownParameters(ptr ptr)
 @ stdcall GetProcessTimes(long ptr ptr ptr ptr)
@@ -1057,6 +1058,7 @@
 @ stdcall SetProcessAffinityMask(long long)
 @ stub -version=0x600+ SetProcessAffinityUpdateMode
 @ stub -version=0x600+ SetProcessDEPPolicy
+# @ stdcall -version=0x601+ SetProcessPreferredUILanguages(long wstr ptr)
 @ stdcall SetProcessPriorityBoost(long long)
 @ stdcall SetProcessShutdownParameters(long long)
 @ stdcall SetProcessWorkingSetSize(long long long)
