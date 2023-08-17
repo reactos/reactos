@@ -108,14 +108,14 @@ BEGIN
         MENUITEM "&Decupează\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiază\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Ște&rge selecția\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Șter&ge selecția\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Selectea&ză tot\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opiere în...", IDM_EDITCOPYTO
-        MENUITEM "&Lipire din...", IDM_EDITPASTEFROM
+        MENUITEM "Lipir&e din...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
         MENUITEM "&Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Întind&ere/Înclinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "Întindere/În&clinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Inversează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
@@ -264,6 +264,6 @@ BEGIN
     IDS_PRINTRES "%d x %d pixeli/cm"
     IDS_CANTPASTE "Nu a putut fi lipit din clipboard. Formatul de date este fie incorect, fie nesuportat."
     IDS_SAVEERROR "Eșec în păstrarea imaginii bitmap („hartă de biți”) în fișierul:\n\n%s"
-    IDS_CANTSENDMAIL "Eșect în trimiterea unei scrisori."
+    IDS_CANTSENDMAIL "Eșec în trimiterea unei scrisori."
     IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sigur veți continua?"
 END
