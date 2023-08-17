@@ -275,7 +275,7 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
     pinfo.pszIcon = MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS);
     pinfo.pszCaption = szOptions;
     pinfo.pfnCallback = PropSheetProc;
-    pinfo.nStartPage = (UINT)param;
+    pinfo.nStartPage = (UINT)(UINT_PTR)param;
 
     PropertySheetW(&pinfo);
 
