@@ -1029,7 +1029,7 @@
 @ stdcall SetFileAttributesW(wstr long)
 @ stdcall -version=0x600+ SetFileBandwidthReservation(ptr long long long ptr ptr)
 @ stdcall SetFileCompletionNotificationModes(ptr long)
-@ stub -version=0x600+ SetFileInformationByHandle
+@ stdcall -version=0x600+ SetFileInformationByHandle(ptr long ptr long)
 @ stub -version=0x600+ SetFileIoOverlappedRange
 @ stdcall SetFilePointer(long long ptr long)
 @ stdcall SetFilePointerEx(long double ptr long)

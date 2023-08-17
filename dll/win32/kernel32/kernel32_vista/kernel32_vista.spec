@@ -8,6 +8,7 @@
 ; Individual files
 @ stdcall GetFileInformationByHandleEx(ptr long ptr long)
 @ stdcall -ret64 GetTickCount64()
+@ stdcall SetFileInformationByHandle(ptr long ptr long)
 
 ; sync.c SRWLock
 @ stdcall InitializeSRWLock(ptr)

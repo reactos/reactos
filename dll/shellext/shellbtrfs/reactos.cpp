@@ -7,6 +7,7 @@
  */
 
 #include "shellext.h"
+
 #include <initguid.h>
 #include <ntddstor.h>
 #include <ndk/rtlfuncs.h>
@@ -14,6 +15,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 /* So that we can link */
 DEFINE_GUID(CLSID_WICImagingFactory, 0xcacaf262,0x9370,0x4615,0xa1,0x3b,0x9f,0x55,0x39,0xda,0x4c,0x0a);
 
@@ -152,64 +154,6 @@ NTSTATUS WINAPI RtlUTF8ToUnicodeN(PWSTR uni_dest, ULONG uni_bytes_max,
     return status;
 }
 
-/* Quick and dirty table for conversion */
-FILE_INFORMATION_CLASS ConvertToFileInfo[MaximumFileInfoByHandleClass] =
-{
-    FileBasicInformation, FileStandardInformation, FileNameInformation, FileRenameInformation,
-    FileDispositionInformation, FileAllocationInformation, FileEndOfFileInformation, FileStreamInformation,
-    FileCompressionInformation, FileAttributeTagInformation, FileIdBothDirectoryInformation, (FILE_INFORMATION_CLASS)-1,
-    FileIoPriorityHintInformation, FileRemoteProtocolInformation
-};
-
-/* Taken from kernel32 */
-DWORD
-BaseSetLastNTError(IN NTSTATUS Status)
-{
-    DWORD dwErrCode;
-    dwErrCode = RtlNtStatusToDosError(Status);
-    SetLastError(dwErrCode);
-    return dwErrCode;
-}
-
-/* Quick implementation, still going farther than Wine implementation */
-BOOL
-WINAPI
-SetFileInformationByHandle(HANDLE hFile,
-                           FILE_INFO_BY_HANDLE_CLASS FileInformationClass,
-                           LPVOID lpFileInformation,
-                           DWORD dwBufferSize)
-{
-    NTSTATUS Status;
-    IO_STATUS_BLOCK IoStatusBlock;
-    FILE_INFORMATION_CLASS FileInfoClass;
-
-    FileInfoClass = (FILE_INFORMATION_CLASS)-1;
-
-    /* Attempt to convert the class */
-    if (FileInformationClass < MaximumFileInfoByHandleClass)
-    {
-        FileInfoClass = ConvertToFileInfo[FileInformationClass];
-    }
-
-    /* If wrong, bail out */
-    if (FileInfoClass == -1)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    /* And set the information */
-    Status = NtSetInformationFile(hFile, &IoStatusBlock, lpFileInformation,
-                                  dwBufferSize, FileInfoClass);
-
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-
-    return TRUE;
-}
 #ifdef __cplusplus
 }
 #endif
