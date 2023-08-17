@@ -193,6 +193,7 @@ typedef struct _REPARSE_DATA_BUFFER {
 #define SYMLINK_FLAG_RELATIVE 1
 #endif
 
+#ifndef __REACTOS__
 #ifndef FILE_SUPPORTS_BLOCK_REFCOUNTING
 
 typedef struct _DUPLICATE_EXTENTS_DATA {
@@ -222,6 +223,41 @@ typedef struct _FSCTL_SET_INTEGRITY_INFORMATION_BUFFER {
 #define FSCTL_SET_INTEGRITY_INFORMATION CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 160, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
 
 #endif
+#else // __REACTOS__
+#ifndef DUPLICATE_EXTENTS_DATA // NT6.3+ feature.
+
+typedef struct _DUPLICATE_EXTENTS_DATA {
+    HANDLE FileHandle;
+    LARGE_INTEGER SourceFileOffset;
+    LARGE_INTEGER TargetFileOffset;
+    LARGE_INTEGER ByteCount;
+} DUPLICATE_EXTENTS_DATA, *PDUPLICATE_EXTENTS_DATA;
+
+#define FSCTL_DUPLICATE_EXTENTS_TO_FILE CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 209, METHOD_BUFFERED, FILE_WRITE_ACCESS)
+
+#endif // DUPLICATE_EXTENTS_DATA
+
+#ifndef FSCTL_GET_INTEGRITY_INFORMATION_BUFFER // NT6.2+ feature.
+
+typedef struct _FSCTL_GET_INTEGRITY_INFORMATION_BUFFER {
+    WORD ChecksumAlgorithm;
+    WORD Reserved;
+    DWORD Flags;
+    DWORD ChecksumChunkSizeInBytes;
+    DWORD ClusterSizeInBytes;
+} FSCTL_GET_INTEGRITY_INFORMATION_BUFFER, *PFSCTL_GET_INTEGRITY_INFORMATION_BUFFER;
+
+typedef struct _FSCTL_SET_INTEGRITY_INFORMATION_BUFFER {
+    WORD ChecksumAlgorithm;
+    WORD Reserved;
+    DWORD Flags;
+} FSCTL_SET_INTEGRITY_INFORMATION_BUFFER, *PFSCTL_SET_INTEGRITY_INFORMATION_BUFFER;
+
+#define FSCTL_GET_INTEGRITY_INFORMATION CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 159, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_SET_INTEGRITY_INFORMATION CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 160, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+
+#endif // FSCTL_GET_INTEGRITY_INFORMATION_BUFFER
+#endif // __REACTOS__
 
 class win_handle {
 public:
@@ -389,7 +425,7 @@ private:
 };
 
 #ifdef __REACTOS__
-inline wstring to_wstring(uint8_t a) { WCHAR buffer[16]; swprintf(buffer, L"%d", a); return wstring(buffer); } 
+inline wstring to_wstring(uint8_t a) { WCHAR buffer[16]; swprintf(buffer, L"%d", a); return wstring(buffer); }
 inline wstring to_wstring(uint16_t a) { WCHAR buffer[16]; swprintf(buffer, L"%d", a); return wstring(buffer); }
 inline wstring to_wstring(uint32_t a) { WCHAR buffer[32]; swprintf(buffer, L"%ld", a); return wstring(buffer); }
 inline wstring to_wstring(uint64_t a) { WCHAR buffer[64]; swprintf(buffer, L"%I64d", a); return wstring(buffer); }
