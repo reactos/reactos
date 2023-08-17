@@ -39,7 +39,7 @@
 
 #define BWM_SETTINGCHANGE  (WM_USER + 300)
 #define BWM_GETSETTINGSPTR (WM_USER + 301)
-struct BrowseUISettings;
+struct ShellSettings;
 
 #include "ACLCustomMRU.h"
 #include "aclhistory.h"
@@ -69,7 +69,7 @@ struct BrowseUISettings;
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 
-struct BrowseUISettings
+struct ShellSettings
 {
     BOOL fLocked = FALSE;
     BOOL fShowGoButton = FALSE;

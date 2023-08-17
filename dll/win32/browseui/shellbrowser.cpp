@@ -305,7 +305,7 @@ private:
     IBindCtx                                *fHistoryBindContext;
     HDSA menuDsa;
     HACCEL m_hAccel;
-    BrowseUISettings m_settings;
+    ShellSettings m_settings;
 public:
 #if 0
     ULONG InternalAddRef()
@@ -624,8 +624,8 @@ public:
     LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnGetBrowseUISettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnGetSettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     HRESULT OnSearch();
 
     static ATL::CWndClassInfo& GetWndClassInfo()
@@ -676,8 +676,8 @@ public:
         COMMAND_RANGE_HANDLER(IDM_GOTO_TRAVEL_FIRSTTARGET, IDM_GOTO_TRAVEL_LASTTARGET, OnGoTravel)
         COMMAND_RANGE_HANDLER(IDM_EXPLORERBAND_BEGINCUSTOM, IDM_EXPLORERBAND_ENDCUSTOM, OnExplorerBar)
         MESSAGE_HANDLER(WM_COMMAND, RelayCommands)
-        MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnBrowseUISettingChanged)
-        MESSAGE_HANDLER(BWM_GETSETTINGSPTR, OnGetBrowseUISettingsPtr)
+        MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnSettingsChange)
+        MESSAGE_HANDLER(BWM_GETSETTINGSPTR, OnGetSettingsPtr)
     END_MSG_MAP()
 
     BEGIN_CONNECTION_POINT_MAP(CShellBrowser)
@@ -3788,7 +3788,7 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     return 0;
 }
 
-LRESULT CShellBrowser::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CShellBrowser::OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     /* Refresh child windows */
     ::SendMessageW(fClientBars[BIInternetToolbar].hwnd, uMsg, wParam, lParam);
@@ -3803,12 +3803,12 @@ LRESULT CShellBrowser::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM
     return 0;
 }
 
-LRESULT CShellBrowser::OnGetBrowseUISettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CShellBrowser::OnGetSettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-     if (!lParam)
+    if (!lParam)
         return ERROR_INVALID_PARAMETER;
 
-    *(BrowseUISettings**)lParam = &m_settings;
+    *(ShellSettings**)lParam = &m_settings;
     return NO_ERROR;
 }
 

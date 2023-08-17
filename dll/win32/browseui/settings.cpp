@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-BOOL BrowseUISettings::Save()
+BOOL ShellSettings::Save()
 {
     SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"StatusBarOther",
                      REG_DWORD, &fStatusBarVisible, sizeof(fStatusBarVisible), SHREGSET_FORCE_HKCU);
@@ -21,7 +21,7 @@ BOOL BrowseUISettings::Save()
     return TRUE;
 }
 
-BOOL BrowseUISettings::Load()
+BOOL ShellSettings::Load()
 {
     fStatusBarVisible = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
                                              L"StatusBarOther", FALSE, FALSE);

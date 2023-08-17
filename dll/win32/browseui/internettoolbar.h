@@ -92,7 +92,7 @@ public:
     BOOL                                    fSizing;
     POINT                                   fStartPosition;
     LONG                                    fStartHeight;
-    BrowseUISettings                        *pSettings;
+    ShellSettings                           *pSettings;
 public:
     CInternetToolbar();
     virtual ~CInternetToolbar();
@@ -202,7 +202,7 @@ public:
     LRESULT OnLUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     BEGIN_MSG_MAP(CInternetToolbar)
         COMMAND_ID_HANDLER(IDM_GOTO_BACK, OnTravelBack)
@@ -224,7 +224,7 @@ public:
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLUp)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_WININICHANGE, OnWinIniChange)
-        MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnBrowseUISettingChanged)
+        MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnSettingsChange)
     END_MSG_MAP()
 
     DECLARE_REGISTRY_RESOURCEID(IDR_INTERNETTOOLBAR)

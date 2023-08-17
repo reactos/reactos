@@ -1347,7 +1347,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
         if (ownerWindow == NULL)
             return E_FAIL;
 
-        // Get browseui settings from owner window
+        // Get settings from owner window
         ::SendMessageW(ownerWindow, BWM_GETSETTINGSPTR, 0, (LPARAM)&pSettings);
 
         // create dock container
@@ -1921,7 +1921,7 @@ LRESULT CInternetToolbar::OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam
     return lres;
 }
 
-LRESULT CInternetToolbar::OnBrowseUISettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CInternetToolbar::OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     /* Refresh toolbar locked state */
     RefreshLockedToolbarState();
