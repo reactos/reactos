@@ -1495,22 +1495,25 @@ WSPAccept(
     ListenReceiveData = (PAFD_RECEIVED_ACCEPT_DATA)ReceiveBuffer;
 
     /* If this is non-blocking, make sure there's something for us to accept */
-    FD_ZERO(&ReadSet);
-    FD_SET(Socket->Handle, &ReadSet);
-    Timeout.tv_sec=0;
-    Timeout.tv_usec=0;
-
-    if (WSPSelect(0, &ReadSet, NULL, NULL, &Timeout, lpErrno) == SOCKET_ERROR)
+    if (Socket->SharedData->NonBlocking)
     {
-        NtClose(SockEvent);
-        return SOCKET_ERROR;
-    }
+        FD_ZERO(&ReadSet);
+        FD_SET(Socket->Handle, &ReadSet);
+        Timeout.tv_sec=0;
+        Timeout.tv_usec=0;
 
-    if (ReadSet.fd_array[0] != Socket->Handle)
-    {
-        NtClose(SockEvent);
-        if (lpErrno) *lpErrno = WSAEWOULDBLOCK;
-        return SOCKET_ERROR;
+        if (WSPSelect(0, &ReadSet, NULL, NULL, &Timeout, lpErrno) == SOCKET_ERROR)
+        {
+            NtClose(SockEvent);
+            return SOCKET_ERROR;
+        }
+
+        if (ReadSet.fd_array[0] != Socket->Handle)
+        {
+            NtClose(SockEvent);
+            if (lpErrno) *lpErrno = WSAEWOULDBLOCK;
+            return SOCKET_ERROR;
+        }
     }
 
     /* Send IOCTL */
@@ -1782,6 +1785,7 @@ WSPAccept(
 
     AcceptSocketInfo->SharedData->State = SocketConnected;
     AcceptSocketInfo->SharedData->ConnectTime = GetCurrentTimeInSeconds();
+    AcceptSocketInfo->SharedData->NonBlocking = Socket->SharedData->NonBlocking;
 
     /* Return Address in SOCKADDR FORMAT */
     if( SocketAddress )
