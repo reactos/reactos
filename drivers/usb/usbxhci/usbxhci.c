@@ -358,7 +358,7 @@ XHCI_StartController(
     KeQuerySystemTime(&EndTime);
     EndTime.QuadPart += XHCI_POLL_TIME_SET(16);
 
-    IsPolling = FALSE;
+    IsPolling = TRUE;
     while (IsPolling)
     {
         Status.AsULONG = READ_REGISTER_ULONG(&OperRegisters->UsbStatus.AsULONG);
