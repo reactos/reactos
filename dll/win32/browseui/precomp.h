@@ -79,4 +79,14 @@ struct ShellSettings
     BOOL Load();
 };
 
+struct CabinetStateSettings : CABINETSTATE
+{
+    /* Additional CabinetState settings */
+    BOOL fFullPathAddress = TRUE;
+
+    BOOL Load();
+};
+
+extern CabinetStateSettings gCabinetState;
+
 #endif /* _BROWSEUI_PCH_ */

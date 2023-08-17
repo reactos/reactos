@@ -30,6 +30,7 @@ list(APPEND SOURCE
     internettoolbar.cpp
     parsecmdline.cpp
     regtreeoptions.cpp
+    settings_cabinet.cpp
     settings.cpp
     shellbrowser.cpp
     toolsband.cpp

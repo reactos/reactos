@@ -296,7 +296,6 @@ private:
     barInfo                                 fClientBars[3];
     CComPtr<ITravelLog>                     fTravelLog;
     HMENU                                   fCurrentMenuBar;
-    CABINETSTATE                            fCabinetState;
     GUID                                    fCurrentVertBar;             //The guid of the built in vertical bar that is being shown
     // The next three fields support persisted history for shell views.
     // They do not need to be reference counted.
@@ -350,7 +349,8 @@ public:
     HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
-    void LoadCabinetState();
+    void RefreshCabinetState();
+    void UpdateWindowTitle();
 
 /*    // *** IDockingWindowFrame methods ***
     virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
@@ -719,6 +719,7 @@ CShellBrowser::CShellBrowser()
     fHistoryStream = NULL;
     fHistoryBindContext = NULL;
     m_settings.Load();
+    gCabinetState.Load();
 }
 
 CShellBrowser::~CShellBrowser()
@@ -738,11 +739,6 @@ HRESULT CShellBrowser::Initialize()
     menuDsa = DSA_Create(sizeof(MenuBandInfo), 5);
     if (!menuDsa)
         return E_OUTOFMEMORY;
-
-    fCabinetState.cLength = sizeof(fCabinetState);
-    if (ReadCabinetState(&fCabinetState, sizeof(fCabinetState)) == FALSE)
-    {
-    }
 
     // create window
     Create(HWND_DESKTOP);
@@ -787,8 +783,6 @@ HRESULT CShellBrowser::Initialize()
         return hResult;
 
     fToolbarProxy.Initialize(m_hWnd, clientBar);
-
-    LoadCabinetState();
 
     // create status bar
     DWORD dwStatusStyle = WS_CHILD | WS_CLIPSIBLINGS | SBARS_SIZEGRIP | SBARS_TOOLTIPS;
@@ -1049,42 +1043,33 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         FireNavigateComplete(L"ERROR");
     }
 
-    if (fCabinetState.fFullPathTitle)
-        nameFlags = SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
-    else
-        nameFlags = SHGDN_FORADDRESSBAR;
-    hResult = IEGetNameAndFlags(fCurrentDirectoryPIDL, nameFlags, newTitle,
-        sizeof(newTitle) / sizeof(wchar_t), NULL);
+    UpdateWindowTitle();
+
+    LPCITEMIDLIST pidlChild;
+    INT index, indexOpen;
+    HIMAGELIST himlSmall, himlLarge;
+
+    CComPtr<IShellFolder> sf;
+    hResult = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
     if (SUCCEEDED(hResult))
     {
-        SetWindowText(newTitle);
+        index = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
 
-        LPCITEMIDLIST pidlChild;
-        INT index, indexOpen;
-        HIMAGELIST himlSmall, himlLarge;
+        Shell_GetImageLists(&himlLarge, &himlSmall);
 
-        CComPtr<IShellFolder> sf;
-        hResult = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
-        if (SUCCEEDED(hResult))
-        {
-            index = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+        HICON icSmall = ImageList_GetIcon(himlSmall, indexOpen, 0);
+        HICON icLarge = ImageList_GetIcon(himlLarge, indexOpen, 0);
 
-            Shell_GetImageLists(&himlLarge, &himlSmall);
+        /* Hack to make it possible to release the old icons */
+        /* Something seems to go wrong with WM_SETICON */
+        HICON oldSmall = (HICON)SendMessage(WM_GETICON, ICON_SMALL, 0);
+        HICON oldLarge = (HICON)SendMessage(WM_GETICON, ICON_BIG,   0);
 
-            HICON icSmall = ImageList_GetIcon(himlSmall, indexOpen, 0);
-            HICON icLarge = ImageList_GetIcon(himlLarge, indexOpen, 0);
+        SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
+        SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
 
-            /* Hack to make it possible to release the old icons */
-            /* Something seems to go wrong with WM_SETICON */
-            HICON oldSmall = (HICON)SendMessage(WM_GETICON, ICON_SMALL, 0);
-            HICON oldLarge = (HICON)SendMessage(WM_GETICON, ICON_BIG,   0);
-
-            SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
-            SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
-
-            DestroyIcon(oldSmall);
-            DestroyIcon(oldLarge);
-        }
+        DestroyIcon(oldSmall);
+        DestroyIcon(oldLarge);
     }
 
     FireCommandStateChangeAll();
@@ -1520,14 +1505,6 @@ void CShellBrowser::RepositionBars()
     ::SetWindowPos(fCurrentShellViewWindow, NULL, clientRect.left, clientRect.top,
                         clientRect.right - clientRect.left,
                         clientRect.bottom - clientRect.top, SWP_NOOWNERZORDER | SWP_NOZORDER);
-}
-
-void CShellBrowser::LoadCabinetState()
-{
-    fCabinetState.fFullPathTitle = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState",
-                                                        L"FullPath",
-                                                        FALSE,
-                                                        FALSE);
 }
 
 HRESULT CShellBrowser::FireEvent(DISPID dispIdMember, int argCount, VARIANT *arguments)
@@ -3577,6 +3554,7 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
 
 LRESULT CShellBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    RefreshCabinetState();
     SHPropagateMessage(m_hWnd, uMsg, wParam, lParam, TRUE);
     return 0;
 }
@@ -3815,4 +3793,24 @@ LRESULT CShellBrowser::OnGetSettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam,
 HRESULT CShellBrowser_CreateInstance(REFIID riid, void **ppv)
 {
     return ShellObjectCreatorInit<CShellBrowser>(riid, ppv);
+}
+
+void CShellBrowser::RefreshCabinetState()
+{
+    gCabinetState.Load();
+    UpdateWindowTitle();
+}
+
+void CShellBrowser::UpdateWindowTitle()
+{
+    WCHAR title[MAX_PATH];
+    SHGDNF flags;
+
+    if (gCabinetState.fFullPathTitle)
+        flags = SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
+    else
+        flags = SHGDN_FORADDRESSBAR;
+
+    if (SUCCEEDED(IEGetNameAndFlags(fCurrentDirectoryPIDL, flags, title, MAX_PATH, NULL)))
+        SetWindowText(title);
 }
