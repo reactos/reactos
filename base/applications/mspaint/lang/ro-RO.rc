@@ -106,16 +106,16 @@ BEGIN
     POPUP "Popup #0"
     BEGIN
         MENUITEM "&Decupează\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copiază\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Copiază\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Ște&rge selecția\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Selectea&ză &tot\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Selectea&ză tot\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opiază în...", IDM_EDITCOPYTO
-        MENUITEM "Lipește &din...", IDM_EDITPASTEFROM
+        MENUITEM "C&opiere în...", IDM_EDITCOPYTO
+        MENUITEM "&Lipire din...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotește/&Oglindește...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Î&ntide/Înclină...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Întind&ere/Înclinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Inversează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
