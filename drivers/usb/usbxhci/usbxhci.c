@@ -22,7 +22,7 @@
  * where: n = Port Number (Valid values are 1, 2, 3, ...MaxPorts
  */
 #define XHCI_PORTSC(OperationalBase, PortNo) \
-    (PVOID)((ULONG)OperationalBase + (0x400 + (0x10 * (PortNo - 1))))
+    (PVOID)((ULONG_PTR)OperationalBase + (0x400 + (0x10 * (PortNo - 1))))
 
 /* Status codes for XHCI_PollCheck() */
 #define POLL_STATUS_DONE     0      // Done polling successfully
