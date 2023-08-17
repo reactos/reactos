@@ -1,7 +1,7 @@
 /*
  *  FreeLoader
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *  Copyright (C) 2009       Hervé Poussineau  <hpoussin@reactos.org>
+ *  Copyright (C) 2009       HervÃ© Poussineau  <hpoussin@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
