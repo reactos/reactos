@@ -994,10 +994,10 @@ Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 specificat parametrul OFFSET, va fi rotunjit la cel mai
                 apropiat multiplu a lui <N>.
 
-    NOERR       Doar pentru automatizare. Când apare o eroare, programul
-                DiskPart continuă să proceseze comenzi ca și când eroarea nu ar
-                fi apărut. Fără parametrul NOERR, o eroare cauzează DiskPart
-                să se închidă cu un cod de eroare.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
     După ce a fost creată partiția, marcajul se mută automat pe noua
     partiție. Doar o singură partiție extinsă poate fi creată pe un disc.
@@ -1369,10 +1369,10 @@ Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 parametrul OFFSET este specificat, va fi rotunjit la cel mai
                 apropiat multiplu a lui <N>.
                                                 
-    NOERR       Doar pentru automatizare. Când apare o eroare, DiskPart
-                continuă să proceseze comenzi ca și când eroarea nu ar fi
-                apărut. Fără parametrul NOERR, o eroare cauzează DiskPart să
-                se închidă cu un cod de eroare.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
     După ce a fost creată partiția, marcajul se mută automat pe
     noua partiție logică.
@@ -2132,10 +2132,10 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                 parametrul OFFSET este specificat, va fi rotunjit la cel mai
                 apropiat multiplu a lui <N>.
                                                 
-    NOERR       Doar pentru automatizare. Când apare o eroare, DiskPart
-                continuă să proceseze comenzi ca și când eroarea nu ar fi
-                apărut. Fără parametrul NOERR, o eroare cauzează DiskPart
-                să se închidă cu un cod de eroare.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
     După ce ați creat partiția, marcajul se mută automat pe noua partiție
     logică. Partiția nu primește nicio literă de disc. Trebuie să folosiți
@@ -2832,10 +2832,10 @@ Language=Romanian
 
 Sintaxă:  DELETE PARTITION [NOERR] [OVERRIDE]
 
-    NOERR       Doar pentru automatizare. Când apare o eroare, DiskPart
-                continuă să proceseze comenzi ca și când eroarea nu ar fi
-                apărut. Fără parametrul NOERR, o eroare cauzează DiskPart
-                să se închidă cu un cod de eroare.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
     OVERRIDE    Permite programului DiskPart să șteargă orice partiție,
                 indiferent de tipul său. De obicei, DiskPart vă permite doar
@@ -4048,10 +4048,10 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 specificat, programul DiskPart va afișa progesul formatării
                 în procente.
                                                 
-    NOERR       Doar pentru automatizare. Când apare o eroare, programul
-                DiskPart continuă să proceseze comenzi ca și când eroarea nu ar
-                fi apărut. Fără parametrul NOERR, o eroare cauzează programul
-                DiskPart să se închidă cu un cod de eroare.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
     Un volum trebuie să fie selectat pentru ca această operațiune să reușească.
 
@@ -7294,10 +7294,10 @@ Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
                 Când un sistem de fișiere e demontat, toate identificatoarele
                 de gestiune deschise ale volumului vor deveni nevalide.
 
-    NOERR       Doar pentru automatizare. Când apare o eroare, programul
-                DiskPart continuă să proceseze comenzi ca și când eroarea nu ar
-                fi apărut. Fără parametrul NOERR, o eroare cauzează programul
-                DiskPart să se închidă cu un cod de eroare.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
     Destinat numai pentru utilizarea producătorilor de echipamente originale
     (OEM).
@@ -7891,10 +7891,10 @@ Sintaxă:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
 
                 Pentru discurile GPT, specificați un GUID pentru identificator.
 
-    NOERR       Doar pentru automatizare. Când apare o eroare, programul
-                DiskPart continuă să proceseze comenzi ca și când eroarea nu ar
-                fi apărut. Fără parametrul NOERR, o eroare cauzează programul
-                DiskPart să se închidă cu un cod de eroare.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
     Un disc trebuie să fie selectat pentru ca această operațiune să reușească.
 
