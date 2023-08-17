@@ -6,7 +6,7 @@
  * or make this more complex.
 
  * This source code is in the PUBLIC DOMAIN and has NO WARRANTY.
- * by Waldo Alvarez Cañizares <wac at ghost.matcom.uh.cu>, June 22, 2003. */
+ * by Waldo Alvarez Caï¿½izares <wac at ghost.matcom.uh.cu>, June 22, 2003. */
 
 //#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -383,8 +383,8 @@ WndProc ( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
         Buttons[i++] = CreatePushButton("Width +",70,100,WS_VISIBLE);
         Buttons[i++] = CreatePushButton("Width -",70,101,WS_VISIBLE);
 
-        Buttons[i++] = CreatePushButton("Heigth +",70,102,WS_VISIBLE);
-        Buttons[i++] = CreatePushButton("Heigth -",70,103,WS_VISIBLE);
+        Buttons[i++] = CreatePushButton("Height +",70,102,WS_VISIBLE);
+        Buttons[i++] = CreatePushButton("Height -",70,103,WS_VISIBLE);
 
         Buttons[i++] = CreatePushButton("CreateWindowA",140,CREATEWINDOW,WS_VISIBLE);
         Buttons[i++] = CreatePushButton("CreateWindowExA",140,CREATEWINDOWEX,WS_VISIBLE);

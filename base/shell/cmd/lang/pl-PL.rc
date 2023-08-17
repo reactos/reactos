@@ -453,14 +453,14 @@ Uaktualnienia dostępne na stronie: https://reactos.org"
     STRING_VOL_HELP3 " Numer seryjny woluminu to: %04X-%04X\n"
     STRING_VOL_HELP4 "Wyświetla etykietę woluminu w danym napędzie (o ile istnieje) i jego numer seryjny.\n\nVOL [napęd:]"
     STRING_WINDOW_HELP1 "Zmienia wymiar i pozycję danego okna konsoli\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
+WINDOW [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['tytuł']\n\n\
 /POS          określa położenie i rozmiary okna\n\
 MIN           minimalizuje okno\n\
 MAX           maksymalizuje okno\n\
 RESTORE       odtwarza standardowe ustawienia okna"
     STRING_WINDOW_HELP2 "Zmienia wymiar i pozycję określonego okna konsoli\n\n\
-ACTIVATE 'tytuł' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'tytuł' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['nowy_tytuł']\n\n\
 window        tytuł okna, na którym zostaną przeprowadzone zmiany\n\
 /POS          określa położenie i rozmiary okna\n\
