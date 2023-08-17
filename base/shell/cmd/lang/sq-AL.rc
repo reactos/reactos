@@ -452,14 +452,14 @@ Updates janë në dispozicion në: https://reactos.org"
     STRING_VOL_HELP3 " Numri Serial i Volumit është %04X-%04X\n"
     STRING_VOL_HELP4 "Shfaq etiketa e volumeve të diskut, nëse ekzistojne.\n\nVOL [drive:]"
     STRING_WINDOW_HELP1 "ndrysho aspektin e dritares se konsolit\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
+WINDOW [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['titulli']\n\n\
 /POS          specifikojë vendosje e dritares dhe dimensionet\n\
 MIN           minimizo dritaren\n\
 MAX           rrit dritaren\n\
 RESTORE       riktheni dritaren"
     STRING_WINDOW_HELP2 "ndrysho aspektin e dritares se konsolit\n\n\
-ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        dritare ku mund te kryesh veprime\n\
 /POS          specifikojë vendosje e dritares dhe dimensionet\n\

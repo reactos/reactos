@@ -458,14 +458,14 @@ VER [/C][/R][/W]\n\n\
     STRING_VOL_HELP3 " Серiйний номер тому: %04X-%04X\n"
     STRING_VOL_HELP4 "Виводить мiтку тому та серiйний номер, якщо вони iснують.\n\nVOL [диск:]"
     STRING_WINDOW_HELP1 "змiнює вигляд вiкна консолi\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
+WINDOW [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['заголовок']\n\n\
 /POS          визначає розміри та розмiщення вiкна\n\
 MIN           згортає вiкно\n\
 MAX           розгортає вiкно\n\
 RESTORE       вiдновлює вiкно"
     STRING_WINDOW_HELP2 "змiнює вигляд вiкна консолi\n\n\
-ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        заголовок вiкна, вигляд якого треба змiнити\n\
 /POS          визначає розміри та розмiщення вiкна\n\

@@ -388,8 +388,8 @@ WndProc ( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
             Buttons[i++] = CreatePushButton("Width +",70,100,WS_VISIBLE);
             Buttons[i++] = CreatePushButton("Width -",70,101,WS_VISIBLE);
 
-            Buttons[i++] = CreatePushButton("Heigth +",70,102,WS_VISIBLE);
-            Buttons[i++] = CreatePushButton("Heigth -",70,103,WS_VISIBLE);
+            Buttons[i++] = CreatePushButton("Height +",70,102,WS_VISIBLE);
+            Buttons[i++] = CreatePushButton("Height -",70,103,WS_VISIBLE);
 
             Buttons[i++] = CreatePushButton("CreateWindowA",CHECKBUTWIDTH,CREATEWINDOW_ID,WS_VISIBLE);
             Buttons[i++] = CreatePushButton("CreateWindowExA",CHECKBUTWIDTH,CREATEWINDOWEX_ID,WS_VISIBLE);

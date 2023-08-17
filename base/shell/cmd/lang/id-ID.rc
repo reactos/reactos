@@ -447,14 +447,14 @@ Pemutakiran tersedia di: https://reactos.org"
     STRING_VOL_HELP3 " Nomor Seri Volume adalah %04X-%04X\n"
     STRING_VOL_HELP4 "Menampilkan label dan nomor seri volume disk, jika ada.\n\nVOL [drive:]"
     STRING_WINDOW_HELP1 "mengubah aspek jendela konsol\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
+WINDOW [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 /POS          menetapkan penempatan dan dimensi jendela\n\
 MIN           mengecilkan jendela\n\
 MAX           memaksimalkan jendela\n\
 RESTORE       mengembalikan jendela"
     STRING_WINDOW_HELP2 "mengubah aspek jendela konsol\n\n\
-ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        tile jendela yang melakukan aksi\n\
 /POS          menetapkan penempatan dan dimensi jendela\n\

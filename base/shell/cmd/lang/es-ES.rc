@@ -463,7 +463,7 @@ MIN           minimiza la ventana\n\
 MAX           maximiza la ventana\n\
 RESTORE       restaura la ventana"
     STRING_WINDOW_HELP2 "Cambia el aspecto de la ventana de la consola.\n\n\
-ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        Título de la ventana en la que realizar las acciónes\n\
 /POS          Especifica la posición y dimensión de la ventana\n\
