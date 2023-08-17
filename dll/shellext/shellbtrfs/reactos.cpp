@@ -153,12 +153,24 @@ NTSTATUS WINAPI RtlUTF8ToUnicodeN(PWSTR uni_dest, ULONG uni_bytes_max,
 }
 
 /* Quick and dirty table for conversion */
+#if 0 // < VISTA
+#ifndef FileIoPriorityHintInformation // FILE_INFORMATION_CLASS NT6.0+ feature.
+#define FileIoPriorityHintInformation ((FILE_INFORMATION_CLASS)43)
+#endif
+
+// FILE_INFO_BY_HANDLE_CLASS and its MaximumFileInfoByHandleClass are NT6.0+.
+// Some other files depend on NT6.0+ too, so to be continued later...
+#endif // 0 // < VISTA
+#ifndef FileRemoteProtocolInformation // FILE_INFORMATION_CLASS NT6.1+ feature.
+#define FileRemoteProtocolInformation ((FILE_INFORMATION_CLASS)55)
+#endif
 FILE_INFORMATION_CLASS ConvertToFileInfo[MaximumFileInfoByHandleClass] =
 {
     FileBasicInformation, FileStandardInformation, FileNameInformation, FileRenameInformation,
     FileDispositionInformation, FileAllocationInformation, FileEndOfFileInformation, FileStreamInformation,
     FileCompressionInformation, FileAttributeTagInformation, FileIdBothDirectoryInformation, (FILE_INFORMATION_CLASS)-1,
     FileIoPriorityHintInformation, FileRemoteProtocolInformation
+// FIXME: FILE_INFO_BY_HANDLE_CLASS has 2+ more values. What about them here? Should they be '-1' too?
 };
 
 /* Taken from kernel32 */
