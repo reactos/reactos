@@ -298,7 +298,7 @@ ShowFolderOptionsDialog(UINT Page, BOOL Async = FALSE)
         return;
     }
     
-    LPVOID param = (LPVOID)Page;
+    LPVOID param = (LPVOID)(UINT_PTR)Page;
     if (Async)
         SHCreateThread(ShowFolderOptionsDialogThreadProc, param, 0, 0);
     else
