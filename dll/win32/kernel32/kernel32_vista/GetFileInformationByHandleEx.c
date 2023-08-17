@@ -23,11 +23,13 @@ BOOL WINAPI GetFileInformationByHandleEx( HANDLE handle, FILE_INFO_BY_HANDLE_CLA
     case FileRemoteProtocolInfo:
     case FileFullDirectoryInfo:
     case FileFullDirectoryRestartInfo:
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
     case FileStorageInfo:
     case FileAlignmentInfo:
     case FileIdInfo:
     case FileIdExtdDirectoryInfo:
     case FileIdExtdDirectoryRestartInfo:
+#endif // _WIN32_WINNT_WIN8
         //FIXME( "%p, %u, %p, %u\n", handle, class, info, size );
         SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
         return FALSE;

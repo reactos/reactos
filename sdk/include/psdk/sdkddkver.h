@@ -30,6 +30,9 @@ Abstract:
 #define _WIN32_WINNT_WINBLUE                0x0603
 #define _WIN32_WINNT_WINTHRESHOLD           0x0A00
 #define _WIN32_WINNT_WIN10                  0x0A00
+#define _WIN32_WINNT_WIN10_RS1              _WIN32_WINNT_WIN10
+#define _WIN32_WINNT_WIN10_RS2              _WIN32_WINNT_WIN10
+#define _WIN32_WINNT_WIN10_RS3              _WIN32_WINNT_WIN10
 
 /* _WIN32_IE */
 #define _WIN32_IE_IE20                      0x0200

@@ -1000,14 +1000,26 @@ typedef enum _FILE_INFO_BY_HANDLE_CLASS {
     FileIdBothDirectoryRestartInfo,
     FileIoPriorityHintInfo,
     FileRemoteProtocolInfo,
+// FIXME: Check NT version (> 6.0) for all following values.
+// #if (NTDDI_VERSION >= NTDDI_WIN8) // These 2 were not on PSDK2003R2 (yet?).
     FileFullDirectoryInfo,
     FileFullDirectoryRestartInfo,
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
     FileStorageInfo,
     FileAlignmentInfo,
     FileIdInfo,
     FileIdExtdDirectoryInfo,
     FileIdExtdDirectoryRestartInfo,
-    MaximumFileInfoByHandlesClass
+#endif // _WIN32_WINNT_WIN8
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN10_RS1)
+    FileDispositionInfoEx,
+    FileRenameInfoEx,
+#endif // _WIN32_WINNT_WIN10_RS1
+#if 0 // NTDDI_WIN10_RS4
+    FileCaseSensitiveInfo,
+    FileNormalizedNameInfo,
+#endif // 0 // NTDDI_WIN10_RS4
+    MaximumFileInfoByHandleClass
 } FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
 
 typedef struct _FILE_ID_BOTH_DIR_INFO {
@@ -1110,7 +1122,7 @@ typedef struct _FILE_REMOTE_PROTOCOL_INFO {
     } ProtocolSpecificReserved;
 } FILE_REMOTE_PROTOCOL_INFO, *PFILE_REMOTE_PROTOCOL_INFO;
 
-#endif
+#endif // (_WIN32_WINNT >= 0x0600)
 
 typedef enum _FINDEX_INFO_LEVELS {
 	FindExInfoStandard,

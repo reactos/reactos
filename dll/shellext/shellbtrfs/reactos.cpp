@@ -153,7 +153,7 @@ NTSTATUS WINAPI RtlUTF8ToUnicodeN(PWSTR uni_dest, ULONG uni_bytes_max,
 }
 
 /* Quick and dirty table for conversion */
-FILE_INFORMATION_CLASS ConvertToFileInfo[MaximumFileInfoByHandlesClass] =
+FILE_INFORMATION_CLASS ConvertToFileInfo[MaximumFileInfoByHandleClass] =
 {
     FileBasicInformation, FileStandardInformation, FileNameInformation, FileRenameInformation,
     FileDispositionInformation, FileAllocationInformation, FileEndOfFileInformation, FileStreamInformation,
@@ -186,7 +186,7 @@ SetFileInformationByHandle(HANDLE hFile,
     FileInfoClass = (FILE_INFORMATION_CLASS)-1;
 
     /* Attempt to convert the class */
-    if (FileInformationClass < MaximumFileInfoByHandlesClass)
+    if (FileInformationClass < MaximumFileInfoByHandleClass)
     {
         FileInfoClass = ConvertToFileInfo[FileInformationClass];
     }
