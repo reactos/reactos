@@ -105,14 +105,14 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "&Decupează\tCtrl+X", IDM_EDITCUT
-        MENUITEM "&Copiază\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Dec&upează\tCtrl+X", IDM_EDITCUT
+        MENUITEM "Copia&ză\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Șter&ge selecția\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Șt&erge selecția\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Selectea&ză tot\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opiere în...", IDM_EDITCOPYTO
-        MENUITEM "Lipir&e din...", IDM_EDITPASTEFROM
+        MENUITEM "Lipire &din...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
         MENUITEM "&Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Întindere/În&clinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
