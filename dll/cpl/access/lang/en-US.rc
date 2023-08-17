@@ -44,20 +44,20 @@ END
 
 IDD_PROPPAGEDISPLAY DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Display"
+CAPTION "Работен плот"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "High Contrast", -1, 6, 11, 234, 62
+    GROUPBOX "Висок контраст", -1, 6, 11, 234, 62
     LTEXT "Use this option if you want ReactOS to use colors and fonts designed for easy reading.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Use High Contrast", IDC_CONTRAST_BOX, 12, 49, 126, 14
+    AUTOCHECKBOX "&Използвай висок контраст", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Settings", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
-    GROUPBOX "Cursor options", -1, 6, 79, 234, 115
+    GROUPBOX "Опции за курсора", -1, 6, 79, 234, 115
     LTEXT "Use the track bars to modify the blinking speed of the cursor and its width.",
           -1, 12, 88, 222, 20
-    CTEXT "Blinking s&peed:", -1, 12, 115, 222, 11
-    LTEXT "None", -1, 18, 130, 36, 11
-    LTEXT "Fast", -1, 192, 130, 36, 11
+    CTEXT "Скорост на премигване:", -1, 12, 115, 222, 11
+    LTEXT "Няма", -1, 18, 130, 36, 11
+    LTEXT "Бърза", -1, 192, 130, 36, 11
     CONTROL "", IDC_CURSOR_BLINK_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 124, 126, 20
     CTEXT "Cursor &width:", -1, 12, 151, 222, 11
