@@ -7,7 +7,7 @@
 * or make this more complex. Also Fonts are not heavily used.
 
 * This source code is in the PUBLIC DOMAIN and has NO WARRANTY.
-* by Waldo Alvarez CaÃ±izares <wac at ghost.matcom.uh.cu>, started July 11, 2003. */
+* by Waldo Alvarez Cañizares <wac at ghost.matcom.uh.cu>, started July 11, 2003. */
 
 //#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
