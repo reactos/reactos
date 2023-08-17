@@ -24,17 +24,24 @@ jobs:
         echo march-sha=$(gcc -march=native -Q --help=target | sha1sum | awk '{print $1}') >> $GITHUB_OUTPUT
         echo git-sha=$(git ls-remote https://github.com/zefklop/RosBE.git | grep unix_amd64 | awk '{print $1}') >> $GITHUB_OUTPUT
         wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
-    - name: Get RosBE
-      id: get_rosbe
-      uses: actions/cache@v3
+    - name: Restore RosBE
+      id: restore_rosbe
+      uses: actions/cache/restore@v3
       with:
         path: RosBE-CI
         key: RosBE-CI-${{runner.os}}-${{steps.get_rosbe_spec.outputs.march-sha}}-${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}
     - name: Compile RosBE
-      if: ${{ steps.get_rosbe.outputs.cache-hit != 'true' }}
+      id: compile_rosbe
+      if: ${{ steps.restore_rosbe.outputs.cache-hit != 'true' }}
       run: |
         chmod +x build_rosbe_ci.sh
         ./build_rosbe_ci.sh ${{github.workspace}}/RosBE-CI
+    - name: Save RosBE
+      if: ${{ steps.compile_rosbe.outcome == 'success' }}
+      uses: actions/cache/save@v3
+      with:
+        path: RosBE-CI
+        key: ${{steps.restore_rosbe.outputs.cache-primary-key}}
     - name: Install ccache
       run: sudo apt install ccache
     - name: Install LLVM
