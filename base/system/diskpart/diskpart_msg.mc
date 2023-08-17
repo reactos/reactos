@@ -994,7 +994,7 @@ Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 specificat parametrul OFFSET, va fi rotunjit la cel mai
                 apropiat multiplu a lui <N>.
 
-    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+    NOERR       Doar pentru automatizare. Când apare o eroare, programul
                 DiskPart continuă să proceseze comenzi ca și când eroarea nu ar
                 fi apărut. Fără parametrul NOERR, o eroare cauzează DiskPart
                 să se închidă cu un cod de eroare.
@@ -2114,7 +2114,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
 
                 Atenție:
 
-                    Creând partiții cu acest parametru poate cauza
+                    Crearea de partiții cu acest parametru poate cauza
                     calculatorului dumneavoastră să nu mai funcționeze bine sau
                     să nu mai poată porni. Dacă nu sunteți un OEM sau un
                     profesionist cu experiență în discuri GPT, nu creați
@@ -4033,12 +4033,12 @@ Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 necesar. Toate identificatoarele de gestiune deschise ale
                 volumului nu ar mai fi valabile.
 
-    DUPLICATE   Numai pentru formatul UDF: Această etichetă se aplică
+    DUPLICATE   Numai pentru formatul UDF: Această etichetă e aplicată
                 formatului UDF, versiunea 2.5 sau mai nouă. Această etichetă
                 intruiește operațiunea de formatare să dubleze metadatele
                 sistemului de fișiere la cel de al doilea set de sectoare
                 de pe disc. Metadatele dublate sunt folosite de aplicații,
-                de exemplu de aplicații de reparare și de recuperare. Dacă
+                de exemplu de utilitare de reparare și de recuperare. Dacă
                 sectoarele primare de metadate sunt găsite ca și corupte,
                 metadatele sistemului de fișiere vor fi citite de sectoarele
                 duplicate.
@@ -6187,7 +6187,7 @@ Sintaxă: SELECT DISK=<N>
 
     DISK=NEXT
                 Odată ce discul e selectat, această comandă este folosită
-                pentru a se repeta peste toate discurile din lista de discuri.
+                pentru a fi aplicată fiecărui disc din lista de discuri.
                 Următorul disc din listă va primi marcaj. Dacă următorul
                 disc este începutul enumerării, comanda va eșua și niciun disc
                 nu va trebui să fie marcat
@@ -7249,8 +7249,8 @@ Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
                 hexazecimal, pentru un tip de partiție. Orice octet care
                 descrie tipul de partiție poate fi specificată cu acest
                 parametru, exceptând pentru tipul 0x42 (partiție LDM). Rețineți
-                că primul '0x' este omis când se specifică partiții de tip
-                hexazecimal.
+                că primul '0x' este omis când se specifică tip de partiție
+                hexazecimală.
                                                                 
                 Pentru discurile cu tabelul de partiție GUID (GPT) puteți
                 specifica un tip de partiție GUID pentru partiția pe care vreți
@@ -7306,7 +7306,7 @@ Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
                 
     Atenție:
 
-        Creând partiții cu acest parametru poate cauza calculatorului
+        Crearea de partiții cu acest parametru poate cauza calculatorului
         dumneavoastră să eșueaze sau să nu mai poată porni. Dacă nu sunteți un
         OEM sau un profesionist cu experiență în discuri GPT, nu creați
         partiții pe discuri GPT folosind acest parametru. În schimb, folosiți
