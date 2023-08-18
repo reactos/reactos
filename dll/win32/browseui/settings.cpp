@@ -39,7 +39,9 @@ BOOL ShellSettings::Load()
 
 BOOL CabinetStateSettings::Load()
 {
-    /* Ideally we would use ReadCabinetState, but unfortunately Wine's implementation is incomplete. */
+    ReadCabinetState(this, this->cLength);
+
+    /* Overrides */
     fFullPathTitle = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState",
                                           L"FullPath", FALSE, FALSE);
 
