@@ -270,55 +270,18 @@ HBITMAP ImageModel::CopyBitmap()
 
 BOOL ImageModel::IsBlackAndWhite()
 {
-    LONG cxWidth = GetWidth(), cyHeight = GetHeight();
-    for (LONG y = 0; y < cyHeight; ++y)
-    {
-        for (LONG x = 0; x < cxWidth; ++x)
-        {
-            COLORREF rgbColor = ::GetPixel(m_hDrawingDC, x, y);
-            if (rgbColor != RGB(0, 0, 0) && rgbColor != RGB(255, 255, 255))
-                return FALSE;
-        }
-    }
-    return TRUE;
+    ::SelectObject(m_hDrawingDC, m_hbmOld); // De-select
+    BOOL bBlackAndWhite = IsBitmapBlackAndWhite(m_hBms[m_currInd]);
+    m_hbmOld = ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]); // Re-select
+    return bBlackAndWhite;
 }
-
-struct BITMAPINFOEX : BITMAPINFO
-{
-    RGBQUAD bmiColorsExtra[256 - 1];
-};
 
 void ImageModel::PushBlackAndWhite()
 {
-    INT cx = GetWidth(), cy = GetHeight();
-
-    BITMAPINFOEX bmi;
-    ZeroMemory(&bmi, sizeof(bmi));
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = cx;
-    bmi.bmiHeader.biHeight = cy;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 1;
-    bmi.bmiColors[0].rgbBlue = 0;
-    bmi.bmiColors[0].rgbGreen = 0;
-    bmi.bmiColors[0].rgbRed = 0;
-    bmi.bmiColors[1].rgbBlue = 255;
-    bmi.bmiColors[1].rgbGreen = 255;
-    bmi.bmiColors[1].rgbRed = 255;
-
-    LPVOID pvMonoBits;
-    HBITMAP hMonoBitmap = ::CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, &pvMonoBits, NULL, 0);
-    if (!hMonoBitmap)
-        return;
-
     ::SelectObject(m_hDrawingDC, m_hbmOld); // De-select
-
-    ::GetDIBits(m_hDrawingDC, m_hBms[m_currInd], 0, cy, pvMonoBits, &bmi, DIB_RGB_COLORS);
-    HBITMAP hNewBitmap = CreateDIBWithProperties(cx, cy);
-    ::SetDIBits(m_hDrawingDC, hNewBitmap, 0, cy, pvMonoBits, &bmi, DIB_RGB_COLORS);
-    ::DeleteObject(hMonoBitmap);
-
+    HBITMAP hNewBitmap = ConvertToBlackAndWhite(m_hBms[m_currInd]);
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]); // Re-select
 
-    PushImageForUndo(hNewBitmap);
+    if (hNewBitmap)
+        PushImageForUndo(hNewBitmap);
 }

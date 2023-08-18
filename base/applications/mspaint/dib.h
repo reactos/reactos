@@ -7,10 +7,12 @@
 
 #pragma once
 
+BOOL IsBitmapBlackAndWhite(HBITMAP hbm);
 HBITMAP CreateDIBWithProperties(int width, int height);
 HBITMAP CreateMonoBitmap(int width, int height, BOOL bWhite);
 HBITMAP CreateColorDIB(int width, int height, COLORREF rgb);
 HBITMAP CachedBufferDIB(HBITMAP hbm, int minimalWidth, int minimalHeight);
+HBITMAP ConvertToBlackAndWhite(HBITMAP hbm);
 
 HBITMAP CopyMonoImage(HBITMAP hbm, INT cx = 0, INT cy = 0);
 
