@@ -592,19 +592,22 @@ HBITMAP ConvertToBlackAndWhite(HBITMAP hbm)
     bmi.bmiColors[1].rgbBlue = 255;
     bmi.bmiColors[1].rgbGreen = 255;
     bmi.bmiColors[1].rgbRed = 255;
-
     HDC hdc = ::CreateCompatibleDC(NULL);
-
     LPVOID pvMonoBits;
     HBITMAP hMonoBitmap = ::CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &pvMonoBits, NULL, 0);
     if (!hMonoBitmap)
+    {
+        ::DeleteDC(hdc);
         return NULL;
+    }
 
-    ::GetDIBits(hdc, hbm, 0, bm.bmHeight, pvMonoBits, &bmi, DIB_RGB_COLORS);
     HBITMAP hNewBitmap = CreateDIBWithProperties(bm.bmWidth, bm.bmHeight);
-    ::SetDIBits(hdc, hNewBitmap, 0, bm.bmHeight, pvMonoBits, &bmi, DIB_RGB_COLORS);
+    if (hNewBitmap)
+    {
+        ::GetDIBits(hdc, hbm, 0, bm.bmHeight, pvMonoBits, &bmi, DIB_RGB_COLORS);
+        ::SetDIBits(hdc, hNewBitmap, 0, bm.bmHeight, pvMonoBits, &bmi, DIB_RGB_COLORS);
+    }
     ::DeleteObject(hMonoBitmap);
-
     ::DeleteDC(hdc);
 
     return hNewBitmap;
