@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -105,18 +105,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Dec&upează\tCtrl+X", IDM_EDITCUT
+        MENUITEM "Copia&ză\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Șt&erge selecția\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Selectea&ză tot\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "C&opiere în...", IDM_EDITCOPYTO
+        MENUITEM "Lipire &din...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Întindere/În&clinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Inversează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -214,7 +214,7 @@ BEGIN
 END
 
 IDD_FONTS DIALOG 0, 0, 225, 25
-CAPTION "Fonts"
+CAPTION "Fonturi"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 8, "MS Shell Dlg"
@@ -263,7 +263,7 @@ BEGIN
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixeli/cm"
     IDS_CANTPASTE "Nu a putut fi lipit din clipboard. Formatul de date este fie incorect, fie nesuportat."
-    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
-    IDS_CANTSENDMAIL "Failed to send a mail."
-    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
+    IDS_SAVEERROR "Eșec în păstrarea imaginii bitmap („hartă de biți”) în fișierul:\n\n%s"
+    IDS_CANTSENDMAIL "Eșec în trimiterea unei scrisori."
+    IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sigur veți continua?"
 END
