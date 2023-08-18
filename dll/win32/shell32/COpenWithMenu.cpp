@@ -240,12 +240,12 @@ HICON COpenWithList::GetIcon(SApp *pApp)
         if (!ExtractIconExW(wszPath, 0, NULL, &pApp->hIcon, 1))
         {
             SHFILEINFO fi;
-            /* FIXME: Ideally we should pass SHGFI_ICON|SHGFI_USEFILEATTRIBUTES because
+            /* FIXME: Ideally we should include SHGFI_USEFILEATTRIBUTES because
             ** we already know the file has no icons but SHGetFileInfo is broken in that case.
             ** Without SHGFI_USEFILEATTRIBUTES we needlessly hit the disk again but it will
             ** return the correct default .exe icon.
             */
-            SHGetFileInfoW(wszPath, 0, &fi, sizeof(fi), SHGFI_ICON);
+            SHGetFileInfoW(wszPath, 0, &fi, sizeof(fi), SHGFI_ICON|SHGFI_SMALLICON|SHGFI_SHELLICONSIZE);
             pApp->hIcon = fi.hIcon;
         }
     }
