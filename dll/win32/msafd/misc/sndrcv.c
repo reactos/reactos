@@ -294,6 +294,12 @@ WSPRecv(SOCKET Handle,
                                    NULL,
                                    0);
 
+    if (Status == STATUS_PENDING && Socket->SharedData->NonBlocking)
+    {
+        if (lpErrno) *lpErrno = WSAEWOULDBLOCK;
+        return SOCKET_ERROR;
+    }
+
     /* Wait for completion of not overlapped */
     if (Status == STATUS_PENDING && lpOverlapped == NULL)
     {
