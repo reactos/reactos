@@ -596,7 +596,8 @@ LRESULT co_UserFreeWindow(PWND Window,
    /* remove the window already at this point from the thread window list so we
       don't get into trouble when destroying the thread windows while we're still
       in co_UserFreeWindow() */
-   RemoveEntryList(&Window->ThreadListEntry);
+   if (!IsListEmpty(&Window->ThreadListEntry))
+       RemoveEntryList(&Window->ThreadListEntry);
 
    BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
 
@@ -1917,6 +1918,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
        pWnd->HideAccel = pWnd->spwndParent->HideAccel;
    }
 
+   InitializeListHead(&pWnd->ThreadListEntry);
    pWnd->head.pti->cWindows++;
 
    if (Class->spicn && !Class->spicnSm)
