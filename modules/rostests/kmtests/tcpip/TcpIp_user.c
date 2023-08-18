@@ -113,7 +113,7 @@ START_TEST(TcpIpConnect)
     Error = KmtSendToDriver(IOCTL_TEST_CONNECT);
     ok_eq_ulong(Error, ERROR_SUCCESS);
 
-    WaitForSingleObject(AcceptThread, INFINITE);
+    WaitForSingleObject(AcceptThread, 10 * 1000);
 
     UnloadTcpIpTestDriver();
 
