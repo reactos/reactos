@@ -764,13 +764,8 @@ private:
                 CString ext(pCodecs[i].FilenameExtension);
                 extensions += ext;
             }
-            extensions.MakeLower();
 
-            strFilter += TEXT(" (");
-            strFilter += extensions;
-            strFilter += TEXT(")");
             strFilter += chSeparator;
-
             strFilter += extensions;
             strFilter += chSeparator;
 
@@ -783,7 +778,6 @@ private:
                 continue;
 
             CString extensions(pCodecs[i].FilenameExtension);
-            extensions.MakeLower();
 
             CString desc(pCodecs[i].FormatDescription);
             strFilter += desc;

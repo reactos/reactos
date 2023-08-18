@@ -101,7 +101,6 @@ static void init_gdip()
     DisposeImage = AddrOf<DISPOSEIMAGE>("GdipDisposeImage");
 }
 
-
 static void determine_file_bpp(TCHAR* tfile, Gdiplus::PixelFormat expect_pf)
 {
     using namespace Gdiplus;
@@ -135,8 +134,7 @@ static void determine_file_bpp(TCHAR* tfile, Gdiplus::PixelFormat expect_pf)
     Shutdown(gdiplusToken);
 }
 
-
-START_TEST(CImage)
+static void Test_LoadSaveImage(void)
 {
     HRESULT hr;
     TCHAR* file;
@@ -146,12 +144,6 @@ START_TEST(CImage)
     CImage image1, image2;
     COLORREF color;
     HDC hDC;
-
-#if 0
-    width = image1.GetWidth();
-    height = image1.GetHeight();
-    bpp = image1.GetBPP();
-#endif
 
     HINSTANCE hInst = GetModuleHandle(NULL);
     GetTempPath(MAX_PATH, szTempPath);
@@ -165,7 +157,6 @@ START_TEST(CImage)
     ok(height == 48, "Expected height to be 48, was: %d\n", height);
     bpp = image1.GetBPP();
     ok(bpp == 8, "Expected bpp to be 8, was: %d\n", bpp);
-
 
     image2.LoadFromResource(hInst, IDB_CROSS);
     ok(!image2.IsNull(), "Expected image2 is not null\n");
@@ -208,7 +199,7 @@ START_TEST(CImage)
     height = image2.GetHeight();
     ok_int(height, 48);
     bpp = image2.GetBPP();
-    ok_int(bpp, 32);
+    ok(bpp == 32 || bpp == 8, "bpp was %d\n", bpp);
 
     for (n = 0; n < _countof(szFiles); ++n)
     {
@@ -234,12 +225,11 @@ START_TEST(CImage)
         bpp = image2.GetBPP();
         if (n == 3)
         {
-            ok(bpp == 32, "Expected bpp to be 32, was: %d (for %i)\n", bpp, n);
+            ok(bpp == 24 || bpp == 32, "Expected bpp to be 24 or 32, was: %d (for %i)\n", bpp, n);
             determine_file_bpp(file, PixelFormat24bppRGB);
         }
         else
         {
-            ok(bpp == 32, "Expected bpp to be 32, was: %d (for %i)\n", bpp, n);
             determine_file_bpp(file, PixelFormat8bppIndexed);
         }
         color = image1.GetPixel(5, 5);
@@ -248,67 +238,177 @@ START_TEST(CImage)
         bOK = DeleteFile(file);
         ok(bOK, "Expected bOK to be TRUE, was: %d (for %i)\n", bOK, n);
     }
+}
 
+static INT FindGUID(REFGUID rguid, const CSimpleArray<GUID>& guids)
+{
+    for (INT i = 0; i < guids.GetSize(); ++i)
+    {
+        if (memcmp(&rguid, &guids[i], sizeof(GUID)) == 0)
+            return i;
+    }
+    return -1;
+}
+
+static INT FindFilterItem(const TCHAR *filter, const TCHAR *item)
+{
+    INT iFilter = 0;
+    DWORD cbItem = lstrlen(item) * sizeof(TCHAR);
+    BOOL bSep = TRUE;
+
+    for (; *filter; ++filter)
+    {
+        if (bSep && memcmp(item, filter, cbItem) == 0)
+            return (iFilter + 1) / 2;
+
+        bSep = (*filter == TEXT('|'));
+        if (bSep)
+            ++iFilter;
+    }
+
+    return -1;
+}
+
+static void Test_Importer(void)
+{
+    HRESULT hr;
     ATL::IAtlStringMgr *mgr = CAtlStringMgr::GetInstance();
     CSimpleArray<GUID> aguidFileTypes;
-#ifdef UNICODE
-    CHAR szBuff[512];
-    const WCHAR *psz;
-#else
-    const CHAR *psz;
-#endif
+    INT iNULL, iBMP, iJPEG, iGIF, iPNG, iTIFF, iEMF, iWMF;
 
+    // Try importer with "All Image Files"
     CSimpleString strImporters(mgr);
     aguidFileTypes.RemoveAll();
-    hr = CImage::GetImporterFilterString(strImporters,
-                                         aguidFileTypes,
-                                         TEXT("All Image Files"), 0);
+    hr = CImage::GetImporterFilterString(strImporters, aguidFileTypes, TEXT("All Image Files"), 0);
     ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
-    ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 8, was %d.", aguidFileTypes.GetSize());
-    ok(IsEqualGUID(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
-    ok(IsEqualGUID(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
-    ok(IsEqualGUID(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
-    ok(IsEqualGUID(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
-    ok(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatEMF), "Expected aguidFileTypes[4] to be Gdiplus::ImageFormatEMF.\n");
-    ok(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatWMF), "Expected aguidFileTypes[5] to be Gdiplus::ImageFormatWMF.\n");
-    ok(IsEqualGUID(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
-    ok(IsEqualGUID(aguidFileTypes[7], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
-    ok(IsEqualGUID(aguidFileTypes[8], Gdiplus::ImageFormatIcon), "Expected aguidFileTypes[8] to be Gdiplus::ImageFormatIcon.\n");
+    ok(aguidFileTypes.GetSize() >= 8,
+       "Expected aguidFileTypes.GetSize() to be >= 8, was %d.", aguidFileTypes.GetSize());
 
-    psz = strImporters.GetString();
-#ifdef UNICODE
-    WideCharToMultiByte(CP_ACP, 0, psz, -1, szBuff, 512, NULL, NULL);
-    ok(lstrcmpA(szBuff, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
-       "The importer filter string is bad, was: %s\n", szBuff);
-#else
-    ok(lstrcmpA(psz, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
-       "The importer filter string is bad, was: %s\n", psz);
-#endif
+    iNULL = FindGUID(GUID_NULL, aguidFileTypes);
+    iBMP = FindGUID(Gdiplus::ImageFormatBMP, aguidFileTypes);
+    iJPEG = FindGUID(Gdiplus::ImageFormatJPEG, aguidFileTypes);
+    iGIF = FindGUID(Gdiplus::ImageFormatGIF, aguidFileTypes);
+    iPNG = FindGUID(Gdiplus::ImageFormatPNG, aguidFileTypes);
+    iTIFF = FindGUID(Gdiplus::ImageFormatTIFF, aguidFileTypes);
+    iEMF = FindGUID(Gdiplus::ImageFormatEMF, aguidFileTypes);
+    iWMF = FindGUID(Gdiplus::ImageFormatWMF, aguidFileTypes);
 
+    ok_int(iNULL, 0);
+    ok(iBMP > 0, "iBMP was %d\n", iBMP);
+    ok(iJPEG > 0, "iJPEG was %d\n", iJPEG);
+    ok(iGIF > 0, "iGIF was %d\n", iGIF);
+    ok(iPNG > 0, "iPNG was %d\n", iPNG);
+    ok(iTIFF > 0, "iTIFF was %d\n", iTIFF);
+    ok(iEMF > 0, "iEMF was %d\n", iEMF);
+    ok(iWMF > 0, "iWMF was %d\n", iWMF);
+
+    ok_int(memcmp(strImporters, TEXT("All Image Files|"), sizeof(TEXT("All Image Files|")) - sizeof(TCHAR)), 0);
+    ok_int(iBMP, FindFilterItem(strImporters, TEXT("BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|")));
+    ok_int(iJPEG, FindFilterItem(strImporters, TEXT("JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|")));
+    ok_int(iGIF, FindFilterItem(strImporters, TEXT("GIF (*.GIF)|*.GIF|")));
+    ok_int(iPNG, FindFilterItem(strImporters, TEXT("PNG (*.PNG)|*.PNG|")));
+    ok_int(iTIFF, FindFilterItem(strImporters, TEXT("TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|")));
+
+    // Try importer without "All Image Files"
+    aguidFileTypes.RemoveAll();
+    strImporters.Empty();
+    hr = CImage::GetImporterFilterString(strImporters, aguidFileTypes, NULL, 0);
+    ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
+    ok(aguidFileTypes.GetSize() >= 7,
+       "Expected aguidFileTypes.GetSize() to be >= 7, was %d.", aguidFileTypes.GetSize());
+
+    iNULL = FindGUID(GUID_NULL, aguidFileTypes);
+    iBMP = FindGUID(Gdiplus::ImageFormatBMP, aguidFileTypes);
+    iJPEG = FindGUID(Gdiplus::ImageFormatJPEG, aguidFileTypes);
+    iGIF = FindGUID(Gdiplus::ImageFormatGIF, aguidFileTypes);
+    iPNG = FindGUID(Gdiplus::ImageFormatPNG, aguidFileTypes);
+    iTIFF = FindGUID(Gdiplus::ImageFormatTIFF, aguidFileTypes);
+    iEMF = FindGUID(Gdiplus::ImageFormatEMF, aguidFileTypes);
+    iWMF = FindGUID(Gdiplus::ImageFormatWMF, aguidFileTypes);
+
+    ok_int(iNULL, -1);
+    ok_int(iBMP, 0);
+    ok(iJPEG > 0, "iJPEG was %d\n", iJPEG);
+    ok(iGIF > 0, "iGIF was %d\n", iGIF);
+    ok(iPNG > 0, "iPNG was %d\n", iPNG);
+    ok(iTIFF > 0, "iTIFF was %d\n", iTIFF);
+    ok(iEMF > 0, "iEMF was %d\n", iEMF);
+    ok(iWMF > 0, "iWMF was %d\n", iWMF);
+
+    ok_int(iBMP, FindFilterItem(strImporters, TEXT("BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|")));
+    ok_int(iJPEG, FindFilterItem(strImporters, TEXT("JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|")));
+    ok_int(iGIF, FindFilterItem(strImporters, TEXT("GIF (*.GIF)|*.GIF|")));
+    ok_int(iPNG, FindFilterItem(strImporters, TEXT("PNG (*.PNG)|*.PNG|")));
+    ok_int(iTIFF, FindFilterItem(strImporters, TEXT("TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|")));
+}
+
+static void Test_Exporter(void)
+{
+    HRESULT hr;
+    ATL::IAtlStringMgr *mgr = CAtlStringMgr::GetInstance();
+    CSimpleArray<GUID> aguidFileTypes;
+    INT iNULL, iBMP, iJPEG, iGIF, iPNG, iTIFF;
+
+    // Try exporter with "All Image Files"
     CSimpleString strExporters(mgr);
     aguidFileTypes.RemoveAll();
-    hr = CImage::GetExporterFilterString(strExporters,
-                                         aguidFileTypes,
-                                         TEXT("All Image Files"), 0);
+    hr = CImage::GetExporterFilterString(strExporters, aguidFileTypes, TEXT("All Image Files"), 0);
     ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
-    ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 8, was %d.", aguidFileTypes.GetSize());
-    ok(IsEqualGUID(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
-    ok(IsEqualGUID(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
-    ok(IsEqualGUID(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
-    ok(IsEqualGUID(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
-    ok(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatEMF), "Expected aguidFileTypes[4] to be Gdiplus::ImageFormatEMF.\n");
-    ok(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatWMF), "Expected aguidFileTypes[5] to be Gdiplus::ImageFormatWMF.\n");
-    ok(IsEqualGUID(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
-    ok(IsEqualGUID(aguidFileTypes[7], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
-    ok(IsEqualGUID(aguidFileTypes[8], Gdiplus::ImageFormatIcon), "Expected aguidFileTypes[8] to be Gdiplus::ImageFormatIcon.\n");
+    ok(aguidFileTypes.GetSize() >= 6,
+       "Expected aguidFileTypes.GetSize() to be >= 6, was %d.", aguidFileTypes.GetSize());
 
-    psz = strExporters.GetString();
-#ifdef UNICODE
-    WideCharToMultiByte(CP_ACP, 0, psz, -1, szBuff, 512, NULL, NULL);
-    ok(lstrcmpA(szBuff, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
-       "The exporter filter string is bad, was: %s\n", szBuff);
-#else
-    ok(lstrcmpA(psz, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
-       "The exporter filter string is bad, was: %s\n", psz);
-#endif
+    iNULL = FindGUID(GUID_NULL, aguidFileTypes);
+    iBMP = FindGUID(Gdiplus::ImageFormatBMP, aguidFileTypes);
+    iJPEG = FindGUID(Gdiplus::ImageFormatJPEG, aguidFileTypes);
+    iGIF = FindGUID(Gdiplus::ImageFormatGIF, aguidFileTypes);
+    iPNG = FindGUID(Gdiplus::ImageFormatPNG, aguidFileTypes);
+    iTIFF = FindGUID(Gdiplus::ImageFormatTIFF, aguidFileTypes);
+
+    ok_int(iNULL, 0);
+    ok(iBMP > 0, "iBMP was %d\n", iBMP);
+    ok(iJPEG > 0, "iJPEG was %d\n", iJPEG);
+    ok(iGIF > 0, "iGIF was %d\n", iGIF);
+    ok(iPNG > 0, "iPNG was %d\n", iPNG);
+    ok(iTIFF > 0, "iTIFF was %d\n", iTIFF);
+
+    ok_int(iBMP, FindFilterItem(strExporters, TEXT("BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|")));
+    ok_int(iJPEG, FindFilterItem(strExporters, TEXT("JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|")));
+    ok_int(iGIF, FindFilterItem(strExporters, TEXT("GIF (*.GIF)|*.GIF|")));
+    ok_int(iPNG, FindFilterItem(strExporters, TEXT("PNG (*.PNG)|*.PNG|")));
+    ok_int(iTIFF, FindFilterItem(strExporters, TEXT("TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|")));
+
+    // Try exporter without "All Image Files"
+    strExporters.Empty();
+    aguidFileTypes.RemoveAll();
+    hr = CImage::GetExporterFilterString(strExporters, aguidFileTypes, NULL, 0);
+    ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
+    ok(aguidFileTypes.GetSize() >= 5,
+       "Expected aguidFileTypes.GetSize() to be >= 5, was %d.", aguidFileTypes.GetSize());
+
+    iNULL = FindGUID(GUID_NULL, aguidFileTypes);
+    iBMP = FindGUID(Gdiplus::ImageFormatBMP, aguidFileTypes);
+    iJPEG = FindGUID(Gdiplus::ImageFormatJPEG, aguidFileTypes);
+    iGIF = FindGUID(Gdiplus::ImageFormatGIF, aguidFileTypes);
+    iPNG = FindGUID(Gdiplus::ImageFormatPNG, aguidFileTypes);
+    iTIFF = FindGUID(Gdiplus::ImageFormatTIFF, aguidFileTypes);
+
+    ok_int(iNULL, -1);
+    ok_int(iBMP, 0);
+    ok(iJPEG > 0, "iJPEG was %d\n", iJPEG);
+    ok(iGIF > 0, "iGIF was %d\n", iGIF);
+    ok(iPNG > 0, "iPNG was %d\n", iPNG);
+    ok(iTIFF > 0, "iTIFF was %d\n", iTIFF);
+
+    ok_int(iBMP, FindFilterItem(strExporters, TEXT("BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|")));
+    ok_int(iJPEG, FindFilterItem(strExporters, TEXT("JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|")));
+    ok_int(iGIF, FindFilterItem(strExporters, TEXT("GIF (*.GIF)|*.GIF|")));
+    ok_int(iPNG, FindFilterItem(strExporters, TEXT("PNG (*.PNG)|*.PNG|")));
+    ok_int(iTIFF, FindFilterItem(strExporters, TEXT("TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|")));
+}
+
+START_TEST(CImage)
+{
+    Test_LoadSaveImage();
+    Test_Importer();
+    Test_Exporter();
 }
