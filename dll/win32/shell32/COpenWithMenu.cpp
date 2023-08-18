@@ -78,7 +78,7 @@ class COpenWithList
 
         SApp *AddInternal(LPCWSTR pwszFilename);
         static BOOL LoadInfo(SApp *pApp);
-        static VOID GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd);
+        static BOOL GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd);
         BOOL LoadProgIdList(HKEY hKey, LPCWSTR pwszExt);
         static HANDLE OpenMRUList(HKEY hKey);
         BOOL LoadMRUList(HKEY hKey);
@@ -217,7 +217,12 @@ LPCWSTR COpenWithList::GetName(SApp *pApp)
         {
             WARN("Failed to load %ls info\n", pApp->wszFilename);
             StringCbCopyW(pApp->wszName, sizeof(pApp->wszName), pApp->wszFilename);
-            return NULL;
+
+            WCHAR wszPath[MAX_PATH];
+            if (!GetPathFromCmd(wszPath, pApp->wszCmd))
+            {
+                return NULL;
+            }
         }
     }
 
@@ -232,7 +237,17 @@ HICON COpenWithList::GetIcon(SApp *pApp)
         WCHAR wszPath[MAX_PATH];
 
         GetPathFromCmd(wszPath, pApp->wszCmd);
-        ExtractIconExW(wszPath, 0, NULL, &pApp->hIcon, 1);
+        if (!ExtractIconExW(wszPath, 0, NULL, &pApp->hIcon, 1))
+        {
+            SHFILEINFO fi;
+            /* FIXME: Ideally we should pass SHGFI_ICON|SHGFI_USEFILEATTRIBUTES because
+            ** we already know the file has no icons but SHGetFileInfo is broken in that case.
+            ** Without SHGFI_USEFILEATTRIBUTES we needlessly hit the disk again but it will
+            ** return the correct default .exe icon.
+            */
+            SHGetFileInfoW(wszPath, 0, &fi, sizeof(fi), SHGFI_ICON|SHGFI_USEFILEATTRIBUTES);
+            pApp->hIcon = fi.hIcon;
+        }
     }
 
     TRACE("%ls icon: %p\n", pApp->wszFilename, pApp->hIcon);
@@ -381,7 +396,7 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
     return success;
 }
 
-VOID COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
+BOOL COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
 {
     WCHAR wszBuf[MAX_PATH], *pwszDest = wszBuf;
 
@@ -401,8 +416,10 @@ VOID COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
 
     /* Expand evn vers and optionally search for path */
     ExpandEnvironmentStrings(wszBuf, pwszAppPath, MAX_PATH);
-    if (!PathFileExists(pwszAppPath))
-        SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+    if (PathFileExists(pwszAppPath))
+        return TRUE;
+    else
+        return SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
 }
 
 BOOL COpenWithList::LoadRecommended(LPCWSTR pwszFilePath)
