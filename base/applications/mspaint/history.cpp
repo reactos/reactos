@@ -283,31 +283,42 @@ BOOL ImageModel::IsBlackAndWhite()
     return TRUE;
 }
 
+struct BITMAPINFOEX : BITMAPINFO
+{
+    RGBQUAD bmiColorsExtra[256 - 1];
+};
+
 void ImageModel::PushBlackAndWhite()
 {
-    HBITMAP hNewBitmap = CopyBitmap();
-    if (!hNewBitmap)
+    INT cx = GetWidth(), cy = GetHeight();
+
+    BITMAPINFOEX bmi;
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = cx;
+    bmi.bmiHeader.biHeight = cy;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 1;
+    bmi.bmiColors[0].rgbBlue = 0;
+    bmi.bmiColors[0].rgbGreen = 0;
+    bmi.bmiColors[0].rgbRed = 0;
+    bmi.bmiColors[1].rgbBlue = 255;
+    bmi.bmiColors[1].rgbGreen = 255;
+    bmi.bmiColors[1].rgbRed = 255;
+
+    LPVOID pvMonoBits;
+    HBITMAP hMonoBitmap = ::CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, &pvMonoBits, NULL, 0);
+    if (!hMonoBitmap)
         return;
 
-    HDC hdc2 = ::CreateCompatibleDC(NULL);
-    HGDIOBJ hbm2Old = ::SelectObject(hdc2, hNewBitmap);
-    LONG cxWidth = GetWidth(), cyHeight = GetHeight();
-    for (LONG y = 0; y < cyHeight; ++y)
-    {
-        for (LONG x = 0; x < cxWidth; ++x)
-        {
-            COLORREF rgbColor = ::GetPixel(m_hDrawingDC, x, y);
-            BYTE Red = GetRValue(rgbColor);
-            BYTE Green = GetGValue(rgbColor);
-            BYTE Blue = GetBValue(rgbColor);
-            if ((Red + Green + Blue) / 3 >= 255 / 2)
-                ::SetPixelV(hdc2, x, y, RGB(255, 255, 255)); // White
-            else
-                ::SetPixelV(hdc2, x, y, RGB(0, 0, 0)); // Black
-        }
-    }
-    ::SelectObject(hdc2, hbm2Old);
-    ::DeleteDC(hdc2);
+    ::SelectObject(m_hDrawingDC, m_hbmOld); // De-select
+
+    ::GetDIBits(m_hDrawingDC, m_hBms[m_currInd], 0, cy, pvMonoBits, &bmi, DIB_RGB_COLORS);
+    HBITMAP hNewBitmap = CreateDIBWithProperties(cx, cy);
+    ::SetDIBits(m_hDrawingDC, hNewBitmap, 0, cy, pvMonoBits, &bmi, DIB_RGB_COLORS);
+    ::DeleteObject(hMonoBitmap);
+
+    m_hbmOld = ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]); // Re-select
 
     PushImageForUndo(hNewBitmap);
 }
