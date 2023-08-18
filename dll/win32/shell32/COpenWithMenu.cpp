@@ -245,7 +245,7 @@ HICON COpenWithList::GetIcon(SApp *pApp)
             ** Without SHGFI_USEFILEATTRIBUTES we needlessly hit the disk again but it will
             ** return the correct default .exe icon.
             */
-            SHGetFileInfoW(wszPath, 0, &fi, sizeof(fi), SHGFI_ICON|SHGFI_USEFILEATTRIBUTES);
+            SHGetFileInfoW(wszPath, 0, &fi, sizeof(fi), SHGFI_ICON);
             pApp->hIcon = fi.hIcon;
         }
     }
