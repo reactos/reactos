@@ -81,7 +81,6 @@ struct ShellSettings
 
 struct CabinetStateSettings : CABINETSTATE
 {
-    /* Additional CabinetState settings */
     BOOL fFullPathAddress = TRUE;
 
     BOOL Load();
