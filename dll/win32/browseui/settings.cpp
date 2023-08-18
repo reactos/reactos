@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 
+CabinetStateSettings gCabinetState;
+
 BOOL ShellSettings::Save()
 {
     SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"StatusBarOther",
@@ -31,6 +33,18 @@ BOOL ShellSettings::Load()
 
     fLocked = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Toolbar",
                                    L"Locked", FALSE, TRUE);
+
+    return TRUE;
+}
+
+BOOL CabinetStateSettings::Load()
+{
+    /* Ideally we would use ReadCabinetState, but unfortunately Wine's implementation is incomplete. */
+    fFullPathTitle = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState",
+                                          L"FullPath", FALSE, FALSE);
+
+    fFullPathAddress = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState",
+                                            L"FullPathAddress", FALSE, TRUE);
 
     return TRUE;
 }
