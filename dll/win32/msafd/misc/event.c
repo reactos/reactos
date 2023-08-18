@@ -189,7 +189,7 @@ WSPEnumNetworkEvents(
 
     if (Status != STATUS_SUCCESS)
     {
-        ERR("Status 0x%08x", Status);
+        ERR("Status 0x%08x\n", Status);
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
     }
 
