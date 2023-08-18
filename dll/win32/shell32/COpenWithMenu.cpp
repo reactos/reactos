@@ -217,6 +217,7 @@ LPCWSTR COpenWithList::GetName(SApp *pApp)
         {
             WARN("Failed to load %ls info\n", pApp->wszFilename);
             StringCbCopyW(pApp->wszName, sizeof(pApp->wszName), pApp->wszFilename);
+            return NULL;
         }
     }
 
@@ -321,6 +322,7 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
     WCHAR wszBuf[100];
     WCHAR *pResult;
     WCHAR wszPath[MAX_PATH];
+    BOOL success = FALSE;
 
     GetPathFromCmd(wszPath, pApp->wszCmd);
     TRACE("LoadInfo %ls\n", wszPath);
@@ -363,7 +365,10 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
     /* Query name */
     swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\FileDescription", wLang, wCode);
     if (VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen))
+    {
         StringCchCopyNW(pApp->wszName, _countof(pApp->wszName), pResult, cchLen);
+        success = cchLen > 1;
+    }
     else
         ERR("Cannot get app name\n");
 
@@ -373,7 +378,7 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
     if (VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen))
         StringCchCopyNW(pApp->wszManufacturer, _countof(pApp->wszManufacturer), pResult, cchLen);*/
     HeapFree(GetProcessHeap(), 0, pBuf);
-    return TRUE;
+    return success;
 }
 
 VOID COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
@@ -862,6 +867,7 @@ BOOL COpenWithDialog::IsNoOpen(HWND hwnd)
 VOID COpenWithDialog::AddApp(COpenWithList::SApp *pApp, BOOL bSelected)
 {
     LPCWSTR pwszName = m_pAppList->GetName(pApp);
+    if (!pwszName) return ;
     HICON hIcon = m_pAppList->GetIcon(pApp);
 
     TRACE("AddApp Cmd %ls Name %ls\n", pApp->wszCmd, pwszName);
@@ -875,7 +881,7 @@ VOID COpenWithDialog::AddApp(COpenWithList::SApp *pApp, BOOL bSelected)
         tvins.hParent = tvins.hInsertAfter = m_hOther;
 
     tvins.item.mask = TVIF_TEXT|TVIF_PARAM;
-    tvins.item.pszText = (LPWSTR)pwszName;
+    tvins.item.pszText = const_cast<LPWSTR>(pwszName);
     tvins.item.lParam = (LPARAM)pApp;
 
     if (hIcon)
@@ -1189,6 +1195,7 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
 {
     MENUITEMINFOW mii;
     LPCWSTR pwszName = m_pAppList->GetName((COpenWithList::SApp*)pApp);
+    if (!pwszName) return ;
 
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
@@ -1196,7 +1203,7 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
     mii.fType = MFT_STRING;
     mii.fState = MFS_ENABLED;
     mii.wID = m_idCmdLast;
-    mii.dwTypeData = (LPWSTR)pwszName;
+    mii.dwTypeData = const_cast<LPWSTR>(pwszName);
     mii.cch = wcslen(mii.dwTypeData);
     mii.dwItemData = (ULONG_PTR)pApp;
 
