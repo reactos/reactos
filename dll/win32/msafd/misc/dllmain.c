@@ -70,9 +70,6 @@ WSPSocket(int AddressFamily,
     INT                         Status;
     PSOCK_SHARED_INFO           SharedData = NULL;
 
-    TRACE("Creating Socket, getting TDI Name - AddressFamily (%d)  SocketType (%d)  Protocol (%d).\n",
-        AddressFamily, SocketType, Protocol);
-
     if (lpProtocolInfo && lpProtocolInfo->dwServiceFlags3 != 0 && lpProtocolInfo->dwServiceFlags4 != 0)
     {
         /* Duplpicating socket from different process */
@@ -220,7 +217,6 @@ WSPSocket(int AddressFamily,
         if( Socket->SharedData->SocketType == SOCK_DGRAM ||
             Socket->SharedData->SocketType == SOCK_RAW )
         {
-            TRACE("Connectionless socket\n");
             Socket->SharedData->ServiceFlags1 |= XP1_CONNECTIONLESS;
         }
         Socket->Handle = INVALID_SOCKET;
@@ -413,8 +409,6 @@ ok:
     Upcalls.lpWPUModifyIFSHandle(Socket->ProtocolInfo.dwCatalogEntryId, (SOCKET)Sock, lpErrno);
 
     /* Return Socket Handle */
-    TRACE("Success %x\n", Sock);
-
     return (SOCKET)Sock;
 
 error:
@@ -649,7 +643,7 @@ WSPCloseSocket(IN SOCKET Handle,
 
     if(!NT_SUCCESS(Status))
     {
-        ERR("NtCreateEvent failed: 0x%08x", Status);
+        ERR("NtCreateEvent failed: 0x%08x\n", Status);
         return SOCKET_ERROR;
     }
 
@@ -664,7 +658,7 @@ WSPCloseSocket(IN SOCKET Handle,
         if (Status)
         {
             if (lpErrno) *lpErrno = Status;
-            ERR("WSHNotify failed. Error 0x%#x", Status);
+            ERR("WSHNotify failed. Error 0x%#x\n", Status);
             NtClose(SockEvent);
             return SOCKET_ERROR;
         }
@@ -1119,8 +1113,6 @@ WSPSelect(IN int nfds,
 
     PollBufferSize = sizeof(*PollInfo) + ((HandleCount - 1) * sizeof(AFD_HANDLE));
 
-    TRACE("HandleCount: %u BufferSize: %u\n", HandleCount, PollBufferSize);
-
     /* Convert Timeout to NT Format */
     if (timeout == NULL)
     {
@@ -1299,8 +1291,6 @@ WSPSelect(IN int nfds,
                                    PollInfo,
                                    PollBufferSize);
 
-    TRACE("DeviceIoControlFile => %x\n", Status);
-
     /* Wait for Completion */
     if (Status == STATUS_PENDING)
     {
@@ -1401,14 +1391,11 @@ WSPSelect(IN int nfds,
                 *lpErrno = WSAEINVAL;
                 break;
         }
-        TRACE("*lpErrno = %x\n", *lpErrno);
     }
 
     HandleCount = (readfds ? readfds->fd_count : 0) +
                   (writefds && writefds != readfds ? writefds->fd_count : 0) +
                   (exceptfds && exceptfds != readfds && exceptfds != writefds ? exceptfds->fd_count : 0);
-
-    TRACE("%d events\n", HandleCount);
 
     return HandleCount;
 }
@@ -1495,22 +1482,25 @@ WSPAccept(
     ListenReceiveData = (PAFD_RECEIVED_ACCEPT_DATA)ReceiveBuffer;
 
     /* If this is non-blocking, make sure there's something for us to accept */
-    FD_ZERO(&ReadSet);
-    FD_SET(Socket->Handle, &ReadSet);
-    Timeout.tv_sec=0;
-    Timeout.tv_usec=0;
-
-    if (WSPSelect(0, &ReadSet, NULL, NULL, &Timeout, lpErrno) == SOCKET_ERROR)
+    if (Socket->SharedData->NonBlocking)
     {
-        NtClose(SockEvent);
-        return SOCKET_ERROR;
-    }
+        FD_ZERO(&ReadSet);
+        FD_SET(Socket->Handle, &ReadSet);
+        Timeout.tv_sec=0;
+        Timeout.tv_usec=0;
 
-    if (ReadSet.fd_array[0] != Socket->Handle)
-    {
-        NtClose(SockEvent);
-        if (lpErrno) *lpErrno = WSAEWOULDBLOCK;
-        return SOCKET_ERROR;
+        if (WSPSelect(0, &ReadSet, NULL, NULL, &Timeout, lpErrno) == SOCKET_ERROR)
+        {
+            NtClose(SockEvent);
+            return SOCKET_ERROR;
+        }
+
+        if (ReadSet.fd_array[0] != Socket->Handle)
+        {
+            NtClose(SockEvent);
+            if (lpErrno) *lpErrno = WSAEWOULDBLOCK;
+            return SOCKET_ERROR;
+        }
     }
 
     /* Send IOCTL */
@@ -1782,6 +1772,7 @@ WSPAccept(
 
     AcceptSocketInfo->SharedData->State = SocketConnected;
     AcceptSocketInfo->SharedData->ConnectTime = GetCurrentTimeInSeconds();
+    AcceptSocketInfo->SharedData->NonBlocking = Socket->SharedData->NonBlocking;
 
     /* Return Address in SOCKADDR FORMAT */
     if( SocketAddress )
@@ -1797,8 +1788,6 @@ WSPAccept(
 
     /* Re-enable Async Event */
     SockReenableAsyncSelectEvent(Socket, FD_ACCEPT);
-
-    TRACE("Socket %x\n", AcceptSocket);
 
     if (Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_ACCEPT))
     {
@@ -3044,7 +3033,6 @@ WSPStartup(
         CatalogEntryId = lpProtocolInfo->dwCatalogEntryId;
     }
 
-    TRACE("Status (%d).\n", Status);
     return Status;
 }
 
@@ -3181,7 +3169,7 @@ WSPStringToAddress(IN LPWSTR AddressString,
                 /* move over the dot to next ip part */
                 (*bp)++;
             }
-            
+
             /* check dots count */
             if (numdots != 3)
             {
@@ -3238,8 +3226,6 @@ WSPAPI
 WSPCleanup(OUT LPINT lpErrno)
 
 {
-    TRACE("Leaving.\n");
-
     if (lpErrno) *lpErrno = NO_ERROR;
 
     return 0;
@@ -3442,7 +3428,6 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
         /* Overlapped request for non overlapped opened socket */
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
-            TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
             NtClose( SockEvent );
             return 0;
         }
