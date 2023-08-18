@@ -240,8 +240,8 @@ HICON COpenWithList::GetIcon(SApp *pApp)
         if (!ExtractIconExW(wszPath, 0, NULL, &pApp->hIcon, 1))
         {
             SHFILEINFO fi;
-            /* FIXME: Ideally we should include SHGFI_USEFILEATTRIBUTES because
-            ** we already know the file has no icons but SHGetFileInfo is broken in that case.
+            /* FIXME: Ideally we should include SHGFI_USEFILEATTRIBUTES because we already
+            ** know the file has no icons but SHGetFileInfo is broken in that case (CORE-19122).
             ** Without SHGFI_USEFILEATTRIBUTES we needlessly hit the disk again but it will
             ** return the correct default .exe icon.
             */
