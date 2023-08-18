@@ -6,7 +6,6 @@ modules/livecd_extras
 modules/hybridcd_extras
 modules/3rdparty
 modules/[Aa][Hh][Kk]_[Tt]ests
-.vs
 .cache
 .cproject
 .DS_Store

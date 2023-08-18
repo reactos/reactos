@@ -328,11 +328,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCH_RESULTS "Търсене. . ."
+    IDS_SEARCH_RESULTS "Резултати от търсенето"
     IDS_SEARCHINVALID "'%1' не е валидна папка."
     IDS_SEARCH_FOLDER "Търсене в %s"
     IDS_SEARCH_FILES_FOUND "%u намерени файлове"
-    IDS_SEARCH_OPEN_FOLDER "Open Containing &Folder"
+    IDS_SEARCH_OPEN_FOLDER "Отвори файла в &Папката"
     IDS_COL_NAME "Име"
     IDS_COL_LOCATION "В папка"
     IDS_COL_RELEVANCE "Relevance"

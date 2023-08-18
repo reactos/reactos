@@ -348,7 +348,7 @@ BEGIN
     IDS_USERPROFILE_LOCAL "Local"
     IDS_USERPROFILE_ROAMING "Roaming"
     IDS_USERPROFILE_MANDATORY "Mandatory"
-    IDS_USERPROFILE_CONFIRM_DELETE "Сигурен ли сте че искате да изтриете този профил: %s's?"
+    IDS_USERPROFILE_CONFIRM_DELETE "Сигурен ли сте че искате да изтриете този профил: %s?"
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirm Delete"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Account Unknown"
     IDS_USERPROFILE_ACCOUNT_DELETED "Account Deleted"
