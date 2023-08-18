@@ -538,7 +538,7 @@ BOOL IsBitmapBlackAndWhite(HBITMAP hbm)
 
     BITMAPINFOEX bmi;
     ZeroMemory(&bmi, sizeof(bmi));
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = bm.bmWidth;
     bmi.bmiHeader.biHeight = bm.bmHeight;
     bmi.bmiHeader.biPlanes = 1;
