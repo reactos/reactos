@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -20,7 +20,7 @@ BEGIN
         MENUITEM "Aranjări &orizontale", ID_SHELL_CMD_TILE_WND_H
         MENUITEM "Aranjări &verticale", ID_SHELL_CMD_TILE_WND_V
         MENUITEM "Afișează &biroul", ID_SHELL_CMD_SHOW_DESKTOP
-        MENUITEM "Des&face", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM "Desfa&ce", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
         MENUITEM "&Gestionar de activități", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
@@ -60,7 +60,7 @@ BEGIN
         MENUITEM "E&xecutare…", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "Sinc&ronizează", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "De&autentificare %s…", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "Dea&utentificare %s…", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "De&conectare…", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
         MENUITEM "D&etașare calculator", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
         MENUITEM "Î&nchidere calculator…", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
@@ -75,11 +75,11 @@ BEGIN
     GROUPBOX "Aspectul barei de activități", IDC_STATIC, 6, 6, 240, 120
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "Fi&xează bara de activități", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
-    AUTOCHECKBOX "&Auto-ascunde bara de activități", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
-    AUTOCHECKBOX "&Menține bara de activități deasupra celorlalte ferestre", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "Auto-ascun&de bara de activități", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "Menține &bara de activități deasupra celorlalte ferestre", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Grupează butoanele similare din bara de activități", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Afișează bara „&Lansări rapide”", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    AUTOCHECKBOX "U&se small icons", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+    AUTOCHECKBOX "Folos&ește pictograme mici", IDC_TASKBARPROP_SMALLICONS, 13, 110, 240, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -106,11 +106,11 @@ BEGIN
     LTEXT "Puteți menține ordonată zona de notificare prin ascunderea pictogramelor neaccesate recent.", IDC_STATIC, 13, 48, 223, 16
     AUTOCHECKBOX "Asc&unde pictogramele neaccesate", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10
     PUSHBUTTON "&Particularizare…", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14
-    GROUPBOX "System icons", IDC_STATIC, 6, 99, 240, 56
-    LTEXT "Select which system icons to always show.", IDC_STATIC, 13, 113, 223, 8
+    GROUPBOX "Pictograme de sistem", IDC_STATIC, 6, 99, 240, 56
+    LTEXT "Selectați ce pictograme de sistem urmează să fie afișate mereu.", IDC_STATIC, 13, 113, 240, 8
     AUTOCHECKBOX "Afișează &ceas", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
     AUTOCHECKBOX "Afișează s&ecunde", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
-    AUTOCHECKBOX "&Desktop", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
+    AUTOCHECKBOX "&Birou", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
 END
 
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
@@ -164,7 +164,7 @@ END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
-CAPTION "Advanced"
+CAPTION "Avansat"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX         "Opțiuni ale meniului „Pornire” ", IDC_STATIC, 7, 7, 238, 42
