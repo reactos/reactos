@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/console.c
  * PURPOSE:         Console Management Functions
- * PROGRAMMERS:     Gé van Geldorp
+ * PROGRAMMERS:     GÃ© van Geldorp
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
@@ -465,8 +465,8 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
             }
             IShellLinkW_Release(pshl);
         }
+        CoUninitialize();
     }
-    CoUninitialize();
 
 Finish:
 
