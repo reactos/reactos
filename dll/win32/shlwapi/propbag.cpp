@@ -1028,7 +1028,7 @@ VOID CDesktopUpgradePropertyBag::_MarkAsUpgraded(HKEY hkey)
 
 BOOL CDesktopUpgradePropertyBag::_AlreadyUpgraded(HKEY hKey)
 {
-    // Written in _MarkAsUpgraded. Just check the existence
+    // Check the existence of the value written in _MarkAsUpgraded.
     DWORD dwValue, cbData = sizeof(dwValue);
     return SHGetValueW(hKey, NULL, L"Upgrade", NULL, &dwValue, &cbData) == ERROR_SUCCESS;
 }
