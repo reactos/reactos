@@ -1039,9 +1039,9 @@ HRESULT CDesktopUpgradePropertyBag::_ReadFlags(VARIANT *pvari)
 {
     UNKNOWN_DESKVIEW_FLAGS Flags;
     DWORD cbValue = sizeof(Flags);
-    if (SHGetValueA(HKEY_CURRENT_USER,
-                    "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DeskView",
-                    "Settings",
+    if (SHGetValueW(HKEY_CURRENT_USER,
+                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DeskView",
+                    L"Settings",
                     NULL,
                     &Flags,
                     &cbValue) != ERROR_SUCCESS || cbValue < sizeof(Flags))
@@ -1071,8 +1071,7 @@ IStream* CDesktopUpgradePropertyBag::_NewStreamFromOld(IStream *pOldStream)
 
     // Move stream pointer
     LARGE_INTEGER li;
-    li.u.LowPart = Data.wSize - sizeof(Data);
-    li.u.HighPart = 0;
+    li.QuadPart = Data.wSize - sizeof(Data);
     hr = pOldStream->Seek(li, STREAM_SEEK_CUR, NULL);
     if (FAILED(hr))
         return NULL;
@@ -1089,16 +1088,14 @@ IStream* CDesktopUpgradePropertyBag::_NewStreamFromOld(IStream *pOldStream)
     if (!pNewStream)
         return NULL;
 
-    // Subtract data.wSize with borrow from the size
-    BOOL bBorrow = (uli.u.LowPart < Data.wSize);
-    uli.u.LowPart -= Data.wSize;
-    uli.u.HighPart -= bBorrow;
+    // Subtract Data.wSize from the size
+    uli.QuadPart -= Data.wSize;
 
     // Copy to pNewStream
     hr = pOldStream->CopyTo(pNewStream, uli, NULL, NULL);
     if (SUCCEEDED(hr))
     {
-        li.u.LowPart = li.u.HighPart = 0;
+        li.QuadPart = 0;
         pNewStream->Seek(li, STREAM_SEEK_SET, NULL);
     }
     else
