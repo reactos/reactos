@@ -3804,13 +3804,11 @@ void CShellBrowser::RefreshCabinetState()
 void CShellBrowser::UpdateWindowTitle()
 {
     WCHAR title[MAX_PATH];
-    SHGDNF flags;
+    SHGDNF flags = SHGDN_FORADDRESSBAR;
 
     if (gCabinetState.fFullPathTitle)
-        flags = SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
-    else
-        flags = SHGDN_FORADDRESSBAR;
+        flags |= SHGDN_FORPARSING;
 
-    if (SUCCEEDED(IEGetNameAndFlags(fCurrentDirectoryPIDL, flags, title, MAX_PATH, NULL)))
+    if (SUCCEEDED(IEGetNameAndFlags(fCurrentDirectoryPIDL, flags, title, _countof(title), NULL)))
         SetWindowText(title);
 }

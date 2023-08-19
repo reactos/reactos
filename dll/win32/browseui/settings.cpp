@@ -9,7 +9,7 @@
 
 CabinetStateSettings gCabinetState;
 
-BOOL ShellSettings::Save()
+void ShellSettings::Save()
 {
     SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"StatusBarOther",
                      REG_DWORD, &fStatusBarVisible, sizeof(fStatusBarVisible), SHREGSET_FORCE_HKCU);
@@ -19,11 +19,9 @@ BOOL ShellSettings::Save()
 
     SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Toolbar", L"Locked",
                      REG_DWORD, &fLocked, sizeof(fLocked), SHREGSET_FORCE_HKCU);
-
-    return TRUE;
 }
 
-BOOL ShellSettings::Load()
+void ShellSettings::Load()
 {
     fStatusBarVisible = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
                                              L"StatusBarOther", FALSE, FALSE);
@@ -33,11 +31,9 @@ BOOL ShellSettings::Load()
 
     fLocked = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Toolbar",
                                    L"Locked", FALSE, TRUE);
-
-    return TRUE;
 }
 
-BOOL CabinetStateSettings::Load()
+void CabinetStateSettings::Load()
 {
     ReadCabinetState(this, this->cLength);
 
@@ -47,6 +43,4 @@ BOOL CabinetStateSettings::Load()
 
     fFullPathAddress = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState",
                                             L"FullPathAddress", FALSE, TRUE);
-
-    return TRUE;
 }

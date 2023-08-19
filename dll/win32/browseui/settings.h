@@ -15,15 +15,15 @@ struct ShellSettings
     BOOL fShowGoButton = FALSE;
     BOOL fStatusBarVisible = FALSE;
 
-    BOOL Save();
-    BOOL Load();
+    void Save();
+    void Load();
 };
 
 struct CabinetStateSettings : CABINETSTATE
 {
     BOOL fFullPathAddress = TRUE;
 
-    BOOL Load();
+    void Load();
 };
 
 extern CabinetStateSettings gCabinetState;

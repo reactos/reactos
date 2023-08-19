@@ -130,12 +130,9 @@ HRESULT CAddressEditBox::RefreshAddress()
 
     /* Set the path if filesystem; otherwise use the name */
     WCHAR szPathOrName[MAX_PATH];
-    SHGDNF flags;
-
+    SHGDNF flags = SHGDN_FORADDRESSBAR;
     if (gCabinetState.fFullPathAddress)
-        flags = SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
-    else
-        flags = SHGDN_FORADDRESSBAR;
+        flags |= SHGDN_FORPARSING;
 
     STRRET ret;
     hr = pShellFolder->GetDisplayNameOf(pidlChild, flags, &ret);
