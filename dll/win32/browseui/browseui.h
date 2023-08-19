@@ -24,3 +24,5 @@ HRESULT CTravelLog_CreateInstance(REFIID riid, void **ppv);
 HRESULT CBaseBar_CreateInstance(REFIID riid, void **ppv, BOOL vertical);
 HRESULT CBaseBarSite_CreateInstance(REFIID riid, void **ppv, BOOL bVertical);
 HRESULT CToolsBand_CreateInstance(REFIID riid, void **ppv);
+
+long IEGetNameAndFlags(LPITEMIDLIST pidl, SHGDNF uFlags, LPWSTR pszBuf, UINT cchBuf, SFGAOF *rgfInOut);

@@ -134,16 +134,8 @@ HRESULT CAddressEditBox::RefreshAddress()
     if (gCabinetState.fFullPathAddress)
         flags |= SHGDN_FORPARSING;
 
-    STRRET ret;
-    hr = pShellFolder->GetDisplayNameOf(pidlChild, flags, &ret);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = StrRetToBufW(&ret, pidlChild, szPathOrName, _countof(szPathOrName));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    item.pszText = szPathOrName;
+    if (SUCCEEDED(IEGetNameAndFlags(absolutePIDL, flags, szPathOrName, _countof(szPathOrName), NULL)))
+        item.pszText = szPathOrName;
 
     /* Ownership of absolutePIDL will be moved to fCombobox. See CBEN_DELETEITEM */
     item.lParam = reinterpret_cast<LPARAM>(absolutePIDL.Detach());
