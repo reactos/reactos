@@ -14,7 +14,7 @@
  *              up the DosDevices Object Directory, and initializing each component.
  *
  * procsup.c  - Handles all internal functions dealing with the CSR Process Object,
- *              including de/allocation, de/referencing, un/locking, prority, and
+ *              including de/allocation, de/referencing, un/locking, priority, and
  *              lookups. Also handles all external APIs which touch the CSR Process Object.
  *
  * server.c   - Handles all internal functions related to loading and managing Server
@@ -24,7 +24,7 @@
  *
  * session.c  - Handles all internal functions dealing with the CSR Session Object,
  *              including de/allocation, de/referencing, and un/locking. Holds the SB API
- *              Dispatch/Name Tables and the public CsrSv API Interface for commmunication
+ *              Dispatch/Name Tables and the public CsrSv API Interface for communication
  *              with the Session Manager.
  *
  * thredsup.c - Handles all internal functions dealing with the CSR Thread Object,

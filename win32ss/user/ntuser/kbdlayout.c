@@ -579,7 +579,7 @@ IntReorderKeyboardLayouts(
 /*
  * UserSetDefaultInputLang
  *
- * Sets default kyboard layout for system. Called from UserSystemParametersInfo.
+ * Sets default keyboard layout for system. Called from UserSystemParametersInfo.
  */
 BOOL
 NTAPI

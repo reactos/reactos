@@ -1048,7 +1048,7 @@ CsrLockProcessByClientId(IN HANDLE Pid,
  * @return TRUE if the reversion was succesful, FALSE otherwise.
  *
  * @remarks Impersonation can be recursive; as such, the impersonation token
- *          will only be deleted once the CSR Thread's impersonaton count
+ *          will only be deleted once the CSR Thread's impersonation count
  *          has reached zero.
  *
  *--*/
