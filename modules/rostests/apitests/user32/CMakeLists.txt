@@ -50,6 +50,7 @@ list(APPEND SOURCE
     SetScrollRange.c
     ShowWindow.c
     SwitchToThisWindow.c
+    SystemMenu.c
     SystemParametersInfo.c
     TrackMouseEvent.c
     VirtualKey.c
