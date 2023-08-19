@@ -217,6 +217,8 @@ SHSetIniStringUTF7W(
     _In_opt_z_ LPCWSTR lpString,
     _In_z_ LPCWSTR lpFileName);
 
+HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create);
+
 int
 WINAPIV
 ShellMessageBoxWrapW(
