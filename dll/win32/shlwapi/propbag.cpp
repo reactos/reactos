@@ -1108,7 +1108,7 @@ IStream* CDesktopUpgradePropertyBag::_NewStreamFromOld(IStream *pOldStream)
 
 IStream* CDesktopUpgradePropertyBag::_GetOldDesktopViewStream()
 {
-    HKEY hKey = SHGetShellKey(1, L"Streams\\Desktop", FALSE);
+    HKEY hKey = SHGetShellKey(SHKEY_Root_HKCU, L"Streams\\Desktop", FALSE);
     if (!hKey)
         return NULL;
 
