@@ -263,6 +263,7 @@ add_subdirectory(xolehlp)
 
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
     add_subdirectory(avrt)
+    add_subdirectory(uianimation)
     add_subdirectory(dwmapi)
     add_subdirectory(shcore)
 endif()
