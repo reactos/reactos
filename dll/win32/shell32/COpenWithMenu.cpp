@@ -379,11 +379,9 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
 
     /* Query name */
     swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\FileDescription", wLang, wCode);
-    if (VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen))
-    {
+    success = VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen) && (cchLen > 1);
+    if (success)
         StringCchCopyNW(pApp->wszName, _countof(pApp->wszName), pResult, cchLen);
-        success = cchLen > 1;
-    }
     else
         ERR("Cannot get app name\n");
 
@@ -416,10 +414,9 @@ BOOL COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
 
     /* Expand evn vers and optionally search for path */
     ExpandEnvironmentStrings(wszBuf, pwszAppPath, MAX_PATH);
-    if (PathFileExists(pwszAppPath))
-        return TRUE;
-    else
+    if (!PathFileExists(pwszAppPath))
         return SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+    return TRUE
 }
 
 BOOL COpenWithList::LoadRecommended(LPCWSTR pwszFilePath)
@@ -884,7 +881,7 @@ BOOL COpenWithDialog::IsNoOpen(HWND hwnd)
 VOID COpenWithDialog::AddApp(COpenWithList::SApp *pApp, BOOL bSelected)
 {
     LPCWSTR pwszName = m_pAppList->GetName(pApp);
-    if (!pwszName) return ;
+    if (!pwszName) return;
     HICON hIcon = m_pAppList->GetIcon(pApp);
 
     TRACE("AddApp Cmd %ls Name %ls\n", pApp->wszCmd, pwszName);
@@ -1212,7 +1209,7 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
 {
     MENUITEMINFOW mii;
     LPCWSTR pwszName = m_pAppList->GetName((COpenWithList::SApp*)pApp);
-    if (!pwszName) return ;
+    if (!pwszName) return;
 
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
