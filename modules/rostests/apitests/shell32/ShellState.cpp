@@ -12,6 +12,7 @@
 #include <shellutils.h>
 #include <strsafe.h>
 #include <shlwapi.h>
+#include <shlwapi_undoc.h>
 
 /* [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer] */
 /* The contents of RegValue ShellState. */
@@ -71,8 +72,6 @@ static int read_key(REGSHELLSTATE *prss)
 
     return 0;
 }
-
-extern "C" HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create);
 
 static int read_advanced_key(SHELLSTATE* pss)
 {
