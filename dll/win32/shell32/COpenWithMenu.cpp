@@ -416,7 +416,7 @@ BOOL COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
     ExpandEnvironmentStrings(wszBuf, pwszAppPath, MAX_PATH);
     if (!PathFileExists(pwszAppPath))
         return SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
-    return TRUE
+    return TRUE;
 }
 
 BOOL COpenWithList::LoadRecommended(LPCWSTR pwszFilePath)
