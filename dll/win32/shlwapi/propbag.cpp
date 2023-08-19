@@ -1049,7 +1049,7 @@ HRESULT CDesktopUpgradePropertyBag::_ReadFlags(VARIANT *pvari)
         return E_FAIL;
     }
 
-    V_UINT(pvari) = ((UINT)(Flags >> 32)) | 0x220;
+    V_UINT(pvari) = ((UINT)(Flags >> 32)) | 0x220; // FIXME: Magic number
     V_VT(pvari) = VT_UINT;
     return S_OK;
 }
