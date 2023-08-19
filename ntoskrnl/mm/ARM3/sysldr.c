@@ -996,7 +996,8 @@ MiResolveImageReferences(IN PVOID ImageBase,
     PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor, CurrentImport;
     ULONG ImportSize, ImportCount = 0, LoadedImportsSize, ExportSize;
     PLOAD_IMPORTS LoadedImports, NewImports;
-    ULONG GdiLink, NormalLink, i;
+    ULONG i;
+    BOOLEAN GdiLink, NormalLink;
     BOOLEAN ReferenceNeeded, Loaded;
     ANSI_STRING TempString;
     UNICODE_STRING NameString, DllName;
@@ -1006,7 +1007,9 @@ MiResolveImageReferences(IN PVOID ImageBase,
     PIMAGE_EXPORT_DIRECTORY ExportDirectory;
     NTSTATUS Status;
     PIMAGE_THUNK_DATA OrigThunk, FirstThunk;
+
     PAGED_CODE();
+
     DPRINT("%s - ImageBase: %p. ImageFileDirectory: %wZ\n",
            __FUNCTION__, ImageBase, ImageFileDirectory);
 
@@ -1054,25 +1057,26 @@ MiResolveImageReferences(IN PVOID ImageBase,
     }
 
     /* Reset the import count and loop descriptors again */
-    ImportCount = GdiLink = NormalLink = 0;
+    GdiLink = NormalLink = FALSE;
+    ImportCount = 0;
     while ((ImportDescriptor->Name) && (ImportDescriptor->OriginalFirstThunk))
     {
         /* Get the name */
         ImportName = (PCHAR)((ULONG_PTR)ImageBase + ImportDescriptor->Name);
 
         /* Check if this is a GDI driver */
-        GdiLink = GdiLink |
+        GdiLink = GdiLink ||
                   !(_strnicmp(ImportName, "win32k", sizeof("win32k") - 1));
 
         /* We can also allow dxapi (for Windows compat, allow IRT and coverage) */
-        NormalLink = NormalLink |
+        NormalLink = NormalLink ||
                      ((_strnicmp(ImportName, "win32k", sizeof("win32k") - 1)) &&
                       (_strnicmp(ImportName, "dxapi", sizeof("dxapi") - 1)) &&
                       (_strnicmp(ImportName, "coverage", sizeof("coverage") - 1)) &&
                       (_strnicmp(ImportName, "irt", sizeof("irt") - 1)));
 
         /* Check if this is a valid GDI driver */
-        if ((GdiLink) && (NormalLink))
+        if (GdiLink && NormalLink)
         {
             /* It's not, it's importing stuff it shouldn't be! */
             Status = STATUS_PROCEDURE_NOT_FOUND;
