@@ -1033,11 +1033,11 @@ BOOL CDesktopUpgradePropertyBag::_AlreadyUpgraded(HKEY hKey)
     return SHGetValueW(hKey, NULL, L"Upgrade", NULL, &dwValue, &cbData) == ERROR_SUCCESS;
 }
 
-typedef DWORDLONG UNKNOWN_DESKVIEW_FLAGS; // FIXME
+typedef DWORDLONG DESKVIEW_FLAGS; // 64-bit data
 
 HRESULT CDesktopUpgradePropertyBag::_ReadFlags(VARIANT *pvari)
 {
-    UNKNOWN_DESKVIEW_FLAGS Flags;
+    DESKVIEW_FLAGS Flags;
     DWORD cbValue = sizeof(Flags);
     if (SHGetValueW(HKEY_CURRENT_USER,
                     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DeskView",
@@ -1054,24 +1054,23 @@ HRESULT CDesktopUpgradePropertyBag::_ReadFlags(VARIANT *pvari)
     return S_OK;
 }
 
-// FIXME
-typedef struct tagUNKNOWN_STREAM_DATA
+typedef struct tagOLD_STREAM_HEADER
 {
     WORD wMagic;
-    WORD aw[6];
+    WORD awUnknown[6];
     WORD wSize;
-} UNKNOWN_STREAM_DATA, *PUNKNOWN_STREAM_DATA;
+} OLD_STREAM_HEADER, *POLD_STREAM_HEADER;
 
 IStream* CDesktopUpgradePropertyBag::_NewStreamFromOld(IStream *pOldStream)
 {
-    UNKNOWN_STREAM_DATA Data;
-    HRESULT hr = pOldStream->Read(&Data, sizeof(Data), NULL);
-    if (FAILED(hr) || Data.wMagic != 28)
+    OLD_STREAM_HEADER Header;
+    HRESULT hr = pOldStream->Read(&Header, sizeof(Header), NULL);
+    if (FAILED(hr) || Header.wMagic != 28)
         return NULL;
 
     // Move stream pointer
     LARGE_INTEGER li;
-    li.QuadPart = Data.wSize - sizeof(Data);
+    li.QuadPart = Header.wSize - sizeof(Header);
     hr = pOldStream->Seek(li, STREAM_SEEK_CUR, NULL);
     if (FAILED(hr))
         return NULL;
@@ -1088,8 +1087,8 @@ IStream* CDesktopUpgradePropertyBag::_NewStreamFromOld(IStream *pOldStream)
     if (!pNewStream)
         return NULL;
 
-    // Subtract Data.wSize from the size
-    uli.QuadPart -= Data.wSize;
+    // Subtract Header.wSize from the size
+    uli.QuadPart -= Header.wSize;
 
     // Copy to pNewStream
     hr = pOldStream->CopyTo(pNewStream, uli, NULL, NULL);
