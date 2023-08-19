@@ -1093,15 +1093,11 @@ IStream* CDesktopUpgradePropertyBag::_NewStreamFromOld(IStream *pOldStream)
 
     // Copy to pNewStream
     hr = pOldStream->CopyTo(pNewStream, uli, NULL, NULL);
-    if (SUCCEEDED(hr))
-    {
-        li.QuadPart = 0;
-        pNewStream->Seek(li, STREAM_SEEK_SET, NULL);
-    }
-    else
-    {
-        pNewStream.Release();
-    }
+    if (FAILED(hr))
+        return NULL;
+
+    li.QuadPart = 0;
+    pNewStream->Seek(li, STREAM_SEEK_SET, NULL);
 
     return pNewStream.Detach();
 }
