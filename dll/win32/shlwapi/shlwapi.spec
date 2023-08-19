@@ -469,9 +469,9 @@
 469 stub -noname RunRegCommand
 470 stub -noname IUnknown_ProfferServiceOld
 471 stdcall -noname SHCreatePropertyBagOnRegKey(ptr wstr long ptr ptr)
-472 stub -noname SHCreatePropertyBagOnProfileSelection
-473 stub -noname SHGetIniStringUTF7W
-474 stub -noname SHSetIniStringUTF7W
+472 stdcall -noname SHCreatePropertyBagOnProfileSection(wstr wstr long ptr ptr)
+473 stdcall -noname SHGetIniStringUTF7W(wstr wstr ptr long wstr)
+474 stdcall -noname SHSetIniStringUTF7W(wstr wstr wstr wstr)
 475 stdcall -noname GetShellSecurityDescriptor(ptr long)
 476 stdcall -noname SHGetObjectCompatFlags(ptr ptr)
 477 stdcall -noname SHCreatePropertyBagOnMemory(long ptr ptr)
