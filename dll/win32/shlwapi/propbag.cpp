@@ -1171,7 +1171,7 @@ CDesktopUpgradePropertyBag::Read(
         return hr;
     }
 
-    return ::VariantChangeTypeForRead(pvari, vt);
+    return ::VariantChangeType(pvari, pvari, 0, vt);
 }
 
 /**************************************************************************
