@@ -292,24 +292,26 @@ MiLocateExportName(IN PVOID DllBase,
 
 NTSTATUS
 NTAPI
-MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
-                    IN PLIST_ENTRY ListHead)
+MmCallDllInitialize(
+    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry,
+    _In_ PLIST_ENTRY ModuleListHead)
 {
     UNICODE_STRING ServicesKeyName = RTL_CONSTANT_STRING(
         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
     PMM_DLL_INITIALIZE DllInit;
     UNICODE_STRING RegPath, ImportName;
+    PCWCH Extension;
     NTSTATUS Status;
+
+    PAGED_CODE();
 
     /* Try to see if the image exports a DllInitialize routine */
     DllInit = (PMM_DLL_INITIALIZE)MiLocateExportName(LdrEntry->DllBase,
                                                      "DllInitialize");
-    if (!DllInit) return STATUS_SUCCESS;
+    if (!DllInit)
+        return STATUS_SUCCESS;
 
-    /*
-     * Do a temporary copy of BaseDllName called ImportName
-     * because we'll alter the length of the string.
-     */
+    /* Make a temporary copy of BaseDllName because we will alter its length */
     ImportName.Length = LdrEntry->BaseDllName.Length;
     ImportName.MaximumLength = LdrEntry->BaseDllName.MaximumLength;
     ImportName.Buffer = LdrEntry->BaseDllName.Buffer;
@@ -322,7 +324,8 @@ MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                                            TAG_LDR_WSTR);
 
     /* Check if this allocation was unsuccessful */
-    if (!RegPath.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!RegPath.Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Build and append the service name itself */
     RegPath.Length = ServicesKeyName.Length;
@@ -330,49 +333,52 @@ MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                   ServicesKeyName.Buffer,
                   ServicesKeyName.Length);
 
-    /* Check if there is a dot in the filename */
-    if (wcschr(ImportName.Buffer, L'.'))
-    {
-        /* Remove the extension */
-        ImportName.Length = (USHORT)(wcschr(ImportName.Buffer, L'.') -
-            ImportName.Buffer) * sizeof(WCHAR);
-    }
+    /* If the filename has an extension, remove it */
+    Extension = wcschr(ImportName.Buffer, L'.');
+    if (Extension)
+        ImportName.Length = (USHORT)(Extension - ImportName.Buffer) * sizeof(WCHAR);
 
-    /* Append service name (the basename without extension) */
+    /* Append the service name (base name without extension) */
     RtlAppendUnicodeStringToString(&RegPath, &ImportName);
 
-    /* Now call the DllInit func */
+    /* Now call DllInitialize */
     DPRINT("Calling DllInit(%wZ)\n", &RegPath);
     Status = DllInit(&RegPath);
 
     /* Clean up */
     ExFreePoolWithTag(RegPath.Buffer, TAG_LDR_WSTR);
 
-    /* Return status value which DllInitialize returned */
+    // TODO: This is for Driver Verifier support.
+    UNREFERENCED_PARAMETER(ModuleListHead);
+
+    /* Return the DllInitialize status value */
     return Status;
 }
 
 BOOLEAN
-NTAPI
-MiCallDllUnloadAndUnloadDll(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+MiCallDllUnloadAndUnloadDll(
+    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     NTSTATUS Status;
-    PMM_DLL_UNLOAD Func;
+    PMM_DLL_UNLOAD DllUnload;
+
     PAGED_CODE();
 
-    /* Get the unload routine */
-    Func = (PMM_DLL_UNLOAD)MiLocateExportName(LdrEntry->DllBase, "DllUnload");
-    if (!Func) return FALSE;
+    /* Retrieve the DllUnload routine */
+    DllUnload = (PMM_DLL_UNLOAD)MiLocateExportName(LdrEntry->DllBase, "DllUnload");
+    if (!DllUnload)
+        return FALSE;
 
     /* Call it and check for success */
-    Status = Func();
-    if (!NT_SUCCESS(Status)) return FALSE;
+    Status = DllUnload();
+    if (!NT_SUCCESS(Status))
+        return FALSE;
 
     /* Lie about the load count so we can unload the image */
     ASSERT(LdrEntry->LoadCount == 0);
     LdrEntry->LoadCount = 1;
 
-    /* Unload it and return true */
+    /* Unload it */
     MmUnloadSystemImage(LdrEntry);
     return TRUE;
 }

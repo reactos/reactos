@@ -1653,9 +1653,8 @@ MmCheckSystemImage(
 NTSTATUS
 NTAPI
 MmCallDllInitialize(
-    IN PLDR_DATA_TABLE_ENTRY LdrEntry,
-    IN PLIST_ENTRY ListHead
-);
+    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry,
+    _In_ PLIST_ENTRY ModuleListHead);
 
 VOID
 NTAPI
