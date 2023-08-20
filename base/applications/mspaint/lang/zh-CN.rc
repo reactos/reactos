@@ -81,10 +81,10 @@ BEGIN
     BEGIN
         MENUITEM "旋转/镜像...(&M)\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "拉伸/倾斜...(&S)\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "剪裁(&C)", IDM_IMAGECROP
+        MENUITEM "剪裁(&R)", IDM_IMAGECROP
         MENUITEM "反色(&I)\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "属性(&A)...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "删除图像\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "删除图像(&C)\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "不透明处理(&D)", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "颜色(&C)"
@@ -106,18 +106,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "剪切(&T)\tCtrl+X", IDM_EDITCUT
+        MENUITEM "复制(&C)\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "粘贴(&P)\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "删除选中区域(&L)\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "全部选择(&A)\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "复制到(&O)...", IDM_EDITCOPYTO
+        MENUITEM "从...粘贴(&F)", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "旋转/镜像...(&M)\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "拉伸/倾斜...(&S)\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "反色(&I)\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

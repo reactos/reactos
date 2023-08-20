@@ -36,18 +36,18 @@ BEGIN
     END
     POPUP "&Rediger"
     BEGIN
-        MENUITEM "Angre\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Gjenopprett\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "A&ngre\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Gjenopprett\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Klipp ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Kopier\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Lim inn\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Slett valgt\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Invertere valg", IDM_EDITINVERTSELECTION
-        MENUITEM "Velg alt\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Klipp &ut\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopier\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Lim inn\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "&Slett valgt\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Invertere valg", IDM_EDITINVERTSELECTION
+        MENUITEM "Velg &alt\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopier til...", IDM_EDITCOPYTO
-        MENUITEM "Lim inn fra...", IDM_EDITPASTEFROM
+        MENUITEM "Kopier &til...", IDM_EDITCOPYTO
+        MENUITEM "Lim inn &fra...", IDM_EDITPASTEFROM
     END
     POPUP "&Vis"
     BEGIN
@@ -76,13 +76,13 @@ BEGIN
     END
     POPUP "&Bilde"
     BEGIN
-        MENUITEM "Roter/speile...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Beskjær", IDM_IMAGECROP
-        MENUITEM "Invertere farger\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Attributter...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Fjern bilde\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Gjør ugjennomsiktig", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&Roter/speile...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Beskjær", IDM_IMAGECROP
+        MENUITEM "&Invertere farger\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Attributter...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "&Fjern bilde\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Gjør &ugjennomsiktig", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Farger"
     BEGIN
@@ -103,18 +103,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Klipp &ut\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopier\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Lim inn\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "&Slett valgt\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Velg &alt\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "Kopier &til...", IDM_EDITCOPYTO
+        MENUITEM "Lim inn &fra...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Roter/speile...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Str&etch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Invertere farger\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

@@ -37,18 +37,18 @@ BEGIN
     END
     POPUP "&Editatu"
     BEGIN
-        MENUITEM "Desegin\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Errepikatu\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&Desegin\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "E&rrepikatu\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Ebaki\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Kopiatu\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Itsasti\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Selekzioa ezabatu\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "selekzioa alderantzikatu", IDM_EDITINVERTSELECTION
-        MENUITEM "Huatatu dena\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "E&baki\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopiatu\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Itsasti\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Selekzioa &ezabatu\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Selekzioa &alderantzikatu", IDM_EDITINVERTSELECTION
+        MENUITEM "&Huatatu dena\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopiatu hona...", IDM_EDITCOPYTO
-        MENUITEM "Itsasti hemendik...", IDM_EDITPASTEFROM
+        MENUITEM "Kopiatu h&ona...", IDM_EDITCOPYTO
+        MENUITEM "Itsasti he&mendik...", IDM_EDITPASTEFROM
     END
     POPUP "&Ikusi"
     BEGIN
@@ -77,13 +77,13 @@ BEGIN
     END
     POPUP "I&rudia"
     BEGIN
-        MENUITEM "Irauli/biratu...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Hedatu/Zeharkatu...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Moztu", IDM_IMAGECROP
-        MENUITEM "Alderantzikatu koloreak\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Atributuak...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Garbitu irudia\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Marraztu opako", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "I&rauli/biratu...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "He&datu/Zeharkatu...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Moztu", IDM_IMAGECROP
+        MENUITEM "A&lderantzikatu koloreak\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Atributuak...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "&Garbitu irudia\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Marraztu &opako", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Koloreak"
     BEGIN
@@ -104,18 +104,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "E&baki\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopiatu\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Itsasti\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Selekzioa &ezabatu\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Huatatu dena\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "Kopiatu h&ona...", IDM_EDITCOPYTO
+        MENUITEM "Itsasti he&mendik...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "I&rauli/biratu...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "He&datu/Zeharkatu...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "A&lderantzikatu koloreak\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

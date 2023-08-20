@@ -80,10 +80,10 @@ BEGIN
     BEGIN
         MENUITEM "回転と反転(&M)\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "伸縮と傾斜(&S)\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "切り取り(&C)", IDM_IMAGECROP
+        MENUITEM "切り取り(&R)", IDM_IMAGECROP
         MENUITEM "色の反転(&I)\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "画像の属性(&A)\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "画像の削除\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "画像の削除(&C)\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "不透明色を描画する(&D)", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "色(&C)"

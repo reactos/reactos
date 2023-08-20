@@ -16,17 +16,17 @@ BEGIN
     POPUP "&Fișier"
     BEGIN
         MENUITEM "&Nou\tCtrl+N", IDM_FILENEW
-        MENUITEM "&Deschidere…\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "&Deschidere...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "&Păstrează\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Păst&rare în…", IDM_FILESAVEAS
+        MENUITEM "Păst&rare în...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Din aparat media…", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "Din aparat media...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
         MENUITEM "Pre&vizionează pagina", IDM_FILEPAGEVIEW
-        MENUITEM "C&onfigurare pagină…", IDM_FILEPAGESETUP
-        MENUITEM "I&mprimă…\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "C&onfigurare pagină...", IDM_FILEPAGESETUP
+        MENUITEM "I&mprimă...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Transmite…", IDM_FILESEND
+        MENUITEM "Transmite...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Decor de birou (în c&arou)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Decor de birou (&centrat)", IDM_FILEASWALLPAPERCENTERED
@@ -48,8 +48,8 @@ BEGIN
         MENUITEM "In&versează selecția", IDM_EDITINVERTSELECTION
         MENUITEM "Selecte&ază tot\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opiere în…", IDM_EDITCOPYTO
-        MENUITEM "Lipire di&n…", IDM_EDITPASTEFROM
+        MENUITEM "C&opiere în...", IDM_EDITCOPYTO
+        MENUITEM "Lipire di&n...", IDM_EDITPASTEFROM
     END
     POPUP "&Afișare"
     BEGIN
@@ -78,26 +78,26 @@ BEGIN
     END
     POPUP "I&magine"
     BEGIN
-        MENUITEM "&Rotire/Oglindire…\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Întin&dere/Înclinare…\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Întin&dere/Înclinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Recoltea&ză", IDM_IMAGECROP
         MENUITEM "In&versează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "&Atribute…\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "&Atribute...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Șt&erge imaginea", IDM_IMAGEDELETEIMAGE
         MENUITEM "Mod &opac", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Culori"
     BEGIN
-        MENUITEM "&Editare paletă…", IDM_COLORSEDITPALETTE
+        MENUITEM "&Editare paletă...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
         MENUITEM "Paletă &modernă", IDM_COLORSMODERNPALETTE
         MENUITEM "Paletă &veche", IDM_COLORSOLDPALETTE
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…", IDM_HELPHELPTOPICS
+        MENUITEM "&Manual...", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Despre…", IDM_HELPINFO
+        MENUITEM "&Despre...", IDM_HELPINFO
     END
 END
 
@@ -105,14 +105,14 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "Dec&upează\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copia&ză\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Decupează\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Copiază\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Șt&erge selecția\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Selectea&ză tot\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Selecte&ază tot\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opiere în...", IDM_EDITCOPYTO
-        MENUITEM "Lipire &din...", IDM_EDITPASTEFROM
+        MENUITEM "Lipire di&n...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
         MENUITEM "&Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Întindere/În&clinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW

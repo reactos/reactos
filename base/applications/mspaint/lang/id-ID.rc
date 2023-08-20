@@ -103,18 +103,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Gunting\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Salin\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Te&mpel\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Hapus &Pilihan\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Pilih S&emua\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "Salin &ke...", IDM_EDITCOPYTO
+        MENUITEM "Tempel da&ri...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "Putar/&Cermin...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Perluas/Condongkan...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Balikkan warna\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

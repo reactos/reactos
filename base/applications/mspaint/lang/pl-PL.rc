@@ -107,7 +107,7 @@ BEGIN
     POPUP "Popup #0"
     BEGIN
         MENUITEM "&Wytnij\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Kopiuj\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Kopiuj\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Wkl&ej\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Wyczyść z&aznaczenie\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Zaznacz wszystko\tCtrl+A", IDM_EDITSELECTALL

@@ -37,18 +37,18 @@ BEGIN
     END
     POPUP "S&zerkesztés"
     BEGIN
-        MENUITEM "Visszavonás\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Ismét\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&Visszavonás\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Ismét\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Kivágás\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Másolás\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Beillesztés\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Kijelölés törlése\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Kijelölés megfordítása", IDM_EDITINVERTSELECTION
-        MENUITEM "Mindent kijelöl\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Kivá&gás\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Másolás\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Beillesztés\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Kijelölés &törlése\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Kijelölés megf&ordítása", IDM_EDITINVERTSELECTION
+        MENUITEM "Mindent &kijelöl\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Másolás fájlba...", IDM_EDITCOPYTO
-        MENUITEM "Fájl beillesztése...", IDM_EDITPASTEFROM
+        MENUITEM "Másolás &fájlba...", IDM_EDITCOPYTO
+        MENUITEM "Fájl b&eillesztése...", IDM_EDITPASTEFROM
     END
     POPUP "&Nézet"
     BEGIN
@@ -77,13 +77,13 @@ BEGIN
     END
     POPUP "&Kép"
     BEGIN
-        MENUITEM "Forgatás/Tükrözés...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Nyújtás/Döntés...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Vágás", IDM_IMAGECROP
-        MENUITEM "Színek megfordítása\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Attribútumok...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Kép törlése\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Nem átlátszó", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&Forgatás/Tükrözés...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Nyújtás/&Döntés...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Vágás", IDM_IMAGECROP
+        MENUITEM "&Színek megfordítása\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Attribútumok...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "&Kép törlése\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Nem átlátszó", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "Szín&ek"
     BEGIN
@@ -104,18 +104,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Kivá&gás\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Másolás\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Beillesztés\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Kijelölés &törlése\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Mindent &kijelöl\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "Másolás &fájlba...", IDM_EDITCOPYTO
+        MENUITEM "Fájl b&eillesztése...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Forgatás/Tükrözés...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Nyújtás/&Döntés...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Színek megfordítása\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

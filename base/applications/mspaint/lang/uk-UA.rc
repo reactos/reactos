@@ -38,18 +38,18 @@ BEGIN
     END
     POPUP "&Редагування"
     BEGIN
-        MENUITEM "Скасувати\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Повторити\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&Скасувати\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Повторити\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Вирізати\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Копіювати\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Вставити\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Видалити виділення\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Обернути виділення", IDM_EDITINVERTSELECTION
+        MENUITEM "&Вирізати\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Копіювати\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Вс&тавити\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Ви&далити виділення\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Обернути виділення", IDM_EDITINVERTSELECTION
         MENUITEM "Виді&лити все\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Копіювати до файлу...", IDM_EDITCOPYTO
-        MENUITEM "Вставити з файлу...", IDM_EDITPASTEFROM
+        MENUITEM "Ко&піювати до файлу...", IDM_EDITCOPYTO
+        MENUITEM "Вставити з &файлу...", IDM_EDITPASTEFROM
     END
     POPUP "В&игляд"
     BEGIN
@@ -78,13 +78,13 @@ BEGIN
     END
     POPUP "&Зображення"
     BEGIN
-        MENUITEM "Відобразити/повернути...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Обітнути", IDM_IMAGECROP
-        MENUITEM "Обернути кольори\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Атрибути...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Видалити малюнок\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Непрозоре тло", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "Відо&бразити/повернути...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "Обі&тнути", IDM_IMAGECROP
+        MENUITEM "&Обернути кольори\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Атрибути...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Ви&далити малюнок\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Не&прозоре тло", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Кольори"
     BEGIN
@@ -105,18 +105,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Вирізати\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Копіювати\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Вс&тавити\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Ви&далити виділення\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Виді&лити все\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "Ко&піювати до файлу...", IDM_EDITCOPYTO
+        MENUITEM "Вставити з &файлу...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Відо&бразити/повернути...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Обернути кольори\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

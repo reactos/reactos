@@ -36,18 +36,18 @@ BEGIN
     END
     POPUP "&Modifiko"
     BEGIN
-        MENUITEM "&v\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Undo\tCtrl+Z", IDM_EDITUNDO
         MENUITEM "&Perserit\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Prej\tCtrl+X", IDM_EDITCUT
+        MENUITEM "Pre&j\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopjo\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Ngjit\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Fshi perzgjedhjen\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Kthe perzgjedhjen", IDM_EDITINVERTSELECTION
-        MENUITEM "Perzgjedh te gjitha\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Fshi perzgjedhjen\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Kth&e perzgjedhjen", IDM_EDITINVERTSELECTION
+        MENUITEM "Perzgjedh te gjith&a\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopjo tek...", IDM_EDITCOPYTO
-        MENUITEM "Ngjit nga...", IDM_EDITPASTEFROM
+        MENUITEM "K&opjo tek...", IDM_EDITCOPYTO
+        MENUITEM "N&gjit nga...", IDM_EDITPASTEFROM
     END
     POPUP "Shiko"
     BEGIN
@@ -77,11 +77,11 @@ BEGIN
     POPUP "&Imazhe"
     BEGIN
         MENUITEM "Rrotullu/&Pamjen...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&&Streq/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Streq/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Copto", IDM_IMAGECROP
         MENUITEM "&Inverto ngjyrat\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atributet...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Fshi foton\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Fshi foton\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Vizato errët", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "Ngjyrat"
@@ -103,18 +103,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Pre&j\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopjo\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Ngjit\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "&Fshi perzgjedhjen\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Perzgjedh te gjith&a\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "K&opjo tek...", IDM_EDITCOPYTO
+        MENUITEM "N&gjit nga...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "Rrotullu/&Pamjen...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Streq/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Inverto ngjyrat\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

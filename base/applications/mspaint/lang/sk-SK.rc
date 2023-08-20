@@ -36,18 +36,18 @@ BEGIN
     END
     POPUP "&Upraviť"
     BEGIN
-        MENUITEM "Späť\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Znova\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&Späť\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Znova\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Vystrihnúť\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Kopírovať\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Prilepiť\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Vymazať výber\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Invertovať výber", IDM_EDITINVERTSELECTION
+        MENUITEM "&Vystrihnúť\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopírovať\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Prilepiť\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Vy&mazať výber\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Invertovať výber", IDM_EDITINVERTSELECTION
         MENUITEM "Vy&brať všetko\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopírovať do...", IDM_EDITCOPYTO
-        MENUITEM "Prilepiť z...", IDM_EDITPASTEFROM
+        MENUITEM "K&opírovať do...", IDM_EDITCOPYTO
+        MENUITEM "P&rilepiť z...", IDM_EDITPASTEFROM
     END
     POPUP "&Zobraziť"
     BEGIN
@@ -76,13 +76,13 @@ BEGIN
     END
     POPUP "&Obrázok"
     BEGIN
-        MENUITEM "Prevrátiť alebo otočiť...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Orezať", IDM_IMAGECROP
-        MENUITEM "Invertovať farby\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Atribúty...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Vymazať obrázok\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Kresliť nepriesvitne", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "Pr&evrátiť alebo otočiť...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Orezať", IDM_IMAGECROP
+        MENUITEM "&Invertovať farby\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Atribúty...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Vy&mazať obrázok\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Kresliť nepriesvitne", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Farby"
     BEGIN
@@ -103,18 +103,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Vystrihnúť\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopírovať\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Prilepiť\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Vy&mazať výber\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Vy&brať všetko\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "K&opírovať do...", IDM_EDITCOPYTO
+        MENUITEM "P&rilepiť z...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Pr&evrátiť alebo otočiť...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Invertovať farby\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

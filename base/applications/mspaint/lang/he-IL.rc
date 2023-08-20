@@ -77,7 +77,7 @@ BEGIN
     POPUP "ת&מונה"
     BEGIN
         MENUITEM "סובב/הפוך...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "חתוך", IDM_IMAGECROP
         MENUITEM "הפוך צבעים\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "תכונות...\tCtrl+E", IDM_IMAGEATTRIBUTES
@@ -103,18 +103,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "גזור\tCtrl+X", IDM_EDITCUT
+        MENUITEM "העתק\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "הדבק\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "מחק בחירה\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "בחר הכל\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "העתק ל...", IDM_EDITCOPYTO
+        MENUITEM "הדבק מ...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "סובב/הפוך...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "הפוך צבעים\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

@@ -37,18 +37,18 @@ BEGIN
     END
     POPUP "&Redigera"
     BEGIN
-        MENUITEM "Ångra\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Göra om\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "Å&ngra\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Göra om\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Klipp ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Kopiera\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Klistra in\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Ta bort\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Invertera val", IDM_EDITINVERTSELECTION
+        MENUITEM "Klipp &ut\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopiera\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "K&listra in\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Ta &bort\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Invertera val", IDM_EDITINVERTSELECTION
         MENUITEM "&Markera allt\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopiera till...", IDM_EDITCOPYTO
-        MENUITEM "Klistra från...", IDM_EDITPASTEFROM
+        MENUITEM "Ko&piera till...", IDM_EDITCOPYTO
+        MENUITEM "Klistra &från...", IDM_EDITPASTEFROM
     END
     POPUP "&Visa"
     BEGIN
@@ -77,13 +77,13 @@ BEGIN
     END
     POPUP "&Bild"
     BEGIN
-        MENUITEM "Rotera/Spegelvänd...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Beskära", IDM_IMAGECROP
-        MENUITEM "Invertera färger\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Attribut...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Radera bild\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "???Draw opaque", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&Rotera/Spegelvänd...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Beskära", IDM_IMAGECROP
+        MENUITEM "&Invertera färger\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Attribut...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Ra&dera bild\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Draw &opaque", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Färger"
     BEGIN
@@ -104,18 +104,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Klipp &ut\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Kopiera\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "K&listra in\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Ta &bort\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "&Markera allt\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "Ko&piera till...", IDM_EDITCOPYTO
+        MENUITEM "Klistra &från...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Rotera/Spegelvänd...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Invertera färger\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

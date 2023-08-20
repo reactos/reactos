@@ -79,7 +79,7 @@ BEGIN
     BEGIN
         MENUITEM "Inverter/&girar...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Alongar/inclinar...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Cortar", IDM_IMAGECROP
+        MENUITEM "&Cortar", IDM_IMAGECROP
         MENUITEM "&Inverter cores\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "A&tributos...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "&Limpar imagem\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
@@ -104,18 +104,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Recortar\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Copiar\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "C&olar\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "&Limpar seleção\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Selecionar &tudo\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "C&opy to...", IDM_EDITCOPYTO
-        MENUITEM "Paste &from...", IDM_EDITPASTEFROM
+        MENUITEM "Copiar &para...", IDM_EDITCOPYTO
+        MENUITEM "Colar &de...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "Inverter/&girar...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Alongar/inclinar...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Inverter cores\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 

@@ -78,10 +78,10 @@ BEGIN
     BEGIN
         MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Crop", IDM_IMAGECROP
+        MENUITEM "C&rop", IDM_IMAGECROP
         MENUITEM "&Invert colours\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Attributes...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Delete image\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Clear image\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "&Draw opaque", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Colours"
@@ -103,8 +103,8 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "C&ut\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Copy\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Cu&t\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Copy\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
         MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
