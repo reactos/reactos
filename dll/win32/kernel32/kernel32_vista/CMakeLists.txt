@@ -9,7 +9,7 @@ spec2def(kernel32_vista.dll kernel32_vista.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     GetFileInformationByHandleEx.c
     GetTickCount64.c
-    InitOnceExecuteOnce.c
+    InitOnce.c
     sync.c
     vista.c)
 

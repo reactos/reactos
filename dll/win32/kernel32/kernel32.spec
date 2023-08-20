@@ -708,10 +708,10 @@
 @ stdcall -stub -version=0x600+ IdnToNameprepUnicode(long wstr long ptr long)
 @ stdcall -stub -version=0x600+ IdnToUnicode(long wstr long ptr long)
 @ stdcall InitAtomTable(long)
-@ stdcall -stub -version=0x600+ InitOnceBeginInitialize(ptr long ptr ptr)
-@ stdcall -stub -version=0x600+ InitOnceComplete(ptr long ptr)
+@ stdcall -version=0x600+ InitOnceBeginInitialize(ptr long ptr ptr)
+@ stdcall -version=0x600+ InitOnceComplete(ptr long ptr)
 @ stdcall -version=0x600+ InitOnceExecuteOnce(ptr ptr ptr ptr)
-@ stdcall -stub -version=0x600+ InitOnceInitialize(ptr)
+@ stdcall -version=0x600+ InitOnceInitialize(ptr) NTDLL.RtlRunOnceInitialize
 @ stdcall -version=0x600+ InitializeConditionVariable(ptr) ntdll.RtlInitializeConditionVariable
 @ stdcall InitializeCriticalSection(ptr)
 @ stdcall InitializeCriticalSectionAndSpinCount(ptr long)

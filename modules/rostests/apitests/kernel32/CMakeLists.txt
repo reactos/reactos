@@ -18,6 +18,7 @@ list(APPEND SOURCE
     GetDriveType.c
     GetModuleFileName.c
     GetVolumeInformation.c
+    InitOnce.c
     interlck.c
     IsDBCSLeadByteEx.c
     JapaneseCalendar.c

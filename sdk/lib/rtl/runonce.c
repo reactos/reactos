@@ -8,52 +8,58 @@
 /******************************************************************
  *              RtlRunOnceInitialize (NTDLL.@)
  */
-void WINAPI RtlRunOnceInitialize( RTL_RUN_ONCE *once )
+VOID NTAPI RtlRunOnceInitialize(_Out_ PRTL_RUN_ONCE RunOnce)
 {
-    once->Ptr = NULL;
+    RunOnce->Ptr = NULL;
 }
 
 /******************************************************************
  *              RtlRunOnceBeginInitialize (NTDLL.@)
  */
-DWORD WINAPI RtlRunOnceBeginInitialize( RTL_RUN_ONCE *once, ULONG flags, void **context )
+_Must_inspect_result_
+NTSTATUS
+NTAPI
+RtlRunOnceBeginInitialize(
+    _Inout_ PRTL_RUN_ONCE RunOnce,
+    _In_ ULONG Flags,
+    _Outptr_opt_result_maybenull_ PVOID *Context)
 {
-    if (flags & RTL_RUN_ONCE_CHECK_ONLY)
+    if (Flags & RTL_RUN_ONCE_CHECK_ONLY)
     {
-        ULONG_PTR val = (ULONG_PTR)once->Ptr;
+        ULONG_PTR val = (ULONG_PTR)RunOnce->Ptr;
 
-        if (flags & RTL_RUN_ONCE_ASYNC) return STATUS_INVALID_PARAMETER;
+        if (Flags & RTL_RUN_ONCE_ASYNC) return STATUS_INVALID_PARAMETER;
         if ((val & 3) != 2) return STATUS_UNSUCCESSFUL;
-        if (context) *context = (void *)(val & ~3);
+        if (Context) *Context = (void *)(val & ~3);
         return STATUS_SUCCESS;
     }
 
     for (;;)
     {
-        ULONG_PTR next, val = (ULONG_PTR)once->Ptr;
+        ULONG_PTR next, val = (ULONG_PTR)RunOnce->Ptr;
 
         switch (val & 3)
         {
         case 0:  /* first time */
-            if (!interlocked_cmpxchg_ptr( &once->Ptr,
-                                          (flags & RTL_RUN_ONCE_ASYNC) ? (void *)3 : (void *)1, 0 ))
+            if (!interlocked_cmpxchg_ptr( &RunOnce->Ptr,
+                                          (Flags & RTL_RUN_ONCE_ASYNC) ? (void *)3 : (void *)1, 0))
                 return STATUS_PENDING;
             break;
 
         case 1:  /* in progress, wait */
-            if (flags & RTL_RUN_ONCE_ASYNC) return STATUS_INVALID_PARAMETER;
+            if (Flags & RTL_RUN_ONCE_ASYNC) return STATUS_INVALID_PARAMETER;
             next = val & ~3;
-            if (interlocked_cmpxchg_ptr( &once->Ptr, (void *)((ULONG_PTR)&next | 1),
+            if (interlocked_cmpxchg_ptr( &RunOnce->Ptr, (void *)((ULONG_PTR)&next | 1),
                                          (void *)val ) == (void *)val)
                 NtWaitForKeyedEvent( 0, &next, FALSE, NULL );
             break;
 
         case 2:  /* done */
-            if (context) *context = (void *)(val & ~3);
+            if (Context) *Context = (void *)(val & ~3);
             return STATUS_SUCCESS;
 
         case 3:  /* in progress, async */
-            if (!(flags & RTL_RUN_ONCE_ASYNC)) return STATUS_INVALID_PARAMETER;
+            if (!(Flags & RTL_RUN_ONCE_ASYNC)) return STATUS_INVALID_PARAMETER;
             return STATUS_PENDING;
         }
     }
@@ -62,25 +68,30 @@ DWORD WINAPI RtlRunOnceBeginInitialize( RTL_RUN_ONCE *once, ULONG flags, void **
 /******************************************************************
  *              RtlRunOnceComplete (NTDLL.@)
  */
-DWORD WINAPI RtlRunOnceComplete( RTL_RUN_ONCE *once, ULONG flags, void *context )
+NTSTATUS
+NTAPI
+RtlRunOnceComplete(
+    _Inout_ PRTL_RUN_ONCE RunOnce,
+    _In_ ULONG Flags,
+    _In_opt_ PVOID Context)
 {
-    if ((ULONG_PTR)context & 3) return STATUS_INVALID_PARAMETER;
+    if ((ULONG_PTR)Context & 3) return STATUS_INVALID_PARAMETER;
 
-    if (flags & RTL_RUN_ONCE_INIT_FAILED)
+    if (Flags & RTL_RUN_ONCE_INIT_FAILED)
     {
-        if (context) return STATUS_INVALID_PARAMETER;
-        if (flags & RTL_RUN_ONCE_ASYNC) return STATUS_INVALID_PARAMETER;
+        if (Context) return STATUS_INVALID_PARAMETER;
+        if (Flags & RTL_RUN_ONCE_ASYNC) return STATUS_INVALID_PARAMETER;
     }
-    else context = (void *)((ULONG_PTR)context | 2);
+    else Context = (void *)((ULONG_PTR)Context | 2);
 
     for (;;)
     {
-        ULONG_PTR val = (ULONG_PTR)once->Ptr;
+        ULONG_PTR val = (ULONG_PTR)RunOnce->Ptr;
 
         switch (val & 3)
         {
         case 1:  /* in progress */
-            if (interlocked_cmpxchg_ptr( &once->Ptr, context, (void *)val ) != (void *)val) break;
+            if (interlocked_cmpxchg_ptr( &RunOnce->Ptr, Context, (void *)val ) != (void *)val) break;
             val &= ~3;
             while (val)
             {
@@ -91,8 +102,8 @@ DWORD WINAPI RtlRunOnceComplete( RTL_RUN_ONCE *once, ULONG flags, void *context 
             return STATUS_SUCCESS;
 
         case 3:  /* in progress, async */
-            if (!(flags & RTL_RUN_ONCE_ASYNC)) return STATUS_INVALID_PARAMETER;
-            if (interlocked_cmpxchg_ptr( &once->Ptr, context, (void *)val ) != (void *)val) break;
+            if (!(Flags & RTL_RUN_ONCE_ASYNC)) return STATUS_INVALID_PARAMETER;
+            if (interlocked_cmpxchg_ptr( &RunOnce->Ptr, Context, (void *)val) != (void *)val) break;
             return STATUS_SUCCESS;
 
         default:
@@ -104,18 +115,24 @@ DWORD WINAPI RtlRunOnceComplete( RTL_RUN_ONCE *once, ULONG flags, void *context 
 /******************************************************************
  *              RtlRunOnceExecuteOnce (NTDLL.@)
  */
-DWORD WINAPI RtlRunOnceExecuteOnce( RTL_RUN_ONCE *once, PRTL_RUN_ONCE_INIT_FN func,
-                                    void *param, void **context )
+_Maybe_raises_SEH_exception_
+NTSTATUS
+NTAPI
+RtlRunOnceExecuteOnce(
+    _Inout_ PRTL_RUN_ONCE RunOnce,
+    _In_ __inner_callback PRTL_RUN_ONCE_INIT_FN InitFn,
+    _Inout_opt_ PVOID Parameter,
+    _Outptr_opt_result_maybenull_ PVOID *Context)
 {
-    DWORD ret = RtlRunOnceBeginInitialize( once, 0, context );
+    DWORD ret = RtlRunOnceBeginInitialize( RunOnce, 0, Context );
 
     if (ret != STATUS_PENDING) return ret;
 
-    if (!func( once, param, context ))
+    if (!InitFn( RunOnce, Parameter, Context ))
     {
-        RtlRunOnceComplete( once, RTL_RUN_ONCE_INIT_FAILED, NULL );
+        RtlRunOnceComplete( RunOnce, RTL_RUN_ONCE_INIT_FAILED, NULL );
         return STATUS_UNSUCCESSFUL;
     }
 
-    return RtlRunOnceComplete( once, 0, context ? *context : NULL );
+    return RtlRunOnceComplete( RunOnce, 0, Context ? *Context : NULL );
 }
