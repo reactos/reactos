@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Windows
- * FILE:             win32ss/user/ntuser/winpos.c
- * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS kernel
+ * PURPOSE:     Windows
+ * PROGRAMER:   Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 #include <win32k.h>
@@ -437,7 +436,7 @@ co_WinPosActivateOtherWindow(PWND Wnd)
    // Find any window to bring to top. Works Okay for wine since it does not see X11 windows.
    WndTo = UserGetDesktopWindow();
    WndTo = WndTo->spwndChild;
-   if ( WndTo == NULL )
+   if (WndTo == NULL)
    {
       //ERR("WinPosActivateOtherWindow No window!\n");
       return;
@@ -1685,8 +1684,6 @@ co_WinPosSetWindowPos(
 
    ASSERT_REFS_CO(Window);
 
-   TRACE("pwnd %p, after %p, %d,%d (%dx%d), flags 0x%x",
-          Window, WndInsertAfter, x, y, cx, cy, flags);
 #if DBG
    dump_winpos_flags(flags);
 #endif
@@ -1878,7 +1875,7 @@ co_WinPosSetWindowPos(
 
    DceResetActiveDCEs(Window); // For WS_VISIBLE changes.
 
-   if (!(WinPos.flags & SWP_NOREDRAW))
+   if (!(WinPos.flags & SWP_NOREDRAW) && ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE))
    {
       /* Determine the new visible region */
       VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE,
@@ -2035,7 +2032,7 @@ co_WinPosSetWindowPos(
                 }
                 IntInvalidateWindows(Window, DirtyRgn, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
              }
-             else if ( RgnType != ERROR && RgnType == NULLREGION ) // Must be the same. See CORE-7166 & CORE-15934
+             else if (RgnType != ERROR && RgnType == NULLREGION) // Must be the same. See CORE-7166 & CORE-15934
              {
                 if ( !PosChanged &&
                      !(WinPos.flags & SWP_DEFERERASE) &&
@@ -2066,7 +2063,7 @@ co_WinPosSetWindowPos(
       }
 
       /* Expose what was covered before but not covered anymore */
-      if ( VisBefore != NULL )
+      if (VisBefore != NULL)
       {
          PREGION ExposedRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
          if (ExposedRgn)
@@ -2076,7 +2073,7 @@ co_WinPosSetWindowPos(
                                OldWindowRect.left - NewWindowRect.left,
                                OldWindowRect.top  - NewWindowRect.top);
 
-             if ( VisAfter != NULL )
+             if (VisAfter != NULL)
                 RgnType = IntGdiCombineRgn(ExposedRgn, ExposedRgn, VisAfter, RGN_DIFF);
 
              if (RgnType != ERROR && RgnType != NULLREGION)
@@ -2124,7 +2121,7 @@ co_WinPosSetWindowPos(
        if ( !(Window->style & WS_CHILD) && (Parent) && (Parent->style & WS_CLIPCHILDREN))
        {
            TRACE("SWP_FRAMECHANGED Parent WS_CLIPCHILDREN\n");
-           UserSyncAndPaintWindows( Parent, RDW_CLIPCHILDREN);
+           UserSyncAndPaintWindows(Parent, RDW_CLIPCHILDREN);
        }
    }
 
@@ -2980,7 +2977,7 @@ END:
     return retvalue;
 }
 
-BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp, BOOL sAsync )
+BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL sAsync)
 {
     PSMWP pDWP;
     PCVR winpos;
@@ -3010,7 +3007,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp, BOOL sAsync )
 
         UserRefObjectCo(pwnd, &Ref);
 
-        if ( sAsync )
+        if (sAsync)
         {
            LRESULT lRes;
            PWINDOWPOS ppos = ExAllocatePoolWithTag(PagedPool, sizeof(WINDOWPOS), USERTAG_SWP);
