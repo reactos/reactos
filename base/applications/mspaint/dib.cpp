@@ -13,6 +13,13 @@ float g_xDpi = 96;
 float g_yDpi = 96;
 SYSTEMTIME g_fileTime;
 
+#define WIDTHBYTES(i) (((i) + 31) / 32 * 4)
+
+struct BITMAPINFOEX : BITMAPINFO
+{
+    RGBQUAD bmiColorsExtra[256 - 1];
+};
+
 /* FUNCTIONS ********************************************************/
 
 // Convert DPI (dots per inch) into PPCM (pixels per centimeter)
@@ -518,4 +525,90 @@ HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF)
     DeleteDC(hDC);
 
     return hbm;
+}
+
+BOOL IsBitmapBlackAndWhite(HBITMAP hbm)
+{
+    BITMAP bm;
+    if (!::GetObjectW(hbm, sizeof(bm), &bm))
+        return FALSE;
+
+    if (bm.bmBitsPixel == 1)
+        return TRUE;
+
+    BITMAPINFOEX bmi;
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = bm.bmWidth;
+    bmi.bmiHeader.biHeight = bm.bmHeight;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 24;
+
+    DWORD widthbytes = WIDTHBYTES(24 * bm.bmWidth);
+    DWORD cbBits = widthbytes * bm.bmHeight;
+    LPBYTE pbBits = new BYTE[cbBits];
+
+    HDC hdc = ::CreateCompatibleDC(NULL);
+    ::GetDIBits(hdc, hbm, 0, bm.bmHeight, pbBits, &bmi, DIB_RGB_COLORS);
+    ::DeleteDC(hdc);
+
+    BOOL bBlackAndWhite = TRUE;
+    for (LONG y = 0; y < bm.bmHeight; ++y)
+    {
+        LPBYTE pbLine = &pbBits[widthbytes * y];
+        for (LONG x = 0; x < bm.bmWidth; ++x)
+        {
+            BYTE Blue = *pbLine++;
+            BYTE Green = *pbLine++;
+            BYTE Red = *pbLine++;
+            COLORREF rgbColor = RGB(Red, Green, Blue);
+            if (rgbColor != RGB(0, 0, 0) && rgbColor != RGB(255, 255, 255))
+            {
+                bBlackAndWhite = FALSE;
+                goto Finish;
+            }
+        }
+    }
+
+Finish:
+    delete[] pbBits;
+
+    return bBlackAndWhite;
+}
+
+HBITMAP ConvertToBlackAndWhite(HBITMAP hbm)
+{
+    BITMAP bm;
+    if (!::GetObject(hbm, sizeof(bm), &bm))
+        return NULL;
+
+    BITMAPINFOEX bmi;
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = bm.bmWidth;
+    bmi.bmiHeader.biHeight = bm.bmHeight;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 1;
+    bmi.bmiColors[1].rgbBlue = 255;
+    bmi.bmiColors[1].rgbGreen = 255;
+    bmi.bmiColors[1].rgbRed = 255;
+    HDC hdc = ::CreateCompatibleDC(NULL);
+    LPVOID pvMonoBits;
+    HBITMAP hMonoBitmap = ::CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &pvMonoBits, NULL, 0);
+    if (!hMonoBitmap)
+    {
+        ::DeleteDC(hdc);
+        return NULL;
+    }
+
+    HBITMAP hNewBitmap = CreateDIBWithProperties(bm.bmWidth, bm.bmHeight);
+    if (hNewBitmap)
+    {
+        ::GetDIBits(hdc, hbm, 0, bm.bmHeight, pvMonoBits, &bmi, DIB_RGB_COLORS);
+        ::SetDIBits(hdc, hNewBitmap, 0, bm.bmHeight, pvMonoBits, &bmi, DIB_RGB_COLORS);
+    }
+    ::DeleteObject(hMonoBitmap);
+    ::DeleteDC(hdc);
+
+    return hNewBitmap;
 }
