@@ -6190,7 +6190,7 @@ Sintaxă: SELECT DISK=<N>
                 pentru a fi aplicată fiecărui disc din lista de discuri.
                 Următorul disc din listă va primi marcaj. Dacă următorul
                 disc este începutul enumerării, comanda va eșua și niciun disc
-                nu va trebui să fie marcat
+                nu va trebui să fie marcat.
 
     Dacă nicio opțiune nu este specificată, comanda SELECT va lista discul
     care este marcat în prezent. Puteți vizualiza numerele de index pentru
@@ -7249,8 +7249,8 @@ Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
                 hexazecimal, pentru un tip de partiție. Orice octet care
                 descrie tipul de partiție poate fi specificată cu acest
                 parametru, exceptând pentru tipul 0x42 (partiție LDM). Rețineți
-                că primul '0x' este omis când se specifică tip de partiție
-                hexazecimală.
+                că primul '0x' când este specificat în hexazecimal un tip de
+                partiție.
                                                                 
                 Pentru discurile cu tabelul de partiție GUID (GPT) puteți
                 specifica un tip de partiție GUID pentru partiția pe care vreți
