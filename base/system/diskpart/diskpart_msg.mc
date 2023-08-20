@@ -1363,7 +1363,7 @@ Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 Dacă nu este dat niciun decalaj, partiția e plasată pe prima
                 expansiune a discului ce e suficient de mare ca să o țină.
 
-    ALIGN=<N>   Folosită de obicei cu Numărul unității logice RAID (LUN)
+    ALIGN=<N>   Folosită de obicei cu Numărul unității logice (LUN) RAID
                 a șirurilor de dispozitive pentru a îmbunătăți performanța.
                 Decalajul partiției va fi un multiplu a lui <N>. Dacă
                 parametrul OFFSET este specificat, va fi rotunjit la cel mai
