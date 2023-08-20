@@ -719,7 +719,7 @@ SHGetIniStringUTF7W(
         return SHGetIniStringW(lpAppName, lpKeyName + 1, lpReturnedString, nSize, lpFileName);
 
     return GetPrivateProfileStringW(lpAppName, lpKeyName, L"", lpReturnedString, nSize, lpFileName);
-}   
+}
 
 /**************************************************************************
  *  SHSetIniStringUTF7W (SHLWAPI.474)
