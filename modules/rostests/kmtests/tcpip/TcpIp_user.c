@@ -113,7 +113,8 @@ START_TEST(TcpIpConnect)
     Error = KmtSendToDriver(IOCTL_TEST_CONNECT);
     ok_eq_ulong(Error, ERROR_SUCCESS);
 
-    WaitForSingleObject(AcceptThread, INFINITE);
+    Error = WaitForSingleObject(AcceptThread, 10 * 1000);
+    ok(Error == WAIT_OBJECT_0, "AcceptThread timed out\n");
 
     UnloadTcpIpTestDriver();
 
