@@ -1330,8 +1330,8 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
         if (GuiData->IsWindowActive || Buff->CursorBlinkOn)
         {
             InvalidateCell(GuiData, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+            Buff->CursorBlinkOn = !Buff->CursorBlinkOn;
         }
-        Buff->CursorBlinkOn = GuiData->IsWindowActive ? !Buff->CursorBlinkOn : FALSE;
 
         if ((GuiData->OldCursor.x != Buff->CursorPosition.X) ||
             (GuiData->OldCursor.y != Buff->CursorPosition.Y))
