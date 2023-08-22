@@ -33,6 +33,9 @@
 #include "docobj.h"
 #include "shobjidl.h"
 #include "shlobj.h"
+#ifdef __REACTOS__
+    #include <shlwapi_undoc.h>
+#endif
 
 /* Function ptrs for ordinal calls */
 static HMODULE hShlwapi;
@@ -2796,6 +2799,7 @@ static void test_SHSetIniString(void)
     DeleteFileW(TestIniW);
 }
 
+#ifndef __REACTOS__
 enum _shellkey_flags {
     SHKEY_Root_HKCU = 0x1,
     SHKEY_Root_HKLM = 0x2,
@@ -2811,6 +2815,7 @@ enum _shellkey_flags {
     SHKEY_Subkey_MUICache = 0x5000,
     SHKEY_Subkey_FileExts = 0x6000
 };
+#endif
 
 static void test_SHGetShellKey(void)
 {

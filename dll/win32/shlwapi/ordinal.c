@@ -4505,6 +4505,7 @@ BOOL WINAPI SHSkipJunction(IBindCtx *pbc, const CLSID *pclsid)
  */
 HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create)
 {
+#ifndef __REACTOS__
     enum _shellkey_flags {
         SHKEY_Root_HKCU = 0x1,
         SHKEY_Root_HKLM = 0x2,
@@ -4520,6 +4521,7 @@ HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create)
         SHKEY_Subkey_MUICache = 0x5000,
         SHKEY_Subkey_FileExts = 0x6000
     };
+#endif
 
     static const WCHAR explorerW[] = {'S','o','f','t','w','a','r','e','\\',
         'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',

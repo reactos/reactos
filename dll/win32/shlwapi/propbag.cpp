@@ -719,7 +719,7 @@ SHGetIniStringUTF7W(
         return SHGetIniStringW(lpAppName, lpKeyName + 1, lpReturnedString, nSize, lpFileName);
 
     return GetPrivateProfileStringW(lpAppName, lpKeyName, L"", lpReturnedString, nSize, lpFileName);
-}   
+}
 
 /**************************************************************************
  *  SHSetIniStringUTF7W (SHLWAPI.474)
@@ -994,4 +994,197 @@ SHCreatePropertyBagOnProfileSection(
     }
 
     return pIniPB->QueryInterface(riid, ppvObj);
+}
+
+class CDesktopUpgradePropertyBag : public CBasePropertyBag
+{
+protected:
+    BOOL _AlreadyUpgraded(HKEY hKey);
+    VOID _MarkAsUpgraded(HKEY hkey);
+    HRESULT _ReadFlags(VARIANT *pvari);
+    HRESULT _ReadItemPositions(VARIANT *pvari);
+    IStream* _GetOldDesktopViewStream();
+    IStream* _NewStreamFromOld(IStream *pOldStream);
+
+public:
+    CDesktopUpgradePropertyBag() : CBasePropertyBag(0) { }
+
+    STDMETHODIMP Read(
+        _In_z_ LPCWSTR pszPropName,
+        _Inout_ VARIANT *pvari,
+        _Inout_opt_ IErrorLog *pErrorLog) override;
+
+    STDMETHODIMP Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari) override
+    {
+        return E_NOTIMPL;
+    }
+};
+
+VOID CDesktopUpgradePropertyBag::_MarkAsUpgraded(HKEY hkey)
+{
+    DWORD dwValue = TRUE;
+    SHSetValueW(hkey, NULL, L"Upgrade", REG_DWORD, &dwValue, sizeof(dwValue));
+}
+
+BOOL CDesktopUpgradePropertyBag::_AlreadyUpgraded(HKEY hKey)
+{
+    // Check the existence of the value written in _MarkAsUpgraded.
+    DWORD dwValue, cbData = sizeof(dwValue);
+    return SHGetValueW(hKey, NULL, L"Upgrade", NULL, &dwValue, &cbData) == ERROR_SUCCESS;
+}
+
+typedef DWORDLONG DESKVIEW_FLAGS; // 64-bit data
+
+HRESULT CDesktopUpgradePropertyBag::_ReadFlags(VARIANT *pvari)
+{
+    DESKVIEW_FLAGS Flags;
+    DWORD cbValue = sizeof(Flags);
+    if (SHGetValueW(HKEY_CURRENT_USER,
+                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DeskView",
+                    L"Settings",
+                    NULL,
+                    &Flags,
+                    &cbValue) != ERROR_SUCCESS || cbValue < sizeof(Flags))
+    {
+        return E_FAIL;
+    }
+
+    V_UINT(pvari) = ((UINT)(Flags >> 32)) | 0x220; // FIXME: Magic number
+    V_VT(pvari) = VT_UINT;
+    return S_OK;
+}
+
+typedef struct tagOLD_STREAM_HEADER
+{
+    WORD wMagic;
+    WORD awUnknown[6];
+    WORD wSize;
+} OLD_STREAM_HEADER, *POLD_STREAM_HEADER;
+
+IStream* CDesktopUpgradePropertyBag::_NewStreamFromOld(IStream *pOldStream)
+{
+    OLD_STREAM_HEADER Header;
+    HRESULT hr = pOldStream->Read(&Header, sizeof(Header), NULL);
+    if (FAILED(hr) || Header.wMagic != 28)
+        return NULL;
+
+    // Move stream pointer
+    LARGE_INTEGER li;
+    li.QuadPart = Header.wSize - sizeof(Header);
+    hr = pOldStream->Seek(li, STREAM_SEEK_CUR, NULL);
+    if (FAILED(hr))
+        return NULL;
+
+    // Get the size
+    ULARGE_INTEGER uli;
+    hr = IStream_Size(pOldStream, &uli);
+    if (FAILED(hr))
+        return NULL;
+
+    // Create new stream and attach
+    CComPtr<IStream> pNewStream;
+    pNewStream.Attach(SHCreateMemStream(NULL, 0));
+    if (!pNewStream)
+        return NULL;
+
+    // Subtract Header.wSize from the size
+    uli.QuadPart -= Header.wSize;
+
+    // Copy to pNewStream
+    hr = pOldStream->CopyTo(pNewStream, uli, NULL, NULL);
+    if (FAILED(hr))
+        return NULL;
+
+    li.QuadPart = 0;
+    pNewStream->Seek(li, STREAM_SEEK_SET, NULL);
+
+    return pNewStream.Detach();
+}
+
+IStream* CDesktopUpgradePropertyBag::_GetOldDesktopViewStream()
+{
+    HKEY hKey = SHGetShellKey(SHKEY_Root_HKCU, L"Streams\\Desktop", FALSE);
+    if (!hKey)
+        return NULL;
+
+    CComPtr<IStream> pOldStream;
+    if (!_AlreadyUpgraded(hKey))
+    {
+        pOldStream.Attach(SHOpenRegStream2W(hKey, NULL, L"ViewView2", 0));
+        if (pOldStream)
+        {
+            ULARGE_INTEGER uli;
+            HRESULT hr = IStream_Size(pOldStream, &uli);
+            if (SUCCEEDED(hr) && !uli.QuadPart)
+                pOldStream.Release();
+        }
+
+        if (!pOldStream)
+            pOldStream.Attach(SHOpenRegStream2W(hKey, NULL, L"ViewView", 0));
+
+        _MarkAsUpgraded(hKey);
+    }
+
+    ::RegCloseKey(hKey);
+    return pOldStream.Detach();
+}
+
+HRESULT CDesktopUpgradePropertyBag::_ReadItemPositions(VARIANT *pvari)
+{
+    CComPtr<IStream> pOldStream;
+    pOldStream.Attach(_GetOldDesktopViewStream());
+    if (!pOldStream)
+        return E_FAIL;
+
+    HRESULT hr = E_FAIL;
+    IStream *pNewStream = _NewStreamFromOld(pOldStream);
+    if (pNewStream)
+    {
+        V_UNKNOWN(pvari) = pNewStream;
+        V_VT(pvari) = VT_UNKNOWN;
+        hr = S_OK;
+    }
+
+    return hr;
+}
+
+STDMETHODIMP
+CDesktopUpgradePropertyBag::Read(
+    _In_z_ LPCWSTR pszPropName,
+    _Inout_ VARIANT *pvari,
+    _Inout_opt_ IErrorLog *pErrorLog)
+{
+    UNREFERENCED_PARAMETER(pErrorLog);
+
+    VARTYPE vt = V_VT(pvari);
+
+    HRESULT hr = E_FAIL;
+    if (StrCmpW(L"FFlags", pszPropName) == 0)
+        hr = _ReadFlags(pvari);
+    else if (StrCmpNW(L"ItemPos", pszPropName, 7) == 0)
+        hr = _ReadItemPositions(pvari);
+
+    if (FAILED(hr))
+    {
+        ::VariantInit(pvari);
+        return hr;
+    }
+
+    return ::VariantChangeType(pvari, pvari, 0, vt);
+}
+
+/**************************************************************************
+ *  SHGetDesktopUpgradePropertyBag (Not exported; used in CViewStatePropertyBag)
+ *
+ * Creates or gets a property bag object for desktop upgrade
+ *
+ * @param riid    Specifies either IID_IUnknown, IID_IPropertyBag or IID_IPropertyBag2.
+ * @param ppvObj  Receives an IPropertyBag pointer.
+ * @return        An HRESULT value. S_OK on success, non-zero on failure.
+ */
+HRESULT SHGetDesktopUpgradePropertyBag(REFIID riid, void **ppvObj)
+{
+    *ppvObj = NULL;
+    CComPtr<CDesktopUpgradePropertyBag> pPropBag(new CDesktopUpgradePropertyBag());
+    return pPropBag->QueryInterface(riid, ppvObj);
 }
