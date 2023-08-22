@@ -1484,13 +1484,13 @@ static BOOL SHIsRemovableDrive(LPCITEMIDLIST pidl)
  * Retrieves a property bag in which the view state information of a folder
  * can be stored.
  *
- * @param pidl        PIDL of the folder requested
- * @param bag_name    Name of the property bag requested
- * @param flags       Optional flags
- * @param riid        IID of requested property bag interface
- * @param ppv         Address to receive pointer to the new interface
- * @return            An HRESULT value. S_OK on success, non-zero on failure.
- * @see               https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-shgetviewstatepropertybag
+ * @param pidl      PIDL of the folder requested
+ * @param bag_name  Name of the property bag requested
+ * @param flags     Optional flags
+ * @param riid      IID of requested property bag interface
+ * @param ppv       Address to receive pointer to the new interface
+ * @return          An HRESULT value. S_OK on success, non-zero on failure.
+ * @see             https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-shgetviewstatepropertybag
  */
 EXTERN_C HRESULT WINAPI
 SHGetViewStatePropertyBag(
