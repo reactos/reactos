@@ -71,7 +71,7 @@ RtlAllocateHandle(
     /* Check if we are out of free handles entries */
     if (HandleTable->FreeHandles == NULL)
     {
-        /* Check if we don't have uncomitted handle entries yet */
+        /* Check if we don't have uncommitted handle entries yet */
         if (HandleTable->UnCommittedHandles == NULL)
         {
             /* Use the maximum number of handle entries */

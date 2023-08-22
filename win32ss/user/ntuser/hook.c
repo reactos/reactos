@@ -43,7 +43,7 @@ IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
         {
             /* A callback in user mode can trigger UserLoadApiHook to be called and
                as a result IntLoadHookModule will be called recursively.
-               To solve this we set the flag that means that the appliaction has
+               To solve this we set the flag that means that the application has
                loaded the api hook before the callback and in case of error we remove it */
             ppi->W32PF_flags |= W32PF_APIHOOKLOADED;
 

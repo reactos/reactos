@@ -135,7 +135,7 @@ NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
 * @name NtGdiD3dContextDestroy
 * @implemented
 *
-* The Function NtGdiD3dContextDestroy destorys the context data we got from NtGdiD3dContextCreate
+* The Function NtGdiD3dContextDestroy destroys the context data we got from NtGdiD3dContextCreate
 * It redirects to dxg.sys in windows XP/2003,  dxkrnl.sys in vista and is fully implemented 
 * in win32k.sys in windows 2000 and below
 *

@@ -259,7 +259,7 @@ class wine_sync:
         return True, warning_message
 
     def revert_staged_patchset(self):
-        # revert all of this in one commmit
+        # revert all of this in one commit
         staged_patch_dir_path = os.path.join(self.reactos_src, self.staged_patch_dir)
         if not os.path.isdir(staged_patch_dir_path):
             return True

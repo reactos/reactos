@@ -442,7 +442,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
         case 0xC2:
         {
             // FIXME: Reenable this call when we understand why
-            // our included mouse driver doesn't correctly reeanble
+            // our included mouse driver doesn't correctly reenable
             // mouse reporting!
             // BiosMousePs2Interface(Stack);
             // break;

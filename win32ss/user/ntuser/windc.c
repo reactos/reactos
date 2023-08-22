@@ -1022,7 +1022,7 @@ NtUserGetDC(HWND hWnd)
  * Select logical palette into device context.
  * \param	hDC 				handle to the device context
  * \param	hpal				handle to the palette
- * \param	ForceBackground 	If this value is FALSE the logical palette will be copied to the device palette only when the applicatioon
+ * \param	ForceBackground 	If this value is FALSE the logical palette will be copied to the device palette only when the application
  * 								is in the foreground. If this value is TRUE then map the colors in the logical palette to the device
  * 								palette colors in the best way.
  * \return	old palette

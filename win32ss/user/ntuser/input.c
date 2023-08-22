@@ -42,7 +42,7 @@ IntLastInputTick(BOOL bUpdate)
 /*
  * DoTheScreenSaver
  *
- * Check if scrensaver should be started and sends message to SAS window
+ * Check if screensaver should be started and sends message to SAS window
  */
 VOID FASTCALL
 DoTheScreenSaver(VOID)

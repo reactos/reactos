@@ -184,7 +184,7 @@ GdiPoolAllocate(
     cjOffset = ulIndex * pPool->cjAllocSize;
     pvAlloc = (PVOID)((ULONG_PTR)pSection->pvBaseAddress + cjOffset);
 
-    /* Check if memory is comitted */
+    /* Check if memory is committed */
     ulPageBit = 1 << (cjOffset / PAGE_SIZE);
     ulPageBit |= 1 << ((cjOffset + pPool->cjAllocSize - 1) / PAGE_SIZE);
     if ((pSection->ulCommitBitmap & ulPageBit) != ulPageBit)

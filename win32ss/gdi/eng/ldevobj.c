@@ -407,7 +407,7 @@ LDEVOBJ_pLoadDriver(
         /* Check if the ldev is associated with a file */
         if (pldev->pGdiDriverInfo)
         {
-            /* Check for match (case insensative) */
+            /* Check for match (case insensitive) */
             if (RtlEqualUnicodeString(&pldev->pGdiDriverInfo->DriverName, &strDriverName, TRUE))
             {
                 /* Image found in LDEV list */
