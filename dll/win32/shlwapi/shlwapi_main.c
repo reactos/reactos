@@ -34,8 +34,8 @@ DECLSPEC_HIDDEN HINSTANCE shlwapi_hInstance = 0;
 DECLSPEC_HIDDEN DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
 
 #ifdef __REACTOS__
-EXTERN_C VOID FreeViewStatePropertyBagCache(VOID);
 extern CRITICAL_SECTION g_csBagCacheLock;
+VOID FreeViewStatePropertyBagCache(VOID);
 #endif
 
 /*************************************************************************
