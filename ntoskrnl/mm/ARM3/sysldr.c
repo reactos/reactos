@@ -213,6 +213,60 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
     return Status;
 }
 
+#ifndef RVA
+#define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
+#endif
+
+USHORT
+NTAPI
+NameToOrdinal(
+    _In_ PCSTR ExportName,
+    _In_ PVOID ImageBase,
+    _In_ ULONG NumberOfNames,
+    _In_ PULONG NameTable,
+    _In_ PUSHORT OrdinalTable)
+{
+    LONG Low, Mid, High, Ret;
+
+    /* Fail if no names */
+    if (!NumberOfNames)
+        return -1;
+
+    /* Do a binary search */
+    Low = Mid = 0;
+    High = NumberOfNames - 1;
+    while (High >= Low)
+    {
+        /* Get new middle value */
+        Mid = (Low + High) >> 1;
+
+        /* Compare name */
+        Ret = strcmp(ExportName, (PCHAR)RVA(ImageBase, NameTable[Mid]));
+        if (Ret < 0)
+        {
+            /* Update high */
+            High = Mid - 1;
+        }
+        else if (Ret > 0)
+        {
+            /* Update low */
+            Low = Mid + 1;
+        }
+        else
+        {
+            /* We got it */
+            break;
+        }
+    }
+
+    /* Check if we couldn't find it */
+    if (High < Low)
+        return -1;
+
+    /* Otherwise, this is the ordinal */
+    return OrdinalTable[Mid];
+}
+
 PVOID
 NTAPI
 MiLocateExportName(IN PVOID DllBase,
@@ -221,7 +275,6 @@ MiLocateExportName(IN PVOID DllBase,
     PULONG NameTable;
     PUSHORT OrdinalTable;
     PIMAGE_EXPORT_DIRECTORY ExportDirectory;
-    LONG Low = 0, Mid = 0, High, Ret;
     USHORT Ordinal;
     PVOID Function;
     ULONG ExportSize;
@@ -241,37 +294,15 @@ MiLocateExportName(IN PVOID DllBase,
     OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
                              ExportDirectory->AddressOfNameOrdinals);
 
-    /* Do a binary search */
-    High = ExportDirectory->NumberOfNames - 1;
-    while (High >= Low)
-    {
-        /* Get new middle value */
-        Mid = (Low + High) >> 1;
-
-        /* Compare name */
-        Ret = strcmp(ExportName, (PCHAR)DllBase + NameTable[Mid]);
-        if (Ret < 0)
-        {
-            /* Update high */
-            High = Mid - 1;
-        }
-        else if (Ret > 0)
-        {
-            /* Update low */
-            Low = Mid + 1;
-        }
-        else
-        {
-            /* We got it */
-            break;
-        }
-    }
+    /* Get the ordinal */
+    Ordinal = NameToOrdinal(ExportName,
+                            DllBase,
+                            ExportDirectory->NumberOfNames,
+                            NameTable,
+                            OrdinalTable);
 
     /* Check if we couldn't find it */
-    if (High < Low) return NULL;
-
-    /* Otherwise, this is the ordinal */
-    Ordinal = OrdinalTable[Mid];
+    if (Ordinal == -1) return NULL;
 
     /* Resolve the address and write it */
     ExportTable = (PULONG)((ULONG_PTR)DllBase +
@@ -486,7 +517,6 @@ MiFindExportedRoutineByName(IN PVOID DllBase,
     PULONG NameTable;
     PUSHORT OrdinalTable;
     PIMAGE_EXPORT_DIRECTORY ExportDirectory;
-    LONG Low = 0, Mid = 0, High, Ret;
     USHORT Ordinal;
     PVOID Function;
     ULONG ExportSize;
@@ -506,37 +536,15 @@ MiFindExportedRoutineByName(IN PVOID DllBase,
     OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
                              ExportDirectory->AddressOfNameOrdinals);
 
-    /* Do a binary search */
-    High = ExportDirectory->NumberOfNames - 1;
-    while (High >= Low)
-    {
-        /* Get new middle value */
-        Mid = (Low + High) >> 1;
-
-        /* Compare name */
-        Ret = strcmp(ExportName->Buffer, (PCHAR)DllBase + NameTable[Mid]);
-        if (Ret < 0)
-        {
-            /* Update high */
-            High = Mid - 1;
-        }
-        else if (Ret > 0)
-        {
-            /* Update low */
-            Low = Mid + 1;
-        }
-        else
-        {
-            /* We got it */
-            break;
-        }
-    }
+    /* Get the ordinal */
+    Ordinal = NameToOrdinal(ExportName->Buffer,
+                            DllBase,
+                            ExportDirectory->NumberOfNames,
+                            NameTable,
+                            OrdinalTable);
 
     /* Check if we couldn't find it */
-    if (High < Low) return NULL;
-
-    /* Otherwise, this is the ordinal */
-    Ordinal = OrdinalTable[Mid];
+    if (Ordinal == -1) return NULL;
 
     /* Validate the ordinal */
     if (Ordinal >= ExportDirectory->NumberOfFunctions) return NULL;
@@ -696,8 +704,6 @@ MiSnapThunk(IN PVOID DllBase,
     PUSHORT OrdinalTable;
     PIMAGE_IMPORT_BY_NAME NameImport;
     USHORT Hint;
-    ULONG Low = 0, Mid = 0, High;
-    LONG Ret;
     NTSTATUS Status;
     PCHAR MissingForwarder;
     CHAR NameBuffer[MAXIMUM_FILENAME_LENGTH];
@@ -751,40 +757,18 @@ MiSnapThunk(IN PVOID DllBase,
         else
         {
             /* Do a binary search */
-            High = ExportDirectory->NumberOfNames - 1;
-            while (High >= Low)
-            {
-                /* Get new middle value */
-                Mid = (Low + High) >> 1;
-
-                /* Compare name */
-                Ret = strcmp((PCHAR)NameImport->Name, (PCHAR)DllBase + NameTable[Mid]);
-                if (Ret < 0)
-                {
-                    /* Update high */
-                    High = Mid - 1;
-                }
-                else if (Ret > 0)
-                {
-                    /* Update low */
-                    Low = Mid + 1;
-                }
-                else
-                {
-                    /* We got it */
-                    break;
-                }
-            }
+            Ordinal = NameToOrdinal((PCHAR)NameImport->Name,
+                                    DllBase,
+                                    ExportDirectory->NumberOfNames,
+                                    NameTable,
+                                    OrdinalTable);
 
             /* Check if we couldn't find it */
-            if (High < Low)
+            if (Ordinal == -1)
             {
                 DPRINT1("Warning: Driver failed to load, %s not found\n", NameImport->Name);
                 return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
             }
-
-            /* Otherwise, this is the ordinal */
-            Ordinal = OrdinalTable[Mid];
         }
     }
 

@@ -62,48 +62,14 @@ BOOLEAN PspDoingGiveBacks;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-CODE_SEG("INIT")
 USHORT
 NTAPI
-NameToOrdinal(IN PCHAR Name,
-              IN PVOID DllBase,
-              IN ULONG NumberOfNames,
-              IN PULONG NameTable,
-              IN PUSHORT OrdinalTable)
-{
-    ULONG Mid;
-    LONG Ret;
-
-    /* Fail if no names */
-    if (!NumberOfNames) return -1;
-
-    /* Do binary search */
-    Mid = NumberOfNames >> 1;
-    Ret = strcmp(Name, (PCHAR)((ULONG_PTR)DllBase + NameTable[Mid]));
-
-    /* Check if we found it */
-    if (!Ret) return OrdinalTable[Mid];
-
-    /* We didn't. Check if we only had one name to check */
-    if (NumberOfNames == 1) return -1;
-
-    /* Check if we should look up or down */
-    if (Ret < 0)
-    {
-        /* Loop down */
-        NumberOfNames = Mid;
-    }
-    else
-    {
-        /* Look up, update tables */
-        NameTable = &NameTable[Mid + 1];
-        OrdinalTable = &OrdinalTable[Mid + 1];
-        NumberOfNames -= (Mid - 1);
-    }
-
-    /* Call us recursively */
-    return NameToOrdinal(Name, DllBase, NumberOfNames, NameTable, OrdinalTable);
-}
+NameToOrdinal(
+    _In_ PCSTR ExportName,
+    _In_ PVOID ImageBase,
+    _In_ ULONG NumberOfNames,
+    _In_ PULONG NameTable,
+    _In_ PUSHORT OrdinalTable);
 
 CODE_SEG("INIT")
 NTSTATUS
