@@ -634,7 +634,6 @@ SepSidInTokenEx(
 PSID
 NTAPI
 SepGetSidFromAce(
-    _In_ UCHAR AceType,
     _In_ PACE Ace);
 
 NTSTATUS

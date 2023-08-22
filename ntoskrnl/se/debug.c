@@ -118,7 +118,7 @@ SepDumpAces(
         DbgPrint("Ace->Header.AceType -> %s\n", SepGetAceTypeString(Ace->Header.AceType));
         DbgPrint("Ace->AccessMask -> 0x%08lx\n", Ace->AccessMask);
 
-        Sid = SepGetSidFromAce(Ace->Header.AceType, Ace);
+        Sid = SepGetSidFromAce(Ace);
         ASSERT(Sid);
         RtlConvertSidToUnicodeString(&SidString, Sid, TRUE);
         DbgPrint("Ace SID -> %wZ\n", &SidString);

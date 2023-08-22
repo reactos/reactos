@@ -558,13 +558,6 @@ SepSidInToken(
  * given access control entry. This identifier
  * is valid for the whole of its lifetime.
  *
- * @param[in] AceType
- * The type of an access control entry. This
- * type that is given by the calling thread
- * must coincide with the actual ACE that is
- * given in the second parameter otherwise this
- * can potentially lead to UNDEFINED behavior!
- *
  * @param[in] Ace
  * A pointer to an access control entry, which
  * can be obtained from a DACL.
@@ -577,7 +570,6 @@ SepSidInToken(
 PSID
 NTAPI
 SepGetSidFromAce(
-    _In_ UCHAR AceType,
     _In_ PACE Ace)
 {
     PULONG Flags;
@@ -589,7 +581,7 @@ SepGetSidFromAce(
     ASSERT(Ace);
 
     /* Obtain the SID based upon ACE type */
-    switch (AceType)
+    switch (Ace->Header.AceType)
     {
         case ACCESS_DENIED_ACE_TYPE:
         case ACCESS_ALLOWED_ACE_TYPE:
@@ -620,7 +612,7 @@ SepGetSidFromAce(
 
         default:
         {
-            DPRINT1("SepGetSidFromAce(): Unknown ACE type (Ace 0x%p, Type %u)\n", Ace, AceType);
+            DPRINT1("SepGetSidFromAce(): Unknown ACE type (Ace 0x%p, Type %u)\n", Ace, Ace->Header.AceType);
             break;
         }
     }

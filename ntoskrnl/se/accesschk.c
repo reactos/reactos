@@ -517,7 +517,7 @@ SepAnalyzeAcesFromDacl(
                     if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
                     {
                         /* Get the SID from this ACE */
-                        Sid = SepGetSidFromAce(ACCESS_DENIED_ACE_TYPE, CurrentAce);
+                        Sid = SepGetSidFromAce(CurrentAce);
                         ASSERT(Sid);
 
                         if (SepSidInTokenEx(AccessToken, PrincipalSelfSid, Sid, TRUE, IsTokenRestricted))
@@ -539,7 +539,7 @@ SepAnalyzeAcesFromDacl(
                     else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
                     {
                         /* Get the SID from this ACE */
-                        Sid = SepGetSidFromAce(ACCESS_ALLOWED_ACE_TYPE, CurrentAce);
+                        Sid = SepGetSidFromAce(CurrentAce);
                         ASSERT(Sid);
 
                         if (SepSidInTokenEx(AccessToken, PrincipalSelfSid, Sid, FALSE, IsTokenRestricted))
@@ -561,7 +561,7 @@ SepAnalyzeAcesFromDacl(
                     else if (CurrentAce->Header.AceType == ACCESS_DENIED_OBJECT_ACE_TYPE)
                     {
                         /* Get the SID and object type from this ACE */
-                        Sid = SepGetSidFromAce(ACCESS_DENIED_OBJECT_ACE_TYPE, CurrentAce);
+                        Sid = SepGetSidFromAce(CurrentAce);
                         ObjectTypeGuid = SepGetObjectTypeGuidFromAce(CurrentAce, TRUE);
                         ASSERT(Sid);
 
@@ -610,7 +610,7 @@ SepAnalyzeAcesFromDacl(
                     else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_OBJECT_ACE_TYPE)
                     {
                         /* Get the SID and object type from this ACE */
-                        Sid = SepGetSidFromAce(ACCESS_ALLOWED_OBJECT_ACE_TYPE, CurrentAce);
+                        Sid = SepGetSidFromAce(CurrentAce);
                         ObjectTypeGuid = SepGetObjectTypeGuidFromAce(CurrentAce, FALSE);
                         ASSERT(Sid);
 
@@ -705,7 +705,7 @@ SepAnalyzeAcesFromDacl(
                     if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
                     {
                         /* Get the SID from this ACE */
-                        Sid = SepGetSidFromAce(ACCESS_DENIED_ACE_TYPE, CurrentAce);
+                        Sid = SepGetSidFromAce(CurrentAce);
                         ASSERT(Sid);
 
                         if (SepSidInTokenEx(AccessToken, PrincipalSelfSid, Sid, TRUE, IsTokenRestricted))
@@ -735,7 +735,7 @@ SepAnalyzeAcesFromDacl(
                     else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
                     {
                         /* Get the SID from this ACE */
-                        Sid = SepGetSidFromAce(ACCESS_ALLOWED_ACE_TYPE, CurrentAce);
+                        Sid = SepGetSidFromAce(CurrentAce);
                         ASSERT(Sid);
 
                         if (SepSidInTokenEx(AccessToken, PrincipalSelfSid, Sid, FALSE, IsTokenRestricted))
@@ -761,7 +761,7 @@ SepAnalyzeAcesFromDacl(
                     else if (CurrentAce->Header.AceType == ACCESS_DENIED_OBJECT_ACE_TYPE)
                     {
                         /* Get the SID and object type from this ACE */
-                        Sid = SepGetSidFromAce(ACCESS_DENIED_OBJECT_ACE_TYPE, CurrentAce);
+                        Sid = SepGetSidFromAce(CurrentAce);
                         ObjectTypeGuid = SepGetObjectTypeGuidFromAce(CurrentAce, TRUE);
                         ASSERT(Sid);
 
@@ -811,7 +811,7 @@ SepAnalyzeAcesFromDacl(
                     else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_OBJECT_ACE_TYPE)
                     {
                         /* Get the SID and object type from this ACE */
-                        Sid = SepGetSidFromAce(ACCESS_ALLOWED_OBJECT_ACE_TYPE, CurrentAce);
+                        Sid = SepGetSidFromAce(CurrentAce);
                         ObjectTypeGuid = SepGetObjectTypeGuidFromAce(CurrentAce, FALSE);
                         ASSERT(Sid);
 
