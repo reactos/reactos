@@ -125,26 +125,27 @@ Example:
     ACTIVE
 .
 Language=Romanian
-    On disks with master boot record (MBR) disk formatting, marks
-    the partition with focus as active.
+    Pe discurile cu Registrul principal de inițializare (MBR) formatarea
+    discului marchează partiția în cauză ca activă.
 
-Syntax:  ACTIVE
+Sintaxă:  ACTIVE
 
-    Writes a value to the disk which is read by the basic input/output
-    system (BIOS) at boot. This value specifies that the partition is
-    a valid system partition.
+    Scrie o valoare pe disc care este citită de Sistemul de 
+    intrare/ieșire de bază (BIOS) la inițializare. Această valoare specifică
+    faptul că partiția este o partiție de sistem validă.
 
-    A partition must be selected for this operation to succeed.
+    O partiție trebuie să fie selectată pentru această operațiune să fie cu
+    succes.
 
-    Caution:
+    Atenție:
 
-        DiskPart verifies only that the partition is capable of containing the
-        operating system startup files. DiskPart does not check the contents of
-        the partition. If you mistakenly mark a partition as active and it does
-        not contain the operating system startup files, your computer might not
-        start.
+        DiskPart doar verifică dacă partiția este capabilă să conțină fișierele
+        de pornire ale sistemului de operare. DiskPart nu verifică coținutul
+        partiției. Dacă ați marcat în mod eronat o partiție ca activă și nu
+        conține fișierele de pornire ale sistemului de operare, calculatorul
+        dumneavostră ar putea să nu pornească.
 
-Example:
+De exemplu:
 
     ACTIVE
 .
@@ -285,7 +286,7 @@ Language=Portugese
 <Add ADD command help text here>
 .
 Language=Romanian
-<Add ADD command help text here>
+<Adăugați aici textul de ajutor pentru comanda ADD>
 .
 Language=Russian
 <Add ADD command help text here>
@@ -321,7 +322,7 @@ Language=Portugese
 <Add ASSIGN command help text here>
 .
 Language=Romanian
-<Add ASSIGN command help text here>
+<Adăugați aici textul de ajutor pentru comanda ASSIGN>
 .
 Language=Russian
 <Add ASSIGN command help text here>
@@ -357,7 +358,7 @@ Language=Portugese
 <Add ATTACH command help text here>
 .
 Language=Romanian
-<Add ATTACH command help text here>
+<Adăugați aici textul de ajutor pentru comanda ATTACH>
 .
 Language=Russian
 <Add ATTACH command help text here>
@@ -393,7 +394,7 @@ Language=Portugese
 <Add ATTRIBUTES command help text here>
 .
 Language=Romanian
-<Add ATTRIBUTES command help text here>
+<Adăugați aici textul de ajutor pentru comanda ATTRIBUTES>
 .
 Language=Russian
 <Add ATTRIBUTES command help text here>
@@ -429,7 +430,7 @@ Language=Portugese
 <Add AUTOMOUNT command help text here>
 .
 Language=Romanian
-<Add AUTOMOUNT command help text here>
+<Adăugați aici textul de ajutor pentru comanda AUTOMOUNT>
 .
 Language=Russian
 <Add AUTOMOUNT command help text here>
@@ -466,7 +467,7 @@ Language=Portugese
 <Add BREAK command help text here>
 .
 Language=Romanian
-<Add BREAK command help text here>
+<Adăugați aici textul de ajutor pentru comanda BREAK>
 .
 Language=Russian
 <Add BREAK command help text here>
@@ -576,23 +577,24 @@ Example:
     CLEAN
 .
 Language=Romanian
-    Removes any and all partition or volume formatting from the disk with
-    focus.
+    Șterge orice și întreaga formatare a partiției sau a volumului din
+    discul în cauză.
 
-Syntax:  CLEAN [ALL]
+Sintaxă:  CLEAN [ALL]
 
-    ALL         Specifies that each and every byte\sector on the disk is set to
-                zero, which completely deletes all data contained on the disk.
+    ALL         Specifică faptul că fiecare octet/sector de pe disc este setat
+                pe zero, ceea ce șterge complet toate datele conținute pe disc.
 
-    On master boot record (MBR) disks, only the MBR partitioning information
-    and hidden sector information are overwritten. On GUID partition table
-    (GPT) disks, the GPT partitioning information, including the Protective
-    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
-    and the last 1MB of the disk are zeroed. This erases any disk formatting 
-    that had been previously applied to the disk. The disk's state after 
-    cleaning the disk is 'UNINITIALIZED'.
+    Pe discurile cu Registrul principal de inițializare (MBR), sunt suprascrise
+    numai informațiile despre partiționarea MBR și informațiile despre
+    sectoarele ascunse. Pe discurile cu tabel de partiție GUID (GPT),
+    informațiile de partiționare GPT, incluzând MBR protectiv, sunt
+    suprascrise. Dacă parametrul ALL nu e folosit, primul 1 Mo și ultimul 1 Mo
+    al discului sunt puse la valoarea zero. Aceasta șterge orice formatare a
+    discului ce a fost aplicată anterior discului. Starea discului după ce
+    este curățat discul este „UNINITIALIZED” (neinițializat).
 
-Example:
+De exemplu:
 
     CLEAN
 .
@@ -718,7 +720,7 @@ Language=Portugese
 <Add COMPACT command help text here>
 .
 Language=Romanian
-<Add COMPACT command help text here>
+<Adăugați aici textul de ajutor pentru comanda COMPACT>
 .
 Language=Russian
 <Add COMPACT command help text here>
@@ -754,7 +756,7 @@ Language=Portugese
 <Add CONVERT command help text here>
 .
 Language=Romanian
-<Add CONVERT command help text here>
+<Adăugați aici textul de ajutor pentru comanda CONVERT>
 .
 Language=Russian
 <Add CONVERT command help text here>
@@ -790,7 +792,7 @@ Language=Portugese
 <Add CREATE PARTITION EFI command help text here>
 .
 Language=Romanian
-<Add CREATE PARTITION EFI command help text here>
+<Adăugați aici textul de ajutor pentru comanda CREATE PARTITION EFI>
 .
 Language=Russian
 <Add CREATE PARTITION EFI command help text here>
@@ -972,39 +974,41 @@ Example:
     CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Romanian
-    Creates an extended partition on the disk with focus.
-    Applies to master boot record (MBR) disks only.
+    Crează o partiție extinsă pe discul în cauză.
+    Se aplică doar la discurile cu Registrul principal de inițializare (MBR).
 
-Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+Sintaxă:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
-                given, the partition continues until there is no more free
-                space in the extended partition.
+    SIZE=<N>    Mărimea partiției în megaocteți (Mo). Dacă nu este dată nicio
+                mărime, partiția continuă până când nu mai este spațiu liber
+                în partiția extinsă.
 
-    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
-                created. If no offset is given, the partition will start
-                at the beginning of the first free space on the disk that
-                is large enough to hold the new partition.
+    OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția este creată.
+                Dacă nu este dat niciun decalaj, partiția va începe de la
+                primul spațiu liber de pe disc ce este suficient de mare ca
+                să țină noua partiție.
 
-    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
-                arrays to improve performance. The partition offset will be
-                a multiple of <N>. If the OFFSET parameter is specified, it
-                will be rounded to the closest multiple of <N>.
+    ALIGN=<N>   De obicei, folosit cu matrici de dispozitive cu Număr de
+                unitate logică (LUN) RAID pentru a îmbunătăți performanța.
+                Decalajul partiției va fi un multiplu a lui <N>. Dacă este
+                specificat parametrul OFFSET, va fi rotunjit la cel mai
+                apropiat multiplu a lui <N>.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
-    After the partition has been created, the focus automatically shifts to the
-    new partition. Only one extended partition can be created per disk. This
-    command fails if you attempt to create an extended partition within another
-    extended partition. You must create an extended partition before you can
-    create logical partitions.
+    După ce a fost creată partiția, marcajul se mută automat pe noua
+    partiție. Doar o singură partiție extinsă poate fi creată pe un disc.
+    Această comandă eșuează dacă încercați să creați o partiție extinsă
+    în altă partiție extinsă. Trebuie să creați o partiție extinsă
+    înainte de a crea partiții logice.
 
-    A basic MBR disk must be selected for this operation to succeed.
+    Un disc MBR de bază trebuie să fie selectat pentru ca această operațiune
+    să aibă succes.
 
-Example:
+De exemplu:
 
     CREATE PARTITION EXTENDED SIZE=1000
 .
@@ -1343,38 +1347,40 @@ Example:
     CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Romanian
-    Creates a logical partition in an extended partition.
-    Applies to master boot record (MBR) disks only.
+    Crează o partiție logică într-o partiție extinsă.
+    Se aplică doar la discurile cu Registrul principal de inițializare (MBR).
 
-Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
-                at least as big in bytes as the number specified by N. If you
-                specify a size for the logical partition, it must be smaller
-                than the extended partition. If no size is given, the partition
-                continues until there is no more free space in the extended
-                partition.
+    SIZE=<N>    Mărimea partiției în megaocteți (Mo). Partiția e cel puțin
+                la fel de mare în octeți ca numărul specificat de N. Dacă
+                specificați o dimensiune pentru partiția logică, aceasta
+                trebuie să fie mai mică decât partiția logică. Dacă nu este
+                dată nicio mărime, partiția continuă până când nu mai este
+                spațiu liber pe partiția extinsă.
 
-    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
-                If no offset is given, the partition is placed in the first disk
-                extent that is large enough to hold it.
+    OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția e creată.
+                Dacă nu este dat niciun decalaj, partiția e plasată pe prima
+                expansiune a discului ce e suficient de mare ca să o țină.
 
-    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
-                arrays to improve performance. The partition offset will be
-                a multiple of <N>. If the OFFSET parameter is specified, it
-                will be rounded to the closest multiple of <N>.
+    ALIGN=<N>   Folosită de obicei cu Numărul unității logice (LUN) RAID
+                a șirurilor de dispozitive pentru a îmbunătăți performanța.
+                Decalajul partiției va fi un multiplu a lui <N>. Dacă
+                parametrul OFFSET este specificat, va fi rotunjit la cel mai
+                apropiat multiplu a lui <N>.
+                                                
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    După ce a fost creată partiția, marcajul se mută automat pe
+    noua partiție logică.
 
-    After the partition has been created, the focus automatically shifts to the
-    new logical partition.
+    Un disc MBR de bază trebuie să fie selectat pentru ca această operațiune
+    să reușească.
 
-    A basic MBR disk must be selected for this operation to succeed.
-
-Example:
+De exemplu:
 
     CREATE PARTITION LOGICAL SIZE=1000
 .
@@ -1572,7 +1578,7 @@ Language=Portugese
 <Add CREATE PARTITION MSR command help text here>
 .
 Language=Romanian
-<Add CREATE PARTITION MSR command help text here>
+<Adăugați aici textul de ajutor pentru comanda CREATE PARTITION MSR>
 .
 Language=Russian
 <Add CREATE PARTITION MSR command help text here>
@@ -2037,105 +2043,111 @@ Example:
     CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Romanian
-    Creates a primary partition on the basic disk with focus.
+    Crează o partiție primară pe discul de bază în cauză.
 
-Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
             [ALIGN=<N>] [NOERR]
 
-    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
-                given, the partition continues until there is no more
-                unallocated space in the current region.
+    SIZE=<N>    Mărimea partiției în megaocteți (Mo). Dacă nu e dată nicio
+                mărime, partiția continuă până când nu mai este spațiu nealocat
+                în regiunea curentă.
 
-    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
-                If no offset is given, the partition is placed in the first disk
-                extent that is large enough to hold it.
+    OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția este creată.
+                Dacă nu e dat niciun decalaj, partiția este plasată pe prima
+                expansiune de disc ce e suficient de mare ca să o țină.
 
     ID={<BYTE> | <GUID>}
 
-                Specifies the partition type.
+                Specifică tipul partiției.
 
-                Intended for Original Equipment Manufacturer (OEM) use only.
+                Destinat numai pentru uzul producătorilor de echipamente
+                originale (OEM).
 
-                For master boot record (MBR) disks, you can specify a partition
-                type byte, in hexadecimal form, for the partition. If this
-                parameter is not specified for an MBR disk, the command creates
-                a partition of type 0x06 (specifies no file system is installed).
+                Pentru discurile cu Registrul principal de inițializare (MBR),
+                puteți specifica un octet, în format hexazecimal, pentru un tip
+                de partiție. Dacă acest parametru nu e specificat pentru
+                un disc MBR, comanda crează o partiție de tipul 0x06
+                (menționează că nu este niciun sistem de fișier instalat).
 
-                    LDM data partition:
+                    Partiția de date LDM:
                         0x42
 
-                    Recovery partition:
+                    Partiția de recuperare:
                         0x27
 
-                    Recognized OEM Ids:
+                    Date de identificare (ID-uri) OEM:
                         0x12
                         0x84
                         0xDE
                         0xFE
                         0xA0
 
-                For GUID partition table (GPT) disks you can specify a
-                partition type GUID for the partition you want to create.
-                Recognized GUIDs include:
+                Pentru discurile cu tabel de partiție GUID (GPT) puteți
+                specifica un tip de partiție GUID pentru partiția pe care vreți
+                să o creați. GUID-urile recunoscute includ:
 
-                    EFI System partition:
+                    Partiția de sistem EFI:
                         c12a7328-f81f-11d2-ba4b-00a0c93ec93b
 
-                    Microsoft Reserved partition:
+                    Partiția rezervată Microsoft:
                         e3c9e316-0b5c-4db8-817d-f92df00215ae
 
-                    Basic data partition:
+                    Partiția de bază pentru date:
                         ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 
-                    LDM Metadata partition on a dynamic disk:
+                    Partiția de metadate LDM pe un disc dinamic:
                         5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
 
-                    LDM Data partition on a dynamic disk:
+                    Partiția de date LDM pe un disc dinamic:
                         af9b60a0-1431-4f62-bc68-3311714a69ad
 
-                    Recovery partition:
+                    Partiția de recuperare:
                         de94bba4-06d1-4d40-a16a-bfd50179d6ac
 
-                If this parameter is not specified for a GPT disk, the command
-                creates a basic data partition.
+                Dacă acest parametru nu este specificat pentru un disc GPT,
+                comanda crează o partiție de bază pentru date.
 
-                Any partition type byte or GUID can be specified with this
-                parameter. DiskPart does not check the partition type for
-                validity except to ensure that it is a byte in hexadecimal form
-                or a GUID.
+                Orice octet care descrie tipul de partiție sau GUID poate fi
+                specificat cu acest parametru. DiskPart nu verifică tipul
+                partiției pentru validitate, cu excepția faptului că este
+                un octet cu valoare în format hexazecimal sau un GUID.
 
-                Caution:
+                Atenție:
 
-                    Creating partitions with this parameter might cause your
-                    computer to fail or be unable to start up. Unless you are
-                    an OEM or an IT professional experienced with GPT disks, do
-                    not create partitions on GPT disks using this parameter.
-                    Instead, always use the CREATE PARTITION EFI command to
-                    create EFI System partitions, the CREATE PARTITION MSR
-                    command to create Microsoft Reserved partitions, and the
-                    CREATE PARTITION PRIMARY command without this parameter to
-                    create primary partitions on GPT disks.
+                    Crearea de partiții cu acest parametru poate cauza
+                    calculatorului dumneavoastră să nu mai funcționeze bine sau
+                    să nu mai poată porni. Dacă nu sunteți un OEM sau un
+                    profesionist cu experiență în discuri GPT, nu creați
+                    partiții pe discuri GPT folosind acest parametru.
+                    În schimb, folosiți întotdeauna comanda
+                    CREATE PARTITION EFI ca să creați partiții de sistem EFI,
+                    comanda CREATE PARTITION MSR ca să creați partiții
+                    rezervate Microsoft, și comanda CREATE PARTITION PRIMARY
+                    fără acest parametru ca să creați partiții primare pe
+                    discuri GPT.
 
-    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
-                arrays to improve performance. The partition offset will be
-                a multiple of <N>. If the OFFSET parameter is specified, it
-                will be rounded to the closest multiple of <N>.
+    ALIGN=<N>   Folosită deobicei cu Numărul unității logice (LUN) RAID
+                a șirurilor de dispozitive pentru a îmbunătăți performanța.
+                Decalajul partiției va fi un multiplu a lui <N>. Dacă
+                parametrul OFFSET este specificat, va fi rotunjit la cel mai
+                apropiat multiplu a lui <N>.
+                                                
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    După ce ați creat partiția, marcajul se mută automat pe noua partiție
+    logică. Partiția nu primește nicio literă de disc. Trebuie să folosiți
+    comanda de atribuire pentru a atribui partiției o literă de disc.
 
-    After you create the partition, the focus automatically shifts to the new
-    partition. The partition does not receive a drive letter. You must use the
-    assign command to assign a drive letter to the partition.
+    Un disc de bază trebuie să fie selectat pentru ca această operațiune
+    să reușească.
+                
+    Dacă un tip de partiție nu e specificat, discul este neinițializat și
+    mărimea discului este mai mare de 2To, va fi inițializat cu GPT.
 
-    A basic disk must be selected for this operation to succeed.
-
-    If a partition type is not specified, the disk is uninitialized and disk
-    size is greater than 2TB, it will be initialized to GPT.
-
-Example:
+De exemplu:
 
     CREATE PARTITION PRIMARY SIZE=1000
     CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
@@ -2684,7 +2696,7 @@ Language=Portugese
 <Add DELETE DISK command help text here>
 .
 Language=Romanian
-<Add DELETE DISK command help text here>
+<Adăugați aici textul de ajutor pentru comanda DELETE DISK>
 .
 Language=Russian
 <Add DELETE DISK command help text here>
@@ -2816,28 +2828,29 @@ Example:
     DELETE PARTITION
 .
 Language=Romanian
-Deletes the partition with focus.
+Șterge partiția în cauză.
 
-Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+Sintaxă:  DELETE PARTITION [NOERR] [OVERRIDE]
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
-    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
-                Typically, DiskPart only permits you to delete known data
-                partitions.
+    OVERRIDE    Permite programului DiskPart să șteargă orice partiție,
+                indiferent de tipul său. De obicei, DiskPart vă permite doar
+                să ștergeți partițiile de date cunoscute.
 
-    You cannot delete the system partition, boot partition, or any partition
-    that contains the active paging file or crash dump (memory dump) filed.
+    Nu puteți șterge partiția de sistem, partiția de inițializare sau orice
+    altă partiție ce conține un fișier de paginație activ sau un registru
+    de colaps operațional (registru de memorie) solicitat.
 
-    A partition must be selected for this operation to succeed.
+    O partiție trebuie selectată pentru ca acestă operațiune să reușească.
 
-    Partitions cannot be deleted from dynamic disks or created on dynamic
-    disks.
-
-Example:
+    Partițiile nu pot fi șterse de pe discurile dinamice sau create
+    pe discurile dinamice.
+                
+De exemplu:
 
     DELETE PARTITION
 .
@@ -2987,7 +3000,7 @@ Language=Portugese
 <Add DELETE VOLUME command help text here>
 .
 Language=Romanian
-<Add DELETE VOLUME command help text here>
+<Adăugați aici textul de ajutor pentru comanda DELETE VOLUME>
 .
 Language=Russian
 <Add DELETE VOLUME command help text here>
@@ -3060,14 +3073,14 @@ Example:
     DETAIL DISK
 .
 Language=Romanian
-    Displays the properties of the selected disk and the list of volumes on
-    the disk.
+    Afișează proprietățile discului selectat și listează volumele
+    pe disc.
 
-Syntax:  DETAIL DISK
+Sintaxă:  DETAIL DISK
 
-    A disk must be selected for this operation to succeed.
+    Un disc trebuie să fie selectat pentru ca această operațiune să reușească.
 
-Example:
+De exemplu:
 
     DETAIL DISK
 .
@@ -3181,11 +3194,12 @@ Example:
     DETAIL PARTITION
 .
 Language=Romanian
-    Displays the properties for the selected partition.
+    Afișează proprietățile pentru partiția selectată.
 
-Syntax:  DETAIL PARTITION
+Sintaxă:  DETAIL PARTITION
 
-    A partition must be selected for this operation to succeed.
+    O partiție trebuie să fie selectată pentru ca această operațiune
+    să reușească.
 
 Example:
 
@@ -3301,14 +3315,14 @@ Example:
     DETAIL VOLUME
 .
 Language=Romanian
-    Displays the properties for the selected volume and the list of disks on
-    which the volume resides.
+    Afișează proprietățile pentru volumul selectat și listează discurile
+    pe care aparține volumul.
 
-Syntax:  DETAIL VOLUME
+Sintaxă:  DETAIL VOLUME
 
-    A volume must be selected for this operation to succeed.
+    Un volum trebuie să fie selectat pentru ca această operațiune să reușească.
 
-Example:
+De exemplu:
 
     DETAIL VOLUME
 .
@@ -3390,7 +3404,7 @@ Language=Portugese
 <Add DETACH command help text here>
 .
 Language=Romanian
-<Add DETACH command help text here>
+<Adăugați aici textul de ajutor pentru comanda DETACH>
 .
 Language=Russian
 <Add DETACH command help text here>
@@ -3450,11 +3464,11 @@ Example:
     EXIT
 .
 Language=Romanian
-    Exits the DiskPart command interpreter.
+    Iese din interpretorul de comenzi al programului DiskPart.
 
-Syntax:  EXIT
+Sintaxă:  EXIT
 
-Example:
+De exemplu:
 
     EXIT
 .
@@ -3522,7 +3536,7 @@ Language=Portugese
 <Add EXPAND command help text here>
 .
 Language=Romanian
-<Add EXPAND command help text here>
+<Adăugați aici textul de ajutor pentru comanda EXPAND>
 .
 Language=Russian
 <Add EXPAND command help text here>
@@ -3558,7 +3572,7 @@ Language=Portugese
 <Add EXTEND command help text here>
 .
 Language=Romanian
-<Add EXTEND command help text here>
+<Adăugați aici textul de ajutor pentru comanda EXTEND>
 .
 Language=Russian
 <Add EXTEND command help text here>
@@ -3632,14 +3646,15 @@ Example:
     FILESYSTEMS
 .
 Language=Romanian
-    Displays information about the current file system for the selected
-    volume, and the supported file systems for formatting the volume.
+    Afișează informații despre sistemul actual de fișiere pentru volumul
+    selectat și pentru sistemele de fișiere suportate pentru formatarea
+    volumului.
 
-Syntax:  FILESYSTEMS
+Sintaxă:  FILESYSTEMS
 
-    A volume must be selected for this operation to succeed.
+    Un volum trebuie să fie selectat pentru ca această operațiune să reușească.
 
-Example:
+De exemplu:
 
     FILESYSTEMS
 .
@@ -3979,68 +3994,70 @@ Examples:
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=Romanian
-    Formats the specified volume for use with ReactOS.
+    Formatează volumul specificat pentru folosire cu ReactOS.
 
-Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
                 [NOERR]
 
-    FS=<FS>     Specifies the type of file system. If no file system is given,
-                the default file system displayed by the FILESYSTEMS command is
-                used.
+    FS=<FS>     Specifică tipul sistemului de fișiere. Dacă nu e dat niciun
+                sistem de fișiere, este folosit sistemul de fișiere implicit
+                afișat de comanda FILESYSTEMS.
 
     REVISION=<X.XX>
 
-                Specifies the file system revision (if applicable).
+                Specifică revizia sistemului de fișiere (dacă este aplicabil).
 
-    RECOMMENDED If specified, use the recommended file system and revision
-                instead of the default if a recommendation exists. The
-                recommended file system (if one exists) is displayed by the
-                FILESYSTEMS command.
+    RECOMMENDED Dacă este specificat, folosiți sistemul de fișiere recomandat
+                și revizia în locul celui implicit dacă există o
+                recomandare. Sistemul de fișiere recomandat (dacă există unul)
+                este afișat de comanda FILESYSTEMS.
 
-    LABEL=<"label">
+    LABEL=<"etichetă">
 
-                Specifies the volume label.
+                Specifică eticheta volumului.
 
-    UNIT=<N>    Overrides the default allocation unit size. Default settings
-                are strongly recommended for general use. The default
-                allocation unit size for a particular file system is displayed
-                by the FILESYSTEMS command.
+    UNIT=<N>    Ignoră dimensiunea implicită a unității de alocare. Setările
+                implicite sunt recomandate cu tărie pentru uz general.
+                Dimensiunea implicită a unității de alocare pentru un anumit
+                sistem de fișiere este afișată de comanda FILESYSTEMS.
 
-                NTFS compression is not supported for allocation unit sizes
-                above 4096.
+                Comprimarea NTFS nu este acceptată pentru dimensiunile
+                unităților de alocare mai mari de 4096.
 
-    QUICK       Performs a quick format.
+    QUICK       Efectuează o formatare rapidă.
 
-    COMPRESS    NTFS only: Files created on the new volume will be compressed
-                by default.
+    COMPRESS    Numai pentru formatul NTFS: Fișierele create pe noul volum
+                vor fi comprimate în mod implicit.
+    OVERRIDE    Forțează mai întâi demontarea sistemului de fișiere, dacă e
+                necesar. Toate identificatoarele de gestiune deschise ale
+                volumului nu ar mai fi valabile.
 
-    OVERRIDE    Forces the file system to dismount first if necessary. All
-                opened handles to the volume would no longer be valid.
+    DUPLICATE   Numai pentru formatul UDF: Această etichetă e aplicată
+                formatului UDF, versiunea 2.5 sau mai nouă. Această etichetă
+                intruiește operațiunea de formatare să dubleze metadatele
+                sistemului de fișiere la cel de al doilea set de sectoare
+                de pe disc. Metadatele dublate sunt folosite de aplicații,
+                de exemplu de utilitare de reparare și de recuperare. Dacă
+                sectoarele primare de metadate sunt găsite ca și corupte,
+                metadatele sistemului de fișiere vor fi citite de sectoarele
+                duplicate.
 
-    DUPLICATE   UDF Only: This flag applies to UDF format, version 2.5 or
-                higher.
-                This flag instructs the format operation to duplicate the file
-                system meta-data to a second set of sectors on the disk. The
-                duplicate meta-data is used by applications, for example repair
-                or recovery applications. If the primary meta-data sectors are
-                found to be corrupted, the file system meta-data will be read
-                from the duplicate sectors.
+    NOWAIT      Forțează comanda să se întoarcă imediat atât timp cât procesul
+                de formatare este încă în curs. Dacă NOWAIT nu este
+                specificat, programul DiskPart va afișa progesul formatării
+                în procente.
+                                                
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
-    NOWAIT      Forces the command to return immediately while the format
-                process is still in progress. If NOWAIT is not specified,
-                DiskPart will display format progress in percentage.
+    Un volum trebuie să fie selectat pentru ca această operațiune să reușească.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+De exemplu:
 
-    A volume must be selected for this operation to succeed.
-
-Examples:
-
-    FORMAT FS=NTFS LABEL="New Volume" QUICK COMPRESS
+    FORMAT FS=NTFS LABEL="Volum nou" QUICK COMPRESS
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=Russian
@@ -4377,7 +4394,7 @@ Language=Portugese
 <Add GPT command help text here>
 .
 Language=Romanian
-<Add GPT command help text here>
+<Adăugați aici textul de ajutor pentru comanda GPT>
 .
 Language=Russian
 <Add GPT command help text here>
@@ -4465,16 +4482,17 @@ Example:
     HELP CREATE PARTITION PRIMARY
 .
 Language=Romanian
-    Displays a list of the available commands or detailed help information for a
-    specified command.
+    Afișează o listă a comenzilor disponibile sau informații detaliate
+    de ajutor pentru o comandă specificată.
 
-Syntax:  HELP [<COMMAND>]
+Sintaxă:  HELP [<COMMAND>]
 
-    <COMMAND>   The command for which to display detail help.
+    <COMMAND>   Comanda pentru care se afișează ajutorul detaliat.
 
-    If no command is specified, HELP will display all possible commands.
+    Dacă nu este specificată nicio comandă, comanda HELP va afișa
+    toate comenzile posibile.
 
-Example:
+De exemplu:
 
     HELP
     HELP CREATE PARTITION PRIMARY
@@ -4572,7 +4590,7 @@ Language=Portugese
 <Add IMPORT command help text here>
 .
 Language=Romanian
-<Add IMPORT command help text here>
+<Adăugați aici textul de ajutor pentru comanda IMPORT>
 .
 Language=Russian
 <Add IMPORT command help text here>
@@ -4692,25 +4710,27 @@ Example:
     INACTIVE
 .
 Language=Romanian
-    On disks with master boot record (MBR) disk formatting, marks
-    the partition with focus as inactive.
+    Pe discurile cu formatare Registrul principal de inițializare (MBR),
+    marchează partiția în cauză ca inactivă.
 
-Syntax:  INACTIVE
+Sintaxă:  INACTIVE
 
-    The computer may start from the next option specified in the BIOS such as a
-    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
-    environment (such as Remote Installation Services (RIS)) when you restart
-    the computer.
+    Calculatorul poate începe cu următoarea opțiune specificată în BIOS cum ar
+    fi, un mediu de inițializare pe un disc CD-ROM sau pe un Mediu de execuție
+    de preinițializare (PXE) (cum ar fi, Servicii de instalare de la distanță
+    (RIS)) atunci când vă reporniți calculatorul.
 
-    A partition must be selected for this operation to succeed.
+    O partiție trebuie să fie selectată pentru ca această operațiune
+    să reușească.
 
-    Caution:
+    Atenție:
 
-        Your computer might not start without an active partition. Do not mark
-        a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of ReactOS storage management.
+        Calculatorul dumneavoastră ar putea să nu pornească fără o partiție
+        activă. Nu marcați o partiție de sistem sau de inițializare ca inactivă
+        dacă nu sunteți un utilizator experimentat cu o înțelegere aprofundată
+        a gestionării stocării ReactOS.
 
-Example:
+De exemplu:
 
     INACTIVE
 .
@@ -4939,27 +4959,26 @@ Example:
     LIST DISK
 .
 Language=Romanian
-    Displays a list of disks.
+    Afișează o listă de discuri.
 
-Syntax:  LIST DISK
+Sintaxă:  LIST DISK
 
-    Displays a list of disks and information about them, such as their
-    size, amount of available free space, whether the disk is a basic
-    or dynamic disk, and whether the disk uses the master boot record
-    (MBR) or GUID partition table (GPT) partition style. The disk marked
-    with an asterisk (*) has focus.
+    Afișează o listă de discuri și de informații despre ele, cum ar fi
+    mărimea lor, cantitatea de spațiu liber disponibil, dacă discul este un
+    disc static sau un disc dinamic și dacă discul folosește stilul de
+    partiționare Registrul principal de inițializare (MBR) sau tabelul de
+    partiționare GUID (GPT). Discul marcat cu un asterisc (*) are marcaj.
 
-    Note that the FREE column does not display the total amount of free
-    space on the disk, but rather the amount of usable free space left
-    on the disk. For example, if you have a 10GB disk with 4 primary
-    partitions covering 5GB, there is no usable free space left (no
-    more partitions may be created). Another example would be you have
-    a 10GB disk with 3 primary partitions and an extended partition
-    covering 8GB. The exended partition is of size 3GB with one logical
-    drive of size 2GB. The disk will show only 1GB as free - the
-    1GB of free space in the extended partition.
+    Rețineți că coloana FREE nu afișează cantitatea totală de spațiu liber
+    pe disc, dar mai degrabă cantitatea de spațiu liber utilizabil rămas pe
+    disc. De exemplu, dacă aveți un disc de 10Go cu 4 partiții primare care
+    acoperă 5Go, nu este spațiu liber utilizabil rămas (nu mai pot fi create
+    alte partiții). Alt exemplu poate fi că aveți un disc de 10Go cu 3 partiții
+    primare și o partiție extinsă care acoperă 8Go. Partiția există are mărimea
+    de 3GB cu un disc logic demărime de 2Go. Discul va arăta numai 1Go ca
+    spațiu liber - spațiu liber de 1Go în partiția extinsă.
 
-Example:
+De exemplu:
 
     LIST DISK
 .
@@ -5154,17 +5173,18 @@ Example:
     LIST PARTITION
 .
 Language=Romanian
-    Displays a list of partitions in the partition table for the selected disk.
+    Afișează o listă de partiții în tabelul de partiționare pentru discul
+    selectat.
 
-Syntax:  LIST PARTITION
+Sintaxă:  LIST PARTITION
 
-    On dynamic disks, the partitions do not neccessarily correspond to the
-    dynamic volumes on the disk. Partitions may not be created or deleted
-    on dynamic disks.
+    Pe discurile dinamice, partițiile nu corespund în mod necesar, volumelor
+    dinamice de pe disc. Partițiile nu pot fi create sau șterse pe discurile
+    dinamice.
 
-    A disk must be selected for this operation to succeed.
+    Un disc trebuie să fie selectat pentru ca această operațiune să reușească.
 
-Example:
+De exemplu:
 
     LIST PARTITION
 .
@@ -5289,12 +5309,12 @@ Example:
     LIST VOLUME
 .
 Language=Romanian
-    Displays a list of basic and dynamic volumes which are installed on the local
-    machine.
+    Afișează o listă a volumelor de bază sau dinamice ce sunt instalate în
+    calculatorul local.
+                
+Sintaxă:  LIST VOLUME
 
-Syntax:  LIST VOLUME
-
-Example:
+De exemplu:
 
     LIST VOLUME
 .
@@ -5366,7 +5386,7 @@ Language=Portugese
 <Add LIST VDISK command help text here>
 .
 Language=Romanian
-<Add LIST VDISK command help text here>
+<Adăugați aici textul de ajutor pentru comanda LIST VDISK>
 .
 Language=Russian
 <Add LIST VDISK command help text here>
@@ -5402,7 +5422,7 @@ Language=Portugese
 <Add MERGE command help text here>
 .
 Language=Romanian
-<Add MERGE command help text here>
+<Adăugați aici textul de ajutor pentru comanda MERGE>
 .
 Language=Russian
 <Add MERGE command help text here>
@@ -5438,7 +5458,7 @@ Language=Portugese
 <Add OFFLINE command help text here>
 .
 Language=Romanian
-<Add OFFLINE command help text here>
+<Adăugați aici textul de ajutor pentru comanda OFFLINE>
 .
 Language=Russian
 <Add OFFLINE command help text here>
@@ -5474,7 +5494,7 @@ Language=Portugese
 <Add ONLINE command help text here>
 .
 Language=Romanian
-<Add ONLINE command help text here>
+<Adăugați aici textul de ajutor pentru comanda ONLINE>
 .
 Language=Russian
 <Add ONLINE command help text here>
@@ -5510,7 +5530,7 @@ Language=Portugese
 <Add RECOVER command help text here>
 .
 Language=Romanian
-<Add RECOVER command help text here>
+<Adăugați aici textul de ajutor pentru comanda RECOVER>
 .
 Language=Russian
 <Add RECOVER command help text here>
@@ -5610,16 +5630,16 @@ Example:
     ASSIGN f:
 .
 Language=Romanian
-    Provides a way to add comments to a script.
+    Furnizează un mod de a adăuga comentarii la un script.
 
-Syntax:  REM
+Sintaxă:  REM
 
-Example:
+De exemplu:
 
-    In this example script, REM is used to provide a comment about what the
-    script does.
+    În acest script exemplificat, comanda REM este folosită ca să furnizeze
+    un comentariu despre ce face scriptul.
 
-    REM These commands set up 3 drives.
+    REM Aceste comenzi configurează 3 discuri.
     CREATE PARTITION PRIMARY SIZE=2048
     ASSIGN d:
     CREATE PARTITION EXTEND
@@ -5741,7 +5761,7 @@ Language=Portugese
 <Add REMOVE command help text here>
 .
 Language=Romanian
-<Add REMOVE command help text here>
+<Adăugați aici textul de ajutor pentru comanda REMOVE>
 .
 Language=Russian
 <Add REMOVE command help text here>
@@ -5777,7 +5797,7 @@ Language=Portugese
 <Add REPAIR command help text here>
 .
 Language=Romanian
-<Add REPAIR command help text here>
+<Adăugați aici textul de ajutor pentru comanda REPAIR>
 .
 Language=Russian
 <Add REPAIR command help text here>
@@ -5838,11 +5858,11 @@ Example:
     RESCAN
 .
 Language=Romanian
-    Locates new disks that may have been added to the computer.
+    Localizează noile discuri ce pot fi adăugate la calculator.
 
-Syntax:  RESCAN
+Sintaxă:  RESCAN
 
-Example:
+De exemplu:
 
     RESCAN
 .
@@ -5910,7 +5930,7 @@ Language=Portugese
 <Add RETAIN command help text here>
 .
 Language=Romanian
-<Add RETAIN command help text here>
+<Adăugați aici textul de ajutor pentru comanda RETAIN>
 .
 Language=Russian
 <Add RETAIN command help text here>
@@ -5946,7 +5966,7 @@ Language=Portugese
 <Add SAN command help text here>
 .
 Language=Romanian
-<Add SAN command help text here>
+<Adăugați aici textul de ajutor pentru comanda SAN>
 .
 Language=Russian
 <Add SAN command help text here>
@@ -6143,40 +6163,40 @@ Example:
     SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Romanian
-    Selects the specified disk and shifts the focus to it.
+    Selectează discul specificat și mută marcajul pe el.
 
-Syntax:  SELECT DISK=<N>
+Sintaxă: SELECT DISK=<N>
          SELECT DISK=SYSTEM
          SELECT DISK=NEXT
-         SELECT DISK=<Path>
+         SELECT DISK=<Cale>
 
     DISK=<N>
-                The DiskPart disk index number of the disk to receive
-                focus.
+                Numărul indexului discului pentru programul DiskPart care
+                urmează să primească marcajul.
 
-    DISK=<Path>
-                The location path of the disk to receive focus.
+    DISK=<Cale>
+                Calea locației discului care urmează să primească marcajul.
 
     DISK=SYSTEM
-                On BIOS machines, BIOS disk 0 will receive focus.
-                On EFI machines, the disk containing the ESP partition
-                used for the current boot will receive focus. On EFI
-                machines, if there is no ESP, or there is more than
-                one ESP present, or the machine is booted from Windows PE,
-                the command will fail.
+                La calculatoarele cu BIOS, discul 0 din BIOS va fi marcat.
+                La calculatoarele EFI, discul care conține partiția ESP
+                folosită pentru inițializarea curentă va primi marcaj.
+                La calculatoarele EFI, dacă nu este ESP sau este prezent
+                mai mult decât un ESP sau calculatorul este inițializat din
+                Windows PE, comanda va eșua.
 
     DISK=NEXT
-                Once a disk is selected, this command is used to iterate
-                over all disks in the disk list. The next disk in the list
-                will receive focus. If the next disk is the start of the
-                enumeration, the command will fail and no disk will have
-                focus.
+                Odată ce discul e selectat, această comandă este folosită
+                pentru a fi aplicată fiecărui disc din lista de discuri.
+                Următorul disc din listă va primi marcaj. Dacă următorul
+                disc este începutul enumerării, comanda va eșua și niciun disc
+                nu va trebui să fie marcat.
 
-    If no options are specified, the select command lists the disk that
-    currently has the focus. You can view the DiskPart index numbers
-    for all disks on the computer by using the LIST DISK command.
+    Dacă nicio opțiune nu este specificată, comanda SELECT va lista discul
+    care este marcat în prezent. Puteți vizualiza numerele de index pentru
+    toate discurile din calculator folosind comanda LIST DISK.
 
-Example:
+De exemplu:
 
     SELECT DISK=1
     SELECT DISK=SYSTEM
@@ -6477,23 +6497,20 @@ Example:
     SELECT PARTITION=1
 .
 Language=Romanian
-    Selects the specified partition and shifts the focus to it.
+    Selectează partiția specificată și mută marcajul pe ea.
 
-Syntax:  SELECT PARTITION=<N>
+Sintaxă:  SELECT PARTITION=<N>
 
     PARTITION=<N>
 
-                The number of the partition to receive the focus.
+                Numărul partiției ce urmează să primească marcajul.
 
-    If no partition is specified, the select command lists the current
-    partition with focus. You can specify the partition by its number. You can
-    view the numbers of all partitions on the current disk by using the list
-    partition command.
-
-    You must first select a disk using the DiskPart select disk command before
-    you can select a partition.
-
-Example:
+     Dacă nicio partiție nu este specificată, comanda SELECT va lista partiția
+     marcată în prezent. Puteți specifica partiția prin numărul său. Puteți
+     vizualiza numerele tuturor partițiilor de pe discul actual folosind
+     comanda LIST PARTITION.
+                
+De exemplu:
 
     SELECT PARTITION=1
 .
@@ -6699,22 +6716,23 @@ Example:
     SELECT VOLUME=C:\\MountH
 .
 Language=Romanian
-    Selects the specified volume and shifts the focus to it.
+    Selectează volumul specificat și mută marcajul pe el.
 
-Syntax:  SELECT VOLUME={<N> | <D>}
+Sintaxă:  SELECT VOLUME={<N> | <D>}
 
-    VOLUME=<N>  The number of the volume to receive the focus.
+    VOLUME=<N>  Numărul volumului care urmează să primească marcajul.
 
-    VOLUME=<D>  The drive letter or mounted folder path of the volume
-                to receive the focus.
+    VOLUME=<D>  Litera discului sau calea dosarului montat al volumului
+                ce urmează să primească marcajul.
 
-    If no volume is specified, the select command lists the current volume with
-    focus. You can specify the volume by number, drive letter, or mounted folder
-    path. On a basic disk, selecting a volume also gives the corresponding
-    partition focus. You can view the numbers of all volumes on the computer by
-    using the list volume command.
+    Dacă niciun volum nu e specificat, comanda SELECT listează volumul actual
+    cu marcaj. Puteți specifica volumul după număr, după litera discului sau
+    după calea dosarului montat. Pe un disc de bază, selectarea unui volum
+    oferă de asemenea, marcajul corespunzător pe partiție. Puteți
+    vizualiza numărul tuturor volumelor din calculator folosind comanda
+    LIST VOLUME.
 
-Example:
+De exemplu:
 
     SELECT VOLUME=1
     SELECT VOLUME=C
@@ -6847,7 +6865,7 @@ Language=Portugese
 <Add SELECT VDISK command help text here>
 .
 Language=Romanian
-<Add SELECT VDISK command help text here>
+<Adăugați aici textul de ajutor pentru comanda SELECT VDISK>
 .
 Language=Russian
 <Add SELECT VDISK command help text here>
@@ -7219,84 +7237,88 @@ Example:
     SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 .
 Language=Romanian
-    Changes the partition type field for the partition with focus.
+    Schimbă registrul tipului partiției pentru partiția în cauză.
 
-Syntax:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
+Sintaxă:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
 
     ID={<BYTE> | <GUID>}
 
-                Specifies the new partition type.
-                For master boot record (MBR) disks, you can specify a partition
-                type byte, in hexadecimal form, for the partition. Any
-                partition type byte can be specified with this parameter except
-                for type 0x42 (LDM partition). Note that the leading '0x' is 
-                omitted when specifying the hexadecimal partition type.
+                Specifică noul tip al partiției.
+                Pentru discurile cu Registrul principal de inițializare (MBR),
+                puteți speciifica puteți specifica un octet, în format
+                hexazecimal, pentru un tip de partiție. Orice octet care
+                descrie tipul de partiție poate fi specificată cu acest
+                parametru, exceptând pentru tipul 0x42 (partiție LDM). Rețineți
+                că primul '0x' când este specificat în hexazecimal un tip de
+                partiție.
+                                                                
+                Pentru discurile cu tabelul de partiție GUID (GPT) puteți
+                specifica un tip de partiție GUID pentru partiția pe care vreți
+                să o creați. GUID-urile recunoscute includ:
 
-                For GUID partition table (GPT) disks you can specify a
-                partition type GUID for the partition. Recognized GUIDs
-                include:
-
-                    EFI System partition:
+                    Partiția de sistem EFI:
                         c12a7328-f81f-11d2-ba4b-00a0c93ec93b
 
-                    Basic data partition:
+                    Partiția de bază pentru date:
                         ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 
-                Any partition type GUID can be specified with this parameter
-                except for the following:
+                Orice partiție de tip GUID poate fi specificată cu acest
+                parametru exceptând următoarele:
 
-                    Microsoft Reserved partition:
+                    Partiția rezervată Microsoft:
                         e3c9e316-0b5c-4db8-817d-f92df00215a
 
-                    LDM Metadata partition on a dynamic disk:
+                    Partiția de metadate LDM pe un disc dinamic:
                         5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
 
-                    LDM Data partition on a dynamic disk:
+                    Partiția de date LDM pe un disc dinamic:
                         af9b60a0-1431-4f62-bc68-3311714a69ad
 
-                    Cluster Metadata partition:
+                    Partiția de metadate a grupului:
                         db97dba9-0840-4bae-97f0-ffb9a327c7e1
 
 
-                Other than the limitations mentioned, DiskPart otherwise does
-                not check the partition type for validity except to ensure that
-                it is a byte in hexadecimal form or a GUID.
+                În afară de limitările menționate, DiskPart nu verifică
+                valabilitatea tipului de partiție decât pentru a se asigura că
+                este un octet în formă hexazecimală sau un GUID.
 
-    OVERRIDE    Enables DiskPart to force the file system on the volume to
-                dismount before changing the partition type. When changing
-                the partition type, DiskPart will attempt to lock and dismount
-                the file system on the volume. If this parameter is not specified,
-                and the call to lock the file system fails, (because some other
-                application has an open handle to the volume), the entire
-                operation will fail. When this parameter is specified, the
-                dismount is forced even if the call to lock the file system
-                fails. When a file system is dismounted, all opened handles to
-                the volume will become invalid.
+    OVERRIDE    Activează DiskPart pentru a forța sistemul de fișiere pe volum
+                să demonteze tipul de partiție înainte de a-l schimba. Când se
+                schimbă tipul de partiție, DiskPart va încerca să blocheze și
+                să demonteze sistemul de fișiere pe volum. Dacă acest parametru
+                nu este specificat și apelarea blocării sistemului de fișiere
+                eșuează, (deoarece alte câteva aplicații au un identificator
+                de gestiune deschis pentru volum), întreaga operațiune va eșua.
+                Când acest parametru este specificat, demontarea e forțată
+                chiar dacă apelarea blocării sistemului de fișiere eșuează.
+                Când un sistem de fișiere e demontat, toate identificatoarele
+                de gestiune deschise ale volumului vor deveni nevalide.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
-    Intended for Original Equipment Manufacturer (OEM) use only.
+    Destinat numai pentru utilizarea producătorilor de echipamente originale
+    (OEM).
 
-    A partition must be selected for this operation to succeed.
+    O partiție trebuie selectată pentru ca acestă operațiune să reușească.
+                
+    Atenție:
 
-    Caution:
+        Crearea de partiții cu acest parametru poate cauza calculatorului
+        dumneavoastră să eșueaze sau să nu mai poată porni. Dacă nu sunteți un
+        OEM sau un profesionist cu experiență în discuri GPT, nu creați
+        partiții pe discuri GPT folosind acest parametru. În schimb, folosiți
+        întotdeauna comanda CREATE PARTITION EFI ca să creați partiții de
+        sistem EFI, comanda CREATE PARTITION MSR ca să creați partiții
+        rezervate Microsoft, și comanda CREATE PARTITION PRIMARY fără acest
+        parametru ca să creați partiții primare pe discuri GPT.
 
-        Changing partition type fields with this parameter might cause your
-        computer to fail or be unable to start up. Unless you are an OEM or an
-        IT professional experienced with GPT disks, do not change partition
-        type fields on GPT disks using this parameter. Instead, always use the
-        CREATE PARTITION EFI command to create EFI System partitions, the
-        CREATE PARTITION MSR command to create Microsoft Reserved partitions,
-        and the CREATE PARTITION PRIMARY command without the ID parameter to
-        create primary partitions on GPT disks.
+    Această comandă nu funcționează nici pe discuri dinamice, nici pe
+    Partiții rezervate Microsoft.
 
-    This command does not work on dynamic disks nor on Microsoft Reserved
-    partitions.
-
-Example:
+De exemplu:
     SET ID=07 OVERRIDE
     SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 .
@@ -7719,7 +7741,7 @@ Language=Portugese
 <Add SHRINK command help text here>
 .
 Language=Romanian
-<Add SHRINK command help text here>
+<Adăugați aici textul de ajutor pentru comanda SHRINK>
 .
 Language=Russian
 <Add SHRINK command help text here>
@@ -7856,27 +7878,27 @@ Example:
     UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Romanian
-    Displays or sets the GUID partition table (GPT) identifier or master boot
-    record (MBR) signature for the disk with focus.
+    Afișează sau setează identificatorul tabelului de partiție GUID (GPT) sau
+    semnătura Registrului principal de inițializare (MBR) pentru discul
+    în cauză.
 
-Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+Sintaxă:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
 
     ID={<DWORD> | <GUID>}
 
-                For MBR disks, you can specify a four-byte (DWORD) value in
-                hexadecimal form for the signature.
+                Pentru discurile MBR, puteți specifica o valoare de patru
+                octeți (DWORD) formă hexazecimală pentru semnătură.
 
-                For GPT disks, specify a GUID for the identifier.
+                Pentru discurile GPT, specificați un GUID pentru identificator.
 
-    NOERR       For scripting only. When an error is encountered, DiskPart
-                continues to process commands as if the error did not occur.
-                Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.
+    NOERR       Doar pentru scriere de fișiere script. Când apare o eroare,
+                programul DiskPart continuă să proceseze comenzi ca și când
+                eroarea nu ar fi apărut. Fără parametrul NOERR, o eroare
+                cauzează programul DiskPart să se închidă cu un cod de eroare.
 
-    A disk must be selected for this operation to succeed.  This command works
-    on basic and dynamic disks.
+    Un disc trebuie să fie selectat pentru ca această operațiune să reușească.
 
-Example:
+De exemplu:
 
     UNIQUEID DISK
     UNIQUEID DISK ID=5f1b2c36
