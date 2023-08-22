@@ -1278,7 +1278,10 @@ public:
 
 // CViewStatePropertyBag is cached
 CComPtr<CViewStatePropertyBag> g_pCachedBag;
-CRITICAL_SECTION g_csBagCacheLock;
+extern "C"
+{
+    CRITICAL_SECTION g_csBagCacheLock;
+}
 
 HRESULT
 CViewStatePropertyBag::Init(
