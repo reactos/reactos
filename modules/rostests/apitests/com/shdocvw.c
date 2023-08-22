@@ -89,6 +89,13 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_MruPidlList),
+        {
+            {    0x0,   &IID_IMruPidlList },
+            {    0x0,   &IID_IUnknown },
+        }
+    },
+    {
         ID_NAME(CLSID_SH_FavBand),
         {
             {  -0x30,   &IID_IDeskBand },
