@@ -304,6 +304,9 @@ MiLocateExportName(IN PVOID DllBase,
     /* Check if we couldn't find it */
     if (Ordinal == -1) return NULL;
 
+    /* Validate the ordinal */
+    if (Ordinal >= ExportDirectory->NumberOfFunctions) return NULL;
+
     /* Resolve the address and write it */
     ExportTable = (PULONG)((ULONG_PTR)DllBase +
                            ExportDirectory->AddressOfFunctions);
