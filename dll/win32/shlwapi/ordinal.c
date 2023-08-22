@@ -5105,6 +5105,7 @@ HRESULT WINAPI SHCreatePropertyBagOnRegKey (HKEY hKey, LPCWSTR subkey,
 }
 #endif
 
+#ifndef __REACTOS__ /* See propbag.cpp */
 /***********************************************************************
  *             SHGetViewStatePropertyBag [SHLWAPI.515]
  *
@@ -5131,6 +5132,7 @@ HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST pidl, LPWSTR bag_name,
 
     return E_NOTIMPL;
 }
+#endif
 
 /***********************************************************************
  *             SHFormatDateTimeW [SHLWAPI.354]
