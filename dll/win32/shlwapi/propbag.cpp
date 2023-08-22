@@ -1522,16 +1522,14 @@ SHGetViewStatePropertyBag(
         return E_FAIL;
     }
 
+    CComPtr<CViewStatePropertyBag> pBag(new CViewStatePropertyBag());
+
+    hr = pBag->Init(pidl, bag_name, flags);
+    if (SUCCEEDED(hr))
     {
-        CComPtr<CViewStatePropertyBag> pBag(new CViewStatePropertyBag());
+        g_pCachedBag.Attach(pBag);
 
-        hr = pBag->Init(pidl, bag_name, flags);
-        if (SUCCEEDED(hr))
-        {
-            g_pCachedBag.Attach(pBag);
-
-            hr = g_pCachedBag->QueryInterface(riid, ppv);
-        }
+        hr = g_pCachedBag->QueryInterface(riid, ppv);
     }
 
     ::LeaveCriticalSection(&g_csBagCacheLock);
