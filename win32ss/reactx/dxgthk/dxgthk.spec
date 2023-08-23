@@ -2,7 +2,7 @@
 @ stdcall EngAllocMem(long long long) win32k.EngAllocMem
 @ stdcall EngAllocUserMem(long long) win32k.EngAllocUserMem
 @ stdcall EngCopyBits(ptr ptr ptr ptr ptr ptr) win32k.EngCopyBits
-@ stdcall EngCreateBitmap(long long long long ptr) win32k.EngCreateBitmap
+@ stdcall EngCreateBitmap(long long long long long ptr) win32k.EngCreateBitmap
 @ stdcall EngCreatePalette(long long long long long long) win32k.EngCreatePalette
 @ stdcall EngCreateSemaphore() win32k.EngCreateSemaphore
 @ stdcall EngDeletePalette(ptr) win32k.EngDeletePalette
