@@ -1223,11 +1223,17 @@ protected:
 
     HKEY _GetHKey(DWORD dwVspbFlags);
 
+    HRESULT _GetMRUSlot(
+        LPCITEMIDLIST pidl,
+        DWORD dwMode,
+        HKEY hKey,
+        UINT *pnSlot);
+
     HRESULT _GetRegKey(
         LPCITEMIDLIST pidl,
         LPCWSTR pszBagName,
         DWORD dwFlags,
-        char unknown,
+        DWORD dwMode,
         HKEY hKey,
         LPWSTR pszDest,
         INT cchDest);
@@ -1411,17 +1417,67 @@ HKEY CViewStatePropertyBag::_GetHKey(DWORD dwVspbFlags)
     return SHGetShellKey(SHKEY_Key_ShellNoRoam | SHKEY_Root_HKCU, NULL, TRUE);
 }
 
-HRESULT CViewStatePropertyBag::_GetRegKey(
+HRESULT
+CViewStatePropertyBag::_GetMRUSlot(
+    LPCITEMIDLIST pidl,
+    DWORD dwMode,
+    HKEY hKey,
+    UINT *pnSlot)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+CViewStatePropertyBag::_GetRegKey(
     LPCITEMIDLIST pidl,
     LPCWSTR pszBagName,
     DWORD dwFlags,
-    char unknown,
+    DWORD dwMode,
     HKEY hKey,
     LPWSTR pszDest,
     INT cchDest)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    HRESULT hr = S_OK;
+    UINT nSlot;
+
+    if (dwFlags & (SHGVSPB_INHERIT | SHGVSPB_PERFOLDER))
+    {
+        hr = _GetMRUSlot(pidl, dwMode, hKey, &nSlot);
+        if (SUCCEEDED(hr))
+        {
+            if (dwFlags & SHGVSPB_INHERIT)
+                wnsprintfW(pszDest, cchDest, L"Bags\\%d\\%s\\Inherit", nSlot, pszBagName);
+            else
+                wnsprintfW(pszDest, cchDest, L"Bags\\%d\\%s", nSlot, pszBagName);
+        }
+    }
+    else
+    {
+        wnsprintfW(pszDest, cchDest, L"Bags\\AllFolders\\%s", pszBagName);
+    }
+
+    return hr;
+}
+
+static HRESULT BindCtx_CreateWithMode(DWORD dwMode, IBindCtx **ppbc)
+{
+    HRESULT hr = ::CreateBindCtx(0, ppbc);
+    if (FAILED(hr))
+        return hr;
+
+    IBindCtx *pbc = *ppbc;
+
+    BIND_OPTS opts = { sizeof(opts) };
+    opts.grfMode = dwMode;
+    hr = pbc->SetBindOptions(&opts);
+    if (FAILED(hr))
+    {
+        pbc->Release();
+        *ppbc = NULL;
+    }
+
+    return hr;
 }
 
 HRESULT
@@ -1433,8 +1489,43 @@ CViewStatePropertyBag::_CreateBag(
     REFIID riid,
     IPropertyBag **pppb)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+    HKEY hKey;
+    CComPtr<IBindCtx> pBC;
+    CComPtr<IShellFolder> psf;
+    WCHAR szBuff[64];
+
+    if ((dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) != STGM_READ)
+        dwMode |= STGM_CREATE;
+
+    if ((dwVspbFlags & SHGVSPB_ALLUSERS) && (dwVspbFlags & SHGVSPB_PERFOLDER))
+    {
+        hr = BindCtx_CreateWithMode(dwMode, &pBC);
+        if (SUCCEEDED(hr))
+        {
+            hr = SHGetDesktopFolder(&psf);
+            if (SUCCEEDED(hr))
+            {
+                hr = psf->BindToObject(m_pidl, pBC, riid, (void **)pppb);
+                if (SUCCEEDED(hr) && !*pppb)
+                    hr = E_FAIL;
+            }
+        }
+    }
+    else
+    {
+        hKey = _GetHKey(dwVspbFlags);
+        if (!hKey)
+            return E_FAIL;
+
+        hr = _GetRegKey(pidl, pszPath, dwVspbFlags, dwMode, hKey, szBuff, 64);
+        if (SUCCEEDED(hr))
+            hr = SHCreatePropertyBagOnRegKey(hKey, szBuff, dwMode, riid, (void**)pppb);
+
+        ::RegCloseKey(hKey);
+    }
+
+    return hr;
 }
 
 HRESULT
