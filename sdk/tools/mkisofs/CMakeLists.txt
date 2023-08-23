@@ -106,4 +106,11 @@ else()
     # libschily implements an own printf function with support for the %r formatter.
     # Silence compilers checking for invalid formatting sequences.
     target_compile_options(libschily PRIVATE "-Wno-format")
+
+    # mkisofs uses K&R-style function definitions to support very old compilers.
+    # This causes warnings with modern compilers.
+    target_compile_options(libmdigest PRIVATE "-Wno-deprecated-non-prototype")
+    target_compile_options(libschily PRIVATE "-Wno-deprecated-non-prototype")
+    target_compile_options(libsiconv PRIVATE "-Wno-deprecated-non-prototype")
+    target_compile_options(mkisofs PRIVATE "-Wno-deprecated-non-prototype")
 endif()
