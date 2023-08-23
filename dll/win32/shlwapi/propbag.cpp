@@ -130,7 +130,7 @@ protected:
     ATL::CSimpleMap<ATL::CStringW, ATL::CComVariant, CPropMapEqual> m_PropMap;
 
 public:
-    CMemPropertyBag(DWORD dwFlags) : CBasePropertyBag(dwFlags) { }
+    CMemPropertyBag(DWORD dwMode) : CBasePropertyBag(dwMode) { }
 
     STDMETHODIMP Read(_In_z_ LPCWSTR pszPropName, _Inout_ VARIANT *pvari,
                       _Inout_opt_ IErrorLog *pErrorLog) override;
@@ -1007,7 +1007,7 @@ protected:
     IStream* _NewStreamFromOld(IStream *pOldStream);
 
 public:
-    CDesktopUpgradePropertyBag() : CBasePropertyBag(0) { }
+    CDesktopUpgradePropertyBag() : CBasePropertyBag(STGM_READ) { }
 
     STDMETHODIMP Read(
         _In_z_ LPCWSTR pszPropName,
@@ -1264,9 +1264,7 @@ protected:
     HRESULT _ReadGlobalDefaultsBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
 
 public:
-    CViewStatePropertyBag() : CBasePropertyBag(0)
-    {
-    }
+    CViewStatePropertyBag() : CBasePropertyBag(STGM_READ) { }
 
     ~CViewStatePropertyBag() override
     {
@@ -1580,7 +1578,7 @@ BOOL CViewStatePropertyBag::_EnsureUserDefaultsBag(DWORD dwMode, REFIID riid)
     if (!m_pUserDefaultsBag && !m_bUserDefaultsBag && _CanAccessUserDefaultsBag())
     {
         m_bUserDefaultsBag = TRUE;
-        _CreateBag(0, m_pszPath, SHGVSPB_USERDEFAULTS, dwMode, riid, &m_pUserDefaultsBag);
+        _CreateBag(NULL, m_pszPath, SHGVSPB_USERDEFAULTS, dwMode, riid, &m_pUserDefaultsBag);
     }
     return (m_pUserDefaultsBag != NULL);
 }
@@ -1604,7 +1602,7 @@ BOOL CViewStatePropertyBag::_EnsureGlobalDefaultsBag(DWORD dwMode, REFIID riid)
     if (!m_pGlobalDefaultsBag && !m_bGlobalDefaultsBag && _CanAccessGlobalDefaultsBag())
     {
         m_bGlobalDefaultsBag = TRUE;
-        _CreateBag(0, m_pszPath, SHGVSPB_GLOBALDEAFAULTS, dwMode, riid, &m_pGlobalDefaultsBag);
+        _CreateBag(NULL, m_pszPath, SHGVSPB_GLOBALDEAFAULTS, dwMode, riid, &m_pGlobalDefaultsBag);
     }
     return (m_pGlobalDefaultsBag != NULL);
 }
@@ -1615,7 +1613,7 @@ CViewStatePropertyBag::_ReadPidlBag(
     VARIANT *pvari,
     IErrorLog *pErrorLog)
 {
-    if (!_EnsurePidlBag(0, IID_IPropertyBag))
+    if (!_EnsurePidlBag(STGM_READ, IID_IPropertyBag))
         return E_FAIL;
 
     return m_pPidlBag->Read(pszPropName, pvari, pErrorLog);
@@ -1627,7 +1625,7 @@ CViewStatePropertyBag::_ReadInheritBag(
     VARIANT *pvari,
     IErrorLog *pErrorLog)
 {
-    if (!_EnsureInheritBag(0, IID_IPropertyBag))
+    if (!_EnsureInheritBag(STGM_READ, IID_IPropertyBag))
         return E_FAIL;
 
     return m_pInheritBag->Read(pszPropName, pvari, pErrorLog);
@@ -1639,7 +1637,7 @@ CViewStatePropertyBag::_ReadUpgradeBag(
     VARIANT *pvari,
     IErrorLog *pErrorLog)
 {
-    if (!_EnsureUpgradeBag(0, IID_IPropertyBag))
+    if (!_EnsureUpgradeBag(STGM_READ, IID_IPropertyBag))
         return E_FAIL;
 
     return m_pUpgradeBag->Read(pszPropName, pvari, pErrorLog);
@@ -1651,7 +1649,7 @@ CViewStatePropertyBag::_ReadUserDefaultsBag(
     VARIANT *pvari,
     IErrorLog *pErrorLog)
 {
-    if (!_EnsureUserDefaultsBag(0, IID_IPropertyBag))
+    if (!_EnsureUserDefaultsBag(STGM_READ, IID_IPropertyBag))
         return E_FAIL;
 
     return m_pUserDefaultsBag->Read(pszPropName, pvari, pErrorLog);
@@ -1663,7 +1661,7 @@ CViewStatePropertyBag::_ReadFolderDefaultsBag(
     VARIANT *pvari,
     IErrorLog *pErrorLog)
 {
-    if (!_EnsureFolderDefaultsBag(0, IID_IPropertyBag))
+    if (!_EnsureFolderDefaultsBag(STGM_READ, IID_IPropertyBag))
         return E_FAIL;
 
     return m_pFolderDefaultsBag->Read(pszPropName, pvari, pErrorLog);
@@ -1675,7 +1673,7 @@ CViewStatePropertyBag::_ReadGlobalDefaultsBag(
     VARIANT *pvari,
     IErrorLog *pErrorLog)
 {
-    if (!_EnsureGlobalDefaultsBag(0, IID_IPropertyBag))
+    if (!_EnsureGlobalDefaultsBag(STGM_READ, IID_IPropertyBag))
         return E_FAIL;
 
     return m_pGlobalDefaultsBag->Read(pszPropName, pvari, pErrorLog);
@@ -1689,7 +1687,7 @@ CViewStatePropertyBag::Read(
 {
     if ((m_dwVspbFlags & SHGVSPB_NOAUTODEFAULTS) || (m_dwVspbFlags & SHGVSPB_INHERIT))
     {
-        if (!_EnsureReadBag(0, IID_IPropertyBag))
+        if (!_EnsureReadBag(STGM_READ, IID_IPropertyBag))
             return E_FAIL;
 
         return m_pReadBag->Read(pszPropName, pvari, pErrorLog);
