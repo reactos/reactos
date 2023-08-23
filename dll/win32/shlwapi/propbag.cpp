@@ -1518,7 +1518,7 @@ CViewStatePropertyBag::_CreateBag(
         if (!hKey)
             return E_FAIL;
 
-        hr = _GetRegKey(pidl, pszPath, dwVspbFlags, dwMode, hKey, szBuff, 64);
+        hr = _GetRegKey(pidl, pszPath, dwVspbFlags, dwMode, hKey, szBuff, _countof(szBuff));
         if (SUCCEEDED(hr))
             hr = SHCreatePropertyBagOnRegKey(hKey, szBuff, dwMode, riid, (void**)pppb);
 
