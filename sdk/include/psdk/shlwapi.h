@@ -2003,8 +2003,8 @@ HRESULT
 WINAPI
 SHGetViewStatePropertyBag(
   _In_opt_ PCIDLIST_ABSOLUTE pidl,
-  _In_opt_ LPWSTR bag_name,
-  DWORD flags,
+  _In_opt_ LPCWSTR bag_name,
+  _In_ DWORD flags,
   _In_ REFIID riid,
   _Outptr_ void **ppv);
 

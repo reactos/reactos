@@ -1188,3 +1188,344 @@ HRESULT SHGetDesktopUpgradePropertyBag(REFIID riid, void **ppvObj)
     CComPtr<CDesktopUpgradePropertyBag> pPropBag(new CDesktopUpgradePropertyBag());
     return pPropBag->QueryInterface(riid, ppvObj);
 }
+
+class CViewStatePropertyBag : public CBasePropertyBag
+{
+protected:
+    LPITEMIDLIST m_pidl = NULL;
+    LPWSTR m_pszPath = NULL;
+    DWORD m_dwVspbFlags = 0; // SHGVSPB_... flags
+    CComPtr<IPropertyBag> m_pPidlBag;
+    CComPtr<IPropertyBag> m_pUpgradeBag;
+    CComPtr<IPropertyBag> m_pInheritBag;
+    CComPtr<IPropertyBag> m_pUserDefaultsBag;
+    CComPtr<IPropertyBag> m_pFolderDefaultsBag;
+    CComPtr<IPropertyBag> m_pGlobalDefaultsBag;
+    CComPtr<IPropertyBag> m_pReadBag;
+    CComPtr<IPropertyBag> m_pWriteBag;
+    BOOL m_bPidlBag = FALSE;
+    BOOL m_bUpgradeBag = FALSE;
+    BOOL m_bInheritBag = FALSE;
+    BOOL m_bUserDefaultsBag = FALSE;
+    BOOL m_bFolderDefaultsBag = FALSE;
+    BOOL m_bGlobalDefaultsBag = FALSE;
+    BOOL m_bReadBag = FALSE;
+    BOOL m_bWriteBag = FALSE;
+
+    BOOL _IsSamePidl(LPCITEMIDLIST pidlOther) const;
+    BOOL _IsSystemFolder() const;
+    BOOL _CanAccessPidlBag() const;
+    BOOL _CanAccessUserDefaultsBag() const;
+    BOOL _CanAccessFolderDefaultsBag() const;
+    BOOL _CanAccessGlobalDefaultsBag() const;
+    BOOL _CanAccessInheritBag() const;
+    BOOL _CanAccessUpgradeBag() const;
+
+    HKEY _GetHKey(DWORD dwVspbFlags);
+
+    HRESULT _GetRegKey(
+        LPCITEMIDLIST pidl,
+        LPCWSTR pszBagName,
+        DWORD dwFlags,
+        char unknown,
+        HKEY hKey,
+        LPWSTR pszDest,
+        INT cchDest);
+
+    HRESULT _CreateBag(
+        LPITEMIDLIST pidl,
+        LPCWSTR pszPath,
+        DWORD dwVspbFlags,
+        DWORD dwMode,
+        REFIID riid,
+        void **ppvObj);
+
+    void _ResetTryAgainFlag();
+
+public:
+    CViewStatePropertyBag() : CBasePropertyBag(0)
+    {
+    }
+
+    ~CViewStatePropertyBag() override
+    {
+        ::ILFree(m_pidl);
+        ::LocalFree(m_pszPath);
+    }
+
+    HRESULT Init(_In_opt_ LPCITEMIDLIST pidl, _In_opt_ LPCWSTR pszPath, _In_ DWORD dwVspbFlags);
+    BOOL IsSameBag(LPCITEMIDLIST pidl, LPCWSTR pszPath, DWORD dwVspbFlags) const;
+
+    STDMETHODIMP Read(
+        _In_z_ LPCWSTR pszPropName,
+        _Inout_ VARIANT *pvari,
+        _Inout_opt_ IErrorLog *pErrorLog) override;
+
+    STDMETHODIMP Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari) override
+    {
+        ERR("%p: %s: Read-only\n", this, debugstr_w(pszPropName));
+        return E_NOTIMPL;
+    }
+};
+
+// CViewStatePropertyBag is cached
+CComPtr<CViewStatePropertyBag> g_pCachedBag;
+extern "C"
+{
+    CRITICAL_SECTION g_csBagCacheLock;
+}
+
+HRESULT
+CViewStatePropertyBag::Init(
+    _In_opt_ LPCITEMIDLIST pidl,
+    _In_opt_ LPCWSTR pszPath,
+    _In_ DWORD dwVspbFlags)
+{
+    if (pidl)
+    {
+        m_pidl = ILClone(pidl);
+        if (!m_pidl)
+            return E_OUTOFMEMORY;
+    }
+
+    if (pszPath)
+    {
+        m_pszPath = StrDupW(pszPath);
+        if (!m_pszPath)
+            return E_OUTOFMEMORY;
+
+        m_dwVspbFlags = dwVspbFlags;
+    }
+
+    return S_OK;
+}
+
+BOOL CViewStatePropertyBag::_IsSamePidl(LPCITEMIDLIST pidlOther) const
+{
+    if (!pidlOther && !m_pidl)
+        return TRUE;
+
+    return (pidlOther && m_pidl && ILIsEqual(pidlOther, m_pidl));
+}
+
+BOOL CViewStatePropertyBag::IsSameBag(LPCITEMIDLIST pidl, LPCWSTR pszPath, DWORD dwVspbFlags) const
+{
+    return (dwVspbFlags == m_dwVspbFlags && StrCmpW(pszPath, m_pszPath) == 0 && _IsSamePidl(pidl));
+}
+
+BOOL CViewStatePropertyBag::_IsSystemFolder() const
+{
+    LPCITEMIDLIST ppidlLast;
+    CComPtr<IShellFolder> psf;
+
+    HRESULT hr = SHBindToParent(m_pidl, IID_IShellFolder, (void **)&psf, &ppidlLast);
+    if (FAILED(hr))
+        return FALSE;
+
+    WIN32_FIND_DATAW FindData;
+    hr = SHGetDataFromIDListW(psf, ppidlLast, SHGDFIL_FINDDATA, &FindData, sizeof(FindData));
+    if (FAILED(hr))
+        return FALSE;
+
+    return PathIsSystemFolderW(NULL, FindData.dwFileAttributes);
+}
+
+BOOL CViewStatePropertyBag::_CanAccessPidlBag() const
+{
+    return ((m_dwVspbFlags & SHGVSPB_FOLDER) == SHGVSPB_FOLDER);
+}
+
+BOOL CViewStatePropertyBag::_CanAccessUserDefaultsBag() const
+{
+    if (_CanAccessPidlBag())
+        return TRUE;
+
+    return ((m_dwVspbFlags & SHGVSPB_USERDEFAULTS) == SHGVSPB_USERDEFAULTS);
+}
+
+BOOL CViewStatePropertyBag::_CanAccessFolderDefaultsBag() const
+{
+    if (_CanAccessUserDefaultsBag())
+        return TRUE;
+
+    return ((m_dwVspbFlags & SHGVSPB_ALLUSERS) && (m_dwVspbFlags & SHGVSPB_PERFOLDER));
+}
+
+BOOL CViewStatePropertyBag::_CanAccessGlobalDefaultsBag() const
+{
+    if (_CanAccessFolderDefaultsBag())
+        return TRUE;
+
+    return ((m_dwVspbFlags & SHGVSPB_GLOBALDEAFAULTS) == SHGVSPB_GLOBALDEAFAULTS);
+}
+
+BOOL CViewStatePropertyBag::_CanAccessInheritBag() const
+{
+    return (_CanAccessPidlBag() || (m_dwVspbFlags & SHGVSPB_INHERIT));
+}
+
+BOOL CViewStatePropertyBag::_CanAccessUpgradeBag() const
+{
+    return StrCmpW(m_pszPath, L"Desktop") == 0;
+}
+
+void CViewStatePropertyBag::_ResetTryAgainFlag()
+{
+    if (m_dwVspbFlags & SHGVSPB_NOAUTODEFAULTS)
+        m_bReadBag = FALSE;
+    else if ((m_dwVspbFlags & SHGVSPB_FOLDER) == SHGVSPB_FOLDER)
+        m_bPidlBag = FALSE;
+    else if (m_dwVspbFlags & SHGVSPB_INHERIT)
+        m_bInheritBag = FALSE;
+    else if ((m_dwVspbFlags & SHGVSPB_USERDEFAULTS) == SHGVSPB_USERDEFAULTS)
+        m_bUserDefaultsBag = FALSE;
+    else if ((m_dwVspbFlags & SHGVSPB_ALLUSERS) && (m_dwVspbFlags & SHGVSPB_PERFOLDER))
+        m_bFolderDefaultsBag = FALSE;
+    else if ((m_dwVspbFlags & SHGVSPB_GLOBALDEAFAULTS) == SHGVSPB_GLOBALDEAFAULTS)
+        m_bGlobalDefaultsBag = FALSE;
+}
+
+HKEY CViewStatePropertyBag::_GetHKey(DWORD dwVspbFlags)
+{
+    if (!(dwVspbFlags & (SHGVSPB_INHERIT | SHGVSPB_PERUSER)))
+        return SHGetShellKey((SHKEY_Key_Shell | SHKEY_Root_HKLM), NULL, TRUE);
+
+    if ((m_dwVspbFlags & SHGVSPB_ROAM) && (dwVspbFlags & SHGVSPB_PERFOLDER))
+        return SHGetShellKey((SHKEY_Key_Shell | SHKEY_Root_HKCU), NULL, TRUE);
+
+    return SHGetShellKey(SHKEY_Key_ShellNoRoam | SHKEY_Root_HKCU, NULL, TRUE);
+}
+
+HRESULT CViewStatePropertyBag::_GetRegKey(
+    LPCITEMIDLIST pidl,
+    LPCWSTR pszBagName,
+    DWORD dwFlags,
+    char unknown,
+    HKEY hKey,
+    LPWSTR pszDest,
+    INT cchDest)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+CViewStatePropertyBag::_CreateBag(
+    LPITEMIDLIST pidl,
+    LPCWSTR pszPath,
+    DWORD dwVspbFlags,
+    DWORD dwMode,
+    REFIID riid,
+    void **ppvObj)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CViewStatePropertyBag::Read(
+    _In_z_ LPCWSTR pszPropName,
+    _Inout_ VARIANT *pvari,
+    _Inout_opt_ IErrorLog *pErrorLog)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+static BOOL SHIsRemovableDrive(LPCITEMIDLIST pidl)
+{
+    STRRET strret;
+    CComPtr<IShellFolder> psf;
+    WCHAR szBuff[MAX_PATH];
+    LPCITEMIDLIST ppidlLast;
+    INT iDrive, nType;
+    HRESULT hr;
+
+    hr = SHBindToParent(pidl, IID_IShellFolder, (void **)&psf, &ppidlLast);
+    if (FAILED(hr))
+        return FALSE;
+
+    hr = psf->GetDisplayNameOf(ppidlLast, SHGDN_FORPARSING, &strret);
+    if (FAILED(hr))
+        return FALSE;
+
+    hr = StrRetToBufW(&strret, ppidlLast, szBuff, _countof(szBuff));
+    if (FAILED(hr))
+        return FALSE;
+
+    iDrive = PathGetDriveNumberW(szBuff);
+    if (iDrive < 0)
+        return FALSE;
+
+    nType = RealDriveType(iDrive, FALSE);
+    return (nType == DRIVE_REMOVABLE || nType == DRIVE_CDROM);
+}
+
+/**************************************************************************
+ *  SHGetViewStatePropertyBag (SHLWAPI.515)
+ *
+ * Retrieves a property bag in which the view state information of a folder
+ * can be stored.
+ *
+ * @param pidl      PIDL of the folder requested
+ * @param bag_name  Name of the property bag requested
+ * @param flags     Optional SHGVSPB_... flags
+ * @param riid      IID of requested property bag interface
+ * @param ppv       Address to receive pointer to the new interface
+ * @return          An HRESULT value. S_OK on success, non-zero on failure.
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-shgetviewstatepropertybag
+ */
+EXTERN_C HRESULT WINAPI
+SHGetViewStatePropertyBag(
+    _In_opt_ PCIDLIST_ABSOLUTE pidl,
+    _In_opt_ LPCWSTR bag_name,
+    _In_ DWORD flags,
+    _In_ REFIID riid,
+    _Outptr_ void **ppv)
+{
+    HRESULT hr;
+
+    TRACE("%p %s 0x%X %p %p\n", pidl, debugstr_w(bag_name), flags, &riid, ppv);
+
+    *ppv = NULL;
+
+    ::EnterCriticalSection(&g_csBagCacheLock);
+
+    if (g_pCachedBag && g_pCachedBag->IsSameBag(pidl, bag_name, flags))
+    {
+        hr = g_pCachedBag->QueryInterface(riid, ppv);
+        ::LeaveCriticalSection(&g_csBagCacheLock);
+        return hr;
+    }
+
+    if (SHIsRemovableDrive(pidl))
+    {
+        TRACE("pidl %p is removable\n", pidl);
+        ::LeaveCriticalSection(&g_csBagCacheLock);
+        return E_FAIL;
+    }
+
+    CComPtr<CViewStatePropertyBag> pBag(new CViewStatePropertyBag());
+
+    hr = pBag->Init(pidl, bag_name, flags);
+    if (SUCCEEDED(hr))
+    {
+        g_pCachedBag.Attach(pBag);
+
+        hr = g_pCachedBag->QueryInterface(riid, ppv);
+    }
+    else
+    {
+        ERR("0x%08X\n", hr);
+    }
+
+    ::LeaveCriticalSection(&g_csBagCacheLock);
+    return hr;
+}
+
+EXTERN_C VOID FreeViewStatePropertyBagCache(VOID)
+{
+    ::EnterCriticalSection(&g_csBagCacheLock);
+    g_pCachedBag.Release();
+    ::LeaveCriticalSection(&g_csBagCacheLock);
+}
