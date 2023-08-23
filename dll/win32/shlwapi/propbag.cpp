@@ -1174,7 +1174,7 @@ CDesktopUpgradePropertyBag::Read(
 }
 
 /**************************************************************************
- *  SHGetDesktopUpgradePropertyBag (Not exported; used in CViewStatePropertyBag)
+ *  SHGetDesktopUpgradePropertyBag (Internal)
  *
  * Creates or gets a property bag object for desktop upgrade
  *
