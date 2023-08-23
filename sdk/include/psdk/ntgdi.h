@@ -3923,4 +3923,46 @@ NtGdiGetCurrentDpiInfo(
 
 #endif /* PRIVATE_DWM_INTERFACE */
 
+/* ReactOS Display Driver Model */
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateAllocation(_Inout_ PD3DKMT_CREATEALLOCATION unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICheckMonitorPowerState(_In_ PD3DKMT_CHECKMONITORPOWERSTATE unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICheckOcclusion(_In_ PD3DKMT_CHECKOCCLUSION unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICloseAdapter(_In_ PD3DKMT_CLOSEADAPTER unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+WINAPI
+NtGdiDdDDICreateContext(_Inout_ PD3DKMT_CREATECONTEXT unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateDevice(_Inout_ PD3DKMT_CREATEDEVICE unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateOverlay(_Inout_ PD3DKMT_CREATEOVERLAY unnamedParam1);
 #endif /* _NTGDI_ */

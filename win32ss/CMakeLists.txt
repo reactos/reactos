@@ -166,6 +166,7 @@ list(APPEND SOURCE
     gdi/ntgdi/bitmaps.c
     gdi/ntgdi/cliprgn.c
     gdi/ntgdi/coord.c
+    gdi/ntgdi/d3dkmt.c
     gdi/ntgdi/dcattr.c
     gdi/ntgdi/dclife.c
     gdi/ntgdi/dcobjs.c
