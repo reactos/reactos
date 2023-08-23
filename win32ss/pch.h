@@ -58,6 +58,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define LPPOINT PPOINTL
 #define PPOINT PPOINTL
 
+#include <d3dkmddi.h>
 #include <winerror.h>
 #include <wingdi.h>
 #define NT_BUILD_ENVIRONMENT
