@@ -1245,6 +1245,7 @@ protected:
         DWORD dwMode,
         REFIID riid,
         IPropertyBag **pppb);
+
     HRESULT _FindNearestInheritBag(REFIID riid, IPropertyBag **pppb);
 
     void _ResetTryAgainFlag();
