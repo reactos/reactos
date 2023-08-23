@@ -1189,21 +1189,12 @@ HRESULT SHGetDesktopUpgradePropertyBag(REFIID riid, void **ppvObj)
     return pPropBag->QueryInterface(riid, ppvObj);
 }
 
-// Flags for CViewStatePropertyBag
-#define VSPB_USER_DEFAULTS_BAG    0x1
-#define VSPB_FLAG_NON_USER_BAG    0x2
-#define VSPB_FOLDER_DEFAULTS_BAG  0x4
-#define VSPB_GLOBAL_DEFAULTS_BAG  0x8
-#define VSPB_INHERIT_BAG          0x10
-#define VSPB_UNKNOWN_BAG          0x20
-#define VSPB_READ_BAG             0x80000000
-
 class CViewStatePropertyBag : public CBasePropertyBag
 {
 protected:
     LPITEMIDLIST m_pidl = NULL;
     LPWSTR m_pszPath = NULL;
-    DWORD m_dwVspbFlags = 0; // VSPB_... flags
+    DWORD m_dwVspbFlags = 0; // SHGVSPB_... flags
     CComPtr<IPropertyBag> m_pPidlBag;
     CComPtr<IPropertyBag> m_pUpgradeBag;
     CComPtr<IPropertyBag> m_pInheritBag;
@@ -1340,7 +1331,7 @@ BOOL CViewStatePropertyBag::_IsSystemFolder() const
 
 BOOL CViewStatePropertyBag::_CanAccessPidlBag() const
 {
-    return (m_dwVspbFlags & VSPB_USER_DEFAULTS_BAG) && (m_dwVspbFlags & VSPB_FOLDER_DEFAULTS_BAG);
+    return ((m_dwVspbFlags & SHGVSPB_FOLDER) == SHGVSPB_FOLDER);
 }
 
 BOOL CViewStatePropertyBag::_CanAccessUserDefaultsBag() const
@@ -1348,7 +1339,7 @@ BOOL CViewStatePropertyBag::_CanAccessUserDefaultsBag() const
     if (_CanAccessPidlBag())
         return TRUE;
 
-    return ((m_dwVspbFlags & VSPB_USER_DEFAULTS_BAG) && (m_dwVspbFlags & VSPB_GLOBAL_DEFAULTS_BAG));
+    return ((m_dwVspbFlags & SHGVSPB_USERDEFAULTS) == SHGVSPB_USERDEFAULTS);
 }
 
 BOOL CViewStatePropertyBag::_CanAccessFolderDefaultsBag() const
@@ -1356,7 +1347,7 @@ BOOL CViewStatePropertyBag::_CanAccessFolderDefaultsBag() const
     if (_CanAccessUserDefaultsBag())
         return TRUE;
 
-    return ((m_dwVspbFlags & VSPB_FLAG_NON_USER_BAG) && (m_dwVspbFlags & VSPB_FOLDER_DEFAULTS_BAG));
+    return ((m_dwVspbFlags & SHGVSPB_ALLUSERS) && (m_dwVspbFlags & SHGVSPB_PERFOLDER));
 }
 
 BOOL CViewStatePropertyBag::_CanAccessGlobalDefaultsBag() const
@@ -1364,12 +1355,12 @@ BOOL CViewStatePropertyBag::_CanAccessGlobalDefaultsBag() const
     if (_CanAccessFolderDefaultsBag())
         return TRUE;
 
-    return ((m_dwVspbFlags & VSPB_FLAG_NON_USER_BAG) && (m_dwVspbFlags & VSPB_GLOBAL_DEFAULTS_BAG));
+    return ((m_dwVspbFlags & SHGVSPB_GLOBALDEAFAULTS) == SHGVSPB_GLOBALDEAFAULTS);
 }
 
 BOOL CViewStatePropertyBag::_CanAccessInheritBag() const
 {
-    return (_CanAccessPidlBag() || (m_dwVspbFlags & VSPB_INHERIT_BAG));
+    return (_CanAccessPidlBag() || (m_dwVspbFlags & SHGVSPB_INHERIT));
 }
 
 BOOL CViewStatePropertyBag::_CanAccessUpgradeBag() const
@@ -1379,27 +1370,27 @@ BOOL CViewStatePropertyBag::_CanAccessUpgradeBag() const
 
 void CViewStatePropertyBag::_ResetTryAgainFlag()
 {
-    if (m_dwVspbFlags & VSPB_READ_BAG)
+    if (m_dwVspbFlags & SHGVSPB_NOAUTODEFAULTS)
     {
         m_bReadBag = FALSE;
     }
-    else if ((m_dwVspbFlags & VSPB_USER_DEFAULTS_BAG) && (m_dwVspbFlags & VSPB_FOLDER_DEFAULTS_BAG))
+    else if ((m_dwVspbFlags & SHGVSPB_FOLDER) == SHGVSPB_FOLDER)
     {
         m_bPidlBag = FALSE;
     }
-    else if (m_dwVspbFlags & VSPB_INHERIT_BAG)
+    else if (m_dwVspbFlags & SHGVSPB_INHERIT)
     {
         m_bInheritBag = FALSE;
     }
-    else if ((m_dwVspbFlags & VSPB_USER_DEFAULTS_BAG) && (m_dwVspbFlags & VSPB_GLOBAL_DEFAULTS_BAG))
+    else if ((m_dwVspbFlags & SHGVSPB_USERDEFAULTS) == SHGVSPB_USERDEFAULTS)
     {
         m_bUserDefaultsBag = FALSE;
     }
-    else if ((m_dwVspbFlags & VSPB_FLAG_NON_USER_BAG) && (m_dwVspbFlags & VSPB_FOLDER_DEFAULTS_BAG))
+    else if ((m_dwVspbFlags & SHGVSPB_ALLUSERS) && (m_dwVspbFlags & SHGVSPB_PERFOLDER))
     {
         m_bFolderDefaultsBag = FALSE;
     }
-    else if ((m_dwVspbFlags & VSPB_FLAG_NON_USER_BAG) && (m_dwVspbFlags & VSPB_GLOBAL_DEFAULTS_BAG))
+    else if ((m_dwVspbFlags & SHGVSPB_GLOBALDEAFAULTS) == SHGVSPB_GLOBALDEAFAULTS)
     {
         m_bGlobalDefaultsBag = FALSE;
     }
@@ -1407,10 +1398,10 @@ void CViewStatePropertyBag::_ResetTryAgainFlag()
 
 HKEY CViewStatePropertyBag::_GetHKey(DWORD dwVspbFlags)
 {
-    if (!(dwVspbFlags & (VSPB_INHERIT_BAG | VSPB_USER_DEFAULTS_BAG)))
+    if (!(dwVspbFlags & (SHGVSPB_INHERIT | SHGVSPB_PERUSER)))
         return SHGetShellKey((SHKEY_Key_Shell | SHKEY_Root_HKLM), NULL, TRUE);
 
-    if ((m_dwVspbFlags & VSPB_UNKNOWN_BAG) && (dwVspbFlags & VSPB_FOLDER_DEFAULTS_BAG))
+    if ((m_dwVspbFlags & SHGVSPB_ROAM) && (dwVspbFlags & SHGVSPB_PERFOLDER))
         return SHGetShellKey((SHKEY_Key_Shell | SHKEY_Root_HKCU), NULL, TRUE);
 
     return SHGetShellKey(SHKEY_Key_ShellNoRoam | SHKEY_Root_HKCU, NULL, TRUE);
@@ -1489,7 +1480,7 @@ static BOOL SHIsRemovableDrive(LPCITEMIDLIST pidl)
  *
  * @param pidl      PIDL of the folder requested
  * @param bag_name  Name of the property bag requested
- * @param flags     Optional flags
+ * @param flags     Optional SHGVSPB_... flags
  * @param riid      IID of requested property bag interface
  * @param ppv       Address to receive pointer to the new interface
  * @return          An HRESULT value. S_OK on success, non-zero on failure.
