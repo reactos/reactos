@@ -1263,6 +1263,7 @@ public:
 
     STDMETHODIMP Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari) override
     {
+        ERR("%p: %s: Read-only\n", this, debugstr_w(pszPropName));
         return E_NOTIMPL;
     }
 };
@@ -1371,29 +1372,17 @@ BOOL CViewStatePropertyBag::_CanAccessUpgradeBag() const
 void CViewStatePropertyBag::_ResetTryAgainFlag()
 {
     if (m_dwVspbFlags & SHGVSPB_NOAUTODEFAULTS)
-    {
         m_bReadBag = FALSE;
-    }
     else if ((m_dwVspbFlags & SHGVSPB_FOLDER) == SHGVSPB_FOLDER)
-    {
         m_bPidlBag = FALSE;
-    }
     else if (m_dwVspbFlags & SHGVSPB_INHERIT)
-    {
         m_bInheritBag = FALSE;
-    }
     else if ((m_dwVspbFlags & SHGVSPB_USERDEFAULTS) == SHGVSPB_USERDEFAULTS)
-    {
         m_bUserDefaultsBag = FALSE;
-    }
     else if ((m_dwVspbFlags & SHGVSPB_ALLUSERS) && (m_dwVspbFlags & SHGVSPB_PERFOLDER))
-    {
         m_bFolderDefaultsBag = FALSE;
-    }
     else if ((m_dwVspbFlags & SHGVSPB_GLOBALDEAFAULTS) == SHGVSPB_GLOBALDEAFAULTS)
-    {
         m_bGlobalDefaultsBag = FALSE;
-    }
 }
 
 HKEY CViewStatePropertyBag::_GetHKey(DWORD dwVspbFlags)
@@ -1484,7 +1473,7 @@ static BOOL SHIsRemovableDrive(LPCITEMIDLIST pidl)
  * @param riid      IID of requested property bag interface
  * @param ppv       Address to receive pointer to the new interface
  * @return          An HRESULT value. S_OK on success, non-zero on failure.
- * @see             https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-shgetviewstatepropertybag
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-shgetviewstatepropertybag
  */
 EXTERN_C HRESULT WINAPI
 SHGetViewStatePropertyBag(
@@ -1495,6 +1484,8 @@ SHGetViewStatePropertyBag(
     _Outptr_ void **ppv)
 {
     HRESULT hr;
+
+    TRACE("%p %s 0x%X %p %p\n", pidl, debugstr_w(bag_name), flags, &riid, ppv);
 
     *ppv = NULL;
 
@@ -1509,6 +1500,7 @@ SHGetViewStatePropertyBag(
 
     if (SHIsRemovableDrive(pidl))
     {
+        TRACE("pidl %p is removable\n", pidl);
         ::LeaveCriticalSection(&g_csBagCacheLock);
         return E_FAIL;
     }
@@ -1521,6 +1513,10 @@ SHGetViewStatePropertyBag(
         g_pCachedBag.Attach(pBag);
 
         hr = g_pCachedBag->QueryInterface(riid, ppv);
+    }
+    else
+    {
+        ERR("0x%08X\n", hr);
     }
 
     ::LeaveCriticalSection(&g_csBagCacheLock);
