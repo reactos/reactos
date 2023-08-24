@@ -1223,11 +1223,7 @@ protected:
 
     HKEY _GetHKey(DWORD dwVspbFlags);
 
-    HRESULT _GetMRUSlot(
-        LPCITEMIDLIST pidl,
-        DWORD dwMode,
-        HKEY hKey,
-        UINT *pnSlot);
+    HRESULT _GetMRUSlot(LPCITEMIDLIST pidl, DWORD dwMode, HKEY hKey, UINT *pSlot);
 
     HRESULT _GetRegKey(
         LPCITEMIDLIST pidl,
@@ -1417,11 +1413,7 @@ HKEY CViewStatePropertyBag::_GetHKey(DWORD dwVspbFlags)
 }
 
 HRESULT
-CViewStatePropertyBag::_GetMRUSlot(
-    LPCITEMIDLIST pidl,
-    DWORD dwMode,
-    HKEY hKey,
-    UINT *pnSlot)
+CViewStatePropertyBag::_GetMRUSlot(LPCITEMIDLIST pidl, DWORD dwMode, HKEY hKey, UINT *pSlot)
 {
     FIXME("Stub\n");
     return E_NOTIMPL;
