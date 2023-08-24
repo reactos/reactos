@@ -9,12 +9,19 @@
 #include "precomp.h"
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
+#include <shlobj_undoc.h>
+#include <shlguid_undoc.h>
 #include <atlstr.h>         // for CStringW
 #include <atlsimpcoll.h>    // for CSimpleMap
 #include <atlcomcli.h>      // for CComVariant
 #include <atlconv.h>        // for CA2W and CW2A
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
+#define MODE_CAN_READ(dwMode) \
+    (((dwMode) & (STGM_READ | STGM_WRITE | STGM_READWRITE)) != STGM_WRITE)
+#define MODE_CAN_WRITE(dwMode) \
+    (((dwMode) & (STGM_READ | STGM_WRITE | STGM_READWRITE)) != STGM_READ)
 
 class CBasePropertyBag
     : public IPropertyBag
@@ -152,7 +159,7 @@ CMemPropertyBag::Read(
     ::VariantInit(pvari);
 
 #if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
-    if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) == STGM_WRITE)
+    if (!MODE_CAN_READ(m_dwMode))
     {
         ERR("%p: 0x%X\n", this, m_dwMode);
         return E_ACCESSDENIED;
@@ -197,7 +204,7 @@ CMemPropertyBag::Write(
     TRACE("%p: %s %p\n", this, debugstr_w(pszPropName), pvari);
 
 #if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
-    if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) == STGM_READ)
+    if (!MODE_CAN_WRITE(m_dwMode))
     {
         ERR("%p: 0x%X\n", this, m_dwMode);
         return E_ACCESSDENIED;
@@ -287,9 +294,9 @@ public:
 HRESULT CRegPropertyBag::Init(HKEY hKey, LPCWSTR lpSubKey)
 {
     REGSAM nAccess = 0;
-    if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) != STGM_WRITE)
+    if (MODE_CAN_READ(m_dwMode))
         nAccess |= KEY_READ;
-    if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) != STGM_READ)
+    if (MODE_CAN_WRITE(m_dwMode))
         nAccess |= KEY_WRITE;
 
     LONG error;
@@ -408,7 +415,7 @@ CRegPropertyBag::Read(
 
     TRACE("%p: %s %p %p\n", this, debugstr_w(pszPropName), pvari, pErrorLog);
 
-    if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) == STGM_WRITE)
+    if (!MODE_CAN_READ(m_dwMode))
     {
         ERR("%p: 0x%X\n", this, m_dwMode);
         ::VariantInit(pvari);
@@ -478,7 +485,7 @@ CRegPropertyBag::Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari)
 {
     TRACE("%p: %s %p\n", this, debugstr_w(pszPropName), pvari);
 
-    if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) == STGM_READ)
+    if (!MODE_CAN_WRITE(m_dwMode))
     {
         ERR("%p: 0x%X\n", this, m_dwMode);
         return E_ACCESSDENIED;
@@ -855,7 +862,7 @@ CIniPropertyBag::Read(
 
     ::VariantInit(pvari);
 
-    if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) == STGM_WRITE)
+    if (!MODE_CAN_READ(m_dwMode))
     {
         ERR("%p: 0x%X\n", this, m_dwMode);
         return E_ACCESSDENIED;
@@ -889,7 +896,7 @@ CIniPropertyBag::Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari)
 {
     TRACE("%p: %s %p\n", this, debugstr_w(pszPropName), pvari);
 
-    if ((m_dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) == STGM_READ)
+    if (!MODE_CAN_WRITE(m_dwMode))
     {
         ERR("%p: 0x%X\n", this, m_dwMode);
         return E_ACCESSDENIED;
@@ -1016,6 +1023,7 @@ public:
 
     STDMETHODIMP Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari) override
     {
+        ERR("%p: %s: Read-only\n", this, debugstr_w(pszPropName));
         return E_NOTIMPL;
     }
 };
@@ -1223,6 +1231,16 @@ protected:
 
     HKEY _GetHKey(DWORD dwVspbFlags);
 
+    UINT _GetMRUSize(HKEY hKey);
+
+    HRESULT _GetMRUSlots(
+        LPCITEMIDLIST pidl,
+        DWORD dwMode,
+        HKEY hKey,
+        UINT *puSlots,
+        UINT cSlots,
+        UINT *pcSlots);
+
     HRESULT _GetMRUSlot(LPCITEMIDLIST pidl, DWORD dwMode, HKEY hKey, UINT *pSlot);
 
     HRESULT _GetRegKey(
@@ -1412,11 +1430,52 @@ HKEY CViewStatePropertyBag::_GetHKey(DWORD dwVspbFlags)
     return SHGetShellKey(SHKEY_Key_ShellNoRoam | SHKEY_Root_HKCU, NULL, TRUE);
 }
 
+UINT CViewStatePropertyBag::_GetMRUSize(HKEY hKey)
+{
+    DWORD dwValue, cbValue = sizeof(dwValue);
+
+    if (SHGetValueW(hKey, NULL, L"BagMRU Size", NULL, &dwValue, &cbValue) != ERROR_SUCCESS)
+        return 400;
+
+    return (UINT)dwValue;
+}
+
+HRESULT
+CViewStatePropertyBag::_GetMRUSlots(
+    LPCITEMIDLIST pidl,
+    DWORD dwMode,
+    HKEY hKey,
+    UINT *puSlots,
+    UINT cSlots,
+    UINT *pcSlots)
+{
+    HRESULT hr;
+    CComPtr<IMruPidlList> pMruList;
+
+    hr = ::CoCreateInstance(CLSID_MruPidlList, NULL, CLSCTX_INPROC_SERVER, IID_IMruPidlList,
+                            (void**)&pMruList);
+    if (FAILED(hr))
+        return hr;
+
+    UINT cMRUSize = _GetMRUSize(hKey);
+    hr = pMruList->InitList(cMRUSize, hKey, L"BagMRU");
+    if (FAILED(hr))
+        return hr;
+
+    hr = pMruList->QueryPidl(pidl, cSlots, puSlots, pcSlots);
+    if (SUCCEEDED(hr) && MODE_CAN_WRITE(dwMode))
+        hr = pMruList->UsePidl(pidl, puSlots);
+    else if (cSlots == 1)
+        hr = E_FAIL;
+
+    return hr;
+}
+
 HRESULT
 CViewStatePropertyBag::_GetMRUSlot(LPCITEMIDLIST pidl, DWORD dwMode, HKEY hKey, UINT *pSlot)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    UINT cSlots;
+    return _GetMRUSlots(pidl, dwMode, hKey, pSlot, 1, &cSlots);
 }
 
 HRESULT
@@ -1486,7 +1545,7 @@ CViewStatePropertyBag::_CreateBag(
     CComPtr<IShellFolder> psf;
     WCHAR szBuff[64];
 
-    if ((dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) != STGM_READ)
+    if (MODE_CAN_WRITE(dwMode))
         dwMode |= STGM_CREATE;
 
     if ((dwVspbFlags & SHGVSPB_ALLUSERS) && (dwVspbFlags & SHGVSPB_PERFOLDER))
@@ -1522,8 +1581,31 @@ CViewStatePropertyBag::_CreateBag(
 HRESULT
 CViewStatePropertyBag::_FindNearestInheritBag(REFIID riid, IPropertyBag **pppb)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    *pppb = NULL;
+
+    HKEY hKey = _GetHKey(SHGVSPB_INHERIT);
+    if (!hKey)
+        return E_FAIL;
+
+    UINT cSlots, anSlots[64];
+    if (FAILED(_GetMRUSlots(m_pidl, 0, hKey, anSlots, _countof(anSlots), &cSlots)) || !cSlots)
+    {
+        ::RegCloseKey(hKey);
+        return E_FAIL;
+    }
+
+    HRESULT hr = E_FAIL;
+    WCHAR szBuff[64];
+    for (UINT iSlot = 0; iSlot < cSlots; ++iSlot)
+    {
+        wnsprintfW(szBuff, _countof(szBuff), L"Bags\\%d\\%s\\Inherit", anSlots[iSlot], m_pszPath);
+        hr = SHCreatePropertyBagOnRegKey(hKey, szBuff, STGM_READ, riid, (void**)pppb);
+        if (SUCCEEDED(hr))
+            break;
+    }
+
+    ::RegCloseKey(hKey);
+    return hr;
 }
 
 BOOL CViewStatePropertyBag::_EnsureReadBag(DWORD dwMode, REFIID riid)
