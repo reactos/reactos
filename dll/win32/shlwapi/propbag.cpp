@@ -130,7 +130,7 @@ protected:
     ATL::CSimpleMap<ATL::CStringW, ATL::CComVariant, CPropMapEqual> m_PropMap;
 
 public:
-    CMemPropertyBag(DWORD dwFlags) : CBasePropertyBag(dwFlags) { }
+    CMemPropertyBag(DWORD dwMode) : CBasePropertyBag(dwMode) { }
 
     STDMETHODIMP Read(_In_z_ LPCWSTR pszPropName, _Inout_ VARIANT *pvari,
                       _Inout_opt_ IErrorLog *pErrorLog) override;
@@ -1007,7 +1007,7 @@ protected:
     IStream* _NewStreamFromOld(IStream *pOldStream);
 
 public:
-    CDesktopUpgradePropertyBag() : CBasePropertyBag(0) { }
+    CDesktopUpgradePropertyBag() : CBasePropertyBag(STGM_READ) { }
 
     STDMETHODIMP Read(
         _In_z_ LPCWSTR pszPropName,
@@ -1174,7 +1174,7 @@ CDesktopUpgradePropertyBag::Read(
 }
 
 /**************************************************************************
- *  SHGetDesktopUpgradePropertyBag (Not exported; used in CViewStatePropertyBag)
+ *  SHGetDesktopUpgradePropertyBag (Internal)
  *
  * Creates or gets a property bag object for desktop upgrade
  *
@@ -1223,11 +1223,13 @@ protected:
 
     HKEY _GetHKey(DWORD dwVspbFlags);
 
+    HRESULT _GetMRUSlot(LPCITEMIDLIST pidl, DWORD dwMode, HKEY hKey, UINT *pSlot);
+
     HRESULT _GetRegKey(
         LPCITEMIDLIST pidl,
         LPCWSTR pszBagName,
         DWORD dwFlags,
-        char unknown,
+        DWORD dwMode,
         HKEY hKey,
         LPWSTR pszDest,
         INT cchDest);
@@ -1238,14 +1240,28 @@ protected:
         DWORD dwVspbFlags,
         DWORD dwMode,
         REFIID riid,
-        void **ppvObj);
+        IPropertyBag **pppb);
+
+    HRESULT _FindNearestInheritBag(REFIID riid, IPropertyBag **pppb);
 
     void _ResetTryAgainFlag();
 
+    BOOL _EnsureReadBag(DWORD dwMode, REFIID riid);
+    BOOL _EnsurePidlBag(DWORD dwMode, REFIID riid);
+    BOOL _EnsureInheritBag(DWORD dwMode, REFIID riid);
+    BOOL _EnsureUpgradeBag(DWORD dwMode, REFIID riid);
+    BOOL _EnsureUserDefaultsBag(DWORD dwMode, REFIID riid);
+    BOOL _EnsureFolderDefaultsBag(DWORD dwMode, REFIID riid);
+    BOOL _EnsureGlobalDefaultsBag(DWORD dwMode, REFIID riid);
+    HRESULT _ReadPidlBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
+    HRESULT _ReadInheritBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
+    HRESULT _ReadUpgradeBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
+    HRESULT _ReadUserDefaultsBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
+    HRESULT _ReadFolderDefaultsBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
+    HRESULT _ReadGlobalDefaultsBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
+
 public:
-    CViewStatePropertyBag() : CBasePropertyBag(0)
-    {
-    }
+    CViewStatePropertyBag() : CBasePropertyBag(STGM_READ) { }
 
     ~CViewStatePropertyBag() override
     {
@@ -1396,17 +1412,63 @@ HKEY CViewStatePropertyBag::_GetHKey(DWORD dwVspbFlags)
     return SHGetShellKey(SHKEY_Key_ShellNoRoam | SHKEY_Root_HKCU, NULL, TRUE);
 }
 
-HRESULT CViewStatePropertyBag::_GetRegKey(
+HRESULT
+CViewStatePropertyBag::_GetMRUSlot(LPCITEMIDLIST pidl, DWORD dwMode, HKEY hKey, UINT *pSlot)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+CViewStatePropertyBag::_GetRegKey(
     LPCITEMIDLIST pidl,
     LPCWSTR pszBagName,
     DWORD dwFlags,
-    char unknown,
+    DWORD dwMode,
     HKEY hKey,
     LPWSTR pszDest,
     INT cchDest)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    HRESULT hr = S_OK;
+    UINT nSlot;
+
+    if (dwFlags & (SHGVSPB_INHERIT | SHGVSPB_PERFOLDER))
+    {
+        hr = _GetMRUSlot(pidl, dwMode, hKey, &nSlot);
+        if (SUCCEEDED(hr))
+        {
+            if (dwFlags & SHGVSPB_INHERIT)
+                wnsprintfW(pszDest, cchDest, L"Bags\\%d\\%s\\Inherit", nSlot, pszBagName);
+            else
+                wnsprintfW(pszDest, cchDest, L"Bags\\%d\\%s", nSlot, pszBagName);
+        }
+    }
+    else
+    {
+        wnsprintfW(pszDest, cchDest, L"Bags\\AllFolders\\%s", pszBagName);
+    }
+
+    return hr;
+}
+
+static HRESULT BindCtx_CreateWithMode(DWORD dwMode, IBindCtx **ppbc)
+{
+    HRESULT hr = ::CreateBindCtx(0, ppbc);
+    if (FAILED(hr))
+        return hr;
+
+    IBindCtx *pbc = *ppbc;
+
+    BIND_OPTS opts = { sizeof(opts) };
+    opts.grfMode = dwMode;
+    hr = pbc->SetBindOptions(&opts);
+    if (FAILED(hr))
+    {
+        pbc->Release();
+        *ppbc = NULL;
+    }
+
+    return hr;
 }
 
 HRESULT
@@ -1416,10 +1478,198 @@ CViewStatePropertyBag::_CreateBag(
     DWORD dwVspbFlags,
     DWORD dwMode,
     REFIID riid,
-    void **ppvObj)
+    IPropertyBag **pppb)
+{
+    HRESULT hr;
+    HKEY hKey;
+    CComPtr<IBindCtx> pBC;
+    CComPtr<IShellFolder> psf;
+    WCHAR szBuff[64];
+
+    if ((dwMode & (STGM_READ | STGM_WRITE | STGM_READWRITE)) != STGM_READ)
+        dwMode |= STGM_CREATE;
+
+    if ((dwVspbFlags & SHGVSPB_ALLUSERS) && (dwVspbFlags & SHGVSPB_PERFOLDER))
+    {
+        hr = BindCtx_CreateWithMode(dwMode, &pBC);
+        if (SUCCEEDED(hr))
+        {
+            hr = SHGetDesktopFolder(&psf);
+            if (SUCCEEDED(hr))
+            {
+                hr = psf->BindToObject(m_pidl, pBC, riid, (void **)pppb);
+                if (SUCCEEDED(hr) && !*pppb)
+                    hr = E_FAIL;
+            }
+        }
+    }
+    else
+    {
+        hKey = _GetHKey(dwVspbFlags);
+        if (!hKey)
+            return E_FAIL;
+
+        hr = _GetRegKey(pidl, pszPath, dwVspbFlags, dwMode, hKey, szBuff, _countof(szBuff));
+        if (SUCCEEDED(hr))
+            hr = SHCreatePropertyBagOnRegKey(hKey, szBuff, dwMode, riid, (void**)pppb);
+
+        ::RegCloseKey(hKey);
+    }
+
+    return hr;
+}
+
+HRESULT
+CViewStatePropertyBag::_FindNearestInheritBag(REFIID riid, IPropertyBag **pppb)
 {
     FIXME("Stub\n");
     return E_NOTIMPL;
+}
+
+BOOL CViewStatePropertyBag::_EnsureReadBag(DWORD dwMode, REFIID riid)
+{
+    if (!m_pReadBag && !m_bReadBag)
+    {
+        m_bReadBag = TRUE;
+        _CreateBag(m_pidl, m_pszPath, m_dwVspbFlags, dwMode, riid, &m_pReadBag);
+    }
+    return (m_pReadBag != NULL);
+}
+
+BOOL CViewStatePropertyBag::_EnsurePidlBag(DWORD dwMode, REFIID riid)
+{
+    if (!m_pPidlBag && !m_bPidlBag && _CanAccessPidlBag())
+    {
+        m_bPidlBag = TRUE;
+        _CreateBag(m_pidl, m_pszPath, SHGVSPB_FOLDER, dwMode, riid, &m_pPidlBag);
+    }
+    return (m_pPidlBag != NULL);
+}
+
+BOOL CViewStatePropertyBag::_EnsureInheritBag(DWORD dwMode, REFIID riid)
+{
+    if (!m_pInheritBag && !m_bInheritBag && _CanAccessInheritBag())
+    {
+        m_bInheritBag = TRUE;
+        _FindNearestInheritBag(riid, &m_pInheritBag);
+    }
+    return (m_pInheritBag != NULL);
+}
+
+BOOL CViewStatePropertyBag::_EnsureUpgradeBag(DWORD dwMode, REFIID riid)
+{
+    if (!m_pUpgradeBag && !m_bUpgradeBag && _CanAccessUpgradeBag())
+    {
+        m_bUpgradeBag = TRUE;
+        SHGetDesktopUpgradePropertyBag(riid, (void**)&m_pUpgradeBag);
+    }
+    return (m_pUpgradeBag != NULL);
+}
+
+BOOL CViewStatePropertyBag::_EnsureUserDefaultsBag(DWORD dwMode, REFIID riid)
+{
+    if (!m_pUserDefaultsBag && !m_bUserDefaultsBag && _CanAccessUserDefaultsBag())
+    {
+        m_bUserDefaultsBag = TRUE;
+        _CreateBag(NULL, m_pszPath, SHGVSPB_USERDEFAULTS, dwMode, riid, &m_pUserDefaultsBag);
+    }
+    return (m_pUserDefaultsBag != NULL);
+}
+
+BOOL CViewStatePropertyBag::_EnsureFolderDefaultsBag(DWORD dwMode, REFIID riid)
+{
+    if (!m_pFolderDefaultsBag && !m_bFolderDefaultsBag && _CanAccessFolderDefaultsBag())
+    {
+        m_bFolderDefaultsBag = TRUE;
+        if (_IsSystemFolder())
+        {
+            _CreateBag(m_pidl, m_pszPath, SHGVSPB_PERFOLDER | SHGVSPB_ALLUSERS,
+                       dwMode, riid, &m_pFolderDefaultsBag);
+        }
+    }
+    return (m_pFolderDefaultsBag != NULL);
+}
+
+BOOL CViewStatePropertyBag::_EnsureGlobalDefaultsBag(DWORD dwMode, REFIID riid)
+{
+    if (!m_pGlobalDefaultsBag && !m_bGlobalDefaultsBag && _CanAccessGlobalDefaultsBag())
+    {
+        m_bGlobalDefaultsBag = TRUE;
+        _CreateBag(NULL, m_pszPath, SHGVSPB_GLOBALDEAFAULTS, dwMode, riid, &m_pGlobalDefaultsBag);
+    }
+    return (m_pGlobalDefaultsBag != NULL);
+}
+
+HRESULT
+CViewStatePropertyBag::_ReadPidlBag(
+    LPCWSTR pszPropName,
+    VARIANT *pvari,
+    IErrorLog *pErrorLog)
+{
+    if (!_EnsurePidlBag(STGM_READ, IID_IPropertyBag))
+        return E_FAIL;
+
+    return m_pPidlBag->Read(pszPropName, pvari, pErrorLog);
+}
+
+HRESULT
+CViewStatePropertyBag::_ReadInheritBag(
+    LPCWSTR pszPropName,
+    VARIANT *pvari,
+    IErrorLog *pErrorLog)
+{
+    if (!_EnsureInheritBag(STGM_READ, IID_IPropertyBag))
+        return E_FAIL;
+
+    return m_pInheritBag->Read(pszPropName, pvari, pErrorLog);
+}
+
+HRESULT
+CViewStatePropertyBag::_ReadUpgradeBag(
+    LPCWSTR pszPropName,
+    VARIANT *pvari,
+    IErrorLog *pErrorLog)
+{
+    if (!_EnsureUpgradeBag(STGM_READ, IID_IPropertyBag))
+        return E_FAIL;
+
+    return m_pUpgradeBag->Read(pszPropName, pvari, pErrorLog);
+}
+
+HRESULT
+CViewStatePropertyBag::_ReadUserDefaultsBag(
+    LPCWSTR pszPropName,
+    VARIANT *pvari,
+    IErrorLog *pErrorLog)
+{
+    if (!_EnsureUserDefaultsBag(STGM_READ, IID_IPropertyBag))
+        return E_FAIL;
+
+    return m_pUserDefaultsBag->Read(pszPropName, pvari, pErrorLog);
+}
+
+HRESULT
+CViewStatePropertyBag::_ReadFolderDefaultsBag(
+    LPCWSTR pszPropName,
+    VARIANT *pvari,
+    IErrorLog *pErrorLog)
+{
+    if (!_EnsureFolderDefaultsBag(STGM_READ, IID_IPropertyBag))
+        return E_FAIL;
+
+    return m_pFolderDefaultsBag->Read(pszPropName, pvari, pErrorLog);
+}
+
+HRESULT
+CViewStatePropertyBag::_ReadGlobalDefaultsBag(
+    LPCWSTR pszPropName,
+    VARIANT *pvari,
+    IErrorLog *pErrorLog)
+{
+    if (!_EnsureGlobalDefaultsBag(STGM_READ, IID_IPropertyBag))
+        return E_FAIL;
+
+    return m_pGlobalDefaultsBag->Read(pszPropName, pvari, pErrorLog);
 }
 
 STDMETHODIMP
@@ -1428,8 +1678,35 @@ CViewStatePropertyBag::Read(
     _Inout_ VARIANT *pvari,
     _Inout_opt_ IErrorLog *pErrorLog)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    if ((m_dwVspbFlags & SHGVSPB_NOAUTODEFAULTS) || (m_dwVspbFlags & SHGVSPB_INHERIT))
+    {
+        if (!_EnsureReadBag(STGM_READ, IID_IPropertyBag))
+            return E_FAIL;
+
+        return m_pReadBag->Read(pszPropName, pvari, pErrorLog);
+    }
+
+    HRESULT hr = _ReadPidlBag(pszPropName, pvari, pErrorLog);
+    if (SUCCEEDED(hr))
+        return hr;
+
+    hr = _ReadInheritBag(pszPropName, pvari, pErrorLog);
+    if (SUCCEEDED(hr))
+        return hr;
+
+    hr = _ReadUpgradeBag(pszPropName, pvari, pErrorLog);
+    if (SUCCEEDED(hr))
+        return hr;
+
+    hr = _ReadUserDefaultsBag(pszPropName, pvari, pErrorLog);
+    if (SUCCEEDED(hr))
+        return hr;
+
+    hr = _ReadFolderDefaultsBag(pszPropName, pvari, pErrorLog);
+    if (SUCCEEDED(hr))
+        return hr;
+
+    return _ReadGlobalDefaultsBag(pszPropName, pvari, pErrorLog);
 }
 
 static BOOL SHIsRemovableDrive(LPCITEMIDLIST pidl)
@@ -1508,16 +1785,16 @@ SHGetViewStatePropertyBag(
     CComPtr<CViewStatePropertyBag> pBag(new CViewStatePropertyBag());
 
     hr = pBag->Init(pidl, bag_name, flags);
-    if (SUCCEEDED(hr))
-    {
-        g_pCachedBag.Attach(pBag);
-
-        hr = g_pCachedBag->QueryInterface(riid, ppv);
-    }
-    else
+    if (FAILED(hr))
     {
         ERR("0x%08X\n", hr);
+        ::LeaveCriticalSection(&g_csBagCacheLock);
+        return hr;
     }
+
+    g_pCachedBag.Attach(pBag);
+
+    hr = g_pCachedBag->QueryInterface(riid, ppv);
 
     ::LeaveCriticalSection(&g_csBagCacheLock);
     return hr;
