@@ -1696,27 +1696,230 @@ AccessCheck(IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
     return TRUE;
 }
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Determines whether security access can be granted to a client
+ * that requests such access on the object type list. The access
+ * is either granted or denied for the whole object hierarchy
+ * in the list.
+ *
+ * @param[in] pSecurityDescriptor
+ * A pointer to a security descriptor that identifies the security
+ * information of an object being accessed. This function walks
+ * through this descriptor for any ACLs and respective access
+ * rights if access can be granted.
+ *
+ * @param[in] PrincipalSelfSid
+ * A pointer to a principal self SID. This parameter can be NULL if
+ * the associated object being checked for access does not represent
+ * a principal.
+ *
+ * @param[in] ClientToken
+ * A handle to an access token, that identifies the client of which
+ * requests access to the target object.
+ *
+ * @param[in] DesiredAccess
+ * The access right bitmask where the client wants to acquire. This
+ * can be an OR'ed set of multiple access rights or MAXIMUM_ALLOWED
+ * to request all of possible access rights the target object allows.
+ * If only some rights were granted but not all the access is deemed
+ * as denied.
+ *
+ * @param[in] ObjectTypeList
+ * A pointer to a given object type list. If this parameter is not NULL
+ * the function will perform an access check against the main object
+ * and sub-objects of this list. If this parameter is NULL and
+ * ObjectTypeListLength is 0, the function will perform a normal
+ * access check instead.
+ *
+ * @param[in] ObjectTypeListLength
+ * The length of the object type list array, pointed by ObjectTypeList.
+ * This length in question represents the number of elements in such array.
+ * This parameter must be 0 if no array list is provided.
+ *
+ * @param[in] GenericMapping
+ * The generic mapping of access rights of an object type.
+ *
+ * @param[out] PrivilegeSet
+ * A pointer to a set of privileges that were used to perform the
+ * access check, returned to caller. This function will return no
+ * privileges (privilege count set to 0) if no privileges were used
+ * to accomplish the access check. This parameter must not be NULL!
+ *
+ * @param[in,out] PrivilegeSetLength
+ * The total length size of a set of privileges. This length represents
+ * the count of elements in the privilege set array.
+ *
+ * @param[out] GrantedAccess
+ * A pointer to granted access rights, returned to the caller.
+ *
+ * @param[out] AccessStatus
+ * A pointer to a boolean value that indicates whether access is granted
+ * or denied to the client that requests access to the entire hierarchy
+ * of an object type list. If ObjectTypeList is NULL, this value represents
+ * the access that is granted or denied to the target object, just like
+ * in AccessCheck.
+ *
+ * @return
+ * The function returns TRUE if the access check operation has completed
+ * successfully, otherwise it returns FALSE.
  */
-BOOL WINAPI AccessCheckByType(
-    PSECURITY_DESCRIPTOR pSecurityDescriptor, 
-    PSID PrincipalSelfSid,
-    HANDLE ClientToken, 
-    DWORD DesiredAccess, 
-    POBJECT_TYPE_LIST ObjectTypeList,
-    DWORD ObjectTypeListLength,
-    PGENERIC_MAPPING GenericMapping,
-    PPRIVILEGE_SET PrivilegeSet,
-    LPDWORD PrivilegeSetLength, 
-    LPDWORD GrantedAccess,
-    LPBOOL AccessStatus)
+BOOL
+WINAPI
+AccessCheckByType(
+    _In_ PSECURITY_DESCRIPTOR pSecurityDescriptor,
+    _In_opt_ PSID PrincipalSelfSid,
+    _In_ HANDLE ClientToken,
+    _In_ DWORD DesiredAccess,
+    _In_reads_opt_(ObjectTypeListLength) POBJECT_TYPE_LIST ObjectTypeList,
+    _In_ DWORD ObjectTypeListLength,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _Out_writes_bytes_(*PrivilegeSetLength) PPRIVILEGE_SET PrivilegeSet,
+    _Inout_ LPDWORD PrivilegeSetLength,
+    _Out_ LPDWORD GrantedAccess,
+    _Out_ LPBOOL AccessStatus)
 {
-	FIXME("stub\n");
+	NTSTATUS Status;
+    NTSTATUS NtAccessStatus;
 
-	*AccessStatus = TRUE;
+	Status = NtAccessCheckByType(pSecurityDescriptor,
+                                 PrincipalSelfSid,
+                                 ClientToken,
+                                 DesiredAccess,
+                                 ObjectTypeList,
+                                 ObjectTypeListLength,
+                                 GenericMapping,
+                                 PrivilegeSet,
+                                 PrivilegeSetLength,
+                                 (PACCESS_MASK)GrantedAccess,
+                                 &NtAccessStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return !*AccessStatus;
+    if (!NT_SUCCESS(NtAccessStatus))
+    {
+        SetLastError(RtlNtStatusToDosError(NtAccessStatus));
+        *AccessStatus = FALSE;
+    }
+    else
+    {
+        *AccessStatus = TRUE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Determines whether security access can be granted to a client
+ * that requests such access on the object type list. Unlike the
+ * AccessCheckByType variant, this function will grant or deny
+ * access to each individual object and sub-object in the list.
+ *
+ * @param[in] pSecurityDescriptor
+ * A pointer to a security descriptor that identifies the security
+ * information of an object being accessed. This function walks
+ * through this descriptor for any ACLs and respective access
+ * rights if access can be granted.
+ *
+ * @param[in] PrincipalSelfSid
+ * A pointer to a principal self SID. This parameter can be NULL if
+ * the associated object being checked for access does not represent
+ * a principal.
+ *
+ * @param[in] ClientToken
+ * A handle to an access token, that identifies the client of which
+ * requests access to the target object.
+ *
+ * @param[in] DesiredAccess
+ * The access right bitmask where the client wants to acquire. This
+ * can be an OR'ed set of multiple access rights or MAXIMUM_ALLOWED
+ * to request all of possible access rights the target object allows.
+ * If only some rights were granted but not all the access is deemed
+ * as denied.
+ *
+ * @param[in] ObjectTypeList
+ * A pointer to a given object type list. This function will perform an
+ * access check against the main object and sub-objects of this list.
+ * This parameter must not be NULL!
+ *
+ * @param[in] ObjectTypeListLength
+ * The length of the object type list array, pointed by ObjectTypeList.
+ * This length in question represents the number of elements in such array.
+ * This parameter must be 0 if no array list is provided.
+ *
+ * @param[in] GenericMapping
+ * The generic mapping of access rights of an object type.
+ *
+ * @param[out] PrivilegeSet
+ * A pointer to a set of privileges that were used to perform the
+ * access check, returned to caller. This function will return no
+ * privileges (privilege count set to 0) if no privileges were used
+ * to accomplish the access check. This parameter must not be NULL!
+ *
+ * @param[in,out] PrivilegeSetLength
+ * The total length size of a set of privileges. This length represents
+ * the count of elements in the privilege set array.
+ *
+ * @param[out] GrantedAccess
+ * A pointer to granted access rights. This parameter is an array of granted
+ * rights for the object and each sub-object of an object type list.
+ *
+ * @param[out] AccessStatus
+ * A pointer to a boolean value that indicates whether access is granted
+ * or denied to the client that requests access to the object and sub-objects
+ * of an object type list. This parameter is an array of boolean values for the
+ * object and each individual sub-object of the list.
+ *
+ * @return
+ * The function returns TRUE if the access check operation has completed
+ * successfully, otherwise it returns FALSE.
+ */
+BOOL
+WINAPI
+AccessCheckByTypeResultList(
+    _In_ PSECURITY_DESCRIPTOR pSecurityDescriptor,
+    _In_opt_ PSID PrincipalSelfSid,
+    _In_ HANDLE ClientToken,
+    _In_ DWORD DesiredAccess,
+    _In_reads_(ObjectTypeListLength) POBJECT_TYPE_LIST ObjectTypeList,
+    _In_ DWORD ObjectTypeListLength,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _Out_writes_bytes_(*PrivilegeSetLength) PPRIVILEGE_SET PrivilegeSet,
+    _Inout_ LPDWORD PrivilegeSetLength,
+    _Out_writes_(ObjectTypeListLength) LPDWORD GrantedAccess,
+    _Out_writes_(ObjectTypeListLength) LPBOOL AccessStatus)
+{
+    NTSTATUS Status;
+    DWORD ResultListIndex;
+    PNTSTATUS NtAccessStatus = NULL;
+
+    Status = NtAccessCheckByTypeResultList(pSecurityDescriptor,
+                                           PrincipalSelfSid,
+                                           ClientToken,
+                                           DesiredAccess,
+                                           ObjectTypeList,
+                                           ObjectTypeListLength,
+                                           GenericMapping,
+                                           PrivilegeSet,
+                                           PrivilegeSetLength,
+                                           (PACCESS_MASK)GrantedAccess,
+                                           NtAccessStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    for (ResultListIndex = 0; ResultListIndex < ObjectTypeListLength; ResultListIndex++)
+    {
+        AccessStatus[ResultListIndex] = RtlNtStatusToDosError(NtAccessStatus[ResultListIndex]);
+    }
+
+    return TRUE;
 }
 
 /*

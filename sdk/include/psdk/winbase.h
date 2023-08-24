@@ -1545,7 +1545,37 @@ void WINAPI AddRefActCtx(_Inout_ HANDLE);
 _Ret_maybenull_ PVOID WINAPI AddVectoredExceptionHandler(_In_ ULONG, _In_ PVECTORED_EXCEPTION_HANDLER);
 _Ret_maybenull_ PVOID WINAPI AddVectoredContinueHandler(_In_ ULONG, _In_ PVECTORED_EXCEPTION_HANDLER);
 #endif
-BOOL WINAPI AccessCheckByType(PSECURITY_DESCRIPTOR,PSID,HANDLE,DWORD,POBJECT_TYPE_LIST,DWORD,PGENERIC_MAPPING,PPRIVILEGE_SET,LPDWORD,LPDWORD,LPBOOL);
+
+BOOL
+WINAPI
+AccessCheckByType(
+  _In_ PSECURITY_DESCRIPTOR pSecurityDescriptor,
+  _In_opt_ PSID PrincipalSelfSid,
+  _In_ HANDLE ClientToken,
+  _In_ DWORD DesiredAccess,
+  _In_reads_opt_(ObjectTypeListLength) POBJECT_TYPE_LIST ObjectTypeList,
+  _In_ DWORD ObjectTypeListLength,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _Out_writes_bytes_(*PrivilegeSetLength)PPRIVILEGE_SET PrivilegeSet,
+  _Inout_ LPDWORD PrivilegeSetLength,
+  _Out_ LPDWORD GrantedAccess,
+  _Out_ LPBOOL AccessStatus);
+
+BOOL
+WINAPI
+AccessCheckByTypeResultList(
+  _In_ PSECURITY_DESCRIPTOR pSecurityDescriptor,
+  _In_opt_ PSID PrincipalSelfSid,
+  _In_ HANDLE ClientToken,
+  _In_ DWORD DesiredAccess,
+  _In_reads_(ObjectTypeListLength) POBJECT_TYPE_LIST ObjectTypeList,
+  _In_ DWORD ObjectTypeListLength,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _Out_writes_bytes_(*PrivilegeSetLength) PPRIVILEGE_SET PrivilegeSet,
+  _Inout_ LPDWORD PrivilegeSetLength,
+  _Out_writes_(ObjectTypeListLength) LPDWORD GrantedAccess,
+  _Out_writes_(ObjectTypeListLength) LPBOOL AccessStatus);
+
 BOOL WINAPI AdjustTokenGroups(HANDLE,BOOL,PTOKEN_GROUPS,DWORD,PTOKEN_GROUPS,PDWORD);
 BOOL WINAPI AdjustTokenPrivileges(HANDLE,BOOL,PTOKEN_PRIVILEGES,DWORD,PTOKEN_PRIVILEGES,PDWORD);
 BOOL WINAPI AllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY,BYTE,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,PSID*);
