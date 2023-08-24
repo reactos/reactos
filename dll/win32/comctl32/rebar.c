@@ -2732,6 +2732,11 @@ REBAR_strdifW( LPCWSTR a, LPCWSTR b )
     return ( (a && !b) || (b && !a) || (a && b && lstrcmpW(a, b) ) );
 }
 
+#ifdef __REACTOS__
+static LRESULT
+REBAR_ShowBand (REBAR_INFO *infoPtr, INT iBand, BOOL show);
+#endif // __REACTOS__
+
 static LRESULT
 REBAR_SetBandInfoT(REBAR_INFO *infoPtr, INT iBand, const REBARBANDINFOW *lprbbi, BOOL bUnicode)
 {
@@ -2775,7 +2780,13 @@ REBAR_SetBandInfoT(REBAR_INFO *infoPtr, INT iBand, const REBARBANDINFOW *lprbbi,
 	  REBAR_Layout(infoPtr);
 	  InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
     }
-
+#ifdef __REACTOS__
+    if (uChanged & RBBIM_STYLE)
+    {
+        BOOL bVisible = (lprbbi->fStyle & RBBS_HIDDEN) != RBBS_HIDDEN;
+        REBAR_ShowBand(infoPtr, iBand, bVisible == TRUE);
+    }
+#endif
     return TRUE;
 }
 
