@@ -1464,7 +1464,7 @@ CViewStatePropertyBag::_GetMRUSlots(
         return hr;
 
     hr = pMruList->QueryPidl(pidl, cSlots, puSlots, pcSlots);
-    if (SUCCEEDED(hr) && MODE_CAN_WRITE(dwMode))
+    if (hr == S_OK && MODE_CAN_WRITE(dwMode))
         hr = pMruList->UsePidl(pidl, puSlots);
     else if (cSlots == 1)
         hr = E_FAIL;
