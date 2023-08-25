@@ -253,20 +253,24 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
         hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
         if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         {
-           /* If already started, find its window */
+            /* If already started, find its window */
             HWND hWindow;
             for (int wait = 2500, inter = 250; wait > 0; wait -= inter)
-                if ((hWindow = FindWindowW(szWindowClass, NULL)) != 0)
+            {
+                if ((hWindow = FindWindowW(szWindowClass, NULL)) != NULL)
                     break;
                 else
                     Sleep(inter);
+            }
 
-            /* Activate the window in the other instance */
-            SwitchToThisWindow(hWindow, TRUE);
-            if (bAppwizMode)
-                PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
             if (hWindow)
+            {
+                /* Activate the window in the other instance */
+                SwitchToThisWindow(hWindow, TRUE);
+                if (bAppwizMode)
+                    PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
                 return FALSE;
+            }
         }
 
         CMainWindow wnd(&db, bAppwizMode);
