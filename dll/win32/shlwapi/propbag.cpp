@@ -1450,11 +1450,9 @@ CViewStatePropertyBag::_GetMRUSlots(
     UINT cSlots,
     UINT *pcSlots)
 {
-    HRESULT hr;
     CComPtr<IMruPidlList> pMruList;
-
-    hr = ::CoCreateInstance(CLSID_MruPidlList, NULL, CLSCTX_INPROC_SERVER, IID_IMruPidlList,
-                            (void**)&pMruList);
+    HRESULT hr = ::CoCreateInstance(CLSID_MruPidlList, NULL, CLSCTX_INPROC_SERVER,
+                                    IID_IMruPidlList, (void**)&pMruList);
     if (FAILED(hr))
         return hr;
 
