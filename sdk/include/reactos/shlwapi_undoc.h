@@ -108,9 +108,11 @@ HRESULT WINAPI SHPropertyBag_ReadRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, R
 HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GUID *pguid);
 HRESULT WINAPI SHPropertyBag_ReadStream(IPropertyBag *ppb, LPCWSTR pszPropName, IStream **ppStream);
 
-HRESULT WINAPI SHGetPerScreenResName(OUT LPWSTR lpResName,
-                                     IN INT cchResName,
-                                     IN DWORD dwReserved);
+INT WINAPI
+SHGetPerScreenResName(
+    _Out_writes_z_(cchBuffer) LPWSTR pszBuffer,
+    _In_ INT cchBuffer,
+    _In_ DWORD dwReserved);
 
 HRESULT WINAPI SHPropertyBag_Delete(IPropertyBag *ppb, LPCWSTR pszPropName);
 HRESULT WINAPI SHPropertyBag_WriteBOOL(IPropertyBag *ppb, LPCWSTR pszPropName, BOOL bValue);

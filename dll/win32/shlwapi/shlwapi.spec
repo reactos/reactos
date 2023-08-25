@@ -530,7 +530,7 @@
 530 stdcall -noname SHPropertyBag_WriteInt(ptr wstr long) SHPropertyBag_WriteLONG
 531 stdcall -noname SHPropertyBag_ReadStream(ptr wstr ptr)
 532 stdcall -noname SHPropertyBag_WriteStream(ptr wstr ptr)
-533 stub -noname SHGetPerScreenResName
+533 stdcall -noname SHGetPerScreenResName(ptr long long)
 534 stdcall -noname SHPropertyBag_ReadBOOL(ptr wstr ptr)
 535 stdcall -noname SHPropertyBag_Delete(ptr wstr)
 536 stdcall -stub -noname IUnknown_QueryServicePropertyBag(ptr long ptr ptr)

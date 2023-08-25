@@ -1806,3 +1806,30 @@ EXTERN_C VOID FreeViewStatePropertyBagCache(VOID)
     g_pCachedBag.Release();
     ::LeaveCriticalSection(&g_csBagCacheLock);
 }
+
+/**************************************************************************
+ *  SHGetPerScreenResName (SHLWAPI.533)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/getperscreenresname.htm
+ */
+INT WINAPI
+SHGetPerScreenResName(
+    _Out_writes_z_(cchBuffer) LPWSTR pszBuffer,
+    _In_ INT cchBuffer,
+    _In_ DWORD dwReserved)
+{
+    if (dwReserved)
+        return 0;
+
+    HDC hDC = ::GetDC(NULL);
+    INT cxWidth = ::GetDeviceCaps(hDC, HORZRES);
+    INT cyHeight = ::GetDeviceCaps(hDC, VERTRES);
+    ::ReleaseDC(NULL, hDC);
+
+    INT cMonitors = ::GetSystemMetrics(SM_CMONITORS);
+    INT ret = wnsprintfW(pszBuffer, cchBuffer, L"%dx%d(%d)", cxWidth, cyHeight, cMonitors);
+    if (ret < 0)
+        ret = 0;
+
+    return ret;
+}
