@@ -688,7 +688,7 @@ static void SHPropertyBag_SHSetIniStringW(void)
     DeleteFileW(szIniFile);
 }
 
-void SHPropertyBag_OnIniFile(void)
+static void SHPropertyBag_OnIniFile(void)
 {
     WCHAR szIniFile[MAX_PATH], szValue[MAX_PATH];
     HRESULT hr;
@@ -823,6 +823,18 @@ void SHPropertyBag_OnIniFile(void)
     DeleteFileW(szIniFile);
 }
 
+static void SHPropertyBag_PerScreenRes(void)
+{
+    WCHAR szBuff1[64], szBuff2[64];
+    wsprintfW(szBuff1, L"%dx%d(%d)",
+              GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
+              GetSystemMetrics(SM_CMONITORS));
+
+    szBuff2[0] = UNICODE_NULL;
+    SHGetPerScreenResName(szBuff2, _countof(szBuff2), 0);
+    ok_wstr(szBuff1, szBuff2);
+}
+
 START_TEST(SHPropertyBag)
 {
     SHPropertyBag_ReadTest();
@@ -831,4 +843,5 @@ START_TEST(SHPropertyBag)
     SHPropertyBag_OnRegKey();
     SHPropertyBag_SHSetIniStringW();
     SHPropertyBag_OnIniFile();
+    SHPropertyBag_PerScreenRes();
 }
