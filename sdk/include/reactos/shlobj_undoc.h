@@ -697,13 +697,13 @@ DECLARE_INTERFACE_(IMruPidlList, IUnknown)
 #undef INTERFACE
 
 #ifdef COBJMACROS
-#define IMruPidlList_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IMruPidlList_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IMruPidlList_Release(T) (T)->lpVtbl->Release(T)
-#define IMruPidlList_InitList(T,a,b,c) (T)->lpVtbl->InitList(T,a,b,c)
-#define IMruPidlList_UsePidl(T,a,b) (T)->lpVtbl->UsePidl(T,a,b)
-#define IMruPidlList_QueryPidl(T,a,b,c,d) (T)->lpVtbl->QueryPidl(T,a,b,c,d)
-#define IMruPidlList_PruneKids(T,a) (T)->lpVtbl->PruneKids(T,a)
+#define IMruPidlList_QueryInterface(T,a,b)  (T)->lpVtbl->QueryInterface(T,a,b)
+#define IMruPidlList_AddRef(T)              (T)->lpVtbl->AddRef(T)
+#define IMruPidlList_Release(T)             (T)->lpVtbl->Release(T)
+#define IMruPidlList_InitList(T,a,b,c)      (T)->lpVtbl->InitList(T,a,b,c)
+#define IMruPidlList_UsePidl(T,a,b)         (T)->lpVtbl->UsePidl(T,a,b)
+#define IMruPidlList_QueryPidl(T,a,b,c,d)   (T)->lpVtbl->QueryPidl(T,a,b,c,d)
+#define IMruPidlList_PruneKids(T,a)         (T)->lpVtbl->PruneKids(T,a)
 #endif
 
 /*****************************************************************************
