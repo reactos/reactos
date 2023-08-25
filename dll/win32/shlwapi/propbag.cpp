@@ -45,6 +45,9 @@ public:
     // IUnknown interface
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override
     {
+        if (!ppvObject)
+            return E_POINTER;
+
 #if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
         if (::IsEqualGUID(riid, IID_IPropertyBag2))
         {
@@ -60,8 +63,8 @@ public:
             return S_OK;
         }
 
-        ERR("%p: %s: E_NOTIMPL\n", this, debugstr_guid(&riid));
-        return E_NOTIMPL;
+        ERR("%p: %s: E_NOINTERFACE\n", this, debugstr_guid(&riid));
+        return E_NOINTERFACE;
     }
     STDMETHODIMP_(ULONG) AddRef() override
     {
