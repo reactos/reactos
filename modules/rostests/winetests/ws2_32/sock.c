@@ -7010,11 +7010,11 @@ static void test_write_watch(void)
     base = VirtualAlloc( 0, size, MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH, PAGE_READWRITE );
     ok( base != NULL, "VirtualAlloc failed %u\n", GetLastError() );
 
-#ifdef __REACTOS__  /* ROSTESTS-385 */
+#ifdef __REACTOS__
     if (!base)
     {
-        /* MEM_WRITE_WATCH is not supported yet in ReactOS */
-        win_skip( "VirtualAlloc not supported\n" );
+        skip("VirtualAlloc(MEM_WRITE_WATCH) is not supported yet on ReactOS\n");
+        skip("Skipping tests due to hang. See ROSTESTS-385\n");
         return;
     }
 #endif
@@ -8021,7 +8021,6 @@ static void test_getaddrinfo(void)
     }
 }
 
-#ifndef __REACTOS__    /* ROSTESTS-385 */
 static void test_ConnectEx(void)
 {
     SOCKET listener = INVALID_SOCKET;
@@ -8836,7 +8835,6 @@ static void test_DisconnectEx(void)
     closesocket(connector);
     closesocket(listener);
 }
-#endif // ifndef __REACTOS__   /* ROSTESTS-385 */
 
 #define compare_file(h,s,o) compare_file2(h,s,o,__FILE__,__LINE__)
 
@@ -11632,8 +11630,20 @@ START_TEST( sock )
     test_GetAddrInfoExW();
     test_getaddrinfo();
 
-#ifndef __REACTOS__    /* ROSTESTS-385 */
-    /* UNIMPLEMENTED in ReactOS See dll/win32/msafd/misc/stubs.c */
+#ifdef __REACTOS__
+    if (!winetest_interactive)
+    {
+        skip("WSPAcceptEx(), WSPConnectEx() and WSPDisconnectEx() are UNIMPLEMENTED on ReactOS\n");
+        skip("Skipping tests due to hang. See ROSTESTS-385\n");
+    }
+    else
+    {
+        /* UNIMPLEMENTED in ReactOS See dll/win32/msafd/misc/stubs.c */
+        test_AcceptEx();
+        test_ConnectEx();
+        test_DisconnectEx();
+    }
+#else
     test_AcceptEx();
     test_ConnectEx();
     test_DisconnectEx();
