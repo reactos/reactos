@@ -1271,12 +1271,14 @@ protected:
     BOOL _EnsureUserDefaultsBag(DWORD dwMode, REFIID riid);
     BOOL _EnsureFolderDefaultsBag(DWORD dwMode, REFIID riid);
     BOOL _EnsureGlobalDefaultsBag(DWORD dwMode, REFIID riid);
+    BOOL _EnsureWriteBag(DWORD dwMode, REFIID riid);
     HRESULT _ReadPidlBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
     HRESULT _ReadInheritBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
     HRESULT _ReadUpgradeBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
     HRESULT _ReadUserDefaultsBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
     HRESULT _ReadFolderDefaultsBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
     HRESULT _ReadGlobalDefaultsBag(LPCWSTR pszPropName, VARIANT *pvari, IErrorLog *pErrorLog);
+    void _PruneMRUTree();
 
 public:
     CViewStatePropertyBag() : CBasePropertyBag(STGM_READ) { }
@@ -1295,11 +1297,7 @@ public:
         _Inout_ VARIANT *pvari,
         _Inout_opt_ IErrorLog *pErrorLog) override;
 
-    STDMETHODIMP Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari) override
-    {
-        ERR("%p: %s: Read-only\n", this, debugstr_w(pszPropName));
-        return E_NOTIMPL;
-    }
+    STDMETHODIMP Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari) override;
 };
 
 // CViewStatePropertyBag is cached
@@ -1789,6 +1787,49 @@ CViewStatePropertyBag::Read(
         return hr;
 
     return _ReadGlobalDefaultsBag(pszPropName, pvari, pErrorLog);
+}
+
+void CViewStatePropertyBag::_PruneMRUTree()
+{
+    HKEY hKey = _GetHKey(SHGVSPB_INHERIT);
+    if (!hKey)
+        return;
+
+    CComPtr<IMruPidlList> pMruList;
+    HRESULT hr = ::CoCreateInstance(CLSID_MruPidlList, NULL, CLSCTX_INPROC_SERVER,
+                                    IID_IMruPidlList, (void**)&pMruList);
+    if (SUCCEEDED(hr))
+    {
+        hr = pMruList->InitList(200, hKey, L"BagMRU");
+        if (SUCCEEDED(hr))
+            pMruList->PruneKids(m_pidl);
+    }
+
+    ::RegCloseKey(hKey);
+}
+
+BOOL CViewStatePropertyBag::_EnsureWriteBag(DWORD dwMode, REFIID riid)
+{
+    if (!m_pWriteBag && !m_bWriteBag)
+    {
+        m_bWriteBag = TRUE;
+        _CreateBag(m_pidl, m_pszPath, m_dwVspbFlags, dwMode, riid, &m_pWriteBag);
+        if (m_pWriteBag)
+        {
+            _ResetTryAgainFlag();
+            if (m_dwVspbFlags & SHGVSPB_INHERIT)
+                _PruneMRUTree();
+        }
+    }
+    return (m_pWriteBag != NULL);
+}
+
+STDMETHODIMP CViewStatePropertyBag::Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari)
+{
+    if (!_EnsureWriteBag(STGM_WRITE, IID_IPropertyBag))
+        return E_FAIL;
+
+    return m_pWriteBag->Write(pszPropName, pvari);
 }
 
 static BOOL SHIsRemovableDrive(LPCITEMIDLIST pidl)
