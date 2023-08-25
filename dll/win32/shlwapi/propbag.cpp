@@ -1821,11 +1821,8 @@ SHGetPerScreenResName(
     if (dwReserved)
         return 0;
 
-    HDC hDC = ::GetDC(NULL);
-    INT cxWidth = ::GetDeviceCaps(hDC, HORZRES);
-    INT cyHeight = ::GetDeviceCaps(hDC, VERTRES);
-    ::ReleaseDC(NULL, hDC);
-
+    INT cxWidth = ::GetSystemMetrics(SM_CXFULLSCREEN);
+    INT cyHeight = ::GetSystemMetrics(SM_CYFULLSCREEN);
     INT cMonitors = ::GetSystemMetrics(SM_CMONITORS);
     INT ret = wnsprintfW(pszBuffer, cchBuffer, L"%dx%d(%d)", cxWidth, cyHeight, cMonitors);
     if (ret < 0)
