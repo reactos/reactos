@@ -15,6 +15,7 @@
 #include <atlsimpcoll.h>    // for CSimpleMap
 #include <atlcomcli.h>      // for CComVariant
 #include <atlconv.h>        // for CA2W and CW2A
+#include <strsafe.h>        // for StringC... functions
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -1496,14 +1497,14 @@ CViewStatePropertyBag::_GetRegKey(
         if (SUCCEEDED(hr))
         {
             if (dwFlags & SHGVSPB_INHERIT)
-                wnsprintfW(pszDest, cchDest, L"Bags\\%d\\%s\\Inherit", nSlot, pszBagName);
+                StringCchPrintfW(pszDest, cchDest, L"Bags\\%d\\%s\\Inherit", nSlot, pszBagName);
             else
-                wnsprintfW(pszDest, cchDest, L"Bags\\%d\\%s", nSlot, pszBagName);
+                StringCchPrintfW(pszDest, cchDest, L"Bags\\%d\\%s", nSlot, pszBagName);
         }
     }
     else
     {
-        wnsprintfW(pszDest, cchDest, L"Bags\\AllFolders\\%s", pszBagName);
+        StringCchPrintfW(pszDest, cchDest, L"Bags\\AllFolders\\%s", pszBagName);
     }
 
     return hr;
@@ -1597,7 +1598,7 @@ CViewStatePropertyBag::_FindNearestInheritBag(REFIID riid, IPropertyBag **pppb)
     WCHAR szBuff[64];
     for (UINT iSlot = 0; iSlot < cSlots; ++iSlot)
     {
-        wnsprintfW(szBuff, _countof(szBuff), L"Bags\\%d\\%s\\Inherit", anSlots[iSlot], m_pszPath);
+        StringCchPrintfW(szBuff, _countof(szBuff), L"Bags\\%d\\%s\\Inherit", anSlots[iSlot], m_pszPath);
         hr = SHCreatePropertyBagOnRegKey(hKey, szBuff, STGM_READ, riid, (void**)pppb);
         if (SUCCEEDED(hr))
             break;
