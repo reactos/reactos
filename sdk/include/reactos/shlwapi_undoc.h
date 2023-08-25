@@ -110,7 +110,7 @@ HRESULT WINAPI SHPropertyBag_ReadStream(IPropertyBag *ppb, LPCWSTR pszPropName, 
 
 INT WINAPI
 SHGetPerScreenResName(
-    _Out_writes_z_(cchBuffer) LPWSTR pszBuffer,
+    _Out_writes_(cchBuffer) LPWSTR pszBuffer,
     _In_ INT cchBuffer,
     _In_ DWORD dwReserved);
 
