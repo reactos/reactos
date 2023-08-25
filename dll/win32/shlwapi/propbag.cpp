@@ -1437,7 +1437,7 @@ UINT CViewStatePropertyBag::_GetMRUSize(HKEY hKey)
     DWORD dwValue, cbValue = sizeof(dwValue);
 
     if (SHGetValueW(hKey, NULL, L"BagMRU Size", NULL, &dwValue, &cbValue) != ERROR_SUCCESS)
-        return 400;
+        return 400; // The default size of the MRU (most recently used) list
 
     return (UINT)dwValue;
 }
