@@ -13,6 +13,7 @@
 #include <atlsimpcoll.h>    // for CSimpleMap
 #include <atlcomcli.h>      // for CComVariant
 #include <atlconv.h>        // for CA2W and CW2A
+#include <strsafe.h>        // for StringC... functions
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -1824,9 +1825,6 @@ SHGetPerScreenResName(
     INT cxWidth = ::GetSystemMetrics(SM_CXFULLSCREEN);
     INT cyHeight = ::GetSystemMetrics(SM_CYFULLSCREEN);
     INT cMonitors = ::GetSystemMetrics(SM_CMONITORS);
-    INT ret = wnsprintfW(pszBuffer, cchBuffer, L"%dx%d(%d)", cxWidth, cyHeight, cMonitors);
-    if (ret < 0)
-        ret = 0;
-
-    return ret;
+    StringCchPrintfW(pszBuffer, cchBuffer, L"%dx%d(%d)", cxWidth, cyHeight, cMonitors);
+    return lstrlenW(pszBuffer);
 }
