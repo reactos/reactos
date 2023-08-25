@@ -1598,7 +1598,8 @@ CViewStatePropertyBag::_FindNearestInheritBag(REFIID riid, IPropertyBag **pppb)
     WCHAR szBuff[64];
     for (UINT iSlot = 0; iSlot < cSlots; ++iSlot)
     {
-        StringCchPrintfW(szBuff, _countof(szBuff), L"Bags\\%d\\%s\\Inherit", anSlots[iSlot], m_pszPath);
+        StringCchPrintfW(szBuff, _countof(szBuff), L"Bags\\%d\\%s\\Inherit", anSlots[iSlot],
+                         m_pszPath);
         hr = SHCreatePropertyBagOnRegKey(hKey, szBuff, STGM_READ, riid, (void**)pppb);
         if (SUCCEEDED(hr))
             break;
