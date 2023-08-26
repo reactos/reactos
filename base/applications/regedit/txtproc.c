@@ -15,13 +15,6 @@ static HKEY reg_class_keys[] =
     HKEY_CURRENT_CONFIG, HKEY_CURRENT_USER, HKEY_DYN_DATA
 };
 
-static INT text_len(LPCWSTR text, size_t byte_size)
-{
-    size_t cch;
-    StringCchLengthW(text, byte_size / sizeof(WCHAR), &cch);
-    return (INT)cch;
-}
-
 static LPWSTR load_str(INT id)
 {
     /* Use rotation buffer */
@@ -157,43 +150,43 @@ txt_export_data(FILE *fp, INT i, LPCWSTR value_name, DWORD value_len, DWORD type
 
     switch (type)
     {
-    case REG_SZ:
-        txt_export_type(fp, L"REG_SZ");
-        txt_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_len(data, size), data);
-        break;
+        case REG_SZ:
+            txt_export_type(fp, L"REG_SZ");
+            txt_export_field(fp, load_str(IDS_FIELD_DATA), data);
+            break;
 
-    case REG_DWORD:
-        txt_export_type(fp, L"REG_DWORD");
-        txt_fprintf(fp, L"%-19s0x%lx\r\n", load_str(IDS_FIELD_DATA), *(DWORD*)data);
-        break;
+        case REG_DWORD:
+            txt_export_type(fp, L"REG_DWORD");
+            txt_fprintf(fp, L"%-19s0x%lx\r\n", load_str(IDS_FIELD_DATA), *(DWORD*)data);
+            break;
 
-    case REG_EXPAND_SZ:
-        txt_export_type(fp, L"REG_EXPAND_SZ");
-        txt_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_len(data, size), data);
-        break;
+        case REG_EXPAND_SZ:
+            txt_export_type(fp, L"REG_EXPAND_SZ");
+            txt_export_field(fp, load_str(IDS_FIELD_DATA), data);
+            break;
 
-    case REG_MULTI_SZ:
-        txt_export_type(fp, L"REG_MULTI_SZ");
-        txt_export_multi_sz(fp, data, size);
-        break;
+        case REG_MULTI_SZ:
+            txt_export_type(fp, L"REG_MULTI_SZ");
+            txt_export_multi_sz(fp, data, size);
+            break;
 
-    case REG_BINARY:
-    case REG_QWORD:
-    case REG_NONE:
-    default:
-        if (type == REG_BINARY)
-            pszType = L"REG_BINARY";
-        else if (type == REG_QWORD)
-            pszType = L"REG_QWORD";
-        else if (type == REG_NONE)
-            pszType = L"REG_NONE";
-        else
-            pszType = load_str(IDS_UNKNOWN);
+        case REG_BINARY:
+        case REG_QWORD:
+        case REG_NONE:
+        default:
+            if (type == REG_BINARY)
+                pszType = L"REG_BINARY";
+            else if (type == REG_QWORD)
+                pszType = L"REG_QWORD";
+            else if (type == REG_NONE)
+                pszType = L"REG_NONE";
+            else
+                pszType = load_str(IDS_UNKNOWN);
 
-        txt_export_type(fp, pszType);
-        txt_export_field(fp, load_str(IDS_FIELD_DATA), L"");
-        txt_export_binary(fp, data, size);
-        break;
+            txt_export_type(fp, pszType);
+            txt_export_field(fp, load_str(IDS_FIELD_DATA), L"");
+            txt_export_binary(fp, data, size);
+            break;
     }
 
     txt_newline(fp);
