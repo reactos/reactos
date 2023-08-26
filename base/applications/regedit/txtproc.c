@@ -144,24 +144,24 @@ static void export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len, DWO
         export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_DWORD");
         export_fprintf(fp, L"%-19s0x%08lX\r\n", load_str(IDS_FIELD_DATA), *(DWORD*)data);
         break;
-    case REG_NONE:
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_NONE");
-        break;
     case REG_EXPAND_SZ:
         export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_EXPAND_SZ");
         export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_length(data, size), data);
-        break;
-    case REG_BINARY:
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_BINARY");
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_DATA), L"");
-        export_binary(fp, data, size);
         break;
     case REG_MULTI_SZ:
         export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_MULTI_SZ");
         export_multi_string(fp, data, size);
         break;
+    case REG_NONE:
+    case REG_BINARY:
     default:
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), load_str(IDS_UNKNOWN));
+        if (type == REG_BINARY)
+            export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_BINARY");
+        else if (type == REG_NONE)
+            export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_NONE");
+        else
+            export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), load_str(IDS_UNKNOWN));
+        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_DATA), L"");
         export_binary(fp, data, size);
         break;
     }
