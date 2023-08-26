@@ -95,6 +95,28 @@ do {    \
     FindClose(h);                           \
 } while (0)
 
+#define testType3_A(lpFileName, fInfoLevelId, fSearchOp, lpSearchFilter, dwAdditionalFlags, dwInitialError, hUnexpectedHandleValue, dwExpectedError)    \
+do {    \
+    ZeroMemory(&fd, sizeof(fd));            \
+    SetLastError((dwInitialError));         \
+    h = FindFirstFileExA((lpFileName), (fInfoLevelId), &fd, (fSearchOp), (lpSearchFilter), (dwAdditionalFlags));  \
+    ok(h != (hUnexpectedHandleValue), "FindFirstFileExA returned 0x%p\n", h); \
+    ok_err(dwExpectedError);                \
+    ok(fd.cFileName[0] != 0, "fd.cFileName == \"\"\n"); \
+    FindClose(h);                           \
+} while (0)
+
+#define testType3_W(lpFileName, fInfoLevelId, fSearchOp, lpSearchFilter, dwAdditionalFlags, dwInitialError, hUnexpectedHandleValue, dwExpectedError)    \
+do {    \
+    ZeroMemory(&fd, sizeof(fd));            \
+    SetLastError((dwInitialError));         \
+    h = FindFirstFileExW((lpFileName), (fInfoLevelId), &fd, (fSearchOp), (lpSearchFilter), (dwAdditionalFlags));  \
+    ok(h != (hUnexpectedHandleValue), "FindFirstFileExW returned 0x%p\n", h); \
+    ok_err(dwExpectedError);                \
+    ok(fd.cFileName[0] != 0, "fd.cFileName == \"\"\n"); \
+    FindClose(h);                           \
+} while (0)
+
 
 static void Test_FindFirstFileA(void)
 {
@@ -104,7 +126,7 @@ static void Test_FindFirstFileA(void)
     HANDLE h;
 
     /* Save the current directory */
-    GetCurrentDirectoryA(sizeof(CurrentDirectory) / sizeof(CHAR), CurrentDirectory);
+    GetCurrentDirectoryA(_countof(CurrentDirectory), CurrentDirectory);
 
 /*** Tests for the root directory - root directory ***/
     /* Modify the current directory */
@@ -295,7 +317,7 @@ static void Test_FindFirstFileW(void)
     HANDLE h;
 
     /* Save the current directory */
-    GetCurrentDirectoryW(sizeof(CurrentDirectory) / sizeof(WCHAR), CurrentDirectory);
+    GetCurrentDirectoryW(_countof(CurrentDirectory), CurrentDirectory);
 
 /*** Tests for the root directory - root directory ***/
     /* Modify the current directory */
@@ -478,6 +500,39 @@ static void Test_FindFirstFileW(void)
     return;
 }
 
+static void Test_FindFirstFileExA(void)
+{
+    CHAR CurrentDirectory[MAX_PATH];
+    WIN32_FIND_DATAA fd;
+    HANDLE h;
+
+    /* Save the current directory */
+    GetCurrentDirectoryA(_countof(CurrentDirectory), CurrentDirectory);
+    SetCurrentDirectoryA(OSDirA); /* We expect here that OSDir is of the form: C:\OSDir */
+
+    testType3_A(".", FindExInfoStandard, FindExSearchNameMatch, NULL, 0, 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
+    testType3_A(".", FindExInfoStandard, FindExSearchNameMatch, "XXX", 0, 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
+
+    /* Restore the old current directory */
+    SetCurrentDirectoryA(CurrentDirectory);
+}
+
+static void Test_FindFirstFileExW(void)
+{
+    WCHAR CurrentDirectory[MAX_PATH];
+    WIN32_FIND_DATAW fd;
+    HANDLE h;
+
+    /* Save the current directory */
+    GetCurrentDirectoryW(_countof(CurrentDirectory), CurrentDirectory);
+    SetCurrentDirectoryW(OSDirW); /* We expect here that OSDir is of the form: C:\OSDir */
+
+    testType3_W(L".", FindExInfoStandard, FindExSearchNameMatch, NULL, 0, 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
+    testType3_W(L".", FindExInfoStandard, FindExSearchNameMatch, L"XXX", 0, 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
+
+    /* Restore the old current directory */
+    SetCurrentDirectoryW(CurrentDirectory);
+}
 
 static int init(void)
 {
@@ -485,7 +540,7 @@ static int init(void)
     size_t i;
 
     myARGC = winetest_get_mainargs(&myARGV);
-    if (!GetCurrentDirectoryA(sizeof(baseA)/sizeof(baseA[0]), baseA)) return 0;
+    if (!GetCurrentDirectoryA(_countof(baseA), baseA)) return 0;
     strcpy(selfnameA, myARGV[0]);
 
     /* Strip the path of selfname */
@@ -497,7 +552,7 @@ static int init(void)
     if ((p = strrchr(exenameA, '/')) != NULL)
         exenameA = p + 1;
 
-    if (!GetWindowsDirectoryA(OSDirA, sizeof(OSDirA)/sizeof(OSDirA[0]))) return 0;
+    if (!GetWindowsDirectoryA(OSDirA, _countof(OSDirA))) return 0;
 
     /* Quick-and-dirty conversion ANSI --> UNICODE without the Win32 APIs */
     for (i = 0 ; i <= strlen(baseA) ; ++i)
@@ -519,10 +574,12 @@ static int init(void)
 
 START_TEST(FindFiles)
 {
-    int b  = init();
+    int b = init();
     ok(b, "Basic init of FindFiles test\n");
     if (!b) return;
 
     Test_FindFirstFileA();
     Test_FindFirstFileW();
+    Test_FindFirstFileExA();
+    Test_FindFirstFileExW();
 }
