@@ -327,7 +327,7 @@ static FILE *txt_open_export_file(LPCWSTR file_name)
     return file;
 }
 
-static HKEY txt_open_export_key(HKEY key_class, WCHAR *subkey, WCHAR *path)
+static HKEY txt_open_export_key(HKEY key_class, LPCWSTR subkey, WCHAR *path)
 {
     HKEY key;
 
