@@ -111,9 +111,9 @@ static void txt_export_binary(FILE *fp, const void *data, size_t size)
     }
 }
 
-static void txt_export_field(FILE *fp, LPCWSTR pszLabel, LPCWSTR pszValue)
+static void txt_export_field(FILE *fp, LPCWSTR label, LPCWSTR value)
 {
-    txt_fprintf(fp, L"%-19s%s\r\n", pszLabel, pszValue);
+    txt_fprintf(fp, L"%-19s%s\r\n", label, value);
 }
 
 static void txt_export_multi_sz(FILE *fp, const void *data, size_t size)
@@ -128,14 +128,14 @@ static void txt_export_multi_sz(FILE *fp, const void *data, size_t size)
     }
 }
 
-static void txt_export_type(FILE *fp, LPCWSTR pszType)
+static void txt_export_type(FILE *fp, LPCWSTR type)
 {
-    txt_export_field(fp, load_str(IDS_FIELD_TYPE), pszType);
+    txt_export_field(fp, load_str(IDS_FIELD_TYPE), type);
 }
 
-static void txt_export_name(FILE *fp, LPCWSTR pszName)
+static void txt_export_name(FILE *fp, LPCWSTR name)
 {
-    txt_export_field(fp, load_str(IDS_FIELD_NAME), pszName);
+    txt_export_field(fp, load_str(IDS_FIELD_NAME), name);
 }
 
 static void
@@ -193,7 +193,7 @@ txt_export_data(FILE *fp, INT i, LPCWSTR value_name, DWORD value_len, DWORD type
 }
 
 static WCHAR *
-txt_build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name, DWORD subkey_len)
+txt_build_subkey_path(LPCWSTR path, DWORD path_len, LPCWSTR subkey_name, DWORD subkey_len)
 {
     WCHAR *subkey_path;
     subkey_path = malloc((path_len + subkey_len + 2) * sizeof(WCHAR));
@@ -237,7 +237,7 @@ static void txt_export_class_and_last_write(FILE *fp, HKEY key)
     txt_fprintf(fp, L"%-19s%s - %s\r\n", load_str(IDS_FIELD_LASTWRITE), sz1, sz2);
 }
 
-static void txt_export_registry_data(FILE *fp, HKEY key, WCHAR *path)
+static void txt_export_registry_data(FILE *fp, HKEY key, LPCWSTR path)
 {
     LONG rc;
     DWORD max_value_len = 256, value_len;
@@ -314,7 +314,7 @@ static void txt_export_registry_data(FILE *fp, HKEY key, WCHAR *path)
     free(subkey_name);
 }
 
-static FILE *txt_open_export_file(WCHAR *file_name)
+static FILE *txt_open_export_file(LPCWSTR file_name)
 {
     FILE *file = _wfopen(file_name, L"wb");
     if (!file)
@@ -338,7 +338,7 @@ static HKEY txt_open_export_key(HKEY key_class, WCHAR *subkey, WCHAR *path)
     return NULL;
 }
 
-static BOOL txt_export_key(WCHAR *file_name, WCHAR *path)
+static BOOL txt_export_key(LPCWSTR file_name, WCHAR *path)
 {
     HKEY key_class, key;
     WCHAR *subkey;
@@ -363,7 +363,7 @@ static BOOL txt_export_key(WCHAR *file_name, WCHAR *path)
     return TRUE;
 }
 
-static BOOL txt_export_all(WCHAR *file_name, WCHAR *path)
+static BOOL txt_export_all(LPCWSTR file_name, WCHAR *path)
 {
     FILE *fp;
     int i;
@@ -395,7 +395,7 @@ static BOOL txt_export_all(WCHAR *file_name, WCHAR *path)
     return TRUE;
 }
 
-BOOL txt_export_registry_key(WCHAR *file_name, WCHAR *path)
+BOOL txt_export_registry_key(LPCWSTR file_name, WCHAR *path)
 {
     if (path && *path)
         return txt_export_key(file_name, path);
