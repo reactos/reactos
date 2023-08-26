@@ -139,7 +139,8 @@ static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len,
     {
     case REG_SZ:
         txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_SZ");
-        txt_export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_len(data, size), data);
+        txt_export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA),
+                           text_len(data, size), data);
         break;
     case REG_DWORD:
         txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_DWORD");
@@ -147,7 +148,8 @@ static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len,
         break;
     case REG_EXPAND_SZ:
         txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_EXPAND_SZ");
-        txt_export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_len(data, size), data);
+        txt_export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA),
+                           text_len(data, size), data);
         break;
     case REG_MULTI_SZ:
         txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_MULTI_SZ");
@@ -161,7 +163,8 @@ static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len,
         else if (type == REG_NONE)
             txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_NONE");
         else
-            txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), load_str(IDS_UNKNOWN));
+            txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE),
+                               load_str(IDS_UNKNOWN));
         txt_export_fprintf(fp, L"%-19s\r\n", load_str(IDS_FIELD_DATA));
         txt_export_binary(fp, data, size);
         break;
@@ -170,7 +173,8 @@ static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len,
     txt_export_newline(fp);
 }
 
-static WCHAR *txt_build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name, DWORD subkey_len)
+static WCHAR *
+txt_build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name, DWORD subkey_len)
 {
     WCHAR *subkey_path;
     subkey_path = malloc((path_len + subkey_len + 2) * sizeof(WCHAR));
@@ -198,20 +202,21 @@ static void txt_export_class_and_last_write(FILE *fp, HKEY key)
         txt_export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_CLASS_NAME),
                            text_len(szClassName, cchClassName * sizeof(WCHAR)), szClassName);
     else
-        txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_CLASS_NAME), load_str(IDS_NO_CLASS_NAME));
+        txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_CLASS_NAME),
+                           load_str(IDS_NO_CLASS_NAME));
 
     if (memcmp(&ftLastWrite, &ftNull, sizeof(ftNull)) == 0)
     {
-        txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_LASTWRITE), load_str(IDS_NULL_TIMESTAMP));
+        txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_LASTWRITE),
+                           load_str(IDS_NULL_TIMESTAMP));
+        return;
     }
-    else
-    {
-        FileTimeToLocalFileTime(&ftLastWrite, &ftLocal);
-        FileTimeToSystemTime(&ftLocal, &stLastWrite);
-        GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &stLastWrite, NULL, sz1, _countof(sz1));
-        GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &stLastWrite, NULL, sz2, _countof(sz2));
-        txt_export_fprintf(fp, L"%-19s%s - %s\r\n", load_str(IDS_FIELD_LASTWRITE), sz1, sz2);
-    }
+
+    FileTimeToLocalFileTime(&ftLastWrite, &ftLocal);
+    FileTimeToSystemTime(&ftLocal, &stLastWrite);
+    GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &stLastWrite, NULL, sz1, _countof(sz1));
+    GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &stLastWrite, NULL, sz2, _countof(sz2));
+    txt_export_fprintf(fp, L"%-19s%s - %s\r\n", load_str(IDS_FIELD_LASTWRITE), sz1, sz2);
 }
 
 static void txt_export_registry_data(FILE *fp, HKEY key, WCHAR *path)
