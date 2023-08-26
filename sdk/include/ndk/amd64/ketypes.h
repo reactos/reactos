@@ -25,6 +25,62 @@ Author:
 //
 
 //
+// Kernel Feature Bits
+// See https://www.geoffchappell.com/studies/windows/km/ntoskrnl/structs/kprcb/featurebits.htm?tx=61&ts=0,1400
+//
+#define KF_SMEP                         0x00000001 // Win 6.2
+#define KF_RDTSC                        0x00000002 // From ks386.inc, ksamd64.inc
+#define KF_CR4                          0x00000004 // From ks386.inc, ksamd64.inc
+#define KF_CMOV                         0x00000008
+#define KF_GLOBAL_PAGE                  0x00000010 // From ks386.inc, ksamd64.inc
+#define KF_LARGE_PAGE                   0x00000020 // From ks386.inc, ksamd64.inc
+#define KF_MTRR                         0x00000040
+#define KF_CMPXCHG8B                    0x00000080 // From ks386.inc, ksamd64.inc
+#define KF_MMX                          0x00000100
+#define KF_DTS                          0x00000200 // Win 5.2-6.2
+#define KF_PAT                          0x00000400
+#define KF_FXSR                         0x00000800
+#define KF_FAST_SYSCALL                 0x00001000 // From ks386.inc, ksamd64.inc
+#define KF_XMMI                         0x00002000 // SSE
+#define KF_3DNOW                        0x00004000
+#define KF_AMDK6MTRR                    0x00008000 // Win 5.0-6.1
+#define KF_XSAVEOPT                     0x00008000 // From KF_XSAVEOPT_BIT
+#define KF_XMMI64                       0x00010000 // SSE2
+#define KF_BRANCH                       0x00020000 // From ksamd64.inc, Win 6.1-6.2 
+#define KF_00040000                     0x00040000 // Unclear
+#define KF_SSE3                         0x00080000 // Win 6.0+
+#define KF_CMPXCHG16B                   0x00100000 // Win 6.0-6.2
+#define KF_AUTHENTICAMD                 0x00200000 // Win 6.1+
+#define KF_ACNT2                        0x00400000 // Win 6.1+
+#define KF_XSTATE                       0x00800000 // From ksamd64.inc, Win 6.1+
+#define KF_GENUINE_INTEL                0x01000000 // Win 6.1+
+#define KF_02000000                     0x02000000 // Unclear
+#define KF_SLAT                         0x04000000 // Win 6.2+, Intel: EPT supported
+#define KF_VIRT_FIRMWARE_ENABLED        0x08000000 // Win 6.2+
+#define KF_RDWRFSGSBASE                 0x10000000 // From ksamd64.inc KF_RDWRFSGSBASE_BIT (0x1C)
+#define KF_NX_BIT                       0x20000000
+#define KF_NX_DISABLED                  0x40000000
+#define KF_NX_ENABLED                   0x80000000
+#define KF_RDRAND               0x0000000100000000ULL // Win 10.0+
+#define KF_SMAP                 0x0000000200000000ULL // From ksamd64.inc
+#define KF_RDTSCP               0x0000000400000000ULL // Win 10.0+
+#define KF_HUGEPAGE             0x0000002000000000ULL // Win 10.0 1607+
+#define KF_XSAVES               0x0000004000000000ULL // From ksamd64.inc KF_XSAVES_BIT (0x26)
+#define KF_FPU_LEAKAGE          0x0000020000000000ULL // From ksamd64.inc KF_FPU_LEAKAGE_BIT (0x29)
+#define KF_CAT                  0x0000100000000000ULL // From ksamd64.inc KF_CAT_BIT (0x02C)
+#define KF_CET_SS               0x0000400000000000ULL // From ksamd64.inc
+#define KF_SSSE3                0x0000800000000000ULL
+#define KF_SSE4_1               0x0001000000000000ULL
+#define KF_SSE4_2               0x0002000000000000ULL
+
+#define KF_XSAVEOPT_BIT                 15 // From ksamd64.inc (0x0F -> 0x8000)
+#define KF_XSTATE_BIT                   23 // From ksamd64.inc (0x17 -> 0x800000)
+#define KF_RDWRFSGSBASE_BIT             28 // From ksamd64.inc (0x1C -> 0x10000000)
+#define KF_XSAVES_BIT                   38 // From ksamd64.inc (0x26 -> 0x4000000000)
+#define KF_FPU_LEAKAGE_BIT              41 // From ksamd64.inc (0x29 -> 0x20000000000)
+#define KF_CAT_BIT                      44 // From ksamd64.inc (0x2C -> 0x100000000000)
+
+//
 // KPCR Access for non-IA64 builds
 //
 //#define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
