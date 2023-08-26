@@ -61,13 +61,14 @@ static HKEY txt_parse_key_name(WCHAR *key_name, WCHAR **key_path)
     if (!key_name) return 0;
 
     *key_path = wcschr(key_name, '\\');
-    if (*key_path) (*key_path)++;
+    if (*key_path)
+        (*key_path)++;
 
     for (i = 0; i < _countof(reg_class_keys); i++)
     {
         int len = lstrlenW(reg_class_namesW[i]);
         if (!_wcsnicmp(key_name, reg_class_namesW[i], len) &&
-           (key_name[len] == 0 || key_name[len] == '\\'))
+            (key_name[len] == 0 || key_name[len] == '\\'))
         {
             return reg_class_keys[i];
         }
@@ -117,9 +118,9 @@ static void txt_export_binary(FILE *fp, const void *data, size_t size)
     }
 }
 
-static void txt_export_multi_string(FILE *fp, const void *data, size_t size)
+static void txt_export_multi_sz(FILE *fp, const void *data, size_t size)
 {
-    const WCHAR *pch;
+    LPCWSTR pch;
     for (pch = data; *pch; pch += lstrlenW(pch) + 1)
     {
         if (pch == data)
@@ -129,32 +130,47 @@ static void txt_export_multi_string(FILE *fp, const void *data, size_t size)
     }
 }
 
-static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len, DWORD type,
-                            const void *data, size_t size)
+static void txt_export_type(FILE *fp, LPCWSTR pszType)
+{
+    txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), pszType);
+}
+
+static void txt_export_name(FILE *fp, LPCWSTR pszName)
+{
+    txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_NAME), pszName);
+}
+
+static void
+txt_export_data(FILE *fp, INT i, LPCWSTR value_name, DWORD value_len, DWORD type,
+                const void *data, size_t size)
 {
     LPCWSTR pszType;
 
     txt_fprintf(fp, load_str(IDS_VALUE_INDEX), i);
-    txt_fprintf(fp, L"\r\n%-19s%s\r\n", load_str(IDS_FIELD_NAME), value_name);
+    txt_export_name(fp, value_name);
 
     switch (type)
     {
     case REG_SZ:
-        txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_SZ");
+        txt_export_type(fp, L"REG_SZ");
         txt_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_len(data, size), data);
         break;
+
     case REG_DWORD:
-        txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_DWORD");
+        txt_export_type(fp, L"REG_DWORD");
         txt_fprintf(fp, L"%-19s0x%lx\r\n", load_str(IDS_FIELD_DATA), *(DWORD*)data);
         break;
+
     case REG_EXPAND_SZ:
-        txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_EXPAND_SZ");
+        txt_export_type(fp, L"REG_EXPAND_SZ");
         txt_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_len(data, size), data);
         break;
+
     case REG_MULTI_SZ:
-        txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_MULTI_SZ");
-        txt_export_multi_string(fp, data, size);
+        txt_export_type(fp, L"REG_MULTI_SZ");
+        txt_export_multi_sz(fp, data, size);
         break;
+
     case REG_BINARY:
     case REG_QWORD:
     case REG_NONE:
@@ -168,7 +184,7 @@ static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len,
         else
             pszType = load_str(IDS_UNKNOWN);
 
-        txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), pszType);
+        txt_export_type(fp, pszType);
         txt_fprintf(fp, L"%-19s\r\n", load_str(IDS_FIELD_DATA));
         txt_export_binary(fp, data, size);
         break;
