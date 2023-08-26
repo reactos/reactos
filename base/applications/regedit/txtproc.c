@@ -317,13 +317,8 @@ static void txt_export_registry_data(FILE *fp, HKEY key, LPCWSTR path)
 static FILE *txt_open_export_file(LPCWSTR file_name)
 {
     FILE *file = _wfopen(file_name, L"wb");
-    if (!file)
-    {
-        _wperror(L"regedit");
-        error_exit(STRING_CANNOT_OPEN_FILE, file_name);
-    }
-
-    fwrite("\xFF\xFE", 2, 1, file);
+    if (file)
+        fwrite("\xFF\xFE", 2, 1, file);
     return file;
 }
 
@@ -331,11 +326,10 @@ static HKEY txt_open_export_key(HKEY key_class, LPCWSTR subkey, WCHAR *path)
 {
     HKEY key;
 
-    if (!RegOpenKeyExW(key_class, subkey, 0, KEY_READ, &key))
-        return key;
+    if (RegOpenKeyExW(key_class, subkey, 0, KEY_READ, &key) != ERROR_SUCCESS)
+        return NULL;
 
-    output_message(STRING_OPEN_KEY_FAILED, path);
-    return NULL;
+    return key;
 }
 
 static BOOL txt_export_key(LPCWSTR file_name, WCHAR *path)
@@ -347,7 +341,6 @@ static BOOL txt_export_key(LPCWSTR file_name, WCHAR *path)
     if (!(key_class = txt_parse_key_name(path, &subkey)))
     {
         if (subkey) *(subkey - 1) = 0;
-        output_message(STRING_INVALID_SYSTEM_KEY, path);
         return FALSE;
     }
 
@@ -355,12 +348,15 @@ static BOOL txt_export_key(LPCWSTR file_name, WCHAR *path)
         return FALSE;
 
     fp = txt_open_export_file(file_name);
-    txt_export_registry_data(fp, key, path);
-    txt_newline(fp);
-    fclose(fp);
+    if (fp)
+    {
+        txt_export_registry_data(fp, key, path);
+        txt_newline(fp);
+        fclose(fp);
+    }
 
     RegCloseKey(key);
-    return TRUE;
+    return fp != NULL;
 }
 
 static BOOL txt_export_all(LPCWSTR file_name, WCHAR *path)
@@ -371,6 +367,8 @@ static BOOL txt_export_all(LPCWSTR file_name, WCHAR *path)
     WCHAR *class_name;
 
     fp = txt_open_export_file(file_name);
+    if (!fp)
+        return FALSE;
 
     for (i = 0; i < _countof(classes); i++)
     {
