@@ -1777,11 +1777,7 @@ static void move_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, const FILE
 
     if (IsAttribFile(feFrom->attributes))
 #ifdef __REACTOS__
-    {
-        WCHAR szDestPath[MAX_PATH];
-        PathCombineW(szDestPath, feTo->szFullPath, feFrom->szFilename);
         move_file_to_file(op, feFrom->szFullPath, szDestPath);
-    }
 #else
         SHNotifyMoveFileW(op, feFrom->szFullPath, szDestPath, FALSE);
 #endif
