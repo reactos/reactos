@@ -142,7 +142,7 @@ static void export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len, DWO
         break;
     case REG_DWORD:
         export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_DWORD");
-        export_fprintf(fp, L"%-19s0x%08lX\r\n", load_str(IDS_FIELD_DATA), *(DWORD*)data);
+        export_fprintf(fp, L"%-19s0x%lx\r\n", load_str(IDS_FIELD_DATA), *(DWORD*)data);
         break;
     case REG_EXPAND_SZ:
         export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_EXPAND_SZ");
