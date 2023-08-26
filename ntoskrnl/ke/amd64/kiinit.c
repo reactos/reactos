@@ -170,7 +170,7 @@ NTAPI
 KiInitializeCpu(PKIPCR Pcr)
 {
     ULONG64 Pat;
-    ULONG FeatureBits;
+    ULONG64 FeatureBits;
 
     /* Initialize gs */
     KiInitializeSegments();
@@ -199,7 +199,8 @@ KiInitializeCpu(PKIPCR Pcr)
     FeatureBits |= KF_NX_ENABLED;
 
     /* Save feature bits */
-    Pcr->Prcb.FeatureBits = FeatureBits;
+    Pcr->Prcb.FeatureBits = (ULONG)FeatureBits;
+    Pcr->Prcb.FeatureBitsHigh = FeatureBits >> 32;
 
     /* Enable fx save restore support */
     __writecr4(__readcr4() | CR4_FXSR);
@@ -283,6 +284,8 @@ KiInitializeKernelMachineDependent(
     IN PKPRCB Prcb,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    ULONG64 FeatureBits;
+
     /* Set boot-level flags */
     KeI386CpuType = Prcb->CpuType;
     KeI386CpuStep = Prcb->CpuStep;
@@ -291,26 +294,52 @@ KiInitializeKernelMachineDependent(
     if (Prcb->CpuID)
         KeProcessorRevision = Prcb->CpuStep;
 
+    FeatureBits = Prcb->FeatureBits | (ULONG64)Prcb->FeatureBitsHigh << 32;
+
     /* Set basic CPU Features that user mode can read */
+    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
+    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
     SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] = TRUE;
-    SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] = TRUE;
-    SharedUserData->ProcessorFeatures[PF_PPC_MOVEMEM_64BIT_OK] = TRUE;
-    SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = TRUE; // ???
-    SharedUserData->ProcessorFeatures[PF_NX_ENABLED] = TRUE;
-    SharedUserData->ProcessorFeatures[PF_FASTFAIL_AVAILABLE] = TRUE;
-    SharedUserData->ProcessorFeatures[PF_XSAVE_ENABLED] = TRUE;
     SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
-        (Prcb->FeatureBits & KF_MMX) ? TRUE: FALSE;
+        (FeatureBits & KF_MMX) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] =
-        ((Prcb->FeatureBits & KF_FXSR) && (Prcb->FeatureBits & KF_XMMI)) ? TRUE: FALSE;
-    SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
-        ((Prcb->FeatureBits & KF_FXSR) && (Prcb->FeatureBits & KF_XMMI64)) ? TRUE: FALSE;
+        ((FeatureBits & KF_FXSR) && (FeatureBits & KF_XMMI)) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
-        (Prcb->FeatureBits & KF_3DNOW) ? TRUE: FALSE;
+        (FeatureBits & KF_3DNOW) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] = TRUE;
+    SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = TRUE; // ???
+    SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
+        ((FeatureBits & KF_FXSR) && (FeatureBits & KF_XMMI64)) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_SSE_DAZ_MODE_AVAILABLE] = FALSE; // ???
+    SharedUserData->ProcessorFeatures[PF_NX_ENABLED] = TRUE;
     SharedUserData->ProcessorFeatures[PF_SSE3_INSTRUCTIONS_AVAILABLE] =
-        (Prcb->FeatureBits & KF_SSE3) ? TRUE: FALSE;
+        (FeatureBits & KF_SSE3) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE128] =
-        (Prcb->FeatureBits & KF_CMPXCHG16B) ? TRUE: FALSE;
+        (FeatureBits & KF_CMPXCHG16B) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_COMPARE64_EXCHANGE128] = FALSE; // ???
+    SharedUserData->ProcessorFeatures[PF_CHANNELS_ENABLED] = FALSE; // ???
+    SharedUserData->ProcessorFeatures[PF_XSAVE_ENABLED] = FALSE; // FIXME
+    SharedUserData->ProcessorFeatures[PF_SECOND_LEVEL_ADDRESS_TRANSLATION] =
+        (FeatureBits & KF_SLAT) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_VIRT_FIRMWARE_ENABLED] =
+        (FeatureBits & KF_VIRT_FIRMWARE_ENABLED) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_RDWRFSGSBASE_AVAILABLE] =
+        (FeatureBits & KF_RDWRFSGSBASE) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_FASTFAIL_AVAILABLE] = TRUE;
+    SharedUserData->ProcessorFeatures[PF_RDRAND_INSTRUCTION_AVAILABLE] =
+        (FeatureBits & KF_RDRAND) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_RDTSCP_INSTRUCTION_AVAILABLE] =
+        (FeatureBits & KF_RDTSCP) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_RDPID_INSTRUCTION_AVAILABLE] = FALSE; // ???
+    SharedUserData->ProcessorFeatures[PF_SSSE3_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_SSSE3) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_SSE4_1_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_SSE4_1) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_SSE4_2_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_SSE4_2) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_AVX_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
+    SharedUserData->ProcessorFeatures[PF_AVX2_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
+    SharedUserData->ProcessorFeatures[PF_AVX512F_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
 
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;

@@ -910,6 +910,9 @@ typedef struct _KPRCB
     CACHE_DESCRIPTOR Cache[5];
     ULONG CacheCount;
 #endif
+#ifdef __REACTOS__
+    ULONG FeatureBitsHigh;
+#endif
 } KPRCB, *PKPRCB;
 
 //
