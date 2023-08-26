@@ -132,6 +132,8 @@ static void txt_export_multi_string(FILE *fp, const void *data, size_t size)
 static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len, DWORD type,
                             const void *data, size_t size)
 {
+    LPCWSTR pszType;
+
     txt_fprintf(fp, load_str(IDS_VALUE_INDEX), i);
     txt_fprintf(fp, L"\r\n%-19s%s\r\n", load_str(IDS_FIELD_NAME), value_name);
 
@@ -158,14 +160,15 @@ static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len,
     case REG_NONE:
     default:
         if (type == REG_BINARY)
-            txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_BINARY");
+            pszType = L"REG_BINARY";
         else if (type == REG_QWORD)
-            txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_QWORD");
+            pszType = L"REG_QWORD";
         else if (type == REG_NONE)
-            txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_NONE");
+            pszType = L"REG_NONE";
         else
-            txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), load_str(IDS_UNKNOWN));
+            pszType = load_str(IDS_UNKNOWN);
 
+        txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), pszType);
         txt_fprintf(fp, L"%-19s\r\n", load_str(IDS_FIELD_DATA));
         txt_export_binary(fp, data, size);
         break;
