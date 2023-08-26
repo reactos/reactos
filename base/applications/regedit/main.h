@@ -140,7 +140,6 @@ char *GetMultiByteString(const WCHAR *strW);
 BOOL import_registry_file(FILE *reg_file);
 void delete_registry_key(WCHAR *reg_key_name);
 BOOL export_registry_key(WCHAR *file_name, WCHAR *path, DWORD format);
-BOOL txt_export_registry_key(LPCWSTR file_name, WCHAR *path);
 
 /* security.c */
 BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCWSTR lpMachine, LPCWSTR lpKeyName);
@@ -163,5 +162,8 @@ BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath);
 void DestroyTreeView(HWND hwndTV);
 void DestroyListView(HWND hwndLV);
 void DestroyMainMenu(void);
+
+/* txtproc.c */
+BOOL txt_export_registry_key(LPCWSTR file_name, LPCWSTR path);
 
 /* EOF */

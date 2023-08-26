@@ -47,7 +47,7 @@ static void txt_fprintf(FILE *fp, LPCWSTR format, ...)
     va_end(va);
 }
 
-static HKEY txt_parse_key_name(WCHAR *key_name, WCHAR **key_path)
+static HKEY txt_parse_key_name(LPCWSTR key_name, WCHAR **key_path)
 {
     unsigned int i;
 
@@ -322,7 +322,7 @@ static FILE *txt_open_export_file(LPCWSTR file_name)
     return file;
 }
 
-static HKEY txt_open_export_key(HKEY key_class, LPCWSTR subkey, WCHAR *path)
+static HKEY txt_open_export_key(HKEY key_class, LPCWSTR subkey, LPCWSTR path)
 {
     HKEY key;
 
@@ -332,7 +332,7 @@ static HKEY txt_open_export_key(HKEY key_class, LPCWSTR subkey, WCHAR *path)
     return key;
 }
 
-static BOOL txt_export_key(LPCWSTR file_name, WCHAR *path)
+static BOOL txt_export_key(LPCWSTR file_name, LPCWSTR path)
 {
     HKEY key_class, key;
     WCHAR *subkey;
@@ -359,7 +359,7 @@ static BOOL txt_export_key(LPCWSTR file_name, WCHAR *path)
     return fp != NULL;
 }
 
-static BOOL txt_export_all(LPCWSTR file_name, WCHAR *path)
+static BOOL txt_export_all(LPCWSTR file_name, LPCWSTR path)
 {
     FILE *fp;
     int i;
@@ -393,7 +393,7 @@ static BOOL txt_export_all(LPCWSTR file_name, WCHAR *path)
     return TRUE;
 }
 
-BOOL txt_export_registry_key(LPCWSTR file_name, WCHAR *path)
+BOOL txt_export_registry_key(LPCWSTR file_name, LPCWSTR path)
 {
     if (path && *path)
         return txt_export_key(file_name, path);
