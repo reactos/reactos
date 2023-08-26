@@ -418,7 +418,7 @@ VOID Ki386InitializeLdt(VOID);
 VOID Ki386SetProcessorFeatures(VOID);
 VOID KiGetCacheInformation(VOID);
 VOID KiSetProcessorType(VOID);
-ULONG KiGetFeatureBits(VOID);
+ULONG64 KiGetFeatureBits(VOID);
 VOID KiInitializeCpuFeatures(VOID);
 #if DBG
 VOID KiReportCpuFeatures(IN PKPRCB Prcb);

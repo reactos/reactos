@@ -145,13 +145,13 @@ KiSetProcessorType(VOID)
     KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
 }
 
-ULONG
+ULONG64
 NTAPI
 KiGetFeatureBits(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
-    ULONG FeatureBits = 0;
+    ULONG64 FeatureBits = 0;
     CPU_INFO CpuInfo;
 
     /* Get the Vendor ID */
