@@ -2735,7 +2735,7 @@ REBAR_strdifW( LPCWSTR a, LPCWSTR b )
 #ifdef __REACTOS__
 static LRESULT
 REBAR_ShowBand (REBAR_INFO *infoPtr, INT iBand, BOOL show);
-#endif // __REACTOS__
+#endif
 
 static LRESULT
 REBAR_SetBandInfoT(REBAR_INFO *infoPtr, INT iBand, const REBARBANDINFOW *lprbbi, BOOL bUnicode)
