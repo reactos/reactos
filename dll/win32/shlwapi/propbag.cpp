@@ -13,6 +13,7 @@
 #include <atlsimpcoll.h>    // for CSimpleMap
 #include <atlcomcli.h>      // for CComVariant
 #include <atlconv.h>        // for CA2W and CW2A
+#include <strsafe.h>        // for StringC... functions
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -1805,4 +1806,25 @@ EXTERN_C VOID FreeViewStatePropertyBagCache(VOID)
     ::EnterCriticalSection(&g_csBagCacheLock);
     g_pCachedBag.Release();
     ::LeaveCriticalSection(&g_csBagCacheLock);
+}
+
+/**************************************************************************
+ *  SHGetPerScreenResName (SHLWAPI.533)
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/getperscreenresname.htm
+ */
+INT WINAPI
+SHGetPerScreenResName(
+    _Out_writes_(cchBuffer) LPWSTR pszBuffer,
+    _In_ INT cchBuffer,
+    _In_ DWORD dwReserved)
+{
+    if (dwReserved)
+        return 0;
+
+    INT cxWidth = ::GetSystemMetrics(SM_CXFULLSCREEN);
+    INT cyHeight = ::GetSystemMetrics(SM_CYFULLSCREEN);
+    INT cMonitors = ::GetSystemMetrics(SM_CMONITORS);
+    StringCchPrintfW(pszBuffer, cchBuffer, L"%dx%d(%d)", cxWidth, cyHeight, cMonitors);
+    return lstrlenW(pszBuffer);
 }
