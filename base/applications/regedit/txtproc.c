@@ -139,8 +139,7 @@ static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len,
     {
     case REG_SZ:
         txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_SZ");
-        txt_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA),
-                           text_len(data, size), data);
+        txt_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_len(data, size), data);
         break;
     case REG_DWORD:
         txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_DWORD");
@@ -154,11 +153,14 @@ static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len,
         txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_MULTI_SZ");
         txt_export_multi_string(fp, data, size);
         break;
-    case REG_NONE:
     case REG_BINARY:
+    case REG_QWORD:
+    case REG_NONE:
     default:
         if (type == REG_BINARY)
             txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_BINARY");
+        else if (type == REG_QWORD)
+            txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_QWORD");
         else if (type == REG_NONE)
             txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_NONE");
         else
