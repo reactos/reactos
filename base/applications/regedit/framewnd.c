@@ -690,7 +690,7 @@ BOOL ExportRegistryFile(HWND hWnd)
 
             case 4:  /* Text File */
             {
-                if (!export_registry_key_in_text(ofn.lpstrFile, ExportKeyPath))
+                if (!txt_export_registry_key(ofn.lpstrFile, ExportKeyPath))
                 {
                     /* Error creating the file */
                     LoadStringW(hInst, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));

@@ -15,7 +15,7 @@ static HKEY reg_class_keys[] =
     HKEY_CURRENT_CONFIG, HKEY_CURRENT_USER, HKEY_DYN_DATA
 };
 
-static INT text_length(const WCHAR *text, size_t byte_size)
+static INT text_len(const WCHAR *text, size_t byte_size)
 {
     size_t cch;
     StringCchLengthW(text, byte_size / sizeof(WCHAR), &cch);
@@ -24,6 +24,7 @@ static INT text_length(const WCHAR *text, size_t byte_size)
 
 static LPWSTR load_str(INT id)
 {
+    /* Use rotation buffer */
     static WCHAR s_asz[3][MAX_PATH];
     static INT s_index = 0;
     LPWSTR psz;
@@ -33,27 +34,27 @@ static LPWSTR load_str(INT id)
     return psz;
 }
 
-static void export_fputs(FILE *fp, const WCHAR *str)
+static void txt_export_fputs(FILE *fp, const WCHAR *str)
 {
     fwrite(str, lstrlenW(str) * sizeof(WCHAR), 1, fp);
 }
 
-static void export_newline(FILE *fp)
+static void txt_export_newline(FILE *fp)
 {
-    export_fputs(fp, L"\r\n");
+    txt_export_fputs(fp, L"\r\n");
 }
 
-static void export_fprintf(FILE *fp, const WCHAR *format, ...)
+static void txt_export_fprintf(FILE *fp, const WCHAR *format, ...)
 {
     WCHAR line[1024];
     va_list va;
     va_start(va, format);
     StringCchVPrintfW(line, _countof(line), format, va);
-    export_fputs(fp, line);
+    txt_export_fputs(fp, line);
     va_end(va);
 }
 
-static HKEY parse_key_name(WCHAR *key_name, WCHAR **key_path)
+static HKEY txt_parse_key_name(WCHAR *key_name, WCHAR **key_path)
 {
     unsigned int i;
 
@@ -75,28 +76,28 @@ static HKEY parse_key_name(WCHAR *key_name, WCHAR **key_path)
     return 0;
 }
 
-static void export_binary(FILE *fp, const void *data, size_t size)
+static void txt_export_binary(FILE *fp, const void *data, size_t size)
 {
     const BYTE *pb = data;
     for (DWORD addr = 0; addr < size; addr += 0x10)
     {
-        export_fprintf(fp, L"%08X  ", addr);
+        txt_export_fprintf(fp, L"%08X  ", addr);
         for (size_t column = 0; column < 16; ++column)
         {
             if (addr + column >= size)
             {
                 if (column == 8)
-                    export_fputs(fp, L"  ");
-                export_fputs(fp, L"   ");
+                    txt_export_fputs(fp, L"  ");
+                txt_export_fputs(fp, L"   ");
             }
             else
             {
                 if (column == 8)
-                    export_fputs(fp, L" -");
-                export_fprintf(fp, L" %02x", (pb[addr + column] & 0xFF));
+                    txt_export_fputs(fp, L" -");
+                txt_export_fprintf(fp, L" %02x", (pb[addr + column] & 0xFF));
             }
         }
-        export_fputs(fp, L"  ");
+        txt_export_fputs(fp, L"  ");
         for (size_t column = 0; column < 16; ++column)
         {
             if (addr + column >= size)
@@ -107,69 +108,69 @@ static void export_binary(FILE *fp, const void *data, size_t size)
             {
                 BYTE b = pb[addr + column];
                 if (isprint(b) || IsCharAlphaNumericW(b))
-                    export_fprintf(fp, L"%c", b);
+                    txt_export_fprintf(fp, L"%c", b);
                 else
-                    export_fputs(fp, L".");
+                    txt_export_fputs(fp, L".");
             }
         }
-        export_newline(fp);
+        txt_export_newline(fp);
     }
 }
 
-static void export_multi_string(FILE *fp, const void *data, size_t size)
+static void txt_export_multi_string(FILE *fp, const void *data, size_t size)
 {
     const WCHAR *pch;
     for (pch = data; *pch; pch += lstrlenW(pch) + 1)
     {
         if (pch == data)
-            export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), lstrlenW(pch), pch);
+            txt_export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), lstrlenW(pch), pch);
         else
-            export_fprintf(fp, L"%-19s%-*s\r\n", L"", lstrlenW(pch), pch);
+            txt_export_fprintf(fp, L"%-19s%-*s\r\n", L"", lstrlenW(pch), pch);
     }
 }
 
-static void export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len, DWORD type,
-                        const void *data, size_t size)
+static void txt_export_data(FILE *fp, INT i, WCHAR *value_name, DWORD value_len, DWORD type,
+                            const void *data, size_t size)
 {
-    export_fprintf(fp, load_str(IDS_VALUE_INDEX), i);
-    export_fprintf(fp, L"\r\n%-19s%s\r\n", load_str(IDS_FIELD_NAME), value_name);
+    txt_export_fprintf(fp, load_str(IDS_VALUE_INDEX), i);
+    txt_export_fprintf(fp, L"\r\n%-19s%s\r\n", load_str(IDS_FIELD_NAME), value_name);
 
     switch (type)
     {
     case REG_SZ:
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_SZ");
-        export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_length(data, size), data);
+        txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_SZ");
+        txt_export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_len(data, size), data);
         break;
     case REG_DWORD:
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_DWORD");
-        export_fprintf(fp, L"%-19s0x%lx\r\n", load_str(IDS_FIELD_DATA), *(DWORD*)data);
+        txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_DWORD");
+        txt_export_fprintf(fp, L"%-19s0x%lx\r\n", load_str(IDS_FIELD_DATA), *(DWORD*)data);
         break;
     case REG_EXPAND_SZ:
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_EXPAND_SZ");
-        export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_length(data, size), data);
+        txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_EXPAND_SZ");
+        txt_export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), text_len(data, size), data);
         break;
     case REG_MULTI_SZ:
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_MULTI_SZ");
-        export_multi_string(fp, data, size);
+        txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_MULTI_SZ");
+        txt_export_multi_string(fp, data, size);
         break;
     case REG_NONE:
     case REG_BINARY:
     default:
         if (type == REG_BINARY)
-            export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_BINARY");
+            txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_BINARY");
         else if (type == REG_NONE)
-            export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_NONE");
+            txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), L"REG_NONE");
         else
-            export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), load_str(IDS_UNKNOWN));
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_DATA), L"");
-        export_binary(fp, data, size);
+            txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), load_str(IDS_UNKNOWN));
+        txt_export_fprintf(fp, L"%-19s\r\n", load_str(IDS_FIELD_DATA));
+        txt_export_binary(fp, data, size);
         break;
     }
 
-    export_newline(fp);
+    txt_export_newline(fp);
 }
 
-static WCHAR *build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name, DWORD subkey_len)
+static WCHAR *txt_build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name, DWORD subkey_len)
 {
     WCHAR *subkey_path;
     subkey_path = malloc((path_len + subkey_len + 2) * sizeof(WCHAR));
@@ -177,12 +178,12 @@ static WCHAR *build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name,
     return subkey_path;
 }
 
-static void export_key_name(FILE *fp, const WCHAR *name)
+static void txt_export_key_name(FILE *fp, const WCHAR *name)
 {
-    export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_KEY_NAME), name);
+    txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_KEY_NAME), name);
 }
 
-static void export_class_and_last_write(FILE *fp, HKEY key)
+static void txt_export_class_and_last_write(FILE *fp, HKEY key)
 {
     WCHAR szClassName[MAX_PATH];
     DWORD cchClassName = _countof(szClassName);
@@ -194,14 +195,14 @@ static void export_class_and_last_write(FILE *fp, HKEY key)
                     NULL, &ftLastWrite);
 
     if (cchClassName > 0)
-        export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_CLASS_NAME),
-                        text_length(szClassName, cchClassName * sizeof(WCHAR)), szClassName);
+        txt_export_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_CLASS_NAME),
+                           text_len(szClassName, cchClassName * sizeof(WCHAR)), szClassName);
     else
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_CLASS_NAME), load_str(IDS_NO_CLASS_NAME));
+        txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_CLASS_NAME), load_str(IDS_NO_CLASS_NAME));
 
     if (memcmp(&ftLastWrite, &ftNull, sizeof(ftNull)) == 0)
     {
-        export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_LASTWRITE), load_str(IDS_NULL_TIMESTAMP));
+        txt_export_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_LASTWRITE), load_str(IDS_NULL_TIMESTAMP));
     }
     else
     {
@@ -209,11 +210,11 @@ static void export_class_and_last_write(FILE *fp, HKEY key)
         FileTimeToSystemTime(&ftLocal, &stLastWrite);
         GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &stLastWrite, NULL, sz1, _countof(sz1));
         GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &stLastWrite, NULL, sz2, _countof(sz2));
-        export_fprintf(fp, L"%-19s%s - %s\r\n", load_str(IDS_FIELD_LASTWRITE), sz1, sz2);
+        txt_export_fprintf(fp, L"%-19s%s - %s\r\n", load_str(IDS_FIELD_LASTWRITE), sz1, sz2);
     }
 }
 
-static void export_registry_data(FILE *fp, HKEY key, WCHAR *path)
+static void txt_export_registry_data(FILE *fp, HKEY key, WCHAR *path)
 {
     LONG rc;
     DWORD max_value_len = 256, value_len;
@@ -224,8 +225,8 @@ static void export_registry_data(FILE *fp, HKEY key, WCHAR *path)
     BYTE *data;
     HKEY subkey;
 
-    export_key_name(fp, path);
-    export_class_and_last_write(fp, key);
+    txt_export_key_name(fp, path);
+    txt_export_class_and_last_write(fp, key);
 
     value_name = malloc(max_value_len * sizeof(WCHAR));
     data = malloc(max_data_bytes);
@@ -238,7 +239,7 @@ static void export_registry_data(FILE *fp, HKEY key, WCHAR *path)
         rc = RegEnumValueW(key, i, value_name, &value_len, NULL, &type, data, &data_size);
         if (rc == ERROR_SUCCESS)
         {
-            export_data(fp, i, value_name, value_len, type, data, data_size);
+            txt_export_data(fp, i, value_name, value_len, type, data, data_size);
             i++;
         }
         else if (rc == ERROR_MORE_DATA)
@@ -272,13 +273,13 @@ static void export_registry_data(FILE *fp, HKEY key, WCHAR *path)
         if (rc == ERROR_SUCCESS)
         {
             if (i == 0)
-                export_newline(fp);
+                txt_export_newline(fp);
 
-            subkey_path = build_subkey_path(path, path_len, subkey_name, subkey_len);
+            subkey_path = txt_build_subkey_path(path, path_len, subkey_name, subkey_len);
             if (!RegOpenKeyExW(key, subkey_name, 0, KEY_READ, &subkey))
             {
-                export_newline(fp);
-                export_registry_data(fp, subkey, subkey_path);
+                txt_export_newline(fp);
+                txt_export_registry_data(fp, subkey, subkey_path);
                 RegCloseKey(subkey);
             }
             free(subkey_path);
@@ -290,7 +291,7 @@ static void export_registry_data(FILE *fp, HKEY key, WCHAR *path)
     free(subkey_name);
 }
 
-static FILE *TXTPROC_open_export_file(WCHAR *file_name)
+static FILE *txt_open_export_file(WCHAR *file_name)
 {
     FILE *file = _wfopen(file_name, L"wb");
     if (!file)
@@ -303,7 +304,7 @@ static FILE *TXTPROC_open_export_file(WCHAR *file_name)
     return file;
 }
 
-static HKEY open_export_key(HKEY key_class, WCHAR *subkey, WCHAR *path)
+static HKEY txt_open_export_key(HKEY key_class, WCHAR *subkey, WCHAR *path)
 {
     HKEY key;
 
@@ -314,43 +315,43 @@ static HKEY open_export_key(HKEY key_class, WCHAR *subkey, WCHAR *path)
     return NULL;
 }
 
-static BOOL export_key(WCHAR *file_name, WCHAR *path)
+static BOOL txt_export_key(WCHAR *file_name, WCHAR *path)
 {
     HKEY key_class, key;
     WCHAR *subkey;
     FILE *fp;
 
-    if (!(key_class = parse_key_name(path, &subkey)))
+    if (!(key_class = txt_parse_key_name(path, &subkey)))
     {
         if (subkey) *(subkey - 1) = 0;
         output_message(STRING_INVALID_SYSTEM_KEY, path);
         return FALSE;
     }
 
-    if (!(key = open_export_key(key_class, subkey, path)))
+    if (!(key = txt_open_export_key(key_class, subkey, path)))
         return FALSE;
 
-    fp = TXTPROC_open_export_file(file_name);
-    export_registry_data(fp, key, path);
-    export_newline(fp);
+    fp = txt_open_export_file(file_name);
+    txt_export_registry_data(fp, key, path);
+    txt_export_newline(fp);
     fclose(fp);
 
     RegCloseKey(key);
     return TRUE;
 }
 
-static BOOL export_all(WCHAR *file_name, WCHAR *path)
+static BOOL txt_export_all(WCHAR *file_name, WCHAR *path)
 {
     FILE *fp;
     int i;
     HKEY classes[] = {HKEY_LOCAL_MACHINE, HKEY_USERS}, key;
     WCHAR *class_name;
 
-    fp = TXTPROC_open_export_file(file_name);
+    fp = txt_open_export_file(file_name);
 
     for (i = 0; i < _countof(classes); i++)
     {
-        if (!(key = open_export_key(classes[i], NULL, path)))
+        if (!(key = txt_open_export_key(classes[i], NULL, path)))
         {
             fclose(fp);
             return FALSE;
@@ -359,22 +360,22 @@ static BOOL export_all(WCHAR *file_name, WCHAR *path)
         class_name = malloc((lstrlenW(reg_class_namesW[i]) + 1) * sizeof(WCHAR));
         lstrcpyW(class_name, reg_class_namesW[i]);
 
-        export_registry_data(fp, classes[i], class_name);
+        txt_export_registry_data(fp, classes[i], class_name);
 
         free(class_name);
         RegCloseKey(key);
     }
 
-    export_newline(fp);
+    txt_export_newline(fp);
     fclose(fp);
 
     return TRUE;
 }
 
-BOOL export_registry_key_in_text(WCHAR *file_name, WCHAR *path)
+BOOL txt_export_registry_key(WCHAR *file_name, WCHAR *path)
 {
     if (path && *path)
-        return export_key(file_name, path);
+        return txt_export_key(file_name, path);
     else
-        return export_all(file_name, path);
+        return txt_export_all(file_name, path);
 }
