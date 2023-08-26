@@ -653,6 +653,8 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
                  LPVOID lpSearchFilter,
                  IN DWORD dwAdditionalFlags)
 {
+    UNREFERENCED_PARAMETER(lpSearchFilter);
+
     TRACE("FindFirstFileExW(lpFileName %S)\n", lpFileName);
 
     if ((fInfoLevelId != FindExInfoStandard && fInfoLevelId != FindExInfoBasic) ||
@@ -692,13 +694,6 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
         DECLSPEC_ALIGN(4) BYTE DirectoryInfo[FIND_DATA_SIZE];
         DIR_INFORMATION DirInfo = { .DirInfo = &DirectoryInfo };
 
-        /* The search filter is always unused */
-        if (lpSearchFilter)
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return INVALID_HANDLE_VALUE;
-        }
-
         RtlInitUnicodeString(&FileName, lpFileName);
         if (FileName.Length != 0 && FileName.Buffer[FileName.Length / sizeof(WCHAR) - 1] == L'.')
         {
@@ -735,6 +730,7 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
             DeviceNameInfo = RtlIsDosDeviceName_U(lpFileName);
             if (DeviceNameInfo != 0)
             {
+                RtlReleaseRelativeName(&RelativePath);
                 RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathBuffer);
 
                 /* OK, it's really a DOS device */
@@ -798,6 +794,7 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
 
         if (!NT_SUCCESS(Status))
         {
+            RtlReleaseRelativeName(&RelativePath);
             RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathBuffer);
 
             /* Adjust the last error codes */
@@ -817,6 +814,7 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
         if (FilePattern.Length == 0)
         {
             NtClose(hDirectory);
+            RtlReleaseRelativeName(&RelativePath);
             RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathBuffer);
 
             SetLastError(ERROR_FILE_NOT_FOUND);
@@ -891,6 +889,7 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
                                       &FilePattern,
                                       TRUE);
 
+        RtlReleaseRelativeName(&RelativePath);
         RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathBuffer);
 
         if (!NT_SUCCESS(Status))
