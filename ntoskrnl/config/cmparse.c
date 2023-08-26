@@ -1111,6 +1111,31 @@ CmpHandleExitNode(IN OUT PHHIVE *Hive,
     }
 }
 
+/**
+ * @brief
+ * Computes the hashes of each subkey in key path name
+ * and stores them in a hash stack for cache lookup.
+ *
+ * @param[in] RemainingName
+ * A Unicode string structure consisting of the remaining
+ * registry key path name.
+ *
+ * @param[in] ConvKey
+ * The hash convkey of the current KCB to be supplied.
+ *
+ * @param[in,out] HashCacheStack
+ * An array stack. This function uses this array to store
+ * all the computed hashes of a key pathname.
+ *
+ * @param[out] TotalSubKeys
+ * The number of total subkeys that have been found, returned
+ * by this function to the caller. If no subkey levels are found
+ * the function returns 0.
+ *
+ * @return
+ * Returns the number of remaining subkey levels to caller.
+ * If no subkey levels are found then this function returns 0.
+ */
 static
 ULONG
 CmpComputeHashValue(
@@ -1229,6 +1254,31 @@ CmpComputeHashValue(
     return RemainingSubkeysInTotal;
 }
 
+/**
+ * @brief
+ * Compares each subkey's hash and name with those
+ * captured in the hash cache stack.
+ *
+ * @param[in] HashCacheStack
+ * A pointer to a hash cache stack array filled with
+ * subkey hashes and names for comparison.
+ *
+ * @param[in] CurrentKcb
+ * A pointer to the currently given KCB.
+ *
+ * @param[in] RemainingSubkeys
+ * The remaining subkey levels to be supplied.
+ *
+ * @param[out] ParentKcb
+ * A pointer to the parent KCB returned to the caller.
+ * This parameter points to the parent of the current
+ * KCB if all the subkeys match, otherwise it points
+ * to the actual current KCB.
+ *
+ * @return
+ * Returns TRUE if all the subkey levels match, otherwise
+ * FALSE is returned.
+ */
 static
 BOOLEAN
 CmpCompareSubkeys(
@@ -1290,6 +1340,22 @@ CmpCompareSubkeys(
     return TRUE;
 }
 
+/**
+ * @brief
+ * Removes the subkeys on a remaining key pathname.
+ *
+ * @param[in] HashCacheStack
+ * A pointer to a hash cache stack array filled with
+ * subkey hashes and names.
+ *
+ * @param[in] RemainingSubkeys
+ * The remaining subkey levels to be supplied.
+ *
+ * @param[in,out] RemainingName
+ * A Unicode string structure consisting of the remaining
+ * registry key path name, where the subkeys of such path
+ * are to be removed.
+ */
 static
 VOID
 CmpRemoveSubkeysInRemainingName(
@@ -1326,6 +1392,69 @@ CmpRemoveSubkeysInRemainingName(
     }
 }
 
+/**
+ * @brief
+ * Looks up in the pool cache for key pathname that matches
+ * with one in the said cache and returns a KCB pointing
+ * to that name. This function performs locking of KCBs
+ * during cache lookup.
+ *
+ * @param[in] HashCacheStack
+ * A pointer to a hash cache stack array filled with
+ * subkey hashes and names.
+ *
+ * @param[in] LockKcbsExclusive
+ * If set to TRUE, the KCBs are locked exclusively by the
+ * calling thread, otherwise they are locked in shared mode.
+ * See Remarks for further information.
+ *
+ * @param[in] TotalRemainingSubkeys
+ * The total remaining subkey levels to be supplied.
+ *
+ * @param[in,out] RemainingName
+ * A Unicode string structure consisting of the remaining
+ * registry key path name. The remaining name is updated
+ * by the function if a key pathname is found in cache.
+ *
+ * @param[in,out] OuterStackArray
+ * A pointer to an array that lives on the caller's stack.
+ * The expected size of the array is up to 32 elements,
+ * which is the imposed limit by CMP_HASH_STACK_LIMIT.
+ * This limit also corresponds to the maximum depth of
+ * subkey levels.
+ *
+ * @param[in,out] Kcb
+ * A pointer to a KCB, this KCB is changed if the key pathname
+ * is found in cache.
+ *
+ * @param[out] Hive
+ * A pointer to a hive, this hive is changed if the key pathname
+ * is found in cache.
+ *
+ * @param[out] Cell
+ * A pointer to a cell, this cell is changed if the key pathname
+ * is found in cache.
+ *
+ * @param[out] MatchRemainSubkeyLevel
+ * A pointer to match subkey levels returned by the function.
+ * If no match levels are found, this is 0.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if cache lookup has completed successfully.
+ * STATUS_OBJECT_NAME_NOT_FOUND is returned if the current KCB of
+ * the key pathname has been deleted. STATUS_RETRY is returned if
+ * at least the current KCB or its parent have been deleted
+ * and a cache lookup must be retried again. STATUS_UNSUCCESSFUL is
+ * returned if a KCB is referenced too many times.
+ *
+ * @remarks
+ * The function attempts to do a cache lookup with a shared lock
+ * on KCBs so that other threads can simultaneously get access
+ * to these KCBs. When the captured KCB is being deleted on us
+ * we have to retry a lookup with exclusive look so that no other
+ * threads will mess with the KCBs and perform appropriate actions
+ * if a KCB is deleted.
+ */
 static
 NTSTATUS
 CmpLookInCache(
@@ -1505,6 +1634,63 @@ CmpLookInCache(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Builds a hash stack cache and looks up in the
+ * pool cache for a matching key pathname.
+ *
+ * @param[in] ParseObject
+ * A pointer to a parse object, acting as a key
+ * body. This parameter is unused.
+ *
+ * @param[in,out] Kcb
+ * A pointer to a KCB. This KCB is used by the
+ * registry parser after hash stack and cache
+ * lookup are done. This KCB might change if the
+ * key is found to be cached in the cache pool.
+ *
+ * @param[in] Current
+ * The current remaining key pathname.
+ *
+ * @param[out] Hive
+ * A pointer to a registry hive, returned by the caller.
+ *
+ * @param[out] Cell
+ * A pointer to a hive cell, returned by the caller.
+ *
+ * @param[out] TotalRemainingSubkeys
+ * A pointer to a number of total remaining subkey levels,
+ * returned by the caller. This can be 0 if no subkey levels
+ * have been found.
+ *
+ * @param[out] MatchRemainSubkeyLevel
+ * A pointer to a number of remaining subkey levels that match,
+ * returned by the caller. This can be 0 if no matching levels
+ * are found.
+ *
+ * @param[out] TotalSubkeys
+ * A pointer to a number of total subkeys. This can be 0 if no
+ * subkey levels are found. By definition, both MatchRemainSubkeyLevel
+ * and TotalRemainingSubkeys are 0 as well.
+ *
+ * @param[in,out] OuterStackArray
+ * A pointer to an array that lives on the caller's stack.
+ * The expected size of the array is up to 32 elements,
+ * which is the imposed limit by CMP_HASH_STACK_LIMIT.
+ * This limit also corresponds to the maximum depth of
+ * subkey levels.
+ *
+ * @param[out] LockedKcbs
+ * A pointer to an array of locked KCBs, returned by the caller.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if all the operations have succeeded without
+ * problems. STATUS_NAME_TOO_LONG is returned if the key pathname has
+ * too many subkey levels (more than 32 levels deep). A failure NTSTATUS
+ * code is returned otherwise. Refer to CmpLookInCache documentation
+ * for more information about other returned status codes.
+ * STATUS_UNSUCCESSFUL is returned if a KCB is referenced too many times.
+ */
 NTSTATUS
 NTAPI
 CmpBuildHashStackAndLookupCache(

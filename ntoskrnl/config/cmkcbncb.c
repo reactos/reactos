@@ -1134,6 +1134,13 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
     if (!LockHeld) CmpReleaseKcbLock(KeyBody->KeyControlBlock);
 }
 
+/**
+ * @brief
+ * Unlocks a number of KCBs provided by a KCB array.
+ *
+ * @param[in] KcbArray
+ * A pointer to an array of KCBs to be unlocked.
+ */
 VOID
 CmpUnLockKcbArray(
     _In_ PULONG KcbArray)
@@ -1147,6 +1154,24 @@ CmpUnLockKcbArray(
     }
 }
 
+/**
+ * @brief
+ * Locks a given number of KCBs.
+ *
+ * @param[in] KcbArray
+ * A pointer to an array of KCBs to be locked.
+ * The count of KCBs to be locked is defined by the
+ * first element in the array.
+ *
+ * @param[in] KcbLockFlags
+ * Define a lock flag to lock the KCBs.
+ *
+ * CMP_LOCK_KCB_ARRAY_EXCLUSIVE -- indicates the KCBs are locked
+ * exclusively and owned by the calling thread.
+ *
+ * CMP_LOCK_KCB_ARRAY_SHARED --  indicates the KCBs are locked
+ * in shared mode by the owning threads.
+ */
 static
 VOID
 CmpLockKcbArray(
@@ -1169,6 +1194,18 @@ CmpLockKcbArray(
     }
 }
 
+/**
+ * @brief
+ * Sorts an array of KCB hashes in ascending order
+ * and removes any key indices that are duplicates.
+ * The purpose of sorting the KCB elements is to
+ * ensure consistent and proper locking order, so
+ * that we can prevent a deadlock.
+ *
+ * @param[in,out] KcbArray
+ * A pointer to an array of KCBs of which the key
+ * indices are to be sorted.
+ */
 static
 VOID
 CmpSortKcbArray(
@@ -1216,6 +1253,50 @@ CmpSortKcbArray(
     KcbArray[0] = KcbCount;
 }
 
+/**
+ * @brief
+ * Builds an array of KCBs and locks them. Whether these
+ * KCBs are locked exclusively or in shared mode by the calling
+ * thread, is specified by the KcbLockFlags parameter. The array
+ * is sorted.
+ *
+ * @param[in] HashCacheStack
+ * A pointer to a hash cache stack. This stack parameter
+ * stores the convkey hashes of interested KCBs of a
+ * key path name that need to be locked.
+ *
+ * @param[in] KcbLockFlags
+ * Define a lock flag to lock the KCBs. Consult the
+ * CmpLockKcbArray documentation for more information.
+ *
+ * @param[in] Kcb
+ * A pointer to a key control block to be given. This
+ * KCB is included in the array for locking, that is,
+ * given by the CmpParseKey from the parser object.
+ *
+ * @param[in,out] OuterStackArray
+ * A pointer to an array that lives on the caller's
+ * stack. It acts like an auxiliary array used by
+ * the function to store the KCB elements for locking.
+ * The expected size of the array is up to 32 elements,
+ * which is the imposed limit by CMP_HASH_STACK_LIMIT.
+ * This limit also corresponds to the maximum depth of
+ * subkey levels.
+ *
+ * @param[in] TotalRemainingSubkeys
+ * The number of total remaining subkey levels.
+ *
+ * @param[in] MatchRemainSubkeyLevel
+ * The number of remaining subkey levels that match.
+ *
+ * @return
+ * Returns a pointer to an array of KCBs that have been
+ * locked.
+ *
+ * @remarks
+ * The caller HAS THE RESPONSIBILITY to unlock the KCBs
+ * after the necessary operations are done!
+ */
 PULONG
 NTAPI
 CmpBuildAndLockKcbArray(
