@@ -19,7 +19,7 @@
 VOID
 CopyTextToClipboard(LPCWSTR lpszText);
 VOID
-ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem);
+ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem, POINT *Point = NULL);
 BOOL
 StartProcess(const CStringW &Path, BOOL Wait);
 BOOL
