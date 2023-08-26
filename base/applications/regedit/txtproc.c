@@ -15,7 +15,7 @@ static HKEY reg_class_keys[] =
     HKEY_CURRENT_CONFIG, HKEY_CURRENT_USER, HKEY_DYN_DATA
 };
 
-static INT text_len(const WCHAR *text, size_t byte_size)
+static INT text_len(LPCWSTR text, size_t byte_size)
 {
     size_t cch;
     StringCchLengthW(text, byte_size / sizeof(WCHAR), &cch);
@@ -34,7 +34,7 @@ static LPWSTR load_str(INT id)
     return psz;
 }
 
-static void txt_fputs(FILE *fp, const WCHAR *str)
+static void txt_fputs(FILE *fp, LPCWSTR str)
 {
     fwrite(str, lstrlenW(str) * sizeof(WCHAR), 1, fp);
 }
@@ -44,7 +44,7 @@ static void txt_newline(FILE *fp)
     txt_fputs(fp, L"\r\n");
 }
 
-static void txt_fprintf(FILE *fp, const WCHAR *format, ...)
+static void txt_fprintf(FILE *fp, LPCWSTR format, ...)
 {
     WCHAR line[1024];
     va_list va;
@@ -118,26 +118,31 @@ static void txt_export_binary(FILE *fp, const void *data, size_t size)
     }
 }
 
+static void txt_export_field(FILE *fp, LPCWSTR pszLabel, LPCWSTR pszValue)
+{
+    txt_fprintf(fp, L"%-19s%s\r\n", pszLabel, pszValue);
+}
+
 static void txt_export_multi_sz(FILE *fp, const void *data, size_t size)
 {
     LPCWSTR pch;
     for (pch = data; *pch; pch += lstrlenW(pch) + 1)
     {
         if (pch == data)
-            txt_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_DATA), lstrlenW(pch), pch);
+            txt_export_field(fp, load_str(IDS_FIELD_DATA), pch);
         else
-            txt_fprintf(fp, L"%-19s%-*s\r\n", L"", lstrlenW(pch), pch);
+            txt_export_field(fp, L"", pch);
     }
 }
 
 static void txt_export_type(FILE *fp, LPCWSTR pszType)
 {
-    txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_TYPE), pszType);
+    txt_export_field(fp, load_str(IDS_FIELD_TYPE), pszType);
 }
 
 static void txt_export_name(FILE *fp, LPCWSTR pszName)
 {
-    txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_NAME), pszName);
+    txt_export_field(fp, load_str(IDS_FIELD_NAME), pszName);
 }
 
 static void
@@ -147,6 +152,7 @@ txt_export_data(FILE *fp, INT i, LPCWSTR value_name, DWORD value_len, DWORD type
     LPCWSTR pszType;
 
     txt_fprintf(fp, load_str(IDS_VALUE_INDEX), i);
+    txt_newline(fp);
     txt_export_name(fp, value_name);
 
     switch (type)
@@ -185,7 +191,7 @@ txt_export_data(FILE *fp, INT i, LPCWSTR value_name, DWORD value_len, DWORD type
             pszType = load_str(IDS_UNKNOWN);
 
         txt_export_type(fp, pszType);
-        txt_fprintf(fp, L"%-19s\r\n", load_str(IDS_FIELD_DATA));
+        txt_export_field(fp, load_str(IDS_FIELD_DATA), L"");
         txt_export_binary(fp, data, size);
         break;
     }
@@ -202,9 +208,9 @@ txt_build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name, DWORD sub
     return subkey_path;
 }
 
-static void txt_export_key_name(FILE *fp, const WCHAR *name)
+static void txt_export_key_name(FILE *fp, LPCWSTR name)
 {
-    txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_KEY_NAME), name);
+    txt_export_field(fp, load_str(IDS_FIELD_KEY_NAME), name);
 }
 
 static void txt_export_class_and_last_write(FILE *fp, HKEY key)
@@ -218,17 +224,16 @@ static void txt_export_class_and_last_write(FILE *fp, HKEY key)
     RegQueryInfoKey(key, szClassName, &cchClassName, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                     NULL, &ftLastWrite);
 
+    szClassName[_countof(szClassName) - 1] = UNICODE_NULL;
+
     if (cchClassName > 0)
-        txt_fprintf(fp, L"%-19s%-*s\r\n", load_str(IDS_FIELD_CLASS_NAME),
-                    text_len(szClassName, cchClassName * sizeof(WCHAR)), szClassName);
+        txt_export_field(fp, load_str(IDS_FIELD_CLASS_NAME), szClassName);
     else
-        txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_CLASS_NAME),
-                    load_str(IDS_NO_CLASS_NAME));
+        txt_export_field(fp, load_str(IDS_FIELD_CLASS_NAME), load_str(IDS_NO_CLASS_NAME));
 
     if (memcmp(&ftLastWrite, &ftNull, sizeof(ftNull)) == 0)
     {
-        txt_fprintf(fp, L"%-19s%s\r\n", load_str(IDS_FIELD_LASTWRITE),
-                    load_str(IDS_NULL_TIMESTAMP));
+        txt_export_field(fp, load_str(IDS_FIELD_LASTWRITE), load_str(IDS_NULL_TIMESTAMP));
         return;
     }
 
