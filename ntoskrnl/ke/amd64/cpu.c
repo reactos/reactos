@@ -151,7 +151,7 @@ KiGetFeatureBits(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
-    ULONG FeatureBits = KF_WORKING_PTE;
+    ULONG FeatureBits = 0;
     CPU_INFO CpuInfo;
 
     /* Get the Vendor ID */
@@ -167,7 +167,7 @@ KiGetFeatureBits(VOID)
     Prcb->InitialApicId = (UCHAR)(CpuInfo.Ebx >> 24);
 
     /* Convert all CPUID Feature bits into our format */
-    if (CpuInfo.Edx & X86_FEATURE_VME) FeatureBits |= KF_V86_VIS | KF_CR4;
+    if (CpuInfo.Edx & X86_FEATURE_VME) FeatureBits |= KF_CR4;
     if (CpuInfo.Edx & X86_FEATURE_PSE) FeatureBits |= KF_LARGE_PAGE | KF_CR4;
     if (CpuInfo.Edx & X86_FEATURE_TSC) FeatureBits |= KF_RDTSC;
     if (CpuInfo.Edx & X86_FEATURE_CX8) FeatureBits |= KF_CMPXCHG8B;
@@ -183,11 +183,9 @@ KiGetFeatureBits(VOID)
     if (CpuInfo.Edx & X86_FEATURE_SSE2) FeatureBits |= KF_XMMI64;
 
     if (CpuInfo.Ecx & X86_FEATURE_SSE3) FeatureBits |= KF_SSE3;
-    //if (CpuInfo.Ecx & X86_FEATURE_MONITOR) FeatureBits |= KF_MONITOR;
-    //if (CpuInfo.Ecx & X86_FEATURE_SSSE3) FeatureBits |= KF_SSE3SUP;
+    //if (CpuInfo.Ecx & X86_FEATURE_SSSE3) FeatureBits |= KF_SSSE3;
     if (CpuInfo.Ecx & X86_FEATURE_CX16) FeatureBits |= KF_CMPXCHG16B;
-    //if (CpuInfo.Ecx & X86_FEATURE_SSE41) FeatureBits |= KF_SSE41;
-    //if (CpuInfo.Ecx & X86_FEATURE_POPCNT) FeatureBits |= KF_POPCNT;
+    //if (CpuInfo.Ecx & X86_FEATURE_SSE41) FeatureBits |= KF_SSE4_1;
     if (CpuInfo.Ecx & X86_FEATURE_XSAVE) FeatureBits |= KF_XSTATE;
 
     /* Check if the CPU has hyper-threading */
@@ -250,7 +248,7 @@ KiReportCpuFeatures(IN PKPRCB Prcb)
     DPRINT1("Supported CPU features: ");
 
 #define print_kf_bit(kf_value) if (Prcb->FeatureBits & kf_value) DbgPrint(#kf_value " ")
-    print_kf_bit(KF_V86_VIS);
+    print_kf_bit(KF_SMEP);
     print_kf_bit(KF_RDTSC);
     print_kf_bit(KF_CR4);
     print_kf_bit(KF_CMOV);
@@ -260,7 +258,6 @@ KiReportCpuFeatures(IN PKPRCB Prcb)
     print_kf_bit(KF_CMPXCHG8B);
     print_kf_bit(KF_CMPXCHG16B);
     print_kf_bit(KF_MMX);
-    print_kf_bit(KF_WORKING_PTE);
     print_kf_bit(KF_PAT);
     print_kf_bit(KF_FXSR);
     print_kf_bit(KF_FAST_SYSCALL);
@@ -272,10 +269,8 @@ KiReportCpuFeatures(IN PKPRCB Prcb)
     print_kf_bit(KF_NX_DISABLED);
     print_kf_bit(KF_NX_ENABLED);
     print_kf_bit(KF_SSE3);
-    //print_kf_bit(KF_SSE3SUP);
-    //print_kf_bit(KF_SSE41);
-    //print_kf_bit(KF_MONITOR);
-    //print_kf_bit(KF_POPCNT);
+    print_kf_bit(KF_SSSE3);
+    print_kf_bit(KF_SSE4_1);
     print_kf_bit(KF_XSTATE);
 #undef print_kf_bit
 
