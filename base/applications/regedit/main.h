@@ -140,6 +140,7 @@ char *GetMultiByteString(const WCHAR *strW);
 BOOL import_registry_file(FILE *reg_file);
 void delete_registry_key(WCHAR *reg_key_name);
 BOOL export_registry_key(WCHAR *file_name, WCHAR *path, DWORD format);
+BOOL export_registry_key_in_text(WCHAR *file_name, WCHAR *path);
 
 /* security.c */
 BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCWSTR lpMachine, LPCWSTR lpKeyName);

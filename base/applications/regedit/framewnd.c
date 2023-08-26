@@ -255,7 +255,7 @@ BuildFilterStrings(WCHAR *Filter, PFILTERPAIR Pairs, int PairCount)
     Filter[++c] = L'\0';
 }
 
-static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
+static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn, BOOL bSave)
 {
     FILTERPAIR FilterPairs[4];
     static WCHAR Filter[1024];
@@ -272,8 +272,16 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     FilterPairs[1].FilterID = IDS_FLT_HIVFILES_FLT;
     FilterPairs[2].DisplayID = IDS_FLT_REGEDIT4;
     FilterPairs[2].FilterID = IDS_FLT_REGEDIT4_FLT;
-    FilterPairs[3].DisplayID = IDS_FLT_ALLFILES;
-    FilterPairs[3].FilterID = IDS_FLT_ALLFILES_FLT;
+    if (bSave)
+    {
+        FilterPairs[3].DisplayID = IDS_FLT_TXTFILES;
+        FilterPairs[3].FilterID = IDS_FLT_TXTFILES_FLT;
+    }
+    else
+    {
+        FilterPairs[3].DisplayID = IDS_FLT_ALLFILES;
+        FilterPairs[3].FilterID = IDS_FLT_ALLFILES_FLT;
+    }
     BuildFilterStrings(Filter, FilterPairs, ARRAY_SIZE(FilterPairs));
 
     pofn->lpstrFilter = Filter;
@@ -283,6 +291,10 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     pofn->nMaxFileTitle = _MAX_PATH;
     pofn->Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
     pofn->lpstrDefExt = L"reg";
+    if (bSave)
+        pofn->Flags |= OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+    else
+        pofn->Flags |= OFN_FILEMUSTEXIST | OFN_ENABLESIZING;
     return TRUE;
 }
 
@@ -354,7 +366,7 @@ static BOOL LoadHive(HWND hWnd)
     /* get the item key to load the hive in */
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
     /* initialize the "open file" dialog */
-    InitOpenFileName(hWnd, &ofn);
+    InitOpenFileName(hWnd, &ofn, FALSE);
     /* build the "All Files" filter up */
     filter.DisplayID = IDS_FLT_ALLFILES;
     filter.FilterID = IDS_FLT_ALLFILES_FLT;
@@ -363,7 +375,6 @@ static BOOL LoadHive(HWND hWnd)
     /* load and set the caption and flags for dialog */
     LoadStringW(hInst, IDS_LOAD_HIVE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
-    ofn.Flags |= OFN_ENABLESIZING;
     /*    ofn.lCustData = ;*/
     /* now load the hive */
     if (GetOpenFileName(&ofn))
@@ -442,10 +453,9 @@ static BOOL ImportRegistryFile(HWND hWnd)
     /* Figure out in which key path we are importing */
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
 
-    InitOpenFileName(hWnd, &ofn);
+    InitOpenFileName(hWnd, &ofn, FALSE);
     LoadStringW(hInst, IDS_IMPORT_REG_FILE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
-    ofn.Flags |= OFN_ENABLESIZING;
     /*    ofn.lCustData = ;*/
     if (GetOpenFileName(&ofn))
     {
@@ -590,7 +600,7 @@ BOOL ExportRegistryFile(HWND hWnd)
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
     GetKeyName(ExportKeyPath, ARRAY_SIZE(ExportKeyPath), hKeyRoot, pszKeyPath);
 
-    InitOpenFileName(hWnd, &ofn);
+    InitOpenFileName(hWnd, &ofn, TRUE);
     LoadStringW(hInst, IDS_EXPORT_REG_FILE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
 
@@ -599,7 +609,7 @@ BOOL ExportRegistryFile(HWND hWnd)
     {
         ofn.lCustData = (LPARAM) ExportKeyPath;
     }
-    ofn.Flags = OFN_ENABLETEMPLATE | OFN_EXPLORER | OFN_ENABLEHOOK | OFN_OVERWRITEPROMPT;
+    ofn.Flags |= OFN_ENABLETEMPLATE | OFN_ENABLEHOOK;
     ofn.lpfnHook = ExportRegistryFile_OFNHookProc;
     ofn.lpTemplateName = MAKEINTRESOURCEW(IDD_EXPORTRANGE);
     if (GetSaveFileName(&ofn))
@@ -658,11 +668,29 @@ BOOL ExportRegistryFile(HWND hWnd)
 
             case 1:  /* Windows Registry Editor Version 5.00 */
             case 3:  /* REGEDIT4 */
-            default: /* All files ==> use Windows Registry Editor Version 5.00 */
+            default:
             {
                 if (!export_registry_key(ofn.lpstrFile, ExportKeyPath,
                                          (ofn.nFilterIndex == 3 ? REG_FORMAT_4
                                                                 : REG_FORMAT_5)))
+                {
+                    /* Error creating the file */
+                    LoadStringW(hInst, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
+                    LoadStringW(hInst, IDS_EXPORT_ERROR, szText, ARRAY_SIZE(szText));
+                    InfoMessageBox(hWnd, MB_OK | MB_ICONERROR, szTitle, szText, ofn.lpstrFile);
+                    bRet = FALSE;
+                }
+                else
+                {
+                    bRet = TRUE;
+                }
+
+                break;
+            }
+
+            case 4:  /* Text File */
+            {
+                if (!export_registry_key_in_text(ofn.lpstrFile, ExportKeyPath))
                 {
                     /* Error creating the file */
                     LoadStringW(hInst, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));

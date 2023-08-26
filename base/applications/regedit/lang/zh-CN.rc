@@ -431,6 +431,8 @@ BEGIN
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "所有文件 (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
+    IDS_FLT_TXTFILES "Text Files (*.txt)"
+    IDS_FLT_TXTFILES_FLT "*.txt"
 END
 
 STRINGTABLE
@@ -524,6 +526,20 @@ BEGIN
     IDS_BUS_PNPISABUS "即插即用 ISA 总线"
     IDS_BUS_PNPBUS "即插即用总线"
     IDS_BUS_UNKNOWNTYPE "未知的接口类型"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FIELD_KEY_NAME "Key Name:"
+    IDS_FIELD_CLASS_NAME "Class Name:"
+    IDS_NO_CLASS_NAME "<NO CLASS>"
+    IDS_NULL_TIMESTAMP "<NULL>"
+    IDS_FIELD_NAME "  Name:"
+    IDS_FIELD_TYPE "  Type:"
+    IDS_FIELD_DATA "  Data:"
+    IDS_FIELD_LASTWRITE "Last Write Time:"
+    IDS_UNKNOWN "<UNKNOWN>"
+    IDS_VALUE_INDEX "Value %d"
 END
 
 /*****************************************************************/

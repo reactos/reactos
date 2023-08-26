@@ -421,6 +421,8 @@ BEGIN
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "Todos os ficheiros (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
+    IDS_FLT_TXTFILES "Text Files (*.txt)"
+    IDS_FLT_TXTFILES_FLT "*.txt"
 END
 
 STRINGTABLE
@@ -514,6 +516,20 @@ BEGIN
     IDS_BUS_PNPISABUS "PnP-ISA Bus"
     IDS_BUS_PNPBUS "PnP Bus"
     IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FIELD_KEY_NAME "Key Name:"
+    IDS_FIELD_CLASS_NAME "Class Name:"
+    IDS_NO_CLASS_NAME "<NO CLASS>"
+    IDS_NULL_TIMESTAMP "<NULL>"
+    IDS_FIELD_NAME "  Name:"
+    IDS_FIELD_TYPE "  Type:"
+    IDS_FIELD_DATA "  Data:"
+    IDS_FIELD_LASTWRITE "Last Write Time:"
+    IDS_UNKNOWN "<UNKNOWN>"
+    IDS_VALUE_INDEX "Value %d"
 END
 
 /*****************************************************************/
