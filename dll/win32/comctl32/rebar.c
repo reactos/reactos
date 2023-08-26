@@ -2784,7 +2784,7 @@ REBAR_SetBandInfoT(REBAR_INFO *infoPtr, INT iBand, const REBARBANDINFOW *lprbbi,
     if (uChanged & RBBIM_STYLE)
     {
         BOOL bVisible = (lprbbi->fStyle & RBBS_HIDDEN) != RBBS_HIDDEN;
-        REBAR_ShowBand(infoPtr, iBand, bVisible == TRUE);
+        REBAR_ShowBand(infoPtr, iBand, bVisible);
     }
 #endif
     return TRUE;
