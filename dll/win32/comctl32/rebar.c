@@ -2776,17 +2776,25 @@ REBAR_SetBandInfoT(REBAR_INFO *infoPtr, INT iBand, const REBARBANDINFOW *lprbbi,
 
     REBAR_DumpBand (infoPtr);
 
+#ifndef __REACTOS__
     if (uChanged & (RBBIM_CHILDSIZE | RBBIM_SIZE | RBBIM_STYLE | RBBIM_IMAGE)) {
 	  REBAR_Layout(infoPtr);
 	  InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
     }
-#ifdef __REACTOS__
-    if (uChanged & RBBIM_STYLE)
+#else
+    if (uChanged & (RBBIM_CHILDSIZE | RBBIM_SIZE | RBBIM_IMAGE))
+    {
+        REBAR_Layout(infoPtr);
+        InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
+    }
+    else if (uChanged &  RBBIM_STYLE)
     {
         BOOL bVisible = (lprbbi->fStyle & RBBS_HIDDEN) != RBBS_HIDDEN;
         REBAR_ShowBand(infoPtr, iBand, bVisible);
+        return TRUE;
     }
 #endif
+
     return TRUE;
 }
 
