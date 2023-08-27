@@ -1,3 +1,9 @@
+/*
+ * PROJECT:     ReactOS SDK
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Provides CPUID structure definitions
+ * COPYRIGHT:   Copyright 2023 Timo Kreuzer <timo.kreuzer@reactos.org>
+ */
 
 #define CHAR8 char
 
@@ -104,10 +110,7 @@ typedef union
             UINT32 XSaveAreaSize; // The size in bytes of the XSAVE area containing all states enabled by XCRO | IA32_XSS.
         } Ebx;
         CPUID_EXTENDED_STATE_SUB_LEAF_ECX Ecx;
-        struct
-        {
-            UINT32 Edx; // Reports the supported bits of the upper 32 bits of the IA32_XSS MSR.IA32_XSS[n + 32] can be set to 1 only if EDX[n] is 1.
-        } Edx;
+        UINT32 Edx; // Reports the supported bits of the upper 32 bits of the IA32_XSS MSR. IA32_XSS[n + 32] can be set to 1 only if EDX[n] is 1.
     };
 } CPUID_EXTENDED_STATE_SUB_LEAF_EAX_REGS;
 

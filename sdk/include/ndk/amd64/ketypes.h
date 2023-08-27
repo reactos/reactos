@@ -249,7 +249,7 @@ typedef enum
 #define MSR_GS_SWAP             0xC0000102
 #define MSR_MCG_STATUS          0x017A
 #define MSR_AMD_ACCESS          0x9C5A203A
-#define MSR_IA32_MISC_ENABLE    0x01A0
+#define MSR_IA32_MISC_ENABLE    0x000001A0
 #define MSR_LAST_BRANCH_FROM    0x01DB
 #define MSR_LAST_BRANCH_TO      0x01DC
 #define MSR_LAST_EXCEPTION_FROM 0x01DD
