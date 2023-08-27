@@ -1682,11 +1682,25 @@ LPITEMIDLIST _ILCreateBitBucket(void)
     return _ILCreateGuid(PT_GUID, &CLSID_RecycleBin);
 }
 
+#ifdef __REACTOS__
+LPITEMIDLIST _ILCreateFonts(void)
+{
+    TRACE("()\n");
+    return _ILCreateGuid(PT_GUID, &CLSID_FontsFolderShortcut);
+}
+
 LPITEMIDLIST _ILCreateAdminTools(void)
 {
     TRACE("()\n");
     return _ILCreateGuid(PT_GUID, &CLSID_AdminFolderShortcut); //FIXME
 }
+
+LPITEMIDLIST _ILCreateConnections(void)
+{
+    TRACE("()\n");
+    return _ILCreateGuid(PT_GUID, &CLSID_ConnectionFolder);
+}
+#endif
 
 LPITEMIDLIST _ILCreateGuid(PIDLTYPE type, REFIID guid)
 {
@@ -1724,7 +1738,34 @@ LPITEMIDLIST _ILCreateGuidFromStrA(LPCSTR szGUID)
     }
     return _ILCreateGuid(PT_GUID, &iid);
 }
-#endif
+#endif // __REACTOS__
+
+#ifdef __REACTOS__
+UINT _SHGetCSIDLByNameW(LPCWSTR lpszName);
+
+// If szUrl is '::{GUID}' then returns a GUID
+// otherwise it tries to resolve the shortcut.
+LPITEMIDLIST _ILCreateGuidFromShellUrlW(LPCWSTR szUrl)
+{
+    UINT idx;
+    LPITEMIDLIST pidl;
+
+    if (szUrl[0] == L':' && szUrl[1] == L':')
+    {
+        return _ILCreateGuidFromStrW(szUrl + 2);
+    }
+
+    idx = _SHGetCSIDLByNameW(szUrl);
+    if (idx == UINT_MAX)
+    {
+        ERR("%s is not a shell shortcut\n", debugstr_w(szUrl));
+        return NULL;
+    }
+
+    SHGetSpecialFolderLocation(NULL, idx, &pidl);
+    return pidl;
+}
+#endif // __REACTOS__
 
 LPITEMIDLIST _ILCreateGuidFromStrW(LPCWSTR szGUID)
 {

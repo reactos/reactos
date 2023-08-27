@@ -269,6 +269,10 @@ LPITEMIDLIST	_ILCreateGuid(PIDLTYPE type, REFIID guid) DECLSPEC_HIDDEN;
 LPITEMIDLIST	_ILCreateGuidFromStrA(LPCSTR szGUID) DECLSPEC_HIDDEN;
 LPITEMIDLIST	_ILCreateGuidFromStrW(LPCWSTR szGUID) DECLSPEC_HIDDEN;
 
+#ifdef __REACTOS__
+LPITEMIDLIST    _ILCreateGuidFromShellUrlW(LPCWSTR szUrl) DECLSPEC_HIDDEN;
+#endif
+
 /* Commonly used PIDLs representing file system objects. */
 LPITEMIDLIST	_ILCreateDesktop	(void) DECLSPEC_HIDDEN;
 LPITEMIDLIST	_ILCreateFromFindDataW(const WIN32_FIND_DATAW *stffile) DECLSPEC_HIDDEN;
@@ -283,7 +287,9 @@ LPITEMIDLIST	_ILCreatePrinters	(void) DECLSPEC_HIDDEN;
 LPITEMIDLIST	_ILCreateNetwork	(void) DECLSPEC_HIDDEN;
 LPITEMIDLIST	_ILCreateNetHood	(void) DECLSPEC_HIDDEN;
 #ifdef __REACTOS__
+LPITEMIDLIST	_ILCreateFonts		(void);
 LPITEMIDLIST	_ILCreateAdminTools	(void);
+LPITEMIDLIST	_ILCreateConnections(void);
 #endif
 LPITEMIDLIST	_ILCreateBitBucket	(void) DECLSPEC_HIDDEN;
 LPITEMIDLIST	_ILCreateDrive		(LPCWSTR) DECLSPEC_HIDDEN;

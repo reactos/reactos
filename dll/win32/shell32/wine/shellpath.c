@@ -1110,14 +1110,14 @@ static const CSIDL_DATA CSIDL_Data[] =
     { /* 0x03 - CSIDL_CONTROLS (.CPL files) */
         &FOLDERID_ControlPanelFolder,
         CSIDL_Type_SystemPath,
-        NULL,
+        L"ControlPanelFolder",
         NULL,
         -IDI_SHELL_CONTROL_PANEL
     },
     { /* 0x04 - CSIDL_PRINTERS */
         &FOLDERID_PrintersFolder,
         CSIDL_Type_SystemPath,
-        NULL,
+        L"PrintersFolder",
         NULL,
         -IDI_SHELL_PRINTERS_FOLDER
     },
@@ -1157,7 +1157,7 @@ static const CSIDL_DATA CSIDL_Data[] =
     { /* 0x0a - CSIDL_BITBUCKET - Recycle Bin */
         &FOLDERID_RecycleBinFolder,
         CSIDL_Type_Disallowed,
-        NULL,
+        L"RecycleBinFolder",
         NULL
     },
     { /* 0x0b - CSIDL_STARTMENU */
@@ -1216,14 +1216,14 @@ static const CSIDL_DATA CSIDL_Data[] =
     { /* 0x11 - CSIDL_DRIVES */
         &FOLDERID_ComputerFolder,
         CSIDL_Type_Disallowed,
-        NULL,
+        L"MyComputerFolder",
         NULL,
         -IDI_SHELL_COMPUTER_FOLDER
     },
     { /* 0x12 - CSIDL_NETWORK */
         &FOLDERID_NetworkFolder,
         CSIDL_Type_Disallowed,
-        NULL,
+        L"NetworkPlacesFolder",
         NULL,
         -IDI_SHELL_NETWORK_FOLDER
     },
@@ -1442,7 +1442,7 @@ static const CSIDL_DATA CSIDL_Data[] =
     { /* 0x31 - CSIDL_CONNECTIONS */
         &FOLDERID_ConnectionsFolder,
         CSIDL_Type_Disallowed,
-        NULL,
+        L"ConnectionsFolder",
         NULL,
         -IDI_SHELL_NETWORK_CONNECTIONS
     },
@@ -1847,6 +1847,22 @@ static const CSIDL_DATA CSIDL_Data[] =
     }
 #endif
 };
+
+#ifdef __REACTOS__
+UINT _SHGetCSIDLByNameW(LPCWSTR lpszName)
+{
+    UINT i;
+    for (i = 0; i < _countof(CSIDL_Data); i++)
+    {
+        if (CSIDL_Data[i].szValueName != NULL &&
+            StrCmpIW(lpszName, CSIDL_Data[i].szValueName) == 0)
+        {
+            return i;
+        }
+    }
+    return UINT_MAX;
+}
+#endif
 
 #ifndef __REACTOS__
 static HRESULT _SHExpandEnvironmentStrings(LPCWSTR szSrc, LPWSTR szDest);
@@ -3154,6 +3170,20 @@ HRESULT WINAPI SHGetFolderLocation(
         case CSIDL_NETWORK:
             *ppidl = _ILCreateNetwork();
             break;
+
+#ifdef __REACTOS__
+        case CSIDL_FONTS:
+            *ppidl = _ILCreateFonts();
+            break;
+
+        case CSIDL_ADMINTOOLS:
+            *ppidl = _ILCreateAdminTools();
+            break;
+
+        case CSIDL_CONNECTIONS:
+            *ppidl = _ILCreateConnections();
+            break;
+#endif // __REACTOS__
 
         default:
         {

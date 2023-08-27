@@ -332,7 +332,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
         if (urldata.nScheme == URL_SCHEME_SHELL) /* handle shell: urls */
         {
             TRACE ("-- shell url: %s\n", debugstr_w(urldata.pszSuffix));
-            pidlTemp = _ILCreateGuidFromStrW(urldata.pszSuffix + 2);
+            pidlTemp = _ILCreateGuidFromShellUrlW(urldata.pszSuffix);
         }
         else
             return IEParseDisplayNameWithBCW(CP_ACP, lpszDisplayName, pbc, ppidl);
