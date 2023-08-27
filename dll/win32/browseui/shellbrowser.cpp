@@ -3829,7 +3829,7 @@ LRESULT CShellBrowser::OnAppCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
             break;
 
         default:
-            ERR("uCmd: %u\n", uCmd);
+            FIXME("uCmd: %u\n", uCmd);
             break;
     }
     return 0;
