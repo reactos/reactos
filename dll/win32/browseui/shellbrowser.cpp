@@ -626,6 +626,7 @@ public:
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnGetSettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnAppCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     HRESULT OnSearch();
 
     static ATL::CWndClassInfo& GetWndClassInfo()
@@ -678,6 +679,7 @@ public:
         MESSAGE_HANDLER(WM_COMMAND, RelayCommands)
         MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnSettingsChange)
         MESSAGE_HANDLER(BWM_GETSETTINGSPTR, OnGetSettingsPtr)
+        MESSAGE_HANDLER(WM_APPCOMMAND, OnAppCommand)
     END_MSG_MAP()
 
     BEGIN_CONNECTION_POINT_MAP(CShellBrowser)
@@ -3810,6 +3812,27 @@ LRESULT CShellBrowser::OnGetSettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam,
 
     *(ShellSettings**)lParam = &m_settings;
     return NO_ERROR;
+}
+
+// WM_APPCOMMAND
+LRESULT CShellBrowser::OnAppCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    UINT uCmd = GET_APPCOMMAND_LPARAM(lParam);
+    switch (uCmd)
+    {
+        case APPCOMMAND_BROWSER_BACKWARD:
+            GoBack();
+            break;
+
+        case APPCOMMAND_BROWSER_FORWARD:
+            GoForward();
+            break;
+
+        default:
+            FIXME("uCmd: %u\n", uCmd);
+            break;
+    }
+    return 0;
 }
 
 HRESULT CShellBrowser_CreateInstance(REFIID riid, void **ppv)
