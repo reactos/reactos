@@ -350,8 +350,8 @@ static LPWSTR AllocStrCat(LPWSTR psz, LPCWSTR cat)
 
 void HDropFromClipboard(HDC hdc, const RECT *lpRect)
 {
-    LPWSTR psz = NULL;
-    WCHAR szText[MAX_PATH + 2];
+    LPWSTR pszAlloc = NULL;
+    WCHAR szFile[MAX_PATH + 2];
     HDROP hDrop = (HDROP)GetClipboardData(CF_HDROP);
     UINT iFile, cFiles = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
     RECT rc = *lpRect;
@@ -360,13 +360,14 @@ void HDropFromClipboard(HDC hdc, const RECT *lpRect)
 
     for (iFile = 0; iFile < cFiles; ++iFile)
     {
-        DragQueryFileW(hDrop, iFile, szText, _countof(szText));
-        lstrcatW(szText, L"\r\n");
-        psz = AllocStrCat(psz, szText);
+        DragQueryFileW(hDrop, iFile, szFile, _countof(szFile));
+        lstrcatW(szFile, L"\r\n");
+        pszAlloc = AllocStrCat(pszAlloc, szFile);
     }
 
-    DrawTextW(hdc, psz, -1, &rc, DT_LEFT | DT_NOPREFIX | DT_EXTERNALLEADING | DT_WORD_ELLIPSIS);
-    free(psz);
+    DrawTextW(hdc, pszAlloc, -1, &rc,
+              DT_LEFT | DT_NOPREFIX | DT_EXTERNALLEADING | DT_WORD_ELLIPSIS);
+    free(pszAlloc);
 }
 
 BOOL RealizeClipboardPalette(HDC hdc)
