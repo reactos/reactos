@@ -358,6 +358,13 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
             break;
         }
 
+        case CF_HDROP:
+        {
+            GetClientRect(hWnd, &rc);
+            HDropFromClipboard(hdc, &rc);
+            break;
+        }
+
         default:
         {
             GetClientRect(hWnd, &rc);

@@ -331,6 +331,45 @@ void PlayEnhMetaFileFromClipboard(HDC hdc, const RECT *lpRect)
     PlayEnhMetaFile(hdc, hEmf, lpRect);
 }
 
+static LPWSTR AllocStrCat(LPWSTR psz, LPCWSTR cat)
+{
+    INT cch;
+    LPWSTR pszNew;
+
+    if (psz == NULL)
+        return _wcsdup(cat);
+
+    cch = lstrlenW(psz) + lstrlenW(cat) + 1;
+    pszNew = realloc(psz, cch * sizeof(WCHAR));
+    if (!pszNew)
+        return psz;
+
+    lstrcatW(pszNew, cat);
+    return pszNew;
+}
+
+void HDropFromClipboard(HDC hdc, const RECT *lpRect)
+{
+    LPWSTR pszAlloc = NULL;
+    WCHAR szFile[MAX_PATH + 2];
+    HDROP hDrop = (HDROP)GetClipboardData(CF_HDROP);
+    UINT iFile, cFiles = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
+    RECT rc = *lpRect;
+
+    FillRect(hdc, &rc, (HBRUSH)(COLOR_WINDOW + 1));
+
+    for (iFile = 0; iFile < cFiles; ++iFile)
+    {
+        DragQueryFileW(hDrop, iFile, szFile, _countof(szFile));
+        lstrcatW(szFile, L"\r\n");
+        pszAlloc = AllocStrCat(pszAlloc, szFile);
+    }
+
+    DrawTextW(hdc, pszAlloc, -1, &rc,
+              DT_LEFT | DT_NOPREFIX | DT_EXTERNALLEADING | DT_WORD_ELLIPSIS);
+    free(pszAlloc);
+}
+
 BOOL RealizeClipboardPalette(HDC hdc)
 {
     BOOL Success;
