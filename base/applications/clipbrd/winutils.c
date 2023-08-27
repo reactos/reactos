@@ -333,10 +333,18 @@ void PlayEnhMetaFileFromClipboard(HDC hdc, const RECT *lpRect)
 
 void HDropFromClipboard(HDC hdc, const RECT *lpRect)
 {
+    RECT rc = *lpRect;
+    TEXTMETRIC tm;
     WCHAR szText[MAX_PATH];
     HDROP hDrop = (HDROP)GetClipboardData(CF_HDROP);
-    DragQueryFileW(hDrop, 0, szText, _countof(szText));
-    DrawTextW(hdc, szText, -1, (RECT*)lpRect, DT_LEFT | DT_TOP | DT_SINGLELINE);
+    UINT iFile, cFiles = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
+    GetTextMetrics(hdc, &tm);
+    for (iFile = 0; iFile < cFiles; ++iFile)
+    {
+        DragQueryFileW(hDrop, iFile, szText, _countof(szText));
+        DrawTextW(hdc, szText, -1, &rc, DT_LEFT | DT_TOP | DT_SINGLELINE);
+        rc.top += tm.tmHeight;
+    }
 }
 
 BOOL RealizeClipboardPalette(HDC hdc)
