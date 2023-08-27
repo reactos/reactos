@@ -1,3 +1,9 @@
+/*
+ * PROJECT:     ReactOS SDK
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Provides CPUID structure definitions
+ * COPYRIGHT:   Copyright 2023 Timo Kreuzer <timo.kreuzer@reactos.org>
+ */
 
 #define SIZE_2KB 2048
 
