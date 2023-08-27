@@ -84,6 +84,9 @@ HRESULT WINAPI CExeDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
 
             pszSrcList += wcslen(pszSrcList) + 1;
         }
+
+        GlobalUnlock(medium.hGlobal);
+        ReleaseStgMedium(&medium);
     }
 
     ShellExecuteW(NULL, L"open", sPathTarget, wszBuf, NULL,SW_SHOWNORMAL);

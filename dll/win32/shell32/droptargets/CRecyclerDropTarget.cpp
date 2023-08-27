@@ -65,6 +65,7 @@ class CRecyclerDropTarget :
                 hr = E_FAIL;
             }
 
+            GlobalUnlock(medium.hGlobal);
             ReleaseStgMedium(&medium);
 
             return hr;
