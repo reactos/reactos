@@ -1773,6 +1773,7 @@ static void move_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, const FILE
 {
     WCHAR szDestPath[MAX_PATH];
 
+#ifdef __REACTOS__
     if (!PathFileExistsW(feTo->szFullPath))
         SHNotifyCreateDirectoryW(feTo->szFullPath, NULL);
 
