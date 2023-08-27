@@ -17,4 +17,5 @@ void BitBltFromClipboard(PAINTSTRUCT ps, SCROLLSTATE state, DWORD dwRop);
 void SetDIBitsToDeviceFromClipboard(UINT uFormat, PAINTSTRUCT ps, SCROLLSTATE state, UINT fuColorUse);
 void PlayMetaFileFromClipboard(HDC hdc, const RECT *lpRect);
 void PlayEnhMetaFileFromClipboard(HDC hdc, const RECT *lpRect);
+void HDropFromClipboard(HDC hdc, const RECT *lpRect);
 BOOL RealizeClipboardPalette(HDC hdc);

@@ -331,6 +331,14 @@ void PlayEnhMetaFileFromClipboard(HDC hdc, const RECT *lpRect)
     PlayEnhMetaFile(hdc, hEmf, lpRect);
 }
 
+void HDropFromClipboard(HDC hdc, const RECT *lpRect)
+{
+    WCHAR szText[MAX_PATH];
+    HDROP hDrop = (HDROP)GetClipboardData(CF_HDROP);
+    DragQueryFileW(hDrop, 0, szText, _countof(szText));
+    DrawTextW(hdc, szText, -1, (RECT*)lpRect, DT_LEFT | DT_TOP | DT_SINGLELINE);
+}
+
 BOOL RealizeClipboardPalette(HDC hdc)
 {
     BOOL Success;
