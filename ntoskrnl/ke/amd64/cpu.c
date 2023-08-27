@@ -10,6 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <x86x64/Cpuid.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -152,7 +153,8 @@ KiGetFeatureBits(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
     ULONG64 FeatureBits = 0;
-    CPU_INFO CpuInfo;
+    CPUID_VERSION_INFO_REGS VersionInfo;
+    CPUID_EXTENDED_FUNCTION_REGS extendedFunction;
 
     /* Get the Vendor ID */
     Vendor = Prcb->CpuVendor;
@@ -161,38 +163,39 @@ KiGetFeatureBits(VOID)
     if (!Vendor) return FeatureBits;
 
     /* Get the CPUID Info. */
-    KiCpuId(&CpuInfo, 1);
+    __cpuid(VersionInfo.AsInt32, CPUID_VERSION_INFO);
 
     /* Set the initial APIC ID */
-    Prcb->InitialApicId = (UCHAR)(CpuInfo.Ebx >> 24);
+    Prcb->InitialApicId = (UCHAR)VersionInfo.Ebx.Bits.InitialLocalApicId;
 
     /* Convert all CPUID Feature bits into our format */
-    if (CpuInfo.Edx & X86_FEATURE_VME) FeatureBits |= KF_CR4;
-    if (CpuInfo.Edx & X86_FEATURE_PSE) FeatureBits |= KF_LARGE_PAGE | KF_CR4;
-    if (CpuInfo.Edx & X86_FEATURE_TSC) FeatureBits |= KF_RDTSC;
-    if (CpuInfo.Edx & X86_FEATURE_CX8) FeatureBits |= KF_CMPXCHG8B;
-    if (CpuInfo.Edx & X86_FEATURE_SYSCALL) FeatureBits |= KF_FAST_SYSCALL;
-    if (CpuInfo.Edx & X86_FEATURE_MTTR) FeatureBits |= KF_MTRR;
-    if (CpuInfo.Edx & X86_FEATURE_PGE) FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
-    if (CpuInfo.Edx & X86_FEATURE_CMOV) FeatureBits |= KF_CMOV;
-    if (CpuInfo.Edx & X86_FEATURE_PAT) FeatureBits |= KF_PAT;
-    if (CpuInfo.Edx & X86_FEATURE_DS) FeatureBits |= KF_DTS;
-    if (CpuInfo.Edx & X86_FEATURE_MMX) FeatureBits |= KF_MMX;
-    if (CpuInfo.Edx & X86_FEATURE_FXSR) FeatureBits |= KF_FXSR;
-    if (CpuInfo.Edx & X86_FEATURE_SSE) FeatureBits |= KF_XMMI;
-    if (CpuInfo.Edx & X86_FEATURE_SSE2) FeatureBits |= KF_XMMI64;
+    if (VersionInfo.Edx.Bits.VME) FeatureBits |= KF_CR4;
+    if (VersionInfo.Edx.Bits.PSE) FeatureBits |= KF_LARGE_PAGE | KF_CR4;
+    if (VersionInfo.Edx.Bits.TSC) FeatureBits |= KF_RDTSC;
+    if (VersionInfo.Edx.Bits.CX8) FeatureBits |= KF_CMPXCHG8B;
+    if (VersionInfo.Edx.Bits.SEP) FeatureBits |= KF_FAST_SYSCALL;
+    if (VersionInfo.Edx.Bits.MTRR) FeatureBits |= KF_MTRR;
+    if (VersionInfo.Edx.Bits.PGE) FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
+    if (VersionInfo.Edx.Bits.CMOV) FeatureBits |= KF_CMOV;
+    if (VersionInfo.Edx.Bits.PAT) FeatureBits |= KF_PAT;
+    if (VersionInfo.Edx.Bits.DS) FeatureBits |= KF_DTS;
+    if (VersionInfo.Edx.Bits.MMX) FeatureBits |= KF_MMX;
+    if (VersionInfo.Edx.Bits.FXSR) FeatureBits |= KF_FXSR;
+    if (VersionInfo.Edx.Bits.SSE) FeatureBits |= KF_XMMI;
+    if (VersionInfo.Edx.Bits.SSE2) FeatureBits |= KF_XMMI64;
 
-    if (CpuInfo.Ecx & X86_FEATURE_SSE3) FeatureBits |= KF_SSE3;
-    //if (CpuInfo.Ecx & X86_FEATURE_SSSE3) FeatureBits |= KF_SSSE3;
-    if (CpuInfo.Ecx & X86_FEATURE_CX16) FeatureBits |= KF_CMPXCHG16B;
-    //if (CpuInfo.Ecx & X86_FEATURE_SSE41) FeatureBits |= KF_SSE4_1;
-    if (CpuInfo.Ecx & X86_FEATURE_XSAVE) FeatureBits |= KF_XSTATE;
+    if (VersionInfo.Ecx.Bits.SSE3) FeatureBits |= KF_SSE3;
+    if (VersionInfo.Ecx.Bits.SSSE3) FeatureBits |= KF_SSSE3;
+    if (VersionInfo.Ecx.Bits.CMPXCHG16B) FeatureBits |= KF_CMPXCHG16B;
+    if (VersionInfo.Ecx.Bits.SSE4_1) FeatureBits |= KF_SSE4_1;
+    if (VersionInfo.Ecx.Bits.XSAVE) FeatureBits |= KF_XSTATE;
 
     /* Check if the CPU has hyper-threading */
-    if (CpuInfo.Edx & X86_FEATURE_HT)
+    if (VersionInfo.Edx.Bits.HTT)
     {
         /* Set the number of logical CPUs */
-        Prcb->LogicalProcessorsPerPhysicalProcessor = (UCHAR)(CpuInfo.Ebx >> 16);
+        Prcb->LogicalProcessorsPerPhysicalProcessor =
+            VersionInfo.Ebx.Bits.MaximumAddressableIdsForLogicalProcessors;
         if (Prcb->LogicalProcessorsPerPhysicalProcessor > 1)
         {
             /* We're on dual-core */
@@ -206,23 +209,25 @@ KiGetFeatureBits(VOID)
     }
 
     /* Check extended cpuid features */
-    KiCpuId(&CpuInfo, 0x80000000);
-    if ((CpuInfo.Eax & 0xffffff00) == 0x80000000)
+    __cpuid(extendedFunction.AsInt32, CPUID_EXTENDED_FUNCTION);
+    if ((extendedFunction.MaxLeaf & 0xffffff00) == 0x80000000)
     {
         /* Check if CPUID 0x80000001 is supported */
-        if (CpuInfo.Eax >= 0x80000001)
+        if (extendedFunction.MaxLeaf >= 0x80000001)
         {
+            CPUID_EXTENDED_CPU_SIG_REGS extSig;
+
             /* Check which extended features are available. */
-            KiCpuId(&CpuInfo, 0x80000001);
+            __cpuid(extSig.AsInt32, CPUID_EXTENDED_CPU_SIG);
 
             /* Check if NX-bit is supported */
-            if (CpuInfo.Edx & X86_FEATURE_NX) FeatureBits |= KF_NX_BIT;
+            if (extSig.Intel.Edx.Bits.NX) FeatureBits |= KF_NX_BIT;
 
             /* Now handle each features for each CPU Vendor */
             switch (Vendor)
             {
                 case CPU_AMD:
-                    if (CpuInfo.Edx & 0x80000000) FeatureBits |= KF_3DNOW;
+                    if (extSig.Amd.Edx.Bits.ThreeDNow) FeatureBits |= KF_3DNOW;
                     break;
             }
         }
