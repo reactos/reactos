@@ -13,6 +13,12 @@
     ((CMP_HASH_IRRATIONAL * (ConvKey)) % CMP_HASH_PRIME)
 
 //
+// Computes the hashkey of a character
+//
+#define COMPUTE_HASH_CHAR(ConvKey, Char)                            \
+    (37 * ConvKey + RtlUpcaseUnicodeChar(Char))
+
+//
 // Returns the index into the hash table, or the entry itself
 //
 #define GET_HASH_INDEX(ConvKey)                                     \
