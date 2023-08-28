@@ -1971,16 +1971,16 @@ IUnknown_QueryServicePropertyBag(
     _In_ REFIID riid,
     _Outptr_ void **ppvObj)
 {
-    TRACE("%p 0x%x %p %p\n", pService, flags, &riid, ppvObj);
+    TRACE("%p 0x%x %p %p\n", punk, flags, &riid, ppvObj);
 
     CComPtr<IShellBrowserService> pService;
-    HRESULT hr = IUnknown_QueryService(punk, &SID_STopLevelBrowser, &IID_IShellBrowserService,
+    HRESULT hr = IUnknown_QueryService(punk, SID_STopLevelBrowser, IID_IShellBrowserService,
                                        (void **)&pService);
     if (FAILED(hr))
     {
         ERR("0x%X\n", hr);
         return hr;
     }
-    
+
     return pService->GetPropertyBag(flags, riid, ppvObj);
 }
