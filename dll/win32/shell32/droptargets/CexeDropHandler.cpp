@@ -72,6 +72,7 @@ HRESULT WINAPI CExeDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         if (!lpdf)
         {
             ERR("Error locking global\n");
+            ReleaseStgMedium(&medium);
             return E_FAIL;
         }
         pszSrcList = (LPWSTR) (((byte*) lpdf) + lpdf->pFiles);

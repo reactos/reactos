@@ -46,6 +46,7 @@ class CRecyclerDropTarget :
             if (!lpdf)
             {
                 ERR("Error locking global\n");
+                ReleaseStgMedium(&medium);
                 return E_FAIL;
             }
 
