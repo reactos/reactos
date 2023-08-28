@@ -7,8 +7,6 @@
 
 #include "regedit.h"
 
-#define MAX_SUBKEY_LEN   257
-
 static HKEY reg_class_keys[] =
 {
     HKEY_LOCAL_MACHINE, HKEY_USERS, HKEY_CLASSES_ROOT,
@@ -284,14 +282,14 @@ static void txt_export_registry_data(FILE *fp, HKEY key, LPCWSTR path)
     free(data);
     free(value_name);
 
-    subkey_name = malloc(MAX_SUBKEY_LEN * sizeof(WCHAR));
+    subkey_name = malloc(MAX_PATH * sizeof(WCHAR));
 
     path_len = lstrlenW(path);
 
     i = 0;
     for (;;)
     {
-        subkey_len = MAX_SUBKEY_LEN;
+        subkey_len = MAX_PATH;
         rc = RegEnumKeyExW(key, i, subkey_name, &subkey_len, NULL, NULL, NULL, NULL);
         if (rc == ERROR_SUCCESS)
         {
