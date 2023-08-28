@@ -214,8 +214,8 @@ static void txt_export_class_and_last_write(FILE *fp, HKEY key)
     SYSTEMTIME stLastWrite;
     WCHAR sz1[64], sz2[64];
 
-    RegQueryInfoKey(key, szClassName, &cchClassName, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                    NULL, &ftLastWrite);
+    RegQueryInfoKeyW(key, szClassName, &cchClassName, NULL, NULL, NULL, NULL, NULL, NULL,
+                     NULL, NULL, &ftLastWrite);
 
     szClassName[_countof(szClassName) - 1] = UNICODE_NULL;
 
