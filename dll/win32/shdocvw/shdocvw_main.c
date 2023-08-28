@@ -89,6 +89,8 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
         return get_ieframe_object(rclsid, riid, ppv);
 
 #ifdef __REACTOS__
+    if (IsEqualGUID(&CLSID_MruLongList, rclsid))
+        return CMruLongList_CreateInstance(0, ppv, 0);
     if (IsEqualGUID(&CLSID_MruPidlList, rclsid))
         return CMruPidlList_CreateInstance(0, ppv, 0);
 #endif

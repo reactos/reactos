@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS shdocvw
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:     Implement shdocvw.dll
+ * PURPOSE:     Implement MRU List of shdocvw.dll
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -15,23 +15,31 @@
 #include <shlobj.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
+#include <shlwapi.h>
 #include "shdocvw.h"
 
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-struct SLOTITEMDATA
+extern "C" void __cxa_pure_virtual(void)
 {
-    // FIXME
-};
+    ::DebugBreak();
+}
 
-class CMruBase : public IMruDataList
+class CMruBase
+    : public IMruDataList
 {
 protected:
-    LONG m_cRefs = 1;
-    HKEY m_hKey = NULL;
-    // FIXME: Add members
+    LONG            m_cRefs         = 1;
+    DWORD           m_dwFlags       = 0;
+    BOOL            m_bFlag1        = FALSE;
+    BOOL            m_bChecked      = FALSE;
+    HKEY            m_hKey          = NULL;
+    DWORD           m_cSlotRooms    = 0;
+    DWORD           m_cSlots        = 0;
+    SLOTCOMPARE     m_fnCompare     = NULL;
+    SLOTITEMDATA *  m_pSlots        = NULL;
 
 public:
     CMruBase()
@@ -39,7 +47,7 @@ public:
     }
     virtual ~CMruBase();
 
-    // IUnknown
+    // IUnknown methods
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObj) override;
     STDMETHODIMP_(ULONG) AddRef() override
     {
@@ -55,26 +63,32 @@ public:
         return m_cRefs;
     }
 
-    // IMruDataList
-    STDMETHODIMP InitData(
-        UINT a2,
-        UINT a3,
-        HKEY hKey,
-        LPCWSTR a5,
-        void *a6) override;
-    STDMETHODIMP AddData(BYTE *a2, UINT a3, UINT *a4) override;
-    STDMETHODIMP FindData(const BYTE *a2, UINT a3, int *a4) override;
-    STDMETHODIMP GetData(SLOTITEMDATA *a2, BYTE *a3, UINT a4) override;
-    STDMETHODIMP QueryInfo(SLOTITEMDATA *a2, UINT *a3, UINT *a4) override;
-    STDMETHODIMP Delete(int a2) override;
+    // IMruDataList methods
+    STDMETHODIMP InitData(UINT cCapacity, UINT flags, HKEY hKey, LPCWSTR pszSubKey,
+                          SLOTCOMPARE fnCompare) override;
+    STDMETHODIMP AddData(const BYTE *pbData, DWORD cbData, UINT *piSlot) override;
+    STDMETHODIMP FindData(const BYTE *pbData, DWORD cbData, UINT *piSlot) override;
+    STDMETHODIMP GetData(UINT iSlot, BYTE *pbData, DWORD cbData) override;
+    STDMETHODIMP QueryInfo(UINT iSlot, UINT *puSlot, DWORD *pcbData) override;
+    STDMETHODIMP Delete(UINT iSlot) override;
 
-    static void *operator new(size_t size)
+    // Non-standard methods
+    virtual HRESULT _IsEqual(const SLOTITEMDATA *pSlot, LPCITEMIDLIST pidl, UINT cbPidl) const;
+    virtual HRESULT _DeleteValue(LPCWSTR pszValue);
+    virtual HRESULT _InitSlots() = 0;
+    virtual void _SaveSlots() = 0;
+    virtual UINT _UpdateSlots(UINT iSlot) = 0;
+    virtual void _SlotString(DWORD dwSlot, LPWSTR psz, DWORD cch) = 0;
+    virtual HRESULT _GetSlot(UINT iSlot, UINT *puSlot) = 0;
+    virtual HRESULT _RemoveSlot(UINT iSlot, UINT *uSlot) = 0;
+
+    static void* operator new(size_t size)
     {
-        return LocalAlloc(LMEM_FIXED, size);
+        return ::LocalAlloc(LPTR, size);
     }
     static void operator delete(void *ptr)
     {
-        LocalFree(ptr);
+        ::LocalFree(ptr);
     }
 };
 
@@ -84,6 +98,21 @@ CMruBase::~CMruBase()
     {
         ::RegCloseKey(m_hKey);
         m_hKey = NULL;
+    }
+
+    if (m_pSlots)
+    {
+        for (UINT iSlot = 0; iSlot < m_cSlots; ++iSlot)
+        {
+            if (m_pSlots[iSlot].pidl)
+            {
+                ::LocalFree(m_pSlots[iSlot].pidl);
+                m_pSlots[iSlot].pidl = NULL;
+            }
+        }
+
+        ::LocalFree(m_pSlots);
+        m_pSlots = NULL;
     }
 }
 
@@ -101,64 +130,216 @@ STDMETHODIMP CMruBase::QueryInterface(REFIID riid, void **ppvObj)
     return E_NOINTERFACE;
 }
 
-STDMETHODIMP CMruBase::InitData(
-    UINT a2,
-    UINT a3,
+STDMETHODIMP
+CMruBase::InitData(
+    UINT cCapacity,
+    UINT flags,
     HKEY hKey,
-    LPCWSTR a5,
-    void *a6)
+    LPCWSTR pszSubKey,
+    SLOTCOMPARE fnCompare)
 {
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CMruBase::AddData(BYTE *a2, UINT a3, UINT *a4)
+STDMETHODIMP CMruBase::AddData(const BYTE *pbData, DWORD cbData, UINT *piSlot)
 {
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CMruBase::FindData(const BYTE *a2, UINT a3, int *a4)
+STDMETHODIMP CMruBase::FindData(const BYTE *pbData, DWORD cbData, UINT *piSlot)
 {
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CMruBase::GetData(SLOTITEMDATA *a2, BYTE *a3, UINT a4)
+STDMETHODIMP CMruBase::GetData(UINT iSlot, BYTE *pbData, DWORD cbData)
 {
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CMruBase::QueryInfo(SLOTITEMDATA *a2, UINT *a3, UINT *a4)
+STDMETHODIMP CMruBase::QueryInfo(UINT iSlot, UINT *puSlot, DWORD *pcbData)
 {
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CMruBase::Delete(int a2)
+STDMETHODIMP CMruBase::Delete(UINT iSlot)
 {
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
-class CMruPidlList
+HRESULT CMruBase::_IsEqual(const SLOTITEMDATA *pSlot, LPCITEMIDLIST pidl, UINT cbPidl) const
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CMruBase::_DeleteValue(LPCWSTR pszValue)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+class CMruLongList
     : public CMruBase
-    , public IMruPidlList
 {
 protected:
-    HLOCAL m_hLocal = NULL;
-    HANDLE m_hMutex = NULL;
-    // FIXME: Add members
+    UINT *m_puSlotData = NULL;
+
+    void _ImportShortList();
+
+    HRESULT _InitSlots() override;
+    void _SaveSlots() override;
+    UINT _UpdateSlots(UINT iSlot) override;
+    void _SlotString(DWORD dwSlot, LPWSTR psz, DWORD cch) override;
+    HRESULT _GetSlot(UINT iSlot, UINT *puSlot) override;
+    HRESULT _RemoveSlot(UINT iSlot, UINT *uSlot) override;
 
 public:
-    CMruPidlList() : CMruBase()
+    CMruLongList()
     {
     }
 
-    ~CMruPidlList() override
+    ~CMruLongList() override
     {
-        m_hLocal = ::LocalFree(m_hLocal);
+        if (m_puSlotData)
+        {
+            ::LocalFree(m_puSlotData);
+            m_puSlotData = NULL;
+        }
+    }
+};
+
+HRESULT CMruLongList::_InitSlots()
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+void CMruLongList::_SaveSlots()
+{
+    FIXME("Stub\n");
+}
+
+UINT CMruLongList::_UpdateSlots(UINT iSlot)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+void CMruLongList::_SlotString(DWORD dwSlot, LPWSTR psz, DWORD cch)
+{
+    FIXME("Stub\n");
+}
+
+HRESULT CMruLongList::_GetSlot(UINT iSlot, UINT *puSlot)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CMruLongList::_RemoveSlot(UINT iSlot, UINT *uSlot)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+void CMruLongList::_ImportShortList()
+{
+    FIXME("Stub\n");
+}
+
+EXTERN_C HRESULT
+CMruLongList_CreateInstance(DWORD dwUnused1, void **ppv, DWORD dwUnused3)
+{
+    UNREFERENCED_PARAMETER(dwUnused1);
+    UNREFERENCED_PARAMETER(dwUnused3);
+
+    CMruLongList *pMruList = new CMruLongList();
+    *ppv = static_cast<IMruDataList*>(pMruList);
+    return S_OK;
+}
+
+class CMruNode
+    : public CMruLongList
+{
+protected:
+    UINT m_uSlotData = 0;
+    CMruNode *m_pParent = NULL;
+    IShellFolder *m_pShellFolder = NULL;
+
+public:
+    CMruNode() { }
+    CMruNode(CMruNode *pParent, UINT uSlotData);
+    ~CMruNode() override;
+
+    CMruNode *GetParent();
+};
+
+CMruNode::CMruNode(CMruNode *pParent, UINT uSlotData)
+{
+    m_uSlotData = uSlotData;
+    m_pParent = pParent;
+    pParent->AddRef();
+}
+
+CMruNode::~CMruNode()
+{
+    if (m_pParent)
+    {
+        m_pParent->Release();
+        m_pParent = NULL;
+    }
+
+    if (m_pShellFolder)
+    {
+        m_pShellFolder->Release();
+        m_pShellFolder = NULL;
+    }
+}
+
+CMruNode *CMruNode::GetParent()
+{
+    if (m_pParent)
+        m_pParent->AddRef();
+    return m_pParent;
+}
+
+class CMruPidlList
+    : public IMruPidlList
+    , public CMruNode
+{
+protected:
+    LPBYTE m_pbSlots = NULL;
+    DWORD m_cbSlots = 0;
+    HANDLE m_hMutex = NULL;
+
+    BOOL _LoadNodeSlots()
+    {
+        DWORD cbSlots = m_cbSlots;
+        if (SHGetValueW(m_hKey, NULL, L"NodeSlots", NULL, m_pbSlots, &cbSlots) != ERROR_SUCCESS)
+            return FALSE;
+        m_cbSlots = cbSlots;
+        return TRUE;
+    }
+
+    void _SaveNodeSlots()
+    {
+        SHSetValueW(m_hKey, NULL, L"NodeSlots", REG_BINARY, m_pbSlots, m_cbSlots);
+    }
+
+public:
+    CMruPidlList()
+    {
+    }
+
+    virtual ~CMruPidlList()
+    {
+        m_pbSlots = (LPBYTE)::LocalFree(m_pbSlots);
         if (m_hMutex)
         {
             ::CloseHandle(m_hMutex);
@@ -166,7 +347,7 @@ public:
         }
     }
 
-    // IUnknown
+    // IUnknown methods
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObj) override;
     STDMETHODIMP_(ULONG) AddRef() override
     {
@@ -177,7 +358,7 @@ public:
         return CMruBase::Release();
     }
 
-    // IMruPidlList
+    // IMruPidlList methods
     STDMETHODIMP InitList(UINT cMRUSize, HKEY hKey, LPCWSTR pszName) override;
     STDMETHODIMP UsePidl(LPCITEMIDLIST pidl, UINT *puSlots) override;
     STDMETHODIMP QueryPidl(
@@ -236,6 +417,8 @@ EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD dwUnused1, void **ppv, DWORD 
 {
     UNREFERENCED_PARAMETER(dwUnused1);
     UNREFERENCED_PARAMETER(dwUnused3);
+
+    *ppv = NULL;
 
     CMruPidlList *pMruList = new CMruPidlList();
     if (pMruList == NULL)
