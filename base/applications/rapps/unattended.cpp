@@ -269,6 +269,10 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
                 SwitchToThisWindow(hWindow, TRUE);
                 if (bAppwizMode)
                     PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
+
+                if (hMutex)
+                    CloseHandle(hMutex);
+
                 return FALSE;
             }
         }
