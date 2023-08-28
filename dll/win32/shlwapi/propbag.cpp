@@ -1958,7 +1958,7 @@ SHGetPerScreenResName(
  *  IUnknown_QueryServicePropertyBag (SHLWAPI.536)
  *
  * @param punk      An IUnknown interface.
- * @param flags     The flags.
+ * @param flags     The SHGVSPB_... flags of SHGetViewStatePropertyBag.
  * @param riid      IID of requested property bag interface.
  * @param ppvObj    Address to receive pointer to the new interface.
  * @return          An HRESULT value. S_OK on success, non-zero on failure.
