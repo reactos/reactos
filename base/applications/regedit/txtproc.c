@@ -238,7 +238,7 @@ static void txt_export_class_and_last_write(FILE *fp, HKEY key)
 static void txt_export_registry_data(FILE *fp, HKEY key, LPCWSTR path)
 {
     LONG rc;
-    DWORD max_value_len = 256, value_len;
+    DWORD max_value_len = MAX_PATH, value_len;
     DWORD max_data_bytes = 2048, data_size;
     DWORD subkey_len;
     DWORD i, type, path_len;
