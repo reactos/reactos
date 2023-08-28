@@ -706,6 +706,46 @@ DECLARE_INTERFACE_(IMruPidlList, IUnknown)
 #define IMruPidlList_PruneKids(T,a)         (T)->lpVtbl->PruneKids(T,a)
 #endif
 
+struct SLOTITEMDATA;
+
+/*****************************************************************************
+ * IMruDataList interface
+ */
+#define INTERFACE IMruDataList
+DECLARE_INTERFACE_(IMruDataList, IUnknown)
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IMruDataList ***/
+    STDMETHOD(InitData)(
+        THIS_
+        UINT a2,
+        UINT a3,
+        HKEY hKey,
+        LPCWSTR a5,
+        void *a6) PURE;
+    STDMETHOD(AddData)(THIS_ BYTE*, UINT, UINT*) PURE;
+    STDMETHOD(FindData)(THIS_ const BYTE*, UINT, int*) PURE;
+    STDMETHOD(GetData)(THIS_ struct SLOTITEMDATA*, BYTE*, UINT) PURE;
+    STDMETHOD(QueryInfo)(THIS_ struct SLOTITEMDATA*, UINT*, UINT*) PURE;
+    STDMETHOD(Delete)(THIS_ int) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IMruDataList_QueryInterface(T,a,b)  (T)->lpVtbl->QueryInterface(T,a,b)
+#define IMruDataList_AddRef(T)              (T)->lpVtbl->AddRef(T)
+#define IMruDataList_Release(T)             (T)->lpVtbl->Release(T)
+#define IMruDataList_InitData(T,a,b,c,d,e)  (T)->lpVtbl->InitData(T,a,b,c,d,e)
+#define IMruDataList_AddData(T,a,b,c)       (T)->lpVtbl->AddData(T,a,b,c)
+#define IMruDataList_FindData(T,a,b,c)      (T)->lpVtbl->FindData(T,a,b,c)
+#define IMruDataList_GetData(T,a,b,c)       (T)->lpVtbl->GetData(T,a,b,c)
+#define IMruDataList_QueryInfo(T,a,b,c)     (T)->lpVtbl->QueryInfo(T,a,b,c)
+#define IMruDataList_Delete(T,a)            (T)->lpVtbl->Delete(T,a)
+#endif
+
 /*****************************************************************************
  * ITrayPriv interface
  */

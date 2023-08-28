@@ -17,6 +17,7 @@ set_source_files_properties(shdocvw.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT
 
 add_library(shdocvw MODULE
     ${SOURCE}
+    mrulist.cpp
     shdocvw.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
 

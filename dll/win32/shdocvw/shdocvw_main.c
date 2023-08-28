@@ -30,6 +30,7 @@
 #include "winreg.h"
 #ifdef __REACTOS__
 #include "winnls.h"
+#include <shlguid_undoc.h>
 #endif
 #include "shlwapi.h"
 #include "wininet.h"
@@ -86,6 +87,11 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
        || IsEqualGUID(&CLSID_CUrlHistory, rclsid)
        || IsEqualGUID(&CLSID_TaskbarList, rclsid))
         return get_ieframe_object(rclsid, riid, ppv);
+
+#ifdef __REACTOS__
+    if (IsEqualGUID(&CLSID_MruPidlList, rclsid))
+        return CMruPidlList_CreateInstance(0, ppv, 0);
+#endif
 
     /* As a last resort, figure if the CLSID belongs to a 'Shell Instance Object' */
     return SHDOCVW_GetShellInstanceObjectClassObject(rclsid, riid, ppv);
