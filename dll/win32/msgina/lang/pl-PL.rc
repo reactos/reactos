@@ -245,6 +245,8 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Twoje konto ma ograniczenia czasowe, które uniemożliwiają zalogowanie się w tej chwili. Spróbuj ponownie później."
     IDS_INVALIDWORKSTATION "Twoje konto zostało skonfigurowane w sposób nie zezwalający na używanie tego komputera. Spróbuj na innym komputerze."
     IDS_ACCOUNTRESTRICTION "Nie możesz się zalogować z powodu ograniczeń konta."
+    IDS_EMERGENCY_RESTART_TITLE "Emergency restart"
+    IDS_EMERGENCY_RESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */

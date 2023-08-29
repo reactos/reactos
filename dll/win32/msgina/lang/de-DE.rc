@@ -234,6 +234,8 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Ihr Konto sieht es nicht vor, dass Sie sich zu dieser Zeit anmelden. Bitte versuchen Sie es später noch einmal."
     IDS_INVALIDWORKSTATION "Ihr Konto sieht es nicht vor, dass Sie sich an diesem Computer anmelden. Bitte melden Sie sich an einem anderen Computer an."
     IDS_ACCOUNTRESTRICTION "Wegen einer Kontenbeschränkung dürfen Sie sich nicht anmelden."
+    IDS_EMERGENCY_RESTART_TITLE "Emergency restart"
+    IDS_EMERGENCY_RESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */

@@ -235,6 +235,8 @@ BEGIN
     IDS_INVALIDLOGONHOURS "A fiókján olyan időkorlátozás van, amely miatt jelenleg nem tud belépni. Kérjük próbálja újra később."
     IDS_INVALIDWORKSTATION "A fiókja úgy van beállítva hogy nem használhatja ezt a számítógépet. Kérjük próbálkozzon egy másik számítógéppel."
     IDS_ACCOUNTRESTRICTION "Fiókkorlátozás miatt nem sikerült a bejelentkezés."
+    IDS_EMERGENCY_RESTART_TITLE "Emergency restart"
+    IDS_EMERGENCY_RESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */

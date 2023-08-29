@@ -242,6 +242,8 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Ваш профіль має обмеження часу, через що ви не можете зайти зараз. Будь-ласка, спробуйте пізніше."
     IDS_INVALIDWORKSTATION "Ваш профіль налаштовано так, що ви не можете користуватись цим комп'ютером. Спробуйте інший комп'ютер."
     IDS_ACCOUNTRESTRICTION "Не вдалось ввійти через обмеження профілю."
+    IDS_EMERGENCY_RESTART_TITLE "Emergency restart"
+    IDS_EMERGENCY_RESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */
