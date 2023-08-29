@@ -123,6 +123,6 @@
 #define IDS_SHUTDOWN_SLEEP_DESC       50008
 #define IDS_SHUTDOWN_HIBERNATE_DESC   50009
 
-/* Emergency Restart*/
+/* Emergency Restart */
 #define IDS_EMERGENCY_RESTART_TITLE   50010
 #define IDS_EMERGENCY_RESTART         50011
