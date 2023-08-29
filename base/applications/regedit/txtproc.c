@@ -211,9 +211,15 @@ static void txt_export_class_and_last_write(FILE *fp, HKEY key)
     FILETIME ftLastWrite, ftLocal, ftNull = { 0 };
     SYSTEMTIME stLastWrite;
     WCHAR sz1[64], sz2[64];
+    LONG error;
 
-    RegQueryInfoKeyW(key, szClassName, &cchClassName, NULL, NULL, NULL, NULL, NULL, NULL,
-                     NULL, NULL, &ftLastWrite);
+    error = RegQueryInfoKeyW(key, szClassName, &cchClassName, NULL, NULL, NULL, NULL, NULL, NULL,
+                             NULL, NULL, &ftLastWrite);
+    if (error != ERROR_SUCCESS)
+    {
+        cchClassName = 0;
+        ftLastWrite = ftNull;
+    }
 
     szClassName[_countof(szClassName) - 1] = UNICODE_NULL;
 
