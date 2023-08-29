@@ -5,7 +5,7 @@
  * Copyright 2002 Andriy Palamarchuk
  * Copyright 2004 Dietrich Teickner (from Odin)
  * Copyright 2004 Rolf Kalbermatter
- * Copyright 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * Copyright 2019-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1744,15 +1744,48 @@ static void move_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
         Win32RemoveDirectoryW(feFrom->szFullPath);
 }
 
+#ifdef __REACTOS__
+static BOOL move_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCHAR *szTo)
+{
+    if (PathFileExistsW(szTo))
+    {
+        if (op->req->fFlags & FOF_RENAMEONCOLLISION)
+        {
+            CStringW newPath = try_find_new_name(szTo);
+            if (!newPath.IsEmpty())
+            {
+                return SHNotifyMoveFileW(op, szFrom, newPath, FALSE) == 0;
+            }
+        }
+        else if (!(op->req->fFlags & FOF_NOCONFIRMATION))
+        {
+            if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FILE, PathFindFileNameW(szTo), op))
+                return FALSE;
+        }
+    }
+
+    return SHNotifyMoveFileW(op, szFrom, szTo, FALSE) == 0;
+}
+#endif
+
 /* moves a file or directory to another directory */
 static void move_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, const FILE_ENTRY *feTo)
 {
     WCHAR szDestPath[MAX_PATH];
 
+#ifdef __REACTOS__
+    if (!PathFileExistsW(feTo->szFullPath))
+        SHNotifyCreateDirectoryW(feTo->szFullPath, NULL);
+#endif
+
     PathCombineW(szDestPath, feTo->szFullPath, feFrom->szFilename);
 
     if (IsAttribFile(feFrom->attributes))
+#ifdef __REACTOS__
+        move_file_to_file(op, feFrom->szFullPath, szDestPath);
+#else
         SHNotifyMoveFileW(op, feFrom->szFullPath, szDestPath, FALSE);
+#endif
     else if (!(op->req->fFlags & FOF_FILESONLY && feFrom->bFromWildcard))
         move_dir_to_dir(op, feFrom, szDestPath);
 }
@@ -1813,10 +1846,30 @@ static DWORD move_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flF
             }
         }
 
+#ifdef __REACTOS__
+        if ((flFrom->dwNumFiles > 1 && flTo->dwNumFiles == 1) ||
+            IsAttribDir(fileDest->attributes))
+        {
+            move_to_dir(op, entryToMove, fileDest);
+        }
+        else if (IsAttribDir(entryToMove->attributes))
+        {
+            move_dir_to_dir(op, entryToMove, fileDest->szFullPath);
+        }
+        else
+        {
+            if (!move_file_to_file(op, entryToMove->szFullPath, fileDest->szFullPath))
+            {
+                op->req->fAnyOperationsAborted = TRUE;
+                return ERROR_CANCELLED;
+            }
+        }
+#else
         if (fileDest->bExists && IsAttribDir(fileDest->attributes))
             move_to_dir(op, entryToMove, fileDest);
         else
             SHNotifyMoveFileW(op, entryToMove->szFullPath, fileDest->szFullPath, IsAttribDir(entryToMove->attributes));
+#endif
 
         if (op->progress != NULL)
             op->bCancelled |= op->progress->HasUserCancelled();
