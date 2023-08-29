@@ -294,7 +294,7 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn, BOOL bSave)
     if (bSave)
         pofn->Flags |= OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
     else
-        pofn->Flags |= OFN_FILEMUSTEXIST | OFN_ENABLESIZING;
+        pofn->Flags |= OFN_FILEMUSTEXIST;
     return TRUE;
 }
 
@@ -375,7 +375,8 @@ static BOOL LoadHive(HWND hWnd)
     /* load and set the caption and flags for dialog */
     LoadStringW(hInst, IDS_LOAD_HIVE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
-    /*    ofn.lCustData = ;*/
+    ofn.Flags |= OFN_ENABLESIZING;
+
     /* now load the hive */
     if (GetOpenFileName(&ofn))
     {
@@ -456,7 +457,8 @@ static BOOL ImportRegistryFile(HWND hWnd)
     InitOpenFileName(hWnd, &ofn, FALSE);
     LoadStringW(hInst, IDS_IMPORT_REG_FILE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
-    /*    ofn.lCustData = ;*/
+    ofn.Flags |= OFN_ENABLESIZING;
+
     if (GetOpenFileName(&ofn))
     {
         /* Look at the extension of the file to determine its type */
