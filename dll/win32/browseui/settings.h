@@ -4,6 +4,7 @@
  * PURPOSE:     Settings header file
  * COPYRIGHT:   Copyright 2023 Carl Bialorucki <cbialo2@outlook.com>
  */
+
 #include "precomp.h"
 
 #define BWM_SETTINGCHANGE  (WM_USER + 300)
