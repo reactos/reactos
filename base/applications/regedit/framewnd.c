@@ -230,8 +230,7 @@ static BOOL CheckCommDlgError(HWND hWnd)
     return TRUE;
 }
 
-WCHAR FileNameBuffer[_MAX_PATH];
-WCHAR FileTitleBuffer[_MAX_PATH];
+WCHAR FileNameBuffer[MAX_PATH];
 
 typedef struct
 {
@@ -257,7 +256,7 @@ BuildFilterStrings(WCHAR *Filter, PFILTERPAIR Pairs, int PairCount)
 
 static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn, BOOL bSave)
 {
-    FILTERPAIR FilterPairs[4];
+    FILTERPAIR FilterPairs[5];
     static WCHAR Filter[1024];
 
     memset(pofn, 0, sizeof(OPENFILENAME));
@@ -276,25 +275,27 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn, BOOL bSave)
     {
         FilterPairs[3].DisplayID = IDS_FLT_TXTFILES;
         FilterPairs[3].FilterID = IDS_FLT_TXTFILES_FLT;
+        FilterPairs[4].DisplayID = IDS_FLT_ALLFILES;
+        FilterPairs[4].FilterID = IDS_FLT_ALLFILES_FLT;
     }
     else
     {
         FilterPairs[3].DisplayID = IDS_FLT_ALLFILES;
         FilterPairs[3].FilterID = IDS_FLT_ALLFILES_FLT;
     }
-    BuildFilterStrings(Filter, FilterPairs, ARRAY_SIZE(FilterPairs));
+
+    BuildFilterStrings(Filter, FilterPairs, ARRAY_SIZE(FilterPairs) - !bSave);
 
     pofn->lpstrFilter = Filter;
     pofn->lpstrFile = FileNameBuffer;
-    pofn->nMaxFile = _MAX_PATH;
-    pofn->lpstrFileTitle = FileTitleBuffer;
-    pofn->nMaxFileTitle = _MAX_PATH;
+    pofn->nMaxFile = _countof(FileNameBuffer);
     pofn->Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
     pofn->lpstrDefExt = L"reg";
     if (bSave)
         pofn->Flags |= OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
     else
         pofn->Flags |= OFN_FILEMUSTEXIST;
+
     return TRUE;
 }
 
@@ -670,7 +671,7 @@ BOOL ExportRegistryFile(HWND hWnd)
 
             case 1:  /* Windows Registry Editor Version 5.00 */
             case 3:  /* REGEDIT4 */
-            default:
+            default: /* All files ==> use Windows Registry Editor Version 5.00 */
             {
                 if (!export_registry_key(ofn.lpstrFile, ExportKeyPath,
                                          (ofn.nFilterIndex == 3 ? REG_FORMAT_4
