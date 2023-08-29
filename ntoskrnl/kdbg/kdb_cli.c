@@ -3299,7 +3299,8 @@ KdbpCliMainLoop(
          * Repeat the last one if the user pressed Enter.
          * This reduces the risk of RSI when single-stepping!
          */
-        CmdLen = KdbPrompt(KdbPromptStr.Buffer, Command, sizeof(Command));
+        // TEMP HACK! Issue an empty string instead of duplicating "kdb:>"
+        CmdLen = KdbPrompt(/*KdbPromptStr.Buffer*/"", Command, sizeof(Command));
         if (CmdLen == 0)
         {
             /* Nothing received but the user didn't press Enter, retry */
