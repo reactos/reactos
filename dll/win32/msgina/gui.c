@@ -987,7 +987,7 @@ SecurityDialogProc(
                     EndDialog(hwndDlg, WLX_SAS_ACTION_LOCK_WKSTA);
                     return TRUE;
                 case IDC_SECURITY_LOGOFF:
-                    if(ISKEYDOWN(VK_CONTROL))
+                    if (ISKEYDOWN(VK_CONTROL))
                     {
                         if (ResourceMessageBox(pgContext,
                                                hwndDlg,
