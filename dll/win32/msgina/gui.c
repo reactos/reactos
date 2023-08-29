@@ -12,6 +12,7 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <ndk/exfuncs.h>
+#include <ndk/setypes.h>
 
 typedef struct _DISPLAYSTATUSMSG
 {
@@ -1013,7 +1014,11 @@ SecurityDialogProc(
                                                IDS_EMERGENCY_RESTART_TITLE,
                                                IDS_EMERGENCY_RESTART) == IDOK)
                         {
+                            BOOLEAN Old;
+                            ERR("Emergency restarting NT...\n");
+                            RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
                             NtShutdownSystem(ShutdownReboot);
+                            RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
                         }
                     }
                     else if (OnShutDown(hwndDlg, pgContext) == IDOK)
