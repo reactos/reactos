@@ -31,15 +31,15 @@ class CMruBase
     : public IMruDataList
 {
 protected:
-    LONG            m_cRefs         = 1;
-    DWORD           m_dwFlags       = 0;
-    BOOL            m_bFlag1        = FALSE;
-    BOOL            m_bChecked      = FALSE;
-    HKEY            m_hKey          = NULL;
-    DWORD           m_cSlotRooms    = 0;
-    DWORD           m_cSlots        = 0;
-    SLOTCOMPARE     m_fnCompare     = NULL;
-    SLOTITEMDATA *  m_pSlots        = NULL;
+    LONG            m_cRefs         = 1;        // Reference count
+    DWORD           m_dwFlags       = 0;        // The flags
+    BOOL            m_bFlag1        = FALSE;    // ???
+    BOOL            m_bChecked      = FALSE;    // ???
+    HKEY            m_hKey          = NULL;     // A registry key
+    DWORD           m_cSlotRooms    = 0;        // Rooms for slots
+    DWORD           m_cSlots        = 0;        // The # of slots
+    SLOTCOMPARE     m_fnCompare     = NULL;     // The comparison function
+    SLOTITEMDATA *  m_pSlots        = NULL;     // Slot data
 
 public:
     CMruBase()
@@ -188,7 +188,7 @@ class CMruLongList
     : public CMruBase
 {
 protected:
-    UINT *m_puSlotData = NULL;
+    UINT *m_puSlotData = NULL;      // The slot data
 
     void _ImportShortList();
 
@@ -268,9 +268,9 @@ class CMruNode
     : public CMruLongList
 {
 protected:
-    UINT m_uSlotData = 0;
-    CMruNode *m_pParent = NULL;
-    IShellFolder *m_pShellFolder = NULL;
+    UINT m_uSlotData = 0;                   // The slot data
+    CMruNode *m_pParent = NULL;             // The parent
+    IShellFolder *m_pShellFolder = NULL;    // The shell folder
 
 public:
     CMruNode() { }
@@ -314,9 +314,9 @@ class CMruPidlList
     , public CMruNode
 {
 protected:
-    LPBYTE m_pbSlots = NULL;
-    DWORD m_cbSlots = 0;
-    HANDLE m_hMutex = NULL;
+    LPBYTE m_pbSlots = NULL;        // The data
+    DWORD m_cbSlots = 0;            // The data size
+    HANDLE m_hMutex = NULL;         // The mutex (for sync)
 
     BOOL _LoadNodeSlots()
     {
