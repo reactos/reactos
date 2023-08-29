@@ -693,19 +693,14 @@ BOOL ExportRegistryFile(HWND hWnd)
 
             case 4:  /* Text File */
             {
-                if (!txt_export_registry_key(ofn.lpstrFile, ExportKeyPath))
+                bRet = txt_export_registry_key(ofn.lpstrFile, ExportKeyPath);
+                if (!bRet)
                 {
                     /* Error creating the file */
                     LoadStringW(hInst, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
                     LoadStringW(hInst, IDS_EXPORT_ERROR, szText, ARRAY_SIZE(szText));
                     InfoMessageBox(hWnd, MB_OK | MB_ICONERROR, szTitle, szText, ofn.lpstrFile);
-                    bRet = FALSE;
                 }
-                else
-                {
-                    bRet = TRUE;
-                }
-
                 break;
             }
         }
