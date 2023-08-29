@@ -987,8 +987,21 @@ SecurityDialogProc(
                     EndDialog(hwndDlg, WLX_SAS_ACTION_LOCK_WKSTA);
                     return TRUE;
                 case IDC_SECURITY_LOGOFF:
-                    if (OnLogOff(hwndDlg, pgContext) == IDYES)
+                    if(ISKEYDOWN(VK_CONTROL))
+                    {
+                        if (ResourceMessageBox(pgContext,
+                                               hwndDlg,
+                                               MB_OKCANCEL | MB_ICONSTOP,
+                                               IDS_FORCE_LOGOFF_TITLE,
+                                               IDS_FORCE_LOGOFF) == IDOK)
+                        {
+                            EndDialog(hwndDlg, WLX_SAS_ACTION_FORCE_LOGOFF);
+                        }
+                    }
+                    else if (OnLogOff(hwndDlg, pgContext) == IDYES)
+                    {
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
+                    }
                     return TRUE;
                 case IDC_SECURITY_SHUTDOWN:
                     /* Emergency restart feature */
@@ -998,7 +1011,7 @@ SecurityDialogProc(
                                                hwndDlg,
                                                MB_OKCANCEL | MB_ICONSTOP,
                                                IDS_EMERGENCY_RESTART_TITLE,
-                                               IDS_EMERGENCY_RESTART))
+                                               IDS_EMERGENCY_RESTART) == IDOK)
                         {
                             NtShutdownSystem(ShutdownReboot);
                         }

@@ -126,3 +126,5 @@
 /* Emergency Restart*/
 #define IDS_EMERGENCY_RESTART_TITLE   50010
 #define IDS_EMERGENCY_RESTART         50011
+#define IDS_FORCE_LOGOFF_TITLE        50012
+#define IDS_FORCE_LOGOFF              50013
