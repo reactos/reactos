@@ -205,6 +205,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IMenuPopup),                  TRUE },
     { ID_NAME(IID_IModalWindow)                      },
     { ID_NAME(IID_IMoniker)                          },
+    { ID_NAME(IID_IMruDataList)                      },
     { ID_NAME(IID_IMruPidlList)                      },
     { ID_NAME(IID_IMultiMonitorDockingSite),    TRUE },
     { ID_NAME(IID_IMultiQI),                    TRUE },
