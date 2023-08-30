@@ -13,7 +13,6 @@
 #include <winreg.h>
 #include <ndk/exfuncs.h>
 #include <ndk/setypes.h>
-#include <pseh/pseh2.h>
 
 typedef struct _DISPLAYSTATUSMSG
 {
