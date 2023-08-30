@@ -3616,7 +3616,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           {
               /* We cannot foresee CW_USEDEFAULT's position without communicating with USER32.
                  Use a top-level STATIC control to get the proper position. */
-              HWND hwndDummy = CreateWindowExW(0, L"STATIC", NULL, 0,
+              HWND hwndDummy = CreateWindowExW(0, WC_STATICW, NULL, 0,
                                                CW_USEDEFAULT, CW_USEDEFAULT, dx, dy,
                                                NULL, NULL, GetModuleHandleW(NULL), NULL);
               if (hwndDummy)
