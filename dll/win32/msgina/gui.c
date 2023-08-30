@@ -32,7 +32,8 @@ typedef struct _LEGALNOTICEDATA
 
 // Timer ID for the animated dialog bar.
 #define IDT_BAR 1
-#define ISKEYDOWN(x) GetKeyState(x) & 0x8000
+
+#define ISKEYDOWN(x) (GetKeyState(x) & 0x8000)
 
 typedef struct _DLG_DATA
 {
@@ -1015,8 +1016,8 @@ SecurityDialogProc(
                                                IDS_EMERGENCY_RESTART) == IDOK)
                         {
                             BOOLEAN Old;
-                            ERR("Emergency restarting NT...\n");
 
+                            ERR("Emergency restarting NT...\n");
                             RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
                             NtShutdownSystem(ShutdownReboot);
                             RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
