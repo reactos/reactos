@@ -3581,26 +3581,69 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         SetFocus(GetDlgItem(hwnd, IDOK));
       }
 #ifdef __REACTOS__
-      { /* 
-           try to fit it into the desktop  
-           user32 positions the dialog based on the IDD_PROPSHEET template, 
-           but we've since made it larger by adding controls
-        */
-          RECT rcWork;
-          RECT rcDlg;
-          int dx, dy;
+      /* Move the window position if necessary */
+      {
+          INT dx, dy;
+          RECT rcInit;
+          HWND hwndParent = psInfo->ppshheader.hwndParent;
+          BOOL bMove = FALSE;
+          WINDOWPLACEMENT wndpl = { sizeof(wndpl) };
 
-          if (GetWindowRect(hwnd, &rcDlg) && SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWork, 0))
+          GetWindowRect(hwnd, &rcInit);
+          dx = rcInit.right - rcInit.left;
+          dy = rcInit.bottom - rcInit.top;
+
+          if (IsWindow(hwndParent))
           {
-              dx = rcDlg.right - rcWork.right;
-              dy = rcDlg.bottom - rcWork.bottom;
+              bMove = TRUE;
+              /* hwndParent might be minimized (See Control_ShowAppletInTaskbar).
+                 Use normal position. */
+              GetWindowPlacement(hwndParent, &wndpl);
+              rcInit = wndpl.rcNormalPosition;
+              if (IsWindowVisible(hwndParent) && !IsIconic(hwndParent))
+              {
+                  /* Is it Right-to-Left layout? */
+                  if (GetWindowLongPtrW(hwndParent, GWL_EXSTYLE) & WS_EX_RTLREADING)
+                      rcInit.left = rcInit.right - dx - GetSystemMetrics(SM_CXSMICON);
+                  else
+                      rcInit.left += GetSystemMetrics(SM_CXSMICON);
 
-              if (rcDlg.right > rcWork.right)
-                  rcDlg.left -= dx;
-              if (rcDlg.bottom > rcWork.bottom)
-                  rcDlg.top -= dy;
+                  rcInit.top += GetSystemMetrics(SM_CYSMICON);
+              }
+          }
+          else
+          {
+              /* We cannot foresee CW_USEDEFAULT's posision without communicating with USER32.
+                 Use a top-level STATIC control creation to get the proper position. */
+              HWND hwndDummy = CreateWindowExW(0, L"STATIC", NULL, 0,
+                                               CW_USEDEFAULT, CW_USEDEFAULT, dx, dy,
+                                               NULL, NULL, GetModuleHandleW(NULL), NULL);
+              if (hwndDummy)
+              {
+                  bMove = TRUE;
+                  GetWindowRect(hwndDummy, &rcInit);
+                  DestroyWindow(hwndDummy);
+              }
+          }
 
-              SetWindowPos(hwnd, HWND_TOPMOST, rcDlg.left, rcDlg.top, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW | SWP_NOSIZE);
+          if (bMove)
+          {
+              MONITORINFO mi = { sizeof(mi) };
+              HMONITOR hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+              if (GetMonitorInfo(hMonitor, &mi))
+              {
+                  /* Try to fit it into the desktop */
+                  if (mi.rcWork.right < rcInit.left + dx)
+                      rcInit.left = mi.rcWork.right - dx;
+                  if (mi.rcWork.bottom < rcInit.top + dy)
+                      rcInit.top = mi.rcWork.bottom - dy;
+                  if (rcInit.left < mi.rcWork.left)
+                      rcInit.left = mi.rcWork.left;
+                  if (rcInit.top < mi.rcWork.top)
+                      rcInit.top = mi.rcWork.top;
+                  SetWindowPos(hwnd, NULL, rcInit.left, rcInit.top, 0, 0,
+                               SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+              }
           }
       }
 #endif
