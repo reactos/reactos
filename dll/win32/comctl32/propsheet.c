@@ -3633,7 +3633,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
               HMONITOR hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
               if (GetMonitorInfo(hMonitor, &mi))
               {
-                  /* Try to fit it into the desktop */
+                  /* Try to fit it onto the desktop */
                   if (mi.rcWork.right < rcInit.left + dx)
                       rcInit.left = mi.rcWork.right - dx;
                   if (mi.rcWork.bottom < rcInit.top + dy)
