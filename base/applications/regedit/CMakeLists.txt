@@ -20,6 +20,7 @@ list(APPEND SOURCE
     security.c
     settings.c
     treeview.c
+    txtproc.c
     regedit.h)
 
 file(GLOB regedit_rc_deps res/*.*)

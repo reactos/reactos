@@ -163,4 +163,7 @@ void DestroyTreeView(HWND hwndTV);
 void DestroyListView(HWND hwndLV);
 void DestroyMainMenu(void);
 
+/* txtproc.c */
+BOOL txt_export_registry_key(LPCWSTR file_name, LPCWSTR path);
+
 /* EOF */

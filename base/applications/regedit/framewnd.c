@@ -230,8 +230,7 @@ static BOOL CheckCommDlgError(HWND hWnd)
     return TRUE;
 }
 
-WCHAR FileNameBuffer[_MAX_PATH];
-WCHAR FileTitleBuffer[_MAX_PATH];
+WCHAR FileNameBuffer[MAX_PATH];
 
 typedef struct
 {
@@ -255,9 +254,9 @@ BuildFilterStrings(WCHAR *Filter, PFILTERPAIR Pairs, int PairCount)
     Filter[++c] = L'\0';
 }
 
-static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
+static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn, BOOL bSave)
 {
-    FILTERPAIR FilterPairs[4];
+    FILTERPAIR FilterPairs[5];
     static WCHAR Filter[1024];
 
     memset(pofn, 0, sizeof(OPENFILENAME));
@@ -272,17 +271,31 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     FilterPairs[1].FilterID = IDS_FLT_HIVFILES_FLT;
     FilterPairs[2].DisplayID = IDS_FLT_REGEDIT4;
     FilterPairs[2].FilterID = IDS_FLT_REGEDIT4_FLT;
-    FilterPairs[3].DisplayID = IDS_FLT_ALLFILES;
-    FilterPairs[3].FilterID = IDS_FLT_ALLFILES_FLT;
-    BuildFilterStrings(Filter, FilterPairs, ARRAY_SIZE(FilterPairs));
+    if (bSave)
+    {
+        FilterPairs[3].DisplayID = IDS_FLT_TXTFILES;
+        FilterPairs[3].FilterID = IDS_FLT_TXTFILES_FLT;
+        FilterPairs[4].DisplayID = IDS_FLT_ALLFILES;
+        FilterPairs[4].FilterID = IDS_FLT_ALLFILES_FLT;
+    }
+    else
+    {
+        FilterPairs[3].DisplayID = IDS_FLT_ALLFILES;
+        FilterPairs[3].FilterID = IDS_FLT_ALLFILES_FLT;
+    }
+
+    BuildFilterStrings(Filter, FilterPairs, ARRAY_SIZE(FilterPairs) - !bSave);
 
     pofn->lpstrFilter = Filter;
     pofn->lpstrFile = FileNameBuffer;
-    pofn->nMaxFile = _MAX_PATH;
-    pofn->lpstrFileTitle = FileTitleBuffer;
-    pofn->nMaxFileTitle = _MAX_PATH;
+    pofn->nMaxFile = _countof(FileNameBuffer);
     pofn->Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
     pofn->lpstrDefExt = L"reg";
+    if (bSave)
+        pofn->Flags |= OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+    else
+        pofn->Flags |= OFN_FILEMUSTEXIST;
+
     return TRUE;
 }
 
@@ -354,7 +367,7 @@ static BOOL LoadHive(HWND hWnd)
     /* get the item key to load the hive in */
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
     /* initialize the "open file" dialog */
-    InitOpenFileName(hWnd, &ofn);
+    InitOpenFileName(hWnd, &ofn, FALSE);
     /* build the "All Files" filter up */
     filter.DisplayID = IDS_FLT_ALLFILES;
     filter.FilterID = IDS_FLT_ALLFILES_FLT;
@@ -364,7 +377,7 @@ static BOOL LoadHive(HWND hWnd)
     LoadStringW(hInst, IDS_LOAD_HIVE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
     ofn.Flags |= OFN_ENABLESIZING;
-    /*    ofn.lCustData = ;*/
+
     /* now load the hive */
     if (GetOpenFileName(&ofn))
     {
@@ -442,11 +455,11 @@ static BOOL ImportRegistryFile(HWND hWnd)
     /* Figure out in which key path we are importing */
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
 
-    InitOpenFileName(hWnd, &ofn);
+    InitOpenFileName(hWnd, &ofn, FALSE);
     LoadStringW(hInst, IDS_IMPORT_REG_FILE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
     ofn.Flags |= OFN_ENABLESIZING;
-    /*    ofn.lCustData = ;*/
+
     if (GetOpenFileName(&ofn))
     {
         /* Look at the extension of the file to determine its type */
@@ -590,7 +603,7 @@ BOOL ExportRegistryFile(HWND hWnd)
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
     GetKeyName(ExportKeyPath, ARRAY_SIZE(ExportKeyPath), hKeyRoot, pszKeyPath);
 
-    InitOpenFileName(hWnd, &ofn);
+    InitOpenFileName(hWnd, &ofn, TRUE);
     LoadStringW(hInst, IDS_EXPORT_REG_FILE, Caption, ARRAY_SIZE(Caption));
     ofn.lpstrTitle = Caption;
 
@@ -599,7 +612,7 @@ BOOL ExportRegistryFile(HWND hWnd)
     {
         ofn.lCustData = (LPARAM) ExportKeyPath;
     }
-    ofn.Flags = OFN_ENABLETEMPLATE | OFN_EXPLORER | OFN_ENABLEHOOK | OFN_OVERWRITEPROMPT;
+    ofn.Flags |= OFN_ENABLETEMPLATE | OFN_ENABLEHOOK;
     ofn.lpfnHook = ExportRegistryFile_OFNHookProc;
     ofn.lpTemplateName = MAKEINTRESOURCEW(IDD_EXPORTRANGE);
     if (GetSaveFileName(&ofn))
@@ -675,6 +688,19 @@ BOOL ExportRegistryFile(HWND hWnd)
                     bRet = TRUE;
                 }
 
+                break;
+            }
+
+            case 4:  /* Text File */
+            {
+                bRet = txt_export_registry_key(ofn.lpstrFile, ExportKeyPath);
+                if (!bRet)
+                {
+                    /* Error creating the file */
+                    LoadStringW(hInst, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
+                    LoadStringW(hInst, IDS_EXPORT_ERROR, szText, ARRAY_SIZE(szText));
+                    InfoMessageBox(hWnd, MB_OK | MB_ICONERROR, szTitle, szText, ofn.lpstrFile);
+                }
                 break;
             }
         }
