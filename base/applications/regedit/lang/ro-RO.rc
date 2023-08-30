@@ -431,7 +431,7 @@ BEGIN
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "Orice fișier (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
-    IDS_FLT_TXTFILES "Text Files (*.txt)"
+    IDS_FLT_TXTFILES "Fișiere text (*.txt)"
     IDS_FLT_TXTFILES_FLT "*.txt"
 END
 
@@ -530,16 +530,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FIELD_KEY_NAME "Key Name:"
-    IDS_FIELD_CLASS_NAME "Class Name:"
-    IDS_NO_CLASS_NAME "<NO CLASS>"
-    IDS_NULL_TIMESTAMP "<NULL>"
-    IDS_FIELD_NAME "  Name:"
-    IDS_FIELD_TYPE "  Type:"
-    IDS_FIELD_DATA "  Data:"
-    IDS_FIELD_LASTWRITE "Last Write Time:"
-    IDS_UNKNOWN "<UNKNOWN>"
-    IDS_VALUE_INDEX "Value %d"
+    IDS_FIELD_KEY_NAME "Numele cheii:"
+    IDS_FIELD_CLASS_NAME "Numele clasei:"
+    IDS_NO_CLASS_NAME "<NO CLASS (nicio clasă)>"
+    IDS_NULL_TIMESTAMP "<NULL (nul)>"
+    IDS_FIELD_NAME "  Nume:"
+    IDS_FIELD_TYPE "  Tip:"
+    IDS_FIELD_DATA "  Dată:"
+    IDS_FIELD_LASTWRITE "Ultima dată a scrierii:"
+    IDS_UNKNOWN "<UNKNOWN (necunoscut)>"
+    IDS_VALUE_INDEX "Valoare %d"
 END
 
 /*****************************************************************/
