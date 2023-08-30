@@ -1016,15 +1016,6 @@ SecurityDialogProc(
                                                IDS_EMERGENCY_RESTART) == IDOK)
                         {
                             ERR("Emergency restarting NT...\n");
-                            _SEH2_TRY
-                            {
-                                DebugBreak();
-                            }
-                            _SEH2_EXCEPT(_SEH2_GetExceptionCode() == EXCEPTION_BREAKPOINT ?
-                                         EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
-                            {
-                            }
-                            _SEH2_END;
                             BOOLEAN Old;
                             RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
                             NtShutdownSystem(ShutdownReboot);
