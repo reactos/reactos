@@ -239,10 +239,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "あなたのアカウントはこの時間のログオンを妨げる時間制限があります。あとでやり直して下さい。"
     IDS_INVALIDWORKSTATION "あなたのアカウントはこのコンピュータで使えないように設定されています。他のコンピュータをお使い下さい。"
     IDS_ACCOUNTRESTRICTION "アカウント制限のため、あなたはログオンできません。"
-    IDS_EMERGENCY_RESTART_TITLE "Emergency restart"
-    IDS_EMERGENCY_RESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
-    IDS_EMERGENCY_LOGOFF_TITLE "Log Off ReactOS"
-    IDS_EMERGENCY_LOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
+    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */

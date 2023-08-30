@@ -994,8 +994,8 @@ SecurityDialogProc(
                         if (ResourceMessageBox(pgContext,
                                                hwndDlg,
                                                MB_OKCANCEL | MB_ICONSTOP,
-                                               IDS_EMERGENCY_LOGOFF_TITLE,
-                                               IDS_EMERGENCY_LOGOFF) == IDOK)
+                                               IDS_EMERGENCYLOGOFFTITLE,
+                                               IDS_EMERGENCYLOGOFF) == IDOK)
                         {
                             EndDialog(hwndDlg, WLX_SAS_ACTION_FORCE_LOGOFF);
                         }
@@ -1012,8 +1012,8 @@ SecurityDialogProc(
                         if (ResourceMessageBox(pgContext,
                                                hwndDlg,
                                                MB_OKCANCEL | MB_ICONSTOP,
-                                               IDS_EMERGENCY_RESTART_TITLE,
-                                               IDS_EMERGENCY_RESTART) == IDOK)
+                                               IDS_EMERGENCYRESTARTTITLE,
+                                               IDS_EMERGENCYRESTART) == IDOK)
                         {
                             BOOLEAN Old;
 

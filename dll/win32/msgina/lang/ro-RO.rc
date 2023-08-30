@@ -243,10 +243,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Contul dumneavoastră are restricții de timp care vă împiedică să vă conectați în acest moment. Încercați mai târziu."
     IDS_INVALIDWORKSTATION "Contul dumneavoastră este configurat pentru a vă preveni în a folosi acest calculator. Încercați la alt calculator."
     IDS_ACCOUNTRESTRICTION "Eșec în conectarea dumneavoastră din cauza unei restricții a contului."
-    IDS_EMERGENCY_RESTART_TITLE "Emergency restart"
-    IDS_EMERGENCY_RESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
-    IDS_EMERGENCY_LOGOFF_TITLE "Log Off ReactOS"
-    IDS_EMERGENCY_LOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
+    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */
