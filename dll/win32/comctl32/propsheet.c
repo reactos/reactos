@@ -3597,7 +3597,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
               WINDOWPLACEMENT wndpl = { sizeof(wndpl) };
               bMove = TRUE;
 
-              /* hwndParent might be minimized (See Control_ShowAppletInTaskbar).
+              /* hwndParent can be minimized (See Control_ShowAppletInTaskbar).
                  Use normal position. */
               GetWindowPlacement(hwndParent, &wndpl);
               rcInit = wndpl.rcNormalPosition;
