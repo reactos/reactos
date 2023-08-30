@@ -1014,8 +1014,18 @@ SecurityDialogProc(
                                                IDS_EMERGENCY_RESTART_TITLE,
                                                IDS_EMERGENCY_RESTART) == IDOK)
                         {
-                            BOOLEAN Old;
                             ERR("Emergency restarting NT...\n");
+                            #ifndef __GNUC__
+                            __try
+                            {
+                                DebugBreak();
+                            }
+                            __except (GetExceptionCode() == EXCEPTION_BREAKPOINT ?
+                                      EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
+                            {
+                            }
+                            #endif
+                            BOOLEAN Old;
                             RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
                             NtShutdownSystem(ShutdownReboot);
                             RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
