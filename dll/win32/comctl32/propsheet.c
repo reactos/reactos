@@ -3587,7 +3587,6 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           RECT rcInit;
           HWND hwndParent = psInfo->ppshheader.hwndParent;
           BOOL bMove = FALSE;
-          WINDOWPLACEMENT wndpl = { sizeof(wndpl) };
 
           GetWindowRect(hwnd, &rcInit);
           dx = rcInit.right - rcInit.left;
@@ -3595,7 +3594,9 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
           if (IsWindow(hwndParent))
           {
+              WINDOWPLACEMENT wndpl = { sizeof(wndpl) };
               bMove = TRUE;
+
               /* hwndParent might be minimized (See Control_ShowAppletInTaskbar).
                  Use normal position. */
               GetWindowPlacement(hwndParent, &wndpl);
