@@ -726,7 +726,7 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 
     DPRINT("WM_ACTIVATE - ActivationState = %d\n", ActivationState);
 
-    GuiData->IsWindowActive = ActivationState != WA_INACTIVE;
+    GuiData->IsWindowActive = (ActivationState != WA_INACTIVE);
 
     if ( ActivationState == WA_ACTIVE ||
          ActivationState == WA_CLICKACTIVE )
