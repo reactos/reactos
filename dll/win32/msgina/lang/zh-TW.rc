@@ -244,8 +244,8 @@ BEGIN
     IDS_ACCOUNTRESTRICTION "由於您的帳戶的限制，因此無法讓您登入。"
     IDS_EMERGENCY_RESTART_TITLE "Emergency restart"
     IDS_EMERGENCY_RESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
-    IDS_FORCE_LOGOFF_TITLE "Log Off ReactOS"
-    IDS_FORCE_LOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCY_LOGOFF_TITLE "Log Off ReactOS"
+    IDS_EMERGENCY_LOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */
