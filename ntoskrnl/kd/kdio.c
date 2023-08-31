@@ -593,8 +593,9 @@ KdIoPrintf(
     KdIoPrintString(Buffer, Length);
 }
 
-
+#ifdef KDBG
 extern const CSTRING KdbPromptStr;
+#endif
 
 VOID
 NTAPI
@@ -645,9 +646,11 @@ KdReceivePacket(
     _Out_ PULONG DataLength,
     _Inout_ PKD_CONTEXT Context)
 {
+#ifdef KDBG
     PDBGKD_DEBUG_IO DebugIo;
     STRING ResponseString;
     CHAR MessageBuffer[512];
+#endif
 
     if (PacketType != PACKET_TYPE_KD_DEBUG_IO)
     {
@@ -655,6 +658,7 @@ KdReceivePacket(
         return KdPacketTimedOut;
     }
 
+#ifdef KDBG
     DebugIo = (PDBGKD_DEBUG_IO)MessageHeader->Buffer;
 
     /* Validate API call */
@@ -703,6 +707,7 @@ KdReceivePacket(
 
     /* Only now we can copy back the data into MessageData->Buffer */
     RtlCopyMemory(MessageData->Buffer, ResponseString.Buffer, *DataLength);
+#endif
 
     return KdPacketReceived;
 }
