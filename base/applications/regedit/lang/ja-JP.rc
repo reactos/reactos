@@ -15,53 +15,53 @@ END
 /* Command-line strings */
 STRINGTABLE
 BEGIN
-    STRING_USAGE "Usage:\n\
-  regedit [options] [filename] [reg_key]\n\n\
-Options:\n\
-  [no option]    Launch the graphical version of this program.\n\
-  /L:system.dat  The location of the system.dat file to be modified.\n\
-                 Compatible with any other switch. Ignored.\n\
-  /R:user.dat    The location of the user.dat file to be modified.\n\
-                 Compatible with any other switch. Ignored.\n\
-  /C             Import the contents of a registry file.\n\
-  /D             Delete a specified registry key.\n\
-  /E             Export the contents of a specified registry key to a file.\n\
-                 If no key is specified, the entire registry is exported.\n\
-  /S             Silent mode. No messages will be displayed.\n\
-  /V             Launch the GUI in advanced mode. Ignored.\n\
-  /?             Display this information and exit.\n\
-  [filename]     The location of the file containing registry information to\n\
-                 be imported. When used with [/E], this option specifies the\n\
-                 file location where registry information will be exported.\n\
-  [reg_key]      The registry key to be modified.\n\
+    STRING_USAGE "使い方:\n\
+  regedit [オプション] [ファイル名] [reg_key]\n\n\
+オプション:\n\
+  [オプションなし]   このプログラムのグラフィカルなバージョンを起動します。\n\
+  /L:system.dat  変更する system.dat ファイルの場所です。\n\
+                 他のスイッチと互換です。無視されます。\n\
+  /R:user.dat    変更する user.dat ファイルの場所です。\n\
+                 他のスイッチと互換です。無視されます。\n\
+  /C             レジストリファイルの内容をインポートします。\n\
+  /D             指定したレジストリキーを削除します。\n\
+  /E             指定したレジストリキーの内容をファイルにエクスポートします。\n\
+                 キーが未指定のときはレジストリ全体がエクスポートされます。\n\
+  /S             サイレントモード。メッセージが表示されません。\n\
+  /V             上級者向けモードでGUIを起動します。無視されます。\n\
+  /?             この情報を表示して終了します。\n\
+  [ファイル名]   インポートされるレジストリ情報を含むファイルの場所です。\n\
+                 [/E] と一緒に使うと、このオプションは、エクスポートされる\n\
+                 ファイルの場所です\n\
+  [reg_key]      変更されるレジストリーキーです。\n\
 \n\
-Usage examples:\n\
+使用例:\n\
   regedit ""import.reg""\n\
   regedit /E ""export.reg"" ""HKEY_CURRENT_USER\\Console""\n\
   regedit /D ""HKEY_LOCAL_MACHINE\\Error\\Path""\n"
-    STRING_INVALID_SWITCH "regedit: Invalid or unrecognized switch [%1]\n"
-    STRING_HELP "Type ""regedit /?"" for help.\n"
-    STRING_NO_FILENAME "regedit: No filename was specified.\n"
-    STRING_NO_REG_KEY "regedit: No registry key was specified for removal.\n"
-    STRING_FILE_NOT_FOUND "regedit: The file '%1' was not found.\n"
-    STRING_CANNOT_OPEN_FILE "regedit: Unable to open the file '%1'.\n"
-    STRING_UNHANDLED_ACTION "regedit: Unhandled action.\n"
-    STRING_OUT_OF_MEMORY "regedit: Out of memory! (%1!S!, line %2!u!)\n"
-    STRING_INVALID_HEX "regedit: Invalid hexadecimal value.\n"
-    STRING_CSV_HEX_ERROR "regedit: Unable to convert hexadecimal data. An invalid value was encountered at '%1'.\n"
-    STRING_ESCAPE_SEQUENCE "regedit: Unrecognized escape sequence [\\%1!c!]\n"
-    STRING_UNKNOWN_DATA_FORMAT "regedit: Unsupported registry data type [0x%1!x!]\n"
-    STRING_UNEXPECTED_EOL "regedit: Unexpected end of line in '%1'.\n"
-    STRING_UNRECOGNIZED_LINE "regedit: The line '%1' was not recognized.\n"
-    STRING_SETVALUE_FAILED "regedit: Unable to add the registry value '%1' to '%2'.\n"
-    STRING_OPEN_KEY_FAILED "regedit: Unable to open the registry key '%1'.\n"
-    STRING_UNSUPPORTED_TYPE "regedit: Unsupported registry data type [0x%1!x!] encountered in '%2'.\n"
-    STRING_EXPORT_AS_BINARY "regedit: The registry value '%1' will be exported as binary data.\n"
-    STRING_INVALID_SYSTEM_KEY "regedit: Invalid system key [%1]\n"
-    STRING_REG_KEY_NOT_FOUND "regedit: Unable to export '%1'. The specified registry key was not found.\n"
-    STRING_DELETE_FAILED "regedit: Unable to delete the registry key '%1'.\n"
-    STRING_UNKNOWN_TYPE "Unknown Type"
-    STRING_INVALID_LINE_SYNTAX, "regedit: The line contains invalid syntax.\n"
+    STRING_INVALID_SWITCH "regedit: 無効または認識されないスイッチ [%1]\n"
+    STRING_HELP "ヘルプを表示するには ""regedit /?"" と入力ください。\n"
+    STRING_NO_FILENAME "regedit: ファイル名が未指定です。\n"
+    STRING_NO_REG_KEY "regedit: 除去するレジストリーキーが未指定です。\n"
+    STRING_FILE_NOT_FOUND "regedit: ファイル '%1' は見つかりませんでした。\n"
+    STRING_CANNOT_OPEN_FILE "regedit: ファイル '%1' が開けません。.\n"
+    STRING_UNHANDLED_ACTION "regedit: ハンドルされないアクションです。\n"
+    STRING_OUT_OF_MEMORY "regedit: メモリー不足です! (%1!S!, 行 %2!u!)\n"
+    STRING_INVALID_HEX "regedit: 不正な16進数の値です。\n"
+    STRING_CSV_HEX_ERROR "regedit: 16進数のデータを変換できません。不正な値が '%1' で見つかりました。\n"
+    STRING_ESCAPE_SEQUENCE "regedit: 認識されないエスケープシーケンスです [\\%1!c!]\n"
+    STRING_UNKNOWN_DATA_FORMAT "regedit: 未サポートのレジストリデータの種類です [0x%1!x!]\n"
+    STRING_UNEXPECTED_EOL "regedit: 予期しない行の終わりです。'%1'\n"
+    STRING_UNRECOGNIZED_LINE "regedit: 行 '%1' は認識されません。\n"
+    STRING_SETVALUE_FAILED "regedit: レジストリ値 '%1' を '%2' に追加できませんでした。\n"
+    STRING_OPEN_KEY_FAILED "regedit: レジストリキー '%1' を開けませんでした。\n"
+    STRING_UNSUPPORTED_TYPE "regedit: 未サポートのレジストリデータの種類 [0x%1!x!] が '%2' で見つかりました。\n"
+    STRING_EXPORT_AS_BINARY "regedit: レジストリ値 '%1' がバイナリデータでエクスポートされます。\n"
+    STRING_INVALID_SYSTEM_KEY "regedit: 不正なシステムキーです [%1]\n"
+    STRING_REG_KEY_NOT_FOUND "regedit: '%1' をエクスポートできません。指定されたレジストリキーが見つかりません。\n"
+    STRING_DELETE_FAILED "regedit: レジストリキー '%1' を削除できません。\n"
+    STRING_UNKNOWN_TYPE "未知の種類"
+    STRING_INVALID_LINE_SYNTAX, "regedit: 無効な文法の行があります。\n"
 END
 
 /* Menus */
@@ -277,39 +277,39 @@ END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resources"
+CAPTION "リソース"
 FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
     CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
-    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    LTEXT "割り込み:", IDC_STATIC, 10, 48, 35, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "メモリ:", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
-    LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
+    LTEXT "ポート:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "デバイス特有のデータ:", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
-    GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
-    LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
-    LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Device exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
+    GROUPBOX "使い方", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "未定", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "共有", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "デバイス専用", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "ドライバ専用", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "ｲﾝﾀｰﾌｪｲｽの種類:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "バス番号:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
-    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
+    RTEXT "バージョン:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
+    RTEXT "リビジョン:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
     DEFPUSHBUTTON "OK", IDOK, 92, 263, 40, 14
-    PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+    PUSHBUTTON "データ(&D)...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
 END
 
 /* String Tables */
@@ -415,13 +415,13 @@ BEGIN
     IDS_FLT_REGFILE "登録ファイル"
     IDS_FLT_REGFILES "登録ファイル (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES "レジストリ ハイブ ファイル (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
     IDS_FLT_REGEDIT4 "Win9x/NT4 登録ファイル (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "すべてのファイル (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
-    IDS_FLT_TXTFILES "Text Files (*.txt)"
+    IDS_FLT_TXTFILES "テキスト ファイル (*.txt)"
     IDS_FLT_TXTFILES_FLT "*.txt"
 END
 
@@ -466,40 +466,40 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER "Bus Number"
-    IDS_INTERFACE "Interface"
-    IDS_DMA_CHANNEL "Channel"
-    IDS_DMA_PORT "Port"
-    IDS_INTERRUPT_VECTOR "Vector"
-    IDS_INTERRUPT_LEVEL "Level"
-    IDS_INTERRUPT_AFFINITY "Affinity"
-    IDS_INTERRUPT_TYPE "Type"
-    IDS_MEMORY_ADDRESS "Physical Address"
-    IDS_MEMORY_LENGTH "Length"
-    IDS_MEMORY_ACCESS "Access"
-    IDS_PORT_ADDRESS "Physical Address"
-    IDS_PORT_LENGTH "Length"
-    IDS_PORT_ACCESS "Access"
-    IDS_SPECIFIC_RESERVED1 "Reserved 1"
-    IDS_SPECIFIC_RESERVED2 "Reserved 2"
-    IDS_SPECIFIC_DATASIZE "Data Size"
+    IDS_BUSNUMBER "バス番号"
+    IDS_INTERFACE "インターフェイス"
+    IDS_DMA_CHANNEL "チャンネル"
+    IDS_DMA_PORT "ポート"
+    IDS_INTERRUPT_VECTOR "ベクター"
+    IDS_INTERRUPT_LEVEL "レベル"
+    IDS_INTERRUPT_AFFINITY "アフィニティ"
+    IDS_INTERRUPT_TYPE "種類"
+    IDS_MEMORY_ADDRESS "物理アドレス"
+    IDS_MEMORY_LENGTH "長さ"
+    IDS_MEMORY_ACCESS "アクセス"
+    IDS_PORT_ADDRESS "物理アドレス"
+    IDS_PORT_LENGTH "長さ"
+    IDS_PORT_ACCESS "アクセス"
+    IDS_SPECIFIC_RESERVED1 "予約済み 1"
+    IDS_SPECIFIC_RESERVED2 "予約済み 2"
+    IDS_SPECIFIC_DATASIZE "データサイズ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PORT_PORT_IO "Port"
-    IDS_PORT_MEMORY_IO "Memory"
+    IDS_PORT_PORT_IO "ポート"
+    IDS_PORT_MEMORY_IO "メモリ"
     IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY "Read Only"
-    IDS_MEMORY_WRITE_ONLY "Write Only"
-    IDS_MEMORY_READ_WRITE "Read / Write"
+    IDS_MEMORY_READ_ONLY "読み込みのみ"
+    IDS_MEMORY_WRITE_ONLY "書き込みのみ"
+    IDS_MEMORY_READ_WRITE "読み書き可能"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED "Undefined"
-    IDS_BUS_INTERNAL "Internal"
+    IDS_BUS_UNDEFINED "未定義"
+    IDS_BUS_INTERNAL "内部"
     IDS_BUS_ISA "ISA"
     IDS_BUS_EISA "EISA"
     IDS_BUS_MICROCHANNEL "MicroChannel"
@@ -511,25 +511,25 @@ BEGIN
     IDS_BUS_CBUS "C-Bus"
     IDS_BUS_MPIBUS "MPI-Bus"
     IDS_BUS_MPSABUS "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL "Processor Internal"
-    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
+    IDS_BUS_PROCESSORINTERNAL "内部プロセッサ"
+    IDS_BUS_INTERNALPOWERBUS "内部 Power Bus"
     IDS_BUS_PNPISABUS "PnP-ISA Bus"
     IDS_BUS_PNPBUS "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
+    IDS_BUS_UNKNOWNTYPE "未知のインターフェイスの種類"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FIELD_KEY_NAME "Key Name:"
-    IDS_FIELD_CLASS_NAME "Class Name:"
-    IDS_NO_CLASS_NAME "<NO CLASS>"
-    IDS_NULL_TIMESTAMP "<NULL>"
-    IDS_FIELD_NAME "  Name:"
-    IDS_FIELD_TYPE "  Type:"
-    IDS_FIELD_DATA "  Data:"
-    IDS_FIELD_LASTWRITE "Last Write Time:"
-    IDS_UNKNOWN "<UNKNOWN>"
-    IDS_VALUE_INDEX "Value %d"
+    IDS_FIELD_KEY_NAME "キー名:"
+    IDS_FIELD_CLASS_NAME "クラス名:"
+    IDS_NO_CLASS_NAME "<クラスなし>"
+    IDS_NULL_TIMESTAMP "<なし>"
+    IDS_FIELD_NAME "  名前:"
+    IDS_FIELD_TYPE "  種類:"
+    IDS_FIELD_DATA "  データ:"
+    IDS_FIELD_LASTWRITE "最終書き込み時刻:"
+    IDS_UNKNOWN "<未知>"
+    IDS_VALUE_INDEX "値 %d"
 END
 
 /*****************************************************************/
