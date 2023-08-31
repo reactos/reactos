@@ -243,10 +243,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Contul dumneavoastră are restricții de timp care vă împiedică să vă conectați în acest moment. Încercați mai târziu."
     IDS_INVALIDWORKSTATION "Contul dumneavoastră este configurat pentru a vă preveni în a folosi acest calculator. Încercați la alt calculator."
     IDS_ACCOUNTRESTRICTION "Eșec în conectarea dumneavoastră din cauza unei restricții a contului."
-    IDS_EMERGENCYLOGOFFTITLE "Deautetifică ReactOS"
-    IDS_EMERGENCYLOGOFF "Apăsați OK pentru a vă deautentifica imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
+    IDS_EMERGENCYLOGOFFTITLE "Deautentificare din ReactOS"
+    IDS_EMERGENCYLOGOFF "Apăsați Confirmă pentru a vă deautentifica imediat. Toate datele nepăstrate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
     IDS_EMERGENCYRESTARTTITLE "Repornire de urgență"
-    IDS_EMERGENCYRESTART "Apăsați OK pentru a vă reporni calculatorul imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
+    IDS_EMERGENCYRESTART "Apăsați Confirmă pentru a vă reporni calculatorul imediat. Toate datele nepăstrate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
 END
 
 /* Shutdown Dialog Strings */
