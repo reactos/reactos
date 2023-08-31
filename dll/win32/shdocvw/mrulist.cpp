@@ -43,10 +43,11 @@ BOOL IEILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, BOOL bUnknown)
 #define SLOT_UNKNOWN_FLAG   0x2
 
 // The flags for CMruBase.m_dwFlags
-#define COMPARE_BY_MEMCMP       0
-#define COMPARE_BY_STRCMPIW     1
-#define COMPARE_BY_STRCMPW      2
-#define COMPARE_BY_IEILISEQUAL  3
+#define COMPARE_BY_MEMCMP       0x0
+#define COMPARE_BY_STRCMPIW     0x1
+#define COMPARE_BY_STRCMPW      0x2
+#define COMPARE_BY_IEILISEQUAL  0x3
+#define COMPARE_BY_MASK         0xF
 
 class CMruBase
     : public IMruDataList
@@ -369,7 +370,7 @@ BOOL CMruBase::_IsEqual(const SLOTITEMDATA *pSlot, LPCVOID pvData, UINT cbData) 
     if (m_fnCompare)
         return m_fnCompare(pvData, pSlot->pvData, cbData) == 0;
 
-    switch (m_dwFlags & 0xF)
+    switch (m_dwFlags & COMPARE_BY_MASK)
     {
         case COMPARE_BY_MEMCMP:
             if (pSlot->cbData != cbData)
