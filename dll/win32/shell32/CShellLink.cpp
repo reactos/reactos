@@ -2809,12 +2809,15 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     const WORD runstrings[] = { IDS_SHORTCUT_RUN_NORMAL, IDS_SHORTCUT_RUN_MIN, IDS_SHORTCUT_RUN_MAX };
     const BYTE runshowcmd[] = { SW_SHOWNORMAL, SW_SHOWMINNOACTIVE, SW_SHOWMAXIMIZED };
     HWND hRun = GetDlgItem(hwndDlg, IDC_SHORTCUT_RUN_COMBO);
-    for (UINT i = 0; i < 3; ++i)
+    for (UINT i = 0; i < _countof(runstrings); ++i)
     {
-        WCHAR buf[200];
-        if (!LoadString(shell32_hInstance, runstrings[i], buf, _countof(buf))) break;
+        WCHAR buf[MAX_PATH];
+        if (!LoadString(shell32_hInstance, runstrings[i], buf, _countof(buf)))
+            break;
+
         int idx = SendMessage(hRun, CB_ADDSTRING, 0, (LPARAM)buf);
-        if (idx < 0) continue;
+        if (idx < 0)
+            continue;
         SendMessage(hRun, CB_SETITEMDATA, idx, runshowcmd[i]);
         if (!i || m_Header.nShowCommand == runshowcmd[i])
         {
