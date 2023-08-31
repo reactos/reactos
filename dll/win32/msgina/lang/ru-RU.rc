@@ -232,14 +232,14 @@ BEGIN
     IDS_PASSWORDMUSTCHANGE "Вы должны сменить пароль при следующем входе."
     IDS_PASSWORDEXPIRED "Срок действия вашего пароля истек, необходимо его изменить."
     IDS_ACCOUNTEXPIRED "Срок действия вашего аккаунта истек. Пожалуйста, обратитесь к системному администратору."
-    IDS_ACCOUNTLOCKED "Unable to log you on beacuse your account has been locked out. Please see your system administrator."
-    IDS_INVALIDLOGONHOURS "Your account has time restrictions that prevent you from logging on at this time. Please try again later."
-    IDS_INVALIDWORKSTATION "Your account is configured to prevent you from using this computer. Please try another computer."
-    IDS_ACCOUNTRESTRICTION "Unable to log you on because of an account restriction."
-    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
-    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
-    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
-    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_ACCOUNTLOCKED "Вход в систему невозможен, так как ваша учётная запись заблокирована. Обратитесь к администратору сети."
+    IDS_INVALIDLOGONHOURS "Ограничения вашей учётной записи запрещают вход в систему в данное время. Повторите попытку позже."
+    IDS_INVALIDWORKSTATION "Ограничения вашей учётной записи запрещают вход в систему с данного компьютера. Используйте другой компьютер."
+    IDS_ACCOUNTRESTRICTION "Вход в систему невозможен из-за ограничений для учётной записи."
+    IDS_EMERGENCYLOGOFFTITLE "Выход из ReactOS"
+    IDS_EMERGENCYLOGOFF "Нажмите OK, чтобы завершить сеанс с потерей всех несохранённых данных. Используйте этот вариант только при крайней необходимости."
+    IDS_EMERGENCYRESTARTTITLE "Аварийная перезагрузка"
+    IDS_EMERGENCYRESTART "Нажмите OK, чтобы перезагрузить компьютер с потерей всех несохранённых данных. Используйте этот вариант только при крайней необходимости."
 END
 
 /* Shutdown Dialog Strings */
