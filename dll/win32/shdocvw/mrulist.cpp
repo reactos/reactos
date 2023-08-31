@@ -53,9 +53,9 @@ class CMruBase
 {
 protected:
     LONG            m_cRefs         = 1;        // Reference count
-    DWORD           m_dwFlags       = 0;        // The flags
+    DWORD           m_dwFlags       = 0;        // The COMPARE_BY_... flags
     BOOL            m_bFlag1        = FALSE;    // ???
-    BOOL            m_bChecked      = FALSE;    // ???
+    BOOL            m_bChecked      = FALSE;    // The checked flag
     HKEY            m_hKey          = NULL;     // A registry key
     DWORD           m_cSlotRooms    = 0;        // Rooms for slots
     DWORD           m_cSlots        = 0;        // The # of slots
