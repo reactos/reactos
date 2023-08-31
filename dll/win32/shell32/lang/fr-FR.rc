@@ -191,7 +191,7 @@ BEGIN
     LTEXT "&Touche de raccourci :", IDC_SHORTCUT_KEY, 8, 117, 68, 10
     CONTROL "", IDC_SHORTCUT_KEY_HOTKEY, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
     LTEXT "&Exécuter :", IDC_SHORTCUT_RUN, 8, 136, 68, 10
-    COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 54, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "C&ommentaire :", IDC_SHORTCUT_COMMENT, 8, 154, 68, 10
     EDITTEXT IDC_SHORTCUT_COMMENT_EDIT, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "Trouver la cible...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT
@@ -852,6 +852,11 @@ BEGIN
     IDS_RUNDLG_BROWSE_ERROR "Impossible d'afficher la boîte de dialogue pour la recherche de fichier (erreur interne)"
     IDS_RUNDLG_BROWSE_CAPTION "Parcourir"
     IDS_RUNDLG_BROWSE_FILTER "Fichiers exécutables (*.exe)\0*.exe\0Tous les fichiers (*.*)\0*.*\0"
+
+    /* Shortcut property sheet */
+    IDS_SHORTCUT_RUN_NORMAL "Normal window"
+    IDS_SHORTCUT_RUN_MIN "Minimized"
+    IDS_SHORTCUT_RUN_MAX "Maximized"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Démarrer\\Programmes"

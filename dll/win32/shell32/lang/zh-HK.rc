@@ -199,7 +199,7 @@ BEGIN
     LTEXT "快速鍵(&K)：", IDC_SHORTCUT_KEY, 8, 117, 68, 10
     CONTROL "", IDC_SHORTCUT_KEY_HOTKEY, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
     LTEXT "執行(&R)：", IDC_SHORTCUT_RUN, 8, 136, 68, 10
-    COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 54, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "註解(&O)：", IDC_SHORTCUT_COMMENT, 8, 154, 68, 10
     EDITTEXT IDC_SHORTCUT_COMMENT_EDIT, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "尋找目標(&F)...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT
@@ -858,6 +858,11 @@ BEGIN
     IDS_RUNDLG_BROWSE_ERROR "無法顯示瀏覽對話方塊（內部錯誤）"
     IDS_RUNDLG_BROWSE_CAPTION "瀏覽"
     IDS_RUNDLG_BROWSE_FILTER "可執行檔 (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
+    /* Shortcut property sheet */
+    IDS_SHORTCUT_RUN_NORMAL "Normal window"
+    IDS_SHORTCUT_RUN_MIN "Minimized"
+    IDS_SHORTCUT_RUN_MAX "Maximized"
 
     /* ATTENTION: DO NOT change English folder names into Chinese unless necessary,
      * or it may cause problems in the system. */

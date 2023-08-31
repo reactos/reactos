@@ -191,7 +191,7 @@ BEGIN
     LTEXT "ショートカットキー(&K):", IDC_SHORTCUT_KEY, 8, 117, 68, 10
     CONTROL "", IDC_SHORTCUT_KEY_HOTKEY, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
     LTEXT "実行状態 (&R):", IDC_SHORTCUT_RUN, 8, 136, 68, 10
-    COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 54, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "コメント(&O):", IDC_SHORTCUT_COMMENT, 8, 154, 68, 10
     EDITTEXT IDC_SHORTCUT_COMMENT_EDIT, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "対象の検索(&F)...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT
@@ -849,6 +849,11 @@ BEGIN
     IDS_RUNDLG_BROWSE_ERROR "「閲覧」ダイアログを表示できませんでした (内部エラー)"
     IDS_RUNDLG_BROWSE_CAPTION "参照"
     IDS_RUNDLG_BROWSE_FILTER "実行可能ファイル (*.exe)\0*.exe\0すべてのファイル (*.*)\0*.*\0"
+
+    /* Shortcut property sheet */
+    IDS_SHORTCUT_RUN_NORMAL "Normal window"
+    IDS_SHORTCUT_RUN_MIN "Minimized"
+    IDS_SHORTCUT_RUN_MAX "Maximized"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "スタート メニュー\\プログラム"
