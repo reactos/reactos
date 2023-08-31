@@ -3853,8 +3853,6 @@ RegistryPage(PINPUT_RECORD Ir)
     else
     {
         CONSOLE_SetStatusText(MUIGetString(STRING_DONE));
-        //if (RepairUpdateFlag)
-            //return SUCCESS_PAGE;
         return BOOT_LOADER_PAGE;
     }
 }
