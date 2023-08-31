@@ -242,6 +242,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "由於您的帳户有時間限制，因此目前無法讓您登入。請稍候再試一次。"
     IDS_INVALIDWORKSTATION "您的帳户已設定為不能使用這個電腦登入。請使用其他電腦登入。"
     IDS_ACCOUNTRESTRICTION "由於您的帳户的限制，因此無法讓您登入。"
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
+    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */

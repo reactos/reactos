@@ -245,6 +245,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Twoje konto ma ograniczenia czasowe, które uniemożliwiają zalogowanie się w tej chwili. Spróbuj ponownie później."
     IDS_INVALIDWORKSTATION "Twoje konto zostało skonfigurowane w sposób nie zezwalający na używanie tego komputera. Spróbuj na innym komputerze."
     IDS_ACCOUNTRESTRICTION "Nie możesz się zalogować z powodu ograniczeń konta."
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
+    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */

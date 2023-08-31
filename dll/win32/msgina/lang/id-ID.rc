@@ -234,6 +234,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Akun anda memiliki pembatasan waktu sehingga mencegah untuk masuk saat ini. Mohon coba lagi nanti."
     IDS_INVALIDWORKSTATION "Akun anda disetel untuk mencegah masuk di komputer ini. Mohon coba gunakan komputer lain."
     IDS_ACCOUNTRESTRICTION "Tidak bisa masuk karena pembatasan akun."
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
+    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */

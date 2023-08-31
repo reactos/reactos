@@ -235,6 +235,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Your account has time restrictions that prevent you from logging on at this time. Please try again later."
     IDS_INVALIDWORKSTATION "Your account is configured to prevent you from using this computer. Please try another computer."
     IDS_ACCOUNTRESTRICTION "Unable to log you on because of an account restriction."
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
+    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */

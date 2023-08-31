@@ -234,6 +234,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Вашия акаунт е временно ограничен в момента. Моля опитайте по-късно."
     IDS_INVALIDWORKSTATION "Акаунта ви е ограничен на този компютър. Моля използвайте друг компютър."
     IDS_ACCOUNTRESTRICTION "Не можете да влезете поради ограничение на акаунта."
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
+    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */

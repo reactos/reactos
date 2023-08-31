@@ -234,6 +234,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Ihr Konto sieht es nicht vor, dass Sie sich zu dieser Zeit anmelden. Bitte versuchen Sie es später noch einmal."
     IDS_INVALIDWORKSTATION "Ihr Konto sieht es nicht vor, dass Sie sich an diesem Computer anmelden. Bitte melden Sie sich an einem anderen Computer an."
     IDS_ACCOUNTRESTRICTION "Wegen einer Kontenbeschränkung dürfen Sie sich nicht anmelden."
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
+    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */

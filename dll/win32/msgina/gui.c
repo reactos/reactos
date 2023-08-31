@@ -11,6 +11,8 @@
 #include <wingdi.h>
 #include <winnls.h>
 #include <winreg.h>
+#include <ndk/exfuncs.h>
+#include <ndk/setypes.h>
 
 typedef struct _DISPLAYSTATUSMSG
 {
@@ -30,6 +32,8 @@ typedef struct _LEGALNOTICEDATA
 
 // Timer ID for the animated dialog bar.
 #define IDT_BAR 1
+
+#define ISKEYDOWN(x) (GetKeyState(x) & 0x8000)
 
 typedef struct _DLG_DATA
 {
@@ -985,12 +989,44 @@ SecurityDialogProc(
                     EndDialog(hwndDlg, WLX_SAS_ACTION_LOCK_WKSTA);
                     return TRUE;
                 case IDC_SECURITY_LOGOFF:
-                    if (OnLogOff(hwndDlg, pgContext) == IDYES)
+                    if (ISKEYDOWN(VK_CONTROL))
+                    {
+                        if (ResourceMessageBox(pgContext,
+                                               hwndDlg,
+                                               MB_OKCANCEL | MB_ICONSTOP,
+                                               IDS_EMERGENCYLOGOFFTITLE,
+                                               IDS_EMERGENCYLOGOFF) == IDOK)
+                        {
+                            EndDialog(hwndDlg, WLX_SAS_ACTION_FORCE_LOGOFF);
+                        }
+                    }
+                    else if (OnLogOff(hwndDlg, pgContext) == IDYES)
+                    {
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
+                    }
                     return TRUE;
                 case IDC_SECURITY_SHUTDOWN:
-                    if (OnShutDown(hwndDlg, pgContext) == IDOK)
+                    /* Emergency restart feature */
+                    if (ISKEYDOWN(VK_CONTROL))
+                    {
+                        if (ResourceMessageBox(pgContext,
+                                               hwndDlg,
+                                               MB_OKCANCEL | MB_ICONSTOP,
+                                               IDS_EMERGENCYRESTARTTITLE,
+                                               IDS_EMERGENCYRESTART) == IDOK)
+                        {
+                            BOOLEAN Old;
+
+                            ERR("Emergency restarting NT...\n");
+                            RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
+                            NtShutdownSystem(ShutdownReboot);
+                            RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
+                        }
+                    }
+                    else if (OnShutDown(hwndDlg, pgContext) == IDOK)
+                    {
                         EndDialog(hwndDlg, pgContext->nShutdownAction);
+                    }
                     return TRUE;
                 case IDC_SECURITY_CHANGEPWD:
                     if (OnChangePassword(hwndDlg, pgContext))

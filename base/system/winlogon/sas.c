@@ -1060,13 +1060,17 @@ DoGenericAction(
             break;
         case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
         case WLX_SAS_ACTION_SHUTDOWN: /* 0x05 */
+        case WLX_SAS_ACTION_FORCE_LOGOFF: /* 0x09 */
         case WLX_SAS_ACTION_SHUTDOWN_POWER_OFF: /* 0x0a */
         case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
             if (Session->LogonState != STATE_LOGGED_OFF)
             {
+                UINT LogOffFlags = EWX_LOGOFF;
+                if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
+                    LogOffFlags |= EWX_FORCE;
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
                     break;
-                if (!NT_SUCCESS(HandleLogoff(Session, EWX_LOGOFF)))
+                if (!NT_SUCCESS(HandleLogoff(Session, LogOffFlags)))
                 {
                     RemoveStatusMessage(Session);
                     break;

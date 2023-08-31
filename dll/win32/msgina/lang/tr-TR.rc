@@ -236,6 +236,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Hesabınızda şu anda oturum açmanızı engelleyen zaman kısıtlamaları var. Lütfen daha sonra tekrar deneyiniz."
     IDS_INVALIDWORKSTATION "Hesabınız, bu bilgisayarı kullanmanızı engelleyecek şekilde yapılandırıldı. Lütfen başka bir bilgisayar deneyiniz."
     IDS_ACCOUNTRESTRICTION "Hesap kısıtlaması nedeniyle oturum açılamıyor."
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
+    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
 END
 
 /* Shutdown Dialog Strings */
