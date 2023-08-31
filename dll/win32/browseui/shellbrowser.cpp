@@ -351,6 +351,7 @@ public:
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
     void LoadCabinetState();
+    static BOOL _DoesPidlRoam(LPCITEMIDLIST pidl);
 
 /*    // *** IDockingWindowFrame methods ***
     virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
@@ -2387,12 +2388,33 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryService(REFGUID guidService, REFII
     return E_NOINTERFACE;
 }
 
+BOOL CShellBrowser::_DoesPidlRoam(LPCITEMIDLIST pidl)
+{
+    WCHAR szPath[MAX_PATH];
+    return SHGetPathFromIDListWrapW(pidl, szPath) && PathIsUNCW(szPath);
+}
+
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetPropertyBag(long flags, REFIID riid, void **ppvObject)
 {
     if (ppvObject == NULL)
         return E_POINTER;
+
     *ppvObject = NULL;
-    return E_NOTIMPL;
+
+    LPITEMIDLIST pidl;
+    HRESULT hr = GetPidl(&pidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return E_FAIL;
+
+    // FIXME: pidl for Internet etc.
+
+    if (_DoesPidlRoam(pidl))
+        flags |= SHGVSPB_ROAM;
+
+    hr = SHGetViewStatePropertyBag(pidl, L"Shell", flags, riid, ppvObject);
+
+    ILFree(pidl);
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetTypeInfoCount(UINT *pctinfo)
