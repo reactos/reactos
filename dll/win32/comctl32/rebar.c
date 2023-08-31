@@ -2734,7 +2734,7 @@ REBAR_strdifW( LPCWSTR a, LPCWSTR b )
 
 #ifdef __REACTOS__
 static LRESULT
-REBAR_ShowBand (REBAR_INFO *infoPtr, INT iBand, BOOL show);
+REBAR_ShowBand(REBAR_INFO *infoPtr, INT iBand, BOOL show);
 #endif
 
 static LRESULT
