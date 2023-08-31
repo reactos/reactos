@@ -65,10 +65,10 @@ protected:
 
     HRESULT _LoadItem(UINT iSlot);
     HRESULT _AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData);
-    HRESULT _GetItem(UINT iSlot, SLOTITEMDATA **ppSlot);
+    HRESULT _GetItem(UINT iSlot, SLOTITEMDATA **ppItem);
     void _DeleteItem(UINT iSlot);
 
-    HRESULT _GetSlotItem(UINT iSlot, SLOTITEMDATA **ppSlot);
+    HRESULT _GetSlotItem(UINT iSlot, SLOTITEMDATA **ppItem);
     void _CheckUsedSlots();
 
 public:
@@ -96,7 +96,7 @@ public:
     STDMETHODIMP Delete(UINT iSlot) override;
 
     // Non-standard methods
-    virtual BOOL _IsEqual(const SLOTITEMDATA *pSlot, LPCVOID pvData, UINT cbData) const;
+    virtual BOOL _IsEqual(const SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData) const;
     virtual HRESULT _DeleteValue(LPCWSTR pszValue);
     virtual HRESULT _InitSlots() = 0;
     virtual void _SaveSlots() = 0;
@@ -165,47 +165,47 @@ HRESULT CMruBase::_LoadItem(UINT iSlot)
     DWORD cbData;
     WCHAR szValue[12];
 
-    SLOTITEMDATA *pSlot = &m_pSlots[iSlot];
+    SLOTITEMDATA *pItem = &m_pSlots[iSlot];
     _SlotString(iSlot, szValue, _countof(szValue));
 
     if (SHGetValueW(m_hKey, NULL, szValue, NULL, NULL, &cbData) == ERROR_SUCCESS &&
         cbData > 0)
     {
-        pSlot->pvData = ::LocalAlloc(LPTR, cbData);
-        if (pSlot->pvData)
+        pItem->pvData = ::LocalAlloc(LPTR, cbData);
+        if (pItem->pvData)
         {
-            pSlot->cbData = cbData;
-            if (SHGetValueW(m_hKey, NULL, szValue, NULL, pSlot->pvData, &cbData) != ERROR_SUCCESS)
-                pSlot->pvData = ::LocalFree(pSlot->pvData);
+            pItem->cbData = cbData;
+            if (SHGetValueW(m_hKey, NULL, szValue, NULL, pItem->pvData, &cbData) != ERROR_SUCCESS)
+                pItem->pvData = ::LocalFree(pItem->pvData);
         }
     }
 
-    pSlot->dwFlags |= SLOT_LOADED;
-    if (!pSlot->pvData)
+    pItem->dwFlags |= SLOT_LOADED;
+    if (!pItem->pvData)
         return E_FAIL;
 
     return S_OK;
 }
 
-HRESULT CMruBase::_GetSlotItem(UINT iSlot, SLOTITEMDATA **ppSlot)
+HRESULT CMruBase::_GetSlotItem(UINT iSlot, SLOTITEMDATA **ppItem)
 {
     if (!(m_pSlots[iSlot].dwFlags & SLOT_LOADED))
         _LoadItem(iSlot);
 
-    SLOTITEMDATA *pSlot = &m_pSlots[iSlot];
-    if (!pSlot->pvData)
+    SLOTITEMDATA *pItem = &m_pSlots[iSlot];
+    if (!pItem->pvData)
         return E_OUTOFMEMORY;
 
-    *ppSlot = pSlot;
+    *ppItem = pItem;
     return S_OK;
 }
 
-HRESULT CMruBase::_GetItem(UINT iSlot, SLOTITEMDATA **ppSlot)
+HRESULT CMruBase::_GetItem(UINT iSlot, SLOTITEMDATA **ppItem)
 {
     HRESULT hr = _GetSlot(iSlot, &iSlot);
     if (FAILED(hr))
         return hr;
-    return _GetSlotItem(iSlot, ppSlot);
+    return _GetSlotItem(iSlot, ppItem);
 }
 
 void CMruBase::_DeleteItem(UINT iSlot)
@@ -229,7 +229,7 @@ void CMruBase::_CheckUsedSlots()
 
 HRESULT CMruBase::_AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData)
 {
-    SLOTITEMDATA *pSlot = &m_pSlots[iSlot];
+    SLOTITEMDATA *pItem = &m_pSlots[iSlot];
 
     WCHAR szBuff[12];
     _SlotString(iSlot, szBuff, _countof(szBuff));
@@ -237,18 +237,18 @@ HRESULT CMruBase::_AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData)
     if (SHSetValueW(m_hKey, NULL, szBuff, REG_BINARY, pbData, cbData) != ERROR_SUCCESS)
         return E_OUTOFMEMORY;
 
-    if (cbData >= pSlot->cbData || !pSlot->pvData)
+    if (cbData >= pItem->cbData || !pItem->pvData)
     {
-        ::LocalFree(pSlot->pvData);
-        pSlot->pvData = ::LocalAlloc(LPTR, cbData);
+        ::LocalFree(pItem->pvData);
+        pItem->pvData = ::LocalAlloc(LPTR, cbData);
     }
 
-    if (!pSlot->pvData)
+    if (!pItem->pvData)
         return E_FAIL;
 
-    pSlot->cbData = cbData;
-    pSlot->dwFlags = (SLOT_LOADED | SLOT_UNKNOWN_FLAG);
-    CopyMemory(pSlot->pvData, pbData, cbData);
+    pItem->cbData = cbData;
+    pItem->dwFlags = (SLOT_LOADED | SLOT_UNKNOWN_FLAG);
+    CopyMemory(pItem->pvData, pbData, cbData);
     return S_OK;
 }
 
@@ -308,8 +308,8 @@ STDMETHODIMP CMruBase::FindData(const BYTE *pbData, DWORD cbData, UINT *piSlot)
         return E_FAIL;
 
     UINT iSlot = 0;
-    SLOTITEMDATA *pSlotData;
-    while (FAILED(_GetItem(iSlot, &pSlotData)) || !_IsEqual(pSlotData, pbData, cbData))
+    SLOTITEMDATA *pItem;
+    while (FAILED(_GetItem(iSlot, &pItem)) || !_IsEqual(pItem, pbData, cbData))
     {
         if (++iSlot >= m_cSlots)
             return E_FAIL;
@@ -321,15 +321,15 @@ STDMETHODIMP CMruBase::FindData(const BYTE *pbData, DWORD cbData, UINT *piSlot)
 
 STDMETHODIMP CMruBase::GetData(UINT iSlot, BYTE *pbData, DWORD cbData)
 {
-    SLOTITEMDATA *pSlotData;
-    HRESULT hr = _GetItem(iSlot, &pSlotData);
+    SLOTITEMDATA *pItem;
+    HRESULT hr = _GetItem(iSlot, &pItem);
     if (FAILED(hr))
         return hr;
 
-    if (cbData < pSlotData->cbData)
+    if (cbData < pItem->cbData)
         return 0x8007007A; // FIXME: Magic number
 
-    CopyMemory(pbData, pSlotData->pvData, pSlotData->cbData);
+    CopyMemory(pbData, pItem->pvData, pItem->cbData);
     return hr;
 }
 
@@ -345,10 +345,10 @@ STDMETHODIMP CMruBase::QueryInfo(UINT iSlot, UINT *puSlot, DWORD *pcbData)
 
     if (pcbData)
     {
-        SLOTITEMDATA *pSlotData;
-        hr = _GetSlotItem(iGotSlot, &pSlotData);
+        SLOTITEMDATA *pItem;
+        hr = _GetSlotItem(iGotSlot, &pItem);
         if (SUCCEEDED(hr))
-            *pcbData = pSlotData->cbData;
+            *pcbData = pItem->cbData;
     }
 
     return hr;
@@ -365,26 +365,26 @@ STDMETHODIMP CMruBase::Delete(UINT iSlot)
     return hr;
 }
 
-BOOL CMruBase::_IsEqual(const SLOTITEMDATA *pSlot, LPCVOID pvData, UINT cbData) const
+BOOL CMruBase::_IsEqual(const SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData) const
 {
     if (m_fnCompare)
-        return m_fnCompare(pvData, pSlot->pvData, cbData) == 0;
+        return m_fnCompare(pvData, pItem->pvData, cbData) == 0;
 
     switch (m_dwFlags & COMPARE_BY_MASK)
     {
         case COMPARE_BY_MEMCMP:
-            if (pSlot->cbData != cbData)
+            if (pItem->cbData != cbData)
                 return FALSE;
-            return memcmp(pvData, pSlot->pvData, cbData) == 0;
+            return memcmp(pvData, pItem->pvData, cbData) == 0;
 
         case COMPARE_BY_STRCMPIW:
-            return StrCmpIW((LPCWSTR)pvData, (LPCWSTR)pSlot->pvData) == 0;
+            return StrCmpIW((LPCWSTR)pvData, (LPCWSTR)pItem->pvData) == 0;
 
         case COMPARE_BY_STRCMPW:
-            return StrCmpW((LPCWSTR)pvData, (LPCWSTR)pSlot->pvData) == 0;
+            return StrCmpW((LPCWSTR)pvData, (LPCWSTR)pItem->pvData) == 0;
 
         case COMPARE_BY_IEILISEQUAL:
-            return IEILIsEqual((LPCITEMIDLIST)pvData, (LPCITEMIDLIST)pSlot->pvData, FALSE);
+            return IEILIsEqual((LPCITEMIDLIST)pvData, (LPCITEMIDLIST)pItem->pvData, FALSE);
 
         default:
             ERR("0x%08X\n", m_dwFlags);
