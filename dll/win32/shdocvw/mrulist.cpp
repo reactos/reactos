@@ -53,11 +53,12 @@ protected:
     SLOTITEMDATA *  m_pSlots        = NULL;     // Slot data
 
     HRESULT _LoadItem(UINT iSlot);
-    HRESULT _GetSlotItem(UINT iSlot, SLOTITEMDATA **ppSlot);
+    HRESULT _AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData);
     HRESULT _GetItem(UINT iSlot, SLOTITEMDATA **ppSlot);
     void _DeleteItem(UINT iSlot);
+
+    HRESULT _GetSlotItem(UINT iSlot, SLOTITEMDATA **ppSlot);
     void _CheckUsedSlots();
-    HRESULT _AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData);
 
 public:
     CMruBase()
