@@ -1938,7 +1938,7 @@ EXTERN_C VOID FreeViewStatePropertyBagCache(VOID)
  *
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/propbag/getperscreenresname.htm
  */
-INT WINAPI
+EXTERN_C INT WINAPI
 SHGetPerScreenResName(
     _Out_writes_(cchBuffer) LPWSTR pszBuffer,
     _In_ INT cchBuffer,
@@ -1952,4 +1952,35 @@ SHGetPerScreenResName(
     INT cMonitors = ::GetSystemMetrics(SM_CMONITORS);
     StringCchPrintfW(pszBuffer, cchBuffer, L"%dx%d(%d)", cxWidth, cyHeight, cMonitors);
     return lstrlenW(pszBuffer);
+}
+
+/**************************************************************************
+ *  IUnknown_QueryServicePropertyBag (SHLWAPI.536)
+ *
+ * @param punk      An IUnknown interface.
+ * @param flags     The SHGVSPB_... flags of SHGetViewStatePropertyBag.
+ * @param riid      IID of requested property bag interface.
+ * @param ppvObj    Address to receive pointer to the new interface.
+ * @return          An HRESULT value. S_OK on success, non-zero on failure.
+ * @see https://geoffchappell.com/studies/windows/shell/shlwapi/api/util/iunknown/queryservicepropertybag.htm
+ */
+EXTERN_C HRESULT WINAPI
+IUnknown_QueryServicePropertyBag(
+    _In_ IUnknown *punk,
+    _In_ long flags,
+    _In_ REFIID riid,
+    _Outptr_ void **ppvObj)
+{
+    TRACE("%p 0x%x %p %p\n", punk, flags, &riid, ppvObj);
+
+    CComPtr<IShellBrowserService> pService;
+    HRESULT hr = IUnknown_QueryService(punk, SID_STopLevelBrowser, IID_IShellBrowserService,
+                                       (void **)&pService);
+    if (FAILED(hr))
+    {
+        ERR("0x%X\n", hr);
+        return hr;
+    }
+
+    return pService->GetPropertyBag(flags, riid, ppvObj);
 }

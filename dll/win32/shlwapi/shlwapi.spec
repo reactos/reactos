@@ -533,7 +533,7 @@
 533 stdcall -noname SHGetPerScreenResName(ptr long long)
 534 stdcall -noname SHPropertyBag_ReadBOOL(ptr wstr ptr)
 535 stdcall -noname SHPropertyBag_Delete(ptr wstr)
-536 stdcall -stub -noname IUnknown_QueryServicePropertyBag(ptr long ptr ptr)
+536 stdcall -noname IUnknown_QueryServicePropertyBag(ptr long ptr ptr)
 537 stub -noname SHBoolSystemParametersInfo
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
 539 stub -noname IUnknown_ShowBrowserBar
