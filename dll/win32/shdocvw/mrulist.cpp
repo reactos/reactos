@@ -38,6 +38,16 @@ BOOL IEILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, BOOL bUnknown)
     return FALSE;
 }
 
+// The flags for SLOTITEMDATA.dwFlags
+#define SLOT_LOADED         0x1
+#define SLOT_UNKNOWN_FLAG   0x2
+
+// The flags for CMruBase.m_dwFlags
+#define COMPARE_BY_MEMCMP       0
+#define COMPARE_BY_STRCMPIW     1
+#define COMPARE_BY_STRCMPW      2
+#define COMPARE_BY_IEILISEQUAL  3
+
 class CMruBase
     : public IMruDataList
 {
@@ -169,7 +179,7 @@ HRESULT CMruBase::_LoadItem(UINT iSlot)
         }
     }
 
-    pSlot->dwFlags |= 1;
+    pSlot->dwFlags |= SLOT_LOADED;
     if (!pSlot->pvData)
         return E_FAIL;
 
@@ -178,7 +188,7 @@ HRESULT CMruBase::_LoadItem(UINT iSlot)
 
 HRESULT CMruBase::_GetSlotItem(UINT iSlot, SLOTITEMDATA **ppSlot)
 {
-    if (!(m_pSlots[iSlot].dwFlags & 1))
+    if (!(m_pSlots[iSlot].dwFlags & SLOT_LOADED))
         _LoadItem(iSlot);
 
     SLOTITEMDATA *pSlot = &m_pSlots[iSlot];
@@ -236,7 +246,7 @@ HRESULT CMruBase::_AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData)
         return E_FAIL;
 
     pSlot->cbData = cbData;
-    pSlot->dwFlags = 3;
+    pSlot->dwFlags = (SLOT_LOADED | SLOT_UNKNOWN_FLAG);
     CopyMemory(pSlot->pvData, pbData, cbData);
     return S_OK;
 }
@@ -361,22 +371,22 @@ BOOL CMruBase::_IsEqual(const SLOTITEMDATA *pSlot, LPCVOID pvData, UINT cbData) 
 
     switch (m_dwFlags & 0xF)
     {
-        case 0: // FIXME: Magic number
+        case COMPARE_BY_MEMCMP:
             if (pSlot->cbData != cbData)
                 return FALSE;
-
             return memcmp(pvData, pSlot->pvData, cbData) == 0;
 
-        case 1:
+        case COMPARE_BY_STRCMPIW:
             return StrCmpIW((LPCWSTR)pvData, (LPCWSTR)pSlot->pvData) == 0;
 
-        case 2:
+        case COMPARE_BY_STRCMPW:
             return StrCmpW((LPCWSTR)pvData, (LPCWSTR)pSlot->pvData) == 0;
 
-        case 3:
+        case COMPARE_BY_IEILISEQUAL:
             return IEILIsEqual((LPCITEMIDLIST)pvData, (LPCITEMIDLIST)pSlot->pvData, FALSE);
 
         default:
+            ERR("0x%08X\n", m_dwFlags);
             return FALSE;
     }
 }
