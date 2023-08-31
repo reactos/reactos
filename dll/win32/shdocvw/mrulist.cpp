@@ -16,6 +16,7 @@
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <shlwapi.h>
+#include <shlwapi_undoc.h>
 #include "shdocvw.h"
 
 #include <wine/debug.h>
@@ -25,6 +26,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 extern "C" void __cxa_pure_virtual(void)
 {
     ::DebugBreak();
+}
+
+BOOL IEILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, BOOL bUnknown)
+{
+    UINT cb1 = ILGetSize(pidl1), cb2 = ILGetSize(pidl2);
+    if (cb1 == cb2 && memcmp(pidl1, pidl2, cb1) == 0)
+        return TRUE;
+
+    FIXME("%p, %p\n", pidl1, pidl2);
+    return FALSE;
 }
 
 class CMruBase
@@ -41,6 +52,13 @@ protected:
     SLOTCOMPARE     m_fnCompare     = NULL;     // The comparison function
     SLOTITEMDATA *  m_pSlots        = NULL;     // Slot data
 
+    HRESULT _LoadItem(UINT iSlot);
+    HRESULT _GetSlotItem(UINT iSlot, SLOTITEMDATA **ppSlot);
+    HRESULT _GetItem(UINT iSlot, SLOTITEMDATA **ppSlot);
+    void _DeleteItem(UINT iSlot);
+    void _CheckUsedSlots();
+    HRESULT _AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData);
+
 public:
     CMruBase()
     {
@@ -53,19 +71,12 @@ public:
     {
         return ::InterlockedIncrement(&m_cRefs);
     }
-    STDMETHODIMP_(ULONG) Release() override
-    {
-        if (::InterlockedDecrement(&m_cRefs) == 0)
-        {
-            delete this;
-            return 0;
-        }
-        return m_cRefs;
-    }
+    STDMETHODIMP_(ULONG) Release() override;
 
     // IMruDataList methods
-    STDMETHODIMP InitData(UINT cCapacity, UINT flags, HKEY hKey, LPCWSTR pszSubKey,
-                          SLOTCOMPARE fnCompare) override;
+    STDMETHODIMP InitData(UINT cCapacity, UINT flags, HKEY hKey,
+                          LPCWSTR pszSubKey OPTIONAL,
+                          SLOTCOMPARE fnCompare OPTIONAL) override;
     STDMETHODIMP AddData(const BYTE *pbData, DWORD cbData, UINT *piSlot) override;
     STDMETHODIMP FindData(const BYTE *pbData, DWORD cbData, UINT *piSlot) override;
     STDMETHODIMP GetData(UINT iSlot, BYTE *pbData, DWORD cbData) override;
@@ -73,7 +84,7 @@ public:
     STDMETHODIMP Delete(UINT iSlot) override;
 
     // Non-standard methods
-    virtual HRESULT _IsEqual(const SLOTITEMDATA *pSlot, LPCITEMIDLIST pidl, UINT cbPidl) const;
+    virtual BOOL _IsEqual(const SLOTITEMDATA *pSlot, LPCITEMIDLIST pidl, UINT cbPidl) const;
     virtual HRESULT _DeleteValue(LPCWSTR pszValue);
     virtual HRESULT _InitSlots() = 0;
     virtual void _SaveSlots() = 0;
@@ -130,58 +141,259 @@ STDMETHODIMP CMruBase::QueryInterface(REFIID riid, void **ppvObj)
     return E_NOINTERFACE;
 }
 
+STDMETHODIMP_(ULONG) CMruBase::Release()
+{
+    if (::InterlockedDecrement(&m_cRefs) == 0)
+    {
+        _SaveSlots();
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+HRESULT CMruBase::_LoadItem(UINT iSlot)
+{
+    DWORD cbData;
+    WCHAR szValue[12];
+
+    SLOTITEMDATA *pSlot = &m_pSlots[iSlot];
+    _SlotString(iSlot, szValue, _countof(szValue));
+
+    if (SHGetValueW(m_hKey, NULL, szValue, NULL, NULL, &cbData) == ERROR_SUCCESS &&
+        cbData > 0)
+    {
+        pSlot->pidl = (LPITEMIDLIST)LocalAlloc(LPTR, cbData);
+        if (pSlot->pidl)
+        {
+            pSlot->cbPidl = cbData;
+            if (SHGetValueW(m_hKey, NULL, szValue, NULL, pSlot->pidl, &cbData) != ERROR_SUCCESS)
+            {
+                ::LocalFree(pSlot->pidl);
+                pSlot->pidl = NULL;
+            }
+        }
+    }
+
+    pSlot->dwFlags |= 1;
+    if (!pSlot->pidl)
+        return E_FAIL;
+
+    return S_OK;
+}
+
+HRESULT CMruBase::_GetSlotItem(UINT iSlot, SLOTITEMDATA **ppSlot)
+{
+    if (!(m_pSlots[iSlot].dwFlags & 1))
+        _LoadItem(iSlot);
+
+    SLOTITEMDATA *pSlot = &m_pSlots[iSlot];
+    if (!pSlot->pidl)
+        return E_OUTOFMEMORY;
+
+    *ppSlot = pSlot;
+    return S_OK;
+}
+
+HRESULT CMruBase::_GetItem(UINT iSlot, SLOTITEMDATA **ppSlot)
+{
+    HRESULT hr = _GetSlot(iSlot, &iSlot);
+    if (FAILED(hr))
+        return hr;
+    return _GetSlotItem(iSlot, ppSlot);
+}
+
+void CMruBase::_DeleteItem(UINT iSlot)
+{
+    WCHAR szBuff[12];
+
+    _SlotString(iSlot, szBuff, _countof(szBuff));
+    _DeleteValue(szBuff);
+
+    if (m_pSlots[iSlot].pidl)
+    {
+        LocalFree(m_pSlots[iSlot].pidl);
+        m_pSlots[iSlot].pidl = NULL;
+    }
+}
+
+void CMruBase::_CheckUsedSlots()
+{
+    UINT iGotSlot;
+    for (UINT iSlot = 0; iSlot < m_cSlots; ++iSlot)
+        _GetSlot(iSlot, &iGotSlot);
+
+    m_bChecked = TRUE;
+}
+
+HRESULT CMruBase::_AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData)
+{
+    SLOTITEMDATA *pSlot = &m_pSlots[iSlot];
+
+    WCHAR szBuff[12];
+    _SlotString(iSlot, szBuff, _countof(szBuff));
+
+    if (SHSetValueW(m_hKey, NULL, szBuff, REG_BINARY, pbData, cbData) != ERROR_SUCCESS)
+        return E_OUTOFMEMORY;
+
+    if (cbData >= pSlot->cbPidl || !pSlot->pidl)
+    {
+        LocalFree(pSlot->pidl);
+        pSlot->pidl = (LPITEMIDLIST)LocalAlloc(LPTR, cbData);
+    }
+
+    if (!pSlot->pidl)
+        return E_FAIL;
+
+    pSlot->cbPidl = cbData;
+    pSlot->dwFlags = 3;
+    CopyMemory(pSlot->pidl, pbData, cbData);
+    return S_OK;
+}
+
 STDMETHODIMP
 CMruBase::InitData(
     UINT cCapacity,
     UINT flags,
     HKEY hKey,
-    LPCWSTR pszSubKey,
-    SLOTCOMPARE fnCompare)
+    LPCWSTR pszSubKey OPTIONAL,
+    SLOTCOMPARE fnCompare OPTIONAL)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    m_dwFlags = flags;
+    m_fnCompare = fnCompare;
+    m_cSlotRooms = cCapacity;
+
+    if (pszSubKey)
+        ::RegCreateKeyExWrapW(hKey, pszSubKey, 0, NULL, 0, MAXIMUM_ALLOWED, NULL, &m_hKey, NULL);
+    else
+        m_hKey = SHRegDuplicateHKey(hKey);
+
+    if (!m_hKey)
+        return E_FAIL;
+
+    m_pSlots = (SLOTITEMDATA*)::LocalAlloc(LPTR, m_cSlotRooms * sizeof(SLOTITEMDATA));
+    if (!m_pSlots)
+        return E_OUTOFMEMORY;
+
+    return _InitSlots();
 }
 
 STDMETHODIMP CMruBase::AddData(const BYTE *pbData, DWORD cbData, UINT *piSlot)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    UINT iSlot;
+    HRESULT hr = FindData(pbData, cbData, &iSlot);
+    if (FAILED(hr))
+    {
+        iSlot = _UpdateSlots(m_cSlots);
+        hr = _AddItem(iSlot, pbData, cbData);
+        if (FAILED(hr))
+            return hr;
+    }
+    else
+    {
+        iSlot = _UpdateSlots(iSlot);
+        hr = S_OK;
+    }
+
+    if (piSlot)
+        *piSlot = iSlot;
+
+    return hr;
 }
 
 STDMETHODIMP CMruBase::FindData(const BYTE *pbData, DWORD cbData, UINT *piSlot)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    if (m_cSlots <= 0)
+        return E_FAIL;
+
+    UINT iSlot = 0;
+    SLOTITEMDATA *pSlotData;
+    while (FAILED(_GetItem(iSlot, &pSlotData)) ||
+           !_IsEqual(pSlotData, (LPITEMIDLIST)pbData, cbData))
+    {
+        if (++iSlot >= m_cSlots)
+            return E_FAIL;
+    }
+
+    *piSlot = iSlot;
+    return S_OK;
 }
 
 STDMETHODIMP CMruBase::GetData(UINT iSlot, BYTE *pbData, DWORD cbData)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    SLOTITEMDATA *pSlotData;
+    HRESULT hr = _GetItem(iSlot, &pSlotData);
+    if (FAILED(hr))
+        return hr;
+
+    if (cbData < pSlotData->cbPidl)
+        return 0x8007007A; // FIXME: Magic number
+
+    CopyMemory(pbData, pSlotData->pidl, pSlotData->cbPidl);
+    return hr;
 }
 
 STDMETHODIMP CMruBase::QueryInfo(UINT iSlot, UINT *puSlot, DWORD *pcbData)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    UINT iGotSlot;
+    HRESULT hr = _GetSlot(iSlot, &iGotSlot);
+    if (FAILED(hr))
+        return hr;
+
+    if (puSlot)
+        *puSlot = iGotSlot;
+
+    if (pcbData)
+    {
+        SLOTITEMDATA *pSlotData;
+        hr = _GetSlotItem(iGotSlot, &pSlotData);
+        if (SUCCEEDED(hr))
+            *pcbData = pSlotData->cbPidl;
+    }
+
+    return hr;
 }
 
 STDMETHODIMP CMruBase::Delete(UINT iSlot)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    UINT uSlot;
+    HRESULT hr = _RemoveSlot(iSlot, &uSlot);
+    if (FAILED(hr))
+        return hr;
+
+    _DeleteItem(uSlot);
+    return hr;
 }
 
-HRESULT CMruBase::_IsEqual(const SLOTITEMDATA *pSlot, LPCITEMIDLIST pidl, UINT cbPidl) const
+BOOL CMruBase::_IsEqual(const SLOTITEMDATA *pSlot, LPCITEMIDLIST pidl, UINT cbPidl) const
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    if (m_fnCompare)
+        return m_fnCompare(pidl, pSlot->pidl, cbPidl) == 0;
+
+    switch (m_dwFlags & 0xF)
+    {
+        case 0: // FIXME: Magic number
+            if (pSlot->cbPidl == cbPidl)
+                return memcmp(pidl, pSlot->pidl, cbPidl) == 0;
+            return FALSE;
+
+        case 1:
+            return StrCmpIW((LPCWSTR)pidl, (LPCWSTR)pSlot->pidl) == 0;
+
+        case 2:
+            return StrCmpW((LPCWSTR)pidl, (LPCWSTR)pSlot->pidl) == 0;
+
+        case 3:
+            return IEILIsEqual(pidl, pSlot->pidl, FALSE);
+
+        default:
+            return FALSE;
+    }
 }
 
 HRESULT CMruBase::_DeleteValue(LPCWSTR pszValue)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    return SHDeleteValueW(m_hKey, NULL, pszValue);
 }
 
 class CMruLongList
