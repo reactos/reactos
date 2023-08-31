@@ -29,11 +29,11 @@ extern "C" {
 typedef struct tagSLOTITEMDATA
 {
     DWORD dwFlags;
-    UINT cbPidl;
-    LPITEMIDLIST pidl;
+    UINT cbData;
+    LPVOID pvData;
 } SLOTITEMDATA, *PSLOTITEMDATA;
 
-typedef INT (CALLBACK *SLOTCOMPARE)(LPCITEMIDLIST, LPCITEMIDLIST, UINT);
+typedef INT (CALLBACK *SLOTCOMPARE)(LPCVOID pvData1, LPCVOID pvData2, UINT cbData);
 
 /*****************************************************************************
  * New shellstate structure
