@@ -54,7 +54,7 @@
 @ stub _get_wide_winmain_command_line
 @ stub _get_wpgmptr
 @ cdecl -arch=i386 _getdllprocaddr() msvcrt._getdllprocaddr
-@ cdecl -arch=x86_64 -version=0x502 _getdllprocaddr() msvcrt._getdllprocaddr
+; @ cdecl -arch=x86_64 -version=0x502 _getdllprocaddr() msvcrt._getdllprocaddr # FIXME: version can't be less than 0x600...
 @ stdcall _getpid() msvcrt._getpid
 @ stub _initialize_narrow_environment
 @ cdecl -stub -version=0xA00+ _initialize_onexit_table(ptr)

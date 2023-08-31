@@ -12,7 +12,7 @@
 @ stdcall _execvp() msvcrt._execvp
 @ stdcall _execvpe() msvcrt._execvpe
 @ cdecl -arch=i386 _loaddll() msvcrt._loaddll
-@ cdecl -arch=x86_64 -version=0x502 _loaddll() msvcrt._loaddll
+; @ cdecl -arch=x86_64 -version=0x502 _loaddll() msvcrt._loaddll # FIXME: version can't be less than 0x600...
 @ stdcall _spawnl() msvcrt._spawnl
 @ stdcall _spawnle() msvcrt._spawnle
 @ stdcall _spawnlp() msvcrt._spawnlp
@@ -22,7 +22,7 @@
 @ stdcall _spawnvp() msvcrt._spawnvp
 @ stdcall _spawnvpe() msvcrt._spawnvpe
 @ cdecl -arch=i386 _unloaddll() msvcrt._unloaddll
-@ cdecl -arch=x86_64 -version=0x502 _unloaddll() msvcrt._unloaddll
+; @ cdecl -arch=x86_64 -version=0x502 _unloaddll() msvcrt._unloaddll # FIXME: version can't be less than 0x600...
 @ stdcall _wexecl() msvcrt._wexecl
 @ stdcall _wexecle() msvcrt._wexecle
 @ stdcall _wexeclp() msvcrt._wexeclp
