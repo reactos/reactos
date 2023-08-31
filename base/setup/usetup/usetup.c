@@ -3853,8 +3853,8 @@ RegistryPage(PINPUT_RECORD Ir)
     else
     {
         CONSOLE_SetStatusText(MUIGetString(STRING_DONE));
-        if (RepairUpdateFlag)
-            return SUCCESS_PAGE;
+        //if (RepairUpdateFlag)
+            //return SUCCESS_PAGE;
         return BOOT_LOADER_PAGE;
     }
 }
@@ -3883,7 +3883,6 @@ RegistryPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 BootLoaderPage(PINPUT_RECORD Ir)
 {
-    USHORT Line = 12;
     WCHAR PathBuffer[MAX_PATH];
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
@@ -3931,97 +3930,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
         }
     }
 
-    MUIDisplayPage(BOOT_LOADER_PAGE);
-    CONSOLE_InvertTextXY(8, Line, 60, 1);
-
-    while (TRUE)
-    {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
-        {
-            CONSOLE_NormalTextXY(8, Line, 60, 1);
-
-            Line++;
-            if (Line < 12)
-                Line = 15;
-
-            if (Line > 15)
-                Line = 12;
-
-            CONSOLE_InvertTextXY(8, Line, 60, 1);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
-        {
-            CONSOLE_NormalTextXY(8, Line, 60, 1);
-
-            Line--;
-            if (Line < 12)
-                Line = 15;
-
-            if (Line > 15)
-                Line = 12;
-
-            CONSOLE_InvertTextXY(8, Line, 60, 1);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_HOME))  /* HOME */
-        {
-            CONSOLE_NormalTextXY(8, Line, 60, 1);
-
-            Line = 12;
-
-            CONSOLE_InvertTextXY(8, Line, 60, 1);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_END))  /* END */
-        {
-            CONSOLE_NormalTextXY(8, Line, 60, 1);
-
-            Line = 15;
-
-            CONSOLE_InvertTextXY(8, Line, 60, 1);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
-        {
-            if (Line == 12)
-            {
-                /* Install on both MBR and VBR */
-                USetupData.MBRInstallType = 2;
-                break;
-            }
-            else if (Line == 13)
-            {
-                /* Install on VBR only */
-                USetupData.MBRInstallType = 3;
-                break;
-            }
-            else if (Line == 14)
-            {
-                /* Install on floppy */
-                USetupData.MBRInstallType = 1;
-                break;
-            }
-            else if (Line == 15)
-            {
-                /* Skip MBR installation */
-                USetupData.MBRInstallType = 0;
-                break;
-            }
-
-            return BOOT_LOADER_PAGE;
-        }
-    }
+    /* Install MBR and VBR by default if not specified in unattended setup. */
+    USetupData.MBRInstallType = 2;
 
 Quit:
     switch (USetupData.MBRInstallType)
