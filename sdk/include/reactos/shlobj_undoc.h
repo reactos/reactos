@@ -26,6 +26,15 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+typedef struct tagSLOTITEMDATA
+{
+    DWORD dwFlags;
+    UINT cbPidl;
+    LPITEMIDLIST pidl;
+} SLOTITEMDATA, *PSLOTITEMDATA;
+
+typedef INT (CALLBACK *SLOTCOMPARE)(LPCITEMIDLIST, LPCITEMIDLIST, UINT);
+
 /*****************************************************************************
  * New shellstate structure
  */
@@ -676,6 +685,38 @@ DECLARE_INTERFACE_(IShellBrowserService, IUnknown)
 #define IShellBrowserService_AddRef(T) (T)->lpVtbl->AddRef(T)
 #define IShellBrowserService_Release(T) (T)->lpVtbl->Release(T)
 #define IShellBrowserService_GetPropertyBag(T,a,b,c) (T)->lpVtbl->GetPropertyBag(T,a,b,c)
+#endif
+
+/*****************************************************************************
+ * IMruDataList interface
+ */
+#define INTERFACE IMruDataList
+DECLARE_INTERFACE_(IMruDataList, IUnknown)
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IMruDataList ***/
+    STDMETHOD(InitData)(THIS_ UINT, UINT, HKEY, LPCWSTR, SLOTCOMPARE) PURE;
+    STDMETHOD(AddData)(THIS_ const BYTE *, DWORD, UINT*) PURE;
+    STDMETHOD(FindData)(THIS_ const BYTE*, DWORD, UINT*) PURE;
+    STDMETHOD(GetData)(THIS_ UINT, BYTE*, DWORD) PURE;
+    STDMETHOD(QueryInfo)(THIS_ UINT, UINT*, DWORD*) PURE;
+    STDMETHOD(Delete)(THIS_ UINT) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IMruDataList_QueryInterface(T,a,b)  (T)->lpVtbl->QueryInterface(T,a,b)
+#define IMruDataList_AddRef(T)              (T)->lpVtbl->AddRef(T)
+#define IMruDataList_Release(T)             (T)->lpVtbl->Release(T)
+#define IMruDataList_InitData(T,a,b,c,d,e)  (T)->lpVtbl->InitData(T,a,b,c,d,e)
+#define IMruDataList_AddData(T,a,b,c)       (T)->lpVtbl->AddData(T,a,b,c)
+#define IMruDataList_FindData(T,a,b,c)      (T)->lpVtbl->FindData(T,a,b,c)
+#define IMruDataList_GetData(T,a,b,c)       (T)->lpVtbl->GetData(T,a,b,c)
+#define IMruDataList_QueryInfo(T,a,b,c)     (T)->lpVtbl->QueryInfo(T,a,b,c)
+#define IMruDataList_Delete(T,a)            (T)->lpVtbl->Delete(T,a)
 #endif
 
 /*****************************************************************************
