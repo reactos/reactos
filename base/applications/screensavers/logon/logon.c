@@ -34,7 +34,7 @@
 
 HBITMAP GetScreenSaverBitmap(VOID)
 {
-    return LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+    return LoadImageW(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 }
 
 LRESULT CALLBACK ScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -50,10 +50,10 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             if (bitmap == NULL)
             {
                 /* Extremely unlikely, message not localized. */
-                MessageBox(hWnd,
-                           L"Fatal Error: Could not load bitmap",
-                           L"Error",
-                           MB_OK | MB_ICONEXCLAMATION);
+                MessageBoxW(hWnd,
+                            L"Fatal Error: Could not load bitmap",
+                            L"Error",
+                            MB_OK | MB_ICONEXCLAMATION);
             }
             SetTimer(hWnd, APP_TIMER, APP_TIMER_INTERVAL, NULL);
             break;
@@ -70,19 +70,19 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
              hdc = BeginPaint(hWnd, &ps);
              hdcMem = CreateCompatibleDC(hdc);
              hbmOld = SelectObject(hdcMem, bitmap);
-             GetObject(bitmap, sizeof(bm), &bm);
+             GetObjectW(bitmap, sizeof(bm), &bm);
 
              if (rect.right < bm.bmWidth || rect.bottom < bm.bmHeight)
              {
-                StretchBlt(hdc, RANDOM (0, rect.right - (bm.bmWidth / 5)),
-                           RANDOM (0, rect.bottom - (bm.bmHeight / 5)),
+                StretchBlt(hdc, RANDOM(0, rect.right - (bm.bmWidth / 5)),
+                           RANDOM(0, rect.bottom - (bm.bmHeight / 5)),
                            bm.bmWidth / 5, bm.bmHeight / 5, hdcMem, 0, 0,
                            bm.bmWidth, bm.bmHeight, SRCCOPY);
              }
              else
              {
-                 BitBlt(hdc, RANDOM (0, rect.right - bm.bmWidth),
-                        RANDOM (0, rect.bottom - bm.bmHeight),
+                 BitBlt(hdc, RANDOM(0, rect.right - bm.bmWidth),
+                        RANDOM(0, rect.bottom - bm.bmHeight),
                         bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
              }
 
@@ -102,7 +102,7 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             break;
 
         default:
-            /* Pass Windows messages to the default screensaver window procedure */
+            /* Pass window messages to the default screensaver window procedure */
             return DefScreenSaverProc(hWnd, uMsg, wParam, lParam);
     }
 
@@ -122,10 +122,10 @@ BOOL WINAPI RegisterDialogClasses(HANDLE hInst)
     WCHAR szMessage[256];
     WCHAR szTitle[25];
 
-    LoadString(hInst, IDS_TEXT, szMessage, sizeof(szMessage) / sizeof(TCHAR));
-    LoadString(hInst, IDS_DESCRIPTION, szTitle, sizeof(szTitle) / sizeof(TCHAR));
+    LoadStringW(hInst, IDS_TEXT, szMessage, sizeof(szMessage) / sizeof(TCHAR));
+    LoadStringW(hInst, IDS_DESCRIPTION, szTitle, sizeof(szTitle) / sizeof(TCHAR));
 
-    MessageBox(NULL, szMessage, szTitle, MB_OK | MB_ICONEXCLAMATION);
+    MessageBoxW(NULL, szMessage, szTitle, MB_OK | MB_ICONEXCLAMATION);
 
     return FALSE;
 }
