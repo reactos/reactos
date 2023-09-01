@@ -92,17 +92,14 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
              break;
         }
         case WM_TIMER:
-        {
             InvalidateRect(hWnd, NULL, 1);
             break;
-        }
+
         case WM_DESTROY:
-        {
             KillTimer(hWnd, APP_TIMER);
             DeleteObject(bitmap);
             PostQuitMessage(0);
             break;
-        }
 
         default:
             /* Pass Windows messages to the default screensaver window procedure */
