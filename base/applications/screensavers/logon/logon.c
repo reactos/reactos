@@ -32,7 +32,7 @@
 #define APP_TIMER             1
 #define APP_TIMER_INTERVAL    10000
 
-HBITMAP GetScreenSaverBitmap()
+HBITMAP GetScreenSaverBitmap(VOID)
 {
     return LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 }
@@ -122,8 +122,8 @@ BOOL WINAPI RegisterDialogClasses(HANDLE hInst)
     WCHAR szMessage[256];
     WCHAR szTitle[25];
 
-    LoadString(hInst, IDS_TEXT, szMessage, wcslen(szMessage));
-    LoadString(hInst, IDS_DESCRIPTION, szTitle, wcslen(szTitle));
+    LoadString(hInst, IDS_TEXT, szMessage, sizeof(szMessage) / sizeof(TCHAR));
+    LoadString(hInst, IDS_DESCRIPTION, szTitle, sizeof(szTitle) / sizeof(TCHAR));
 
     MessageBox(NULL, szMessage, szTitle, MB_OK | MB_ICONEXCLAMATION);
 
