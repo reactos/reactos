@@ -39,8 +39,7 @@
 #define APP_TIMER_FADE        200
 #define APP_TIMER_FADE_FPS    30
 
-HBITMAP
-GetScreenSaverBitmap(VOID)
+HBITMAP GetScreenSaverBitmap()
 {
     OSVERSIONINFOEX osvi;
 
@@ -58,8 +57,7 @@ GetScreenSaverBitmap(VOID)
             break;
     }
 }
-void
-FadeInBitmap(HWND hWnd, HBITMAP bitmap)
+void FadeInBitmap(HWND hWnd, HBITMAP bitmap)
 {
     RECT rect;
     BITMAP bm; /* Bitmap structure */
@@ -93,16 +91,12 @@ FadeInBitmap(HWND hWnd, HBITMAP bitmap)
     EndPaint(hWnd, &ps);
 }
 
-void
-FadeOutBitmap(HWND hWnd)
+void FadeOutBitmap(HWND hWnd)
 {
     InvalidateRect(hWnd, NULL, 1);
 }
 
-
-LRESULT
-CALLBACK
-ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HBITMAP bitmap;
 
@@ -114,16 +108,12 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (bitmap == NULL)
             {
                 MessageBox(hWnd,
-                           _T("Fatal Error: Could not load bitmap"),
-                           _T("Error"),
+                           L"Fatal Error: Could not load bitmap",
+                           L"Error",
                            MB_OK | MB_ICONEXCLAMATION);
             }
 
-            SetTimer(hWnd,
-                     APP_TIMER,
-                     APP_TIMER_INTERVAL,
-                     NULL);
-
+            SetTimer(hWnd, APP_TIMER, APP_TIMER_INTERVAL, NULL);
              break;
         }
         case WM_PAINT:
@@ -138,25 +128,20 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PostQuitMessage(0);
             break;
         default:
-            // Pass Windows Messages to the default screensaver window procedure
             return DefScreenSaverProc(hWnd, message, wParam, lParam);
     }
 
     return 0;
 }
 
-BOOL
-WINAPI
-ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return FALSE;
 }
 
 // This function is only called one time before opening the configuration dialog.
 // Use it to show a message that no configuration is necessary and return FALSE to indicate that no configuration dialog shall be opened.
-BOOL
-WINAPI
-RegisterDialogClasses(HANDLE hInst)
+BOOL WINAPI RegisterDialogClasses(HANDLE hInst)
 {
     TCHAR szMessage[256];
     TCHAR szTitle[25];
