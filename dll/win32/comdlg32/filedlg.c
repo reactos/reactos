@@ -2862,6 +2862,7 @@ static LPWSTR FILEDLG95_GetFallbackExtension(FileOpenDlgInfos *fodInfos, LPWSTR 
 static BOOL
 FILEDLG95_AddDotExtIfNeeded(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
 {
+    BOOL ret = FALSE;
     LPWSTR ext = PathFindExtensionW(lpstrPathAndFile);
     int PathLength = lstrlenW(lpstrPathAndFile);
     LPWSTR the_ext = FILEDLG95_GetFallbackExtension(fodInfos, lpstrPathAndFile);
@@ -2880,6 +2881,7 @@ FILEDLG95_AddDotExtIfNeeded(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
             lstrcatW(lpstrPathAndFile, the_ext);
             /* update ext */
             ext = PathFindExtensionW(lpstrPathAndFile);
+            ret = TRUE;
         }
     }
 
@@ -2887,7 +2889,10 @@ FILEDLG95_AddDotExtIfNeeded(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
 
     /* In Open dialog: if file does not exist try without extension */
     if (!(fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG) && !PathFileExistsW(lpstrPathAndFile))
+    {
         lpstrPathAndFile[PathLength] = 0;
+        ret = FALSE;
+    }
 
     /* Set/clear the output OFN_EXTENSIONDIFFERENT flag */
     if (*ext)
@@ -2896,6 +2901,8 @@ FILEDLG95_AddDotExtIfNeeded(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
         fodInfos->ofnInfos->Flags &= ~OFN_EXTENSIONDIFFERENT;
     else
         fodInfos->ofnInfos->Flags |= OFN_EXTENSIONDIFFERENT;
+
+    return ret;
 }
 #endif
 
