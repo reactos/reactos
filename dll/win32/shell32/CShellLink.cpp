@@ -2821,7 +2821,7 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
         SendMessageW(hRun, CB_SETITEMDATA, idx, runshowcmd[i]);
         if (!i || m_Header.nShowCommand == runshowcmd[i])
         {
-            SendMessage(hRun, CB_SETCURSEL, idx, 0);
+            SendMessageW(hRun, CB_SETCURSEL, idx, 0);
         }
     }
 
