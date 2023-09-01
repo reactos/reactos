@@ -2829,14 +2829,18 @@ void FILEDLG95_OnOpenMessage(HWND hwnd, int idCaption, int idText)
 #ifdef __REACTOS__
 static LPWSTR FILEDLG95_GetFallbackExtension(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
 {
-    LPWSTR lpstrFilter, the_ext = NULL;
+    LPWSTR lpstrFilter, the_ext = NULL, pchDot = NULL;
 
-    /* get filter extensions */
+    /* Without lpstrDefExt, append no extension */
+    if (!fodInfos->defext)
+        return NULL;
+
+    /* Get filter extensions */
     lpstrFilter = (LPWSTR) CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
                                             fodInfos->ofnInfos->nFilterIndex - 1);
     if (lpstrFilter != (LPWSTR)CB_ERR && lpstrFilter && *lpstrFilter)
     {
-        LPWSTR pchDot, pchSemicolon = wcschr(lpstrFilter, L';');
+        LPWSTR pchSemicolon = wcschr(lpstrFilter, L';');
 
         if (pchSemicolon)
             *pchSemicolon = UNICODE_NULL;
@@ -2850,7 +2854,7 @@ static LPWSTR FILEDLG95_GetFallbackExtension(FileOpenDlgInfos *fodInfos, LPWSTR 
             *pchSemicolon = L';';
     }
 
-    if (!the_ext && fodInfos->defext)
+    if (!the_ext && (!pchDot || pchDot[1]))
     {
         /* use default extension if no extension in filter */
         the_ext = StrDupW(fodInfos->defext);
