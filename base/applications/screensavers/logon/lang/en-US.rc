@@ -2,6 +2,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-    IDS_DESCRIPTION "Logon Screen Saver"
+    IDS_DESCRIPTION "Logon ScreenSaver"
     IDS_TEXT "No options need to be set."
 END
