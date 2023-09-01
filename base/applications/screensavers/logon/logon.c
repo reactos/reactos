@@ -35,7 +35,14 @@
 static HBITMAP
 GetScreenSaverBitmap(VOID)
 {
-    return LoadImageW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDB_LOGO), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+    OSVERSIONINFOEX osvi = {0};
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    GetVersionEx ((OSVERSIONINFO *) &osvi);
+
+    return LoadImageW(GetModuleHandle(NULL),
+                      MAKEINTRESOURCEW(osvi.wProductType == VER_NT_WORKSTATION ?
+                                       IDB_WORKSTATION : IDB_SERVER),
+                      IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 }
 
 LRESULT
