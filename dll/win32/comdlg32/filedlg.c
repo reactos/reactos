@@ -2911,16 +2911,14 @@ FILEDLG95_AddDotExtIfNeeded(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
 #endif
 
 #ifdef __REACTOS__
-int FILEDLG95_ValidatePathAction(void *fodInfos0, LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
-                                 HWND hwnd, DWORD flags, BOOL isSaveDlg, int defAction)
+int FILEDLG95_ValidatePathAction(struct FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile,
+                                 IShellFolder **ppsf, HWND hwnd, DWORD flags, BOOL isSaveDlg,
+                                 int defAction)
 #else
 int FILEDLG95_ValidatePathAction(LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
                                  HWND hwnd, DWORD flags, BOOL isSaveDlg, int defAction)
 #endif
 {
-#ifdef __REACTOS__
-    FileOpenDlgInfos *fodInfos = fodInfos0;
-#endif
     int nOpenAction = defAction;
     LPWSTR lpszTemp, lpszTemp1;
     LPITEMIDLIST pidl = NULL;
