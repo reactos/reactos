@@ -28,12 +28,6 @@ i8042Flush(
 		KeStallExecutionProcessor(50);
 		TRACE_(I8042PRT, "Output data flushed\n");
 	}
-
-	/* Flush input buffer */
-	while (NT_SUCCESS(i8042ReadData(DeviceExtension, KBD_IBF, &Ignore))) {
-		KeStallExecutionProcessor(50);
-		TRACE_(I8042PRT, "Input data flushed\n");
-	}
 }
 
 BOOLEAN
