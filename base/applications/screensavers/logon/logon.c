@@ -36,12 +36,12 @@ static HBITMAP
 GetScreenSaverBitmap(VOID)
 {
     OSVERSIONINFOEX osvi = {0};
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-    GetVersionEx ((OSVERSIONINFO *) &osvi);
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    GetVersionEx((OSVERSIONINFO *) &osvi);
 
     return LoadImageW(GetModuleHandle(NULL),
-                      MAKEINTRESOURCEW(osvi.wProductType == VER_NT_WORKSTATION ?
-                                       IDB_WORKSTATION : IDB_SERVER),
+                      osvi.wProductType == VER_NT_WORKSTATION ?
+                      MAKEINTRESOURCEW(IDB_WORKSTATION) : MAKEINTRESOURCEW(IDB_SERVER),
                       IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 }
 
@@ -64,6 +64,7 @@ ScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             L"Error",
                             MB_OK | MB_ICONEXCLAMATION);
             }
+
             SetTimer(hWnd, APP_TIMER, APP_TIMER_INTERVAL, NULL);
             break;
         }
