@@ -18,12 +18,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
 #include <scrnsave.h>
-#include <stdlib.h>
 
 #include "resource.h"
 
@@ -32,14 +32,16 @@
 #define APP_TIMER             1
 #define APP_TIMER_INTERVAL    10000
 
-HBITMAP GetScreenSaverBitmap(VOID)
+static HBITMAP
+GetScreenSaverBitmap(VOID)
 {
-    return LoadImageW(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+    return LoadImageW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDB_LOGO), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 }
 
-LRESULT CALLBACK ScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT
+CALLBACK
+ScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    static RECT rect;
     static HBITMAP bitmap;
 
     switch (uMsg)
@@ -60,70 +62,79 @@ LRESULT CALLBACK ScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         }
         case WM_PAINT:
         {
-             BITMAP bm;
-             PAINTSTRUCT ps;
-             HDC hdc;
-             HDC hdcMem;
-             HBITMAP hbmOld;
+            BITMAP bm;
+            PAINTSTRUCT ps;
+            HDC hdc;
+            HDC hdcMem;
+            HBITMAP hbmOld;
+            RECT rect;
 
-             GetClientRect(hWnd, &rect);
-             hdc = BeginPaint(hWnd, &ps);
-             hdcMem = CreateCompatibleDC(hdc);
-             hbmOld = SelectObject(hdcMem, bitmap);
-             GetObjectW(bitmap, sizeof(bm), &bm);
+            hdc = BeginPaint(hWnd, &ps);
+            hdcMem = CreateCompatibleDC(hdc);
+            hbmOld = SelectObject(hdcMem, bitmap);
+            GetObjectW(bitmap, sizeof(bm), &bm);
 
-             if (rect.right < bm.bmWidth || rect.bottom < bm.bmHeight)
-             {
+            GetClientRect(hWnd, &rect);
+            if (rect.right < bm.bmWidth || rect.bottom < bm.bmHeight)
+            {
                 StretchBlt(hdc, RANDOM(0, rect.right - (bm.bmWidth / 5)),
                            RANDOM(0, rect.bottom - (bm.bmHeight / 5)),
                            bm.bmWidth / 5, bm.bmHeight / 5, hdcMem, 0, 0,
                            bm.bmWidth, bm.bmHeight, SRCCOPY);
-             }
-             else
-             {
-                 BitBlt(hdc, RANDOM(0, rect.right - bm.bmWidth),
-                        RANDOM(0, rect.bottom - bm.bmHeight),
-                        bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
-             }
+            }
+            else
+            {
+                BitBlt(hdc, RANDOM(0, rect.right - bm.bmWidth),
+                    RANDOM(0, rect.bottom - bm.bmHeight),
+                    bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            }
 
-             SelectObject(hdcMem, hbmOld);
-             DeleteDC(hdcMem);
-             EndPaint(hWnd, &ps);
-             break;
+            SelectObject(hdcMem, hbmOld);
+            DeleteDC(hdcMem);
+            EndPaint(hWnd, &ps);
+            break;
         }
         case WM_TIMER:
-            InvalidateRect(hWnd, NULL, 1);
+        {
+            InvalidateRect(hWnd, NULL, TRUE);
             break;
-
+        }
         case WM_DESTROY:
+        {
             KillTimer(hWnd, APP_TIMER);
             DeleteObject(bitmap);
             PostQuitMessage(0);
             break;
-
+        }
         default:
+        {
             /* Pass window messages to the default screensaver window procedure */
             return DefScreenSaverProc(hWnd, uMsg, wParam, lParam);
+        }
     }
 
     return 0;
 }
 
-BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+BOOL
+WINAPI
+ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return FALSE;
 }
 
-/* This function is only called one time before opening the configuration dialog.
+/* This function is only called once before opening the configuration dialog.
  * Use it to show a message that no configuration is necessary and return FALSE to indicate that no configuration dialog shall be opened.
  */
-BOOL WINAPI RegisterDialogClasses(HANDLE hInst)
+BOOL
+WINAPI
+RegisterDialogClasses(HANDLE hInst)
 {
     WCHAR szMessage[256];
     WCHAR szTitle[25];
 
-    LoadStringW(hInst, IDS_TEXT, szMessage, sizeof(szMessage) / sizeof(TCHAR));
-    LoadStringW(hInst, IDS_DESCRIPTION, szTitle, sizeof(szTitle) / sizeof(TCHAR));
+    LoadStringW(hInst, IDS_TEXT, szMessage, _countof(szMessage));
+    LoadStringW(hInst, IDS_DESCRIPTION, szTitle, _countof(szTitle));
 
     MessageBoxW(NULL, szMessage, szTitle, MB_OK | MB_ICONEXCLAMATION);
 
