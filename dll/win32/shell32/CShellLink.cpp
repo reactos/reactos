@@ -2812,10 +2812,10 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     for (UINT i = 0; i < _countof(runstrings); ++i)
     {
         WCHAR buf[MAX_PATH];
-        if (!LoadString(shell32_hInstance, runstrings[i], buf, _countof(buf)))
+        if (!LoadStringW(shell32_hInstance, runstrings[i], buf, _countof(buf)))
             break;
 
-        int idx = SendMessage(hRun, CB_ADDSTRING, 0, (LPARAM)buf);
+        int idx = SendMessageW(hRun, CB_ADDSTRING, 0, (LPARAM)buf);
         if (idx < 0)
             continue;
         SendMessage(hRun, CB_SETITEMDATA, idx, runshowcmd[i]);
@@ -2946,8 +2946,7 @@ LRESULT CShellLink::OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr)
 
         HeapFree(GetProcessHeap(), 0, unquoted);
 
-
-        m_Header.wHotKey = SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_KEY_HOTKEY, HKM_GETHOTKEY, 0, 0);
+        m_Header.wHotKey = (WORD)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_KEY_HOTKEY, HKM_GETHOTKEY, 0, 0);
 
         int idx = (int)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_RUN_COMBO, CB_GETCURSEL, 0, 0);
         if (idx != CB_ERR)
