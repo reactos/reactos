@@ -29,11 +29,15 @@
 
 #include "resource.h"
 
-#define RANDOM( min, max ) ((rand() % (int)(((max)+1) - (min))) + (min))
+#define RANDOM(min, max) ((rand() % (int)(((max)+1) - (min))) + (min))
 
 #define APPNAME               _T("Logon")
 #define APP_TIMER             1
-#define APP_TIMER_INTERVAL    2000
+#define FADEIN_TIMER          2
+#define FADEOUT_TIMER         3
+#define APP_TIMER_INTERVAL    10000
+#define APP_TIMER_FADE        200
+#define APP_TIMER_FADE_FPS    30
 
 HBITMAP
 GetScreenSaverBitmap(VOID)
@@ -54,19 +58,59 @@ GetScreenSaverBitmap(VOID)
             break;
     }
 }
+void
+FadeInBitmap(HWND hWnd, HBITMAP bitmap)
+{
+    RECT rect;
+    BITMAP bm; /* Bitmap structure */
+    PAINTSTRUCT ps;
+    HDC hdc;
+    HDC hdcMem;
+    HBITMAP hbmOld;
+
+    GetClientRect(hWnd, &rect);
+    hdc = BeginPaint(hWnd, &ps);
+    hdcMem = CreateCompatibleDC(hdc);
+    hbmOld = SelectObject(hdcMem, bitmap);
+    GetObject(bitmap, sizeof(bm), &bm);
+
+    if (rect.right < bm.bmWidth || rect.bottom < bm.bmHeight)
+    {
+        StretchBlt(hdc, RANDOM(0, rect.right - (bm.bmWidth /5)),
+                   RANDOM(0, rect.bottom - (bm.bmHeight /5)),
+                   bm.bmWidth / 5, bm.bmHeight / 5, hdcMem, 0, 0,
+                   bm.bmWidth, bm.bmHeight, SRCCOPY);
+    }
+    else
+    {
+        BitBlt(hdc, RANDOM(0, rect.right - bm.bmWidth),
+               RANDOM(0, rect.bottom - bm.bmHeight),
+               bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
+    }
+
+    SelectObject(hdcMem, hbmOld);
+    DeleteDC(hdcMem);
+    EndPaint(hWnd, &ps);
+}
+
+void
+FadeOutBitmap(HWND hWnd)
+{
+    InvalidateRect(hWnd, NULL, 1);
+}
+
 
 LRESULT
 CALLBACK
 ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static RECT rect;
     static HBITMAP bitmap;
 
     switch (message)
     {
         case WM_CREATE:
         {
-            bitmap = GetScreenSaverBitmap ();
+            bitmap = GetScreenSaverBitmap();
             if (bitmap == NULL)
             {
                 MessageBox(hWnd,
@@ -83,71 +127,16 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
              break;
         }
         case WM_PAINT:
-        {
-             BITMAP bm; /* Bitmap structure as seen in bmWidth & bmHeight */
-             PAINTSTRUCT ps;
-             HDC hdc;
-             HDC hdcMem;
-             HBITMAP hbmOld;
-
-             // Obtain window coordinates.
-             GetClientRect (hWnd, &rect);
-
-             hdc = BeginPaint(hWnd, &ps);
-             hdcMem = CreateCompatibleDC(hdc);
-             hbmOld = SelectObject(hdcMem, bitmap);
-
-             GetObject(bitmap, sizeof(bm), &bm);
-
-             if (rect.right < bm.bmWidth ||
-                 rect.bottom < bm.bmHeight)
-             {
-                StretchBlt(
-                    hdc,
-                    RANDOM (0, rect.right - (bm.bmWidth /5)),
-                    RANDOM (0, rect.bottom - (bm.bmHeight /5)),
-                    bm.bmWidth /5,
-                    bm.bmHeight /5,
-                    hdcMem,
-                    0,
-                    0,
-                    bm.bmWidth,
-                    bm.bmHeight,
-                    SRCCOPY);
-             }
-             else
-             {
-                 BitBlt(
-                     hdc,
-                     RANDOM (0, rect.right - bm.bmWidth),
-                     RANDOM (0, rect.bottom - bm.bmHeight),
-                     bm.bmWidth,
-                     bm.bmHeight,
-                     hdcMem,
-                     0,
-                     0,
-                     SRCCOPY);
-             }
-
-             SelectObject(hdcMem, hbmOld);
-             DeleteDC(hdcMem);
-
-             EndPaint(hWnd, &ps);
-             break;
-        }
+            FadeInBitmap(hWnd, bitmap);
+            break;
         case WM_TIMER:
-        {
-          InvalidateRect(hWnd, NULL, 1);
-          break;
-        }
+            FadeOutBitmap(hWnd);
+            break;
         case WM_DESTROY:
-        {
             KillTimer(hWnd, APP_TIMER);
             DeleteObject(bitmap);
             PostQuitMessage(0);
             break;
-        }
-
         default:
             // Pass Windows Messages to the default screensaver window procedure
             return DefScreenSaverProc(hWnd, message, wParam, lParam);
