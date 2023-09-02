@@ -861,9 +861,9 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "Исполняемые файлы (*.exe)\0*.exe\0Все файлы (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
-    IDS_SHORTCUT_RUN_NORMAL "Normal window"
-    IDS_SHORTCUT_RUN_MIN "Minimized"
-    IDS_SHORTCUT_RUN_MAX "Maximized"
+    IDS_SHORTCUT_RUN_NORMAL "Обычный размер окна"
+    IDS_SHORTCUT_RUN_MIN "Свёрнутое в значок"
+    IDS_SHORTCUT_RUN_MAX "Развёрнутое на весь экран"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Главное меню\\Программы"
