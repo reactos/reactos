@@ -32,7 +32,8 @@
 #define APP_TIMER             1
 #define APP_TIMER_INTERVAL    10000
 
-static HBITMAP
+static
+HBITMAP
 GetScreenSaverBitmap(VOID)
 {
     OSVERSIONINFOEX osvi = {0};
