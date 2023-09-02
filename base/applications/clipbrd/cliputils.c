@@ -4,6 +4,7 @@
  * PURPOSE:     Clipboard helper functions.
  * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
  *              Copyright 2015-2018 Hermes Belusca-Maito
+ *              Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -202,142 +203,185 @@ BOOL IsClipboardFormatSupported(UINT uFormat)
     }
 }
 
-LPWSTR WideFromAnsi(LPCSTR pszAnsi)
+LPCWSTR FindNewLineW(LPCWSTR pszText, SIZE_T cch)
 {
-    INT cchMax = MultiByteToWideChar(CP_ACP, 0, pszAnsi, -1, NULL, 0);
-    LPWSTR pszWide = malloc(cchMax * sizeof(WCHAR));
-    if (!pszWide)
-        return NULL;
-    MultiByteToWideChar(CP_ACP, 0, pszAnsi, -1, pszWide, cchMax);
-    return pszWide;
-}
-
-LPWSTR GetTextFromClipboard(UINT uFormat, BOOL bOpen)
-{
-    HGLOBAL hGlobal;
-    LPSTR pszA;
-    LPWSTR pszW;
-
-    if (bOpen && !OpenClipboard(Globals.hMainWnd))
-        return NULL;
-
-    hGlobal = GetClipboardData(uFormat);
-    if (hGlobal)
+    SIZE_T ich;
+    for (ich = 0; ich < cch; ++ich)
     {
-        switch (uFormat)
-        {
-            case CF_DSPTEXT:
-            case CF_TEXT:
-            case CF_OEMTEXT:
-                pszA = _strdup(GlobalLock(hGlobal));
-                GlobalUnlock(hGlobal);
-                pszW = WideFromAnsi(pszA);
-                free(pszA);
-                break;
-
-            case CF_UNICODETEXT:
-                pszW = _wcsdup(GlobalLock(hGlobal));
-                GlobalUnlock(hGlobal);
-                break;
-
-            case CF_HDROP:
-            {
-                WCHAR szFile[MAX_PATH + 2];
-                UINT iFile, cFiles = DragQueryFileW((HDROP)hGlobal, 0xFFFFFFFF, NULL, 0);
-                pszW = NULL;
-                for (iFile = 0; iFile < cFiles; ++iFile)
-                {
-                    DragQueryFileW((HDROP)hGlobal, iFile, szFile, _countof(szFile) - 2);
-                    lstrcatW(szFile, L"\r\n");
-                    pszW = AllocStrCat(pszW, szFile);
-                }
-                break;
-            }
-
-            default:
-            {
-                if (uFormat == Globals.uCFSTR_FILENAMEA)
-                {
-                    pszA = _strdup(GlobalLock(hGlobal));
-                    GlobalUnlock(hGlobal);
-                    pszW = WideFromAnsi(pszA);
-                    free(pszA);
-                }
-                else if (uFormat == Globals.uCFSTR_FILENAMEW)
-                {
-                    pszW = _wcsdup(GlobalLock(hGlobal));
-                    GlobalUnlock(hGlobal);
-                }
-                else
-                {
-                    pszW = NULL;
-                }
-                break;
-            }
-        }
+        if (pszText[ich] == UNICODE_NULL || pszText[ich] == L'\n')
+            break;
     }
 
-    if (bOpen)
-        CloseClipboard();
-
-    return pszW;
+    return &pszText[ich];
 }
 
-SIZE GetTextSize(HDC hDC, LPCWSTR pszText)
+LPCSTR FindNewLineA(LPCSTR pszText, SIZE_T cch)
+{
+    SIZE_T ich;
+    for (ich = 0; ich < cch; ++ich)
+    {
+        if (pszText[ich] == ANSI_NULL || pszText[ich] == '\n')
+            break;
+    }
+
+    return &pszText[ich];
+}
+
+SIZE GetTextSizeW(HDC hDC, LPCWSTR pszText, SIZE_T cch)
 {
     SIZE textSize = { 0, 0 };
     LPCWSTR pch0 = pszText, pch1;
-    RECT rc;
-    size_t cchLine;
-    const UINT uFormat = DT_CALCRECT | DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX;
+    size_t ich, cchLine;
+    DWORD dwSize;
 
-    for (;;)
+    for (ich = 0; ich < cch; pch0 = pch1 + 1)
     {
-        pch1 = wcschr(pch0, L'\n');
-        if (pch1)
-            cchLine = pch1 - pch0;
-        else
-            cchLine = wcslen(pch0);
+        pch1 = FindNewLineW(pch0, cch - ich);
+        cchLine = pch1 - pch0;
 
-        SetRectEmpty(&rc);
-        textSize.cy += DrawTextW(hDC, pch0, cchLine, &rc, uFormat);
-        if (textSize.cx < rc.right)
-            textSize.cx = rc.right;
+        if (cchLine > 0 && pch0[cchLine - 1] == L'\r')
+            --cchLine;
 
-        if (!pch1)
-            break;
+        dwSize = GetTabbedTextExtentW(hDC, pch0, cchLine, 0, NULL);
+        if (textSize.cx < LOWORD(dwSize))
+            textSize.cx = LOWORD(dwSize);
+        textSize.cy += HIWORD(dwSize);
 
-        pch0 = pch1 + 1;
+        ich += pch1 - pch0 + 1;
     }
 
     return textSize;
 }
 
-BOOL GetTextClipboardDimensions(UINT uFormat, PRECT pRc)
+SIZE GetTextSizeA(HDC hDC, LPCSTR pszText, SIZE_T cch)
 {
-    HDC hDC;
-    HGDIOBJ hFontOld;
-    SIZE textSize;
-    LPWSTR pszText;
+    SIZE textSize = { 0, 0 };
+    LPCSTR pch0 = pszText, pch1;
+    size_t ich, cchLine;
+    DWORD dwSize;
 
-    pszText = GetTextFromClipboard(uFormat, FALSE);
-    if (!pszText)
+    for (ich = 0; ich < cch; pch0 = pch1 + 1)
+    {
+        pch1 = FindNewLineA(pch0, cch - ich);
+        cchLine = pch1 - pch0;
+
+        if (cchLine > 0 && pch0[cchLine - 1] == '\r')
+            --cchLine;
+
+        dwSize = GetTabbedTextExtentA(hDC, pch0, cchLine, 0, NULL);
+        if (textSize.cx < LOWORD(dwSize))
+            textSize.cx = LOWORD(dwSize);
+        textSize.cy += HIWORD(dwSize);
+
+        ich += pch1 - pch0 + 1;
+    }
+
+    return textSize;
+}
+
+BOOL DoText(UINT uFormat, DO_TEXT_PROC fnCallback, HDC hDC, LPRECT lpRect)
+{
+    LPWSTR pszW = NULL;
+    LPSTR pszA;
+    BOOL ret = FALSE;
+    HGLOBAL hGlobal = GetClipboardData(uFormat);
+    SIZE_T cbSize = GlobalSize(hGlobal);
+
+    if (!hGlobal || !cbSize)
         return FALSE;
 
-    hDC = GetDC(Globals.hMainWnd);
-    hFontOld = SelectObject(hDC, Globals.hFont);
-    textSize = GetTextSize(hDC, pszText);
-    SelectObject(hDC, hFontOld);
-    ReleaseDC(Globals.hMainWnd, hDC);
+    switch (uFormat)
+    {
+        case CF_DSPTEXT:
+        case CF_TEXT:
+        case CF_OEMTEXT:
+ansi_text:
+            pszA = (LPSTR)GlobalLock(hGlobal);
+            if (pszA)
+            {
+                ret = fnCallback(uFormat, pszA, (cbSize - 1) / sizeof(CHAR), TRUE, hDC, lpRect);
+                GlobalUnlock(hGlobal);
+            }
+            break;
 
-    free(pszText);
+        case CF_UNICODETEXT:
+wide_text:
+            pszW = (LPWSTR)GlobalLock(hGlobal);
+            if (pszW)
+            {
+                ret = fnCallback(uFormat, pszW, (cbSize - 1) / sizeof(WCHAR), FALSE, hDC, lpRect);
+                GlobalUnlock(hGlobal);
+            }
+            break;
 
+        case CF_HDROP:
+        {
+            WCHAR szFile[MAX_PATH + 2];
+            UINT iFile, cFiles = DragQueryFileW((HDROP)hGlobal, 0xFFFFFFFF, NULL, 0);
+            if (Globals.bTextCached)
+            {
+                fnCallback(uFormat, Globals.pszTextCache, Globals.cchTextCache, FALSE, hDC, lpRect);
+                break;
+            }
+            for (iFile = 0; iFile < cFiles; ++iFile)
+            {
+                DragQueryFileW((HDROP)hGlobal, iFile, szFile, _countof(szFile) - 2);
+                wcscat(szFile, L"\r\n");
+                pszW = AllocStrCat(pszW, szFile);
+            }
+            if (pszW)
+            {
+                Globals.cchTextCache = wcslen(pszW);
+                ret = fnCallback(uFormat, pszW, Globals.cchTextCache, FALSE, hDC, lpRect);
+                free(Globals.pszTextCache);
+                Globals.pszTextCache = pszW;
+                Globals.bTextCached = TRUE;
+            }
+            break;
+        }
+
+        default:
+        {
+            if (uFormat == Globals.uCFSTR_FILENAMEA)
+                goto ansi_text;
+            else if (uFormat == Globals.uCFSTR_FILENAMEW)
+                goto wide_text;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+static BOOL CALLBACK
+GetTextDimensionCallback(UINT uFormat, LPCVOID text, SIZE_T cch, BOOL bAnsi,
+                         HDC hDC, LPRECT pRc)
+{
+    SIZE textSize;
+    if (bAnsi)
+        textSize = GetTextSizeA(hDC, (LPCSTR)text, cch);
+    else
+        textSize = GetTextSizeW(hDC, (LPCWSTR)text, cch);
     SetRect(pRc, 0, 0, textSize.cx, textSize.cy);
+    return TRUE;
+}
+
+BOOL GetTextClipboardDimensions(UINT uFormat, PRECT pRc)
+{
+    HDC hDC = GetDC(Globals.hMainWnd);
+    DoText(uFormat, GetTextDimensionCallback, hDC, pRc);
+    ReleaseDC(Globals.hMainWnd, hDC);
     return TRUE;
 }
 
 BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc)
 {
+    if (Globals.bExtentCached)
+    {
+        *pRc = Globals.rcExtentCache;
+        return TRUE;
+    }
+
     SetRectEmpty(pRc);
 
     if (!OpenClipboard(Globals.hMainWnd))
@@ -422,5 +466,7 @@ BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc)
 
     CloseClipboard();
 
+    Globals.rcExtentCache = *pRc;
+    Globals.bExtentCached = TRUE;
     return TRUE;
 }

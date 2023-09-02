@@ -4,6 +4,7 @@
  * PURPOSE:     Provides a view of the contents of the ReactOS clipboard.
  * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
  *              Copyright 2015-2018 Hermes Belusca-Maito
+ *              Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -18,31 +19,10 @@ static void InitGlobals(HINSTANCE hInstance)
 {
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
-    Globals.hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
     /* Registered clipboard formats */
-    Globals.uCFSTR_FILECONTENTS          = RegisterClipboardFormat(CFSTR_FILECONTENTS);
-    Globals.uCFSTR_FILEDESCRIPTOR        = RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR);
-    Globals.uCFSTR_FILENAMEA             = RegisterClipboardFormatA(CFSTR_FILENAMEA);
-    Globals.uCFSTR_FILENAMEW             = RegisterClipboardFormatW(CFSTR_FILENAMEW);
-    Globals.uCFSTR_FILENAMEMAP           = RegisterClipboardFormat(CFSTR_FILENAMEMAP);
-    Globals.uCFSTR_MOUNTEDVOLUME         = RegisterClipboardFormat(CFSTR_MOUNTEDVOLUME);
-    Globals.uCFSTR_SHELLIDLIST           = RegisterClipboardFormat(CFSTR_SHELLIDLIST);
-    Globals.uCFSTR_SHELLIDLISTOFFSET     = RegisterClipboardFormat(CFSTR_SHELLIDLISTOFFSET);
-    Globals.uCFSTR_NETRESOURCES          = RegisterClipboardFormat(CFSTR_NETRESOURCES);
-    Globals.uCFSTR_PRINTERGROUP          = RegisterClipboardFormat(CFSTR_PRINTERGROUP);
-    Globals.uCFSTR_SHELLURL              = RegisterClipboardFormat(CFSTR_SHELLURL);
-    Globals.uCFSTR_INDRAGLOOP            = RegisterClipboardFormat(CFSTR_INDRAGLOOP);
-    Globals.uCFSTR_LOGICALPERFORMEDDROPEFFECT = RegisterClipboardFormat(CFSTR_LOGICALPERFORMEDDROPEFFECT);
-    Globals.uCFSTR_PASTESUCCEEDED        = RegisterClipboardFormat(CFSTR_PASTESUCCEEDED);
-    Globals.uCFSTR_PERFORMEDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PERFORMEDDROPEFFECT);
-    Globals.uCFSTR_PREFERREDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT);
-    Globals.uCFSTR_TARGETCLSID           = RegisterClipboardFormat(CFSTR_TARGETCLSID);
-}
-
-static void FreeGlobals(void)
-{
-    DeleteObject(Globals.hFont);
+    Globals.uCFSTR_FILENAMEA = RegisterClipboardFormatA(CFSTR_FILENAMEA);
+    Globals.uCFSTR_FILENAMEW = RegisterClipboardFormatW(CFSTR_FILENAMEW);
 }
 
 static void SaveClipboardToFile(void)
@@ -142,6 +122,8 @@ static void LoadClipboardFromDrop(HDROP hDrop)
 static void SetDisplayFormat(UINT uFormat)
 {
     RECT rc;
+
+    CacheClear();
 
     CheckMenuItem(Globals.hMenu, Globals.uCheckedItem, MF_BYCOMMAND | MF_UNCHECKED);
     Globals.uCheckedItem = uFormat + CMD_AUTOMATIC;
@@ -302,18 +284,17 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     COLORREF crOldBkColor, crOldTextColor;
     RECT rc;
-    HGDIOBJ hFontOld;
-
-    if (!OpenClipboard(Globals.hMainWnd))
-        return;
 
     hdc = BeginPaint(hWnd, &ps);
 
-    hFontOld = SelectObject(hdc, Globals.hFont);
-
     /* Erase the background if needed */
-    if (ps.fErase)
-        FillRect(ps.hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
+    FillRect(ps.hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
+
+    if (!OpenClipboard(Globals.hMainWnd))
+    {
+        EndPaint(hWnd, &ps);
+        return;
+    }
 
     /* Set the correct background and text colors */
     crOldBkColor   = SetBkColor(ps.hdc, GetSysColor(COLOR_WINDOW));
@@ -396,8 +377,6 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
         default:
         {
-            GetClientRect(hWnd, &rc);
-
             if (Globals.uDisplayFormat == Globals.uCFSTR_FILENAMEA ||
                 Globals.uDisplayFormat == Globals.uCFSTR_FILENAMEW)
             {
@@ -405,6 +384,7 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
                 break;
             }
 
+            GetClientRect(hWnd, &rc);
             DrawTextFromResource(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT,
                                  hdc, &rc, DT_CENTER | DT_WORDBREAK | DT_NOPREFIX);
             break;
@@ -415,10 +395,19 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     SetTextColor(ps.hdc, crOldTextColor);
     SetBkColor(ps.hdc, crOldBkColor);
 
-    SelectObject(hdc, hFontOld);
     EndPaint(hWnd, &ps);
 
     CloseClipboard();
+}
+
+void CacheClear(void)
+{
+    Globals.bExtentCached = Globals.bTextCached = FALSE;
+    if (Globals.pszTextCache)
+    {
+        free(Globals.pszTextCache);
+        Globals.pszTextCache = NULL;
+    }
 }
 
 static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -485,6 +474,8 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     GlobalFree(hglb);
                 }
             }
+
+            CacheClear();
 
             PostQuitMessage(0);
             break;
@@ -722,14 +713,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     wndclass.hInstance = hInstance;
     wndclass.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(CLIPBRD_ICON));
     wndclass.hCursor = LoadCursorW(0, IDC_ARROW);
-    wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wndclass.hbrBackground = NULL; /* The background will be erased in WM_PAINT handling */
     wndclass.lpszMenuName = MAKEINTRESOURCEW(MAIN_MENU);
     wndclass.lpszClassName = szClassName;
 
     if (!RegisterClassExW(&wndclass))
     {
         ShowLastWin32Error(NULL);
-        FreeGlobals();
         return 0;
     }
 
@@ -751,7 +741,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     if (!Globals.hMainWnd)
     {
         ShowLastWin32Error(NULL);
-        FreeGlobals();
         return 0;
     }
 
@@ -776,8 +765,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
             DispatchMessageW(&msg);
         }
     }
-
-    FreeGlobals();
 
     return (int)msg.wParam;
 }

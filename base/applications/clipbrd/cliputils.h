@@ -27,3 +27,10 @@ UINT GetAutomaticClipboardFormat(void);
 BOOL IsClipboardFormatSupported(UINT uFormat);
 BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc);
 LPWSTR GetTextFromClipboard(UINT uFormat, BOOL bOpen);
+
+typedef BOOL (CALLBACK *DO_TEXT_PROC)(UINT uFormat, LPCVOID text, SIZE_T cch, BOOL bAnsi,
+                                      HDC hDC, LPRECT lpRect);
+BOOL DoText(UINT uFormat, DO_TEXT_PROC fnCallback, HDC hDC, LPRECT lpRect);
+LPCWSTR FindNewLineW(LPCWSTR pszText, SIZE_T cch);
+LPCSTR FindNewLineA(LPCSTR pszText, SIZE_T cch);
+void CacheClear(void);
