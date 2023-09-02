@@ -2807,7 +2807,7 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
 
     /* Run */
     const WORD runstrings[] = { IDS_SHORTCUT_RUN_NORMAL, IDS_SHORTCUT_RUN_MIN, IDS_SHORTCUT_RUN_MAX };
-    const BYTE runshowcmd[] = { SW_SHOWNORMAL, SW_SHOWMINNOACTIVE, SW_SHOWMAXIMIZED };
+    const DWORD runshowcmd[] = { SW_SHOWNORMAL, SW_SHOWMINNOACTIVE, SW_SHOWMAXIMIZED };
     HWND hRunCombo = GetDlgItem(hwndDlg, IDC_SHORTCUT_RUN_COMBO);
     for (UINT i = 0; i < _countof(runstrings); ++i)
     {
