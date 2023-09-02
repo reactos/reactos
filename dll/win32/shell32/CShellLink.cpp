@@ -2808,20 +2808,20 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     /* Run */
     const WORD runstrings[] = { IDS_SHORTCUT_RUN_NORMAL, IDS_SHORTCUT_RUN_MIN, IDS_SHORTCUT_RUN_MAX };
     const BYTE runshowcmd[] = { SW_SHOWNORMAL, SW_SHOWMINNOACTIVE, SW_SHOWMAXIMIZED };
-    HWND hRun = GetDlgItem(hwndDlg, IDC_SHORTCUT_RUN_COMBO);
+    HWND hRunCombo = GetDlgItem(hwndDlg, IDC_SHORTCUT_RUN_COMBO);
     for (UINT i = 0; i < _countof(runstrings); ++i)
     {
         WCHAR buf[MAX_PATH];
         if (!LoadStringW(shell32_hInstance, runstrings[i], buf, _countof(buf)))
             break;
 
-        int idx = SendMessageW(hRun, CB_ADDSTRING, 0, (LPARAM)buf);
-        if (idx < 0)
+        int index = SendMessageW(hRunCombo, CB_ADDSTRING, 0, (LPARAM)buf);
+        if (index < 0)
             continue;
-        SendMessageW(hRun, CB_SETITEMDATA, idx, runshowcmd[i]);
+        SendMessageW(hRunCombo, CB_SETITEMDATA, index, runshowcmd[i]);
         if (!i || m_Header.nShowCommand == runshowcmd[i])
         {
-            SendMessageW(hRun, CB_SETCURSEL, idx, 0);
+            SendMessageW(hRunCombo, CB_SETCURSEL, index, 0);
         }
     }
 
@@ -2948,10 +2948,10 @@ LRESULT CShellLink::OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr)
 
         m_Header.wHotKey = (WORD)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_KEY_HOTKEY, HKM_GETHOTKEY, 0, 0);
 
-        int idx = (int)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_RUN_COMBO, CB_GETCURSEL, 0, 0);
-        if (idx != CB_ERR)
+        int index = (int)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_RUN_COMBO, CB_GETCURSEL, 0, 0);
+        if (index != CB_ERR)
         {
-            m_Header.nShowCommand = (UINT)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_RUN_COMBO, CB_GETITEMDATA, idx, 0);
+            m_Header.nShowCommand = (UINT)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_RUN_COMBO, CB_GETITEMDATA, index, 0);
         }
 
         TRACE("This %p m_sLinkPath %S\n", this, m_sLinkPath);
