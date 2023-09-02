@@ -45,14 +45,14 @@ public:
 
     CImage() throw()
     {
-        m_hbm = NULL;
-        m_hbmOld = NULL;
+        m_hBitmap = NULL;
+        m_hOldBitmap = NULL;
         m_hDC = NULL;
 
         m_eOrientation = DIBOR_DEFAULT;
-        m_bHasAlphaCh = false;
-        m_bIsDIBSec = false;
-        m_rgbTransColor = CLR_INVALID;
+        m_bHasAlphaChannel = false;
+        m_bIsDIBSection = false;
+        m_clrTransparentColor = CLR_INVALID;
         ZeroMemory(&m_ds, sizeof(m_ds));
 
         s_gdiplus.IncreaseCImageCount();
@@ -66,7 +66,7 @@ public:
 
     operator HBITMAP() throw()
     {
-        return m_hbm;
+        return m_hBitmap;
     }
 
     static void ReleaseGDIPlus()
@@ -82,12 +82,12 @@ public:
     HBITMAP Detach() throw()
     {
         m_eOrientation = DIBOR_DEFAULT;
-        m_bHasAlphaCh = false;
-        m_rgbTransColor = CLR_INVALID;
+        m_bHasAlphaChannel = false;
+        m_clrTransparentColor = CLR_INVALID;
         ZeroMemory(&m_ds, sizeof(m_ds));
 
-        HBITMAP hBitmap = m_hbm;
-        m_hbm = NULL;
+        HBITMAP hBitmap = m_hBitmap;
+        m_hBitmap = NULL;
         return hBitmap;
     }
 
@@ -97,7 +97,7 @@ public:
             return m_hDC;
 
         m_hDC = ::CreateCompatibleDC(NULL);
-        m_hbmOld = ::SelectObject(m_hDC, m_hbm);
+        m_hOldBitmap = (HBITMAP)::SelectObject(m_hDC, m_hBitmap);
         return m_hDC;
     }
 
@@ -108,10 +108,10 @@ public:
         if (m_hDC == NULL)
             return;
 
-        if (m_hbmOld)
+        if (m_hOldBitmap)
         {
-            ::SelectObject(m_hDC, m_hbmOld);
-            m_hbmOld = NULL;
+            ::SelectObject(m_hDC, m_hOldBitmap);
+            m_hOldBitmap = NULL;
         }
         ::DeleteDC(m_hDC);
         m_hDC = NULL;
@@ -204,7 +204,7 @@ public:
 
     void Destroy() throw()
     {
-        if (m_hbm)
+        if (m_hBitmap)
         {
             ::DeleteObject(Detach());
         }
@@ -214,18 +214,18 @@ public:
               int xSrc, int ySrc, int nSrcWidth, int nSrcHeight) const throw()
     {
         ATLASSERT(IsTransparencySupported());
-        if (m_bHasAlphaCh)
+        if (m_bHasAlphaChannel)
         {
             return AlphaBlend(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
                               xSrc, ySrc, nSrcWidth, nSrcHeight);
         }
-        else if (m_rgbTransColor != CLR_INVALID)
+        else if (m_clrTransparentColor != CLR_INVALID)
         {
             COLORREF rgb;
-            if ((m_rgbTransColor & 0xFF000000) == 0x01000000)
-                rgb = RGBFromPaletteIndex(m_rgbTransColor & 0xFF);
+            if ((m_clrTransparentColor & 0xFF000000) == 0x01000000)
+                rgb = RGBFromPaletteIndex(m_clrTransparentColor & 0xFF);
             else
-                rgb = m_rgbTransColor;
+                rgb = m_clrTransparentColor;
             return TransparentBlt(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
                                   xSrc, ySrc, nSrcWidth, nSrcHeight, rgb);
         }
@@ -278,7 +278,7 @@ public:
 
     int GetBPP() const throw()
     {
-        ATLASSERT(m_hbm);
+        ATLASSERT(m_hBitmap);
         return m_bm.bmBitsPixel;
     }
 
@@ -293,7 +293,7 @@ public:
 
     int GetHeight() const throw()
     {
-        ATLASSERT(m_hbm);
+        ATLASSERT(m_hBitmap);
         return m_bm.bmHeight;
     }
 
@@ -345,19 +345,19 @@ public:
 
     COLORREF GetTransparentColor() const throw()
     {
-        return m_rgbTransColor;
+        return m_clrTransparentColor;
     }
 
     int GetWidth() const throw()
     {
-        ATLASSERT(m_hbm);
+        ATLASSERT(m_hBitmap);
         return m_bm.bmWidth;
     }
 
     bool IsDIBSection() const throw()
     {
-        ATLASSERT(m_hbm);
-        return m_bIsDIBSec;
+        ATLASSERT(m_hBitmap);
+        return m_bIsDIBSection;
     }
 
     bool IsIndexed() const throw()
@@ -368,7 +368,7 @@ public:
 
     bool IsNull() const throw()
     {
-        return m_hbm == NULL;
+        return m_hBitmap == NULL;
     }
 
     HRESULT Load(LPCTSTR pszFileName) throw()
@@ -511,7 +511,7 @@ public:
             return E_FAIL;
 
         using namespace Gdiplus;
-        ATLASSERT(m_hbm);
+        ATLASSERT(m_hBitmap);
 
         // Get encoders
         UINT cEncoders = 0;
@@ -523,7 +523,7 @@ public:
 
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
-        s_gdiplus.CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
+        s_gdiplus.CreateBitmapFromHBITMAP(m_hBitmap, NULL, &pBitmap);
 
         // save to stream
         Status status;
@@ -542,7 +542,7 @@ public:
             return E_FAIL;
 
         using namespace Gdiplus;
-        ATLASSERT(m_hbm);
+        ATLASSERT(m_hBitmap);
 
         // convert the file name string into Unicode
         CStringW pszNameW(pszFileName);
@@ -566,7 +566,7 @@ public:
 
         // create a GpBitmap from HBITMAP
         GpBitmap *pBitmap = NULL;
-        s_gdiplus.CreateBitmapFromHBITMAP(m_hbm, NULL, &pBitmap);
+        s_gdiplus.CreateBitmapFromHBITMAP(m_hBitmap, NULL, &pBitmap);
 
         // save to file
         Status status = s_gdiplus.SaveImageToFile(pBitmap, pszNameW, &clsid, NULL);
@@ -608,9 +608,9 @@ public:
 
     COLORREF SetTransparentColor(COLORREF rgbTransparent) throw()
     {
-        ATLASSERT(m_hbm);
-        COLORREF rgbOldColor = m_rgbTransColor;
-        m_rgbTransColor = rgbTransparent;
+        ATLASSERT(m_hBitmap);
+        COLORREF rgbOldColor = m_clrTransparentColor;
+        m_clrTransparentColor = rgbTransparent;
         return rgbOldColor;
     }
 
@@ -1013,13 +1013,13 @@ private:
     }
 
 private:
-    HBITMAP             m_hbm;
-    mutable HGDIOBJ     m_hbmOld;
+    HBITMAP             m_hBitmap;
+    mutable HBITMAP     m_hOldBitmap;
     mutable HDC         m_hDC;
     DIBOrientation      m_eOrientation;
-    bool                m_bHasAlphaCh;
-    bool                m_bIsDIBSec;
-    COLORREF            m_rgbTransColor;
+    bool                m_bHasAlphaChannel;
+    bool                m_bIsDIBSection;
+    COLORREF            m_clrTransparentColor;
     union
     {
         BITMAP          m_bm;
@@ -1131,16 +1131,16 @@ private:
         Destroy();
 
         const int size = sizeof(DIBSECTION);
-        m_bIsDIBSec = (::GetObject(hBitmap, size, &m_ds) == size);
+        m_bIsDIBSection = (::GetObject(hBitmap, size, &m_ds) == size);
 
         bool bOK = (::GetObject(hBitmap, sizeof(BITMAP), &m_bm) != 0);
 
         if (bOK)
         {
-            m_hbm = hBitmap;
+            m_hBitmap = hBitmap;
             m_eOrientation = eOrientation;
-            m_bHasAlphaCh = (m_bm.bmBitsPixel == 32);
-            m_rgbTransColor = CLR_INVALID;
+            m_bHasAlphaChannel = (m_bm.bmBitsPixel == 32);
+            m_clrTransparentColor = CLR_INVALID;
         }
     }
 
@@ -1201,7 +1201,7 @@ private:
 
         // attach it
         AttachInternal(hbm, eOrientation, -1);
-        m_bHasAlphaCh = bHasAlphaCh;
+        m_bHasAlphaChannel = bHasAlphaCh;
 
         return hbm != NULL;
     }
