@@ -799,7 +799,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Mountain Standard 
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Mountain Standard Time (Mexico)","Display",0x00000000,%GMT_MINUS_07_B_DESC%
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Mountain Standard Time (Mexico)","Dlt",0x00000000,%GMT_MINUS_07_B_DAYLIGHT%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Mountain Standard Time (Mexico)","Std",0x00000000,
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Mountain Standard Time (Mexico)","Std",0x00000000,%GMT_MINUS_07_B_STANDARD%
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Mountain Standard Time (Mexico)","Index",0x00010001,13
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Mountain Standard Time (Mexico)","TZI",0x00000001,\
 0xa4,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
