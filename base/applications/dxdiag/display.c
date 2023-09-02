@@ -18,7 +18,6 @@ GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize)
     FILETIME AccessTime;
     SYSTEMTIME SysTime, LocalTime;
     UINT Length;
-    TIME_ZONE_INFORMATION TimeInfo;
 
     hFile = CreateFileW(pFullPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (!hFile)
@@ -31,13 +30,10 @@ GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize)
     }
     CloseHandle(hFile);
 
-    if(!GetTimeZoneInformation(&TimeInfo))
-        return FALSE;
-
     if (!FileTimeToSystemTime(&AccessTime, &SysTime))
         return FALSE;
 
-    if (!SystemTimeToTzSpecificLocalTime(&TimeInfo, &SysTime, &LocalTime))
+    if (!SystemTimeToTzSpecificLocalTime(NULL, &SysTime, &LocalTime))
         return FALSE;
 
     Length = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &LocalTime, NULL, szTime, szTimeSize);
