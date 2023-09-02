@@ -8,25 +8,6 @@
 
 #include "precomp.h"
 
-/* Registered clipboard formats */
-UINT g_uCFSTR_FILECONTENTS;
-UINT g_uCFSTR_FILEDESCRIPTOR;
-UINT g_uCFSTR_FILENAMEA;
-UINT g_uCFSTR_FILENAMEW;
-UINT g_uCFSTR_FILENAMEMAP;
-UINT g_uCFSTR_MOUNTEDVOLUME;
-UINT g_uCFSTR_SHELLIDLIST;
-UINT g_uCFSTR_SHELLIDLISTOFFSET;
-UINT g_uCFSTR_NETRESOURCES;
-UINT g_uCFSTR_PRINTERGROUP;
-UINT g_uCFSTR_SHELLURL;
-UINT g_uCFSTR_INDRAGLOOP;
-UINT g_uCFSTR_LOGICALPERFORMEDDROPEFFECT;
-UINT g_uCFSTR_PASTESUCCEEDED;
-UINT g_uCFSTR_PERFORMEDDROPEFFECT;
-UINT g_uCFSTR_PREFERREDDROPEFFECT;
-UINT g_uCFSTR_TARGETCLSID;
-
 LRESULT
 SendClipboardOwnerMessage(
     IN BOOL bUnicode,
@@ -221,11 +202,11 @@ BOOL IsClipboardFormatSupported(UINT uFormat)
 LPWSTR WideFromAnsi(LPCSTR pszAnsi)
 {
     INT cchMax = MultiByteToWideChar(CP_ACP, 0, pszAnsi, -1, NULL, 0);
-    LPWSTR psz = malloc(cchMax * sizeof(WCHAR));
-    if (!psz)
+    LPWSTR pszWide = malloc(cchMax * sizeof(WCHAR));
+    if (!pszWide)
         return NULL;
-    MultiByteToWideChar(CP_ACP, 0, pszAnsi, -1, psz, cchMax);
-    return psz;
+    MultiByteToWideChar(CP_ACP, 0, pszAnsi, -1, pszWide, cchMax);
+    return pszWide;
 }
 
 LPWSTR GetTextFromClipboard(UINT uFormat, BOOL bOpen)
@@ -304,18 +285,25 @@ SIZE GetTextSize(HDC hDC, LPCWSTR pszText)
     SIZE textSize = { 0, 0 };
     LPCWSTR pch0 = pszText, pch1;
     RECT rc;
+    size_t cchLine;
     const UINT uFormat = DT_CALCRECT | DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX;
 
     for (;;)
     {
         pch1 = wcschr(pch0, L'\n');
+        if (pch1)
+            cchLine = pch1 - pch0;
+        else
+            cchLine = wcslen(pch0);
+
+        SetRectEmpty(&rc);
+        textSize.cy += DrawTextW(hDC, pch0, cchLine, &rc, uFormat);
+        if (textSize.cx < rc.right)
+            textSize.cx = rc.right;
+
         if (!pch1)
             break;
 
-        SetRectEmpty(&rc);
-        textSize.cy += DrawTextW(hDC, pch0, pch1 - pch0, &rc, uFormat);
-        if (textSize.cx < rc.right)
-            textSize.cx = rc.right;
         pch0 = pch1 + 1;
     }
 
@@ -327,8 +315,9 @@ BOOL GetTextClipboardDimensions(UINT uFormat, PRECT pRc)
     HDC hDC;
     HGDIOBJ hFontOld;
     SIZE textSize;
+    LPWSTR pszText;
 
-    LPWSTR pszText = GetTextFromClipboard(uFormat, FALSE);
+    pszText = GetTextFromClipboard(uFormat, FALSE);
     if (!pszText)
         return FALSE;
 
