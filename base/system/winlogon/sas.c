@@ -1015,6 +1015,28 @@ HandleShutdown(
     return STATUS_SUCCESS;
 }
 
+BOOL
+IsLocalSystem(HANDLE UserToken)
+{
+    BOOL IsLocalSystem;
+    SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+    PSID pLocalSystemSID;
+
+    IsLocalSystem = AllocateAndInitializeSid(&NtAuthority,
+                                             1, SECURITY_LOCAL_SYSTEM_RID,
+                                             0, 0, 0, 0, 0, 0, 0,
+                                             &pLocalSystemSID);
+    if(IsLocalSystem)
+    {
+        if (!CheckTokenMembership(UserToken, pLocalSystemSID, &IsLocalSystem))
+            IsLocalSystem = FALSE;
+
+        FreeSid(pLocalSystemSID);
+    }
+
+    return IsLocalSystem;
+}
+
 static
 VOID
 DoGenericAction(
@@ -1069,6 +1091,9 @@ DoGenericAction(
                 if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
                     LogOffFlags |= EWX_FORCE;
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
+                    break;
+                /* Prevent LocalSystem from logging off unless it is shutting down. */
+                if (IsLocalSystem(Session->UserToken) && !WLX_SHUTTINGDOWN(wlxAction))
                     break;
                 if (!NT_SUCCESS(HandleLogoff(Session, LogOffFlags)))
                 {

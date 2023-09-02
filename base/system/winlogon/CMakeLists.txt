@@ -1,3 +1,6 @@
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    add_compile_options(-Wno-missing-braces)
+endif()
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
