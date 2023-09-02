@@ -270,11 +270,14 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     COLORREF crOldBkColor, crOldTextColor;
     RECT rc;
+    HGDIOBJ hFontOld;
 
     if (!OpenClipboard(Globals.hMainWnd))
         return;
 
     hdc = BeginPaint(hWnd, &ps);
+
+    hFontOld = SelectObject(hdc, Globals.hFont);
 
     /* Erase the background if needed */
     if (ps.fErase)
@@ -299,6 +302,7 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case CF_TEXT:
         case CF_OEMTEXT:
         case CF_UNICODETEXT:
+        case CF_HDROP:
         {
             DrawTextFromClipboard(Globals.uDisplayFormat, ps, Scrollstate);
             break;
@@ -358,16 +362,17 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
             break;
         }
 
-        case CF_HDROP:
-        {
-            GetClientRect(hWnd, &rc);
-            HDropFromClipboard(hdc, &rc);
-            break;
-        }
-
         default:
         {
             GetClientRect(hWnd, &rc);
+
+            if (Globals.uDisplayFormat == g_uCFSTR_FILENAMEA ||
+                Globals.uDisplayFormat == g_uCFSTR_FILENAMEW)
+            {
+                DrawTextFromClipboard(Globals.uDisplayFormat, ps, Scrollstate);
+                break;
+            }
+
             DrawTextFromResource(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT,
                                  hdc, &rc, DT_CENTER | DT_WORDBREAK | DT_NOPREFIX);
             break;
@@ -378,6 +383,7 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     SetTextColor(ps.hdc, crOldTextColor);
     SetBkColor(ps.hdc, crOldBkColor);
 
+    SelectObject(hdc, hFontOld);
     EndPaint(hWnd, &ps);
 
     CloseClipboard();
@@ -514,21 +520,6 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             GetClipboardDataDimensions(Globals.uDisplayFormat, &rc);
             UpdateWindowScrollState(hWnd, rc.right, rc.bottom, &Scrollstate);
-
-            // NOTE: There still are little problems drawing
-            // the background when displaying clipboard text.
-            if (!IsClipboardFormatSupported(Globals.uDisplayFormat) ||
-                Globals.uDisplayFormat == CF_DSPTEXT ||
-                Globals.uDisplayFormat == CF_TEXT    ||
-                Globals.uDisplayFormat == CF_OEMTEXT ||
-                Globals.uDisplayFormat == CF_UNICODETEXT)
-            {
-                InvalidateRect(Globals.hMainWnd, NULL, TRUE);
-            }
-            else
-            {
-                InvalidateRect(Globals.hMainWnd, NULL, FALSE);
-            }
 
             break;
         }
@@ -690,11 +681,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
             break;
     }
 
+    InitRegisteredClipboardFormats();
+
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
+    Globals.hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
     ZeroMemory(&wndclass, sizeof(wndclass));
     wndclass.cbSize = sizeof(wndclass);
+    wndclass.style = CS_HREDRAW | CS_VREDRAW;
     wndclass.lpfnWndProc = MainWndProc;
     wndclass.hInstance = hInstance;
     wndclass.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(CLIPBRD_ICON));

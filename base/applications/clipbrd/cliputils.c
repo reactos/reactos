@@ -7,6 +7,47 @@
  */
 
 #include "precomp.h"
+#include <shlobj.h>
+
+/* Registered clipboard formats */
+UINT g_uCFSTR_FILECONTENTS;
+UINT g_uCFSTR_FILEDESCRIPTOR;
+UINT g_uCFSTR_FILENAMEA;
+UINT g_uCFSTR_FILENAMEW;
+UINT g_uCFSTR_FILENAMEMAP;
+UINT g_uCFSTR_MOUNTEDVOLUME;
+UINT g_uCFSTR_SHELLIDLIST;
+UINT g_uCFSTR_SHELLIDLISTOFFSET;
+UINT g_uCFSTR_NETRESOURCES;
+UINT g_uCFSTR_PRINTERGROUP;
+UINT g_uCFSTR_SHELLURL;
+UINT g_uCFSTR_INDRAGLOOP;
+UINT g_uCFSTR_LOGICALPERFORMEDDROPEFFECT;
+UINT g_uCFSTR_PASTESUCCEEDED;
+UINT g_uCFSTR_PERFORMEDDROPEFFECT;
+UINT g_uCFSTR_PREFERREDDROPEFFECT;
+UINT g_uCFSTR_TARGETCLSID;
+
+void InitRegisteredClipboardFormats(void)
+{
+    g_uCFSTR_FILECONTENTS          = RegisterClipboardFormat(CFSTR_FILECONTENTS);
+    g_uCFSTR_FILEDESCRIPTOR        = RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR);
+    g_uCFSTR_FILENAMEA             = RegisterClipboardFormatA(CFSTR_FILENAMEA);
+    g_uCFSTR_FILENAMEW             = RegisterClipboardFormatW(CFSTR_FILENAMEW);
+    g_uCFSTR_FILENAMEMAP           = RegisterClipboardFormat(CFSTR_FILENAMEMAP);
+    g_uCFSTR_MOUNTEDVOLUME         = RegisterClipboardFormat(CFSTR_MOUNTEDVOLUME);
+    g_uCFSTR_SHELLIDLIST           = RegisterClipboardFormat(CFSTR_SHELLIDLIST);
+    g_uCFSTR_SHELLIDLISTOFFSET     = RegisterClipboardFormat(CFSTR_SHELLIDLISTOFFSET);
+    g_uCFSTR_NETRESOURCES          = RegisterClipboardFormat(CFSTR_NETRESOURCES);
+    g_uCFSTR_PRINTERGROUP          = RegisterClipboardFormat(CFSTR_PRINTERGROUP);
+    g_uCFSTR_SHELLURL              = RegisterClipboardFormat(CFSTR_SHELLURL);
+    g_uCFSTR_INDRAGLOOP            = RegisterClipboardFormat(CFSTR_INDRAGLOOP);
+    g_uCFSTR_LOGICALPERFORMEDDROPEFFECT = RegisterClipboardFormat(CFSTR_LOGICALPERFORMEDDROPEFFECT);
+    g_uCFSTR_PASTESUCCEEDED        = RegisterClipboardFormat(CFSTR_PASTESUCCEEDED);
+    g_uCFSTR_PERFORMEDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PERFORMEDDROPEFFECT);
+    g_uCFSTR_PREFERREDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT);
+    g_uCFSTR_TARGETCLSID           = RegisterClipboardFormat(CFSTR_TARGETCLSID);
+}
 
 LRESULT
 SendClipboardOwnerMessage(
@@ -191,59 +232,138 @@ BOOL IsClipboardFormatSupported(UINT uFormat)
 
         default:
         {
+            if (uFormat == g_uCFSTR_FILENAMEA || uFormat == g_uCFSTR_FILENAMEW)
+                return TRUE;
+
             return FALSE;
         }
     }
 }
 
-SIZE_T
-GetLineExtentW(
-    IN LPCWSTR lpText,
-    OUT LPCWSTR* lpNextLine)
+LPWSTR WideFromAnsi(LPCSTR pszAnsi)
 {
-    LPCWSTR ptr;
-
-    /* Find the next line of text (lpText is NULL-terminated) */
-    /* For newlines, focus only on '\n', not on '\r' */
-    ptr = wcschr(lpText, L'\n'); // Find the end of this line.
-    if (ptr)
-    {
-        /* We have the end of this line, go to the next line (ignore the endline in the count) */
-        *lpNextLine = ptr + 1;
-    }
-    else
-    {
-        /* This line was the last one, go pointing to the terminating NULL */
-        ptr = lpText + wcslen(lpText);
-        *lpNextLine = ptr;
-    }
-
-    return (ptr - lpText);
+    INT cchMax = MultiByteToWideChar(CP_ACP, 0, pszAnsi, -1, NULL, 0);
+    LPWSTR psz = malloc(cchMax * sizeof(WCHAR));
+    if (!psz)
+        return NULL;
+    MultiByteToWideChar(CP_ACP, 0, pszAnsi, -1, psz, cchMax);
+    return psz;
 }
 
-SIZE_T
-GetLineExtentA(
-    IN LPCSTR lpText,
-    OUT LPCSTR* lpNextLine)
+LPWSTR GetTextFromClipboard(UINT uFormat, BOOL bOpen)
 {
-    LPCSTR ptr;
+    HGLOBAL hGlobal;
+    LPSTR pszA;
+    LPWSTR pszW;
 
-    /* Find the next line of text (lpText is NULL-terminated) */
-    /* For newlines, focus only on '\n', not on '\r' */
-    ptr = strchr(lpText, '\n'); // Find the end of this line.
-    if (ptr)
+    if (bOpen && !OpenClipboard(Globals.hMainWnd))
+        return NULL;
+
+    hGlobal = GetClipboardData(uFormat);
+    if (hGlobal)
     {
-        /* We have the end of this line, go to the next line (ignore the endline in the count) */
-        *lpNextLine = ptr + 1;
-    }
-    else
-    {
-        /* This line was the last one, go pointing to the terminating NULL */
-        ptr = lpText + strlen(lpText);
-        *lpNextLine = ptr;
+        switch (uFormat)
+        {
+            case CF_DSPTEXT:
+            case CF_TEXT:
+            case CF_OEMTEXT:
+                pszA = _strdup(GlobalLock(hGlobal));
+                GlobalUnlock(hGlobal);
+                pszW = WideFromAnsi(pszA);
+                free(pszA);
+                break;
+
+            case CF_UNICODETEXT:
+                pszW = _wcsdup(GlobalLock(hGlobal));
+                GlobalUnlock(hGlobal);
+                break;
+
+            case CF_HDROP:
+            {
+                WCHAR szFile[MAX_PATH + 2];
+                UINT iFile, cFiles = DragQueryFileW((HDROP)hGlobal, 0xFFFFFFFF, NULL, 0);
+                pszW = NULL;
+                for (iFile = 0; iFile < cFiles; ++iFile)
+                {
+                    DragQueryFileW((HDROP)hGlobal, iFile, szFile, _countof(szFile) - 2);
+                    lstrcatW(szFile, L"\r\n");
+                    pszW = AllocStrCat(pszW, szFile);
+                }
+                break;
+            }
+
+            default:
+            {
+                if (uFormat == g_uCFSTR_FILENAMEA)
+                {
+                    pszA = _strdup(GlobalLock(hGlobal));
+                    GlobalUnlock(hGlobal);
+                    pszW = WideFromAnsi(pszA);
+                    free(pszA);
+                }
+                else if (uFormat == g_uCFSTR_FILENAMEW)
+                {
+                    pszW = _wcsdup(GlobalLock(hGlobal));
+                    GlobalUnlock(hGlobal);
+                }
+                else
+                {
+                    pszW = NULL;
+                }
+                break;
+            }
+        }
     }
 
-    return (ptr - lpText);
+    if (bOpen)
+        CloseClipboard();
+
+    return pszW;
+}
+
+SIZE GetTextSize(HDC hDC, LPCWSTR pszText)
+{
+    SIZE textSize = { 0, 0 };
+    LPCWSTR pch0 = pszText, pch1;
+    RECT rc;
+    const UINT uFormat = DT_CALCRECT | DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOPREFIX;
+
+    for (;;)
+    {
+        pch1 = wcschr(pch0, L'\n');
+        if (!pch1)
+            break;
+
+        SetRectEmpty(&rc);
+        textSize.cy += DrawTextW(hDC, pch0, pch1 - pch0, &rc, uFormat);
+        if (textSize.cx < rc.right)
+            textSize.cx = rc.right;
+        pch0 = pch1 + 1;
+    }
+
+    return textSize;
+}
+
+BOOL GetTextClipboardDimensions(UINT uFormat, PRECT pRc)
+{
+    HDC hDC;
+    HGDIOBJ hFontOld;
+    SIZE textSize;
+
+    LPWSTR pszText = GetTextFromClipboard(uFormat, FALSE);
+    if (!pszText)
+        return FALSE;
+
+    hDC = GetDC(Globals.hMainWnd);
+    hFontOld = SelectObject(hDC, Globals.hFont);
+    textSize = GetTextSize(hDC, pszText);
+    SelectObject(hDC, hFontOld);
+    ReleaseDC(Globals.hMainWnd, hDC);
+
+    free(pszText);
+
+    SetRect(pRc, 0, 0, textSize.cx, textSize.cy);
+    return TRUE;
 }
 
 BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc)
@@ -313,56 +433,16 @@ BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc)
         case CF_TEXT:
         case CF_OEMTEXT:
         case CF_UNICODETEXT:
+        case CF_HDROP:
         {
-            HDC hDC;
-            HGLOBAL hGlobal;
-            PVOID lpText, ptr;
-            DWORD dwSize;
-            SIZE txtSize = {0, 0};
-            SIZE_T lineSize;
-
-            hGlobal = GetClipboardData(uFormat);
-            if (!hGlobal)
-                break;
-
-            lpText = GlobalLock(hGlobal);
-            if (!lpText)
-                break;
-
-            hDC = GetDC(Globals.hMainWnd);
-
-            /* Find the size of the rectangle enclosing the text */
-            for (;;)
-            {
-                if (uFormat == CF_UNICODETEXT)
-                {
-                    if (*(LPCWSTR)lpText == UNICODE_NULL)
-                        break;
-                    lineSize = GetLineExtentW(lpText, (LPCWSTR*)&ptr);
-                    dwSize = GetTabbedTextExtentW(hDC, lpText, lineSize, 0, NULL);
-                }
-                else
-                {
-                    if (*(LPCSTR)lpText == ANSI_NULL)
-                        break;
-                    lineSize = GetLineExtentA(lpText, (LPCSTR*)&ptr);
-                    dwSize = GetTabbedTextExtentA(hDC, lpText, lineSize, 0, NULL);
-                }
-                txtSize.cx = max(txtSize.cx, LOWORD(dwSize));
-                txtSize.cy += HIWORD(dwSize);
-                lpText = ptr;
-            }
-
-            ReleaseDC(Globals.hMainWnd, hDC);
-
-            GlobalUnlock(hGlobal);
-
-            SetRect(pRc, 0, 0, txtSize.cx, txtSize.cy);
+            GetTextClipboardDimensions(uFormat, pRc);
             break;
         }
 
         default:
         {
+            if (uFormat == g_uCFSTR_FILENAMEA || uFormat == g_uCFSTR_FILENAMEW)
+                GetTextClipboardDimensions(uFormat, pRc);
             break;
         }
     }

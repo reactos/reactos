@@ -46,6 +46,7 @@ typedef struct _CLIPBOARD_GLOBALS
     HMENU hMenu;
     UINT uDisplayFormat;
     UINT uCheckedItem;
+    HFONT hFont;
 
     /* Metrics of the current font */
     LONG CharWidth;
@@ -53,5 +54,7 @@ typedef struct _CLIPBOARD_GLOBALS
 } CLIPBOARD_GLOBALS;
 
 extern CLIPBOARD_GLOBALS Globals;
+
+void InitRegisteredClipboardFormats(void);
 
 #endif /* _CLIPBRD_PCH_ */
