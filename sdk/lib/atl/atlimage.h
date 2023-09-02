@@ -93,28 +93,40 @@ public:
 
     HDC GetDC() const throw()
     {
-        if (m_hDC)
-            return m_hDC;
+        ATLASSERT(m_nDCRefCount >= 0);
 
-        m_hDC = ::CreateCompatibleDC(NULL);
-        m_hOldBitmap = (HBITMAP)::SelectObject(m_hDC, m_hBitmap);
+        if (::InterlockedIncrement(&m_nDCRefCount) == 1)
+        {
+            ATLASSERT(m_hDC == NULL);
+            ATLASSERT(m_hOldBitmap == NULL);
+            m_hDC = ::CreateCompatibleDC(NULL);
+            m_hOldBitmap = (HBITMAP)::SelectObject(m_hDC, m_hBitmap);
+        }
+
         return m_hDC;
     }
 
     void ReleaseDC() const throw()
     {
-        ATLASSERT(m_hDC);
+        ATLASSERT(m_nDCRefCount > 0);
 
-        if (m_hDC == NULL)
+        if (::InterlockedDecrement(&m_nDCRefCount) > 0)
             return;
+
+        ATLASSERT(m_hDC != NULL);
+        ATLASSERT(m_hOldBitmap != NULL);
 
         if (m_hOldBitmap)
         {
             ::SelectObject(m_hDC, m_hOldBitmap);
             m_hOldBitmap = NULL;
         }
-        ::DeleteDC(m_hDC);
-        m_hDC = NULL;
+
+        if (m_hDC)
+        {
+            ::DeleteDC(m_hDC);
+            m_hDC = NULL;
+        }
     }
 
     BOOL AlphaBlend(HDC hDestDC,
@@ -130,9 +142,9 @@ public:
         bf.SourceConstantAlpha = bSrcAlpha;
         bf.AlphaFormat = AC_SRC_ALPHA;
 
-        GetDC();
+        HDC hSrcDC = GetDC();
         BOOL ret = ::AlphaBlend(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                                m_hDC, xSrc, ySrc, nSrcWidth, nSrcHeight, bf);
+                                hSrcDC, xSrc, ySrc, nSrcWidth, nSrcHeight, bf);
         ReleaseDC();
         return ret;
     }
@@ -165,9 +177,9 @@ public:
                 int nDestWidth, int nDestHeight,
                 int xSrc, int ySrc, DWORD dwROP = SRCCOPY) const throw()
     {
-        GetDC();
+        HDC hSrcDC = GetDC();
         BOOL ret = ::BitBlt(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                            m_hDC, xSrc, ySrc, dwROP);
+                            hSrcDC, xSrc, ySrc, dwROP);
         ReleaseDC();
         return ret;
     }
@@ -286,8 +298,8 @@ public:
                        RGBQUAD* prgbColors) const throw()
     {
         ATLASSERT(IsDIBSection());
-        GetDC();
-        ::GetDIBColorTable(m_hDC, iFirstColor, nColors, prgbColors);
+        HDC hSrcDC = GetDC();
+        ::GetDIBColorTable(hSrcDC, iFirstColor, nColors, prgbColors);
         ReleaseDC();
     }
 
@@ -328,8 +340,8 @@ public:
 
     COLORREF GetPixel(int x, int y) const throw()
     {
-        GetDC();
-        COLORREF ret = ::GetPixel(m_hDC, x, y);
+        HDC hSrcDC = GetDC();
+        COLORREF ret = ::GetPixel(hSrcDC, x, y);
         ReleaseDC();
         return ret;
     }
@@ -445,9 +457,9 @@ public:
                  DWORD dwROP = SRCCOPY) const throw()
     {
         ATLASSERT(IsTransparencySupported());
-        GetDC();
+        HDC hSrcDC = GetDC();
         BOOL ret = ::MaskBlt(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                             m_hDC, xSrc, ySrc,
+                             hSrcDC, xSrc, ySrc,
                              hbmMask, xMask, yMask, dwROP);
         ReleaseDC();
         return ret;
@@ -478,8 +490,8 @@ public:
                 int xMask = 0, int yMask = 0) const throw()
     {
         ATLASSERT(IsTransparencySupported());
-        GetDC();
-        BOOL ret = ::PlgBlt(hDestDC, pPoints, m_hDC,
+        HDC hSrcDC = GetDC();
+        BOOL ret = ::PlgBlt(hDestDC, pPoints, hSrcDC,
                             xSrc, ySrc, nSrcWidth, nSrcHeight,
                             hbmMask, xMask, yMask);
         ReleaseDC();
@@ -581,23 +593,23 @@ public:
                        const RGBQUAD* prgbColors) throw()
     {
         ATLASSERT(IsDIBSection());
-        GetDC();
-        ::SetDIBColorTable(m_hDC, iFirstColor, nColors, prgbColors);
+        HDC hSrcDC = GetDC();
+        ::SetDIBColorTable(hSrcDC, iFirstColor, nColors, prgbColors);
         ReleaseDC();
     }
 
     void SetPixel(int x, int y, COLORREF color) throw()
     {
-        GetDC();
-        ::SetPixelV(m_hDC, x, y, color);
+        HDC hSrcDC = GetDC();
+        ::SetPixelV(hSrcDC, x, y, color);
         ReleaseDC();
     }
 
     void SetPixelIndexed(int x, int y, int iIndex) throw()
     {
         ATLASSERT(IsIndexed());
-        GetDC();
-        ::SetPixelV(m_hDC, x, y, PALETTEINDEX(iIndex));
+        HDC hSrcDC = GetDC();
+        ::SetPixelV(hSrcDC, x, y, PALETTEINDEX(iIndex));
         ReleaseDC();
     }
 
@@ -619,9 +631,9 @@ public:
                     int xSrc, int ySrc, int nSrcWidth, int nSrcHeight,
                     DWORD dwROP = SRCCOPY) const throw()
     {
-        GetDC();
+        HDC hSrcDC = GetDC();
         BOOL ret = ::StretchBlt(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                                m_hDC, xSrc, ySrc, nSrcWidth, nSrcHeight, dwROP);
+                                hSrcDC, xSrc, ySrc, nSrcWidth, nSrcHeight, dwROP);
         ReleaseDC();
         return ret;
     }
@@ -656,10 +668,10 @@ public:
                         UINT crTransparent = CLR_INVALID) const throw()
     {
         ATLASSERT(IsTransparencySupported());
-        GetDC();
+        HDC hSrcDC = GetDC();
         BOOL ret = ::TransparentBlt(hDestDC, xDest, yDest,
                                     nDestWidth, nDestHeight,
-                                    m_hDC, xSrc, ySrc,
+                                    hSrcDC, xSrc, ySrc,
                                     nSrcWidth, nSrcHeight, crTransparent);
         ReleaseDC();
         return ret;
@@ -1016,6 +1028,7 @@ private:
     HBITMAP             m_hBitmap;
     mutable HBITMAP     m_hOldBitmap;
     mutable HDC         m_hDC;
+    mutable LONG        m_nDCRefCount = 0;
     DIBOrientation      m_eOrientation;
     bool                m_bHasAlphaChannel;
     bool                m_bIsDIBSection;
@@ -1213,7 +1226,36 @@ private:
 
 DECLSPEC_SELECTANY CImage::CInitGDIPlus CImage::s_gdiplus;
 
-}
+class CImageDC
+{
+private:
+    const CImage& m_image;
+    HDC m_hDC;
+
+public:
+    CImageDC(const CImage& image)
+        : m_image(image)
+        , m_hDC(image.GetDC())
+    {
+    }
+
+    virtual ~CImageDC() throw()
+    {
+        m_image.ReleaseDC();
+        m_hDC = NULL;
+    }
+
+    operator HDC() const throw()
+    {
+        return m_hDC;
+    }
+
+private:
+    CImageDC(const CImageDC&) = delete;
+    CImageDC& operator=(const CImageDC&) = delete;
+};
+
+} // namespace ATL
 
 #endif
 
