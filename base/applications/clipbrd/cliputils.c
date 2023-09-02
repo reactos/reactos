@@ -191,8 +191,11 @@ BOOL IsClipboardFormatSupported(UINT uFormat)
 
         default:
         {
-            if (uFormat == g_uCFSTR_FILENAMEA || uFormat == g_uCFSTR_FILENAMEW)
+            if (uFormat == Globals.uCFSTR_FILENAMEA ||
+                uFormat == Globals.uCFSTR_FILENAMEW)
+            {
                 return TRUE;
+            }
 
             return FALSE;
         }
@@ -253,14 +256,14 @@ LPWSTR GetTextFromClipboard(UINT uFormat, BOOL bOpen)
 
             default:
             {
-                if (uFormat == g_uCFSTR_FILENAMEA)
+                if (uFormat == Globals.uCFSTR_FILENAMEA)
                 {
                     pszA = _strdup(GlobalLock(hGlobal));
                     GlobalUnlock(hGlobal);
                     pszW = WideFromAnsi(pszA);
                     free(pszA);
                 }
-                else if (uFormat == g_uCFSTR_FILENAMEW)
+                else if (uFormat == Globals.uCFSTR_FILENAMEW)
                 {
                     pszW = _wcsdup(GlobalLock(hGlobal));
                     GlobalUnlock(hGlobal);
@@ -408,8 +411,11 @@ BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc)
 
         default:
         {
-            if (uFormat == g_uCFSTR_FILENAMEA || uFormat == g_uCFSTR_FILENAMEW)
+            if (uFormat == Globals.uCFSTR_FILENAMEA ||
+                uFormat == Globals.uCFSTR_FILENAMEW)
+            {
                 GetTextClipboardDimensions(uFormat, pRc);
+            }
             break;
         }
     }

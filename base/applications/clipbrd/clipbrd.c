@@ -14,48 +14,30 @@ static const WCHAR szClassName[] = L"ClipBookWClass";
 CLIPBOARD_GLOBALS Globals;
 SCROLLSTATE Scrollstate;
 
-/* Registered clipboard formats */
-UINT g_uCFSTR_FILECONTENTS;
-UINT g_uCFSTR_FILEDESCRIPTOR;
-UINT g_uCFSTR_FILENAMEA;
-UINT g_uCFSTR_FILENAMEW;
-UINT g_uCFSTR_FILENAMEMAP;
-UINT g_uCFSTR_MOUNTEDVOLUME;
-UINT g_uCFSTR_SHELLIDLIST;
-UINT g_uCFSTR_SHELLIDLISTOFFSET;
-UINT g_uCFSTR_NETRESOURCES;
-UINT g_uCFSTR_PRINTERGROUP;
-UINT g_uCFSTR_SHELLURL;
-UINT g_uCFSTR_INDRAGLOOP;
-UINT g_uCFSTR_LOGICALPERFORMEDDROPEFFECT;
-UINT g_uCFSTR_PASTESUCCEEDED;
-UINT g_uCFSTR_PERFORMEDDROPEFFECT;
-UINT g_uCFSTR_PREFERREDDROPEFFECT;
-UINT g_uCFSTR_TARGETCLSID;
-
 static void InitGlobals(HINSTANCE hInstance)
 {
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
     Globals.hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
-    g_uCFSTR_FILECONTENTS          = RegisterClipboardFormat(CFSTR_FILECONTENTS);
-    g_uCFSTR_FILEDESCRIPTOR        = RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR);
-    g_uCFSTR_FILENAMEA             = RegisterClipboardFormatA(CFSTR_FILENAMEA);
-    g_uCFSTR_FILENAMEW             = RegisterClipboardFormatW(CFSTR_FILENAMEW);
-    g_uCFSTR_FILENAMEMAP           = RegisterClipboardFormat(CFSTR_FILENAMEMAP);
-    g_uCFSTR_MOUNTEDVOLUME         = RegisterClipboardFormat(CFSTR_MOUNTEDVOLUME);
-    g_uCFSTR_SHELLIDLIST           = RegisterClipboardFormat(CFSTR_SHELLIDLIST);
-    g_uCFSTR_SHELLIDLISTOFFSET     = RegisterClipboardFormat(CFSTR_SHELLIDLISTOFFSET);
-    g_uCFSTR_NETRESOURCES          = RegisterClipboardFormat(CFSTR_NETRESOURCES);
-    g_uCFSTR_PRINTERGROUP          = RegisterClipboardFormat(CFSTR_PRINTERGROUP);
-    g_uCFSTR_SHELLURL              = RegisterClipboardFormat(CFSTR_SHELLURL);
-    g_uCFSTR_INDRAGLOOP            = RegisterClipboardFormat(CFSTR_INDRAGLOOP);
-    g_uCFSTR_LOGICALPERFORMEDDROPEFFECT = RegisterClipboardFormat(CFSTR_LOGICALPERFORMEDDROPEFFECT);
-    g_uCFSTR_PASTESUCCEEDED        = RegisterClipboardFormat(CFSTR_PASTESUCCEEDED);
-    g_uCFSTR_PERFORMEDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PERFORMEDDROPEFFECT);
-    g_uCFSTR_PREFERREDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT);
-    g_uCFSTR_TARGETCLSID           = RegisterClipboardFormat(CFSTR_TARGETCLSID);
+    /* Registered clipboard formats */
+    Globals.uCFSTR_FILECONTENTS          = RegisterClipboardFormat(CFSTR_FILECONTENTS);
+    Globals.uCFSTR_FILEDESCRIPTOR        = RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR);
+    Globals.uCFSTR_FILENAMEA             = RegisterClipboardFormatA(CFSTR_FILENAMEA);
+    Globals.uCFSTR_FILENAMEW             = RegisterClipboardFormatW(CFSTR_FILENAMEW);
+    Globals.uCFSTR_FILENAMEMAP           = RegisterClipboardFormat(CFSTR_FILENAMEMAP);
+    Globals.uCFSTR_MOUNTEDVOLUME         = RegisterClipboardFormat(CFSTR_MOUNTEDVOLUME);
+    Globals.uCFSTR_SHELLIDLIST           = RegisterClipboardFormat(CFSTR_SHELLIDLIST);
+    Globals.uCFSTR_SHELLIDLISTOFFSET     = RegisterClipboardFormat(CFSTR_SHELLIDLISTOFFSET);
+    Globals.uCFSTR_NETRESOURCES          = RegisterClipboardFormat(CFSTR_NETRESOURCES);
+    Globals.uCFSTR_PRINTERGROUP          = RegisterClipboardFormat(CFSTR_PRINTERGROUP);
+    Globals.uCFSTR_SHELLURL              = RegisterClipboardFormat(CFSTR_SHELLURL);
+    Globals.uCFSTR_INDRAGLOOP            = RegisterClipboardFormat(CFSTR_INDRAGLOOP);
+    Globals.uCFSTR_LOGICALPERFORMEDDROPEFFECT = RegisterClipboardFormat(CFSTR_LOGICALPERFORMEDDROPEFFECT);
+    Globals.uCFSTR_PASTESUCCEEDED        = RegisterClipboardFormat(CFSTR_PASTESUCCEEDED);
+    Globals.uCFSTR_PERFORMEDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PERFORMEDDROPEFFECT);
+    Globals.uCFSTR_PREFERREDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT);
+    Globals.uCFSTR_TARGETCLSID           = RegisterClipboardFormat(CFSTR_TARGETCLSID);
 }
 
 static void FreeGlobals(void)
@@ -416,8 +398,8 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
         {
             GetClientRect(hWnd, &rc);
 
-            if (Globals.uDisplayFormat == g_uCFSTR_FILENAMEA ||
-                Globals.uDisplayFormat == g_uCFSTR_FILENAMEW)
+            if (Globals.uDisplayFormat == Globals.uCFSTR_FILENAMEA ||
+                Globals.uDisplayFormat == Globals.uCFSTR_FILENAMEW)
             {
                 DrawTextFromClipboard(Globals.uDisplayFormat, ps, Scrollstate);
                 break;
