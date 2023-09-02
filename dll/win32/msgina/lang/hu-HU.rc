@@ -235,10 +235,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "A fiókján olyan időkorlátozás van, amely miatt jelenleg nem tud belépni. Kérjük próbálja újra később."
     IDS_INVALIDWORKSTATION "A fiókja úgy van beállítva hogy nem használhatja ezt a számítógépet. Kérjük próbálkozzon egy másik számítógéppel."
     IDS_ACCOUNTRESTRICTION "Fiókkorlátozás miatt nem sikerült a bejelentkezés."
-    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
-    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
-    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
-    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYLOGOFFTITLE "Kijelentkezés a ReactOS-ből"
+    IDS_EMERGENCYLOGOFF "Kattintson az OK-ra az azonnali kijelentkezéshez. Minden nem mentett adat el fog veszni. Csak végső megoldásként használja ezt."
+    IDS_EMERGENCYRESTARTTITLE "Vészhelyzeti újraindítás"
+    IDS_EMERGENCYRESTART "Kattintson az OK-ra az azonnali újraindításhoz. Minden nem mentett adat el fog veszni. Csak végső megoldásként használja ezt."
 END
 
 /* Shutdown Dialog Strings */

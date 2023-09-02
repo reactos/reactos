@@ -804,11 +804,11 @@ BEGIN
     IDS_COPYERRORSAME "'%s' nem másolható: a forrás- és célfájl ugyanaz."
     IDS_MOVEERRORSUBFOLDER "'%s' nem mozgatható: a célmappa a forrásmappa egyik almappája."
     IDS_COPYERRORSUBFOLDER "'%s' nem másolható: a célmappa a forrásmappa egyik almappája."
-    IDS_MOVEERROR "Cannot move '%s': %s"
-    IDS_COPYERROR "Cannot copy '%s': %s"
+    IDS_MOVEERROR "'%s' nem mozgatható: %s"
+    IDS_COPYERROR "'%s' nem másolható: %s"
 
-    IDS_CREATEFILE_DENIED "Could not create file %1"
-    IDS_CREATEFILE_CAPTION "Error creating file"
+    IDS_CREATEFILE_DENIED "Nem sikerült a(z) %1 fájl létrehozása"
+    IDS_CREATEFILE_CAPTION "Hiba a fájl létrehozásakor"
     IDS_CREATEFOLDER_DENIED "Nem sikerült a(z) '%1' mappa létrehozása."
     IDS_CREATEFOLDER_CAPTION "Nem sikerült létrehozni a mappát"
     IDS_DELETEITEM_CAPTION "Állomány törlés megerősítése"
@@ -883,7 +883,7 @@ BEGIN
     IDS_NETWORKPLACE "Hálózati helyek"
 
     IDS_NEWFOLDER "Új mappa"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWITEMFORMAT "Új %s"
 
     IDS_DRIVE_FIXED "Helyi lemez"
     IDS_DRIVE_CDROM "CD-meghajtó"
@@ -900,7 +900,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Készítők"
     IDS_SHELL_ABOUT_BACK "< &Vissza"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "Ú&j" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Mappa"
     FCIDM_SHVIEW_NEWLINK "&Parancsikon"
     IDS_FOLDER_OPTIONS "Mappabeállítások"

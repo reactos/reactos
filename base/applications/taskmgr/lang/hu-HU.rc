@@ -138,8 +138,8 @@ BEGIN
         END
         MENUITEM "&Processzorok használata...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", ID_PROCESS_PAGE_PROPERTIES
-        MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
+        MENUITEM "&Tulajdonságok", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "Fájl &helyének megnyitása", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 
@@ -381,8 +381,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Normál prioritásra állítja a folyamatot"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Normál alatti prioritásra állítja a folyamatot"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Alacsony prioritásra állítja a folyamatot"
-    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
-    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
+    ID_PROCESS_PAGE_PROPERTIES "Megjeleníti a folyamat fájl tulajdonságait"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Megnyitja a folyamat fájl helyét"
 END
 
 STRINGTABLE
