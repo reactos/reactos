@@ -1231,7 +1231,6 @@ public:
     virtual ~CImageDC() throw()
     {
         m_image.ReleaseDC();
-        m_hDC = NULL;
     }
 
     operator HDC() const throw()
