@@ -142,9 +142,8 @@ public:
         bf.SourceConstantAlpha = bSrcAlpha;
         bf.AlphaFormat = AC_SRC_ALPHA;
 
-        HDC hSrcDC = GetDC();
         BOOL ret = ::AlphaBlend(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                                hSrcDC, xSrc, ySrc, nSrcWidth, nSrcHeight, bf);
+                                GetDC(), xSrc, ySrc, nSrcWidth, nSrcHeight, bf);
         ReleaseDC();
         return ret;
     }
@@ -177,9 +176,8 @@ public:
                 int nDestWidth, int nDestHeight,
                 int xSrc, int ySrc, DWORD dwROP = SRCCOPY) const throw()
     {
-        HDC hSrcDC = GetDC();
         BOOL ret = ::BitBlt(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                            hSrcDC, xSrc, ySrc, dwROP);
+                            GetDC(), xSrc, ySrc, dwROP);
         ReleaseDC();
         return ret;
     }
@@ -298,8 +296,7 @@ public:
                        RGBQUAD* prgbColors) const throw()
     {
         ATLASSERT(IsDIBSection());
-        HDC hSrcDC = GetDC();
-        ::GetDIBColorTable(hSrcDC, iFirstColor, nColors, prgbColors);
+        ::GetDIBColorTable(GetDC(), iFirstColor, nColors, prgbColors);
         ReleaseDC();
     }
 
@@ -340,8 +337,7 @@ public:
 
     COLORREF GetPixel(int x, int y) const throw()
     {
-        HDC hSrcDC = GetDC();
-        COLORREF ret = ::GetPixel(hSrcDC, x, y);
+        COLORREF ret = ::GetPixel(GetDC(), x, y);
         ReleaseDC();
         return ret;
     }
@@ -457,9 +453,8 @@ public:
                  DWORD dwROP = SRCCOPY) const throw()
     {
         ATLASSERT(IsTransparencySupported());
-        HDC hSrcDC = GetDC();
         BOOL ret = ::MaskBlt(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                             hSrcDC, xSrc, ySrc,
+                             GetDC(), xSrc, ySrc,
                              hbmMask, xMask, yMask, dwROP);
         ReleaseDC();
         return ret;
@@ -490,8 +485,7 @@ public:
                 int xMask = 0, int yMask = 0) const throw()
     {
         ATLASSERT(IsTransparencySupported());
-        HDC hSrcDC = GetDC();
-        BOOL ret = ::PlgBlt(hDestDC, pPoints, hSrcDC,
+        BOOL ret = ::PlgBlt(hDestDC, pPoints, GetDC(),
                             xSrc, ySrc, nSrcWidth, nSrcHeight,
                             hbmMask, xMask, yMask);
         ReleaseDC();
@@ -593,23 +587,20 @@ public:
                        const RGBQUAD* prgbColors) throw()
     {
         ATLASSERT(IsDIBSection());
-        HDC hSrcDC = GetDC();
-        ::SetDIBColorTable(hSrcDC, iFirstColor, nColors, prgbColors);
+        ::SetDIBColorTable(GetDC(), iFirstColor, nColors, prgbColors);
         ReleaseDC();
     }
 
     void SetPixel(int x, int y, COLORREF color) throw()
     {
-        HDC hSrcDC = GetDC();
-        ::SetPixelV(hSrcDC, x, y, color);
+        ::SetPixelV(GetDC(), x, y, color);
         ReleaseDC();
     }
 
     void SetPixelIndexed(int x, int y, int iIndex) throw()
     {
         ATLASSERT(IsIndexed());
-        HDC hSrcDC = GetDC();
-        ::SetPixelV(hSrcDC, x, y, PALETTEINDEX(iIndex));
+        ::SetPixelV(GetDC(), x, y, PALETTEINDEX(iIndex));
         ReleaseDC();
     }
 
@@ -631,9 +622,8 @@ public:
                     int xSrc, int ySrc, int nSrcWidth, int nSrcHeight,
                     DWORD dwROP = SRCCOPY) const throw()
     {
-        HDC hSrcDC = GetDC();
         BOOL ret = ::StretchBlt(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                                hSrcDC, xSrc, ySrc, nSrcWidth, nSrcHeight, dwROP);
+                                GetDC(), xSrc, ySrc, nSrcWidth, nSrcHeight, dwROP);
         ReleaseDC();
         return ret;
     }
@@ -668,10 +658,9 @@ public:
                         UINT crTransparent = CLR_INVALID) const throw()
     {
         ATLASSERT(IsTransparencySupported());
-        HDC hSrcDC = GetDC();
         BOOL ret = ::TransparentBlt(hDestDC, xDest, yDest,
                                     nDestWidth, nDestHeight,
-                                    hSrcDC, xSrc, ySrc,
+                                    GetDC(), xSrc, ySrc,
                                     nSrcWidth, nSrcHeight, crTransparent);
         ReleaseDC();
         return ret;
