@@ -113,8 +113,11 @@ public:
         if (::InterlockedDecrement(&m_nDCRefCount) > 0)
             return;
 
-        ATLASSERT(m_hDC != NULL);
-        ATLASSERT(m_hOldBitmap != NULL);
+        if (!m_hDC)
+        {
+            ATLASSERT(!m_hOldBitmap);
+            return;
+        }
 
         if (m_hOldBitmap)
         {
@@ -122,11 +125,8 @@ public:
             m_hOldBitmap = NULL;
         }
 
-        if (m_hDC)
-        {
-            ::DeleteDC(m_hDC);
-            m_hDC = NULL;
-        }
+        ::DeleteDC(m_hDC);
+        m_hDC = NULL;
     }
 
     BOOL AlphaBlend(HDC hDestDC,
