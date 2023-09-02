@@ -7,11 +7,42 @@
  */
 
 #include "precomp.h"
+#include <shlobj.h> /* For CFSTR_... */
 
 static const WCHAR szClassName[] = L"ClipBookWClass";
 
 CLIPBOARD_GLOBALS Globals;
 SCROLLSTATE Scrollstate;
+
+static void InitGlobals(HINSTANCE hInstance)
+{
+    ZeroMemory(&Globals, sizeof(Globals));
+    Globals.hInstance = hInstance;
+    Globals.hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+
+    g_uCFSTR_FILECONTENTS          = RegisterClipboardFormat(CFSTR_FILECONTENTS);
+    g_uCFSTR_FILEDESCRIPTOR        = RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR);
+    g_uCFSTR_FILENAMEA             = RegisterClipboardFormatA(CFSTR_FILENAMEA);
+    g_uCFSTR_FILENAMEW             = RegisterClipboardFormatW(CFSTR_FILENAMEW);
+    g_uCFSTR_FILENAMEMAP           = RegisterClipboardFormat(CFSTR_FILENAMEMAP);
+    g_uCFSTR_MOUNTEDVOLUME         = RegisterClipboardFormat(CFSTR_MOUNTEDVOLUME);
+    g_uCFSTR_SHELLIDLIST           = RegisterClipboardFormat(CFSTR_SHELLIDLIST);
+    g_uCFSTR_SHELLIDLISTOFFSET     = RegisterClipboardFormat(CFSTR_SHELLIDLISTOFFSET);
+    g_uCFSTR_NETRESOURCES          = RegisterClipboardFormat(CFSTR_NETRESOURCES);
+    g_uCFSTR_PRINTERGROUP          = RegisterClipboardFormat(CFSTR_PRINTERGROUP);
+    g_uCFSTR_SHELLURL              = RegisterClipboardFormat(CFSTR_SHELLURL);
+    g_uCFSTR_INDRAGLOOP            = RegisterClipboardFormat(CFSTR_INDRAGLOOP);
+    g_uCFSTR_LOGICALPERFORMEDDROPEFFECT = RegisterClipboardFormat(CFSTR_LOGICALPERFORMEDDROPEFFECT);
+    g_uCFSTR_PASTESUCCEEDED        = RegisterClipboardFormat(CFSTR_PASTESUCCEEDED);
+    g_uCFSTR_PERFORMEDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PERFORMEDDROPEFFECT);
+    g_uCFSTR_PREFERREDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT);
+    g_uCFSTR_TARGETCLSID           = RegisterClipboardFormat(CFSTR_TARGETCLSID);
+}
+
+static void FreeGlobals(void)
+{
+    DeleteObject(Globals.hFont);
+}
 
 static void SaveClipboardToFile(void)
 {
@@ -681,11 +712,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
             break;
     }
 
-    InitRegisteredClipboardFormats();
-
-    ZeroMemory(&Globals, sizeof(Globals));
-    Globals.hInstance = hInstance;
-    Globals.hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    InitGlobals(hInstance);
 
     ZeroMemory(&wndclass, sizeof(wndclass));
     wndclass.cbSize = sizeof(wndclass);
@@ -701,6 +728,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     if (!RegisterClassExW(&wndclass))
     {
         ShowLastWin32Error(NULL);
+        FreeGlobals();
         return 0;
     }
 
@@ -722,6 +750,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     if (!Globals.hMainWnd)
     {
         ShowLastWin32Error(NULL);
+        FreeGlobals();
         return 0;
     }
 
@@ -746,6 +775,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
             DispatchMessageW(&msg);
         }
     }
+
+    FreeGlobals();
 
     return (int)msg.wParam;
 }

@@ -55,6 +55,4 @@ typedef struct _CLIPBOARD_GLOBALS
 
 extern CLIPBOARD_GLOBALS Globals;
 
-void InitRegisteredClipboardFormats(void);
-
 #endif /* _CLIPBRD_PCH_ */

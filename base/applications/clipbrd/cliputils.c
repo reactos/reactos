@@ -7,7 +7,6 @@
  */
 
 #include "precomp.h"
-#include <shlobj.h>
 
 /* Registered clipboard formats */
 UINT g_uCFSTR_FILECONTENTS;
@@ -27,27 +26,6 @@ UINT g_uCFSTR_PASTESUCCEEDED;
 UINT g_uCFSTR_PERFORMEDDROPEFFECT;
 UINT g_uCFSTR_PREFERREDDROPEFFECT;
 UINT g_uCFSTR_TARGETCLSID;
-
-void InitRegisteredClipboardFormats(void)
-{
-    g_uCFSTR_FILECONTENTS          = RegisterClipboardFormat(CFSTR_FILECONTENTS);
-    g_uCFSTR_FILEDESCRIPTOR        = RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR);
-    g_uCFSTR_FILENAMEA             = RegisterClipboardFormatA(CFSTR_FILENAMEA);
-    g_uCFSTR_FILENAMEW             = RegisterClipboardFormatW(CFSTR_FILENAMEW);
-    g_uCFSTR_FILENAMEMAP           = RegisterClipboardFormat(CFSTR_FILENAMEMAP);
-    g_uCFSTR_MOUNTEDVOLUME         = RegisterClipboardFormat(CFSTR_MOUNTEDVOLUME);
-    g_uCFSTR_SHELLIDLIST           = RegisterClipboardFormat(CFSTR_SHELLIDLIST);
-    g_uCFSTR_SHELLIDLISTOFFSET     = RegisterClipboardFormat(CFSTR_SHELLIDLISTOFFSET);
-    g_uCFSTR_NETRESOURCES          = RegisterClipboardFormat(CFSTR_NETRESOURCES);
-    g_uCFSTR_PRINTERGROUP          = RegisterClipboardFormat(CFSTR_PRINTERGROUP);
-    g_uCFSTR_SHELLURL              = RegisterClipboardFormat(CFSTR_SHELLURL);
-    g_uCFSTR_INDRAGLOOP            = RegisterClipboardFormat(CFSTR_INDRAGLOOP);
-    g_uCFSTR_LOGICALPERFORMEDDROPEFFECT = RegisterClipboardFormat(CFSTR_LOGICALPERFORMEDDROPEFFECT);
-    g_uCFSTR_PASTESUCCEEDED        = RegisterClipboardFormat(CFSTR_PASTESUCCEEDED);
-    g_uCFSTR_PERFORMEDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PERFORMEDDROPEFFECT);
-    g_uCFSTR_PREFERREDDROPEFFECT   = RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT);
-    g_uCFSTR_TARGETCLSID           = RegisterClipboardFormat(CFSTR_TARGETCLSID);
-}
 
 LRESULT
 SendClipboardOwnerMessage(
