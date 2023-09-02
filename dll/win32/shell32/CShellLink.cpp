@@ -2802,6 +2802,27 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     if (m_sDescription)
         SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_COMMENT_EDIT, m_sDescription);
 
+    /* Hot key */
+    SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_KEY_HOTKEY, HKM_SETHOTKEY, m_Header.wHotKey, 0);
+
+    /* Run */
+    const WORD runstrings[] = { IDS_SHORTCUT_RUN_NORMAL, IDS_SHORTCUT_RUN_MIN, IDS_SHORTCUT_RUN_MAX };
+    const DWORD runshowcmd[] = { SW_SHOWNORMAL, SW_SHOWMINNOACTIVE, SW_SHOWMAXIMIZED };
+    HWND hRunCombo = GetDlgItem(hwndDlg, IDC_SHORTCUT_RUN_COMBO);
+    for (UINT i = 0; i < _countof(runstrings); ++i)
+    {
+        WCHAR buf[MAX_PATH];
+        if (!LoadStringW(shell32_hInstance, runstrings[i], buf, _countof(buf)))
+            break;
+
+        int index = SendMessageW(hRunCombo, CB_ADDSTRING, 0, (LPARAM)buf);
+        if (index < 0)
+            continue;
+        SendMessageW(hRunCombo, CB_SETITEMDATA, index, runshowcmd[i]);
+        if (!i || m_Header.nShowCommand == runshowcmd[i])
+            SendMessageW(hRunCombo, CB_SETCURSEL, index, 0);
+    }
+
     /* auto-completion */
     SHAutoComplete(GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT), SHACF_DEFAULT);
     SHAutoComplete(GetDlgItem(hwndDlg, IDC_SHORTCUT_START_IN_EDIT), SHACF_DEFAULT);
@@ -2922,6 +2943,14 @@ LRESULT CShellLink::OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr)
             SetArguments(L"\0");
 
         HeapFree(GetProcessHeap(), 0, unquoted);
+
+        m_Header.wHotKey = (WORD)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_KEY_HOTKEY, HKM_GETHOTKEY, 0, 0);
+
+        int index = (int)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_RUN_COMBO, CB_GETCURSEL, 0, 0);
+        if (index != CB_ERR)
+        {
+            m_Header.nShowCommand = (UINT)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_RUN_COMBO, CB_GETITEMDATA, index, 0);
+        }
 
         TRACE("This %p m_sLinkPath %S\n", this, m_sLinkPath);
         Save(m_sLinkPath, TRUE);
