@@ -1015,18 +1015,19 @@ HandleShutdown(
     return STATUS_SUCCESS;
 }
 
+static
 BOOL
-IsLocalSystem(HANDLE UserToken)
+IsLocalSystem(_In_ HANDLE UserToken)
 {
     BOOL IsLocalSystem;
-    SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY NtAuthority = { SECURITY_NT_AUTHORITY };
     PSID pLocalSystemSID;
 
     IsLocalSystem = AllocateAndInitializeSid(&NtAuthority,
                                              1, SECURITY_LOCAL_SYSTEM_RID,
                                              0, 0, 0, 0, 0, 0, 0,
                                              &pLocalSystemSID);
-    if(IsLocalSystem)
+    if (IsLocalSystem)
     {
         if (!CheckTokenMembership(UserToken, pLocalSystemSID, &IsLocalSystem))
             IsLocalSystem = FALSE;
