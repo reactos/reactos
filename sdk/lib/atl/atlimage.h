@@ -110,7 +110,7 @@ public:
     {
         ATLASSERT(m_nDCRefCount > 0);
 
-        if (::InterlockedDecrement(&m_nDCRefCount) > 0)
+        if (::InterlockedDecrement(&m_nDCRefCount) != 0)
             return;
 
         if (!m_hDC)
