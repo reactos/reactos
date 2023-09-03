@@ -97,9 +97,13 @@ public:
         if (::InterlockedIncrement(&m_nDCRefCount) == 1)
         {
             ATLASSERT(m_hDC == NULL);
-            m_hDC = ::CreateCompatibleDC(NULL);
             ATLASSERT(m_hOldBitmap == NULL);
+
+            m_hDC = ::CreateCompatibleDC(NULL);
+            ATLASSERT(m_hDC != NULL);
+
             m_hOldBitmap = (HBITMAP)::SelectObject(m_hDC, m_hBitmap);
+            ATLASSERT(m_hOldBitmap != NULL);
         }
 
         return m_hDC;
@@ -112,20 +116,18 @@ public:
         if (::InterlockedDecrement(&m_nDCRefCount) != 0)
             return;
 
-        if (!m_hDC)
-        {
-            ATLASSERT(!m_hOldBitmap);
-            return;
-        }
-
         if (m_hOldBitmap)
         {
+            ATLASSERT(m_hDC != NULL);
             ::SelectObject(m_hDC, m_hOldBitmap);
             m_hOldBitmap = NULL;
         }
 
-        ::DeleteDC(m_hDC);
-        m_hDC = NULL;
+        if (m_hDC)
+        {
+            ::DeleteDC(m_hDC);
+            m_hDC = NULL;
+        }
     }
 
     BOOL AlphaBlend(HDC hDestDC,
