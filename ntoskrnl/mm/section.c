@@ -145,16 +145,20 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
 
 NTSTATUS
 NTAPI
-MmMapViewOfArm3Section(IN PVOID SectionObject,
-                       IN PEPROCESS Process,
-                       IN OUT PVOID *BaseAddress,
-                       IN ULONG_PTR ZeroBits,
-                       IN SIZE_T CommitSize,
-                       IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-                       IN OUT PSIZE_T ViewSize,
-                       IN SECTION_INHERIT InheritDisposition,
-                       IN ULONG AllocationType,
-                       IN ULONG Protect);
+MmMapViewOfArm3Section(
+    _In_ PVOID SectionObject,
+    _In_ PEPROCESS Process,
+    _Outptr_result_bytebuffer_(*ViewSize)
+      _When_(*ViewSize != 0, _Pre_opt_valid_)
+      _When_(*ViewSize == 0, _Pre_valid_)
+        PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _In_ SIZE_T CommitSize,
+    _Inout_ PLARGE_INTEGER SectionOffset,
+    _Inout_ PSIZE_T ViewSize,
+    _In_range_(ViewShare, ViewUnmap) SECTION_INHERIT InheritDisposition,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Protect);
 
 //
 // PeFmtCreateSection depends on the following:
@@ -3994,16 +3998,17 @@ NtQuerySection(
  * @implemented
  */
 NTSTATUS NTAPI
-MmMapViewOfSection(IN PVOID SectionObject,
-                   IN PEPROCESS Process,
-                   IN OUT PVOID *BaseAddress,
-                   IN ULONG_PTR ZeroBits,
-                   IN SIZE_T CommitSize,
-                   IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-                   IN OUT PSIZE_T ViewSize,
-                   IN SECTION_INHERIT InheritDisposition,
-                   IN ULONG AllocationType,
-                   IN ULONG Protect)
+MmMapViewOfSection(
+    _In_ PVOID SectionObject,
+    _In_ PEPROCESS Process,
+    _Outptr_result_bytebuffer_(*ViewSize) _Pre_opt_valid_ PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _In_ SIZE_T CommitSize,
+    _Inout_opt_ PLARGE_INTEGER SectionOffset,
+    _Inout_ PSIZE_T ViewSize,
+    _In_range_(ViewShare, ViewUnmap) SECTION_INHERIT InheritDisposition,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Protect)
 {
     PSECTION Section;
     PMMSUPPORT AddressSpace;
@@ -4013,6 +4018,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
     if (MiIsRosSectionObject(SectionObject) == FALSE)
     {
         DPRINT("Mapping ARM3 section into %s\n", Process->ImageFileName);
+        ASSERT(SectionOffset != NULL);
         return MmMapViewOfArm3Section(SectionObject,
                                       Process,
                                       BaseAddress,

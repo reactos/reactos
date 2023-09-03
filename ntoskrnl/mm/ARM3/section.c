@@ -1261,17 +1261,18 @@ MiLoadUserSymbols(IN PCONTROL_AREA ControlArea,
 
 NTSTATUS
 NTAPI
-MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
-                       IN PEPROCESS Process,
-                       IN PVOID *BaseAddress,
-                       IN PLARGE_INTEGER SectionOffset,
-                       IN PSIZE_T ViewSize,
-                       IN PSECTION Section,
-                       IN SECTION_INHERIT InheritDisposition,
-                       IN ULONG ProtectionMask,
-                       IN SIZE_T CommitSize,
-                       IN ULONG_PTR ZeroBits,
-                       IN ULONG AllocationType)
+MiMapViewOfDataSection(
+    _In_ PCONTROL_AREA ControlArea,
+    _In_ PEPROCESS Process,
+    _Outptr_result_bytebuffer_(*ViewSize) _Pre_opt_valid_ PVOID *BaseAddress,
+    _Inout_ PLARGE_INTEGER SectionOffset,
+    _Inout_ PSIZE_T ViewSize,
+    _In_ PSECTION Section,
+    _In_range_(ViewShare, ViewUnmap) SECTION_INHERIT InheritDisposition,
+    _In_ ULONG ProtectionMask,
+    _In_ SIZE_T CommitSize,
+    _In_ ULONG_PTR ZeroBits,
+    _In_ ULONG AllocationType)
 {
     PMMVAD_LONG Vad;
     ULONG_PTR StartAddress;
@@ -2893,16 +2894,20 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
  */
 NTSTATUS
 NTAPI
-MmMapViewOfArm3Section(IN PVOID SectionObject,
-                       IN PEPROCESS Process,
-                       IN OUT PVOID *BaseAddress,
-                       IN ULONG_PTR ZeroBits,
-                       IN SIZE_T CommitSize,
-                       IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-                       IN OUT PSIZE_T ViewSize,
-                       IN SECTION_INHERIT InheritDisposition,
-                       IN ULONG AllocationType,
-                       IN ULONG Protect)
+MmMapViewOfArm3Section(
+    _In_ PVOID SectionObject,
+    _In_ PEPROCESS Process,
+    _Outptr_result_bytebuffer_(*ViewSize)
+      _When_(*ViewSize != 0, _Pre_opt_valid_)
+      _When_(*ViewSize == 0, _Pre_valid_)
+        PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _In_ SIZE_T CommitSize,
+    _Inout_ PLARGE_INTEGER SectionOffset,
+    _Inout_ PSIZE_T ViewSize,
+    _In_range_(ViewShare, ViewUnmap) SECTION_INHERIT InheritDisposition,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Protect)
 {
     KAPC_STATE ApcState;
     BOOLEAN Attached = FALSE;
@@ -3619,16 +3624,17 @@ NtOpenSection(OUT PHANDLE SectionHandle,
 
 NTSTATUS
 NTAPI
-NtMapViewOfSection(IN HANDLE SectionHandle,
-                   IN HANDLE ProcessHandle,
-                   IN OUT PVOID* BaseAddress,
-                   IN ULONG_PTR ZeroBits,
-                   IN SIZE_T CommitSize,
-                   IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-                   IN OUT PSIZE_T ViewSize,
-                   IN SECTION_INHERIT InheritDisposition,
-                   IN ULONG AllocationType,
-                   IN ULONG Protect)
+NtMapViewOfSection(
+    _In_ HANDLE SectionHandle,
+    _In_ HANDLE ProcessHandle,
+    _Outptr_result_bytebuffer_(*ViewSize) _Pre_valid_ PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _In_ SIZE_T CommitSize,
+    _Inout_opt_ PLARGE_INTEGER SectionOffset,
+    _Inout_ PSIZE_T ViewSize,
+    _In_range_(ViewShare, ViewUnmap) SECTION_INHERIT InheritDisposition,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Win32Protect)
 {
     PVOID SafeBaseAddress;
     LARGE_INTEGER SafeSectionOffset;
@@ -3662,7 +3668,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     }
 
     /* Convert the protection mask, and validate it */
-    ProtectionMask = MiMakeProtectionMask(Protect);
+    ProtectionMask = MiMakeProtectionMask(Win32Protect);
     if (ProtectionMask == MM_INVALID_PROTECTION)
     {
         DPRINT1("Invalid page protection\n");
@@ -3805,7 +3811,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
                                 &SafeViewSize,
                                 InheritDisposition,
                                 AllocationType,
-                                Protect);
+                                Win32Protect);
 
     /* Return data only on success */
     if (NT_SUCCESS(Status))
