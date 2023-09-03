@@ -2827,6 +2827,7 @@ void FILEDLG95_OnOpenMessage(HWND hwnd, int idCaption, int idText)
 }
 
 #ifdef __REACTOS__
+/* The return value needs LocalFree */
 static LPWSTR FILEDLG95_GetFallbackExtension(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
 {
     LPWSTR lpstrFilter, the_ext = NULL, pchDot = NULL;
@@ -2860,7 +2861,7 @@ static LPWSTR FILEDLG95_GetFallbackExtension(FileOpenDlgInfos *fodInfos, LPWSTR 
         the_ext = StrDupW(fodInfos->defext);
     }
 
-    return the_ext; /* Needs LocalFree */
+    return the_ext;
 }
 
 static BOOL
