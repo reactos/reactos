@@ -1249,7 +1249,6 @@ public:
         return m_hDC;
     }
 
-private:
     CImageDC(const CImageDC&) = delete;
     CImageDC& operator=(const CImageDC&) = delete;
 };
