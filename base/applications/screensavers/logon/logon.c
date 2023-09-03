@@ -38,11 +38,11 @@ GetScreenSaverBitmap(VOID)
 {
     OSVERSIONINFOEX osvi = {0};
     osvi.dwOSVersionInfoSize = sizeof(osvi);
-    GetVersionEx((OSVERSIONINFO *) &osvi);
+    GetVersionEx((POSVERSIONINFO)&osvi);
 
     return LoadImageW(GetModuleHandle(NULL),
                       osvi.wProductType == VER_NT_WORKSTATION ?
-                      MAKEINTRESOURCEW(IDB_WORKSTATION) : MAKEINTRESOURCEW(IDB_SERVER),
+                          MAKEINTRESOURCEW(IDB_WORKSTATION) : MAKEINTRESOURCEW(IDB_SERVER),
                       IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 }
 
