@@ -98,8 +98,8 @@ public:
         if (::InterlockedIncrement(&m_nDCRefCount) == 1)
         {
             ATLASSERT(m_hDC == NULL);
-            ATLASSERT(m_hOldBitmap == NULL);
             m_hDC = ::CreateCompatibleDC(NULL);
+            ATLASSERT(m_hOldBitmap == NULL);
             m_hOldBitmap = (HBITMAP)::SelectObject(m_hDC, m_hBitmap);
         }
 
