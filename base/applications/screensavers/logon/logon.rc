@@ -15,8 +15,11 @@ IDI_ICON  ICON  DISCARDABLE  "res/icon_logon.ico"
 
 #include <reactos/version.rc>
 
+/* To change the bitmap used for Workstation or Server
+ * versions, add the new bitmap and update the path below.
+ */
 IDB_WORKSTATION BITMAP "res/0.bmp"
-IDB_SERVER BITMAP "res/1.bmp"
+IDB_SERVER BITMAP "res/0.bmp"
 
 #include <reactos/manifest_exe.rc>
 

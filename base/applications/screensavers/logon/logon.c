@@ -18,127 +18,95 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdarg.h>
+#include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
 #include <scrnsave.h>
-#include <stdlib.h>
-#include <tchar.h>
 
 #include "resource.h"
 
-#define RANDOM( min, max ) ((rand() % (int)(((max)+1) - (min))) + (min))
+#define RANDOM(min, max) ((rand() % (int)(((max)+1) - (min))) + (min))
 
-#define APPNAME               _T("Logon")
 #define APP_TIMER             1
-#define APP_TIMER_INTERVAL    2000
+#define APP_TIMER_INTERVAL    10000
 
+static
 HBITMAP
 GetScreenSaverBitmap(VOID)
 {
-    OSVERSIONINFOEX osvi;
+    OSVERSIONINFOEX osvi = {0};
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    GetVersionEx((POSVERSIONINFO)&osvi);
 
-    ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-    GetVersionEx ((OSVERSIONINFO *) &osvi);
-
-    switch(osvi.wProductType)
-    {
-        case VER_NT_WORKSTATION:
-            return LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_WORKSTATION), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-            break;
-        default:
-            return LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_SERVER), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-            break;
-    }
+    return LoadImageW(GetModuleHandle(NULL),
+                      osvi.wProductType == VER_NT_WORKSTATION ?
+                          MAKEINTRESOURCEW(IDB_WORKSTATION) : MAKEINTRESOURCEW(IDB_SERVER),
+                      IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 }
 
 LRESULT
 CALLBACK
-ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+ScreenSaverProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    static RECT rect;
     static HBITMAP bitmap;
 
-    switch (message)
+    switch (uMsg)
     {
         case WM_CREATE:
         {
-            bitmap = GetScreenSaverBitmap ();
+            bitmap = GetScreenSaverBitmap();
             if (bitmap == NULL)
             {
-                MessageBox(hWnd,
-                           _T("Fatal Error: Could not load bitmap"),
-                           _T("Error"),
-                           MB_OK | MB_ICONEXCLAMATION);
+                /* Extremely unlikely, message not localized. */
+                MessageBoxW(hWnd,
+                            L"Fatal Error: Could not load bitmap",
+                            L"Error",
+                            MB_OK | MB_ICONEXCLAMATION);
             }
 
-            SetTimer(hWnd,
-                     APP_TIMER,
-                     APP_TIMER_INTERVAL,
-                     NULL);
-
-             break;
+            SetTimer(hWnd, APP_TIMER, APP_TIMER_INTERVAL, NULL);
+            break;
         }
         case WM_PAINT:
         {
-             BITMAP bm; /* Bitmap structure as seen in bmWidth & bmHeight */
-             PAINTSTRUCT ps;
-             HDC hdc;
-             HDC hdcMem;
-             HBITMAP hbmOld;
+            BITMAP bm;
+            PAINTSTRUCT ps;
+            HDC hdc;
+            HDC hdcMem;
+            HBITMAP hbmOld;
+            RECT rect;
 
-             // Obtain window coordinates.
-             GetClientRect (hWnd, &rect);
+            hdc = BeginPaint(hWnd, &ps);
+            hdcMem = CreateCompatibleDC(hdc);
+            hbmOld = SelectObject(hdcMem, bitmap);
+            GetObjectW(bitmap, sizeof(bm), &bm);
 
-             hdc = BeginPaint(hWnd, &ps);
-             hdcMem = CreateCompatibleDC(hdc);
-             hbmOld = SelectObject(hdcMem, bitmap);
+            GetClientRect(hWnd, &rect);
+            if (rect.right < bm.bmWidth || rect.bottom < bm.bmHeight)
+            {
+                StretchBlt(hdc, RANDOM(0, rect.right - (bm.bmWidth / 5)),
+                           RANDOM(0, rect.bottom - (bm.bmHeight / 5)),
+                           bm.bmWidth / 5, bm.bmHeight / 5, hdcMem, 0, 0,
+                           bm.bmWidth, bm.bmHeight, SRCCOPY);
+            }
+            else
+            {
+                BitBlt(hdc, RANDOM(0, rect.right - bm.bmWidth),
+                    RANDOM(0, rect.bottom - bm.bmHeight),
+                    bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            }
 
-             GetObject(bitmap, sizeof(bm), &bm);
-
-             if (rect.right < bm.bmWidth ||
-                 rect.bottom < bm.bmHeight)
-             {
-                StretchBlt(
-                    hdc,
-                    RANDOM (0, rect.right - (bm.bmWidth /5)),
-                    RANDOM (0, rect.bottom - (bm.bmHeight /5)),
-                    bm.bmWidth /5,
-                    bm.bmHeight /5,
-                    hdcMem,
-                    0,
-                    0,
-                    bm.bmWidth,
-                    bm.bmHeight,
-                    SRCCOPY);
-             }
-             else
-             {
-                 BitBlt(
-                     hdc,
-                     RANDOM (0, rect.right - bm.bmWidth),
-                     RANDOM (0, rect.bottom - bm.bmHeight),
-                     bm.bmWidth,
-                     bm.bmHeight,
-                     hdcMem,
-                     0,
-                     0,
-                     SRCCOPY);
-             }
-
-             SelectObject(hdcMem, hbmOld);
-             DeleteDC(hdcMem);
-
-             EndPaint(hWnd, &ps);
-             break;
+            SelectObject(hdcMem, hbmOld);
+            DeleteDC(hdcMem);
+            EndPaint(hWnd, &ps);
+            break;
         }
         case WM_TIMER:
         {
-          InvalidateRect(hWnd, NULL, 1);
-          break;
+            InvalidateRect(hWnd, NULL, TRUE);
+            break;
         }
         case WM_DESTROY:
         {
@@ -147,10 +115,11 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PostQuitMessage(0);
             break;
         }
-
         default:
-            // Pass Windows Messages to the default screensaver window procedure
-            return DefScreenSaverProc(hWnd, message, wParam, lParam);
+        {
+            /* Pass window messages to the default screensaver window procedure */
+            return DefScreenSaverProc(hWnd, uMsg, wParam, lParam);
+        }
     }
 
     return 0;
@@ -163,19 +132,20 @@ ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-// This function is only called one time before opening the configuration dialog.
-// Use it to show a message that no configuration is necessary and return FALSE to indicate that no configuration dialog shall be opened.
+/* This function is only called once before opening the configuration dialog.
+ * Use it to show a message that no configuration is necessary and return FALSE to indicate that no configuration dialog shall be opened.
+ */
 BOOL
 WINAPI
 RegisterDialogClasses(HANDLE hInst)
 {
-    TCHAR szMessage[256];
-    TCHAR szTitle[25];
+    WCHAR szMessage[256];
+    WCHAR szTitle[25];
 
-    LoadString(hInst, IDS_TEXT, szMessage, sizeof(szMessage) / sizeof(TCHAR));
-    LoadString(hInst, IDS_DESCRIPTION, szTitle, sizeof(szTitle) / sizeof(TCHAR));
+    LoadStringW(hInst, IDS_TEXT, szMessage, _countof(szMessage));
+    LoadStringW(hInst, IDS_DESCRIPTION, szTitle, _countof(szTitle));
 
-    MessageBox(NULL, szMessage, szTitle, MB_OK | MB_ICONEXCLAMATION);
+    MessageBoxW(NULL, szMessage, szTitle, MB_OK | MB_ICONEXCLAMATION);
 
     return FALSE;
 }
