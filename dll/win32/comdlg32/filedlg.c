@@ -2836,8 +2836,8 @@ static LPWSTR FILEDLG95_GetFallbackExtension(FileOpenDlgInfos *fodInfos, LPWSTR 
         return NULL;
 
     /* Get filter extensions */
-    lpstrFilter = (LPWSTR) CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
-                                            fodInfos->ofnInfos->nFilterIndex - 1);
+    lpstrFilter = (LPWSTR)CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
+                                           fodInfos->ofnInfos->nFilterIndex - 1);
     if (lpstrFilter != (LPWSTR)CB_ERR && lpstrFilter && *lpstrFilter)
     {
         LPWSTR pchSemicolon = wcschr(lpstrFilter, L';');
