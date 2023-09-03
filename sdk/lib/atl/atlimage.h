@@ -94,7 +94,6 @@ public:
     HDC GetDC() const throw()
     {
         ATLASSERT(m_nDCRefCount >= 0);
-
         if (::InterlockedIncrement(&m_nDCRefCount) == 1)
         {
             ATLASSERT(m_hDC == NULL);
