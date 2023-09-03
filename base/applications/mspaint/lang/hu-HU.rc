@@ -213,7 +213,7 @@ BEGIN
 END
 
 IDD_FONTS DIALOG 0, 0, 225, 25
-CAPTION "Fonts"
+CAPTION "Betűtípusok"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 8, "MS Shell Dlg"
@@ -256,13 +256,13 @@ BEGIN
     IDS_ANGLE "A szögnek -89 és 89 között kell lennie."
     IDS_LOADERRORTEXT "A(z) %s fájlt nem sikerült betölteni."
     IDS_ENLARGEPROMPTTEXT "A vágólapon lévő kép nagyobb mint a bitkép.\nSzeretné a bitkép méretét megnövelni?"
-    IDS_BOLD "Bold"
-    IDS_ITALIC "Italic"
-    IDS_UNDERLINE "Underline"
-    IDS_VERTICAL "Vertical"
+    IDS_BOLD "Félkövér"
+    IDS_ITALIC "Dőlt"
+    IDS_UNDERLINE "Aláhúzott"
+    IDS_VERTICAL "Függőleges"
     IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
-    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
-    IDS_CANTSENDMAIL "Failed to send a mail."
-    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
+    IDS_CANTPASTE "Nem sikerült a beillesztés a vágólapról. Hibás, vagy nem támogatott adatformátum."
+    IDS_SAVEERROR "Nem sikerült a bitkép mentése az alábbi fájlba:\n\n%s"
+    IDS_CANTSENDMAIL "Nem sikerült az email küldése."
+    IDS_LOSECOLOR "A színinformációk el fognak veszni a művelet során. Biztosan folytatja?"
 END

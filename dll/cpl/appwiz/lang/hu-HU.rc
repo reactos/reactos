@@ -90,5 +90,5 @@ BEGIN
     IDS_NO_DIRECTORY "Nincs megadva mappa!"
     IDS_INVALID_PATH "A megadott mappa érvénytelen!"
     IDS_INVALID_NAME "A megadott parancsikon név érvénytelen fájlnév karaktereket tartalmaz, vagy túl hosszú."
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_BROWSE_FOR_TARGET "Kérem válassza ki a parancsikon hivatkozását:"
 END
