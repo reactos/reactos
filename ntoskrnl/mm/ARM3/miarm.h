@@ -2244,14 +2244,6 @@ MiInsertBasedSection(
 
 NTSTATUS
 NTAPI
-MiUnmapViewOfSection(
-    IN PEPROCESS Process,
-    IN PVOID BaseAddress,
-    IN ULONG Flags
-);
-
-NTSTATUS
-NTAPI
 MiRosUnmapViewOfSection(
     IN PEPROCESS Process,
     IN PVOID BaseAddress,
@@ -2308,13 +2300,6 @@ VOID
 NTAPI
 MiSessionAddProcess(
     IN PEPROCESS NewProcess
-);
-
-NTSTATUS
-NTAPI
-MiSessionCommitPageTables(
-    IN PVOID StartVa,
-    IN PVOID EndVa
 );
 
 ULONG

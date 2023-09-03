@@ -112,8 +112,8 @@ PVOID MmHighSectionBase;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static
 BOOLEAN
-NTAPI
 MiIsProtectionCompatible(IN ULONG SectionPageProtection,
                          IN ULONG NewSectionPageProtection)
 {
@@ -283,8 +283,8 @@ MiInitializeSystemSpaceMap(IN PMMSESSION InputSession OPTIONAL)
     return TRUE;
 }
 
+static
 PVOID
-NTAPI
 MiInsertInSystemSpace(IN PMMSESSION Session,
                       IN ULONG Buckets,
                       IN PCONTROL_AREA ControlArea)
@@ -525,8 +525,8 @@ MiFillSystemPageDirectory(IN PVOID Base,
     }
 }
 
+static
 NTSTATUS
-NTAPI
 MiCheckPurgeAndUpMapCount(IN PCONTROL_AREA ControlArea,
                           IN BOOLEAN FailIfSystemViews)
 {
@@ -586,8 +586,8 @@ MiLocateSubsection(IN PMMVAD Vad,
     return Subsection;
 }
 
+static
 VOID
-NTAPI
 MiSegmentDelete(IN PSEGMENT Segment)
 {
     PCONTROL_AREA ControlArea;
@@ -709,8 +709,8 @@ MiSegmentDelete(IN PSEGMENT Segment)
     ExFreePool(Segment);
 }
 
+static
 VOID
-NTAPI
 MiCheckControlArea(IN PCONTROL_AREA ControlArea,
                    IN KIRQL OldIrql)
 {
@@ -744,8 +744,8 @@ MiCheckControlArea(IN PCONTROL_AREA ControlArea,
     }
 }
 
+static
 VOID
-NTAPI
 MiDereferenceControlArea(IN PCONTROL_AREA ControlArea)
 {
     KIRQL OldIrql;
@@ -798,8 +798,8 @@ MiRemoveMappedView(IN PEPROCESS CurrentProcess,
     MiCheckControlArea(ControlArea, OldIrql);
 }
 
+static
 NTSTATUS
-NTAPI
 MiUnmapViewOfSection(IN PEPROCESS Process,
                      IN PVOID BaseAddress,
                      IN ULONG Flags)
@@ -919,8 +919,8 @@ Quickie:
     return Status;
 }
 
+static
 NTSTATUS
-NTAPI
 MiSessionCommitPageTables(IN PVOID StartVa,
                           IN PVOID EndVa)
 {
@@ -1147,8 +1147,8 @@ MiMapViewInSystemSpace(
     return STATUS_SUCCESS;
 }
 
+static
 NTSTATUS
-NTAPI
 MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
                        IN PEPROCESS Process,
                        IN PVOID *BaseAddress,
@@ -1402,8 +1402,8 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     return STATUS_SUCCESS;
 }
 
+static
 NTSTATUS
-NTAPI
 MiCreateDataFileMap(IN PFILE_OBJECT File,
                     OUT PSEGMENT *Segment,
                     IN PSIZE_T MaximumSize,
@@ -1419,7 +1419,6 @@ MiCreateDataFileMap(IN PFILE_OBJECT File,
 
 static
 NTSTATUS
-NTAPI
 MiCreatePagingFileMap(OUT PSEGMENT *Segment,
                       IN PLARGE_INTEGER MaximumSize,
                       IN ULONG ProtectionMask,
@@ -1632,8 +1631,8 @@ MmGetImageInformation (OUT PSECTION_IMAGE_INFORMATION ImageInformation)
     *ImageInformation = ((PMM_IMAGE_SECTION_OBJECT)SectionObject->Segment)->ImageInformation;
 }
 
+static
 NTSTATUS
-NTAPI
 MmGetFileNameForFileObject(IN PFILE_OBJECT FileObject,
                            OUT POBJECT_NAME_INFORMATION *ModuleName)
 {
@@ -1916,8 +1915,8 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
     MiReleasePfnLock(OldIrql);
 }
 
+static
 VOID
-NTAPI
 MiRemoveMappedPtes(IN PVOID BaseAddress,
                    IN ULONG NumberOfPtes,
                    IN PCONTROL_AREA ControlArea,
@@ -2018,8 +2017,8 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
     MiCheckControlArea(ControlArea, OldIrql);
 }
 
+static
 ULONG
-NTAPI
 MiRemoveFromSystemSpace(IN PMMSESSION Session,
                         IN PVOID Base,
                         OUT PCONTROL_AREA *ControlArea)
@@ -2062,8 +2061,8 @@ MiRemoveFromSystemSpace(IN PMMSESSION Session,
     return Size;
 }
 
+static
 NTSTATUS
-NTAPI
 MiUnmapViewInSystemSpace(IN PMMSESSION Session,
                          IN PVOID MappedBase)
 {
