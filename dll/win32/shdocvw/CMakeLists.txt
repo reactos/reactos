@@ -23,7 +23,7 @@ add_library(shdocvw MODULE
 
 set_module_type(shdocvw win32dll)
 target_link_libraries(shdocvw uuid wine)
-add_delay_importlibs(shdocvw ole32 oleaut32 ieframe)
+add_delay_importlibs(shdocvw shell32 ole32 oleaut32 ieframe)
 add_importlibs(shdocvw shlwapi advapi32 msvcrt kernel32 ntdll)
 add_dependencies(shdocvw stdole2)
 add_pch(shdocvw precomp.h SOURCE)
