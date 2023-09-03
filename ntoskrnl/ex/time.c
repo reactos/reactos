@@ -372,8 +372,9 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     /* Calculate the new system time */
     ExLocalTimeToSystemTime(&LocalTime, &SystemTime);
 
-    /* Set the new system time */
+    /* Set the new system time and notify the system */
     KeSetSystemTime(&SystemTime, &OldTime, FALSE, NULL);
+    PoNotifySystemTimeSet();
 
     /* Return success */
     DPRINT("ExpSetTimeZoneInformation() done\n");
@@ -400,7 +401,16 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     TIME_FIELDS TimeFields;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
+
     PAGED_CODE();
+
+    // TODO: Handle the case when SystemTime == NULL, which means:
+    // "update system time using the current time-zone information".
+    if (!SystemTime)
+    {
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
 
     /* Check if we were called from user-mode */
     if (PreviousMode != KernelMode)
@@ -409,7 +419,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
         {
             /* Verify the time pointers */
             NewSystemTime = ProbeForReadLargeInteger(SystemTime);
-            if(PreviousTime) ProbeForWriteLargeInteger(PreviousTime);
+            if (PreviousTime) ProbeForWriteLargeInteger(PreviousTime);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -437,8 +447,9 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     RtlTimeToTimeFields(&LocalTime, &TimeFields);
     HalSetRealTimeClock(&TimeFields);
 
-    /* Now set system time */
+    /* Now set the system time and notify the system */
     KeSetSystemTime(&NewSystemTime, &OldSystemTime, FALSE, NULL);
+    PoNotifySystemTimeSet();
 
     /* Check if caller wanted previous time */
     if (PreviousTime)

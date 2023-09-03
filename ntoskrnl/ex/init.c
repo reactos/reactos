@@ -1549,10 +1549,8 @@ Phase1InitializationDiscard(IN PVOID Context)
                                          ExpTimeZoneBias.QuadPart;
         }
 
-        /* Update the system time */
+        /* Update the system time and notify the system */
         KeSetSystemTime(&UniversalBootTime, &OldTime, FALSE, NULL);
-
-        /* Do system callback */
         PoNotifySystemTimeSet();
 
         /* Remember this as the boot time */
@@ -1681,7 +1679,8 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* Check if the timezone switched and update the time */
-        if (LastTzBias != ExpLastTimeZoneBias) ZwSetSystemTime(NULL, NULL);
+        if (LastTzBias != ExpLastTimeZoneBias)
+            ZwSetSystemTime(NULL, NULL);
     }
 
     /* Initialize the File System Runtime Library */
