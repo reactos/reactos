@@ -235,6 +235,21 @@ static void Test_LoadSaveImage(void)
         color = image1.GetPixel(5, 5);
         ok(color == RGB(255, 0,0), "Expected color to be 255, 0, 0; was: %i, %i, %i (for %i)\n", GetRValue(color), GetGValue(color), GetBValue(color), n);
 
+        {
+            CImageDC dc1(image1);
+            ::SetPixel(dc1, 5, 5, RGB(0, 255, 0));
+            {
+                CImageDC dc2(image1);
+                ::SetPixel(dc2, 5, 5, RGB(0, 0, 255));
+            }
+        }
+        color = image1.GetPixel(5, 5);
+        ok_long(color, RGB(0, 0, 255));
+
+        image1.SetPixel(5, 5, RGB(255, 0, 0));
+        color = image1.GetPixel(5, 5);
+        ok_long(color, RGB(255, 0, 0));
+
         bOK = DeleteFile(file);
         ok(bOK, "Expected bOK to be TRUE, was: %d (for %i)\n", bOK, n);
     }
