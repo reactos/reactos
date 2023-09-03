@@ -142,8 +142,9 @@ public:
         bf.SourceConstantAlpha = bSrcAlpha;
         bf.AlphaFormat = AC_SRC_ALPHA;
 
+        GetDC();
         BOOL ret = ::AlphaBlend(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                                GetDC(), xSrc, ySrc, nSrcWidth, nSrcHeight, bf);
+                                m_hDC, xSrc, ySrc, nSrcWidth, nSrcHeight, bf);
         ReleaseDC();
         return ret;
     }
@@ -176,8 +177,9 @@ public:
                 int nDestWidth, int nDestHeight,
                 int xSrc, int ySrc, DWORD dwROP = SRCCOPY) const throw()
     {
+        GetDC();
         BOOL ret = ::BitBlt(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                            GetDC(), xSrc, ySrc, dwROP);
+                            m_hDC, xSrc, ySrc, dwROP);
         ReleaseDC();
         return ret;
     }
@@ -296,7 +298,8 @@ public:
                        RGBQUAD* prgbColors) const throw()
     {
         ATLASSERT(IsDIBSection());
-        ::GetDIBColorTable(GetDC(), iFirstColor, nColors, prgbColors);
+        GetDC();
+        ::GetDIBColorTable(m_hDC, iFirstColor, nColors, prgbColors);
         ReleaseDC();
     }
 
@@ -337,7 +340,8 @@ public:
 
     COLORREF GetPixel(int x, int y) const throw()
     {
-        COLORREF ret = ::GetPixel(GetDC(), x, y);
+        GetDC();
+        COLORREF ret = ::GetPixel(m_hDC, x, y);
         ReleaseDC();
         return ret;
     }
@@ -453,8 +457,9 @@ public:
                  DWORD dwROP = SRCCOPY) const throw()
     {
         ATLASSERT(IsTransparencySupported());
+        GetDC();
         BOOL ret = ::MaskBlt(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                             GetDC(), xSrc, ySrc,
+                             m_hDC, xSrc, ySrc,
                              hbmMask, xMask, yMask, dwROP);
         ReleaseDC();
         return ret;
@@ -485,7 +490,8 @@ public:
                 int xMask = 0, int yMask = 0) const throw()
     {
         ATLASSERT(IsTransparencySupported());
-        BOOL ret = ::PlgBlt(hDestDC, pPoints, GetDC(),
+        GetDC();
+        BOOL ret = ::PlgBlt(hDestDC, pPoints, m_hDC,
                             xSrc, ySrc, nSrcWidth, nSrcHeight,
                             hbmMask, xMask, yMask);
         ReleaseDC();
@@ -587,20 +593,23 @@ public:
                        const RGBQUAD* prgbColors) throw()
     {
         ATLASSERT(IsDIBSection());
-        ::SetDIBColorTable(GetDC(), iFirstColor, nColors, prgbColors);
+        GetDC();
+        ::SetDIBColorTable(m_hDC, iFirstColor, nColors, prgbColors);
         ReleaseDC();
     }
 
     void SetPixel(int x, int y, COLORREF color) throw()
     {
-        ::SetPixelV(GetDC(), x, y, color);
+        GetDC();
+        ::SetPixelV(m_hDC, x, y, color);
         ReleaseDC();
     }
 
     void SetPixelIndexed(int x, int y, int iIndex) throw()
     {
         ATLASSERT(IsIndexed());
-        ::SetPixelV(GetDC(), x, y, PALETTEINDEX(iIndex));
+        GetDC();
+        ::SetPixelV(m_hDC, x, y, PALETTEINDEX(iIndex));
         ReleaseDC();
     }
 
@@ -622,8 +631,9 @@ public:
                     int xSrc, int ySrc, int nSrcWidth, int nSrcHeight,
                     DWORD dwROP = SRCCOPY) const throw()
     {
+        GetDC();
         BOOL ret = ::StretchBlt(hDestDC, xDest, yDest, nDestWidth, nDestHeight,
-                                GetDC(), xSrc, ySrc, nSrcWidth, nSrcHeight, dwROP);
+                                m_hDC, xSrc, ySrc, nSrcWidth, nSrcHeight, dwROP);
         ReleaseDC();
         return ret;
     }
@@ -658,9 +668,10 @@ public:
                         UINT crTransparent = CLR_INVALID) const throw()
     {
         ATLASSERT(IsTransparencySupported());
+        GetDC();
         BOOL ret = ::TransparentBlt(hDestDC, xDest, yDest,
                                     nDestWidth, nDestHeight,
-                                    GetDC(), xSrc, ySrc,
+                                    m_hDC, xSrc, ySrc,
                                     nSrcWidth, nSrcHeight, crTransparent);
         ReleaseDC();
         return ret;
