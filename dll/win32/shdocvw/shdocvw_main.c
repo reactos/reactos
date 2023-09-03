@@ -31,6 +31,7 @@
 #ifdef __REACTOS__
 #include "winnls.h"
 #include <shlguid_undoc.h>
+#include <rpcproxy.h>
 #endif
 #include "shlwapi.h"
 #include "wininet.h"
@@ -44,6 +45,9 @@ LONG SHDOCVW_refCount = 0;
 
 static HMODULE SHDOCVW_hshell32 = 0;
 static HINSTANCE ieframe_instance;
+#ifdef __REACTOS__
+static HINSTANCE instance;
+#endif
 
 static HINSTANCE get_ieframe_instance(void)
 {
@@ -104,8 +108,12 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
+#ifdef __REACTOS__
+    return __wine_register_resources(instance);
+#else
     TRACE("\n");
     return S_OK;
+#endif
 }
 
 /***********************************************************************
@@ -113,8 +121,12 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
+#ifdef __REACTOS__
+    return __wine_unregister_resources(instance);
+#else
     TRACE("\n");
     return S_OK;
+#endif
 }
 
 /******************************************************************
@@ -155,6 +167,9 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
     switch (fdwReason)
     {
     case DLL_PROCESS_ATTACH:
+#ifdef __REACTOS__
+        instance = hinst;
+#endif
         DisableThreadLibraryCalls(hinst);
         break;
     case DLL_PROCESS_DETACH:

@@ -199,6 +199,10 @@ HKCR
             Version = s '1.1'
             VersionIndependentProgId = s 'SearchAssistantOC.SearchAssistantOC'
         }
+        '{53BD6B4E-3780-4693-AFC3-7161C2F3EE9C}' = s 'MruLongList'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
     }
     'Shell.Explorer.1' = s 'Microsoft Web Browser Version 1'
     {
