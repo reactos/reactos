@@ -2879,9 +2879,8 @@ FILEDLG95_AddDotExtIfNeeded(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
         {
             /* Make the extension lowercase */
             CharLowerW(the_ext);
-            /* append a dot */
+            /* Append it (with dot) to the file */
             lstrcatW(lpstrPathAndFile, L".");
-            /* append the extension */
             lstrcatW(lpstrPathAndFile, the_ext);
             /* update ext */
             ext = PathFindExtensionW(lpstrPathAndFile);
