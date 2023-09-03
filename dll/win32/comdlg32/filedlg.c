@@ -2893,7 +2893,7 @@ FILEDLG95_AddDotExtIfNeeded(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
     /* In Open dialog: if file does not exist try without extension */
     if (!(fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG) && !PathFileExistsW(lpstrPathAndFile))
     {
-        lpstrPathAndFile[PathLength] = 0;
+        lpstrPathAndFile[PathLength] = UNICODE_NULL;
         ret = FALSE;
     }
 
