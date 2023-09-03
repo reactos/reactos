@@ -243,12 +243,17 @@ static void Test_LoadSaveImage(void)
                 ::SetPixel(dc2, 5, 5, RGB(0, 0, 255));
             }
         }
-        color = image1.GetPixel(5, 5);
-        ok_long(color, RGB(0, 0, 255));
 
-        image1.SetPixel(5, 5, RGB(255, 0, 0));
-        color = image1.GetPixel(5, 5);
-        ok_long(color, RGB(255, 0, 0));
+        {
+            HDC hdcImage = image1.GetDC();
+            color = ::GetPixel(hdcImage, 5, 5);
+            ok_long(color, RGB(0, 0, 255));
+
+            ::SetPixel(hdcImage, 5, 5, RGB(255, 0, 0));
+            color = ::GetPixel(hdcImage, 5, 5);
+            ok_long(color, RGB(255, 0, 0));
+            image1.ReleaseDC();
+        }
 
         bOK = DeleteFile(file);
         ok(bOK, "Expected bOK to be TRUE, was: %d (for %i)\n", bOK, n);
