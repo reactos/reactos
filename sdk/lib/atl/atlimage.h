@@ -6,12 +6,6 @@
 #ifndef __ATLIMAGE_H__
 #define __ATLIMAGE_H__
 
-// !!!!
-// TODO: The backend (gdi+) that this class relies on is not yet complete!
-//       Before that is finished, this class will not be a perfect replacement.
-//       See rostest/apitests/atl/CImage_WIP.txt for test results.
-// !!!!
-
 #pragma once
 
 #include <atlcore.h>        // for ATL Core
