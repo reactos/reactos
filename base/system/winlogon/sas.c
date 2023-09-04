@@ -795,6 +795,11 @@ HandleLogoff(
     DWORD exitCode;
     NTSTATUS Status;
 
+    /* HACK & FIXME: Prevents logging off a user with a NULL token (e.g. SYSTEM pseudo account).
+     * However this appears to happen too early. */
+    if (Session->UserToken == NULL)
+        return STATUS_INVALID_PARAMETER;
+
     /* Prepare data for logoff thread */
     LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
     if (!LSData)
@@ -938,8 +943,6 @@ HandleShutdown(
     DWORD exitCode;
     BOOLEAN Old;
 
-    // SwitchDesktop(Session->WinlogonDesktop);
-
     /* If the system is rebooting, show the appropriate string */
     if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
         DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISRESTARTING);
@@ -965,6 +968,9 @@ HandleShutdown(
     // (we are shutting down ReactOS, not just logging off so no hangs, etc...
     // should be allowed).
     // LSData->Flags |= EWX_FORCE;
+
+    /* Ensure we are on the correct desktop before running shutdown thread. */
+    SwitchDesktop(Session->WinlogonDesktop);
 
     /* Run shutdown thread */
     hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
@@ -1013,29 +1019,6 @@ HandleShutdown(
     }
     RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
     return STATUS_SUCCESS;
-}
-
-static
-BOOL
-IsLocalSystem(_In_ HANDLE UserToken)
-{
-    BOOL IsLocalSystem;
-    SID_IDENTIFIER_AUTHORITY NtAuthority = { SECURITY_NT_AUTHORITY };
-    PSID pLocalSystemSID;
-
-    IsLocalSystem = AllocateAndInitializeSid(&NtAuthority,
-                                             1, SECURITY_LOCAL_SYSTEM_RID,
-                                             0, 0, 0, 0, 0, 0, 0,
-                                             &pLocalSystemSID);
-    if (IsLocalSystem)
-    {
-        if (!CheckTokenMembership(UserToken, pLocalSystemSID, &IsLocalSystem))
-            IsLocalSystem = FALSE;
-
-        FreeSid(pLocalSystemSID);
-    }
-
-    return IsLocalSystem;
 }
 
 static
@@ -1093,15 +1076,15 @@ DoGenericAction(
                     LogOffFlags |= EWX_FORCE;
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
                     break;
-                /* Prevent LocalSystem from logging off unless it is shutting down. */
-                if (IsLocalSystem(Session->UserToken) && !WLX_SHUTTINGDOWN(wlxAction))
-                    break;
-                if (!NT_SUCCESS(HandleLogoff(Session, LogOffFlags)))
+                if (NT_SUCCESS(HandleLogoff(Session, LogOffFlags)))
                 {
-                    RemoveStatusMessage(Session);
-                    break;
+                    Session->Gina.Functions.WlxLogoff(Session->Gina.Context);
+                    if (!WLX_SHUTTINGDOWN(wlxAction))
+                    {
+                        RemoveStatusMessage(Session);
+                        Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+                    }
                 }
-                Session->Gina.Functions.WlxLogoff(Session->Gina.Context);
             }
             if (WLX_SHUTTINGDOWN(wlxAction))
             {
@@ -1113,11 +1096,6 @@ DoGenericAction(
                     RemoveStatusMessage(Session);
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
                 }
-            }
-            else
-            {
-                RemoveStatusMessage(Session);
-                Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             }
             break;
         case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
