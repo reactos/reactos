@@ -47,8 +47,11 @@
  * Data structure
  */
 
-
+#ifdef __REACTOS__
+typedef struct FileOpenDlgInfos
+#else
 typedef struct
+#endif
 {
     LPOPENFILENAMEW ofnInfos;
     BOOL unicode;

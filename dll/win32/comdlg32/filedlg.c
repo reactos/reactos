@@ -2826,8 +2826,98 @@ void FILEDLG95_OnOpenMessage(HWND hwnd, int idCaption, int idText)
   MessageBoxW(hwnd,strMsgText, strMsgTitle, MB_OK | MB_ICONHAND);
 }
 
+#ifdef __REACTOS__
+/* The return value needs LocalFree */
+static LPWSTR FILEDLG95_GetFallbackExtension(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
+{
+    LPWSTR lpstrFilter, the_ext = NULL, pchDot = NULL;
+
+    /* Without lpstrDefExt, append no extension */
+    if (!fodInfos->defext)
+        return NULL;
+
+    /* Get filter extensions */
+    lpstrFilter = (LPWSTR)CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
+                                           fodInfos->ofnInfos->nFilterIndex - 1);
+    if (lpstrFilter != (LPWSTR)CB_ERR && lpstrFilter && *lpstrFilter)
+    {
+        LPWSTR pchSemicolon = wcschr(lpstrFilter, L';');
+
+        if (pchSemicolon)
+            *pchSemicolon = UNICODE_NULL;
+
+        pchDot = wcschr(lpstrFilter, L'.');
+
+        if (pchDot && pchDot[1] && !wcschr(pchDot, L'*') && !wcschr(pchDot, L'?'))
+            the_ext = StrDupW(pchDot + 1);
+
+        if (pchSemicolon)
+            *pchSemicolon = L';';
+    }
+
+    if (!the_ext && (!pchDot || pchDot[1]))
+    {
+        /* use default extension if no extension in filter */
+        the_ext = StrDupW(fodInfos->defext);
+    }
+
+    return the_ext;
+}
+
+static BOOL
+FILEDLG95_AddDotExtIfNeeded(FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile)
+{
+    BOOL ret = FALSE;
+    LPWSTR ext = PathFindExtensionW(lpstrPathAndFile);
+    int PathLength = lstrlenW(lpstrPathAndFile);
+    LPWSTR the_ext = FILEDLG95_GetFallbackExtension(fodInfos, lpstrPathAndFile);
+
+    if (the_ext && *the_ext &&
+        (*ext == UNICODE_NULL || lstrcmpiW(ext + 1, the_ext) != 0))
+    {
+        if (strlenW(lpstrPathAndFile) + 1 + strlenW(the_ext) + 1 <=
+            fodInfos->ofnInfos->nMaxFile)
+        {
+            /* Make the extension lowercase */
+            CharLowerW(the_ext);
+            /* Append it (with dot) to the file */
+            lstrcatW(lpstrPathAndFile, L".");
+            lstrcatW(lpstrPathAndFile, the_ext);
+            /* update ext */
+            ext = PathFindExtensionW(lpstrPathAndFile);
+            ret = TRUE;
+        }
+    }
+
+    LocalFree(the_ext);
+
+    /* In Open dialog: if file does not exist try without extension */
+    if (!(fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG) && !PathFileExistsW(lpstrPathAndFile))
+    {
+        lpstrPathAndFile[PathLength] = UNICODE_NULL;
+        ret = FALSE;
+    }
+
+    /* Set/clear the output OFN_EXTENSIONDIFFERENT flag */
+    if (*ext)
+        ext++;
+    if (!lstrcmpiW(fodInfos->defext, ext))
+        fodInfos->ofnInfos->Flags &= ~OFN_EXTENSIONDIFFERENT;
+    else
+        fodInfos->ofnInfos->Flags |= OFN_EXTENSIONDIFFERENT;
+
+    return ret;
+}
+#endif
+
+#ifdef __REACTOS__
+int FILEDLG95_ValidatePathAction(struct FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile,
+                                 IShellFolder **ppsf, HWND hwnd, DWORD flags, BOOL isSaveDlg,
+                                 int defAction)
+#else
 int FILEDLG95_ValidatePathAction(LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
                                  HWND hwnd, DWORD flags, BOOL isSaveDlg, int defAction)
+#endif
 {
     int nOpenAction = defAction;
     LPWSTR lpszTemp, lpszTemp1;
@@ -2924,8 +3014,17 @@ int FILEDLG95_ValidatePathAction(LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
             {
                 if( (flags & OFN_FILEMUSTEXIST) && !isSaveDlg )
                 {
+#ifdef __REACTOS__
+                    FILEDLG95_AddDotExtIfNeeded(fodInfos, lpstrPathAndFile);
+                    if (!PathFileExistsW(lpstrPathAndFile))
+                    {
+                        FILEDLG95_OnOpenMessage(hwnd, 0, IDS_FILENOTEXISTING);
+                        break;
+                    }
+#else
                     FILEDLG95_OnOpenMessage(hwnd, 0, IDS_FILENOTEXISTING);
                     break;
+#endif
                 }
             }
             /* change to the current folder */
@@ -3011,7 +3110,11 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
   else
     nOpenAction = ONOPEN_BROWSE;
 
+#ifdef __REACTOS__
+  nOpenAction = FILEDLG95_ValidatePathAction(fodInfos, lpstrPathAndFile, &lpsf, hwnd,
+#else
   nOpenAction = FILEDLG95_ValidatePathAction(lpstrPathAndFile, &lpsf, hwnd,
+#endif
                                              fodInfos->ofnInfos->Flags,
                                              fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG,
                                              nOpenAction);
@@ -3088,7 +3191,9 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
     case ONOPEN_OPEN:   /* fill in the return struct and close the dialog */
       TRACE("ONOPEN_OPEN %s\n", debugstr_w(lpstrPathAndFile));
       {
+#ifndef __REACTOS__
         WCHAR *ext = NULL;
+#endif
 
         /* update READONLY check box flag */
 	if ((SendMessageW(GetDlgItem(hwnd,IDC_OPENREADONLY),BM_GETCHECK,0,0) & 0x03) == BST_CHECKED)
@@ -3097,104 +3202,13 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 	  fodInfos->ofnInfos->Flags &= ~OFN_READONLY;
 
         /* Attach the file extension with file name*/
-        ext = PathFindExtensionW(lpstrPathAndFile);
 #ifdef __REACTOS__
-        if (*ext == UNICODE_NULL && fodInfos->defext)
-        {
-            LPWSTR filterExt = NULL, lpstrFilter = NULL, pch, pchNext;
-            LPCWSTR the_ext = NULL;
-            static const WCHAR szwDot[] = {'.',0};
-            int PathLength = lstrlenW(lpstrPathAndFile);
-
-            /* get filter extensions */
-            lpstrFilter = (LPWSTR) CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
-                                                    fodInfos->ofnInfos->nFilterIndex - 1);
-            if (lpstrFilter != (LPWSTR)CB_ERR)  /* control is not empty */
-            {
-                LPWSTR filterSearchIndex, pchFirst = NULL;
-                filterExt = heap_alloc((lstrlenW(lpstrFilter) + 1) * sizeof(WCHAR));
-                if (filterExt)
-                {
-                    strcpyW(filterExt, lpstrFilter);
-
-                    if (ext && *ext)
-                    {
-                        /* find ext in filter */
-                        for (pch = filterExt; pch && *pch; pch = pchNext)
-                        {
-                            filterSearchIndex = strchrW(pch, ';');
-                            if (filterSearchIndex)
-                            {
-                                filterSearchIndex[0] = 0;
-                                pchNext = filterSearchIndex + 1;
-                            }
-                            else
-                            {
-                                pchNext = NULL;
-                            }
-
-                            while (*pch == '*' || *pch == '.' || *pch == '?')
-                            {
-                                ++pch;
-                            }
-
-                            if (!pchFirst)
-                                pchFirst = pch;
-
-                            if (lstrcmpiW(pch, &ext[1]) == 0)
-                            {
-                                the_ext = pch;
-                                break;
-                            }
-                        }
-
-                        /* use first one if not found */
-                        if (!the_ext && pchFirst && *pchFirst)
-                        {
-                            the_ext = pchFirst;
-                        }
-                    }
-                }
-            }
-
-            if (!the_ext)
-            {
-                /* use default extension if no extension in filter */
-                the_ext = fodInfos->defext;
-            }
-
-            if (the_ext && *the_ext && lstrcmpiW(&ext[1], the_ext) != 0)
-            {
-                if (strlenW(lpstrPathAndFile) + 1 + strlenW(the_ext) + 1 <=
-                    fodInfos->ofnInfos->nMaxFile)
-                {
-                    /* append the dot */
-                    lstrcatW(lpstrPathAndFile, szwDot);
-                    /* append the extension */
-                    lstrcatW(lpstrPathAndFile, the_ext);
-                    /* update ext */
-                    ext = PathFindExtensionW(lpstrPathAndFile);
-                }
-            }
-
-            heap_free(filterExt);
-
-            /* In Open dialog: if file does not exist try without extension */
-            if (!(fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG) && !PathFileExistsW(lpstrPathAndFile))
-                lpstrPathAndFile[PathLength] = 0;
-
-            /* Set/clear the output OFN_EXTENSIONDIFFERENT flag */
-            if (*ext)
-                ext++;
-            if (!lstrcmpiW(fodInfos->defext, ext))
-                fodInfos->ofnInfos->Flags &= ~OFN_EXTENSIONDIFFERENT;
-            else
-                fodInfos->ofnInfos->Flags |= OFN_EXTENSIONDIFFERENT;
-        }
-
+        /* Add extension if necessary */
+        FILEDLG95_AddDotExtIfNeeded(fodInfos, lpstrPathAndFile);
         /* update dialog data */
         SetWindowTextW(fodInfos->DlgInfos.hwndFileName, PathFindFileNameW(lpstrPathAndFile));
 #else /* __REACTOS__ */
+        ext = PathFindExtensionW(lpstrPathAndFile);
         if (! *ext && fodInfos->defext)
         {
             /* if no extension is specified with file name, then */
