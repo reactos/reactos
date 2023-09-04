@@ -34,8 +34,8 @@
 @ stub _gmtime32_s
 @ stdcall _gmtime64() msvcrt._gmtime64
 @ stub _gmtime64_s
-@ cdecl _localtime32 msvcrt._localtime32
-@ cdecl _localtime32_s msvcrt._localtime32_s
+@ cdecl _localtime32() msvcrt._localtime32
+@ cdecl _localtime32_s() msvcrt._localtime32_s
 @ cdecl _localtime64() msvcrt._localtime64
 @ cdecl _localtime64_s() msvcrt._localtime64_s
 @ stub _mkgmtime32
