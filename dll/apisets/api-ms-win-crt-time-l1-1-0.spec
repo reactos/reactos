@@ -37,7 +37,7 @@
 @ cdecl _localtime32 msvcrt._localtime32
 @ cdecl _localtime32_s msvcrt._localtime32_s
 @ cdecl _localtime64() msvcrt._localtime64
-@ stub _localtime64_s
+@ cdecl _localtime64_s() msvcrt._localtime64_s
 @ stub _mkgmtime32
 @ stdcall _mkgmtime64() msvcrt._mkgmtime64
 @ stub _mktime32
