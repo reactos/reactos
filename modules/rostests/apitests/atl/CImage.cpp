@@ -37,9 +37,9 @@ Test_PixelAddress(INT iLine, const CImage &image1, const BITMAP &bm, INT x, INT 
 }
 
 static void
-Test_MonoBitmapEntry(INT iLine, INT width, INT height, BOOL bTopDown)
+Test_BitmapEntry(INT iLine, INT bpp, INT width, INT height, BOOL bTopDown)
 {
-    HBITMAP hBitmap = ::CreateBitmap(width, height, 1, 1, NULL);
+    HBITMAP hBitmap = ::CreateBitmap(width, height, bpp, 1, NULL);
     ok(hBitmap != NULL, "Line %d: hBitmap was NULL\n", iLine);
 
     CImage image1;
@@ -52,13 +52,61 @@ Test_MonoBitmapEntry(INT iLine, INT width, INT height, BOOL bTopDown)
 
     ok(image1.GetWidth() == width, "Line %d: %d vs %d\n", iLine, image1.GetWidth(), width);
     ok(image1.GetHeight() == height, "Line %d: %d vs %d\n", iLine, image1.GetHeight(), height);
-    ok(image1.GetBPP() == 1, "Line %d: %d vs %d\n", iLine, image1.GetBPP(), 1);
+    ok(image1.GetBPP() == bpp, "Line %d: %d vs %d\n", iLine, image1.GetBPP(), 1);
 }
 
-static void Test_MonoBitmap(void)
+static void Test_Bitmap(void)
 {
-    Test_MonoBitmapEntry(__LINE__, 20, 30, FALSE);
-    Test_MonoBitmapEntry(__LINE__, 20, 30, TRUE);
+    Test_BitmapEntry(__LINE__, 1, 20, 30, FALSE);
+    Test_BitmapEntry(__LINE__, 1, 30, 20, TRUE);
+    Test_BitmapEntry(__LINE__, 4, 20, 30, FALSE);
+    Test_BitmapEntry(__LINE__, 4, 30, 20, TRUE);
+    Test_BitmapEntry(__LINE__, 8, 20, 30, FALSE);
+    Test_BitmapEntry(__LINE__, 8, 30, 20, TRUE);
+    Test_BitmapEntry(__LINE__, 24, 20, 30, FALSE);
+    Test_BitmapEntry(__LINE__, 24, 30, 20, TRUE);
+    Test_BitmapEntry(__LINE__, 32, 20, 30, FALSE);
+    Test_BitmapEntry(__LINE__, 32, 30, 20, TRUE);
+}
+
+static void Test_CompatBitmapEntry(INT iLine, HDC hdc, INT width, INT height)
+{
+    HBITMAP hBitmap = ::CreateCompatibleBitmap(hdc, width, height);
+    ok(hBitmap != NULL, "Line %d: hBitmap was NULL\n", iLine);
+
+    CImage image1;
+
+    ok(image1.IsNull(), "Line %d: IsNull() was TRUE\n", iLine);
+    image1.Attach(hBitmap);
+
+    ok(!image1.IsNull(), "Line %d: IsNull() was FALSE\n", iLine);
+    ok(!image1.IsDIBSection(), "Line %d: IsDIBSection() was TRUE\n", iLine);
+
+    ok(image1.GetWidth() == width, "Line %d: %d vs %d\n", iLine, image1.GetWidth(), width);
+    ok(image1.GetHeight() == height, "Line %d: %d vs %d\n", iLine, image1.GetHeight(), height);
+}
+
+static void Test_CompatBitmap(void)
+{
+    HDC hdc = ::CreateCompatibleDC(NULL);
+
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+
+    ::DeleteDC(hdc);
+
+    hdc = ::GetDC(NULL);
+
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+
+    ::ReleaseDC(NULL, hdc);
 }
 
 static void
@@ -444,7 +492,8 @@ static void Test_Exporter(void)
 
 START_TEST(CImage)
 {
-    Test_MonoBitmap();
+    Test_Bitmap();
+    Test_CompatBitmap();
     Test_DIBSection();
     Test_ResBitmap();
     Test_Importer();
