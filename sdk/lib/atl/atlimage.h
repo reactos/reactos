@@ -6,12 +6,6 @@
 #ifndef __ATLIMAGE_H__
 #define __ATLIMAGE_H__
 
-// !!!!
-// TODO: The backend (gdi+) that this class relies on is not yet complete!
-//       Before that is finished, this class will not be a perfect replacement.
-//       See rostest/apitests/atl/CImage_WIP.txt for test results.
-// !!!!
-
 #pragma once
 
 #include <atlcore.h>        // for ATL Core
@@ -93,28 +87,41 @@ public:
 
     HDC GetDC() const throw()
     {
-        if (m_hDC)
-            return m_hDC;
+        ATLASSERT(m_nDCRefCount >= 0);
+        if (::InterlockedIncrement(&m_nDCRefCount) == 1)
+        {
+            ATLASSERT(m_hDC == NULL);
+            ATLASSERT(m_hOldBitmap == NULL);
 
-        m_hDC = ::CreateCompatibleDC(NULL);
-        m_hOldBitmap = (HBITMAP)::SelectObject(m_hDC, m_hBitmap);
+            m_hDC = ::CreateCompatibleDC(NULL);
+            ATLASSERT(m_hDC != NULL);
+
+            m_hOldBitmap = (HBITMAP)::SelectObject(m_hDC, m_hBitmap);
+            ATLASSERT(m_hOldBitmap != NULL);
+        }
+
         return m_hDC;
     }
 
     void ReleaseDC() const throw()
     {
-        ATLASSERT(m_hDC);
+        ATLASSERT(m_nDCRefCount > 0);
 
-        if (m_hDC == NULL)
+        if (::InterlockedDecrement(&m_nDCRefCount) != 0)
             return;
 
         if (m_hOldBitmap)
         {
+            ATLASSERT(m_hDC != NULL);
             ::SelectObject(m_hDC, m_hOldBitmap);
             m_hOldBitmap = NULL;
         }
-        ::DeleteDC(m_hDC);
-        m_hDC = NULL;
+
+        if (m_hDC)
+        {
+            ::DeleteDC(m_hDC);
+            m_hDC = NULL;
+        }
     }
 
     BOOL AlphaBlend(HDC hDestDC,
@@ -1016,6 +1023,7 @@ private:
     HBITMAP             m_hBitmap;
     mutable HBITMAP     m_hOldBitmap;
     mutable HDC         m_hDC;
+    mutable LONG        m_nDCRefCount = 0;
     DIBOrientation      m_eOrientation;
     bool                m_bHasAlphaChannel;
     bool                m_bIsDIBSection;
@@ -1213,7 +1221,34 @@ private:
 
 DECLSPEC_SELECTANY CImage::CInitGDIPlus CImage::s_gdiplus;
 
-}
+class CImageDC
+{
+private:
+    const CImage& m_image;
+    HDC m_hDC;
+
+public:
+    CImageDC(const CImage& image)
+        : m_image(image)
+        , m_hDC(image.GetDC())
+    {
+    }
+
+    virtual ~CImageDC() throw()
+    {
+        m_image.ReleaseDC();
+    }
+
+    operator HDC() const throw()
+    {
+        return m_hDC;
+    }
+
+    CImageDC(const CImageDC&) = delete;
+    CImageDC& operator=(const CImageDC&) = delete;
+};
+
+} // namespace ATL
 
 #endif
 
