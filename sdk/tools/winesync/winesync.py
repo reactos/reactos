@@ -84,7 +84,9 @@ class wine_sync:
             self.wine_staging_repo.reset(wine_staging_target_commit, pygit2.GIT_RESET_HARD)
 
             # run the wine-staging script
-            subprocess.call(['bash', '-c', self.wine_staging_src + '/patches/patchinstall.sh DESTDIR=' + self.wine_src + ' --all --backend=git-am'])
+            if subprocess.call(['python', self.wine_staging_src + '/staging/patchinstall.py', 'DESTDIR=' + self.wine_src, '--all', '--backend=git-am']):
+                # the new script failed (it doesn't exist?), try the old one
+                subprocess.call(['bash', '-c', self.wine_staging_src + '/patches/patchinstall.sh DESTDIR=' + self.wine_src + ' --all --backend=git-am'])
 
             # delete the branch we created
             self.wine_staging_repo.checkout(self.wine_staging_repo.lookup_branch('master'))
