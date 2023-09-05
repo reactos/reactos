@@ -459,7 +459,7 @@ public:
     {
         HANDLE hHandle = ::LoadImage(hInstance, pszResourceName,
                                      IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-        Attach(reinterpret_cast<HBITMAP>(hHandle), DIBOR_BOTTOMUP);
+        Attach(reinterpret_cast<HBITMAP>(hHandle));
     }
     void LoadFromResource(HINSTANCE hInstance, UINT nIDResource) noexcept
     {
@@ -1040,6 +1040,8 @@ private:
     }
 
 private:
+    // FIXME: MS ATL CImage has m_nWidth, m_nHeight, m_nPitch, m_nBPP, and m_pBits.
+    // FIXME: MS ATL CImage hasn't m_eOrientation, m_bm, and m_ds.
     HBITMAP             m_hBitmap;
     mutable HBITMAP     m_hOldBitmap;
     mutable HDC         m_hDC;
@@ -1162,14 +1164,22 @@ private:
         m_bIsDIBSection = (::GetObject(hBitmap, size, &m_ds) == size);
 
         bool bOK = (::GetObject(hBitmap, sizeof(BITMAP), &m_bm) != 0);
+        if (!bOK)
+            return;
 
-        if (bOK)
+        m_hBitmap = hBitmap;
+
+        if (m_bIsDIBSection && eOrientation == DIBOR_DEFAULT)
         {
-            m_hBitmap = hBitmap;
-            m_eOrientation = eOrientation;
-            m_bHasAlphaChannel = (m_bm.bmBitsPixel == 32);
-            m_clrTransparentColor = CLR_INVALID;
+            if (m_ds.dsBmih.biHeight < 0)
+                eOrientation = DIBOR_TOPDOWN;
+            else
+                eOrientation = DIBOR_BOTTOMUP;
         }
+        m_eOrientation = eOrientation;
+
+        m_bHasAlphaChannel = (m_bm.bmBitsPixel == 32);
+        m_clrTransparentColor = CLR_INVALID;
     }
 
     BOOL CreateInternal(int nWidth, int nHeight, int nBPP,
