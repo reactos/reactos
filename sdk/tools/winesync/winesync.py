@@ -99,7 +99,7 @@ class wine_sync:
     # Helper function for resolving wine tree path to reactos one
     # Note: it doesn't care about the fact that the file actually exists or not
     def wine_to_reactos_path(self, wine_path):
-        if wine_path in self.module_cfg['files']:
+        if self.module_cfg['files'] and (wine_path in self.module_cfg['files']):
             # we have a direct mapping
             return self.module_cfg['files'][wine_path]
 
@@ -107,11 +107,8 @@ class wine_sync:
             # root files should have a direct mapping
             return None
 
-        if self.module_cfg['directories'] is None:
-            return None
-
         wine_dir, wine_file = os.path.split(wine_path)
-        if wine_dir in self.module_cfg['directories']:
+        if self.module_cfg['directories'] and (wine_dir in self.module_cfg['directories']):
             # we have a mapping for the directory
             return posixpath.join(self.module_cfg['directories'][wine_dir], wine_file)
 
@@ -295,8 +292,13 @@ class wine_sync:
         if not has_patches:
             return True
 
-        self.reactos_index.add_all([f for f in self.module_cfg['files'].values()])
-        self.reactos_index.add_all([f'{d}/*.*' for d in self.module_cfg['directories'].values()])
+        # Note: these path lists may be empty or None, in which case
+        # we should not call index.add_all(), otherwise we would add
+        # any untracked file present in the repository.
+        if self.module_cfg['files']:
+            self.reactos_index.add_all([f for f in self.module_cfg['files'].values()])
+        if self.module_cfg['directories']:
+            self.reactos_index.add_all([f'{d}/*.*' for d in self.module_cfg['directories'].values()])
         self.reactos_index.write()
 
         self.reactos_repo.create_commit(
