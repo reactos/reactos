@@ -270,6 +270,7 @@ static VOID NOTEPAD_InitData(HINSTANCE hInstance)
  */
 static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
 {
+    DWORD dwStart, dwEnd;
     int enable;
 
     UNREFERENCED_PARAMETER(index);
@@ -280,8 +281,8 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
         SendMessage(Globals.hEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
     EnableMenuItem(menu, CMD_PASTE,
         IsClipboardFormatAvailable(CF_TEXT) ? MF_ENABLED : MF_GRAYED);
-    enable = (int) SendMessage(Globals.hEdit, EM_GETSEL, 0, 0);
-    enable = (HIWORD(enable) == LOWORD(enable)) ? MF_GRAYED : MF_ENABLED;
+    SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+    enable = ((dwStart == dwEnd) ? MF_GRAYED : MF_ENABLED);
     EnableMenuItem(menu, CMD_CUT, enable);
     EnableMenuItem(menu, CMD_COPY, enable);
     EnableMenuItem(menu, CMD_DELETE, enable);

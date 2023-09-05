@@ -865,6 +865,10 @@ VOID DIALOG_GoTo(VOID)
     else
         ich = (INT)SendMessage(Globals.hEdit, EM_LINEINDEX, GotoData.iLine, 0);
 
+    /* EM_LINEINDEX can return -1 on failure */
+    if (ich < 0)
+        ich = 0;
+
     /* Move the caret */
     SendMessage(Globals.hEdit, EM_SETSEL, ich, ich);
     SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
@@ -872,13 +876,16 @@ VOID DIALOG_GoTo(VOID)
 
 VOID DIALOG_StatusBarUpdateCaretPos(VOID)
 {
-    int line, col;
+    int line, ich, col;
     TCHAR buff[MAX_PATH];
     DWORD dwStart, dwSize;
 
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwSize);
     line = SendMessage(Globals.hEdit, EM_LINEFROMCHAR, (WPARAM)dwStart, 0);
-    col = dwStart - SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, 0);
+    ich = (int)SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, 0);
+
+    /* EM_LINEINDEX can return -1 on failure */
+    col = ((ich < 0) ? 0 : (dwStart - ich));
 
     StringCchPrintf(buff, _countof(buff), Globals.szStatusBarLineCol, line + 1, col + 1);
     SendMessage(Globals.hStatusBar, SB_SETTEXT, SBPART_CURPOS, (LPARAM)buff);
