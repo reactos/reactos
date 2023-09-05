@@ -164,7 +164,7 @@ int DIALOG_StringMsgBox(HWND hParent, int formatId, LPCTSTR szString, DWORD dwFl
 
     /* Load and format szMessage */
     LoadString(Globals.hInstance, formatId, szResource, _countof(szResource));
-    _sntprintf(szMessage, _countof(szMessage), szResource, szString);
+    StringCchPrintf(szMessage, _countof(szMessage), szResource, szString);
 
     /* Load szCaption */
     if ((dwFlags & MB_ICONMASK) == MB_ICONEXCLAMATION)
@@ -880,7 +880,7 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
     line = SendMessage(Globals.hEdit, EM_LINEFROMCHAR, (WPARAM)dwStart, 0);
     col = dwStart - SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, 0);
 
-    _stprintf(buff, Globals.szStatusBarLineCol, line + 1, col + 1);
+    StringCchPrintf(buff, _countof(buff), Globals.szStatusBarLineCol, line + 1, col + 1);
     SendMessage(Globals.hStatusBar, SB_SETTEXT, SBPART_CURPOS, (LPARAM)buff);
 }
 

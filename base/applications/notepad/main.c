@@ -202,7 +202,7 @@ BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
         if (bShowAlert)
         {
             LoadString(Globals.hInstance, STRING_CANNOTFIND, szResource, _countof(szResource));
-            _sntprintf(szText, _countof(szText), szResource, pFindReplace->lpstrFindWhat);
+            StringCchPrintf(szText, _countof(szText), szResource, pFindReplace->lpstrFindWhat);
             LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, _countof(szResource));
             MessageBox(Globals.hFindReplaceDlg, szText, szResource, MB_OK);
         }
