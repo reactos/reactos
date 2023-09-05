@@ -283,6 +283,17 @@ public:
         return pb;
     }
 
+    const void *GetBits() const noexcept
+    {
+        ATLASSERT(IsDIBSection());
+        const BYTE *pb = (const BYTE *)m_bm.bmBits;
+        if (m_eOrientation == DIBOR_BOTTOMUP)
+        {
+            pb += m_bm.bmWidthBytes * (m_bm.bmHeight - 1);
+        }
+        return pb;
+    }
+
     int GetBPP() const noexcept
     {
         ATLASSERT(m_hBitmap);
@@ -345,6 +356,15 @@ public:
     {
         ATLASSERT(IsDIBSection());
         BYTE *pb = (BYTE *)GetBits();
+        pb += GetPitch() * y;
+        pb += (GetBPP() * x) / 8;
+        return pb;
+    }
+
+    const void* GetPixelAddress(int x, int y) const noexcept
+    {
+        ATLASSERT(IsDIBSection());
+        const BYTE *pb = (const BYTE *)GetBits();
         pb += GetPitch() * y;
         pb += (GetBPP() * x) / 8;
         return pb;

@@ -40,7 +40,7 @@ static void
 Test_MonoBitmapEntry(INT iLine, INT width, INT height, BOOL bTopDown)
 {
     HBITMAP hBitmap = ::CreateBitmap(width, height, 1, 1, NULL);
-    ok(hBitmap != NULL, "Line %d: hBitmap was NULL\n");
+    ok(hBitmap != NULL, "Line %d: hBitmap was NULL\n", iLine);
 
     CImage image1;
 
@@ -112,7 +112,7 @@ Test_DIBSectionEntry(INT iLine, HDC hdc, INT bpp, INT width, INT height, BOOL bT
     ok(image1.IsDIBSection(), "Line %d: IsDIBSection() was FALSE\n", iLine);
     if (bpp == 4 || bpp == 8)
     {
-        ok(image1.GetTransparentColor() == 0xFFFFFFFF, "Line %d: 0x%08X\n", iLine,
+        ok(image1.GetTransparentColor() == 0xFFFFFFFF, "Line %d: 0x%08lX\n", iLine,
            image1.GetTransparentColor());
     }
 
@@ -154,20 +154,20 @@ Test_DIBSectionEntry(INT iLine, HDC hdc, INT bpp, INT width, INT height, BOOL bT
         C_ASSERT(sizeof(DWORD) == sizeof(RGBQUAD));
         FillMemory(Colors, sizeof(Colors), 0xCC);
         image1.GetColorTable(0, _countof(Colors), (RGBQUAD *)Colors);
-        ok(Colors[0] == 0, "Line %d: rgbColors[0] was 0x%08X\n", iLine, Colors[0]);
-        ok(Colors[1] == 0xFFFFFF, "Line %d: rgbColors[1] was 0x%08X\n", iLine, Colors[1]);
+        ok(Colors[0] == 0, "Line %d: 0x%08lX\n", iLine, Colors[0]);
+        ok(Colors[1] == 0xFFFFFF, "Line %d: 0x%08lX\n", iLine, Colors[1]);
         if (bpp >= 4)
-            ok(Colors[2] == 0xFF0000, "Line %d: rgbColors[2] was 0x%08X\n", iLine, Colors[2]);
+            ok(Colors[2] == 0xFF0000, "Line %d: 0x%08lX\n", iLine, Colors[2]);
     }
 
     // Test SetPixel/GetPixel
     COLORREF color;
     image1.SetPixel(0, 0, RGB(255, 255, 255));
     color = image1.GetPixel(0, 0);
-    ok(color == RGB(255, 255, 255), "Line %d: color was 0x%08X\n", iLine, color);
+    ok(color == RGB(255, 255, 255), "Line %d: color was 0x%08lX\n", iLine, color);
     image1.SetPixel(0, 0, RGB(0, 0, 0));
     color = image1.GetPixel(0, 0);
-    ok(color == RGB(0, 0, 0), "Line %d: color was 0x%08X\n", iLine, color);
+    ok(color == RGB(0, 0, 0), "Line %d: color was 0x%08lX\n", iLine, color);
 
     // Test GetDC/ReleaseDC
     {
@@ -178,7 +178,7 @@ Test_DIBSectionEntry(INT iLine, HDC hdc, INT bpp, INT width, INT height, BOOL bT
             HDC hdc2 = image1.GetDC();
             ok(hdc2 != NULL, "Line %d: hdc2 was NULL\n", iLine);
             color = ::GetPixel(hdc2, 2, 2);
-            ok(color == RGB(255, 255, 255), "Line %d: color was 0x%08X\n", iLine, color);
+            ok(color == RGB(255, 255, 255), "Line %d: color was 0x%08lX\n", iLine, color);
             image1.ReleaseDC();
         }
         image1.ReleaseDC();
@@ -193,7 +193,7 @@ Test_DIBSectionEntry(INT iLine, HDC hdc, INT bpp, INT width, INT height, BOOL bT
             CImageDC hdc2(image1);
             ok(hdc2 != NULL, "Line %d: hdc2 was NULL\n", iLine);
             color = ::GetPixel(hdc2, 1, 0);
-            ok(color == RGB(255, 255, 255), "Line %d: color was 0x%08X\n", iLine, color);
+            ok(color == RGB(255, 255, 255), "Line %d: color was 0x%08lX\n", iLine, color);
         }
     }
 
@@ -210,19 +210,19 @@ Test_DIBSectionEntry(INT iLine, HDC hdc, INT bpp, INT width, INT height, BOOL bT
         ::ExpandEnvironmentStrings(TEXT("%TEMP%\\CImage"), szFileName, _countof(szFileName));
         StringCchCat(szFileName, _countof(szFileName), dotexts[iDotExt]);
         hr = image1.Save(szFileName);
-        ok(hr == S_OK, "Line %d: %d: hr was 0x%08X\n", iLine, iDotExt, hr);
+        ok(hr == S_OK, "Line %d: %d: hr was 0x%08lX\n", iLine, iDotExt, hr);
 
         CImage image2;
         hr = image2.Load(szFileName);
-        ok(hr == S_OK, "Line %d: %d: hr was 0x%08X\n", iLine, iDotExt, hr);
+        ok(hr == S_OK, "Line %d: %d: hr was 0x%08lX\n", iLine, iDotExt, hr);
         ::DeleteFile(szFileName);
 
         CImageDC hdc2(image2);
-        ok(hdc2 != NULL, "Line %d: %d: hdc2 was NULL\n", iLine);
+        ok(hdc2 != NULL, "Line %d: %d: hdc2 was NULL\n", iLine, iDotExt);
         color = ::GetPixel(hdc2, 0, 0);
-        ok(color == RGB(0, 0, 0), "Line %d: %d: color was 0x%08X\n", iLine, iDotExt, color);
+        ok(color == RGB(0, 0, 0), "Line %d: %d: color was 0x%08lX\n", iLine, iDotExt, color);
         color = ::GetPixel(hdc2, 1, 0);
-        ok(color == RGB(255, 255, 255), "Line %d: %d: color was 0x%08X\n", iLine, iDotExt, color);
+        ok(color == RGB(255, 255, 255), "Line %d: %d: color was 0x%08lX\n", iLine, iDotExt, color);
     }
 
     // Test GetPixelAddress
