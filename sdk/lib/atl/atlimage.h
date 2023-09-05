@@ -33,8 +33,8 @@ public:
     enum DIBOrientation
     {
         DIBOR_DEFAULT,              // default
-        DIBOR_BOTTOMUP,             // bottom-up DIB
-        DIBOR_TOPDOWN               // top-down DIB
+        DIBOR_TOPDOWN,              // top-down DIB
+        DIBOR_BOTTOMUP              // bottom-up DIB
     };
 
     CImage() noexcept
@@ -459,7 +459,7 @@ public:
     {
         HANDLE hHandle = ::LoadImage(hInstance, pszResourceName,
                                      IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-        Attach(reinterpret_cast<HBITMAP>(hHandle));
+        Attach(reinterpret_cast<HBITMAP>(hHandle), DIBOR_BOTTOMUP);
     }
     void LoadFromResource(HINSTANCE hInstance, UINT nIDResource) noexcept
     {
