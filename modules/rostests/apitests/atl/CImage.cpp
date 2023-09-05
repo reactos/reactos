@@ -122,24 +122,24 @@ Test_DIBSectionEntry(INT iLine, HDC hdc, INT bpp, INT width, INT height, BOOL bT
     bmi.bmiHeader.biBitCount = bpp;
     switch (bpp)
     {
-    case 1:
-        bmi.bmiHeader.biClrUsed = 2;
-        bmi.bmiColorsExtra[0].rgbBlue = 0xFF;
-        bmi.bmiColorsExtra[0].rgbGreen = 0xFF;
-        bmi.bmiColorsExtra[0].rgbRed = 0xFF;
-        break;
-    case 4:
-    case 8:
-        bmi.bmiHeader.biClrUsed = 3;
-        bmi.bmiColorsExtra[0].rgbBlue = 0xFF;
-        bmi.bmiColorsExtra[0].rgbGreen = 0xFF;
-        bmi.bmiColorsExtra[0].rgbRed = 0xFF;
-        bmi.bmiColorsExtra[1].rgbBlue = 0;
-        bmi.bmiColorsExtra[1].rgbGreen = 0;
-        bmi.bmiColorsExtra[1].rgbRed = 0xFF;
-        break;
-    default:
-        break;
+        case 1:
+            bmi.bmiHeader.biClrUsed = 2;
+            bmi.bmiColorsExtra[0].rgbBlue = 0xFF;
+            bmi.bmiColorsExtra[0].rgbGreen = 0xFF;
+            bmi.bmiColorsExtra[0].rgbRed = 0xFF;
+            break;
+        case 4:
+        case 8:
+            bmi.bmiHeader.biClrUsed = 3;
+            bmi.bmiColorsExtra[0].rgbBlue = 0xFF;
+            bmi.bmiColorsExtra[0].rgbGreen = 0xFF;
+            bmi.bmiColorsExtra[0].rgbRed = 0xFF;
+            bmi.bmiColorsExtra[1].rgbBlue = 0;
+            bmi.bmiColorsExtra[1].rgbGreen = 0;
+            bmi.bmiColorsExtra[1].rgbRed = 0xFF;
+            break;
+        default:
+            break;
     }
 
     // Create a DIB bitmap
