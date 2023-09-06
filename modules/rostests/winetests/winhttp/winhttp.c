@@ -4278,7 +4278,8 @@ static void test_IWinHttpRequest(int port)
     ok( hr == S_OK, "got %08x\n", hr );
 #if __REACTOS__
     if (SysStringByteLen(response)) // Returned non-zero length response
-        ok( !memcmp(response, data_start, sizeof(data_start)), "got %s\n", wine_dbgstr_wn(response, 32) );
+        ok( !memcmp(response, data_start, sizeof(data_start)), "got %s\n",
+            wine_dbgstr_wn(response, min(SysStringByteLen(response) / sizeof(WCHAR), 32)) );
     else
         ok(FALSE, "got zero (0) length response\n");
 #else
