@@ -1,5 +1,9 @@
 
+@ stdcall InitOnceBeginInitialize(ptr long ptr ptr)
+@ stdcall InitOnceComplete(ptr long ptr)
 @ stdcall InitOnceExecuteOnce(ptr ptr ptr ptr)
+@ stdcall InitOnceInitialize(ptr) NTDLL.RtlRunOnceInitialize
+
 @ stdcall GetFileInformationByHandleEx(long long ptr long)
 @ stdcall -ret64 GetTickCount64()
 

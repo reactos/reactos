@@ -3837,6 +3837,8 @@ typedef PRTL_RUN_ONCE LPINIT_ONCE;
 #define INIT_ONCE_ASYNC RTL_RUN_ONCE_ASYNC
 #define INIT_ONCE_INIT_FAILED RTL_RUN_ONCE_INIT_FAILED
 
+#define INIT_ONCE_CTX_RESERVED_BITS RTL_RUN_ONCE_CTX_RESERVED_BITS
+
 typedef BOOL
 (WINAPI *PINIT_ONCE_FN)(
   _Inout_ PINIT_ONCE InitOnce,
@@ -3961,14 +3963,41 @@ CopyFile2(
 
 #endif /* _WIN32_WINNT >= 0x0601 */
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+
+WINBASEAPI
+VOID
+WINAPI
+InitOnceInitialize(
+    _Out_ PINIT_ONCE InitOnce);
+
+WINBASEAPI
+BOOL
+WINAPI
+InitOnceBeginInitialize(
+    _Inout_ LPINIT_ONCE lpInitOnce,
+    _In_ DWORD dwFlags,
+    _Out_ PBOOL fPending,
+    _Outptr_opt_result_maybenull_ LPVOID *lpContext);
+
+WINBASEAPI
+BOOL
+WINAPI
+InitOnceComplete(
+    _Inout_ LPINIT_ONCE lpInitOnce,
+    _In_ DWORD dwFlags,
+    _In_opt_ LPVOID lpContext);
+
+#endif /* (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA) */
+
 WINBASEAPI
 BOOL
 WINAPI
 InitOnceExecuteOnce(
-  _Inout_ PINIT_ONCE InitOnce,
-  _In_ __callback PINIT_ONCE_FN InitFn,
-  _Inout_opt_ PVOID Parameter,
-  _Outptr_opt_result_maybenull_ LPVOID *Context);
+    _Inout_ PINIT_ONCE InitOnce,
+    _In_ __callback PINIT_ONCE_FN InitFn,
+    _Inout_opt_ PVOID Parameter,
+    _Outptr_opt_result_maybenull_ LPVOID *Context);
 
 
 #if defined(_SLIST_HEADER_) && !defined(_NTOS_) && !defined(_NTOSP_)
