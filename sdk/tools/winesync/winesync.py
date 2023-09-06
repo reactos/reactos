@@ -58,7 +58,11 @@ class wine_sync:
         self.staged_patch_dir = posixpath.join('sdk', 'tools', 'winesync', self.module + '_staging')
 
     def create_or_checkout_wine_branch(self, wine_tag, wine_staging_tag):
-        wine_branch_name = 'winesync-' + wine_tag + '-' + wine_staging_tag
+        # build the wine branch name
+        wine_branch_name = 'winesync-' + wine_tag
+        if wine_staging_tag:
+            wine_branch_name += '-' + wine_staging_tag
+
         branch = self.wine_repo.lookup_branch(wine_branch_name)
         if branch is None:
             # get our target commits
@@ -68,29 +72,32 @@ class wine_sync:
             if isinstance(wine_target_commit, pygit2.Commit):
                 wine_target_commit = wine_target_commit.id
 
-            wine_staging_target_commit = self.wine_staging_repo.revparse_single(wine_staging_tag)
-            if isinstance(wine_staging_target_commit, pygit2.Tag):
-                wine_staging_target_commit = wine_staging_target_commit.target
-            if isinstance(wine_staging_target_commit, pygit2.Commit):
-                wine_staging_target_commit = wine_staging_target_commit.id
+            # do the same for the wine-staging tree
+            if wine_staging_tag:
+                wine_staging_target_commit = self.wine_staging_repo.revparse_single(wine_staging_tag)
+                if isinstance(wine_staging_target_commit, pygit2.Tag):
+                    wine_staging_target_commit = wine_staging_target_commit.target
+                if isinstance(wine_staging_target_commit, pygit2.Commit):
+                    wine_staging_target_commit = wine_staging_target_commit.id
 
             self.wine_repo.branches.local.create(wine_branch_name, self.wine_repo.revparse_single('HEAD'))
             self.wine_repo.checkout(self.wine_repo.lookup_branch(wine_branch_name))
             self.wine_repo.reset(wine_target_commit, pygit2.GIT_RESET_HARD)
 
             # do the same for the wine-staging tree
-            self.wine_staging_repo.branches.local.create(wine_branch_name, self.wine_staging_repo.revparse_single('HEAD'))
-            self.wine_staging_repo.checkout(self.wine_staging_repo.lookup_branch(wine_branch_name))
-            self.wine_staging_repo.reset(wine_staging_target_commit, pygit2.GIT_RESET_HARD)
+            if wine_staging_tag:
+                self.wine_staging_repo.branches.local.create(wine_branch_name, self.wine_staging_repo.revparse_single('HEAD'))
+                self.wine_staging_repo.checkout(self.wine_staging_repo.lookup_branch(wine_branch_name))
+                self.wine_staging_repo.reset(wine_staging_target_commit, pygit2.GIT_RESET_HARD)
 
-            # run the wine-staging script
-            if subprocess.call(['python', self.wine_staging_src + '/staging/patchinstall.py', 'DESTDIR=' + self.wine_src, '--all', '--backend=git-am']):
-                # the new script failed (it doesn't exist?), try the old one
-                subprocess.call(['bash', '-c', self.wine_staging_src + '/patches/patchinstall.sh DESTDIR=' + self.wine_src + ' --all --backend=git-am'])
+                # run the wine-staging script
+                if subprocess.call(['python', self.wine_staging_src + '/staging/patchinstall.py', 'DESTDIR=' + self.wine_src, '--all', '--backend=git-am']):
+                    # the new script failed (it doesn't exist?), try the old one
+                    subprocess.call(['bash', '-c', self.wine_staging_src + '/patches/patchinstall.sh DESTDIR=' + self.wine_src + ' --all --backend=git-am'])
 
-            # delete the branch we created
-            self.wine_staging_repo.checkout(self.wine_staging_repo.lookup_branch('master'))
-            self.wine_staging_repo.branches.delete(wine_branch_name)
+                # delete the branch we created
+                self.wine_staging_repo.checkout(self.wine_staging_repo.lookup_branch('master'))
+                self.wine_staging_repo.branches.delete(wine_branch_name)
         else:
             self.wine_repo.checkout(self.wine_repo.lookup_branch(wine_branch_name))
 
@@ -379,9 +386,9 @@ class wine_sync:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('module', help='The module you want to sync. <module>.cfg must exist in the current directory')
-    parser.add_argument('wine_tag', help='The wine tag or commit id to sync to')
-    parser.add_argument('wine_staging_tag', help='The wine staging tag or commit id to pick wine staged patches from')
+    parser.add_argument('module', help='The module you want to sync. <module>.cfg must exist in the current directory.')
+    parser.add_argument('wine_tag', help='The wine tag or commit id to sync to.')
+    parser.add_argument('wine_staging_tag', nargs='?', default=None, help='The optional wine staging tag or commit id to pick wine staged patches from.')
 
     args = parser.parse_args()
 
