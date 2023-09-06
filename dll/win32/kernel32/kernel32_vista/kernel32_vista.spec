@@ -1,3 +1,4 @@
+
 @ stdcall InitOnceBeginInitialize(ptr long ptr ptr)
 @ stdcall InitOnceComplete(ptr long ptr)
 @ stdcall InitOnceExecuteOnce(ptr ptr ptr ptr)
