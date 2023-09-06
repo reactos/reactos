@@ -63,13 +63,13 @@ public:
     END_COM_MAP()
 };
 
-
+#ifndef __RATL__ // Avoid confliction of CAtlExeModuleT
 class CDumExe: public CAtlExeModuleT<CDumExe>
 {
 
 };
 CDumExe dum;
-
+#endif
 
 START_TEST(CComObject)
 {

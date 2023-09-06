@@ -49,6 +49,12 @@ inline LONG_PTR GetWindowLongPtr(HWND hWnd, int nIndex)
 #pragma push_macro("SubclassWindow")
 #undef SubclassWindow
 
+#ifdef __RATL__
+    #ifndef _Post_z_
+        #define _Post_z_
+    #endif
+#endif
+
 namespace ATL
 {
 
