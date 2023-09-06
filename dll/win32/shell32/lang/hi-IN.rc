@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Hindi (India) resource file
+ * TRANSLATOR:  Copyright 2019 Arnav Bhatt <arnavbhatt2004@gmail.com>
+ */
+
 LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
 
 MENU_001 MENUEX
@@ -1019,7 +1026,7 @@ BEGIN
     IDS_SPECIFY_ACTION "आपको एक कार्रवाई निर्दिष्ट करनी चाहिए।"
     IDS_INVALID_PROGRAM "निर्दिष्ट प्रोग्राम नहीं मिल सका। सुनिश्चित करें कि फ़ाइल का नाम और पथ सही है।"
     IDS_REMOVE_ACTION "क्या आप वाकई इस कार्रवाई को हटाना चाहते हैं?"
-    IDS_ACTION_EXISTS "इस फ़ाइल प्रकार के लिए कार्रवाई '% s' पहले से ही पंजीकृत है। कृपया एक अलग नाम दर्ज करें और पुनः प्रयास करें।"
+    IDS_ACTION_EXISTS "इस फ़ाइल प्रकार के लिए कार्रवाई '%s' पहले से ही पंजीकृत है। कृपया एक अलग नाम दर्ज करें और पुनः प्रयास करें।"
     IDS_EXE_FILTER "प्रोग्राम\0*.exe\0सारे फ़ाइल\0*.*\0"
     IDS_EDITING_ACTION "प्रकार के लिए संपादन कार्रवाई:"
     IDS_NO_ICONS "फ़ाइल '%s' में कोई आइकन नहीं है।\n\nसूची से एक आइकन चुनें या एक अलग फ़ाइल निर्दिष्ट करें।"
