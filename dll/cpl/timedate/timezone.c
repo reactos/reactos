@@ -168,36 +168,51 @@ ShowTimeZoneList(HWND hwnd)
 {
     TIME_ZONE_INFORMATION TimeZoneInfo;
     PTIMEZONE_ENTRY Entry;
-    BOOL bDoAdvancedTest;
-    DWORD dwIndex;
-    DWORD i;
+    DWORD dwCount;
+    DWORD dwIndex = 0;
+    BOOL bFound = FALSE;
 
-    GetTimeZoneInformation(&TimeZoneInfo);
-    bDoAdvancedTest = (!*TimeZoneInfo.StandardName);
-
-    dwIndex = 0;
-    i = 0;
-    Entry = TimeZoneListHead;
-    while (Entry != NULL)
+    if (GetTimeZoneInformation(&TimeZoneInfo) == TIME_ZONE_ID_INVALID)
     {
-        SendMessageW(hwnd,
-                     CB_ADDSTRING,
-                     0,
-                     (LPARAM)Entry->Description);
+        /* Failed to retrieve current time-zone info, reset it */
+        ZeroMemory(&TimeZoneInfo, sizeof(TimeZoneInfo));
+    }
 
-        if ( (!bDoAdvancedTest && *Entry->StandardName &&
-                wcscmp(Entry->StandardName, TimeZoneInfo.StandardName) == 0) ||
-             ( (Entry->TimezoneInfo.Bias == TimeZoneInfo.Bias) &&
-               (Entry->TimezoneInfo.StandardBias == TimeZoneInfo.StandardBias) &&
-               (Entry->TimezoneInfo.DaylightBias == TimeZoneInfo.DaylightBias) &&
-               (memcmp(&Entry->TimezoneInfo.StandardDate, &TimeZoneInfo.StandardDate, sizeof(SYSTEMTIME)) == 0) &&
-               (memcmp(&Entry->TimezoneInfo.DaylightDate, &TimeZoneInfo.DaylightDate, sizeof(SYSTEMTIME)) == 0) ) )
+    for (Entry = TimeZoneListHead; Entry != NULL; Entry = Entry->Next)
+    {
+        dwCount = SendMessageW(hwnd,
+                               CB_ADDSTRING,
+                               0,
+                               (LPARAM)Entry->Description);
+        if (dwCount == CB_ERR || dwCount == CB_ERRSPACE)
+            continue;
+
+        /* If the time-zone was found in the list, skip the tests */
+        if (bFound)
+            continue;
+
+        if (*TimeZoneInfo.StandardName && *Entry->StandardName)
         {
-            dwIndex = i;
+            /* Compare by name */
+            if (wcscmp(Entry->StandardName, TimeZoneInfo.StandardName) == 0)
+            {
+                dwIndex = dwCount;
+                bFound = TRUE;
+            }
         }
-
-        i++;
-        Entry = Entry->Next;
+        else
+        {
+            /* Compare by date and bias */
+            if ((Entry->TimezoneInfo.Bias == TimeZoneInfo.Bias) &&
+                (Entry->TimezoneInfo.StandardBias == TimeZoneInfo.StandardBias) &&
+                (Entry->TimezoneInfo.DaylightBias == TimeZoneInfo.DaylightBias) &&
+                (memcmp(&Entry->TimezoneInfo.StandardDate, &TimeZoneInfo.StandardDate, sizeof(SYSTEMTIME)) == 0) &&
+                (memcmp(&Entry->TimezoneInfo.DaylightDate, &TimeZoneInfo.DaylightDate, sizeof(SYSTEMTIME)) == 0))
+            {
+                dwIndex = dwCount;
+                bFound = TRUE;
+            }
+        }
     }
 
     SendMessageW(hwnd,
