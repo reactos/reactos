@@ -233,35 +233,6 @@ UINT WINAPI SetupPromptForDiskW(HWND hwndParent, PCWSTR DialogTitle, PCWSTR Disk
         SetLastError(ERROR_INVALID_PARAMETER);
         return DPROMPT_CANCEL;
     }
-
-    if (PathToSource && (DiskPromptStyle & IDF_CHECKFIRST))
-    {
-        static const WCHAR format[] = {'%', 's', '\\', '%', 's', '\0'};
-        WCHAR filepath[MAX_PATH];
-
-        if (strlenW(PathToSource) + 1 + strlenW(FileSought) < sizeof(filepath))
-        {
-            snprintfW(filepath, MAX_PATH, format, PathToSource, FileSought);
-
-            if (GetFileAttributesW(filepath) != INVALID_FILE_ATTRIBUTES)
-            {
-                if (PathRequiredSize)
-                    *PathRequiredSize = strlenW(PathToSource) + 1;
-
-                if (!PathBuffer)
-                    return DPROMPT_SUCCESS;
-
-                if (PathBufferSize >= strlenW(PathToSource) + 1)
-                {
-                    strcpyW(PathBuffer, PathToSource);
-                    return DPROMPT_SUCCESS;
-                }
-                else
-                    return DPROMPT_BUFFERTOOSMALL;
-            }
-        }
-    }
-
     params.DialogTitle = DialogTitle;
     params.DiskName = DiskName;
     params.PathToSource = PathToSource;
