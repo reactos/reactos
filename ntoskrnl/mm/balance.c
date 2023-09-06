@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/balance.c
- * PURPOSE:         kernel memory management functions
- *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
- *                  Cameron Gutman (cameron.gutman@reactos.org)
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS kernel
+ * PURPOSE:     kernel memory management functions
+ * PROGRAMMERS: David Welch <welch@cwcom.net>
+ *              Cameron Gutman <cameron.gutman@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -144,7 +142,7 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 
     (*NrFreedPages) = 0;
 
-    DPRINT1("MM BALANCER: %s\n", Priority ? "Paging out!" : "Removing access bit!");
+    DPRINT("MM BALANCER: %s\n", Priority ? "Paging out!" : "Removing access bit!");
 
     FirstPage = MmGetLRUFirstUserPage();
     CurrentPage = FirstPage;
