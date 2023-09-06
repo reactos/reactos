@@ -710,8 +710,8 @@
 @ cdecl -arch=x86_64 _local_unwind(ptr ptr)
 @ cdecl -arch=i386 _local_unwind2(ptr long)
 @ cdecl -arch=i386 -version=0x600+ _local_unwind4(ptr ptr long)
-@ stub -version=0x600+ _localtime32
-@ stub -version=0x600+ _localtime32_s
+@ cdecl -version=0x600+ _localtime32(ptr)
+@ cdecl -version=0x600+ _localtime32_s(ptr ptr)
 @ cdecl _localtime64(ptr)
 @ cdecl -version=0x600+ _localtime64_s(ptr ptr)
 @ cdecl _lock(long)
