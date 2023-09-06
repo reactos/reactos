@@ -4276,7 +4276,12 @@ static void test_IWinHttpRequest(int port)
 
     hr = IWinHttpRequest_get_ResponseText( req, &response );
     ok( hr == S_OK, "got %08x\n", hr );
+#ifdef __REACTOS__
+    ok( !memcmp(response, data_start, sizeof(data_start)), "got %s\n",
+        wine_dbgstr_wn(response, min(SysStringLen(response), 32)) );
+#else
     ok( !memcmp(response, data_start, sizeof(data_start)), "got %s\n", wine_dbgstr_wn(response, 32) );
+#endif
     SysFreeString( response );
 
     IWinHttpRequest_Release( req );
