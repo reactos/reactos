@@ -4282,7 +4282,6 @@ static void test_IWinHttpRequest(int port)
 #else
     ok( !memcmp(response, data_start, sizeof(data_start)), "got %s\n", wine_dbgstr_wn(response, 32) );
 #endif
-
     SysFreeString( response );
 
     IWinHttpRequest_Release( req );
