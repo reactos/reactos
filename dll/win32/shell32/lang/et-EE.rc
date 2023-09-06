@@ -494,7 +494,7 @@ CAPTION "Logi ReactOS'ist välja"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Kas soovid kindlasti välja logida?", -1, 49, 15, 131, 8
+    LTEXT "Kas soovid kindlasti välja logida?", -1, 49, 15, 132, 8
     DEFPUSHBUTTON "&Logi välja", IDOK, 49, 38, 43, 14
     PUSHBUTTON "Loobu", IDCANCEL, 99, 38, 43, 14
 END

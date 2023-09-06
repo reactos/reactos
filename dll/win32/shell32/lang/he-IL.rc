@@ -489,7 +489,7 @@ CAPTION "התנתקות מ-ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "האם אתה בטוח שברצונך להתנתק?", -1, 49, 15, 131, 8
+    LTEXT "האם אתה בטוח שברצונך להתנתק?", -1, 49, 15, 132, 8
     DEFPUSHBUTTON "התנתק", IDOK, 49, 38, 43, 14
     PUSHBUTTON "ביטול", IDCANCEL, 99, 38, 43, 14
 END

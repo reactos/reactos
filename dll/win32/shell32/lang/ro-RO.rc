@@ -490,9 +490,9 @@ CAPTION "Deautentificare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Sigur doriți să vă deautentificați?", -1, 35, 16, 146, 8
-    DEFPUSHBUTTON "&Deautentifică", IDOK, 41, 39, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 95, 39, 50, 14
+    LTEXT "Sigur doriți să vă deautentificați?", -1, 49, 15, 132, 8
+    DEFPUSHBUTTON "&Deautentifică", IDOK, 49, 38, 53, 14
+    PUSHBUTTON "Anulează", IDCANCEL, 109, 38, 53, 14
 END
 
 IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 208, 122

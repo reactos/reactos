@@ -496,7 +496,7 @@ CAPTION "登出 ReactOS"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "您確定要登出 ReactOS 嗎？", -1, 49, 15, 131, 8
+    LTEXT "您確定要登出 ReactOS 嗎？", -1, 49, 15, 132, 8
     DEFPUSHBUTTON "登出(&L)", IDOK, 49, 38, 43, 14
     PUSHBUTTON "取消", IDCANCEL, 99, 38, 43, 14
 END

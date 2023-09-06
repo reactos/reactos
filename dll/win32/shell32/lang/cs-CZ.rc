@@ -493,9 +493,9 @@ CAPTION "Odhlásit se ze systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Opravdu se chcete odhlásit?", -1, 35, 16, 146, 8
-    DEFPUSHBUTTON "&Odhlásit", IDOK, 41, 39, 50, 14
-    PUSHBUTTON "Storno", IDCANCEL, 95, 39, 50, 14
+    LTEXT "Opravdu se chcete odhlásit?", -1, 49, 15, 132, 8
+    DEFPUSHBUTTON "&Odhlásit", IDOK, 49, 38, 43, 14
+    PUSHBUTTON "Storno", IDCANCEL, 99, 38, 43, 14
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60

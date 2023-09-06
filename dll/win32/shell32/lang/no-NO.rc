@@ -487,9 +487,9 @@ CAPTION "Logg av ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Er du sikker på at du vil logge av?", -1, 43, 11, 140, 22
-    DEFPUSHBUTTON "&Logg av", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "Avbryt", IDCANCEL, 122, 40, 60, 14
+    LTEXT "Er du sikker på at du vil logge av?", -1, 49, 15, 132, 8
+    DEFPUSHBUTTON "&Logg av", IDOK, 49, 38, 43, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 99, 38, 43, 14
 END
 
 IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 208, 122
