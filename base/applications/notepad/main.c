@@ -349,13 +349,11 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_COMMAND:
-        WaitCursor(TRUE);
         if (HIWORD(wParam) == EN_CHANGE || HIWORD(wParam) == EN_HSCROLL || HIWORD(wParam) == EN_VSCROLL)
             DIALOG_StatusBarUpdateCaretPos();
         if ((HIWORD(wParam) == EN_CHANGE))
             NOTEPAD_EnableSearchMenu();
         NOTEPAD_MenuCommand(LOWORD(wParam));
-        WaitCursor(FALSE);
         break;
 
     case WM_CLOSE:
@@ -419,11 +417,9 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         TCHAR szFileName[MAX_PATH];
         HDROP hDrop = (HDROP) wParam;
 
-        WaitCursor(TRUE);
         DragQueryFile(hDrop, 0, szFileName, _countof(szFileName));
         DragFinish(hDrop);
         DoOpenFile(szFileName);
-        WaitCursor(FALSE);
         break;
     }
 

@@ -419,8 +419,6 @@ VOID DIALOG_FileOpen(VOID)
     OPENFILENAME openfilename;
     TCHAR szPath[MAX_PATH];
 
-    WaitCursor(TRUE);
-
     ZeroMemory(&openfilename, sizeof(openfilename));
 
     if (Globals.szFileName[0] == 0)
@@ -443,8 +441,6 @@ VOID DIALOG_FileOpen(VOID)
         else
             AlertFileNotFound(openfilename.lpstrFile);
     }
-
-    WaitCursor(FALSE);
 }
 
 BOOL DIALOG_FileSave(VOID)
@@ -662,8 +658,6 @@ VOID DoCreateEditWindow(VOID)
     LPTSTR pTemp = NULL;
     BOOL bModified = FALSE;
 
-    WaitCursor(TRUE);
-
     iSize = 0;
 
     /* If the edit control already exists, try to save its content */
@@ -678,7 +672,6 @@ VOID DoCreateEditWindow(VOID)
             if (!pTemp)
             {
                 ShowLastError();
-                WaitCursor(FALSE);
                 return;
             }
 
@@ -720,7 +713,6 @@ VOID DoCreateEditWindow(VOID)
         }
 
         ShowLastError();
-        WaitCursor(FALSE);
         return;
     }
 
@@ -748,8 +740,6 @@ VOID DoCreateEditWindow(VOID)
 
     /* Re-arrange controls */
     PostMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
-
-    WaitCursor(FALSE);
 }
 
 VOID DIALOG_EditWrap(VOID)
