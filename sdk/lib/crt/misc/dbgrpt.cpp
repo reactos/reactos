@@ -38,6 +38,13 @@ static const wchar_t* _CrtModeMessages[_CRT_ERRCNT] =
     L"Error",
     L"Assertion Failed"
 };
+// Report type
+static _HFILE _CrtReportFile[_CRT_ERRCNT] =
+{
+    _CRTDBG_INVALID_HFILE,
+    _CRTDBG_INVALID_HFILE,
+    _CRTDBG_INVALID_HFILE
+};
 
 // Manually delay-load as to not have a dependency on user32
 typedef int (WINAPI *tMessageBoxW)(_In_opt_ HWND hWnd, _In_opt_ LPCWSTR lpText, _In_opt_ LPCWSTR lpCaption, _In_ UINT uType);
@@ -221,6 +228,73 @@ void _CrtLeaveDbgReport(int reportType)
         _InterlockedDecrement(&_CrtInAssert);
 }
 
+EXTERN_C
+_HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile)
+{
+    _HFILE oldReportFile = _CrtReportFile[reportType];
+    _CrtReportFile[reportType] = reportFile;
+    return oldReportFile;
+}
+
+template <typename char_t>
+inline size_t _crt_strlen(const char_t* str)
+{
+    return 0;
+}
+
+template <>
+inline size_t _crt_strlen<char>(const char* str)
+{
+    return strlen(str);
+}
+
+template <>
+inline size_t _crt_strlen<wchar_t>(const wchar_t* str)
+{
+    return wcslen(str);
+}
+
+template <typename char_t>
+inline BOOL _crt_fputs(const char_t *str, FILE *fout)
+{
+    return FALSE;
+}
+
+template <>
+inline BOOL _crt_fputs<char>(const char *str, FILE *fout)
+{
+    return !fputs(str, fout);
+}
+
+template <>
+inline BOOL _crt_fputs<wchar_t>(const wchar_t *str, FILE *fout)
+{
+    return !fputws(str, fout);
+}
+
+template <typename char_t>
+inline BOOL _CrtDebugOutputReport(HANDLE hFile, const char_t* szCompleteMessage)
+{
+    if (hFile == _CRTDBG_INVALID_HFILE)
+    {
+        OutputDebugStringA("error: Invalid report file detected. Please use _CrtSetReportFile(reportType, hFile).\n");
+        ::DebugBreak();
+        return FALSE;
+    }
+    else if (hFile == _CRTDBG_FILE_STDERR)
+    {
+        return _crt_fputs<char_t>(szCompleteMessage, stderr);
+    }
+    else if (hFile == _CRTDBG_FILE_STDOUT)
+    {
+        return _crt_fputs<char_t>(szCompleteMessage, stdout);
+    }
+    else
+    {
+        DWORD cbMessage = (DWORD)_crt_strlen<char_t>(szCompleteMessage);
+        return WriteFile(hFile, szCompleteMessage, cbMessage, &cbMessage, NULL);
+    }
+}
 
 template <typename char_t>
 static int _CrtHandleDbgReport(int reportType, const char_t* szCompleteMessage, const char_t* szFormatted,
@@ -230,8 +304,13 @@ static int _CrtHandleDbgReport(int reportType, const char_t* szCompleteMessage, 
 
     if (_CrtModeOutputFormat[reportType] & _CRTDBG_MODE_FILE)
     {
-        OutputDebugStringA("ERROR: Please implement _CrtSetReportFile first\n");
-        _CrtDbgBreak();
+        HANDLE hFile = _CrtReportFile[reportType];
+        if (!_CrtDebugOutputReport(hFile, szCompleteMessage))
+        {
+            // FIXME: Failed message with location
+            return FALSE;
+        }
+        return TRUE;
     }
 
     if (_CrtModeOutputFormat[reportType] & _CRTDBG_MODE_DEBUG)

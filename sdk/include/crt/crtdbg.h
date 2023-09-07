@@ -84,19 +84,13 @@ extern "C" {
 // Debug reporting functions
 
 #ifdef _DEBUG
-
     int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...);
     int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumber, const wchar_t *moduleName, const wchar_t *format, ...);
-
 #endif
-
-
-
 
 // Assertion and error reporting
 
 #ifndef _DEBUG
-
     #define _CrtDbgBreak() ((void)0)
 
     #ifndef _ASSERT_EXPR
@@ -124,9 +118,8 @@ extern "C" {
     #define _RPTFW0(rptno,msg)
     #define _RPTFWN(rptno,msg,...)
 
-
+    _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile);
 #else // _DEBUG
-
     #define _CrtDbgBreak() __debugbreak()
 
     #ifndef _ASSERT_EXPR
@@ -161,6 +154,7 @@ extern "C" {
     #define _RPTFW0(rptno,msg)      _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", msg)
     #define _RPTFWN(rptno,msg,...)  _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, msg, __VA_ARGS__)
 
+    #define _CrtSetReportFile(t,f) ((_HFILE)0)
 #endif
 
 
@@ -231,7 +225,6 @@ extern "C" {
 #define _CrtSetReportHook2(t,f) ((int)0)
 #define _CrtSetReportHookW2(t,f) ((int)0)
 #define _CrtSetReportMode(t,f) ((int)0)
-#define _CrtSetReportFile(t,f) ((_HFILE)0)
 
 #define _CrtSetBreakAlloc(a) ((long)0)
 #define _CrtSetAllocHook(f) ((_CRT_ALLOC_HOOK)0)
