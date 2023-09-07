@@ -699,10 +699,12 @@ void CMruLongList::_ImportShortList()
 }
 
 EXTERN_C HRESULT
-CMruLongList_CreateInstance(DWORD dwUnused1, void **ppv, DWORD dwUnused3)
+CMruLongList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3)
 {
     UNREFERENCED_PARAMETER(dwUnused1);
     UNREFERENCED_PARAMETER(dwUnused3);
+
+    TRACE("%p %p %p\n", dwUnused1, ppv, dwUnused3);
 
     CMruLongList *pMruList = new CMruLongList();
     *ppv = static_cast<IMruDataList*>(pMruList);
@@ -858,10 +860,12 @@ STDMETHODIMP CMruPidlList::PruneKids(LPCITEMIDLIST pidl)
     return E_NOTIMPL;
 }
 
-EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD dwUnused1, void **ppv, DWORD dwUnused3)
+EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3)
 {
     UNREFERENCED_PARAMETER(dwUnused1);
     UNREFERENCED_PARAMETER(dwUnused3);
+
+    TRACE("%p %p %p\n", dwUnused1, ppv, dwUnused3);
 
     *ppv = NULL;
 

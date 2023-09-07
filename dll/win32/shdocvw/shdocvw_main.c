@@ -108,10 +108,10 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
+    TRACE("\n");
 #ifdef __REACTOS__
     return __wine_register_resources(instance);
 #else
-    TRACE("\n");
     return S_OK;
 #endif
 }
@@ -121,10 +121,10 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
+    TRACE("\n");
 #ifdef __REACTOS__
     return __wine_unregister_resources(instance);
 #else
-    TRACE("\n");
     return S_OK;
 #endif
 }
