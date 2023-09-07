@@ -187,6 +187,12 @@ LRESULT CTextEditWindow::OnNCHitTest(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (CWaitCursor::IsWaiting())
+    {
+        bHandled = FALSE;
+        return 0;
+    }
+
     UINT nHitTest = LOWORD(lParam);
     if (nHitTest == HTCAPTION)
     {

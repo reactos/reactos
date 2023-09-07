@@ -263,6 +263,8 @@ LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    CWaitCursor waitCursor;
+
     TCHAR droppedfile[MAX_PATH];
 
     HDROP hDrop = (HDROP)wParam;
@@ -587,6 +589,8 @@ LRESULT CMainWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 
 LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    CWaitCursor waitCursor;
+
     // Disable commands while dragging mouse
     if (canvasWindow.m_drawing && ::GetCapture())
     {
@@ -911,6 +915,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.NotifyImageChanged();
             break;
         case IDM_IMAGEROTATEMIRROR:
+            ::SetCursor(CWaitCursor::s_hWaitCursor);
             switch (mirrorRotateDialog.DoModal(mainWindow.m_hWnd))
             {
                 case 1: /* flip horizontally */
@@ -949,6 +954,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (attributesDialog.DoModal(mainWindow.m_hWnd))
             {
+                ::SetCursor(CWaitCursor::s_hWaitCursor);
                 if (attributesDialog.m_bBlackAndWhite && !imageModel.IsBlackAndWhite())
                 {
                     CString strText(MAKEINTRESOURCE(IDS_LOSECOLOR));
@@ -972,6 +978,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (stretchSkewDialog.DoModal(mainWindow.m_hWnd))
             {
+                ::SetCursor(CWaitCursor::s_hWaitCursor);
                 if (selectionModel.m_bShow)
                 {
                     selectionModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,

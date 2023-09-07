@@ -50,6 +50,7 @@
 #include "toolsmodel.h"
 #include "winproc.h"
 #include "dialogs.h"
+#include "waitcursor.h"
 #include "globalvar.h"
 
 #endif /* _MSPAINT_H */

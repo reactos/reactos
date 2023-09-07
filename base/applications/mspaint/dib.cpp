@@ -151,6 +151,8 @@ GetDIBHeight(HBITMAP hBitmap)
 
 BOOL SaveDIBToFile(HBITMAP hBitmap, LPCWSTR FileName, BOOL fIsMainFile, REFGUID guidFileType)
 {
+    CWaitCursor waitCursor;
+
     CImageDx img;
     img.Attach(hBitmap);
     HRESULT hr = img.SaveDx(FileName, guidFileType, g_xDpi, g_yDpi);
@@ -250,6 +252,8 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCWSTR name, LPWIN32_FIND_DATAW pFoun
 
 HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
 {
+    CWaitCursor waitCursor;
+
     // find the file
     WIN32_FIND_DATA find;
     HANDLE hFind = ::FindFirstFileW(name, &find);
@@ -341,6 +345,8 @@ HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight, BOOL bMono)
 
 HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical, BOOL bMono)
 {
+    CWaitCursor waitCursor;
+
     if (nDegree == 0)
         return CopyDIBImage(hbm);
 
@@ -402,6 +408,8 @@ struct BITMAPINFODX : BITMAPINFO
 
 HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
 {
+    CWaitCursor waitCursor;
+
     BITMAP bm;
     if (!GetObject(hBitmap, sizeof(BITMAP), &bm))
         return NULL;
@@ -463,6 +471,8 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
 
 HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal)
 {
+    CWaitCursor waitCursor;
+
     LPBYTE pb = (LPBYTE)GlobalLock(hGlobal);
     if (!pb)
         return NULL;
@@ -508,6 +518,8 @@ HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal)
 
 HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF)
 {
+    CWaitCursor waitCursor;
+
     ENHMETAHEADER header;
     if (!GetEnhMetaFileHeader(hEMF, sizeof(header), &header))
         return NULL;
@@ -529,6 +541,8 @@ HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF)
 
 BOOL IsBitmapBlackAndWhite(HBITMAP hbm)
 {
+    CWaitCursor waitCursor;
+
     BITMAP bm;
     if (!::GetObjectW(hbm, sizeof(bm), &bm))
         return FALSE;
@@ -578,6 +592,8 @@ Finish:
 
 HBITMAP ConvertToBlackAndWhite(HBITMAP hbm)
 {
+    CWaitCursor waitCursor;
+
     BITMAP bm;
     if (!::GetObject(hbm, sizeof(bm), &bm))
         return NULL;
