@@ -1263,7 +1263,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                Entry = Entry->Flink;
             }
 
-            ERR("MsqSendMessage timed out 2 Status %lx\n", WaitStatus);
+            WARN("MsqSendMessage timed out 2 Status %lx\n", WaitStatus);
             break;
          }
          // Receiving thread passed on and left us hanging with issues still pending.
@@ -1535,7 +1535,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, L
     }
     else
     {
-       ERR("Not the same cursor!\n");
+       WARN("Not the same cursor!\n");
     }
 
     msg->hwnd = UserHMGetHandle(pwndMsg);
