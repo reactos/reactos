@@ -38,8 +38,8 @@ static const wchar_t* _CrtModeMessages[_CRT_ERRCNT] =
     L"Error",
     L"Assertion Failed"
 };
-// Report type
-static _HFILE _CrtReportFile[_CRT_ERRCNT] =
+// Report files
+static _HFILE _CrtReportFiles[_CRT_ERRCNT] =
 {
     _CRTDBG_INVALID_HFILE,
     _CRTDBG_INVALID_HFILE,
@@ -64,6 +64,7 @@ struct dbgrpt_char_traits<char>
     static const char_t* szUnknownFile;
 
     static void OutputDebugString(const char_t* message);
+    static size_t StringLength(const char_t* str) { return strlen(str); }
 };
 
 template<>
@@ -76,6 +77,7 @@ struct dbgrpt_char_traits<wchar_t>
     static const char_t* szUnknownFile;
 
     static void OutputDebugString(const char_t* message);
+    static size_t StringLength(const char_t* str) { return wcslen(str); };
 };
 
 // Shortcut
@@ -104,16 +106,15 @@ const wchar_traits::char_t* wchar_traits::szEmptyString = L"";
 const achar_traits::char_t* achar_traits::szUnknownFile = "<unknown file>";
 const wchar_traits::char_t* wchar_traits::szUnknownFile = L"<unknown file>";
 
-void achar_traits::OutputDebugString(const char* message)
+inline void achar_traits::OutputDebugString(const char* message)
 {
     OutputDebugStringA(message);
 }
 
-void wchar_traits::OutputDebugString(const wchar_t* message)
+inline void wchar_traits::OutputDebugString(const wchar_t* message)
 {
     OutputDebugStringW(message);
 }
-
 
 static
 HMODULE _CrtGetUser32()
@@ -229,71 +230,48 @@ void _CrtLeaveDbgReport(int reportType)
 }
 
 EXTERN_C
+int __cdecl _CrtSetReportMode(int reportType, int reportMode)
+{
+    int oldReportMode;
+
+    if (reportType >= _CRT_ERRCNT || reportType < 0)
+        return -1;
+
+    oldReportMode = _CrtModeOutputFormat[reportType];
+    _CrtModeOutputFormat[reportType] = reportMode;
+    return oldReportMode;
+}
+
+EXTERN_C
 _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile)
 {
-    _HFILE oldReportFile = _CrtReportFile[reportType];
-    _CrtReportFile[reportType] = reportFile;
+    _HFILE oldReportFile;
+
+    if (reportType >= _CRT_ERRCNT || reportType < 0)
+        return _CRTDBG_INVALID_HFILE;
+
+    oldReportFile = _CrtReportFiles[reportType];
+    if (reportFile != _CRTDBG_REPORT_FILE)
+        _CrtReportFiles[reportType] = reportFile;
     return oldReportFile;
 }
 
 template <typename char_t>
-inline size_t _crt_strlen(const char_t* str)
+static inline BOOL _CrtDbgReportToFile(HANDLE hFile, const char_t* szMsg)
 {
-    return 0;
-}
+    typedef dbgrpt_char_traits<char_t> traits;
+    DWORD cbMsg;
 
-template <>
-inline size_t _crt_strlen<char>(const char* str)
-{
-    return strlen(str);
-}
-
-template <>
-inline size_t _crt_strlen<wchar_t>(const wchar_t* str)
-{
-    return wcslen(str);
-}
-
-template <typename char_t>
-inline BOOL _crt_fputs(const char_t *str, FILE *fout)
-{
-    return FALSE;
-}
-
-template <>
-inline BOOL _crt_fputs<char>(const char *str, FILE *fout)
-{
-    return !fputs(str, fout);
-}
-
-template <>
-inline BOOL _crt_fputs<wchar_t>(const wchar_t *str, FILE *fout)
-{
-    return !fputws(str, fout);
-}
-
-template <typename char_t>
-inline BOOL _CrtDebugOutputReport(HANDLE hFile, const char_t* szCompleteMessage)
-{
-    if (hFile == _CRTDBG_INVALID_HFILE)
-    {
-        OutputDebugStringA("error: Invalid report file detected. Please use _CrtSetReportFile(reportType, hFile).\n");
-        ::DebugBreak();
+    if (hFile == _CRTDBG_INVALID_HFILE || hFile == NULL)
         return FALSE;
-    }
+
+    if (hFile == _CRTDBG_FILE_STDOUT)
+        hFile = ::GetStdHandle(STD_OUTPUT_HANDLE);
     else if (hFile == _CRTDBG_FILE_STDERR)
-    {
-        return _crt_fputs<char_t>(szCompleteMessage, stderr);
-    }
-    else if (hFile == _CRTDBG_FILE_STDOUT)
-    {
-        return _crt_fputs<char_t>(szCompleteMessage, stdout);
-    }
-    else
-    {
-        DWORD cbMessage = (DWORD)_crt_strlen<char_t>(szCompleteMessage);
-        return WriteFile(hFile, szCompleteMessage, cbMessage, &cbMessage, NULL);
-    }
+        hFile = ::GetStdHandle(STD_ERROR_HANDLE);
+
+    cbMsg = (DWORD)(traits::StringLength(szMsg) * sizeof(char_t));
+    return ::WriteFile(hFile, szMsg, cbMsg, &cbMsg, NULL);
 }
 
 template <typename char_t>
@@ -304,13 +282,7 @@ static int _CrtHandleDbgReport(int reportType, const char_t* szCompleteMessage, 
 
     if (_CrtModeOutputFormat[reportType] & _CRTDBG_MODE_FILE)
     {
-        HANDLE hFile = _CrtReportFile[reportType];
-        if (!_CrtDebugOutputReport(hFile, szCompleteMessage))
-        {
-            // FIXME: Failed message with location
-            return FALSE;
-        }
-        return TRUE;
+        _CrtDbgReportToFile<char_t>(_CrtReportFiles[reportType], szCompleteMessage);
     }
 
     if (_CrtModeOutputFormat[reportType] & _CRTDBG_MODE_DEBUG)
@@ -442,6 +414,5 @@ int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumb
 
     return nResult;
 }
-
 
 //#endif // _DEBUG
