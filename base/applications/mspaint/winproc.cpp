@@ -954,7 +954,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (attributesDialog.DoModal(mainWindow.m_hWnd))
             {
-                ::SetCursor(CWaitCursor::s_hWaitCursor);
+                CWaitCursor waitCursor;
                 if (attributesDialog.m_bBlackAndWhite && !imageModel.IsBlackAndWhite())
                 {
                     CString strText(MAKEINTRESOURCE(IDS_LOSECOLOR));
@@ -978,7 +978,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (stretchSkewDialog.DoModal(mainWindow.m_hWnd))
             {
-                ::SetCursor(CWaitCursor::s_hWaitCursor);
+                CWaitCursor waitCursor;
                 if (selectionModel.m_bShow)
                 {
                     selectionModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,
