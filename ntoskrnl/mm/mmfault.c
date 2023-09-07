@@ -239,7 +239,10 @@ MmAccessFault(IN ULONG FaultCode,
     if (MmGetKernelAddressSpace())
     {
         /* Check if this is an ARM3 memory area */
+        ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+        MmLockAddressSpace(MmGetKernelAddressSpace());
         MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
+        MmUnlockAddressSpace(MmGetKernelAddressSpace());
         if (!(MemoryArea) && (Address <= MM_HIGHEST_USER_ADDRESS))
         {
             /* Could this be a VAD fault from user-mode? */
