@@ -538,6 +538,7 @@ DIALOG_Printing_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         EndDialog(hwnd, IDABORT);
                     else
                         EndDialog(hwnd, IDCANCEL);
+                    WaitCursor(FALSE);
                     break;
             }
             break;
@@ -573,6 +574,8 @@ VOID DIALOG_FilePrint(VOID)
         return;
     }
 
+    WaitCursor(TRUE);
+
     printer = &printData->printer;
     printer->lStructSize = sizeof(PRINTDLG);
     printer->hwndOwner = Globals.hMainWnd;
@@ -598,6 +601,7 @@ VOID DIALOG_FilePrint(VOID)
     if (!ret)
     {
         LocalFree(printData);
+        WaitCursor(FALSE);
         return; /* The user canceled printing */
     }
     assert(printer->hDC != NULL);
@@ -613,6 +617,8 @@ VOID DIALOG_FilePrint(VOID)
     {
         AlertPrintError();
     }
+
+    /* WaitCursor(FALSE) will be called in DIALOG_Printing_DialogProc */
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -671,6 +677,8 @@ VOID DIALOG_FilePageSetup(VOID)
 {
     PAGESETUPDLG page;
 
+    WaitCursor(TRUE);
+
     ZeroMemory(&page, sizeof(page));
     page.lStructSize = sizeof(page);
     page.hwndOwner = Globals.hMainWnd;
@@ -688,4 +696,6 @@ VOID DIALOG_FilePageSetup(VOID)
     Globals.hDevMode = page.hDevMode;
     Globals.hDevNames = page.hDevNames;
     Globals.lMargins = page.rtMargin;
+
+    WaitCursor(FALSE);
 }

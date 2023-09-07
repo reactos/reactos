@@ -111,6 +111,24 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     SetWindowText(Globals.hMainWnd, szCaption);
 }
 
+VOID WaitCursor(BOOL bBegin)
+{
+    HCURSOR s_hOldCursor;
+    static INT s_nLock = 0;
+
+    if (bBegin)
+    {
+        if (s_nLock++ == 0)
+            s_hOldCursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+    }
+    else
+    {
+        if (--s_nLock == 0)
+            SetCursor(s_hOldCursor);
+    }
+}
+
+
 VOID DIALOG_StatusBarAlignParts(VOID)
 {
     static const int defaultWidths[] = {120, 120, 120};
@@ -220,11 +238,14 @@ static BOOL DoSaveFile(VOID)
     HANDLE hFile;
     DWORD cchText;
 
+    WaitCursor(TRUE);
+
     hFile = CreateFileW(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_WRITE,
                         NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         ShowLastError();
+        WaitCursor(FALSE);
         return FALSE;
     }
 
@@ -259,6 +280,7 @@ static BOOL DoSaveFile(VOID)
         SetFileName(Globals.szFileName);
     }
 
+    WaitCursor(FALSE);
     return bRet;
 }
 
@@ -307,6 +329,8 @@ VOID DoOpenFile(LPCTSTR szFileName)
     if (!DoCloseFile())
         return;
 
+    WaitCursor(TRUE);
+
     hFile = CreateFile(szFileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                        OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -347,6 +371,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
+    WaitCursor(FALSE);
 }
 
 VOID DIALOG_FileNew(VOID)
@@ -355,6 +380,8 @@ VOID DIALOG_FileNew(VOID)
     if (!DoCloseFile())
         return;
 
+    WaitCursor(TRUE);
+
     SetWindowText(Globals.hEdit, NULL);
     SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
     Globals.iEoln = EOLN_CRLF;
@@ -362,19 +389,28 @@ VOID DIALOG_FileNew(VOID)
 
     NOTEPAD_EnableSearchMenu();
     DIALOG_StatusBarUpdateAll();
+
+    WaitCursor(FALSE);
 }
 
 VOID DIALOG_FileNewWindow(VOID)
 {
     TCHAR pszNotepadExe[MAX_PATH];
+
+    WaitCursor(TRUE);
+
     GetModuleFileName(NULL, pszNotepadExe, _countof(pszNotepadExe));
     ShellExecute(NULL, NULL, pszNotepadExe, NULL, NULL, SW_SHOWNORMAL);
+
+    WaitCursor(FALSE);
 }
 
 VOID DIALOG_FileOpen(VOID)
 {
     OPENFILENAME openfilename;
     TCHAR szPath[MAX_PATH];
+
+    WaitCursor(TRUE);
 
     ZeroMemory(&openfilename, sizeof(openfilename));
 
@@ -398,6 +434,8 @@ VOID DIALOG_FileOpen(VOID)
         else
             AlertFileNotFound(openfilename.lpstrFile);
     }
+
+    WaitCursor(FALSE);
 }
 
 BOOL DIALOG_FileSave(VOID)
@@ -615,6 +653,8 @@ VOID DoCreateEditWindow(VOID)
     LPTSTR pTemp = NULL;
     BOOL bModified = FALSE;
 
+    WaitCursor(TRUE);
+
     iSize = 0;
 
     /* If the edit control already exists, try to save its content */
@@ -629,6 +669,7 @@ VOID DoCreateEditWindow(VOID)
             if (!pTemp)
             {
                 ShowLastError();
+                WaitCursor(FALSE);
                 return;
             }
 
@@ -670,6 +711,7 @@ VOID DoCreateEditWindow(VOID)
         }
 
         ShowLastError();
+        WaitCursor(FALSE);
         return;
     }
 
@@ -697,6 +739,8 @@ VOID DoCreateEditWindow(VOID)
 
     /* Re-arrange controls */
     PostMessageW(Globals.hMainWnd, WM_SIZE, 0, 0);
+
+    WaitCursor(FALSE);
 }
 
 VOID DIALOG_EditWrap(VOID)

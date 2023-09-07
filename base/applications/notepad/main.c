@@ -349,11 +349,13 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_COMMAND:
+        WaitCursor(TRUE);
         if (HIWORD(wParam) == EN_CHANGE || HIWORD(wParam) == EN_HSCROLL || HIWORD(wParam) == EN_VSCROLL)
             DIALOG_StatusBarUpdateCaretPos();
         if ((HIWORD(wParam) == EN_CHANGE))
             NOTEPAD_EnableSearchMenu();
         NOTEPAD_MenuCommand(LOWORD(wParam));
+        WaitCursor(FALSE);
         break;
 
     case WM_CLOSE:
@@ -417,9 +419,11 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         TCHAR szFileName[MAX_PATH];
         HDROP hDrop = (HDROP) wParam;
 
+        WaitCursor(TRUE);
         DragQueryFile(hDrop, 0, szFileName, _countof(szFileName));
         DragFinish(hDrop);
         DoOpenFile(szFileName);
+        WaitCursor(FALSE);
         break;
     }
 
@@ -433,6 +437,8 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             FINDREPLACE *pFindReplace = (FINDREPLACE *) lParam;
             Globals.find = *(FINDREPLACE *) lParam;
 
+            WaitCursor(TRUE);
+
             if (pFindReplace->Flags & FR_FINDNEXT)
                 NOTEPAD_FindNext(pFindReplace, FALSE, TRUE);
             else if (pFindReplace->Flags & FR_REPLACE)
@@ -441,6 +447,8 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 NOTEPAD_ReplaceAll(pFindReplace);
             else if (pFindReplace->Flags & FR_DIALOGTERM)
                 NOTEPAD_FindTerm();
+
+            WaitCursor(FALSE);
             break;
         }
 
@@ -587,7 +595,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     wndclass.lpfnWndProc = NOTEPAD_WndProc;
     wndclass.hInstance = Globals.hInstance;
     wndclass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_NPICON));
-    wndclass.hCursor = LoadCursor(0, IDC_ARROW);
+    wndclass.hCursor = LoadCursor(NULL, (GetSystemMetrics(SM_PENWINDOWS) ? IDC_ARROW : IDC_IBEAM));
     wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndclass.lpszMenuName = MAKEINTRESOURCE(MAIN_MENU);
     wndclass.lpszClassName = className;
