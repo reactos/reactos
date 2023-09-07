@@ -10,10 +10,6 @@
 class CWaitCursor
 {
 public:
-    static LONG s_nLock;
-    static HCURSOR s_hOldCursor;
-    static HCURSOR s_hWaitCursor;
-
     CWaitCursor()
     {
         if (s_nLock++ == 0)
@@ -42,6 +38,15 @@ public:
     {
         return s_nLock > 0;
     }
+    static void KeepWait()
+    {
+        ::SetCursor(s_hWaitCursor);
+    }
+
+protected:
+    static LONG s_nLock;
+    static HCURSOR s_hOldCursor;
+    static HCURSOR s_hWaitCursor;
 };
 
 DECLSPEC_SELECTANY LONG CWaitCursor::s_nLock = 0;

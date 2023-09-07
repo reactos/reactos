@@ -915,7 +915,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.NotifyImageChanged();
             break;
         case IDM_IMAGEROTATEMIRROR:
-            ::SetCursor(CWaitCursor::s_hWaitCursor);
+            CWaitCursor::KeepWait();
             switch (mirrorRotateDialog.DoModal(mainWindow.m_hWnd))
             {
                 case 1: /* flip horizontally */
