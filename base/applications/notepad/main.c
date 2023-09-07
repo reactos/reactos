@@ -591,7 +591,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     wndclass.lpfnWndProc = NOTEPAD_WndProc;
     wndclass.hInstance = Globals.hInstance;
     wndclass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_NPICON));
-    wndclass.hCursor = LoadCursor(NULL, (GetSystemMetrics(SM_PENWINDOWS) ? IDC_ARROW : IDC_IBEAM));
+    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndclass.lpszMenuName = MAKEINTRESOURCE(MAIN_MENU);
     wndclass.lpszClassName = className;
