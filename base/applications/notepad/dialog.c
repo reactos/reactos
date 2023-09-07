@@ -113,13 +113,18 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
 
 VOID WaitCursor(BOOL bBegin)
 {
+    static HCURSOR s_hWaitCursor = NULL;
     static HCURSOR s_hOldCursor = NULL;
     static INT s_nLock = 0;
 
     if (bBegin)
     {
         if (s_nLock++ == 0)
-            s_hOldCursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+        {
+            if (s_hWaitCursor == NULL)
+                s_hWaitCursor = LoadCursor(NULL, IDC_WAIT);
+            s_hOldCursor = SetCursor(s_hWaitCursor);
+        }
     }
     else
     {
