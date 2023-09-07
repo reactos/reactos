@@ -35,7 +35,7 @@ class wine_sync:
             self.reactos_src = input('Please enter the path to the reactos git tree: ')
             self.wine_src = input('Please enter the path to the wine git tree: ')
             self.wine_staging_src = input('Please enter the path to the wine-staging git tree: ')
-            config['repos'] = { 'reactos' : self.reactos_src,
+            config['repos'] = { 'reactos': self.reactos_src,
                                 'wine': self.wine_src,
                                 'wine-staging': self.wine_staging_src }
             with open('winesync.cfg', 'w') as file_output:
@@ -89,8 +89,8 @@ class wine_sync:
 
         return wine_branch_name
 
-    # helper function for resolving wine tree path to reactos one
-    # Note : it doesn't care about the fact that the file actually exists or not
+    # Helper function for resolving wine tree path to reactos one
+    # Note: it doesn't care about the fact that the file actually exists or not
     def wine_to_reactos_path(self, wine_path):
         if wine_path in self.module_cfg['files']:
             # we have a direct mapping
@@ -133,7 +133,7 @@ class wine_sync:
                 # check if we should care
                 new_reactos_path = self.wine_to_reactos_path(delta.new_file.path)
                 if not new_reactos_path is None:
-                    warning_message += 'file ' + delta.new_file.path + ' is added to the wine tree !\n'
+                    warning_message += 'file ' + delta.new_file.path + ' is added to the wine tree!\n'
                     old_reactos_path = '/dev/null'
                 else:
                     old_reactos_path = None
@@ -141,12 +141,12 @@ class wine_sync:
                 # check if we should care
                 old_reactos_path = self.wine_to_reactos_path(delta.old_file.path)
                 if not old_reactos_path is None:
-                    warning_message += 'file ' + delta.old_file.path + ' is removed from the wine tree !\n'
+                    warning_message += 'file ' + delta.old_file.path + ' is removed from the wine tree!\n'
                     new_reactos_path = '/dev/null'
                 else:
                     new_reactos_path = None
             elif delta.new_file.path.endswith('Makefile.in'):
-                warning_message += 'file ' + delta.new_file.path + ' was modified !\n'
+                warning_message += 'file ' + delta.new_file.path + ' was modified!\n'
                 # no need to warn that those are ignored, we just did.
                 continue
             else:
@@ -210,7 +210,7 @@ class wine_sync:
         print('Applied patches from wine commit ' + str(wine_commit.id))
 
         if ignored_files:
-            warning_message += 'WARNING : some files were ignored: ' + ' '.join(ignored_files) + '\n'
+            warning_message += 'WARNING: some files were ignored: ' + ' '.join(ignored_files) + '\n'
 
         if not in_staging:
             self.module_cfg['tags']['wine'] = str(wine_commit.id)
