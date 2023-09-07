@@ -63,7 +63,7 @@ public:
     END_COM_MAP()
 };
 
-#ifndef __RATL__ // Avoid confliction of CAtlExeModuleT
+#ifndef __RATL__ // Avoid conflict (causing assertion at CAtlModule::CAtlModule)
 class CDumExe: public CAtlExeModuleT<CDumExe>
 {
 
