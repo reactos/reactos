@@ -125,6 +125,10 @@ VOID WaitCursor(BOOL bBegin)
                 s_hWaitCursor = LoadCursor(NULL, IDC_WAIT);
             s_hOldCursor = SetCursor(s_hWaitCursor);
         }
+        else
+        {
+            SetCursor(s_hWaitCursor);
+        }
     }
     else
     {
