@@ -2,6 +2,7 @@
 
 import sys
 import os
+import posixpath
 import string
 import argparse
 import subprocess
@@ -54,7 +55,7 @@ class wine_sync:
         with open(module + '.cfg', 'r') as file_input:
             self.module_cfg = yaml.safe_load(file_input)
 
-        self.staged_patch_dir = os.path.join('sdk', 'tools', 'winesync', self.module + '_staging')
+        self.staged_patch_dir = posixpath.join('sdk', 'tools', 'winesync', self.module + '_staging')
 
     def create_or_checkout_wine_branch(self, wine_tag, wine_staging_tag):
         wine_branch_name = 'winesync-' + wine_tag + '-' + wine_staging_tag
@@ -110,7 +111,7 @@ class wine_sync:
         wine_dir, wine_file = os.path.split(wine_path)
         if wine_dir in self.module_cfg['directories']:
             # we have a mapping for the directory
-            return os.path.join(self.module_cfg['directories'][wine_dir], wine_file)
+            return posixpath.join(self.module_cfg['directories'][wine_dir], wine_file)
 
         # no match
         return None
@@ -228,7 +229,7 @@ class wine_sync:
                 os.mkdir(os.path.join(self.reactos_src, self.staged_patch_dir))
             with open(patch_path, 'w') as file_output:
                 file_output.write(complete_patch)
-            self.reactos_index.add(os.path.join(self.staged_patch_dir, patch_file_name))
+            self.reactos_index.add(posixpath.join(self.staged_patch_dir, patch_file_name))
 
         self.reactos_index.write()
 
@@ -264,7 +265,7 @@ class wine_sync:
 
     def revert_staged_patchset(self):
         # revert all of this in one commit
-        staged_patch_dir_path = os.path.join(self.reactos_src, self.staged_patch_dir)
+        staged_patch_dir_path = posixpath.join(self.reactos_src, self.staged_patch_dir)
         if not os.path.isdir(staged_patch_dir_path):
             return True
 
@@ -285,7 +286,7 @@ class wine_sync:
                     print('Please check, remove the offending patch with git rm, and relaunch this script')
                     return False
 
-            self.reactos_index.remove(os.path.join(self.staged_patch_dir, patch_file_name))
+            self.reactos_index.remove(posixpath.join(self.staged_patch_dir, patch_file_name))
             self.reactos_index.write()
             os.remove(patch_path)
 
