@@ -146,7 +146,7 @@ STDMETHODIMP CMruBase::QueryInterface(REFIID riid, void **ppvObj)
 {
     if (!ppvObj)
         return E_POINTER;
-    if (IsEqualGUID(riid, IID_IMruDataList))
+    if (IsEqualGUID(riid, IID_IMruDataList) || IsEqualGUID(riid, IID_IUnknown))
     {
         *ppvObj = static_cast<IMruDataList*>(this);
         AddRef();
@@ -706,8 +706,13 @@ CMruLongList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3
 
     TRACE("%p %p %p\n", dwUnused1, ppv, dwUnused3);
 
+    if (!ppv)
+        return E_POINTER;
+
     CMruLongList *pMruList = new CMruLongList();
     *ppv = static_cast<IMruDataList*>(pMruList);
+    TRACE("%p\n", *ppv);
+
     return S_OK;
 }
 
@@ -867,6 +872,9 @@ EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DW
 
     TRACE("%p %p %p\n", dwUnused1, ppv, dwUnused3);
 
+    if (!ppv)
+        return E_POINTER;
+
     *ppv = NULL;
 
     CMruPidlList *pMruList = new CMruPidlList();
@@ -874,5 +882,6 @@ EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DW
         return E_OUTOFMEMORY;
 
     *ppv = static_cast<IMruPidlList*>(pMruList);
+    TRACE("%p\n", *ppv);
     return S_OK;
 }
