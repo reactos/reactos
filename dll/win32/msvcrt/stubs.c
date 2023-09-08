@@ -917,7 +917,7 @@ vsnprintf(
     return 0;
 }
 
-#ifndef DEEPDEBUG
+#ifndef _DEBUG
 
 int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...)
 {
@@ -945,4 +945,4 @@ _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile)
     return NULL;
 }
 
-#endif /* ndef DEEPDEBUG */
+#endif /* ndef _DEBUG */
