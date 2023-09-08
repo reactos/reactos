@@ -1,8 +1,4 @@
 
-if(DEEPDEBUG)
-    add_definitions(-DDEEPDEBUG)
-endif()
-
 list(APPEND CRT_SOURCE
     ${CRT_CONIO_SOURCE}
     ${CRT_DIRECT_SOURCE}
