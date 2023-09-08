@@ -1,11 +1,12 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test for CImage
+ * PURPOSE:         Test for CImage and CImageDC
  * PROGRAMMER:      Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <atlimage.h>
+#include <strsafe.h>
 #include "resource.h"
 
 #ifdef HAVE_APITEST
@@ -14,250 +15,313 @@
     #include "atltest.h"
 #endif
 
-const TCHAR* szFiles[] = {
-    TEXT("ant.png"),
-    TEXT("ant.tif"),
-    TEXT("ant.gif"),
-    TEXT("ant.jpg"),
-    TEXT("ant.bmp"),
+struct BITMAPINFOEX : BITMAPINFO
+{
+    RGBQUAD bmiColorsExtra[256 - 1];
 };
 
-static TCHAR szTempPath[MAX_PATH];
-TCHAR* file_name(const TCHAR* file)
+static void
+Test_PixelAddress(INT iLine, const CImage &image1, const BITMAP &bm, INT x, INT y, BOOL bTopDown)
 {
-    static TCHAR buffer[MAX_PATH];
-    lstrcpy(buffer, szTempPath);
-    lstrcat(buffer, TEXT("\\"));
-    lstrcat(buffer, file);
-    return buffer;
+    LPBYTE pb = (LPBYTE)bm.bmBits;
+
+    if (bTopDown)
+        pb += bm.bmWidthBytes * y;
+    else
+        pb += bm.bmWidthBytes * (bm.bmHeight - y - 1);
+
+    pb += (x * bm.bmBitsPixel) / 8;
+
+    LPCVOID addr = image1.GetPixelAddress(x, y);
+    ok(pb == addr, "Line %d: (%d, %d): %p vs %p\n", iLine, x, y, pb, addr);
 }
 
-static void write_bitmap(HINSTANCE hInst, int id, TCHAR* file)
+static void
+Test_BitmapEntry(INT iLine, INT bpp, INT width, INT height, BOOL bTopDown)
 {
-    HRSRC rsrc;
+    HBITMAP hBitmap = ::CreateBitmap(width, height, bpp, 1, NULL);
+    ok(hBitmap != NULL, "Line %d: hBitmap was NULL\n", iLine);
 
-    rsrc = FindResource(hInst, MAKEINTRESOURCE(id), RT_BITMAP);
-    ok(rsrc != NULL, "Expected to find an image resource\n");
-    if (rsrc)
+    CImage image1;
+
+    ok(image1.IsNull(), "Line %d: IsNull() was TRUE\n", iLine);
+    image1.Attach(hBitmap, (bTopDown ? CImage::DIBOR_TOPDOWN : CImage::DIBOR_BOTTOMUP));
+
+    ok(!image1.IsNull(), "Line %d: IsNull() was FALSE\n", iLine);
+    ok(!image1.IsDIBSection(), "Line %d: IsDIBSection() was TRUE\n", iLine);
+
+    ok(image1.GetWidth() == width, "Line %d: %d vs %d\n", iLine, image1.GetWidth(), width);
+    ok(image1.GetHeight() == height, "Line %d: %d vs %d\n", iLine, image1.GetHeight(), height);
+    ok(image1.GetBPP() == bpp, "Line %d: %d vs %d\n", iLine, image1.GetBPP(), 1);
+}
+
+static void Test_Bitmap(void)
+{
+    Test_BitmapEntry(__LINE__, 1, 20, 30, FALSE);
+    Test_BitmapEntry(__LINE__, 1, 30, 20, TRUE);
+    Test_BitmapEntry(__LINE__, 4, 20, 30, FALSE);
+    Test_BitmapEntry(__LINE__, 4, 30, 20, TRUE);
+    Test_BitmapEntry(__LINE__, 8, 20, 30, FALSE);
+    Test_BitmapEntry(__LINE__, 8, 30, 20, TRUE);
+    Test_BitmapEntry(__LINE__, 24, 20, 30, FALSE);
+    Test_BitmapEntry(__LINE__, 24, 30, 20, TRUE);
+    Test_BitmapEntry(__LINE__, 32, 20, 30, FALSE);
+    Test_BitmapEntry(__LINE__, 32, 30, 20, TRUE);
+}
+
+static void Test_CompatBitmapEntry(INT iLine, HDC hdc, INT width, INT height)
+{
+    HBITMAP hBitmap = ::CreateCompatibleBitmap(hdc, width, height);
+    ok(hBitmap != NULL, "Line %d: hBitmap was NULL\n", iLine);
+
+    CImage image1;
+
+    ok(image1.IsNull(), "Line %d: IsNull() was TRUE\n", iLine);
+    image1.Attach(hBitmap);
+
+    ok(!image1.IsNull(), "Line %d: IsNull() was FALSE\n", iLine);
+    ok(!image1.IsDIBSection(), "Line %d: IsDIBSection() was TRUE\n", iLine);
+
+    ok(image1.GetWidth() == width, "Line %d: %d vs %d\n", iLine, image1.GetWidth(), width);
+    ok(image1.GetHeight() == height, "Line %d: %d vs %d\n", iLine, image1.GetHeight(), height);
+}
+
+static void Test_CompatBitmap(void)
+{
+    HDC hdc = ::CreateCompatibleDC(NULL);
+
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+
+    ::DeleteDC(hdc);
+
+    hdc = ::GetDC(NULL);
+
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+    Test_CompatBitmapEntry(__LINE__, hdc, 20, 30);
+
+    ::ReleaseDC(NULL, hdc);
+}
+
+static void
+Test_DIBSectionEntry(INT iLine, HDC hdc, INT bpp, INT width, INT height, BOOL bTopDown)
+{
+    // Initialize BITMAPINFOEX
+    BITMAPINFOEX bmi;
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = width;
+    bmi.bmiHeader.biHeight = (bTopDown ? -height : height);
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = bpp;
+    switch (bpp)
     {
-        void *rsrc_data;
-        HANDLE hfile;
-        BOOL ret;
-        HGLOBAL glob = LoadResource(hInst, rsrc);
-        DWORD rsrc_size = SizeofResource(hInst, rsrc);
-
-        rsrc_data = LockResource(glob);
-
-        hfile = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
-        ok(hfile != INVALID_HANDLE_VALUE, "Unable to open temp file: %lu\n", GetLastError());
-        if (hfile != INVALID_HANDLE_VALUE)
-        {
-            BITMAPFILEHEADER bfh = { 0 };
-            DWORD dwWritten;
-
-            bfh.bfType = 'MB';
-            bfh.bfSize = rsrc_size + sizeof(BITMAPFILEHEADER);
-            bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-            bfh.bfReserved1 = bfh.bfReserved2 = 0;
-            ret = WriteFile(hfile, &bfh, sizeof(bfh), &dwWritten, NULL);
-            ok(ret, "Unable to write temp file: %lu\n", GetLastError());
-            ret = WriteFile(hfile, rsrc_data, rsrc_size, &dwWritten, NULL);
-            ok(ret, "Unable to write temp file: %lu\n", GetLastError());
-            CloseHandle(hfile);
-        }
-        UnlockResource(rsrc_data);
+        case 1:
+            bmi.bmiHeader.biClrUsed = 2;
+            bmi.bmiColorsExtra[0].rgbBlue = 0xFF;
+            bmi.bmiColorsExtra[0].rgbGreen = 0xFF;
+            bmi.bmiColorsExtra[0].rgbRed = 0xFF;
+            break;
+        case 4:
+        case 8:
+            bmi.bmiHeader.biClrUsed = 3;
+            bmi.bmiColorsExtra[0].rgbBlue = 0xFF;
+            bmi.bmiColorsExtra[0].rgbGreen = 0xFF;
+            bmi.bmiColorsExtra[0].rgbRed = 0xFF;
+            bmi.bmiColorsExtra[1].rgbBlue = 0;
+            bmi.bmiColorsExtra[1].rgbGreen = 0;
+            bmi.bmiColorsExtra[1].rgbRed = 0xFF;
+            break;
+        default:
+            break;
     }
-}
 
-typedef Gdiplus::GpStatus (WINAPI *STARTUP)(ULONG_PTR *, const Gdiplus::GdiplusStartupInput *, Gdiplus::GdiplusStartupOutput *);
-typedef void (WINAPI *SHUTDOWN)(ULONG_PTR);
-typedef Gdiplus::GpStatus (WINGDIPAPI *CREATEBITMAPFROMFILE)(GDIPCONST WCHAR*, Gdiplus::GpBitmap **);
-typedef Gdiplus::GpStatus (WINGDIPAPI *GETPIXELFORMAT)(Gdiplus::GpImage *image, Gdiplus::PixelFormat *format);
-typedef Gdiplus::GpStatus (WINGDIPAPI *DISPOSEIMAGE)(Gdiplus::GpImage *);
+    // Create a DIB bitmap
+    HBITMAP hBitmap = ::CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
+    ok(hBitmap != NULL, "Line %d: hBitmap was NULL\n", iLine);
 
-static HINSTANCE               hinstGdiPlus;
-static ULONG_PTR               gdiplusToken;
+    BITMAP bm;
+    ::GetObject(hBitmap, sizeof(bm), &bm);
+    INT pitch = (bTopDown ? bm.bmWidthBytes : -bm.bmWidthBytes);
 
-static STARTUP                 Startup;
-static SHUTDOWN                Shutdown;
-static CREATEBITMAPFROMFILE    CreateBitmapFromFile;
-static GETPIXELFORMAT          GetImagePixelFormat;
-static DISPOSEIMAGE            DisposeImage;
+    CImage image1;
 
-template <typename TYPE>
-TYPE AddrOf(const char *name)
-{
-    FARPROC proc = ::GetProcAddress(hinstGdiPlus, name);
-    return reinterpret_cast<TYPE>(proc);
-}
+    ok(image1.IsNull(), "Line %d: IsNull() was FALSE\n", iLine);
+ 
+    image1.Attach(hBitmap, (bTopDown ? CImage::DIBOR_TOPDOWN : CImage::DIBOR_BOTTOMUP));
 
-static void init_gdip()
-{
-    hinstGdiPlus = ::LoadLibraryA("gdiplus.dll");
-    Startup = AddrOf<STARTUP>("GdiplusStartup");
-    Shutdown = AddrOf<SHUTDOWN>("GdiplusShutdown");
-    CreateBitmapFromFile = AddrOf<CREATEBITMAPFROMFILE>("GdipCreateBitmapFromFile");
-    GetImagePixelFormat = AddrOf<GETPIXELFORMAT>("GdipGetImagePixelFormat");
-    DisposeImage = AddrOf<DISPOSEIMAGE>("GdipDisposeImage");
-}
-
-static void determine_file_bpp(TCHAR* tfile, Gdiplus::PixelFormat expect_pf)
-{
-    using namespace Gdiplus;
-    GpBitmap *pBitmap = NULL;
-
-#ifdef UNICODE
-    WCHAR* file = tfile;
-#else
-    WCHAR file[MAX_PATH];
-    ::MultiByteToWideChar(CP_ACP, 0, tfile, -1, file, MAX_PATH);
-#endif
-
-    if (Startup == NULL)
-        init_gdip();
-
-    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-    Startup(&gdiplusToken, &gdiplusStartupInput, NULL);
-
-
-    Gdiplus::GpStatus status = CreateBitmapFromFile(file, &pBitmap);
-    ok(status == Gdiplus::Ok, "Expected status to be %i, was: %i\n", (int)Gdiplus::Ok, (int)status);
-    ok(pBitmap != NULL, "Expected a valid bitmap\n");
-    if (pBitmap)
+    ok(!image1.IsNull(), "Line %d: IsNull() was FALSE\n", iLine);
+    ok(image1.IsDIBSection(), "Line %d: IsDIBSection() was FALSE\n", iLine);
+    if (bpp == 4 || bpp == 8)
     {
-        PixelFormat pf;
-        GetImagePixelFormat(pBitmap, &pf);
-        ok(pf == expect_pf, "Expected PixelFormat to be 0x%x, was: 0x%x\n", (int)expect_pf, (int)pf);
-
-        DisposeImage(pBitmap);
+        ok(image1.GetTransparentColor() == 0xFFFFFFFF, "Line %d: 0x%08lX\n", iLine,
+           image1.GetTransparentColor());
     }
-    Shutdown(gdiplusToken);
-}
 
-static void Test_LoadSaveImage(void)
-{
-    HRESULT hr;
-    TCHAR* file;
-    BOOL bOK;
-    int width, height, bpp;
-    size_t n;
-    CImage image1, image2;
+    switch (bpp)
+    {
+        case 1:
+            ok(image1.GetMaxColorTableEntries() == 2,
+               "Line %d: %d\n", iLine, image1.GetMaxColorTableEntries());
+            break;
+        case 4:
+            ok(image1.GetMaxColorTableEntries() == 16,
+               "Line %d: %d\n", iLine, image1.GetMaxColorTableEntries());
+            break;
+        case 8:
+            ok(image1.GetMaxColorTableEntries() == 256,
+               "Line %d: %d\n", iLine, image1.GetMaxColorTableEntries());
+            break;
+        case 24:
+        case 32:
+            ok(image1.GetMaxColorTableEntries() == 0,
+               "Line %d: %d\n", iLine, image1.GetMaxColorTableEntries());
+            break;
+    }
+
+    ok(image1.GetWidth() == width, "Line %d: %d vs %d\n", iLine, image1.GetWidth(), width);
+    ok(image1.GetHeight() == height, "Line %d: %d vs %d\n", iLine, image1.GetHeight(), height);
+    ok(image1.GetBPP() == bpp, "Line %d: %d vs %d\n", iLine, image1.GetBPP(), bpp);
+    ok(image1.GetPitch() == pitch, "Line %d: %d vs %d\n", iLine, image1.GetPitch(), pitch);
+
+    LPBYTE pbBits = (LPBYTE)bm.bmBits;
+    if (!bTopDown)
+        pbBits += bm.bmWidthBytes * (height - 1);
+    ok(image1.GetBits() == pbBits, "Line %d: %p vs %p\n", iLine, image1.GetBits(), pbBits);
+
+    // Test Color Table
+    if (bpp <= 8)
+    {
+        DWORD Colors[3];
+        C_ASSERT(sizeof(DWORD) == sizeof(RGBQUAD));
+        FillMemory(Colors, sizeof(Colors), 0xCC);
+        image1.GetColorTable(0, _countof(Colors), (RGBQUAD *)Colors);
+        ok(Colors[0] == 0, "Line %d: 0x%08lX\n", iLine, Colors[0]);
+        ok(Colors[1] == 0xFFFFFF, "Line %d: 0x%08lX\n", iLine, Colors[1]);
+        if (bpp >= 4)
+            ok(Colors[2] == 0xFF0000, "Line %d: 0x%08lX\n", iLine, Colors[2]);
+    }
+
+    // Test SetPixel/GetPixel
     COLORREF color;
-    HDC hDC;
+    image1.SetPixel(0, 0, RGB(255, 255, 255));
+    color = image1.GetPixel(0, 0);
+    ok(color == RGB(255, 255, 255), "Line %d: color was 0x%08lX\n", iLine, color);
+    image1.SetPixel(0, 0, RGB(0, 0, 0));
+    color = image1.GetPixel(0, 0);
+    ok(color == RGB(0, 0, 0), "Line %d: color was 0x%08lX\n", iLine, color);
 
-    HINSTANCE hInst = GetModuleHandle(NULL);
-    GetTempPath(MAX_PATH, szTempPath);
-
-    image1.LoadFromResource(hInst, IDB_ANT);
-    ok(!image1.IsNull(), "Expected image1 is not null\n");
-
-    width = image1.GetWidth();
-    ok(width == 48, "Expected width to be 48, was: %d\n", width);
-    height = image1.GetHeight();
-    ok(height == 48, "Expected height to be 48, was: %d\n", height);
-    bpp = image1.GetBPP();
-    ok(bpp == 8, "Expected bpp to be 8, was: %d\n", bpp);
-
-    image2.LoadFromResource(hInst, IDB_CROSS);
-    ok(!image2.IsNull(), "Expected image2 is not null\n");
-    image2.SetTransparentColor(RGB(255, 255, 255));
-
-    width = image2.GetWidth();
-    ok(width == 32, "Expected width to be 32, was: %d\n", width);
-    height = image2.GetHeight();
-    ok(height == 32, "Expected height to be 32, was: %d\n", height);
-    bpp = image2.GetBPP();
-    ok(bpp == 8, "Expected bpp to be 8, was: %d\n", bpp);
-
-    color = image1.GetPixel(5, 5);
-    ok(color == RGB(166, 202, 240), "Expected color to be 166, 202, 240; was: %i, %i, %i\n", GetRValue(color), GetGValue(color), GetBValue(color));
-
-    hDC = image1.GetDC();
-    bOK = image2.Draw(hDC, 0, 0);
-    image1.ReleaseDC();
-    ok(bOK != FALSE, "Expected bDraw to be TRUE, was: %d\n", bOK);
-    image2.Destroy();
-
-    color = image1.GetPixel(5, 5);
-    ok(color == RGB(255, 0,0), "Expected color to be 255, 0, 0; was: %i, %i, %i\n", GetRValue(color), GetGValue(color), GetBValue(color));
-
-    file = file_name(TEXT("ant.bmp"));
-    write_bitmap(hInst, IDB_ANT, file);
-
-    init_gdip();
-
-    determine_file_bpp(file, PixelFormat8bppIndexed);
-
-    hr = image2.Load(file);
-    ok(hr == S_OK, "Expected hr to be S_OK, was: %08lx\n", hr);
-    ok(!image2.IsNull(), "Expected image1 is not null\n");
-    bOK = DeleteFile(file);
-    ok(bOK, "Expected bOK to be TRUE, was: %d\n", bOK);
-
-    width = image2.GetWidth();
-    ok_int(width, 48);
-    height = image2.GetHeight();
-    ok_int(height, 48);
-    bpp = image2.GetBPP();
-    ok(bpp == 32 || bpp == 8, "bpp was %d\n", bpp);
-
-    for (n = 0; n < _countof(szFiles); ++n)
+    // Test GetDC/ReleaseDC
     {
-        file = file_name(szFiles[n]);
-        image2.Destroy();
-
-        if (n == 0)
-            hr = image1.Save(file, Gdiplus::ImageFormatPNG);
-        else
-            hr = image1.Save(file);
-        ok(hr == S_OK, "Expected hr to be S_OK, was: %08lx (for %i)\n", hr, n);
-
-        bOK = (GetFileAttributes(file) != 0xFFFFFFFF);
-        ok(bOK, "Expected bOK to be TRUE, was: %d (for %i)\n", bOK, n);
-
-        hr = image2.Load(file);
-        ok(hr == S_OK, "Expected hr to be S_OK, was: %08lx (for %i)\n", hr, n);
-
-        width = image2.GetWidth();
-        ok(width == 48, "Expected width to be 48, was: %d (for %i)\n", width, n);
-        height = image2.GetHeight();
-        ok(height == 48, "Expected height to be 48, was: %d (for %i)\n", height, n);
-        bpp = image2.GetBPP();
-        if (n == 3)
+        HDC hdc1 = image1.GetDC();
+        ok(hdc1 != NULL, "Line %d: hdc1 was NULL\n", iLine);
+        ::SetPixelV(hdc1, 2, 2, RGB(255, 255, 255));
         {
-            ok(bpp == 24 || bpp == 32, "Expected bpp to be 24 or 32, was: %d (for %i)\n", bpp, n);
-            determine_file_bpp(file, PixelFormat24bppRGB);
-        }
-        else
-        {
-            determine_file_bpp(file, PixelFormat8bppIndexed);
-        }
-        color = image1.GetPixel(5, 5);
-        ok(color == RGB(255, 0,0), "Expected color to be 255, 0, 0; was: %i, %i, %i (for %i)\n", GetRValue(color), GetGValue(color), GetBValue(color), n);
-
-        {
-            CImageDC dc1(image1);
-            ::SetPixel(dc1, 5, 5, RGB(0, 255, 0));
-            {
-                CImageDC dc2(image1);
-                ::SetPixel(dc2, 5, 5, RGB(0, 0, 255));
-            }
-        }
-
-        {
-            HDC hdcImage = image1.GetDC();
-            color = ::GetPixel(hdcImage, 5, 5);
-            ok_long(color, RGB(0, 0, 255));
-
-            ::SetPixel(hdcImage, 5, 5, RGB(255, 0, 0));
-            color = ::GetPixel(hdcImage, 5, 5);
-            ok_long(color, RGB(255, 0, 0));
+            HDC hdc2 = image1.GetDC();
+            ok(hdc2 != NULL, "Line %d: hdc2 was NULL\n", iLine);
+            color = ::GetPixel(hdc2, 2, 2);
+            ok(color == RGB(255, 255, 255), "Line %d: color was 0x%08lX\n", iLine, color);
             image1.ReleaseDC();
         }
-
-        bOK = DeleteFile(file);
-        ok(bOK, "Expected bOK to be TRUE, was: %d (for %i)\n", bOK, n);
+        image1.ReleaseDC();
     }
+
+    // Test CImageDC
+    {
+        CImageDC hdc1(image1);
+        ok(hdc1 != NULL, "Line %d: hdc1 was NULL\n", iLine);
+        ::SetPixelV(hdc1, 1, 0, RGB(255, 255, 255));
+        {
+            CImageDC hdc2(image1);
+            ok(hdc2 != NULL, "Line %d: hdc2 was NULL\n", iLine);
+            color = ::GetPixel(hdc2, 1, 0);
+            ok(color == RGB(255, 255, 255), "Line %d: color was 0x%08lX\n", iLine, color);
+        }
+    }
+
+    HRESULT hr;
+    TCHAR szFileName[MAX_PATH];
+    LPCTSTR dotexts[] =
+    {
+        TEXT(".bmp"), TEXT(".jpg"), TEXT(".png"), TEXT(".gif"), TEXT(".tif")
+    };
+
+    // Test Save/Load
+    for (UINT iDotExt = 0; iDotExt < _countof(dotexts); ++iDotExt)
+    {
+        ::ExpandEnvironmentStrings(TEXT("%TEMP%\\CImage"), szFileName, _countof(szFileName));
+        StringCchCat(szFileName, _countof(szFileName), dotexts[iDotExt]);
+        hr = image1.Save(szFileName);
+        ok(hr == S_OK, "Line %d: %d: hr was 0x%08lX\n", iLine, iDotExt, hr);
+
+        CImage image2;
+        hr = image2.Load(szFileName);
+        ok(hr == S_OK, "Line %d: %d: hr was 0x%08lX\n", iLine, iDotExt, hr);
+        ::DeleteFile(szFileName);
+
+        CImageDC hdc2(image2);
+        ok(hdc2 != NULL, "Line %d: %d: hdc2 was NULL\n", iLine, iDotExt);
+        color = ::GetPixel(hdc2, 0, 0);
+        ok(color == RGB(0, 0, 0), "Line %d: %d: color was 0x%08lX\n", iLine, iDotExt, color);
+        color = ::GetPixel(hdc2, 1, 0);
+        ok(color == RGB(255, 255, 255), "Line %d: %d: color was 0x%08lX\n", iLine, iDotExt, color);
+    }
+
+    // Test GetPixelAddress
+    Test_PixelAddress(iLine, image1, bm, 0, 0, bTopDown);
+    Test_PixelAddress(iLine, image1, bm, 10, 0, bTopDown);
+    Test_PixelAddress(iLine, image1, bm, 0, 10, bTopDown);
+    Test_PixelAddress(iLine, image1, bm, 4, 6, bTopDown);
+    Test_PixelAddress(iLine, image1, bm, 6, 2, bTopDown);
+}
+
+static void Test_DIBSection(void)
+{
+    HDC hdc = ::CreateCompatibleDC(NULL);
+
+    Test_DIBSectionEntry(__LINE__, hdc, 1, 30, 20, FALSE);
+    Test_DIBSectionEntry(__LINE__, hdc, 1, 20, 30, TRUE);
+    Test_DIBSectionEntry(__LINE__, hdc, 4, 30, 20, FALSE);
+    Test_DIBSectionEntry(__LINE__, hdc, 4, 20, 30, TRUE);
+    Test_DIBSectionEntry(__LINE__, hdc, 8, 30, 20, FALSE);
+    Test_DIBSectionEntry(__LINE__, hdc, 8, 20, 30, TRUE);
+    Test_DIBSectionEntry(__LINE__, hdc, 24, 30, 20, FALSE);
+    Test_DIBSectionEntry(__LINE__, hdc, 24, 20, 30, TRUE);
+    Test_DIBSectionEntry(__LINE__, hdc, 32, 30, 20, FALSE);
+    Test_DIBSectionEntry(__LINE__, hdc, 32, 20, 30, TRUE);
+
+    ::DeleteDC(hdc);
+}
+
+static void Test_ResBitmap(void)
+{
+    HINSTANCE hInst = GetModuleHandle(NULL);
+
+    CImage image1;
+    ok_int(image1.IsNull(), TRUE);
+    image1.LoadFromResource(hInst, IDB_ANT);
+    ok_int(image1.IsNull(), FALSE);
+
+    ok_int(image1.GetWidth(), 48);
+    ok_int(image1.GetHeight(), 48);
+    ok_int(image1.GetBPP(), 8);
+    ok_int(image1.GetPitch(), -48);
+
+    CImage image2;
+    ok_int(image2.IsNull(), TRUE);
+    image2.LoadFromResource(hInst, IDB_CROSS);
+    ok_int(image2.IsNull(), FALSE);
+
+    ok_int(image2.GetWidth(), 32);
+    ok_int(image2.GetHeight(), 32);
+    ok_int(image2.GetBPP(), 8);
+    ok_int(image2.GetPitch(), -32);
 }
 
 static INT FindGUID(REFGUID rguid, const CSimpleArray<GUID>& guids)
@@ -428,7 +492,10 @@ static void Test_Exporter(void)
 
 START_TEST(CImage)
 {
-    Test_LoadSaveImage();
+    Test_Bitmap();
+    Test_CompatBitmap();
+    Test_DIBSection();
+    Test_ResBitmap();
     Test_Importer();
     Test_Exporter();
 }

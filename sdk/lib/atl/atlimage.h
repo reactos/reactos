@@ -33,8 +33,8 @@ public:
     enum DIBOrientation
     {
         DIBOR_DEFAULT,              // default
-        DIBOR_BOTTOMUP,             // bottom-up DIB
-        DIBOR_TOPDOWN               // top-down DIB
+        DIBOR_TOPDOWN,              // top-down DIB
+        DIBOR_BOTTOMUP              // bottom-up DIB
     };
 
     CImage() noexcept
@@ -283,6 +283,17 @@ public:
         return pb;
     }
 
+    const void *GetBits() const noexcept
+    {
+        ATLASSERT(IsDIBSection());
+        const BYTE *pb = (const BYTE *)m_bm.bmBits;
+        if (m_eOrientation == DIBOR_BOTTOMUP)
+        {
+            pb += m_bm.bmWidthBytes * (m_bm.bmHeight - 1);
+        }
+        return pb;
+    }
+
     int GetBPP() const noexcept
     {
         ATLASSERT(m_hBitmap);
@@ -345,6 +356,15 @@ public:
     {
         ATLASSERT(IsDIBSection());
         BYTE *pb = (BYTE *)GetBits();
+        pb += GetPitch() * y;
+        pb += (GetBPP() * x) / 8;
+        return pb;
+    }
+
+    const void* GetPixelAddress(int x, int y) const noexcept
+    {
+        ATLASSERT(IsDIBSection());
+        const BYTE *pb = (const BYTE *)GetBits();
         pb += GetPitch() * y;
         pb += (GetBPP() * x) / 8;
         return pb;
@@ -1020,6 +1040,8 @@ private:
     }
 
 private:
+    // FIXME: MS ATL CImage has m_nWidth, m_nHeight, m_nPitch, m_nBPP, and m_pBits.
+    // FIXME: MS ATL CImage hasn't m_eOrientation, m_bm, and m_ds.
     HBITMAP             m_hBitmap;
     mutable HBITMAP     m_hOldBitmap;
     mutable HDC         m_hDC;
@@ -1142,14 +1164,22 @@ private:
         m_bIsDIBSection = (::GetObject(hBitmap, size, &m_ds) == size);
 
         bool bOK = (::GetObject(hBitmap, sizeof(BITMAP), &m_bm) != 0);
+        if (!bOK)
+            return;
 
-        if (bOK)
+        m_hBitmap = hBitmap;
+
+        if (m_bIsDIBSection && eOrientation == DIBOR_DEFAULT)
         {
-            m_hBitmap = hBitmap;
-            m_eOrientation = eOrientation;
-            m_bHasAlphaChannel = (m_bm.bmBitsPixel == 32);
-            m_clrTransparentColor = CLR_INVALID;
+            if (m_ds.dsBmih.biHeight < 0)
+                eOrientation = DIBOR_TOPDOWN;
+            else
+                eOrientation = DIBOR_BOTTOMUP;
         }
+        m_eOrientation = eOrientation;
+
+        m_bHasAlphaChannel = (m_bm.bmBitsPixel == 32);
+        m_clrTransparentColor = CLR_INVALID;
     }
 
     BOOL CreateInternal(int nWidth, int nHeight, int nBPP,
