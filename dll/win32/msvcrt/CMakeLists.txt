@@ -1,4 +1,8 @@
 
+if(DEEPDEBUG)
+    add_definitions(-DDEEPDEBUG)
+endif()
+
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/crt/include)
 spec2def(msvcrt.dll msvcrt.spec ADD_IMPORTLIB)
 
