@@ -1,7 +1,9 @@
 
 if(DEEPDEBUG)
     add_definitions(-DDEEPDEBUG)
-    set(DEEPDEBUGCRT_LIB deepdebugcrt)
+    set(SWITCH_CRT crt)
+else()
+    set(SWITCH_CRT minicrt)
 endif()
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/crt/include)
@@ -38,7 +40,7 @@ list(APPEND SOURCE
 add_library(msvcrt MODULE ${SOURCE})
 set_module_type(msvcrt win32dll ENTRYPOINT DllMain 12)
 add_dependencies(msvcrt psdk)
-target_link_libraries(msvcrt crt cpprt wine ${PSEH_LIB} ${DEEPDEBUGCRT_LIB})
+target_link_libraries(msvcrt ${SWITCH_CRT} cpprt wine ${PSEH_LIB})
 
 if(MSVC)
     # export of deleting destructor "name"

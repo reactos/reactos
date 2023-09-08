@@ -36,8 +36,20 @@ list(APPEND CRT_ASM_SOURCE
 set_source_files_properties(${CRT_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "__MINGW_IMPORT=extern;USE_MSVCRT_PREFIX;_MSVCRT_LIB_;_MSVCRT_;_MT;CRTDLL")
 add_asm_files(crt_asm ${CRT_ASM_SOURCE})
 
-add_library(crt ${CRT_SOURCE} ${crt_asm})
-target_link_libraries(crt chkstk ${PSEH_LIB})
+add_library(minicrt ${CRT_SOURCE} ${crt_asm})
+target_link_libraries(minicrt chkstk ${PSEH_LIB})
+target_compile_definitions(minicrt
+ PRIVATE    __MINGW_IMPORT=extern
+    USE_MSVCRT_PREFIX
+    _MSVCRT_LIB_
+    _MSVCRT_
+    _MT
+    CRTDLL)
+#add_pch(minicrt precomp.h)
+add_dependencies(minicrt psdk asm)
+
+add_library(crt misc/dbgrpt.cpp)
+target_link_libraries(crt chkstk ${PSEH_LIB} minicrt)
 target_compile_definitions(crt
  PRIVATE    __MINGW_IMPORT=extern
     USE_MSVCRT_PREFIX
@@ -45,16 +57,4 @@ target_compile_definitions(crt
     _MSVCRT_
     _MT
     CRTDLL)
-#add_pch(crt precomp.h)
-add_dependencies(crt psdk asm)
-
-add_library(deepdebugcrt misc/dbgrpt.cpp)
-target_link_libraries(deepdebugcrt chkstk ${PSEH_LIB})
-target_compile_definitions(deepdebugcrt
- PRIVATE    __MINGW_IMPORT=extern
-    USE_MSVCRT_PREFIX
-    _MSVCRT_LIB_
-    _MSVCRT_
-    _MT
-    CRTDLL)
-add_dependencies(deepdebugcrt psdk)
+add_dependencies(crt psdk)
