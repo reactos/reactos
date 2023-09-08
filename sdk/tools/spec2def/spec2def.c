@@ -72,6 +72,7 @@ char *pszArchString2;
 char *pszSourceFileName = NULL;
 char *pszDllName = NULL;
 char *gpszUnderscore = "";
+int gbDebugVersion = 0;
 int gbDebug;
 unsigned guOsVersion = 0x502;
 #define DbgPrint(...) (!gbDebug || fprintf(stderr, __VA_ARGS__))
@@ -85,6 +86,7 @@ enum
     FL_NORELAY = 16,
     FL_RET64 = 32,
     FL_REGISTER = 64,
+    FL_DBGONLY = 128,
 };
 
 enum
@@ -244,6 +246,12 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
     int i;
     int bRelay = 0;
     int bInPrototype = 0;
+
+    /* Ignore -dbgonly entries on Release */
+    if (!gbDebugVersion && (pexp->uFlags & FL_DBGONLY))
+    {
+        return 0;
+    }
 
     /* Workaround for forwarded externs. See here for an explanation:
      * https://stackoverflow.com/questions/4060143/forwarding-data-in-a-dll */
@@ -747,6 +755,12 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
 int
 OutputLine_def(FILE *fileDest, EXPORT *pexp)
 {
+    /* Ignore -dbgonly entries on Release */
+    if (!gbDebugVersion && (pexp->uFlags & FL_DBGONLY))
+    {
+        return 0;
+    }
+
     /* Don't add private exports to the import lib */
     if (gbImportLib && (pexp->uFlags & FL_PRIVATE))
     {
@@ -1089,6 +1103,10 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
 
                 } while (*pc == ',');
             }
+            else if (CompareToken(pc, "-dbgonly"))
+            {
+                exp.uFlags |= FL_DBGONLY;
+            }
             else if (CompareToken(pc, "-private"))
             {
                 exp.uFlags |= FL_PRIVATE;
@@ -1407,6 +1425,7 @@ void usage(void)
            "  --version=<version>     Sets the version to create exports for\n"
            "  --implib                generate a def file for an import library\n"
            "  --no-private-warnings   suppress warnings about symbols that should be -private\n"
+           "  --debug-version         enable -dbgonly entries\n"
            "  -a=<arch>               set architecture to <arch> (i386, x86_64, arm, arm64)\n"
            "  --with-tracing          generate wine-like \"+relay\" trace trampolines (needs -s)\n");
 }
@@ -1463,6 +1482,10 @@ int main(int argc, char *argv[])
         else if (strcasecmp(argv[i], "--ms") == 0)
         {
             gbMSComp = 1;
+        }
+        else if (strcasecmp(argv[i], "--debug-version") == 0)
+        {
+            gbDebugVersion = 1;
         }
         else if (strcasecmp(argv[i], "--no-private-warnings") == 0)
         {
