@@ -917,28 +917,5 @@ vsnprintf(
     return 0;
 }
 
-#ifndef DEEPDEBUG
-int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
 
-int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumber, const wchar_t *moduleName, const wchar_t *format, ...)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
 
-int __cdecl _CrtSetReportMode(int reportType, int reportMode)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-_HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-#endif
