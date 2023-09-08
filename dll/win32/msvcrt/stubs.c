@@ -936,6 +936,8 @@ int __cdecl _CrtSetReportMode(int reportType, int reportMode)
     return 0;
 }
 
+typedef void *_HFILE;
+
 _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile)
 {
     UNIMPLEMENTED;

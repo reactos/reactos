@@ -3,7 +3,7 @@ if(NOT DEEPDEBUG)
 endif
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/crt/include)
-spec2def(msvcrtd.dll msvcrtd.spec ADD_IMPORTLIB)
+spec2def(msvcrtd.dll ../msvcrt/msvcrt.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DUSE_MSVCRT_PREFIX
@@ -16,13 +16,13 @@ add_definitions(
     -D__MINGW_IMPORT="")
 
 list(APPEND SOURCE
-    dllmain.c
+    ../msvcrt/dllmain.c
     stubs.c
     msvcrtd.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrtd_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrtd.def)
 
-add_library(msvcrtd MODULE ${SOURCE} )
+add_library(msvcrtd MODULE ${SOURCE})
 set_module_type(msvcrtd win32dll ENTRYPOINT DllMain 12)
 add_dependencies(msvcrtd psdk)
 target_link_libraries(msvcrtd crt cpprt wine ${PSEH_LIB})
