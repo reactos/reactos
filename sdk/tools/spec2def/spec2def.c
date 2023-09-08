@@ -72,7 +72,7 @@ char *pszArchString2;
 char *pszSourceFileName = NULL;
 char *pszDllName = NULL;
 char *gpszUnderscore = "";
-int gbDebugVersion = 0;
+int gbDebugBuild = 0;
 int gbDebug;
 unsigned guOsVersion = 0x502;
 #define DbgPrint(...) (!gbDebug || fprintf(stderr, __VA_ARGS__))
@@ -248,7 +248,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
     int bInPrototype = 0;
 
     /* Ignore -dbgonly entries on Release */
-    if (!gbDebugVersion && (pexp->uFlags & FL_DBGONLY))
+    if (!gbDebugBuild && (pexp->uFlags & FL_DBGONLY))
     {
         return 0;
     }
@@ -756,7 +756,7 @@ int
 OutputLine_def(FILE *fileDest, EXPORT *pexp)
 {
     /* Ignore -dbgonly entries on Release */
-    if (!gbDebugVersion && (pexp->uFlags & FL_DBGONLY))
+    if (!gbDebugBuild && (pexp->uFlags & FL_DBGONLY))
     {
         return 0;
     }
@@ -1425,7 +1425,7 @@ void usage(void)
            "  --version=<version>     Sets the version to create exports for\n"
            "  --implib                generate a def file for an import library\n"
            "  --no-private-warnings   suppress warnings about symbols that should be -private\n"
-           "  --debug-version         enable -dbgonly entries\n"
+           "  --debug-build           enable -dbgonly entries\n"
            "  -a=<arch>               set architecture to <arch> (i386, x86_64, arm, arm64)\n"
            "  --with-tracing          generate wine-like \"+relay\" trace trampolines (needs -s)\n");
 }
@@ -1483,9 +1483,9 @@ int main(int argc, char *argv[])
         {
             gbMSComp = 1;
         }
-        else if (strcasecmp(argv[i], "--debug-version") == 0)
+        else if (strcasecmp(argv[i], "--debug-build") == 0)
         {
-            gbDebugVersion = 1;
+            gbDebugBuild = 1;
         }
         else if (strcasecmp(argv[i], "--no-private-warnings") == 0)
         {
