@@ -15,6 +15,7 @@ list(APPEND CRT_MISC_SOURCE
     misc/amsg.c
     misc/assert.c
     misc/crt_init.c
+    misc/dbgrpt.cpp
     misc/environ.c
     misc/getargs.c
     misc/i10output.c
