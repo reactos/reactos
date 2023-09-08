@@ -918,6 +918,7 @@ vsnprintf(
 }
 
 #ifndef DEEPDEBUG
+
 int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...)
 {
     UNIMPLEMENTED;
@@ -943,4 +944,5 @@ _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile)
     UNIMPLEMENTED;
     return NULL;
 }
-#endif
+
+#endif /* ndef DEEPDEBUG */

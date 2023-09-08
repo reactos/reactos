@@ -9,7 +9,6 @@ list(APPEND CRT_SOURCE
     ${CRT_MBSTRING_SOURCE}
     ${CRT_MEM_SOURCE}
     ${CRT_MISC_SOURCE}
-    ${CRT_DEEPDEBUG_SOURCE}
     ${CRT_PRINTF_SOURCE}
     ${CRT_PROCESS_SOURCE}
     ${CRT_SEARCH_SOURCE}
@@ -48,3 +47,14 @@ target_compile_definitions(crt
     CRTDLL)
 #add_pch(crt precomp.h)
 add_dependencies(crt psdk asm)
+
+add_library(deepdebugcrt ${CRT_DEEPDEBUG_SOURCE})
+target_link_libraries(deepdebugcrt chkstk ${PSEH_LIB})
+target_compile_definitions(deepdebugcrt
+ PRIVATE    __MINGW_IMPORT=extern
+    USE_MSVCRT_PREFIX
+    _MSVCRT_LIB_
+    _MSVCRT_
+    _MT
+    CRTDLL)
+add_dependencies(deepdebugcrt psdk)

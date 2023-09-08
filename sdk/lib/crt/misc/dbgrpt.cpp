@@ -86,7 +86,6 @@ struct dbgrpt_char_traits<wchar_t>
 typedef dbgrpt_char_traits<char> achar_traits;
 typedef dbgrpt_char_traits<wchar_t> wchar_traits;
 
-
 const wchar_t* achar_traits::szAssertionMessage =
     L"Debug %s!\n"
     L"%s%hs" /* module */
