@@ -232,12 +232,10 @@ void _CrtLeaveDbgReport(int reportType)
 EXTERN_C
 int __cdecl _CrtSetReportMode(int reportType, int reportMode)
 {
-    int oldReportMode;
-
     if (reportType >= _CRT_ERRCNT || reportType < 0)
         return 0;
 
-    oldReportMode = _CrtModeOutputFormat[reportType];
+    int oldReportMode = _CrtModeOutputFormat[reportType];
     _CrtModeOutputFormat[reportType] = reportMode;
     return oldReportMode;
 }
@@ -245,12 +243,10 @@ int __cdecl _CrtSetReportMode(int reportType, int reportMode)
 EXTERN_C
 _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile)
 {
-    _HFILE oldReportFile;
-
     if (reportType >= _CRT_ERRCNT || reportType < 0)
         return NULL;
 
-    oldReportFile = _CrtReportFiles[reportType];
+    _HFILE oldReportFile = _CrtReportFiles[reportType];
     if (reportFile != _CRTDBG_REPORT_FILE)
         _CrtReportFiles[reportType] = reportFile;
     return oldReportFile;
@@ -260,7 +256,6 @@ template <typename char_t>
 static inline BOOL _CrtDbgReportToFile(HANDLE hFile, const char_t* szMsg)
 {
     typedef dbgrpt_char_traits<char_t> traits;
-    DWORD cbMsg;
 
     if (hFile == _CRTDBG_INVALID_HFILE || hFile == NULL)
         return FALSE;
@@ -270,7 +265,7 @@ static inline BOOL _CrtDbgReportToFile(HANDLE hFile, const char_t* szMsg)
     else if (hFile == _CRTDBG_FILE_STDERR)
         hFile = ::GetStdHandle(STD_ERROR_HANDLE);
 
-    cbMsg = (DWORD)(traits::StringLength(szMsg) * sizeof(char_t));
+    DWORD cbMsg = (DWORD)(traits::StringLength(szMsg) * sizeof(char_t));
     return ::WriteFile(hFile, szMsg, cbMsg, &cbMsg, NULL);
 }
 
