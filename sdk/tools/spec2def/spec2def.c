@@ -86,7 +86,7 @@ enum
     FL_NORELAY = 16,
     FL_RET64 = 32,
     FL_REGISTER = 64,
-    FL_DBGONLY = 128,
+    FL_DEBUG_ONLY = 128,
 };
 
 enum
@@ -248,7 +248,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
     int bInPrototype = 0;
 
     /* Ignore -debug-only entries on Release */
-    if (!gbDebugBuild && (pexp->uFlags & FL_DBGONLY))
+    if (!gbDebugBuild && (pexp->uFlags & FL_DEBUG_ONLY))
     {
         return 0;
     }
@@ -756,7 +756,7 @@ int
 OutputLine_def(FILE *fileDest, EXPORT *pexp)
 {
     /* Ignore -debug-only entries on Release */
-    if (!gbDebugBuild && (pexp->uFlags & FL_DBGONLY))
+    if (!gbDebugBuild && (pexp->uFlags & FL_DEBUG_ONLY))
     {
         return 0;
     }
@@ -1105,7 +1105,7 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             }
             else if (CompareToken(pc, "-debug-only"))
             {
-                exp.uFlags |= FL_DBGONLY;
+                exp.uFlags |= FL_DEBUG_ONLY;
             }
             else if (CompareToken(pc, "-private"))
             {
