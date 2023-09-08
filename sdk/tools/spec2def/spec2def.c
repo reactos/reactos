@@ -247,7 +247,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
     int bRelay = 0;
     int bInPrototype = 0;
 
-    /* Ignore -dbgonly entries on Release */
+    /* Ignore -debug-only entries on Release */
     if (!gbDebugBuild && (pexp->uFlags & FL_DBGONLY))
     {
         return 0;
@@ -755,7 +755,7 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
 int
 OutputLine_def(FILE *fileDest, EXPORT *pexp)
 {
-    /* Ignore -dbgonly entries on Release */
+    /* Ignore -debug-only entries on Release */
     if (!gbDebugBuild && (pexp->uFlags & FL_DBGONLY))
     {
         return 0;
@@ -1103,7 +1103,7 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
 
                 } while (*pc == ',');
             }
-            else if (CompareToken(pc, "-dbgonly"))
+            else if (CompareToken(pc, "-debug-only"))
             {
                 exp.uFlags |= FL_DBGONLY;
             }
@@ -1425,7 +1425,7 @@ void usage(void)
            "  --version=<version>     Sets the version to create exports for\n"
            "  --implib                generate a def file for an import library\n"
            "  --no-private-warnings   suppress warnings about symbols that should be -private\n"
-           "  --debug-build           enable -dbgonly entries\n"
+           "  --debug-build           enable -debug-only entries\n"
            "  -a=<arch>               set architecture to <arch> (i386, x86_64, arm, arm64)\n"
            "  --with-tracing          generate wine-like \"+relay\" trace trampolines (needs -s)\n");
 }
