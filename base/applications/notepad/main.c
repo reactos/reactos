@@ -563,8 +563,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 #ifdef _DEBUG
     /* Report any memory leaks on exit */
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    _CrtSetReportMode(0, 0);
-    _CrtSetReportFile(0, NULL);
 #endif
 
     switch (GetUserDefaultUILanguage())
