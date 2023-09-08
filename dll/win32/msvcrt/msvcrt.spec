@@ -199,9 +199,9 @@
 @ cdecl -arch=i386 _CItanh()
 @ stub -version=0x600+ _CrtCheckMemory
 @ stub -version=0x600+ _CrtDbgBreak
-@ stub -version=0x600+ _CrtDbgReport
+@ cdecl _CrtDbgReport(long str long str str)
 @ stub -version=0x600+ _CrtDbgReportV
-@ stub -version=0x600+ _CrtDbgReportW
+@ cdecl _CrtDbgReportW(long wstr long wstr wstr)
 @ stub -version=0x600+ _CrtDbgReportWV
 @ stub -version=0x600+ _CrtDoForAllClientObjects
 @ stub -version=0x600+ _CrtDumpMemoryLeaks
