@@ -941,6 +941,6 @@ typedef void *_HFILE;
 _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile)
 {
     UNIMPLEMENTED;
-    return 0;
+    return NULL;
 }
 #endif
