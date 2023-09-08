@@ -421,7 +421,7 @@ function(spec2def _dllname _spec_file)
 
     if(DBG)
         set(__debug_build "--debug-build")
-    else
+    else()
         set(__debug_build "")
     endif()
 
