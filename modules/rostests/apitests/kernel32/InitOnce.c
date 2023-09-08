@@ -72,8 +72,8 @@ InitOnceProc(
 START_TEST(InitOnce)
 {
     BOOL bRet, fPending;
-    ULONG i, ulInitCount, ulSeed, ulContextData;
-    ULONG_PTR ulTempContext;
+    ULONG i, ulInitCount, ulSeed;
+    ULONG_PTR ulContextData, ulTempContext;
     DWORD dwError;
 
     HMODULE hKernel32;
