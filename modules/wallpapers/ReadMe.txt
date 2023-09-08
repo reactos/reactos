@@ -15,12 +15,12 @@ ReactOS_CirclesBlue_2.jpg           | See above                                 
 ReactOS_CirclesGold_1.jpg           | See above                                      | See above
 ReactOS_CirclesGold_2.jpg           | See above                                      | See above
 ReactOS_Hexagons.jpg                | See above                                      | https://reactos.org/forum/viewtopic.php?p=109866#p109866
-ReactOS_Soft_Blue.png               | Forum user "Foxlet" (foxlet@furcode.co)        | https://jira.reactos.org/browse/CORE-15783
-ReactOS_Soft_Blue_4x3.png           | See above                                      | See above
-ReactOS_Soft_Blue_16x9.png          | See above                                      | See above
+ReactOS_Mizu_4x3.png                | Forum user "Foxlet" (foxlet@furcode.co)        | https://jira.reactos.org/browse/CORE-15783
+ReactOS_Mizu_16x9_A.png             | See above                                      | See above
+ReactOS_Mizu_16x9_B.png             | See above                                      | See above
 Silhouette collection               | Jake Collins (polar@ever3st.com)               | https://ever3st.com/Graphics/Loot/
 
-To include the module in your build folder, run the configure script with the flags -DENABLE_WALLPAPERS=1 
+To include the module in your build folder, run the configure script with the flags -DENABLE_WALLPAPERS=1
 
 # For Windows users
 
