@@ -235,7 +235,7 @@ int __cdecl _CrtSetReportMode(int reportType, int reportMode)
     int oldReportMode;
 
     if (reportType >= _CRT_ERRCNT || reportType < 0)
-        return -1;
+        return 0;
 
     oldReportMode = _CrtModeOutputFormat[reportType];
     _CrtModeOutputFormat[reportType] = reportMode;
@@ -248,7 +248,7 @@ _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile)
     _HFILE oldReportFile;
 
     if (reportType >= _CRT_ERRCNT || reportType < 0)
-        return _CRTDBG_INVALID_HFILE;
+        return NULL;
 
     oldReportFile = _CrtReportFiles[reportType];
     if (reportFile != _CRTDBG_REPORT_FILE)
