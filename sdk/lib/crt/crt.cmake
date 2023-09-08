@@ -49,7 +49,8 @@ target_compile_definitions(minicrt
 add_dependencies(minicrt psdk asm)
 
 add_library(crt misc/dbgrpt.cpp)
-target_link_libraries(crt chkstk ${PSEH_LIB} minicrt)
+target_link_libraries(crt chkstk ${PSEH_LIB})
+add_importlibs(crt minicrt)
 target_compile_definitions(crt
  PRIVATE    __MINGW_IMPORT=extern
     USE_MSVCRT_PREFIX
