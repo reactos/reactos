@@ -237,7 +237,8 @@ int __cdecl _CrtSetReportMode(int reportType, int reportMode)
         return 0;
 
     int oldReportMode = _CrtModeOutputFormat[reportType];
-    _CrtModeOutputFormat[reportType] = reportMode;
+    if (reportMode != _CRTDBG_REPORT_MODE)
+        _CrtModeOutputFormat[reportType] = reportMode;
     return oldReportMode;
 }
 
