@@ -2,7 +2,7 @@ if(DEEPDEBUG)
     add_definitions(-DDEEPDEBUG)
 else()
     message(FATAL_ERROR "msvcrtd.dll needs DEEPDEBUG")
-endif
+endif()
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/crt/include)
 
