@@ -1,9 +1,10 @@
-if(NOT DEEPDEBUG)
+if(DEEPDEBUG)
+    add_definitions(-DDEEPDEBUG)
+else()
     message(FATAL_ERROR "msvcrtd.dll needs DEEPDEBUG")
 endif
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/crt/include)
-spec2def(msvcrtd.dll ../msvcrt/msvcrt.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DUSE_MSVCRT_PREFIX
@@ -17,14 +18,14 @@ add_definitions(
 
 list(APPEND SOURCE
     ../msvcrt/dllmain.c
-    stubs.c
+    ../msvcrt/stubs.c
     msvcrtd.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msvcrtd_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/msvcrtd.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/../msvcrt/msvcrt_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/../msvcrt/msvcrt.def)
 
 add_library(msvcrtd MODULE ${SOURCE})
 set_module_type(msvcrtd win32dll ENTRYPOINT DllMain 12)
-add_dependencies(msvcrtd psdk)
+add_dependencies(msvcrtd psdk msvcrt)
 target_link_libraries(msvcrtd crt cpprt wine ${PSEH_LIB})
 
 add_importlibs(msvcrtd kernel32 ntdll)
