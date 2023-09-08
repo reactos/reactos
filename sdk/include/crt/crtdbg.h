@@ -122,8 +122,8 @@ extern "C" {
     #define _RPTFW0(rptno,msg)
     #define _RPTFWN(rptno,msg,...)
 
-    int __cdecl _CrtSetReportMode(int reportType, int reportMode);
-    _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile);
+    #define _CrtSetReportMode(t,f) ((int)0)
+    #define _CrtSetReportFile(t,f) ((_HFILE)0)
 
 #else // _DEBUG
 
@@ -161,8 +161,8 @@ extern "C" {
     #define _RPTFW0(rptno,msg)      _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", msg)
     #define _RPTFWN(rptno,msg,...)  _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, msg, __VA_ARGS__)
 
-    #define _CrtSetReportMode(t,f) ((int)0)
-    #define _CrtSetReportFile(t,f) ((_HFILE)0)
+    int __cdecl _CrtSetReportMode(int reportType, int reportMode);
+    _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile);
 
 #endif
 

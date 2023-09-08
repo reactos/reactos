@@ -16,6 +16,8 @@
 #include <windows.h>
 
 #undef OutputDebugString
+#undef _CrtSetReportMode
+#undef _CrtSetReportFile
 
 #define DBGRPT_MAX_BUFFER_SIZE  4096
 #define DBGRPT_ASSERT_PREFIX_MESSAGE    "Assertion failed: "
