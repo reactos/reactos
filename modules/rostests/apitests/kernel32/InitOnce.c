@@ -154,6 +154,7 @@ _test_sync:
 
     /* Re-initialize One-Time initialization structure by using INIT_ONCE_STATIC_INIT */
     InitOnce = (INIT_ONCE)INIT_ONCE_STATIC_INIT;
+    ulContextData = 0xdeadbeef;
 
     /* Perform synchronous initialization by using InitOnceBeginInitialize */
     fPending = FALSE;
@@ -168,6 +169,16 @@ _test_sync:
     {
         goto _test_async;
     }
+
+    /* Call again to check whether initialization has completed */
+    fPending = 0xdeadbeef;
+    bRet = pfnInitOnceBeginInitialize(&InitOnce,
+                                      INIT_ONCE_CHECK_ONLY,
+                                      &fPending,
+                                      (LPVOID*)&ulContextData);
+    ok(bRet == FALSE, "InitOnceBeginInitialize should fail\n");
+    ok(fPending == 0xdeadbeef, "fPending should be unmodified\n");
+    ok(ulContextData == 0xdeadbeef, "ulContextData should be unmodified\n");
 
     /* Complete the initialization */
     InitWorker(&ulInitCount, &ulTempContext);
