@@ -218,10 +218,10 @@
 @ stub -version=0x600+ _CrtSetDbgBlockType
 @ stub -version=0x600+ _CrtSetDbgFlag
 @ stub -version=0x600+ _CrtSetDumpClient
-@ stub -version=0x600+ _CrtSetReportFile
+@ cdecl _CrtSetReportFile(long ptr)
 @ stub -version=0x600+ _CrtSetReportHook
 @ stub -version=0x600+ _CrtSetReportHook2
-@ stub -version=0x600+ _CrtSetReportMode
+@ cdecl _CrtSetReportMode(long long)
 @ stdcall _CxxThrowException(long long)
 @ cdecl -arch=i386 -norelay _EH_prolog()
 @ cdecl _Getdays()
