@@ -390,10 +390,8 @@ function(spec2def _dllname _spec_file)
         set(__version_arg "--version=${DLL_EXPORT_VERSION}")
     endif()
 
-    if(DBG)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(__debug_build "--debug-build")
-    else()
-        set(__debug_build "")
     endif()
 
     # Generate exports def and C stubs file for the DLL
