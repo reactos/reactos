@@ -48,7 +48,7 @@ target_compile_definitions(crt
 #add_pch(crt precomp.h)
 add_dependencies(crt psdk asm)
 
-add_library(deepdebugcrt ${CRT_DEEPDEBUG_SOURCE})
+add_library(deepdebugcrt misc/dbgrpt.cpp)
 target_link_libraries(deepdebugcrt chkstk ${PSEH_LIB})
 target_compile_definitions(deepdebugcrt
  PRIVATE    __MINGW_IMPORT=extern

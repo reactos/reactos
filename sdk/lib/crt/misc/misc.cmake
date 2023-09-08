@@ -25,10 +25,6 @@ list(APPEND CRT_MISC_SOURCE
     misc/tls.c
 )
 
-list(APPEND CRT_DEEPDEBUG_SOURCE
-    misc/dbgrpt.cpp
-)
-
 add_library(getopt misc/getopt.c)
 target_compile_definitions(getopt PRIVATE _DLL __USE_CRTIMP)
 add_dependencies(getopt psdk)
