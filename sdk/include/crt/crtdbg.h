@@ -84,13 +84,17 @@ extern "C" {
 // Debug reporting functions
 
 #ifdef _DEBUG
+
     int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...);
     int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumber, const wchar_t *moduleName, const wchar_t *format, ...);
+
 #endif
+
 
 // Assertion and error reporting
 
 #ifndef _DEBUG
+
     #define _CrtDbgBreak() ((void)0)
 
     #ifndef _ASSERT_EXPR
@@ -159,6 +163,7 @@ extern "C" {
 
     #define _CrtSetReportMode(t,f) ((int)0)
     #define _CrtSetReportFile(t,f) ((_HFILE)0)
+
 #endif
 
 
