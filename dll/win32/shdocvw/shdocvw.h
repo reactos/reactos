@@ -47,7 +47,12 @@ extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid,
  * Dll lifetime tracking declaration for shdocvw.dll
  */
 #ifdef __REACTOS__
-extern LONG SHDOCVW_refCount;
+# ifdef __cplusplus
+EXTERN_C
+# else
+extern
+# endif
+LONG SHDOCVW_refCount;
 #else
 extern LONG SHDOCVW_refCount DECLSPEC_HIDDEN;
 #endif
