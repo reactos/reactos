@@ -152,32 +152,35 @@ ProbeAndCaptureUnicodeStringOrAtom(
     __in_data_source(USER_MODE) _In_ PUNICODE_STRING pustrUnsafe)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    UNICODE_STRING ustrCopy;
 
     /* Default to NULL */
-    pustrOut->Buffer = NULL;
+    RtlInitEmptyUnicodeString(pustrOut, NULL, 0);
 
     _SEH2_TRY
     {
         ProbeForRead(pustrUnsafe, sizeof(UNICODE_STRING), 1);
 
+        ustrCopy = *pustrUnsafe;
+
         /* Validate the string */
-        if ((pustrUnsafe->Length & 1) || (pustrUnsafe->Buffer == NULL))
+        if ((ustrCopy.Length & 1) || (ustrCopy.Buffer == NULL))
         {
             /* This is not legal */
             _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
         }
 
         /* Check if this is an atom */
-        if (IS_ATOM(pustrUnsafe->Buffer))
+        if (IS_ATOM(ustrCopy.Buffer))
         {
             /* Copy the atom, length is 0 */
             pustrOut->MaximumLength = pustrOut->Length = 0;
-            pustrOut->Buffer = pustrUnsafe->Buffer;
+            pustrOut->Buffer = ustrCopy.Buffer;
         }
         else
         {
             /* Get the length, maximum length includes zero termination */
-            pustrOut->Length = pustrUnsafe->Length;
+            pustrOut->Length = ustrCopy.Length;
             pustrOut->MaximumLength = pustrOut->Length + sizeof(WCHAR);
 
             /* Allocate a buffer */
@@ -190,8 +193,8 @@ ProbeAndCaptureUnicodeStringOrAtom(
             }
 
             /* Copy the string and zero terminate it */
-            ProbeForRead(pustrUnsafe->Buffer, pustrOut->Length, 1);
-            RtlCopyMemory(pustrOut->Buffer, pustrUnsafe->Buffer, pustrOut->Length);
+            ProbeForRead(ustrCopy.Buffer, pustrOut->Length, 1);
+            RtlCopyMemory(pustrOut->Buffer, ustrCopy.Buffer, pustrOut->Length);
             pustrOut->Buffer[pustrOut->Length / sizeof(WCHAR)] = L'\0';
         }
     }
