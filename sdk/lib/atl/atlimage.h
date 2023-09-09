@@ -285,13 +285,7 @@ public:
 
     const void *GetBits() const noexcept
     {
-        ATLASSERT(IsDIBSection());
-        const BYTE *pb = (const BYTE *)m_bm.bmBits;
-        if (m_eOrientation == DIBOR_BOTTOMUP)
-        {
-            pb += m_bm.bmWidthBytes * (m_bm.bmHeight - 1);
-        }
-        return pb;
+        return const_cast<CImage*>(this)->GetBits();
     }
 
     int GetBPP() const noexcept
@@ -363,11 +357,7 @@ public:
 
     const void* GetPixelAddress(int x, int y) const noexcept
     {
-        ATLASSERT(IsDIBSection());
-        const BYTE *pb = (const BYTE *)GetBits();
-        pb += GetPitch() * y;
-        pb += (GetBPP() * x) / 8;
-        return pb;
+        return const_cast<CImage*>(this)->GetPixelAddress(x, y);
     }
 
     COLORREF GetTransparentColor() const noexcept
