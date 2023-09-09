@@ -1,12 +1,10 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/timedate/timezone.c
  * PURPOSE:     Time Zone property page
  * COPYRIGHT:   Copyright 2004-2005 Eric Kohl
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *              Copyright 2006 Christoph v. Wittich <Christoph@ActiveVB.de>
- *
  */
 
 #include "timedate.h"
@@ -168,36 +166,45 @@ ShowTimeZoneList(HWND hwnd)
 {
     TIME_ZONE_INFORMATION TimeZoneInfo;
     PTIMEZONE_ENTRY Entry;
-    BOOL bDoAdvancedTest;
-    DWORD dwIndex;
-    DWORD i;
+    DWORD dwCount;
+    DWORD dwIndex = 0;
+    BOOL bFound = FALSE;
 
-    GetTimeZoneInformation(&TimeZoneInfo);
-    bDoAdvancedTest = (!*TimeZoneInfo.StandardName);
+    if (GetTimeZoneInformation(&TimeZoneInfo) == TIME_ZONE_ID_INVALID)
+        ZeroMemory(&TimeZoneInfo, sizeof(TimeZoneInfo));
 
-    dwIndex = 0;
-    i = 0;
-    Entry = TimeZoneListHead;
-    while (Entry != NULL)
+    for (Entry = TimeZoneListHead; Entry != NULL; Entry = Entry->Next)
     {
-        SendMessageW(hwnd,
-                     CB_ADDSTRING,
-                     0,
-                     (LPARAM)Entry->Description);
+        dwCount = SendMessageW(hwnd,
+                               CB_ADDSTRING,
+                               0,
+                               (LPARAM)Entry->Description);
+        if (dwCount == CB_ERR || dwCount == CB_ERRSPACE)
+            continue;
 
-        if ( (!bDoAdvancedTest && *Entry->StandardName &&
-                wcscmp(Entry->StandardName, TimeZoneInfo.StandardName) == 0) ||
-             ( (Entry->TimezoneInfo.Bias == TimeZoneInfo.Bias) &&
-               (Entry->TimezoneInfo.StandardBias == TimeZoneInfo.StandardBias) &&
-               (Entry->TimezoneInfo.DaylightBias == TimeZoneInfo.DaylightBias) &&
-               (memcmp(&Entry->TimezoneInfo.StandardDate, &TimeZoneInfo.StandardDate, sizeof(SYSTEMTIME)) == 0) &&
-               (memcmp(&Entry->TimezoneInfo.DaylightDate, &TimeZoneInfo.DaylightDate, sizeof(SYSTEMTIME)) == 0) ) )
+        if (bFound)
+            continue;
+
+        if (*TimeZoneInfo.StandardName && *Entry->StandardName)
         {
-            dwIndex = i;
+            if (wcscmp(Entry->StandardName, TimeZoneInfo.StandardName) == 0)
+            {
+                dwIndex = dwCount;
+                bFound = TRUE;
+            }
         }
-
-        i++;
-        Entry = Entry->Next;
+        else
+        {
+            if ((Entry->TimezoneInfo.Bias == TimeZoneInfo.Bias) &&
+                (Entry->TimezoneInfo.StandardBias == TimeZoneInfo.StandardBias) &&
+                (Entry->TimezoneInfo.DaylightBias == TimeZoneInfo.DaylightBias) &&
+                (memcmp(&Entry->TimezoneInfo.StandardDate, &TimeZoneInfo.StandardDate, sizeof(SYSTEMTIME)) == 0) &&
+                (memcmp(&Entry->TimezoneInfo.DaylightDate, &TimeZoneInfo.DaylightDate, sizeof(SYSTEMTIME)) == 0))
+            {
+                dwIndex = dwCount;
+                bFound = TRUE;
+            }
+        }
     }
 
     SendMessageW(hwnd,
@@ -285,7 +292,7 @@ TimeZonePageProc(HWND hwndDlg,
         case WM_DRAWITEM:
         {
             LPDRAWITEMSTRUCT lpDrawItem;
-            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+            lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
             if(lpDrawItem->CtlID == IDC_WORLD_BACKGROUND)
             {
                 HDC hdcMem;
