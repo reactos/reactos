@@ -1665,7 +1665,8 @@ Exit:
     /* Additional cleanup on failure */
     if (bResult == FALSE)
     {
-        if (ustrRsrc.Buffer != NULL)
+        if ((ustrRsrc.Buffer != NULL) &&
+            !IS_INTRESOURCE(ustrRsrc.Buffer))
         {
             ExFreePoolWithTag(ustrRsrc.Buffer, TAG_STRING);
         }
