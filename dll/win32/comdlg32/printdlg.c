@@ -2927,6 +2927,10 @@ static void pagesetup_set_devmode(pagesetup_data *data, DEVMODEW *dm)
     else
     {
         dmA = convert_to_devmodeA(dm);
+#ifdef __REACTOS__
+        if (!dmA)
+            return;
+#endif
         size = dmA->dmSize + dmA->dmDriverExtra;
         src = dmA;
     }
