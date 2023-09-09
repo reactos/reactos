@@ -2327,6 +2327,10 @@ SetupDiGetINFClassW(
         ClassName, ClassNameSize, RequiredSize);
 
     /* Open .inf file */
+#ifdef __REACTOS__
+    if (!InfName)
+        return ret;
+#endif
     hInf = SetupOpenInfFileW(InfName, NULL, INF_STYLE_WIN4, NULL);
     if (hInf == INVALID_HANDLE_VALUE)
         goto cleanup;
