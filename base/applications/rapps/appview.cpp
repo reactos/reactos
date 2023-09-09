@@ -2004,8 +2004,8 @@ CApplicationView::RestoreListSelection(const LVITEMW &Item)
     fi.psz = Item.pszText;
 
     HWND hList = m_ListView ? m_ListView->m_hWnd : NULL;
-    int index = ListView_FindItem(hList, -1, &fi);
-    if (Item.iItem != -1)
+    int index = hList ? ListView_FindItem(hList, -1, &fi) : -1;
+    if (index != -1)
     {
         ListView_SetItemState(hList, index, Item.state, Item.stateMask);
     }
