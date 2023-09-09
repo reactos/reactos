@@ -36,11 +36,7 @@ list(APPEND CRT_ASM_SOURCE
 set_source_files_properties(${CRT_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "__MINGW_IMPORT=extern;USE_MSVCRT_PREFIX;_MSVCRT_LIB_;_MSVCRT_;_MT;CRTDLL")
 add_asm_files(crt_asm ${CRT_ASM_SOURCE})
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CRT_DEBUG_SOURCE misc/dbgrpt.cpp)
-endif()
-
-add_library(crt ${CRT_SOURCE} ${crt_asm} ${CRT_DEBUG_SOURCE})
+add_library(crt ${CRT_SOURCE} ${crt_asm})
 target_link_libraries(crt chkstk ${PSEH_LIB})
 target_compile_definitions(crt
  PRIVATE    __MINGW_IMPORT=extern
