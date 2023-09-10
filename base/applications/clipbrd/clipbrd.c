@@ -287,7 +287,7 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     hdc = BeginPaint(hWnd, &ps);
 
-    /* Erase the background if needed */
+    /* Erase the background */
     FillRect(ps.hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
 
     if (!OpenClipboard(Globals.hMainWnd))
