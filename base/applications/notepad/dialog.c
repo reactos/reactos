@@ -111,6 +111,33 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     SetWindowText(Globals.hMainWnd, szCaption);
 }
 
+VOID WaitCursor(BOOL bBegin)
+{
+    static HCURSOR s_hWaitCursor = NULL;
+    static HCURSOR s_hOldCursor = NULL;
+    static INT s_nLock = 0;
+
+    if (bBegin)
+    {
+        if (s_nLock++ == 0)
+        {
+            if (s_hWaitCursor == NULL)
+                s_hWaitCursor = LoadCursor(NULL, IDC_WAIT);
+            s_hOldCursor = SetCursor(s_hWaitCursor);
+        }
+        else
+        {
+            SetCursor(s_hWaitCursor);
+        }
+    }
+    else
+    {
+        if (--s_nLock == 0)
+            SetCursor(s_hOldCursor);
+    }
+}
+
+
 VOID DIALOG_StatusBarAlignParts(VOID)
 {
     static const int defaultWidths[] = {120, 120, 120};
@@ -220,11 +247,14 @@ static BOOL DoSaveFile(VOID)
     HANDLE hFile;
     DWORD cchText;
 
+    WaitCursor(TRUE);
+
     hFile = CreateFileW(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_WRITE,
                         NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         ShowLastError();
+        WaitCursor(FALSE);
         return FALSE;
     }
 
@@ -259,6 +289,7 @@ static BOOL DoSaveFile(VOID)
         SetFileName(Globals.szFileName);
     }
 
+    WaitCursor(FALSE);
     return bRet;
 }
 
@@ -307,6 +338,8 @@ VOID DoOpenFile(LPCTSTR szFileName)
     if (!DoCloseFile())
         return;
 
+    WaitCursor(TRUE);
+
     hFile = CreateFile(szFileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                        OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -347,6 +380,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
+    WaitCursor(FALSE);
 }
 
 VOID DIALOG_FileNew(VOID)
@@ -355,6 +389,8 @@ VOID DIALOG_FileNew(VOID)
     if (!DoCloseFile())
         return;
 
+    WaitCursor(TRUE);
+
     SetWindowText(Globals.hEdit, NULL);
     SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
     Globals.iEoln = EOLN_CRLF;
@@ -362,13 +398,20 @@ VOID DIALOG_FileNew(VOID)
 
     NOTEPAD_EnableSearchMenu();
     DIALOG_StatusBarUpdateAll();
+
+    WaitCursor(FALSE);
 }
 
 VOID DIALOG_FileNewWindow(VOID)
 {
     TCHAR pszNotepadExe[MAX_PATH];
+
+    WaitCursor(TRUE);
+
     GetModuleFileName(NULL, pszNotepadExe, _countof(pszNotepadExe));
     ShellExecute(NULL, NULL, pszNotepadExe, NULL, NULL, SW_SHOWNORMAL);
+
+    WaitCursor(FALSE);
 }
 
 VOID DIALOG_FileOpen(VOID)

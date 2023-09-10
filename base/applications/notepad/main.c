@@ -433,6 +433,8 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             FINDREPLACE *pFindReplace = (FINDREPLACE *) lParam;
             Globals.find = *(FINDREPLACE *) lParam;
 
+            WaitCursor(TRUE);
+
             if (pFindReplace->Flags & FR_FINDNEXT)
                 NOTEPAD_FindNext(pFindReplace, FALSE, TRUE);
             else if (pFindReplace->Flags & FR_REPLACE)
@@ -441,6 +443,8 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 NOTEPAD_ReplaceAll(pFindReplace);
             else if (pFindReplace->Flags & FR_DIALOGTERM)
                 NOTEPAD_FindTerm();
+
+            WaitCursor(FALSE);
             break;
         }
 
@@ -587,7 +591,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     wndclass.lpfnWndProc = NOTEPAD_WndProc;
     wndclass.hInstance = Globals.hInstance;
     wndclass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_NPICON));
-    wndclass.hCursor = LoadCursor(0, IDC_ARROW);
+    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndclass.lpszMenuName = MAKEINTRESOURCE(MAIN_MENU);
     wndclass.lpszClassName = className;

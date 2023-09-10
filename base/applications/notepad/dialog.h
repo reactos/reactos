@@ -57,3 +57,4 @@ VOID DoOpenFile(LPCTSTR szFileName);
 VOID DoShowHideStatusBar(VOID);
 VOID DoCreateEditWindow(VOID);
 void UpdateWindowCaption(BOOL clearModifyAlert);
+VOID WaitCursor(BOOL bBegin);
