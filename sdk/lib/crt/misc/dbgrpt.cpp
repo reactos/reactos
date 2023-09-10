@@ -16,6 +16,8 @@
 #include <windows.h>
 
 #undef OutputDebugString
+#undef _CrtSetReportMode
+#undef _CrtSetReportFile
 
 #define DBGRPT_MAX_BUFFER_SIZE  4096
 #define DBGRPT_ASSERT_PREFIX_MESSAGE    "Assertion failed: "
@@ -38,6 +40,13 @@ static const wchar_t* _CrtModeMessages[_CRT_ERRCNT] =
     L"Error",
     L"Assertion Failed"
 };
+// Report files
+static _HFILE _CrtReportFiles[_CRT_ERRCNT] =
+{
+    _CRTDBG_INVALID_HFILE,
+    _CRTDBG_INVALID_HFILE,
+    _CRTDBG_INVALID_HFILE
+};
 
 // Manually delay-load as to not have a dependency on user32
 typedef int (WINAPI *tMessageBoxW)(_In_opt_ HWND hWnd, _In_opt_ LPCWSTR lpText, _In_opt_ LPCWSTR lpCaption, _In_ UINT uType);
@@ -57,6 +66,7 @@ struct dbgrpt_char_traits<char>
     static const char_t* szUnknownFile;
 
     static void OutputDebugString(const char_t* message);
+    static size_t StringLength(const char_t* str) { return strlen(str); }
 };
 
 template<>
@@ -69,12 +79,12 @@ struct dbgrpt_char_traits<wchar_t>
     static const char_t* szUnknownFile;
 
     static void OutputDebugString(const char_t* message);
+    static size_t StringLength(const char_t* str) { return wcslen(str); };
 };
 
 // Shortcut
 typedef dbgrpt_char_traits<char> achar_traits;
 typedef dbgrpt_char_traits<wchar_t> wchar_traits;
-
 
 const wchar_t* achar_traits::szAssertionMessage =
     L"Debug %s!\n"
@@ -97,16 +107,15 @@ const wchar_traits::char_t* wchar_traits::szEmptyString = L"";
 const achar_traits::char_t* achar_traits::szUnknownFile = "<unknown file>";
 const wchar_traits::char_t* wchar_traits::szUnknownFile = L"<unknown file>";
 
-void achar_traits::OutputDebugString(const char* message)
+inline void achar_traits::OutputDebugString(const char* message)
 {
     OutputDebugStringA(message);
 }
 
-void wchar_traits::OutputDebugString(const wchar_t* message)
+inline void wchar_traits::OutputDebugString(const wchar_t* message)
 {
     OutputDebugStringW(message);
 }
-
 
 static
 HMODULE _CrtGetUser32()
@@ -221,6 +230,46 @@ void _CrtLeaveDbgReport(int reportType)
         _InterlockedDecrement(&_CrtInAssert);
 }
 
+EXTERN_C
+int __cdecl _CrtSetReportMode(int reportType, int reportMode)
+{
+    if (reportType >= _CRT_ERRCNT || reportType < 0)
+        return 0;
+
+    int oldReportMode = _CrtModeOutputFormat[reportType];
+    if (reportMode != _CRTDBG_REPORT_MODE)
+        _CrtModeOutputFormat[reportType] = reportMode;
+    return oldReportMode;
+}
+
+EXTERN_C
+_HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile)
+{
+    if (reportType >= _CRT_ERRCNT || reportType < 0)
+        return NULL;
+
+    _HFILE oldReportFile = _CrtReportFiles[reportType];
+    if (reportFile != _CRTDBG_REPORT_FILE)
+        _CrtReportFiles[reportType] = reportFile;
+    return oldReportFile;
+}
+
+template <typename char_t>
+static inline BOOL _CrtDbgReportToFile(HANDLE hFile, const char_t* szMsg)
+{
+    typedef dbgrpt_char_traits<char_t> traits;
+
+    if (hFile == _CRTDBG_INVALID_HFILE || hFile == NULL)
+        return FALSE;
+
+    if (hFile == _CRTDBG_FILE_STDOUT)
+        hFile = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    else if (hFile == _CRTDBG_FILE_STDERR)
+        hFile = ::GetStdHandle(STD_ERROR_HANDLE);
+
+    DWORD cbMsg = (DWORD)(traits::StringLength(szMsg) * sizeof(char_t));
+    return ::WriteFile(hFile, szMsg, cbMsg, &cbMsg, NULL);
+}
 
 template <typename char_t>
 static int _CrtHandleDbgReport(int reportType, const char_t* szCompleteMessage, const char_t* szFormatted,
@@ -230,8 +279,7 @@ static int _CrtHandleDbgReport(int reportType, const char_t* szCompleteMessage, 
 
     if (_CrtModeOutputFormat[reportType] & _CRTDBG_MODE_FILE)
     {
-        OutputDebugStringA("ERROR: Please implement _CrtSetReportFile first\n");
-        _CrtDbgBreak();
+        _CrtDbgReportToFile<char_t>(_CrtReportFiles[reportType], szCompleteMessage);
     }
 
     if (_CrtModeOutputFormat[reportType] & _CRTDBG_MODE_DEBUG)

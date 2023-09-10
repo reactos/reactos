@@ -91,8 +91,6 @@ extern "C" {
 #endif
 
 
-
-
 // Assertion and error reporting
 
 #ifndef _DEBUG
@@ -124,6 +122,8 @@ extern "C" {
     #define _RPTFW0(rptno,msg)
     #define _RPTFWN(rptno,msg,...)
 
+    #define _CrtSetReportMode(t,f) ((int)0)
+    #define _CrtSetReportFile(t,f) ((_HFILE)0)
 
 #else // _DEBUG
 
@@ -160,6 +160,9 @@ extern "C" {
 
     #define _RPTFW0(rptno,msg)      _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", msg)
     #define _RPTFWN(rptno,msg,...)  _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, msg, __VA_ARGS__)
+
+    int __cdecl _CrtSetReportMode(int reportType, int reportMode);
+    _HFILE __cdecl _CrtSetReportFile(int reportType, _HFILE reportFile);
 
 #endif
 
@@ -230,8 +233,6 @@ extern "C" {
 #define _CrtGetReportHook() ((_CRT_REPORT_HOOK)0)
 #define _CrtSetReportHook2(t,f) ((int)0)
 #define _CrtSetReportHookW2(t,f) ((int)0)
-#define _CrtSetReportMode(t,f) ((int)0)
-#define _CrtSetReportFile(t,f) ((_HFILE)0)
 
 #define _CrtSetBreakAlloc(a) ((long)0)
 #define _CrtSetAllocHook(f) ((_CRT_ALLOC_HOOK)0)

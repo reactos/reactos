@@ -199,9 +199,9 @@
 @ cdecl -arch=i386 _CItanh()
 @ stub -version=0x600+ _CrtCheckMemory
 @ stub -version=0x600+ _CrtDbgBreak
-@ stub -version=0x600+ _CrtDbgReport
+@ cdecl -version=0x600+ _CrtDbgReport(long str long str str)
 @ stub -version=0x600+ _CrtDbgReportV
-@ stub -version=0x600+ _CrtDbgReportW
+@ cdecl -version=0x600+ _CrtDbgReportW(long wstr long wstr wstr)
 @ stub -version=0x600+ _CrtDbgReportWV
 @ stub -version=0x600+ _CrtDoForAllClientObjects
 @ stub -version=0x600+ _CrtDumpMemoryLeaks
@@ -218,10 +218,10 @@
 @ stub -version=0x600+ _CrtSetDbgBlockType
 @ stub -version=0x600+ _CrtSetDbgFlag
 @ stub -version=0x600+ _CrtSetDumpClient
-@ stub -version=0x600+ _CrtSetReportFile
+@ cdecl -version=0x600+ _CrtSetReportFile(long ptr)
 @ stub -version=0x600+ _CrtSetReportHook
 @ stub -version=0x600+ _CrtSetReportHook2
-@ stub -version=0x600+ _CrtSetReportMode
+@ cdecl -version=0x600+ _CrtSetReportMode(long long)
 @ stdcall _CxxThrowException(long long)
 @ cdecl -arch=i386 -norelay _EH_prolog()
 @ cdecl _Getdays()
