@@ -9,6 +9,10 @@
 /* UTF-8 */
 #pragma code_page(65001)
 
+/* Only use english on debug builds to reduce compile time */
+#if DBG
+    #include "lang/en-US.rc"
+#else
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
@@ -39,3 +43,4 @@
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif
+#endif /* DBG */
