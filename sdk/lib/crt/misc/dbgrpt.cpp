@@ -309,7 +309,14 @@ static int _CrtHandleDbgReport(int reportType, const char_t* szCompleteMessage, 
 
 
 EXTERN_C
-int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...)
+int __cdecl
+_VCrtDbgReportA(
+    int reportType,
+    const char *filename,
+    int linenumber,
+    const char *moduleName,
+    const char *format,
+    va_list arglist)
 {
     char szFormatted[DBGRPT_MAX_BUFFER_SIZE+1] = {0};           // The user provided message
     char szCompleteMessage[(DBGRPT_MAX_BUFFER_SIZE+1)*2] = {0}; // The output for debug / file
@@ -325,11 +332,7 @@ int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, 
 
     if (format)
     {
-        va_list arglist;
-        va_start(arglist, format);
         int len = _vsnprintf(szFormatted, DBGRPT_MAX_BUFFER_SIZE - 2 - sizeof(DBGRPT_ASSERT_PREFIX_MESSAGE), format, arglist);
-        va_end(arglist);
-
         if (len < 0)
         {
             strcpy(szFormatted, DBGRPT_STRING_TOO_LONG);
@@ -361,7 +364,14 @@ int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, 
 }
 
 EXTERN_C
-int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumber, const wchar_t *moduleName, const wchar_t *format, ...)
+int __cdecl
+_VCrtDbgReportW(
+    int reportType,
+    const wchar_t *filename,
+    int linenumber,
+    const wchar_t *moduleName,
+    const wchar_t *format,
+    va_list arglist)
 {
     wchar_t szFormatted[DBGRPT_MAX_BUFFER_SIZE+1] = {0};           // The user provided message
     wchar_t szCompleteMessage[(DBGRPT_MAX_BUFFER_SIZE+1)*2] = {0}; // The output for debug / file
@@ -377,11 +387,7 @@ int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumb
 
     if (format)
     {
-        va_list arglist;
-        va_start(arglist, format);
         int len = _vsnwprintf(szFormatted, DBGRPT_MAX_BUFFER_SIZE - 2 - sizeof(DBGRPT_ASSERT_PREFIX_MESSAGE), format, arglist);
-        va_end(arglist);
-
         if (len < 0)
         {
             wcscpy(szFormatted, _CRT_WIDE(DBGRPT_STRING_TOO_LONG));
@@ -412,5 +418,68 @@ int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumb
     return nResult;
 }
 
+EXTERN_C
+int __cdecl
+_CrtDbgReportV(
+    int reportType,
+    const char *filename,
+    int linenumber,
+    const char *moduleName,
+    const char *format,
+    va_list arglist)
+{
+    return _VCrtDbgReportA(reportType, filename, linenumber, moduleName, format, arglist);
+}
+
+EXTERN_C
+int __cdecl
+_CrtDbgReportWV(
+    int reportType,
+    const wchar_t *filename,
+    int linenumber,
+    const wchar_t *moduleName,
+    const wchar_t *format,
+    va_list arglist)
+{
+    return _VCrtDbgReportW(reportType, filename, linenumber, moduleName, format, arglist);
+}
+
+EXTERN_C
+int __cdecl
+_CrtDbgReport(
+    int reportType,
+    const char *filename,
+    int linenumber,
+    const char *moduleName,
+    const char *format,
+    ...)
+{
+    va_list arglist;
+    int result;
+
+    va_start(arglist, format);
+    result = _VCrtDbgReportA(reportType, filename, linenumber, moduleName, format, arglist);
+    va_end(arglist);
+    return result;
+}
+
+EXTERN_C
+int __cdecl
+_CrtDbgReportW(
+    int reportType,
+    const wchar_t *filename,
+    int linenumber,
+    const wchar_t *moduleName,
+    const wchar_t *format,
+    ...)
+{
+    va_list arglist;
+    int result;
+
+    va_start(arglist, format);
+    result = _VCrtDbgReportW(reportType, filename, linenumber, moduleName, format, arglist);
+    va_end(arglist);
+    return result;
+}
 
 //#endif // _DEBUG
