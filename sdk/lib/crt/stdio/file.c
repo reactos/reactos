@@ -1209,6 +1209,7 @@ void CDECL _unlock_file(FILE *file)
     /* ReactOS: string streams dont need to be locked */
     else if(!(file->_flag & _IOSTRG))
         LeaveCriticalSection(&((file_crit*)file)->crit);
+
 }
 
 /*********************************************************************
