@@ -408,7 +408,7 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
 
     VOID
     GetRestoreListSelectionData(LVITEMW &Item, WCHAR *Name, UINT NameLen);
-    int
+    VOID
     RestoreListSelection(const LVITEMW &Item);
 
     // this function is called when a item of listview get focus.

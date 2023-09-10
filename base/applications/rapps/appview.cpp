@@ -1996,20 +1996,21 @@ CApplicationView::GetRestoreListSelectionData(LVITEMW &Item, WCHAR *Name, UINT N
     }
 }
 
-int
+VOID
 CApplicationView::RestoreListSelection(const LVITEMW &Item)
 {
-    LVFINDINFOW fi;
-    fi.flags = LVFI_STRING;
-    fi.psz = Item.pszText;
-
-    HWND hList = m_ListView ? m_ListView->m_hWnd : NULL;
-    int index = hList ? ListView_FindItem(hList, -1, &fi) : -1;
-    if (index != -1)
+    int index = Item.iItem;
+    if (index != -1) // Was there a selected item?
     {
-        ListView_SetItemState(hList, index, Item.state, Item.stateMask);
+        LVFINDINFOW fi;
+        fi.flags = LVFI_STRING;
+        fi.psz = Item.pszText;
+        index = ListView_FindItem(m_ListView->m_hWnd, -1, &fi);
     }
-    return index;
+    if (index != -1) // Is it still in the list?
+    {
+        ListView_SetItemState(m_ListView->m_hWnd, index, Item.state, Item.stateMask);
+    }
 }
 
 // this function is called when a item of listview get focus.
