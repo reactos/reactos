@@ -885,3 +885,96 @@ EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DW
     TRACE("%p\n", *ppv);
     return S_OK;
 }
+
+class CMruClassFactory : public IClassFactory
+{
+protected:
+    LONG m_cRefs = 1;
+
+public:
+    CMruClassFactory()
+    {
+        ::InterlockedIncrement(&SHDOCVW_refCount);
+    }
+    virtual ~CMruClassFactory()
+    {
+        ::InterlockedDecrement(&SHDOCVW_refCount);
+    }
+
+    // IUnknown methods
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObj) override;
+    STDMETHODIMP_(ULONG) AddRef() override
+    {
+        return ::InterlockedIncrement(&m_cRefs);
+    }
+    STDMETHODIMP_(ULONG) Release()
+    {
+        if (::InterlockedDecrement(&m_cRefs) == 0)
+        {
+            delete this;
+            return 0;
+        }
+        return m_cRefs;
+    }
+
+    // IClassFactory methods
+    STDMETHODIMP CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject);
+    STDMETHODIMP LockServer(BOOL fLock);
+
+    static void* operator new(size_t size)
+    {
+        return ::LocalAlloc(LPTR, size);
+    }
+    static void operator delete(void *ptr)
+    {
+        ::LocalFree(ptr);
+    }
+};
+
+STDMETHODIMP CMruClassFactory::QueryInterface(REFIID riid, void **ppvObj)
+{
+    if (!ppvObj)
+        return E_POINTER;
+    if (IsEqualGUID(riid, IID_IClassFactory) || IsEqualGUID(riid, IID_IUnknown))
+    {
+        *ppvObj = static_cast<IClassFactory*>(this);
+        AddRef();
+        return S_OK;
+    }
+    ERR("%s: E_NOINTERFACE\n", debugstr_guid(&riid));
+    return E_NOINTERFACE;
+}
+
+STDMETHODIMP CMruClassFactory::CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject)
+{
+    if (pUnkOuter)
+        return CLASS_E_NOAGGREGATION;
+
+    if (IsEqualGUID(riid, IID_IMruDataList))
+        return CMruLongList_CreateInstance(0, ppvObject, 0);
+
+    if (IsEqualGUID(riid, IID_IMruPidlList))
+        return CMruPidlList_CreateInstance(0, ppvObject, 0);
+
+    return E_NOINTERFACE;
+}
+
+STDMETHODIMP CMruClassFactory::LockServer(BOOL fLock)
+{
+    if (fLock)
+        ::InterlockedIncrement(&SHDOCVW_refCount);
+    else
+        ::InterlockedDecrement(&SHDOCVW_refCount);
+    return S_OK;
+}
+
+EXTERN_C HRESULT CMruClassFactory_CreateInstance(REFIID riid, void **ppv)
+{
+    CMruClassFactory *pFactory = new CMruClassFactory();
+    if (!pFactory)
+        return E_OUTOFMEMORY;
+
+    HRESULT hr = pFactory->QueryInterface(riid, ppv);
+    pFactory->Release();
+    return hr;
+}

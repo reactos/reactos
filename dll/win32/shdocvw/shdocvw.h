@@ -60,8 +60,7 @@ static inline void SHDOCVW_LockModule(void) { InterlockedIncrement( &SHDOCVW_ref
 static inline void SHDOCVW_UnlockModule(void) { InterlockedDecrement( &SHDOCVW_refCount ); }
 
 #ifdef __REACTOS__
-EXTERN_C HRESULT CMruLongList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3);
-EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3);
+EXTERN_C HRESULT CMruClassFactory_CreateInstance(REFIID riid, void **ppv);
 #endif
 
 #endif /* __WINE_SHDOCVW_H */

@@ -93,10 +93,14 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
         return get_ieframe_object(rclsid, riid, ppv);
 
 #ifdef __REACTOS__
-    if (IsEqualGUID(&CLSID_MruLongList, rclsid))
-        return CMruLongList_CreateInstance(0, ppv, 0);
-    if (IsEqualGUID(&CLSID_MruPidlList, rclsid))
-        return CMruPidlList_CreateInstance(0, ppv, 0);
+    if (IsEqualGUID(riid, &IID_IClassFactory) || IsEqualGUID(riid, &IID_IUnknown))
+    {
+        if (IsEqualGUID(rclsid, &CLSID_MruLongList) ||
+            IsEqualGUID(rclsid, &CLSID_MruPidlList))
+        {
+            return CMruClassFactory_CreateInstance(riid, ppv);
+        }
+    }
 #endif
 
     /* As a last resort, figure if the CLSID belongs to a 'Shell Instance Object' */
