@@ -2901,6 +2901,10 @@ static DEVMODEW *pagesetup_get_devmode(const pagesetup_data *data)
         ret = HeapAlloc(GetProcessHeap(), 0, dm->dmSize + dm->dmDriverExtra);
         memcpy(ret, dm, dm->dmSize + dm->dmDriverExtra);
     }
+#ifdef __REACTOS__
+    else if (!dm)
+        ret = NULL;
+#endif
     else
         ret = GdiConvertToDevmodeW((DEVMODEA *)dm);
 
