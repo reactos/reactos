@@ -2783,6 +2783,8 @@ int CDECL fclose(FILE* file)
 {
   int r, flag;
 
+  if(!file)
+    return EOF;
   _lock_file(file);
   flag = file->_flag;
   free(file->_tmpfname);
