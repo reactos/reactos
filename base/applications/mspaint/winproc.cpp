@@ -916,35 +916,45 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 switch (mirrorRotateDialog.DoModal(mainWindow.m_hWnd))
                 {
                     case 1: /* flip horizontally */
+                    {
                         if (selectionModel.m_bShow)
                             selectionModel.FlipHorizontally();
                         else
                             imageModel.FlipHorizontally();
                         break;
+                    }
                     case 2: /* flip vertically */
+                    {
                         if (selectionModel.m_bShow)
                             selectionModel.FlipVertically();
                         else
                             imageModel.FlipVertically();
                         break;
+                    }
                     case 3: /* rotate 90 degrees */
+                    {
                         if (selectionModel.m_bShow)
                             selectionModel.RotateNTimes90Degrees(1);
                         else
                             imageModel.RotateNTimes90Degrees(1);
                         break;
+                    }
                     case 4: /* rotate 180 degrees */
+                    {
                         if (selectionModel.m_bShow)
                             selectionModel.RotateNTimes90Degrees(2);
                         else
                             imageModel.RotateNTimes90Degrees(2);
                         break;
+                    }
                     case 5: /* rotate 270 degrees */
+                    {
                         if (selectionModel.m_bShow)
                             selectionModel.RotateNTimes90Degrees(3);
                         else
                             imageModel.RotateNTimes90Degrees(3);
                         break;
+                    }
                 }
             }
             break;
