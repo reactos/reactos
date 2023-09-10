@@ -635,6 +635,12 @@ LRESULT CCanvasWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (CWaitCursor::IsWaiting())
+    {
+        bHandled = FALSE;
+        return 0;
+    }
+
     POINT pt;
     ::GetCursorPos(&pt);
     ScreenToClient(&pt);
