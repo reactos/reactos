@@ -62,9 +62,9 @@ FUNC call_stubless_func
     add rdx, [rcx + 8]       /* info->ProcFormatString + offset */
     mov rcx, [rcx]           /* info->pStubDesc */
 
-    movaps [rsp + 20h], xmm1
-    movaps [rsp + 28h], xmm2
-    movaps [rsp + 30h], xmm3
+    movsd qword ptr [rsp + 20h], xmm1
+    movsd qword ptr [rsp + 28h], xmm2
+    movsd qword ptr [rsp + 30h], xmm3
     lea r9, [rsp + 18h]      /* fpu_args */
     call ndr_client_call
     add rsp, 38h
@@ -97,6 +97,14 @@ FUNC call_server_func
     mov rdx, [rsp + 8]
     mov r8, [rsp + 16]
     mov r9, [rsp + 24]
+
+    /* Usually the 64 bit SSE2 version of movd is called movq, as in GCC code
+       (see https://www.felixcloutier.com/x86/movd:movq). But there is another
+       movq with different encoding, which does not accept an integer register
+       as source (see https://www.felixcloutier.com/x86/movq). Older versions
+       of ML64 get confused and do not accept movq with integer registers,
+       but they translate movd to 64 bit, when 64 bit registers are used as
+       source, so we use that here. */
     movd xmm0, rcx
     movd xmm1, rdx
     movd xmm2, r8
