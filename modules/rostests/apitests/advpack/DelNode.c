@@ -425,9 +425,7 @@ static void Test_DelNodeA(void)
                 }
                 else
                 {
-                    FILE *fout = fopen(path, "w");
-                    if (fout)
-                        fclose(fout);
+                    fclose(fopen(path, "w"));
 
                     attr = GetFileAttributesA(path);
                     ok(attr != INVALID_FILE_ATTRIBUTES, "Line %d: attr was 0x%08lX\n", lineno, attr);

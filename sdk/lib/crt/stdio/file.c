@@ -1207,9 +1207,8 @@ void CDECL _unlock_file(FILE *file)
     if(file>=_iob && file<_iob+_IOB_ENTRIES)
         _unlock(_STREAM_LOCKS+(file-_iob));
     /* ReactOS: string streams dont need to be locked */
-    else if(!(file->_flag & _IOSTRG))
+    else if (file && !(file->_flag & _IOSTRG))
         LeaveCriticalSection(&((file_crit*)file)->crit);
-
 }
 
 /*********************************************************************
