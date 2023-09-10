@@ -56,7 +56,7 @@ class CMruBase
 protected:
     LONG            m_cRefs         = 1;        // Reference count
     DWORD           m_dwFlags       = 0;        // The COMPARE_BY_... flags
-    BOOL            m_bNeedSave     = FALSE;    // ???
+    BOOL            m_bNeedSave     = FALSE;    // The flag that indicates whether it needs saving
     BOOL            m_bChecked      = FALSE;    // The checked flag
     HKEY            m_hKey          = NULL;     // A registry key
     DWORD           m_cSlotRooms    = 0;        // Rooms for slots
@@ -461,7 +461,7 @@ HRESULT CMruShortList::_InitSlots()
     if (SHGetValueW(m_hKey, NULL, L"MRUList", NULL, m_pszSlotData, &cbData) == ERROR_SUCCESS)
         m_cSlots = (cbData / sizeof(WCHAR)) - 1;
 
-    m_pszSlotData[m_cSlots] = 0;
+    m_pszSlotData[m_cSlots] = UNICODE_NULL;
     return S_OK;
 }
 
@@ -475,6 +475,7 @@ void CMruShortList::_SaveSlots()
     }
 }
 
+// NOTE: MRUList uses lowercase alphabet for history of most recently used items.
 UINT CMruShortList::_UpdateSlots(UINT iSlot)
 {
     UINT iData, cDataToMove = iSlot;
@@ -487,6 +488,7 @@ UINT CMruShortList::_UpdateSlots(UINT iSlot)
         }
         else
         {
+            // This code is getting the item index from a lowercase letter.
             iData = m_pszSlotData[m_cSlots - 1] - L'a';
             --cDataToMove;
         }
@@ -585,7 +587,7 @@ HRESULT CMruLongList::_InitSlots()
     else
         _ImportShortList();
 
-    m_puSlotData[m_cSlots] = 0xFFFFFFFF;
+    m_puSlotData[m_cSlots] = MAXDWORD;
     return S_OK;
 }
 
