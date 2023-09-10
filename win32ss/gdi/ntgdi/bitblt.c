@@ -1599,9 +1599,8 @@ NtGdiGetPixel(
         /* Delete the surface */
         GDIOBJ_vDeleteObject(&psurfDest->BaseObject);
 
-        /* The top byte is zero if color was valid */
-        if (~ulRGBColor)
-            ulRGBColor &= 0xFFFFFF;
+        /* The top byte is zero */
+        ulRGBColor &= 0x00FFFFFF;
     }
 
 leave:
