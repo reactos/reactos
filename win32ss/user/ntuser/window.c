@@ -2394,7 +2394,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    if (Window->spwndNext || Window->spwndPrev)
    {
-      ERR("Window 0x%p has been linked too early! (%wZ)\n", Window, ClassName);
+      ERR("Window 0x%p has been linked too early!\n", Window);
    }
 
    if (!(Window->state2 & WNDS2_WIN31COMPAT))
