@@ -545,9 +545,6 @@ void CDefView::UpdateStatusbar()
     WCHAR szPartText[MAX_PATH] = {0};
     UINT cSelectedItems;
 
-    if (!m_ListView)
-        return;
-
     cSelectedItems = m_ListView.GetSelectedCount();
     if (cSelectedItems)
     {
@@ -1737,11 +1734,12 @@ LRESULT CDefView::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled
 
     TRACE("%p width=%u height=%u\n", this, wWidth, wHeight);
 
+    // WM_SIZE can come before WM_CREATE
+    if (!m_ListView)
+        return;
+
     /* Resize the ListView to fit our window */
-    if (m_ListView)
-    {
-        ::MoveWindow(m_ListView, 0, 0, wWidth, wHeight, TRUE);
-    }
+    ::MoveWindow(m_ListView, 0, 0, wWidth, wHeight, TRUE);
 
     _DoFolderViewCB(SFVM_SIZE, 0, 0);
 
