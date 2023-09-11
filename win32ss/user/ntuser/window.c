@@ -2419,7 +2419,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Result = co_IntSendMessage(UserHMGetHandle(Window), WM_NCCREATE, 0, (LPARAM) Cs);
    if (!Result)
    {
-      ERR("co_UserCreateWindowEx (%wZ): NCCREATE message failed\n", ClassName);
+      ERR("co_UserCreateWindowEx(%wZ): NCCREATE message failed\n", ClassName);
       goto cleanup;
    }
 
