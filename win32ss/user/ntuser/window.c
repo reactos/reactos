@@ -2194,7 +2194,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    pti = GetW32ThreadInfo();
    if (pti == NULL || pti->rpdesk == NULL)
    {
-      ERR("Thread is not attached to a desktop! Cannot create window (%wZ)!\n", ClassName);
+      ERR("Thread is not attached to a desktop! Cannot create window (%wZ)\n", ClassName);
       return NULL; // There is nothing to cleanup.
    }
    WinSta = pti->rpdesk->rpwinstaParent;
