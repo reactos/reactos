@@ -1120,6 +1120,20 @@ public:
             OutputDebugStringW(L"###");
             OutputDebugStringW(sz);
             OutputDebugStringW(L"\n");
+            for (HWND hwnd = s_hWnd; hwnd; hwnd = ::GetParent(hwnd))
+            {
+                ::GetClassNameW(hwnd, sz, MAX_PATH);
+                OutputDebugStringW(L"CLASS:");
+                OutputDebugStringW(sz);
+                OutputDebugStringW(L", ");
+            }
+            sz[0] = (message / 1000) % 10 + L'0';
+            sz[1] = (message / 100) % 10 + L'0';
+            sz[2] = (message / 10) % 10 + L'0';
+            sz[3] = (message / 1) % 10 + L'0';
+            sz[4] = 0;
+            OutputDebugStringW(L"message:");
+            OutputDebugStringW(sz);
         }
         ATLASSERT(::IsWindow(m_hWnd));
         return ::SendMessage(m_hWnd, message, wParam, lParam);
