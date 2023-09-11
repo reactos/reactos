@@ -1736,7 +1736,7 @@ LRESULT CDefView::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled
 
     // WM_SIZE can come before WM_CREATE
     if (!m_ListView)
-        return;
+        return 0;
 
     /* Resize the ListView to fit our window */
     ::MoveWindow(m_ListView, 0, 0, wWidth, wHeight, TRUE);
