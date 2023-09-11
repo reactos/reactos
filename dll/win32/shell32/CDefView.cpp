@@ -545,6 +545,9 @@ void CDefView::UpdateStatusbar()
     WCHAR szPartText[MAX_PATH] = {0};
     UINT cSelectedItems;
 
+    if (!m_ListView)
+        return;
+
     cSelectedItems = m_ListView.GetSelectedCount();
     if (cSelectedItems)
     {
