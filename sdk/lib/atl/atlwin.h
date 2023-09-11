@@ -1109,6 +1109,18 @@ public:
 
     LRESULT SendMessage(UINT message, WPARAM wParam = 0, LPARAM lParam = 0)
     {
+        static HWND s_hWnd = NULL;
+        if (::IsWindow(m_hWnd))
+            s_hWnd = m_hWnd;
+        if (!::IsWindow(m_hWnd))
+        {
+            HINSTANCE hInst = (HINSTANCE)GetWindowLongPtrW(s_hWnd, GWLP_HINSTANCE);
+            WCHAR sz[MAX_PATH];
+            GetModuleFileNameW(hInst, sz, MAX_PATH);
+            OutputDebugStringW(L"###");
+            OutputDebugStringW(sz);
+            OutputDebugStringW(L"\n");
+        }
         ATLASSERT(::IsWindow(m_hWnd));
         return ::SendMessage(m_hWnd, message, wParam, lParam);
     }
