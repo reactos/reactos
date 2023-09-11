@@ -545,6 +545,7 @@ void CDefView::UpdateStatusbar()
     WCHAR szPartText[MAX_PATH] = {0};
     UINT cSelectedItems;
 
+    ASSERT(m_ListView.m_hWnd);
     cSelectedItems = m_ListView.GetSelectedCount();
     if (cSelectedItems)
     {
@@ -1472,6 +1473,7 @@ UINT CDefView::GetSelections()
 {
     SHFree(m_apidl);
 
+    ASSERT(m_ListView.m_hWnd);
     m_cidl = m_ListView.GetSelectedCount();
     m_apidl = static_cast<PCUITEMID_CHILD*>(SHAlloc(m_cidl * sizeof(PCUITEMID_CHILD)));
     if (!m_apidl)
@@ -1537,6 +1539,7 @@ HRESULT CDefView::OpenSelectedItems()
     UINT uCommand;
     HRESULT hResult;
 
+    ASSERT(m_ListView.m_hWnd);
     m_cidl = m_ListView.GetSelectedCount();
     if (m_cidl == 0)
         return S_OK;
@@ -1610,6 +1613,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         }
     }
 
+    ASSERT(m_ListView.m_hWnd);
     m_cidl = m_ListView.GetSelectedCount();
     /* In case we still have this left over, clean it up! */
     hResult = GetItemObject( m_cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pCM));
