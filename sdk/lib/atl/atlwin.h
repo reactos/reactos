@@ -1114,7 +1114,7 @@ public:
             s_hWnd = m_hWnd;
         if (!::IsWindow(m_hWnd))
         {
-            HINSTANCE hInst = (HINSTANCE)GetWindowLongPtrW(s_hWnd, GWLP_HINSTANCE);
+            HINSTANCE hInst = (HINSTANCE)::GetWindowLongPtrW(s_hWnd, GWLP_HINSTANCE);
             WCHAR sz[MAX_PATH];
             GetModuleFileNameW(hInst, sz, MAX_PATH);
             OutputDebugStringW(L"###");
