@@ -2479,7 +2479,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Result = co_IntSendMessage(UserHMGetHandle(Window), WM_CREATE, 0, (LPARAM) Cs);
    if (Result == (LRESULT)-1)
    {
-      ERR("co_UserCreateWindowEx (%wZ): WM_CREATE message failed\n", ClassName);
+      ERR("co_UserCreateWindowEx(%wZ): WM_CREATE message failed\n", ClassName);
       goto cleanup;
    }
 
