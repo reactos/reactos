@@ -2194,7 +2194,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    pti = GetW32ThreadInfo();
    if (pti == NULL || pti->rpdesk == NULL)
    {
-      ERR("Thread is not attached to a desktop! Cannot create window!\n");
+      ERR("Thread is not attached to a desktop! Cannot create window (%wZ)!\n", ClassName);
       return NULL; // There is nothing to cleanup.
    }
    WinSta = pti->rpdesk->rpwinstaParent;
@@ -2229,7 +2229,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
     }
     else if ((Cs->style & (WS_CHILD|WS_POPUP)) == WS_CHILD)
     {
-         ERR("Cannot create a child window without a parent!\n");
+         ERR("Cannot create a child window (%wZ) without a parent!\n", ClassName);
          EngSetLastError(ERROR_TLW_WITH_WSCHILD);
          goto cleanup;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
     }
@@ -2249,12 +2249,12 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
     if (hWndParent && !ParentWindow)
     {
-        ERR("Got invalid parent window handle\n");
+        ERR("Got invalid parent window handle for %wZ\n", ClassName);
         goto cleanup;
     }
     else if (hWndOwner && !OwnerWindow)
     {
-        ERR("Got invalid owner window handle\n");
+        ERR("Got invalid owner window handle for %wZ\n", ClassName);
         ParentWindow = NULL;
         goto cleanup;
     }
@@ -2293,7 +2293,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                             dwVer );
    if(!Window)
    {
-       ERR("IntCreateWindow failed!\n");
+       ERR("IntCreateWindow (%wZ) failed!\n", ClassName);
        goto cleanup;
    }
 
@@ -2394,7 +2394,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    if (Window->spwndNext || Window->spwndPrev)
    {
-      ERR("Window 0x%p has been linked too early!\n", Window);
+      ERR("Window 0x%p has been linked too early! (%wZ)\n", Window, ClassName);
    }
 
    if (!(Window->state2 & WNDS2_WIN31COMPAT))
@@ -2419,7 +2419,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Result = co_IntSendMessage(UserHMGetHandle(Window), WM_NCCREATE, 0, (LPARAM) Cs);
    if (!Result)
    {
-      ERR("co_UserCreateWindowEx(): NCCREATE message failed\n");
+      ERR("co_UserCreateWindowEx (%wZ): NCCREATE message failed\n", ClassName);
       goto cleanup;
    }
 
@@ -2479,7 +2479,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Result = co_IntSendMessage(UserHMGetHandle(Window), WM_CREATE, 0, (LPARAM) Cs);
    if (Result == (LRESULT)-1)
    {
-      ERR("co_UserCreateWindowEx(): WM_CREATE message failed\n");
+      ERR("co_UserCreateWindowEx (%wZ): WM_CREATE message failed\n", ClassName);
       goto cleanup;
    }
 
@@ -2570,7 +2570,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
        co_IntUserManualGuiCheck(TRUE);
    }
 
-   TRACE("co_UserCreateWindowEx(): Created window %p\n", hWnd);
+   TRACE("co_UserCreateWindowEx(%wZ): Created window %p\n", ClassName, hWnd);
    ret = Window;
 
 cleanup:
