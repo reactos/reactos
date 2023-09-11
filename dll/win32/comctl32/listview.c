@@ -24,15 +24,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * NOTES
- *
- * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on May. 20, 2005, by James Hawkins.
- * 
- * Unless otherwise noted, we believe this code to be complete, as per
- * the specification mentioned above.
- * If you discover missing features, or bugs, please note them below.
- * 
  * TODO:
  *
  * Default Message Processing
@@ -1337,7 +1328,7 @@ static inline BOOL iterator_rangesitems(ITERATOR* i, RANGES ranges)
 static BOOL iterator_frameditems_absolute(ITERATOR* i, const LISTVIEW_INFO* infoPtr, const RECT *frame)
 {
     RECT rcItem, rcTemp;
-    
+
     /* in case we fail, we want to return an empty iterator */
     if (!iterator_empty(i)) return FALSE;
 
@@ -1736,7 +1727,7 @@ static inline void LISTVIEW_InvalidateItem(const LISTVIEW_INFO *infoPtr, INT nIt
 {
     RECT rcBox;
 
-    if(!is_redrawing(infoPtr)) return; 
+    if(!is_redrawing(infoPtr)) return;
     LISTVIEW_GetItemBox(infoPtr, nItem, &rcBox);
     LISTVIEW_InvalidateRect(infoPtr, &rcBox);
 }
@@ -2114,7 +2105,7 @@ static INT LISTVIEW_UpdateVScroll(LISTVIEW_INFO *infoPtr)
         }
 #else
 	vertInfo.nMax = infoPtr->nItemCount;
-	
+
 	/* scroll by at least one page */
 	if(vertInfo.nPage < infoPtr->nItemHeight)
 	  vertInfo.nPage = infoPtr->nItemHeight;
@@ -2751,7 +2742,7 @@ static void LISTVIEW_NextIconPosLeft(LISTVIEW_INFO *infoPtr, LPPOINT lpPos)
     infoPtr->currIconPos.y  = 0;
 }
 
-    
+
 /***
  * DESCRIPTION:
  * Moves an icon to the specified position.
@@ -3700,7 +3691,6 @@ static void LISTVIEW_SetGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
     iterator_destroy(&i);
 
     infoPtr->bDoChangeNotify = bOldChange;
-    
     LISTVIEW_SetItemFocus(infoPtr, nItem);
 }
 
@@ -4162,6 +4152,7 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
 
                         /* Begin selection and capture mouse */
                         infoPtr->bMarqueeSelect = TRUE;
+                        infoPtr->marqueeRect = rect;
                         SetCapture(infoPtr->hwndSelf);
                     }
                 }
@@ -9950,7 +9941,7 @@ static LRESULT LISTVIEW_HScroll(LISTVIEW_INFO *infoPtr, INT nScrollCode,
 
 static LRESULT LISTVIEW_MouseWheel(LISTVIEW_INFO *infoPtr, INT wheelDelta)
 {
-    UINT pulScrollLines = 3;
+    INT pulScrollLines = 3;
 
     TRACE("(wheelDelta=%d)\n", wheelDelta);
 
@@ -9979,8 +9970,8 @@ static LRESULT LISTVIEW_MouseWheel(LISTVIEW_INFO *infoPtr, INT wheelDelta)
         {
             int cLineScroll;
             pulScrollLines = min((UINT)LISTVIEW_GetCountPerColumn(infoPtr), pulScrollLines);
-            cLineScroll = pulScrollLines * (float)infoPtr->cWheelRemainder / WHEEL_DELTA;
-            infoPtr->cWheelRemainder -= WHEEL_DELTA * cLineScroll / (int)pulScrollLines;
+            cLineScroll = pulScrollLines * infoPtr->cWheelRemainder / WHEEL_DELTA;
+            infoPtr->cWheelRemainder -= WHEEL_DELTA * cLineScroll / pulScrollLines;
             LISTVIEW_VScroll(infoPtr, SB_INTERNAL, -cLineScroll);
         }
         break;
@@ -11946,7 +11937,7 @@ static LRESULT LISTVIEW_Command(LISTVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lP
 	    SIZE	  sz;
 
 	    if (!infoPtr->hwndEdit || !hdc) return 0;
-	    GetWindowTextW(infoPtr->hwndEdit, buffer, sizeof(buffer)/sizeof(buffer[0]));
+	    GetWindowTextW(infoPtr->hwndEdit, buffer, ARRAY_SIZE(buffer));
 	    GetWindowRect(infoPtr->hwndEdit, &rect);
 
             /* Select font to get the right dimension of the string */
