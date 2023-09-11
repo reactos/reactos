@@ -1,5 +1,5 @@
 /*
- * PROJECT:    PAINT for ReactOS
+ * PROJECT:    ReactOS headers
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Wait cursor management
  * COPYRIGHT:  Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
@@ -31,16 +31,20 @@ public:
             s_hOldCursor = NULL;
         }
     }
+
     CWaitCursor(const CWaitCursor&) = delete;
     CWaitCursor& operator=(const CWaitCursor&) = delete;
+    void *operator new(size_t) = delete;
+    void operator delete(void*) = delete;
+
+    static void Restore()
+    {
+        ::SetCursor(s_hWaitCursor);
+    }
 
     static BOOL IsWaiting()
     {
         return s_nLock > 0;
-    }
-    static void KeepWait()
-    {
-        ::SetCursor(s_hWaitCursor);
     }
 
 protected:
