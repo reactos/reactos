@@ -2293,7 +2293,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                             dwVer );
    if(!Window)
    {
-       ERR("IntCreateWindow(%wZ) failed!\n", ClassName);
+       ERR("IntCreateWindow(%wZ) failed\n", ClassName);
        goto cleanup;
    }
 
