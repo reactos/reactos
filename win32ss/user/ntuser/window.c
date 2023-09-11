@@ -2229,7 +2229,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
     }
     else if ((Cs->style & (WS_CHILD|WS_POPUP)) == WS_CHILD)
     {
-         ERR("Cannot create a child window (%wZ) without a parent!\n", ClassName);
+         ERR("Cannot create a child window (%wZ) without a parent\n", ClassName);
          EngSetLastError(ERROR_TLW_WITH_WSCHILD);
          goto cleanup;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
     }
