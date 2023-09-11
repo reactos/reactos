@@ -37,14 +37,14 @@ public:
     void *operator new(size_t) = delete;
     void operator delete(void*) = delete;
 
-    static void Restore()
-    {
-        ::SetCursor(s_hWaitCursor);
-    }
-
     static BOOL IsWaiting()
     {
         return s_nLock > 0;
+    }
+
+    static void Restore()
+    {
+        ::SetCursor(s_hWaitCursor);
     }
 
 protected:
