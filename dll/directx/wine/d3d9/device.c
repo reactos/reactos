@@ -2946,7 +2946,6 @@ static HRESULT WINAPI d3d9_device_DrawIndexedPrimitiveUP(IDirect3DDevice9Ex *ifa
 
     wined3d_device_set_stream_source(device->wined3d_device, 0, NULL, 0, 0);
     wined3d_device_set_index_buffer(device->wined3d_device, NULL, WINED3DFMT_UNKNOWN, 0);
-    wined3d_device_set_base_vertex_index(device->wined3d_device, 0);
 
     if (SUCCEEDED(hr))
         d3d9_rts_flag_auto_gen_mipmap(device);
