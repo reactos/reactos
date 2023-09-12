@@ -740,7 +740,7 @@ protected:
     HRESULT _CreateNode(UINT iSlot, CMruNode **ppNewNode);
     HRESULT _AddPidl(UINT iSlot, LPCITEMIDLIST pidl);
     HRESULT _FindPidl(LPCITEMIDLIST pidl, UINT *piSlot);
-    HRESULT _GetPidlSlot(LPCITEMIDLIST pidl, BOOL bAdd, UINT *puSlotData);
+    HRESULT _GetPidlSlot(LPCITEMIDLIST pidl, BOOL bAdd, UINT *piSlot);
 
 public:
     CMruNode() { }
@@ -754,7 +754,7 @@ public:
     HRESULT GetNodeSlot(UINT *piSlot);
     HRESULT SetNodeSlot(UINT iSlot);
 
-    HRESULT RemoveLeast(LPDWORD pdwData);
+    HRESULT RemoveLeast(UINT *piSlot);
     HRESULT Clear(CMruPidlList *pList);
 };
 
@@ -817,8 +817,8 @@ HRESULT CMruNode::GetNode(BOOL bAdd, LPCITEMIDLIST pidl, CMruNode **ppNewNode)
     if (!_InitLate())
         return E_FAIL;
 
-    UINT uSlotData;
-    HRESULT hr = _GetPidlSlot(pidl, bAdd, &uSlotData);
+    UINT iSlot;
+    HRESULT hr = _GetPidlSlot(pidl, bAdd, &iSlot);
     if (FAILED(hr))
     {
         if (!bAdd)
@@ -831,7 +831,7 @@ HRESULT CMruNode::GetNode(BOOL bAdd, LPCITEMIDLIST pidl, CMruNode **ppNewNode)
     }
 
     CMruNode *pNewNode;
-    hr = _CreateNode(uSlotData, &pNewNode);
+    hr = _CreateNode(iSlot, &pNewNode);
     if (SUCCEEDED(hr))
     {
         _SaveSlots();
@@ -910,7 +910,7 @@ HRESULT CMruNode::_FindPidl(LPCITEMIDLIST pidl, UINT *piSlot)
     return FindData((const BYTE *)pidl, sizeof(WORD) + pidl->mkid.cb, piSlot);
 }
 
-HRESULT CMruNode::_GetPidlSlot(LPCITEMIDLIST pidl, BOOL bAdd, UINT *puSlotData)
+HRESULT CMruNode::_GetPidlSlot(LPCITEMIDLIST pidl, BOOL bAdd, UINT *piSlot)
 {
     LPITEMIDLIST pidlFirst = ILCloneFirst(pidl);
     if (!pidlFirst)
@@ -920,24 +920,24 @@ HRESULT CMruNode::_GetPidlSlot(LPCITEMIDLIST pidl, BOOL bAdd, UINT *puSlotData)
     HRESULT hr = _FindPidl(pidlFirst, &iSlot);
     if (SUCCEEDED(hr))
     {
-        *puSlotData = _UpdateSlots(iSlot);
+        *piSlot = _UpdateSlots(iSlot);
         hr = S_OK;
     }
     else if (bAdd)
     {
-        *puSlotData = _UpdateSlots(m_cSlots);
-        hr = _AddPidl(*puSlotData, pidlFirst);
+        *piSlot = _UpdateSlots(m_cSlots);
+        hr = _AddPidl(*piSlot, pidlFirst);
     }
 
     ILFree(pidlFirst);
     return hr;
 }
 
-HRESULT CMruNode::RemoveLeast(LPDWORD pdwData)
+HRESULT CMruNode::RemoveLeast(UINT *piSlot)
 {
     if (!m_cSlots)
     {
-        CMruNode::GetNodeSlot(pdwData);
+        CMruNode::GetNodeSlot(piSlot);
         return S_FALSE;
     }
 
@@ -950,7 +950,7 @@ HRESULT CMruNode::RemoveLeast(LPDWORD pdwData)
     hr = CMruNode::_CreateNode(uSlot, &pNode);
     if (SUCCEEDED(hr))
     {
-        hr = pNode->RemoveLeast(pdwData);
+        hr = pNode->RemoveLeast(piSlot);
         pNode->Release();
     }
 
