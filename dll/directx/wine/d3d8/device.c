@@ -1827,15 +1827,11 @@ static HRESULT WINAPI d3d8_device_SetRenderState(IDirect3DDevice8 *iface,
     TRACE("iface %p, state %#x, value %#x.\n", iface, state, value);
 
     wined3d_mutex_lock();
-    switch (state)
-    {
-        case D3DRS_ZBIAS:
-            wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_DEPTHBIAS, value);
-            break;
-
-        default:
-            wined3d_device_set_render_state(device->wined3d_device, state, value);
-    }
+    if (state == D3DRS_ZBIAS)
+        state = WINED3D_RS_DEPTHBIAS;
+    wined3d_stateblock_set_render_state(device->update_state, state, value);
+    if (!device->recording)
+        wined3d_device_set_render_state(device->wined3d_device, state, value);
     wined3d_mutex_unlock();
 
     return D3D_OK;
