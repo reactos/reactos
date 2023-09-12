@@ -826,6 +826,8 @@ static HRESULT WINAPI d3d8_device_CreateAdditionalSwapChain(IDirect3DDevice8 *if
 
 static HRESULT CDECL reset_enum_callback(struct wined3d_resource *resource)
 {
+    struct d3d8_vertexbuffer *vertex_buffer;
+    struct d3d8_indexbuffer *index_buffer;
     struct wined3d_resource_desc desc;
     IDirect3DBaseTexture8 *texture;
     struct d3d8_surface *surface;
@@ -837,6 +839,19 @@ static HRESULT CDECL reset_enum_callback(struct wined3d_resource *resource)
 
     if (desc.resource_type != WINED3D_RTYPE_TEXTURE_2D)
     {
+        if (desc.bind_flags & WINED3D_BIND_VERTEX_BUFFER)
+        {
+            vertex_buffer = wined3d_resource_get_parent(resource);
+            if (vertex_buffer && vertex_buffer->draw_buffer)
+                return D3D_OK;
+        }
+        if (desc.bind_flags & WINED3D_BIND_INDEX_BUFFER)
+        {
+            index_buffer = wined3d_resource_get_parent(resource);
+            if (index_buffer && index_buffer->draw_buffer)
+                return D3D_OK;
+        }
+
         WARN("Resource %p in pool D3DPOOL_DEFAULT blocks the Reset call.\n", resource);
         return D3DERR_DEVICELOST;
     }
