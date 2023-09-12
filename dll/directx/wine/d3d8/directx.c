@@ -242,10 +242,11 @@ static HRESULT WINAPI d3d8_CheckDeviceFormat(IDirect3D8 *iface, UINT adapter, D3
     TRACE("iface %p, adapter %u, device_type %#x, adapter_format %#x, usage %#x, resource_type %#x, format %#x.\n",
             iface, adapter, device_type, adapter_format, usage, resource_type, format);
 
-    if (!adapter_format)
+    if (adapter_format != D3DFMT_X8R8G8B8 && adapter_format != D3DFMT_R5G6B5
+            && adapter_format != D3DFMT_X1R5G5B5)
     {
         WARN("Invalid adapter format.\n");
-        return D3DERR_INVALIDCALL;
+        return adapter_format ? D3DERR_NOTAVAILABLE : D3DERR_INVALIDCALL;
     }
 
     bind_flags = wined3d_bind_flags_from_d3d8_usage(usage);
