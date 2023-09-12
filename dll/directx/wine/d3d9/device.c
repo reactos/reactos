@@ -2313,6 +2313,15 @@ static HRESULT WINAPI d3d9_device_CreateStateBlock(IDirect3DDevice9Ex *iface,
         return D3DERR_INVALIDCALL;
     }
 
+    wined3d_mutex_lock();
+    if (device->recording)
+    {
+        wined3d_mutex_unlock();
+        WARN("Trying to create a stateblock while recording, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
+    wined3d_mutex_unlock();
+
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
