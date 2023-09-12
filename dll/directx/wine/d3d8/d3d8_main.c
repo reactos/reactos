@@ -58,7 +58,7 @@ IDirect3D8 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT sdk_version)
 /***********************************************************************
  *              ValidateVertexShader (D3D8.@)
  */
-HRESULT WINAPI ValidatePixelShader(const DWORD *ps_code,
+HRESULT WINAPI ValidateVertexShader(const DWORD *ps_code,
        const D3DCAPS8 *caps, BOOL return_error, char **errors)
 {
     const char *message = "";
