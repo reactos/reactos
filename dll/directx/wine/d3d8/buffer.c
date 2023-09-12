@@ -580,6 +580,10 @@ HRESULT indexbuffer_init(struct d3d8_indexbuffer *buffer, struct d3d8_device *de
     if (pool == D3DPOOL_SCRATCH)
         return D3DERR_INVALIDCALL;
 
+    /* In d3d8, buffers can't be used as rendertarget or depth/stencil buffer. */
+    if (usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+        return D3DERR_INVALIDCALL;
+
     desc.byte_width = size;
     desc.usage = (usage & WINED3DUSAGE_MASK) | WINED3DUSAGE_STATICDECL;
     if (pool == D3DPOOL_SCRATCH)
