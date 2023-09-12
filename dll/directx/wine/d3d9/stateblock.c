@@ -111,6 +111,7 @@ static HRESULT WINAPI d3d9_stateblock_Apply(IDirect3DStateBlock9 *iface)
     struct wined3d_buffer *wined3d_buffer;
     struct d3d9_vertexbuffer *buffer;
     unsigned int i, offset, stride;
+    enum wined3d_format_id format;
     struct d3d9_device *device;
     HRESULT hr;
 
@@ -130,6 +131,8 @@ static HRESULT WINAPI d3d9_stateblock_Apply(IDirect3DStateBlock9 *iface)
         if (buffer->draw_buffer)
             device->sysmem_vb |= 1u << i;
     }
+    device->sysmem_ib = (wined3d_buffer = wined3d_device_get_index_buffer(device->wined3d_device, &format, &offset))
+            && (buffer = wined3d_buffer_get_parent(wined3d_buffer)) && buffer->draw_buffer;
     wined3d_mutex_unlock();
 
     return D3D_OK;

@@ -104,11 +104,12 @@ struct d3d9_device
 
     LONG device_state;
     DWORD sysmem_vb : 16; /* D3D9_MAX_STREAMS */
+    DWORD sysmem_ib : 1;
     DWORD in_destruction : 1;
     DWORD in_scene : 1;
     DWORD has_vertex_declaration : 1;
     DWORD recording : 1;
-    DWORD padding : 12;
+    DWORD padding : 11;
 
     unsigned int max_user_clip_planes;
 
@@ -199,6 +200,7 @@ struct d3d9_indexbuffer
     struct d3d9_resource resource;
     struct wined3d_buffer *wined3d_buffer;
     IDirect3DDevice9Ex *parent_device;
+    struct wined3d_buffer *draw_buffer;
     enum wined3d_format_id format;
 };
 
