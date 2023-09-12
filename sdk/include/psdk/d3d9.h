@@ -69,8 +69,10 @@
 #define D3DPRESENT_DONOTWAIT                    1L
 #define D3DPRESENT_LINEAR_CONTENT               2L
 #define D3DPRESENT_BACK_BUFFERS_MAX             3L
+#define D3DPRESENT_BACK_BUFFERS_MAX_EX          30L
 #define D3DSGR_NO_CALIBRATION                   0x00000000L
 #define D3DSGR_CALIBRATE                        0x00000001L
+#define D3DCURSOR_IMMEDIATE_UPDATE              0x00000001L
 
 #define _FACD3D  0x876
 #define MAKE_D3DHRESULT( code )                 MAKE_HRESULT( 1, _FACD3D, code )
