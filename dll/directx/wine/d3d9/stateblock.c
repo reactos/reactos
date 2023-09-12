@@ -121,8 +121,14 @@ static HRESULT WINAPI d3d9_stateblock_Apply(IDirect3DStateBlock9 *iface)
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    wined3d_stateblock_apply(stateblock->wined3d_stateblock);
     device = impl_from_IDirect3DDevice9Ex(stateblock->parent_device);
+    if (device->recording)
+    {
+        wined3d_mutex_unlock();
+        WARN("Trying to apply stateblock while recording, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
+    wined3d_stateblock_apply(stateblock->wined3d_stateblock);
     device->sysmem_vb = 0;
     for (i = 0; i < D3D9_MAX_STREAMS; ++i)
     {
