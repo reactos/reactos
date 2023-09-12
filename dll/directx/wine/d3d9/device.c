@@ -2068,7 +2068,7 @@ static HRESULT WINAPI d3d9_device_SetViewport(IDirect3DDevice9Ex *iface, const D
     vp.max_z = viewport->MaxZ;
 
     wined3d_mutex_lock();
-    wined3d_device_set_viewport(device->wined3d_device, &vp);
+    wined3d_device_set_viewports(device->wined3d_device, 1, &vp);
     wined3d_mutex_unlock();
 
     return D3D_OK;
