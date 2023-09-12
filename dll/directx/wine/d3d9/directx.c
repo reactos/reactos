@@ -137,9 +137,7 @@ static HRESULT WINAPI d3d9_GetAdapterIdentifier(IDirect3D9Ex *iface, UINT adapte
     adapter_id.device_name = identifier->DeviceName;
     adapter_id.device_name_size = sizeof(identifier->DeviceName);
 
-    wined3d_mutex_lock();
     hr = wined3d_get_adapter_identifier(d3d9->wined3d, adapter, flags, &adapter_id);
-    wined3d_mutex_unlock();
 
     identifier->DriverVersion = adapter_id.driver_version;
     identifier->VendorId = adapter_id.vendor_id;
@@ -544,11 +542,9 @@ static HRESULT WINAPI d3d9_GetAdapterLUID(IDirect3D9Ex *iface, UINT adapter, LUI
     adapter_id.description_size = 0;
     adapter_id.device_name_size = 0;
 
-    wined3d_mutex_lock();
     hr = wined3d_get_adapter_identifier(d3d9->wined3d, adapter, 0, &adapter_id);
-    wined3d_mutex_unlock();
 
-    memcpy(luid, &adapter_id.adapter_luid, sizeof(*luid));
+    *luid = adapter_id.adapter_luid;
 
     return hr;
 }

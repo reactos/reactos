@@ -132,9 +132,7 @@ static HRESULT WINAPI d3d8_GetAdapterIdentifier(IDirect3D8 *iface, UINT adapter,
     adapter_id.device_name = NULL; /* d3d9 only */
     adapter_id.device_name_size = 0; /* d3d9 only */
 
-    wined3d_mutex_lock();
     hr = wined3d_get_adapter_identifier(d3d8->wined3d, adapter, flags, &adapter_id);
-    wined3d_mutex_unlock();
 
     identifier->DriverVersion = adapter_id.driver_version;
     identifier->VendorId = adapter_id.vendor_id;
