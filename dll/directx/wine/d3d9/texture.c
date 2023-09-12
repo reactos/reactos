@@ -1301,6 +1301,12 @@ HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
     DWORD flags = 0;
     HRESULT hr;
 
+    if (pool == D3DPOOL_MANAGED && device->d3d_parent->extended)
+    {
+        WARN("Managed resources are not supported by d3d9ex devices.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
     texture->IDirect3DBaseTexture9_iface.lpVtbl = (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_2d_vtbl;
     d3d9_resource_init(&texture->resource);
     list_init(&texture->rtv_list);
