@@ -1341,8 +1341,9 @@ HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
             return D3DERR_INVALIDCALL;
         }
         wined3d_mutex_lock();
-        hr = wined3d_check_device_format(device->d3d_parent->wined3d, 0, WINED3D_DEVICE_TYPE_HAL, WINED3DFMT_B8G8R8A8_UNORM,
-                WINED3DUSAGE_TEXTURE | WINED3DUSAGE_QUERY_GENMIPMAP, WINED3D_RTYPE_TEXTURE_2D, wined3dformat_from_d3dformat(format));
+        hr = wined3d_check_device_format(device->d3d_parent->wined3d, WINED3DADAPTER_DEFAULT,
+                WINED3D_DEVICE_TYPE_HAL, WINED3DFMT_B8G8R8A8_UNORM, WINED3DUSAGE_QUERY_GENMIPMAP,
+                WINED3D_BIND_SHADER_RESOURCE, WINED3D_RTYPE_TEXTURE_2D, wined3dformat_from_d3dformat(format));
         wined3d_mutex_unlock();
         if (hr == D3D_OK)
         {
