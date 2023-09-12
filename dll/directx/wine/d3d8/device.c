@@ -321,7 +321,7 @@ static BOOL wined3d_swapchain_desc_from_present_parameters(struct wined3d_swapch
     return TRUE;
 }
 
-void d3dcaps_from_wined3dcaps(D3DCAPS8 *caps, const WINED3DCAPS *wined3d_caps)
+void d3dcaps_from_wined3dcaps(D3DCAPS8 *caps, const struct wined3d_caps *wined3d_caps)
 {
     caps->DeviceType                = (D3DDEVTYPE)wined3d_caps->DeviceType;
     caps->AdapterOrdinal            = wined3d_caps->AdapterOrdinal;
@@ -671,7 +671,7 @@ static HRESULT WINAPI d3d8_device_GetDirect3D(IDirect3DDevice8 *iface, IDirect3D
 static HRESULT WINAPI d3d8_device_GetDeviceCaps(IDirect3DDevice8 *iface, D3DCAPS8 *caps)
 {
     struct d3d8_device *device = impl_from_IDirect3DDevice8(iface);
-    WINED3DCAPS wined3d_caps;
+    struct wined3d_caps wined3d_caps;
     HRESULT hr;
 
     TRACE("iface %p, caps %p.\n", iface, caps);

@@ -347,7 +347,7 @@ static BOOL wined3d_swapchain_desc_from_present_parameters(struct wined3d_swapch
     return TRUE;
 }
 
-void d3dcaps_from_wined3dcaps(D3DCAPS9 *caps, const WINED3DCAPS *wined3d_caps)
+void d3dcaps_from_wined3dcaps(D3DCAPS9 *caps, const struct wined3d_caps *wined3d_caps)
 {
     static const DWORD ps_minor_version[] = {0, 4, 0, 0};
     static const DWORD vs_minor_version[] = {0, 1, 0, 0};
@@ -664,7 +664,7 @@ static HRESULT WINAPI d3d9_device_GetDirect3D(IDirect3DDevice9Ex *iface, IDirect
 static HRESULT WINAPI d3d9_device_GetDeviceCaps(IDirect3DDevice9Ex *iface, D3DCAPS9 *caps)
 {
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
-    WINED3DCAPS wined3d_caps;
+    struct wined3d_caps wined3d_caps;
     HRESULT hr;
 
     TRACE("iface %p, caps %p.\n", iface, caps);
@@ -4226,8 +4226,8 @@ HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wine
         D3DPRESENT_PARAMETERS *parameters, D3DDISPLAYMODEEX *mode)
 {
     struct wined3d_swapchain_desc *swapchain_desc;
+    struct wined3d_caps caps;
     unsigned i, count = 1;
-    WINED3DCAPS caps;
     HRESULT hr;
 
     if (mode)
