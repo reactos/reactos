@@ -19,8 +19,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
 #include "initguid.h"
 #include "d3d8_private.h"
 #include "wine/debug.h"

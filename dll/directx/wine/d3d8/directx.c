@@ -20,9 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 
 #include "windef.h"
@@ -30,7 +27,6 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 #include "d3d8_private.h"
 
