@@ -74,9 +74,7 @@ static ULONG WINAPI d3d8_swapchain_Release(IDirect3DSwapChain8 *iface)
     {
         IDirect3DDevice8 *parent_device = swapchain->parent_device;
 
-        wined3d_mutex_lock();
         wined3d_swapchain_decref(swapchain->wined3d_swapchain);
-        wined3d_mutex_unlock();
 
         if (parent_device)
             IDirect3DDevice8_Release(parent_device);

@@ -124,9 +124,7 @@ static ULONG WINAPI d3d9_swapchain_Release(IDirect3DSwapChain9Ex *iface)
     {
         IDirect3DDevice9Ex *parent_device = swapchain->parent_device;
 
-        wined3d_mutex_lock();
         wined3d_swapchain_decref(swapchain->wined3d_swapchain);
-        wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
         if (parent_device)
