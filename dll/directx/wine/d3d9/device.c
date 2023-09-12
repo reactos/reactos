@@ -3359,7 +3359,9 @@ static HRESULT WINAPI d3d9_device_SetFVF(IDirect3DDevice9Ex *iface, DWORD fvf)
         return D3DERR_DRIVERINTERNALERROR;
     }
 
-    wined3d_device_set_vertex_declaration(device->wined3d_device, decl);
+    wined3d_stateblock_set_vertex_declaration(device->update_state, decl);
+    if (!device->recording)
+        wined3d_device_set_vertex_declaration(device->wined3d_device, decl);
     device->has_vertex_declaration = TRUE;
     wined3d_mutex_unlock();
 
