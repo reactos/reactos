@@ -1750,13 +1750,13 @@ static HRESULT WINAPI d3d9_device_ColorFill(IDirect3DDevice9Ex *iface,
         WARN("Colour fills are not allowed on surfaces with resource access %#x.\n", desc.access);
         return D3DERR_INVALIDCALL;
     }
-    if ((desc.usage & (WINED3DUSAGE_RENDERTARGET | WINED3DUSAGE_TEXTURE)) == WINED3DUSAGE_TEXTURE)
+    if ((desc.bind_flags & (WINED3D_BIND_RENDER_TARGET | WINED3D_BIND_SHADER_RESOURCE)) == WINED3D_BIND_SHADER_RESOURCE)
     {
         wined3d_mutex_unlock();
         WARN("Colorfill is not allowed on non-RT textures, returning D3DERR_INVALIDCALL.\n");
         return D3DERR_INVALIDCALL;
     }
-    if (desc.usage & WINED3DUSAGE_DEPTHSTENCIL)
+    if (desc.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
     {
         wined3d_mutex_unlock();
         WARN("Colorfill is not allowed on depth stencil surfaces, returning D3DERR_INVALIDCALL.\n");
