@@ -76,12 +76,13 @@ static ULONG WINAPI d3d9_vertexbuffer_Release(IDirect3DVertexBuffer9 *iface)
 
     if (!refcount)
     {
+        struct wined3d_buffer *draw_buffer = buffer->draw_buffer;
         IDirect3DDevice9Ex *device = buffer->parent_device;
 
         wined3d_mutex_lock();
         wined3d_buffer_decref(buffer->wined3d_buffer);
-        if (buffer->draw_buffer)
-            wined3d_buffer_decref(buffer->draw_buffer);
+        if (draw_buffer)
+            wined3d_buffer_decref(draw_buffer);
         wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
