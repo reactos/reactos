@@ -3144,7 +3144,9 @@ static HRESULT WINAPI d3d8_device_SetPixelShader(IDirect3DDevice8 *iface, DWORD 
 
     if (!shader)
     {
-        wined3d_device_set_pixel_shader(device->wined3d_device, NULL);
+        wined3d_stateblock_set_pixel_shader(device->update_state, NULL);
+        if (!device->recording)
+            wined3d_device_set_pixel_shader(device->wined3d_device, NULL);
         wined3d_mutex_unlock();
         return D3D_OK;
     }
@@ -3157,7 +3159,9 @@ static HRESULT WINAPI d3d8_device_SetPixelShader(IDirect3DDevice8 *iface, DWORD 
     }
 
     TRACE("Setting shader %p.\n", shader_impl);
-    wined3d_device_set_pixel_shader(device->wined3d_device, shader_impl->wined3d_shader);
+    wined3d_stateblock_set_pixel_shader(device->update_state, shader_impl->wined3d_shader);
+    if (!device->recording)
+        wined3d_device_set_pixel_shader(device->wined3d_device, shader_impl->wined3d_shader);
     wined3d_mutex_unlock();
 
     return D3D_OK;
