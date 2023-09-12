@@ -991,6 +991,7 @@ static HRESULT d3d9_device_reset(struct d3d9_device *device,
         if (!extended)
         {
             device->recording = FALSE;
+            device->auto_mipmaps = 0;
             wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_ZENABLE,
                     !!swapchain_desc.enable_auto_depth_stencil);
         }
@@ -2456,6 +2457,19 @@ static HRESULT WINAPI d3d9_device_SetTexture(IDirect3DDevice9Ex *iface, DWORD st
     wined3d_mutex_lock();
     hr = wined3d_device_set_texture(device->wined3d_device, stage,
             texture_impl ? texture_impl->wined3d_texture : NULL);
+    if (SUCCEEDED(hr) && !device->recording)
+    {
+        unsigned int i = stage < 16 || (stage >= D3DVERTEXTEXTURESAMPLER0 && stage <= D3DVERTEXTEXTURESAMPLER3)
+                ? stage < 16 ? stage : stage - D3DVERTEXTEXTURESAMPLER0 + 16 : ~0u;
+
+        if (i < D3D9_MAX_TEXTURE_UNITS)
+        {
+            if (texture_impl && texture_impl->usage & D3DUSAGE_AUTOGENMIPMAP)
+                device->auto_mipmaps |= 1u << i;
+            else
+                device->auto_mipmaps &= ~(1u << i);
+        }
+    }
     wined3d_mutex_unlock();
 
     return hr;
@@ -2700,10 +2714,13 @@ static float WINAPI d3d9_device_GetNPatchMode(IDirect3DDevice9Ex *iface)
 static void d3d9_generate_auto_mipmaps(struct d3d9_device *device)
 {
     struct wined3d_texture *texture;
-    unsigned int i, stage;
+    unsigned int i, stage, map;
 
-    for (i = 0; i < D3D9_MAX_TEXTURE_UNITS; ++i)
+    map = device->auto_mipmaps;
+    while (map)
     {
+        i = wined3d_bit_scan(&map);
+
         stage = i >= 16 ? i - 16 + D3DVERTEXTEXTURESAMPLER0 : i;
         if ((texture = wined3d_device_get_texture(device->wined3d_device, stage)))
             d3d9_texture_gen_auto_mipmap(wined3d_texture_get_parent(texture));

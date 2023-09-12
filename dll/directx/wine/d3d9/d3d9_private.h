@@ -111,6 +111,8 @@ struct d3d9_device
     DWORD recording : 1;
     DWORD padding : 11;
 
+    DWORD auto_mipmaps; /* D3D9_MAX_TEXTURE_UNITS */
+
     unsigned int max_user_clip_planes;
 
     UINT implicit_swapchain_count;
