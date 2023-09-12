@@ -39,8 +39,13 @@
 
 #define D3DPRESENTFLAGS_MASK 0x00000fffu
 
+#define D3D8_MAX_VERTEX_SHADER_CONSTANTF 256
+#define D3D8_MAX_STREAMS 16
+
 /* CreateVertexShader can return > 0xFFFF */
 #define VS_HIGHESTFIXEDFXF 0xF0000000
+
+extern const struct wined3d_parent_ops d3d8_null_wined3d_parent_ops DECLSPEC_HIDDEN;
 
 void d3dcaps_from_wined3dcaps(D3DCAPS8 *caps, const struct wined3d_caps *wined3d_caps) DECLSPEC_HIDDEN;
 
@@ -118,8 +123,10 @@ struct d3d8_device
     UINT                   index_buffer_pos;
 
     LONG device_state;
-    /* Avoids recursion with nested ReleaseRef to 0 */
-    BOOL                    inDestruction;
+    DWORD sysmem_vb : 16; /* D3D8_MAX_STREAMS */
+    DWORD in_destruction : 1;
+    DWORD recording : 1;
+    DWORD padding : 14;
 
     /* The d3d8 API supports only one implicit swapchain (no D3DCREATE_ADAPTERGROUP_DEVICE,
      * no GetSwapchain, GetBackBuffer doesn't accept a swapchain number). */
@@ -199,6 +206,7 @@ struct d3d8_vertexbuffer
     struct d3d8_resource resource;
     struct wined3d_buffer *wined3d_buffer;
     IDirect3DDevice8 *parent_device;
+    struct wined3d_buffer *draw_buffer;
     DWORD fvf;
 };
 
@@ -259,8 +267,6 @@ struct d3d8_vertex_shader
 void d3d8_vertex_shader_destroy(struct d3d8_vertex_shader *shader) DECLSPEC_HIDDEN;
 HRESULT d3d8_vertex_shader_init(struct d3d8_vertex_shader *shader, struct d3d8_device *device,
         const DWORD *declaration, const DWORD *byte_code, DWORD shader_handle, DWORD usage) DECLSPEC_HIDDEN;
-
-#define D3D8_MAX_VERTEX_SHADER_CONSTANTF 256
 
 struct d3d8_pixel_shader
 {
