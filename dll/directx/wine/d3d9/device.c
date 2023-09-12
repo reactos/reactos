@@ -2708,13 +2708,21 @@ static void d3d9_generate_auto_mipmaps(struct d3d9_device *device)
 }
 
 static void d3d9_device_upload_sysmem_vertex_buffers(struct d3d9_device *device,
-        unsigned int start_vertex, unsigned int vertex_count)
+        int base_vertex, unsigned int start_vertex, unsigned int vertex_count)
 {
     struct wined3d_box box = {0, 0, 0, 1, 0, 1};
     struct d3d9_vertexbuffer *d3d9_buffer;
     unsigned int i, offset, stride, map;
     struct wined3d_buffer *dst_buffer;
     HRESULT hr;
+
+    if (!device->sysmem_vb)
+        return;
+
+    if (base_vertex >= 0 || start_vertex >= -base_vertex)
+        start_vertex += base_vertex;
+    else
+        FIXME("System memory vertex data offset is negative.\n");
 
     map = device->sysmem_vb;
     while (map)
@@ -2777,7 +2785,7 @@ static HRESULT WINAPI d3d9_device_DrawPrimitive(IDirect3DDevice9Ex *iface,
         return D3DERR_INVALIDCALL;
     }
     vertex_count = vertex_count_from_primitive_count(primitive_type, primitive_count);
-    d3d9_device_upload_sysmem_vertex_buffers(device, start_vertex, vertex_count);
+    d3d9_device_upload_sysmem_vertex_buffers(device, 0, start_vertex, vertex_count);
     d3d9_generate_auto_mipmaps(device);
     wined3d_device_set_primitive_type(device->wined3d_device, primitive_type, 0);
     hr = wined3d_device_draw_primitive(device->wined3d_device, start_vertex, vertex_count);
@@ -2809,7 +2817,7 @@ static HRESULT WINAPI d3d9_device_DrawIndexedPrimitive(IDirect3DDevice9Ex *iface
         return D3DERR_INVALIDCALL;
     }
     index_count = vertex_count_from_primitive_count(primitive_type, primitive_count);
-    d3d9_device_upload_sysmem_vertex_buffers(device, min_vertex_idx, vertex_count);
+    d3d9_device_upload_sysmem_vertex_buffers(device, base_vertex_idx, min_vertex_idx, vertex_count);
     d3d9_device_upload_sysmem_index_buffer(device, start_idx, index_count);
     d3d9_generate_auto_mipmaps(device);
     wined3d_device_set_base_vertex_index(device->wined3d_device, base_vertex_idx);
