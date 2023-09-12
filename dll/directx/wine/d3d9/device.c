@@ -2273,14 +2273,18 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_SetRenderState(IDirect3DDevi
     {
         wined3d_color_from_d3dcolor(&factor, value);
         wined3d_mutex_lock();
-        wined3d_device_set_blend_state(device->wined3d_device, NULL, &factor);
+        wined3d_stateblock_set_blend_factor(device->update_state, &factor);
+        if (!device->recording)
+            wined3d_device_set_blend_state(device->wined3d_device, NULL, &factor);
         wined3d_mutex_unlock();
 
         return D3D_OK;
     }
 
     wined3d_mutex_lock();
-    wined3d_device_set_render_state(device->wined3d_device, state, value);
+    wined3d_stateblock_set_render_state(device->update_state, state, value);
+    if (!device->recording)
+        wined3d_device_set_render_state(device->wined3d_device, state, value);
     wined3d_mutex_unlock();
 
     return D3D_OK;
