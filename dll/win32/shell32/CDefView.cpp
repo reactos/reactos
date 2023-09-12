@@ -901,7 +901,10 @@ PCUITEMID_CHILD CDefView::_PidlByItem(LVITEM& lvItem)
 int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
 {
     if (!m_ListView)
-        OutputDebugStringW(L"###5\n");
+    {
+        //OutputDebugStringW(L"###5\n");
+        return -1;
+    }
 
     int cItems = m_ListView.GetItemCount();
 
