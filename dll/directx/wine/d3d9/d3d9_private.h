@@ -107,8 +107,7 @@ struct d3d9_device
     DWORD in_destruction : 1;
     DWORD in_scene : 1;
     DWORD has_vertex_declaration : 1;
-    DWORD recording : 1;
-    DWORD padding : 11;
+    DWORD padding : 12;
 
     DWORD auto_mipmaps; /* D3D9_MAX_TEXTURE_UNITS */
 
@@ -116,6 +115,8 @@ struct d3d9_device
 
     UINT implicit_swapchain_count;
     struct wined3d_swapchain **implicit_swapchains;
+
+    struct wined3d_stateblock *recording;
 };
 
 HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wined3d *wined3d,

@@ -126,12 +126,13 @@ struct d3d8_device
     DWORD sysmem_vb : 16; /* D3D8_MAX_STREAMS */
     DWORD sysmem_ib : 1;
     DWORD in_destruction : 1;
-    DWORD recording : 1;
-    DWORD padding : 13;
+    DWORD padding : 14;
 
     /* The d3d8 API supports only one implicit swapchain (no D3DCREATE_ADAPTERGROUP_DEVICE,
      * no GetSwapchain, GetBackBuffer doesn't accept a swapchain number). */
     struct wined3d_swapchain *implicit_swapchain;
+
+    struct wined3d_stateblock *recording;
 };
 
 HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wined3d *wined3d, UINT adapter,

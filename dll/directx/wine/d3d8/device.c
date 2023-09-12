@@ -593,6 +593,9 @@ static ULONG WINAPI d3d8_device_Release(IDirect3DDevice8 *iface)
         if (device->index_buffer)
             wined3d_buffer_decref(device->index_buffer);
 
+        if (device->recording)
+            wined3d_stateblock_decref(device->recording);
+
         wined3d_swapchain_decref(device->implicit_swapchain);
         wined3d_device_release_focus_window(device->wined3d_device);
         wined3d_device_decref(device->wined3d_device);
@@ -908,7 +911,9 @@ static HRESULT WINAPI d3d8_device_Reset(IDirect3DDevice8 *iface,
     if (SUCCEEDED(hr = wined3d_device_reset(device->wined3d_device, &swapchain_desc,
             NULL, reset_enum_callback, TRUE)))
     {
-        device->recording = FALSE;
+        if (device->recording)
+            wined3d_stateblock_decref(device->recording);
+        device->recording = NULL;
         present_parameters->BackBufferCount = swapchain_desc.backbuffer_count;
         implicit_swapchain = wined3d_swapchain_get_parent(device->implicit_swapchain);
         implicit_swapchain->swap_interval
@@ -1859,13 +1864,14 @@ static HRESULT WINAPI d3d8_device_GetRenderState(IDirect3DDevice8 *iface,
 static HRESULT WINAPI d3d8_device_BeginStateBlock(IDirect3DDevice8 *iface)
 {
     struct d3d8_device *device = impl_from_IDirect3DDevice8(iface);
+    struct wined3d_stateblock *stateblock;
     HRESULT hr;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    if (SUCCEEDED(hr = wined3d_device_begin_stateblock(device->wined3d_device)))
-        device->recording = TRUE;
+    if (SUCCEEDED(hr = wined3d_device_begin_stateblock(device->wined3d_device, &stateblock)))
+        device->recording = stateblock;
     wined3d_mutex_unlock();
 
     return hr;
@@ -1883,14 +1889,15 @@ static HRESULT WINAPI d3d8_device_EndStateBlock(IDirect3DDevice8 *iface, DWORD *
      * of memory later and cause locking problems)
      */
     wined3d_mutex_lock();
-    hr = wined3d_device_end_stateblock(device->wined3d_device, &stateblock);
+    hr = wined3d_device_end_stateblock(device->wined3d_device);
     if (FAILED(hr))
     {
         WARN("Failed to end the state block, %#x.\n", hr);
         wined3d_mutex_unlock();
         return hr;
     }
-    device->recording = FALSE;
+    stateblock = device->recording;
+    device->recording = NULL;
 
     *token = d3d8_allocate_handle(&device->handle_table, stateblock, D3D8_HANDLE_SB);
     wined3d_mutex_unlock();
