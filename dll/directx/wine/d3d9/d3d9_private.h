@@ -251,6 +251,7 @@ struct d3d9_vertex_declaration
     LONG refcount;
     D3DVERTEXELEMENT9 *elements;
     UINT element_count;
+    DWORD stream_map;
     struct wined3d_vertex_declaration *wined3d_declaration;
     DWORD fvf;
     IDirect3DDevice9Ex *parent_device;
