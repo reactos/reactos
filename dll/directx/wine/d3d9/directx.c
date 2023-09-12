@@ -370,7 +370,7 @@ static HRESULT WINAPI d3d9_GetDeviceCaps(IDirect3D9Ex *iface, UINT adapter, D3DD
     hr = wined3d_get_device_caps(d3d9->wined3d, adapter, device_type, &wined3d_caps);
     wined3d_mutex_unlock();
 
-    d3dcaps_from_wined3dcaps(caps, &wined3d_caps);
+    d3dcaps_from_wined3dcaps(caps, &wined3d_caps, 0);
 
     return hr;
 }
