@@ -4230,6 +4230,17 @@ HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wine
     unsigned i, count = 1;
     HRESULT hr;
 
+    static const enum wined3d_feature_level feature_levels[] =
+    {
+        WINED3D_FEATURE_LEVEL_9_SM3,
+        WINED3D_FEATURE_LEVEL_9_SM2,
+        WINED3D_FEATURE_LEVEL_9_1,
+        WINED3D_FEATURE_LEVEL_8,
+        WINED3D_FEATURE_LEVEL_7,
+        WINED3D_FEATURE_LEVEL_6,
+        WINED3D_FEATURE_LEVEL_5,
+    };
+
     if (mode)
         FIXME("Ignoring display mode.\n");
 
@@ -4240,7 +4251,8 @@ HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wine
     if (!(flags & D3DCREATE_FPU_PRESERVE)) setup_fpu();
 
     wined3d_mutex_lock();
-    if (FAILED(hr = wined3d_device_create(wined3d, adapter, device_type, focus_window, flags, 4,
+    if (FAILED(hr = wined3d_device_create(wined3d, adapter, device_type,
+            focus_window, flags, 4, feature_levels, ARRAY_SIZE(feature_levels),
             &device->device_parent, &device->wined3d_device)))
     {
         WARN("Failed to create wined3d device, hr %#x.\n", hr);
