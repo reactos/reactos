@@ -4547,6 +4547,7 @@ HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wine
         wined3d_swapchain_decref(d3d_swapchain->wined3d_swapchain);
         wined3d_device_release_focus_window(device->wined3d_device);
         wined3d_device_decref(device->wined3d_device);
+        heap_free(swapchain_desc);
         wined3d_mutex_unlock();
         return E_OUTOFMEMORY;
     }
