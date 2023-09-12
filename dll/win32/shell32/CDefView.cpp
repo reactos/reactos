@@ -439,6 +439,10 @@ CDefView::CDefView() :
     m_viewinfo_data.hbmBack = NULL;
 
     m_hMyComputerIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_COMPUTER_DESKTOP));
+
+    m_ListView.m_dummy = 12;
+    m_dummy = 15;
+    OutputDebugStringW(L"###1\n");
 }
 
 CDefView::~CDefView()
@@ -544,6 +548,9 @@ void CDefView::UpdateStatusbar()
     WCHAR szFormat[MAX_PATH] = {0};
     WCHAR szPartText[MAX_PATH] = {0};
     UINT cSelectedItems;
+
+    if (!m_ListView)
+        return;
 
     cSelectedItems = m_ListView.GetSelectedCount();
     if (cSelectedItems)
@@ -703,6 +710,9 @@ BOOL CDefView::CreateList()
 
 void CDefView::UpdateListColors()
 {
+    if (!m_ListView)
+        OutputDebugStringW(L"###2\n");
+
     if (m_FolderSettings.fFlags & FWF_DESKTOP)
     {
         /* Check if drop shadows option is enabled */
@@ -770,6 +780,9 @@ BOOL CDefView::InitList()
 
     TRACE("%p\n", this);
 
+    if (!m_ListView)
+        OutputDebugStringW(L"###3\n");
+
     m_ListView.DeleteAllItems();
 
     m_hMenuArrangeModes = CreateMenu();
@@ -836,6 +849,9 @@ BOOL CDefView::_Sort()
     HWND hHeader;
     HDITEM hColumn;
 
+    if (!m_ListView)
+        OutputDebugStringW(L"###4\n");
+
     if (m_ListView.GetWindowLongPtr(GWL_STYLE) & LVS_NOSORTHEADER)
         return TRUE;
 
@@ -884,6 +900,9 @@ PCUITEMID_CHILD CDefView::_PidlByItem(LVITEM& lvItem)
 */
 int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
 {
+    if (!m_ListView)
+        OutputDebugStringW(L"###5\n");
+
     int cItems = m_ListView.GetItemCount();
 
     for (int i = 0; i<cItems; i++)
@@ -907,6 +926,9 @@ int CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
     if (_DoFolderViewCB(SFVM_ADDINGOBJECT, 0, (LPARAM)pidl) == S_FALSE)
         return -1;
 
+    if (!m_ListView)
+        OutputDebugStringW(L"###6\n");
+
     lvItem.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;    /*set the mask*/
     lvItem.iItem = m_ListView.GetItemCount();             /*add the item to the end of the list*/
     lvItem.iSubItem = 0;
@@ -927,6 +949,9 @@ BOOLEAN CDefView::LV_DeleteItem(PCUITEMID_CHILD pidl)
 
     TRACE("(%p)(pidl=%p)\n", this, pidl);
 
+    if (!m_ListView)
+        OutputDebugStringW(L"###6\n");
+
     nIndex = LV_FindItemByPidl(pidl);
 
     return m_ListView.DeleteItem(nIndex);
@@ -941,6 +966,9 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
     LVITEMW lvItem;
 
     TRACE("(%p)(pidlold=%p pidlnew=%p)\n", this, pidlOld, pidlNew);
+
+    if (!m_ListView)
+        OutputDebugStringW(L"###7\n");
 
     nItem = LV_FindItemByPidl(pidlOld);
 
@@ -979,6 +1007,9 @@ BOOLEAN CDefView::LV_ProdItem(PCUITEMID_CHILD pidl)
     LVITEMW lvItem;
 
     TRACE("(%p)(pidl=%p)\n", this, pidl);
+
+    if (!m_ListView)
+        OutputDebugStringW(L"###8\n");
 
     nItem = LV_FindItemByPidl(pidl);
 
@@ -1027,6 +1058,9 @@ HRESULT CDefView::FillList()
     DWORD dwValue, cbValue;
 
     TRACE("%p\n", this);
+
+    if (!m_ListView)
+        OutputDebugStringW(L"###9\n");
 
     /* determine if there is a setting to show all the hidden files/folders */
     dwValue = 1;
@@ -1129,6 +1163,9 @@ LRESULT CDefView::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 
 LRESULT CDefView::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    if (!m_ListView)
+        OutputDebugStringW(L"###10\n");
+
     return m_ListView.SendMessageW(uMsg, 0, 0);
 }
 
@@ -1188,6 +1225,9 @@ LRESULT CDefView::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 {
     HDC hDC = (HDC)wParam;
 
+    if (!m_ListView)
+        OutputDebugStringW(L"###11\n");
+
     RECT rc;
     ::GetClientRect(m_ListView, &rc);
 
@@ -1213,6 +1253,9 @@ LRESULT CDefView::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
 LRESULT CDefView::OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    if (!m_ListView)
+        OutputDebugStringW(L"###12\n");
+
     /* Update desktop labels color */
     UpdateListColors();
 
@@ -1270,6 +1313,9 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     if (m_FolderSettings.fFlags & FWF_DESKTOP)
     {
+        if (!m_ListView)
+            OutputDebugStringW(L"###13\n");
+
         HWND hwndSB;
         m_pShellBrowser->GetWindow(&hwndSB);
         SetShellWindowEx(hwndSB, m_ListView);
@@ -1472,6 +1518,9 @@ UINT CDefView::GetSelections()
 {
     SHFree(m_apidl);
 
+    if (!m_ListView)
+        OutputDebugStringW(L"###14\n");
+
     m_cidl = m_ListView.GetSelectedCount();
     m_apidl = static_cast<PCUITEMID_CHILD*>(SHAlloc(m_cidl * sizeof(PCUITEMID_CHILD)));
     if (!m_apidl)
@@ -1537,6 +1586,9 @@ HRESULT CDefView::OpenSelectedItems()
     UINT uCommand;
     HRESULT hResult;
 
+    if (!m_ListView)
+        OutputDebugStringW(L"###15\n");
+
     m_cidl = m_ListView.GetSelectedCount();
     if (m_cidl == 0)
         return S_OK;
@@ -1591,6 +1643,9 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     m_hContextMenu = CreatePopupMenu();
     if (!m_hContextMenu)
         return E_FAIL;
+
+    if (!m_ListView)
+        OutputDebugStringW(L"###16\n");
 
     if (lParam != ~0)   // unless app key (menu key) was pressed
     {
@@ -1793,6 +1848,9 @@ void CDefView::DoActivate(UINT uState)
 
         if (SVUIA_ACTIVATE_FOCUS == uState)
         {
+            if (!m_ListView)
+                OutputDebugStringW(L"###17\n");
+
             m_ListView.SetFocus();
         }
     }
@@ -1824,6 +1882,9 @@ LRESULT CDefView::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
 
     m_pShellBrowser->OnViewWindowActive(this);
     DoActivate(SVUIA_ACTIVATE_FOCUS);
+
+    if (!m_ListView)
+        OutputDebugStringW(L"###18\n");
 
     /* Set the focus to the listview */
     m_ListView.SetFocus();
@@ -1867,27 +1928,36 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
     TRACE("(%p)->(0x%08x 0x%08x %p) stub\n", this, dwCmdID, dwCmd, hwndCmd);
 
+
     switch (dwCmdID)
     {
         case FCIDM_SHVIEW_SMALLICON:
+            if (!m_ListView)
+                OutputDebugStringW(L"###19\n");
             m_FolderSettings.ViewMode = FVM_SMALLICON;
             m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_SMALLICON);
             CheckToolbar();
             break;
 
         case FCIDM_SHVIEW_BIGICON:
+            if (!m_ListView)
+                OutputDebugStringW(L"###20\n");
             m_FolderSettings.ViewMode = FVM_ICON;
             m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_ICON);
             CheckToolbar();
             break;
 
         case FCIDM_SHVIEW_LISTVIEW:
+            if (!m_ListView)
+                OutputDebugStringW(L"###21\n");
             m_FolderSettings.ViewMode = FVM_LIST;
             m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_LIST);
             CheckToolbar();
             break;
 
         case FCIDM_SHVIEW_REPORTVIEW:
+            if (!m_ListView)
+                OutputDebugStringW(L"###22\n");
             m_FolderSettings.ViewMode = FVM_DETAILS;
             m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_REPORT);
             CheckToolbar();
@@ -1904,25 +1974,35 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             break;
 
         case FCIDM_SHVIEW_SNAPTOGRID:
+            if (!m_ListView)
+                OutputDebugStringW(L"###23\n");
             m_ListView.Arrange(LVA_SNAPTOGRID);
             break;
         case FCIDM_SHVIEW_ALIGNTOGRID:
+            if (!m_ListView)
+                OutputDebugStringW(L"###24\n");
             if (_GetSnapToGrid() == S_OK)
                 m_ListView.SetExtendedListViewStyle(0, LVS_EX_SNAPTOGRID);
             else
                 ArrangeGrid();
             break;
         case FCIDM_SHVIEW_AUTOARRANGE:
+            if (!m_ListView)
+                OutputDebugStringW(L"###25\n");
             if (GetAutoArrange() == S_OK)
                 m_ListView.ModifyStyle(LVS_AUTOARRANGE, 0);
             else
                 AutoArrange();
             break;
         case FCIDM_SHVIEW_SELECTALL:
+            if (!m_ListView)
+                OutputDebugStringW(L"###26\n");
             m_ListView.SetItemState(-1, LVIS_SELECTED, LVIS_SELECTED);
             break;
 
         case FCIDM_SHVIEW_INVERTSELECTION:
+            if (!m_ListView)
+                OutputDebugStringW(L"###27\n");
             nCount = m_ListView.GetItemCount();
             for (int i=0; i < nCount; i++)
                 m_ListView.SetItemState(i, m_ListView.GetItemState(i, LVIS_SELECTED) ? 0 : LVIS_SELECTED, LVIS_SELECTED);
@@ -2161,6 +2241,9 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
                     DWORD dwEffect2;
 
+            if (!m_ListView)
+                OutputDebugStringW(L"###28\n");
+
                     m_pSourceDataObject = pda;
                     m_ptFirstMousePos = params->ptAction;
                     ClientToScreen(&m_ptFirstMousePos);
@@ -2188,6 +2271,9 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             pidl = _PidlByItem(lpdi->item);
 
             TRACE("-- LVN_BEGINLABELEDITW %p\n", this);
+
+            if (!m_ListView)
+                OutputDebugStringW(L"###29\n");
 
             m_pSFParent->GetAttributesOf(1, &pidl, &dwAttr);
             if (SFGAO_CANRENAME & dwAttr)
@@ -2226,6 +2312,9 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             TRACE("-- LVN_ENDLABELEDITW %p\n", this);
 
             m_isEditing = FALSE;
+
+            if (!m_ListView)
+                OutputDebugStringW(L"###30\n");
 
             if (lpdi->item.pszText)
             {
@@ -2567,6 +2656,9 @@ HRESULT WINAPI CDefView::Refresh()
 
     _DoFolderViewCB(SFVM_LISTREFRESHED, TRUE, 0);
 
+            if (!m_ListView)
+                OutputDebugStringW(L"###31\n");
+
     m_ListView.DeleteAllItems();
     FillList();
 
@@ -2666,6 +2758,9 @@ HRESULT WINAPI CDefView::SelectItem(PCUITEMID_CHILD pidl, UINT uFlags)
     LVITEMW lvItem = {0};
     lvItem.mask = LVIF_STATE;
     lvItem.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
+
+            if (!m_ListView)
+                OutputDebugStringW(L"###32\n");
 
     while (m_ListView.GetItem(&lvItem))
     {
@@ -2800,6 +2895,9 @@ HRESULT STDMETHODCALLTYPE CDefView::SetCurrentViewMode(UINT ViewMode)
         }
     }
 
+            if (!m_ListView)
+                OutputDebugStringW(L"###33\n");
+
     m_ListView.ModifyStyle(LVS_TYPEMASK, dwStyle);
 
     /* This will not necessarily be the actual mode set above.
@@ -2837,6 +2935,9 @@ HRESULT STDMETHODCALLTYPE CDefView::ItemCount(UINT uFlags, int *pcItems)
     if (uFlags != SVGIO_ALLVIEW)
         FIXME("some flags unsupported, %x\n", uFlags & ~SVGIO_ALLVIEW);
 
+            if (!m_ListView)
+                OutputDebugStringW(L"###34\n");
+
     *pcItems = m_ListView.GetItemCount();
 
     return S_OK;
@@ -2851,6 +2952,9 @@ HRESULT STDMETHODCALLTYPE CDefView::GetSelectionMarkedItem(int *piItem)
 {
     TRACE("(%p)->(%p)\n", this, piItem);
 
+            if (!m_ListView)
+                OutputDebugStringW(L"###35\n");
+
     *piItem = m_ListView.GetSelectionMark();
 
     return S_OK;
@@ -2859,6 +2963,9 @@ HRESULT STDMETHODCALLTYPE CDefView::GetSelectionMarkedItem(int *piItem)
 HRESULT STDMETHODCALLTYPE CDefView::GetFocusedItem(int *piItem)
 {
     TRACE("(%p)->(%p)\n", this, piItem);
+
+            if (!m_ListView)
+                OutputDebugStringW(L"###36\n");
 
     *piItem = m_ListView.GetNextItem(-1, LVNI_FOCUSED);
 
@@ -2870,6 +2977,9 @@ HRESULT STDMETHODCALLTYPE CDefView::GetItemPosition(PCUITEMID_CHILD pidl, POINT 
     int lvIndex = LV_FindItemByPidl(pidl);
     if (lvIndex == -1 || ppt == NULL)
         return E_INVALIDARG;
+
+            if (!m_ListView)
+                OutputDebugStringW(L"###37\n");
 
     m_ListView.GetItemPosition(lvIndex, ppt);
     return S_OK;
@@ -2901,11 +3011,16 @@ HRESULT STDMETHODCALLTYPE CDefView::GetDefaultSpacing(POINT *ppt)
 
 HRESULT STDMETHODCALLTYPE CDefView::GetAutoArrange()
 {
+            if (!m_ListView)
+                OutputDebugStringW(L"###38\n");
+
     return ((m_ListView.GetStyle() & LVS_AUTOARRANGE) ? S_OK : S_FALSE);
 }
 
 HRESULT CDefView::_GetSnapToGrid()
 {
+            if (!m_ListView)
+                OutputDebugStringW(L"###39\n");
     DWORD dwExStyle = (DWORD)m_ListView.SendMessage(LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
     return ((dwExStyle & LVS_EX_SNAPTOGRID) ? S_OK : S_FALSE);
 }
@@ -2918,6 +3033,9 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
 
     lvItem.state = 0;
     lvItem.stateMask = LVIS_SELECTED;
+
+            if (!m_ListView)
+                OutputDebugStringW(L"###40\n");
 
     if (dwFlags & SVSI_ENSUREVISIBLE)
         m_ListView.EnsureVisible(iItem, 0);
@@ -2943,6 +3061,9 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
 
 HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, POINT *apt, DWORD dwFlags)
 {
+            if (!m_ListView)
+                OutputDebugStringW(L"###41\n");
+
     /* Reset the selection */
     m_ListView.SetItemState(-1, 0, LVIS_SELECTED);
 
@@ -3086,12 +3207,18 @@ HRESULT STDMETHODCALLTYPE CDefView::GetArrangeParam(LPARAM *sort)
 
 HRESULT STDMETHODCALLTYPE CDefView::ArrangeGrid()
 {
+            if (!m_ListView)
+                OutputDebugStringW(L"###42\n");
+
     m_ListView.SetExtendedListViewStyle(LVS_EX_SNAPTOGRID, LVS_EX_SNAPTOGRID);
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::AutoArrange()
 {
+            if (!m_ListView)
+                OutputDebugStringW(L"###43\n");
+
     m_ListView.ModifyStyle(0, LVS_AUTOARRANGE);
     m_ListView.Arrange(LVA_DEFAULT);
     return S_OK;
@@ -3134,6 +3261,8 @@ HRESULT STDMETHODCALLTYPE CDefView::RemoveObject(PITEMID_CHILD pidl, UINT *item)
 
 HRESULT STDMETHODCALLTYPE CDefView::GetObjectCount(UINT *count)
 {
+            if (!m_ListView)
+                OutputDebugStringW(L"###44\n");
     TRACE("(%p)->(%p)\n", this, count);
     *count = m_ListView.GetItemCount();
     return S_OK;
@@ -3380,6 +3509,9 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
        to remember the last key state when the button was pressed */
     m_grfKeyState = grfKeyState;
 
+            if (!m_ListView)
+                OutputDebugStringW(L"###45\n");
+
     /* Map from global to client coordinates and query the index of the listview-item, which is
      * currently under the mouse cursor. */
     LVHITTESTINFO htinfo = {{pt.x, pt.y}, LVHT_ONITEM};
@@ -3533,6 +3665,9 @@ HRESULT WINAPI CDefView::DragLeave()
 
 INT CDefView::_FindInsertableIndexFromPoint(POINT pt)
 {
+            if (!m_ListView)
+                OutputDebugStringW(L"###46\n");
+
     RECT rcBound;
     INT i, nCount = m_ListView.GetItemCount();
     DWORD dwSpacing;
@@ -3659,6 +3794,9 @@ void CDefView::_MoveSelectionOnAutoArrange(POINT pt)
 {
     // get insertable index from position
     INT iPosition = _FindInsertableIndexFromPoint(pt);
+
+            if (!m_ListView)
+                OutputDebugStringW(L"###47\n");
 
     // create identity mapping of indexes
     CSimpleArray<INT> array;
