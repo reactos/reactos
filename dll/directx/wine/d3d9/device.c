@@ -3422,8 +3422,11 @@ static HRESULT WINAPI d3d9_device_SetVertexShader(IDirect3DDevice9Ex *iface, IDi
     TRACE("iface %p, shader %p.\n", iface, shader);
 
     wined3d_mutex_lock();
-    wined3d_device_set_vertex_shader(device->wined3d_device,
+    wined3d_stateblock_set_vertex_shader(device->update_state,
             shader_obj ? shader_obj->wined3d_shader : NULL);
+    if (!device->recording)
+        wined3d_device_set_vertex_shader(device->wined3d_device,
+                shader_obj ? shader_obj->wined3d_shader : NULL);
     wined3d_mutex_unlock();
 
     return D3D_OK;
