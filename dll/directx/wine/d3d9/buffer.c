@@ -283,6 +283,10 @@ HRESULT vertexbuffer_init(struct d3d9_vertexbuffer *buffer, struct d3d9_device *
         return D3DERR_INVALIDCALL;
     }
 
+    /* In d3d9, buffers can't be used as rendertarget or depth/stencil buffer. */
+    if (usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+        return D3DERR_INVALIDCALL;
+
     buffer->IDirect3DVertexBuffer9_iface.lpVtbl = &d3d9_vertexbuffer_vtbl;
     buffer->fvf = fvf;
     d3d9_resource_init(&buffer->resource);
