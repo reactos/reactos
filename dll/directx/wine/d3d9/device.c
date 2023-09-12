@@ -1536,7 +1536,7 @@ static HRESULT WINAPI d3d9_device_UpdateSurface(IDirect3DDevice9Ex *iface,
     hr = wined3d_device_copy_sub_resource_region(device->wined3d_device,
             wined3d_texture_get_resource(dst->wined3d_texture), dst->sub_resource_idx, dst_point ? dst_point->x : 0,
             dst_point ? dst_point->y : 0, 0, wined3d_texture_get_resource(src->wined3d_texture),
-            src->sub_resource_idx, &src_box);
+            src->sub_resource_idx, &src_box, 0);
     if (SUCCEEDED(hr) && dst->texture)
         d3d9_texture_flag_auto_gen_mipmap(dst->texture);
 
