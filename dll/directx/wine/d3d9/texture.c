@@ -1453,6 +1453,10 @@ HRESULT volumetexture_init(struct d3d9_texture *texture, struct d3d9_device *dev
     struct wined3d_resource_desc desc;
     HRESULT hr;
 
+    /* In d3d9, 3D textures can't be used as rendertarget or depth/stencil buffer. */
+    if (usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+        return D3DERR_INVALIDCALL;
+
     texture->IDirect3DBaseTexture9_iface.lpVtbl = (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_3d_vtbl;
     d3d9_resource_init(&texture->resource);
     list_init(&texture->rtv_list);
