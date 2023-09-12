@@ -142,7 +142,7 @@ enum wined3d_format_id wined3dformat_from_d3dformat(D3DFORMAT format)
     }
 }
 
-unsigned int wined3dmapflags_from_d3dmapflags(unsigned int flags)
+unsigned int wined3dmapflags_from_d3dmapflags(unsigned int flags, unsigned int usage)
 {
     static const unsigned int handled = D3DLOCK_NOSYSLOCK
             | D3DLOCK_NOOVERWRITE
@@ -151,12 +151,12 @@ unsigned int wined3dmapflags_from_d3dmapflags(unsigned int flags)
     unsigned int wined3d_flags;
 
     wined3d_flags = flags & handled;
-    if (!(flags & (D3DLOCK_NOOVERWRITE | D3DLOCK_DISCARD)))
+    if (~usage & D3DUSAGE_WRITEONLY && !(flags & (D3DLOCK_NOOVERWRITE | D3DLOCK_DISCARD)))
         wined3d_flags |= WINED3D_MAP_READ;
     if (!(flags & D3DLOCK_READONLY))
         wined3d_flags |= WINED3D_MAP_WRITE;
     if (!(wined3d_flags & (WINED3D_MAP_READ | WINED3D_MAP_WRITE)))
-        wined3d_flags |= WINED3D_MAP_READ | WINED3D_MAP_WRITE;
+        wined3d_flags |= WINED3D_MAP_WRITE;
     flags &= ~(handled | D3DLOCK_READONLY);
 
     if (flags)
