@@ -1330,6 +1330,11 @@ HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
     if (is_gdi_compat_wined3dformat(desc.format))
         flags |= WINED3D_TEXTURE_CREATE_GET_DC;
 
+    if (usage & D3DUSAGE_WRITEONLY)
+    {
+        WARN("Texture can't be created with the D3DUSAGE_WRITEONLY flags, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
     if (usage & D3DUSAGE_AUTOGENMIPMAP)
     {
         if (pool == D3DPOOL_SYSTEMMEM)
@@ -1419,6 +1424,11 @@ HRESULT cubetexture_init(struct d3d9_texture *texture, struct d3d9_device *devic
     if (is_gdi_compat_wined3dformat(desc.format))
         flags |= WINED3D_TEXTURE_CREATE_GET_DC;
 
+    if (usage & D3DUSAGE_WRITEONLY)
+    {
+        WARN("Texture can't be created with the D3DUSAGE_WRITEONLY flags, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
     if (usage & D3DUSAGE_AUTOGENMIPMAP)
     {
         if (pool == D3DPOOL_SYSTEMMEM)
@@ -1493,6 +1503,11 @@ HRESULT volumetexture_init(struct d3d9_texture *texture, struct d3d9_device *dev
     desc.depth = depth;
     desc.size = 0;
 
+    if (usage & D3DUSAGE_WRITEONLY)
+    {
+        WARN("Texture can't be created with the D3DUSAGE_WRITEONLY flags, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
     if (usage & D3DUSAGE_AUTOGENMIPMAP)
     {
         WARN("D3DUSAGE_AUTOGENMIPMAP volume texture is not supported, returning D3DERR_INVALIDCALL.\n");
