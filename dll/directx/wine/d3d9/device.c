@@ -2712,8 +2712,10 @@ static void d3d9_device_upload_sysmem_vertex_buffers(struct d3d9_device *device,
 {
     struct wined3d_box box = {0, 0, 0, 1, 0, 1};
     struct d3d9_vertexbuffer *d3d9_buffer;
+    struct wined3d_resource *dst_resource;
     unsigned int i, offset, stride, map;
     struct wined3d_buffer *dst_buffer;
+    struct wined3d_resource_desc desc;
     HRESULT hr;
 
     if (!device->sysmem_vb)
@@ -2733,10 +2735,12 @@ static void d3d9_device_upload_sysmem_vertex_buffers(struct d3d9_device *device,
         if (FAILED(hr = wined3d_device_get_stream_source(device->wined3d_device, i, &dst_buffer, &offset, &stride)))
             ERR("Failed to get stream source.\n");
         d3d9_buffer = wined3d_buffer_get_parent(dst_buffer);
+        dst_resource = wined3d_buffer_get_resource(dst_buffer);
+        wined3d_resource_get_desc(dst_resource, &desc);
         box.left = offset + start_vertex * stride;
-        box.right = box.left + vertex_count * stride;
+        box.right = min(box.left + vertex_count * stride, desc.size);
         if (FAILED(hr = wined3d_device_copy_sub_resource_region(device->wined3d_device,
-                wined3d_buffer_get_resource(dst_buffer), 0, box.left, 0, 0,
+                dst_resource, 0, box.left, 0, 0,
                 wined3d_buffer_get_resource(d3d9_buffer->wined3d_buffer), 0, &box, 0)))
             ERR("Failed to update buffer.\n");
     }
