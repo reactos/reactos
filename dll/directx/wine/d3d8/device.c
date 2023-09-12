@@ -1230,7 +1230,7 @@ static HRESULT WINAPI d3d8_device_CreateDepthStencilSurface(IDirect3DDevice8 *if
     *surface = NULL;
 
     /* TODO: Verify that Discard is false */
-    return d3d8_device_create_surface(device, width, height, format, WINED3D_TEXTURE_CREATE_MAPPABLE,
+    return d3d8_device_create_surface(device, width, height, format, 0,
             surface, D3DUSAGE_DEPTHSTENCIL, D3DPOOL_DEFAULT, multisample_type, 0);
 }
 
