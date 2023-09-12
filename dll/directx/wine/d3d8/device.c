@@ -2280,8 +2280,7 @@ static void d3d8_device_upload_sysmem_vertex_buffers(struct d3d8_device *device,
     map = device->sysmem_vb;
     while (map)
     {
-        i = ffs(map) - 1;
-        map ^= 1u << i;
+        i = wined3d_bit_scan(&map);
 
         if (FAILED(hr = wined3d_device_get_stream_source(device->wined3d_device, i, &dst_buffer, &offset, &stride)))
             ERR("Failed to get stream source.\n");
@@ -2618,8 +2617,7 @@ static HRESULT WINAPI d3d8_device_ProcessVertices(IDirect3DDevice8 *iface, UINT 
     map = device->sysmem_vb;
     while (map)
     {
-        i = ffs(map) - 1;
-        map ^= 1u << i;
+        i = wined3d_bit_scan(&map);
 
         if (FAILED(wined3d_device_get_stream_source(device->wined3d_device,
                 i, &wined3d_buffer, &offset, &stride)))
@@ -2636,8 +2634,7 @@ static HRESULT WINAPI d3d8_device_ProcessVertices(IDirect3DDevice8 *iface, UINT 
     map = device->sysmem_vb;
     while (map)
     {
-        i = ffs(map) - 1;
-        map ^= 1u << i;
+        i = wined3d_bit_scan(&map);
 
         if (FAILED(wined3d_device_get_stream_source(device->wined3d_device,
                 i, &wined3d_buffer, &offset, &stride)))
