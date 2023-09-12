@@ -2814,9 +2814,15 @@ static HRESULT WINAPI d3d8_device_SetVertexShader(IDirect3DDevice8 *iface, DWORD
         TRACE("Setting FVF, %#x\n", shader);
 
         wined3d_mutex_lock();
-        wined3d_device_set_vertex_declaration(device->wined3d_device,
+        wined3d_stateblock_set_vertex_declaration(device->update_state,
                 d3d8_device_get_fvf_declaration(device, shader)->wined3d_vertex_declaration);
-        wined3d_device_set_vertex_shader(device->wined3d_device, NULL);
+        wined3d_stateblock_set_vertex_shader(device->update_state, NULL);
+        if (!device->recording)
+        {
+            wined3d_device_set_vertex_declaration(device->wined3d_device,
+                    d3d8_device_get_fvf_declaration(device, shader)->wined3d_vertex_declaration);
+            wined3d_device_set_vertex_shader(device->wined3d_device, NULL);
+        }
         wined3d_mutex_unlock();
 
         return D3D_OK;
@@ -2833,9 +2839,15 @@ static HRESULT WINAPI d3d8_device_SetVertexShader(IDirect3DDevice8 *iface, DWORD
         return D3DERR_INVALIDCALL;
     }
 
-    wined3d_device_set_vertex_declaration(device->wined3d_device,
+    wined3d_stateblock_set_vertex_declaration(device->update_state,
             shader_impl->vertex_declaration->wined3d_vertex_declaration);
-    wined3d_device_set_vertex_shader(device->wined3d_device, shader_impl->wined3d_shader);
+    wined3d_stateblock_set_vertex_shader(device->update_state, shader_impl->wined3d_shader);
+    if (!device->recording)
+    {
+        wined3d_device_set_vertex_declaration(device->wined3d_device,
+                shader_impl->vertex_declaration->wined3d_vertex_declaration);
+        wined3d_device_set_vertex_shader(device->wined3d_device, shader_impl->wined3d_shader);
+    }
     wined3d_mutex_unlock();
 
     return D3D_OK;
