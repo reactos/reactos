@@ -3232,8 +3232,11 @@ static HRESULT WINAPI d3d9_device_SetVertexDeclaration(IDirect3DDevice9Ex *iface
     TRACE("iface %p, declaration %p.\n", iface, declaration);
 
     wined3d_mutex_lock();
-    wined3d_device_set_vertex_declaration(device->wined3d_device,
+    wined3d_stateblock_set_vertex_declaration(device->update_state,
             decl_impl ? decl_impl->wined3d_declaration : NULL);
+    if (!device->recording)
+        wined3d_device_set_vertex_declaration(device->wined3d_device,
+                decl_impl ? decl_impl->wined3d_declaration : NULL);
     device->has_vertex_declaration = !!decl_impl;
     wined3d_mutex_unlock();
 
