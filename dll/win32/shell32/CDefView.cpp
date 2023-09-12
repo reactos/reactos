@@ -2982,11 +2982,7 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
 
 HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, POINT *apt, DWORD dwFlags)
 {
-    if (!m_ListView)
-    {
-        ERR("!m_ListView\n");
-        return E_FAIL;
-    }
+    ASSERT(m_ListView);
 
     /* Reset the selection */
     m_ListView.SetItemState(-1, 0, LVIS_SELECTED);
