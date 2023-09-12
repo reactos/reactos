@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
 #include "d3d8_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);

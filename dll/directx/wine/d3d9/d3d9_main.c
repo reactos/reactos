@@ -22,6 +22,7 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
 #include "initguid.h"
 #include "d3d9_private.h"
 

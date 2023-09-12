@@ -1,6 +1,4 @@
 /*
- * IDirect3DVertexDeclaration8 implementation
- *
  * Copyright 2007 Henri Verbeet
  *
  * This library is free software; you can redistribute it and/or
@@ -18,10 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* IDirect3DVertexDeclaration8 is internal to our implementation.
- * It's not visible in the API. */
-
 #include "config.h"
+#include "wine/port.h"
 #include "d3d8_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);

@@ -21,6 +21,7 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <stdarg.h>
 
