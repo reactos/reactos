@@ -1267,7 +1267,7 @@ static HRESULT WINAPI d3d8_device_CopyRects(IDirect3DDevice8 *iface,
 
     wined3d_mutex_lock();
     wined3d_texture_get_sub_resource_desc(src->wined3d_texture, src->sub_resource_idx, &wined3d_desc);
-    if (wined3d_desc.usage & WINED3DUSAGE_DEPTHSTENCIL)
+    if (wined3d_desc.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
     {
         WARN("Source %p is a depth stencil surface, returning D3DERR_INVALIDCALL.\n", src_surface);
         wined3d_mutex_unlock();
@@ -1278,7 +1278,7 @@ static HRESULT WINAPI d3d8_device_CopyRects(IDirect3DDevice8 *iface,
     src_h = wined3d_desc.height;
 
     wined3d_texture_get_sub_resource_desc(dst->wined3d_texture, dst->sub_resource_idx, &wined3d_desc);
-    if (wined3d_desc.usage & WINED3DUSAGE_DEPTHSTENCIL)
+    if (wined3d_desc.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
     {
         WARN("Destination %p is a depth stencil surface, returning D3DERR_INVALIDCALL.\n", dst_surface);
         wined3d_mutex_unlock();
