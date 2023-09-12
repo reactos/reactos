@@ -2750,8 +2750,10 @@ static void d3d9_device_upload_sysmem_index_buffer(struct d3d9_device *device,
         unsigned int start_idx, unsigned int idx_count)
 {
     struct wined3d_box box = {0, 0, 0, 1, 0, 1};
-    struct d3d9_vertexbuffer *d3d9_buffer;
+    struct wined3d_resource *dst_resource;
+    struct d3d9_indexbuffer *d3d9_buffer;
     struct wined3d_buffer *dst_buffer;
+    struct wined3d_resource_desc desc;
     enum wined3d_format_id format;
     unsigned int offset, idx_size;
     HRESULT hr;
@@ -2762,11 +2764,13 @@ static void d3d9_device_upload_sysmem_index_buffer(struct d3d9_device *device,
     if (!(dst_buffer = wined3d_device_get_index_buffer(device->wined3d_device, &format, &offset)))
         ERR("Failed to get index buffer.\n");
     d3d9_buffer = wined3d_buffer_get_parent(dst_buffer);
+    dst_resource = wined3d_buffer_get_resource(dst_buffer);
+    wined3d_resource_get_desc(dst_resource, &desc);
     idx_size = format == WINED3DFMT_R16_UINT ? 2 : 4;
     box.left = offset + start_idx * idx_size;
-    box.right = box.left + idx_count * idx_size;
+    box.right = min(box.left + idx_count * idx_size, desc.size);
     if (FAILED(hr = wined3d_device_copy_sub_resource_region(device->wined3d_device,
-            wined3d_buffer_get_resource(dst_buffer), 0, box.left, 0, 0,
+            dst_resource, 0, box.left, 0, 0,
             wined3d_buffer_get_resource(d3d9_buffer->wined3d_buffer), 0, &box, 0)))
         ERR("Failed to update buffer.\n");
 }
