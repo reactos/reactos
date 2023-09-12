@@ -1757,6 +1757,9 @@ static HRESULT WINAPI d3d9_device_ColorFill(IDirect3DDevice9Ex *iface,
 
     TRACE("iface %p, surface %p, rect %p, color 0x%08x.\n", iface, surface, rect, color);
 
+    if (!surface)
+        return D3DERR_INVALIDCALL;
+
     wined3d_mutex_lock();
 
     if (FAILED(wined3d_texture_get_sub_resource_desc(surface_impl->wined3d_texture,
