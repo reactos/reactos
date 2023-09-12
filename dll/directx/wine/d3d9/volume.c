@@ -126,7 +126,7 @@ static HRESULT WINAPI d3d9_volume_GetDesc(IDirect3DVolume9 *iface, D3DVOLUME_DES
 
     desc->Format = d3dformat_from_wined3dformat(wined3d_desc.format);
     desc->Type = D3DRTYPE_VOLUME;
-    desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage);
+    desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage, wined3d_desc.bind_flags);
     desc->Pool = d3dpool_from_wined3daccess(wined3d_desc.access, wined3d_desc.usage);
     desc->Width = wined3d_desc.width;
     desc->Height = wined3d_desc.height;

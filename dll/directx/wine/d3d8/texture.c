@@ -253,7 +253,7 @@ static HRESULT WINAPI d3d8_texture_2d_GetLevelDesc(IDirect3DTexture8 *iface, UIN
     {
         desc->Format = d3dformat_from_wined3dformat(wined3d_desc.format);
         desc->Type = D3DRTYPE_SURFACE;
-        desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage);
+        desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage, wined3d_desc.bind_flags);
         desc->Pool = d3dpool_from_wined3daccess(wined3d_desc.access, wined3d_desc.usage);
         desc->Size = wined3d_desc.size;
         desc->MultiSampleType = wined3d_desc.multisample_type;
@@ -600,7 +600,7 @@ static HRESULT WINAPI d3d8_texture_cube_GetLevelDesc(IDirect3DCubeTexture8 *ifac
     {
         desc->Format = d3dformat_from_wined3dformat(wined3d_desc.format);
         desc->Type = D3DRTYPE_SURFACE;
-        desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage);
+        desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage, wined3d_desc.bind_flags);
         desc->Pool = d3dpool_from_wined3daccess(wined3d_desc.access, wined3d_desc.usage);
         desc->Size = wined3d_desc.size;
         desc->MultiSampleType = wined3d_desc.multisample_type;
@@ -945,7 +945,7 @@ static HRESULT WINAPI d3d8_texture_3d_GetLevelDesc(IDirect3DVolumeTexture8 *ifac
     {
         desc->Format = d3dformat_from_wined3dformat(wined3d_desc.format);
         desc->Type = D3DRTYPE_VOLUME;
-        desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage);
+        desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage, wined3d_desc.bind_flags);
         desc->Pool = d3dpool_from_wined3daccess(wined3d_desc.access, wined3d_desc.usage);
         desc->Size = wined3d_desc.size;
         desc->Width = wined3d_desc.width;
@@ -1110,6 +1110,7 @@ HRESULT texture_init(struct d3d8_texture *texture, struct d3d8_device *device,
     desc.usage |= WINED3DUSAGE_TEXTURE;
     if (pool == D3DPOOL_SCRATCH)
         desc.usage |= WINED3DUSAGE_SCRATCH;
+    desc.bind_flags = wined3d_bind_flags_from_d3d8_usage(usage) | WINED3D_BIND_SHADER_RESOURCE;
     desc.access = wined3daccess_from_d3dpool(pool, usage)
             | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
     desc.width = width;
@@ -1158,6 +1159,7 @@ HRESULT cubetexture_init(struct d3d8_texture *texture, struct d3d8_device *devic
     desc.usage |= WINED3DUSAGE_LEGACY_CUBEMAP | WINED3DUSAGE_TEXTURE;
     if (pool == D3DPOOL_SCRATCH)
         desc.usage |= WINED3DUSAGE_SCRATCH;
+    desc.bind_flags = wined3d_bind_flags_from_d3d8_usage(usage) | WINED3D_BIND_SHADER_RESOURCE;
     desc.access = wined3daccess_from_d3dpool(pool, usage)
             | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
     desc.width = edge_length;
@@ -1205,6 +1207,7 @@ HRESULT volumetexture_init(struct d3d8_texture *texture, struct d3d8_device *dev
     desc.usage |= WINED3DUSAGE_TEXTURE;
     if (pool == D3DPOOL_SCRATCH)
         desc.usage |= WINED3DUSAGE_SCRATCH;
+    desc.bind_flags = wined3d_bind_flags_from_d3d8_usage(usage) | WINED3D_BIND_SHADER_RESOURCE;
     desc.access = wined3daccess_from_d3dpool(pool, usage);
     desc.width = width;
     desc.height = height;

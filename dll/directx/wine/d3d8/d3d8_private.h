@@ -278,9 +278,14 @@ unsigned int wined3dmapflags_from_d3dmapflags(unsigned int flags) DECLSPEC_HIDDE
 void load_local_constants(const DWORD *d3d8_elements, struct wined3d_shader *wined3d_vertex_shader) DECLSPEC_HIDDEN;
 size_t parse_token(const DWORD *pToken) DECLSPEC_HIDDEN;
 
-static inline DWORD d3dusage_from_wined3dusage(unsigned int usage)
+static inline DWORD d3dusage_from_wined3dusage(unsigned int wined3d_usage, unsigned int bind_flags)
 {
-    return usage & WINED3DUSAGE_MASK;
+    DWORD usage = wined3d_usage & WINED3DUSAGE_MASK;
+    if (bind_flags & WINED3D_BIND_RENDER_TARGET)
+        usage |= D3DUSAGE_RENDERTARGET;
+    if (bind_flags & WINED3D_BIND_DEPTH_STENCIL)
+        usage |= D3DUSAGE_DEPTHSTENCIL;
+    return usage;
 }
 
 static inline D3DPOOL d3dpool_from_wined3daccess(unsigned int access, unsigned int usage)
@@ -316,6 +321,18 @@ static inline unsigned int wined3daccess_from_d3dpool(D3DPOOL pool, unsigned int
         default:
             return 0;
     }
+}
+
+static inline unsigned int wined3d_bind_flags_from_d3d8_usage(DWORD usage)
+{
+    unsigned int bind_flags = 0;
+
+    if (usage & D3DUSAGE_RENDERTARGET)
+        bind_flags |= WINED3D_BIND_RENDER_TARGET;
+    if (usage & D3DUSAGE_DEPTHSTENCIL)
+        bind_flags |= WINED3D_BIND_DEPTH_STENCIL;
+
+    return bind_flags;
 }
 
 #endif /* __WINE_D3DX8_PRIVATE_H */

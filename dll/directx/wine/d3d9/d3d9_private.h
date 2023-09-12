@@ -291,9 +291,14 @@ static inline struct d3d9_device *impl_from_IDirect3DDevice9Ex(IDirect3DDevice9E
     return CONTAINING_RECORD(iface, struct d3d9_device, IDirect3DDevice9Ex_iface);
 }
 
-static inline DWORD d3dusage_from_wined3dusage(unsigned int usage)
+static inline DWORD d3dusage_from_wined3dusage(unsigned int wined3d_usage, unsigned int bind_flags)
 {
-    return usage & WINED3DUSAGE_MASK;
+    DWORD usage = wined3d_usage & WINED3DUSAGE_MASK;
+    if (bind_flags & WINED3D_BIND_RENDER_TARGET)
+        usage |= D3DUSAGE_RENDERTARGET;
+    if (bind_flags & WINED3D_BIND_DEPTH_STENCIL)
+        usage |= D3DUSAGE_DEPTHSTENCIL;
+    return usage;
 }
 
 static inline D3DPOOL d3dpool_from_wined3daccess(unsigned int access, unsigned int usage)
@@ -329,6 +334,18 @@ static inline unsigned int wined3daccess_from_d3dpool(D3DPOOL pool, unsigned int
         default:
             return 0;
     }
+}
+
+static inline unsigned int wined3d_bind_flags_from_d3d9_usage(DWORD usage)
+{
+    unsigned int bind_flags = 0;
+
+    if (usage & D3DUSAGE_RENDERTARGET)
+        bind_flags |= WINED3D_BIND_RENDER_TARGET;
+    if (usage & D3DUSAGE_DEPTHSTENCIL)
+        bind_flags |= WINED3D_BIND_DEPTH_STENCIL;
+
+    return bind_flags;
 }
 
 static inline DWORD wined3dusage_from_d3dusage(unsigned int usage)
