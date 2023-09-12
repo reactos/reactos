@@ -116,7 +116,7 @@ struct d3d9_device
     UINT implicit_swapchain_count;
     struct wined3d_swapchain **implicit_swapchains;
 
-    struct wined3d_stateblock *recording;
+    struct wined3d_stateblock *recording, *state, *update_state;
 };
 
 HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wined3d *wined3d,

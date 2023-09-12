@@ -605,6 +605,7 @@ static ULONG WINAPI DECLSPEC_HOTPATCH d3d9_device_Release(IDirect3DDevice9Ex *if
 
         if (device->recording)
             wined3d_stateblock_decref(device->recording);
+        wined3d_stateblock_decref(device->state);
 
         wined3d_device_release_focus_window(device->wined3d_device);
         wined3d_device_decref(device->wined3d_device);
@@ -999,6 +1000,7 @@ static HRESULT d3d9_device_reset(struct d3d9_device *device,
             if (device->recording)
                 wined3d_stateblock_decref(device->recording);
             device->recording = NULL;
+            device->update_state = device->state;
             device->auto_mipmaps = 0;
             wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_ZENABLE,
                     !!swapchain_desc.enable_auto_depth_stencil);
@@ -2360,7 +2362,7 @@ static HRESULT WINAPI d3d9_device_BeginStateBlock(IDirect3DDevice9Ex *iface)
 
     wined3d_mutex_lock();
     if (SUCCEEDED(hr = wined3d_device_begin_stateblock(device->wined3d_device, &stateblock)))
-        device->recording = stateblock;
+        device->update_state = device->recording = stateblock;
     wined3d_mutex_unlock();
 
     return hr;
@@ -2385,6 +2387,7 @@ static HRESULT WINAPI d3d9_device_EndStateBlock(IDirect3DDevice9Ex *iface, IDire
     }
     wined3d_stateblock = device->recording;
     device->recording = NULL;
+    device->update_state = device->state;
     wined3d_mutex_unlock();
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
@@ -4496,6 +4499,15 @@ HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wine
     device->max_user_clip_planes = caps.MaxUserClipPlanes;
     if (flags & D3DCREATE_ADAPTERGROUP_DEVICE)
         count = caps.NumberOfAdaptersInGroup;
+
+    if (FAILED(hr = wined3d_stateblock_create(device->wined3d_device, WINED3D_SBT_PRIMARY, &device->state)))
+    {
+        ERR("Failed to create the primary stateblock, hr %#x.\n", hr);
+        wined3d_device_decref(device->wined3d_device);
+        wined3d_mutex_unlock();
+        return hr;
+    }
+    device->update_state = device->state;
 
     if (flags & D3DCREATE_MULTITHREADED)
         wined3d_device_set_multithreaded(device->wined3d_device);
