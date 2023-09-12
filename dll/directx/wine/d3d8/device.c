@@ -913,6 +913,8 @@ static HRESULT WINAPI d3d8_device_Reset(IDirect3DDevice8 *iface,
             NULL, reset_enum_callback, TRUE)))
     {
         present_parameters->BackBufferCount = swapchain_desc.backbuffer_count;
+        device->implicit_swapchain->swap_interval
+                = wined3dswapinterval_from_d3dpresentationinterval(present_parameters->FullScreen_PresentationInterval);
         wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_POINTSIZE_MIN, 0);
         wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_ZENABLE,
                 !!swapchain_desc.enable_auto_depth_stencil);
@@ -3476,6 +3478,8 @@ HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wine
 
     wined3d_swapchain = wined3d_device_get_swapchain(device->wined3d_device, 0);
     device->implicit_swapchain = wined3d_swapchain_get_parent(wined3d_swapchain);
+    device->implicit_swapchain->swap_interval
+            = wined3dswapinterval_from_d3dpresentationinterval(parameters->FullScreen_PresentationInterval);
 
     device->d3d_parent = &parent->IDirect3D8_iface;
     IDirect3D8_AddRef(device->d3d_parent);

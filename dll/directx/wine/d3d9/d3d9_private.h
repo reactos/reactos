@@ -149,6 +149,7 @@ struct d3d9_swapchain
     LONG refcount;
     struct wined3d_swapchain *wined3d_swapchain;
     IDirect3DDevice9Ex *parent_device;
+    unsigned int swap_interval;
 };
 
 HRESULT d3d9_swapchain_create(struct d3d9_device *device, struct wined3d_swapchain_desc *desc,

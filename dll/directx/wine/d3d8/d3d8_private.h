@@ -166,6 +166,7 @@ struct d3d8_swapchain
     LONG refcount;
     struct wined3d_swapchain *wined3d_swapchain;
     IDirect3DDevice8 *parent_device;
+    unsigned int swap_interval;
 };
 
 HRESULT d3d8_swapchain_create(struct d3d8_device *device, struct wined3d_swapchain_desc *desc,

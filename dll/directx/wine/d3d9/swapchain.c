@@ -137,7 +137,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_swapchain_Present(IDirect3DSwapChai
 
     wined3d_mutex_lock();
     hr = wined3d_swapchain_present(swapchain->wined3d_swapchain,
-            src_rect, dst_rect, dst_window_override, 0, flags);
+            src_rect, dst_rect, dst_window_override, swapchain->swap_interval, flags);
     wined3d_mutex_unlock();
 
     return hr;
@@ -350,6 +350,7 @@ static HRESULT swapchain_init(struct d3d9_swapchain *swapchain, struct d3d9_devi
 
     swapchain->refcount = 1;
     swapchain->IDirect3DSwapChain9Ex_iface.lpVtbl = &d3d9_swapchain_vtbl;
+    swapchain->swap_interval = desc->swap_interval;
 
     wined3d_mutex_lock();
     hr = wined3d_swapchain_create(device->wined3d_device, desc, swapchain,
