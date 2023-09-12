@@ -4107,40 +4107,40 @@ static void CDECL device_parent_activate(struct wined3d_device_parent *device_pa
         InterlockedCompareExchange(&device->device_state, D3D9_DEVICE_STATE_NOT_RESET, D3D9_DEVICE_STATE_LOST);
 }
 
-static HRESULT CDECL device_parent_surface_created(struct wined3d_device_parent *device_parent,
-        struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
+static HRESULT CDECL device_parent_texture_sub_resource_created(struct wined3d_device_parent *device_parent,
+        enum wined3d_resource_type type, struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
         void **parent, const struct wined3d_parent_ops **parent_ops)
 {
-    struct d3d9_surface *d3d_surface;
+    TRACE("device_parent %p, type %#x, wined3d_texture %p, sub_resource_idx %u, parent %p, parent_ops %p.\n",
+            device_parent, type, wined3d_texture, sub_resource_idx, parent, parent_ops);
 
-    TRACE("device_parent %p, wined3d_texture %p, sub_resource_idx %u, parent %p, parent_ops %p.\n",
-            device_parent, wined3d_texture, sub_resource_idx, parent, parent_ops);
+    if (type == WINED3D_RTYPE_TEXTURE_2D)
+    {
+        struct d3d9_surface *d3d_surface;
 
-    if (!(d3d_surface = heap_alloc_zero(sizeof(*d3d_surface))))
-        return E_OUTOFMEMORY;
+        if (!(d3d_surface = heap_alloc_zero(sizeof(*d3d_surface))))
+            return E_OUTOFMEMORY;
 
-    surface_init(d3d_surface, wined3d_texture, sub_resource_idx, parent_ops);
-    *parent = d3d_surface;
-    TRACE("Created surface %p.\n", d3d_surface);
+        surface_init(d3d_surface, wined3d_texture, sub_resource_idx, parent_ops);
+        *parent = d3d_surface;
+        TRACE("Created surface %p.\n", d3d_surface);
+    }
+    else if (type == WINED3D_RTYPE_TEXTURE_3D)
+    {
+        struct d3d9_volume *d3d_volume;
 
-    return D3D_OK;
-}
+        if (!(d3d_volume = heap_alloc_zero(sizeof(*d3d_volume))))
+            return E_OUTOFMEMORY;
 
-static HRESULT CDECL device_parent_volume_created(struct wined3d_device_parent *device_parent,
-        struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
-        void **parent, const struct wined3d_parent_ops **parent_ops)
-{
-    struct d3d9_volume *d3d_volume;
-
-    TRACE("device_parent %p, texture %p, sub_resource_idx %u, parent %p, parent_ops %p.\n",
-            device_parent, wined3d_texture, sub_resource_idx, parent, parent_ops);
-
-    if (!(d3d_volume = heap_alloc_zero(sizeof(*d3d_volume))))
-        return E_OUTOFMEMORY;
-
-    volume_init(d3d_volume, wined3d_texture, sub_resource_idx, parent_ops);
-    *parent = d3d_volume;
-    TRACE("Created volume %p.\n", d3d_volume);
+        volume_init(d3d_volume, wined3d_texture, sub_resource_idx, parent_ops);
+        *parent = d3d_volume;
+        TRACE("Created volume %p.\n", d3d_volume);
+    }
+    else
+    {
+        ERR("Unhandled resource type %#x.\n", type);
+        return E_FAIL;
+    }
 
     return D3D_OK;
 }
@@ -4205,8 +4205,7 @@ static const struct wined3d_device_parent_ops d3d9_wined3d_device_parent_ops =
     device_parent_wined3d_device_created,
     device_parent_mode_changed,
     device_parent_activate,
-    device_parent_surface_created,
-    device_parent_volume_created,
+    device_parent_texture_sub_resource_created,
     device_parent_create_swapchain_texture,
     device_parent_create_swapchain,
 };
