@@ -346,6 +346,11 @@ static BOOL wined3d_swapchain_desc_from_present_parameters(struct wined3d_swapch
             = wined3dformat_from_d3dformat(present_parameters->AutoDepthStencilFormat);
     swapchain_desc->flags
             = (present_parameters->Flags & D3DPRESENTFLAGS_MASK) | WINED3D_SWAPCHAIN_ALLOW_MODE_SWITCH;
+    if (is_gdi_compat_wined3dformat(swapchain_desc->backbuffer_format)
+            /* WINED3DFMT_UNKNOWN creates the swapchain with the current
+             * display format, which is always GDI-compatible. */
+            || swapchain_desc->backbuffer_format == WINED3DFMT_UNKNOWN)
+        swapchain_desc->flags |= WINED3D_SWAPCHAIN_GDI_COMPATIBLE;
     swapchain_desc->refresh_rate = present_parameters->FullScreen_RefreshRateInHz;
     swapchain_desc->auto_restore_display_mode = TRUE;
 
@@ -4176,9 +4181,6 @@ static HRESULT CDECL device_parent_create_swapchain_texture(struct wined3d_devic
 
     if (container_parent == device_parent)
         container_parent = &device->IDirect3DDevice9Ex_iface;
-
-    if (is_gdi_compat_wined3dformat(desc->format))
-        texture_flags |= WINED3D_TEXTURE_CREATE_GET_DC;
 
     if (FAILED(hr = wined3d_texture_create(device->wined3d_device, desc, 1, 1,
             texture_flags | WINED3D_TEXTURE_CREATE_MAPPABLE, NULL, container_parent,
