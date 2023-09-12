@@ -57,9 +57,7 @@ static ULONG WINAPI d3d8_swapchain_AddRef(IDirect3DSwapChain8 *iface)
     {
         if (swapchain->parent_device)
             IDirect3DDevice8_AddRef(swapchain->parent_device);
-        wined3d_mutex_lock();
         wined3d_swapchain_incref(swapchain->wined3d_swapchain);
-        wined3d_mutex_unlock();
     }
 
     return ref;
