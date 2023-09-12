@@ -981,10 +981,6 @@ static HRESULT d3d9_device_reset(struct d3d9_device *device,
             device->device_state = D3D9_DEVICE_STATE_OK;
         }
 
-        if (!device->d3d_parent->extended)
-            for (i = 0; i < ARRAY_SIZE(device->textures); ++i)
-                device->textures[i] = NULL;
-
         rtv = wined3d_device_get_rendertarget_view(device->wined3d_device, 0);
         device->render_targets[0] = wined3d_rendertarget_view_get_sub_resource_parent(rtv);
         for (i = 1; i < ARRAY_SIZE(device->render_targets); ++i)
@@ -2402,13 +2398,6 @@ static HRESULT WINAPI d3d9_device_SetTexture(IDirect3DDevice9Ex *iface, DWORD st
     wined3d_mutex_lock();
     hr = wined3d_device_set_texture(device->wined3d_device, stage,
             texture_impl ? texture_impl->wined3d_texture : NULL);
-    if (SUCCEEDED(hr))
-    {
-        unsigned int i = stage >= D3DVERTEXTEXTURESAMPLER0 ? stage - D3DVERTEXTEXTURESAMPLER0 + 16 : stage;
-
-        if (stage < ARRAY_SIZE(device->textures))
-            device->textures[i] = texture_impl;
-    }
     wined3d_mutex_unlock();
 
     return hr;
@@ -2652,11 +2641,15 @@ static float WINAPI d3d9_device_GetNPatchMode(IDirect3DDevice9Ex *iface)
 /* wined3d critical section must be taken by the caller. */
 static void d3d9_generate_auto_mipmaps(struct d3d9_device *device)
 {
-    unsigned int i;
+    struct wined3d_texture *texture;
+    unsigned int i, stage;
 
-    for (i = 0; i < ARRAY_SIZE(device->textures); ++i)
-        if (device->textures[i])
-            d3d9_texture_gen_auto_mipmap(device->textures[i]);
+    for (i = 0; i < D3D9_MAX_TEXTURE_UNITS; ++i)
+    {
+        stage = i >= 16 ? i - 16 + D3DVERTEXTEXTURESAMPLER0 : i;
+        if ((texture = wined3d_device_get_texture(device->wined3d_device, stage)))
+            d3d9_texture_gen_auto_mipmap(wined3d_texture_get_parent(texture));
+    }
 }
 
 static HRESULT WINAPI d3d9_device_DrawPrimitive(IDirect3DDevice9Ex *iface,

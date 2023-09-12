@@ -99,7 +99,6 @@ struct d3d9_device
     UINT index_buffer_size;
     UINT index_buffer_pos;
 
-    struct d3d9_texture *textures[D3D9_MAX_TEXTURE_UNITS];
     struct d3d9_surface *render_targets[D3D_MAX_SIMULTANEOUS_RENDERTARGETS];
 
     LONG device_state;
