@@ -1377,29 +1377,28 @@ static HRESULT WINAPI d3d9_device_CreateIndexBuffer(IDirect3DDevice9Ex *iface, U
     return D3D_OK;
 }
 
-static HRESULT d3d9_device_create_surface(struct d3d9_device *device, UINT width, UINT height,
-        D3DFORMAT format, DWORD flags, IDirect3DSurface9 **surface, UINT usage, D3DPOOL pool,
-        D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality, void *user_mem)
+static HRESULT d3d9_device_create_surface(struct d3d9_device *device, unsigned int flags,
+        enum wined3d_format_id format, enum wined3d_multisample_type multisample_type,
+        unsigned int multisample_quality, unsigned int usage, unsigned int bind_flags, unsigned int access,
+        unsigned int width, unsigned int height, void *user_mem, IDirect3DSurface9 **surface)
 {
     struct wined3d_resource_desc desc;
     struct d3d9_surface *surface_impl;
     struct wined3d_texture *texture;
     HRESULT hr;
 
-    TRACE("device %p, width %u, height %u, format %#x, flags %#x, surface %p.\n"
-            "usage %#x, pool %#x, multisample_type %#x, multisample_quality %u.\n",
-            device, width, height, format, flags, surface, usage, pool,
-            multisample_type, multisample_quality);
+    TRACE("device %p, flags %#x, format %#x, multisample_type %#x, multisample_quality %u, "
+            "usage %#x, bind_flags %#x, access %#x, width %u, height %u, user_mem %p, surface %p.\n",
+            device, flags, format, multisample_type, multisample_quality, usage,
+            bind_flags, access, width, height, user_mem, surface);
 
     desc.resource_type = WINED3D_RTYPE_TEXTURE_2D;
-    desc.format = wined3dformat_from_d3dformat(format);
+    desc.format = format;
     desc.multisample_type = multisample_type;
     desc.multisample_quality = multisample_quality;
-    desc.usage = usage & WINED3DUSAGE_MASK;
-    if (pool == D3DPOOL_SCRATCH)
-        desc.usage |= WINED3DUSAGE_SCRATCH;
-    desc.bind_flags = wined3d_bind_flags_from_d3d9_usage(usage);
-    desc.access = wined3daccess_from_d3dpool(pool, usage);
+    desc.usage = usage;
+    desc.bind_flags = bind_flags;
+    desc.access = access;
     desc.width = width;
     desc.height = height;
     desc.depth = 1;
@@ -1457,7 +1456,7 @@ static HRESULT WINAPI d3d9_device_CreateRenderTarget(IDirect3DDevice9Ex *iface, 
         BOOL lockable, IDirect3DSurface9 **surface, HANDLE *shared_handle)
 {
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
-    DWORD flags = 0;
+    unsigned int access = WINED3D_RESOURCE_ACCESS_GPU;
 
     TRACE("iface %p, width %u, height %u, format %#x, multisample_type %#x, multisample_quality %u.\n"
             "lockable %#x, surface %p, shared_handle %p.\n",
@@ -1477,10 +1476,10 @@ static HRESULT WINAPI d3d9_device_CreateRenderTarget(IDirect3DDevice9Ex *iface, 
     }
 
     if (lockable)
-        flags |= WINED3D_TEXTURE_CREATE_MAPPABLE;
+        access |= WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
 
-    return d3d9_device_create_surface(device, width, height, format, flags, surface,
-            D3DUSAGE_RENDERTARGET, D3DPOOL_DEFAULT, multisample_type, multisample_quality, NULL);
+    return d3d9_device_create_surface(device, 0, wined3dformat_from_d3dformat(format), multisample_type,
+            multisample_quality, 0, WINED3D_BIND_RENDER_TARGET, access, width, height, NULL, surface);
 }
 
 static HRESULT WINAPI d3d9_device_CreateDepthStencilSurface(IDirect3DDevice9Ex *iface, UINT width, UINT height,
@@ -1510,8 +1509,9 @@ static HRESULT WINAPI d3d9_device_CreateDepthStencilSurface(IDirect3DDevice9Ex *
     if (discard)
         flags |= WINED3D_TEXTURE_CREATE_DISCARD;
 
-    return d3d9_device_create_surface(device, width, height, format, flags, surface,
-            D3DUSAGE_DEPTHSTENCIL, D3DPOOL_DEFAULT, multisample_type, multisample_quality, NULL);
+    return d3d9_device_create_surface(device, flags, wined3dformat_from_d3dformat(format),
+            multisample_type, multisample_quality, 0, WINED3D_BIND_DEPTH_STENCIL,
+            WINED3D_RESOURCE_ACCESS_GPU, width, height, NULL, surface);
 }
 
 
@@ -1785,6 +1785,7 @@ static HRESULT WINAPI d3d9_device_CreateOffscreenPlainSurface(IDirect3DDevice9Ex
         HANDLE *shared_handle)
 {
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
+    unsigned int usage, access;
     void *user_mem = NULL;
 
     TRACE("iface %p, width %u, height %u, format %#x, pool %#x, surface %p, shared_handle %p.\n",
@@ -1818,8 +1819,14 @@ static HRESULT WINAPI d3d9_device_CreateOffscreenPlainSurface(IDirect3DDevice9Ex
         }
     }
 
-    return d3d9_device_create_surface(device, width, height, format,
-            WINED3D_TEXTURE_CREATE_MAPPABLE, surface, 0, pool, D3DMULTISAMPLE_NONE, 0, user_mem);
+    usage = 0;
+    if (pool == D3DPOOL_SCRATCH)
+        usage |= WINED3DUSAGE_SCRATCH;
+    access = wined3daccess_from_d3dpool(pool, usage)
+            | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+
+    return d3d9_device_create_surface(device, 0, wined3dformat_from_d3dformat(format),
+            WINED3D_MULTISAMPLE_NONE, 0, usage, 0, access, width, height, user_mem, surface);
 }
 
 static HRESULT WINAPI d3d9_device_SetRenderTarget(IDirect3DDevice9Ex *iface, DWORD idx, IDirect3DSurface9 *surface)
@@ -3885,7 +3892,7 @@ static HRESULT WINAPI d3d9_device_CreateDepthStencilSurfaceEx(IDirect3DDevice9Ex
             iface, width, height, format, multisample_type, multisample_quality,
             discard, surface, shared_handle, usage);
 
-    if (usage & D3DUSAGE_DEPTHSTENCIL)
+    if (usage & (D3DUSAGE_DEPTHSTENCIL | D3DUSAGE_RENDERTARGET))
     {
         WARN("Invalid usage %#x.\n", usage);
         return D3DERR_INVALIDCALL;
@@ -3898,8 +3905,9 @@ static HRESULT WINAPI d3d9_device_CreateDepthStencilSurfaceEx(IDirect3DDevice9Ex
         flags |= WINED3D_TEXTURE_CREATE_DISCARD;
 
     *surface = NULL;
-    return d3d9_device_create_surface(device, width, height, format, flags, surface,
-            D3DUSAGE_DEPTHSTENCIL | usage, D3DPOOL_DEFAULT, multisample_type, multisample_quality, NULL);
+    return d3d9_device_create_surface(device, flags, wined3dformat_from_d3dformat(format),
+            multisample_type, multisample_quality, usage & WINED3DUSAGE_MASK, WINED3D_BIND_DEPTH_STENCIL,
+            WINED3D_RESOURCE_ACCESS_GPU, width, height, NULL, surface);
 }
 
 static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_ResetEx(IDirect3DDevice9Ex *iface,
