@@ -1339,9 +1339,22 @@ HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
             WARN("D3DUSAGE_AUTOGENMIPMAP texture with %u levels, returning D3DERR_INVALIDCALL.\n", levels);
             return D3DERR_INVALIDCALL;
         }
-        flags |= WINED3D_TEXTURE_CREATE_GENERATE_MIPMAPS;
+        wined3d_mutex_lock();
+        hr = wined3d_check_device_format(device->d3d_parent->wined3d, 0, WINED3D_DEVICE_TYPE_HAL, WINED3DFMT_B8G8R8A8_UNORM,
+                WINED3DUSAGE_TEXTURE | WINED3DUSAGE_QUERY_GENMIPMAP, WINED3D_RTYPE_TEXTURE_2D, wined3dformat_from_d3dformat(format));
+        wined3d_mutex_unlock();
+        if (hr == D3D_OK)
+        {
+            flags |= WINED3D_TEXTURE_CREATE_GENERATE_MIPMAPS;
+            levels = 0;
+        }
+        else
+        {
+            WARN("D3DUSAGE_AUTOGENMIPMAP not supported on D3DFORMAT %#x, creating a texture "
+                    "with a single level.\n", format);
+            levels = 1;
+        }
         texture->autogen_filter_type = D3DTEXF_LINEAR;
-        levels = 0;
     }
     else
     {
