@@ -1107,24 +1107,8 @@ public:
         return ::SendDlgItemMessage(m_hWnd, nID, message, wParam, lParam);
     }
 
-    int m_dummy = 2;
-
     LRESULT SendMessage(UINT message, WPARAM wParam = 0, LPARAM lParam = 0)
     {
-        if (!::IsWindow(m_hWnd))
-        {
-            WCHAR sz[64] = L"### ";
-            sz[4] = L'0' + ((message / 1000) % 10);
-            sz[5] = L'0' + ((message / 100) % 10);
-            sz[6] = L'0' + ((message / 10) % 10);
-            sz[7] = L'0' + ((message / 1) % 10);
-            sz[8] = L'-';
-            sz[9] = L'0' + ((m_dummy / 100) % 10);
-            sz[10] = L'0' + ((m_dummy / 10) % 10);
-            sz[11] = L'0' + ((m_dummy / 1) % 10);
-            sz[12] = 0;
-            OutputDebugStringW(sz);
-        }
         ATLASSERT(::IsWindow(m_hWnd));
         return ::SendMessage(m_hWnd, message, wParam, lParam);
     }
