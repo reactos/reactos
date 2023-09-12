@@ -61,12 +61,12 @@ IDirect3D8 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT sdk_version)
  *              ValidateVertexShader (D3D8.@)
  */
 HRESULT WINAPI ValidateVertexShader(DWORD *vertexshader, DWORD *reserved1, DWORD *reserved2,
-                                    BOOL return_error, char **errors)
+                                    BOOL boolean, char **errors)
 {
     const char *message = "";
     HRESULT hr = E_FAIL;
 
-    TRACE("(%p %p %p %d %p): semi-stub\n", vertexshader, reserved1, reserved2, return_error, errors);
+    TRACE("(%p %p %p %d %p): semi-stub\n", vertexshader, reserved1, reserved2, boolean, errors);
 
     if (!vertexshader)
     {
@@ -87,7 +87,7 @@ HRESULT WINAPI ValidateVertexShader(DWORD *vertexshader, DWORD *reserved1, DWORD
     }
 
 done:
-    if (!return_error) message = "";
+    if (!boolean) message = "";
     if (errors && (*errors = HeapAlloc(GetProcessHeap(), 0, strlen(message) + 1)))
         strcpy(*errors, message);
 
@@ -97,12 +97,12 @@ done:
 /***********************************************************************
  *              ValidatePixelShader (D3D8.@)
  */
-HRESULT WINAPI ValidatePixelShader(DWORD *pixelshader, DWORD *reserved1, BOOL return_error, char **errors)
+HRESULT WINAPI ValidatePixelShader(DWORD *pixelshader, DWORD *reserved1, BOOL boolean, char **errors)
 {
     const char *message = "";
     HRESULT hr = E_FAIL;
 
-    TRACE("(%p %p %d %p): semi-stub\n", pixelshader, reserved1, return_error, errors);
+    TRACE("(%p %p %d %p): semi-stub\n", pixelshader, reserved1, boolean, errors);
 
     if (!pixelshader)
         return E_FAIL;
@@ -121,7 +121,7 @@ HRESULT WINAPI ValidatePixelShader(DWORD *pixelshader, DWORD *reserved1, BOOL re
             message = "(Global Validation Error) Version Token: Unsupported pixel shader version.\n";
     }
 
-    if (!return_error) message = "";
+    if (!boolean) message = "";
     if (errors && (*errors = HeapAlloc(GetProcessHeap(), 0, strlen(message) + 1)))
         strcpy(*errors, message);
 
