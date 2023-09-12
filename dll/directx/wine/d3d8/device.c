@@ -2592,14 +2592,54 @@ static HRESULT WINAPI d3d8_device_ProcessVertices(IDirect3DDevice8 *iface, UINT 
 {
     struct d3d8_device *device = impl_from_IDirect3DDevice8(iface);
     struct d3d8_vertexbuffer *dst = unsafe_impl_from_IDirect3DVertexBuffer8(dst_buffer);
+    struct d3d8_vertexbuffer *d3d8_buffer;
+    struct wined3d_buffer *wined3d_buffer;
+    unsigned int i, offset, stride, map;
     HRESULT hr;
 
     TRACE("iface %p, src_start_idx %u, dst_idx %u, vertex_count %u, dst_buffer %p, flags %#x.\n",
             iface, src_start_idx, dst_idx, vertex_count, dst_buffer, flags);
 
     wined3d_mutex_lock();
+
+    /* Note that an alternative approach would be to simply create these
+     * buffers with WINED3D_RESOURCE_ACCESS_MAP_R and update them here like we
+     * do for draws. In some regards that would be easier, but it seems less
+     * than optimal to upload data to the GPU only to subsequently download it
+     * again. */
+    map = device->sysmem_vb;
+    while (map)
+    {
+        i = ffs(map) - 1;
+        map ^= 1u << i;
+
+        if (FAILED(wined3d_device_get_stream_source(device->wined3d_device,
+                i, &wined3d_buffer, &offset, &stride)))
+            ERR("Failed to get stream source.\n");
+        d3d8_buffer = wined3d_buffer_get_parent(wined3d_buffer);
+        if (FAILED(wined3d_device_set_stream_source(device->wined3d_device,
+                i, d3d8_buffer->wined3d_buffer, offset, stride)))
+            ERR("Failed to set stream source.\n");
+    }
+
     hr = wined3d_device_process_vertices(device->wined3d_device, src_start_idx, dst_idx,
             vertex_count, dst->wined3d_buffer, NULL, flags, dst->fvf);
+
+    map = device->sysmem_vb;
+    while (map)
+    {
+        i = ffs(map) - 1;
+        map ^= 1u << i;
+
+        if (FAILED(wined3d_device_get_stream_source(device->wined3d_device,
+                i, &wined3d_buffer, &offset, &stride)))
+            ERR("Failed to get stream source.\n");
+        d3d8_buffer = wined3d_buffer_get_parent(wined3d_buffer);
+        if (FAILED(wined3d_device_set_stream_source(device->wined3d_device,
+                i, d3d8_buffer->draw_buffer, offset, stride)))
+            ERR("Failed to set stream source.\n");
+    }
+
     wined3d_mutex_unlock();
 
     return hr;
