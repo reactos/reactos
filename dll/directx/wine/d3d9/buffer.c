@@ -572,6 +572,9 @@ HRESULT indexbuffer_init(struct d3d9_indexbuffer *buffer, struct d3d9_device *de
     struct wined3d_buffer_desc desc;
     HRESULT hr;
 
+    if (pool == D3DPOOL_SCRATCH)
+        return D3DERR_INVALIDCALL;
+
     desc.byte_width = size;
     desc.usage = (usage & WINED3DUSAGE_MASK) | WINED3DUSAGE_STATICDECL;
     if (pool == D3DPOOL_SCRATCH)
