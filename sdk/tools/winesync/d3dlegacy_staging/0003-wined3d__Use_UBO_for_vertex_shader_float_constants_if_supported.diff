@@ -1,0 +1,26 @@
+diff --git a/dll/directx/wine/d3d8/directx.c b/dll/directx/wine/d3d8/directx.c
+index c523984..274d5e1 100644
+--- a/dll/directx/wine/d3d8/directx.c
++++ b/dll/directx/wine/d3d8/directx.c
+@@ -416,7 +416,7 @@ BOOL d3d8_init(struct d3d8 *d3d8)
+     DWORD flags = WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING
+             | WINED3D_HANDLE_RESTORE | WINED3D_PIXEL_CENTER_INTEGER
+             | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR | WINED3D_NO_PRIMITIVE_RESTART
+-            | WINED3D_LEGACY_CUBEMAP_FILTERING;
++            | WINED3D_LEGACY_CUBEMAP_FILTERING | WINED3D_LEGACY_SHADER_CONSTANTS;
+ 
+     d3d8->IDirect3D8_iface.lpVtbl = &d3d8_vtbl;
+     d3d8->refcount = 1;
+diff --git a/dll/directx/wine/d3d9/directx.c b/dll/directx/wine/d3d9/directx.c
+index 1d3754a..f42c5ea 100644
+--- a/dll/directx/wine/d3d9/directx.c
++++ b/dll/directx/wine/d3d9/directx.c
+@@ -583,7 +583,7 @@ BOOL d3d9_init(struct d3d9 *d3d9, BOOL extended)
+     DWORD flags = WINED3D_PRESENT_CONVERSION | WINED3D_HANDLE_RESTORE | WINED3D_PIXEL_CENTER_INTEGER
+             | WINED3D_SRGB_READ_WRITE_CONTROL | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR
+             | WINED3D_NO_PRIMITIVE_RESTART | WINED3D_LEGACY_CUBEMAP_FILTERING
+-            | WINED3D_NORMALIZED_DEPTH_BIAS;
++            | WINED3D_NORMALIZED_DEPTH_BIAS | WINED3D_LEGACY_SHADER_CONSTANTS;
+ 
+     if (!extended)
+         flags |= WINED3D_VIDMEM_ACCOUNTING;
