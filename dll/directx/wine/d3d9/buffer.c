@@ -310,8 +310,7 @@ HRESULT vertexbuffer_init(struct d3d9_vertexbuffer *buffer, struct d3d9_device *
     desc.byte_width = size;
     desc.usage = usage & WINED3DUSAGE_MASK;
     desc.bind_flags = 0;
-    desc.access = wined3daccess_from_d3dpool(pool, usage)
-            | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+    desc.access = wined3daccess_from_d3dpool(pool, usage) | map_access_from_usage(usage);
     desc.misc_flags = 0;
     desc.structure_byte_stride = 0;
 
@@ -629,8 +628,7 @@ HRESULT indexbuffer_init(struct d3d9_indexbuffer *buffer, struct d3d9_device *de
     desc.byte_width = size;
     desc.usage = (usage & WINED3DUSAGE_MASK) | WINED3DUSAGE_STATICDECL;
     desc.bind_flags = 0;
-    desc.access = wined3daccess_from_d3dpool(pool, usage)
-            | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+    desc.access = wined3daccess_from_d3dpool(pool, usage) | map_access_from_usage(usage);
     desc.misc_flags = 0;
     desc.structure_byte_stride = 0;
 
