@@ -290,7 +290,7 @@ class wine_sync:
 
             with open(patch_path, 'rb') as patch_file:
                 try:
-                    subprocess.run(['git', '-C', self.reactos_src, 'apply', '-R', '--reject'], stdin=patch_file, check=True)
+                    subprocess.run(['git', '-C', self.reactos_src, 'apply', '-R', '--ignore-whitespace', '--reject'], stdin=patch_file, check=True)
                 except subprocess.CalledProcessError as err:
                     print(f'Error while reverting patch {patch_file_name}')
                     print('Please check, remove the offending patch with git rm, and relaunch this script')
