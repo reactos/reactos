@@ -2187,9 +2187,11 @@ static HRESULT WINAPI d3d8_device_ValidateDevice(IDirect3DDevice8 *iface, DWORD 
 static HRESULT WINAPI d3d8_device_GetInfo(IDirect3DDevice8 *iface,
         DWORD info_id, void *info, DWORD info_size)
 {
-    FIXME("iface %p, info_id %#x, info %p, info_size %u stub!\n", iface, info_id, info, info_size);
+    TRACE("iface %p, info_id %#x, info %p, info_size %u.\n", iface, info_id, info, info_size);
 
-    return D3D_OK;
+    if (info_id < 4)
+        return E_FAIL;
+    return S_FALSE;
 }
 
 static HRESULT WINAPI d3d8_device_SetPaletteEntries(IDirect3DDevice8 *iface,
