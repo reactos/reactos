@@ -2432,9 +2432,9 @@ static HRESULT WINAPI d3d8_device_DrawPrimitiveUP(IDirect3DDevice8 *iface,
     TRACE("iface %p, primitive_type %#x, primitive_count %u, data %p, stride %u.\n",
             iface, primitive_type, primitive_count, data, stride);
 
-    if (!primitive_count)
+    if (!primitive_count || !stride)
     {
-        WARN("primitive_count is 0, returning D3D_OK\n");
+        WARN("primitive_count or stride is 0, returning D3D_OK.\n");
         return D3D_OK;
     }
 
@@ -2532,9 +2532,9 @@ static HRESULT WINAPI d3d8_device_DrawIndexedPrimitiveUP(IDirect3DDevice8 *iface
             iface, primitive_type, min_vertex_idx, vertex_count, primitive_count,
             index_data, index_format, vertex_data, vertex_stride);
 
-    if (!primitive_count)
+    if (!primitive_count || !vertex_stride)
     {
-        WARN("primitive_count is 0, returning D3D_OK\n");
+        WARN("primitive_count or vertex_stride is 0, returning D3D_OK.\n");
         return D3D_OK;
     }
 
