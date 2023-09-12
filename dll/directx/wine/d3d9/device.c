@@ -4059,16 +4059,31 @@ static HRESULT WINAPI d3d9_device_CreateRenderTargetEx(IDirect3DDevice9Ex *iface
         UINT width, UINT height, D3DFORMAT format, D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality,
         BOOL lockable, IDirect3DSurface9 **surface, HANDLE *shared_handle, DWORD usage)
 {
-    FIXME("iface %p, width %u, height %u, format %#x, multisample_type %#x, multisample_quality %u, "
-            "lockable %#x, surface %p, shared_handle %p, usage %#x stub!\n",
+    struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
+    unsigned int access = WINED3D_RESOURCE_ACCESS_GPU;
+
+    TRACE("iface %p, width %u, height %u, format %#x, multisample_type %#x, multisample_quality %u, "
+            "lockable %#x, surface %p, shared_handle %p, usage %#x.\n",
             iface, width, height, format, multisample_type, multisample_quality,
             lockable, surface, shared_handle, usage);
 
     *surface = NULL;
+
+    if (usage & (D3DUSAGE_DEPTHSTENCIL | D3DUSAGE_RENDERTARGET))
+    {
+        WARN("Invalid usage %#x.\n", usage);
+        return D3DERR_INVALIDCALL;
+    }
+
     if (shared_handle)
         FIXME("Resource sharing not implemented, *shared_handle %p.\n", *shared_handle);
 
-    return E_NOTIMPL;
+    if (lockable)
+        access |= WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+
+    return d3d9_device_create_surface(device, 0, wined3dformat_from_d3dformat(format),
+            multisample_type, multisample_quality, usage & WINED3DUSAGE_MASK,
+            WINED3D_BIND_RENDER_TARGET, access, width, height, NULL, surface);
 }
 
 static HRESULT WINAPI d3d9_device_CreateOffscreenPlainSurfaceEx(IDirect3DDevice9Ex *iface,
