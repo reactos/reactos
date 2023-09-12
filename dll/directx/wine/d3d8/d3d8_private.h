@@ -313,23 +313,35 @@ static inline D3DPOOL d3dpool_from_wined3daccess(unsigned int access, unsigned i
     }
 }
 
+static inline unsigned int map_access_from_usage(unsigned int usage)
+{
+    if (usage & D3DUSAGE_WRITEONLY)
+        return WINED3D_RESOURCE_ACCESS_MAP_W;
+    return WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+}
+
 static inline unsigned int wined3daccess_from_d3dpool(D3DPOOL pool, unsigned int usage)
 {
+    unsigned int access;
+
     switch (pool)
     {
         case D3DPOOL_DEFAULT:
-            if (usage & D3DUSAGE_DYNAMIC)
-                return WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
-            return WINED3D_RESOURCE_ACCESS_GPU;
+            access = WINED3D_RESOURCE_ACCESS_GPU;
+            break;
         case D3DPOOL_MANAGED:
-            return WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_CPU
-                    | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+            access = WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_CPU;
+            break;
         case D3DPOOL_SYSTEMMEM:
         case D3DPOOL_SCRATCH:
-            return WINED3D_RESOURCE_ACCESS_CPU | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+            access = WINED3D_RESOURCE_ACCESS_CPU;
+            break;
         default:
-            return 0;
+            access = 0;
     }
+    if (pool != D3DPOOL_DEFAULT || usage & D3DUSAGE_DYNAMIC)
+        access |= map_access_from_usage(usage);
+    return access;
 }
 
 static inline unsigned int wined3d_bind_flags_from_d3d8_usage(DWORD usage)
