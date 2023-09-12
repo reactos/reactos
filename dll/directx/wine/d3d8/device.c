@@ -2910,7 +2910,9 @@ static HRESULT WINAPI d3d8_device_SetVertexShaderConstant(IDirect3DDevice8 *ifac
     }
 
     wined3d_mutex_lock();
-    hr = wined3d_device_set_vs_consts_f(device->wined3d_device, start_register, count, data);
+    hr = wined3d_stateblock_set_vs_consts_f(device->update_state, start_register, count, data);
+    if (SUCCEEDED(hr) && !device->recording)
+        hr = wined3d_device_set_vs_consts_f(device->wined3d_device, start_register, count, data);
     wined3d_mutex_unlock();
 
     return hr;
