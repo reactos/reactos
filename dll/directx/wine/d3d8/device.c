@@ -1619,9 +1619,29 @@ static HRESULT WINAPI d3d8_device_MultiplyTransform(IDirect3DDevice8 *iface,
 static HRESULT WINAPI d3d8_device_SetViewport(IDirect3DDevice8 *iface, const D3DVIEWPORT8 *viewport)
 {
     struct d3d8_device *device = impl_from_IDirect3DDevice8(iface);
+    struct wined3d_sub_resource_desc rt_desc;
+    struct wined3d_rendertarget_view *rtv;
+    struct d3d8_surface *surface;
     struct wined3d_viewport vp;
 
     TRACE("iface %p, viewport %p.\n", iface, viewport);
+
+    wined3d_mutex_lock();
+    if (!(rtv = wined3d_device_get_rendertarget_view(device->wined3d_device, 0)))
+    {
+        wined3d_mutex_unlock();
+        return D3DERR_NOTFOUND;
+    }
+    surface = wined3d_rendertarget_view_get_sub_resource_parent(rtv);
+    wined3d_texture_get_sub_resource_desc(surface->wined3d_texture, surface->sub_resource_idx, &rt_desc);
+
+    if (viewport->X > rt_desc.width || viewport->Width > rt_desc.width - viewport->X
+            || viewport->Y > rt_desc.height || viewport->Height > rt_desc.height - viewport->Y)
+    {
+        WARN("Invalid viewport, returning D3DERR_INVALIDCALL.\n");
+        wined3d_mutex_unlock();
+        return D3DERR_INVALIDCALL;
+    }
 
     vp.x = viewport->X;
     vp.y = viewport->Y;
@@ -1630,7 +1650,6 @@ static HRESULT WINAPI d3d8_device_SetViewport(IDirect3DDevice8 *iface, const D3D
     vp.min_z = viewport->MinZ;
     vp.max_z = viewport->MaxZ;
 
-    wined3d_mutex_lock();
     wined3d_device_set_viewport(device->wined3d_device, &vp);
     wined3d_mutex_unlock();
 
