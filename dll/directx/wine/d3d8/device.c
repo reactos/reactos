@@ -1438,12 +1438,15 @@ static HRESULT WINAPI d3d8_device_SetRenderTarget(IDirect3DDevice8 *iface,
 
     original_dsv = wined3d_device_get_depth_stencil_view(device->wined3d_device);
     rtv = ds_impl ? d3d8_surface_acquire_rendertarget_view(ds_impl) : NULL;
-    wined3d_device_set_depth_stencil_view(device->wined3d_device, rtv);
+    hr = wined3d_device_set_depth_stencil_view(device->wined3d_device, rtv);
     d3d8_surface_release_rendertarget_view(ds_impl, rtv);
-    rtv = render_target ? d3d8_surface_acquire_rendertarget_view(rt_impl) : NULL;
-    if (render_target && FAILED(hr = wined3d_device_set_rendertarget_view(device->wined3d_device, 0, rtv, TRUE)))
-        wined3d_device_set_depth_stencil_view(device->wined3d_device, original_dsv);
-    d3d8_surface_release_rendertarget_view(rt_impl, rtv);
+    if (SUCCEEDED(hr))
+    {
+        rtv = render_target ? d3d8_surface_acquire_rendertarget_view(rt_impl) : NULL;
+        if (render_target && FAILED(hr = wined3d_device_set_rendertarget_view(device->wined3d_device, 0, rtv, TRUE)))
+            wined3d_device_set_depth_stencil_view(device->wined3d_device, original_dsv);
+        d3d8_surface_release_rendertarget_view(rt_impl, rtv);
+    }
 
     wined3d_mutex_unlock();
 

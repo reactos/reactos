@@ -1903,16 +1903,17 @@ static HRESULT WINAPI d3d9_device_SetDepthStencilSurface(IDirect3DDevice9Ex *ifa
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
     struct d3d9_surface *ds_impl = unsafe_impl_from_IDirect3DSurface9(depth_stencil);
     struct wined3d_rendertarget_view *rtv;
+    HRESULT hr;
 
     TRACE("iface %p, depth_stencil %p.\n", iface, depth_stencil);
 
     wined3d_mutex_lock();
     rtv = ds_impl ? d3d9_surface_acquire_rendertarget_view(ds_impl) : NULL;
-    wined3d_device_set_depth_stencil_view(device->wined3d_device, rtv);
+    hr = wined3d_device_set_depth_stencil_view(device->wined3d_device, rtv);
     d3d9_surface_release_rendertarget_view(ds_impl, rtv);
     wined3d_mutex_unlock();
 
-    return D3D_OK;
+    return hr;
 }
 
 static HRESULT WINAPI d3d9_device_GetDepthStencilSurface(IDirect3DDevice9Ex *iface, IDirect3DSurface9 **depth_stencil)
