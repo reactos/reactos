@@ -24,6 +24,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
+class CMruBase;
+    class CMruShortList;
+    class CMruLongList;
+        class CMruNode;
+            class CMruPidlList;
+class CMruClassFactory;
+
 extern "C" void __cxa_pure_virtual(void)
 {
     ::DebugBreak();
@@ -97,7 +104,7 @@ public:
 
     // Non-standard methods
     virtual BOOL _IsEqual(const SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData) const;
-    virtual HRESULT _DeleteValue(LPCWSTR pszValue);
+    virtual DWORD _DeleteValue(LPCWSTR pszValue);
     virtual HRESULT _InitSlots() = 0;
     virtual void _SaveSlots() = 0;
     virtual UINT _UpdateSlots(UINT iSlot) = 0;
@@ -399,7 +406,7 @@ BOOL CMruBase::_IsEqual(const SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData) 
     }
 }
 
-HRESULT CMruBase::_DeleteValue(LPCWSTR pszValue)
+DWORD CMruBase::_DeleteValue(LPCWSTR pszValue)
 {
     return SHDeleteValueW(m_hKey, NULL, pszValue);
 }
@@ -726,12 +733,30 @@ protected:
     CMruNode *m_pParent = NULL;             // The parent
     IShellFolder *m_pShellFolder = NULL;    // The shell folder
 
+    BOOL _InitLate();
+    BOOL _IsEqual(SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData);
+    DWORD _DeleteValue(LPCWSTR pszValue) override;
+
+    HRESULT _CreateNode(DWORD dwSlot, CMruNode **ppNewNode);
+
+    HRESULT _FindPidl(LPCITEMIDLIST pidl, UINT *piSlot);
+    HRESULT _GetPidlSlot(LPCITEMIDLIST pidl, BOOL bAdd, UINT *puSlotData);
+    HRESULT _AddPidl(UINT uSlot, LPCITEMIDLIST pidl);
+
 public:
     CMruNode() { }
     CMruNode(CMruNode *pParent, UINT uSlotData);
     ~CMruNode() override;
 
     CMruNode *GetParent();
+
+    HRESULT BindToSlot(UINT uSlotData, IShellFolder **ppSF);
+    HRESULT GetNode(BOOL bAdd, LPCITEMIDLIST pidl, CMruNode **pNewNode);
+    HRESULT GetNodeSlot(LPDWORD pdwData);
+    HRESULT SetNodeSlot(UINT pnSlot);
+
+    HRESULT RemoveLeast(LPDWORD pdwData);
+    HRESULT Clear(CMruPidlList *pList);
 };
 
 CMruNode::CMruNode(CMruNode *pParent, UINT uSlotData)
@@ -761,6 +786,183 @@ CMruNode *CMruNode::GetParent()
     if (m_pParent)
         m_pParent->AddRef();
     return m_pParent;
+}
+
+HRESULT CMruNode::_CreateNode(DWORD dwSlot, CMruNode **ppNewNode)
+{
+    CMruNode *pNewNode = new CMruNode(this, dwSlot);
+    if (!pNewNode)
+        return E_OUTOFMEMORY;
+
+    WCHAR szBuff[12];
+    _SlotString(dwSlot, szBuff, _countof(szBuff));
+
+    HRESULT hr = pNewNode->InitData(m_cSlotRooms, 0, m_hKey, szBuff, NULL);
+    if (FAILED(hr))
+        pNewNode->Release();
+    else
+        *ppNewNode = pNewNode;
+
+    return hr;
+}
+
+HRESULT CMruNode::GetNode(BOOL bAdd, LPCITEMIDLIST pidl, CMruNode **ppNewNode)
+{
+    if (!pidl || !pidl->mkid.cb)
+    {
+        *ppNewNode = this;
+        AddRef();
+        return S_OK;
+    }
+
+    if (!_InitLate())
+        return E_FAIL;
+
+    UINT uSlotData;
+    HRESULT hr = _GetPidlSlot(pidl, bAdd, &uSlotData);
+    if (FAILED(hr))
+    {
+        if (!bAdd)
+        {
+            *ppNewNode = this;
+            AddRef();
+            return S_FALSE;
+        }
+        return hr;
+    }
+
+    CMruNode *pNewNode;
+    hr = _CreateNode(uSlotData, &pNewNode);
+    if (SUCCEEDED(hr))
+    {
+        _SaveSlots();
+
+        LPCITEMIDLIST pidl2 = (LPCITEMIDLIST)((LPBYTE)pidl + pidl->mkid.cb);
+        pNewNode->GetNode(bAdd, pidl2, ppNewNode);
+        pNewNode->Release();
+    }
+
+    return hr;
+}
+
+HRESULT CMruNode::BindToSlot(UINT uSlotData, IShellFolder **ppSF)
+{
+    SLOTITEMDATA *pItem;
+    HRESULT hr = _GetSlotItem(uSlotData, &pItem);
+    if (FAILED(hr))
+        return hr;
+
+    return m_pShellFolder->BindToObject((LPITEMIDLIST)pItem->pvData,
+                                        NULL,
+                                        IID_IShellFolder,
+                                        (void **)ppSF);
+}
+
+BOOL CMruNode::_InitLate()
+{
+    if (!m_pShellFolder)
+    {
+        if (m_pParent)
+            m_pParent->BindToSlot(m_uSlotData, &m_pShellFolder);
+        else
+            SHGetDesktopFolder(&m_pShellFolder);
+    }
+    return (m_pShellFolder != NULL);
+}
+
+BOOL CMruNode::_IsEqual(SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData)
+{
+    return m_pShellFolder->CompareIDs(0x10000000,
+                                      (LPITEMIDLIST)pItem->pvData,
+                                      (LPCITEMIDLIST)pvData) == 0;
+}
+
+HRESULT CMruNode::GetNodeSlot(LPDWORD pdwData)
+{
+    DWORD cbData = sizeof(*pdwData);
+    DWORD error = SHGetValueW(m_hKey, NULL, L"NodeSlot", NULL,
+                              pdwData, (pdwData ? &cbData : NULL));
+    if (error != ERROR_SUCCESS)
+        return E_FAIL;
+    return S_OK;
+}
+
+HRESULT CMruNode::SetNodeSlot(UINT pnSlot)
+{
+    if (SHSetValueW(m_hKey, NULL, L"NodeSlot", REG_DWORD, &pnSlot, sizeof(DWORD)) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    return S_OK;
+}
+
+HRESULT CMruNode::_AddPidl(UINT uSlot, LPCITEMIDLIST pidl)
+{
+    return CMruBase::_AddItem(uSlot, (const BYTE*)pidl, sizeof(WORD) + pidl->mkid.cb);
+}
+
+DWORD CMruNode::_DeleteValue(LPCWSTR pszValue)
+{
+    CMruBase::_DeleteValue(pszValue);
+    return SHDeleteKeyW(m_hKey, pszValue);
+}
+
+HRESULT CMruNode::_FindPidl(LPCITEMIDLIST pidl, UINT *piSlot)
+{
+    return FindData((const BYTE *)pidl, sizeof(WORD) + pidl->mkid.cb, piSlot);
+}
+
+HRESULT CMruNode::_GetPidlSlot(LPCITEMIDLIST pidl, BOOL bAdd, UINT *puSlotData)
+{
+    LPITEMIDLIST pidlFirst = ILCloneFirst(pidl);
+    if (!pidlFirst)
+        return E_OUTOFMEMORY;
+
+    UINT iSlot;
+    HRESULT hr = _FindPidl(pidlFirst, &iSlot);
+    if (SUCCEEDED(hr))
+    {
+        *puSlotData = _UpdateSlots(iSlot);
+        hr = S_OK;
+    }
+    else if (bAdd)
+    {
+        *puSlotData = _UpdateSlots(m_cSlots);
+        hr = _AddPidl(*puSlotData, pidlFirst);
+    }
+
+    ILFree(pidlFirst);
+    return hr;
+}
+
+HRESULT CMruNode::RemoveLeast(LPDWORD pdwData)
+{
+    if (!m_cSlots)
+    {
+        CMruNode::GetNodeSlot(pdwData);
+        return S_FALSE;
+    }
+
+    DWORD dwSlot;
+    HRESULT hr = _GetSlot(m_cSlots - 1, &dwSlot);
+    if (FAILED(hr))
+        return hr;
+
+    CMruNode *pNode;
+    hr = CMruNode::_CreateNode(dwSlot, &pNode);
+    if (SUCCEEDED(hr))
+    {
+        hr = pNode->RemoveLeast(pdwData);
+        pNode->Release();
+    }
+
+    if (hr == S_FALSE)
+    {
+        Delete(m_cSlots - 1);
+        if (m_cSlots || SUCCEEDED(GetNodeSlot(0)))
+            return S_OK;
+    }
+
+    return hr;
 }
 
 class CMruPidlList
@@ -821,6 +1023,8 @@ public:
         UINT *puSlots,
         UINT *pcSlots) override;
     STDMETHODIMP PruneKids(LPCITEMIDLIST pidl) override;
+
+    void EmptyNodeSlot(UINT iSlot);
 };
 
 STDMETHODIMP CMruPidlList::QueryInterface(REFIID riid, void **ppvObj)
@@ -885,6 +1089,32 @@ EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DW
 
     *ppv = static_cast<IMruPidlList*>(pMruList);
     TRACE("%p\n", *ppv);
+    return S_OK;
+}
+
+void CMruPidlList::EmptyNodeSlot(UINT iSlot)
+{
+    m_pbSlots[iSlot - 1] = 0;
+    m_bNeedSave = TRUE;
+}
+
+HRESULT CMruNode::Clear(CMruPidlList *pList)
+{
+    UINT uSlot;
+    while (SUCCEEDED(_GetSlot(0, &uSlot)))
+    {
+        CMruNode *pNode;
+        if (SUCCEEDED(CMruNode::_CreateNode(uSlot, &pNode)))
+        {
+            UINT iSlot;
+            if (SUCCEEDED(pNode->GetNodeSlot(&iSlot)))
+                pList->EmptyNodeSlot(iSlot);
+
+            pNode->Clear(pList);
+            pNode->Release();
+        }
+        Delete(0);
+    }
     return S_OK;
 }
 
