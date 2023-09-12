@@ -542,9 +542,8 @@ static HRESULT WINAPI d3d9_GetAdapterLUID(IDirect3D9Ex *iface, UINT adapter, LUI
     adapter_id.description_size = 0;
     adapter_id.device_name_size = 0;
 
-    hr = wined3d_get_adapter_identifier(d3d9->wined3d, adapter, 0, &adapter_id);
-
-    *luid = adapter_id.adapter_luid;
+    if (SUCCEEDED(hr = wined3d_get_adapter_identifier(d3d9->wined3d, adapter, 0, &adapter_id)))
+        *luid = adapter_id.adapter_luid;
 
     return hr;
 }
