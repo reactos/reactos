@@ -4443,8 +4443,8 @@ HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wine
 
     static const enum wined3d_feature_level feature_levels[] =
     {
-        WINED3D_FEATURE_LEVEL_9_SM3,
-        WINED3D_FEATURE_LEVEL_9_SM2,
+        WINED3D_FEATURE_LEVEL_9_3,
+        WINED3D_FEATURE_LEVEL_9_2,
         WINED3D_FEATURE_LEVEL_9_1,
         WINED3D_FEATURE_LEVEL_8,
         WINED3D_FEATURE_LEVEL_7,
