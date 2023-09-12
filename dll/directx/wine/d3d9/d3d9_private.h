@@ -55,7 +55,7 @@ BOOL is_gdi_compat_wined3dformat(enum wined3d_format_id format) DECLSPEC_HIDDEN;
 enum wined3d_format_id wined3dformat_from_d3dformat(D3DFORMAT format) DECLSPEC_HIDDEN;
 unsigned int wined3dmapflags_from_d3dmapflags(unsigned int flags) DECLSPEC_HIDDEN;
 void present_parameters_from_wined3d_swapchain_desc(D3DPRESENT_PARAMETERS *present_parameters,
-        const struct wined3d_swapchain_desc *swapchain_desc) DECLSPEC_HIDDEN;
+        const struct wined3d_swapchain_desc *swapchain_desc, DWORD presentation_interval) DECLSPEC_HIDDEN;
 void d3dcaps_from_wined3dcaps(D3DCAPS9 *caps, const WINED3DCAPS *wined3d_caps) DECLSPEC_HIDDEN;
 
 struct d3d9
@@ -153,7 +153,7 @@ struct d3d9_swapchain
 };
 
 HRESULT d3d9_swapchain_create(struct d3d9_device *device, struct wined3d_swapchain_desc *desc,
-        struct d3d9_swapchain **swapchain) DECLSPEC_HIDDEN;
+        unsigned int swap_interval, struct d3d9_swapchain **swapchain) DECLSPEC_HIDDEN;
 
 struct d3d9_surface
 {

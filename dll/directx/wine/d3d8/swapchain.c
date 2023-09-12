@@ -167,13 +167,13 @@ static const struct wined3d_parent_ops d3d8_swapchain_wined3d_parent_ops =
 };
 
 static HRESULT swapchain_init(struct d3d8_swapchain *swapchain, struct d3d8_device *device,
-        struct wined3d_swapchain_desc *desc)
+        struct wined3d_swapchain_desc *desc, unsigned int swap_interval)
 {
     HRESULT hr;
 
     swapchain->refcount = 1;
     swapchain->IDirect3DSwapChain8_iface.lpVtbl = &d3d8_swapchain_vtbl;
-    swapchain->swap_interval = desc->swap_interval;
+    swapchain->swap_interval = swap_interval;
 
     wined3d_mutex_lock();
     hr = wined3d_swapchain_create(device->wined3d_device, desc, swapchain,
@@ -193,7 +193,7 @@ static HRESULT swapchain_init(struct d3d8_swapchain *swapchain, struct d3d8_devi
 }
 
 HRESULT d3d8_swapchain_create(struct d3d8_device *device, struct wined3d_swapchain_desc *desc,
-        struct d3d8_swapchain **swapchain)
+        unsigned int swap_interval, struct d3d8_swapchain **swapchain)
 {
     struct d3d8_swapchain *object;
     HRESULT hr;
@@ -201,7 +201,7 @@ HRESULT d3d8_swapchain_create(struct d3d8_device *device, struct wined3d_swapcha
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = swapchain_init(object, device, desc)))
+    if (FAILED(hr = swapchain_init(object, device, desc, swap_interval)))
     {
         WARN("Failed to initialize swapchain, hr %#x.\n", hr);
         heap_free(object);

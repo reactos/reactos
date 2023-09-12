@@ -230,29 +230,8 @@ static D3DSWAPEFFECT d3dswapeffect_from_wined3dswapeffect(enum wined3d_swap_effe
     }
 }
 
-static DWORD d3dpresentationinterval_from_wined3dswapinterval(enum wined3d_swap_interval interval)
-{
-    switch (interval)
-    {
-        case WINED3D_SWAP_INTERVAL_IMMEDIATE:
-            return D3DPRESENT_INTERVAL_IMMEDIATE;
-        case WINED3D_SWAP_INTERVAL_ONE:
-            return D3DPRESENT_INTERVAL_ONE;
-        case WINED3D_SWAP_INTERVAL_TWO:
-            return D3DPRESENT_INTERVAL_TWO;
-        case WINED3D_SWAP_INTERVAL_THREE:
-            return D3DPRESENT_INTERVAL_THREE;
-        case WINED3D_SWAP_INTERVAL_FOUR:
-            return D3DPRESENT_INTERVAL_FOUR;
-        default:
-            ERR("Invalid swap interval %#x.\n", interval);
-        case WINED3D_SWAP_INTERVAL_DEFAULT:
-            return D3DPRESENT_INTERVAL_DEFAULT;
-    }
-}
-
 void present_parameters_from_wined3d_swapchain_desc(D3DPRESENT_PARAMETERS *present_parameters,
-        const struct wined3d_swapchain_desc *swapchain_desc)
+        const struct wined3d_swapchain_desc *swapchain_desc, DWORD presentation_interval)
 {
     present_parameters->BackBufferWidth = swapchain_desc->backbuffer_width;
     present_parameters->BackBufferHeight = swapchain_desc->backbuffer_height;
@@ -268,8 +247,7 @@ void present_parameters_from_wined3d_swapchain_desc(D3DPRESENT_PARAMETERS *prese
             = d3dformat_from_wined3dformat(swapchain_desc->auto_depth_stencil_format);
     present_parameters->Flags = swapchain_desc->flags & D3DPRESENTFLAGS_MASK;
     present_parameters->FullScreen_RefreshRateInHz = swapchain_desc->refresh_rate;
-    present_parameters->PresentationInterval
-            = d3dpresentationinterval_from_wined3dswapinterval(swapchain_desc->swap_interval);
+    present_parameters->PresentationInterval = presentation_interval;
 }
 
 static enum wined3d_swap_effect wined3dswapeffect_from_d3dswapeffect(D3DSWAPEFFECT effect)
@@ -292,7 +270,7 @@ static enum wined3d_swap_effect wined3dswapeffect_from_d3dswapeffect(D3DSWAPEFFE
     }
 }
 
-static enum wined3d_swap_interval wined3dswapinterval_from_d3dpresentationinterval(DWORD interval)
+static enum wined3d_swap_interval wined3dswapinterval_from_d3d(DWORD interval)
 {
     switch (interval)
     {
@@ -361,8 +339,6 @@ static BOOL wined3d_swapchain_desc_from_present_parameters(struct wined3d_swapch
     swapchain_desc->flags
             = (present_parameters->Flags & D3DPRESENTFLAGS_MASK) | WINED3D_SWAPCHAIN_ALLOW_MODE_SWITCH;
     swapchain_desc->refresh_rate = present_parameters->FullScreen_RefreshRateInHz;
-    swapchain_desc->swap_interval
-            = wined3dswapinterval_from_d3dpresentationinterval(present_parameters->PresentationInterval);
     swapchain_desc->auto_restore_display_mode = TRUE;
 
     if (present_parameters->Flags & ~D3DPRESENTFLAGS_MASK)
@@ -800,7 +776,8 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_CreateAdditionalSwapChain(ID
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
     struct wined3d_swapchain_desc desc;
     struct d3d9_swapchain *object;
-    UINT i, count;
+    unsigned int swap_interval;
+    unsigned int i, count;
     HRESULT hr;
 
     TRACE("iface %p, present_parameters %p, swapchain %p.\n",
@@ -833,9 +810,11 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_CreateAdditionalSwapChain(ID
     if (!wined3d_swapchain_desc_from_present_parameters(&desc, present_parameters,
             device->d3d_parent->extended))
         return D3DERR_INVALIDCALL;
-    if (SUCCEEDED(hr = d3d9_swapchain_create(device, &desc, &object)))
+    swap_interval = wined3dswapinterval_from_d3d(present_parameters->PresentationInterval);
+    if (SUCCEEDED(hr = d3d9_swapchain_create(device, &desc, swap_interval, &object)))
         *swapchain = (IDirect3DSwapChain9 *)&object->IDirect3DSwapChain9Ex_iface;
-    present_parameters_from_wined3d_swapchain_desc(present_parameters, &desc);
+    present_parameters_from_wined3d_swapchain_desc(present_parameters,
+            &desc, present_parameters->PresentationInterval);
 
     return hr;
 }
@@ -992,7 +971,7 @@ static HRESULT d3d9_device_reset(struct d3d9_device *device,
         else
         {
             device->implicit_swapchains[0]->swap_interval
-                    = wined3dswapinterval_from_d3dpresentationinterval(present_parameters->PresentationInterval);
+                    = wined3dswapinterval_from_d3d(present_parameters->PresentationInterval);
             wined3d_swapchain_get_desc(device->implicit_swapchains[0]->wined3d_swapchain, &swapchain_desc);
             present_parameters->BackBufferWidth = swapchain_desc.backbuffer_width;
             present_parameters->BackBufferHeight = swapchain_desc.backbuffer_height;
@@ -4191,8 +4170,7 @@ static HRESULT CDECL device_parent_create_swapchain(struct wined3d_device_parent
 
     TRACE("device_parent %p, desc %p, swapchain %p\n", device_parent, desc, swapchain);
 
-    hr = d3d9_swapchain_create(device, desc, &d3d_swapchain);
-    if (FAILED(hr))
+    if (FAILED(hr = d3d9_swapchain_create(device, desc, WINED3D_SWAP_INTERVAL_DEFAULT, &d3d_swapchain)))
     {
         WARN("Failed to create swapchain, hr %#x.\n", hr);
         *swapchain = NULL;
@@ -4337,12 +4315,13 @@ HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wine
     for (i = 0; i < device->implicit_swapchain_count; ++i)
     {
         device->implicit_swapchains[i]->swap_interval
-                = wined3dswapinterval_from_d3dpresentationinterval(parameters[i].PresentationInterval);
+                = wined3dswapinterval_from_d3d(parameters[i].PresentationInterval);
     }
 
     for (i = 0; i < count; ++i)
     {
-        present_parameters_from_wined3d_swapchain_desc(&parameters[i], &swapchain_desc[i]);
+        present_parameters_from_wined3d_swapchain_desc(&parameters[i],
+                &swapchain_desc[i], parameters[i].PresentationInterval);
     }
 
     wined3d_mutex_unlock();

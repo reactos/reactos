@@ -170,7 +170,7 @@ struct d3d8_swapchain
 };
 
 HRESULT d3d8_swapchain_create(struct d3d8_device *device, struct wined3d_swapchain_desc *desc,
-        struct d3d8_swapchain **swapchain) DECLSPEC_HIDDEN;
+        unsigned int swap_interval, struct d3d8_swapchain **swapchain) DECLSPEC_HIDDEN;
 
 struct d3d8_surface
 {
