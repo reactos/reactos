@@ -902,7 +902,7 @@ int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
 {
     if (!m_ListView)
     {
-        //OutputDebugStringW(L"###5\n");
+        OutputDebugStringW(L"###5\n");
         return -1;
     }
 
@@ -930,7 +930,10 @@ int CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
         return -1;
 
     if (!m_ListView)
+    {
         OutputDebugStringW(L"###6\n");
+        return -1;
+    }
 
     lvItem.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;    /*set the mask*/
     lvItem.iItem = m_ListView.GetItemCount();             /*add the item to the end of the list*/
@@ -952,10 +955,12 @@ BOOLEAN CDefView::LV_DeleteItem(PCUITEMID_CHILD pidl)
 
     TRACE("(%p)(pidl=%p)\n", this, pidl);
 
-    if (!m_ListView)
-        OutputDebugStringW(L"###6\n");
-
     nIndex = LV_FindItemByPidl(pidl);
+    if (nIndex < 0)
+    {
+        OutputDebugStringW(L"###6.5\n");
+        return FALSE;
+    }
 
     return m_ListView.DeleteItem(nIndex);
 }
@@ -969,9 +974,6 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
     LVITEMW lvItem;
 
     TRACE("(%p)(pidlold=%p pidlnew=%p)\n", this, pidlOld, pidlNew);
-
-    if (!m_ListView)
-        OutputDebugStringW(L"###7\n");
 
     nItem = LV_FindItemByPidl(pidlOld);
 
@@ -1010,9 +1012,6 @@ BOOLEAN CDefView::LV_ProdItem(PCUITEMID_CHILD pidl)
     LVITEMW lvItem;
 
     TRACE("(%p)(pidl=%p)\n", this, pidl);
-
-    if (!m_ListView)
-        OutputDebugStringW(L"###8\n");
 
     nItem = LV_FindItemByPidl(pidl);
 
