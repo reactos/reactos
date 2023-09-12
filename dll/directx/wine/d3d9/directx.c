@@ -137,15 +137,16 @@ static HRESULT WINAPI d3d9_GetAdapterIdentifier(IDirect3D9Ex *iface, UINT adapte
     adapter_id.device_name = identifier->DeviceName;
     adapter_id.device_name_size = sizeof(identifier->DeviceName);
 
-    hr = wined3d_get_adapter_identifier(d3d9->wined3d, adapter, flags, &adapter_id);
-
-    identifier->DriverVersion = adapter_id.driver_version;
-    identifier->VendorId = adapter_id.vendor_id;
-    identifier->DeviceId = adapter_id.device_id;
-    identifier->SubSysId = adapter_id.subsystem_id;
-    identifier->Revision = adapter_id.revision;
-    memcpy(&identifier->DeviceIdentifier, &adapter_id.device_identifier, sizeof(identifier->DeviceIdentifier));
-    identifier->WHQLLevel = adapter_id.whql_level;
+    if (SUCCEEDED(hr = wined3d_get_adapter_identifier(d3d9->wined3d, adapter, flags, &adapter_id)))
+    {
+        identifier->DriverVersion = adapter_id.driver_version;
+        identifier->VendorId = adapter_id.vendor_id;
+        identifier->DeviceId = adapter_id.device_id;
+        identifier->SubSysId = adapter_id.subsystem_id;
+        identifier->Revision = adapter_id.revision;
+        memcpy(&identifier->DeviceIdentifier, &adapter_id.device_identifier, sizeof(identifier->DeviceIdentifier));
+        identifier->WHQLLevel = adapter_id.whql_level;
+    }
 
     return hr;
 }
