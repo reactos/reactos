@@ -171,12 +171,8 @@ static HRESULT swapchain_init(struct d3d8_swapchain *swapchain, struct d3d8_devi
     swapchain->IDirect3DSwapChain8_iface.lpVtbl = &d3d8_swapchain_vtbl;
     swapchain->swap_interval = swap_interval;
 
-    wined3d_mutex_lock();
-    hr = wined3d_swapchain_create(device->wined3d_device, desc, swapchain,
-            &d3d8_swapchain_wined3d_parent_ops, &swapchain->wined3d_swapchain);
-    wined3d_mutex_unlock();
-
-    if (FAILED(hr))
+    if (FAILED(hr = wined3d_swapchain_create(device->wined3d_device, desc, swapchain,
+            &d3d8_swapchain_wined3d_parent_ops, &swapchain->wined3d_swapchain)))
     {
         WARN("Failed to create wined3d swapchain, hr %#x.\n", hr);
         return hr;
