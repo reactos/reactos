@@ -887,8 +887,7 @@ PCUITEMID_CHILD CDefView::_PidlByItem(LVITEM& lvItem)
 */
 int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
 {
-    if (!m_ListView)
-        return -1;
+    ASSERT(m_ListView);
 
     int cItems = m_ListView.GetItemCount();
 
@@ -910,8 +909,7 @@ int CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
 
     TRACE("(%p)(pidl=%p)\n", this, pidl);
 
-    if (!m_ListView)
-        return -1;
+    ASSERT(m_ListView);
 
     if (_DoFolderViewCB(SFVM_ADDINGOBJECT, 0, (LPARAM)pidl) == S_FALSE)
         return -1;
@@ -936,6 +934,8 @@ BOOLEAN CDefView::LV_DeleteItem(PCUITEMID_CHILD pidl)
 
     TRACE("(%p)(pidl=%p)\n", this, pidl);
 
+    ASSERT(m_ListView);
+
     nIndex = LV_FindItemByPidl(pidl);
     if (nIndex < 0)
         return FALSE;
@@ -952,6 +952,8 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
     LVITEMW lvItem;
 
     TRACE("(%p)(pidlold=%p pidlnew=%p)\n", this, pidlOld, pidlNew);
+
+    ASSERT(m_ListView);
 
     nItem = LV_FindItemByPidl(pidlOld);
 
@@ -991,6 +993,8 @@ BOOLEAN CDefView::LV_ProdItem(PCUITEMID_CHILD pidl)
 
     TRACE("(%p)(pidl=%p)\n", this, pidl);
 
+    ASSERT(m_ListView);
+
     nItem = LV_FindItemByPidl(pidl);
 
     if (-1 != nItem)
@@ -1020,7 +1024,7 @@ INT CALLBACK CDefView::fill_list(LPVOID ptr, LPVOID arg)
     CDefView *pThis = static_cast<CDefView *>(arg);
 
     /* in a commdlg This works as a filemask*/
-    if (pThis->IncludeObject(pidl) == S_OK)
+    if (pThis->IncludeObject(pidl) == S_OK && pThis->m_ListView)
         pThis->LV_AddItem(pidl);
 
     SHFree(pidl);
@@ -1492,6 +1496,8 @@ UINT CDefView::GetSelections()
     }
 
     TRACE("-- Items selected =%u\n", m_cidl);
+
+    ASSERT(m_ListView);
 
     UINT i = 0;
     int lvIndex = -1;
@@ -2325,6 +2331,12 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
 */
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    if (!m_ListView)
+    {
+        ERR("!m_ListView\n");
+        return FALSE;
+    }
+
     HANDLE hChange = (HANDLE)wParam;
     DWORD dwProcID = (DWORD)lParam;
     PIDLIST_ABSOLUTE *Pidls;
@@ -2342,6 +2354,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     TRACE("(%p)(%p,%p,0x%08x)\n", this, Pidls[0], Pidls[1], lParam);
 
     lEvent &= ~SHCNE_INTERRUPT;
+
     switch (lEvent)
     {
         case SHCNE_MKDIR:
@@ -2670,6 +2683,12 @@ HRESULT WINAPI CDefView::SelectItem(PCUITEMID_CHILD pidl, UINT uFlags)
 
     TRACE("(%p)->(pidl=%p, 0x%08x) stub\n", this, pidl, uFlags);
 
+    if (!m_ListView)
+    {
+        ERR("!m_ListView\n");
+        return E_FAIL;
+    }
+
     i = LV_FindItemByPidl(pidl);
     if (i == -1)
         return S_OK;
@@ -2878,6 +2897,12 @@ HRESULT STDMETHODCALLTYPE CDefView::GetFocusedItem(int *piItem)
 
 HRESULT STDMETHODCALLTYPE CDefView::GetItemPosition(PCUITEMID_CHILD pidl, POINT *ppt)
 {
+    if (!m_ListView)
+    {
+        ERR("!m_ListView\n");
+        return E_FAIL;
+    }
+
     int lvIndex = LV_FindItemByPidl(pidl);
     if (lvIndex == -1 || ppt == NULL)
         return E_INVALIDARG;
@@ -2891,7 +2916,10 @@ HRESULT STDMETHODCALLTYPE CDefView::GetSpacing(POINT *ppt)
     TRACE("(%p)->(%p)\n", this, ppt);
 
     if (!m_ListView)
+    {
+        ERR("!m_ListView\n");
         return S_FALSE;
+    }
 
     if (ppt)
     {
@@ -2954,6 +2982,12 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
 
 HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, POINT *apt, DWORD dwFlags)
 {
+    if (!m_ListView)
+    {
+        ERR("!m_ListView\n");
+        return E_FAIL;
+    }
+
     /* Reset the selection */
     m_ListView.SetItemState(-1, 0, LVIS_SELECTED);
 
@@ -3111,6 +3145,11 @@ HRESULT STDMETHODCALLTYPE CDefView::AutoArrange()
 HRESULT STDMETHODCALLTYPE CDefView::AddObject(PITEMID_CHILD pidl, UINT *item)
 {
     TRACE("(%p)->(%p %p)\n", this, pidl, item);
+    if (!m_ListView)
+    {
+        ERR("!m_ListView\n");
+        return E_FAIL;
+    }
     *item = LV_AddItem(pidl);
     return (int)*item >= 0 ? S_OK : E_OUTOFMEMORY;
 }
@@ -3123,11 +3162,13 @@ HRESULT STDMETHODCALLTYPE CDefView::GetObject(PITEMID_CHILD *pidl, UINT item)
 
 HRESULT STDMETHODCALLTYPE CDefView::RemoveObject(PITEMID_CHILD pidl, UINT *item)
 {
-
     TRACE("(%p)->(%p %p)\n", this, pidl, item);
 
     if (!m_ListView)
+    {
+        ERR("!m_ListView\n");
         return E_FAIL;
+    }
 
     if (pidl)
     {
