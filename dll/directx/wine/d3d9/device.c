@@ -3558,13 +3558,9 @@ static HRESULT WINAPI d3d9_device_SetStreamSource(IDirect3DDevice9Ex *iface,
             iface, stream_idx, buffer, offset, stride);
 
     wined3d_mutex_lock();
-    if (!stride)
-    {
-        unsigned int cur_offset;
-
-        hr = wined3d_device_get_stream_source(device->wined3d_device, stream_idx, &wined3d_buffer,
-                &cur_offset, &stride);
-    }
+    if (!buffer_impl)
+        wined3d_device_get_stream_source(device->wined3d_device, stream_idx, &wined3d_buffer,
+                &offset, &stride);
 
     if (!buffer_impl)
         wined3d_buffer = NULL;
