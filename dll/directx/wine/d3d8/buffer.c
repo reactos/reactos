@@ -57,9 +57,10 @@ static ULONG WINAPI d3d8_vertexbuffer_AddRef(IDirect3DVertexBuffer8 *iface)
     {
         IDirect3DDevice8_AddRef(buffer->parent_device);
         wined3d_mutex_lock();
-        wined3d_buffer_incref(buffer->wined3d_buffer);
         if (buffer->draw_buffer)
             wined3d_buffer_incref(buffer->draw_buffer);
+        else
+            wined3d_buffer_incref(buffer->wined3d_buffer);
         wined3d_mutex_unlock();
     }
 
@@ -79,9 +80,10 @@ static ULONG WINAPI d3d8_vertexbuffer_Release(IDirect3DVertexBuffer8 *iface)
         IDirect3DDevice8 *device = buffer->parent_device;
 
         wined3d_mutex_lock();
-        wined3d_buffer_decref(buffer->wined3d_buffer);
         if (draw_buffer)
             wined3d_buffer_decref(draw_buffer);
+        else
+            wined3d_buffer_decref(buffer->wined3d_buffer);
         wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
@@ -269,6 +271,9 @@ static const IDirect3DVertexBuffer8Vtbl Direct3DVertexBuffer8_Vtbl =
 static void STDMETHODCALLTYPE d3d8_vertexbuffer_wined3d_object_destroyed(void *parent)
 {
     struct d3d8_vertexbuffer *buffer = parent;
+
+    if (buffer->draw_buffer)
+        wined3d_buffer_decref(buffer->wined3d_buffer);
     d3d8_resource_cleanup(&buffer->resource);
     heap_free(buffer);
 }
@@ -380,9 +385,10 @@ static ULONG WINAPI d3d8_indexbuffer_AddRef(IDirect3DIndexBuffer8 *iface)
     {
         IDirect3DDevice8_AddRef(buffer->parent_device);
         wined3d_mutex_lock();
-        wined3d_buffer_incref(buffer->wined3d_buffer);
         if (buffer->draw_buffer)
             wined3d_buffer_incref(buffer->draw_buffer);
+        else
+            wined3d_buffer_incref(buffer->wined3d_buffer);
         wined3d_mutex_unlock();
     }
 
@@ -402,9 +408,10 @@ static ULONG WINAPI d3d8_indexbuffer_Release(IDirect3DIndexBuffer8 *iface)
         IDirect3DDevice8 *device = buffer->parent_device;
 
         wined3d_mutex_lock();
-        wined3d_buffer_decref(buffer->wined3d_buffer);
         if (draw_buffer)
             wined3d_buffer_decref(draw_buffer);
+        else
+            wined3d_buffer_decref(buffer->wined3d_buffer);
         wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
@@ -591,6 +598,9 @@ static const IDirect3DIndexBuffer8Vtbl d3d8_indexbuffer_vtbl =
 static void STDMETHODCALLTYPE d3d8_indexbuffer_wined3d_object_destroyed(void *parent)
 {
     struct d3d8_indexbuffer *buffer = parent;
+
+    if (buffer->draw_buffer)
+        wined3d_buffer_decref(buffer->wined3d_buffer);
     d3d8_resource_cleanup(&buffer->resource);
     heap_free(buffer);
 }
