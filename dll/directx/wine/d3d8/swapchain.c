@@ -88,7 +88,6 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d8_swapchain_Present(IDirect3DSwapChai
 {
     struct d3d8_swapchain *swapchain = impl_from_IDirect3DSwapChain8(iface);
     struct d3d8_device *device = impl_from_IDirect3DDevice8(swapchain->parent_device);
-    HRESULT hr;
 
     TRACE("iface %p, src_rect %s, dst_rect %s, dst_window_override %p, dirty_region %p.\n",
             iface, wine_dbgstr_rect(src_rect), wine_dbgstr_rect(dst_rect), dst_window_override, dirty_region);
@@ -99,12 +98,8 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d8_swapchain_Present(IDirect3DSwapChai
     if (dirty_region)
         FIXME("Ignoring dirty_region %p.\n", dirty_region);
 
-    wined3d_mutex_lock();
-    hr = wined3d_swapchain_present(swapchain->wined3d_swapchain,
+    return wined3d_swapchain_present(swapchain->wined3d_swapchain,
             src_rect, dst_rect, dst_window_override, swapchain->swap_interval, 0);
-    wined3d_mutex_unlock();
-
-    return hr;
 }
 
 static HRESULT WINAPI d3d8_swapchain_GetBackBuffer(IDirect3DSwapChain8 *iface,
