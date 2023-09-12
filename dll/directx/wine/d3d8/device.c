@@ -595,6 +595,7 @@ static ULONG WINAPI d3d8_device_Release(IDirect3DDevice8 *iface)
 
         if (device->recording)
             wined3d_stateblock_decref(device->recording);
+        wined3d_stateblock_decref(device->state);
 
         wined3d_swapchain_decref(device->implicit_swapchain);
         wined3d_device_release_focus_window(device->wined3d_device);
@@ -914,6 +915,7 @@ static HRESULT WINAPI d3d8_device_Reset(IDirect3DDevice8 *iface,
         if (device->recording)
             wined3d_stateblock_decref(device->recording);
         device->recording = NULL;
+        device->update_state = device->state;
         present_parameters->BackBufferCount = swapchain_desc.backbuffer_count;
         implicit_swapchain = wined3d_swapchain_get_parent(device->implicit_swapchain);
         implicit_swapchain->swap_interval
@@ -1871,7 +1873,7 @@ static HRESULT WINAPI d3d8_device_BeginStateBlock(IDirect3DDevice8 *iface)
 
     wined3d_mutex_lock();
     if (SUCCEEDED(hr = wined3d_device_begin_stateblock(device->wined3d_device, &stateblock)))
-        device->recording = stateblock;
+        device->update_state = device->recording = stateblock;
     wined3d_mutex_unlock();
 
     return hr;
@@ -1898,6 +1900,7 @@ static HRESULT WINAPI d3d8_device_EndStateBlock(IDirect3DDevice8 *iface, DWORD *
     }
     stateblock = device->recording;
     device->recording = NULL;
+    device->update_state = device->state;
 
     *token = d3d8_allocate_handle(&device->handle_table, stateblock, D3D8_HANDLE_SB);
     wined3d_mutex_unlock();
@@ -3606,6 +3609,15 @@ HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wine
         heap_free(device->handle_table.entries);
         return hr;
     }
+
+    if (FAILED(hr = wined3d_stateblock_create(device->wined3d_device, WINED3D_SBT_PRIMARY, &device->state)))
+    {
+        ERR("Failed to create primary stateblock, hr %#x.\n", hr);
+        wined3d_device_decref(device->wined3d_device);
+        wined3d_mutex_unlock();
+        return hr;
+    }
+    device->update_state = device->state;
 
     if (!parameters->Windowed)
     {
