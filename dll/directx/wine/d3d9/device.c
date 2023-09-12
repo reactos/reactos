@@ -4503,16 +4503,6 @@ HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wine
             wined3d_mutex_unlock();
             return hr;
         }
-
-        for (i = 0; i < count; ++i)
-        {
-            HWND device_window = parameters[i].hDeviceWindow;
-
-            if (!device_window) device_window = focus_window;
-            wined3d_device_setup_fullscreen_window(device->wined3d_device, device_window,
-                    parameters[i].BackBufferWidth,
-                    parameters[i].BackBufferHeight);
-        }
     }
 
     if (!(swapchain_desc = heap_alloc(sizeof(*swapchain_desc) * count)))

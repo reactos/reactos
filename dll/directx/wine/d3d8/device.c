@@ -3602,10 +3602,8 @@ HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wine
 
     if (!parameters->Windowed)
     {
-        HWND device_window = parameters->hDeviceWindow;
-
         if (!focus_window)
-            focus_window = device_window;
+            focus_window = parameters->hDeviceWindow;
         if (FAILED(hr = wined3d_device_acquire_focus_window(device->wined3d_device, focus_window)))
         {
             ERR("Failed to acquire focus window, hr %#x.\n", hr);
@@ -3614,12 +3612,6 @@ HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wine
             heap_free(device->handle_table.entries);
             return hr;
         }
-
-        if (!device_window)
-            device_window = focus_window;
-        wined3d_device_setup_fullscreen_window(device->wined3d_device, device_window,
-                parameters->BackBufferWidth,
-                parameters->BackBufferHeight);
     }
 
     if (flags & D3DCREATE_MULTITHREADED)
