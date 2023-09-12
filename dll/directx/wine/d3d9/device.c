@@ -32,6 +32,14 @@ const struct wined3d_parent_ops d3d9_null_wined3d_parent_ops =
     d3d9_null_wined3d_object_destroyed,
 };
 
+static void wined3d_color_from_d3dcolor(struct wined3d_color *wined3d_colour, D3DCOLOR d3d_colour)
+{
+    wined3d_colour->r = ((d3d_colour >> 16) & 0xff) / 255.0f;
+    wined3d_colour->g = ((d3d_colour >>  8) & 0xff) / 255.0f;
+    wined3d_colour->b = (d3d_colour & 0xff) / 255.0f;
+    wined3d_colour->a = ((d3d_colour >> 24) & 0xff) / 255.0f;
+}
+
 D3DFORMAT d3dformat_from_wined3dformat(enum wined3d_format_id format)
 {
     BYTE *c = (BYTE *)&format;
@@ -1980,14 +1988,8 @@ static void d3d9_rts_flag_auto_gen_mipmap(struct d3d9_device *device)
 static HRESULT WINAPI d3d9_device_Clear(IDirect3DDevice9Ex *iface, DWORD rect_count,
         const D3DRECT *rects, DWORD flags, D3DCOLOR color, float z, DWORD stencil)
 {
-    const struct wined3d_color c =
-    {
-        ((color >> 16) & 0xff) / 255.0f,
-        ((color >>  8) & 0xff) / 255.0f,
-        (color & 0xff) / 255.0f,
-        ((color >> 24) & 0xff) / 255.0f,
-    };
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
+    struct wined3d_color c;
     HRESULT hr;
 
     TRACE("iface %p, rect_count %u, rects %p, flags %#x, color 0x%08x, z %.8e, stencil %u.\n",
@@ -1999,6 +2001,7 @@ static HRESULT WINAPI d3d9_device_Clear(IDirect3DDevice9Ex *iface, DWORD rect_co
         rect_count = 0;
     }
 
+    wined3d_color_from_d3dcolor(&c, color);
     wined3d_mutex_lock();
     hr = wined3d_device_clear(device->wined3d_device, rect_count, (const RECT *)rects, flags, &c, z, stencil);
     if (SUCCEEDED(hr))
@@ -2217,8 +2220,19 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_SetRenderState(IDirect3DDevi
         D3DRENDERSTATETYPE state, DWORD value)
 {
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
+    struct wined3d_color factor;
 
     TRACE("iface %p, state %#x, value %#x.\n", iface, state, value);
+
+    if (state == D3DRS_BLENDFACTOR)
+    {
+        wined3d_color_from_d3dcolor(&factor, value);
+        wined3d_mutex_lock();
+        wined3d_device_set_blend_state(device->wined3d_device, NULL, &factor);
+        wined3d_mutex_unlock();
+
+        return D3D_OK;
+    }
 
     wined3d_mutex_lock();
     wined3d_device_set_render_state(device->wined3d_device, state, value);
@@ -2231,8 +2245,19 @@ static HRESULT WINAPI d3d9_device_GetRenderState(IDirect3DDevice9Ex *iface,
         D3DRENDERSTATETYPE state, DWORD *value)
 {
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
+    struct wined3d_color factor;
 
     TRACE("iface %p, state %#x, value %p.\n", iface, state, value);
+
+    if (state == D3DRS_BLENDFACTOR)
+    {
+        wined3d_mutex_lock();
+        wined3d_device_get_blend_state(device->wined3d_device, &factor);
+        wined3d_mutex_unlock();
+        *value = D3DCOLOR_COLORVALUE(factor.r, factor.g, factor.b, factor.a);
+
+        return D3D_OK;
+    }
 
     wined3d_mutex_lock();
     *value = wined3d_device_get_render_state(device->wined3d_device, state);
