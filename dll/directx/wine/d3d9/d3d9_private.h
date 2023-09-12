@@ -42,6 +42,7 @@
 
 #define D3D9_MAX_VERTEX_SHADER_CONSTANTF 256
 #define D3D9_MAX_TEXTURE_UNITS 20
+#define D3D9_MAX_STREAMS 16
 
 #define D3DPRESENTFLAGS_MASK 0x00000fffu
 
@@ -102,9 +103,12 @@ struct d3d9_device
     struct d3d9_surface *render_targets[D3D_MAX_SIMULTANEOUS_RENDERTARGETS];
 
     LONG device_state;
-    BOOL in_destruction;
-    BOOL in_scene;
-    BOOL has_vertex_declaration;
+    DWORD sysmem_vb : 16; /* D3D9_MAX_STREAMS */
+    DWORD in_destruction : 1;
+    DWORD in_scene : 1;
+    DWORD has_vertex_declaration : 1;
+    DWORD recording : 1;
+    DWORD padding : 12;
 
     unsigned int max_user_clip_planes;
 
@@ -181,6 +185,7 @@ struct d3d9_vertexbuffer
     struct d3d9_resource resource;
     struct wined3d_buffer *wined3d_buffer;
     IDirect3DDevice9Ex *parent_device;
+    struct wined3d_buffer *draw_buffer;
     DWORD fvf;
 };
 
