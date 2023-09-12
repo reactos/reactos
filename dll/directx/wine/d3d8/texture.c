@@ -1186,6 +1186,10 @@ HRESULT volumetexture_init(struct d3d8_texture *texture, struct d3d8_device *dev
     struct wined3d_resource_desc desc;
     HRESULT hr;
 
+    /* In d3d8, 3D textures can't be used as rendertarget or depth/stencil buffer. */
+    if (usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+        return D3DERR_INVALIDCALL;
+
     texture->IDirect3DBaseTexture8_iface.lpVtbl = (const IDirect3DBaseTexture8Vtbl *)&Direct3DVolumeTexture8_Vtbl;
     d3d8_resource_init(&texture->resource);
     list_init(&texture->rtv_list);
