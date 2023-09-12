@@ -54,7 +54,7 @@ HRESULT vdecl_convert_fvf(DWORD FVF, D3DVERTEXELEMENT9 **ppVertexElements) DECLS
 D3DFORMAT d3dformat_from_wined3dformat(enum wined3d_format_id format) DECLSPEC_HIDDEN;
 BOOL is_gdi_compat_wined3dformat(enum wined3d_format_id format) DECLSPEC_HIDDEN;
 enum wined3d_format_id wined3dformat_from_d3dformat(D3DFORMAT format) DECLSPEC_HIDDEN;
-unsigned int wined3dmapflags_from_d3dmapflags(unsigned int flags) DECLSPEC_HIDDEN;
+unsigned int wined3dmapflags_from_d3dmapflags(unsigned int flags, unsigned int usage) DECLSPEC_HIDDEN;
 void present_parameters_from_wined3d_swapchain_desc(D3DPRESENT_PARAMETERS *present_parameters,
         const struct wined3d_swapchain_desc *swapchain_desc, DWORD presentation_interval) DECLSPEC_HIDDEN;
 void d3dcaps_from_wined3dcaps(D3DCAPS9 *caps, const struct wined3d_caps *wined3d_caps) DECLSPEC_HIDDEN;
@@ -187,7 +187,7 @@ struct d3d9_vertexbuffer
     struct wined3d_buffer *wined3d_buffer;
     IDirect3DDevice9Ex *parent_device;
     struct wined3d_buffer *draw_buffer;
-    DWORD fvf;
+    DWORD fvf, usage;
 };
 
 HRESULT vertexbuffer_init(struct d3d9_vertexbuffer *buffer, struct d3d9_device *device,
@@ -202,6 +202,7 @@ struct d3d9_indexbuffer
     IDirect3DDevice9Ex *parent_device;
     struct wined3d_buffer *draw_buffer;
     enum wined3d_format_id format;
+    DWORD usage;
 };
 
 HRESULT indexbuffer_init(struct d3d9_indexbuffer *buffer, struct d3d9_device *device,
