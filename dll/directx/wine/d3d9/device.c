@@ -1014,8 +1014,8 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_Present(IDirect3DDevice9Ex *
     unsigned int i;
     HRESULT hr;
 
-    TRACE("iface %p, src_rect %p, dst_rect %p, dst_window_override %p, dirty_region %p.\n",
-            iface, src_rect, dst_rect, dst_window_override, dirty_region);
+    TRACE("iface %p, src_rect %s, dst_rect %s, dst_window_override %p, dirty_region %p.\n",
+            iface, wine_dbgstr_rect(src_rect), wine_dbgstr_rect(dst_rect), dst_window_override, dirty_region);
 
     if (device->device_state != D3D9_DEVICE_STATE_OK)
         return device->d3d_parent->extended ? S_PRESENT_OCCLUDED : D3DERR_DEVICELOST;
@@ -1512,8 +1512,8 @@ static HRESULT WINAPI d3d9_device_UpdateSurface(IDirect3DDevice9Ex *iface,
     struct wined3d_box src_box;
     HRESULT hr;
 
-    TRACE("iface %p, src_surface %p, src_rect %p, dst_surface %p, dst_point %p.\n",
-            iface, src_surface, src_rect, dst_surface, dst_point);
+    TRACE("iface %p, src_surface %p, src_rect %s, dst_surface %p, dst_point %p.\n",
+            iface, src_surface, wine_dbgstr_rect(src_rect), dst_surface, dst_point);
 
     wined3d_mutex_lock();
 
@@ -1630,8 +1630,8 @@ static HRESULT WINAPI d3d9_device_StretchRect(IDirect3DDevice9Ex *iface, IDirect
     HRESULT hr = D3DERR_INVALIDCALL;
     RECT d, s;
 
-    TRACE("iface %p, src_surface %p, src_rect %p, dst_surface %p, dst_rect %p, filter %#x.\n",
-            iface, src_surface, src_rect, dst_surface, dst_rect, filter);
+    TRACE("iface %p, src_surface %p, src_rect %s, dst_surface %p, dst_rect %s, filter %#x.\n",
+            iface, src_surface, wine_dbgstr_rect(src_rect), dst_surface, wine_dbgstr_rect(dst_rect), filter);
 
     wined3d_mutex_lock();
     wined3d_texture_get_sub_resource_desc(dst->wined3d_texture, dst->sub_resource_idx, &dst_desc);
