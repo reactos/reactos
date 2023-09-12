@@ -729,7 +729,7 @@ class CMruNode
     : public CMruLongList
 {
 protected:
-    UINT m_uSlotData = 0;                   // The slot data
+    UINT m_iSlot = 0;                       // The slot index
     CMruNode *m_pParent = NULL;             // The parent
     IShellFolder *m_pShellFolder = NULL;    // The shell folder
 
@@ -749,10 +749,10 @@ public:
 
     CMruNode *GetParent();
 
-    HRESULT BindToSlot(UINT uSlotData, IShellFolder **ppSF);
+    HRESULT BindToSlot(UINT iSlot, IShellFolder **ppSF);
     HRESULT GetNode(BOOL bAdd, LPCITEMIDLIST pidl, CMruNode **pNewNode);
-    HRESULT GetNodeSlot(LPDWORD pdwData);
-    HRESULT SetNodeSlot(UINT pnSlot);
+    HRESULT GetNodeSlot(UINT *piSlot);
+    HRESULT SetNodeSlot(UINT iSlot);
 
     HRESULT RemoveLeast(LPDWORD pdwData);
     HRESULT Clear(CMruPidlList *pList);
@@ -760,7 +760,7 @@ public:
 
 CMruNode::CMruNode(CMruNode *pParent, UINT iSlot)
 {
-    m_uSlotData = iSlot;
+    m_iSlot = iSlot;
     m_pParent = pParent;
     pParent->AddRef();
 }
@@ -844,10 +844,10 @@ HRESULT CMruNode::GetNode(BOOL bAdd, LPCITEMIDLIST pidl, CMruNode **ppNewNode)
     return hr;
 }
 
-HRESULT CMruNode::BindToSlot(UINT uSlotData, IShellFolder **ppSF)
+HRESULT CMruNode::BindToSlot(UINT iSlot, IShellFolder **ppSF)
 {
     SLOTITEMDATA *pItem;
-    HRESULT hr = _GetSlotItem(uSlotData, &pItem);
+    HRESULT hr = _GetSlotItem(iSlot, &pItem);
     if (FAILED(hr))
         return hr;
 
@@ -862,11 +862,11 @@ BOOL CMruNode::_InitLate()
     if (!m_pShellFolder)
     {
         if (m_pParent)
-            m_pParent->BindToSlot(m_uSlotData, &m_pShellFolder);
+            m_pParent->BindToSlot(m_iSlot, &m_pShellFolder);
         else
             SHGetDesktopFolder(&m_pShellFolder);
     }
-    return (m_pShellFolder != NULL);
+    return !!m_pShellFolder;
 }
 
 BOOL CMruNode::_IsEqual(SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData)
@@ -876,21 +876,21 @@ BOOL CMruNode::_IsEqual(SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData)
                                       (LPCITEMIDLIST)pvData) == 0;
 }
 
-HRESULT CMruNode::GetNodeSlot(LPDWORD pdwData)
+HRESULT CMruNode::GetNodeSlot(UINT *piSlot)
 {
-    DWORD cbData = sizeof(*pdwData);
-    DWORD error = SHGetValueW(m_hKey, NULL, L"NodeSlot", NULL,
-                              pdwData, (pdwData ? &cbData : NULL));
+    DWORD dwData, cbData = sizeof(dwData);
+    DWORD error = SHGetValueW(m_hKey, NULL, L"NodeSlot", NULL, &dwData, (piSlot ? &cbData : NULL));
     if (error != ERROR_SUCCESS)
         return E_FAIL;
+    *piSlot = (UINT)dwData;
     return S_OK;
 }
 
-HRESULT CMruNode::SetNodeSlot(UINT pnSlot)
+HRESULT CMruNode::SetNodeSlot(UINT iSlot)
 {
-    if (SHSetValueW(m_hKey, NULL, L"NodeSlot", REG_DWORD, &pnSlot, sizeof(DWORD)) != ERROR_SUCCESS)
+    DWORD dwData = iSlot;
+    if (SHSetValueW(m_hKey, NULL, L"NodeSlot", REG_DWORD, &dwData, sizeof(dwData)) != ERROR_SUCCESS)
         return E_FAIL;
-
     return S_OK;
 }
 
