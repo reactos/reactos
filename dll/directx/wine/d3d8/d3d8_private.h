@@ -124,9 +124,10 @@ struct d3d8_device
 
     LONG device_state;
     DWORD sysmem_vb : 16; /* D3D8_MAX_STREAMS */
+    DWORD sysmem_ib : 1;
     DWORD in_destruction : 1;
     DWORD recording : 1;
-    DWORD padding : 14;
+    DWORD padding : 13;
 
     /* The d3d8 API supports only one implicit swapchain (no D3DCREATE_ADAPTERGROUP_DEVICE,
      * no GetSwapchain, GetBackBuffer doesn't accept a swapchain number). */
@@ -220,6 +221,7 @@ struct d3d8_indexbuffer
     struct d3d8_resource resource;
     struct wined3d_buffer *wined3d_buffer;
     IDirect3DDevice8 *parent_device;
+    struct wined3d_buffer *draw_buffer;
     enum wined3d_format_id format;
 };
 
