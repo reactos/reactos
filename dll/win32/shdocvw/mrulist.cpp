@@ -108,7 +108,7 @@ public:
     virtual HRESULT _InitSlots() = 0;
     virtual void _SaveSlots() = 0;
     virtual UINT _UpdateSlots(UINT iSlot) = 0;
-    virtual void _SlotString(DWORD dwSlot, LPWSTR psz, DWORD cch) = 0;
+    virtual void _SlotString(UINT iSlot, LPWSTR psz, DWORD cch) = 0;
     virtual HRESULT _GetSlot(UINT iSlot, UINT *puSlot) = 0;
     virtual HRESULT _RemoveSlot(UINT iSlot, UINT *puSlot) = 0;
 
@@ -442,7 +442,7 @@ protected:
     HRESULT _InitSlots() override;
     void _SaveSlots() override;
     UINT _UpdateSlots(UINT iSlot) override;
-    void _SlotString(DWORD dwSlot, LPWSTR psz, DWORD cch) override;
+    void _SlotString(UINT iSlot, LPWSTR psz, DWORD cch) override;
     HRESULT _GetSlot(UINT iSlot, UINT *puSlot) override;
     HRESULT _RemoveSlot(UINT iSlot, UINT *puSlot) override;
     friend class CMruLongList;
@@ -515,11 +515,11 @@ UINT CMruShortList::_UpdateSlots(UINT iSlot)
     return iData;
 }
 
-void CMruShortList::_SlotString(DWORD dwSlot, LPWSTR psz, DWORD cch)
+void CMruShortList::_SlotString(UINT iSlot, LPWSTR psz, DWORD cch)
 {
     if (cch >= 2)
     {
-        psz[0] = (WCHAR)(L'a' + dwSlot);
+        psz[0] = (WCHAR)(L'a' + iSlot);
         psz[1] = UNICODE_NULL;
     }
 }
@@ -563,7 +563,7 @@ protected:
     HRESULT _InitSlots() override;
     void _SaveSlots() override;
     UINT _UpdateSlots(UINT iSlot) override;
-    void _SlotString(DWORD dwSlot, LPWSTR psz, DWORD cch) override;
+    void _SlotString(UINT iSlot, LPWSTR psz, DWORD cch) override;
     HRESULT _GetSlot(UINT iSlot, UINT *puSlot) override;
     HRESULT _RemoveSlot(UINT iSlot, UINT *puSlot) override;
 
@@ -640,9 +640,9 @@ UINT CMruLongList::_UpdateSlots(UINT iSlot)
     return uSlotData;
 }
 
-void CMruLongList::_SlotString(DWORD dwSlot, LPWSTR psz, DWORD cch)
+void CMruLongList::_SlotString(UINT iSlot, LPWSTR psz, DWORD cch)
 {
-    StringCchPrintfW(psz, cch, L"%d", dwSlot);
+    StringCchPrintfW(psz, cch, L"%d", iSlot);
 }
 
 HRESULT CMruLongList::_GetSlot(UINT iSlot, UINT *puSlot)
@@ -684,20 +684,20 @@ void CMruLongList::_ImportShortList()
     {
         for (;;)
         {
-            UINT uSlot;
-            hr = pShortList->_GetSlot(m_cSlots, &uSlot);
+            UINT iSlot;
+            hr = pShortList->_GetSlot(m_cSlots, &iSlot);
             if (FAILED(hr))
                 break;
 
             SLOTITEMDATA *pItem;
-            hr = pShortList->_GetSlotItem(uSlot, &pItem);
+            hr = pShortList->_GetSlotItem(iSlot, &pItem);
             if (FAILED(hr))
                 break;
 
-            _AddItem(uSlot, (const BYTE*)pItem->pvData, pItem->cbData);
-            pShortList->_DeleteItem(uSlot);
+            _AddItem(iSlot, (const BYTE*)pItem->pvData, pItem->cbData);
+            pShortList->_DeleteItem(iSlot);
 
-            m_puSlotData[m_cSlots++] = uSlot;
+            m_puSlotData[m_cSlots++] = iSlot;
         }
 
         m_bNeedSave = TRUE;
@@ -737,15 +737,14 @@ protected:
     BOOL _IsEqual(SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData);
     DWORD _DeleteValue(LPCWSTR pszValue) override;
 
-    HRESULT _CreateNode(DWORD dwSlot, CMruNode **ppNewNode);
-
+    HRESULT _CreateNode(UINT iSlot, CMruNode **ppNewNode);
+    HRESULT _AddPidl(UINT iSlot, LPCITEMIDLIST pidl);
     HRESULT _FindPidl(LPCITEMIDLIST pidl, UINT *piSlot);
     HRESULT _GetPidlSlot(LPCITEMIDLIST pidl, BOOL bAdd, UINT *puSlotData);
-    HRESULT _AddPidl(UINT uSlot, LPCITEMIDLIST pidl);
 
 public:
     CMruNode() { }
-    CMruNode(CMruNode *pParent, UINT uSlotData);
+    CMruNode(CMruNode *pParent, UINT iSlot);
     ~CMruNode() override;
 
     CMruNode *GetParent();
@@ -759,9 +758,9 @@ public:
     HRESULT Clear(CMruPidlList *pList);
 };
 
-CMruNode::CMruNode(CMruNode *pParent, UINT uSlotData)
+CMruNode::CMruNode(CMruNode *pParent, UINT iSlot)
 {
-    m_uSlotData = uSlotData;
+    m_uSlotData = iSlot;
     m_pParent = pParent;
     pParent->AddRef();
 }
@@ -788,14 +787,14 @@ CMruNode *CMruNode::GetParent()
     return m_pParent;
 }
 
-HRESULT CMruNode::_CreateNode(DWORD dwSlot, CMruNode **ppNewNode)
+HRESULT CMruNode::_CreateNode(UINT iSlot, CMruNode **ppNewNode)
 {
-    CMruNode *pNewNode = new CMruNode(this, dwSlot);
+    CMruNode *pNewNode = new CMruNode(this, iSlot);
     if (!pNewNode)
         return E_OUTOFMEMORY;
 
     WCHAR szBuff[12];
-    _SlotString(dwSlot, szBuff, _countof(szBuff));
+    _SlotString(iSlot, szBuff, _countof(szBuff));
 
     HRESULT hr = pNewNode->InitData(m_cSlotRooms, 0, m_hKey, szBuff, NULL);
     if (FAILED(hr))
@@ -895,9 +894,9 @@ HRESULT CMruNode::SetNodeSlot(UINT pnSlot)
     return S_OK;
 }
 
-HRESULT CMruNode::_AddPidl(UINT uSlot, LPCITEMIDLIST pidl)
+HRESULT CMruNode::_AddPidl(UINT iSlot, LPCITEMIDLIST pidl)
 {
-    return CMruBase::_AddItem(uSlot, (const BYTE*)pidl, sizeof(WORD) + pidl->mkid.cb);
+    return CMruBase::_AddItem(iSlot, (const BYTE*)pidl, sizeof(WORD) + pidl->mkid.cb);
 }
 
 DWORD CMruNode::_DeleteValue(LPCWSTR pszValue)
@@ -942,13 +941,13 @@ HRESULT CMruNode::RemoveLeast(LPDWORD pdwData)
         return S_FALSE;
     }
 
-    DWORD dwSlot;
-    HRESULT hr = _GetSlot(m_cSlots - 1, &dwSlot);
+    UINT uSlot;
+    HRESULT hr = _GetSlot(m_cSlots - 1, &uSlot);
     if (FAILED(hr))
         return hr;
 
     CMruNode *pNode;
-    hr = CMruNode::_CreateNode(dwSlot, &pNode);
+    hr = CMruNode::_CreateNode(uSlot, &pNode);
     if (SUCCEEDED(hr))
     {
         hr = pNode->RemoveLeast(pdwData);
