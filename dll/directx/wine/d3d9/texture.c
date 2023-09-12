@@ -1451,6 +1451,12 @@ HRESULT volumetexture_init(struct d3d9_texture *texture, struct d3d9_device *dev
     struct wined3d_resource_desc desc;
     HRESULT hr;
 
+    if (pool == D3DPOOL_MANAGED && device->d3d_parent->extended)
+    {
+        WARN("Managed resources are not supported by d3d9ex devices.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
     /* In d3d9, 3D textures can't be used as rendertarget or depth/stencil buffer. */
     if (usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
         return D3DERR_INVALIDCALL;
