@@ -1405,9 +1405,6 @@ HRESULT cubetexture_init(struct d3d9_texture *texture, struct d3d9_device *devic
     desc.depth = 1;
     desc.size = 0;
 
-    if (pool != D3DPOOL_DEFAULT || (usage & D3DUSAGE_DYNAMIC))
-        flags |= WINED3D_TEXTURE_CREATE_MAPPABLE;
-
     if (is_gdi_compat_wined3dformat(desc.format))
         flags |= WINED3D_TEXTURE_CREATE_GET_DC;
 
