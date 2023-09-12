@@ -1813,9 +1813,6 @@ static HRESULT WINAPI d3d9_device_CreateOffscreenPlainSurface(IDirect3DDevice9Ex
         }
     }
 
-    /* FIXME: Offscreen surfaces are supposed to be always lockable,
-     * regardless of the pool they're created in. Should we set dynamic usage
-     * here? */
     return d3d9_device_create_surface(device, width, height, format,
             WINED3D_TEXTURE_CREATE_MAPPABLE, surface, 0, pool, D3DMULTISAMPLE_NONE, 0, user_mem);
 }
