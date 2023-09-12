@@ -2027,6 +2027,12 @@ static HRESULT WINAPI d3d8_device_CreateStateBlock(IDirect3DDevice8 *iface,
     }
 
     wined3d_mutex_lock();
+    if (device->recording)
+    {
+        wined3d_mutex_unlock();
+        WARN("Trying to create a stateblock while recording, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
     hr = wined3d_stateblock_create(device->wined3d_device, (enum wined3d_stateblock_type)type, &stateblock);
     if (FAILED(hr))
     {
