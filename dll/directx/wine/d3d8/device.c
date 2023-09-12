@@ -304,6 +304,20 @@ static BOOL wined3d_swapchain_desc_from_present_parameters(struct wined3d_swapch
         WARN("Invalid backbuffer count %u.\n", present_parameters->BackBufferCount);
         return FALSE;
     }
+    switch (present_parameters->FullScreen_PresentationInterval)
+    {
+        case D3DPRESENT_INTERVAL_DEFAULT:
+        case D3DPRESENT_INTERVAL_ONE:
+        case D3DPRESENT_INTERVAL_TWO:
+        case D3DPRESENT_INTERVAL_THREE:
+        case D3DPRESENT_INTERVAL_FOUR:
+        case D3DPRESENT_INTERVAL_IMMEDIATE:
+            break;
+        default:
+            WARN("Invalid presentation interval %#x.\n",
+                    present_parameters->FullScreen_PresentationInterval);
+            return FALSE;
+    }
 
     swapchain_desc->backbuffer_width = present_parameters->BackBufferWidth;
     swapchain_desc->backbuffer_height = present_parameters->BackBufferHeight;
