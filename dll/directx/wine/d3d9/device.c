@@ -346,10 +346,11 @@ static BOOL wined3d_swapchain_desc_from_present_parameters(struct wined3d_swapch
             = wined3dformat_from_d3dformat(present_parameters->AutoDepthStencilFormat);
     swapchain_desc->flags
             = (present_parameters->Flags & D3DPRESENTFLAGS_MASK) | WINED3D_SWAPCHAIN_ALLOW_MODE_SWITCH;
-    if (is_gdi_compat_wined3dformat(swapchain_desc->backbuffer_format)
+    if ((present_parameters->Flags & D3DPRESENTFLAG_LOCKABLE_BACKBUFFER)
+            && (is_gdi_compat_wined3dformat(swapchain_desc->backbuffer_format)
             /* WINED3DFMT_UNKNOWN creates the swapchain with the current
              * display format, which is always GDI-compatible. */
-            || swapchain_desc->backbuffer_format == WINED3DFMT_UNKNOWN)
+            || swapchain_desc->backbuffer_format == WINED3DFMT_UNKNOWN))
         swapchain_desc->flags |= WINED3D_SWAPCHAIN_GDI_COMPATIBLE;
     swapchain_desc->refresh_rate = present_parameters->FullScreen_RefreshRateInHz;
     swapchain_desc->auto_restore_display_mode = TRUE;
