@@ -294,7 +294,7 @@ void d3dcaps_from_wined3dcaps(D3DCAPS8 *caps, const WINED3DCAPS *wined3d_caps)
     caps->Caps                      = wined3d_caps->Caps;
     caps->Caps2                     = wined3d_caps->Caps2;
     caps->Caps3                     = wined3d_caps->Caps3;
-    caps->PresentationIntervals     = wined3d_caps->PresentationIntervals;
+    caps->PresentationIntervals     = D3DPRESENT_INTERVAL_IMMEDIATE | D3DPRESENT_INTERVAL_ONE;
     caps->CursorCaps                = wined3d_caps->CursorCaps;
     caps->DevCaps                   = wined3d_caps->DevCaps;
     caps->PrimitiveMiscCaps         = wined3d_caps->PrimitiveMiscCaps;
