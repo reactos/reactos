@@ -594,7 +594,7 @@ static ULONG WINAPI d3d8_device_Release(IDirect3DDevice8 *iface)
         if (device->index_buffer)
             wined3d_buffer_decref(device->index_buffer);
 
-        wined3d_device_uninit_3d(device->wined3d_device);
+        wined3d_swapchain_decref(device->implicit_swapchain);
         wined3d_device_release_focus_window(device->wined3d_device);
         wined3d_device_decref(device->wined3d_device);
         heap_free(device->handle_table.entries);
@@ -877,6 +877,7 @@ static HRESULT WINAPI d3d8_device_Reset(IDirect3DDevice8 *iface,
 {
     struct d3d8_device *device = impl_from_IDirect3DDevice8(iface);
     struct wined3d_swapchain_desc swapchain_desc;
+    struct d3d8_swapchain *implicit_swapchain;
     HRESULT hr;
 
     TRACE("iface %p, present_parameters %p.\n", iface, present_parameters);
@@ -888,6 +889,7 @@ static HRESULT WINAPI d3d8_device_Reset(IDirect3DDevice8 *iface,
     }
     if (!wined3d_swapchain_desc_from_present_parameters(&swapchain_desc, present_parameters))
         return D3DERR_INVALIDCALL;
+    swapchain_desc.flags |= WINED3D_SWAPCHAIN_IMPLICIT;
 
     wined3d_mutex_lock();
 
@@ -909,7 +911,8 @@ static HRESULT WINAPI d3d8_device_Reset(IDirect3DDevice8 *iface,
     {
         device->recording = FALSE;
         present_parameters->BackBufferCount = swapchain_desc.backbuffer_count;
-        device->implicit_swapchain->swap_interval
+        implicit_swapchain = wined3d_swapchain_get_parent(device->implicit_swapchain);
+        implicit_swapchain->swap_interval
                 = wined3dswapinterval_from_d3d(present_parameters->FullScreen_PresentationInterval);
         wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_POINTSIZE_MIN, 0);
         wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_ZENABLE,
@@ -929,6 +932,7 @@ static HRESULT WINAPI d3d8_device_Present(IDirect3DDevice8 *iface, const RECT *s
         const RECT *dst_rect, HWND dst_window_override, const RGNDATA *dirty_region)
 {
     struct d3d8_device *device = impl_from_IDirect3DDevice8(iface);
+    struct d3d8_swapchain *implicit_swapchain;
 
     TRACE("iface %p, src_rect %s, dst_rect %s, dst_window_override %p, dirty_region %p.\n",
             iface, wine_dbgstr_rect(src_rect), wine_dbgstr_rect(dst_rect), dst_window_override, dirty_region);
@@ -938,7 +942,8 @@ static HRESULT WINAPI d3d8_device_Present(IDirect3DDevice8 *iface, const RECT *s
      * shows a framerate on Windows in applications that only call the device
      * method, like e.g. the dx8 sdk samples. The conclusion is that native
      * calls the swapchain's public method from the device. */
-    return IDirect3DSwapChain8_Present(&device->implicit_swapchain->IDirect3DSwapChain8_iface,
+    implicit_swapchain = wined3d_swapchain_get_parent(device->implicit_swapchain);
+    return IDirect3DSwapChain8_Present(&implicit_swapchain->IDirect3DSwapChain8_iface,
             src_rect, dst_rect, dst_window_override, dirty_region);
 }
 
@@ -946,7 +951,6 @@ static HRESULT WINAPI d3d8_device_GetBackBuffer(IDirect3DDevice8 *iface,
         UINT backbuffer_idx, D3DBACKBUFFER_TYPE backbuffer_type, IDirect3DSurface8 **backbuffer)
 {
     struct d3d8_device *device = impl_from_IDirect3DDevice8(iface);
-    struct wined3d_swapchain *wined3d_swapchain;
     struct wined3d_texture *wined3d_texture;
     struct d3d8_surface *surface_impl;
 
@@ -958,8 +962,7 @@ static HRESULT WINAPI d3d8_device_GetBackBuffer(IDirect3DDevice8 *iface,
     /* No need to check for backbuffer == NULL, Windows crashes in that case. */
     wined3d_mutex_lock();
 
-    wined3d_swapchain = device->implicit_swapchain->wined3d_swapchain;
-    if (!(wined3d_texture = wined3d_swapchain_get_back_buffer(wined3d_swapchain, backbuffer_idx)))
+    if (!(wined3d_texture = wined3d_swapchain_get_back_buffer(device->implicit_swapchain, backbuffer_idx)))
     {
         wined3d_mutex_unlock();
         *backbuffer = NULL;
@@ -1387,7 +1390,7 @@ static HRESULT WINAPI d3d8_device_GetFrontBuffer(IDirect3DDevice8 *iface, IDirec
     }
 
     wined3d_mutex_lock();
-    hr = wined3d_swapchain_get_front_buffer_data(device->implicit_swapchain->wined3d_swapchain,
+    hr = wined3d_swapchain_get_front_buffer_data(device->implicit_swapchain,
             dst_impl->wined3d_texture, dst_impl->sub_resource_idx);
     wined3d_mutex_unlock();
 
@@ -3532,29 +3535,6 @@ static HRESULT CDECL device_parent_create_swapchain_texture(struct wined3d_devic
     return hr;
 }
 
-static HRESULT CDECL device_parent_create_swapchain(struct wined3d_device_parent *device_parent,
-        struct wined3d_swapchain_desc *desc, struct wined3d_swapchain **swapchain)
-{
-    struct d3d8_device *device = device_from_device_parent(device_parent);
-    struct d3d8_swapchain *d3d_swapchain;
-    HRESULT hr;
-
-    TRACE("device_parent %p, desc %p, swapchain %p.\n", device_parent, desc, swapchain);
-
-    if (FAILED(hr = d3d8_swapchain_create(device, desc, WINED3D_SWAP_INTERVAL_DEFAULT, &d3d_swapchain)))
-    {
-        WARN("Failed to create swapchain, hr %#x.\n", hr);
-        *swapchain = NULL;
-        return hr;
-    }
-
-    *swapchain = d3d_swapchain->wined3d_swapchain;
-    wined3d_swapchain_incref(*swapchain);
-    IDirect3DSwapChain8_Release(&d3d_swapchain->IDirect3DSwapChain8_iface);
-
-    return hr;
-}
-
 static const struct wined3d_device_parent_ops d3d8_wined3d_device_parent_ops =
 {
     device_parent_wined3d_device_created,
@@ -3562,7 +3542,6 @@ static const struct wined3d_device_parent_ops d3d8_wined3d_device_parent_ops =
     device_parent_activate,
     device_parent_texture_sub_resource_created,
     device_parent_create_swapchain_texture,
-    device_parent_create_swapchain,
 };
 
 static void setup_fpu(void)
@@ -3587,6 +3566,7 @@ HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wine
 {
     struct wined3d_swapchain_desc swapchain_desc;
     struct wined3d_swapchain *wined3d_swapchain;
+    struct d3d8_swapchain *d3d_swapchain;
     HRESULT hr;
 
     static const enum wined3d_feature_level feature_levels[] =
@@ -3654,16 +3634,22 @@ HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wine
         heap_free(device->handle_table.entries);
         return D3DERR_INVALIDCALL;
     }
+    swapchain_desc.flags |= WINED3D_SWAPCHAIN_IMPLICIT;
 
-    if (FAILED(hr = wined3d_device_init_3d(device->wined3d_device, &swapchain_desc)))
+    if (FAILED(hr = d3d8_swapchain_create(device, &swapchain_desc,
+            wined3dswapinterval_from_d3d(parameters->FullScreen_PresentationInterval), &d3d_swapchain)))
     {
-        WARN("Failed to initialize 3D, hr %#x.\n", hr);
+        WARN("Failed to create implicit swapchain, hr %#x.\n", hr);
         wined3d_device_release_focus_window(device->wined3d_device);
         wined3d_device_decref(device->wined3d_device);
         wined3d_mutex_unlock();
         heap_free(device->handle_table.entries);
         return hr;
     }
+
+    wined3d_swapchain = d3d_swapchain->wined3d_swapchain;
+    wined3d_swapchain_incref(wined3d_swapchain);
+    IDirect3DSwapChain8_Release(&d3d_swapchain->IDirect3DSwapChain8_iface);
 
     wined3d_device_set_render_state(device->wined3d_device,
             WINED3D_RS_ZENABLE, !!swapchain_desc.enable_auto_depth_stencil);
@@ -3681,10 +3667,7 @@ HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wine
         goto err;
     }
 
-    wined3d_swapchain = wined3d_device_get_swapchain(device->wined3d_device, 0);
-    device->implicit_swapchain = wined3d_swapchain_get_parent(wined3d_swapchain);
-    device->implicit_swapchain->swap_interval
-            = wined3dswapinterval_from_d3d(parameters->FullScreen_PresentationInterval);
+    device->implicit_swapchain = wined3d_swapchain;
 
     device->d3d_parent = &parent->IDirect3D8_iface;
     IDirect3D8_AddRef(device->d3d_parent);
@@ -3693,7 +3676,7 @@ HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wine
 
 err:
     wined3d_mutex_lock();
-    wined3d_device_uninit_3d(device->wined3d_device);
+    wined3d_swapchain_decref(wined3d_swapchain);
     wined3d_device_release_focus_window(device->wined3d_device);
     wined3d_device_decref(device->wined3d_device);
     wined3d_mutex_unlock();

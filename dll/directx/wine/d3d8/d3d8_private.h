@@ -131,7 +131,7 @@ struct d3d8_device
 
     /* The d3d8 API supports only one implicit swapchain (no D3DCREATE_ADAPTERGROUP_DEVICE,
      * no GetSwapchain, GetBackBuffer doesn't accept a swapchain number). */
-    struct d3d8_swapchain   *implicit_swapchain;
+    struct wined3d_swapchain *implicit_swapchain;
 };
 
 HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wined3d *wined3d, UINT adapter,

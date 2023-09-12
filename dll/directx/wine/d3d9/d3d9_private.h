@@ -116,7 +116,7 @@ struct d3d9_device
     unsigned int max_user_clip_planes;
 
     UINT implicit_swapchain_count;
-    struct d3d9_swapchain **implicit_swapchains;
+    struct wined3d_swapchain **implicit_swapchains;
 };
 
 HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wined3d *wined3d,
