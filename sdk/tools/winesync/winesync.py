@@ -46,6 +46,9 @@ class wine_sync:
         self.wine_staging_repo = pygit2.Repository(self.wine_staging_src)
         self.reactos_repo = pygit2.Repository(self.reactos_src)
 
+        # the standard author signature we will use
+        self.winesync_author_signature = pygit2.Signature('winesync', 'ros-dev@reactos.org')
+
         # read the index from the reactos tree
         self.reactos_index = self.reactos_repo.index
         self.reactos_index.read()
@@ -245,8 +248,9 @@ class wine_sync:
         else:
             commit_msg += f'wine commit id {str(wine_commit.id)} by {wine_commit.author.name} <{wine_commit.author.email}>'
 
-        self.reactos_repo.create_commit('HEAD',
-            pygit2.Signature('winesync', 'ros-dev@reactos.org'),
+        self.reactos_repo.create_commit(
+            'HEAD',
+            self.winesync_author_signature,
             self.reactos_repo.default_signature,
             commit_msg,
             self.reactos_index.write_tree(),
@@ -310,7 +314,7 @@ class wine_sync:
 
         self.reactos_repo.create_commit(
             'HEAD',
-            self.reactos_repo.default_signature,
+            self.winesync_author_signature,
             self.reactos_repo.default_signature,
             f'[WINESYNC]: revert wine-staging patchset for {self.module}',
             self.reactos_index.write_tree(),
@@ -376,7 +380,7 @@ class wine_sync:
             self.reactos_index.write()
             self.reactos_repo.create_commit(
                 'HEAD',
-                self.reactos_repo.default_signature,
+                self.winesync_author_signature,
                 self.reactos_repo.default_signature,
                 f'[WINESYNC]: {self.module} is now in sync with wine-staging {wine_tag}',
                 self.reactos_index.write_tree(),
