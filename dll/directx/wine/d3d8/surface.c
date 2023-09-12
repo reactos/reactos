@@ -258,6 +258,8 @@ static HRESULT WINAPI d3d8_surface_LockRect(IDirect3DSurface8 *iface,
         locked_rect->pBits = NULL;
     }
 
+    if (hr == E_INVALIDARG)
+        return D3DERR_INVALIDCALL;
     return hr;
 }
 
