@@ -1878,7 +1878,6 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
     TRACE("(%p)->(0x%08x 0x%08x %p) stub\n", this, dwCmdID, dwCmd, hwndCmd);
 
-
     switch (dwCmdID)
     {
         case FCIDM_SHVIEW_SMALLICON:
