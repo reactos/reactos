@@ -251,6 +251,7 @@ struct d3d8_vertex_declaration
 {
     DWORD *elements;
     DWORD elements_size; /* Size of elements, in bytes */
+    DWORD stream_map;
     struct wined3d_vertex_declaration *wined3d_vertex_declaration;
     DWORD shader_handle;
 };

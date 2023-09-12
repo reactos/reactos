@@ -2269,15 +2269,25 @@ static HRESULT WINAPI d3d8_device_GetCurrentTexturePalette(IDirect3DDevice8 *ifa
 static void d3d8_device_upload_sysmem_vertex_buffers(struct d3d8_device *device,
         unsigned int start_vertex, unsigned int vertex_count)
 {
+    struct wined3d_vertex_declaration *wined3d_decl;
     struct wined3d_box box = {0, 0, 0, 1, 0, 1};
     struct d3d8_vertexbuffer *d3d8_buffer;
     struct wined3d_resource *dst_resource;
+    struct d3d8_vertex_declaration *decl;
     unsigned int i, offset, stride, map;
     struct wined3d_buffer *dst_buffer;
     struct wined3d_resource_desc desc;
     HRESULT hr;
 
-    map = device->sysmem_vb;
+    if (!device->sysmem_vb)
+        return;
+
+    wined3d_decl = wined3d_device_get_vertex_declaration(device->wined3d_device);
+    if (!wined3d_decl)
+        return;
+
+    decl = wined3d_vertex_declaration_get_parent(wined3d_decl);
+    map = decl->stream_map & device->sysmem_vb;
     while (map)
     {
         i = wined3d_bit_scan(&map);
