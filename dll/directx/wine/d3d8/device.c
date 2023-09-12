@@ -1964,6 +1964,12 @@ static HRESULT WINAPI d3d8_device_CaptureStateBlock(IDirect3DDevice8 *iface, DWO
     TRACE("iface %p, token %#x.\n", iface, token);
 
     wined3d_mutex_lock();
+    if (device->recording)
+    {
+        wined3d_mutex_unlock();
+        WARN("Trying to capture stateblock while recording, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
     stateblock = d3d8_get_object(&device->handle_table, token - 1, D3D8_HANDLE_SB);
     if (!stateblock)
     {
