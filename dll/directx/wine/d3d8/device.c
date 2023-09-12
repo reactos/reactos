@@ -2101,18 +2101,17 @@ static HRESULT WINAPI d3d8_device_SetTexture(IDirect3DDevice8 *iface, DWORD stag
 {
     struct d3d8_device *device = impl_from_IDirect3DDevice8(iface);
     struct d3d8_texture *texture_impl;
-    HRESULT hr;
 
     TRACE("iface %p, stage %u, texture %p.\n", iface, stage, texture);
 
     texture_impl = unsafe_impl_from_IDirect3DBaseTexture8(texture);
 
     wined3d_mutex_lock();
-    hr = wined3d_device_set_texture(device->wined3d_device, stage,
+    wined3d_device_set_texture(device->wined3d_device, stage,
             texture_impl ? texture_impl->wined3d_texture : NULL);
     wined3d_mutex_unlock();
 
-    return hr;
+    return D3D_OK;
 }
 
 static const struct tss_lookup
