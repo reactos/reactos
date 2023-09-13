@@ -754,8 +754,8 @@ static void context_apply_fbo_entry(struct wined3d_context *context, GLenum targ
 
 /* Context activation is done by the caller. */
 static void context_apply_fbo_state(struct wined3d_context *context, GLenum target,
-        struct wined3d_rendertarget_info *render_targets, struct wined3d_surface *depth_stencil,
-        DWORD color_location, DWORD ds_location)
+        const struct wined3d_rendertarget_info *render_targets,
+        const struct wined3d_rendertarget_info *depth_stencil, DWORD color_location, DWORD ds_location)
 {
     struct fbo_entry *entry, *entry2;
 
@@ -777,16 +777,8 @@ static void context_apply_fbo_state(struct wined3d_context *context, GLenum targ
     }
     else
     {
-        struct wined3d_rendertarget_info ds = {{0}};
-
-        if (depth_stencil)
-        {
-            ds.resource = &depth_stencil->container->resource;
-            ds.sub_resource_idx = surface_get_sub_resource_idx(depth_stencil);
-            ds.layer_count = 1;
-        }
         context->current_fbo = context_find_fbo_entry(context, target,
-                render_targets, &ds, color_location, ds_location);
+                render_targets, depth_stencil, color_location, ds_location);
         context_apply_fbo_entry(context, target, context->current_fbo);
     }
 }
@@ -795,6 +787,8 @@ static void context_apply_fbo_state(struct wined3d_context *context, GLenum targ
 void context_apply_fbo_state_blit(struct wined3d_context *context, GLenum target,
         struct wined3d_surface *render_target, struct wined3d_surface *depth_stencil, DWORD location)
 {
+    struct wined3d_rendertarget_info ds_info = {{0}};
+
     memset(context->blit_targets, 0, sizeof(context->blit_targets));
     if (render_target)
     {
@@ -802,7 +796,15 @@ void context_apply_fbo_state_blit(struct wined3d_context *context, GLenum target
         context->blit_targets[0].sub_resource_idx = surface_get_sub_resource_idx(render_target);
         context->blit_targets[0].layer_count = 1;
     }
-    context_apply_fbo_state(context, target, context->blit_targets, depth_stencil, location, location);
+
+    if (depth_stencil)
+    {
+        ds_info.resource = &depth_stencil->container->resource;
+        ds_info.sub_resource_idx = surface_get_sub_resource_idx(depth_stencil);
+        ds_info.layer_count = 1;
+    }
+
+    context_apply_fbo_state(context, target, context->blit_targets, &ds_info, location, location);
 }
 
 /* Context activation is done by the caller. */
@@ -3055,6 +3057,8 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
 
         if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
         {
+            struct wined3d_rendertarget_info ds_info = {{0}};
+
             context_validate_onscreen_formats(context, dsv);
 
             if (!rt_count || wined3d_resource_is_offscreen(rts[0]->resource))
@@ -3072,14 +3076,22 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
                     if (rts[i] && rts[i]->format->id != WINED3DFMT_NULL)
                         rt_mask |= (1u << i);
                 }
-                context_apply_fbo_state(context, GL_FRAMEBUFFER, context->blit_targets,
-                        wined3d_rendertarget_view_get_surface(dsv),
+
+                if (dsv)
+                {
+                    ds_info.gl_view = dsv->gl_view;
+                    ds_info.resource = dsv->resource;
+                    ds_info.sub_resource_idx = dsv->sub_resource_idx;
+                    ds_info.layer_count = dsv->layer_count;
+                }
+
+                context_apply_fbo_state(context, GL_FRAMEBUFFER, context->blit_targets, &ds_info,
                         rt_count ? rts[0]->resource->draw_binding : 0,
                         dsv ? dsv->resource->draw_binding : 0);
             }
             else
             {
-                context_apply_fbo_state(context, GL_FRAMEBUFFER, NULL, NULL,
+                context_apply_fbo_state(context, GL_FRAMEBUFFER, NULL, &ds_info,
                         WINED3D_LOCATION_DRAWABLE, WINED3D_LOCATION_DRAWABLE);
                 rt_mask = context_generate_rt_mask_from_resource(rts[0]->resource);
             }
@@ -3193,9 +3205,11 @@ void context_state_fb(struct wined3d_context *context, const struct wined3d_stat
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
     {
+        struct wined3d_rendertarget_info ds_info = {{0}};
+
         if (!context->render_offscreen)
         {
-            context_apply_fbo_state(context, GL_FRAMEBUFFER, NULL, NULL,
+            context_apply_fbo_state(context, GL_FRAMEBUFFER, NULL, &ds_info,
                     WINED3D_LOCATION_DRAWABLE, WINED3D_LOCATION_DRAWABLE);
         }
         else
@@ -3216,8 +3230,16 @@ void context_state_fb(struct wined3d_context *context, const struct wined3d_stat
                 if (!color_location)
                     color_location = fb->render_targets[i]->resource->draw_binding;
             }
-            context_apply_fbo_state(context, GL_FRAMEBUFFER, context->blit_targets,
-                    wined3d_rendertarget_view_get_surface(fb->depth_stencil),
+
+            if (fb->depth_stencil)
+            {
+                ds_info.gl_view = fb->depth_stencil->gl_view;
+                ds_info.resource = fb->depth_stencil->resource;
+                ds_info.sub_resource_idx = fb->depth_stencil->sub_resource_idx;
+                ds_info.layer_count = fb->depth_stencil->layer_count;
+            }
+
+            context_apply_fbo_state(context, GL_FRAMEBUFFER, context->blit_targets, &ds_info,
                     color_location, fb->depth_stencil ? fb->depth_stencil->resource->draw_binding : 0);
         }
     }
