@@ -683,6 +683,7 @@ static void wined3d_texture_cleanup(struct wined3d_texture *texture)
 {
     unsigned int sub_count = texture->level_count * texture->layer_count;
     struct wined3d_device *device = texture->resource.device;
+    struct wined3d_renderbuffer_entry *entry, *entry2;
     struct wined3d_context *context = NULL;
 #if !defined(STAGING_CSMT)
     const struct wined3d_gl_info *gl_info;
@@ -725,6 +726,20 @@ static void wined3d_texture_cleanup(struct wined3d_texture *texture)
         texture->sub_resources[i].buffer = NULL;
 #endif /* STAGING_CSMT */
     }
+    if (!context && !list_empty(&texture->renderbuffers))
+    {
+        context = context_acquire(device, NULL, 0);
+        gl_info = context->gl_info;
+    }
+
+    LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &texture->renderbuffers, struct wined3d_renderbuffer_entry, entry)
+    {
+        TRACE("Deleting renderbuffer %u.\n", entry->id);
+        context_gl_resource_released(device, entry->id, TRUE);
+        gl_info->fbo_ops.glDeleteRenderbuffers(1, &entry->id);
+        heap_free(entry);
+    }
+
     if (context)
         context_release(context);
 
@@ -2222,10 +2237,39 @@ static void texture2d_upload_data(struct wined3d_texture *texture, unsigned int 
             texture->resource.format, &src_rect, row_pitch, &dst_point, FALSE, data);
 }
 
+/* Context activation is done by the caller. Context may be NULL in ddraw-only mode. */
 static BOOL texture2d_load_location(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD location)
 {
-    return surface_load_location(texture->sub_resources[sub_resource_idx].u.surface, context, location);
+    struct wined3d_surface *surface;
+
+    TRACE("texture %p, sub_resource_idx %u, context %p, location %s.\n",
+            texture, sub_resource_idx, context, wined3d_debug_location(location));
+
+    surface = texture->sub_resources[sub_resource_idx].u.surface;
+    switch (location)
+    {
+        case WINED3D_LOCATION_USER_MEMORY:
+        case WINED3D_LOCATION_SYSMEM:
+        case WINED3D_LOCATION_BUFFER:
+            return surface_load_sysmem(surface, context, location);
+
+        case WINED3D_LOCATION_DRAWABLE:
+            return surface_load_drawable(surface, context);
+
+        case WINED3D_LOCATION_RB_RESOLVED:
+        case WINED3D_LOCATION_RB_MULTISAMPLE:
+            return surface_load_renderbuffer(surface, context, location);
+
+        case WINED3D_LOCATION_TEXTURE_RGB:
+        case WINED3D_LOCATION_TEXTURE_SRGB:
+            return surface_load_texture(surface, context,
+                    location == WINED3D_LOCATION_TEXTURE_SRGB);
+
+        default:
+            ERR("Don't know how to handle location %#x.\n", location);
+            return FALSE;
+    }
 }
 
 /* Context activation is done by the caller. */
@@ -2372,22 +2416,17 @@ static void wined3d_texture_unload(struct wined3d_resource *resource)
             wined3d_texture_remove_buffer_object(texture, i, context);
 #endif /* STAGING_CSMT */
 
-        if (resource->type == WINED3D_RTYPE_TEXTURE_2D)
-        {
-            struct wined3d_surface *surface = sub_resource->u.surface;
-            struct wined3d_renderbuffer_entry *entry, *entry2;
-
-            LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &surface->renderbuffers, struct wined3d_renderbuffer_entry, entry)
-            {
-                context_gl_resource_released(device, entry->id, TRUE);
-                gl_info->fbo_ops.glDeleteRenderbuffers(1, &entry->id);
-                list_remove(&entry->entry);
-                heap_free(entry);
-            }
-            list_init(&surface->renderbuffers);
-            surface->current_renderbuffer = NULL;
-        }
     }
+
+    LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &texture->renderbuffers, struct wined3d_renderbuffer_entry, entry)
+    {
+        context_gl_resource_released(device, entry->id, TRUE);
+        gl_info->fbo_ops.glDeleteRenderbuffers(1, &entry->id);
+        list_remove(&entry->entry);
+        heap_free(entry);
+    }
+    list_init(&texture->renderbuffers);
+    texture->current_renderbuffer = NULL;
 
     context_release(context);
 

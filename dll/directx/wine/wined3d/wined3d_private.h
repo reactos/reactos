@@ -3389,10 +3389,16 @@ static inline struct wined3d_texture_sub_resource *surface_get_sub_resource(stru
 HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst_rect,
         struct wined3d_surface *src_surface, const RECT *src_rect, DWORD flags,
         const struct wined3d_blt_fx *blt_fx, enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;
+BOOL surface_load_drawable(struct wined3d_surface *surface,
+        struct wined3d_context *context) DECLSPEC_HIDDEN;
 void surface_load_fb_texture(struct wined3d_surface *surface, BOOL srgb,
         struct wined3d_context *context) DECLSPEC_HIDDEN;
-BOOL surface_load_location(struct wined3d_surface *surface,
-        struct wined3d_context *context, DWORD location) DECLSPEC_HIDDEN;
+BOOL surface_load_renderbuffer(struct wined3d_surface *surface,
+        struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
+BOOL surface_load_sysmem(struct wined3d_surface *surface,
+        struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
+BOOL surface_load_texture(struct wined3d_surface *surface,
+        struct wined3d_context *context, BOOL srgb) DECLSPEC_HIDDEN;
 void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         const struct wined3d_gl_info *gl_info, const struct wined3d_format *format, const RECT *src_rect,
         unsigned int src_pitch, const POINT *dst_point, BOOL srgb,

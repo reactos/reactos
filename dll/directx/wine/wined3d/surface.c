@@ -2212,7 +2212,7 @@ static HRESULT surface_blt_special(struct wined3d_surface *dst_surface, const RE
 }
 
 /* Context activation is done by the caller. */
-static BOOL surface_load_sysmem(struct wined3d_surface *surface,
+BOOL surface_load_sysmem(struct wined3d_surface *surface,
         struct wined3d_context *context, DWORD dst_location)
 {
     unsigned int sub_resource_idx = surface_get_sub_resource_idx(surface);
@@ -2260,7 +2260,7 @@ static BOOL surface_load_sysmem(struct wined3d_surface *surface,
 }
 
 /* Context activation is done by the caller. */
-static BOOL surface_load_drawable(struct wined3d_surface *surface,
+BOOL surface_load_drawable(struct wined3d_surface *surface,
         struct wined3d_context *context)
 {
     unsigned int sub_resource_idx = surface_get_sub_resource_idx(surface);
@@ -2307,7 +2307,7 @@ static BOOL surface_load_drawable(struct wined3d_surface *surface,
     return TRUE;
 }
 
-static BOOL surface_load_texture(struct wined3d_surface *surface,
+BOOL surface_load_texture(struct wined3d_surface *surface,
         struct wined3d_context *context, BOOL srgb)
 {
     unsigned int width, height, level, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch;
@@ -2482,8 +2482,8 @@ static BOOL surface_load_texture(struct wined3d_surface *surface,
 }
 
 /* Context activation is done by the caller. */
-static BOOL surface_load_renderbuffer(struct wined3d_surface *surface, struct wined3d_context *context,
-        DWORD dst_location)
+BOOL surface_load_renderbuffer(struct wined3d_surface *surface,
+        struct wined3d_context *context, DWORD dst_location)
 {
     struct wined3d_texture *texture = surface->container;
     unsigned int level = surface_get_sub_resource_idx(surface) % texture->level_count;
@@ -2513,36 +2513,6 @@ static BOOL surface_load_renderbuffer(struct wined3d_surface *surface, struct wi
             surface, src_location, &rect, surface, dst_location, &rect);
 
     return TRUE;
-}
-
-/* Context activation is done by the caller. Context may be NULL in ddraw-only mode. */
-BOOL surface_load_location(struct wined3d_surface *surface, struct wined3d_context *context, DWORD location)
-{
-    TRACE("surface %p, location %s.\n", surface, wined3d_debug_location(location));
-
-    switch (location)
-    {
-        case WINED3D_LOCATION_USER_MEMORY:
-        case WINED3D_LOCATION_SYSMEM:
-        case WINED3D_LOCATION_BUFFER:
-            return surface_load_sysmem(surface, context, location);
-
-        case WINED3D_LOCATION_DRAWABLE:
-            return surface_load_drawable(surface, context);
-
-        case WINED3D_LOCATION_RB_RESOLVED:
-        case WINED3D_LOCATION_RB_MULTISAMPLE:
-            return surface_load_renderbuffer(surface, context, location);
-
-        case WINED3D_LOCATION_TEXTURE_RGB:
-        case WINED3D_LOCATION_TEXTURE_SRGB:
-            return surface_load_texture(surface, context,
-                    location == WINED3D_LOCATION_TEXTURE_SRGB);
-
-        default:
-            ERR("Don't know how to handle location %#x.\n", location);
-            return FALSE;
-    }
 }
 
 /* Context activation is done by the caller. */
