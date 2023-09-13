@@ -35,7 +35,7 @@
 #include "wine/test.h"
 
 
-//DECLARE_HANDLE(HSTRING_TABLE);
+DECLARE_HANDLE(HSTRING_TABLE);
 
 /* Flags for StringTableAddString and StringTableLookUpString */
 #define ST_CASE_SENSITIVE_COMPARE	0x00000001

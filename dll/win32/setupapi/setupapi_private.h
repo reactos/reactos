@@ -62,6 +62,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
 #endif
 
+#include <setupapi_undoc.h>
+
 #include "resource.h"
 
 #define SETUP_DEVICE_INFO_SET_MAGIC 0xd00ff057
