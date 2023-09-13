@@ -2362,28 +2362,6 @@ const DWORD *context_get_tex_unit_mapping(const struct wined3d_context *context,
     return context->tex_unit_map;
 }
 
-/* Context activation is done by the caller. */
-static void set_blit_dimension(const struct wined3d_gl_info *gl_info, UINT width, UINT height)
-{
-    const GLdouble projection[] =
-    {
-        2.0 / width,          0.0,  0.0, 0.0,
-                0.0, 2.0 / height,  0.0, 0.0,
-                0.0,          0.0,  2.0, 0.0,
-               -1.0,         -1.0, -1.0, 1.0,
-    };
-
-    if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
-    {
-        gl_info->gl_ops.gl.p_glMatrixMode(GL_PROJECTION);
-        checkGLcall("glMatrixMode(GL_PROJECTION)");
-        gl_info->gl_ops.gl.p_glLoadMatrixd(projection);
-        checkGLcall("glLoadMatrixd");
-    }
-    gl_info->gl_ops.gl.p_glViewport(0, 0, width, height);
-    checkGLcall("glViewport");
-}
-
 static void context_get_rt_size(const struct wined3d_context *context, SIZE *size)
 {
     const struct wined3d_texture *rt = context->current_rt.texture;
@@ -2974,8 +2952,13 @@ static DWORD context_generate_rt_mask_no_fbo(const struct wined3d_context *conte
 /* Context activation is done by the caller. */
 void context_apply_blit_state(struct wined3d_context *context, const struct wined3d_device *device)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture *rt = context->current_rt.texture;
     DWORD rt_mask, *cur_mask;
+    unsigned int sampler;
+    SIZE rt_size;
+
+    TRACE("Setting up context %p for blitting.\n", context);
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
     {
@@ -3014,9 +2997,188 @@ void context_apply_blit_state(struct wined3d_context *context, const struct wine
     {
         context_check_fbo_status(context, GL_FRAMEBUFFER);
     }
-
-    SetupForBlit(device, context);
     context_invalidate_state(context, STATE_FRAMEBUFFER);
+
+    context_get_rt_size(context, &rt_size);
+
+    if (context->last_was_blit)
+    {
+        if (context->blit_w != rt_size.cx || context->blit_h != rt_size.cy)
+        {
+            gl_info->gl_ops.gl.p_glViewport(0, 0, rt_size.cx, rt_size.cy);
+            context->blit_w = rt_size.cx;
+            context->blit_h = rt_size.cy;
+            /* No need to dirtify here, the states are still dirtified because
+             * they weren't applied since the last context_apply_blit_state()
+             * call. */
+        }
+        checkGLcall("blit state application");
+        TRACE("Context is already set up for blitting, nothing to do.\n");
+        return;
+    }
+    context->last_was_blit = TRUE;
+
+    if (gl_info->supported[ARB_SAMPLER_OBJECTS])
+        GL_EXTCALL(glBindSampler(0, 0));
+    context_active_texture(context, gl_info, 0);
+
+    sampler = context->rev_tex_unit_map[0];
+    if (sampler != WINED3D_UNMAPPED_STAGE)
+    {
+        if (sampler < MAX_TEXTURES)
+        {
+            context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_TEXTURE0 + sampler));
+            context_invalidate_state(context, STATE_TEXTURESTAGE(sampler, WINED3D_TSS_COLOR_OP));
+        }
+        context_invalidate_state(context, STATE_SAMPLER(sampler));
+    }
+
+    if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+    {
+        gl_info->gl_ops.gl.p_glDisable(GL_ALPHA_TEST);
+        context_invalidate_state(context, STATE_RENDER(WINED3D_RS_ALPHATESTENABLE));
+    }
+    gl_info->gl_ops.gl.p_glDisable(GL_DEPTH_TEST);
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_ZENABLE));
+    gl_info->gl_ops.gl.p_glDisable(GL_BLEND);
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE));
+    gl_info->gl_ops.gl.p_glDisable(GL_CULL_FACE);
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_CULLMODE));
+    gl_info->gl_ops.gl.p_glDisable(GL_STENCIL_TEST);
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_STENCILENABLE));
+    gl_info->gl_ops.gl.p_glDisable(GL_SCISSOR_TEST);
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_SCISSORTESTENABLE));
+    if (gl_info->supported[ARB_POINT_SPRITE])
+    {
+        gl_info->gl_ops.gl.p_glDisable(GL_POINT_SPRITE_ARB);
+        context_invalidate_state(context, STATE_RENDER(WINED3D_RS_POINTSPRITEENABLE));
+    }
+    gl_info->gl_ops.gl.p_glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE));
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE1));
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE2));
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE3));
+
+    context->last_was_rhw = TRUE;
+    context_invalidate_state(context, STATE_VDECL); /* because of last_was_rhw = TRUE */
+
+    context_enable_clip_distances(context, 0);
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_CLIPPING));
+
+    /* FIXME: Make draw_textured_quad() able to work with a upper left origin. */
+    if (gl_info->supported[ARB_CLIP_CONTROL])
+        GL_EXTCALL(glClipControl(GL_LOWER_LEFT, GL_NEGATIVE_ONE_TO_ONE));
+    gl_info->gl_ops.gl.p_glViewport(0, 0, rt_size.cx, rt_size.cy);
+    context_invalidate_state(context, STATE_VIEWPORT);
+
+    device->shader_backend->shader_disable(device->shader_priv, context);
+
+    context->blit_w = rt_size.cx;
+    context->blit_h = rt_size.cy;
+
+    checkGLcall("blit state application");
+}
+
+static void context_apply_blit_projection(const struct wined3d_context *context, unsigned int w, unsigned int h)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const GLdouble projection[] =
+    {
+        2.0 / w,     0.0,  0.0, 0.0,
+            0.0, 2.0 / h,  0.0, 0.0,
+            0.0,     0.0,  2.0, 0.0,
+           -1.0,    -1.0, -1.0, 1.0,
+    };
+
+    gl_info->gl_ops.gl.p_glMatrixMode(GL_PROJECTION);
+    gl_info->gl_ops.gl.p_glLoadMatrixd(projection);
+}
+
+/* Setup OpenGL states for fixed-function blitting. */
+/* Context activation is done by the caller. */
+void context_apply_ffp_blit_state(struct wined3d_context *context, const struct wined3d_device *device)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    unsigned int i, sampler;
+
+    if (!gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+        ERR("Applying fixed-function state without legacy context support.\n");
+
+    if (context->last_was_ffp_blit)
+    {
+        SIZE rt_size;
+
+        context_get_rt_size(context, &rt_size);
+        if (context->blit_w != rt_size.cx || context->blit_h != rt_size.cy)
+            context_apply_blit_projection(context, rt_size.cx, rt_size.cy);
+        context_apply_blit_state(context, device);
+
+        checkGLcall("ffp blit state application");
+        return;
+    }
+    context->last_was_ffp_blit = TRUE;
+
+    context_apply_blit_state(context, device);
+
+    /* Disable all textures. The caller can then bind a texture it wants to blit
+     * from. */
+    for (i = gl_info->limits.textures - 1; i > 0 ; --i)
+    {
+        context_active_texture(context, gl_info, i);
+
+        if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
+            gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+        gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_3D);
+        if (gl_info->supported[ARB_TEXTURE_RECTANGLE])
+            gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_RECTANGLE_ARB);
+        gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_2D);
+
+        gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+        sampler = context->rev_tex_unit_map[i];
+        if (sampler != WINED3D_UNMAPPED_STAGE)
+        {
+            if (sampler < MAX_TEXTURES)
+                context_invalidate_state(context, STATE_TEXTURESTAGE(sampler, WINED3D_TSS_COLOR_OP));
+            context_invalidate_state(context, STATE_SAMPLER(sampler));
+        }
+    }
+
+    context_active_texture(context, gl_info, 0);
+
+    if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
+        gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+    gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_3D);
+    if (gl_info->supported[ARB_TEXTURE_RECTANGLE])
+        gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_RECTANGLE_ARB);
+    gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_2D);
+
+    gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    if (gl_info->supported[EXT_TEXTURE_LOD_BIAS])
+        gl_info->gl_ops.gl.p_glTexEnvf(GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, 0.0f);
+
+    gl_info->gl_ops.gl.p_glMatrixMode(GL_TEXTURE);
+    gl_info->gl_ops.gl.p_glLoadIdentity();
+
+    /* Setup transforms. */
+    gl_info->gl_ops.gl.p_glMatrixMode(GL_MODELVIEW);
+    gl_info->gl_ops.gl.p_glLoadIdentity();
+    context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(0)));
+    context_apply_blit_projection(context, context->blit_w, context->blit_h);
+    context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_PROJECTION));
+
+    /* Other misc states. */
+    gl_info->gl_ops.gl.p_glDisable(GL_LIGHTING);
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_LIGHTING));
+    glDisableWINE(GL_FOG);
+    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_FOGENABLE));
+
+    if (gl_info->supported[EXT_SECONDARY_COLOR])
+    {
+        gl_info->gl_ops.gl.p_glDisable(GL_COLOR_SUM_EXT);
+        context_invalidate_state(context, STATE_RENDER(WINED3D_RS_SPECULARENABLE));
+    }
+    checkGLcall("ffp blit state application");
 }
 
 static BOOL have_framebuffer_attachment(unsigned int rt_count, struct wined3d_rendertarget_view * const *rts,
@@ -3137,6 +3299,7 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
     }
 
     context->last_was_blit = FALSE;
+    context->last_was_ffp_blit = FALSE;
 
     /* Blending and clearing should be orthogonal, but tests on the nvidia
      * driver show that disabling blending when clearing improves the clearing
@@ -4066,6 +4229,7 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
 
     context->numDirtyEntries = 0; /* This makes the whole list clean */
     context->last_was_blit = FALSE;
+    context->last_was_ffp_blit = FALSE;
 
     return TRUE;
 }
@@ -4127,6 +4291,7 @@ static void context_apply_compute_state(struct wined3d_context *context,
     context_invalidate_state(context, STATE_FRAMEBUFFER);
 
     context->last_was_blit = FALSE;
+    context->last_was_ffp_blit = FALSE;
 }
 
 static BOOL use_transform_feedback(const struct wined3d_state *state)

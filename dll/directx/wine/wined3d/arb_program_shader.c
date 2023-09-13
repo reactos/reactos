@@ -7840,7 +7840,7 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
     else
         wined3d_texture_load(src_texture, context, FALSE);
 
-    context_apply_blit_state(context, device);
+    context_apply_ffp_blit_state(context, device);
 
     if (dst_location == WINED3D_LOCATION_DRAWABLE)
     {

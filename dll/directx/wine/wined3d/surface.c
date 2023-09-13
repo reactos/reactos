@@ -1805,7 +1805,7 @@ static void fb_copy_to_texture_hwstretch(struct wined3d_texture *dst_texture, un
     /* Activate the Proper context for reading from the source surface, set it up for blitting */
     context = context_acquire(device, src_texture, src_sub_resource_idx);
     gl_info = context->gl_info;
-    context_apply_blit_state(context, device);
+    context_apply_ffp_blit_state(context, device);
     wined3d_texture_load(dst_texture, context, FALSE);
 
     offscreen_buffer = context_get_offscreen_gl_buffer(context);
@@ -2920,8 +2920,7 @@ static DWORD ffp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
      * unless we're overwriting it completely. */
     wined3d_texture_load(src_texture, context, FALSE);
 
-    /* Activate the destination context, set it up for blitting. */
-    context_apply_blit_state(context, device);
+    context_apply_ffp_blit_state(context, device);
 
     if (dst_location == WINED3D_LOCATION_DRAWABLE)
     {
@@ -2981,7 +2980,6 @@ static DWORD ffp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
         checkGLcall("glDisable(GL_ALPHA_TEST)");
     }
 
-    /* Leave the OpenGL state valid for blitting. */
     gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_2D);
     checkGLcall("glDisable(GL_TEXTURE_2D)");
     if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])

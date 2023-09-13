@@ -1921,7 +1921,9 @@ struct wined3d_context
     DWORD shader_update_mask : 6; /* WINED3D_SHADER_TYPE_COUNT, 6 */
     DWORD clip_distance_mask : 8; /* MAX_CLIP_DISTANCES, 8 */
     DWORD last_was_dual_blend : 1;
+    DWORD last_was_ffp_blit : 1;
     DWORD padding : 8;
+
     DWORD constant_update_mask;
     DWORD                   numbered_array_mask;
     GLenum                  tracking_parm;     /* Which source is tracking current colour         */
@@ -2148,6 +2150,8 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
 void context_apply_fbo_state_blit(struct wined3d_context *context, GLenum target,
         struct wined3d_resource *rt, unsigned int rt_sub_resource_idx,
         struct wined3d_resource *ds, unsigned int ds_sub_resource_idx, DWORD location) DECLSPEC_HIDDEN;
+void context_apply_ffp_blit_state(struct wined3d_context *context,
+        const struct wined3d_device *device) DECLSPEC_HIDDEN;
 void context_active_texture(struct wined3d_context *context, const struct wined3d_gl_info *gl_info,
         unsigned int unit) DECLSPEC_HIDDEN;
 void context_bind_bo(struct wined3d_context *context, GLenum binding, GLuint name) DECLSPEC_HIDDEN;
