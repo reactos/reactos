@@ -3136,8 +3136,6 @@ struct wined3d_texture_ops
             const struct wined3d_const_bo_address *data, unsigned int row_pitch, unsigned int slice_pitch);
     BOOL (*texture_load_location)(struct wined3d_texture *texture, unsigned int sub_resource_idx,
             struct wined3d_context *context, DWORD location);
-    void (*texture_prepare_texture)(struct wined3d_texture *texture,
-            struct wined3d_context *context, BOOL srgb);
 };
 
 #define WINED3D_TEXTURE_COND_NP2            0x00000001
