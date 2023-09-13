@@ -2134,7 +2134,7 @@ static void wined3d_cs_exec_blt_sub_resource(struct wined3d_cs *cs, const void *
         wined3d_texture_bind_and_dirtify(dst_texture, context, FALSE);
         wined3d_texture_upload_data(dst_texture, op->dst_sub_resource_idx, context,
                 dst_texture->resource.format, &op->src_box, wined3d_const_bo_address(&addr),
-                row_pitch, slice_pitch, op->dst_box.left, op->dst_box.top, op->dst_box.front);
+                row_pitch, slice_pitch, op->dst_box.left, op->dst_box.top, op->dst_box.front, FALSE);
         wined3d_texture_validate_location(dst_texture, op->dst_sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB);
         wined3d_texture_invalidate_location(dst_texture, op->dst_sub_resource_idx, ~WINED3D_LOCATION_TEXTURE_RGB);
 
@@ -2229,8 +2229,8 @@ static void wined3d_cs_exec_update_sub_resource(struct wined3d_cs *cs, const voi
     wined3d_texture_bind_and_dirtify(texture, context, FALSE);
 
     wined3d_box_set(&src_box, 0, 0, box->right - box->left, box->bottom - box->top, 0, box->back - box->front);
-    wined3d_texture_upload_data(texture, op->sub_resource_idx, context, texture->resource.format,
-            &src_box, &addr, op->data.row_pitch, op->data.slice_pitch, box->left, box->top, box->front);
+    wined3d_texture_upload_data(texture, op->sub_resource_idx, context, texture->resource.format, &src_box,
+            &addr, op->data.row_pitch, op->data.slice_pitch, box->left, box->top, box->front, FALSE);
 
     wined3d_texture_validate_location(texture, op->sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB);
     wined3d_texture_invalidate_location(texture, op->sub_resource_idx, ~WINED3D_LOCATION_TEXTURE_RGB);
