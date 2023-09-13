@@ -2227,9 +2227,7 @@ cards_intel[] =
     {"830M",                        CARD_INTEL_830M},
 },
 /* 20101109 - These are never returned by current Gallium radeon
- * drivers: R700, RV790, R680, RV535, RV516, R410, RS485, RV360, RV351.
- *
- * These are returned but not handled: RC410, RV380. */
+ * drivers: R700, RV790, R680, RV535, RV516, R410, RS485, RV360, RV351. */
 cards_amd_mesa[] =
 {
     /* Polaris 10/11 */
@@ -2307,10 +2305,12 @@ cards_amd_mesa[] =
     {"RS482",                       CARD_AMD_RADEON_XPRESS_200M},
     {"RS480",                       CARD_AMD_RADEON_XPRESS_200M},
     {"RS400",                       CARD_AMD_RADEON_XPRESS_200M},
+    {"RC410",                       CARD_AMD_RADEON_XPRESS_200M},
     /* R300 */
     {"R360",                        CARD_AMD_RADEON_9500},
     {"R350",                        CARD_AMD_RADEON_9500},
     {"R300",                        CARD_AMD_RADEON_9500},
+    {"RV380",                       CARD_AMD_RADEON_9500},
     {"RV370",                       CARD_AMD_RADEON_9500},
     {"RV360",                       CARD_AMD_RADEON_9500},
     {"RV351",                       CARD_AMD_RADEON_9500},
