@@ -2331,11 +2331,9 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
 */
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    // The change notify can come before WM_CREATE.
     if (!m_ListView)
-    {
-        ERR("!m_ListView\n");
         return FALSE;
-    }
 
     HANDLE hChange = (HANDLE)wParam;
     DWORD dwProcID = (DWORD)lParam;
