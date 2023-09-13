@@ -3389,8 +3389,6 @@ struct fbo_entry
 
 struct wined3d_surface
 {
-    struct wined3d_texture *container;
-
     /* For GetDC */
     HBITMAP bitmap;
     HDC dc;
@@ -3774,19 +3772,6 @@ struct wined3d_rendertarget_view
 
     struct wined3d_view_desc desc;
 };
-
-static inline struct wined3d_surface *wined3d_rendertarget_view_get_surface(
-        const struct wined3d_rendertarget_view *view)
-{
-    struct wined3d_texture *texture;
-
-    if (!view || view->resource->type != WINED3D_RTYPE_TEXTURE_2D)
-        return NULL;
-
-    texture = texture_from_resource(view->resource);
-
-    return texture->sub_resources[view->sub_resource_idx].u.surface;
-}
 
 void wined3d_rendertarget_view_get_drawable_size(const struct wined3d_rendertarget_view *view,
         const struct wined3d_context *context, unsigned int *width, unsigned int *height) DECLSPEC_HIDDEN;

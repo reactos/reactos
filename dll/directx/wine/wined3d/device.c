@@ -226,11 +226,11 @@ void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, c
         float depth, DWORD stencil)
 {
     struct wined3d_rendertarget_view *rtv = rt_count ? fb->render_targets[0] : NULL;
-    struct wined3d_surface *target = rtv ? wined3d_rendertarget_view_get_surface(rtv) : NULL;
     struct wined3d_rendertarget_view *dsv = fb->depth_stencil;
-    struct wined3d_surface *depth_stencil = dsv ? wined3d_rendertarget_view_get_surface(dsv) : NULL;
     const struct wined3d_state *state = &device->cs->state;
+    struct wined3d_texture *depth_stencil = NULL;
     const struct wined3d_gl_info *gl_info;
+    struct wined3d_texture *target = NULL;
     UINT drawable_width, drawable_height;
     struct wined3d_color corrected_color;
     struct wined3d_context *context;
@@ -238,10 +238,19 @@ void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, c
     BOOL render_offscreen;
     unsigned int i;
 
-    if (target)
-        context = context_acquire(device, target->container, rtv->sub_resource_idx);
+    if (rtv && rtv->resource->type != WINED3D_RTYPE_BUFFER)
+    {
+        target = texture_from_resource(rtv->resource);
+        context = context_acquire(device, target, rtv->sub_resource_idx);
+    }
     else
+    {
         context = context_acquire(device, NULL, 0);
+    }
+
+    if (dsv && dsv->resource->type != WINED3D_RTYPE_BUFFER)
+        depth_stencil = texture_from_resource(dsv->resource);
+
     if (!context->valid)
     {
         context_release(context);
@@ -281,11 +290,11 @@ void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, c
     }
     else
     {
-        unsigned int ds_level = dsv->sub_resource_idx % depth_stencil->container->level_count;
+        unsigned int ds_level = dsv->sub_resource_idx % depth_stencil->level_count;
 
         render_offscreen = TRUE;
-        drawable_width = wined3d_texture_get_level_pow2_width(depth_stencil->container, ds_level);
-        drawable_height = wined3d_texture_get_level_pow2_height(depth_stencil->container, ds_level);
+        drawable_width = wined3d_texture_get_level_pow2_width(depth_stencil, ds_level);
+        drawable_height = wined3d_texture_get_level_pow2_height(depth_stencil, ds_level);
     }
 
     if (depth_stencil)
@@ -447,7 +456,7 @@ void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, c
     }
 
     if (wined3d_settings.strict_draw_ordering || (flags & WINED3DCLEAR_TARGET
-            && target->container->swapchain && target->container->swapchain->front_buffer == target->container))
+            && target->swapchain && target->swapchain->front_buffer == target))
         gl_info->gl_ops.gl.p_glFlush(); /* Flush to ensure ordering across contexts. */
 
     context_release(context);

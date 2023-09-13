@@ -394,6 +394,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
 {
     struct wined3d_texture *back_buffer = swapchain->back_buffers[0];
     const struct wined3d_fb_state *fb = &swapchain->device->cs->fb;
+    struct wined3d_rendertarget_view *dsv = fb->depth_stencil;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_texture *logo_texture;
     struct wined3d_context *context;
@@ -522,14 +523,13 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
         wined3d_texture_validate_location(swapchain->back_buffers[swapchain->desc.backbuffer_count - 1],
                 0, WINED3D_LOCATION_DISCARDED);
 
-    if (fb->depth_stencil)
+    if (dsv && dsv->resource->type != WINED3D_RTYPE_BUFFER)
     {
-        struct wined3d_surface *ds = wined3d_rendertarget_view_get_surface(fb->depth_stencil);
+        struct wined3d_texture *ds = texture_from_resource(dsv->resource);
 
-        if (ds && (swapchain->desc.flags & WINED3D_SWAPCHAIN_DISCARD_DEPTHSTENCIL
-                || ds->container->flags & WINED3D_TEXTURE_DISCARD))
-            wined3d_texture_validate_location(ds->container,
-                    fb->depth_stencil->sub_resource_idx, WINED3D_LOCATION_DISCARDED);
+        if ((swapchain->desc.flags & WINED3D_SWAPCHAIN_DISCARD_DEPTHSTENCIL
+                || ds->flags & WINED3D_TEXTURE_DISCARD))
+            wined3d_texture_validate_location(ds, dsv->sub_resource_idx, WINED3D_LOCATION_DISCARDED);
     }
 
     context_release(context);
@@ -566,7 +566,7 @@ static void swapchain_gdi_frontbuffer_updated(struct wined3d_swapchain *swapchai
     if (swapchain->palette)
         wined3d_palette_apply_to_dc(swapchain->palette, front->dc);
 
-    if (front->container->resource.map_count)
+    if (swapchain->front_buffer->resource.map_count)
         ERR("Trying to blit a mapped surface.\n");
 
     TRACE("Copying surface %p to screen.\n", front);
@@ -608,15 +608,15 @@ static void swapchain_gdi_present(struct wined3d_swapchain *swapchain,
     /* Flip the surface data. */
     dc = front->dc;
     bitmap = front->bitmap;
-    data = front->container->resource.heap_memory;
+    data = swapchain->front_buffer->resource.heap_memory;
 
     front->dc = back->dc;
     front->bitmap = back->bitmap;
-    front->container->resource.heap_memory = back->container->resource.heap_memory;
+    swapchain->front_buffer->resource.heap_memory = swapchain->back_buffers[0]->resource.heap_memory;
 
     back->dc = dc;
     back->bitmap = bitmap;
-    back->container->resource.heap_memory = data;
+    swapchain->back_buffers[0]->resource.heap_memory = data;
 
     /* FPS support */
     if (TRACE_ON(fps))

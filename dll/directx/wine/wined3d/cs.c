@@ -1023,16 +1023,14 @@ static void wined3d_cs_exec_set_depth_stencil_view(struct wined3d_cs *cs, const 
     struct wined3d_device *device = cs->device;
     struct wined3d_rendertarget_view *prev;
 
-    if ((prev = cs->state.fb->depth_stencil))
+    if ((prev = cs->state.fb->depth_stencil) && prev->resource->type != WINED3D_RTYPE_BUFFER)
     {
-        struct wined3d_surface *prev_surface = wined3d_rendertarget_view_get_surface(prev);
+        struct wined3d_texture *prev_texture = texture_from_resource(prev->resource);
 
-        if (prev_surface && (device->swapchains[0]->desc.flags & WINED3D_SWAPCHAIN_DISCARD_DEPTHSTENCIL
-                || prev_surface->container->flags & WINED3D_TEXTURE_DISCARD))
-        {
-            wined3d_texture_validate_location(prev_surface->container,
+        if (device->swapchains[0]->desc.flags & WINED3D_SWAPCHAIN_DISCARD_DEPTHSTENCIL
+                || prev_texture->flags & WINED3D_TEXTURE_DISCARD)
+            wined3d_texture_validate_location(prev_texture,
                     prev->sub_resource_idx, WINED3D_LOCATION_DISCARDED);
-        }
     }
 
     cs->fb.depth_stencil = op->view;
