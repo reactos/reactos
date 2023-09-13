@@ -2803,8 +2803,14 @@ static HRESULT texture_init(struct wined3d_texture *texture, const struct wined3
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (desc->usage & WINED3DUSAGE_DYNAMIC && wined3d_resource_access_is_managed(desc->access))
-        FIXME("Trying to create a managed texture with dynamic usage.\n");
+    if (desc->usage & WINED3DUSAGE_DYNAMIC && (wined3d_resource_access_is_managed(desc->access)
+            || desc->usage & WINED3DUSAGE_SCRATCH))
+    {
+        WARN("Attempted to create a dynamic texture with access %s and usage %s.\n",
+                wined3d_debug_resource_access(desc->access), debug_d3dusage(desc->usage));
+        return WINED3DERR_INVALIDCALL;
+    }
+
     if (!(desc->usage & (WINED3DUSAGE_DYNAMIC | WINED3DUSAGE_RENDERTARGET | WINED3DUSAGE_DEPTHSTENCIL))
             && (flags & WINED3D_TEXTURE_CREATE_MAPPABLE))
         WARN("Creating a mappable texture that doesn't specify dynamic usage.\n");
