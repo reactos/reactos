@@ -2975,8 +2975,8 @@ static HRESULT texture_init(struct wined3d_texture *texture, const struct wined3
             wined3d_texture_invalidate_location(texture, i, ~WINED3D_LOCATION_SYSMEM);
         }
 
-        if (FAILED(hr = device_parent->ops->surface_created(device_parent,
-                texture, i, &sub_resource->parent, &sub_resource->parent_ops)))
+        if (FAILED(hr = device_parent->ops->texture_sub_resource_created(device_parent,
+                desc->resource_type, texture, i, &sub_resource->parent, &sub_resource->parent_ops)))
         {
             WARN("Failed to create sub-resource parent, hr %#x.\n", hr);
             sub_resource->parent = NULL;
@@ -3375,8 +3375,8 @@ static HRESULT volumetexture_init(struct wined3d_texture *texture, const struct 
         sub_resource = &texture->sub_resources[i];
         sub_resource->locations = WINED3D_LOCATION_DISCARDED;
 
-        if (FAILED(hr = device_parent->ops->volume_created(device_parent,
-                texture, i, &sub_resource->parent, &sub_resource->parent_ops)))
+        if (FAILED(hr = device_parent->ops->texture_sub_resource_created(device_parent,
+                desc->resource_type, texture, i, &sub_resource->parent, &sub_resource->parent_ops)))
         {
             WARN("Failed to create volume parent, hr %#x.\n", hr);
             sub_resource->parent = NULL;
