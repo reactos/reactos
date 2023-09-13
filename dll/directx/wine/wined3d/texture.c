@@ -3381,9 +3381,10 @@ HRESULT CDECL wined3d_texture_update_overlay(struct wined3d_texture *texture, un
         const RECT *src_rect, struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
         const RECT *dst_rect, DWORD flags)
 {
-    struct wined3d_texture_sub_resource *sub_resource, *dst_sub_resource;
-    struct wined3d_surface *surface, *dst_surface;
+    struct wined3d_texture_sub_resource *dst_sub_resource;
     struct wined3d_overlay_info *overlay;
+    struct wined3d_surface *dst_surface;
+    unsigned int level, dst_level;
 
     TRACE("texture %p, sub_resource_idx %u, src_rect %s, dst_texture %p, "
             "dst_sub_resource_idx %u, dst_rect %s, flags %#x.\n",
@@ -3391,7 +3392,7 @@ HRESULT CDECL wined3d_texture_update_overlay(struct wined3d_texture *texture, un
             dst_sub_resource_idx, wine_dbgstr_rect(dst_rect), flags);
 
     if (!(texture->resource.usage & WINED3DUSAGE_OVERLAY) || texture->resource.type != WINED3D_RTYPE_TEXTURE_2D
-            || !(sub_resource = wined3d_texture_get_sub_resource(texture, sub_resource_idx)))
+            || sub_resource_idx >= texture->level_count * texture->layer_count)
     {
         WARN("Invalid sub-resource specified.\n");
         return WINEDDERR_NOTAOVERLAYSURFACE;
@@ -3406,21 +3407,22 @@ HRESULT CDECL wined3d_texture_update_overlay(struct wined3d_texture *texture, un
 
     overlay = &texture->overlay_info[sub_resource_idx];
 
-    surface = sub_resource->u.surface;
+    level = sub_resource_idx % texture->level_count;
     if (src_rect)
         overlay->src_rect = *src_rect;
     else
         SetRect(&overlay->src_rect, 0, 0,
-                wined3d_texture_get_level_width(texture, surface->texture_level),
-                wined3d_texture_get_level_height(texture, surface->texture_level));
+                wined3d_texture_get_level_width(texture, level),
+                wined3d_texture_get_level_height(texture, level));
 
     dst_surface = dst_sub_resource->u.surface;
+    dst_level = dst_sub_resource_idx % dst_texture->level_count;
     if (dst_rect)
         overlay->dst_rect = *dst_rect;
     else
         SetRect(&overlay->dst_rect, 0, 0,
-                wined3d_texture_get_level_width(dst_texture, dst_surface->texture_level),
-                wined3d_texture_get_level_height(dst_texture, dst_surface->texture_level));
+                wined3d_texture_get_level_width(dst_texture, dst_level),
+                wined3d_texture_get_level_height(dst_texture, dst_level));
 
     if (overlay->dst && (overlay->dst != dst_surface || flags & WINEDDOVER_HIDE))
     {
