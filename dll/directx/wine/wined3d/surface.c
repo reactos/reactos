@@ -559,11 +559,9 @@ static BOOL fbo_blitter_supported(enum wined3d_blit_op blit_op, const struct win
 /* This call just downloads data, the caller is responsible for binding the
  * correct texture. */
 /* Context activation is done by the caller. */
-static void surface_download_data(struct wined3d_surface *surface, const struct wined3d_gl_info *gl_info,
-        DWORD dst_location)
+static void texture2d_download_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
+        const struct wined3d_gl_info *gl_info, DWORD dst_location)
 {
-    unsigned int sub_resource_idx = surface_get_sub_resource_idx(surface);
-    struct wined3d_texture *texture = surface->container;
     const struct wined3d_format *format = texture->resource.format;
     struct wined3d_texture_sub_resource *sub_resource;
     unsigned int dst_row_pitch, dst_slice_pitch;
@@ -574,10 +572,11 @@ static void surface_download_data(struct wined3d_surface *surface, const struct 
     GLenum target;
     void *mem;
 
-    /* Only support read back of converted P8 surfaces. */
+    /* Only support read back of converted P8 textures. */
     if (texture->flags & WINED3D_TEXTURE_CONVERTED && format->id != WINED3DFMT_P8_UINT && !format->download)
     {
-        ERR("Trying to read back converted surface %p with format %s.\n", surface, debug_d3dformat(format->id));
+        ERR("Trying to read back converted texture %p, %u with format %s.\n",
+                texture, sub_resource_idx, debug_d3dformat(format->id));
         return;
     }
 
@@ -597,7 +596,7 @@ static void surface_download_data(struct wined3d_surface *surface, const struct 
         if (texture->flags & WINED3D_TEXTURE_COND_NP2_EMULATED)
             ERR("Array texture %p uses NP2 emulation.\n", texture);
 
-        WARN_(d3d_perf)("Downloading all miplevel layers to get the surface data for a single sub-resource.\n");
+        WARN_(d3d_perf)("Downloading all miplevel layers to get the data for a single sub-resource.\n");
 
         if (!(temporary_mem = heap_calloc(texture->layer_count, sub_resource->size)))
         {
@@ -640,7 +639,8 @@ static void surface_download_data(struct wined3d_surface *surface, const struct 
         if (data.buffer_object)
             ERR("Converted texture %p uses PBO unexpectedly.\n", texture);
 
-        WARN_(d3d_perf)("Downloading converted surface %p with format %s.\n", surface, debug_d3dformat(format->id));
+        WARN_(d3d_perf)("Downloading converted texture %p, %u with format %s.\n",
+                texture, sub_resource_idx, debug_d3dformat(format->id));
 
         f = *format;
         f.byte_count = format->conv_byte_count;
@@ -674,16 +674,16 @@ static void surface_download_data(struct wined3d_surface *surface, const struct 
 
     if (texture->resource.format_flags & WINED3DFMT_FLAG_COMPRESSED)
     {
-        TRACE("Downloading compressed surface %p, level %u, format %#x, type %#x, data %p.\n",
-                surface, level, format->glFormat, format->glType, mem);
+        TRACE("Downloading compressed texture %p, %u, level %u, format %#x, type %#x, data %p.\n",
+                texture, sub_resource_idx, level, format->glFormat, format->glType, mem);
 
         GL_EXTCALL(glGetCompressedTexImage(target, level, mem));
         checkGLcall("glGetCompressedTexImage");
     }
     else
     {
-        TRACE("Downloading surface %p, level %u, format %#x, type %#x, data %p.\n",
-                surface, level, format->glFormat, format->glType, mem);
+        TRACE("Downloading texture %p, %u, level %u, format %#x, type %#x, data %p.\n",
+                texture, sub_resource_idx, level, format->glFormat, format->glType, mem);
 
         gl_info->gl_ops.gl.p_glGetTexImage(target, level, format->glFormat, format->glType, mem);
         checkGLcall("glGetTexImage");
@@ -2247,7 +2247,7 @@ BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_res
         {
             wined3d_texture_bind_and_dirtify(texture, context,
                     !(sub_resource->locations & WINED3D_LOCATION_TEXTURE_RGB));
-            surface_download_data(sub_resource->u.surface, gl_info, dst_location);
+            texture2d_download_data(texture, sub_resource_idx, gl_info, dst_location);
             ++texture->download_count;
 
             return TRUE;
