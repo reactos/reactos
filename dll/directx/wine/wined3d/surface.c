@@ -1670,7 +1670,7 @@ void texture2d_load_fb_texture(struct wined3d_texture *texture,
     checkGLcall("glCopyTexSubImage2D");
 
     if (restore_texture)
-        context_restore(context, restore_texture->sub_resources[sub_resource_idx].u.surface);
+        context_restore(context, restore_texture->sub_resources[restore_idx].u.surface);
 }
 
 /* Does a direct frame buffer -> texture copy. Stretching is done with single
