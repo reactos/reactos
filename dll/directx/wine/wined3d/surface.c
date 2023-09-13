@@ -2305,13 +2305,11 @@ BOOL texture2d_load_drawable(struct wined3d_texture *texture,
     return TRUE;
 }
 
-BOOL surface_load_texture(struct wined3d_surface *surface,
+BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, BOOL srgb)
 {
     unsigned int width, height, level, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch;
-    unsigned int sub_resource_idx = surface_get_sub_resource_idx(surface);
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_texture *texture = surface->container;
     struct wined3d_device *device = texture->resource.device;
     const struct wined3d_color_key_conversion *conversion;
     struct wined3d_texture_sub_resource *sub_resource;
@@ -2323,13 +2321,13 @@ BOOL surface_load_texture(struct wined3d_surface *surface,
     BOOL depth;
 
     depth = texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL;
-    sub_resource = surface_get_sub_resource(surface);
+    sub_resource = &texture->sub_resources[sub_resource_idx];
 
     if (!depth && wined3d_settings.offscreen_rendering_mode != ORM_FBO
             && wined3d_resource_is_offscreen(&texture->resource)
             && (sub_resource->locations & WINED3D_LOCATION_DRAWABLE))
     {
-        surface_load_fb_texture(surface, srgb, context);
+        surface_load_fb_texture(sub_resource->u.surface, srgb, context);
 
         return TRUE;
     }
@@ -2346,11 +2344,13 @@ BOOL surface_load_texture(struct wined3d_surface *surface,
                     &texture->resource, WINED3D_LOCATION_TEXTURE_SRGB))
     {
         if (srgb)
-            surface_blt_fbo(device, context, WINED3D_TEXF_POINT, surface, WINED3D_LOCATION_TEXTURE_RGB,
-                    &src_rect, surface, WINED3D_LOCATION_TEXTURE_SRGB, &src_rect);
+            surface_blt_fbo(device, context, WINED3D_TEXF_POINT,
+                    sub_resource->u.surface, WINED3D_LOCATION_TEXTURE_RGB, &src_rect,
+                    sub_resource->u.surface, WINED3D_LOCATION_TEXTURE_SRGB, &src_rect);
         else
-            surface_blt_fbo(device, context, WINED3D_TEXF_POINT, surface, WINED3D_LOCATION_TEXTURE_SRGB,
-                    &src_rect, surface, WINED3D_LOCATION_TEXTURE_RGB, &src_rect);
+            surface_blt_fbo(device, context, WINED3D_TEXF_POINT,
+                    sub_resource->u.surface, WINED3D_LOCATION_TEXTURE_SRGB, &src_rect,
+                    sub_resource->u.surface, WINED3D_LOCATION_TEXTURE_RGB, &src_rect);
 
         return TRUE;
     }
@@ -2364,8 +2364,8 @@ BOOL surface_load_texture(struct wined3d_surface *surface,
 
         if (fbo_blitter_supported(WINED3D_BLIT_OP_COLOR_BLIT, gl_info,
                 &texture->resource, src_location, &texture->resource, dst_location))
-            surface_blt_fbo(device, context, WINED3D_TEXF_POINT, surface, src_location,
-                    &src_rect, surface, dst_location, &src_rect);
+            surface_blt_fbo(device, context, WINED3D_TEXF_POINT, sub_resource->u.surface,
+                    src_location, &src_rect, sub_resource->u.surface, dst_location, &src_rect);
 
         return TRUE;
     }
@@ -2377,7 +2377,7 @@ BOOL surface_load_texture(struct wined3d_surface *surface,
         if ((sub_resource->locations & (WINED3D_LOCATION_TEXTURE_RGB | texture->resource.map_binding))
                 == WINED3D_LOCATION_TEXTURE_RGB)
         {
-            FIXME_(d3d_perf)("Downloading RGB surface %p to reload it as sRGB.\n", surface);
+            FIXME_(d3d_perf)("Downloading RGB texture %p, %u to reload it as sRGB.\n", texture, sub_resource_idx);
             wined3d_texture_load_location(texture, sub_resource_idx, context, texture->resource.map_binding);
         }
     }
@@ -2386,7 +2386,7 @@ BOOL surface_load_texture(struct wined3d_surface *surface,
         if ((sub_resource->locations & (WINED3D_LOCATION_TEXTURE_SRGB | texture->resource.map_binding))
                 == WINED3D_LOCATION_TEXTURE_SRGB)
         {
-            FIXME_(d3d_perf)("Downloading sRGB surface %p to reload it as RGB.\n", surface);
+            FIXME_(d3d_perf)("Downloading sRGB texture %p, %u to reload it as RGB.\n", texture, sub_resource_idx);
             wined3d_texture_load_location(texture, sub_resource_idx, context, texture->resource.map_binding);
         }
     }

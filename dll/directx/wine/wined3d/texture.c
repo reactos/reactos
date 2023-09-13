@@ -2241,12 +2241,9 @@ static void texture2d_upload_data(struct wined3d_texture *texture, unsigned int 
 static BOOL texture2d_load_location(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD location)
 {
-    struct wined3d_surface *surface;
-
     TRACE("texture %p, sub_resource_idx %u, context %p, location %s.\n",
             texture, sub_resource_idx, context, wined3d_debug_location(location));
 
-    surface = texture->sub_resources[sub_resource_idx].u.surface;
     switch (location)
     {
         case WINED3D_LOCATION_USER_MEMORY:
@@ -2263,7 +2260,7 @@ static BOOL texture2d_load_location(struct wined3d_texture *texture, unsigned in
 
         case WINED3D_LOCATION_TEXTURE_RGB:
         case WINED3D_LOCATION_TEXTURE_SRGB:
-            return surface_load_texture(surface, context,
+            return texture2d_load_texture(texture, sub_resource_idx, context,
                     location == WINED3D_LOCATION_TEXTURE_SRGB);
 
         default:
