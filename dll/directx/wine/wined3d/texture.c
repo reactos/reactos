@@ -1256,12 +1256,12 @@ static void texture2d_create_dc(void *object)
 {
     struct wined3d_surface *surface = object;
     struct wined3d_context *context = NULL;
+    unsigned int sub_resource_idx, level;
     const struct wined3d_format *format;
     unsigned int row_pitch, slice_pitch;
     struct wined3d_texture *texture;
     struct wined3d_bo_address data;
     D3DKMT_CREATEDCFROMMEMORY desc;
-    unsigned int sub_resource_idx;
     struct wined3d_device *device;
     NTSTATUS status;
 
@@ -1269,6 +1269,7 @@ static void texture2d_create_dc(void *object)
 
     texture = surface->container;
     sub_resource_idx = surface_get_sub_resource_idx(surface);
+    level = sub_resource_idx % texture->level_count;
     device = texture->resource.device;
 
     format = texture->resource.format;
@@ -1283,7 +1284,7 @@ static void texture2d_create_dc(void *object)
 
     wined3d_texture_load_location(texture, sub_resource_idx, context, texture->resource.map_binding);
     wined3d_texture_invalidate_location(texture, sub_resource_idx, ~texture->resource.map_binding);
-    wined3d_texture_get_pitch(texture, surface->texture_level, &row_pitch, &slice_pitch);
+    wined3d_texture_get_pitch(texture, level, &row_pitch, &slice_pitch);
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, texture->resource.map_binding);
     desc.pMemory = context_map_bo_address(context, &data,
             texture->sub_resources[sub_resource_idx].size,
@@ -1293,8 +1294,8 @@ static void texture2d_create_dc(void *object)
         context_release(context);
 
     desc.Format = format->ddi_format;
-    desc.Width = wined3d_texture_get_level_width(texture, surface->texture_level);
-    desc.Height = wined3d_texture_get_level_height(texture, surface->texture_level);
+    desc.Width = wined3d_texture_get_level_width(texture, level);
+    desc.Height = wined3d_texture_get_level_height(texture, level);
     desc.Pitch = row_pitch;
     desc.hDeviceDc = CreateCompatibleDC(NULL);
     desc.pColorTable = NULL;
