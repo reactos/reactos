@@ -7832,7 +7832,7 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
          * flip in the blitter, we don't actually need that flip anyway. So we
          * use the surface's texture as scratch texture, and flip the source
          * rectangle instead. */
-        surface_load_fb_texture(src_surface, FALSE, context);
+        texture2d_load_fb_texture(src_texture, src_sub_resource_idx, FALSE, context);
 
         s = *src_rect;
         s.top = wined3d_texture_get_level_height(src_texture, src_level) - s.top;
