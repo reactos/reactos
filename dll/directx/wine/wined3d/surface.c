@@ -259,13 +259,12 @@ static BOOL texture2d_is_full_rect(const struct wined3d_texture *texture, unsign
     return TRUE;
 }
 
-static void texture2d_depth_blt_fbo(const struct wined3d_device *device,
+static void texture2d_depth_blt_fbo(const struct wined3d_device *device, struct wined3d_context *context,
         struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx, DWORD src_location,
         const RECT *src_rect, struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
         DWORD dst_location, const RECT *dst_rect)
 {
-    const struct wined3d_gl_info *gl_info;
-    struct wined3d_context *context;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     DWORD src_mask, dst_mask;
     GLbitfield gl_mask;
 
@@ -298,14 +297,6 @@ static void texture2d_depth_blt_fbo(const struct wined3d_device *device,
     if (src_mask & WINED3DFMT_FLAG_STENCIL)
         gl_mask |= GL_STENCIL_BUFFER_BIT;
 
-    context = context_acquire(device, NULL, 0);
-    if (!context->valid)
-    {
-        context_release(context);
-        WARN("Invalid context, skipping blit.\n");
-        return;
-    }
-
     /* Make sure the locations are up-to-date. Loading the destination
      * surface isn't required if the entire surface is overwritten. */
     wined3d_texture_load_location(src_texture, src_sub_resource_idx, context, src_location);
@@ -313,8 +304,6 @@ static void texture2d_depth_blt_fbo(const struct wined3d_device *device,
         wined3d_texture_load_location(dst_texture, dst_sub_resource_idx, context, dst_location);
     else
         wined3d_texture_prepare_location(dst_texture, dst_sub_resource_idx, context, dst_location);
-
-    gl_info = context->gl_info;
 
     context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER, NULL, 0,
             &src_texture->resource, src_sub_resource_idx, src_location);
@@ -351,8 +340,6 @@ static void texture2d_depth_blt_fbo(const struct wined3d_device *device,
 
     if (wined3d_settings.strict_draw_ordering)
         gl_info->gl_ops.gl.p_glFlush(); /* Flush to ensure ordering across contexts. */
-
-    context_release(context);
 }
 
 static BOOL is_multisample_location(const struct wined3d_texture *texture, DWORD location)
@@ -2578,7 +2565,7 @@ static DWORD fbo_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
     if (blit_op == WINED3D_BLIT_OP_DEPTH_BLIT)
     {
         TRACE("Depth/stencil blit.\n");
-        texture2d_depth_blt_fbo(device, src_surface->container, surface_get_sub_resource_idx(src_surface),
+        texture2d_depth_blt_fbo(device, context, src_surface->container, surface_get_sub_resource_idx(src_surface),
                 src_location, src_rect, dst_surface->container, surface_get_sub_resource_idx(dst_surface),
                 dst_location, dst_rect);
         return dst_location;
