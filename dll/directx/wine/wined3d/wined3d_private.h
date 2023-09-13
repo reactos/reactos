@@ -3286,6 +3286,9 @@ static inline unsigned int wined3d_texture_get_level_pow2_height(const struct wi
     return max(1, texture->pow2_height >> level);
 }
 
+BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_resource_idx,
+        struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
+
 void wined3d_texture_apply_sampler_desc(struct wined3d_texture *texture,
         const struct wined3d_sampler_desc *sampler_desc, const struct wined3d_context *context) DECLSPEC_HIDDEN;
 void wined3d_texture_bind(struct wined3d_texture *texture,
@@ -3394,8 +3397,6 @@ BOOL surface_load_drawable(struct wined3d_surface *surface,
 void surface_load_fb_texture(struct wined3d_surface *surface, BOOL srgb,
         struct wined3d_context *context) DECLSPEC_HIDDEN;
 BOOL surface_load_renderbuffer(struct wined3d_surface *surface,
-        struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
-BOOL surface_load_sysmem(struct wined3d_surface *surface,
         struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
 BOOL surface_load_texture(struct wined3d_surface *surface,
         struct wined3d_context *context, BOOL srgb) DECLSPEC_HIDDEN;

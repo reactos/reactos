@@ -2252,7 +2252,7 @@ static BOOL texture2d_load_location(struct wined3d_texture *texture, unsigned in
         case WINED3D_LOCATION_USER_MEMORY:
         case WINED3D_LOCATION_SYSMEM:
         case WINED3D_LOCATION_BUFFER:
-            return surface_load_sysmem(surface, context, location);
+            return texture2d_load_sysmem(texture, sub_resource_idx, context, location);
 
         case WINED3D_LOCATION_DRAWABLE:
             return surface_load_drawable(surface, context);
