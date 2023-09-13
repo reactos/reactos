@@ -2074,19 +2074,17 @@ static void fb_copy_to_texture_hwstretch(struct wined3d_texture *dst_texture, un
     wined3d_texture_invalidate_location(dst_texture, dst_sub_resource_idx, ~WINED3D_LOCATION_TEXTURE_RGB);
 }
 
-static HRESULT surface_blt_special(struct wined3d_surface *dst_surface, const RECT *dst_rect,
-        struct wined3d_surface *src_surface, const RECT *src_rect, DWORD flags,
-        const struct wined3d_blt_fx *fx, enum wined3d_texture_filter_type filter)
+static HRESULT wined3d_texture_blt_special(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+        const RECT *dst_rect, struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx,
+        const RECT *src_rect, DWORD flags, const struct wined3d_blt_fx *fx, enum wined3d_texture_filter_type filter)
 {
-    struct wined3d_texture *dst_texture = dst_surface->container;
-    struct wined3d_device *device = dst_texture->resource.device;
-    const struct wined3d_surface *rt = wined3d_rendertarget_view_get_surface(device->fb.render_targets[0]);
     struct wined3d_swapchain *src_swapchain, *dst_swapchain;
-    struct wined3d_texture *src_texture;
+    const struct wined3d_rendertarget_view *rtv;
 
-    TRACE("dst_surface %p, dst_rect %s, src_surface %p, src_rect %s, flags %#x, fx %p, filter %s.\n",
-            dst_surface, wine_dbgstr_rect(dst_rect), src_surface, wine_dbgstr_rect(src_rect),
-            flags, fx, debug_d3dtexturefiltertype(filter));
+    TRACE("dst_texture %p, dst_sub_resource_idx %u, dst_rect %s, src_texture %p, "
+            "src_sub_resource_idx %u, src_rect %s, flags %#x, fx %p, filter %s.\n",
+            dst_texture, dst_sub_resource_idx, wine_dbgstr_rect(dst_rect), src_texture, src_sub_resource_idx,
+            wine_dbgstr_rect(src_rect), flags, fx, debug_d3dtexturefiltertype(filter));
 
     /* Get the swapchain. One of the surfaces has to be a primary surface. */
     if (!(dst_texture->resource.access & WINED3D_RESOURCE_ACCESS_GPU))
@@ -2095,27 +2093,19 @@ static HRESULT surface_blt_special(struct wined3d_surface *dst_surface, const RE
         return WINED3DERR_INVALIDCALL;
     }
 
+    if (!(src_texture->resource.access & WINED3D_RESOURCE_ACCESS_GPU))
+    {
+        WARN("Source resource is not GPU accessible, rejecting GL blit.\n");
+        return WINED3DERR_INVALIDCALL;
+    }
+
+    src_swapchain = src_texture->swapchain;
     dst_swapchain = dst_texture->swapchain;
 
-    if (src_surface)
-    {
-        src_texture = src_surface->container;
-        if (!(src_texture->resource.access & WINED3D_RESOURCE_ACCESS_GPU))
-        {
-            WARN("Source resource is not GPU accessible, rejecting GL blit.\n");
-            return WINED3DERR_INVALIDCALL;
-        }
-
-        src_swapchain = src_texture->swapchain;
-    }
-    else
-    {
-        src_texture = NULL;
-        src_swapchain = NULL;
-    }
-
     /* Early sort out of cases where no render target is used */
-    if (!dst_swapchain && !src_swapchain && src_surface != rt && dst_surface != rt)
+    if (!(rtv = dst_texture->resource.device->fb.render_targets[0]) || (!src_swapchain && !dst_swapchain
+            && (&src_texture->resource != rtv->resource || src_sub_resource_idx != rtv->sub_resource_idx)
+            && (&dst_texture->resource != rtv->resource || dst_sub_resource_idx != rtv->sub_resource_idx)))
     {
         TRACE("No surface is render target, not using hardware blit.\n");
         return WINED3DERR_INVALIDCALL;
@@ -2144,16 +2134,18 @@ static HRESULT surface_blt_special(struct wined3d_surface *dst_surface, const RE
     if (dst_swapchain)
     {
         /* Handled with regular texture -> swapchain blit */
-        if (src_surface == rt)
+        if (&src_texture->resource == rtv->resource && src_sub_resource_idx == rtv->sub_resource_idx)
             TRACE("Blit from active render target to a swapchain\n");
     }
-    else if (src_swapchain && dst_surface == rt)
+    else if (src_swapchain && &dst_texture->resource == rtv->resource
+            && dst_sub_resource_idx == rtv->sub_resource_idx)
     {
         FIXME("Implement blit from a swapchain to the active render target\n");
         return WINED3DERR_INVALIDCALL;
     }
 
-    if ((src_swapchain || src_surface == rt) && !dst_swapchain)
+    if (!dst_swapchain && (src_swapchain || (&src_texture->resource == rtv->resource
+            && src_sub_resource_idx == rtv->sub_resource_idx)))
     {
         unsigned int src_level, src_width, src_height;
         /* Blit from render target to texture */
@@ -2189,21 +2181,21 @@ static HRESULT surface_blt_special(struct wined3d_surface *dst_surface, const RE
          *    back buffer. This is slower than reading line per line, thus not used for flipping
          * -> If the app wants a scaled image with a dest rect that is bigger than the fb, it has to be copied
          *    pixel by pixel. */
-        src_level = surface_get_sub_resource_idx(src_surface) % src_texture->level_count;
+        src_level = src_sub_resource_idx % src_texture->level_count;
         src_width = wined3d_texture_get_level_width(src_texture, src_level);
         src_height = wined3d_texture_get_level_height(src_texture, src_level);
         if (!stretchx || dst_rect->right - dst_rect->left > src_width
                 || dst_rect->bottom - dst_rect->top > src_height)
         {
             TRACE("No stretching in x direction, using direct framebuffer -> texture copy.\n");
-            fb_copy_to_texture_direct(dst_texture, surface_get_sub_resource_idx(dst_surface), dst_rect,
-                    src_texture, surface_get_sub_resource_idx(src_surface), src_rect, filter);
+            fb_copy_to_texture_direct(dst_texture, dst_sub_resource_idx, dst_rect,
+                    src_texture, src_sub_resource_idx, src_rect, filter);
         }
         else
         {
             TRACE("Using hardware stretching to flip / stretch the texture.\n");
-            fb_copy_to_texture_hwstretch(dst_texture, surface_get_sub_resource_idx(dst_surface), dst_rect,
-                    src_texture, surface_get_sub_resource_idx(src_surface), src_rect, filter);
+            fb_copy_to_texture_hwstretch(dst_texture, dst_sub_resource_idx, dst_rect,
+                    src_texture, src_sub_resource_idx, src_rect, filter);
         }
 
         return WINED3D_OK;
@@ -4095,7 +4087,8 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const struct wi
 
 fallback:
     /* Special cases for render targets. */
-    if (SUCCEEDED(surface_blt_special(dst_surface, &dst_rect, src_surface, &src_rect, flags, fx, filter)))
+    if (SUCCEEDED(wined3d_texture_blt_special(dst_texture, dst_sub_resource_idx, &dst_rect,
+            src_texture, src_sub_resource_idx, &src_rect, flags, fx, filter)))
         return WINED3D_OK;
 
 cpu:
