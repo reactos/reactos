@@ -368,26 +368,23 @@ static BOOL is_multisample_location(const struct wined3d_texture *texture, DWORD
  * Depth / stencil is not supported. Context activation is done by the caller. */
 static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3d_context *context,
         enum wined3d_texture_filter_type filter, struct wined3d_texture *src_texture,
-        unsigned int src_sub_resource_idx, DWORD src_location, const RECT *src_rect_in,
+        unsigned int src_sub_resource_idx, DWORD src_location, const RECT *src_rect,
         struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx, DWORD dst_location,
-        const RECT *dst_rect_in)
+        const RECT *dst_rect)
 {
     struct wined3d_texture *required_texture, *restore_texture;
     unsigned int required_idx, restore_idx;
     const struct wined3d_gl_info *gl_info;
-    RECT src_rect, dst_rect;
     GLenum gl_filter;
     GLenum buffer;
     int i;
+    RECT s, d;
 
     TRACE("device %p, context %p, filter %s, src_texture %p, src_sub_resource_idx %u, src_location %s, "
             "src_rect %s, dst_texture %p, dst_sub_resource_idx %u, dst_location %s, dst_rect %s.\n",
             device, context, debug_d3dtexturefiltertype(filter), src_texture, src_sub_resource_idx,
-            wined3d_debug_location(src_location), wine_dbgstr_rect(src_rect_in), dst_texture,
-            dst_sub_resource_idx, wined3d_debug_location(dst_location), wine_dbgstr_rect(dst_rect_in));
-
-    src_rect = *src_rect_in;
-    dst_rect = *dst_rect_in;
+            wined3d_debug_location(src_location), wine_dbgstr_rect(src_rect), dst_texture,
+            dst_sub_resource_idx, wined3d_debug_location(dst_location), wine_dbgstr_rect(dst_rect));
 
     switch (filter)
     {
@@ -406,8 +403,8 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
     /* Resolve the source surface first if needed. */
     if (is_multisample_location(src_texture, src_location)
             && (src_texture->resource.format->id != dst_texture->resource.format->id
-                || abs(src_rect.bottom - src_rect.top) != abs(dst_rect.bottom - dst_rect.top)
-                || abs(src_rect.right - src_rect.left) != abs(dst_rect.right - dst_rect.left)))
+                || abs(src_rect->bottom - src_rect->top) != abs(dst_rect->bottom - dst_rect->top)
+                || abs(src_rect->right - src_rect->left) != abs(dst_rect->right - dst_rect->left)))
         src_location = WINED3D_LOCATION_RB_RESOLVED;
 
     /* Make sure the locations are up-to-date. Loading the destination
@@ -415,7 +412,7 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
      * in fact harmful if we're being called by surface_load_location() with
      * the purpose of loading the destination surface.) */
     wined3d_texture_load_location(src_texture, src_sub_resource_idx, context, src_location);
-    if (!texture2d_is_full_rect(dst_texture, dst_sub_resource_idx % dst_texture->level_count, &dst_rect))
+    if (!texture2d_is_full_rect(dst_texture, dst_sub_resource_idx % dst_texture->level_count, dst_rect))
         wined3d_texture_load_location(dst_texture, dst_sub_resource_idx, context, dst_location);
     else
         wined3d_texture_prepare_location(dst_texture, dst_sub_resource_idx, context, dst_location);
@@ -457,7 +454,9 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
     {
         TRACE("Source texture %p is onscreen.\n", src_texture);
         buffer = wined3d_texture_get_gl_buffer(src_texture);
-        wined3d_texture_translate_drawable_coords(src_texture, context->win_handle, &src_rect);
+        s = *src_rect;
+        wined3d_texture_translate_drawable_coords(src_texture, context->win_handle, &s);
+        src_rect = &s;
     }
     else
     {
@@ -475,7 +474,9 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
     {
         TRACE("Destination texture %p is onscreen.\n", dst_texture);
         buffer = wined3d_texture_get_gl_buffer(dst_texture);
-        wined3d_texture_translate_drawable_coords(dst_texture, context->win_handle, &dst_rect);
+        d = *dst_rect;
+        wined3d_texture_translate_drawable_coords(dst_texture, context->win_handle, &d);
+        dst_rect = &d;
     }
     else
     {
@@ -496,8 +497,8 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
     gl_info->gl_ops.gl.p_glDisable(GL_SCISSOR_TEST);
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_SCISSORTESTENABLE));
 
-    gl_info->fbo_ops.glBlitFramebuffer(src_rect.left, src_rect.top, src_rect.right, src_rect.bottom,
-            dst_rect.left, dst_rect.top, dst_rect.right, dst_rect.bottom, GL_COLOR_BUFFER_BIT, gl_filter);
+    gl_info->fbo_ops.glBlitFramebuffer(src_rect->left, src_rect->top, src_rect->right, src_rect->bottom,
+            dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom, GL_COLOR_BUFFER_BIT, gl_filter);
     checkGLcall("glBlitFramebuffer()");
 
     if (wined3d_settings.strict_draw_ordering || (dst_location == WINED3D_LOCATION_DRAWABLE
