@@ -1498,18 +1498,16 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
     return dst_texture;
 }
 
-static void read_from_framebuffer(struct wined3d_surface *surface,
-        struct wined3d_context *old_ctx, DWORD src_location, DWORD dst_location)
+static void texture2d_read_from_framebuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
+        struct wined3d_context *context, DWORD src_location, DWORD dst_location)
 {
-    unsigned int sub_resource_idx = surface_get_sub_resource_idx(surface);
-    struct wined3d_texture *texture = surface->container;
     struct wined3d_device *device = texture->resource.device;
-    struct wined3d_context *context = old_ctx;
-    struct wined3d_surface *restore_rt = NULL;
+    struct wined3d_texture *restore_texture;
     const struct wined3d_gl_info *gl_info;
     unsigned int row_pitch, slice_pitch;
     unsigned int width, height, level;
     struct wined3d_bo_address data;
+    unsigned int restore_idx;
     BYTE *row, *top, *bottom;
     BOOL src_is_upside_down;
     unsigned int i;
@@ -1517,16 +1515,18 @@ static void read_from_framebuffer(struct wined3d_surface *surface,
 
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, dst_location);
 
-    restore_rt = context_get_rt_surface(old_ctx);
-    if (restore_rt != surface)
+    restore_texture = context->current_rt.texture;
+    restore_idx = context->current_rt.sub_resource_idx;
+    if (restore_texture != texture || restore_idx != sub_resource_idx)
         context = context_acquire(device, texture, sub_resource_idx);
     else
-        restore_rt = NULL;
+        restore_texture = NULL;
     gl_info = context->gl_info;
 
     if (src_location != texture->resource.draw_binding)
     {
-        context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER, surface, NULL, src_location);
+        context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER,
+                texture->sub_resources[sub_resource_idx].u.surface, NULL, src_location);
         context_check_fbo_status(context, GL_READ_FRAMEBUFFER);
         context_invalidate_state(context, STATE_FRAMEBUFFER);
     }
@@ -1620,8 +1620,8 @@ error:
         checkGLcall("glBindBuffer");
     }
 
-    if (restore_rt)
-        context_restore(context, restore_rt);
+    if (restore_texture)
+        context_restore(context, restore_texture->sub_resources[restore_idx].u.surface);
 }
 
 /* Read the framebuffer contents into a texture. Note that this function
@@ -2232,7 +2232,8 @@ BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_res
     if (is_multisample_location(texture, WINED3D_LOCATION_TEXTURE_RGB))
     {
         wined3d_texture_load_location(texture, sub_resource_idx, context, WINED3D_LOCATION_RB_RESOLVED);
-        read_from_framebuffer(sub_resource->u.surface, context, WINED3D_LOCATION_RB_RESOLVED, dst_location);
+        texture2d_read_from_framebuffer(texture, sub_resource_idx, context,
+                WINED3D_LOCATION_RB_RESOLVED, dst_location);
         return TRUE;
     }
     else
@@ -2255,7 +2256,8 @@ BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_res
     if (!(texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL)
             && (sub_resource->locations & WINED3D_LOCATION_DRAWABLE))
     {
-        read_from_framebuffer(sub_resource->u.surface, context, texture->resource.draw_binding, dst_location);
+        texture2d_read_from_framebuffer(texture, sub_resource_idx, context,
+                texture->resource.draw_binding, dst_location);
         return TRUE;
     }
 
