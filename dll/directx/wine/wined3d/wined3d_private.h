@@ -3393,9 +3393,10 @@ BOOL surface_load_location(struct wined3d_surface *surface,
         struct wined3d_context *context, DWORD location) DECLSPEC_HIDDEN;
 void surface_set_compatible_renderbuffer(struct wined3d_surface *surface,
         const struct wined3d_rendertarget_info *rt) DECLSPEC_HIDDEN;
-void wined3d_surface_upload_data(struct wined3d_surface *surface, const struct wined3d_gl_info *gl_info,
-        const struct wined3d_format *format, const RECT *src_rect, UINT src_pitch, const POINT *dst_point,
-        BOOL srgb, const struct wined3d_const_bo_address *data) DECLSPEC_HIDDEN;
+void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
+        const struct wined3d_gl_info *gl_info, const struct wined3d_format *format, const RECT *src_rect,
+        unsigned int src_pitch, const POINT *dst_point, BOOL srgb,
+        const struct wined3d_const_bo_address *data) DECLSPEC_HIDDEN;
 
 void draw_textured_quad(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, const RECT *src_rect, const RECT *dst_rect,

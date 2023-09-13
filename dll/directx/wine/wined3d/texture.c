@@ -2133,7 +2133,7 @@ static void texture2d_upload_data(struct wined3d_texture *texture, unsigned int 
         src_rect.bottom = wined3d_texture_get_level_height(texture, texture_level);
     }
 
-    wined3d_surface_upload_data(texture->sub_resources[sub_resource_idx].u.surface, context->gl_info,
+    wined3d_surface_upload_data(texture, sub_resource_idx, context->gl_info,
             texture->resource.format, &src_rect, row_pitch, &dst_point, FALSE, data);
 }
 

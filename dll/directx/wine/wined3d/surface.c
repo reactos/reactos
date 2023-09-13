@@ -776,24 +776,23 @@ static void surface_download_data(struct wined3d_surface *surface, const struct 
 /* This call just uploads data, the caller is responsible for binding the
  * correct texture. */
 /* Context activation is done by the caller. */
-void wined3d_surface_upload_data(struct wined3d_surface *surface, const struct wined3d_gl_info *gl_info,
-        const struct wined3d_format *format, const RECT *src_rect, UINT src_pitch, const POINT *dst_point,
-        BOOL srgb, const struct wined3d_const_bo_address *data)
+void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
+        const struct wined3d_gl_info *gl_info, const struct wined3d_format *format, const RECT *src_rect,
+        unsigned int src_pitch, const POINT *dst_point, BOOL srgb, const struct wined3d_const_bo_address *data)
 {
-    unsigned int sub_resource_idx = surface_get_sub_resource_idx(surface);
-    struct wined3d_texture *texture = surface->container;
     UINT update_w = src_rect->right - src_rect->left;
     UINT update_h = src_rect->bottom - src_rect->top;
     unsigned int level, layer;
     GLenum target;
 
-    TRACE("surface %p, gl_info %p, format %s, src_rect %s, src_pitch %u, dst_point %s, srgb %#x, data {%#x:%p}.\n",
-            surface, gl_info, debug_d3dformat(format->id), wine_dbgstr_rect(src_rect), src_pitch,
-            wine_dbgstr_point(dst_point), srgb, data->buffer_object, data->addr);
+    TRACE("texure %p, sub_resource_idx %u, gl_info %p, format %s, src_rect %s, "
+            "src_pitch %u, dst_point %s, srgb %#x, data {%#x:%p}.\n",
+            texture, sub_resource_idx, gl_info, debug_d3dformat(format->id), wine_dbgstr_rect(src_rect),
+            src_pitch, wine_dbgstr_point(dst_point), srgb, data->buffer_object, data->addr);
 
     if (texture->sub_resources[sub_resource_idx].map_count)
     {
-        WARN("Uploading a surface that is currently mapped, setting WINED3D_TEXTURE_PIN_SYSMEM.\n");
+        WARN("Uploading a texture that is currently mapped, setting WINED3D_TEXTURE_PIN_SYSMEM.\n");
         texture->flags |= WINED3D_TEXTURE_PIN_SYSMEM;
     }
 
@@ -874,7 +873,7 @@ void wined3d_surface_upload_data(struct wined3d_surface *surface, const struct w
                 addr += src_pitch;
             }
         }
-        checkGLcall("Upload compressed surface data");
+        checkGLcall("Upload compressed texture data");
     }
     else
     {
@@ -900,7 +899,7 @@ void wined3d_surface_upload_data(struct wined3d_surface *surface, const struct w
                     update_w, update_h, format->glFormat, format->glType, addr);
         }
         gl_info->gl_ops.gl.p_glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        checkGLcall("Upload surface data");
+        checkGLcall("Upload texture data");
     }
 
     if (data->buffer_object)
@@ -914,6 +913,7 @@ void wined3d_surface_upload_data(struct wined3d_surface *surface, const struct w
 
     if (gl_info->quirks & WINED3D_QUIRK_FBO_TEX_UPDATE)
     {
+        struct wined3d_surface *surface = texture->sub_resources[sub_resource_idx].u.surface;
         struct wined3d_device *device = texture->resource.device;
         unsigned int i;
 
@@ -963,7 +963,7 @@ static HRESULT surface_upload_from_surface(struct wined3d_surface *dst_surface, 
             src_texture->sub_resources[src_sub_resource_idx].locations);
     wined3d_texture_get_pitch(src_texture, src_level, &src_row_pitch, &src_slice_pitch);
 
-    wined3d_surface_upload_data(dst_surface, gl_info, src_texture->resource.format, src_rect,
+    wined3d_surface_upload_data(dst_texture, dst_sub_resource_idx, gl_info, src_texture->resource.format, src_rect,
             src_row_pitch, dst_point, FALSE, wined3d_const_bo_address(&data));
 
     context_release(context);
@@ -1562,7 +1562,7 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
 
         wined3d_texture_prepare_texture(dst_texture, context, FALSE);
         wined3d_texture_bind_and_dirtify(dst_texture, context, FALSE);
-        wined3d_surface_upload_data(dst_texture->sub_resources[0].u.surface, gl_info, src_format,
+        wined3d_surface_upload_data(dst_texture, 0, gl_info, src_format,
                 &src_rect, src_row_pitch, &dst_point, FALSE, wined3d_const_bo_address(&src_data));
 
         wined3d_texture_validate_location(dst_texture, 0, WINED3D_LOCATION_TEXTURE_RGB);
@@ -2557,7 +2557,7 @@ static BOOL surface_load_texture(struct wined3d_surface *surface,
         data.addr = dst_mem;
     }
 
-    wined3d_surface_upload_data(surface, gl_info, &format, &src_rect,
+    wined3d_surface_upload_data(texture, sub_resource_idx, gl_info, &format, &src_rect,
             src_row_pitch, &dst_point, srgb, wined3d_const_bo_address(&data));
 
     heap_free(dst_mem);
