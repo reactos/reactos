@@ -1674,13 +1674,10 @@ void texture2d_load_fb_texture(struct wined3d_texture *texture,
 
 /* Does a direct frame buffer -> texture copy. Stretching is done with single
  * pixel copy calls. */
-static void fb_copy_to_texture_direct(struct wined3d_surface *dst_surface, struct wined3d_surface *src_surface,
-        const RECT *src_rect, const RECT *dst_rect_in, enum wined3d_texture_filter_type filter)
+static void fb_copy_to_texture_direct(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+        const RECT *dst_rect_in, struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx,
+        const RECT *src_rect, enum wined3d_texture_filter_type filter)
 {
-    unsigned int src_sub_resource_idx = surface_get_sub_resource_idx(src_surface);
-    unsigned int dst_sub_resource_idx = surface_get_sub_resource_idx(dst_surface);
-    struct wined3d_texture *src_texture = src_surface->container;
-    struct wined3d_texture *dst_texture = dst_surface->container;
     struct wined3d_device *device = dst_texture->resource.device;
     unsigned int src_height, src_level, dst_level;
     const struct wined3d_gl_info *gl_info;
@@ -2202,7 +2199,8 @@ static HRESULT surface_blt_special(struct wined3d_surface *dst_surface, const RE
                 || dst_rect->bottom - dst_rect->top > src_height)
         {
             TRACE("No stretching in x direction, using direct framebuffer -> texture copy.\n");
-            fb_copy_to_texture_direct(dst_surface, src_surface, src_rect, dst_rect, filter);
+            fb_copy_to_texture_direct(dst_texture, surface_get_sub_resource_idx(dst_surface), dst_rect,
+                    src_texture, surface_get_sub_resource_idx(src_surface), src_rect, filter);
         }
         else
         {
