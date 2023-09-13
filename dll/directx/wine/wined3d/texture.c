@@ -2778,15 +2778,27 @@ static HRESULT texture1d_init(struct wined3d_texture *texture, const struct wine
     return WINED3D_OK;
 }
 
-static HRESULT texture_init(struct wined3d_texture *texture, const struct wined3d_resource_desc *desc,
+static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struct wined3d_resource_desc *desc,
         unsigned int layer_count, unsigned int level_count, DWORD flags, struct wined3d_device *device,
         void *parent, const struct wined3d_parent_ops *parent_ops, const struct wined3d_texture_ops *texture_ops)
 {
     struct wined3d_device_parent *device_parent = device->device_parent;
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    UINT pow2_width, pow2_height;
-    unsigned int sub_count, i;
+    unsigned int sub_count, i, j, size, offset = 0;
+    unsigned int pow2_width, pow2_height;
+    const struct wined3d_format *format;
     HRESULT hr;
+
+    TRACE("texture %p, resource_type %s, format %s, multisample_type %#x, multisample_quality %#x, "
+            "usage %s, access %s, width %u, height %u, depth %u, layer_count %u, level_count %u, "
+            "flags %#x, device %p, parent %p, parent_ops %p, texture_ops %p.\n",
+            texture, debug_d3dresourcetype(desc->resource_type), debug_d3dformat(desc->format),
+            desc->multisample_type, desc->multisample_quality, debug_d3dusage(desc->usage),
+            wined3d_debug_resource_access(desc->access), desc->width, desc->height, desc->depth,
+            layer_count, level_count, flags, device, parent, parent_ops, texture_ops);
+
+   if (!desc->width || !desc->height || !desc->depth)
+        return WINED3DERR_INVALIDCALL;
 
     if (desc->resource_type == WINED3D_RTYPE_TEXTURE_3D)
     {
@@ -2900,12 +2912,67 @@ static HRESULT texture_init(struct wined3d_texture *texture, const struct wined3
         TRACE("Creating an oversized (%ux%u) surface.\n", pow2_width, pow2_height);
     }
 
-    if (FAILED(hr = wined3d_texture_init(texture, texture_ops, layer_count, level_count, desc,
-            flags, device, parent, parent_ops, &texture_resource_ops)))
+    format = wined3d_get_format(&device->adapter->gl_info, desc->format, desc->usage);
+    for (i = 0; i < layer_count; ++i)
     {
-        WARN("Failed to initialize texture, returning %#x.\n", hr);
+        for (j = 0; j < level_count; ++j)
+        {
+            unsigned int idx = i * level_count + j;
+
+            size = wined3d_format_calculate_size(format, device->surface_alignment,
+                    max(1, desc->width >> j), max(1, desc->height >> j), max(1, desc->depth >> j));
+            texture->sub_resources[idx].offset = offset;
+            texture->sub_resources[idx].size = size;
+            offset += size;
+        }
+        offset = (offset + (RESOURCE_ALIGNMENT - 1)) & ~(RESOURCE_ALIGNMENT - 1);
+    }
+
+    if (!offset)
+        return WINED3DERR_INVALIDCALL;
+
+    if (FAILED(hr = resource_init(&texture->resource, device, desc->resource_type, format,
+            desc->multisample_type, desc->multisample_quality, desc->usage, desc->access,
+            desc->width, desc->height, desc->depth, offset, parent, parent_ops, &texture_resource_ops)))
+    {
+        static unsigned int once;
+
+        /* DXTn 3D textures are not supported. Do not write the ERR for them. */
+        if ((desc->format == WINED3DFMT_DXT1 || desc->format == WINED3DFMT_DXT2 || desc->format == WINED3DFMT_DXT3
+                || desc->format == WINED3DFMT_DXT4 || desc->format == WINED3DFMT_DXT5)
+                && !(format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_TEXTURE)
+                && desc->resource_type != WINED3D_RTYPE_TEXTURE_3D && !once++)
+            ERR_(winediag)("The application tried to create a DXTn texture, but the driver does not support them.\n");
+
+        WARN("Failed to initialize resource, returning %#x\n", hr);
         return hr;
     }
+    wined3d_resource_update_draw_binding(&texture->resource);
+    if ((flags & WINED3D_TEXTURE_CREATE_MAPPABLE) || desc->format == WINED3DFMT_D16_LOCKABLE)
+        texture->resource.access |= WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+
+    texture->texture_ops = texture_ops;
+
+    texture->layer_count = layer_count;
+    texture->level_count = level_count;
+    texture->lod = 0;
+    texture->flags |= WINED3D_TEXTURE_POW2_MAT_IDENT | WINED3D_TEXTURE_NORMALIZED_COORDS;
+    if (flags & WINED3D_TEXTURE_CREATE_GET_DC_LENIENT)
+        texture->flags |= WINED3D_TEXTURE_PIN_SYSMEM | WINED3D_TEXTURE_GET_DC_LENIENT;
+    if (flags & (WINED3D_TEXTURE_CREATE_GET_DC | WINED3D_TEXTURE_CREATE_GET_DC_LENIENT))
+        texture->flags |= WINED3D_TEXTURE_GET_DC;
+    if (flags & WINED3D_TEXTURE_CREATE_DISCARD)
+        texture->flags |= WINED3D_TEXTURE_DISCARD;
+    if (flags & WINED3D_TEXTURE_CREATE_GENERATE_MIPMAPS)
+    {
+        if (!(texture->resource.format_flags & WINED3DFMT_FLAG_GEN_MIPMAP))
+            WARN("Format doesn't support mipmaps generation, "
+                    "ignoring WINED3D_TEXTURE_CREATE_GENERATE_MIPMAPS flag.\n");
+        else
+            texture->flags |= WINED3D_TEXTURE_GENERATE_MIPMAPS;
+    }
+
+    list_init(&texture->renderbuffers);
 
     /* Precalculated scaling for 'faked' non power of two texture coords. */
     if (texture->resource.gl_type == WINED3D_GL_RES_TYPE_TEX_RECT)
@@ -3632,12 +3699,12 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
             break;
 
         case WINED3D_RTYPE_TEXTURE_2D:
-            hr = texture_init(object, desc, layer_count, level_count,
+            hr = wined3d_texture_init(object, desc, layer_count, level_count,
                     flags, device, parent, parent_ops, &texture2d_ops);
             break;
 
         case WINED3D_RTYPE_TEXTURE_3D:
-            hr = texture_init(object, desc, layer_count, level_count,
+            hr = wined3d_texture_init(object, desc, layer_count, level_count,
                     flags, device, parent, parent_ops, &texture3d_ops);
             break;
 
