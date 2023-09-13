@@ -472,59 +472,6 @@ StringTableGetExtraData(HSTRING_TABLE hStringTable,
 }
 
 /**************************************************************************
- * StringTableLookUpString [SETUPAPI.@]
- *
- * Searches a string table for a given string.
- *
- * PARAMS
- *     hStringTable [I] Handle to the string table
- *     lpString     [I] String to be searched for
- *     dwFlags      [I] Flags
- *                        1: case sensitive compare
- *
- * RETURNS
- *     Success: String ID
- *     Failure: -1
- */
-DWORD WINAPI
-StringTableLookUpString(HSTRING_TABLE hStringTable,
-                        LPWSTR lpString,
-                        DWORD dwFlags)
-{
-    PSTRING_TABLE pStringTable;
-    DWORD i;
-
-    TRACE("%p %s %x\n", hStringTable, debugstr_w(lpString), dwFlags);
-
-    pStringTable = (PSTRING_TABLE)hStringTable;
-    if (pStringTable == NULL)
-    {
-        ERR("Invalid hStringTable!\n");
-        return (DWORD)-1;
-    }
-
-    /* Search for existing string in the string table */
-    for (i = 0; i < pStringTable->dwMaxSlots; i++)
-    {
-        if (pStringTable->pSlots[i].pString != NULL)
-        {
-            if (dwFlags & 1)
-            {
-                if (!lstrcmpW(pStringTable->pSlots[i].pString, lpString))
-                    return i + 1;
-            }
-            else
-            {
-                if (!lstrcmpiW(pStringTable->pSlots[i].pString, lpString))
-                    return i + 1;
-            }
-        }
-    }
-
-    return (DWORD)-1;
-}
-
-/**************************************************************************
  * StringTableLookUpStringEx [SETUPAPI.@]
  *
  * Searches a string table and extra data for a given string.
@@ -535,7 +482,7 @@ StringTableLookUpString(HSTRING_TABLE hStringTable,
  *     dwFlags      [I] Flags
  *                        1: case sensitive compare
  *     lpExtraData  [O] Pointer to the buffer that receives the extra data
- *     lpReserved   [I/O] Unused
+ *     dwReserved   [I/O] Unused
  *
  * RETURNS
  *     Success: String ID
@@ -587,6 +534,29 @@ StringTableLookUpStringEx(HSTRING_TABLE hStringTable,
         }
     }
     return ~0u;
+}
+
+/**************************************************************************
+ * StringTableLookUpString [SETUPAPI.@]
+ *
+ * Searches a string table for a given string.
+ *
+ * PARAMS
+ *     hStringTable [I] Handle to the string table
+ *     lpString     [I] String to be searched for
+ *     dwFlags      [I] Flags
+ *                        1: case sensitive compare
+ *
+ * RETURNS
+ *     Success: String ID
+ *     Failure: -1
+ */
+DWORD WINAPI
+StringTableLookUpString(HSTRING_TABLE hStringTable,
+                        LPWSTR lpString,
+                        DWORD dwFlags)
+{
+    return StringTableLookUpStringEx(hStringTable, lpString, dwFlags, NULL, 0);
 }
 
 /**************************************************************************
