@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <pseh/pseh2.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -2360,7 +2361,7 @@ BOOL WINAPI PrintDlgA(LPPRINTDLGA lppd)
 					   (LPARAM)PrintStructures));
 
 	if(bRet) {
-	    DEVMODEA *lpdm = PrintStructures->lpDevMode, *lpdmReturn;
+	    DEVMODEA *lpdm = PrintStructures->lpDevMode, *lpdmReturn = { 0 };
 	    PRINTER_INFO_2A *pi = PrintStructures->lpPrinterInfo;
 	    DRIVER_INFO_3A *di = PrintStructures->lpDriverInfo;
 
@@ -2374,7 +2375,20 @@ BOOL WINAPI PrintDlgA(LPPRINTDLGA lppd)
 					       GMEM_MOVEABLE);
 	    }
 	    lpdmReturn = GlobalLock(lppd->hDevMode);
+#ifdef __REACTOS__
+        _SEH2_TRY
+        {
+            // This can cause Unhandled exception errors
+            memcpy(lpdmReturn, lpdm, lpdm->dmSize + lpdm->dmDriverExtra);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            // No Action
+        }
+        _SEH2_END;
+#else
 	    memcpy(lpdmReturn, lpdm, lpdm->dmSize + lpdm->dmDriverExtra);
+#endif
 
 	    PRINTDLG_CreateDevNames(&(lppd->hDevNames),
 		    di->pDriverPath,
@@ -2511,7 +2525,7 @@ BOOL WINAPI PrintDlgW(LPPRINTDLGW lppd)
 					   (LPARAM)PrintStructures));
 
 	if(bRet) {
-	    DEVMODEW *lpdm = PrintStructures->lpDevMode, *lpdmReturn;
+	    DEVMODEW *lpdm = PrintStructures->lpDevMode, *lpdmReturn = { 0 };
 	    PRINTER_INFO_2W *pi = PrintStructures->lpPrinterInfo;
 	    DRIVER_INFO_3W *di = PrintStructures->lpDriverInfo;
 
@@ -2533,7 +2547,20 @@ BOOL WINAPI PrintDlgW(LPPRINTDLGW lppd)
 					       GMEM_MOVEABLE);
 	    }
 	    lpdmReturn = GlobalLock(lppd->hDevMode);
+#ifdef __REACTOS__
+        _SEH2_TRY
+        {
+            // This can cause Unhandled exception errors
+            memcpy(lpdmReturn, lpdm, lpdm->dmSize + lpdm->dmDriverExtra);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            // No Action
+        }
+        _SEH2_END;
+#else
 	    memcpy(lpdmReturn, lpdm, lpdm->dmSize + lpdm->dmDriverExtra);
+#endif
 
 	    if (lppd->hDevNames != 0) {
 	        WORD locks;
@@ -2927,6 +2954,13 @@ static void pagesetup_set_devmode(pagesetup_data *data, DEVMODEW *dm)
     else
     {
         dmA = convert_to_devmodeA(dm);
+#ifdef __REACTOS__
+         if (!dmA)
+         {
+             ERR("convert_to_devmodeA failed\n");
+             return;
+         }
+#endif
         size = dmA->dmSize + dmA->dmDriverExtra;
         src = dmA;
     }
@@ -3093,6 +3127,12 @@ static BOOL pagesetup_change_printer(LPWSTR name, pagesetup_data *data)
     DocumentPropertiesW(0, 0, name, dm, NULL, DM_OUT_BUFFER);
 
     pagesetup_set_devmode(data, dm);
+#ifdef __REACTOS__
+    if(!data->u.dlgw->hDevMode)
+    {    ERR("pagesetup_set_devmode failed\n");
+         goto end;
+    }
+#endif
     pagesetup_set_devnames(data, drv_info->pDriverPath, prn_info->pPrinterName,
                            prn_info->pPortName);
 
@@ -3408,7 +3448,15 @@ static BOOL pagesetup_wm_command(HWND hDlg, WPARAM wParam, LPARAM lParam, pagese
             INT length = SendDlgItemMessageW(hDlg, id, CB_GETLBTEXTLEN, index, 0);
             name = HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*(length+1));
             SendDlgItemMessageW(hDlg, id, CB_GETLBTEXT, index, (LPARAM)name);
+#ifdef __REACTOS__
+            if (pagesetup_change_printer(name, data))
+            {
+                ERR("pagesetup_change_printer failed.\n");
+                return FALSE;
+            }
+#else
             pagesetup_change_printer(name, data);
+#endif
             pagesetup_init_combos(hDlg, data);
             HeapFree(GetProcessHeap(),0,name);
         }
@@ -3883,7 +3931,15 @@ static BOOL pagesetup_common(pagesetup_data *data)
             COMDLG32_SetCommDlgExtendedError(PDERR_NODEFAULTPRN);
             return FALSE;
         }
+#ifdef __REACTOS__
+        if (!pagesetup_change_printer(def, data))
+        {
+            ERR("pagesetup_change_printer failed.\n");
+            return FALSE;
+        }
+#else
         pagesetup_change_printer(def, data);
+#endif
         HeapFree(GetProcessHeap(), 0, def);
     }
 

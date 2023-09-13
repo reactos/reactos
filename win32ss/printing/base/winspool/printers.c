@@ -599,6 +599,11 @@ DeviceCapabilitiesW(LPCWSTR pDevice, LPCWSTR pPort, WORD fwCapability, LPWSTR pO
             {
                 iDevCap = fpDeviceCapabilities( hPrinter, (PWSTR)pDevice, fwCapability, pOutput, (PDEVMODE)pDevMode );
             }
+            else
+            {
+                FIXME("Handle ReactOS Not Able to Print Wine Tests\n");
+                if (fwCapability == DC_COPIES) iDevCap = 0;
+            }
 
             FreeLibrary(hLibrary);
         }
