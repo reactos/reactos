@@ -911,13 +911,12 @@ void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int s
 
     if (gl_info->quirks & WINED3D_QUIRK_FBO_TEX_UPDATE)
     {
-        struct wined3d_surface *surface = texture->sub_resources[sub_resource_idx].u.surface;
         struct wined3d_device *device = texture->resource.device;
         unsigned int i;
 
         for (i = 0; i < device->context_count; ++i)
         {
-            context_surface_update(device->contexts[i], surface);
+            context_texture_update(device->contexts[i], texture);
         }
     }
 }
