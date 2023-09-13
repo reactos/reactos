@@ -3290,6 +3290,10 @@ static inline unsigned int wined3d_texture_get_level_pow2_height(const struct wi
     return max(1, texture->pow2_height >> level);
 }
 
+HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+        const struct wined3d_box *dst_box, struct wined3d_texture *src_texture,
+        unsigned int src_sub_resource_idx, const struct wined3d_box *src_box, DWORD flags,
+        const struct wined3d_blt_fx *blt_fx, enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;
 BOOL texture2d_load_drawable(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context) DECLSPEC_HIDDEN;
 void texture2d_load_fb_texture(struct wined3d_texture *texture, unsigned int sub_resource_idx,
@@ -3396,9 +3400,6 @@ static inline unsigned int surface_get_sub_resource_idx(const struct wined3d_sur
     return surface->texture_layer * surface->container->level_count + surface->texture_level;
 }
 
-HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const struct wined3d_box *dst_box,
-        struct wined3d_surface *src_surface, const struct wined3d_box *src_box, DWORD flags,
-        const struct wined3d_blt_fx *blt_fx, enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;
 void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         const struct wined3d_gl_info *gl_info, const struct wined3d_format *format, const RECT *src_rect,
         unsigned int src_pitch, const POINT *dst_point, BOOL srgb,

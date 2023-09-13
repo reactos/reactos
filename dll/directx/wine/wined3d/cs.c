@@ -2061,15 +2061,8 @@ static void wined3d_cs_exec_blt_sub_resource(struct wined3d_cs *cs, const void *
     }
     else if (op->dst_resource->type == WINED3D_RTYPE_TEXTURE_2D)
     {
-        struct wined3d_surface *dst_surface, *src_surface;
-        struct wined3d_texture *dst_texture, *src_texture;
-
-        dst_texture = texture_from_resource(op->dst_resource);
-        src_texture = texture_from_resource(op->src_resource);
-        dst_surface = dst_texture->sub_resources[op->dst_sub_resource_idx].u.surface;
-        src_surface = src_texture->sub_resources[op->src_sub_resource_idx].u.surface;
-
-        if (FAILED(wined3d_surface_blt(dst_surface, &op->dst_box, src_surface,
+        if (FAILED(texture2d_blt(texture_from_resource(op->dst_resource), op->dst_sub_resource_idx,
+                &op->dst_box, texture_from_resource(op->src_resource), op->src_sub_resource_idx,
                 &op->src_box, op->flags, &op->fx, op->filter)))
             FIXME("Blit failed.\n");
     }

@@ -3838,15 +3838,12 @@ struct wined3d_blitter *wined3d_cpu_blitter_create(void)
     return blitter;
 }
 
-HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const struct wined3d_box *dst_box,
-        struct wined3d_surface *src_surface, const struct wined3d_box *src_box, DWORD flags,
-        const struct wined3d_blt_fx *fx, enum wined3d_texture_filter_type filter)
+HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+        const struct wined3d_box *dst_box, struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx,
+        const struct wined3d_box *src_box, DWORD flags, const struct wined3d_blt_fx *fx,
+        enum wined3d_texture_filter_type filter)
 {
-    unsigned int dst_sub_resource_idx = surface_get_sub_resource_idx(dst_surface);
-    unsigned int src_sub_resource_idx = surface_get_sub_resource_idx(src_surface);
     struct wined3d_texture_sub_resource *src_sub_resource, *dst_sub_resource;
-    struct wined3d_texture *dst_texture = dst_surface->container;
-    struct wined3d_texture *src_texture = src_surface->container;
     struct wined3d_device *device = dst_texture->resource.device;
     struct wined3d_swapchain *src_swapchain, *dst_swapchain;
     const struct wined3d_color_key *colour_key = NULL;
@@ -3862,9 +3859,10 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const struct wi
             | WINED3D_BLT_ALPHA_TEST
             | WINED3D_BLT_RAW;
 
-    TRACE("dst_surface %p, dst_box %s, src_surface %p, src_box %s, flags %#x, fx %p, filter %s.\n",
-            dst_surface, debug_box(dst_box), src_surface, debug_box(src_box),
-            flags, fx, debug_d3dtexturefiltertype(filter));
+    TRACE("dst_texture %p, dst_sub_resource_idx %u, dst_box %s, src_texture %p, "
+            "src_sub_resource_idx %u, src_box %s, flags %#x, fx %p, filter %s.\n",
+            dst_texture, dst_sub_resource_idx, debug_box(dst_box), src_texture, src_sub_resource_idx,
+            debug_box(src_box), flags, fx, debug_d3dtexturefiltertype(filter));
     TRACE("Usage is %s.\n", debug_d3dusage(dst_texture->resource.usage));
 
     if (fx)
