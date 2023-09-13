@@ -562,7 +562,7 @@ static void swapchain_gdi_frontbuffer_updated(struct wined3d_swapchain *swapchai
 
     TRACE("swapchain %p.\n", swapchain);
 
-    front = swapchain->front_buffer->sub_resources[0].dc_info;
+    front = &swapchain->front_buffer->dc_info[0];
     if (swapchain->palette)
         wined3d_palette_apply_to_dc(swapchain->palette, front->dc);
 
@@ -602,8 +602,8 @@ static void swapchain_gdi_present(struct wined3d_swapchain *swapchain,
     void *data;
     HDC dc;
 
-    front = swapchain->front_buffer->sub_resources[0].dc_info;
-    back = swapchain->back_buffers[0]->sub_resources[0].dc_info;
+    front = &swapchain->front_buffer->dc_info[0];
+    back = &swapchain->back_buffers[0]->dc_info[0];
 
     /* Flip the surface data. */
     dc = front->dc;
