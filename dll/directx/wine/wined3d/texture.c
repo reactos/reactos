@@ -2259,7 +2259,7 @@ static BOOL texture2d_load_location(struct wined3d_texture *texture, unsigned in
 
         case WINED3D_LOCATION_RB_RESOLVED:
         case WINED3D_LOCATION_RB_MULTISAMPLE:
-            return surface_load_renderbuffer(surface, context, location);
+            return texture2d_load_renderbuffer(texture, sub_resource_idx, context, location);
 
         case WINED3D_LOCATION_TEXTURE_RGB:
         case WINED3D_LOCATION_TEXTURE_SRGB:

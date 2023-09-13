@@ -2480,17 +2480,18 @@ BOOL surface_load_texture(struct wined3d_surface *surface,
 }
 
 /* Context activation is done by the caller. */
-BOOL surface_load_renderbuffer(struct wined3d_surface *surface,
+BOOL texture2d_load_renderbuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD dst_location)
 {
-    struct wined3d_texture *texture = surface->container;
-    unsigned int level = surface_get_sub_resource_idx(surface) % texture->level_count;
+    unsigned int level = sub_resource_idx % texture->level_count;
     const RECT rect = {0, 0,
             wined3d_texture_get_level_width(texture, level),
             wined3d_texture_get_level_height(texture, level)};
-    DWORD locations = surface_get_sub_resource(surface)->locations;
-    DWORD src_location;
+    struct wined3d_texture_sub_resource *sub_resource;
+    DWORD src_location, locations;
 
+    sub_resource = &texture->sub_resources[sub_resource_idx];
+    locations = sub_resource->locations;
     if (texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL)
     {
         FIXME("Unimplemented copy from %s for depth/stencil buffers.\n",
@@ -2507,8 +2508,8 @@ BOOL surface_load_renderbuffer(struct wined3d_surface *surface,
     else /* surface_blt_fbo will load the source location if necessary. */
         src_location = WINED3D_LOCATION_TEXTURE_RGB;
 
-    surface_blt_fbo(texture->resource.device, context, WINED3D_TEXF_POINT,
-            surface, src_location, &rect, surface, dst_location, &rect);
+    surface_blt_fbo(texture->resource.device, context, WINED3D_TEXF_POINT, sub_resource->u.surface,
+            src_location, &rect, sub_resource->u.surface, dst_location, &rect);
 
     return TRUE;
 }

@@ -3288,6 +3288,8 @@ static inline unsigned int wined3d_texture_get_level_pow2_height(const struct wi
 
 BOOL texture2d_load_drawable(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context) DECLSPEC_HIDDEN;
+BOOL texture2d_load_renderbuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
+        struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
 BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
 
@@ -3396,8 +3398,6 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst
         const struct wined3d_blt_fx *blt_fx, enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;
 void surface_load_fb_texture(struct wined3d_surface *surface, BOOL srgb,
         struct wined3d_context *context) DECLSPEC_HIDDEN;
-BOOL surface_load_renderbuffer(struct wined3d_surface *surface,
-        struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
 BOOL surface_load_texture(struct wined3d_surface *surface,
         struct wined3d_context *context, BOOL srgb) DECLSPEC_HIDDEN;
 void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
