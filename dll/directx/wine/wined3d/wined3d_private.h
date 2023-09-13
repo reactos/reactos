@@ -3293,6 +3293,15 @@ static inline unsigned int wined3d_texture_get_level_pow2_height(const struct wi
     return max(1, texture->pow2_height >> level);
 }
 
+static inline void wined3d_texture_get_level_box(const struct wined3d_texture *texture,
+        unsigned int level, struct wined3d_box *box)
+{
+    wined3d_box_set(box, 0, 0,
+            wined3d_texture_get_level_width(texture, level),
+            wined3d_texture_get_level_height(texture, level),
+            0, wined3d_texture_get_level_depth(texture, level));
+}
+
 HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
         const struct wined3d_box *dst_box, struct wined3d_texture *src_texture,
         unsigned int src_sub_resource_idx, const struct wined3d_box *src_box, DWORD flags,

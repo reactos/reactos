@@ -3241,22 +3241,13 @@ static void texture3d_upload_data(struct wined3d_texture *texture, unsigned int 
             texture, sub_resource_idx, context, debug_d3dformat(format->id), debug_box(src_box),
             data->buffer_object, data->addr, row_pitch, slice_pitch, dst_x, dst_y, dst_z, srgb);
 
-    if (src_box)
-    {
-        addr += src_box->front * slice_pitch;
-        addr += src_box->top * row_pitch;
-        addr += src_box->left * format->byte_count;
+    addr += src_box->front * slice_pitch;
+    addr += src_box->top * row_pitch;
+    addr += src_box->left * format->byte_count;
 
-        update_w = src_box->right - src_box->left;
-        update_h = src_box->bottom - src_box->top;
-        update_d = src_box->back - src_box->front;
-    }
-    else
-    {
-        update_w = wined3d_texture_get_level_width(texture, level);
-        update_h = wined3d_texture_get_level_height(texture, level);
-        update_d = wined3d_texture_get_level_depth(texture, level);
-    }
+    update_w = src_box->right - src_box->left;
+    update_h = src_box->bottom - src_box->top;
+    update_d = src_box->back - src_box->front;
 
     if (format->conv_byte_count)
     {
@@ -3338,6 +3329,7 @@ static void texture3d_srgb_transfer(struct wined3d_texture *texture, unsigned in
     struct wined3d_texture_sub_resource *sub_resource = &texture->sub_resources[sub_resource_idx];
     unsigned int row_pitch, slice_pitch;
     struct wined3d_bo_address data;
+    struct wined3d_box src_box;
 
     /* Optimisations are possible, but the effort should be put into either
      * implementing EXT_SRGB_DECODE in the driver or finding out why we
@@ -3351,11 +3343,12 @@ static void texture3d_srgb_transfer(struct wined3d_texture *texture, unsigned in
         return;
 
     wined3d_texture_get_pitch(texture, sub_resource_idx, &row_pitch, &slice_pitch);
+    wined3d_texture_get_level_box(texture, sub_resource_idx % texture->level_count, &src_box);
     wined3d_texture_bind_and_dirtify(texture, context, !dest_is_srgb);
     texture3d_download_data(texture, sub_resource_idx, context, &data);
     wined3d_texture_bind_and_dirtify(texture, context, dest_is_srgb);
     texture3d_upload_data(texture, sub_resource_idx, context, texture->resource.format,
-            NULL, wined3d_const_bo_address(&data), row_pitch, slice_pitch, 0, 0, 0, FALSE);
+            &src_box, wined3d_const_bo_address(&data), row_pitch, slice_pitch, 0, 0, 0, FALSE);
 
     heap_free(data.addr);
 }
@@ -3377,12 +3370,15 @@ static BOOL texture3d_load_location(struct wined3d_texture *texture, unsigned in
             if (sub_resource->locations & WINED3D_LOCATION_SYSMEM)
             {
                 struct wined3d_const_bo_address data = {0, texture->resource.heap_memory};
+                struct wined3d_box src_box;
+
                 data.addr += sub_resource->offset;
                 wined3d_texture_bind_and_dirtify(texture, context,
                         location == WINED3D_LOCATION_TEXTURE_SRGB);
                 wined3d_texture_get_pitch(texture, sub_resource_idx, &row_pitch, &slice_pitch);
+                wined3d_texture_get_level_box(texture, sub_resource_idx % texture->level_count, &src_box);
                 texture3d_upload_data(texture, sub_resource_idx, context, texture->resource.format,
-                        NULL, &data, row_pitch, slice_pitch, 0, 0, 0, FALSE);
+                        &src_box, &data, row_pitch, slice_pitch, 0, 0, 0, FALSE);
             }
             else if (sub_resource->locations & WINED3D_LOCATION_BUFFER)
             {
@@ -3391,11 +3387,14 @@ static BOOL texture3d_load_location(struct wined3d_texture *texture, unsigned in
 #else  /* STAGING_CSMT */
                 struct wined3d_const_bo_address data = {sub_resource->buffer->name, NULL};
 #endif /* STAGING_CSMT */
+                struct wined3d_box src_box;
+
                 wined3d_texture_bind_and_dirtify(texture, context,
                         location == WINED3D_LOCATION_TEXTURE_SRGB);
                 wined3d_texture_get_pitch(texture, sub_resource_idx, &row_pitch, &slice_pitch);
+                wined3d_texture_get_level_box(texture, sub_resource_idx % texture->level_count, &src_box);
                 texture3d_upload_data(texture, sub_resource_idx, context, texture->resource.format,
-                        NULL, &data, row_pitch, slice_pitch, 0, 0, 0, FALSE);
+                        &src_box, &data, row_pitch, slice_pitch, 0, 0, 0, FALSE);
             }
             else if (sub_resource->locations & WINED3D_LOCATION_TEXTURE_RGB)
             {
