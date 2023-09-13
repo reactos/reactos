@@ -2514,6 +2514,10 @@ BOOL texture2d_load_renderbuffer(struct wined3d_texture *texture, unsigned int s
         src_location = WINED3D_LOCATION_RB_RESOLVED;
     else if (locations & WINED3D_LOCATION_TEXTURE_SRGB)
         src_location = WINED3D_LOCATION_TEXTURE_SRGB;
+    else if (locations & WINED3D_LOCATION_TEXTURE_RGB)
+        src_location = WINED3D_LOCATION_TEXTURE_RGB;
+    else if (locations & WINED3D_LOCATION_DRAWABLE)
+        src_location = WINED3D_LOCATION_DRAWABLE;
     else /* texture2d_blt_fbo() will load the source location if necessary. */
         src_location = WINED3D_LOCATION_TEXTURE_RGB;
 
