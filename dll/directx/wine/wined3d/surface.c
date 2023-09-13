@@ -366,28 +366,25 @@ static BOOL is_multisample_location(const struct wined3d_texture *texture, DWORD
 
 /* Blit between surface locations. Onscreen on different swapchains is not supported.
  * Depth / stencil is not supported. Context activation is done by the caller. */
-static void surface_blt_fbo(const struct wined3d_device *device,
-        struct wined3d_context *old_ctx, enum wined3d_texture_filter_type filter,
-        struct wined3d_surface *src_surface, DWORD src_location, const RECT *src_rect_in,
-        struct wined3d_surface *dst_surface, DWORD dst_location, const RECT *dst_rect_in)
+static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3d_context *context,
+        enum wined3d_texture_filter_type filter, struct wined3d_texture *src_texture,
+        unsigned int src_sub_resource_idx, DWORD src_location, const RECT *src_rect_in,
+        struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx, DWORD dst_location,
+        const RECT *dst_rect_in)
 {
-    unsigned int dst_sub_resource_idx = surface_get_sub_resource_idx(dst_surface);
-    unsigned int src_sub_resource_idx = surface_get_sub_resource_idx(src_surface);
-    struct wined3d_texture *dst_texture = dst_surface->container;
-    struct wined3d_texture *src_texture = src_surface->container;
+    struct wined3d_texture *required_texture, *restore_texture;
+    unsigned int required_idx, restore_idx;
     const struct wined3d_gl_info *gl_info;
-    struct wined3d_context *context = old_ctx;
-    struct wined3d_surface *required_rt, *restore_rt = NULL;
     RECT src_rect, dst_rect;
     GLenum gl_filter;
     GLenum buffer;
     int i;
 
-    TRACE("device %p, filter %s,\n", device, debug_d3dtexturefiltertype(filter));
-    TRACE("src_surface %p, src_location %s, src_rect %s,\n",
-            src_surface, wined3d_debug_location(src_location), wine_dbgstr_rect(src_rect_in));
-    TRACE("dst_surface %p, dst_location %s, dst_rect %s.\n",
-            dst_surface, wined3d_debug_location(dst_location), wine_dbgstr_rect(dst_rect_in));
+    TRACE("device %p, context %p, filter %s, src_texture %p, src_sub_resource_idx %u, src_location %s, "
+            "src_rect %s, dst_texture %p, dst_sub_resource_idx %u, dst_location %s, dst_rect %s.\n",
+            device, context, debug_d3dtexturefiltertype(filter), src_texture, src_sub_resource_idx,
+            wined3d_debug_location(src_location), wine_dbgstr_rect(src_rect_in), dst_texture,
+            dst_sub_resource_idx, wined3d_debug_location(dst_location), wine_dbgstr_rect(dst_rect_in));
 
     src_rect = *src_rect_in;
     dst_rect = *dst_rect_in;
@@ -417,23 +414,35 @@ static void surface_blt_fbo(const struct wined3d_device *device,
      * surface isn't required if the entire surface is overwritten. (And is
      * in fact harmful if we're being called by surface_load_location() with
      * the purpose of loading the destination surface.) */
-    wined3d_texture_load_location(src_texture, src_sub_resource_idx, old_ctx, src_location);
+    wined3d_texture_load_location(src_texture, src_sub_resource_idx, context, src_location);
     if (!texture2d_is_full_rect(dst_texture, dst_sub_resource_idx % dst_texture->level_count, &dst_rect))
-        wined3d_texture_load_location(dst_texture, dst_sub_resource_idx, old_ctx, dst_location);
+        wined3d_texture_load_location(dst_texture, dst_sub_resource_idx, context, dst_location);
     else
-        wined3d_texture_prepare_location(dst_texture, dst_sub_resource_idx, old_ctx, dst_location);
+        wined3d_texture_prepare_location(dst_texture, dst_sub_resource_idx, context, dst_location);
 
 
-    if (src_location == WINED3D_LOCATION_DRAWABLE) required_rt = src_surface;
-    else if (dst_location == WINED3D_LOCATION_DRAWABLE) required_rt = dst_surface;
-    else required_rt = NULL;
-
-    restore_rt = context_get_rt_surface(old_ctx);
-    if (restore_rt != required_rt)
-        context = context_acquire(device, required_rt ? required_rt->container : NULL,
-                required_rt ? surface_get_sub_resource_idx(required_rt) : 0);
+    if (src_location == WINED3D_LOCATION_DRAWABLE)
+    {
+        required_texture = src_texture;
+        required_idx = src_sub_resource_idx;
+    }
+    else if (dst_location == WINED3D_LOCATION_DRAWABLE)
+    {
+        required_texture = dst_texture;
+        required_idx = dst_sub_resource_idx;
+    }
     else
-        restore_rt = NULL;
+    {
+        required_texture = NULL;
+        required_idx = 0;
+    }
+
+    restore_texture = context->current_rt.texture;
+    restore_idx = context->current_rt.sub_resource_idx;
+    if (restore_texture != required_texture || restore_idx != required_idx)
+        context = context_acquire(device, required_texture, required_idx);
+    else
+        restore_texture = NULL;
 
     if (!context->valid)
     {
@@ -446,34 +455,36 @@ static void surface_blt_fbo(const struct wined3d_device *device,
 
     if (src_location == WINED3D_LOCATION_DRAWABLE)
     {
-        TRACE("Source surface %p is onscreen.\n", src_surface);
+        TRACE("Source texture %p is onscreen.\n", src_texture);
         buffer = wined3d_texture_get_gl_buffer(src_texture);
         wined3d_texture_translate_drawable_coords(src_texture, context->win_handle, &src_rect);
     }
     else
     {
-        TRACE("Source surface %p is offscreen.\n", src_surface);
+        TRACE("Source texture %p is offscreen.\n", src_texture);
         buffer = GL_COLOR_ATTACHMENT0;
     }
 
-    context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER, src_surface, NULL, src_location);
+    context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER,
+            src_texture->sub_resources[src_sub_resource_idx].u.surface, NULL, src_location);
     gl_info->gl_ops.gl.p_glReadBuffer(buffer);
     checkGLcall("glReadBuffer()");
     context_check_fbo_status(context, GL_READ_FRAMEBUFFER);
 
     if (dst_location == WINED3D_LOCATION_DRAWABLE)
     {
-        TRACE("Destination surface %p is onscreen.\n", dst_surface);
+        TRACE("Destination texture %p is onscreen.\n", dst_texture);
         buffer = wined3d_texture_get_gl_buffer(dst_texture);
         wined3d_texture_translate_drawable_coords(dst_texture, context->win_handle, &dst_rect);
     }
     else
     {
-        TRACE("Destination surface %p is offscreen.\n", dst_surface);
+        TRACE("Destination texture %p is offscreen.\n", dst_texture);
         buffer = GL_COLOR_ATTACHMENT0;
     }
 
-    context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER, dst_surface, NULL, dst_location);
+    context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER,
+            dst_texture->sub_resources[dst_sub_resource_idx].u.surface, NULL, dst_location);
     context_set_draw_buffer(context, buffer);
     context_check_fbo_status(context, GL_DRAW_FRAMEBUFFER);
     context_invalidate_state(context, STATE_FRAMEBUFFER);
@@ -493,8 +504,8 @@ static void surface_blt_fbo(const struct wined3d_device *device,
             && dst_texture->swapchain->front_buffer == dst_texture))
         gl_info->gl_ops.gl.p_glFlush();
 
-    if (restore_rt)
-        context_restore(context, restore_rt);
+    if (restore_texture)
+        context_restore(context, restore_texture->sub_resources[restore_idx].u.surface);
 }
 
 static BOOL fbo_blitter_supported(enum wined3d_blit_op blit_op, const struct wined3d_gl_info *gl_info,
@@ -2342,13 +2353,13 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
                     &texture->resource, WINED3D_LOCATION_TEXTURE_SRGB))
     {
         if (srgb)
-            surface_blt_fbo(device, context, WINED3D_TEXF_POINT,
-                    sub_resource->u.surface, WINED3D_LOCATION_TEXTURE_RGB, &src_rect,
-                    sub_resource->u.surface, WINED3D_LOCATION_TEXTURE_SRGB, &src_rect);
+            texture2d_blt_fbo(device, context, WINED3D_TEXF_POINT,
+                    texture, sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB, &src_rect,
+                    texture, sub_resource_idx, WINED3D_LOCATION_TEXTURE_SRGB, &src_rect);
         else
-            surface_blt_fbo(device, context, WINED3D_TEXF_POINT,
-                    sub_resource->u.surface, WINED3D_LOCATION_TEXTURE_SRGB, &src_rect,
-                    sub_resource->u.surface, WINED3D_LOCATION_TEXTURE_RGB, &src_rect);
+            texture2d_blt_fbo(device, context, WINED3D_TEXF_POINT,
+                    texture, sub_resource_idx, WINED3D_LOCATION_TEXTURE_SRGB, &src_rect,
+                    texture, sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB, &src_rect);
 
         return TRUE;
     }
@@ -2362,8 +2373,8 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
 
         if (fbo_blitter_supported(WINED3D_BLIT_OP_COLOR_BLIT, gl_info,
                 &texture->resource, src_location, &texture->resource, dst_location))
-            surface_blt_fbo(device, context, WINED3D_TEXF_POINT, sub_resource->u.surface,
-                    src_location, &src_rect, sub_resource->u.surface, dst_location, &src_rect);
+            texture2d_blt_fbo(device, context, WINED3D_TEXF_POINT, texture, sub_resource_idx,
+                    src_location, &src_rect, texture, sub_resource_idx, dst_location, &src_rect);
 
         return TRUE;
     }
@@ -2503,11 +2514,11 @@ BOOL texture2d_load_renderbuffer(struct wined3d_texture *texture, unsigned int s
         src_location = WINED3D_LOCATION_RB_RESOLVED;
     else if (locations & WINED3D_LOCATION_TEXTURE_SRGB)
         src_location = WINED3D_LOCATION_TEXTURE_SRGB;
-    else /* surface_blt_fbo will load the source location if necessary. */
+    else /* texture2d_blt_fbo() will load the source location if necessary. */
         src_location = WINED3D_LOCATION_TEXTURE_RGB;
 
-    surface_blt_fbo(texture->resource.device, context, WINED3D_TEXF_POINT, sub_resource->u.surface,
-            src_location, &rect, sub_resource->u.surface, dst_location, &rect);
+    texture2d_blt_fbo(texture->resource.device, context, WINED3D_TEXF_POINT, texture,
+            sub_resource_idx, src_location, &rect, texture, sub_resource_idx, dst_location, &rect);
 
     return TRUE;
 }
@@ -2564,8 +2575,9 @@ static DWORD fbo_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
     if (blit_op == WINED3D_BLIT_OP_COLOR_BLIT)
     {
         TRACE("Colour blit.\n");
-        surface_blt_fbo(device, context, filter, src_surface, src_location,
-                src_rect, dst_surface, dst_location, dst_rect);
+        texture2d_blt_fbo(device, context, filter, src_surface->container,
+                surface_get_sub_resource_idx(src_surface), src_location, src_rect, dst_surface->container,
+                surface_get_sub_resource_idx(dst_surface), dst_location, dst_rect);
         return dst_location;
     }
 
