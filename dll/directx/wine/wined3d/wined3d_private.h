@@ -2119,9 +2119,10 @@ struct wined3d_blitter_ops
             unsigned int rt_count, const struct wined3d_fb_state *fb, unsigned int rect_count, const RECT *clear_rects,
             const RECT *draw_rect, DWORD flags, const struct wined3d_color *colour, float depth, DWORD stencil);
     DWORD (*blitter_blit)(struct wined3d_blitter *blitter, enum wined3d_blit_op op, struct wined3d_context *context,
-            struct wined3d_surface *src_surface, DWORD src_location, const RECT *src_rect,
-            struct wined3d_surface *dst_surface, DWORD dst_location, const RECT *dst_rect,
-            const struct wined3d_color_key *color_key, enum wined3d_texture_filter_type filter);
+            struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx, DWORD src_location,
+            const RECT *src_rect, struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+            DWORD dst_location, const RECT *dst_rect, const struct wined3d_color_key *colour_key,
+            enum wined3d_texture_filter_type filter);
 };
 
 void wined3d_arbfp_blitter_create(struct wined3d_blitter **next,
@@ -3393,11 +3394,6 @@ struct wined3d_surface
 static inline unsigned int surface_get_sub_resource_idx(const struct wined3d_surface *surface)
 {
     return surface->texture_layer * surface->container->level_count + surface->texture_level;
-}
-
-static inline struct wined3d_texture_sub_resource *surface_get_sub_resource(struct wined3d_surface *surface)
-{
-    return &surface->container->sub_resources[surface_get_sub_resource_idx(surface)];
 }
 
 HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const struct wined3d_box *dst_box,

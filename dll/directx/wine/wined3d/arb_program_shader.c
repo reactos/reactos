@@ -7795,13 +7795,11 @@ static BOOL arbfp_blit_supported(enum wined3d_blit_op blit_op, const struct wine
 }
 
 static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit_op op,
-        struct wined3d_context *context, struct wined3d_surface *src_surface, DWORD src_location,
-        const RECT *src_rect, struct wined3d_surface *dst_surface, DWORD dst_location, const RECT *dst_rect,
+        struct wined3d_context *context, struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx,
+        DWORD src_location, const RECT *src_rect, struct wined3d_texture *dst_texture,
+        unsigned int dst_sub_resource_idx, DWORD dst_location, const RECT *dst_rect,
         const struct wined3d_color_key *color_key, enum wined3d_texture_filter_type filter)
 {
-    unsigned int src_sub_resource_idx = surface_get_sub_resource_idx(src_surface);
-    struct wined3d_texture *src_texture = src_surface->container;
-    struct wined3d_texture *dst_texture = dst_surface->container;
     struct wined3d_device *device = dst_texture->resource.device;
     struct wined3d_arbfp_blitter *arbfp_blitter;
     struct wined3d_color_key alpha_test_key;
@@ -7812,15 +7810,15 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
             &dst_texture->resource, dst_location))
     {
         if ((next = blitter->next))
-            return next->ops->blitter_blit(next, op, context, src_surface, src_location,
-                    src_rect, dst_surface, dst_location, dst_rect, color_key, filter);
+            return next->ops->blitter_blit(next, op, context, src_texture, src_sub_resource_idx, src_location,
+                    src_rect, dst_texture, dst_sub_resource_idx, dst_location, dst_rect, color_key, filter);
     }
 
     arbfp_blitter = CONTAINING_RECORD(blitter, struct wined3d_arbfp_blitter, blitter);
 
     /* Now load the surface */
     if (wined3d_settings.offscreen_rendering_mode != ORM_FBO
-            && (surface_get_sub_resource(src_surface)->locations
+            && (src_texture->sub_resources[src_sub_resource_idx].locations
             & (WINED3D_LOCATION_TEXTURE_RGB | WINED3D_LOCATION_DRAWABLE))
             == WINED3D_LOCATION_DRAWABLE
             && !wined3d_resource_is_offscreen(&src_texture->resource))
@@ -7857,16 +7855,16 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
 
         if (dst_location == WINED3D_LOCATION_DRAWABLE)
         {
-            TRACE("Destination surface %p is onscreen.\n", dst_surface);
+            TRACE("Destination texture %p is onscreen.\n", dst_texture);
             buffer = wined3d_texture_get_gl_buffer(dst_texture);
         }
         else
         {
-            TRACE("Destination surface %p is offscreen.\n", dst_surface);
+            TRACE("Destination texture %p is offscreen.\n", dst_texture);
             buffer = GL_COLOR_ATTACHMENT0;
         }
         context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER,
-                &dst_texture->resource, surface_get_sub_resource_idx(dst_surface), NULL, 0, dst_location);
+                &dst_texture->resource, dst_sub_resource_idx, NULL, 0, dst_location);
         context_set_draw_buffer(context, buffer);
         context_check_fbo_status(context, GL_DRAW_FRAMEBUFFER);
         context_invalidate_state(context, STATE_FRAMEBUFFER);

@@ -318,7 +318,6 @@ static void swapchain_blit(const struct wined3d_swapchain *swapchain,
         struct wined3d_context *context, const RECT *src_rect, const RECT *dst_rect)
 {
     struct wined3d_texture *texture = swapchain->back_buffers[0];
-    struct wined3d_surface *back_buffer = texture->sub_resources[0].u.surface;
     struct wined3d_device *device = swapchain->device;
     enum wined3d_texture_filter_type filter;
     DWORD location;
@@ -338,8 +337,8 @@ static void swapchain_blit(const struct wined3d_swapchain *swapchain,
         location = WINED3D_LOCATION_RB_RESOLVED;
 
     wined3d_texture_validate_location(texture, 0, WINED3D_LOCATION_DRAWABLE);
-    device->blitter->ops->blitter_blit(device->blitter, WINED3D_BLIT_OP_COLOR_BLIT, context, back_buffer,
-            location, src_rect, back_buffer, WINED3D_LOCATION_DRAWABLE, dst_rect, NULL, filter);
+    device->blitter->ops->blitter_blit(device->blitter, WINED3D_BLIT_OP_COLOR_BLIT, context, texture, 0,
+            location, src_rect, texture, 0, WINED3D_LOCATION_DRAWABLE, dst_rect, NULL, filter);
     wined3d_texture_invalidate_location(texture, 0, WINED3D_LOCATION_DRAWABLE);
 }
 
