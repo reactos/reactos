@@ -696,34 +696,13 @@ static void wined3d_swapchain_update_swap_interval_cs(void *object)
     context = context_acquire(swapchain->device, swapchain->front_buffer, 0);
     gl_info = context->gl_info;
 
-    switch (swapchain->desc.swap_interval)
-    {
-        case WINED3DPRESENT_INTERVAL_IMMEDIATE:
-            swap_interval = 0;
-            break;
-        case WINED3DPRESENT_INTERVAL_DEFAULT:
-        case WINED3DPRESENT_INTERVAL_ONE:
-            swap_interval = 1;
-            break;
-        case WINED3DPRESENT_INTERVAL_TWO:
-            swap_interval = 2;
-            break;
-        case WINED3DPRESENT_INTERVAL_THREE:
-            swap_interval = 3;
-            break;
-        case WINED3DPRESENT_INTERVAL_FOUR:
-            swap_interval = 4;
-            break;
-        default:
-            FIXME("Unhandled present interval %#x.\n", swapchain->desc.swap_interval);
-            swap_interval = 1;
-    }
+    swap_interval = swapchain->desc.swap_interval > 4 ? 1 : swapchain->desc.swap_interval;
 
     if (gl_info->supported[WGL_EXT_SWAP_CONTROL])
     {
         if (!GL_EXTCALL(wglSwapIntervalEXT(swap_interval)))
-            ERR("wglSwapIntervalEXT failed to set swap interval %d for context %p, last error %#x\n",
-                swap_interval, context, GetLastError());
+            ERR("wglSwapIntervalEXT failed to set swap interval %d for context %p, last error %#x.\n",
+                    swap_interval, context, GetLastError());
     }
 
     context_release(context);

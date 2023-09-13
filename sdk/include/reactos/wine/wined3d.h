@@ -531,6 +531,16 @@ enum wined3d_swap_effect
     WINED3D_SWAP_EFFECT_OVERLAY,
 };
 
+enum wined3d_swap_interval
+{
+    WINED3D_SWAP_INTERVAL_IMMEDIATE = 0,
+    WINED3D_SWAP_INTERVAL_ONE       = 1,
+    WINED3D_SWAP_INTERVAL_TWO       = 2,
+    WINED3D_SWAP_INTERVAL_THREE     = 3,
+    WINED3D_SWAP_INTERVAL_FOUR      = 4,
+    WINED3D_SWAP_INTERVAL_DEFAULT   = ~0u,
+};
+
 enum wined3d_sampler_state
 {
     WINED3D_SAMP_ADDRESS_U                  = 1,
@@ -590,7 +600,7 @@ enum wined3d_texture_stage_state
     WINED3D_TSS_ALPHA_ARG0                  = 15,
     WINED3D_TSS_RESULT_ARG                  = 16,
     WINED3D_TSS_CONSTANT                    = 17,
-    WINED3D_TSS_INVALID                     = ~0U,
+    WINED3D_TSS_INVALID                     = ~0u,
 };
 #define WINED3D_HIGHEST_TEXTURE_STATE                           WINED3D_TSS_CONSTANT
 
@@ -939,13 +949,6 @@ enum wined3d_shader_byte_code_format
 #define WINED3D_MAP_READ                                        0x80000000
 
 #define WINED3DPRESENT_RATE_DEFAULT                             0x00000000
-
-#define WINED3DPRESENT_INTERVAL_DEFAULT                         0x00000000
-#define WINED3DPRESENT_INTERVAL_ONE                             0x00000001
-#define WINED3DPRESENT_INTERVAL_TWO                             0x00000002
-#define WINED3DPRESENT_INTERVAL_THREE                           0x00000004
-#define WINED3DPRESENT_INTERVAL_FOUR                            0x00000008
-#define WINED3DPRESENT_INTERVAL_IMMEDIATE                       0x80000000
 
 #define WINED3DCLIPPLANE0                                       (1u << 0)
 #define WINED3DCLIPPLANE1                                       (1u << 1)
@@ -1743,7 +1746,7 @@ struct wined3d_swapchain_desc
     enum wined3d_format_id auto_depth_stencil_format;
     DWORD flags;
     UINT refresh_rate;
-    UINT swap_interval;
+    enum wined3d_swap_interval swap_interval;
     BOOL auto_restore_display_mode;
 };
 
