@@ -785,22 +785,23 @@ static void context_apply_fbo_state(struct wined3d_context *context, GLenum targ
 
 /* Context activation is done by the caller. */
 void context_apply_fbo_state_blit(struct wined3d_context *context, GLenum target,
-        struct wined3d_surface *render_target, struct wined3d_surface *depth_stencil, DWORD location)
+        struct wined3d_resource *rt, unsigned int rt_sub_resource_idx,
+        struct wined3d_resource *ds, unsigned int ds_sub_resource_idx, DWORD location)
 {
     struct wined3d_rendertarget_info ds_info = {{0}};
 
     memset(context->blit_targets, 0, sizeof(context->blit_targets));
-    if (render_target)
+    if (rt)
     {
-        context->blit_targets[0].resource = &render_target->container->resource;
-        context->blit_targets[0].sub_resource_idx = surface_get_sub_resource_idx(render_target);
+        context->blit_targets[0].resource = rt;
+        context->blit_targets[0].sub_resource_idx = rt_sub_resource_idx;
         context->blit_targets[0].layer_count = 1;
     }
 
-    if (depth_stencil)
+    if (ds)
     {
-        ds_info.resource = &depth_stencil->container->resource;
-        ds_info.sub_resource_idx = surface_get_sub_resource_idx(depth_stencil);
+        ds_info.resource = ds;
+        ds_info.sub_resource_idx = ds_sub_resource_idx;
         ds_info.layer_count = 1;
     }
 
@@ -2974,7 +2975,6 @@ static DWORD context_generate_rt_mask_no_fbo(const struct wined3d_context *conte
 void context_apply_blit_state(struct wined3d_context *context, const struct wined3d_device *device)
 {
     struct wined3d_texture *rt = context->current_rt.texture;
-    struct wined3d_surface *surface;
     DWORD rt_mask, *cur_mask;
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
@@ -2983,8 +2983,8 @@ void context_apply_blit_state(struct wined3d_context *context, const struct wine
         {
             wined3d_texture_load(rt, context, FALSE);
 
-            surface = rt->sub_resources[context->current_rt.sub_resource_idx].u.surface;
-            context_apply_fbo_state_blit(context, GL_FRAMEBUFFER, surface, NULL, rt->resource.draw_binding);
+            context_apply_fbo_state_blit(context, GL_FRAMEBUFFER, &rt->resource,
+                    context->current_rt.sub_resource_idx, NULL, 0, rt->resource.draw_binding);
             if (rt->resource.format->id != WINED3DFMT_NULL)
                 rt_mask = 1;
             else

@@ -7865,7 +7865,8 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
             TRACE("Destination surface %p is offscreen.\n", dst_surface);
             buffer = GL_COLOR_ATTACHMENT0;
         }
-        context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER, dst_surface, NULL, dst_location);
+        context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER,
+                &dst_texture->resource, surface_get_sub_resource_idx(dst_surface), NULL, 0, dst_location);
         context_set_draw_buffer(context, buffer);
         context_check_fbo_status(context, GL_DRAW_FRAMEBUFFER);
         context_invalidate_state(context, STATE_FRAMEBUFFER);

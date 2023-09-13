@@ -316,12 +316,12 @@ static void texture2d_depth_blt_fbo(const struct wined3d_device *device,
 
     gl_info = context->gl_info;
 
-    context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER, NULL,
-            src_texture->sub_resources[src_sub_resource_idx].u.surface, src_location);
+    context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER, NULL, 0,
+            &src_texture->resource, src_sub_resource_idx, src_location);
     context_check_fbo_status(context, GL_READ_FRAMEBUFFER);
 
-    context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER, NULL,
-            dst_texture->sub_resources[dst_sub_resource_idx].u.surface, dst_location);
+    context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER, NULL, 0,
+            &dst_texture->resource, dst_sub_resource_idx, dst_location);
     context_set_draw_buffer(context, GL_NONE);
     context_check_fbo_status(context, GL_DRAW_FRAMEBUFFER);
     context_invalidate_state(context, STATE_FRAMEBUFFER);
@@ -465,7 +465,7 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
     }
 
     context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER,
-            src_texture->sub_resources[src_sub_resource_idx].u.surface, NULL, src_location);
+            &src_texture->resource, src_sub_resource_idx, NULL, 0, src_location);
     gl_info->gl_ops.gl.p_glReadBuffer(buffer);
     checkGLcall("glReadBuffer()");
     context_check_fbo_status(context, GL_READ_FRAMEBUFFER);
@@ -485,7 +485,7 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
     }
 
     context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER,
-            dst_texture->sub_resources[dst_sub_resource_idx].u.surface, NULL, dst_location);
+            &dst_texture->resource, dst_sub_resource_idx, NULL, 0, dst_location);
     context_set_draw_buffer(context, buffer);
     context_check_fbo_status(context, GL_DRAW_FRAMEBUFFER);
     context_invalidate_state(context, STATE_FRAMEBUFFER);
@@ -1528,7 +1528,7 @@ static void texture2d_read_from_framebuffer(struct wined3d_texture *texture, uns
     if (src_location != texture->resource.draw_binding)
     {
         context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER,
-                texture->sub_resources[sub_resource_idx].u.surface, NULL, src_location);
+                &texture->resource, sub_resource_idx, NULL, 0, src_location);
         context_check_fbo_status(context, GL_READ_FRAMEBUFFER);
         context_invalidate_state(context, STATE_FRAMEBUFFER);
     }
@@ -2963,7 +2963,8 @@ static DWORD ffp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
             TRACE("Destination surface %p is offscreen.\n", dst_surface);
             buffer = GL_COLOR_ATTACHMENT0;
         }
-        context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER, dst_surface, NULL, dst_location);
+        context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER,
+                dst_resource, surface_get_sub_resource_idx(dst_surface), NULL, 0, dst_location);
         context_set_draw_buffer(context, buffer);
         context_check_fbo_status(context, GL_DRAW_FRAMEBUFFER);
         context_invalidate_state(context, STATE_FRAMEBUFFER);
