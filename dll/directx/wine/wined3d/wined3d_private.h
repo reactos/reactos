@@ -4509,15 +4509,6 @@ static inline void wined3d_insert_bits(DWORD *bitstream,
     }
 }
 
-static inline struct wined3d_surface *context_get_rt_surface(const struct wined3d_context *context)
-{
-    struct wined3d_texture *texture = context->current_rt.texture;
-
-    if (!texture)
-        return NULL;
-    return texture->sub_resources[context->current_rt.sub_resource_idx].u.surface;
-}
-
 static inline void wined3d_from_cs(const struct wined3d_cs *cs)
 {
     if (cs->thread)
