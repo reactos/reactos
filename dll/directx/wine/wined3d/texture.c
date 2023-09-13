@@ -1378,23 +1378,30 @@ void wined3d_texture_set_compatible_renderbuffer(struct wined3d_texture *texture
     checkGLcall("set_compatible_renderbuffer");
 }
 
+struct wined3d_texture_idx
+{
+    struct wined3d_texture *texture;
+    unsigned int sub_resource_idx;
+};
+
 static void texture2d_create_dc(void *object)
 {
-    struct wined3d_surface *surface = object;
+    const struct wined3d_texture_idx *idx = object;
     struct wined3d_context *context = NULL;
     unsigned int sub_resource_idx, level;
     const struct wined3d_format *format;
     unsigned int row_pitch, slice_pitch;
     struct wined3d_texture *texture;
+    struct wined3d_surface *surface;
     struct wined3d_bo_address data;
     D3DKMT_CREATEDCFROMMEMORY desc;
     struct wined3d_device *device;
     NTSTATUS status;
 
-    TRACE("surface %p.\n", surface);
+    TRACE("texture %p, sub_resource_idx %u.\n", idx->texture, idx->sub_resource_idx);
 
-    texture = surface->container;
-    sub_resource_idx = surface_get_sub_resource_idx(surface);
+    texture = idx->texture;
+    sub_resource_idx = idx->sub_resource_idx;
     level = sub_resource_idx % texture->level_count;
     device = texture->resource.device;
 
@@ -1434,10 +1441,11 @@ static void texture2d_create_dc(void *object)
         return;
     }
 
+    surface = texture->sub_resources[sub_resource_idx].u.surface;
     surface->dc = desc.hDc;
     surface->bitmap = desc.hBitmap;
 
-    TRACE("Created DC %p, bitmap %p for surface %p.\n", surface->dc, surface->bitmap, surface);
+    TRACE("Created DC %p, bitmap %p for texture %p, %u.\n", surface->dc, surface->bitmap, texture, sub_resource_idx);
 }
 
 static void texture2d_destroy_dc(void *object)
@@ -1613,7 +1621,9 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
 
     if (create_dib)
     {
-        wined3d_cs_init_object(device->cs, texture2d_create_dc, surface);
+        struct wined3d_texture_idx texture_idx = {texture, 0};
+
+        wined3d_cs_init_object(device->cs, texture2d_create_dc, &texture_idx);
         device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
     }
 
@@ -2986,7 +2996,9 @@ static HRESULT texture_init(struct wined3d_texture *texture, const struct wined3
 
             if ((desc->usage & WINED3DUSAGE_OWNDC) || (device->wined3d->flags & WINED3D_NO3D))
             {
-                wined3d_cs_init_object(device->cs, texture2d_create_dc, surface);
+                struct wined3d_texture_idx texture_idx = {texture, idx};
+
+                wined3d_cs_init_object(device->cs, texture2d_create_dc, &texture_idx);
                 device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
                 if (!surface->dc)
                 {
@@ -3784,7 +3796,9 @@ HRESULT CDECL wined3d_texture_get_dc(struct wined3d_texture *texture, unsigned i
 
     if (!surface->dc)
     {
-        wined3d_cs_init_object(device->cs, texture2d_create_dc, surface);
+        struct wined3d_texture_idx texture_idx = {texture, sub_resource_idx};
+
+        wined3d_cs_init_object(device->cs, texture2d_create_dc, &texture_idx);
         device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
     }
     if (!surface->dc)
