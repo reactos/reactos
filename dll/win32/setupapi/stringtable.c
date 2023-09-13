@@ -427,14 +427,14 @@ StringTableDuplicate(HSTRING_TABLE hStringTable)
     if (pSourceTable == NULL)
     {
         ERR("Invalid hStringTable!\n");
-        return (HSTRING_TABLE)NULL;
+        return NULL;
     }
 
     pDestinationTable = MyMalloc(sizeof(STRING_TABLE));
     if (pDestinationTable == NULL)
     {
         ERR("Could not allocate a new string table!\n");
-        return (HSTRING_TABLE)NULL;
+        return NULL;
     }
 
     memset(pDestinationTable, 0, sizeof(STRING_TABLE));
@@ -443,7 +443,7 @@ StringTableDuplicate(HSTRING_TABLE hStringTable)
     if (pDestinationTable->pSlots == NULL)
     {
         MyFree(pDestinationTable);
-        return (HSTRING_TABLE)NULL;
+        return NULL;
     }
 
     memset(pDestinationTable->pSlots, 0, sizeof(TABLE_SLOT) * pSourceTable->dwMaxSlots);
