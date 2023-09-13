@@ -554,7 +554,7 @@ static const struct wined3d_swapchain_ops swapchain_gl_ops =
 
 static void swapchain_gdi_frontbuffer_updated(struct wined3d_swapchain *swapchain)
 {
-    struct wined3d_surface *front;
+    struct wined3d_dc_info *front;
     POINT offset = {0, 0};
     HDC src_dc, dst_dc;
     RECT draw_rect;
@@ -562,7 +562,7 @@ static void swapchain_gdi_frontbuffer_updated(struct wined3d_swapchain *swapchai
 
     TRACE("swapchain %p.\n", swapchain);
 
-    front = swapchain->front_buffer->sub_resources[0].u.surface;
+    front = swapchain->front_buffer->sub_resources[0].dc_info;
     if (swapchain->palette)
         wined3d_palette_apply_to_dc(swapchain->palette, front->dc);
 
@@ -597,13 +597,13 @@ static void swapchain_gdi_frontbuffer_updated(struct wined3d_swapchain *swapchai
 static void swapchain_gdi_present(struct wined3d_swapchain *swapchain,
         const RECT *src_rect, const RECT *dst_rect, DWORD flags)
 {
-    struct wined3d_surface *front, *back;
+    struct wined3d_dc_info *front, *back;
     HBITMAP bitmap;
     void *data;
     HDC dc;
 
-    front = swapchain->front_buffer->sub_resources[0].u.surface;
-    back = swapchain->back_buffers[0]->sub_resources[0].u.surface;
+    front = swapchain->front_buffer->sub_resources[0].dc_info;
+    back = swapchain->back_buffers[0]->sub_resources[0].dc_info;
 
     /* Flip the surface data. */
     dc = front->dc;

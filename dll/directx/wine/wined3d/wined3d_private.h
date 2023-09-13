@@ -2095,8 +2095,6 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
         const struct wined3d_vertex_pipe_ops *vertex, const struct fragment_pipeline *fragment,
         const struct StateEntryTemplate *misc) DECLSPEC_HIDDEN;
 
-struct wined3d_surface;
-
 enum wined3d_blit_op
 {
     WINED3D_BLIT_OP_COLOR_BLIT,
@@ -3220,10 +3218,11 @@ struct wined3d_texture
         void *parent;
         const struct wined3d_parent_ops *parent_ops;
 
-        union
+        struct wined3d_dc_info
         {
-            struct wined3d_surface *surface;
-        } u;
+            HBITMAP bitmap;
+            HDC dc;
+        } *dc_info;
         unsigned int offset;
         unsigned int size;
 
@@ -3386,13 +3385,6 @@ struct fbo_entry
         DWORD rb_namespace;
         struct wined3d_fbo_resource objects[MAX_RENDER_TARGET_VIEWS + 1];
     } key;
-};
-
-struct wined3d_surface
-{
-    /* For GetDC */
-    HBITMAP bitmap;
-    HDC dc;
 };
 
 void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
