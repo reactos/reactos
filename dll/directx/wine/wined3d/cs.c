@@ -2098,13 +2098,6 @@ static void wined3d_cs_exec_blt_sub_resource(struct wined3d_cs *cs, const void *
             goto error;
         }
 
-        if (op->src_box.left || op->src_box.top || op->src_box.front)
-        {
-            FIXME("Source box %s not supported for %s resources.\n",
-                    debug_box(&op->src_box), debug_d3dresourcetype(op->dst_resource->type));
-            goto error;
-        }
-
         dst_texture = texture_from_resource(op->dst_resource);
         src_texture = texture_from_resource(op->src_resource);
 
@@ -2139,8 +2132,9 @@ static void wined3d_cs_exec_blt_sub_resource(struct wined3d_cs *cs, const void *
                 &row_pitch, &slice_pitch);
 
         wined3d_texture_bind_and_dirtify(dst_texture, context, FALSE);
-        wined3d_texture_upload_data(dst_texture, op->dst_sub_resource_idx, context, dst_texture->resource.format,
-                &op->dst_box, wined3d_const_bo_address(&addr), row_pitch, slice_pitch);
+        wined3d_texture_upload_data(dst_texture, op->dst_sub_resource_idx, context,
+                dst_texture->resource.format, &op->src_box, wined3d_const_bo_address(&addr),
+                row_pitch, slice_pitch, op->dst_box.left, op->dst_box.top, op->dst_box.front);
         wined3d_texture_validate_location(dst_texture, op->dst_sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB);
         wined3d_texture_invalidate_location(dst_texture, op->dst_sub_resource_idx, ~WINED3D_LOCATION_TEXTURE_RGB);
 
@@ -2197,6 +2191,7 @@ static void wined3d_cs_exec_update_sub_resource(struct wined3d_cs *cs, const voi
     struct wined3d_const_bo_address addr;
     struct wined3d_context *context;
     struct wined3d_texture *texture;
+    struct wined3d_box src_box;
 
     context = context_acquire(cs->device, NULL, 0);
 
@@ -2233,8 +2228,9 @@ static void wined3d_cs_exec_update_sub_resource(struct wined3d_cs *cs, const voi
         wined3d_texture_load_location(texture, op->sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
     wined3d_texture_bind_and_dirtify(texture, context, FALSE);
 
+    wined3d_box_set(&src_box, 0, 0, box->right - box->left, box->bottom - box->top, 0, box->back - box->front);
     wined3d_texture_upload_data(texture, op->sub_resource_idx, context, texture->resource.format,
-            box, &addr, op->data.row_pitch, op->data.slice_pitch);
+            &src_box, &addr, op->data.row_pitch, op->data.slice_pitch, box->left, box->top, box->front);
 
     wined3d_texture_validate_location(texture, op->sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB);
     wined3d_texture_invalidate_location(texture, op->sub_resource_idx, ~WINED3D_LOCATION_TEXTURE_RGB);
