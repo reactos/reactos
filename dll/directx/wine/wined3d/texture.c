@@ -2293,7 +2293,7 @@ static void texture2d_upload_data(struct wined3d_texture *texture, unsigned int 
 {
     struct wined3d_box src_box;
     unsigned int texture_level;
-    POINT dst_point;
+    unsigned int dst_x, dst_y;
 
     src_box.left = 0;
     src_box.top = 0;
@@ -2301,21 +2301,21 @@ static void texture2d_upload_data(struct wined3d_texture *texture, unsigned int 
     src_box.back = 1;
     if (box)
     {
-        dst_point.x = box->left;
-        dst_point.y = box->top;
+        dst_x = box->left;
+        dst_y = box->top;
         src_box.right = box->right - box->left;
         src_box.bottom = box->bottom - box->top;
     }
     else
     {
-        dst_point.x = dst_point.y = 0;
+        dst_x = dst_y = 0;
         texture_level = sub_resource_idx % texture->level_count;
         src_box.right = wined3d_texture_get_level_width(texture, texture_level);
         src_box.bottom = wined3d_texture_get_level_height(texture, texture_level);
     }
 
     wined3d_surface_upload_data(texture, sub_resource_idx, context->gl_info,
-            texture->resource.format, &src_box, row_pitch, &dst_point, FALSE, data);
+            texture->resource.format, &src_box, row_pitch, dst_x, dst_y, FALSE, data);
 }
 
 /* Context activation is done by the caller. Context may be NULL in ddraw-only mode. */

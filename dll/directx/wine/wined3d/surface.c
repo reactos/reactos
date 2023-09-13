@@ -776,8 +776,8 @@ static void texture2d_download_data(struct wined3d_texture *texture, unsigned in
 /* Context activation is done by the caller. */
 void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         const struct wined3d_gl_info *gl_info, const struct wined3d_format *format,
-        const struct wined3d_box *src_box, unsigned int src_pitch, const POINT *dst_point, BOOL srgb,
-        const struct wined3d_const_bo_address *data)
+        const struct wined3d_box *src_box, unsigned int src_pitch, unsigned int dst_x, unsigned int dst_y,
+        BOOL srgb, const struct wined3d_const_bo_address *data)
 {
     unsigned int update_w = src_box->right - src_box->left;
     unsigned int update_h = src_box->bottom - src_box->top;
@@ -785,9 +785,9 @@ void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int s
     GLenum target;
 
     TRACE("texure %p, sub_resource_idx %u, gl_info %p, format %s, src_box %s, "
-            "src_pitch %u, dst_point %s, srgb %#x, data {%#x:%p}.\n",
+            "src_pitch %u, dst_x %u, dst_y %u, srgb %#x, data {%#x:%p}.\n",
             texture, sub_resource_idx, gl_info, debug_d3dformat(format->id), debug_box(src_box),
-            src_pitch, wine_dbgstr_point(dst_point), srgb, data->buffer_object, data->addr);
+            src_pitch, dst_x, dst_y, srgb, data->buffer_object, data->addr);
 
     if (texture->sub_resources[sub_resource_idx].map_count)
     {
@@ -830,21 +830,20 @@ void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int s
 
         wined3d_format_calculate_pitch(format, 1, update_w, update_h, &dst_row_pitch, &dst_slice_pitch);
 
-        TRACE("Uploading compressed data, target %#x, level %u, layer %u, x %d, y %d, w %u, h %u, "
-                "format %#x, image_size %#x, addr %p.\n",
-                target, level, layer, dst_point->x, dst_point->y,
-                update_w, update_h, internal, dst_slice_pitch, addr);
+        TRACE("Uploading compressed data, target %#x, level %u, layer %u, "
+                "x %u, y %u, w %u, h %u, format %#x, image_size %#x, addr %p.\n",
+                target, level, layer, dst_x, dst_y, update_w, update_h, internal, dst_slice_pitch, addr);
 
         if (dst_row_pitch == src_pitch)
         {
             if (target == GL_TEXTURE_2D_ARRAY)
             {
-                GL_EXTCALL(glCompressedTexSubImage3D(target, level, dst_point->x, dst_point->y,
+                GL_EXTCALL(glCompressedTexSubImage3D(target, level, dst_x, dst_y,
                         layer, update_w, update_h, 1, internal, dst_slice_pitch, addr));
             }
             else
             {
-                GL_EXTCALL(glCompressedTexSubImage2D(target, level, dst_point->x, dst_point->y,
+                GL_EXTCALL(glCompressedTexSubImage2D(target, level, dst_x, dst_y,
                         update_w, update_h, internal, dst_slice_pitch, addr));
             }
         }
@@ -855,16 +854,16 @@ void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int s
 
             /* glCompressedTexSubImage2D() ignores pixel store state, so we
              * can't use the unpack row length like for glTexSubImage2D. */
-            for (row = 0, y = dst_point->y; row < row_count; ++row)
+            for (row = 0, y = dst_y; row < row_count; ++row)
             {
                 if (target == GL_TEXTURE_2D_ARRAY)
                 {
-                    GL_EXTCALL(glCompressedTexSubImage3D(target, level, dst_point->x, y,
+                    GL_EXTCALL(glCompressedTexSubImage3D(target, level, dst_x, y,
                             layer, update_w, format->block_height, 1, internal, dst_row_pitch, addr));
                 }
                 else
                 {
-                    GL_EXTCALL(glCompressedTexSubImage2D(target, level, dst_point->x, y,
+                    GL_EXTCALL(glCompressedTexSubImage2D(target, level, dst_x, y,
                             update_w, format->block_height, internal, dst_row_pitch, addr));
                 }
 
@@ -883,18 +882,18 @@ void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int s
 
         TRACE("Uploading data, target %#x, level %u, layer %u, x %d, y %d, w %u, h %u, "
                 "format %#x, type %#x, addr %p.\n",
-                target, level, layer, dst_point->x, dst_point->y,
+                target, level, layer, dst_x, dst_y,
                 update_w, update_h, format->glFormat, format->glType, addr);
 
         gl_info->gl_ops.gl.p_glPixelStorei(GL_UNPACK_ROW_LENGTH, src_pitch / format->byte_count);
         if (target == GL_TEXTURE_2D_ARRAY)
         {
-            GL_EXTCALL(glTexSubImage3D(target, level, dst_point->x, dst_point->y,
+            GL_EXTCALL(glTexSubImage3D(target, level, dst_x, dst_y,
                     layer, update_w, update_h, 1, format->glFormat, format->glType, addr));
         }
         else
         {
-            gl_info->gl_ops.gl.p_glTexSubImage2D(target, level, dst_point->x, dst_point->y,
+            gl_info->gl_ops.gl.p_glTexSubImage2D(target, level, dst_x, dst_y,
                     update_w, update_h, format->glFormat, format->glType, addr);
         }
         gl_info->gl_ops.gl.p_glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -922,8 +921,8 @@ void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int s
     }
 }
 
-static HRESULT texture2d_upload_from_surface(struct wined3d_texture *dst_texture,
-        unsigned int dst_sub_resource_idx, const POINT *dst_point, struct wined3d_texture *src_texture,
+static HRESULT texture2d_upload_from_surface(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+        unsigned int dst_x, unsigned int dst_y, struct wined3d_texture *src_texture,
         unsigned int src_sub_resource_idx, const struct wined3d_box *src_box)
 {
     unsigned int src_row_pitch, src_slice_pitch;
@@ -933,9 +932,9 @@ static HRESULT texture2d_upload_from_surface(struct wined3d_texture *dst_texture
     struct wined3d_bo_address data;
     UINT update_w, update_h;
 
-    TRACE("dst_texture %p, dst_sub_resource_idx %u, dst_point %s, "
+    TRACE("dst_texture %p, dst_sub_resource_idx %u, dst_x %u, dst_y %u, "
             "src_texture %p, src_sub_resource_idx %u, src_box %s.\n",
-            dst_texture, dst_sub_resource_idx, wine_dbgstr_point(dst_point),
+            dst_texture, dst_sub_resource_idx, dst_x, dst_y,
             src_texture, src_sub_resource_idx, debug_box(src_box));
 
     context = context_acquire(dst_texture->resource.device, NULL, 0);
@@ -960,7 +959,7 @@ static HRESULT texture2d_upload_from_surface(struct wined3d_texture *dst_texture
     wined3d_texture_get_pitch(src_texture, src_level, &src_row_pitch, &src_slice_pitch);
 
     wined3d_surface_upload_data(dst_texture, dst_sub_resource_idx, gl_info, src_texture->resource.format,
-            src_box, src_row_pitch, dst_point, FALSE, wined3d_const_bo_address(&data));
+            src_box, src_row_pitch, dst_x, dst_y, FALSE, wined3d_const_bo_address(&data));
 
     context_release(context);
 
@@ -1468,14 +1467,13 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
     else
     {
         struct wined3d_box src_box = {0, 0, desc.width, desc.height, 0, 1};
-        POINT dst_point = {0, 0};
 
         TRACE("Using upload conversion.\n");
 
         wined3d_texture_prepare_texture(dst_texture, context, FALSE);
         wined3d_texture_bind_and_dirtify(dst_texture, context, FALSE);
         wined3d_surface_upload_data(dst_texture, 0, gl_info, src_format,
-                &src_box, src_row_pitch, &dst_point, FALSE, wined3d_const_bo_address(&src_data));
+                &src_box, src_row_pitch, 0, 0, FALSE, wined3d_const_bo_address(&src_data));
 
         wined3d_texture_validate_location(dst_texture, 0, WINED3D_LOCATION_TEXTURE_RGB);
         wined3d_texture_invalidate_location(dst_texture, 0, ~WINED3D_LOCATION_TEXTURE_RGB);
@@ -2301,7 +2299,6 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     BYTE *src_mem, *dst_mem = NULL;
     struct wined3d_format format;
     struct wined3d_box src_box;
-    POINT dst_point = {0, 0};
     BOOL depth;
 
     depth = texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL;
@@ -2461,7 +2458,7 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     }
 
     wined3d_surface_upload_data(texture, sub_resource_idx, gl_info, &format, &src_box,
-            src_row_pitch, &dst_point, srgb, wined3d_const_bo_address(&data));
+            src_row_pitch, 0, 0, srgb, wined3d_const_bo_address(&data));
 
     heap_free(dst_mem);
 
@@ -4009,10 +4006,8 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
             TRACE("Not doing upload because the destination format needs conversion.\n");
         else
         {
-            POINT dst_point = {dst_box->left, dst_box->top};
-
             if (SUCCEEDED(texture2d_upload_from_surface(dst_texture, dst_sub_resource_idx,
-                    &dst_point, src_texture, src_sub_resource_idx, src_box)))
+                    dst_box->left, dst_box->top, src_texture, src_sub_resource_idx, src_box)))
             {
                 if (!wined3d_resource_is_offscreen(&dst_texture->resource))
                 {
