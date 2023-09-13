@@ -2258,12 +2258,11 @@ BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_res
 }
 
 /* Context activation is done by the caller. */
-BOOL surface_load_drawable(struct wined3d_surface *surface,
-        struct wined3d_context *context)
+BOOL texture2d_load_drawable(struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, struct wined3d_context *context)
 {
-    unsigned int sub_resource_idx = surface_get_sub_resource_idx(surface);
-    struct wined3d_texture *texture = surface->container;
     struct wined3d_surface *restore_rt = NULL;
+    struct wined3d_surface *surface;
     struct wined3d_device *device;
     unsigned int level;
     RECT r;
@@ -2279,11 +2278,12 @@ BOOL surface_load_drawable(struct wined3d_surface *surface,
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO
             && wined3d_resource_is_offscreen(&texture->resource))
     {
-        ERR("Trying to load offscreen surface into WINED3D_LOCATION_DRAWABLE.\n");
+        ERR("Trying to load offscreen texture into WINED3D_LOCATION_DRAWABLE.\n");
         return FALSE;
     }
 
     device = texture->resource.device;
+    surface = texture->sub_resources[sub_resource_idx].u.surface;
     restore_rt = context_get_rt_surface(context);
     if (restore_rt != surface)
         context = context_acquire(device, texture, sub_resource_idx);
