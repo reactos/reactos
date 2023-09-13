@@ -5689,9 +5689,6 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                                      WINED3DCAPS3_COPY_TO_VIDMEM                   |
                                      WINED3DCAPS3_COPY_TO_SYSTEMMEM;
 
-    caps->PresentationIntervals    = WINED3DPRESENT_INTERVAL_IMMEDIATE  |
-                                     WINED3DPRESENT_INTERVAL_ONE;
-
     caps->CursorCaps               = WINED3DCURSORCAPS_COLOR            |
                                      WINED3DCURSORCAPS_LOWRES;
 

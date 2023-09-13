@@ -1889,7 +1889,6 @@ typedef struct _WINED3DCAPS
     DWORD Caps;
     DWORD Caps2;
     DWORD Caps3;
-    DWORD PresentationIntervals;
 
     DWORD CursorCaps;
     DWORD DevCaps;
