@@ -427,6 +427,8 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
             texture->flags |= WINED3D_TEXTURE_GENERATE_MIPMAPS;
     }
 
+    list_init(&texture->renderbuffers);
+
     return WINED3D_OK;
 }
 
@@ -1276,6 +1278,89 @@ HRESULT CDECL wined3d_texture_set_color_key(struct wined3d_texture *texture,
     wined3d_cs_emit_set_color_key(device->cs, texture, flags, color_key);
 
     return WINED3D_OK;
+}
+
+/* In D3D the depth stencil dimensions have to be greater than or equal to the
+ * render target dimensions. With FBOs, the dimensions have to be an exact match. */
+/* TODO: We should synchronize the renderbuffer's content with the texture's content. */
+/* Context activation is done by the caller. */
+void wined3d_texture_set_compatible_renderbuffer(struct wined3d_texture *texture,
+        unsigned int level, const struct wined3d_rendertarget_info *rt)
+{
+    struct wined3d_renderbuffer_entry *entry;
+    const struct wined3d_gl_info *gl_info;
+    unsigned int src_width, src_height;
+    unsigned int width, height;
+    GLuint renderbuffer = 0;
+
+    gl_info = &texture->resource.device->adapter->gl_info;
+    if (gl_info->supported[ARB_FRAMEBUFFER_OBJECT])
+        return;
+
+    if (rt && rt->resource->format->id != WINED3DFMT_NULL)
+    {
+        struct wined3d_texture *rt_texture;
+        unsigned int rt_level;
+
+        if (rt->resource->type == WINED3D_RTYPE_BUFFER)
+        {
+            FIXME("Unsupported resource type %s.\n", debug_d3dresourcetype(rt->resource->type));
+            return;
+        }
+        rt_texture = wined3d_texture_from_resource(rt->resource);
+        rt_level = rt->sub_resource_idx % rt_texture->level_count;
+
+        width = wined3d_texture_get_level_pow2_width(rt_texture, rt_level);
+        height = wined3d_texture_get_level_pow2_height(rt_texture, rt_level);
+    }
+    else
+    {
+        width = wined3d_texture_get_level_pow2_width(texture, level);
+        height = wined3d_texture_get_level_pow2_height(texture, level);
+    }
+
+    src_width = wined3d_texture_get_level_pow2_width(texture, level);
+    src_height = wined3d_texture_get_level_pow2_height(texture, level);
+
+    /* A depth stencil smaller than the render target is not valid */
+    if (width > src_width || height > src_height)
+        return;
+
+    /* Remove any renderbuffer set if the sizes match */
+    if (width == src_width && height == src_height)
+    {
+        texture->current_renderbuffer = NULL;
+        return;
+    }
+
+    /* Look if we've already got a renderbuffer of the correct dimensions */
+    LIST_FOR_EACH_ENTRY(entry, &texture->renderbuffers, struct wined3d_renderbuffer_entry, entry)
+    {
+        if (entry->width == width && entry->height == height)
+        {
+            renderbuffer = entry->id;
+            texture->current_renderbuffer = entry;
+            break;
+        }
+    }
+
+    if (!renderbuffer)
+    {
+        gl_info->fbo_ops.glGenRenderbuffers(1, &renderbuffer);
+        gl_info->fbo_ops.glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+        gl_info->fbo_ops.glRenderbufferStorage(GL_RENDERBUFFER,
+                texture->resource.format->glInternal, width, height);
+
+        entry = heap_alloc(sizeof(*entry));
+        entry->width = width;
+        entry->height = height;
+        entry->id = renderbuffer;
+        list_add_head(&texture->renderbuffers, &entry->entry);
+
+        texture->current_renderbuffer = entry;
+    }
+
+    checkGLcall("set_compatible_renderbuffer");
 }
 
 static void texture2d_create_dc(void *object)
@@ -2188,10 +2273,7 @@ static void texture2d_prepare_texture(struct wined3d_texture *texture, struct wi
 static void texture2d_cleanup_sub_resources(struct wined3d_texture *texture)
 {
     unsigned int sub_count = texture->level_count * texture->layer_count;
-    struct wined3d_device *device = texture->resource.device;
     struct wined3d_texture_sub_resource *sub_resource;
-    struct wined3d_renderbuffer_entry *entry, *entry2;
-    const struct wined3d_gl_info *gl_info = NULL;
     struct wined3d_context *context = NULL;
     struct wined3d_surface *surface;
     unsigned int i;
@@ -2203,20 +2285,6 @@ static void texture2d_cleanup_sub_resources(struct wined3d_texture *texture)
             continue;
 
         TRACE("surface %p.\n", surface);
-
-        if (!context && !list_empty(&surface->renderbuffers))
-        {
-            context = context_acquire(device, NULL, 0);
-            gl_info = context->gl_info;
-        }
-
-        LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &surface->renderbuffers, struct wined3d_renderbuffer_entry, entry)
-        {
-            TRACE("Deleting renderbuffer %u.\n", entry->id);
-            context_gl_resource_released(device, entry->id, TRUE);
-            gl_info->fbo_ops.glDeleteRenderbuffers(1, &entry->id);
-            heap_free(entry);
-        }
 
         if (surface->dc)
             texture2d_destroy_dc(surface);
@@ -2263,6 +2331,7 @@ static void wined3d_texture_unload(struct wined3d_resource *resource)
 {
     struct wined3d_texture *texture = texture_from_resource(resource);
     UINT sub_count = texture->level_count * texture->layer_count;
+    struct wined3d_renderbuffer_entry *entry, *entry2;
     struct wined3d_device *device = resource->device;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
@@ -2641,7 +2710,6 @@ static HRESULT texture1d_init(struct wined3d_texture *texture, const struct wine
             surface->container = texture;
             surface->texture_level = i;
             surface->texture_layer = j;
-            list_init(&surface->renderbuffers);
 
             sub_resource = &texture->sub_resources[idx];
             sub_resource->locations = WINED3D_LOCATION_DISCARDED;

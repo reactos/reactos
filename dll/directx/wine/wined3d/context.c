@@ -456,19 +456,15 @@ static inline void context_set_fbo_key_for_render_target(const struct wined3d_co
     }
 
     texture = wined3d_texture_from_resource(resource);
-    if (resource->type == WINED3D_RTYPE_TEXTURE_2D)
+    if (texture->current_renderbuffer)
     {
-        struct wined3d_surface *surface = texture->sub_resources[sub_resource_idx].u.surface;
-
-        if (surface->current_renderbuffer)
-        {
-            key->objects[idx].object = surface->current_renderbuffer->id;
-            key->objects[idx].target = 0;
-            key->objects[idx].level = key->objects[idx].layer = 0;
-            key->rb_namespace |= 1 << idx;
-            return;
-        }
+        key->objects[idx].object = texture->current_renderbuffer->id;
+        key->objects[idx].target = 0;
+        key->objects[idx].level = key->objects[idx].layer = 0;
+        key->rb_namespace |= 1 << idx;
+        return;
     }
+
     key->objects[idx].target = wined3d_texture_get_sub_resource_target(texture, sub_resource_idx);
     key->objects[idx].level = sub_resource_idx % texture->level_count;
     key->objects[idx].layer = sub_resource_idx / texture->level_count;
@@ -615,10 +611,7 @@ static struct fbo_entry *context_find_fbo_entry(struct wined3d_context *context,
         }
         else if (depth_stencil->resource->type == WINED3D_RTYPE_TEXTURE_2D)
         {
-            struct wined3d_surface *surface;
-
-            surface = ds_texture->sub_resources[depth_stencil->sub_resource_idx].u.surface;
-            surface_set_compatible_renderbuffer(surface, &render_targets[0]);
+            wined3d_texture_set_compatible_renderbuffer(ds_texture, ds_level, &render_targets[0]);
         }
     }
 

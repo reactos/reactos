@@ -3203,6 +3203,9 @@ struct wined3d_texture
         RECT dst_rect;
     } *overlay_info;
 
+    struct list renderbuffers;
+    const struct wined3d_renderbuffer_entry *current_renderbuffer;
+
     struct wined3d_texture_sub_resource
     {
         void *parent;
@@ -3304,6 +3307,8 @@ BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned 
         struct wined3d_context *context, DWORD location) DECLSPEC_HIDDEN;
 void wined3d_texture_prepare_texture(struct wined3d_texture *texture,
         struct wined3d_context *context, BOOL srgb) DECLSPEC_HIDDEN;
+void wined3d_texture_set_compatible_renderbuffer(struct wined3d_texture *texture,
+        unsigned int level, const struct wined3d_rendertarget_info *rt) DECLSPEC_HIDDEN;
 void wined3d_texture_set_map_binding(struct wined3d_texture *texture, DWORD map_binding) DECLSPEC_HIDDEN;
 void wined3d_texture_set_swapchain(struct wined3d_texture *texture,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
@@ -3369,9 +3374,6 @@ struct wined3d_surface
     /* For GetDC */
     HBITMAP bitmap;
     HDC dc;
-
-    struct list               renderbuffers;
-    const struct wined3d_renderbuffer_entry *current_renderbuffer;
 };
 
 static inline unsigned int surface_get_sub_resource_idx(const struct wined3d_surface *surface)
@@ -3391,8 +3393,6 @@ void surface_load_fb_texture(struct wined3d_surface *surface, BOOL srgb,
         struct wined3d_context *context) DECLSPEC_HIDDEN;
 BOOL surface_load_location(struct wined3d_surface *surface,
         struct wined3d_context *context, DWORD location) DECLSPEC_HIDDEN;
-void surface_set_compatible_renderbuffer(struct wined3d_surface *surface,
-        const struct wined3d_rendertarget_info *rt) DECLSPEC_HIDDEN;
 void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         const struct wined3d_gl_info *gl_info, const struct wined3d_format *format, const RECT *src_rect,
         unsigned int src_pitch, const POINT *dst_point, BOOL srgb,
