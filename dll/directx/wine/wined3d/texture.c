@@ -2291,29 +2291,31 @@ static void texture2d_upload_data(struct wined3d_texture *texture, unsigned int 
         const struct wined3d_context *context, const struct wined3d_box *box,
         const struct wined3d_const_bo_address *data, unsigned int row_pitch, unsigned int slice_pitch)
 {
+    struct wined3d_box src_box;
     unsigned int texture_level;
     POINT dst_point;
-    RECT src_rect;
 
-    src_rect.left = 0;
-    src_rect.top = 0;
+    src_box.left = 0;
+    src_box.top = 0;
+    src_box.front = 0;
+    src_box.back = 1;
     if (box)
     {
         dst_point.x = box->left;
         dst_point.y = box->top;
-        src_rect.right = box->right - box->left;
-        src_rect.bottom = box->bottom - box->top;
+        src_box.right = box->right - box->left;
+        src_box.bottom = box->bottom - box->top;
     }
     else
     {
         dst_point.x = dst_point.y = 0;
         texture_level = sub_resource_idx % texture->level_count;
-        src_rect.right = wined3d_texture_get_level_width(texture, texture_level);
-        src_rect.bottom = wined3d_texture_get_level_height(texture, texture_level);
+        src_box.right = wined3d_texture_get_level_width(texture, texture_level);
+        src_box.bottom = wined3d_texture_get_level_height(texture, texture_level);
     }
 
     wined3d_surface_upload_data(texture, sub_resource_idx, context->gl_info,
-            texture->resource.format, &src_rect, row_pitch, &dst_point, FALSE, data);
+            texture->resource.format, &src_box, row_pitch, &dst_point, FALSE, data);
 }
 
 /* Context activation is done by the caller. Context may be NULL in ddraw-only mode. */

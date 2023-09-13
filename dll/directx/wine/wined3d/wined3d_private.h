@@ -3386,9 +3386,9 @@ struct fbo_entry
 };
 
 void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-        const struct wined3d_gl_info *gl_info, const struct wined3d_format *format, const RECT *src_rect,
-        unsigned int src_pitch, const POINT *dst_point, BOOL srgb,
-        const struct wined3d_const_bo_address *data) DECLSPEC_HIDDEN;
+        const struct wined3d_gl_info *gl_info, const struct wined3d_format *format,
+        const struct wined3d_box *src_box, unsigned int src_pitch, const POINT *dst_point,
+        BOOL srgb, const struct wined3d_const_bo_address *data) DECLSPEC_HIDDEN;
 
 void draw_textured_quad(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, const RECT *src_rect, const RECT *dst_rect,
