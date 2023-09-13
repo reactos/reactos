@@ -450,7 +450,7 @@ static void surface_blt_fbo(const struct wined3d_device *device,
     {
         TRACE("Source surface %p is onscreen.\n", src_surface);
         buffer = wined3d_texture_get_gl_buffer(src_texture);
-        surface_translate_drawable_coords(src_surface, context->win_handle, &src_rect);
+        wined3d_texture_translate_drawable_coords(src_texture, context->win_handle, &src_rect);
     }
     else
     {
@@ -467,7 +467,7 @@ static void surface_blt_fbo(const struct wined3d_device *device,
     {
         TRACE("Destination surface %p is onscreen.\n", dst_surface);
         buffer = wined3d_texture_get_gl_buffer(dst_texture);
-        surface_translate_drawable_coords(dst_surface, context->win_handle, &dst_rect);
+        wined3d_texture_translate_drawable_coords(dst_texture, context->win_handle, &dst_rect);
     }
     else
     {
@@ -2157,33 +2157,6 @@ static void fb_copy_to_texture_hwstretch(struct wined3d_surface *dst_surface, st
     wined3d_texture_invalidate_location(dst_texture, dst_sub_resource_idx, ~WINED3D_LOCATION_TEXTURE_RGB);
 }
 
-/* Front buffer coordinates are always full screen coordinates, but our GL
- * drawable is limited to the window's client area. The sysmem and texture
- * copies do have the full screen size. Note that GL has a bottom-left
- * origin, while D3D has a top-left origin. */
-void surface_translate_drawable_coords(const struct wined3d_surface *surface, HWND window, RECT *rect)
-{
-    struct wined3d_texture *texture = surface->container;
-    POINT offset = {0, 0};
-    UINT drawable_height;
-    RECT windowsize;
-
-    if (!texture->swapchain)
-        return;
-
-    if (texture == texture->swapchain->front_buffer)
-    {
-        ScreenToClient(window, &offset);
-        OffsetRect(rect, offset.x, offset.y);
-    }
-
-    GetClientRect(window, &windowsize);
-    drawable_height = windowsize.bottom - windowsize.top;
-
-    rect->top = drawable_height - rect->top;
-    rect->bottom = drawable_height - rect->bottom;
-}
-
 static HRESULT surface_blt_special(struct wined3d_surface *dst_surface, const RECT *dst_rect,
         struct wined3d_surface *src_surface, const RECT *src_rect, DWORD flags,
         const struct wined3d_blt_fx *fx, enum wined3d_texture_filter_type filter)
@@ -3081,7 +3054,7 @@ static DWORD ffp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
     if (dst_location == WINED3D_LOCATION_DRAWABLE)
     {
         r = *dst_rect;
-        surface_translate_drawable_coords(dst_surface, context->win_handle, &r);
+        wined3d_texture_translate_drawable_coords(dst_texture, context->win_handle, &r);
         dst_rect = &r;
     }
 

@@ -48,6 +48,32 @@ static BOOL wined3d_texture_use_immutable_storage(const struct wined3d_texture *
             && !(texture->resource.format_flags & WINED3DFMT_FLAG_HEIGHT_SCALE);
 }
 
+/* Front buffer coordinates are always full screen coordinates, but our GL
+ * drawable is limited to the window's client area. The sysmem and texture
+ * copies do have the full screen size. Note that GL has a bottom-left
+ * origin, while D3D has a top-left origin. */
+void wined3d_texture_translate_drawable_coords(const struct wined3d_texture *texture, HWND window, RECT *rect)
+{
+    unsigned int drawable_height;
+    POINT offset = {0, 0};
+    RECT windowsize;
+
+    if (!texture->swapchain)
+        return;
+
+    if (texture == texture->swapchain->front_buffer)
+    {
+        ScreenToClient(window, &offset);
+        OffsetRect(rect, offset.x, offset.y);
+    }
+
+    GetClientRect(window, &windowsize);
+    drawable_height = windowsize.bottom - windowsize.top;
+
+    rect->top = drawable_height - rect->top;
+    rect->bottom = drawable_height - rect->bottom;
+}
+
 GLenum wined3d_texture_get_gl_buffer(const struct wined3d_texture *texture)
 {
     const struct wined3d_swapchain *swapchain = texture->swapchain;
