@@ -20,6 +20,24 @@
 
 #include "setupapi_private.h"
 
+
+#define _PSETUP(func)   pSetup ## func
+
+#define StringTableInitialize       _PSETUP(StringTableInitialize)
+#define StringTableInitializeEx     _PSETUP(StringTableInitializeEx)
+#define StringTableDestroy          _PSETUP(StringTableDestroy)
+#define StringTableAddString        _PSETUP(StringTableAddString)
+#define StringTableAddStringEx      _PSETUP(StringTableAddStringEx)
+#define StringTableDuplicate        _PSETUP(StringTableDuplicate)
+#define StringTableGetExtraData     _PSETUP(StringTableGetExtraData)
+#define StringTableLookUpString     _PSETUP(StringTableLookUpString)
+#define StringTableLookUpStringEx   _PSETUP(StringTableLookUpStringEx)
+#define StringTableSetExtraData     _PSETUP(StringTableSetExtraData)
+#define StringTableStringFromId     _PSETUP(StringTableStringFromId)
+#define StringTableStringFromIdEx   _PSETUP(StringTableStringFromIdEx)
+#define StringTableTrim             _PSETUP(StringTableTrim)
+
+
 #define TABLE_DEFAULT_SIZE 256
 
 typedef struct _TABLE_SLOT
@@ -39,7 +57,7 @@ typedef struct _STRING_TABLE
 
 
 /**************************************************************************
- * pSetupStringTableInitialize [SETUPAPI.@]
+ * StringTableInitialize [SETUPAPI.@]
  *
  * Creates a new string table and initializes it.
  *
@@ -51,7 +69,7 @@ typedef struct _STRING_TABLE
  *     Failure: NULL
  */
 HSTRING_TABLE WINAPI
-pSetupStringTableInitialize(VOID)
+StringTableInitialize(VOID)
 {
     PSTRING_TABLE pStringTable;
 
@@ -84,9 +102,8 @@ pSetupStringTableInitialize(VOID)
     return (HSTRING_TABLE)pStringTable;
 }
 
-
 /**************************************************************************
- * pSetupStringTableInitializeEx [SETUPAPI.@]
+ * StringTableInitializeEx [SETUPAPI.@]
  *
  * Creates a new string table and initializes it.
  *
@@ -99,8 +116,8 @@ pSetupStringTableInitialize(VOID)
  *     Failure: NULL
  */
 HSTRING_TABLE WINAPI
-pSetupStringTableInitializeEx(DWORD dwMaxExtraDataSize,
-                              DWORD dwReserved)
+StringTableInitializeEx(DWORD dwMaxExtraDataSize,
+                        DWORD dwReserved)
 {
     PSTRING_TABLE pStringTable;
 
@@ -129,9 +146,8 @@ pSetupStringTableInitializeEx(DWORD dwMaxExtraDataSize,
     return (HSTRING_TABLE)pStringTable;
 }
 
-
 /**************************************************************************
- * pSetupStringTableDestroy [SETUPAPI.@]
+ * StringTableDestroy [SETUPAPI.@]
  *
  * Destroys a string table.
  *
@@ -142,7 +158,7 @@ pSetupStringTableInitializeEx(DWORD dwMaxExtraDataSize,
  *     None
  */
 VOID WINAPI
-pSetupStringTableDestroy(HSTRING_TABLE hStringTable)
+StringTableDestroy(HSTRING_TABLE hStringTable)
 {
     PSTRING_TABLE pStringTable;
     DWORD i;
@@ -171,9 +187,8 @@ pSetupStringTableDestroy(HSTRING_TABLE hStringTable)
     MyFree(pStringTable);
 }
 
-
 /**************************************************************************
- * pSetupStringTableAddString [SETUPAPI.@]
+ * StringTableAddString [SETUPAPI.@]
  *
  * Adds a new string to the string table.
  *
@@ -193,9 +208,9 @@ pSetupStringTableDestroy(HSTRING_TABLE hStringTable)
  *     this case.
  */
 DWORD WINAPI
-pSetupStringTableAddString(HSTRING_TABLE hStringTable,
-                           LPWSTR lpString,
-                           DWORD dwFlags)
+StringTableAddString(HSTRING_TABLE hStringTable,
+                     LPWSTR lpString,
+                     DWORD dwFlags)
 {
     PSTRING_TABLE pStringTable;
     DWORD i;
@@ -248,7 +263,7 @@ pSetupStringTableAddString(HSTRING_TABLE hStringTable,
         MyFree(pNewSlots);
         pStringTable->dwMaxSlots = dwNewMaxSlots;
 
-        return pSetupStringTableAddString(hStringTable, lpString, dwFlags);
+        return StringTableAddString(hStringTable, lpString, dwFlags);
     }
 
     /* Search for an empty slot */
@@ -276,9 +291,8 @@ pSetupStringTableAddString(HSTRING_TABLE hStringTable,
     return (DWORD)-1;
 }
 
-
 /**************************************************************************
- * pSetupStringTableAddStringEx [SETUPAPI.@]
+ * StringTableAddStringEx [SETUPAPI.@]
  *
  * Adds a new string plus extra data to the string table.
  *
@@ -300,11 +314,11 @@ pSetupStringTableAddString(HSTRING_TABLE hStringTable,
  *     this case.
  */
 DWORD WINAPI
-pSetupStringTableAddStringEx(HSTRING_TABLE hStringTable,
-                             LPWSTR lpString,
-                             DWORD dwFlags,
-                             LPVOID lpExtraData,
-                             DWORD dwExtraDataSize)
+StringTableAddStringEx(HSTRING_TABLE hStringTable,
+                       LPWSTR lpString,
+                       DWORD dwFlags,
+                       LPVOID lpExtraData,
+                       DWORD dwExtraDataSize)
 {
     PSTRING_TABLE pStringTable;
     DWORD i;
@@ -386,9 +400,8 @@ pSetupStringTableAddStringEx(HSTRING_TABLE hStringTable,
     return (DWORD)-1;
 }
 
-
 /**************************************************************************
- * pSetupStringTableDuplicate [SETUPAPI.@]
+ * StringTableDuplicate [SETUPAPI.@]
  *
  * Duplicates a given string table.
  *
@@ -401,7 +414,7 @@ pSetupStringTableAddStringEx(HSTRING_TABLE hStringTable,
  *
  */
 HSTRING_TABLE WINAPI
-pSetupStringTableDuplicate(HSTRING_TABLE hStringTable)
+StringTableDuplicate(HSTRING_TABLE hStringTable)
 {
     PSTRING_TABLE pSourceTable;
     PSTRING_TABLE pDestinationTable;
@@ -470,9 +483,8 @@ pSetupStringTableDuplicate(HSTRING_TABLE hStringTable)
     return (HSTRING_TABLE)pDestinationTable;
 }
 
-
 /**************************************************************************
- * pSetupStringTableGetExtraData [SETUPAPI.@]
+ * StringTableGetExtraData [SETUPAPI.@]
  *
  * Retrieves extra data from a given string table entry.
  *
@@ -487,10 +499,10 @@ pSetupStringTableDuplicate(HSTRING_TABLE hStringTable)
  *     Failure: FALSE
  */
 BOOL WINAPI
-pSetupStringTableGetExtraData(HSTRING_TABLE hStringTable,
-                              DWORD dwId,
-                              LPVOID lpExtraData,
-                              DWORD dwExtraDataSize)
+StringTableGetExtraData(HSTRING_TABLE hStringTable,
+                        DWORD dwId,
+                        LPVOID lpExtraData,
+                        DWORD dwExtraDataSize)
 {
     PSTRING_TABLE pStringTable;
 
@@ -523,9 +535,8 @@ pSetupStringTableGetExtraData(HSTRING_TABLE hStringTable,
     return TRUE;
 }
 
-
 /**************************************************************************
- * pSetupStringTableLookUpString [SETUPAPI.@]
+ * StringTableLookUpString [SETUPAPI.@]
  *
  * Searches a string table for a given string.
  *
@@ -540,9 +551,9 @@ pSetupStringTableGetExtraData(HSTRING_TABLE hStringTable,
  *     Failure: -1
  */
 DWORD WINAPI
-pSetupStringTableLookUpString(HSTRING_TABLE hStringTable,
-                              LPWSTR lpString,
-                              DWORD dwFlags)
+StringTableLookUpString(HSTRING_TABLE hStringTable,
+                        LPWSTR lpString,
+                        DWORD dwFlags)
 {
     PSTRING_TABLE pStringTable;
     DWORD i;
@@ -577,9 +588,8 @@ pSetupStringTableLookUpString(HSTRING_TABLE hStringTable,
     return (DWORD)-1;
 }
 
-
 /**************************************************************************
- * pSetupStringTableLookUpStringEx [SETUPAPI.@]
+ * StringTableLookUpStringEx [SETUPAPI.@]
  *
  * Searches a string table and extra data for a given string.
  *
@@ -596,11 +606,11 @@ pSetupStringTableLookUpString(HSTRING_TABLE hStringTable,
  *     Failure: -1
  */
 DWORD WINAPI
-pSetupStringTableLookUpStringEx(HSTRING_TABLE hStringTable,
-                                LPWSTR lpString,
-                                DWORD dwFlags,
-                                LPVOID lpExtraData,
-                                DWORD dwReserved)
+StringTableLookUpStringEx(HSTRING_TABLE hStringTable,
+                          LPWSTR lpString,
+                          DWORD dwFlags,
+                          LPVOID lpExtraData,
+                          DWORD dwReserved)
 {
     PSTRING_TABLE pStringTable;
     DWORD i;
@@ -643,9 +653,8 @@ pSetupStringTableLookUpStringEx(HSTRING_TABLE hStringTable,
     return ~0u;
 }
 
-
 /**************************************************************************
- * pSetupStringTableSetExtraData [SETUPAPI.@]
+ * StringTableSetExtraData [SETUPAPI.@]
  *
  * Sets extra data for a given string table entry.
  *
@@ -660,10 +669,10 @@ pSetupStringTableLookUpStringEx(HSTRING_TABLE hStringTable,
  *     Failure: FALSE
  */
 BOOL WINAPI
-pSetupStringTableSetExtraData(HSTRING_TABLE hStringTable,
-                              DWORD dwId,
-                              LPVOID lpExtraData,
-                              DWORD dwExtraDataSize)
+StringTableSetExtraData(HSTRING_TABLE hStringTable,
+                        DWORD dwId,
+                        LPVOID lpExtraData,
+                        DWORD dwExtraDataSize)
 {
     PSTRING_TABLE pStringTable;
 
@@ -704,9 +713,8 @@ pSetupStringTableSetExtraData(HSTRING_TABLE hStringTable,
     return TRUE;
 }
 
-
 /**************************************************************************
- * pSetupStringTableStringFromId [SETUPAPI.@]
+ * StringTableStringFromId [SETUPAPI.@]
  *
  * Returns a pointer to a string for the given string ID.
  *
@@ -719,8 +727,8 @@ pSetupStringTableSetExtraData(HSTRING_TABLE hStringTable,
  *     Failure: NULL
  */
 LPWSTR WINAPI
-pSetupStringTableStringFromId(HSTRING_TABLE hStringTable,
-                              DWORD dwId)
+StringTableStringFromId(HSTRING_TABLE hStringTable,
+                        DWORD dwId)
 {
     PSTRING_TABLE pStringTable;
     static WCHAR empty[] = {0};
@@ -740,9 +748,8 @@ pSetupStringTableStringFromId(HSTRING_TABLE hStringTable,
     return pStringTable->pSlots[dwId - 1].pString;
 }
 
-
 /**************************************************************************
- * pSetupStringTableStringFromIdEx [SETUPAPI.@]
+ * StringTableStringFromIdEx [SETUPAPI.@]
  *
  * Returns a string for the given string ID.
  *
@@ -757,10 +764,10 @@ pSetupStringTableStringFromId(HSTRING_TABLE hStringTable,
  *     Failure: FALSE
  */
 BOOL WINAPI
-pSetupStringTableStringFromIdEx(HSTRING_TABLE hStringTable,
-                                DWORD dwId,
-                                LPWSTR lpBuffer,
-                                LPDWORD lpBufferLength)
+StringTableStringFromIdEx(HSTRING_TABLE hStringTable,
+                          DWORD dwId,
+                          LPWSTR lpBuffer,
+                          LPDWORD lpBufferLength)
 {
     PSTRING_TABLE pStringTable;
     DWORD dwLength;
@@ -794,4 +801,21 @@ pSetupStringTableStringFromIdEx(HSTRING_TABLE hStringTable,
     *lpBufferLength = dwLength;
 
     return bResult;
+}
+
+/**************************************************************************
+ * StringTableTrim [SETUPAPI.@]
+ *
+ * ...
+ *
+ * PARAMS
+ *     hStringTable [I] Handle to the string table
+ *
+ * RETURNS
+ *     None
+ */
+VOID WINAPI
+StringTableTrim(HSTRING_TABLE hStringTable)
+{
+    FIXME("%p\n", hStringTable);
 }
