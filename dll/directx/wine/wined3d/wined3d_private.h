@@ -3395,8 +3395,8 @@ static inline struct wined3d_texture_sub_resource *surface_get_sub_resource(stru
     return &surface->container->sub_resources[surface_get_sub_resource_idx(surface)];
 }
 
-HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst_rect,
-        struct wined3d_surface *src_surface, const RECT *src_rect, DWORD flags,
+HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const struct wined3d_box *dst_box,
+        struct wined3d_surface *src_surface, const struct wined3d_box *src_box, DWORD flags,
         const struct wined3d_blt_fx *blt_fx, enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;
 void surface_load_fb_texture(struct wined3d_surface *surface, BOOL srgb,
         struct wined3d_context *context) DECLSPEC_HIDDEN;

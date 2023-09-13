@@ -3853,12 +3853,10 @@ struct wined3d_blitter *wined3d_cpu_blitter_create(void)
     return blitter;
 }
 
-HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst_rect,
-        struct wined3d_surface *src_surface, const RECT *src_rect, DWORD flags,
+HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const struct wined3d_box *dst_box,
+        struct wined3d_surface *src_surface, const struct wined3d_box *src_box, DWORD flags,
         const struct wined3d_blt_fx *fx, enum wined3d_texture_filter_type filter)
 {
-    struct wined3d_box dst_box = {dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom, 0, 1};
-    struct wined3d_box src_box = {src_rect->left, src_rect->top, src_rect->right, src_rect->bottom, 0, 1};
     unsigned int dst_sub_resource_idx = surface_get_sub_resource_idx(dst_surface);
     unsigned int src_sub_resource_idx = surface_get_sub_resource_idx(src_surface);
     struct wined3d_texture_sub_resource *src_sub_resource, *dst_sub_resource;
@@ -3872,14 +3870,15 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst
     struct wined3d_context *context;
     enum wined3d_blit_op blit_op;
     BOOL scale, convert, resolve;
+    RECT src_rect, dst_rect;
 
     static const DWORD simple_blit = WINED3D_BLT_SRC_CKEY
             | WINED3D_BLT_SRC_CKEY_OVERRIDE
             | WINED3D_BLT_ALPHA_TEST
             | WINED3D_BLT_RAW;
 
-    TRACE("dst_surface %p, dst_rect %s, src_surface %p, src_rect %s, flags %#x, fx %p, filter %s.\n",
-            dst_surface, wine_dbgstr_rect(dst_rect), src_surface, wine_dbgstr_rect(src_rect),
+    TRACE("dst_surface %p, dst_box %s, src_surface %p, src_box %s, flags %#x, fx %p, filter %s.\n",
+            dst_surface, debug_box(dst_box), src_surface, debug_box(src_box),
             flags, fx, debug_d3dtexturefiltertype(filter));
     TRACE("Usage is %s.\n", debug_d3dusage(dst_texture->resource.usage));
 
@@ -3893,6 +3892,9 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst
                 fx->src_color_key.color_space_low_value,
                 fx->src_color_key.color_space_high_value);
     }
+
+    SetRect(&src_rect, src_box->left, src_box->top, src_box->right, src_box->bottom);
+    SetRect(&dst_rect, dst_box->left, dst_box->top, dst_box->right, dst_box->bottom);
 
     if (!fx || !(fx->fx))
         flags &= ~WINED3D_BLT_FX;
@@ -3944,8 +3946,8 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst
         goto fallback;
     }
 
-    scale = src_rect->right - src_rect->left != dst_rect->right - dst_rect->left
-            || src_rect->bottom - src_rect->top != dst_rect->bottom - dst_rect->top;
+    scale = src_box->right - src_box->left != dst_box->right - dst_box->left
+            || src_box->bottom - src_box->top != dst_box->bottom - dst_box->top;
     convert = src_texture->resource.format->id != dst_texture->resource.format->id;
     resolve = src_texture->resource.multisample_type != dst_texture->resource.multisample_type;
 
@@ -3966,8 +3968,8 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst
         context = context_acquire(device, dst_texture, dst_sub_resource_idx);
         valid_locations = device->blitter->ops->blitter_blit(device->blitter,
                 WINED3D_BLIT_OP_DEPTH_BLIT, context,
-                src_surface, src_texture->resource.draw_binding, src_rect,
-                dst_surface, dst_location, dst_rect, NULL, filter);
+                src_surface, src_texture->resource.draw_binding, &src_rect,
+                dst_surface, dst_location, &dst_rect, NULL, filter);
         context_release(context);
 
         wined3d_texture_validate_location(dst_texture, dst_sub_resource_idx, valid_locations);
@@ -4021,9 +4023,9 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst
             TRACE("Not doing upload because the destination format needs conversion.\n");
         else
         {
-            POINT dst_point = {dst_rect->left, dst_rect->top};
+            POINT dst_point = {dst_box->left, dst_box->top};
 
-            if (SUCCEEDED(surface_upload_from_surface(dst_surface, &dst_point, src_surface, src_rect)))
+            if (SUCCEEDED(surface_upload_from_surface(dst_surface, &dst_point, src_surface, &src_rect)))
             {
                 if (!wined3d_resource_is_offscreen(&dst_texture->resource))
                 {
@@ -4070,8 +4072,8 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst
 
     context = context_acquire(device, dst_texture, dst_sub_resource_idx);
     valid_locations = device->blitter->ops->blitter_blit(device->blitter, blit_op, context,
-            src_surface, src_texture->resource.draw_binding, src_rect,
-            dst_surface, dst_location, dst_rect, colour_key, filter);
+            src_surface, src_texture->resource.draw_binding, &src_rect,
+            dst_surface, dst_location, &dst_rect, colour_key, filter);
     context_release(context);
 
     wined3d_texture_validate_location(dst_texture, dst_sub_resource_idx, valid_locations);
@@ -4081,10 +4083,10 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const RECT *dst
 
 fallback:
     /* Special cases for render targets. */
-    if (SUCCEEDED(surface_blt_special(dst_surface, dst_rect, src_surface, src_rect, flags, fx, filter)))
+    if (SUCCEEDED(surface_blt_special(dst_surface, &dst_rect, src_surface, &src_rect, flags, fx, filter)))
         return WINED3D_OK;
 
 cpu:
-    return surface_cpu_blt(dst_texture, dst_sub_resource_idx, &dst_box,
-            src_texture, src_sub_resource_idx, &src_box, flags, fx, filter);
+    return surface_cpu_blt(dst_texture, dst_sub_resource_idx, dst_box,
+            src_texture, src_sub_resource_idx, src_box, flags, fx, filter);
 }
