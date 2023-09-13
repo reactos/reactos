@@ -1791,14 +1791,11 @@ static void fb_copy_to_texture_direct(struct wined3d_texture *dst_texture, unsig
 }
 
 /* Uses the hardware to stretch and flip the image */
-static void fb_copy_to_texture_hwstretch(struct wined3d_surface *dst_surface, struct wined3d_surface *src_surface,
-        const RECT *src_rect, const RECT *dst_rect_in, enum wined3d_texture_filter_type filter)
+static void fb_copy_to_texture_hwstretch(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+        const RECT *dst_rect_in, struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx,
+        const RECT *src_rect, enum wined3d_texture_filter_type filter)
 {
     unsigned int src_width, src_height, src_pow2_width, src_pow2_height, src_level;
-    unsigned int src_sub_resource_idx = surface_get_sub_resource_idx(src_surface);
-    unsigned int dst_sub_resource_idx = surface_get_sub_resource_idx(dst_surface);
-    struct wined3d_texture *src_texture = src_surface->container;
-    struct wined3d_texture *dst_texture = dst_surface->container;
     struct wined3d_device *device = dst_texture->resource.device;
     GLenum src_target, dst_target, texture_target;
     GLuint src, backup = 0;
@@ -1870,7 +1867,7 @@ static void fb_copy_to_texture_hwstretch(struct wined3d_surface *dst_surface, st
         checkGLcall("glEnable(texture_target)");
 
         /* For now invalidate the texture copy of the back buffer. Drawable and sysmem copy are untouched */
-        surface_get_sub_resource(src_surface)->locations &= ~WINED3D_LOCATION_TEXTURE_RGB;
+        src_texture->sub_resources[src_sub_resource_idx].locations &= ~WINED3D_LOCATION_TEXTURE_RGB;
     }
 
     /* Make sure that the top pixel is always above the bottom pixel, and keep a separate upside down flag
@@ -2205,7 +2202,8 @@ static HRESULT surface_blt_special(struct wined3d_surface *dst_surface, const RE
         else
         {
             TRACE("Using hardware stretching to flip / stretch the texture.\n");
-            fb_copy_to_texture_hwstretch(dst_surface, src_surface, src_rect, dst_rect, filter);
+            fb_copy_to_texture_hwstretch(dst_texture, surface_get_sub_resource_idx(dst_surface), dst_rect,
+                    src_texture, surface_get_sub_resource_idx(src_surface), src_rect, filter);
         }
 
         return WINED3D_OK;
