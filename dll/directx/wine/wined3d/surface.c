@@ -560,9 +560,10 @@ static BOOL fbo_blitter_supported(enum wined3d_blit_op blit_op, const struct win
  * correct texture. */
 /* Context activation is done by the caller. */
 static void texture2d_download_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-        const struct wined3d_gl_info *gl_info, DWORD dst_location)
+        const struct wined3d_context *context, DWORD dst_location)
 {
     const struct wined3d_format *format = texture->resource.format;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture_sub_resource *sub_resource;
     unsigned int dst_row_pitch, dst_slice_pitch;
     unsigned int src_row_pitch, src_slice_pitch;
@@ -2222,7 +2223,6 @@ static HRESULT surface_blt_special(struct wined3d_surface *dst_surface, const RE
 BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD dst_location)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture_sub_resource *sub_resource;
 
     sub_resource = &texture->sub_resources[sub_resource_idx];
@@ -2246,7 +2246,7 @@ BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_res
         {
             wined3d_texture_bind_and_dirtify(texture, context,
                     !(sub_resource->locations & WINED3D_LOCATION_TEXTURE_RGB));
-            texture2d_download_data(texture, sub_resource_idx, gl_info, dst_location);
+            texture2d_download_data(texture, sub_resource_idx, context, dst_location);
             ++texture->download_count;
 
             return TRUE;
