@@ -506,7 +506,7 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
         gl_info->gl_ops.gl.p_glFlush();
 
     if (restore_texture)
-        context_restore(context, restore_texture->sub_resources[restore_idx].u.surface);
+        context_restore(context, restore_texture, restore_idx);
 }
 
 static BOOL fbo_blitter_supported(enum wined3d_blit_op blit_op, const struct wined3d_gl_info *gl_info,
@@ -1623,7 +1623,7 @@ error:
     }
 
     if (restore_texture)
-        context_restore(context, restore_texture->sub_resources[restore_idx].u.surface);
+        context_restore(context, restore_texture, restore_idx);
 }
 
 /* Read the framebuffer contents into a texture. Note that this function
@@ -1670,7 +1670,7 @@ void texture2d_load_fb_texture(struct wined3d_texture *texture,
     checkGLcall("glCopyTexSubImage2D");
 
     if (restore_texture)
-        context_restore(context, restore_texture->sub_resources[restore_idx].u.surface);
+        context_restore(context, restore_texture, restore_idx);
 }
 
 /* Does a direct frame buffer -> texture copy. Stretching is done with single
@@ -2258,9 +2258,10 @@ BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_res
 BOOL texture2d_load_drawable(struct wined3d_texture *texture,
         unsigned int sub_resource_idx, struct wined3d_context *context)
 {
-    struct wined3d_surface *restore_rt = NULL;
+    struct wined3d_texture *restore_texture;
     struct wined3d_surface *surface;
     struct wined3d_device *device;
+    unsigned int restore_idx;
     unsigned int level;
     RECT r;
 
@@ -2281,11 +2282,12 @@ BOOL texture2d_load_drawable(struct wined3d_texture *texture,
 
     device = texture->resource.device;
     surface = texture->sub_resources[sub_resource_idx].u.surface;
-    restore_rt = context_get_rt_surface(context);
-    if (restore_rt != surface)
+    restore_texture = context->current_rt.texture;
+    restore_idx = context->current_rt.sub_resource_idx;
+    if (restore_texture != texture || restore_idx != sub_resource_idx)
         context = context_acquire(device, texture, sub_resource_idx);
     else
-        restore_rt = NULL;
+        restore_texture = NULL;
 
     level = sub_resource_idx % texture->level_count;
     SetRect(&r, 0, 0, wined3d_texture_get_level_width(texture, level),
@@ -2296,8 +2298,8 @@ BOOL texture2d_load_drawable(struct wined3d_texture *texture,
             surface, WINED3D_LOCATION_DRAWABLE, &r,
             NULL, WINED3D_TEXF_POINT);
 
-    if (restore_rt)
-        context_restore(context, restore_rt);
+    if (restore_texture)
+        context_restore(context, restore_texture, restore_idx);
 
     return TRUE;
 }
