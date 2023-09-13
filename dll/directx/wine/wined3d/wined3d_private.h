@@ -3387,18 +3387,10 @@ struct wined3d_surface
 {
     struct wined3d_texture *container;
 
-    unsigned int texture_level;
-    unsigned int texture_layer;
-
     /* For GetDC */
     HBITMAP bitmap;
     HDC dc;
 };
-
-static inline unsigned int surface_get_sub_resource_idx(const struct wined3d_surface *surface)
-{
-    return surface->texture_layer * surface->container->level_count + surface->texture_level;
-}
 
 void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         const struct wined3d_gl_info *gl_info, const struct wined3d_format *format, const RECT *src_rect,

@@ -1450,18 +1450,20 @@ static void texture2d_create_dc(void *object)
 
 static void texture2d_destroy_dc(void *object)
 {
-    struct wined3d_surface *surface = object;
+    const struct wined3d_texture_idx *idx = object;
     D3DKMT_DESTROYDCFROMMEMORY destroy_desc;
     struct wined3d_context *context = NULL;
     struct wined3d_texture *texture;
+    struct wined3d_surface *surface;
     struct wined3d_bo_address data;
     unsigned int sub_resource_idx;
     struct wined3d_device *device;
     NTSTATUS status;
 
-    texture = surface->container;
-    sub_resource_idx = surface_get_sub_resource_idx(surface);
+    texture = idx->texture;
+    sub_resource_idx = idx->sub_resource_idx;
     device = texture->resource.device;
+    surface = texture->sub_resources[sub_resource_idx].u.surface;
 
     if (!surface->dc)
     {
@@ -1497,7 +1499,6 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     const struct wined3d_format *format = wined3d_get_format(gl_info, format_id, texture->resource.usage);
     UINT resource_size = wined3d_format_calculate_size(format, device->surface_alignment, width, height, 1);
     struct wined3d_texture_sub_resource *sub_resource;
-    struct wined3d_surface *surface;
     DWORD valid_location = 0;
     BOOL create_dib = FALSE;
 
@@ -1550,10 +1551,11 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     wined3d_resource_wait_idle(&texture->resource);
 
     sub_resource = &texture->sub_resources[0];
-    surface = sub_resource->u.surface;
-    if (surface->dc)
+    if (sub_resource->u.surface->dc)
     {
-        wined3d_cs_destroy_object(device->cs, texture2d_destroy_dc, surface);
+        struct wined3d_texture_idx texture_idx = {texture, 0};
+
+        wined3d_cs_destroy_object(device->cs, texture2d_destroy_dc, &texture_idx);
         device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
         create_dib = TRUE;
     }
@@ -2338,7 +2340,11 @@ static void texture2d_cleanup_sub_resources(struct wined3d_texture *texture)
         TRACE("surface %p.\n", surface);
 
         if (surface->dc)
-            texture2d_destroy_dc(surface);
+        {
+            struct wined3d_texture_idx texture_idx = {texture, i};
+
+            texture2d_destroy_dc(&texture_idx);
+        }
     }
     if (context)
         context_release(context);
@@ -2754,8 +2760,6 @@ static HRESULT texture1d_init(struct wined3d_texture *texture, const struct wine
 
             surface = &surfaces[idx];
             surface->container = texture;
-            surface->texture_level = i;
-            surface->texture_layer = j;
 
             sub_resource = &texture->sub_resources[idx];
             sub_resource->locations = WINED3D_LOCATION_DISCARDED;
@@ -3845,7 +3849,9 @@ HRESULT CDECL wined3d_texture_release_dc(struct wined3d_texture *texture, unsign
 
     if (!(texture->resource.usage & WINED3DUSAGE_OWNDC) && !(device->wined3d->flags & WINED3D_NO3D))
     {
-        wined3d_cs_destroy_object(device->cs, texture2d_destroy_dc, surface);
+        struct wined3d_texture_idx texture_idx = {texture, sub_resource_idx};
+
+        wined3d_cs_destroy_object(device->cs, texture2d_destroy_dc, &texture_idx);
         device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
     }
 
