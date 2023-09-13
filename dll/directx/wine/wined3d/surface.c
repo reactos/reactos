@@ -933,13 +933,10 @@ void wined3d_surface_upload_data(struct wined3d_texture *texture, unsigned int s
     }
 }
 
-static HRESULT surface_upload_from_surface(struct wined3d_surface *dst_surface, const POINT *dst_point,
-        struct wined3d_surface *src_surface, const RECT *src_rect)
+static HRESULT texture2d_upload_from_surface(struct wined3d_texture *dst_texture,
+        unsigned int dst_sub_resource_idx, const POINT *dst_point, struct wined3d_texture *src_texture,
+        unsigned int src_sub_resource_idx, const RECT *src_rect)
 {
-    unsigned int src_sub_resource_idx = surface_get_sub_resource_idx(src_surface);
-    unsigned int dst_sub_resource_idx = surface_get_sub_resource_idx(dst_surface);
-    struct wined3d_texture *src_texture = src_surface->container;
-    struct wined3d_texture *dst_texture = dst_surface->container;
     unsigned int src_row_pitch, src_slice_pitch;
     const struct wined3d_gl_info *gl_info;
     unsigned int src_level, dst_level;
@@ -947,16 +944,17 @@ static HRESULT surface_upload_from_surface(struct wined3d_surface *dst_surface, 
     struct wined3d_bo_address data;
     UINT update_w, update_h;
 
-    TRACE("dst_surface %p, dst_point %s, src_surface %p, src_rect %s.\n",
-            dst_surface, wine_dbgstr_point(dst_point),
-            src_surface, wine_dbgstr_rect(src_rect));
+    TRACE("dst_texture %p, dst_sub_resource_idx %u, dst_point %s, "
+            "src_texture %p, src_sub_resource_idx %u, src_rect %s.\n",
+            dst_texture, dst_sub_resource_idx, wine_dbgstr_point(dst_point),
+            src_texture, src_sub_resource_idx, wine_dbgstr_rect(src_rect));
 
     context = context_acquire(dst_texture->resource.device, NULL, 0);
     gl_info = context->gl_info;
 
-    /* Only load the surface for partial updates. For newly allocated texture
-     * the texture wouldn't be the current location, and we'd upload zeroes
-     * just to overwrite them again. */
+    /* Only load the sub-resource for partial updates. For newly allocated
+     * textures the texture wouldn't be the current location, and we'd upload
+     * zeroes just to overwrite them again. */
     update_w = src_rect->right - src_rect->left;
     update_h = src_rect->bottom - src_rect->top;
     dst_level = dst_sub_resource_idx % dst_texture->level_count;
@@ -4037,7 +4035,8 @@ HRESULT wined3d_surface_blt(struct wined3d_surface *dst_surface, const struct wi
         {
             POINT dst_point = {dst_box->left, dst_box->top};
 
-            if (SUCCEEDED(surface_upload_from_surface(dst_surface, &dst_point, src_surface, &src_rect)))
+            if (SUCCEEDED(texture2d_upload_from_surface(dst_texture, dst_sub_resource_idx,
+                    &dst_point, src_texture, src_sub_resource_idx, &src_rect)))
             {
                 if (!wined3d_resource_is_offscreen(&dst_texture->resource))
                 {
