@@ -259,24 +259,20 @@ static BOOL texture2d_is_full_rect(const struct wined3d_texture *texture, unsign
     return TRUE;
 }
 
-static void surface_depth_blt_fbo(const struct wined3d_device *device,
-        struct wined3d_surface *src_surface, DWORD src_location, const RECT *src_rect,
-        struct wined3d_surface *dst_surface, DWORD dst_location, const RECT *dst_rect)
+static void texture2d_depth_blt_fbo(const struct wined3d_device *device,
+        struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx, DWORD src_location,
+        const RECT *src_rect, struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+        DWORD dst_location, const RECT *dst_rect)
 {
-    unsigned int dst_sub_resource_idx = surface_get_sub_resource_idx(dst_surface);
-    unsigned int src_sub_resource_idx = surface_get_sub_resource_idx(src_surface);
-    struct wined3d_texture *dst_texture = dst_surface->container;
-    struct wined3d_texture *src_texture = src_surface->container;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
     DWORD src_mask, dst_mask;
     GLbitfield gl_mask;
 
-    TRACE("device %p\n", device);
-    TRACE("src_surface %p, src_location %s, src_rect %s,\n",
-            src_surface, wined3d_debug_location(src_location), wine_dbgstr_rect(src_rect));
-    TRACE("dst_surface %p, dst_location %s, dst_rect %s.\n",
-            dst_surface, wined3d_debug_location(dst_location), wine_dbgstr_rect(dst_rect));
+    TRACE("device %p, src_texture %p, src_sub_resource_idx %u, src_location %s, src_rect %s, "
+            "dst_texture %p, dst_sub_resource_idx %u, dst_location %s, dst_rect %s.\n", device,
+            src_texture, src_sub_resource_idx, wined3d_debug_location(src_location), wine_dbgstr_rect(src_rect),
+            dst_texture, dst_sub_resource_idx, wined3d_debug_location(dst_location), wine_dbgstr_rect(dst_rect));
 
     src_mask = src_texture->resource.format_flags & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL);
     dst_mask = dst_texture->resource.format_flags & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL);
@@ -320,10 +316,12 @@ static void surface_depth_blt_fbo(const struct wined3d_device *device,
 
     gl_info = context->gl_info;
 
-    context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER, NULL, src_surface, src_location);
+    context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER, NULL,
+            src_texture->sub_resources[src_sub_resource_idx].u.surface, src_location);
     context_check_fbo_status(context, GL_READ_FRAMEBUFFER);
 
-    context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER, NULL, dst_surface, dst_location);
+    context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER, NULL,
+            dst_texture->sub_resources[dst_sub_resource_idx].u.surface, dst_location);
     context_set_draw_buffer(context, GL_NONE);
     context_check_fbo_status(context, GL_DRAW_FRAMEBUFFER);
     context_invalidate_state(context, STATE_FRAMEBUFFER);
@@ -2574,7 +2572,9 @@ static DWORD fbo_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
     if (blit_op == WINED3D_BLIT_OP_DEPTH_BLIT)
     {
         TRACE("Depth/stencil blit.\n");
-        surface_depth_blt_fbo(device, src_surface, src_location, src_rect, dst_surface, dst_location, dst_rect);
+        texture2d_depth_blt_fbo(device, src_surface->container, surface_get_sub_resource_idx(src_surface),
+                src_location, src_rect, dst_surface->container, surface_get_sub_resource_idx(dst_surface),
+                dst_location, dst_rect);
         return dst_location;
     }
 
