@@ -3863,6 +3863,8 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
     if (data)
     {
         unsigned int sub_count = level_count * layer_count;
+        unsigned int level, width, height, depth;
+        struct wined3d_box box;
         unsigned int i;
 
         for (i = 0; i < sub_count; ++i)
@@ -3878,8 +3880,14 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
 
         for (i = 0; i < sub_count; ++i)
         {
-            wined3d_device_update_sub_resource(device, &object->resource,
-                    i, NULL, data[i].data, data[i].row_pitch, data[i].slice_pitch, 0);
+            level = i % object->level_count;
+            width = wined3d_texture_get_level_width(object, level);
+            height = wined3d_texture_get_level_height(object, level);
+            depth = wined3d_texture_get_level_depth(object, level);
+            wined3d_box_set(&box, 0, 0, width, height, 0, depth);
+
+            wined3d_cs_emit_update_sub_resource(device->cs, &object->resource,
+                    i, &box, data[i].data, data[i].row_pitch, data[i].slice_pitch);
         }
     }
 
