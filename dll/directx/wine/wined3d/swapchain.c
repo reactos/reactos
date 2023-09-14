@@ -70,7 +70,7 @@ static void swapchain_cleanup(struct wined3d_swapchain *swapchain)
     }
 
     wined3d_cs_destroy_object(swapchain->device->cs, wined3d_swapchain_destroy_object, swapchain);
-    swapchain->device->cs->ops->finish(swapchain->device->cs, WINED3D_CS_QUEUE_DEFAULT);
+    wined3d_cs_finish(swapchain->device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
     /* Restore the screen resolution if we rendered in fullscreen.
      * This will restore the screen resolution to what it was before creating
