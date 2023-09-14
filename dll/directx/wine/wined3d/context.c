@@ -213,10 +213,9 @@ static void wined3d_context_gl_attach_depth_stencil_fbo(struct wined3d_context_g
 }
 
 /* Context activation is done by the caller. */
-static void context_attach_surface_fbo(struct wined3d_context *context,
-        GLenum fbo_target, DWORD idx, const struct wined3d_fbo_resource *resource, BOOL rb_namespace)
+static void wined3d_context_gl_attach_surface_fbo(struct wined3d_context_gl *context_gl,
+        GLenum fbo_target, unsigned int idx, const struct wined3d_fbo_resource *resource, BOOL rb_namespace)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     TRACE("Attach GL object %u to %u.\n", resource->object, idx);
@@ -735,8 +734,8 @@ static void wined3d_context_gl_apply_fbo_entry(struct wined3d_context_gl *contex
     /* Apply render targets */
     for (i = 0; i < gl_info->limits.buffers; ++i)
     {
-        context_attach_surface_fbo(&context_gl->c, target, i, &entry->key.objects[i + 1],
-                entry->key.rb_namespace & (1 << (i + 1)));
+        wined3d_context_gl_attach_surface_fbo(context_gl, target, i,
+                &entry->key.objects[i + 1], entry->key.rb_namespace & (1 << (i + 1)));
     }
 
     wined3d_context_gl_attach_depth_stencil_fbo(context_gl, target,
