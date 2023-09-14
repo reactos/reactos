@@ -832,15 +832,22 @@ todo_wine {
     ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
     ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
 
-    RegCloseKey(class_key);
+    key = SetupDiCreateDevRegKeyW(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
+    ok(key != INVALID_HANDLE_VALUE, "Failed to create device key, error %#x.\n", GetLastError());
+    RegCloseKey(key);
 
     ret = SetupDiRemoveDevice(set, &device);
     ok(ret, "Failed to remove device, error %#x.\n", GetLastError());
     SetupDiDestroyDeviceInfoList(set);
 
+    res = RegOpenKeyA(class_key, driver_path, &key);
+    ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
+
     /* Vista+ deletes the key automatically. */
     res = RegDeleteKeyA(HKEY_LOCAL_MACHINE, class_key_path);
     ok(!res || res == ERROR_FILE_NOT_FOUND, "Failed to delete class key, error %u.\n", res);
+
+    RegCloseKey(class_key);
 }
 
 static void test_register_device_iface(void)
