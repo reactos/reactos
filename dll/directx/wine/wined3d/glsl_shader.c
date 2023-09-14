@@ -705,10 +705,11 @@ static void shader_glsl_load_samplers_range(const struct wined3d_gl_info *gl_inf
 static unsigned int shader_glsl_map_tex_unit(const struct wined3d_context *context,
         const struct wined3d_shader_version *shader_version, unsigned int sampler_idx)
 {
-    const DWORD *tex_unit_map;
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
+    const unsigned int *tex_unit_map;
     unsigned int base, count;
 
-    tex_unit_map = context_get_tex_unit_mapping(context, shader_version, &base, &count);
+    tex_unit_map = wined3d_context_gl_get_tex_unit_mapping(context_gl, shader_version, &base, &count);
     if (sampler_idx >= count)
         return WINED3D_UNMAPPED_STAGE;
     if (!tex_unit_map)
@@ -731,9 +732,10 @@ static void shader_glsl_append_sampler_binding_qualifier(struct wined3d_string_b
 static void shader_glsl_load_samplers(const struct wined3d_context *context,
         struct shader_glsl_priv *priv, GLuint program_id, const struct wined3d_shader_reg_maps *reg_maps)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_shader_version *shader_version;
-    const DWORD *tex_unit_map;
+    const unsigned int *tex_unit_map;
     unsigned int base, count;
     const char *prefix;
 
@@ -742,7 +744,7 @@ static void shader_glsl_load_samplers(const struct wined3d_context *context,
 
     shader_version = reg_maps ? &reg_maps->shader_version : NULL;
     prefix = shader_glsl_get_prefix(shader_version ? shader_version->type : WINED3D_SHADER_TYPE_PIXEL);
-    tex_unit_map = context_get_tex_unit_mapping(context, shader_version, &base, &count);
+    tex_unit_map = wined3d_context_gl_get_tex_unit_mapping(context_gl, shader_version, &base, &count);
     shader_glsl_load_samplers_range(gl_info, priv, program_id, prefix, base, count, tex_unit_map);
 }
 

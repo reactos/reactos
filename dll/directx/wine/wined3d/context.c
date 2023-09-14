@@ -2369,16 +2369,16 @@ void wined3d_context_destroy(struct wined3d_context *context)
     device->adapter->adapter_ops->adapter_destroy_context(context);
 }
 
-const DWORD *context_get_tex_unit_mapping(const struct wined3d_context *context,
+const unsigned int *wined3d_context_gl_get_tex_unit_mapping(const struct wined3d_context_gl *context_gl,
         const struct wined3d_shader_version *shader_version, unsigned int *base, unsigned int *count)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     if (!shader_version)
     {
         *base = 0;
         *count = WINED3D_MAX_TEXTURES;
-        return context->tex_unit_map;
+        return context_gl->c.tex_unit_map;
     }
 
     if (shader_version->major >= 4)
@@ -2403,7 +2403,7 @@ const DWORD *context_get_tex_unit_mapping(const struct wined3d_context *context,
             *count = 0;
     }
 
-    return context->tex_unit_map;
+    return context_gl->c.tex_unit_map;
 }
 
 static void context_get_rt_size(const struct wined3d_context *context, SIZE *size)
@@ -3777,18 +3777,19 @@ static void context_load_shader_resources(struct wined3d_context *context, const
 static void context_bind_shader_resources(struct wined3d_context *context,
         const struct wined3d_state *state, enum wined3d_shader_type shader_type)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     unsigned int bind_idx, shader_sampler_count, base, count, i;
     const struct wined3d_device *device = context->device;
     struct wined3d_shader_sampler_map_entry *entry;
     struct wined3d_shader_resource_view *view;
     const struct wined3d_shader *shader;
+    const unsigned int *tex_unit_map;
     struct wined3d_sampler *sampler;
-    const DWORD *tex_unit_map;
 
     if (!(shader = state->shader[shader_type]))
         return;
 
-    tex_unit_map = context_get_tex_unit_mapping(context,
+    tex_unit_map = wined3d_context_gl_get_tex_unit_mapping(context_gl,
             &shader->reg_maps.shader_version, &base, &count);
 
     shader_sampler_count = shader->reg_maps.sampler_map.count;
