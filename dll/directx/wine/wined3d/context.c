@@ -514,12 +514,11 @@ static void wined3d_context_gl_generate_fbo_key(const struct wined3d_context_gl 
     memset(&key->objects[buffers + 1], 0, (ARRAY_SIZE(key->objects) - buffers - 1) * sizeof(*key->objects));
 }
 
-static struct fbo_entry *context_create_fbo_entry(const struct wined3d_context *context,
+static struct fbo_entry *wined3d_context_gl_create_fbo_entry(const struct wined3d_context_gl *context_gl,
         const struct wined3d_rendertarget_info *render_targets, const struct wined3d_rendertarget_info *depth_stencil,
         DWORD color_location, DWORD ds_location)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct fbo_entry *entry;
 
     entry = heap_alloc(sizeof(*entry));
@@ -691,7 +690,8 @@ static struct fbo_entry *wined3d_context_gl_find_fbo_entry(struct wined3d_contex
 
     if (context_gl->fbo_entry_count < WINED3D_MAX_FBO_ENTRIES)
     {
-        entry = context_create_fbo_entry(&context_gl->c, render_targets, depth_stencil, color_location, ds_location);
+        entry = wined3d_context_gl_create_fbo_entry(context_gl,
+                render_targets, depth_stencil, color_location, ds_location);
         list_add_head(&context_gl->fbo_list, &entry->entry);
         ++context_gl->fbo_entry_count;
     }
