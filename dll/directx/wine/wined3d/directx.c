@@ -2463,7 +2463,14 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
     wined3d_adapter_no3d_create_context,
 };
 
-static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter)
+static void wined3d_adapter_no3d_init_d3d_info(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags)
+{
+    struct wined3d_d3d_info *d3d_info = &adapter->d3d_info;
+
+    d3d_info->wined3d_creation_flags = wined3d_creation_flags;
+}
+
+static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags)
 {
     static const struct wined3d_gpu_description gpu_description =
     {
@@ -2484,6 +2491,8 @@ static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter)
     adapter->fragment_pipe = &none_fragment_pipe;
     adapter->shader_backend = &none_shader_backend;
     adapter->adapter_ops = &wined3d_adapter_no3d_ops;
+
+    wined3d_adapter_no3d_init_d3d_info(adapter, wined3d_creation_flags);
 
     return TRUE;
 }
@@ -2510,7 +2519,7 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int o
     adapter->formats = NULL;
 
     if (wined3d_creation_flags & WINED3D_NO3D)
-        return wined3d_adapter_no3d_init(adapter);
+        return wined3d_adapter_no3d_init(adapter, wined3d_creation_flags);
     return wined3d_adapter_gl_init(adapter, wined3d_creation_flags);
 }
 
