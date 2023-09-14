@@ -4501,9 +4501,9 @@ HRESULT CDECL wined3d_device_set_rendertarget_view(struct wined3d_device *device
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (view && !(view->resource->usage & WINED3DUSAGE_RENDERTARGET))
+    if (view && !(view->resource->bind_flags & WINED3D_BIND_RENDER_TARGET))
     {
-        WARN("View resource %p doesn't have render target usage.\n", view->resource);
+        WARN("View resource %p doesn't have render target bind flags.\n", view->resource);
         return WINED3DERR_INVALIDCALL;
     }
 
