@@ -915,7 +915,10 @@ static HRESULT WINAPI d3d_viewport_SetViewport2(IDirect3DViewport3 *iface, D3DVI
 {
     struct d3d_viewport *viewport = impl_from_IDirect3DViewport3(iface);
     struct d3d_device *device = viewport->active_device;
+    struct wined3d_sub_resource_desc rt_desc;
+    struct wined3d_rendertarget_view *rtv;
     IDirect3DViewport3 *current_viewport;
+    struct ddraw_surface *surface;
 
     TRACE("iface %p, vp %p.\n", iface, vp);
 
@@ -928,20 +931,42 @@ static HRESULT WINAPI d3d_viewport_SetViewport2(IDirect3DViewport3 *iface, D3DVI
         _dump_D3DVIEWPORT2(vp);
     }
 
+    if (!device)
+    {
+        WARN("Viewport not bound to a device, returning D3DERR_VIEWPORTHASNODEVICE.\n");
+        return D3DERR_VIEWPORTHASNODEVICE;
+    }
+
     wined3d_mutex_lock();
+
+    if (device->version > 1)
+    {
+        if (!(rtv = wined3d_device_get_rendertarget_view(device->wined3d_device, 0)))
+        {
+            wined3d_mutex_unlock();
+            return DDERR_INVALIDCAPS;
+        }
+        surface = wined3d_rendertarget_view_get_sub_resource_parent(rtv);
+        wined3d_texture_get_sub_resource_desc(surface->wined3d_texture, surface->sub_resource_idx, &rt_desc);
+
+        if (vp->dwX > rt_desc.width || vp->dwWidth > rt_desc.width - vp->dwX
+            || vp->dwY > rt_desc.height || vp->dwHeight > rt_desc.height - vp->dwY)
+        {
+            WARN("Invalid viewport, returning DDERR_INVALIDPARAMS.\n");
+            wined3d_mutex_unlock();
+            return DDERR_INVALIDPARAMS;
+        }
+    }
 
     viewport->use_vp2 = 1;
     memset(&viewport->viewports.vp2, 0, sizeof(viewport->viewports.vp2));
     memcpy(&viewport->viewports.vp2, vp, vp->dwSize);
 
-    if (device)
+    if (SUCCEEDED(IDirect3DDevice3_GetCurrentViewport(&device->IDirect3DDevice3_iface, &current_viewport)))
     {
-        if (SUCCEEDED(IDirect3DDevice3_GetCurrentViewport(&device->IDirect3DDevice3_iface, &current_viewport)))
-        {
-            if (current_viewport == iface)
-                viewport_activate(viewport, FALSE);
-            IDirect3DViewport3_Release(current_viewport);
-        }
+        if (current_viewport == iface)
+            viewport_activate(viewport, FALSE);
+        IDirect3DViewport3_Release(current_viewport);
     }
 
     wined3d_mutex_unlock();
