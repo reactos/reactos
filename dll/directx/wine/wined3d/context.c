@@ -2685,23 +2685,23 @@ void wined3d_context_gl_copy_bo_address(struct wined3d_context_gl *context_gl,
     }
 }
 
-static void context_set_render_offscreen(struct wined3d_context *context, BOOL offscreen)
+static void wined3d_context_gl_set_render_offscreen(struct wined3d_context_gl *context_gl, BOOL offscreen)
 {
-    if (context->render_offscreen == offscreen)
+    if (context_gl->c.render_offscreen == offscreen)
         return;
 
-    context_invalidate_state(context, STATE_VIEWPORT);
-    context_invalidate_state(context, STATE_SCISSORRECT);
-    if (!context->gl_info->supported[ARB_CLIP_CONTROL])
+    context_invalidate_state(&context_gl->c, STATE_VIEWPORT);
+    context_invalidate_state(&context_gl->c, STATE_SCISSORRECT);
+    if (!context_gl->c.gl_info->supported[ARB_CLIP_CONTROL])
     {
-        context_invalidate_state(context, STATE_RASTERIZER);
-        context_invalidate_state(context, STATE_POINTSPRITECOORDORIGIN);
-        context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_PROJECTION));
+        context_invalidate_state(&context_gl->c, STATE_RASTERIZER);
+        context_invalidate_state(&context_gl->c, STATE_POINTSPRITECOORDORIGIN);
+        context_invalidate_state(&context_gl->c, STATE_TRANSFORM(WINED3D_TS_PROJECTION));
     }
-    context_invalidate_state(context, STATE_SHADER(WINED3D_SHADER_TYPE_DOMAIN));
-    if (context->gl_info->supported[ARB_FRAGMENT_COORD_CONVENTIONS])
-        context_invalidate_state(context, STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL));
-    context->render_offscreen = offscreen;
+    context_invalidate_state(&context_gl->c, STATE_SHADER(WINED3D_SHADER_TYPE_DOMAIN));
+    if (context_gl->c.gl_info->supported[ARB_FRAGMENT_COORD_CONVENTIONS])
+        context_invalidate_state(&context_gl->c, STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL));
+    context_gl->c.render_offscreen = offscreen;
 }
 
 GLenum wined3d_context_gl_get_offscreen_gl_buffer(const struct wined3d_context_gl *context_gl)
@@ -3928,7 +3928,7 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
             return FALSE;
         }
 
-        context_set_render_offscreen(context, TRUE);
+        wined3d_context_gl_set_render_offscreen(context_gl, TRUE);
     }
 
     /* Preload resources before FBO setup. Texture preload in particular may
@@ -4126,6 +4126,7 @@ static void context_setup_target(struct wined3d_context *context,
         struct wined3d_texture *texture, unsigned int sub_resource_idx)
 {
     BOOL old_render_offscreen = context->render_offscreen, render_offscreen;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
 
     render_offscreen = wined3d_resource_is_offscreen(&texture->resource);
     if (context->current_rt.texture == texture
@@ -4181,7 +4182,7 @@ static void context_setup_target(struct wined3d_context *context,
 
     context->current_rt.texture = texture;
     context->current_rt.sub_resource_idx = sub_resource_idx;
-    context_set_render_offscreen(context, render_offscreen);
+    wined3d_context_gl_set_render_offscreen(context_gl, render_offscreen);
 }
 
 static void wined3d_context_gl_activate(struct wined3d_context_gl *context_gl,
