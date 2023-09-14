@@ -45,6 +45,19 @@ static GUID guid2 = {0x6a55b5a5, 0x3f65, 0x11db, {0xb7,0x04,0x00,0x11,0x95,0x5c,
 BOOL (WINAPI *pSetupDiSetDevicePropertyW)(HDEVINFO, PSP_DEVINFO_DATA, const DEVPROPKEY *, DEVPROPTYPE, const BYTE *, DWORD, DWORD);
 BOOL (WINAPI *pSetupDiGetDevicePropertyW)(HDEVINFO, PSP_DEVINFO_DATA, const DEVPROPKEY *, DEVPROPTYPE *, BYTE *, DWORD, DWORD *, DWORD);
 
+static void create_file(const char *name, const char *data)
+{
+    HANDLE file;
+    DWORD size;
+    BOOL ret;
+
+    file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "Failed to create %s, error %u.\n", name, GetLastError());
+    ret = WriteFile(file, data, strlen(data), &size, NULL);
+    ok(ret && size == strlen(data), "Failed to write %s, error %u.\n", name, GetLastError());
+    CloseHandle(file);
+}
+
 static void test_create_device_list_ex(void)
 {
     static const WCHAR machine[] = { 'd','u','m','m','y',0 };
@@ -107,26 +120,6 @@ todo_wine
     RegCloseKey(root_key);
 }
 
-static void create_inf_file(LPCSTR filename)
-{
-    DWORD dwNumberOfBytesWritten;
-    HANDLE hf = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
-                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
-    static const char data[] =
-        "[Version]\n"
-        "Signature=\"$Chicago$\"\n"
-        "Class=Bogus\n"
-        "ClassGUID={6a55b5a4-3f65-11db-b704-0011955c2bdb}\n"
-        "[ClassInstall32]\n"
-        "AddReg=BogusClass.NT.AddReg\n"
-        "[BogusClass.NT.AddReg]\n"
-        "HKR,,,,\"Wine test devices\"\n";
-
-    WriteFile(hf, data, sizeof(data) - 1, &dwNumberOfBytesWritten, NULL);
-    CloseHandle(hf);
-}
-
 static void get_temp_filename(LPSTR path)
 {
     static char curr[MAX_PATH] = { 0 };
@@ -152,10 +145,20 @@ static void test_install_class(void)
     char tmpfile[MAX_PATH];
     BOOL ret;
 
+    static const char inf_data[] =
+            "[Version]\n"
+            "Signature=\"$Chicago$\"\n"
+            "Class=Bogus\n"
+            "ClassGUID={6a55b5a4-3f65-11db-b704-0011955c2bdb}\n"
+            "[ClassInstall32]\n"
+            "AddReg=BogusClass.NT.AddReg\n"
+            "[BogusClass.NT.AddReg]\n"
+            "HKR,,,,\"Wine test devices\"\n";
+
     tmpfile[0] = '.';
     tmpfile[1] = '\\';
     get_temp_filename(tmpfile + 2);
-    create_inf_file(tmpfile + 2);
+    create_file(tmpfile + 2, inf_data);
 
     ret = SetupDiInstallClassA(NULL, NULL, 0, NULL);
     ok(!ret, "Expected failure.\n");
@@ -1956,9 +1959,167 @@ static void test_device_install_params(void)
     SetupDiDestroyDeviceInfoList(set);
 }
 
+#ifdef __i386__
+#define MYEXT "x86"
+#define WOWEXT "AMD64"
+#define WRONGEXT "ARM"
+#elif defined(__x86_64__)
+#define MYEXT "AMD64"
+#define WOWEXT "x86"
+#define WRONGEXT "ARM64"
+#elif defined(__arm__)
+#define MYEXT "ARM"
+#define WOWEXT "ARM64"
+#define WRONGEXT "x86"
+#elif defined(__aarch64__)
+#define MYEXT "ARM64"
+#define WOWEXT "ARM"
+#define WRONGEXT "AMD64"
+#else
+#define MYEXT
+#define WOWEXT
+#define WRONGEXT
+#endif
+
+static void test_get_actual_section(void)
+{
+    static const char inf_data[] = "[Version]\n"
+            "Signature=\"$Chicago$\"\n"
+            "[section1]\n"
+            "[section2]\n"
+            "[section2.nt]\n"
+            "[section3]\n"
+            "[section3.nt" MYEXT "]\n"
+            "[section4]\n"
+            "[section4.nt]\n"
+            "[section4.nt" MYEXT "]\n"
+            "[section5.nt]\n"
+            "[section6.nt" MYEXT "]\n"
+            "[section7]\n"
+            "[section7.nt" WRONGEXT "]\n"
+            "[section8.nt" WRONGEXT "]\n"
+            "[section9.nt" MYEXT "]\n"
+            "[section9.nt" WOWEXT "]\n"
+            "[section10.nt" WOWEXT "]\n";
+
+    char inf_path[MAX_PATH], section[LINE_LEN], *extptr;
+    DWORD size;
+    HINF hinf;
+    BOOL ret;
+
+    GetTempPathA(sizeof(inf_path), inf_path);
+    strcat(inf_path, "setupapi_test.inf");
+    create_file(inf_path, inf_data);
+
+    hinf = SetupOpenInfFileA(inf_path, NULL, INF_STYLE_WIN4, NULL);
+    ok(hinf != INVALID_HANDLE_VALUE, "Failed to open INF file, error %#x.\n", GetLastError());
+
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section1", section, ARRAY_SIZE(section), NULL, NULL);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcmp(section, "section1"), "Got unexpected section %s.\n", section);
+
+    size = 0xdeadbeef;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section1", NULL, 5, &size, NULL);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(size == 9, "Got size %u.\n", size);
+
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section1", section, 5, &size, NULL);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Got unexpected error %#x.\n", GetLastError());
+    ok(size == 9, "Got size %u.\n", size);
+
+    SetLastError(0xdeadbeef);
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section1", section, ARRAY_SIZE(section), &size, NULL);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "section1"), "Got unexpected section %s.\n", section);
+    ok(size == 9, "Got size %u.\n", size);
+
+    extptr = section;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section1", section, ARRAY_SIZE(section), NULL, &extptr);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "section1"), "Got unexpected section %s.\n", section);
+    ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
+
+    extptr = section;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section2", section, ARRAY_SIZE(section), NULL, &extptr);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "section2.NT"), "Got unexpected section %s.\n", section);
+    ok(extptr == section + 8, "Got extension %s.\n", extptr);
+
+    extptr = section;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section3", section, ARRAY_SIZE(section), NULL, &extptr);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "section3.NT" MYEXT), "Got unexpected section %s.\n", section);
+    ok(extptr == section + 8, "Got extension %s.\n", extptr);
+
+    extptr = section;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section4", section, ARRAY_SIZE(section), NULL, &extptr);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "section4.NT" MYEXT), "Got unexpected section %s.\n", section);
+    ok(extptr == section + 8, "Got extension %s.\n", extptr);
+
+    extptr = section;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section5", section, ARRAY_SIZE(section), NULL, &extptr);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "section5.NT"), "Got unexpected section %s.\n", section);
+    ok(extptr == section + 8, "Got extension %s.\n", extptr);
+
+    extptr = section;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section6", section, ARRAY_SIZE(section), NULL, &extptr);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "section6.NT" MYEXT), "Got unexpected section %s.\n", section);
+    ok(extptr == section + 8, "Got extension %s.\n", extptr);
+
+    extptr = section;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section7", section, ARRAY_SIZE(section), NULL, &extptr);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "section7"), "Got unexpected section %s.\n", section);
+    ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
+
+todo_wine {
+    extptr = section;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section8", section, ARRAY_SIZE(section), NULL, &extptr);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "section8"), "Got unexpected section %s.\n", section);
+    ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
+
+    extptr = section;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "nonexistent", section, ARRAY_SIZE(section), NULL, &extptr);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "nonexistent"), "Got unexpected section %s.\n", section);
+    ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
+}
+
+    extptr = section;
+    ret = SetupDiGetActualSectionToInstallA(hinf, "section9", section, ARRAY_SIZE(section), NULL, &extptr);
+    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+    ok(!strcasecmp(section, "section9.NT" MYEXT), "Got unexpected section %s.\n", section);
+    ok(extptr == section + 8, "Got extension %s.\n", extptr);
+
+todo_wine {
+    if (0)
+    {
+        /* For some reason, this call hangs on Windows 10 1809. */
+        extptr = section;
+        ret = SetupDiGetActualSectionToInstallA(hinf, "section10", section, ARRAY_SIZE(section), NULL, &extptr);
+        ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+        ok(!strcasecmp(section, "section10"), "Got unexpected section %s.\n", section);
+        ok(!extptr, "Got extension %s.\n", extptr);
+    }
+}
+
+    SetupCloseInfFile(hinf);
+    ret = DeleteFileA(inf_path);
+    ok(ret, "Failed to delete %s, error %u.\n", inf_path, GetLastError());
+}
+
 START_TEST(devinst)
 {
     HKEY hkey;
+
+    test_get_actual_section();
 
     if ((hkey = SetupDiOpenClassRegKey(NULL, KEY_ALL_ACCESS)) == INVALID_HANDLE_VALUE)
     {
