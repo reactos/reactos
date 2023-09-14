@@ -2747,10 +2747,9 @@ GLenum wined3d_context_gl_get_offscreen_gl_buffer(const struct wined3d_context_g
     }
 }
 
-static DWORD context_generate_rt_mask_no_fbo(const struct wined3d_context *context, struct wined3d_resource *rt)
+static uint32_t wined3d_context_gl_generate_rt_mask_no_fbo(const struct wined3d_context_gl *context_gl,
+        struct wined3d_resource *rt)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
-
     if (!rt || rt->format->id == WINED3DFMT_NULL)
         return 0;
     else if (rt->type != WINED3D_RTYPE_BUFFER && texture_from_resource(rt)->swapchain)
@@ -2764,8 +2763,8 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
 {
     struct wined3d_context *context = &context_gl->c;
     const struct wined3d_gl_info *gl_info;
+    uint32_t rt_mask, *cur_mask;
     struct wined3d_texture *rt;
-    DWORD rt_mask, *cur_mask;
     unsigned int sampler;
     SIZE rt_size;
 
@@ -2796,7 +2795,7 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
     }
     else
     {
-        rt_mask = context_generate_rt_mask_no_fbo(context, &rt->resource);
+        rt_mask = wined3d_context_gl_generate_rt_mask_no_fbo(context_gl, &rt->resource);
     }
 
     cur_mask = context_gl->current_fbo ? &context_gl->current_fbo->rt_mask : &context_gl->draw_buffers_mask;
@@ -3029,7 +3028,7 @@ BOOL wined3d_context_gl_apply_clear_state(struct wined3d_context_gl *context_gl,
     struct wined3d_rendertarget_view * const *rts = fb->render_targets;
     const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_rendertarget_view *dsv = fb->depth_stencil;
-    DWORD rt_mask = 0, *cur_mask;
+    uint32_t rt_mask = 0, *cur_mask;
     unsigned int i;
 
     if (isStateDirty(&context_gl->c, STATE_FRAMEBUFFER) || fb != state->fb
@@ -3088,7 +3087,7 @@ BOOL wined3d_context_gl_apply_clear_state(struct wined3d_context_gl *context_gl,
         }
         else
         {
-            rt_mask = context_generate_rt_mask_no_fbo(&context_gl->c, rt_count ? rts[0]->resource : NULL);
+            rt_mask = wined3d_context_gl_generate_rt_mask_no_fbo(context_gl, rt_count ? rts[0]->resource : NULL);
         }
     }
     else if (wined3d_settings.offscreen_rendering_mode == ORM_FBO
@@ -3102,7 +3101,7 @@ BOOL wined3d_context_gl_apply_clear_state(struct wined3d_context_gl *context_gl,
     }
     else
     {
-        rt_mask = context_generate_rt_mask_no_fbo(&context_gl->c, rt_count ? rts[0]->resource : NULL);
+        rt_mask = wined3d_context_gl_generate_rt_mask_no_fbo(context_gl, rt_count ? rts[0]->resource : NULL);
     }
 
     cur_mask = context_gl->current_fbo ? &context_gl->current_fbo->rt_mask : &context_gl->draw_buffers_mask;
@@ -3144,6 +3143,7 @@ BOOL wined3d_context_gl_apply_clear_state(struct wined3d_context_gl *context_gl,
 
 static unsigned int find_draw_buffers_mask(const struct wined3d_context *context, const struct wined3d_state *state)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct wined3d_rendertarget_view * const *rts = state->fb->render_targets;
     struct wined3d_shader *ps = state->shader[WINED3D_SHADER_TYPE_PIXEL];
     const struct wined3d_gl_info *gl_info = context->gl_info;
@@ -3151,7 +3151,7 @@ static unsigned int find_draw_buffers_mask(const struct wined3d_context *context
     unsigned int i;
 
     if (wined3d_settings.offscreen_rendering_mode != ORM_FBO)
-        return context_generate_rt_mask_no_fbo(context, rts[0]->resource);
+        return wined3d_context_gl_generate_rt_mask_no_fbo(context_gl, rts[0]->resource);
     else if (!context->render_offscreen)
         return context_generate_rt_mask_from_resource(rts[0]->resource);
 
