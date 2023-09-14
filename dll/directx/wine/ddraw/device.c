@@ -5166,9 +5166,25 @@ static HRESULT WINAPI d3d_device3_SetTextureStageState(IDirect3DDevice3 *iface,
         DWORD stage, D3DTEXTURESTAGESTATETYPE state, DWORD value)
 {
     struct d3d_device *device = impl_from_IDirect3DDevice3(iface);
+    DWORD old_value;
+    HRESULT hr;
 
     TRACE("iface %p, stage %u, state %#x, value %#x.\n",
             iface, stage, state, value);
+
+    /* Tests show that legacy texture blending is not reset if the texture stage state
+     * value is unchanged. */
+    if (FAILED(hr = IDirect3DDevice7_GetTextureStageState(&device->IDirect3DDevice7_iface,
+                stage, state, &old_value)))
+        return hr;
+
+    if (old_value == value)
+    {
+        TRACE("Application is setting the same value over, nothing to do.\n");
+        return D3D_OK;
+    }
+
+    device->legacyTextureBlending = FALSE;
 
     return IDirect3DDevice7_SetTextureStageState(&device->IDirect3DDevice7_iface, stage, state, value);
 }
