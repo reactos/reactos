@@ -845,7 +845,7 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
 
         TRACE("Using upload conversion.\n");
 
-        wined3d_texture_prepare_texture(dst_texture, context, FALSE);
+        wined3d_texture_prepare_location(dst_texture, 0, context, WINED3D_LOCATION_TEXTURE_RGB);
         wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(dst_texture), wined3d_context_gl(context), FALSE);
         wined3d_texture_upload_data(dst_texture, 0, context, src_format, &src_box,
                 wined3d_const_bo_address(&src_data), src_row_pitch, src_slice_pitch, 0, 0, 0, FALSE);
@@ -1020,7 +1020,7 @@ void texture2d_load_fb_texture(struct wined3d_texture_gl *texture_gl,
     gl_info = context->gl_info;
     device_invalidate_state(device, STATE_FRAMEBUFFER);
 
-    wined3d_texture_prepare_texture(&texture_gl->t, context, srgb);
+    wined3d_texture_gl_prepare_texture(texture_gl, context_gl, srgb);
     wined3d_texture_gl_bind_and_dirtify(texture_gl, context_gl, srgb);
 
     TRACE("Reading back offscreen render target %p, %u.\n", texture_gl, sub_resource_idx);
@@ -1681,6 +1681,7 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
         struct wined3d_context *context, BOOL srgb)
 {
     unsigned int width, height, level, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch;
+    struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(texture);
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_device *device = texture->resource.device;
@@ -1699,7 +1700,7 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
             && wined3d_resource_is_offscreen(&texture->resource)
             && (sub_resource->locations & WINED3D_LOCATION_DRAWABLE))
     {
-        texture2d_load_fb_texture(wined3d_texture_gl(texture), sub_resource_idx, srgb, context);
+        texture2d_load_fb_texture(texture_gl, sub_resource_idx, srgb, context);
 
         return TRUE;
     }
@@ -1773,8 +1774,8 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
         wined3d_texture_load_location(texture, sub_resource_idx, context, WINED3D_LOCATION_SYSMEM);
     }
 
-    wined3d_texture_prepare_texture(texture, context, srgb);
-    wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(texture), wined3d_context_gl(context), srgb);
+    wined3d_texture_gl_prepare_texture(texture_gl, context_gl, srgb);
+    wined3d_texture_gl_bind_and_dirtify(texture_gl, context_gl, srgb);
     wined3d_texture_get_pitch(texture, level, &src_row_pitch, &src_slice_pitch);
 
     format = texture->resource.format;

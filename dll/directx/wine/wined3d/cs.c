@@ -2232,7 +2232,8 @@ static void wined3d_cs_exec_blt_sub_resource(struct wined3d_cs *cs, const void *
                 && update_h == wined3d_texture_get_level_height(dst_texture, level)
                 && update_d == wined3d_texture_get_level_depth(dst_texture, level))
         {
-            wined3d_texture_prepare_texture(dst_texture, context, FALSE);
+            wined3d_texture_prepare_location(dst_texture, op->dst_sub_resource_idx,
+                    context, WINED3D_LOCATION_TEXTURE_RGB);
         }
         else if (!wined3d_texture_load_location(dst_texture, op->dst_sub_resource_idx,
                 context, WINED3D_LOCATION_TEXTURE_RGB))
@@ -2341,7 +2342,7 @@ static void wined3d_cs_exec_update_sub_resource(struct wined3d_cs *cs, const voi
     /* Only load the sub-resource for partial updates. */
     if (!box->left && !box->top && !box->front
             && box->right == width && box->bottom == height && box->back == depth)
-        wined3d_texture_prepare_texture(texture, context, FALSE);
+        wined3d_texture_prepare_location(texture, op->sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
     else
         wined3d_texture_load_location(texture, op->sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
 

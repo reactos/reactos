@@ -1715,52 +1715,53 @@ static void wined3d_texture_force_reload(struct wined3d_texture *texture)
 }
 
 /* Context activation is done by the caller. */
-void wined3d_texture_prepare_texture(struct wined3d_texture *texture, struct wined3d_context *context, BOOL srgb)
+void wined3d_texture_gl_prepare_texture(struct wined3d_texture_gl *texture_gl,
+        struct wined3d_context_gl *context_gl, BOOL srgb)
 {
     DWORD alloc_flag = srgb ? WINED3D_TEXTURE_SRGB_ALLOCATED : WINED3D_TEXTURE_RGB_ALLOCATED;
-    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_resource *resource = &texture->resource;
+    const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    struct wined3d_resource *resource = &texture_gl->t.resource;
     const struct wined3d_device *device = resource->device;
     const struct wined3d_format *format = resource->format;
     const struct wined3d_color_key_conversion *conversion;
     const struct wined3d_format_gl *format_gl;
     GLenum internal;
 
-    TRACE("texture %p, context %p, format %s.\n", texture, context, debug_d3dformat(format->id));
+    TRACE("texture_gl %p, context_gl %p, format %s.\n", texture_gl, context_gl, debug_d3dformat(format->id));
 
     if (!d3d_info->shader_color_key
-            && !(texture->async.flags & WINED3D_TEXTURE_ASYNC_COLOR_KEY)
-            != !(texture->async.color_key_flags & WINED3D_CKEY_SRC_BLT))
+            && !(texture_gl->t.async.flags & WINED3D_TEXTURE_ASYNC_COLOR_KEY)
+            != !(texture_gl->t.async.color_key_flags & WINED3D_CKEY_SRC_BLT))
     {
-        wined3d_texture_force_reload(texture);
+        wined3d_texture_force_reload(&texture_gl->t);
 
-        if (texture->async.color_key_flags & WINED3D_CKEY_SRC_BLT)
-            texture->async.flags |= WINED3D_TEXTURE_ASYNC_COLOR_KEY;
+        if (texture_gl->t.async.color_key_flags & WINED3D_CKEY_SRC_BLT)
+            texture_gl->t.async.flags |= WINED3D_TEXTURE_ASYNC_COLOR_KEY;
     }
 
-    if (texture->flags & alloc_flag)
+    if (texture_gl->t.flags & alloc_flag)
         return;
 
     if (resource->format_flags & WINED3DFMT_FLAG_DECOMPRESS)
     {
         TRACE("WINED3DFMT_FLAG_DECOMPRESS set.\n");
-        texture->flags |= WINED3D_TEXTURE_CONVERTED;
+        texture_gl->t.flags |= WINED3D_TEXTURE_CONVERTED;
         format = wined3d_resource_get_decompress_format(resource);
     }
     else if (format->conv_byte_count)
     {
-        texture->flags |= WINED3D_TEXTURE_CONVERTED;
+        texture_gl->t.flags |= WINED3D_TEXTURE_CONVERTED;
     }
-    else if ((conversion = wined3d_format_get_color_key_conversion(texture, TRUE)))
+    else if ((conversion = wined3d_format_get_color_key_conversion(&texture_gl->t, TRUE)))
     {
-        texture->flags |= WINED3D_TEXTURE_CONVERTED;
+        texture_gl->t.flags |= WINED3D_TEXTURE_CONVERTED;
         format = wined3d_get_format(device->adapter, conversion->dst_format, resource->bind_flags);
         TRACE("Using format %s for color key conversion.\n", debug_d3dformat(format->id));
     }
     format_gl = wined3d_format_gl(format);
 
-    wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(texture), wined3d_context_gl(context), srgb);
+    wined3d_texture_gl_bind_and_dirtify(texture_gl, context_gl, srgb);
 
     if (srgb)
         internal = format_gl->srgb_internal;
@@ -1774,11 +1775,11 @@ void wined3d_texture_prepare_texture(struct wined3d_texture *texture, struct win
 
     TRACE("internal %#x, format %#x, type %#x.\n", internal, format_gl->format, format_gl->type);
 
-    if (wined3d_texture_use_immutable_storage(texture, gl_info))
-        wined3d_texture_gl_allocate_immutable_storage(wined3d_texture_gl(texture), internal, gl_info);
+    if (wined3d_texture_use_immutable_storage(&texture_gl->t, gl_info))
+        wined3d_texture_gl_allocate_immutable_storage(texture_gl, internal, gl_info);
     else
-        wined3d_texture_gl_allocate_mutable_storage(wined3d_texture_gl(texture), internal, format_gl, gl_info);
-    texture->flags |= alloc_flag;
+        wined3d_texture_gl_allocate_mutable_storage(texture_gl, internal, format_gl, gl_info);
+    texture_gl->t.flags |= alloc_flag;
 }
 
 static void wined3d_texture_gl_prepare_rb(struct wined3d_texture_gl *texture_gl,
@@ -1822,6 +1823,9 @@ static void wined3d_texture_gl_prepare_rb(struct wined3d_texture_gl *texture_gl,
 BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD location)
 {
+    struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(texture);
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+
     switch (location)
     {
         case WINED3D_LOCATION_SYSMEM:
@@ -1842,11 +1846,11 @@ BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned 
             return TRUE;
 
         case WINED3D_LOCATION_TEXTURE_RGB:
-            wined3d_texture_prepare_texture(texture, context, FALSE);
+            wined3d_texture_gl_prepare_texture(texture_gl, context_gl, FALSE);
             return TRUE;
 
         case WINED3D_LOCATION_TEXTURE_SRGB:
-            wined3d_texture_prepare_texture(texture, context, TRUE);
+            wined3d_texture_gl_prepare_texture(texture_gl, context_gl, TRUE);
             return TRUE;
 
         case WINED3D_LOCATION_DRAWABLE:
@@ -1855,11 +1859,11 @@ BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned 
             return TRUE;
 
         case WINED3D_LOCATION_RB_MULTISAMPLE:
-            wined3d_texture_gl_prepare_rb(wined3d_texture_gl(texture), context->gl_info, TRUE);
+            wined3d_texture_gl_prepare_rb(texture_gl, context->gl_info, TRUE);
             return TRUE;
 
         case WINED3D_LOCATION_RB_RESOLVED:
-            wined3d_texture_gl_prepare_rb(wined3d_texture_gl(texture), context->gl_info, FALSE);
+            wined3d_texture_gl_prepare_rb(texture_gl, context->gl_info, FALSE);
             return TRUE;
 
         default:
@@ -3844,7 +3848,7 @@ void wined3d_texture_upload_from_texture(struct wined3d_texture *dst_texture, un
     if (update_w == wined3d_texture_get_level_width(dst_texture, dst_level)
             && update_h == wined3d_texture_get_level_height(dst_texture, dst_level)
             && update_d == wined3d_texture_get_level_depth(dst_texture, dst_level))
-        wined3d_texture_prepare_texture(dst_texture, context, FALSE);
+        wined3d_texture_prepare_location(dst_texture, dst_sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
     else
         wined3d_texture_load_location(dst_texture, dst_sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
     wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(dst_texture), wined3d_context_gl(context), FALSE);
