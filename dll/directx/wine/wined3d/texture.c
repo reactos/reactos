@@ -1505,14 +1505,6 @@ void wined3d_texture_gl_set_compatible_renderbuffer(struct wined3d_texture_gl *t
     checkGLcall("set compatible renderbuffer");
 }
 
-static BOOL wined3d_texture_prepare_sysmem(struct wined3d_texture *texture)
-{
-    if (texture->resource.heap_memory)
-        return TRUE;
-
-    return wined3d_resource_allocate_sysmem(&texture->resource);
-}
-
 HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT width, UINT height,
         enum wined3d_format_id format_id, enum wined3d_multisample_type multisample_type,
         UINT multisample_quality, void *mem, UINT pitch)
@@ -1638,7 +1630,8 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     }
     else
     {
-        wined3d_texture_prepare_sysmem(texture);
+        if (!wined3d_resource_prepare_sysmem(&texture->resource))
+            ERR("Failed to allocate resource memory.\n");
         valid_location = WINED3D_LOCATION_SYSMEM;
     }
 
@@ -1813,7 +1806,7 @@ BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned 
     switch (location)
     {
         case WINED3D_LOCATION_SYSMEM:
-            return wined3d_texture_prepare_sysmem(texture);
+            return wined3d_resource_prepare_sysmem(&texture->resource);
 
         case WINED3D_LOCATION_USER_MEMORY:
             if (!texture->user_memory)
@@ -3296,7 +3289,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
     if (desc->resource_type != WINED3D_RTYPE_TEXTURE_3D
             || !wined3d_texture_use_pbo(texture, gl_info))
     {
-        if (!wined3d_resource_allocate_sysmem(&texture->resource))
+        if (!wined3d_resource_prepare_sysmem(&texture->resource))
         {
             wined3d_texture_cleanup_sync(texture);
             return E_OUTOFMEMORY;

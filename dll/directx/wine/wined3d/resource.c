@@ -499,7 +499,7 @@ void CDECL wined3d_resource_preload(struct wined3d_resource *resource)
     wined3d_cs_emit_preload_resource(resource->device->cs, resource);
 }
 
-BOOL wined3d_resource_allocate_sysmem(struct wined3d_resource *resource)
+static BOOL wined3d_resource_allocate_sysmem(struct wined3d_resource *resource)
 {
     void **p;
     SIZE_T align = RESOURCE_ALIGNMENT - 1 + sizeof(*p);
@@ -517,6 +517,14 @@ BOOL wined3d_resource_allocate_sysmem(struct wined3d_resource *resource)
     resource->heap_memory = ++p;
 
     return TRUE;
+}
+
+BOOL wined3d_resource_prepare_sysmem(struct wined3d_resource *resource)
+{
+    if (resource->heap_memory)
+        return TRUE;
+
+    return wined3d_resource_allocate_sysmem(resource);
 }
 
 void wined3d_resource_free_sysmem(struct wined3d_resource *resource)

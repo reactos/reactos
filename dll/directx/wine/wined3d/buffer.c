@@ -601,12 +601,7 @@ static BOOL wined3d_buffer_prepare_location(struct wined3d_buffer *buffer,
     switch (location)
     {
         case WINED3D_LOCATION_SYSMEM:
-            if (buffer->resource.heap_memory)
-                return TRUE;
-
-            if (!wined3d_resource_allocate_sysmem(&buffer->resource))
-                return FALSE;
-            return TRUE;
+            return wined3d_resource_prepare_sysmem(&buffer->resource);
 
         case WINED3D_LOCATION_BUFFER:
             if (buffer_gl->buffer_object)
@@ -1438,7 +1433,7 @@ static HRESULT wined3d_buffer_init(struct wined3d_buffer *buffer, struct wined3d
 
     if (buffer->locations & WINED3D_LOCATION_SYSMEM || !(buffer->flags & WINED3D_BUFFER_USE_BO))
     {
-        if (!wined3d_resource_allocate_sysmem(&buffer->resource))
+        if (!wined3d_resource_prepare_sysmem(&buffer->resource))
             return E_OUTOFMEMORY;
     }
 
