@@ -990,24 +990,6 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     TRACE("Capture done.\n");
 }
 
-static void apply_lights(struct wined3d_device *device, const struct wined3d_state *state)
-{
-    UINT i;
-
-    for (i = 0; i < LIGHTMAP_SIZE; ++i)
-    {
-        struct list *e;
-
-        LIST_FOR_EACH(e, &state->light_map[i])
-        {
-            const struct wined3d_light_info *light = LIST_ENTRY(e, struct wined3d_light_info, entry);
-
-            wined3d_device_set_light(device, light->OriginalIndex, &light->OriginalParms);
-            wined3d_device_set_light_enable(device, light->OriginalIndex, light->glIndex != -1);
-        }
-    }
-}
-
 void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
 {
     struct wined3d_stateblock_state *state = &stateblock->device->stateblock_state;
@@ -1047,7 +1029,16 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
                 1, &stateblock->stateblock_state.vs_consts_b[stateblock->contained_vs_consts_b[i]]);
     }
 
-    apply_lights(device, &stateblock->state);
+    for (i = 0; i < ARRAY_SIZE(stateblock->state.light_map); ++i)
+    {
+        const struct wined3d_light_info *light;
+
+        LIST_FOR_EACH_ENTRY(light, &stateblock->state.light_map[i], struct wined3d_light_info, entry)
+        {
+            wined3d_device_set_light(device, light->OriginalIndex, &light->OriginalParms);
+            wined3d_device_set_light_enable(device, light->OriginalIndex, light->glIndex != -1);
+        }
+    }
 
     if (stateblock->changed.pixelShader)
     {
