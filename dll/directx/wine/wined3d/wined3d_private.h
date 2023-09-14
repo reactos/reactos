@@ -3007,6 +3007,7 @@ struct wined3d_gl_bo
 struct wined3d_stateblock_state
 {
     struct wined3d_shader *vs;
+    struct wined3d_vec4 vs_consts_f[WINED3D_MAX_VS_CONSTS_F];
 };
 
 struct wined3d_device
