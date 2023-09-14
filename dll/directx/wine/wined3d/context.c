@@ -1093,13 +1093,15 @@ void context_gl_resource_released(struct wined3d_device *device,
     context_enum_fbo_entries(device, name, rb_namespace, context_queue_fbo_entry_destruction);
 }
 
-void context_texture_update(struct wined3d_context *context, const struct wined3d_texture_gl *texture_gl)
+void wined3d_context_gl_texture_update(struct wined3d_context_gl *context_gl,
+        const struct wined3d_texture_gl *texture_gl)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct fbo_entry *entry = context->current_fbo;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    struct fbo_entry *entry = context_gl->c.current_fbo;
     unsigned int i;
 
-    if (!entry || context->rebind_fbo) return;
+    if (!entry || context_gl->c.rebind_fbo)
+        return;
 
     for (i = 0; i < gl_info->limits.buffers + 1; ++i)
     {
@@ -1107,7 +1109,7 @@ void context_texture_update(struct wined3d_context *context, const struct wined3
                 || texture_gl->texture_srgb.name == entry->key.objects[i].object)
         {
             TRACE("Updated texture %p is bound as attachment %u to the current FBO.\n", texture_gl, i);
-            context->rebind_fbo = TRUE;
+            context_gl->c.rebind_fbo = TRUE;
             return;
         }
     }

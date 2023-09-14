@@ -2127,7 +2127,7 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
 
         for (i = 0; i < device->context_count; ++i)
         {
-            context_texture_update(device->contexts[i], wined3d_texture_gl(texture));
+            wined3d_context_gl_texture_update(wined3d_context_gl(device->contexts[i]), wined3d_texture_gl(texture));
         }
     }
 }
