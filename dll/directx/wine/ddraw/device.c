@@ -3916,7 +3916,20 @@ static HRESULT WINAPI d3d_device2_SetClipStatus(IDirect3DDevice2 *iface, D3DCLIP
  *****************************************************************************/
 static HRESULT WINAPI d3d_device7_GetClipStatus(IDirect3DDevice7 *iface, D3DCLIPSTATUS *clip_status)
 {
-    FIXME("iface %p, clip_status %p stub!\n", iface, clip_status);
+    struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
+    struct wined3d_viewport vp;
+
+    FIXME("iface %p, clip_status %p stub.\n", iface, clip_status);
+
+    wined3d_device_get_viewports(device->wined3d_device, NULL, &vp);
+    clip_status->minx = vp.x;
+    clip_status->maxx = vp.x + vp.width;
+    clip_status->miny = vp.y;
+    clip_status->maxy = vp.y + vp.height;
+    clip_status->minz = 0.0f;
+    clip_status->maxz = 0.0f;
+    clip_status->dwFlags = D3DCLIPSTATUS_EXTENTS2;
+    clip_status->dwStatus = 0;
 
     return D3D_OK;
 }
