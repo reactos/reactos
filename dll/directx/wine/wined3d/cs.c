@@ -529,9 +529,8 @@ static void wined3d_cs_exec_present(struct wined3d_cs *cs, const void *data)
 
     swapchain = op->swapchain;
     wined3d_swapchain_set_window(swapchain, op->dst_window_override);
-    wined3d_swapchain_set_swap_interval(swapchain, op->swap_interval);
 
-    swapchain->swapchain_ops->swapchain_present(swapchain, &op->src_rect, &op->dst_rect, op->flags);
+    swapchain->swapchain_ops->swapchain_present(swapchain, &op->src_rect, &op->dst_rect, op->swap_interval, op->flags);
 
     wined3d_resource_release(&swapchain->front_buffer->resource);
     for (i = 0; i < swapchain->desc.backbuffer_count; ++i)

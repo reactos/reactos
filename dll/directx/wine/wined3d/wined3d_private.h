@@ -4066,7 +4066,7 @@ static inline struct wined3d_unordered_access_view_gl *wined3d_unordered_access_
 struct wined3d_swapchain_ops
 {
     void (*swapchain_present)(struct wined3d_swapchain *swapchain,
-            const RECT *src_rect, const RECT *dst_rect, DWORD flags);
+            const RECT *src_rect, const RECT *dst_rect, unsigned int swap_interval, DWORD flags);
     void (*swapchain_frontbuffer_updated)(struct wined3d_swapchain *swapchain);
 };
 
@@ -4104,8 +4104,6 @@ struct wined3d_swapchain
 };
 
 void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activate) DECLSPEC_HIDDEN;
-void wined3d_swapchain_set_swap_interval(struct wined3d_swapchain *swapchain,
-        unsigned int swap_interval) DECLSPEC_HIDDEN;
 struct wined3d_context *swapchain_get_context(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 void swapchain_destroy_contexts(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 HDC swapchain_get_backup_dc(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
