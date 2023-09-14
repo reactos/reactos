@@ -2241,11 +2241,11 @@ static void ffp_blitter_clear(struct wined3d_blitter *blitter, struct wined3d_de
     }
 
     if (flags)
-        device_clear_render_targets(device, rt_count, fb, rect_count,
+        device_clear_render_targets(device, flags & WINED3DCLEAR_TARGET ? rt_count : 0, fb, rect_count,
                 clear_rects, draw_rect, flags, colour, depth, stencil);
 
     if (next_flags && (next = blitter->next))
-        next->ops->blitter_clear(next, device, rt_count, fb, rect_count,
+        next->ops->blitter_clear(next, device, next_flags & WINED3DCLEAR_TARGET ? rt_count : 0, fb, rect_count,
                 clear_rects, draw_rect, next_flags, colour, depth, stencil);
 }
 
