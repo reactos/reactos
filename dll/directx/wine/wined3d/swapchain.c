@@ -1339,29 +1339,38 @@ static HRESULT wined3d_swapchain_set_display_mode(struct wined3d_swapchain *swap
 HRESULT CDECL wined3d_swapchain_resize_target(struct wined3d_swapchain *swapchain,
         const struct wined3d_display_mode *mode)
 {
-    struct wined3d_device *device = swapchain->device;
     struct wined3d_display_mode actual_mode;
     RECT original_window_rect, window_rect;
+    struct wined3d_device *device;
+    HWND window;
     HRESULT hr;
 
     TRACE("swapchain %p, mode %p.\n", swapchain, mode);
+
+    wined3d_mutex_lock();
+
+    device = swapchain->device;
+    window = swapchain->device_window;
 
     if (swapchain->desc.windowed)
     {
         SetRect(&window_rect, 0, 0, mode->width, mode->height);
         AdjustWindowRectEx(&window_rect,
-                GetWindowLongW(swapchain->device_window, GWL_STYLE), FALSE,
-                GetWindowLongW(swapchain->device_window, GWL_EXSTYLE));
+                GetWindowLongW(window, GWL_STYLE), FALSE,
+                GetWindowLongW(window, GWL_EXSTYLE));
         SetRect(&window_rect, 0, 0,
                 window_rect.right - window_rect.left, window_rect.bottom - window_rect.top);
-        GetWindowRect(swapchain->device_window, &original_window_rect);
+        GetWindowRect(window, &original_window_rect);
         OffsetRect(&window_rect, original_window_rect.left, original_window_rect.top);
     }
     else if (swapchain->desc.flags & WINED3D_SWAPCHAIN_ALLOW_MODE_SWITCH)
     {
         actual_mode = *mode;
         if (FAILED(hr = wined3d_swapchain_set_display_mode(swapchain, &actual_mode)))
+        {
+            wined3d_mutex_unlock();
             return hr;
+        }
         SetRect(&window_rect, 0, 0, actual_mode.width, actual_mode.height);
     }
     else
@@ -1370,15 +1379,17 @@ HRESULT CDECL wined3d_swapchain_resize_target(struct wined3d_swapchain *swapchai
                 &actual_mode, NULL)))
         {
             ERR("Failed to get display mode, hr %#x.\n", hr);
+            wined3d_mutex_unlock();
             return hr;
         }
 
         SetRect(&window_rect, 0, 0, actual_mode.width, actual_mode.height);
     }
 
-    MoveWindow(swapchain->device_window, window_rect.left, window_rect.top,
-            window_rect.right - window_rect.left,
-            window_rect.bottom - window_rect.top, TRUE);
+    wined3d_mutex_unlock();
+
+    MoveWindow(window, window_rect.left, window_rect.top,
+            window_rect.right - window_rect.left, window_rect.bottom - window_rect.top, TRUE);
 
     return WINED3D_OK;
 }
