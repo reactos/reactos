@@ -38,7 +38,6 @@ static void resource_check_usage(DWORD usage)
             | WINED3DUSAGE_SCRATCH
             | WINED3DUSAGE_PRIVATE
             | WINED3DUSAGE_LEGACY_CUBEMAP
-            | WINED3DUSAGE_TEXTURE
             | ~WINED3DUSAGE_MASK;
 
     /* WINED3DUSAGE_WRITEONLY is supposed to result in write-combined mappings

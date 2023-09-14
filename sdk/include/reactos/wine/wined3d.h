@@ -944,10 +944,9 @@ enum wined3d_shader_type
 #define WINED3DUSAGE_TEXTAPI                                    0x10000000
 #define WINED3DUSAGE_MASK                                       0x10007bf8
 
-#define WINED3DUSAGE_SCRATCH                                    0x00200000
-#define WINED3DUSAGE_PRIVATE                                    0x00400000
-#define WINED3DUSAGE_LEGACY_CUBEMAP                             0x00800000
-#define WINED3DUSAGE_TEXTURE                                    0x01000000
+#define WINED3DUSAGE_SCRATCH                                    0x00400000
+#define WINED3DUSAGE_PRIVATE                                    0x00800000
+#define WINED3DUSAGE_LEGACY_CUBEMAP                             0x01000000
 #define WINED3DUSAGE_OWNDC                                      0x02000000
 #define WINED3DUSAGE_STATICDECL                                 0x04000000
 #define WINED3DUSAGE_OVERLAY                                    0x08000000

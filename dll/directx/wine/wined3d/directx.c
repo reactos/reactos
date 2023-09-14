@@ -1541,10 +1541,6 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
     adapter_format = wined3d_get_format(adapter, adapter_format_id, WINED3D_BIND_RENDER_TARGET);
     format = wined3d_get_format(adapter, check_format_id, bind_flags);
 
-    if (usage & WINED3DUSAGE_TEXTURE)
-        bind_flags |= WINED3D_BIND_SHADER_RESOURCE;
-    usage &= ~WINED3DUSAGE_TEXTURE;
-
     switch (resource_type)
     {
         case WINED3D_RTYPE_NONE:

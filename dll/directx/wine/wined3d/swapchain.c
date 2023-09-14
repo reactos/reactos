@@ -933,8 +933,6 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
         texture_desc.usage = 0;
         if (device->wined3d->flags & WINED3D_NO3D)
             texture_desc.usage |= WINED3DUSAGE_OWNDC;
-        if (texture_desc.bind_flags & WINED3D_BIND_SHADER_RESOURCE)
-            texture_desc.usage |= WINED3DUSAGE_TEXTURE;
         for (i = 0; i < swapchain->desc.backbuffer_count; ++i)
         {
             TRACE("Creating back buffer %u.\n", i);
