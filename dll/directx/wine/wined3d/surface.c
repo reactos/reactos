@@ -846,9 +846,9 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
         TRACE("Using upload conversion.\n");
 
         wined3d_texture_prepare_location(dst_texture, 0, context, WINED3D_LOCATION_TEXTURE_RGB);
-        wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(dst_texture), wined3d_context_gl(context), FALSE);
-        wined3d_texture_upload_data(dst_texture, 0, context, src_format, &src_box,
-                wined3d_const_bo_address(&src_data), src_row_pitch, src_slice_pitch, 0, 0, 0, FALSE);
+        dst_texture->texture_ops->texture_upload_data(context, wined3d_const_bo_address(&src_data),
+                src_format, &src_box, src_row_pitch, src_slice_pitch,
+                dst_texture, 0, WINED3D_LOCATION_TEXTURE_RGB, 0, 0, 0);
 
         wined3d_texture_validate_location(dst_texture, 0, WINED3D_LOCATION_TEXTURE_RGB);
         wined3d_texture_invalidate_location(dst_texture, 0, ~WINED3D_LOCATION_TEXTURE_RGB);
