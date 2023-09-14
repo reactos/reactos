@@ -2413,23 +2413,23 @@ const unsigned int *wined3d_context_gl_get_tex_unit_mapping(const struct wined3d
     return context_gl->tex_unit_map;
 }
 
-static void context_get_rt_size(const struct wined3d_context *context, SIZE *size)
+static void wined3d_context_gl_get_rt_size(const struct wined3d_context_gl *context_gl, SIZE *size)
 {
-    const struct wined3d_texture *rt = context->current_rt.texture;
+    const struct wined3d_texture *rt = context_gl->c.current_rt.texture;
     unsigned int level;
 
     if (rt->swapchain)
     {
         RECT window_size;
 
-        GetClientRect(context->win_handle, &window_size);
+        GetClientRect(context_gl->c.win_handle, &window_size);
         size->cx = window_size.right - window_size.left;
         size->cy = window_size.bottom - window_size.top;
 
         return;
     }
 
-    level = context->current_rt.sub_resource_idx % rt->level_count;
+    level = context_gl->c.current_rt.sub_resource_idx % rt->level_count;
     size->cx = wined3d_texture_get_level_width(rt, level);
     size->cy = wined3d_texture_get_level_height(rt, level);
 }
@@ -2811,7 +2811,7 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
         wined3d_context_gl_check_fbo_status(context_gl, GL_FRAMEBUFFER);
     context_invalidate_state(context, STATE_FRAMEBUFFER);
 
-    context_get_rt_size(context, &rt_size);
+    wined3d_context_gl_get_rt_size(context_gl, &rt_size);
 
     if (context->last_was_blit)
     {
@@ -2932,7 +2932,7 @@ void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_
     {
         SIZE rt_size;
 
-        context_get_rt_size(context, &rt_size);
+        wined3d_context_gl_get_rt_size(context_gl, &rt_size);
         if (context->blit_w != rt_size.cx || context->blit_h != rt_size.cy)
             context_apply_blit_projection(context, rt_size.cx, rt_size.cy);
         wined3d_context_gl_apply_blit_state(context_gl, device);
@@ -5636,7 +5636,7 @@ void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_te
     apply_texture_blit_state(gl_info, &texture_gl->texture_rgb, info.bind_target, level, filter);
     gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, level);
 
-    context_get_rt_size(context, &dst_size);
+    wined3d_context_gl_get_rt_size(context_gl, &dst_size);
     w = dst_size.cx;
     h = dst_size.cy;
 
