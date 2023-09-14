@@ -165,6 +165,7 @@ struct wined3d_d3d_limits
     unsigned int active_light_count;
 
     unsigned int max_rt_count;
+    unsigned int max_clip_distances;
     float pointsize_max;
 };
 

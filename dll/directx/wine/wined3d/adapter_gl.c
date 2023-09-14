@@ -3651,6 +3651,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     adapter->fragment_pipe = select_fragment_implementation(gl_info, adapter->shader_backend);
 
     d3d_info->limits.max_rt_count = gl_info->limits.buffers;
+    d3d_info->limits.max_clip_distances = gl_info->limits.user_clip_distances;
     d3d_info->limits.pointsize_max = gl_info->limits.pointsize_max;
 
     adapter->shader_backend->shader_get_caps(gl_info, &shader_caps);
