@@ -484,6 +484,8 @@ ULONG CDECL wined3d_device_decref(struct wined3d_device *device)
     {
         UINT i;
 
+        wined3d_stateblock_state_cleanup(&device->stateblock_state);
+
         wined3d_cs_destroy(device->cs);
 
         if (device->recording && wined3d_stateblock_decref(device->recording))
@@ -2210,21 +2212,29 @@ struct wined3d_vertex_declaration * CDECL wined3d_device_get_vertex_declaration(
 
 void CDECL wined3d_device_set_vertex_shader(struct wined3d_device *device, struct wined3d_shader *shader)
 {
-    struct wined3d_shader *prev = device->update_state->shader[WINED3D_SHADER_TYPE_VERTEX];
+    struct wined3d_shader *prev = device->state.shader[WINED3D_SHADER_TYPE_VERTEX];
 
     TRACE("device %p, shader %p.\n", device, shader);
 
+    if (shader)
+        wined3d_shader_incref(shader);
+    if (device->update_stateblock_state->vs)
+        wined3d_shader_decref(device->update_stateblock_state->vs);
+    device->update_stateblock_state->vs = shader;
+
     if (device->recording)
+    {
         device->recording->changed.vertexShader = TRUE;
+        return;
+    }
 
     if (shader == prev)
         return;
 
     if (shader)
         wined3d_shader_incref(shader);
-    device->update_state->shader[WINED3D_SHADER_TYPE_VERTEX] = shader;
-    if (!device->recording)
-        wined3d_cs_emit_set_shader(device->cs, WINED3D_SHADER_TYPE_VERTEX, shader);
+    device->state.shader[WINED3D_SHADER_TYPE_VERTEX] = shader;
+    wined3d_cs_emit_set_shader(device->cs, WINED3D_SHADER_TYPE_VERTEX, shader);
     if (prev)
         wined3d_shader_decref(prev);
 }
@@ -3561,6 +3571,7 @@ HRESULT CDECL wined3d_device_begin_stateblock(struct wined3d_device *device)
 
     device->recording = stateblock;
     device->update_state = &stateblock->state;
+    device->update_stateblock_state = &stateblock->stateblock_state;
 
     TRACE("Recording stateblock %p.\n", stateblock);
 
@@ -3586,6 +3597,7 @@ HRESULT CDECL wined3d_device_end_stateblock(struct wined3d_device *device,
     *stateblock = object;
     device->recording = NULL;
     device->update_state = &device->state;
+    device->update_stateblock_state = &device->stateblock_state;
 
     TRACE("Returning stateblock %p.\n", *stateblock);
 
@@ -5013,6 +5025,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         }
         wined3d_cs_emit_reset_state(device->cs);
         state_cleanup(&device->state);
+        wined3d_stateblock_state_cleanup(&device->stateblock_state);
 
         if (device->d3d_initialized)
             wined3d_device_delete_opengl_contexts(device);
@@ -5020,6 +5033,8 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         memset(&device->state, 0, sizeof(device->state));
         state_init(&device->state, &device->fb, &device->adapter->d3d_info, WINED3D_STATE_INIT_DEFAULT);
         device->update_state = &device->state;
+        memset(&device->stateblock_state, 0, sizeof(device->stateblock_state));
+        device->update_stateblock_state = &device->stateblock_state;
 
         device_init_swapchain_state(device, swapchain);
         if (wined3d_settings.logo)
@@ -5294,6 +5309,7 @@ HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
 
     state_init(&device->state, &device->fb, &adapter->d3d_info, WINED3D_STATE_INIT_DEFAULT);
     device->update_state = &device->state;
+    device->update_stateblock_state = &device->stateblock_state;
 
     device->max_frame_latency = 3;
 
@@ -5301,6 +5317,7 @@ HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
     {
         WARN("Failed to create command stream.\n");
         state_cleanup(&device->state);
+        wined3d_stateblock_state_cleanup(&device->stateblock_state);
         hr = E_FAIL;
         goto err;
     }

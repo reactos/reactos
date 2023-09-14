@@ -526,6 +526,17 @@ void state_unbind_resources(struct wined3d_state *state)
     }
 }
 
+void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state)
+{
+    struct wined3d_shader *shader;
+
+    if ((shader = state->vs))
+    {
+        state->vs = NULL;
+        wined3d_shader_decref(shader);
+    }
+}
+
 void state_cleanup(struct wined3d_state *state)
 {
     unsigned int counter;
@@ -559,6 +570,7 @@ ULONG CDECL wined3d_stateblock_decref(struct wined3d_stateblock *stateblock)
     if (!refcount)
     {
         state_cleanup(&stateblock->state);
+        wined3d_stateblock_state_cleanup(&stateblock->stateblock_state);
         heap_free(stateblock);
     }
 
@@ -674,6 +686,7 @@ static void wined3d_state_record_lights(struct wined3d_state *dst_state, const s
 
 void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
 {
+    const struct wined3d_stateblock_state *state = &stateblock->device->stateblock_state;
     const struct wined3d_state *src_state = &stateblock->device->state;
     unsigned int i;
     DWORD map;
@@ -682,18 +695,15 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
 
     TRACE("Capturing state %p.\n", src_state);
 
-    if (stateblock->changed.vertexShader && stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX]
-            != src_state->shader[WINED3D_SHADER_TYPE_VERTEX])
+    if (stateblock->changed.vertexShader && stateblock->stateblock_state.vs != state->vs)
     {
-        TRACE("Updating vertex shader from %p to %p\n",
-                stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX],
-                src_state->shader[WINED3D_SHADER_TYPE_VERTEX]);
+        TRACE("Updating vertex shader from %p to %p.\n", stateblock->stateblock_state.vs, state->vs);
 
-        if (src_state->shader[WINED3D_SHADER_TYPE_VERTEX])
-            wined3d_shader_incref(src_state->shader[WINED3D_SHADER_TYPE_VERTEX]);
-        if (stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX])
-            wined3d_shader_decref(stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX]);
-        stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX] = src_state->shader[WINED3D_SHADER_TYPE_VERTEX];
+        if (state->vs)
+            wined3d_shader_incref(state->vs);
+        if (stateblock->stateblock_state.vs)
+            wined3d_shader_decref(stateblock->stateblock_state.vs);
+        stateblock->stateblock_state.vs = state->vs;
     }
 
     /* Vertex shader float constants. */
@@ -983,6 +993,7 @@ static void apply_lights(struct wined3d_device *device, const struct wined3d_sta
 
 void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
 {
+    struct wined3d_stateblock_state *state = &stateblock->device->stateblock_state;
     struct wined3d_device *device = stateblock->device;
     unsigned int i;
     DWORD map;
@@ -990,7 +1001,14 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     TRACE("Applying stateblock %p to device %p.\n", stateblock, device);
 
     if (stateblock->changed.vertexShader)
-        wined3d_device_set_vertex_shader(device, stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX]);
+    {
+        if (stateblock->stateblock_state.vs)
+            wined3d_shader_incref(stateblock->stateblock_state.vs);
+        if (state->vs)
+            wined3d_shader_decref(state->vs);
+        state->vs = stateblock->stateblock_state.vs;
+        wined3d_device_set_vertex_shader(device, stateblock->stateblock_state.vs);
+    }
 
     /* Vertex Shader Constants. */
     for (i = 0; i < stateblock->num_contained_vs_consts_f; ++i)

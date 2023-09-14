@@ -3004,6 +3004,11 @@ struct wined3d_gl_bo
  * wined3d_device_create() ignores it. */
 #define WINED3DCREATE_MULTITHREADED 0x00000004
 
+struct wined3d_stateblock_state
+{
+    struct wined3d_shader *vs;
+};
+
 struct wined3d_device
 {
     LONG ref;
@@ -3042,6 +3047,8 @@ struct wined3d_device
     struct wined3d_state state;
     struct wined3d_state *update_state;
     struct wined3d_stateblock *recording;
+    struct wined3d_stateblock_state stateblock_state;
+    struct wined3d_stateblock_state *update_stateblock_state;
 
     /* Internal use fields  */
     struct wined3d_device_creation_parameters create_parms;
@@ -3604,6 +3611,7 @@ struct wined3d_stateblock
     /* Array indicating whether things have been set or changed */
     struct wined3d_saved_states changed;
     struct wined3d_state state;
+    struct wined3d_stateblock_state stateblock_state;
 
     /* Contained state management */
     DWORD                     contained_render_states[WINEHIGHEST_RENDER_STATE + 1];
@@ -3629,6 +3637,8 @@ struct wined3d_stateblock
 };
 
 void stateblock_init_contained_states(struct wined3d_stateblock *stateblock) DECLSPEC_HIDDEN;
+
+void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state) DECLSPEC_HIDDEN;
 
 void state_cleanup(struct wined3d_state *state) DECLSPEC_HIDDEN;
 void wined3d_state_enable_light(struct wined3d_state *state, const struct wined3d_d3d_info *d3d_info,
