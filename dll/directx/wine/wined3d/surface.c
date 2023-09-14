@@ -2344,6 +2344,12 @@ static DWORD fbo_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
     struct wined3d_device *device;
     struct wined3d_blitter *next;
 
+    TRACE("blitter %p, op %#x, context %p, src_texture %p, src_sub_resource_idx %u, src_location %s, src_rect %s, "
+            "dst_texture %p, dst_sub_resource_idx %u, dst_location %s, dst_rect %s, colour_key %p, filter %s.\n",
+            blitter, op, context, src_texture, src_sub_resource_idx, wined3d_debug_location(src_location),
+            wine_dbgstr_rect(src_rect), dst_texture, dst_sub_resource_idx, wined3d_debug_location(dst_location),
+            wine_dbgstr_rect(dst_rect), colour_key, debug_d3dtexturefiltertype(filter));
+
     src_resource = &src_texture->resource;
     dst_resource = &dst_texture->resource;
 
@@ -2360,9 +2366,15 @@ static DWORD fbo_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
     if (!fbo_blitter_supported(blit_op, context->gl_info,
             src_resource, src_location, dst_resource, dst_location))
     {
-        if ((next = blitter->next))
-            return next->ops->blitter_blit(next, op, context, src_texture, src_sub_resource_idx, src_location,
-                    src_rect, dst_texture, dst_sub_resource_idx, dst_location, dst_rect, colour_key, filter);
+        if (!(next = blitter->next))
+        {
+            ERR("No blitter to handle blit op %#x.\n", op);
+            return dst_location;
+        }
+
+        TRACE("Forwarding to blitter %p.\n", next);
+        return next->ops->blitter_blit(next, op, context, src_texture, src_sub_resource_idx, src_location,
+                src_rect, dst_texture, dst_sub_resource_idx, dst_location, dst_rect, colour_key, filter);
     }
 
     if (blit_op == WINED3D_BLIT_OP_COLOR_BLIT)
