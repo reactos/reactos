@@ -579,7 +579,7 @@ void state_cleanup(struct wined3d_state *state)
     if (!(state->flags & WINED3D_STATE_NO_REF))
         state_unbind_resources(state);
 
-    for (counter = 0; counter < MAX_ACTIVE_LIGHTS; ++counter)
+    for (counter = 0; counter < WINED3D_MAX_ACTIVE_LIGHTS; ++counter)
     {
         state->light_state.lights[counter] = NULL;
     }

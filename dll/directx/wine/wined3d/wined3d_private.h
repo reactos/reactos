@@ -263,7 +263,7 @@ static inline enum complex_fixup get_complex_fixup(struct color_fixup_desc fixup
 #define WINED3D_MAX_FRAGMENT_SAMPLERS 16
 #define WINED3D_MAX_VERTEX_SAMPLERS 4
 #define WINED3D_MAX_COMBINED_SAMPLERS (WINED3D_MAX_FRAGMENT_SAMPLERS + WINED3D_MAX_VERTEX_SAMPLERS)
-#define MAX_ACTIVE_LIGHTS           8
+#define WINED3D_MAX_ACTIVE_LIGHTS   8
 #define MAX_CLIP_DISTANCES          8
 #define MAX_CONSTANT_BUFFERS        15
 #define MAX_SAMPLER_OBJECTS         16
@@ -1622,9 +1622,9 @@ enum wined3d_pipeline
 #define STATE_LIGHT_TYPE (STATE_VIEWPORT + 1)
 #define STATE_IS_LIGHT_TYPE(a) ((a) == STATE_LIGHT_TYPE)
 #define STATE_ACTIVELIGHT(a) (STATE_LIGHT_TYPE + 1 + (a))
-#define STATE_IS_ACTIVELIGHT(a) ((a) >= STATE_ACTIVELIGHT(0) && (a) < STATE_ACTIVELIGHT(MAX_ACTIVE_LIGHTS))
+#define STATE_IS_ACTIVELIGHT(a) ((a) >= STATE_ACTIVELIGHT(0) && (a) < STATE_ACTIVELIGHT(WINED3D_MAX_ACTIVE_LIGHTS))
 
-#define STATE_SCISSORRECT (STATE_ACTIVELIGHT(MAX_ACTIVE_LIGHTS - 1) + 1)
+#define STATE_SCISSORRECT (STATE_ACTIVELIGHT(WINED3D_MAX_ACTIVE_LIGHTS - 1) + 1)
 #define STATE_IS_SCISSORRECT(a) ((a) == STATE_SCISSORRECT)
 
 #define STATE_CLIPPLANE(a) (STATE_SCISSORRECT + 1 + (a))
@@ -2906,7 +2906,7 @@ struct wined3d_light_state
 {
     /* Light hashmap. Collisions are handled using linked lists. */
     struct list light_map[LIGHTMAP_SIZE];
-    const struct wined3d_light_info *lights[MAX_ACTIVE_LIGHTS];
+    const struct wined3d_light_info *lights[WINED3D_MAX_ACTIVE_LIGHTS];
 };
 
 #define WINED3D_STATE_NO_REF        0x00000001

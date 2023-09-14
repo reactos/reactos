@@ -181,7 +181,7 @@ struct glsl_vs_program
         GLint q_att;
         GLint cos_htheta;
         GLint cos_hphi;
-    } light_location[MAX_ACTIVE_LIGHTS];
+    } light_location[WINED3D_MAX_ACTIVE_LIGHTS];
     GLint pointsize_location;
     GLint pointsize_min_location;
     GLint pointsize_max_location;
@@ -1595,7 +1595,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
         DWORD directional_count = 0;
         DWORD parallel_point_count = 0;
 
-        for (i = 0; i < MAX_ACTIVE_LIGHTS; ++i)
+        for (i = 0; i < WINED3D_MAX_ACTIVE_LIGHTS; ++i)
         {
             if (!state->light_state.lights[i])
                 continue;
@@ -1625,7 +1625,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
         parallel_point_idx = directional_idx + directional_count;
 
         shader_glsl_ffp_vertex_lightambient_uniform(context, state, prog);
-        for (i = 0; i < MAX_ACTIVE_LIGHTS; ++i)
+        for (i = 0; i < WINED3D_MAX_ACTIVE_LIGHTS; ++i)
         {
             const struct wined3d_light_info *light_info = state->light_state.lights[i];
             unsigned int idx;
@@ -8918,7 +8918,7 @@ static GLuint shader_glsl_generate_ffp_vertex_shader(struct shader_glsl_priv *pr
     shader_addline(buffer, "    float q_att;\n");
     shader_addline(buffer, "    float cos_htheta;\n");
     shader_addline(buffer, "    float cos_hphi;\n");
-    shader_addline(buffer, "} ffp_light[%u];\n", MAX_ACTIVE_LIGHTS);
+    shader_addline(buffer, "} ffp_light[%u];\n", WINED3D_MAX_ACTIVE_LIGHTS);
 
     if (settings->point_size)
     {
@@ -9880,7 +9880,7 @@ static void shader_glsl_init_vs_uniform_locations(const struct wined3d_gl_info *
     vs->material_emissive_location = GL_EXTCALL(glGetUniformLocation(program_id, "ffp_material.emissive"));
     vs->material_shininess_location = GL_EXTCALL(glGetUniformLocation(program_id, "ffp_material.shininess"));
     vs->light_ambient_location = GL_EXTCALL(glGetUniformLocation(program_id, "ffp_light_ambient"));
-    for (i = 0; i < MAX_ACTIVE_LIGHTS; ++i)
+    for (i = 0; i < WINED3D_MAX_ACTIVE_LIGHTS; ++i)
     {
         string_buffer_sprintf(name, "ffp_light[%u].diffuse", i);
         vs->light_location[i].diffuse = GL_EXTCALL(glGetUniformLocation(program_id, name->buffer));
@@ -11423,7 +11423,7 @@ static void glsl_vertex_pipe_vp_get_caps(const struct wined3d_gl_info *gl_info, 
     caps->xyzrhw = TRUE;
     caps->emulated_flatshading = !needs_legacy_glsl_syntax(gl_info);
     caps->ffp_generic_attributes = TRUE;
-    caps->max_active_lights = MAX_ACTIVE_LIGHTS;
+    caps->max_active_lights = WINED3D_MAX_ACTIVE_LIGHTS;
     caps->max_vertex_blend_matrices = MAX_VERTEX_BLENDS;
     caps->max_vertex_blend_matrix_index = MAX_VERTEX_INDEX_BLENDS - 1;
     caps->vertex_processing_caps = WINED3DVTXPCAPS_TEXGEN

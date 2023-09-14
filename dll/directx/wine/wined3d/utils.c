@@ -6625,7 +6625,7 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
     if (d3d_info->limits.varying_count >= wined3d_max_compat_varyings(gl_info))
         settings->texcoords = (1u << WINED3D_MAX_TEXTURES) - 1;
 
-    for (i = 0; i < MAX_ACTIVE_LIGHTS; ++i)
+    for (i = 0; i < WINED3D_MAX_ACTIVE_LIGHTS; ++i)
     {
         if (!state->light_state.lights[i])
             continue;
