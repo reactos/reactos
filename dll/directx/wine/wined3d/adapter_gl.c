@@ -4398,7 +4398,8 @@ static BOOL adapter_gl_check_format(const struct wined3d_adapter *adapter,
     {
         const struct wined3d_pixel_format *cfg = &adapter->cfgs[i];
 
-        if (wined3d_check_pixel_format_color(cfg, rt_format)
+        if ((!adapter_format || wined3d_check_pixel_format_color(cfg, adapter_format))
+                && (!rt_format || wined3d_check_pixel_format_color(cfg, rt_format))
                 && wined3d_check_pixel_format_depth(cfg, ds_format))
         {
             return TRUE;

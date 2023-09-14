@@ -1331,7 +1331,6 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
         UINT adapter_idx, enum wined3d_device_type device_type, enum wined3d_format_id adapter_format_id,
         enum wined3d_format_id render_target_format_id, enum wined3d_format_id depth_stencil_format_id)
 {
-    const struct wined3d_format *adapter_format;
     const struct wined3d_format *rt_format;
     const struct wined3d_format *ds_format;
     const struct wined3d_adapter *adapter;
@@ -1346,7 +1345,6 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
 
     adapter = wined3d->adapters[adapter_idx];
 
-    adapter_format = wined3d_get_format(adapter, adapter_format_id, WINED3D_BIND_RENDER_TARGET);
     rt_format = wined3d_get_format(adapter, render_target_format_id, WINED3D_BIND_RENDER_TARGET);
     ds_format = wined3d_get_format(adapter, depth_stencil_format_id, WINED3D_BIND_DEPTH_STENCIL);
 
@@ -1361,7 +1359,7 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
         return WINED3DERR_NOTAVAILABLE;
     }
 
-    if (adapter->adapter_ops->adapter_check_format(adapter, adapter_format, rt_format, ds_format))
+    if (adapter->adapter_ops->adapter_check_format(adapter, NULL, rt_format, ds_format))
     {
         TRACE("Formats match.\n");
         return WINED3D_OK;
@@ -1438,22 +1436,7 @@ static BOOL wined3d_check_depth_stencil_format(const struct wined3d_adapter *ada
         return FALSE;
     }
 
-    if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
-    {
-        unsigned int i;
-
-        for (i = 0; i < adapter->cfg_count; ++i)
-        {
-            const struct wined3d_pixel_format *cfg = &adapter->cfgs[i];
-            if (wined3d_check_pixel_format_color(cfg, adapter_format)
-                    && wined3d_check_pixel_format_depth(cfg, ds_format))
-                return TRUE;
-        }
-
-        return FALSE;
-    }
-
-    return TRUE;
+    return adapter->adapter_ops->adapter_check_format(adapter, adapter_format, NULL, ds_format);
 }
 
 static BOOL wined3d_check_render_target_format(const struct wined3d_adapter *adapter,
