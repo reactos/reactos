@@ -609,10 +609,10 @@ void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
                 break;
 
             default:
-                FIXME("Unhandled OS version %u.%u, reporting 2000/XP.\n",
+                FIXME("Unhandled OS version %u.%u, reporting Windows 7.\n",
                         os_version.dwMajorVersion, os_version.dwMinorVersion);
-                driver_os_version = 6;
-                driver_model = DRIVER_MODEL_NT5X;
+                driver_os_version = 8;
+                driver_model = DRIVER_MODEL_NT6X;
                 break;
         }
     }
