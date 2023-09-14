@@ -1150,23 +1150,24 @@ HRESULT wined3d_device_set_implicit_swapchain(struct wined3d_device *device, str
     {
         if (FAILED(hr = wined3d_device_create_primary_opengl_context(device)))
             goto err_out;
-        device_init_swapchain_state(device, swapchain);
-
-        TRACE("All defaults now set up.\n");
-
-        /* Clear the screen */
-        if (device->back_buffer_view)
-            clear_flags |= WINED3DCLEAR_TARGET;
-        if (swapchain_desc->enable_auto_depth_stencil)
-            clear_flags |= WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL;
-        if (clear_flags)
-            wined3d_device_clear(device, 0, NULL, clear_flags, &black, 1.0f, 0);
 
         device->d3d_initialized = TRUE;
-
-        if (wined3d_settings.logo)
-            device_load_logo(device, wined3d_settings.logo);
     }
+
+    device_init_swapchain_state(device, swapchain);
+
+    TRACE("All defaults now set up.\n");
+
+    /* Clear the screen. */
+    if (device->back_buffer_view)
+        clear_flags |= WINED3DCLEAR_TARGET;
+    if (swapchain_desc->enable_auto_depth_stencil)
+        clear_flags |= WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL;
+    if (clear_flags)
+        wined3d_device_clear(device, 0, NULL, clear_flags, &black, 1.0f, 0);
+
+    if (wined3d_settings.logo)
+        device_load_logo(device, wined3d_settings.logo);
 
     return WINED3D_OK;
 
