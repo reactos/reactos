@@ -1885,6 +1885,77 @@ static void test_device_interface_key(void)
     SetupDiDestroyDeviceInfoList(set);
 }
 
+static void test_device_install_params(void)
+{
+    SP_DEVINFO_DATA device = {sizeof(device)};
+    SP_DEVINSTALL_PARAMS_A params;
+    HDEVINFO set;
+    BOOL ret;
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    params.cbSize = sizeof(params) - 1;
+    SetLastError(0xdeadbeef);
+    ret = SetupDiGetDeviceInstallParamsA(set, &device, &params);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "Got unexpected error %#x.\n", GetLastError());
+
+    params.cbSize = sizeof(params) + 1;
+    SetLastError(0xdeadbeef);
+    ret = SetupDiGetDeviceInstallParamsA(set, &device, &params);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "Got unexpected error %#x.\n", GetLastError());
+
+    params.cbSize = sizeof(params) - 1;
+    SetLastError(0xdeadbeef);
+    ret = SetupDiSetDeviceInstallParamsA(set, &device, &params);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "Got unexpected error %#x.\n", GetLastError());
+
+    params.cbSize = sizeof(params) + 1;
+    SetLastError(0xdeadbeef);
+    ret = SetupDiSetDeviceInstallParamsA(set, &device, &params);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "Got unexpected error %#x.\n", GetLastError());
+
+    memset(&params, 0xcc, sizeof(params));
+    params.cbSize = sizeof(params);
+    ret = SetupDiGetDeviceInstallParamsA(set, &device, &params);
+    ok(ret, "Failed to get device install params, error %#x.\n", GetLastError());
+    ok(!params.Flags, "Got flags %#x.\n", params.Flags);
+    ok(!params.FlagsEx, "Got extended flags %#x.\n", params.FlagsEx);
+    ok(!params.hwndParent, "Got parent %p.\n", params.hwndParent);
+    ok(!params.InstallMsgHandler, "Got callback %p.\n", params.InstallMsgHandler);
+    ok(!params.InstallMsgHandlerContext, "Got callback context %p.\n", params.InstallMsgHandlerContext);
+    ok(!params.FileQueue, "Got queue %p.\n", params.FileQueue);
+    ok(!params.ClassInstallReserved, "Got class installer data %#lx.\n", params.ClassInstallReserved);
+    ok(!params.DriverPath[0], "Got driver path %s.\n", params.DriverPath);
+
+    params.Flags = DI_INF_IS_SORTED;
+    params.FlagsEx = DI_FLAGSEX_ALLOWEXCLUDEDDRVS;
+    strcpy(params.DriverPath, "C:\\windows");
+    ret = SetupDiSetDeviceInstallParamsA(set, &device, &params);
+    ok(ret, "Failed to set device install params, error %#x.\n", GetLastError());
+
+    memset(&params, 0xcc, sizeof(params));
+    params.cbSize = sizeof(params);
+    ret = SetupDiGetDeviceInstallParamsA(set, &device, &params);
+    ok(ret, "Failed to get device install params, error %#x.\n", GetLastError());
+    ok(params.Flags == DI_INF_IS_SORTED, "Got flags %#x.\n", params.Flags);
+    ok(params.FlagsEx == DI_FLAGSEX_ALLOWEXCLUDEDDRVS, "Got extended flags %#x.\n", params.FlagsEx);
+    ok(!params.hwndParent, "Got parent %p.\n", params.hwndParent);
+    ok(!params.InstallMsgHandler, "Got callback %p.\n", params.InstallMsgHandler);
+    ok(!params.InstallMsgHandlerContext, "Got callback context %p.\n", params.InstallMsgHandlerContext);
+    ok(!params.FileQueue, "Got queue %p.\n", params.FileQueue);
+    ok(!params.ClassInstallReserved, "Got class installer data %#lx.\n", params.ClassInstallReserved);
+    ok(!strcasecmp(params.DriverPath, "C:\\windows"), "Got driver path %s.\n", params.DriverPath);
+
+    SetupDiDestroyDeviceInfoList(set);
+}
+
 START_TEST(devinst)
 {
     HKEY hkey;
@@ -1913,4 +1984,5 @@ START_TEST(devinst)
     test_get_inf_class();
     test_devnode();
     test_device_interface_key();
+    test_device_install_params();
 }
