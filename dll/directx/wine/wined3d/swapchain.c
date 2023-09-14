@@ -1042,7 +1042,9 @@ HRESULT CDECL wined3d_swapchain_create(struct wined3d_device *device, struct win
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
+    wined3d_mutex_lock();
     hr = swapchain_init(object, device, desc, parent, parent_ops);
+    wined3d_mutex_unlock();
     if (FAILED(hr))
     {
         WARN("Failed to initialize swapchain, hr %#x.\n", hr);
