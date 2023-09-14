@@ -498,12 +498,11 @@ static inline void wined3d_context_gl_set_fbo_key_for_render_target(const struct
     }
 }
 
-static void context_generate_fbo_key(const struct wined3d_context *context,
+static void wined3d_context_gl_generate_fbo_key(const struct wined3d_context_gl *context_gl,
         struct wined3d_fbo_entry_key *key, const struct wined3d_rendertarget_info *render_targets,
         const struct wined3d_rendertarget_info *depth_stencil, DWORD color_location, DWORD ds_location)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
-    unsigned int buffers = context->gl_info->limits.buffers;
+    unsigned int buffers = context_gl->c.gl_info->limits.buffers;
     unsigned int i;
 
     key->rb_namespace = 0;
@@ -519,11 +518,13 @@ static struct fbo_entry *context_create_fbo_entry(const struct wined3d_context *
         const struct wined3d_rendertarget_info *render_targets, const struct wined3d_rendertarget_info *depth_stencil,
         DWORD color_location, DWORD ds_location)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct fbo_entry *entry;
 
     entry = heap_alloc(sizeof(*entry));
-    context_generate_fbo_key(context, &entry->key, render_targets, depth_stencil, color_location, ds_location);
+    wined3d_context_gl_generate_fbo_key(context_gl, &entry->key,
+            render_targets, depth_stencil, color_location, ds_location);
     entry->flags = 0;
     if (depth_stencil->resource)
     {
@@ -550,7 +551,8 @@ static void wined3d_context_gl_reuse_fbo_entry(struct wined3d_context_gl *contex
     wined3d_context_gl_bind_fbo(context_gl, target, entry->id);
     context_clean_fbo_attachments(gl_info, target);
 
-    context_generate_fbo_key(&context_gl->c, &entry->key, render_targets, depth_stencil, color_location, ds_location);
+    wined3d_context_gl_generate_fbo_key(context_gl, &entry->key,
+            render_targets, depth_stencil, color_location, ds_location);
     entry->flags = 0;
     if (depth_stencil->resource)
     {
@@ -618,7 +620,8 @@ static struct fbo_entry *wined3d_context_gl_find_fbo_entry(struct wined3d_contex
         }
     }
 
-    context_generate_fbo_key(&context_gl->c, &fbo_key, render_targets, depth_stencil, color_location, ds_location);
+    wined3d_context_gl_generate_fbo_key(context_gl, &fbo_key,
+            render_targets, depth_stencil, color_location, ds_location);
 
     if (TRACE_ON(d3d))
     {
