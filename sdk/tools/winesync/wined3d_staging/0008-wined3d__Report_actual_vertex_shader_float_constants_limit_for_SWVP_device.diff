@@ -1,0 +1,77 @@
+diff --git a/dll/directx/wine/wined3d/adapter_gl.c b/dll/directx/wine/wined3d/adapter_gl.c
+index 6da0e20..fe507de 100644
+--- a/dll/directx/wine/wined3d/adapter_gl.c
++++ b/dll/directx/wine/wined3d/adapter_gl.c
+@@ -5171,7 +5171,8 @@ static void wined3d_adapter_gl_init_d3d_info(struct wined3d_adapter_gl *adapter_
+     d3d_info->limits.gs_version = shader_caps.gs_version;
+     d3d_info->limits.ps_version = shader_caps.ps_version;
+     d3d_info->limits.cs_version = shader_caps.cs_version;
+-    d3d_info->limits.vs_uniform_count = shader_caps.vs_uniform_count;
++    d3d_info->limits.vs_uniform_count_swvp = shader_caps.vs_uniform_count;
++    d3d_info->limits.vs_uniform_count = min(WINED3D_MAX_VS_CONSTS_F, shader_caps.vs_uniform_count);
+     d3d_info->limits.ps_uniform_count = shader_caps.ps_uniform_count;
+     d3d_info->limits.varying_count = shader_caps.varying_count;
+     d3d_info->limits.ffp_textures = fragment_caps.MaxSimultaneousTextures;
+diff --git a/dll/directx/wine/wined3d/device.c b/dll/directx/wine/wined3d/device.c
+index 90d04e6..ac720b9 100644
+--- a/dll/directx/wine/wined3d/device.c
++++ b/dll/directx/wine/wined3d/device.c
+@@ -4076,10 +4076,21 @@ struct wined3d_texture * CDECL wined3d_device_get_texture(const struct wined3d_d
+ 
+ HRESULT CDECL wined3d_device_get_device_caps(const struct wined3d_device *device, struct wined3d_caps *caps)
+ {
++    const struct wined3d_adapter *adapter = device->wined3d->adapters[device->adapter->ordinal];
++    struct wined3d_vertex_caps vertex_caps;
++    HRESULT hr;
++
+     TRACE("device %p, caps %p.\n", device, caps);
+ 
+-    return wined3d_get_device_caps(device->wined3d, device->adapter->ordinal,
++    hr = wined3d_get_device_caps(device->wined3d, device->adapter->ordinal,
+             device->create_parms.device_type, caps);
++    if (FAILED(hr))
++        return hr;
++
++    adapter->vertex_pipe->vp_get_caps(adapter, &vertex_caps);
++    if (device->create_parms.flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING)
++        caps->MaxVertexShaderConst = adapter->d3d_info.limits.vs_uniform_count_swvp;
++    return hr;
+ }
+ 
+ HRESULT CDECL wined3d_device_get_display_mode(const struct wined3d_device *device, UINT swapchain_idx,
+diff --git a/dll/directx/wine/wined3d/glsl_shader.c b/dll/directx/wine/wined3d/glsl_shader.c
+index 039bec0..c9612c8 100644
+--- a/dll/directx/wine/wined3d/glsl_shader.c
++++ b/dll/directx/wine/wined3d/glsl_shader.c
+@@ -11233,7 +11233,10 @@ static void shader_glsl_get_caps(const struct wined3d_adapter *adapter, struct s
+     caps->vs_version = gl_info->supported[ARB_VERTEX_SHADER] ? caps->vs_version : 0;
+     caps->ps_version = gl_info->supported[ARB_FRAGMENT_SHADER] ? caps->ps_version : 0;
+ 
+-    caps->vs_uniform_count = min(WINED3D_MAX_VS_CONSTS_F, gl_info->limits.glsl_vs_float_constants);
++    caps->vs_uniform_count = min(WINED3D_MAX_VS_CONSTS_F_SWVP,
++            gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT]
++            ? gl_info->limits.glsl_max_uniform_block_size / sizeof(struct wined3d_vec4)
++            : gl_info->limits.glsl_vs_float_constants);
+     caps->ps_uniform_count = min(WINED3D_MAX_PS_CONSTS_F, gl_info->limits.glsl_ps_float_constants);
+     caps->varying_count = gl_info->limits.glsl_varyings;
+ 
+diff --git a/dll/directx/wine/wined3d/wined3d_private.h b/dll/directx/wine/wined3d/wined3d_private.h
+index 731b44a..6a7dc4f 100644
+--- a/dll/directx/wine/wined3d/wined3d_private.h
++++ b/dll/directx/wine/wined3d/wined3d_private.h
+@@ -167,6 +167,7 @@ struct wined3d_d3d_limits
+ {
+     unsigned int vs_version, hs_version, ds_version, gs_version, ps_version, cs_version;
+     DWORD vs_uniform_count;
++    DWORD vs_uniform_count_swvp;
+     DWORD ps_uniform_count;
+     unsigned int varying_count;
+     unsigned int ffp_textures;
+@@ -703,6 +704,7 @@ enum wined3d_shader_conditional_op
+ #define WINED3D_MAX_CONSTS_B 16
+ #define WINED3D_MAX_CONSTS_I 16
+ #define WINED3D_MAX_VS_CONSTS_F 256
++#define WINED3D_MAX_VS_CONSTS_F_SWVP 8192
+ #define WINED3D_MAX_PS_CONSTS_F 224
+ 
+ /* FIXME: This needs to go up to 2048 for

@@ -167,6 +167,7 @@ struct wined3d_d3d_limits
 {
     unsigned int vs_version, hs_version, ds_version, gs_version, ps_version, cs_version;
     DWORD vs_uniform_count;
+    DWORD vs_uniform_count_swvp;
     DWORD ps_uniform_count;
     unsigned int varying_count;
     unsigned int ffp_textures;
@@ -710,6 +711,7 @@ enum wined3d_shader_conditional_op
 #define WINED3D_MAX_CONSTS_B 16
 #define WINED3D_MAX_CONSTS_I 16
 #define WINED3D_MAX_VS_CONSTS_F 256
+#define WINED3D_MAX_VS_CONSTS_F_SWVP 8192
 #define WINED3D_MAX_PS_CONSTS_F 224
 
 /* FIXME: This needs to go up to 2048 for

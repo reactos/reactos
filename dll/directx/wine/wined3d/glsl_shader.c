@@ -11233,7 +11233,10 @@ static void shader_glsl_get_caps(const struct wined3d_adapter *adapter, struct s
     caps->vs_version = gl_info->supported[ARB_VERTEX_SHADER] ? caps->vs_version : 0;
     caps->ps_version = gl_info->supported[ARB_FRAGMENT_SHADER] ? caps->ps_version : 0;
 
-    caps->vs_uniform_count = min(WINED3D_MAX_VS_CONSTS_F, gl_info->limits.glsl_vs_float_constants);
+    caps->vs_uniform_count = min(WINED3D_MAX_VS_CONSTS_F_SWVP,
+            gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT]
+            ? gl_info->limits.glsl_max_uniform_block_size / sizeof(struct wined3d_vec4)
+            : gl_info->limits.glsl_vs_float_constants);
     caps->ps_uniform_count = min(WINED3D_MAX_PS_CONSTS_F, gl_info->limits.glsl_ps_float_constants);
     caps->varying_count = gl_info->limits.glsl_varyings;
 

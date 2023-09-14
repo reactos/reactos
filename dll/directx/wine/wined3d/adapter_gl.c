@@ -5171,7 +5171,8 @@ static void wined3d_adapter_gl_init_d3d_info(struct wined3d_adapter_gl *adapter_
     d3d_info->limits.gs_version = shader_caps.gs_version;
     d3d_info->limits.ps_version = shader_caps.ps_version;
     d3d_info->limits.cs_version = shader_caps.cs_version;
-    d3d_info->limits.vs_uniform_count = shader_caps.vs_uniform_count;
+    d3d_info->limits.vs_uniform_count_swvp = shader_caps.vs_uniform_count;
+    d3d_info->limits.vs_uniform_count = min(WINED3D_MAX_VS_CONSTS_F, shader_caps.vs_uniform_count);
     d3d_info->limits.ps_uniform_count = shader_caps.ps_uniform_count;
     d3d_info->limits.varying_count = shader_caps.varying_count;
     d3d_info->limits.ffp_textures = fragment_caps.MaxSimultaneousTextures;
