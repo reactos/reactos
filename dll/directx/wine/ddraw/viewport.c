@@ -122,7 +122,7 @@ void viewport_deactivate(struct d3d_viewport *viewport)
     }
 }
 
-static void viewport_alloc_active_light_index(struct d3d_light *light)
+void viewport_alloc_active_light_index(struct d3d_light *light)
 {
     struct d3d_viewport *vp = light->active_viewport;
     unsigned int i;
@@ -148,6 +148,23 @@ static void viewport_alloc_active_light_index(struct d3d_light *light)
     light->active_light_index = i + 1;
     ++vp->active_lights_count;
     vp->map_lights |= 1u << i;
+}
+
+void viewport_free_active_light_index(struct d3d_light *light)
+{
+    struct d3d_viewport *vp = light->active_viewport;
+
+    TRACE("vp %p, light %p, index %u, active_lights_count %u, map_lights %#x.\n",
+            vp, light, light->active_light_index, vp->active_lights_count, vp->map_lights);
+
+    if (!light->active_light_index)
+        return;
+
+    assert(vp->map_lights & (1u << (light->active_light_index - 1)));
+
+    --vp->active_lights_count;
+    vp->map_lights &= ~(1u << (light->active_light_index - 1));
+    light->active_light_index = 0;
 }
 
 /*****************************************************************************
@@ -798,19 +815,11 @@ static HRESULT WINAPI d3d_viewport_AddLight(IDirect3DViewport3 *viewport, IDirec
     }
 
     light_impl->active_viewport = vp;
-    viewport_alloc_active_light_index(light_impl);
-    if (!light_impl->active_light_index)
-    {
-        light_impl->active_viewport = NULL;
-        wined3d_mutex_unlock();
-        return DDERR_INVALIDPARAMS;
-    }
 
     /* Add the light in the 'linked' chain */
     list_add_head(&vp->light_list, &light_impl->entry);
     IDirect3DLight_AddRef(light);
 
-    /* Attach the light to the viewport */
     light_activate(light_impl);
 
     wined3d_mutex_unlock();
@@ -851,8 +860,6 @@ static HRESULT WINAPI d3d_viewport_DeleteLight(IDirect3DViewport3 *iface, IDirec
     list_remove(&l->entry);
     l->active_viewport = NULL;
     IDirect3DLight_Release(lpDirect3DLight);
-    --viewport->active_lights_count;
-    viewport->map_lights &= ~(1 << l->active_light_index);
 
     wined3d_mutex_unlock();
 

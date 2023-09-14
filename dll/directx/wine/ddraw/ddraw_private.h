@@ -663,4 +663,7 @@ struct member_info
 
 HRESULT hr_ddraw_from_wined3d(HRESULT hr) DECLSPEC_HIDDEN;
 
+void viewport_alloc_active_light_index(struct d3d_light *light) DECLSPEC_HIDDEN;
+void viewport_free_active_light_index(struct d3d_light *light) DECLSPEC_HIDDEN;
+
 #endif
