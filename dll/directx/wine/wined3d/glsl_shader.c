@@ -8470,12 +8470,11 @@ static inline BOOL vs_args_equal(const struct vs_compile_args *stored, const str
     return !memcmp(stored->interpolation_mode, new->interpolation_mode, sizeof(new->interpolation_mode));
 }
 
-static GLuint find_glsl_vshader(const struct wined3d_context *context, struct shader_glsl_priv *priv,
-        struct wined3d_shader *shader, const struct vs_compile_args *args)
+static GLuint find_glsl_vertex_shader(const struct wined3d_context_gl *context_gl,
+        struct shader_glsl_priv *priv, struct wined3d_shader *shader, const struct vs_compile_args *args)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_vs_compiled_shader *gl_shaders, *new_array;
-    uint32_t use_map = context->stream_info.use_map;
+    uint32_t use_map = context_gl->c.stream_info.use_map;
     struct glsl_shader_private *shader_data;
     unsigned int i, new_size;
     GLuint ret;
@@ -10134,7 +10133,7 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
         vshader = state->shader[WINED3D_SHADER_TYPE_VERTEX];
 
         find_vs_compile_args(state, vshader, context->stream_info.swizzle_map, &vs_compile_args, context);
-        vs_id = find_glsl_vshader(context, priv, vshader, &vs_compile_args);
+        vs_id = find_glsl_vertex_shader(context_gl, priv, vshader, &vs_compile_args);
         vs_list = &vshader->linked_programs;
     }
     else if (priv->vertex_pipe == &glsl_vertex_pipe)
