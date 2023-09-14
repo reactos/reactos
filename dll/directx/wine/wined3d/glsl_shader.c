@@ -2990,6 +2990,10 @@ static void shader_glsl_get_register_name(const struct wined3d_shader_register *
                 string_buffer_sprintf(register_name, "vpc[%u]", reg->idx[0].offset);
             break;
 
+        case WINED3DSPR_COVERAGE:
+            string_buffer_sprintf(register_name, "gl_SampleMaskIn[0]");
+            break;
+
         case WINED3DSPR_SAMPLEMASK:
             string_buffer_sprintf(register_name, "sample_mask");
             break;

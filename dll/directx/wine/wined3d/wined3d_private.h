@@ -4213,6 +4213,7 @@ static inline BOOL shader_is_scalar(const struct wined3d_shader_register *reg)
         case WINED3DSPR_OUTPOINTID:
         case WINED3DSPR_PREDICATE:  /* p0 */
         case WINED3DSPR_PRIMID:     /* primID */
+        case WINED3DSPR_COVERAGE: /* vCoverage */
         case WINED3DSPR_SAMPLEMASK: /* oMask */
             return TRUE;
 
