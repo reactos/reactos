@@ -1910,8 +1910,7 @@ HGLRC context_create_wgl_attribs(const struct wined3d_gl_info *gl_info, HDC hdc,
     return ctx;
 }
 
-static BOOL wined3d_context_init(struct wined3d_context *context, struct wined3d_swapchain *swapchain,
-        struct wined3d_texture *target, const struct wined3d_format *ds_format)
+static BOOL wined3d_context_init(struct wined3d_context *context, struct wined3d_swapchain *swapchain)
 {
     struct wined3d_device *device = swapchain->device;
     DWORD state;
@@ -1952,7 +1951,7 @@ static BOOL wined3d_context_init(struct wined3d_context *context, struct wined3d
 
     context->device = device;
     context->swapchain = swapchain;
-    context->current_rt.texture = target;
+    context->current_rt.texture = swapchain->front_buffer;
     context->current_rt.sub_resource_idx = 0;
     context->tid = GetCurrentThreadId();
 
@@ -1981,7 +1980,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain, cons
         return NULL;
     context = &context_gl->c;
 
-    if (!(wined3d_context_init(context, swapchain, target, ds_format)))
+    if (!(wined3d_context_init(context, swapchain)))
     {
         heap_free(context_gl);
         return NULL;
