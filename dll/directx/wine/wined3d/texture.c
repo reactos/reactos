@@ -2848,7 +2848,6 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
         if (desc->resource_type != WINED3D_RTYPE_TEXTURE_3D && !gl_info->supported[ARB_TEXTURE_RECTANGLE]
                 && !gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT])
         {
-
             /* TODO: Add support for non-power-of-two compressed textures. */
             if (format->flags[WINED3D_GL_RES_TYPE_TEX_2D]
                     & (WINED3DFMT_FLAG_COMPRESSED | WINED3DFMT_FLAG_HEIGHT_SCALE))
