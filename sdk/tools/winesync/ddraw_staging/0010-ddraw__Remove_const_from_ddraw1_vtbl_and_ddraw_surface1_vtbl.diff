@@ -1,0 +1,26 @@
+diff --git a/dll/directx/wine/ddraw/ddraw.c b/dll/directx/wine/ddraw/ddraw.c
+index 1141739..83c7ae3 100644
+--- a/dll/directx/wine/ddraw/ddraw.c
++++ b/dll/directx/wine/ddraw/ddraw.c
+@@ -4723,7 +4723,7 @@ static const struct IDirectDraw2Vtbl ddraw2_vtbl =
+     ddraw2_GetAvailableVidMem,
+ };
+ 
+-static const struct IDirectDrawVtbl ddraw1_vtbl =
++static struct IDirectDrawVtbl ddraw1_vtbl =
+ {
+     /* IUnknown */
+     ddraw1_QueryInterface,
+diff --git a/dll/directx/wine/ddraw/surface.c b/dll/directx/wine/ddraw/surface.c
+index 31ccce2..0a477d5 100644
+--- a/dll/directx/wine/ddraw/surface.c
++++ b/dll/directx/wine/ddraw/surface.c
+@@ -5621,7 +5621,7 @@ static const struct IDirectDrawSurface2Vtbl ddraw_surface2_vtbl =
+     ddraw_surface2_PageUnlock,
+ };
+ 
+-static const struct IDirectDrawSurfaceVtbl ddraw_surface1_vtbl =
++static struct IDirectDrawSurfaceVtbl ddraw_surface1_vtbl =
+ {
+     /* IUnknown */
+     ddraw_surface1_QueryInterface,
