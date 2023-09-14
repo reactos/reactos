@@ -664,46 +664,46 @@ static void wined3d_texture_allocate_gl_immutable_storage(struct wined3d_texture
     checkGLcall("allocate immutable storage");
 }
 
-static void wined3d_texture_unload_gl_texture(struct wined3d_texture *texture)
+static void wined3d_texture_gl_unload_texture(struct wined3d_texture_gl *texture_gl)
 {
-    struct wined3d_device *device = texture->resource.device;
+    struct wined3d_device *device = texture_gl->t.resource.device;
     const struct wined3d_gl_info *gl_info = NULL;
     struct wined3d_context *context = NULL;
 
-    if (texture->texture_rgb.name || texture->texture_srgb.name
-            || texture->rb_multisample || texture->rb_resolved)
+    if (texture_gl->t.texture_rgb.name || texture_gl->t.texture_srgb.name
+            || texture_gl->rb_multisample || texture_gl->rb_resolved)
     {
         context = context_acquire(device, NULL, 0);
         gl_info = context->gl_info;
     }
 
-    if (texture->texture_rgb.name)
-        gltexture_delete(device, context->gl_info, &texture->texture_rgb);
+    if (texture_gl->t.texture_rgb.name)
+        gltexture_delete(device, context->gl_info, &texture_gl->t.texture_rgb);
 
-    if (texture->texture_srgb.name)
-        gltexture_delete(device, context->gl_info, &texture->texture_srgb);
+    if (texture_gl->t.texture_srgb.name)
+        gltexture_delete(device, context->gl_info, &texture_gl->t.texture_srgb);
 
-    if (texture->rb_multisample)
+    if (texture_gl->rb_multisample)
     {
-        TRACE("Deleting multisample renderbuffer %u.\n", texture->rb_multisample);
-        context_gl_resource_released(device, texture->rb_multisample, TRUE);
-        gl_info->fbo_ops.glDeleteRenderbuffers(1, &texture->rb_multisample);
-        texture->rb_multisample = 0;
+        TRACE("Deleting multisample renderbuffer %u.\n", texture_gl->rb_multisample);
+        context_gl_resource_released(device, texture_gl->rb_multisample, TRUE);
+        gl_info->fbo_ops.glDeleteRenderbuffers(1, &texture_gl->rb_multisample);
+        texture_gl->rb_multisample = 0;
     }
 
-    if (texture->rb_resolved)
+    if (texture_gl->rb_resolved)
     {
-        TRACE("Deleting resolved renderbuffer %u.\n", texture->rb_resolved);
-        context_gl_resource_released(device, texture->rb_resolved, TRUE);
-        gl_info->fbo_ops.glDeleteRenderbuffers(1, &texture->rb_resolved);
-        texture->rb_resolved = 0;
+        TRACE("Deleting resolved renderbuffer %u.\n", texture_gl->rb_resolved);
+        context_gl_resource_released(device, texture_gl->rb_resolved, TRUE);
+        gl_info->fbo_ops.glDeleteRenderbuffers(1, &texture_gl->rb_resolved);
+        texture_gl->rb_resolved = 0;
     }
 
     if (context) context_release(context);
 
-    wined3d_texture_set_dirty(texture);
+    wined3d_texture_set_dirty(&texture_gl->t);
 
-    resource_unload(&texture->resource);
+    resource_unload(&texture_gl->t.resource);
 }
 
 static void wined3d_texture_sub_resources_destroyed(struct wined3d_texture *texture)
@@ -903,7 +903,6 @@ static void wined3d_texture_cleanup(struct wined3d_texture *texture)
         }
         heap_free(texture->overlay_info);
     }
-    wined3d_texture_unload_gl_texture(texture);
 }
 
 static void wined3d_texture_gl_cleanup(struct wined3d_texture_gl *texture_gl)
@@ -930,6 +929,7 @@ static void wined3d_texture_gl_cleanup(struct wined3d_texture_gl *texture_gl)
     }
 
     wined3d_texture_cleanup(&texture_gl->t);
+    wined3d_texture_gl_unload_texture(texture_gl);
 }
 
 void wined3d_texture_set_swapchain(struct wined3d_texture *texture, struct wined3d_swapchain *swapchain)
@@ -1798,39 +1798,39 @@ void wined3d_texture_prepare_texture(struct wined3d_texture *texture, struct win
     texture->flags |= alloc_flag;
 }
 
-static void wined3d_texture_prepare_rb(struct wined3d_texture *texture,
+static void wined3d_texture_gl_prepare_rb(struct wined3d_texture_gl *texture_gl,
         const struct wined3d_gl_info *gl_info, BOOL multisample)
 {
     const struct wined3d_format_gl *format_gl;
 
-    format_gl = wined3d_format_gl(texture->resource.format);
+    format_gl = wined3d_format_gl(texture_gl->t.resource.format);
     if (multisample)
     {
         DWORD samples;
 
-        if (texture->rb_multisample)
+        if (texture_gl->rb_multisample)
             return;
 
-        samples = wined3d_texture_get_gl_sample_count(texture);
+        samples = wined3d_texture_get_gl_sample_count(&texture_gl->t);
 
-        gl_info->fbo_ops.glGenRenderbuffers(1, &texture->rb_multisample);
-        gl_info->fbo_ops.glBindRenderbuffer(GL_RENDERBUFFER, texture->rb_multisample);
+        gl_info->fbo_ops.glGenRenderbuffers(1, &texture_gl->rb_multisample);
+        gl_info->fbo_ops.glBindRenderbuffer(GL_RENDERBUFFER, texture_gl->rb_multisample);
         gl_info->fbo_ops.glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples,
-                format_gl->internal, texture->resource.width, texture->resource.height);
+                format_gl->internal, texture_gl->t.resource.width, texture_gl->t.resource.height);
         checkGLcall("glRenderbufferStorageMultisample()");
-        TRACE("Created multisample rb %u.\n", texture->rb_multisample);
+        TRACE("Created multisample rb %u.\n", texture_gl->rb_multisample);
     }
     else
     {
-        if (texture->rb_resolved)
+        if (texture_gl->rb_resolved)
             return;
 
-        gl_info->fbo_ops.glGenRenderbuffers(1, &texture->rb_resolved);
-        gl_info->fbo_ops.glBindRenderbuffer(GL_RENDERBUFFER, texture->rb_resolved);
+        gl_info->fbo_ops.glGenRenderbuffers(1, &texture_gl->rb_resolved);
+        gl_info->fbo_ops.glBindRenderbuffer(GL_RENDERBUFFER, texture_gl->rb_resolved);
         gl_info->fbo_ops.glRenderbufferStorage(GL_RENDERBUFFER, format_gl->internal,
-                texture->resource.width, texture->resource.height);
+                texture_gl->t.resource.width, texture_gl->t.resource.height);
         checkGLcall("glRenderbufferStorage()");
-        TRACE("Created resolved rb %u.\n", texture->rb_resolved);
+        TRACE("Created resolved rb %u.\n", texture_gl->rb_resolved);
     }
 }
 
@@ -1872,11 +1872,11 @@ BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned 
             return TRUE;
 
         case WINED3D_LOCATION_RB_MULTISAMPLE:
-            wined3d_texture_prepare_rb(texture, context->gl_info, TRUE);
+            wined3d_texture_gl_prepare_rb(wined3d_texture_gl(texture), context->gl_info, TRUE);
             return TRUE;
 
         case WINED3D_LOCATION_RB_RESOLVED:
-            wined3d_texture_prepare_rb(texture, context->gl_info, FALSE);
+            wined3d_texture_gl_prepare_rb(wined3d_texture_gl(texture), context->gl_info, FALSE);
             return TRUE;
 
         default:
@@ -2562,7 +2562,7 @@ static void wined3d_texture_gl_unload(struct wined3d_resource *resource)
     context_release(context);
 
     wined3d_texture_force_reload(&texture_gl->t);
-    wined3d_texture_unload_gl_texture(&texture_gl->t);
+    wined3d_texture_gl_unload_texture(texture_gl);
 }
 
 static HRESULT texture_resource_sub_resource_map(struct wined3d_resource *resource, unsigned int sub_resource_idx,

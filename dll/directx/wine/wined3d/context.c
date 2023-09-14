@@ -484,14 +484,14 @@ static inline void context_set_fbo_key_for_render_target(const struct wined3d_co
             break;
 
         case WINED3D_LOCATION_RB_MULTISAMPLE:
-            key->objects[idx].object = texture_gl->t.rb_multisample;
+            key->objects[idx].object = texture_gl->rb_multisample;
             key->objects[idx].target = 0;
             key->objects[idx].level = key->objects[idx].layer = 0;
             key->rb_namespace |= 1 << idx;
             break;
 
         case WINED3D_LOCATION_RB_RESOLVED:
-            key->objects[idx].object = texture_gl->t.rb_resolved;
+            key->objects[idx].object = texture_gl->rb_resolved;
             key->objects[idx].target = 0;
             key->objects[idx].level = key->objects[idx].layer = 0;
             key->rb_namespace |= 1 << idx;

@@ -348,10 +348,10 @@ static void swapchain_blit(const struct wined3d_swapchain *swapchain,
 }
 
 /* Context activation is done by the caller. */
-static void wined3d_swapchain_rotate(struct wined3d_swapchain *swapchain, struct wined3d_context *context)
+static void wined3d_swapchain_gl_rotate(struct wined3d_swapchain *swapchain, struct wined3d_context *context)
 {
     struct wined3d_texture_sub_resource *sub_resource;
-    struct wined3d_texture *texture, *texture_prev;
+    struct wined3d_texture_gl *texture, *texture_prev;
     struct gl_texture tex0;
     GLuint rb0;
     DWORD locations0;
@@ -361,35 +361,35 @@ static void wined3d_swapchain_rotate(struct wined3d_swapchain *swapchain, struct
     if (swapchain->desc.backbuffer_count < 2 || !swapchain->render_to_fbo)
         return;
 
-    texture_prev = swapchain->back_buffers[0];
+    texture_prev = wined3d_texture_gl(swapchain->back_buffers[0]);
 
     /* Back buffer 0 is already in the draw binding. */
-    tex0 = texture_prev->texture_rgb;
+    tex0 = texture_prev->t.texture_rgb;
     rb0 = texture_prev->rb_multisample;
-    locations0 = texture_prev->sub_resources[0].locations;
+    locations0 = texture_prev->t.sub_resources[0].locations;
 
     for (i = 1; i < swapchain->desc.backbuffer_count; ++i)
     {
-        texture = swapchain->back_buffers[i];
-        sub_resource = &texture->sub_resources[0];
+        texture = wined3d_texture_gl(swapchain->back_buffers[i]);
+        sub_resource = &texture->t.sub_resources[0];
 
         if (!(sub_resource->locations & supported_locations))
-            wined3d_texture_load_location(texture, 0, context, texture->resource.draw_binding);
+            wined3d_texture_load_location(&texture->t, 0, context, texture->t.resource.draw_binding);
 
-        texture_prev->texture_rgb = texture->texture_rgb;
+        texture_prev->t.texture_rgb = texture->t.texture_rgb;
         texture_prev->rb_multisample = texture->rb_multisample;
 
-        wined3d_texture_validate_location(texture_prev, 0, sub_resource->locations & supported_locations);
-        wined3d_texture_invalidate_location(texture_prev, 0, ~(sub_resource->locations & supported_locations));
+        wined3d_texture_validate_location(&texture_prev->t, 0, sub_resource->locations & supported_locations);
+        wined3d_texture_invalidate_location(&texture_prev->t, 0, ~(sub_resource->locations & supported_locations));
 
         texture_prev = texture;
     }
 
-    texture_prev->texture_rgb = tex0;
+    texture_prev->t.texture_rgb = tex0;
     texture_prev->rb_multisample = rb0;
 
-    wined3d_texture_validate_location(texture_prev, 0, locations0 & supported_locations);
-    wined3d_texture_invalidate_location(texture_prev, 0, ~(locations0 & supported_locations));
+    wined3d_texture_validate_location(&texture_prev->t, 0, locations0 & supported_locations);
+    wined3d_texture_invalidate_location(&texture_prev->t, 0, ~(locations0 & supported_locations));
 
     device_invalidate_state(swapchain->device, STATE_FRAMEBUFFER);
 }
@@ -495,7 +495,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
     /* call wglSwapBuffers through the gl table to avoid confusing the Steam overlay */
     gl_info->gl_ops.wgl.p_wglSwapBuffers(context->hdc);
 
-    wined3d_swapchain_rotate(swapchain, context);
+    wined3d_swapchain_gl_rotate(swapchain, context);
 
     TRACE("SwapBuffers called, Starting new frame\n");
     /* FPS support */

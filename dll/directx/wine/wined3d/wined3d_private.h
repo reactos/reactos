@@ -3270,9 +3270,6 @@ struct wined3d_texture
     GLenum target;
     DWORD update_map_binding;
 
-    GLuint rb_multisample;
-    GLuint rb_resolved;
-
     void *user_memory;
     unsigned int row_pitch;
     unsigned int slice_pitch;
@@ -3454,6 +3451,9 @@ void wined3d_gl_texture_swizzle_from_color_fixup(GLint swizzle[4], struct color_
 struct wined3d_texture_gl
 {
     struct wined3d_texture t;
+
+    GLuint rb_multisample;
+    GLuint rb_resolved;
 
     struct list renderbuffers;
     const struct wined3d_renderbuffer_entry *current_renderbuffer;
