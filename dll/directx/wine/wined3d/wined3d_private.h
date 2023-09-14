@@ -212,6 +212,7 @@ struct wined3d_d3d_info
     unsigned int draw_base_vertex_offset : 1;
     unsigned int vertex_bgra : 1;
     unsigned int texture_swizzle : 1;
+    unsigned int srgb_read_control : 1;
     enum wined3d_feature_level feature_level;
 
     DWORD multisample_draw_location;
@@ -4899,7 +4900,7 @@ static inline BOOL needs_separate_srgb_gl_texture(const struct wined3d_context *
     unsigned int flags = texture->resource.format_flags
             & (WINED3DFMT_FLAG_SRGB_READ | WINED3DFMT_FLAG_SRGB_WRITE);
 
-    return (!context->gl_info->supported[EXT_TEXTURE_SRGB_DECODE]
+    return (!context->d3d_info->srgb_read_control
             || (flags && flags != (WINED3DFMT_FLAG_SRGB_READ | WINED3DFMT_FLAG_SRGB_WRITE)))
             && context->d3d_info->wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL;
 }
