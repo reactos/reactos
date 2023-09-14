@@ -1951,8 +1951,7 @@ struct wined3d_context
     DWORD numbered_array_mask;
     GLenum                  tracking_parm;     /* Which source is tracking current colour         */
     GLenum                  untracked_materials[2];
-    UINT                    blit_w, blit_h;
-    enum fogsource          fog_source;
+    enum fogsource fog_source;
 
     UINT instance_count;
 
@@ -1989,6 +1988,7 @@ struct wined3d_context_gl
 
     uint32_t default_attrib_value_set;
 
+    SIZE blit_size;
     unsigned int active_texture;
 
     GLenum *texture_type;

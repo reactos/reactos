@@ -2791,12 +2791,11 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
 
     if (context->last_was_blit)
     {
-        if (context->blit_w != rt_size.cx || context->blit_h != rt_size.cy)
+        if (context_gl->blit_size.cx != rt_size.cx || context_gl->blit_size.cy != rt_size.cy)
         {
             gl_info->gl_ops.gl.p_glViewport(0, 0, rt_size.cx, rt_size.cy);
             context->viewport_count = WINED3D_MAX_VIEWPORTS;
-            context->blit_w = rt_size.cx;
-            context->blit_h = rt_size.cy;
+            context_gl->blit_size = rt_size;
             /* No need to dirtify here, the states are still dirtified because
              * they weren't applied since the last context_apply_blit_state()
              * call. */
@@ -2870,8 +2869,7 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
 
     device->shader_backend->shader_disable(device->shader_priv, context);
 
-    context->blit_w = rt_size.cx;
-    context->blit_h = rt_size.cy;
+    context_gl->blit_size = rt_size;
 
     checkGLcall("blit state application");
 }
@@ -2909,7 +2907,7 @@ void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_
         SIZE rt_size;
 
         wined3d_context_gl_get_rt_size(context_gl, &rt_size);
-        if (context->blit_w != rt_size.cx || context->blit_h != rt_size.cy)
+        if (context_gl->blit_size.cx != rt_size.cx || context_gl->blit_size.cy != rt_size.cy)
             context_apply_blit_projection(context, rt_size.cx, rt_size.cy);
         wined3d_context_gl_apply_blit_state(context_gl, device);
 
@@ -2964,7 +2962,7 @@ void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_
     gl_info->gl_ops.gl.p_glMatrixMode(GL_MODELVIEW);
     gl_info->gl_ops.gl.p_glLoadIdentity();
     context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(0)));
-    context_apply_blit_projection(context, context->blit_w, context->blit_h);
+    context_apply_blit_projection(context, context_gl->blit_size.cx, context_gl->blit_size.cy);
     context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_PROJECTION));
 
     /* Other misc states. */
