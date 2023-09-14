@@ -2291,16 +2291,6 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, unsigned in
             | WINEDDSCAPS_SYSTEMMEMORY
             | WINEDDSCAPS_VISIBLE;
 
-    if (!(wined3d->flags & WINED3D_NO3D))
-    {
-        caps->ddraw_caps.dds_caps |= WINEDDSCAPS_3DDEVICE
-                | WINEDDSCAPS_MIPMAP
-                | WINEDDSCAPS_TEXTURE
-                | WINEDDSCAPS_VIDEOMEMORY
-                | WINEDDSCAPS_ZBUFFER;
-        caps->ddraw_caps.caps |= WINEDDCAPS_3D;
-    }
-
     caps->shader_double_precision = d3d_info->shader_double_precision;
     caps->viewport_array_index_any_shader = d3d_info->viewport_array_index_any_shader;
 
