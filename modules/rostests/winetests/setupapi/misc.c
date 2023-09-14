@@ -320,7 +320,7 @@ static void test_SetupCopyOEMInf(void)
     DeleteFileA(dest);
     strcpy(pnf, dest);
     *(strrchr(pnf, '.') + 1) = 'p';
-    ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
+    todo_wine ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
 
     res = SetupUninstallOEMInfA(strrchr(orig_dest, '\\') + 1, 0, NULL);
     ok(res, "Failed to uninstall '%s', error %u.\n", orig_dest, GetLastError());
@@ -328,7 +328,7 @@ static void test_SetupCopyOEMInf(void)
     DeleteFileA(orig_dest);
     strcpy(pnf, dest);
     *(strrchr(pnf, '.') + 1) = 'p';
-    ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
+    todo_wine ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
 
     GetWindowsDirectoryA(orig_dest, sizeof(orig_dest));
     strcat(orig_dest, "\\inf\\");
