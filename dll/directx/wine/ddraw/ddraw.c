@@ -4127,35 +4127,20 @@ static HRESULT WINAPI d3d1_CreateViewport(IDirect3D *iface, IDirect3DViewport **
             outer_unknown);
 }
 
-/*****************************************************************************
- * IDirect3D3::FindDevice
- *
- * This method finds a device with the requested properties and returns a
- * device description
- *
- * Versions 1, 2 and 3
- * Params:
- *  fds: Describes the requested device characteristics
- *  fdr: Returns the device description
- *
- * Returns:
- *  D3D_OK on success
- *  DDERR_INVALIDPARAMS if no device was found
- *
- *****************************************************************************/
-static HRESULT WINAPI d3d3_FindDevice(IDirect3D3 *iface, D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr)
+static HRESULT ddraw_find_device(struct ddraw *ddraw, const D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr,
+        unsigned int guid_count, const GUID * const *guids)
 {
-    struct ddraw *ddraw = impl_from_IDirect3D3(iface);
     D3DDEVICEDESC7 desc7;
     D3DDEVICEDESC desc1;
+    unsigned int i;
     HRESULT hr;
 
-    TRACE("iface %p, fds %p, fdr %p.\n", iface, fds, fdr);
+    TRACE("ddraw %p, fds %p, fdr %p, guid_count %u, guids %p.\n", ddraw, fds, fdr, guid_count, guids);
 
-    if (!fds || !fdr) return DDERR_INVALIDPARAMS;
+    if (!fds || !fdr)
+        return DDERR_INVALIDPARAMS;
 
-    if (fds->dwSize != sizeof(D3DFINDDEVICESEARCH) || (fdr->dwSize != sizeof(D3DFINDDEVICERESULT1) &&
-        fdr->dwSize != sizeof(D3DFINDDEVICERESULT2) && fdr->dwSize != sizeof(D3DFINDDEVICERESULT)))
+    if (fds->dwSize != sizeof(*fds) || fdr->dwSize != sizeof(*fdr))
         return DDERR_INVALIDPARAMS;
 
     if (fds->dwFlags & D3DFDS_COLORMODEL)
@@ -4163,12 +4148,22 @@ static HRESULT WINAPI d3d3_FindDevice(IDirect3D3 *iface, D3DFINDDEVICESEARCH *fd
 
     if (fds->dwFlags & D3DFDS_GUID)
     {
-        TRACE("Trying to match guid %s.\n", debugstr_guid(&(fds->guid)));
-        if (!IsEqualGUID(&IID_D3DDEVICE_WineD3D, &fds->guid)
-                && !IsEqualGUID(&IID_IDirect3DHALDevice, &fds->guid)
-                && !IsEqualGUID(&IID_IDirect3DRGBDevice, &fds->guid))
+        BOOL found = FALSE;
+
+        TRACE("Trying to match GUID %s.\n", debugstr_guid(&fds->guid));
+
+        for (i = 0; i < guid_count; ++i)
         {
-            WARN("No match for this GUID.\n");
+            if (IsEqualGUID(guids[i], &fds->guid))
+            {
+                found = TRUE;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            WARN("Failed to match GUID %s.\n", debugstr_guid(&fds->guid));
             return DDERR_NOTFOUND;
         }
     }
@@ -4204,22 +4199,52 @@ static HRESULT WINAPI d3d3_FindDevice(IDirect3D3 *iface, D3DFINDDEVICESEARCH *fd
     return D3D_OK;
 }
 
-static HRESULT WINAPI d3d2_FindDevice(IDirect3D2 *iface, D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr)
+static HRESULT WINAPI d3d3_FindDevice(IDirect3D3 *iface, D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr)
 {
-    struct ddraw *ddraw = impl_from_IDirect3D2(iface);
+    struct ddraw *ddraw = impl_from_IDirect3D3(iface);
+    static const GUID * const guids[] =
+    {
+        &IID_D3DDEVICE_WineD3D,
+        &IID_IDirect3DHALDevice,
+        &IID_IDirect3DRGBDevice,
+    };
 
     TRACE("iface %p, fds %p, fdr %p.\n", iface, fds, fdr);
 
-    return d3d3_FindDevice(&ddraw->IDirect3D3_iface, fds, fdr);
+    return ddraw_find_device(ddraw, fds, fdr, ARRAY_SIZE(guids), guids);
+}
+
+static HRESULT WINAPI d3d2_FindDevice(IDirect3D2 *iface, D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr)
+{
+    struct ddraw *ddraw = impl_from_IDirect3D2(iface);
+    static const GUID * const guids[] =
+    {
+        &IID_D3DDEVICE_WineD3D,
+        &IID_IDirect3DHALDevice,
+        &IID_IDirect3DMMXDevice,
+        &IID_IDirect3DRGBDevice,
+        &IID_IDirect3DRampDevice,
+    };
+
+    TRACE("iface %p, fds %p, fdr %p.\n", iface, fds, fdr);
+
+    return ddraw_find_device(ddraw, fds, fdr, ARRAY_SIZE(guids), guids);
 }
 
 static HRESULT WINAPI d3d1_FindDevice(IDirect3D *iface, D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr)
 {
     struct ddraw *ddraw = impl_from_IDirect3D(iface);
+    static const GUID * const guids[] =
+    {
+        &IID_D3DDEVICE_WineD3D,
+        &IID_IDirect3DHALDevice,
+        &IID_IDirect3DRGBDevice,
+        &IID_IDirect3DRampDevice,
+    };
 
     TRACE("iface %p, fds %p, fdr %p.\n", iface, fds, fdr);
 
-    return d3d3_FindDevice(&ddraw->IDirect3D3_iface, fds, fdr);
+    return ddraw_find_device(ddraw, fds, fdr, ARRAY_SIZE(guids), guids);
 }
 
 /*****************************************************************************
