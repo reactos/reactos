@@ -12913,7 +12913,7 @@ static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wi
     /* We don't necessarily want to blit from resources without
      * WINED3D_RESOURCE_ACCESS_GPU, but that may be the only way to decompress
      * compressed textures. */
-    decompress = src_format && (src_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_COMPRESSED)
+    decompress = (src_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_COMPRESSED)
             && !(dst_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_COMPRESSED);
     if (!decompress && !(src_resource->access & dst_resource->access & WINED3D_RESOURCE_ACCESS_GPU))
     {
