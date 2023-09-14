@@ -2201,21 +2201,29 @@ void CDECL wined3d_device_get_scissor_rects(const struct wined3d_device *device,
 void CDECL wined3d_device_set_vertex_declaration(struct wined3d_device *device,
         struct wined3d_vertex_declaration *declaration)
 {
-    struct wined3d_vertex_declaration *prev = device->update_state->vertex_declaration;
+    struct wined3d_vertex_declaration *prev = device->state.vertex_declaration;
 
     TRACE("device %p, declaration %p.\n", device, declaration);
 
+    if (declaration)
+        wined3d_vertex_declaration_incref(declaration);
+    if (device->update_stateblock_state->vertex_declaration)
+        wined3d_vertex_declaration_decref(device->update_stateblock_state->vertex_declaration);
+    device->update_stateblock_state->vertex_declaration = declaration;
+
     if (device->recording)
+    {
         device->recording->changed.vertexDecl = TRUE;
+        return;
+    }
 
     if (declaration == prev)
         return;
 
     if (declaration)
         wined3d_vertex_declaration_incref(declaration);
-    device->update_state->vertex_declaration = declaration;
-    if (!device->recording)
-        wined3d_cs_emit_set_vertex_declaration(device->cs, declaration);
+    device->state.vertex_declaration = declaration;
+    wined3d_cs_emit_set_vertex_declaration(device->cs, declaration);
     if (prev)
         wined3d_vertex_declaration_decref(prev);
 }

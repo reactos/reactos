@@ -523,10 +523,17 @@ void state_unbind_resources(struct wined3d_state *state)
 
 void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state)
 {
+    struct wined3d_vertex_declaration *decl;
     struct wined3d_texture *texture;
     struct wined3d_buffer *buffer;
     struct wined3d_shader *shader;
     unsigned int i;
+
+    if ((decl = state->vertex_declaration))
+    {
+        state->vertex_declaration = NULL;
+        wined3d_vertex_declaration_decref(decl);
+    }
 
     if ((buffer = state->index_buffer))
     {
@@ -814,16 +821,16 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
         stateblock->stateblock_state.index_format = state->index_format;
     }
 
-    if (stateblock->changed.vertexDecl && stateblock->state.vertex_declaration != src_state->vertex_declaration)
+    if (stateblock->changed.vertexDecl && stateblock->stateblock_state.vertex_declaration != state->vertex_declaration)
     {
         TRACE("Updating vertex declaration from %p to %p.\n",
-                stateblock->state.vertex_declaration, src_state->vertex_declaration);
+                stateblock->stateblock_state.vertex_declaration, state->vertex_declaration);
 
-        if (src_state->vertex_declaration)
-                wined3d_vertex_declaration_incref(src_state->vertex_declaration);
-        if (stateblock->state.vertex_declaration)
-                wined3d_vertex_declaration_decref(stateblock->state.vertex_declaration);
-        stateblock->state.vertex_declaration = src_state->vertex_declaration;
+        if (state->vertex_declaration)
+                wined3d_vertex_declaration_incref(state->vertex_declaration);
+        if (stateblock->stateblock_state.vertex_declaration)
+                wined3d_vertex_declaration_decref(stateblock->stateblock_state.vertex_declaration);
+        stateblock->stateblock_state.vertex_declaration = state->vertex_declaration;
     }
 
     if (stateblock->changed.material
@@ -1124,8 +1131,15 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
         wined3d_device_set_base_vertex_index(device, stateblock->stateblock_state.base_vertex_index);
     }
 
-    if (stateblock->changed.vertexDecl && stateblock->state.vertex_declaration)
-        wined3d_device_set_vertex_declaration(device, stateblock->state.vertex_declaration);
+    if (stateblock->changed.vertexDecl && stateblock->stateblock_state.vertex_declaration)
+    {
+        if (stateblock->stateblock_state.vertex_declaration)
+            wined3d_vertex_declaration_incref(stateblock->stateblock_state.vertex_declaration);
+        if (state->vertex_declaration)
+            wined3d_vertex_declaration_decref(state->vertex_declaration);
+        state->vertex_declaration = stateblock->stateblock_state.vertex_declaration;
+        wined3d_device_set_vertex_declaration(device, stateblock->stateblock_state.vertex_declaration);
+    }
 
     if (stateblock->changed.material)
     {
