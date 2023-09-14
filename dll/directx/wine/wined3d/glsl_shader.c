@@ -2952,6 +2952,10 @@ static void shader_glsl_get_register_name(const struct wined3d_shader_register *
                 sprintf(register_name, "vpc[%u]", reg->idx[0].offset);
             break;
 
+        case WINED3DSPR_SAMPLEMASK:
+            sprintf(register_name, "sample_mask");
+            break;
+
         default:
             FIXME("Unhandled register type %#x.\n", reg->type);
             sprintf(register_name, "unrecognized_register");
@@ -7386,6 +7390,9 @@ static void shader_glsl_generate_ps_epilogue(const struct wined3d_gl_info *gl_in
         shader_glsl_generate_fog_code(buffer, gl_info, args->fog);
 
     shader_glsl_generate_alpha_test(buffer, gl_info, args->alpha_test_func + 1);
+
+    if (reg_maps->sample_mask)
+        shader_addline(buffer, "gl_SampleMask[0] = floatBitsToInt(sample_mask);\n");
 }
 
 /* Context activation is done by the caller. */
@@ -7595,6 +7602,9 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
         shader_addline(buffer, "layout(early_fragment_tests) in;\n");
 
     shader_addline(buffer, "void main()\n{\n");
+
+    if (reg_maps->sample_mask)
+        shader_addline(buffer, "float sample_mask = uintBitsToFloat(0xffffffffu);\n");
 
     /* Direct3D applications expect integer vPos values, while OpenGL drivers
      * add approximately 0.5. This causes off-by-one problems as spotted by

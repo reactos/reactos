@@ -1048,7 +1048,8 @@ struct wined3d_shader_reg_maps
     DWORD vocp           : 1;
     DWORD input_rel_addressing : 1;
     DWORD viewport_array : 1;
-    DWORD padding        : 15;
+    DWORD sample_mask    : 1;
+    DWORD padding        : 14;
 
     DWORD rt_mask; /* Used render targets, 32 max. */
 
@@ -4175,13 +4176,14 @@ static inline BOOL shader_is_scalar(const struct wined3d_shader_register *reg)
             /* oPos */
             return FALSE;
 
+        case WINED3DSPR_CONSTBOOL:  /* b# */
         case WINED3DSPR_DEPTHOUT:   /* oDepth */
         case WINED3DSPR_DEPTHOUTGE:
         case WINED3DSPR_DEPTHOUTLE:
-        case WINED3DSPR_CONSTBOOL:  /* b# */
         case WINED3DSPR_LOOP:       /* aL */
         case WINED3DSPR_PREDICATE:  /* p0 */
         case WINED3DSPR_PRIMID:     /* primID */
+        case WINED3DSPR_SAMPLEMASK: /* oMask */
             return TRUE;
 
         case WINED3DSPR_MISCTYPE:
