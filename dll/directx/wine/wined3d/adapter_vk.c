@@ -270,7 +270,7 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     }
     wined3d_driver_info_init(&adapter->driver_info, gpu_description, wined3d_settings.emulated_textureram);
 
-    if (!wined3d_adapter_vk_init_format_info(adapter))
+    if (!wined3d_adapter_vk_init_format_info(adapter_vk, vk_info))
         goto fail_vulkan;
 
     adapter->vertex_pipe = &none_vertex_pipe;

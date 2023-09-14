@@ -1942,6 +1942,11 @@ static struct wined3d_format_gl *wined3d_format_gl_mutable(struct wined3d_format
     return CONTAINING_RECORD(format, struct wined3d_format_gl, f);
 }
 
+static struct wined3d_format_vk *wined3d_format_vk_mutable(struct wined3d_format *format)
+{
+    return CONTAINING_RECORD(format, struct wined3d_format_vk, f);
+}
+
 static struct wined3d_format *get_format_by_idx(const struct wined3d_adapter *adapter, int fmt_idx)
 {
     return (struct wined3d_format *)((BYTE *)adapter->formats + fmt_idx * adapter->format_size);
@@ -4084,9 +4089,159 @@ fail:
     return FALSE;
 }
 
-BOOL wined3d_adapter_vk_init_format_info(struct wined3d_adapter *adapter)
+static void init_vulkan_format_info(struct wined3d_format_vk *format,
+        const struct wined3d_vk_info *vk_info, VkPhysicalDevice vk_physical_device)
 {
-    return wined3d_adapter_init_format_info(adapter, sizeof(struct wined3d_format));
+    static const struct
+    {
+        enum wined3d_format_id id;
+        VkFormat vk_format;
+    }
+    vulkan_formats[] =
+    {
+        {WINED3DFMT_R32G32B32A32_FLOAT,    VK_FORMAT_R32G32B32A32_SFLOAT,     },
+        {WINED3DFMT_R32G32B32A32_UINT,     VK_FORMAT_R32G32B32A32_UINT,       },
+        {WINED3DFMT_R32G32B32A32_SINT,     VK_FORMAT_R32G32B32A32_SINT,       },
+        {WINED3DFMT_R32G32B32_FLOAT,       VK_FORMAT_R32G32B32_SFLOAT,        },
+        {WINED3DFMT_R32G32B32_UINT,        VK_FORMAT_R32G32B32_UINT,          },
+        {WINED3DFMT_R32G32B32_SINT,        VK_FORMAT_R32G32B32_SINT,          },
+        {WINED3DFMT_R16G16B16A16_FLOAT,    VK_FORMAT_R16G16B16A16_SFLOAT,     },
+        {WINED3DFMT_R16G16B16A16_UNORM,    VK_FORMAT_R16G16B16A16_UNORM,      },
+        {WINED3DFMT_R16G16B16A16_UINT,     VK_FORMAT_R16G16B16A16_UINT,       },
+        {WINED3DFMT_R16G16B16A16_SNORM,    VK_FORMAT_R16G16B16A16_SNORM,      },
+        {WINED3DFMT_R16G16B16A16_SINT,     VK_FORMAT_R16G16B16A16_SINT,       },
+        {WINED3DFMT_R32G32_FLOAT,          VK_FORMAT_R32G32_SFLOAT,           },
+        {WINED3DFMT_R32G32_UINT,           VK_FORMAT_R32G32_UINT,             },
+        {WINED3DFMT_R32G32_SINT,           VK_FORMAT_R32G32_SINT,             },
+        {WINED3DFMT_R10G10B10A2_UNORM,     VK_FORMAT_A2B10G10R10_UNORM_PACK32,},
+        {WINED3DFMT_R11G11B10_FLOAT,       VK_FORMAT_B10G11R11_UFLOAT_PACK32, },
+        {WINED3DFMT_R8G8_UNORM,            VK_FORMAT_R8G8_UNORM,              },
+        {WINED3DFMT_R8G8_UINT,             VK_FORMAT_R8G8_UINT,               },
+        {WINED3DFMT_R8G8_SNORM,            VK_FORMAT_R8G8_SNORM,              },
+        {WINED3DFMT_R8G8_SINT,             VK_FORMAT_R8G8_SINT,               },
+        {WINED3DFMT_R8G8B8A8_UNORM,        VK_FORMAT_R8G8B8A8_UNORM,          },
+        {WINED3DFMT_R8G8B8A8_UNORM_SRGB,   VK_FORMAT_R8G8B8A8_SRGB,           },
+        {WINED3DFMT_R8G8B8A8_UINT,         VK_FORMAT_R8G8B8A8_UINT,           },
+        {WINED3DFMT_R8G8B8A8_SNORM,        VK_FORMAT_R8G8B8A8_SNORM,          },
+        {WINED3DFMT_R8G8B8A8_SINT,         VK_FORMAT_R8G8B8A8_SINT,           },
+        {WINED3DFMT_R16G16_FLOAT,          VK_FORMAT_R16G16_SFLOAT,           },
+        {WINED3DFMT_R16G16_UNORM,          VK_FORMAT_R16G16_UNORM,            },
+        {WINED3DFMT_R16G16_UINT,           VK_FORMAT_R16G16_UINT,             },
+        {WINED3DFMT_R16G16_SNORM,          VK_FORMAT_R16G16_SNORM,            },
+        {WINED3DFMT_R16G16_SINT,           VK_FORMAT_R16G16_SINT,             },
+        {WINED3DFMT_D32_FLOAT,             VK_FORMAT_D32_SFLOAT,              },
+        {WINED3DFMT_R32_FLOAT,             VK_FORMAT_R32_SFLOAT,              },
+        {WINED3DFMT_R32_UINT,              VK_FORMAT_R32_UINT,                },
+        {WINED3DFMT_R32_SINT,              VK_FORMAT_R32_SINT,                },
+        {WINED3DFMT_R16_FLOAT,             VK_FORMAT_R16_SFLOAT,              },
+        {WINED3DFMT_D16_UNORM,             VK_FORMAT_D16_UNORM,               },
+        {WINED3DFMT_R16_UNORM,             VK_FORMAT_R16_UNORM,               },
+        {WINED3DFMT_R16_UINT,              VK_FORMAT_R16_UINT,                },
+        {WINED3DFMT_R16_SNORM,             VK_FORMAT_R16_SNORM,               },
+        {WINED3DFMT_R16_SINT,              VK_FORMAT_R16_SINT,                },
+        {WINED3DFMT_R8_UNORM,              VK_FORMAT_R8_UNORM,                },
+        {WINED3DFMT_R8_UINT,               VK_FORMAT_R8_UINT,                 },
+        {WINED3DFMT_R8_SNORM,              VK_FORMAT_R8_SNORM,                },
+        {WINED3DFMT_R8_SINT,               VK_FORMAT_R8_SINT,                 },
+        {WINED3DFMT_A8_UNORM,              VK_FORMAT_R8_UNORM,                },
+        {WINED3DFMT_B8G8R8A8_UNORM,        VK_FORMAT_B8G8R8A8_UNORM,          },
+        {WINED3DFMT_B8G8R8A8_UNORM_SRGB,   VK_FORMAT_B8G8R8A8_SRGB,           },
+        {WINED3DFMT_BC1_UNORM,             VK_FORMAT_BC1_RGBA_UNORM_BLOCK,    },
+        {WINED3DFMT_BC1_UNORM_SRGB,        VK_FORMAT_BC1_RGBA_SRGB_BLOCK,     },
+        {WINED3DFMT_BC2_UNORM,             VK_FORMAT_BC2_UNORM_BLOCK,         },
+        {WINED3DFMT_BC2_UNORM_SRGB,        VK_FORMAT_BC2_SRGB_BLOCK,          },
+        {WINED3DFMT_BC3_UNORM,             VK_FORMAT_BC3_UNORM_BLOCK,         },
+        {WINED3DFMT_BC3_UNORM_SRGB,        VK_FORMAT_BC3_SRGB_BLOCK,          },
+        {WINED3DFMT_BC4_UNORM,             VK_FORMAT_BC4_UNORM_BLOCK,         },
+        {WINED3DFMT_BC4_SNORM,             VK_FORMAT_BC4_SNORM_BLOCK,         },
+        {WINED3DFMT_BC5_UNORM,             VK_FORMAT_BC5_UNORM_BLOCK,         },
+        {WINED3DFMT_BC5_SNORM,             VK_FORMAT_BC5_SNORM_BLOCK,         },
+        {WINED3DFMT_BC6H_UF16,             VK_FORMAT_BC6H_UFLOAT_BLOCK,       },
+        {WINED3DFMT_BC6H_SF16,             VK_FORMAT_BC6H_SFLOAT_BLOCK,       },
+        {WINED3DFMT_BC7_UNORM,             VK_FORMAT_BC7_UNORM_BLOCK,         },
+        {WINED3DFMT_BC7_UNORM_SRGB,        VK_FORMAT_BC7_SRGB_BLOCK,          },
+    };
+    VkFormat vk_format = VK_FORMAT_UNDEFINED;
+    VkFormatFeatureFlags texture_flags;
+    VkFormatProperties properties;
+    unsigned int flags;
+    unsigned int i;
+
+    for (i = 0; i < ARRAY_SIZE(vulkan_formats); ++i)
+    {
+        if (vulkan_formats[i].id == format->f.id)
+        {
+            vk_format = vulkan_formats[i].vk_format;
+            break;
+        }
+    }
+    if (!vk_format)
+    {
+        WARN("Unsupported format %s.\n", debug_d3dformat(format->f.id));
+        return;
+    }
+
+    format->vk_format = vk_format;
+
+    VK_CALL(vkGetPhysicalDeviceFormatProperties(vk_physical_device, vk_format, &properties));
+
+    if (properties.bufferFeatures & VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT)
+        format->f.flags[WINED3D_GL_RES_TYPE_BUFFER] |= WINED3DFMT_FLAG_VERTEX_ATTRIBUTE;
+    if (properties.bufferFeatures & VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT)
+        format->f.flags[WINED3D_GL_RES_TYPE_BUFFER] |= WINED3DFMT_FLAG_TEXTURE;
+
+    flags = 0;
+    texture_flags = properties.linearTilingFeatures | properties.optimalTilingFeatures;
+    if (texture_flags & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT)
+    {
+        flags |= WINED3DFMT_FLAG_TEXTURE | WINED3DFMT_FLAG_VTF;
+    }
+    if (texture_flags & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT)
+    {
+        flags |= WINED3DFMT_FLAG_RENDERTARGET;
+    }
+    if (texture_flags & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT)
+    {
+        flags |= WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING;
+    }
+    if (texture_flags & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)
+    {
+        flags |= WINED3DFMT_FLAG_FILTERING;
+    }
+
+    format->f.flags[WINED3D_GL_RES_TYPE_TEX_1D] |= flags;
+    format->f.flags[WINED3D_GL_RES_TYPE_TEX_2D] |= flags;
+    format->f.flags[WINED3D_GL_RES_TYPE_TEX_3D] |= flags;
+    format->f.flags[WINED3D_GL_RES_TYPE_TEX_CUBE] |= flags;
+}
+
+BOOL wined3d_adapter_vk_init_format_info(struct wined3d_adapter_vk *adapter_vk,
+        const struct wined3d_vk_info *vk_info)
+{
+    VkPhysicalDevice vk_physical_device = adapter_vk->physical_device;
+    struct wined3d_adapter *adapter = &adapter_vk->a;
+    struct wined3d_format_vk *format;
+    unsigned int i;
+
+    if (!wined3d_adapter_init_format_info(adapter, sizeof(*format)))
+        return FALSE;
+
+    for (i = 0; i < WINED3D_FORMAT_COUNT; ++i)
+    {
+        format = wined3d_format_vk_mutable(get_format_by_idx(adapter, i));
+
+        if (format->f.id)
+            init_vulkan_format_info(format, vk_info, vk_physical_device);
+    }
+
+    if (!init_typeless_formats(adapter)) goto fail;
+
+    return TRUE;
+
+fail:
+    heap_free(adapter->formats);
+    adapter->formats = NULL;
+    return FALSE;
 }
 
 const struct wined3d_format *wined3d_get_format(const struct wined3d_adapter *adapter,

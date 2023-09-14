@@ -2791,7 +2791,8 @@ struct wined3d_caps_gl_ctx
 BOOL wined3d_adapter_gl_init_format_info(struct wined3d_adapter *adapter,
         struct wined3d_caps_gl_ctx *ctx) DECLSPEC_HIDDEN;
 BOOL wined3d_adapter_no3d_init_format_info(struct wined3d_adapter *adapter) DECLSPEC_HIDDEN;
-BOOL wined3d_adapter_vk_init_format_info(struct wined3d_adapter *adapter) DECLSPEC_HIDDEN;
+BOOL wined3d_adapter_vk_init_format_info(struct wined3d_adapter_vk *adapter_vk,
+        const struct wined3d_vk_info *vk_info) DECLSPEC_HIDDEN;
 UINT64 adapter_adjust_memory(struct wined3d_adapter *adapter, INT64 amount) DECLSPEC_HIDDEN;
 
 BOOL wined3d_caps_gl_ctx_test_viewport_subpixel_bits(struct wined3d_caps_gl_ctx *ctx) DECLSPEC_HIDDEN;
@@ -4687,6 +4688,18 @@ struct wined3d_format_gl
 static inline const struct wined3d_format_gl *wined3d_format_gl(const struct wined3d_format *format)
 {
     return CONTAINING_RECORD(format, struct wined3d_format_gl, f);
+}
+
+struct wined3d_format_vk
+{
+    struct wined3d_format f;
+
+    VkFormat vk_format;
+};
+
+static inline const struct wined3d_format_vk *wined3d_format_vk(const struct wined3d_format *format)
+{
+    return CONTAINING_RECORD(format, struct wined3d_format_vk, f);
 }
 
 BOOL wined3d_array_reserve(void **elements, SIZE_T *capacity, SIZE_T count, SIZE_T size) DECLSPEC_HIDDEN;
