@@ -2870,9 +2870,10 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
     checkGLcall("blit state application");
 }
 
-static void context_apply_blit_projection(const struct wined3d_context *context, unsigned int w, unsigned int h)
+static void wined3d_context_gl_apply_blit_projection(const struct wined3d_context_gl *context_gl,
+        unsigned int w, unsigned int h)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     const GLdouble projection[] =
     {
         2.0 / w,     0.0,  0.0, 0.0,
@@ -2904,7 +2905,7 @@ void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_
 
         wined3d_context_gl_get_rt_size(context_gl, &rt_size);
         if (context_gl->blit_size.cx != rt_size.cx || context_gl->blit_size.cy != rt_size.cy)
-            context_apply_blit_projection(context, rt_size.cx, rt_size.cy);
+            wined3d_context_gl_apply_blit_projection(context_gl, rt_size.cx, rt_size.cy);
         wined3d_context_gl_apply_blit_state(context_gl, device);
 
         checkGLcall("ffp blit state application");
@@ -2958,7 +2959,7 @@ void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_
     gl_info->gl_ops.gl.p_glMatrixMode(GL_MODELVIEW);
     gl_info->gl_ops.gl.p_glLoadIdentity();
     context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(0)));
-    context_apply_blit_projection(context, context_gl->blit_size.cx, context_gl->blit_size.cy);
+    wined3d_context_gl_apply_blit_projection(context_gl, context_gl->blit_size.cx, context_gl->blit_size.cy);
     context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_PROJECTION));
 
     /* Other misc states. */
