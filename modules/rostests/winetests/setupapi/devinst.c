@@ -703,12 +703,8 @@ static void test_device_iface_detail(void)
 
 static void test_device_key(void)
 {
-    static const WCHAR classKey[] = {'S','y','s','t','e','m','\\',
-     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-     'C','o','n','t','r','o','l','\\','C','l','a','s','s','\\',
-     '{','6','a','5','5','b','5','a','4','-','3','f','6','5','-',
-     '1','1','d','b','-','b','7','0','4','-',
-     '0','0','1','1','9','5','5','c','2','b','d','b','}',0};
+    static const char class_key_path[] = "System\\CurrentControlSet\\Control\\Class"
+            "\\{6a55b5a4-3f65-11db-b704-0011955c2bdb}";
     static const WCHAR bogus[] = {'S','y','s','t','e','m','\\',
      'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
      'E','n','u','m','\\','R','o','o','t','\\',
@@ -782,66 +778,68 @@ static void test_device_key(void)
     ok(GetLastError() == ERROR_INVALID_DATA, "Got unexpected error %#x.\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, classKey, &key);
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, class_key_path, &key);
     ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
     RegCloseKey(key);
 
+    /* Vista+ will fail the following call to SetupDiCreateDevKeyW() if the
+     * class key doesn't exist. */
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, class_key_path, &key);
+    ok(!res, "Failed to create class key, error %u.\n", res);
+    RegCloseKey(key);
+
     key = SetupDiCreateDevRegKeyW(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
-    ok(key != INVALID_HANDLE_VALUE || GetLastError() == ERROR_KEY_DOES_NOT_EXIST, /* Vista+ */
-            "Failed to create device key, error %#x.\n", GetLastError());
-    if (key != INVALID_HANDLE_VALUE)
-    {
-        RegCloseKey(key);
+    ok(key != INVALID_HANDLE_VALUE, "Failed to create device key, error %#x.\n", GetLastError());
+    RegCloseKey(key);
 
-        ok(!RegOpenKeyW(HKEY_LOCAL_MACHINE, classKey, &key), "Key should exist.\n");
-        RegCloseKey(key);
+    ok(!RegOpenKeyA(HKEY_LOCAL_MACHINE, class_key_path, &key), "Key should exist.\n");
+    RegCloseKey(key);
 
-        res = RegOpenKeyA(HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Control\\Class", &class_key);
-        ok(!res, "Failed to open class key, error %u.\n", res);
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Control\\Class", &class_key);
+    ok(!res, "Failed to open class key, error %u.\n", res);
 
-        ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_DRIVER, NULL,
-                (BYTE *)driver_path, sizeof(driver_path), NULL);
-        ok(ret, "Failed to get driver property, error %#x.\n", GetLastError());
-        res = RegOpenKeyA(class_key, driver_path, &key);
-        ok(!res, "Failed to open driver key, error %u.\n", res);
-        RegSetValueExA(key, "foo", 0, REG_SZ, (BYTE *)"bar", sizeof("bar"));
-        RegCloseKey(key);
+    ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_DRIVER, NULL,
+            (BYTE *)driver_path, sizeof(driver_path), NULL);
+    ok(ret, "Failed to get driver property, error %#x.\n", GetLastError());
+    res = RegOpenKeyA(class_key, driver_path, &key);
+    ok(!res, "Failed to open driver key, error %u.\n", res);
+    RegSetValueExA(key, "foo", 0, REG_SZ, (BYTE *)"bar", sizeof("bar"));
+    RegCloseKey(key);
 
-        SetLastError(0xdeadbeef);
-        key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, 0);
+    SetLastError(0xdeadbeef);
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, 0);
 todo_wine {
-        ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
-        ok(GetLastError() == ERROR_INVALID_DATA || GetLastError() == ERROR_ACCESS_DENIED, /* win2k3 */
-                "Got unexpected error %#x.\n", GetLastError());
+    ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA || GetLastError() == ERROR_ACCESS_DENIED, /* win2k3 */
+            "Got unexpected error %#x.\n", GetLastError());
 }
 
-        key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_READ);
-        ok(key != INVALID_HANDLE_VALUE, "Failed to open device key, error %#x.\n", GetLastError());
-        size = sizeof(data);
-        res = RegQueryValueExA(key, "foo", NULL, NULL, (BYTE *)data, &size);
-        ok(!res, "Failed to get value, error %u.\n", res);
-        ok(!strcmp(data, "bar"), "Got wrong data %s.\n", data);
-        RegCloseKey(key);
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_READ);
+    ok(key != INVALID_HANDLE_VALUE, "Failed to open device key, error %#x.\n", GetLastError());
+    size = sizeof(data);
+    res = RegQueryValueExA(key, "foo", NULL, NULL, (BYTE *)data, &size);
+    ok(!res, "Failed to get value, error %u.\n", res);
+    ok(!strcmp(data, "bar"), "Got wrong data %s.\n", data);
+    RegCloseKey(key);
 
-        ret = SetupDiDeleteDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV);
-        ok(ret, "Failed to delete device key, error %#x.\n", GetLastError());
+    ret = SetupDiDeleteDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV);
+    ok(ret, "Failed to delete device key, error %#x.\n", GetLastError());
 
-        res = RegOpenKeyA(class_key, driver_path, &key);
-        ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
+    res = RegOpenKeyA(class_key, driver_path, &key);
+    ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
 
-        key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, 0);
-        ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
-        ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, 0);
+    ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
 
-        RegCloseKey(class_key);
-    }
+    RegCloseKey(class_key);
 
     ret = SetupDiRemoveDevice(set, &device);
     ok(ret, "Failed to remove device, error %#x.\n", GetLastError());
     SetupDiDestroyDeviceInfoList(set);
 
     /* Vista+ deletes the key automatically. */
-    res = RegDeleteKeyW(HKEY_LOCAL_MACHINE, classKey);
+    res = RegDeleteKeyA(HKEY_LOCAL_MACHINE, class_key_path);
     ok(!res || res == ERROR_FILE_NOT_FOUND, "Failed to delete class key, error %u.\n", res);
 }
 
