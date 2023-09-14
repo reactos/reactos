@@ -30,8 +30,7 @@ WINE_DECLARE_DEBUG_CHANNEL(d3d_perf);
 
 static void resource_check_usage(DWORD usage)
 {
-    static DWORD handled = WINED3DUSAGE_RENDERTARGET
-            | WINED3DUSAGE_DEPTHSTENCIL
+    static const DWORD handled = WINED3DUSAGE_WRITEONLY
             | WINED3DUSAGE_WRITEONLY
             | WINED3DUSAGE_DYNAMIC
             | WINED3DUSAGE_STATICDECL

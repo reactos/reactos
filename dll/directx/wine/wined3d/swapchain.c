@@ -959,7 +959,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
             struct wined3d_texture *ds;
 
             texture_desc.format = swapchain->desc.auto_depth_stencil_format;
-            texture_desc.usage = WINED3DUSAGE_DEPTHSTENCIL;
+            texture_desc.usage = 0;
             texture_desc.bind_flags = WINED3D_BIND_DEPTH_STENCIL;
 
             if (FAILED(hr = device->device_parent->ops->create_swapchain_texture(device->device_parent,

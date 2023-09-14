@@ -4938,7 +4938,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         texture_desc.format = swapchain->desc.auto_depth_stencil_format;
         texture_desc.multisample_type = swapchain->desc.multisample_type;
         texture_desc.multisample_quality = swapchain->desc.multisample_quality;
-        texture_desc.usage = WINED3DUSAGE_DEPTHSTENCIL;
+        texture_desc.usage = 0;
         texture_desc.bind_flags = WINED3D_BIND_DEPTH_STENCIL;
         texture_desc.access = WINED3D_RESOURCE_ACCESS_GPU;
         texture_desc.width = swapchain->desc.backbuffer_width;
