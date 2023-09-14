@@ -749,13 +749,10 @@ static void wined3d_state_record_lights(struct wined3d_light_state *dst_state,
 void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
 {
     const struct wined3d_stateblock_state *state = &stateblock->device->stateblock_state;
-    const struct wined3d_state *src_state = &stateblock->device->state;
     unsigned int i;
     DWORD map;
 
     TRACE("stateblock %p.\n", stateblock);
-
-    TRACE("Capturing state %p.\n", src_state);
 
     if (stateblock->changed.vertexShader && stateblock->stateblock_state.vs != state->vs)
     {
