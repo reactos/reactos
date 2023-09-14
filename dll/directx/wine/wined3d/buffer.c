@@ -1360,11 +1360,11 @@ static GLenum buffer_type_hint_from_bind_flags(const struct wined3d_gl_info *gl_
     return GL_ARRAY_BUFFER;
 }
 
-static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device *device,
-        UINT size, DWORD usage, enum wined3d_format_id format_id, unsigned int access, unsigned int bind_flags,
-        const struct wined3d_sub_resource_data *data, void *parent, const struct wined3d_parent_ops *parent_ops)
+static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device *device, UINT size,
+        DWORD usage, unsigned int access, unsigned int bind_flags, const struct wined3d_sub_resource_data *data,
+        void *parent, const struct wined3d_parent_ops *parent_ops)
 {
-    const struct wined3d_format *format = wined3d_get_format(device->adapter, format_id, usage);
+    const struct wined3d_format *format = wined3d_get_format(device->adapter, WINED3DFMT_UNKNOWN, usage);
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     struct wined3d_resource *resource = &buffer->resource;
     BOOL dynamic_buffer_ok;
@@ -1473,7 +1473,7 @@ HRESULT CDECL wined3d_buffer_create(struct wined3d_device *device, const struct 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = buffer_init(object, device, desc->byte_width, desc->usage, WINED3DFMT_UNKNOWN,
+    if (FAILED(hr = buffer_init(object, device, desc->byte_width, desc->usage,
             desc->access, desc->bind_flags, data, parent, parent_ops)))
     {
         WARN("Failed to initialize buffer, hr %#x.\n", hr);
