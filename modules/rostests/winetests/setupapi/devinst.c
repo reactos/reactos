@@ -45,6 +45,8 @@ static GUID guid2 = {0x6a55b5a5, 0x3f65, 0x11db, {0xb7,0x04,0x00,0x11,0x95,0x5c,
 BOOL (WINAPI *pSetupDiSetDevicePropertyW)(HDEVINFO, PSP_DEVINFO_DATA, const DEVPROPKEY *, DEVPROPTYPE, const BYTE *, DWORD, DWORD);
 BOOL (WINAPI *pSetupDiGetDevicePropertyW)(HDEVINFO, PSP_DEVINFO_DATA, const DEVPROPKEY *, DEVPROPTYPE *, BYTE *, DWORD, DWORD *, DWORD);
 
+static BOOL wow64;
+
 static void create_file(const char *name, const char *data)
 {
     HANDLE file;
@@ -2111,8 +2113,236 @@ static void test_get_actual_section(void)
     ok(ret, "Failed to delete %s, error %u.\n", inf_path, GetLastError());
 }
 
+static void test_driver_list(void)
+{
+    char inf_dir[MAX_PATH], inf_path[MAX_PATH], inf_path2[MAX_PATH];
+    static const char hardware_id[] = "bogus_hardware_id\0";
+    static const char compat_id[] = "bogus_compat_id\0";
+    SP_DEVINSTALL_PARAMS_A params = {sizeof(params)};
+    SP_DRVINFO_DATA_A driver = {sizeof(driver)};
+    SP_DEVINFO_DATA device = {sizeof(device)};
+    HDEVINFO set;
+    BOOL ret;
+
+    static const char inf_data[] = "[Version]\n"
+            "Signature=\"$Chicago$\"\n"
+            "ClassGuid={6a55b5a4-3f65-11db-b704-0011955c2bdb}\n"
+            "[Manufacturer]\n"
+            "mfg1=mfg1_key,NT" MYEXT "\n"
+            "mfg2=mfg2_key,NT" MYEXT "\n"
+            "mfg1_wow=mfg1_key,NT" WOWEXT "\n"
+            "mfg2_wow=mfg2_key,NT" WOWEXT "\n"
+            "mfg3=mfg3_key,NT" WRONGEXT "\n"
+            "[mfg1_key.nt" MYEXT "]\n"
+            "desc1=,bogus_hardware_id\n"
+            "desc2=,bogus_hardware_id\n"
+            "desc3=,wrong_hardware_id\n"
+            "desc4=,wrong_hardware_id,bogus_compat_id\n"
+            "[mfg1_key.nt" WOWEXT "]\n"
+            "desc1=,bogus_hardware_id\n"
+            "desc2=,bogus_hardware_id\n"
+            "desc3=,wrong_hardware_id\n"
+            "desc4=,wrong_hardware_id,bogus_compat_id\n"
+            "[mfg2_key.nt" MYEXT "]\n"
+            "desc5=,bogus_hardware_id\n"
+            "[mfg2_key.nt" WOWEXT "]\n"
+            "desc5=,bogus_hardware_id\n"
+            "[mfg3_key.nt" WRONGEXT "]\n"
+            "desc6=,bogus_hardware_id\n";
+
+    static const char inf_data_file1[] = "[Version]\n"
+            "Signature=\"$Chicago$\"\n"
+            "ClassGuid={6a55b5a4-3f65-11db-b704-0011955c2bdb}\n"
+            "[Manufacturer]\n"
+            "mfg1=mfg1_key,NT" MYEXT ",NT" WOWEXT "\n"
+            "[mfg1_key.nt" MYEXT "]\n"
+            "desc1=,bogus_hardware_id\n"
+            "[mfg1_key.nt" WOWEXT "]\n"
+            "desc1=,bogus_hardware_id\n";
+
+    static const char inf_data_file2[] = "[Version]\n"
+            "Signature=\"$Chicago$\"\n"
+            "ClassGuid={6a55b5a5-3f65-11db-b704-0011955c2bdb}\n"
+            "[Manufacturer]\n"
+            "mfg1=mfg1_key,NT" MYEXT ",NT" WOWEXT "\n"
+            "[mfg1_key.nt" MYEXT "]\n"
+            "desc2=,bogus_hardware_id\n"
+            "[mfg1_key.nt" WOWEXT "]\n"
+            "desc2=,bogus_hardware_id\n";
+
+    GetTempPathA(sizeof(inf_path), inf_path);
+    strcat(inf_path, "setupapi_test.inf");
+    create_file(inf_path, inf_data);
+    set = SetupDiCreateDeviceInfoList(NULL, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\BOGUS\\0000", &GUID_NULL, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    ret = SetupDiSetDeviceRegistryPropertyA(set, &device, SPDRP_HARDWAREID,
+            (const BYTE *)hardware_id, sizeof(hardware_id));
+    ok(ret, "Failed to set hardware ID, error %#x.\n", GetLastError());
+
+    ret = SetupDiSetDeviceRegistryPropertyA(set, &device, SPDRP_COMPATIBLEIDS,
+            (const BYTE *)compat_id, sizeof(compat_id));
+    ok(ret, "Failed to set hardware ID, error %#x.\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 0, &driver);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_NO_MORE_ITEMS, "Got unexpected error %#x.\n", GetLastError());
+
+    ret = SetupDiGetDeviceInstallParamsA(set, &device, &params);
+    ok(ret, "Failed to get device install params, error %#x.\n", GetLastError());
+    strcpy(params.DriverPath, inf_path);
+    params.Flags = DI_ENUMSINGLEINF;
+    ret = SetupDiSetDeviceInstallParamsA(set, &device, &params);
+    ok(ret, "Failed to set device install params, error %#x.\n", GetLastError());
+
+    ret = SetupDiBuildDriverInfoList(set, &device, SPDIT_COMPATDRIVER);
+    ok(ret, "Failed to build driver list, error %#x.\n", GetLastError());
+
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 0, &driver);
+    ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
+    ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+    ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.MfgName, wow64 ? "mfg1_wow" : "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
+    ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
+
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 1, &driver);
+    ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
+    ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+    ok(!strcmp(driver.Description, "desc2"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.MfgName, wow64 ? "mfg1_wow" : "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
+    ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
+
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 2, &driver);
+    ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
+    ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+    ok(!strcmp(driver.Description, "desc4"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.MfgName, wow64 ? "mfg1_wow" : "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
+    ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
+
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 3, &driver);
+    ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
+    ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+    ok(!strcmp(driver.Description, "desc5"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.MfgName, wow64 ? "mfg2_wow" : "mfg2"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
+    ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
+
+    SetLastError(0xdeadbeef);
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 4, &driver);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_NO_MORE_ITEMS, "Got unexpected error %#x.\n", GetLastError());
+
+    SetupDiDestroyDeviceInfoList(set);
+    ret = DeleteFileA(inf_path);
+    ok(ret, "Failed to delete %s, error %u.\n", inf_path, GetLastError());
+
+    /* Test building from a path. */
+
+    GetTempPathA(sizeof(inf_dir), inf_dir);
+    strcat(inf_dir, "setupapi_test");
+    ret = CreateDirectoryA(inf_dir, NULL);
+    ok(ret, "Failed to create directory, error %u.\n", GetLastError());
+    sprintf(inf_path, "%s/test1.inf", inf_dir);
+    create_file(inf_path, inf_data_file1);
+    sprintf(inf_path2, "%s/test2.inf", inf_dir);
+    create_file(inf_path2, inf_data_file2);
+
+    set = SetupDiCreateDeviceInfoList(NULL, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\BOGUS\\0000", &GUID_NULL, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    ret = SetupDiSetDeviceRegistryPropertyA(set, &device, SPDRP_HARDWAREID,
+            (const BYTE *)hardware_id, sizeof(hardware_id));
+    ok(ret, "Failed to set hardware ID, error %#x.\n", GetLastError());
+
+    ret = SetupDiGetDeviceInstallParamsA(set, &device, &params);
+    ok(ret, "Failed to get device install params, error %#x.\n", GetLastError());
+    strcpy(params.DriverPath, inf_dir);
+    ret = SetupDiSetDeviceInstallParamsA(set, &device, &params);
+    ok(ret, "Failed to set device install params, error %#x.\n", GetLastError());
+
+    ret = SetupDiBuildDriverInfoList(set, &device, SPDIT_COMPATDRIVER);
+    ok(ret, "Failed to build driver list, error %#x.\n", GetLastError());
+
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 0, &driver);
+    ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
+    ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+    ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.MfgName, "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
+    ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
+
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 1, &driver);
+    ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
+    ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+    ok(!strcmp(driver.Description, "desc2"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.MfgName, "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
+    ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
+
+    SetLastError(0xdeadbeef);
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 2, &driver);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_NO_MORE_ITEMS, "Got unexpected error %#x.\n", GetLastError());
+
+    SetupDiDestroyDeviceInfoList(set);
+    ret = DeleteFileA(inf_path);
+    ok(ret, "Failed to delete %s, error %u.\n", inf_path, GetLastError());
+    ret = DeleteFileA(inf_path2);
+    ok(ret, "Failed to delete %s, error %u.\n", inf_path2, GetLastError());
+    ret = RemoveDirectoryA(inf_dir);
+    ok(ret, "Failed to delete %s, error %u.\n", inf_dir, GetLastError());
+
+    /* Test the default path. */
+
+    create_file("C:/windows/inf/wine_test1.inf", inf_data_file1);
+    create_file("C:/windows/inf/wine_test2.inf", inf_data_file2);
+
+    set = SetupDiCreateDeviceInfoList(NULL, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\BOGUS\\0000", &GUID_NULL, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    ret = SetupDiSetDeviceRegistryPropertyA(set, &device, SPDRP_HARDWAREID,
+            (const BYTE *)hardware_id, sizeof(hardware_id));
+    ok(ret, "Failed to set hardware ID, error %#x.\n", GetLastError());
+
+    ret = SetupDiBuildDriverInfoList(set, &device, SPDIT_COMPATDRIVER);
+    ok(ret, "Failed to build driver list, error %#x.\n", GetLastError());
+
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 0, &driver);
+    ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
+    ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+    ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.MfgName, "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
+    ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
+
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 1, &driver);
+    ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
+    ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+    ok(!strcmp(driver.Description, "desc2"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.MfgName, "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
+    ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
+
+    SetLastError(0xdeadbeef);
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 2, &driver);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_NO_MORE_ITEMS, "Got unexpected error %#x.\n", GetLastError());
+
+    SetupDiDestroyDeviceInfoList(set);
+    ret = DeleteFileA("C:/windows/inf/wine_test1.inf");
+    ok(ret, "Failed to delete %s, error %u.\n", inf_path, GetLastError());
+    ret = DeleteFileA("C:/windows/inf/wine_test2.inf");
+    ok(ret, "Failed to delete %s, error %u.\n", inf_path2, GetLastError());
+    /* Windows "precompiles" INF files in this dir; try to avoid leaving them behind. */
+    DeleteFileA("C:/windows/inf/wine_test1.pnf");
+    DeleteFileA("C:/windows/inf/wine_test2.pnf");
+}
+
 START_TEST(devinst)
 {
+    static BOOL (WINAPI *pIsWow64Process)(HANDLE, BOOL *);
     HKEY hkey;
 
     test_get_actual_section();
@@ -2123,6 +2353,9 @@ START_TEST(devinst)
         return;
     }
     RegCloseKey(hkey);
+
+    pIsWow64Process = (void *)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsWow64Process");
+    if (pIsWow64Process) pIsWow64Process(GetCurrentProcess(), &wow64);
 
     test_create_device_list_ex();
     test_open_class_key();
@@ -2142,4 +2375,5 @@ START_TEST(devinst)
     test_devnode();
     test_device_interface_key();
     test_device_install_params();
+    test_driver_list();
 }
