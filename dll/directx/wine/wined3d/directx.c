@@ -1463,16 +1463,13 @@ static BOOL wined3d_check_depth_stencil_format(const struct wined3d_adapter *ada
     return TRUE;
 }
 
-/* Check the render target capabilities of a format */
-static BOOL CheckRenderTargetCapability(const struct wined3d_adapter *adapter,
-        const struct wined3d_format *adapter_format, const struct wined3d_format *check_format,
+static BOOL wined3d_check_render_target_format(const struct wined3d_adapter *adapter,
+        const struct wined3d_format *adapter_format, const struct wined3d_format *rt_format,
         enum wined3d_gl_resource_type gl_type)
 {
-    /* Filter out non-RT formats */
-    if (!(check_format->flags[gl_type] & WINED3DFMT_FLAG_RENDERTARGET))
+    if (!(rt_format->flags[gl_type] & WINED3DFMT_FLAG_RENDERTARGET))
         return FALSE;
-    if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
-        return TRUE;
+
     if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
     {
         const struct wined3d_pixel_format *cfgs = adapter->cfgs;
@@ -1481,11 +1478,12 @@ static BOOL CheckRenderTargetCapability(const struct wined3d_adapter *adapter,
         /* In backbuffer mode the front and backbuffer share the same WGL
          * pixelformat. The format must match in RGB, alpha is allowed to be
          * different. (Only the backbuffer can have alpha.) */
-        if (adapter_format->red_size != check_format->red_size
-                || adapter_format->green_size != check_format->green_size
-                || adapter_format->blue_size != check_format->blue_size)
+        if (adapter_format->red_size != rt_format->red_size
+                || adapter_format->green_size != rt_format->green_size
+                || adapter_format->blue_size != rt_format->blue_size)
         {
-            TRACE("[FAILED]\n");
+            TRACE("Render target format %s doesn't match with adapter format %s.\n",
+                    debug_d3dformat(rt_format->id), debug_d3dformat(adapter_format->id));
             return FALSE;
         }
 
@@ -1494,15 +1492,18 @@ static BOOL CheckRenderTargetCapability(const struct wined3d_adapter *adapter,
         for (i = 0; i < adapter->cfg_count; ++i)
         {
             if (cfgs[i].windowDrawable
-                    && wined3d_check_pixel_format_color(&cfgs[i], check_format))
+                    && wined3d_check_pixel_format_color(&cfgs[i], rt_format))
             {
                 TRACE("Pixel format %d is compatible with format %s.\n",
-                        cfgs[i].iPixelFormat, debug_d3dformat(check_format->id));
+                        cfgs[i].iPixelFormat, debug_d3dformat(rt_format->id));
                 return TRUE;
             }
         }
+
+        return FALSE;
     }
-    return FALSE;
+
+    return TRUE;
 }
 
 static BOOL wined3d_check_surface_capability(const struct wined3d_format *format)
@@ -1683,7 +1684,7 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
         }
 
         if ((bind_flags & WINED3D_BIND_RENDER_TARGET)
-                && !CheckRenderTargetCapability(adapter, adapter_format, format, gl_type))
+                && !wined3d_check_render_target_format(adapter, adapter_format, format, gl_type))
         {
             TRACE("Requested WINED3D_BIND_RENDER_TARGET, but format %s is not supported for render targets.\n",
                     debug_d3dformat(check_format_id));
