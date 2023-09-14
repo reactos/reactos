@@ -2134,14 +2134,14 @@ static void shader_glsl_declare_generic_vertex_attribute(struct wined3d_string_b
 }
 
 /** Generate the variable & register declarations for the GLSL output target */
-static void shader_generate_glsl_declarations(const struct wined3d_context *context,
+static void shader_generate_glsl_declarations(const struct wined3d_context_gl *context_gl,
         struct wined3d_string_buffer *buffer, const struct wined3d_shader *shader,
         const struct wined3d_shader_reg_maps *reg_maps, const struct shader_glsl_ctx_priv *ctx_priv)
 {
     const struct wined3d_shader_version *version = &reg_maps->shader_version;
     const struct vs_compile_args *vs_args = ctx_priv->cur_vs_args;
     const struct ps_compile_args *ps_args = ctx_priv->cur_ps_args;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     const struct wined3d_shader_indexable_temp *idx_temp_reg;
     unsigned int uniform_block_base, uniform_block_count;
     const struct wined3d_shader_lconst *lconst;
@@ -2381,7 +2381,7 @@ static void shader_generate_glsl_declarations(const struct wined3d_context *cont
         }
 
         if (shader_glsl_use_layout_binding_qualifier(gl_info))
-            shader_glsl_append_sampler_binding_qualifier(buffer, context, version, entry->bind_idx);
+            shader_glsl_append_sampler_binding_qualifier(buffer, &context_gl->c, version, entry->bind_idx);
         shader_addline(buffer, "uniform %s%s %s_sampler%u;\n",
                 sampler_type_prefix, sampler_type, prefix, entry->bind_idx);
     }
@@ -7523,6 +7523,7 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
         const struct wined3d_shader *shader,
         const struct ps_compile_args *args, struct ps_np2fixup_info *np2fixup_info)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     const struct wined3d_shader_version *version = &reg_maps->shader_version;
     const char *prefix = shader_glsl_get_prefix(version->type);
@@ -7561,7 +7562,7 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
         shader_addline(buffer, "#extension GL_ARB_texture_rectangle : enable\n");
 
     /* Base Declarations */
-    shader_generate_glsl_declarations(context, buffer, shader, reg_maps, &priv_ctx);
+    shader_generate_glsl_declarations(context_gl, buffer, shader, reg_maps, &priv_ctx);
 
     if (gl_info->supported[ARB_CONSERVATIVE_DEPTH])
     {
@@ -7873,6 +7874,7 @@ static void shader_glsl_generate_vs_epilogue(const struct wined3d_gl_info *gl_in
 static GLuint shader_glsl_generate_vshader(const struct wined3d_context *context,
         struct shader_glsl_priv *priv, const struct wined3d_shader *shader, const struct vs_compile_args *args)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct wined3d_string_buffer_list *string_buffers = &priv->string_buffers;
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     const struct wined3d_shader_version *version = &reg_maps->shader_version;
@@ -7897,7 +7899,7 @@ static GLuint shader_glsl_generate_vshader(const struct wined3d_context *context
         shader_addline(buffer, "#extension GL_ARB_shader_viewport_layer_array : enable\n");
 
     /* Base Declarations */
-    shader_generate_glsl_declarations(context, buffer, shader, reg_maps, &priv_ctx);
+    shader_generate_glsl_declarations(context_gl, buffer, shader, reg_maps, &priv_ctx);
 
     for (i = 0; i < shader->input_signature.element_count; ++i)
         shader_glsl_declare_generic_vertex_attribute(buffer, gl_info, &shader->input_signature.elements[i]);
@@ -8016,6 +8018,7 @@ static void shader_glsl_generate_shader_phase_invocation(struct wined3d_string_b
 static GLuint shader_glsl_generate_hull_shader(const struct wined3d_context *context,
         struct shader_glsl_priv *priv, const struct wined3d_shader *shader)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct wined3d_string_buffer_list *string_buffers = &priv->string_buffers;
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     struct wined3d_string_buffer *buffer = &priv->shader_buffer;
@@ -8034,7 +8037,7 @@ static GLuint shader_glsl_generate_hull_shader(const struct wined3d_context *con
     shader_glsl_enable_extensions(buffer, gl_info);
     shader_addline(buffer, "#extension GL_ARB_tessellation_shader : enable\n");
 
-    shader_generate_glsl_declarations(context, buffer, shader, reg_maps, &priv_ctx);
+    shader_generate_glsl_declarations(context_gl, buffer, shader, reg_maps, &priv_ctx);
 
     shader_addline(buffer, "layout(vertices = %u) out;\n", hs->output_vertex_count);
 
@@ -8112,6 +8115,7 @@ static void shader_glsl_generate_ds_epilogue(const struct wined3d_gl_info *gl_in
 static GLuint shader_glsl_generate_domain_shader(const struct wined3d_context *context,
         struct shader_glsl_priv *priv, const struct wined3d_shader *shader, const struct ds_compile_args *args)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct wined3d_string_buffer_list *string_buffers = &priv->string_buffers;
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     struct wined3d_string_buffer *buffer = &priv->shader_buffer;
@@ -8128,7 +8132,7 @@ static GLuint shader_glsl_generate_domain_shader(const struct wined3d_context *c
     shader_glsl_enable_extensions(buffer, gl_info);
     shader_addline(buffer, "#extension GL_ARB_tessellation_shader : enable\n");
 
-    shader_generate_glsl_declarations(context, buffer, shader, reg_maps, &priv_ctx);
+    shader_generate_glsl_declarations(context_gl, buffer, shader, reg_maps, &priv_ctx);
 
     shader_addline(buffer, "layout(");
     switch (shader->u.ds.tessellator_domain)
@@ -8206,6 +8210,7 @@ static GLuint shader_glsl_generate_domain_shader(const struct wined3d_context *c
 static GLuint shader_glsl_generate_geometry_shader(const struct wined3d_context *context,
         struct shader_glsl_priv *priv, const struct wined3d_shader *shader, const struct gs_compile_args *args)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct wined3d_string_buffer_list *string_buffers = &priv->string_buffers;
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     struct wined3d_string_buffer *buffer = &priv->shader_buffer;
@@ -8224,7 +8229,7 @@ static GLuint shader_glsl_generate_geometry_shader(const struct wined3d_context 
 
     shader_glsl_enable_extensions(buffer, gl_info);
 
-    shader_generate_glsl_declarations(context, buffer, shader, reg_maps, &priv_ctx);
+    shader_generate_glsl_declarations(context_gl, buffer, shader, reg_maps, &priv_ctx);
 
     primitive_type = shader->u.gs.input_type ? shader->u.gs.input_type : args->primitive_type;
     shader_addline(buffer, "layout(%s", glsl_primitive_type_from_d3d(primitive_type));
@@ -8337,6 +8342,7 @@ static GLuint shader_glsl_generate_compute_shader(const struct wined3d_context *
         const struct wined3d_shader *shader)
 {
     const struct wined3d_shader_thread_group_size *thread_group_size = &shader->u.cs.thread_group_size;
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct shader_glsl_ctx_priv priv_ctx;
@@ -8351,7 +8357,7 @@ static GLuint shader_glsl_generate_compute_shader(const struct wined3d_context *
     shader_glsl_enable_extensions(buffer, gl_info);
     shader_addline(buffer, "#extension GL_ARB_compute_shader : enable\n");
 
-    shader_generate_glsl_declarations(context, buffer, shader, reg_maps, &priv_ctx);
+    shader_generate_glsl_declarations(context_gl, buffer, shader, reg_maps, &priv_ctx);
 
     for (i = 0; i < reg_maps->tgsm_count; ++i)
     {
