@@ -3699,6 +3699,9 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
     TRACE("byte_code %p, byte_code_size %#lx, format %#x.\n",
             desc->byte_code, (long)desc->byte_code_size, desc->format);
 
+    if (!desc->byte_code)
+        return WINED3DERR_INVALIDCALL;
+
     if (!(shader->frontend = shader_select_frontend(desc->format)))
     {
         FIXME("Unable to find frontend for shader.\n");
@@ -4253,9 +4256,6 @@ HRESULT CDECL wined3d_shader_create_cs(struct wined3d_device *device, const stru
     TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, parent, parent_ops, shader);
 
-    if (!desc->byte_code)
-        return WINED3DERR_INVALIDCALL;
-
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
@@ -4289,9 +4289,6 @@ HRESULT CDECL wined3d_shader_create_ds(struct wined3d_device *device, const stru
 
     TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, parent, parent_ops, shader);
-
-    if (!desc->byte_code)
-        return WINED3DERR_INVALIDCALL;
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
@@ -4328,9 +4325,6 @@ HRESULT CDECL wined3d_shader_create_gs(struct wined3d_device *device, const stru
     TRACE("device %p, desc %p, so_desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, so_desc, parent, parent_ops, shader);
 
-    if (!desc->byte_code)
-        return WINED3DERR_INVALIDCALL;
-
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
@@ -4357,9 +4351,6 @@ HRESULT CDECL wined3d_shader_create_hs(struct wined3d_device *device, const stru
 
     TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, parent, parent_ops, shader);
-
-    if (!desc->byte_code)
-        return WINED3DERR_INVALIDCALL;
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
@@ -4395,9 +4386,6 @@ HRESULT CDECL wined3d_shader_create_ps(struct wined3d_device *device, const stru
     TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, parent, parent_ops, shader);
 
-    if (!desc->byte_code)
-        return WINED3DERR_INVALIDCALL;
-
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
@@ -4424,9 +4412,6 @@ HRESULT CDECL wined3d_shader_create_vs(struct wined3d_device *device, const stru
 
     TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, parent, parent_ops, shader);
-
-    if (!desc->byte_code)
-        return WINED3DERR_INVALIDCALL;
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
