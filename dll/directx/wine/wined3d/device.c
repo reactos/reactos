@@ -3342,7 +3342,7 @@ HRESULT CDECL wined3d_device_process_vertices(struct wined3d_device *device,
     struct wined3d_resource *resource;
     struct wined3d_box box = {0};
     struct wined3d_shader *vs;
-    unsigned int i;
+    unsigned int i, j;
     HRESULT hr;
     WORD map;
 
@@ -3377,7 +3377,20 @@ HRESULT CDECL wined3d_device_process_vertices(struct wined3d_device *device,
         box.left = src_start_idx * e->stride;
         box.right = box.left + vertex_count * e->stride;
         if (FAILED(wined3d_resource_map(resource, 0, &map_desc, &box, WINED3D_MAP_READ)))
+        {
             ERR("Failed to map resource.\n");
+            for (j = 0, map = stream_info.use_map; map && j < i; map >>= 1, ++j)
+            {
+                if (!(map & 1))
+                    continue;
+
+                e = &stream_info.elements[j];
+                resource = &state->streams[e->stream_idx].buffer->resource;
+                if (FAILED(wined3d_resource_unmap(resource, 0)))
+                    ERR("Failed to unmap resource.\n");
+            }
+            return WINED3DERR_INVALIDCALL;
+        }
         e->data.buffer_object = 0;
         e->data.addr += (ULONG_PTR)map_desc.data;
     }
