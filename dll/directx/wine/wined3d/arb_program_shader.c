@@ -7789,9 +7789,11 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
         const struct wined3d_color_key *color_key, enum wined3d_texture_filter_type filter)
 {
     struct wined3d_device *device = dst_texture->resource.device;
+    struct wined3d_texture *staging_texture = NULL;
     struct wined3d_arbfp_blitter *arbfp_blitter;
     struct wined3d_color_key alpha_test_key;
     struct wined3d_blitter *next;
+    unsigned int src_level;
     RECT s, d;
 
     TRACE("blitter %p, op %#x, context %p, src_texture %p, src_sub_resource_idx %u, src_location %s, src_rect %s, "
@@ -7816,14 +7818,45 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
 
     arbfp_blitter = CONTAINING_RECORD(blitter, struct wined3d_arbfp_blitter, blitter);
 
-    /* Now load the surface */
-    if (wined3d_settings.offscreen_rendering_mode != ORM_FBO
+    if (!(src_texture->resource.access & WINED3D_RESOURCE_ACCESS_GPU))
+    {
+        struct wined3d_resource_desc desc;
+        struct wined3d_box upload_box;
+        HRESULT hr;
+
+        TRACE("Source texture is not GPU accessible, creating a staging texture.\n");
+
+        src_level = src_sub_resource_idx % src_texture->level_count;
+        desc.resource_type = WINED3D_RTYPE_TEXTURE_2D;
+        desc.format = src_texture->resource.format->id;
+        desc.multisample_type = src_texture->resource.multisample_type;
+        desc.multisample_quality = src_texture->resource.multisample_quality;
+        desc.usage = WINED3DUSAGE_PRIVATE;
+        desc.access = WINED3D_RESOURCE_ACCESS_GPU;
+        desc.width = wined3d_texture_get_level_width(src_texture, src_level);
+        desc.height = wined3d_texture_get_level_height(src_texture, src_level);
+        desc.depth = 1;
+        desc.size = 0;
+
+        if (FAILED(hr = wined3d_texture_create(device, &desc, 1, 1, 0,
+                NULL, NULL, &wined3d_null_parent_ops, &staging_texture)))
+        {
+            ERR("Failed to create staging texture, hr %#x.\n", hr);
+            return dst_location;
+        }
+
+        wined3d_box_set(&upload_box, 0, 0, desc.width, desc.height, 0, desc.depth);
+        wined3d_texture_upload_from_texture(staging_texture, 0, 0, 0, 0,
+                src_texture, src_sub_resource_idx, &upload_box);
+
+        src_texture = staging_texture;
+        src_sub_resource_idx = 0;
+    }
+    else if (wined3d_settings.offscreen_rendering_mode != ORM_FBO
             && (src_texture->sub_resources[src_sub_resource_idx].locations
-            & (WINED3D_LOCATION_TEXTURE_RGB | WINED3D_LOCATION_DRAWABLE))
-            == WINED3D_LOCATION_DRAWABLE
+            & (WINED3D_LOCATION_TEXTURE_RGB | WINED3D_LOCATION_DRAWABLE)) == WINED3D_LOCATION_DRAWABLE
             && !wined3d_resource_is_offscreen(&src_texture->resource))
     {
-        unsigned int src_level = src_sub_resource_idx % src_texture->level_count;
 
         /* Without FBO blits transferring from the drawable to the texture is
          * expensive, because we have to flip the data in sysmem. Since we can
@@ -7833,12 +7866,15 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
         texture2d_load_fb_texture(src_texture, src_sub_resource_idx, FALSE, context);
 
         s = *src_rect;
+        src_level = src_sub_resource_idx % src_texture->level_count;
         s.top = wined3d_texture_get_level_height(src_texture, src_level) - s.top;
         s.bottom = wined3d_texture_get_level_height(src_texture, src_level) - s.bottom;
         src_rect = &s;
     }
     else
+    {
         wined3d_texture_load(src_texture, context, FALSE);
+    }
 
     context_apply_ffp_blit_state(context, device);
 
@@ -7888,6 +7924,9 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
 
     if (dst_texture->swapchain && (dst_texture->swapchain->front_buffer == dst_texture))
         context->gl_info->gl_ops.gl.p_glFlush();
+
+    if (staging_texture)
+        wined3d_texture_decref(staging_texture);
 
     return dst_location;
 }
