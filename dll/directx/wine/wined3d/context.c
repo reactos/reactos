@@ -5171,18 +5171,20 @@ void context_load_tex_coords(const struct wined3d_context *context, const struct
     checkGLcall("loadTexCoords");
 }
 
-/* This should match any arrays loaded in context_load_vertex_data().
- * TODO: Only load/unload arrays if we have to. */
-static void context_unload_vertex_data(const struct wined3d_context *context)
+/* This should match any arrays loaded in context_load_vertex_data(). */
+static void context_unload_vertex_data(struct wined3d_context *context)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
+    if (!context->namedArraysLoaded)
+        return;
     gl_info->gl_ops.gl.p_glDisableClientState(GL_VERTEX_ARRAY);
     gl_info->gl_ops.gl.p_glDisableClientState(GL_NORMAL_ARRAY);
     gl_info->gl_ops.gl.p_glDisableClientState(GL_COLOR_ARRAY);
     if (gl_info->supported[EXT_SECONDARY_COLOR])
         gl_info->gl_ops.gl.p_glDisableClientState(GL_SECONDARY_COLOR_ARRAY_EXT);
     context_unload_tex_coords(context);
+    context->namedArraysLoaded = FALSE;
 }
 
 static void context_load_vertex_data(struct wined3d_context *context,
@@ -5602,10 +5604,9 @@ void context_update_stream_sources(struct wined3d_context *context, const struct
         context_unload_numbered_arrays(context);
         context->numbered_array_mask = 0;
     }
-    else if (context->namedArraysLoaded)
+    else
     {
         context_unload_vertex_data(context);
-        context->namedArraysLoaded = FALSE;
     }
 
     if (load_numbered)
