@@ -4256,6 +4256,7 @@ struct wined3d_geometry_shader
     unsigned int instance_count;
 
     struct wined3d_stream_output_desc so_desc;
+    unsigned int *output_register_idx;
 };
 
 struct wined3d_pixel_shader

@@ -1592,7 +1592,6 @@ enum wined3d_shader_type
 #define WINED3D_OUTPUT_SLOT_UNUSED                              0xfffffffe
 
 #define WINED3D_MAX_STREAM_OUTPUT_BUFFERS                       4
-#define WINED3D_STREAM_OUTPUT_GAP                               0xffffffff
 #define WINED3D_NO_RASTERIZER_STREAM                            0xffffffff
 
 #define WINED3D_VIEW_BUFFER_RAW                                 0x00000001
@@ -2085,7 +2084,8 @@ struct wined3d_shader_desc
 struct wined3d_stream_output_element
 {
     unsigned int stream_idx;
-    unsigned int register_idx;
+    const char *semantic_name;
+    unsigned int semantic_idx;
     BYTE component_idx;
     BYTE component_count;
     BYTE output_slot;
@@ -2093,7 +2093,7 @@ struct wined3d_stream_output_element
 
 struct wined3d_stream_output_desc
 {
-    struct wined3d_stream_output_element *elements;
+    const struct wined3d_stream_output_element *elements;
     unsigned int element_count;
     unsigned int buffer_strides[WINED3D_MAX_STREAM_OUTPUT_BUFFERS];
     unsigned int buffer_stride_count;
