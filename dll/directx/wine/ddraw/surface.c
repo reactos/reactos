@@ -40,8 +40,10 @@ static inline struct ddraw_surface *impl_from_IDirectDrawGammaControl(IDirectDra
  * applications from drawing to the screen while we've locked the frontbuffer.
  * We'd like to do this in wined3d instead, but for that to work wined3d needs
  * to support windowless rendering first. */
-HRESULT ddraw_surface_update_frontbuffer(struct ddraw_surface *surface, const RECT *rect, BOOL read)
+HRESULT ddraw_surface_update_frontbuffer(struct ddraw_surface *surface,
+        const RECT *rect, BOOL read, unsigned int swap_interval)
 {
+    struct wined3d_texture *dst_texture;
     struct ddraw *ddraw = surface->ddraw;
     HDC surface_dc, screen_dc;
     int x, y, w, h;
@@ -69,9 +71,15 @@ HRESULT ddraw_surface_update_frontbuffer(struct ddraw_surface *surface, const RE
          * care about. */
         if (read)
             return DD_OK;
+        if (swap_interval)
+            dst_texture = wined3d_swapchain_get_back_buffer(surface->ddraw->wined3d_swapchain, 0);
+        else
+            dst_texture = surface->ddraw->wined3d_frontbuffer;
 
-        return wined3d_texture_blt(ddraw->wined3d_frontbuffer, 0, rect,
-                surface->wined3d_texture, surface->sub_resource_idx, rect, 0, NULL, WINED3D_TEXF_POINT);
+        if (SUCCEEDED(hr = wined3d_texture_blt(dst_texture, 0, rect, surface->wined3d_texture,
+                surface->sub_resource_idx, rect, 0, NULL, WINED3D_TEXF_POINT)) && swap_interval)
+            hr = wined3d_swapchain_present(surface->ddraw->wined3d_swapchain, rect, rect, NULL, swap_interval, 0);
+        return hr;
     }
 
     if (FAILED(hr = wined3d_texture_get_dc(surface->wined3d_texture, surface->sub_resource_idx, &surface_dc)))
@@ -474,7 +482,7 @@ static HRESULT ddraw_surface_set_palette(struct ddraw_surface *surface, IDirectD
             palette_impl->flags |= DDPCAPS_PRIMARYSURFACE;
         wined3d_swapchain_set_palette(surface->ddraw->wined3d_swapchain,
                 palette_impl ? palette_impl->wined3d_palette : NULL);
-        ddraw_surface_update_frontbuffer(surface, NULL, FALSE);
+        ddraw_surface_update_frontbuffer(surface, NULL, FALSE, 0);
     }
     if (palette_impl)
         IDirectDrawPalette_AddRef(&palette_impl->IDirectDrawPalette_iface);
@@ -990,7 +998,7 @@ static HRESULT surface_lock(struct ddraw_surface *surface,
     }
 
     if (surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
-        hr = ddraw_surface_update_frontbuffer(surface, rect, TRUE);
+        hr = ddraw_surface_update_frontbuffer(surface, rect, TRUE, 0);
     if (SUCCEEDED(hr))
         hr = wined3d_resource_map(wined3d_texture_get_resource(surface->wined3d_texture),
                 surface->sub_resource_idx, &map_desc, rect ? &box : NULL,
@@ -1179,7 +1187,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_Unlock(IDirectDrawSurface
     wined3d_mutex_lock();
     hr = wined3d_resource_unmap(wined3d_texture_get_resource(surface->wined3d_texture), surface->sub_resource_idx);
     if (SUCCEEDED(hr) && surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
-        hr = ddraw_surface_update_frontbuffer(surface, &surface->ddraw->primary_lock, FALSE);
+        hr = ddraw_surface_update_frontbuffer(surface, &surface->ddraw->primary_lock, FALSE, 0);
     wined3d_mutex_unlock();
 
     return hr;
@@ -1222,6 +1230,24 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface1_Unlock(IDirectDrawSurface
 
     /* data might not be the LPRECT of later versions, so drop it. */
     return ddraw_surface7_Unlock(&surface->IDirectDrawSurface7_iface, NULL);
+}
+
+static unsigned int ddraw_swap_interval_from_flags(DWORD flags)
+{
+    if (flags & DDFLIP_NOVSYNC)
+        return 0;
+
+    switch (flags & (DDFLIP_INTERVAL2 | DDFLIP_INTERVAL3 | DDFLIP_INTERVAL4))
+    {
+        case DDFLIP_INTERVAL2:
+            return 2;
+        case DDFLIP_INTERVAL3:
+            return 3;
+        case DDFLIP_INTERVAL4:
+            return 4;
+        default:
+            return 1;
+    }
 }
 
 static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_Flip(IDirectDrawSurface7 *iface,
@@ -1337,7 +1363,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_Flip(IDirectDrawSurface7 
     wined3d_resource_set_parent(wined3d_texture_get_resource(texture), ddraw_texture);
     src_impl->wined3d_texture = texture;
 
-    if (flags)
+    if (flags & ~(DDFLIP_NOVSYNC | DDFLIP_INTERVAL2 | DDFLIP_INTERVAL3 | DDFLIP_INTERVAL4))
     {
         static UINT once;
         if (!once++)
@@ -1347,7 +1373,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_Flip(IDirectDrawSurface7 
     }
 
     if (dst_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
-        hr = ddraw_surface_update_frontbuffer(dst_impl, NULL, FALSE);
+        hr = ddraw_surface_update_frontbuffer(dst_impl, NULL, FALSE, ddraw_swap_interval_from_flags(flags));
     else
         hr = DD_OK;
 
@@ -1488,11 +1514,11 @@ static HRESULT ddraw_surface_blt_clipped(struct ddraw_surface *dst_surface, cons
     if (!dst_surface->clipper)
     {
         if (src_surface && src_surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
-            hr = ddraw_surface_update_frontbuffer(src_surface, &src_rect, TRUE);
+            hr = ddraw_surface_update_frontbuffer(src_surface, &src_rect, TRUE, 0);
         if (SUCCEEDED(hr))
             hr = ddraw_surface_blt(dst_surface, &dst_rect, src_surface, &src_rect, flags, fill_colour, fx, filter);
         if (SUCCEEDED(hr) && (dst_surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE))
-            hr = ddraw_surface_update_frontbuffer(dst_surface, &dst_rect, FALSE);
+            hr = ddraw_surface_update_frontbuffer(dst_surface, &dst_rect, FALSE, 0);
 
         return hr;
     }
@@ -1535,7 +1561,7 @@ static HRESULT ddraw_surface_blt_clipped(struct ddraw_surface *dst_surface, cons
 
             if (src_surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
             {
-                if (FAILED(hr = ddraw_surface_update_frontbuffer(src_surface, &src_rect_clipped, TRUE)))
+                if (FAILED(hr = ddraw_surface_update_frontbuffer(src_surface, &src_rect_clipped, TRUE, 0)))
                     break;
             }
         }
@@ -1546,7 +1572,7 @@ static HRESULT ddraw_surface_blt_clipped(struct ddraw_surface *dst_surface, cons
 
         if (dst_surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
         {
-            if (FAILED(hr = ddraw_surface_update_frontbuffer(dst_surface, &clip_rect[i], FALSE)))
+            if (FAILED(hr = ddraw_surface_update_frontbuffer(dst_surface, &clip_rect[i], FALSE, 0)))
                 break;
         }
     }
@@ -2219,7 +2245,7 @@ static HRESULT WINAPI ddraw_surface7_GetDC(IDirectDrawSurface7 *iface, HDC *dc)
     if (surface->dc)
         hr = DDERR_DCALREADYCREATED;
     else if (surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
-        hr = ddraw_surface_update_frontbuffer(surface, NULL, TRUE);
+        hr = ddraw_surface_update_frontbuffer(surface, NULL, TRUE, 0);
     if (SUCCEEDED(hr))
         hr = wined3d_texture_get_dc(surface->wined3d_texture, surface->sub_resource_idx, dc);
 
@@ -2323,7 +2349,7 @@ static HRESULT WINAPI ddraw_surface7_ReleaseDC(IDirectDrawSurface7 *iface, HDC h
     {
         surface->dc = NULL;
         if (surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
-            hr = ddraw_surface_update_frontbuffer(surface, NULL, FALSE);
+            hr = ddraw_surface_update_frontbuffer(surface, NULL, FALSE, 0);
     }
     wined3d_mutex_unlock();
 
@@ -4291,12 +4317,12 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_BltFast(IDirectDrawSurfac
     }
 
     if (src_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
-        hr = ddraw_surface_update_frontbuffer(src_impl, src_rect, TRUE);
+        hr = ddraw_surface_update_frontbuffer(src_impl, src_rect, TRUE, 0);
     if (SUCCEEDED(hr))
         hr = wined3d_texture_blt(dst_impl->wined3d_texture, dst_impl->sub_resource_idx, &dst_rect,
                 src_impl->wined3d_texture, src_impl->sub_resource_idx, src_rect, flags, NULL, WINED3D_TEXF_POINT);
     if (SUCCEEDED(hr) && (dst_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE))
-        hr = ddraw_surface_update_frontbuffer(dst_impl, &dst_rect, FALSE);
+        hr = ddraw_surface_update_frontbuffer(dst_impl, &dst_rect, FALSE, 0);
     wined3d_mutex_unlock();
 
     switch(hr)
