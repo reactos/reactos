@@ -3274,6 +3274,15 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
                 fx->src_color_key.color_space_high_value);
     }
 
+    dst_sub_resource = &dst_texture->sub_resources[dst_sub_resource_idx];
+    src_sub_resource = &src_texture->sub_resources[src_sub_resource_idx];
+
+    if (src_sub_resource->locations & WINED3D_LOCATION_DISCARDED)
+    {
+        WARN("Source sub-resource is discarded, nothing to do.\n");
+        return WINED3D_OK;
+    }
+
     SetRect(&src_rect, src_box->left, src_box->top, src_box->right, src_box->bottom);
     SetRect(&dst_rect, dst_box->left, dst_box->top, dst_box->right, dst_box->bottom);
 
@@ -3364,9 +3373,6 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
     }
 
     TRACE("Colour blit.\n");
-
-    dst_sub_resource = &dst_texture->sub_resources[dst_sub_resource_idx];
-    src_sub_resource = &src_texture->sub_resources[src_sub_resource_idx];
 
     /* In principle this would apply to depth blits as well, but we don't
      * implement those in the CPU blitter at the moment. */
