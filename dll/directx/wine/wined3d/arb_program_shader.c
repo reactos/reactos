@@ -7698,9 +7698,6 @@ static BOOL arbfp_blit_supported(enum wined3d_blit_op blit_op, const struct wine
     enum complex_fixup src_fixup;
     BOOL decompress;
 
-    if (!context->gl_info->supported[ARB_FRAGMENT_PROGRAM])
-        return FALSE;
-
     if (src_resource->type != WINED3D_RTYPE_TEXTURE_2D)
         return FALSE;
 
