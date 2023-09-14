@@ -268,9 +268,8 @@ static void test_enum_sections(void)
     static const char *contents = STD_HEADER "[s1]\nfoo=bar\n[s2]\nbar=foo\n[s3]\n[strings]\na=b\n";
 
     BOOL ret;
-    DWORD len;
     HINF hinf;
-    UINT err, index;
+    UINT err, index, len;
     char buffer[256];
 
     if (!pSetupEnumInfSectionsA)
