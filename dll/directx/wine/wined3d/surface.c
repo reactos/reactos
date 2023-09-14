@@ -1806,6 +1806,14 @@ static HRESULT surface_cpu_blt(struct wined3d_texture *dst_texture, unsigned int
 
     context = context_acquire(device, NULL, 0);
 
+    src_format = src_texture->resource.format;
+    dst_format = dst_texture->resource.format;
+
+    if (wined3d_format_is_typeless(src_format) && src_format->id == dst_format->typeless_id)
+        src_format = dst_format;
+    if (wined3d_format_is_typeless(dst_format) && dst_format->id == src_format->typeless_id)
+        dst_format = src_format;
+
     dst_range.offset = 0;
     dst_range.size = dst_texture->sub_resources[dst_sub_resource_idx].size;
     if (src_texture == dst_texture && src_sub_resource_idx == dst_sub_resource_idx)
@@ -1823,30 +1831,23 @@ static HRESULT surface_cpu_blt(struct wined3d_texture *dst_texture, unsigned int
                 dst_texture->sub_resources[dst_sub_resource_idx].size, 0, WINED3D_MAP_READ | WINED3D_MAP_WRITE);
 
         src_map = dst_map;
-        src_format = dst_texture->resource.format;
-        dst_format = src_format;
-        dst_fmt_flags = dst_texture->resource.format_flags;
-        src_fmt_flags = dst_fmt_flags;
     }
     else
     {
         same_sub_resource = FALSE;
-        dst_format = dst_texture->resource.format;
-        dst_fmt_flags = dst_texture->resource.format_flags;
-        if (!(flags & WINED3D_BLT_RAW) && dst_texture->resource.format->id != src_texture->resource.format->id)
+        if (!(flags & WINED3D_BLT_RAW) && dst_format->id != src_format->id)
         {
             if (!(converted_texture = surface_convert_format(src_texture, src_sub_resource_idx, dst_format)))
             {
-                FIXME("Cannot convert %s to %s.\n", debug_d3dformat(src_texture->resource.format->id),
-                        debug_d3dformat(dst_texture->resource.format->id));
+                FIXME("Cannot convert %s to %s.\n", debug_d3dformat(src_format->id),
+                        debug_d3dformat(dst_format->id));
                 context_release(context);
                 return WINED3DERR_NOTAVAILABLE;
             }
             src_texture = converted_texture;
             src_sub_resource_idx = 0;
+            src_format = src_texture->resource.format;
         }
-        src_format = src_texture->resource.format;
-        src_fmt_flags = src_texture->resource.format_flags;
 
         map_binding = src_texture->resource.map_binding;
         texture_level = src_sub_resource_idx % src_texture->level_count;
@@ -1867,6 +1868,8 @@ static HRESULT surface_cpu_blt(struct wined3d_texture *dst_texture, unsigned int
         dst_map.data = wined3d_context_map_bo_address(context, &dst_data,
                 dst_texture->sub_resources[dst_sub_resource_idx].size, 0, WINED3D_MAP_WRITE);
     }
+    src_fmt_flags = src_format->flags[src_texture->resource.gl_type];
+    dst_fmt_flags = dst_format->flags[dst_texture->resource.gl_type];
     flags &= ~WINED3D_BLT_RAW;
 
     bpp = dst_format->byte_count;
