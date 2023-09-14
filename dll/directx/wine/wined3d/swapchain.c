@@ -113,17 +113,22 @@ ULONG CDECL wined3d_swapchain_incref(struct wined3d_swapchain *swapchain)
 ULONG CDECL wined3d_swapchain_decref(struct wined3d_swapchain *swapchain)
 {
     ULONG refcount = InterlockedDecrement(&swapchain->ref);
+    struct wined3d_device *device;
 
     TRACE("%p decreasing refcount to %u.\n", swapchain, refcount);
 
     if (!refcount)
     {
-        struct wined3d_device *device = swapchain->device;
+        wined3d_mutex_lock();
 
+        device = swapchain->device;
         device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
         swapchain_cleanup(swapchain);
         swapchain->parent_ops->wined3d_object_destroyed(swapchain->parent);
+
+        wined3d_mutex_unlock();
+
         heap_free(swapchain);
     }
 
