@@ -2339,15 +2339,14 @@ static void wined3d_device_set_sampler(struct wined3d_device *device,
         return;
     }
 
-    prev = device->update_state->sampler[type][idx];
+    prev = device->state.sampler[type][idx];
     if (sampler == prev)
         return;
 
     if (sampler)
         wined3d_sampler_incref(sampler);
-    device->update_state->sampler[type][idx] = sampler;
-    if (!device->recording)
-        wined3d_cs_emit_set_sampler(device->cs, type, idx, sampler);
+    device->state.sampler[type][idx] = sampler;
+    wined3d_cs_emit_set_sampler(device->cs, type, idx, sampler);
     if (prev)
         wined3d_sampler_decref(prev);
 }
