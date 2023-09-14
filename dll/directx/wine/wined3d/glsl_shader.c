@@ -2567,7 +2567,7 @@ static void shader_glsl_fixup_scalar_register_variable(char *register_name,
 /** Writes the GLSL variable name that corresponds to the register that the
  * DX opcode parameter is trying to access */
 static void shader_glsl_get_register_name(const struct wined3d_shader_register *reg,
-        enum wined3d_data_type data_type, char *register_name, BOOL *is_color,
+        enum wined3d_data_type data_type, char *register_name, BOOL *is_swizzled,
         const struct wined3d_shader_context *ctx)
 {
     /* oPos, oFog and oPts in D3D */
@@ -2587,7 +2587,8 @@ static void shader_glsl_get_register_name(const struct wined3d_shader_register *
     if (reg->idx[1].offset != ~0u && reg->idx[1].rel_addr)
         shader_glsl_add_src_param_ext(ctx, reg->idx[1].rel_addr, WINED3DSP_WRITEMASK_0,
                 &rel_param1, reg->idx[1].rel_addr->reg.data_type);
-    *is_color = FALSE;
+    if (is_swizzled)
+        *is_swizzled = FALSE;
 
     switch (reg->type)
     {
@@ -2603,8 +2604,8 @@ static void shader_glsl_get_register_name(const struct wined3d_shader_register *
 
                 if (reg->idx[0].rel_addr)
                     FIXME("VS3 input registers relative addressing.\n");
-                if (priv->cur_vs_args->swizzle_map & (1u << reg->idx[0].offset))
-                    *is_color = TRUE;
+                if (is_swizzled && priv->cur_vs_args->swizzle_map & (1u << reg->idx[0].offset))
+                    *is_swizzled = TRUE;
                 if (reg->idx[0].rel_addr)
                 {
                     sprintf(register_name, "%s_in[%s + %u]",
@@ -3154,13 +3155,11 @@ static void shader_glsl_add_src_param(const struct wined3d_shader_instruction *i
 static DWORD shader_glsl_add_dst_param(const struct wined3d_shader_instruction *ins,
         const struct wined3d_shader_dst_param *wined3d_dst, struct glsl_dst_param *glsl_dst)
 {
-    BOOL is_color = FALSE;
-
     glsl_dst->mask_str[0] = '\0';
     glsl_dst->reg_name[0] = '\0';
 
     shader_glsl_get_register_name(&wined3d_dst->reg, wined3d_dst->reg.data_type,
-            glsl_dst->reg_name, &is_color, ins->ctx);
+            glsl_dst->reg_name, NULL, ins->ctx);
     return shader_glsl_get_write_mask(wined3d_dst, glsl_dst->mask_str);
 }
 
@@ -3475,9 +3474,8 @@ static void shader_glsl_color_correction_ext(struct wined3d_string_buffer *buffe
 static void shader_glsl_color_correction(const struct wined3d_shader_instruction *ins, struct color_fixup_desc fixup)
 {
     char reg_name[256];
-    BOOL is_color;
 
-    shader_glsl_get_register_name(&ins->dst[0].reg, ins->dst[0].reg.data_type, reg_name, &is_color, ins->ctx);
+    shader_glsl_get_register_name(&ins->dst[0].reg, ins->dst[0].reg.data_type, reg_name, NULL, ins->ctx);
     shader_glsl_color_correction_ext(ins->ctx->buffer, reg_name, ins->dst[0].write_mask, fixup);
 }
 
