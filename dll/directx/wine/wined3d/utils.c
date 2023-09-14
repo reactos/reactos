@@ -4229,7 +4229,7 @@ const char *debug_const_bo_address(const struct wined3d_const_bo_address *addres
 {
     if (!address)
         return "(null)";
-    return wine_dbg_sprintf("{%#x:%p}", address->buffer_object, address->addr);
+    return wine_dbg_sprintf("{%#lx:%p}", address->buffer_object, address->addr);
 }
 
 const char *debug_bo_address(const struct wined3d_bo_address *address)
