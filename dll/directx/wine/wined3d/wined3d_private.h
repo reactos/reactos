@@ -1549,7 +1549,6 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
         const struct wined3d_draw_parameters *draw_parameters) DECLSPEC_HIDDEN;
 void dispatch_compute(struct wined3d_device *device, const struct wined3d_state *state,
         const struct wined3d_dispatch_parameters *dispatch_parameters) DECLSPEC_HIDDEN;
-DWORD get_flexible_vertex_size(DWORD d3dvtVertexType) DECLSPEC_HIDDEN;
 
 #define eps 1e-8f
 

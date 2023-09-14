@@ -3043,6 +3043,36 @@ unsigned int CDECL wined3d_device_get_max_frame_latency(const struct wined3d_dev
     return device->max_frame_latency;
 }
 
+static DWORD get_flexible_vertex_size(DWORD d3dvtVertexType)
+{
+    DWORD size = 0;
+    int i;
+    int numTextures = (d3dvtVertexType & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
+
+    if (d3dvtVertexType & WINED3DFVF_NORMAL) size += 3 * sizeof(float);
+    if (d3dvtVertexType & WINED3DFVF_DIFFUSE) size += sizeof(DWORD);
+    if (d3dvtVertexType & WINED3DFVF_SPECULAR) size += sizeof(DWORD);
+    if (d3dvtVertexType & WINED3DFVF_PSIZE) size += sizeof(DWORD);
+    switch (d3dvtVertexType & WINED3DFVF_POSITION_MASK)
+    {
+        case WINED3DFVF_XYZ:    size += 3 * sizeof(float); break;
+        case WINED3DFVF_XYZRHW: size += 4 * sizeof(float); break;
+        case WINED3DFVF_XYZB1:  size += 4 * sizeof(float); break;
+        case WINED3DFVF_XYZB2:  size += 5 * sizeof(float); break;
+        case WINED3DFVF_XYZB3:  size += 6 * sizeof(float); break;
+        case WINED3DFVF_XYZB4:  size += 7 * sizeof(float); break;
+        case WINED3DFVF_XYZB5:  size += 8 * sizeof(float); break;
+        case WINED3DFVF_XYZW:   size += 4 * sizeof(float); break;
+        default: FIXME("Unexpected position mask %#x.\n", d3dvtVertexType & WINED3DFVF_POSITION_MASK);
+    }
+    for (i = 0; i < numTextures; i++)
+    {
+        size += GET_TEXCOORD_SIZE_FROM_FVF(d3dvtVertexType, i) * sizeof(float);
+    }
+
+    return size;
+}
+
 /* Context activation is done by the caller. */
 #define copy_and_next(dest, src, size) memcpy(dest, src, size); dest += (size)
 static HRESULT process_vertices_strided(const struct wined3d_device *device, DWORD dwDestIndex, DWORD dwCount,

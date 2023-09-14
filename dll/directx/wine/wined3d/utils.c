@@ -5873,33 +5873,6 @@ void transpose_matrix(struct wined3d_matrix *out, const struct wined3d_matrix *m
     *out = temp;
 }
 
-DWORD get_flexible_vertex_size(DWORD d3dvtVertexType) {
-    DWORD size = 0;
-    int i;
-    int numTextures = (d3dvtVertexType & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
-
-    if (d3dvtVertexType & WINED3DFVF_NORMAL) size += 3 * sizeof(float);
-    if (d3dvtVertexType & WINED3DFVF_DIFFUSE) size += sizeof(DWORD);
-    if (d3dvtVertexType & WINED3DFVF_SPECULAR) size += sizeof(DWORD);
-    if (d3dvtVertexType & WINED3DFVF_PSIZE) size += sizeof(DWORD);
-    switch (d3dvtVertexType & WINED3DFVF_POSITION_MASK) {
-        case WINED3DFVF_XYZ:    size += 3 * sizeof(float); break;
-        case WINED3DFVF_XYZRHW: size += 4 * sizeof(float); break;
-        case WINED3DFVF_XYZB1:  size += 4 * sizeof(float); break;
-        case WINED3DFVF_XYZB2:  size += 5 * sizeof(float); break;
-        case WINED3DFVF_XYZB3:  size += 6 * sizeof(float); break;
-        case WINED3DFVF_XYZB4:  size += 7 * sizeof(float); break;
-        case WINED3DFVF_XYZB5:  size += 8 * sizeof(float); break;
-        case WINED3DFVF_XYZW:   size += 4 * sizeof(float); break;
-        default: ERR("Unexpected position mask\n");
-    }
-    for (i = 0; i < numTextures; i++) {
-        size += GET_TEXCOORD_SIZE_FROM_FVF(d3dvtVertexType, i) * sizeof(float);
-    }
-
-    return size;
-}
-
 unsigned int wined3d_max_compat_varyings(const struct wined3d_gl_info *gl_info)
 {
     /* On core profile we have to also count diffuse and specular colors and the
