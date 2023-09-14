@@ -2589,17 +2589,16 @@ void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl, GLen
     checkGLcall("bind texture");
 }
 
-void *context_map_bo_address(struct wined3d_context *context,
+void *wined3d_context_gl_map_bo_address(struct wined3d_context_gl *context_gl,
         const struct wined3d_bo_address *data, size_t size, GLenum binding, DWORD flags)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info;
     BYTE *memory;
 
     if (!data->buffer_object)
         return data->addr;
 
-    gl_info = context->gl_info;
+    gl_info = context_gl->c.gl_info;
     wined3d_context_gl_bind_bo(context_gl, binding, data->buffer_object);
 
     if (gl_info->supported[ARB_MAP_BUFFER_RANGE])
@@ -2656,8 +2655,8 @@ void wined3d_context_gl_copy_bo_address(struct wined3d_context_gl *context_gl,
         }
         else
         {
-            src_ptr = context_map_bo_address(&context_gl->c, src, size, src_binding, WINED3D_MAP_READ);
-            dst_ptr = context_map_bo_address(&context_gl->c, dst, size, dst_binding, WINED3D_MAP_WRITE);
+            src_ptr = wined3d_context_gl_map_bo_address(context_gl, src, size, src_binding, WINED3D_MAP_READ);
+            dst_ptr = wined3d_context_gl_map_bo_address(context_gl, dst, size, dst_binding, WINED3D_MAP_WRITE);
 
             memcpy(dst_ptr, src_ptr, size);
 
