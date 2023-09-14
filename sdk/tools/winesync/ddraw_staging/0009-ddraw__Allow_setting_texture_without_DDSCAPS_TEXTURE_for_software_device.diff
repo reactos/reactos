@@ -1,0 +1,59 @@
+diff --git a/dll/directx/wine/ddraw/device.c b/dll/directx/wine/ddraw/device.c
+index 5d18a12..3d38ba6 100644
+--- a/dll/directx/wine/ddraw/device.c
++++ b/dll/directx/wine/ddraw/device.c
+@@ -2910,10 +2910,8 @@ static HRESULT WINAPI d3d_device3_SetLightState(IDirect3DDevice3 *iface,
+                 wined3d_mutex_unlock();
+                 return DDERR_INVALIDPARAMS;
+             }
+-
+             material_activate(m);
+         }
+-
+         device->material = value;
+     }
+     else if (state == D3DLIGHTSTATE_COLORMODEL)
+@@ -4794,7 +4792,8 @@ static HRESULT d3d_device7_SetTexture(IDirect3DDevice7 *iface,
+     struct ddraw_surface *surf = unsafe_impl_from_IDirectDrawSurface7(texture);
+     struct wined3d_texture *wined3d_texture = NULL;
+ 
+-    TRACE("iface %p, stage %u, texture %p.\n", iface, stage, texture);
++    TRACE("iface %p, stage %u, texture %p, surf %p, surf->surface_desc.ddsCaps.dwCaps %#x.\n",
++            iface, stage, texture, surf, surf ? surf->surface_desc.ddsCaps.dwCaps : 0);
+ 
+     if (surf && (surf->surface_desc.ddsCaps.dwCaps & DDSCAPS_TEXTURE))
+         wined3d_texture = surf->wined3d_texture;
+@@ -4830,19 +4829,30 @@ static HRESULT WINAPI d3d_device3_SetTexture(IDirect3DDevice3 *iface,
+ {
+     struct d3d_device *device = impl_from_IDirect3DDevice3(iface);
+     struct ddraw_surface *tex = unsafe_impl_from_IDirect3DTexture2(texture);
+-    HRESULT hr;
++    struct wined3d_texture *wined3d_texture;
+ 
+     TRACE("iface %p, stage %u, texture %p.\n", iface, stage, texture);
+ 
+     wined3d_mutex_lock();
+ 
+-    hr = IDirect3DDevice7_SetTexture(&device->IDirect3DDevice7_iface, stage, &tex->IDirectDrawSurface7_iface);
++    if (tex && ((tex->surface_desc.ddsCaps.dwCaps & DDSCAPS_TEXTURE) || !device->hw))
++    {
++        if (!(tex->surface_desc.ddsCaps.dwCaps & DDSCAPS_TEXTURE))
++            WARN("Setting texture without DDSCAPS_TEXTURE.\n");
++        wined3d_texture = tex->wined3d_texture;
++    }
++    else
++    {
++        wined3d_texture = NULL;
++    }
++
++    wined3d_device_set_texture(device->wined3d_device, stage, wined3d_texture);
+ 
+     fixup_texture_alpha_op(device);
+ 
+     wined3d_mutex_unlock();
+ 
+-    return hr;
++    return D3D_OK;
+ }
+ 
+ static const struct tss_lookup
