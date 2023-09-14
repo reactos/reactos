@@ -4101,19 +4101,18 @@ void wined3d_context_gl_end_transform_feedback(struct wined3d_context_gl *contex
     }
 }
 
-static void context_pause_transform_feedback(struct wined3d_context *context, BOOL force)
+static void wined3d_context_gl_pause_transform_feedback(struct wined3d_context_gl *context_gl, BOOL force)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
-    if (!context->transform_feedback_active || context->transform_feedback_paused)
+    if (!context_gl->c.transform_feedback_active || context_gl->c.transform_feedback_paused)
         return;
 
     if (gl_info->supported[ARB_TRANSFORM_FEEDBACK2])
     {
         GL_EXTCALL(glPauseTransformFeedback());
         checkGLcall("glPauseTransformFeedback");
-        context->transform_feedback_paused = 1;
+        context_gl->c.transform_feedback_paused = 1;
         return;
     }
 
@@ -4833,7 +4832,7 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
     gl_info = context->gl_info;
 
     if (!use_transform_feedback(state))
-        context_pause_transform_feedback(context, TRUE);
+        wined3d_context_gl_pause_transform_feedback(context_gl, TRUE);
 
     for (i = 0; i < gl_info->limits.buffers; ++i)
     {
@@ -5004,7 +5003,7 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
         checkGLcall("glMemoryBarrier");
     }
 
-    context_pause_transform_feedback(context, FALSE);
+    wined3d_context_gl_pause_transform_feedback(context_gl, FALSE);
 
     if (rasterizer_discard)
     {
