@@ -2042,6 +2042,11 @@ struct wined3d_context_gl
     struct wined3d_context c;
 };
 
+static inline struct wined3d_context_gl *wined3d_context_gl(struct wined3d_context *context)
+{
+    return CONTAINING_RECORD(context, struct wined3d_context_gl, c);
+}
+
 struct wined3d_fb_state
 {
     struct wined3d_rendertarget_view *render_targets[MAX_RENDER_TARGET_VIEWS];

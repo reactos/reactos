@@ -1482,6 +1482,32 @@ static void wined3d_context_cleanup(struct wined3d_context *context)
     heap_free(context->texture_type);
 }
 
+static void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
+{
+    wined3d_context_cleanup(&context_gl->c);
+}
+
+static void wined3d_context_gl_destroy(struct wined3d_context_gl *context_gl)
+{
+    if (context_gl->c.current && context_gl->c.tid != GetCurrentThreadId())
+    {
+        struct wined3d_gl_info *gl_info;
+
+        /* Make a copy of gl_info for wined3d_context_gl_cleanup() use, the
+         * one in wined3d_adapter may go away in the meantime. */
+        gl_info = heap_alloc(sizeof(*gl_info));
+        *gl_info = *context_gl->c.gl_info;
+        context_gl->c.gl_info = gl_info;
+        context_gl->c.destroyed = 1;
+
+        return;
+    }
+
+    wined3d_context_gl_cleanup(context_gl);
+    TlsSetValue(wined3d_context_tls_idx, NULL);
+    heap_free(context_gl);
+}
+
 DWORD context_get_tls_idx(void)
 {
     return wined3d_context_tls_idx;
@@ -1512,7 +1538,7 @@ BOOL context_set_current(struct wined3d_context *ctx)
         if (old->destroyed)
         {
             TRACE("Switching away from destroyed context %p.\n", old);
-            wined3d_context_cleanup(old);
+            wined3d_context_gl_cleanup(wined3d_context_gl(old));
             heap_free((void *)old->gl_info);
             heap_free(old);
         }
@@ -2325,23 +2351,7 @@ void wined3d_context_destroy(struct wined3d_context *context)
     device->adapter->fragment_pipe->free_context_data(context);
     device_context_remove(device, context);
 
-    if (context->current && context->tid != GetCurrentThreadId())
-    {
-        struct wined3d_gl_info *gl_info;
-
-        /* Make a copy of gl_info for wined3d_context_cleanup() use, the
-         * one in wined3d_adapter may go away in the meantime. */
-        gl_info = heap_alloc(sizeof(*gl_info));
-        *gl_info = *context->gl_info;
-        context->gl_info = gl_info;
-        context->destroyed = 1;
-
-        return;
-    }
-
-    wined3d_context_cleanup(context);
-    TlsSetValue(wined3d_context_tls_idx, NULL);
-    heap_free(context);
+    wined3d_context_gl_destroy(wined3d_context_gl(context));
 }
 
 const DWORD *context_get_tex_unit_mapping(const struct wined3d_context *context,
