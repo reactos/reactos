@@ -1419,6 +1419,21 @@ void CDECL wined3d_stateblock_set_vertex_declaration(struct wined3d_stateblock *
     stateblock->changed.vertexDecl = TRUE;
 }
 
+void CDECL wined3d_stateblock_set_render_state(struct wined3d_stateblock *stateblock,
+        enum wined3d_render_state state, DWORD value)
+{
+    TRACE("stateblock %p, state %s (%#x), value %#x.\n", stateblock, debug_d3drenderstate(state), state, value);
+
+    if (state > WINEHIGHEST_RENDER_STATE)
+    {
+        WARN("Unhandled render state %#x.\n", state);
+        return;
+    }
+
+    stateblock->stateblock_state.rs[state] = value;
+    stateblock->changed.renderState[state >> 5] |= 1u << (state & 0x1f);
+}
+
 static void init_default_render_states(DWORD rs[WINEHIGHEST_RENDER_STATE + 1], const struct wined3d_d3d_info *d3d_info)
 {
     union
