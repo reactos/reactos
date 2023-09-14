@@ -704,10 +704,10 @@ static struct fbo_entry *wined3d_context_gl_find_fbo_entry(struct wined3d_contex
 }
 
 /* Context activation is done by the caller. */
-static void context_apply_fbo_entry(struct wined3d_context *context, GLenum target, struct fbo_entry *entry)
+static void wined3d_context_gl_apply_fbo_entry(struct wined3d_context_gl *context_gl,
+        GLenum target, struct fbo_entry *entry)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     GLuint read_binding, draw_binding;
     unsigned int i;
 
@@ -717,8 +717,8 @@ static void context_apply_fbo_entry(struct wined3d_context *context, GLenum targ
         return;
     }
 
-    read_binding = context->fbo_read_binding;
-    draw_binding = context->fbo_draw_binding;
+    read_binding = context_gl->c.fbo_read_binding;
+    draw_binding = context_gl->c.fbo_draw_binding;
     wined3d_context_gl_bind_fbo(context_gl, GL_FRAMEBUFFER, entry->id);
 
     if (gl_info->supported[ARB_FRAMEBUFFER_NO_ATTACHMENTS])
@@ -734,11 +734,11 @@ static void context_apply_fbo_entry(struct wined3d_context *context, GLenum targ
     /* Apply render targets */
     for (i = 0; i < gl_info->limits.buffers; ++i)
     {
-        context_attach_surface_fbo(context, target, i, &entry->key.objects[i + 1],
+        context_attach_surface_fbo(&context_gl->c, target, i, &entry->key.objects[i + 1],
                 entry->key.rb_namespace & (1 << (i + 1)));
     }
 
-    context_attach_depth_stencil_fbo(context, target, &entry->key.objects[0],
+    context_attach_depth_stencil_fbo(&context_gl->c, target, &entry->key.objects[0],
             entry->key.rb_namespace & 0x1, entry->flags);
 
     /* Set valid read and draw buffer bindings to satisfy pedantic pre-ES2_compatibility
@@ -784,7 +784,7 @@ static void context_apply_fbo_state(struct wined3d_context *context, GLenum targ
     {
         context->current_fbo = wined3d_context_gl_find_fbo_entry(context_gl, target,
                 render_targets, depth_stencil, color_location, ds_location);
-        context_apply_fbo_entry(context, target, context->current_fbo);
+        wined3d_context_gl_apply_fbo_entry(context_gl, target, context->current_fbo);
     }
 }
 
