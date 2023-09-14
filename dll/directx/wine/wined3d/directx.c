@@ -1227,8 +1227,8 @@ HRESULT CDECL wined3d_get_adapter_raster_status(const struct wined3d *wined3d, U
     return WINED3D_OK;
 }
 
-static BOOL wined3d_check_pixel_format_color(const struct wined3d_gl_info *gl_info,
-        const struct wined3d_pixel_format *cfg, const struct wined3d_format *format)
+static BOOL wined3d_check_pixel_format_color(const struct wined3d_pixel_format *cfg,
+        const struct wined3d_format *format)
 {
     /* Float formats need FBOs. If FBOs are used this function isn't called */
     if (format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_FLOAT)
@@ -1247,8 +1247,8 @@ static BOOL wined3d_check_pixel_format_color(const struct wined3d_gl_info *gl_in
     return TRUE;
 }
 
-static BOOL wined3d_check_pixel_format_depth(const struct wined3d_gl_info *gl_info,
-        const struct wined3d_pixel_format *cfg, const struct wined3d_format *format)
+static BOOL wined3d_check_pixel_format_depth(const struct wined3d_pixel_format *cfg,
+        const struct wined3d_format *format)
 {
     BOOL lockable = FALSE;
 
@@ -1315,8 +1315,8 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
         cfg_count = adapter->cfg_count;
         for (i = 0; i < cfg_count; ++i)
         {
-            if (wined3d_check_pixel_format_color(&adapter->gl_info, &cfgs[i], rt_format)
-                    && wined3d_check_pixel_format_depth(&adapter->gl_info, &cfgs[i], ds_format))
+            if (wined3d_check_pixel_format_color(&cfgs[i], rt_format)
+                    && wined3d_check_pixel_format_depth(&cfgs[i], ds_format))
             {
                 TRACE("Formats match.\n");
                 return WINED3D_OK;
@@ -1381,7 +1381,8 @@ static BOOL CheckDepthStencilCapability(const struct wined3d_adapter *adapter,
         enum wined3d_gl_resource_type gl_type)
 {
     /* Only allow depth/stencil formats */
-    if (!(ds_format->depth_size || ds_format->stencil_size)) return FALSE;
+    if (!(ds_format->depth_size || ds_format->stencil_size))
+        return FALSE;
 
     /* Blacklist formats not supported on Windows */
     switch (ds_format->id)
@@ -1409,8 +1410,8 @@ static BOOL CheckDepthStencilCapability(const struct wined3d_adapter *adapter,
         for (i = 0; i < adapter->cfg_count; ++i)
         {
             const struct wined3d_pixel_format *cfg = &adapter->cfgs[i];
-            if (wined3d_check_pixel_format_color(&adapter->gl_info, cfg, display_format)
-                    && wined3d_check_pixel_format_depth(&adapter->gl_info, cfg, ds_format))
+            if (wined3d_check_pixel_format_color(cfg, display_format)
+                    && wined3d_check_pixel_format_depth(cfg, ds_format))
                 return TRUE;
         }
     }
@@ -1449,7 +1450,7 @@ static BOOL CheckRenderTargetCapability(const struct wined3d_adapter *adapter,
         for (i = 0; i < adapter->cfg_count; ++i)
         {
             if (cfgs[i].windowDrawable
-                    && wined3d_check_pixel_format_color(&adapter->gl_info, &cfgs[i], check_format))
+                    && wined3d_check_pixel_format_color(&cfgs[i], check_format))
             {
                 TRACE("Pixel format %d is compatible with format %s.\n",
                         cfgs[i].iPixelFormat, debug_d3dformat(check_format->id));
