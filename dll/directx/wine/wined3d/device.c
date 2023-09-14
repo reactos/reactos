@@ -1575,8 +1575,8 @@ void CDECL wined3d_device_multiply_transform(struct wined3d_device *device,
 HRESULT CDECL wined3d_device_set_light(struct wined3d_device *device,
         UINT light_idx, const struct wined3d_light *light)
 {
-    UINT hash_idx = LIGHTMAP_HASHFUNC(light_idx);
     struct wined3d_light_info *object = NULL;
+    HRESULT hr;
     float rho;
 
     TRACE("device %p, light_idx %u, light %p.\n", device, light_idx, light);
@@ -1610,16 +1610,8 @@ HRESULT CDECL wined3d_device_set_light(struct wined3d_device *device,
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (!(object = wined3d_light_state_get_light(&device->update_state->light_state, light_idx)))
-    {
-        TRACE("Adding new light\n");
-        if (!(object = heap_alloc_zero(sizeof(*object))))
-            return E_OUTOFMEMORY;
-
-        list_add_head(&device->update_state->light_state.light_map[hash_idx], &object->entry);
-        object->glIndex = -1;
-        object->OriginalIndex = light_idx;
-    }
+    if (FAILED(hr = wined3d_light_state_set_light(&device->update_state->light_state, light_idx, light, &object)))
+        return hr;
 
     /* Initialize the object. */
     TRACE("Light %u setting to type %#x, diffuse %s, specular %s, ambient %s, "
@@ -1630,9 +1622,6 @@ HRESULT CDECL wined3d_device_set_light(struct wined3d_device *device,
             light->position.x, light->position.y, light->position.z,
             light->direction.x, light->direction.y, light->direction.z,
             light->range, light->falloff, light->theta, light->phi);
-
-    /* Save away the information. */
-    object->OriginalParms = *light;
 
     switch (light->type)
     {

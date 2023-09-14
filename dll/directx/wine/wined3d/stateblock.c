@@ -627,6 +627,33 @@ struct wined3d_light_info *wined3d_light_state_get_light(const struct wined3d_li
     return NULL;
 }
 
+HRESULT wined3d_light_state_set_light(struct wined3d_light_state *state, DWORD light_idx,
+        const struct wined3d_light *params, struct wined3d_light_info **light_info)
+{
+    struct wined3d_light_info *object;
+    unsigned int hash_idx;
+
+    if (!(object = wined3d_light_state_get_light(state, light_idx)))
+    {
+        TRACE("Adding new light.\n");
+        if (!(object = heap_alloc_zero(sizeof(*object))))
+        {
+            ERR("Failed to allocate light info.\n");
+            return E_OUTOFMEMORY;
+        }
+
+        hash_idx = LIGHTMAP_HASHFUNC(light_idx);
+        list_add_head(&state->light_map[hash_idx], &object->entry);
+        object->glIndex = -1;
+        object->OriginalIndex = light_idx;
+    }
+
+    object->OriginalParms = *params;
+
+    *light_info = object;
+    return WINED3D_OK;
+}
+
 void wined3d_light_state_enable_light(struct wined3d_light_state *state, const struct wined3d_d3d_info *d3d_info,
         struct wined3d_light_info *light_info, BOOL enable)
 {
