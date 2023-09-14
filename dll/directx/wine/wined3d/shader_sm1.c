@@ -543,7 +543,7 @@ static void *shader_sm1_init(const DWORD *byte_code, size_t byte_code_size,
 
     major = WINED3D_SM1_VERSION_MAJOR(*byte_code);
     minor = WINED3D_SM1_VERSION_MINOR(*byte_code);
-    if (WINED3D_SHADER_VERSION(major, minor) > WINED3D_SHADER_VERSION(3, 0))
+    if (WINED3D_SHADER_VERSION(major, minor) > WINED3D_SHADER_VERSION(3, 255))
     {
         WARN("Invalid shader version %u.%u (%#x).\n", major, minor, *byte_code);
         return NULL;
