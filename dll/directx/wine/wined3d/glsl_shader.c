@@ -1429,21 +1429,21 @@ static void shader_glsl_ffp_vertex_light_uniform(const struct wined3d_context_gl
     checkGLcall("setting FFP lights uniforms");
 }
 
-static void shader_glsl_pointsize_uniform(const struct wined3d_context *context,
+static void shader_glsl_pointsize_uniform(const struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state, struct glsl_shader_prog_link *prog)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     float min, max;
     float size, att[3];
 
-    get_pointsize_minmax(context, state, &min, &max);
+    get_pointsize_minmax(&context_gl->c, state, &min, &max);
 
     GL_EXTCALL(glUniform1f(prog->vs.pointsize_min_location, min));
     checkGLcall("glUniform1f");
     GL_EXTCALL(glUniform1f(prog->vs.pointsize_max_location, max));
     checkGLcall("glUniform1f");
 
-    get_pointsize(context, state, &size, att);
+    get_pointsize(&context_gl->c, state, &size, att);
 
     GL_EXTCALL(glUniform1f(prog->vs.pointsize_location, size));
     checkGLcall("glUniform1f");
@@ -1551,7 +1551,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
     }
 
     if (update_mask & WINED3D_SHADER_CONST_VS_POINTSIZE)
-        shader_glsl_pointsize_uniform(context, state, prog);
+        shader_glsl_pointsize_uniform(context_gl, state, prog);
 
     if (update_mask & WINED3D_SHADER_CONST_POS_FIXUP)
     {
