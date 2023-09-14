@@ -1677,7 +1677,7 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     struct wined3d_box src_box;
     BOOL depth;
 
-    depth = texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL;
+    depth = texture->resource.bind_flags & WINED3D_BIND_DEPTH_STENCIL;
     sub_resource = &texture->sub_resources[sub_resource_idx];
 
     if (!depth && wined3d_settings.offscreen_rendering_mode != ORM_FBO
