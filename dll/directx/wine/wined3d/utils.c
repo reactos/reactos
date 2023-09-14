@@ -4177,10 +4177,13 @@ static void init_vulkan_format_info(struct wined3d_format_vk *format,
         {WINED3DFMT_BC7_UNORM_SRGB,        VK_FORMAT_BC7_SRGB_BLOCK,          },
     };
     VkFormat vk_format = VK_FORMAT_UNDEFINED;
+    VkImageFormatProperties image_properties;
     VkFormatFeatureFlags texture_flags;
     VkFormatProperties properties;
+    VkImageUsageFlags vk_usage;
     unsigned int flags;
     unsigned int i;
+    VkResult vr;
 
     for (i = 0; i < ARRAY_SIZE(vulkan_formats); ++i)
     {
@@ -4228,6 +4231,22 @@ static void init_vulkan_format_info(struct wined3d_format_vk *format,
     format->f.flags[WINED3D_GL_RES_TYPE_TEX_2D] |= flags;
     format->f.flags[WINED3D_GL_RES_TYPE_TEX_3D] |= flags;
     format->f.flags[WINED3D_GL_RES_TYPE_TEX_CUBE] |= flags;
+
+    vk_usage = 0;
+    if (texture_flags & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT)
+        vk_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    else if (texture_flags & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+        vk_usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    if (vk_usage)
+    {
+        if ((vr = VK_CALL(vkGetPhysicalDeviceImageFormatProperties(vk_physical_device, vk_format,
+                VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL, vk_usage, 0, &image_properties))) < 0)
+        {
+            ERR("Failed to get image format properties, vr %s.\n", wined3d_debug_vkresult(vr));
+            return;
+        }
+        format->f.multisample_types = image_properties.sampleCounts;
+    }
 }
 
 BOOL wined3d_adapter_vk_init_format_info(struct wined3d_adapter_vk *adapter_vk,
