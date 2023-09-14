@@ -30,9 +30,7 @@ WINE_DECLARE_DEBUG_CHANNEL(d3d_perf);
 
 static void resource_check_usage(DWORD usage)
 {
-    static const DWORD handled = WINED3DUSAGE_WRITEONLY
-            | WINED3DUSAGE_WRITEONLY
-            | WINED3DUSAGE_DYNAMIC
+    static const DWORD handled = WINED3DUSAGE_DYNAMIC
             | WINED3DUSAGE_STATICDECL
             | WINED3DUSAGE_OVERLAY
             | WINED3DUSAGE_SCRATCH
@@ -40,7 +38,7 @@ static void resource_check_usage(DWORD usage)
             | WINED3DUSAGE_LEGACY_CUBEMAP
             | ~WINED3DUSAGE_MASK;
 
-    /* WINED3DUSAGE_WRITEONLY is supposed to result in write-combined mappings
+    /* Write-only CPU access is supposed to result in write-combined mappings
      * being returned. OpenGL doesn't give us explicit control over that, but
      * the hints and access flags we set for typical access patterns on
      * dynamic resources should in theory have the same effect on the OpenGL
@@ -51,8 +49,8 @@ static void resource_check_usage(DWORD usage)
         FIXME("Unhandled usage flags %#x.\n", usage & ~handled);
         handled |= usage;
     }
-    if ((usage & (WINED3DUSAGE_DYNAMIC | WINED3DUSAGE_WRITEONLY)) == WINED3DUSAGE_DYNAMIC)
-        WARN_(d3d_perf)("WINED3DUSAGE_DYNAMIC used without WINED3DUSAGE_WRITEONLY.\n");
+    if (usage & WINED3DUSAGE_DYNAMIC && access & WINED3D_RESOURCE_ACCESS_MAP_R)
+        WARN_(d3d_perf)("WINED3DUSAGE_DYNAMIC used with WINED3D_RESOURCE_ACCESS_MAP_R.\n");
 }
 
 HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *device,
@@ -86,7 +84,7 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
         {WINED3D_RTYPE_TEXTURE_3D,  0,                              WINED3D_GL_RES_TYPE_TEX_3D},
     };
 
-    resource_check_usage(usage);
+    resource_check_usage(usage, access);
 
     if (usage & WINED3DUSAGE_SCRATCH && access & WINED3D_RESOURCE_ACCESS_GPU)
     {
