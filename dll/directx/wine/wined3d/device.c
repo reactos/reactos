@@ -1152,8 +1152,6 @@ HRESULT wined3d_device_set_implicit_swapchain(struct wined3d_device *device, str
             goto err_out;
         device_init_swapchain_state(device, swapchain);
 
-        device->contexts[0]->last_was_rhw = 0;
-
         TRACE("All defaults now set up.\n");
 
         /* Clear the screen */
