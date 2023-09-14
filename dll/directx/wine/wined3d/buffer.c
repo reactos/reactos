@@ -772,8 +772,9 @@ void * CDECL wined3d_buffer_get_parent(const struct wined3d_buffer *buffer)
 
 /* The caller provides a context and binds the buffer */
 static void wined3d_buffer_gl_sync_apple(struct wined3d_buffer_gl *buffer_gl,
-        DWORD flags, const struct wined3d_gl_info *gl_info)
+        uint32_t flags, struct wined3d_context_gl *context_gl)
 {
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     enum wined3d_fence_result ret;
     HRESULT hr;
 
@@ -784,6 +785,8 @@ static void wined3d_buffer_gl_sync_apple(struct wined3d_buffer_gl *buffer_gl,
 
     if (flags & WINED3D_MAP_DISCARD)
     {
+        wined3d_buffer_gl_bind(buffer_gl, context_gl);
+
         GL_EXTCALL(glBufferData(buffer_gl->buffer_type_hint, buffer_gl->b.resource.size,
                 NULL, buffer_gl->buffer_object_usage));
         checkGLcall("glBufferData");
@@ -834,6 +837,7 @@ drop_fence:
     }
 
     gl_info->gl_ops.gl.p_glFinish();
+    wined3d_buffer_gl_bind(buffer_gl, context_gl);
     GL_EXTCALL(glBufferParameteriAPPLE(buffer_gl->buffer_type_hint, GL_BUFFER_SERIALIZED_MODIFY_APPLE, GL_TRUE));
     checkGLcall("glBufferParameteriAPPLE(buffer_gl->buffer_type_hint, GL_BUFFER_SERIALIZED_MODIFY_APPLE, GL_TRUE)");
     buffer_gl->b.flags &= ~WINED3D_BUFFER_APPLESYNC;
@@ -964,7 +968,6 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
         unsigned int offset, unsigned int size, BYTE **data, DWORD flags)
 {
     struct wined3d_device *device = buffer_gl->b.resource.device;
-    struct wined3d_context_gl *context_gl;
     struct wined3d_context *context;
     LONG count;
     BYTE *base;
@@ -976,6 +979,7 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
     if (buffer_gl->b.buffer_object)
     {
         unsigned int dirty_offset = offset, dirty_size = size;
+        struct wined3d_bo_address addr;
 
         /* DISCARD invalidates the entire buffer, regardless of the specified
          * offset and size. Some applications also depend on the entire buffer
@@ -1003,11 +1007,7 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
         }
         else
         {
-            const struct wined3d_gl_info *gl_info;
-
             context = context_acquire(device, NULL, 0);
-            context_gl = wined3d_context_gl(context);
-            gl_info = context_gl->gl_info;
 
             if (flags & WINED3D_MAP_DISCARD)
                 wined3d_buffer_validate_location(&buffer_gl->b, WINED3D_LOCATION_BUFFER);
@@ -1025,8 +1025,6 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
 
             if (count == 1)
             {
-                wined3d_buffer_gl_bind(buffer_gl, context_gl);
-
                 /* Filter redundant WINED3D_MAP_DISCARD maps. The 3DMark2001
                  * multitexture fill rate test seems to depend on this. When
                  * we map a buffer with GL_MAP_INVALIDATE_BUFFER_BIT, the
@@ -1037,28 +1035,19 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
                 if (buffer_gl->b.flags & WINED3D_BUFFER_DISCARD)
                     flags &= ~WINED3D_MAP_DISCARD;
 
-                if (gl_info->supported[ARB_MAP_BUFFER_RANGE])
-                {
-                    GLbitfield mapflags = wined3d_resource_gl_map_flags(flags);
-                    buffer_gl->b.map_ptr = GL_EXTCALL(glMapBufferRange(buffer_gl->buffer_type_hint,
-                            0, buffer_gl->b.resource.size, mapflags));
-                    checkGLcall("glMapBufferRange");
-                }
-                else
-                {
-                    if (buffer_gl->b.flags & WINED3D_BUFFER_APPLESYNC)
-                        wined3d_buffer_gl_sync_apple(buffer_gl, flags, gl_info);
-                    buffer_gl->b.map_ptr = GL_EXTCALL(glMapBuffer(buffer_gl->buffer_type_hint,
-                            wined3d_resource_gl_legacy_map_flags(flags)));
-                    checkGLcall("glMapBuffer");
-                }
+                if (buffer_gl->b.flags & WINED3D_BUFFER_APPLESYNC)
+                    wined3d_buffer_gl_sync_apple(buffer_gl, flags, wined3d_context_gl(context));
+
+                addr.buffer_object = buffer_gl->b.buffer_object;
+                addr.addr = 0;
+                buffer_gl->b.map_ptr = wined3d_context_map_bo_address(context, &addr,
+                        buffer_gl->b.resource.size, buffer_gl->b.resource.bind_flags, flags);
 
                 if (((DWORD_PTR)buffer_gl->b.map_ptr) & (RESOURCE_ALIGNMENT - 1))
                 {
                     WARN("Pointer %p is not %u byte aligned.\n", buffer_gl->b.map_ptr, RESOURCE_ALIGNMENT);
 
-                    GL_EXTCALL(glUnmapBuffer(buffer_gl->buffer_type_hint));
-                    checkGLcall("glUnmapBuffer");
+                    wined3d_context_unmap_bo_address(context, &addr, buffer_gl->b.resource.bind_flags, 0, NULL);
                     buffer_gl->b.map_ptr = NULL;
 
                     if (buffer_gl->b.resource.usage & WINED3DUSAGE_DYNAMIC)
@@ -1122,36 +1111,33 @@ static void wined3d_buffer_gl_unmap(struct wined3d_buffer_gl *buffer_gl)
     if (buffer_gl->b.map_ptr)
     {
         struct wined3d_device *device = buffer_gl->b.resource.device;
+        unsigned int range_count = buffer_gl->b.modified_areas;
         const struct wined3d_gl_info *gl_info;
         struct wined3d_context_gl *context_gl;
         struct wined3d_context *context;
+        struct wined3d_bo_address addr;
 
         context = context_acquire(device, NULL, 0);
         context_gl = wined3d_context_gl(context);
         gl_info = context_gl->gl_info;
 
-        wined3d_buffer_gl_bind(buffer_gl, context_gl);
-
-        if (gl_info->supported[ARB_MAP_BUFFER_RANGE])
+        if (buffer_gl->b.flags & WINED3D_BUFFER_APPLESYNC)
         {
-            for (i = 0; i < buffer_gl->b.modified_areas; ++i)
-            {
-                GL_EXTCALL(glFlushMappedBufferRange(buffer_gl->buffer_type_hint,
-                        buffer_gl->b.maps[i].offset, buffer_gl->b.maps[i].size));
-                checkGLcall("glFlushMappedBufferRange");
-            }
-        }
-        else if (buffer_gl->b.flags & WINED3D_BUFFER_APPLESYNC)
-        {
-            for (i = 0; i < buffer_gl->b.modified_areas; ++i)
+            wined3d_buffer_gl_bind(buffer_gl, context_gl);
+            for (i = 0; i < range_count; ++i)
             {
                 GL_EXTCALL(glFlushMappedBufferRangeAPPLE(buffer_gl->buffer_type_hint,
                         buffer_gl->b.maps[i].offset, buffer_gl->b.maps[i].size));
                 checkGLcall("glFlushMappedBufferRangeAPPLE");
             }
+            range_count = 0;
         }
 
-        GL_EXTCALL(glUnmapBuffer(buffer_gl->buffer_type_hint));
+        addr.buffer_object = buffer_gl->b.buffer_object;
+        addr.addr = 0;
+        wined3d_context_unmap_bo_address(context, &addr,
+                buffer_gl->b.resource.bind_flags, range_count, buffer_gl->b.maps);
+
         context_release(context);
 
         buffer_clear_dirty_areas(&buffer_gl->b);
