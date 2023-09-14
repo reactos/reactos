@@ -5372,7 +5372,7 @@ HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
     wine_rb_init(&device->samplers, wined3d_sampler_compare);
 
     if (vertex_pipeline->vp_states && fragment_pipeline->states
-            && FAILED(hr = compile_state_table(device->StateTable, device->multistate_funcs,
+            && FAILED(hr = compile_state_table(device->state_table, device->multistate_funcs,
             &adapter->d3d_info, adapter->gl_info.supported, vertex_pipeline,
             fragment_pipeline, misc_state_template)))
     {
@@ -5411,11 +5411,9 @@ err:
 
 void device_invalidate_state(const struct wined3d_device *device, DWORD state)
 {
-    DWORD rep = device->StateTable[state].representative;
+    DWORD rep = device->state_table[state].representative;
     struct wined3d_context *context;
-    DWORD idx;
-    BYTE shift;
-    UINT i;
+    unsigned int i, idx, shift;
 
     wined3d_from_cs(device->cs);
 
@@ -5429,7 +5427,7 @@ void device_invalidate_state(const struct wined3d_device *device, DWORD state)
     for (i = 0; i < device->context_count; ++i)
     {
         context = device->contexts[i];
-        if(isStateDirty(context, rep)) continue;
+        if (isStateDirty(context, rep)) continue;
 
         context->dirtyArray[context->numDirtyEntries++] = rep;
         idx = rep / (sizeof(*context->isStateDirty) * CHAR_BIT);

@@ -5552,39 +5552,43 @@ static void validate_state_table(struct StateEntry *state_table)
     }
 }
 
-HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_multistate_funcs,
+HRESULT compile_state_table(struct StateEntry *state_table, APPLYSTATEFUNC **dev_multistate_funcs,
         const struct wined3d_d3d_info *d3d_info, const BOOL *supported_extensions,
         const struct wined3d_vertex_pipe_ops *vertex, const struct fragment_pipeline *fragment,
         const struct StateEntryTemplate *misc)
 {
-    unsigned int i, type, handlers;
     APPLYSTATEFUNC multistate_funcs[STATE_HIGHEST + 1][3];
     const struct StateEntryTemplate *cur;
+    unsigned int i, type, handlers;
     BOOL set[STATE_HIGHEST + 1];
 
     memset(multistate_funcs, 0, sizeof(multistate_funcs));
 
-    for(i = 0; i < STATE_HIGHEST + 1; i++) {
-        StateTable[i].representative = 0;
-        StateTable[i].apply = state_undefined;
+    for (i = 0; i < STATE_HIGHEST + 1; ++i)
+    {
+        state_table[i].representative = 0;
+        state_table[i].apply = state_undefined;
     }
 
-    for(type = 0; type < 3; type++) {
+    for (type = 0; type < 3; ++type)
+    {
         /* This switch decides the order in which the states are applied */
-        switch(type) {
+        switch (type)
+        {
             case 0: cur = misc; break;
             case 1: cur = fragment->states; break;
             case 2: cur = vertex->vp_states; break;
             default: cur = NULL; /* Stupid compiler */
         }
-        if(!cur) continue;
+        if (!cur) continue;
 
         /* GL extension filtering should not prevent multiple handlers being applied from different
          * pipeline parts
          */
         memset(set, 0, sizeof(set));
 
-        for(i = 0; cur[i].state; i++) {
+        for (i = 0; cur[i].state; ++i)
+        {
             APPLYSTATEFUNC *funcs_array;
 
             /* Only use the first matching state with the available extension from one template.
@@ -5594,7 +5598,7 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
              *
              * if GL_XYZ_fancy is supported, ignore the 2nd line
              */
-            if(set[cur[i].state]) continue;
+            if (set[cur[i].state]) continue;
             /* Skip state lines depending on unsupported extensions */
             if (!supported_extensions[cur[i].extension]) continue;
             set[cur[i].state] = TRUE;
@@ -5609,12 +5613,13 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
 
             handlers = num_handlers(multistate_funcs[cur[i].state]);
             multistate_funcs[cur[i].state][handlers] = cur[i].content.apply;
-            switch(handlers) {
+            switch (handlers)
+            {
                 case 0:
-                    StateTable[cur[i].state].apply = cur[i].content.apply;
+                    state_table[cur[i].state].apply = cur[i].content.apply;
                     break;
                 case 1:
-                    StateTable[cur[i].state].apply = multistate_apply_2;
+                    state_table[cur[i].state].apply = multistate_apply_2;
                     if (!(dev_multistate_funcs[cur[i].state] = heap_calloc(2, sizeof(**dev_multistate_funcs))))
                         goto out_of_mem;
 
@@ -5622,7 +5627,7 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
                     dev_multistate_funcs[cur[i].state][1] = multistate_funcs[cur[i].state][1];
                     break;
                 case 2:
-                    StateTable[cur[i].state].apply = multistate_apply_3;
+                    state_table[cur[i].state].apply = multistate_apply_3;
                     if (!(funcs_array = heap_realloc(dev_multistate_funcs[cur[i].state],
                             sizeof(**dev_multistate_funcs) * 3)))
                         goto out_of_mem;
@@ -5631,22 +5636,22 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
                     dev_multistate_funcs[cur[i].state][2] = multistate_funcs[cur[i].state][2];
                     break;
                 default:
-                    ERR("Unexpected amount of state handlers for state %u: %u\n",
-                        cur[i].state, handlers + 1);
+                    ERR("Unexpected amount of state handlers for state %u: %u.\n",
+                            cur[i].state, handlers + 1);
             }
 
-            if (StateTable[cur[i].state].representative
-                    && StateTable[cur[i].state].representative != cur[i].content.representative)
+            if (state_table[cur[i].state].representative
+                    && state_table[cur[i].state].representative != cur[i].content.representative)
             {
                 FIXME("State %s (%#x) has different representatives in different pipeline parts.\n",
                         debug_d3dstate(cur[i].state), cur[i].state);
             }
-            StateTable[cur[i].state].representative = cur[i].content.representative;
+            state_table[cur[i].state].representative = cur[i].content.representative;
         }
     }
 
-    prune_invalid_states(StateTable, d3d_info);
-    validate_state_table(StateTable);
+    prune_invalid_states(state_table, d3d_info);
+    validate_state_table(state_table);
 
     return WINED3D_OK;
 
@@ -5656,7 +5661,7 @@ out_of_mem:
         heap_free(dev_multistate_funcs[i]);
     }
 
-    memset(dev_multistate_funcs, 0, (STATE_HIGHEST + 1)*sizeof(*dev_multistate_funcs));
+    memset(dev_multistate_funcs, 0, (STATE_HIGHEST + 1) * sizeof(*dev_multistate_funcs));
 
     return E_OUTOFMEMORY;
 }

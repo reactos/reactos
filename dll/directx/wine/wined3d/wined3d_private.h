@@ -2115,7 +2115,7 @@ extern const struct wined3d_vertex_pipe_ops ffp_vertex_pipe DECLSPEC_HIDDEN;
 extern const struct wined3d_vertex_pipe_ops glsl_vertex_pipe DECLSPEC_HIDDEN;
 
 /* "Base" state table */
-HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_multistate_funcs,
+HRESULT compile_state_table(struct StateEntry *state_table, APPLYSTATEFUNC **dev_multistate_funcs,
         const struct wined3d_d3d_info *d3d_info, const BOOL *supported_extensions,
         const struct wined3d_vertex_pipe_ops *vertex, const struct fragment_pipeline *fragment,
         const struct StateEntryTemplate *misc) DECLSPEC_HIDDEN;
@@ -3074,7 +3074,7 @@ struct wined3d_device
     void *shader_priv;
     void *fragment_priv;
     void *vertex_priv;
-    struct StateEntry StateTable[STATE_HIGHEST + 1];
+    struct StateEntry state_table[STATE_HIGHEST + 1];
     /* Array of functions for states which are handled by more than one pipeline part */
     APPLYSTATEFUNC *multistate_funcs[STATE_HIGHEST + 1];
     struct wined3d_blitter *blitter;

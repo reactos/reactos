@@ -1953,7 +1953,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     context->win_handle = swapchain->win_handle;
     context->gl_info = &device->adapter->gl_info;
     context->d3d_info = &device->adapter->d3d_info;
-    context->state_table = device->StateTable;
+    context->state_table = device->state_table;
 
     /* Mark all states dirty to force a proper initialization of the states on
      * the first use of the context. Compute states do not need initialization. */
