@@ -2645,11 +2645,11 @@ BOOL wined3d_caps_gl_ctx_test_viewport_subpixel_bits(struct wined3d_caps_gl_ctx 
 
 void install_gl_compat_wrapper(struct wined3d_gl_info *gl_info, enum wined3d_gl_extension ext) DECLSPEC_HIDDEN;
 
-enum projection_types
+enum wined3d_projection_type
 {
-    proj_none    = 0,
-    proj_count3  = 1,
-    proj_count4  = 2
+    WINED3D_PROJECTION_NONE    = 0,
+    WINED3D_PROJECTION_COUNT3  = 1,
+    WINED3D_PROJECTION_COUNT4  = 2
 };
 
 enum dst_arg

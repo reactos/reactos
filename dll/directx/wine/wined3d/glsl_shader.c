@@ -9290,12 +9290,12 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *
         if (!(tex_map & (1u << stage)))
             continue;
 
-        if (settings->op[stage].projected == proj_none)
+        if (settings->op[stage].projected == WINED3D_PROJECTION_NONE)
         {
             proj = FALSE;
         }
-        else if (settings->op[stage].projected == proj_count4
-                || settings->op[stage].projected == proj_count3)
+        else if (settings->op[stage].projected == WINED3D_PROJECTION_COUNT4
+                || settings->op[stage].projected == WINED3D_PROJECTION_COUNT3)
         {
             proj = TRUE;
         }
@@ -9378,12 +9378,12 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *
             shader_addline(buffer, "ret.xy = bumpenv_mat%u * tex%u.xy;\n", stage - 1, stage - 1);
 
             /* With projective textures, texbem only divides the static
-             * texture coord, not the displacement, so multiply the
+             * texture coordinate, not the displacement, so multiply the
              * displacement with the dividing parameter before passing it to
              * TXP. */
-            if (settings->op[stage].projected != proj_none)
+            if (settings->op[stage].projected != WINED3D_PROJECTION_NONE)
             {
-                if (settings->op[stage].projected == proj_count4)
+                if (settings->op[stage].projected == WINED3D_PROJECTION_COUNT4)
                 {
                     shader_addline(buffer, "ret.xy = (ret.xy * ffp_texcoord[%u].w) + ffp_texcoord[%u].xy;\n",
                             stage, stage);
@@ -9408,7 +9408,7 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *
                 shader_addline(buffer, "tex%u *= clamp(tex%u.z * bumpenv_lum_scale%u + bumpenv_lum_offset%u, 0.0, 1.0);\n",
                         stage, stage - 1, stage - 1, stage - 1);
         }
-        else if (settings->op[stage].projected == proj_count3)
+        else if (settings->op[stage].projected == WINED3D_PROJECTION_COUNT3)
         {
             shader_addline(buffer, "tex%u = %s(ps_sampler%u, ffp_texcoord[%u].xyz);\n",
                     stage, texture_function, stage, stage);

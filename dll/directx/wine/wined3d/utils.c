@@ -5806,7 +5806,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
             settings->op[i].color_fixup = COLOR_FIXUP_IDENTITY;
             settings->op[i].dst = resultreg;
             settings->op[i].tex_type = WINED3D_GL_RES_TYPE_TEX_1D;
-            settings->op[i].projected = proj_none;
+            settings->op[i].projected = WINED3D_PROJECTION_NONE;
             i++;
             break;
         }
@@ -5930,15 +5930,15 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
         {
             ttff = state->texture_states[i][WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS];
             if (ttff == (WINED3D_TTFF_PROJECTED | WINED3D_TTFF_COUNT3))
-                settings->op[i].projected = proj_count3;
+                settings->op[i].projected = WINED3D_PROJECTION_COUNT3;
             else if (ttff & WINED3D_TTFF_PROJECTED)
-                settings->op[i].projected = proj_count4;
+                settings->op[i].projected = WINED3D_PROJECTION_COUNT4;
             else
-                settings->op[i].projected = proj_none;
+                settings->op[i].projected = WINED3D_PROJECTION_NONE;
         }
         else
         {
-            settings->op[i].projected = proj_none;
+            settings->op[i].projected = WINED3D_PROJECTION_NONE;
         }
 
         settings->op[i].cop = cop;

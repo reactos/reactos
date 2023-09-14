@@ -6379,12 +6379,17 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
 
         textype = arbfp_texture_target(settings->op[stage].tex_type);
 
-        if(settings->op[stage].projected == proj_none) {
+        if (settings->op[stage].projected == WINED3D_PROJECTION_NONE)
+        {
             instr = "TEX";
-        } else if(settings->op[stage].projected == proj_count4 ||
-                  settings->op[stage].projected == proj_count3) {
+        }
+        else if (settings->op[stage].projected == WINED3D_PROJECTION_COUNT4
+                || settings->op[stage].projected == WINED3D_PROJECTION_COUNT3)
+        {
             instr = "TXP";
-        } else {
+        }
+        else
+        {
             FIXME("Unexpected projection mode %d\n", settings->op[stage].projected);
             instr = "TXP";
         }
@@ -6398,18 +6403,27 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
             shader_addline(&buffer, "SWZ arg1, bumpmat%u, y, w, 0, 0;\n", stage - 1);
             shader_addline(&buffer, "DP3 ret.y, arg1, tex%u;\n", stage - 1);
 
-            /* with projective textures, texbem only divides the static texture coord, not the displacement,
-             * so multiply the displacement with the dividing parameter before passing it to TXP
-             */
-            if (settings->op[stage].projected != proj_none) {
-                if(settings->op[stage].projected == proj_count4) {
+            /* With projective textures, texbem only divides the static
+             * texture coordinate, not the displacement, so multiply the
+             * displacement with the dividing parameter before passing it to
+             * TXP. */
+            if (settings->op[stage].projected != WINED3D_PROJECTION_NONE)
+            {
+                if (settings->op[stage].projected == WINED3D_PROJECTION_COUNT4)
+                {
                     shader_addline(&buffer, "MOV ret.w, fragment.texcoord[%u].w;\n", stage);
-                    shader_addline(&buffer, "MUL ret.xyz, ret, fragment.texcoord[%u].w, fragment.texcoord[%u];\n", stage, stage);
-                } else {
-                    shader_addline(&buffer, "MOV ret.w, fragment.texcoord[%u].z;\n", stage);
-                    shader_addline(&buffer, "MAD ret.xyz, ret, fragment.texcoord[%u].z, fragment.texcoord[%u];\n", stage, stage);
+                    shader_addline(&buffer, "MUL ret.xyz, ret, fragment.texcoord[%u].w, fragment.texcoord[%u];\n",
+                            stage, stage);
                 }
-            } else {
+                else
+                {
+                    shader_addline(&buffer, "MOV ret.w, fragment.texcoord[%u].z;\n", stage);
+                    shader_addline(&buffer, "MAD ret.xyz, ret, fragment.texcoord[%u].z, fragment.texcoord[%u];\n",
+                            stage, stage);
+                }
+            }
+            else
+            {
                 shader_addline(&buffer, "ADD ret, ret, fragment.texcoord[%u];\n", stage);
             }
 
@@ -6421,12 +6435,16 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
                                stage - 1, stage - 1, stage - 1);
                 shader_addline(&buffer, "MUL tex%u, tex%u, ret.x;\n", stage, stage);
             }
-        } else if(settings->op[stage].projected == proj_count3) {
+        }
+        else if (settings->op[stage].projected == WINED3D_PROJECTION_COUNT3)
+        {
             shader_addline(&buffer, "MOV ret, fragment.texcoord[%u];\n", stage);
             shader_addline(&buffer, "MOV ret.w, ret.z;\n");
             shader_addline(&buffer, "%s tex%u, ret, texture[%u], %s;\n",
                             instr, stage, stage, textype);
-        } else {
+        }
+        else
+        {
             shader_addline(&buffer, "%s tex%u, fragment.texcoord[%u], texture[%u], %s;\n",
                             instr, stage, stage, stage, textype);
         }
