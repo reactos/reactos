@@ -2254,6 +2254,10 @@ struct wined3d_blitter *wined3d_glsl_blitter_create(struct wined3d_blitter **nex
 void wined3d_raw_blitter_create(struct wined3d_blitter **next,
         const struct wined3d_gl_info *gl_info) DECLSPEC_HIDDEN;
 
+BOOL fbo_blitter_supported(enum wined3d_blit_op blit_op, const struct wined3d_gl_info *gl_info,
+        const struct wined3d_resource *src_resource, DWORD src_location,
+        const struct wined3d_resource *dst_resource, DWORD dst_location) DECLSPEC_HIDDEN;
+
 BOOL wined3d_clip_blit(const RECT *clip_rect, RECT *clipped, RECT *other) DECLSPEC_HIDDEN;
 
 HGLRC context_create_wgl_attribs(const struct wined3d_gl_info *gl_info, HDC hdc, HGLRC share_ctx) DECLSPEC_HIDDEN;
@@ -3582,6 +3586,11 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
         const struct wined3d_box *dst_box, struct wined3d_texture *src_texture,
         unsigned int src_sub_resource_idx, const struct wined3d_box *src_box, DWORD flags,
         const struct wined3d_blt_fx *blt_fx, enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;
+void texture2d_blt_fbo(struct wined3d_device *device, struct wined3d_context *context,
+        enum wined3d_texture_filter_type filter, struct wined3d_texture *src_texture,
+        unsigned int src_sub_resource_idx, DWORD src_location, const RECT *src_rect,
+        struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx, DWORD dst_location,
+        const RECT *dst_rect) DECLSPEC_HIDDEN;
 void texture2d_get_blt_info(const struct wined3d_texture_gl *texture_gl, unsigned int sub_resource_idx,
         const RECT *rect, struct wined3d_blt_info *info) DECLSPEC_HIDDEN;
 BOOL texture2d_load_drawable(struct wined3d_texture *texture, unsigned int sub_resource_idx,
@@ -3590,8 +3599,6 @@ void texture2d_load_fb_texture(struct wined3d_texture_gl *texture_gl, unsigned i
         BOOL srgb, struct wined3d_context *context) DECLSPEC_HIDDEN;
 BOOL texture2d_load_renderbuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
-BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-        struct wined3d_context *context, BOOL srgb) DECLSPEC_HIDDEN;
 void texture2d_read_from_framebuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD src_location, DWORD dst_location) DECLSPEC_HIDDEN;
 
