@@ -3022,6 +3022,7 @@ struct wined3d_stateblock_state
     BOOL ps_consts_b[WINED3D_MAX_CONSTS_B];
 
     DWORD rs[WINEHIGHEST_RENDER_STATE + 1];
+    struct wined3d_color blend_factor;
 
     struct wined3d_texture *textures[MAX_COMBINED_SAMPLERS];
     DWORD sampler_states[MAX_COMBINED_SAMPLERS][WINED3D_HIGHEST_SAMPLER_STATE + 1];

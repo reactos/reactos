@@ -1993,13 +1993,17 @@ static void resolve_depth_buffer(struct wined3d_device *device)
 void CDECL wined3d_device_set_blend_state(struct wined3d_device *device,
         struct wined3d_blend_state *blend_state, const struct wined3d_color *blend_factor)
 {
-    struct wined3d_state *state = device->update_state;
+    struct wined3d_state *state = &device->state;
     struct wined3d_blend_state *prev;
 
     TRACE("device %p, blend_state %p, blend_factor %s.\n", device, blend_state, debug_color(blend_factor));
 
+    device->update_stateblock_state->blend_factor = *blend_factor;
     if (device->recording)
+    {
         device->recording->changed.blend_state = TRUE;
+        return;
+    }
 
     prev = state->blend_state;
     if (prev == blend_state && !memcmp(blend_factor, &state->blend_factor, sizeof(*blend_factor)))
@@ -2009,8 +2013,7 @@ void CDECL wined3d_device_set_blend_state(struct wined3d_device *device,
         wined3d_blend_state_incref(blend_state);
     state->blend_state = blend_state;
     state->blend_factor = *blend_factor;
-    if (!device->recording)
-        wined3d_cs_emit_set_blend_state(device->cs, blend_state, blend_factor);
+    wined3d_cs_emit_set_blend_state(device->cs, blend_state, blend_factor);
     if (prev)
         wined3d_blend_state_decref(prev);
 }

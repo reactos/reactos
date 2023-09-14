@@ -859,18 +859,12 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     }
 
     if (stateblock->changed.blend_state
-            && (src_state->blend_state != stateblock->state.blend_state
-            || memcmp(&src_state->blend_factor, &stateblock->state.blend_factor,
-                    sizeof(stateblock->state.blend_factor))))
+            && memcmp(&state->blend_factor, &stateblock->stateblock_state.blend_factor,
+                    sizeof(stateblock->stateblock_state.blend_factor)))
     {
-        TRACE("Updating blend state.\n");
+        TRACE("Updating blend factor.\n");
 
-        if (src_state->blend_state)
-                wined3d_blend_state_incref(src_state->blend_state);
-        if (stateblock->state.blend_state)
-                wined3d_blend_state_decref(stateblock->state.blend_state);
-        stateblock->state.blend_state = src_state->blend_state;
-        stateblock->state.blend_factor = src_state->blend_factor;
+        stateblock->stateblock_state.blend_factor = state->blend_factor;
     }
 
     map = stateblock->changed.streamSource;
@@ -1162,7 +1156,10 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     }
 
     if (stateblock->changed.blend_state)
-        wined3d_device_set_blend_state(device, stateblock->state.blend_state, &stateblock->state.blend_factor);
+    {
+        state->blend_factor = stateblock->stateblock_state.blend_factor;
+        wined3d_device_set_blend_state(device, NULL, &stateblock->stateblock_state.blend_factor);
+    }
 
     map = stateblock->changed.streamSource;
     for (i = 0; map; map >>= 1, ++i)
@@ -1473,6 +1470,11 @@ static void stateblock_state_init_default(struct wined3d_stateblock_state *state
     }
 
     init_default_sampler_states(state->sampler_states);
+
+    state->blend_factor.r = 1.0f;
+    state->blend_factor.g = 1.0f;
+    state->blend_factor.b = 1.0f;
+    state->blend_factor.a = 1.0f;
 }
 
 void wined3d_stateblock_state_init(struct wined3d_stateblock_state *state,
