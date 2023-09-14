@@ -2158,15 +2158,6 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     gl_info->gl_ops.gl.p_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     checkGLcall("glPixelStorei(GL_UNPACK_ALIGNMENT, 1);");
 
-    if (gl_info->supported[ARB_VERTEX_BLEND])
-    {
-        /* Direct3D always uses n-1 weights for n world matrices and uses
-         * 1 - sum for the last one this is equal to GL_WEIGHT_SUM_UNITY_ARB.
-         * Enabling it doesn't do anything unless GL_VERTEX_BLEND_ARB isn't
-         * enabled as well. */
-        gl_info->gl_ops.gl.p_glEnable(GL_WEIGHT_SUM_UNITY_ARB);
-        checkGLcall("glEnable(GL_WEIGHT_SUM_UNITY_ARB)");
-    }
     if (gl_info->supported[NV_TEXTURE_SHADER2])
     {
         /* Set up the previous texture input for all shader units. This applies to bump mapping, and in d3d

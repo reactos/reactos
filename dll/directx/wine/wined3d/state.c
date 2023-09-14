@@ -3868,41 +3868,9 @@ void clipplane(struct wined3d_context *context, const struct wined3d_state *stat
 
 static void transform_worldex(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    UINT matrix = state_id - STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(0));
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    GLenum glMat;
+    unsigned int matrix = state_id - STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(0));
 
-    TRACE("Setting world matrix %d\n", matrix);
-
-    if (matrix >= gl_info->limits.blends)
-    {
-        WARN("Unsupported blend matrix set\n");
-        return;
-    }
-
-    if (isStateDirty(context, STATE_TRANSFORM(WINED3D_TS_VIEW)))
-        return;
-
-    /* GL_MODELVIEW0_ARB:  0x1700
-     * GL_MODELVIEW1_ARB:  0x850a
-     * GL_MODELVIEW2_ARB:  0x8722
-     * GL_MODELVIEW3_ARB:  0x8723
-     * etc
-     * GL_MODELVIEW31_ARB: 0x873f
-     */
-    if(matrix == 1) glMat = GL_MODELVIEW1_ARB;
-    else glMat = GL_MODELVIEW2_ARB - 2 + matrix;
-
-    gl_info->gl_ops.gl.p_glMatrixMode(glMat);
-    checkGLcall("glMatrixMode(glMat)");
-
-    /* World matrix 0 is multiplied with the view matrix because d3d uses 3
-     * matrices while gl uses only 2. To avoid weighting the view matrix
-     * incorrectly it has to be multiplied into every GL modelview matrix. */
-    gl_info->gl_ops.gl.p_glLoadMatrixf(&state->transforms[WINED3D_TS_VIEW]._11);
-    checkGLcall("glLoadMatrixf");
-    gl_info->gl_ops.gl.p_glMultMatrixf(&state->transforms[WINED3D_TS_WORLD_MATRIX(matrix)]._11);
-    checkGLcall("glMultMatrixf");
+    WARN("Unsupported world matrix %u set.\n", matrix);
 }
 
 static void state_vertexblend_w(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -3915,50 +3883,6 @@ static void state_vertexblend_w(struct wined3d_context *context, const struct wi
 
     if (!once++) FIXME("Vertex blend flags %#x not supported.\n", f);
     else WARN("Vertex blend flags %#x not supported.\n", f);
-}
-
-static void state_vertexblend(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
-{
-    enum wined3d_vertex_blend_flags val = state->render_states[WINED3D_RS_VERTEXBLEND];
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_device *device = context->device;
-    static unsigned int once;
-
-    switch (val)
-    {
-        case WINED3D_VBF_1WEIGHTS:
-        case WINED3D_VBF_2WEIGHTS:
-        case WINED3D_VBF_3WEIGHTS:
-            gl_info->gl_ops.gl.p_glEnable(GL_VERTEX_BLEND_ARB);
-            checkGLcall("glEnable(GL_VERTEX_BLEND_ARB)");
-
-            /* D3D adds one more matrix which has weight (1 - sum(weights)).
-             * This is enabled at context creation with enabling
-             * GL_WEIGHT_SUM_UNITY_ARB. */
-            GL_EXTCALL(glVertexBlendARB(state->render_states[WINED3D_RS_VERTEXBLEND] + 1));
-
-            if (!device->vertexBlendUsed)
-            {
-                unsigned int i;
-                for (i = 1; i < gl_info->limits.blends; ++i)
-                {
-                    if (!isStateDirty(context, STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(i))))
-                        transform_worldex(context, state, STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(i)));
-                }
-                device->vertexBlendUsed = TRUE;
-            }
-            break;
-
-        case WINED3D_VBF_TWEENING:
-        case WINED3D_VBF_0WEIGHTS: /* Indexed vertex blending, not supported. */
-            if (!once++) FIXME("Vertex blend flags %#x not supported.\n", val);
-            else WARN("Vertex blend flags %#x not supported.\n", val);
-            /* Fall through. */
-        case WINED3D_VBF_DISABLE:
-            gl_info->gl_ops.gl.p_glDisable(GL_VERTEX_BLEND_ARB);
-            checkGLcall("glDisable(GL_VERTEX_BLEND_ARB)");
-            break;
-    }
 }
 
 static void transform_view(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -4011,16 +3935,6 @@ static void transform_view(struct wined3d_context *context, const struct wined3d
      * No need to do it here if the state is scheduled for update. */
     if (!isStateDirty(context, STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(0))))
         transform_world(context, state, STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(0)));
-
-    /* Avoid looping over a number of matrices if the app never used the functionality */
-    if (context->device->vertexBlendUsed)
-    {
-        for (k = 1; k < gl_info->limits.blends; ++k)
-        {
-            if (!isStateDirty(context, STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(k))))
-                transform_worldex(context, state, STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(k)));
-        }
-    }
 }
 
 static void transform_projection(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -4045,8 +3959,6 @@ static void unload_vertex_data(const struct wined3d_gl_info *gl_info)
     gl_info->gl_ops.gl.p_glDisableClientState(GL_COLOR_ARRAY);
     if (gl_info->supported[EXT_SECONDARY_COLOR])
         gl_info->gl_ops.gl.p_glDisableClientState(GL_SECONDARY_COLOR_ARRAY_EXT);
-    if (gl_info->supported[ARB_VERTEX_BLEND])
-        gl_info->gl_ops.gl.p_glDisableClientState(GL_WEIGHT_ARRAY_ARB);
     unload_tex_coords(gl_info);
 }
 
@@ -4290,59 +4202,10 @@ static void load_vertex_data(struct wined3d_context *context,
     {
         e = &si->elements[WINED3D_FFP_BLENDWEIGHT];
 
-        if (gl_info->supported[ARB_VERTEX_BLEND])
-        {
-            TRACE("Blend %u %p %u\n", e->format->component_count,
-                    e->data.addr + state->load_base_vertex_index * e->stride, e->stride);
-
-            gl_info->gl_ops.gl.p_glEnableClientState(GL_WEIGHT_ARRAY_ARB);
-            checkGLcall("glEnableClientState(GL_WEIGHT_ARRAY_ARB)");
-
-            GL_EXTCALL(glVertexBlendARB(e->format->component_count + 1));
-
-            if (curVBO != e->data.buffer_object)
-            {
-                GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, e->data.buffer_object));
-                checkGLcall("glBindBuffer");
-                curVBO = e->data.buffer_object;
-            }
-
-            TRACE("glWeightPointerARB(%#x, %#x, %#x, %p);\n",
-                    e->format->gl_vtx_format,
-                    e->format->gl_vtx_type,
-                    e->stride,
-                    e->data.addr + state->load_base_vertex_index * e->stride);
-            GL_EXTCALL(glWeightPointerARB(e->format->gl_vtx_format, e->format->gl_vtx_type, e->stride,
-                    e->data.addr + state->load_base_vertex_index * e->stride));
-
-            checkGLcall("glWeightPointerARB");
-
-            if (si->use_map & (1u << WINED3D_FFP_BLENDINDICES))
-            {
-                static BOOL warned;
-                if (!warned)
-                {
-                    FIXME("blendMatrixIndices support\n");
-                    warned = TRUE;
-                }
-            }
-        }
-        else
-        {
-            /* TODO: Support vertex blending in immediate mode draws. No need
-             * to write a FIXME here, this is done after the general vertex
-             * declaration decoding. */
-            WARN("Vertex blending not supported.\n");
-        }
-    }
-    else
-    {
-        if (gl_info->supported[ARB_VERTEX_BLEND])
-        {
-            static const GLbyte one = 1;
-            GL_EXTCALL(glWeightbvARB(1, &one));
-            checkGLcall("glWeightbvARB(gl_info->max_blends, weights)");
-        }
+        /* TODO: Support vertex blending in immediate mode draws. No need to
+         * write a FIXME here, this is done after the general vertex
+         * declaration decoding. */
+        WARN("Vertex blending not supported.\n");
     }
 
     /* Point Size ----------------------------------------------*/
@@ -5653,7 +5516,6 @@ static const struct StateEntryTemplate vp_ffp_states[] =
     { STATE_RENDER(WINED3D_RS_SPECULARMATERIALSOURCE),    { STATE_RENDER(WINED3D_RS_COLORVERTEX),               NULL                }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_AMBIENTMATERIALSOURCE),     { STATE_RENDER(WINED3D_RS_COLORVERTEX),               NULL                }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_EMISSIVEMATERIALSOURCE),    { STATE_RENDER(WINED3D_RS_COLORVERTEX),               NULL                }, WINED3D_GL_EXT_NONE             },
-    { STATE_RENDER(WINED3D_RS_VERTEXBLEND),               { STATE_RENDER(WINED3D_RS_VERTEXBLEND),               state_vertexblend   }, ARB_VERTEX_BLEND                },
     { STATE_RENDER(WINED3D_RS_VERTEXBLEND),               { STATE_RENDER(WINED3D_RS_VERTEXBLEND),               state_vertexblend_w }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_POINTSIZE),                 { STATE_RENDER(WINED3D_RS_POINTSCALEENABLE),          NULL                }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_POINTSIZE_MIN),             { STATE_RENDER(WINED3D_RS_POINTSIZE_MIN),             state_psizemin_arb  }, ARB_POINT_PARAMETERS            },
@@ -5826,7 +5688,7 @@ static void vp_ffp_get_caps(const struct wined3d_gl_info *gl_info, struct wined3
     caps->xyzrhw = FALSE;
     caps->ffp_generic_attributes = FALSE;
     caps->max_active_lights = gl_info->limits.lights;
-    caps->max_vertex_blend_matrices = gl_info->limits.blends;
+    caps->max_vertex_blend_matrices = 1;
     caps->max_vertex_blend_matrix_index = 0;
     caps->vertex_processing_caps = WINED3DVTXPCAPS_DIRECTIONALLIGHTS
             | WINED3DVTXPCAPS_MATERIALSOURCE7

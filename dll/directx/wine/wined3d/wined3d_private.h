@@ -2542,7 +2542,6 @@ struct wined3d_gl_limits
     UINT texture3d_size;
     float pointsize_max;
     float pointsize_min;
-    UINT blends;
     UINT anisotropy;
     float shininess;
     UINT samples;
@@ -2939,13 +2938,12 @@ struct wined3d_device
     APPLYSTATEFUNC *multistate_funcs[STATE_HIGHEST + 1];
     struct wined3d_blitter *blitter;
 
-    BYTE vertexBlendUsed : 1;           /* To avoid needless setting of the blend matrices */
     BYTE bCursorVisible : 1;
     BYTE d3d_initialized : 1;
     BYTE inScene : 1;                   /* A flag to check for proper BeginScene / EndScene call pairs */
     BYTE softwareVertexProcessing : 1;  /* process vertex shaders using software or hardware */
     BYTE filter_messages : 1;
-    BYTE padding : 2;
+    BYTE padding : 3;
 
     unsigned char           surface_alignment; /* Line Alignment of surfaces                      */
 

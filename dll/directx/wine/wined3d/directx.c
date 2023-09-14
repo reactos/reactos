@@ -201,7 +201,6 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_ARB_transform_feedback3",          ARB_TRANSFORM_FEEDBACK3       },
     {"GL_ARB_uniform_buffer_object",        ARB_UNIFORM_BUFFER_OBJECT     },
     {"GL_ARB_vertex_array_bgra",            ARB_VERTEX_ARRAY_BGRA         },
-    {"GL_ARB_vertex_blend",                 ARB_VERTEX_BLEND              },
     {"GL_ARB_vertex_buffer_object",         ARB_VERTEX_BUFFER_OBJECT      },
     {"GL_ARB_vertex_program",               ARB_VERTEX_PROGRAM            },
     {"GL_ARB_vertex_shader",                ARB_VERTEX_SHADER             },
@@ -2950,17 +2949,6 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     USE_GL_FUNC(glGetUniformBlockIndex)
     USE_GL_FUNC(glGetUniformIndices)
     USE_GL_FUNC(glUniformBlockBinding)
-    /* GL_ARB_vertex_blend */
-    USE_GL_FUNC(glVertexBlendARB)
-    USE_GL_FUNC(glWeightPointerARB)
-    USE_GL_FUNC(glWeightbvARB)
-    USE_GL_FUNC(glWeightdvARB)
-    USE_GL_FUNC(glWeightfvARB)
-    USE_GL_FUNC(glWeightivARB)
-    USE_GL_FUNC(glWeightsvARB)
-    USE_GL_FUNC(glWeightubvARB)
-    USE_GL_FUNC(glWeightuivARB)
-    USE_GL_FUNC(glWeightusvARB)
     /* GL_ARB_vertex_buffer_object */
     USE_GL_FUNC(glBindBufferARB)
     USE_GL_FUNC(glBufferDataARB)
@@ -3481,7 +3469,6 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
     GLfloat gl_floatv[2];
     GLint gl_max;
 
-    gl_info->limits.blends = 1;
     gl_info->limits.buffers = 1;
     gl_info->limits.textures = 0;
     gl_info->limits.texture_coords = 0;
@@ -3637,12 +3624,6 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
         gl_info->limits.texture_coords = 1;
     }
 
-    if (gl_info->supported[ARB_VERTEX_BLEND])
-    {
-        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_VERTEX_UNITS_ARB, &gl_max);
-        gl_info->limits.blends = gl_max;
-        TRACE("Max blends: %u.\n", gl_info->limits.blends);
-    }
     if (gl_info->supported[EXT_TEXTURE3D])
     {
         gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE_EXT, &gl_max);
