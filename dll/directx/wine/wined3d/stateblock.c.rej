@@ -1,0 +1,10 @@
+diff a/dll/directx/wine/wined3d/stateblock.c b/dll/directx/wine/wined3d/stateblock.c	(rejected hunks)
+@@ -1222,7 +1223,7 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
+     tmpfloat.f = 1.0f;
+     state->render_states[WINED3D_RS_PATCHSEGMENTS] = tmpfloat.d;
+     state->render_states[WINED3D_RS_DEBUGMONITORTOKEN] = 0xbaadcafe;
+-    tmpfloat.f = gl_info->limits.pointsize_max;
++    tmpfloat.f = d3d_info->limits.pointsize_max;
+     state->render_states[WINED3D_RS_POINTSIZE_MAX] = tmpfloat.d;
+     state->render_states[WINED3D_RS_INDEXEDVERTEXBLENDENABLE] = FALSE;
+     state->render_states[WINED3D_RS_COLORWRITEENABLE] = 0x0000000f;

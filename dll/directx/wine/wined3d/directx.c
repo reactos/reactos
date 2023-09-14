@@ -2186,7 +2186,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
     }
 
     caps->MaxAnisotropy = gl_info->limits.anisotropy;
-    caps->MaxPointSize = gl_info->limits.pointsize_max;
+    caps->MaxPointSize = d3d_info->limits.pointsize_max;
 
     caps->MaxPrimitiveCount   = 0x555555; /* Taken from an AMD Radeon HD 5700 (Evergreen) GPU. */
     caps->MaxVertexIndex      = 0xffffff; /* Taken from an AMD Radeon HD 5700 (Evergreen) GPU. */

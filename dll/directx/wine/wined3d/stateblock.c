@@ -1118,21 +1118,22 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     TRACE("Applied stateblock %p.\n", stateblock);
 }
 
-static void state_init_default(struct wined3d_state *state, const struct wined3d_gl_info *gl_info)
+static void state_init_default(struct wined3d_state *state, const struct wined3d_d3d_info *d3d_info)
 {
     union
     {
         struct wined3d_line_pattern lp;
         DWORD d;
     } lp;
-    union {
+    union
+    {
         float f;
         DWORD d;
     } tmpfloat;
     unsigned int i;
     struct wined3d_matrix identity;
 
-    TRACE("state %p, gl_info %p.\n", state, gl_info);
+    TRACE("state %p, d3d_info %p.\n", state, d3d_info);
 
     get_identity_matrix(&identity);
     state->gl_primitive_type = ~0u;
@@ -1227,7 +1228,7 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
     tmpfloat.f = 1.0f;
     state->render_states[WINED3D_RS_PATCHSEGMENTS] = tmpfloat.d;
     state->render_states[WINED3D_RS_DEBUGMONITORTOKEN] = 0xbaadcafe;
-    tmpfloat.f = gl_info->limits.pointsize_max;
+    tmpfloat.f = d3d_info->limits.pointsize_max;
     state->render_states[WINED3D_RS_POINTSIZE_MAX] = tmpfloat.d;
     state->render_states[WINED3D_RS_INDEXEDVERTEXBLENDENABLE] = FALSE;
     tmpfloat.f = 0.0f;
@@ -1322,8 +1323,7 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
 }
 
 void state_init(struct wined3d_state *state, struct wined3d_fb_state *fb,
-        const struct wined3d_gl_info *gl_info, const struct wined3d_d3d_info *d3d_info,
-        DWORD flags)
+        const struct wined3d_d3d_info *d3d_info, DWORD flags)
 {
     unsigned int i;
 
@@ -1336,7 +1336,7 @@ void state_init(struct wined3d_state *state, struct wined3d_fb_state *fb,
     }
 
     if (flags & WINED3D_STATE_INIT_DEFAULT)
-        state_init_default(state, gl_info);
+        state_init_default(state, d3d_info);
 }
 
 static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
@@ -1346,7 +1346,7 @@ static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
 
     stateblock->ref = 1;
     stateblock->device = device;
-    state_init(&stateblock->state, NULL, &device->adapter->gl_info, d3d_info, 0);
+    state_init(&stateblock->state, NULL, d3d_info, 0);
 
     if (type == WINED3D_SBT_RECORDED)
         return WINED3D_OK;
