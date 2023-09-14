@@ -4302,8 +4302,7 @@ void CDECL wined3d_device_update_sub_resource(struct wined3d_device *device, str
         height = 1;
         depth = 1;
     }
-    else if (resource->type == WINED3D_RTYPE_TEXTURE_1D ||
-            resource->type == WINED3D_RTYPE_TEXTURE_2D || resource->type == WINED3D_RTYPE_TEXTURE_3D)
+    else
     {
         struct wined3d_texture *texture = texture_from_resource(resource);
         unsigned int level;
@@ -4318,11 +4317,6 @@ void CDECL wined3d_device_update_sub_resource(struct wined3d_device *device, str
         width = wined3d_texture_get_level_width(texture, level);
         height = wined3d_texture_get_level_height(texture, level);
         depth = wined3d_texture_get_level_depth(texture, level);
-    }
-    else
-    {
-        FIXME("Not implemented for %s resources.\n", debug_d3dresourcetype(resource->type));
-        return;
     }
 
     if (!box)
