@@ -298,10 +298,7 @@ static void adapter_vk_get_wined3d_caps(const struct wined3d_adapter *adapter, s
     BOOL sampler_anisotropy = limits->maxSamplerAnisotropy > 1.0f;
 
     caps->ddraw_caps.dds_caps |= WINEDDSCAPS_3DDEVICE
-            | WINEDDSCAPS_MIPMAP
-            | WINEDDSCAPS_TEXTURE
-            | WINEDDSCAPS_VIDEOMEMORY
-            | WINEDDSCAPS_ZBUFFER;
+            | WINEDDSCAPS_VIDEOMEMORY;
     caps->ddraw_caps.caps |= WINEDDCAPS_3D;
 
     caps->Caps2 |= WINED3DCAPS2_CANGENMIPMAP;

@@ -2197,7 +2197,10 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, unsigned in
             | WINEDDSCAPS_FRONTBUFFER
             | WINEDDSCAPS_OFFSCREENPLAIN
             | WINEDDSCAPS_PALETTE
-            | WINEDDSCAPS_PRIMARYSURFACE;
+            | WINEDDSCAPS_PRIMARYSURFACE
+            | WINEDDSCAPS_TEXTURE
+            | WINEDDSCAPS_ZBUFFER
+            | WINEDDSCAPS_MIPMAP;
 
     caps->shader_double_precision = d3d_info->shader_double_precision;
     caps->viewport_array_index_any_shader = d3d_info->viewport_array_index_any_shader;
