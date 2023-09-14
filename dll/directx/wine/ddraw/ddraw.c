@@ -888,21 +888,6 @@ static HRESULT ddraw_set_cooperative_level(struct ddraw *ddraw, HWND window,
         ddraw->focuswindow = NULL;
     }
 
-    if ((cooplevel & DDSCL_FULLSCREEN) != (ddraw->cooperative_level & DDSCL_FULLSCREEN) || window != ddraw->dest_window)
-    {
-        if (ddraw->cooperative_level & DDSCL_FULLSCREEN)
-            wined3d_device_restore_fullscreen_window(ddraw->wined3d_device, ddraw->dest_window, NULL);
-
-        if (cooplevel & DDSCL_FULLSCREEN)
-        {
-            struct wined3d_display_mode display_mode;
-
-            wined3d_get_adapter_display_mode(ddraw->wined3d, WINED3DADAPTER_DEFAULT, &display_mode, NULL);
-            wined3d_device_setup_fullscreen_window(ddraw->wined3d_device, window,
-                    display_mode.width, display_mode.height);
-        }
-    }
-
     if ((cooplevel & DDSCL_EXCLUSIVE) && exclusive_window != window)
     {
         ddraw->device_state = DDRAW_DEVICE_STATE_NOT_RESTORED;
