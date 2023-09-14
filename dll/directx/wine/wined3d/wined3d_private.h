@@ -2068,7 +2068,7 @@ struct fragment_caps
 struct fragment_pipeline
 {
     void (*enable_extension)(const struct wined3d_gl_info *gl_info, BOOL enable);
-    void (*get_caps)(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps);
+    void (*get_caps)(const struct wined3d_adapter *adapter, struct fragment_caps *caps);
     DWORD (*get_emul_mask)(const struct wined3d_gl_info *gl_info);
     void *(*alloc_private)(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv);
     void (*free_private)(struct wined3d_device *device, struct wined3d_context *context);

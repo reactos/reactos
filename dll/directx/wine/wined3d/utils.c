@@ -3155,7 +3155,7 @@ static BOOL init_format_texture_info(struct wined3d_adapter *adapter, struct win
     unsigned int i, j;
     BOOL srgb_write;
 
-    adapter->fragment_pipe->get_caps(gl_info, &fragment_caps);
+    adapter->fragment_pipe->get_caps(adapter, &fragment_caps);
     adapter->shader_backend->shader_get_caps(adapter, &shader_caps);
     srgb_write = (fragment_caps.wined3d_caps & WINED3D_FRAGMENT_CAP_SRGB_WRITE)
             && (shader_caps.wined3d_caps & WINED3D_SHADER_CAP_SRGB_WRITE);

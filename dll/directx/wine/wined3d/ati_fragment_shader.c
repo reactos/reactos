@@ -1263,7 +1263,7 @@ static void atifs_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
     }
 }
 
-static void atifs_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps)
+static void atifs_get_caps(const struct wined3d_adapter *adapter, struct fragment_caps *caps)
 {
     caps->wined3d_caps = WINED3D_FRAGMENT_CAP_PROJ_CONTROL;
     caps->PrimitiveMiscCaps = WINED3DPMISCCAPS_TSSARGTEMP               |

@@ -5271,8 +5271,10 @@ const struct wined3d_vertex_pipe_ops ffp_vertex_pipe =
     vp_ffp_states,
 };
 
-static void ffp_fragment_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps)
+static void ffp_fragment_get_caps(const struct wined3d_adapter *adapter, struct fragment_caps *caps)
 {
+    const struct wined3d_gl_info *gl_info = &adapter->gl_info;
+
     caps->wined3d_caps = 0;
     caps->PrimitiveMiscCaps = 0;
     caps->TextureOpCaps = WINED3DTEXOPCAPS_ADD
@@ -5373,7 +5375,7 @@ const struct wined3d_vertex_pipe_ops none_vertex_pipe =
     NULL,
 };
 
-static void fp_none_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps)
+static void fp_none_get_caps(const struct wined3d_adapter *adapter, struct fragment_caps *caps)
 {
     memset(caps, 0, sizeof(*caps));
 }
