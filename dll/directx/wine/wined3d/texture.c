@@ -1452,9 +1452,9 @@ HRESULT CDECL wined3d_texture_set_color_key(struct wined3d_texture *texture,
 /* TODO: We should synchronize the renderbuffer's content with the texture's content. */
 /* Context activation is done by the caller. */
 void wined3d_texture_gl_set_compatible_renderbuffer(struct wined3d_texture_gl *texture_gl,
-        struct wined3d_context *context, unsigned int level, const struct wined3d_rendertarget_info *rt)
+        struct wined3d_context_gl *context_gl, unsigned int level, const struct wined3d_rendertarget_info *rt)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_renderbuffer_entry *entry;
     unsigned int src_width, src_height;
     unsigned int width, height;

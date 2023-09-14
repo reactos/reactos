@@ -613,7 +613,7 @@ static struct fbo_entry *wined3d_context_gl_find_fbo_entry(struct wined3d_contex
         else if (depth_stencil->resource->type == WINED3D_RTYPE_TEXTURE_2D)
         {
             wined3d_texture_gl_set_compatible_renderbuffer(wined3d_texture_gl(ds_texture),
-                    &context_gl->c, ds_level, &render_targets[0]);
+                    context_gl, ds_level, &render_targets[0]);
         }
     }
 
