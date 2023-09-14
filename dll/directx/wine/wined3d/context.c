@@ -1896,12 +1896,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     if (!(context = heap_alloc_zero(sizeof(*context))))
         return NULL;
 
-    context->free_timestamp_query_size = 4;
-    if (!(context->free_timestamp_queries = heap_calloc(context->free_timestamp_query_size,
-            sizeof(*context->free_timestamp_queries))))
-        goto out;
     list_init(&context->timestamp_queries);
-
     list_init(&context->occlusion_queries);
     list_init(&context->fences);
     list_init(&context->so_statistics_queries);
@@ -1982,7 +1977,6 @@ out:
         wined3d_release_dc(swapchain->win_handle, context->hdc);
     device->shader_backend->shader_free_context_data(context);
     device->adapter->fragment_pipe->free_context_data(context);
-    heap_free(context->free_timestamp_queries);
     heap_free(context);
     return NULL;
 }
