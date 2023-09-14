@@ -69,7 +69,7 @@ static void create_source_fileW(LPWSTR filename, const BYTE *data, DWORD size)
 static UINT CALLBACK dummy_callbackA(PVOID Context, UINT Notification,
                                      UINT_PTR Param1, UINT_PTR Param2)
 {
-    ok(0, "Received unexpected notification (%p, %u, %lu, %lu)\n", Context,
+    ok(0, "Received unexpected notification (%p, %u, %Iu, %Iu)\n", Context,
        Notification, Param1, Param2);
     return 0;
 }
@@ -77,7 +77,7 @@ static UINT CALLBACK dummy_callbackA(PVOID Context, UINT Notification,
 static UINT CALLBACK dummy_callbackW(PVOID Context, UINT Notification,
                                      UINT_PTR Param1, UINT_PTR Param2)
 {
-    ok(0, "Received unexpected notification (%p, %u, %lu, %lu)\n", Context,
+    ok(0, "Received unexpected notification (%p, %u, %Iu, %Iu)\n", Context,
        Notification, Param1, Param2);
     return 0;
 }
@@ -117,7 +117,7 @@ static void test_invalid_parametersA(void)
         ok(!ret, "[%d] Expected SetupIterateCabinetA to return 0, got %d\n", i, ret);
         todo_wine_if (invalid_parameters[i].todo_lasterror)
             ok(GetLastError() == invalid_parameters[i].expected_lasterror,
-               "[%d] Expected GetLastError() to return %u, got %u\n",
+               "[%d] Expected GetLastError() to return %lu, got %lu\n",
                i, invalid_parameters[i].expected_lasterror, GetLastError());
     }
 
@@ -126,7 +126,7 @@ static void test_invalid_parametersA(void)
     ok(!ret, "Expected SetupIterateCabinetA to return 0, got %d\n", ret);
     ok(GetLastError() == ERROR_NOT_ENOUGH_MEMORY ||
        GetLastError() == ERROR_FILE_NOT_FOUND, /* Win9x/NT4/Win2k */
-       "Expected GetLastError() to return ERROR_NOT_ENOUGH_MEMORY, got %u\n",
+       "Expected GetLastError() to return ERROR_NOT_ENOUGH_MEMORY, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -134,7 +134,7 @@ static void test_invalid_parametersA(void)
     ok(!ret, "Expected SetupIterateCabinetA to return 0, got %d\n", ret);
     ok(GetLastError() == ERROR_NOT_ENOUGH_MEMORY ||
        GetLastError() == ERROR_FILE_NOT_FOUND, /* Win9x/NT4/Win2k */
-       "Expected GetLastError() to return ERROR_NOT_ENOUGH_MEMORY, got %u\n",
+       "Expected GetLastError() to return ERROR_NOT_ENOUGH_MEMORY, got %lu\n",
        GetLastError());
 
     DeleteFileA(source);
@@ -183,7 +183,7 @@ static void test_invalid_parametersW(void)
         ok(!ret, "[%d] Expected SetupIterateCabinetW to return 0, got %d\n", i, ret);
         todo_wine_if (invalid_parameters[i].todo_lasterror)
             ok(GetLastError() == invalid_parameters[i].expected_lasterror,
-               "[%d] Expected GetLastError() to return %u, got %u\n",
+               "[%d] Expected GetLastError() to return %lu, got %lu\n",
                i, invalid_parameters[i].expected_lasterror, GetLastError());
     }
 
@@ -192,7 +192,7 @@ static void test_invalid_parametersW(void)
     ok(!ret, "Expected SetupIterateCabinetW to return 0, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        GetLastError() == ERROR_NOT_ENOUGH_MEMORY, /* Vista/Win2k8 */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -200,7 +200,7 @@ static void test_invalid_parametersW(void)
     ok(!ret, "Expected SetupIterateCabinetW to return 0, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        GetLastError() == ERROR_NOT_ENOUGH_MEMORY, /* Vista/Win2k8 */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -208,7 +208,7 @@ static void test_invalid_parametersW(void)
     ok(!ret, "Expected SetupIterateCabinetW to return 0, got %d\n", ret);
     ok(GetLastError() == ERROR_NOT_ENOUGH_MEMORY ||
        GetLastError() == ERROR_FILE_NOT_FOUND, /* NT4/Win2k */
-       "Expected GetLastError() to return ERROR_NOT_ENOUGH_MEMORY, got %u\n",
+       "Expected GetLastError() to return ERROR_NOT_ENOUGH_MEMORY, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -216,7 +216,7 @@ static void test_invalid_parametersW(void)
     ok(!ret, "Expected SetupIterateCabinetW to return 0, got %d\n", ret);
     ok(GetLastError() == ERROR_NOT_ENOUGH_MEMORY ||
        GetLastError() == ERROR_FILE_NOT_FOUND, /* NT4/Win2k */
-       "Expected GetLastError() to return ERROR_NOT_ENOUGH_MEMORY, got %u\n",
+       "Expected GetLastError() to return ERROR_NOT_ENOUGH_MEMORY, got %lu\n",
        GetLastError());
 
     DeleteFileW(source);
@@ -250,14 +250,14 @@ static void test_invalid_callbackA(void)
     ret = SetupIterateCabinetA(source, 0, NULL, NULL);
     ok(!ret, "Expected SetupIterateCabinetA to return 0, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_DATA,
-       "Expected GetLastError() to return ERROR_INVALID_DATA, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_DATA, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = SetupIterateCabinetA(source, 0, crash_callbackA, NULL);
     ok(!ret, "Expected SetupIterateCabinetA to return 0, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_DATA,
-       "Expected GetLastError() to return ERROR_INVALID_DATA, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_DATA, got %lu\n",
        GetLastError());
 
     DeleteFileA(source);
@@ -284,14 +284,14 @@ static void test_invalid_callbackW(void)
     ret = SetupIterateCabinetW(source, 0, NULL, NULL);
     ok(!ret, "Expected SetupIterateCabinetW to return 0, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_DATA,
-       "Expected GetLastError() to return ERROR_INVALID_DATA, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_DATA, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = SetupIterateCabinetW(source, 0, crash_callbackW, NULL);
     ok(!ret, "Expected SetupIterateCabinetW to return 0, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_DATA,
-       "Expected GetLastError() to return ERROR_INVALID_DATA, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_DATA, got %lu\n",
        GetLastError());
 
     DeleteFileW(source);
@@ -342,8 +342,8 @@ static UINT CALLBACK simple_callbackA(void *context, UINT message, UINT_PTR para
         ok(index < ARRAY_SIZE(expected_files), "%u: Got unexpected file.\n", index);
         ok(!strcmp(info->NameInCabinet, expected_files[index].nameA),
                 "%u: Got file name %s.\n", index, debugstr_a(info->NameInCabinet));
-        ok(info->FileSize == expected_files[index].size, "%u: Got file size %u.\n", index, info->FileSize);
-        ok(!info->Win32Error, "%u: Got error %u.\n", index, info->Win32Error);
+        ok(info->FileSize == expected_files[index].size, "%u: Got file size %lu.\n", index, info->FileSize);
+        ok(!info->Win32Error, "%u: Got error %lu.\n", index, info->Win32Error);
         ok(info->DosDate == 14545, "%u: Got date %u.\n", index, info->DosDate);
         ok(info->DosTime == 18672, "%u: Got time %u.\n", index, info->DosTime);
         ok(info->DosAttribs == FILE_ATTRIBUTE_ARCHIVE, "%u: Got attributes %#x.\n", index, info->DosAttribs);
@@ -410,12 +410,12 @@ static void test_simple_enumerationA(void)
     {
         snprintf(path, ARRAY_SIZE(path), "%s\\%s", temp, expected_files[i].nameA);
         ret = DeleteFileA(path);
-        ok(ret, "Failed to delete %s, error %u.\n", debugstr_a(path), GetLastError());
+        ok(ret, "Failed to delete %s, error %lu.\n", debugstr_a(path), GetLastError());
     }
 
     snprintf(path, ARRAY_SIZE(path), "%s\\testcab.cab", temp);
     ret = DeleteFileA(path);
-    ok(ret, "Failed to delete %s, error %u.\n", debugstr_a(path), GetLastError());
+    ok(ret, "Failed to delete %s, error %lu.\n", debugstr_a(path), GetLastError());
 }
 
 static UINT CALLBACK simple_callbackW(void *context, UINT message, UINT_PTR param1, UINT_PTR param2)
@@ -450,8 +450,8 @@ static UINT CALLBACK simple_callbackW(void *context, UINT message, UINT_PTR para
         ok(index < ARRAY_SIZE(expected_files), "%u: Got unexpected file.\n", index);
         ok(!wcscmp(info->NameInCabinet, expected_files[index].nameW),
                 "%u: Got file name %s.\n", index, debugstr_w(info->NameInCabinet));
-        ok(info->FileSize == expected_files[index].size, "%u: Got file size %u.\n", index, info->FileSize);
-        ok(!info->Win32Error, "%u: Got error %u.\n", index, info->Win32Error);
+        ok(info->FileSize == expected_files[index].size, "%u: Got file size %lu.\n", index, info->FileSize);
+        ok(!info->Win32Error, "%u: Got error %lu.\n", index, info->Win32Error);
         ok(info->DosDate == 14545, "%u: Got date %u.\n", index, info->DosDate);
         ok(info->DosTime == 18672, "%u: Got time %u.\n", index, info->DosTime);
         ok(info->DosAttribs == FILE_ATTRIBUTE_ARCHIVE, "%u: Got attributes %#x.\n", index, info->DosAttribs);
@@ -518,12 +518,12 @@ static void test_simple_enumerationW(void)
     {
         swprintf(path, ARRAY_SIZE(path), L"%s\\%s", temp, expected_files[i].nameW);
         ret = DeleteFileW(path);
-        ok(ret, "Failed to delete %s, error %u.\n", debugstr_w(path), GetLastError());
+        ok(ret, "Failed to delete %s, error %lu.\n", debugstr_w(path), GetLastError());
     }
 
     swprintf(path, ARRAY_SIZE(path), L"%s\\testcab.cab", temp);
     ret = DeleteFileW(path);
-    ok(ret, "Failed to delete %s, error %u.\n", debugstr_w(path), GetLastError());
+    ok(ret, "Failed to delete %s, error %lu.\n", debugstr_w(path), GetLastError());
 }
 
 START_TEST(setupcab)
