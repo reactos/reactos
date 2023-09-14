@@ -2690,6 +2690,8 @@ HRESULT __cdecl wined3d_stateblock_create(struct wined3d_device *device,
 ULONG __cdecl wined3d_stateblock_decref(struct wined3d_stateblock *stateblock);
 ULONG __cdecl wined3d_stateblock_incref(struct wined3d_stateblock *stateblock);
 void __cdecl wined3d_stateblock_set_pixel_shader(struct wined3d_stateblock *stateblock, struct wined3d_shader *shader);
+HRESULT __cdecl wined3d_stateblock_set_ps_consts_b(struct wined3d_stateblock *stateblock,
+        unsigned int start_idx, unsigned int count, const BOOL *constants);
 HRESULT __cdecl wined3d_stateblock_set_ps_consts_f(struct wined3d_stateblock *stateblock,
         unsigned int start_idx, unsigned int count, const struct wined3d_vec4 *constants);
 HRESULT __cdecl wined3d_stateblock_set_ps_consts_i(struct wined3d_stateblock *stateblock,

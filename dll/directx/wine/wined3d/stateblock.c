@@ -1386,6 +1386,26 @@ HRESULT CDECL wined3d_stateblock_set_ps_consts_i(struct wined3d_stateblock *stat
     return WINED3D_OK;
 }
 
+HRESULT CDECL wined3d_stateblock_set_ps_consts_b(struct wined3d_stateblock *stateblock,
+        unsigned int start_idx, unsigned int count, const BOOL *constants)
+{
+    unsigned int i;
+
+    TRACE("stateblock %p, start_idx %u, count %u, constants %p.\n",
+            stateblock, start_idx, count, constants);
+
+    if (!constants || start_idx >= WINED3D_MAX_CONSTS_B)
+        return WINED3DERR_INVALIDCALL;
+
+    if (count > WINED3D_MAX_CONSTS_B - start_idx)
+        count = WINED3D_MAX_CONSTS_B - start_idx;
+
+    memcpy(&stateblock->stateblock_state.ps_consts_b[start_idx], constants, count * sizeof(*constants));
+    for (i = start_idx; i < count + start_idx; ++i)
+        stateblock->changed.pixelShaderConstantsB |= (1u << i);
+    return WINED3D_OK;
+}
+
 void CDECL wined3d_stateblock_set_vertex_declaration(struct wined3d_stateblock *stateblock,
         struct wined3d_vertex_declaration *declaration)
 {
