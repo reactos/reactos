@@ -46,27 +46,30 @@ static DWORD wined3d_context_tls_idx;
 /* FBO helper functions */
 
 /* Context activation is done by the caller. */
-static void context_bind_fbo(struct wined3d_context *context, GLenum target, GLuint fbo)
+static void wined3d_context_gl_bind_fbo(struct wined3d_context_gl *context_gl, GLenum target, GLuint fbo)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     switch (target)
     {
         case GL_READ_FRAMEBUFFER:
-            if (context->fbo_read_binding == fbo) return;
-            context->fbo_read_binding = fbo;
+            if (context_gl->c.fbo_read_binding == fbo)
+                return;
+            context_gl->c.fbo_read_binding = fbo;
             break;
 
         case GL_DRAW_FRAMEBUFFER:
-            if (context->fbo_draw_binding == fbo) return;
-            context->fbo_draw_binding = fbo;
+            if (context_gl->c.fbo_draw_binding == fbo)
+                return;
+            context_gl->c.fbo_draw_binding = fbo;
             break;
 
         case GL_FRAMEBUFFER:
-            if (context->fbo_read_binding == fbo
-                    && context->fbo_draw_binding == fbo) return;
-            context->fbo_read_binding = fbo;
-            context->fbo_draw_binding = fbo;
+            if (context_gl->c.fbo_read_binding == fbo
+                    && context_gl->c.fbo_draw_binding == fbo)
+                return;
+            context_gl->c.fbo_read_binding = fbo;
+            context_gl->c.fbo_draw_binding = fbo;
             break;
 
         default:
@@ -98,11 +101,12 @@ static void context_clean_fbo_attachments(const struct wined3d_gl_info *gl_info,
 /* Context activation is done by the caller. */
 static void context_destroy_fbo(struct wined3d_context *context, GLuint fbo)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
-    context_bind_fbo(context, GL_FRAMEBUFFER, fbo);
+    wined3d_context_gl_bind_fbo(context_gl, GL_FRAMEBUFFER, fbo);
     context_clean_fbo_attachments(gl_info, GL_FRAMEBUFFER);
-    context_bind_fbo(context, GL_FRAMEBUFFER, 0);
+    wined3d_context_gl_bind_fbo(context_gl, GL_FRAMEBUFFER, 0);
 
     gl_info->fbo_ops.glDeleteFramebuffers(1, &fbo);
     checkGLcall("glDeleteFramebuffers()");
@@ -541,9 +545,10 @@ static void context_reuse_fbo_entry(struct wined3d_context *context, GLenum targ
         const struct wined3d_rendertarget_info *render_targets, const struct wined3d_rendertarget_info *depth_stencil,
         DWORD color_location, DWORD ds_location, struct fbo_entry *entry)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
-    context_bind_fbo(context, target, entry->id);
+    wined3d_context_gl_bind_fbo(context_gl, target, entry->id);
     context_clean_fbo_attachments(gl_info, target);
 
     context_generate_fbo_key(context, &entry->key, render_targets, depth_stencil, color_location, ds_location);
@@ -709,13 +714,13 @@ static void context_apply_fbo_entry(struct wined3d_context *context, GLenum targ
 
     if (entry->flags & WINED3D_FBO_ENTRY_FLAG_ATTACHED)
     {
-        context_bind_fbo(context, target, entry->id);
+        wined3d_context_gl_bind_fbo(context_gl, target, entry->id);
         return;
     }
 
     read_binding = context->fbo_read_binding;
     draw_binding = context->fbo_draw_binding;
-    context_bind_fbo(context, GL_FRAMEBUFFER, entry->id);
+    wined3d_context_gl_bind_fbo(context_gl, GL_FRAMEBUFFER, entry->id);
 
     if (gl_info->supported[ARB_FRAMEBUFFER_NO_ATTACHMENTS])
     {
@@ -744,9 +749,9 @@ static void context_apply_fbo_entry(struct wined3d_context *context, GLenum targ
     if (target != GL_FRAMEBUFFER)
     {
         if (target == GL_READ_FRAMEBUFFER)
-            context_bind_fbo(context, GL_DRAW_FRAMEBUFFER, draw_binding);
+            wined3d_context_gl_bind_fbo(context_gl, GL_DRAW_FRAMEBUFFER, draw_binding);
         else
-            context_bind_fbo(context, GL_READ_FRAMEBUFFER, read_binding);
+            wined3d_context_gl_bind_fbo(context_gl, GL_READ_FRAMEBUFFER, read_binding);
     }
 
     entry->flags |= WINED3D_FBO_ENTRY_FLAG_ATTACHED;
@@ -757,6 +762,7 @@ static void context_apply_fbo_state(struct wined3d_context *context, GLenum targ
         const struct wined3d_rendertarget_info *render_targets,
         const struct wined3d_rendertarget_info *depth_stencil, DWORD color_location, DWORD ds_location)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct fbo_entry *entry, *entry2;
 
     LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &context->fbo_destroy_list, struct fbo_entry, entry)
@@ -766,14 +772,14 @@ static void context_apply_fbo_state(struct wined3d_context *context, GLenum targ
 
     if (context->rebind_fbo)
     {
-        context_bind_fbo(context, GL_FRAMEBUFFER, 0);
+        wined3d_context_gl_bind_fbo(context_gl, GL_FRAMEBUFFER, 0);
         context->rebind_fbo = FALSE;
     }
 
     if (color_location == WINED3D_LOCATION_DRAWABLE)
     {
         context->current_fbo = NULL;
-        context_bind_fbo(context, target, 0);
+        wined3d_context_gl_bind_fbo(context_gl, target, 0);
     }
     else
     {
@@ -2774,7 +2780,7 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
         else
         {
             context->current_fbo = NULL;
-            context_bind_fbo(context, GL_FRAMEBUFFER, 0);
+            wined3d_context_gl_bind_fbo(context_gl, GL_FRAMEBUFFER, 0);
             rt_mask = context_generate_rt_mask_from_resource(&rt->resource);
         }
     }
@@ -4035,6 +4041,7 @@ static void context_apply_compute_state(struct wined3d_context *context,
         const struct wined3d_device *device, const struct wined3d_state *state)
 {
     const struct wined3d_state_entry *state_table = context->state_table;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     unsigned int state_id, i;
 
@@ -4084,7 +4091,7 @@ static void context_apply_compute_state(struct wined3d_context *context,
      *
      * Without this, the bloom effect in Nier:Automata is too bright on the
      * Mesa radeonsi driver, and presumably on other Mesa based drivers. */
-    context_bind_fbo(context, GL_FRAMEBUFFER, 0);
+    wined3d_context_gl_bind_fbo(context_gl, GL_FRAMEBUFFER, 0);
     context_invalidate_state(context, STATE_FRAMEBUFFER);
 
     context->last_was_blit = FALSE;
