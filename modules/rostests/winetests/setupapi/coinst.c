@@ -49,3 +49,23 @@ DWORD WINAPI class_error(DI_FUNCTION function, HDEVINFO set, SP_DEVINFO_DATA *de
 {
     return 0xdeadbeef;
 }
+
+DWORD WINAPI co_success(DI_FUNCTION function, HDEVINFO set, SP_DEVINFO_DATA *device,
+        COINSTALLER_CONTEXT_DATA *context)
+{
+    callback_count++;
+    last_message = function;
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI CoDeviceInstall(DI_FUNCTION function, HDEVINFO set, SP_DEVINFO_DATA *device,
+        COINSTALLER_CONTEXT_DATA *context)
+{
+    return co_success(function, set, device, context);
+}
+
+DWORD WINAPI co_error(DI_FUNCTION function, HDEVINFO set, SP_DEVINFO_DATA *device,
+        COINSTALLER_CONTEXT_DATA *context)
+{
+    return 0xdeadbeef;
+}
