@@ -2676,7 +2676,6 @@ struct wined3d_adapter
     LUID luid;
 
     struct wined3d_format *formats;
-    unsigned int format_count;
 
     const struct wined3d_vertex_pipe_ops *vertex_pipe;
     const struct fragment_pipeline *fragment_pipe;

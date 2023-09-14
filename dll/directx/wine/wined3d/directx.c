@@ -2513,7 +2513,6 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int o
             adapter->luid.HighPart, adapter->luid.LowPart, adapter);
 
     adapter->formats = NULL;
-    adapter->format_count = 0;
 
     if (wined3d_creation_flags & WINED3D_NO3D)
         return wined3d_adapter_no3d_init(adapter);
