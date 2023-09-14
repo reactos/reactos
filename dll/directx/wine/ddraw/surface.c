@@ -1742,6 +1742,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_Blt(IDirectDrawSurface7 *
                 && ((ULONG)src_rect->left >= src_rect->right || src_rect->right > src_impl->surface_desc.dwWidth
                 || (ULONG)src_rect->top >= src_rect->bottom || src_rect->bottom > src_impl->surface_desc.dwHeight))
         {
+            wined3d_mutex_unlock();
             WARN("Invalid source rectangle.\n");
             return DDERR_INVALIDRECT;
         }
@@ -1779,6 +1780,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_Blt(IDirectDrawSurface7 *
     if (!(flags & (DDBLT_COLORFILL | DDBLT_DEPTHFILL)) && !src_impl)
     {
         WARN("No source surface.\n");
+        wined3d_mutex_unlock();
         return DDERR_INVALIDPARAMS;
     }
 
