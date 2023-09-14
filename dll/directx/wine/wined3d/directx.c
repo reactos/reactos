@@ -1388,16 +1388,6 @@ static BOOL wined3d_check_depth_stencil_format(const struct wined3d_adapter *ada
     return adapter->adapter_ops->adapter_check_format(adapter, adapter_format, NULL, ds_format);
 }
 
-static BOOL wined3d_check_render_target_format(const struct wined3d_adapter *adapter,
-        const struct wined3d_format *adapter_format, const struct wined3d_format *rt_format,
-        enum wined3d_gl_resource_type gl_type)
-{
-    if (!(rt_format->flags[gl_type] & WINED3DFMT_FLAG_RENDERTARGET))
-        return FALSE;
-
-    return adapter->adapter_ops->adapter_check_format(adapter, adapter_format, rt_format, NULL);
-}
-
 static BOOL wined3d_check_surface_format(const struct wined3d_format *format)
 {
     if ((format->flags[WINED3D_GL_RES_TYPE_TEX_2D] | format->flags[WINED3D_GL_RES_TYPE_RB]) & WINED3DFMT_FLAG_BLIT)
@@ -1539,6 +1529,8 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
 
     if (bind_flags & WINED3D_BIND_SHADER_RESOURCE)
         format_flags |= WINED3DFMT_FLAG_TEXTURE;
+    if (bind_flags & WINED3D_BIND_RENDER_TARGET)
+        format_flags |= WINED3DFMT_FLAG_RENDERTARGET;
     if (usage & WINED3DUSAGE_QUERY_FILTER)
         format_flags |= WINED3DFMT_FLAG_FILTERING;
     if (usage & WINED3DUSAGE_QUERY_POSTPIXELSHADER_BLENDING)
@@ -1568,7 +1560,7 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
         }
 
         if ((bind_flags & WINED3D_BIND_RENDER_TARGET)
-                && !wined3d_check_render_target_format(adapter, adapter_format, format, gl_type))
+                && !adapter->adapter_ops->adapter_check_format(adapter, adapter_format, format, NULL))
         {
             TRACE("Requested WINED3D_BIND_RENDER_TARGET, but format %s is not supported for render targets.\n",
                     debug_d3dformat(check_format_id));
