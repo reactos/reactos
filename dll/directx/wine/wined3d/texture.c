@@ -3705,3 +3705,49 @@ HRESULT CDECL wined3d_texture_release_dc(struct wined3d_texture *texture, unsign
 
     return WINED3D_OK;
 }
+
+void wined3d_texture_upload_from_texture(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+        unsigned int dst_x, unsigned int dst_y, unsigned int dst_z, struct wined3d_texture *src_texture,
+        unsigned int src_sub_resource_idx, const struct wined3d_box *src_box)
+{
+    unsigned int src_row_pitch, src_slice_pitch;
+    unsigned int update_w, update_h, update_d;
+    unsigned int src_level, dst_level;
+    struct wined3d_context *context;
+    struct wined3d_bo_address data;
+
+    TRACE("dst_texture %p, dst_sub_resource_idx %u, dst_x %u, dst_y %u, dst_z %u, "
+            "src_texture %p, src_sub_resource_idx %u, src_box %s.\n",
+            dst_texture, dst_sub_resource_idx, dst_x, dst_y, dst_z,
+            src_texture, src_sub_resource_idx, debug_box(src_box));
+
+    context = context_acquire(dst_texture->resource.device, NULL, 0);
+
+    /* Only load the sub-resource for partial updates. For newly allocated
+     * textures the texture wouldn't be the current location, and we'd upload
+     * zeroes just to overwrite them again. */
+    update_w = src_box->right - src_box->left;
+    update_h = src_box->bottom - src_box->top;
+    update_d = src_box->back - src_box->front;
+    dst_level = dst_sub_resource_idx % dst_texture->level_count;
+    if (update_w == wined3d_texture_get_level_width(dst_texture, dst_level)
+            && update_h == wined3d_texture_get_level_height(dst_texture, dst_level)
+            && update_d == wined3d_texture_get_level_depth(dst_texture, dst_level))
+        wined3d_texture_prepare_texture(dst_texture, context, FALSE);
+    else
+        wined3d_texture_load_location(dst_texture, dst_sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
+    wined3d_texture_bind_and_dirtify(dst_texture, context, FALSE);
+
+    src_level = src_sub_resource_idx % src_texture->level_count;
+    wined3d_texture_get_memory(src_texture, src_sub_resource_idx, &data,
+            src_texture->sub_resources[src_sub_resource_idx].locations);
+    wined3d_texture_get_pitch(src_texture, src_level, &src_row_pitch, &src_slice_pitch);
+
+    wined3d_texture_upload_data(dst_texture, dst_sub_resource_idx, context, src_texture->resource.format,
+            src_box, wined3d_const_bo_address(&data), src_row_pitch, src_slice_pitch, dst_x, dst_y, dst_z, FALSE);
+
+    context_release(context);
+
+    wined3d_texture_validate_location(dst_texture, dst_sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB);
+    wined3d_texture_invalidate_location(dst_texture, dst_sub_resource_idx, ~WINED3D_LOCATION_TEXTURE_RGB);
+}

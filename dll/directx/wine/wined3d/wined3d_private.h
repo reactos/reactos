@@ -3355,6 +3355,9 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
         struct wined3d_context *context, const struct wined3d_format *format, const struct wined3d_box *src_box,
         const struct wined3d_const_bo_address *data, unsigned int row_pitch, unsigned int slice_pitch,
         unsigned int dst_x, unsigned int dst_y, unsigned int dst_z, BOOL srgb) DECLSPEC_HIDDEN;
+void wined3d_texture_upload_from_texture(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+        unsigned int dst_x, unsigned int dst_y, unsigned int dst_z, struct wined3d_texture *src_texture,
+        unsigned int src_sub_resource_idx, const struct wined3d_box *src_box) DECLSPEC_HIDDEN;
 void wined3d_texture_validate_location(struct wined3d_texture *texture,
         unsigned int sub_resource_idx, DWORD location) DECLSPEC_HIDDEN;
 
