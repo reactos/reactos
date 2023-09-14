@@ -6298,7 +6298,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
 
         if ((texture = state->textures[i]))
         {
-            if (can_use_texture_swizzle(gl_info, texture->resource.format))
+            if (can_use_texture_swizzle(d3d_info, texture->resource.format))
                 settings->op[i].color_fixup = COLOR_FIXUP_IDENTITY;
             else
                 settings->op[i].color_fixup = texture->resource.format->color_fixup;

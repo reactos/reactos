@@ -4025,7 +4025,7 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
                 args->color_fixup[i] = COLOR_FIXUP_IDENTITY;
                 continue;
             }
-            if (can_use_texture_swizzle(gl_info, texture->resource.format))
+            if (can_use_texture_swizzle(d3d_info, texture->resource.format))
                 args->color_fixup[i] = COLOR_FIXUP_IDENTITY;
             else
                 args->color_fixup[i] = texture->resource.format->color_fixup;

@@ -1352,7 +1352,6 @@ void wined3d_cs_emit_set_constant_buffer(struct wined3d_cs *cs, enum wined3d_sha
 
 static void wined3d_cs_exec_set_texture(struct wined3d_cs *cs, const void *data)
 {
-    const struct wined3d_gl_info *gl_info = &cs->device->adapter->gl_info;
     const struct wined3d_d3d_info *d3d_info = &cs->device->adapter->d3d_info;
     const struct wined3d_cs_set_texture *op = data;
     struct wined3d_texture *prev;
@@ -1373,7 +1372,7 @@ static void wined3d_cs_exec_set_texture(struct wined3d_cs *cs, const void *data)
 
         if (!prev || wined3d_texture_gl(op->texture)->target != wined3d_texture_gl(prev)->target
                 || (!is_same_fixup(new_format->color_fixup, old_format->color_fixup)
-                && !(can_use_texture_swizzle(gl_info, new_format) && can_use_texture_swizzle(gl_info, old_format)))
+                && !(can_use_texture_swizzle(d3d_info, new_format) && can_use_texture_swizzle(d3d_info, old_format)))
                 || (new_fmt_flags & WINED3DFMT_FLAG_SHADOW) != (old_fmt_flags & WINED3DFMT_FLAG_SHADOW))
             device_invalidate_state(cs->device, STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL));
 

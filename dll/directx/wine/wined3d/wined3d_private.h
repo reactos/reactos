@@ -209,6 +209,7 @@ struct wined3d_d3d_info
     unsigned int texture_npot_conditional : 1;
     unsigned int draw_base_vertex_offset : 1;
     unsigned int vertex_bgra : 1;
+    unsigned int texture_swizzle : 1;
     enum wined3d_feature_level feature_level;
 
     DWORD multisample_draw_location;
@@ -4822,10 +4823,9 @@ static inline GLuint wined3d_texture_gl_get_texture_name(const struct wined3d_te
             ? texture_gl->texture_srgb.name : texture_gl->texture_rgb.name;
 }
 
-static inline BOOL can_use_texture_swizzle(const struct wined3d_gl_info *gl_info, const struct wined3d_format *format)
+static inline BOOL can_use_texture_swizzle(const struct wined3d_d3d_info *d3d_info, const struct wined3d_format *format)
 {
-    return gl_info->supported[ARB_TEXTURE_SWIZZLE] && !is_complex_fixup(format->color_fixup)
-            && !is_scaling_fixup(format->color_fixup);
+    return d3d_info->texture_swizzle && !is_complex_fixup(format->color_fixup) && !is_scaling_fixup(format->color_fixup);
 }
 
 static inline BOOL needs_interpolation_qualifiers_for_shader_outputs(const struct wined3d_gl_info *gl_info)

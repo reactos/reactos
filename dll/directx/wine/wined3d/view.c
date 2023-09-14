@@ -231,7 +231,7 @@ static void create_texture_view(struct wined3d_gl_view *view, GLenum view_target
         context_invalidate_compute_state(context, STATE_COMPUTE_SHADER_RESOURCE_BINDING);
         context_invalidate_state(context, STATE_GRAPHICS_SHADER_RESOURCE_BINDING);
     }
-    else if (!is_identity_fixup(view_format->color_fixup) && can_use_texture_swizzle(gl_info, view_format))
+    else if (!is_identity_fixup(view_format->color_fixup) && can_use_texture_swizzle(context->d3d_info, view_format))
     {
         GLint swizzle[4];
 

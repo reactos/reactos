@@ -1037,7 +1037,7 @@ void wined3d_texture_gl_bind(struct wined3d_texture_gl *texture_gl,
         checkGLcall("glTexParameteri(GL_DEPTH_TEXTURE_MODE_ARB, GL_INTENSITY)");
     }
 
-    if (!is_identity_fixup(fixup) && can_use_texture_swizzle(gl_info, format))
+    if (!is_identity_fixup(fixup) && can_use_texture_swizzle(context->d3d_info, format))
     {
         GLint swizzle[4];
 

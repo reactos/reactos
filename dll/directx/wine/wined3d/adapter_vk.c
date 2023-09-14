@@ -729,6 +729,7 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     adapter->shader_backend = &none_shader_backend;
 
     adapter->d3d_info.wined3d_creation_flags = wined3d_creation_flags;
+    adapter->d3d_info.texture_swizzle = TRUE;
 
     return TRUE;
 
