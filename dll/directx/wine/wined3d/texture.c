@@ -3783,8 +3783,10 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
         UINT layer_count, UINT level_count, DWORD flags, const struct wined3d_sub_resource_data *data,
         void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_texture **texture)
 {
+    unsigned int sub_count = level_count * layer_count;
     const struct wined3d_texture_ops *texture_ops;
     struct wined3d_texture *object;
+    unsigned int i;
     HRESULT hr;
 
     TRACE("device %p, desc %p, layer_count %u, level_count %u, flags %#x, data %p, "
@@ -3848,8 +3850,19 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
             return WINED3DERR_INVALIDCALL;
     }
 
-    if (!(object = heap_alloc_zero(FIELD_OFFSET(struct wined3d_texture,
-            sub_resources[level_count * layer_count]))))
+    if (data)
+    {
+        for (i = 0; i < sub_count; ++i)
+        {
+            if (data[i].data)
+                continue;
+
+            WARN("Invalid sub-resource data specified for sub-resource %u.\n", i);
+            return E_INVALIDARG;
+        }
+    }
+
+    if (!(object = heap_alloc_zero(FIELD_OFFSET(struct wined3d_texture, sub_resources[sub_count]))))
         return E_OUTOFMEMORY;
 
     if (FAILED(hr = wined3d_texture_init(object, desc, layer_count,
@@ -3864,21 +3877,8 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
      * in this case. */
     if (data)
     {
-        unsigned int sub_count = level_count * layer_count;
         unsigned int level, width, height, depth;
         struct wined3d_box box;
-        unsigned int i;
-
-        for (i = 0; i < sub_count; ++i)
-        {
-            if (!data[i].data)
-            {
-                WARN("Invalid sub-resource data specified for sub-resource %u.\n", i);
-                wined3d_texture_cleanup_sync(object);
-                heap_free(object);
-                return E_INVALIDARG;
-            }
-        }
 
         for (i = 0; i < sub_count; ++i)
         {
