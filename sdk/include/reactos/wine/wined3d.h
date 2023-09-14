@@ -90,6 +90,19 @@ enum wined3d_device_type
     WINED3D_DEVICE_TYPE_NULLREF             = 4,
 };
 
+enum wined3d_feature_level
+{
+    WINED3D_FEATURE_LEVEL_5,
+    WINED3D_FEATURE_LEVEL_6,
+    WINED3D_FEATURE_LEVEL_7,
+    WINED3D_FEATURE_LEVEL_8,
+    WINED3D_FEATURE_LEVEL_9_SM2,
+    WINED3D_FEATURE_LEVEL_9_SM3,
+    WINED3D_FEATURE_LEVEL_10,
+    WINED3D_FEATURE_LEVEL_11,
+    WINED3D_FEATURE_LEVEL_COUNT
+};
+
 enum wined3d_degree_type
 {
     WINED3D_DEGREE_LINEAR                   = 1,
@@ -1987,6 +2000,8 @@ struct wined3d_caps
     struct wined3d_ddraw_caps ddraw_caps;
 
     BOOL shader_double_precision;
+
+    enum wined3d_feature_level max_feature_level;
 };
 
 struct wined3d_color_key

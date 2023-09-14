@@ -184,19 +184,6 @@ struct wined3d_ffp_attrib_ops
     wined3d_generic_attrib_func generic[WINED3D_FFP_EMIT_COUNT];
 };
 
-enum wined3d_feature_level
-{
-    WINED3D_FEATURE_LEVEL_5,
-    WINED3D_FEATURE_LEVEL_6,
-    WINED3D_FEATURE_LEVEL_7,
-    WINED3D_FEATURE_LEVEL_8,
-    WINED3D_FEATURE_LEVEL_9_SM2,
-    WINED3D_FEATURE_LEVEL_9_SM3,
-    WINED3D_FEATURE_LEVEL_10,
-    WINED3D_FEATURE_LEVEL_11,
-    WINED3D_FEATURE_LEVEL_COUNT
-};
-
 struct wined3d_d3d_info
 {
     struct wined3d_d3d_limits limits;
