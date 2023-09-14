@@ -2683,47 +2683,6 @@ static void context_set_render_offscreen(struct wined3d_context *context, BOOL o
     context->render_offscreen = offscreen;
 }
 
-static BOOL match_depth_stencil_format(const struct wined3d_format *existing,
-        const struct wined3d_format *required)
-{
-    if (existing == required)
-        return TRUE;
-    if ((existing->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_FLOAT)
-            != (required->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_FLOAT))
-        return FALSE;
-    if (existing->depth_size < required->depth_size)
-        return FALSE;
-    /* If stencil bits are used the exact amount is required - otherwise
-     * wrapping won't work correctly. */
-    if (required->stencil_size && required->stencil_size != existing->stencil_size)
-        return FALSE;
-    return TRUE;
-}
-
-/* Context activation is done by the caller. */
-static void context_validate_onscreen_formats(struct wined3d_context *context,
-        const struct wined3d_rendertarget_view *depth_stencil)
-{
-    /* Onscreen surfaces are always in a swapchain */
-    struct wined3d_swapchain *swapchain = context->current_rt.texture->swapchain;
-
-    if (context->render_offscreen || !depth_stencil) return;
-    if (match_depth_stencil_format(swapchain->ds_format, depth_stencil->format)) return;
-
-    /* TODO: If the requested format would satisfy the needs of the existing one(reverse match),
-     * or no onscreen depth buffer was created, the OpenGL drawable could be changed to the new
-     * format. */
-    WARN("Depth stencil format is not supported by WGL, rendering the backbuffer in an FBO\n");
-
-    /* The currently active context is the necessary context to access the swapchain's onscreen buffers */
-    if (!(wined3d_texture_load_location(context->current_rt.texture, context->current_rt.sub_resource_idx,
-            context, WINED3D_LOCATION_TEXTURE_RGB)))
-        ERR("Failed to load location.\n");
-    swapchain->render_to_fbo = TRUE;
-    swapchain_update_draw_bindings(swapchain);
-    context_set_render_offscreen(context, TRUE);
-}
-
 GLenum context_get_offscreen_gl_buffer(const struct wined3d_context *context)
 {
     switch (wined3d_settings.offscreen_rendering_mode)
@@ -3030,8 +2989,6 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
         if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
         {
             struct wined3d_rendertarget_info ds_info = {{0}};
-
-            context_validate_onscreen_formats(context, dsv);
 
             if (!rt_count || wined3d_resource_is_offscreen(rts[0]->resource))
             {
@@ -3944,11 +3901,6 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
         }
 
         context_set_render_offscreen(context, TRUE);
-    }
-
-    if (wined3d_settings.offscreen_rendering_mode == ORM_FBO && isStateDirty(context, STATE_FRAMEBUFFER))
-    {
-        context_validate_onscreen_formats(context, fb->depth_stencil);
     }
 
     /* Preload resources before FBO setup. Texture preload in particular may
