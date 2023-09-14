@@ -2456,6 +2456,17 @@ HRESULT CDECL wined3d_device_create(struct wined3d *wined3d, UINT adapter_idx, e
     return WINED3D_OK;
 }
 
+static BOOL wined3d_adapter_no3d_create_context(struct wined3d_context *context,
+        struct wined3d_texture *target, const struct wined3d_format *ds_format)
+{
+    return TRUE;
+}
+
+static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
+{
+    wined3d_adapter_no3d_create_context,
+};
+
 static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter)
 {
     TRACE("adapter %p.\n", adapter);
@@ -2473,6 +2484,7 @@ static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter)
     adapter->vertex_pipe = &none_vertex_pipe;
     adapter->fragment_pipe = &none_fragment_pipe;
     adapter->shader_backend = &none_shader_backend;
+    adapter->adapter_ops = &wined3d_adapter_no3d_ops;
 
     return TRUE;
 }

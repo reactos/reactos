@@ -1887,108 +1887,171 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
         struct wined3d_texture *target, const struct wined3d_format *ds_format)
 {
     struct wined3d_device *device = swapchain->device;
-    const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    const struct wined3d_format *color_format;
-    struct wined3d_context *ret;
-    BOOL auxBuffers = FALSE;
-    HGLRC ctx, share_ctx;
-    DWORD target_usage;
-    unsigned int i;
+    struct wined3d_context *context;
     DWORD state;
 
     TRACE("swapchain %p, target %p, window %p.\n", swapchain, target, swapchain->win_handle);
 
     wined3d_from_cs(device->cs);
 
-    if (!(ret = heap_alloc_zero(sizeof(*ret))))
+    if (!(context = heap_alloc_zero(sizeof(*context))))
         return NULL;
 
-    ret->free_timestamp_query_size = 4;
-    if (!(ret->free_timestamp_queries = heap_calloc(ret->free_timestamp_query_size,
-            sizeof(*ret->free_timestamp_queries))))
+    context->free_timestamp_query_size = 4;
+    if (!(context->free_timestamp_queries = heap_calloc(context->free_timestamp_query_size,
+            sizeof(*context->free_timestamp_queries))))
         goto out;
-    list_init(&ret->timestamp_queries);
+    list_init(&context->timestamp_queries);
 
-    ret->free_occlusion_query_size = 4;
-    if (!(ret->free_occlusion_queries = heap_calloc(ret->free_occlusion_query_size,
-            sizeof(*ret->free_occlusion_queries))))
+    context->free_occlusion_query_size = 4;
+    if (!(context->free_occlusion_queries = heap_calloc(context->free_occlusion_query_size,
+            sizeof(*context->free_occlusion_queries))))
         goto out;
-    list_init(&ret->occlusion_queries);
+    list_init(&context->occlusion_queries);
 
-    ret->free_fence_size = 4;
-    if (!(ret->free_fences = heap_calloc(ret->free_fence_size, sizeof(*ret->free_fences))))
+    context->free_fence_size = 4;
+    if (!(context->free_fences = heap_calloc(context->free_fence_size, sizeof(*context->free_fences))))
         goto out;
-    list_init(&ret->fences);
+    list_init(&context->fences);
 
-    list_init(&ret->so_statistics_queries);
+    list_init(&context->so_statistics_queries);
 
-    list_init(&ret->pipeline_statistics_queries);
+    list_init(&context->pipeline_statistics_queries);
 
-    list_init(&ret->fbo_list);
-    list_init(&ret->fbo_destroy_list);
+    list_init(&context->fbo_list);
+    list_init(&context->fbo_destroy_list);
 
-    if (!device->shader_backend->shader_allocate_context_data(ret))
+    if (!device->shader_backend->shader_allocate_context_data(context))
     {
         ERR("Failed to allocate shader backend context data.\n");
         goto out;
     }
-    if (!device->adapter->fragment_pipe->allocate_context_data(ret))
+    if (!device->adapter->fragment_pipe->allocate_context_data(context))
     {
         ERR("Failed to allocate fragment pipeline context data.\n");
         goto out;
     }
 
-    for (i = 0; i < ARRAY_SIZE(ret->tex_unit_map); ++i)
-        ret->tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
-    for (i = 0; i < ARRAY_SIZE(ret->rev_tex_unit_map); ++i)
-        ret->rev_tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
-    if (gl_info->limits.graphics_samplers >= MAX_COMBINED_SAMPLERS)
-    {
-        /* Initialize the texture unit mapping to a 1:1 mapping. */
-        unsigned int base, count;
-
-        wined3d_gl_limits_get_texture_unit_range(&gl_info->limits, WINED3D_SHADER_TYPE_PIXEL, &base, &count);
-        if (base + MAX_FRAGMENT_SAMPLERS > ARRAY_SIZE(ret->rev_tex_unit_map))
-        {
-            ERR("Unexpected texture unit base index %u.\n", base);
-            goto out;
-        }
-        for (i = 0; i < min(count, MAX_FRAGMENT_SAMPLERS); ++i)
-        {
-            ret->tex_unit_map[i] = base + i;
-            ret->rev_tex_unit_map[base + i] = i;
-        }
-
-        wined3d_gl_limits_get_texture_unit_range(&gl_info->limits, WINED3D_SHADER_TYPE_VERTEX, &base, &count);
-        if (base + MAX_VERTEX_SAMPLERS > ARRAY_SIZE(ret->rev_tex_unit_map))
-        {
-            ERR("Unexpected texture unit base index %u.\n", base);
-            goto out;
-        }
-        for (i = 0; i < min(count, MAX_VERTEX_SAMPLERS); ++i)
-        {
-            ret->tex_unit_map[MAX_FRAGMENT_SAMPLERS + i] = base + i;
-            ret->rev_tex_unit_map[base + i] = MAX_FRAGMENT_SAMPLERS + i;
-        }
-    }
-
-    if (!(ret->texture_type = heap_calloc(gl_info->limits.combined_samplers,
-            sizeof(*ret->texture_type))))
-        goto out;
-
-    if (!(ret->hdc = GetDCEx(swapchain->win_handle, 0, DCX_USESTYLE | DCX_CACHE)))
+    if (!(context->hdc = GetDCEx(swapchain->win_handle, 0, DCX_USESTYLE | DCX_CACHE)))
     {
         WARN("Failed to retrieve device context, trying swapchain backup.\n");
 
-        if ((ret->hdc = swapchain_get_backup_dc(swapchain)))
-            ret->hdc_is_private = TRUE;
+        if ((context->hdc = swapchain_get_backup_dc(swapchain)))
+            context->hdc_is_private = TRUE;
         else
         {
             ERR("Failed to retrieve a device context.\n");
             goto out;
         }
     }
+
+    if (!device_context_add(device, context))
+    {
+        ERR("Failed to add the newly created context to the context list\n");
+        goto out;
+    }
+
+    context->win_handle = swapchain->win_handle;
+    context->gl_info = &device->adapter->gl_info;
+    context->d3d_info = &device->adapter->d3d_info;
+    context->state_table = device->StateTable;
+
+    /* Mark all states dirty to force a proper initialization of the states on
+     * the first use of the context. Compute states do not need initialization. */
+    for (state = 0; state <= STATE_HIGHEST; ++state)
+    {
+        if (context->state_table[state].representative && !STATE_IS_COMPUTE(state))
+            context_invalidate_state(context, state);
+    }
+
+    context->device = device;
+    context->swapchain = swapchain;
+    context->current_rt.texture = target;
+    context->current_rt.sub_resource_idx = 0;
+    context->tid = GetCurrentThreadId();
+
+    if (!(device->adapter->adapter_ops->adapter_create_context(context, target, ds_format)))
+    {
+        device_context_remove(device, context);
+        goto out;
+    }
+
+    device->shader_backend->shader_init_context_state(context);
+    context->shader_update_mask = (1u << WINED3D_SHADER_TYPE_PIXEL)
+            | (1u << WINED3D_SHADER_TYPE_VERTEX)
+            | (1u << WINED3D_SHADER_TYPE_GEOMETRY)
+            | (1u << WINED3D_SHADER_TYPE_HULL)
+            | (1u << WINED3D_SHADER_TYPE_DOMAIN)
+            | (1u << WINED3D_SHADER_TYPE_COMPUTE);
+
+    TRACE("Created context %p.\n", context);
+
+    return context;
+
+out:
+    if (context->hdc)
+        wined3d_release_dc(swapchain->win_handle, context->hdc);
+    device->shader_backend->shader_free_context_data(context);
+    device->adapter->fragment_pipe->free_context_data(context);
+    heap_free(context->free_fences);
+    heap_free(context->free_occlusion_queries);
+    heap_free(context->free_timestamp_queries);
+    heap_free(context);
+    return NULL;
+}
+
+BOOL wined3d_adapter_opengl_create_context(struct wined3d_context *context,
+        struct wined3d_texture *target, const struct wined3d_format *ds_format)
+{
+    struct wined3d_device *device = context->device;
+    const struct wined3d_format *color_format;
+    const struct wined3d_d3d_info *d3d_info;
+    const struct wined3d_gl_info *gl_info;
+    BOOL aux_buffers = FALSE;
+    HGLRC ctx, share_ctx;
+    DWORD target_usage;
+    unsigned int i;
+
+    gl_info = context->gl_info;
+    d3d_info = context->d3d_info;
+
+    for (i = 0; i < ARRAY_SIZE(context->tex_unit_map); ++i)
+        context->tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
+    for (i = 0; i < ARRAY_SIZE(context->rev_tex_unit_map); ++i)
+        context->rev_tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
+    if (gl_info->limits.graphics_samplers >= MAX_COMBINED_SAMPLERS)
+    {
+        /* Initialize the texture unit mapping to a 1:1 mapping. */
+        unsigned int base, count;
+
+        wined3d_gl_limits_get_texture_unit_range(&gl_info->limits, WINED3D_SHADER_TYPE_PIXEL, &base, &count);
+        if (base + MAX_FRAGMENT_SAMPLERS > ARRAY_SIZE(context->rev_tex_unit_map))
+        {
+            ERR("Unexpected texture unit base index %u.\n", base);
+            return FALSE;
+        }
+        for (i = 0; i < min(count, MAX_FRAGMENT_SAMPLERS); ++i)
+        {
+            context->tex_unit_map[i] = base + i;
+            context->rev_tex_unit_map[base + i] = i;
+        }
+
+        wined3d_gl_limits_get_texture_unit_range(&gl_info->limits, WINED3D_SHADER_TYPE_VERTEX, &base, &count);
+        if (base + MAX_VERTEX_SAMPLERS > ARRAY_SIZE(context->rev_tex_unit_map))
+        {
+            ERR("Unexpected texture unit base index %u.\n", base);
+            return FALSE;
+        }
+        for (i = 0; i < min(count, MAX_VERTEX_SAMPLERS); ++i)
+        {
+            context->tex_unit_map[MAX_FRAGMENT_SAMPLERS + i] = base + i;
+            context->rev_tex_unit_map[base + i] = MAX_FRAGMENT_SAMPLERS + i;
+        }
+    }
+
+    if (!(context->texture_type = heap_calloc(gl_info->limits.combined_samplers,
+            sizeof(*context->texture_type))))
+        return FALSE;
 
     color_format = target->resource.format;
     target_usage = target->resource.usage;
@@ -1997,7 +2060,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
      * X4R4G4B4/X8R8G8B8 as we might need it for the backbuffer. */
     if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
     {
-        auxBuffers = TRUE;
+        aux_buffers = TRUE;
 
         if (color_format->id == WINED3DFMT_B4G4R4X4_UNORM)
             color_format = wined3d_get_format(gl_info, WINED3DFMT_B4G4R4A4_UNORM, target_usage);
@@ -2029,94 +2092,73 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     }
 
     /* Try to find a pixel format which matches our requirements. */
-    if (!(ret->pixel_format = context_choose_pixel_format(device, ret->hdc, color_format, ds_format, auxBuffers)))
-        goto out;
+    if (!(context->pixel_format = context_choose_pixel_format(device,
+            context->hdc, color_format, ds_format, aux_buffers)))
+        return FALSE;
 
-    ret->gl_info = gl_info;
-    ret->win_handle = swapchain->win_handle;
+    context_enter(context);
 
-    context_enter(ret);
-
-    if (!context_set_pixel_format(ret))
+    if (!context_set_pixel_format(context))
     {
-        ERR("Failed to set pixel format %d on device context %p.\n", ret->pixel_format, ret->hdc);
-        context_release(ret);
-        goto out;
+        ERR("Failed to set pixel format %d on device context %p.\n", context->pixel_format, context->hdc);
+        context_release(context);
+        heap_free(context->texture_type);
+        return FALSE;
     }
 
     share_ctx = device->context_count ? device->contexts[0]->glCtx : NULL;
     if (gl_info->p_wglCreateContextAttribsARB)
     {
-        if (!(ctx = context_create_wgl_attribs(gl_info, ret->hdc, share_ctx)))
-            goto out;
+        if (!(ctx = context_create_wgl_attribs(gl_info, context->hdc, share_ctx)))
+        {
+            context_release(context);
+            heap_free(context->texture_type);
+            return FALSE;
+        }
     }
     else
     {
-        if (!(ctx = wglCreateContext(ret->hdc)))
+        if (!(ctx = wglCreateContext(context->hdc)))
         {
             ERR("Failed to create a WGL context.\n");
-            context_release(ret);
-            goto out;
+            context_release(context);
+            heap_free(context->texture_type);
+            return FALSE;
         }
 
         if (share_ctx && !wglShareLists(share_ctx, ctx))
         {
             ERR("wglShareLists(%p, %p) failed, last error %#x.\n", share_ctx, ctx, GetLastError());
-            context_release(ret);
+            context_release(context);
             if (!wglDeleteContext(ctx))
                 ERR("wglDeleteContext(%p) failed, last error %#x.\n", ctx, GetLastError());
-            goto out;
+            heap_free(context->texture_type);
+            return FALSE;
         }
     }
 
-    if (!device_context_add(device, ret))
-    {
-        ERR("Failed to add the newly created context to the context list\n");
-        context_release(ret);
-        if (!wglDeleteContext(ctx))
-            ERR("wglDeleteContext(%p) failed, last error %#x.\n", ctx, GetLastError());
-        goto out;
-    }
+    context->render_offscreen = wined3d_resource_is_offscreen(&target->resource);
+    context->draw_buffers_mask = context_generate_rt_mask(GL_BACK);
+    context->valid = 1;
 
-    ret->d3d_info = d3d_info;
-    ret->state_table = device->StateTable;
-
-    /* Mark all states dirty to force a proper initialization of the states on
-     * the first use of the context. Compute states do not need initialization. */
-    for (state = 0; state <= STATE_HIGHEST; ++state)
-    {
-        if (ret->state_table[state].representative && !STATE_IS_COMPUTE(state))
-            context_invalidate_state(ret, state);
-    }
-
-    ret->device = device;
-    ret->swapchain = swapchain;
-    ret->current_rt.texture = target;
-    ret->current_rt.sub_resource_idx = 0;
-    ret->tid = GetCurrentThreadId();
-
-    ret->render_offscreen = wined3d_resource_is_offscreen(&target->resource);
-    ret->draw_buffers_mask = context_generate_rt_mask(GL_BACK);
-    ret->valid = 1;
-
-    ret->glCtx = ctx;
-    ret->hdc_has_format = TRUE;
-    ret->needs_set = 1;
+    context->glCtx = ctx;
+    context->hdc_has_format = TRUE;
+    context->needs_set = 1;
 
     /* Set up the context defaults */
-    if (!context_set_current(ret))
+    if (!context_set_current(context))
     {
         ERR("Cannot activate context to set up defaults.\n");
-        device_context_remove(device, ret);
-        context_release(ret);
+        context_release(context);
         if (!wglDeleteContext(ctx))
             ERR("wglDeleteContext(%p) failed, last error %#x.\n", ctx, GetLastError());
-        goto out;
+        heap_free(context->texture_type);
+        return FALSE;
     }
 
     if (context_debug_output_enabled(gl_info))
     {
-        GL_EXTCALL(glDebugMessageCallback(wined3d_debug_callback, ret));
+        GL_EXTCALL(glDebugMessageCallback(wined3d_debug_callback, context));
         if (TRACE_ON(d3d_synchronous))
             gl_info->gl_ops.gl.p_glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         GL_EXTCALL(glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE));
@@ -2142,7 +2184,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     }
 
     if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
-        gl_info->gl_ops.gl.p_glGetIntegerv(GL_AUX_BUFFERS, &ret->aux_buffers);
+        gl_info->gl_ops.gl.p_glGetIntegerv(GL_AUX_BUFFERS, &context->aux_buffers);
 
     TRACE("Setting up the screen\n");
 
@@ -2178,7 +2220,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
          */
         for (i = 1; i < gl_info->limits.textures; ++i)
         {
-            context_active_texture(ret, gl_info, i);
+            context_active_texture(context, gl_info, i);
             gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_SHADER_NV,
                     GL_PREVIOUS_TEXTURE_INPUT_NV, GL_TEXTURE0_ARB + i - 1);
             checkGLcall("glTexEnvi(GL_TEXTURE_SHADER_NV, GL_PREVIOUS_TEXTURE_INPUT_NV, ...");
@@ -2199,16 +2241,17 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
                 "!!ARBfp1.0\n"
                 "MOV result.color, fragment.color.primary;\n"
                 "END\n";
-        GL_EXTCALL(glGenProgramsARB(1, &ret->dummy_arbfp_prog));
-        GL_EXTCALL(glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, ret->dummy_arbfp_prog));
-        GL_EXTCALL(glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(dummy_program), dummy_program));
+        GL_EXTCALL(glGenProgramsARB(1, &context->dummy_arbfp_prog));
+        GL_EXTCALL(glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, context->dummy_arbfp_prog));
+        GL_EXTCALL(glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
+                GL_PROGRAM_FORMAT_ASCII_ARB, strlen(dummy_program), dummy_program));
     }
 
     if (gl_info->supported[ARB_POINT_SPRITE])
     {
         for (i = 0; i < gl_info->limits.textures; ++i)
         {
-            context_active_texture(ret, gl_info, i);
+            context_active_texture(context, gl_info, i);
             gl_info->gl_ops.gl.p_glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
             checkGLcall("glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE)");
         }
@@ -2242,39 +2285,18 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     }
     if (gl_info->supported[ARB_CLIP_CONTROL])
         GL_EXTCALL(glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_LOWER_LEFT));
-    device->shader_backend->shader_init_context_state(ret);
-    ret->shader_update_mask = (1u << WINED3D_SHADER_TYPE_PIXEL)
-            | (1u << WINED3D_SHADER_TYPE_VERTEX)
-            | (1u << WINED3D_SHADER_TYPE_GEOMETRY)
-            | (1u << WINED3D_SHADER_TYPE_HULL)
-            | (1u << WINED3D_SHADER_TYPE_DOMAIN)
-            | (1u << WINED3D_SHADER_TYPE_COMPUTE);
 
     /* If this happens to be the first context for the device, dummy textures
      * are not created yet. In that case, they will be created (and bound) by
      * create_dummy_textures right after this context is initialized. */
     if (device->dummy_textures.tex_2d)
-        context_bind_dummy_textures(device, ret);
+        context_bind_dummy_textures(device, context);
 
     /* Initialise all rectangles to avoid resetting unused ones later. */
     gl_info->gl_ops.gl.p_glScissor(0, 0, 0, 0);
     checkGLcall("glScissor");
 
-    TRACE("Created context %p.\n", ret);
-
-    return ret;
-
-out:
-    if (ret->hdc)
-        wined3d_release_dc(swapchain->win_handle, ret->hdc);
-    device->shader_backend->shader_free_context_data(ret);
-    device->adapter->fragment_pipe->free_context_data(ret);
-    heap_free(ret->texture_type);
-    heap_free(ret->free_fences);
-    heap_free(ret->free_occlusion_queries);
-    heap_free(ret->free_timestamp_queries);
-    heap_free(ret);
-    return NULL;
+    return TRUE;
 }
 
 void context_destroy(struct wined3d_device *device, struct wined3d_context *context)

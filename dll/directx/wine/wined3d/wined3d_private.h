@@ -2664,6 +2664,15 @@ struct wined3d_driver_info
 void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
         const struct wined3d_gpu_description *gpu_description, UINT64 vram_bytes) DECLSPEC_HIDDEN;
 
+struct wined3d_adapter_ops
+{
+    BOOL (*adapter_create_context)(struct wined3d_context *context,
+            struct wined3d_texture *target, const struct wined3d_format *ds_format);
+};
+
+BOOL wined3d_adapter_opengl_create_context(struct wined3d_context *context,
+        struct wined3d_texture *target, const struct wined3d_format *ds_format) DECLSPEC_HIDDEN;
+
 /* The adapter structure */
 struct wined3d_adapter
 {
@@ -2684,6 +2693,7 @@ struct wined3d_adapter
     const struct wined3d_vertex_pipe_ops *vertex_pipe;
     const struct fragment_pipeline *fragment_pipe;
     const struct wined3d_shader_backend_ops *shader_backend;
+    const struct wined3d_adapter_ops *adapter_ops;
 };
 
 BOOL wined3d_adapter_opengl_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags) DECLSPEC_HIDDEN;

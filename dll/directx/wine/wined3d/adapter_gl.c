@@ -4178,6 +4178,11 @@ static DWORD get_max_gl_version(const struct wined3d_gl_info *gl_info, DWORD fla
     return wined3d_settings.max_gl_version;
 }
 
+static const struct wined3d_adapter_ops wined3d_adapter_opengl_ops =
+{
+    wined3d_adapter_opengl_create_context,
+};
+
 BOOL wined3d_adapter_opengl_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags)
 {
     static const DWORD supported_gl_versions[] =
@@ -4285,6 +4290,7 @@ BOOL wined3d_adapter_opengl_init(struct wined3d_adapter *adapter, DWORD wined3d_
     wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
 
     wined3d_adapter_init_ffp_attrib_ops(adapter);
+    adapter->adapter_ops = &wined3d_adapter_opengl_ops;
 
     return TRUE;
 }
