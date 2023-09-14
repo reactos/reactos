@@ -352,7 +352,7 @@ struct glsl_ffp_fragment_shader
 struct glsl_ffp_destroy_ctx
 {
     struct shader_glsl_priv *priv;
-    const struct wined3d_context *context;
+    const struct wined3d_context_gl *context_gl;
 };
 
 static void shader_glsl_generate_shader_epilogue(const struct wined3d_shader_context *ctx);
@@ -11452,8 +11452,9 @@ static void shader_glsl_free_ffp_vertex_shader(struct wine_rb_entry *entry, void
             struct glsl_ffp_vertex_shader, desc.entry);
     struct glsl_shader_prog_link *program, *program2;
     struct glsl_ffp_destroy_ctx *ctx = param;
-    const struct wined3d_gl_info *gl_info = ctx->context->gl_info;
+    const struct wined3d_gl_info *gl_info;
 
+    gl_info = ctx->context_gl->c.gl_info;
     LIST_FOR_EACH_ENTRY_SAFE(program, program2, &shader->linked_programs,
             struct glsl_shader_prog_link, vs.shader_entry)
     {
@@ -11466,11 +11467,12 @@ static void shader_glsl_free_ffp_vertex_shader(struct wine_rb_entry *entry, void
 /* Context activation is done by the caller. */
 static void glsl_vertex_pipe_vp_free(struct wined3d_device *device, struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct shader_glsl_priv *priv = device->vertex_priv;
     struct glsl_ffp_destroy_ctx ctx;
 
     ctx.priv = priv;
-    ctx.context = context;
+    ctx.context_gl = context_gl;
     wine_rb_destroy(&priv->ffp_vertex_shaders, shader_glsl_free_ffp_vertex_shader, &ctx);
 }
 
@@ -11962,8 +11964,9 @@ static void shader_glsl_free_ffp_fragment_shader(struct wine_rb_entry *entry, vo
             struct glsl_ffp_fragment_shader, entry.entry);
     struct glsl_shader_prog_link *program, *program2;
     struct glsl_ffp_destroy_ctx *ctx = param;
-    const struct wined3d_gl_info *gl_info = ctx->context->gl_info;
+    const struct wined3d_gl_info *gl_info;
 
+    gl_info = ctx->context_gl->c.gl_info;
     LIST_FOR_EACH_ENTRY_SAFE(program, program2, &shader->linked_programs,
             struct glsl_shader_prog_link, ps.shader_entry)
     {
@@ -11976,11 +11979,12 @@ static void shader_glsl_free_ffp_fragment_shader(struct wine_rb_entry *entry, vo
 /* Context activation is done by the caller. */
 static void glsl_fragment_pipe_free(struct wined3d_device *device, struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct shader_glsl_priv *priv = device->fragment_priv;
     struct glsl_ffp_destroy_ctx ctx;
 
     ctx.priv = priv;
-    ctx.context = context;
+    ctx.context_gl = context_gl;
     wine_rb_destroy(&priv->ffp_fragment_shaders, shader_glsl_free_ffp_fragment_shader, &ctx);
 }
 
