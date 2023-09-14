@@ -1035,8 +1035,8 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_format_gl *format;
+    struct wined3d_buffer_gl *buffer_gl;
     struct wined3d_resource *resource;
-    struct wined3d_buffer *buffer;
     unsigned int offset, size;
 
     resource = view->resource;
@@ -1061,13 +1061,13 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
         return;
     }
 
-    buffer = buffer_from_resource(resource);
-    wined3d_buffer_load_location(buffer, context, WINED3D_LOCATION_BUFFER);
+    buffer_gl = wined3d_buffer_gl(buffer_from_resource(resource));
+    wined3d_buffer_load_location(&buffer_gl->b, context, WINED3D_LOCATION_BUFFER);
     wined3d_unordered_access_view_invalidate_location(view, ~WINED3D_LOCATION_BUFFER);
 
-    get_buffer_view_range(buffer, &view->desc, &format->f, &offset, &size);
-    context_bind_bo(context, buffer->buffer_type_hint, buffer->buffer_object);
-    GL_EXTCALL(glClearBufferSubData(buffer->buffer_type_hint, format->internal,
+    get_buffer_view_range(&buffer_gl->b, &view->desc, &format->f, &offset, &size);
+    context_bind_bo(context, buffer_gl->buffer_type_hint, buffer_gl->b.buffer_object);
+    GL_EXTCALL(glClearBufferSubData(buffer_gl->buffer_type_hint, format->internal,
             offset, size, format->format, format->type, clear_value));
     checkGLcall("clear unordered access view");
 }
@@ -1104,7 +1104,7 @@ void wined3d_unordered_access_view_copy_counter(struct wined3d_unordered_access_
     src.buffer_object = view->counter_bo;
     src.addr = NULL;
 
-    context_copy_bo_address(context, &dst, buffer->buffer_type_hint,
+    context_copy_bo_address(context, &dst, wined3d_buffer_gl(buffer)->buffer_type_hint,
             &src, GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint));
 
     wined3d_buffer_invalidate_location(buffer, ~dst_location);

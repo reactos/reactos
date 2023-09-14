@@ -3815,7 +3815,6 @@ struct wined3d_buffer
 
     GLuint buffer_object;
     GLenum buffer_object_usage;
-    GLenum buffer_type_hint;
     unsigned int bind_flags;
     DWORD flags;
     DWORD locations;
@@ -3854,6 +3853,8 @@ void wined3d_buffer_upload_data(struct wined3d_buffer *buffer, struct wined3d_co
 struct wined3d_buffer_gl
 {
     struct wined3d_buffer b;
+
+    GLenum buffer_type_hint;
 };
 
 static inline struct wined3d_buffer_gl *wined3d_buffer_gl(struct wined3d_buffer *buffer)
