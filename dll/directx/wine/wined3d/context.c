@@ -4553,9 +4553,6 @@ void dispatch_compute(struct wined3d_device *device, const struct wined3d_state 
     GL_EXTCALL(glMemoryBarrier(GL_ALL_BARRIER_BITS));
     checkGLcall("glMemoryBarrier");
 
-    if (wined3d_settings.strict_draw_ordering)
-        gl_info->gl_ops.gl.p_glFlush(); /* Flush to ensure ordering across contexts. */
-
     context_release(context);
 }
 
@@ -5316,9 +5313,6 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
         wined3d_fence_issue(ib_fence, device);
     for (i = 0; i < context->buffer_fence_count; ++i)
         wined3d_fence_issue(context->buffer_fences[i], device);
-
-    if (wined3d_settings.strict_draw_ordering)
-        gl_info->gl_ops.gl.p_glFlush(); /* Flush to ensure ordering across contexts. */
 
     context_release(context);
 }

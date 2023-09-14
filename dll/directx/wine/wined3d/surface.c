@@ -337,9 +337,6 @@ static void texture2d_depth_blt_fbo(const struct wined3d_device *device, struct 
     gl_info->fbo_ops.glBlitFramebuffer(src_rect->left, src_rect->top, src_rect->right, src_rect->bottom,
             dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom, gl_mask, GL_NEAREST);
     checkGLcall("glBlitFramebuffer()");
-
-    if (wined3d_settings.strict_draw_ordering)
-        gl_info->gl_ops.gl.p_glFlush(); /* Flush to ensure ordering across contexts. */
 }
 
 static BOOL is_multisample_location(const struct wined3d_texture *texture, DWORD location)
@@ -488,8 +485,7 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
             dst_rect->left, dst_rect->top, dst_rect->right, dst_rect->bottom, GL_COLOR_BUFFER_BIT, gl_filter);
     checkGLcall("glBlitFramebuffer()");
 
-    if (wined3d_settings.strict_draw_ordering || (dst_location == WINED3D_LOCATION_DRAWABLE
-            && dst_texture->swapchain->front_buffer == dst_texture))
+    if (dst_location == WINED3D_LOCATION_DRAWABLE && dst_texture->swapchain->front_buffer == dst_texture)
         gl_info->gl_ops.gl.p_glFlush();
 
     if (restore_texture)
@@ -1893,9 +1889,6 @@ static void fb_copy_to_texture_hwstretch(struct wined3d_texture *dst_texture, un
         checkGLcall("glDeleteTextures(1, &backup)");
     }
 
-    if (wined3d_settings.strict_draw_ordering)
-        gl_info->gl_ops.gl.p_glFlush(); /* Flush to ensure ordering across contexts. */
-
     context_release(context);
 
     /* The texture is now most up to date - If the surface is a render target
@@ -2814,9 +2807,8 @@ static DWORD ffp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
         checkGLcall("glDisable(GL_TEXTURE_RECTANGLE_ARB)");
     }
 
-    if (wined3d_settings.strict_draw_ordering
-            || (dst_texture->swapchain && dst_texture->swapchain->front_buffer == dst_texture))
-        gl_info->gl_ops.gl.p_glFlush(); /* Flush to ensure ordering across contexts. */
+    if (dst_texture->swapchain && dst_texture->swapchain->front_buffer == dst_texture)
+        gl_info->gl_ops.gl.p_glFlush();
 
     /* Restore the color key parameters */
     wined3d_texture_set_color_key(src_texture, WINED3D_CKEY_SRC_BLT,

@@ -2463,9 +2463,6 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
     }
     heap_free(converted_mem);
 
-    if (wined3d_settings.strict_draw_ordering)
-        gl_info->gl_ops.gl.p_glFlush();
-
     if (gl_info->quirks & WINED3D_QUIRK_FBO_TEX_UPDATE)
     {
         struct wined3d_device *device = texture->resource.device;

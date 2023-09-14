@@ -7886,9 +7886,8 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
     /* Leave the opengl state valid for blitting */
     arbfp_blit_unset(context->gl_info);
 
-    if (wined3d_settings.strict_draw_ordering
-            || (dst_texture->swapchain && (dst_texture->swapchain->front_buffer == dst_texture)))
-        context->gl_info->gl_ops.gl.p_glFlush(); /* Flush to ensure ordering across contexts. */
+    if (dst_texture->swapchain && (dst_texture->swapchain->front_buffer == dst_texture))
+        context->gl_info->gl_ops.gl.p_glFlush();
 
     return dst_location;
 }

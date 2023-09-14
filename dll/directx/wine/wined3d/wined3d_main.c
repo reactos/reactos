@@ -83,7 +83,6 @@ struct wined3d_settings wined3d_settings =
     NULL,           /* No wine logo by default */
     TRUE,           /* Prefer multisample textures to multisample renderbuffers. */
     ~0u,            /* Don't force a specific sample count by default. */
-    FALSE,          /* No strict draw ordering. */
     FALSE,          /* Don't range check relative addressing indices in float constants. */
     ~0U,            /* No VS shader model limit by default. */
     ~0U,            /* No HS shader model limit by default. */
@@ -290,13 +289,6 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
         if (!get_config_key_dword(hkey, appkey, "SampleCount", &wined3d_settings.sample_count))
             ERR_(winediag)("Forcing sample count to %u. This may not be compatible with all applications.\n",
                     wined3d_settings.sample_count);
-        if (!get_config_key(hkey, appkey, "StrictDrawOrdering", buffer, size)
-                && !strcmp(buffer,"enabled"))
-        {
-            ERR_(winediag)("\"StrictDrawOrdering\" is deprecated, please use \"csmt\" instead.\n");
-            TRACE("Enforcing strict draw ordering.\n");
-            wined3d_settings.strict_draw_ordering = TRUE;
-        }
         if (!get_config_key(hkey, appkey, "CheckFloatConstants", buffer, size)
                 && !strcmp(buffer, "enabled"))
         {
