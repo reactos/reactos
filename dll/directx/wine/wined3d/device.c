@@ -2952,15 +2952,14 @@ static void wined3d_device_set_pipeline_unordered_access_view(struct wined3d_dev
         return;
     }
 
-    prev = device->update_state->unordered_access_view[pipeline][idx];
+    prev = device->state.unordered_access_view[pipeline][idx];
     if (uav == prev && initial_count == ~0u)
         return;
 
     if (uav)
         wined3d_unordered_access_view_incref(uav);
-    device->update_state->unordered_access_view[pipeline][idx] = uav;
-    if (!device->recording)
-        wined3d_cs_emit_set_unordered_access_view(device->cs, pipeline, idx, uav, initial_count);
+    device->state.unordered_access_view[pipeline][idx] = uav;
+    wined3d_cs_emit_set_unordered_access_view(device->cs, pipeline, idx, uav, initial_count);
     if (prev)
         wined3d_unordered_access_view_decref(prev);
 }
