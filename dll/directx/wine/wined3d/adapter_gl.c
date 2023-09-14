@@ -1302,6 +1302,10 @@ static const struct wined3d_renderer_table
 cards_nvidia_binary[] =
 {
     /* Direct 3D 11 */
+    {"RTX 2080 Ti",                 CARD_NVIDIA_GEFORCE_RTX2080TI}, /* GeForce 2000 - highend */
+    {"RTX 2080",                    CARD_NVIDIA_GEFORCE_RTX2080},   /* GeForce 2000 - highend */
+    {"RTX 2070",                    CARD_NVIDIA_GEFORCE_RTX2070},   /* GeForce 2000 - highend */
+    {"RTX 2060",                    CARD_NVIDIA_GEFORCE_RTX2060},   /* GeForce 2000 - highend */
     {"TITAN V",                     CARD_NVIDIA_TITANV},            /* GeForce 1000 - highend */
     {"TITAN X (Pascal)",            CARD_NVIDIA_TITANX_PASCAL},     /* GeForce 1000 - highend */
     {"GTX 1080 Ti",                 CARD_NVIDIA_GEFORCE_GTX1080TI}, /* GeForce 1000 - highend */
