@@ -3695,7 +3695,7 @@ static void context_update_stream_info(struct wined3d_context *context, const st
 
     if (use_vs(state))
     {
-        if (state->vertex_declaration->half_float_conv_needed)
+        if (state->vertex_declaration->have_half_floats && !gl_info->supported[ARB_HALF_FLOAT_VERTEX])
         {
             TRACE("Using immediate mode draw with vertex shaders for FLOAT16 conversion.\n");
             context->use_immediate_mode_draw = TRUE;

@@ -3513,10 +3513,10 @@ struct wined3d_vertex_declaration
     struct wined3d_device *device;
 
     struct wined3d_vertex_declaration_element *elements;
-    UINT element_count;
+    unsigned int element_count;
 
     BOOL position_transformed;
-    BOOL half_float_conv_needed;
+    BOOL have_half_floats;
 };
 
 struct wined3d_saved_states

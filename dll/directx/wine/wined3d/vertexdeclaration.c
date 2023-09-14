@@ -183,7 +183,6 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_adapter *adapter = device->adapter;
-    const struct wined3d_gl_info *gl_info = &adapter->gl_info;
     unsigned int i;
 
     if (TRACE_ON(d3d_decl))
@@ -227,7 +226,8 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
 
         /* Find the streams used in the declaration. The vertex buffers have
          * to be loaded when drawing, but filter tesselation pseudo streams. */
-        if (e->input_slot >= MAX_STREAMS) continue;
+        if (e->input_slot >= MAX_STREAMS)
+            continue;
 
         if (!e->format->gl_vtx_format)
         {
@@ -263,7 +263,7 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
 
         if (elements[i].format == WINED3DFMT_R16G16_FLOAT || elements[i].format == WINED3DFMT_R16G16B16A16_FLOAT)
         {
-            if (!gl_info->supported[ARB_HALF_FLOAT_VERTEX]) declaration->half_float_conv_needed = TRUE;
+            declaration->have_half_floats = TRUE;
         }
     }
 
