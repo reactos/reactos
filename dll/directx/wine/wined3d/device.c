@@ -5351,7 +5351,7 @@ HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
     device->ref = 1;
     device->wined3d = wined3d;
     wined3d_incref(device->wined3d);
-    device->adapter = wined3d->adapter_count ? adapter : NULL;
+    device->adapter = adapter;
     device->device_parent = device_parent;
     list_init(&device->resources);
     list_init(&device->shaders);
