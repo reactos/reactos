@@ -8578,10 +8578,9 @@ static GLuint find_glsl_hull_shader(const struct wined3d_context_gl *context_gl,
     return ret;
 }
 
-static GLuint find_glsl_domain_shader(const struct wined3d_context *context,
+static GLuint find_glsl_domain_shader(const struct wined3d_context_gl *context_gl,
         struct shader_glsl_priv *priv, struct wined3d_shader *shader, const struct ds_compile_args *args)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_ds_compiled_shader *gl_shaders, *new_array;
     struct glsl_shader_private *shader_data;
     unsigned int i, new_size;
@@ -10162,7 +10161,7 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
         struct ds_compile_args args;
 
         find_ds_compile_args(state, dshader, &args, context);
-        ds_id = find_glsl_domain_shader(context, priv, dshader, &args);
+        ds_id = find_glsl_domain_shader(context_gl, priv, dshader, &args);
     }
 
     gshader = state->shader[WINED3D_SHADER_TYPE_GEOMETRY];
