@@ -1531,6 +1531,7 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     const struct wined3d_d3d_info *d3d_info;
     const struct wined3d_gl_info *gl_info;
     const struct wined3d_format *format;
+    const struct wined3d *d3d;
     struct wined3d_device *device;
     unsigned int resource_size;
     DWORD valid_location = 0;
@@ -1541,6 +1542,7 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
             texture, width, height, debug_d3dformat(format_id), multisample_type, multisample_quality, mem, pitch);
 
     device = texture->resource.device;
+    d3d = device->wined3d;
     gl_info = &device->adapter->gl_info;
     d3d_info = &device->adapter->d3d_info;
     format = wined3d_get_format(device->adapter, format_id, texture->resource.bind_flags);
@@ -1608,6 +1610,8 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     texture->resource.multisample_quality = multisample_quality;
     texture->resource.width = width;
     texture->resource.height = height;
+    if (!(texture->resource.access & WINED3D_RESOURCE_ACCESS_CPU) && d3d->flags & WINED3D_VIDMEM_ACCOUNTING)
+        adapter_adjust_memory(device->adapter,  (INT64)texture->slice_pitch - texture->resource.size);
     texture->resource.size = texture->slice_pitch;
     sub_resource->size = texture->slice_pitch;
     sub_resource->locations = WINED3D_LOCATION_DISCARDED;
