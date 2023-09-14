@@ -5355,9 +5355,13 @@ LRESULT device_process_message(struct wined3d_device *device, HWND window, BOOL 
     }
     else if (message == WM_ACTIVATEAPP)
     {
-        UINT i;
+        unsigned int i = device->swapchain_count;
 
-        for (i = 0; i < device->swapchain_count; i++)
+        /* Deactivating the implicit swapchain may cause the application
+         * (e.g. Deus Ex: GOTY) to destroy the device, so take care to
+         * deactivate the implicit swapchain last, and to avoid accessing the
+         * "device" pointer afterwards. */
+        while (i--)
             wined3d_swapchain_activate(device->swapchains[i], wparam);
     }
     else if (message == WM_SYSCOMMAND)
