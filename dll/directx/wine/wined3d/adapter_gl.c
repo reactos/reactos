@@ -4385,10 +4385,34 @@ static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, s
     caps->MaxAnisotropy = gl_info->limits.anisotropy;
 }
 
+static BOOL adapter_gl_check_format(const struct wined3d_adapter *adapter,
+        const struct wined3d_format *adapter_format, const struct wined3d_format *rt_format,
+        const struct wined3d_format *ds_format)
+{
+    unsigned int i;
+
+    if (wined3d_settings.offscreen_rendering_mode != ORM_BACKBUFFER)
+        return TRUE;
+
+    for (i = 0; i < adapter->cfg_count; ++i)
+    {
+        const struct wined3d_pixel_format *cfg = &adapter->cfgs[i];
+
+        if (wined3d_check_pixel_format_color(cfg, rt_format)
+                && wined3d_check_pixel_format_depth(cfg, ds_format))
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
 {
     wined3d_adapter_gl_create_context,
     adapter_gl_get_wined3d_caps,
+    adapter_gl_check_format,
 };
 
 static BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter,

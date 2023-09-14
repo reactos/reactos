@@ -1277,7 +1277,7 @@ HRESULT CDECL wined3d_get_adapter_raster_status(const struct wined3d *wined3d, U
     return WINED3D_OK;
 }
 
-static BOOL wined3d_check_pixel_format_color(const struct wined3d_pixel_format *cfg,
+BOOL wined3d_check_pixel_format_color(const struct wined3d_pixel_format *cfg,
         const struct wined3d_format *format)
 {
     /* Float formats need FBOs. If FBOs are used this function isn't called */
@@ -1297,7 +1297,7 @@ static BOOL wined3d_check_pixel_format_color(const struct wined3d_pixel_format *
     return TRUE;
 }
 
-static BOOL wined3d_check_pixel_format_depth(const struct wined3d_pixel_format *cfg,
+BOOL wined3d_check_pixel_format_depth(const struct wined3d_pixel_format *cfg,
         const struct wined3d_format *format)
 {
     BOOL lockable = FALSE;
@@ -1331,6 +1331,7 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
         UINT adapter_idx, enum wined3d_device_type device_type, enum wined3d_format_id adapter_format_id,
         enum wined3d_format_id render_target_format_id, enum wined3d_format_id depth_stencil_format_id)
 {
+    const struct wined3d_format *adapter_format;
     const struct wined3d_format *rt_format;
     const struct wined3d_format *ds_format;
     const struct wined3d_adapter *adapter;
@@ -1344,6 +1345,8 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
         return WINED3DERR_INVALIDCALL;
 
     adapter = wined3d->adapters[adapter_idx];
+
+    adapter_format = wined3d_get_format(adapter, adapter_format_id, WINED3D_BIND_RENDER_TARGET);
     rt_format = wined3d_get_format(adapter, render_target_format_id, WINED3D_BIND_RENDER_TARGET);
     ds_format = wined3d_get_format(adapter, depth_stencil_format_id, WINED3D_BIND_DEPTH_STENCIL);
 
@@ -1358,33 +1361,17 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
         return WINED3DERR_NOTAVAILABLE;
     }
 
-    if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
+    if (adapter->adapter_ops->adapter_check_format(adapter, adapter_format, rt_format, ds_format))
     {
-        const struct wined3d_pixel_format *cfgs;
-        unsigned int cfg_count;
-        unsigned int i;
-
-        cfgs = adapter->cfgs;
-        cfg_count = adapter->cfg_count;
-        for (i = 0; i < cfg_count; ++i)
-        {
-            if (wined3d_check_pixel_format_color(&cfgs[i], rt_format)
-                    && wined3d_check_pixel_format_depth(&cfgs[i], ds_format))
-            {
-                TRACE("Formats match.\n");
-                return WINED3D_OK;
-            }
-        }
-
-        TRACE("Unsupported format pair: %s and %s.\n",
-                debug_d3dformat(render_target_format_id),
-                debug_d3dformat(depth_stencil_format_id));
-
-        return WINED3DERR_NOTAVAILABLE;
+        TRACE("Formats match.\n");
+        return WINED3D_OK;
     }
 
-    TRACE("Formats match.\n");
-    return WINED3D_OK;
+    TRACE("Unsupported format pair: %s and %s.\n",
+            debug_d3dformat(render_target_format_id),
+            debug_d3dformat(depth_stencil_format_id));
+
+    return WINED3DERR_NOTAVAILABLE;
 }
 
 HRESULT CDECL wined3d_check_device_multisample_type(const struct wined3d *wined3d, UINT adapter_idx,
@@ -2336,10 +2323,18 @@ static void adapter_no3d_get_wined3d_caps(const struct wined3d_adapter *adapter,
 {
 }
 
+static BOOL adapter_no3d_check_format(const struct wined3d_adapter *adapter,
+        const struct wined3d_format *adapter_format, const struct wined3d_format *rt_format,
+        const struct wined3d_format *ds_format)
+{
+    return TRUE;
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
 {
     wined3d_adapter_no3d_create_context,
     adapter_no3d_get_wined3d_caps,
+    adapter_no3d_check_format,
 };
 
 static void wined3d_adapter_no3d_init_d3d_info(struct wined3d_adapter *adapter, unsigned int wined3d_creation_flags)

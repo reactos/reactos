@@ -2689,6 +2689,9 @@ struct wined3d_adapter_ops
     BOOL (*adapter_create_context)(struct wined3d_context *context,
             struct wined3d_texture *target, const struct wined3d_format *ds_format);
     void (*adapter_get_wined3d_caps)(const struct wined3d_adapter *adapter, struct wined3d_caps *caps);
+    BOOL (*adapter_check_format)(const struct wined3d_adapter *adapter,
+            const struct wined3d_format *adapter_format, const struct wined3d_format *rt_format,
+            const struct wined3d_format *ds_format);
 };
 
 /* The adapter structure */
@@ -4809,5 +4812,10 @@ void wined3d_dxtn_free(void) DECLSPEC_HIDDEN;
 
 /* The WNDCLASS-Name for the fake window which we use to retrieve the GL capabilities */
 #define WINED3D_OPENGL_WINDOW_CLASS_NAME "WineD3D_OpenGL"
+
+BOOL wined3d_check_pixel_format_color(const struct wined3d_pixel_format *cfg,
+        const struct wined3d_format *format) DECLSPEC_HIDDEN;
+BOOL wined3d_check_pixel_format_depth(const struct wined3d_pixel_format *cfg,
+        const struct wined3d_format *format) DECLSPEC_HIDDEN;
 
 #endif
