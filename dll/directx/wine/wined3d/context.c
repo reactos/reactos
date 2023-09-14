@@ -702,6 +702,7 @@ static struct fbo_entry *context_find_fbo_entry(struct wined3d_context *context,
 /* Context activation is done by the caller. */
 static void context_apply_fbo_entry(struct wined3d_context *context, GLenum target, struct fbo_entry *entry)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     GLuint read_binding, draw_binding;
     unsigned int i;
@@ -739,7 +740,7 @@ static void context_apply_fbo_entry(struct wined3d_context *context, GLenum targ
     /* Set valid read and draw buffer bindings to satisfy pedantic pre-ES2_compatibility
      * GL contexts requirements. */
     gl_info->gl_ops.gl.p_glReadBuffer(GL_NONE);
-    context_set_draw_buffer(context, GL_NONE);
+    wined3d_context_gl_set_draw_buffer(context_gl, GL_NONE);
     if (target != GL_FRAMEBUFFER)
     {
         if (target == GL_READ_FRAMEBUFFER)
@@ -2504,12 +2505,14 @@ static void context_apply_draw_buffers(struct wined3d_context *context, DWORD rt
 }
 
 /* Context activation is done by the caller. */
-void context_set_draw_buffer(struct wined3d_context *context, GLenum buffer)
+void wined3d_context_gl_set_draw_buffer(struct wined3d_context_gl *context_gl, GLenum buffer)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    DWORD *current_mask = context->current_fbo ? &context->current_fbo->rt_mask : &context->draw_buffers_mask;
-    DWORD new_mask = context_generate_rt_mask(buffer);
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    struct fbo_entry *current_fbo = context_gl->c.current_fbo;
+    uint32_t new_mask = context_generate_rt_mask(buffer);
+    uint32_t *current_mask;
 
+    current_mask = current_fbo ? &current_fbo->rt_mask : &context_gl->c.draw_buffers_mask;
     if (new_mask == *current_mask)
         return;
 
