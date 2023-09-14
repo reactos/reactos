@@ -21,7 +21,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -59,9 +58,9 @@ static void create_inf_file(LPCSTR filename, const char *data)
     BOOL ret;
     HANDLE handle = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    assert(handle != INVALID_HANDLE_VALUE);
+    ok(handle != INVALID_HANDLE_VALUE, "Failed to create %s, error %u.\n", filename, GetLastError());
     ret = WriteFile(handle, data, strlen(data), &res, NULL);
-    assert(ret != 0);
+    ok(ret, "Failed to write file, error %u.\n", GetLastError());
     CloseHandle(handle);
 }
 
@@ -777,7 +776,7 @@ START_TEST(install)
 
     /* Set CBT hook to disallow MessageBox creation in current thread */
     hhook = SetWindowsHookExA(WH_CBT, cbt_hook_proc, 0, GetCurrentThreadId());
-    assert(hhook != 0);
+    ok(!!hhook, "Failed to set hook, error %u.\n", GetLastError());
 
     test_cmdline();
     test_registry();
