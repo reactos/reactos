@@ -4653,6 +4653,18 @@ static void adapter_gl_uninit_3d(struct wined3d_device *device)
     wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
 }
 
+static void *adapter_gl_map_bo_address(struct wined3d_context *context,
+        const struct wined3d_bo_address *data, size_t size, GLenum binding, uint32_t flags)
+{
+    return wined3d_context_gl_map_bo_address(wined3d_context_gl(context), data, size, binding, flags);
+}
+
+static void adapter_gl_unmap_bo_address(struct wined3d_context *context,
+        const struct wined3d_bo_address *data, GLenum binding)
+{
+    return wined3d_context_gl_unmap_bo_address(wined3d_context_gl(context), data, binding);
+}
+
 static HRESULT adapter_gl_create_swapchain(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
         void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_swapchain **swapchain)
 {
@@ -5126,6 +5138,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
     adapter_gl_check_format,
     adapter_gl_init_3d,
     adapter_gl_uninit_3d,
+    adapter_gl_map_bo_address,
+    adapter_gl_unmap_bo_address,
     adapter_gl_create_swapchain,
     adapter_gl_destroy_swapchain,
     adapter_gl_create_buffer,

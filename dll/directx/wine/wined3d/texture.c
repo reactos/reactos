@@ -700,7 +700,6 @@ void wined3d_texture_sub_resources_destroyed(struct wined3d_texture *texture)
 static void wined3d_texture_create_dc(void *object)
 {
     const struct wined3d_texture_idx *idx = object;
-    struct wined3d_context_gl *context_gl = NULL;
     struct wined3d_context *context = NULL;
     unsigned int sub_resource_idx, level;
     const struct wined3d_format *format;
@@ -737,19 +736,26 @@ static void wined3d_texture_create_dc(void *object)
         }
     }
 
-    if (device->d3d_initialized)
+    if (!(texture->sub_resources[sub_resource_idx].locations & texture->resource.map_binding))
     {
         context = context_acquire(device, NULL, 0);
-        context_gl = wined3d_context_gl(context);
+        wined3d_texture_load_location(texture, sub_resource_idx, context, texture->resource.map_binding);
     }
-
-    wined3d_texture_load_location(texture, sub_resource_idx, context, texture->resource.map_binding);
     wined3d_texture_invalidate_location(texture, sub_resource_idx, ~texture->resource.map_binding);
     wined3d_texture_get_pitch(texture, level, &row_pitch, &slice_pitch);
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, texture->resource.map_binding);
-    desc.pMemory = wined3d_context_gl_map_bo_address(context_gl, &data,
-            texture->sub_resources[sub_resource_idx].size,
-            GL_PIXEL_UNPACK_BUFFER, WINED3D_MAP_READ | WINED3D_MAP_WRITE);
+    if (data.buffer_object)
+    {
+        if (!context)
+            context = context_acquire(device, NULL, 0);
+        desc.pMemory = wined3d_context_map_bo_address(context, &data,
+                texture->sub_resources[sub_resource_idx].size,
+                GL_PIXEL_UNPACK_BUFFER, WINED3D_MAP_READ | WINED3D_MAP_WRITE);
+    }
+    else
+    {
+        desc.pMemory = data.addr;
+    }
 
     if (context)
         context_release(context);
@@ -779,9 +785,8 @@ static void wined3d_texture_create_dc(void *object)
 static void wined3d_texture_destroy_dc(void *object)
 {
     const struct wined3d_texture_idx *idx = object;
-    struct wined3d_context_gl *context_gl = NULL;
     D3DKMT_DESTROYDCFROMMEMORY destroy_desc;
-    struct wined3d_context *context = NULL;
+    struct wined3d_context *context;
     struct wined3d_texture *texture;
     struct wined3d_dc_info *dc_info;
     struct wined3d_bo_address data;
@@ -809,17 +814,13 @@ static void wined3d_texture_destroy_dc(void *object)
     dc_info->dc = NULL;
     dc_info->bitmap = NULL;
 
-    if (device->d3d_initialized)
+    wined3d_texture_get_memory(texture, sub_resource_idx, &data, texture->resource.map_binding);
+    if (data.buffer_object)
     {
         context = context_acquire(device, NULL, 0);
-        context_gl = wined3d_context_gl(context);
-    }
-
-    wined3d_texture_get_memory(texture, sub_resource_idx, &data, texture->resource.map_binding);
-    wined3d_context_gl_unmap_bo_address(context_gl, &data, GL_PIXEL_UNPACK_BUFFER);
-
-    if (context)
+        wined3d_context_unmap_bo_address(context, &data, GL_PIXEL_UNPACK_BUFFER);
         context_release(context);
+    }
 }
 
 void wined3d_texture_set_swapchain(struct wined3d_texture *texture, struct wined3d_swapchain *swapchain)
@@ -2906,8 +2907,7 @@ static HRESULT texture_resource_sub_resource_map(struct wined3d_resource *resour
     struct wined3d_texture_sub_resource *sub_resource;
     struct wined3d_device *device = resource->device;
     unsigned int fmt_flags = resource->format_flags;
-    struct wined3d_context_gl *context_gl = NULL;
-    struct wined3d_context *context = NULL;
+    struct wined3d_context *context;
     struct wined3d_texture *texture;
     struct wined3d_bo_address data;
     unsigned int texture_level;
@@ -2942,11 +2942,7 @@ static HRESULT texture_resource_sub_resource_map(struct wined3d_resource *resour
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (device->d3d_initialized)
-    {
-        context = context_acquire(device, NULL, 0);
-        context_gl = wined3d_context_gl(context);
-    }
+    context = context_acquire(device, NULL, 0);
 
     if (flags & WINED3D_MAP_DISCARD)
     {
@@ -2974,12 +2970,11 @@ static HRESULT texture_resource_sub_resource_map(struct wined3d_resource *resour
         wined3d_texture_invalidate_location(texture, sub_resource_idx, ~resource->map_binding);
 
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, resource->map_binding);
-    base_memory = wined3d_context_gl_map_bo_address(context_gl, &data,
+    base_memory = wined3d_context_map_bo_address(context, &data,
             sub_resource->size, GL_PIXEL_UNPACK_BUFFER, flags);
     TRACE("Base memory pointer %p.\n", base_memory);
 
-    if (context)
-        context_release(context);
+    context_release(context);
 
     if (fmt_flags & WINED3DFMT_FLAG_BROKEN_PITCH)
     {
@@ -3039,8 +3034,7 @@ static HRESULT texture_resource_sub_resource_unmap(struct wined3d_resource *reso
 {
     struct wined3d_texture_sub_resource *sub_resource;
     struct wined3d_device *device = resource->device;
-    struct wined3d_context_gl *context_gl = NULL;
-    struct wined3d_context *context = NULL;
+    struct wined3d_context *context;
     struct wined3d_texture *texture;
     struct wined3d_bo_address data;
 
@@ -3058,17 +3052,12 @@ static HRESULT texture_resource_sub_resource_unmap(struct wined3d_resource *reso
         return WINEDDERR_NOTLOCKED;
     }
 
-    if (device->d3d_initialized)
-    {
-        context = context_acquire(device, NULL, 0);
-        context_gl = wined3d_context_gl(context);
-    }
+    context = context_acquire(device, NULL, 0);
 
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, texture->resource.map_binding);
-    wined3d_context_gl_unmap_bo_address(context_gl, &data, GL_PIXEL_UNPACK_BUFFER);
+    wined3d_context_unmap_bo_address(context, &data, GL_PIXEL_UNPACK_BUFFER);
 
-    if (context)
-        context_release(context);
+    context_release(context);
 
     if (texture->swapchain && texture->swapchain->front_buffer == texture)
     {

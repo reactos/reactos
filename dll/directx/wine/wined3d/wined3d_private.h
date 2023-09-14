@@ -2795,6 +2795,10 @@ struct wined3d_adapter_ops
             const struct wined3d_format *ds_format);
     HRESULT (*adapter_init_3d)(struct wined3d_device *device);
     void (*adapter_uninit_3d)(struct wined3d_device *device);
+    void *(*adapter_map_bo_address)(struct wined3d_context *context,
+            const struct wined3d_bo_address *data, size_t size, GLenum binding, uint32_t flags);
+    void (*adapter_unmap_bo_address)(struct wined3d_context *context,
+            const struct wined3d_bo_address *data, GLenum binding);
     HRESULT (*adapter_create_swapchain)(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
             void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_swapchain **swapchain);
     void (*adapter_destroy_swapchain)(struct wined3d_swapchain *swapchain);
@@ -5296,6 +5300,18 @@ static inline float wined3d_get_float_state(const struct wined3d_state *state, e
 
     tmpvalue.d = state->render_states[rs];
     return tmpvalue.f;
+}
+
+static inline void *wined3d_context_map_bo_address(struct wined3d_context *context,
+        const struct wined3d_bo_address *data, size_t size, GLenum binding, uint32_t flags)
+{
+    return context->device->adapter->adapter_ops->adapter_map_bo_address(context, data, size, binding, flags);
+}
+
+static inline void wined3d_context_unmap_bo_address(struct wined3d_context *context,
+        const struct wined3d_bo_address *data, GLenum binding)
+{
+    return context->device->adapter->adapter_ops->adapter_unmap_bo_address(context, data, binding);
 }
 
 /* The WNDCLASS-Name for the fake window which we use to retrieve the GL capabilities */
