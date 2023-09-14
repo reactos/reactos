@@ -1739,7 +1739,7 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
                 if (op_result == FILEOP_ABORT)
                     goto done;
                 else if (op_result == FILEOP_SKIP)
-                    break;
+                    continue;
                 else if (op_result != FILEOP_DOIT)
                     FIXME("Unhandled return value %#x.\n", op_result);
 

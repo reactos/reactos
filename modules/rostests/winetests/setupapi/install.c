@@ -2006,10 +2006,10 @@ static void test_start_copy(void)
     ret = SetupQueueCopyA(queue, "src", NULL, "three.txt", NULL, NULL, "dst", NULL, 0);
     ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
     run_queue(queue, start_copy_cb);
-    todo_wine ok(got_start_copy == 3, "Got %u callbacks.\n", got_start_copy);
+    ok(got_start_copy == 3, "Got %u callbacks.\n", got_start_copy);
     ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
     ok(!file_exists("dst/two.txt"), "Destination file should not exist.\n");
-    todo_wine ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
+    ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
 
     start_copy_ret = FILEOP_ABORT;
     got_start_copy = 0;
