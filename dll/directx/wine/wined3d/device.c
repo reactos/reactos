@@ -5419,7 +5419,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         TRACE("Changing the device window from %p to %p.\n",
                 current_desc->device_window, swapchain_desc->device_window);
         current_desc->device_window = swapchain_desc->device_window;
-        swapchain->device_window = swapchain_desc->device_window;
+        swapchain_state->device_window = swapchain_desc->device_window;
         wined3d_swapchain_set_window(swapchain, NULL);
     }
 
@@ -5436,7 +5436,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
             HWND focus_window = device->create_parms.focus_window;
 
             if (!focus_window)
-                focus_window = swapchain->device_window;
+                focus_window = swapchain->state.device_window;
             if (FAILED(hr = wined3d_device_acquire_focus_window(device, focus_window)))
             {
                 ERR("Failed to acquire focus window, hr %#x.\n", hr);
@@ -5460,7 +5460,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
          * up their mess. Guild Wars also loses the device during that. */
         swapchain_state->style = 0;
         swapchain_state->exstyle = 0;
-        wined3d_swapchain_state_setup_fullscreen(swapchain_state, swapchain->device_window,
+        wined3d_swapchain_state_setup_fullscreen(swapchain_state, swapchain_state->device_window,
                 swapchain_desc->backbuffer_width, swapchain_desc->backbuffer_height);
         swapchain_state->style = style;
         swapchain_state->exstyle = exstyle;

@@ -560,7 +560,7 @@ static LRESULT CALLBACK wined3d_hook_proc(int code, WPARAM wparam, LPARAM lparam
         {
             swapchain = hook_table.swapchains[i].swapchain;
 
-            if (swapchain->device_window != msg->hwnd)
+            if (swapchain->state.device_window != msg->hwnd)
                 continue;
 
             if ((entry = wined3d_find_wndproc(msg->hwnd, swapchain->device->wined3d))
@@ -752,7 +752,7 @@ void wined3d_hook_swapchain(struct wined3d_swapchain *swapchain)
 
     swapchain_entry = &hook_table.swapchains[hook_table.swapchain_count++];
     swapchain_entry->swapchain = swapchain;
-    swapchain_entry->thread_id = GetWindowThreadProcessId(swapchain->device_window, NULL);
+    swapchain_entry->thread_id = GetWindowThreadProcessId(swapchain->state.device_window, NULL);
 
     if ((hook = wined3d_find_hook(swapchain_entry->thread_id)))
     {
