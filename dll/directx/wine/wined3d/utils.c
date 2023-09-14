@@ -5695,7 +5695,6 @@ void wined3d_format_get_float_color_key(const struct wined3d_format *format,
     }
 }
 
-/* DirectDraw stuff */
 enum wined3d_format_id pixelformat_for_depth(DWORD depth)
 {
     switch (depth)

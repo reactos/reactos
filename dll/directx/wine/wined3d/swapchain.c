@@ -771,6 +771,16 @@ void swapchain_set_max_frame_latency(struct wined3d_swapchain *swapchain, const 
     swapchain->max_frame_latency = device->max_frame_latency >= 2 ? device->max_frame_latency - 1 : 1;
 }
 
+static enum wined3d_format_id adapter_format_from_backbuffer_format(struct wined3d_swapchain *swapchain,
+        enum wined3d_format_id format_id)
+{
+    const struct wined3d_adapter *adapter = swapchain->device->adapter;
+    const struct wined3d_format *backbuffer_format;
+
+    backbuffer_format = wined3d_get_format(adapter, format_id, WINED3D_BIND_RENDER_TARGET);
+    return pixelformat_for_depth(backbuffer_format->byte_count * CHAR_BIT);
+}
+
 static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3d_device *device,
         struct wined3d_swapchain_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
@@ -890,7 +900,8 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
             /* Change the display settings */
             swapchain->d3d_mode.width = desc->backbuffer_width;
             swapchain->d3d_mode.height = desc->backbuffer_height;
-            swapchain->d3d_mode.format_id = desc->backbuffer_format;
+            swapchain->d3d_mode.format_id = adapter_format_from_backbuffer_format(swapchain,
+                    desc->backbuffer_format);
             swapchain->d3d_mode.refresh_rate = desc->refresh_rate;
             swapchain->d3d_mode.scanline_ordering = WINED3D_SCANLINE_ORDERING_UNKNOWN;
 
@@ -1423,7 +1434,8 @@ HRESULT CDECL wined3d_swapchain_set_fullscreen(struct wined3d_swapchain *swapcha
                 actual_mode.width = swapchain_desc->backbuffer_width;
                 actual_mode.height = swapchain_desc->backbuffer_height;
                 actual_mode.refresh_rate = swapchain_desc->refresh_rate;
-                actual_mode.format_id = swapchain_desc->backbuffer_format;
+                actual_mode.format_id = adapter_format_from_backbuffer_format(swapchain,
+                        swapchain_desc->backbuffer_format);
                 actual_mode.scanline_ordering = WINED3D_SCANLINE_ORDERING_UNKNOWN;
             }
             else
