@@ -2385,7 +2385,8 @@ enum wined3d_pci_device
     CARD_AMD_RADEON_R9_M395X        = 0x6920,
     CARD_AMD_RADEON_RX_460          = 0x67ef,
     CARD_AMD_RADEON_RX_480          = 0x67df,
-    CARD_AMD_RADEON_RX_VEGA         = 0x687f,
+    CARD_AMD_RADEON_RX_VEGA_10      = 0x687f,
+    CARD_AMD_RADEON_RX_VEGA_20      = 0x66af,
 
     CARD_NVIDIA_RIVA_128            = 0x0018,
     CARD_NVIDIA_RIVA_TNT            = 0x0020,
