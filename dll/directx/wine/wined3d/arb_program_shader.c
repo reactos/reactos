@@ -4414,15 +4414,15 @@ static struct arb_vs_compiled_shader *find_arb_vshader(struct wined3d_shader *sh
 }
 
 static void find_arb_ps_compile_args(const struct wined3d_state *state,
-        const struct wined3d_context *context, const struct wined3d_shader *shader,
+        const struct wined3d_context_gl *context_gl, const struct wined3d_shader *shader,
         struct arb_ps_compile_args *args)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
+    const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     int i;
     WORD int_skip;
 
-    find_ps_compile_args(state, shader, context->stream_info.position_transformed, &args->super, context);
+    find_ps_compile_args(state, shader, context_gl->c.stream_info.position_transformed, &args->super, &context_gl->c);
 
     /* This forces all local boolean constants to 1 to make them stateblock independent */
     args->bools = shader->reg_maps.local_bool_consts;
@@ -4564,7 +4564,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
         struct arb_ps_compiled_shader *compiled;
 
         TRACE("Using pixel shader %p.\n", ps);
-        find_arb_ps_compile_args(state, context, ps, &compile_args);
+        find_arb_ps_compile_args(state, context_gl, ps, &compile_args);
         compiled = find_arb_pshader(context_gl, ps, &compile_args);
         priv->current_fprogram_id = compiled->prgId;
         priv->compiled_fprog = compiled;
