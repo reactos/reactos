@@ -4353,6 +4353,7 @@ extern enum wined3d_format_id pixelformat_for_depth(DWORD depth) DECLSPEC_HIDDEN
 #define WINED3DFMT_FLAG_INTEGER                     0x00200000
 #define WINED3DFMT_FLAG_GEN_MIPMAP                  0x00400000
 #define WINED3DFMT_FLAG_NORMALISED                  0x00800000
+#define WINED3DFMT_FLAG_VERTEX_ATTRIBUTE            0x01000000
 
 struct wined3d_rational
 {

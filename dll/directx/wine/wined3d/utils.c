@@ -3709,6 +3709,7 @@ static BOOL init_format_vertex_info(const struct wined3d_adapter *adapter,
         format->emit_idx = format_vertex_info[i].emit_idx;
         format->gl_vtx_type = format_vertex_info[i].gl_vtx_type;
         format->gl_vtx_format = format->component_count;
+        format->flags[WINED3D_GL_RES_TYPE_BUFFER] |= WINED3DFMT_FLAG_VERTEX_ATTRIBUTE;
     }
 
     if (gl_info->supported[ARB_VERTEX_ARRAY_BGRA])
