@@ -12232,6 +12232,300 @@ static void glsl_blitter_generate_p8_shader(struct wined3d_string_buffer *buffer
     shader_addline(buffer, "}\n");
 }
 
+static void gen_packed_yuv_read(struct wined3d_string_buffer *buffer,
+        const struct wined3d_gl_info *gl_info, const struct glsl_blitter_args *args,
+        const char *tex_type)
+{
+    enum complex_fixup complex_fixup = get_complex_fixup(args->fixup);
+    char chroma, luminance;
+    const char *tex;
+
+    /* The YUY2 and UYVY formats contain two pixels packed into a 32 bit
+     * macropixel, giving effectively 16 bits per pixel. The color consists of
+     * a luminance(Y) and two chroma(U and V) values. Each macropixel has two
+     * luminance values, one for each single pixel it contains, and one U and
+     * one V value shared between both pixels.
+     *
+     * The data is loaded into an A8L8 texture. With YUY2, the luminance
+     * component contains the luminance and alpha the chroma. With UYVY it is
+     * vice versa. Thus take the format into account when generating the read
+     * swizzles
+     *
+     * Reading the Y value is straightforward - just sample the texture. The
+     * hardware takes care of filtering in the horizontal and vertical
+     * direction.
+     *
+     * Reading the U and V values is harder. We have to avoid filtering
+     * horizontally, because that would mix the U and V values of one pixel or
+     * two adjacent pixels.  Thus floor the texture coordinate and add 0.5 to
+     * get an unfiltered read, regardless of the filtering setting. Vertical
+     * filtering works automatically though - the U and V values of two rows
+     * are mixed nicely.
+     *
+     * Apart of avoiding filtering issues, the code has to know which value it
+     * just read, and where it can find the other one. To determine this, it
+     * checks if it sampled an even or odd pixel, and shifts the 2nd read
+     * accordingly.
+     *
+     * Handling horizontal filtering of U and V values requires reading a 2nd
+     * pair of pixels, extracting U and V and mixing them. This is not
+     * implemented yet.
+     *
+     * An alternative implementation idea is to load the texture as A8R8G8B8
+     * texture, with width / 2. This way one read gives all 3 values, finding
+     * U and V is easy in an unfiltered situation. Finding the luminance on
+     * the other hand requires finding out if it is an odd or even pixel. The
+     * real drawback of this approach is filtering. This would have to be
+     * emulated completely in the shader, reading up two 2 packed pixels in up
+     * to 2 rows and interpolating both horizontally and vertically. Beyond
+     * that it would require adjustments to the texture handling code to deal
+     * with the width scaling. */
+
+    if (complex_fixup == COMPLEX_FIXUP_UYVY)
+    {
+        chroma = 'x';
+        luminance = gl_info->supported[WINED3D_GL_LEGACY_CONTEXT] ? 'w' : 'y';
+    }
+    else
+    {
+        chroma = gl_info->supported[WINED3D_GL_LEGACY_CONTEXT] ? 'w' : 'y';
+        luminance = 'x';
+    }
+
+    tex = needs_legacy_glsl_syntax(gl_info) ? tex_type : "";
+
+    /* First we have to read the chroma values. This means we need at least
+     * two pixels (no filtering), or 4 pixels (with filtering). To get the
+     * unmodified chroma, we have to rid ourselves of the filtering when we
+     * sample the texture. */
+    shader_addline(buffer, "    texcoord.xy = out_texcoord.xy;\n");
+    /* We must not allow filtering between pixel x and x+1, this would mix U
+     * and V. Vertical filtering is ok. However, bear in mind that the pixel
+     * center is at 0.5, so add 0.5. */
+    shader_addline(buffer, "    texcoord.x = (floor(texcoord.x * size.x) + 0.5) / size.x;\n");
+    shader_addline(buffer, "    luminance = texture%s(sampler, texcoord.xy).%c;\n", tex, chroma);
+
+    /* Multiply the x coordinate by 0.5 and get the fraction. This gives 0.25
+     * and 0.75 for the even and odd pixels respectively. */
+    /* Put the value into either of the chroma values. */
+    shader_addline(buffer, "    bool even = fract(texcoord.x * size.x * 0.5) < 0.5;\n");
+    shader_addline(buffer, "    if (even)\n");
+    shader_addline(buffer, "        chroma.y = luminance;\n");
+    shader_addline(buffer, "    else\n");
+    shader_addline(buffer, "        chroma.x = luminance;\n");
+
+    /* Sample pixel 2. If we read an even pixel, sample the pixel right to the
+     * current one. Otherwise, sample the left pixel. */
+    shader_addline(buffer, "    texcoord.x += even ? 1.0 / size.x : -1.0 / size.x;\n");
+    shader_addline(buffer, "    luminance = texture%s(sampler, texcoord.xy).%c;\n", tex, chroma);
+
+    /* Put the value into the other chroma. */
+    shader_addline(buffer, "    if (even)\n");
+    shader_addline(buffer, "        chroma.x = luminance;\n");
+    shader_addline(buffer, "    else\n");
+    shader_addline(buffer, "        chroma.y = luminance;\n");
+
+    /* TODO: If filtering is enabled, sample a 2nd pair of pixels left or right of
+     * the current one and lerp the two U and V values. */
+
+    /* This gives the correctly filtered luminance value. */
+    shader_addline(buffer, "    luminance = texture%s(sampler, out_texcoord.xy).%c;\n", tex, luminance);
+}
+
+static void gen_yv12_read(struct wined3d_string_buffer *buffer,
+        const struct wined3d_gl_info *gl_info, const char *tex_type)
+{
+    char component = gl_info->supported[WINED3D_GL_LEGACY_CONTEXT] ? 'w' : 'x';
+    const char *tex = needs_legacy_glsl_syntax(gl_info) ? tex_type : "";
+
+    /* YV12 surfaces contain a WxH sized luminance plane, followed by a
+     * (W/2)x(H/2) V and a (W/2)x(H/2) U plane, each with 8 bit per pixel. So
+     * the effective bitdepth is 12 bits per pixel. Since the U and V planes
+     * have only half the pitch of the luminance plane, the packing into the
+     * gl texture is a bit unfortunate. If the whole texture is interpreted as
+     * luminance data it looks approximately like this:
+     *
+     *        +----------------------------------+----
+     *        |                                  |
+     *        |                                  |
+     *        |                                  |
+     *        |                                  |
+     *        |                                  |   2
+     *        |            LUMINANCE             |   -
+     *        |                                  |   3
+     *        |                                  |
+     *        |                                  |
+     *        |                                  |
+     *        |                                  |
+     *        +----------------+-----------------+----
+     *        |                |                 |
+     *        |  V even rows   |  V odd rows     |
+     *        |                |                 |   1
+     *        +----------------+------------------   -
+     *        |                |                 |   3
+     *        |  U even rows   |  U odd rows     |
+     *        |                |                 |
+     *        +----------------+-----------------+----
+     *        |                |                 |
+     *        |     0.5        |       0.5       |
+     *
+     * So it appears as if there are 4 chroma images, but in fact the odd rows
+     * in the chroma images are in the same row as the even ones. So it is
+     * kinda tricky to read. */
+
+    /* First sample the chroma values. */
+    shader_addline(buffer, "    texcoord.xy = out_texcoord.xy;\n");
+    /* The chroma planes have only half the width. */
+    shader_addline(buffer, "    texcoord.x *= 0.5;\n");
+
+    /* The first value is between 2/3 and 5/6 of the texture's height, so
+     * scale+bias the coordinate. Also read the right side of the image when
+     * reading odd lines.
+     *
+     * Don't forget to clamp the y values in into the range, otherwise we'll
+     * get filtering bleeding. */
+
+    /* Read odd lines from the right side (add 0.5 to the x coordinate). */
+    shader_addline(buffer, "    if (fract(floor(texcoord.y * size.y) * 0.5 + 1.0 / 6.0) >= 0.5)\n");
+    shader_addline(buffer, "        texcoord.x += 0.5;\n");
+
+    /* Clamp, keep the half pixel origin in mind. */
+    shader_addline(buffer, "    texcoord.y = clamp(2.0 / 3.0 + texcoord.y / 6.0, "
+            "2.0 / 3.0 + 0.5 / size.y, 5.0 / 6.0 - 0.5 / size.y);\n");
+
+    shader_addline(buffer, "    chroma.x = texture%s(sampler, texcoord.xy).%c;\n", tex, component);
+
+    /* The other chroma value is 1/6th of the texture lower, from 5/6th to
+     * 6/6th No need to clamp because we're just reusing the already clamped
+     * value from above. */
+    shader_addline(buffer, "    texcoord.y += 1.0 / 6.0;\n");
+    shader_addline(buffer, "    chroma.y = texture%s(sampler, texcoord.xy).%c;\n", tex, component);
+
+    /* Sample the luminance value. It is in the top 2/3rd of the texture, so
+     * scale the y coordinate.  Clamp the y coordinate to prevent the chroma
+     * values from bleeding into the sampled luminance values due to
+     * filtering. */
+    shader_addline(buffer, "    texcoord.xy = out_texcoord.xy;\n");
+    /* Multiply the y coordinate by 2/3 and clamp it. */
+    shader_addline(buffer, "    texcoord.y = min(texcoord.y * 2.0 / 3.0, 2.0 / 3.0 - 0.5 / size.y);\n");
+    shader_addline(buffer, "    luminance = texture%s(sampler, texcoord.xy).%c;\n", tex, component);
+}
+
+static void gen_nv12_read(struct wined3d_string_buffer *buffer,
+        const struct wined3d_gl_info *gl_info, const char *tex_type)
+{
+    char component = gl_info->supported[WINED3D_GL_LEGACY_CONTEXT] ? 'w' : 'x';
+    const char *tex = needs_legacy_glsl_syntax(gl_info) ? tex_type : "";
+
+    /* NV12 surfaces contain a WxH sized luminance plane, followed by a
+     * (W/2)x(H/2) sized plane where each component is an UV pair. So the
+     * effective bitdepth is 12 bits per pixel. If the whole texture is
+     * interpreted as luminance data it looks approximately like this:
+     *
+     *        +----------------------------------+----
+     *        |                                  |
+     *        |                                  |
+     *        |                                  |
+     *        |                                  |
+     *        |                                  |   2
+     *        |            LUMINANCE             |   -
+     *        |                                  |   3
+     *        |                                  |
+     *        |                                  |
+     *        |                                  |
+     *        |                                  |
+     *        +----------------------------------+----
+     *        |UVUVUVUVUVUVUVUVUVUVUVUVUVUVUVUVUV|
+     *        |UVUVUVUVUVUVUVUVUVUVUVUVUVUVUVUVUV|
+     *        |                                  |   1
+     *        |                                  |   -
+     *        |                                  |   3
+     *        |                                  |
+     *        |                                  |
+     *        +----------------------------------+---- */
+
+    /* First sample the chroma values. */
+    shader_addline(buffer, "    texcoord.xy = out_texcoord.xy;\n");
+    /* We only have half the number of chroma pixels. */
+    shader_addline(buffer, "    texcoord.x *= 0.5;\n");
+    shader_addline(buffer, "    texcoord.y = (texcoord.y + 2.0) / 3.0;\n");
+
+    /* We must not allow filtering horizontally, this would mix U and V.
+     * Vertical filtering is ok. However, bear in mind that the pixel center
+     * is at 0.5, so add 0.5. */
+
+    /* Convert to non-normalised coordinates so we can find the individual
+     * pixel. */
+    shader_addline(buffer, "    texcoord.x = floor(texcoord.x * size.x);\n");
+    /* Multiply by 2 since chroma components are stored in UV pixel pairs, add
+     * 0.5 to hit the center of the pixel. Then convert back to normalised
+     * coordinates. */
+    shader_addline(buffer, "    texcoord.x = (texcoord.x * 2.0 + 0.5) / size.x;\n");
+    /* Clamp, keep the half pixel origin in mind. */
+    shader_addline(buffer, "    texcoord.y = max(texcoord.y, 2.0 / 3.0 + 0.5 / size.y);\n");
+
+    shader_addline(buffer, "    chroma.y = texture%s(sampler, texcoord.xy).%c;\n", tex, component);
+    /* Add 1.0 / size.x to sample the adjacent texel. */
+    shader_addline(buffer, "    texcoord.x += 1.0 / size.x;\n");
+    shader_addline(buffer, "    chroma.x = texture%s(sampler, texcoord.xy).%c;\n", tex, component);
+
+    /* Sample the luminance value. It is in the top 2/3rd of the texture, so
+     * scale the y coordinate. Clamp the y coordinate to prevent the chroma
+     * values from bleeding into the sampled luminance values due to
+     * filtering. */
+    shader_addline(buffer, "    texcoord.xy = out_texcoord.xy;\n");
+    /* Multiply the y coordinate by 2/3 and clamp it. */
+    shader_addline(buffer, "    texcoord.y = min(texcoord.y * 2.0 / 3.0, 2.0 / 3.0 - 0.5 / size.y);\n");
+    shader_addline(buffer, "    luminance = texture%s(sampler, texcoord.xy).%c;\n", tex, component);
+}
+
+static void glsl_blitter_generate_yuv_shader(struct wined3d_string_buffer *buffer,
+        const struct wined3d_gl_info *gl_info, const struct glsl_blitter_args *args,
+        const char *output, const char *tex_type, const char *swizzle)
+{
+    enum complex_fixup complex_fixup = get_complex_fixup(args->fixup);
+
+    shader_addline(buffer, "const vec4 yuv_coef = vec4(1.403, -0.344, -0.714, 1.770);\n");
+    shader_addline(buffer, "float luminance;\n");
+    shader_addline(buffer, "vec2 texcoord;\n");
+    shader_addline(buffer, "vec2 chroma;\n");
+    shader_addline(buffer, "uniform vec2 size;\n");
+
+    shader_addline(buffer, "\nvoid main()\n{\n");
+
+    switch (complex_fixup)
+    {
+        case COMPLEX_FIXUP_UYVY:
+        case COMPLEX_FIXUP_YUY2:
+            gen_packed_yuv_read(buffer, gl_info, args, tex_type);
+            break;
+
+        case COMPLEX_FIXUP_YV12:
+            gen_yv12_read(buffer, gl_info, tex_type);
+            break;
+
+        case COMPLEX_FIXUP_NV12:
+            gen_nv12_read(buffer, gl_info, tex_type);
+            break;
+
+        default:
+            FIXME("Unsupported fixup %#x.\n", complex_fixup);
+            string_buffer_free(buffer);
+            return;
+    }
+
+    /* Calculate the final result. Formula is taken from
+     * http://www.fourcc.org/fccyvrgb.php. Note that the chroma
+     * ranges from -0.5 to 0.5. */
+    shader_addline(buffer, "\n    chroma.xy -= 0.5;\n");
+
+    shader_addline(buffer, "    %s.x = luminance + chroma.x * yuv_coef.x;\n", output);
+    shader_addline(buffer, "    %s.y = luminance + chroma.y * yuv_coef.y + chroma.x * yuv_coef.z;\n", output);
+    shader_addline(buffer, "    %s.z = luminance + chroma.y * yuv_coef.w;\n", output);
+
+    shader_addline(buffer, "}\n");
+}
+
 static void glsl_blitter_generate_plain_shader(struct wined3d_string_buffer *buffer,
         const struct wined3d_gl_info *gl_info, const struct glsl_blitter_args *args,
         const char *output, const char *tex_type, const char *swizzle)
@@ -12316,10 +12610,20 @@ static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter
     output = string_buffer_get(&blitter->string_buffers);
     string_buffer_sprintf(output, "%s[0]", get_fragment_output(gl_info));
 
-    if (complex_fixup == COMPLEX_FIXUP_P8)
-        glsl_blitter_generate_p8_shader(buffer, gl_info, args, output->buffer, tex_type, swizzle);
-    else
-        glsl_blitter_generate_plain_shader(buffer, gl_info, args, output->buffer, tex_type, swizzle);
+    switch (complex_fixup)
+    {
+        case COMPLEX_FIXUP_P8:
+            glsl_blitter_generate_p8_shader(buffer, gl_info, args, output->buffer, tex_type, swizzle);
+            break;
+        case COMPLEX_FIXUP_YUY2:
+        case COMPLEX_FIXUP_UYVY:
+        case COMPLEX_FIXUP_YV12:
+        case COMPLEX_FIXUP_NV12:
+            glsl_blitter_generate_yuv_shader(buffer, gl_info, args, output->buffer, tex_type, swizzle);
+            break;
+        case COMPLEX_FIXUP_NONE:
+            glsl_blitter_generate_plain_shader(buffer, gl_info, args, output->buffer, tex_type, swizzle);
+    }
 
     string_buffer_release(&blitter->string_buffers, output);
 
@@ -12395,20 +12699,12 @@ static struct glsl_blitter_program *glsl_blitter_get_program(struct wined3d_glsl
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct glsl_blitter_program *program;
-    enum complex_fixup complex_fixup;
     struct glsl_blitter_args args;
     struct wine_rb_entry *entry;
 
     memset(&args, 0, sizeof(args));
     args.texture_type = texture->target;
     args.fixup = texture->resource.format->color_fixup;
-
-    complex_fixup = get_complex_fixup(args.fixup);
-    if (complex_fixup && complex_fixup != COMPLEX_FIXUP_P8)
-    {
-        FIXME("Complex fixup %#x not supported.\n", complex_fixup);
-        return NULL;
-    }
 
     if ((entry = wine_rb_get(&blitter->programs, &args)))
         return WINE_RB_ENTRY_VALUE(entry, struct glsl_blitter_program, entry);
@@ -12446,7 +12742,6 @@ static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wi
     const struct wined3d_resource *dst_resource = &dst_texture->resource;
     const struct wined3d_format *src_format = src_resource->format;
     const struct wined3d_format *dst_format = dst_resource->format;
-    enum complex_fixup complex_fixup = COMPLEX_FIXUP_NONE;
     BOOL decompress;
 
     if (blit_op == WINED3D_BLIT_OP_RAW_BLIT && dst_format->id == src_format->id)
@@ -12486,16 +12781,6 @@ static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wi
         return FALSE;
     }
 
-    if (is_complex_fixup(src_format->color_fixup))
-    {
-        complex_fixup = get_complex_fixup(src_format->color_fixup);
-        if (complex_fixup != COMPLEX_FIXUP_P8)
-        {
-            TRACE("Complex source fixup %#x not supported.\n", complex_fixup);
-            return FALSE;
-        }
-    }
-
     if (!is_identity_fixup(dst_format->color_fixup)
             && (dst_format->id != src_format->id || dst_location != WINED3D_LOCATION_DRAWABLE))
     {
@@ -12520,6 +12805,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
     struct glsl_blitter_program *program;
     struct wined3d_blitter *next;
     unsigned int src_level;
+    GLint location;
     RECT s, d;
 
     TRACE("blitter %p, op %#x, context %p, src_texture %p, src_sub_resource_idx %u, src_location %s, src_rect %s, "
@@ -12637,8 +12923,25 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         return dst_location;
     }
     GL_EXTCALL(glUseProgram(program->id));
-    if (get_complex_fixup(program->args.fixup) == COMPLEX_FIXUP_P8)
-        glsl_blitter_upload_palette(glsl_blitter, context, src_texture);
+    switch (get_complex_fixup(program->args.fixup))
+    {
+        case COMPLEX_FIXUP_P8:
+            glsl_blitter_upload_palette(glsl_blitter, context, src_texture);
+            break;
+
+        case COMPLEX_FIXUP_YUY2:
+        case COMPLEX_FIXUP_UYVY:
+        case COMPLEX_FIXUP_YV12:
+        case COMPLEX_FIXUP_NV12:
+            src_level = src_sub_resource_idx % src_texture->level_count;
+            location = GL_EXTCALL(glGetUniformLocation(program->id, "size"));
+            GL_EXTCALL(glUniform2f(location, wined3d_texture_get_level_pow2_width(src_texture, src_level),
+                    wined3d_texture_get_level_pow2_height(src_texture, src_level)));
+            break;
+
+        default:
+            break;
+    }
     context_draw_shaded_quad(context, src_texture, src_sub_resource_idx, src_rect, dst_rect, filter);
     GL_EXTCALL(glUseProgram(0));
 
