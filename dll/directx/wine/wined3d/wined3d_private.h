@@ -4668,13 +4668,6 @@ static inline BOOL is_rasterization_disabled(const struct wined3d_shader *geomet
             && geometry_shader->u.gs.so_desc.rasterizer_stream_idx == WINED3D_NO_RASTERIZER_STREAM;
 }
 
-static inline int wined3d_bit_scan(unsigned int *x)
-{
-    int bit_offset = ffs(*x) - 1;
-    *x ^= 1u << bit_offset;
-    return bit_offset;
-}
-
 static inline DWORD wined3d_extract_bits(const DWORD *bitstream,
         unsigned int offset, unsigned int count)
 {

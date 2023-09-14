@@ -26,8 +26,8 @@
 #ifndef __WINE_WINED3D_H
 #define __WINE_WINED3D_H
 
-#ifndef __WINE_CONFIG_H
-# error You must include config.h to use this header
+#ifndef __WINE_WINE_PORT_H
+# error You must include wine/port.h to use this header
 #endif
 
 #include "wine/list.h"
@@ -2809,6 +2809,13 @@ static inline unsigned int wined3d_log2i(unsigned int x)
 
     return (i = x >> 16) ? (x = i >> 8) ? l[x] + 24 : l[i] + 16 : (i = x >> 8) ? l[i] + 8 : l[x];
 #endif
+}
+
+static inline int wined3d_bit_scan(unsigned int *x)
+{
+    int bit_offset = ffs(*x) - 1;
+    *x ^= 1u << bit_offset;
+    return bit_offset;
 }
 
 static inline void wined3d_box_set(struct wined3d_box *box, unsigned int left, unsigned int top,
