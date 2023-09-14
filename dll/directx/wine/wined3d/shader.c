@@ -1027,12 +1027,14 @@ static HRESULT shader_scan_output_signature(struct wined3d_shader *shader)
 }
 
 /* Note that this does not count the loop register as an address register. */
-static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const struct wined3d_shader_frontend *fe,
-        struct wined3d_shader_reg_maps *reg_maps, struct wined3d_shader_signature *input_signature,
-        struct wined3d_shader_signature *output_signature, DWORD constf_size)
+static HRESULT shader_get_registers_used(struct wined3d_shader *shader, DWORD constf_size)
 {
     struct wined3d_shader_signature_element input_signature_elements[max(MAX_ATTRIBS, MAX_REG_INPUT)];
     struct wined3d_shader_signature_element output_signature_elements[MAX_REG_OUTPUT];
+    struct wined3d_shader_signature *output_signature = &shader->output_signature;
+    struct wined3d_shader_signature *input_signature = &shader->input_signature;
+    struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
+    const struct wined3d_shader_frontend *fe = shader->frontend;
     unsigned int cur_loop_depth = 0, max_loop_depth = 0;
     struct wined3d_shader_version shader_version;
     struct wined3d_shader_phase *phase = NULL;
@@ -3292,11 +3294,11 @@ const struct wined3d_shader_backend_ops none_shader_backend =
 static HRESULT shader_set_function(struct wined3d_shader *shader, DWORD float_const_count,
         enum wined3d_shader_type type, unsigned int max_version)
 {
+    const struct wined3d_d3d_info *d3d_info = &shader->device->adapter->d3d_info;
     struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     const struct wined3d_shader_frontend *fe;
-    HRESULT hr;
     unsigned int backend_version;
-    const struct wined3d_d3d_info *d3d_info = &shader->device->adapter->d3d_info;
+    HRESULT hr;
 
     TRACE("shader %p, float_const_count %u, type %#x, max_version %u.\n",
             shader, float_const_count, type, max_version);
@@ -3314,8 +3316,7 @@ static HRESULT shader_set_function(struct wined3d_shader *shader, DWORD float_co
         shader_trace_init(fe, shader->frontend_data);
 
     /* Second pass: figure out which registers are used, what the semantics are, etc. */
-    if (FAILED(hr = shader_get_registers_used(shader, fe, reg_maps, &shader->input_signature,
-            &shader->output_signature, float_const_count)))
+    if (FAILED(hr = shader_get_registers_used(shader, float_const_count)))
         return hr;
 
     if (reg_maps->shader_version.type != type)
