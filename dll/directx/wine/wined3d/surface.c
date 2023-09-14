@@ -3123,8 +3123,8 @@ static void surface_cpu_blt_colour_fill(struct wined3d_rendertarget_view *view,
 
     c = wined3d_format_convert_from_float(view->format, colour);
     bpp = view->format->byte_count;
-    w = min(box->right, view->width) - box->left;
-    h = min(box->bottom, view->height) - box->top;
+    w = min(box->right, view->width) - min(box->left, view->width);
+    h = min(box->bottom, view->height) - min(box->top, view->height);
 
     texture = texture_from_resource(view->resource);
     map_binding = texture->resource.map_binding;
