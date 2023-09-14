@@ -2204,12 +2204,11 @@ static void ffp_blitter_clear(struct wined3d_blitter *blitter, struct wined3d_de
         unsigned int rt_count, const struct wined3d_fb_state *fb, unsigned int rect_count, const RECT *clear_rects,
         const RECT *draw_rect, DWORD flags, const struct wined3d_color *colour, float depth, DWORD stencil)
 {
-    BOOL have_previous_rect = FALSE, have_identical_size = TRUE;
-    struct wined3d_rendertarget_view *view;
+    struct wined3d_rendertarget_view *view, *previous = NULL;
+    BOOL have_identical_size = TRUE;
     struct wined3d_fb_state tmp_fb;
     unsigned int next_rt_count = 0;
     struct wined3d_blitter *next;
-    RECT previous_rect, rect;
     DWORD next_flags = 0;
     unsigned int i;
 
@@ -2253,23 +2252,17 @@ static void ffp_blitter_clear(struct wined3d_blitter *blitter, struct wined3d_de
             if (!(view = fb->render_targets[i]))
                 continue;
 
-            SetRect(&rect, 0, 0, view->width, view->height);
-            IntersectRect(&rect, draw_rect, &rect);
-            if (have_previous_rect && !EqualRect(&previous_rect, &rect))
+            if (previous && (previous->width != view->width || previous->height != view->height))
                 have_identical_size = FALSE;
-            previous_rect = rect;
-            have_previous_rect = TRUE;
+            previous = view;
         }
         if (flags & (WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL))
         {
             view = fb->depth_stencil;
 
-            SetRect(&rect, 0, 0, view->width, view->height);
-            IntersectRect(&rect, draw_rect, &rect);
-            if (have_previous_rect && !EqualRect(&previous_rect, &rect))
+            if (previous && (previous->width != view->width || previous->height != view->height))
                 have_identical_size = FALSE;
-            previous_rect = rect;
-            have_previous_rect = TRUE;
+            previous = view;
         }
 
         if (have_identical_size)
