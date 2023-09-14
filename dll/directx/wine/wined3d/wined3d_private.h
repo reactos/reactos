@@ -3438,6 +3438,8 @@ void wined3d_texture_upload_from_texture(struct wined3d_texture *dst_texture, un
 void wined3d_texture_validate_location(struct wined3d_texture *texture,
         unsigned int sub_resource_idx, DWORD location) DECLSPEC_HIDDEN;
 
+void wined3d_gl_texture_swizzle_from_color_fixup(GLint swizzle[4], struct color_fixup_desc fixup) DECLSPEC_HIDDEN;
+
 #define WINED3D_LOCATION_DISCARDED      0x00000001
 #define WINED3D_LOCATION_SYSMEM         0x00000002
 #define WINED3D_LOCATION_USER_MEMORY    0x00000004

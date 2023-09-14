@@ -1055,6 +1055,24 @@ void wined3d_texture_set_swapchain(struct wined3d_texture *texture, struct wined
     wined3d_resource_update_draw_binding(&texture->resource);
 }
 
+void wined3d_gl_texture_swizzle_from_color_fixup(GLint swizzle[4], struct color_fixup_desc fixup)
+{
+    static const GLenum swizzle_source[] =
+    {
+        GL_ZERO,  /* CHANNEL_SOURCE_ZERO */
+        GL_ONE,   /* CHANNEL_SOURCE_ONE */
+        GL_RED,   /* CHANNEL_SOURCE_X */
+        GL_GREEN, /* CHANNEL_SOURCE_Y */
+        GL_BLUE,  /* CHANNEL_SOURCE_Z */
+        GL_ALPHA, /* CHANNEL_SOURCE_W */
+    };
+
+    swizzle[0] = swizzle_source[fixup.x_source];
+    swizzle[1] = swizzle_source[fixup.y_source];
+    swizzle[2] = swizzle_source[fixup.z_source];
+    swizzle[3] = swizzle_source[fixup.w_source];
+}
+
 /* Context activation is done by the caller. */
 void wined3d_texture_bind(struct wined3d_texture *texture,
         struct wined3d_context *context, BOOL srgb)
@@ -1170,27 +1188,11 @@ void wined3d_texture_bind(struct wined3d_texture *texture,
 
     if (!is_identity_fixup(fixup) && can_use_texture_swizzle(gl_info, format))
     {
-        static const GLenum swizzle_source[] =
-        {
-            GL_ZERO,  /* CHANNEL_SOURCE_ZERO */
-            GL_ONE,   /* CHANNEL_SOURCE_ONE */
-            GL_RED,   /* CHANNEL_SOURCE_X */
-            GL_GREEN, /* CHANNEL_SOURCE_Y */
-            GL_BLUE,  /* CHANNEL_SOURCE_Z */
-            GL_ALPHA, /* CHANNEL_SOURCE_W */
-        };
-        struct
-        {
-            GLint x, y, z, w;
-        }
-        swizzle;
+        GLint swizzle[4];
 
-        swizzle.x = swizzle_source[fixup.x_source];
-        swizzle.y = swizzle_source[fixup.y_source];
-        swizzle.z = swizzle_source[fixup.z_source];
-        swizzle.w = swizzle_source[fixup.w_source];
-        gl_info->gl_ops.gl.p_glTexParameteriv(target, GL_TEXTURE_SWIZZLE_RGBA, &swizzle.x);
-        checkGLcall("glTexParameteriv(GL_TEXTURE_SWIZZLE_RGBA)");
+        wined3d_gl_texture_swizzle_from_color_fixup(swizzle, fixup);
+        gl_info->gl_ops.gl.p_glTexParameteriv(target, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
+        checkGLcall("set format swizzle");
     }
 }
 

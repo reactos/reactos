@@ -212,7 +212,7 @@ static void create_texture_view(struct wined3d_gl_view *view, GLenum view_target
             level_idx, desc->u.texture.level_count, layer_idx, layer_count));
     checkGLcall("create texture view");
 
-    if (is_stencil_view_format(&view_format_gl->f))
+    if (is_stencil_view_format(view_format))
     {
         static const GLint swizzle[] = {GL_ZERO, GL_RED, GL_ZERO, GL_ZERO};
 
@@ -230,6 +230,15 @@ static void create_texture_view(struct wined3d_gl_view *view, GLenum view_target
 
         context_invalidate_compute_state(context, STATE_COMPUTE_SHADER_RESOURCE_BINDING);
         context_invalidate_state(context, STATE_GRAPHICS_SHADER_RESOURCE_BINDING);
+    }
+    else if (!is_identity_fixup(view_format->color_fixup) && can_use_texture_swizzle(gl_info, view_format))
+    {
+        GLint swizzle[4];
+
+        context_bind_texture(context, view->target, view->name);
+        wined3d_gl_texture_swizzle_from_color_fixup(swizzle, view_format->color_fixup);
+        gl_info->gl_ops.gl.p_glTexParameteriv(view->target, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
+        checkGLcall("set format swizzle");
     }
 
     context_release(context);
