@@ -390,7 +390,6 @@ enum wined3d_render_state
     WINED3D_RS_COLORWRITEENABLE1            = 190,
     WINED3D_RS_COLORWRITEENABLE2            = 191,
     WINED3D_RS_COLORWRITEENABLE3            = 192,
-    WINED3D_RS_BLENDFACTOR                  = 193,
     WINED3D_RS_SRGBWRITEENABLE              = 194,
     WINED3D_RS_DEPTHBIAS                    = 195,
     WINED3D_RS_WRAP8                        = 198,
@@ -2289,7 +2288,8 @@ HRESULT __cdecl wined3d_device_end_stateblock(struct wined3d_device *device, str
 void __cdecl wined3d_device_evict_managed_resources(struct wined3d_device *device);
 UINT __cdecl wined3d_device_get_available_texture_mem(const struct wined3d_device *device);
 INT __cdecl wined3d_device_get_base_vertex_index(const struct wined3d_device *device);
-struct wined3d_blend_state * __cdecl wined3d_device_get_blend_state(const struct wined3d_device *device);
+struct wined3d_blend_state * __cdecl wined3d_device_get_blend_state(const struct wined3d_device *device,
+        struct wined3d_color *blend_factor);
 HRESULT __cdecl wined3d_device_get_clip_plane(const struct wined3d_device *device,
         UINT plane_idx, struct wined3d_vec4 *plane);
 HRESULT __cdecl wined3d_device_get_clip_status(const struct wined3d_device *device,
@@ -2404,7 +2404,8 @@ void __cdecl wined3d_device_resolve_sub_resource(struct wined3d_device *device,
 void __cdecl wined3d_device_restore_fullscreen_window(struct wined3d_device *device, HWND window,
         const RECT *window_rect);
 void __cdecl wined3d_device_set_base_vertex_index(struct wined3d_device *device, INT base_index);
-void __cdecl wined3d_device_set_blend_state(struct wined3d_device *device, struct wined3d_blend_state *blend_state);
+void __cdecl wined3d_device_set_blend_state(struct wined3d_device *device, struct wined3d_blend_state *blend_state,
+        const struct wined3d_color *blend_factor);
 HRESULT __cdecl wined3d_device_set_clip_plane(struct wined3d_device *device,
         UINT plane_idx, const struct wined3d_vec4 *plane);
 HRESULT __cdecl wined3d_device_set_clip_status(struct wined3d_device *device,

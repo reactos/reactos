@@ -264,6 +264,7 @@ struct wined3d_cs_set_blend_state
 {
     enum wined3d_cs_op opcode;
     struct wined3d_blend_state *state;
+    struct wined3d_color factor;
 };
 
 struct wined3d_cs_set_rasterizer_state
@@ -1543,18 +1544,26 @@ void wined3d_cs_emit_set_shader(struct wined3d_cs *cs, enum wined3d_shader_type 
 static void wined3d_cs_exec_set_blend_state(struct wined3d_cs *cs, const void *data)
 {
     const struct wined3d_cs_set_blend_state *op = data;
+    struct wined3d_state *state = &cs->state;
 
-    cs->state.blend_state = op->state;
-    device_invalidate_state(cs->device, STATE_BLEND);
+    if (state->blend_state != op->state)
+    {
+        state->blend_state = op->state;
+        device_invalidate_state(cs->device, STATE_BLEND);
+    }
+    state->blend_factor = op->factor;
+    device_invalidate_state(cs->device, STATE_BLEND_FACTOR);
 }
 
-void wined3d_cs_emit_set_blend_state(struct wined3d_cs *cs, struct wined3d_blend_state *state)
+void wined3d_cs_emit_set_blend_state(struct wined3d_cs *cs, struct wined3d_blend_state *state,
+        const struct wined3d_color *blend_factor)
 {
     struct wined3d_cs_set_blend_state *op;
 
     op = cs->ops->require_space(cs, sizeof(*op), WINED3D_CS_QUEUE_DEFAULT);
     op->opcode = WINED3D_CS_OP_SET_BLEND_STATE;
     op->state = state;
+    op->factor = *blend_factor;
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
 }
