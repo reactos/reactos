@@ -34,10 +34,6 @@
 
 #include "wined3d_private.h"
 
-#ifdef __REACTOS__
-#include <reactos/undocuser.h>
-#endif
-
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(d3d_perf);
 WINE_DECLARE_DEBUG_CHANNEL(d3d_synchronous);
@@ -148,8 +144,8 @@ static void context_attach_gl_texture_fbo(struct wined3d_context *context,
         gl_info->fbo_ops.glFramebufferTexture(fbo_target, attachment,
                 resource->object, resource->level);
     }
-    else if (resource->target == GL_TEXTURE_1D_ARRAY || resource->target == GL_TEXTURE_2D_ARRAY ||
-            resource->target == GL_TEXTURE_3D)
+    else if (resource->target == GL_TEXTURE_1D_ARRAY || resource->target == GL_TEXTURE_2D_ARRAY
+            || resource->target == GL_TEXTURE_3D)
     {
         if (!gl_info->fbo_ops.glFramebufferTextureLayer)
         {
@@ -1779,6 +1775,7 @@ void context_bind_dummy_textures(const struct wined3d_context *context)
             gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_1D_ARRAY, textures->tex_1d_array);
             gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_2D_ARRAY, textures->tex_2d_array);
         }
+
         if (gl_info->supported[ARB_TEXTURE_BUFFER_OBJECT])
             gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_BUFFER, textures->tex_buffer);
 
@@ -3150,11 +3147,12 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
     return TRUE;
 }
 
-static DWORD find_draw_buffers_mask(const struct wined3d_context *context, const struct wined3d_state *state)
+static unsigned int find_draw_buffers_mask(const struct wined3d_context *context, const struct wined3d_state *state)
 {
     struct wined3d_rendertarget_view * const *rts = state->fb->render_targets;
     struct wined3d_shader *ps = state->shader[WINED3D_SHADER_TYPE_PIXEL];
-    DWORD rt_mask, mask;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    unsigned int rt_mask, mask;
     unsigned int i;
 
     if (wined3d_settings.offscreen_rendering_mode != ORM_FBO)
@@ -3162,19 +3160,10 @@ static DWORD find_draw_buffers_mask(const struct wined3d_context *context, const
     else if (!context->render_offscreen)
         return context_generate_rt_mask_from_resource(rts[0]->resource);
 
-    /* If we attach more buffers than supported in dual blend mode, the NVIDIA
-     * driver generates the following error:
-     *      GL_INVALID_OPERATION error generated. State(s) are invalid: blend.
-     * DX11 does not treat this configuration as invalid, so disable the unused ones.
-     */
     rt_mask = ps ? ps->reg_maps.rt_mask : 1;
-    if (wined3d_dualblend_enabled(state, context->gl_info))
-        rt_mask &= context->d3d_info->valid_dual_rt_mask;
-    else
-        rt_mask &= context->d3d_info->valid_rt_mask;
+    rt_mask &= (1u << gl_info->limits.buffers) - 1;
 
     mask = rt_mask;
-    i = 0;
     while (mask)
     {
         i = wined3d_bit_scan(&mask);
@@ -3188,7 +3177,7 @@ static DWORD find_draw_buffers_mask(const struct wined3d_context *context, const
 /* Context activation is done by the caller. */
 void context_state_fb(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    DWORD rt_mask = find_draw_buffers_mask(context, state);
+    unsigned int rt_mask = find_draw_buffers_mask(context, state);
     const struct wined3d_fb_state *fb = state->fb;
     DWORD color_location = 0;
     DWORD *cur_mask;
@@ -4522,100 +4511,6 @@ static void draw_primitive_arrays(struct wined3d_context *context, const struct 
     }
 }
 
-static const BYTE *software_vertex_blending(struct wined3d_context *context,
-        const struct wined3d_state *state, const struct wined3d_stream_info *si,
-        unsigned int element_idx, unsigned int stride_idx, float *result)
-{
-#define SI_FORMAT(idx) (si->elements[(idx)].format->emit_idx)
-#define SI_PTR(idx1, idx2) (si->elements[(idx1)].data.addr + si->elements[(idx1)].stride * (idx2))
-
-    const float *data = (const float *)SI_PTR(element_idx, stride_idx);
-    float vector[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-    float cur_weight, weight_sum = 0.0f;
-    struct wined3d_matrix m;
-    const BYTE *blend_index;
-    const float *weights;
-    int i, num_weights;
-
-    if (element_idx != WINED3D_FFP_POSITION && element_idx != WINED3D_FFP_NORMAL)
-        return (BYTE *)data;
-
-    if (!use_indexed_vertex_blending(state, si) || !use_software_vertex_processing(context->device))
-        return (BYTE *)data;
-
-    if (!si->elements[WINED3D_FFP_BLENDINDICES].data.addr ||
-        !si->elements[WINED3D_FFP_BLENDWEIGHT].data.addr)
-    {
-        FIXME("no blend indices / weights set\n");
-        return (BYTE *)data;
-    }
-
-    if (SI_FORMAT(WINED3D_FFP_BLENDINDICES) != WINED3D_FFP_EMIT_UBYTE4)
-    {
-        FIXME("unsupported blend index format: %u\n", SI_FORMAT(WINED3D_FFP_BLENDINDICES));
-        return (BYTE *)data;
-    }
-
-    /* FIXME: validate weight format */
-    switch (state->render_states[WINED3D_RS_VERTEXBLEND])
-    {
-        case WINED3D_VBF_0WEIGHTS: num_weights = 0; break;
-        case WINED3D_VBF_1WEIGHTS: num_weights = 1; break;
-        case WINED3D_VBF_2WEIGHTS: num_weights = 2; break;
-        case WINED3D_VBF_3WEIGHTS: num_weights = 3; break;
-        default:
-            FIXME("unsupported vertex blend render state: %u\n", state->render_states[WINED3D_RS_VERTEXBLEND]);
-            return (BYTE *)data;
-    }
-
-    switch (SI_FORMAT(element_idx))
-    {
-        case WINED3D_FFP_EMIT_FLOAT4: vector[3] = data[3];
-        case WINED3D_FFP_EMIT_FLOAT3: vector[2] = data[2];
-        case WINED3D_FFP_EMIT_FLOAT2: vector[1] = data[1];
-        default:
-            FIXME("unsupported value format: %u\n", SI_FORMAT(element_idx));
-            return (BYTE *)data;
-    }
-
-    blend_index = SI_PTR(WINED3D_FFP_BLENDINDICES, stride_idx);
-    weights = (const float *)SI_PTR(WINED3D_FFP_BLENDWEIGHT, stride_idx);
-    result[0] = result[1] = result[2] = result[3] = 0.0f;
-
-    for (i = 0; i < num_weights + 1; i++)
-    {
-        cur_weight = (i < num_weights) ? weights[i] : 1.0f - weight_sum;
-        get_modelview_matrix(context, state, blend_index[i], &m);
-
-        if (element_idx == WINED3D_FFP_POSITION)
-        {
-            result[0] += cur_weight * (vector[0] * m._11 + vector[1] * m._21 + vector[2] * m._31 + vector[3] * m._41);
-            result[1] += cur_weight * (vector[0] * m._12 + vector[1] * m._22 + vector[2] * m._32 + vector[3] * m._42);
-            result[2] += cur_weight * (vector[0] * m._13 + vector[1] * m._23 + vector[2] * m._33 + vector[3] * m._43);
-            result[3] += cur_weight * (vector[0] * m._14 + vector[1] * m._24 + vector[2] * m._34 + vector[3] * m._44);
-        }
-        else
-        {
-            if (context->d3d_info->wined3d_creation_flags & WINED3D_LEGACY_FFP_LIGHTING)
-                invert_matrix_3d(&m, &m);
-            else
-                invert_matrix(&m, &m);
-
-            /* multiply with transposed M */
-            result[0] += cur_weight * (vector[0] * m._11 + vector[1] * m._12 + vector[2] * m._13);
-            result[1] += cur_weight * (vector[0] * m._21 + vector[1] * m._22 + vector[2] * m._23);
-            result[2] += cur_weight * (vector[0] * m._31 + vector[1] * m._32 + vector[2] * m._33);
-        }
-
-        weight_sum += weights[i];
-    }
-
-#undef SI_FORMAT
-#undef SI_PTR
-
-    return (BYTE *)result;
-}
-
 static unsigned int get_stride_idx(const void *idx_data, unsigned int idx_size,
         unsigned int base_vertex_idx, unsigned int start_idx, unsigned int vertex_idx)
 {
@@ -4644,7 +4539,6 @@ static void draw_primitive_immediate_mode(struct wined3d_context *context, const
     BOOL specular_fog = FALSE;
     BOOL ps = use_ps(state);
     const void *ptr;
-    float tmp[4];
 
     static unsigned int once;
 
@@ -4681,7 +4575,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context *context, const
                 if (!(use_map & 1u << element_idx))
                     continue;
 
-                ptr = software_vertex_blending(context, state, si, element_idx, stride_idx, tmp);
+                ptr = si->elements[element_idx].data.addr + si->elements[element_idx].stride * stride_idx;
                 ops->generic[si->elements[element_idx].format->emit_idx](element_idx, ptr);
             }
         }
@@ -4793,7 +4687,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context *context, const
 
         if (normal)
         {
-            ptr = software_vertex_blending(context, state, si, WINED3D_FFP_NORMAL, stride_idx, tmp);
+            ptr = normal + stride_idx * si->elements[WINED3D_FFP_NORMAL].stride;
             ops->normal[si->elements[WINED3D_FFP_NORMAL].format->emit_idx](ptr);
         }
 
@@ -4838,7 +4732,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context *context, const
 
         if (position)
         {
-            ptr = software_vertex_blending(context, state, si, WINED3D_FFP_POSITION, stride_idx, tmp);
+            ptr = position + stride_idx * si->elements[WINED3D_FFP_POSITION].stride;
             ops->position[si->elements[WINED3D_FFP_POSITION].format->emit_idx](ptr);
         }
     }
@@ -4975,7 +4869,7 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
         if (!(rtv = fb->render_targets[i]) || rtv->format->id == WINED3DFMT_NULL)
             continue;
 
-        if (state->render_states[WINED3D_RS_COLORWRITE(i)])
+        if (state->render_states[WINED3D_RS_COLORWRITEENABLE])
         {
             wined3d_rendertarget_view_load_location(rtv, context, rtv->resource->draw_binding);
             wined3d_rendertarget_view_invalidate_location(rtv, ~rtv->resource->draw_binding);
@@ -5067,12 +4961,6 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
                 WARN_(d3d_perf)("Using software emulation because manual fog coordinates are provided.\n");
             emulation = TRUE;
         }
-         else if (use_indexed_vertex_blending(state, stream_info) && use_software_vertex_processing(context->device))
-        {
-            WARN_(d3d_perf)("Using software emulation because application requested SVP.\n");
-            emulation = TRUE;
-        }
-
 
         if (emulation)
         {

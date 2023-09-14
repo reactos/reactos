@@ -195,7 +195,6 @@ struct wined3d_d3d_info
 {
     struct wined3d_d3d_limits limits;
     struct wined3d_ffp_attrib_ops ffp_attrib_ops;
-    DWORD valid_rt_mask;
     DWORD wined3d_creation_flags;
     unsigned int xyzrhw : 1;
     unsigned int emulated_flatshading : 1;

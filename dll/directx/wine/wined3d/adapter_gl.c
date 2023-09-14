@@ -3738,10 +3738,6 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
 
     TRACE("Max texture stages: %u.\n", d3d_info->limits.ffp_blend_stages);
 
-    d3d_info->valid_rt_mask = 0;
-    for (i = 0; i < gl_info->limits.buffers; ++i)
-        d3d_info->valid_rt_mask |= (1u << i);
-
     if (!d3d_info->shader_color_key)
     {
         /* We do not want to deal with re-creating immutable texture storage
