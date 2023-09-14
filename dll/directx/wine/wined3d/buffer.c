@@ -964,19 +964,40 @@ struct wined3d_resource * CDECL wined3d_buffer_get_resource(struct wined3d_buffe
     return &buffer->resource;
 }
 
-static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
-        unsigned int offset, unsigned int size, BYTE **data, DWORD flags)
+static HRESULT buffer_resource_sub_resource_map(struct wined3d_resource *resource, unsigned int sub_resource_idx,
+        struct wined3d_map_desc *map_desc, const struct wined3d_box *box, uint32_t flags)
 {
-    struct wined3d_device *device = buffer_gl->b.resource.device;
+    struct wined3d_buffer *buffer = buffer_from_resource(resource);
+    struct wined3d_device *device = resource->device;
     struct wined3d_context *context;
+    unsigned int offset, size;
+    uint8_t *base;
     LONG count;
-    BYTE *base;
 
-    TRACE("buffer_gl %p, offset %u, size %u, data %p, flags %#x.\n", buffer_gl, offset, size, data, flags);
+    TRACE("resource %p, sub_resource_idx %u, map_desc %p, box %s, flags %#x.\n",
+            resource, sub_resource_idx, map_desc, debug_box(box), flags);
 
-    count = ++buffer_gl->b.resource.map_count;
+    if (sub_resource_idx)
+    {
+        WARN("Invalid sub_resource_idx %u.\n", sub_resource_idx);
+        return E_INVALIDARG;
+    }
 
-    if (buffer_gl->b.buffer_object)
+    if (box)
+    {
+        offset = box->left;
+        size = box->right - box->left;
+    }
+    else
+    {
+        offset = size = 0;
+    }
+
+    map_desc->row_pitch = map_desc->slice_pitch = resource->size;
+
+    count = ++resource->map_count;
+
+    if (buffer->buffer_object)
     {
         unsigned int dirty_offset = offset, dirty_size = size;
         struct wined3d_bo_address addr;
@@ -992,36 +1013,36 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
         }
 
         if (((flags & WINED3D_MAP_WRITE) && !(flags & (WINED3D_MAP_NOOVERWRITE | WINED3D_MAP_DISCARD)))
-                || (!(flags & WINED3D_MAP_WRITE) && (buffer_gl->b.locations & WINED3D_LOCATION_SYSMEM))
-                || buffer_gl->b.flags & WINED3D_BUFFER_PIN_SYSMEM)
+                || (!(flags & WINED3D_MAP_WRITE) && (buffer->locations & WINED3D_LOCATION_SYSMEM))
+                || buffer->flags & WINED3D_BUFFER_PIN_SYSMEM)
         {
-            if (!(buffer_gl->b.locations & WINED3D_LOCATION_SYSMEM))
+            if (!(buffer->locations & WINED3D_LOCATION_SYSMEM))
             {
                 context = context_acquire(device, NULL, 0);
-                wined3d_buffer_load_location(&buffer_gl->b, context, WINED3D_LOCATION_SYSMEM);
+                wined3d_buffer_load_location(buffer, context, WINED3D_LOCATION_SYSMEM);
                 context_release(context);
             }
 
             if (flags & WINED3D_MAP_WRITE)
-                wined3d_buffer_invalidate_range(&buffer_gl->b, WINED3D_LOCATION_BUFFER, dirty_offset, dirty_size);
+                wined3d_buffer_invalidate_range(buffer, WINED3D_LOCATION_BUFFER, dirty_offset, dirty_size);
         }
         else
         {
             context = context_acquire(device, NULL, 0);
 
             if (flags & WINED3D_MAP_DISCARD)
-                wined3d_buffer_validate_location(&buffer_gl->b, WINED3D_LOCATION_BUFFER);
+                wined3d_buffer_validate_location(buffer, WINED3D_LOCATION_BUFFER);
             else
-                wined3d_buffer_load_location(&buffer_gl->b, context, WINED3D_LOCATION_BUFFER);
+                wined3d_buffer_load_location(buffer, context, WINED3D_LOCATION_BUFFER);
 
             if (flags & WINED3D_MAP_WRITE)
             {
-                wined3d_buffer_invalidate_location(&buffer_gl->b, WINED3D_LOCATION_SYSMEM);
-                buffer_invalidate_bo_range(&buffer_gl->b, dirty_offset, dirty_size);
+                wined3d_buffer_invalidate_location(buffer, WINED3D_LOCATION_SYSMEM);
+                buffer_invalidate_bo_range(buffer, dirty_offset, dirty_size);
             }
 
-            if ((flags & WINED3D_MAP_DISCARD) && buffer_gl->b.resource.heap_memory)
-                wined3d_buffer_evict_sysmem(&buffer_gl->b);
+            if ((flags & WINED3D_MAP_DISCARD) && resource->heap_memory)
+                wined3d_buffer_evict_sysmem(buffer);
 
             if (count == 1)
             {
@@ -1032,40 +1053,39 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
                  * buffer. The r600g driver only does this when the buffer is
                  * currently in use, while the proprietary NVIDIA driver
                  * appears to do this unconditionally. */
-                if (buffer_gl->b.flags & WINED3D_BUFFER_DISCARD)
+                if (buffer->flags & WINED3D_BUFFER_DISCARD)
                     flags &= ~WINED3D_MAP_DISCARD;
 
-                if (buffer_gl->b.flags & WINED3D_BUFFER_APPLESYNC)
-                    wined3d_buffer_gl_sync_apple(buffer_gl, flags, wined3d_context_gl(context));
+                if (buffer->flags & WINED3D_BUFFER_APPLESYNC)
+                    wined3d_buffer_gl_sync_apple(wined3d_buffer_gl(buffer), flags, wined3d_context_gl(context));
 
-                addr.buffer_object = buffer_gl->b.buffer_object;
+                addr.buffer_object = buffer->buffer_object;
                 addr.addr = 0;
-                buffer_gl->b.map_ptr = wined3d_context_map_bo_address(context, &addr,
-                        buffer_gl->b.resource.size, buffer_gl->b.resource.bind_flags, flags);
+                buffer->map_ptr = wined3d_context_map_bo_address(context,
+                        &addr, resource->size, resource->bind_flags, flags);
 
-                if (((DWORD_PTR)buffer_gl->b.map_ptr) & (RESOURCE_ALIGNMENT - 1))
+                if (((DWORD_PTR)buffer->map_ptr) & (RESOURCE_ALIGNMENT - 1))
                 {
-                    WARN("Pointer %p is not %u byte aligned.\n", buffer_gl->b.map_ptr, RESOURCE_ALIGNMENT);
+                    WARN("Pointer %p is not %u byte aligned.\n", buffer->map_ptr, RESOURCE_ALIGNMENT);
 
-                    wined3d_context_unmap_bo_address(context, &addr, buffer_gl->b.resource.bind_flags, 0, NULL);
-                    buffer_gl->b.map_ptr = NULL;
+                    wined3d_context_unmap_bo_address(context, &addr, resource->bind_flags, 0, NULL);
+                    buffer->map_ptr = NULL;
 
-                    if (buffer_gl->b.resource.usage & WINED3DUSAGE_DYNAMIC)
+                    if (resource->usage & WINED3DUSAGE_DYNAMIC)
                     {
-                        /* The extra copy is more expensive than not using VBOs at
-                         * all on the Nvidia Linux driver, which is the only driver
-                         * that returns unaligned pointers.
-                         */
+                        /* The extra copy is more expensive than not using VBOs
+                         * at all on the NVIDIA Linux driver, which is the
+                         * only driver that returns unaligned pointers. */
                         TRACE("Dynamic buffer, dropping VBO.\n");
-                        wined3d_buffer_drop_bo(&buffer_gl->b);
+                        wined3d_buffer_drop_bo(buffer);
                     }
                     else
                     {
                         TRACE("Falling back to doublebuffered operation.\n");
-                        wined3d_buffer_load_location(&buffer_gl->b, context, WINED3D_LOCATION_SYSMEM);
-                        buffer_gl->b.flags |= WINED3D_BUFFER_PIN_SYSMEM;
+                        wined3d_buffer_load_location(buffer, context, WINED3D_LOCATION_SYSMEM);
+                        buffer->flags |= WINED3D_BUFFER_PIN_SYSMEM;
                     }
-                    TRACE("New pointer is %p.\n", buffer_gl->b.resource.heap_memory);
+                    TRACE("New pointer is %p.\n", resource->heap_memory);
                 }
             }
 
@@ -1073,14 +1093,13 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
         }
 
         if (flags & WINED3D_MAP_DISCARD)
-            buffer_gl->b.flags |= WINED3D_BUFFER_DISCARD;
+            buffer->flags |= WINED3D_BUFFER_DISCARD;
     }
 
-    base = buffer_gl->b.map_ptr ? buffer_gl->b.map_ptr : buffer_gl->b.resource.heap_memory;
-    *data = base + offset;
+    base = buffer->map_ptr ? buffer->map_ptr : resource->heap_memory;
+    map_desc->data = base + offset;
 
-    TRACE("Returning memory at %p (base %p, offset %u).\n", *data, base, offset);
-    /* TODO: check Flags compatibility with buffer->currentDesc.Usage (see MSDN) */
+    TRACE("Returning memory at %p (base %p, offset %u).\n", map_desc->data, base, offset);
 
     return WINED3D_OK;
 }
@@ -1228,32 +1247,6 @@ static void buffer_resource_preload(struct wined3d_resource *resource)
     context = context_acquire(resource->device, NULL, 0);
     wined3d_buffer_load(buffer_from_resource(resource), context, NULL);
     context_release(context);
-}
-
-static HRESULT buffer_resource_sub_resource_map(struct wined3d_resource *resource, unsigned int sub_resource_idx,
-        struct wined3d_map_desc *map_desc, const struct wined3d_box *box, DWORD flags)
-{
-    struct wined3d_buffer_gl *buffer_gl = wined3d_buffer_gl(buffer_from_resource(resource));
-    UINT offset, size;
-
-    if (sub_resource_idx)
-    {
-        WARN("Invalid sub_resource_idx %u.\n", sub_resource_idx);
-        return E_INVALIDARG;
-    }
-
-    if (box)
-    {
-        offset = box->left;
-        size = box->right - box->left;
-    }
-    else
-    {
-        offset = size = 0;
-    }
-
-    map_desc->row_pitch = map_desc->slice_pitch = resource->size;
-    return wined3d_buffer_gl_map(buffer_gl, offset, size, (BYTE **)&map_desc->data, flags);
 }
 
 static HRESULT buffer_resource_sub_resource_map_info(struct wined3d_resource *resource, unsigned int sub_resource_idx,
