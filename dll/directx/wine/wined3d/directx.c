@@ -115,11 +115,13 @@ ULONG CDECL wined3d_decref(struct wined3d *wined3d)
  * The driver version has the form "x.y.z.w".
  *
  * "x" is the Windows version the driver is meant for:
- * 4 -> 95/98/NT4
- * 5 -> 2000
- * 6 -> 2000/XP
- * 7 -> Vista
- * 8 -> Win 7
+ *  4 -> 95/98/NT4
+ *  5 -> 2000
+ *  6 -> 2000/XP
+ *  7 -> Vista
+ *  8 -> Windows 7
+ *  9 -> Windows 8
+ * 10 -> Windows 10
  *
  * "y" is the maximum Direct3D version the driver supports.
  * y  -> d3d version mapping:
@@ -589,7 +591,7 @@ void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
                 }
                 else
                 {
-                    if (os_version.dwMinorVersion > 2)
+                    if (os_version.dwMinorVersion > 3)
                     {
                         FIXME("Unhandled OS version %u.%u, reporting Win 8.\n",
                                 os_version.dwMajorVersion, os_version.dwMinorVersion);
