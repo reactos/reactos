@@ -1350,8 +1350,10 @@ static void wined3d_texture_cleanup_sync(struct wined3d_texture *texture)
 
 static void wined3d_texture_destroy_object(void *object)
 {
-    wined3d_texture_cleanup(object);
-    heap_free(object);
+    struct wined3d_texture *texture = object;
+
+    wined3d_texture_cleanup(texture);
+    heap_free(wined3d_texture_gl(texture));
 }
 
 ULONG CDECL wined3d_texture_decref(struct wined3d_texture *texture)
@@ -3035,7 +3037,8 @@ static const struct wined3d_texture_ops texture1d_ops =
 
 static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struct wined3d_resource_desc *desc,
         unsigned int layer_count, unsigned int level_count, DWORD flags, struct wined3d_device *device,
-        void *parent, const struct wined3d_parent_ops *parent_ops, const struct wined3d_texture_ops *texture_ops)
+        void *parent, const struct wined3d_parent_ops *parent_ops, void *sub_resources,
+        const struct wined3d_texture_ops *texture_ops)
 {
     const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
     struct wined3d_device_parent *device_parent = device->device_parent;
@@ -3047,11 +3050,11 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
 
     TRACE("texture %p, resource_type %s, format %s, multisample_type %#x, multisample_quality %#x, "
             "usage %s, access %s, width %u, height %u, depth %u, layer_count %u, level_count %u, "
-            "flags %#x, device %p, parent %p, parent_ops %p, texture_ops %p.\n",
+            "flags %#x, device %p, parent %p, parent_ops %p, sub_resources %p, texture_ops %p.\n",
             texture, debug_d3dresourcetype(desc->resource_type), debug_d3dformat(desc->format),
             desc->multisample_type, desc->multisample_quality, debug_d3dusage(desc->usage),
             wined3d_debug_resource_access(desc->access), desc->width, desc->height, desc->depth,
-            layer_count, level_count, flags, device, parent, parent_ops, texture_ops);
+            layer_count, level_count, flags, device, parent, parent_ops, sub_resources, texture_ops);
 
    if (!desc->width || !desc->height || !desc->depth)
         return WINED3DERR_INVALIDCALL;
@@ -3077,6 +3080,8 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
         WARN("OpenGL implementation does not support array textures.\n");
         return WINED3DERR_INVALIDCALL;
     }
+
+    texture->sub_resources = sub_resources;
 
     /* TODO: It should only be possible to create textures for formats
      * that are reported as supported. */
@@ -3779,13 +3784,23 @@ HRESULT CDECL wined3d_texture_get_sub_resource_desc(const struct wined3d_texture
     return WINED3D_OK;
 }
 
+static void *wined3d_texture_allocate_object_memory(SIZE_T s, SIZE_T level_count, SIZE_T layer_count)
+{
+    struct wined3d_texture *t;
+
+    if (level_count > ((~(SIZE_T)0 - s) / sizeof(*t->sub_resources)) / layer_count)
+        return NULL;
+
+    return heap_alloc_zero(s + level_count * layer_count * sizeof(*t->sub_resources));
+}
+
 HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct wined3d_resource_desc *desc,
         UINT layer_count, UINT level_count, DWORD flags, const struct wined3d_sub_resource_data *data,
         void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_texture **texture)
 {
     unsigned int sub_count = level_count * layer_count;
     const struct wined3d_texture_ops *texture_ops;
-    struct wined3d_texture *object;
+    struct wined3d_texture_gl *object;
     unsigned int i;
     HRESULT hr;
 
@@ -3862,11 +3877,11 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
         }
     }
 
-    if (!(object = heap_alloc_zero(FIELD_OFFSET(struct wined3d_texture, sub_resources[sub_count]))))
+    if (!(object = wined3d_texture_allocate_object_memory(sizeof(*object), level_count, layer_count)))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = wined3d_texture_init(object, desc, layer_count,
-            level_count, flags, device, parent, parent_ops, texture_ops)))
+    if (FAILED(hr = wined3d_texture_init(&object->t, desc, layer_count,
+            level_count, flags, device, parent, parent_ops, &object[1], texture_ops)))
     {
         WARN("Failed to initialize texture, returning %#x.\n", hr);
         heap_free(object);
@@ -3882,19 +3897,19 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
 
         for (i = 0; i < sub_count; ++i)
         {
-            level = i % object->level_count;
-            width = wined3d_texture_get_level_width(object, level);
-            height = wined3d_texture_get_level_height(object, level);
-            depth = wined3d_texture_get_level_depth(object, level);
+            level = i % object->t.level_count;
+            width = wined3d_texture_get_level_width(&object->t, level);
+            height = wined3d_texture_get_level_height(&object->t, level);
+            depth = wined3d_texture_get_level_depth(&object->t, level);
             wined3d_box_set(&box, 0, 0, width, height, 0, depth);
 
-            wined3d_cs_emit_update_sub_resource(device->cs, &object->resource,
+            wined3d_cs_emit_update_sub_resource(device->cs, &object->t.resource,
                     i, &box, data[i].data, data[i].row_pitch, data[i].slice_pitch);
         }
     }
 
     TRACE("Created texture %p.\n", object);
-    *texture = object;
+    *texture = &object->t;
 
     return WINED3D_OK;
 }
