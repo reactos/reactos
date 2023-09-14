@@ -822,11 +822,12 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     }
 
     if (stateblock->changed.material
-            && memcmp(&src_state->material, &stateblock->state.material, sizeof(stateblock->state.material)))
+            && memcmp(&state->material, &stateblock->stateblock_state.material,
+            sizeof(stateblock->stateblock_state.material)))
     {
         TRACE("Updating material.\n");
 
-        stateblock->state.material = src_state->material;
+        stateblock->stateblock_state.material = state->material;
     }
 
     assert(src_state->viewport_count <= 1);
@@ -1127,7 +1128,10 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
         wined3d_device_set_vertex_declaration(device, stateblock->state.vertex_declaration);
 
     if (stateblock->changed.material)
-        wined3d_device_set_material(device, &stateblock->state.material);
+    {
+        state->material = stateblock->stateblock_state.material;
+        wined3d_device_set_material(device, &stateblock->stateblock_state.material);
+    }
 
     if (stateblock->changed.viewport)
         wined3d_device_set_viewports(device, stateblock->state.viewport_count, stateblock->state.viewports);

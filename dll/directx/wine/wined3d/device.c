@@ -1833,12 +1833,15 @@ void CDECL wined3d_device_set_material(struct wined3d_device *device, const stru
 {
     TRACE("device %p, material %p.\n", device, material);
 
-    device->update_state->material = *material;
-
+    device->update_stateblock_state->material = *material;
     if (device->recording)
+    {
         device->recording->changed.material = TRUE;
-    else
-        wined3d_cs_emit_set_material(device->cs, material);
+        return;
+    }
+
+    device->state.material = *material;
+    wined3d_cs_emit_set_material(device->cs, material);
 }
 
 void CDECL wined3d_device_get_material(const struct wined3d_device *device, struct wined3d_material *material)
