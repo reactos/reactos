@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -30,6 +31,7 @@
 #include "winsvc.h"
 #include "setupapi.h"
 #include "shlobj.h"
+#include "fci.h"
 
 #include "wine/test.h"
 
@@ -62,6 +64,225 @@ static void create_inf_file(LPCSTR filename, const char *data)
     ret = WriteFile(handle, data, strlen(data), &res, NULL);
     ok(ret, "Failed to write file, error %u.\n", GetLastError());
     CloseHandle(handle);
+}
+
+static void create_file(const char *filename)
+{
+    create_inf_file(filename, "dummy");
+}
+
+static BOOL delete_file(const char *filename)
+{
+    if (GetFileAttributesA(filename) & FILE_ATTRIBUTE_DIRECTORY)
+        return RemoveDirectoryA(filename);
+    else
+        return DeleteFileA(filename);
+}
+
+static BOOL file_exists(const char *path)
+{
+    return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
+}
+
+static void * CDECL mem_alloc(ULONG cb)
+{
+    return HeapAlloc(GetProcessHeap(), 0, cb);
+}
+
+static void CDECL mem_free(void *memory)
+{
+    HeapFree(GetProcessHeap(), 0, memory);
+}
+
+static BOOL CDECL get_next_cabinet(PCCAB pccab, ULONG  cbPrevCab, void *pv)
+{
+    sprintf(pccab->szCab, pv, pccab->iCab);
+    return TRUE;
+}
+
+static LONG CDECL progress(UINT typeStatus, ULONG cb1, ULONG cb2, void *pv)
+{
+    return 0;
+}
+
+static int CDECL file_placed(PCCAB pccab, char *pszFile, LONG cbFile,
+                             BOOL fContinuation, void *pv)
+{
+    return 0;
+}
+
+static INT_PTR CDECL fci_open(char *pszFile, int oflag, int pmode, int *err, void *pv)
+{
+    HANDLE handle;
+    DWORD dwAccess = 0;
+    DWORD dwShareMode = 0;
+    DWORD dwCreateDisposition = OPEN_EXISTING;
+
+    dwAccess = GENERIC_READ | GENERIC_WRITE;
+    dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+
+    if (GetFileAttributesA(pszFile) != INVALID_FILE_ATTRIBUTES)
+        dwCreateDisposition = OPEN_EXISTING;
+    else
+        dwCreateDisposition = CREATE_NEW;
+
+    handle = CreateFileA(pszFile, dwAccess, dwShareMode, NULL,
+                         dwCreateDisposition, 0, NULL);
+
+    ok(handle != INVALID_HANDLE_VALUE, "Failed to CreateFile %s\n", pszFile);
+
+    return (INT_PTR)handle;
+}
+
+static UINT CDECL fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
+{
+    HANDLE handle = (HANDLE)hf;
+    DWORD dwRead;
+    BOOL res;
+
+    res = ReadFile(handle, memory, cb, &dwRead, NULL);
+    ok(res, "Failed to ReadFile\n");
+
+    return dwRead;
+}
+
+static UINT CDECL fci_write(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
+{
+    HANDLE handle = (HANDLE)hf;
+    DWORD dwWritten;
+    BOOL res;
+
+    res = WriteFile(handle, memory, cb, &dwWritten, NULL);
+    ok(res, "Failed to WriteFile\n");
+
+    return dwWritten;
+}
+
+static int CDECL fci_close(INT_PTR hf, int *err, void *pv)
+{
+    HANDLE handle = (HANDLE)hf;
+    ok(CloseHandle(handle), "Failed to CloseHandle\n");
+
+    return 0;
+}
+
+static LONG CDECL fci_seek(INT_PTR hf, LONG dist, int seektype, int *err, void *pv)
+{
+    HANDLE handle = (HANDLE)hf;
+    DWORD ret;
+
+    ret = SetFilePointer(handle, dist, NULL, seektype);
+    ok(ret != INVALID_SET_FILE_POINTER, "Failed to SetFilePointer\n");
+
+    return ret;
+}
+
+static int CDECL fci_delete(char *pszFile, int *err, void *pv)
+{
+    BOOL ret = DeleteFileA(pszFile);
+    ok(ret, "Failed to DeleteFile %s\n", pszFile);
+
+    return 0;
+}
+
+static BOOL CDECL get_temp_file(char *pszTempName, int cbTempName, void *pv)
+{
+    LPSTR tempname;
+
+    tempname = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
+    GetTempFileNameA(".", "xx", 0, tempname);
+
+    if (tempname && (strlen(tempname) < (unsigned)cbTempName))
+    {
+        lstrcpyA(pszTempName, tempname);
+        HeapFree(GetProcessHeap(), 0, tempname);
+        return TRUE;
+    }
+
+    HeapFree(GetProcessHeap(), 0, tempname);
+
+    return FALSE;
+}
+
+static INT_PTR CDECL get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
+                                   USHORT *pattribs, int *err, void *pv)
+{
+    BY_HANDLE_FILE_INFORMATION finfo;
+    FILETIME filetime;
+    HANDLE handle;
+    DWORD attrs;
+    BOOL res;
+
+    handle = CreateFileA(pszName, GENERIC_READ, FILE_SHARE_READ, NULL,
+                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+
+    ok(handle != INVALID_HANDLE_VALUE, "Failed to CreateFile %s\n", pszName);
+
+    res = GetFileInformationByHandle(handle, &finfo);
+    ok(res, "Expected GetFileInformationByHandle to succeed\n");
+
+    FileTimeToLocalFileTime(&finfo.ftLastWriteTime, &filetime);
+    FileTimeToDosDateTime(&filetime, pdate, ptime);
+
+    attrs = GetFileAttributesA(pszName);
+    ok(attrs != INVALID_FILE_ATTRIBUTES, "Failed to GetFileAttributes\n");
+
+    return (INT_PTR)handle;
+}
+
+static BOOL add_file(HFCI hfci, const char *file, TCOMP compress)
+{
+    char path[MAX_PATH];
+    char filename[MAX_PATH];
+
+    lstrcpyA(path, CURR_DIR);
+    lstrcatA(path, "\\");
+    lstrcatA(path, file);
+
+    lstrcpyA(filename, file);
+
+    return FCIAddFile(hfci, path, filename, FALSE, get_next_cabinet,
+                      progress, get_open_info, compress);
+}
+
+static void create_cab_file(const CHAR *name, const CHAR *files)
+{
+    CCAB cabParams = {0};
+    LPCSTR ptr;
+    HFCI hfci;
+    ERF erf;
+    BOOL res;
+
+    cabParams.cb = INT_MAX;
+    cabParams.cbFolderThresh = 900000;
+    cabParams.setID = 0xbeef;
+    cabParams.iCab = 1;
+    lstrcpyA(cabParams.szCabPath, CURR_DIR);
+    lstrcatA(cabParams.szCabPath, "\\");
+    lstrcpyA(cabParams.szCab, name);
+
+    hfci = FCICreate(&erf, file_placed, mem_alloc, mem_free, fci_open,
+                      fci_read, fci_write, fci_close, fci_seek, fci_delete,
+                      get_temp_file, &cabParams, NULL);
+
+    ok(hfci != NULL, "Failed to create an FCI context\n");
+
+    ptr = files;
+    while (*ptr)
+    {
+        create_file(ptr);
+        res = add_file(hfci, ptr, tcompTYPE_MSZIP);
+        ok(res, "Failed to add file: %s\n", ptr);
+        res = DeleteFileA(ptr);
+        ok(res, "Failed to delete file %s, error %u\n", ptr, GetLastError());
+        ptr += lstrlenA(ptr) + 1;
+    }
+
+    res = FCIFlushCabinet(hfci, FALSE, get_next_cabinet, progress);
+    ok(res, "Failed to flush the cabinet\n");
+
+    res = FCIDestroy(hfci);
+    ok(res, "Failed to destroy the cabinet\n");
 }
 
 /* CBT hook to ensure a window (e.g., MessageBox) cannot be created */
@@ -760,6 +981,113 @@ static void test_dirid(void)
     check_dirid(40, expected);
 }
 
+static void test_install_files_queue(void)
+{
+    static const char inf_data[] = "[Version]\n"
+            "Signature=\"$Chicago$\"\n"
+            "[DefaultInstall]\n"
+            "CopyFiles=files_section\n"
+            "[files_section]\n"
+            "one.txt\n"
+            "two.txt\n"
+            "three.txt\n"
+            "four.txt\n"
+            "five.txt\n"
+            "six.txt\n"
+            "seven.txt\n"
+            "eight.txt\n"
+            "[SourceDisksNames]\n"
+            "1=heis\n"
+            "2=duo,,,alpha\n"
+            "3=treis,treis.cab\n"
+            "4=tessares,tessares.cab,,alpha\n"
+            "[SourceDisksFiles]\n"
+            "one.txt=1\n"
+            "two.txt=1,beta\n"
+            "three.txt=2\n"
+            "four.txt=2,beta\n"
+            "five.txt=3\n"
+            "six.txt=3,beta\n"
+            "seven.txt=4\n"
+            "eight.txt=4,beta\n"
+            "[DestinationDirs]\n"
+            "files_section=40000,dst\n";
+
+    char path[MAX_PATH];
+    HSPFILEQ queue;
+    void *context;
+    HINF hinf;
+    BOOL ret;
+
+    create_inf_file(inffile, inf_data);
+
+    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    hinf = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
+    ok(hinf != INVALID_HANDLE_VALUE, "Failed to open INF file, error %#x.\n", GetLastError());
+
+    ret = CreateDirectoryA("src", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+    ret = CreateDirectoryA("src/alpha", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+    ret = CreateDirectoryA("src/alpha/beta", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+    ret = CreateDirectoryA("src/beta", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+    ret = SetupSetDirectoryIdA(hinf, 40000, CURR_DIR);
+    ok(ret, "Failed to set directory ID, error %u.\n", GetLastError());
+
+    create_file("src/one.txt");
+    create_file("src/beta/two.txt");
+    create_file("src/alpha/three.txt");
+    create_file("src/alpha/beta/four.txt");
+    create_cab_file("src/treis.cab", "src\\beta\\five.txt\0six.txt\0");
+    create_cab_file("src/alpha/tessares.cab", "seven.txt\0eight.txt\0");
+
+    queue = SetupOpenFileQueue();
+    ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
+
+    context = SetupInitDefaultQueueCallbackEx(NULL, INVALID_HANDLE_VALUE, 0, 0, 0);
+    ok(!!context, "Failed to create callback context, error %#x.\n", GetLastError());
+
+    ret = SetupInstallFilesFromInfSectionA(hinf, NULL, queue, "DefaultInstall", "src", 0);
+    ok(ret, "Failed to install files, error %#x.\n", GetLastError());
+
+    ok(file_exists("src/one.txt"), "Source file should exist.\n");
+    ok(!file_exists("dst/one.txt"), "Destination file should not exist.\n");
+
+    ret = SetupCommitFileQueueA(NULL, queue, SetupDefaultQueueCallbackA, context);
+    ok(ret, "Failed to commit queue, error %#x.\n", GetLastError());
+
+    ok(file_exists("src/one.txt"), "Source file should exist.\n");
+    ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+    ok(delete_file("dst/two.txt"), "Destination file should exist.\n");
+    ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
+    ok(delete_file("dst/four.txt"), "Destination file should exist.\n");
+    ok(delete_file("dst/five.txt"), "Destination file should exist.\n");
+    ok(delete_file("dst/six.txt"), "Destination file should exist.\n");
+    todo_wine ok(delete_file("dst/seven.txt"), "Destination file should exist.\n");
+    todo_wine ok(delete_file("dst/eight.txt"), "Destination file should exist.\n");
+
+    SetupTermDefaultQueueCallback(context);
+    ret = SetupCloseFileQueue(queue);
+    ok(ret, "Failed to close queue, error %#x.\n", GetLastError());
+
+    SetupCloseInfFile(hinf);
+    delete_file("src/one.txt");
+    delete_file("src/beta/two.txt");
+    delete_file("src/alpha/three.txt");
+    delete_file("src/alpha/beta/four.txt");
+    delete_file("src/treis.cab");
+    delete_file("src/alpha/tessares.cab");
+    delete_file("src/alpha/beta/");
+    delete_file("src/alpha/");
+    delete_file("src/beta/");
+    delete_file("src/");
+    delete_file("dst/");
+    ret = DeleteFileA(inffile);
+    ok(ret, "Failed to delete INF file, error %u.\n", GetLastError());
+}
+
 START_TEST(install)
 {
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
@@ -784,6 +1112,7 @@ START_TEST(install)
     test_install_svc_from();
     test_driver_install();
     test_dirid();
+    test_install_files_queue();
 
     UnhookWindowsHookEx(hhook);
 
