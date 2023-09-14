@@ -4277,17 +4277,18 @@ static void adapter_gl_destroy_device(struct wined3d_device *device)
 static HRESULT adapter_gl_create_context(struct wined3d_swapchain *swapchain, struct wined3d_context **context)
 {
     struct wined3d_context_gl *context_gl;
+    HRESULT hr;
 
     TRACE("swapchain %p, context %p.\n", swapchain, context);
 
     if (!(context_gl = heap_alloc_zero(sizeof(*context_gl))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(wined3d_context_gl_init(context_gl, swapchain)))
+    if (FAILED(hr = wined3d_context_gl_init(context_gl, swapchain)))
     {
         WARN("Failed to initialise context.\n");
         heap_free(context_gl);
-        return E_FAIL;
+        return hr;
     }
 
     TRACE("Created context %p.\n", context_gl);

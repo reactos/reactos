@@ -291,17 +291,18 @@ static void adapter_vk_destroy_device(struct wined3d_device *device)
 static HRESULT adapter_vk_create_context(struct wined3d_swapchain *swapchain, struct wined3d_context **context)
 {
     struct wined3d_context *context_vk;
+    HRESULT hr;
 
     TRACE("swapchain %p, context %p.\n", swapchain, context);
 
     if (!(context_vk = heap_alloc_zero(sizeof(*context_vk))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(wined3d_context_vk_init(context_vk, swapchain)))
+    if (FAILED(hr = wined3d_context_vk_init(context_vk, swapchain)))
     {
         WARN("Failed to initialise context.\n");
         heap_free(context_vk);
-        return E_FAIL;
+        return hr;
     }
 
     TRACE("Created context %p.\n", context_vk);
