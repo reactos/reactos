@@ -1967,12 +1967,11 @@ static BOOL wined3d_context_init(struct wined3d_context *context, struct wined3d
 
 struct wined3d_context *context_create(struct wined3d_swapchain *swapchain, const struct wined3d_format *ds_format)
 {
-    struct wined3d_texture *target = swapchain->front_buffer;
     struct wined3d_device *device = swapchain->device;
     struct wined3d_context_gl *context_gl;
     struct wined3d_context *context;
 
-    TRACE("swapchain %p, target %p, window %p.\n", swapchain, target, swapchain->win_handle);
+    TRACE("swapchain %p.\n", swapchain);
 
     wined3d_from_cs(device->cs);
 
@@ -1985,7 +1984,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain, cons
         heap_free(context_gl);
         return NULL;
     }
-    if (!(device->adapter->adapter_ops->adapter_create_context(context, target, ds_format)))
+    if (!(device->adapter->adapter_ops->adapter_create_context(context, ds_format)))
     {
         wined3d_release_dc(context->win_handle, context->hdc);
         heap_free(context_gl);
@@ -2004,13 +2003,13 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain, cons
     return context;
 }
 
-BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
-        struct wined3d_texture *target, const struct wined3d_format *ds_format)
+BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context, const struct wined3d_format *ds_format)
 {
     struct wined3d_device *device = context->device;
     const struct wined3d_format *color_format;
     const struct wined3d_d3d_info *d3d_info;
     const struct wined3d_gl_info *gl_info;
+    struct wined3d_resource *target;
     unsigned int target_bind_flags;
     BOOL aux_buffers = FALSE;
     HGLRC ctx, share_ctx;
@@ -2057,8 +2056,9 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
             sizeof(*context->texture_type))))
         return FALSE;
 
-    color_format = target->resource.format;
-    target_bind_flags = target->resource.bind_flags;
+    target = &context->current_rt.texture->resource;
+    color_format = target->format;
+    target_bind_flags = target->bind_flags;
 
     /* In case of ORM_BACKBUFFER, make sure to request an alpha component for
      * X4R4G4B4/X8R8G8B8 as we might need it for the backbuffer. */
@@ -2141,7 +2141,7 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
         }
     }
 
-    context->render_offscreen = wined3d_resource_is_offscreen(&target->resource);
+    context->render_offscreen = wined3d_resource_is_offscreen(target);
     context->draw_buffers_mask = context_generate_rt_mask(GL_BACK);
     context->valid = 1;
 

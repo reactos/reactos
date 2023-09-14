@@ -2720,8 +2720,7 @@ struct wined3d_adapter_ops
             BYTE surface_alignment, const enum wined3d_feature_level *levels, unsigned int level_count,
             struct wined3d_device_parent *device_parent, struct wined3d_device **device);
     void (*adapter_destroy_device)(struct wined3d_device *device);
-    BOOL (*adapter_create_context)(struct wined3d_context *context,
-            struct wined3d_texture *target, const struct wined3d_format *ds_format);
+    BOOL (*adapter_create_context)(struct wined3d_context *context, const struct wined3d_format *ds_format);
     void (*adapter_get_wined3d_caps)(const struct wined3d_adapter *adapter, struct wined3d_caps *caps);
     BOOL (*adapter_check_format)(const struct wined3d_adapter *adapter,
             const struct wined3d_format *adapter_format, const struct wined3d_format *rt_format,
@@ -2776,9 +2775,10 @@ static inline const struct wined3d_adapter_gl *wined3d_adapter_gl_const(const st
     return CONTAINING_RECORD(adapter, struct wined3d_adapter_gl, a);
 }
 
-struct wined3d_adapter *wined3d_adapter_gl_create(unsigned int ordinal, unsigned int wined3d_creation_flags) DECLSPEC_HIDDEN;
+struct wined3d_adapter *wined3d_adapter_gl_create(unsigned int ordinal,
+        unsigned int wined3d_creation_flags) DECLSPEC_HIDDEN;
 BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
-        struct wined3d_texture *target, const struct wined3d_format *ds_format) DECLSPEC_HIDDEN;
+        const struct wined3d_format *ds_format) DECLSPEC_HIDDEN;
 
 struct wined3d_adapter_vk
 {

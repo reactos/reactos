@@ -288,8 +288,7 @@ static void adapter_vk_destroy_device(struct wined3d_device *device)
     heap_free(device_vk);
 }
 
-static BOOL adapter_vk_create_context(struct wined3d_context *context,
-        struct wined3d_texture *target, const struct wined3d_format *ds_format)
+static BOOL adapter_vk_create_context(struct wined3d_context *context, const struct wined3d_format *ds_format)
 {
     return TRUE;
 }
