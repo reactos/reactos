@@ -53,6 +53,7 @@ static CHAR CURR_DIR[MAX_PATH];
  *  - copy styles
  */
 
+static void (WINAPI *pMyFree)(void*);
 static BOOL (WINAPI *pSetupGetFileCompressionInfoExA)(PCSTR, PSTR, DWORD, PDWORD, PDWORD, PDWORD, PUINT);
 static BOOL (WINAPI *pSetupQueryInfOriginalFileInformationA)(PSP_INF_INFORMATION, UINT, PSP_ALTPLATFORM_INFO, PSP_ORIGINAL_FILE_INFO_A);
 
@@ -476,7 +477,7 @@ static void test_SetupGetFileCompressionInfo(void)
     ok(target_size == sizeof(uncompressed), "got %ld\n", target_size);
     ok(type == FILE_COMPRESSION_NONE, "got %d, expected FILE_COMPRESSION_NONE\n", type);
 
-    MyFree(name);
+    pMyFree(name);
     DeleteFileA(source);
 }
 
@@ -913,6 +914,7 @@ START_TEST(misc)
 {
     HMODULE hsetupapi = GetModuleHandleA("setupapi.dll");
 
+    pMyFree = (void*)GetProcAddress(hsetupapi, "MyFree");
     pSetupGetFileCompressionInfoExA = (void*)GetProcAddress(hsetupapi, "SetupGetFileCompressionInfoExA");
     pSetupQueryInfOriginalFileInformationA = (void*)GetProcAddress(hsetupapi, "SetupQueryInfOriginalFileInformationA");
 
