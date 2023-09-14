@@ -4337,13 +4337,17 @@ HRESULT CDECL wined3d_device_copy_sub_resource_region(struct wined3d_device *dev
 
 void CDECL wined3d_device_update_sub_resource(struct wined3d_device *device, struct wined3d_resource *resource,
         unsigned int sub_resource_idx, const struct wined3d_box *box, const void *data, unsigned int row_pitch,
-        unsigned int depth_pitch)
+        unsigned int depth_pitch, unsigned int flags)
 {
     unsigned int width, height, depth;
     struct wined3d_box b;
 
-    TRACE("device %p, resource %p, sub_resource_idx %u, box %s, data %p, row_pitch %u, depth_pitch %u.\n",
-            device, resource, sub_resource_idx, debug_box(box), data, row_pitch, depth_pitch);
+    TRACE("device %p, resource %p, sub_resource_idx %u, box %s, data %p, row_pitch %u, depth_pitch %u, "
+            "flags %#x.\n",
+            device, resource, sub_resource_idx, debug_box(box), data, row_pitch, depth_pitch, flags);
+
+    if (flags)
+        FIXME("Ignoring flags %#x.\n", flags);
 
     if (resource->type == WINED3D_RTYPE_BUFFER)
     {

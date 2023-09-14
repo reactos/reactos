@@ -3609,7 +3609,7 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
         for (i = 0; i < sub_count; ++i)
         {
             wined3d_device_update_sub_resource(device, &object->resource,
-                    i, NULL, data[i].data, data[i].row_pitch, data[i].slice_pitch);
+                    i, NULL, data[i].data, data[i].row_pitch, data[i].slice_pitch, 0);
         }
     }
 

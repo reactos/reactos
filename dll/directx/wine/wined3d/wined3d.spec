@@ -200,7 +200,7 @@
 @ cdecl wined3d_device_show_cursor(ptr long)
 @ cdecl wined3d_device_uninit_3d(ptr)
 @ cdecl wined3d_device_uninit_gdi(ptr)
-@ cdecl wined3d_device_update_sub_resource(ptr ptr long ptr ptr long long)
+@ cdecl wined3d_device_update_sub_resource(ptr ptr long ptr ptr long long long)
 @ cdecl wined3d_device_update_texture(ptr ptr ptr)
 @ cdecl wined3d_device_validate_device(ptr ptr)
 

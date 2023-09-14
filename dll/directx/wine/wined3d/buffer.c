@@ -1426,7 +1426,7 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
 
     if (data)
         wined3d_device_update_sub_resource(device, &buffer->resource,
-                0, NULL, data->data, data->row_pitch, data->slice_pitch);
+                0, NULL, data->data, data->row_pitch, data->slice_pitch, 0);
 
     return WINED3D_OK;
 }
