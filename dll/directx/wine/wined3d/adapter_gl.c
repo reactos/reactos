@@ -991,41 +991,28 @@ static void quirk_broken_viewport_subpixel_bits(struct wined3d_gl_info *gl_info)
 static const struct wined3d_gpu_description *query_gpu_description(const struct wined3d_gl_info *gl_info,
         UINT64 *vram_bytes)
 {
-    const struct wined3d_gpu_description *gpu_description;
+    const struct wined3d_gpu_description *gpu_description = NULL, *gpu_description_override;
     enum wined3d_pci_vendor vendor = PCI_VENDOR_NONE;
     enum wined3d_pci_device device = PCI_DEVICE_NONE;
-    static unsigned int once;
+    GLuint value;
 
     if (gl_info->supported[WGL_WINE_QUERY_RENDERER])
     {
-        GLuint value;
-
         if (GL_EXTCALL(wglQueryCurrentRendererIntegerWINE(WGL_RENDERER_VENDOR_ID_WINE, &value)))
             vendor = value;
         if (GL_EXTCALL(wglQueryCurrentRendererIntegerWINE(WGL_RENDERER_DEVICE_ID_WINE, &value)))
             device = value;
         if (GL_EXTCALL(wglQueryCurrentRendererIntegerWINE(WGL_RENDERER_VIDEO_MEMORY_WINE, &value)))
             *vram_bytes = (UINT64)value * 1024 * 1024;
+
         TRACE("Card reports vendor PCI ID 0x%04x, device PCI ID 0x%04x, 0x%s bytes of video memory.\n",
                 vendor, device, wine_dbgstr_longlong(*vram_bytes));
+
+        gpu_description = wined3d_get_gpu_description(vendor, device);
     }
 
-    if (wined3d_settings.pci_vendor_id != PCI_VENDOR_NONE)
-    {
-        vendor = wined3d_settings.pci_vendor_id;
-        TRACE("Overriding vendor PCI ID with 0x%04x.\n", vendor);
-    }
-
-    if (wined3d_settings.pci_device_id != PCI_DEVICE_NONE)
-    {
-        device = wined3d_settings.pci_device_id;
-        TRACE("Overriding device PCI ID with 0x%04x.\n", device);
-    }
-
-    if (!(gpu_description = wined3d_get_gpu_description(vendor, device))
-            && (wined3d_settings.pci_vendor_id != PCI_VENDOR_NONE
-            || wined3d_settings.pci_device_id != PCI_DEVICE_NONE) && !once++)
-        ERR_(winediag)("Invalid GPU override %04x:%04x specified, ignoring.\n", vendor, device);
+    if ((gpu_description_override = wined3d_get_user_override_gpu_description(vendor, device)))
+        gpu_description = gpu_description_override;
 
     return gpu_description;
 }

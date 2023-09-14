@@ -627,13 +627,18 @@ const struct wined3d_gpu_description *get_vulkan_gpu_description(const VkPhysica
     TRACE("Driver version: %#x.\n", properties->driverVersion);
     TRACE("API version: %s.\n", debug_vk_version(properties->apiVersion));
 
-    if ((description = wined3d_get_gpu_description(properties->vendorID, properties->deviceID)))
-        return description;
+    if (!(description = wined3d_get_user_override_gpu_description(properties->vendorID, properties->deviceID)))
+        description = wined3d_get_gpu_description(properties->vendorID, properties->deviceID);
 
-    FIXME("Failed to retrieve GPU description for device %s %04x:%04x.\n",
-            debugstr_a(properties->deviceName), properties->vendorID, properties->deviceID);
+    if (!description)
+    {
+        FIXME("Failed to retrieve GPU description for device %s %04x:%04x.\n",
+                debugstr_a(properties->deviceName), properties->vendorID, properties->deviceID);
 
-    return wined3d_get_gpu_description(HW_VENDOR_AMD, CARD_AMD_RADEON_RX_VEGA);
+        description = wined3d_get_gpu_description(HW_VENDOR_AMD, CARD_AMD_RADEON_RX_VEGA);
+    }
+
+    return description;
 }
 
 static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,

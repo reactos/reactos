@@ -28,6 +28,7 @@
 #include "winternl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
+WINE_DECLARE_DEBUG_CHANNEL(winediag);
 
 #define DEFAULT_REFRESH_RATE 0
 
@@ -499,6 +500,32 @@ const struct wined3d_gpu_description *wined3d_get_gpu_description(enum wined3d_p
     }
 
     return NULL;
+}
+
+const struct wined3d_gpu_description *wined3d_get_user_override_gpu_description(enum wined3d_pci_vendor vendor,
+        enum wined3d_pci_device device)
+{
+    const struct wined3d_gpu_description *gpu_desc;
+    static unsigned int once;
+
+    if (wined3d_settings.pci_vendor_id == PCI_VENDOR_NONE && wined3d_settings.pci_device_id == PCI_DEVICE_NONE)
+        return NULL;
+
+    if (wined3d_settings.pci_vendor_id != PCI_VENDOR_NONE)
+    {
+        vendor = wined3d_settings.pci_vendor_id;
+        TRACE("Overriding vendor PCI ID with 0x%04x.\n", vendor);
+    }
+    if (wined3d_settings.pci_device_id != PCI_DEVICE_NONE)
+    {
+        device = wined3d_settings.pci_device_id;
+        TRACE("Overriding device PCI ID with 0x%04x.\n", device);
+    }
+
+    if (!(gpu_desc = wined3d_get_gpu_description(vendor, device)) && !once++)
+        ERR_(winediag)("Invalid GPU override %04x:%04x specified, ignoring.\n", vendor, device);
+
+    return gpu_desc;
 }
 
 void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
