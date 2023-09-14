@@ -4395,8 +4395,6 @@ struct wined3d_format
     UINT block_byte_count;
 
     enum wined3d_ffp_emit_idx emit_idx;
-    GLenum gl_vtx_type;
-    GLint gl_vtx_format;
 
     GLint glInternal;
     GLint glGammaInternal;
@@ -4439,6 +4437,19 @@ const struct wined3d_color_key_conversion * wined3d_format_get_color_key_convers
         const struct wined3d_texture *texture, BOOL need_alpha_ck) DECLSPEC_HIDDEN;
 BOOL wined3d_formats_are_srgb_variants(enum wined3d_format_id format1,
         enum wined3d_format_id format2) DECLSPEC_HIDDEN;
+
+struct wined3d_format_gl
+{
+    struct wined3d_format f;
+
+    GLenum vtx_type;
+    GLint vtx_format;
+};
+
+static inline const struct wined3d_format_gl *wined3d_format_gl(const struct wined3d_format *format)
+{
+    return CONTAINING_RECORD(format, struct wined3d_format_gl, f);
+}
 
 BOOL wined3d_array_reserve(void **elements, SIZE_T *capacity, SIZE_T count, SIZE_T size) DECLSPEC_HIDDEN;
 

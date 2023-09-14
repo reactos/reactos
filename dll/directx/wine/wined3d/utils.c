@@ -1929,6 +1929,11 @@ static inline int get_format_idx(enum wined3d_format_id format_id)
     return -1;
 }
 
+static struct wined3d_format_gl *wined3d_format_gl_mutable(struct wined3d_format *format)
+{
+    return CONTAINING_RECORD(format, struct wined3d_format_gl, f);
+}
+
 static struct wined3d_format *get_format_by_idx(const struct wined3d_adapter *adapter, int fmt_idx)
 {
     return (struct wined3d_format *)((BYTE *)adapter->formats + fmt_idx * adapter->format_size);
@@ -1946,6 +1951,17 @@ static struct wined3d_format *get_format_internal(const struct wined3d_adapter *
     }
 
     return get_format_by_idx(adapter, fmt_idx);
+}
+
+static struct wined3d_format_gl *get_format_gl_internal(const struct wined3d_adapter *adapter,
+        enum wined3d_format_id format_id)
+{
+    struct wined3d_format *format;
+
+    if ((format = get_format_internal(adapter, format_id)))
+        return wined3d_format_gl_mutable(format);
+
+    return NULL;
 }
 
 static void copy_format(const struct wined3d_adapter *adapter,
@@ -3682,27 +3698,27 @@ static void apply_format_fixups(struct wined3d_adapter *adapter, struct wined3d_
 static BOOL init_format_vertex_info(const struct wined3d_adapter *adapter,
         struct wined3d_gl_info *gl_info)
 {
-    struct wined3d_format *format;
+    struct wined3d_format_gl *format;
     unsigned int i;
 
     for (i = 0; i < ARRAY_SIZE(format_vertex_info); ++i)
     {
-        if (!(format = get_format_internal(adapter, format_vertex_info[i].id)))
+        if (!(format = get_format_gl_internal(adapter, format_vertex_info[i].id)))
             return FALSE;
 
         if (!gl_info->supported[format_vertex_info[i].extension])
             continue;
 
-        format->emit_idx = format_vertex_info[i].emit_idx;
-        format->gl_vtx_type = format_vertex_info[i].gl_vtx_type;
-        format->gl_vtx_format = format->component_count;
-        format->flags[WINED3D_GL_RES_TYPE_BUFFER] |= WINED3DFMT_FLAG_VERTEX_ATTRIBUTE;
+        format->f.emit_idx = format_vertex_info[i].emit_idx;
+        format->vtx_type = format_vertex_info[i].gl_vtx_type;
+        format->vtx_format = format->f.component_count;
+        format->f.flags[WINED3D_GL_RES_TYPE_BUFFER] |= WINED3DFMT_FLAG_VERTEX_ATTRIBUTE;
     }
 
     if (gl_info->supported[ARB_VERTEX_ARRAY_BGRA])
     {
-        format = get_format_internal(adapter, WINED3DFMT_B8G8R8A8_UNORM);
-        format->gl_vtx_format = GL_BGRA;
+        format = get_format_gl_internal(adapter, WINED3DFMT_B8G8R8A8_UNORM);
+        format->vtx_format = GL_BGRA;
     }
 
     return TRUE;
@@ -3985,7 +4001,7 @@ BOOL wined3d_adapter_gl_init_format_info(struct wined3d_adapter *adapter, struct
 {
     struct wined3d_gl_info *gl_info = &adapter->gl_info;
 
-    if (!wined3d_adapter_init_format_info(adapter, sizeof(struct wined3d_format)))
+    if (!wined3d_adapter_init_format_info(adapter, sizeof(struct wined3d_format_gl)))
         return FALSE;
 
     if (!init_format_texture_info(adapter, gl_info)) goto fail;
