@@ -1104,64 +1104,71 @@ static HRESULT buffer_resource_sub_resource_map(struct wined3d_resource *resourc
     return WINED3D_OK;
 }
 
-static void wined3d_buffer_gl_unmap(struct wined3d_buffer_gl *buffer_gl)
+static HRESULT buffer_resource_sub_resource_unmap(struct wined3d_resource *resource, unsigned int sub_resource_idx)
 {
-    ULONG i;
+    struct wined3d_buffer *buffer = buffer_from_resource(resource);
+    unsigned int range_count = buffer->modified_areas;
+    struct wined3d_device *device = resource->device;
+    struct wined3d_context *context;
+    struct wined3d_bo_address addr;
 
-    TRACE("buffer_gl %p.\n", buffer_gl);
+    TRACE("resource %p, sub_resource_idx %u.\n", resource, sub_resource_idx);
 
-    /* In the case that the number of Unmap calls > the
-     * number of Map calls, d3d returns always D3D_OK.
-     * This is also needed to prevent Map from returning garbage on
-     * the next call (this will happen if the lock_count is < 0). */
-    if (!buffer_gl->b.resource.map_count)
+    if (sub_resource_idx)
+    {
+        WARN("Invalid sub_resource_idx %u.\n", sub_resource_idx);
+        return E_INVALIDARG;
+    }
+
+    if (!resource->map_count)
     {
         WARN("Unmap called without a previous map call.\n");
-        return;
+        return WINED3D_OK;
     }
 
-    if (--buffer_gl->b.resource.map_count)
+    if (--resource->map_count)
     {
-        /* Delay loading the buffer until everything is unlocked */
+        /* Delay loading the buffer until everything is unmapped. */
         TRACE("Ignoring unmap.\n");
-        return;
+        return WINED3D_OK;
     }
 
-    if (buffer_gl->b.map_ptr)
-    {
-        struct wined3d_device *device = buffer_gl->b.resource.device;
-        unsigned int range_count = buffer_gl->b.modified_areas;
-        const struct wined3d_gl_info *gl_info;
-        struct wined3d_context_gl *context_gl;
-        struct wined3d_context *context;
-        struct wined3d_bo_address addr;
+    if (!buffer->map_ptr)
+        return WINED3D_OK;
 
-        context = context_acquire(device, NULL, 0);
+    context = context_acquire(device, NULL, 0);
+
+    if (buffer->flags & WINED3D_BUFFER_APPLESYNC)
+    {
+        struct wined3d_context_gl *context_gl;
+        const struct wined3d_gl_info *gl_info;
+        struct wined3d_buffer_gl *buffer_gl;
+        unsigned int i;
+
+        buffer_gl = wined3d_buffer_gl(buffer);
         context_gl = wined3d_context_gl(context);
         gl_info = context_gl->gl_info;
 
-        if (buffer_gl->b.flags & WINED3D_BUFFER_APPLESYNC)
+        wined3d_buffer_gl_bind(buffer_gl, context_gl);
+        for (i = 0; i < range_count; ++i)
         {
-            wined3d_buffer_gl_bind(buffer_gl, context_gl);
-            for (i = 0; i < range_count; ++i)
-            {
-                GL_EXTCALL(glFlushMappedBufferRangeAPPLE(buffer_gl->buffer_type_hint,
-                        buffer_gl->b.maps[i].offset, buffer_gl->b.maps[i].size));
-                checkGLcall("glFlushMappedBufferRangeAPPLE");
-            }
-            range_count = 0;
+            GL_EXTCALL(glFlushMappedBufferRangeAPPLE(buffer_gl->buffer_type_hint,
+                    buffer->maps[i].offset, buffer->maps[i].size));
+            checkGLcall("glFlushMappedBufferRangeAPPLE");
         }
-
-        addr.buffer_object = buffer_gl->b.buffer_object;
-        addr.addr = 0;
-        wined3d_context_unmap_bo_address(context, &addr,
-                buffer_gl->b.resource.bind_flags, range_count, buffer_gl->b.maps);
-
-        context_release(context);
-
-        buffer_clear_dirty_areas(&buffer_gl->b);
-        buffer_gl->b.map_ptr = NULL;
+        range_count = 0;
     }
+
+    addr.buffer_object = buffer->buffer_object;
+    addr.addr = 0;
+    wined3d_context_unmap_bo_address(context, &addr, resource->bind_flags, range_count, buffer->maps);
+
+    context_release(context);
+
+    buffer_clear_dirty_areas(buffer);
+    buffer->map_ptr = NULL;
+
+    return WINED3D_OK;
 }
 
 void wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_offset,
@@ -1264,18 +1271,6 @@ static HRESULT buffer_resource_sub_resource_map_info(struct wined3d_resource *re
     info->slice_pitch = buffer->desc.byte_width;
     info->size        = buffer->resource.size;
 
-    return WINED3D_OK;
-}
-
-static HRESULT buffer_resource_sub_resource_unmap(struct wined3d_resource *resource, unsigned int sub_resource_idx)
-{
-    if (sub_resource_idx)
-    {
-        WARN("Invalid sub_resource_idx %u.\n", sub_resource_idx);
-        return E_INVALIDARG;
-    }
-
-    wined3d_buffer_gl_unmap(wined3d_buffer_gl(buffer_from_resource(resource)));
     return WINED3D_OK;
 }
 
