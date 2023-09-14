@@ -615,7 +615,7 @@ void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
 
     driver_info->vendor = gpu_desc->vendor;
     driver_info->device = gpu_desc->device;
-    driver_info->description = gpu_desc->description;
+    wined3d_copy_name(driver_info->description, gpu_desc->description, ARRAY_SIZE(driver_info->description));
     driver_info->vram_bytes = vram_bytes ? vram_bytes : (UINT64)gpu_desc->vidmem * 1024 * 1024;
     driver = gpu_desc->driver;
 

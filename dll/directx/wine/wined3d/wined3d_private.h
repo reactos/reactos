@@ -2684,12 +2684,15 @@ const struct wined3d_gpu_description *wined3d_get_user_override_gpu_description(
 enum wined3d_pci_device wined3d_gpu_from_feature_level(enum wined3d_pci_vendor *vendor,
         enum wined3d_feature_level feature_level) DECLSPEC_HIDDEN;
 
+/* 512 in Direct3D 8/9, 128 in DXGI. */
+#define WINED3D_MAX_DEVICE_IDENTIFIER_LENGTH 512
+
 struct wined3d_driver_info
 {
     enum wined3d_pci_vendor vendor;
     enum wined3d_pci_device device;
     const char *name;
-    const char *description;
+    char description[WINED3D_MAX_DEVICE_IDENTIFIER_LENGTH];
     UINT64 vram_bytes;
     UINT64 sysmem_bytes;
     DWORD version_high;

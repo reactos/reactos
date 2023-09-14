@@ -618,34 +618,53 @@ static VkPhysicalDevice get_vulkan_physical_device(struct wined3d_vk_info *vk_in
     return physical_devices[0];
 }
 
-const struct wined3d_gpu_description *get_vulkan_gpu_description(const VkPhysicalDeviceProperties *properties)
+static enum wined3d_display_driver guess_display_driver(enum wined3d_pci_vendor vendor)
 {
-    const struct wined3d_gpu_description *description;
+    switch (vendor)
+    {
+        case HW_VENDOR_AMD:    return DRIVER_AMD_RX;
+        case HW_VENDOR_INTEL:  return DRIVER_INTEL_HD4000;
+        case HW_VENDOR_NVIDIA: return DRIVER_NVIDIA_GEFORCE8;
+        default:               return DRIVER_WINE;
+    }
+}
+
+static void adapter_vk_init_driver_info(struct wined3d_adapter *adapter,
+        const VkPhysicalDeviceProperties *properties)
+{
+    const struct wined3d_gpu_description *gpu_description;
+    struct wined3d_gpu_description description;
 
     TRACE("Device name: %s.\n", debugstr_a(properties->deviceName));
     TRACE("Vendor ID: 0x%04x, Device ID: 0x%04x.\n", properties->vendorID, properties->deviceID);
     TRACE("Driver version: %#x.\n", properties->driverVersion);
     TRACE("API version: %s.\n", debug_vk_version(properties->apiVersion));
 
-    if (!(description = wined3d_get_user_override_gpu_description(properties->vendorID, properties->deviceID)))
-        description = wined3d_get_gpu_description(properties->vendorID, properties->deviceID);
+    if (!(gpu_description = wined3d_get_user_override_gpu_description(properties->vendorID, properties->deviceID)))
+        gpu_description = wined3d_get_gpu_description(properties->vendorID, properties->deviceID);
 
-    if (!description)
+    /* FIXME: Get vidmem from Vulkan. */
+    if (!gpu_description)
     {
         FIXME("Failed to retrieve GPU description for device %s %04x:%04x.\n",
                 debugstr_a(properties->deviceName), properties->vendorID, properties->deviceID);
 
-        description = wined3d_get_gpu_description(HW_VENDOR_AMD, CARD_AMD_RADEON_RX_VEGA);
+        description.vendor = properties->vendorID;
+        description.device = properties->deviceID;
+        description.description = properties->deviceName;
+        description.driver = guess_display_driver(properties->vendorID);
+        description.vidmem = 0;
+
+        gpu_description = &description;
     }
 
-    return description;
+    wined3d_driver_info_init(&adapter->driver_info, gpu_description, wined3d_settings.emulated_textureram);
 }
 
 static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
         unsigned int ordinal, unsigned int wined3d_creation_flags)
 {
     struct wined3d_vk_info *vk_info = &adapter_vk->vk_info;
-    const struct wined3d_gpu_description *gpu_description;
     struct wined3d_adapter *adapter = &adapter_vk->a;
     VkPhysicalDeviceIDProperties id_properties;
     VkPhysicalDeviceProperties2 properties2;
@@ -676,12 +695,7 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
         VK_CALL(vkGetPhysicalDeviceProperties(adapter_vk->physical_device, &properties2.properties));
     adapter_vk->device_limits = properties2.properties.limits;
 
-    if (!(gpu_description = get_vulkan_gpu_description(&properties2.properties)))
-    {
-        ERR("Failed to get GPU description.\n");
-        goto fail_vulkan;
-    }
-    wined3d_driver_info_init(&adapter->driver_info, gpu_description, wined3d_settings.emulated_textureram);
+    adapter_vk_init_driver_info(adapter, &properties2.properties);
 
     memcpy(&adapter->driver_uuid, id_properties.driverUUID, sizeof(adapter->driver_uuid));
     memcpy(&adapter->device_uuid, id_properties.deviceUUID, sizeof(adapter->device_uuid));
