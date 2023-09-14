@@ -27,6 +27,7 @@
 #include "winuser.h"
 #include "winreg.h"
 #include "initguid.h"
+#include "devguid.h"
 #include "devpkey.h"
 #include "setupapi.h"
 #include "cfgmgr32.h"
@@ -1500,7 +1501,7 @@ static void test_registry_property_a(void)
 {
     static const CHAR bogus[] = "System\\CurrentControlSet\\Enum\\Root\\LEGACY_BOGUS";
     SP_DEVINFO_DATA device = {sizeof(device)};
-    CHAR buf[6] = "";
+    CHAR buf[64] = "";
     DWORD size, type;
     HDEVINFO set;
     BOOL ret;
@@ -1594,13 +1595,69 @@ todo_wine {
 
     res = RegOpenKeyA(HKEY_LOCAL_MACHINE, bogus, &key);
     ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
+
+    /* Test existing registry properties right after device creation */
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+
+    /* Create device from a not registered class without device name */
+    ret = SetupDiCreateDeviceInfoA(set, "LEGACY_BOGUS", &guid, NULL, NULL, DICD_GENERATE_ID, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    /* No SPDRP_DEVICEDESC property */
+    SetLastError(0xdeadbeef);
+    ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_DEVICEDESC, NULL, (BYTE *)buf, sizeof(buf), NULL);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA, "Got unexpected error %#x.\n", GetLastError());
+
+    /* No SPDRP_CLASS property */
+    SetLastError(0xdeadbeef);
+    ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_CLASS, NULL, (BYTE *)buf, sizeof(buf), NULL);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA, "Got unexpected error %#x.\n", GetLastError());
+
+    /* Have SPDRP_CLASSGUID property */
+    memset(buf, 0, sizeof(buf));
+    ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_CLASSGUID, NULL, (BYTE *)buf, sizeof(buf), NULL);
+    ok(ret, "Failed to get property, error %#x.\n", GetLastError());
+    ok(!lstrcmpiA(buf, "{6a55b5a4-3f65-11db-b704-0011955c2bdb}"), "Got unexpected value %s.\n", buf);
+
+    ret = SetupDiDeleteDeviceInfo(set, &device);
+    ok(ret, "Failed to delete device, error %#x.\n", GetLastError());
+
+    /* Create device from a not registered class with a device name */
+    ret = SetupDiCreateDeviceInfoA(set, "LEGACY_BOGUS", &guid, "device_name", NULL, DICD_GENERATE_ID, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    /* Have SPDRP_DEVICEDESC property */
+    memset(buf, 0, sizeof(buf));
+    ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_DEVICEDESC, NULL, (BYTE *)buf, sizeof(buf), NULL);
+    ok(ret, "Failed to get property, error %#x.\n", GetLastError());
+    ok(!lstrcmpA(buf, "device_name"), "Got unexpected value %s.\n", buf);
+
+    SetupDiDestroyDeviceInfoList(set);
+
+    /* Create device from a registered class */
+    set = SetupDiCreateDeviceInfoList(&GUID_DEVCLASS_DISPLAY, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+
+    ret = SetupDiCreateDeviceInfoA(set, "display", &GUID_DEVCLASS_DISPLAY, NULL, NULL, DICD_GENERATE_ID, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    /* Have SPDRP_CLASS property */
+    memset(buf, 0, sizeof(buf));
+    ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_CLASS, NULL, (BYTE *)buf, sizeof(buf), NULL);
+    todo_wine ok(ret, "Failed to get property, error %#x.\n", GetLastError());
+    todo_wine ok(!lstrcmpA(buf, "Display"), "Got unexpected value %s.\n", buf);
+
+    SetupDiDestroyDeviceInfoList(set);
 }
 
 static void test_registry_property_w(void)
 {
     WCHAR friendly_name[] = {'B','o','g','u','s',0};
     SP_DEVINFO_DATA device = {sizeof(device)};
-    WCHAR buf[6] = {0};
+    WCHAR buf[64] = {0};
     DWORD size, type;
     HDEVINFO set;
     BOOL ret;
@@ -1698,6 +1755,62 @@ todo_wine {
 
     res = RegOpenKeyW(HKEY_LOCAL_MACHINE, bogus, &key);
     ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
+
+    /* Test existing registry properties right after device creation */
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+
+    /* Create device from a not registered class without device name */
+    ret = SetupDiCreateDeviceInfoW(set, L"LEGACY_BOGUS", &guid, NULL, NULL, DICD_GENERATE_ID, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    /* No SPDRP_DEVICEDESC property */
+    SetLastError(0xdeadbeef);
+    ret = SetupDiGetDeviceRegistryPropertyW(set, &device, SPDRP_DEVICEDESC, NULL, (BYTE *)buf, sizeof(buf), NULL);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA, "Got unexpected error %#x.\n", GetLastError());
+
+    /* No SPDRP_CLASS property */
+    SetLastError(0xdeadbeef);
+    ret = SetupDiGetDeviceRegistryPropertyW(set, &device, SPDRP_CLASS, NULL, (BYTE *)buf, sizeof(buf), NULL);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA, "Got unexpected error %#x.\n", GetLastError());
+
+    /* Have SPDRP_CLASSGUID property */
+    memset(buf, 0, sizeof(buf));
+    ret = SetupDiGetDeviceRegistryPropertyW(set, &device, SPDRP_CLASSGUID, NULL, (BYTE *)buf, sizeof(buf), NULL);
+    ok(ret, "Failed to get property, error %#x.\n", GetLastError());
+    ok(!lstrcmpiW(buf, L"{6a55b5a4-3f65-11db-b704-0011955c2bdb}"), "Got unexpected value %s.\n", wine_dbgstr_w(buf));
+
+    ret = SetupDiDeleteDeviceInfo(set, &device);
+    ok(ret, "Failed to delete device, error %#x.\n", GetLastError());
+
+    /* Create device from a not registered class with a device name */
+    ret = SetupDiCreateDeviceInfoW(set, L"LEGACY_BOGUS", &guid, L"device_name", NULL, DICD_GENERATE_ID, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    /* Have SPDRP_DEVICEDESC property */
+    memset(buf, 0, sizeof(buf));
+    ret = SetupDiGetDeviceRegistryPropertyW(set, &device, SPDRP_DEVICEDESC, NULL, (BYTE *)buf, sizeof(buf), NULL);
+    ok(ret, "Failed to get property, error %#x.\n", GetLastError());
+    ok(!lstrcmpW(buf, L"device_name"), "Got unexpected value %s.\n", wine_dbgstr_w(buf));
+
+    SetupDiDestroyDeviceInfoList(set);
+
+    /* Create device from a registered class */
+    set = SetupDiCreateDeviceInfoList(&GUID_DEVCLASS_DISPLAY, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+
+    ret = SetupDiCreateDeviceInfoW(set, L"display", &GUID_DEVCLASS_DISPLAY, NULL, NULL, DICD_GENERATE_ID, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    /* Have SPDRP_CLASS property */
+    memset(buf, 0, sizeof(buf));
+    ret = SetupDiGetDeviceRegistryPropertyW(set, &device, SPDRP_CLASS, NULL, (BYTE *)buf, sizeof(buf), NULL);
+    todo_wine ok(ret, "Failed to get property, error %#x.\n", GetLastError());
+    todo_wine ok(!lstrcmpW(buf, L"Display"), "Got unexpected value %s.\n", wine_dbgstr_w(buf));
+
+    SetupDiDestroyDeviceInfoList(set);
 }
 
 static void test_get_inf_class(void)
