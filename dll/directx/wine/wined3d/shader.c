@@ -3730,7 +3730,7 @@ static HRESULT geometry_shader_init(struct wined3d_shader *shader, struct wined3
         const struct wined3d_shader_desc *desc, const struct wined3d_stream_output_desc *so_desc,
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
-    struct wined3d_stream_output_element *elements = NULL;
+    struct wined3d_stream_output_element *elements;
     enum wined3d_shader_type shader_type;
     HRESULT hr;
 
@@ -3748,17 +3748,17 @@ static HRESULT geometry_shader_init(struct wined3d_shader *shader, struct wined3
         }
     }
 
-    if (so_desc && !(elements = heap_calloc(so_desc->element_count, sizeof(*elements))))
-        return E_OUTOFMEMORY;
-
     if (FAILED(hr = shader_init(shader, device, desc, 0, WINED3D_SHADER_TYPE_GEOMETRY, parent, parent_ops)))
-    {
-        heap_free(elements);
         return hr;
-    }
 
     if (so_desc)
     {
+        if (!(elements = heap_calloc(so_desc->element_count, sizeof(*elements))))
+        {
+            shader_cleanup(shader);
+            return E_OUTOFMEMORY;
+        }
+
         shader->u.gs.so_desc = *so_desc;
         shader->u.gs.so_desc.elements = elements;
         memcpy(elements, so_desc->elements, so_desc->element_count * sizeof(*elements));
