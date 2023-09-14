@@ -1231,7 +1231,7 @@ success:
 
 static BOOL wined3d_context_gl_set_gl_context(struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_swapchain *swapchain = context_gl->c.swapchain;
+    struct wined3d_swapchain_gl *swapchain_gl = wined3d_swapchain_gl(context_gl->c.swapchain);
     BOOL backup = FALSE;
 
     if (!wined3d_context_gl_set_pixel_format(context_gl))
@@ -1252,14 +1252,14 @@ static BOOL wined3d_context_gl_set_gl_context(struct wined3d_context_gl *context
          * a swapchain, so we can't use the swapchain to get a backup dc. To
          * make this work windowless contexts would need to be handled by the
          * device. */
-        if (context_gl->c.destroyed || !swapchain)
+        if (context_gl->c.destroyed || !swapchain_gl)
         {
             FIXME("Unable to get backup dc for destroyed context %p.\n", context_gl);
             wined3d_context_gl_set_current(NULL);
             return FALSE;
         }
 
-        if (!(context_gl->dc = swapchain_get_backup_dc(swapchain)))
+        if (!(context_gl->dc = wined3d_swapchain_gl_get_backup_dc(swapchain_gl)))
         {
             wined3d_context_gl_set_current(NULL);
             return FALSE;
@@ -1968,7 +1968,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
 
     if (!context_gl->dc)
     {
-        if (!(context_gl->dc = swapchain_get_backup_dc(context->swapchain)))
+        if (!(context_gl->dc = wined3d_swapchain_gl_get_backup_dc(wined3d_swapchain_gl(context->swapchain))))
         {
             ERR("Failed to retrieve a device context.\n");
             return E_FAIL;
