@@ -4709,10 +4709,10 @@ static void draw_primitive_immediate_mode(struct wined3d_context_gl *context_gl,
     checkGLcall("draw immediate mode");
 }
 
-static void draw_indirect(struct wined3d_context *context, const struct wined3d_state *state,
+static void wined3d_context_gl_draw_indirect(struct wined3d_context_gl *context_gl, const struct wined3d_state *state,
         const struct wined3d_indirect_draw_parameters *parameters, unsigned int idx_size)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_buffer *buffer = parameters->buffer;
     const void *offset;
 
@@ -4977,7 +4977,7 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
     if (parameters->indirect)
     {
         if (!context->use_immediate_mode_draw && !emulation)
-            draw_indirect(context, state, &parameters->u.indirect, idx_size);
+            wined3d_context_gl_draw_indirect(context_gl, state, &parameters->u.indirect, idx_size);
         else
             FIXME("Indirect draws with immediate mode/emulation are not supported.\n");
     }
