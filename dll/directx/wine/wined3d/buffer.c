@@ -857,10 +857,14 @@ void wined3d_buffer_load(struct wined3d_buffer *buffer, struct wined3d_context *
 
     TRACE("buffer %p.\n", buffer);
 
-    if (buffer->resource.map_count)
+    if (buffer->resource.map_count && buffer->map_ptr)
     {
-        WARN("Buffer is mapped, skipping preload.\n");
+        FIXME("Buffer is mapped through buffer object, not loading.\n");
         return;
+    }
+    else if (buffer->resource.map_count)
+    {
+        WARN("Loading mapped buffer.\n");
     }
 
     buffer_mark_used(buffer);
