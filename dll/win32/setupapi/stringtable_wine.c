@@ -404,7 +404,7 @@ DWORD WINAPI StringTableAddStringEx(HSTRING_TABLE hTable, LPWSTR string,
     len = sizeof(DWORD) + (lstrlenW(string)+1)*sizeof(WCHAR) + table->max_extra_size;
     if (table->nextoffset + len >= table->allocated) {
         table->allocated <<= 1;
-        table->data = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, table->data, table->allocated);
+        table->data = _recalloc(table->data, 1, table->allocated);
     }
 
     /* hash string */
