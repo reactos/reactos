@@ -1444,9 +1444,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
             }
         }
 
-        if (context->blit_vbo)
-            GL_EXTCALL(glDeleteBuffers(1, &context->blit_vbo));
-
         checkGLcall("context cleanup");
     }
 
@@ -1493,6 +1490,9 @@ void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
     {
         if (context_gl->dummy_arbfp_prog)
             GL_EXTCALL(glDeleteProgramsARB(1, &context_gl->dummy_arbfp_prog));
+
+        if (context_gl->blit_vbo)
+            GL_EXTCALL(glDeleteBuffers(1, &context_gl->blit_vbo));
 
         checkGLcall("context cleanup");
     }
@@ -5630,9 +5630,9 @@ void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_te
     /* Draw a quad. */
     if (gl_info->supported[ARB_VERTEX_BUFFER_OBJECT])
     {
-        if (!context->blit_vbo)
-            GL_EXTCALL(glGenBuffers(1, &context->blit_vbo));
-        GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, context->blit_vbo));
+        if (!context_gl->blit_vbo)
+            GL_EXTCALL(glGenBuffers(1, &context_gl->blit_vbo));
+        GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, context_gl->blit_vbo));
 
         context_unload_vertex_data(context);
         context_unload_numbered_arrays(context);

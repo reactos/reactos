@@ -2020,8 +2020,6 @@ struct wined3d_context
     struct wined3d_fence *buffer_fences[MAX_ATTRIBS];
     unsigned int buffer_fence_count;
 
-    GLuint blit_vbo;
-
     unsigned int viewport_count;
     unsigned int scissor_rect_count;
 };
@@ -2039,6 +2037,8 @@ struct wined3d_context_gl
     uint32_t padding : 31;
 
     GLenum *texture_type;
+
+    GLuint blit_vbo;
 
     unsigned int tex_unit_map[WINED3D_MAX_COMBINED_SAMPLERS];
     unsigned int rev_tex_unit_map[MAX_GL_FRAGMENT_SAMPLERS + WINED3D_MAX_VERTEX_SAMPLERS];
