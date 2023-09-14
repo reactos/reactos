@@ -2574,10 +2574,12 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
     src_swapchain = src_texture->swapchain;
     dst_swapchain = dst_texture->swapchain;
 
-    /* TODO: We could support cross-swapchain blits by first downloading the
-     * source to a texture. */
-    if (src_swapchain && dst_swapchain && src_swapchain != dst_swapchain)
+    if (src_swapchain && dst_swapchain && src_swapchain != dst_swapchain
+            && (wined3d_settings.offscreen_rendering_mode != ORM_FBO
+            || src_texture == src_swapchain->front_buffer))
     {
+        /* TODO: We could support cross-swapchain blits by first downloading
+         * the source to a texture. */
         FIXME("Cross-swapchain blit not supported.\n");
         return WINED3DERR_INVALIDCALL;
     }
