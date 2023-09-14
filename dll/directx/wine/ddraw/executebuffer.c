@@ -309,21 +309,11 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer, struct d3d
                         case D3DPROCESSVERTICES_TRANSFORM:
                             wined3d_device_set_stream_source(device->wined3d_device, 0,
                                     buffer->src_vertex_buffer, buffer->src_vertex_pos, sizeof(D3DVERTEX));
-                            if (op == D3DPROCESSVERTICES_TRANSFORMLIGHT)
-                            {
-                                wined3d_device_set_vertex_declaration(device->wined3d_device,
-                                        ddraw_find_decl(device->ddraw, D3DFVF_VERTEX));
-                                wined3d_device_set_render_state(device->wined3d_device,
-                                        WINED3D_RS_LIGHTING, TRUE);
-                            }
-                            else
-                            {
-                                wined3d_device_set_vertex_declaration(device->wined3d_device,
-                                        ddraw_find_decl(device->ddraw, D3DFVF_LVERTEX));
-                                wined3d_device_set_render_state(device->wined3d_device,
-                                        WINED3D_RS_LIGHTING, FALSE);
-                            }
-
+                            wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_LIGHTING,
+                                    op == D3DPROCESSVERTICES_TRANSFORMLIGHT && !!device->material);
+                            wined3d_device_set_vertex_declaration(device->wined3d_device,
+                                    ddraw_find_decl(device->ddraw, op == D3DPROCESSVERTICES_TRANSFORMLIGHT
+                                    ? D3DFVF_VERTEX : D3DFVF_LVERTEX));
                             wined3d_device_process_vertices(device->wined3d_device, ci->wStart, ci->wDest,
                                     ci->dwCount, buffer->dst_vertex_buffer, NULL, 0, D3DFVF_TLVERTEX);
                             break;
