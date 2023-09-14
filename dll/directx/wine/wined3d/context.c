@@ -1152,19 +1152,18 @@ static BOOL wined3d_context_gl_restore_pixel_format(struct wined3d_context_gl *c
     return ret;
 }
 
-static BOOL context_set_pixel_format(struct wined3d_context *context)
+static BOOL wined3d_context_gl_set_pixel_format(struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    BOOL private = context->hdc_is_private;
-    int format = context->pixel_format;
-    HDC dc = context->hdc;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    BOOL private = context_gl->c.hdc_is_private;
+    int format = context_gl->c.pixel_format;
+    HDC dc = context_gl->c.hdc;
     int current;
 
-    if (private && context->hdc_has_format)
+    if (private && context_gl->c.hdc_has_format)
         return TRUE;
 
-    if (!private && WindowFromDC(dc) != context->win_handle)
+    if (!private && WindowFromDC(dc) != context_gl->c.win_handle)
         return FALSE;
 
     current = gl_info->gl_ops.wgl.p_wglGetPixelFormat(dc);
@@ -1180,8 +1179,8 @@ static BOOL context_set_pixel_format(struct wined3d_context *context)
             return FALSE;
         }
 
-        context->restore_pf = 0;
-        context->restore_pf_win = private ? NULL : WindowFromDC(dc);
+        context_gl->c.restore_pf = 0;
+        context_gl->c.restore_pf_win = private ? NULL : WindowFromDC(dc);
         goto success;
     }
 
@@ -1201,12 +1200,12 @@ static BOOL context_set_pixel_format(struct wined3d_context *context)
         }
 
         win = private ? NULL : WindowFromDC(dc);
-        if (win != context->restore_pf_win)
+        if (win != context_gl->c.restore_pf_win)
         {
             wined3d_context_gl_restore_pixel_format(context_gl);
 
-            context->restore_pf = private ? 0 : current;
-            context->restore_pf_win = win;
+            context_gl->c.restore_pf = private ? 0 : current;
+            context_gl->c.restore_pf_win = win;
         }
 
         goto success;
@@ -1222,16 +1221,17 @@ static BOOL context_set_pixel_format(struct wined3d_context *context)
 
 success:
     if (private)
-        context->hdc_has_format = TRUE;
+        context_gl->c.hdc_has_format = TRUE;
     return TRUE;
 }
 
 static BOOL context_set_gl_context(struct wined3d_context *ctx)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(ctx);
     struct wined3d_swapchain *swapchain = ctx->swapchain;
     BOOL backup = FALSE;
 
-    if (!context_set_pixel_format(ctx))
+    if (!wined3d_context_gl_set_pixel_format(context_gl))
     {
         WARN("Failed to set pixel format %d on device context %p.\n",
                 ctx->pixel_format, ctx->hdc);
@@ -1265,7 +1265,7 @@ static BOOL context_set_gl_context(struct wined3d_context *ctx)
         ctx->hdc_is_private = TRUE;
         ctx->hdc_has_format = FALSE;
 
-        if (!context_set_pixel_format(ctx))
+        if (!wined3d_context_gl_set_pixel_format(context_gl))
         {
             ERR("Failed to set pixel format %d on device context %p.\n",
                     ctx->pixel_format, ctx->hdc);
@@ -2113,7 +2113,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
 
     context_enter(context);
 
-    if (!context_set_pixel_format(context))
+    if (!wined3d_context_gl_set_pixel_format(context_gl))
     {
         ERR("Failed to set pixel format %d on device context %p.\n", context->pixel_format, context->hdc);
         context_release(context);
