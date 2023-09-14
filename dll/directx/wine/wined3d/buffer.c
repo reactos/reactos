@@ -1398,9 +1398,6 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
     buffer->bind_flags = bind_flags;
     buffer->locations = data ? WINED3D_LOCATION_DISCARDED : WINED3D_LOCATION_SYSMEM;
 
-    if (!wined3d_resource_allocate_sysmem(&buffer->resource))
-        return E_OUTOFMEMORY;
-
     TRACE("buffer %p, size %#x, usage %#x, format %s, memory @ %p.\n",
             buffer, buffer->resource.size, buffer->resource.usage,
             debug_d3dformat(buffer->resource.format->id), buffer->resource.heap_memory);
@@ -1413,6 +1410,7 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
          * the buffer to provide the same behavior to the application. */
         TRACE("Pinning system memory.\n");
         buffer->flags |= WINED3D_BUFFER_PIN_SYSMEM;
+        buffer->locations = WINED3D_LOCATION_SYSMEM;
     }
 
     /* Observations show that draw_primitive_immediate_mode() is faster on
@@ -1435,6 +1433,12 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
     else
     {
         buffer->flags |= WINED3D_BUFFER_USE_BO;
+    }
+
+    if (buffer->locations & WINED3D_LOCATION_SYSMEM || !(buffer->flags & WINED3D_BUFFER_USE_BO))
+    {
+        if (!wined3d_resource_allocate_sysmem(&buffer->resource))
+            return E_OUTOFMEMORY;
     }
 
     if (!(buffer->maps = heap_alloc(sizeof(*buffer->maps))))
