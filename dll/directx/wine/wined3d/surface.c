@@ -1824,7 +1824,7 @@ BOOL texture2d_load_renderbuffer(struct wined3d_texture *texture, unsigned int s
 
     sub_resource = &texture->sub_resources[sub_resource_idx];
     locations = sub_resource->locations;
-    if (texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL)
+    if (texture->resource.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
     {
         FIXME("Unimplemented copy from %s for depth/stencil buffers.\n",
                 wined3d_debug_location(locations));
