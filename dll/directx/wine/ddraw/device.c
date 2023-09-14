@@ -5703,7 +5703,12 @@ static HRESULT d3d_device7_EndStateBlock(IDirect3DDevice7 *iface, DWORD *statebl
         return DDERR_INVALIDPARAMS;
 
     wined3d_mutex_lock();
-
+    if (!device->recording)
+    {
+        wined3d_mutex_unlock();
+        WARN("Trying to end a stateblock, but no stateblock is being recorded.\n");
+        return D3DERR_NOTINBEGINSTATEBLOCK;
+    }
     hr = wined3d_device_end_stateblock(device->wined3d_device, &wined3d_sb);
     if (FAILED(hr))
     {
