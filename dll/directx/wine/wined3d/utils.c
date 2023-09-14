@@ -3682,34 +3682,6 @@ static void apply_format_fixups(struct wined3d_adapter *adapter, struct wined3d_
     format->flags[WINED3D_GL_RES_TYPE_TEX_3D] &= ~WINED3DFMT_FLAG_TEXTURE;
 }
 
-static unsigned int calculate_vertex_attribute_size(GLenum type, unsigned int component_count)
-{
-    switch (type)
-    {
-        case GL_HALF_FLOAT:
-            return component_count * sizeof(GLhalfNV);
-        case GL_FLOAT:
-            return component_count * sizeof(GLfloat);
-        case GL_BYTE:
-            return component_count * sizeof(GLbyte);
-        case GL_UNSIGNED_BYTE:
-            return component_count * sizeof(GLubyte);
-        case GL_SHORT:
-            return component_count * sizeof(GLshort);
-        case GL_UNSIGNED_SHORT:
-            return component_count * sizeof(GLushort);
-        case GL_INT:
-            return component_count * sizeof(GLint);
-        case GL_UNSIGNED_INT:
-            return component_count * sizeof(GLuint);
-        case GL_UNSIGNED_INT_2_10_10_10_REV:
-            return sizeof(GLuint);
-        default:
-            FIXME("Unhandled GL type %#x.\n", type);
-            return 0;
-    }
-}
-
 static BOOL init_format_vertex_info(const struct wined3d_adapter *adapter,
         struct wined3d_gl_info *gl_info)
 {
@@ -3729,13 +3701,6 @@ static BOOL init_format_vertex_info(const struct wined3d_adapter *adapter,
         format->gl_vtx_type = format_vertex_info[i].gl_vtx_type;
         format->gl_vtx_format = format_vertex_info[i].component_count;
         format->gl_normalized = format_vertex_info[i].gl_normalized;
-        if (!(format->attribute_size = calculate_vertex_attribute_size(format->gl_vtx_type,
-                format->component_count)))
-        {
-            ERR("Invalid attribute size for vertex format %s (%#x).\n",
-                    debug_d3dformat(format_vertex_info[i].id), format_vertex_info[i].id);
-            return FALSE;
-        }
     }
 
     return TRUE;

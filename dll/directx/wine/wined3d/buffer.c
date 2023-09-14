@@ -309,7 +309,7 @@ static BOOL buffer_process_converted_attribute(struct wined3d_buffer *buffer,
     }
 
     data = ((DWORD_PTR)attrib->data.addr) % buffer->stride;
-    for (i = 0; i < format->attribute_size; ++i)
+    for (i = 0; i < format->byte_count; ++i)
     {
         DWORD_PTR idx = (data + i) % buffer->stride;
         if (buffer->conversion_map[idx] != conversion_type)
