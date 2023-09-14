@@ -2416,16 +2416,18 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
     return WINED3D_OK;
 }
 
-HRESULT CDECL wined3d_device_create(struct wined3d *wined3d, UINT adapter_idx, enum wined3d_device_type device_type,
-        HWND focus_window, DWORD flags, BYTE surface_alignment, struct wined3d_device_parent *device_parent,
-        struct wined3d_device **device)
+HRESULT CDECL wined3d_device_create(struct wined3d *wined3d, unsigned int adapter_idx,
+        enum wined3d_device_type device_type, HWND focus_window, DWORD flags, BYTE surface_alignment,
+        const enum wined3d_feature_level *feature_levels, unsigned int feature_level_count,
+        struct wined3d_device_parent *device_parent, struct wined3d_device **device)
 {
     struct wined3d_device *object;
     HRESULT hr;
 
-    TRACE("wined3d %p, adapter_idx %u, device_type %#x, focus_window %p, "
-            "flags %#x, surface_alignment %u, device_parent %p, device %p.\n",
-            wined3d, adapter_idx, device_type, focus_window, flags, surface_alignment, device_parent, device);
+    TRACE("wined3d %p, adapter_idx %u, device_type %#x, focus_window %p, flags %#x, "
+            "surface_alignment %u, feature_levels %p, feature_level_count %u, device_parent %p, device %p.\n",
+            wined3d, adapter_idx, device_type, focus_window, flags, surface_alignment,
+            feature_levels, feature_level_count, device_parent, device);
 
     if (adapter_idx >= wined3d->adapter_count)
         return WINED3DERR_INVALIDCALL;
@@ -2433,9 +2435,9 @@ HRESULT CDECL wined3d_device_create(struct wined3d *wined3d, UINT adapter_idx, e
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    hr = device_init(object, wined3d, adapter_idx, device_type,
-            focus_window, flags, surface_alignment, device_parent);
-    if (FAILED(hr))
+    if (FAILED(hr = device_init(object, wined3d, adapter_idx,
+            device_type, focus_window, flags, surface_alignment,
+            feature_levels, feature_level_count, device_parent)))
     {
         WARN("Failed to initialize device, hr %#x.\n", hr);
         heap_free(object);

@@ -3019,6 +3019,8 @@ struct wined3d_device
 
     WORD padding2 : 16;
 
+    enum wined3d_feature_level feature_level;
+
     struct wined3d_state state;
     struct wined3d_state *update_state;
     struct wined3d_stateblock *recording;
@@ -3074,7 +3076,8 @@ BOOL device_context_add(struct wined3d_device *device, struct wined3d_context *c
 void device_context_remove(struct wined3d_device *device, struct wined3d_context *context) DECLSPEC_HIDDEN;
 HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
         UINT adapter_idx, enum wined3d_device_type device_type, HWND focus_window, DWORD flags,
-        BYTE surface_alignment, struct wined3d_device_parent *device_parent) DECLSPEC_HIDDEN;
+        BYTE surface_alignment, const enum wined3d_feature_level *levels, unsigned int level_count,
+        struct wined3d_device_parent *device_parent) DECLSPEC_HIDDEN;
 LRESULT device_process_message(struct wined3d_device *device, HWND window, BOOL unicode,
         UINT message, WPARAM wparam, LPARAM lparam, WNDPROC proc) DECLSPEC_HIDDEN;
 void device_resource_add(struct wined3d_device *device, struct wined3d_resource *resource) DECLSPEC_HIDDEN;
@@ -3970,6 +3973,7 @@ const char *debug_ivec4(const struct wined3d_ivec4 *v) DECLSPEC_HIDDEN;
 const char *debug_uvec4(const struct wined3d_uvec4 *v) DECLSPEC_HIDDEN;
 const char *debug_shader_type(enum wined3d_shader_type shader_type) DECLSPEC_HIDDEN;
 const char *debug_vec4(const struct wined3d_vec4 *v) DECLSPEC_HIDDEN;
+const char *wined3d_debug_feature_level(enum wined3d_feature_level level) DECLSPEC_HIDDEN;
 void dump_color_fixup_desc(struct color_fixup_desc fixup) DECLSPEC_HIDDEN;
 
 BOOL is_invalid_op(const struct wined3d_state *state, int stage,

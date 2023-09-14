@@ -42,7 +42,7 @@
 @ cdecl wined3d_device_copy_resource(ptr ptr ptr)
 @ cdecl wined3d_device_copy_sub_resource_region(ptr ptr long long long long ptr long ptr long)
 @ cdecl wined3d_device_copy_uav_counter(ptr ptr long ptr)
-@ cdecl wined3d_device_create(ptr long long ptr long long ptr ptr)
+@ cdecl wined3d_device_create(ptr long long ptr long long ptr long ptr ptr)
 @ cdecl wined3d_device_decref(ptr)
 @ cdecl wined3d_device_dispatch_compute(ptr long long long)
 @ cdecl wined3d_device_dispatch_compute_indirect(ptr ptr long)

@@ -6657,6 +6657,28 @@ const char *wined3d_debug_location(DWORD location)
     return wine_dbg_sprintf("%s%s%s", prefix, buffer.str, suffix);
 }
 
+const char *wined3d_debug_feature_level(enum wined3d_feature_level level)
+{
+    switch (level)
+    {
+#define LEVEL_TO_STR(level) case level: return #level
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_5);
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_6);
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_7);
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_8);
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_9_1);
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_9_SM2);
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_9_SM3);
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_10);
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_10_1);
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_11);
+        LEVEL_TO_STR(WINED3D_FEATURE_LEVEL_11_1);
+#undef LEVEL_TO_STR
+        default:
+            return wine_dbg_sprintf("%#x", level);
+    }
+}
+
 /* Print a floating point value with the %.8e format specifier, always using
  * '.' as decimal separator. */
 void wined3d_ftoa(float value, char *s)
