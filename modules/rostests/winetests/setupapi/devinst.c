@@ -1167,7 +1167,6 @@ todo_wine {
 
     key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
     ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
-todo_wine
     ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
 
     res = RegOpenKeyA(HKEY_LOCAL_MACHINE, params_key_path, &key);
@@ -1196,7 +1195,6 @@ todo_wine
 
     key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
     ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
-todo_wine
     ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
 
     res = RegOpenKeyA(HKEY_LOCAL_MACHINE, params_key_path, &key);
