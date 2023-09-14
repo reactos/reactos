@@ -2667,7 +2667,7 @@ static void fixup_texture_alpha_op(struct d3d_device *device)
     /* This fixup is required by the way D3DTBLEND_MODULATE maps to texture stage states.
        See d3d_device3_SetRenderState() for details. */
     struct wined3d_texture *tex;
-    BOOL tex_alpha = FALSE;
+    BOOL tex_alpha = TRUE;
     DDPIXELFORMAT ddfmt;
 
     if (!(device->legacyTextureBlending && device->texture_map_blend == D3DTBLEND_MODULATE))
@@ -2680,8 +2680,8 @@ static void fixup_texture_alpha_op(struct d3d_device *device)
         wined3d_resource_get_desc(wined3d_texture_get_resource(tex), &desc);
         ddfmt.dwSize = sizeof(ddfmt);
         ddrawformat_from_wined3dformat(&ddfmt, desc.format);
-        if (ddfmt.u5.dwRGBAlphaBitMask)
-            tex_alpha = TRUE;
+        if (!ddfmt.u5.dwRGBAlphaBitMask)
+            tex_alpha = FALSE;
     }
 
     /* Args 1 and 2 are already set to WINED3DTA_TEXTURE/WINED3DTA_CURRENT in case of D3DTBLEND_MODULATE */
