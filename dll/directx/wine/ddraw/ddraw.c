@@ -573,6 +573,9 @@ static HRESULT ddraw_attach_d3d_device(struct ddraw *ddraw,
 
     TRACE("ddraw %p.\n", ddraw);
 
+    if (ddraw->flags & DDRAW_NO3D)
+        return wined3d_device_init_3d(ddraw->wined3d_device, swapchain_desc);
+
     if (!window || window == GetDesktopWindow())
     {
         window = CreateWindowExA(0, DDRAW_WINDOW_CLASS_NAME, "Hidden D3D Window",
@@ -598,8 +601,7 @@ static HRESULT ddraw_attach_d3d_device(struct ddraw *ddraw,
     /* Set this NOW, otherwise creating the depth stencil surface will cause a
      * recursive loop until ram or emulated video memory is full. */
     ddraw->flags |= DDRAW_D3D_INITIALIZED;
-    hr = wined3d_device_init_3d(ddraw->wined3d_device, swapchain_desc);
-    if (FAILED(hr))
+    if (FAILED(hr = wined3d_device_init_3d(ddraw->wined3d_device, swapchain_desc)))
     {
         ddraw->flags &= ~DDRAW_D3D_INITIALIZED;
         return hr;
@@ -642,12 +644,7 @@ static HRESULT ddraw_create_swapchain(struct ddraw *ddraw, HWND window, BOOL win
     swapchain_desc.windowed = windowed;
     swapchain_desc.flags = WINED3D_SWAPCHAIN_ALLOW_MODE_SWITCH;
 
-    if (!(ddraw->flags & DDRAW_NO3D))
-        hr = ddraw_attach_d3d_device(ddraw, &swapchain_desc);
-    else
-        hr = wined3d_device_init_gdi(ddraw->wined3d_device, &swapchain_desc);
-
-    if (FAILED(hr))
+    if (FAILED(hr = ddraw_attach_d3d_device(ddraw, &swapchain_desc)))
     {
         ERR("Failed to create swapchain, hr %#x.\n", hr);
         return hr;
