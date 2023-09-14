@@ -1903,6 +1903,7 @@ static void test_need_media(void)
     queue = SetupOpenFileQueue();
     ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
     copy_params.LayoutInf = hinf;
+    copy_params.QueueHandle = queue;
     /* In fact this fails with ERROR_INVALID_PARAMETER on 8+. */
     if (SetupQueueCopyIndirectA(&copy_params))
     {
