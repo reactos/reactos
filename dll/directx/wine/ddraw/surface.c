@@ -6217,7 +6217,9 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
             /* Videomemory adds localvidmem. This is mutually exclusive with
              * systemmemory and texturemanage. */
             desc->ddsCaps.dwCaps |= DDSCAPS_LOCALVIDMEM;
-            wined3d_desc.usage |= WINED3DUSAGE_DYNAMIC;
+            /* Dynamic resources can't be written by the GPU. */
+            if (!(wined3d_desc.bind_flags & (WINED3D_BIND_RENDER_TARGET | WINED3D_BIND_DEPTH_STENCIL)))
+                wined3d_desc.usage |= WINED3DUSAGE_DYNAMIC;
         }
     }
 
