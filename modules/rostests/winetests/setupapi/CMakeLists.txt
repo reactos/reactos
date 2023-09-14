@@ -36,7 +36,7 @@ set_property(SOURCE setupapi.rc PROPERTY OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_D
 
 add_executable(setupapi_winetest ${SOURCE} setupapi.rc)
 set_module_type(setupapi_winetest win32cui)
-target_link_libraries(setupapi_winetest uuid)
+target_link_libraries(setupapi_winetest uuid oldnames)
 add_importlibs(setupapi_winetest advapi32 cabinet ole32 setupapi user32 shell32 msvcrt kernel32 ntdll)
 add_rostests_file(TARGET setupapi_winetest)
 
