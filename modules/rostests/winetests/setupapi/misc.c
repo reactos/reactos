@@ -119,7 +119,6 @@ static void test_original_file_name(LPCSTR original, LPCSTR dest)
     res = pSetupQueryInfOriginalFileInformationA(pspii, 0, NULL, &spofi);
     ok(res, "SetupQueryInfOriginalFileInformationA failed with error %d\n", GetLastError());
     ok(!spofi.OriginalCatalogName[0], "spofi.OriginalCatalogName should have been \"\" instead of \"%s\"\n", spofi.OriginalCatalogName);
-    todo_wine
     ok(!strcmp(original, spofi.OriginalInfName), "spofi.OriginalInfName of %s didn't match real original name %s\n", spofi.OriginalInfName, original);
 
     HeapFree(GetProcessHeap(), 0, pspii);
@@ -230,7 +229,6 @@ static void test_SetupCopyOEMInf(void)
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     ok(file_exists(path), "Expected source inf to exist.\n");
     ok(file_exists(dest), "Expected dest file to exist.\n");
-todo_wine
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
 
     /* try SP_COPY_REPLACEONLY, dest exists */
@@ -240,7 +238,6 @@ todo_wine
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     ok(file_exists(path), "Expected source inf to exist.\n");
     ok(file_exists(dest), "Expected dest file to exist.\n");
-todo_wine
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
 
     strcpy(dest, "aaa");
@@ -269,14 +266,12 @@ todo_wine
     ok(file_exists(path), "Expected source inf to exist\n");
     ok(file_exists(orig_dest), "Expected dest inf to exist\n");
     ok(!strcmp(dest, "aaa"), "Expected dest to be unchanged\n");
-todo_wine
     ok(size == strlen(orig_dest) + 1, "Expected size %d, got %d.\n", strlen(orig_dest) + 1, size);
 
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), &size, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-todo_wine
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
     ok(size == strlen(dest) + 1, "Expected size %d, got %d.\n", strlen(dest) + 1, size);
 
@@ -286,7 +281,6 @@ todo_wine
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, &filepart);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-todo_wine
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
     ok(filepart == strrchr(dest, '\\') + 1, "Got unexpected file part %s.\n", filepart);
 
@@ -341,13 +335,11 @@ todo_wine
     strcat(orig_dest, "\\inf\\");
     strcat(orig_dest, tmpfile);
     res = CopyFileA(tmpfile, orig_dest, TRUE);
-todo_wine
     ok(res, "Failed to copy file, error %u.\n", GetLastError());
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-todo_wine
     ok(!strcasecmp(dest, orig_dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
 
     /* Since it wasn't actually installed, SetupUninstallOEMInf would fail here. */
