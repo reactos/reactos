@@ -3549,7 +3549,7 @@ static enum wined3d_texture_address wined3d_texture_gl_address_mode(const struct
 }
 
 static void wined3d_sampler_desc_from_sampler_states(struct wined3d_sampler_desc *desc,
-        const struct wined3d_context *context, const DWORD *sampler_states,
+        const struct wined3d_context_gl *context_gl, const DWORD *sampler_states,
         const struct wined3d_texture_gl *texture_gl)
 {
     union
@@ -3600,7 +3600,7 @@ static void wined3d_sampler_desc_from_sampler_states(struct wined3d_sampler_desc
     if (texture_gl->t.flags & WINED3D_TEXTURE_COND_NP2)
     {
         desc->mip_filter = WINED3D_TEXF_NONE;
-        if (context->gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT])
+        if (context_gl->c.gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT])
             desc->min_filter = WINED3D_TEXF_POINT;
     }
 }
@@ -3637,7 +3637,7 @@ static void sampler(struct wined3d_context *context, const struct wined3d_state 
         struct wined3d_sampler *sampler;
         struct wine_rb_entry *entry;
 
-        wined3d_sampler_desc_from_sampler_states(&desc, context, sampler_states, texture_gl);
+        wined3d_sampler_desc_from_sampler_states(&desc, context_gl, sampler_states, texture_gl);
 
         wined3d_texture_gl_bind(texture_gl, context_gl, srgb);
 
