@@ -926,7 +926,7 @@ static LONG fullscreen_exstyle(LONG exstyle)
     return exstyle;
 }
 
-HRESULT CDECL wined3d_device_setup_fullscreen_window(struct wined3d_device *device,
+HRESULT wined3d_device_setup_fullscreen_window(struct wined3d_device *device,
         HWND window, unsigned int w, unsigned int h)
 {
     BOOL filter_messages;
@@ -967,8 +967,8 @@ HRESULT CDECL wined3d_device_setup_fullscreen_window(struct wined3d_device *devi
     return WINED3D_OK;
 }
 
-void CDECL wined3d_device_restore_fullscreen_window(struct wined3d_device *device, HWND window,
-        const RECT *window_rect)
+void wined3d_device_restore_fullscreen_window(struct wined3d_device *device,
+        HWND window, const RECT *window_rect)
 {
     unsigned int window_pos_flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOACTIVATE;
     BOOL filter_messages;

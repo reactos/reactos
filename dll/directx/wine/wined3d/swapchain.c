@@ -79,17 +79,24 @@ static void swapchain_cleanup(struct wined3d_swapchain *swapchain)
      * desktop resolution. In case of d3d7 this will be a NOP because ddraw
      * sets the resolution before starting up Direct3D, thus orig_width and
      * orig_height will be equal to the modes in the presentation params. */
-    if (!swapchain->desc.windowed && swapchain->desc.auto_restore_display_mode)
+    if (!swapchain->desc.windowed)
     {
-        if (FAILED(hr = wined3d_set_adapter_display_mode(swapchain->device->wined3d,
-                swapchain->device->adapter->ordinal, &swapchain->original_mode)))
-            ERR("Failed to restore display mode, hr %#x.\n", hr);
-
-        if (swapchain->desc.flags & WINED3D_SWAPCHAIN_RESTORE_WINDOW_RECT)
+        if (swapchain->desc.auto_restore_display_mode)
         {
-            wined3d_device_restore_fullscreen_window(swapchain->device, swapchain->device_window,
-                    &swapchain->original_window_rect);
-            wined3d_device_release_focus_window(swapchain->device);
+            if (FAILED(hr = wined3d_set_adapter_display_mode(swapchain->device->wined3d,
+                    swapchain->device->adapter->ordinal, &swapchain->original_mode)))
+                ERR("Failed to restore display mode, hr %#x.\n", hr);
+
+            if (swapchain->desc.flags & WINED3D_SWAPCHAIN_RESTORE_WINDOW_RECT)
+            {
+                wined3d_device_restore_fullscreen_window(swapchain->device, swapchain->device_window,
+                        &swapchain->original_window_rect);
+                wined3d_device_release_focus_window(swapchain->device);
+            }
+        }
+        else
+        {
+            wined3d_device_restore_fullscreen_window(swapchain->device, swapchain->device_window, NULL);
         }
     }
 
@@ -810,6 +817,10 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
             desc->backbuffer_format = swapchain->original_mode.format_id;
             TRACE("Updating format to %s.\n", debug_d3dformat(swapchain->original_mode.format_id));
         }
+    }
+    else
+    {
+        wined3d_device_setup_fullscreen_window(device, window, desc->backbuffer_width, desc->backbuffer_height);
     }
     swapchain->desc = *desc;
     wined3d_swapchain_apply_sample_count_override(swapchain, swapchain->desc.backbuffer_format,

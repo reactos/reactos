@@ -2403,8 +2403,6 @@ void __cdecl wined3d_device_resolve_sub_resource(struct wined3d_device *device,
         struct wined3d_resource *dst_resource, unsigned int dst_sub_resource_idx,
         struct wined3d_resource *src_resource, unsigned int src_sub_resource_idx,
         enum wined3d_format_id format_id);
-void __cdecl wined3d_device_restore_fullscreen_window(struct wined3d_device *device, HWND window,
-        const RECT *window_rect);
 void __cdecl wined3d_device_set_base_vertex_index(struct wined3d_device *device, INT base_index);
 void __cdecl wined3d_device_set_blend_state(struct wined3d_device *device, struct wined3d_blend_state *blend_state,
         const struct wined3d_color *blend_factor);
@@ -2504,8 +2502,6 @@ HRESULT __cdecl wined3d_device_set_vs_consts_i(struct wined3d_device *device,
 void __cdecl wined3d_device_set_vs_resource_view(struct wined3d_device *device,
         UINT idx, struct wined3d_shader_resource_view *view);
 void __cdecl wined3d_device_set_vs_sampler(struct wined3d_device *device, UINT idx, struct wined3d_sampler *sampler);
-HRESULT __cdecl wined3d_device_setup_fullscreen_window(struct wined3d_device *device,
-        HWND window, unsigned int w, unsigned int h);
 BOOL __cdecl wined3d_device_show_cursor(struct wined3d_device *device, BOOL show);
 void __cdecl wined3d_device_update_sub_resource(struct wined3d_device *device, struct wined3d_resource *resource,
         unsigned int sub_resource_idx, const struct wined3d_box *box, const void *data, unsigned int row_pitch,
