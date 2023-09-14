@@ -4347,15 +4347,15 @@ void dispatch_compute(struct wined3d_device *device, const struct wined3d_state 
 }
 
 /* Context activation is done by the caller. */
-static void draw_primitive_arrays(struct wined3d_context *context, const struct wined3d_state *state,
-        const void *idx_data, unsigned int idx_size, int base_vertex_idx, unsigned int start_idx,
-        unsigned int count, unsigned int start_instance, unsigned int instance_count)
+static void wined3d_context_gl_draw_primitive_arrays(struct wined3d_context_gl *context_gl,
+        const struct wined3d_state *state, const void *idx_data, unsigned int idx_size, int base_vertex_idx,
+        unsigned int start_idx, unsigned int count, unsigned int start_instance, unsigned int instance_count)
 {
-    const struct wined3d_ffp_attrib_ops *ops = &context->d3d_info->ffp_attrib_ops;
+    const struct wined3d_ffp_attrib_ops *ops = &context_gl->c.d3d_info->ffp_attrib_ops;
     GLenum idx_type = idx_size == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT;
-    const struct wined3d_stream_info *si = &context->stream_info;
+    const struct wined3d_stream_info *si = &context_gl->c.stream_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     unsigned int instanced_elements[ARRAY_SIZE(si->elements)];
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     unsigned int instanced_element_count = 0;
     GLenum mode = state->gl_primitive_type;
     const void *indices;
@@ -4460,7 +4460,8 @@ static void draw_primitive_arrays(struct wined3d_context *context, const struct 
             element = &si->elements[element_idx];
             ptr = element->data.addr + element->stride * i;
             if (element->data.buffer_object)
-                ptr += (ULONG_PTR)wined3d_buffer_load_sysmem(state->streams[element->stream_idx].buffer, context);
+                ptr += (ULONG_PTR)wined3d_buffer_load_sysmem(state->streams[element->stream_idx].buffer,
+                        &context_gl->c);
             ops->generic[element->format->emit_idx](element_idx, ptr);
         }
 
@@ -4991,9 +4992,9 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
                     idx_size, parameters->u.direct.base_vertex_idx,
                     parameters->u.direct.start_idx, parameters->u.direct.index_count, instance_count);
         else
-            draw_primitive_arrays(context, state, idx_data, idx_size, parameters->u.direct.base_vertex_idx,
-                    parameters->u.direct.start_idx, parameters->u.direct.index_count,
-                    parameters->u.direct.start_instance, instance_count);
+            wined3d_context_gl_draw_primitive_arrays(context_gl, state, idx_data, idx_size,
+                    parameters->u.direct.base_vertex_idx, parameters->u.direct.start_idx,
+                    parameters->u.direct.index_count, parameters->u.direct.start_instance, instance_count);
     }
 
     if (context->uses_uavs)
