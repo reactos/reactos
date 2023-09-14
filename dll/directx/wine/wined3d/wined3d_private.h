@@ -1740,9 +1740,9 @@ struct wined3d_fence
 
 HRESULT wined3d_fence_create(struct wined3d_device *device, struct wined3d_fence **fence) DECLSPEC_HIDDEN;
 void wined3d_fence_destroy(struct wined3d_fence *fence) DECLSPEC_HIDDEN;
-void wined3d_fence_issue(struct wined3d_fence *fence, const struct wined3d_device *device) DECLSPEC_HIDDEN;
+void wined3d_fence_issue(struct wined3d_fence *fence, struct wined3d_device *device) DECLSPEC_HIDDEN;
 enum wined3d_fence_result wined3d_fence_wait(const struct wined3d_fence *fence,
-        const struct wined3d_device *device) DECLSPEC_HIDDEN;
+        struct wined3d_device *device) DECLSPEC_HIDDEN;
 
 /* Direct3D terminology with little modifications. We do not have an issued
  * state because only the driver knows about it, but we have a created state
@@ -2064,6 +2064,8 @@ static inline const struct wined3d_context_gl *wined3d_context_gl_const(const st
     return CONTAINING_RECORD(context, struct wined3d_context_gl, c);
 }
 
+struct wined3d_context *wined3d_context_gl_acquire(const struct wined3d_device *device,
+        struct wined3d_texture *texture, unsigned int sub_resource_idx) DECLSPEC_HIDDEN;
 void wined3d_context_gl_active_texture(struct wined3d_context_gl *context_gl,
         const struct wined3d_gl_info *gl_info, unsigned int unit) DECLSPEC_HIDDEN;
 void wined3d_context_gl_alloc_fence(struct wined3d_context_gl *context_gl,
@@ -2088,7 +2090,7 @@ void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_
 void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl,
         GLenum target, GLuint name) DECLSPEC_HIDDEN;
 void wined3d_context_gl_check_fbo_status(const struct wined3d_context_gl *context_gl, GLenum target) DECLSPEC_HIDDEN;
-void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
+void wined3d_context_gl_destroy(struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
 void wined3d_context_gl_free_fence(struct wined3d_fence *fence) DECLSPEC_HIDDEN;
 void wined3d_context_gl_free_occlusion_query(struct wined3d_occlusion_query *query) DECLSPEC_HIDDEN;
 void wined3d_context_gl_free_pipeline_statistics_query(struct wined3d_pipeline_statistics_query *query) DECLSPEC_HIDDEN;
@@ -2101,6 +2103,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 void wined3d_context_gl_load_tex_coords(const struct wined3d_context_gl *context_gl,
         const struct wined3d_stream_info *si, GLuint *current_bo, const struct wined3d_state *state) DECLSPEC_HIDDEN;
+void wined3d_context_gl_release(struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
 void wined3d_context_gl_set_draw_buffer(struct wined3d_context_gl *context_gl, GLenum buffer) DECLSPEC_HIDDEN;
 void wined3d_context_gl_texture_update(struct wined3d_context_gl *context_gl,
         const struct wined3d_texture_gl *texture_gl) DECLSPEC_HIDDEN;
@@ -2239,16 +2242,12 @@ void wined3d_raw_blitter_create(struct wined3d_blitter **next,
 
 BOOL wined3d_clip_blit(const RECT *clip_rect, RECT *clipped, RECT *other) DECLSPEC_HIDDEN;
 
-struct wined3d_context *context_acquire(const struct wined3d_device *device,
-        struct wined3d_texture *texture, unsigned int sub_resource_idx) DECLSPEC_HIDDEN;
 void context_bind_bo(struct wined3d_context *context, GLenum binding, GLuint name) DECLSPEC_HIDDEN;
 void context_bind_dummy_textures(const struct wined3d_context *context) DECLSPEC_HIDDEN;
 void context_copy_bo_address(struct wined3d_context *context,
         const struct wined3d_bo_address *dst, GLenum dst_binding,
         const struct wined3d_bo_address *src, GLenum src_binding, size_t size) DECLSPEC_HIDDEN;
-struct wined3d_context *context_create(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 HGLRC context_create_wgl_attribs(const struct wined3d_gl_info *gl_info, HDC hdc, HGLRC share_ctx) DECLSPEC_HIDDEN;
-void wined3d_context_destroy(struct wined3d_context *context) DECLSPEC_HIDDEN;
 void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_texture_gl *texture_gl,
         unsigned int sub_resource_idx, const RECT *src_rect, const RECT *dst_rect,
         enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;
@@ -2265,9 +2264,8 @@ void context_invalidate_compute_state(struct wined3d_context *context, DWORD sta
 void context_invalidate_state(struct wined3d_context *context, DWORD state_id) DECLSPEC_HIDDEN;
 void *context_map_bo_address(struct wined3d_context *context, const struct wined3d_bo_address *data,
         size_t size, GLenum binding, DWORD flags) DECLSPEC_HIDDEN;
-struct wined3d_context *context_reacquire(const struct wined3d_device *device,
+struct wined3d_context *context_reacquire(struct wined3d_device *device,
         struct wined3d_context *context) DECLSPEC_HIDDEN;
-void context_release(struct wined3d_context *context) DECLSPEC_HIDDEN;
 void context_resource_released(const struct wined3d_device *device, struct wined3d_resource *resource) DECLSPEC_HIDDEN;
 void context_restore(struct wined3d_context *context, struct wined3d_texture *texture,
         unsigned int sub_resource_idx) DECLSPEC_HIDDEN;
@@ -2753,8 +2751,9 @@ struct wined3d_adapter_ops
             BYTE surface_alignment, const enum wined3d_feature_level *levels, unsigned int level_count,
             struct wined3d_device_parent *device_parent, struct wined3d_device **device);
     void (*adapter_destroy_device)(struct wined3d_device *device);
-    HRESULT (*adapter_create_context)(struct wined3d_swapchain *swapchain, struct wined3d_context **context);
-    void (*adapter_destroy_context)(struct wined3d_context *context);
+    struct wined3d_context *(*adapter_acquire_context)(struct wined3d_device *device,
+            struct wined3d_texture *texture, unsigned int sub_resource_idx);
+    void (*adapter_release_context)(struct wined3d_context *context);
     void (*adapter_get_wined3d_caps)(const struct wined3d_adapter *adapter, struct wined3d_caps *caps);
     BOOL (*adapter_check_format)(const struct wined3d_adapter *adapter,
             const struct wined3d_format *adapter_format, const struct wined3d_format *rt_format,
@@ -3277,6 +3276,19 @@ struct wined3d_gl_bo *wined3d_device_get_bo(struct wined3d_device *device, UINT 
 void wined3d_device_release_bo(struct wined3d_device *device, struct wined3d_gl_bo *bo,
         const struct wined3d_context *context) DECLSPEC_HIDDEN;
 #endif /* STAGING_CSMT */
+
+struct wined3d_device_no3d
+{
+    struct wined3d_device d;
+
+    struct wined3d_context context_no3d;
+};
+
+static inline struct wined3d_device_no3d *wined3d_device_no3d(struct wined3d_device *device)
+{
+    return CONTAINING_RECORD(device, struct wined3d_device_no3d, d);
+}
+
 
 struct wined3d_device_gl
 {
@@ -4983,6 +4995,19 @@ BOOL invert_matrix(struct wined3d_matrix *out, const struct wined3d_matrix *m) D
 
 void compute_normal_matrix(float *normal_matrix, BOOL legacy_lighting,
         const struct wined3d_matrix *modelview) DECLSPEC_HIDDEN;
+
+static inline struct wined3d_context *context_acquire(struct wined3d_device *device,
+        struct wined3d_texture *texture, unsigned int sub_resource_idx)
+{
+    wined3d_from_cs(device->cs);
+
+    return device->adapter->adapter_ops->adapter_acquire_context(device, texture, sub_resource_idx);
+}
+
+static inline void context_release(struct wined3d_context *context)
+{
+    context->device->adapter->adapter_ops->adapter_release_context(context);
+}
 
 /* The WNDCLASS-Name for the fake window which we use to retrieve the GL capabilities */
 #define WINED3D_OPENGL_WINDOW_CLASS_NAME "WineD3D_OpenGL"

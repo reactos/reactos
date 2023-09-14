@@ -490,7 +490,7 @@ static void wined3d_texture_remove_buffer_object(struct wined3d_texture *texture
 static void wined3d_texture_update_map_binding(struct wined3d_texture *texture)
 {
     unsigned int sub_count = texture->level_count * texture->layer_count;
-    const struct wined3d_device *device = texture->resource.device;
+    struct wined3d_device *device = texture->resource.device;
     DWORD map_binding = texture->update_map_binding;
     struct wined3d_context *context = NULL;
     unsigned int i;

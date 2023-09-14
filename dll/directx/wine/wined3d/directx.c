@@ -2233,21 +2233,22 @@ static HRESULT adapter_no3d_create_device(struct wined3d *wined3d, const struct 
         const enum wined3d_feature_level *levels, unsigned int level_count,
         struct wined3d_device_parent *device_parent, struct wined3d_device **device)
 {
-    struct wined3d_device *object;
+    struct wined3d_device_no3d *device_no3d;
     HRESULT hr;
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(device_no3d = heap_alloc_zero(sizeof(*device_no3d))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = wined3d_device_init(object, wined3d, adapter->ordinal, device_type,
+    if (FAILED(hr = wined3d_device_init(&device_no3d->d, wined3d, adapter->ordinal, device_type,
             focus_window, flags, surface_alignment, levels, level_count, device_parent)))
     {
         WARN("Failed to initialize device, hr %#x.\n", hr);
-        heap_free(object);
+        heap_free(device_no3d);
         return hr;
     }
 
-    *device = object;
+    *device = &device_no3d->d;
+
     return WINED3D_OK;
 }
 
@@ -2257,32 +2258,22 @@ static void adapter_no3d_destroy_device(struct wined3d_device *device)
     heap_free(device);
 }
 
-static HRESULT adapter_no3d_create_context(struct wined3d_swapchain *swapchain, struct wined3d_context **context)
+struct wined3d_context *adapter_no3d_acquire_context(struct wined3d_device *device,
+        struct wined3d_texture *texture, unsigned int sub_resource_idx)
 {
-    struct wined3d_context *context_no3d;
+    TRACE("device %p, texture %p, sub_resource_idx %u.\n", device, texture, sub_resource_idx);
 
-    TRACE("swapchain %p, context %p.\n", swapchain, context);
+    wined3d_from_cs(device->cs);
 
-    if (!(context_no3d = heap_alloc_zero(sizeof(*context_no3d))))
-        return E_OUTOFMEMORY;
+    if (!device->context_count)
+        return NULL;
 
-    if (FAILED(wined3d_context_no3d_init(context_no3d, swapchain)))
-    {
-        WARN("Failed to initialise context.\n");
-        heap_free(context_no3d);
-        return E_FAIL;
-    }
-
-    TRACE("Created context %p.\n", context_no3d);
-    *context = context_no3d;
-
-    return WINED3D_OK;
+    return &wined3d_device_no3d(device)->context_no3d;
 }
 
-static void adapter_no3d_destroy_context(struct wined3d_context *context)
+void adapter_no3d_release_context(struct wined3d_context *context)
 {
-    wined3d_context_cleanup(context);
-    heap_free(context);
+    TRACE("context %p.\n", context);
 }
 
 static void adapter_no3d_get_wined3d_caps(const struct wined3d_adapter *adapter, struct wined3d_caps *caps)
@@ -2298,11 +2289,32 @@ static BOOL adapter_no3d_check_format(const struct wined3d_adapter *adapter,
 
 static HRESULT adapter_no3d_init_3d(struct wined3d_device *device)
 {
+    struct wined3d_context *context_no3d;
+    HRESULT hr;
+
     TRACE("device %p.\n", device);
+
+    context_no3d = &wined3d_device_no3d(device)->context_no3d;
+    if (FAILED(hr = wined3d_context_no3d_init(context_no3d, device->swapchains[0])))
+    {
+        WARN("Failed to initialise context.\n");
+        return hr;
+    }
+
+    if (!device_context_add(device, context_no3d))
+    {
+        ERR("Failed to add the newly created context to the context list.\n");
+        wined3d_context_cleanup(context_no3d);
+        return E_FAIL;
+    }
+
+    TRACE("Initialised context %p.\n", context_no3d);
 
     if (!(device->blitter = wined3d_cpu_blitter_create()))
     {
         ERR("Failed to create CPU blitter.\n");
+        device_context_remove(device, context_no3d);
+        wined3d_context_cleanup(context_no3d);
         return E_FAIL;
     }
 
@@ -2311,9 +2323,14 @@ static HRESULT adapter_no3d_init_3d(struct wined3d_device *device)
 
 static void adapter_no3d_uninit_3d(struct wined3d_device *device)
 {
+    struct wined3d_context *context_no3d;
+
     TRACE("device %p.\n", device);
 
+    context_no3d = &wined3d_device_no3d(device)->context_no3d;
     device->blitter->ops->blitter_destroy(device->blitter, NULL);
+    device_context_remove(device, context_no3d);
+    wined3d_context_cleanup(context_no3d);
 }
 
 static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
@@ -2321,8 +2338,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
     adapter_no3d_destroy,
     adapter_no3d_create_device,
     adapter_no3d_destroy_device,
-    adapter_no3d_create_context,
-    adapter_no3d_destroy_context,
+    adapter_no3d_acquire_context,
+    adapter_no3d_release_context,
     adapter_no3d_get_wined3d_caps,
     adapter_no3d_check_format,
     adapter_no3d_init_3d,

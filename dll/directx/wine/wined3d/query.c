@@ -180,7 +180,7 @@ static BOOL wined3d_fence_supported(const struct wined3d_gl_info *gl_info)
 }
 
 static enum wined3d_fence_result wined3d_fence_test(const struct wined3d_fence *fence,
-        const struct wined3d_device *device, DWORD flags)
+        struct wined3d_device *device, DWORD flags)
 {
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
@@ -258,7 +258,7 @@ static enum wined3d_fence_result wined3d_fence_test(const struct wined3d_fence *
 }
 
 enum wined3d_fence_result wined3d_fence_wait(const struct wined3d_fence *fence,
-        const struct wined3d_device *device)
+        struct wined3d_device *device)
 {
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
@@ -332,7 +332,7 @@ enum wined3d_fence_result wined3d_fence_wait(const struct wined3d_fence *fence,
     return ret;
 }
 
-void wined3d_fence_issue(struct wined3d_fence *fence, const struct wined3d_device *device)
+void wined3d_fence_issue(struct wined3d_fence *fence, struct wined3d_device *device)
 {
     struct wined3d_context *context = NULL;
     const struct wined3d_gl_info *gl_info;

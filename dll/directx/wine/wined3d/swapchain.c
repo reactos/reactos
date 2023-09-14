@@ -1068,32 +1068,51 @@ HRESULT CDECL wined3d_swapchain_create(struct wined3d_device *device, struct win
 
 static struct wined3d_context *swapchain_create_context(struct wined3d_swapchain *swapchain)
 {
+    struct wined3d_device *device = swapchain->device;
+    struct wined3d_context_gl *context_gl;
     struct wined3d_context **ctx_array;
-    struct wined3d_context *ctx;
 
     TRACE("Creating a new context for swapchain %p, thread %u.\n", swapchain, GetCurrentThreadId());
 
-    if (!(ctx = context_create(swapchain)))
+    wined3d_from_cs(device->cs);
+
+    if (!(context_gl = heap_alloc_zero(sizeof(*context_gl))))
     {
-        ERR("Failed to create a new context for the swapchain\n");
+        ERR("Failed to allocate context memory.\n");
         return NULL;
     }
-    context_release(ctx);
+
+    if (FAILED(wined3d_context_gl_init(context_gl, swapchain)))
+    {
+        WARN("Failed to initialise context.\n");
+        heap_free(context_gl);
+        return NULL;
+    }
+
+    if (!device_context_add(device, &context_gl->c))
+    {
+        ERR("Failed to add the newly created context to the context list.\n");
+        wined3d_context_gl_destroy(context_gl);
+        return NULL;
+    }
+
+    TRACE("Created context %p.\n", context_gl);
+
+    context_release(&context_gl->c);
 
     if (!(ctx_array = heap_calloc(swapchain->num_contexts + 1, sizeof(*ctx_array))))
     {
-        ERR("Out of memory when trying to allocate a new context array\n");
-        wined3d_context_destroy(ctx);
+        ERR("Failed to allocate new context array memory.\n");
+        wined3d_context_gl_destroy(context_gl);
         return NULL;
     }
     memcpy(ctx_array, swapchain->context, sizeof(*ctx_array) * swapchain->num_contexts);
     heap_free(swapchain->context);
-    ctx_array[swapchain->num_contexts] = ctx;
+    ctx_array[swapchain->num_contexts] = &context_gl->c;
     swapchain->context = ctx_array;
     swapchain->num_contexts++;
 
-    TRACE("Returning context %p\n", ctx);
-    return ctx;
+    return &context_gl->c;
 }
 
 void swapchain_destroy_contexts(struct wined3d_swapchain *swapchain)
@@ -1102,7 +1121,7 @@ void swapchain_destroy_contexts(struct wined3d_swapchain *swapchain)
 
     for (i = 0; i < swapchain->num_contexts; ++i)
     {
-        wined3d_context_destroy(swapchain->context[i]);
+        wined3d_context_gl_destroy(wined3d_context_gl(swapchain->context[i]));
     }
     heap_free(swapchain->context);
     swapchain->num_contexts = 0;
