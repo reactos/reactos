@@ -1774,3 +1774,332 @@ const struct wined3d_shader_frontend sm4_shader_frontend =
     shader_sm4_read_instruction,
     shader_sm4_is_end,
 };
+
+#define TAG_AON9 WINEMAKEFOURCC('A', 'o', 'n', '9')
+#define TAG_DXBC WINEMAKEFOURCC('D', 'X', 'B', 'C')
+#define TAG_ISGN WINEMAKEFOURCC('I', 'S', 'G', 'N')
+#define TAG_OSG5 WINEMAKEFOURCC('O', 'S', 'G', '5')
+#define TAG_OSGN WINEMAKEFOURCC('O', 'S', 'G', 'N')
+#define TAG_PCSG WINEMAKEFOURCC('P', 'C', 'S', 'G')
+#define TAG_SHDR WINEMAKEFOURCC('S', 'H', 'D', 'R')
+#define TAG_SHEX WINEMAKEFOURCC('S', 'H', 'E', 'X')
+
+struct aon9_header
+{
+    DWORD chunk_size;
+    DWORD shader_version;
+    DWORD unknown;
+    DWORD byte_code_offset;
+};
+
+struct shader_handler_context
+{
+    struct wined3d_shader *shader;
+    enum wined3d_shader_byte_code_format *format;
+    unsigned int max_version;
+};
+
+static void read_dword(const char **ptr, DWORD *d)
+{
+    memcpy(d, *ptr, sizeof(*d));
+    *ptr += sizeof(*d);
+}
+
+static BOOL require_space(size_t offset, size_t count, size_t size, size_t data_size)
+{
+    return !count || (data_size - offset) / count >= size;
+}
+
+static void skip_dword_unknown(const char **ptr, unsigned int count)
+{
+    unsigned int i;
+    DWORD d;
+
+    WARN("Skipping %u unknown DWORDs:\n", count);
+    for (i = 0; i < count; ++i)
+    {
+        read_dword(ptr, &d);
+        WARN("\t0x%08x\n", d);
+    }
+}
+
+static HRESULT parse_dxbc(const char *data, SIZE_T data_size,
+        HRESULT (*chunk_handler)(const char *data, DWORD data_size, DWORD tag, void *ctx), void *ctx)
+{
+    const char *ptr = data;
+    HRESULT hr = S_OK;
+    DWORD chunk_count;
+    DWORD total_size;
+    unsigned int i;
+    DWORD version;
+    DWORD tag;
+
+    read_dword(&ptr, &tag);
+    TRACE("tag: %s.\n", debugstr_an((const char *)&tag, 4));
+
+    if (tag != TAG_DXBC)
+    {
+        WARN("Wrong tag.\n");
+        return E_INVALIDARG;
+    }
+
+    WARN("Ignoring DXBC checksum.\n");
+    skip_dword_unknown(&ptr, 4);
+
+    read_dword(&ptr, &version);
+    TRACE("version: %#x.\n", version);
+    if (version != 0x00000001)
+    {
+        WARN("Got unexpected DXBC version %#x.\n", version);
+        return E_INVALIDARG;
+    }
+
+    read_dword(&ptr, &total_size);
+    TRACE("total size: %#x\n", total_size);
+
+    read_dword(&ptr, &chunk_count);
+    TRACE("chunk count: %#x\n", chunk_count);
+
+    for (i = 0; i < chunk_count; ++i)
+    {
+        DWORD chunk_tag, chunk_size;
+        const char *chunk_ptr;
+        DWORD chunk_offset;
+
+        read_dword(&ptr, &chunk_offset);
+        TRACE("chunk %u at offset %#x\n", i, chunk_offset);
+
+        if (chunk_offset >= data_size || !require_space(chunk_offset, 2, sizeof(DWORD), data_size))
+        {
+            WARN("Invalid chunk offset %#x (data size %#lx).\n", chunk_offset, data_size);
+            return E_FAIL;
+        }
+
+        chunk_ptr = data + chunk_offset;
+
+        read_dword(&chunk_ptr, &chunk_tag);
+        read_dword(&chunk_ptr, &chunk_size);
+
+        if (!require_space(chunk_ptr - data, 1, chunk_size, data_size))
+        {
+            WARN("Invalid chunk size %#x (data size %#lx, chunk offset %#x).\n",
+                    chunk_size, data_size, chunk_offset);
+            return E_FAIL;
+        }
+
+        if (FAILED(hr = chunk_handler(chunk_ptr, chunk_size, chunk_tag, ctx)))
+            break;
+    }
+
+    return hr;
+}
+
+static const char *shader_get_string(const char *data, size_t data_size, DWORD offset)
+{
+    size_t len, max_len;
+
+    if (offset >= data_size)
+    {
+        WARN("Invalid offset %#x (data size %#lx).\n", offset, (long)data_size);
+        return NULL;
+    }
+
+    max_len = data_size - offset;
+    len = strnlen(data + offset, max_len);
+
+    if (len == max_len)
+        return NULL;
+
+    return data + offset;
+}
+
+static HRESULT shader_parse_signature(DWORD tag, const char *data, DWORD data_size,
+        struct wined3d_shader_signature *s)
+{
+    struct wined3d_shader_signature_element *e;
+    const char *ptr = data;
+    unsigned int i;
+    DWORD count;
+
+    if (!require_space(0, 2, sizeof(DWORD), data_size))
+    {
+        WARN("Invalid data size %#x.\n", data_size);
+        return E_INVALIDARG;
+    }
+
+    read_dword(&ptr, &count);
+    TRACE("%u elements.\n", count);
+
+    skip_dword_unknown(&ptr, 1); /* It seems to always be 0x00000008. */
+
+    if (!require_space(ptr - data, count, 6 * sizeof(DWORD), data_size))
+    {
+        WARN("Invalid count %#x (data size %#x).\n", count, data_size);
+        return E_INVALIDARG;
+    }
+
+    if (!(e = heap_calloc(count, sizeof(*e))))
+    {
+        ERR("Failed to allocate input signature memory.\n");
+        return E_OUTOFMEMORY;
+    }
+
+    for (i = 0; i < count; ++i)
+    {
+        DWORD name_offset;
+
+        if (tag == TAG_OSG5)
+            read_dword(&ptr, &e[i].stream_idx);
+        else
+            e[i].stream_idx = 0;
+        read_dword(&ptr, &name_offset);
+        if (!(e[i].semantic_name = shader_get_string(data, data_size, name_offset)))
+        {
+            WARN("Invalid name offset %#x (data size %#x).\n", name_offset, data_size);
+            heap_free(e);
+            return E_INVALIDARG;
+        }
+        read_dword(&ptr, &e[i].semantic_idx);
+        read_dword(&ptr, &e[i].sysval_semantic);
+        read_dword(&ptr, &e[i].component_type);
+        read_dword(&ptr, &e[i].register_idx);
+        read_dword(&ptr, &e[i].mask);
+
+        TRACE("Stream: %u, semantic: %s, semantic idx: %u, sysval_semantic %#x, "
+                "type %u, register idx: %u, use_mask %#x, input_mask %#x.\n",
+                e[i].stream_idx, debugstr_a(e[i].semantic_name), e[i].semantic_idx, e[i].sysval_semantic,
+                e[i].component_type, e[i].register_idx, (e[i].mask >> 8) & 0xff, e[i].mask & 0xff);
+    }
+
+    s->elements = e;
+    s->element_count = count;
+
+    return S_OK;
+}
+
+static HRESULT shader_dxbc_chunk_handler(const char *data, DWORD data_size, DWORD tag, void *context)
+{
+    struct shader_handler_context *ctx = context;
+    struct wined3d_shader *shader = ctx->shader;
+    HRESULT hr;
+
+    switch (tag)
+    {
+        case TAG_ISGN:
+            if (ctx->max_version < 4)
+            {
+                TRACE("Skipping shader input signature.\n");
+                break;
+            }
+            if (shader->input_signature.elements)
+            {
+                FIXME("Multiple input signatures.\n");
+                break;
+            }
+            if (FAILED(hr = shader_parse_signature(tag, data, data_size, &shader->input_signature)))
+                return hr;
+            break;
+
+        case TAG_OSGN:
+        case TAG_OSG5:
+            if (ctx->max_version < 4)
+            {
+                TRACE("Skipping shader output signature.\n");
+                break;
+            }
+            if (shader->output_signature.elements)
+            {
+                FIXME("Multiple output signatures.\n");
+                break;
+            }
+            if (FAILED(hr = shader_parse_signature(tag, data, data_size, &shader->output_signature)))
+                return hr;
+            break;
+
+        case TAG_PCSG:
+            if (shader->patch_constant_signature.elements)
+            {
+                FIXME("Multiple patch constant signatures.\n");
+                break;
+            }
+            if (FAILED(hr = shader_parse_signature(tag, data, data_size, &shader->patch_constant_signature)))
+                return hr;
+            break;
+
+        case TAG_SHDR:
+        case TAG_SHEX:
+            if (ctx->max_version < 4)
+            {
+                TRACE("Skipping SM4+ shader.\n");
+                break;
+            }
+            if (shader->function)
+                FIXME("Multiple shader code chunks.\n");
+            shader->function = (const DWORD *)data;
+            shader->functionLength = data_size;
+            *ctx->format = WINED3D_SHADER_BYTE_CODE_FORMAT_SM4;
+            break;
+
+        case TAG_AON9:
+            if (ctx->max_version < 4)
+            {
+                const struct aon9_header *header = (const struct aon9_header *)data;
+                unsigned int unknown_dword_count;
+                const char *byte_code;
+
+                if (data_size < sizeof(*header))
+                {
+                    WARN("Invalid Aon9 data size %#x.\n", data_size);
+                    return E_FAIL;
+                }
+                byte_code = data + header->byte_code_offset;
+                unknown_dword_count = (header->byte_code_offset - sizeof(*header)) / sizeof(DWORD);
+
+                if (data_size - 2 * sizeof(DWORD) < header->byte_code_offset)
+                {
+                    WARN("Invalid byte code offset %#x (size %#x).\n", header->byte_code_offset, data_size);
+                    return E_FAIL;
+                }
+                FIXME("Skipping %u unknown DWORDs.\n", unknown_dword_count);
+
+                if (shader->function)
+                    FIXME("Multiple shader code chunks.\n");
+                shader->function = (const DWORD *)byte_code;
+                shader->functionLength = data_size - header->byte_code_offset;
+                *ctx->format = WINED3D_SHADER_BYTE_CODE_FORMAT_SM1;
+                TRACE("Feature level 9 shader version 0%08x, 0%08x.\n",
+                        header->shader_version, *shader->function);
+            }
+            else
+            {
+                TRACE("Skipping feature level 9 shader code.\n");
+            }
+            break;
+
+        default:
+            TRACE("Skipping chunk %s.\n", debugstr_an((const char *)&tag, 4));
+            break;
+    }
+
+    return S_OK;
+}
+
+HRESULT shader_extract_from_dxbc(struct wined3d_shader *shader,
+        unsigned int max_shader_version, enum wined3d_shader_byte_code_format *format)
+{
+    struct shader_handler_context ctx;
+    HRESULT hr;
+
+    ctx.shader = shader;
+    ctx.format = format;
+    ctx.max_version = max_shader_version;
+
+    hr = parse_dxbc(shader->byte_code, shader->byte_code_size, shader_dxbc_chunk_handler, &ctx);
+    if (!shader->function)
+        hr = E_INVALIDARG;
+
+    if (FAILED(hr))
+        WARN("Failed to parse DXBC, hr %#x.\n", hr);
+
+    return hr;
+}

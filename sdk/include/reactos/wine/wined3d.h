@@ -874,6 +874,7 @@ enum wined3d_shader_byte_code_format
 {
     WINED3D_SHADER_BYTE_CODE_FORMAT_SM1     = 0,
     WINED3D_SHADER_BYTE_CODE_FORMAT_SM4     = 1,
+    WINED3D_SHADER_BYTE_CODE_FORMAT_DXBC    = 2,
 };
 
 enum wined3d_shader_type

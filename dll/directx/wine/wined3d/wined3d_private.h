@@ -1260,6 +1260,9 @@ struct wined3d_shader_frontend
 extern const struct wined3d_shader_frontend sm1_shader_frontend DECLSPEC_HIDDEN;
 extern const struct wined3d_shader_frontend sm4_shader_frontend DECLSPEC_HIDDEN;
 
+HRESULT shader_extract_from_dxbc(struct wined3d_shader *shader,
+        unsigned int max_shader_version, enum wined3d_shader_byte_code_format *format);
+
 typedef void (*SHADER_HANDLER)(const struct wined3d_shader_instruction *);
 
 #define WINED3D_SHADER_CAP_VS_CLIPPING      0x00000001
@@ -4138,8 +4141,10 @@ struct wined3d_shader
 {
     LONG ref;
     const struct wined3d_shader_limits *limits;
-    DWORD *function;
-    UINT functionLength;
+    const DWORD *function;
+    unsigned int functionLength;
+    void *byte_code;
+    unsigned int byte_code_size;
     BOOL load_local_constsF;
     const struct wined3d_shader_frontend *frontend;
     void *frontend_data;
