@@ -535,6 +535,15 @@ void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state)
         wined3d_vertex_declaration_decref(decl);
     }
 
+    for (i = 0; i < MAX_STREAMS; ++i)
+    {
+        if ((buffer = state->streams[i].buffer))
+        {
+            state->streams[i].buffer = NULL;
+            wined3d_buffer_decref(buffer);
+        }
+    }
+
     if ((buffer = state->index_buffer))
     {
         state->index_buffer = NULL;
@@ -872,19 +881,19 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     {
         if (!(map & 1)) continue;
 
-        if (stateblock->state.streams[i].stride != src_state->streams[i].stride
-                || stateblock->state.streams[i].buffer != src_state->streams[i].buffer)
+        if (stateblock->stateblock_state.streams[i].stride != state->streams[i].stride
+                || stateblock->stateblock_state.streams[i].buffer != state->streams[i].buffer)
         {
             TRACE("Updating stream source %u to %p, stride to %u.\n",
-                    i, src_state->streams[i].buffer,
-                    src_state->streams[i].stride);
+                    i, state->streams[i].buffer,
+                    state->streams[i].stride);
 
-            stateblock->state.streams[i].stride = src_state->streams[i].stride;
-            if (src_state->streams[i].buffer)
-                    wined3d_buffer_incref(src_state->streams[i].buffer);
-            if (stateblock->state.streams[i].buffer)
-                    wined3d_buffer_decref(stateblock->state.streams[i].buffer);
-            stateblock->state.streams[i].buffer = src_state->streams[i].buffer;
+            stateblock->stateblock_state.streams[i].stride = state->streams[i].stride;
+            if (state->streams[i].buffer)
+                    wined3d_buffer_incref(state->streams[i].buffer);
+            if (stateblock->stateblock_state.streams[i].buffer)
+                    wined3d_buffer_decref(stateblock->stateblock_state.streams[i].buffer);
+            stateblock->stateblock_state.streams[i].buffer = state->streams[i].buffer;
         }
     }
 
@@ -893,14 +902,14 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     {
         if (!(map & 1)) continue;
 
-        if (stateblock->state.streams[i].frequency != src_state->streams[i].frequency
-                || stateblock->state.streams[i].flags != src_state->streams[i].flags)
+        if (stateblock->stateblock_state.streams[i].frequency != state->streams[i].frequency
+                || stateblock->stateblock_state.streams[i].flags != state->streams[i].flags)
         {
             TRACE("Updating stream frequency %u to %u flags to %#x.\n",
-                    i, src_state->streams[i].frequency, src_state->streams[i].flags);
+                    i, state->streams[i].frequency, state->streams[i].flags);
 
-            stateblock->state.streams[i].frequency = src_state->streams[i].frequency;
-            stateblock->state.streams[i].flags = src_state->streams[i].flags;
+            stateblock->stateblock_state.streams[i].frequency = state->streams[i].frequency;
+            stateblock->stateblock_state.streams[i].flags = state->streams[i].flags;
         }
     }
 
@@ -1164,18 +1173,30 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     map = stateblock->changed.streamSource;
     for (i = 0; map; map >>= 1, ++i)
     {
-        if (map & 1)
-            wined3d_device_set_stream_source(device, i,
-                    stateblock->state.streams[i].buffer,
-                    0, stateblock->state.streams[i].stride);
+        if (!(map & 1)) continue;
+
+        state->streams[i].stride = stateblock->stateblock_state.streams[i].stride;
+        if (stateblock->stateblock_state.streams[i].buffer)
+                wined3d_buffer_incref(stateblock->stateblock_state.streams[i].buffer);
+        if (state->streams[i].buffer)
+                wined3d_buffer_decref(state->streams[i].buffer);
+        state->streams[i].buffer = stateblock->stateblock_state.streams[i].buffer;
+
+        wined3d_device_set_stream_source(device, i,
+                stateblock->stateblock_state.streams[i].buffer,
+                0, stateblock->stateblock_state.streams[i].stride);
     }
 
     map = stateblock->changed.streamFreq;
     for (i = 0; map; map >>= 1, ++i)
     {
-        if (map & 1)
-            wined3d_device_set_stream_source_freq(device, i,
-                    stateblock->state.streams[i].frequency | stateblock->state.streams[i].flags);
+        if (!(map & 1)) continue;
+
+        state->streams[i].frequency = stateblock->stateblock_state.streams[i].frequency;
+        state->streams[i].flags = stateblock->stateblock_state.streams[i].flags;
+
+        wined3d_device_set_stream_source_freq(device, i,
+                stateblock->stateblock_state.streams[i].frequency | stateblock->stateblock_state.streams[i].flags);
     }
 
     map = stateblock->changed.textures;

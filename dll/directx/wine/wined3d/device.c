@@ -1381,11 +1381,21 @@ HRESULT CDECL wined3d_device_set_stream_source(struct wined3d_device *device, UI
         return WINED3DERR_INVALIDCALL;
     }
 
-    stream = &device->update_state->streams[stream_idx];
+    stream = &device->state.streams[stream_idx];
     prev_buffer = stream->buffer;
 
+    if (buffer)
+        wined3d_buffer_incref(buffer);
+    if (device->update_stateblock_state->streams[stream_idx].buffer)
+        wined3d_buffer_decref(device->update_stateblock_state->streams[stream_idx].buffer);
+    device->update_stateblock_state->streams[stream_idx].buffer = buffer;
+    device->update_stateblock_state->streams[stream_idx].stride = stride;
+
     if (device->recording)
+    {
         device->recording->changed.streamSource |= 1u << stream_idx;
+        return WINED3D_OK;
+    }
 
     if (prev_buffer == buffer
             && stream->stride == stride
@@ -1400,9 +1410,7 @@ HRESULT CDECL wined3d_device_set_stream_source(struct wined3d_device *device, UI
     stream->offset = offset;
     if (buffer)
         wined3d_buffer_incref(buffer);
-
-    if (!device->recording)
-        wined3d_cs_emit_set_stream_source(device->cs, stream_idx, buffer, offset, stride);
+    wined3d_cs_emit_set_stream_source(device->cs, stream_idx, buffer, offset, stride);
     if (prev_buffer)
         wined3d_buffer_decref(prev_buffer);
 
@@ -1434,8 +1442,8 @@ HRESULT CDECL wined3d_device_get_stream_source(const struct wined3d_device *devi
 
 HRESULT CDECL wined3d_device_set_stream_source_freq(struct wined3d_device *device, UINT stream_idx, UINT divider)
 {
+    UINT old_flags, old_freq, flags, freq;
     struct wined3d_stream_state *stream;
-    UINT old_flags, old_freq;
 
     TRACE("device %p, stream_idx %u, divider %#x.\n", device, stream_idx, divider);
 
@@ -1456,16 +1464,24 @@ HRESULT CDECL wined3d_device_set_stream_source_freq(struct wined3d_device *devic
         return WINED3DERR_INVALIDCALL;
     }
 
-    stream = &device->update_state->streams[stream_idx];
+    stream = &device->state.streams[stream_idx];
     old_flags = stream->flags;
     old_freq = stream->frequency;
 
-    stream->flags = divider & (WINED3DSTREAMSOURCE_INSTANCEDATA | WINED3DSTREAMSOURCE_INDEXEDDATA);
-    stream->frequency = divider & 0x7fffff;
+    flags = divider & (WINED3DSTREAMSOURCE_INSTANCEDATA | WINED3DSTREAMSOURCE_INDEXEDDATA);
+    freq = divider & 0x7fffff;
 
+    device->update_stateblock_state->streams[stream_idx].flags = flags;
+    device->update_stateblock_state->streams[stream_idx].frequency = freq;
     if (device->recording)
+    {
         device->recording->changed.streamFreq |= 1u << stream_idx;
-    else if (stream->frequency != old_freq || stream->flags != old_flags)
+        return WINED3D_OK;
+    }
+
+    stream->flags = flags;
+    stream->frequency = freq;
+    if (stream->frequency != old_freq || stream->flags != old_flags)
         wined3d_cs_emit_set_stream_source_freq(device->cs, stream_idx, stream->frequency, stream->flags);
 
     return WINED3D_OK;
@@ -5254,11 +5270,11 @@ void device_resource_released(struct wined3d_device *device, struct wined3d_reso
                     device->state.streams[i].buffer = NULL;
                 }
 
-                if (device->recording && &device->update_state->streams[i].buffer->resource == resource)
+                if (device->recording && &device->update_stateblock_state->streams[i].buffer->resource == resource)
                 {
                     ERR("Buffer resource %p is still in use by stateblock %p, stream %u.\n",
                             resource, device->recording, i);
-                    device->update_state->streams[i].buffer = NULL;
+                    device->update_stateblock_state->streams[i].buffer = NULL;
                 }
             }
 

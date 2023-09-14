@@ -3007,6 +3007,7 @@ struct wined3d_gl_bo
 struct wined3d_stateblock_state
 {
     struct wined3d_vertex_declaration *vertex_declaration;
+    struct wined3d_stream_state streams[MAX_STREAMS + 1];
     struct wined3d_buffer *index_buffer;
     enum wined3d_format_id index_format;
     int base_vertex_index;
