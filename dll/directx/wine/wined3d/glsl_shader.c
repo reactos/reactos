@@ -12296,6 +12296,9 @@ static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wi
         return FALSE;
     }
 
+    if (src_resource->type != WINED3D_RTYPE_TEXTURE_2D)
+        return FALSE;
+
     if (src_texture->target == GL_TEXTURE_2D_MULTISAMPLE
             || dst_texture->target == GL_TEXTURE_2D_MULTISAMPLE
             || src_texture->target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY

@@ -304,6 +304,9 @@ static BOOL fbo_blitter_supported(enum wined3d_blit_op blit_op, const struct win
     if (!(src_resource->access & dst_resource->access & WINED3D_RESOURCE_ACCESS_GPU))
         return FALSE;
 
+    if (src_resource->type != WINED3D_RTYPE_TEXTURE_2D)
+        return FALSE;
+
     switch (blit_op)
     {
         case WINED3D_BLIT_OP_COLOR_BLIT:
@@ -1661,6 +1664,12 @@ static HRESULT wined3d_texture_blt_special(struct wined3d_texture *dst_texture, 
             dst_texture, dst_sub_resource_idx, wine_dbgstr_rect(dst_rect), src_texture, src_sub_resource_idx,
             wine_dbgstr_rect(src_rect), flags, fx, debug_d3dtexturefiltertype(filter));
 
+    if (dst_texture->resource.type != WINED3D_RTYPE_TEXTURE_2D)
+    {
+        FIXME("Not implemented for %s resources.\n", debug_d3dresourcetype(dst_texture->resource.type));
+        return WINED3DERR_INVALIDCALL;
+    }
+
     /* Get the swapchain. One of the surfaces has to be a primary surface. */
     if (!(dst_texture->resource.access & WINED3D_RESOURCE_ACCESS_GPU))
     {
@@ -2322,6 +2331,9 @@ static BOOL ffp_blit_supported(enum wined3d_blit_op blit_op, const struct wined3
     const struct wined3d_format *src_format = src_resource->format;
     const struct wined3d_format *dst_format = dst_resource->format;
     BOOL decompress;
+
+    if (src_resource->type != WINED3D_RTYPE_TEXTURE_2D)
+        return FALSE;
 
     decompress = src_format && (src_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_COMPRESSED)
             && !(dst_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_COMPRESSED);

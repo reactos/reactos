@@ -7701,6 +7701,9 @@ static BOOL arbfp_blit_supported(enum wined3d_blit_op blit_op, const struct wine
     if (!context->gl_info->supported[ARB_FRAGMENT_PROGRAM])
         return FALSE;
 
+    if (src_resource->type != WINED3D_RTYPE_TEXTURE_2D)
+        return FALSE;
+
     if (blit_op == WINED3D_BLIT_OP_RAW_BLIT && dst_format->id == src_format->id)
     {
         if (dst_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL))
