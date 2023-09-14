@@ -2662,6 +2662,33 @@ static HRESULT WINAPI d3d_device7_SetRenderState_FPUPreserve(IDirect3DDevice7 *i
     return hr;
 }
 
+static void fixup_texture_alpha_op(struct d3d_device *device)
+{
+    /* This fixup is required by the way D3DTBLEND_MODULATE maps to texture stage states.
+       See d3d_device3_SetRenderState() for details. */
+    struct wined3d_texture *tex;
+    BOOL tex_alpha = FALSE;
+    DDPIXELFORMAT ddfmt;
+
+    if (!(device->legacyTextureBlending && device->texture_map_blend == D3DTBLEND_MODULATE))
+        return;
+
+    if ((tex = wined3d_device_get_texture(device->wined3d_device, 0)))
+    {
+        struct wined3d_resource_desc desc;
+
+        wined3d_resource_get_desc(wined3d_texture_get_resource(tex), &desc);
+        ddfmt.dwSize = sizeof(ddfmt);
+        ddrawformat_from_wined3dformat(&ddfmt, desc.format);
+        if (ddfmt.u5.dwRGBAlphaBitMask)
+            tex_alpha = TRUE;
+    }
+
+    /* Args 1 and 2 are already set to WINED3DTA_TEXTURE/WINED3DTA_CURRENT in case of D3DTBLEND_MODULATE */
+    wined3d_device_set_texture_stage_state(device->wined3d_device,
+            0, WINED3D_TSS_ALPHA_OP, tex_alpha ? WINED3D_TOP_SELECT_ARG1 : WINED3D_TOP_SELECT_ARG2);
+}
+
 static HRESULT WINAPI d3d_device3_SetRenderState(IDirect3DDevice3 *iface,
         D3DRENDERSTATETYPE state, DWORD value)
 {
@@ -2732,32 +2759,14 @@ static HRESULT WINAPI d3d_device3_SetRenderState(IDirect3DDevice3 *iface,
             }
 
             device->legacyTextureBlending = TRUE;
+            device->texture_map_blend = value;
 
             switch (value)
             {
                 case D3DTBLEND_MODULATE:
                 {
-                    struct wined3d_texture *tex = NULL;
-                    BOOL tex_alpha = FALSE;
-                    DDPIXELFORMAT ddfmt;
+                    fixup_texture_alpha_op(device);
 
-                    if ((tex = wined3d_device_get_texture(device->wined3d_device, 0)))
-                    {
-                        struct wined3d_resource_desc desc;
-
-                        wined3d_resource_get_desc(wined3d_texture_get_resource(tex), &desc);
-                        ddfmt.dwSize = sizeof(ddfmt);
-                        ddrawformat_from_wined3dformat(&ddfmt, desc.format);
-                        if (ddfmt.u5.dwRGBAlphaBitMask)
-                            tex_alpha = TRUE;
-                    }
-
-                    if (tex_alpha)
-                        wined3d_device_set_texture_stage_state(device->wined3d_device,
-                                0, WINED3D_TSS_ALPHA_OP, WINED3D_TOP_SELECT_ARG1);
-                    else
-                        wined3d_device_set_texture_stage_state(device->wined3d_device,
-                                0, WINED3D_TSS_ALPHA_OP, WINED3D_TOP_SELECT_ARG2);
                     wined3d_device_set_texture_stage_state(device->wined3d_device,
                             0, WINED3D_TSS_ALPHA_ARG1, WINED3DTA_TEXTURE);
                     wined3d_device_set_texture_stage_state(device->wined3d_device,
@@ -2827,7 +2836,6 @@ static HRESULT WINAPI d3d_device3_SetRenderState(IDirect3DDevice3 *iface,
                 default:
                     FIXME("Unhandled texture environment %#x.\n", value);
             }
-            device->texture_map_blend = value;
             hr = D3D_OK;
             break;
         }
@@ -4830,33 +4838,7 @@ static HRESULT WINAPI d3d_device3_SetTexture(IDirect3DDevice3 *iface,
 
     hr = IDirect3DDevice7_SetTexture(&device->IDirect3DDevice7_iface, stage, &tex->IDirectDrawSurface7_iface);
 
-    if (device->legacyTextureBlending && device->texture_map_blend == D3DTBLEND_MODULATE)
-    {
-        /* This fixup is required by the way D3DTBLEND_MODULATE maps to texture stage states.
-           See d3d_device3_SetRenderState() for details. */
-        struct wined3d_texture *tex = NULL;
-        BOOL tex_alpha = FALSE;
-        DDPIXELFORMAT ddfmt;
-
-        if ((tex = wined3d_device_get_texture(device->wined3d_device, 0)))
-        {
-            struct wined3d_resource_desc desc;
-
-            wined3d_resource_get_desc(wined3d_texture_get_resource(tex), &desc);
-            ddfmt.dwSize = sizeof(ddfmt);
-            ddrawformat_from_wined3dformat(&ddfmt, desc.format);
-            if (ddfmt.u5.dwRGBAlphaBitMask)
-                tex_alpha = TRUE;
-        }
-
-        /* Args 1 and 2 are already set to WINED3DTA_TEXTURE/WINED3DTA_CURRENT in case of D3DTBLEND_MODULATE */
-        if (tex_alpha)
-            wined3d_device_set_texture_stage_state(device->wined3d_device,
-                    0, WINED3D_TSS_ALPHA_OP, WINED3D_TOP_SELECT_ARG1);
-        else
-            wined3d_device_set_texture_stage_state(device->wined3d_device,
-                    0, WINED3D_TSS_ALPHA_OP, WINED3D_TOP_SELECT_ARG2);
-    }
+    fixup_texture_alpha_op(device);
 
     wined3d_mutex_unlock();
 
