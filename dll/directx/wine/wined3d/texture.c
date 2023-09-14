@@ -2993,8 +2993,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
     if (wined3d_texture_use_pbo(texture, gl_info))
         texture->resource.map_binding = WINED3D_LOCATION_BUFFER;
 
-    if ((desc->resource_type != WINED3D_RTYPE_TEXTURE_3D
-            && !(texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL))
+    if (desc->resource_type != WINED3D_RTYPE_TEXTURE_3D
             || !wined3d_texture_use_pbo(texture, gl_info))
     {
         if (!wined3d_resource_allocate_sysmem(&texture->resource))
@@ -3036,8 +3035,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
 
         sub_resource = &texture->sub_resources[i];
         sub_resource->locations = WINED3D_LOCATION_DISCARDED;
-        if (desc->resource_type != WINED3D_RTYPE_TEXTURE_3D
-                && !(texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL))
+        if (desc->resource_type != WINED3D_RTYPE_TEXTURE_3D)
         {
             wined3d_texture_validate_location(texture, i, WINED3D_LOCATION_SYSMEM);
             wined3d_texture_invalidate_location(texture, i, ~WINED3D_LOCATION_SYSMEM);
