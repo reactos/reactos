@@ -3887,7 +3887,7 @@ static void context_bind_unordered_access_views(struct wined3d_context *context,
         const struct wined3d_shader *shader, struct wined3d_unordered_access_view * const *views)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_unordered_access_view *view;
+    struct wined3d_unordered_access_view_gl *view_gl;
     const struct wined3d_format_gl *format_gl;
     GLuint texture_name;
     unsigned int i;
@@ -3898,7 +3898,7 @@ static void context_bind_unordered_access_views(struct wined3d_context *context,
 
     for (i = 0; i < MAX_UNORDERED_ACCESS_VIEWS; ++i)
     {
-        if (!(view = views[i]))
+        if (!views[i])
         {
             if (shader->reg_maps.uav_resource_info[i].type)
                 WARN("No unordered access view bound at index %u.\n", i);
@@ -3906,16 +3906,17 @@ static void context_bind_unordered_access_views(struct wined3d_context *context,
             continue;
         }
 
-        if (view->gl_view.name)
+        view_gl = wined3d_unordered_access_view_gl(views[i]);
+        if (view_gl->gl_view.name)
         {
-            texture_name = view->gl_view.name;
+            texture_name = view_gl->gl_view.name;
             level = 0;
         }
-        else if (view->resource->type != WINED3D_RTYPE_BUFFER)
+        else if (view_gl->v.resource->type != WINED3D_RTYPE_BUFFER)
         {
-            struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(texture_from_resource(view->resource));
+            struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(texture_from_resource(view_gl->v.resource));
             texture_name = wined3d_texture_gl_get_texture_name(texture_gl, context, FALSE);
-            level = view->desc.u.texture.level_idx;
+            level = view_gl->v.desc.u.texture.level_idx;
         }
         else
         {
@@ -3924,12 +3925,12 @@ static void context_bind_unordered_access_views(struct wined3d_context *context,
             continue;
         }
 
-        format_gl = wined3d_format_gl(view->format);
+        format_gl = wined3d_format_gl(view_gl->v.format);
         GL_EXTCALL(glBindImageTexture(i, texture_name, level, GL_TRUE, 0, GL_READ_WRITE,
                 format_gl->internal));
 
-        if (view->counter_bo)
-            GL_EXTCALL(glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, i, view->counter_bo));
+        if (view_gl->counter_bo)
+            GL_EXTCALL(glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, i, view_gl->counter_bo));
     }
     checkGLcall("Bind unordered access views");
 }

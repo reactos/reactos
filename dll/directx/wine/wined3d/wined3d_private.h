@@ -3945,9 +3945,7 @@ struct wined3d_unordered_access_view
     void *parent;
     const struct wined3d_parent_ops *parent_ops;
 
-    struct wined3d_gl_view gl_view;
     const struct wined3d_format *format;
-    GLuint counter_bo;
 
     struct wined3d_view_desc desc;
 };
@@ -3960,6 +3958,19 @@ void wined3d_unordered_access_view_invalidate_location(struct wined3d_unordered_
         DWORD location) DECLSPEC_HIDDEN;
 void wined3d_unordered_access_view_set_counter(struct wined3d_unordered_access_view *view,
         unsigned int value) DECLSPEC_HIDDEN;
+
+struct wined3d_unordered_access_view_gl
+{
+    struct wined3d_unordered_access_view v;
+    struct wined3d_gl_view gl_view;
+    GLuint counter_bo;
+};
+
+static inline struct wined3d_unordered_access_view_gl *wined3d_unordered_access_view_gl(
+        struct wined3d_unordered_access_view *view)
+{
+    return CONTAINING_RECORD(view, struct wined3d_unordered_access_view_gl, v);
+}
 
 struct wined3d_swapchain_ops
 {
