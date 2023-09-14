@@ -2145,10 +2145,10 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
     }
 }
 
-static void texture_download_data_slow_path(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-        struct wined3d_context *context, const struct wined3d_bo_address *data)
+static void wined3d_texture_gl_download_data_slow_path(struct wined3d_texture_gl *texture_gl,
+        unsigned int sub_resource_idx, struct wined3d_context_gl *context_gl, const struct wined3d_bo_address *data)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_texture_sub_resource *sub_resource;
     unsigned int dst_row_pitch, dst_slice_pitch;
     unsigned int src_row_pitch, src_slice_pitch;
@@ -2158,53 +2158,54 @@ static void texture_download_data_slow_path(struct wined3d_texture *texture, uns
     GLenum target;
     void *mem;
 
-    format_gl = wined3d_format_gl(texture->resource.format);
+    format_gl = wined3d_format_gl(texture_gl->t.resource.format);
 
     /* Only support read back of converted P8 textures. */
-    if (texture->flags & WINED3D_TEXTURE_CONVERTED && format_gl->f.id != WINED3DFMT_P8_UINT && !format_gl->f.download)
+    if (texture_gl->t.flags & WINED3D_TEXTURE_CONVERTED && format_gl->f.id != WINED3DFMT_P8_UINT
+            && !format_gl->f.download)
     {
         ERR("Trying to read back converted texture %p, %u with format %s.\n",
-                texture, sub_resource_idx, debug_d3dformat(format_gl->f.id));
+                texture_gl, sub_resource_idx, debug_d3dformat(format_gl->f.id));
         return;
     }
 
-    sub_resource = &texture->sub_resources[sub_resource_idx];
-    target = wined3d_texture_gl_get_sub_resource_target(wined3d_texture_gl(texture), sub_resource_idx);
-    level = sub_resource_idx % texture->level_count;
+    sub_resource = &texture_gl->t.sub_resources[sub_resource_idx];
+    target = wined3d_texture_gl_get_sub_resource_target(texture_gl, sub_resource_idx);
+    level = sub_resource_idx % texture_gl->t.level_count;
 
     if (target == GL_TEXTURE_1D_ARRAY || target == GL_TEXTURE_2D_ARRAY)
     {
         if (format_gl->f.download)
         {
-            FIXME("Reading back converted array texture %p is not supported.\n", texture);
+            FIXME("Reading back converted array texture %p is not supported.\n", texture_gl);
             return;
         }
 
         /* NP2 emulation is not allowed on array textures. */
-        if (texture->flags & WINED3D_TEXTURE_COND_NP2_EMULATED)
-            ERR("Array texture %p uses NP2 emulation.\n", texture);
+        if (texture_gl->t.flags & WINED3D_TEXTURE_COND_NP2_EMULATED)
+            ERR("Array texture %p uses NP2 emulation.\n", texture_gl);
 
         WARN_(d3d_perf)("Downloading all miplevel layers to get the data for a single sub-resource.\n");
 
-        if (!(temporary_mem = heap_calloc(texture->layer_count, sub_resource->size)))
+        if (!(temporary_mem = heap_calloc(texture_gl->t.layer_count, sub_resource->size)))
         {
             ERR("Out of memory.\n");
             return;
         }
     }
 
-    if (texture->flags & WINED3D_TEXTURE_COND_NP2_EMULATED)
+    if (texture_gl->t.flags & WINED3D_TEXTURE_COND_NP2_EMULATED)
     {
         if (format_gl->f.download)
         {
-            FIXME("Reading back converted texture %p with NP2 emulation is not supported.\n", texture);
+            FIXME("Reading back converted texture %p with NP2 emulation is not supported.\n", texture_gl);
             return;
         }
 
-        wined3d_texture_get_pitch(texture, level, &dst_row_pitch, &dst_slice_pitch);
-        wined3d_format_calculate_pitch(&format_gl->f, texture->resource.device->surface_alignment,
-                wined3d_texture_get_level_pow2_width(texture, level),
-                wined3d_texture_get_level_pow2_height(texture, level),
+        wined3d_texture_get_pitch(&texture_gl->t, level, &dst_row_pitch, &dst_slice_pitch);
+        wined3d_format_calculate_pitch(&format_gl->f, texture_gl->t.resource.device->surface_alignment,
+                wined3d_texture_get_level_pow2_width(&texture_gl->t, level),
+                wined3d_texture_get_level_pow2_height(&texture_gl->t, level),
                 &src_row_pitch, &src_slice_pitch);
         if (!(temporary_mem = heap_alloc(src_slice_pitch)))
         {
@@ -2214,7 +2215,7 @@ static void texture_download_data_slow_path(struct wined3d_texture *texture, uns
 
         if (data->buffer_object)
             ERR("NP2 emulated texture uses PBO unexpectedly.\n");
-        if (texture->resource.format_flags & WINED3DFMT_FLAG_COMPRESSED)
+        if (texture_gl->t.resource.format_flags & WINED3DFMT_FLAG_COMPRESSED)
             ERR("Unexpected compressed format for NP2 emulated texture.\n");
     }
 
@@ -2223,17 +2224,17 @@ static void texture_download_data_slow_path(struct wined3d_texture *texture, uns
         struct wined3d_format f;
 
         if (data->buffer_object)
-            ERR("Converted texture %p uses PBO unexpectedly.\n", texture);
+            ERR("Converted texture %p uses PBO unexpectedly.\n", texture_gl);
 
         WARN_(d3d_perf)("Downloading converted texture %p, %u with format %s.\n",
-                texture, sub_resource_idx, debug_d3dformat(format_gl->f.id));
+                texture_gl, sub_resource_idx, debug_d3dformat(format_gl->f.id));
 
         f = format_gl->f;
         f.byte_count = format_gl->f.conv_byte_count;
-        wined3d_texture_get_pitch(texture, level, &dst_row_pitch, &dst_slice_pitch);
-        wined3d_format_calculate_pitch(&f, texture->resource.device->surface_alignment,
-                wined3d_texture_get_level_width(texture, level),
-                wined3d_texture_get_level_height(texture, level),
+        wined3d_texture_get_pitch(&texture_gl->t, level, &dst_row_pitch, &dst_slice_pitch);
+        wined3d_format_calculate_pitch(&f, texture_gl->t.resource.device->surface_alignment,
+                wined3d_texture_get_level_width(&texture_gl->t, level),
+                wined3d_texture_get_level_height(&texture_gl->t, level),
                 &src_row_pitch, &src_slice_pitch);
 
         if (!(temporary_mem = heap_alloc(src_slice_pitch)))
@@ -2258,10 +2259,10 @@ static void texture_download_data_slow_path(struct wined3d_texture *texture, uns
         mem = data->addr;
     }
 
-    if (texture->resource.format_flags & WINED3DFMT_FLAG_COMPRESSED)
+    if (texture_gl->t.resource.format_flags & WINED3DFMT_FLAG_COMPRESSED)
     {
         TRACE("Downloading compressed texture %p, %u, level %u, format %#x, type %#x, data %p.\n",
-                texture, sub_resource_idx, level, format_gl->format, format_gl->type, mem);
+                texture_gl, sub_resource_idx, level, format_gl->format, format_gl->type, mem);
 
         GL_EXTCALL(glGetCompressedTexImage(target, level, mem));
         checkGLcall("glGetCompressedTexImage");
@@ -2269,7 +2270,7 @@ static void texture_download_data_slow_path(struct wined3d_texture *texture, uns
     else
     {
         TRACE("Downloading texture %p, %u, level %u, format %#x, type %#x, data %p.\n",
-                texture, sub_resource_idx, level, format_gl->format, format_gl->type, mem);
+                texture_gl, sub_resource_idx, level, format_gl->format, format_gl->type, mem);
 
         gl_info->gl_ops.gl.p_glGetTexImage(target, level, format_gl->format, format_gl->type, mem);
         checkGLcall("glGetTexImage");
@@ -2278,10 +2279,10 @@ static void texture_download_data_slow_path(struct wined3d_texture *texture, uns
     if (format_gl->f.download)
     {
         format_gl->f.download(mem, data->addr, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch,
-                wined3d_texture_get_level_width(texture, level),
-                wined3d_texture_get_level_height(texture, level), 1);
+                wined3d_texture_get_level_width(&texture_gl->t, level),
+                wined3d_texture_get_level_height(&texture_gl->t, level), 1);
     }
-    else if (texture->flags & WINED3D_TEXTURE_COND_NP2_EMULATED)
+    else if (texture_gl->t.flags & WINED3D_TEXTURE_COND_NP2_EMULATED)
     {
         const BYTE *src_data;
         unsigned int h, y;
@@ -2338,7 +2339,7 @@ static void texture_download_data_slow_path(struct wined3d_texture *texture, uns
         src_data = mem;
         dst_data = data->addr;
         TRACE("Repacking the surface data from pitch %u to pitch %u.\n", src_row_pitch, dst_row_pitch);
-        h = wined3d_texture_get_level_height(texture, level);
+        h = wined3d_texture_get_level_height(&texture_gl->t, level);
         for (y = 0; y < h; ++y)
         {
             memcpy(dst_data, src_data, dst_row_pitch);
@@ -2348,7 +2349,7 @@ static void texture_download_data_slow_path(struct wined3d_texture *texture, uns
     }
     else if (temporary_mem)
     {
-        unsigned int layer = sub_resource_idx / texture->level_count;
+        unsigned int layer = sub_resource_idx / texture_gl->t.level_count;
         void *src_data = temporary_mem + layer * sub_resource->size;
         if (data->buffer_object)
         {
@@ -2446,7 +2447,7 @@ static void wined3d_texture_gl_download_data(struct wined3d_context *context,
             || src_texture->flags & (WINED3D_TEXTURE_CONVERTED | WINED3D_TEXTURE_COND_NP2_EMULATED)))
             || target == GL_TEXTURE_1D_ARRAY)
     {
-        texture_download_data_slow_path(src_texture, src_sub_resource_idx, context, dst_bo_addr);
+        wined3d_texture_gl_download_data_slow_path(src_texture_gl, src_sub_resource_idx, context_gl, dst_bo_addr);
         return;
     }
 
