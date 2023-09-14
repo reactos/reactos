@@ -44,10 +44,6 @@ static const DWORD pixel_states_render[] =
     WINED3D_RS_COLORWRITEENABLE1,
     WINED3D_RS_COLORWRITEENABLE2,
     WINED3D_RS_COLORWRITEENABLE3,
-    WINED3D_RS_COLORWRITEENABLE4,
-    WINED3D_RS_COLORWRITEENABLE5,
-    WINED3D_RS_COLORWRITEENABLE6,
-    WINED3D_RS_COLORWRITEENABLE7,
     WINED3D_RS_DEPTHBIAS,
     WINED3D_RS_DESTBLEND,
     WINED3D_RS_DESTBLENDALPHA,
@@ -93,7 +89,6 @@ static const DWORD pixel_states_render[] =
     WINED3D_RS_ZENABLE,
     WINED3D_RS_ZFUNC,
     WINED3D_RS_ZWRITEENABLE,
-    WINED3D_RS_DEPTHCLIP,
 };
 
 static const DWORD pixel_states_texture[] =
@@ -1164,7 +1159,7 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     TRACE("Applied stateblock %p.\n", stateblock);
 }
 
-static void state_init_default(struct wined3d_state *state, const struct wined3d_d3d_info *d3d_info)
+static void init_default_render_states(DWORD rs[WINEHIGHEST_RENDER_STATE + 1], const struct wined3d_d3d_info *d3d_info)
 {
     union
     {
@@ -1176,6 +1171,136 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
         float f;
         DWORD d;
     } tmpfloat;
+
+    rs[WINED3D_RS_ZENABLE] = WINED3D_ZB_TRUE;
+    rs[WINED3D_RS_FILLMODE] = WINED3D_FILL_SOLID;
+    rs[WINED3D_RS_SHADEMODE] = WINED3D_SHADE_GOURAUD;
+    lp.lp.repeat_factor = 0;
+    lp.lp.line_pattern = 0;
+    rs[WINED3D_RS_LINEPATTERN] = lp.d;
+    rs[WINED3D_RS_ZWRITEENABLE] = TRUE;
+    rs[WINED3D_RS_ALPHATESTENABLE] = FALSE;
+    rs[WINED3D_RS_LASTPIXEL] = TRUE;
+    rs[WINED3D_RS_SRCBLEND] = WINED3D_BLEND_ONE;
+    rs[WINED3D_RS_DESTBLEND] = WINED3D_BLEND_ZERO;
+    rs[WINED3D_RS_CULLMODE] = WINED3D_CULL_BACK;
+    rs[WINED3D_RS_ZFUNC] = WINED3D_CMP_LESSEQUAL;
+    rs[WINED3D_RS_ALPHAFUNC] = WINED3D_CMP_ALWAYS;
+    rs[WINED3D_RS_ALPHAREF] = 0;
+    rs[WINED3D_RS_DITHERENABLE] = FALSE;
+    rs[WINED3D_RS_ALPHABLENDENABLE] = FALSE;
+    rs[WINED3D_RS_FOGENABLE] = FALSE;
+    rs[WINED3D_RS_SPECULARENABLE] = FALSE;
+    rs[WINED3D_RS_ZVISIBLE] = 0;
+    rs[WINED3D_RS_FOGCOLOR] = 0;
+    rs[WINED3D_RS_FOGTABLEMODE] = WINED3D_FOG_NONE;
+    tmpfloat.f = 0.0f;
+    rs[WINED3D_RS_FOGSTART] = tmpfloat.d;
+    tmpfloat.f = 1.0f;
+    rs[WINED3D_RS_FOGEND] = tmpfloat.d;
+    tmpfloat.f = 1.0f;
+    rs[WINED3D_RS_FOGDENSITY] = tmpfloat.d;
+    rs[WINED3D_RS_EDGEANTIALIAS] = FALSE;
+    rs[WINED3D_RS_RANGEFOGENABLE] = FALSE;
+    rs[WINED3D_RS_STENCILENABLE] = FALSE;
+    rs[WINED3D_RS_STENCILFAIL] = WINED3D_STENCIL_OP_KEEP;
+    rs[WINED3D_RS_STENCILZFAIL] = WINED3D_STENCIL_OP_KEEP;
+    rs[WINED3D_RS_STENCILPASS] = WINED3D_STENCIL_OP_KEEP;
+    rs[WINED3D_RS_STENCILREF] = 0;
+    rs[WINED3D_RS_STENCILMASK] = 0xffffffff;
+    rs[WINED3D_RS_STENCILFUNC] = WINED3D_CMP_ALWAYS;
+    rs[WINED3D_RS_STENCILWRITEMASK] = 0xffffffff;
+    rs[WINED3D_RS_TEXTUREFACTOR] = 0xffffffff;
+    rs[WINED3D_RS_WRAP0] = 0;
+    rs[WINED3D_RS_WRAP1] = 0;
+    rs[WINED3D_RS_WRAP2] = 0;
+    rs[WINED3D_RS_WRAP3] = 0;
+    rs[WINED3D_RS_WRAP4] = 0;
+    rs[WINED3D_RS_WRAP5] = 0;
+    rs[WINED3D_RS_WRAP6] = 0;
+    rs[WINED3D_RS_WRAP7] = 0;
+    rs[WINED3D_RS_CLIPPING] = TRUE;
+    rs[WINED3D_RS_LIGHTING] = TRUE;
+    rs[WINED3D_RS_AMBIENT] = 0;
+    rs[WINED3D_RS_FOGVERTEXMODE] = WINED3D_FOG_NONE;
+    rs[WINED3D_RS_COLORVERTEX] = TRUE;
+    rs[WINED3D_RS_LOCALVIEWER] = TRUE;
+    rs[WINED3D_RS_NORMALIZENORMALS] = FALSE;
+    rs[WINED3D_RS_DIFFUSEMATERIALSOURCE] = WINED3D_MCS_COLOR1;
+    rs[WINED3D_RS_SPECULARMATERIALSOURCE] = WINED3D_MCS_COLOR2;
+    rs[WINED3D_RS_AMBIENTMATERIALSOURCE] = WINED3D_MCS_MATERIAL;
+    rs[WINED3D_RS_EMISSIVEMATERIALSOURCE] = WINED3D_MCS_MATERIAL;
+    rs[WINED3D_RS_VERTEXBLEND] = WINED3D_VBF_DISABLE;
+    rs[WINED3D_RS_CLIPPLANEENABLE] = 0;
+    rs[WINED3D_RS_SOFTWAREVERTEXPROCESSING] = FALSE;
+    tmpfloat.f = 1.0f;
+    rs[WINED3D_RS_POINTSIZE] = tmpfloat.d;
+    tmpfloat.f = 1.0f;
+    rs[WINED3D_RS_POINTSIZE_MIN] = tmpfloat.d;
+    rs[WINED3D_RS_POINTSPRITEENABLE] = FALSE;
+    rs[WINED3D_RS_POINTSCALEENABLE] = FALSE;
+    tmpfloat.f = 1.0f;
+    rs[WINED3D_RS_POINTSCALE_A] = tmpfloat.d;
+    tmpfloat.f = 0.0f;
+    rs[WINED3D_RS_POINTSCALE_B] = tmpfloat.d;
+    tmpfloat.f = 0.0f;
+    rs[WINED3D_RS_POINTSCALE_C] = tmpfloat.d;
+    rs[WINED3D_RS_MULTISAMPLEANTIALIAS] = TRUE;
+    rs[WINED3D_RS_MULTISAMPLEMASK] = 0xffffffff;
+    rs[WINED3D_RS_PATCHEDGESTYLE] = WINED3D_PATCH_EDGE_DISCRETE;
+    tmpfloat.f = 1.0f;
+    rs[WINED3D_RS_PATCHSEGMENTS] = tmpfloat.d;
+    rs[WINED3D_RS_DEBUGMONITORTOKEN] = 0xbaadcafe;
+    tmpfloat.f = d3d_info->limits.pointsize_max;
+    rs[WINED3D_RS_POINTSIZE_MAX] = tmpfloat.d;
+    rs[WINED3D_RS_INDEXEDVERTEXBLENDENABLE] = FALSE;
+    rs[WINED3D_RS_COLORWRITEENABLE] = 0x0000000f;
+    tmpfloat.f = 0.0f;
+    rs[WINED3D_RS_TWEENFACTOR] = tmpfloat.d;
+    rs[WINED3D_RS_BLENDOP] = WINED3D_BLEND_OP_ADD;
+    rs[WINED3D_RS_POSITIONDEGREE] = WINED3D_DEGREE_CUBIC;
+    rs[WINED3D_RS_NORMALDEGREE] = WINED3D_DEGREE_LINEAR;
+    /* states new in d3d9 */
+    rs[WINED3D_RS_SCISSORTESTENABLE] = FALSE;
+    rs[WINED3D_RS_SLOPESCALEDEPTHBIAS] = 0;
+    tmpfloat.f = 1.0f;
+    rs[WINED3D_RS_MINTESSELLATIONLEVEL] = tmpfloat.d;
+    rs[WINED3D_RS_MAXTESSELLATIONLEVEL] = tmpfloat.d;
+    rs[WINED3D_RS_ANTIALIASEDLINEENABLE] = FALSE;
+    tmpfloat.f = 0.0f;
+    rs[WINED3D_RS_ADAPTIVETESS_X] = tmpfloat.d;
+    rs[WINED3D_RS_ADAPTIVETESS_Y] = tmpfloat.d;
+    tmpfloat.f = 1.0f;
+    rs[WINED3D_RS_ADAPTIVETESS_Z] = tmpfloat.d;
+    tmpfloat.f = 0.0f;
+    rs[WINED3D_RS_ADAPTIVETESS_W] = tmpfloat.d;
+    rs[WINED3D_RS_ENABLEADAPTIVETESSELLATION] = FALSE;
+    rs[WINED3D_RS_TWOSIDEDSTENCILMODE] = FALSE;
+    rs[WINED3D_RS_BACK_STENCILFAIL] = WINED3D_STENCIL_OP_KEEP;
+    rs[WINED3D_RS_BACK_STENCILZFAIL] = WINED3D_STENCIL_OP_KEEP;
+    rs[WINED3D_RS_BACK_STENCILPASS] = WINED3D_STENCIL_OP_KEEP;
+    rs[WINED3D_RS_BACK_STENCILFUNC] = WINED3D_CMP_ALWAYS;
+    rs[WINED3D_RS_COLORWRITEENABLE1] = 0x0000000f;
+    rs[WINED3D_RS_COLORWRITEENABLE2] = 0x0000000f;
+    rs[WINED3D_RS_COLORWRITEENABLE3] = 0x0000000f;
+    rs[WINED3D_RS_SRGBWRITEENABLE] = 0;
+    rs[WINED3D_RS_DEPTHBIAS] = 0;
+    rs[WINED3D_RS_WRAP8] = 0;
+    rs[WINED3D_RS_WRAP9] = 0;
+    rs[WINED3D_RS_WRAP10] = 0;
+    rs[WINED3D_RS_WRAP11] = 0;
+    rs[WINED3D_RS_WRAP12] = 0;
+    rs[WINED3D_RS_WRAP13] = 0;
+    rs[WINED3D_RS_WRAP14] = 0;
+    rs[WINED3D_RS_WRAP15] = 0;
+    rs[WINED3D_RS_SEPARATEALPHABLENDENABLE] = FALSE;
+    rs[WINED3D_RS_SRCBLENDALPHA] = WINED3D_BLEND_ONE;
+    rs[WINED3D_RS_DESTBLENDALPHA] = WINED3D_BLEND_ZERO;
+    rs[WINED3D_RS_BLENDOPALPHA] = WINED3D_BLEND_OP_ADD;
+}
+
+static void state_init_default(struct wined3d_state *state, const struct wined3d_d3d_info *d3d_info)
+{
     unsigned int i;
     struct wined3d_matrix identity;
 
@@ -1193,134 +1318,7 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
         state->transforms[WINED3D_TS_WORLD_MATRIX(i)] = identity;
     }
 
-    TRACE("Render states\n");
-    /* Render states: */
-    state->render_states[WINED3D_RS_ZENABLE] = WINED3D_ZB_TRUE;
-    state->render_states[WINED3D_RS_FILLMODE] = WINED3D_FILL_SOLID;
-    state->render_states[WINED3D_RS_SHADEMODE] = WINED3D_SHADE_GOURAUD;
-    lp.lp.repeat_factor = 0;
-    lp.lp.line_pattern = 0;
-    state->render_states[WINED3D_RS_LINEPATTERN] = lp.d;
-    state->render_states[WINED3D_RS_ZWRITEENABLE] = TRUE;
-    state->render_states[WINED3D_RS_ALPHATESTENABLE] = FALSE;
-    state->render_states[WINED3D_RS_LASTPIXEL] = TRUE;
-    state->render_states[WINED3D_RS_SRCBLEND] = WINED3D_BLEND_ONE;
-    state->render_states[WINED3D_RS_DESTBLEND] = WINED3D_BLEND_ZERO;
-    state->render_states[WINED3D_RS_CULLMODE] = WINED3D_CULL_BACK;
-    state->render_states[WINED3D_RS_ZFUNC] = WINED3D_CMP_LESSEQUAL;
-    state->render_states[WINED3D_RS_ALPHAFUNC] = WINED3D_CMP_ALWAYS;
-    state->render_states[WINED3D_RS_ALPHAREF] = 0;
-    state->render_states[WINED3D_RS_DITHERENABLE] = FALSE;
-    state->render_states[WINED3D_RS_ALPHABLENDENABLE] = FALSE;
-    state->render_states[WINED3D_RS_FOGENABLE] = FALSE;
-    state->render_states[WINED3D_RS_SPECULARENABLE] = FALSE;
-    state->render_states[WINED3D_RS_ZVISIBLE] = 0;
-    state->render_states[WINED3D_RS_FOGCOLOR] = 0;
-    state->render_states[WINED3D_RS_FOGTABLEMODE] = WINED3D_FOG_NONE;
-    tmpfloat.f = 0.0f;
-    state->render_states[WINED3D_RS_FOGSTART] = tmpfloat.d;
-    tmpfloat.f = 1.0f;
-    state->render_states[WINED3D_RS_FOGEND] = tmpfloat.d;
-    tmpfloat.f = 1.0f;
-    state->render_states[WINED3D_RS_FOGDENSITY] = tmpfloat.d;
-    state->render_states[WINED3D_RS_EDGEANTIALIAS] = FALSE;
-    state->render_states[WINED3D_RS_RANGEFOGENABLE] = FALSE;
-    state->render_states[WINED3D_RS_STENCILENABLE] = FALSE;
-    state->render_states[WINED3D_RS_STENCILFAIL] = WINED3D_STENCIL_OP_KEEP;
-    state->render_states[WINED3D_RS_STENCILZFAIL] = WINED3D_STENCIL_OP_KEEP;
-    state->render_states[WINED3D_RS_STENCILPASS] = WINED3D_STENCIL_OP_KEEP;
-    state->render_states[WINED3D_RS_STENCILREF] = 0;
-    state->render_states[WINED3D_RS_STENCILMASK] = 0xffffffff;
-    state->render_states[WINED3D_RS_STENCILFUNC] = WINED3D_CMP_ALWAYS;
-    state->render_states[WINED3D_RS_STENCILWRITEMASK] = 0xffffffff;
-    state->render_states[WINED3D_RS_TEXTUREFACTOR] = 0xffffffff;
-    state->render_states[WINED3D_RS_WRAP0] = 0;
-    state->render_states[WINED3D_RS_WRAP1] = 0;
-    state->render_states[WINED3D_RS_WRAP2] = 0;
-    state->render_states[WINED3D_RS_WRAP3] = 0;
-    state->render_states[WINED3D_RS_WRAP4] = 0;
-    state->render_states[WINED3D_RS_WRAP5] = 0;
-    state->render_states[WINED3D_RS_WRAP6] = 0;
-    state->render_states[WINED3D_RS_WRAP7] = 0;
-    state->render_states[WINED3D_RS_CLIPPING] = TRUE;
-    state->render_states[WINED3D_RS_LIGHTING] = TRUE;
-    state->render_states[WINED3D_RS_AMBIENT] = 0;
-    state->render_states[WINED3D_RS_FOGVERTEXMODE] = WINED3D_FOG_NONE;
-    state->render_states[WINED3D_RS_COLORVERTEX] = TRUE;
-    state->render_states[WINED3D_RS_LOCALVIEWER] = TRUE;
-    state->render_states[WINED3D_RS_NORMALIZENORMALS] = FALSE;
-    state->render_states[WINED3D_RS_DIFFUSEMATERIALSOURCE] = WINED3D_MCS_COLOR1;
-    state->render_states[WINED3D_RS_SPECULARMATERIALSOURCE] = WINED3D_MCS_COLOR2;
-    state->render_states[WINED3D_RS_AMBIENTMATERIALSOURCE] = WINED3D_MCS_MATERIAL;
-    state->render_states[WINED3D_RS_EMISSIVEMATERIALSOURCE] = WINED3D_MCS_MATERIAL;
-    state->render_states[WINED3D_RS_VERTEXBLEND] = WINED3D_VBF_DISABLE;
-    state->render_states[WINED3D_RS_CLIPPLANEENABLE] = 0;
-    state->render_states[WINED3D_RS_SOFTWAREVERTEXPROCESSING] = FALSE;
-    tmpfloat.f = 1.0f;
-    state->render_states[WINED3D_RS_POINTSIZE] = tmpfloat.d;
-    tmpfloat.f = 1.0f;
-    state->render_states[WINED3D_RS_POINTSIZE_MIN] = tmpfloat.d;
-    state->render_states[WINED3D_RS_POINTSPRITEENABLE] = FALSE;
-    state->render_states[WINED3D_RS_POINTSCALEENABLE] = FALSE;
-    tmpfloat.f = 1.0f;
-    state->render_states[WINED3D_RS_POINTSCALE_A] = tmpfloat.d;
-    tmpfloat.f = 0.0f;
-    state->render_states[WINED3D_RS_POINTSCALE_B] = tmpfloat.d;
-    tmpfloat.f = 0.0f;
-    state->render_states[WINED3D_RS_POINTSCALE_C] = tmpfloat.d;
-    state->render_states[WINED3D_RS_MULTISAMPLEANTIALIAS] = TRUE;
-    state->render_states[WINED3D_RS_MULTISAMPLEMASK] = 0xffffffff;
-    state->render_states[WINED3D_RS_PATCHEDGESTYLE] = WINED3D_PATCH_EDGE_DISCRETE;
-    tmpfloat.f = 1.0f;
-    state->render_states[WINED3D_RS_PATCHSEGMENTS] = tmpfloat.d;
-    state->render_states[WINED3D_RS_DEBUGMONITORTOKEN] = 0xbaadcafe;
-    tmpfloat.f = d3d_info->limits.pointsize_max;
-    state->render_states[WINED3D_RS_POINTSIZE_MAX] = tmpfloat.d;
-    state->render_states[WINED3D_RS_INDEXEDVERTEXBLENDENABLE] = FALSE;
-    tmpfloat.f = 0.0f;
-    state->render_states[WINED3D_RS_TWEENFACTOR] = tmpfloat.d;
-    state->render_states[WINED3D_RS_BLENDOP] = WINED3D_BLEND_OP_ADD;
-    state->render_states[WINED3D_RS_POSITIONDEGREE] = WINED3D_DEGREE_CUBIC;
-    state->render_states[WINED3D_RS_NORMALDEGREE] = WINED3D_DEGREE_LINEAR;
-    /* states new in d3d9 */
-    state->render_states[WINED3D_RS_SCISSORTESTENABLE] = FALSE;
-    state->render_states[WINED3D_RS_SLOPESCALEDEPTHBIAS] = 0;
-    tmpfloat.f = 1.0f;
-    state->render_states[WINED3D_RS_MINTESSELLATIONLEVEL] = tmpfloat.d;
-    state->render_states[WINED3D_RS_MAXTESSELLATIONLEVEL] = tmpfloat.d;
-    state->render_states[WINED3D_RS_ANTIALIASEDLINEENABLE] = FALSE;
-    tmpfloat.f = 0.0f;
-    state->render_states[WINED3D_RS_ADAPTIVETESS_X] = tmpfloat.d;
-    state->render_states[WINED3D_RS_ADAPTIVETESS_Y] = tmpfloat.d;
-    tmpfloat.f = 1.0f;
-    state->render_states[WINED3D_RS_ADAPTIVETESS_Z] = tmpfloat.d;
-    tmpfloat.f = 0.0f;
-    state->render_states[WINED3D_RS_ADAPTIVETESS_W] = tmpfloat.d;
-    state->render_states[WINED3D_RS_ENABLEADAPTIVETESSELLATION] = FALSE;
-    state->render_states[WINED3D_RS_TWOSIDEDSTENCILMODE] = FALSE;
-    state->render_states[WINED3D_RS_BACK_STENCILFAIL] = WINED3D_STENCIL_OP_KEEP;
-    state->render_states[WINED3D_RS_BACK_STENCILZFAIL] = WINED3D_STENCIL_OP_KEEP;
-    state->render_states[WINED3D_RS_BACK_STENCILPASS] = WINED3D_STENCIL_OP_KEEP;
-    state->render_states[WINED3D_RS_BACK_STENCILFUNC] = WINED3D_CMP_ALWAYS;
-    state->render_states[WINED3D_RS_SRGBWRITEENABLE] = 0;
-    state->render_states[WINED3D_RS_DEPTHBIAS] = 0;
-    tmpfloat.f = 0.0f;
-    state->render_states[WINED3D_RS_DEPTHBIASCLAMP] = tmpfloat.d;
-    state->render_states[WINED3D_RS_DEPTHCLIP] = TRUE;
-    state->render_states[WINED3D_RS_WRAP8] = 0;
-    state->render_states[WINED3D_RS_WRAP9] = 0;
-    state->render_states[WINED3D_RS_WRAP10] = 0;
-    state->render_states[WINED3D_RS_WRAP11] = 0;
-    state->render_states[WINED3D_RS_WRAP12] = 0;
-    state->render_states[WINED3D_RS_WRAP13] = 0;
-    state->render_states[WINED3D_RS_WRAP14] = 0;
-    state->render_states[WINED3D_RS_WRAP15] = 0;
-    state->render_states[WINED3D_RS_SEPARATEALPHABLENDENABLE] = FALSE;
-    state->render_states[WINED3D_RS_SRCBLENDALPHA] = WINED3D_BLEND_ONE;
-    state->render_states[WINED3D_RS_DESTBLENDALPHA] = WINED3D_BLEND_ZERO;
-    state->render_states[WINED3D_RS_BLENDOPALPHA] = WINED3D_BLEND_OP_ADD;
-    for (i = 0; i < MAX_RENDER_TARGETS; ++i)
-        state->render_states[WINED3D_RS_COLORWRITE(i)] = 0x0000000f;
+    init_default_render_states(state->render_states, d3d_info);
 
     /* Texture Stage States - Put directly into state block, we will call function below */
     for (i = 0; i < MAX_TEXTURES; ++i)
