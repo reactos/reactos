@@ -1001,7 +1001,7 @@ static void wined3d_device_delete_opengl_contexts_cs(void *object)
 
     context = context_acquire(device, NULL, 0);
     device->blitter->ops->blitter_destroy(device->blitter, context);
-    device->shader_backend->shader_free_private(device);
+    device->shader_backend->shader_free_private(device, context);
     destroy_dummy_textures(device, context);
     destroy_default_samplers(device, context);
     context_release(context);
@@ -1039,7 +1039,7 @@ static void wined3d_device_create_primary_opengl_context_cs(void *object)
     if (!(device->blitter = wined3d_cpu_blitter_create()))
     {
         ERR("Failed to create CPU blitter.\n");
-        device->shader_backend->shader_free_private(device);
+        device->shader_backend->shader_free_private(device, NULL);
         return;
     }
     wined3d_ffp_blitter_create(&device->blitter, &device->adapter->gl_info);

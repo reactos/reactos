@@ -5231,7 +5231,7 @@ static void *ffp_alloc(const struct wined3d_shader_backend_ops *shader_backend, 
     return shader_priv;
 }
 
-static void ffp_free(struct wined3d_device *device) {}
+static void ffp_free(struct wined3d_device *device, struct wined3d_context *context) {}
 
 static void vp_ffp_get_caps(const struct wined3d_gl_info *gl_info, struct wined3d_vertex_caps *caps)
 {
@@ -5349,7 +5349,7 @@ static void *none_alloc(const struct wined3d_shader_backend_ops *shader_backend,
     return shader_priv;
 }
 
-static void none_free(struct wined3d_device *device) {}
+static void none_free(struct wined3d_device *device, struct wined3d_context *context) {}
 
 static void vp_none_get_caps(const struct wined3d_gl_info *gl_info, struct wined3d_vertex_caps *caps)
 {

@@ -4798,7 +4798,7 @@ static HRESULT shader_arb_alloc(struct wined3d_device *device, const struct wine
     if (!(fragment_priv = fragment_pipe->alloc_private(&arb_program_shader_backend, priv)))
     {
         ERR("Failed to initialize fragment pipe.\n");
-        vertex_pipe->vp_free(device);
+        vertex_pipe->vp_free(device, NULL);
         heap_free(priv);
         return E_FAIL;
     }
@@ -4836,13 +4836,13 @@ static void release_signature(struct wine_rb_entry *entry, void *context)
 }
 
 /* Context activation is done by the caller. */
-static void shader_arb_free(struct wined3d_device *device)
+static void shader_arb_free(struct wined3d_device *device, struct wined3d_context *context)
 {
     struct shader_arb_priv *priv = device->shader_priv;
 
     wine_rb_destroy(&priv->signature_tree, release_signature, NULL);
-    priv->fragment_pipe->free_private(device);
-    priv->vertex_pipe->vp_free(device);
+    priv->fragment_pipe->free_private(device, context);
+    priv->vertex_pipe->vp_free(device, context);
     heap_free(device->shader_priv);
 }
 
@@ -5710,22 +5710,24 @@ static void *arbfp_alloc(const struct wined3d_shader_backend_ops *shader_backend
 }
 
 /* Context activation is done by the caller. */
-static void arbfp_free_ffpshader(struct wine_rb_entry *entry, void *context)
+static void arbfp_free_ffpshader(struct wine_rb_entry *entry, void *param)
 {
-    const struct wined3d_gl_info *gl_info = context;
     struct arbfp_ffp_desc *entry_arb = WINE_RB_ENTRY_VALUE(entry, struct arbfp_ffp_desc, parent.entry);
+    struct wined3d_context *context = param;
+    const struct wined3d_gl_info *gl_info;
 
+    gl_info = context->gl_info;
     GL_EXTCALL(glDeleteProgramsARB(1, &entry_arb->shader));
-    checkGLcall("glDeleteProgramsARB(1, &entry_arb->shader)");
+    checkGLcall("delete ffp program");
     heap_free(entry_arb);
 }
 
 /* Context activation is done by the caller. */
-static void arbfp_free(struct wined3d_device *device)
+static void arbfp_free(struct wined3d_device *device, struct wined3d_context *context)
 {
     struct shader_arb_priv *priv = device->fragment_priv;
 
-    wine_rb_destroy(&priv->fragment_shaders, arbfp_free_ffpshader, &device->adapter->gl_info);
+    wine_rb_destroy(&priv->fragment_shaders, arbfp_free_ffpshader, context);
     priv->use_arbfp_fixed_func = FALSE;
 
     if (device->shader_backend != &arb_program_shader_backend)

@@ -352,7 +352,7 @@ struct glsl_ffp_fragment_shader
 struct glsl_ffp_destroy_ctx
 {
     struct shader_glsl_priv *priv;
-    const struct wined3d_gl_info *gl_info;
+    const struct wined3d_context *context;
 };
 
 static void shader_glsl_generate_shader_epilogue(const struct wined3d_shader_context *ctx);
@@ -10970,7 +10970,7 @@ static HRESULT shader_glsl_alloc(struct wined3d_device *device, const struct win
     if (!(fragment_priv = fragment_pipe->alloc_private(&glsl_shader_backend, priv)))
     {
         ERR("Failed to initialize fragment pipe.\n");
-        vertex_pipe->vp_free(device);
+        vertex_pipe->vp_free(device, NULL);
         heap_free(priv);
         return E_FAIL;
     }
@@ -11019,14 +11019,14 @@ fail:
     constant_heap_free(&priv->vconst_heap);
     heap_free(priv->stack);
     string_buffer_free(&priv->shader_buffer);
-    fragment_pipe->free_private(device);
-    vertex_pipe->vp_free(device);
+    fragment_pipe->free_private(device, NULL);
+    vertex_pipe->vp_free(device, NULL);
     heap_free(priv);
     return E_OUTOFMEMORY;
 }
 
 /* Context activation is done by the caller. */
-static void shader_glsl_free(struct wined3d_device *device)
+static void shader_glsl_free(struct wined3d_device *device, struct wined3d_context *context)
 {
     struct shader_glsl_priv *priv = device->shader_priv;
 
@@ -11036,8 +11036,8 @@ static void shader_glsl_free(struct wined3d_device *device)
     heap_free(priv->stack);
     string_buffer_list_cleanup(&priv->string_buffers);
     string_buffer_free(&priv->shader_buffer);
-    priv->fragment_pipe->free_private(device);
-    priv->vertex_pipe->vp_free(device);
+    priv->fragment_pipe->free_private(device, context);
+    priv->vertex_pipe->vp_free(device, context);
 
     heap_free(device->shader_priv);
     device->shader_priv = NULL;
@@ -11480,30 +11480,31 @@ static void *glsl_vertex_pipe_vp_alloc(const struct wined3d_shader_backend_ops *
     return NULL;
 }
 
-static void shader_glsl_free_ffp_vertex_shader(struct wine_rb_entry *entry, void *context)
+static void shader_glsl_free_ffp_vertex_shader(struct wine_rb_entry *entry, void *param)
 {
     struct glsl_ffp_vertex_shader *shader = WINE_RB_ENTRY_VALUE(entry,
             struct glsl_ffp_vertex_shader, desc.entry);
     struct glsl_shader_prog_link *program, *program2;
-    struct glsl_ffp_destroy_ctx *ctx = context;
+    struct glsl_ffp_destroy_ctx *ctx = param;
+    const struct wined3d_gl_info *gl_info = ctx->context->gl_info;
 
     LIST_FOR_EACH_ENTRY_SAFE(program, program2, &shader->linked_programs,
             struct glsl_shader_prog_link, vs.shader_entry)
     {
-        delete_glsl_program_entry(ctx->priv, ctx->gl_info, program);
+        delete_glsl_program_entry(ctx->priv, gl_info, program);
     }
-    ctx->gl_info->gl_ops.ext.p_glDeleteShader(shader->id);
+    GL_EXTCALL(glDeleteShader(shader->id));
     heap_free(shader);
 }
 
 /* Context activation is done by the caller. */
-static void glsl_vertex_pipe_vp_free(struct wined3d_device *device)
+static void glsl_vertex_pipe_vp_free(struct wined3d_device *device, struct wined3d_context *context)
 {
     struct shader_glsl_priv *priv = device->vertex_priv;
     struct glsl_ffp_destroy_ctx ctx;
 
     ctx.priv = priv;
-    ctx.gl_info = &device->adapter->gl_info;
+    ctx.context = context;
     wine_rb_destroy(&priv->ffp_vertex_shaders, shader_glsl_free_ffp_vertex_shader, &ctx);
 }
 
@@ -11993,30 +11994,31 @@ static void *glsl_fragment_pipe_alloc(const struct wined3d_shader_backend_ops *s
     return NULL;
 }
 
-static void shader_glsl_free_ffp_fragment_shader(struct wine_rb_entry *entry, void *context)
+static void shader_glsl_free_ffp_fragment_shader(struct wine_rb_entry *entry, void *param)
 {
     struct glsl_ffp_fragment_shader *shader = WINE_RB_ENTRY_VALUE(entry,
             struct glsl_ffp_fragment_shader, entry.entry);
     struct glsl_shader_prog_link *program, *program2;
-    struct glsl_ffp_destroy_ctx *ctx = context;
+    struct glsl_ffp_destroy_ctx *ctx = param;
+    const struct wined3d_gl_info *gl_info = ctx->context->gl_info;
 
     LIST_FOR_EACH_ENTRY_SAFE(program, program2, &shader->linked_programs,
             struct glsl_shader_prog_link, ps.shader_entry)
     {
-        delete_glsl_program_entry(ctx->priv, ctx->gl_info, program);
+        delete_glsl_program_entry(ctx->priv, gl_info, program);
     }
-    ctx->gl_info->gl_ops.ext.p_glDeleteShader(shader->id);
+    GL_EXTCALL(glDeleteShader(shader->id));
     heap_free(shader);
 }
 
 /* Context activation is done by the caller. */
-static void glsl_fragment_pipe_free(struct wined3d_device *device)
+static void glsl_fragment_pipe_free(struct wined3d_device *device, struct wined3d_context *context)
 {
     struct shader_glsl_priv *priv = device->fragment_priv;
     struct glsl_ffp_destroy_ctx ctx;
 
     ctx.priv = priv;
-    ctx.gl_info = &device->adapter->gl_info;
+    ctx.context = context;
     wine_rb_destroy(&priv->ffp_fragment_shaders, shader_glsl_free_ffp_fragment_shader, &ctx);
 }
 

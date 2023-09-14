@@ -754,7 +754,7 @@ static void *nvrc_fragment_alloc(const struct wined3d_shader_backend_ops *shader
 }
 
 /* Context activation is done by the caller. */
-static void nvrc_fragment_free(struct wined3d_device *device) {}
+static void nvrc_fragment_free(struct wined3d_device *device, struct wined3d_context *context) {}
 
 /* Two fixed function pipeline implementations using GL_NV_register_combiners and
  * GL_NV_texture_shader. The nvts_fragment_pipeline assumes that both extensions

@@ -1438,7 +1438,7 @@ struct wined3d_shader_backend_ops
     void (*shader_destroy)(struct wined3d_shader *shader);
     HRESULT (*shader_alloc_private)(struct wined3d_device *device, const struct wined3d_vertex_pipe_ops *vertex_pipe,
             const struct fragment_pipeline *fragment_pipe);
-    void (*shader_free_private)(struct wined3d_device *device);
+    void (*shader_free_private)(struct wined3d_device *device, struct wined3d_context *context);
     BOOL (*shader_allocate_context_data)(struct wined3d_context *context);
     void (*shader_free_context_data)(struct wined3d_context *context);
     void (*shader_init_context_state)(struct wined3d_context *context);
@@ -2071,7 +2071,7 @@ struct fragment_pipeline
     void (*get_caps)(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps);
     DWORD (*get_emul_mask)(const struct wined3d_gl_info *gl_info);
     void *(*alloc_private)(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv);
-    void (*free_private)(struct wined3d_device *device);
+    void (*free_private)(struct wined3d_device *device, struct wined3d_context *context);
     BOOL (*allocate_context_data)(struct wined3d_context *context);
     void (*free_context_data)(struct wined3d_context *context);
     BOOL (*color_fixup_supported)(struct color_fixup_desc fixup);
@@ -2098,7 +2098,7 @@ struct wined3d_vertex_pipe_ops
     void (*vp_get_caps)(const struct wined3d_gl_info *gl_info, struct wined3d_vertex_caps *caps);
     DWORD (*vp_get_emul_mask)(const struct wined3d_gl_info *gl_info);
     void *(*vp_alloc)(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv);
-    void (*vp_free)(struct wined3d_device *device);
+    void (*vp_free)(struct wined3d_device *device, struct wined3d_context *context);
     const struct wined3d_state_entry_template *vp_states;
 };
 
