@@ -4936,6 +4936,33 @@ static inline enum wined3d_material_color_source validate_material_colour_source
     return WINED3D_MCS_MATERIAL;
 }
 
+static inline void wined3d_get_material_colour_source(enum wined3d_material_color_source *diffuse,
+        enum wined3d_material_color_source *emissive, enum wined3d_material_color_source *ambient,
+        enum wined3d_material_color_source *specular, const struct wined3d_state *state,
+        const struct wined3d_stream_info *si)
+{
+    if (!state->render_states[WINED3D_RS_LIGHTING])
+    {
+        *diffuse = WINED3D_MCS_COLOR1;
+        *specular = WINED3D_MCS_COLOR2;
+        *emissive = *ambient = WINED3D_MCS_MATERIAL;
+
+        return;
+    }
+
+    if (!state->render_states[WINED3D_RS_COLORVERTEX])
+    {
+        *diffuse = *emissive = *ambient = *specular = WINED3D_MCS_MATERIAL;
+
+        return;
+    }
+
+    *diffuse = validate_material_colour_source(si->use_map, state->render_states[WINED3D_RS_DIFFUSEMATERIALSOURCE]);
+    *emissive = validate_material_colour_source(si->use_map, state->render_states[WINED3D_RS_EMISSIVEMATERIALSOURCE]);
+    *ambient = validate_material_colour_source(si->use_map, state->render_states[WINED3D_RS_AMBIENTMATERIALSOURCE]);
+    *specular = validate_material_colour_source(si->use_map, state->render_states[WINED3D_RS_SPECULARMATERIALSOURCE]);
+}
+
 BOOL invert_matrix(struct wined3d_matrix *out, const struct wined3d_matrix *m) DECLSPEC_HIDDEN;
 
 void compute_normal_matrix(float *normal_matrix, BOOL legacy_lighting,

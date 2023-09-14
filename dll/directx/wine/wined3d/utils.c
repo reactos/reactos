@@ -6719,6 +6719,7 @@ int wined3d_ffp_frag_program_key_compare(const void *key, const struct wine_rb_e
 void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
         const struct wined3d_state *state, struct wined3d_ffp_vs_settings *settings)
 {
+    enum wined3d_material_color_source diffuse_source, emissive_source, ambient_source, specular_source;
     const struct wined3d_stream_info *si = &context->stream_info;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_d3d_info *d3d_info = context->d3d_info;
@@ -6788,24 +6789,12 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
     settings->point_size = state->gl_primitive_type == GL_POINTS;
     settings->per_vertex_point_size = !!(si->use_map & 1u << WINED3D_FFP_PSIZE);
 
-    if (state->render_states[WINED3D_RS_COLORVERTEX])
-    {
-        settings->diffuse_source = validate_material_colour_source(si->use_map,
-                state->render_states[WINED3D_RS_DIFFUSEMATERIALSOURCE]);
-        settings->emissive_source = validate_material_colour_source(si->use_map,
-                state->render_states[WINED3D_RS_EMISSIVEMATERIALSOURCE]);
-        settings->ambient_source = validate_material_colour_source(si->use_map,
-                state->render_states[WINED3D_RS_AMBIENTMATERIALSOURCE]);
-        settings->specular_source = validate_material_colour_source(si->use_map,
-                state->render_states[WINED3D_RS_SPECULARMATERIALSOURCE]);
-    }
-    else
-    {
-        settings->diffuse_source = WINED3D_MCS_MATERIAL;
-        settings->emissive_source = WINED3D_MCS_MATERIAL;
-        settings->ambient_source = WINED3D_MCS_MATERIAL;
-        settings->specular_source = WINED3D_MCS_MATERIAL;
-    }
+    wined3d_get_material_colour_source(&diffuse_source, &emissive_source,
+            &ambient_source, &specular_source, state, si);
+    settings->diffuse_source = diffuse_source;
+    settings->emissive_source = emissive_source;
+    settings->ambient_source = ambient_source;
+    settings->specular_source = specular_source;
 
     for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
     {
