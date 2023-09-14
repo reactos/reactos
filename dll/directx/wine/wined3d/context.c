@@ -1961,10 +1961,16 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
 
     context_gl->tid = GetCurrentThreadId();
     context_gl->window = context->swapchain->win_handle;
-    if (!(context_gl->dc = GetDCEx(context_gl->window, 0, DCX_USESTYLE | DCX_CACHE)))
+    if (context_gl->window == GetDesktopWindow())
     {
+        TRACE("Swapchain is created on the desktop window, trying backup device context.\n");
+        context_gl->dc = NULL;
+    }
+    else if (!(context_gl->dc = GetDCEx(context_gl->window, 0, DCX_USESTYLE | DCX_CACHE)))
         WARN("Failed to retrieve device context, trying swapchain backup.\n");
 
+    if (!context_gl->dc)
+    {
         if (!(context_gl->dc = swapchain_get_backup_dc(context->swapchain)))
         {
             ERR("Failed to retrieve a device context.\n");
