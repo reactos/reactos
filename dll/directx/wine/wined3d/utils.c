@@ -3573,12 +3573,6 @@ static void apply_format_fixups(struct wined3d_adapter *adapter, struct wined3d_
         format->color_fixup = create_complex_fixup_desc(COMPLEX_FIXUP_P8);
     }
 
-    if (gl_info->supported[ARB_VERTEX_ARRAY_BGRA])
-    {
-        format = get_format_internal(adapter, WINED3DFMT_B8G8R8A8_UNORM);
-        format->gl_vtx_format = GL_BGRA;
-    }
-
     if (!gl_info->supported[ARB_HALF_FLOAT_VERTEX])
     {
         /* Do not change the size of the type, it is CPU side. We have to change the GPU-side information though.
@@ -3705,6 +3699,12 @@ static BOOL init_format_vertex_info(const struct wined3d_adapter *adapter,
         format->emit_idx = format_vertex_info[i].emit_idx;
         format->gl_vtx_type = format_vertex_info[i].gl_vtx_type;
         format->gl_vtx_format = format->component_count;
+    }
+
+    if (gl_info->supported[ARB_VERTEX_ARRAY_BGRA])
+    {
+        format = get_format_internal(adapter, WINED3DFMT_B8G8R8A8_UNORM);
+        format->gl_vtx_format = GL_BGRA;
     }
 
     return TRUE;
