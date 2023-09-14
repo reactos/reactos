@@ -2430,6 +2430,51 @@ static void adapter_no3d_destroy_buffer(struct wined3d_buffer *buffer)
         wined3d_device_decref(device);
 }
 
+static HRESULT adapter_no3d_create_rendertarget_view(const struct wined3d_view_desc *desc,
+        struct wined3d_resource *resource, void *parent, const struct wined3d_parent_ops *parent_ops,
+        struct wined3d_rendertarget_view **view)
+{
+    struct wined3d_rendertarget_view *view_no3d;
+    HRESULT hr;
+
+    TRACE("desc %s, resource %p, parent %p, parent_ops %p, view %p.\n",
+            wined3d_debug_view_desc(desc, resource), resource, parent, parent_ops, view);
+
+    if (!(view_no3d = heap_alloc_zero(sizeof(*view_no3d))))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(hr = wined3d_rendertarget_view_no3d_init(view_no3d, desc, resource, parent, parent_ops)))
+    {
+        WARN("Failed to initialise view, hr %#x.\n", hr);
+        heap_free(view_no3d);
+        return hr;
+    }
+
+    TRACE("Created render target view %p.\n", view_no3d);
+    *view = view_no3d;
+
+    return hr;
+}
+
+static void adapter_no3d_destroy_rendertarget_view(struct wined3d_rendertarget_view *view)
+{
+    struct wined3d_device *device = view->resource->device;
+    unsigned int swapchain_count = device->swapchain_count;
+
+    TRACE("view %p.\n", view);
+
+    /* Take a reference to the device, in case releasing the view's resource
+     * would cause the device to be destroyed. However, swapchain resources
+     * don't take a reference to the device, and we wouldn't want to increment
+     * the refcount on a device that's in the process of being destroyed. */
+    if (swapchain_count)
+        wined3d_device_incref(device);
+    wined3d_rendertarget_view_cleanup(view);
+    wined3d_cs_destroy_object(device->cs, heap_free, view);
+    if (swapchain_count)
+        wined3d_device_decref(device);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
 {
     adapter_no3d_destroy,
@@ -2445,6 +2490,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
     adapter_no3d_destroy_swapchain,
     adapter_no3d_create_buffer,
     adapter_no3d_destroy_buffer,
+    adapter_no3d_create_rendertarget_view,
+    adapter_no3d_destroy_rendertarget_view,
 };
 
 static void wined3d_adapter_no3d_init_d3d_info(struct wined3d_adapter *adapter, unsigned int wined3d_creation_flags)

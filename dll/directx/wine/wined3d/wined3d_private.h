@@ -2796,6 +2796,10 @@ struct wined3d_adapter_ops
             const struct wined3d_sub_resource_data *data, void *parent, const struct wined3d_parent_ops *parent_ops,
             struct wined3d_buffer **buffer);
     void (*adapter_destroy_buffer)(struct wined3d_buffer *buffer);
+    HRESULT (*adapter_create_rendertarget_view)(const struct wined3d_view_desc *desc,
+            struct wined3d_resource *resource, void *parent, const struct wined3d_parent_ops *parent_ops,
+            struct wined3d_rendertarget_view **view);
+    void (*adapter_destroy_rendertarget_view)(struct wined3d_rendertarget_view *view);
 };
 
 /* The adapter structure */
@@ -4202,6 +4206,7 @@ struct wined3d_rendertarget_view
     struct wined3d_view_desc desc;
 };
 
+void wined3d_rendertarget_view_cleanup(struct wined3d_rendertarget_view *view) DECLSPEC_HIDDEN;
 void wined3d_rendertarget_view_get_drawable_size(const struct wined3d_rendertarget_view *view,
         const struct wined3d_context *context, unsigned int *width, unsigned int *height) DECLSPEC_HIDDEN;
 void wined3d_rendertarget_view_invalidate_location(struct wined3d_rendertarget_view *view,
@@ -4212,6 +4217,10 @@ void wined3d_rendertarget_view_prepare_location(struct wined3d_rendertarget_view
         struct wined3d_context *context, DWORD location) DECLSPEC_HIDDEN;
 void wined3d_rendertarget_view_validate_location(struct wined3d_rendertarget_view *view,
         DWORD location) DECLSPEC_HIDDEN;
+
+HRESULT wined3d_rendertarget_view_no3d_init(struct wined3d_rendertarget_view *view_no3d,
+        const struct wined3d_view_desc *desc, struct wined3d_resource *resource,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
 struct wined3d_rendertarget_view_gl
 {
@@ -4224,6 +4233,25 @@ static inline struct wined3d_rendertarget_view_gl *wined3d_rendertarget_view_gl(
 {
     return CONTAINING_RECORD(view, struct wined3d_rendertarget_view_gl, v);
 }
+
+HRESULT wined3d_rendertarget_view_gl_init(struct wined3d_rendertarget_view_gl *view_gl,
+        const struct wined3d_view_desc *desc, struct wined3d_resource *resource,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
+
+struct wined3d_rendertarget_view_vk
+{
+    struct wined3d_rendertarget_view v;
+};
+
+static inline struct wined3d_rendertarget_view_vk *wined3d_rendertarget_view_vk(
+        struct wined3d_rendertarget_view *view)
+{
+    return CONTAINING_RECORD(view, struct wined3d_rendertarget_view_vk, v);
+}
+
+HRESULT wined3d_rendertarget_view_vk_init(struct wined3d_rendertarget_view_vk *view_vk,
+        const struct wined3d_view_desc *desc, struct wined3d_resource *resource,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
 struct wined3d_shader_resource_view
 {
