@@ -2272,13 +2272,13 @@ static void surface_cpu_blt_colour_fill(struct wined3d_rendertarget_view *view,
 {
     struct wined3d_device *device = view->resource->device;
     struct wined3d_context_gl *context_gl = NULL;
+    unsigned int x, y, z, w, h, d, bpp, level;
     struct wined3d_context *context = NULL;
     struct wined3d_texture *texture;
     struct wined3d_bo_address data;
-    unsigned int x, y, w, h, bpp;
     struct wined3d_map_desc map;
     DWORD map_binding;
-    BYTE *row;
+    uint8_t *dst;
     DWORD c;
 
     TRACE("view %p, box %s, colour %s.\n", view, debug_box(box), debug_color(colour));
@@ -2305,18 +2305,28 @@ static void surface_cpu_blt_colour_fill(struct wined3d_rendertarget_view *view,
         context_gl = wined3d_context_gl(context);
     }
 
+    texture = texture_from_resource(view->resource);
+    level = view->sub_resource_idx % texture->level_count;
+
     c = wined3d_format_convert_from_float(view->format, colour);
     bpp = view->format->byte_count;
     w = min(box->right, view->width) - min(box->left, view->width);
     h = min(box->bottom, view->height) - min(box->top, view->height);
+    if (view->resource->type != WINED3D_RTYPE_TEXTURE_3D)
+    {
+        d = 1;
+    }
+    else
+    {
+        d = wined3d_texture_get_level_depth(texture, level);
+        d = min(box->back, d) - min(box->front, d);
+    }
 
-    texture = texture_from_resource(view->resource);
     map_binding = texture->resource.map_binding;
     if (!wined3d_texture_load_location(texture, view->sub_resource_idx, context, map_binding))
         ERR("Failed to load the sub-resource into %s.\n", wined3d_debug_location(map_binding));
     wined3d_texture_invalidate_location(texture, view->sub_resource_idx, ~map_binding);
-    wined3d_texture_get_pitch(texture, view->sub_resource_idx % texture->level_count,
-            &map.row_pitch, &map.slice_pitch);
+    wined3d_texture_get_pitch(texture, level, &map.row_pitch, &map.slice_pitch);
     wined3d_texture_get_memory(texture, view->sub_resource_idx, &data, map_binding);
     map.data = wined3d_context_gl_map_bo_address(context_gl, &data,
             texture->sub_resources[view->sub_resource_idx].size, GL_PIXEL_UNPACK_BUFFER, WINED3D_MAP_WRITE);
@@ -2343,12 +2353,12 @@ static void surface_cpu_blt_colour_fill(struct wined3d_rendertarget_view *view,
 
         case 3:
         {
-            row = map.data;
-            for (x = 0; x < w; ++x, row += 3)
+            dst = map.data;
+            for (x = 0; x < w; ++x, dst += 3)
             {
-                row[0] = (c      ) & 0xff;
-                row[1] = (c >>  8) & 0xff;
-                row[2] = (c >> 16) & 0xff;
+                dst[0] = (c      ) & 0xff;
+                dst[1] = (c >>  8) & 0xff;
+                dst[2] = (c >> 16) & 0xff;
             }
             break;
         }
@@ -2365,11 +2375,18 @@ static void surface_cpu_blt_colour_fill(struct wined3d_rendertarget_view *view,
             return;
     }
 
-    row = map.data;
+    dst = map.data;
     for (y = 1; y < h; ++y)
     {
-        row += map.row_pitch;
-        memcpy(row, map.data, w * bpp);
+        dst += map.row_pitch;
+        memcpy(dst, map.data, w * bpp);
+    }
+
+    dst = map.data;
+    for (z = 1; z < d; ++z)
+    {
+        dst += map.slice_pitch;
+        memcpy(dst, map.data, w * h * bpp);
     }
 
     wined3d_context_gl_unmap_bo_address(context_gl, &data, GL_PIXEL_UNPACK_BUFFER);
@@ -2399,7 +2416,7 @@ static void cpu_blitter_clear(struct wined3d_blitter *blitter, struct wined3d_de
         box.right = min(clear_rects[i].right, draw_rect->right);
         box.bottom = min(clear_rects[i].bottom, draw_rect->bottom);
         box.front = 0;
-        box.back = 1;
+        box.back = ~0u;
 
         if (box.left >= box.right || box.top >= box.bottom)
             continue;
