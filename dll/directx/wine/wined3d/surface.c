@@ -2218,7 +2218,7 @@ static void ffp_blitter_clear(struct wined3d_blitter *blitter, struct wined3d_de
                 continue;
 
             if (ffp_blitter_use_cpu_clear(view)
-                    || (!(view->resource->usage & WINED3DUSAGE_RENDERTARGET)
+                    || (!(view->resource->bind_flags & WINED3D_BIND_RENDER_TARGET)
                     && (wined3d_settings.offscreen_rendering_mode != ORM_FBO
                     || !(view->format_flags & WINED3DFMT_FLAG_FBO_ATTACHABLE))))
             {
