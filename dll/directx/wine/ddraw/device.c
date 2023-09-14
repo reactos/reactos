@@ -4518,19 +4518,24 @@ static HRESULT WINAPI d3d_device7_DrawIndexedPrimitiveVB_FPUPreserve(IDirect3DDe
 }
 
 static HRESULT WINAPI d3d_device3_DrawIndexedPrimitiveVB(IDirect3DDevice3 *iface,
-        D3DPRIMITIVETYPE PrimitiveType, IDirect3DVertexBuffer *D3DVertexBuf, WORD *Indices,
-        DWORD IndexCount, DWORD Flags)
+        D3DPRIMITIVETYPE primitive_type, IDirect3DVertexBuffer *vertex_buffer,
+        WORD *indices, DWORD index_count, DWORD flags)
 {
+    struct d3d_vertex_buffer *vb =
+            unsafe_impl_from_IDirect3DVertexBuffer7((IDirect3DVertexBuffer7 *)vertex_buffer);
     struct d3d_device *device = impl_from_IDirect3DDevice3(iface);
-    struct d3d_vertex_buffer *vb = unsafe_impl_from_IDirect3DVertexBuffer7((IDirect3DVertexBuffer7 *)D3DVertexBuf);
+    DWORD stride;
 
     TRACE("iface %p, primitive_type %#x, vb %p, indices %p, index_count %u, flags %#x.\n",
-            iface, PrimitiveType, D3DVertexBuf, Indices, IndexCount, Flags);
+            iface, primitive_type, vertex_buffer, indices, index_count, flags);
 
-    setup_lighting(device, vb->fvf, Flags);
+    setup_lighting(device, vb->fvf, flags);
 
-    return IDirect3DDevice7_DrawIndexedPrimitiveVB(&device->IDirect3DDevice7_iface, PrimitiveType,
-            &vb->IDirect3DVertexBuffer7_iface, 0, IndexCount, Indices, IndexCount, Flags);
+    if (!(stride = get_flexible_vertex_size(vb->fvf)))
+        return D3D_OK;
+
+    return IDirect3DDevice7_DrawIndexedPrimitiveVB(&device->IDirect3DDevice7_iface, primitive_type,
+            &vb->IDirect3DVertexBuffer7_iface, 0, vb->size / stride, indices, index_count, flags);
 }
 
 /*****************************************************************************
