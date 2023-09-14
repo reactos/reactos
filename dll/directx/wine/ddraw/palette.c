@@ -215,7 +215,7 @@ static HRESULT WINAPI ddraw_palette_GetEntries(IDirectDrawPalette *iface,
     return hr;
 }
 
-static const struct IDirectDrawPaletteVtbl ddraw_palette_vtbl =
+static struct IDirectDrawPaletteVtbl ddraw_palette_vtbl =
 {
     /*** IUnknown ***/
     ddraw_palette_QueryInterface,

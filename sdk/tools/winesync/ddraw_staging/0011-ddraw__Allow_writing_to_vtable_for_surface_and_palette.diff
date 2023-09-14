@@ -1,0 +1,53 @@
+diff --git a/dll/directx/wine/ddraw/palette.c b/dll/directx/wine/ddraw/palette.c
+index 980c62b..89e4fa6 100644
+--- a/dll/directx/wine/ddraw/palette.c
++++ b/dll/directx/wine/ddraw/palette.c
+@@ -215,7 +215,7 @@ static HRESULT WINAPI ddraw_palette_GetEntries(IDirectDrawPalette *iface,
+     return hr;
+ }
+ 
+-static const struct IDirectDrawPaletteVtbl ddraw_palette_vtbl =
++static struct IDirectDrawPaletteVtbl ddraw_palette_vtbl =
+ {
+     /*** IUnknown ***/
+     ddraw_palette_QueryInterface,
+diff --git a/dll/directx/wine/ddraw/surface.c b/dll/directx/wine/ddraw/surface.c
+index 0a477d5..e4ae2d6 100644
+--- a/dll/directx/wine/ddraw/surface.c
++++ b/dll/directx/wine/ddraw/surface.c
+@@ -5414,7 +5414,7 @@ static HRESULT WINAPI d3d_texture1_Load(IDirect3DTexture *iface, IDirect3DTextur
+  * The VTable
+  *****************************************************************************/
+ 
+-static const struct IDirectDrawSurface7Vtbl ddraw_surface7_vtbl =
++static struct IDirectDrawSurface7Vtbl ddraw_surface7_vtbl =
+ {
+     /* IUnknown */
+     ddraw_surface7_QueryInterface,
+@@ -5473,7 +5473,7 @@ static const struct IDirectDrawSurface7Vtbl ddraw_surface7_vtbl =
+     ddraw_surface7_GetLOD,
+ };
+ 
+-static const struct IDirectDrawSurface4Vtbl ddraw_surface4_vtbl =
++static struct IDirectDrawSurface4Vtbl ddraw_surface4_vtbl =
+ {
+     /* IUnknown */
+     ddraw_surface4_QueryInterface,
+@@ -5527,7 +5527,7 @@ static const struct IDirectDrawSurface4Vtbl ddraw_surface4_vtbl =
+     ddraw_surface4_ChangeUniquenessValue,
+ };
+ 
+-static const struct IDirectDrawSurface3Vtbl ddraw_surface3_vtbl =
++static struct IDirectDrawSurface3Vtbl ddraw_surface3_vtbl =
+ {
+     /* IUnknown */
+     ddraw_surface3_QueryInterface,
+@@ -5575,7 +5575,7 @@ static const struct IDirectDrawSurface3Vtbl ddraw_surface3_vtbl =
+     ddraw_surface3_SetSurfaceDesc,
+ };
+ 
+-static const struct IDirectDrawSurface2Vtbl ddraw_surface2_vtbl =
++static struct IDirectDrawSurface2Vtbl ddraw_surface2_vtbl =
+ {
+     /* IUnknown */
+     ddraw_surface2_QueryInterface,
