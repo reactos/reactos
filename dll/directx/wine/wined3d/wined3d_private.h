@@ -176,7 +176,6 @@ struct wined3d_d3d_limits
 
     unsigned int max_rt_count;
     unsigned int max_clip_distances;
-    unsigned int max_compat_varying_count;
     unsigned int texture_size;
     float pointsize_max;
 };
@@ -218,6 +217,7 @@ struct wined3d_d3d_info
     uint32_t srgb_read_control : 1;
     uint32_t srgb_write_control : 1;
     uint32_t clip_control : 1;
+    uint32_t full_ffp_varyings : 1;
     enum wined3d_feature_level feature_level;
 
     DWORD multisample_draw_location;
@@ -1316,6 +1316,7 @@ typedef void (*SHADER_HANDLER)(const struct wined3d_shader_instruction *);
 #define WINED3D_SHADER_CAP_SRGB_WRITE               0x00000002u
 #define WINED3D_SHADER_CAP_DOUBLE_PRECISION         0x00000004u
 #define WINED3D_SHADER_CAP_OUTPUT_INTERPOLATION     0x00000008u
+#define WINED3D_SHADER_CAP_FULL_FFP_VARYINGS        0x00000010u
 
 struct shader_caps
 {
@@ -1330,7 +1331,6 @@ struct shader_caps
     unsigned int ps_uniform_count;
     float ps_1x_max_value;
     unsigned int varying_count;
-    unsigned int max_compat_varying_count;
 
     DWORD wined3d_caps;
 };

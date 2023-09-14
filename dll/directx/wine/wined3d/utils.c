@@ -6498,7 +6498,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
      * Reading uninitialized varyings on core profile contexts results in an
      * error while with builtin varyings on legacy contexts you get undefined
      * behavior. */
-    if (d3d_info->limits.varying_count && d3d_info->limits.varying_count < d3d_info->limits.max_compat_varying_count)
+    if (d3d_info->limits.varying_count && !d3d_info->full_ffp_varyings)
     {
         settings->texcoords_initialized = 0;
         for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
@@ -6733,7 +6733,7 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
                 settings->texcoords |= 1u << i;
             settings->texgen[i] = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
         }
-        if (d3d_info->limits.varying_count >= d3d_info->limits.max_compat_varying_count)
+        if (d3d_info->full_ffp_varyings)
             settings->texcoords = (1u << WINED3D_MAX_TEXTURES) - 1;
 
         if (d3d_info->emulated_flatshading)
@@ -6790,7 +6790,7 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
             settings->texcoords |= 1u << i;
         settings->texgen[i] = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
     }
-    if (d3d_info->limits.varying_count >= d3d_info->limits.max_compat_varying_count)
+    if (d3d_info->full_ffp_varyings)
         settings->texcoords = (1u << WINED3D_MAX_TEXTURES) - 1;
 
     for (i = 0; i < WINED3D_MAX_ACTIVE_LIGHTS; ++i)
