@@ -4178,6 +4178,12 @@ static HRESULT ddraw_find_device(struct ddraw *ddraw, const D3DFINDDEVICESEARCH 
 
         TRACE("Trying to match GUID %s.\n", debugstr_guid(&fds->guid));
 
+        if ((ddraw->flags & DDRAW_NO3D) && IsEqualGUID(&fds->guid, &IID_IDirect3DHALDevice))
+        {
+            WARN("HAL device not available without 3D support.\n");
+            return DDERR_NOTFOUND;
+        }
+
         for (i = 0; i < guid_count; ++i)
         {
             if (IsEqualGUID(guids[i], &fds->guid))
