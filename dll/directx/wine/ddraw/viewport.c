@@ -760,6 +760,13 @@ static HRESULT WINAPI d3d_viewport_AddLight(IDirect3DViewport3 *iface, IDirect3D
         return DDERR_INVALIDPARAMS;
     }
 
+    if (light_impl->active_viewport)
+    {
+        wined3d_mutex_unlock();
+        WARN("Light %p is active in viewport %p.\n", light_impl, light_impl->active_viewport);
+        return D3DERR_LIGHTHASVIEWPORT;
+    }
+
     /* Find a light number and update both light and viewports objects accordingly */
     while (map & 1)
     {
