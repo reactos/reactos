@@ -3043,6 +3043,8 @@ struct wined3d_stateblock_state
     struct wined3d_material material;
     struct wined3d_viewport viewport;
     RECT scissor_rect;
+
+    struct wined3d_light_state light_state;
 };
 
 struct wined3d_device

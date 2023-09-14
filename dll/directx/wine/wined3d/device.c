@@ -1610,7 +1610,12 @@ HRESULT CDECL wined3d_device_set_light(struct wined3d_device *device,
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (FAILED(hr = wined3d_light_state_set_light(&device->update_state->light_state, light_idx, light, &object)))
+    if (FAILED(hr = wined3d_light_state_set_light(&device->update_stateblock_state->light_state, light_idx, light, &object)))
+        return hr;
+    if (device->recording)
+        return WINED3D_OK;
+
+    if (FAILED(hr = wined3d_light_state_set_light(&device->state.light_state, light_idx, light, &object)))
         return hr;
 
     /* Initialize the object. */
@@ -1699,8 +1704,7 @@ HRESULT CDECL wined3d_device_set_light(struct wined3d_device *device,
             FIXME("Unrecognized light type %#x.\n", light->type);
     }
 
-    if (!device->recording)
-        wined3d_cs_emit_set_light(device->cs, object);
+    wined3d_cs_emit_set_light(device->cs, object);
 
     return WINED3D_OK;
 }
@@ -1725,25 +1729,37 @@ HRESULT CDECL wined3d_device_get_light(const struct wined3d_device *device,
 HRESULT CDECL wined3d_device_set_light_enable(struct wined3d_device *device, UINT light_idx, BOOL enable)
 {
     struct wined3d_light_info *light_info;
+    HRESULT hr;
 
     TRACE("device %p, light_idx %u, enable %#x.\n", device, light_idx, enable);
 
+    if (!(light_info = wined3d_light_state_get_light(&device->update_stateblock_state->light_state, light_idx)))
+    {
+        if (FAILED(hr = wined3d_light_state_set_light(&device->update_stateblock_state->light_state, light_idx,
+                &WINED3D_default_light, &light_info)))
+            return hr;
+    }
+    wined3d_light_state_enable_light(&device->update_stateblock_state->light_state,
+            &device->adapter->d3d_info, light_info, enable);
+
+    if (device->recording)
+        return WINED3D_OK;
+
     /* Special case - enabling an undefined light creates one with a strict set of parameters. */
-    if (!(light_info = wined3d_light_state_get_light(&device->update_state->light_state, light_idx)))
+    if (!(light_info = wined3d_light_state_get_light(&device->state.light_state, light_idx)))
     {
         TRACE("Light enabled requested but light not defined, so defining one!\n");
         wined3d_device_set_light(device, light_idx, &WINED3D_default_light);
 
-        if (!(light_info = wined3d_light_state_get_light(&device->update_state->light_state, light_idx)))
+        if (!(light_info = wined3d_light_state_get_light(&device->state.light_state, light_idx)))
         {
             FIXME("Adding default lights has failed dismally\n");
             return WINED3DERR_INVALIDCALL;
         }
     }
 
-    wined3d_light_state_enable_light(&device->update_state->light_state, &device->adapter->d3d_info, light_info, enable);
-    if (!device->recording)
-        wined3d_cs_emit_set_light_enable(device->cs, light_idx, enable);
+    wined3d_light_state_enable_light(&device->state.light_state, &device->adapter->d3d_info, light_info, enable);
+    wined3d_cs_emit_set_light_enable(device->cs, light_idx, enable);
 
     return WINED3D_OK;
 }
