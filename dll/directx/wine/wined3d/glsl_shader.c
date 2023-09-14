@@ -2804,6 +2804,8 @@ static void shader_glsl_get_register_name(const struct wined3d_shader_register *
                 case WINED3D_IMMCONST_SCALAR:
                     switch (data_type)
                     {
+                        case WINED3D_DATA_UNORM:
+                        case WINED3D_DATA_SNORM:
                         case WINED3D_DATA_FLOAT:
                             if (gl_info->supported[ARB_SHADER_BIT_ENCODING])
                                 sprintf(register_name, "uintBitsToFloat(%#xu)", reg->u.immconst_data[0]);
@@ -2827,6 +2829,8 @@ static void shader_glsl_get_register_name(const struct wined3d_shader_register *
                 case WINED3D_IMMCONST_VEC4:
                     switch (data_type)
                     {
+                        case WINED3D_DATA_UNORM:
+                        case WINED3D_DATA_SNORM:
                         case WINED3D_DATA_FLOAT:
                             if (gl_info->supported[ARB_SHADER_BIT_ENCODING])
                             {
