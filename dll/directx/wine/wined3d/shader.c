@@ -4125,6 +4125,16 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
     args->render_offscreen = shader->reg_maps.vpos && gl_info->supported[ARB_FRAGMENT_COORD_CONVENTIONS]
             ? context->render_offscreen : 0;
 
+    if (!gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+    {
+        for (i = 0; i < ARRAY_SIZE(state->fb->render_targets); ++i)
+        {
+            struct wined3d_rendertarget_view *rtv = state->fb->render_targets[i];
+            if (rtv && rtv->format->id == WINED3DFMT_A8_UNORM)
+                args->rt_alpha_swizzle |= 1u << i;
+        }
+    }
+
     args->dual_source_blend = wined3d_dualblend_enabled(state, gl_info);
 }
 

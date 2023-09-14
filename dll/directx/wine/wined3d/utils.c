@@ -1519,7 +1519,8 @@ static const struct wined3d_format_texture_info format_texture_info[] =
             ARB_TEXTURE_RG,             NULL},
     {WINED3DFMT_A8_UNORM,               GL_R8,                            GL_R8,                                  0,
             GL_RED,                     GL_UNSIGNED_BYTE,                 0,
-            WINED3DFMT_FLAG_TEXTURE | WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING | WINED3DFMT_FLAG_FILTERING,
+            WINED3DFMT_FLAG_TEXTURE | WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING | WINED3DFMT_FLAG_FILTERING
+            | WINED3DFMT_FLAG_RENDERTARGET,
             ARB_TEXTURE_RG,             NULL},
     {WINED3DFMT_A8_UNORM,               GL_ALPHA8,                        GL_ALPHA8,                              0,
             GL_ALPHA,                   GL_UNSIGNED_BYTE,                 0,

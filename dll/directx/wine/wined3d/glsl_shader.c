@@ -7452,11 +7452,12 @@ static void shader_glsl_enable_extensions(struct wined3d_string_buffer *buffer,
 
 static void shader_glsl_generate_color_output(struct wined3d_string_buffer *buffer,
         const struct wined3d_gl_info *gl_info, const struct wined3d_shader *shader,
-        struct wined3d_string_buffer_list *string_buffers)
+        const struct ps_compile_args *args, struct wined3d_string_buffer_list *string_buffers)
 {
     const struct wined3d_shader_signature *output_signature = &shader->output_signature;
     struct wined3d_string_buffer *src, *assignment;
     enum wined3d_data_type dst_data_type;
+    const char *swizzle;
     unsigned int i;
 
     if (output_signature->element_count)
@@ -7479,7 +7480,8 @@ static void shader_glsl_generate_color_output(struct wined3d_string_buffer *buff
             shader_addline(buffer, "color_out%u = ", output->semantic_idx);
             string_buffer_sprintf(src, "ps_out[%u]", output->semantic_idx);
             shader_glsl_sprintf_cast(assignment, src->buffer, dst_data_type, WINED3D_DATA_FLOAT);
-            shader_addline(buffer, "%s;\n", assignment->buffer);
+            swizzle = args->rt_alpha_swizzle & (1u << output->semantic_idx) ? ".argb" : "";
+            shader_addline(buffer, "%s%s;\n", assignment->buffer, swizzle);
         }
         string_buffer_release(string_buffers, src);
         string_buffer_release(string_buffers, assignment);
@@ -7491,7 +7493,8 @@ static void shader_glsl_generate_color_output(struct wined3d_string_buffer *buff
         while (mask)
         {
             i = wined3d_bit_scan(&mask);
-            shader_addline(buffer, "color_out%u = ps_out[%u];\n", i, i);
+            swizzle = args->rt_alpha_swizzle & (1u << i) ? ".argb" : "";
+            shader_addline(buffer, "color_out%u = ps_out[%u]%s;\n", i, i, swizzle);
         }
     }
 }
@@ -7520,7 +7523,7 @@ static void shader_glsl_generate_ps_epilogue(const struct wined3d_gl_info *gl_in
         shader_addline(buffer, "gl_SampleMask[0] = floatBitsToInt(sample_mask);\n");
 
     if (!needs_legacy_glsl_syntax(gl_info))
-        shader_glsl_generate_color_output(buffer, gl_info, shader, string_buffers);
+        shader_glsl_generate_color_output(buffer, gl_info, shader, args, string_buffers);
 }
 
 /* Context activation is done by the caller. */

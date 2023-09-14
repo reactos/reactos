@@ -1352,8 +1352,8 @@ struct ps_compile_args
     DWORD flatshading : 1;
     DWORD alpha_test_func : 3;
     DWORD render_offscreen : 1;
-    DWORD dual_source_blend : 1;
-    DWORD padding : 25;
+    DWORD rt_alpha_swizzle : 8; /* MAX_RENDER_TARGET_VIEWS, 8 */
+    DWORD padding : 18;
 };
 
 enum fog_src_type
