@@ -2332,13 +2332,10 @@ static void test_append_reg(void)
     ok(!l, "Got error %lu.\n", l);
     size = sizeof(value);
     l = RegQueryValueExA(key, "value", NULL, &type, (BYTE *)value, &size);
-    todo_wine ok(!l, "Got error %lu.\n", l);
-    if (!l)
-    {
-        ok(type == REG_MULTI_SZ, "Got type %#lx.\n", type);
-        ok(size == sizeof("data\0"), "Got size %lu.\n", size);
-        ok(!memcmp(value, "data\0", size), "Got data %s.\n", debugstr_an(value, size));
-    }
+    ok(!l, "Got error %lu.\n", l);
+    ok(type == REG_MULTI_SZ, "Got type %#lx.\n", type);
+    ok(size == sizeof("data\0"), "Got size %lu.\n", size);
+    ok(!memcmp(value, "data\0", size), "Got data %s.\n", debugstr_an(value, size));
 
     /* Key exists and already has a value. */
 
