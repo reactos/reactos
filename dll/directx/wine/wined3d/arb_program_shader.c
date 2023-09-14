@@ -611,7 +611,7 @@ static void shader_arb_vs_local_constants(const struct arb_vs_compiled_shader *g
     unsigned char i;
 
     /* Upload the position fixup */
-    shader_get_position_fixup(context, state, position_fixup);
+    shader_get_position_fixup(context, state, 1, position_fixup);
     GL_EXTCALL(glProgramLocalParameter4fvARB(GL_VERTEX_PROGRAM_ARB, gl_shader->pos_fixup, position_fixup));
 
     if (!gl_shader->num_int_consts) return;

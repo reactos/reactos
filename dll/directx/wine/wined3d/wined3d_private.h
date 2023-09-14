@@ -2000,6 +2000,8 @@ struct wined3d_context
     GLfloat                 fog_coord_value;
     GLfloat                 color[4], fogstart, fogend, fogcolor[4];
     GLuint                  dummy_arbfp_prog;
+
+    unsigned int viewport_count;
 };
 
 struct wined3d_fb_state
@@ -2863,7 +2865,8 @@ struct wined3d_state
     struct wined3d_matrix transforms[HIGHEST_TRANSFORMSTATE + 1];
     struct wined3d_vec4 clip_planes[MAX_CLIP_DISTANCES];
     struct wined3d_material material;
-    struct wined3d_viewport viewport;
+    struct wined3d_viewport viewports[WINED3D_MAX_VIEWPORTS];
+    unsigned int viewport_count;
     RECT scissor_rect;
 
     /* Light hashmap. Collisions are handled using linked lists. */
@@ -3661,7 +3664,7 @@ void wined3d_cs_emit_set_unordered_access_view(struct wined3d_cs *cs, enum wined
         unsigned int initial_count) DECLSPEC_HIDDEN;
 void wined3d_cs_emit_set_vertex_declaration(struct wined3d_cs *cs,
         struct wined3d_vertex_declaration *declaration) DECLSPEC_HIDDEN;
-void wined3d_cs_emit_set_viewport(struct wined3d_cs *cs, const struct wined3d_viewport *viewport) DECLSPEC_HIDDEN;
+void wined3d_cs_emit_set_viewports(struct wined3d_cs *cs, unsigned int viewport_count, const struct wined3d_viewport *viewports) DECLSPEC_HIDDEN;
 void wined3d_cs_emit_unload_resource(struct wined3d_cs *cs, struct wined3d_resource *resource) DECLSPEC_HIDDEN;
 void wined3d_cs_emit_update_sub_resource(struct wined3d_cs *cs, struct wined3d_resource *resource,
         unsigned int sub_resource_idx, const struct wined3d_box *box, const void *data, unsigned int row_pitch,
@@ -4167,24 +4170,28 @@ static inline BOOL shader_is_scalar(const struct wined3d_shader_register *reg)
 }
 
 static inline void shader_get_position_fixup(const struct wined3d_context *context,
-        const struct wined3d_state *state, float *position_fixup)
+        const struct wined3d_state *state, unsigned int fixup_count, float *position_fixup)
 {
     float center_offset;
+    unsigned int i;
 
     if (context->d3d_info->wined3d_creation_flags & WINED3D_PIXEL_CENTER_INTEGER)
         center_offset = 63.0f / 64.0f;
     else
         center_offset = -1.0f / 64.0f;
 
-    position_fixup[0] = 1.0f;
-    position_fixup[1] = 1.0f;
-    position_fixup[2] = center_offset / state->viewport.width;
-    position_fixup[3] = -center_offset / state->viewport.height;
-
-    if (context->render_offscreen)
+    for (i = 0; i < fixup_count; ++i)
     {
-        position_fixup[1] *= -1.0f;
-        position_fixup[3] *= -1.0f;
+        position_fixup[4 * i    ] = 1.0f;
+        position_fixup[4 * i + 1] = 1.0f;
+        position_fixup[4 * i + 2] = center_offset / state->viewports[i].width;
+        position_fixup[4 * i + 3] = -center_offset / state->viewports[i].height;
+
+        if (context->render_offscreen)
+        {
+            position_fixup[4 * i + 1] *= -1.0f;
+            position_fixup[4 * i + 3] *= -1.0f;
+        }
     }
 }
 

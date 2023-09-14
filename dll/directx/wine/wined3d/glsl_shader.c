@@ -1460,7 +1460,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
     const struct wined3d_shader *pshader = state->shader[WINED3D_SHADER_TYPE_PIXEL];
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct shader_glsl_priv *priv = shader_priv;
-    float position_fixup[4];
+    float position_fixup[4 * WINED3D_MAX_VIEWPORTS];
     float normal[3 * 3];
     DWORD update_mask;
 
@@ -1498,9 +1498,11 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
 
     if (update_mask & WINED3D_SHADER_CONST_POS_FIXUP)
     {
-        shader_get_position_fixup(context, state, position_fixup);
+        unsigned int fixup_count = state->shader[WINED3D_SHADER_TYPE_GEOMETRY] ?
+                max(state->viewport_count, 1) : 1;
+        shader_get_position_fixup(context, state, fixup_count, position_fixup);
         if (state->shader[WINED3D_SHADER_TYPE_GEOMETRY])
-            GL_EXTCALL(glUniform4fv(prog->gs.pos_fixup_location, 1, position_fixup));
+            GL_EXTCALL(glUniform4fv(prog->gs.pos_fixup_location, fixup_count, position_fixup));
         else if (state->shader[WINED3D_SHADER_TYPE_DOMAIN])
             GL_EXTCALL(glUniform4fv(prog->ds.pos_fixup_location, 1, position_fixup));
         else
@@ -3562,7 +3564,7 @@ static void PRINTF_ATTR(9, 10) shader_glsl_gen_sample_code(const struct wined3d_
         shader_glsl_color_correction(ins, fixup);
 }
 
-static void shader_glsl_fixup_position(struct wined3d_string_buffer *buffer)
+static void shader_glsl_fixup_position(struct wined3d_string_buffer *buffer, BOOL use_viewport_index)
 {
     /* Write the final position.
      *
@@ -3571,8 +3573,16 @@ static void shader_glsl_fixup_position(struct wined3d_string_buffer *buffer)
      * pos_fixup. pos_fixup.y contains 1.0 or -1.0 to turn the rendering
      * upside down for offscreen rendering. pos_fixup.x contains 1.0 to allow
      * a MAD. */
-    shader_addline(buffer, "gl_Position.y = gl_Position.y * pos_fixup.y;\n");
-    shader_addline(buffer, "gl_Position.xy += pos_fixup.zw * gl_Position.ww;\n");
+    if (use_viewport_index)
+    {
+        shader_addline(buffer, "gl_Position.y = gl_Position.y * pos_fixup[gl_ViewportIndex].y;\n");
+        shader_addline(buffer, "gl_Position.xy += pos_fixup[gl_ViewportIndex].zw * gl_Position.ww;\n");
+    }
+    else
+    {
+        shader_addline(buffer, "gl_Position.y = gl_Position.y * pos_fixup.y;\n");
+        shader_addline(buffer, "gl_Position.xy += pos_fixup.zw * gl_Position.ww;\n");
+    }
 
     /* Z coord [0;1]->[-1;1] mapping, see comment in get_projection_matrix()
      * in utils.c
@@ -4899,9 +4909,10 @@ static void shader_glsl_emit(const struct wined3d_shader_instruction *ins)
 {
     unsigned int stream = ins->handler_idx == WINED3DSIH_EMIT ? 0 : ins->src[0].reg.idx[0].offset;
 
+    shader_addline(ins->ctx->buffer, "gl_ViewportIndex = 0;\n");
     shader_addline(ins->ctx->buffer, "setup_gs_output(gs_out);\n");
     if (!ins->ctx->gl_info->supported[ARB_CLIP_CONTROL])
-        shader_glsl_fixup_position(ins->ctx->buffer);
+        shader_glsl_fixup_position(ins->ctx->buffer, TRUE);
 
     if (!stream)
         shader_addline(ins->ctx->buffer, "EmitVertex();\n");
@@ -6522,6 +6533,14 @@ static void shader_glsl_input_pack(const struct wined3d_shader *shader, struct w
                 else
                     FIXME("ARB_fragment_layer_viewport is not supported.\n");
             }
+            else if (input->sysval_semantic == WINED3D_SV_VIEWPORT_ARRAY_INDEX && !semantic_idx)
+            {
+                if (gl_info->supported[ARB_VIEWPORT_ARRAY])
+                    shader_addline(buffer, "ps_in[%u]%s = intBitsToFloat(gl_ViewportIndex);\n",
+                            input->register_idx, reg_mask);
+                else
+                    FIXME("ARB_viewport_array is not supported.\n");
+            }
             else
             {
                 if (input->sysval_semantic)
@@ -6811,6 +6830,11 @@ static void shader_glsl_setup_sm3_rasterizer_input(struct shader_glsl_priv *priv
         else if (output->sysval_semantic == WINED3D_SV_RENDER_TARGET_ARRAY_INDEX && !semantic_idx)
         {
             shader_addline(buffer, "gl_Layer = floatBitsToInt(outputs[%u])%s;\n",
+                    output->register_idx, reg_mask);
+        }
+        else if (output->sysval_semantic == WINED3D_SV_VIEWPORT_ARRAY_INDEX && !semantic_idx)
+        {
+            shader_addline(buffer, "gl_ViewportIndex = floatBitsToInt(outputs[%u])%s;\n",
                     output->register_idx, reg_mask);
         }
         else if (output->sysval_semantic == WINED3D_SV_CLIP_DISTANCE)
@@ -7604,7 +7628,7 @@ static void shader_glsl_generate_vs_epilogue(const struct wined3d_gl_info *gl_in
         shader_addline(buffer, "gl_PointSize = clamp(ffp_point.size, ffp_point.size_min, ffp_point.size_max);\n");
 
     if (args->next_shader_type == WINED3D_SHADER_TYPE_PIXEL && !gl_info->supported[ARB_CLIP_CONTROL])
-        shader_glsl_fixup_position(buffer);
+        shader_glsl_fixup_position(buffer, FALSE);
 }
 
 /* Context activation is done by the caller. */
@@ -7842,7 +7866,7 @@ static void shader_glsl_generate_ds_epilogue(const struct wined3d_gl_info *gl_in
     shader_addline(buffer, "setup_ds_output(ds_out);\n");
 
     if (args->next_shader_type == WINED3D_SHADER_TYPE_PIXEL && !gl_info->supported[ARB_CLIP_CONTROL])
-        shader_glsl_fixup_position(buffer);
+        shader_glsl_fixup_position(buffer, FALSE);
 }
 
 static GLuint shader_glsl_generate_domain_shader(const struct wined3d_context *context,
@@ -7967,7 +7991,7 @@ static GLuint shader_glsl_generate_geometry_shader(const struct wined3d_context 
     shader_addline(buffer, "in shader_in_out { vec4 reg[%u]; } shader_in[];\n", shader->limits->packed_input);
 
     if (!gl_info->supported[ARB_CLIP_CONTROL])
-        shader_addline(buffer, "uniform vec4 pos_fixup;\n");
+        shader_addline(buffer, "uniform vec4 pos_fixup[%u];\n", WINED3D_MAX_VIEWPORTS);
 
     if (is_rasterization_disabled(shader))
     {

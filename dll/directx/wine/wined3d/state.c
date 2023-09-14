@@ -4548,23 +4548,23 @@ static void vertexdeclaration(struct wined3d_context *context, const struct wine
     }
 }
 
-static void get_viewport(struct wined3d_context *context, const struct wined3d_state *state,
-        struct wined3d_viewport *viewport)
+static void get_viewports(struct wined3d_context *context, const struct wined3d_state *state,
+        unsigned int viewport_count, struct wined3d_viewport *viewports)
 {
     const struct wined3d_rendertarget_view *depth_stencil = state->fb->depth_stencil;
     const struct wined3d_rendertarget_view *target = state->fb->render_targets[0];
-    unsigned int width, height;
+    unsigned int width, height, i;
 
-    *viewport = state->viewport;
-
-    if (target)
+    for (i = 0; i < viewport_count; ++i)
     {
-        if (context->d3d_info->wined3d_creation_flags & WINED3D_LIMIT_VIEWPORT)
+        viewports[i] = state->viewports[i];
+
+        if (target)
         {
-            if (viewport->width > target->width)
-                viewport->width = target->width;
-            if (viewport->height > target->height)
-                viewport->height = target->height;
+            if (viewports[i].width > target->width)
+                viewports[i].width = target->width;
+            if (viewports[i].height > target->height)
+                viewports[i].height = target->height;
         }
     }
 
@@ -4589,22 +4589,45 @@ static void get_viewport(struct wined3d_context *context, const struct wined3d_s
         return;
     }
 
-    viewport->y = height - (viewport->y + viewport->height);
+    for (i = 0; i < viewport_count; ++i)
+        viewports[i].y = height - (viewports[i].y + viewports[i].height);
 }
 
 static void viewport_miscpart(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_viewport vp;
-
-    get_viewport(context, state, &vp);
-
-    gl_info->gl_ops.gl.p_glDepthRange(vp.min_z, vp.max_z);
+    struct wined3d_viewport vp[WINED3D_MAX_VIEWPORTS];
 
     if (gl_info->supported[ARB_VIEWPORT_ARRAY])
-        GL_EXTCALL(glViewportIndexedf(0, vp.x, vp.y, vp.width, vp.height));
+    {
+        unsigned int i, reset_count = 0;
+
+        get_viewports(context, state, state->viewport_count, vp);
+        for (i = 0; i < state->viewport_count; ++i)
+        {
+            GL_EXTCALL(glDepthRangeIndexed(i, vp[i].min_z, vp[i].max_z));
+            GL_EXTCALL(glViewportIndexedf(i, vp[i].x, vp[i].y, vp[i].width, vp[i].height));
+        }
+
+        if (context->viewport_count > state->viewport_count)
+            reset_count = context->viewport_count - state->viewport_count;
+
+        if (reset_count)
+        {
+            static const GLfloat reset[4 * WINED3D_MAX_VIEWPORTS];
+            static const GLdouble resetd[2 * WINED3D_MAX_VIEWPORTS];
+
+            GL_EXTCALL(glDepthRangeArrayv(state->viewport_count, reset_count, resetd));
+            GL_EXTCALL(glViewportArrayv(state->viewport_count, reset_count, reset));
+        }
+        context->viewport_count = state->viewport_count;
+    }
     else
-        gl_info->gl_ops.gl.p_glViewport(vp.x, vp.y, vp.width, vp.height);
+    {
+        get_viewports(context, state, 1, vp);
+        gl_info->gl_ops.gl.p_glDepthRange(vp[0].min_z, vp[0].max_z);
+        gl_info->gl_ops.gl.p_glViewport(vp[0].x, vp[0].y, vp[0].width, vp[0].height);
+    }
     checkGLcall("setting clip space and viewport");
 }
 
@@ -4615,16 +4638,34 @@ static void viewport_miscpart_cc(struct wined3d_context *context,
     float pixel_center_offset = context->d3d_info->wined3d_creation_flags
             & WINED3D_PIXEL_CENTER_INTEGER ? 63.0f / 128.0f : -1.0f / 128.0f;
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_viewport vp;
+    struct wined3d_viewport vp[WINED3D_MAX_VIEWPORTS];
+    unsigned int i, reset_count = 0;
 
-    get_viewport(context, state, &vp);
-    vp.x += pixel_center_offset;
-    vp.y += pixel_center_offset;
-
-    gl_info->gl_ops.gl.p_glDepthRange(vp.min_z, vp.max_z);
+    get_viewports(context, state, state->viewport_count, vp);
 
     GL_EXTCALL(glClipControl(context->render_offscreen ? GL_UPPER_LEFT : GL_LOWER_LEFT, GL_ZERO_TO_ONE));
-    GL_EXTCALL(glViewportIndexedf(0, vp.x, vp.y, vp.width, vp.height));
+
+    for (i = 0; i < state->viewport_count; ++i)
+    {
+        vp[i].x += pixel_center_offset;
+        vp[i].y += pixel_center_offset;
+        GL_EXTCALL(glDepthRangeIndexed(i, vp[i].min_z, vp[i].max_z));
+        GL_EXTCALL(glViewportIndexedf(i, vp[i].x, vp[i].y, vp[i].width, vp[i].height));
+    }
+
+    if (context->viewport_count > state->viewport_count)
+        reset_count = context->viewport_count - state->viewport_count;
+
+    if (reset_count)
+    {
+        static const GLfloat reset[4 * WINED3D_MAX_VIEWPORTS];
+        static const GLdouble resetd[2 * WINED3D_MAX_VIEWPORTS];
+
+        GL_EXTCALL(glDepthRangeArrayv(state->viewport_count, reset_count, resetd));
+        GL_EXTCALL(glViewportArrayv(state->viewport_count, reset_count, reset));
+    }
+    context->viewport_count = state->viewport_count;
+
     checkGLcall("setting clip space and viewport");
 }
 

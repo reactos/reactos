@@ -816,11 +816,15 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     }
 
     if (stateblock->changed.viewport
-            && memcmp(&src_state->viewport, &stateblock->state.viewport, sizeof(stateblock->state.viewport)))
+            && (src_state->viewport_count != stateblock->state.viewport_count
+            || memcmp(src_state->viewports, stateblock->state.viewports, src_state->viewport_count * sizeof(stateblock->state.viewports))))
     {
-        TRACE("Updating viewport.\n");
+        TRACE("Updating viewports.\n");
 
-        stateblock->state.viewport = src_state->viewport;
+        if ((stateblock->state.viewport_count = src_state->viewport_count))
+            memcpy(stateblock->state.viewports, src_state->viewports, sizeof(src_state->viewports));
+        else
+            memset(stateblock->state.viewports, 0, sizeof(*stateblock->state.viewports));
     }
 
     if (stateblock->changed.scissorRect && memcmp(&src_state->scissor_rect,
@@ -1060,7 +1064,7 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
         wined3d_device_set_material(device, &stateblock->state.material);
 
     if (stateblock->changed.viewport)
-        wined3d_device_set_viewport(device, &stateblock->state.viewport);
+        wined3d_device_set_viewports(device, stateblock->state.viewport_count, stateblock->state.viewports);
 
     if (stateblock->changed.scissorRect)
         wined3d_device_set_scissor_rect(device, &stateblock->state.scissor_rect);

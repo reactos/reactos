@@ -4888,10 +4888,10 @@ void get_projection_matrix(const struct wined3d_context *context, const struct w
     if (context->last_was_rhw)
     {
         /* Transform D3D RHW coordinates to OpenGL clip coordinates. */
-        float x = state->viewport.x;
-        float y = state->viewport.y;
-        float w = state->viewport.width;
-        float h = state->viewport.height;
+        float x = state->viewports[0].x;
+        float y = state->viewports[0].y;
+        float w = state->viewports[0].width;
+        float h = state->viewports[0].height;
         float x_scale = 2.0f / w;
         float x_offset = (center_offset - (2.0f * x) - w) / w;
         float y_scale = flip ? 2.0f / h : 2.0f / -h;
@@ -4915,10 +4915,10 @@ void get_projection_matrix(const struct wined3d_context *context, const struct w
     else
     {
         float y_scale = flip ? -1.0f : 1.0f;
-        float x_offset = center_offset / state->viewport.width;
+        float x_offset = center_offset / state->viewports[0].width;
         float y_offset = flip
-                ? center_offset / state->viewport.height
-                : -center_offset / state->viewport.height;
+                ? center_offset / state->viewports[0].height
+                : -center_offset / state->viewports[0].height;
         float z_scale = clip_control ? 1.0f : 2.0f;
         float z_offset = clip_control ? 0.0f : -1.0f;
         const struct wined3d_matrix projection =
@@ -5118,9 +5118,10 @@ void get_pointsize(const struct wined3d_context *context, const struct wined3d_s
     b.d = state->render_states[WINED3D_RS_POINTSCALE_B];
     c.d = state->render_states[WINED3D_RS_POINTSCALE_C];
 
+    /* Always use first viewport, this path does not apply to d3d10/11 multiple viewports case. */
     if (state->render_states[WINED3D_RS_POINTSCALEENABLE])
     {
-        float scale_factor = state->viewport.height * state->viewport.height;
+        float scale_factor = state->viewports[0].height * state->viewports[0].height;
 
         out_att[0] = a.f / scale_factor;
         out_att[1] = b.f / scale_factor;
