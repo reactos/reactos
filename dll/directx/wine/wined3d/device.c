@@ -2254,10 +2254,12 @@ struct wined3d_shader * CDECL wined3d_device_get_vertex_shader(const struct wine
     return device->state.shader[WINED3D_SHADER_TYPE_VERTEX];
 }
 
-static void wined3d_device_set_constant_buffer(struct wined3d_device *device,
+void CDECL wined3d_device_set_constant_buffer(struct wined3d_device *device,
         enum wined3d_shader_type type, UINT idx, struct wined3d_buffer *buffer)
 {
     struct wined3d_buffer *prev;
+
+    TRACE("device %p, type %#x, idx %u, buffer %p.\n", device, type, idx, buffer);
 
     if (idx >= MAX_CONSTANT_BUFFERS)
     {
@@ -2285,9 +2287,11 @@ void CDECL wined3d_device_set_vs_cb(struct wined3d_device *device, UINT idx, str
     wined3d_device_set_constant_buffer(device, WINED3D_SHADER_TYPE_VERTEX, idx, buffer);
 }
 
-static struct wined3d_buffer *wined3d_device_get_constant_buffer(const struct wined3d_device *device,
+struct wined3d_buffer * CDECL wined3d_device_get_constant_buffer(const struct wined3d_device *device,
         enum wined3d_shader_type shader_type, unsigned int idx)
 {
+    TRACE("device %p, shader_type %#x, idx %u.\n", device, shader_type, idx);
+
     if (idx >= MAX_CONSTANT_BUFFERS)
     {
         WARN("Invalid constant buffer index %u.\n", idx);
