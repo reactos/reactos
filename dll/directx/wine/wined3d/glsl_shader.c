@@ -12769,17 +12769,17 @@ static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter
 
 /* Context activation is done by the caller. */
 static void glsl_blitter_upload_palette(struct wined3d_glsl_blitter *blitter,
-        struct wined3d_context *context, const struct wined3d_texture *texture)
+        struct wined3d_context_gl *context_gl, const struct wined3d_texture_gl *texture_gl)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     const struct wined3d_palette *palette;
 
-    palette = texture->swapchain ? texture->swapchain->palette : NULL;
+    palette = texture_gl->t.swapchain ? texture_gl->t.swapchain->palette : NULL;
 
     if (!blitter->palette_texture)
         gl_info->gl_ops.gl.p_glGenTextures(1, &blitter->palette_texture);
 
-    context_active_texture(context, gl_info, 1);
+    context_active_texture(&context_gl->c, gl_info, 1);
     gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_1D, blitter->palette_texture);
     gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -12799,7 +12799,7 @@ static void glsl_blitter_upload_palette(struct wined3d_glsl_blitter *blitter,
                 GL_UNSIGNED_INT_8_8_8_8_REV, &black);
     }
 
-    context_active_texture(context, gl_info, 0);
+    context_active_texture(&context_gl->c, gl_info, 0);
 }
 
 /* Context activation is done by the caller. */
@@ -13062,7 +13062,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
     switch (get_complex_fixup(program->args.fixup))
     {
         case COMPLEX_FIXUP_P8:
-            glsl_blitter_upload_palette(glsl_blitter, context, src_texture);
+            glsl_blitter_upload_palette(glsl_blitter, context_gl, src_texture_gl);
             break;
 
         case COMPLEX_FIXUP_YUY2:
