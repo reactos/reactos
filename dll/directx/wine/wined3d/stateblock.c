@@ -1040,21 +1040,24 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     /* Vertex Shader Constants. */
     for (i = 0; i < stateblock->num_contained_vs_consts_f; ++i)
     {
-        state->vs_consts_f[i] = stateblock->stateblock_state.vs_consts_f[i];
-        wined3d_device_set_vs_consts_f(device, stateblock->contained_vs_consts_f[i],
-                1, &stateblock->stateblock_state.vs_consts_f[stateblock->contained_vs_consts_f[i]]);
+        unsigned int idx = stateblock->contained_vs_consts_f[i];
+
+        state->vs_consts_f[idx] = stateblock->stateblock_state.vs_consts_f[idx];
+        wined3d_device_set_vs_consts_f(device, idx, 1, &stateblock->stateblock_state.vs_consts_f[idx]);
     }
     for (i = 0; i < stateblock->num_contained_vs_consts_i; ++i)
     {
-        state->vs_consts_i[i] = stateblock->stateblock_state.vs_consts_i[i];
-        wined3d_device_set_vs_consts_i(device, stateblock->contained_vs_consts_i[i],
-                1, &stateblock->stateblock_state.vs_consts_i[stateblock->contained_vs_consts_i[i]]);
+        unsigned int idx = stateblock->contained_vs_consts_i[i];
+
+        state->vs_consts_i[idx] = stateblock->stateblock_state.vs_consts_i[idx];
+        wined3d_device_set_vs_consts_i(device, idx, 1, &stateblock->stateblock_state.vs_consts_i[idx]);
     }
     for (i = 0; i < stateblock->num_contained_vs_consts_b; ++i)
     {
-        state->vs_consts_b[i] = stateblock->stateblock_state.vs_consts_b[i];
-        wined3d_device_set_vs_consts_b(device, stateblock->contained_vs_consts_b[i],
-                1, &stateblock->stateblock_state.vs_consts_b[stateblock->contained_vs_consts_b[i]]);
+        unsigned int idx = stateblock->contained_vs_consts_b[i];
+
+        state->vs_consts_b[idx] = stateblock->stateblock_state.vs_consts_b[idx];
+        wined3d_device_set_vs_consts_b(device, idx, 1, &stateblock->stateblock_state.vs_consts_b[idx]);
     }
 
     for (i = 0; i < ARRAY_SIZE(stateblock->stateblock_state.light_state.light_map); ++i)
@@ -1087,29 +1090,33 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     /* Pixel Shader Constants. */
     for (i = 0; i < stateblock->num_contained_ps_consts_f; ++i)
     {
-        state->ps_consts_f[i] = stateblock->stateblock_state.ps_consts_f[i];
-        wined3d_device_set_ps_consts_f(device, stateblock->contained_ps_consts_f[i],
-                1, &stateblock->stateblock_state.ps_consts_f[stateblock->contained_ps_consts_f[i]]);
+        unsigned int idx = stateblock->contained_ps_consts_f[i];
+
+        state->ps_consts_f[idx] = stateblock->stateblock_state.ps_consts_f[idx];
+        wined3d_device_set_ps_consts_f(device, idx, 1, &stateblock->stateblock_state.ps_consts_f[idx]);
     }
     for (i = 0; i < stateblock->num_contained_ps_consts_i; ++i)
     {
-        state->ps_consts_i[i] = stateblock->stateblock_state.ps_consts_i[i];
-        wined3d_device_set_ps_consts_i(device, stateblock->contained_ps_consts_i[i],
-                1, &stateblock->stateblock_state.ps_consts_i[stateblock->contained_ps_consts_i[i]]);
+        unsigned int idx = stateblock->contained_ps_consts_i[i];
+
+        state->ps_consts_i[idx] = stateblock->stateblock_state.ps_consts_i[idx];
+        wined3d_device_set_ps_consts_i(device, idx, 1, &stateblock->stateblock_state.ps_consts_i[idx]);
     }
     for (i = 0; i < stateblock->num_contained_ps_consts_b; ++i)
     {
-        state->ps_consts_b[i] = stateblock->stateblock_state.ps_consts_b[i];
-        wined3d_device_set_ps_consts_b(device, stateblock->contained_ps_consts_b[i],
-                1, &stateblock->stateblock_state.ps_consts_b[stateblock->contained_ps_consts_b[i]]);
+        unsigned int idx = stateblock->contained_ps_consts_b[i];
+
+        state->ps_consts_b[idx] = stateblock->stateblock_state.ps_consts_b[idx];
+        wined3d_device_set_ps_consts_b(device, idx, 1, &stateblock->stateblock_state.ps_consts_b[idx]);
     }
 
     /* Render states. */
     for (i = 0; i < stateblock->num_contained_render_states; ++i)
     {
-        state->rs[i] = stateblock->stateblock_state.rs[i];
-        wined3d_device_set_render_state(device, stateblock->contained_render_states[i],
-                stateblock->stateblock_state.rs[stateblock->contained_render_states[i]]);
+        enum wined3d_render_state rs = stateblock->contained_render_states[i];
+
+        state->rs[rs] = stateblock->stateblock_state.rs[rs];
+        wined3d_device_set_render_state(device, rs, stateblock->stateblock_state.rs[rs]);
     }
 
     /* Texture states. */
