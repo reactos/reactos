@@ -420,7 +420,8 @@ static void shader_glsl_add_version_declaration(struct wined3d_string_buffer *bu
     shader_addline(buffer, "#version %u\n", shader_glsl_get_version(gl_info));
 }
 
-static void shader_glsl_append_imm_vec4(struct wined3d_string_buffer *buffer, const float *values)
+static void shader_glsl_append_imm_vec4(struct wined3d_string_buffer *buffer, const float *values,
+        const struct wined3d_gl_info *gl_info)
 {
     char str[4][17];
 
@@ -428,7 +429,17 @@ static void shader_glsl_append_imm_vec4(struct wined3d_string_buffer *buffer, co
     wined3d_ftoa(values[1], str[1]);
     wined3d_ftoa(values[2], str[2]);
     wined3d_ftoa(values[3], str[3]);
-    shader_addline(buffer, "vec4(%s, %s, %s, %s)", str[0], str[1], str[2], str[3]);
+
+    if (gl_info->supported[ARB_SHADER_BIT_ENCODING])
+    {
+        const unsigned int *uint_values = (const unsigned int *)values;
+
+        shader_addline(buffer, "uintBitsToFloat(uvec4(%#xu, %#xu, %#xu, %#xu))\n"
+                "        /* %s, %s, %s, %s */", uint_values[0], uint_values[1],
+                uint_values[2], uint_values[3], str[0], str[1], str[2], str[3]);
+    }
+    else
+        shader_addline(buffer, "vec4(%s, %s, %s, %s)", str[0], str[1], str[2], str[3]);
 }
 
 static void shader_glsl_append_imm_ivec(struct wined3d_string_buffer *buffer,
@@ -2483,7 +2494,7 @@ static void shader_generate_glsl_declarations(const struct wined3d_context *cont
         LIST_FOR_EACH_ENTRY(lconst, &shader->constantsF, struct wined3d_shader_lconst, entry)
         {
             shader_addline(buffer, "const vec4 %s_lc%u = ", prefix, lconst->idx);
-            shader_glsl_append_imm_vec4(buffer, (const float *)lconst->value);
+            shader_glsl_append_imm_vec4(buffer, (const float *)lconst->value, gl_info);
             shader_addline(buffer, ";\n");
         }
     }
@@ -7706,10 +7717,10 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
     if (args->srgb_correction)
     {
         shader_addline(buffer, "const vec4 srgb_const0 = ");
-        shader_glsl_append_imm_vec4(buffer, wined3d_srgb_const0);
+        shader_glsl_append_imm_vec4(buffer, wined3d_srgb_const0, gl_info);
         shader_addline(buffer, ";\n");
         shader_addline(buffer, "const vec4 srgb_const1 = ");
-        shader_glsl_append_imm_vec4(buffer, wined3d_srgb_const1);
+        shader_glsl_append_imm_vec4(buffer, wined3d_srgb_const1, gl_info);
         shader_addline(buffer, ";\n");
     }
     if (reg_maps->vpos || reg_maps->usesdsy)
@@ -9560,10 +9571,10 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *
     if (settings->sRGB_write)
     {
         shader_addline(buffer, "const vec4 srgb_const0 = ");
-        shader_glsl_append_imm_vec4(buffer, wined3d_srgb_const0);
+        shader_glsl_append_imm_vec4(buffer, wined3d_srgb_const0, gl_info);
         shader_addline(buffer, ";\n");
         shader_addline(buffer, "const vec4 srgb_const1 = ");
-        shader_glsl_append_imm_vec4(buffer, wined3d_srgb_const1);
+        shader_glsl_append_imm_vec4(buffer, wined3d_srgb_const1, gl_info);
         shader_addline(buffer, ";\n");
     }
 
