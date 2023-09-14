@@ -199,7 +199,6 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
     else
         wined3d_texture_prepare_location(dst_texture, dst_sub_resource_idx, context, dst_location);
 
-
     if (src_location == WINED3D_LOCATION_DRAWABLE)
     {
         required_texture = src_texture;
@@ -1807,21 +1806,18 @@ BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_res
                 WINED3D_LOCATION_RB_RESOLVED, dst_location);
         return TRUE;
     }
-    else
+
+    if (sub_resource->locations & (WINED3D_LOCATION_RB_MULTISAMPLE | WINED3D_LOCATION_RB_RESOLVED))
+        wined3d_texture_load_location(texture, sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
+
+    /* Download the sub-resource to system memory. */
+    if (sub_resource->locations & (WINED3D_LOCATION_TEXTURE_RGB | WINED3D_LOCATION_TEXTURE_SRGB))
     {
-        if (sub_resource->locations & (WINED3D_LOCATION_RB_MULTISAMPLE | WINED3D_LOCATION_RB_RESOLVED))
-            wined3d_texture_load_location(texture, sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
-
-        /* Download the sub-resource to system memory. */
-        if (sub_resource->locations & (WINED3D_LOCATION_TEXTURE_RGB | WINED3D_LOCATION_TEXTURE_SRGB))
-        {
-            wined3d_texture_bind_and_dirtify(texture, context,
-                    !(sub_resource->locations & WINED3D_LOCATION_TEXTURE_RGB));
-            texture2d_download_data(texture, sub_resource_idx, context, dst_location);
-            ++texture->download_count;
-
-            return TRUE;
-        }
+        wined3d_texture_bind_and_dirtify(texture, context,
+                !(sub_resource->locations & WINED3D_LOCATION_TEXTURE_RGB));
+        texture2d_download_data(texture, sub_resource_idx, context, dst_location);
+        ++texture->download_count;
+        return TRUE;
     }
 
     if (!(texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL)
