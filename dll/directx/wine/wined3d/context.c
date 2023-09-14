@@ -2791,6 +2791,7 @@ void context_apply_blit_state(struct wined3d_context *context, const struct wine
         if (context->blit_w != rt_size.cx || context->blit_h != rt_size.cy)
         {
             gl_info->gl_ops.gl.p_glViewport(0, 0, rt_size.cx, rt_size.cy);
+            context->viewport_count = WINED3D_MAX_VIEWPORTS;
             context->blit_w = rt_size.cx;
             context->blit_h = rt_size.cy;
             /* No need to dirtify here, the states are still dirtified because
@@ -2859,6 +2860,7 @@ void context_apply_blit_state(struct wined3d_context *context, const struct wine
     if (gl_info->supported[ARB_CLIP_CONTROL])
         GL_EXTCALL(glClipControl(GL_LOWER_LEFT, GL_NEGATIVE_ONE_TO_ONE));
     gl_info->gl_ops.gl.p_glViewport(0, 0, rt_size.cx, rt_size.cy);
+    context->viewport_count = WINED3D_MAX_VIEWPORTS;
     context_invalidate_state(context, STATE_VIEWPORT);
 
     device->shader_backend->shader_disable(device->shader_priv, context);
