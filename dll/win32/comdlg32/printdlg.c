@@ -3129,8 +3129,9 @@ static BOOL pagesetup_change_printer(LPWSTR name, pagesetup_data *data)
     pagesetup_set_devmode(data, dm);
 #ifdef __REACTOS__
     if(!data->u.dlgw->hDevMode)
-    {    ERR("pagesetup_set_devmode failed\n");
-         goto end;
+    {
+        ERR("pagesetup_set_devmode failed\n");
+        goto end;
     }
 #endif
     pagesetup_set_devnames(data, drv_info->pDriverPath, prn_info->pPrinterName,

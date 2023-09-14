@@ -601,7 +601,7 @@ DeviceCapabilitiesW(LPCWSTR pDevice, LPCWSTR pPort, WORD fwCapability, LPWSTR pO
             }
             else
             {
-                FIXME("Handle ReactOS Not Able to Print Wine Tests\n");
+                FIXME("Handle ReactOS not able to print Wine tests\n");
                 if (fwCapability == DC_COPIES) iDevCap = 0;
             }
 
