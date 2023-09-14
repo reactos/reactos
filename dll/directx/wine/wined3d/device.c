@@ -5881,30 +5881,26 @@ err:
     return hr;
 }
 
-void device_invalidate_state(const struct wined3d_device *device, DWORD state)
+void device_invalidate_state(const struct wined3d_device *device, unsigned int state_id)
 {
-    DWORD rep = device->state_table[state].representative;
+    unsigned int representative, i, idx, shift;
     struct wined3d_context *context;
-    unsigned int i, idx, shift;
 
     wined3d_from_cs(device->cs);
 
-    if (STATE_IS_COMPUTE(state))
+    if (STATE_IS_COMPUTE(state_id))
     {
         for (i = 0; i < device->context_count; ++i)
-            context_invalidate_compute_state(device->contexts[i], state);
+            context_invalidate_compute_state(device->contexts[i], state_id);
         return;
     }
 
+    representative = device->state_table[state_id].representative;
+    idx = representative / (sizeof(*context->dirty_graphics_states) * CHAR_BIT);
+    shift = representative & ((sizeof(*context->dirty_graphics_states) * CHAR_BIT) - 1);
     for (i = 0; i < device->context_count; ++i)
     {
-        context = device->contexts[i];
-        if (isStateDirty(context, rep)) continue;
-
-        context->dirtyArray[context->numDirtyEntries++] = rep;
-        idx = rep / (sizeof(*context->isStateDirty) * CHAR_BIT);
-        shift = rep & ((sizeof(*context->isStateDirty) * CHAR_BIT) - 1);
-        context->isStateDirty[idx] |= (1u << shift);
+        device->contexts[i]->dirty_graphics_states[idx] |= (1u << shift);
     }
 }
 

@@ -1898,16 +1898,8 @@ struct wined3d_context
 {
     const struct wined3d_d3d_info *d3d_info;
     const struct wined3d_state_entry *state_table;
-    /* State dirtification
-     * dirtyArray is an array that contains markers for dirty states. numDirtyEntries states are dirty, their numbers are in indices
-     * 0...numDirtyEntries - 1. isStateDirty is a redundant copy of the dirtyArray. Technically only one of them would be needed,
-     * but with the help of both it is easy to find out if a state is dirty(just check the array index), and for applying dirty states
-     * only numDirtyEntries array elements have to be checked, not STATE_HIGHEST states.
-     */
-    DWORD                   dirtyArray[STATE_HIGHEST + 1]; /* Won't get bigger than that, a state is never marked dirty 2 times */
-    DWORD                   numDirtyEntries;
-    DWORD isStateDirty[STATE_HIGHEST / (sizeof(DWORD) * CHAR_BIT) + 1]; /* Bitmap to find out quickly if a state is dirty */
-    unsigned int dirty_compute_states[STATE_COMPUTE_COUNT / (sizeof(unsigned int) * CHAR_BIT) + 1];
+    uint32_t dirty_graphics_states[STATE_HIGHEST / (sizeof(uint32_t) * CHAR_BIT) + 1];
+    uint32_t dirty_compute_states[STATE_COMPUTE_COUNT / (sizeof(uint32_t) * CHAR_BIT) + 1];
 
     struct wined3d_device *device;
     struct wined3d_swapchain *swapchain;
@@ -3327,11 +3319,11 @@ static inline struct wined3d_device_gl *wined3d_device_gl(struct wined3d_device 
     return CONTAINING_RECORD(device, struct wined3d_device_gl, d);
 }
 
-static inline BOOL isStateDirty(const struct wined3d_context *context, DWORD state)
+static inline BOOL isStateDirty(const struct wined3d_context *context, unsigned int state_id)
 {
-    DWORD idx = state / (sizeof(*context->isStateDirty) * CHAR_BIT);
-    BYTE shift = state & ((sizeof(*context->isStateDirty) * CHAR_BIT) - 1);
-    return context->isStateDirty[idx] & (1u << shift);
+    unsigned int idx = state_id / (sizeof(*context->dirty_graphics_states) * CHAR_BIT);
+    unsigned int shift = state_id & ((sizeof(*context->dirty_graphics_states) * CHAR_BIT) - 1);
+    return context->dirty_graphics_states[idx] & (1u << shift);
 }
 
 static inline float wined3d_alpha_ref(const struct wined3d_state *state)

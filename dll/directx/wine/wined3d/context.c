@@ -1647,18 +1647,14 @@ void context_invalidate_compute_state(struct wined3d_context *context, DWORD sta
     context->dirty_compute_states[index] |= (1u << shift);
 }
 
-void context_invalidate_state(struct wined3d_context *context, DWORD state)
+void context_invalidate_state(struct wined3d_context *context, unsigned int state_id)
 {
-    DWORD rep = context->state_table[state].representative;
-    DWORD idx;
-    BYTE shift;
+    unsigned int representative = context->state_table[state_id].representative;
+    unsigned int index, shift;
 
-    if (isStateDirty(context, rep)) return;
-
-    context->dirtyArray[context->numDirtyEntries++] = rep;
-    idx = rep / (sizeof(*context->isStateDirty) * CHAR_BIT);
-    shift = rep & ((sizeof(*context->isStateDirty) * CHAR_BIT) - 1);
-    context->isStateDirty[idx] |= (1u << shift);
+    index = representative / (sizeof(*context->dirty_graphics_states) * CHAR_BIT);
+    shift = representative & ((sizeof(*context->dirty_graphics_states) * CHAR_BIT) - 1);
+    context->dirty_graphics_states[index] |= (1u << shift);
 }
 
 /* This function takes care of wined3d pixel format selection. */
@@ -3911,7 +3907,7 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     const struct wined3d_fb_state *fb = state->fb;
-    unsigned int i;
+    unsigned int i, base;
     WORD map;
 
     if (!have_framebuffer_attachment(gl_info->limits.buffers, fb->render_targets, fb->depth_stencil))
@@ -3963,13 +3959,18 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
             wined3d_buffer_load_sysmem(state->index_buffer, context);
     }
 
-    for (i = 0; i < context->numDirtyEntries; ++i)
+    for (i = 0, base = 0; i < ARRAY_SIZE(context->dirty_graphics_states); ++i)
     {
-        DWORD rep = context->dirtyArray[i];
-        DWORD idx = rep / (sizeof(*context->isStateDirty) * CHAR_BIT);
-        BYTE shift = rep & ((sizeof(*context->isStateDirty) * CHAR_BIT) - 1);
-        context->isStateDirty[idx] &= ~(1u << shift);
-        state_table[rep].apply(context, state, rep);
+        uint32_t dirty_mask = context->dirty_graphics_states[i];
+
+        while (dirty_mask)
+        {
+            unsigned int state_id = base + wined3d_bit_scan(&dirty_mask);
+
+            state_table[state_id].apply(context, state, state_id);
+            context->dirty_graphics_states[i] &= ~(1u << (state_id - base));
+        }
+        base += sizeof(dirty_mask) * CHAR_BIT;
     }
 
     if (context->shader_update_mask & ~(1u << WINED3D_SHADER_TYPE_COMPUTE))
@@ -4005,7 +4006,6 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
         wined3d_context_gl_check_fbo_status(context_gl, GL_FRAMEBUFFER);
 
-    context->numDirtyEntries = 0; /* This makes the whole list clean */
     context->last_was_blit = FALSE;
     context->last_was_ffp_blit = FALSE;
 
