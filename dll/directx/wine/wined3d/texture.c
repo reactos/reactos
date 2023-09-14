@@ -2077,7 +2077,7 @@ static void wined3d_texture_gl_upload_data(struct wined3d_context *context,
         }
 
         src_mem = wined3d_context_gl_map_bo_address(context_gl, &bo,
-                src_slice_pitch, GL_PIXEL_UNPACK_BUFFER, WINED3D_MAP_READ);
+                src_slice_pitch * update_d, GL_PIXEL_UNPACK_BUFFER, WINED3D_MAP_READ);
         if (decompress)
             compressed_format->decompress(src_mem, converted_mem, src_row_pitch, src_slice_pitch,
                     dst_row_pitch, dst_slice_pitch, update_w, update_h, update_d);
