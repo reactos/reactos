@@ -1678,11 +1678,10 @@ static HRESULT WINAPI ddraw7_GetDisplayMode(IDirectDraw7 *iface, DDSURFACEDESC2 
 
     memset(DDSD, 0, DDSD->dwSize);
     DDSD->dwSize = sizeof(*DDSD);
-    DDSD->dwFlags |= DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_PITCH | DDSD_REFRESHRATE;
+    DDSD->dwFlags = DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_PITCH | DDSD_REFRESHRATE;
     DDSD->dwWidth = mode.width;
     DDSD->dwHeight = mode.height;
     DDSD->u2.dwRefreshRate = 60;
-    DDSD->ddsCaps.dwCaps = 0;
     DDSD->u4.ddpfPixelFormat.dwSize = sizeof(DDSD->u4.ddpfPixelFormat);
     ddrawformat_from_wined3dformat(&DDSD->u4.ddpfPixelFormat, mode.format_id);
     DDSD->u1.lPitch = mode.width * DDSD->u4.ddpfPixelFormat.u1.dwRGBBitCount / 8;
