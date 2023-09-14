@@ -261,8 +261,8 @@ static inline enum complex_fixup get_complex_fixup(struct color_fixup_desc fixup
 #define WINED3D_MAX_STREAMS         16
 #define WINED3D_MAX_TEXTURES        8
 #define WINED3D_MAX_FRAGMENT_SAMPLERS 16
-#define MAX_VERTEX_SAMPLERS         4
-#define MAX_COMBINED_SAMPLERS       (WINED3D_MAX_FRAGMENT_SAMPLERS + MAX_VERTEX_SAMPLERS)
+#define WINED3D_MAX_VERTEX_SAMPLERS 4
+#define MAX_COMBINED_SAMPLERS       (WINED3D_MAX_FRAGMENT_SAMPLERS + WINED3D_MAX_VERTEX_SAMPLERS)
 #define MAX_ACTIVE_LIGHTS           8
 #define MAX_CLIP_DISTANCES          8
 #define MAX_CONSTANT_BUFFERS        15
@@ -2004,7 +2004,7 @@ struct wined3d_context
     GLuint blit_vbo;
 
     DWORD tex_unit_map[MAX_COMBINED_SAMPLERS];
-    DWORD rev_tex_unit_map[MAX_GL_FRAGMENT_SAMPLERS + MAX_VERTEX_SAMPLERS];
+    DWORD rev_tex_unit_map[MAX_GL_FRAGMENT_SAMPLERS + WINED3D_MAX_VERTEX_SAMPLERS];
 
     /* Extension emulation */
     GLint                   gl_fog_source;

@@ -2039,12 +2039,12 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
         }
 
         wined3d_gl_limits_get_texture_unit_range(&gl_info->limits, WINED3D_SHADER_TYPE_VERTEX, &base, &count);
-        if (base + MAX_VERTEX_SAMPLERS > ARRAY_SIZE(context->rev_tex_unit_map))
+        if (base + WINED3D_MAX_VERTEX_SAMPLERS > ARRAY_SIZE(context->rev_tex_unit_map))
         {
             ERR("Unexpected texture unit base index %u.\n", base);
             return FALSE;
         }
-        for (i = 0; i < min(count, MAX_VERTEX_SAMPLERS); ++i)
+        for (i = 0; i < min(count, WINED3D_MAX_VERTEX_SAMPLERS); ++i)
         {
             context->tex_unit_map[WINED3D_MAX_FRAGMENT_SAMPLERS + i] = base + i;
             context->rev_tex_unit_map[base + i] = WINED3D_MAX_FRAGMENT_SAMPLERS + i;
@@ -2371,7 +2371,7 @@ const DWORD *context_get_tex_unit_mapping(const struct wined3d_context *context,
             break;
         case WINED3D_SHADER_TYPE_VERTEX:
             *base = WINED3D_MAX_FRAGMENT_SAMPLERS;
-            *count = MAX_VERTEX_SAMPLERS;
+            *count = WINED3D_MAX_VERTEX_SAMPLERS;
             break;
         default:
             ERR("Unhandled shader type %#x.\n", shader_version->type);
@@ -3428,7 +3428,7 @@ static void context_map_vsamplers(struct wined3d_context *context, BOOL ps, cons
     if (ps)
         ps_resource_info = state->shader[WINED3D_SHADER_TYPE_PIXEL]->reg_maps.resource_info;
 
-    for (i = 0; i < MAX_VERTEX_SAMPLERS; ++i)
+    for (i = 0; i < WINED3D_MAX_VERTEX_SAMPLERS; ++i)
     {
         DWORD vsampler_idx = i + WINED3D_MAX_FRAGMENT_SAMPLERS;
         if (vs_resource_info[i].type)
@@ -3741,7 +3741,7 @@ static void context_preload_textures(struct wined3d_context *context, const stru
 
     if (use_vs(state))
     {
-        for (i = 0; i < MAX_VERTEX_SAMPLERS; ++i)
+        for (i = 0; i < WINED3D_MAX_VERTEX_SAMPLERS; ++i)
         {
             if (state->shader[WINED3D_SHADER_TYPE_VERTEX]->reg_maps.resource_info[i].type)
                 context_preload_texture(context, state, WINED3D_MAX_FRAGMENT_SAMPLERS + i);
