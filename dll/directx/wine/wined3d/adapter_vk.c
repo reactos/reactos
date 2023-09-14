@@ -416,12 +416,14 @@ static BOOL adapter_vk_check_format(const struct wined3d_adapter *adapter,
 
 static HRESULT adapter_vk_init_3d(struct wined3d_device *device)
 {
+    struct wined3d_device_vk *device_vk;
     struct wined3d_context *context_vk;
     HRESULT hr;
 
     TRACE("device %p.\n", device);
 
-    context_vk = &wined3d_device_vk(device)->context_vk;
+    device_vk = wined3d_device_vk(device);
+    context_vk = &device_vk->context_vk;
     if (FAILED(hr = wined3d_context_vk_init(context_vk, device->swapchains[0])))
     {
         WARN("Failed to initialise context.\n");
@@ -437,6 +439,14 @@ static HRESULT adapter_vk_init_3d(struct wined3d_device *device)
 
     TRACE("Initialised context %p.\n", context_vk);
 
+    if (!(device_vk->d.blitter = wined3d_cpu_blitter_create()))
+    {
+        ERR("Failed to create CPU blitter.\n");
+        device_context_remove(device, context_vk);
+        wined3d_context_cleanup(context_vk);
+        return E_FAIL;
+    }
+
     return WINED3D_OK;
 }
 
@@ -445,6 +455,8 @@ static void adapter_vk_uninit_3d(struct wined3d_device *device)
     struct wined3d_context *context_vk;
 
     TRACE("device %p.\n", device);
+
+    device->blitter->ops->blitter_destroy(device->blitter, NULL);
 
     context_vk = &wined3d_device_vk(device)->context_vk;
     device_context_remove(device, context_vk);
