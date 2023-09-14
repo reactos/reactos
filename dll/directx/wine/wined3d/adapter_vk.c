@@ -27,6 +27,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 struct wined3d_device_vk
 {
     struct wined3d_device d;
+
+    VkDevice vk_device;
+    VkQueue vk_queue;
 };
 
 static inline struct wined3d_device_vk *wined3d_device_vk(struct wined3d_device *device)
@@ -43,6 +46,30 @@ static const char *debug_vk_version(uint32_t version)
 {
     return wine_dbg_sprintf("%u.%u.%u",
             VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
+}
+
+static HRESULT hresult_from_vk_result(VkResult vr)
+{
+    switch (vr)
+    {
+        case VK_SUCCESS:
+            return S_OK;
+        case VK_ERROR_OUT_OF_HOST_MEMORY:
+            WARN("Out of host memory.\n");
+            return E_OUTOFMEMORY;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+            WARN("Out of device memory.\n");
+            return E_OUTOFMEMORY;
+        case VK_ERROR_DEVICE_LOST:
+            WARN("Device lost.\n");
+            return E_FAIL;
+        case VK_ERROR_EXTENSION_NOT_PRESENT:
+            WARN("Extension not present.\n");
+            return E_FAIL;
+        default:
+            FIXME("Unhandled VkResult %d.\n", vr);
+            return E_FAIL;
+    }
 }
 
 #ifdef USE_WIN32_VULKAN
@@ -106,33 +133,116 @@ static void adapter_vk_destroy(struct wined3d_adapter *adapter)
     heap_free(adapter_vk);
 }
 
+static HRESULT wined3d_select_vulkan_queue_family(const struct wined3d_adapter_vk *adapter_vk,
+        uint32_t *queue_family_index)
+{
+    VkPhysicalDevice physical_device = adapter_vk->physical_device;
+    const struct wined3d_vk_info *vk_info = &adapter_vk->vk_info;
+    VkQueueFamilyProperties *queue_properties;
+    uint32_t count, i;
+
+    VK_CALL(vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &count, NULL));
+
+    if (!(queue_properties = heap_calloc(count, sizeof(*queue_properties))))
+        return E_OUTOFMEMORY;
+
+    VK_CALL(vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &count, queue_properties));
+
+    for (i = 0; i < count; ++i)
+    {
+        if (queue_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        {
+            *queue_family_index = i;
+            heap_free(queue_properties);
+            return WINED3D_OK;
+        }
+    }
+    heap_free(queue_properties);
+
+    WARN("Failed to find graphics queue.\n");
+    return E_FAIL;
+}
+
 static HRESULT adapter_vk_create_device(struct wined3d *wined3d, const struct wined3d_adapter *adapter,
         enum wined3d_device_type device_type, HWND focus_window, unsigned int flags, BYTE surface_alignment,
         const enum wined3d_feature_level *levels, unsigned int level_count,
         struct wined3d_device_parent *device_parent, struct wined3d_device **device)
 {
+    const struct wined3d_adapter_vk *adapter_vk = wined3d_adapter_vk_const(adapter);
+    const struct wined3d_vk_info *vk_info = &adapter_vk->vk_info;
+    static const float priorities[] = {1.0f};
     struct wined3d_device_vk *device_vk;
+    VkDevice vk_device = VK_NULL_HANDLE;
+    VkDeviceQueueCreateInfo queue_info;
+    VkPhysicalDeviceFeatures features;
+    VkPhysicalDevice physical_device;
+    VkDeviceCreateInfo device_info;
+    uint32_t queue_family_index;
+    VkResult vr;
     HRESULT hr;
 
     if (!(device_vk = heap_alloc_zero(sizeof(*device_vk))))
         return E_OUTOFMEMORY;
 
+    if (FAILED(hr = wined3d_select_vulkan_queue_family(adapter_vk, &queue_family_index)))
+        goto fail;
+
+    physical_device = adapter_vk->physical_device;
+
+    VK_CALL(vkGetPhysicalDeviceFeatures(physical_device, &features));
+
+    queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queue_info.pNext = NULL;
+    queue_info.flags = 0;
+    queue_info.queueFamilyIndex = queue_family_index;
+    queue_info.queueCount = ARRAY_SIZE(priorities);
+    queue_info.pQueuePriorities = priorities;
+
+    device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    device_info.pNext = NULL;
+    device_info.flags = 0;
+    device_info.queueCreateInfoCount = 1;
+    device_info.pQueueCreateInfos = &queue_info;
+    device_info.enabledLayerCount = 0;
+    device_info.ppEnabledLayerNames = NULL;
+    device_info.enabledExtensionCount = 0;
+    device_info.ppEnabledExtensionNames = NULL;
+    device_info.pEnabledFeatures = &features;
+
+    if ((vr = VK_CALL(vkCreateDevice(physical_device, &device_info, NULL, &vk_device))) < 0)
+    {
+        WARN("Failed to create Vulkan device, vr %d.\n", vr);
+        vk_device = VK_NULL_HANDLE;
+        hr = hresult_from_vk_result(vr);
+        goto fail;
+    }
+
+    device_vk->vk_device = vk_device;
+    VK_CALL(vkGetDeviceQueue(vk_device, queue_family_index, 0, &device_vk->vk_queue));
+
     if (FAILED(hr = wined3d_device_init(&device_vk->d, wined3d, adapter->ordinal, device_type,
             focus_window, flags, surface_alignment, levels, level_count, device_parent)))
     {
         WARN("Failed to initialize device, hr %#x.\n", hr);
-        heap_free(device_vk);
-        return hr;
+        goto fail;
     }
 
     return WINED3D_OK;
+
+fail:
+    VK_CALL(vkDestroyDevice(vk_device, NULL));
+    heap_free(device_vk);
+    return hr;
 }
 
 static void adapter_vk_destroy_device(struct wined3d_device *device)
 {
+    struct wined3d_adapter_vk *adapter_vk = wined3d_adapter_vk(device->adapter);
     struct wined3d_device_vk *device_vk = wined3d_device_vk(device);
+    const struct wined3d_vk_info *vk_info = &adapter_vk->vk_info;
 
-    wined3d_device_cleanup(device);
+    wined3d_device_cleanup(&device_vk->d);
+    VK_CALL(vkDestroyDevice(device_vk->vk_device, NULL));
     heap_free(device_vk);
 }
 
