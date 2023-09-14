@@ -1135,7 +1135,7 @@ struct wined3d_context *swapchain_get_context(struct wined3d_swapchain *swapchai
 
     for (i = 0; i < swapchain->num_contexts; ++i)
     {
-        if (swapchain->context[i]->tid == tid)
+        if (wined3d_context_gl(swapchain->context[i])->tid == tid)
             return swapchain->context[i];
     }
 

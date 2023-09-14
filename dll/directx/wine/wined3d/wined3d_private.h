@@ -1907,7 +1907,6 @@ struct wined3d_context
         struct wined3d_texture *texture;
         unsigned int sub_resource_idx;
     } current_rt;
-    DWORD                   tid;    /* Thread ID which owns this context at the moment */
 
     /* Stores some information about the context state for optimization */
     DWORD shader_update_mask : 6; /* WINED3D_SHADER_TYPE_COUNT, 6 */
@@ -1973,6 +1972,8 @@ HRESULT wined3d_context_no3d_init(struct wined3d_context *context_no3d,
 struct wined3d_context_gl
 {
     struct wined3d_context c;
+
+    DWORD tid; /* Thread ID which owns this context at the moment. */
 
     uint32_t dc_is_private : 1;
     uint32_t dc_has_format : 1; /* Only meaningful for private DCs. */

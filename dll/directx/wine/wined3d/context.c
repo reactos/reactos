@@ -1917,7 +1917,6 @@ static void wined3d_context_init(struct wined3d_context *context, struct wined3d
     context->swapchain = swapchain;
     context->current_rt.texture = swapchain->front_buffer;
     context->current_rt.sub_resource_idx = 0;
-    context->tid = GetCurrentThreadId();
 
     context->shader_update_mask = (1u << WINED3D_SHADER_TYPE_PIXEL)
             | (1u << WINED3D_SHADER_TYPE_VERTEX)
@@ -1956,6 +1955,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
     gl_info = context->gl_info;
     d3d_info = context->d3d_info;
 
+    context_gl->tid = GetCurrentThreadId();
     context_gl->window = context->swapchain->win_handle;
     if (!(context_gl->dc = GetDCEx(context_gl->window, 0, DCX_USESTYLE | DCX_CACHE)))
     {
@@ -2324,7 +2324,7 @@ void wined3d_context_gl_destroy(struct wined3d_context_gl *context_gl)
 
     device_context_remove(device, &context_gl->c);
 
-    if (context_gl->c.current && context_gl->c.tid != GetCurrentThreadId())
+    if (context_gl->c.current && context_gl->tid != GetCurrentThreadId())
     {
         struct wined3d_gl_info *gl_info;
 
@@ -4264,7 +4264,7 @@ struct wined3d_context_gl *wined3d_context_gl_reacquire(struct wined3d_context_g
     struct wined3d_context *acquired_context;
     struct wined3d_device *device;
 
-    if (!context_gl || context_gl->c.tid != GetCurrentThreadId())
+    if (!context_gl || context_gl->tid != GetCurrentThreadId())
         return NULL;
 
     device = context_gl->c.device;
