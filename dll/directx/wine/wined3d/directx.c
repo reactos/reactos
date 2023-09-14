@@ -1277,56 +1277,6 @@ HRESULT CDECL wined3d_get_adapter_raster_status(const struct wined3d *wined3d, U
     return WINED3D_OK;
 }
 
-BOOL wined3d_check_pixel_format_color(const struct wined3d_pixel_format *cfg,
-        const struct wined3d_format *format)
-{
-    /* Float formats need FBOs. If FBOs are used this function isn't called */
-    if (format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_FLOAT)
-        return FALSE;
-
-    /* Probably a RGBA_float or color index mode. */
-    if (cfg->iPixelType != WGL_TYPE_RGBA_ARB)
-        return FALSE;
-
-    if (cfg->redSize < format->red_size
-            || cfg->greenSize < format->green_size
-            || cfg->blueSize < format->blue_size
-            || cfg->alphaSize < format->alpha_size)
-        return FALSE;
-
-    return TRUE;
-}
-
-BOOL wined3d_check_pixel_format_depth(const struct wined3d_pixel_format *cfg,
-        const struct wined3d_format *format)
-{
-    BOOL lockable = FALSE;
-
-    /* Float formats need FBOs. If FBOs are used this function isn't called */
-    if (format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_FLOAT)
-        return FALSE;
-
-    if ((format->id == WINED3DFMT_D16_LOCKABLE) || (format->id == WINED3DFMT_D32_FLOAT))
-        lockable = TRUE;
-
-    /* On some modern cards like the Geforce8/9, GLX doesn't offer some
-     * depth/stencil formats which D3D9 reports. We can safely report
-     * "compatible" formats (e.g. D24 can be used for D16) as long as we
-     * aren't dealing with a lockable format. This also helps D3D <= 7 as they
-     * expect D16 which isn't offered without this on Geforce8 cards. */
-    if (!(cfg->depthSize == format->depth_size || (!lockable && cfg->depthSize > format->depth_size)))
-        return FALSE;
-
-    /* Some cards like Intel i915 ones only offer D24S8 but lots of games also
-     * need a format without stencil. We can allow a mismatch if the format
-     * doesn't have any stencil bits. If it does have stencil bits the size
-     * must match, or stencil wrapping would break. */
-    if (format->stencil_size && cfg->stencilSize != format->stencil_size)
-        return FALSE;
-
-    return TRUE;
-}
-
 HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
         UINT adapter_idx, enum wined3d_device_type device_type, enum wined3d_format_id adapter_format_id,
         enum wined3d_format_id render_target_format_id, enum wined3d_format_id depth_stencil_format_id)
@@ -1446,41 +1396,7 @@ static BOOL wined3d_check_render_target_format(const struct wined3d_adapter *ada
     if (!(rt_format->flags[gl_type] & WINED3DFMT_FLAG_RENDERTARGET))
         return FALSE;
 
-    if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
-    {
-        const struct wined3d_pixel_format *cfgs = adapter->cfgs;
-        unsigned int i;
-
-        /* In backbuffer mode the front and backbuffer share the same WGL
-         * pixelformat. The format must match in RGB, alpha is allowed to be
-         * different. (Only the backbuffer can have alpha.) */
-        if (adapter_format->red_size != rt_format->red_size
-                || adapter_format->green_size != rt_format->green_size
-                || adapter_format->blue_size != rt_format->blue_size)
-        {
-            TRACE("Render target format %s doesn't match with adapter format %s.\n",
-                    debug_d3dformat(rt_format->id), debug_d3dformat(adapter_format->id));
-            return FALSE;
-        }
-
-        /* Check if there is a WGL pixel format matching the requirements, the format should also be window
-         * drawable (not offscreen; e.g. Nvidia offers R5G6B5 for pbuffers even when X is running at 24bit) */
-        for (i = 0; i < adapter->cfg_count; ++i)
-        {
-            if (cfgs[i].windowDrawable
-                    && wined3d_check_pixel_format_color(&cfgs[i], adapter_format)
-                    && wined3d_check_pixel_format_color(&cfgs[i], rt_format))
-            {
-                TRACE("Pixel format %d is compatible with format %s.\n",
-                        cfgs[i].iPixelFormat, debug_d3dformat(rt_format->id));
-                return TRUE;
-            }
-        }
-
-        return FALSE;
-    }
-
-    return TRUE;
+    return adapter->adapter_ops->adapter_check_format(adapter, adapter_format, rt_format, NULL);
 }
 
 static BOOL wined3d_check_surface_format(const struct wined3d_format *format)
