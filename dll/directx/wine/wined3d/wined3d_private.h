@@ -2037,6 +2037,11 @@ struct wined3d_context
     unsigned int scissor_rect_count;
 };
 
+struct wined3d_context_gl
+{
+    struct wined3d_context c;
+};
+
 struct wined3d_fb_state
 {
     struct wined3d_rendertarget_view *render_targets[MAX_RENDER_TARGET_VIEWS];

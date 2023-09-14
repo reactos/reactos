@@ -1886,6 +1886,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
         struct wined3d_texture *target, const struct wined3d_format *ds_format)
 {
     struct wined3d_device *device = swapchain->device;
+    struct wined3d_context_gl *context_gl;
     struct wined3d_context *context;
     DWORD state;
 
@@ -1893,8 +1894,9 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
 
     wined3d_from_cs(device->cs);
 
-    if (!(context = heap_alloc_zero(sizeof(*context))))
+    if (!(context_gl = heap_alloc_zero(sizeof(*context_gl))))
         return NULL;
+    context = &context_gl->c;
 
     list_init(&context->timestamp_queries);
     list_init(&context->occlusion_queries);
@@ -1977,7 +1979,7 @@ out:
         wined3d_release_dc(swapchain->win_handle, context->hdc);
     device->shader_backend->shader_free_context_data(context);
     device->adapter->fragment_pipe->free_context_data(context);
-    heap_free(context);
+    heap_free(context_gl);
     return NULL;
 }
 
