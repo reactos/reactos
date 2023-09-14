@@ -9793,9 +9793,8 @@ static struct glsl_ffp_vertex_shader *shader_glsl_find_ffp_vertex_shader(struct 
 }
 
 static struct glsl_ffp_fragment_shader *shader_glsl_find_ffp_fragment_shader(struct shader_glsl_priv *priv,
-        const struct ffp_frag_settings *args, const struct wined3d_context *context)
+        const struct ffp_frag_settings *args, const struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_ffp_fragment_shader *glsl_desc;
     const struct ffp_frag_desc *desc;
 
@@ -10207,7 +10206,7 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
         struct ffp_frag_settings settings;
 
         gen_ffp_frag_op(context, state, &settings, FALSE);
-        ffp_shader = shader_glsl_find_ffp_fragment_shader(priv, &settings, context);
+        ffp_shader = shader_glsl_find_ffp_fragment_shader(priv, &settings, context_gl);
         ps_id = ffp_shader->id;
         ps_list = &ffp_shader->linked_programs;
     }
