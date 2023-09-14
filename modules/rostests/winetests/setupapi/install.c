@@ -1369,7 +1369,7 @@ static void test_install_file(void)
     SetLastError(0xdeadbeef);
     ret = SetupInstallFileA(hinf, &infctx, "one.txt", "src", "one.txt", SP_COPY_REPLACEONLY, NULL, NULL);
     ok(!ret, "Expected failure.\n");
-    todo_wine ok(GetLastError() == ERROR_SUCCESS, "Got unexpected error %#x.\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Got unexpected error %#x.\n", GetLastError());
     ok(!file_exists("dst/one.txt"), "Destination file should not exist.\n");
 
     ret = SetupFindFirstLineA(hinf, "section1", "two.txt", &infctx);
