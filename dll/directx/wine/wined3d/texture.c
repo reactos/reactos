@@ -740,6 +740,8 @@ static void wined3d_texture_allocate_gl_immutable_storage(struct wined3d_texture
     unsigned int samples = wined3d_texture_get_gl_sample_count(texture);
     GLsizei height = wined3d_texture_get_level_pow2_height(texture, 0);
     GLsizei width = wined3d_texture_get_level_pow2_width(texture, 0);
+    GLboolean standard_pattern = texture->resource.multisample_type != WINED3D_MULTISAMPLE_NON_MASKABLE
+            && texture->resource.multisample_quality == WINED3D_STANDARD_MULTISAMPLE_PATTERN;
 
     switch (texture->target)
     {
@@ -753,11 +755,11 @@ static void wined3d_texture_allocate_gl_immutable_storage(struct wined3d_texture
             break;
         case GL_TEXTURE_2D_MULTISAMPLE:
             GL_EXTCALL(glTexStorage2DMultisample(texture->target, samples,
-                    gl_internal_format, width, height, GL_FALSE));
+                    gl_internal_format, width, height, standard_pattern));
             break;
         case GL_TEXTURE_2D_MULTISAMPLE_ARRAY:
             GL_EXTCALL(glTexStorage3DMultisample(texture->target, samples,
-                    gl_internal_format, width, height, texture->layer_count, GL_FALSE));
+                    gl_internal_format, width, height, texture->layer_count, standard_pattern));
             break;
         case GL_TEXTURE_1D_ARRAY:
             GL_EXTCALL(glTexStorage2D(texture->target, texture->level_count,
@@ -3819,7 +3821,7 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
         }
         if (desc->multisample_type != WINED3D_MULTISAMPLE_NON_MASKABLE
                 && (!(format->multisample_types & 1u << (desc->multisample_type - 1))
-                || desc->multisample_quality))
+                || (desc->multisample_quality && desc->multisample_quality != WINED3D_STANDARD_MULTISAMPLE_PATTERN)))
         {
             WARN("Unsupported multisample type %u quality %u requested.\n", desc->multisample_type,
                     desc->multisample_quality);

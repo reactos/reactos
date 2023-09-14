@@ -1589,6 +1589,8 @@ enum wined3d_shader_type
 #define WINED3D_TEXTURE_CREATE_GET_DC                           0x00000008
 #define WINED3D_TEXTURE_CREATE_GENERATE_MIPMAPS                 0x00000010
 
+#define WINED3D_STANDARD_MULTISAMPLE_PATTERN                    0xffffffff
+
 #define WINED3D_APPEND_ALIGNED_ELEMENT                          0xffffffff
 
 #define WINED3D_OUTPUT_SLOT_SEMANTIC                            0xffffffff
