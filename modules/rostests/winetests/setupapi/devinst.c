@@ -1261,14 +1261,14 @@ static void test_device_iface_detail(void)
     ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, expected_size, &size, NULL);
     ok(ret, "Failed to get interface detail, error %#lx.\n", GetLastError());
     ok(!strcasecmp(path, detail->DevicePath), "Got unexpected path %s.\n", detail->DevicePath);
-    todo_wine ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
+    ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
 
     SetLastError(0xdeadbeef);
     size = 0xdeadbeef;
     ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, expected_size * 2, &size, NULL);
     ok(ret, "Failed to get interface detail, error %#lx.\n", GetLastError());
     ok(!strcasecmp(path, detail->DevicePath), "Got unexpected path %s.\n", detail->DevicePath);
-    todo_wine ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
+    ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
 
     expected_size = FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_W, DevicePath[strlen(path) + 1]);
 
