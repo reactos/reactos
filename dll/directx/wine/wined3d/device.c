@@ -4267,6 +4267,12 @@ void CDECL wined3d_device_update_sub_resource(struct wined3d_device *device, str
     if (flags)
         FIXME("Ignoring flags %#x.\n", flags);
 
+    if (!(resource->access & WINED3D_RESOURCE_ACCESS_GPU))
+    {
+        WARN("Resource %p is not GPU accessible.\n", resource);
+        return;
+    }
+
     if (resource->type == WINED3D_RTYPE_BUFFER)
     {
         if (sub_resource_idx > 0)
