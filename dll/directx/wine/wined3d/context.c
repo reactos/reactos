@@ -435,7 +435,7 @@ static inline void context_set_fbo_key_for_render_target(const struct wined3d_co
 {
     unsigned int sub_resource_idx = render_target->sub_resource_idx;
     struct wined3d_resource *resource = render_target->resource;
-    struct wined3d_texture *texture;
+    struct wined3d_texture_gl *texture_gl;
 
     if (!resource || resource->format->id == WINED3DFMT_NULL || resource->type == WINED3D_RTYPE_BUFFER)
     {
@@ -456,19 +456,19 @@ static inline void context_set_fbo_key_for_render_target(const struct wined3d_co
         return;
     }
 
-    texture = wined3d_texture_from_resource(resource);
-    if (texture->current_renderbuffer)
+    texture_gl = wined3d_texture_gl(wined3d_texture_from_resource(resource));
+    if (texture_gl->current_renderbuffer)
     {
-        key->objects[idx].object = texture->current_renderbuffer->id;
+        key->objects[idx].object = texture_gl->current_renderbuffer->id;
         key->objects[idx].target = 0;
         key->objects[idx].level = key->objects[idx].layer = 0;
         key->rb_namespace |= 1 << idx;
         return;
     }
 
-    key->objects[idx].target = wined3d_texture_get_sub_resource_target(texture, sub_resource_idx);
-    key->objects[idx].level = sub_resource_idx % texture->level_count;
-    key->objects[idx].layer = sub_resource_idx / texture->level_count;
+    key->objects[idx].target = wined3d_texture_get_sub_resource_target(&texture_gl->t, sub_resource_idx);
+    key->objects[idx].level = sub_resource_idx % texture_gl->t.level_count;
+    key->objects[idx].layer = sub_resource_idx / texture_gl->t.level_count;
 
     if (render_target->layer_count != 1)
         key->objects[idx].layer = WINED3D_ALL_LAYERS;
@@ -476,22 +476,22 @@ static inline void context_set_fbo_key_for_render_target(const struct wined3d_co
     switch (location)
     {
         case WINED3D_LOCATION_TEXTURE_RGB:
-            key->objects[idx].object = wined3d_texture_get_texture_name(texture, context, FALSE);
+            key->objects[idx].object = wined3d_texture_get_texture_name(&texture_gl->t, context, FALSE);
             break;
 
         case WINED3D_LOCATION_TEXTURE_SRGB:
-            key->objects[idx].object = wined3d_texture_get_texture_name(texture, context, TRUE);
+            key->objects[idx].object = wined3d_texture_get_texture_name(&texture_gl->t, context, TRUE);
             break;
 
         case WINED3D_LOCATION_RB_MULTISAMPLE:
-            key->objects[idx].object = texture->rb_multisample;
+            key->objects[idx].object = texture_gl->t.rb_multisample;
             key->objects[idx].target = 0;
             key->objects[idx].level = key->objects[idx].layer = 0;
             key->rb_namespace |= 1 << idx;
             break;
 
         case WINED3D_LOCATION_RB_RESOLVED:
-            key->objects[idx].object = texture->rb_resolved;
+            key->objects[idx].object = texture_gl->t.rb_resolved;
             key->objects[idx].target = 0;
             key->objects[idx].level = key->objects[idx].layer = 0;
             key->rb_namespace |= 1 << idx;
@@ -612,7 +612,8 @@ static struct fbo_entry *context_find_fbo_entry(struct wined3d_context *context,
         }
         else if (depth_stencil->resource->type == WINED3D_RTYPE_TEXTURE_2D)
         {
-            wined3d_texture_set_compatible_renderbuffer(ds_texture, context, ds_level, &render_targets[0]);
+            wined3d_texture_gl_set_compatible_renderbuffer(wined3d_texture_gl(ds_texture),
+                    context, ds_level, &render_targets[0]);
         }
     }
 

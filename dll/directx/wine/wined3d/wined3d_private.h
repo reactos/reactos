@@ -3307,9 +3307,6 @@ struct wined3d_texture
         HDC dc;
     } *dc_info;
 
-    struct list renderbuffers;
-    const struct wined3d_renderbuffer_entry *current_renderbuffer;
-
     struct wined3d_texture_sub_resource
     {
         void *parent;
@@ -3437,8 +3434,6 @@ BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned 
         struct wined3d_context *context, DWORD location) DECLSPEC_HIDDEN;
 void wined3d_texture_prepare_texture(struct wined3d_texture *texture,
         struct wined3d_context *context, BOOL srgb) DECLSPEC_HIDDEN;
-void wined3d_texture_set_compatible_renderbuffer(struct wined3d_texture *texture, struct wined3d_context *context,
-        unsigned int level, const struct wined3d_rendertarget_info *rt) DECLSPEC_HIDDEN;
 void wined3d_texture_set_map_binding(struct wined3d_texture *texture, DWORD map_binding) DECLSPEC_HIDDEN;
 void wined3d_texture_set_swapchain(struct wined3d_texture *texture,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
@@ -3459,12 +3454,19 @@ void wined3d_gl_texture_swizzle_from_color_fixup(GLint swizzle[4], struct color_
 struct wined3d_texture_gl
 {
     struct wined3d_texture t;
+
+    struct list renderbuffers;
+    const struct wined3d_renderbuffer_entry *current_renderbuffer;
 };
 
 static inline struct wined3d_texture_gl *wined3d_texture_gl(struct wined3d_texture *texture)
 {
     return CONTAINING_RECORD(texture, struct wined3d_texture_gl, t);
 }
+
+void wined3d_texture_gl_set_compatible_renderbuffer(struct wined3d_texture_gl *texture_gl,
+        struct wined3d_context *context, unsigned int level,
+        const struct wined3d_rendertarget_info *rt) DECLSPEC_HIDDEN;
 
 #define WINED3D_LOCATION_DISCARDED      0x00000001
 #define WINED3D_LOCATION_SYSMEM         0x00000002
