@@ -2092,7 +2092,7 @@ static void test_register_dlls(void)
     ok(ret, "Failed to install, error %#x.\n", GetLastError());
 
     l = RegOpenKeyA(HKEY_CURRENT_USER, "winetest_setupapi_selfreg", &key);
-    todo_wine ok(!l, "Got error %u.\n", l);
+    ok(!l, "Got error %u.\n", l);
     RegCloseKey(key);
 
     ret = SetupInstallFromInfSectionA(NULL, hinf, "DefaultInstall", SPINST_UNREGSVR,
