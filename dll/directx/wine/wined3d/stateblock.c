@@ -535,6 +535,12 @@ void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state)
         state->vs = NULL;
         wined3d_shader_decref(shader);
     }
+
+    if ((shader = state->ps))
+    {
+        state->ps = NULL;
+        wined3d_shader_decref(shader);
+    }
 }
 
 void state_cleanup(struct wined3d_state *state)
@@ -958,14 +964,13 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
         stateblock->state.sampler_states[stage][state] = src_state->sampler_states[stage][state];
     }
 
-    if (stateblock->changed.pixelShader && stateblock->state.shader[WINED3D_SHADER_TYPE_PIXEL]
-            != src_state->shader[WINED3D_SHADER_TYPE_PIXEL])
+    if (stateblock->changed.pixelShader && stateblock->stateblock_state.ps != state->ps)
     {
-        if (src_state->shader[WINED3D_SHADER_TYPE_PIXEL])
-            wined3d_shader_incref(src_state->shader[WINED3D_SHADER_TYPE_PIXEL]);
-        if (stateblock->state.shader[WINED3D_SHADER_TYPE_PIXEL])
-            wined3d_shader_decref(stateblock->state.shader[WINED3D_SHADER_TYPE_PIXEL]);
-        stateblock->state.shader[WINED3D_SHADER_TYPE_PIXEL] = src_state->shader[WINED3D_SHADER_TYPE_PIXEL];
+        if (state->ps)
+            wined3d_shader_incref(state->ps);
+        if (stateblock->stateblock_state.ps)
+            wined3d_shader_decref(stateblock->stateblock_state.ps);
+        stateblock->stateblock_state.ps = state->ps;
     }
 
     wined3d_state_record_lights(&stateblock->state, src_state);
@@ -1033,7 +1038,14 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     apply_lights(device, &stateblock->state);
 
     if (stateblock->changed.pixelShader)
-        wined3d_device_set_pixel_shader(device, stateblock->state.shader[WINED3D_SHADER_TYPE_PIXEL]);
+    {
+        if (stateblock->stateblock_state.ps)
+            wined3d_shader_incref(stateblock->stateblock_state.ps);
+        if (state->ps)
+            wined3d_shader_decref(state->ps);
+        state->ps = stateblock->stateblock_state.ps;
+        wined3d_device_set_pixel_shader(device, stateblock->stateblock_state.ps);
+    }
 
     /* Pixel Shader Constants. */
     for (i = 0; i < stateblock->num_contained_ps_consts_f; ++i)

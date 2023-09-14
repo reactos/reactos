@@ -2536,21 +2536,28 @@ HRESULT CDECL wined3d_device_get_vs_consts_f(const struct wined3d_device *device
 
 void CDECL wined3d_device_set_pixel_shader(struct wined3d_device *device, struct wined3d_shader *shader)
 {
-    struct wined3d_shader *prev = device->update_state->shader[WINED3D_SHADER_TYPE_PIXEL];
+    struct wined3d_shader *prev = device->state.shader[WINED3D_SHADER_TYPE_PIXEL];
 
     TRACE("device %p, shader %p.\n", device, shader);
 
+    if (shader)
+        wined3d_shader_incref(shader);
+    if (device->update_stateblock_state->ps)
+        wined3d_shader_decref(device->update_stateblock_state->ps);
+    device->update_stateblock_state->ps = shader;
     if (device->recording)
+    {
         device->recording->changed.pixelShader = TRUE;
+        return;
+    }
 
     if (shader == prev)
         return;
 
     if (shader)
         wined3d_shader_incref(shader);
-    device->update_state->shader[WINED3D_SHADER_TYPE_PIXEL] = shader;
-    if (!device->recording)
-        wined3d_cs_emit_set_shader(device->cs, WINED3D_SHADER_TYPE_PIXEL, shader);
+    device->state.shader[WINED3D_SHADER_TYPE_PIXEL] = shader;
+    wined3d_cs_emit_set_shader(device->cs, WINED3D_SHADER_TYPE_PIXEL, shader);
     if (prev)
         wined3d_shader_decref(prev);
 }
