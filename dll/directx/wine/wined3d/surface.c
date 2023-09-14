@@ -3249,16 +3249,16 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
          * Prince of Persia 3D use Blt() from the backbuffer to the
          * frontbuffer instead of doing a Flip(). D3d8 and d3d9 applications
          * can't blit directly to the frontbuffer. */
-        enum wined3d_swap_effect swap_effect = dst_swapchain->desc.swap_effect;
+        enum wined3d_swap_effect swap_effect = dst_swapchain->state.desc.swap_effect;
 
         TRACE("Using present for backbuffer -> frontbuffer blit.\n");
 
         /* Set the swap effect to COPY, we don't want the backbuffer to become
          * undefined. */
-        dst_swapchain->desc.swap_effect = WINED3D_SWAP_EFFECT_COPY;
+        dst_swapchain->state.desc.swap_effect = WINED3D_SWAP_EFFECT_COPY;
         wined3d_swapchain_present(dst_swapchain, NULL, NULL,
                 dst_swapchain->win_handle, dst_swapchain->swap_interval, 0);
-        dst_swapchain->desc.swap_effect = swap_effect;
+        dst_swapchain->state.desc.swap_effect = swap_effect;
 
         return WINED3D_OK;
     }

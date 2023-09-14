@@ -533,7 +533,7 @@ static void wined3d_cs_exec_present(struct wined3d_cs *cs, const void *data)
     swapchain->swapchain_ops->swapchain_present(swapchain, &op->src_rect, &op->dst_rect, op->swap_interval, op->flags);
 
     wined3d_resource_release(&swapchain->front_buffer->resource);
-    for (i = 0; i < swapchain->desc.backbuffer_count; ++i)
+    for (i = 0; i < swapchain->state.desc.backbuffer_count; ++i)
     {
         wined3d_resource_release(&swapchain->back_buffers[i]->resource);
     }
@@ -561,7 +561,7 @@ void wined3d_cs_emit_present(struct wined3d_cs *cs, struct wined3d_swapchain *sw
     pending = InterlockedIncrement(&cs->pending_presents);
 
     wined3d_resource_acquire(&swapchain->front_buffer->resource);
-    for (i = 0; i < swapchain->desc.backbuffer_count; ++i)
+    for (i = 0; i < swapchain->state.desc.backbuffer_count; ++i)
     {
         wined3d_resource_acquire(&swapchain->back_buffers[i]->resource);
     }
@@ -1140,7 +1140,7 @@ static void wined3d_cs_exec_set_depth_stencil_view(struct wined3d_cs *cs, const 
     {
         struct wined3d_texture *prev_texture = texture_from_resource(prev->resource);
 
-        if (device->swapchains[0]->desc.flags & WINED3D_SWAPCHAIN_DISCARD_DEPTHSTENCIL
+        if (device->swapchains[0]->state.desc.flags & WINED3D_SWAPCHAIN_DISCARD_DEPTHSTENCIL
                 || prev_texture->flags & WINED3D_TEXTURE_DISCARD)
             wined3d_texture_validate_location(prev_texture,
                     prev->sub_resource_idx, WINED3D_LOCATION_DISCARDED);
