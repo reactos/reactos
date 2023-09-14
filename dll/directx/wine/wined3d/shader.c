@@ -3728,7 +3728,7 @@ static HRESULT vertex_shader_init(struct wined3d_shader *shader, struct wined3d_
     return WINED3D_OK;
 }
 
-struct wined3d_shader_signature_element *shader_find_signature_element(const struct wined3d_shader_signature *s,
+static struct wined3d_shader_signature_element *shader_find_signature_element(const struct wined3d_shader_signature *s,
         unsigned int stream_idx, const char *semantic_name, unsigned int semantic_idx)
 {
     struct wined3d_shader_signature_element *e = s->elements;
@@ -3745,14 +3745,36 @@ struct wined3d_shader_signature_element *shader_find_signature_element(const str
     return NULL;
 }
 
+BOOL shader_get_stream_output_register_info(const struct wined3d_shader *shader,
+        const struct wined3d_stream_output_element *so_element, unsigned int *register_idx, unsigned int *component_idx)
+{
+    const struct wined3d_shader_signature_element *output;
+    unsigned int idx;
+
+    if (!(output = shader_find_signature_element(&shader->output_signature,
+            so_element->stream_idx, so_element->semantic_name, so_element->semantic_idx)))
+        return FALSE;
+
+    for (idx = 0; idx < 4; ++idx)
+    {
+        if (output->mask & (1u << idx))
+            break;
+    }
+    idx += so_element->component_idx;
+
+    *register_idx = output->register_idx;
+    *component_idx = idx;
+    return TRUE;
+}
+
 static HRESULT geometry_shader_init_stream_output(struct wined3d_shader *shader,
         const struct wined3d_stream_output_desc *so_desc)
 {
     const struct wined3d_shader_frontend *fe = shader->frontend;
     const struct wined3d_shader_signature_element *output;
+    unsigned int i, component_idx, register_idx, mask;
     struct wined3d_stream_output_element *elements;
     struct wined3d_shader_version shader_version;
-    unsigned int i, component_idx, mask;
     const DWORD *ptr;
     void *fe_data;
     HRESULT hr;
@@ -3805,7 +3827,8 @@ static HRESULT geometry_shader_init_stream_output(struct wined3d_shader *shader,
         if (!e->semantic_name)
             continue;
         if (!(output = shader_find_signature_element(&shader->output_signature,
-                e->stream_idx, e->semantic_name, e->semantic_idx)))
+                e->stream_idx, e->semantic_name, e->semantic_idx))
+                || !shader_get_stream_output_register_info(shader, e, &register_idx, &component_idx))
         {
             WARN("Failed to find output signature element for stream output entry.\n");
             return E_INVALIDARG;
@@ -3813,17 +3836,11 @@ static HRESULT geometry_shader_init_stream_output(struct wined3d_shader *shader,
 
         e->semantic_name = output->semantic_name;
 
-        for (component_idx = 0; component_idx < 4; ++component_idx)
-        {
-            if ((1u << component_idx) & output->mask)
-                break;
-        }
-        component_idx += e->component_idx;
         mask = ((1u << e->component_count) - 1) << component_idx;
         if ((output->mask & 0xff & mask) != mask)
         {
             WARN("Invalid component range %u-%u (mask %#x), output mask %#x.\n",
-                    e->component_idx, e->component_count, mask, output->mask & 0xff);
+                    component_idx, e->component_count, mask, output->mask & 0xff);
             return E_INVALIDARG;
         }
     }

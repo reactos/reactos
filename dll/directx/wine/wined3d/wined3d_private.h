@@ -1274,8 +1274,9 @@ extern const struct wined3d_shader_frontend sm4_shader_frontend DECLSPEC_HIDDEN;
 
 HRESULT shader_extract_from_dxbc(struct wined3d_shader *shader,
         unsigned int max_shader_version, enum wined3d_shader_byte_code_format *format) DECLSPEC_HIDDEN;
-struct wined3d_shader_signature_element *shader_find_signature_element(const struct wined3d_shader_signature *s,
-        unsigned int stream_idx, const char *semantic_name, unsigned int semantic_idx) DECLSPEC_HIDDEN;
+BOOL shader_get_stream_output_register_info(const struct wined3d_shader *shader,
+        const struct wined3d_stream_output_element *so_element, unsigned int *register_idx,
+        unsigned int *component_idx) DECLSPEC_HIDDEN;
 
 typedef void (*SHADER_HANDLER)(const struct wined3d_shader_instruction *);
 

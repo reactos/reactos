@@ -822,9 +822,9 @@ static BOOL shader_glsl_generate_transform_feedback_varyings(struct wined3d_stri
         const char **varyings, unsigned int *varying_count, char *strings, unsigned int *strings_length,
         GLenum buffer_mode, struct wined3d_shader *shader)
 {
-    unsigned int i, component_idx, buffer_idx, count, length, highest_output_slot, stride;
     const struct wined3d_stream_output_desc *so_desc = &shader->u.gs.so_desc;
-    const struct wined3d_shader_signature_element *output;
+    unsigned int buffer_idx, count, length, highest_output_slot, stride;
+    unsigned int i, register_idx, component_idx;
     BOOL have_varyings_to_record = FALSE;
 
     count = length = 0;
@@ -856,16 +856,8 @@ static BOOL shader_glsl_generate_transform_feedback_varyings(struct wined3d_stri
                 continue;
             }
 
-            if (!(output = shader_find_signature_element(&shader->output_signature,
-                    e->stream_idx, e->semantic_name, e->semantic_idx)))
+            if (!shader_get_stream_output_register_info(shader, e, &register_idx, &component_idx))
                 continue;
-
-            for (component_idx = 0; component_idx < 4; ++component_idx)
-            {
-                if ((1u << component_idx) & output->mask)
-                    break;
-            }
-            component_idx += e->component_idx;
 
             if (component_idx || e->component_count != 4)
             {
@@ -878,12 +870,12 @@ static BOOL shader_glsl_generate_transform_feedback_varyings(struct wined3d_stri
                 }
 
                 string_buffer_sprintf(buffer, "shader_in_out.reg%u_%u_%u",
-                        output->register_idx, component_idx, component_idx + e->component_count - 1);
+                        register_idx, component_idx, component_idx + e->component_count - 1);
                 append_transform_feedback_varying(varyings, &count, &strings, &length, buffer);
             }
             else
             {
-                string_buffer_sprintf(buffer, "shader_in_out.reg%u", output->register_idx);
+                string_buffer_sprintf(buffer, "shader_in_out.reg%u", register_idx);
                 append_transform_feedback_varying(varyings, &count, &strings, &length, buffer);
             }
 
@@ -7183,8 +7175,7 @@ static void shader_glsl_generate_stream_output_setup(struct wined3d_string_buffe
         const struct wined3d_shader *shader)
 {
     const struct wined3d_stream_output_desc *so_desc = &shader->u.gs.so_desc;
-    const struct wined3d_shader_signature_element *output;
-    unsigned int i, component_idx;
+    unsigned int i, register_idx, component_idx;
 
     shader_addline(buffer, "out shader_in_out\n{\n");
     for (i = 0; i < so_desc->element_count; ++i)
@@ -7198,16 +7189,8 @@ static void shader_glsl_generate_stream_output_setup(struct wined3d_string_buffe
         }
         if (!e->semantic_name)
             continue;
-        if (!(output = shader_find_signature_element(&shader->output_signature,
-                e->stream_idx, e->semantic_name, e->semantic_idx)))
+        if (!shader_get_stream_output_register_info(shader, e, &register_idx, &component_idx))
             continue;
-
-        for (component_idx = 0; component_idx < 4; ++component_idx)
-        {
-            if ((1u << component_idx) & output->mask)
-                break;
-        }
-        component_idx += e->component_idx;
 
         if (component_idx || e->component_count != 4)
         {
@@ -7217,11 +7200,11 @@ static void shader_glsl_generate_stream_output_setup(struct wined3d_string_buffe
                 shader_addline(buffer, "vec%u", e->component_count);
 
             shader_addline(buffer, " reg%u_%u_%u;\n",
-                    output->register_idx, component_idx, component_idx + e->component_count - 1);
+                    register_idx, component_idx, component_idx + e->component_count - 1);
         }
         else
         {
-            shader_addline(buffer, "vec4 reg%u;\n", output->register_idx);
+            shader_addline(buffer, "vec4 reg%u;\n", register_idx);
         }
     }
     shader_addline(buffer, "} shader_out;\n");
@@ -7239,16 +7222,8 @@ static void shader_glsl_generate_stream_output_setup(struct wined3d_string_buffe
         }
         if (!e->semantic_name)
             continue;
-        if (!(output = shader_find_signature_element(&shader->output_signature,
-                e->stream_idx, e->semantic_name, e->semantic_idx)))
+        if (!shader_get_stream_output_register_info(shader, e, &register_idx, &component_idx))
             continue;
-
-        for (component_idx = 0; component_idx < 4; ++component_idx)
-        {
-            if ((1u << component_idx) & output->mask)
-                break;
-        }
-        component_idx += e->component_idx;
 
         if (component_idx || e->component_count != 4)
         {
@@ -7258,13 +7233,12 @@ static void shader_glsl_generate_stream_output_setup(struct wined3d_string_buffe
             write_mask = ((1u << e->component_count) - 1) << component_idx;
             shader_glsl_write_mask_to_str(write_mask, str_mask);
             shader_addline(buffer, "shader_out.reg%u_%u_%u = outputs[%u]%s;\n",
-                    output->register_idx, component_idx, component_idx + e->component_count - 1,
-                    output->register_idx, str_mask);
+                    register_idx, component_idx, component_idx + e->component_count - 1,
+                    register_idx, str_mask);
         }
         else
         {
-            shader_addline(buffer, "shader_out.reg%u = outputs[%u];\n",
-                    output->register_idx, output->register_idx);
+            shader_addline(buffer, "shader_out.reg%u = outputs[%u];\n", register_idx, register_idx);
         }
     }
     shader_addline(buffer, "}\n");
