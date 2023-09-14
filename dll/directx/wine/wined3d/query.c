@@ -76,6 +76,7 @@ static void wined3d_query_destroy_buffer_object(struct wined3d_context *context,
 static BOOL wined3d_query_buffer_queue_result(struct wined3d_context *context, struct wined3d_query *query, GLuint id)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
+    GLsync tmp_sync;
 
     if (!gl_info->supported[ARB_QUERY_BUFFER_OBJECT] || !gl_info->supported[ARB_BUFFER_STORAGE])
         return FALSE;
@@ -103,6 +104,14 @@ static BOOL wined3d_query_buffer_queue_result(struct wined3d_context *context, s
     GL_EXTCALL(glGetQueryObjectui64v(id, GL_QUERY_RESULT, (void *)sizeof(query->map_ptr[0])));
     GL_EXTCALL(glBindBuffer(GL_QUERY_BUFFER, 0));
     checkGLcall("queue query result");
+
+    /* ARB_buffer_storage requires the client to call FenceSync with
+     * SYNC_GPU_COMMANDS_COMPLETE after the server does a write. This behavior
+     * is not enforced by Mesa.
+     */
+    tmp_sync = GL_EXTCALL(glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
+    GL_EXTCALL(glDeleteSync(tmp_sync));
+    checkGLcall("query buffer sync");
 
     return TRUE;
 }
