@@ -2906,10 +2906,10 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (!(desc->usage & (WINED3DUSAGE_DYNAMIC | WINED3DUSAGE_RENDERTARGET | WINED3DUSAGE_DEPTHSTENCIL))
-            && (flags & WINED3D_TEXTURE_CREATE_MAPPABLE))
+    if ((flags & WINED3D_TEXTURE_CREATE_MAPPABLE) && !((desc->usage & WINED3DUSAGE_DYNAMIC)
+            || (desc->bind_flags & (WINED3D_BIND_RENDER_TARGET | WINED3D_BIND_DEPTH_STENCIL))))
         WARN("Creating a mappable texture that doesn't specify dynamic usage.\n");
-    if (desc->usage & WINED3DUSAGE_RENDERTARGET && desc->access & WINED3D_RESOURCE_ACCESS_CPU)
+    if (desc->bind_flags & WINED3D_BIND_RENDER_TARGET && desc->access & WINED3D_RESOURCE_ACCESS_CPU)
         FIXME("Trying to create a CPU accessible render target.\n");
 
     pow2_width = desc->width;
@@ -2955,7 +2955,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
     texture->pow2_height = pow2_height;
 
     if ((pow2_width > d3d_info->limits.texture_size || pow2_height > d3d_info->limits.texture_size)
-            && (desc->usage & WINED3DUSAGE_TEXTURE))
+            && (desc->bind_flags & WINED3D_BIND_SHADER_RESOURCE))
     {
         /* One of four options:
          * 1: Do the same as we do with NPOT and scale the texture. (Any
