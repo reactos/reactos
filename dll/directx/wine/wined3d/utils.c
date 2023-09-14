@@ -2175,6 +2175,24 @@ static BOOL init_format_decompress_info(struct wined3d_adapter *adapter)
     return TRUE;
 }
 
+static BOOL init_srgb_formats(struct wined3d_adapter *adapter)
+{
+    struct wined3d_format *format, *srgb_format;
+    unsigned int i;
+
+    for (i = 0; i < ARRAY_SIZE(format_srgb_info); ++i)
+    {
+        if (!(srgb_format = get_format_internal(adapter, format_srgb_info[i].srgb_format_id)))
+            return FALSE;
+        if (!(format = get_format_internal(adapter, format_srgb_info[i].base_format_id)))
+            return FALSE;
+
+        copy_format(adapter, srgb_format, format);
+    }
+
+    return TRUE;
+}
+
 static GLenum wined3d_gl_type_to_enum(enum wined3d_gl_resource_type type)
 {
     switch (type)
@@ -4006,6 +4024,8 @@ static BOOL wined3d_adapter_init_format_info(struct wined3d_adapter *adapter, si
     if (!init_format_block_info(adapter))
         goto fail;
     if (!init_format_decompress_info(adapter))
+        goto fail;
+    if (!init_srgb_formats(adapter))
         goto fail;
 
     return TRUE;
