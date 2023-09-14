@@ -5013,6 +5013,19 @@ static inline void context_release(struct wined3d_context *context)
     context->device->adapter->adapter_ops->adapter_release_context(context);
 }
 
+static inline float wined3d_get_float_state(const struct wined3d_state *state, enum wined3d_render_state rs)
+{
+    union
+    {
+        DWORD d;
+        float f;
+    }
+    tmpvalue;
+
+    tmpvalue.d = state->render_states[rs];
+    return tmpvalue.f;
+}
+
 /* The WNDCLASS-Name for the fake window which we use to retrieve the GL capabilities */
 #define WINED3D_OPENGL_WINDOW_CLASS_NAME "WineD3D_OpenGL"
 

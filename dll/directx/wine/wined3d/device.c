@@ -58,16 +58,21 @@ struct lights_settings
     struct wined3d_color ambient_light;
     struct wined3d_matrix modelview_matrix;
     struct wined3d_matrix_3x3 normal_matrix;
+    struct wined3d_vec4 position_transformed;
+
+    float fog_start, fog_end, fog_density;
 
     uint32_t point_light_count          : 8;
     uint32_t spot_light_count           : 8;
     uint32_t directional_light_count    : 8;
     uint32_t parallel_point_light_count : 8;
-
+    uint32_t lighting                   : 1;
     uint32_t legacy_lighting            : 1;
     uint32_t normalise                  : 1;
     uint32_t localviewer                : 1;
-    uint32_t padding                    : 29;
+    uint32_t fog_coord_mode             : 2;
+    uint32_t fog_mode                   : 2;
+    uint32_t padding                    : 24;
 };
 
 /* Define the default light parameters as specified by MSDN. */
@@ -3263,7 +3268,7 @@ static void wined3d_color_rgb_mul_add(struct wined3d_color *dst, const struct wi
 }
 
 static void init_transformed_lights(struct lights_settings *ls,
-        const struct wined3d_state *state, BOOL legacy_lighting)
+        const struct wined3d_state *state, BOOL legacy_lighting, BOOL compute_lighting)
 {
     const struct wined3d_light_info *lights[WINED3D_MAX_SOFTWARE_ACTIVE_LIGHTS];
     const struct wined3d_light_info *light_info;
@@ -3274,14 +3279,29 @@ static void init_transformed_lights(struct lights_settings *ls,
 
     memset(ls, 0, sizeof(*ls));
 
+    ls->lighting = !!compute_lighting;
+    ls->fog_mode = state->render_states[WINED3D_RS_FOGVERTEXMODE];
+    ls->fog_coord_mode = state->render_states[WINED3D_RS_RANGEFOGENABLE]
+            ? WINED3D_FFP_VS_FOG_RANGE : WINED3D_FFP_VS_FOG_DEPTH;
+    ls->fog_start = wined3d_get_float_state(state, WINED3D_RS_FOGSTART);
+    ls->fog_end = wined3d_get_float_state(state, WINED3D_RS_FOGEND);
+    ls->fog_density = wined3d_get_float_state(state, WINED3D_RS_FOGDENSITY);
+
+    if (ls->fog_mode == WINED3D_FOG_NONE && !compute_lighting)
+        return;
+
+    multiply_matrix(&ls->modelview_matrix, &state->transforms[WINED3D_TS_VIEW],
+            &state->transforms[WINED3D_TS_WORLD_MATRIX(0)]);
+
+    if (!compute_lighting)
+        return;
+
+    compute_normal_matrix(&ls->normal_matrix._11, legacy_lighting, &ls->modelview_matrix);
+
     wined3d_color_from_d3dcolor(&ls->ambient_light, state->render_states[WINED3D_RS_AMBIENT]);
     ls->legacy_lighting = !!legacy_lighting;
     ls->normalise = !!state->render_states[WINED3D_RS_NORMALIZENORMALS];
     ls->localviewer = !!state->render_states[WINED3D_RS_LOCALVIEWER];
-
-    multiply_matrix(&ls->modelview_matrix, &state->transforms[WINED3D_TS_VIEW],
-            &state->transforms[WINED3D_TS_WORLD_MATRIX(0)]);
-    compute_normal_matrix(&ls->normal_matrix._11, legacy_lighting, &ls->modelview_matrix);
 
     for (i = 0, index = 0; i < LIGHTMAP_SIZE && index < ARRAY_SIZE(lights); ++i)
     {
@@ -3424,21 +3444,28 @@ static void update_light_diffuse_specular(struct wined3d_color *diffuse, struct 
         wined3d_color_rgb_mul_add(specular, &light->specular, att * powf(t, material_shininess));
 }
 
+static void light_set_vertex_data(struct lights_settings *ls,
+        const struct wined3d_vec4 *position)
+{
+    if (ls->fog_mode == WINED3D_FOG_NONE && !ls->lighting)
+        return;
+
+    wined3d_vec4_transform(&ls->position_transformed, position, &ls->modelview_matrix);
+    wined3d_vec3_scale((struct wined3d_vec3 *)&ls->position_transformed, 1.0f / ls->position_transformed.w);
+}
+
 static void compute_light(struct wined3d_color *ambient, struct wined3d_color *diffuse,
-        struct wined3d_color *specular, const struct lights_settings *ls, const struct wined3d_vec3 *normal,
-        const struct wined3d_vec4 *position, float material_shininess)
+        struct wined3d_color *specular, struct lights_settings *ls, const struct wined3d_vec3 *normal,
+        float material_shininess)
 {
     struct wined3d_vec3 position_transformed_normalised;
     struct wined3d_vec3 normal_transformed = {0.0f};
-    struct wined3d_vec4 position_transformed;
     const struct light_transformed *light;
     struct wined3d_vec3 dir, dst;
     unsigned int i, index;
     float att;
 
-    wined3d_vec4_transform(&position_transformed, position, &ls->modelview_matrix);
-    wined3d_vec3_scale((struct wined3d_vec3 *)&position_transformed, 1.0f / position_transformed.w);
-    position_transformed_normalised = *(const struct wined3d_vec3 *)&position_transformed;
+    position_transformed_normalised = *(const struct wined3d_vec3 *)&ls->position_transformed;
     wined3d_vec3_normalise(&position_transformed_normalised);
 
     if (normal)
@@ -3466,9 +3493,9 @@ static void compute_light(struct wined3d_color *ambient, struct wined3d_color *d
     for (i = 0; i < ls->point_light_count; ++i, ++index)
     {
         light = &ls->lights[index];
-        dir.x = light->position.x - position_transformed.x;
-        dir.y = light->position.y - position_transformed.y;
-        dir.z = light->position.z - position_transformed.z;
+        dir.x = light->position.x - ls->position_transformed.x;
+        dir.y = light->position.y - ls->position_transformed.y;
+        dir.z = light->position.z - ls->position_transformed.z;
 
         dst.z = wined3d_vec3_dot(&dir, &dir);
         dst.y = sqrtf(dst.z);
@@ -3504,9 +3531,9 @@ static void compute_light(struct wined3d_color *ambient, struct wined3d_color *d
 
         light = &ls->lights[index];
 
-        dir.x = light->position.x - position_transformed.x;
-        dir.y = light->position.y - position_transformed.y;
-        dir.z = light->position.z - position_transformed.z;
+        dir.x = light->position.x - ls->position_transformed.x;
+        dir.y = light->position.y - ls->position_transformed.y;
+        dir.z = light->position.z - ls->position_transformed.z;
 
         dst.z = wined3d_vec3_dot(&dir, &dir);
         dst.y = sqrtf(dst.z);
@@ -3555,6 +3582,46 @@ static void compute_light(struct wined3d_color *ambient, struct wined3d_color *d
             update_light_diffuse_specular(diffuse, specular, (const struct wined3d_vec3 *)&light->position,
                     1.0f, material_shininess, &normal_transformed, &position_transformed_normalised, light, ls);
     }
+}
+
+static float wined3d_calculate_fog_factor(float fog_coord, const struct lights_settings *ls)
+{
+    switch (ls->fog_mode)
+    {
+        case WINED3D_FOG_NONE:
+            return fog_coord;
+        case WINED3D_FOG_LINEAR:
+            return (ls->fog_end - fog_coord) / (ls->fog_end - ls->fog_start);
+        case WINED3D_FOG_EXP:
+            return expf(-fog_coord * ls->fog_density);
+        case WINED3D_FOG_EXP2:
+            return expf(-fog_coord * fog_coord * ls->fog_density * ls->fog_density);
+    }
+}
+
+static void update_fog_factor(float *fog_factor, struct lights_settings *ls)
+{
+    float fog_coord;
+
+    if (ls->fog_mode == WINED3D_FOG_NONE)
+        return;
+
+    switch (ls->fog_coord_mode)
+    {
+        case WINED3D_FFP_VS_FOG_RANGE:
+            fog_coord = sqrtf(wined3d_vec3_dot((const struct wined3d_vec3 *)&ls->position_transformed,
+                    (const struct wined3d_vec3 *)&ls->position_transformed));
+            break;
+
+        case WINED3D_FFP_VS_FOG_DEPTH:
+            fog_coord = fabsf(ls->position_transformed.z);
+            break;
+
+        default:
+            ERR("Unhandled fog coordinate mode %#x.\n", ls->fog_coord_mode);
+            return;
+    }
+    *fog_factor = wined3d_calculate_fog_factor(fog_coord, ls);
 }
 
 /* Context activation is done by the caller. */
@@ -3655,16 +3722,23 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
     output_colour_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, 0);
     material_specular_state_colour = state->render_states[WINED3D_RS_SPECULARENABLE]
             ? &state->material.specular : &black;
-    if (lighting)
-        init_transformed_lights(&ls, state,
-                device->adapter->d3d_info.wined3d_creation_flags & WINED3D_LEGACY_FFP_LIGHTING);
+    init_transformed_lights(&ls, state, device->adapter->d3d_info.wined3d_creation_flags
+            & WINED3D_LEGACY_FFP_LIGHTING, lighting);
 
     for (i = 0; i < dwCount; ++i)
     {
         const struct wined3d_stream_info_element *position_element = &stream_info->elements[WINED3D_FFP_POSITION];
         const float *p = (const float *)&position_element->data.addr[i * position_element->stride];
         struct wined3d_color ambient, diffuse, specular;
+        struct wined3d_vec4 position;
         unsigned int tex_index;
+
+        position.x = p[0];
+        position.y = p[1];
+        position.z = p[2];
+        position.w = 1.0f;
+
+        light_set_vertex_data(&ls, &position);
 
         if ( ((dst_fvf & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZ ) ||
              ((dst_fvf & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZRHW ) ) {
@@ -3777,13 +3851,7 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
         if (lighting)
         {
             const struct wined3d_stream_info_element *element;
-            struct wined3d_vec4 position;
             struct wined3d_vec3 *normal;
-
-            position.x = p[0];
-            position.y = p[1];
-            position.z = p[2];
-            position.w = 1.0f;
 
             if (stream_info->use_map & (1u << WINED3D_FFP_NORMAL))
             {
@@ -3794,7 +3862,7 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
             {
                 normal = NULL;
             }
-            compute_light(&ambient, &diffuse, &specular, &ls, normal, &position,
+            compute_light(&ambient, &diffuse, &specular, &ls, normal,
                     state->render_states[WINED3D_RS_SPECULARENABLE] ? state->material.power : 0.0f);
         }
 
@@ -3847,6 +3915,7 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
             {
                 specular_colour = material_specular;
             }
+            update_fog_factor(&specular_colour.a, &ls);
             wined3d_color_clamp(&specular_colour, &specular_colour, 0.0f, 1.0f);
             *((DWORD *)dest_ptr) = wined3d_format_convert_from_float(output_colour_format, &specular_colour);
             dest_ptr += sizeof(DWORD);
