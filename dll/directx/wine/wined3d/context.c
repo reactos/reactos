@@ -3945,7 +3945,7 @@ static void context_load_stream_output_buffers(struct wined3d_context *context,
 static BOOL context_apply_draw_state(struct wined3d_context *context,
         const struct wined3d_device *device, const struct wined3d_state *state)
 {
-    const struct StateEntry *state_table = context->state_table;
+    const struct wined3d_state_entry *state_table = context->state_table;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_fb_state *fb = state->fb;
     unsigned int i;
@@ -4059,7 +4059,7 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
 static void context_apply_compute_state(struct wined3d_context *context,
         const struct wined3d_device *device, const struct wined3d_state *state)
 {
-    const struct StateEntry *state_table = context->state_table;
+    const struct wined3d_state_entry *state_table = context->state_table;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     unsigned int state_id, i;
 

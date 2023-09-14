@@ -1099,7 +1099,8 @@ static void atifs_srgbwriteenable(struct wined3d_context *context, const struct 
         WARN("sRGB writes are not supported by this fragment pipe.\n");
 }
 
-static const struct StateEntryTemplate atifs_fragmentstate_template[] = {
+static const struct wined3d_state_entry_template atifs_fragmentstate_template[] =
+{
     {STATE_RENDER(WINED3D_RS_TEXTUREFACTOR),              { STATE_RENDER(WINED3D_RS_TEXTUREFACTOR),             atifs_tfactor           }, WINED3D_GL_EXT_NONE             },
     {STATE_RENDER(WINED3D_RS_ALPHAFUNC),                  { STATE_RENDER(WINED3D_RS_ALPHATESTENABLE),           NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_RENDER(WINED3D_RS_ALPHAREF),                   { STATE_RENDER(WINED3D_RS_ALPHATESTENABLE),           NULL                    }, WINED3D_GL_EXT_NONE             },

@@ -4510,7 +4510,7 @@ static void state_so_warn(struct wined3d_context *context, const struct wined3d_
     WARN("Transform feedback not supported.\n");
 }
 
-const struct StateEntryTemplate misc_state_template[] =
+const struct wined3d_state_entry_template misc_state_template[] =
 {
     { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX),  { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX),  state_cb,           }, ARB_UNIFORM_BUFFER_OBJECT       },
     { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX),  { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX),  state_cb_warn,      }, WINED3D_GL_EXT_NONE             },
@@ -4740,7 +4740,7 @@ const struct StateEntryTemplate misc_state_template[] =
     {0 /* Terminate */,                                   { 0,                                                  0                   }, WINED3D_GL_EXT_NONE             },
 };
 
-static const struct StateEntryTemplate vp_ffp_states[] =
+static const struct wined3d_state_entry_template vp_ffp_states[] =
 {
     { STATE_VDECL,                                        { STATE_VDECL,                                        vertexdeclaration   }, WINED3D_GL_EXT_NONE             },
     { STATE_SHADER(WINED3D_SHADER_TYPE_VERTEX),           { STATE_VDECL,                                        NULL                }, WINED3D_GL_EXT_NONE             },
@@ -5115,7 +5115,7 @@ static const struct StateEntryTemplate vp_ffp_states[] =
     {0 /* Terminate */,                                   { 0,                                                  0                   }, WINED3D_GL_EXT_NONE             },
 };
 
-static const struct StateEntryTemplate ffp_fragmentstate_template[] = {
+static const struct wined3d_state_entry_template ffp_fragmentstate_template[] = {
     { STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_OP),        { STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_OP),        tex_colorop         }, WINED3D_GL_EXT_NONE             },
     { STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_ARG1),      { STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_OP),        NULL                }, WINED3D_GL_EXT_NONE             },
     { STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_ARG2),      { STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_OP),        NULL                }, WINED3D_GL_EXT_NONE             },
@@ -5419,7 +5419,7 @@ static void multistate_apply_3(struct wined3d_context *context, const struct win
     context->device->multistate_funcs[state_id][2](context, state, state_id);
 }
 
-static void prune_invalid_states(struct StateEntry *state_table, const struct wined3d_d3d_info *d3d_info)
+static void prune_invalid_states(struct wined3d_state_entry *state_table, const struct wined3d_d3d_info *d3d_info)
 {
     unsigned int start, last, i;
 
@@ -5448,7 +5448,7 @@ static void prune_invalid_states(struct StateEntry *state_table, const struct wi
     }
 }
 
-static void validate_state_table(struct StateEntry *state_table)
+static void validate_state_table(struct wined3d_state_entry *state_table)
 {
     static const struct
     {
@@ -5552,13 +5552,13 @@ static void validate_state_table(struct StateEntry *state_table)
     }
 }
 
-HRESULT compile_state_table(struct StateEntry *state_table, APPLYSTATEFUNC **dev_multistate_funcs,
+HRESULT compile_state_table(struct wined3d_state_entry *state_table, APPLYSTATEFUNC **dev_multistate_funcs,
         const struct wined3d_d3d_info *d3d_info, const BOOL *supported_extensions,
         const struct wined3d_vertex_pipe_ops *vertex, const struct fragment_pipeline *fragment,
-        const struct StateEntryTemplate *misc)
+        const struct wined3d_state_entry_template *misc)
 {
     APPLYSTATEFUNC multistate_funcs[STATE_HIGHEST + 1][3];
-    const struct StateEntryTemplate *cur;
+    const struct wined3d_state_entry_template *cur;
     unsigned int i, type, handlers;
     BOOL set[STATE_HIGHEST + 1];
 

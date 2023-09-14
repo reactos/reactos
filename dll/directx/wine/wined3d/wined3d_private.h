@@ -1880,7 +1880,7 @@ struct wined3d_context
 {
     const struct wined3d_gl_info *gl_info;
     const struct wined3d_d3d_info *d3d_info;
-    const struct StateEntry *state_table;
+    const struct wined3d_state_entry *state_table;
     /* State dirtification
      * dirtyArray is an array that contains markers for dirty states. numDirtyEntries states are dirty, their numbers are in indices
      * 0...numDirtyEntries - 1. isStateDirty is a redundant copy of the dirtyArray. Technically only one of them would be needed,
@@ -2035,16 +2035,16 @@ struct wined3d_fb_state
 
 typedef void (*APPLYSTATEFUNC)(struct wined3d_context *ctx, const struct wined3d_state *state, DWORD state_id);
 
-struct StateEntry
+struct wined3d_state_entry
 {
-    DWORD representative;
+    unsigned int representative;
     APPLYSTATEFUNC apply;
 };
 
-struct StateEntryTemplate
+struct wined3d_state_entry_template
 {
     DWORD state;
-    struct StateEntry content;
+    struct wined3d_state_entry content;
     unsigned int extension;
 };
 
@@ -2074,7 +2074,7 @@ struct fragment_pipeline
     BOOL (*allocate_context_data)(struct wined3d_context *context);
     void (*free_context_data)(struct wined3d_context *context);
     BOOL (*color_fixup_supported)(struct color_fixup_desc fixup);
-    const struct StateEntryTemplate *states;
+    const struct wined3d_state_entry_template *states;
 };
 
 struct wined3d_vertex_caps
@@ -2098,10 +2098,10 @@ struct wined3d_vertex_pipe_ops
     DWORD (*vp_get_emul_mask)(const struct wined3d_gl_info *gl_info);
     void *(*vp_alloc)(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv);
     void (*vp_free)(struct wined3d_device *device);
-    const struct StateEntryTemplate *vp_states;
+    const struct wined3d_state_entry_template *vp_states;
 };
 
-extern const struct StateEntryTemplate misc_state_template[] DECLSPEC_HIDDEN;
+extern const struct wined3d_state_entry_template misc_state_template[] DECLSPEC_HIDDEN;
 extern const struct fragment_pipeline none_fragment_pipe DECLSPEC_HIDDEN;
 extern const struct fragment_pipeline ffp_fragment_pipeline DECLSPEC_HIDDEN;
 extern const struct fragment_pipeline atifs_fragment_pipeline DECLSPEC_HIDDEN;
@@ -2115,10 +2115,10 @@ extern const struct wined3d_vertex_pipe_ops ffp_vertex_pipe DECLSPEC_HIDDEN;
 extern const struct wined3d_vertex_pipe_ops glsl_vertex_pipe DECLSPEC_HIDDEN;
 
 /* "Base" state table */
-HRESULT compile_state_table(struct StateEntry *state_table, APPLYSTATEFUNC **dev_multistate_funcs,
+HRESULT compile_state_table(struct wined3d_state_entry *state_table, APPLYSTATEFUNC **dev_multistate_funcs,
         const struct wined3d_d3d_info *d3d_info, const BOOL *supported_extensions,
         const struct wined3d_vertex_pipe_ops *vertex, const struct fragment_pipeline *fragment,
-        const struct StateEntryTemplate *misc) DECLSPEC_HIDDEN;
+        const struct wined3d_state_entry_template *misc) DECLSPEC_HIDDEN;
 
 enum wined3d_blit_op
 {
@@ -3074,7 +3074,7 @@ struct wined3d_device
     void *shader_priv;
     void *fragment_priv;
     void *vertex_priv;
-    struct StateEntry state_table[STATE_HIGHEST + 1];
+    struct wined3d_state_entry state_table[STATE_HIGHEST + 1];
     /* Array of functions for states which are handled by more than one pipeline part */
     APPLYSTATEFUNC *multistate_funcs[STATE_HIGHEST + 1];
     struct wined3d_blitter *blitter;
@@ -4683,8 +4683,8 @@ static inline BOOL use_ps(const struct wined3d_state *state)
 static inline void context_apply_state(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id)
 {
-    const struct StateEntry *state_table = context->state_table;
-    DWORD rep = state_table[state_id].representative;
+    const struct wined3d_state_entry *state_table = context->state_table;
+    unsigned int rep = state_table[state_id].representative;
     state_table[rep].apply(context, state, rep);
 }
 

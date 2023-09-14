@@ -11764,7 +11764,7 @@ static void glsl_vertex_pipe_clip_plane(struct wined3d_context *context,
     context->constant_update_mask |= WINED3D_SHADER_CONST_VS_CLIP_PLANES;
 }
 
-static const struct StateEntryTemplate glsl_vertex_pipe_vp_states[] =
+static const struct wined3d_state_entry_template glsl_vertex_pipe_vp_states[] =
 {
     {STATE_VDECL,                                                {STATE_VDECL,                                                glsl_vertex_pipe_vdecl }, WINED3D_GL_EXT_NONE          },
     {STATE_SHADER(WINED3D_SHADER_TYPE_VERTEX),                   {STATE_SHADER(WINED3D_SHADER_TYPE_VERTEX),                   glsl_vertex_pipe_vs    }, WINED3D_GL_EXT_NONE          },
@@ -12138,7 +12138,7 @@ static void glsl_fragment_pipe_shademode(struct wined3d_context *context,
     context->shader_update_mask |= 1u << WINED3D_SHADER_TYPE_PIXEL;
 }
 
-static const struct StateEntryTemplate glsl_fragment_pipe_state_template[] =
+static const struct wined3d_state_entry_template glsl_fragment_pipe_state_template[] =
 {
     {STATE_VDECL,                                               {STATE_VDECL,                                                glsl_fragment_pipe_vdecl               }, WINED3D_GL_EXT_NONE },
     {STATE_SHADER(WINED3D_SHADER_TYPE_VERTEX),                  {STATE_SHADER(WINED3D_SHADER_TYPE_VERTEX),                   glsl_fragment_pipe_vs                  }, WINED3D_GL_EXT_NONE },

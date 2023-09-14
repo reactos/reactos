@@ -768,7 +768,7 @@ static BOOL nvts_color_fixup_supported(struct color_fixup_desc fixup)
     return is_identity_fixup(fixup);
 }
 
-static const struct StateEntryTemplate nvrc_fragmentstate_template[] =
+static const struct wined3d_state_entry_template nvrc_fragmentstate_template[] =
 {
     { STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_OP),        { STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_OP),        nvrc_colorop        }, WINED3D_GL_EXT_NONE             },
     { STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_ARG1),      { STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_OP),        NULL                }, WINED3D_GL_EXT_NONE             },

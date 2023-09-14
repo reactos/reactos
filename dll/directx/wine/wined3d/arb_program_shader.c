@@ -6673,7 +6673,7 @@ static void textransform(struct wined3d_context *context, const struct wined3d_s
         fragment_prog_arbfp(context, state, state_id);
 }
 
-static const struct StateEntryTemplate arbfp_fragmentstate_template[] =
+static const struct wined3d_state_entry_template arbfp_fragmentstate_template[] =
 {
     {STATE_RENDER(WINED3D_RS_TEXTUREFACTOR),              { STATE_RENDER(WINED3D_RS_TEXTUREFACTOR),             state_texfactor_arbfp   }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(0, WINED3D_TSS_COLOR_OP),         { STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL),            NULL                    }, WINED3D_GL_EXT_NONE             },
