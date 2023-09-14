@@ -89,7 +89,7 @@ struct wined3d_settings wined3d_settings =
     ~0U,            /* No GS shader model limit by default. */
     ~0U,            /* No PS shader model limit by default. */
     ~0u,            /* No CS shader model limit by default. */
-    FALSE,          /* 3D support enabled by default. */
+    WINED3D_RENDERER_AUTO,
     WINED3D_SHADER_BACKEND_AUTO,
 };
 
@@ -104,11 +104,10 @@ struct wined3d * CDECL wined3d_create(DWORD flags)
         return NULL;
     }
 
-    if (wined3d_settings.no_3d)
+    if (wined3d_settings.renderer == WINED3D_RENDERER_NO3D)
         flags |= WINED3D_NO3D;
 
-    hr = wined3d_init(object, flags);
-    if (FAILED(hr))
+    if (FAILED(hr = wined3d_init(object, flags)))
     {
         WARN("Failed to initialize wined3d object, hr %#x.\n", hr);
         heap_free(object);
@@ -327,12 +326,24 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             TRACE("Limiting PS shader model to %u.\n", wined3d_settings.max_sm_ps);
         if (!get_config_key_dword(hkey, appkey, "MaxShaderModelCS", &wined3d_settings.max_sm_cs))
             TRACE("Limiting CS shader model to %u.\n", wined3d_settings.max_sm_cs);
-        if ((!get_config_key(hkey, appkey, "renderer", buffer, size)
+        if (!get_config_key(hkey, appkey, "renderer", buffer, size)
                 || !get_config_key(hkey, appkey, "DirectDrawRenderer", buffer, size))
-                && !strcmp(buffer, "gdi"))
         {
-            TRACE("Disabling 3D support.\n");
-            wined3d_settings.no_3d = TRUE;
+            if (!strcmp(buffer, "vulkan"))
+            {
+                ERR_(winediag)("Using the Vulkan renderer.\n");
+                wined3d_settings.renderer = WINED3D_RENDERER_VULKAN;
+            }
+            else if (!strcmp(buffer, "gl"))
+            {
+                ERR_(winediag)("Using the OpenGL renderer.\n");
+                wined3d_settings.renderer = WINED3D_RENDERER_OPENGL;
+            }
+            else if (!strcmp(buffer, "gdi") || !strcmp(buffer, "no3d"))
+            {
+                ERR_(winediag)("Disabling 3D support.\n");
+                wined3d_settings.renderer = WINED3D_RENDERER_NO3D;
+            }
         }
     }
 

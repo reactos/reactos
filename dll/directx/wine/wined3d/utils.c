@@ -4084,6 +4084,11 @@ fail:
     return FALSE;
 }
 
+BOOL wined3d_adapter_vk_init_format_info(struct wined3d_adapter *adapter)
+{
+    return wined3d_adapter_init_format_info(adapter, sizeof(struct wined3d_format));
+}
+
 const struct wined3d_format *wined3d_get_format(const struct wined3d_adapter *adapter,
         enum wined3d_format_id format_id, unsigned int bind_flags)
 {

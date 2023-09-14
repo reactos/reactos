@@ -385,6 +385,14 @@ static inline void wined3d_pause(void)
 #define PCI_VENDOR_NONE 0xffff /* e.g. 0x8086 for Intel and 0x10de for Nvidia */
 #define PCI_DEVICE_NONE 0xffff /* e.g. 0x14f for a Geforce6200 */
 
+enum wined3d_renderer
+{
+    WINED3D_RENDERER_AUTO,
+    WINED3D_RENDERER_VULKAN,
+    WINED3D_RENDERER_OPENGL,
+    WINED3D_RENDERER_NO3D,
+};
+
 enum wined3d_shader_backend
 {
     WINED3D_SHADER_BACKEND_AUTO,
@@ -415,7 +423,7 @@ struct wined3d_settings
     unsigned int max_sm_gs;
     unsigned int max_sm_ps;
     unsigned int max_sm_cs;
-    BOOL no_3d;
+    enum wined3d_renderer renderer;
     enum wined3d_shader_backend shader_backend;
 };
 
@@ -2750,6 +2758,19 @@ struct wined3d_adapter *wined3d_adapter_gl_create(unsigned int ordinal, unsigned
 BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
         struct wined3d_texture *target, const struct wined3d_format *ds_format) DECLSPEC_HIDDEN;
 
+struct wined3d_adapter_vk
+{
+    struct wined3d_adapter a;
+};
+
+static inline struct wined3d_adapter_vk *wined3d_adapter_vk(struct wined3d_adapter *adapter)
+{
+    return CONTAINING_RECORD(adapter, struct wined3d_adapter_vk, a);
+}
+
+struct wined3d_adapter *wined3d_adapter_vk_create(unsigned int ordinal,
+        unsigned int wined3d_creation_flags) DECLSPEC_HIDDEN;
+
 struct wined3d_caps_gl_ctx
 {
     HDC dc;
@@ -2766,6 +2787,7 @@ struct wined3d_caps_gl_ctx
 BOOL wined3d_adapter_gl_init_format_info(struct wined3d_adapter *adapter,
         struct wined3d_caps_gl_ctx *ctx) DECLSPEC_HIDDEN;
 BOOL wined3d_adapter_no3d_init_format_info(struct wined3d_adapter *adapter) DECLSPEC_HIDDEN;
+BOOL wined3d_adapter_vk_init_format_info(struct wined3d_adapter *adapter) DECLSPEC_HIDDEN;
 UINT64 adapter_adjust_memory(struct wined3d_adapter *adapter, INT64 amount) DECLSPEC_HIDDEN;
 
 BOOL wined3d_caps_gl_ctx_test_viewport_subpixel_bits(struct wined3d_caps_gl_ctx *ctx) DECLSPEC_HIDDEN;
