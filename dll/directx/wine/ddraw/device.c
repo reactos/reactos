@@ -5333,7 +5333,7 @@ static HRESULT d3d_device7_SetViewport(IDirect3DDevice7 *iface, D3DVIEWPORT7 *vi
     vp.min_z = viewport->dvMinZ;
     vp.max_z = viewport->dvMaxZ;
 
-    wined3d_device_set_viewport(device->wined3d_device, &vp);
+    wined3d_device_set_viewports(device->wined3d_device, 1, &vp);
     wined3d_mutex_unlock();
 
     return D3D_OK;
