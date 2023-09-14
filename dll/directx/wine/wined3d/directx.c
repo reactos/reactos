@@ -2554,6 +2554,20 @@ static void adapter_no3d_destroy_unordered_access_view(struct wined3d_unordered_
     TRACE("view %p.\n", view);
 }
 
+static HRESULT adapter_no3d_create_sampler(struct wined3d_device *device, const struct wined3d_sampler_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_sampler **sampler)
+{
+    TRACE("device %p, desc %p, parent %p, parent_ops %p, sampler %p.\n",
+            device, desc, parent, parent_ops, sampler);
+
+    return E_NOTIMPL;
+}
+
+static void adapter_no3d_destroy_sampler(struct wined3d_sampler *sampler)
+{
+    TRACE("sampler %p.\n", sampler);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
 {
     adapter_no3d_destroy,
@@ -2577,6 +2591,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
     adapter_no3d_destroy_shader_resource_view,
     adapter_no3d_create_unordered_access_view,
     adapter_no3d_destroy_unordered_access_view,
+    adapter_no3d_create_sampler,
+    adapter_no3d_destroy_sampler,
 };
 
 static void wined3d_adapter_no3d_init_d3d_info(struct wined3d_adapter *adapter, unsigned int wined3d_creation_flags)

@@ -33,23 +33,6 @@ ULONG CDECL wined3d_sampler_incref(struct wined3d_sampler *sampler)
     return refcount;
 }
 
-static void wined3d_sampler_destroy_object(void *object)
-{
-    struct wined3d_sampler *sampler = object;
-    const struct wined3d_gl_info *gl_info;
-    struct wined3d_context *context;
-
-    if (sampler->name)
-    {
-        context = context_acquire(sampler->device, NULL, 0);
-        gl_info = wined3d_context_gl(context)->gl_info;
-        GL_EXTCALL(glDeleteSamplers(1, &sampler->name));
-        context_release(context);
-    }
-
-    heap_free(sampler);
-}
-
 ULONG CDECL wined3d_sampler_decref(struct wined3d_sampler *sampler)
 {
     ULONG refcount = InterlockedDecrement(&sampler->refcount);
@@ -59,7 +42,7 @@ ULONG CDECL wined3d_sampler_decref(struct wined3d_sampler *sampler)
     if (!refcount)
     {
         sampler->parent_ops->wined3d_object_destroyed(sampler->parent);
-        wined3d_cs_destroy_object(sampler->device->cs, wined3d_sampler_destroy_object, sampler);
+        sampler->device->adapter->adapter_ops->adapter_destroy_sampler(sampler);
     }
 
     return refcount;
@@ -72,7 +55,20 @@ void * CDECL wined3d_sampler_get_parent(const struct wined3d_sampler *sampler)
     return sampler->parent;
 }
 
-static void wined3d_sampler_cs_init(void *object)
+static void wined3d_sampler_init(struct wined3d_sampler *sampler, struct wined3d_device *device,
+        const struct wined3d_sampler_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    TRACE("sampler %p, device %p, desc %p, parent %p, parent_ops %p.\n",
+            sampler, device, desc, parent, parent_ops);
+
+    sampler->refcount = 1;
+    sampler->device = device;
+    sampler->parent = parent;
+    sampler->parent_ops = parent_ops;
+    sampler->desc = *desc;
+}
+
+static void wined3d_sampler_gl_cs_init(void *object)
 {
     struct wined3d_sampler *sampler = object;
     const struct wined3d_sampler_desc *desc;
@@ -114,25 +110,32 @@ static void wined3d_sampler_cs_init(void *object)
     context_release(context);
 }
 
-static void wined3d_sampler_init(struct wined3d_sampler *sampler, struct wined3d_device *device,
+void wined3d_sampler_gl_init(struct wined3d_sampler *sampler_gl, struct wined3d_device *device,
         const struct wined3d_sampler_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
-    sampler->refcount = 1;
-    sampler->device = device;
-    sampler->parent = parent;
-    sampler->parent_ops = parent_ops;
-    sampler->desc = *desc;
+    TRACE("sampler_gl %p, device %p, desc %p, parent %p, parent_ops %p.\n",
+            sampler_gl, device, desc, parent, parent_ops);
+
+    wined3d_sampler_init(sampler_gl, device, desc, parent, parent_ops);
 
     if (device->adapter->gl_info.supported[ARB_SAMPLER_OBJECTS])
-        wined3d_cs_init_object(device->cs, wined3d_sampler_cs_init, sampler);
+        wined3d_cs_init_object(device->cs, wined3d_sampler_gl_cs_init, sampler_gl);
+}
+
+void wined3d_sampler_vk_init(struct wined3d_sampler *sampler_vk, struct wined3d_device *device,
+        const struct wined3d_sampler_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    TRACE("sampler_vk %p, device %p, desc %p, parent %p, parent_ops %p.\n",
+            sampler_vk, device, desc, parent, parent_ops);
+
+    wined3d_sampler_init(sampler_vk, device, desc, parent, parent_ops);
 }
 
 HRESULT CDECL wined3d_sampler_create(struct wined3d_device *device, const struct wined3d_sampler_desc *desc,
         void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_sampler **sampler)
 {
-    struct wined3d_sampler *object;
-
-    TRACE("device %p, desc %p, parent %p, sampler %p.\n", device, desc, parent, sampler);
+    TRACE("device %p, desc %p, parent %p, parent_ops %p, sampler %p.\n",
+            device, desc, parent, parent_ops, sampler);
 
     if (desc->address_u < WINED3D_TADDRESS_WRAP || desc->address_u > WINED3D_TADDRESS_MIRROR_ONCE
             || desc->address_v < WINED3D_TADDRESS_WRAP || desc->address_v > WINED3D_TADDRESS_MIRROR_ONCE
@@ -144,15 +147,7 @@ HRESULT CDECL wined3d_sampler_create(struct wined3d_device *device, const struct
             || desc->mip_filter > WINED3D_TEXF_LINEAR)
         return WINED3DERR_INVALIDCALL;
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
-        return E_OUTOFMEMORY;
-
-    wined3d_sampler_init(object, device, desc, parent, parent_ops);
-
-    TRACE("Created sampler %p.\n", object);
-    *sampler = object;
-
-    return WINED3D_OK;
+    return device->adapter->adapter_ops->adapter_create_sampler(device, desc, parent, parent_ops, sampler);
 }
 
 static void texture_gl_apply_base_level(struct wined3d_texture_gl *texture_gl,

@@ -733,6 +733,32 @@ static void adapter_vk_destroy_unordered_access_view(struct wined3d_unordered_ac
         wined3d_device_decref(device);
 }
 
+static HRESULT adapter_vk_create_sampler(struct wined3d_device *device, const struct wined3d_sampler_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_sampler **sampler)
+{
+    struct wined3d_sampler *sampler_vk;
+
+    TRACE("device %p, desc %p, parent %p, parent_ops %p, sampler %p.\n",
+            device, desc, parent, parent_ops, sampler);
+
+    if (!(sampler_vk = heap_alloc_zero(sizeof(*sampler_vk))))
+        return E_OUTOFMEMORY;
+
+    wined3d_sampler_vk_init(sampler_vk, device, desc, parent, parent_ops);
+
+    TRACE("Created sampler %p.\n", sampler_vk);
+    *sampler = sampler_vk;
+
+    return WINED3D_OK;
+}
+
+static void adapter_vk_destroy_sampler(struct wined3d_sampler *sampler)
+{
+    TRACE("sampler %p.\n", sampler);
+
+    wined3d_cs_destroy_object(sampler->device->cs, heap_free, sampler);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
 {
     adapter_vk_destroy,
@@ -756,6 +782,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
     adapter_vk_destroy_shader_resource_view,
     adapter_vk_create_unordered_access_view,
     adapter_vk_destroy_unordered_access_view,
+    adapter_vk_create_sampler,
+    adapter_vk_destroy_sampler,
 };
 
 static unsigned int wined3d_get_wine_vk_version(void)

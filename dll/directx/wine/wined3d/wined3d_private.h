@@ -2813,6 +2813,9 @@ struct wined3d_adapter_ops
             struct wined3d_resource *resource, void *parent, const struct wined3d_parent_ops *parent_ops,
             struct wined3d_unordered_access_view **view);
     void (*adapter_destroy_unordered_access_view)(struct wined3d_unordered_access_view *view);
+    HRESULT (*adapter_create_sampler)(struct wined3d_device *device, const struct wined3d_sampler_desc *desc,
+            void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_sampler **sampler);
+    void (*adapter_destroy_sampler)(struct wined3d_sampler *sampler);
 };
 
 /* The adapter structure */
@@ -3841,6 +3844,14 @@ struct wined3d_sampler
 
 void wined3d_sampler_bind(struct wined3d_sampler *sampler, unsigned int unit,
         struct wined3d_texture_gl *texture_gl, const struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
+
+void wined3d_sampler_gl_init(struct wined3d_sampler *sampler_gl,
+        struct wined3d_device *device, const struct wined3d_sampler_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
+
+void wined3d_sampler_vk_init(struct wined3d_sampler *sampler_vk,
+        struct wined3d_device *device, const struct wined3d_sampler_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
 struct wined3d_vertex_declaration_element
 {
