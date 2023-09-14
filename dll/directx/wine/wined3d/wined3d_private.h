@@ -73,6 +73,7 @@
 #define WINED3D_QUIRK_BROKEN_ARB_FOG            0x00000200
 
 struct fragment_pipeline;
+struct wined3d_adapter;
 struct wined3d_context;
 struct wined3d_state;
 struct wined3d_texture_gl;
@@ -2687,6 +2688,7 @@ struct wined3d_adapter_ops
 {
     BOOL (*adapter_create_context)(struct wined3d_context *context,
             struct wined3d_texture *target, const struct wined3d_format *ds_format);
+    void (*adapter_get_wined3d_caps)(const struct wined3d_adapter *adapter, struct wined3d_caps *caps);
 };
 
 BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,

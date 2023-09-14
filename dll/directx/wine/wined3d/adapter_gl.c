@@ -4246,9 +4246,155 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
     }
 }
 
+static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, struct wined3d_caps *caps)
+{
+    const struct wined3d_d3d_info *d3d_info = &adapter->d3d_info;
+    const struct wined3d_gl_info *gl_info = &adapter->gl_info;
+
+    if (gl_info->supported[ARB_FRAMEBUFFER_OBJECT] || gl_info->supported[EXT_FRAMEBUFFER_OBJECT])
+        caps->Caps2 |= WINED3DCAPS2_CANGENMIPMAP;
+
+    if (gl_info->supported[WINED3D_GL_BLEND_EQUATION])
+        caps->PrimitiveMiscCaps |= WINED3DPMISCCAPS_BLENDOP;
+    if (gl_info->supported[EXT_BLEND_EQUATION_SEPARATE] && gl_info->supported[EXT_BLEND_FUNC_SEPARATE])
+        caps->PrimitiveMiscCaps |= WINED3DPMISCCAPS_SEPARATEALPHABLEND;
+    if (gl_info->supported[EXT_DRAW_BUFFERS2])
+        caps->PrimitiveMiscCaps |= WINED3DPMISCCAPS_INDEPENDENTWRITEMASKS;
+    if (gl_info->supported[ARB_FRAMEBUFFER_SRGB])
+        caps->PrimitiveMiscCaps |= WINED3DPMISCCAPS_POSTBLENDSRGBCONVERT;
+
+    if (gl_info->supported[ARB_TEXTURE_FILTER_ANISOTROPIC])
+    {
+        caps->RasterCaps |= WINED3DPRASTERCAPS_ANISOTROPY
+                | WINED3DPRASTERCAPS_ZBIAS
+                | WINED3DPRASTERCAPS_MIPMAPLODBIAS;
+    }
+
+    if (gl_info->supported[ARB_BLEND_FUNC_EXTENDED])
+        caps->DestBlendCaps |= WINED3DPBLENDCAPS_SRCALPHASAT;
+
+    if (gl_info->supported[EXT_BLEND_COLOR])
+    {
+        caps->SrcBlendCaps |= WINED3DPBLENDCAPS_BLENDFACTOR;
+        caps->DestBlendCaps |= WINED3DPBLENDCAPS_BLENDFACTOR;
+    }
+
+    if (gl_info->supported[EXT_TEXTURE3D])
+    {
+        caps->TextureCaps |= WINED3DPTEXTURECAPS_VOLUMEMAP
+                | WINED3DPTEXTURECAPS_MIPVOLUMEMAP;
+        if (!d3d_info->texture_npot)
+            caps->TextureCaps |= WINED3DPTEXTURECAPS_VOLUMEMAP_POW2;
+    }
+
+    if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
+    {
+        caps->TextureCaps |= WINED3DPTEXTURECAPS_CUBEMAP
+                | WINED3DPTEXTURECAPS_MIPCUBEMAP;
+        if (!d3d_info->texture_npot)
+            caps->TextureCaps |= WINED3DPTEXTURECAPS_CUBEMAP_POW2;
+    }
+
+    if (gl_info->supported[ARB_TEXTURE_FILTER_ANISOTROPIC])
+    {
+        caps->TextureFilterCaps |= WINED3DPTFILTERCAPS_MAGFANISOTROPIC
+                | WINED3DPTFILTERCAPS_MINFANISOTROPIC;
+    }
+
+    if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
+    {
+        caps->CubeTextureFilterCaps |= WINED3DPTFILTERCAPS_MAGFLINEAR
+                | WINED3DPTFILTERCAPS_MAGFPOINT
+                | WINED3DPTFILTERCAPS_MINFLINEAR
+                | WINED3DPTFILTERCAPS_MINFPOINT
+                | WINED3DPTFILTERCAPS_MIPFLINEAR
+                | WINED3DPTFILTERCAPS_MIPFPOINT
+                | WINED3DPTFILTERCAPS_LINEAR
+                | WINED3DPTFILTERCAPS_LINEARMIPLINEAR
+                | WINED3DPTFILTERCAPS_LINEARMIPNEAREST
+                | WINED3DPTFILTERCAPS_MIPLINEAR
+                | WINED3DPTFILTERCAPS_MIPNEAREST
+                | WINED3DPTFILTERCAPS_NEAREST;
+
+        if (gl_info->supported[ARB_TEXTURE_FILTER_ANISOTROPIC])
+        {
+            caps->CubeTextureFilterCaps |= WINED3DPTFILTERCAPS_MAGFANISOTROPIC
+                    | WINED3DPTFILTERCAPS_MINFANISOTROPIC;
+        }
+    }
+
+    if (gl_info->supported[EXT_TEXTURE3D])
+    {
+        caps->VolumeTextureFilterCaps |= WINED3DPTFILTERCAPS_MAGFLINEAR
+                | WINED3DPTFILTERCAPS_MAGFPOINT
+                | WINED3DPTFILTERCAPS_MINFLINEAR
+                | WINED3DPTFILTERCAPS_MINFPOINT
+                | WINED3DPTFILTERCAPS_MIPFLINEAR
+                | WINED3DPTFILTERCAPS_MIPFPOINT
+                | WINED3DPTFILTERCAPS_LINEAR
+                | WINED3DPTFILTERCAPS_LINEARMIPLINEAR
+                | WINED3DPTFILTERCAPS_LINEARMIPNEAREST
+                | WINED3DPTFILTERCAPS_MIPLINEAR
+                | WINED3DPTFILTERCAPS_MIPNEAREST
+                | WINED3DPTFILTERCAPS_NEAREST;
+    }
+
+    if (gl_info->supported[ARB_TEXTURE_BORDER_CLAMP])
+    {
+        caps->TextureAddressCaps |= WINED3DPTADDRESSCAPS_BORDER;
+    }
+    if (gl_info->supported[ARB_TEXTURE_MIRRORED_REPEAT])
+    {
+        caps->TextureAddressCaps |= WINED3DPTADDRESSCAPS_MIRROR;
+    }
+    if (gl_info->supported[ARB_TEXTURE_MIRROR_CLAMP_TO_EDGE])
+    {
+        caps->TextureAddressCaps |= WINED3DPTADDRESSCAPS_MIRRORONCE;
+    }
+
+    if (gl_info->supported[EXT_TEXTURE3D])
+    {
+        caps->VolumeTextureAddressCaps |= WINED3DPTADDRESSCAPS_INDEPENDENTUV
+                | WINED3DPTADDRESSCAPS_CLAMP
+                | WINED3DPTADDRESSCAPS_WRAP;
+
+        if (gl_info->supported[ARB_TEXTURE_BORDER_CLAMP])
+        {
+            caps->VolumeTextureAddressCaps |= WINED3DPTADDRESSCAPS_BORDER;
+        }
+        if (gl_info->supported[ARB_TEXTURE_MIRRORED_REPEAT])
+        {
+            caps->VolumeTextureAddressCaps |= WINED3DPTADDRESSCAPS_MIRROR;
+        }
+        if (gl_info->supported[ARB_TEXTURE_MIRROR_CLAMP_TO_EDGE])
+        {
+            caps->VolumeTextureAddressCaps |= WINED3DPTADDRESSCAPS_MIRRORONCE;
+        }
+    }
+
+    if (gl_info->supported[EXT_TEXTURE3D])
+        caps->MaxVolumeExtent = gl_info->limits.texture3d_size;
+
+    if (gl_info->supported[EXT_STENCIL_WRAP])
+    {
+        caps->StencilCaps |= WINED3DSTENCILCAPS_DECR
+                | WINED3DSTENCILCAPS_INCR;
+    }
+
+    if (gl_info->supported[WINED3D_GL_VERSION_2_0]
+            || gl_info->supported[EXT_STENCIL_TWO_SIDE]
+            || gl_info->supported[ATI_SEPARATE_STENCIL])
+    {
+        caps->StencilCaps |= WINED3DSTENCILCAPS_TWOSIDED;
+    }
+
+    caps->MaxAnisotropy = gl_info->limits.anisotropy;
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
 {
     wined3d_adapter_gl_create_context,
+    adapter_gl_get_wined3d_caps,
 };
 
 BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags)
