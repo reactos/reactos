@@ -4360,8 +4360,7 @@ static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, s
 
     if (gl_info->supported[ARB_TEXTURE_FILTER_ANISOTROPIC])
     {
-        caps->RasterCaps |= WINED3DPRASTERCAPS_ANISOTROPY
-                | WINED3DPRASTERCAPS_ZBIAS;
+        caps->RasterCaps |= WINED3DPRASTERCAPS_ANISOTROPY;
 
         caps->TextureFilterCaps |= WINED3DPTFILTERCAPS_MAGFANISOTROPIC
                 | WINED3DPTFILTERCAPS_MINFANISOTROPIC;

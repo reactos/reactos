@@ -1226,7 +1226,6 @@ enum wined3d_shader_type
 #define WINED3DPRASTERCAPS_ANTIALIASSORTINDEPENDENT             0x00000800
 #define WINED3DPRASTERCAPS_ANTIALIASEDGES                       0x00001000
 #define WINED3DPRASTERCAPS_MIPMAPLODBIAS                        0x00002000
-#define WINED3DPRASTERCAPS_ZBIAS                                0x00004000
 #define WINED3DPRASTERCAPS_ZBUFFERLESSHSR                       0x00008000
 #define WINED3DPRASTERCAPS_FOGRANGE                             0x00010000
 #define WINED3DPRASTERCAPS_ANISOTROPY                           0x00020000
