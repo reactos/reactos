@@ -13026,6 +13026,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
                 src_texture, src_sub_resource_idx, &upload_box);
 
         src_texture = staging_texture;
+        src_texture_gl = wined3d_texture_gl(src_texture);
         src_sub_resource_idx = 0;
     }
     else if (wined3d_settings.offscreen_rendering_mode != ORM_FBO
