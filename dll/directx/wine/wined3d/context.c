@@ -5303,26 +5303,27 @@ static void wined3d_context_gl_load_vertex_data(struct wined3d_context_gl *conte
     wined3d_context_gl_load_tex_coords(context_gl, si, &current_bo, state);
 }
 
-static void context_unload_numbered_array(struct wined3d_context *context, unsigned int i)
+static void wined3d_context_gl_unload_numbered_array(struct wined3d_context_gl *context_gl, unsigned int i)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     GL_EXTCALL(glDisableVertexAttribArray(i));
     checkGLcall("glDisableVertexAttribArray");
     if (gl_info->supported[ARB_INSTANCED_ARRAYS])
         GL_EXTCALL(glVertexAttribDivisor(i, 0));
 
-    context->numbered_array_mask &= ~(1u << i);
+    context_gl->c.numbered_array_mask &= ~(1u << i);
 }
 
 static void context_unload_numbered_arrays(struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     unsigned int i;
 
     while (context->numbered_array_mask)
     {
         i = wined3d_bit_scan(&context->numbered_array_mask);
-        context_unload_numbered_array(context, i);
+        wined3d_context_gl_unload_numbered_array(context_gl, i);
     }
 }
 
@@ -5348,7 +5349,7 @@ static void wined3d_context_gl_load_numbered_arrays(struct wined3d_context_gl *c
         if (!(stream_info->use_map & (1u << i)))
         {
             if (context->numbered_array_mask & (1u << i))
-                context_unload_numbered_array(context, i);
+                wined3d_context_gl_unload_numbered_array(context_gl, i);
             if (!use_vs(state) && i == WINED3D_FFP_DIFFUSE)
             {
                 if (!(context_gl->default_attrib_value_set & (1u << i)) || !context_gl->diffuse_attrib_to_1)
@@ -5385,7 +5386,7 @@ static void wined3d_context_gl_load_numbered_arrays(struct wined3d_context_gl *c
             /* Unload instanced arrays, they will be loaded using immediate
              * mode instead. */
             if (context->numbered_array_mask & (1u << i))
-                context_unload_numbered_array(context, i);
+                wined3d_context_gl_unload_numbered_array(context_gl, i);
             context_gl->default_attrib_value_set &= ~(1u << i);
             continue;
         }
@@ -5435,7 +5436,7 @@ static void wined3d_context_gl_load_numbered_arrays(struct wined3d_context_gl *c
                 ptr += (ULONG_PTR)wined3d_buffer_load_sysmem(stream->buffer, context);
 
             if (context->numbered_array_mask & (1u << i))
-                context_unload_numbered_array(context, i);
+                wined3d_context_gl_unload_numbered_array(context_gl, i);
 
             switch (format_gl->f.id)
             {
