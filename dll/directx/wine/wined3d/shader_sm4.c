@@ -61,6 +61,9 @@ WINE_DECLARE_DEBUG_CHANNEL(d3d_bytecode);
 #define WINED3D_SM4_GLOBAL_FLAGS_SHIFT          11
 #define WINED3D_SM4_GLOBAL_FLAGS_MASK           (0xffu << WINED3D_SM4_GLOBAL_FLAGS_SHIFT)
 
+#define WINED3D_SM5_PRECISE_SHIFT               19
+#define WINED3D_SM5_PRECISE_MASK                (0xfu << WINED3D_SM5_PRECISE_SHIFT)
+
 #define WINED3D_SM5_CONTROL_POINT_COUNT_SHIFT   11
 #define WINED3D_SM5_CONTROL_POINT_COUNT_MASK    (0xffu << WINED3D_SM5_CONTROL_POINT_COUNT_SHIFT)
 
@@ -1643,6 +1646,7 @@ static void shader_sm4_read_instruction(void *data, const DWORD **ptr, struct wi
     unsigned int i, len;
     SIZE_T remaining;
     const DWORD *p;
+    DWORD precise;
 
     list_move_head(&priv->src_free, &priv->src);
 
@@ -1717,12 +1721,13 @@ static void shader_sm4_read_instruction(void *data, const DWORD **ptr, struct wi
             shader_sm4_read_instruction_modifier(previous_token = *p++, ins);
 
         ins->flags = (opcode_token & WINED3D_SM4_INSTRUCTION_FLAGS_MASK) >> WINED3D_SM4_INSTRUCTION_FLAGS_SHIFT;
-
         if (ins->flags & WINED3D_SM4_INSTRUCTION_FLAG_SATURATE)
         {
             ins->flags &= ~WINED3D_SM4_INSTRUCTION_FLAG_SATURATE;
             instruction_dst_modifier = WINED3DSPDM_SATURATE;
         }
+        precise = (opcode_token & WINED3D_SM5_PRECISE_MASK) >> WINED3D_SM5_PRECISE_SHIFT;
+        ins->flags |= precise << WINED3DSI_PRECISE_SHIFT;
 
         for (i = 0; i < ins->dst_count; ++i)
         {

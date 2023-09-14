@@ -1917,6 +1917,23 @@ static void shader_dump_sync_flags(struct wined3d_string_buffer *buffer, DWORD s
         shader_addline(buffer, "_unknown_flags(%#x)", sync_flags);
 }
 
+static void shader_dump_precise_flags(struct wined3d_string_buffer *buffer, DWORD precise_flags)
+{
+    if (!precise_flags)
+        return;
+
+    shader_addline(buffer, " [precise");
+    if (precise_flags != WINED3DSI_PRECISE_XYZW)
+    {
+        shader_addline(buffer, "(%s%s%s%s)",
+                precise_flags & WINED3DSI_PRECISE_X ? "x" : "",
+                precise_flags & WINED3DSI_PRECISE_Y ? "y" : "",
+                precise_flags & WINED3DSI_PRECISE_Z ? "z" : "",
+                precise_flags & WINED3DSI_PRECISE_W ? "w" : "");
+    }
+    shader_addline(buffer, "]");
+}
+
 static void shader_dump_uav_flags(struct wined3d_string_buffer *buffer, DWORD uav_flags)
 {
     if (uav_flags & WINED3DSUF_GLOBALLY_COHERENT)
@@ -3079,6 +3096,10 @@ static void shader_trace_init(const struct wined3d_shader_frontend *fe, void *fe
             else if (ins.handler_idx == WINED3DSIH_SYNC)
             {
                 shader_dump_sync_flags(&buffer, ins.flags);
+            }
+            else
+            {
+                shader_dump_precise_flags(&buffer, ins.flags);
             }
 
             if (wined3d_shader_instruction_has_texel_offset(&ins))

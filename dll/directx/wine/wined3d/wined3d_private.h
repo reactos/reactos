@@ -626,6 +626,14 @@ enum wined3d_tessellator_partitioning
 #define WINED3DSI_SAMPLE_INFO_UINT  0x1
 #define WINED3DSI_SAMPLER_COMPARISON_MODE 0x1
 
+#define WINED3DSI_PRECISE_X         0x100
+#define WINED3DSI_PRECISE_Y         0x200
+#define WINED3DSI_PRECISE_Z         0x400
+#define WINED3DSI_PRECISE_W         0x800
+#define WINED3DSI_PRECISE_XYZW      (WINED3DSI_PRECISE_X | WINED3DSI_PRECISE_Y \
+                                    | WINED3DSI_PRECISE_Z | WINED3DSI_PRECISE_W)
+#define WINED3DSI_PRECISE_SHIFT     8
+
 enum wined3d_shader_rel_op
 {
     WINED3D_SHADER_REL_OP_GT = 1,
