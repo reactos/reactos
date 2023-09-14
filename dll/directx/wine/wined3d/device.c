@@ -3043,17 +3043,16 @@ unsigned int CDECL wined3d_device_get_max_frame_latency(const struct wined3d_dev
     return device->max_frame_latency;
 }
 
-static DWORD get_flexible_vertex_size(DWORD d3dvtVertexType)
+static unsigned int wined3d_get_flexible_vertex_size(DWORD fvf)
 {
-    DWORD size = 0;
-    int i;
-    int numTextures = (d3dvtVertexType & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
+    unsigned int texcoord_count = (fvf & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
+    unsigned int i, size = 0;
 
-    if (d3dvtVertexType & WINED3DFVF_NORMAL) size += 3 * sizeof(float);
-    if (d3dvtVertexType & WINED3DFVF_DIFFUSE) size += sizeof(DWORD);
-    if (d3dvtVertexType & WINED3DFVF_SPECULAR) size += sizeof(DWORD);
-    if (d3dvtVertexType & WINED3DFVF_PSIZE) size += sizeof(DWORD);
-    switch (d3dvtVertexType & WINED3DFVF_POSITION_MASK)
+    if (fvf & WINED3DFVF_NORMAL) size += 3 * sizeof(float);
+    if (fvf & WINED3DFVF_DIFFUSE) size += sizeof(DWORD);
+    if (fvf & WINED3DFVF_SPECULAR) size += sizeof(DWORD);
+    if (fvf & WINED3DFVF_PSIZE) size += sizeof(DWORD);
+    switch (fvf & WINED3DFVF_POSITION_MASK)
     {
         case WINED3DFVF_XYZ:    size += 3 * sizeof(float); break;
         case WINED3DFVF_XYZRHW: size += 4 * sizeof(float); break;
@@ -3063,11 +3062,11 @@ static DWORD get_flexible_vertex_size(DWORD d3dvtVertexType)
         case WINED3DFVF_XYZB4:  size += 7 * sizeof(float); break;
         case WINED3DFVF_XYZB5:  size += 8 * sizeof(float); break;
         case WINED3DFVF_XYZW:   size += 4 * sizeof(float); break;
-        default: FIXME("Unexpected position mask %#x.\n", d3dvtVertexType & WINED3DFVF_POSITION_MASK);
+        default: FIXME("Unexpected position mask %#x.\n", fvf & WINED3DFVF_POSITION_MASK);
     }
-    for (i = 0; i < numTextures; i++)
+    for (i = 0; i < texcoord_count; ++i)
     {
-        size += GET_TEXCOORD_SIZE_FROM_FVF(d3dvtVertexType, i) * sizeof(float);
+        size += GET_TEXCOORD_SIZE_FROM_FVF(fvf, i) * sizeof(float);
     }
 
     return size;
@@ -3076,14 +3075,13 @@ static DWORD get_flexible_vertex_size(DWORD d3dvtVertexType)
 /* Context activation is done by the caller. */
 #define copy_and_next(dest, src, size) memcpy(dest, src, size); dest += (size)
 static HRESULT process_vertices_strided(const struct wined3d_device *device, DWORD dwDestIndex, DWORD dwCount,
-        const struct wined3d_stream_info *stream_info, struct wined3d_buffer *dest, DWORD flags,
-        DWORD DestFVF)
+        const struct wined3d_stream_info *stream_info, struct wined3d_buffer *dest, DWORD flags, DWORD dst_fvf)
 {
     struct wined3d_matrix mat, proj_mat, view_mat, world_mat;
     struct wined3d_map_desc map_desc;
     struct wined3d_box box = {0};
     struct wined3d_viewport vp;
-    UINT vertex_size;
+    unsigned int vertex_size;
     unsigned int i;
     BYTE *dest_ptr;
     BOOL doClip;
@@ -3121,7 +3119,7 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
     else
         doClip = FALSE;
 
-    vertex_size = get_flexible_vertex_size(DestFVF);
+    vertex_size = wined3d_get_flexible_vertex_size(dst_fvf);
     box.left = dwDestIndex * vertex_size;
     box.right = box.left + dwCount * vertex_size;
     if (FAILED(hr = wined3d_resource_map(&dest->resource, 0, &map_desc, &box, WINED3D_MAP_WRITE)))
@@ -3161,13 +3159,13 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
     multiply_matrix(&mat,&view_mat,&world_mat);
     multiply_matrix(&mat,&proj_mat,&mat);
 
-    numTextures = (DestFVF & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
+    numTextures = (dst_fvf & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
 
     for (i = 0; i < dwCount; i+= 1) {
         unsigned int tex_index;
 
-        if ( ((DestFVF & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZ ) ||
-             ((DestFVF & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZRHW ) ) {
+        if ( ((dst_fvf & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZ ) ||
+             ((dst_fvf & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZRHW ) ) {
             /* The position first */
             const struct wined3d_stream_info_element *element = &stream_info->elements[WINED3D_FFP_POSITION];
             const float *p = (const float *)(element->data.addr + i * element->stride);
@@ -3262,14 +3260,14 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
 
             dest_ptr += 3 * sizeof(float);
 
-            if ((DestFVF & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZRHW)
+            if ((dst_fvf & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZRHW)
                 dest_ptr += sizeof(float);
         }
 
-        if (DestFVF & WINED3DFVF_PSIZE)
+        if (dst_fvf & WINED3DFVF_PSIZE)
             dest_ptr += sizeof(DWORD);
 
-        if (DestFVF & WINED3DFVF_NORMAL)
+        if (dst_fvf & WINED3DFVF_NORMAL)
         {
             const struct wined3d_stream_info_element *element = &stream_info->elements[WINED3D_FFP_NORMAL];
             const float *normal = (const float *)(element->data.addr + i * element->stride);
@@ -3278,7 +3276,7 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
             copy_and_next(dest_ptr, normal, 3 * sizeof(float));
         }
 
-        if (DestFVF & WINED3DFVF_DIFFUSE)
+        if (dst_fvf & WINED3DFVF_DIFFUSE)
         {
             const struct wined3d_stream_info_element *element = &stream_info->elements[WINED3D_FFP_DIFFUSE];
             const DWORD *color_d = (const DWORD *)(element->data.addr + i * element->stride);
@@ -3300,7 +3298,7 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
             }
         }
 
-        if (DestFVF & WINED3DFVF_SPECULAR)
+        if (dst_fvf & WINED3DFVF_SPECULAR)
         {
             /* What's the color value in the feedback buffer? */
             const struct wined3d_stream_info_element *element = &stream_info->elements[WINED3D_FFP_SPECULAR];
@@ -3330,11 +3328,11 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
             if (!(stream_info->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + tex_index))))
             {
                 ERR("No source texture, but destination requests one\n");
-                dest_ptr += GET_TEXCOORD_SIZE_FROM_FVF(DestFVF, tex_index) * sizeof(float);
+                dest_ptr += GET_TEXCOORD_SIZE_FROM_FVF(dst_fvf, tex_index) * sizeof(float);
             }
             else
             {
-                copy_and_next(dest_ptr, tex_coord, GET_TEXCOORD_SIZE_FROM_FVF(DestFVF, tex_index) * sizeof(float));
+                copy_and_next(dest_ptr, tex_coord, GET_TEXCOORD_SIZE_FROM_FVF(dst_fvf, tex_index) * sizeof(float));
             }
         }
     }
