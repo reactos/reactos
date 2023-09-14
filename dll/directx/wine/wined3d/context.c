@@ -5093,12 +5093,11 @@ void wined3d_context_gl_load_tex_coords(const struct wined3d_context_gl *context
 }
 
 /* This should match any arrays loaded in context_load_vertex_data(). */
-static void context_unload_vertex_data(struct wined3d_context *context)
+static void wined3d_context_gl_unload_vertex_data(struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
-    if (!context->namedArraysLoaded)
+    if (!context_gl->c.namedArraysLoaded)
         return;
     gl_info->gl_ops.gl.p_glDisableClientState(GL_VERTEX_ARRAY);
     gl_info->gl_ops.gl.p_glDisableClientState(GL_NORMAL_ARRAY);
@@ -5106,7 +5105,7 @@ static void context_unload_vertex_data(struct wined3d_context *context)
     if (gl_info->supported[EXT_SECONDARY_COLOR])
         gl_info->gl_ops.gl.p_glDisableClientState(GL_SECONDARY_COLOR_ARRAY_EXT);
     wined3d_context_gl_unload_tex_coords(context_gl);
-    context->namedArraysLoaded = FALSE;
+    context_gl->c.namedArraysLoaded = FALSE;
 }
 
 static void context_load_vertex_data(struct wined3d_context *context,
@@ -5547,7 +5546,7 @@ void wined3d_context_gl_update_stream_sources(struct wined3d_context_gl *context
     if (context_gl->c.use_immediate_mode_draw)
         return;
 
-    context_unload_vertex_data(&context_gl->c);
+    wined3d_context_gl_unload_vertex_data(context_gl);
     if (context_gl->c.d3d_info->ffp_generic_attributes || use_vs(state))
     {
         TRACE("Loading numbered arrays.\n");
@@ -5635,7 +5634,7 @@ void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_te
             GL_EXTCALL(glGenBuffers(1, &context_gl->blit_vbo));
         GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, context_gl->blit_vbo));
 
-        context_unload_vertex_data(context);
+        wined3d_context_gl_unload_vertex_data(context_gl);
         context_unload_numbered_arrays(context);
 
         GL_EXTCALL(glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STREAM_DRAW));
