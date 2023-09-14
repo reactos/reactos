@@ -140,11 +140,10 @@ static void wined3d_buffer_gl_bind(struct wined3d_buffer_gl *buffer_gl, struct w
 
 /* Context activation is done by the caller. */
 static void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *buffer_gl,
-        struct wined3d_context *context)
+        struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_resource *resource = &buffer_gl->b.resource;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
 
     if (!buffer_gl->buffer_object)
         return;
@@ -172,7 +171,7 @@ static void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *bu
         if (resource->bind_flags & WINED3D_BIND_STREAM_OUTPUT)
         {
             device_invalidate_state(resource->device, STATE_STREAM_OUTPUT);
-            if (context->transform_feedback_active)
+            if (context_gl->c.transform_feedback_active)
             {
                 /* We have to make sure that transform feedback is not active
                  * when deleting a potentially bound transform feedback buffer.
@@ -269,7 +268,7 @@ fail:
     /* Clean up all BO init, but continue because we can work without a BO :-) */
     ERR("Failed to create a buffer object. Continuing, but performance issues may occur.\n");
     buffer_gl->b.flags &= ~WINED3D_BUFFER_USE_BO;
-    wined3d_buffer_gl_destroy_buffer_object(buffer_gl, &context_gl->c);
+    wined3d_buffer_gl_destroy_buffer_object(buffer_gl, context_gl);
     buffer_clear_dirty_areas(&buffer_gl->b);
     return FALSE;
 }
@@ -758,7 +757,7 @@ static void buffer_unload(struct wined3d_resource *resource)
 
         wined3d_buffer_load_location(buffer, context, WINED3D_LOCATION_SYSMEM);
         wined3d_buffer_invalidate_location(buffer, WINED3D_LOCATION_BUFFER);
-        wined3d_buffer_gl_destroy_buffer_object(wined3d_buffer_gl(buffer), context);
+        wined3d_buffer_gl_destroy_buffer_object(wined3d_buffer_gl(buffer), wined3d_context_gl(context));
         buffer_clear_dirty_areas(buffer);
 
         context_release(context);
@@ -787,7 +786,7 @@ static void wined3d_buffer_gl_destroy_object(void *object)
     if (buffer_gl->buffer_object)
     {
         context = context_acquire(buffer_gl->b.resource.device, NULL, 0);
-        wined3d_buffer_gl_destroy_buffer_object(buffer_gl, context);
+        wined3d_buffer_gl_destroy_buffer_object(buffer_gl, wined3d_context_gl(context));
         context_release(context);
 
         heap_free(buffer_gl->b.conversion_map);
