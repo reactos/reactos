@@ -570,31 +570,30 @@ struct wined3d_format_block_info
     UINT block_width;
     UINT block_height;
     UINT block_byte_count;
-    BOOL verify;
-    BOOL compressed;
+    unsigned int flags;
 };
 
 static const struct wined3d_format_block_info format_block_info[] =
 {
-    {WINED3DFMT_DXT1,      4,  4,  8,  TRUE,  TRUE},
-    {WINED3DFMT_DXT2,      4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_DXT3,      4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_DXT4,      4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_DXT5,      4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_BC1_UNORM, 4,  4,  8,  TRUE,  TRUE},
-    {WINED3DFMT_BC2_UNORM, 4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_BC3_UNORM, 4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_BC4_UNORM, 4,  4,  8,  TRUE,  TRUE},
-    {WINED3DFMT_BC4_SNORM, 4,  4,  8,  TRUE,  TRUE},
-    {WINED3DFMT_BC5_UNORM, 4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_BC5_SNORM, 4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_BC6H_UF16, 4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_BC6H_SF16, 4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_BC7_UNORM, 4,  4,  16, TRUE,  TRUE},
-    {WINED3DFMT_ATI1N,     4,  4,  8,  FALSE, TRUE},
-    {WINED3DFMT_ATI2N,     4,  4,  16, FALSE, TRUE},
-    {WINED3DFMT_YUY2,      2,  1,  4,  FALSE, FALSE},
-    {WINED3DFMT_UYVY,      2,  1,  4,  FALSE, FALSE},
+    {WINED3DFMT_DXT1,      4,  4,  8,  WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_DXT2,      4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_DXT3,      4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_DXT4,      4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_DXT5,      4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_BC1_UNORM, 4,  4,  8,  WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_BC2_UNORM, 4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_BC3_UNORM, 4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_BC4_UNORM, 4,  4,  8,  WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_BC4_SNORM, 4,  4,  8,  WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_BC5_UNORM, 4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_BC5_SNORM, 4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_BC6H_UF16, 4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_BC6H_SF16, 4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_BC7_UNORM, 4,  4,  16, WINED3DFMT_FLAG_COMPRESSED},
+    {WINED3DFMT_ATI1N,     4,  4,  8,  WINED3DFMT_FLAG_COMPRESSED | WINED3DFMT_FLAG_BLOCKS_NO_VERIFY},
+    {WINED3DFMT_ATI2N,     4,  4,  16, WINED3DFMT_FLAG_COMPRESSED | WINED3DFMT_FLAG_BLOCKS_NO_VERIFY},
+    {WINED3DFMT_YUY2,      2,  1,  4,  WINED3DFMT_FLAG_BLOCKS_NO_VERIFY},
+    {WINED3DFMT_UYVY,      2,  1,  4,  WINED3DFMT_FLAG_BLOCKS_NO_VERIFY},
 };
 
 struct wined3d_format_vertex_info
@@ -2107,23 +2106,17 @@ fail:
 static BOOL init_format_block_info(struct wined3d_adapter *adapter)
 {
     struct wined3d_format *format;
-    unsigned int flags, i;
+    unsigned int i;
 
     for (i = 0; i < ARRAY_SIZE(format_block_info); ++i)
     {
         if (!(format = get_format_internal(adapter, format_block_info[i].id)))
             return FALSE;
 
-        flags = WINED3DFMT_FLAG_BLOCKS;
-        if (!format_block_info[i].verify)
-            flags |= WINED3DFMT_FLAG_BLOCKS_NO_VERIFY;
-        if (format_block_info[i].compressed)
-            flags |= WINED3DFMT_FLAG_COMPRESSED;
-
         format->block_width = format_block_info[i].block_width;
         format->block_height = format_block_info[i].block_height;
         format->block_byte_count = format_block_info[i].block_byte_count;
-        format_set_flag(format, flags);
+        format_set_flag(format, WINED3DFMT_FLAG_BLOCKS | format_block_info[i].flags);
     }
 
     return TRUE;
