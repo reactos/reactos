@@ -5386,15 +5386,13 @@ static void context_unload_numbered_array(struct wined3d_context *context, unsig
     context->numbered_array_mask &= ~(1u << i);
 }
 
-/* This should match any arrays loaded in loadNumberedArrays.
- * TODO: Only load / unload arrays if we have to. */
 static void context_unload_numbered_arrays(struct wined3d_context *context)
 {
     unsigned int i;
 
-    /* Disable any attributes. */
-    for (i = 0; i < context->gl_info->limits.vertex_attribs; ++i)
+    while (context->numbered_array_mask)
     {
+        i = wined3d_bit_scan(&context->numbered_array_mask);
         context_unload_numbered_array(context, i);
     }
 }
