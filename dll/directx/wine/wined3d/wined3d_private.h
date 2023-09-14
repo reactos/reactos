@@ -2022,9 +2022,6 @@ struct wined3d_context
 
     GLuint blit_vbo;
 
-    DWORD tex_unit_map[WINED3D_MAX_COMBINED_SAMPLERS];
-    DWORD rev_tex_unit_map[MAX_GL_FRAGMENT_SAMPLERS + WINED3D_MAX_VERTEX_SAMPLERS];
-
     unsigned int viewport_count;
     unsigned int scissor_rect_count;
 };
@@ -2042,6 +2039,9 @@ struct wined3d_context_gl
     uint32_t padding : 31;
 
     GLenum *texture_type;
+
+    unsigned int tex_unit_map[WINED3D_MAX_COMBINED_SAMPLERS];
+    unsigned int rev_tex_unit_map[MAX_GL_FRAGMENT_SAMPLERS + WINED3D_MAX_VERTEX_SAMPLERS];
 
     /* Extension emulation. */
     GLint gl_fog_source;

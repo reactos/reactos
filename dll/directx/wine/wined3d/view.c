@@ -873,9 +873,9 @@ static void shader_resource_view_gl_bind_and_dirtify(struct wined3d_shader_resou
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
 
-    if (context->active_texture < ARRAY_SIZE(context->rev_tex_unit_map))
+    if (context->active_texture < ARRAY_SIZE(context_gl->rev_tex_unit_map))
     {
-        DWORD active_sampler = context->rev_tex_unit_map[context->active_texture];
+        unsigned int active_sampler = context_gl->rev_tex_unit_map[context->active_texture];
         if (active_sampler != WINED3D_UNMAPPED_STAGE)
             context_invalidate_state(context, STATE_SAMPLER(active_sampler));
     }

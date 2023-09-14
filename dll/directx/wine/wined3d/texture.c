@@ -1061,9 +1061,9 @@ void wined3d_texture_gl_bind_and_dirtify(struct wined3d_texture_gl *texture_gl,
      * called from sampler() in state.c. This means we can't touch anything
      * other than whatever happens to be the currently active texture, or we
      * would risk marking already applied sampler states dirty again. */
-    if (context_gl->c.active_texture < ARRAY_SIZE(context_gl->c.rev_tex_unit_map))
+    if (context_gl->c.active_texture < ARRAY_SIZE(context_gl->rev_tex_unit_map))
     {
-        DWORD active_sampler = context_gl->c.rev_tex_unit_map[context_gl->c.active_texture];
+        unsigned int active_sampler = context_gl->rev_tex_unit_map[context_gl->c.active_texture];
         if (active_sampler != WINED3D_UNMAPPED_STAGE)
             context_invalidate_state(&context_gl->c, STATE_SAMPLER(active_sampler));
     }

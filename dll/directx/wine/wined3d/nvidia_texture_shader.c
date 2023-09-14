@@ -482,8 +482,9 @@ void set_tex_op_nvrc(const struct wined3d_gl_info *gl_info, const struct wined3d
 static void nvrc_colorop(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     BOOL tex_used = context->fixed_function_usage_map & (1u << stage);
-    DWORD mapped_stage = context->tex_unit_map[stage];
+    unsigned int mapped_stage = context_gl->tex_unit_map[stage];
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
     TRACE("Setting color op for stage %u.\n", stage);
@@ -603,8 +604,11 @@ static void nvrc_resultarg(struct wined3d_context *context, const struct wined3d
 
 static void nvts_texdim(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    DWORD sampler = state_id - STATE_SAMPLER(0);
-    DWORD mapped_stage = context->tex_unit_map[sampler];
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    unsigned int sampler, mapped_stage;
+
+    sampler = state_id - STATE_SAMPLER(0);
+    mapped_stage = context_gl->tex_unit_map[sampler];
 
     /* No need to enable / disable anything here for unused samplers. The tex_colorop
     * handler takes care. Also no action is needed with pixel shaders, or if tex_colorop
@@ -622,7 +626,8 @@ static void nvts_texdim(struct wined3d_context *context, const struct wined3d_st
 static void nvts_bumpenvmat(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
-    DWORD mapped_stage = context->tex_unit_map[stage + 1];
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    unsigned int mapped_stage = context_gl->tex_unit_map[stage + 1];
     const struct wined3d_gl_info *gl_info = context->gl_info;
     float mat[2][2];
 

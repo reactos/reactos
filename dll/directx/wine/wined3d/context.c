@@ -1994,37 +1994,37 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
     gl_info = context->gl_info;
     d3d_info = context->d3d_info;
 
-    for (i = 0; i < ARRAY_SIZE(context->tex_unit_map); ++i)
-        context->tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
-    for (i = 0; i < ARRAY_SIZE(context->rev_tex_unit_map); ++i)
-        context->rev_tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
+    for (i = 0; i < ARRAY_SIZE(context_gl->tex_unit_map); ++i)
+        context_gl->tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
+    for (i = 0; i < ARRAY_SIZE(context_gl->rev_tex_unit_map); ++i)
+        context_gl->rev_tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
     if (gl_info->limits.graphics_samplers >= WINED3D_MAX_COMBINED_SAMPLERS)
     {
         /* Initialize the texture unit mapping to a 1:1 mapping. */
         unsigned int base, count;
 
         wined3d_gl_limits_get_texture_unit_range(&gl_info->limits, WINED3D_SHADER_TYPE_PIXEL, &base, &count);
-        if (base + WINED3D_MAX_FRAGMENT_SAMPLERS > ARRAY_SIZE(context->rev_tex_unit_map))
+        if (base + WINED3D_MAX_FRAGMENT_SAMPLERS > ARRAY_SIZE(context_gl->rev_tex_unit_map))
         {
             ERR("Unexpected texture unit base index %u.\n", base);
             return E_FAIL;
         }
         for (i = 0; i < min(count, WINED3D_MAX_FRAGMENT_SAMPLERS); ++i)
         {
-            context->tex_unit_map[i] = base + i;
-            context->rev_tex_unit_map[base + i] = i;
+            context_gl->tex_unit_map[i] = base + i;
+            context_gl->rev_tex_unit_map[base + i] = i;
         }
 
         wined3d_gl_limits_get_texture_unit_range(&gl_info->limits, WINED3D_SHADER_TYPE_VERTEX, &base, &count);
-        if (base + WINED3D_MAX_VERTEX_SAMPLERS > ARRAY_SIZE(context->rev_tex_unit_map))
+        if (base + WINED3D_MAX_VERTEX_SAMPLERS > ARRAY_SIZE(context_gl->rev_tex_unit_map))
         {
             ERR("Unexpected texture unit base index %u.\n", base);
             return E_FAIL;
         }
         for (i = 0; i < min(count, WINED3D_MAX_VERTEX_SAMPLERS); ++i)
         {
-            context->tex_unit_map[WINED3D_MAX_FRAGMENT_SAMPLERS + i] = base + i;
-            context->rev_tex_unit_map[base + i] = WINED3D_MAX_FRAGMENT_SAMPLERS + i;
+            context_gl->tex_unit_map[WINED3D_MAX_FRAGMENT_SAMPLERS + i] = base + i;
+            context_gl->rev_tex_unit_map[base + i] = WINED3D_MAX_FRAGMENT_SAMPLERS + i;
         }
     }
 
@@ -2378,7 +2378,7 @@ const unsigned int *wined3d_context_gl_get_tex_unit_mapping(const struct wined3d
     {
         *base = 0;
         *count = WINED3D_MAX_TEXTURES;
-        return context_gl->c.tex_unit_map;
+        return context_gl->tex_unit_map;
     }
 
     if (shader_version->major >= 4)
@@ -2403,7 +2403,7 @@ const unsigned int *wined3d_context_gl_get_tex_unit_mapping(const struct wined3d
             *count = 0;
     }
 
-    return context_gl->c.tex_unit_map;
+    return context_gl->tex_unit_map;
 }
 
 static void context_get_rt_size(const struct wined3d_context *context, SIZE *size)
@@ -2826,7 +2826,7 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
         GL_EXTCALL(glBindSampler(0, 0));
     context_active_texture(context, gl_info, 0);
 
-    sampler = context->rev_tex_unit_map[0];
+    sampler = context_gl->rev_tex_unit_map[0];
     if (sampler != WINED3D_UNMAPPED_STAGE)
     {
         if (sampler < WINED3D_MAX_TEXTURES)
@@ -2950,7 +2950,7 @@ void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_
 
         gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-        sampler = context->rev_tex_unit_map[i];
+        sampler = context_gl->rev_tex_unit_map[i];
         if (sampler != WINED3D_UNMAPPED_STAGE)
         {
             if (sampler < WINED3D_MAX_TEXTURES)
@@ -3226,17 +3226,17 @@ void context_state_fb(struct wined3d_context *context, const struct wined3d_stat
 
 static void wined3d_context_gl_map_stage(struct wined3d_context_gl *context_gl, unsigned int stage, unsigned int unit)
 {
-    unsigned int i = context_gl->c.rev_tex_unit_map[unit];
-    unsigned int j = context_gl->c.tex_unit_map[stage];
+    unsigned int i = context_gl->rev_tex_unit_map[unit];
+    unsigned int j = context_gl->tex_unit_map[stage];
 
     TRACE("Mapping stage %u to unit %u.\n", stage, unit);
-    context_gl->c.tex_unit_map[stage] = unit;
+    context_gl->tex_unit_map[stage] = unit;
     if (i != WINED3D_UNMAPPED_STAGE && i != stage)
-        context_gl->c.tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
+        context_gl->tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
 
-    context_gl->c.rev_tex_unit_map[unit] = stage;
+    context_gl->rev_tex_unit_map[unit] = stage;
     if (j != WINED3D_UNMAPPED_STAGE && j != unit)
-        context_gl->c.rev_tex_unit_map[j] = WINED3D_UNMAPPED_STAGE;
+        context_gl->rev_tex_unit_map[j] = WINED3D_UNMAPPED_STAGE;
 }
 
 static void context_invalidate_texture_stage(struct wined3d_context *context, DWORD stage)
@@ -3318,7 +3318,7 @@ static void wined3d_context_gl_map_fixed_function_samplers(struct wined3d_contex
             if (!(ffu_map & 1))
                 continue;
 
-            if (context_gl->c.tex_unit_map[i] != i)
+            if (context_gl->tex_unit_map[i] != i)
             {
                 wined3d_context_gl_map_stage(context_gl, i, i);
                 context_invalidate_state(&context_gl->c, STATE_SAMPLER(i));
@@ -3335,7 +3335,7 @@ static void wined3d_context_gl_map_fixed_function_samplers(struct wined3d_contex
         if (!(ffu_map & 1))
             continue;
 
-        if (context_gl->c.tex_unit_map[i] != tex)
+        if (context_gl->tex_unit_map[i] != tex)
         {
             wined3d_context_gl_map_stage(context_gl, i, tex);
             context_invalidate_state(&context_gl->c, STATE_SAMPLER(i));
@@ -3355,7 +3355,7 @@ static void wined3d_context_gl_map_psamplers(struct wined3d_context_gl *context_
 
     for (i = 0; i < WINED3D_MAX_FRAGMENT_SAMPLERS; ++i)
     {
-        if (resource_info[i].type && context_gl->c.tex_unit_map[i] != i)
+        if (resource_info[i].type && context_gl->tex_unit_map[i] != i)
         {
             wined3d_context_gl_map_stage(context_gl, i, i);
             context_invalidate_state(&context_gl->c, STATE_SAMPLER(i));
@@ -3368,7 +3368,7 @@ static void wined3d_context_gl_map_psamplers(struct wined3d_context_gl *context_
 static BOOL wined3d_context_gl_unit_free_for_vs(const struct wined3d_context_gl *context_gl,
         const struct wined3d_shader_resource_info *ps_resource_info, unsigned int unit)
 {
-    unsigned int current_mapping = context_gl->c.rev_tex_unit_map[unit];
+    unsigned int current_mapping = context_gl->rev_tex_unit_map[unit];
 
     /* Not currently used */
     if (current_mapping == WINED3D_UNMAPPED_STAGE)
@@ -3417,7 +3417,7 @@ static void wined3d_context_gl_map_vsamplers(struct wined3d_context_gl *context_
             {
                 if (wined3d_context_gl_unit_free_for_vs(context_gl, ps_resource_info, start))
                 {
-                    if (context_gl->c.tex_unit_map[vsampler_idx] != start)
+                    if (context_gl->tex_unit_map[vsampler_idx] != start)
                     {
                         wined3d_context_gl_map_stage(context_gl, vsampler_idx, start);
                         context_invalidate_state(&context_gl->c, STATE_SAMPLER(vsampler_idx));
@@ -3429,7 +3429,7 @@ static void wined3d_context_gl_map_vsamplers(struct wined3d_context_gl *context_
 
                 --start;
             }
-            if (context_gl->c.tex_unit_map[vsampler_idx] == WINED3D_UNMAPPED_STAGE)
+            if (context_gl->tex_unit_map[vsampler_idx] == WINED3D_UNMAPPED_STAGE)
                 WARN("Couldn't find a free texture unit for vertex sampler %u.\n", i);
         }
     }
@@ -4636,7 +4636,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context_gl *context_gl,
         if (!ps && !state->textures[texture_idx])
             continue;
 
-        texture_unit = context_gl->c.tex_unit_map[texture_idx];
+        texture_unit = context_gl->tex_unit_map[texture_idx];
         if (texture_unit == WINED3D_UNMAPPED_STAGE)
             continue;
 
@@ -4714,7 +4714,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context_gl *context_gl,
             coord_idx = state->texture_states[texture_idx][WINED3D_TSS_TEXCOORD_INDEX];
             ptr = tex_coords[coord_idx] + (stride_idx * si->elements[WINED3D_FFP_TEXCOORD0 + coord_idx].stride);
             ops->texcoord[si->elements[WINED3D_FFP_TEXCOORD0 + coord_idx].format->emit_idx](
-                    GL_TEXTURE0_ARB + context_gl->c.tex_unit_map[texture_idx], ptr);
+                    GL_TEXTURE0_ARB + context_gl->tex_unit_map[texture_idx], ptr);
         }
 
         if (position)
@@ -5060,7 +5060,7 @@ void wined3d_context_gl_load_tex_coords(const struct wined3d_context_gl *context
     {
         unsigned int coord_idx = state->texture_states[texture_idx][WINED3D_TSS_TEXCOORD_INDEX];
 
-        if ((mapped_stage = context_gl->c.tex_unit_map[texture_idx]) == WINED3D_UNMAPPED_STAGE)
+        if ((mapped_stage = context_gl->tex_unit_map[texture_idx]) == WINED3D_UNMAPPED_STAGE)
             continue;
 
         if (mapped_stage >= gl_info->limits.texture_coords)

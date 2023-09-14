@@ -3149,9 +3149,9 @@ static void set_tex_op(const struct wined3d_gl_info *gl_info, const struct wined
 
 static void tex_colorop(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
+    unsigned int stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
+    unsigned int mapped_stage = wined3d_context_gl(context)->tex_unit_map[stage];
     BOOL tex_used = context->fixed_function_usage_map & (1u << stage);
-    DWORD mapped_stage = context->tex_unit_map[stage];
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
     TRACE("Setting color op for stage %d\n", stage);
@@ -3210,9 +3210,9 @@ static void tex_colorop(struct wined3d_context *context, const struct wined3d_st
 
 void tex_alphaop(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
+    unsigned int stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
+    unsigned int mapped_stage = wined3d_context_gl(context)->tex_unit_map[stage];
     BOOL tex_used = context->fixed_function_usage_map & (1u << stage);
-    DWORD mapped_stage = context->tex_unit_map[stage];
     const struct wined3d_gl_info *gl_info = context->gl_info;
     DWORD op, arg1, arg2, arg0;
 
@@ -3309,9 +3309,9 @@ void tex_alphaop(struct wined3d_context *context, const struct wined3d_state *st
 
 static void transform_texture(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     unsigned int tex = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
-    unsigned int mapped_stage = context->tex_unit_map[tex];
+    unsigned int mapped_stage = wined3d_context_gl(context)->tex_unit_map[tex];
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_matrix mat;
 
     /* Ignore this when a vertex shader is used, or if the streams aren't sorted out yet */
@@ -3336,14 +3336,15 @@ static void transform_texture(struct wined3d_context *context, const struct wine
 
 static void tex_coordindex(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
+    unsigned int stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    unsigned int mapped_stage = context_gl->tex_unit_map[stage];
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
     static const GLfloat s_plane[] = { 1.0f, 0.0f, 0.0f, 0.0f };
     static const GLfloat t_plane[] = { 0.0f, 1.0f, 0.0f, 0.0f };
     static const GLfloat r_plane[] = { 0.0f, 0.0f, 1.0f, 0.0f };
     static const GLfloat q_plane[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    DWORD mapped_stage = context->tex_unit_map[stage];
 
     if (mapped_stage == WINED3D_UNMAPPED_STAGE)
     {
@@ -3620,8 +3621,8 @@ static void wined3d_sampler_desc_from_sampler_states(struct wined3d_sampler_desc
 static void sampler(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    DWORD sampler_idx = state_id - STATE_SAMPLER(0);
-    DWORD mapped_stage = context->tex_unit_map[sampler_idx];
+    unsigned int sampler_idx = state_id - STATE_SAMPLER(0);
+    unsigned int mapped_stage = context_gl->tex_unit_map[sampler_idx];
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
     TRACE("Sampler %u.\n", sampler_idx);

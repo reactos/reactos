@@ -6692,8 +6692,8 @@ void texture_activate_dimensions(const struct wined3d_texture *texture, const st
 /* Context activation is done by the caller (state handler). */
 void sampler_texdim(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    DWORD sampler = state_id - STATE_SAMPLER(0);
-    DWORD mapped_stage = context->tex_unit_map[sampler];
+    unsigned int sampler = state_id - STATE_SAMPLER(0);
+    unsigned int mapped_stage = wined3d_context_gl(context)->tex_unit_map[sampler];
 
     /* No need to enable / disable anything here for unused samplers. The
      * tex_colorop handler takes care. Also no action is needed with pixel

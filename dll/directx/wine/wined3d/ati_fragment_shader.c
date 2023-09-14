@@ -1010,13 +1010,14 @@ static void atifs_stage_constant(struct wined3d_context *context, const struct w
 
 static void set_tex_op_atifs(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_device *device = context->device;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
     struct atifs_context_private_data *ctx_priv = context->fragment_pipe_data;
     const struct atifs_ffp_desc *desc, *last_shader = ctx_priv->last_shader;
-    struct ffp_frag_settings settings;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_device *device = context->device;
     struct atifs_private_data *priv = device->fragment_priv;
+    struct ffp_frag_settings settings;
     DWORD mapped_stage;
     unsigned int i;
 
@@ -1051,7 +1052,7 @@ static void set_tex_op_atifs(struct wined3d_context *context, const struct wined
      */
     for (i = 0; i < desc->num_textures_used; ++i)
     {
-        mapped_stage = context->tex_unit_map[i];
+        mapped_stage = context_gl->tex_unit_map[i];
         if (mapped_stage != WINED3D_UNMAPPED_STAGE)
         {
             context_active_texture(context, gl_info, mapped_stage);
