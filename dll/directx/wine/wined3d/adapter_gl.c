@@ -1192,6 +1192,7 @@ static enum wined3d_gl_vendor wined3d_guess_gl_vendor(const struct wined3d_gl_in
             || strstr(gl_vendor_string, "DRI R300 Project")
             || strstr(gl_vendor_string, "Tungsten Graphics, Inc")
             || strstr(gl_vendor_string, "VMware, Inc.")
+            || strstr(gl_vendor_string, "Red Hat")
             || strstr(gl_vendor_string, "Intel")
             || strstr(gl_renderer, "Mesa")
             || strstr(gl_renderer, "Gallium")
@@ -1231,6 +1232,10 @@ static enum wined3d_pci_vendor wined3d_guess_card_vendor(const char *gl_vendor_s
             || strstr(gl_renderer, "i915")
             || strstr(gl_vendor_string, "Intel Inc."))
         return HW_VENDOR_INTEL;
+
+    if (strstr(gl_vendor_string, "Red Hat")
+            || strstr(gl_renderer, "virgl"))
+        return HW_VENDOR_REDHAT;
 
     if (strstr(gl_renderer, "SVGA3D"))
         return HW_VENDOR_VMWARE;
@@ -1790,6 +1795,10 @@ cards_nvidia_mesa[] =
     {"nv04",                        CARD_NVIDIA_RIVA_TNT},
     {"nv03",                        CARD_NVIDIA_RIVA_128},
 },
+cards_redhat[] =
+{
+    {"virgl",                       CARD_REDHAT_VIRGL},
+},
 cards_vmware[] =
 {
     {"SVGA3D",                      CARD_VMWARE_SVGA3D},
@@ -1813,6 +1822,10 @@ nvidia_gl_vendor_table[] =
     {GL_VENDOR_APPLE,   "Apple OSX NVidia binary driver",   cards_nvidia_binary,    ARRAY_SIZE(cards_nvidia_binary)},
     {GL_VENDOR_MESA,    "Mesa Nouveau driver",              cards_nvidia_mesa,      ARRAY_SIZE(cards_nvidia_mesa)},
     {GL_VENDOR_NVIDIA,  "NVIDIA binary driver",             cards_nvidia_binary,    ARRAY_SIZE(cards_nvidia_binary)},
+},
+redhat_gl_vendor_table[] =
+{
+    {GL_VENDOR_MESA,    "Red Hat driver",                   cards_redhat,           ARRAY_SIZE(cards_redhat)},
 },
 vmware_gl_vendor_table[] =
 {
@@ -1860,6 +1873,7 @@ card_vendor_table[] =
 {
     {HW_VENDOR_AMD,    "AMD",    amd_gl_vendor_table,    ARRAY_SIZE(amd_gl_vendor_table)},
     {HW_VENDOR_NVIDIA, "NVIDIA", nvidia_gl_vendor_table, ARRAY_SIZE(nvidia_gl_vendor_table)},
+    {HW_VENDOR_REDHAT, "Red Hat",redhat_gl_vendor_table, ARRAY_SIZE(redhat_gl_vendor_table)},
     {HW_VENDOR_VMWARE, "VMware", vmware_gl_vendor_table, ARRAY_SIZE(vmware_gl_vendor_table)},
     {HW_VENDOR_INTEL,  "Intel",  intel_gl_vendor_table,  ARRAY_SIZE(intel_gl_vendor_table)},
 };
