@@ -5066,6 +5066,13 @@ struct wined3d * CDECL wined3d_device_get_wined3d(const struct wined3d_device *d
     return device->wined3d;
 }
 
+enum wined3d_feature_level CDECL wined3d_device_get_feature_level(const struct wined3d_device *device)
+{
+    TRACE("device %p.\n", device);
+
+    return device->feature_level;
+}
+
 void CDECL wined3d_device_set_gamma_ramp(const struct wined3d_device *device,
         UINT swapchain_idx, DWORD flags, const struct wined3d_gamma_ramp *ramp)
 {
