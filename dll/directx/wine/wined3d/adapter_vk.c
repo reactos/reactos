@@ -454,7 +454,9 @@ static unsigned int wined3d_get_wine_vk_version(void)
 
     major = atoi(ptr);
 
-    while (isdigit(*ptr) || *ptr == '.')
+    while (isdigit(*ptr))
+        ++ptr;
+    if (*ptr == '.')
         ++ptr;
 
     minor = atoi(ptr);
