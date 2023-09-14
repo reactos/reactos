@@ -1199,7 +1199,7 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
     memcpy(&identifier->device_identifier, &IID_D3DDEVICE_D3DUID, sizeof(identifier->device_identifier));
     identifier->whql_level = (flags & WINED3DENUM_NO_WHQL_LEVEL) ? 0 : 1;
     memcpy(&identifier->adapter_luid, &adapter->luid, sizeof(identifier->adapter_luid));
-    identifier->video_memory = min(~(SIZE_T)0, adapter->vram_bytes);
+    identifier->video_memory = min(~(SIZE_T)0, adapter->driver_info.vram_bytes);
 
     return WINED3D_OK;
 }
@@ -2491,9 +2491,8 @@ static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter, DWORD win
     TRACE("adapter %p.\n", adapter);
 
     wined3d_driver_info_init(&adapter->driver_info, &gpu_description, 0);
-    adapter->vram_bytes = adapter->driver_info.vram_bytes;
     adapter->vram_bytes_used = 0;
-    TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->vram_bytes));
+    TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->driver_info.vram_bytes));
 
     if (!wined3d_adapter_no3d_init_format_info(adapter))
         return FALSE;
