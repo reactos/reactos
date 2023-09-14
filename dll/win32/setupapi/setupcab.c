@@ -152,9 +152,9 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
 
   switch (fdint) {
   case fdintCABINET_INFO:
-    TRACE("New cabinet, path %s, set %u, number %u, next disk %s.\n",
-            debugstr_a(pfdin->psz3), pfdin->setID, pfdin->iCabinet, debugstr_a(pfdin->psz2));
-    ci.CabinetFile = phsc->most_recent_cabinet_name;
+    TRACE("New cabinet, path %s, set %u, number %u, next disk %s, next cabinet %s.\n",
+            debugstr_a(pfdin->psz3), pfdin->setID, pfdin->iCabinet, debugstr_a(pfdin->psz2), debugstr_a(pfdin->psz1));
+    ci.CabinetFile = pfdin->psz1;
     ci.CabinetPath = pfdin->psz3;
     ci.DiskName = pfdin->psz2;
     ci.SetId = pfdin->setID;
