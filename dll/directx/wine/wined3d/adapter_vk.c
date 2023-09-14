@@ -268,6 +268,8 @@ static HRESULT adapter_vk_create_device(struct wined3d *wined3d, const struct wi
         goto fail;
     }
 
+    *device = &device_vk->d;
+
     return WINED3D_OK;
 
 fail:
