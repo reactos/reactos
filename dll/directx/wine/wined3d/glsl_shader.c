@@ -71,6 +71,20 @@ resource_type_info[] =
     {4, 3, ""},        /* WINED3D_SHADER_RESOURCE_TEXTURE_CUBEARRAY */
 };
 
+static const struct
+{
+    enum wined3d_data_type data_type;
+    const char *glsl_scalar_type;
+    const char *glsl_vector_type;
+}
+component_type_info[] =
+{
+    {WINED3D_DATA_FLOAT, "float", "vec"},  /* WINED3D_TYPE_UNKNOWN */
+    {WINED3D_DATA_UINT,  "uint",  "uvec"}, /* WINED3D_TYPE_UINT */
+    {WINED3D_DATA_INT,   "int",   "ivec"}, /* WINED3D_TYPE_INT */
+    {WINED3D_DATA_FLOAT, "float", "vec"},  /* WINED3D_TYPE_FLOAT */
+};
+
 struct glsl_dst_param
 {
     char reg_name[150];
@@ -2050,6 +2064,7 @@ static void shader_glsl_declare_generic_vertex_attribute(struct wined3d_string_b
         const struct wined3d_gl_info *gl_info, const struct wined3d_shader_signature_element *e)
 {
     unsigned int index = e->register_idx;
+    enum wined3d_component_type type;
 
     if (e->sysval_semantic == WINED3D_SV_VERTEX_ID)
     {
@@ -2069,23 +2084,18 @@ static void shader_glsl_declare_generic_vertex_attribute(struct wined3d_string_b
     if (shader_glsl_use_explicit_attrib_location(gl_info))
         shader_addline(buffer, "layout(location = %u) ", index);
 
-    switch (e->component_type)
+    type = e->component_type;
+    if ((unsigned int)type >= ARRAY_SIZE(component_type_info))
     {
-        case WINED3D_TYPE_UINT:
-            shader_glsl_declare_typed_vertex_attribute(buffer, gl_info, "uvec", "uint", index);
-            break;
-        case WINED3D_TYPE_INT:
-            shader_glsl_declare_typed_vertex_attribute(buffer, gl_info, "ivec", "int", index);
-            break;
-
-        default:
-            FIXME("Unhandled type %#x.\n", e->component_type);
-            /* Fall through. */
-        case WINED3D_TYPE_UNKNOWN:
-        case WINED3D_TYPE_FLOAT:
-            shader_addline(buffer, "%s vec4 vs_in%u;\n", get_attribute_keyword(gl_info), index);
-            break;
+        FIXME("Unhandled type %#x.\n", type);
+        type = WINED3D_TYPE_FLOAT;
     }
+    if (type == WINED3D_TYPE_FLOAT || type == WINED3D_TYPE_UNKNOWN)
+        shader_addline(buffer, "%s vec4 vs_in%u;\n", get_attribute_keyword(gl_info), index);
+    else
+        shader_glsl_declare_typed_vertex_attribute(buffer, gl_info,
+                component_type_info[type].glsl_vector_type,
+                component_type_info[type].glsl_scalar_type, index);
 }
 
 /** Generate the variable & register declarations for the GLSL output target */
@@ -7386,9 +7396,55 @@ static void shader_glsl_enable_extensions(struct wined3d_string_buffer *buffer,
         shader_addline(buffer, "#extension GL_EXT_texture_array : enable\n");
 }
 
+static void shader_glsl_generate_color_output(struct wined3d_string_buffer *buffer,
+        const struct wined3d_gl_info *gl_info, const struct wined3d_shader *shader,
+        struct wined3d_string_buffer_list *string_buffers)
+{
+    const struct wined3d_shader_signature *output_signature = &shader->output_signature;
+    struct wined3d_string_buffer *src, *assignment;
+    enum wined3d_data_type dst_data_type;
+    unsigned int i;
+
+    if (output_signature->element_count)
+    {
+        src = string_buffer_get(string_buffers);
+        assignment = string_buffer_get(string_buffers);
+        for (i = 0; i < output_signature->element_count; ++i)
+        {
+            const struct wined3d_shader_signature_element *output = &output_signature->elements[i];
+
+            /* register_idx is set to ~0u for non-color outputs. */
+            if (output->register_idx == ~0u)
+                continue;
+            if ((unsigned int)output->component_type >= ARRAY_SIZE(component_type_info))
+            {
+                FIXME("Unhandled component type %#x.\n", output->component_type);
+                continue;
+            }
+            dst_data_type = component_type_info[output->component_type].data_type;
+            shader_addline(buffer, "color_out%u = ", output->semantic_idx);
+            string_buffer_sprintf(src, "ps_out[%u]", output->semantic_idx);
+            shader_glsl_sprintf_cast(assignment, src->buffer, dst_data_type, WINED3D_DATA_FLOAT);
+            shader_addline(buffer, "%s;\n", assignment->buffer);
+        }
+        string_buffer_release(string_buffers, src);
+        string_buffer_release(string_buffers, assignment);
+    }
+    else
+    {
+        DWORD mask = shader->reg_maps.rt_mask;
+
+        while (mask)
+        {
+            i = wined3d_bit_scan(&mask);
+            shader_addline(buffer, "color_out%u = ps_out[%u];\n", i, i);
+        }
+    }
+}
+
 static void shader_glsl_generate_ps_epilogue(const struct wined3d_gl_info *gl_info,
         struct wined3d_string_buffer *buffer, const struct wined3d_shader *shader,
-        const struct ps_compile_args *args)
+        const struct ps_compile_args *args, struct wined3d_string_buffer_list *string_buffers)
 {
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     const char *output = needs_legacy_glsl_syntax(gl_info) ? "gl_FragData[0]" : "ps_out0";
@@ -7408,6 +7464,9 @@ static void shader_glsl_generate_ps_epilogue(const struct wined3d_gl_info *gl_in
 
     if (reg_maps->sample_mask)
         shader_addline(buffer, "gl_SampleMask[0] = floatBitsToInt(sample_mask);\n");
+
+    if (!needs_legacy_glsl_syntax(gl_info))
+        shader_glsl_generate_color_output(buffer, gl_info, shader, string_buffers);
 }
 
 /* Context activation is done by the caller. */
@@ -7692,7 +7751,7 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
 
     /* In SM4+ the shader epilogue is generated by the "ret" instruction. */
     if (reg_maps->shader_version.major < 4)
-        shader_glsl_generate_ps_epilogue(gl_info, buffer, shader, args);
+        shader_glsl_generate_ps_epilogue(gl_info, buffer, shader, args, string_buffers);
 
     shader_addline(buffer, "}\n");
 
@@ -8189,7 +8248,7 @@ static void shader_glsl_generate_shader_epilogue(const struct wined3d_shader_con
     switch (shader->reg_maps.shader_version.type)
     {
         case WINED3D_SHADER_TYPE_PIXEL:
-            shader_glsl_generate_ps_epilogue(gl_info, buffer, shader, priv->cur_ps_args);
+            shader_glsl_generate_ps_epilogue(gl_info, buffer, shader, priv->cur_ps_args, priv->string_buffers);
             break;
         case WINED3D_SHADER_TYPE_VERTEX:
             shader_glsl_generate_vs_epilogue(gl_info, buffer, shader, priv->cur_vs_args);
@@ -9680,6 +9739,8 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *
     shader_glsl_generate_fog_code(buffer, gl_info, settings->fog);
 
     shader_glsl_generate_alpha_test(buffer, gl_info, alpha_test_func);
+    if (!needs_legacy_glsl_syntax(gl_info))
+        shader_addline(buffer, "color_out0 = ps_out[0];\n");
 
     shader_addline(buffer, "}\n");
 
@@ -12623,6 +12684,8 @@ static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter
     shader_glsl_add_version_declaration(buffer, gl_info);
     shader_addline(buffer, "uniform sampler%s sampler;\n", tex_type);
     declare_in_varying(gl_info, buffer, FALSE, "vec3 out_texcoord;\n");
+    /* TODO: Declare the out variable with the correct type (and put it in the
+     * blitter args). */
     if (!needs_legacy_glsl_syntax(gl_info))
         shader_addline(buffer, "out vec4 ps_out[1];\n");
 
