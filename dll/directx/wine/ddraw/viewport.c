@@ -309,6 +309,12 @@ static HRESULT WINAPI d3d_viewport_SetViewport(IDirect3DViewport3 *iface, D3DVIE
     if (!vp)
         return DDERR_INVALIDPARAMS;
 
+    if (vp->dwSize != sizeof(*vp))
+    {
+        WARN("Invalid D3DVIEWPORT size %u.\n", vp->dwSize);
+        return DDERR_INVALIDPARAMS;
+    }
+
     if (TRACE_ON(ddraw))
     {
         TRACE("  getting D3DVIEWPORT :\n");
@@ -343,13 +349,12 @@ static HRESULT WINAPI d3d_viewport_SetViewport(IDirect3DViewport3 *iface, D3DVIE
     }
 
     viewport->use_vp2 = 0;
-    memset(&viewport->viewports.vp1, 0, sizeof(viewport->viewports.vp1));
-    memcpy(&viewport->viewports.vp1, vp, vp->dwSize);
+    viewport->viewports.vp1 = *vp;
 
     /* Empirical testing on a couple of d3d1 games showed that these values
      * should be ignored. */
-    viewport->viewports.vp1.dvMinZ = 0.0;
-    viewport->viewports.vp1.dvMaxZ = 1.0;
+    viewport->viewports.vp1.dvMinZ = 0.0f;
+    viewport->viewports.vp1.dvMaxZ = 1.0f;
 
     if (SUCCEEDED(IDirect3DDevice3_GetCurrentViewport(&device->IDirect3DDevice3_iface, &current_viewport)))
     {
@@ -950,6 +955,12 @@ static HRESULT WINAPI d3d_viewport_SetViewport2(IDirect3DViewport3 *iface, D3DVI
     if (!vp)
         return DDERR_INVALIDPARAMS;
 
+    if (vp->dwSize != sizeof(*vp))
+    {
+        WARN("Invalid D3DVIEWPORT2 size %u.\n", vp->dwSize);
+        return DDERR_INVALIDPARAMS;
+    }
+
     if (TRACE_ON(ddraw))
     {
         TRACE("  getting D3DVIEWPORT2 :\n");
@@ -984,8 +995,7 @@ static HRESULT WINAPI d3d_viewport_SetViewport2(IDirect3DViewport3 *iface, D3DVI
     }
 
     viewport->use_vp2 = 1;
-    memset(&viewport->viewports.vp2, 0, sizeof(viewport->viewports.vp2));
-    memcpy(&viewport->viewports.vp2, vp, vp->dwSize);
+    viewport->viewports.vp2 = *vp;
 
     if (SUCCEEDED(IDirect3DDevice3_GetCurrentViewport(&device->IDirect3DDevice3_iface, &current_viewport)))
     {
