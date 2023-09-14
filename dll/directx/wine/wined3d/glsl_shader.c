@@ -799,16 +799,16 @@ static void shader_glsl_load_images(const struct wined3d_gl_info *gl_info, struc
 }
 
 /* Context activation is done by the caller. */
-static void shader_glsl_load_program_resources(const struct wined3d_context *context,
+static void shader_glsl_load_program_resources(const struct wined3d_context_gl *context_gl,
         struct shader_glsl_priv *priv, GLuint program_id, const struct wined3d_shader *shader)
 {
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
 
-    shader_glsl_init_uniform_block_bindings(context->gl_info, priv, program_id, reg_maps);
-    shader_glsl_load_icb(context->gl_info, priv, program_id, reg_maps);
+    shader_glsl_init_uniform_block_bindings(context_gl->c.gl_info, priv, program_id, reg_maps);
+    shader_glsl_load_icb(context_gl->c.gl_info, priv, program_id, reg_maps);
     /* Texture unit mapping is set up to be the same each time the shader
      * program is used so we can hardcode the sampler uniform values. */
-    shader_glsl_load_samplers(context, priv, program_id, reg_maps);
+    shader_glsl_load_samplers(&context_gl->c, priv, program_id, reg_maps);
 }
 
 static void append_transform_feedback_varying(const char **varyings, unsigned int *varying_count,
@@ -9966,6 +9966,7 @@ static void shader_glsl_init_ps_uniform_locations(const struct wined3d_gl_info *
 static HRESULT shader_glsl_compile_compute_shader(struct shader_glsl_priv *priv,
         const struct wined3d_context *context, struct wined3d_shader *shader)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_context_data *ctx_data = context->shader_backend_data;
     struct wined3d_string_buffer *buffer = &priv->shader_buffer;
     const struct wined3d_gl_info *gl_info = context->gl_info;
@@ -10033,7 +10034,7 @@ static HRESULT shader_glsl_compile_compute_shader(struct shader_glsl_priv *priv,
 
     GL_EXTCALL(glUseProgram(program_id));
     checkGLcall("glUseProgram");
-    shader_glsl_load_program_resources(context, priv, program_id, shader);
+    shader_glsl_load_program_resources(context_gl, priv, program_id, shader);
     shader_glsl_load_images(gl_info, priv, program_id, &shader->reg_maps);
 
     entry->constant_update_mask = 0;
@@ -10092,6 +10093,7 @@ static void set_glsl_compute_shader_program(const struct wined3d_context *contex
 static void set_glsl_shader_program(const struct wined3d_context *context, const struct wined3d_state *state,
         struct shader_glsl_priv *priv, struct glsl_context_data *ctx_data)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     const struct wined3d_d3d_info *d3d_info = context->d3d_info;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_shader *pre_rasterization_shader;
@@ -10414,7 +10416,7 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
         if (entry->vs.base_vertex_id_location != -1)
             entry->constant_update_mask |= WINED3D_SHADER_CONST_BASE_VERTEX_ID;
 
-        shader_glsl_load_program_resources(context, priv, program_id, vshader);
+        shader_glsl_load_program_resources(context_gl, priv, program_id, vshader);
     }
     else
     {
@@ -10452,14 +10454,14 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
         entry->constant_update_mask |= WINED3D_SHADER_CONST_VS_POINTSIZE;
 
     if (hshader)
-        shader_glsl_load_program_resources(context, priv, program_id, hshader);
+        shader_glsl_load_program_resources(context_gl, priv, program_id, hshader);
 
     if (dshader)
     {
         if (entry->ds.pos_fixup_location != -1)
             entry->constant_update_mask |= WINED3D_SHADER_CONST_POS_FIXUP;
 
-        shader_glsl_load_program_resources(context, priv, program_id, dshader);
+        shader_glsl_load_program_resources(context_gl, priv, program_id, dshader);
     }
 
     if (gshader)
@@ -10467,7 +10469,7 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
         if (entry->gs.pos_fixup_location != -1)
             entry->constant_update_mask |= WINED3D_SHADER_CONST_POS_FIXUP;
 
-        shader_glsl_load_program_resources(context, priv, program_id, gshader);
+        shader_glsl_load_program_resources(context_gl, priv, program_id, gshader);
     }
 
     if (ps_id)
@@ -10482,7 +10484,7 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
             if (entry->ps.ycorrection_location != -1)
                 entry->constant_update_mask |= WINED3D_SHADER_CONST_PS_Y_CORR;
 
-            shader_glsl_load_program_resources(context, priv, program_id, pshader);
+            shader_glsl_load_program_resources(context_gl, priv, program_id, pshader);
             shader_glsl_load_images(gl_info, priv, program_id, &pshader->reg_maps);
         }
         else
