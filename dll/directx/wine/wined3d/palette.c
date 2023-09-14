@@ -106,6 +106,8 @@ HRESULT CDECL wined3d_palette_set_entries(struct wined3d_palette *palette,
             palette, flags, start, count, entries);
     TRACE("Palette flags: %#x.\n", palette->flags);
 
+    wined3d_cs_finish(palette->device->cs, WINED3D_CS_QUEUE_DEFAULT);
+
     if (palette->flags & WINED3D_PALETTE_8BIT_ENTRIES)
     {
         const BYTE *entry = (const BYTE *)entries;
