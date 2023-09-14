@@ -223,6 +223,8 @@ void draw_textured_quad(struct wined3d_texture *texture, unsigned int sub_resour
     texture->texture_rgb.sampler_desc.mag_filter = WINED3D_TEXF_POINT;
     texture->texture_rgb.sampler_desc.min_filter = WINED3D_TEXF_POINT;
     texture->texture_rgb.sampler_desc.mip_filter = WINED3D_TEXF_NONE;
+    texture->texture_rgb.sampler_desc.address_u = WINED3D_TADDRESS_CLAMP;
+    texture->texture_rgb.sampler_desc.address_v = WINED3D_TADDRESS_CLAMP;
     texture->texture_rgb.sampler_desc.srgb_decode = FALSE;
     texture->texture_rgb.base_level = level;
 }
