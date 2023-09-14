@@ -2081,10 +2081,10 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
     BOOL decompress;
     GLenum target;
 
-    TRACE("texture %p, sub_resource_idx %u, context %p, format %s, src_box %s, data {%#x:%p}, "
+    TRACE("texture %p, sub_resource_idx %u, context %p, format %s, src_box %s, data %s, "
             "src_row_pitch %#x, src_slice_pitch %#x, dst_x %u, dst_y %u, dst_z %u, srgb %#x.\n",
             texture, sub_resource_idx, context, debug_d3dformat(format->id), debug_box(src_box),
-            data->buffer_object, data->addr, src_row_pitch, src_slice_pitch, dst_x, dst_y, dst_z, srgb);
+            debug_const_bo_address(data), src_row_pitch, src_slice_pitch, dst_x, dst_y, dst_z, srgb);
 
     if (texture->sub_resources[sub_resource_idx].map_count)
     {

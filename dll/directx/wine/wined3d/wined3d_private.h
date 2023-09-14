@@ -3970,8 +3970,10 @@ void swapchain_set_max_frame_latency(struct wined3d_swapchain *swapchain,
  */
 
 /* Trace routines */
+const char *debug_bo_address(const struct wined3d_bo_address *address) DECLSPEC_HIDDEN;
 const char *debug_box(const struct wined3d_box *box) DECLSPEC_HIDDEN;
 const char *debug_color(const struct wined3d_color *color) DECLSPEC_HIDDEN;
+const char *debug_const_bo_address(const struct wined3d_const_bo_address *address) DECLSPEC_HIDDEN;
 const char *debug_d3dshaderinstructionhandler(enum WINED3D_SHADER_INSTRUCTION_HANDLER handler_idx) DECLSPEC_HIDDEN;
 const char *debug_d3dformat(enum wined3d_format_id format_id) DECLSPEC_HIDDEN;
 const char *debug_d3ddevicetype(enum wined3d_device_type device_type) DECLSPEC_HIDDEN;

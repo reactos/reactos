@@ -3682,7 +3682,7 @@ static void context_update_stream_info(struct wined3d_context *context, const st
         if (buffer->fence)
             context->buffer_fences[context->buffer_fence_count++] = buffer->fence;
 
-        TRACE("Load array %u {%#x:%p}.\n", i, element->data.buffer_object, element->data.addr);
+        TRACE("Load array %u %s.\n", i, debug_bo_address(&element->data));
     }
 
     if (prev_all_vbo != stream_info->all_vbo)
@@ -5181,8 +5181,8 @@ void context_load_tex_coords(const struct wined3d_context *context, const struct
         {
             const struct wined3d_stream_info_element *e = &si->elements[WINED3D_FFP_TEXCOORD0 + coord_idx];
 
-            TRACE("Setting up texture %u, idx %d, coord_idx %u, data {%#x:%p}.\n",
-                    texture_idx, mapped_stage, coord_idx, e->data.buffer_object, e->data.addr);
+            TRACE("Setting up texture %u, idx %u, coord_idx %u, data %s.\n",
+                    texture_idx, mapped_stage, coord_idx, debug_bo_address(&e->data));
 
             if (*current_bo != e->data.buffer_object)
             {
@@ -5499,7 +5499,7 @@ static void context_load_numbered_arrays(struct wined3d_context *context,
             continue;
         }
 
-        TRACE("Loading array %u [VBO=%u].\n", i, element->data.buffer_object);
+        TRACE("Loading array %u %s.\n", i, debug_bo_address(&element->data));
 
         if (element->stride)
         {
