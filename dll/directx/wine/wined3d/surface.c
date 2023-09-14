@@ -906,7 +906,7 @@ static void texture2d_read_from_framebuffer(struct wined3d_texture *texture, uns
         /* Mapping the primary render target which is not on a swapchain.
          * Read from the back buffer. */
         TRACE("Mapping offscreen render target.\n");
-        gl_info->gl_ops.gl.p_glReadBuffer(context_get_offscreen_gl_buffer(context));
+        gl_info->gl_ops.gl.p_glReadBuffer(wined3d_context_gl_get_offscreen_gl_buffer(context_gl));
         src_is_upside_down = TRUE;
     }
     else
@@ -997,6 +997,7 @@ void texture2d_load_fb_texture(struct wined3d_texture_gl *texture_gl,
 {
     struct wined3d_texture *restore_texture;
     const struct wined3d_gl_info *gl_info;
+    struct wined3d_context_gl *context_gl;
     struct wined3d_resource *resource;
     unsigned int restore_idx, level;
     struct wined3d_device *device;
@@ -1010,17 +1011,18 @@ void texture2d_load_fb_texture(struct wined3d_texture_gl *texture_gl,
         context = context_acquire(device, &texture_gl->t, sub_resource_idx);
     else
         restore_texture = NULL;
+    context_gl = wined3d_context_gl(context);
 
     gl_info = context->gl_info;
     device_invalidate_state(device, STATE_FRAMEBUFFER);
 
     wined3d_texture_prepare_texture(&texture_gl->t, context, srgb);
-    wined3d_texture_gl_bind_and_dirtify(texture_gl, wined3d_context_gl(context), srgb);
+    wined3d_texture_gl_bind_and_dirtify(texture_gl, context_gl, srgb);
 
     TRACE("Reading back offscreen render target %p, %u.\n", texture_gl, sub_resource_idx);
 
     if (wined3d_resource_is_offscreen(resource))
-        gl_info->gl_ops.gl.p_glReadBuffer(context_get_offscreen_gl_buffer(context));
+        gl_info->gl_ops.gl.p_glReadBuffer(wined3d_context_gl_get_offscreen_gl_buffer(context_gl));
     else
         gl_info->gl_ops.gl.p_glReadBuffer(wined3d_texture_get_gl_buffer(&texture_gl->t));
     checkGLcall("glReadBuffer");
@@ -1074,7 +1076,7 @@ static void fb_copy_to_texture_direct(struct wined3d_texture_gl *dst_texture, un
     {
         TRACE("Reading from an offscreen target\n");
         upsidedown = !upsidedown;
-        gl_info->gl_ops.gl.p_glReadBuffer(context_get_offscreen_gl_buffer(context));
+        gl_info->gl_ops.gl.p_glReadBuffer(wined3d_context_gl_get_offscreen_gl_buffer(context_gl));
     }
     else
     {
@@ -1188,7 +1190,7 @@ static void fb_copy_to_texture_hwstretch(struct wined3d_texture_gl *dst_texture,
     wined3d_context_gl_apply_ffp_blit_state(context_gl, device);
     wined3d_texture_load(&dst_texture->t, context, FALSE);
 
-    offscreen_buffer = context_get_offscreen_gl_buffer(context);
+    offscreen_buffer = wined3d_context_gl_get_offscreen_gl_buffer(context_gl);
     src_level = src_sub_resource_idx % src_texture->t.level_count;
     src_width = wined3d_texture_get_level_width(&src_texture->t, src_level);
     src_height = wined3d_texture_get_level_height(&src_texture->t, src_level);

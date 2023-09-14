@@ -2724,7 +2724,7 @@ static void context_set_render_offscreen(struct wined3d_context *context, BOOL o
     context->render_offscreen = offscreen;
 }
 
-GLenum context_get_offscreen_gl_buffer(const struct wined3d_context *context)
+GLenum wined3d_context_gl_get_offscreen_gl_buffer(const struct wined3d_context_gl *context_gl)
 {
     switch (wined3d_settings.offscreen_rendering_mode)
     {
@@ -2732,7 +2732,7 @@ GLenum context_get_offscreen_gl_buffer(const struct wined3d_context *context)
             return GL_COLOR_ATTACHMENT0;
 
         case ORM_BACKBUFFER:
-            return context->aux_buffers > 0 ? GL_AUX0 : GL_BACK;
+            return context_gl->c.aux_buffers > 0 ? GL_AUX0 : GL_BACK;
 
         default:
             FIXME("Unhandled offscreen rendering mode %#x.\n", wined3d_settings.offscreen_rendering_mode);
@@ -2742,12 +2742,14 @@ GLenum context_get_offscreen_gl_buffer(const struct wined3d_context *context)
 
 static DWORD context_generate_rt_mask_no_fbo(const struct wined3d_context *context, struct wined3d_resource *rt)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
+
     if (!rt || rt->format->id == WINED3DFMT_NULL)
         return 0;
     else if (rt->type != WINED3D_RTYPE_BUFFER && texture_from_resource(rt)->swapchain)
         return context_generate_rt_mask_from_resource(rt);
     else
-        return context_generate_rt_mask(context_get_offscreen_gl_buffer(context));
+        return context_generate_rt_mask(wined3d_context_gl_get_offscreen_gl_buffer(context_gl));
 }
 
 /* Context activation is done by the caller. */
