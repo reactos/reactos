@@ -3347,7 +3347,7 @@ static void init_format_filter_info(struct wined3d_adapter *adapter,
 {
     enum wined3d_pci_vendor vendor = adapter->driver_info.vendor;
     struct wined3d_format *format;
-    unsigned int fmt_idx, i;
+    unsigned int i;
     static const enum wined3d_format_id fmts16[] =
     {
         WINED3DFMT_R16_FLOAT,
@@ -3356,8 +3356,8 @@ static void init_format_filter_info(struct wined3d_adapter *adapter,
     };
     BOOL filtered;
 
+    /* This was already handled by init_format_texture_info(). */
     if (gl_info->supported[ARB_INTERNALFORMAT_QUERY2])
-        /* This was already handled by init_format_texture_info(). */
         return;
 
     if (wined3d_settings.offscreen_rendering_mode != ORM_FBO
@@ -3384,8 +3384,8 @@ static void init_format_filter_info(struct wined3d_adapter *adapter,
         {
             for (i = 0; i < ARRAY_SIZE(fmts16); ++i)
             {
-                fmt_idx = get_format_idx(fmts16[i]);
-                format_set_flag(&adapter->formats[fmt_idx], WINED3DFMT_FLAG_FILTERING);
+                format = get_format_internal(adapter, fmts16[i]);
+                format_set_flag(format, WINED3DFMT_FLAG_FILTERING);
             }
         }
         return;
@@ -3393,19 +3393,19 @@ static void init_format_filter_info(struct wined3d_adapter *adapter,
 
     for (i = 0; i < ARRAY_SIZE(fmts16); ++i)
     {
-        fmt_idx = get_format_idx(fmts16[i]);
-        format = &adapter->formats[fmt_idx];
-        if (!format->glInternal) continue; /* Not supported by GL */
+        format = get_format_internal(adapter, fmts16[i]);
+        if (!format->glInternal)
+            continue; /* Not supported by GL */
 
-        filtered = check_filter(gl_info, adapter->formats[fmt_idx].glInternal);
+        filtered = check_filter(gl_info, format->glInternal);
         if (filtered)
         {
-            TRACE("Format %s supports filtering\n", debug_d3dformat(fmts16[i]));
+            TRACE("Format %s supports filtering.\n", debug_d3dformat(format->id));
             format_set_flag(format, WINED3DFMT_FLAG_FILTERING);
         }
         else
         {
-            TRACE("Format %s does not support filtering\n", debug_d3dformat(fmts16[i]));
+            TRACE("Format %s does not support filtering.\n", debug_d3dformat(format->id));
         }
     }
 }
