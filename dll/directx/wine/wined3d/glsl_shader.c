@@ -1979,6 +1979,14 @@ static void shader_glsl_declare_shader_inputs(const struct wined3d_gl_info *gl_i
     }
 }
 
+static BOOL needs_interpolation_qualifiers_for_shader_outputs(const struct wined3d_gl_info *gl_info)
+{
+    /* In GLSL 4.40+ it is fine to specify interpolation qualifiers only in
+     * fragment shaders. In older GLSL versions interpolation qualifiers must
+     * match between shader stages. */
+    return gl_info->glsl_version < MAKEDWORD_VERSION(4, 40);
+}
+
 static void shader_glsl_declare_shader_outputs(const struct wined3d_gl_info *gl_info,
         struct wined3d_string_buffer *buffer, unsigned int element_count, BOOL rasterizer_setup,
         const DWORD *interpolation_mode)
@@ -11108,6 +11116,8 @@ static void shader_glsl_get_caps(const struct wined3d_adapter *adapter, struct s
      * shader_glsl_alloc(). */
     caps->wined3d_caps = WINED3D_SHADER_CAP_VS_CLIPPING
             | WINED3D_SHADER_CAP_SRGB_WRITE;
+    if (needs_interpolation_qualifiers_for_shader_outputs(gl_info))
+        caps->wined3d_caps |= WINED3D_SHADER_CAP_OUTPUT_INTERPOLATION;
 }
 
 static BOOL shader_glsl_color_fixup_supported(struct color_fixup_desc fixup)

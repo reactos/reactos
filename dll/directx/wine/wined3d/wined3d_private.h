@@ -205,6 +205,7 @@ struct wined3d_d3d_info
     unsigned int vs_clipping : 1;
     unsigned int shader_color_key : 1;
     unsigned int shader_double_precision : 1;
+    unsigned int shader_output_interpolation : 1;
     unsigned int viewport_array_index_any_shader : 1;
     unsigned int texture_npot : 1;
     unsigned int texture_npot_conditional : 1;
@@ -1305,9 +1306,10 @@ BOOL shader_get_stream_output_register_info(const struct wined3d_shader *shader,
 
 typedef void (*SHADER_HANDLER)(const struct wined3d_shader_instruction *);
 
-#define WINED3D_SHADER_CAP_VS_CLIPPING      0x00000001
-#define WINED3D_SHADER_CAP_SRGB_WRITE       0x00000002
-#define WINED3D_SHADER_CAP_DOUBLE_PRECISION 0x00000004
+#define WINED3D_SHADER_CAP_VS_CLIPPING              0x00000001u
+#define WINED3D_SHADER_CAP_SRGB_WRITE               0x00000002u
+#define WINED3D_SHADER_CAP_DOUBLE_PRECISION         0x00000004u
+#define WINED3D_SHADER_CAP_OUTPUT_INTERPOLATION     0x00000008u
 
 struct shader_caps
 {
@@ -4920,15 +4922,6 @@ static inline GLuint wined3d_texture_gl_get_texture_name(const struct wined3d_te
 static inline BOOL can_use_texture_swizzle(const struct wined3d_d3d_info *d3d_info, const struct wined3d_format *format)
 {
     return d3d_info->texture_swizzle && !is_complex_fixup(format->color_fixup) && !is_scaling_fixup(format->color_fixup);
-}
-
-static inline BOOL needs_interpolation_qualifiers_for_shader_outputs(const struct wined3d_gl_info *gl_info)
-{
-    /* In GLSL 4.40+ it is fine to specify interpolation qualifiers only in
-     * fragment shaders. In older GLSL versions interpolation qualifiers must
-     * match between shader stages.
-     */
-    return gl_info->glsl_version < MAKEDWORD_VERSION(4, 40);
 }
 
 static inline BOOL is_rasterization_disabled(const struct wined3d_shader *geometry_shader)

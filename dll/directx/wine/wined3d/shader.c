@@ -3505,10 +3505,10 @@ HRESULT CDECL wined3d_shader_set_local_constants_float(struct wined3d_shader *sh
 }
 
 static void init_interpolation_compile_args(DWORD *interpolation_args,
-        const struct wined3d_shader *pixel_shader, const struct wined3d_gl_info *gl_info)
+        const struct wined3d_shader *pixel_shader, const struct wined3d_d3d_info *d3d_info)
 {
-    if (!needs_interpolation_qualifiers_for_shader_outputs(gl_info)
-            || !pixel_shader || pixel_shader->reg_maps.shader_version.major < 4)
+    if (!d3d_info->shader_output_interpolation || !pixel_shader
+            || pixel_shader->reg_maps.shader_version.major < 4)
     {
         memset(interpolation_args, 0, sizeof(pixel_shader->u.ps.interpolation_mode));
         return;
@@ -3525,7 +3525,6 @@ void find_vs_compile_args(const struct wined3d_state *state, const struct wined3
     const struct wined3d_shader *pixel_shader = state->shader[WINED3D_SHADER_TYPE_PIXEL];
     const struct wined3d_shader *hull_shader = state->shader[WINED3D_SHADER_TYPE_HULL];
     const struct wined3d_d3d_info *d3d_info = context->d3d_info;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
 
     args->fog_src = state->render_states[WINED3D_RS_FOGTABLEMODE]
             == WINED3D_FOG_NONE ? VS_FOG_COORD : VS_FOG_Z;
@@ -3548,7 +3547,7 @@ void find_vs_compile_args(const struct wined3d_state *state, const struct wined3
         args->flatshading = 0;
 
     init_interpolation_compile_args(args->interpolation_mode,
-            args->next_shader_type == WINED3D_SHADER_TYPE_PIXEL ? pixel_shader : NULL, gl_info);
+            args->next_shader_type == WINED3D_SHADER_TYPE_PIXEL ? pixel_shader : NULL, d3d_info);
 }
 
 static BOOL match_usage(BYTE usage1, BYTE usage_idx1, BYTE usage2, BYTE usage_idx2)
@@ -3865,7 +3864,6 @@ void find_ds_compile_args(const struct wined3d_state *state, const struct wined3
     const struct wined3d_shader *geometry_shader = state->shader[WINED3D_SHADER_TYPE_GEOMETRY];
     const struct wined3d_shader *pixel_shader = state->shader[WINED3D_SHADER_TYPE_PIXEL];
     const struct wined3d_shader *hull_shader = state->shader[WINED3D_SHADER_TYPE_HULL];
-    const struct wined3d_gl_info *gl_info = context->gl_info;
 
     args->tessellator_output_primitive = hull_shader->u.hs.tessellator_output_primitive;
     args->tessellator_partitioning = hull_shader->u.hs.tessellator_partitioning;
@@ -3877,7 +3875,7 @@ void find_ds_compile_args(const struct wined3d_state *state, const struct wined3
     args->render_offscreen = context->render_offscreen;
 
     init_interpolation_compile_args(args->interpolation_mode,
-            args->next_shader_type == WINED3D_SHADER_TYPE_PIXEL ? pixel_shader : NULL, gl_info);
+            args->next_shader_type == WINED3D_SHADER_TYPE_PIXEL ? pixel_shader : NULL, context->d3d_info);
 
     args->padding = 0;
 }
@@ -3886,14 +3884,13 @@ void find_gs_compile_args(const struct wined3d_state *state, const struct wined3
         struct gs_compile_args *args, const struct wined3d_context *context)
 {
     const struct wined3d_shader *pixel_shader = state->shader[WINED3D_SHADER_TYPE_PIXEL];
-    const struct wined3d_gl_info *gl_info = context->gl_info;
 
     args->output_count = pixel_shader ? pixel_shader->limits->packed_input : shader->limits->packed_output;
 
     if (!(args->primitive_type = shader->u.gs.input_type))
         args->primitive_type = d3d_primitive_type_from_gl(state->gl_primitive_type);
 
-    init_interpolation_compile_args(args->interpolation_mode, pixel_shader, gl_info);
+    init_interpolation_compile_args(args->interpolation_mode, pixel_shader, context->d3d_info);
 }
 
 void find_ps_compile_args(const struct wined3d_state *state, const struct wined3d_shader *shader,
