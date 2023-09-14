@@ -1,0 +1,60 @@
+diff --git a/dll/directx/wine/ddraw/ddraw.c b/dll/directx/wine/ddraw/ddraw.c
+index 2c76190..9429ca5 100644
+--- a/dll/directx/wine/ddraw/ddraw.c
++++ b/dll/directx/wine/ddraw/ddraw.c
+@@ -49,6 +49,7 @@ static struct enum_device_entry
+     char interface_name[100];
+     char device_name[100];
+     const GUID *device_guid;
++    DWORD remove_caps;
+ } device_list7[] =
+ {
+     /* T&L HAL device */
+@@ -56,6 +57,7 @@ static struct enum_device_entry
+         "WINE Direct3D7 Hardware Transform and Lighting acceleration using WineD3D",
+         "Wine D3D7 T&L HAL",
+         &IID_IDirect3DTnLHalDevice,
++        0,
+     },
+ 
+     /* HAL device */
+@@ -63,6 +65,7 @@ static struct enum_device_entry
+         "WINE Direct3D7 Hardware acceleration using WineD3D",
+         "Direct3D HAL",
+         &IID_IDirect3DHALDevice,
++        0,
+     },
+ 
+     /* RGB device */
+@@ -70,6 +73,7 @@ static struct enum_device_entry
+         "WINE Direct3D7 RGB Software Emulation using WineD3D",
+         "Wine D3D7 RGB",
+         &IID_IDirect3DRGBDevice,
++        D3DDEVCAPS_HWTRANSFORMANDLIGHT,
+     },
+ };
+ 
+@@ -3631,6 +3635,7 @@ static HRESULT WINAPI d3d7_EnumDevices(IDirect3D7 *iface, LPD3DENUMDEVICESCALLBA
+ {
+     struct ddraw *ddraw = impl_from_IDirect3D7(iface);
+     D3DDEVICEDESC7 device_desc7;
++    DWORD dev_caps;
+     HRESULT hr;
+     size_t i;
+ 
+@@ -3647,11 +3652,15 @@ static HRESULT WINAPI d3d7_EnumDevices(IDirect3D7 *iface, LPD3DENUMDEVICESCALLBA
+         return hr;
+     }
+ 
++    dev_caps = device_desc7.dwDevCaps;
++
+     for (i = 0; i < ARRAY_SIZE(device_list7); i++)
+     {
+         HRESULT ret;
+ 
+         device_desc7.deviceGUID = *device_list7[i].device_guid;
++        device_desc7.dwDevCaps  = dev_caps & ~device_list7[i].remove_caps;
++
+         ret = callback(device_list7[i].interface_name, device_list7[i].device_name, &device_desc7, context);
+         if (ret != DDENUMRET_OK)
+         {
