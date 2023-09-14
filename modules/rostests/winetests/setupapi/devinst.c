@@ -1034,6 +1034,8 @@ static void test_device_iface_detail(void)
 
 static void test_device_key(void)
 {
+    static const char params_key_path[] = "System\\CurrentControlSet\\Enum\\Root"
+            "\\LEGACY_BOGUS\\0000\\Device Parameters";
     static const char class_key_path[] = "System\\CurrentControlSet\\Control\\Class"
             "\\{6a55b5a4-3f65-11db-b704-0011955c2bdb}";
     static const WCHAR bogus[] = {'S','y','s','t','e','m','\\',
@@ -1162,6 +1164,43 @@ todo_wine {
     key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, 0);
     ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
     ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
+
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+    ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
+todo_wine
+    ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
+
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, params_key_path, &key);
+    ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
+
+    key = SetupDiCreateDevRegKeyA(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, NULL, NULL);
+    ok(key != INVALID_HANDLE_VALUE, "Got unexpected error %#x.\n", GetLastError());
+    RegCloseKey(key);
+
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, params_key_path, &key);
+    ok(!res, "Failed to open device key, error %u.\n", res);
+    res = RegSetValueExA(key, "foo", 0, REG_SZ, (BYTE *)"bar", sizeof("bar"));
+    ok(!res, "Failed to set value, error %u.\n", res);
+    RegCloseKey(key);
+
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+    ok(key != INVALID_HANDLE_VALUE, "Got unexpected error %#x.\n", GetLastError());
+    size = sizeof(data);
+    res = RegQueryValueExA(key, "foo", NULL, NULL, (BYTE *)data, &size);
+    ok(!res, "Failed to get value, error %u.\n", res);
+    ok(!strcmp(data, "bar"), "Got wrong data %s.\n", data);
+    RegCloseKey(key);
+
+    ret = SetupDiDeleteDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV);
+    ok(ret, "Got unexpected error %#x.\n", GetLastError());
+
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+    ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
+todo_wine
+    ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
+
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, params_key_path, &key);
+    ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
 
     key = SetupDiCreateDevRegKeyW(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
     ok(key != INVALID_HANDLE_VALUE, "Failed to create device key, error %#x.\n", GetLastError());
