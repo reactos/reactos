@@ -2849,6 +2849,8 @@ void context_apply_blit_state(struct wined3d_context *context, const struct wine
         }
         context_invalidate_state(context, STATE_SAMPLER(sampler));
     }
+    context_invalidate_compute_state(context, STATE_COMPUTE_SHADER_RESOURCE_BINDING);
+    context_invalidate_state(context, STATE_GRAPHICS_SHADER_RESOURCE_BINDING);
 
     if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
     {
