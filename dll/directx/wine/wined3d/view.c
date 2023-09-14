@@ -625,8 +625,8 @@ HRESULT CDECL wined3d_rendertarget_view_create(const struct wined3d_view_desc *d
     struct wined3d_rendertarget_view *object;
     HRESULT hr;
 
-    TRACE("desc %p, resource %p, parent %p, parent_ops %p, view %p.\n",
-            desc, resource, parent, parent_ops, view);
+    TRACE("desc %s, resource %p, parent %p, parent_ops %p, view %p.\n",
+            wined3d_debug_view_desc(desc, resource), resource, parent, parent_ops, view);
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
@@ -811,8 +811,8 @@ HRESULT CDECL wined3d_shader_resource_view_create(const struct wined3d_view_desc
     struct wined3d_shader_resource_view *object;
     HRESULT hr;
 
-    TRACE("desc %p, resource %p, parent %p, parent_ops %p, view %p.\n",
-            desc, resource, parent, parent_ops, view);
+    TRACE("desc %s, resource %p, parent %p, parent_ops %p, view %p.\n",
+            wined3d_debug_view_desc(desc, resource), resource, parent, parent_ops, view);
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
@@ -1186,8 +1186,8 @@ HRESULT CDECL wined3d_unordered_access_view_create(const struct wined3d_view_des
     struct wined3d_unordered_access_view *object;
     HRESULT hr;
 
-    TRACE("desc %p, resource %p, parent %p, parent_ops %p, view %p.\n",
-            desc, resource, parent, parent_ops, view);
+    TRACE("desc %s, resource %p, parent %p, parent_ops %p, view %p.\n",
+            wined3d_debug_view_desc(desc, resource), resource, parent, parent_ops, view);
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;

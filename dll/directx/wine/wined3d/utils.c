@@ -4485,6 +4485,31 @@ const char *wined3d_debug_bind_flags(DWORD bind_flags)
     return wine_dbg_sprintf("%s", buffer.str);
 }
 
+const char *wined3d_debug_view_desc(const struct wined3d_view_desc *d, const struct wined3d_resource *resource)
+{
+    struct debug_buffer buffer;
+    unsigned int flags = d->flags;
+
+    init_debug_buffer(&buffer, "0");
+#define VIEW_FLAG_TO_STR(x) if (flags & x) { debug_append(&buffer, #x, " | "); flags &= ~x; }
+    VIEW_FLAG_TO_STR(WINED3D_VIEW_BUFFER_RAW);
+    VIEW_FLAG_TO_STR(WINED3D_VIEW_BUFFER_APPEND);
+    VIEW_FLAG_TO_STR(WINED3D_VIEW_BUFFER_COUNTER);
+    VIEW_FLAG_TO_STR(WINED3D_VIEW_TEXTURE_CUBE);
+    VIEW_FLAG_TO_STR(WINED3D_VIEW_TEXTURE_ARRAY);
+#undef VIEW_FLAG_TO_STR
+    if (flags)
+        FIXME("Unrecognised view flag(s) %#x.\n", flags);
+
+    if (resource->type == WINED3D_RTYPE_BUFFER)
+        return wine_dbg_sprintf("format %s, flags %s, start_idx %u, count %u",
+                debug_d3dformat(d->format_id), buffer.str, d->u.buffer.start_idx, d->u.buffer.count);
+    else
+        return wine_dbg_sprintf("format %s, flags %s, level_idx %u, level_count %u, layer_idx %u, layer_count %u",
+                debug_d3dformat(d->format_id), buffer.str, d->u.texture.level_idx, d->u.texture.level_count,
+                d->u.texture.layer_idx, d->u.texture.layer_count);
+}
+
 const char *debug_d3dusage(DWORD usage)
 {
     struct debug_buffer buffer;
