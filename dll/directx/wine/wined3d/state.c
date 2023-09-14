@@ -4344,7 +4344,7 @@ static void indexbuffer(struct wined3d_context *context, const struct wined3d_st
     }
     else
     {
-        struct wined3d_buffer *ib = state->index_buffer;
+        struct wined3d_buffer_gl *ib = wined3d_buffer_gl(state->index_buffer);
         GL_EXTCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib->buffer_object));
     }
 }
@@ -4445,7 +4445,8 @@ static void state_cb(struct wined3d_context *context, const struct wined3d_state
     for (i = 0; i < count; ++i)
     {
         buffer = state->cb[shader_type][i];
-        GL_EXTCALL(glBindBufferBase(GL_UNIFORM_BUFFER, base + i, buffer ? buffer->buffer_object : 0));
+        GL_EXTCALL(glBindBufferBase(GL_UNIFORM_BUFFER, base + i,
+                buffer ? wined3d_buffer_gl(buffer)->buffer_object : 0));
     }
     checkGLcall("bind constant buffers");
 }
@@ -4517,7 +4518,7 @@ static void state_so(struct wined3d_context *context, const struct wined3d_state
         }
         size = buffer->resource.size - offset;
         GL_EXTCALL(glBindBufferRange(GL_TRANSFORM_FEEDBACK_BUFFER, i,
-                buffer->buffer_object, offset, size));
+                wined3d_buffer_gl(buffer)->buffer_object, offset, size));
     }
     checkGLcall("bind transform feedback buffers");
 }

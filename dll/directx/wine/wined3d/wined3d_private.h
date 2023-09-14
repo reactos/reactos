@@ -3813,7 +3813,6 @@ struct wined3d_buffer
 
     struct wined3d_buffer_desc desc;
 
-    GLuint buffer_object;
     unsigned int bind_flags;
     DWORD flags;
     DWORD locations;
@@ -3853,6 +3852,7 @@ struct wined3d_buffer_gl
 {
     struct wined3d_buffer b;
 
+    GLuint buffer_object;
     GLenum buffer_object_usage;
     GLenum buffer_type_hint;
 };

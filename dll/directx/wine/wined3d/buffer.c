@@ -135,16 +135,17 @@ void wined3d_buffer_invalidate_location(struct wined3d_buffer *buffer, DWORD loc
 /* Context activation is done by the caller. */
 static void wined3d_buffer_gl_bind(struct wined3d_buffer_gl *buffer_gl, struct wined3d_context *context)
 {
-    context_bind_bo(context, buffer_gl->buffer_type_hint, buffer_gl->b.buffer_object);
+    context_bind_bo(context, buffer_gl->buffer_type_hint, buffer_gl->buffer_object);
 }
 
 /* Context activation is done by the caller. */
-static void buffer_destroy_buffer_object(struct wined3d_buffer *buffer, struct wined3d_context *context)
+static void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *buffer_gl,
+        struct wined3d_context *context)
 {
+    struct wined3d_resource *resource = &buffer_gl->b.resource;
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_resource *resource = &buffer->resource;
 
-    if (!buffer->buffer_object)
+    if (!buffer_gl->buffer_object)
         return;
 
     /* The stream source state handler might have read the memory of the
@@ -154,11 +155,11 @@ static void buffer_destroy_buffer_object(struct wined3d_buffer *buffer, struct w
      * rarely. */
     if (resource->bind_count)
     {
-        if (buffer->bind_flags & WINED3D_BIND_VERTEX_BUFFER)
+        if (buffer_gl->b.bind_flags & WINED3D_BIND_VERTEX_BUFFER)
             device_invalidate_state(resource->device, STATE_STREAMSRC);
-        if (buffer->bind_flags & WINED3D_BIND_INDEX_BUFFER)
+        if (buffer_gl->b.bind_flags & WINED3D_BIND_INDEX_BUFFER)
             device_invalidate_state(resource->device, STATE_INDEXBUFFER);
-        if (buffer->bind_flags & WINED3D_BIND_CONSTANT_BUFFER)
+        if (buffer_gl->b.bind_flags & WINED3D_BIND_CONSTANT_BUFFER)
         {
             device_invalidate_state(resource->device, STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX));
             device_invalidate_state(resource->device, STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_HULL));
@@ -167,7 +168,7 @@ static void buffer_destroy_buffer_object(struct wined3d_buffer *buffer, struct w
             device_invalidate_state(resource->device, STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_PIXEL));
             device_invalidate_state(resource->device, STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_COMPUTE));
         }
-        if (buffer->bind_flags & WINED3D_BIND_STREAM_OUTPUT)
+        if (buffer_gl->b.bind_flags & WINED3D_BIND_STREAM_OUTPUT)
         {
             device_invalidate_state(resource->device, STATE_STREAM_OUTPUT);
             if (context->transform_feedback_active)
@@ -175,22 +176,22 @@ static void buffer_destroy_buffer_object(struct wined3d_buffer *buffer, struct w
                 /* We have to make sure that transform feedback is not active
                  * when deleting a potentially bound transform feedback buffer.
                  * This may happen when the device is being destroyed. */
-                WARN("Deleting buffer object for buffer %p, disabling transform feedback.\n", buffer);
+                WARN("Deleting buffer object for buffer %p, disabling transform feedback.\n", buffer_gl);
                 context_end_transform_feedback(context);
             }
         }
     }
 
-    GL_EXTCALL(glDeleteBuffers(1, &buffer->buffer_object));
+    GL_EXTCALL(glDeleteBuffers(1, &buffer_gl->buffer_object));
     checkGLcall("glDeleteBuffers");
-    buffer->buffer_object = 0;
+    buffer_gl->buffer_object = 0;
 
-    if (buffer->fence)
+    if (buffer_gl->b.fence)
     {
-        wined3d_fence_destroy(buffer->fence);
-        buffer->fence = NULL;
+        wined3d_fence_destroy(buffer_gl->b.fence);
+        buffer_gl->b.fence = NULL;
     }
-    buffer->flags &= ~WINED3D_BUFFER_APPLESYNC;
+    buffer_gl->b.flags &= ~WINED3D_BUFFER_APPLESYNC;
 }
 
 /* Context activation is done by the caller. */
@@ -216,9 +217,9 @@ static BOOL wined3d_buffer_gl_create_buffer_object(struct wined3d_buffer_gl *buf
      * to be verified to check if the rhw and color values are in the correct
      * format. */
 
-    GL_EXTCALL(glGenBuffers(1, &buffer_gl->b.buffer_object));
+    GL_EXTCALL(glGenBuffers(1, &buffer_gl->buffer_object));
     error = gl_info->gl_ops.gl.p_glGetError();
-    if (!buffer_gl->b.buffer_object || error != GL_NO_ERROR)
+    if (!buffer_gl->buffer_object || error != GL_NO_ERROR)
     {
         ERR("Failed to create a BO with error %s (%#x).\n", debug_glerror(error), error);
         goto fail;
@@ -266,7 +267,7 @@ fail:
     /* Clean up all BO init, but continue because we can work without a BO :-) */
     ERR("Failed to create a buffer object. Continuing, but performance issues may occur.\n");
     buffer_gl->b.flags &= ~WINED3D_BUFFER_USE_BO;
-    buffer_destroy_buffer_object(&buffer_gl->b, context);
+    wined3d_buffer_gl_destroy_buffer_object(buffer_gl, context);
     buffer_clear_dirty_areas(&buffer_gl->b);
     return FALSE;
 }
@@ -622,7 +623,7 @@ static BOOL wined3d_buffer_prepare_location(struct wined3d_buffer *buffer,
             return TRUE;
 
         case WINED3D_LOCATION_BUFFER:
-            if (buffer->buffer_object)
+            if (wined3d_buffer_gl(buffer)->buffer_object)
                 return TRUE;
 
             if (!(buffer->flags & WINED3D_BUFFER_USE_BO))
@@ -719,7 +720,7 @@ DWORD wined3d_buffer_get_memory(struct wined3d_buffer *buffer,
 
     if (locations & WINED3D_LOCATION_BUFFER)
     {
-        data->buffer_object = buffer->buffer_object;
+        data->buffer_object = wined3d_buffer_gl(buffer)->buffer_object;
         data->addr = NULL;
         return WINED3D_LOCATION_BUFFER;
     }
@@ -742,7 +743,7 @@ static void buffer_unload(struct wined3d_resource *resource)
 
     TRACE("buffer %p.\n", buffer);
 
-    if (buffer->buffer_object)
+    if (wined3d_buffer_gl(buffer)->buffer_object)
     {
         struct wined3d_context *context;
 
@@ -750,7 +751,7 @@ static void buffer_unload(struct wined3d_resource *resource)
 
         wined3d_buffer_load_location(buffer, context, WINED3D_LOCATION_SYSMEM);
         wined3d_buffer_invalidate_location(buffer, WINED3D_LOCATION_BUFFER);
-        buffer_destroy_buffer_object(buffer, context);
+        wined3d_buffer_gl_destroy_buffer_object(wined3d_buffer_gl(buffer), context);
         buffer_clear_dirty_areas(buffer);
 
         context_release(context);
@@ -771,22 +772,22 @@ static void wined3d_buffer_drop_bo(struct wined3d_buffer *buffer)
     buffer_unload(&buffer->resource);
 }
 
-static void wined3d_buffer_destroy_object(void *object)
+static void wined3d_buffer_gl_destroy_object(void *object)
 {
-    struct wined3d_buffer *buffer = object;
+    struct wined3d_buffer_gl *buffer_gl = object;
     struct wined3d_context *context;
 
-    if (buffer->buffer_object)
+    if (buffer_gl->buffer_object)
     {
-        context = context_acquire(buffer->resource.device, NULL, 0);
-        buffer_destroy_buffer_object(buffer, context);
+        context = context_acquire(buffer_gl->b.resource.device, NULL, 0);
+        wined3d_buffer_gl_destroy_buffer_object(buffer_gl, context);
         context_release(context);
 
-        heap_free(buffer->conversion_map);
+        heap_free(buffer_gl->b.conversion_map);
     }
 
-    heap_free(buffer->maps);
-    heap_free(wined3d_buffer_gl(buffer));
+    heap_free(buffer_gl->b.maps);
+    heap_free(buffer_gl);
 }
 
 ULONG CDECL wined3d_buffer_decref(struct wined3d_buffer *buffer)
@@ -799,7 +800,8 @@ ULONG CDECL wined3d_buffer_decref(struct wined3d_buffer *buffer)
     {
         buffer->resource.parent_ops->wined3d_object_destroyed(buffer->resource.parent);
         resource_cleanup(&buffer->resource);
-        wined3d_cs_destroy_object(buffer->resource.device->cs, wined3d_buffer_destroy_object, buffer);
+        wined3d_cs_destroy_object(buffer->resource.device->cs,
+                wined3d_buffer_gl_destroy_object, wined3d_buffer_gl(buffer));
     }
 
     return refcount;
@@ -1014,7 +1016,7 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
 
     count = ++buffer_gl->b.resource.map_count;
 
-    if (buffer_gl->b.buffer_object)
+    if (buffer_gl->buffer_object)
     {
         unsigned int dirty_offset = offset, dirty_size = size;
 
