@@ -3730,7 +3730,7 @@ struct wined3d_sampler
 };
 
 void wined3d_sampler_bind(struct wined3d_sampler *sampler, unsigned int unit,
-        struct wined3d_texture_gl *texture_gl, const struct wined3d_context *context) DECLSPEC_HIDDEN;
+        struct wined3d_texture_gl *texture_gl, const struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
 
 struct wined3d_vertex_declaration_element
 {
