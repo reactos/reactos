@@ -6936,7 +6936,7 @@ static void arbfp_blitter_destroy(struct wined3d_blitter *blitter, struct wined3
     heap_free(arbfp_blitter);
 }
 
-static void gen_planar_yuv_read(struct wined3d_string_buffer *buffer,
+static void gen_packed_yuv_read(struct wined3d_string_buffer *buffer,
         const struct arbfp_blit_type *type, char *luminance)
 {
     char chroma;
@@ -7464,7 +7464,7 @@ static GLuint gen_yuv_shader(const struct wined3d_gl_info *gl_info, const struct
     {
         case COMPLEX_FIXUP_UYVY:
         case COMPLEX_FIXUP_YUY2:
-            gen_planar_yuv_read(&buffer, type, &luminance_component);
+            gen_packed_yuv_read(&buffer, type, &luminance_component);
             break;
 
         case COMPLEX_FIXUP_YV12:
