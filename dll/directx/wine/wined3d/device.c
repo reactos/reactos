@@ -3494,12 +3494,6 @@ HRESULT CDECL wined3d_device_set_texture(struct wined3d_device *device,
         return WINED3D_OK;
     }
 
-    if (texture && texture->resource.usage & WINED3DUSAGE_SCRATCH)
-    {
-        WARN("Rejecting attempt to set scratch texture.\n");
-        return WINED3DERR_INVALIDCALL;
-    }
-
     if (device->recording)
         device->recording->changed.textures |= 1u << stage;
 
