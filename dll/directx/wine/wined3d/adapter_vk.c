@@ -230,8 +230,85 @@ static unsigned int wined3d_get_wine_vk_version(void)
     return VK_MAKE_VERSION(major, minor, 0);
 }
 
+static const struct
+{
+    const char *name;
+    unsigned int core_since_version;
+    BOOL required;
+}
+vulkan_instance_extensions[] =
+{
+    {VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME, VK_API_VERSION_1_1, FALSE},
+};
+
+static BOOL enable_vulkan_instance_extensions(uint32_t *extension_count,
+        const char *enabled_extensions[], const struct wined3d_vk_info *vk_info)
+{
+    PFN_vkEnumerateInstanceExtensionProperties pfn_vkEnumerateInstanceExtensionProperties;
+    VkExtensionProperties *extensions = NULL;
+    BOOL success = FALSE, found;
+    unsigned int i, j, count;
+    VkResult vr;
+
+    *extension_count = 0;
+
+    if (!(pfn_vkEnumerateInstanceExtensionProperties
+            = (void *)VK_CALL(vkGetInstanceProcAddr(NULL, "vkEnumerateInstanceExtensionProperties"))))
+    {
+        WARN("Failed to get 'vkEnumerateInstanceExtensionProperties'.\n");
+        goto done;
+    }
+
+    if ((vr = pfn_vkEnumerateInstanceExtensionProperties(NULL, &count, NULL)) < 0)
+    {
+        WARN("Failed to count instance extensions, vr %d.\n", vr);
+        goto done;
+    }
+    if (!(extensions = heap_calloc(count, sizeof(*extensions))))
+    {
+        WARN("Out of memory.\n");
+        goto done;
+    }
+    if ((vr = pfn_vkEnumerateInstanceExtensionProperties(NULL, &count, extensions)) < 0)
+    {
+        WARN("Failed to enumerate extensions, vr %d.\n", vr);
+        goto done;
+    }
+
+    for (i = 0; i < ARRAY_SIZE(vulkan_instance_extensions); ++i)
+    {
+        if (vulkan_instance_extensions[i].core_since_version <= vk_info->api_version)
+            continue;
+
+        for (j = 0, found = FALSE; j < count; ++j)
+        {
+            if (!strcmp(extensions[j].extensionName, vulkan_instance_extensions[i].name))
+            {
+                found = TRUE;
+                break;
+            }
+        }
+        if (found)
+        {
+            TRACE("Enabling instance extension '%s'.\n", vulkan_instance_extensions[i].name);
+            enabled_extensions[(*extension_count)++] = vulkan_instance_extensions[i].name;
+        }
+        else if (!found && vulkan_instance_extensions[i].required)
+        {
+            WARN("Required extension '%s' is not available.\n", vulkan_instance_extensions[i].name);
+            goto done;
+        }
+    }
+    success = TRUE;
+
+done:
+    heap_free(extensions);
+    return success;
+}
+
 static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
 {
+    const char *enabled_instance_extensions[ARRAY_SIZE(vulkan_instance_extensions)];
     PFN_vkEnumerateInstanceVersion pfn_vkEnumerateInstanceVersion;
     struct vulkan_ops *vk_ops = &vk_info->vk_ops;
     VkInstance instance = VK_NULL_HANDLE;
@@ -246,7 +323,7 @@ static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
 
     if (!(vk_ops->vkCreateInstance = (void *)VK_CALL(vkGetInstanceProcAddr(NULL, "vkCreateInstance"))))
     {
-        ERR("Could not get 'vkCreateInstance'.\n");
+        ERR("Failed to get 'vkCreateInstance'.\n");
         goto fail;
     }
 
@@ -271,6 +348,10 @@ static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
     memset(&instance_info, 0, sizeof(instance_info));
     instance_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instance_info.pApplicationInfo = &app_info;
+    instance_info.ppEnabledExtensionNames = enabled_instance_extensions;
+    if (!enable_vulkan_instance_extensions(&instance_info.enabledExtensionCount, enabled_instance_extensions, vk_info))
+        goto fail;
+
     if ((vr = VK_CALL(vkCreateInstance(&instance_info, NULL, &instance))) < 0)
     {
         WARN("Failed to create Vulkan instance, vr %d.\n", vr);
@@ -295,6 +376,12 @@ static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
 #undef VK_INSTANCE_PFN
 #undef VK_INSTANCE_EXT_PFN
 #undef VK_DEVICE_PFN
+
+#define MAP_INSTANCE_FUNCTION(core_pfn, ext_pfn) \
+    if (!vk_ops->core_pfn) \
+        vk_ops->core_pfn = (void *)VK_CALL(vkGetInstanceProcAddr(instance, #ext_pfn));
+    MAP_INSTANCE_FUNCTION(vkGetPhysicalDeviceProperties2, vkGetPhysicalDeviceProperties2KHR)
+#undef MAP_INSTANCE_FUNCTION
 
     vk_info->instance = instance;
 
@@ -386,7 +473,7 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
     properties2.pNext = &id_properties;
 
-    if (vk_info->api_version >= VK_API_VERSION_1_1)
+    if (vk_info->vk_ops.vkGetPhysicalDeviceProperties2)
         VK_CALL(vkGetPhysicalDeviceProperties2(adapter_vk->physical_device, &properties2));
     else
         VK_CALL(vkGetPhysicalDeviceProperties(adapter_vk->physical_device, &properties2.properties));
