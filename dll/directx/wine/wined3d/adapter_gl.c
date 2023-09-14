@@ -4675,7 +4675,7 @@ static void wined3d_buffer_gl_destroy_object(void *object)
     struct wined3d_buffer_gl *buffer_gl = object;
     struct wined3d_context *context;
 
-    if (buffer_gl->buffer_object)
+    if (buffer_gl->b.buffer_object)
     {
         context = context_acquire(buffer_gl->b.resource.device, NULL, 0);
         wined3d_buffer_gl_destroy_buffer_object(buffer_gl, wined3d_context_gl(context));

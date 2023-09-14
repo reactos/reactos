@@ -4225,6 +4225,7 @@ struct wined3d_buffer
     DWORD flags;
     DWORD locations;
     void *map_ptr;
+    uintptr_t buffer_object;
 
     struct wined3d_map_range *maps;
     SIZE_T maps_size, modified_areas;
@@ -4265,7 +4266,6 @@ struct wined3d_buffer_gl
 {
     struct wined3d_buffer b;
 
-    GLuint buffer_object;
     GLenum buffer_object_usage;
     GLenum buffer_type_hint;
 };

@@ -135,7 +135,7 @@ void wined3d_buffer_invalidate_location(struct wined3d_buffer *buffer, DWORD loc
 /* Context activation is done by the caller. */
 static void wined3d_buffer_gl_bind(struct wined3d_buffer_gl *buffer_gl, struct wined3d_context_gl *context_gl)
 {
-    wined3d_context_gl_bind_bo(context_gl, buffer_gl->buffer_type_hint, buffer_gl->buffer_object);
+    wined3d_context_gl_bind_bo(context_gl, buffer_gl->buffer_type_hint, buffer_gl->b.buffer_object);
 }
 
 /* Context activation is done by the caller. */
@@ -144,8 +144,9 @@ void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *buffer_gl
 {
     const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_resource *resource = &buffer_gl->b.resource;
+    GLuint bo;
 
-    if (!buffer_gl->buffer_object)
+    if (!buffer_gl->b.buffer_object)
         return;
 
     /* The stream source state handler might have read the memory of the
@@ -182,9 +183,10 @@ void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *buffer_gl
         }
     }
 
-    GL_EXTCALL(glDeleteBuffers(1, &buffer_gl->buffer_object));
+    bo = buffer_gl->b.buffer_object;
+    GL_EXTCALL(glDeleteBuffers(1, &bo));
     checkGLcall("glDeleteBuffers");
-    buffer_gl->buffer_object = 0;
+    buffer_gl->b.buffer_object = 0;
 
     if (buffer_gl->b.fence)
     {
@@ -201,6 +203,7 @@ static BOOL wined3d_buffer_gl_create_buffer_object(struct wined3d_buffer_gl *buf
     const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     GLenum gl_usage = GL_STATIC_DRAW;
     GLenum error;
+    GLuint bo;
 
     TRACE("Creating an OpenGL buffer object for wined3d buffer %p with usage %s.\n",
             buffer_gl, debug_d3dusage(buffer_gl->b.resource.usage));
@@ -218,9 +221,10 @@ static BOOL wined3d_buffer_gl_create_buffer_object(struct wined3d_buffer_gl *buf
      * to be verified to check if the rhw and color values are in the correct
      * format. */
 
-    GL_EXTCALL(glGenBuffers(1, &buffer_gl->buffer_object));
+    GL_EXTCALL(glGenBuffers(1, &bo));
+    buffer_gl->b.buffer_object = bo;
     error = gl_info->gl_ops.gl.p_glGetError();
-    if (!buffer_gl->buffer_object || error != GL_NO_ERROR)
+    if (!buffer_gl->b.buffer_object || error != GL_NO_ERROR)
     {
         ERR("Failed to create a BO with error %s (%#x).\n", debug_glerror(error), error);
         goto fail;
@@ -678,7 +682,7 @@ DWORD wined3d_buffer_get_memory(struct wined3d_buffer *buffer,
 
     if (locations & WINED3D_LOCATION_BUFFER)
     {
-        data->buffer_object = wined3d_buffer_gl(buffer)->buffer_object;
+        data->buffer_object = buffer->buffer_object;
         data->addr = NULL;
         return WINED3D_LOCATION_BUFFER;
     }
@@ -701,7 +705,7 @@ static void buffer_unload(struct wined3d_resource *resource)
 
     TRACE("buffer %p.\n", buffer);
 
-    if (wined3d_buffer_gl(buffer)->buffer_object)
+    if (buffer->buffer_object)
     {
         struct wined3d_context *context;
 
@@ -969,7 +973,7 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
 
     count = ++buffer_gl->b.resource.map_count;
 
-    if (buffer_gl->buffer_object)
+    if (buffer_gl->b.buffer_object)
     {
         unsigned int dirty_offset = offset, dirty_size = size;
 
@@ -1485,7 +1489,7 @@ static BOOL wined3d_buffer_gl_prepare_location(struct wined3d_buffer *buffer,
             return wined3d_resource_prepare_sysmem(&buffer->resource);
 
         case WINED3D_LOCATION_BUFFER:
-            if (buffer_gl->buffer_object)
+            if (buffer->buffer_object)
                 return TRUE;
 
             if (!(buffer->flags & WINED3D_BUFFER_USE_BO))

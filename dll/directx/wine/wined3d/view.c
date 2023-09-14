@@ -280,14 +280,13 @@ static void create_buffer_texture(struct wined3d_gl_view *view, struct wined3d_c
     if (gl_info->supported[ARB_TEXTURE_BUFFER_RANGE])
     {
         GL_EXTCALL(glTexBufferRange(GL_TEXTURE_BUFFER, view_format_gl->internal,
-                wined3d_buffer_gl(buffer)->buffer_object, offset, size));
+                buffer->buffer_object, offset, size));
     }
     else
     {
         if (offset || size != buffer->resource.size)
             FIXME("OpenGL implementation does not support ARB_texture_buffer_range.\n");
-        GL_EXTCALL(glTexBuffer(GL_TEXTURE_BUFFER, view_format_gl->internal,
-                wined3d_buffer_gl(buffer)->buffer_object));
+        GL_EXTCALL(glTexBuffer(GL_TEXTURE_BUFFER, view_format_gl->internal, buffer->buffer_object));
     }
     checkGLcall("Create buffer texture");
 
@@ -1046,7 +1045,7 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
     wined3d_unordered_access_view_invalidate_location(view, ~WINED3D_LOCATION_BUFFER);
 
     get_buffer_view_range(&buffer_gl->b, &view->desc, &format->f, &offset, &size);
-    wined3d_context_gl_bind_bo(context_gl, buffer_gl->buffer_type_hint, buffer_gl->buffer_object);
+    wined3d_context_gl_bind_bo(context_gl, buffer_gl->buffer_type_hint, buffer_gl->b.buffer_object);
     GL_EXTCALL(glClearBufferSubData(buffer_gl->buffer_type_hint, format->internal,
             offset, size, format->format, format->type, clear_value));
     checkGLcall("clear unordered access view");
