@@ -4654,8 +4654,8 @@ static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,
     }
 #endif
 
-    glEnableWINE = gl_info->gl_ops.gl.p_glEnable;
-    glDisableWINE = gl_info->gl_ops.gl.p_glDisable;
+    gl_info->p_glEnableWINE = gl_info->gl_ops.gl.p_glEnable;
+    gl_info->p_glDisableWINE = gl_info->gl_ops.gl.p_glDisable;
 
     if (!wined3d_caps_gl_ctx_create(&adapter_gl->a, &caps_gl_ctx))
     {

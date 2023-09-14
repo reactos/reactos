@@ -437,10 +437,10 @@ void install_gl_compat_wrapper(struct wined3d_gl_info *gl_info, enum wined3d_gl_
             gl_info->gl_ops.gl.p_glFogf = wine_glFogf;
             old_fogcoord_glFogfv = gl_info->gl_ops.gl.p_glFogfv;
             gl_info->gl_ops.gl.p_glFogfv = wine_glFogfv;
-            old_fogcoord_glEnable = glEnableWINE;
-            glEnableWINE = wine_glEnable;
-            old_fogcoord_glDisable = glDisableWINE;
-            glDisableWINE = wine_glDisable;
+            old_fogcoord_glEnable = gl_info->p_glEnableWINE;
+            gl_info->p_glEnableWINE = wine_glEnable;
+            old_fogcoord_glDisable = gl_info->p_glDisableWINE;
+            gl_info->p_glDisableWINE = wine_glDisable;
 
             old_fogcoord_glVertex4f = gl_info->gl_ops.gl.p_glVertex4f;
             gl_info->gl_ops.gl.p_glVertex4f = wine_glVertex4f;

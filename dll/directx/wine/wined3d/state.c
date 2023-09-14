@@ -1138,7 +1138,7 @@ void state_fog_fragpart(struct wined3d_context *context, const struct wined3d_st
     if (!state->render_states[WINED3D_RS_FOGENABLE])
     {
         /* No fog? Disable it, and we're done :-) */
-        glDisableWINE(GL_FOG);
+        gl_info->p_glDisableWINE(GL_FOG);
         checkGLcall("glDisable GL_FOG");
         return;
     }
@@ -1275,7 +1275,7 @@ void state_fog_fragpart(struct wined3d_context *context, const struct wined3d_st
         }
     }
 
-    glEnableWINE(GL_FOG);
+    gl_info->p_glEnableWINE(GL_FOG);
     checkGLcall("glEnable GL_FOG");
     if (new_source != context->fog_source || fogstart == fogend)
     {

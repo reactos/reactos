@@ -28,9 +28,6 @@
 
 #define GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI 0x8837  /* not in the gl spec */
 
-extern void (WINE_GLAPI *glDisableWINE)(GLenum cap) DECLSPEC_HIDDEN;
-extern void (WINE_GLAPI *glEnableWINE)(GLenum cap) DECLSPEC_HIDDEN;
-
 /* OpenGL extensions. */
 enum wined3d_gl_extension
 {

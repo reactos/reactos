@@ -2665,6 +2665,9 @@ struct wined3d_gl_info
     HGLRC (WINAPI *p_wglCreateContextAttribsARB)(HDC dc, HGLRC share, const GLint *attribs);
     struct opengl_funcs gl_ops;
     struct wined3d_fbo_ops fbo_ops;
+
+    void (WINE_GLAPI *p_glDisableWINE)(GLenum cap);
+    void (WINE_GLAPI *p_glEnableWINE)(GLenum cap);
 };
 
 /* The driver names reflect the lowest GPU supported

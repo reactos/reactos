@@ -2978,7 +2978,7 @@ void context_apply_ffp_blit_state(struct wined3d_context *context, const struct 
     /* Other misc states. */
     gl_info->gl_ops.gl.p_glDisable(GL_LIGHTING);
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_LIGHTING));
-    glDisableWINE(GL_FOG);
+    gl_info->p_glDisableWINE(GL_FOG);
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_FOGENABLE));
 
     if (gl_info->supported[EXT_SECONDARY_COLOR])
