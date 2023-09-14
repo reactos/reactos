@@ -2003,7 +2003,10 @@ struct wined3d_context_gl
     struct wined3d_context c;
 
     uint32_t fog_enabled : 1;
-    uint32_t padding : 31;
+    uint32_t diffuse_attrib_to_1 : 1;
+    uint32_t padding : 30;
+
+    uint32_t default_attrib_value_set;
 
     GLenum *texture_type;
 

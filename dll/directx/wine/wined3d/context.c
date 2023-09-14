@@ -5358,9 +5358,23 @@ static void wined3d_context_gl_load_numbered_arrays(struct wined3d_context_gl *c
             if (context->numbered_array_mask & (1u << i))
                 context_unload_numbered_array(context, i);
             if (!use_vs(state) && i == WINED3D_FFP_DIFFUSE)
-                GL_EXTCALL(glVertexAttrib4f(i, 1.0f, 1.0f, 1.0f, 1.0f));
+            {
+                if (!(context_gl->default_attrib_value_set & (1u << i)) || !context_gl->diffuse_attrib_to_1)
+                {
+                    GL_EXTCALL(glVertexAttrib4f(i, 1.0f, 1.0f, 1.0f, 1.0f));
+                    context_gl->diffuse_attrib_to_1 = 1;
+                }
+            }
             else
-                GL_EXTCALL(glVertexAttrib4f(i, 0.0f, 0.0f, 0.0f, 0.0f));
+            {
+                if (!(context_gl->default_attrib_value_set & (1u << i)))
+                {
+                    GL_EXTCALL(glVertexAttrib4f(i, 0.0f, 0.0f, 0.0f, 0.0f));
+                    if (i == WINED3D_FFP_DIFFUSE)
+                        context_gl->diffuse_attrib_to_1 = 0;
+                }
+            }
+            context_gl->default_attrib_value_set |= 1u << i;
             continue;
         }
 
@@ -5380,6 +5394,7 @@ static void wined3d_context_gl_load_numbered_arrays(struct wined3d_context_gl *c
              * mode instead. */
             if (context->numbered_array_mask & (1u << i))
                 context_unload_numbered_array(context, i);
+            context_gl->default_attrib_value_set &= ~(1u << i);
             continue;
         }
 
@@ -5526,6 +5541,7 @@ static void wined3d_context_gl_load_numbered_arrays(struct wined3d_context_gl *c
                     break;
 
             }
+            context_gl->default_attrib_value_set &= ~(1u << i);
         }
     }
     checkGLcall("Loading numbered arrays");
