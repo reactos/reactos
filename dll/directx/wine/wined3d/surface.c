@@ -1700,9 +1700,7 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     }
 
     level = sub_resource_idx % texture->level_count;
-    width = wined3d_texture_get_level_width(texture, level);
-    height = wined3d_texture_get_level_height(texture, level);
-    wined3d_box_set(&src_box, 0, 0, width, height, 0, 1);
+    wined3d_texture_get_level_box(texture, level, &src_box);
 
     if (!depth && sub_resource->locations & (WINED3D_LOCATION_TEXTURE_SRGB | WINED3D_LOCATION_TEXTURE_RGB)
             && (texture->resource.format_flags & WINED3DFMT_FLAG_FBO_ATTACHABLE_SRGB)
@@ -1712,7 +1710,7 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     {
         RECT src_rect;
 
-        SetRect(&src_rect, 0, 0, width, height);
+        SetRect(&src_rect, src_box.left, src_box.top, src_box.right, src_box.bottom);
         if (srgb)
             texture2d_blt_fbo(device, context, WINED3D_TEXF_POINT,
                     texture, sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB, &src_rect,
@@ -1733,7 +1731,7 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
         DWORD dst_location = srgb ? WINED3D_LOCATION_TEXTURE_SRGB : WINED3D_LOCATION_TEXTURE_RGB;
         RECT src_rect;
 
-        SetRect(&src_rect, 0, 0, width, height);
+        SetRect(&src_rect, src_box.left, src_box.top, src_box.right, src_box.bottom);
         if (fbo_blitter_supported(WINED3D_BLIT_OP_COLOR_BLIT, gl_info,
                 &texture->resource, src_location, &texture->resource, dst_location))
             texture2d_blt_fbo(device, context, WINED3D_TEXF_POINT, texture, sub_resource_idx,
@@ -1792,6 +1790,8 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, sub_resource->locations);
     if (conversion)
     {
+        width = src_box.right - src_box.left;
+        height = src_box.bottom - src_box.top;
         wined3d_format_calculate_pitch(format, device->surface_alignment,
                 width, height, &dst_row_pitch, &dst_slice_pitch);
 
