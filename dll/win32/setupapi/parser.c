@@ -1696,6 +1696,7 @@ BOOL WINAPI SetupFindNextMatchLineW( PINFCONTEXT context_in, PCWSTR key,
                                      PINFCONTEXT context_out )
 {
     struct inf_file *file = context_in->CurrentInf;
+    WCHAR buffer[MAX_STRING_LEN + 1];
     struct section *section;
     struct line *line;
     unsigned int i;
@@ -1709,7 +1710,8 @@ BOOL WINAPI SetupFindNextMatchLineW( PINFCONTEXT context_in, PCWSTR key,
     for (i = context_in->Line+1, line = &section->lines[i]; i < section->nb_lines; i++, line++)
     {
         if (line->key_field == -1) continue;
-        if (!strcmpiW( key, file->fields[line->key_field].text ))
+        PARSER_string_substW( file, file->fields[line->key_field].text, buffer, ARRAY_SIZE(buffer) );
+        if (!strcmpiW( key, buffer ))
         {
             if (context_out != context_in) *context_out = *context_in;
             context_out->Line = i;

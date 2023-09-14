@@ -428,6 +428,16 @@ static void test_key_names(void)
         ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %u\n", i, GetLastError() );
         if (hinf == INVALID_HANDLE_VALUE) continue;
 
+        ret = SetupFindFirstLineA( hinf, "Test", key_names[i].key, &context );
+        ok(ret, "Test %d: failed to find key %s\n", i, key_names[i].key);
+
+        if (!strncmp( key_names[i].data, "%foo%", strlen( "%foo%" ) ))
+        {
+            ret = SetupFindFirstLineA( hinf, "Test", "%foo%", &context );
+            ok(!ret, "SetupFindFirstLine() should not match unsubstituted keys\n");
+            ok(GetLastError() == ERROR_LINE_NOT_FOUND, "got wrong error %u\n", GetLastError());
+        }
+
         ret = SetupFindFirstLineA( hinf, "Test", 0, &context );
         ok(ret, "SetupFindFirstLineA failed: le=%u\n", GetLastError());
         if (!ret)

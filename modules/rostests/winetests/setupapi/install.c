@@ -455,7 +455,7 @@ static void test_profile_items(void)
         goto cleanup;
     }
 
-    snprintf(path, MAX_PATH, "%s\\TestDir", commonprogs);
+    sprintf(path, "%s\\TestDir", commonprogs);
     if (!CreateDirectoryA(path, NULL) && GetLastError() == ERROR_ACCESS_DENIED)
     {
         skip("need admin rights\n");
@@ -467,23 +467,23 @@ static void test_profile_items(void)
     sprintf(path, "%s\\%s", CURR_DIR, inffile);
     run_cmdline("DefaultInstall", 128, path);
 
-    snprintf(path, MAX_PATH, "%s\\TestItem.lnk", commonprogs);
-    snprintf(path, MAX_PATH, "%s\\TestDir", commonprogs);
+    sprintf(path, "%s\\TestItem.lnk", commonprogs);
+    sprintf(path, "%s\\TestDir", commonprogs);
     ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "directory not created\n");
-    snprintf(path, MAX_PATH, "%s\\TestDir\\TestItem2.lnk", commonprogs);
+    sprintf(path, "%s\\TestDir\\TestItem2.lnk", commonprogs);
     ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "link not created\n");
-    snprintf(path, MAX_PATH, "%s\\TestGroup", commonprogs);
+    sprintf(path, "%s\\TestGroup", commonprogs);
     ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "group not created\n");
 
-    snprintf(path, MAX_PATH, "%s\\TestItem.lnk", commonprogs);
+    sprintf(path, "%s\\TestItem.lnk", commonprogs);
     DeleteFileA(path);
-    snprintf(path, MAX_PATH, "%s\\TestDir\\TestItem2.lnk", commonprogs);
+    sprintf(path, "%s\\TestDir\\TestItem2.lnk", commonprogs);
     DeleteFileA(path);
-    snprintf(path, MAX_PATH, "%s\\TestItem2.lnk", commonprogs);
+    sprintf(path, "%s\\TestItem2.lnk", commonprogs);
     DeleteFileA(path);
-    snprintf(path, MAX_PATH, "%s\\TestDir", commonprogs);
+    sprintf(path, "%s\\TestDir", commonprogs);
     RemoveDirectoryA(path);
-    snprintf(path, MAX_PATH, "%s\\TestGroup", commonprogs);
+    sprintf(path, "%s\\TestGroup", commonprogs);
     RemoveDirectoryA(path);
 
 cleanup:

@@ -26,7 +26,8 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winreg.h"
-#include "guiddef.h"
+#include "initguid.h"
+#include "devpkey.h"
 #include "setupapi.h"
 #include "cfgmgr32.h"
 
@@ -41,71 +42,8 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 static GUID guid = {0x6a55b5a4, 0x3f65, 0x11db, {0xb7,0x04,0x00,0x11,0x95,0x5c,0x2b,0xdb}};
 static GUID guid2 = {0x6a55b5a5, 0x3f65, 0x11db, {0xb7,0x04,0x00,0x11,0x95,0x5c,0x2b,0xdb}};
 
-static LSTATUS devinst_RegDeleteTreeW(HKEY hKey, LPCWSTR lpszSubKey)
-{
-    LONG ret;
-    DWORD dwMaxSubkeyLen, dwMaxValueLen;
-    DWORD dwMaxLen, dwSize;
-    WCHAR szNameBuf[MAX_PATH], *lpszName = szNameBuf;
-    HKEY hSubKey = hKey;
-
-    if(lpszSubKey)
-    {
-        ret = RegOpenKeyExW(hKey, lpszSubKey, 0, KEY_READ, &hSubKey);
-        if (ret) return ret;
-    }
-
-    /* Get highest length for keys, values */
-    ret = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL,
-            &dwMaxSubkeyLen, NULL, NULL, &dwMaxValueLen, NULL, NULL, NULL);
-    if (ret) goto cleanup;
-
-    dwMaxSubkeyLen++;
-    dwMaxValueLen++;
-    dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
-    if (dwMaxLen > ARRAY_SIZE(szNameBuf))
-    {
-        /* Name too big: alloc a buffer for it */
-        if (!(lpszName = HeapAlloc( GetProcessHeap(), 0, dwMaxLen*sizeof(WCHAR))))
-        {
-            ret = ERROR_NOT_ENOUGH_MEMORY;
-            goto cleanup;
-        }
-    }
-
-
-    /* Recursively delete all the subkeys */
-    while (TRUE)
-    {
-        dwSize = dwMaxLen;
-        if (RegEnumKeyExW(hSubKey, 0, lpszName, &dwSize, NULL,
-                          NULL, NULL, NULL)) break;
-
-        ret = devinst_RegDeleteTreeW(hSubKey, lpszName);
-        if (ret) goto cleanup;
-    }
-
-    if (lpszSubKey)
-        ret = RegDeleteKeyW(hKey, lpszSubKey);
-    else
-        while (TRUE)
-        {
-            dwSize = dwMaxLen;
-            if (RegEnumValueW(hKey, 0, lpszName, &dwSize,
-                  NULL, NULL, NULL, NULL)) break;
-
-            ret = RegDeleteValueW(hKey, lpszName);
-            if (ret) goto cleanup;
-        }
-
-cleanup:
-    /* Free buffer if allocated */
-    if (lpszName != szNameBuf)
-        HeapFree( GetProcessHeap(), 0, lpszName);
-    if(lpszSubKey)
-        RegCloseKey(hSubKey);
-    return ret;
-}
+BOOL (WINAPI *pSetupDiSetDevicePropertyW)(HDEVINFO, PSP_DEVINFO_DATA, const DEVPROPKEY *, DEVPROPTYPE, const BYTE *, DWORD, DWORD);
+BOOL (WINAPI *pSetupDiGetDevicePropertyW)(HDEVINFO, PSP_DEVINFO_DATA, const DEVPROPKEY *, DEVPROPTYPE *, BYTE *, DWORD, DWORD *, DWORD);
 
 static void test_create_device_list_ex(void)
 {
@@ -129,13 +67,13 @@ static void test_create_device_list_ex(void)
             "Got unexpected error %#x.\n", GetLastError());
 
     set = SetupDiCreateDeviceInfoListExW(NULL, NULL, NULL, NULL);
-    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.", GetLastError());
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
 
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
 
     set = SetupDiCreateDeviceInfoListExW(NULL, NULL, empty, NULL);
-    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.", GetLastError());
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
 
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
@@ -278,6 +216,7 @@ static void test_device_info(void)
     char id[MAX_DEVICE_ID_LEN + 2];
     HDEVINFO set;
     BOOL ret;
+    INT i = 0;
 
     SetLastError(0xdeadbeef);
     ret = SetupDiCreateDeviceInfoA(NULL, NULL, NULL, NULL, NULL, 0, NULL);
@@ -410,6 +349,358 @@ static void test_device_info(void)
     ok(ret, "Failed to create device, error %#x.\n", GetLastError());
 
     SetupDiDestroyDeviceInfoList(set);
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device info list, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+    ret = SetupDiRegisterDeviceInfo(set , &device, 0, NULL, NULL, NULL);
+    ok(ret, "Failed to register device, error %#x.\n", GetLastError());
+    check_device_info(set, 0, &guid, "ROOT\\LEGACY_BOGUS\\0000");
+    check_device_info(set, 1, NULL, NULL);
+    SetupDiDestroyDeviceInfoList(set);
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
+    ok(!ret, "Expect failure\n");
+    ok(GetLastError() == ERROR_DEVINST_ALREADY_EXISTS, "Got error %#x\n", GetLastError());
+    check_device_info(set, 0, NULL, NULL);
+    SetupDiDestroyDeviceInfoList(set);
+
+    set = SetupDiGetClassDevsA(&guid, NULL, NULL, 0);
+    while (SetupDiEnumDeviceInfo(set, i++, &device))
+    {
+        ret = SetupDiRemoveDevice(set, &device);
+        ok(ret, "Failed to remove device, error %#x.\n", GetLastError());
+    }
+    SetupDiDestroyDeviceInfoList(set);
+}
+
+static void test_device_property(void)
+{
+    static const WCHAR valueW[] = {'d', 'e', 'a', 'd', 'b', 'e', 'e', 'f', 0};
+    SP_DEVINFO_DATA device_data = {sizeof(device_data)};
+    HMODULE hmod;
+    HDEVINFO set;
+    DEVPROPTYPE type;
+    DWORD size;
+    BYTE buffer[256];
+    DWORD err;
+    BOOL ret;
+
+    hmod = LoadLibraryA("setupapi.dll");
+    pSetupDiSetDevicePropertyW = (void *)GetProcAddress(hmod, "SetupDiSetDevicePropertyW");
+    pSetupDiGetDevicePropertyW = (void *)GetProcAddress(hmod, "SetupDiGetDevicePropertyW");
+
+    if (!pSetupDiSetDevicePropertyW || !pSetupDiGetDevicePropertyW)
+    {
+        win_skip("SetupDi{Set,Get}DevicePropertyW() are only available on vista+, skipping tests.\n");
+        FreeLibrary(hmod);
+        return;
+    }
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device_data);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    /* SetupDiSetDevicePropertyW */
+    /* #1 Null device info list */
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(NULL, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_HANDLE, "Expect last error %#x, got %#x\n", ERROR_INVALID_HANDLE, err);
+
+    /* #2 Null device */
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, NULL, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_PARAMETER, "Expect last error %#x, got %#x\n", ERROR_INVALID_PARAMETER, err);
+
+    /* #3 Null property key pointer */
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, NULL, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_DATA, "Expect last error %#x, got %#x\n", ERROR_INVALID_DATA, err);
+
+    /* #4 Invalid property key type */
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, 0xffff, (const BYTE *)valueW, sizeof(valueW), 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_DATA, "Expect last error %#x, got %#x\n", ERROR_INVALID_DATA, err);
+
+    /* #5 Null buffer pointer */
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, NULL, sizeof(valueW), 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_USER_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INVALID_USER_BUFFER, err);
+
+    /* #6 Zero buffer size */
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, 0, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_DATA, "Expect last error %#x, got %#x\n", ERROR_INVALID_DATA, err);
+
+    /* #7 Flags not zero */
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 1);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_FLAGS, "Expect last error %#x, got %#x\n", ERROR_INVALID_FLAGS, err);
+
+    /* #8 Normal */
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    err = GetLastError();
+    ok(ret, "Expect success\n");
+    ok(err == NO_ERROR, "Expect last error %#x, got %#x\n", NO_ERROR, err);
+
+    /* #9 Delete property with buffer not null */
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    ok(ret, "Expect success\n");
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_EMPTY, (const BYTE *)valueW, 0, 0);
+    err = GetLastError();
+    ok(ret, "Expect success\n");
+    ok(err == NO_ERROR, "Expect last error %#x, got %#x\n", NO_ERROR, err);
+
+    /* #10 Delete property with size not zero */
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    ok(ret, "Expect success\n");
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_EMPTY, NULL, sizeof(valueW), 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_USER_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INVALID_USER_BUFFER, err);
+
+    /* #11 Delete property */
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    ok(ret, "Expect success\n");
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_EMPTY, NULL, 0, 0);
+    err = GetLastError();
+    ok(ret, "Expect success\n");
+    ok(err == NO_ERROR, "Expect last error %#x, got %#x\n", NO_ERROR, err);
+
+    /* #12 Delete non-existent property */
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_EMPTY, NULL, 0, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_NOT_FOUND, "Expect last error %#x, got %#x\n", ERROR_NOT_FOUND, err);
+
+    /* #13 Delete property value with buffer not null */
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    ok(ret, "Expect success\n");
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_NULL, (const BYTE *)valueW, 0, 0);
+    err = GetLastError();
+    ok(ret, "Expect success\n");
+    ok(err == NO_ERROR, "Expect last error %#x, got %#x\n", NO_ERROR, err);
+
+    /* #14 Delete property value with size not zero */
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    ok(ret, "Expect success\n");
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_NULL, NULL, sizeof(valueW), 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_USER_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INVALID_USER_BUFFER, err);
+
+    /* #15 Delete property value */
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    ok(ret, "Expect success\n");
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_NULL, NULL, 0, 0);
+    err = GetLastError();
+    ok(ret, "Expect success\n");
+    ok(err == NO_ERROR, "Expect last error %#x, got %#x\n", NO_ERROR, err);
+
+    /* #16 Delete non-existent property value */
+    SetLastError(0xdeadbeef);
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_NULL, NULL, 0, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_NOT_FOUND, "Expect last error %#x, got %#x\n", ERROR_NOT_FOUND, err);
+
+
+    /* SetupDiGetDevicePropertyW */
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    ok(ret, "Expect success\n");
+
+    /* #1 Null device info list */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(NULL, &device_data, &DEVPKEY_Device_FriendlyName, &type, buffer, sizeof(buffer), &size, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_HANDLE, "Expect last error %#x, got %#x\n", ERROR_INVALID_HANDLE, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+    ok(size == 0, "Expect size %d, got %d\n", 0, size);
+
+    /* #2 Null device */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(set, NULL, &DEVPKEY_Device_FriendlyName, &type, buffer, sizeof(buffer), &size, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_PARAMETER, "Expect last error %#x, got %#x\n", ERROR_INVALID_PARAMETER, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+    ok(size == 0, "Expect size %d, got %d\n", 0, size);
+
+    /* #3 Null property key */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, NULL, &type, buffer, sizeof(buffer), &size, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_DATA, "Expect last error %#x, got %#x\n", ERROR_INVALID_DATA, err);
+    ok(size == 0, "Expect size %d, got %d\n", 0, size);
+
+    /* #4 Null property type */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, NULL, buffer, sizeof(buffer), &size, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_USER_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INVALID_USER_BUFFER, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+    ok(size == 0, "Expect size %d, got %d\n", 0, size);
+
+    /* #5 Null buffer */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, &type, NULL, sizeof(buffer), &size, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_USER_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INVALID_USER_BUFFER, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+    ok(size == 0, "Expect size %d, got %d\n", 0, size);
+
+    /* #6 Null buffer with zero size and wrong type */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_UINT64;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, &type, NULL, 0, &size, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INSUFFICIENT_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INSUFFICIENT_BUFFER, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+    ok(size == sizeof(valueW), "Got size %d\n", size);
+
+    /* #7 Zero buffer size */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, &type, buffer, 0, &size, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INSUFFICIENT_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INSUFFICIENT_BUFFER, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+    ok(size == sizeof(valueW), "Got size %d\n", size);
+
+    /* #8 Null required size */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, &type, buffer, sizeof(buffer), NULL, 0);
+    err = GetLastError();
+    ok(ret, "Expect success\n");
+    ok(err == NO_ERROR, "Expect last error %#x, got %#x\n", NO_ERROR, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+
+    /* #9 Flags not zero */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, &type, buffer, sizeof(buffer), &size, 1);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INVALID_FLAGS, "Expect last error %#x, got %#x\n", ERROR_INVALID_FLAGS, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+    ok(size == 0, "Expect size %d, got %d\n", 0, size);
+
+    /* #10 Non-existent property key */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_HardwareIds, &type, buffer, sizeof(buffer), &size, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_NOT_FOUND, "Expect last error %#x, got %#x\n", ERROR_NOT_FOUND, err);
+    ok(size == 0, "Expect size %d, got %d\n", 0, size);
+
+    /* #11 Wrong property key type */
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_UINT64;
+    size = 0;
+    memset(buffer, 0, sizeof(buffer));
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, &type, buffer, sizeof(buffer), &size, 0);
+    err = GetLastError();
+    ok(ret, "Expect success\n");
+    ok(err == NO_ERROR, "Expect last error %#x, got %#x\n", NO_ERROR, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+    ok(size == sizeof(valueW), "Got size %d\n", size);
+    ok(!lstrcmpW((WCHAR *)buffer, valueW), "Expect buffer %s, got %s\n", wine_dbgstr_w(valueW), wine_dbgstr_w((WCHAR *)buffer));
+
+    /* #12 Get null property value */
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    ok(ret, "Expect success\n");
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_NULL, NULL, 0, 0);
+    ok(ret, "Expect success\n");
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, &type, buffer, sizeof(buffer), &size, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_NOT_FOUND, "Expect last error %#x, got %#x\n", ERROR_NOT_FOUND, err);
+    ok(size == 0, "Expect size %d, got %d\n", 0, size);
+
+    /* #13 Insufficient buffer size */
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    ok(ret, "Expect success\n");
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, &type, buffer, sizeof(valueW) - 1, &size, 0);
+    err = GetLastError();
+    ok(!ret, "Expect failure\n");
+    ok(err == ERROR_INSUFFICIENT_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INSUFFICIENT_BUFFER, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+    ok(size == sizeof(valueW), "Got size %d\n", size);
+
+    /* #14 Normal */
+    ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
+    ok(ret, "Expect success\n");
+    SetLastError(0xdeadbeef);
+    type = DEVPROP_TYPE_STRING;
+    size = 0;
+    memset(buffer, 0, sizeof(buffer));
+    ret = pSetupDiGetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, &type, buffer, sizeof(buffer), &size, 0);
+    err = GetLastError();
+    ok(ret, "Expect success\n");
+    ok(err == NO_ERROR, "Expect last error %#x, got %#x\n", NO_ERROR, err);
+    ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
+    ok(size == sizeof(valueW), "Got size %d\n", size);
+    ok(!lstrcmpW((WCHAR *)buffer, valueW), "Expect buffer %s, got %s\n", wine_dbgstr_w(valueW), wine_dbgstr_w((WCHAR *)buffer));
+
+    ret = SetupDiRemoveDevice(set, &device_data);
+    ok(ret, "Got unexpected error %#x.\n", GetLastError());
+
+    SetupDiDestroyDeviceInfoList(set);
+    FreeLibrary(hmod);
 }
 
 static void test_get_device_instance_id(void)
@@ -476,11 +767,163 @@ static void test_get_device_instance_id(void)
     SetupDiDestroyDeviceInfoList(set);
 }
 
+static void test_open_device_info(void)
+{
+    SP_DEVINFO_DATA device = {sizeof(device)};
+    CHAR id[MAX_DEVICE_ID_LEN + 2];
+    HDEVINFO set;
+    DWORD i = 0;
+    BOOL ret;
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device info, error %#x.\n", GetLastError());
+
+    /* Open non-existent device */
+    SetLastError(0xdeadbeef);
+    ret = SetupDiOpenDeviceInfoA(set, "Root\\LEGACY_BOGUS\\FFFF", NULL, 0, &device);
+    ok(GetLastError() == ERROR_NO_SUCH_DEVINST, "Got unexpected error %#x.\n", GetLastError());
+    ok(!ret, "Expected failure.\n");
+    check_device_info(set, 0, NULL, NULL);
+
+    /* Open unregistered device */
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\1000", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    ret = SetupDiOpenDeviceInfoA(set, "Root\\LEGACY_BOGUS\\1000", NULL, 0, &device);
+    ok(GetLastError() == ERROR_NO_SUCH_DEVINST, "Got unexpected error %#x.\n", GetLastError());
+    ok(!ret, "Expected failure.\n");
+    check_device_info(set, 0, &guid, "Root\\LEGACY_BOGUS\\1000");
+    check_device_info(set, 1, NULL, NULL);
+
+    /* Open registered device */
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\1001", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+    ret = SetupDiRegisterDeviceInfo(set, &device, 0, NULL, NULL, NULL);
+    ok(ret, "Failed to register device, error %#x.\n", GetLastError());
+    check_device_info(set, 0, &guid, "Root\\LEGACY_BOGUS\\1000");
+    check_device_info(set, 1, &guid, "Root\\LEGACY_BOGUS\\1001");
+    check_device_info(set, 2, NULL, NULL);
+
+    SetLastError(0xdeadbeef);
+    ret = SetupDiOpenDeviceInfoA(set, "Root\\LEGACY_BOGUS\\1001", NULL, 0, &device);
+    ok(GetLastError() == NO_ERROR, "Got unexpected error %#x.\n", GetLastError());
+    ok(ret, "Failed to open device info\n");
+    ret = SetupDiGetDeviceInstanceIdA(set, &device, id, sizeof(id), NULL);
+    ok(ret, "Got unexpected error %#x.\n", GetLastError());
+    ok(!strcasecmp(id, "Root\\LEGACY_BOGUS\\1001"), "Got unexpected id %s.\n", id);
+    check_device_info(set, 0, &guid, "Root\\LEGACY_BOGUS\\1000");
+    check_device_info(set, 1, &guid, "Root\\LEGACY_BOGUS\\1001");
+    check_device_info(set, 2, NULL, NULL);
+
+    /* Open registered device in an empty device info set */
+    SetupDiDestroyDeviceInfoList(set);
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device info list, error %#x.\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SetupDiOpenDeviceInfoA(set, "Root\\LEGACY_BOGUS\\1001", NULL, 0, &device);
+    ok(GetLastError() == NO_ERROR, "Got unexpected error %#x.\n", GetLastError());
+    ok(ret, "Failed to open device info\n");
+    ret = SetupDiGetDeviceInstanceIdA(set, &device, id, sizeof(id), NULL);
+    ok(ret, "Got unexpected error %#x.\n", GetLastError());
+    ok(!strcasecmp(id, "Root\\LEGACY_BOGUS\\1001"), "Got unexpected id %s.\n", id);
+    check_device_info(set, 0, &guid, "Root\\LEGACY_BOGUS\\1001");
+    check_device_info(set, 1, NULL, NULL);
+
+    /* Open registered device again */
+    SetLastError(0xdeadbeef);
+    ret = SetupDiOpenDeviceInfoA(set, "Root\\LEGACY_BOGUS\\1001", NULL, 0, &device);
+    ok(GetLastError() == NO_ERROR, "Got unexpected error %#x.\n", GetLastError());
+    ok(ret, "Failed to open device info\n");
+    ret = SetupDiGetDeviceInstanceIdA(set, &device, id, sizeof(id), NULL);
+    ok(ret, "Got unexpected error %#x.\n", GetLastError());
+    ok(!strcasecmp(id, "Root\\LEGACY_BOGUS\\1001"), "Got unexpected id %s.\n", id);
+    check_device_info(set, 0, &guid, "Root\\LEGACY_BOGUS\\1001");
+    check_device_info(set, 1, NULL, NULL);
+
+    /* Open registered device in a new device info set with wrong GUID */
+    SetupDiDestroyDeviceInfoList(set);
+    set = SetupDiCreateDeviceInfoList(&guid2, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device info list, error %#x.\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SetupDiOpenDeviceInfoA(set, "Root\\LEGACY_BOGUS\\1001", NULL, 0, &device);
+    ok(GetLastError() == ERROR_CLASS_MISMATCH, "Got unexpected error %#x.\n", GetLastError());
+    ok(!ret, "Expected failure.\n");
+    check_device_info(set, 0, NULL, NULL);
+
+    /* Open registered device in a new device info set with NULL GUID */
+    SetupDiDestroyDeviceInfoList(set);
+    set = SetupDiCreateDeviceInfoList(NULL, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device info list, error %#x.\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SetupDiOpenDeviceInfoA(set, "Root\\LEGACY_BOGUS\\1001", NULL, 0, &device);
+    ok(GetLastError() == NO_ERROR, "Got unexpected error %#x.\n", GetLastError());
+    ok(ret, "Failed to open device info\n");
+    check_device_info(set, 0, &guid, "Root\\LEGACY_BOGUS\\1001");
+    check_device_info(set, 1, NULL, NULL);
+
+    SetupDiDestroyDeviceInfoList(set);
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device info list, error %#x.\n", GetLastError());
+
+    /* NULL set */
+    SetLastError(0xdeadbeef);
+    ret = SetupDiOpenDeviceInfoA(NULL, "Root\\LEGACY_BOGUS\\1001", NULL, 0, &device);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "Got unexpected error %#x.\n", GetLastError());
+    ok(!ret, "Expected failure.\n");
+
+    /* NULL instance id */
+    SetLastError(0xdeadbeef);
+    ret = SetupDiOpenDeviceInfoA(set, NULL, NULL, 0, &device);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Got unexpected error %#x.\n", GetLastError());
+    ok(!ret, "Expected failure.\n");
+    check_device_info(set, 0, NULL, NULL);
+
+    /* Invalid SP_DEVINFO_DATA cbSize, device will be added despite failure */
+    SetLastError(0xdeadbeef);
+    device.cbSize = 0;
+    ret = SetupDiOpenDeviceInfoA(set, "Root\\LEGACY_BOGUS\\1001", NULL, 0, &device);
+    device.cbSize = sizeof(device);
+    ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "Got unexpected error %#x.\n", GetLastError());
+    ok(!ret, "Expected failure.\n");
+    check_device_info(set, 0, &guid, "Root\\LEGACY_BOGUS\\1001");
+    check_device_info(set, 1, NULL, NULL);
+
+    SetupDiDestroyDeviceInfoList(set);
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device info list, error %#x.\n", GetLastError());
+
+    /* NULL device */
+    SetLastError(0xdeadbeef);
+    ret = SetupDiOpenDeviceInfoA(set, "Root\\LEGACY_BOGUS\\1001", NULL, 0, NULL);
+    ok(GetLastError() == NO_ERROR, "Got unexpected error %#x.\n", GetLastError());
+    ok(ret, "Failed to open device info\n");
+    check_device_info(set, 0, &guid, "Root\\LEGACY_BOGUS\\1001");
+    check_device_info(set, 1, NULL, NULL);
+
+    /* Clean up */
+    SetupDiDestroyDeviceInfoList(set);
+    set = SetupDiGetClassDevsA(&guid, NULL, NULL, 0);
+    while (SetupDiEnumDeviceInfo(set, i++, &device))
+    {
+        ret = SetupDiRemoveDevice(set, &device);
+        ok(ret, "Failed to remove device, error %#x.\n", GetLastError());
+    }
+    SetupDiDestroyDeviceInfoList(set);
+}
+
 static void test_register_device_info(void)
 {
     SP_DEVINFO_DATA device = {0};
     BOOL ret;
     HDEVINFO set;
+    HKEY hkey;
+    LSTATUS ls;
+    DWORD type = 0;
+    DWORD phantom = 0;
+    DWORD size;
     int i = 0;
 
     SetLastError(0xdeadbeef);
@@ -509,8 +952,19 @@ static void test_register_device_info(void)
 
     ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
     ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+    RegOpenKeyA(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Enum\\ROOT\\LEGACY_BOGUS\\0000", &hkey);
+    size = sizeof(phantom);
+    ls = RegQueryValueExA(hkey, "Phantom", NULL, &type, (BYTE *)&phantom, &size);
+    ok(ls == ERROR_SUCCESS, "Got wrong error code %#x\n", ls);
+    ok(phantom == 1, "Got wrong phantom value %d\n", phantom);
+    ok(type == REG_DWORD, "Got wrong phantom type %#x\n", type);
+    ok(size == sizeof(phantom), "Got wrong phantom size %d\n", size);
     ret = SetupDiRegisterDeviceInfo(set, &device, 0, NULL, NULL, NULL);
     ok(ret, "Failed to register device, error %#x.\n", GetLastError());
+    size = sizeof(phantom);
+    ls = RegQueryValueExA(hkey, "Phantom", NULL, NULL, (BYTE *)&phantom, &size);
+    ok(ls == ERROR_FILE_NOT_FOUND, "Got wrong error code %#x\n", ls);
+    RegCloseKey(hkey);
 
     ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0001", &guid, NULL, NULL, 0, &device);
     ok(ret, "Failed to create device, error %#x.\n", GetLastError());
@@ -769,20 +1223,20 @@ static void test_device_iface_detail(void)
 
 static void test_device_key(void)
 {
-    static const WCHAR classKey[] = {'S','y','s','t','e','m','\\',
-     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-     'C','o','n','t','r','o','l','\\','C','l','a','s','s','\\',
-     '{','6','a','5','5','b','5','a','4','-','3','f','6','5','-',
-     '1','1','d','b','-','b','7','0','4','-',
-     '0','0','1','1','9','5','5','c','2','b','d','b','}',0};
+    static const char params_key_path[] = "System\\CurrentControlSet\\Enum\\Root"
+            "\\LEGACY_BOGUS\\0000\\Device Parameters";
+    static const char class_key_path[] = "System\\CurrentControlSet\\Control\\Class"
+            "\\{6a55b5a4-3f65-11db-b704-0011955c2bdb}";
     static const WCHAR bogus[] = {'S','y','s','t','e','m','\\',
      'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
      'E','n','u','m','\\','R','o','o','t','\\',
      'L','E','G','A','C','Y','_','B','O','G','U','S',0};
     SP_DEVINFO_DATA device = {sizeof(device)};
+    char driver_path[50], data[4];
+    HKEY class_key, key;
+    DWORD size;
     BOOL ret;
     HDEVINFO set;
-    HKEY key = NULL;
     LONG res;
 
     SetLastError(0xdeadbeef);
@@ -840,41 +1294,117 @@ static void test_device_key(void)
     ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
     ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
 
+    ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_DRIVER, NULL,
+            (BYTE *)driver_path, sizeof(driver_path), NULL);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA, "Got unexpected error %#x.\n", GetLastError());
+
     SetLastError(0xdeadbeef);
-    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, classKey, &key);
-todo_wine
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, class_key_path, &key);
     ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
     RegCloseKey(key);
 
+    /* Vista+ will fail the following call to SetupDiCreateDevKeyW() if the
+     * class key doesn't exist. */
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, class_key_path, &key);
+    ok(!res, "Failed to create class key, error %u.\n", res);
+    RegCloseKey(key);
+
     key = SetupDiCreateDevRegKeyW(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
-    ok(key != INVALID_HANDLE_VALUE || GetLastError() == ERROR_KEY_DOES_NOT_EXIST, /* Vista+ */
-            "Failed to create device key, error %#x.\n", GetLastError());
-    if (key != INVALID_HANDLE_VALUE)
-    {
-        RegCloseKey(key);
+    ok(key != INVALID_HANDLE_VALUE, "Failed to create device key, error %#x.\n", GetLastError());
+    RegCloseKey(key);
 
-        ok(!RegOpenKeyW(HKEY_LOCAL_MACHINE, classKey, &key), "Key should exist.\n");
-        RegCloseKey(key);
+    ok(!RegOpenKeyA(HKEY_LOCAL_MACHINE, class_key_path, &key), "Key should exist.\n");
+    RegCloseKey(key);
 
-        SetLastError(0xdeadbeef);
-        key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, 0);
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Control\\Class", &class_key);
+    ok(!res, "Failed to open class key, error %u.\n", res);
+
+    ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_DRIVER, NULL,
+            (BYTE *)driver_path, sizeof(driver_path), NULL);
+    ok(ret, "Failed to get driver property, error %#x.\n", GetLastError());
+    res = RegOpenKeyA(class_key, driver_path, &key);
+    ok(!res, "Failed to open driver key, error %u.\n", res);
+    RegSetValueExA(key, "foo", 0, REG_SZ, (BYTE *)"bar", sizeof("bar"));
+    RegCloseKey(key);
+
+    SetLastError(0xdeadbeef);
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, 0);
 todo_wine {
-        ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
-        ok(GetLastError() == ERROR_INVALID_DATA || GetLastError() == ERROR_ACCESS_DENIED, /* win2k3 */
-                "Got unexpected error %#x.\n", GetLastError());
+    ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA || GetLastError() == ERROR_ACCESS_DENIED, /* win2k3 */
+            "Got unexpected error %#x.\n", GetLastError());
 }
 
-        key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_READ);
-        ok(key != INVALID_HANDLE_VALUE, "Failed to open device key, error %#x.\n", GetLastError());
-        RegCloseKey(key);
-    }
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_READ);
+    ok(key != INVALID_HANDLE_VALUE, "Failed to open device key, error %#x.\n", GetLastError());
+    size = sizeof(data);
+    res = RegQueryValueExA(key, "foo", NULL, NULL, (BYTE *)data, &size);
+    ok(!res, "Failed to get value, error %u.\n", res);
+    ok(!strcmp(data, "bar"), "Got wrong data %s.\n", data);
+    RegCloseKey(key);
+
+    ret = SetupDiDeleteDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV);
+    ok(ret, "Failed to delete device key, error %#x.\n", GetLastError());
+
+    res = RegOpenKeyA(class_key, driver_path, &key);
+    ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
+
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, 0);
+    ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
+
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+    ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
+
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, params_key_path, &key);
+    ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
+
+    key = SetupDiCreateDevRegKeyA(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, NULL, NULL);
+    ok(key != INVALID_HANDLE_VALUE, "Got unexpected error %#x.\n", GetLastError());
+    RegCloseKey(key);
+
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, params_key_path, &key);
+    ok(!res, "Failed to open device key, error %u.\n", res);
+    res = RegSetValueExA(key, "foo", 0, REG_SZ, (BYTE *)"bar", sizeof("bar"));
+    ok(!res, "Failed to set value, error %u.\n", res);
+    RegCloseKey(key);
+
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+    ok(key != INVALID_HANDLE_VALUE, "Got unexpected error %#x.\n", GetLastError());
+    size = sizeof(data);
+    res = RegQueryValueExA(key, "foo", NULL, NULL, (BYTE *)data, &size);
+    ok(!res, "Failed to get value, error %u.\n", res);
+    ok(!strcmp(data, "bar"), "Got wrong data %s.\n", data);
+    RegCloseKey(key);
+
+    ret = SetupDiDeleteDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV);
+    ok(ret, "Got unexpected error %#x.\n", GetLastError());
+
+    key = SetupDiOpenDevRegKey(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+    ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_KEY_DOES_NOT_EXIST, "Got unexpected error %#x.\n", GetLastError());
+
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, params_key_path, &key);
+    ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
+
+    key = SetupDiCreateDevRegKeyW(set, &device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
+    ok(key != INVALID_HANDLE_VALUE, "Failed to create device key, error %#x.\n", GetLastError());
+    RegCloseKey(key);
 
     ret = SetupDiRemoveDevice(set, &device);
     ok(ret, "Failed to remove device, error %#x.\n", GetLastError());
     SetupDiDestroyDeviceInfoList(set);
 
-    /* remove once Wine is fixed */
-    devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, classKey);
+    res = RegOpenKeyA(class_key, driver_path, &key);
+    ok(res == ERROR_FILE_NOT_FOUND, "Key should not exist.\n");
+
+    /* Vista+ deletes the key automatically. */
+    res = RegDeleteKeyA(HKEY_LOCAL_MACHINE, class_key_path);
+    ok(!res || res == ERROR_FILE_NOT_FOUND, "Failed to delete class key, error %u.\n", res);
+
+    RegCloseKey(class_key);
 }
 
 static void test_register_device_iface(void)
@@ -1370,7 +1900,9 @@ START_TEST(devinst)
     test_open_class_key();
     test_install_class();
     test_device_info();
+    test_device_property();
     test_get_device_instance_id();
+    test_open_device_info();
     test_register_device_info();
     test_device_iface();
     test_device_iface_detail();
