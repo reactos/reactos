@@ -226,7 +226,7 @@ struct recorded_instruction
 
 struct shader_arb_ctx_priv
 {
-    char addr_reg[20];
+    char addr_reg[50];
     enum
     {
         /* plain GL_ARB_vertex_program or GL_ARB_fragment_program */
