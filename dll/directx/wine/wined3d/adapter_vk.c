@@ -24,6 +24,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
+static inline const struct wined3d_adapter_vk *wined3d_adapter_vk_const(const struct wined3d_adapter *adapter)
+{
+    return CONTAINING_RECORD(adapter, struct wined3d_adapter_vk, a);
+}
+
 #ifdef USE_WIN32_VULKAN
 static BOOL wined3d_load_vulkan(struct wined3d_vk_info *vk_info)
 {
@@ -93,6 +98,100 @@ static BOOL adapter_vk_create_context(struct wined3d_context *context,
 
 static void adapter_vk_get_wined3d_caps(const struct wined3d_adapter *adapter, struct wined3d_caps *caps)
 {
+    const struct wined3d_adapter_vk *adapter_vk = wined3d_adapter_vk_const(adapter);
+    const VkPhysicalDeviceLimits *limits = &adapter_vk->device_limits;
+    BOOL sampler_anisotropy = limits->maxSamplerAnisotropy > 1.0f;
+
+    caps->ddraw_caps.dds_caps |= WINEDDSCAPS_3DDEVICE
+            | WINEDDSCAPS_MIPMAP
+            | WINEDDSCAPS_TEXTURE
+            | WINEDDSCAPS_VIDEOMEMORY
+            | WINEDDSCAPS_ZBUFFER;
+    caps->ddraw_caps.caps |= WINEDDCAPS_3D;
+
+    caps->Caps2 |= WINED3DCAPS2_CANGENMIPMAP;
+
+    caps->PrimitiveMiscCaps |= WINED3DPMISCCAPS_BLENDOP
+            | WINED3DPMISCCAPS_SEPARATEALPHABLEND
+            | WINED3DPMISCCAPS_INDEPENDENTWRITEMASKS
+            | WINED3DPMISCCAPS_POSTBLENDSRGBCONVERT;
+
+    if (sampler_anisotropy)
+    {
+        caps->RasterCaps |= WINED3DPRASTERCAPS_ANISOTROPY
+                | WINED3DPRASTERCAPS_ZBIAS
+                | WINED3DPRASTERCAPS_MIPMAPLODBIAS;
+
+        caps->TextureFilterCaps |= WINED3DPTFILTERCAPS_MAGFANISOTROPIC
+                | WINED3DPTFILTERCAPS_MINFANISOTROPIC;
+
+        caps->MaxAnisotropy = limits->maxSamplerAnisotropy;
+    }
+
+    caps->SrcBlendCaps |= WINED3DPBLENDCAPS_BLENDFACTOR;
+    caps->DestBlendCaps |= WINED3DPBLENDCAPS_BLENDFACTOR
+            | WINED3DPBLENDCAPS_SRCALPHASAT;
+
+    caps->TextureCaps |= WINED3DPTEXTURECAPS_VOLUMEMAP
+            | WINED3DPTEXTURECAPS_MIPVOLUMEMAP
+            | WINED3DPTEXTURECAPS_VOLUMEMAP_POW2;
+    caps->VolumeTextureFilterCaps |= WINED3DPTFILTERCAPS_MAGFLINEAR
+            | WINED3DPTFILTERCAPS_MAGFPOINT
+            | WINED3DPTFILTERCAPS_MINFLINEAR
+            | WINED3DPTFILTERCAPS_MINFPOINT
+            | WINED3DPTFILTERCAPS_MIPFLINEAR
+            | WINED3DPTFILTERCAPS_MIPFPOINT
+            | WINED3DPTFILTERCAPS_LINEAR
+            | WINED3DPTFILTERCAPS_LINEARMIPLINEAR
+            | WINED3DPTFILTERCAPS_LINEARMIPNEAREST
+            | WINED3DPTFILTERCAPS_MIPLINEAR
+            | WINED3DPTFILTERCAPS_MIPNEAREST
+            | WINED3DPTFILTERCAPS_NEAREST;
+    caps->VolumeTextureAddressCaps |= WINED3DPTADDRESSCAPS_INDEPENDENTUV
+            | WINED3DPTADDRESSCAPS_CLAMP
+            | WINED3DPTADDRESSCAPS_WRAP;
+    caps->VolumeTextureAddressCaps |= WINED3DPTADDRESSCAPS_BORDER
+            | WINED3DPTADDRESSCAPS_MIRROR
+            | WINED3DPTADDRESSCAPS_MIRRORONCE;
+
+    caps->MaxVolumeExtent = limits->maxImageDimension3D;
+
+    caps->TextureCaps |= WINED3DPTEXTURECAPS_CUBEMAP
+            | WINED3DPTEXTURECAPS_MIPCUBEMAP
+            | WINED3DPTEXTURECAPS_CUBEMAP_POW2;
+    caps->CubeTextureFilterCaps |= WINED3DPTFILTERCAPS_MAGFLINEAR
+            | WINED3DPTFILTERCAPS_MAGFPOINT
+            | WINED3DPTFILTERCAPS_MINFLINEAR
+            | WINED3DPTFILTERCAPS_MINFPOINT
+            | WINED3DPTFILTERCAPS_MIPFLINEAR
+            | WINED3DPTFILTERCAPS_MIPFPOINT
+            | WINED3DPTFILTERCAPS_LINEAR
+            | WINED3DPTFILTERCAPS_LINEARMIPLINEAR
+            | WINED3DPTFILTERCAPS_LINEARMIPNEAREST
+            | WINED3DPTFILTERCAPS_MIPLINEAR
+            | WINED3DPTFILTERCAPS_MIPNEAREST
+            | WINED3DPTFILTERCAPS_NEAREST;
+
+    if (sampler_anisotropy)
+    {
+        caps->CubeTextureFilterCaps |= WINED3DPTFILTERCAPS_MAGFANISOTROPIC
+                | WINED3DPTFILTERCAPS_MINFANISOTROPIC;
+    }
+
+    caps->TextureAddressCaps |= WINED3DPTADDRESSCAPS_BORDER
+            | WINED3DPTADDRESSCAPS_MIRROR
+            | WINED3DPTADDRESSCAPS_MIRRORONCE;
+
+    caps->StencilCaps |= WINED3DSTENCILCAPS_DECR
+            | WINED3DSTENCILCAPS_INCR
+            | WINED3DSTENCILCAPS_TWOSIDED;
+
+    caps->DeclTypes |= WINED3DDTCAPS_FLOAT16_2 | WINED3DDTCAPS_FLOAT16_4;
+
+    caps->MaxPixelShader30InstructionSlots = WINED3DMAX30SHADERINSTRUCTIONS;
+    caps->MaxVertexShader30InstructionSlots = WINED3DMAX30SHADERINSTRUCTIONS;
+    caps->PS20Caps.temp_count = WINED3DPS20_MAX_NUMTEMPS;
+    caps->VS20Caps.temp_count = WINED3DVS20_MAX_NUMTEMPS;
 }
 
 static BOOL adapter_vk_check_format(const struct wined3d_adapter *adapter,
@@ -218,25 +317,21 @@ static VkPhysicalDevice get_vulkan_physical_device(struct wined3d_vk_info *vk_in
     return physical_devices[0];
 }
 
-const struct wined3d_gpu_description *get_vulkan_gpu_description(const struct wined3d_vk_info *vk_info,
-        VkPhysicalDevice physical_device)
+const struct wined3d_gpu_description *get_vulkan_gpu_description(const VkPhysicalDeviceProperties *properties)
 {
     const struct wined3d_gpu_description *description;
-    VkPhysicalDeviceProperties properties;
 
-    VK_CALL(vkGetPhysicalDeviceProperties(physical_device, &properties));
+    TRACE("Device name: %s.\n", debugstr_a(properties->deviceName));
+    TRACE("Vendor ID: 0x%04x, Device ID: 0x%04x.\n", properties->vendorID, properties->deviceID);
+    TRACE("Driver version: %#x.\n", properties->driverVersion);
+    TRACE("API version: %u.%u.%u.\n", VK_VERSION_MAJOR(properties->apiVersion),
+            VK_VERSION_MINOR(properties->apiVersion), VK_VERSION_PATCH(properties->apiVersion));
 
-    TRACE("Device name: %s.\n", debugstr_a(properties.deviceName));
-    TRACE("Vendor ID: 0x%04x, Device ID: 0x%04x.\n", properties.vendorID, properties.deviceID);
-    TRACE("Driver version: %#x.\n", properties.driverVersion);
-    TRACE("API version: %u.%u.%u.\n", VK_VERSION_MAJOR(properties.apiVersion),
-            VK_VERSION_MINOR(properties.apiVersion), VK_VERSION_PATCH(properties.apiVersion));
-
-    if ((description = wined3d_get_gpu_description(properties.vendorID, properties.deviceID)))
+    if ((description = wined3d_get_gpu_description(properties->vendorID, properties->deviceID)))
         return description;
 
     FIXME("Failed to retrieve GPU description for device %s %04x:%04x.\n",
-            debugstr_a(properties.deviceName), properties.vendorID, properties.deviceID);
+            debugstr_a(properties->deviceName), properties->vendorID, properties->deviceID);
 
     return wined3d_get_gpu_description(HW_VENDOR_AMD, CARD_AMD_RADEON_RX_VEGA);
 }
@@ -247,6 +342,7 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     struct wined3d_vk_info *vk_info = &adapter_vk->vk_info;
     const struct wined3d_gpu_description *gpu_description;
     struct wined3d_adapter *adapter = &adapter_vk->a;
+    VkPhysicalDeviceProperties properties;
 
     TRACE("adapter_vk %p, ordinal %u, wined3d_creation_flags %#x.\n",
             adapter_vk, ordinal, wined3d_creation_flags);
@@ -263,7 +359,10 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     if (!(adapter_vk->physical_device = get_vulkan_physical_device(vk_info)))
         goto fail_vulkan;
 
-    if (!(gpu_description = get_vulkan_gpu_description(vk_info, adapter_vk->physical_device)))
+    VK_CALL(vkGetPhysicalDeviceProperties(adapter_vk->physical_device, &properties));
+    adapter_vk->device_limits = properties.limits;
+
+    if (!(gpu_description = get_vulkan_gpu_description(&properties)))
     {
         ERR("Failed to get GPU description.\n");
         goto fail_vulkan;
