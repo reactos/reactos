@@ -5131,55 +5131,49 @@ void device_resource_released(struct wined3d_device *device, struct wined3d_reso
         case WINED3D_RTYPE_TEXTURE_3D:
             for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i)
             {
-                struct wined3d_texture *texture = texture_from_resource(resource);
-
-                if (device->state.textures[i] == texture)
+                if (&device->state.textures[i]->resource == resource)
                 {
-                    ERR("Texture %p is still in use, stage %u.\n", texture, i);
+                    ERR("Texture resource %p is still in use, stage %u.\n", resource, i);
                     device->state.textures[i] = NULL;
                 }
 
-                if (device->recording && device->update_state->textures[i] == texture)
+                if (device->recording && &device->update_state->textures[i]->resource == resource)
                 {
-                    ERR("Texture %p is still in use by recording stateblock %p, stage %u.\n",
-                            texture, device->recording, i);
+                    ERR("Texture resource %p is still in use by recording stateblock %p, stage %u.\n",
+                            resource, device->recording, i);
                     device->update_state->textures[i] = NULL;
                 }
             }
             break;
 
         case WINED3D_RTYPE_BUFFER:
+            for (i = 0; i < MAX_STREAMS; ++i)
             {
-                struct wined3d_buffer *buffer = buffer_from_resource(resource);
-
-                for (i = 0; i < MAX_STREAMS; ++i)
+                if (&device->state.streams[i].buffer->resource == resource)
                 {
-                    if (device->state.streams[i].buffer == buffer)
-                    {
-                        ERR("Buffer %p is still in use, stream %u.\n", buffer, i);
-                        device->state.streams[i].buffer = NULL;
-                    }
-
-                    if (device->recording && device->update_state->streams[i].buffer == buffer)
-                    {
-                        ERR("Buffer %p is still in use by stateblock %p, stream %u.\n",
-                                buffer, device->recording, i);
-                        device->update_state->streams[i].buffer = NULL;
-                    }
+                    ERR("Buffer resource %p is still in use, stream %u.\n", resource, i);
+                    device->state.streams[i].buffer = NULL;
                 }
 
-                if (device->state.index_buffer == buffer)
+                if (device->recording && &device->update_state->streams[i].buffer->resource == resource)
                 {
-                    ERR("Buffer %p is still in use as index buffer.\n", buffer);
-                    device->state.index_buffer =  NULL;
+                    ERR("Buffer resource %p is still in use by stateblock %p, stream %u.\n",
+                            resource, device->recording, i);
+                    device->update_state->streams[i].buffer = NULL;
                 }
+            }
 
-                if (device->recording && device->update_state->index_buffer == buffer)
-                {
-                    ERR("Buffer %p is still in use by stateblock %p as index buffer.\n",
-                            buffer, device->recording);
-                    device->update_state->index_buffer =  NULL;
-                }
+            if (&device->state.index_buffer->resource == resource)
+            {
+                ERR("Buffer resource %p is still in use as index buffer.\n", resource);
+                device->state.index_buffer =  NULL;
+            }
+
+            if (device->recording && &device->update_state->index_buffer->resource == resource)
+            {
+                ERR("Buffer resource %p is still in use by stateblock %p as index buffer.\n",
+                        resource, device->recording);
+                device->update_state->index_buffer =  NULL;
             }
             break;
 
