@@ -3438,8 +3438,8 @@ static void compute_light(struct wined3d_color *ambient, struct wined3d_color *d
     float att;
 
     wined3d_vec4_transform(&position_transformed, position, &ls->modelview_matrix);
+    wined3d_vec3_scale((struct wined3d_vec3 *)&position_transformed, 1.0f / position_transformed.w);
     position_transformed_normalised = *(const struct wined3d_vec3 *)&position_transformed;
-    wined3d_vec3_scale(&position_transformed_normalised, 1.0f / position_transformed.w);
     wined3d_vec3_normalise(&position_transformed_normalised);
 
     if (normal)
