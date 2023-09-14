@@ -857,6 +857,8 @@ static BOOL match_broken_arb_fog(const struct wined3d_gl_info *gl_info, struct w
         return FALSE;
     if (!gl_info->supported[ARB_FRAGMENT_PROGRAM])
         return FALSE;
+    if (!gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+        return FALSE;
 
     gl_info->gl_ops.gl.p_glGenTextures(1, &tex);
     gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_2D, tex);
