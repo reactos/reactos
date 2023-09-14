@@ -637,7 +637,6 @@ enum wined3d_pci_device wined3d_gpu_from_feature_level(enum wined3d_pci_vendor *
     card_fallback_amd[] =
     {
         {WINED3D_FEATURE_LEVEL_5,     CARD_AMD_RAGE_128PRO},
-        {WINED3D_FEATURE_LEVEL_6,     CARD_AMD_RAGE_128PRO},
         {WINED3D_FEATURE_LEVEL_7,     CARD_AMD_RADEON_7200},
         {WINED3D_FEATURE_LEVEL_8,     CARD_AMD_RADEON_8500},
         {WINED3D_FEATURE_LEVEL_9_SM2, CARD_AMD_RADEON_9500},
@@ -649,10 +648,7 @@ enum wined3d_pci_device wined3d_gpu_from_feature_level(enum wined3d_pci_vendor *
     card_fallback_intel[] =
     {
         {WINED3D_FEATURE_LEVEL_5,     CARD_INTEL_845G},
-        {WINED3D_FEATURE_LEVEL_6,     CARD_INTEL_845G},
-        {WINED3D_FEATURE_LEVEL_7,     CARD_INTEL_845G},
         {WINED3D_FEATURE_LEVEL_8,     CARD_INTEL_915G},
-        {WINED3D_FEATURE_LEVEL_9_SM2, CARD_INTEL_915G},
         {WINED3D_FEATURE_LEVEL_9_SM3, CARD_INTEL_945G},
         {WINED3D_FEATURE_LEVEL_10,    CARD_INTEL_G45},
         {WINED3D_FEATURE_LEVEL_11,    CARD_INTEL_IVBD},
