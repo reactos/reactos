@@ -3074,20 +3074,132 @@ static unsigned int wined3d_get_flexible_vertex_size(DWORD fvf)
     return size;
 }
 
+static void wined3d_format_get_colour(const struct wined3d_format *format,
+        const void *data, struct wined3d_color *colour)
+{
+    float *output = &colour->r;
+    const uint32_t *u32_data;
+    const uint16_t *u16_data;
+    const float *f32_data;
+    unsigned int i;
+
+    static const struct wined3d_color default_colour = {0.0f, 0.0f, 0.0f, 1.0f};
+    static unsigned int warned;
+
+    switch (format->id)
+    {
+        case WINED3DFMT_B8G8R8A8_UNORM:
+            u32_data = data;
+            wined3d_color_from_d3dcolor(colour, *u32_data);
+            break;
+
+        case WINED3DFMT_R8G8B8A8_UNORM:
+            u32_data = data;
+            colour->r = (*u32_data & 0xffu) / 255.0f;
+            colour->g = ((*u32_data >> 8) & 0xffu) / 255.0f;
+            colour->b = ((*u32_data >> 16) & 0xffu) / 255.0f;
+            colour->a = ((*u32_data >> 24) & 0xffu) / 255.0f;
+            break;
+
+        case WINED3DFMT_R16G16_UNORM:
+        case WINED3DFMT_R16G16B16A16_UNORM:
+            u16_data = data;
+            *colour = default_colour;
+            for (i = 0; i < format->component_count; ++i)
+                output[i] = u16_data[i] / 65535.0f;
+            break;
+
+        case WINED3DFMT_R32_FLOAT:
+        case WINED3DFMT_R32G32_FLOAT:
+        case WINED3DFMT_R32G32B32_FLOAT:
+        case WINED3DFMT_R32G32B32A32_FLOAT:
+            f32_data = data;
+            *colour = default_colour;
+            for (i = 0; i < format->component_count; ++i)
+                output[i] = f32_data[i];
+            break;
+
+        default:
+            *colour = default_colour;
+            if (!warned++)
+                FIXME("Unhandled colour format conversion, format %s.\n", debug_d3dformat(format->id));
+            break;
+    }
+}
+
+static void wined3d_colour_from_mcs(struct wined3d_color *colour, enum wined3d_material_color_source mcs,
+        const struct wined3d_color *material_colour, unsigned int index,
+        const struct wined3d_stream_info *stream_info)
+{
+    const struct wined3d_stream_info_element *element = NULL;
+
+    switch (mcs)
+    {
+        case WINED3D_MCS_MATERIAL:
+            *colour = *material_colour;
+            return;
+
+        case WINED3D_MCS_COLOR1:
+            if (!(stream_info->use_map & (1u << WINED3D_FFP_DIFFUSE)))
+            {
+                colour->r = colour->g = colour->b = colour->a = 1.0f;
+                return;
+            }
+            element = &stream_info->elements[WINED3D_FFP_DIFFUSE];
+            break;
+
+        case WINED3D_MCS_COLOR2:
+            if (!(stream_info->use_map & (1u << WINED3D_FFP_SPECULAR)))
+            {
+                colour->r = colour->g = colour->b = 0.0f;
+                colour->a = 1.0f;
+                return;
+            }
+            element = &stream_info->elements[WINED3D_FFP_SPECULAR];
+            break;
+
+        default:
+            colour->r = colour->g = colour->b = colour->a = 0.0f;
+            ERR("Invalid material colour source %#x.\n", mcs);
+            return;
+    }
+
+    wined3d_format_get_colour(element->format, &element->data.addr[index * element->stride], colour);
+}
+
+static float wined3d_clamp(float value, float min_value, float max_value)
+{
+    return value < min_value ? min_value : value > max_value ? max_value : value;
+}
+
+static void wined3d_color_clamp(struct wined3d_color *dst, const struct wined3d_color *src,
+        float min_value, float max_value)
+{
+    dst->r = wined3d_clamp(src->r, min_value, max_value);
+    dst->g = wined3d_clamp(src->g, min_value, max_value);
+    dst->b = wined3d_clamp(src->b, min_value, max_value);
+    dst->a = wined3d_clamp(src->a, min_value, max_value);
+}
+
 /* Context activation is done by the caller. */
 #define copy_and_next(dest, src, size) memcpy(dest, src, size); dest += (size)
 static HRESULT process_vertices_strided(const struct wined3d_device *device, DWORD dwDestIndex, DWORD dwCount,
         const struct wined3d_stream_info *stream_info, struct wined3d_buffer *dest, DWORD flags, DWORD dst_fvf)
 {
+    enum wined3d_material_color_source diffuse_source, specular_source, ambient_source, emissive_source;
+    const struct wined3d_color *material_specular_state_colour;
     struct wined3d_matrix mat, proj_mat, view_mat, world_mat;
+    const struct wined3d_state *state = &device->state;
+    const struct wined3d_format *output_colour_format;
+    static const struct wined3d_color black;
     struct wined3d_map_desc map_desc;
     struct wined3d_box box = {0};
     struct wined3d_viewport vp;
+    unsigned int texture_count;
     unsigned int vertex_size;
     unsigned int i;
     BYTE *dest_ptr;
     BOOL doClip;
-    DWORD numTextures;
     HRESULT hr;
 
     if (stream_info->use_map & (1u << WINED3D_FFP_NORMAL))
@@ -3097,11 +3209,11 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
 
     if (!(stream_info->use_map & (1u << WINED3D_FFP_POSITION)))
     {
-        ERR("Source has no position mask\n");
+        ERR("Source has no position mask.\n");
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (device->state.render_states[WINED3D_RS_CLIPPING])
+    if (state->render_states[WINED3D_RS_CLIPPING])
     {
         static BOOL warned = FALSE;
         /*
@@ -3161,7 +3273,14 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
     multiply_matrix(&mat,&view_mat,&world_mat);
     multiply_matrix(&mat,&proj_mat,&mat);
 
-    numTextures = (dst_fvf & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
+    texture_count = (dst_fvf & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
+
+    wined3d_get_material_colour_source(&diffuse_source, &emissive_source,
+            &ambient_source, &specular_source, state, stream_info);
+
+    output_colour_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, 0);
+    material_specular_state_colour = state->render_states[WINED3D_RS_SPECULARENABLE]
+            ? &state->material.specular : &black;
 
     for (i = 0; i < dwCount; i+= 1) {
         unsigned int tex_index;
@@ -3280,50 +3399,27 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
 
         if (dst_fvf & WINED3DFVF_DIFFUSE)
         {
-            const struct wined3d_stream_info_element *element = &stream_info->elements[WINED3D_FFP_DIFFUSE];
-            const DWORD *color_d = (const DWORD *)(element->data.addr + i * element->stride);
-            if (!(stream_info->use_map & (1u << WINED3D_FFP_DIFFUSE)))
-            {
-                static BOOL warned = FALSE;
+            struct wined3d_color material_diffuse;
 
-                if(!warned) {
-                    ERR("No diffuse color in source, but destination has one\n");
-                    warned = TRUE;
-                }
-
-                *( (DWORD *) dest_ptr) = 0xffffffff;
-                dest_ptr += sizeof(DWORD);
-            }
-            else
-            {
-                copy_and_next(dest_ptr, color_d, sizeof(DWORD));
-            }
+            wined3d_colour_from_mcs(&material_diffuse, diffuse_source,
+                    &state->material.diffuse, i, stream_info);
+            wined3d_color_clamp(&material_diffuse, &material_diffuse, 0.0f, 1.0f);
+            *(DWORD *)dest_ptr = wined3d_format_convert_from_float(output_colour_format, &material_diffuse);
+            dest_ptr += sizeof(DWORD);
         }
 
         if (dst_fvf & WINED3DFVF_SPECULAR)
         {
-            /* What's the color value in the feedback buffer? */
-            const struct wined3d_stream_info_element *element = &stream_info->elements[WINED3D_FFP_SPECULAR];
-            const DWORD *color_s = (const DWORD *)(element->data.addr + i * element->stride);
-            if (!(stream_info->use_map & (1u << WINED3D_FFP_SPECULAR)))
-            {
-                static BOOL warned = FALSE;
+            struct wined3d_color material_specular;
 
-                if(!warned) {
-                    ERR("No specular color in source, but destination has one\n");
-                    warned = TRUE;
-                }
-
-                *(DWORD *)dest_ptr = 0xff000000;
-                dest_ptr += sizeof(DWORD);
-            }
-            else
-            {
-                copy_and_next(dest_ptr, color_s, sizeof(DWORD));
-            }
+            wined3d_colour_from_mcs(&material_specular, specular_source,
+                    material_specular_state_colour, i, stream_info);
+            wined3d_color_clamp(&material_specular, &material_specular, 0.0f, 1.0f);
+            *((DWORD *)dest_ptr) = wined3d_format_convert_from_float(output_colour_format, &material_specular);
+            dest_ptr += sizeof(DWORD);
         }
 
-        for (tex_index = 0; tex_index < numTextures; ++tex_index)
+        for (tex_index = 0; tex_index < texture_count; ++tex_index)
         {
             const struct wined3d_stream_info_element *element = &stream_info->elements[WINED3D_FFP_TEXCOORD0 + tex_index];
             const float *tex_coord = (const float *)(element->data.addr + i * element->stride);
