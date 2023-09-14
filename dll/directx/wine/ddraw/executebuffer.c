@@ -348,7 +348,7 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
                             wined3d_device_copy_sub_resource_region(device->wined3d_device,
                                     wined3d_buffer_get_resource(buffer->dst_vertex_buffer), 0,
                                     ci->wDest * sizeof(D3DTLVERTEX), 0, 0,
-                                    wined3d_buffer_get_resource(buffer->src_vertex_buffer), 0, &box);
+                                    wined3d_buffer_get_resource(buffer->src_vertex_buffer), 0, &box, 0);
                             break;
 
                         default:
