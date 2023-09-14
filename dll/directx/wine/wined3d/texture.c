@@ -1602,9 +1602,15 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     if (texture->texture_ops == &texture_gl_ops)
     {
         if (multisample_type && gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
+        {
             wined3d_texture_gl(texture)->target = GL_TEXTURE_2D_MULTISAMPLE;
+            texture->flags &= ~WINED3D_TEXTURE_DOWNLOADABLE;
+        }
         else
+        {
             wined3d_texture_gl(texture)->target = GL_TEXTURE_2D;
+            texture->flags |= WINED3D_TEXTURE_DOWNLOADABLE;
+        }
     }
 
     if (((width & (width - 1)) || (height & (height - 1))) && !d3d_info->texture_npot
@@ -3223,7 +3229,8 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
     texture->layer_count = layer_count;
     texture->level_count = level_count;
     texture->lod = 0;
-    texture->flags |= WINED3D_TEXTURE_POW2_MAT_IDENT | WINED3D_TEXTURE_NORMALIZED_COORDS;
+    texture->flags |= WINED3D_TEXTURE_POW2_MAT_IDENT | WINED3D_TEXTURE_NORMALIZED_COORDS
+            | WINED3D_TEXTURE_DOWNLOADABLE;
     if (flags & WINED3D_TEXTURE_CREATE_GET_DC_LENIENT)
         texture->flags |= WINED3D_TEXTURE_PIN_SYSMEM | WINED3D_TEXTURE_GET_DC_LENIENT;
     if (flags & (WINED3D_TEXTURE_CREATE_GET_DC | WINED3D_TEXTURE_CREATE_GET_DC_LENIENT))
@@ -3657,6 +3664,9 @@ HRESULT wined3d_texture_gl_init(struct wined3d_texture_gl *texture_gl, struct wi
 
     if (texture_gl->t.resource.gl_type == WINED3D_GL_RES_TYPE_TEX_RECT)
         texture_gl->target = GL_TEXTURE_RECTANGLE_ARB;
+
+    if (texture_gl->target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY || texture_gl->target == GL_TEXTURE_2D_MULTISAMPLE)
+        texture_gl->t.flags &= ~WINED3D_TEXTURE_DOWNLOADABLE;
 
     return WINED3D_OK;
 }

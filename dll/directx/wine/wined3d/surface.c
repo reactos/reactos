@@ -2685,9 +2685,8 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
             TRACE("Not doing download because of format conversion.\n");
         else if (src_texture->resource.format->conv_byte_count)
             TRACE("Not doing download because the source format needs conversion.\n");
-        else if (wined3d_texture_gl_is_multisample_location(wined3d_texture_gl(src_texture),
-                WINED3D_LOCATION_TEXTURE_RGB))
-            TRACE("Not doing download because of multisample source.\n");
+        else if (!(src_texture->flags & WINED3D_TEXTURE_DOWNLOADABLE))
+            TRACE("Not doing download because texture is not downloadable.\n");
         else if (!texture2d_is_full_rect(src_texture, src_sub_resource_idx % src_texture->level_count, &src_rect))
             TRACE("Not doing download because of partial download (src).\n");
         else if (!texture2d_is_full_rect(dst_texture, dst_sub_resource_idx % dst_texture->level_count, &dst_rect))
