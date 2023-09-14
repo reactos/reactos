@@ -2760,7 +2760,8 @@ static HRESULT WINAPI d3d_device3_SetRenderState(IDirect3DDevice3 *iface,
 
             if (value == 0)
             {
-                hr = wined3d_device_set_texture(device->wined3d_device, 0, NULL);
+                wined3d_device_set_texture(device->wined3d_device, 0, NULL);
+                hr = D3D_OK;
                 break;
             }
 
@@ -4814,7 +4815,6 @@ static HRESULT d3d_device7_SetTexture(IDirect3DDevice7 *iface,
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
     struct ddraw_surface *surf = unsafe_impl_from_IDirectDrawSurface7(texture);
     struct wined3d_texture *wined3d_texture = NULL;
-    HRESULT hr;
 
     TRACE("iface %p, stage %u, texture %p.\n", iface, stage, texture);
 
@@ -4822,10 +4822,10 @@ static HRESULT d3d_device7_SetTexture(IDirect3DDevice7 *iface,
         wined3d_texture = surf->wined3d_texture;
 
     wined3d_mutex_lock();
-    hr = wined3d_device_set_texture(device->wined3d_device, stage, wined3d_texture);
+    wined3d_device_set_texture(device->wined3d_device, stage, wined3d_texture);
     wined3d_mutex_unlock();
 
-    return hr;
+    return D3D_OK;
 }
 
 static HRESULT WINAPI d3d_device7_SetTexture_FPUSetup(IDirect3DDevice7 *iface,
