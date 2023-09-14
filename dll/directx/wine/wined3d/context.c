@@ -2444,9 +2444,9 @@ static inline GLenum draw_buffer_from_rt_mask(DWORD rt_mask)
 }
 
 /* Context activation is done by the caller. */
-static void context_apply_draw_buffers(struct wined3d_context *context, DWORD rt_mask)
+static void wined3d_context_gl_apply_draw_buffers(struct wined3d_context_gl *context_gl, uint32_t rt_mask)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     GLenum draw_buffers[MAX_RENDER_TARGET_VIEWS];
 
     if (!rt_mask)
@@ -2775,7 +2775,7 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
 
     if (rt_mask != *cur_mask)
     {
-        context_apply_draw_buffers(context, rt_mask);
+        wined3d_context_gl_apply_draw_buffers(context_gl, rt_mask);
         *cur_mask = rt_mask;
     }
 
@@ -3079,7 +3079,7 @@ BOOL wined3d_context_gl_apply_clear_state(struct wined3d_context_gl *context_gl,
 
     if (rt_mask != *cur_mask)
     {
-        context_apply_draw_buffers(&context_gl->c, rt_mask);
+        wined3d_context_gl_apply_draw_buffers(context_gl, rt_mask);
         *cur_mask = rt_mask;
         context_invalidate_state(&context_gl->c, STATE_FRAMEBUFFER);
     }
@@ -3195,7 +3195,7 @@ void context_state_fb(struct wined3d_context *context, const struct wined3d_stat
     cur_mask = context_gl->current_fbo ? &context_gl->current_fbo->rt_mask : &context_gl->draw_buffers_mask;
     if (rt_mask != *cur_mask)
     {
-        context_apply_draw_buffers(context, rt_mask);
+        wined3d_context_gl_apply_draw_buffers(context_gl, rt_mask);
         *cur_mask = rt_mask;
     }
     context->constant_update_mask |= WINED3D_SHADER_CONST_PS_Y_CORR;
@@ -3451,7 +3451,7 @@ void context_state_drawbuf(struct wined3d_context *context, const struct wined3d
     rt_mask = find_draw_buffers_mask(context_gl, state);
     if (rt_mask != *cur_mask)
     {
-        context_apply_draw_buffers(context, rt_mask);
+        wined3d_context_gl_apply_draw_buffers(context_gl, rt_mask);
         *cur_mask = rt_mask;
     }
 }
