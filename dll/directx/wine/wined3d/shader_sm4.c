@@ -2103,3 +2103,26 @@ HRESULT shader_extract_from_dxbc(struct wined3d_shader *shader,
 
     return hr;
 }
+
+static HRESULT shader_isgn_chunk_handler(const char *data, DWORD data_size, DWORD tag, void *ctx)
+{
+    struct wined3d_shader_signature *is = ctx;
+
+    if (tag != TAG_ISGN)
+        return S_OK;
+
+    if (is->elements)
+    {
+        FIXME("Multiple shader signatures.\n");
+        return S_OK;
+    }
+
+    return shader_parse_signature(tag, data, data_size, is);
+}
+
+HRESULT CDECL wined3d_extract_shader_input_signature_from_dxbc(struct wined3d_shader_signature *signature,
+        const void *code, SIZE_T code_size)
+{
+    memset(signature, 0, sizeof(*signature));
+    return parse_dxbc(code, code_size, shader_isgn_chunk_handler, signature);
+}

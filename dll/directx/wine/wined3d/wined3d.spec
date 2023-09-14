@@ -320,6 +320,8 @@
 @ cdecl wined3d_vertex_declaration_get_parent(ptr)
 @ cdecl wined3d_vertex_declaration_incref(ptr)
 
+@ cdecl wined3d_extract_shader_input_signature_from_dxbc(ptr ptr long)
+
 @ cdecl wined3d_dxtn_supported()
 @ cdecl wined3d_dxt1_decode(ptr ptr long long long long long)
 @ cdecl wined3d_dxt1_encode(ptr ptr long long long long long)

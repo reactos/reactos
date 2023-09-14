@@ -2779,6 +2779,9 @@ ULONG __cdecl wined3d_vertex_declaration_decref(struct wined3d_vertex_declaratio
 void * __cdecl wined3d_vertex_declaration_get_parent(const struct wined3d_vertex_declaration *declaration);
 ULONG __cdecl wined3d_vertex_declaration_incref(struct wined3d_vertex_declaration *declaration);
 
+HRESULT __cdecl wined3d_extract_shader_input_signature_from_dxbc(struct wined3d_shader_signature *signature,
+        const void *byte_code, SIZE_T byte_code_size);
+
 /* Return the integer base-2 logarithm of x. Undefined for x == 0. */
 static inline unsigned int wined3d_log2i(unsigned int x)
 {
