@@ -505,6 +505,7 @@ enum wined3d_shader_register_type
     WINED3DSPR_GSINSTID,
     WINED3DSPR_DEPTHOUTGE,
     WINED3DSPR_DEPTHOUTLE,
+    WINED3DSPR_RASTERIZER,
 };
 
 enum wined3d_data_type

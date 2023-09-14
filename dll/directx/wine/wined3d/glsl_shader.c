@@ -5783,38 +5783,64 @@ static void shader_glsl_sample_info(const struct wined3d_shader_instruction *ins
     const struct wined3d_shader_reg_maps *reg_maps = ins->ctx->reg_maps;
     const struct wined3d_gl_info *gl_info = ins->ctx->gl_info;
     struct wined3d_string_buffer *buffer = ins->ctx->buffer;
+    const struct wined3d_shader_dst_param *dst = ins->dst;
+    const struct wined3d_shader_src_param *src = ins->src;
     enum wined3d_shader_resource_type resource_type;
     enum wined3d_data_type dst_data_type;
     unsigned int resource_idx, bind_idx;
     char dst_swizzle[6];
     DWORD write_mask;
 
-    if (!gl_info->supported[ARB_SHADER_TEXTURE_IMAGE_SAMPLES])
-    {
-        FIXME("textureSamples() is not supported.\n");
-        return;
-    }
-
-    dst_data_type = ins->dst[0].reg.data_type;
+    dst_data_type = dst->reg.data_type;
     if (ins->flags == WINED3DSI_SAMPLE_INFO_UINT)
         dst_data_type = WINED3D_DATA_UINT;
     else if (ins->flags)
         FIXME("Unhandled flags %#x.\n", ins->flags);
 
-    resource_idx = ins->src[0].reg.idx[0].offset;
-    resource_type = reg_maps->resource_info[resource_idx].type;
-    if (resource_type >= ARRAY_SIZE(resource_type_info))
-    {
-        ERR("Unexpected resource type %#x.\n", resource_type);
-        return;
-    }
-    bind_idx = shader_glsl_find_sampler(&reg_maps->sampler_map, resource_idx, WINED3D_SAMPLER_DEFAULT);
+    write_mask = shader_glsl_append_dst_ext(buffer, ins, dst, dst_data_type);
+    shader_glsl_get_swizzle(src, FALSE, write_mask, dst_swizzle);
 
-    write_mask = shader_glsl_append_dst_ext(buffer, ins, &ins->dst[0], dst_data_type);
-    shader_glsl_get_swizzle(&ins->src[0], FALSE, write_mask, dst_swizzle);
-    shader_addline(buffer, "%s(textureSamples(%s_sampler%u), 0, 0, 0)%s);\n",
-            dst_data_type == WINED3D_DATA_UINT ? "uvec4" : "vec4",
-            shader_glsl_get_prefix(reg_maps->shader_version.type), bind_idx, dst_swizzle);
+    if (dst_data_type == WINED3D_DATA_UINT)
+        shader_addline(buffer, "uvec4(");
+    else
+        shader_addline(buffer, "vec4(");
+
+    if (src->reg.type == WINED3DSPR_RASTERIZER)
+    {
+        if (gl_info->supported[ARB_SAMPLE_SHADING])
+        {
+            shader_addline(buffer, "gl_NumSamples");
+        }
+        else
+        {
+            FIXME("OpenGL implementation does not support ARB_sample_shading.\n");
+            shader_addline(buffer, "1");
+        }
+    }
+    else
+    {
+        resource_idx = src->reg.idx[0].offset;
+        resource_type = reg_maps->resource_info[resource_idx].type;
+        if (resource_type >= ARRAY_SIZE(resource_type_info))
+        {
+            ERR("Unexpected resource type %#x.\n", resource_type);
+            return;
+        }
+        bind_idx = shader_glsl_find_sampler(&reg_maps->sampler_map, resource_idx, WINED3D_SAMPLER_DEFAULT);
+
+        if (gl_info->supported[ARB_SHADER_TEXTURE_IMAGE_SAMPLES])
+        {
+            shader_addline(buffer, "textureSamples(%s_sampler%u)",
+                    shader_glsl_get_prefix(reg_maps->shader_version.type), bind_idx);
+        }
+        else
+        {
+            FIXME("textureSamples() is not supported.\n");
+            shader_addline(buffer, "1");
+        }
+    }
+
+    shader_addline(buffer, ", 0, 0, 0)%s);\n", dst_swizzle);
 }
 
 static void shader_glsl_ld(const struct wined3d_shader_instruction *ins)
