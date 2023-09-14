@@ -6180,12 +6180,15 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
     }
     else
     {
-        if (desc->ddsCaps.dwCaps & DDSCAPS_TEXTURE)
-            wined3d_desc.usage |= WINED3DUSAGE_TEXTURE;
-        if (desc->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
-            wined3d_desc.usage |= WINED3DUSAGE_DEPTHSTENCIL;
-        else if (desc->ddsCaps.dwCaps & DDSCAPS_3DDEVICE)
-            wined3d_desc.usage |= WINED3DUSAGE_RENDERTARGET;
+        if (!(ddraw->flags & DDRAW_NO3D))
+        {
+            if (desc->ddsCaps.dwCaps & DDSCAPS_TEXTURE)
+                wined3d_desc.usage |= WINED3DUSAGE_TEXTURE;
+            if (desc->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
+                wined3d_desc.usage |= WINED3DUSAGE_DEPTHSTENCIL;
+            else if (desc->ddsCaps.dwCaps & DDSCAPS_3DDEVICE)
+                wined3d_desc.usage |= WINED3DUSAGE_RENDERTARGET;
+        }
 
         if (desc->ddsCaps.dwCaps2 & (DDSCAPS2_TEXTUREMANAGE | DDSCAPS2_D3DTEXTUREMANAGE))
         {
