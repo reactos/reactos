@@ -2804,6 +2804,10 @@ struct wined3d_adapter_ops
             struct wined3d_resource *resource, void *parent, const struct wined3d_parent_ops *parent_ops,
             struct wined3d_shader_resource_view **view);
     void (*adapter_destroy_shader_resource_view)(struct wined3d_shader_resource_view *view);
+    HRESULT (*adapter_create_unordered_access_view)(const struct wined3d_view_desc *desc,
+            struct wined3d_resource *resource, void *parent, const struct wined3d_parent_ops *parent_ops,
+            struct wined3d_unordered_access_view **view);
+    void (*adapter_destroy_unordered_access_view)(struct wined3d_unordered_access_view *view);
 };
 
 /* The adapter structure */
@@ -4319,6 +4323,7 @@ struct wined3d_unordered_access_view
     struct wined3d_view_desc desc;
 };
 
+void wined3d_unordered_access_view_cleanup(struct wined3d_unordered_access_view *view) DECLSPEC_HIDDEN;
 void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_view *view,
         const struct wined3d_uvec4 *clear_value, struct wined3d_context *context) DECLSPEC_HIDDEN;
 void wined3d_unordered_access_view_copy_counter(struct wined3d_unordered_access_view *view,
@@ -4340,6 +4345,25 @@ static inline struct wined3d_unordered_access_view_gl *wined3d_unordered_access_
 {
     return CONTAINING_RECORD(view, struct wined3d_unordered_access_view_gl, v);
 }
+
+HRESULT wined3d_unordered_access_view_gl_init(struct wined3d_unordered_access_view_gl *view_gl,
+        const struct wined3d_view_desc *desc, struct wined3d_resource *resource,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
+
+struct wined3d_unordered_access_view_vk
+{
+    struct wined3d_unordered_access_view v;
+};
+
+static inline struct wined3d_unordered_access_view_vk *wined3d_unordered_access_view_vk(
+        struct wined3d_unordered_access_view *view)
+{
+    return CONTAINING_RECORD(view, struct wined3d_unordered_access_view_vk, v);
+}
+
+HRESULT wined3d_unordered_access_view_vk_init(struct wined3d_unordered_access_view_vk *view_vk,
+        const struct wined3d_view_desc *desc, struct wined3d_resource *resource,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
 struct wined3d_swapchain_state
 {
