@@ -2073,15 +2073,20 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
     target = wined3d_texture_get_sub_resource_target(texture, sub_resource_idx);
     level = sub_resource_idx % texture->level_count;
 
-    if (target == GL_TEXTURE_1D_ARRAY)
+    switch (target)
     {
-        dst_y = sub_resource_idx / texture->level_count;
-        update_h = 1;
-    }
-    else if (target == GL_TEXTURE_2D_ARRAY)
-    {
-        dst_z = sub_resource_idx / texture->level_count;
-        update_d = 1;
+        case GL_TEXTURE_1D_ARRAY:
+            dst_y = sub_resource_idx / texture->level_count;
+            update_h = 1;
+            break;
+        case GL_TEXTURE_2D_ARRAY:
+            dst_z = sub_resource_idx / texture->level_count;
+            update_d = 1;
+            break;
+        case GL_TEXTURE_2D_MULTISAMPLE:
+        case GL_TEXTURE_2D_MULTISAMPLE_ARRAY:
+            FIXME("Not supported for multisample textures.\n");
+            return;
     }
 
     bo.buffer_object = data->buffer_object;
