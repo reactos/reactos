@@ -989,8 +989,7 @@ void wined3d_cs_emit_set_viewports(struct wined3d_cs *cs, unsigned int viewport_
     op = cs->ops->require_space(cs, FIELD_OFFSET(struct wined3d_cs_set_viewports, viewports[viewport_count]),
             WINED3D_CS_QUEUE_DEFAULT);
     op->opcode = WINED3D_CS_OP_SET_VIEWPORTS;
-    if (viewport_count)
-        memcpy(op->viewports, viewports, viewport_count * sizeof(*viewports));
+    memcpy(op->viewports, viewports, viewport_count * sizeof(*viewports));
     op->viewport_count = viewport_count;
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
@@ -1015,8 +1014,7 @@ void wined3d_cs_emit_set_scissor_rects(struct wined3d_cs *cs, unsigned int rect_
     op = cs->ops->require_space(cs, FIELD_OFFSET(struct wined3d_cs_set_scissor_rects, rects[rect_count]),
             WINED3D_CS_QUEUE_DEFAULT);
     op->opcode = WINED3D_CS_OP_SET_SCISSOR_RECTS;
-    if (rect_count)
-        memcpy(op->rects, rects, rect_count * sizeof(*rects));
+    memcpy(op->rects, rects, rect_count * sizeof(*rects));
     op->rect_count = rect_count;
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
