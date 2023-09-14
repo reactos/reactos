@@ -1633,7 +1633,10 @@ HRESULT CDECL wined3d_swapchain_state_create(const struct wined3d_swapchain_desc
         return E_OUTOFMEMORY;
 
     if (FAILED(hr = wined3d_swapchain_state_init(s, desc, window, wined3d, adapter_idx)))
+    {
+        heap_free(s);
         return hr;
+    }
 
     *state = s;
 
