@@ -2352,7 +2352,7 @@ static void test_driver_list(void)
     char detail_buffer[1000];
     SP_DRVINFO_DETAIL_DATA_A *detail = (SP_DRVINFO_DETAIL_DATA_A *)detail_buffer;
     char short_path[MAX_PATH], inf_dir[MAX_PATH], inf_path[MAX_PATH + 10], inf_path2[MAX_PATH + 10];
-    static const char hardware_id[] = "bogus_hardware_id\0";
+    static const char hardware_id[] = "bogus_hardware_id\0other_hardware_id\0";
     static const char compat_id[] = "bogus_compat_id\0";
     SP_DEVINSTALL_PARAMS_A params = {sizeof(params)};
     SP_DRVINFO_DATA_A driver = {sizeof(driver)};
@@ -2361,6 +2361,7 @@ static void test_driver_list(void)
     FILETIME filetime;
     HDEVINFO set;
     HANDLE file;
+    DWORD idx;
     BOOL ret;
 
     static const char inf_data[] = "[Version]\n"
@@ -2373,11 +2374,13 @@ static void test_driver_list(void)
             "mfg2_wow=mfg2_key,NT" WOWEXT "\n"
             "mfg3=mfg3_key,NT" WRONGEXT "\n"
             "[mfg1_key.nt" MYEXT "]\n"
+            "desc0=,other_hardware_id,bogus_compat_id\n"
             "desc1=install1,bogus_hardware_id\n"
             "desc2=,bogus_hardware_id\n"
             "desc3=,wrong_hardware_id\n"
             "desc4=,wrong_hardware_id,bogus_compat_id\n"
             "[mfg1_key.nt" WOWEXT "]\n"
+            "desc0=,other_hardware_id,bogus_compat_id\n"
             "desc1=install1,bogus_hardware_id\n"
             "desc2=,bogus_hardware_id\n"
             "desc3=,wrong_hardware_id\n"
@@ -2448,10 +2451,25 @@ static void test_driver_list(void)
     ret = SetupDiBuildDriverInfoList(set, &device, SPDIT_COMPATDRIVER);
     ok(ret, "Failed to build driver list, error %#x.\n", GetLastError());
 
-    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 0, &driver);
+    idx = 0;
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, idx++, &driver);
     ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
     ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
-    ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.Description, "desc0"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.MfgName, wow64 ? "mfg1_wow" : "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
+    ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
+
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, idx++, &driver);
+    ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
+    ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+    todo_wine ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
+    if (strcmp(driver.Description, "desc1"))
+    {
+        ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, idx++, &driver);
+        ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
+        ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+        ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
+    }
     ok(!strcmp(driver.MfgName, wow64 ? "mfg1_wow" : "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
     ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
 
@@ -2519,14 +2537,14 @@ static void test_driver_list(void)
     ok(!detail->CompatIDsLength, "Got wrong compat IDs length %u.\n", detail->CompatIDsLength);
     ok(!memcmp(detail->HardwareID, "bogus_hardware_id\0", sizeof("bogus_hardware_id\0")), "Got wrong ID list.\n");
 
-    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 1, &driver);
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, idx++, &driver);
     ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
     ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
     ok(!strcmp(driver.Description, "desc2"), "Got wrong description '%s'.\n", driver.Description);
     ok(!strcmp(driver.MfgName, wow64 ? "mfg1_wow" : "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
     ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
 
-    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 2, &driver);
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, idx++, &driver);
     ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
     ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
     ok(!strcmp(driver.Description, "desc4"), "Got wrong description '%s'.\n", driver.Description);
@@ -2546,7 +2564,7 @@ static void test_driver_list(void)
     ok(!memcmp(detail->HardwareID, "wrong_hardware_id\0bogus_compat_id\0",
             sizeof("wrong_hardware_id\0bogus_compat_id\0")), "Got wrong ID list.\n");
 
-    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 3, &driver);
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, idx++, &driver);
     ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
     ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
     ok(!strcmp(driver.Description, "desc5"), "Got wrong description '%s'.\n", driver.Description);
@@ -2554,7 +2572,7 @@ static void test_driver_list(void)
     ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
 
     SetLastError(0xdeadbeef);
-    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, 4, &driver);
+    ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, idx++, &driver);
     ok(!ret, "Expected failure.\n");
     ok(GetLastError() == ERROR_NO_MORE_ITEMS, "Got unexpected error %#x.\n", GetLastError());
 
@@ -2568,7 +2586,7 @@ static void test_driver_list(void)
     ret = SetupDiGetSelectedDriverA(set, &device, &driver);
     ok(ret, "Failed to get selected driver, error %#x.\n", GetLastError());
     ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
-    ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
+    todo_wine ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
     ok(!strcmp(driver.MfgName, wow64 ? "mfg1_wow" : "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
     ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
 
