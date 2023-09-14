@@ -155,34 +155,34 @@ HRESULT CDECL wined3d_sampler_create(struct wined3d_device *device, const struct
     return WINED3D_OK;
 }
 
-static void texture_apply_base_level(struct wined3d_texture *texture,
+static void texture_gl_apply_base_level(struct wined3d_texture_gl *texture_gl,
         const struct wined3d_sampler_desc *desc, const struct wined3d_gl_info *gl_info)
 {
     struct gl_texture *gl_tex;
     unsigned int base_level;
 
-    if (texture->flags & WINED3D_TEXTURE_COND_NP2)
+    if (texture_gl->t.flags & WINED3D_TEXTURE_COND_NP2)
         base_level = 0;
     else if (desc->mip_filter == WINED3D_TEXF_NONE)
-        base_level = texture->lod;
+        base_level = texture_gl->t.lod;
     else
-        base_level = min(max(desc->mip_base_level, texture->lod), texture->level_count - 1);
+        base_level = min(max(desc->mip_base_level, texture_gl->t.lod), texture_gl->t.level_count - 1);
 
-    gl_tex = wined3d_texture_get_gl_texture(texture, texture->flags & WINED3D_TEXTURE_IS_SRGB);
+    gl_tex = wined3d_texture_gl_get_gl_texture(texture_gl, texture_gl->t.flags & WINED3D_TEXTURE_IS_SRGB);
     if (base_level != gl_tex->base_level)
     {
         /* Note that WINED3D_SAMP_MAX_MIP_LEVEL specifies the largest mipmap
          * (default 0), while GL_TEXTURE_MAX_LEVEL specifies the smallest
          * mipmap used (default 1000). So WINED3D_SAMP_MAX_MIP_LEVEL
          * corresponds to GL_TEXTURE_BASE_LEVEL. */
-        gl_info->gl_ops.gl.p_glTexParameteri(texture->target, GL_TEXTURE_BASE_LEVEL, base_level);
+        gl_info->gl_ops.gl.p_glTexParameteri(texture_gl->t.target, GL_TEXTURE_BASE_LEVEL, base_level);
         gl_tex->base_level = base_level;
     }
 }
 
 /* This function relies on the correct texture being bound and loaded. */
 void wined3d_sampler_bind(struct wined3d_sampler *sampler, unsigned int unit,
-        struct wined3d_texture *texture, const struct wined3d_context *context)
+        struct wined3d_texture_gl *texture_gl, const struct wined3d_context *context)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
@@ -191,15 +191,15 @@ void wined3d_sampler_bind(struct wined3d_sampler *sampler, unsigned int unit,
         GL_EXTCALL(glBindSampler(unit, sampler->name));
         checkGLcall("bind sampler");
     }
-    else if (texture)
+    else if (texture_gl)
     {
-        wined3d_texture_apply_sampler_desc(texture, &sampler->desc, context);
+        wined3d_texture_gl_apply_sampler_desc(texture_gl, &sampler->desc, context);
     }
     else
     {
         ERR("Could not apply sampler state.\n");
     }
 
-    if (texture)
-        texture_apply_base_level(texture, &sampler->desc, gl_info);
+    if (texture_gl)
+        texture_gl_apply_base_level(texture_gl, &sampler->desc, gl_info);
 }

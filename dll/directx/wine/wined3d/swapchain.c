@@ -364,7 +364,7 @@ static void wined3d_swapchain_gl_rotate(struct wined3d_swapchain *swapchain, str
     texture_prev = wined3d_texture_gl(swapchain->back_buffers[0]);
 
     /* Back buffer 0 is already in the draw binding. */
-    tex0 = texture_prev->t.texture_rgb;
+    tex0 = texture_prev->texture_rgb;
     rb0 = texture_prev->rb_multisample;
     locations0 = texture_prev->t.sub_resources[0].locations;
 
@@ -376,7 +376,7 @@ static void wined3d_swapchain_gl_rotate(struct wined3d_swapchain *swapchain, str
         if (!(sub_resource->locations & supported_locations))
             wined3d_texture_load_location(&texture->t, 0, context, texture->t.resource.draw_binding);
 
-        texture_prev->t.texture_rgb = texture->t.texture_rgb;
+        texture_prev->texture_rgb = texture->texture_rgb;
         texture_prev->rb_multisample = texture->rb_multisample;
 
         wined3d_texture_validate_location(&texture_prev->t, 0, sub_resource->locations & supported_locations);
@@ -385,7 +385,7 @@ static void wined3d_swapchain_gl_rotate(struct wined3d_swapchain *swapchain, str
         texture_prev = texture;
     }
 
-    texture_prev->t.texture_rgb = tex0;
+    texture_prev->texture_rgb = tex0;
     texture_prev->rb_multisample = rb0;
 
     wined3d_texture_validate_location(&texture_prev->t, 0, locations0 & supported_locations);

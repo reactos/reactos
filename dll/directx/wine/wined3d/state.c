@@ -3634,17 +3634,17 @@ static void sampler(struct wined3d_context *context, const struct wined3d_state 
 
     if (state->textures[sampler_idx])
     {
+        struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(state->textures[sampler_idx]);
         BOOL srgb = state->sampler_states[sampler_idx][WINED3D_SAMP_SRGB_TEXTURE];
         const DWORD *sampler_states = state->sampler_states[sampler_idx];
-        struct wined3d_texture *texture = state->textures[sampler_idx];
         struct wined3d_device *device = context->device;
         struct wined3d_sampler_desc desc;
         struct wined3d_sampler *sampler;
         struct wine_rb_entry *entry;
 
-        wined3d_sampler_desc_from_sampler_states(&desc, context, sampler_states, texture);
+        wined3d_sampler_desc_from_sampler_states(&desc, context, sampler_states, &texture_gl->t);
 
-        wined3d_texture_bind(texture, context, srgb);
+        wined3d_texture_gl_bind(texture_gl, context, srgb);
 
         if ((entry = wine_rb_get(&device->samplers, &desc)))
         {
@@ -3665,10 +3665,10 @@ static void sampler(struct wined3d_context *context, const struct wined3d_state 
             }
         }
 
-        wined3d_sampler_bind(sampler, mapped_stage, texture, context);
+        wined3d_sampler_bind(sampler, mapped_stage, texture_gl, context);
 
         /* Trigger shader constant reloading (for NP2 texcoord fixup) */
-        if (!(texture->flags & WINED3D_TEXTURE_POW2_MAT_IDENT))
+        if (!(texture_gl->t.flags & WINED3D_TEXTURE_POW2_MAT_IDENT))
             context->constant_update_mask |= WINED3D_SHADER_CONST_PS_NP2_FIXUP;
     }
     else

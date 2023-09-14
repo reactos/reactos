@@ -13089,7 +13089,8 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         default:
             break;
     }
-    context_draw_shaded_quad(context, src_texture, src_sub_resource_idx, src_rect, dst_rect, filter);
+    context_draw_shaded_quad(context, wined3d_texture_gl(src_texture),
+            src_sub_resource_idx, src_rect, dst_rect, filter);
     GL_EXTCALL(glUseProgram(0));
 
     if (dst_texture->swapchain && (dst_texture->swapchain->front_buffer == dst_texture))
