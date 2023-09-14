@@ -1107,10 +1107,19 @@ void wined3d_device_create_primary_opengl_context_cs(void *object)
     struct wined3d_texture *target;
     HRESULT hr;
 
+    swapchain = device->swapchains[0];
+    target = swapchain->back_buffers ? swapchain->back_buffers[0] : swapchain->front_buffer;
+    if (!(context = context_acquire(device, target, 0)))
+    {
+        WARN("Failed to acquire context.\n");
+        return;
+    }
+
     if (FAILED(hr = device->shader_backend->shader_alloc_private(device,
             device->adapter->vertex_pipe, device->adapter->fragment_pipe)))
     {
         ERR("Failed to allocate shader private data, hr %#x.\n", hr);
+        context_release(context);
         return;
     }
 
@@ -1118,6 +1127,7 @@ void wined3d_device_create_primary_opengl_context_cs(void *object)
     {
         ERR("Failed to create CPU blitter.\n");
         device->shader_backend->shader_free_private(device, NULL);
+        context_release(context);
         return;
     }
     wined3d_ffp_blitter_create(&device->blitter, &device->adapter->gl_info);
@@ -1126,9 +1136,6 @@ void wined3d_device_create_primary_opengl_context_cs(void *object)
     wined3d_fbo_blitter_create(&device->blitter, &device->adapter->gl_info);
     wined3d_raw_blitter_create(&device->blitter, &device->adapter->gl_info);
 
-    swapchain = device->swapchains[0];
-    target = swapchain->back_buffers ? swapchain->back_buffers[0] : swapchain->front_buffer;
-    context = context_acquire(device, target, 0);
     context_gl = wined3d_context_gl(context);
     wined3d_device_gl_create_dummy_textures(wined3d_device_gl(device), context_gl);
     create_default_samplers(device, context);
