@@ -10062,16 +10062,15 @@ static GLuint find_glsl_compute_shader(const struct wined3d_context_gl *context_
 }
 
 /* Context activation is done by the caller. */
-static void set_glsl_compute_shader_program(const struct wined3d_context *context,
+static void set_glsl_compute_shader_program(const struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state, struct shader_glsl_priv *priv, struct glsl_context_data *ctx_data)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_shader_prog_link *entry;
     struct wined3d_shader *shader;
     struct glsl_program_key key;
     GLuint cs_id;
 
-    if (!(context->shader_update_mask & (1u << WINED3D_SHADER_TYPE_COMPUTE)))
+    if (!(context_gl->c.shader_update_mask & (1u << WINED3D_SHADER_TYPE_COMPUTE)))
         return;
 
     if (!(shader = state->shader[WINED3D_SHADER_TYPE_COMPUTE]))
@@ -10591,13 +10590,14 @@ static void shader_glsl_select(void *shader_priv, struct wined3d_context *contex
 static void shader_glsl_select_compute(void *shader_priv, struct wined3d_context *context,
         const struct wined3d_state *state)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct glsl_context_data *ctx_data = context->shader_backend_data;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct shader_glsl_priv *priv = shader_priv;
     GLuint program_id, prev_id;
 
     prev_id = ctx_data->glsl_program ? ctx_data->glsl_program->id : 0;
-    set_glsl_compute_shader_program(context, state, priv, ctx_data);
+    set_glsl_compute_shader_program(context_gl, state, priv, ctx_data);
     program_id = ctx_data->glsl_program ? ctx_data->glsl_program->id : 0;
 
     TRACE("Using GLSL program %u.\n", program_id);
