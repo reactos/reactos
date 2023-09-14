@@ -1647,8 +1647,8 @@ todo_wine {
     /* Have SPDRP_CLASS property */
     memset(buf, 0, sizeof(buf));
     ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_CLASS, NULL, (BYTE *)buf, sizeof(buf), NULL);
-    todo_wine ok(ret, "Failed to get property, error %#x.\n", GetLastError());
-    todo_wine ok(!lstrcmpA(buf, "Display"), "Got unexpected value %s.\n", buf);
+    ok(ret, "Failed to get property, error %#x.\n", GetLastError());
+    ok(!lstrcmpA(buf, "Display"), "Got unexpected value %s.\n", buf);
 
     SetupDiDestroyDeviceInfoList(set);
 }
@@ -1807,8 +1807,8 @@ todo_wine {
     /* Have SPDRP_CLASS property */
     memset(buf, 0, sizeof(buf));
     ret = SetupDiGetDeviceRegistryPropertyW(set, &device, SPDRP_CLASS, NULL, (BYTE *)buf, sizeof(buf), NULL);
-    todo_wine ok(ret, "Failed to get property, error %#x.\n", GetLastError());
-    todo_wine ok(!lstrcmpW(buf, L"Display"), "Got unexpected value %s.\n", wine_dbgstr_w(buf));
+    ok(ret, "Failed to get property, error %#x.\n", GetLastError());
+    ok(!lstrcmpW(buf, L"Display"), "Got unexpected value %s.\n", wine_dbgstr_w(buf));
 
     SetupDiDestroyDeviceInfoList(set);
 }
