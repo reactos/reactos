@@ -2610,8 +2610,8 @@ void *wined3d_context_gl_map_bo_address(struct wined3d_context_gl *context_gl,
 
     if (gl_info->supported[ARB_MAP_BUFFER_RANGE])
     {
-        GLbitfield map_flags = wined3d_resource_gl_map_flags(flags) & ~GL_MAP_FLUSH_EXPLICIT_BIT;
-        memory = GL_EXTCALL(glMapBufferRange(binding, (INT_PTR)data->addr, size, map_flags));
+        memory = GL_EXTCALL(glMapBufferRange(binding, (INT_PTR)data->addr,
+                size, wined3d_resource_gl_map_flags(flags)));
     }
     else
     {
@@ -2625,16 +2625,26 @@ void *wined3d_context_gl_map_bo_address(struct wined3d_context_gl *context_gl,
     return memory;
 }
 
-void wined3d_context_gl_unmap_bo_address(struct wined3d_context_gl *context_gl,
-        const struct wined3d_bo_address *data, GLenum binding)
+void wined3d_context_gl_unmap_bo_address(struct wined3d_context_gl *context_gl, const struct wined3d_bo_address *data,
+        GLenum binding, unsigned int range_count, const struct wined3d_map_range *ranges)
 {
     const struct wined3d_gl_info *gl_info;
+    unsigned int i;
 
     if (!data->buffer_object)
         return;
 
     gl_info = context_gl->gl_info;
     wined3d_context_gl_bind_bo(context_gl, binding, data->buffer_object);
+
+    if (gl_info->supported[ARB_MAP_BUFFER_RANGE])
+    {
+        for (i = 0; i < range_count; ++i)
+        {
+            GL_EXTCALL(glFlushMappedBufferRange(binding, (UINT_PTR)data->addr + ranges[i].offset, ranges[i].size));
+        }
+    }
+
     GL_EXTCALL(glUnmapBuffer(binding));
     wined3d_context_gl_bind_bo(context_gl, binding, 0);
     checkGLcall("Unmap buffer object");
@@ -2645,6 +2655,7 @@ void wined3d_context_gl_copy_bo_address(struct wined3d_context_gl *context_gl,
         const struct wined3d_bo_address *src, GLenum src_binding, size_t size)
 {
     const struct wined3d_gl_info *gl_info;
+    struct wined3d_map_range range;
     BYTE *dst_ptr, *src_ptr;
 
     gl_info = context_gl->gl_info;
@@ -2666,8 +2677,10 @@ void wined3d_context_gl_copy_bo_address(struct wined3d_context_gl *context_gl,
 
             memcpy(dst_ptr, src_ptr, size);
 
-            wined3d_context_gl_unmap_bo_address(context_gl, dst, dst_binding);
-            wined3d_context_gl_unmap_bo_address(context_gl, src, src_binding);
+            range.offset = 0;
+            range.size = size;
+            wined3d_context_gl_unmap_bo_address(context_gl, dst, dst_binding, 1, &range);
+            wined3d_context_gl_unmap_bo_address(context_gl, src, src_binding, 0, NULL);
         }
     }
     else if (!dst->buffer_object && src->buffer_object)

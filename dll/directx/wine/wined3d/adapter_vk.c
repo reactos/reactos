@@ -483,8 +483,8 @@ static void *adapter_vk_map_bo_address(struct wined3d_context *context,
     return data->addr;
 }
 
-static void adapter_vk_unmap_bo_address(struct wined3d_context *context,
-        const struct wined3d_bo_address *data, uint32_t bind_flags)
+static void adapter_vk_unmap_bo_address(struct wined3d_context *context, const struct wined3d_bo_address *data,
+        uint32_t bind_flags, unsigned int range_count, const struct wined3d_map_range *ranges)
 {
     if (data->buffer_object)
         ERR("Unsupported buffer object %#lx.\n", data->buffer_object);

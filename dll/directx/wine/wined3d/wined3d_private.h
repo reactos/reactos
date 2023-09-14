@@ -1906,6 +1906,12 @@ struct wined3d_gl_view
     GLuint name;
 };
 
+struct wined3d_map_range
+{
+    unsigned int offset;
+    unsigned int size;
+};
+
 struct wined3d_rendertarget_info
 {
     struct wined3d_gl_view gl_view;
@@ -2157,8 +2163,8 @@ void wined3d_context_gl_set_draw_buffer(struct wined3d_context_gl *context_gl, G
 void wined3d_context_gl_texture_update(struct wined3d_context_gl *context_gl,
         const struct wined3d_texture_gl *texture_gl) DECLSPEC_HIDDEN;
 void wined3d_context_gl_unload_tex_coords(const struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
-void wined3d_context_gl_unmap_bo_address(struct wined3d_context_gl *context_gl,
-        const struct wined3d_bo_address *data, GLenum binding) DECLSPEC_HIDDEN;
+void wined3d_context_gl_unmap_bo_address(struct wined3d_context_gl *context_gl, const struct wined3d_bo_address *data,
+        GLenum binding, unsigned int range_count, const struct wined3d_map_range *ranges) DECLSPEC_HIDDEN;
 void wined3d_context_gl_update_stream_sources(struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state) DECLSPEC_HIDDEN;
 
@@ -2821,8 +2827,8 @@ struct wined3d_adapter_ops
     void (*adapter_uninit_3d)(struct wined3d_device *device);
     void *(*adapter_map_bo_address)(struct wined3d_context *context,
             const struct wined3d_bo_address *data, size_t size, uint32_t bind_flags, uint32_t map_flags);
-    void (*adapter_unmap_bo_address)(struct wined3d_context *context,
-            const struct wined3d_bo_address *data, uint32_t bind_flags);
+    void (*adapter_unmap_bo_address)(struct wined3d_context *context, const struct wined3d_bo_address *data,
+            uint32_t bind_flags, unsigned int range_count, const struct wined3d_map_range *ranges);
     HRESULT (*adapter_create_swapchain)(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
             void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_swapchain **swapchain);
     void (*adapter_destroy_swapchain)(struct wined3d_swapchain *swapchain);
@@ -3633,6 +3639,7 @@ struct wined3d_texture
         unsigned int size;
 
         unsigned int map_count;
+        uint32_t map_flags;
         DWORD locations;
 #if !defined(STAGING_CSMT)
         GLuint buffer_object;
@@ -4197,12 +4204,6 @@ enum wined3d_buffer_conversion_type
     CONV_NONE,
     CONV_D3DCOLOR,
     CONV_POSITIONT,
-};
-
-struct wined3d_map_range
-{
-    UINT offset;
-    UINT size;
 };
 
 struct wined3d_buffer_ops
@@ -5341,9 +5342,10 @@ static inline void *wined3d_context_map_bo_address(struct wined3d_context *conte
 }
 
 static inline void wined3d_context_unmap_bo_address(struct wined3d_context *context,
-        const struct wined3d_bo_address *data, uint32_t bind_flags)
+        const struct wined3d_bo_address *data, uint32_t bind_flags,
+        unsigned int range_count, const struct wined3d_map_range *ranges)
 {
-    context->device->adapter->adapter_ops->adapter_unmap_bo_address(context, data, bind_flags);
+    context->device->adapter->adapter_ops->adapter_unmap_bo_address(context, data, bind_flags, range_count, ranges);
 }
 
 /* The WNDCLASS-Name for the fake window which we use to retrieve the GL capabilities */

@@ -800,6 +800,7 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
     {
         unsigned int dst_row_pitch, dst_slice_pitch;
         struct wined3d_bo_address dst_data;
+        struct wined3d_map_range range;
         const BYTE *src;
         BYTE *dst;
 
@@ -816,9 +817,11 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
 
         conv->convert(src, dst, src_row_pitch, dst_row_pitch, desc.width, desc.height);
 
+        range.offset = 0;
+        range.size = dst_texture->sub_resources[0].size;
         wined3d_texture_invalidate_location(dst_texture, 0, ~map_binding);
-        wined3d_context_unmap_bo_address(context, &dst_data, 0);
-        wined3d_context_unmap_bo_address(context, &src_data, 0);
+        wined3d_context_unmap_bo_address(context, &dst_data, 0, 1, &range);
+        wined3d_context_unmap_bo_address(context, &src_data, 0, 0, NULL);
     }
     else
     {
@@ -1786,6 +1789,7 @@ static HRESULT surface_cpu_blt(struct wined3d_texture *dst_texture, unsigned int
     unsigned int src_fmt_flags, dst_fmt_flags;
     struct wined3d_map_desc dst_map, src_map;
     unsigned int x, sx, xinc, y, sy, yinc;
+    struct wined3d_map_range dst_range;
     struct wined3d_context *context;
     unsigned int texture_level;
     HRESULT hr = WINED3D_OK;
@@ -1802,6 +1806,8 @@ static HRESULT surface_cpu_blt(struct wined3d_texture *dst_texture, unsigned int
 
     context = context_acquire(device, NULL, 0);
 
+    dst_range.offset = 0;
+    dst_range.size = dst_texture->sub_resources[dst_sub_resource_idx].size;
     if (src_texture == dst_texture && src_sub_resource_idx == dst_sub_resource_idx)
     {
         same_sub_resource = TRUE;
@@ -2236,9 +2242,9 @@ error:
         FIXME("    Unsupported flags %#x.\n", flags);
 
 release:
-    wined3d_context_unmap_bo_address(context, &dst_data, 0);
+    wined3d_context_unmap_bo_address(context, &dst_data, 0, 1, &dst_range);
     if (!same_sub_resource)
-        wined3d_context_unmap_bo_address(context, &src_data, 0);
+        wined3d_context_unmap_bo_address(context, &src_data, 0, 0, NULL);
     if (SUCCEEDED(hr) && dst_texture->swapchain && dst_texture->swapchain->front_buffer == dst_texture)
     {
         SetRect(&dst_texture->swapchain->front_buffer_update,
@@ -2260,6 +2266,7 @@ static void surface_cpu_blt_colour_fill(struct wined3d_rendertarget_view *view,
     struct wined3d_context *context;
     struct wined3d_texture *texture;
     struct wined3d_bo_address data;
+    struct wined3d_map_range range;
     struct wined3d_map_desc map;
     DWORD map_binding;
     uint8_t *dst;
@@ -2314,6 +2321,8 @@ static void surface_cpu_blt_colour_fill(struct wined3d_rendertarget_view *view,
             + (box->front * map.slice_pitch)
             + ((box->top / view->format->block_height) * map.row_pitch)
             + ((box->left / view->format->block_width) * view->format->block_byte_count);
+    range.offset = 0;
+    range.size = texture->sub_resources[view->sub_resource_idx].size;
 
     switch (bpp)
     {
@@ -2369,7 +2378,7 @@ static void surface_cpu_blt_colour_fill(struct wined3d_rendertarget_view *view,
         memcpy(dst, map.data, w * h * bpp);
     }
 
-    wined3d_context_unmap_bo_address(context, &data, 0);
+    wined3d_context_unmap_bo_address(context, &data, 0, 1, &range);
     context_release(context);
 }
 
