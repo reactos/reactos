@@ -2453,9 +2453,39 @@ static BOOL texture2d_load_location(struct wined3d_texture *texture, unsigned in
     }
 }
 
+static void wined3d_texture_gl_upload_data(struct wined3d_context *context,
+        const struct wined3d_const_bo_address *src_bo_addr, const struct wined3d_format *src_format,
+        const struct wined3d_box *src_box, unsigned int src_row_pitch, unsigned int src_slice_pitch,
+        struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx, unsigned int dst_location,
+        unsigned int dst_x, unsigned int dst_y, unsigned int dst_z)
+{
+    BOOL srgb = FALSE;
+
+    TRACE("context %p, src_bo_addr %s, src_format %s, src_box %s, src_row_pitch %u, src_slice_pitch %u, "
+            "dst_texture %p, dst_sub_resource_idx %u, dst_location %s, dst_x %u, dst_y %u, dst_z %u.\n",
+            context, debug_const_bo_address(src_bo_addr), debug_d3dformat(src_format->id), debug_box(src_box),
+            src_row_pitch, src_slice_pitch, dst_texture, dst_sub_resource_idx,
+            wined3d_debug_location(dst_location), dst_x, dst_y, dst_z);
+
+    if (dst_location == WINED3D_LOCATION_TEXTURE_SRGB)
+    {
+        srgb = TRUE;
+    }
+    else if (dst_location != WINED3D_LOCATION_TEXTURE_RGB)
+    {
+        FIXME("Unhandled location %s.\n", wined3d_debug_location(dst_location));
+        return;
+    }
+
+    wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(dst_texture), wined3d_context_gl(context), srgb);
+    wined3d_texture_upload_data(dst_texture, dst_sub_resource_idx, context, src_format,
+            src_box, src_bo_addr, src_row_pitch, src_slice_pitch, dst_x, dst_y, dst_z, srgb);
+}
+
 static const struct wined3d_texture_ops texture2d_ops =
 {
     texture2d_load_location,
+    wined3d_texture_gl_upload_data,
 };
 
 struct wined3d_texture * __cdecl wined3d_texture_from_resource(struct wined3d_resource *resource)
@@ -2829,6 +2859,7 @@ static BOOL texture1d_load_location(struct wined3d_texture *texture, unsigned in
 static const struct wined3d_texture_ops texture1d_ops =
 {
     texture1d_load_location,
+    wined3d_texture_gl_upload_data,
 };
 
 static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struct wined3d_resource_desc *desc,
@@ -3244,6 +3275,7 @@ static BOOL texture3d_load_location(struct wined3d_texture *texture, unsigned in
 static const struct wined3d_texture_ops texture3d_ops =
 {
     texture3d_load_location,
+    wined3d_texture_gl_upload_data,
 };
 
 HRESULT CDECL wined3d_texture_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,

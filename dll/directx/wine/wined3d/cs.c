@@ -2246,10 +2246,10 @@ static void wined3d_cs_exec_blt_sub_resource(struct wined3d_cs *cs, const void *
         wined3d_texture_get_pitch(src_texture, op->src_sub_resource_idx % src_texture->level_count,
                 &row_pitch, &slice_pitch);
 
-        wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(dst_texture), wined3d_context_gl(context), FALSE);
-        wined3d_texture_upload_data(dst_texture, op->dst_sub_resource_idx, context,
-                dst_texture->resource.format, &op->src_box, wined3d_const_bo_address(&addr),
-                row_pitch, slice_pitch, op->dst_box.left, op->dst_box.top, op->dst_box.front, FALSE);
+        dst_texture->texture_ops->texture_upload_data(context, wined3d_const_bo_address(&addr),
+                dst_texture->resource.format, &op->src_box, row_pitch, slice_pitch, dst_texture,
+                op->dst_sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB,
+                op->dst_box.left, op->dst_box.top, op->dst_box.front);
         wined3d_texture_validate_location(dst_texture, op->dst_sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB);
         wined3d_texture_invalidate_location(dst_texture, op->dst_sub_resource_idx, ~WINED3D_LOCATION_TEXTURE_RGB);
 
