@@ -219,7 +219,7 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
                     tmpvalue >> 16, tmpvalue & 0xffff);
             wined3d_settings.max_gl_version = tmpvalue;
         }
-        if (!get_config_key(hkey, appkey, "ShaderBackend", buffer, size))
+        if (!get_config_key(hkey, appkey, "shader_backend", buffer, size))
         {
             if (!strcasecmp(buffer, "glsl"))
             {
