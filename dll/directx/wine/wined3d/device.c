@@ -3187,8 +3187,7 @@ static void wined3d_colour_from_mcs(struct wined3d_color *colour, enum wined3d_m
         case WINED3D_MCS_COLOR2:
             if (!(stream_info->use_map & (1u << WINED3D_FFP_SPECULAR)))
             {
-                colour->r = colour->g = colour->b = 0.0f;
-                colour->a = 1.0f;
+                colour->r = colour->g = colour->b = colour->a = 0.0f;
                 return;
             }
             element = &stream_info->elements[WINED3D_FFP_SPECULAR];
@@ -3842,7 +3841,7 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
                 specular_colour.r = specular.r * material_specular.r;
                 specular_colour.g = specular.g * material_specular.g;
                 specular_colour.b = specular.b * material_specular.b;
-                specular_colour.a = 1.0f;
+                specular_colour.a = ls.legacy_lighting ? 0.0f : material_specular.a;
             }
             else
             {
