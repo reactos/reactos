@@ -3435,15 +3435,15 @@ static void wined3d_context_gl_map_vsamplers(struct wined3d_context_gl *context_
     }
 }
 
-static void context_update_tex_unit_map(struct wined3d_context *context, const struct wined3d_state *state)
+static void wined3d_context_gl_update_tex_unit_map(struct wined3d_context_gl *context_gl,
+        const struct wined3d_state *state)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     BOOL vs = use_vs(state);
     BOOL ps = use_ps(state);
 
     if (!ps)
-        context_update_fixed_function_usage_map(context, state);
+        context_update_fixed_function_usage_map(&context_gl->c, state);
 
     /* Try to go for a 1:1 mapping of the samplers when possible. Pixel shaders
      * need a 1:1 map at the moment.
@@ -3956,7 +3956,7 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
     /* Preload resources before FBO setup. Texture preload in particular may
      * result in changes to the current FBO, due to using e.g. FBO blits for
      * updating a resource location. */
-    context_update_tex_unit_map(context, state);
+    wined3d_context_gl_update_tex_unit_map(context_gl, state);
     context_preload_textures(context, state);
     context_load_shader_resources(context, state, ~(1u << WINED3D_SHADER_TYPE_COMPUTE));
     context_load_unordered_access_resources(context, state->shader[WINED3D_SHADER_TYPE_PIXEL],
