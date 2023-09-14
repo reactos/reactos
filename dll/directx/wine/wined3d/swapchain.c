@@ -151,7 +151,7 @@ void CDECL wined3d_swapchain_set_window(struct wined3d_swapchain *swapchain, HWN
 
 HRESULT CDECL wined3d_swapchain_present(struct wined3d_swapchain *swapchain,
         const RECT *src_rect, const RECT *dst_rect, HWND dst_window_override,
-        DWORD swap_interval, DWORD flags)
+        unsigned int swap_interval, DWORD flags)
 {
     static DWORD notified_flags = 0;
     RECT s, d;
@@ -168,7 +168,7 @@ HRESULT CDECL wined3d_swapchain_present(struct wined3d_swapchain *swapchain,
 
     if (!swapchain->back_buffers)
     {
-        WARN("Swapchain doesn't have a backbuffer, returning WINED3DERR_INVALIDCALL\n");
+        WARN("Swapchain doesn't have a backbuffer, returning WINED3DERR_INVALIDCALL.\n");
         return WINED3DERR_INVALIDCALL;
     }
 
