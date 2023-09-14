@@ -3532,7 +3532,7 @@ void find_vs_compile_args(const struct wined3d_state *state, const struct wined3
             && state->render_states[WINED3D_RS_CLIPPLANEENABLE];
     args->point_size = state->gl_primitive_type == GL_POINTS;
     args->per_vertex_point_size = shader->reg_maps.point_size;
-    args->next_shader_type = hull_shader? WINED3D_SHADER_TYPE_HULL
+    args->next_shader_type = hull_shader ? WINED3D_SHADER_TYPE_HULL
             : geometry_shader ? WINED3D_SHADER_TYPE_GEOMETRY : WINED3D_SHADER_TYPE_PIXEL;
     if (shader->reg_maps.shader_version.major >= 4)
         args->next_shader_input_count = hull_shader ? hull_shader->limits->packed_input

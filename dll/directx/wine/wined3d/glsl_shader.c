@@ -8311,8 +8311,10 @@ static GLuint find_glsl_pshader(const struct wined3d_context *context,
 static inline BOOL vs_args_equal(const struct vs_compile_args *stored, const struct vs_compile_args *new,
         const DWORD use_map)
 {
-    if((stored->swizzle_map & use_map) != new->swizzle_map) return FALSE;
-    if((stored->clip_enabled) != new->clip_enabled) return FALSE;
+    if ((stored->swizzle_map & use_map) != new->swizzle_map)
+        return FALSE;
+    if ((stored->clip_enabled) != new->clip_enabled)
+        return FALSE;
     if (stored->point_size != new->point_size)
         return FALSE;
     if (stored->per_vertex_point_size != new->per_vertex_point_size)
@@ -8323,7 +8325,9 @@ static inline BOOL vs_args_equal(const struct vs_compile_args *stored, const str
         return FALSE;
     if (stored->next_shader_input_count != new->next_shader_input_count)
         return FALSE;
-    return stored->fog_src == new->fog_src;
+    if (stored->fog_src != new->fog_src)
+        return FALSE;
+    return !memcmp(stored->interpolation_mode, new->interpolation_mode, sizeof(new->interpolation_mode));
 }
 
 static GLuint find_glsl_vshader(const struct wined3d_context *context, struct shader_glsl_priv *priv,
