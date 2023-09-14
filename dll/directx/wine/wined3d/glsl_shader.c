@@ -1455,10 +1455,10 @@ static void shader_glsl_pointsize_uniform(const struct wined3d_context_gl *conte
     checkGLcall("glUniform1f");
 }
 
-static void shader_glsl_load_fog_uniform(const struct wined3d_context *context,
+static void shader_glsl_load_fog_uniform(const struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state, struct glsl_shader_prog_link *prog)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_color color;
     float start, end, scale;
     union
@@ -1471,7 +1471,7 @@ static void shader_glsl_load_fog_uniform(const struct wined3d_context *context,
     GL_EXTCALL(glUniform4fv(prog->ps.fog_color_location, 1, &color.r));
     tmpvalue.d = state->render_states[WINED3D_RS_FOGDENSITY];
     GL_EXTCALL(glUniform1f(prog->ps.fog_density_location, tmpvalue.f));
-    get_fog_start_end(context, state, &start, &end);
+    get_fog_start_end(&context_gl->c, state, &start, &end);
     scale = 1.0f / (end - start);
     GL_EXTCALL(glUniform1f(prog->ps.fog_end_location, end));
     GL_EXTCALL(glUniform1f(prog->ps.fog_scale_location, scale));
@@ -1766,7 +1766,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
     }
 
     if (update_mask & WINED3D_SHADER_CONST_PS_FOG)
-        shader_glsl_load_fog_uniform(context, state, prog);
+        shader_glsl_load_fog_uniform(context_gl, state, prog);
 
     if (update_mask & WINED3D_SHADER_CONST_PS_ALPHA_TEST)
     {
