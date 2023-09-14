@@ -1312,7 +1312,7 @@ static void context_update_window(struct wined3d_context *context)
     }
 }
 
-static void context_destroy_gl_resources(struct wined3d_context *context)
+static void wined3d_context_cleanup(struct wined3d_context *context)
 {
     struct wined3d_pipeline_statistics_query *pipeline_statistics_query;
     const struct wined3d_gl_info *gl_info = context->gl_info;
@@ -1510,7 +1510,7 @@ BOOL context_set_current(struct wined3d_context *ctx)
         if (old->destroyed)
         {
             TRACE("Switching away from destroyed context %p.\n", old);
-            context_destroy_gl_resources(old);
+            wined3d_context_cleanup(old);
             heap_free((void *)old->gl_info);
             heap_free(old);
         }
@@ -2328,7 +2328,7 @@ void wined3d_context_destroy(struct wined3d_context *context)
     {
         struct wined3d_gl_info *gl_info;
 
-        /* Make a copy of gl_info for context_destroy_gl_resources() use, the
+        /* Make a copy of gl_info for wined3d_context_cleanup() use, the
          * one in wined3d_adapter may go away in the meantime. */
         gl_info = heap_alloc(sizeof(*gl_info));
         *gl_info = *context->gl_info;
@@ -2338,7 +2338,7 @@ void wined3d_context_destroy(struct wined3d_context *context)
         return;
     }
 
-    context_destroy_gl_resources(context);
+    wined3d_context_cleanup(context);
     TlsSetValue(wined3d_context_tls_idx, NULL);
     heap_free(context);
 }
