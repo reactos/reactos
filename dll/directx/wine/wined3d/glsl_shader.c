@@ -1363,10 +1363,10 @@ static void shader_glsl_ffp_vertex_material_uniform(const struct wined3d_context
     checkGLcall("setting FFP material uniforms");
 }
 
-static void shader_glsl_ffp_vertex_lightambient_uniform(const struct wined3d_context *context,
+static void shader_glsl_ffp_vertex_lightambient_uniform(const struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state, struct glsl_shader_prog_link *prog)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_color color;
 
     wined3d_color_from_d3dcolor(&color, state->render_states[WINED3D_RS_AMBIENT]);
@@ -1654,7 +1654,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
         directional_idx = spot_idx + spot_count;
         parallel_point_idx = directional_idx + directional_count;
 
-        shader_glsl_ffp_vertex_lightambient_uniform(context, state, prog);
+        shader_glsl_ffp_vertex_lightambient_uniform(context_gl, state, prog);
         for (i = 0; i < WINED3D_MAX_ACTIVE_LIGHTS; ++i)
         {
             const struct wined3d_light_info *light_info = state->light_state.lights[i];
