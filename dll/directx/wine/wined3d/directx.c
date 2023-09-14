@@ -4072,7 +4072,11 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         gl_info->supported[WINED3D_GL_BLEND_EQUATION] = TRUE;
 
     if (gl_version >= MAKEDWORD_VERSION(2, 0))
+    {
         gl_info->supported[WINED3D_GL_VERSION_2_0] = TRUE;
+        /* We want to use the core APIs for two-sided stencil in GL 2.0. */
+        gl_info->supported[EXT_STENCIL_TWO_SIDE] = FALSE;
+    }
     if (gl_version >= MAKEDWORD_VERSION(3, 2))
         gl_info->supported[WINED3D_GL_VERSION_3_2] = TRUE;
 
