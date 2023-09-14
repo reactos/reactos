@@ -1,0 +1,37 @@
+diff --git a/dll/directx/wine/wined3d/cs.c b/dll/directx/wine/wined3d/cs.c
+index 9f90d3c..54be547 100644
+--- a/dll/directx/wine/wined3d/cs.c
++++ b/dll/directx/wine/wined3d/cs.c
+@@ -2504,6 +2504,7 @@ static void wined3d_cs_exec_copy_uav_counter(struct wined3d_cs *cs, const void *
+     context_release(context);
+ 
+     wined3d_resource_release(&op->buffer->resource);
++    wined3d_resource_release(view->resource);
+ }
+ 
+ void wined3d_cs_emit_copy_uav_counter(struct wined3d_cs *cs, struct wined3d_buffer *dst_buffer,
+@@ -2518,6 +2519,7 @@ void wined3d_cs_emit_copy_uav_counter(struct wined3d_cs *cs, struct wined3d_buff
+     op->view = uav;
+ 
+     wined3d_resource_acquire(&dst_buffer->resource);
++    wined3d_resource_acquire(uav->resource);
+ 
+     wined3d_cs_submit(cs, WINED3D_CS_QUEUE_DEFAULT);
+ }
+diff --git a/dll/directx/wine/wined3d/device.c b/dll/directx/wine/wined3d/device.c
+index 986ea7a..655b6d9 100644
+--- a/dll/directx/wine/wined3d/device.c
++++ b/dll/directx/wine/wined3d/device.c
+@@ -4616,6 +4616,12 @@ void CDECL wined3d_device_copy_uav_counter(struct wined3d_device *device,
+     TRACE("device %p, dst_buffer %p, offset %u, uav %p.\n",
+             device, dst_buffer, offset, uav);
+ 
++    if (offset + sizeof(GLuint) > dst_buffer->resource.size)
++    {
++        WARN("Offset %u too large.\n", offset);
++        return;
++    }
++
+     wined3d_cs_emit_copy_uav_counter(device->cs, dst_buffer, offset, uav);
+ }
+ 
