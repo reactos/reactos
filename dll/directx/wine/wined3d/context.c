@@ -1066,34 +1066,22 @@ static void context_queue_fbo_entry_destruction(struct wined3d_context *context,
     list_add_head(&context->fbo_destroy_list, &entry->entry);
 }
 
-void context_resource_released(const struct wined3d_device *device,
-        struct wined3d_resource *resource, enum wined3d_resource_type type)
+void context_resource_released(const struct wined3d_device *device, struct wined3d_resource *resource)
 {
-    struct wined3d_texture *texture;
-    UINT i;
+    unsigned int i;
 
     if (!device->d3d_initialized)
         return;
 
-    switch (type)
+    for (i = 0; i < device->context_count; ++i)
     {
-        case WINED3D_RTYPE_TEXTURE_2D:
-        case WINED3D_RTYPE_TEXTURE_3D:
-            texture = texture_from_resource(resource);
+        struct wined3d_context *context = device->contexts[i];
 
-            for (i = 0; i < device->context_count; ++i)
-            {
-                struct wined3d_context *context = device->contexts[i];
-                if (context->current_rt.texture == texture)
-                {
-                    context->current_rt.texture = NULL;
-                    context->current_rt.sub_resource_idx = 0;
-                }
-            }
-            break;
-
-        default:
-            break;
+        if (&context->current_rt.texture->resource == resource)
+        {
+            context->current_rt.texture = NULL;
+            context->current_rt.sub_resource_idx = 0;
+        }
     }
 }
 
