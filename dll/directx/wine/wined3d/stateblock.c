@@ -1340,6 +1340,18 @@ HRESULT CDECL wined3d_stateblock_set_vs_consts_b(struct wined3d_stateblock *stat
     return WINED3D_OK;
 }
 
+void CDECL wined3d_stateblock_set_pixel_shader(struct wined3d_stateblock *stateblock, struct wined3d_shader *shader)
+{
+    TRACE("stateblock %p, shader %p.\n", stateblock, shader);
+
+    if (shader)
+        wined3d_shader_incref(shader);
+    if (stateblock->stateblock_state.ps)
+        wined3d_shader_decref(stateblock->stateblock_state.ps);
+    stateblock->stateblock_state.ps = shader;
+    stateblock->changed.pixelShader = TRUE;
+}
+
 void CDECL wined3d_stateblock_set_vertex_declaration(struct wined3d_stateblock *stateblock,
         struct wined3d_vertex_declaration *declaration)
 {

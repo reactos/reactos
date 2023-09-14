@@ -260,6 +260,7 @@
 @ cdecl wined3d_stateblock_create(ptr long ptr)
 @ cdecl wined3d_stateblock_decref(ptr)
 @ cdecl wined3d_stateblock_incref(ptr)
+@ cdecl wined3d_stateblock_set_pixel_shader(ptr ptr)
 @ cdecl wined3d_stateblock_set_vertex_declaration(ptr ptr)
 @ cdecl wined3d_stateblock_set_vertex_shader(ptr ptr)
 @ cdecl wined3d_stateblock_set_vs_consts_b(ptr long long ptr)

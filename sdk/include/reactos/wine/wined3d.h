@@ -2689,6 +2689,7 @@ HRESULT __cdecl wined3d_stateblock_create(struct wined3d_device *device,
         enum wined3d_stateblock_type type, struct wined3d_stateblock **stateblock);
 ULONG __cdecl wined3d_stateblock_decref(struct wined3d_stateblock *stateblock);
 ULONG __cdecl wined3d_stateblock_incref(struct wined3d_stateblock *stateblock);
+void __cdecl wined3d_stateblock_set_pixel_shader(struct wined3d_stateblock *stateblock, struct wined3d_shader *shader);
 void __cdecl wined3d_stateblock_set_vertex_declaration(struct wined3d_stateblock *stateblock,
         struct wined3d_vertex_declaration *declaration);
 void __cdecl wined3d_stateblock_set_vertex_shader(struct wined3d_stateblock *stateblock, struct wined3d_shader *shader);
