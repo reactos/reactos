@@ -184,6 +184,7 @@ static void texture_gl_apply_base_level(struct wined3d_texture_gl *texture_gl,
 void wined3d_sampler_bind(struct wined3d_sampler *sampler, unsigned int unit,
         struct wined3d_texture_gl *texture_gl, const struct wined3d_context *context)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
     if (gl_info->supported[ARB_SAMPLER_OBJECTS])
@@ -193,7 +194,7 @@ void wined3d_sampler_bind(struct wined3d_sampler *sampler, unsigned int unit,
     }
     else if (texture_gl)
     {
-        wined3d_texture_gl_apply_sampler_desc(texture_gl, &sampler->desc, context);
+        wined3d_texture_gl_apply_sampler_desc(texture_gl, &sampler->desc, context_gl);
     }
     else
     {
