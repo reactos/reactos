@@ -5882,6 +5882,12 @@ static HRESULT d3d_device7_CaptureStateBlock(IDirect3DDevice7 *iface, DWORD stat
     TRACE("iface %p, stateblock %#x.\n", iface, stateblock);
 
     wined3d_mutex_lock();
+    if (device->recording)
+    {
+        wined3d_mutex_unlock();
+        WARN("Trying to capture a stateblock while recording, returning D3DERR_INBEGINSTATEBLOCK.\n");
+        return D3DERR_INBEGINSTATEBLOCK;
+    }
     wined3d_sb = ddraw_get_object(&device->handle_table, stateblock - 1, DDRAW_HANDLE_STATEBLOCK);
     if (!wined3d_sb)
     {
