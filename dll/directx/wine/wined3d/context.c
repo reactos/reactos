@@ -5015,9 +5015,9 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
     context_release(context);
 }
 
-void context_unload_tex_coords(const struct wined3d_context *context)
+void wined3d_context_gl_unload_tex_coords(const struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     unsigned int texture_idx;
 
     for (texture_idx = 0; texture_idx < gl_info->limits.texture_coords; ++texture_idx)
@@ -5091,6 +5091,7 @@ void wined3d_context_gl_load_tex_coords(const struct wined3d_context_gl *context
 /* This should match any arrays loaded in context_load_vertex_data(). */
 static void context_unload_vertex_data(struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
     if (!context->namedArraysLoaded)
@@ -5100,7 +5101,7 @@ static void context_unload_vertex_data(struct wined3d_context *context)
     gl_info->gl_ops.gl.p_glDisableClientState(GL_COLOR_ARRAY);
     if (gl_info->supported[EXT_SECONDARY_COLOR])
         gl_info->gl_ops.gl.p_glDisableClientState(GL_SECONDARY_COLOR_ARRAY_EXT);
-    context_unload_tex_coords(context);
+    wined3d_context_gl_unload_tex_coords(context_gl);
     context->namedArraysLoaded = FALSE;
 }
 

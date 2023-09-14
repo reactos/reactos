@@ -3496,7 +3496,7 @@ static void tex_coordindex(struct wined3d_context *context, const struct wined3d
          */
         GLuint curVBO = gl_info->supported[ARB_VERTEX_BUFFER_OBJECT] ? ~0U : 0;
 
-        context_unload_tex_coords(context);
+        wined3d_context_gl_unload_tex_coords(context_gl);
         wined3d_context_gl_load_tex_coords(context_gl, &context->stream_info, &curVBO, state);
     }
 }
