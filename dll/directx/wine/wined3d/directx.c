@@ -1335,7 +1335,7 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
     const struct wined3d_format *ds_format;
     const struct wined3d_adapter *adapter;
 
-    TRACE("wined3d %p, adapter_idx %u, device_type %s,\n"
+    TRACE("wined3d %p, adapter_idx %u, device_type %s,  "
             "adapter_format %s, render_target_format %s, depth_stencil_format %s.\n",
             wined3d, adapter_idx, debug_d3ddevicetype(device_type), debug_d3dformat(adapter_format_id),
             debug_d3dformat(render_target_format_id), debug_d3dformat(depth_stencil_format_id));
@@ -1346,16 +1346,19 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
     adapter = wined3d->adapters[adapter_idx];
     rt_format = wined3d_get_format(adapter, render_target_format_id, WINED3D_BIND_RENDER_TARGET);
     ds_format = wined3d_get_format(adapter, depth_stencil_format_id, WINED3D_BIND_DEPTH_STENCIL);
-    if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
+
+    if (!(rt_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_RENDERTARGET))
     {
-        if ((rt_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_RENDERTARGET)
-                && (ds_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL)))
-        {
-            TRACE("Formats match.\n");
-            return WINED3D_OK;
-        }
+        WARN("Format %s is not render target format.\n", debug_d3dformat(rt_format->id));
+        return WINED3DERR_NOTAVAILABLE;
     }
-    else
+    if (!(ds_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL)))
+    {
+        WARN("Format %s is not depth/stencil format.\n", debug_d3dformat(ds_format->id));
+        return WINED3DERR_NOTAVAILABLE;
+    }
+
+    if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
     {
         const struct wined3d_pixel_format *cfgs;
         unsigned int cfg_count;
@@ -1372,13 +1375,16 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
                 return WINED3D_OK;
             }
         }
+
+        TRACE("Unsupported format pair: %s and %s.\n",
+                debug_d3dformat(render_target_format_id),
+                debug_d3dformat(depth_stencil_format_id));
+
+        return WINED3DERR_NOTAVAILABLE;
     }
 
-    TRACE("Unsupported format pair: %s and %s.\n",
-            debug_d3dformat(render_target_format_id),
-            debug_d3dformat(depth_stencil_format_id));
-
-    return WINED3DERR_NOTAVAILABLE;
+    TRACE("Formats match.\n");
+    return WINED3D_OK;
 }
 
 HRESULT CDECL wined3d_check_device_multisample_type(const struct wined3d *wined3d, UINT adapter_idx,
