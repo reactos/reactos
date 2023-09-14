@@ -603,22 +603,20 @@ static void wined3d_cs_exec_clear(struct wined3d_cs *cs, const void *data)
 void wined3d_cs_emit_clear(struct wined3d_cs *cs, DWORD rect_count, const RECT *rects,
         DWORD flags, const struct wined3d_color *color, float depth, DWORD stencil)
 {
-    unsigned int rt_count = cs->device->adapter->d3d_info.limits.max_rt_count;
     const struct wined3d_state *state = &cs->device->state;
     const struct wined3d_viewport *vp = &state->viewports[0];
     struct wined3d_rendertarget_view *view;
     struct wined3d_cs_clear *op;
+    unsigned int rt_count, i;
     RECT view_rect;
-    unsigned int i;
+
+    rt_count = flags & WINED3DCLEAR_TARGET ? cs->device->adapter->d3d_info.limits.max_rt_count : 0;
 
     op = wined3d_cs_require_space(cs, FIELD_OFFSET(struct wined3d_cs_clear, rects[rect_count]),
             WINED3D_CS_QUEUE_DEFAULT);
     op->opcode = WINED3D_CS_OP_CLEAR;
     op->flags = flags;
-    if (flags & WINED3DCLEAR_TARGET)
-        op->rt_count = rt_count;
-    else
-        op->rt_count = 0;
+    op->rt_count = rt_count;
     op->fb = &cs->fb;
     SetRect(&op->draw_rect, vp->x, vp->y, vp->x + vp->width, vp->y + vp->height);
     if (state->render_states[WINED3D_RS_SCISSORTESTENABLE])
@@ -629,16 +627,13 @@ void wined3d_cs_emit_clear(struct wined3d_cs *cs, DWORD rect_count, const RECT *
     op->rect_count = rect_count;
     memcpy(op->rects, rects, sizeof(*rects) * rect_count);
 
-    if (flags & WINED3DCLEAR_TARGET)
+    for (i = 0; i < rt_count; ++i)
     {
-        for (i = 0; i < rt_count; ++i)
+        if ((view = state->fb->render_targets[i]))
         {
-            if ((view = state->fb->render_targets[i]))
-            {
-                SetRect(&view_rect, 0, 0, view->width, view->height);
-                IntersectRect(&op->draw_rect, &op->draw_rect, &view_rect);
-                wined3d_resource_acquire(view->resource);
-            }
+            SetRect(&view_rect, 0, 0, view->width, view->height);
+            IntersectRect(&op->draw_rect, &op->draw_rect, &view_rect);
+            wined3d_resource_acquire(view->resource);
         }
     }
     if (flags & (WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL))
