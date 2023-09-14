@@ -528,6 +528,18 @@ const struct wined3d_gpu_description *wined3d_get_user_override_gpu_description(
     return gpu_desc;
 }
 
+static void wined3d_copy_name(char *dst, const char *src, unsigned int dst_size)
+{
+    size_t len;
+
+    if (dst_size)
+    {
+        len = min(strlen(src), dst_size - 1);
+        memcpy(dst, src, len);
+        memset(&dst[len], 0, dst_size - len);
+    }
+}
+
 void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
         const struct wined3d_gpu_description *gpu_desc, UINT64 vram_bytes)
 {
@@ -1198,7 +1210,6 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
         UINT adapter_idx, DWORD flags, struct wined3d_adapter_identifier *identifier)
 {
     const struct wined3d_adapter *adapter;
-    size_t len;
 
     TRACE("wined3d %p, adapter_idx %u, flags %#x, identifier %p.\n",
             wined3d, adapter_idx, flags, identifier);
@@ -1210,21 +1221,8 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
 
     adapter = wined3d->adapters[adapter_idx];
 
-    if (identifier->driver_size)
-    {
-        const char *name = adapter->driver_info.name;
-        len = min(strlen(name), identifier->driver_size - 1);
-        memcpy(identifier->driver, name, len);
-        memset(&identifier->driver[len], 0, identifier->driver_size - len);
-    }
-
-    if (identifier->description_size)
-    {
-        const char *description = adapter->driver_info.description;
-        len = min(strlen(description), identifier->description_size - 1);
-        memcpy(identifier->description, description, len);
-        memset(&identifier->description[len], 0, identifier->description_size - len);
-    }
+    wined3d_copy_name(identifier->driver, adapter->driver_info.name, identifier->driver_size);
+    wined3d_copy_name(identifier->description, adapter->driver_info.description, identifier->description_size);
 
     /* Note that d3d8 doesn't supply a device name. */
     if (identifier->device_name_size)
