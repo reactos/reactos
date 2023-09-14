@@ -5337,7 +5337,7 @@ HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
         BYTE surface_alignment, const enum wined3d_feature_level *levels, unsigned int level_count,
         struct wined3d_device_parent *device_parent)
 {
-    struct wined3d_adapter *adapter = &wined3d->adapters[adapter_idx];
+    struct wined3d_adapter *adapter = wined3d->adapters[adapter_idx];
     const struct wined3d_vertex_pipe_ops *vertex_pipeline;
     const struct fragment_pipeline *fragment_pipeline;
     unsigned int i;

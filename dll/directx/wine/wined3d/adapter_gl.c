@@ -3222,7 +3222,7 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct 
 
 /* Context activation is done by the caller. */
 static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
-        struct wined3d_caps_gl_ctx *caps_gl_ctx, DWORD wined3d_creation_flags)
+        struct wined3d_caps_gl_ctx *caps_gl_ctx, unsigned int wined3d_creation_flags)
 {
     static const struct
     {
@@ -4391,7 +4391,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
     adapter_gl_get_wined3d_caps,
 };
 
-BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags)
+static BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter,
+        unsigned int ordinal, unsigned int wined3d_creation_flags)
 {
     static const DWORD supported_gl_versions[] =
     {
@@ -4403,9 +4404,13 @@ BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter, DWORD wined3d_crea
     struct wined3d_caps_gl_ctx caps_gl_ctx = {0};
     unsigned int i;
 
-    TRACE("adapter %p, wined3d_creation_flags %#x.\n", adapter, wined3d_creation_flags);
+    TRACE("adapter %p, ordinal %u, wined3d_creation_flags %#x.\n",
+            adapter, ordinal, wined3d_creation_flags);
 
-/* Dynamically load all GL core functions */
+    if (!wined3d_adapter_init(adapter, ordinal))
+        return FALSE;
+
+    /* Dynamically load all GL core functions */
 #ifdef USE_WIN32_OPENGL
     {
         HMODULE mod_gl = GetModuleHandleA("opengl32.dll");
@@ -4495,4 +4500,22 @@ BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter, DWORD wined3d_crea
     adapter->adapter_ops = &wined3d_adapter_gl_ops;
 
     return TRUE;
+}
+
+struct wined3d_adapter *wined3d_adapter_gl_create(unsigned int ordinal, unsigned int wined3d_creation_flags)
+{
+    struct wined3d_adapter_gl *adapter;
+
+    if (!(adapter = heap_alloc_zero(sizeof(*adapter))))
+        return NULL;
+
+    if (!wined3d_adapter_gl_init(&adapter->a, ordinal, wined3d_creation_flags))
+    {
+        heap_free(adapter);
+        return NULL;
+    }
+
+    TRACE("Created adapter %p.\n", adapter);
+
+    return &adapter->a;
 }

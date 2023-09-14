@@ -196,7 +196,7 @@ struct wined3d_d3d_info
 {
     struct wined3d_d3d_limits limits;
     struct wined3d_ffp_attrib_ops ffp_attrib_ops;
-    DWORD wined3d_creation_flags;
+    unsigned int wined3d_creation_flags;
     unsigned int xyzrhw : 1;
     unsigned int emulated_flatshading : 1;
     unsigned int ffp_generic_attributes : 1;
@@ -2691,9 +2691,6 @@ struct wined3d_adapter_ops
     void (*adapter_get_wined3d_caps)(const struct wined3d_adapter *adapter, struct wined3d_caps *caps);
 };
 
-BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
-        struct wined3d_texture *target, const struct wined3d_format *ds_format) DECLSPEC_HIDDEN;
-
 /* The adapter structure */
 struct wined3d_adapter
 {
@@ -2722,7 +2719,16 @@ struct wined3d_adapter
     const struct wined3d_adapter_ops *adapter_ops;
 };
 
-BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags) DECLSPEC_HIDDEN;
+BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int ordinal) DECLSPEC_HIDDEN;
+
+struct wined3d_adapter_gl
+{
+    struct wined3d_adapter a;
+};
+
+struct wined3d_adapter *wined3d_adapter_gl_create(unsigned int ordinal, unsigned int wined3d_creation_flags) DECLSPEC_HIDDEN;
+BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
+        struct wined3d_texture *target, const struct wined3d_format *ds_format) DECLSPEC_HIDDEN;
 
 struct wined3d_caps_gl_ctx
 {
@@ -2869,9 +2875,9 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
 struct wined3d
 {
     LONG ref;
-    DWORD flags;
-    UINT adapter_count;
-    struct wined3d_adapter adapters[1];
+    unsigned int flags;
+    unsigned int adapter_count;
+    struct wined3d_adapter *adapters[1];
 };
 
 HRESULT wined3d_init(struct wined3d *wined3d, DWORD flags) DECLSPEC_HIDDEN;
