@@ -3295,6 +3295,7 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     USE_GL_FUNC(glIsEnabledi)                                  /* OpenGL 3.0 */
     USE_GL_FUNC(glLinkProgram)                                 /* OpenGL 2.0 */
     USE_GL_FUNC(glMapBuffer)                                   /* OpenGL 1.5 */
+    USE_GL_FUNC(glMinSampleShading)                            /* OpenGL 4.0 */
     USE_GL_FUNC(glPointParameteri)                             /* OpenGL 1.4 */
     USE_GL_FUNC(glPointParameteriv)                            /* OpenGL 1.4 */
     USE_GL_FUNC(glShaderSource)                                /* OpenGL 2.0 */
