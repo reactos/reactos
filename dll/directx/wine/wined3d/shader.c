@@ -992,6 +992,40 @@ static void wined3d_insert_interpolation_mode(DWORD *packed_interpolation_mode,
             register_idx * WINED3D_PACKED_INTERPOLATION_BIT_COUNT, WINED3D_PACKED_INTERPOLATION_BIT_COUNT, mode);
 }
 
+static HRESULT shader_scan_output_signature(struct wined3d_shader *shader)
+{
+    const struct wined3d_shader_signature *output_signature = &shader->output_signature;
+    struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
+    unsigned int i;
+    HRESULT hr;
+
+    for (i = 0; i < output_signature->element_count; ++i)
+    {
+        const struct wined3d_shader_signature_element *e = &output_signature->elements[i];
+        unsigned int mask;
+
+        reg_maps->output_registers |= 1u << e->register_idx;
+        if (e->sysval_semantic == WINED3D_SV_CLIP_DISTANCE)
+        {
+            if (FAILED(hr = shader_calculate_clip_or_cull_distance_mask(e, &mask)))
+                return hr;
+            reg_maps->clip_distance_mask |= mask;
+        }
+        else if (e->sysval_semantic == WINED3D_SV_CULL_DISTANCE)
+        {
+            if (FAILED(hr = shader_calculate_clip_or_cull_distance_mask(e, &mask)))
+                return hr;
+            reg_maps->cull_distance_mask |= mask;
+        }
+        else if (e->sysval_semantic == WINED3D_SV_VIEWPORT_ARRAY_INDEX)
+        {
+            reg_maps->viewport_array = 1;
+        }
+    }
+
+    return WINED3D_OK;
+}
+
 /* Note that this does not count the loop register as an address register. */
 static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const struct wined3d_shader_frontend *fe,
         struct wined3d_shader_reg_maps *reg_maps, struct wined3d_shader_signature *input_signature,
@@ -1789,29 +1823,8 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
 
     if (output_signature->elements)
     {
-        for (i = 0; i < output_signature->element_count; ++i)
-        {
-            const struct wined3d_shader_signature_element *e = &output_signature->elements[i];
-            unsigned int mask;
-
-            reg_maps->output_registers |= 1u << e->register_idx;
-            if (e->sysval_semantic == WINED3D_SV_CLIP_DISTANCE)
-            {
-                if (FAILED(hr = shader_calculate_clip_or_cull_distance_mask(e, &mask)))
-                    return hr;
-                reg_maps->clip_distance_mask |= mask;
-            }
-            else if (e->sysval_semantic == WINED3D_SV_CULL_DISTANCE)
-            {
-                if (FAILED(hr = shader_calculate_clip_or_cull_distance_mask(e, &mask)))
-                    return hr;
-                reg_maps->cull_distance_mask |= mask;
-            }
-            else if (e->sysval_semantic == WINED3D_SV_VIEWPORT_ARRAY_INDEX)
-            {
-                reg_maps->viewport_array = 1;
-            }
-        }
+        if (FAILED(hr = shader_scan_output_signature(shader)))
+            return hr;
     }
     else if (reg_maps->output_registers)
     {
@@ -3701,6 +3714,12 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
         shader->reg_maps.shader_version.major = 4;
         shader->reg_maps.shader_version.minor = 0;
         shader_set_limits(shader);
+
+        if (FAILED(hr = shader_scan_output_signature(shader)))
+        {
+            shader_cleanup(shader);
+            return hr;
+        }
     }
 
     shader->load_local_constsF = shader->lconst_inf_or_nan;
