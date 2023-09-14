@@ -4834,7 +4834,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
     TRACE("refresh_rate %u\n", swapchain_desc->refresh_rate);
     TRACE("auto_restore_display_mode %#x\n", swapchain_desc->auto_restore_display_mode);
 
-    if (swapchain_desc->backbuffer_usage != WINED3DUSAGE_RENDERTARGET)
+    if (swapchain_desc->backbuffer_usage && swapchain_desc->backbuffer_usage != WINED3DUSAGE_RENDERTARGET)
         FIXME("Got unexpected backbuffer usage %#x.\n", swapchain_desc->backbuffer_usage);
 
     if (swapchain_desc->swap_effect != WINED3D_SWAP_EFFECT_DISCARD
