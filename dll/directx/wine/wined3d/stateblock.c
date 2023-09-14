@@ -1274,6 +1274,20 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     TRACE("Applied stateblock %p.\n", stateblock);
 }
 
+HRESULT CDECL wined3d_stateblock_set_vs_consts_f(struct wined3d_stateblock *stateblock,
+        unsigned int start_idx, unsigned int count, const struct wined3d_vec4 *constants)
+{
+    TRACE("stateblock %p, start_idx %u, count %u, constants %p.\n",
+            stateblock, start_idx, count, constants);
+
+    if (!constants || start_idx >= WINED3D_MAX_VS_CONSTS_F || count > WINED3D_MAX_VS_CONSTS_F - start_idx)
+        return WINED3DERR_INVALIDCALL;
+
+    memcpy(&stateblock->stateblock_state.vs_consts_f[start_idx], constants, count * sizeof(*constants));
+    memset(&stateblock->changed.vs_consts_f[start_idx], 1, count * sizeof(*stateblock->changed.vs_consts_f));
+    return WINED3D_OK;
+}
+
 static void init_default_render_states(DWORD rs[WINEHIGHEST_RENDER_STATE + 1], const struct wined3d_d3d_info *d3d_info)
 {
     union
