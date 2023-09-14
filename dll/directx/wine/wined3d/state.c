@@ -925,7 +925,7 @@ static void state_stencil(struct wined3d_context *context, const struct wined3d_
     if (!(func_back = wined3d_gl_compare_func(state->render_states[WINED3D_RS_BACK_STENCILFUNC])))
         func_back = GL_ALWAYS;
     mask = state->render_states[WINED3D_RS_STENCILMASK];
-    ref = state->render_states[WINED3D_RS_STENCILREF] & mask;
+    ref = state->render_states[WINED3D_RS_STENCILREF] & ((1 << state->fb->depth_stencil->format->stencil_size) - 1);
     stencilFail = gl_stencil_op(state->render_states[WINED3D_RS_STENCILFAIL]);
     depthFail = gl_stencil_op(state->render_states[WINED3D_RS_STENCILZFAIL]);
     stencilPass = gl_stencil_op(state->render_states[WINED3D_RS_STENCILPASS]);
