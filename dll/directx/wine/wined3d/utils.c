@@ -4357,9 +4357,9 @@ struct debug_buffer
 
 static void init_debug_buffer(struct debug_buffer *buffer, const char *default_string)
 {
-    strcpy(buffer->str, default_string);
+    snprintf(buffer->str, sizeof(buffer->str), "%s", default_string);
     buffer->ptr = buffer->str;
-    buffer->size = ARRAY_SIZE(buffer->str);
+    buffer->size = sizeof(buffer->str);
 }
 
 static void debug_append(struct debug_buffer *buffer, const char *str, const char *separator)
@@ -4372,7 +4372,7 @@ static void debug_append(struct debug_buffer *buffer, const char *str, const cha
     if (size == -1 || size >= buffer->size)
     {
         buffer->size = 0;
-        strcpy(&buffer->str[ARRAY_SIZE(buffer->str) - 4], "...");
+        strcpy(&buffer->str[sizeof(buffer->str) - 4], "...");
         return;
     }
 
