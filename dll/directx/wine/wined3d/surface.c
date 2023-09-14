@@ -3092,7 +3092,7 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
 
     if (!device->d3d_initialized)
     {
-        WARN("D3D not initialized, using fallback.\n");
+        WARN("D3D not initialized, using CPU blit fallback.\n");
         goto cpu;
     }
 
@@ -3108,8 +3108,8 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
 
     if (flags & ~simple_blit)
     {
-        WARN_(d3d_perf)("Using fallback for complex blit (%#x).\n", flags);
-        goto fallback;
+        WARN_(d3d_perf)("Using CPU fallback for complex blit (%#x).\n", flags);
+        goto cpu;
     }
 
     src_swapchain = src_texture->swapchain;
@@ -3123,7 +3123,9 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
     if (src_swapchain && dst_swapchain && src_swapchain != dst_swapchain)
     {
         FIXME("Using fallback for cross-swapchain blit.\n");
-        goto fallback;
+        if (SUCCEEDED(wined3d_texture_blt_special(dst_texture, dst_sub_resource_idx, &dst_rect,
+                src_texture, src_sub_resource_idx, &src_rect, flags, fx, filter)))
+            return WINED3D_OK;
     }
 
     scale = src_box->right - src_box->left != dst_box->right - dst_box->left
@@ -3283,12 +3285,6 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
     wined3d_texture_invalidate_location(dst_texture, dst_sub_resource_idx, ~valid_locations);
 
     return WINED3D_OK;
-
-fallback:
-    /* Special cases for render targets. */
-    if (SUCCEEDED(wined3d_texture_blt_special(dst_texture, dst_sub_resource_idx, &dst_rect,
-            src_texture, src_sub_resource_idx, &src_rect, flags, fx, filter)))
-        return WINED3D_OK;
 
 cpu:
     return surface_cpu_blt(dst_texture, dst_sub_resource_idx, dst_box,
