@@ -434,7 +434,7 @@ static void shader_glsl_append_imm_vec4(struct wined3d_string_buffer *buffer, co
     {
         const unsigned int *uint_values = (const unsigned int *)values;
 
-        shader_addline(buffer, "uintBitsToFloat(uvec4(%#xu, %#xu, %#xu, %#xu))\n"
+        shader_addline(buffer, "intBitsToFloat(ivec4(%#x, %#x, %#x, %#x))\n"
                 "        /* %s, %s, %s, %s */", uint_values[0], uint_values[1],
                 uint_values[2], uint_values[3], str[0], str[1], str[2], str[3]);
     }
@@ -2841,7 +2841,7 @@ static void shader_glsl_get_register_name(const struct wined3d_shader_register *
                         case WINED3D_DATA_FLOAT:
                             if (gl_info->supported[ARB_SHADER_BIT_ENCODING])
                             {
-                                string_buffer_sprintf(register_name, "uintBitsToFloat(%#xu)", reg->u.immconst_data[0]);
+                                string_buffer_sprintf(register_name, "intBitsToFloat(%#x)", reg->u.immconst_data[0]);
                             }
                             else
                             {
@@ -2871,7 +2871,7 @@ static void shader_glsl_get_register_name(const struct wined3d_shader_register *
                         case WINED3D_DATA_FLOAT:
                             if (gl_info->supported[ARB_SHADER_BIT_ENCODING])
                             {
-                                string_buffer_sprintf(register_name, "uintBitsToFloat(uvec4(%#xu, %#xu, %#xu, %#xu))",
+                                string_buffer_sprintf(register_name, "intBitsToFloat(ivec4(%#x, %#x, %#x, %#x))",
                                         reg->u.immconst_data[0], reg->u.immconst_data[1],
                                         reg->u.immconst_data[2], reg->u.immconst_data[3]);
                             }
