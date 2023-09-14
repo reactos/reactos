@@ -4578,8 +4578,7 @@ static struct wined3d_texture *wined3d_device_create_cursor_texture(struct wined
     desc.depth = 1;
     desc.size = 0;
 
-    hr = wined3d_texture_create(device, &desc, 1, 1, WINED3D_TEXTURE_CREATE_MAPPABLE,
-            &data, NULL, &wined3d_null_parent_ops, &texture);
+    hr = wined3d_texture_create(device, &desc, 1, 1, 0, &data, NULL, &wined3d_null_parent_ops, &texture);
     wined3d_resource_unmap(&cursor_image->resource, sub_resource_idx);
     if (FAILED(hr))
     {

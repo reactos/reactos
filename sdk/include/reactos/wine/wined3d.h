@@ -1580,7 +1580,6 @@ enum wined3d_shader_type
 #define WINED3D_PALETTE_ALLOW_256                               0x00000002
 #define WINED3D_PALETTE_ALPHA                                   0x00000004
 
-#define WINED3D_TEXTURE_CREATE_MAPPABLE                         0x00000001
 #define WINED3D_TEXTURE_CREATE_DISCARD                          0x00000002
 #define WINED3D_TEXTURE_CREATE_GET_DC_LENIENT                   0x00000004
 #define WINED3D_TEXTURE_CREATE_GET_DC                           0x00000008
