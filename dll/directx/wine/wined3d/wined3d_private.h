@@ -2716,7 +2716,6 @@ struct wined3d_caps_gl_ctx
     GLuint test_program_id;
 };
 
-BOOL wined3d_adapter_init_format_info(struct wined3d_adapter *adapter, size_t format_size) DECLSPEC_HIDDEN;
 BOOL wined3d_adapter_gl_init_format_info(struct wined3d_adapter *adapter,
         struct wined3d_caps_gl_ctx *ctx) DECLSPEC_HIDDEN;
 BOOL wined3d_adapter_no3d_init_format_info(struct wined3d_adapter *adapter) DECLSPEC_HIDDEN;

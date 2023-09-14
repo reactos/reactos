@@ -3988,7 +3988,7 @@ static void init_format_depth_bias_scale(struct wined3d_adapter *adapter,
     }
 }
 
-BOOL wined3d_adapter_init_format_info(struct wined3d_adapter *adapter, size_t format_size)
+static BOOL wined3d_adapter_init_format_info(struct wined3d_adapter *adapter, size_t format_size)
 {
     unsigned int count = WINED3D_FORMAT_COUNT + ARRAY_SIZE(typeless_depth_stencil_formats);
 
