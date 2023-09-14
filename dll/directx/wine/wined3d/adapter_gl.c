@@ -2811,7 +2811,7 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
 #undef MAP_GL_FUNCTION_CAST
 }
 
-static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
+static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct wined3d_d3d_info *d3d_info)
 {
     unsigned int i, sampler_count;
     GLfloat gl_floatv[2];
@@ -2858,8 +2858,7 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
 
     gl_info->gl_ops.gl.p_glGetFloatv(gl_info->supported[WINED3D_GL_LEGACY_CONTEXT]
             ? GL_ALIASED_POINT_SIZE_RANGE : GL_POINT_SIZE_RANGE, gl_floatv);
-    gl_info->limits.pointsize_min = gl_floatv[0];
-    gl_info->limits.pointsize_max = gl_floatv[1];
+    d3d_info->limits.pointsize_max = gl_floatv[1];
     TRACE("Maximum point size support - max point size %f.\n", gl_floatv[1]);
 
     if (gl_info->supported[ARB_MAP_BUFFER_ALIGNMENT])
@@ -3630,7 +3629,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         gl_info->supported[ARB_TEXTURE_MULTISAMPLE] = FALSE;
     }
 
-    wined3d_adapter_init_limits(gl_info);
+    wined3d_adapter_init_limits(gl_info, d3d_info);
 
     if (gl_info->supported[ARB_VERTEX_PROGRAM] && test_arb_vs_offset_limit(gl_info))
         gl_info->quirks |= WINED3D_QUIRK_ARB_VS_OFFSET_LIMIT;
@@ -3657,7 +3656,6 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
 
     d3d_info->limits.max_rt_count = gl_info->limits.buffers;
     d3d_info->limits.max_clip_distances = gl_info->limits.user_clip_distances;
-    d3d_info->limits.pointsize_max = gl_info->limits.pointsize_max;
 
     adapter->shader_backend->shader_get_caps(gl_info, &shader_caps);
     d3d_info->vs_clipping = shader_caps.wined3d_caps & WINED3D_SHADER_CAP_VS_CLIPPING;
