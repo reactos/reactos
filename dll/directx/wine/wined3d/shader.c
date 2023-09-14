@@ -3815,13 +3815,11 @@ static HRESULT geometry_shader_init_stream_output(struct wined3d_shader *shader,
     switch (shader_version.type)
     {
         case WINED3D_SHADER_TYPE_VERTEX:
+        case WINED3D_SHADER_TYPE_DOMAIN:
             heap_free(shader->function);
             shader->function = NULL;
             shader->functionLength = 0;
             break;
-        case WINED3D_SHADER_TYPE_DOMAIN:
-            FIXME("Stream output not supported for %s.\n", debug_shader_type(shader_version.type));
-            return E_NOTIMPL;
         case WINED3D_SHADER_TYPE_GEOMETRY:
             break;
         default:
