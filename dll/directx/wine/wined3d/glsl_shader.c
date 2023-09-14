@@ -1911,7 +1911,7 @@ static void shader_glsl_update_float_vertex_constants(struct wined3d_device *dev
     if (priv->consts_ubo)
         return;
 
-    for (i = start; i < count + start; ++i)
+    for (i = start; i < min(WINED3D_MAX_VS_CONSTS_F, count + start); ++i)
     {
         update_heap_entry(heap, i, priv->next_constant_version);
     }

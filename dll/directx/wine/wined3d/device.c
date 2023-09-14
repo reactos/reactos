@@ -2452,13 +2452,17 @@ HRESULT CDECL wined3d_device_set_vs_consts_f(struct wined3d_device *device,
         unsigned int start_idx, unsigned int count, const struct wined3d_vec4 *constants)
 {
     const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
+    unsigned int constants_count;
     unsigned int i;
 
     TRACE("device %p, start_idx %u, count %u, constants %p.\n",
             device, start_idx, count, constants);
 
-    if (!constants || start_idx >= d3d_info->limits.vs_uniform_count
-            || count > d3d_info->limits.vs_uniform_count - start_idx)
+    constants_count = device->create_parms.flags
+            & (WINED3DCREATE_SOFTWARE_VERTEXPROCESSING | WINED3DCREATE_MIXED_VERTEXPROCESSING)
+            ? d3d_info->limits.vs_uniform_count_swvp : d3d_info->limits.vs_uniform_count;
+    if (!constants || start_idx >= constants_count
+            || count > constants_count - start_idx)
         return WINED3DERR_INVALIDCALL;
 
     memcpy(&device->update_stateblock_state->vs_consts_f[start_idx], constants, count * sizeof(*constants));
@@ -2485,12 +2489,16 @@ HRESULT CDECL wined3d_device_get_vs_consts_f(const struct wined3d_device *device
         unsigned int start_idx, unsigned int count, struct wined3d_vec4 *constants)
 {
     const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
+    unsigned int constants_count;
 
     TRACE("device %p, start_idx %u, count %u, constants %p.\n",
             device, start_idx, count, constants);
 
-    if (!constants || start_idx >= d3d_info->limits.vs_uniform_count
-            || count > d3d_info->limits.vs_uniform_count - start_idx)
+    constants_count = device->create_parms.flags
+            & (WINED3DCREATE_SOFTWARE_VERTEXPROCESSING | WINED3DCREATE_MIXED_VERTEXPROCESSING)
+            ? d3d_info->limits.vs_uniform_count_swvp : d3d_info->limits.vs_uniform_count;
+    if (!constants || start_idx >= constants_count
+            || count > constants_count - start_idx)
         return WINED3DERR_INVALIDCALL;
 
     memcpy(constants, &device->state.vs_consts_f[start_idx], count * sizeof(*constants));
@@ -4078,17 +4086,26 @@ struct wined3d_texture * CDECL wined3d_device_get_texture(const struct wined3d_d
 
 HRESULT CDECL wined3d_device_get_device_caps(const struct wined3d_device *device, struct wined3d_caps *caps)
 {
+#if defined(STAGING_CSMT)
+    const struct wined3d_adapter *adapter = device->wined3d->adapters[device->adapter->ordinal];
+    struct wined3d_vertex_caps vertex_caps;
     HRESULT hr;
 
-    TRACE("device %p, caps %p.\n", device, caps);
+     TRACE("device %p, caps %p.\n", device, caps);
 
     hr = wined3d_get_device_caps(device->wined3d, device->adapter->ordinal,
-            device->create_parms.device_type, caps);
+             device->create_parms.device_type, caps);
+    if (FAILED(hr))
+        return hr;
 
-    if (SUCCEEDED(hr) && use_software_vertex_processing(device))
-        caps->MaxVertexBlendMatrixIndex = 255;
-
+    adapter->vertex_pipe->vp_get_caps(adapter, &vertex_caps);
+    if (device->create_parms.flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING)
+        caps->MaxVertexShaderConst = adapter->d3d_info.limits.vs_uniform_count_swvp;
     return hr;
+#else
+    return wined3d_get_device_caps(device->wined3d, device->adapter->ordinal,
+             device->create_parms.device_type, caps);
+#endif
 }
 
 HRESULT CDECL wined3d_device_get_display_mode(const struct wined3d_device *device, UINT swapchain_idx,

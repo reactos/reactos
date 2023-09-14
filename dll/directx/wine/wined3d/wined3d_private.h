@@ -3175,7 +3175,7 @@ struct wined3d_state
 
     BOOL vs_consts_b[WINED3D_MAX_CONSTS_B];
     struct wined3d_ivec4 vs_consts_i[WINED3D_MAX_CONSTS_I];
-    struct wined3d_vec4 vs_consts_f[WINED3D_MAX_VS_CONSTS_F];
+    struct wined3d_vec4 vs_consts_f[WINED3D_MAX_VS_CONSTS_F_SWVP];
 
     BOOL ps_consts_b[WINED3D_MAX_CONSTS_B];
     struct wined3d_ivec4 ps_consts_i[WINED3D_MAX_CONSTS_I];
@@ -3257,7 +3257,7 @@ struct wined3d_stateblock_state
     int base_vertex_index;
 
     struct wined3d_shader *vs;
-    struct wined3d_vec4 vs_consts_f[WINED3D_MAX_VS_CONSTS_F];
+    struct wined3d_vec4 vs_consts_f[WINED3D_MAX_VS_CONSTS_F_SWVP];
     struct wined3d_ivec4 vs_consts_i[WINED3D_MAX_CONSTS_I];
     BOOL vs_consts_b[WINED3D_MAX_CONSTS_B];
 
@@ -3961,7 +3961,7 @@ struct wined3d_saved_states
     BOOL ps_consts_f[WINED3D_MAX_PS_CONSTS_F];
     WORD vertexShaderConstantsB;                /* WINED3D_MAX_CONSTS_B, 16 */
     WORD vertexShaderConstantsI;                /* WINED3D_MAX_CONSTS_I, 16 */
-    BOOL vs_consts_f[WINED3D_MAX_VS_CONSTS_F];
+    BOOL vs_consts_f[WINED3D_MAX_VS_CONSTS_F_SWVP];
     DWORD textures : 20;                        /* WINED3D_MAX_COMBINED_SAMPLERS, 20 */
     DWORD indices : 1;
     DWORD material : 1;
@@ -3998,7 +3998,7 @@ struct wined3d_stateblock
     unsigned int              num_contained_vs_consts_i;
     DWORD                     contained_vs_consts_b[WINED3D_MAX_CONSTS_B];
     unsigned int              num_contained_vs_consts_b;
-    DWORD                     contained_vs_consts_f[WINED3D_MAX_VS_CONSTS_F];
+    DWORD                     contained_vs_consts_f[WINED3D_MAX_VS_CONSTS_F_SWVP];
     unsigned int              num_contained_vs_consts_f;
     DWORD                     contained_ps_consts_i[WINED3D_MAX_CONSTS_I];
     unsigned int              num_contained_ps_consts_i;
