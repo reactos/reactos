@@ -257,7 +257,7 @@ static BOOL wined3d_buffer_gl_create_buffer_object(struct wined3d_buffer_gl *buf
         goto fail;
     }
 
-    buffer_gl->b.buffer_object_usage = gl_usage;
+    buffer_gl->buffer_object_usage = gl_usage;
     buffer_invalidate_bo_range(&buffer_gl->b, 0, 0);
 
     return TRUE;
@@ -827,7 +827,7 @@ static void wined3d_buffer_gl_sync_apple(struct wined3d_buffer_gl *buffer_gl,
     if (flags & WINED3D_MAP_DISCARD)
     {
         GL_EXTCALL(glBufferData(buffer_gl->buffer_type_hint, buffer_gl->b.resource.size,
-                NULL, buffer_gl->b.buffer_object_usage));
+                NULL, buffer_gl->buffer_object_usage));
         checkGLcall("glBufferData");
         return;
     }
