@@ -774,6 +774,7 @@ static void wined3d_texture_create_dc(void *object)
 static void wined3d_texture_destroy_dc(void *object)
 {
     const struct wined3d_texture_idx *idx = object;
+    struct wined3d_context_gl *context_gl = NULL;
     D3DKMT_DESTROYDCFROMMEMORY destroy_desc;
     struct wined3d_context *context = NULL;
     struct wined3d_texture *texture;
@@ -804,10 +805,13 @@ static void wined3d_texture_destroy_dc(void *object)
     dc_info->bitmap = NULL;
 
     if (device->d3d_initialized)
+    {
         context = context_acquire(device, NULL, 0);
+        context_gl = wined3d_context_gl(context);
+    }
 
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, texture->resource.map_binding);
-    context_unmap_bo_address(context, &data, GL_PIXEL_UNPACK_BUFFER);
+    wined3d_context_gl_unmap_bo_address(context_gl, &data, GL_PIXEL_UNPACK_BUFFER);
 
     if (context)
         context_release(context);
@@ -2008,7 +2012,7 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
         else
             format->upload(src_mem, converted_mem, src_row_pitch, src_slice_pitch,
                     dst_row_pitch, dst_slice_pitch, update_w, update_h, update_d);
-        context_unmap_bo_address(context, &bo, GL_PIXEL_UNPACK_BUFFER);
+        wined3d_context_gl_unmap_bo_address(context_gl, &bo, GL_PIXEL_UNPACK_BUFFER);
 
         bo.buffer_object = 0;
         bo.addr = converted_mem;
@@ -2715,6 +2719,7 @@ static HRESULT texture_resource_sub_resource_unmap(struct wined3d_resource *reso
 {
     struct wined3d_texture_sub_resource *sub_resource;
     struct wined3d_device *device = resource->device;
+    struct wined3d_context_gl *context_gl = NULL;
     struct wined3d_context *context = NULL;
     struct wined3d_texture *texture;
     struct wined3d_bo_address data;
@@ -2734,10 +2739,13 @@ static HRESULT texture_resource_sub_resource_unmap(struct wined3d_resource *reso
     }
 
     if (device->d3d_initialized)
+    {
         context = context_acquire(device, NULL, 0);
+        context_gl = wined3d_context_gl(context);
+    }
 
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, texture->resource.map_binding);
-    context_unmap_bo_address(context, &data, GL_PIXEL_UNPACK_BUFFER);
+    wined3d_context_gl_unmap_bo_address(context_gl, &data, GL_PIXEL_UNPACK_BUFFER);
 
     if (context)
         context_release(context);

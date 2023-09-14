@@ -836,8 +836,8 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
         conv->convert(src, dst, src_row_pitch, dst_row_pitch, desc.width, desc.height);
 
         wined3d_texture_invalidate_location(dst_texture, 0, ~map_binding);
-        context_unmap_bo_address(context, &dst_data, GL_PIXEL_UNPACK_BUFFER);
-        context_unmap_bo_address(context, &src_data, GL_PIXEL_UNPACK_BUFFER);
+        wined3d_context_gl_unmap_bo_address(context_gl, &dst_data, GL_PIXEL_UNPACK_BUFFER);
+        wined3d_context_gl_unmap_bo_address(context_gl, &src_data, GL_PIXEL_UNPACK_BUFFER);
     }
     else
     {
@@ -1812,7 +1812,7 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
                 width, height, &texture->async.gl_color_key);
         src_row_pitch = dst_row_pitch;
         src_slice_pitch = dst_slice_pitch;
-        context_unmap_bo_address(context, &data, GL_PIXEL_UNPACK_BUFFER);
+        wined3d_context_gl_unmap_bo_address(context_gl, &data, GL_PIXEL_UNPACK_BUFFER);
 
         data.buffer_object = 0;
         data.addr = dst_mem;
@@ -3085,9 +3085,9 @@ error:
         FIXME("    Unsupported flags %#x.\n", flags);
 
 release:
-    context_unmap_bo_address(context, &dst_data, GL_PIXEL_UNPACK_BUFFER);
+    wined3d_context_gl_unmap_bo_address(context_gl, &dst_data, GL_PIXEL_UNPACK_BUFFER);
     if (!same_sub_resource)
-        context_unmap_bo_address(context, &src_data, GL_PIXEL_UNPACK_BUFFER);
+        wined3d_context_gl_unmap_bo_address(context_gl, &src_data, GL_PIXEL_UNPACK_BUFFER);
     if (SUCCEEDED(hr) && dst_texture->swapchain && dst_texture->swapchain->front_buffer == dst_texture)
     {
         SetRect(&dst_texture->swapchain->front_buffer_update,
@@ -3207,7 +3207,7 @@ static void surface_cpu_blt_colour_fill(struct wined3d_rendertarget_view *view,
         memcpy(row, map.data, w * bpp);
     }
 
-    context_unmap_bo_address(context, &data, GL_PIXEL_UNPACK_BUFFER);
+    wined3d_context_gl_unmap_bo_address(context_gl, &data, GL_PIXEL_UNPACK_BUFFER);
     if (context)
         context_release(context);
 }

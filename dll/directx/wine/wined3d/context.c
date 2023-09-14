@@ -2618,16 +2618,15 @@ void *wined3d_context_gl_map_bo_address(struct wined3d_context_gl *context_gl,
     return memory;
 }
 
-void context_unmap_bo_address(struct wined3d_context *context,
+void wined3d_context_gl_unmap_bo_address(struct wined3d_context_gl *context_gl,
         const struct wined3d_bo_address *data, GLenum binding)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info;
 
     if (!data->buffer_object)
         return;
 
-    gl_info = context->gl_info;
+    gl_info = context_gl->c.gl_info;
     wined3d_context_gl_bind_bo(context_gl, binding, data->buffer_object);
     GL_EXTCALL(glUnmapBuffer(binding));
     wined3d_context_gl_bind_bo(context_gl, binding, 0);
@@ -2660,8 +2659,8 @@ void wined3d_context_gl_copy_bo_address(struct wined3d_context_gl *context_gl,
 
             memcpy(dst_ptr, src_ptr, size);
 
-            context_unmap_bo_address(&context_gl->c, dst, dst_binding);
-            context_unmap_bo_address(&context_gl->c, src, src_binding);
+            wined3d_context_gl_unmap_bo_address(context_gl, dst, dst_binding);
+            wined3d_context_gl_unmap_bo_address(context_gl, src, src_binding);
         }
     }
     else if (!dst->buffer_object && src->buffer_object)
