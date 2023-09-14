@@ -1570,19 +1570,17 @@ BOOL wined3d_context_gl_set_current(struct wined3d_context_gl *context_gl)
 
 void wined3d_context_gl_release(struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_context *context = &context_gl->c;
-
-    TRACE("Releasing context %p, level %u.\n", context_gl, context->level);
+    TRACE("Releasing context %p, level %u.\n", context_gl, context_gl->level);
 
     if (WARN_ON(d3d))
     {
-        if (!context->level)
-            WARN("Context %p is not active.\n", context);
+        if (!context_gl->level)
+            WARN("Context %p is not active.\n", context_gl);
         else if (context_gl != wined3d_context_gl_get_current())
-            WARN("Context %p is not the current context.\n", context);
+            WARN("Context %p is not the current context.\n", context_gl);
     }
 
-    if (!--context->level)
+    if (!--context_gl->level)
     {
         if (wined3d_context_gl_restore_pixel_format(context_gl))
             context_gl->needs_set = 1;
@@ -1594,7 +1592,7 @@ void wined3d_context_gl_release(struct wined3d_context_gl *context_gl)
             context_gl->restore_dc = NULL;
         }
 
-        if (context->destroy_delayed)
+        if (context_gl->c.destroy_delayed)
         {
             TRACE("Destroying context %p.\n", context_gl);
             wined3d_context_gl_destroy(context_gl);
@@ -1618,9 +1616,9 @@ void context_restore(struct wined3d_context *context, struct wined3d_texture *te
 
 static void wined3d_context_gl_enter(struct wined3d_context_gl *context_gl)
 {
-    TRACE("Entering context %p, level %u.\n", context_gl, context_gl->c.level + 1);
+    TRACE("Entering context %p, level %u.\n", context_gl, context_gl->level + 1);
 
-    if (!context_gl->c.level++)
+    if (!context_gl->level++)
     {
         const struct wined3d_context_gl *current_context = wined3d_context_gl_get_current();
         HGLRC current_gl = wglGetCurrentContext();
@@ -2321,7 +2319,7 @@ void wined3d_context_gl_destroy(struct wined3d_context_gl *context_gl)
     /* We delay destroying a context when it is active. The context_release()
      * function invokes wined3d_context_gl_destroy() again while leaving the
      * last level. */
-    if (context_gl->c.level)
+    if (context_gl->level)
     {
         TRACE("Delaying destruction of context %p.\n", context_gl);
         context_gl->c.destroy_delayed = 1;

@@ -1958,8 +1958,6 @@ struct wined3d_context
 
     UINT instance_count;
 
-    UINT level;
-
     void *shader_backend_data;
     void *fragment_pipe_data;
 
@@ -2006,6 +2004,7 @@ struct wined3d_context_gl
     GLenum *texture_type;
 
     /* The WGL context. */
+    unsigned int level;
     HGLRC restore_ctx;
     HDC restore_dc;
     int restore_pf;
