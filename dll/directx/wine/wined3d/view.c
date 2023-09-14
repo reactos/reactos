@@ -776,6 +776,8 @@ static HRESULT wined3d_shader_resource_view_init(struct wined3d_shader_resource_
     view->parent = parent;
     view->parent_ops = parent_ops;
 
+    if (!(resource->bind_flags & WINED3D_BIND_SHADER_RESOURCE))
+        return E_INVALIDARG;
     if (!(view->format = validate_resource_view(desc, resource, FALSE, FALSE)))
         return E_INVALIDARG;
     view->desc = *desc;
