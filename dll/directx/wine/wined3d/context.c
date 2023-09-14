@@ -3365,10 +3365,10 @@ static void wined3d_context_gl_map_psamplers(struct wined3d_context_gl *context_
     }
 }
 
-static BOOL context_unit_free_for_vs(const struct wined3d_context *context,
-        const struct wined3d_shader_resource_info *ps_resource_info, DWORD unit)
+static BOOL wined3d_context_gl_unit_free_for_vs(const struct wined3d_context_gl *context_gl,
+        const struct wined3d_shader_resource_info *ps_resource_info, unsigned int unit)
 {
-    DWORD current_mapping = context->rev_tex_unit_map[unit];
+    unsigned int current_mapping = context_gl->c.rev_tex_unit_map[unit];
 
     /* Not currently used */
     if (current_mapping == WINED3D_UNMAPPED_STAGE)
@@ -3381,7 +3381,8 @@ static BOOL context_unit_free_for_vs(const struct wined3d_context *context,
         if (!ps_resource_info)
         {
             /* No pixel shader, check fixed function */
-            return current_mapping >= WINED3D_MAX_TEXTURES || !(context->fixed_function_usage_map & (1u << current_mapping));
+            return current_mapping >= WINED3D_MAX_TEXTURES
+                    || !(context_gl->c.fixed_function_usage_map & (1u << current_mapping));
         }
 
         /* Pixel shader, check the shader's sampler map */
@@ -3414,7 +3415,7 @@ static void wined3d_context_gl_map_vsamplers(struct wined3d_context_gl *context_
         {
             while (start >= 0)
             {
-                if (context_unit_free_for_vs(&context_gl->c, ps_resource_info, start))
+                if (wined3d_context_gl_unit_free_for_vs(context_gl, ps_resource_info, start))
                 {
                     if (context_gl->c.tex_unit_map[vsampler_idx] != start)
                     {
