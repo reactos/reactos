@@ -1416,9 +1416,6 @@ static void shader_hw_sample(const struct wined3d_shader_instruction *ins, DWORD
     struct shader_arb_ctx_priv *priv = ins->ctx->backend_data;
     const char *mod;
     BOOL pshader = shader_is_pshader_version(ins->ctx->reg_maps->shader_version.type);
-    const struct wined3d_shader *shader;
-    const struct wined3d_device *device;
-    const struct wined3d_gl_info *gl_info;
     const char *tex_dst = dst_str;
     struct color_fixup_masks masks;
 
@@ -1432,12 +1429,8 @@ static void shader_hw_sample(const struct wined3d_shader_instruction *ins, DWORD
             break;
 
         case WINED3D_SHADER_RESOURCE_TEXTURE_2D:
-            shader = ins->ctx->shader;
-            device = shader->device;
-            gl_info = &device->adapter->gl_info;
-
             if (pshader && priv->cur_ps_args->super.np2_fixup & (1u << sampler_idx)
-                    && gl_info->supported[ARB_TEXTURE_RECTANGLE])
+                    && ins->ctx->gl_info->supported[ARB_TEXTURE_RECTANGLE])
                 tex_type = "RECT";
             else
                 tex_type = "2D";
