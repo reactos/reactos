@@ -1451,6 +1451,9 @@ static void context_destroy_gl_resources(struct wined3d_context *context)
             }
         }
 
+        if (context->blit_vbo)
+            GL_EXTCALL(glDeleteBuffers(1, &context->blit_vbo));
+
         checkGLcall("context cleanup");
     }
 
@@ -5677,15 +5680,41 @@ void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_te
     quad[3].texcoord = info.texcoords[3];
 
     /* Draw a quad. */
-    gl_info->gl_ops.gl.p_glBegin(GL_TRIANGLE_STRIP);
-
-    for (i = 0; i < ARRAY_SIZE(quad); ++i)
+    if (gl_info->supported[ARB_VERTEX_BUFFER_OBJECT])
     {
-        GL_EXTCALL(glVertexAttrib3fv(1, &quad[i].texcoord.x));
-        GL_EXTCALL(glVertexAttrib2fv(0, &quad[i].x));
-    }
+        if (!context->blit_vbo)
+            GL_EXTCALL(glGenBuffers(1, &context->blit_vbo));
+        GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, context->blit_vbo));
 
-    gl_info->gl_ops.gl.p_glEnd();
+        context_unload_vertex_data(context);
+        context_unload_numbered_arrays(context);
+
+        GL_EXTCALL(glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STREAM_DRAW));
+        GL_EXTCALL(glVertexAttribPointer(0, 2, GL_FLOAT, FALSE, sizeof(*quad), NULL));
+        GL_EXTCALL(glVertexAttribPointer(1, 3, GL_FLOAT, FALSE, sizeof(*quad),
+                (void *)FIELD_OFFSET(struct blit_vertex, texcoord)));
+
+        GL_EXTCALL(glEnableVertexAttribArray(0));
+        GL_EXTCALL(glEnableVertexAttribArray(1));
+
+        gl_info->gl_ops.gl.p_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        GL_EXTCALL(glDisableVertexAttribArray(1));
+        GL_EXTCALL(glDisableVertexAttribArray(0));
+    }
+    else
+    {
+        gl_info->gl_ops.gl.p_glBegin(GL_TRIANGLE_STRIP);
+
+        for (i = 0; i < ARRAY_SIZE(quad); ++i)
+        {
+            GL_EXTCALL(glVertexAttrib3fv(1, &quad[i].texcoord.x));
+            GL_EXTCALL(glVertexAttrib2fv(0, &quad[i].x));
+        }
+
+        gl_info->gl_ops.gl.p_glEnd();
+    }
     checkGLcall("draw");
 
     gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, texture->level_count - 1);

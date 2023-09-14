@@ -12443,9 +12443,6 @@ void wined3d_glsl_blitter_create(struct wined3d_blitter **next, const struct win
     if (!gl_info->supported[ARB_VERTEX_SHADER] || !gl_info->supported[ARB_FRAGMENT_SHADER])
         return;
 
-    if (!gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
-        return;
-
     if (!(blitter = heap_alloc(sizeof(*blitter))))
     {
         ERR("Failed to allocate blitter.\n");
