@@ -746,6 +746,11 @@ static void test_register_device_info(void)
     SP_DEVINFO_DATA device = {0};
     BOOL ret;
     HDEVINFO set;
+    HKEY hkey;
+    LSTATUS ls;
+    DWORD type = 0;
+    DWORD phantom = 0;
+    DWORD size;
     int i = 0;
 
     SetLastError(0xdeadbeef);
@@ -774,8 +779,19 @@ static void test_register_device_info(void)
 
     ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
     ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+    RegOpenKeyA(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Enum\\ROOT\\LEGACY_BOGUS\\0000", &hkey);
+    size = sizeof(phantom);
+    ls = RegQueryValueExA(hkey, "Phantom", NULL, &type, (BYTE *)&phantom, &size);
+    todo_wine ok(ls == ERROR_SUCCESS, "Got wrong error code %#x\n", ls);
+    todo_wine ok(phantom == 1, "Got wrong phantom value %d\n", phantom);
+    todo_wine ok(type == REG_DWORD, "Got wrong phantom type %#x\n", type);
+    ok(size == sizeof(phantom), "Got wrong phantom size %d\n", size);
     ret = SetupDiRegisterDeviceInfo(set, &device, 0, NULL, NULL, NULL);
     ok(ret, "Failed to register device, error %#x.\n", GetLastError());
+    size = sizeof(phantom);
+    ls = RegQueryValueExA(hkey, "Phantom", NULL, NULL, (BYTE *)&phantom, &size);
+    ok(ls == ERROR_FILE_NOT_FOUND, "Got wrong error code %#x\n", ls);
+    RegCloseKey(hkey);
 
     ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0001", &guid, NULL, NULL, 0, &device);
     ok(ret, "Failed to create device, error %#x.\n", GetLastError());
