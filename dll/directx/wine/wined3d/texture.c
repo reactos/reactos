@@ -2881,26 +2881,10 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
     if (!desc->width || !desc->height || !desc->depth)
         return WINED3DERR_INVALIDCALL;
 
-    if (desc->resource_type == WINED3D_RTYPE_TEXTURE_3D)
+    if (desc->resource_type == WINED3D_RTYPE_TEXTURE_3D && layer_count != 1)
     {
-        if (layer_count != 1)
-        {
-            ERR("Invalid layer count for volume texture.\n");
-            return E_INVALIDARG;
-        }
-
-        if (!gl_info->supported[EXT_TEXTURE3D])
-        {
-            WARN("OpenGL implementation does not support 3D textures.\n");
-            return WINED3DERR_INVALIDCALL;
-        }
-    }
-
-    if (!(desc->usage & WINED3DUSAGE_LEGACY_CUBEMAP) && layer_count > 1
-            && !gl_info->supported[EXT_TEXTURE_ARRAY])
-    {
-        WARN("OpenGL implementation does not support array textures.\n");
-        return WINED3DERR_INVALIDCALL;
+        ERR("Invalid layer count for volume texture.\n");
+        return E_INVALIDARG;
     }
 
     texture->sub_resources = sub_resources;
@@ -3562,6 +3546,13 @@ static HRESULT wined3d_texture_gl_init(struct wined3d_texture_gl *texture_gl, st
             texture_gl, device, desc, layer_count, level_count,
             flags, parent, parent_ops, sub_resources);
 
+    if (!(desc->usage & WINED3DUSAGE_LEGACY_CUBEMAP) && layer_count > 1
+            && !gl_info->supported[EXT_TEXTURE_ARRAY])
+    {
+        WARN("OpenGL implementation does not support array textures.\n");
+        return WINED3DERR_INVALIDCALL;
+    }
+
     switch (desc->resource_type)
     {
         case WINED3D_RTYPE_TEXTURE_1D:
@@ -3595,6 +3586,11 @@ static HRESULT wined3d_texture_gl_init(struct wined3d_texture_gl *texture_gl, st
             break;
 
         case WINED3D_RTYPE_TEXTURE_3D:
+            if (!gl_info->supported[EXT_TEXTURE3D])
+            {
+                WARN("OpenGL implementation does not support 3D textures.\n");
+                return WINED3DERR_INVALIDCALL;
+            }
             texture_ops = &texture3d_ops;
             texture_gl->target = GL_TEXTURE_3D;
             break;
