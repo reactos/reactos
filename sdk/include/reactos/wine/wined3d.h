@@ -2005,6 +2005,7 @@ struct wined3d_caps
     struct wined3d_ddraw_caps ddraw_caps;
 
     BOOL shader_double_precision;
+    BOOL viewport_array_index_any_shader;
 
     enum wined3d_feature_level max_feature_level;
 };

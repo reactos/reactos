@@ -197,6 +197,7 @@ struct wined3d_d3d_info
     unsigned int vs_clipping : 1;
     unsigned int shader_color_key : 1;
     unsigned int shader_double_precision : 1;
+    unsigned int viewport_array_index_any_shader : 1;
     unsigned int texture_npot : 1;
     unsigned int texture_npot_conditional : 1;
     enum wined3d_feature_level feature_level;

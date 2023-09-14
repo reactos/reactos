@@ -2406,6 +2406,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
     }
 
     caps->shader_double_precision = d3d_info->shader_double_precision;
+    caps->viewport_array_index_any_shader = d3d_info->viewport_array_index_any_shader;
 
     caps->max_feature_level = d3d_info->feature_level;
 
