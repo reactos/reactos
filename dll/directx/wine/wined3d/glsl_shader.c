@@ -7701,10 +7701,10 @@ static GLuint shader_glsl_generate_fragment_shader(const struct wined3d_context_
     if (args->srgb_correction)
     {
         shader_addline(buffer, "const vec4 srgb_const0 = ");
-        shader_glsl_append_imm_vec(buffer, wined3d_srgb_const0, 4, gl_info);
+        shader_glsl_append_imm_vec(buffer, &wined3d_srgb_const[0].x, 4, gl_info);
         shader_addline(buffer, ";\n");
         shader_addline(buffer, "const vec4 srgb_const1 = ");
-        shader_glsl_append_imm_vec(buffer, wined3d_srgb_const1, 4, gl_info);
+        shader_glsl_append_imm_vec(buffer, &wined3d_srgb_const[1].x, 4, gl_info);
         shader_addline(buffer, ";\n");
     }
     if (reg_maps->vpos || reg_maps->usesdsy)
@@ -9555,10 +9555,10 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *
     if (settings->sRGB_write)
     {
         shader_addline(buffer, "const vec4 srgb_const0 = ");
-        shader_glsl_append_imm_vec(buffer, wined3d_srgb_const0, 4, gl_info);
+        shader_glsl_append_imm_vec(buffer, &wined3d_srgb_const[0].x, 4, gl_info);
         shader_addline(buffer, ";\n");
         shader_addline(buffer, "const vec4 srgb_const1 = ");
-        shader_glsl_append_imm_vec(buffer, wined3d_srgb_const1, 4, gl_info);
+        shader_glsl_append_imm_vec(buffer, &wined3d_srgb_const[1].x, 4, gl_info);
         shader_addline(buffer, ";\n");
     }
 

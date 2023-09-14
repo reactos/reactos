@@ -3668,10 +3668,10 @@ static GLuint shader_arb_generate_pshader(const struct wined3d_shader *shader,
     if (args->super.srgb_correction)
     {
         shader_addline(buffer, "PARAM srgb_consts0 = ");
-        shader_arb_append_imm_vec4(buffer, wined3d_srgb_const0);
+        shader_arb_append_imm_vec4(buffer, &wined3d_srgb_const[0].x);
         shader_addline(buffer, ";\n");
         shader_addline(buffer, "PARAM srgb_consts1 = ");
-        shader_arb_append_imm_vec4(buffer, wined3d_srgb_const1);
+        shader_arb_append_imm_vec4(buffer, &wined3d_srgb_const[1].x);
         shader_addline(buffer, ";\n");
     }
 
@@ -6371,10 +6371,10 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
     if (settings->sRGB_write)
     {
         shader_addline(&buffer, "PARAM srgb_consts0 = ");
-        shader_arb_append_imm_vec4(&buffer, wined3d_srgb_const0);
+        shader_arb_append_imm_vec4(&buffer, &wined3d_srgb_const[0].x);
         shader_addline(&buffer, ";\n");
         shader_addline(&buffer, "PARAM srgb_consts1 = ");
-        shader_arb_append_imm_vec4(&buffer, wined3d_srgb_const1);
+        shader_arb_append_imm_vec4(&buffer, &wined3d_srgb_const[1].x);
         shader_addline(&buffer, ";\n");
     }
 

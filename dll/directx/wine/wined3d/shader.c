@@ -32,10 +32,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 
-/* pow, mul_high, sub_high, mul_low */
-const float wined3d_srgb_const0[] = {0.41666f, 1.055f, 0.055f, 12.92f};
-/* cmp */
-const float wined3d_srgb_const1[] = {0.0031308f, 0.0f, 0.0f, 0.0f};
+const struct wined3d_vec4 wined3d_srgb_const[] =
+{
+    /* pow, mul_high, sub_high, mul_low */
+    {0.41666f, 1.055f, 0.055f, 12.92f},
+    /* cmp */
+    {0.0031308f, 0.0f, 0.0f, 0.0f},
+};
 
 static const char * const shader_opcode_names[] =
 {

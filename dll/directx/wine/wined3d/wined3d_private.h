@@ -1489,17 +1489,16 @@ static inline void wined3d_color_from_d3dcolor(struct wined3d_color *wined3d_col
     wined3d_color->a = D3DCOLOR_B_A(d3d_color) / 255.0f;
 }
 
-extern const float wined3d_srgb_const0[] DECLSPEC_HIDDEN;
-extern const float wined3d_srgb_const1[] DECLSPEC_HIDDEN;
+extern const struct wined3d_vec4 wined3d_srgb_const[] DECLSPEC_HIDDEN;
 
 static inline float wined3d_srgb_from_linear(float colour)
 {
     if (colour < 0.0f)
         return 0.0f;
-    if (colour < wined3d_srgb_const1[0])
-        return colour * wined3d_srgb_const0[3];
+    if (colour < wined3d_srgb_const[1].x)
+        return colour * wined3d_srgb_const[0].w;
     if (colour < 1.0f)
-        return wined3d_srgb_const0[1] * powf(colour, wined3d_srgb_const0[0]) - wined3d_srgb_const0[2];
+        return wined3d_srgb_const[0].y * powf(colour, wined3d_srgb_const[0].x) - wined3d_srgb_const[0].z;
     return 1.0f;
 }
 
