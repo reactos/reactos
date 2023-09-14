@@ -4024,3 +4024,25 @@ void wined3d_texture_upload_from_texture(struct wined3d_texture *dst_texture, un
     wined3d_texture_validate_location(dst_texture, dst_sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB);
     wined3d_texture_invalidate_location(dst_texture, dst_sub_resource_idx, ~WINED3D_LOCATION_TEXTURE_RGB);
 }
+
+/* Partial downloads are not supported. */
+void wined3d_texture_download_from_texture(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
+        struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx)
+{
+    struct wined3d_context *context;
+    struct wined3d_bo_address data;
+    DWORD dst_location = dst_texture->resource.map_binding;
+
+    context = context_acquire(src_texture->resource.device, NULL, 0);
+
+    wined3d_texture_prepare_location(dst_texture, dst_sub_resource_idx, context, dst_location);
+    wined3d_texture_get_memory(dst_texture, dst_sub_resource_idx, &data, dst_location);
+    wined3d_texture_bind_and_dirtify(src_texture, context,
+            !(src_texture->sub_resources[src_sub_resource_idx].locations & WINED3D_LOCATION_TEXTURE_RGB));
+    wined3d_texture_download_data(src_texture, src_sub_resource_idx, context, &data);
+
+    context_release(context);
+
+    wined3d_texture_validate_location(dst_texture, dst_sub_resource_idx, dst_location);
+    wined3d_texture_invalidate_location(dst_texture, dst_sub_resource_idx, ~dst_location);
+}

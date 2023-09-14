@@ -3420,6 +3420,29 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
             return WINED3D_OK;
         }
     }
+    else if (!(src_sub_resource->locations & surface_simple_locations)
+            && (dst_sub_resource->locations & dst_texture->resource.map_binding))
+    {
+        /* Download */
+        if (scale)
+            TRACE("Not doing download because of scaling.\n");
+        else if (convert)
+            TRACE("Not doing download because of format conversion.\n");
+        else if (src_texture->resource.format->conv_byte_count)
+            TRACE("Not doing download because the source format needs conversion.\n");
+        else if (is_multisample_location(src_texture, WINED3D_LOCATION_TEXTURE_RGB))
+            TRACE("Not doing download because of multisample source.\n");
+        else if (!texture2d_is_full_rect(src_texture, src_sub_resource_idx % src_texture->level_count, &src_rect))
+            TRACE("Not doing download because of partial download (src).\n");
+        else if (!texture2d_is_full_rect(dst_texture, dst_sub_resource_idx % dst_texture->level_count, &dst_rect))
+            TRACE("Not doing download because of partial download (dst).\n");
+        else
+        {
+            wined3d_texture_download_from_texture(dst_texture, dst_sub_resource_idx, src_texture,
+                    src_sub_resource_idx);
+            return WINED3D_OK;
+        }
+    }
     else if (dst_swapchain && dst_swapchain->back_buffers
             && dst_texture == dst_swapchain->front_buffer
             && src_texture == dst_swapchain->back_buffers[0])
@@ -3443,10 +3466,9 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
 
         return WINED3D_OK;
     }
-    else if ((flags & WINED3D_BLT_RAW) || (!scale && !convert && !resolve))
-    {
+
+    if ((flags & WINED3D_BLT_RAW) || (blit_op == WINED3D_BLIT_OP_COLOR_BLIT && !scale && !convert && !resolve))
         blit_op = WINED3D_BLIT_OP_RAW_BLIT;
-    }
 
     if (dst_texture->resource.access & WINED3D_RESOURCE_ACCESS_GPU)
         dst_location = dst_texture->resource.draw_binding;
