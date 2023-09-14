@@ -6906,10 +6906,10 @@ static void arbfp_free_blit_shader(struct wine_rb_entry *entry, void *ctx)
 {
     struct arbfp_blit_desc *entry_arb = WINE_RB_ENTRY_VALUE(entry, struct arbfp_blit_desc, entry);
     const struct wined3d_gl_info *gl_info;
-    struct wined3d_context *context;
+    struct wined3d_context_gl *context_gl;
 
-    context = ctx;
-    gl_info = context->gl_info;
+    context_gl = ctx;
+    gl_info = context_gl->c.gl_info;
 
     GL_EXTCALL(glDeleteProgramsARB(1, &entry_arb->shader));
     checkGLcall("glDeleteProgramsARB(1, &entry_arb->shader)");
@@ -6919,6 +6919,7 @@ static void arbfp_free_blit_shader(struct wine_rb_entry *entry, void *ctx)
 /* Context activation is done by the caller. */
 static void arbfp_blitter_destroy(struct wined3d_blitter *blitter, struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_arbfp_blitter *arbfp_blitter;
     struct wined3d_blitter *next;
@@ -6928,7 +6929,7 @@ static void arbfp_blitter_destroy(struct wined3d_blitter *blitter, struct wined3
 
     arbfp_blitter = CONTAINING_RECORD(blitter, struct wined3d_arbfp_blitter, blitter);
 
-    wine_rb_destroy(&arbfp_blitter->shaders, arbfp_free_blit_shader, context);
+    wine_rb_destroy(&arbfp_blitter->shaders, arbfp_free_blit_shader, context_gl);
     checkGLcall("Delete blit programs");
 
     if (arbfp_blitter->palette_texture)
