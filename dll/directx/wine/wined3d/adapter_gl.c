@@ -433,11 +433,11 @@ static BOOL match_apple(const struct wined3d_gl_info *gl_info, struct wined3d_ca
      *
      * Detecting this isn't really easy. The vendor string doesn't mention
      * Apple. Compile-time checks aren't sufficient either because a Linux
-     * binary may display on a MacOS X server via remote X11. So try to detect
+     * binary may display on a macOS X server via remote X11. So try to detect
      * the OpenGL implementation by looking at certain Apple extensions. Some
      * extensions like client storage might be supported on other
      * implementations too, but GL_APPLE_flush_render is specific to the
-     * MacOS X window management, and GL_APPLE_ycbcr_422 is QuickTime
+     * macOS X window management, and GL_APPLE_ycbcr_422 is QuickTime
      * specific. So the chance that other implementations support them is
      * rather small since Win32 QuickTime uses DirectDraw, not OpenGL.
      *
@@ -893,11 +893,11 @@ static void quirk_no_np2(struct wined3d_gl_info *gl_info)
 
 static void quirk_texcoord_w(struct wined3d_gl_info *gl_info)
 {
-    /* The Intel GPUs on MacOS set the .w register of texcoords to 0.0 by
+    /* The Intel GPUs on macOS set the .w register of texcoords to 0.0 by
      * default, which causes problems with fixed-function fragment processing.
      * Ideally this flag should be detected with a test shader and OpenGL
-     * feedback mode, but some OpenGL implementations (MacOS ATI at least,
-     * probably all MacOS ones) do not like vertex shaders in feedback mode
+     * feedback mode, but some OpenGL implementations (macOS ATI at least,
+     * probably all macOS ones) do not like vertex shaders in feedback mode
      * and return an error, even though it should be valid according to the
      * spec.
      *
@@ -906,8 +906,8 @@ static void quirk_texcoord_w(struct wined3d_gl_info *gl_info)
      * instruction slots which should be available to the Direct3D
      * application.
      *
-     * ATI Radeon HD 2xxx cards on MacOS have the issue. Instead of checking
-     * for the buggy cards, blacklist all Radeon cards on MacOS and whitelist
+     * ATI Radeon HD 2xxx cards on macOS have the issue. Instead of checking
+     * for the buggy cards, blacklist all Radeon cards on macOS and whitelist
      * the good ones. That way we're prepared for the future. If this
      * workaround is activated on cards that do not need it, it won't break
      * things, just affect performance negatively. */
