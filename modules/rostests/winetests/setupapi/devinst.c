@@ -1059,8 +1059,8 @@ static void test_device_iface(void)
 {
     char buffer[200];
     SP_DEVICE_INTERFACE_DETAIL_DATA_A *detail = (SP_DEVICE_INTERFACE_DETAIL_DATA_A *)buffer;
+    SP_DEVINFO_DATA device = {0}, device2 = {sizeof(device2)};
     SP_DEVICE_INTERFACE_DATA iface = {sizeof(iface)};
-    SP_DEVINFO_DATA device = {0};
     BOOL ret;
     HDEVINFO set;
 
@@ -1157,6 +1157,16 @@ static void test_device_iface(void)
     check_device_iface(set, &device, &guid, 0, 0, "\\\\?\\ROOT#LEGACY_BOGUS#0000#{6A55B5A4-3F65-11DB-B704-0011955C2BDB}\\Oogah");
     check_device_iface(set, &device, &guid, 1, 0, "\\\\?\\ROOT#LEGACY_BOGUS#0000#{6A55B5A4-3F65-11DB-B704-0011955C2BDB}\\test");
     check_device_iface(set, &device, &guid, 2, 0, NULL);
+
+    ret = SetupDiCreateDeviceInfoA(set, "ROOT\\LEGACY_BOGUS\\0001", &guid, NULL, NULL, 0, &device2);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInterfaceA(set, &device2, &guid, NULL, 0, NULL);
+    ok(ret, "Failed to create interface, error %#x.\n", GetLastError());
+
+    check_device_iface(set, NULL, &guid, 0, 0, "\\\\?\\ROOT#LEGACY_BOGUS#0000#{6A55B5A4-3F65-11DB-B704-0011955C2BDB}\\Oogah");
+    check_device_iface(set, NULL, &guid, 1, 0, "\\\\?\\ROOT#LEGACY_BOGUS#0000#{6A55B5A4-3F65-11DB-B704-0011955C2BDB}\\test");
+    check_device_iface(set, NULL, &guid, 2, 0, "\\\\?\\ROOT#LEGACY_BOGUS#0001#{6A55B5A4-3F65-11DB-B704-0011955C2BDB}");
+    check_device_iface(set, NULL, &guid, 3, 0, NULL);
 
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
