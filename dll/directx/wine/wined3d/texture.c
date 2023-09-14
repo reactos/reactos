@@ -1975,8 +1975,6 @@ static void wined3d_texture_gl_upload_data(struct wined3d_context *context,
     unsigned int update_h = src_box->bottom - src_box->top;
     unsigned int update_d = src_box->back - src_box->front;
     struct wined3d_bo_address bo;
-    void *converted_mem = NULL;
-    struct wined3d_format_gl f;
     unsigned int level;
     BOOL decompress;
     GLenum target;
@@ -2050,7 +2048,10 @@ static void wined3d_texture_gl_upload_data(struct wined3d_context *context,
     {
         const struct wined3d_format *compressed_format = src_format;
         unsigned int dst_row_pitch, dst_slice_pitch;
-        void *src_mem;
+        struct wined3d_format_gl f;
+        void *converted_mem;
+        unsigned int z;
+        BYTE *src_mem;
 
         if (decompress)
         {
@@ -2068,9 +2069,7 @@ static void wined3d_texture_gl_upload_data(struct wined3d_context *context,
 
         wined3d_format_calculate_pitch(src_format, 1, update_w, update_h, &dst_row_pitch, &dst_slice_pitch);
 
-        /* Note that uploading 3D textures may require quite some address
-         * space; it may make sense to upload them per-slice instead. */
-        if (!(converted_mem = heap_calloc(update_d, dst_slice_pitch)))
+        if (!(converted_mem = heap_alloc(dst_slice_pitch)))
         {
             ERR("Failed to allocate upload buffer.\n");
             return;
@@ -2078,35 +2077,40 @@ static void wined3d_texture_gl_upload_data(struct wined3d_context *context,
 
         src_mem = wined3d_context_gl_map_bo_address(context_gl, &bo,
                 src_slice_pitch * update_d, GL_PIXEL_UNPACK_BUFFER, WINED3D_MAP_READ);
-        if (decompress)
-            compressed_format->decompress(src_mem, converted_mem, src_row_pitch, src_slice_pitch,
-                    dst_row_pitch, dst_slice_pitch, update_w, update_h, update_d);
-        else
-            src_format->upload(src_mem, converted_mem, src_row_pitch, src_slice_pitch,
-                    dst_row_pitch, dst_slice_pitch, update_w, update_h, update_d);
+
+        for (z = 0; z < update_d; ++z, src_mem += src_slice_pitch)
+        {
+            if (decompress)
+                compressed_format->decompress(src_mem, converted_mem, src_row_pitch, src_slice_pitch,
+                        dst_row_pitch, dst_slice_pitch, update_w, update_h, 1);
+            else
+                src_format->upload(src_mem, converted_mem, src_row_pitch, src_slice_pitch,
+                        dst_row_pitch, dst_slice_pitch, update_w, update_h, 1);
+
+            wined3d_texture_gl_upload_bo(src_format, target, level, dst_row_pitch, dst_x, dst_y,
+                    dst_z + z, update_w, update_h, 1, converted_mem, srgb, dst_texture, gl_info);
+        }
+
         wined3d_context_gl_unmap_bo_address(context_gl, &bo, GL_PIXEL_UNPACK_BUFFER, 0, NULL);
-
-        bo.buffer_object = 0;
-        bo.addr = converted_mem;
-        src_row_pitch = dst_row_pitch;
-        src_slice_pitch = dst_slice_pitch;
+        heap_free(converted_mem);
     }
-
-    if (bo.buffer_object)
+    else
     {
-        GL_EXTCALL(glBindBuffer(GL_PIXEL_UNPACK_BUFFER, bo.buffer_object));
-        checkGLcall("glBindBuffer");
-    }
+        if (bo.buffer_object)
+        {
+            GL_EXTCALL(glBindBuffer(GL_PIXEL_UNPACK_BUFFER, bo.buffer_object));
+            checkGLcall("glBindBuffer");
+        }
 
-    wined3d_texture_gl_upload_bo(src_format, target, level, src_row_pitch, dst_x, dst_y,
-            dst_z, update_w, update_h, update_d, bo.addr, srgb, dst_texture, gl_info);
+        wined3d_texture_gl_upload_bo(src_format, target, level, src_row_pitch, dst_x, dst_y,
+                dst_z, update_w, update_h, update_d, bo.addr, srgb, dst_texture, gl_info);
 
-    if (bo.buffer_object)
-    {
-        GL_EXTCALL(glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0));
-        checkGLcall("glBindBuffer");
+        if (bo.buffer_object)
+        {
+            GL_EXTCALL(glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0));
+            checkGLcall("glBindBuffer");
+        }
     }
-    heap_free(converted_mem);
 
     if (gl_info->quirks & WINED3D_QUIRK_FBO_TEX_UPDATE)
     {
