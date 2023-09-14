@@ -2035,8 +2035,6 @@ struct wined3d_rasterizer_state * CDECL wined3d_device_get_rasterizer_state(stru
 void CDECL wined3d_device_set_render_state(struct wined3d_device *device,
         enum wined3d_render_state state, DWORD value)
 {
-    DWORD old_value;
-
     TRACE("device %p, state %s (%#x), value %#x.\n", device, debug_d3drenderstate(state), state, value);
 
     if (state > WINEHIGHEST_RENDER_STATE)
@@ -2045,8 +2043,7 @@ void CDECL wined3d_device_set_render_state(struct wined3d_device *device,
         return;
     }
 
-    old_value = device->state.render_states[state];
-    device->update_state->render_states[state] = value;
+    device->update_stateblock_state->rs[state] = value;
 
     /* Handle recording of state blocks. */
     if (device->recording)
@@ -2056,11 +2053,13 @@ void CDECL wined3d_device_set_render_state(struct wined3d_device *device,
         return;
     }
 
-    /* Compared here and not before the assignment to allow proper stateblock recording. */
-    if (value == old_value)
+    if (value == device->state.render_states[state])
         TRACE("Application is setting the old value over, nothing to do.\n");
     else
+    {
+        device->state.render_states[state] = value;
         wined3d_cs_emit_set_render_state(device->cs, state, value);
+    }
 
     if (state == WINED3D_RS_POINTSIZE && value == WINED3D_RESZ_CODE)
     {
@@ -5053,6 +5052,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         state_init(&device->state, &device->fb, &device->adapter->d3d_info, WINED3D_STATE_INIT_DEFAULT);
         device->update_state = &device->state;
         memset(&device->stateblock_state, 0, sizeof(device->stateblock_state));
+        wined3d_stateblock_state_init(&device->stateblock_state, device, WINED3D_STATE_INIT_DEFAULT);
         device->update_stateblock_state = &device->stateblock_state;
 
         device_init_swapchain_state(device, swapchain);
@@ -5328,6 +5328,7 @@ HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
 
     state_init(&device->state, &device->fb, &adapter->d3d_info, WINED3D_STATE_INIT_DEFAULT);
     device->update_state = &device->state;
+    wined3d_stateblock_state_init(&device->stateblock_state, device, WINED3D_STATE_INIT_DEFAULT);
     device->update_stateblock_state = &device->stateblock_state;
 
     device->max_frame_latency = 3;

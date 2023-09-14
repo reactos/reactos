@@ -916,9 +916,9 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     {
         enum wined3d_render_state rs = stateblock->contained_render_states[i];
 
-        TRACE("Updating render state %#x to %u.\n", rs, src_state->render_states[rs]);
+        TRACE("Updating render state %#x to %u.\n", rs, state->rs[rs]);
 
-        stateblock->state.render_states[rs] = src_state->render_states[rs];
+        stateblock->stateblock_state.rs[rs] = state->rs[rs];
     }
 
     /* Texture states */
@@ -1066,8 +1066,9 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     /* Render states. */
     for (i = 0; i < stateblock->num_contained_render_states; ++i)
     {
+        state->rs[i] = stateblock->stateblock_state.rs[i];
         wined3d_device_set_render_state(device, stateblock->contained_render_states[i],
-                stateblock->state.render_states[stateblock->contained_render_states[i]]);
+                stateblock->stateblock_state.rs[stateblock->contained_render_states[i]]);
     }
 
     /* Texture states. */
@@ -1387,6 +1388,19 @@ void state_init(struct wined3d_state *state, struct wined3d_fb_state *fb,
         state_init_default(state, d3d_info);
 }
 
+static void stateblock_state_init_default(struct wined3d_stateblock_state *state,
+        const struct wined3d_d3d_info *d3d_info)
+{
+    init_default_render_states(state->rs, d3d_info);
+}
+
+void wined3d_stateblock_state_init(struct wined3d_stateblock_state *state,
+        const struct wined3d_device *device, DWORD flags)
+{
+    if (flags & WINED3D_STATE_INIT_DEFAULT)
+        stateblock_state_init_default(state, &device->adapter->d3d_info);
+}
+
 static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
         struct wined3d_device *device, enum wined3d_stateblock_type type)
 {
@@ -1395,6 +1409,7 @@ static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
     stateblock->ref = 1;
     stateblock->device = device;
     state_init(&stateblock->state, NULL, d3d_info, 0);
+    wined3d_stateblock_state_init(&stateblock->stateblock_state, device, 0);
 
     if (type == WINED3D_SBT_RECORDED)
         return WINED3D_OK;

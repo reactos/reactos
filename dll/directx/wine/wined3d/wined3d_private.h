@@ -3015,6 +3015,8 @@ struct wined3d_stateblock_state
     struct wined3d_vec4 ps_consts_f[WINED3D_MAX_PS_CONSTS_F];
     struct wined3d_ivec4 ps_consts_i[WINED3D_MAX_CONSTS_I];
     BOOL ps_consts_b[WINED3D_MAX_CONSTS_B];
+
+    DWORD rs[WINEHIGHEST_RENDER_STATE + 1];
 };
 
 struct wined3d_device
@@ -3646,6 +3648,8 @@ struct wined3d_stateblock
 
 void stateblock_init_contained_states(struct wined3d_stateblock *stateblock) DECLSPEC_HIDDEN;
 
+void wined3d_stateblock_state_init(struct wined3d_stateblock_state *state,
+        const struct wined3d_device *device, DWORD flags) DECLSPEC_HIDDEN;
 void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state) DECLSPEC_HIDDEN;
 
 void state_cleanup(struct wined3d_state *state) DECLSPEC_HIDDEN;
