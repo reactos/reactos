@@ -6072,17 +6072,19 @@ static const char *get_argreg(struct wined3d_string_buffer *buffer, DWORD argnum
 }
 
 static void gen_ffp_instr(struct wined3d_string_buffer *buffer, unsigned int stage, BOOL color,
-        BOOL alpha, DWORD dst, DWORD op, DWORD dw_arg0, DWORD dw_arg1, DWORD dw_arg2)
+        BOOL alpha, BOOL tmp_dst, DWORD op, DWORD dw_arg0, DWORD dw_arg1, DWORD dw_arg2)
 {
     const char *dstmask, *dstreg, *arg0, *arg1, *arg2;
     unsigned int mul = 1;
 
-    if(color && alpha) dstmask = "";
-    else if(color) dstmask = ".xyz";
-    else dstmask = ".w";
+    if (color && alpha)
+        dstmask = "";
+    else if (color)
+        dstmask = ".xyz";
+    else
+        dstmask = ".w";
 
-    if(dst == tempreg) dstreg = "tempreg";
-    else dstreg = "ret";
+    dstreg = tmp_dst ? "tempreg" : "ret";
 
     arg0 = get_argreg(buffer, 0, stage, dw_arg0);
     arg1 = get_argreg(buffer, 1, stage, dw_arg1);
@@ -6261,7 +6263,7 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
 
         if (arg0 == WINED3DTA_TEXTURE || arg1 == WINED3DTA_TEXTURE || arg2 == WINED3DTA_TEXTURE)
             tex_read |= 1u << stage;
-        if (settings->op[stage].dst == tempreg)
+        if (settings->op[stage].tmp_dst)
             tempreg_used = TRUE;
         if (arg0 == WINED3DTA_TEMP || arg1 == WINED3DTA_TEMP || arg2 == WINED3DTA_TEMP)
             tempreg_used = TRUE;
@@ -6493,23 +6495,23 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
 
         if (settings->op[stage].aop == WINED3D_TOP_DISABLE)
         {
-            gen_ffp_instr(&buffer, stage, TRUE, FALSE, settings->op[stage].dst,
+            gen_ffp_instr(&buffer, stage, TRUE, FALSE, settings->op[stage].tmp_dst,
                           settings->op[stage].cop, settings->op[stage].carg0,
                           settings->op[stage].carg1, settings->op[stage].carg2);
         }
         else if (op_equal)
         {
-            gen_ffp_instr(&buffer, stage, TRUE, TRUE, settings->op[stage].dst,
+            gen_ffp_instr(&buffer, stage, TRUE, TRUE, settings->op[stage].tmp_dst,
                           settings->op[stage].cop, settings->op[stage].carg0,
                           settings->op[stage].carg1, settings->op[stage].carg2);
         }
         else if (settings->op[stage].cop != WINED3D_TOP_BUMPENVMAP
                 && settings->op[stage].cop != WINED3D_TOP_BUMPENVMAP_LUMINANCE)
         {
-            gen_ffp_instr(&buffer, stage, TRUE, FALSE, settings->op[stage].dst,
+            gen_ffp_instr(&buffer, stage, TRUE, FALSE, settings->op[stage].tmp_dst,
                           settings->op[stage].cop, settings->op[stage].carg0,
                           settings->op[stage].carg1, settings->op[stage].carg2);
-            gen_ffp_instr(&buffer, stage, FALSE, TRUE, settings->op[stage].dst,
+            gen_ffp_instr(&buffer, stage, FALSE, TRUE, settings->op[stage].tmp_dst,
                           settings->op[stage].aop, settings->op[stage].aarg0,
                           settings->op[stage].aarg1, settings->op[stage].aarg2);
         }

@@ -341,9 +341,8 @@ static GLuint find_tmpreg(const struct texture_stage_op op[MAX_TEXTURES])
             lowest_read = i;
         }
 
-        if(lowest_write == -1 && op[i].dst == tempreg) {
+        if (lowest_write == -1 && op[i].tmp_dst)
             lowest_write = i;
-        }
 
         if(op[i].carg1 == WINED3DTA_TEXTURE || op[i].carg2 == WINED3DTA_TEXTURE || op[i].carg0 == WINED3DTA_TEXTURE ||
            op[i].aarg1 == WINED3DTA_TEXTURE || op[i].aarg2 == WINED3DTA_TEXTURE || op[i].aarg0 == WINED3DTA_TEXTURE) {
@@ -620,14 +619,18 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES],
             break;
         }
 
-        if(op[stage].dst == tempreg) {
-            /* If we're writing to D3DTA_TEMP, but never reading from it we don't have to write there in the first place.
-             * skip the entire stage, this saves some GPU time
-             */
-            if(tmparg == GL_NONE) continue;
+        if (op[stage].tmp_dst)
+        {
+            /* If we're writing to D3DTA_TEMP, but never reading from it we
+             * don't have to write there in the first place. Skip the entire
+             * stage, this saves some GPU time. */
+            if (tmparg == GL_NONE)
+                continue;
 
             dstreg = tmparg;
-        } else {
+        }
+        else
+        {
             dstreg = GL_REG_0_ATI;
         }
 

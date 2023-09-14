@@ -5804,7 +5804,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
             settings->op[i].carg0 = settings->op[i].carg1 = settings->op[i].carg2 = ARG_UNUSED;
             settings->op[i].aarg0 = settings->op[i].aarg1 = settings->op[i].aarg2 = ARG_UNUSED;
             settings->op[i].color_fixup = COLOR_FIXUP_IDENTITY;
-            settings->op[i].dst = resultreg;
+            settings->op[i].tmp_dst = 0;
             settings->op[i].tex_type = WINED3D_GL_RES_TYPE_TEX_1D;
             settings->op[i].projected = WINED3D_PROJECTION_NONE;
             i++;
@@ -5949,11 +5949,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
         settings->op[i].aarg0 = aarg0;
         settings->op[i].aarg1 = aarg1;
         settings->op[i].aarg2 = aarg2;
-
-        if (state->texture_states[i][WINED3D_TSS_RESULT_ARG] == WINED3DTA_TEMP)
-            settings->op[i].dst = tempreg;
-        else
-            settings->op[i].dst = resultreg;
+        settings->op[i].tmp_dst = state->texture_states[i][WINED3D_TSS_RESULT_ARG] == WINED3DTA_TEMP;
     }
 
     /* Clear unsupported stages */
