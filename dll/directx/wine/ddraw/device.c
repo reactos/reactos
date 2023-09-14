@@ -2723,6 +2723,14 @@ static HRESULT WINAPI d3d_device3_SetRenderState(IDirect3DDevice3 *iface,
 
         case D3DRENDERSTATE_TEXTUREMAPBLEND:
         {
+            if (value == device->texture_map_blend)
+            {
+                TRACE("Application is setting the same value over, nothing to do.\n");
+
+                hr = D3D_OK;
+                break;
+            }
+
             device->legacyTextureBlending = TRUE;
 
             switch (value)
