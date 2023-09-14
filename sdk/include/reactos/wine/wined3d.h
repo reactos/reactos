@@ -790,6 +790,7 @@ enum wined3d_stateblock_type
     WINED3D_SBT_PIXEL_STATE                 = 2,
     WINED3D_SBT_VERTEX_STATE                = 3,
     WINED3D_SBT_RECORDED                    = 4, /* WineD3D private */
+    WINED3D_SBT_PRIMARY                     = 5, /* WineD3D private */
 };
 
 enum wined3d_decl_method

@@ -1573,11 +1573,12 @@ static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
 
     stateblock->ref = 1;
     stateblock->device = device;
-    wined3d_stateblock_state_init(&stateblock->stateblock_state, device, 0);
+    wined3d_stateblock_state_init(&stateblock->stateblock_state, device,
+            type == WINED3D_SBT_PRIMARY ? WINED3D_STATE_INIT_DEFAULT : 0);
 
     stateblock->changed.store_stream_offset = 1;
 
-    if (type == WINED3D_SBT_RECORDED)
+    if (type == WINED3D_SBT_RECORDED || type == WINED3D_SBT_PRIMARY)
         return WINED3D_OK;
 
     TRACE("Updating changed flags appropriate for type %#x.\n", type);
