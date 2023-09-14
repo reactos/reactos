@@ -275,6 +275,7 @@ static inline enum complex_fixup get_complex_fixup(struct color_fixup_desc fixup
 }
 
 /* Device caps */
+#define MAX_VERTEX_BLEND_UBO        256
 #define WINED3D_MAX_STREAMS         16
 #define WINED3D_MAX_TEXTURES        8
 #define WINED3D_MAX_FRAGMENT_SAMPLERS 16
