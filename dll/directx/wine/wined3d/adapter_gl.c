@@ -3855,7 +3855,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     }
     fixup_extensions(gl_info, caps_gl_ctx, gl_renderer_str, gl_vendor,
             gpu_description->vendor, gpu_description->device);
-    wined3d_driver_info_init(driver_info, gpu_description, vram_bytes);
+    wined3d_driver_info_init(driver_info, gpu_description, vram_bytes, 0);
     TRACE("Reporting (fake) driver version 0x%08x-0x%08x.\n",
             driver_info->version_high, driver_info->version_low);
 

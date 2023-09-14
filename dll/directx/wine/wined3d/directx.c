@@ -541,7 +541,7 @@ static void wined3d_copy_name(char *dst, const char *src, unsigned int dst_size)
 }
 
 void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
-        const struct wined3d_gpu_description *gpu_desc, UINT64 vram_bytes)
+        const struct wined3d_gpu_description *gpu_desc, UINT64 vram_bytes, UINT64 sysmem_bytes)
 {
     const struct driver_version_information *version_info;
     enum wined3d_driver_model driver_model;
@@ -637,12 +637,15 @@ void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
         driver_info->vram_bytes = LONG_MAX;
     }
 
-    driver_info->sysmem_bytes = 64 * 1024 * 1024;
-    memory_status.dwLength = sizeof(memory_status);
-    if (GlobalMemoryStatusEx(&memory_status))
-        driver_info->sysmem_bytes = max(memory_status.ullTotalPhys / 2, driver_info->sysmem_bytes);
-    else
-        ERR("Failed to get global memory status.\n");
+    if (!(driver_info->sysmem_bytes = sysmem_bytes))
+    {
+        driver_info->sysmem_bytes = 64 * 1024 * 1024;
+        memory_status.dwLength = sizeof(memory_status);
+        if (GlobalMemoryStatusEx(&memory_status))
+            driver_info->sysmem_bytes = max(memory_status.ullTotalPhys / 2, driver_info->sysmem_bytes);
+        else
+            ERR("Failed to get global memory status.\n");
+    }
 
     /* Try to obtain driver version information for the current Windows version. This fails in
      * some cases:
@@ -2305,7 +2308,7 @@ static struct wined3d_adapter *wined3d_adapter_no3d_create(unsigned int ordinal,
     if (!(adapter = heap_alloc_zero(sizeof(*adapter))))
         return NULL;
 
-    wined3d_driver_info_init(&adapter->driver_info, &gpu_description, 0);
+    wined3d_driver_info_init(&adapter->driver_info, &gpu_description, 0, 0);
     adapter->vram_bytes_used = 0;
     TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->driver_info.vram_bytes));
 

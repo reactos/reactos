@@ -635,8 +635,8 @@ static void adapter_vk_init_driver_info(struct wined3d_adapter *adapter,
 {
     const struct wined3d_gpu_description *gpu_description;
     struct wined3d_gpu_description description;
+    UINT64 vram_bytes, sysmem_bytes;
     const VkMemoryHeap *heap;
-    UINT64 vram_bytes;
     unsigned int i;
 
     TRACE("Device name: %s.\n", debugstr_a(properties->deviceName));
@@ -644,15 +644,18 @@ static void adapter_vk_init_driver_info(struct wined3d_adapter *adapter,
     TRACE("Driver version: %#x.\n", properties->driverVersion);
     TRACE("API version: %s.\n", debug_vk_version(properties->apiVersion));
 
-    for (i = 0, vram_bytes = 0; i < memory_properties->memoryHeapCount; ++i)
+    for (i = 0, vram_bytes = 0, sysmem_bytes = 0; i < memory_properties->memoryHeapCount; ++i)
     {
         heap = &memory_properties->memoryHeaps[i];
         TRACE("Memory heap [%u]: flags %#x, size 0x%s.\n",
                 i, heap->flags, wine_dbgstr_longlong(heap->size));
         if (heap->flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
             vram_bytes += heap->size;
+        else
+            sysmem_bytes += heap->size;
     }
     TRACE("Total device memory: 0x%s.\n", wine_dbgstr_longlong(vram_bytes));
+    TRACE("Total shared system memory: 0x%s.\n", wine_dbgstr_longlong(sysmem_bytes));
 
     if (!(gpu_description = wined3d_get_user_override_gpu_description(properties->vendorID, properties->deviceID)))
         gpu_description = wined3d_get_gpu_description(properties->vendorID, properties->deviceID);
@@ -671,7 +674,7 @@ static void adapter_vk_init_driver_info(struct wined3d_adapter *adapter,
         gpu_description = &description;
     }
 
-    wined3d_driver_info_init(&adapter->driver_info, gpu_description, vram_bytes);
+    wined3d_driver_info_init(&adapter->driver_info, gpu_description, vram_bytes, sysmem_bytes);
 }
 
 static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,

@@ -2710,7 +2710,8 @@ struct wined3d_driver_info
 };
 
 void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
-        const struct wined3d_gpu_description *gpu_description, UINT64 vram_bytes) DECLSPEC_HIDDEN;
+        const struct wined3d_gpu_description *gpu_description,
+        UINT64 vram_bytes, UINT64 sysmem_bytes) DECLSPEC_HIDDEN;
 
 struct wined3d_adapter_ops
 {
