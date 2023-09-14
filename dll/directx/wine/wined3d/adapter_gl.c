@@ -1295,8 +1295,7 @@ static enum wined3d_pci_vendor wined3d_guess_card_vendor(const char *gl_vendor_s
 }
 
 static enum wined3d_feature_level feature_level_from_caps(const struct wined3d_gl_info *gl_info,
-        const struct wined3d_d3d_limits *d3d_limits, const struct shader_caps *shader_caps,
-        const struct fragment_caps *fragment_caps)
+        const struct shader_caps *shader_caps, const struct fragment_caps *fragment_caps)
 {
     unsigned int shader_model;
 
@@ -1322,7 +1321,7 @@ static enum wined3d_feature_level feature_level_from_caps(const struct wined3d_g
         }
     }
 
-    if (shader_model >= 3 && d3d_limits->texture_size >= 4096 && d3d_limits->max_rt_count >= 4)
+    if (shader_model >= 3 && gl_info->limits.texture_size >= 4096 && gl_info->limits.buffers >= 4)
         return WINED3D_FEATURE_LEVEL_9_3;
     if (shader_model >= 2)
     {
@@ -2905,10 +2904,9 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
 #undef MAP_GL_FUNCTION_CAST
 }
 
-static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct wined3d_d3d_info *d3d_info)
+static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
 {
     unsigned int i, sampler_count;
-    GLfloat gl_floatv[2];
     GLint gl_max;
 
     gl_info->limits.buffers = 1;
@@ -2947,13 +2945,8 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct 
     }
 
     gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_TEXTURE_SIZE, &gl_max);
-    d3d_info->limits.texture_size = gl_max;
+    gl_info->limits.texture_size = gl_max;
     TRACE("Maximum texture size support - max texture size %d.\n", gl_max);
-
-    gl_info->gl_ops.gl.p_glGetFloatv(gl_info->supported[WINED3D_GL_LEGACY_CONTEXT]
-            ? GL_ALIASED_POINT_SIZE_RANGE : GL_POINT_SIZE_RANGE, gl_floatv);
-    d3d_info->limits.pointsize_max = gl_floatv[1];
-    TRACE("Maximum point size support - max point size %f.\n", gl_floatv[1]);
 
     if (gl_info->supported[ARB_MAP_BUFFER_ALIGNMENT])
     {
@@ -3246,8 +3239,8 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct 
     }
     else
     {
-        gl_info->limits.framebuffer_width = d3d_info->limits.texture_size;
-        gl_info->limits.framebuffer_height = d3d_info->limits.texture_size;
+        gl_info->limits.framebuffer_width = gl_info->limits.texture_size;
+        gl_info->limits.framebuffer_height = gl_info->limits.texture_size;
     }
 
     gl_info->limits.samplers[WINED3D_SHADER_TYPE_PIXEL] =
@@ -3420,12 +3413,8 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     };
     struct wined3d_driver_info *driver_info = &adapter->driver_info;
     const char *gl_vendor_str, *gl_renderer_str, *gl_version_str;
-    struct wined3d_d3d_info *d3d_info = &adapter->d3d_info;
     const struct wined3d_gpu_description *gpu_description;
     struct wined3d_gl_info *gl_info = &adapter->gl_info;
-    struct wined3d_vertex_caps vertex_caps;
-    struct fragment_caps fragment_caps;
-    struct shader_caps shader_caps;
     const char *WGL_Extensions = NULL;
     enum wined3d_gl_vendor gl_vendor;
     DWORD gl_version, gl_ext_emul_mask;
@@ -3731,7 +3720,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         gl_info->supported[ARB_TEXTURE_MULTISAMPLE] = FALSE;
     }
 
-    wined3d_adapter_init_limits(gl_info, d3d_info);
+    wined3d_adapter_init_limits(gl_info);
 
     if (gl_info->supported[ARB_VERTEX_PROGRAM] && test_arb_vs_offset_limit(gl_info))
         gl_info->quirks |= WINED3D_QUIRK_ARB_VS_OFFSET_LIMIT;
@@ -3755,68 +3744,6 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     adapter->shader_backend = select_shader_backend(gl_info);
     adapter->vertex_pipe = select_vertex_implementation(gl_info, adapter->shader_backend);
     adapter->fragment_pipe = select_fragment_implementation(gl_info, adapter->shader_backend);
-
-    d3d_info->limits.max_rt_count = gl_info->limits.buffers;
-    d3d_info->limits.max_clip_distances = gl_info->limits.user_clip_distances;
-
-    adapter->shader_backend->shader_get_caps(adapter, &shader_caps);
-    d3d_info->vs_clipping = shader_caps.wined3d_caps & WINED3D_SHADER_CAP_VS_CLIPPING;
-    d3d_info->limits.vs_version = shader_caps.vs_version;
-    d3d_info->limits.hs_version = shader_caps.hs_version;
-    d3d_info->limits.ds_version = shader_caps.ds_version;
-    d3d_info->limits.gs_version = shader_caps.gs_version;
-    d3d_info->limits.ps_version = shader_caps.ps_version;
-    d3d_info->limits.cs_version = shader_caps.cs_version;
-    d3d_info->limits.vs_uniform_count = shader_caps.vs_uniform_count;
-    d3d_info->limits.ps_uniform_count = shader_caps.ps_uniform_count;
-    d3d_info->limits.varying_count = shader_caps.varying_count;
-    d3d_info->full_ffp_varyings = !!(shader_caps.wined3d_caps & WINED3D_SHADER_CAP_FULL_FFP_VARYINGS);
-    d3d_info->shader_double_precision = !!(shader_caps.wined3d_caps & WINED3D_SHADER_CAP_DOUBLE_PRECISION);
-    d3d_info->shader_output_interpolation = !!(shader_caps.wined3d_caps & WINED3D_SHADER_CAP_OUTPUT_INTERPOLATION);
-
-    d3d_info->viewport_array_index_any_shader = !!gl_info->supported[ARB_SHADER_VIEWPORT_LAYER_ARRAY];
-
-    adapter->vertex_pipe->vp_get_caps(adapter, &vertex_caps);
-    d3d_info->xyzrhw = vertex_caps.xyzrhw;
-    d3d_info->ffp_generic_attributes = vertex_caps.ffp_generic_attributes;
-    d3d_info->ffp_alpha_test = !!gl_info->supported[WINED3D_GL_LEGACY_CONTEXT];
-    d3d_info->limits.ffp_vertex_blend_matrices = vertex_caps.max_vertex_blend_matrices;
-    d3d_info->limits.active_light_count = vertex_caps.max_active_lights;
-    d3d_info->emulated_flatshading = vertex_caps.emulated_flatshading;
-
-    adapter->fragment_pipe->get_caps(adapter, &fragment_caps);
-    d3d_info->limits.ffp_blend_stages = fragment_caps.MaxTextureBlendStages;
-    d3d_info->limits.ffp_textures = fragment_caps.MaxSimultaneousTextures;
-    d3d_info->shader_color_key = !!(fragment_caps.wined3d_caps & WINED3D_FRAGMENT_CAP_COLOR_KEY);
-    d3d_info->wined3d_creation_flags = wined3d_creation_flags;
-
-    d3d_info->texture_npot = !!gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO];
-    d3d_info->texture_npot_conditional = gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT]
-            || gl_info->supported[ARB_TEXTURE_RECTANGLE];
-
-    d3d_info->draw_base_vertex_offset = !!gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX];
-    d3d_info->vertex_bgra = !!gl_info->supported[ARB_VERTEX_ARRAY_BGRA];
-    d3d_info->texture_swizzle = !!gl_info->supported[ARB_TEXTURE_SWIZZLE];
-    d3d_info->srgb_read_control = !!gl_info->supported[EXT_TEXTURE_SRGB_DECODE];
-    d3d_info->srgb_write_control = !!gl_info->supported[ARB_FRAMEBUFFER_SRGB];
-    d3d_info->clip_control = !!gl_info->supported[ARB_CLIP_CONTROL];
-
-    if (gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
-        d3d_info->multisample_draw_location = WINED3D_LOCATION_TEXTURE_RGB;
-    else
-        d3d_info->multisample_draw_location = WINED3D_LOCATION_RB_MULTISAMPLE;
-
-    d3d_info->feature_level = feature_level_from_caps(gl_info, &d3d_info->limits, &shader_caps, &fragment_caps);
-
-    TRACE("Max texture stages: %u.\n", d3d_info->limits.ffp_blend_stages);
-
-    if (!d3d_info->shader_color_key)
-    {
-        /* We do not want to deal with re-creating immutable texture storage
-         * for colour-keying emulation. */
-        WARN("Disabling ARB_texture_storage because fragment pipe doesn't support colour-keying.\n");
-        gl_info->supported[ARB_TEXTURE_STORAGE] = FALSE;
-    }
 
     if (gl_info->supported[ARB_FRAMEBUFFER_OBJECT])
     {
@@ -3911,13 +3838,20 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
 
     if (!(gpu_description = query_gpu_description(gl_info, &vram_bytes)))
     {
+        enum wined3d_feature_level feature_level;
+        struct fragment_caps fragment_caps;
         enum wined3d_pci_vendor vendor;
         enum wined3d_pci_device device;
+        struct shader_caps shader_caps;
+
+        adapter->shader_backend->shader_get_caps(adapter, &shader_caps);
+        adapter->fragment_pipe->get_caps(adapter, &fragment_caps);
+        feature_level = feature_level_from_caps(gl_info, &shader_caps, &fragment_caps);
 
         vendor = wined3d_guess_card_vendor(gl_vendor_str, gl_renderer_str);
         TRACE("Guessed vendor PCI ID 0x%04x.\n", vendor);
 
-        device = wined3d_guess_card(d3d_info->feature_level, gl_renderer_str, &gl_vendor, &vendor);
+        device = wined3d_guess_card(feature_level, gl_renderer_str, &gl_vendor, &vendor);
         TRACE("Guessed device PCI ID 0x%04x.\n", device);
 
         if (!(gpu_description = wined3d_get_gpu_description(vendor, device)))
@@ -5159,6 +5093,71 @@ static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
     adapter_gl_flush_context,
 };
 
+static void wined3d_adapter_gl_init_d3d_info(struct wined3d_adapter_gl *adapter_gl, uint32_t wined3d_creation_flags)
+{
+    const struct wined3d_gl_info *gl_info = &adapter_gl->a.gl_info;
+    struct wined3d_d3d_info *d3d_info = &adapter_gl->a.d3d_info;
+    struct wined3d_vertex_caps vertex_caps;
+    struct fragment_caps fragment_caps;
+    struct shader_caps shader_caps;
+    GLfloat f[2];
+
+    adapter_gl->a.shader_backend->shader_get_caps(&adapter_gl->a, &shader_caps);
+    adapter_gl->a.vertex_pipe->vp_get_caps(&adapter_gl->a, &vertex_caps);
+    adapter_gl->a.fragment_pipe->get_caps(&adapter_gl->a, &fragment_caps);
+
+    d3d_info->limits.vs_version = shader_caps.vs_version;
+    d3d_info->limits.hs_version = shader_caps.hs_version;
+    d3d_info->limits.ds_version = shader_caps.ds_version;
+    d3d_info->limits.gs_version = shader_caps.gs_version;
+    d3d_info->limits.ps_version = shader_caps.ps_version;
+    d3d_info->limits.cs_version = shader_caps.cs_version;
+    d3d_info->limits.vs_uniform_count = shader_caps.vs_uniform_count;
+    d3d_info->limits.ps_uniform_count = shader_caps.ps_uniform_count;
+    d3d_info->limits.varying_count = shader_caps.varying_count;
+    d3d_info->limits.ffp_textures = fragment_caps.MaxSimultaneousTextures;
+    d3d_info->limits.ffp_blend_stages = fragment_caps.MaxTextureBlendStages;
+    TRACE("Max texture stages: %u.\n", d3d_info->limits.ffp_blend_stages);
+    d3d_info->limits.ffp_vertex_blend_matrices = vertex_caps.max_vertex_blend_matrices;
+    d3d_info->limits.active_light_count = vertex_caps.max_active_lights;
+
+    d3d_info->limits.max_rt_count = gl_info->limits.buffers;
+    d3d_info->limits.max_clip_distances = gl_info->limits.user_clip_distances;
+    d3d_info->limits.texture_size = gl_info->limits.texture_size;
+
+    gl_info->gl_ops.gl.p_glGetFloatv(gl_info->supported[WINED3D_GL_LEGACY_CONTEXT]
+            ? GL_ALIASED_POINT_SIZE_RANGE : GL_POINT_SIZE_RANGE, f);
+    d3d_info->limits.pointsize_max = f[1];
+    TRACE("Maximum point size support - max point size %.8e.\n", f[1]);
+
+    d3d_info->wined3d_creation_flags = wined3d_creation_flags;
+    d3d_info->xyzrhw = vertex_caps.xyzrhw;
+    d3d_info->emulated_flatshading = vertex_caps.emulated_flatshading;
+    d3d_info->ffp_generic_attributes = vertex_caps.ffp_generic_attributes;
+    d3d_info->ffp_alpha_test = !!gl_info->supported[WINED3D_GL_LEGACY_CONTEXT];
+    d3d_info->vs_clipping = shader_caps.wined3d_caps & WINED3D_SHADER_CAP_VS_CLIPPING;
+    d3d_info->shader_color_key = !!(fragment_caps.wined3d_caps & WINED3D_FRAGMENT_CAP_COLOR_KEY);
+    d3d_info->shader_double_precision = !!(shader_caps.wined3d_caps & WINED3D_SHADER_CAP_DOUBLE_PRECISION);
+    d3d_info->shader_output_interpolation = !!(shader_caps.wined3d_caps & WINED3D_SHADER_CAP_OUTPUT_INTERPOLATION);
+    d3d_info->viewport_array_index_any_shader = !!gl_info->supported[ARB_SHADER_VIEWPORT_LAYER_ARRAY];
+    d3d_info->texture_npot = !!gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO];
+    d3d_info->texture_npot_conditional = gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT]
+            || gl_info->supported[ARB_TEXTURE_RECTANGLE];
+    d3d_info->draw_base_vertex_offset = !!gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX];
+    d3d_info->vertex_bgra = !!gl_info->supported[ARB_VERTEX_ARRAY_BGRA];
+    d3d_info->texture_swizzle = !!gl_info->supported[ARB_TEXTURE_SWIZZLE];
+    d3d_info->srgb_read_control = !!gl_info->supported[EXT_TEXTURE_SRGB_DECODE];
+    d3d_info->srgb_write_control = !!gl_info->supported[ARB_FRAMEBUFFER_SRGB];
+    d3d_info->clip_control = !!gl_info->supported[ARB_CLIP_CONTROL];
+    d3d_info->full_ffp_varyings = !!(shader_caps.wined3d_caps & WINED3D_SHADER_CAP_FULL_FFP_VARYINGS);
+    d3d_info->feature_level = feature_level_from_caps(gl_info, &shader_caps, &fragment_caps);
+
+    if (gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
+        d3d_info->multisample_draw_location = WINED3D_LOCATION_TEXTURE_RGB;
+    else
+        d3d_info->multisample_draw_location = WINED3D_LOCATION_RB_MULTISAMPLE;
+}
+
 static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,
         unsigned int ordinal, unsigned int wined3d_creation_flags)
 {
@@ -5237,6 +5236,15 @@ static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,
         ERR("Failed to initialize GL caps for adapter %p.\n", adapter_gl);
         wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
         return FALSE;
+    }
+
+    wined3d_adapter_gl_init_d3d_info(adapter_gl, wined3d_creation_flags);
+    if (!adapter_gl->a.d3d_info.shader_color_key)
+    {
+        /* We do not want to deal with re-creating immutable texture storage
+         * for colour-keying emulation. */
+        WARN("Disabling ARB_texture_storage because fragment pipe doesn't support colour-keying.\n");
+        gl_info->supported[ARB_TEXTURE_STORAGE] = FALSE;
     }
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)

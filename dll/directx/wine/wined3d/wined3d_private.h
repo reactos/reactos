@@ -2690,6 +2690,7 @@ struct wined3d_gl_limits
     unsigned int combined_samplers;
     UINT general_combiners;
     UINT user_clip_distances;
+    unsigned int texture_size;
     UINT texture3d_size;
     UINT anisotropy;
     float shininess;
