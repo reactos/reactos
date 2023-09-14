@@ -5334,9 +5334,10 @@ static void context_unload_numbered_arrays(struct wined3d_context *context)
     }
 }
 
-static void context_load_numbered_arrays(struct wined3d_context *context,
+static void wined3d_context_gl_load_numbered_arrays(struct wined3d_context_gl *context_gl,
         const struct wined3d_stream_info *stream_info, const struct wined3d_state *state)
 {
+    struct wined3d_context *context = &context_gl->c;
     const struct wined3d_shader *vs = state->shader[WINED3D_SHADER_TYPE_VERTEX];
     const struct wined3d_gl_info *gl_info = context->gl_info;
     GLuint current_bo;
@@ -5540,7 +5541,7 @@ void context_update_stream_sources(struct wined3d_context *context, const struct
     if (context->d3d_info->ffp_generic_attributes || use_vs(state))
     {
         TRACE("Loading numbered arrays.\n");
-        context_load_numbered_arrays(context, &context->stream_info, state);
+        wined3d_context_gl_load_numbered_arrays(wined3d_context_gl(context), &context->stream_info, state);
         return;
     }
 
