@@ -1167,9 +1167,9 @@ static void test_install_files_queue(void)
     ok(delete_file("dst/six.txt"), "Destination file should exist.\n");
     ok(delete_file("dst/seven.txt"), "Destination file should exist.\n");
     ok(delete_file("dst/eight.txt"), "Destination file should exist.\n");
-    todo_wine ok(!delete_file("dst/nine.txt"), "Destination file should not exist.\n");
-    todo_wine ok(!delete_file("dst/ten.txt"), "Destination file should not exist.\n");
-    todo_wine ok(delete_file("dst/eleven.txt"), "Destination file should exist.\n");
+    ok(!delete_file("dst/nine.txt"), "Destination file should not exist.\n");
+    ok(!delete_file("dst/ten.txt"), "Destination file should not exist.\n");
+    ok(delete_file("dst/eleven.txt"), "Destination file should exist.\n");
 
     SetupTermDefaultQueueCallback(context);
     ret = SetupCloseFileQueue(queue);
