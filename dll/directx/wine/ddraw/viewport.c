@@ -135,9 +135,25 @@ void viewport_alloc_active_light_index(struct d3d_light *light)
         return;
 
     if (vp->active_lights_count >= DDRAW_MAX_ACTIVE_LIGHTS)
-        return;
+    {
+        struct d3d_light *l;
 
+        LIST_FOR_EACH_ENTRY(l, &vp->light_list, struct d3d_light, entry)
+        {
+            if (l->active_light_index)
+            {
+                WARN("Too many active lights, viewport %p, light %p, deactivating %p.\n", vp, light, l);
+                light_deactivate(l);
+
+                /* Recycle active lights in a FIFO way. */
+                list_remove(&light->entry);
+                list_add_tail(&vp->light_list, &light->entry);
+                break;
+            }
+        }
+    }
     map = vp->map_lights;
+    assert(vp->active_lights_count < DDRAW_MAX_ACTIVE_LIGHTS && map != ~0u);
 
     i = 0;
     while (map & 1)
@@ -817,7 +833,7 @@ static HRESULT WINAPI d3d_viewport_AddLight(IDirect3DViewport3 *viewport, IDirec
     light_impl->active_viewport = vp;
 
     /* Add the light in the 'linked' chain */
-    list_add_head(&vp->light_list, &light_impl->entry);
+    list_add_tail(&vp->light_list, &light_impl->entry);
     IDirect3DLight_AddRef(light);
 
     light_activate(light_impl);

@@ -62,8 +62,6 @@ void light_activate(struct d3d_light *light)
     if (light->light.dwFlags & D3DLIGHT_ACTIVE)
     {
         viewport_alloc_active_light_index(light);
-        if (!light->active_light_index)
-            return;
         light_update(light);
         IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->active_light_index, TRUE);
     }
