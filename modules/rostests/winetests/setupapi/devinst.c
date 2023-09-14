@@ -2579,7 +2579,7 @@ static void test_driver_list(void)
     ret = SetupDiGetSelectedDriverA(set, &device, &driver);
     ok(ret, "Failed to get selected driver, error %#x.\n", GetLastError());
     ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
-    todo_wine ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
     ok(!strcmp(driver.MfgName, wow64 ? "mfg1_wow" : "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
     ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
 
