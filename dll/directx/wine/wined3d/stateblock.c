@@ -916,13 +916,17 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
         if (!(map & 1)) continue;
 
         if (stateblock->stateblock_state.streams[i].stride != state->streams[i].stride
+                || stateblock->stateblock_state.streams[i].offset != state->streams[i].offset
                 || stateblock->stateblock_state.streams[i].buffer != state->streams[i].buffer)
         {
-            TRACE("Updating stream source %u to %p, stride to %u.\n",
-                    i, state->streams[i].buffer,
-                    state->streams[i].stride);
+            TRACE("stateblock %p, stream source %u, buffer %p, stride %u, offset %u.\n",
+                    stateblock, i, state->streams[i].buffer, state->streams[i].stride,
+                    state->streams[i].offset);
 
             stateblock->stateblock_state.streams[i].stride = state->streams[i].stride;
+            if (stateblock->changed.store_stream_offset)
+                stateblock->stateblock_state.streams[i].offset = state->streams[i].offset;
+
             if (state->streams[i].buffer)
                     wined3d_buffer_incref(state->streams[i].buffer);
             if (stateblock->stateblock_state.streams[i].buffer)
@@ -1211,18 +1215,23 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     map = stateblock->changed.streamSource;
     for (i = 0; map; map >>= 1, ++i)
     {
+        unsigned int offset, stride;
+
         if (!(map & 1)) continue;
 
-        state->streams[i].stride = stateblock->stateblock_state.streams[i].stride;
         if (stateblock->stateblock_state.streams[i].buffer)
                 wined3d_buffer_incref(stateblock->stateblock_state.streams[i].buffer);
         if (state->streams[i].buffer)
                 wined3d_buffer_decref(state->streams[i].buffer);
         state->streams[i].buffer = stateblock->stateblock_state.streams[i].buffer;
 
+        offset = stateblock->stateblock_state.streams[i].offset;
+        stride = stateblock->stateblock_state.streams[i].stride;
+
+        state->streams[i].stride = stride;
+        state->streams[i].offset = offset;
         wined3d_device_set_stream_source(device, i,
-                stateblock->stateblock_state.streams[i].buffer,
-                0, stateblock->stateblock_state.streams[i].stride);
+                stateblock->stateblock_state.streams[i].buffer, offset, stride);
     }
 
     map = stateblock->changed.streamFreq;
@@ -1554,6 +1563,7 @@ void wined3d_stateblock_state_init(struct wined3d_stateblock_state *state,
 
     if (flags & WINED3D_STATE_INIT_DEFAULT)
         stateblock_state_init_default(state, &device->adapter->d3d_info);
+
 }
 
 static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
@@ -1564,6 +1574,8 @@ static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
     stateblock->ref = 1;
     stateblock->device = device;
     wined3d_stateblock_state_init(&stateblock->stateblock_state, device, 0);
+
+    stateblock->changed.store_stream_offset = 1;
 
     if (type == WINED3D_SBT_RECORDED)
         return WINED3D_OK;
@@ -1598,6 +1610,12 @@ static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
 
     stateblock_init_contained_states(stateblock);
     wined3d_stateblock_capture(stateblock);
+
+    /* According to the tests, stream offset is not updated in the captured state if
+     * the state was captured on state block creation. This is not the case for
+     * state blocks initialized with BeginStateBlock / EndStateBlock, multiple
+     * captures get stream offsets updated. */
+    stateblock->changed.store_stream_offset = 0;
 
     return WINED3D_OK;
 }
