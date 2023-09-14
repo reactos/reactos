@@ -737,7 +737,7 @@ static void create_dummy_textures(struct wined3d_device *device, struct wined3d_
 
     checkGLcall("create dummy textures");
 
-    context_bind_dummy_textures(device, context);
+    context_bind_dummy_textures(context);
 }
 
 /* Context activation is done by the caller. */
