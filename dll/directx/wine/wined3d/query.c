@@ -538,7 +538,7 @@ static BOOL wined3d_occlusion_query_ops_poll(struct wined3d_query *query, DWORD 
 
     TRACE("query %p, flags %#x.\n", query, flags);
 
-    if (!(context = context_reacquire(device, oq->context)))
+    if (!(context = context_reacquire(device, &oq->context_gl->c)))
     {
         FIXME("%p Wrong thread, returning 1.\n", query);
         oq->samples = 1;
@@ -642,7 +642,7 @@ static BOOL wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DWORD
     {
         if (oq->started)
         {
-            if ((context = context_reacquire(device, oq->context)))
+            if ((context = context_reacquire(device, &oq->context_gl->c)))
             {
                 gl_info = context->gl_info;
                 GL_EXTCALL(glEndQuery(GL_SAMPLES_PASSED));
@@ -651,17 +651,17 @@ static BOOL wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DWORD
             else
             {
                 FIXME("Wrong thread, can't restart query.\n");
-                context_free_occlusion_query(oq);
+                wined3d_context_gl_free_occlusion_query(oq);
                 context = context_acquire(device, NULL, 0);
-                context_alloc_occlusion_query(context, oq);
+                wined3d_context_gl_alloc_occlusion_query(wined3d_context_gl(context), oq);
             }
         }
         else
         {
-            if (oq->context)
-                context_free_occlusion_query(oq);
+            if (oq->context_gl)
+                wined3d_context_gl_free_occlusion_query(oq);
             context = context_acquire(device, NULL, 0);
-            context_alloc_occlusion_query(context, oq);
+            wined3d_context_gl_alloc_occlusion_query(wined3d_context_gl(context), oq);
         }
         gl_info = context->gl_info;
 
@@ -678,7 +678,7 @@ static BOOL wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DWORD
          * so avoid generating an error. */
         if (oq->started)
         {
-            if ((context = context_reacquire(device, oq->context)))
+            if ((context = context_reacquire(device, &oq->context_gl->c)))
             {
                 gl_info = context->gl_info;
                 GL_EXTCALL(glEndQuery(GL_SAMPLES_PASSED));
@@ -1125,8 +1125,8 @@ static void wined3d_occlusion_query_ops_destroy(struct wined3d_query *query)
 {
     struct wined3d_occlusion_query *oq = wined3d_occlusion_query_from_query(query);
 
-    if (oq->context)
-        context_free_occlusion_query(oq);
+    if (oq->context_gl)
+        wined3d_context_gl_free_occlusion_query(oq);
     heap_free(oq);
 }
 

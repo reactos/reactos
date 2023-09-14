@@ -808,13 +808,14 @@ void context_apply_fbo_state_blit(struct wined3d_context *context, GLenum target
 }
 
 /* Context activation is done by the caller. */
-void context_alloc_occlusion_query(struct wined3d_context *context, struct wined3d_occlusion_query *query)
+void wined3d_context_gl_alloc_occlusion_query(struct wined3d_context_gl *context_gl,
+        struct wined3d_occlusion_query *query)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
-    if (context->free_occlusion_query_count)
+    if (context_gl->free_occlusion_query_count)
     {
-        query->id = context->free_occlusion_queries[--context->free_occlusion_query_count];
+        query->id = context_gl->free_occlusion_queries[--context_gl->free_occlusion_query_count];
     }
     else
     {
@@ -823,7 +824,7 @@ void context_alloc_occlusion_query(struct wined3d_context *context, struct wined
             GL_EXTCALL(glGenQueries(1, &query->id));
             checkGLcall("glGenQueries");
 
-            TRACE("Allocated occlusion query %u in context %p.\n", query->id, context);
+            TRACE("Allocated occlusion query %u in context %p.\n", query->id, context_gl);
         }
         else
         {
@@ -832,26 +833,26 @@ void context_alloc_occlusion_query(struct wined3d_context *context, struct wined
         }
     }
 
-    query->context = context;
-    list_add_head(&context->occlusion_queries, &query->entry);
+    query->context_gl = context_gl;
+    list_add_head(&context_gl->occlusion_queries, &query->entry);
 }
 
-void context_free_occlusion_query(struct wined3d_occlusion_query *query)
+void wined3d_context_gl_free_occlusion_query(struct wined3d_occlusion_query *query)
 {
-    struct wined3d_context *context = query->context;
+    struct wined3d_context_gl *context_gl = query->context_gl;
 
     list_remove(&query->entry);
-    query->context = NULL;
+    query->context_gl = NULL;
 
-    if (!wined3d_array_reserve((void **)&context->free_occlusion_queries,
-            &context->free_occlusion_query_size, context->free_occlusion_query_count + 1,
-            sizeof(*context->free_occlusion_queries)))
+    if (!wined3d_array_reserve((void **)&context_gl->free_occlusion_queries,
+            &context_gl->free_occlusion_query_size, context_gl->free_occlusion_query_count + 1,
+            sizeof(*context_gl->free_occlusion_queries)))
     {
-        ERR("Failed to grow free list, leaking query %u in context %p.\n", query->id, context);
+        ERR("Failed to grow free list, leaking query %u in context %p.\n", query->id, context_gl);
         return;
     }
 
-    context->free_occlusion_queries[context->free_occlusion_query_count++] = query->id;
+    context_gl->free_occlusion_queries[context_gl->free_occlusion_query_count++] = query->id;
 }
 
 /* Context activation is done by the caller. */
@@ -1318,7 +1319,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_so_statistics_query *so_statistics_query;
     struct wined3d_timestamp_query *timestamp_query;
-    struct wined3d_occlusion_query *occlusion_query;
     struct fbo_entry *entry, *entry2;
     struct wined3d_fence *fence;
     HGLRC restore_ctx;
@@ -1354,13 +1354,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
         if (context->valid)
             GL_EXTCALL(glDeleteQueries(1, &timestamp_query->id));
         timestamp_query->context = NULL;
-    }
-
-    LIST_FOR_EACH_ENTRY(occlusion_query, &context->occlusion_queries, struct wined3d_occlusion_query, entry)
-    {
-        if (context->valid && gl_info->supported[ARB_OCCLUSION_QUERY])
-            GL_EXTCALL(glDeleteQueries(1, &occlusion_query->id));
-        occlusion_query->context = NULL;
     }
 
     LIST_FOR_EACH_ENTRY(fence, &context->fences, struct wined3d_fence, entry)
@@ -1419,9 +1412,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
         if (gl_info->supported[ARB_TIMER_QUERY])
             GL_EXTCALL(glDeleteQueries(context->free_timestamp_query_count, context->free_timestamp_queries));
 
-        if (gl_info->supported[ARB_OCCLUSION_QUERY])
-            GL_EXTCALL(glDeleteQueries(context->free_occlusion_query_count, context->free_occlusion_queries));
-
         if (gl_info->supported[ARB_SYNC])
         {
             for (i = 0; i < context->free_fence_count; ++i)
@@ -1450,7 +1440,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
     heap_free(context->free_so_statistics_queries);
     heap_free(context->free_pipeline_statistics_queries);
     heap_free(context->free_timestamp_queries);
-    heap_free(context->free_occlusion_queries);
     heap_free(context->free_fences);
 
     context_restore_pixel_format(context);
@@ -1475,6 +1464,7 @@ void wined3d_context_cleanup(struct wined3d_context *context)
 void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
 {
     const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    struct wined3d_occlusion_query *occlusion_query;
     HGLRC restore_ctx;
     HDC restore_dc;
 
@@ -1494,7 +1484,18 @@ void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
         if (context_gl->blit_vbo)
             GL_EXTCALL(glDeleteBuffers(1, &context_gl->blit_vbo));
 
+        if (context_gl->free_occlusion_query_count)
+            GL_EXTCALL(glDeleteQueries(context_gl->free_occlusion_query_count, context_gl->free_occlusion_queries));
+
         checkGLcall("context cleanup");
+    }
+    heap_free(context_gl->free_occlusion_queries);
+
+    LIST_FOR_EACH_ENTRY(occlusion_query, &context_gl->occlusion_queries, struct wined3d_occlusion_query, entry)
+    {
+        if (context_gl->c.valid)
+            GL_EXTCALL(glDeleteQueries(1, &occlusion_query->id));
+        occlusion_query->context_gl = NULL;
     }
 
     heap_free(context_gl->texture_type);
@@ -1914,7 +1915,6 @@ static BOOL wined3d_context_init(struct wined3d_context *context, struct wined3d
     DWORD state;
 
     list_init(&context->timestamp_queries);
-    list_init(&context->occlusion_queries);
     list_init(&context->fences);
     list_init(&context->so_statistics_queries);
     list_init(&context->pipeline_statistics_queries);
@@ -1993,6 +1993,8 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
     device = context->device;
     gl_info = context->gl_info;
     d3d_info = context->d3d_info;
+
+    list_init(&context_gl->occlusion_queries);
 
     for (i = 0; i < ARRAY_SIZE(context_gl->tex_unit_map); ++i)
         context_gl->tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
