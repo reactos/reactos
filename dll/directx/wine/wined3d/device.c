@@ -149,14 +149,31 @@ BOOL device_context_add(struct wined3d_device *device, struct wined3d_context *c
 
     TRACE("Adding context %p.\n", context);
 
+    if (!device->shader_backend->shader_allocate_context_data(context))
+    {
+        ERR("Failed to allocate shader backend context data.\n");
+        return FALSE;
+    }
+    device->shader_backend->shader_init_context_state(context);
+
+    if (!device->adapter->fragment_pipe->allocate_context_data(context))
+    {
+        ERR("Failed to allocate fragment pipeline context data.\n");
+        device->shader_backend->shader_free_context_data(context);
+        return FALSE;
+    }
+
     if (!(new_array = heap_realloc(device->contexts, sizeof(*new_array) * (device->context_count + 1))))
     {
         ERR("Failed to grow the context array.\n");
+        device->adapter->fragment_pipe->free_context_data(context);
+        device->shader_backend->shader_free_context_data(context);
         return FALSE;
     }
 
     new_array[device->context_count++] = context;
     device->contexts = new_array;
+
     return TRUE;
 }
 
