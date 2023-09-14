@@ -2996,7 +2996,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
         return WINED3DERR_INVALIDCALL;
 
     if (FAILED(hr = resource_init(&texture->resource, device, desc->resource_type, format,
-            desc->multisample_type, desc->multisample_quality, desc->usage, desc->access,
+            desc->multisample_type, desc->multisample_quality, desc->usage, 0, desc->access,
             desc->width, desc->height, desc->depth, offset, parent, parent_ops, &texture_resource_ops)))
     {
         static unsigned int once;

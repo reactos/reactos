@@ -155,11 +155,11 @@ static void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *bu
      * rarely. */
     if (resource->bind_count)
     {
-        if (buffer_gl->b.bind_flags & WINED3D_BIND_VERTEX_BUFFER)
+        if (resource->bind_flags & WINED3D_BIND_VERTEX_BUFFER)
             device_invalidate_state(resource->device, STATE_STREAMSRC);
-        if (buffer_gl->b.bind_flags & WINED3D_BIND_INDEX_BUFFER)
+        if (resource->bind_flags & WINED3D_BIND_INDEX_BUFFER)
             device_invalidate_state(resource->device, STATE_INDEXBUFFER);
-        if (buffer_gl->b.bind_flags & WINED3D_BIND_CONSTANT_BUFFER)
+        if (resource->bind_flags & WINED3D_BIND_CONSTANT_BUFFER)
         {
             device_invalidate_state(resource->device, STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX));
             device_invalidate_state(resource->device, STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_HULL));
@@ -168,7 +168,7 @@ static void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *bu
             device_invalidate_state(resource->device, STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_PIXEL));
             device_invalidate_state(resource->device, STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_COMPUTE));
         }
-        if (buffer_gl->b.bind_flags & WINED3D_BIND_STREAM_OUTPUT)
+        if (resource->bind_flags & WINED3D_BIND_STREAM_OUTPUT)
         {
             device_invalidate_state(resource->device, STATE_STREAM_OUTPUT);
             if (context->transform_feedback_active)
@@ -1398,13 +1398,12 @@ static HRESULT wined3d_buffer_init(struct wined3d_buffer *buffer, struct wined3d
     }
 
     if (FAILED(hr = resource_init(resource, device, WINED3D_RTYPE_BUFFER, format,
-            WINED3D_MULTISAMPLE_NONE, 0, desc->usage, desc->access, desc->byte_width, 1, 1,
-            desc->byte_width, parent, parent_ops, &buffer_resource_ops)))
+            WINED3D_MULTISAMPLE_NONE, 0, desc->usage, desc->bind_flags, desc->access,
+            desc->byte_width, 1, 1, desc->byte_width, parent, parent_ops, &buffer_resource_ops)))
     {
         WARN("Failed to initialize resource, hr %#x.\n", hr);
         return hr;
     }
-    buffer->bind_flags = desc->bind_flags;
     buffer->structure_byte_stride = desc->structure_byte_stride;
     buffer->locations = data ? WINED3D_LOCATION_DISCARDED : WINED3D_LOCATION_SYSMEM;
 
