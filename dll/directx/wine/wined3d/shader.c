@@ -1917,19 +1917,19 @@ static void shader_dump_sync_flags(struct wined3d_string_buffer *buffer, DWORD s
         shader_addline(buffer, "_unknown_flags(%#x)", sync_flags);
 }
 
-static void shader_dump_precise_flags(struct wined3d_string_buffer *buffer, DWORD precise_flags)
+static void shader_dump_precise_flags(struct wined3d_string_buffer *buffer, DWORD flags)
 {
-    if (!precise_flags)
+    if (!(flags & WINED3DSI_PRECISE_XYZW))
         return;
 
     shader_addline(buffer, " [precise");
-    if (precise_flags != WINED3DSI_PRECISE_XYZW)
+    if (flags != WINED3DSI_PRECISE_XYZW)
     {
         shader_addline(buffer, "(%s%s%s%s)",
-                precise_flags & WINED3DSI_PRECISE_X ? "x" : "",
-                precise_flags & WINED3DSI_PRECISE_Y ? "y" : "",
-                precise_flags & WINED3DSI_PRECISE_Z ? "z" : "",
-                precise_flags & WINED3DSI_PRECISE_W ? "w" : "");
+                flags & WINED3DSI_PRECISE_X ? "x" : "",
+                flags & WINED3DSI_PRECISE_Y ? "y" : "",
+                flags & WINED3DSI_PRECISE_Z ? "z" : "",
+                flags & WINED3DSI_PRECISE_W ? "w" : "");
     }
     shader_addline(buffer, "]");
 }
