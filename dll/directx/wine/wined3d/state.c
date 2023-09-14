@@ -4174,35 +4174,15 @@ static void light(struct wined3d_context *context, const struct wined3d_state *s
     else
     {
         float quad_att;
-        float colRGBA[] = {0.0f, 0.0f, 0.0f, 0.0f};
 
         /* Light settings are affected by the model view in OpenGL, the View transform in direct3d*/
         gl_info->gl_ops.gl.p_glMatrixMode(GL_MODELVIEW);
         gl_info->gl_ops.gl.p_glPushMatrix();
         gl_info->gl_ops.gl.p_glLoadMatrixf(&state->transforms[WINED3D_TS_VIEW]._11);
 
-        /* Diffuse: */
-        colRGBA[0] = lightInfo->OriginalParms.diffuse.r;
-        colRGBA[1] = lightInfo->OriginalParms.diffuse.g;
-        colRGBA[2] = lightInfo->OriginalParms.diffuse.b;
-        colRGBA[3] = lightInfo->OriginalParms.diffuse.a;
-        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0 + Index, GL_DIFFUSE, colRGBA);
-        checkGLcall("glLightfv");
-
-        /* Specular */
-        colRGBA[0] = lightInfo->OriginalParms.specular.r;
-        colRGBA[1] = lightInfo->OriginalParms.specular.g;
-        colRGBA[2] = lightInfo->OriginalParms.specular.b;
-        colRGBA[3] = lightInfo->OriginalParms.specular.a;
-        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0 + Index, GL_SPECULAR, colRGBA);
-        checkGLcall("glLightfv");
-
-        /* Ambient */
-        colRGBA[0] = lightInfo->OriginalParms.ambient.r;
-        colRGBA[1] = lightInfo->OriginalParms.ambient.g;
-        colRGBA[2] = lightInfo->OriginalParms.ambient.b;
-        colRGBA[3] = lightInfo->OriginalParms.ambient.a;
-        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0 + Index, GL_AMBIENT, colRGBA);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0 + Index, GL_DIFFUSE, &lightInfo->OriginalParms.diffuse.r);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0 + Index, GL_SPECULAR, &lightInfo->OriginalParms.specular.r);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0 + Index, GL_AMBIENT, &lightInfo->OriginalParms.ambient.r);
         checkGLcall("glLightfv");
 
         if ((lightInfo->OriginalParms.range * lightInfo->OriginalParms.range) >= FLT_MIN)
