@@ -2344,11 +2344,11 @@ static void wined3d_cs_exec_update_sub_resource(struct wined3d_cs *cs, const voi
         wined3d_texture_prepare_texture(texture, context, FALSE);
     else
         wined3d_texture_load_location(texture, op->sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
-    wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(texture), wined3d_context_gl(context), FALSE);
 
     wined3d_box_set(&src_box, 0, 0, box->right - box->left, box->bottom - box->top, 0, box->back - box->front);
-    wined3d_texture_upload_data(texture, op->sub_resource_idx, context, texture->resource.format, &src_box,
-            &addr, op->data.row_pitch, op->data.slice_pitch, box->left, box->top, box->front, FALSE);
+    texture->texture_ops->texture_upload_data(context, &addr, texture->resource.format, &src_box,
+            op->data.row_pitch, op->data.slice_pitch, texture, op->sub_resource_idx,
+            WINED3D_LOCATION_TEXTURE_RGB, box->left, box->top, box->front);
 
     wined3d_texture_validate_location(texture, op->sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB);
     wined3d_texture_invalidate_location(texture, op->sub_resource_idx, ~WINED3D_LOCATION_TEXTURE_RGB);
