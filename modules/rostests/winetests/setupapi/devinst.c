@@ -42,6 +42,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 static GUID guid = {0x6a55b5a4, 0x3f65, 0x11db, {0xb7,0x04,0x00,0x11,0x95,0x5c,0x2b,0xdb}};
 static GUID guid2 = {0x6a55b5a5, 0x3f65, 0x11db, {0xb7,0x04,0x00,0x11,0x95,0x5c,0x2b,0xdb}};
 static GUID iface_guid = {0xdeadbeef, 0x3f65, 0x11db, {0xb7,0x04,0x00,0x11,0x95,0x5c,0x2b,0xdb}};
+static GUID iface_guid2 = {0xdeadf00d, 0x3f65, 0x11db, {0xb7,0x04,0x00,0x11,0x95,0x5c,0x2b,0xdb}};
 
 BOOL (WINAPI *pSetupDiSetDevicePropertyW)(HDEVINFO, PSP_DEVINFO_DATA, const DEVPROPKEY *, DEVPROPTYPE, const BYTE *, DWORD, DWORD);
 BOOL (WINAPI *pSetupDiGetDevicePropertyW)(HDEVINFO, PSP_DEVINFO_DATA, const DEVPROPKEY *, DEVPROPTYPE *, BYTE *, DWORD, DWORD *, DWORD);
@@ -2696,7 +2697,7 @@ static void test_call_class_installer(void)
     ok(ret, "Failed to delete file, error %u.\n", GetLastError());
 }
 
-static void check_all_devices_enumerated_(int line, HDEVINFO set)
+static void check_all_devices_enumerated_(int line, HDEVINFO set, BOOL expect_dev3)
 {
     SP_DEVINFO_DATA device = {sizeof(device)};
     BOOL ret, found_dev1 = 0, found_dev2 = 0, found_dev3 = 0;
@@ -2729,9 +2730,10 @@ static void check_all_devices_enumerated_(int line, HDEVINFO set)
     }
     ok_(__FILE__, line)(found_dev1, "Expected device 1 to be enumerated.\n");
     ok_(__FILE__, line)(found_dev2, "Expected device 2 to be enumerated.\n");
-    ok_(__FILE__, line)(found_dev3, "Expected device 2 to be enumerated.\n");
+    ok_(__FILE__, line)(found_dev3 == expect_dev3, "Expected device 2 %sto be enumerated.\n",
+            expect_dev3 ? "" : "not ");
 }
-#define check_all_devices_enumerated(a) check_all_devices_enumerated_(__LINE__,a)
+#define check_all_devices_enumerated(a,b) check_all_devices_enumerated_(__LINE__,a,b)
 
 static void test_get_class_devs(void)
 {
@@ -2747,11 +2749,15 @@ static void test_get_class_devs(void)
     ok(ret, "Failed to create device, error %#x.\n", GetLastError());
     ret = SetupDiCreateDeviceInterfaceA(set, &device, &iface_guid, NULL, 0, &iface);
     ok(ret, "Failed to create interface, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInterfaceA(set, &device, &iface_guid2, NULL, 0, &iface);
+    ok(ret, "Failed to create interface, error %#x.\n", GetLastError());
     ret = SetupDiRegisterDeviceInfo(set, &device, 0, NULL, NULL, NULL);
     ok(ret, "Failed to register device, error %#x.\n", GetLastError());
 
     ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\qux", &guid, NULL, NULL, 0, &device);
     ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInterfaceA(set, &device, &iface_guid, NULL, 0, &iface);
+    ok(ret, "Failed to create interface, error %#x.\n", GetLastError());
     ret = SetupDiRegisterDeviceInfo(set, &device, 0, NULL, NULL, NULL);
     ok(ret, "Failed to register device, error %#x.\n", GetLastError());
 
@@ -2770,7 +2776,7 @@ static void test_get_class_devs(void)
 
     set = SetupDiGetClassDevsA(NULL, NULL, NULL, DIGCF_ALLCLASSES);
     ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
-    check_all_devices_enumerated(set);
+    check_all_devices_enumerated(set, TRUE);
     check_device_iface(set, NULL, &iface_guid, 0, 0, NULL);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
@@ -2786,7 +2792,7 @@ static void test_get_class_devs(void)
 
     set = SetupDiGetClassDevsA(&guid, NULL, NULL, DIGCF_ALLCLASSES);
     ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
-    check_all_devices_enumerated(set);
+    check_all_devices_enumerated(set, TRUE);
     check_device_iface(set, NULL, &iface_guid, 0, 0, NULL);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
@@ -2798,7 +2804,7 @@ static void test_get_class_devs(void)
 
     set = SetupDiGetClassDevsA(NULL, "ROOT", NULL, DIGCF_ALLCLASSES);
     ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
-    check_all_devices_enumerated(set);
+    check_all_devices_enumerated(set, TRUE);
     check_device_iface(set, NULL, &iface_guid, 0, 0, NULL);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
@@ -2835,6 +2841,130 @@ todo_wine {
 }
     check_device_info(set, 3, NULL, NULL);
     check_device_iface(set, NULL, &iface_guid, 0, 0, NULL);
+    ret = SetupDiDestroyDeviceInfoList(set);
+    ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
+
+    /* test DIGCF_DEVICE_INTERFACE */
+
+    SetLastError(0xdeadbeef);
+    set = SetupDiGetClassDevsA(NULL, NULL, NULL, DIGCF_DEVICEINTERFACE);
+    ok(set == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Got unexpected error %#x.\n", GetLastError());
+
+    set = SetupDiGetClassDevsA(NULL, NULL, NULL, DIGCF_DEVICEINTERFACE | DIGCF_ALLCLASSES);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    check_all_devices_enumerated(set, FALSE);
+    check_device_iface(set, NULL, &iface_guid, 0, 0, "\\\\?\\root#legacy_bogus#foo#{deadbeef-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid, 1, 0, "\\\\?\\root#legacy_bogus#qux#{deadbeef-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid, 2, 0, NULL);
+    check_device_iface(set, NULL, &iface_guid2, 0, 0, "\\\\?\\root#legacy_bogus#foo#{deadf00d-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid2, 1, 0, NULL);
+    ret = SetupDiDestroyDeviceInfoList(set);
+    ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
+
+    set = SetupDiGetClassDevsA(&guid, NULL, NULL, DIGCF_DEVICEINTERFACE);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    check_device_info(set, 0, NULL, NULL);
+    check_device_iface(set, NULL, &iface_guid, 0, 0, NULL);
+    check_device_iface(set, NULL, &iface_guid2, 0, 0, NULL);
+    ret = SetupDiDestroyDeviceInfoList(set);
+    ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
+
+    set = SetupDiGetClassDevsA(&iface_guid, NULL, NULL, DIGCF_DEVICEINTERFACE);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    check_device_info(set, 0, &guid, "ROOT\\LEGACY_BOGUS\\FOO");
+    check_device_info(set, 1, &guid, "ROOT\\LEGACY_BOGUS\\QUX");
+    check_device_info(set, 2, &guid, NULL);
+    check_device_iface(set, NULL, &iface_guid, 0, 0, "\\\\?\\root#legacy_bogus#foo#{deadbeef-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid, 1, 0, "\\\\?\\root#legacy_bogus#qux#{deadbeef-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid, 2, 0, NULL);
+    check_device_iface(set, NULL, &iface_guid2, 0, 0, NULL);
+    ret = SetupDiDestroyDeviceInfoList(set);
+    ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
+
+    set = SetupDiGetClassDevsA(&iface_guid, NULL, NULL, DIGCF_DEVICEINTERFACE | DIGCF_ALLCLASSES);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    check_all_devices_enumerated(set, FALSE);
+    check_device_iface(set, NULL, &iface_guid, 0, 0, "\\\\?\\root#legacy_bogus#foo#{deadbeef-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid, 1, 0, "\\\\?\\root#legacy_bogus#qux#{deadbeef-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid, 2, 0, NULL);
+    check_device_iface(set, NULL, &iface_guid2, 0, 0, "\\\\?\\root#legacy_bogus#foo#{deadf00d-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid2, 1, 0, NULL);
+    ret = SetupDiDestroyDeviceInfoList(set);
+    ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    set = SetupDiGetClassDevsA(NULL, "ROOT", NULL, DIGCF_DEVICEINTERFACE);
+    ok(set == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Got unexpected error %#x.\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    set = SetupDiGetClassDevsA(NULL, "ROOT", NULL, DIGCF_DEVICEINTERFACE | DIGCF_ALLCLASSES);
+todo_wine {
+    ok(set == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA, "Got unexpected error %#x.\n", GetLastError());
+}
+
+    SetLastError(0xdeadbeef);
+    set = SetupDiGetClassDevsA(NULL, "ROOT\\LEGACY_BOGUS", NULL, DIGCF_DEVICEINTERFACE | DIGCF_ALLCLASSES);
+todo_wine {
+    ok(set == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA, "Got unexpected error %#x.\n", GetLastError());
+}
+
+    set = SetupDiGetClassDevsA(NULL, "ROOT\\LEGACY_BOGUS\\foo", NULL, DIGCF_DEVICEINTERFACE | DIGCF_ALLCLASSES);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    check_device_info(set, 0, &guid, "ROOT\\LEGACY_BOGUS\\FOO");
+todo_wine
+    check_device_info(set, 1, NULL, NULL);
+    check_device_iface(set, NULL, &iface_guid, 0, 0, "\\\\?\\root#legacy_bogus#foo#{deadbeef-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid, 1, 0, NULL);
+    check_device_iface(set, NULL, &iface_guid2, 0, 0, "\\\\?\\root#legacy_bogus#foo#{deadf00d-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid2, 1, 0, NULL);
+    ret = SetupDiDestroyDeviceInfoList(set);
+    ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
+
+    set = SetupDiGetClassDevsA(NULL, "ROOT\\LEGACY_BOGUS\\bar", NULL, DIGCF_DEVICEINTERFACE | DIGCF_ALLCLASSES);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    check_device_info(set, 0, NULL, NULL);
+    check_device_iface(set, NULL, &iface_guid, 0, 0, NULL);
+    check_device_iface(set, NULL, &iface_guid2, 0, 0, NULL);
+    ret = SetupDiDestroyDeviceInfoList(set);
+    ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    set = SetupDiGetClassDevsA(&iface_guid, "ROOT\\LEGACY_BOGUS", NULL, DIGCF_DEVICEINTERFACE);
+todo_wine {
+    ok(set == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA, "Got unexpected error %#x.\n", GetLastError());
+}
+
+    SetLastError(0xdeadbeef);
+    set = SetupDiGetClassDevsA(&iface_guid, "ROOT\\LEGACY_BOGUS", NULL, DIGCF_DEVICEINTERFACE | DIGCF_ALLCLASSES);
+todo_wine {
+    ok(set == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA, "Got unexpected error %#x.\n", GetLastError());
+}
+
+    set = SetupDiGetClassDevsA(&iface_guid, "ROOT\\LEGACY_BOGUS\\foo", NULL, DIGCF_DEVICEINTERFACE);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    check_device_info(set, 0, &guid, "ROOT\\LEGACY_BOGUS\\FOO");
+    check_device_info(set, 1, NULL, NULL);
+    check_device_iface(set, NULL, &iface_guid, 0, 0, "\\\\?\\root#legacy_bogus#foo#{deadbeef-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid, 1, 0, NULL);
+    check_device_iface(set, NULL, &iface_guid2, 0, 0, NULL);
+    ret = SetupDiDestroyDeviceInfoList(set);
+    ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
+
+    set = SetupDiGetClassDevsA(&iface_guid, "ROOT\\LEGACY_BOGUS\\foo", NULL, DIGCF_DEVICEINTERFACE | DIGCF_ALLCLASSES);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    check_device_info(set, 0, &guid, "ROOT\\LEGACY_BOGUS\\FOO");
+todo_wine
+    check_device_info(set, 1, NULL, NULL);
+    check_device_iface(set, NULL, &iface_guid, 0, 0, "\\\\?\\root#legacy_bogus#foo#{deadbeef-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid, 1, 0, NULL);
+    check_device_iface(set, NULL, &iface_guid2, 0, 0, "\\\\?\\root#legacy_bogus#foo#{deadf00d-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &iface_guid2, 1, 0, NULL);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
 
