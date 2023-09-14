@@ -1478,10 +1478,10 @@ static void shader_glsl_load_fog_uniform(const struct wined3d_context_gl *contex
     checkGLcall("fog emulation uniforms");
 }
 
-static void shader_glsl_clip_plane_uniform(const struct wined3d_context *context,
+static void shader_glsl_clip_plane_uniform(const struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state, unsigned int index, struct glsl_shader_prog_link *prog)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_matrix matrix;
     struct wined3d_vec4 plane;
 
@@ -1547,7 +1547,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
     if (update_mask & WINED3D_SHADER_CONST_VS_CLIP_PLANES)
     {
         for (i = 0; i < gl_info->limits.user_clip_distances; ++i)
-            shader_glsl_clip_plane_uniform(context, state, i, prog);
+            shader_glsl_clip_plane_uniform(context_gl, state, i, prog);
     }
 
     if (update_mask & WINED3D_SHADER_CONST_VS_POINTSIZE)
