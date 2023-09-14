@@ -5921,6 +5921,22 @@ static void shader_glsl_sample_info(const struct wined3d_shader_instruction *ins
     shader_addline(buffer, ", 0, 0, 0)%s);\n", dst_swizzle);
 }
 
+static void shader_glsl_interpolate(const struct wined3d_shader_instruction *ins)
+{
+    const struct wined3d_shader_src_param *input = &ins->src[0];
+    struct wined3d_string_buffer *buffer = ins->ctx->buffer;
+    struct glsl_src_param sample_param;
+    char dst_swizzle[6];
+    DWORD write_mask;
+
+    write_mask = shader_glsl_append_dst(buffer, ins);
+    shader_glsl_get_swizzle(input, FALSE, write_mask, dst_swizzle);
+
+    shader_glsl_add_src_param(ins, &ins->src[1], WINED3DSP_WRITEMASK_0, &sample_param);
+    shader_addline(buffer, "interpolateAtSample(shader_in.reg%u, %s)%s);\n",
+            input->reg.idx[0].offset, sample_param.param_str, dst_swizzle);
+}
+
 static void shader_glsl_ld(const struct wined3d_shader_instruction *ins)
 {
     const struct wined3d_shader_reg_maps *reg_maps = ins->ctx->reg_maps;
@@ -11228,7 +11244,7 @@ static const SHADER_HANDLER shader_glsl_instruction_handler_table[WINED3DSIH_TAB
     /* WINED3DSIH_ENDREP                           */ shader_glsl_end,
     /* WINED3DSIH_ENDSWITCH                        */ shader_glsl_end,
     /* WINED3DSIH_EQ                               */ shader_glsl_relop,
-    /* WINED3DSIH_EVAL_SAMPLE_INDEX                */ NULL,
+    /* WINED3DSIH_EVAL_SAMPLE_INDEX                */ shader_glsl_interpolate,
     /* WINED3DSIH_EXP                              */ shader_glsl_scalar_op,
     /* WINED3DSIH_EXPP                             */ shader_glsl_expp,
     /* WINED3DSIH_F16TOF32                         */ shader_glsl_float16,
