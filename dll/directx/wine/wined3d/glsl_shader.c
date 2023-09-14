@@ -11465,6 +11465,8 @@ static void glsl_vertex_pipe_vdecl(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
+    BOOL specular = !!(context->stream_info.use_map & (1u << WINED3D_FFP_SPECULAR));
+    BOOL diffuse = !!(context->stream_info.use_map & (1u << WINED3D_FFP_DIFFUSE));
     BOOL normal = !!(context->stream_info.use_map & (1u << WINED3D_FFP_NORMAL));
     const BOOL legacy_clip_planes = needs_legacy_glsl_syntax(gl_info);
     BOOL transformed = context->stream_info.position_transformed;
@@ -11497,8 +11499,14 @@ static void glsl_vertex_pipe_vdecl(struct wined3d_context *context,
 
         /* Because of settings->texcoords, we have to regenerate the vertex
          * shader on a vdecl change if there aren't enough varyings to just
-         * always output all the texture coordinates. */
+         * always output all the texture coordinates.
+         *
+         * Likewise, we have to invalidate the shader when using per-vertex
+         * colours and diffuse/specular attribute presence changes, or when
+         * normal presence changes. */
         if (gl_info->limits.glsl_varyings < wined3d_max_compat_varyings(gl_info)
+                || (state->render_states[WINED3D_RS_COLORVERTEX]
+                && (diffuse != context->last_was_diffuse || specular != context->last_was_specular))
                 || normal != context->last_was_normal)
             context->shader_update_mask |= 1u << WINED3D_SHADER_TYPE_VERTEX;
 
@@ -11521,6 +11529,8 @@ static void glsl_vertex_pipe_vdecl(struct wined3d_context *context,
     }
 
     context->last_was_vshader = use_vs(state);
+    context->last_was_diffuse = diffuse;
+    context->last_was_specular = specular;
     context->last_was_normal = normal;
 }
 

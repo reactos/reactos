@@ -1888,6 +1888,8 @@ struct wined3d_context
     DWORD last_swizzle_map : 16; /* MAX_ATTRIBS, 16 */
     DWORD last_was_pshader : 1;
     DWORD last_was_vshader : 1;
+    DWORD last_was_diffuse : 1;
+    DWORD last_was_specular : 1;
     DWORD last_was_normal : 1;
     DWORD namedArraysLoaded : 1;
     DWORD last_was_ffp_blit : 1;
@@ -1895,7 +1897,6 @@ struct wined3d_context
     DWORD last_was_ckey : 1;
     DWORD fog_coord : 1;
     DWORD fog_enabled : 1;
-    DWORD num_untracked_materials : 2;  /* Max value 2 */
     DWORD current : 1;
     DWORD destroyed : 1;
     DWORD valid : 1;
@@ -1921,7 +1922,8 @@ struct wined3d_context
     DWORD shader_update_mask : 6; /* WINED3D_SHADER_TYPE_COUNT, 6 */
     DWORD clip_distance_mask : 8; /* MAX_CLIP_DISTANCES, 8 */
     DWORD last_was_dual_blend : 1;
-    DWORD padding : 9;
+    DWORD num_untracked_materials : 2;  /* Max value 2 */
+    DWORD padding : 7;
 
     DWORD constant_update_mask;
     DWORD numbered_array_mask;
