@@ -603,7 +603,8 @@ static struct fbo_entry *context_find_fbo_entry(struct wined3d_context *context,
             depth_stencil = &ds_null;
         }
         else if (ds_texture->resource.multisample_type != rt_texture->resource.multisample_type
-                || ds_texture->resource.multisample_quality != rt_texture->resource.multisample_quality)
+                || (ds_texture->resource.multisample_type
+                && ds_texture->resource.multisample_quality != rt_texture->resource.multisample_quality))
         {
             WARN("Color multisample type %u and quality %u, depth stencil has %u and %u, disabling ds buffer.\n",
                     rt_texture->resource.multisample_type, rt_texture->resource.multisample_quality,
