@@ -304,7 +304,7 @@ struct shader_arb_priv
     const struct wined3d_context *last_context;
 
     const struct wined3d_vertex_pipe_ops *vertex_pipe;
-    const struct fragment_pipeline *fragment_pipe;
+    const struct wined3d_fragment_pipe_ops *fragment_pipe;
     BOOL ffp_proj_control;
 };
 
@@ -4582,7 +4582,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
         checkGLcall("glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, priv->current_fprogram_id);");
 
         if (!priv->use_arbfp_fixed_func)
-            priv->fragment_pipe->enable_extension(gl_info, FALSE);
+            priv->fragment_pipe->fp_enable(context, FALSE);
 
         /* Enable OpenGL fragment programs. */
         gl_info->gl_ops.gl.p_glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -4629,7 +4629,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
             checkGLcall("glDisable(GL_FRAGMENT_PROGRAM_ARB)");
             priv->current_fprogram_id = 0;
         }
-        priv->fragment_pipe->enable_extension(gl_info, TRUE);
+        priv->fragment_pipe->fp_enable(context, TRUE);
     }
 
     if (use_vs(state))
@@ -4712,7 +4712,7 @@ static void shader_arb_disable(void *shader_priv, struct wined3d_context *contex
         checkGLcall("glDisable(GL_FRAGMENT_PROGRAM_ARB)");
         priv->current_fprogram_id = 0;
     }
-    priv->fragment_pipe->enable_extension(gl_info, FALSE);
+    priv->fragment_pipe->fp_enable(context, FALSE);
 
     if (gl_info->supported[ARB_VERTEX_PROGRAM])
     {
@@ -4785,7 +4785,7 @@ static int sig_tree_compare(const void *key, const struct wine_rb_entry *entry)
 }
 
 static HRESULT shader_arb_alloc(struct wined3d_device *device, const struct wined3d_vertex_pipe_ops *vertex_pipe,
-        const struct fragment_pipeline *fragment_pipe)
+        const struct wined3d_fragment_pipe_ops *fragment_pipe)
 {
     const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
     struct fragment_caps fragment_caps;
@@ -5685,8 +5685,10 @@ struct arbfp_ffp_desc
 };
 
 /* Context activation is done by the caller. */
-static void arbfp_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
+static void arbfp_enable(const struct wined3d_context *context, BOOL enable)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
     if (enable)
     {
         gl_info->gl_ops.gl.p_glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -6855,7 +6857,8 @@ static void arbfp_free_context_data(struct wined3d_context *context)
 {
 }
 
-const struct fragment_pipeline arbfp_fragment_pipeline = {
+const struct wined3d_fragment_pipe_ops arbfp_fragment_pipeline =
+{
     arbfp_enable,
     arbfp_get_caps,
     arbfp_get_emul_mask,

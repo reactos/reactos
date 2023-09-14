@@ -2020,7 +2020,7 @@ static const struct wined3d_vertex_pipe_ops *select_vertex_implementation(const 
     return &ffp_vertex_pipe;
 }
 
-static const struct fragment_pipeline *select_fragment_implementation(const struct wined3d_gl_info *gl_info,
+static const struct wined3d_fragment_pipe_ops *select_fragment_implementation(const struct wined3d_gl_info *gl_info,
         const struct wined3d_shader_backend_ops *shader_backend_ops)
 {
     if (shader_backend_ops == &glsl_shader_backend && gl_info->supported[ARB_FRAGMENT_SHADER])

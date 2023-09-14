@@ -74,7 +74,7 @@
 #define WINED3D_QUIRK_BROKEN_ARB_FOG            0x00000200
 #define WINED3D_QUIRK_NO_INDEPENDENT_BIT_DEPTHS 0x00000400
 
-struct fragment_pipeline;
+struct wined3d_fragment_pipe_ops;
 struct wined3d_adapter;
 struct wined3d_context;
 struct wined3d_state;
@@ -1451,7 +1451,7 @@ struct wined3d_shader_backend_ops
             const struct wined3d_state *state);
     void (*shader_destroy)(struct wined3d_shader *shader);
     HRESULT (*shader_alloc_private)(struct wined3d_device *device, const struct wined3d_vertex_pipe_ops *vertex_pipe,
-            const struct fragment_pipeline *fragment_pipe);
+            const struct wined3d_fragment_pipe_ops *fragment_pipe);
     void (*shader_free_private)(struct wined3d_device *device, struct wined3d_context *context);
     BOOL (*shader_allocate_context_data)(struct wined3d_context *context);
     void (*shader_free_context_data)(struct wined3d_context *context);
@@ -2166,9 +2166,9 @@ struct fragment_caps
 #define GL_EXT_EMUL_ARB_MULTITEXTURE 0x00000001
 #define GL_EXT_EMUL_EXT_FOG_COORD    0x00000002
 
-struct fragment_pipeline
+struct wined3d_fragment_pipe_ops
 {
-    void (*enable_extension)(const struct wined3d_gl_info *gl_info, BOOL enable);
+    void (*fp_enable)(const struct wined3d_context *context, BOOL enable);
     void (*get_caps)(const struct wined3d_adapter *adapter, struct fragment_caps *caps);
     DWORD (*get_emul_mask)(const struct wined3d_gl_info *gl_info);
     void *(*alloc_private)(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv);
@@ -2204,13 +2204,13 @@ struct wined3d_vertex_pipe_ops
 };
 
 extern const struct wined3d_state_entry_template misc_state_template[] DECLSPEC_HIDDEN;
-extern const struct fragment_pipeline none_fragment_pipe DECLSPEC_HIDDEN;
-extern const struct fragment_pipeline ffp_fragment_pipeline DECLSPEC_HIDDEN;
-extern const struct fragment_pipeline atifs_fragment_pipeline DECLSPEC_HIDDEN;
-extern const struct fragment_pipeline arbfp_fragment_pipeline DECLSPEC_HIDDEN;
-extern const struct fragment_pipeline nvts_fragment_pipeline DECLSPEC_HIDDEN;
-extern const struct fragment_pipeline nvrc_fragment_pipeline DECLSPEC_HIDDEN;
-extern const struct fragment_pipeline glsl_fragment_pipe DECLSPEC_HIDDEN;
+extern const struct wined3d_fragment_pipe_ops none_fragment_pipe DECLSPEC_HIDDEN;
+extern const struct wined3d_fragment_pipe_ops ffp_fragment_pipeline DECLSPEC_HIDDEN;
+extern const struct wined3d_fragment_pipe_ops atifs_fragment_pipeline DECLSPEC_HIDDEN;
+extern const struct wined3d_fragment_pipe_ops arbfp_fragment_pipeline DECLSPEC_HIDDEN;
+extern const struct wined3d_fragment_pipe_ops nvts_fragment_pipeline DECLSPEC_HIDDEN;
+extern const struct wined3d_fragment_pipe_ops nvrc_fragment_pipeline DECLSPEC_HIDDEN;
+extern const struct wined3d_fragment_pipe_ops glsl_fragment_pipe DECLSPEC_HIDDEN;
 
 extern const struct wined3d_vertex_pipe_ops none_vertex_pipe DECLSPEC_HIDDEN;
 extern const struct wined3d_vertex_pipe_ops ffp_vertex_pipe DECLSPEC_HIDDEN;
@@ -2219,7 +2219,7 @@ extern const struct wined3d_vertex_pipe_ops glsl_vertex_pipe DECLSPEC_HIDDEN;
 /* "Base" state table */
 HRESULT compile_state_table(struct wined3d_state_entry *state_table, APPLYSTATEFUNC **dev_multistate_funcs,
         const struct wined3d_d3d_info *d3d_info, const BOOL *supported_extensions,
-        const struct wined3d_vertex_pipe_ops *vertex, const struct fragment_pipeline *fragment,
+        const struct wined3d_vertex_pipe_ops *vertex, const struct wined3d_fragment_pipe_ops *fragment,
         const struct wined3d_state_entry_template *misc) DECLSPEC_HIDDEN;
 
 enum wined3d_blit_op
@@ -2802,7 +2802,7 @@ struct wined3d_adapter
     size_t format_size;
 
     const struct wined3d_vertex_pipe_ops *vertex_pipe;
-    const struct fragment_pipeline *fragment_pipe;
+    const struct wined3d_fragment_pipe_ops *fragment_pipe;
     const struct wined3d_shader_backend_ops *shader_backend;
     const struct wined3d_adapter_ops *adapter_ops;
 };

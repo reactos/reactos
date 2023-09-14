@@ -5799,8 +5799,8 @@ HRESULT wined3d_device_init(struct wined3d_device *device, struct wined3d *wined
         struct wined3d_device_parent *device_parent)
 {
     struct wined3d_adapter *adapter = wined3d->adapters[adapter_idx];
+    const struct wined3d_fragment_pipe_ops *fragment_pipeline;
     const struct wined3d_vertex_pipe_ops *vertex_pipeline;
-    const struct fragment_pipeline *fragment_pipeline;
     unsigned int i;
     HRESULT hr;
 

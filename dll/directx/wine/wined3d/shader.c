@@ -3165,7 +3165,7 @@ static void shader_cleanup(struct wined3d_shader *shader)
 struct shader_none_priv
 {
     const struct wined3d_vertex_pipe_ops *vertex_pipe;
-    const struct fragment_pipeline *fragment_pipe;
+    const struct wined3d_fragment_pipe_ops *fragment_pipe;
     BOOL ffp_proj_control;
 };
 
@@ -3185,21 +3185,19 @@ static void shader_none_init_context_state(struct wined3d_context *context) {}
 static void shader_none_select(void *shader_priv, struct wined3d_context *context,
         const struct wined3d_state *state)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct shader_none_priv *priv = shader_priv;
 
     priv->vertex_pipe->vp_enable(context, !use_vs(state));
-    priv->fragment_pipe->enable_extension(gl_info, !use_ps(state));
+    priv->fragment_pipe->fp_enable(context, !use_ps(state));
 }
 
 /* Context activation is done by the caller. */
 static void shader_none_disable(void *shader_priv, struct wined3d_context *context)
 {
     struct shader_none_priv *priv = shader_priv;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
 
     priv->vertex_pipe->vp_enable(context, FALSE);
-    priv->fragment_pipe->enable_extension(gl_info, FALSE);
+    priv->fragment_pipe->fp_enable(context, FALSE);
 
     context->shader_update_mask = (1u << WINED3D_SHADER_TYPE_PIXEL)
             | (1u << WINED3D_SHADER_TYPE_VERTEX)
@@ -3210,7 +3208,7 @@ static void shader_none_disable(void *shader_priv, struct wined3d_context *conte
 }
 
 static HRESULT shader_none_alloc(struct wined3d_device *device, const struct wined3d_vertex_pipe_ops *vertex_pipe,
-        const struct fragment_pipeline *fragment_pipe)
+        const struct wined3d_fragment_pipe_ops *fragment_pipe)
 {
     struct fragment_caps fragment_caps;
     void *vertex_priv, *fragment_priv;

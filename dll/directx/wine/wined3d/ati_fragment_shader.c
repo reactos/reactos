@@ -1250,8 +1250,10 @@ static const struct wined3d_state_entry_template atifs_fragmentstate_template[] 
 };
 
 /* Context activation is done by the caller. */
-static void atifs_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
+static void atifs_enable(const struct wined3d_context *context, BOOL enable)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
     if (enable)
     {
         gl_info->gl_ops.gl.p_glEnable(GL_FRAGMENT_SHADER_ATI);
@@ -1376,7 +1378,8 @@ static void atifs_free_context_data(struct wined3d_context *context)
     heap_free(context->fragment_pipe_data);
 }
 
-const struct fragment_pipeline atifs_fragment_pipeline = {
+const struct wined3d_fragment_pipe_ops atifs_fragment_pipeline =
+{
     atifs_enable,
     atifs_get_caps,
     atifs_get_emul_mask,

@@ -5219,7 +5219,6 @@ static const struct wined3d_state_entry_template ffp_fragmentstate_template[] = 
 };
 
 /* Context activation is done by the caller. */
-static void ffp_enable(const struct wined3d_gl_info *gl_info, BOOL enable) {}
 static void ffp_pipe_enable(const struct wined3d_context *context, BOOL enable) {}
 
 static void *ffp_alloc(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv)
@@ -5330,8 +5329,9 @@ static void ffp_none_context_free(struct wined3d_context *context)
 {
 }
 
-const struct fragment_pipeline ffp_fragment_pipeline = {
-    ffp_enable,
+const struct wined3d_fragment_pipe_ops ffp_fragment_pipeline =
+{
+    ffp_pipe_enable,
     ffp_fragment_get_caps,
     ffp_fragment_get_emul_mask,
     ffp_alloc,
@@ -5342,7 +5342,6 @@ const struct fragment_pipeline ffp_fragment_pipeline = {
     ffp_fragmentstate_template,
 };
 
-static void none_enable(const struct wined3d_gl_info *gl_info, BOOL enable) {}
 static void none_pipe_enable(const struct wined3d_context *context, BOOL enable) {}
 
 static void *none_alloc(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv)
@@ -5387,9 +5386,9 @@ static BOOL fp_none_color_fixup_supported(struct color_fixup_desc fixup)
     return is_identity_fixup(fixup);
 }
 
-const struct fragment_pipeline none_fragment_pipe =
+const struct wined3d_fragment_pipe_ops none_fragment_pipe =
 {
-    none_enable,
+    none_pipe_enable,
     fp_none_get_caps,
     fp_none_get_emul_mask,
     none_alloc,
@@ -5555,7 +5554,7 @@ static void validate_state_table(struct wined3d_state_entry *state_table)
 
 HRESULT compile_state_table(struct wined3d_state_entry *state_table, APPLYSTATEFUNC **dev_multistate_funcs,
         const struct wined3d_d3d_info *d3d_info, const BOOL *supported_extensions,
-        const struct wined3d_vertex_pipe_ops *vertex, const struct fragment_pipeline *fragment,
+        const struct wined3d_vertex_pipe_ops *vertex, const struct wined3d_fragment_pipe_ops *fragment,
         const struct wined3d_state_entry_template *misc)
 {
     APPLYSTATEFUNC multistate_funcs[STATE_HIGHEST + 1][3];

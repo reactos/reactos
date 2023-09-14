@@ -139,7 +139,7 @@ struct shader_glsl_priv
     UINT next_constant_version;
 
     const struct wined3d_vertex_pipe_ops *vertex_pipe;
-    const struct fragment_pipeline *fragment_pipe;
+    const struct wined3d_fragment_pipe_ops *fragment_pipe;
     struct wine_rb_tree ffp_vertex_shaders;
     struct wine_rb_tree ffp_fragment_shaders;
     BOOL ffp_proj_control;
@@ -10554,7 +10554,7 @@ static void shader_glsl_select(void *shader_priv, struct wined3d_context *contex
     GLuint program_id, prev_id;
 
     priv->vertex_pipe->vp_enable(context, !use_vs(state));
-    priv->fragment_pipe->enable_extension(gl_info, !use_ps(state));
+    priv->fragment_pipe->fp_enable(context, !use_ps(state));
 
     prev_id = ctx_data->glsl_program ? ctx_data->glsl_program->id : 0;
     set_glsl_shader_program(context_gl, state, priv, ctx_data);
@@ -10656,7 +10656,7 @@ static void shader_glsl_disable(void *shader_priv, struct wined3d_context *conte
     checkGLcall("glUseProgram");
 
     priv->vertex_pipe->vp_enable(context, FALSE);
-    priv->fragment_pipe->enable_extension(gl_info, FALSE);
+    priv->fragment_pipe->fp_enable(context, FALSE);
 
     if (needs_legacy_glsl_syntax(gl_info) && gl_info->supported[ARB_COLOR_BUFFER_FLOAT])
     {
@@ -10911,7 +10911,7 @@ static void constant_heap_free(struct constant_heap *heap)
 }
 
 static HRESULT shader_glsl_alloc(struct wined3d_device *device, const struct wined3d_vertex_pipe_ops *vertex_pipe,
-        const struct fragment_pipeline *fragment_pipe)
+        const struct wined3d_fragment_pipe_ops *fragment_pipe)
 {
     SIZE_T stack_size = wined3d_log2i(max(WINED3D_MAX_VS_CONSTS_F, WINED3D_MAX_PS_CONSTS_F)) + 1;
     struct fragment_caps fragment_caps;
@@ -11892,7 +11892,7 @@ const struct wined3d_vertex_pipe_ops glsl_vertex_pipe =
     glsl_vertex_pipe_vp_states,
 };
 
-static void glsl_fragment_pipe_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
+static void glsl_fragment_pipe_enable(const struct wined3d_context *context, BOOL enable)
 {
     /* Nothing to do. */
 }
@@ -12251,7 +12251,7 @@ static void glsl_fragment_pipe_free_context_data(struct wined3d_context *context
 {
 }
 
-const struct fragment_pipeline glsl_fragment_pipe =
+const struct wined3d_fragment_pipe_ops glsl_fragment_pipe =
 {
     glsl_fragment_pipe_enable,
     glsl_fragment_pipe_get_caps,

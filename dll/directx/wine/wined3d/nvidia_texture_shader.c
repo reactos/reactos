@@ -659,8 +659,10 @@ static void nvrc_texfactor(struct wined3d_context *context, const struct wined3d
 }
 
 /* Context activation is done by the caller. */
-static void nvrc_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
+static void nvrc_enable(const struct wined3d_context *context, BOOL enable)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
     if (enable)
     {
         gl_info->gl_ops.gl.p_glEnable(GL_REGISTER_COMBINERS_NV);
@@ -674,9 +676,11 @@ static void nvrc_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
 }
 
 /* Context activation is done by the caller. */
-static void nvts_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
+static void nvts_enable(const struct wined3d_context *context, BOOL enable)
 {
-    nvrc_enable(gl_info, enable);
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
+    nvrc_enable(context, enable);
     if (enable)
     {
         gl_info->gl_ops.gl.p_glEnable(GL_TEXTURE_SHADER_NV);
@@ -923,7 +927,8 @@ static void nvrc_context_free(struct wined3d_context *context)
 }
 
 
-const struct fragment_pipeline nvts_fragment_pipeline = {
+const struct wined3d_fragment_pipe_ops nvts_fragment_pipeline =
+{
     nvts_enable,
     nvrc_fragment_get_caps,
     nvrc_fragment_get_emul_mask,
@@ -935,7 +940,8 @@ const struct fragment_pipeline nvts_fragment_pipeline = {
     nvrc_fragmentstate_template,
 };
 
-const struct fragment_pipeline nvrc_fragment_pipeline = {
+const struct wined3d_fragment_pipe_ops nvrc_fragment_pipeline =
+{
     nvrc_enable,
     nvrc_fragment_get_caps,
     nvrc_fragment_get_emul_mask,
