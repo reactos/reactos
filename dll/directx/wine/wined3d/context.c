@@ -3346,22 +3346,21 @@ static void wined3d_context_gl_map_fixed_function_samplers(struct wined3d_contex
     }
 }
 
-static void context_map_psamplers(struct wined3d_context *context, const struct wined3d_state *state)
+static void wined3d_context_gl_map_psamplers(struct wined3d_context_gl *context_gl, const struct wined3d_state *state)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
+    const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
     const struct wined3d_shader_resource_info *resource_info =
             state->shader[WINED3D_SHADER_TYPE_PIXEL]->reg_maps.resource_info;
     unsigned int i;
 
     for (i = 0; i < WINED3D_MAX_FRAGMENT_SAMPLERS; ++i)
     {
-        if (resource_info[i].type && context->tex_unit_map[i] != i)
+        if (resource_info[i].type && context_gl->c.tex_unit_map[i] != i)
         {
             wined3d_context_gl_map_stage(context_gl, i, i);
-            context_invalidate_state(context, STATE_SAMPLER(i));
+            context_invalidate_state(&context_gl->c, STATE_SAMPLER(i));
             if (i < d3d_info->limits.ffp_blend_stages)
-                context_invalidate_texture_stage(context, i);
+                context_invalidate_texture_stage(&context_gl->c, i);
         }
     }
 }
@@ -3454,7 +3453,7 @@ static void context_update_tex_unit_map(struct wined3d_context *context, const s
         return;
 
     if (ps)
-        context_map_psamplers(context, state);
+        wined3d_context_gl_map_psamplers(context_gl, state);
     else
         wined3d_context_gl_map_fixed_function_samplers(context_gl, state);
 
