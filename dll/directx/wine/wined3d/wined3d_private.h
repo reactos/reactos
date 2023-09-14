@@ -1892,7 +1892,7 @@ struct wined3d_context
     DWORD last_was_vshader : 1;
     DWORD last_was_normal : 1;
     DWORD namedArraysLoaded : 1;
-    DWORD numberedArraysLoaded : 1;
+    DWORD last_was_ffp_blit : 1;
     DWORD last_was_blit : 1;
     DWORD last_was_ckey : 1;
     DWORD fog_coord : 1;
@@ -1901,6 +1901,7 @@ struct wined3d_context
     DWORD current : 1;
     DWORD destroyed : 1;
     DWORD valid : 1;
+
     DWORD texShaderBumpMap : 8;         /* MAX_TEXTURES, 8 */
     DWORD lastWasPow2Texture : 8;       /* MAX_TEXTURES, 8 */
     DWORD fixed_function_usage_map : 8; /* MAX_TEXTURES, 8 */
@@ -1909,6 +1910,7 @@ struct wined3d_context
     DWORD rebind_fbo : 1;
     DWORD needs_set : 1;
     DWORD hdc_is_private : 1;
+
     DWORD hdc_has_format : 1;           /* only meaningful if hdc_is_private */
     DWORD update_shader_resource_bindings : 1;
     DWORD update_compute_shader_resource_bindings : 1;
@@ -1921,11 +1923,10 @@ struct wined3d_context
     DWORD shader_update_mask : 6; /* WINED3D_SHADER_TYPE_COUNT, 6 */
     DWORD clip_distance_mask : 8; /* MAX_CLIP_DISTANCES, 8 */
     DWORD last_was_dual_blend : 1;
-    DWORD last_was_ffp_blit : 1;
-    DWORD padding : 8;
+    DWORD padding : 9;
 
     DWORD constant_update_mask;
-    DWORD                   numbered_array_mask;
+    DWORD numbered_array_mask;
     GLenum                  tracking_parm;     /* Which source is tracking current colour         */
     GLenum                  untracked_materials[2];
     UINT                    blit_w, blit_h;

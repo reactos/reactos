@@ -4380,10 +4380,9 @@ static void streamsrc(struct wined3d_context *context, const struct wined3d_stat
             && !use_vs(state) && !context->use_immediate_mode_draw;
 
     if (isStateDirty(context, STATE_VDECL)) return;
-    if (context->numberedArraysLoaded && !load_numbered)
+    if (context->numbered_array_mask && !load_numbered)
     {
         unload_numbered_arrays(context);
-        context->numberedArraysLoaded = FALSE;
         context->numbered_array_mask = 0;
     }
     else if (context->namedArraysLoaded)
@@ -4396,7 +4395,6 @@ static void streamsrc(struct wined3d_context *context, const struct wined3d_stat
     {
         TRACE("Loading numbered arrays\n");
         load_numbered_arrays(context, &context->stream_info, state);
-        context->numberedArraysLoaded = TRUE;
     }
     else if (load_named)
     {
