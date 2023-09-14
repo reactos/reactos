@@ -2767,7 +2767,7 @@ static void query_internal_format(struct wined3d_adapter *adapter,
         struct wined3d_format *format, const struct wined3d_format_texture_info *texture_info,
         struct wined3d_gl_info *gl_info, BOOL srgb_write_supported, BOOL srgb_format)
 {
-    GLint count, multisample_types[MAX_MULTISAMPLE_TYPES];
+    GLint count, multisample_types[8];
     unsigned int i, max_log2;
     GLenum target;
 
@@ -2846,7 +2846,9 @@ static void query_internal_format(struct wined3d_adapter *adapter,
             count = 0;
             GL_EXTCALL(glGetInternalformativ(target, format->glInternal,
                     GL_NUM_SAMPLE_COUNTS, 1, &count));
-            count = min(count, MAX_MULTISAMPLE_TYPES);
+            if (count > ARRAY_SIZE(multisample_types))
+                FIXME("Unexpectedly high number of multisample types %d.\n", count);
+            count = min(count, ARRAY_SIZE(multisample_types));
             GL_EXTCALL(glGetInternalformativ(target, format->glInternal,
                     GL_SAMPLES, count, multisample_types));
             checkGLcall("query sample counts");

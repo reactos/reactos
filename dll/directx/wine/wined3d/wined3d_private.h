@@ -277,7 +277,6 @@ static inline enum complex_fixup get_complex_fixup(struct color_fixup_desc fixup
 #define MAX_TGSM_REGISTERS          8192
 #define MAX_VERTEX_BLENDS           4
 #define MAX_VERTEX_INDEX_BLENDS     9
-#define MAX_MULTISAMPLE_TYPES       8
 #define MAX_RENDER_TARGETS          8
 
 struct min_lookup
