@@ -4677,6 +4677,18 @@ static inline void context_apply_state(struct wined3d_context *context,
     state_table[rep].apply(context, state, rep);
 }
 
+static inline BOOL is_srgb_enabled(const DWORD *sampler_states)
+{
+    /* Only use the LSB of the WINED3D_SAMP_SRGB_TEXTURE value. This matches
+     * the behaviour of the AMD Windows driver.
+     *
+     * Might & Magic: Heroes VI - Shades of Darkness sets
+     * WINED3D_SAMP_SRGB_TEXTURE to a large value that looks like a
+     * pointer—presumably by accident—and expects sRGB decoding to be
+     * disabled. */
+    return sampler_states[WINED3D_SAMP_SRGB_TEXTURE] & 0x1;
+}
+
 static inline BOOL needs_separate_srgb_gl_texture(const struct wined3d_context *context,
         const struct wined3d_texture *texture)
 {

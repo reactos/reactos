@@ -3731,7 +3731,7 @@ static void context_preload_texture(struct wined3d_context *context,
     if (!(texture = state->textures[idx]))
         return;
 
-    wined3d_texture_load(texture, context, state->sampler_states[idx][WINED3D_SAMP_SRGB_TEXTURE]);
+    wined3d_texture_load(texture, context, is_srgb_enabled(state->sampler_states[idx]));
 }
 
 /* Context activation is done by the caller. */

@@ -3596,7 +3596,7 @@ static void wined3d_sampler_desc_from_sampler_states(struct wined3d_sampler_desc
         desc->max_anisotropy = 1;
     desc->compare = texture_gl->t.resource.format_flags & WINED3DFMT_FLAG_SHADOW;
     desc->comparison_func = WINED3D_CMP_LESSEQUAL;
-    desc->srgb_decode = sampler_states[WINED3D_SAMP_SRGB_TEXTURE];
+    desc->srgb_decode = is_srgb_enabled(sampler_states);
 
     if (!(texture_gl->t.resource.format_flags & WINED3DFMT_FLAG_FILTERING))
     {
@@ -3637,9 +3637,9 @@ static void sampler(struct wined3d_context *context, const struct wined3d_state 
     if (state->textures[sampler_idx])
     {
         struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(state->textures[sampler_idx]);
-        BOOL srgb = state->sampler_states[sampler_idx][WINED3D_SAMP_SRGB_TEXTURE];
         const DWORD *sampler_states = state->sampler_states[sampler_idx];
         struct wined3d_device *device = context->device;
+        BOOL srgb = is_srgb_enabled(sampler_states);
         struct wined3d_sampler_desc desc;
         struct wined3d_sampler *sampler;
         struct wine_rb_entry *entry;
