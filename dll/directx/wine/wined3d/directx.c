@@ -1468,6 +1468,7 @@ static BOOL wined3d_check_render_target_format(const struct wined3d_adapter *ada
         for (i = 0; i < adapter->cfg_count; ++i)
         {
             if (cfgs[i].windowDrawable
+                    && wined3d_check_pixel_format_color(&cfgs[i], adapter_format)
                     && wined3d_check_pixel_format_color(&cfgs[i], rt_format))
             {
                 TRACE("Pixel format %d is compatible with format %s.\n",
