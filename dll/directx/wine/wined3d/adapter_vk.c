@@ -337,11 +337,11 @@ static void adapter_vk_get_wined3d_caps(const struct wined3d_adapter *adapter, s
             | WINED3DPMISCCAPS_INDEPENDENTWRITEMASKS
             | WINED3DPMISCCAPS_POSTBLENDSRGBCONVERT;
 
+    caps->RasterCaps |= WINED3DPRASTERCAPS_ZBIAS | WINED3DPRASTERCAPS_MIPMAPLODBIAS;
+
     if (sampler_anisotropy)
     {
-        caps->RasterCaps |= WINED3DPRASTERCAPS_ANISOTROPY
-                | WINED3DPRASTERCAPS_ZBIAS
-                | WINED3DPRASTERCAPS_MIPMAPLODBIAS;
+        caps->RasterCaps |= WINED3DPRASTERCAPS_ANISOTROPY;
 
         caps->TextureFilterCaps |= WINED3DPTFILTERCAPS_MAGFANISOTROPIC
                 | WINED3DPTFILTERCAPS_MINFANISOTROPIC;
