@@ -919,7 +919,7 @@ void shader_resource_view_generate_mipmaps(struct wined3d_shader_resource_view *
     }
     else
     {
-        wined3d_texture_gl_bind_and_dirtify(texture_gl, context, srgb);
+        wined3d_texture_gl_bind_and_dirtify(texture_gl, wined3d_context_gl(context), srgb);
         gl_info->gl_ops.gl.p_glTexParameteri(texture_gl->target, GL_TEXTURE_BASE_LEVEL, base_level);
         gl_info->gl_ops.gl.p_glTexParameteri(texture_gl->target, GL_TEXTURE_MAX_LEVEL, max_level);
     }
