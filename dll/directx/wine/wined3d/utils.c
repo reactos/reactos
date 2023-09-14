@@ -5415,8 +5415,8 @@ void get_modelview_matrix(const struct wined3d_context *context, const struct wi
 void get_projection_matrix(const struct wined3d_context *context, const struct wined3d_state *state,
         struct wined3d_matrix *mat)
 {
-    BOOL clip_control = context->gl_info->supported[ARB_CLIP_CONTROL];
-    BOOL flip = !clip_control && context->render_offscreen;
+    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
+    BOOL clip_control, flip;
     float center_offset;
 
     /* There are a couple of additional things we have to take into account
@@ -5434,7 +5434,9 @@ void get_projection_matrix(const struct wined3d_context *context, const struct w
      * driver, but small enough to prevent it from interfering with any
      * anti-aliasing. */
 
-    if (!clip_control && context->d3d_info->wined3d_creation_flags & WINED3D_PIXEL_CENTER_INTEGER)
+    clip_control = d3d_info->clip_control;
+    flip = !clip_control && context->render_offscreen;
+    if (!clip_control && d3d_info->wined3d_creation_flags & WINED3D_PIXEL_CENTER_INTEGER)
         center_offset = 63.0f / 64.0f;
     else
         center_offset = -1.0f / 64.0f;

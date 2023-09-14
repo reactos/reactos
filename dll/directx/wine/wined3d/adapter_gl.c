@@ -3796,6 +3796,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     d3d_info->texture_swizzle = !!gl_info->supported[ARB_TEXTURE_SWIZZLE];
     d3d_info->srgb_read_control = !!gl_info->supported[EXT_TEXTURE_SRGB_DECODE];
     d3d_info->srgb_write_control = !!gl_info->supported[ARB_FRAMEBUFFER_SRGB];
+    d3d_info->clip_control = !!gl_info->supported[ARB_CLIP_CONTROL];
 
     if (gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
         d3d_info->multisample_draw_location = WINED3D_LOCATION_TEXTURE_RGB;
