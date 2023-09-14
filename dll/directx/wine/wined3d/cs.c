@@ -608,7 +608,6 @@ void wined3d_cs_emit_clear(struct wined3d_cs *cs, DWORD rect_count, const RECT *
     struct wined3d_rendertarget_view *view;
     struct wined3d_cs_clear *op;
     unsigned int rt_count, i;
-    RECT view_rect;
 
     rt_count = flags & WINED3DCLEAR_TARGET ? cs->device->adapter->d3d_info.limits.max_rt_count : 0;
 
@@ -630,17 +629,11 @@ void wined3d_cs_emit_clear(struct wined3d_cs *cs, DWORD rect_count, const RECT *
     for (i = 0; i < rt_count; ++i)
     {
         if ((view = state->fb->render_targets[i]))
-        {
-            SetRect(&view_rect, 0, 0, view->width, view->height);
-            IntersectRect(&op->draw_rect, &op->draw_rect, &view_rect);
             wined3d_resource_acquire(view->resource);
-        }
     }
     if (flags & (WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL))
     {
         view = state->fb->depth_stencil;
-        SetRect(&view_rect, 0, 0, view->width, view->height);
-        IntersectRect(&op->draw_rect, &op->draw_rect, &view_rect);
         wined3d_resource_acquire(view->resource);
     }
 
