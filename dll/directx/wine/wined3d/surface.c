@@ -138,15 +138,6 @@ static void texture2d_depth_blt_fbo(const struct wined3d_device *device, struct 
     checkGLcall("glBlitFramebuffer()");
 }
 
-static BOOL is_multisample_location(const struct wined3d_texture_gl *texture_gl, DWORD location)
-{
-    if (location == WINED3D_LOCATION_RB_MULTISAMPLE)
-        return TRUE;
-    if (location != WINED3D_LOCATION_TEXTURE_RGB && location != WINED3D_LOCATION_TEXTURE_SRGB)
-        return FALSE;
-    return texture_gl->target == GL_TEXTURE_2D_MULTISAMPLE || texture_gl->target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
-}
-
 /* Blit between surface locations. Onscreen on different swapchains is not supported.
  * Depth / stencil is not supported. Context activation is done by the caller. */
 static void texture2d_blt_fbo(struct wined3d_device *device, struct wined3d_context *context,
@@ -186,7 +177,7 @@ static void texture2d_blt_fbo(struct wined3d_device *device, struct wined3d_cont
     }
 
     /* Resolve the source surface first if needed. */
-    if (is_multisample_location(wined3d_texture_gl(src_texture), src_location)
+    if (wined3d_texture_gl_is_multisample_location(wined3d_texture_gl(src_texture), src_location)
             && (src_texture->resource.format->id != dst_texture->resource.format->id
                 || abs(src_rect->bottom - src_rect->top) != abs(dst_rect->bottom - dst_rect->top)
                 || abs(src_rect->right - src_rect->left) != abs(dst_rect->right - dst_rect->left)))
@@ -860,7 +851,7 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
     return dst_texture;
 }
 
-static void texture2d_read_from_framebuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
+void texture2d_read_from_framebuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD src_location, DWORD dst_location)
 {
     struct wined3d_resource *resource = &texture->resource;
@@ -1581,52 +1572,6 @@ static HRESULT wined3d_texture_blt_special(struct wined3d_texture *dst_texture, 
     /* Default: Fall back to the generic blt. Not an error, a TRACE is enough */
     TRACE("Didn't find any usable render target setup for hw blit, falling back to software\n");
     return WINED3DERR_INVALIDCALL;
-}
-
-/* Context activation is done by the caller. */
-BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-        struct wined3d_context *context, DWORD dst_location)
-{
-    struct wined3d_texture_sub_resource *sub_resource;
-
-    sub_resource = &texture->sub_resources[sub_resource_idx];
-    wined3d_texture_prepare_location(texture, sub_resource_idx, context, dst_location);
-
-    /* We cannot download data from multisample textures directly. */
-    if (is_multisample_location(wined3d_texture_gl(texture), WINED3D_LOCATION_TEXTURE_RGB))
-    {
-        wined3d_texture_load_location(texture, sub_resource_idx, context, WINED3D_LOCATION_RB_RESOLVED);
-        texture2d_read_from_framebuffer(texture, sub_resource_idx, context,
-                WINED3D_LOCATION_RB_RESOLVED, dst_location);
-        return TRUE;
-    }
-
-    if (sub_resource->locations & (WINED3D_LOCATION_RB_MULTISAMPLE | WINED3D_LOCATION_RB_RESOLVED))
-        wined3d_texture_load_location(texture, sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
-
-    /* Download the sub-resource to system memory. */
-    if (sub_resource->locations & (WINED3D_LOCATION_TEXTURE_RGB | WINED3D_LOCATION_TEXTURE_SRGB))
-    {
-        struct wined3d_bo_address data;
-        wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(texture), wined3d_context_gl(context),
-                !(sub_resource->locations & WINED3D_LOCATION_TEXTURE_RGB));
-        wined3d_texture_get_memory(texture, sub_resource_idx, &data, dst_location);
-        wined3d_texture_download_data(texture, sub_resource_idx, context, &data);
-        ++texture->download_count;
-        return TRUE;
-    }
-
-    if (!(texture->resource.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
-            && (sub_resource->locations & WINED3D_LOCATION_DRAWABLE))
-    {
-        texture2d_read_from_framebuffer(texture, sub_resource_idx, context,
-                texture->resource.draw_binding, dst_location);
-        return TRUE;
-    }
-
-    FIXME("Can't load texture %p, %u with location flags %s into sysmem.\n",
-            texture, sub_resource_idx, wined3d_debug_location(sub_resource->locations));
-    return FALSE;
 }
 
 /* Context activation is done by the caller. */
@@ -3522,7 +3467,8 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
             TRACE("Not doing download because of format conversion.\n");
         else if (src_texture->resource.format->conv_byte_count)
             TRACE("Not doing download because the source format needs conversion.\n");
-        else if (is_multisample_location(wined3d_texture_gl(src_texture), WINED3D_LOCATION_TEXTURE_RGB))
+        else if (wined3d_texture_gl_is_multisample_location(wined3d_texture_gl(src_texture),
+                WINED3D_LOCATION_TEXTURE_RGB))
             TRACE("Not doing download because of multisample source.\n");
         else if (!texture2d_is_full_rect(src_texture, src_sub_resource_idx % src_texture->level_count, &src_rect))
             TRACE("Not doing download because of partial download (src).\n");

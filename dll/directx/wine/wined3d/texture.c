@@ -2433,6 +2433,53 @@ void wined3d_texture_download_data(struct wined3d_texture *texture, unsigned int
     }
 }
 
+/* Context activation is done by the caller. */
+static BOOL wined3d_texture_gl_load_sysmem(struct wined3d_texture_gl *texture_gl,
+        unsigned int sub_resource_idx, struct wined3d_context_gl *context_gl, DWORD dst_location)
+{
+    struct wined3d_texture_sub_resource *sub_resource;
+
+    sub_resource = &texture_gl->t.sub_resources[sub_resource_idx];
+    wined3d_texture_prepare_location(&texture_gl->t, sub_resource_idx, &context_gl->c, dst_location);
+
+    /* We cannot download data from multisample textures directly. */
+    if (wined3d_texture_gl_is_multisample_location(texture_gl, WINED3D_LOCATION_TEXTURE_RGB))
+    {
+        wined3d_texture_load_location(&texture_gl->t, sub_resource_idx, &context_gl->c, WINED3D_LOCATION_RB_RESOLVED);
+        texture2d_read_from_framebuffer(&texture_gl->t, sub_resource_idx, &context_gl->c,
+                WINED3D_LOCATION_RB_RESOLVED, dst_location);
+        return TRUE;
+    }
+
+    if (sub_resource->locations & (WINED3D_LOCATION_RB_MULTISAMPLE | WINED3D_LOCATION_RB_RESOLVED))
+        wined3d_texture_load_location(&texture_gl->t, sub_resource_idx, &context_gl->c, WINED3D_LOCATION_TEXTURE_RGB);
+
+    /* Download the sub-resource to system memory. */
+    if (sub_resource->locations & (WINED3D_LOCATION_TEXTURE_RGB | WINED3D_LOCATION_TEXTURE_SRGB))
+    {
+        struct wined3d_bo_address data;
+        wined3d_texture_gl_bind_and_dirtify(texture_gl, context_gl,
+                !(sub_resource->locations & WINED3D_LOCATION_TEXTURE_RGB));
+        wined3d_texture_get_memory(&texture_gl->t, sub_resource_idx, &data, dst_location);
+        wined3d_texture_download_data(&texture_gl->t, sub_resource_idx, &context_gl->c, &data);
+        ++texture_gl->t.download_count;
+        return TRUE;
+    }
+
+    if (!(texture_gl->t.resource.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
+            && (sub_resource->locations & WINED3D_LOCATION_DRAWABLE))
+    {
+        texture2d_read_from_framebuffer(&texture_gl->t, sub_resource_idx, &context_gl->c,
+                texture_gl->t.resource.draw_binding, dst_location);
+        return TRUE;
+    }
+
+    FIXME("Can't load texture %p, %u with location flags %s into sysmem.\n",
+            texture_gl, sub_resource_idx, wined3d_debug_location(sub_resource->locations));
+
+    return FALSE;
+}
+
 /* Context activation is done by the caller. Context may be NULL in ddraw-only mode. */
 static BOOL texture2d_load_location(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD location)
@@ -2445,7 +2492,8 @@ static BOOL texture2d_load_location(struct wined3d_texture *texture, unsigned in
         case WINED3D_LOCATION_USER_MEMORY:
         case WINED3D_LOCATION_SYSMEM:
         case WINED3D_LOCATION_BUFFER:
-            return texture2d_load_sysmem(texture, sub_resource_idx, context, location);
+            return wined3d_texture_gl_load_sysmem(wined3d_texture_gl(texture),
+                    sub_resource_idx, wined3d_context_gl(context), location);
 
         case WINED3D_LOCATION_DRAWABLE:
             return texture2d_load_drawable(texture, sub_resource_idx, context);
@@ -2845,6 +2893,7 @@ static BOOL texture1d_load_location(struct wined3d_texture *texture, unsigned in
         struct wined3d_context *context, DWORD location)
 {
     struct wined3d_texture_sub_resource *sub_resource = &texture->sub_resources[sub_resource_idx];
+    struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(texture);
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     unsigned int row_pitch, slice_pitch;
 
@@ -2864,8 +2913,7 @@ static BOOL texture1d_load_location(struct wined3d_texture *texture, unsigned in
                 struct wined3d_box src_box;
 
                 data.addr += sub_resource->offset;
-                wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(texture),
-                        context_gl, location == WINED3D_LOCATION_TEXTURE_SRGB);
+                wined3d_texture_gl_bind_and_dirtify(texture_gl, context_gl, location == WINED3D_LOCATION_TEXTURE_SRGB);
                 wined3d_texture_get_pitch(texture, sub_resource_idx, &row_pitch, &slice_pitch);
                 wined3d_texture_get_level_box(texture, sub_resource_idx % texture->level_count, &src_box);
                 wined3d_texture_upload_data(texture, sub_resource_idx, context, texture->resource.format,
@@ -2876,8 +2924,7 @@ static BOOL texture1d_load_location(struct wined3d_texture *texture, unsigned in
                 struct wined3d_const_bo_address data = {sub_resource->buffer_object, NULL};
                 struct wined3d_box src_box;
 
-                wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(texture), context_gl,
-                        location == WINED3D_LOCATION_TEXTURE_SRGB);
+                wined3d_texture_gl_bind_and_dirtify(texture_gl, context_gl, location == WINED3D_LOCATION_TEXTURE_SRGB);
                 wined3d_texture_get_pitch(texture, sub_resource_idx, &row_pitch, &slice_pitch);
                 wined3d_texture_get_level_box(texture, sub_resource_idx % texture->level_count, &src_box);
                 wined3d_texture_upload_data(texture, sub_resource_idx, context, texture->resource.format,
@@ -2891,46 +2938,8 @@ static BOOL texture1d_load_location(struct wined3d_texture *texture, unsigned in
             break;
 
         case WINED3D_LOCATION_SYSMEM:
-            if (sub_resource->locations & (WINED3D_LOCATION_TEXTURE_RGB | WINED3D_LOCATION_TEXTURE_SRGB))
-            {
-                struct wined3d_bo_address data = {0, texture->resource.heap_memory};
-
-                data.addr += sub_resource->offset;
-                if (sub_resource->locations & WINED3D_LOCATION_TEXTURE_RGB)
-                    wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(texture), context_gl, FALSE);
-                else
-                    wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(texture), context_gl, TRUE);
-
-                wined3d_texture_download_data(texture, sub_resource_idx, context, &data);
-                ++texture->download_count;
-            }
-            else
-            {
-                FIXME("Implement WINED3D_LOCATION_SYSMEM loading from %s.\n",
-                        wined3d_debug_location(sub_resource->locations));
-                return FALSE;
-            }
-            break;
-
         case WINED3D_LOCATION_BUFFER:
-            if (sub_resource->locations & (WINED3D_LOCATION_TEXTURE_RGB | WINED3D_LOCATION_TEXTURE_SRGB))
-            {
-                struct wined3d_bo_address data = {sub_resource->buffer_object, NULL};
-
-                if (sub_resource->locations & WINED3D_LOCATION_TEXTURE_RGB)
-                    wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(texture), context_gl, FALSE);
-                else
-                    wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(texture), context_gl, TRUE);
-
-                wined3d_texture_download_data(texture, sub_resource_idx, context, &data);
-            }
-            else
-            {
-                FIXME("Implement WINED3D_LOCATION_BUFFER loading from %s.\n",
-                        wined3d_debug_location(sub_resource->locations));
-                return FALSE;
-            }
-            break;
+            return wined3d_texture_gl_load_sysmem(texture_gl, sub_resource_idx, context_gl, location);
 
         default:
             FIXME("Implement %s loading from %s.\n", wined3d_debug_location(location),

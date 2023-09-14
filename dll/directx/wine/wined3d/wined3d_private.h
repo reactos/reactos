@@ -3413,6 +3413,18 @@ void wined3d_resource_update_draw_binding(struct wined3d_resource *resource) DEC
 #define RESOURCE_ALIGNMENT 16
 #define WINED3D_CONSTANT_BUFFER_ALIGNMENT 16
 
+#define WINED3D_LOCATION_DISCARDED      0x00000001
+#define WINED3D_LOCATION_SYSMEM         0x00000002
+#define WINED3D_LOCATION_USER_MEMORY    0x00000004
+#define WINED3D_LOCATION_BUFFER         0x00000008
+#define WINED3D_LOCATION_TEXTURE_RGB    0x00000010
+#define WINED3D_LOCATION_TEXTURE_SRGB   0x00000020
+#define WINED3D_LOCATION_DRAWABLE       0x00000040
+#define WINED3D_LOCATION_RB_MULTISAMPLE 0x00000080
+#define WINED3D_LOCATION_RB_RESOLVED    0x00000100
+
+const char *wined3d_debug_location(DWORD location) DECLSPEC_HIDDEN;
+
 struct wined3d_blt_info
 {
     GLenum bind_target;
@@ -3578,10 +3590,10 @@ void texture2d_load_fb_texture(struct wined3d_texture_gl *texture_gl, unsigned i
         BOOL srgb, struct wined3d_context *context) DECLSPEC_HIDDEN;
 BOOL texture2d_load_renderbuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
-BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-        struct wined3d_context *context, DWORD dst_location) DECLSPEC_HIDDEN;
 BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, BOOL srgb) DECLSPEC_HIDDEN;
+void texture2d_read_from_framebuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
+        struct wined3d_context *context, DWORD src_location, DWORD dst_location) DECLSPEC_HIDDEN;
 
 HRESULT wined3d_texture_check_box_dimensions(const struct wined3d_texture *texture,
         unsigned int level, const struct wined3d_box *box) DECLSPEC_HIDDEN;
@@ -3667,6 +3679,16 @@ static inline GLenum wined3d_texture_gl_get_sub_resource_target(const struct win
             ? cube_targets[sub_resource_idx / texture_gl->t.level_count] : texture_gl->target;
 }
 
+static inline BOOL wined3d_texture_gl_is_multisample_location(const struct wined3d_texture_gl *texture_gl,
+        DWORD location)
+{
+    if (location == WINED3D_LOCATION_RB_MULTISAMPLE)
+        return TRUE;
+    if (location != WINED3D_LOCATION_TEXTURE_RGB && location != WINED3D_LOCATION_TEXTURE_SRGB)
+        return FALSE;
+    return texture_gl->target == GL_TEXTURE_2D_MULTISAMPLE || texture_gl->target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+}
+
 void wined3d_texture_gl_apply_sampler_desc(struct wined3d_texture_gl *texture_gl,
         const struct wined3d_sampler_desc *sampler_desc, const struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
 void wined3d_texture_gl_bind(struct wined3d_texture_gl *texture_gl,
@@ -3678,18 +3700,6 @@ void wined3d_texture_gl_prepare_texture(struct wined3d_texture_gl *texture_gl,
 void wined3d_texture_gl_set_compatible_renderbuffer(struct wined3d_texture_gl *texture_gl,
         struct wined3d_context_gl *context_gl, unsigned int level,
         const struct wined3d_rendertarget_info *rt) DECLSPEC_HIDDEN;
-
-#define WINED3D_LOCATION_DISCARDED      0x00000001
-#define WINED3D_LOCATION_SYSMEM         0x00000002
-#define WINED3D_LOCATION_USER_MEMORY    0x00000004
-#define WINED3D_LOCATION_BUFFER         0x00000008
-#define WINED3D_LOCATION_TEXTURE_RGB    0x00000010
-#define WINED3D_LOCATION_TEXTURE_SRGB   0x00000020
-#define WINED3D_LOCATION_DRAWABLE       0x00000040
-#define WINED3D_LOCATION_RB_MULTISAMPLE 0x00000080
-#define WINED3D_LOCATION_RB_RESOLVED    0x00000100
-
-const char *wined3d_debug_location(DWORD location) DECLSPEC_HIDDEN;
 
 struct wined3d_renderbuffer_entry
 {
