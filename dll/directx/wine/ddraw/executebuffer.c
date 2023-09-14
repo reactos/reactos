@@ -131,8 +131,7 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
                     desc.byte_width = new_size * sizeof(*indices);
                     desc.usage = WINED3DUSAGE_DYNAMIC | WINED3DUSAGE_WRITEONLY | WINED3DUSAGE_STATICDECL;
                     desc.bind_flags = WINED3D_BIND_INDEX_BUFFER;
-                    desc.access = WINED3D_RESOURCE_ACCESS_GPU
-                            | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+                    desc.access = WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_MAP_W;
                     desc.misc_flags = 0;
                     desc.structure_byte_stride = 0;
 
@@ -642,7 +641,7 @@ static HRESULT WINAPI d3d_execute_buffer_SetExecuteData(IDirect3DExecuteBuffer *
 
         desc.byte_width = new_size * sizeof(D3DTLVERTEX);
         desc.usage = WINED3DUSAGE_STATICDECL;
-        desc.access = WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+        desc.access = WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_MAP_W;
 
         if (FAILED(hr = wined3d_buffer_create(buffer->d3ddev->wined3d_device, &desc,
                 NULL, NULL, &ddraw_null_wined3d_parent_ops, &dst_buffer)))

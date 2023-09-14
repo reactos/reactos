@@ -3471,7 +3471,7 @@ static HRESULT d3d_device_prepare_vertex_buffer(struct d3d_device *device, UINT 
         desc.byte_width = size;
         desc.usage = WINED3DUSAGE_DYNAMIC | WINED3DUSAGE_WRITEONLY;
         desc.bind_flags = WINED3D_BIND_VERTEX_BUFFER;
-        desc.access = WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+        desc.access = WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_MAP_W;
         desc.misc_flags = 0;
         desc.structure_byte_stride = 0;
 
@@ -3663,7 +3663,7 @@ static HRESULT d3d_device_prepare_index_buffer(struct d3d_device *device, UINT m
         desc.byte_width = size;
         desc.usage = WINED3DUSAGE_DYNAMIC | WINED3DUSAGE_WRITEONLY | WINED3DUSAGE_STATICDECL;
         desc.bind_flags = WINED3D_BIND_INDEX_BUFFER;
-        desc.access = WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+        desc.access = WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_MAP_W;
         desc.misc_flags = 0;
         desc.structure_byte_stride = 0;
 
