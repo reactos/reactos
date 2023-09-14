@@ -1458,24 +1458,32 @@ static HRESULT ddraw_surface_blt(struct ddraw_surface *dst_surface, const RECT *
 
     if (flags & DDBLT_COLORFILL)
     {
+        wined3d_flags = WINED3DCLEAR_TARGET;
+        if (!(flags & DDBLT_ASYNC))
+            wined3d_flags |= WINED3DCLEAR_SYNCHRONOUS;
+
         if (!wined3d_colour_from_ddraw_colour(&dst_surface->surface_desc.u4.ddpfPixelFormat,
                 dst_surface->palette, fill_colour, &colour))
             return DDERR_INVALIDPARAMS;
 
         return wined3d_device_clear_rendertarget_view(wined3d_device,
                 ddraw_surface_get_rendertarget_view(dst_surface),
-                dst_rect, WINED3DCLEAR_TARGET, &colour, 0.0f, 0);
+                dst_rect, wined3d_flags, &colour, 0.0f, 0);
     }
 
     if (flags & DDBLT_DEPTHFILL)
     {
+        wined3d_flags = WINED3DCLEAR_ZBUFFER;
+        if (!(flags & DDBLT_ASYNC))
+            wined3d_flags |= WINED3DCLEAR_SYNCHRONOUS;
+
         if (!wined3d_colour_from_ddraw_colour(&dst_surface->surface_desc.u4.ddpfPixelFormat,
                 dst_surface->palette, fill_colour, &colour))
             return DDERR_INVALIDPARAMS;
 
         return wined3d_device_clear_rendertarget_view(wined3d_device,
                 ddraw_surface_get_rendertarget_view(dst_surface),
-                dst_rect, WINED3DCLEAR_ZBUFFER, NULL, colour.r, 0);
+                dst_rect, wined3d_flags, NULL, colour.r, 0);
     }
 
     wined3d_flags = flags & ~DDBLT_ASYNC;
