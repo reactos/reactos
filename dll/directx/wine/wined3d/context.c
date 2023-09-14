@@ -4238,7 +4238,7 @@ struct wined3d_context *wined3d_context_gl_acquire(const struct wined3d_device *
     {
         context_gl = current_context;
     }
-    else if (texture && !wined3d_resource_is_offscreen(&texture->resource))
+    else if (!wined3d_resource_is_offscreen(&texture->resource))
     {
         TRACE("Rendering onscreen.\n");
 
