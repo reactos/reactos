@@ -523,7 +523,9 @@ void state_unbind_resources(struct wined3d_state *state)
 
 void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state)
 {
+    struct wined3d_texture *texture;
     struct wined3d_shader *shader;
+    unsigned int i;
 
     if ((shader = state->vs))
     {
@@ -535,6 +537,15 @@ void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state)
     {
         state->ps = NULL;
         wined3d_shader_decref(shader);
+    }
+
+    for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i)
+    {
+        if ((texture = state->textures[i]))
+        {
+            state->textures[i] = NULL;
+            wined3d_texture_decref(texture);
+        }
     }
 }
 
@@ -941,13 +952,13 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
         if (!(map & 1)) continue;
 
         TRACE("Updating texture %u to %p (was %p).\n",
-                i, src_state->textures[i], stateblock->state.textures[i]);
+                i, state->textures[i], stateblock->stateblock_state.textures[i]);
 
-        if (src_state->textures[i])
-            wined3d_texture_incref(src_state->textures[i]);
-        if (stateblock->state.textures[i])
-            wined3d_texture_decref(stateblock->state.textures[i]);
-        stateblock->state.textures[i] = src_state->textures[i];
+        if (state->textures[i])
+            wined3d_texture_incref(state->textures[i]);
+        if (stateblock->stateblock_state.textures[i])
+            wined3d_texture_decref(stateblock->stateblock_state.textures[i]);
+        stateblock->stateblock_state.textures[i] = state->textures[i];
     }
 
     for (i = 0; i < stateblock->num_contained_sampler_states; ++i)
@@ -1149,7 +1160,12 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
         if (!(map & 1)) continue;
 
         stage = i < MAX_FRAGMENT_SAMPLERS ? i : WINED3DVERTEXTEXTURESAMPLER0 + i - MAX_FRAGMENT_SAMPLERS;
-        wined3d_device_set_texture(device, stage, stateblock->state.textures[i]);
+        if (stateblock->stateblock_state.textures[i])
+            wined3d_texture_incref(stateblock->stateblock_state.textures[i]);
+        if (state->textures[i])
+            wined3d_texture_decref(state->textures[i]);
+        state->textures[i] = stateblock->stateblock_state.textures[i];
+        wined3d_device_set_texture(device, stage, stateblock->stateblock_state.textures[i]);
     }
 
     map = stateblock->changed.clipplane;

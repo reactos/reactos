@@ -3502,10 +3502,19 @@ HRESULT CDECL wined3d_device_set_texture(struct wined3d_device *device,
         return WINED3D_OK;
     }
 
-    if (device->recording)
-        device->recording->changed.textures |= 1u << stage;
+    if (texture)
+        wined3d_texture_incref(texture);
+    if (device->update_stateblock_state->textures[stage])
+        wined3d_texture_decref(device->update_stateblock_state->textures[stage]);
+    device->update_stateblock_state->textures[stage] = texture;
 
-    prev = device->update_state->textures[stage];
+    if (device->recording)
+    {
+        device->recording->changed.textures |= 1u << stage;
+        return WINED3D_OK;
+    }
+
+    prev = device->state.textures[stage];
     TRACE("Previous texture %p.\n", prev);
 
     if (texture == prev)
@@ -3515,12 +3524,11 @@ HRESULT CDECL wined3d_device_set_texture(struct wined3d_device *device,
     }
 
     TRACE("Setting new texture to %p.\n", texture);
-    device->update_state->textures[stage] = texture;
+    device->state.textures[stage] = texture;
 
     if (texture)
         wined3d_texture_incref(texture);
-    if (!device->recording)
-        wined3d_cs_emit_set_texture(device->cs, stage, texture);
+    wined3d_cs_emit_set_texture(device->cs, stage, texture);
     if (prev)
         wined3d_texture_decref(prev);
 
@@ -5197,11 +5205,11 @@ void device_resource_released(struct wined3d_device *device, struct wined3d_reso
                     device->state.textures[i] = NULL;
                 }
 
-                if (device->recording && &device->update_state->textures[i]->resource == resource)
+                if (device->recording && &device->update_stateblock_state->textures[i]->resource == resource)
                 {
                     ERR("Texture resource %p is still in use by recording stateblock %p, stage %u.\n",
                             resource, device->recording, i);
-                    device->update_state->textures[i] = NULL;
+                    device->update_stateblock_state->textures[i] = NULL;
                 }
             }
             break;
