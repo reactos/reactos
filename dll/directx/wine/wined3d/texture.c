@@ -3659,17 +3659,11 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
      * in this case. */
     if (data)
     {
-        unsigned int level, width, height, depth;
         struct wined3d_box box;
 
         for (i = 0; i < sub_count; ++i)
         {
-            level = i % object->t.level_count;
-            width = wined3d_texture_get_level_width(&object->t, level);
-            height = wined3d_texture_get_level_height(&object->t, level);
-            depth = wined3d_texture_get_level_depth(&object->t, level);
-            wined3d_box_set(&box, 0, 0, width, height, 0, depth);
-
+            wined3d_texture_get_level_box(&object->t, i % object->t.level_count, &box);
             wined3d_cs_emit_update_sub_resource(device->cs, &object->t.resource,
                     i, &box, data[i].data, data[i].row_pitch, data[i].slice_pitch);
         }
