@@ -2520,7 +2520,7 @@ void wined3d_context_gl_active_texture(struct wined3d_context_gl *context_gl,
 {
     GL_EXTCALL(glActiveTexture(GL_TEXTURE0 + unit));
     checkGLcall("glActiveTexture");
-    context_gl->c.active_texture = unit;
+    context_gl->active_texture = unit;
 }
 
 void context_bind_bo(struct wined3d_context *context, GLenum binding, GLuint name)
@@ -2545,7 +2545,7 @@ void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl, GLen
     else
         target = GL_NONE;
 
-    unit = context_gl->c.active_texture;
+    unit = context_gl->active_texture;
     old_texture_type = context_gl->texture_type[unit];
     if (old_texture_type != target)
     {
