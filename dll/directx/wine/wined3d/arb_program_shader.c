@@ -987,9 +987,10 @@ static void shader_arb_request_a0(const struct wined3d_shader_instruction *ins, 
     struct shader_arb_ctx_priv *priv = ins->ctx->backend_data;
     struct wined3d_string_buffer *buffer = ins->ctx->buffer;
 
-    if (!strcmp(priv->addr_reg, src)) return;
+    if (!strcmp(priv->addr_reg, src))
+        return;
 
-    strcpy(priv->addr_reg, src);
+    snprintf(priv->addr_reg, sizeof(priv->addr_reg), "%s", src);
     shader_addline(buffer, "ARL A0.x, %s;\n", src);
 }
 
