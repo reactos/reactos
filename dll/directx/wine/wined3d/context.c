@@ -1120,39 +1120,41 @@ void wined3d_context_gl_texture_update(struct wined3d_context_gl *context_gl,
     }
 }
 
-static BOOL context_restore_pixel_format(struct wined3d_context *ctx)
+static BOOL wined3d_context_gl_restore_pixel_format(struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = ctx->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     BOOL ret = FALSE;
 
-    if (ctx->restore_pf && IsWindow(ctx->restore_pf_win))
+    if (context_gl->c.restore_pf && IsWindow(context_gl->c.restore_pf_win))
     {
-        if (ctx->gl_info->supported[WGL_WINE_PIXEL_FORMAT_PASSTHROUGH])
+        if (context_gl->c.gl_info->supported[WGL_WINE_PIXEL_FORMAT_PASSTHROUGH])
         {
-            HDC dc = GetDCEx(ctx->restore_pf_win, 0, DCX_USESTYLE | DCX_CACHE);
+            HDC dc = GetDCEx(context_gl->c.restore_pf_win, 0, DCX_USESTYLE | DCX_CACHE);
             if (dc)
             {
-                if (!(ret = GL_EXTCALL(wglSetPixelFormatWINE(dc, ctx->restore_pf))))
+                if (!(ret = GL_EXTCALL(wglSetPixelFormatWINE(dc, context_gl->c.restore_pf))))
                 {
-                    ERR("wglSetPixelFormatWINE failed to restore pixel format %d on window %p.\n",
-                            ctx->restore_pf, ctx->restore_pf_win);
+                    ERR("Failed to restore pixel format %d on window %p.\n",
+                            context_gl->c.restore_pf, context_gl->c.restore_pf_win);
                 }
-                ReleaseDC(ctx->restore_pf_win, dc);
+                ReleaseDC(context_gl->c.restore_pf_win, dc);
             }
         }
         else
         {
-            ERR("can't restore pixel format %d on window %p\n", ctx->restore_pf, ctx->restore_pf_win);
+            ERR("Unable to restore pixel format %d on window %p.\n",
+                    context_gl->c.restore_pf, context_gl->c.restore_pf_win);
         }
     }
 
-    ctx->restore_pf = 0;
-    ctx->restore_pf_win = NULL;
+    context_gl->c.restore_pf = 0;
+    context_gl->c.restore_pf_win = NULL;
     return ret;
 }
 
 static BOOL context_set_pixel_format(struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     BOOL private = context->hdc_is_private;
     int format = context->pixel_format;
@@ -1201,7 +1203,7 @@ static BOOL context_set_pixel_format(struct wined3d_context *context)
         win = private ? NULL : WindowFromDC(dc);
         if (win != context->restore_pf_win)
         {
-            context_restore_pixel_format(context);
+            wined3d_context_gl_restore_pixel_format(context_gl);
 
             context->restore_pf = private ? 0 : current;
             context->restore_pf_win = win;
@@ -1324,6 +1326,7 @@ static void context_update_window(struct wined3d_context *context)
 
 void wined3d_context_cleanup(struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     HGLRC restore_ctx;
     HDC restore_dc;
@@ -1336,7 +1339,7 @@ void wined3d_context_cleanup(struct wined3d_context *context)
     else if (context->valid)
         context_set_gl_context(context);
 
-    context_restore_pixel_format(context);
+    wined3d_context_gl_restore_pixel_format(context_gl);
     if (restore_ctx)
     {
         context_restore_gl_context(gl_info, restore_dc, restore_ctx);
@@ -1499,7 +1502,7 @@ void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
 
     heap_free(context_gl->texture_type);
 
-    context_restore_pixel_format(&context_gl->c);
+    wined3d_context_gl_restore_pixel_format(context_gl);
     if (restore_ctx)
         context_restore_gl_context(gl_info, restore_dc, restore_ctx);
 
@@ -1582,6 +1585,8 @@ BOOL context_set_current(struct wined3d_context *ctx)
 
 void context_release(struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+
     TRACE("Releasing context %p, level %u.\n", context, context->level);
 
     if (WARN_ON(d3d))
@@ -1594,7 +1599,7 @@ void context_release(struct wined3d_context *context)
 
     if (!--context->level)
     {
-        if (context_restore_pixel_format(context))
+        if (wined3d_context_gl_restore_pixel_format(context_gl))
             context->needs_set = 1;
         if (context->restore_ctx)
         {
