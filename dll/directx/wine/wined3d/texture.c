@@ -2996,7 +2996,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
         return WINED3DERR_INVALIDCALL;
 
     if (FAILED(hr = resource_init(&texture->resource, device, desc->resource_type, format,
-            desc->multisample_type, desc->multisample_quality, desc->usage, 0, desc->access,
+            desc->multisample_type, desc->multisample_quality, desc->usage, desc->bind_flags, desc->access,
             desc->width, desc->height, desc->depth, offset, parent, parent_ops, &texture_resource_ops)))
     {
         static unsigned int once;
@@ -3512,6 +3512,7 @@ HRESULT CDECL wined3d_texture_get_sub_resource_desc(const struct wined3d_texture
     desc->multisample_type = resource->multisample_type;
     desc->multisample_quality = resource->multisample_quality;
     desc->usage = resource->usage;
+    desc->bind_flags = resource->bind_flags;
     desc->access = resource->access;
 
     level_idx = sub_resource_idx % texture->level_count;

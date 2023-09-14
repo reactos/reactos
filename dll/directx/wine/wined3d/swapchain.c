@@ -848,6 +848,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     texture_desc.usage = 0;
     if (device->wined3d->flags & WINED3D_NO3D)
         texture_desc.usage |= WINED3DUSAGE_OWNDC;
+    texture_desc.bind_flags = 0;
     texture_desc.access = WINED3D_RESOURCE_ACCESS_GPU;
     texture_desc.width = swapchain->desc.backbuffer_width;
     texture_desc.height = swapchain->desc.backbuffer_height;
@@ -931,6 +932,11 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
         texture_desc.usage = swapchain->desc.backbuffer_usage;
         if (device->wined3d->flags & WINED3D_NO3D)
             texture_desc.usage |= WINED3DUSAGE_OWNDC;
+        texture_desc.bind_flags = 0;
+        if (texture_desc.usage & WINED3DUSAGE_RENDERTARGET)
+            texture_desc.bind_flags |= WINED3D_BIND_RENDER_TARGET;
+        if (texture_desc.usage & WINED3DUSAGE_TEXTURE)
+            texture_desc.bind_flags |= WINED3D_BIND_SHADER_RESOURCE;
         for (i = 0; i < swapchain->desc.backbuffer_count; ++i)
         {
             TRACE("Creating back buffer %u.\n", i);
@@ -956,6 +962,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
 
             texture_desc.format = swapchain->desc.auto_depth_stencil_format;
             texture_desc.usage = WINED3DUSAGE_DEPTHSTENCIL;
+            texture_desc.bind_flags = WINED3D_BIND_DEPTH_STENCIL;
 
             if (FAILED(hr = device->device_parent->ops->create_swapchain_texture(device->device_parent,
                     device->device_parent, &texture_desc, texture_flags, &ds)))
