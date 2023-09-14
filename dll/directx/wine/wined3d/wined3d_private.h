@@ -2100,6 +2100,9 @@ void wined3d_context_gl_destroy(struct wined3d_context_gl *context_gl) DECLSPEC_
 void wined3d_context_gl_draw_shaded_quad(struct wined3d_context_gl *context_gl, struct wined3d_texture_gl *texture_gl,
         unsigned int sub_resource_idx, const RECT *src_rect, const RECT *dst_rect,
         enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;
+void wined3d_context_gl_draw_textured_quad(struct wined3d_context_gl *context_gl,
+        struct wined3d_texture_gl *texture_gl, unsigned int sub_resource_idx,
+        const RECT *src_rect, const RECT *dst_rect, enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;
 void wined3d_context_gl_enable_clip_distances(struct wined3d_context_gl *context_gl, uint32_t mask) DECLSPEC_HIDDEN;
 void wined3d_context_gl_end_transform_feedback(struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
 void wined3d_context_gl_free_fence(struct wined3d_fence *fence) DECLSPEC_HIDDEN;
@@ -2264,9 +2267,6 @@ BOOL fbo_blitter_supported(enum wined3d_blit_op blit_op, const struct wined3d_gl
 BOOL wined3d_clip_blit(const RECT *clip_rect, RECT *clipped, RECT *other) DECLSPEC_HIDDEN;
 
 HGLRC context_create_wgl_attribs(const struct wined3d_gl_info *gl_info, HDC hdc, HGLRC share_ctx) DECLSPEC_HIDDEN;
-void context_draw_textured_quad(struct wined3d_context *context, struct wined3d_texture_gl *texture_gl,
-        unsigned int sub_resource_idx, const RECT *src_rect, const RECT *dst_rect,
-        enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;
 struct wined3d_context *context_get_current(void) DECLSPEC_HIDDEN;
 DWORD context_get_tls_idx(void) DECLSPEC_HIDDEN;
 void context_gl_resource_released(struct wined3d_device *device,

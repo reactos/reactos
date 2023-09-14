@@ -5669,12 +5669,11 @@ void wined3d_context_gl_draw_shaded_quad(struct wined3d_context_gl *context_gl, 
 }
 
 /* Context activation is done by the caller. */
-void context_draw_textured_quad(struct wined3d_context *context, struct wined3d_texture_gl *texture_gl,
-        unsigned int sub_resource_idx, const RECT *src_rect, const RECT *dst_rect,
-        enum wined3d_texture_filter_type filter)
+void wined3d_context_gl_draw_textured_quad(struct wined3d_context_gl *context_gl,
+        struct wined3d_texture_gl *texture_gl, unsigned int sub_resource_idx,
+        const RECT *src_rect, const RECT *dst_rect, enum wined3d_texture_filter_type filter)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_blt_info info;
     unsigned int level;
 

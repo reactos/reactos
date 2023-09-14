@@ -2241,7 +2241,7 @@ static DWORD ffp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
         checkGLcall("glAlphaFunc");
     }
 
-    context_draw_textured_quad(context, src_texture_gl,
+    wined3d_context_gl_draw_textured_quad(context_gl, src_texture_gl,
             src_sub_resource_idx, src_rect, dst_rect, filter);
 
     if (op == WINED3D_BLIT_OP_COLOR_BLIT_ALPHATEST || color_key)
