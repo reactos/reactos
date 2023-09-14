@@ -7548,11 +7548,10 @@ static GLuint arbfp_gen_plain_shader(const struct wined3d_gl_info *gl_info, cons
 }
 
 /* Context activation is done by the caller. */
-static HRESULT arbfp_blit_set(struct wined3d_arbfp_blitter *blitter, struct wined3d_context *context,
+static HRESULT arbfp_blit_set(struct wined3d_arbfp_blitter *blitter, struct wined3d_context_gl *context_gl,
         const struct wined3d_texture_gl *texture_gl, unsigned int sub_resource_idx,
         const struct wined3d_color_key *color_key)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     enum complex_fixup fixup;
     struct wine_rb_entry *entry;
@@ -7913,7 +7912,7 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
         color_key = &alpha_test_key;
     }
 
-    arbfp_blit_set(arbfp_blitter, context, src_texture_gl, src_sub_resource_idx, color_key);
+    arbfp_blit_set(arbfp_blitter, context_gl, src_texture_gl, src_sub_resource_idx, color_key);
 
     /* Draw a textured quad */
     context_draw_textured_quad(context, src_texture_gl,
