@@ -12122,7 +12122,7 @@ static void glsl_blitter_destroy(struct wined3d_blitter *blitter, struct wined3d
 }
 
 static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter,
-        const struct wined3d_gl_info *gl_info, struct glsl_blitter_args *args)
+        const struct wined3d_gl_info *gl_info, const struct glsl_blitter_args *args)
 {
     static const struct
     {
