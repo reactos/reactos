@@ -7814,12 +7814,24 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
     struct wined3d_blitter *next;
     RECT s, d;
 
+    TRACE("blitter %p, op %#x, context %p, src_texture %p, src_sub_resource_idx %u, src_location %s, src_rect %s, "
+            "dst_texture %p, dst_sub_resource_idx %u, dst_location %s, dst_rect %s, colour_key %p, filter %s.\n",
+            blitter, op, context, src_texture, src_sub_resource_idx, wined3d_debug_location(src_location),
+            wine_dbgstr_rect(src_rect), dst_texture, dst_sub_resource_idx, wined3d_debug_location(dst_location),
+            wine_dbgstr_rect(dst_rect), color_key, debug_d3dtexturefiltertype(filter));
+
     if (!arbfp_blit_supported(op, context, &src_texture->resource, src_location,
             &dst_texture->resource, dst_location))
     {
-        if ((next = blitter->next))
-            return next->ops->blitter_blit(next, op, context, src_texture, src_sub_resource_idx, src_location,
-                    src_rect, dst_texture, dst_sub_resource_idx, dst_location, dst_rect, color_key, filter);
+        if (!(next = blitter->next))
+        {
+            ERR("No blitter to handle blit op %#x.\n", op);
+            return dst_location;
+        }
+
+        TRACE("Forwarding to blitter %p.\n", next);
+        return next->ops->blitter_blit(next, op, context, src_texture, src_sub_resource_idx, src_location,
+                src_rect, dst_texture, dst_sub_resource_idx, dst_location, dst_rect, color_key, filter);
     }
 
     arbfp_blitter = CONTAINING_RECORD(blitter, struct wined3d_arbfp_blitter, blitter);
