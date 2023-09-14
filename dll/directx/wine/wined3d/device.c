@@ -4796,6 +4796,11 @@ static void update_swapchain_flags(struct wined3d_texture *texture)
 {
     unsigned int flags = texture->swapchain->desc.flags;
 
+    if (flags & WINED3D_SWAPCHAIN_LOCKABLE_BACKBUFFER)
+        texture->resource.access |= WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+    else
+        texture->resource.access &= ~(WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W);
+
     if (flags & WINED3D_SWAPCHAIN_GDI_COMPATIBLE)
         texture->flags |= WINED3D_TEXTURE_GET_DC;
     else

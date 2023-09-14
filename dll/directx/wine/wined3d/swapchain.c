@@ -850,6 +850,8 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
         texture_desc.usage |= WINED3DUSAGE_OWNDC;
     texture_desc.bind_flags = 0;
     texture_desc.access = WINED3D_RESOURCE_ACCESS_GPU;
+    if (swapchain->desc.flags & WINED3D_SWAPCHAIN_LOCKABLE_BACKBUFFER)
+        texture_desc.access |= WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
     texture_desc.width = swapchain->desc.backbuffer_width;
     texture_desc.height = swapchain->desc.backbuffer_height;
     texture_desc.depth = 1;
@@ -959,6 +961,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
             texture_desc.format = swapchain->desc.auto_depth_stencil_format;
             texture_desc.usage = 0;
             texture_desc.bind_flags = WINED3D_BIND_DEPTH_STENCIL;
+            texture_desc.access = WINED3D_RESOURCE_ACCESS_GPU;
 
             if (FAILED(hr = device->device_parent->ops->create_swapchain_texture(device->device_parent,
                     device->device_parent, &texture_desc, 0, &ds)))
