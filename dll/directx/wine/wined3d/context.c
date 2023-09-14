@@ -127,10 +127,10 @@ static void context_attach_depth_stencil_rb(const struct wined3d_gl_info *gl_inf
     }
 }
 
-static void context_attach_gl_texture_fbo(struct wined3d_context *context,
+static void wined3d_context_gl_attach_gl_texture_fbo(struct wined3d_context_gl *context_gl,
         GLenum fbo_target, GLenum attachment, const struct wined3d_fbo_resource *resource)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     if (!resource)
     {
@@ -177,6 +177,7 @@ static void context_attach_depth_stencil_fbo(struct wined3d_context *context,
         GLenum fbo_target, const struct wined3d_fbo_resource *resource, BOOL rb_namespace,
         DWORD flags)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
     if (resource->object)
@@ -191,24 +192,24 @@ static void context_attach_depth_stencil_fbo(struct wined3d_context *context,
         else
         {
             if (flags & WINED3D_FBO_ENTRY_FLAG_DEPTH)
-                context_attach_gl_texture_fbo(context, fbo_target, GL_DEPTH_ATTACHMENT, resource);
+                wined3d_context_gl_attach_gl_texture_fbo(context_gl, fbo_target, GL_DEPTH_ATTACHMENT, resource);
 
             if (flags & WINED3D_FBO_ENTRY_FLAG_STENCIL)
-                context_attach_gl_texture_fbo(context, fbo_target, GL_STENCIL_ATTACHMENT, resource);
+                wined3d_context_gl_attach_gl_texture_fbo(context_gl, fbo_target, GL_STENCIL_ATTACHMENT, resource);
         }
 
         if (!(flags & WINED3D_FBO_ENTRY_FLAG_DEPTH))
-            context_attach_gl_texture_fbo(context, fbo_target, GL_DEPTH_ATTACHMENT, NULL);
+            wined3d_context_gl_attach_gl_texture_fbo(context_gl, fbo_target, GL_DEPTH_ATTACHMENT, NULL);
 
         if (!(flags & WINED3D_FBO_ENTRY_FLAG_STENCIL))
-            context_attach_gl_texture_fbo(context, fbo_target, GL_STENCIL_ATTACHMENT, NULL);
+            wined3d_context_gl_attach_gl_texture_fbo(context_gl, fbo_target, GL_STENCIL_ATTACHMENT, NULL);
     }
     else
     {
         TRACE("Attach depth stencil 0.\n");
 
-        context_attach_gl_texture_fbo(context, fbo_target, GL_DEPTH_ATTACHMENT, NULL);
-        context_attach_gl_texture_fbo(context, fbo_target, GL_STENCIL_ATTACHMENT, NULL);
+        wined3d_context_gl_attach_gl_texture_fbo(context_gl, fbo_target, GL_DEPTH_ATTACHMENT, NULL);
+        wined3d_context_gl_attach_gl_texture_fbo(context_gl, fbo_target, GL_STENCIL_ATTACHMENT, NULL);
     }
 }
 
@@ -216,7 +217,8 @@ static void context_attach_depth_stencil_fbo(struct wined3d_context *context,
 static void context_attach_surface_fbo(struct wined3d_context *context,
         GLenum fbo_target, DWORD idx, const struct wined3d_fbo_resource *resource, BOOL rb_namespace)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     TRACE("Attach GL object %u to %u.\n", resource->object, idx);
 
@@ -230,12 +232,12 @@ static void context_attach_surface_fbo(struct wined3d_context *context,
         }
         else
         {
-            context_attach_gl_texture_fbo(context, fbo_target, GL_COLOR_ATTACHMENT0 + idx, resource);
+            wined3d_context_gl_attach_gl_texture_fbo(context_gl, fbo_target, GL_COLOR_ATTACHMENT0 + idx, resource);
         }
     }
     else
     {
-        context_attach_gl_texture_fbo(context, fbo_target, GL_COLOR_ATTACHMENT0 + idx, NULL);
+        wined3d_context_gl_attach_gl_texture_fbo(context_gl, fbo_target, GL_COLOR_ATTACHMENT0 + idx, NULL);
     }
 }
 
