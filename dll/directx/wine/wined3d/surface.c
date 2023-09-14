@@ -311,10 +311,10 @@ static BOOL fbo_blitter_supported(enum wined3d_blit_op blit_op, const struct win
     {
         case WINED3D_BLIT_OP_COLOR_BLIT:
             if (!((src_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_FBO_ATTACHABLE)
-                    || (src_resource->usage & WINED3DUSAGE_RENDERTARGET)))
+                    || (src_resource->bind_flags & WINED3D_BIND_RENDER_TARGET)))
                 return FALSE;
             if (!((dst_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_FBO_ATTACHABLE)
-                    || (dst_resource->usage & WINED3DUSAGE_RENDERTARGET)))
+                    || (dst_resource->bind_flags & WINED3D_BIND_RENDER_TARGET)))
                 return FALSE;
             if ((src_format->id != dst_format->id || dst_location == WINED3D_LOCATION_DRAWABLE)
                     && (!is_identity_fixup(src_format->color_fixup) || !is_identity_fixup(dst_format->color_fixup)))
