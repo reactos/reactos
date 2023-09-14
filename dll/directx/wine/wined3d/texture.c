@@ -2053,7 +2053,7 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
 
         if (srgb)
             internal = format_gl->srgb_internal;
-        else if (texture->resource.usage & WINED3DUSAGE_RENDERTARGET
+        else if (texture->resource.bind_flags & WINED3D_BIND_RENDER_TARGET
                 && wined3d_resource_is_offscreen(&texture->resource))
             internal = format_gl->rt_internal;
         else
