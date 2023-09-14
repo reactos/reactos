@@ -4935,6 +4935,11 @@ static inline enum wined3d_material_color_source validate_material_colour_source
     return WINED3D_MCS_MATERIAL;
 }
 
+BOOL invert_matrix(struct wined3d_matrix *out, const struct wined3d_matrix *m) DECLSPEC_HIDDEN;
+
+void compute_normal_matrix(float *normal_matrix, BOOL legacy_lighting,
+        const struct wined3d_matrix *modelview) DECLSPEC_HIDDEN;
+
 /* The WNDCLASS-Name for the fake window which we use to retrieve the GL capabilities */
 #define WINED3D_OPENGL_WINDOW_CLASS_NAME "WineD3D_OpenGL"
 
