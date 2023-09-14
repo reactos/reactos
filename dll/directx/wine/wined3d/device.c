@@ -1928,10 +1928,7 @@ void CDECL wined3d_device_set_viewports(struct wined3d_device *device, unsigned 
     }
 
     if (viewport_count)
-        memcpy(device->update_state->viewports, viewports, viewport_count * sizeof(*viewports));
-    else
-        memset(device->update_state->viewports, 0, sizeof(device->update_state->viewports));
-    device->update_state->viewport_count = viewport_count;
+        device->update_stateblock_state->viewport = viewports[0];
 
     /* Handle recording of state blocks */
     if (device->recording)
@@ -1940,6 +1937,12 @@ void CDECL wined3d_device_set_viewports(struct wined3d_device *device, unsigned 
         device->recording->changed.viewport = TRUE;
         return;
     }
+
+    if (viewport_count)
+        memcpy(device->state.viewports, viewports, viewport_count * sizeof(*viewports));
+    else
+        memset(device->state.viewports, 0, sizeof(device->state.viewports));
+    device->state.viewport_count = viewport_count;
 
     wined3d_cs_emit_set_viewports(device->cs, viewport_count, viewports);
 }
@@ -4538,6 +4541,7 @@ HRESULT CDECL wined3d_device_set_rendertarget_view(struct wined3d_device *device
         state->viewports[0].max_z = 1.0f;
         state->viewport_count = 1;
         wined3d_cs_emit_set_viewports(device->cs, 1, state->viewports);
+        device->stateblock_state.viewport = state->viewports[0];
 
         SetRect(&state->scissor_rects[0], 0, 0, view->width, view->height);
         state->scissor_rect_count = 1;
