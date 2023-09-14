@@ -526,7 +526,7 @@ static BOOL wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DWORD
 {
     struct wined3d_occlusion_query *oq = wined3d_occlusion_query_from_query(query);
     struct wined3d_device *device = query->device;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
     BOOL poll = FALSE;
 
@@ -540,6 +540,7 @@ static BOOL wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DWORD
         {
             if ((context = context_reacquire(device, oq->context)))
             {
+                gl_info = context->gl_info;
                 GL_EXTCALL(glEndQuery(GL_SAMPLES_PASSED));
                 checkGLcall("glEndQuery()");
             }
@@ -558,6 +559,7 @@ static BOOL wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DWORD
             context = context_acquire(device, NULL, 0);
             context_alloc_occlusion_query(context, oq);
         }
+        gl_info = context->gl_info;
 
         GL_EXTCALL(glBeginQuery(GL_SAMPLES_PASSED, oq->id));
         checkGLcall("glBeginQuery()");
@@ -574,6 +576,7 @@ static BOOL wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DWORD
         {
             if ((context = context_reacquire(device, oq->context)))
             {
+                gl_info = context->gl_info;
                 GL_EXTCALL(glEndQuery(GL_SAMPLES_PASSED));
                 checkGLcall("glEndQuery()");
 
@@ -713,7 +716,7 @@ static BOOL wined3d_so_statistics_query_ops_issue(struct wined3d_query *query, D
 {
     struct wined3d_so_statistics_query *pq = wined3d_so_statistics_query_from_query(query);
     struct wined3d_device *device = query->device;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
     BOOL poll = FALSE;
 
@@ -725,6 +728,7 @@ static BOOL wined3d_so_statistics_query_ops_issue(struct wined3d_query *query, D
         {
             if ((context = context_reacquire(device, pq->context)))
             {
+                gl_info = context->gl_info;
                 GL_EXTCALL(glEndQueryIndexed(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, pq->stream_idx));
                 GL_EXTCALL(glEndQueryIndexed(GL_PRIMITIVES_GENERATED, pq->stream_idx));
             }
@@ -743,6 +747,7 @@ static BOOL wined3d_so_statistics_query_ops_issue(struct wined3d_query *query, D
             context = context_acquire(device, NULL, 0);
             context_alloc_so_statistics_query(context, pq);
         }
+        gl_info = context->gl_info;
 
         GL_EXTCALL(glBeginQueryIndexed(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN,
                 pq->stream_idx, pq->u.query.written));
@@ -759,6 +764,7 @@ static BOOL wined3d_so_statistics_query_ops_issue(struct wined3d_query *query, D
         {
             if ((context = context_reacquire(device, pq->context)))
             {
+                gl_info = context->gl_info;
                 GL_EXTCALL(glEndQueryIndexed(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, pq->stream_idx));
                 GL_EXTCALL(glEndQueryIndexed(GL_PRIMITIVES_GENERATED, pq->stream_idx));
                 checkGLcall("end query");
@@ -846,7 +852,7 @@ static BOOL wined3d_pipeline_query_ops_issue(struct wined3d_query *query, DWORD 
 {
     struct wined3d_pipeline_statistics_query *pq = wined3d_pipeline_statistics_query_from_query(query);
     struct wined3d_device *device = query->device;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
     BOOL poll = FALSE;
 
@@ -875,6 +881,7 @@ static BOOL wined3d_pipeline_query_ops_issue(struct wined3d_query *query, DWORD 
             context = context_acquire(device, NULL, 0);
             context_alloc_pipeline_statistics_query(context, pq);
         }
+        gl_info = context->gl_info;
 
         GL_EXTCALL(glBeginQuery(GL_VERTICES_SUBMITTED_ARB, pq->u.query.vertices));
         GL_EXTCALL(glBeginQuery(GL_PRIMITIVES_SUBMITTED_ARB, pq->u.query.primitives));
