@@ -1581,7 +1581,7 @@ void context_release(struct wined3d_context *context)
         if (context->destroy_delayed)
         {
             TRACE("Destroying context %p.\n", context);
-            context_destroy(context->device, context);
+            wined3d_context_destroy(context);
         }
     }
 }
@@ -2280,8 +2280,9 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
     return TRUE;
 }
 
-void context_destroy(struct wined3d_device *device, struct wined3d_context *context)
+void wined3d_context_destroy(struct wined3d_context *context)
 {
+    struct wined3d_device *device = context->device;
     BOOL destroy;
 
     TRACE("Destroying ctx %p\n", context);
@@ -2289,7 +2290,8 @@ void context_destroy(struct wined3d_device *device, struct wined3d_context *cont
     wined3d_from_cs(device->cs);
 
     /* We delay destroying a context when it is active. The context_release()
-     * function invokes context_destroy() again while leaving the last level. */
+     * function invokes wined3d_context_destroy() again while leaving the last
+     * level. */
     if (context->level)
     {
         TRACE("Delaying destruction of context %p.\n", context);

@@ -1018,7 +1018,7 @@ static void wined3d_device_delete_opengl_contexts_cs(void *object)
         if (device->contexts[0]->swapchain)
             swapchain_destroy_contexts(device->contexts[0]->swapchain);
         else
-            context_destroy(device, device->contexts[0]);
+            wined3d_context_destroy(device->contexts[0]);
     }
 }
 

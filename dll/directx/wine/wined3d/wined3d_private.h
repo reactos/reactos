@@ -2197,7 +2197,7 @@ void context_copy_bo_address(struct wined3d_context *context,
 struct wined3d_context *context_create(struct wined3d_swapchain *swapchain, struct wined3d_texture *target,
         const struct wined3d_format *ds_format) DECLSPEC_HIDDEN;
 HGLRC context_create_wgl_attribs(const struct wined3d_gl_info *gl_info, HDC hdc, HGLRC share_ctx) DECLSPEC_HIDDEN;
-void context_destroy(struct wined3d_device *device, struct wined3d_context *context) DECLSPEC_HIDDEN;
+void wined3d_context_destroy(struct wined3d_context *context) DECLSPEC_HIDDEN;
 void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_texture_gl *texture_gl,
         unsigned int sub_resource_idx, const RECT *src_rect, const RECT *dst_rect,
         enum wined3d_texture_filter_type filter) DECLSPEC_HIDDEN;

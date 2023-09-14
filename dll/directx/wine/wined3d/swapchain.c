@@ -1104,7 +1104,7 @@ static struct wined3d_context *swapchain_create_context(struct wined3d_swapchain
     if (!(ctx_array = heap_calloc(swapchain->num_contexts + 1, sizeof(*ctx_array))))
     {
         ERR("Out of memory when trying to allocate a new context array\n");
-        context_destroy(swapchain->device, ctx);
+        wined3d_context_destroy(ctx);
         return NULL;
     }
     memcpy(ctx_array, swapchain->context, sizeof(*ctx_array) * swapchain->num_contexts);
@@ -1123,7 +1123,7 @@ void swapchain_destroy_contexts(struct wined3d_swapchain *swapchain)
 
     for (i = 0; i < swapchain->num_contexts; ++i)
     {
-        context_destroy(swapchain->device, swapchain->context[i]);
+        wined3d_context_destroy(swapchain->context[i]);
     }
     heap_free(swapchain->context);
     swapchain->num_contexts = 0;
