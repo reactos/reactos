@@ -1448,6 +1448,9 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
     state->blend_factor.g = 1.0f;
     state->blend_factor.b = 1.0f;
     state->blend_factor.a = 1.0f;
+
+    for (i = 0; i < MAX_STREAMS; ++i)
+        state->streams[i].frequency = 1;
 }
 
 void state_init(struct wined3d_state *state, struct wined3d_fb_state *fb,
@@ -1496,6 +1499,9 @@ static void stateblock_state_init_default(struct wined3d_stateblock_state *state
     state->blend_factor.g = 1.0f;
     state->blend_factor.b = 1.0f;
     state->blend_factor.a = 1.0f;
+
+    for (i = 0; i < MAX_STREAMS; ++i)
+        state->streams[i].frequency = 1;
 }
 
 void wined3d_stateblock_state_init(struct wined3d_stateblock_state *state,
