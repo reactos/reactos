@@ -6077,7 +6077,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
 
     for (i = 0; i < d3d_info->limits.ffp_blend_stages; ++i)
     {
-        const struct wined3d_texture *texture;
+        struct wined3d_texture *texture;
 
         settings->op[i].padding = 0;
         if (state->texture_states[i][WINED3D_TSS_COLOR_OP] == WINED3D_TOP_DISABLE)
@@ -6106,7 +6106,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
             }
             else
             {
-                switch (texture->target)
+                switch (wined3d_texture_gl(texture)->target)
                 {
                     case GL_TEXTURE_1D:
                         settings->op[i].tex_type = WINED3D_GL_RES_TYPE_TEX_1D;
@@ -6167,7 +6167,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
             GLenum texture_dimensions;
 
             texture = state->textures[0];
-            texture_dimensions = texture->target;
+            texture_dimensions = wined3d_texture_gl(texture)->target;
 
             if (texture_dimensions == GL_TEXTURE_2D || texture_dimensions == GL_TEXTURE_RECTANGLE_ARB)
             {
@@ -6377,7 +6377,7 @@ void texture_activate_dimensions(const struct wined3d_texture *texture, const st
 {
     if (texture)
     {
-        switch (texture->target)
+        switch (wined3d_texture_gl(texture)->target)
         {
             case GL_TEXTURE_1D:
                 gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_2D);

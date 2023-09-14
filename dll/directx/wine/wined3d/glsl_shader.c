@@ -12842,7 +12842,7 @@ static void glsl_blitter_upload_palette(struct wined3d_glsl_blitter *blitter,
 
 /* Context activation is done by the caller. */
 static struct glsl_blitter_program *glsl_blitter_get_program(struct wined3d_glsl_blitter *blitter,
-        struct wined3d_context *context, const struct wined3d_texture *texture)
+        struct wined3d_context *context, const struct wined3d_texture_gl *texture_gl)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct glsl_blitter_program *program;
@@ -12850,8 +12850,8 @@ static struct glsl_blitter_program *glsl_blitter_get_program(struct wined3d_glsl
     struct wine_rb_entry *entry;
 
     memset(&args, 0, sizeof(args));
-    args.texture_type = texture->target;
-    args.fixup = texture->resource.format->color_fixup;
+    args.texture_type = texture_gl->target;
+    args.fixup = texture_gl->t.resource.format->color_fixup;
 
     if ((entry = wine_rb_get(&blitter->programs, &args)))
         return WINE_RB_ENTRY_VALUE(entry, struct glsl_blitter_program, entry);
@@ -12882,11 +12882,11 @@ static struct glsl_blitter_program *glsl_blitter_get_program(struct wined3d_glsl
 }
 
 static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wined3d_context *context,
-        const struct wined3d_texture *src_texture, DWORD src_location,
-        const struct wined3d_texture *dst_texture, DWORD dst_location)
+        const struct wined3d_texture_gl *src_texture, DWORD src_location,
+        const struct wined3d_texture_gl *dst_texture, DWORD dst_location)
 {
-    const struct wined3d_resource *src_resource = &src_texture->resource;
-    const struct wined3d_resource *dst_resource = &dst_texture->resource;
+    const struct wined3d_resource *src_resource = &src_texture->t.resource;
+    const struct wined3d_resource *dst_resource = &dst_texture->t.resource;
     const struct wined3d_format *src_format = src_resource->format;
     const struct wined3d_format *dst_format = dst_resource->format;
     BOOL decompress;
@@ -12945,6 +12945,8 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         unsigned int dst_sub_resource_idx, DWORD dst_location, const RECT *dst_rect,
         const struct wined3d_color_key *colour_key, enum wined3d_texture_filter_type filter)
 {
+    struct wined3d_texture_gl *src_texture_gl = wined3d_texture_gl(src_texture);
+    struct wined3d_texture_gl *dst_texture_gl = wined3d_texture_gl(dst_texture);
     struct wined3d_device *device = dst_texture->resource.device;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture *staging_texture = NULL;
@@ -12961,7 +12963,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
             wine_dbgstr_rect(src_rect), dst_texture, dst_sub_resource_idx, wined3d_debug_location(dst_location),
             wine_dbgstr_rect(dst_rect), colour_key, debug_d3dtexturefiltertype(filter));
 
-    if (!glsl_blitter_supported(op, context, src_texture, src_location, dst_texture, dst_location))
+    if (!glsl_blitter_supported(op, context, src_texture_gl, src_location, dst_texture_gl, dst_location))
     {
         if (!(next = blitter->next))
         {
@@ -13021,7 +13023,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
          * flip in the blitter, we don't actually need that flip anyway. So we
          * use the surface's texture as scratch texture, and flip the source
          * rectangle instead. */
-        texture2d_load_fb_texture(src_texture, src_sub_resource_idx, FALSE, context);
+        texture2d_load_fb_texture(src_texture_gl, src_sub_resource_idx, FALSE, context);
 
         s = *src_rect;
         src_level = src_sub_resource_idx % src_texture->level_count;
@@ -13064,7 +13066,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         context_invalidate_state(context, STATE_FRAMEBUFFER);
     }
 
-    if (!(program = glsl_blitter_get_program(glsl_blitter, context, src_texture)))
+    if (!(program = glsl_blitter_get_program(glsl_blitter, context, src_texture_gl)))
     {
         ERR("Failed to get blitter program.\n");
         return dst_location;
@@ -13089,8 +13091,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         default:
             break;
     }
-    context_draw_shaded_quad(context, wined3d_texture_gl(src_texture),
-            src_sub_resource_idx, src_rect, dst_rect, filter);
+    context_draw_shaded_quad(context, src_texture_gl, src_sub_resource_idx, src_rect, dst_rect, filter);
     GL_EXTCALL(glUseProgram(0));
 
     if (dst_texture->swapchain && (dst_texture->swapchain->front_buffer == dst_texture))

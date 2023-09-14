@@ -175,7 +175,7 @@ static void texture_gl_apply_base_level(struct wined3d_texture_gl *texture_gl,
          * (default 0), while GL_TEXTURE_MAX_LEVEL specifies the smallest
          * mipmap used (default 1000). So WINED3D_SAMP_MAX_MIP_LEVEL
          * corresponds to GL_TEXTURE_BASE_LEVEL. */
-        gl_info->gl_ops.gl.p_glTexParameteri(texture_gl->t.target, GL_TEXTURE_BASE_LEVEL, base_level);
+        gl_info->gl_ops.gl.p_glTexParameteri(texture_gl->target, GL_TEXTURE_BASE_LEVEL, base_level);
         gl_tex->base_level = base_level;
     }
 }

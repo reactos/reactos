@@ -3847,7 +3847,7 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
 {
     const struct wined3d_d3d_info *d3d_info = context->d3d_info;
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    const struct wined3d_texture *texture;
+    struct wined3d_texture *texture;
     unsigned int i;
 
     memset(args, 0, sizeof(*args)); /* FIXME: Make sure all bits are set. */
@@ -3922,18 +3922,16 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
     {
         for (i = 0; i < shader->limits->sampler; ++i)
         {
-            const struct wined3d_texture *texture = state->textures[i];
-
             if (!shader->reg_maps.resource_info[i].type)
                 continue;
 
             /* Treat unbound textures as 2D. The dummy texture will provide
              * the proper sample value. The tex_types bitmap defaults to
              * 2D because of the memset. */
-            if (!texture)
+            if (!(texture = state->textures[i]))
                 continue;
 
-            switch (texture->target)
+            switch (wined3d_texture_gl(texture)->target)
             {
                 /* RECT textures are distinguished from 2D textures via np2_fixup */
                 default:

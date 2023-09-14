@@ -33,6 +33,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 static void nvts_activate_dimensions(const struct wined3d_state *state, DWORD stage, struct wined3d_context *context)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_texture *texture;
     BOOL bumpmap = FALSE;
 
     if (stage > 0
@@ -47,9 +48,9 @@ static void nvts_activate_dimensions(const struct wined3d_state *state, DWORD st
         context->texShaderBumpMap &= ~(1u << stage);
     }
 
-    if (state->textures[stage])
+    if ((texture = state->textures[stage]))
     {
-        switch (state->textures[stage]->target)
+        switch (wined3d_texture_gl(texture)->target)
         {
             case GL_TEXTURE_2D:
                 gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV,
@@ -70,7 +71,7 @@ static void nvts_activate_dimensions(const struct wined3d_state *state, DWORD st
                 checkGLcall("glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_TEXTURE_CUBE_MAP_ARB)");
                 break;
             default:
-                FIXME("Unhandled target %#x.\n", state->textures[stage]->target);
+                FIXME("Unhandled target %#x.\n", wined3d_texture_gl(texture)->target);
                 break;
         }
     }

@@ -466,7 +466,7 @@ static inline void context_set_fbo_key_for_render_target(const struct wined3d_co
         return;
     }
 
-    key->objects[idx].target = wined3d_texture_get_sub_resource_target(&texture_gl->t, sub_resource_idx);
+    key->objects[idx].target = wined3d_texture_gl_get_sub_resource_target(texture_gl, sub_resource_idx);
     key->objects[idx].level = sub_resource_idx % texture_gl->t.level_count;
     key->objects[idx].layer = sub_resource_idx / texture_gl->t.level_count;
 
@@ -5709,7 +5709,7 @@ void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_te
     }
     quad[4];
 
-    texture2d_get_blt_info(&texture_gl->t, sub_resource_idx, src_rect, &info);
+    texture2d_get_blt_info(texture_gl, sub_resource_idx, src_rect, &info);
 
     level = sub_resource_idx % texture_gl->t.level_count;
     context_bind_texture(context, info.bind_target, texture_gl->texture_rgb.name);
@@ -5787,7 +5787,7 @@ void context_draw_textured_quad(struct wined3d_context *context, struct wined3d_
     struct wined3d_blt_info info;
     unsigned int level;
 
-    texture2d_get_blt_info(&texture_gl->t, sub_resource_idx, src_rect, &info);
+    texture2d_get_blt_info(texture_gl, sub_resource_idx, src_rect, &info);
 
     gl_info->gl_ops.gl.p_glEnable(info.bind_target);
     checkGLcall("glEnable(bind_target)");

@@ -153,7 +153,7 @@ static inline void cube_coords_float(const RECT *r, UINT w, UINT h, struct wined
     f->b = ((r->bottom * 2.0f) / h) - 1.0f;
 }
 
-void texture2d_get_blt_info(const struct wined3d_texture *texture,
+void texture2d_get_blt_info(const struct wined3d_texture_gl *texture_gl,
         unsigned int sub_resource_idx, const RECT *rect, struct wined3d_blt_info *info)
 {
     struct wined3d_vec3 *coords = info->texcoords;
@@ -162,10 +162,10 @@ void texture2d_get_blt_info(const struct wined3d_texture *texture,
     GLenum target;
     GLsizei w, h;
 
-    level = sub_resource_idx % texture->level_count;
-    w = wined3d_texture_get_level_pow2_width(texture, level);
-    h = wined3d_texture_get_level_pow2_height(texture, level);
-    target = wined3d_texture_get_sub_resource_target(texture, sub_resource_idx);
+    level = sub_resource_idx % texture_gl->t.level_count;
+    w = wined3d_texture_get_level_pow2_width(&texture_gl->t, level);
+    h = wined3d_texture_get_level_pow2_height(&texture_gl->t, level);
+    target = wined3d_texture_gl_get_sub_resource_target(texture_gl, sub_resource_idx);
 
     switch (target)
     {
@@ -564,7 +564,7 @@ static unsigned int wined3d_texture_get_gl_sample_count(const struct wined3d_tex
 
 /* Context activation is done by the caller. */
 /* The caller is responsible for binding the correct texture. */
-static void wined3d_texture_allocate_gl_mutable_storage(struct wined3d_texture *texture,
+static void wined3d_texture_gl_allocate_mutable_storage(struct wined3d_texture_gl *texture_gl,
         GLenum gl_internal_format, const struct wined3d_format_gl *format,
         const struct wined3d_gl_info *gl_info)
 {
@@ -572,34 +572,34 @@ static void wined3d_texture_allocate_gl_mutable_storage(struct wined3d_texture *
     GLsizei width, height, depth;
     GLenum target;
 
-    level_count = texture->level_count;
-    if (texture->target == GL_TEXTURE_1D_ARRAY || texture->target == GL_TEXTURE_2D_ARRAY)
+    level_count = texture_gl->t.level_count;
+    if (texture_gl->target == GL_TEXTURE_1D_ARRAY || texture_gl->target == GL_TEXTURE_2D_ARRAY)
         layer_count = 1;
     else
-        layer_count = texture->layer_count;
+        layer_count = texture_gl->t.layer_count;
 
     for (layer = 0; layer < layer_count; ++layer)
     {
-        target = wined3d_texture_get_sub_resource_target(texture, layer * level_count);
+        target = wined3d_texture_gl_get_sub_resource_target(texture_gl, layer * level_count);
 
         for (level = 0; level < level_count; ++level)
         {
-            width = wined3d_texture_get_level_pow2_width(texture, level);
-            height = wined3d_texture_get_level_pow2_height(texture, level);
-            if (texture->resource.format_flags & WINED3DFMT_FLAG_HEIGHT_SCALE)
+            width = wined3d_texture_get_level_pow2_width(&texture_gl->t, level);
+            height = wined3d_texture_get_level_pow2_height(&texture_gl->t, level);
+            if (texture_gl->t.resource.format_flags & WINED3DFMT_FLAG_HEIGHT_SCALE)
             {
                 height *= format->f.height_scale.numerator;
                 height /= format->f.height_scale.denominator;
             }
 
-            TRACE("texture %p, layer %u, level %u, target %#x, width %u, height %u.\n",
-                    texture, layer, level, target, width, height);
+            TRACE("texture_gl %p, layer %u, level %u, target %#x, width %u, height %u.\n",
+                    texture_gl, layer, level, target, width, height);
 
             if (target == GL_TEXTURE_3D || target == GL_TEXTURE_2D_ARRAY)
             {
-                depth = wined3d_texture_get_level_depth(texture, level);
+                depth = wined3d_texture_get_level_depth(&texture_gl->t, level);
                 GL_EXTCALL(glTexImage3D(target, level, gl_internal_format, width, height,
-                        target == GL_TEXTURE_2D_ARRAY ? texture->layer_count : depth, 0,
+                        target == GL_TEXTURE_2D_ARRAY ? texture_gl->t.layer_count : depth, 0,
                         format->format, format->type, NULL));
                 checkGLcall("glTexImage3D");
             }
@@ -611,7 +611,7 @@ static void wined3d_texture_allocate_gl_mutable_storage(struct wined3d_texture *
             else
             {
                 gl_info->gl_ops.gl.p_glTexImage2D(target, level, gl_internal_format, width,
-                        target == GL_TEXTURE_1D_ARRAY ? texture->layer_count : height, 0,
+                        target == GL_TEXTURE_1D_ARRAY ? texture_gl->t.layer_count : height, 0,
                         format->format, format->type, NULL);
                 checkGLcall("glTexImage2D");
             }
@@ -621,42 +621,42 @@ static void wined3d_texture_allocate_gl_mutable_storage(struct wined3d_texture *
 
 /* Context activation is done by the caller. */
 /* The caller is responsible for binding the correct texture. */
-static void wined3d_texture_allocate_gl_immutable_storage(struct wined3d_texture *texture,
+static void wined3d_texture_gl_allocate_immutable_storage(struct wined3d_texture_gl *texture_gl,
         GLenum gl_internal_format, const struct wined3d_gl_info *gl_info)
 {
-    unsigned int samples = wined3d_texture_get_gl_sample_count(texture);
-    GLsizei height = wined3d_texture_get_level_pow2_height(texture, 0);
-    GLsizei width = wined3d_texture_get_level_pow2_width(texture, 0);
-    GLboolean standard_pattern = texture->resource.multisample_type != WINED3D_MULTISAMPLE_NON_MASKABLE
-            && texture->resource.multisample_quality == WINED3D_STANDARD_MULTISAMPLE_PATTERN;
+    unsigned int samples = wined3d_texture_get_gl_sample_count(&texture_gl->t);
+    GLsizei height = wined3d_texture_get_level_pow2_height(&texture_gl->t, 0);
+    GLsizei width = wined3d_texture_get_level_pow2_width(&texture_gl->t, 0);
+    GLboolean standard_pattern = texture_gl->t.resource.multisample_type != WINED3D_MULTISAMPLE_NON_MASKABLE
+            && texture_gl->t.resource.multisample_quality == WINED3D_STANDARD_MULTISAMPLE_PATTERN;
 
-    switch (texture->target)
+    switch (texture_gl->target)
     {
         case GL_TEXTURE_3D:
-            GL_EXTCALL(glTexStorage3D(texture->target, texture->level_count,
-                    gl_internal_format, width, height, wined3d_texture_get_level_depth(texture, 0)));
+            GL_EXTCALL(glTexStorage3D(texture_gl->target, texture_gl->t.level_count,
+                    gl_internal_format, width, height, wined3d_texture_get_level_depth(&texture_gl->t, 0)));
             break;
         case GL_TEXTURE_2D_ARRAY:
-            GL_EXTCALL(glTexStorage3D(texture->target, texture->level_count,
-                    gl_internal_format, width, height, texture->layer_count));
+            GL_EXTCALL(glTexStorage3D(texture_gl->target, texture_gl->t.level_count,
+                    gl_internal_format, width, height, texture_gl->t.layer_count));
             break;
         case GL_TEXTURE_2D_MULTISAMPLE:
-            GL_EXTCALL(glTexStorage2DMultisample(texture->target, samples,
+            GL_EXTCALL(glTexStorage2DMultisample(texture_gl->target, samples,
                     gl_internal_format, width, height, standard_pattern));
             break;
         case GL_TEXTURE_2D_MULTISAMPLE_ARRAY:
-            GL_EXTCALL(glTexStorage3DMultisample(texture->target, samples,
-                    gl_internal_format, width, height, texture->layer_count, standard_pattern));
+            GL_EXTCALL(glTexStorage3DMultisample(texture_gl->target, samples,
+                    gl_internal_format, width, height, texture_gl->t.layer_count, standard_pattern));
             break;
         case GL_TEXTURE_1D_ARRAY:
-            GL_EXTCALL(glTexStorage2D(texture->target, texture->level_count,
-                    gl_internal_format, width, texture->layer_count));
+            GL_EXTCALL(glTexStorage2D(texture_gl->target, texture_gl->t.level_count,
+                    gl_internal_format, width, texture_gl->t.layer_count));
             break;
         case GL_TEXTURE_1D:
-            GL_EXTCALL(glTexStorage1D(texture->target, texture->level_count, gl_internal_format, width));
+            GL_EXTCALL(glTexStorage1D(texture_gl->target, texture_gl->t.level_count, gl_internal_format, width));
             break;
         default:
-            GL_EXTCALL(glTexStorage2D(texture->target, texture->level_count,
+            GL_EXTCALL(glTexStorage2D(texture_gl->target, texture_gl->t.level_count,
                     gl_internal_format, width, height));
             break;
     }
@@ -978,7 +978,7 @@ void wined3d_texture_gl_bind(struct wined3d_texture_gl *texture_gl,
         texture_gl->t.flags &= ~WINED3D_TEXTURE_IS_SRGB;
 
     gl_tex = wined3d_texture_gl_get_gl_texture(texture_gl, srgb);
-    target = texture_gl->t.target;
+    target = texture_gl->target;
 
     if (gl_tex->name)
     {
@@ -1112,7 +1112,7 @@ void wined3d_texture_gl_apply_sampler_desc(struct wined3d_texture_gl *texture_gl
         const struct wined3d_sampler_desc *sampler_desc, const struct wined3d_context *context)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    GLenum target = texture_gl->t.target;
+    GLenum target = texture_gl->target;
     struct gl_texture *gl_tex;
     DWORD state;
 
@@ -1645,9 +1645,9 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     sub_resource->locations = WINED3D_LOCATION_DISCARDED;
 
     if (multisample_type && gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
-        texture->target = GL_TEXTURE_2D_MULTISAMPLE;
+        wined3d_texture_gl(texture)->target = GL_TEXTURE_2D_MULTISAMPLE;
     else
-        texture->target = GL_TEXTURE_2D;
+        wined3d_texture_gl(texture)->target = GL_TEXTURE_2D;
 
     if (((width & (width - 1)) || (height & (height - 1))) && !d3d_info->texture_npot
             && !d3d_info->texture_npot_conditional)
@@ -1794,9 +1794,9 @@ void wined3d_texture_prepare_texture(struct wined3d_texture *texture, struct win
     TRACE("internal %#x, format %#x, type %#x.\n", internal, format_gl->format, format_gl->type);
 
     if (wined3d_texture_use_immutable_storage(texture, gl_info))
-        wined3d_texture_allocate_gl_immutable_storage(texture, internal, gl_info);
+        wined3d_texture_gl_allocate_immutable_storage(wined3d_texture_gl(texture), internal, gl_info);
     else
-        wined3d_texture_allocate_gl_mutable_storage(texture, internal, format_gl, gl_info);
+        wined3d_texture_gl_allocate_mutable_storage(wined3d_texture_gl(texture), internal, format_gl, gl_info);
     texture->flags |= alloc_flag;
 }
 
@@ -1959,7 +1959,7 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
         update_h /= format->height_scale.denominator;
     }
 
-    target = wined3d_texture_get_sub_resource_target(texture, sub_resource_idx);
+    target = wined3d_texture_gl_get_sub_resource_target(wined3d_texture_gl(texture), sub_resource_idx);
     level = sub_resource_idx % texture->level_count;
 
     switch (target)
@@ -2183,7 +2183,7 @@ static void texture2d_download_data(struct wined3d_texture *texture, unsigned in
     }
 
     sub_resource = &texture->sub_resources[sub_resource_idx];
-    target = wined3d_texture_get_sub_resource_target(texture, sub_resource_idx);
+    target = wined3d_texture_gl_get_sub_resource_target(wined3d_texture_gl(texture), sub_resource_idx);
     level = sub_resource_idx % texture->level_count;
 
     if (target == GL_TEXTURE_2D_ARRAY)
@@ -2398,7 +2398,7 @@ void wined3d_texture_download_data(struct wined3d_texture *texture, unsigned int
     GLenum target;
 
     format_gl = wined3d_format_gl(texture->resource.format);
-    target = wined3d_texture_get_sub_resource_target(texture, sub_resource_idx);
+    target = wined3d_texture_gl_get_sub_resource_target(wined3d_texture_gl(texture), sub_resource_idx);
     level = sub_resource_idx % texture->level_count;
 
     if (texture->resource.type == WINED3D_RTYPE_TEXTURE_2D
@@ -3052,53 +3052,12 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
             texture->flags |= WINED3D_TEXTURE_GENERATE_MIPMAPS;
     }
 
-    switch (desc->resource_type)
-    {
-        case WINED3D_RTYPE_TEXTURE_1D:
-            if (layer_count > 1)
-                texture->target = GL_TEXTURE_1D_ARRAY;
-            else
-                texture->target = GL_TEXTURE_1D;
-            break;
-
-        case WINED3D_RTYPE_TEXTURE_2D:
-            if (desc->usage & WINED3DUSAGE_LEGACY_CUBEMAP)
-            {
-                texture->target = GL_TEXTURE_CUBE_MAP_ARB;
-            }
-            else if (desc->multisample_type && gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
-            {
-                if (layer_count > 1)
-                    texture->target = GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
-                else
-                    texture->target = GL_TEXTURE_2D_MULTISAMPLE;
-            }
-            else
-            {
-                if (layer_count > 1)
-                    texture->target = GL_TEXTURE_2D_ARRAY;
-                else
-                    texture->target = GL_TEXTURE_2D;
-            }
-            break;
-
-        case WINED3D_RTYPE_TEXTURE_3D:
-            texture->target = GL_TEXTURE_3D;
-            break;
-
-        default:
-            ERR("Invalid resource type %s.\n", debug_d3dresourcetype(desc->resource_type));
-            wined3d_texture_cleanup_sync(texture);
-            return WINED3DERR_INVALIDCALL;
-    }
-
     /* Precalculated scaling for 'faked' non power of two texture coords. */
     if (texture->resource.gl_type == WINED3D_GL_RES_TYPE_TEX_RECT)
     {
         texture->pow2_matrix[0] = (float)desc->width;
         texture->pow2_matrix[5] = (float)desc->height;
         texture->flags &= ~(WINED3D_TEXTURE_POW2_MAT_IDENT | WINED3D_TEXTURE_NORMALIZED_COORDS);
-        texture->target = GL_TEXTURE_RECTANGLE_ARB;
     }
     else if (texture->flags & WINED3D_TEXTURE_COND_NP2_EMULATED)
     {
@@ -3594,7 +3553,9 @@ static HRESULT wined3d_texture_gl_init(struct wined3d_texture_gl *texture_gl, st
         const struct wined3d_resource_desc *desc, unsigned int layer_count, unsigned int level_count,
         DWORD flags, void *parent, const struct wined3d_parent_ops *parent_ops, void *sub_resources)
 {
+    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     const struct wined3d_texture_ops *texture_ops;
+    HRESULT hr;
 
     TRACE("texture_gl %p, device %p, desc %p, layer_count %u, level_count %u, "
             "flags %#x, parent %p, parent_ops %p, sub_resources %p.\n",
@@ -3605,13 +3566,39 @@ static HRESULT wined3d_texture_gl_init(struct wined3d_texture_gl *texture_gl, st
     {
         case WINED3D_RTYPE_TEXTURE_1D:
             texture_ops = &texture1d_ops;
+            if (layer_count > 1)
+                texture_gl->target = GL_TEXTURE_1D_ARRAY;
+            else
+                texture_gl->target = GL_TEXTURE_1D;
             break;
+
         case WINED3D_RTYPE_TEXTURE_2D:
             texture_ops = &texture2d_ops;
+            if (desc->usage & WINED3DUSAGE_LEGACY_CUBEMAP)
+            {
+                texture_gl->target = GL_TEXTURE_CUBE_MAP_ARB;
+            }
+            else if (desc->multisample_type && gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
+            {
+                if (layer_count > 1)
+                    texture_gl->target = GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+                else
+                    texture_gl->target = GL_TEXTURE_2D_MULTISAMPLE;
+            }
+            else
+            {
+                if (layer_count > 1)
+                    texture_gl->target = GL_TEXTURE_2D_ARRAY;
+                else
+                    texture_gl->target = GL_TEXTURE_2D;
+            }
             break;
+
         case WINED3D_RTYPE_TEXTURE_3D:
             texture_ops = &texture3d_ops;
+            texture_gl->target = GL_TEXTURE_3D;
             break;
+
         default:
             ERR("Invalid resource type %s.\n", debug_d3dresourcetype(desc->resource_type));
             return WINED3DERR_INVALIDCALL;
@@ -3619,8 +3606,14 @@ static HRESULT wined3d_texture_gl_init(struct wined3d_texture_gl *texture_gl, st
 
     list_init(&texture_gl->renderbuffers);
 
-    return wined3d_texture_init(&texture_gl->t, desc, layer_count, level_count,
-            flags, device, parent, parent_ops, sub_resources, texture_ops);
+    if (FAILED(hr = wined3d_texture_init(&texture_gl->t, desc, layer_count, level_count,
+            flags, device, parent, parent_ops, sub_resources, texture_ops)))
+        return hr;
+
+    if (texture_gl->t.resource.gl_type == WINED3D_GL_RES_TYPE_TEX_RECT)
+        texture_gl->target = GL_TEXTURE_RECTANGLE_ARB;
+
+    return WINED3D_OK;
 }
 
 HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct wined3d_resource_desc *desc,
