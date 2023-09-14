@@ -187,7 +187,6 @@ enum wined3d_gl_extension
     EXT_TEXTURE_SNORM,
     EXT_TEXTURE_SRGB,
     EXT_TEXTURE_SRGB_DECODE,
-    EXT_VERTEX_ARRAY_BGRA,
     /* NVIDIA */
     NV_FENCE,
     NV_FOG_DISTANCE,

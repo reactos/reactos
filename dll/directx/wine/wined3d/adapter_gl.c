@@ -205,7 +205,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_EXT_texture_sRGB",                 EXT_TEXTURE_SRGB              },
     {"GL_EXT_texture_sRGB_decode",          EXT_TEXTURE_SRGB_DECODE       },
     {"GL_EXT_texture_swizzle",              ARB_TEXTURE_SWIZZLE           },
-    {"GL_EXT_vertex_array_bgra",            EXT_VERTEX_ARRAY_BGRA         },
+    {"GL_EXT_vertex_array_bgra",            ARB_VERTEX_ARRAY_BGRA         },
 
     /* NV */
     {"GL_NV_fence",                         NV_FENCE                      },
@@ -3529,11 +3529,6 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     {
         TRACE(" IMPLIED: NVIDIA (NV) Texture Gen Reflection support.\n");
         gl_info->supported[NV_TEXGEN_REFLECTION] = TRUE;
-    }
-    if (!gl_info->supported[ARB_VERTEX_ARRAY_BGRA] && gl_info->supported[EXT_VERTEX_ARRAY_BGRA])
-    {
-        TRACE(" IMPLIED: ARB_vertex_array_bgra support (by EXT_vertex_array_bgra).\n");
-        gl_info->supported[ARB_VERTEX_ARRAY_BGRA] = TRUE;
     }
     if (!gl_info->supported[EXT_TEXTURE_COMPRESSION_RGTC] && gl_info->supported[ARB_TEXTURE_COMPRESSION_RGTC])
     {
