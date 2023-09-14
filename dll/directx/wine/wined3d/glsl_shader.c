@@ -420,6 +420,15 @@ static void shader_glsl_add_version_declaration(struct wined3d_string_buffer *bu
     shader_addline(buffer, "#version %u\n", shader_glsl_get_version(gl_info));
 }
 
+unsigned int shader_glsl_max_compat_varyings(const struct wined3d_gl_info *gl_info)
+{
+    /* On core profile we have to also count diffuse and specular colours and
+     * the fog coordinate. */
+    if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+        return WINED3D_MAX_TEXTURES * 4;
+    return (WINED3D_MAX_TEXTURES + 2) * 4 + 1;
+}
+
 static void shader_glsl_append_imm_vec(struct wined3d_string_buffer *buffer,
         const float *values, unsigned int size, const struct wined3d_gl_info *gl_info)
 {
@@ -7146,7 +7155,7 @@ static GLuint shader_glsl_generate_vs3_rasterizer_input_setup(struct shader_glsl
 
             if (texcoords_written_mask[i] != WINED3DSP_WRITEMASK_ALL)
             {
-                if (gl_info->limits.glsl_varyings < wined3d_max_compat_varyings(gl_info)
+                if (gl_info->limits.glsl_varyings < shader_glsl_max_compat_varyings(gl_info)
                         && !texcoords_written_mask[i])
                     continue;
 
@@ -9057,7 +9066,7 @@ static GLuint shader_glsl_generate_ffp_vertex_shader(struct shader_glsl_priv *pr
                 if (settings->texcoords & (1u << i))
                     shader_addline(buffer, "ffp_varying_texcoord[%u] = ffp_texture_matrix[%u] * ffp_attrib_texcoord%u;\n",
                             i, i, i);
-                else if (gl_info->limits.glsl_varyings >= wined3d_max_compat_varyings(gl_info))
+                else if (gl_info->limits.glsl_varyings >= shader_glsl_max_compat_varyings(gl_info))
                     shader_addline(buffer, "ffp_varying_texcoord[%u] = vec4(0.0);\n", i);
                 else
                     output_legacy_texcoord = FALSE;
@@ -11093,6 +11102,7 @@ static void shader_glsl_get_caps(const struct wined3d_adapter *adapter, struct s
     caps->vs_uniform_count = min(WINED3D_MAX_VS_CONSTS_F, gl_info->limits.glsl_vs_float_constants);
     caps->ps_uniform_count = min(WINED3D_MAX_PS_CONSTS_F, gl_info->limits.glsl_ps_float_constants);
     caps->varying_count = gl_info->limits.glsl_varyings;
+    caps->max_compat_varying_count = shader_glsl_max_compat_varyings(gl_info);
 
     /* FIXME: The following line is card dependent. -8.0 to 8.0 is the
      * Direct3D minimum requirement.
@@ -11542,7 +11552,7 @@ static void glsl_vertex_pipe_vdecl(struct wined3d_context *context,
          * Likewise, we have to invalidate the shader when using per-vertex
          * colours and diffuse/specular attribute presence changes, or when
          * normal presence changes. */
-        if (gl_info->limits.glsl_varyings < wined3d_max_compat_varyings(gl_info)
+        if (gl_info->limits.glsl_varyings < shader_glsl_max_compat_varyings(gl_info)
                 || (state->render_states[WINED3D_RS_COLORVERTEX]
                 && (diffuse != context->last_was_diffuse || specular != context->last_was_specular))
                 || normal != context->last_was_normal)
@@ -12054,7 +12064,7 @@ static void glsl_fragment_pipe_vdecl(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id)
 {
     /* Because of settings->texcoords_initialized and args->texcoords_initialized. */
-    if (context->gl_info->limits.glsl_varyings < wined3d_max_compat_varyings(context->gl_info))
+    if (context->gl_info->limits.glsl_varyings < shader_glsl_max_compat_varyings(context->gl_info))
         context->shader_update_mask |= 1u << WINED3D_SHADER_TYPE_PIXEL;
 
     if (!isStateDirty(context, STATE_RENDER(WINED3D_RS_FOGENABLE)))
@@ -12065,7 +12075,7 @@ static void glsl_fragment_pipe_vs(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id)
 {
     /* Because of settings->texcoords_initialized and args->texcoords_initialized. */
-    if (context->gl_info->limits.glsl_varyings < wined3d_max_compat_varyings(context->gl_info))
+    if (context->gl_info->limits.glsl_varyings < shader_glsl_max_compat_varyings(context->gl_info))
         context->shader_update_mask |= 1u << WINED3D_SHADER_TYPE_PIXEL;
 }
 

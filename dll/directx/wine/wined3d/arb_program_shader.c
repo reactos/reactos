@@ -4957,6 +4957,7 @@ static void shader_arb_get_caps(const struct wined3d_adapter *adapter, struct sh
     }
 
     caps->varying_count = 0;
+    caps->max_compat_varying_count = 0;
     caps->wined3d_caps = WINED3D_SHADER_CAP_SRGB_WRITE;
     if (use_nv_clip(gl_info))
         caps->wined3d_caps |= WINED3D_SHADER_CAP_VS_CLIPPING;

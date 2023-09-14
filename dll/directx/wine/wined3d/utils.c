@@ -6221,13 +6221,6 @@ void transpose_matrix(struct wined3d_matrix *out, const struct wined3d_matrix *m
     *out = temp;
 }
 
-unsigned int wined3d_max_compat_varyings(const struct wined3d_gl_info *gl_info)
-{
-    /* On core profile we have to also count diffuse and specular colors and the
-     * fog coordinate. */
-    return gl_info->supported[WINED3D_GL_LEGACY_CONTEXT] ? WINED3D_MAX_TEXTURES * 4 : (WINED3D_MAX_TEXTURES + 2) * 4 + 1;
-}
-
 void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d_state *state,
         struct ffp_frag_settings *settings, BOOL ignore_textype)
 {
@@ -6267,7 +6260,6 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
     unsigned int i;
     DWORD ttff;
     DWORD cop, aop, carg0, carg1, carg2, aarg0, aarg1, aarg2;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_d3d_info *d3d_info = context->d3d_info;
 
     settings->padding = 0;
@@ -6506,8 +6498,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
      * Reading uninitialized varyings on core profile contexts results in an
      * error while with builtin varyings on legacy contexts you get undefined
      * behavior. */
-    if (d3d_info->limits.varying_count
-            && d3d_info->limits.varying_count < wined3d_max_compat_varyings(gl_info))
+    if (d3d_info->limits.varying_count && d3d_info->limits.varying_count < d3d_info->limits.max_compat_varying_count)
     {
         settings->texcoords_initialized = 0;
         for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
@@ -6716,7 +6707,6 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
 {
     enum wined3d_material_color_source diffuse_source, emissive_source, ambient_source, specular_source;
     const struct wined3d_stream_info *si = &context->stream_info;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_d3d_info *d3d_info = context->d3d_info;
     unsigned int coord_idx, i;
 
@@ -6741,7 +6731,7 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
                 settings->texcoords |= 1u << i;
             settings->texgen[i] = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
         }
-        if (d3d_info->limits.varying_count >= wined3d_max_compat_varyings(gl_info))
+        if (d3d_info->limits.varying_count >= d3d_info->limits.max_compat_varying_count)
             settings->texcoords = (1u << WINED3D_MAX_TEXTURES) - 1;
 
         if (d3d_info->emulated_flatshading)
@@ -6798,7 +6788,7 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
             settings->texcoords |= 1u << i;
         settings->texgen[i] = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
     }
-    if (d3d_info->limits.varying_count >= wined3d_max_compat_varyings(gl_info))
+    if (d3d_info->limits.varying_count >= d3d_info->limits.max_compat_varying_count)
         settings->texcoords = (1u << WINED3D_MAX_TEXTURES) - 1;
 
     for (i = 0; i < WINED3D_MAX_ACTIVE_LIGHTS; ++i)

@@ -175,6 +175,7 @@ struct wined3d_d3d_limits
 
     unsigned int max_rt_count;
     unsigned int max_clip_distances;
+    unsigned int max_compat_varying_count;
     unsigned int texture_size;
     float pointsize_max;
 };
@@ -1324,10 +1325,11 @@ struct shader_caps
     unsigned int ps_version;
     unsigned int cs_version;
 
-    DWORD vs_uniform_count;
-    DWORD ps_uniform_count;
+    unsigned int vs_uniform_count;
+    unsigned int ps_uniform_count;
     float ps_1x_max_value;
-    DWORD varying_count;
+    unsigned int varying_count;
+    unsigned int max_compat_varying_count;
 
     DWORD wined3d_caps;
 };
@@ -2938,7 +2940,6 @@ int wined3d_ffp_vertex_program_key_compare(const void *key, const struct wine_rb
 
 extern const struct wined3d_parent_ops wined3d_null_parent_ops DECLSPEC_HIDDEN;
 
-unsigned int wined3d_max_compat_varyings(const struct wined3d_gl_info *gl_info) DECLSPEC_HIDDEN;
 void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d_state *state,
         struct ffp_frag_settings *settings, BOOL ignore_textype) DECLSPEC_HIDDEN;
 const struct ffp_frag_desc *find_ffp_frag_shader(const struct wine_rb_tree *fragment_shaders,

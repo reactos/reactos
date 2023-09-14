@@ -4114,7 +4114,7 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
         }
     }
 
-    if (context->d3d_info->limits.varying_count < wined3d_max_compat_varyings(context->gl_info))
+    if (d3d_info->limits.varying_count < d3d_info->limits.max_compat_varying_count)
     {
         const struct wined3d_shader *vs = state->shader[WINED3D_SHADER_TYPE_VERTEX];
 
