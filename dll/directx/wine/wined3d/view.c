@@ -536,7 +536,11 @@ static void wined3d_render_target_view_cs_init(void *object)
         if (resource->format->id != view->format->id
                 || (view->layer_count != 1 && view->layer_count != depth_or_layer_count))
         {
-            if (resource->format->gl_view_class != view->format->gl_view_class)
+            GLenum resource_class, view_class;
+
+            resource_class = wined3d_format_gl(resource->format)->view_class;
+            view_class = wined3d_format_gl(view->format)->view_class;
+            if (resource_class != view_class)
             {
                 FIXME("Render target view not supported, resource format %s, view format %s.\n",
                         debug_d3dformat(resource->format->id), debug_d3dformat(view->format->id));
@@ -727,7 +731,10 @@ static void wined3d_shader_resource_view_cs_init(void *object)
     else
     {
         struct wined3d_texture *texture = texture_from_resource(resource);
+        GLenum resource_class, view_class;
 
+        resource_class = wined3d_format_gl(resource->format)->view_class;
+        view_class = wined3d_format_gl(view_format)->view_class;
         view_target = get_texture_view_target(gl_info, desc, texture);
 
         if (resource->format->id == view_format->id && texture->target == view_target
@@ -742,7 +749,7 @@ static void wined3d_shader_resource_view_cs_init(void *object)
             FIXME("Swapchain shader resource views not supported.\n");
         }
         else if (resource->format->typeless_id == view_format->typeless_id
-                && resource->format->gl_view_class == view_format->gl_view_class)
+                && resource_class == view_class)
         {
             create_texture_view(&view->gl_view, view_target, desc, texture, view_format);
         }

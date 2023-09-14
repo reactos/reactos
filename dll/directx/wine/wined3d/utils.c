@@ -3002,23 +3002,23 @@ static GLenum lookup_gl_view_class(GLenum internal_format)
     return GL_NONE;
 }
 
-static void query_view_class(struct wined3d_format *format)
+static void query_view_class(struct wined3d_format_gl *format)
 {
     GLenum internal_view_class, gamma_view_class, rt_view_class;
 
-    internal_view_class = lookup_gl_view_class(format->glInternal);
-    gamma_view_class = lookup_gl_view_class(format->glGammaInternal);
-    rt_view_class = lookup_gl_view_class(format->rtInternal);
+    internal_view_class = lookup_gl_view_class(format->f.glInternal);
+    gamma_view_class = lookup_gl_view_class(format->f.glGammaInternal);
+    rt_view_class = lookup_gl_view_class(format->f.rtInternal);
 
     if (internal_view_class == gamma_view_class || gamma_view_class == rt_view_class)
     {
-        format->gl_view_class = internal_view_class;
+        format->view_class = internal_view_class;
         TRACE("Format %s is member of GL view class %#x.\n",
-                debug_d3dformat(format->id), format->gl_view_class);
+                debug_d3dformat(format->f.id), format->view_class);
     }
     else
     {
-        format->gl_view_class = GL_NONE;
+        format->view_class = GL_NONE;
     }
 }
 
@@ -3094,7 +3094,7 @@ static void query_internal_format(struct wined3d_adapter *adapter,
         }
     }
 
-    query_view_class(format);
+    query_view_class(wined3d_format_gl_mutable(format));
 
     if (format->glInternal && format->flags[WINED3D_GL_RES_TYPE_RB]
             & (WINED3DFMT_FLAG_RENDERTARGET | WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL))

@@ -4418,7 +4418,6 @@ struct wined3d_format
             unsigned int width, unsigned int height, unsigned int depth);
 
     enum wined3d_format_id typeless_id;
-    GLenum gl_view_class;
 };
 
 const struct wined3d_format *wined3d_get_format(const struct wined3d_adapter *adapter,
@@ -4444,6 +4443,8 @@ struct wined3d_format_gl
 
     GLenum vtx_type;
     GLint vtx_format;
+
+    GLenum view_class;
 };
 
 static inline const struct wined3d_format_gl *wined3d_format_gl(const struct wined3d_format *format)
