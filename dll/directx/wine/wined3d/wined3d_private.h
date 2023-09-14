@@ -3416,7 +3416,7 @@ BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned 
         struct wined3d_context *context, DWORD location) DECLSPEC_HIDDEN;
 void wined3d_texture_prepare_texture(struct wined3d_texture *texture,
         struct wined3d_context *context, BOOL srgb) DECLSPEC_HIDDEN;
-void wined3d_texture_set_compatible_renderbuffer(struct wined3d_texture *texture,
+void wined3d_texture_set_compatible_renderbuffer(struct wined3d_texture *texture, struct wined3d_context *context,
         unsigned int level, const struct wined3d_rendertarget_info *rt) DECLSPEC_HIDDEN;
 void wined3d_texture_set_map_binding(struct wined3d_texture *texture, DWORD map_binding) DECLSPEC_HIDDEN;
 void wined3d_texture_set_swapchain(struct wined3d_texture *texture,

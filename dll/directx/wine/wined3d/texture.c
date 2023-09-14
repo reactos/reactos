@@ -1583,15 +1583,14 @@ HRESULT CDECL wined3d_texture_set_color_key(struct wined3d_texture *texture,
 /* TODO: We should synchronize the renderbuffer's content with the texture's content. */
 /* Context activation is done by the caller. */
 void wined3d_texture_set_compatible_renderbuffer(struct wined3d_texture *texture,
-        unsigned int level, const struct wined3d_rendertarget_info *rt)
+        struct wined3d_context *context, unsigned int level, const struct wined3d_rendertarget_info *rt)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_renderbuffer_entry *entry;
-    const struct wined3d_gl_info *gl_info;
     unsigned int src_width, src_height;
     unsigned int width, height;
     GLuint renderbuffer = 0;
 
-    gl_info = &texture->resource.device->adapter->gl_info;
     if (gl_info->supported[ARB_FRAMEBUFFER_OBJECT])
         return;
 
@@ -1658,7 +1657,7 @@ void wined3d_texture_set_compatible_renderbuffer(struct wined3d_texture *texture
         texture->current_renderbuffer = entry;
     }
 
-    checkGLcall("set_compatible_renderbuffer");
+    checkGLcall("set compatible renderbuffer");
 }
 
 HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT width, UINT height,
