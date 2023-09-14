@@ -2153,7 +2153,7 @@ void wined3d_fbo_blitter_create(struct wined3d_blitter **next,
         const struct wined3d_gl_info *gl_info) DECLSPEC_HIDDEN;
 void wined3d_ffp_blitter_create(struct wined3d_blitter **next,
         const struct wined3d_gl_info *gl_info) DECLSPEC_HIDDEN;
-void wined3d_glsl_blitter_create(struct wined3d_blitter **next,
+struct wined3d_blitter *wined3d_glsl_blitter_create(struct wined3d_blitter **next,
         const struct wined3d_device *device) DECLSPEC_HIDDEN;
 void wined3d_raw_blitter_create(struct wined3d_blitter **next,
         const struct wined3d_gl_info *gl_info) DECLSPEC_HIDDEN;

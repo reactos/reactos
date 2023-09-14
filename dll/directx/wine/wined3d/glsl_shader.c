@@ -12972,21 +12972,22 @@ static const struct wined3d_blitter_ops glsl_blitter_ops =
     glsl_blitter_blit,
 };
 
-void wined3d_glsl_blitter_create(struct wined3d_blitter **next, const struct wined3d_device *device)
+struct wined3d_blitter *wined3d_glsl_blitter_create(struct wined3d_blitter **next,
+        const struct wined3d_device *device)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     struct wined3d_glsl_blitter *blitter;
 
     if (device->shader_backend != &glsl_shader_backend)
-        return;
+        return NULL;
 
     if (!gl_info->supported[ARB_VERTEX_SHADER] || !gl_info->supported[ARB_FRAGMENT_SHADER])
-        return;
+        return NULL;
 
     if (!(blitter = heap_alloc(sizeof(*blitter))))
     {
         ERR("Failed to allocate blitter.\n");
-        return;
+        return NULL;
     }
 
     TRACE("Created blitter %p.\n", blitter);
@@ -12997,4 +12998,6 @@ void wined3d_glsl_blitter_create(struct wined3d_blitter **next, const struct win
     wine_rb_init(&blitter->programs, glsl_blitter_args_compare);
     blitter->palette_texture = 0;
     *next = &blitter->blitter;
+
+    return *next;
 }
