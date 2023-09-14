@@ -1541,13 +1541,11 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
     adapter_format = wined3d_get_format(adapter, adapter_format_id, WINED3D_BIND_RENDER_TARGET);
     format = wined3d_get_format(adapter, check_format_id, bind_flags);
 
-    if (usage & WINED3DUSAGE_RENDERTARGET)
-        bind_flags |= WINED3D_BIND_RENDER_TARGET;
     if (usage & WINED3DUSAGE_DEPTHSTENCIL)
         bind_flags |= WINED3D_BIND_DEPTH_STENCIL;
     if (usage & WINED3DUSAGE_TEXTURE)
         bind_flags |= WINED3D_BIND_SHADER_RESOURCE;
-    usage &= ~(WINED3DUSAGE_RENDERTARGET | WINED3DUSAGE_DEPTHSTENCIL | WINED3DUSAGE_TEXTURE);
+    usage &= ~(WINED3DUSAGE_DEPTHSTENCIL | WINED3DUSAGE_TEXTURE);
 
     switch (resource_type)
     {

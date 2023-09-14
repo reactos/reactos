@@ -930,7 +930,6 @@ enum wined3d_shader_type
 #define WINED3D_BIND_DEPTH_STENCIL                              0x00000040
 #define WINED3D_BIND_UNORDERED_ACCESS                           0x00000080
 
-#define WINED3DUSAGE_RENDERTARGET                               0x00000001
 #define WINED3DUSAGE_DEPTHSTENCIL                               0x00000002
 #define WINED3DUSAGE_WRITEONLY                                  0x00000008
 #define WINED3DUSAGE_SOFTWAREPROCESSING                         0x00000010
@@ -944,7 +943,7 @@ enum wined3d_shader_type
 #define WINED3DUSAGE_RESTRICT_SHARED_RESOURCE                   0x00002000
 #define WINED3DUSAGE_DMAP                                       0x00004000
 #define WINED3DUSAGE_TEXTAPI                                    0x10000000
-#define WINED3DUSAGE_MASK                                       0x10007bff
+#define WINED3DUSAGE_MASK                                       0x10007bfa
 
 #define WINED3DUSAGE_SCRATCH                                    0x00200000
 #define WINED3DUSAGE_PRIVATE                                    0x00400000
