@@ -2739,7 +2739,8 @@ struct wined3d_adapter
     const struct wined3d_adapter_ops *adapter_ops;
 };
 
-BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int ordinal) DECLSPEC_HIDDEN;
+BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int ordinal,
+        const struct wined3d_adapter_ops *adapter_ops) DECLSPEC_HIDDEN;
 void wined3d_adapter_cleanup(struct wined3d_adapter *adapter) DECLSPEC_HIDDEN;
 
 struct wined3d_adapter_gl

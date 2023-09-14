@@ -2284,7 +2284,7 @@ static struct wined3d_adapter *wined3d_adapter_no3d_create(unsigned int ordinal,
     adapter->vram_bytes_used = 0;
     TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->driver_info.vram_bytes));
 
-    if (!wined3d_adapter_init(adapter, ordinal))
+    if (!wined3d_adapter_init(adapter, ordinal, &wined3d_adapter_no3d_ops))
     {
         heap_free(adapter);
         return NULL;
@@ -2299,7 +2299,6 @@ static struct wined3d_adapter *wined3d_adapter_no3d_create(unsigned int ordinal,
     adapter->vertex_pipe = &none_vertex_pipe;
     adapter->fragment_pipe = &none_fragment_pipe;
     adapter->shader_backend = &none_shader_backend;
-    adapter->adapter_ops = &wined3d_adapter_no3d_ops;
 
     wined3d_adapter_no3d_init_d3d_info(adapter, wined3d_creation_flags);
 
@@ -2308,7 +2307,8 @@ static struct wined3d_adapter *wined3d_adapter_no3d_create(unsigned int ordinal,
     return adapter;
 }
 
-BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int ordinal)
+BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int ordinal,
+        const struct wined3d_adapter_ops *adapter_ops)
 {
     DISPLAY_DEVICEW display_device;
 
@@ -2331,6 +2331,7 @@ BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int ordinal)
     memset(&adapter->device_uuid, 0, sizeof(adapter->device_uuid));
 
     adapter->formats = NULL;
+    adapter->adapter_ops = adapter_ops;
 
     return TRUE;
 }

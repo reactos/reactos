@@ -648,7 +648,7 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     TRACE("adapter_vk %p, ordinal %u, wined3d_creation_flags %#x.\n",
             adapter_vk, ordinal, wined3d_creation_flags);
 
-    if (!wined3d_adapter_init(adapter, ordinal))
+    if (!wined3d_adapter_init(adapter, ordinal, &wined3d_adapter_vk_ops))
         return FALSE;
 
     if (!wined3d_init_vulkan(vk_info))
@@ -687,7 +687,6 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     adapter->vertex_pipe = &none_vertex_pipe;
     adapter->fragment_pipe = &none_fragment_pipe;
     adapter->shader_backend = &none_shader_backend;
-    adapter->adapter_ops = &wined3d_adapter_vk_ops;
 
     adapter->d3d_info.wined3d_creation_flags = wined3d_creation_flags;
 
