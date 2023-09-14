@@ -77,19 +77,6 @@ enum wined3d_gl_vendor
     GL_VENDOR_NVIDIA,
 };
 
-enum wined3d_d3d_level
-{
-    WINED3D_D3D_LEVEL_5,
-    WINED3D_D3D_LEVEL_6,
-    WINED3D_D3D_LEVEL_7,
-    WINED3D_D3D_LEVEL_8,
-    WINED3D_D3D_LEVEL_9_SM2,
-    WINED3D_D3D_LEVEL_9_SM3,
-    WINED3D_D3D_LEVEL_10,
-    WINED3D_D3D_LEVEL_11,
-    WINED3D_D3D_LEVEL_COUNT
-};
-
 /* The d3d device ID */
 static const GUID IID_D3DDEVICE_D3DUID = { 0xaeb2cdd4, 0x6e41, 0x43ea, { 0x94,0x1c,0x83,0x61,0xcc,0x76,0x07,0x81 } };
 
@@ -1871,26 +1858,26 @@ static enum wined3d_pci_vendor wined3d_guess_card_vendor(const char *gl_vendor_s
     return HW_VENDOR_NVIDIA;
 }
 
-static enum wined3d_d3d_level d3d_level_from_caps(const struct shader_caps *shader_caps,
+static enum wined3d_feature_level feature_level_from_caps(const struct shader_caps *shader_caps,
         const struct fragment_caps *fragment_caps)
 {
     if (shader_caps->vs_version >= 5)
-        return WINED3D_D3D_LEVEL_11;
+        return WINED3D_FEATURE_LEVEL_11;
     if (shader_caps->vs_version == 4)
-        return WINED3D_D3D_LEVEL_10;
+        return WINED3D_FEATURE_LEVEL_10;
     if (shader_caps->vs_version == 3)
-        return WINED3D_D3D_LEVEL_9_SM3;
+        return WINED3D_FEATURE_LEVEL_9_SM3;
     if (shader_caps->vs_version == 2)
-        return WINED3D_D3D_LEVEL_9_SM2;
+        return WINED3D_FEATURE_LEVEL_9_SM2;
     if (shader_caps->vs_version == 1)
-        return WINED3D_D3D_LEVEL_8;
+        return WINED3D_FEATURE_LEVEL_8;
 
     if (fragment_caps->TextureOpCaps & WINED3DTEXOPCAPS_DOTPRODUCT3)
-        return WINED3D_D3D_LEVEL_7;
+        return WINED3D_FEATURE_LEVEL_7;
     if (fragment_caps->MaxSimultaneousTextures > 1)
-        return WINED3D_D3D_LEVEL_6;
+        return WINED3D_FEATURE_LEVEL_6;
 
-    return WINED3D_D3D_LEVEL_5;
+    return WINED3D_FEATURE_LEVEL_5;
 }
 
 static const struct wined3d_renderer_table
@@ -2462,9 +2449,9 @@ card_fallback_intel[] =
     CARD_INTEL_G45,                 /* D3D10 */
     CARD_INTEL_IVBD,                /* D3D11 */
 };
-C_ASSERT(ARRAY_SIZE(card_fallback_nvidia)  == WINED3D_D3D_LEVEL_COUNT);
-C_ASSERT(ARRAY_SIZE(card_fallback_amd)     == WINED3D_D3D_LEVEL_COUNT);
-C_ASSERT(ARRAY_SIZE(card_fallback_intel)   == WINED3D_D3D_LEVEL_COUNT);
+C_ASSERT(ARRAY_SIZE(card_fallback_nvidia)  == WINED3D_FEATURE_LEVEL_COUNT);
+C_ASSERT(ARRAY_SIZE(card_fallback_amd)     == WINED3D_FEATURE_LEVEL_COUNT);
+C_ASSERT(ARRAY_SIZE(card_fallback_intel)   == WINED3D_FEATURE_LEVEL_COUNT);
 
 static enum wined3d_pci_device select_card_handler(const struct gl_vendor_selection *table,
         unsigned int table_size, enum wined3d_gl_vendor gl_vendor, const char *gl_renderer)
@@ -2497,7 +2484,7 @@ static const struct
     const char *description;        /* Description of the card selector i.e. Apple OS/X Intel */
     const struct gl_vendor_selection *gl_vendor_selection;
     unsigned int gl_vendor_count;
-    const enum wined3d_pci_device *card_fallback; /* An array with D3D_LEVEL_COUNT elements */
+    const enum wined3d_pci_device *card_fallback; /* An array with FEATURE_LEVEL_COUNT elements */
 }
 card_vendor_table[] =
 {
@@ -2515,9 +2502,9 @@ card_vendor_table[] =
             card_fallback_intel},
 };
 
-
-static enum wined3d_pci_device wined3d_guess_card(const struct shader_caps *shader_caps, const struct fragment_caps *fragment_caps,
-        DWORD glsl_version, const char *gl_renderer, enum wined3d_gl_vendor *gl_vendor, enum wined3d_pci_vendor *card_vendor)
+static enum wined3d_pci_device wined3d_guess_card(enum wined3d_feature_level feature_level,
+        DWORD glsl_version, const char *gl_renderer, enum wined3d_gl_vendor *gl_vendor,
+        enum wined3d_pci_vendor *card_vendor)
 {
     /* A Direct3D device object contains the PCI id (vendor + device) of the
      * videocard which is used for rendering. Various applications use this
@@ -2569,7 +2556,6 @@ static enum wined3d_pci_device wined3d_guess_card(const struct shader_caps *shad
      * memory behind our backs if really needed. Note that the amount of video
      * memory can be overruled using a registry setting. */
 
-    enum wined3d_d3d_level d3d_level = d3d_level_from_caps(shader_caps, fragment_caps);
     enum wined3d_pci_device device;
     unsigned int i;
 
@@ -2585,7 +2571,7 @@ static enum wined3d_pci_device wined3d_guess_card(const struct shader_caps *shad
             return device;
 
         TRACE("Unrecognized renderer %s, falling back to default.\n", debugstr_a(gl_renderer));
-        return card_vendor_table[i].card_fallback[d3d_level];
+        return card_vendor_table[i].card_fallback[feature_level];
     }
 
     FIXME("No card selector available for card vendor %04x (using GL_RENDERER %s).\n",
@@ -2593,7 +2579,7 @@ static enum wined3d_pci_device wined3d_guess_card(const struct shader_caps *shad
 
     /* Default to generic Nvidia hardware based on the supported OpenGL extensions. */
     *card_vendor = HW_VENDOR_NVIDIA;
-    return card_fallback_nvidia[d3d_level];
+    return card_fallback_nvidia[feature_level];
 }
 
 static const struct wined3d_vertex_pipe_ops *select_vertex_implementation(const struct wined3d_gl_info *gl_info,
@@ -3976,6 +3962,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     };
     struct wined3d_driver_info *driver_info = &adapter->driver_info;
     const char *gl_vendor_str, *gl_renderer_str, *gl_version_str;
+    struct wined3d_d3d_info *d3d_info = &adapter->d3d_info;
     struct wined3d_gl_info *gl_info = &adapter->gl_info;
     const struct gpu_description *gpu_description;
     struct wined3d_vertex_caps vertex_caps;
@@ -3984,10 +3971,10 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     const char *WGL_Extensions = NULL;
     enum wined3d_gl_vendor gl_vendor;
     DWORD gl_version, gl_ext_emul_mask;
-    UINT64 vram_bytes = 0;
-    HDC hdc;
-    unsigned int i, j;
     GLint context_profile = 0;
+    UINT64 vram_bytes = 0;
+    unsigned int i, j;
+    HDC hdc;
 
     TRACE("adapter %p.\n", adapter);
 
@@ -4317,41 +4304,43 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     adapter->fragment_pipe = select_fragment_implementation(gl_info, adapter->shader_backend);
 
     adapter->shader_backend->shader_get_caps(gl_info, &shader_caps);
-    adapter->d3d_info.vs_clipping = shader_caps.wined3d_caps & WINED3D_SHADER_CAP_VS_CLIPPING;
-    adapter->d3d_info.limits.vs_version = shader_caps.vs_version;
-    adapter->d3d_info.limits.hs_version = shader_caps.hs_version;
-    adapter->d3d_info.limits.ds_version = shader_caps.ds_version;
-    adapter->d3d_info.limits.gs_version = shader_caps.gs_version;
-    adapter->d3d_info.limits.ps_version = shader_caps.ps_version;
-    adapter->d3d_info.limits.cs_version = shader_caps.cs_version;
-    adapter->d3d_info.limits.vs_uniform_count = shader_caps.vs_uniform_count;
-    adapter->d3d_info.limits.ps_uniform_count = shader_caps.ps_uniform_count;
-    adapter->d3d_info.limits.varying_count = shader_caps.varying_count;
-    adapter->d3d_info.shader_double_precision = shader_caps.wined3d_caps & WINED3D_SHADER_CAP_DOUBLE_PRECISION;
+    d3d_info->vs_clipping = shader_caps.wined3d_caps & WINED3D_SHADER_CAP_VS_CLIPPING;
+    d3d_info->limits.vs_version = shader_caps.vs_version;
+    d3d_info->limits.hs_version = shader_caps.hs_version;
+    d3d_info->limits.ds_version = shader_caps.ds_version;
+    d3d_info->limits.gs_version = shader_caps.gs_version;
+    d3d_info->limits.ps_version = shader_caps.ps_version;
+    d3d_info->limits.cs_version = shader_caps.cs_version;
+    d3d_info->limits.vs_uniform_count = shader_caps.vs_uniform_count;
+    d3d_info->limits.ps_uniform_count = shader_caps.ps_uniform_count;
+    d3d_info->limits.varying_count = shader_caps.varying_count;
+    d3d_info->shader_double_precision = shader_caps.wined3d_caps & WINED3D_SHADER_CAP_DOUBLE_PRECISION;
 
     adapter->vertex_pipe->vp_get_caps(gl_info, &vertex_caps);
-    adapter->d3d_info.xyzrhw = vertex_caps.xyzrhw;
-    adapter->d3d_info.ffp_generic_attributes = vertex_caps.ffp_generic_attributes;
-    adapter->d3d_info.limits.ffp_vertex_blend_matrices = vertex_caps.max_vertex_blend_matrices;
-    adapter->d3d_info.limits.active_light_count = vertex_caps.max_active_lights;
-    adapter->d3d_info.emulated_flatshading = vertex_caps.emulated_flatshading;
+    d3d_info->xyzrhw = vertex_caps.xyzrhw;
+    d3d_info->ffp_generic_attributes = vertex_caps.ffp_generic_attributes;
+    d3d_info->limits.ffp_vertex_blend_matrices = vertex_caps.max_vertex_blend_matrices;
+    d3d_info->limits.active_light_count = vertex_caps.max_active_lights;
+    d3d_info->emulated_flatshading = vertex_caps.emulated_flatshading;
 
     adapter->fragment_pipe->get_caps(gl_info, &fragment_caps);
-    adapter->d3d_info.limits.ffp_blend_stages = fragment_caps.MaxTextureBlendStages;
-    adapter->d3d_info.limits.ffp_textures = fragment_caps.MaxSimultaneousTextures;
-    adapter->d3d_info.shader_color_key = fragment_caps.wined3d_caps & WINED3D_FRAGMENT_CAP_COLOR_KEY;
-    adapter->d3d_info.wined3d_creation_flags = wined3d_creation_flags;
-    TRACE("Max texture stages: %u.\n", adapter->d3d_info.limits.ffp_blend_stages);
+    d3d_info->limits.ffp_blend_stages = fragment_caps.MaxTextureBlendStages;
+    d3d_info->limits.ffp_textures = fragment_caps.MaxSimultaneousTextures;
+    d3d_info->shader_color_key = fragment_caps.wined3d_caps & WINED3D_FRAGMENT_CAP_COLOR_KEY;
+    d3d_info->wined3d_creation_flags = wined3d_creation_flags;
+    d3d_info->feature_level = feature_level_from_caps(&shader_caps, &fragment_caps);
 
-    adapter->d3d_info.valid_rt_mask = 0;
+    TRACE("Max texture stages: %u.\n", d3d_info->limits.ffp_blend_stages);
+
+    d3d_info->valid_rt_mask = 0;
     for (i = 0; i < gl_info->limits.buffers; ++i)
-        adapter->d3d_info.valid_rt_mask |= (1u << i);
+        d3d_info->valid_rt_mask |= (1u << i);
 
     adapter->d3d_info.valid_dual_rt_mask = 0;
     for (i = 0; i < gl_info->limits.dual_buffers; ++i)
         adapter->d3d_info.valid_dual_rt_mask |= (1u << i);
 
-    if (!adapter->d3d_info.shader_color_key)
+    if (!d3d_info->shader_color_key)
     {
         /* We do not want to deal with re-creating immutable texture storage for color keying emulation. */
         WARN("Disabling ARB_texture_storage because fragment pipe doesn't support color keying.\n");
@@ -4457,7 +4446,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         vendor = wined3d_guess_card_vendor(gl_vendor_str, gl_renderer_str);
         TRACE("Guessed vendor PCI ID 0x%04x.\n", vendor);
 
-        device = wined3d_guess_card(&shader_caps, &fragment_caps, gl_info->glsl_version,
+        device = wined3d_guess_card(d3d_info->feature_level, gl_info->glsl_version,
                 gl_renderer_str, &gl_vendor, &vendor);
         TRACE("Guessed device PCI ID 0x%04x.\n", device);
 
