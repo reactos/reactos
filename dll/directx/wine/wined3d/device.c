@@ -670,11 +670,12 @@ out:
 }
 
 /* Context activation is done by the caller. */
-static void create_dummy_textures(struct wined3d_device *device, struct wined3d_context *context)
+static void wined3d_device_gl_create_dummy_textures(struct wined3d_device_gl *device_gl,
+        struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_dummy_textures *textures = &wined3d_device_gl(device)->dummy_textures;
-    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_dummy_textures *textures = &device_gl->dummy_textures;
+    const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     unsigned int i;
     DWORD color;
 
@@ -687,7 +688,7 @@ static void create_dummy_textures(struct wined3d_device *device, struct wined3d_
      * OpenGL will only allow that when a valid texture is bound.
      * We emulate this by creating dummy textures and binding them
      * to each texture stage when the currently set D3D texture is NULL. */
-    context_active_texture(context, gl_info, 0);
+    context_active_texture(&context_gl->c, gl_info, 0);
 
     gl_info->gl_ops.gl.p_glGenTextures(1, &textures->tex_1d);
     TRACE("Dummy 1D texture given name %u.\n", textures->tex_1d);
@@ -801,7 +802,7 @@ static void create_dummy_textures(struct wined3d_device *device, struct wined3d_
 
     checkGLcall("create dummy textures");
 
-    context_bind_dummy_textures(context);
+    context_bind_dummy_textures(&context_gl->c);
 }
 
 /* Context activation is done by the caller. */
@@ -1080,6 +1081,7 @@ void wined3d_device_delete_opengl_contexts_cs(void *object)
 void wined3d_device_create_primary_opengl_context_cs(void *object)
 {
     struct wined3d_device *device = object;
+    struct wined3d_context_gl *context_gl;
     struct wined3d_swapchain *swapchain;
     struct wined3d_context *context;
     struct wined3d_texture *target;
@@ -1107,7 +1109,8 @@ void wined3d_device_create_primary_opengl_context_cs(void *object)
     swapchain = device->swapchains[0];
     target = swapchain->back_buffers ? swapchain->back_buffers[0] : swapchain->front_buffer;
     context = context_acquire(device, target, 0);
-    create_dummy_textures(device, context);
+    context_gl = wined3d_context_gl(context);
+    wined3d_device_gl_create_dummy_textures(wined3d_device_gl(device), context_gl);
     create_default_samplers(device, context);
     context_release(context);
 }
