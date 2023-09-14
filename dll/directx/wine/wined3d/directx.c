@@ -6785,7 +6785,7 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal, 
     return TRUE;
 }
 
-static BOOL wined3d_adapter_init_nogl(struct wined3d_adapter *adapter, UINT ordinal)
+static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter, UINT ordinal)
 {
     DISPLAY_DEVICEW display_device;
 
@@ -6831,7 +6831,7 @@ HRESULT wined3d_init(struct wined3d *wined3d, DWORD flags)
     TRACE("Initializing adapters.\n");
 
     if (flags & WINED3D_NO3D)
-        ret = wined3d_adapter_init_nogl(&wined3d->adapters[0], 0);
+        ret = wined3d_adapter_no3d_init(&wined3d->adapters[0], 0);
     else
         ret = wined3d_adapter_init(&wined3d->adapters[0], 0, flags);
     if (!ret)
