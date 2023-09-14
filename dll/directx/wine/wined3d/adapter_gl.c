@@ -1714,6 +1714,7 @@ cards_nvidia_mesa[] =
     {"NV117",                       CARD_NVIDIA_GEFORCE_GTX750},
     /* Kepler */
     {"NV108",                       CARD_NVIDIA_GEFORCE_GT740M},
+    {"NV106",                       CARD_NVIDIA_GEFORCE_GT720},
     {"NVF1",                        CARD_NVIDIA_GEFORCE_GTX780TI},
     {"NVF0",                        CARD_NVIDIA_GEFORCE_GTX780},
     {"NVE6",                        CARD_NVIDIA_GEFORCE_GTX770M},
