@@ -1506,23 +1506,15 @@ static BOOL wined3d_check_render_target_format(const struct wined3d_adapter *ada
     return TRUE;
 }
 
-static BOOL wined3d_check_surface_capability(const struct wined3d_format *format)
+static BOOL wined3d_check_surface_format(const struct wined3d_format *format)
 {
     if ((format->flags[WINED3D_GL_RES_TYPE_TEX_2D] | format->flags[WINED3D_GL_RES_TYPE_RB]) & WINED3DFMT_FLAG_BLIT)
-    {
-        TRACE("[OK]\n");
         return TRUE;
-    }
 
     if ((format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & (WINED3DFMT_FLAG_EXTENSION | WINED3DFMT_FLAG_TEXTURE))
             == (WINED3DFMT_FLAG_EXTENSION | WINED3DFMT_FLAG_TEXTURE))
-    {
-        TRACE("[OK]\n");
         return TRUE;
-    }
 
-    /* Reject other formats */
-    TRACE("[FAILED]\n");
     return FALSE;
 }
 
@@ -1591,9 +1583,9 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
                     | WINED3D_BIND_DEPTH_STENCIL;
             if (!(bind_flags & WINED3D_BIND_SHADER_RESOURCE))
             {
-                if (!wined3d_check_surface_capability(format))
+                if (!wined3d_check_surface_format(format))
                 {
-                    TRACE("[FAILED] - Not supported for plain surfaces.\n");
+                    TRACE("%s is not supported for plain surfaces.\n", debug_d3dformat(format->id));
                     return WINED3DERR_NOTAVAILABLE;
                 }
 
