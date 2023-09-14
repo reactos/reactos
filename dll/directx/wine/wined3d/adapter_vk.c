@@ -165,6 +165,32 @@ static HRESULT wined3d_select_vulkan_queue_family(const struct wined3d_adapter_v
     return E_FAIL;
 }
 
+static void wined3d_disable_vulkan_features(VkPhysicalDeviceFeatures *features)
+{
+    features->depthBounds = VK_FALSE;
+    features->alphaToOne = VK_FALSE;
+    features->textureCompressionETC2 = VK_FALSE;
+    features->textureCompressionASTC_LDR = VK_FALSE;
+    features->shaderStorageImageMultisample = VK_FALSE;
+    features->shaderUniformBufferArrayDynamicIndexing = VK_FALSE;
+    features->shaderSampledImageArrayDynamicIndexing = VK_FALSE;
+    features->shaderStorageBufferArrayDynamicIndexing = VK_FALSE;
+    features->shaderStorageImageArrayDynamicIndexing = VK_FALSE;
+    features->shaderInt16 = VK_FALSE;
+    features->shaderResourceResidency = VK_FALSE;
+    features->shaderResourceMinLod = VK_FALSE;
+    features->sparseBinding = VK_FALSE;
+    features->sparseResidencyBuffer = VK_FALSE;
+    features->sparseResidencyImage2D = VK_FALSE;
+    features->sparseResidencyImage3D = VK_FALSE;
+    features->sparseResidency2Samples = VK_FALSE;
+    features->sparseResidency4Samples = VK_FALSE;
+    features->sparseResidency8Samples = VK_FALSE;
+    features->sparseResidency16Samples = VK_FALSE;
+    features->sparseResidencyAliased = VK_FALSE;
+    features->inheritedQueries = VK_FALSE;
+}
+
 static HRESULT adapter_vk_create_device(struct wined3d *wined3d, const struct wined3d_adapter *adapter,
         enum wined3d_device_type device_type, HWND focus_window, unsigned int flags, BYTE surface_alignment,
         const enum wined3d_feature_level *levels, unsigned int level_count,
@@ -192,6 +218,7 @@ static HRESULT adapter_vk_create_device(struct wined3d *wined3d, const struct wi
     physical_device = adapter_vk->physical_device;
 
     VK_CALL(vkGetPhysicalDeviceFeatures(physical_device, &features));
+    wined3d_disable_vulkan_features(&features);
 
     queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queue_info.pNext = NULL;
