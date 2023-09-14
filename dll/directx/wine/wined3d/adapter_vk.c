@@ -463,6 +463,37 @@ static void adapter_vk_uninit_3d(struct wined3d_device *device)
     wined3d_context_cleanup(context_vk);
 }
 
+static HRESULT adapter_vk_create_swapchain(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_swapchain **swapchain)
+{
+    struct wined3d_swapchain *swapchain_vk;
+    HRESULT hr;
+
+    TRACE("device %p, desc %p, parent %p, parent_ops %p, swapchain %p.\n",
+            device, desc, parent, parent_ops, swapchain);
+
+    if (!(swapchain_vk = heap_alloc_zero(sizeof(*swapchain_vk))))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(hr = wined3d_swapchain_vk_init(swapchain_vk, device, desc, parent, parent_ops)))
+    {
+        WARN("Failed to initialise swapchain, hr %#x.\n", hr);
+        heap_free(swapchain_vk);
+        return hr;
+    }
+
+    TRACE("Created swapchain %p.\n", swapchain_vk);
+    *swapchain = swapchain_vk;
+
+    return hr;
+}
+
+static void adapter_vk_destroy_swapchain(struct wined3d_swapchain *swapchain)
+{
+    wined3d_swapchain_cleanup(swapchain);
+    heap_free(swapchain);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
 {
     adapter_vk_destroy,
@@ -474,6 +505,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
     adapter_vk_check_format,
     adapter_vk_init_3d,
     adapter_vk_uninit_3d,
+    adapter_vk_create_swapchain,
+    adapter_vk_destroy_swapchain,
 };
 
 static unsigned int wined3d_get_wine_vk_version(void)

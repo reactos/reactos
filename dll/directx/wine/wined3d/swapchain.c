@@ -36,7 +36,7 @@ static void wined3d_swapchain_destroy_object(void *object)
     swapchain_destroy_contexts(object);
 }
 
-static void swapchain_cleanup(struct wined3d_swapchain *swapchain)
+void wined3d_swapchain_cleanup(struct wined3d_swapchain *swapchain)
 {
     HRESULT hr;
     UINT i;
@@ -135,12 +135,10 @@ ULONG CDECL wined3d_swapchain_decref(struct wined3d_swapchain *swapchain)
             wined3d_device_uninit_3d(device);
         wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
-        swapchain_cleanup(swapchain);
         swapchain->parent_ops->wined3d_object_destroyed(swapchain->parent);
+        swapchain->device->adapter->adapter_ops->adapter_destroy_swapchain(swapchain);
 
         wined3d_mutex_unlock();
-
-        heap_free(swapchain);
     }
 
     return refcount;
@@ -587,7 +585,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
     context_release(context);
 }
 
-static void swapchain_gl_frontbuffer_updated(struct wined3d_swapchain *swapchain)
+static void swapchain_frontbuffer_updated(struct wined3d_swapchain *swapchain)
 {
     struct wined3d_texture *front_buffer = swapchain->front_buffer;
     struct wined3d_context *context;
@@ -601,7 +599,19 @@ static void swapchain_gl_frontbuffer_updated(struct wined3d_swapchain *swapchain
 static const struct wined3d_swapchain_ops swapchain_gl_ops =
 {
     swapchain_gl_present,
-    swapchain_gl_frontbuffer_updated,
+    swapchain_frontbuffer_updated,
+};
+
+static void swapchain_vk_present(struct wined3d_swapchain *swapchain, const RECT *src_rect,
+        const RECT *dst_rect, unsigned int swap_interval, uint32_t flags)
+{
+    FIXME("Not implemented.\n");
+}
+
+static const struct wined3d_swapchain_ops swapchain_vk_ops =
+{
+    swapchain_vk_present,
+    swapchain_frontbuffer_updated,
 };
 
 static void swapchain_gdi_frontbuffer_updated(struct wined3d_swapchain *swapchain)
@@ -693,7 +703,7 @@ static void swapchain_gdi_present(struct wined3d_swapchain *swapchain,
     swapchain_gdi_frontbuffer_updated(swapchain);
 }
 
-static const struct wined3d_swapchain_ops swapchain_gdi_ops =
+static const struct wined3d_swapchain_ops swapchain_no3d_ops =
 {
     swapchain_gdi_present,
     swapchain_gdi_frontbuffer_updated,
@@ -792,8 +802,9 @@ static HRESULT wined3d_swapchain_state_init(struct wined3d_swapchain_state *stat
     return hr;
 }
 
-static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3d_device *device,
-        struct wined3d_swapchain_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
+static HRESULT wined3d_swapchain_init(struct wined3d_swapchain *swapchain, struct wined3d_device *device,
+        struct wined3d_swapchain_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops,
+        const struct wined3d_swapchain_ops *swapchain_ops)
 {
     const struct wined3d_adapter *adapter = device->adapter;
     struct wined3d_resource_desc texture_desc;
@@ -803,6 +814,8 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     unsigned int i;
     HWND window;
     HRESULT hr;
+
+    wined3d_mutex_lock();
 
     if (desc->backbuffer_count > 1)
     {
@@ -815,15 +828,11 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
             && desc->swap_effect != WINED3D_SWAP_EFFECT_COPY)
         FIXME("Unimplemented swap effect %#x.\n", desc->swap_effect);
 
-    if (device->wined3d->flags & WINED3D_NO3D)
-        swapchain->swapchain_ops = &swapchain_gdi_ops;
-    else
-        swapchain->swapchain_ops = &swapchain_gl_ops;
-
     window = desc->device_window ? desc->device_window : device->create_parms.focus_window;
     if (FAILED(hr = wined3d_swapchain_state_init(&swapchain->state, desc, window, device->wined3d, adapter->ordinal)))
         return hr;
 
+    swapchain->swapchain_ops = swapchain_ops;
     swapchain->device = device;
     swapchain->parent = parent;
     swapchain->parent_ops = parent_ops;
@@ -982,6 +991,8 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
 
     wined3d_swapchain_get_gamma_ramp(swapchain, &swapchain->orig_gamma);
 
+    wined3d_mutex_unlock();
+
     return WINED3D_OK;
 
 err:
@@ -1015,7 +1026,36 @@ err:
         wined3d_texture_decref(swapchain->front_buffer);
     }
 
+    wined3d_mutex_unlock();
+
     return hr;
+}
+
+HRESULT wined3d_swapchain_no3d_init(struct wined3d_swapchain *swapchain_no3d, struct wined3d_device *device,
+        struct wined3d_swapchain_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    TRACE("swapchain_no3d %p, device %p, desc %p, parent %p, parent_ops %p.\n",
+            swapchain_no3d, device, desc, parent, parent_ops);
+
+    return wined3d_swapchain_init(swapchain_no3d, device, desc, parent, parent_ops, &swapchain_no3d_ops);
+}
+
+HRESULT wined3d_swapchain_gl_init(struct wined3d_swapchain *swapchain_gl, struct wined3d_device *device,
+        struct wined3d_swapchain_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    TRACE("swapchain_gl %p, device %p, desc %p, parent %p, parent_ops %p.\n",
+            swapchain_gl, device, desc, parent, parent_ops);
+
+    return wined3d_swapchain_init(swapchain_gl, device, desc, parent, parent_ops, &swapchain_gl_ops);
+}
+
+HRESULT wined3d_swapchain_vk_init(struct wined3d_swapchain *swapchain_vk, struct wined3d_device *device,
+        struct wined3d_swapchain_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    TRACE("swapchain_vk %p, device %p, desc %p, parent %p, parent_ops %p.\n",
+            swapchain_vk, device, desc, parent, parent_ops);
+
+    return wined3d_swapchain_init(swapchain_vk, device, desc, parent, parent_ops, &swapchain_vk_ops);
 }
 
 HRESULT CDECL wined3d_swapchain_create(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
@@ -1024,21 +1064,9 @@ HRESULT CDECL wined3d_swapchain_create(struct wined3d_device *device, struct win
     struct wined3d_swapchain *object;
     HRESULT hr;
 
-    TRACE("device %p, desc %p, parent %p, parent_ops %p, swapchain %p.\n",
-            device, desc, parent, parent_ops, swapchain);
-
-    if (!(object = heap_alloc_zero(sizeof(*object))))
-        return E_OUTOFMEMORY;
-
-    wined3d_mutex_lock();
-    hr = swapchain_init(object, device, desc, parent, parent_ops);
-    wined3d_mutex_unlock();
-    if (FAILED(hr))
-    {
-        WARN("Failed to initialize swapchain, hr %#x.\n", hr);
-        heap_free(object);
+    if (FAILED(hr = device->adapter->adapter_ops->adapter_create_swapchain(device,
+            desc, parent, parent_ops, &object)))
         return hr;
-    }
 
     if (desc->flags & WINED3D_SWAPCHAIN_HOOK)
         wined3d_hook_swapchain(object);
@@ -1049,18 +1077,16 @@ HRESULT CDECL wined3d_swapchain_create(struct wined3d_device *device, struct win
         if (FAILED(hr = wined3d_device_set_implicit_swapchain(device, object)))
         {
             wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
-            swapchain_cleanup(object);
+            device->adapter->adapter_ops->adapter_destroy_swapchain(object);
             wined3d_mutex_unlock();
-            heap_free(swapchain);
             return hr;
         }
         wined3d_mutex_unlock();
     }
 
-    TRACE("Created swapchain %p.\n", object);
     *swapchain = object;
 
-    return WINED3D_OK;
+    return hr;
 }
 
 static struct wined3d_context *swapchain_create_context(struct wined3d_swapchain *swapchain)

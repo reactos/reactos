@@ -2783,6 +2783,9 @@ struct wined3d_adapter_ops
             const struct wined3d_format *ds_format);
     HRESULT (*adapter_init_3d)(struct wined3d_device *device);
     void (*adapter_uninit_3d)(struct wined3d_device *device);
+    HRESULT (*adapter_create_swapchain)(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
+            void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_swapchain **swapchain);
+    void (*adapter_destroy_swapchain)(struct wined3d_swapchain *swapchain);
 };
 
 /* The adapter structure */
@@ -4282,12 +4285,25 @@ struct wined3d_swapchain
 };
 
 void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activate) DECLSPEC_HIDDEN;
+void wined3d_swapchain_cleanup(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 struct wined3d_context *swapchain_get_context(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 void swapchain_destroy_contexts(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 HDC swapchain_get_backup_dc(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 void swapchain_update_draw_bindings(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 void swapchain_set_max_frame_latency(struct wined3d_swapchain *swapchain,
         const struct wined3d_device *device) DECLSPEC_HIDDEN;
+
+HRESULT wined3d_swapchain_no3d_init(struct wined3d_swapchain *swapchain_no3d,
+        struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
+
+HRESULT wined3d_swapchain_gl_init(struct wined3d_swapchain *swapchain_gl,
+        struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
+
+HRESULT wined3d_swapchain_vk_init(struct wined3d_swapchain *swapchain_vk,
+        struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * Utility function prototypes
