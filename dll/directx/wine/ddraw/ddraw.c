@@ -1248,7 +1248,7 @@ void ddraw_d3dcaps1_from_7(D3DDEVICEDESC *caps1, D3DDEVICEDESC7 *caps7)
 
 HRESULT ddraw_get_d3dcaps(const struct ddraw *ddraw, D3DDEVICEDESC7 *caps)
 {
-    WINED3DCAPS wined3d_caps;
+    struct wined3d_caps wined3d_caps;
     HRESULT hr;
 
     TRACE("ddraw %p, caps %p.\n", ddraw, caps);
@@ -1480,10 +1480,10 @@ HRESULT CALLBACK enum_zbuffer(DDPIXELFORMAT *format, void *ctx)
 static HRESULT WINAPI ddraw7_GetCaps(IDirectDraw7 *iface, DDCAPS *DriverCaps, DDCAPS *HELCaps)
 {
     struct ddraw *ddraw = impl_from_IDirectDraw7(iface);
-    DDCAPS caps;
-    WINED3DCAPS winecaps;
-    HRESULT hr;
     DDSCAPS2 ddscaps = {0, 0, 0, {0}};
+    struct wined3d_caps winecaps;
+    DDCAPS caps;
+    HRESULT hr;
 
     TRACE("iface %p, driver_caps %p, hel_caps %p.\n", iface, DriverCaps, HELCaps);
 
@@ -5036,7 +5036,7 @@ static const struct wined3d_device_parent_ops ddraw_wined3d_device_parent_ops =
 
 HRESULT ddraw_init(struct ddraw *ddraw, DWORD flags, enum wined3d_device_type device_type)
 {
-    WINED3DCAPS caps;
+    struct wined3d_caps caps;
     HRESULT hr;
 
     ddraw->IDirectDraw7_iface.lpVtbl = &ddraw7_vtbl;
