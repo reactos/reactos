@@ -54,7 +54,7 @@ static void wined3d_query_create_buffer_object(struct wined3d_context_gl *contex
     query->buffer_object = buffer_object;
 }
 
-static void wined3d_query_destroy_buffer_object(struct wined3d_context_gl *context_gl, struct wined3d_query *query)
+void wined3d_query_gl_destroy_buffer_object(struct wined3d_context_gl *context_gl, struct wined3d_query *query)
 {
     const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
@@ -93,7 +93,7 @@ static BOOL wined3d_query_buffer_queue_result(struct wined3d_context_gl *context
         if (wined3d_query_buffer_is_valid(query))
             wined3d_query_buffer_invalidate(query);
         else
-            wined3d_query_destroy_buffer_object(context_gl, query);
+            wined3d_query_gl_destroy_buffer_object(context_gl, query);
     }
 
     if (!query->buffer_object)
@@ -430,21 +430,6 @@ static void wined3d_query_destroy_object(void *object)
 
     if (!list_empty(&query->poll_list_entry))
         list_remove(&query->poll_list_entry);
-
-    if (query->buffer_object)
-    {
-        struct wined3d_context *context;
-
-        context = context_acquire(query->device, NULL, 0);
-        wined3d_query_destroy_buffer_object(wined3d_context_gl(context), query);
-        context_release(context);
-    }
-
-    /* Queries are specific to the GL context that created them. Not
-     * deleting the query will obviously leak it, but that's still better
-     * than potentially deleting a different query with the same id in this
-     * context, and (still) leaking the actual query. */
-    query->query_ops->query_destroy(query);
 }
 
 ULONG CDECL wined3d_query_decref(struct wined3d_query *query)
@@ -455,8 +440,11 @@ ULONG CDECL wined3d_query_decref(struct wined3d_query *query)
 
     if (!refcount)
     {
+        struct wined3d_device *device = query->device;
+
         query->parent_ops->wined3d_object_destroyed(query->parent);
-        wined3d_cs_destroy_object(query->device->cs, wined3d_query_destroy_object, query);
+        wined3d_cs_destroy_object(device->cs, wined3d_query_destroy_object, query);
+        device->adapter->adapter_ops->adapter_destroy_query(query);
     }
 
     return refcount;
@@ -1426,7 +1414,7 @@ static HRESULT wined3d_overflow_query_create(struct wined3d_device *device,
     return WINED3D_OK;
 }
 
-HRESULT CDECL wined3d_query_create(struct wined3d_device *device, enum wined3d_query_type type,
+HRESULT wined3d_query_gl_create(struct wined3d_device *device, enum wined3d_query_type type,
         void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_query **query)
 {
     TRACE("device %p, type %#x, parent %p, parent_ops %p, query %p.\n",
@@ -1467,4 +1455,13 @@ HRESULT CDECL wined3d_query_create(struct wined3d_device *device, enum wined3d_q
             FIXME("Unhandled query type %#x.\n", type);
             return WINED3DERR_NOTAVAILABLE;
     }
+}
+
+HRESULT CDECL wined3d_query_create(struct wined3d_device *device, enum wined3d_query_type type,
+        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_query **query)
+{
+    TRACE("device %p, type %#x, parent %p, parent_ops %p, query %p.\n",
+            device, type, parent, parent_ops, query);
+
+    return device->adapter->adapter_ops->adapter_create_query(device, type, parent, parent_ops, query);
 }

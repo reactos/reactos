@@ -1792,6 +1792,11 @@ struct wined3d_query
     UINT64 *map_ptr;
 };
 
+HRESULT wined3d_query_gl_create(struct wined3d_device *device, enum wined3d_query_type type, void *parent,
+        const struct wined3d_parent_ops *parent_ops, struct wined3d_query **query) DECLSPEC_HIDDEN;
+void wined3d_query_gl_destroy_buffer_object(struct wined3d_context_gl *context_gl,
+        struct wined3d_query *query) DECLSPEC_HIDDEN;
+
 struct wined3d_event_query
 {
     struct wined3d_query query;
@@ -2816,6 +2821,9 @@ struct wined3d_adapter_ops
     HRESULT (*adapter_create_sampler)(struct wined3d_device *device, const struct wined3d_sampler_desc *desc,
             void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_sampler **sampler);
     void (*adapter_destroy_sampler)(struct wined3d_sampler *sampler);
+    HRESULT (*adapter_create_query)(struct wined3d_device *device, enum wined3d_query_type type,
+            void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_query **query);
+    void (*adapter_destroy_query)(struct wined3d_query *query);
 };
 
 /* The adapter structure */

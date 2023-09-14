@@ -5069,6 +5069,42 @@ static void adapter_gl_destroy_sampler(struct wined3d_sampler *sampler)
     wined3d_cs_destroy_object(sampler->device->cs, wined3d_sampler_gl_destroy_object, sampler_gl);
 }
 
+static HRESULT adapter_gl_create_query(struct wined3d_device *device, enum wined3d_query_type type,
+        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_query **query)
+{
+    TRACE("device %p, type %#x, parent %p, parent_ops %p, query %p.\n",
+            device, type, parent, parent_ops, query);
+
+    return wined3d_query_gl_create(device, type, parent, parent_ops, query);
+}
+
+static void wined3d_query_gl_destroy_object(void *object)
+{
+    struct wined3d_query *query = object;
+
+    if (query->buffer_object)
+    {
+        struct wined3d_context *context;
+
+        context = context_acquire(query->device, NULL, 0);
+        wined3d_query_gl_destroy_buffer_object(wined3d_context_gl(context), query);
+        context_release(context);
+    }
+
+    /* Queries are specific to the GL context that created them. Not
+     * deleting the query will obviously leak it, but that's still better
+     * than potentially deleting a different query with the same id in this
+     * context, and (still) leaking the actual query. */
+    query->query_ops->query_destroy(query);
+}
+
+static void adapter_gl_destroy_query(struct wined3d_query *query)
+{
+    TRACE("query %p.\n", query);
+
+    wined3d_cs_destroy_object(query->device->cs, wined3d_query_gl_destroy_object, query);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
 {
     adapter_gl_destroy,
@@ -5094,6 +5130,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
     adapter_gl_destroy_unordered_access_view,
     adapter_gl_create_sampler,
     adapter_gl_destroy_sampler,
+    adapter_gl_create_query,
+    adapter_gl_destroy_query,
 };
 
 static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,

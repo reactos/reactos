@@ -759,6 +759,20 @@ static void adapter_vk_destroy_sampler(struct wined3d_sampler *sampler)
     wined3d_cs_destroy_object(sampler->device->cs, heap_free, sampler);
 }
 
+static HRESULT adapter_vk_create_query(struct wined3d_device *device, enum wined3d_query_type type,
+        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_query **query)
+{
+    TRACE("device %p, type %#x, parent %p, parent_ops %p, query %p.\n",
+            device, type, parent, parent_ops, query);
+
+    return WINED3DERR_NOTAVAILABLE;
+}
+
+static void adapter_vk_destroy_query(struct wined3d_query *query)
+{
+    TRACE("query %p.\n", query);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
 {
     adapter_vk_destroy,
@@ -784,6 +798,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
     adapter_vk_destroy_unordered_access_view,
     adapter_vk_create_sampler,
     adapter_vk_destroy_sampler,
+    adapter_vk_create_query,
+    adapter_vk_destroy_query,
 };
 
 static unsigned int wined3d_get_wine_vk_version(void)
