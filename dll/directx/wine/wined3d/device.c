@@ -1092,7 +1092,7 @@ HRESULT CDECL wined3d_device_init_3d(struct wined3d_device *device,
         goto err_out;
     }
 
-    if (swapchain_desc->backbuffer_count)
+    if (swapchain_desc->backbuffer_count && swapchain_desc->backbuffer_usage & WINED3DUSAGE_RENDERTARGET)
     {
         struct wined3d_resource *back_buffer = &swapchain->back_buffers[0]->resource;
         struct wined3d_view_desc view_desc;
@@ -1128,7 +1128,7 @@ HRESULT CDECL wined3d_device_init_3d(struct wined3d_device *device,
     TRACE("All defaults now set up.\n");
 
     /* Clear the screen */
-    if (swapchain->back_buffers && swapchain->back_buffers[0])
+    if (device->back_buffer_view)
         clear_flags |= WINED3DCLEAR_TARGET;
     if (swapchain_desc->enable_auto_depth_stencil)
         clear_flags |= WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL;
@@ -4949,7 +4949,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         wined3d_rendertarget_view_decref(device->back_buffer_view);
         device->back_buffer_view = NULL;
     }
-    if (swapchain->desc.backbuffer_count)
+    if (swapchain->desc.backbuffer_count && swapchain->desc.backbuffer_usage & WINED3DUSAGE_RENDERTARGET)
     {
         struct wined3d_resource *back_buffer = &swapchain->back_buffers[0]->resource;
 
