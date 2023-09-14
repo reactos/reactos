@@ -31,6 +31,7 @@
 #include "devpkey.h"
 #include "setupapi.h"
 #include "cfgmgr32.h"
+#include "cguid.h"
 
 #include "wine/heap.h"
 #include "wine/test.h"
