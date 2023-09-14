@@ -2159,7 +2159,7 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
     }
 }
 
-static void texture2d_download_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
+static void texture_download_data_slow_path(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, const struct wined3d_bo_address *data)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
@@ -2186,7 +2186,7 @@ static void texture2d_download_data(struct wined3d_texture *texture, unsigned in
     target = wined3d_texture_gl_get_sub_resource_target(wined3d_texture_gl(texture), sub_resource_idx);
     level = sub_resource_idx % texture->level_count;
 
-    if (target == GL_TEXTURE_2D_ARRAY)
+    if (target == GL_TEXTURE_1D_ARRAY || target == GL_TEXTURE_2D_ARRAY)
     {
         if (format_gl->f.download)
         {
@@ -2401,12 +2401,12 @@ void wined3d_texture_download_data(struct wined3d_texture *texture, unsigned int
     target = wined3d_texture_gl_get_sub_resource_target(wined3d_texture_gl(texture), sub_resource_idx);
     level = sub_resource_idx % texture->level_count;
 
-    if (texture->resource.type == WINED3D_RTYPE_TEXTURE_2D
-        && (target == GL_TEXTURE_2D_ARRAY || format_gl->f.conv_byte_count
+    if ((texture->resource.type == WINED3D_RTYPE_TEXTURE_2D
+            && (target == GL_TEXTURE_2D_ARRAY || format_gl->f.conv_byte_count
             || texture->flags & (WINED3D_TEXTURE_CONVERTED | WINED3D_TEXTURE_COND_NP2_EMULATED)))
+            || target == GL_TEXTURE_1D_ARRAY)
     {
-        /* 2D-specific special cases. */
-        texture2d_download_data(texture, sub_resource_idx, context, data);
+        texture_download_data_slow_path(texture, sub_resource_idx, context, data);
         return;
     }
 
