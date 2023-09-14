@@ -1211,7 +1211,9 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
     identifier->device_id = adapter->driver_info.device;
     identifier->subsystem_id = 0;
     identifier->revision = 0;
-    memcpy(&identifier->device_identifier, &IID_D3DDEVICE_D3DUID, sizeof(identifier->device_identifier));
+    identifier->device_identifier = IID_D3DDEVICE_D3DUID;
+    identifier->driver_uuid = adapter->driver_uuid;
+    identifier->device_uuid = adapter->device_uuid;
     identifier->whql_level = (flags & WINED3DENUM_NO_WHQL_LEVEL) ? 0 : 1;
     identifier->adapter_luid = adapter->luid;
     identifier->video_memory = min(~(SIZE_T)0, adapter->driver_info.vram_bytes);
@@ -2547,6 +2549,9 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int o
     }
     TRACE("Allocated LUID %08x:%08x for adapter %p.\n",
             adapter->luid.HighPart, adapter->luid.LowPart, adapter);
+
+    memset(&adapter->driver_uuid, 0, sizeof(adapter->driver_uuid));
+    memset(&adapter->device_uuid, 0, sizeof(adapter->device_uuid));
 
     adapter->formats = NULL;
 

@@ -179,6 +179,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_EXT_framebuffer_blit",             EXT_FRAMEBUFFER_BLIT          },
     {"GL_EXT_framebuffer_multisample",      EXT_FRAMEBUFFER_MULTISAMPLE   },
     {"GL_EXT_framebuffer_object",           EXT_FRAMEBUFFER_OBJECT        },
+    {"GL_EXT_memory_object",                EXT_MEMORY_OBJECT             },
     {"GL_EXT_gpu_program_parameters",       EXT_GPU_PROGRAM_PARAMETERS    },
     {"GL_EXT_gpu_shader4",                  EXT_GPU_SHADER4               },
     {"GL_EXT_packed_depth_stencil",         EXT_PACKED_DEPTH_STENCIL      },
@@ -2499,6 +2500,9 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     USE_GL_FUNC(glVertexAttribI4uivEXT)
     USE_GL_FUNC(glVertexAttribI4usvEXT)
     USE_GL_FUNC(glVertexAttribIPointerEXT)
+    /* GL_EXT_memory_object */
+    USE_GL_FUNC(glGetUnsignedBytei_vEXT)
+    USE_GL_FUNC(glGetUnsignedBytevEXT)
     /* GL_EXT_point_parameters */
     USE_GL_FUNC(glPointParameterfEXT)
     USE_GL_FUNC(glPointParameterfvEXT)
@@ -3870,6 +3874,28 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
 
     adapter->vram_bytes_used = 0;
     TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(driver_info->vram_bytes));
+
+    if (gl_info->supported[EXT_MEMORY_OBJECT])
+    {
+        GLint device_count = 0;
+
+        gl_info->gl_ops.gl.p_glGetIntegerv(GL_NUM_DEVICE_UUIDS_EXT, &device_count);
+        if (device_count > 0)
+        {
+            if (device_count > 1)
+                FIXME("A set of %d devices is not supported.\n", device_count);
+
+            GL_EXTCALL(glGetUnsignedBytevEXT(GL_DRIVER_UUID_EXT, (GLubyte *)&adapter->driver_uuid));
+            GL_EXTCALL(glGetUnsignedBytei_vEXT(GL_DEVICE_UUID_EXT, 0, (GLubyte *)&adapter->device_uuid));
+
+            TRACE("Driver UUID: %s, device UUID %s.\n",
+                    debugstr_guid(&adapter->driver_uuid), debugstr_guid(&adapter->device_uuid));
+        }
+        else
+        {
+            WARN("Unexpected device count %d.\n", device_count);
+        }
+    }
 
     gl_ext_emul_mask = adapter->vertex_pipe->vp_get_emul_mask(gl_info)
             | adapter->fragment_pipe->get_emul_mask(gl_info);

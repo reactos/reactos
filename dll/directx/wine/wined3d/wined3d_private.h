@@ -2695,7 +2695,7 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
 /* The adapter structure */
 struct wined3d_adapter
 {
-    UINT ordinal;
+    unsigned int ordinal;
     POINT monitor_position;
     enum wined3d_format_id screen_format;
 
@@ -2703,6 +2703,8 @@ struct wined3d_adapter
     struct wined3d_d3d_info d3d_info;
     struct wined3d_driver_info driver_info;
     UINT64 vram_bytes_used;
+    GUID driver_uuid;
+    GUID device_uuid;
     LUID luid;
 
     WCHAR device_name[CCHDEVICENAME]; /* for use with e.g. ChangeDisplaySettings() */
