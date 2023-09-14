@@ -1584,17 +1584,17 @@ static void state_colorwrite0(struct wined3d_context *context, const struct wine
 
 static void state_colorwrite1(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    set_color_mask(wined3d_context_gl(context)->gl_info, 1, state->render_states[WINED3D_RS_COLORWRITEENABLE]);
+    set_color_mask(wined3d_context_gl(context)->gl_info, 1, state->render_states[WINED3D_RS_COLORWRITEENABLE1]);
 }
 
 static void state_colorwrite2(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    set_color_mask(wined3d_context_gl(context)->gl_info, 2, state->render_states[WINED3D_RS_COLORWRITEENABLE]);
+    set_color_mask(wined3d_context_gl(context)->gl_info, 2, state->render_states[WINED3D_RS_COLORWRITEENABLE2]);
 }
 
 static void state_colorwrite3(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    set_color_mask(wined3d_context_gl(context)->gl_info, 3, state->render_states[WINED3D_RS_COLORWRITEENABLE]);
+    set_color_mask(wined3d_context_gl(context)->gl_info, 3, state->render_states[WINED3D_RS_COLORWRITEENABLE3]);
 }
 
 static void state_localviewer(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
