@@ -1882,21 +1882,11 @@ HGLRC context_create_wgl_attribs(const struct wined3d_gl_info *gl_info, HDC hdc,
     return ctx;
 }
 
-struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
+static BOOL wined3d_context_init(struct wined3d_context *context, struct wined3d_swapchain *swapchain,
         struct wined3d_texture *target, const struct wined3d_format *ds_format)
 {
     struct wined3d_device *device = swapchain->device;
-    struct wined3d_context_gl *context_gl;
-    struct wined3d_context *context;
     DWORD state;
-
-    TRACE("swapchain %p, target %p, window %p.\n", swapchain, target, swapchain->win_handle);
-
-    wined3d_from_cs(device->cs);
-
-    if (!(context_gl = heap_alloc_zero(sizeof(*context_gl))))
-        return NULL;
-    context = &context_gl->c;
 
     list_init(&context->timestamp_queries);
     list_init(&context->occlusion_queries);
@@ -1910,31 +1900,28 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     if (!device->shader_backend->shader_allocate_context_data(context))
     {
         ERR("Failed to allocate shader backend context data.\n");
-        goto out;
+        return FALSE;
     }
+
     if (!device->adapter->fragment_pipe->allocate_context_data(context))
     {
         ERR("Failed to allocate fragment pipeline context data.\n");
-        goto out;
+        device->shader_backend->shader_free_context_data(context);
+        return FALSE;
     }
 
     if (!(context->hdc = GetDCEx(swapchain->win_handle, 0, DCX_USESTYLE | DCX_CACHE)))
     {
         WARN("Failed to retrieve device context, trying swapchain backup.\n");
 
-        if ((context->hdc = swapchain_get_backup_dc(swapchain)))
-            context->hdc_is_private = TRUE;
-        else
+        if (!(context->hdc = swapchain_get_backup_dc(swapchain)))
         {
             ERR("Failed to retrieve a device context.\n");
-            goto out;
+            device->shader_backend->shader_free_context_data(context);
+            device->adapter->fragment_pipe->free_context_data(context);
+            return FALSE;
         }
-    }
-
-    if (!device_context_add(device, context))
-    {
-        ERR("Failed to add the newly created context to the context list\n");
-        goto out;
+        context->hdc_is_private = TRUE;
     }
 
     context->win_handle = swapchain->win_handle;
@@ -1956,13 +1943,6 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     context->current_rt.sub_resource_idx = 0;
     context->tid = GetCurrentThreadId();
 
-    if (!(device->adapter->adapter_ops->adapter_create_context(context, target, ds_format)))
-    {
-        device_context_remove(device, context);
-        goto out;
-    }
-
-    device->shader_backend->shader_init_context_state(context);
     context->shader_update_mask = (1u << WINED3D_SHADER_TYPE_PIXEL)
             | (1u << WINED3D_SHADER_TYPE_VERTEX)
             | (1u << WINED3D_SHADER_TYPE_GEOMETRY)
@@ -1970,13 +1950,50 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
             | (1u << WINED3D_SHADER_TYPE_DOMAIN)
             | (1u << WINED3D_SHADER_TYPE_COMPUTE);
 
+    return TRUE;
+}
+
+struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
+        struct wined3d_texture *target, const struct wined3d_format *ds_format)
+{
+    struct wined3d_device *device = swapchain->device;
+    struct wined3d_context_gl *context_gl;
+    struct wined3d_context *context;
+
+    TRACE("swapchain %p, target %p, window %p.\n", swapchain, target, swapchain->win_handle);
+
+    wined3d_from_cs(device->cs);
+
+    if (!(context_gl = heap_alloc_zero(sizeof(*context_gl))))
+        return NULL;
+    context = &context_gl->c;
+
+    if (!(wined3d_context_init(context, swapchain, target, ds_format)))
+    {
+        heap_free(context_gl);
+        return NULL;
+    }
+
+    if (!device_context_add(device, context))
+    {
+        ERR("Failed to add the newly created context to the context list\n");
+        goto fail;
+    }
+
+    if (!(device->adapter->adapter_ops->adapter_create_context(context, target, ds_format)))
+    {
+        device_context_remove(device, context);
+        goto fail;
+    }
+
+    device->shader_backend->shader_init_context_state(context);
+
     TRACE("Created context %p.\n", context);
 
     return context;
 
-out:
-    if (context->hdc)
-        wined3d_release_dc(swapchain->win_handle, context->hdc);
+fail:
+    wined3d_release_dc(context->win_handle, context->hdc);
     device->shader_backend->shader_free_context_data(context);
     device->adapter->fragment_pipe->free_context_data(context);
     heap_free(context_gl);
