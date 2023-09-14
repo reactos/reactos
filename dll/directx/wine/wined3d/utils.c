@@ -3460,69 +3460,76 @@ static struct color_fixup_desc create_color_fixup_desc_from_string(const char *s
 
 static void apply_format_fixups(struct wined3d_adapter *adapter, struct wined3d_gl_info *gl_info)
 {
+    const struct wined3d_d3d_info *d3d_info = &adapter->d3d_info;
     struct wined3d_format *format;
+    BOOL use_legacy_fixups;
     unsigned int i;
 
     static const struct
     {
         enum wined3d_format_id id;
         const char *fixup;
+        BOOL legacy;
         enum wined3d_gl_extension extension;
     }
     fixups[] =
     {
-        {WINED3DFMT_R16_FLOAT,             "X11W", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_R32_FLOAT,             "X11W", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_R16G16_UNORM,          "XY1W", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_R16G16_FLOAT,          "XY1W", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_R32G32_FLOAT,          "XY1W", WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_R16_FLOAT,             "X11W", TRUE,  WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_R32_FLOAT,             "X11W", TRUE,  WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_R16G16_UNORM,          "XY1W", TRUE,  WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_R16G16_FLOAT,          "XY1W", TRUE,  WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_R32G32_FLOAT,          "XY1W", TRUE,  WINED3D_GL_EXT_NONE},
 
-        {WINED3DFMT_R8G8_SNORM,            "xy11", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_R8G8_SNORM,            "XY11", NV_TEXTURE_SHADER},
-        {WINED3DFMT_R8G8_SNORM,            "XY11", EXT_TEXTURE_SNORM},
+        {WINED3DFMT_R8G8_SNORM,            "xy11", FALSE, WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_R8G8_SNORM,            "XY11", TRUE,  NV_TEXTURE_SHADER},
+        {WINED3DFMT_R8G8_SNORM,            "XY11", TRUE,  EXT_TEXTURE_SNORM},
 
-        {WINED3DFMT_R16G16_SNORM,          "xy11", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_R16G16_SNORM,          "XY11", NV_TEXTURE_SHADER},
-        {WINED3DFMT_R16G16_SNORM,          "XY11", EXT_TEXTURE_SNORM},
+        {WINED3DFMT_R16G16_SNORM,          "xy11", FALSE, WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_R16G16_SNORM,          "XY11", TRUE,  NV_TEXTURE_SHADER},
+        {WINED3DFMT_R16G16_SNORM,          "XY11", TRUE,  EXT_TEXTURE_SNORM},
 
-        {WINED3DFMT_R8G8B8A8_SNORM,        "xyzw", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_R8G8B8A8_SNORM,        "XYZW", NV_TEXTURE_SHADER},
-        {WINED3DFMT_R8G8B8A8_SNORM,        "XYZW", EXT_TEXTURE_SNORM},
+        {WINED3DFMT_R8G8B8A8_SNORM,        "xyzw", FALSE, WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_R8G8B8A8_SNORM,        "XYZW", FALSE, NV_TEXTURE_SHADER},
+        {WINED3DFMT_R8G8B8A8_SNORM,        "XYZW", FALSE, EXT_TEXTURE_SNORM},
 
-        {WINED3DFMT_R5G5_SNORM_L6_UNORM,   "xzY1", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_R5G5_SNORM_L6_UNORM,   "XYZW", NV_TEXTURE_SHADER},
-        {WINED3DFMT_R5G5_SNORM_L6_UNORM,   "XYZW", EXT_TEXTURE_SNORM},
+        {WINED3DFMT_R5G5_SNORM_L6_UNORM,   "xzY1", FALSE, WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_R5G5_SNORM_L6_UNORM,   "XYZW", FALSE, NV_TEXTURE_SHADER},
+        {WINED3DFMT_R5G5_SNORM_L6_UNORM,   "XYZW", FALSE, EXT_TEXTURE_SNORM},
 
-        {WINED3DFMT_R8G8_SNORM_L8X8_UNORM, "xyZW", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_R8G8_SNORM_L8X8_UNORM, "XYZW", NV_TEXTURE_SHADER},
+        {WINED3DFMT_R8G8_SNORM_L8X8_UNORM, "xyZW", FALSE, WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_R8G8_SNORM_L8X8_UNORM, "XYZW", FALSE, NV_TEXTURE_SHADER},
 
-        {WINED3DFMT_ATI1N,                 "XXXX", EXT_TEXTURE_COMPRESSION_RGTC},
-        {WINED3DFMT_ATI1N,                 "XXXX", ARB_TEXTURE_COMPRESSION_RGTC},
+        {WINED3DFMT_ATI1N,                 "XXXX", FALSE, EXT_TEXTURE_COMPRESSION_RGTC},
+        {WINED3DFMT_ATI1N,                 "XXXX", FALSE, ARB_TEXTURE_COMPRESSION_RGTC},
 
-        {WINED3DFMT_ATI2N,                 "XW11", ATI_TEXTURE_COMPRESSION_3DC},
-        {WINED3DFMT_ATI2N,                 "YX11", EXT_TEXTURE_COMPRESSION_RGTC},
-        {WINED3DFMT_ATI2N,                 "YX11", ARB_TEXTURE_COMPRESSION_RGTC},
+        {WINED3DFMT_ATI2N,                 "XW11", FALSE, ATI_TEXTURE_COMPRESSION_3DC},
+        {WINED3DFMT_ATI2N,                 "YX11", FALSE, EXT_TEXTURE_COMPRESSION_RGTC},
+        {WINED3DFMT_ATI2N,                 "YX11", FALSE, ARB_TEXTURE_COMPRESSION_RGTC},
 
-        {WINED3DFMT_A8_UNORM,              "000X", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_A8_UNORM,              "XYZW", WINED3D_GL_LEGACY_CONTEXT},
+        {WINED3DFMT_A8_UNORM,              "000X", FALSE, WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_A8_UNORM,              "XYZW", FALSE, WINED3D_GL_LEGACY_CONTEXT},
 
-        {WINED3DFMT_L8A8_UNORM,            "XXXY", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_L8A8_UNORM,            "XYZW", WINED3D_GL_LEGACY_CONTEXT},
+        {WINED3DFMT_L8A8_UNORM,            "XXXY", FALSE, WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_L8A8_UNORM,            "XYZW", FALSE, WINED3D_GL_LEGACY_CONTEXT},
 
-        {WINED3DFMT_L4A4_UNORM,            "XXXY", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_L4A4_UNORM,            "XYZW", WINED3D_GL_LEGACY_CONTEXT},
+        {WINED3DFMT_L4A4_UNORM,            "XXXY", FALSE, WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_L4A4_UNORM,            "XYZW", FALSE, WINED3D_GL_LEGACY_CONTEXT},
 
-        {WINED3DFMT_L16_UNORM,             "XXX1", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_L16_UNORM,             "XYZW", WINED3D_GL_LEGACY_CONTEXT},
+        {WINED3DFMT_L16_UNORM,             "XXX1", FALSE, WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_L16_UNORM,             "XYZW", FALSE, WINED3D_GL_LEGACY_CONTEXT},
 
-        {WINED3DFMT_INTZ,                  "XXXX", WINED3D_GL_EXT_NONE},
-        {WINED3DFMT_INTZ,                  "XYZW", WINED3D_GL_LEGACY_CONTEXT},
+        {WINED3DFMT_INTZ,                  "XXXX", FALSE, WINED3D_GL_EXT_NONE},
+        {WINED3DFMT_INTZ,                  "XYZW", FALSE, WINED3D_GL_LEGACY_CONTEXT},
 
-        {WINED3DFMT_L8_UNORM,              "XXX1", ARB_TEXTURE_RG},
+        {WINED3DFMT_L8_UNORM,              "XXX1", FALSE, ARB_TEXTURE_RG},
     };
 
+    use_legacy_fixups = d3d_info->wined3d_creation_flags & WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR;
     for (i = 0; i < ARRAY_SIZE(fixups); ++i)
     {
+        if (fixups[i].legacy && !use_legacy_fixups)
+            continue;
+
         if (!gl_info->supported[fixups[i].extension])
             continue;
 
