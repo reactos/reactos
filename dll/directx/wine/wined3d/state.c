@@ -4036,22 +4036,10 @@ static void get_viewports(struct wined3d_context *context, const struct wined3d_
     unsigned int width, height, i;
 
     for (i = 0; i < viewport_count; ++i)
-    {
         viewports[i] = state->viewports[i];
 
-        if (target)
-        {
-            if (viewports[i].width > target->width)
-                viewports[i].width = target->width;
-            if (viewports[i].height > target->height)
-                viewports[i].height = target->height;
-        }
-    }
-
-    /*
-     * Note: GL requires lower left, DirectX supplies upper left. This is
-     * reversed when using offscreen rendering.
-     */
+    /* Note: GL uses a lower left origin while DirectX uses upper left. This
+     * is reversed when using offscreen rendering. */
     if (context->render_offscreen)
         return;
 

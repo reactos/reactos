@@ -3190,7 +3190,7 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
 
     /* Get the viewport */
     wined3d_device_get_viewports(device, NULL, &vp);
-    TRACE("viewport  x %.8e, y %.8e, width %.8e, height %.8e, min_z %.8e, max_z %.8e.\n",
+    TRACE("viewport x %.8e, y %.8e, width %.8e, height %.8e, min_z %.8e, max_z %.8e.\n",
           vp.x, vp.y, vp.width, vp.height, vp.min_z, vp.max_z);
 
     multiply_matrix(&mat,&view_mat,&world_mat);
