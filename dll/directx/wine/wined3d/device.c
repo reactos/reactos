@@ -2249,15 +2249,14 @@ void CDECL wined3d_device_set_constant_buffer(struct wined3d_device *device,
         return;
     }
 
-    prev = device->update_state->cb[type][idx];
+    prev = device->state.cb[type][idx];
     if (buffer == prev)
         return;
 
     if (buffer)
         wined3d_buffer_incref(buffer);
-    device->update_state->cb[type][idx] = buffer;
-    if (!device->recording)
-        wined3d_cs_emit_set_constant_buffer(device->cs, type, idx, buffer);
+    device->state.cb[type][idx] = buffer;
+    wined3d_cs_emit_set_constant_buffer(device->cs, type, idx, buffer);
     if (prev)
         wined3d_buffer_decref(prev);
 }
