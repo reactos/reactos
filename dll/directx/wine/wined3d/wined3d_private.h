@@ -4227,6 +4227,9 @@ struct wined3d_swapchain_state
 {
     struct wined3d_swapchain_desc desc;
 
+    struct wined3d_display_mode original_mode, d3d_mode;
+    RECT original_window_rect;
+
     /* Window styles to restore when switching fullscreen mode. */
     LONG style;
     LONG exstyle;
@@ -4255,8 +4258,6 @@ struct wined3d_swapchain
 
     struct wined3d_texture **back_buffers;
     struct wined3d_texture *front_buffer;
-    struct wined3d_display_mode original_mode, d3d_mode;
-    RECT original_window_rect;
     struct wined3d_gamma_ramp orig_gamma;
     BOOL render_to_fbo, reapply_mode;
     const struct wined3d_format *ds_format;

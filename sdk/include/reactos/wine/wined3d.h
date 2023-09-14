@@ -2713,18 +2713,19 @@ HRESULT __cdecl wined3d_swapchain_present(struct wined3d_swapchain *swapchain,
 HRESULT __cdecl wined3d_swapchain_resize_buffers(struct wined3d_swapchain *swapchain, unsigned int buffer_count,
         unsigned int width, unsigned int height, enum wined3d_format_id format_id,
         enum wined3d_multisample_type multisample_type, unsigned int multisample_quality);
-HRESULT __cdecl wined3d_swapchain_set_fullscreen(struct wined3d_swapchain *swapchain,
-        const struct wined3d_swapchain_desc *desc, const struct wined3d_display_mode *mode);
 HRESULT __cdecl wined3d_swapchain_set_gamma_ramp(const struct wined3d_swapchain *swapchain,
         DWORD flags, const struct wined3d_gamma_ramp *ramp);
 void __cdecl wined3d_swapchain_set_palette(struct wined3d_swapchain *swapchain, struct wined3d_palette *palette);
 void __cdecl wined3d_swapchain_set_window(struct wined3d_swapchain *swapchain, HWND window);
 
 HRESULT __cdecl wined3d_swapchain_state_create(const struct wined3d_swapchain_desc *desc,
-        HWND window, struct wined3d_swapchain_state **state);
+        HWND window, struct wined3d *wined3d, unsigned int adapter_idx, struct wined3d_swapchain_state **state);
 void __cdecl wined3d_swapchain_state_destroy(struct wined3d_swapchain_state *state);
 HRESULT __cdecl wined3d_swapchain_state_resize_target(struct wined3d_swapchain_state *state,
         struct wined3d *wined3d, unsigned int adapter_idx, const struct wined3d_display_mode *mode);
+HRESULT __cdecl wined3d_swapchain_state_set_fullscreen(struct wined3d_swapchain_state *state,
+        const struct wined3d_swapchain_desc *desc, struct wined3d *wined3d,
+        unsigned int adapter_idx, const struct wined3d_display_mode *mode);
 
 HRESULT __cdecl wined3d_texture_add_dirty_region(struct wined3d_texture *texture,
         UINT layer, const struct wined3d_box *dirty_region);
