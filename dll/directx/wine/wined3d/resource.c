@@ -28,7 +28,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(d3d_perf);
 
-static void resource_check_usage(DWORD usage)
+static void resource_check_usage(DWORD usage, unsigned int access)
 {
     static const DWORD handled = WINED3DUSAGE_DYNAMIC
             | WINED3DUSAGE_STATICDECL
@@ -45,10 +45,7 @@ static void resource_check_usage(DWORD usage)
      * driver. */
 
     if (usage & ~handled)
-    {
         FIXME("Unhandled usage flags %#x.\n", usage & ~handled);
-        handled |= usage;
-    }
     if (usage & WINED3DUSAGE_DYNAMIC && access & WINED3D_RESOURCE_ACCESS_MAP_R)
         WARN_(d3d_perf)("WINED3DUSAGE_DYNAMIC used with WINED3D_RESOURCE_ACCESS_MAP_R.\n");
 }

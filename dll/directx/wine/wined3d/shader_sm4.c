@@ -1905,7 +1905,12 @@ static const char *shader_get_string(const char *data, size_t data_size, DWORD o
     }
 
     max_len = data_size - offset;
+
+#ifdef __REACTOS__
+    len = strlen(data + offset);
+#else`
     len = strnlen(data + offset, max_len);
+#endif
 
     if (len == max_len)
         return NULL;
@@ -1960,8 +1965,13 @@ static HRESULT shader_parse_signature(DWORD tag, const char *data, DWORD data_si
             return E_INVALIDARG;
         }
         read_dword(&ptr, &e[i].semantic_idx);
+#ifdef __REACTOS__
+        read_dword(&ptr, (DWORD*)&e[i].sysval_semantic);
+        read_dword(&ptr, (DWORD*)&e[i].component_type);
+#else
         read_dword(&ptr, &e[i].sysval_semantic);
         read_dword(&ptr, &e[i].component_type);
+#endif
         read_dword(&ptr, &e[i].register_idx);
         read_dword(&ptr, &e[i].mask);
 

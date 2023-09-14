@@ -1443,10 +1443,7 @@ HRESULT wined3d_query_gl_create(struct wined3d_device *device, enum wined3d_quer
             return wined3d_so_statistics_query_create(device, type, parent, parent_ops, query);
 
         case WINED3D_QUERY_TYPE_PIPELINE_STATISTICS:
-            return wined3d_pipeline_query_create(device, type, parent, parent_ops, query);
-
-        case WINED3D_QUERY_TYPE_SO_STATISTICS:
-            return wined3d_statistics_query_create(device, type, parent, parent_ops, query);
+            return wined3d_pipeline_query_create(device, type, parent, parent_ops, query);\
 
         case WINED3D_QUERY_TYPE_SO_OVERFLOW:
             return wined3d_overflow_query_create(device, type, parent, parent_ops, query);

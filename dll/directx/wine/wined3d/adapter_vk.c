@@ -863,7 +863,11 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
 
 static unsigned int wined3d_get_wine_vk_version(void)
 {
+#if __REACTOS__
+    const char *ptr = "4.18";
+#else
     const char *ptr = PACKAGE_VERSION;
+#endif
     int major, minor;
 
     major = atoi(ptr);

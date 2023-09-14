@@ -141,7 +141,7 @@ static const struct wined3d_format *validate_resource_view(const struct wined3d_
     }
     else
     {
-        struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(texture_from_resource(resource));
+        struct wined3d_texture *texture = texture_from_resource(resource);
         unsigned int depth_or_layer_count;
 
         if (resource->format->id != format->id && !wined3d_format_is_typeless(resource->format)
@@ -153,9 +153,9 @@ static const struct wined3d_format *validate_resource_view(const struct wined3d_
         }
 
         if (mip_slice && resource->type == WINED3D_RTYPE_TEXTURE_3D)
-            depth_or_layer_count = wined3d_texture_get_level_depth(&texture_gl->t, desc->u.texture.level_idx);
+            depth_or_layer_count = wined3d_texture_get_level_depth(texture, desc->u.texture.level_idx);
         else
-            depth_or_layer_count = texture_gl->t.layer_count;
+            depth_or_layer_count = texture->layer_count;
 
         if (!desc->u.texture.level_count
                 || (mip_slice && desc->u.texture.level_count != 1)
@@ -1123,13 +1123,13 @@ static void wined3d_unordered_access_view_gl_cs_init(void *object)
     }
     else
     {
-        struct wined3d_texture *texture = texture_from_resource(resource);
+        struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(texture_from_resource(resource));
         unsigned int depth_or_layer_count;
 
         if (resource->type == WINED3D_RTYPE_TEXTURE_3D)
-            depth_or_layer_count = wined3d_texture_get_level_depth(texture, desc->u.texture.level_idx);
+            depth_or_layer_count = wined3d_texture_get_level_depth(&texture_gl->t, desc->u.texture.level_idx);
         else
-            depth_or_layer_count = texture->layer_count;
+            depth_or_layer_count = texture_gl->t.layer_count;
 
         if (desc->u.texture.layer_idx || desc->u.texture.layer_count != depth_or_layer_count)
         {

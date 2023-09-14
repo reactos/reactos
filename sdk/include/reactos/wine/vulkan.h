@@ -59,6 +59,10 @@
 #define WINE_VK_ALIGN DECLSPEC_ALIGN
 #endif
 
+#ifdef __REACTOS__
+#define USE_WIN32_VULKAN 1
+#endif
+
 #define VK_MAX_PHYSICAL_DEVICE_NAME_SIZE 256
 #define VK_UUID_SIZE 16
 #define VK_LUID_SIZE 8

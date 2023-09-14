@@ -1626,8 +1626,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
             GL_EXTCALL(glBindBufferBase(GL_UNIFORM_BUFFER, base, priv->ubo_vs_c));
             checkGLcall("glBindBufferBase");
         }
-        if (gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT]
-                && (context->device->adapter->d3d_info.wined3d_creation_flags & WINED3D_LEGACY_SHADER_CONSTANTS))
+        if (gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT])
         {
             if (priv->ubo_modelview == -1)
             {
@@ -1953,9 +1952,6 @@ static void shader_glsl_update_float_vertex_constants(struct wined3d_device *dev
     struct constant_heap *heap = &priv->vconst_heap;
     UINT i;
 
-    if (!(device->adapter->d3d_info.wined3d_creation_flags & WINED3D_LEGACY_SHADER_CONSTANTS))
-        WARN("Called without legacy shader constant mode.\n");
-
     if (priv->consts_ubo)
         return;
 
@@ -1970,9 +1966,6 @@ static void shader_glsl_update_float_pixel_constants(struct wined3d_device *devi
     struct shader_glsl_priv *priv = device->shader_priv;
     struct constant_heap *heap = &priv->pconst_heap;
     UINT i;
-
-    if (!(device->adapter->d3d_info.wined3d_creation_flags & WINED3D_LEGACY_SHADER_CONSTANTS))
-        WARN("Called without legacy shader constant mode.\n");
 
     for (i = start; i < count + start; ++i)
     {
@@ -11289,8 +11282,7 @@ static HRESULT shader_glsl_alloc(struct wined3d_device *device, const struct win
     if (!(priv = heap_alloc_zero(sizeof(*priv))))
         return E_OUTOFMEMORY;
 
-    priv->consts_ubo = (device->adapter->d3d_info.wined3d_creation_flags & WINED3D_LEGACY_SHADER_CONSTANTS)
-            && gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT];
+    priv->consts_ubo = gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT];
     priv->max_vs_consts_f = min(WINED3D_MAX_VS_CONSTS_F_SWVP, priv->consts_ubo
             ? gl_info->limits.glsl_max_uniform_block_size / sizeof(struct wined3d_vec4)
             : gl_info->limits.glsl_vs_float_constants);
