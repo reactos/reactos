@@ -95,6 +95,14 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
         return WINED3DERR_INVALIDCALL;
     }
 
+    if ((access & (WINED3D_RESOURCE_ACCESS_CPU | WINED3D_RESOURCE_ACCESS_GPU)) != WINED3D_RESOURCE_ACCESS_GPU
+            && bind_flags & (WINED3D_BIND_RENDER_TARGET | WINED3D_BIND_DEPTH_STENCIL))
+    {
+        WARN("Bind flags %s are incompatible with resource access %s.\n",
+                wined3d_debug_bind_flags(bind_flags), wined3d_debug_resource_access(access));
+        return WINED3DERR_INVALIDCALL;
+    }
+
     if (!size)
         ERR("Attempting to create a zero-sized resource.\n");
 
