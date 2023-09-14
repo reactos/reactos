@@ -3202,10 +3202,6 @@ struct wined3d_device
     struct wined3d *wined3d;
     struct wined3d_adapter *adapter;
 
-    /* Window styles to restore when switching fullscreen mode */
-    LONG                    style;
-    LONG                    exStyle;
-
     const struct wined3d_shader_backend_ops *shader_backend;
     void *shader_priv;
     void *fragment_priv;
@@ -3290,12 +3286,8 @@ LRESULT device_process_message(struct wined3d_device *device, HWND window, BOOL 
 void device_resource_add(struct wined3d_device *device, struct wined3d_resource *resource) DECLSPEC_HIDDEN;
 void device_resource_released(struct wined3d_device *device, struct wined3d_resource *resource) DECLSPEC_HIDDEN;
 void device_invalidate_state(const struct wined3d_device *device, DWORD state) DECLSPEC_HIDDEN;
-void wined3d_device_restore_fullscreen_window(struct wined3d_device *device,
-        HWND window, const RECT *window_rect) DECLSPEC_HIDDEN;
 HRESULT wined3d_device_set_implicit_swapchain(struct wined3d_device *device,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
-HRESULT wined3d_device_setup_fullscreen_window(struct wined3d_device *device,
-        HWND window, unsigned int w, unsigned int h) DECLSPEC_HIDDEN;
 void wined3d_device_uninit_3d(struct wined3d_device *device) DECLSPEC_HIDDEN;
 
 struct wined3d_device_no3d
@@ -4231,6 +4223,18 @@ static inline struct wined3d_unordered_access_view_gl *wined3d_unordered_access_
     return CONTAINING_RECORD(view, struct wined3d_unordered_access_view_gl, v);
 }
 
+struct wined3d_swapchain_state
+{
+    /* Window styles to restore when switching fullscreen mode. */
+    LONG style;
+    LONG exstyle;
+};
+
+void wined3d_window_state_restore_from_fullscreen(struct wined3d_swapchain_state *state,
+        HWND window, const RECT *window_rect) DECLSPEC_HIDDEN;
+HRESULT wined3d_swapchain_state_setup_fullscreen(struct wined3d_swapchain_state *state,
+        HWND window, unsigned int w, unsigned int h) DECLSPEC_HIDDEN;
+
 struct wined3d_swapchain_ops
 {
     void (*swapchain_present)(struct wined3d_swapchain *swapchain,
@@ -4264,6 +4268,7 @@ struct wined3d_swapchain
     struct wined3d_context **context;
     unsigned int num_contexts;
 
+    struct wined3d_swapchain_state state;
     HWND win_handle;
     HWND device_window;
 

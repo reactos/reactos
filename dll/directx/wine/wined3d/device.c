@@ -909,115 +909,6 @@ static void destroy_default_samplers(struct wined3d_device *device, struct wined
     device->null_sampler = NULL;
 }
 
-static LONG fullscreen_style(LONG style)
-{
-    /* Make sure the window is managed, otherwise we won't get keyboard input. */
-    style |= WS_POPUP | WS_SYSMENU;
-    style &= ~(WS_CAPTION | WS_THICKFRAME);
-
-    return style;
-}
-
-static LONG fullscreen_exstyle(LONG exstyle)
-{
-    /* Filter out window decorations. */
-    exstyle &= ~(WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE);
-
-    return exstyle;
-}
-
-HRESULT wined3d_device_setup_fullscreen_window(struct wined3d_device *device,
-        HWND window, unsigned int w, unsigned int h)
-{
-    LONG style, exstyle;
-    BOOL filter;
-
-    TRACE("Setting up window %p for fullscreen mode.\n", window);
-
-    if (!IsWindow(window))
-    {
-        WARN("%p is not a valid window.\n", window);
-        return WINED3DERR_NOTAVAILABLE;
-    }
-
-    if (device->style || device->exStyle)
-    {
-        ERR("Changing the window style for window %p, but another style (%08x, %08x) is already stored.\n",
-                window, device->style, device->exStyle);
-    }
-
-    device->style = GetWindowLongW(window, GWL_STYLE);
-    device->exStyle = GetWindowLongW(window, GWL_EXSTYLE);
-
-    style = fullscreen_style(device->style);
-    exstyle = fullscreen_exstyle(device->exStyle);
-
-    TRACE("Old style was %08x, %08x, setting to %08x, %08x.\n",
-            device->style, device->exStyle, style, exstyle);
-
-    filter = wined3d_filter_messages(window, TRUE);
-
-    SetWindowLongW(window, GWL_STYLE, style);
-    SetWindowLongW(window, GWL_EXSTYLE, exstyle);
-    SetWindowPos(window, HWND_TOPMOST, 0, 0, w, h, SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOACTIVATE);
-
-    wined3d_filter_messages(window, filter);
-
-    return WINED3D_OK;
-}
-
-void wined3d_device_restore_fullscreen_window(struct wined3d_device *device,
-        HWND window, const RECT *window_rect)
-{
-    unsigned int window_pos_flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOACTIVATE;
-    LONG style, exstyle;
-    RECT rect = {0};
-    BOOL filter;
-
-    if (!device->style && !device->exStyle)
-        return;
-
-    style = GetWindowLongW(window, GWL_STYLE);
-    exstyle = GetWindowLongW(window, GWL_EXSTYLE);
-
-    /* These flags are set by wined3d_device_setup_fullscreen_window, not the
-     * application, and we want to ignore them in the test below, since it's
-     * not the application's fault that they changed. Additionally, we want to
-     * preserve the current status of these flags (i.e. don't restore them) to
-     * more closely emulate the behavior of Direct3D, which leaves these flags
-     * alone when returning to windowed mode. */
-    device->style ^= (device->style ^ style) & WS_VISIBLE;
-    device->exStyle ^= (device->exStyle ^ exstyle) & WS_EX_TOPMOST;
-
-    TRACE("Restoring window style of window %p to %08x, %08x.\n",
-            window, device->style, device->exStyle);
-
-    filter = wined3d_filter_messages(window, TRUE);
-
-    /* Only restore the style if the application didn't modify it during the
-     * fullscreen phase. Some applications change it before calling Reset()
-     * when switching between windowed and fullscreen modes (HL2), some
-     * depend on the original style (Eve Online). */
-    if (style == fullscreen_style(device->style) && exstyle == fullscreen_exstyle(device->exStyle))
-    {
-        SetWindowLongW(window, GWL_STYLE, device->style);
-        SetWindowLongW(window, GWL_EXSTYLE, device->exStyle);
-    }
-
-    if (window_rect)
-        rect = *window_rect;
-    else
-        window_pos_flags |= (SWP_NOMOVE | SWP_NOSIZE);
-    SetWindowPos(window, 0, rect.left, rect.top,
-            rect.right - rect.left, rect.bottom - rect.top, window_pos_flags);
-
-    wined3d_filter_messages(window, filter);
-
-    /* Delete the old values. */
-    device->style = 0;
-    device->exStyle = 0;
-}
-
 HRESULT CDECL wined3d_device_acquire_focus_window(struct wined3d_device *device, HWND window)
 {
     TRACE("device %p, window %p.\n", device, window);
@@ -5558,19 +5449,18 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
     }
     else if (!swapchain_desc->windowed)
     {
-        DWORD style = device->style;
-        DWORD exStyle = device->exStyle;
-        /* If we're in fullscreen, and the mode wasn't changed, we have to get the window back into
-         * the right position. Some applications(Battlefield 2, Guild Wars) move it and then call
-         * Reset to clear up their mess. Guild Wars also loses the device during that.
-         */
-        device->style = 0;
-        device->exStyle = 0;
-        wined3d_device_setup_fullscreen_window(device, swapchain->device_window,
-                swapchain_desc->backbuffer_width,
-                swapchain_desc->backbuffer_height);
-        device->style = style;
-        device->exStyle = exStyle;
+        DWORD style = swapchain->state.style;
+        DWORD exstyle = swapchain->state.exstyle;
+        /* If we're in fullscreen, and the mode wasn't changed, we have to get
+         * the window back into the right position. Some applications
+         * (Battlefield 2, Guild Wars) move it and then call Reset() to clean
+         * up their mess. Guild Wars also loses the device during that. */
+        swapchain->state.style = 0;
+        swapchain->state.exstyle = 0;
+        wined3d_swapchain_state_setup_fullscreen(&swapchain->state, swapchain->device_window,
+                swapchain_desc->backbuffer_width, swapchain_desc->backbuffer_height);
+        swapchain->state.style = style;
+        swapchain->state.exstyle = exstyle;
     }
 
     if (FAILED(hr = wined3d_swapchain_resize_buffers(swapchain, swapchain_desc->backbuffer_count,

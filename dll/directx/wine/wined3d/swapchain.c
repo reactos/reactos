@@ -89,14 +89,14 @@ static void swapchain_cleanup(struct wined3d_swapchain *swapchain)
 
             if (swapchain->desc.flags & WINED3D_SWAPCHAIN_RESTORE_WINDOW_RECT)
             {
-                wined3d_device_restore_fullscreen_window(swapchain->device, swapchain->device_window,
-                        &swapchain->original_window_rect);
+                wined3d_window_state_restore_from_fullscreen(&swapchain->state,
+                        swapchain->device_window, &swapchain->original_window_rect);
                 wined3d_device_release_focus_window(swapchain->device);
             }
         }
         else
         {
-            wined3d_device_restore_fullscreen_window(swapchain->device, swapchain->device_window, NULL);
+            wined3d_window_state_restore_from_fullscreen(&swapchain->state, swapchain->device_window, NULL);
         }
     }
 
@@ -820,7 +820,8 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     }
     else
     {
-        wined3d_device_setup_fullscreen_window(device, window, desc->backbuffer_width, desc->backbuffer_height);
+        wined3d_swapchain_state_setup_fullscreen(&swapchain->state,
+                window, desc->backbuffer_width, desc->backbuffer_height);
     }
     swapchain->desc = *desc;
     wined3d_swapchain_apply_sample_count_override(swapchain, swapchain->desc.backbuffer_format,
@@ -1399,6 +1400,115 @@ HRESULT CDECL wined3d_swapchain_resize_target(struct wined3d_swapchain *swapchai
     return WINED3D_OK;
 }
 
+static LONG fullscreen_style(LONG style)
+{
+    /* Make sure the window is managed, otherwise we won't get keyboard input. */
+    style |= WS_POPUP | WS_SYSMENU;
+    style &= ~(WS_CAPTION | WS_THICKFRAME);
+
+    return style;
+}
+
+static LONG fullscreen_exstyle(LONG exstyle)
+{
+    /* Filter out window decorations. */
+    exstyle &= ~(WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE);
+
+    return exstyle;
+}
+
+HRESULT wined3d_swapchain_state_setup_fullscreen(struct wined3d_swapchain_state *state,
+        HWND window, unsigned int w, unsigned int h)
+{
+    LONG style, exstyle;
+    BOOL filter;
+
+    TRACE("Setting up window %p for fullscreen mode.\n", window);
+
+    if (!IsWindow(window))
+    {
+        WARN("%p is not a valid window.\n", window);
+        return WINED3DERR_NOTAVAILABLE;
+    }
+
+    if (state->style || state->exstyle)
+    {
+        ERR("Changing the window style for window %p, but another style (%08x, %08x) is already stored.\n",
+                window, state->style, state->exstyle);
+    }
+
+    state->style = GetWindowLongW(window, GWL_STYLE);
+    state->exstyle = GetWindowLongW(window, GWL_EXSTYLE);
+
+    style = fullscreen_style(state->style);
+    exstyle = fullscreen_exstyle(state->exstyle);
+
+    TRACE("Old style was %08x, %08x, setting to %08x, %08x.\n",
+            state->style, state->exstyle, style, exstyle);
+
+    filter = wined3d_filter_messages(window, TRUE);
+
+    SetWindowLongW(window, GWL_STYLE, style);
+    SetWindowLongW(window, GWL_EXSTYLE, exstyle);
+    SetWindowPos(window, HWND_TOPMOST, 0, 0, w, h, SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOACTIVATE);
+
+    wined3d_filter_messages(window, filter);
+
+    return WINED3D_OK;
+}
+
+void wined3d_window_state_restore_from_fullscreen(struct wined3d_swapchain_state *state,
+        HWND window, const RECT *window_rect)
+{
+    unsigned int window_pos_flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOACTIVATE;
+    LONG style, exstyle;
+    RECT rect = {0};
+    BOOL filter;
+
+    if (!state->style && !state->exstyle)
+        return;
+
+    style = GetWindowLongW(window, GWL_STYLE);
+    exstyle = GetWindowLongW(window, GWL_EXSTYLE);
+
+    /* These flags are set by wined3d_device_setup_fullscreen_window, not the
+     * application, and we want to ignore them in the test below, since it's
+     * not the application's fault that they changed. Additionally, we want to
+     * preserve the current status of these flags (i.e. don't restore them) to
+     * more closely emulate the behavior of Direct3D, which leaves these flags
+     * alone when returning to windowed mode. */
+    state->style ^= (state->style ^ style) & WS_VISIBLE;
+    state->exstyle ^= (state->exstyle ^ exstyle) & WS_EX_TOPMOST;
+
+    TRACE("Restoring window style of window %p to %08x, %08x.\n",
+            window, state->style, state->exstyle);
+
+    filter = wined3d_filter_messages(window, TRUE);
+
+    /* Only restore the style if the application didn't modify it during the
+     * fullscreen phase. Some applications change it before calling Reset()
+     * when switching between windowed and fullscreen modes (HL2), some
+     * depend on the original style (Eve Online). */
+    if (style == fullscreen_style(state->style) && exstyle == fullscreen_exstyle(state->exstyle))
+    {
+        SetWindowLongW(window, GWL_STYLE, state->style);
+        SetWindowLongW(window, GWL_EXSTYLE, state->exstyle);
+    }
+
+    if (window_rect)
+        rect = *window_rect;
+    else
+        window_pos_flags |= (SWP_NOMOVE | SWP_NOSIZE);
+    SetWindowPos(window, 0, rect.left, rect.top,
+            rect.right - rect.left, rect.bottom - rect.top, window_pos_flags);
+
+    wined3d_filter_messages(window, filter);
+
+    /* Delete the old values. */
+    state->style = 0;
+    state->exstyle = 0;
+}
+
 HRESULT CDECL wined3d_swapchain_set_fullscreen(struct wined3d_swapchain *swapchain,
         const struct wined3d_swapchain_desc *swapchain_desc, const struct wined3d_display_mode *mode)
 {
@@ -1455,7 +1565,7 @@ HRESULT CDECL wined3d_swapchain_set_fullscreen(struct wined3d_swapchain *swapcha
         if (swapchain->desc.windowed)
         {
             /* Switch from windowed to fullscreen */
-            if (FAILED(hr = wined3d_device_setup_fullscreen_window(device,
+            if (FAILED(hr = wined3d_swapchain_state_setup_fullscreen(&swapchain->state,
                     swapchain->device_window, width, height)))
                 return hr;
         }
@@ -1478,7 +1588,7 @@ HRESULT CDECL wined3d_swapchain_set_fullscreen(struct wined3d_swapchain *swapcha
         RECT *window_rect = NULL;
         if (swapchain->desc.flags & WINED3D_SWAPCHAIN_RESTORE_WINDOW_RECT)
             window_rect = &swapchain->original_window_rect;
-        wined3d_device_restore_fullscreen_window(device, swapchain->device_window, window_rect);
+        wined3d_window_state_restore_from_fullscreen(&swapchain->state, swapchain->device_window, window_rect);
     }
 
     swapchain->desc.windowed = swapchain_desc->windowed;
