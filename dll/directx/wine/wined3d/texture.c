@@ -46,11 +46,15 @@ struct wined3d_rect_f
 
 static BOOL wined3d_texture_use_pbo(const struct wined3d_texture *texture, const struct wined3d_gl_info *gl_info)
 {
-    return !(texture->resource.access & WINED3D_RESOURCE_ACCESS_CPU)
-            && texture->resource.usage & WINED3DUSAGE_DYNAMIC
-            && gl_info->supported[ARB_PIXEL_BUFFER_OBJECT]
-            && !texture->resource.format->conv_byte_count
-            && !(texture->flags & (WINED3D_TEXTURE_PIN_SYSMEM | WINED3D_TEXTURE_COND_NP2_EMULATED));
+    if (!gl_info->supported[ARB_PIXEL_BUFFER_OBJECT]
+            || texture->resource.format->conv_byte_count
+            || (texture->flags & (WINED3D_TEXTURE_PIN_SYSMEM | WINED3D_TEXTURE_COND_NP2_EMULATED)))
+        return FALSE;
+
+    /* Use a PBO for dynamic textures and read-only staging textures. */
+    return (!(texture->resource.access & WINED3D_RESOURCE_ACCESS_CPU)
+                && texture->resource.usage & WINED3DUSAGE_DYNAMIC)
+            || texture->resource.access == (WINED3D_RESOURCE_ACCESS_CPU | WINED3D_RESOURCE_ACCESS_MAP_R);
 }
 
 static BOOL wined3d_texture_use_immutable_storage(const struct wined3d_texture *texture,
