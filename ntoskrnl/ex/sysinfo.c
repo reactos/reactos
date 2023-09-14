@@ -564,11 +564,12 @@ NtEnumerateSystemEnvironmentValuesEx(IN ULONG InformationClass,
 
 NTSTATUS
 NTAPI
-NtQuerySystemEnvironmentValueEx(IN PUNICODE_STRING VariableName,
-                                IN LPGUID VendorGuid,
-                                IN PVOID Value,
-                                IN OUT PULONG ReturnLength,
-                                IN OUT PULONG Attributes)
+NtQuerySystemEnvironmentValueEx(
+    _In_ PUNICODE_STRING VariableName,
+    _In_ LPGUID VendorGuid,
+    _Out_opt_ PVOID Value,
+    _Inout_ PULONG ReturnLength,
+    _Out_opt_ PULONG Attributes)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -576,11 +577,12 @@ NtQuerySystemEnvironmentValueEx(IN PUNICODE_STRING VariableName,
 
 NTSTATUS
 NTAPI
-NtSetSystemEnvironmentValueEx(IN PUNICODE_STRING VariableName,
-                              IN LPGUID VendorGuid,
-                              IN PVOID Value,
-                              IN OUT PULONG ReturnLength,
-                              IN OUT PULONG Attributes)
+NtSetSystemEnvironmentValueEx(
+    _In_ PUNICODE_STRING VariableName,
+    _In_ LPGUID VendorGuid,
+    _In_reads_bytes_opt_(ValueLength) PVOID Value,
+    _In_ ULONG ValueLength,
+    _In_ ULONG Attributes)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

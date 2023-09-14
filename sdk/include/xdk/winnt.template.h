@@ -73,6 +73,7 @@ $define(UCHAR=BYTE)
 $include(ntbasedef.h)
 $include(interlocked.h)
 $include(ketypes.h)
+$include(extypes.h)
 $include(winnt_old.h)
 
 #ifdef __cplusplus

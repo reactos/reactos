@@ -36,6 +36,7 @@ extern void func_SetUnhandledExceptionFilter(void);
 extern void func_SystemFirmware(void);
 extern void func_TerminateProcess(void);
 extern void func_TunnelCache(void);
+extern void func_UEFIFirmware(void);
 extern void func_WideCharToMultiByte(void);
 
 const struct test winetest_testlist[] =
@@ -72,6 +73,7 @@ const struct test winetest_testlist[] =
     { "SystemFirmware",              func_SystemFirmware },
     { "TerminateProcess",            func_TerminateProcess },
     { "TunnelCache",                 func_TunnelCache },
+    { "UEFIFirmware",                func_UEFIFirmware },
     { "WideCharToMultiByte",         func_WideCharToMultiByte },
     { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
     { 0, 0 }

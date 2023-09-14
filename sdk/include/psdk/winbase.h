@@ -2004,25 +2004,7 @@ _Ret_maybenull_ HRSRC WINAPI FindResourceA(_In_opt_ HMODULE,_In_ LPCSTR, _In_ LP
 _Ret_maybenull_ HRSRC WINAPI FindResourceW(_In_opt_ HMODULE,_In_ LPCWSTR, _In_ LPCWSTR);
 _Ret_maybenull_ HRSRC WINAPI FindResourceExA(_In_opt_ HMODULE, _In_ LPCSTR, _In_ LPCSTR, _In_ WORD);
 HRSRC WINAPI FindResourceExW(HINSTANCE,LPCWSTR,LPCWSTR,WORD);
-#if (_WIN32_WINNT >= 0x0502)
 
-DWORD
-WINAPI
-GetFirmwareEnvironmentVariableA(
-  _In_ LPCSTR lpName,
-  _In_ LPCSTR lpGuid,
-  _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
-  _In_ DWORD nSize);
-
-DWORD
-WINAPI
-GetFirmwareEnvironmentVariableW(
-  _In_ LPCWSTR lpName,
-  _In_ LPCWSTR lpGuid,
-  _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
-  _In_ DWORD nSize);
-
-#endif
 BOOL WINAPI FlushFileBuffers(HANDLE);
 BOOL WINAPI FlushInstructionCache(HANDLE,LPCVOID,SIZE_T);
 BOOL WINAPI FlushViewOfFile(LPCVOID,SIZE_T);
@@ -2429,15 +2411,6 @@ VOID WINAPI GetStartupInfoW(LPSTARTUPINFOW);
 HANDLE WINAPI GetStdHandle(_In_ DWORD);
 UINT WINAPI GetSystemDirectoryA(LPSTR,UINT);
 UINT WINAPI GetSystemDirectoryW(LPWSTR,UINT);
-
-WINBASEAPI
-UINT
-WINAPI
-GetSystemFirmwareTable(
-  _In_ DWORD FirmwareTableProviderSignature,
-  _In_ DWORD FirmwareTableID,
-  _Out_writes_bytes_to_opt_(BufferSize,return) PVOID pFirmwareTableBuffer,
-  _In_ DWORD BufferSize);
 
 VOID WINAPI GetSystemInfo(LPSYSTEM_INFO);
 BOOL WINAPI GetSystemPowerStatus(_Out_ LPSYSTEM_POWER_STATUS);
@@ -3170,6 +3143,50 @@ BOOL WINAPI SetFileValidData(HANDLE,LONGLONG);
 
 #if (_WIN32_WINNT >= 0x0502)
 
+WINBASEAPI
+UINT
+WINAPI
+EnumSystemFirmwareTables(
+    _In_ DWORD FirmwareTableProviderSignature,
+    _Out_writes_bytes_to_opt_(BufferSize, return) PVOID pFirmwareTableEnumBuffer,
+    _In_ DWORD BufferSize);
+
+WINBASEAPI
+UINT
+WINAPI
+GetSystemFirmwareTable(
+    _In_ DWORD FirmwareTableProviderSignature,
+    _In_ DWORD FirmwareTableID,
+    _Out_writes_bytes_to_opt_(BufferSize, return) PVOID pFirmwareTableBuffer,
+    _In_ DWORD BufferSize);
+
+_Success_(return > 0)
+WINBASEAPI
+DWORD
+WINAPI
+GetFirmwareEnvironmentVariableA(
+    _In_ LPCSTR lpName,
+    _In_ LPCSTR lpGuid,
+    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
+    _In_ DWORD nSize);
+
+_Success_(return > 0)
+WINBASEAPI
+DWORD
+WINAPI
+GetFirmwareEnvironmentVariableW(
+    _In_ LPCWSTR lpName,
+    _In_ LPCWSTR lpGuid,
+    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
+    _In_ DWORD nSize);
+
+#ifdef UNICODE
+#define GetFirmwareEnvironmentVariable GetFirmwareEnvironmentVariableW
+#else
+#define GetFirmwareEnvironmentVariable GetFirmwareEnvironmentVariableA
+#endif
+
+WINBASEAPI
 BOOL
 WINAPI
 SetFirmwareEnvironmentVariableA(
@@ -3178,6 +3195,7 @@ SetFirmwareEnvironmentVariableA(
   _In_reads_bytes_opt_(nSize) PVOID pValue,
   _In_ DWORD nSize);
 
+WINBASEAPI
 BOOL
 WINAPI
 SetFirmwareEnvironmentVariableW(
@@ -3186,7 +3204,13 @@ SetFirmwareEnvironmentVariableW(
   _In_reads_bytes_opt_(nSize) PVOID pValue,
   _In_ DWORD nSize);
 
+#ifdef UNICODE
+#define SetFirmwareEnvironmentVariable SetFirmwareEnvironmentVariableW
+#else
+#define SetFirmwareEnvironmentVariable SetFirmwareEnvironmentVariableA
 #endif
+
+#endif /* _WIN32_WINNT >= 0x0502 */
 
 UINT WINAPI SetHandleCount(UINT);
 BOOL WINAPI SetHandleInformation(HANDLE,DWORD,DWORD);
