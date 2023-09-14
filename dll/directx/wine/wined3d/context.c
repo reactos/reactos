@@ -2302,7 +2302,6 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
 void wined3d_context_destroy(struct wined3d_context *context)
 {
     struct wined3d_device *device = context->device;
-    BOOL destroy;
 
     TRACE("Destroying ctx %p\n", context);
 
@@ -2320,29 +2319,28 @@ void wined3d_context_destroy(struct wined3d_context *context)
         return;
     }
 
-    if (context->tid == GetCurrentThreadId() || !context->current)
-    {
-        context_destroy_gl_resources(context);
-        TlsSetValue(wined3d_context_tls_idx, NULL);
-        destroy = TRUE;
-    }
-    else
-    {
-        /* Make a copy of gl_info for context_destroy_gl_resources use, the one
-           in wined3d_adapter may go away in the meantime */
-        struct wined3d_gl_info *gl_info = heap_alloc(sizeof(*gl_info));
-        *gl_info = *context->gl_info;
-        context->gl_info = gl_info;
-        context->destroyed = 1;
-        destroy = FALSE;
-    }
-
     device->shader_backend->shader_free_context_data(context);
     device->adapter->fragment_pipe->free_context_data(context);
     heap_free(context->texture_type);
     device_context_remove(device, context);
-    if (destroy)
-        heap_free(context);
+
+    if (context->current && context->tid != GetCurrentThreadId())
+    {
+        struct wined3d_gl_info *gl_info;
+
+        /* Make a copy of gl_info for context_destroy_gl_resources() use, the
+         * one in wined3d_adapter may go away in the meantime. */
+        gl_info = heap_alloc(sizeof(*gl_info));
+        *gl_info = *context->gl_info;
+        context->gl_info = gl_info;
+        context->destroyed = 1;
+
+        return;
+    }
+
+    context_destroy_gl_resources(context);
+    TlsSetValue(wined3d_context_tls_idx, NULL);
+    heap_free(context);
 }
 
 const DWORD *context_get_tex_unit_mapping(const struct wined3d_context *context,
