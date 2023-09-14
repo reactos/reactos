@@ -4117,16 +4117,8 @@ static void shader_glsl_nrm(const struct wined3d_shader_instruction *ins)
                 src_param.param_str, src_param.param_str);
     shader_glsl_append_dst(buffer, ins);
 
-    if (mask_size > 1)
-    {
-        shader_addline(buffer, "tmp0.x == 0.0 ? vec%u(0.0) : (%s * inversesqrt(tmp0.x)));\n",
-                mask_size, src_param.param_str);
-    }
-    else
-    {
-        shader_addline(buffer, "tmp0.x == 0.0 ? 0.0 : (%s * inversesqrt(tmp0.x)));\n",
-                src_param.param_str);
-    }
+    shader_addline(buffer, "tmp0.x == 0.0 ? %s : (%s * inversesqrt(tmp0.x)));\n",
+            src_param.param_str, src_param.param_str);
 }
 
 static void shader_glsl_scalar_op(const struct wined3d_shader_instruction *ins)
