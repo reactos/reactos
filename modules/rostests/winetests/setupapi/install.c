@@ -609,13 +609,26 @@ static void test_install_svc_from(void)
     /* TODO: Test the Flags */
 }
 
-static void test_driver_install(void)
+static void test_service_install(const char *executable, const char *argument)
 {
-    HANDLE handle;
+    struct
+    {
+        const char *add_service_flags;
+        const char *service_type;
+        const char *start_type;
+        DWORD expect_start_error;
+    } tests[] =
+    {
+        {.add_service_flags = "", .service_type = "1", .start_type = "4", .expect_start_error = ERROR_SERVICE_DISABLED},
+        {.add_service_flags = "", .service_type = "0x10", .start_type = "2", .expect_start_error = 0},
+        {.add_service_flags = "0x800", .service_type = "0x10", .start_type = "2", .expect_start_error = ERROR_SERVICE_ALREADY_RUNNING},
+    };
+
     SC_HANDLE scm_handle, svc_handle;
+    SERVICE_STATUS status;
     BOOL ret;
     char path[MAX_PATH + 9], windir[MAX_PATH], driver[MAX_PATH];
-    DWORD attrs;
+    DWORD i, attrs;
     /* Minimal stuff needed */
     static const char *inf =
         "[Version]\n"
@@ -625,14 +638,15 @@ static void test_driver_install(void)
         "[DefaultInstall]\n"
         "CopyFiles=Winetest.DriverFiles\n"
         "[DefaultInstall.Services]\n"
-        "AddService=Winetest,,Winetest.Service\n"
+        "AddService=Winetest,%s,Winetest.Service\n"
         "[Winetest.Service]\n"
-        "ServiceBinary=%12%\\winetest.sys\n"
-        "ServiceType=1\n"
-        "StartType=4\n"
+        "ServiceBinary=%%12%%\\winetest.sys %s service\n"
+        "ServiceType=%s\n"
+        "StartType=%s\n"
         "ErrorControl=1\n"
         "[Winetest.DriverFiles]\n"
         "winetest.sys";
+    char buffer[1024];
 
     /* Bail out if we don't have enough rights */
     SetLastError(0xdeadbeef);
@@ -649,36 +663,70 @@ static void test_driver_install(void)
     lstrcpyA(driver, windir);
     lstrcatA(driver, "\\system32\\drivers\\winetest.sys");
 
-    /* Create a dummy driver file */
-    handle = CreateFileA("winetest.sys", GENERIC_WRITE, 0, NULL,
-                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    CloseHandle(handle);
+    ret = CopyFileA(executable, "winetest.sys", TRUE);
+    ok(ret, "CopyFileA failed, error %u\n", GetLastError());
 
-    create_inf_file(inffile, inf);
-    sprintf(path, "%s\\%s", CURR_DIR, inffile);
-    run_cmdline("DefaultInstall", 128, path);
+    for (i = 0; i < ARRAY_SIZE(tests); ++i)
+    {
+        winetest_push_context("%u", i);
 
-    /* Driver should have been installed */
-    attrs = GetFileAttributesA(driver);
-    ok(attrs != INVALID_FILE_ATTRIBUTES, "Expected driver to exist\n");
+        sprintf(buffer, inf, tests[i].add_service_flags, argument, tests[i].service_type, tests[i].start_type);
+        create_inf_file(inffile, buffer);
+        sprintf(path, "%s\\%s", CURR_DIR, inffile);
+        run_cmdline("DefaultInstall", 128, path);
 
-    scm_handle = OpenSCManagerA(NULL, NULL, GENERIC_ALL);
+        /* Driver should have been installed */
+        attrs = GetFileAttributesA(driver);
+        ok(attrs != INVALID_FILE_ATTRIBUTES, "Expected driver to exist\n");
 
-    /* Open the service to see if it's really there */
-    svc_handle = OpenServiceA(scm_handle, "Winetest", DELETE);
-    ok(svc_handle != NULL, "Service was not created\n");
+        scm_handle = OpenSCManagerA(NULL, NULL, GENERIC_ALL);
 
-    SetLastError(0xdeadbeef);
-    ret = DeleteService(svc_handle);
-    ok(ret, "Service could not be deleted : %d\n", GetLastError());
+        /* Open the service to see if it's really there */
+        svc_handle = OpenServiceA(scm_handle, "Winetest", SERVICE_START|SERVICE_STOP|SERVICE_QUERY_STATUS|DELETE);
+        ok(svc_handle != NULL, "Service was not created\n");
 
-    CloseServiceHandle(svc_handle);
-    CloseServiceHandle(scm_handle);
+        ret = StartServiceA(svc_handle, 0, NULL);
+        if (!tests[i].expect_start_error)
+            ok(ret, "StartServiceA failed, error %u\n", GetLastError());
+        else
+        {
+            ok(!ret, "StartServiceA succeeded\n");
+            ok(GetLastError() == tests[i].expect_start_error, "got error %u\n", GetLastError());
+        }
 
-    /* File cleanup */
-    DeleteFileA(inffile);
+        ret = QueryServiceStatus(svc_handle, &status);
+        ok(ret, "QueryServiceStatus failed: %u\n", GetLastError());
+        while (status.dwCurrentState == SERVICE_START_PENDING)
+        {
+            Sleep(100);
+            ret = QueryServiceStatus(svc_handle, &status);
+            ok(ret, "QueryServiceStatus failed: %u\n", GetLastError());
+        }
+
+        ret = ControlService(svc_handle, SERVICE_CONTROL_STOP, &status);
+        while (status.dwCurrentState == SERVICE_STOP_PENDING)
+        {
+            Sleep(100);
+            ret = QueryServiceStatus(svc_handle, &status);
+            ok(ret, "QueryServiceStatus failed: %u\n", GetLastError());
+        }
+        ok(status.dwCurrentState == SERVICE_STOPPED, "expected SERVICE_STOPPED, got %d\n", status.dwCurrentState);
+
+        SetLastError(0xdeadbeef);
+        ret = DeleteService(svc_handle);
+        ok(ret, "Service could not be deleted : %d\n", GetLastError());
+
+        CloseServiceHandle(svc_handle);
+        CloseServiceHandle(scm_handle);
+
+        /* File cleanup */
+        DeleteFileA(inffile);
+        DeleteFileA(driver);
+
+        winetest_pop_context();
+    }
+
     DeleteFileA("winetest.sys");
-    DeleteFileA(driver);
 }
 
 static void test_profile_items(void)
@@ -2132,11 +2180,89 @@ static void test_register_dlls(void)
     ok(ret, "Failed to delete test DLL, error %u.\n", GetLastError());
 }
 
+static WCHAR service_name[] = L"Wine Test Service";
+static SERVICE_STATUS_HANDLE service_handle;
+static HANDLE stop_event;
+
+static DWORD WINAPI service_handler( DWORD ctrl, DWORD event_type, LPVOID event_data, LPVOID context )
+{
+    SERVICE_STATUS status;
+
+    status.dwServiceType             = SERVICE_WIN32;
+    status.dwControlsAccepted        = SERVICE_ACCEPT_STOP;
+    status.dwWin32ExitCode           = 0;
+    status.dwServiceSpecificExitCode = 0;
+    status.dwCheckPoint              = 0;
+    status.dwWaitHint                = 0;
+
+    switch(ctrl)
+    {
+    case SERVICE_CONTROL_STOP:
+    case SERVICE_CONTROL_SHUTDOWN:
+        trace( "shutting down\n" );
+        status.dwCurrentState     = SERVICE_STOP_PENDING;
+        status.dwControlsAccepted = 0;
+        SetServiceStatus( service_handle, &status );
+        SetEvent( stop_event );
+        return NO_ERROR;
+    default:
+        trace( "got service ctrl %x\n", ctrl );
+        status.dwCurrentState = SERVICE_RUNNING;
+        SetServiceStatus( service_handle, &status );
+        return NO_ERROR;
+    }
+}
+
+static void WINAPI ServiceMain( DWORD argc, LPWSTR *argv )
+{
+    SERVICE_STATUS status;
+
+    trace( "starting service\n" );
+
+    stop_event = CreateEventW( NULL, TRUE, FALSE, NULL );
+
+    service_handle = RegisterServiceCtrlHandlerExW( L"Wine Test Service", service_handler, NULL );
+    if (!service_handle)
+        return;
+
+    status.dwServiceType             = SERVICE_WIN32;
+    status.dwCurrentState            = SERVICE_RUNNING;
+    status.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+    status.dwWin32ExitCode           = 0;
+    status.dwServiceSpecificExitCode = 0;
+    status.dwCheckPoint              = 0;
+    status.dwWaitHint                = 10000;
+    SetServiceStatus( service_handle, &status );
+
+    WaitForSingleObject( stop_event, INFINITE );
+
+    status.dwCurrentState     = SERVICE_STOPPED;
+    status.dwControlsAccepted = 0;
+    SetServiceStatus( service_handle, &status );
+    trace( "service stopped\n" );
+}
+
 START_TEST(install)
 {
-    char temp_path[MAX_PATH], prev_path[MAX_PATH];
+    char temp_path[MAX_PATH], prev_path[MAX_PATH], path[MAX_PATH];
+    char **argv;
     DWORD len;
+    int argc;
 
+    argc = winetest_get_mainargs(&argv);
+    if (argc > 2 && !strcmp( argv[2], "service" ))
+    {
+        static const SERVICE_TABLE_ENTRYW service_table[] =
+        {
+            { service_name, ServiceMain },
+            { NULL, NULL }
+        };
+
+        StartServiceCtrlDispatcherW( service_table );
+        return;
+    }
+
+    GetFullPathNameA(argv[0], ARRAY_SIZE(path), path, NULL);
     GetCurrentDirectoryA(MAX_PATH, prev_path);
     GetTempPathA(MAX_PATH, temp_path);
     SetCurrentDirectoryA(temp_path);
@@ -2154,7 +2280,7 @@ START_TEST(install)
     test_registry();
     test_install_from();
     test_install_svc_from();
-    test_driver_install();
+    test_service_install(path, argv[1]);
     test_dirid();
     test_install_files_queue();
     test_need_media();
