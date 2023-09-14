@@ -955,14 +955,14 @@ void wined3d_context_gl_free_timestamp_query(struct wined3d_timestamp_query *que
     context_gl->free_timestamp_queries[context_gl->free_timestamp_query_count++] = query->id;
 }
 
-void context_alloc_so_statistics_query(struct wined3d_context *context,
+void wined3d_context_gl_alloc_so_statistics_query(struct wined3d_context_gl *context_gl,
         struct wined3d_so_statistics_query *query)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
-    if (context->free_so_statistics_query_count)
+    if (context_gl->free_so_statistics_query_count)
     {
-        query->u = context->free_so_statistics_queries[--context->free_so_statistics_query_count];
+        query->u = context_gl->free_so_statistics_queries[--context_gl->free_so_statistics_query_count];
     }
     else
     {
@@ -970,30 +970,30 @@ void context_alloc_so_statistics_query(struct wined3d_context *context,
         checkGLcall("glGenQueries");
 
         TRACE("Allocated SO statistics queries %u, %u in context %p.\n",
-                query->u.id[0], query->u.id[1], context);
+                query->u.id[0], query->u.id[1], context_gl);
     }
 
-    query->context = context;
-    list_add_head(&context->so_statistics_queries, &query->entry);
+    query->context_gl = context_gl;
+    list_add_head(&context_gl->so_statistics_queries, &query->entry);
 }
 
-void context_free_so_statistics_query(struct wined3d_so_statistics_query *query)
+void wined3d_context_gl_free_so_statistics_query(struct wined3d_so_statistics_query *query)
 {
-    struct wined3d_context *context = query->context;
+    struct wined3d_context_gl *context_gl = query->context_gl;
 
     list_remove(&query->entry);
-    query->context = NULL;
+    query->context_gl = NULL;
 
-    if (!wined3d_array_reserve((void **)&context->free_so_statistics_queries,
-            &context->free_so_statistics_query_size, context->free_so_statistics_query_count + 1,
-            sizeof(*context->free_so_statistics_queries)))
+    if (!wined3d_array_reserve((void **)&context_gl->free_so_statistics_queries,
+            &context_gl->free_so_statistics_query_size, context_gl->free_so_statistics_query_count + 1,
+            sizeof(*context_gl->free_so_statistics_queries)))
     {
         ERR("Failed to grow free list, leaking GL queries %u, %u in context %p.\n",
-                query->u.id[0], query->u.id[1], context);
+                query->u.id[0], query->u.id[1], context_gl);
         return;
     }
 
-    context->free_so_statistics_queries[context->free_so_statistics_query_count++] = query->u;
+    context_gl->free_so_statistics_queries[context_gl->free_so_statistics_query_count++] = query->u;
 }
 
 void context_alloc_pipeline_statistics_query(struct wined3d_context *context,
@@ -1318,7 +1318,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
 {
     struct wined3d_pipeline_statistics_query *pipeline_statistics_query;
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_so_statistics_query *so_statistics_query;
     struct fbo_entry *entry, *entry2;
     HGLRC restore_ctx;
     HDC restore_dc;
@@ -1331,14 +1330,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
         restore_ctx = NULL;
     else if (context->valid)
         context_set_gl_context(context);
-
-    LIST_FOR_EACH_ENTRY(so_statistics_query, &context->so_statistics_queries,
-            struct wined3d_so_statistics_query, entry)
-    {
-        if (context->valid)
-            GL_EXTCALL(glDeleteQueries(ARRAY_SIZE(so_statistics_query->u.id), so_statistics_query->u.id));
-        so_statistics_query->context = NULL;
-    }
 
     LIST_FOR_EACH_ENTRY(pipeline_statistics_query, &context->pipeline_statistics_queries,
             struct wined3d_pipeline_statistics_query, entry)
@@ -1362,15 +1353,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
 
     if (context->valid)
     {
-        if (gl_info->supported[WINED3D_GL_PRIMITIVE_QUERY])
-        {
-            for (i = 0; i < context->free_so_statistics_query_count; ++i)
-            {
-                union wined3d_gl_so_statistics_query *q = &context->free_so_statistics_queries[i];
-                GL_EXTCALL(glDeleteQueries(ARRAY_SIZE(q->id), q->id));
-            }
-        }
-
         if (gl_info->supported[ARB_PIPELINE_STATISTICS_QUERY])
         {
             for (i = 0; i < context->free_pipeline_statistics_query_count; ++i)
@@ -1383,7 +1365,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
         checkGLcall("context cleanup");
     }
 
-    heap_free(context->free_so_statistics_queries);
     heap_free(context->free_pipeline_statistics_queries);
 
     context_restore_pixel_format(context);
@@ -1408,6 +1389,7 @@ void wined3d_context_cleanup(struct wined3d_context *context)
 void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
 {
     const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    struct wined3d_so_statistics_query *so_statistics_query;
     struct wined3d_timestamp_query *timestamp_query;
     struct wined3d_occlusion_query *occlusion_query;
     struct wined3d_fence *fence;
@@ -1430,6 +1412,12 @@ void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
 
         if (context_gl->blit_vbo)
             GL_EXTCALL(glDeleteBuffers(1, &context_gl->blit_vbo));
+
+        for (i = 0; i < context_gl->free_so_statistics_query_count; ++i)
+        {
+            union wined3d_gl_so_statistics_query *q = &context_gl->free_so_statistics_queries[i];
+            GL_EXTCALL(glDeleteQueries(ARRAY_SIZE(q->id), q->id));
+        }
 
         if (context_gl->free_timestamp_query_count)
             GL_EXTCALL(glDeleteQueries(context_gl->free_timestamp_query_count, context_gl->free_timestamp_queries));
@@ -1461,9 +1449,18 @@ void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
 
         checkGLcall("context cleanup");
     }
+    heap_free(context_gl->free_so_statistics_queries);
     heap_free(context_gl->free_timestamp_queries);
     heap_free(context_gl->free_fences);
     heap_free(context_gl->free_occlusion_queries);
+
+    LIST_FOR_EACH_ENTRY(so_statistics_query, &context_gl->so_statistics_queries,
+            struct wined3d_so_statistics_query, entry)
+    {
+        if (context_gl->c.valid)
+            GL_EXTCALL(glDeleteQueries(ARRAY_SIZE(so_statistics_query->u.id), so_statistics_query->u.id));
+        so_statistics_query->context_gl = NULL;
+    }
 
     LIST_FOR_EACH_ENTRY(timestamp_query, &context_gl->timestamp_queries, struct wined3d_timestamp_query, entry)
     {
@@ -1916,7 +1913,6 @@ static BOOL wined3d_context_init(struct wined3d_context *context, struct wined3d
     struct wined3d_device *device = swapchain->device;
     DWORD state;
 
-    list_init(&context->so_statistics_queries);
     list_init(&context->pipeline_statistics_queries);
 
     list_init(&context->fbo_list);
@@ -1997,6 +1993,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
     list_init(&context_gl->occlusion_queries);
     list_init(&context_gl->fences);
     list_init(&context_gl->timestamp_queries);
+    list_init(&context_gl->so_statistics_queries);
 
     for (i = 0; i < ARRAY_SIZE(context_gl->tex_unit_map); ++i)
         context_gl->tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
