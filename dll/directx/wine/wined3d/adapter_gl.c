@@ -4274,6 +4274,51 @@ static void adapter_gl_destroy_device(struct wined3d_device *device)
     heap_free(device_gl);
 }
 
+static HRESULT adapter_gl_create_context(struct wined3d_swapchain *swapchain, struct wined3d_context **context)
+{
+    struct wined3d_context_gl *context_gl;
+
+    TRACE("swapchain %p, context %p.\n", swapchain, context);
+
+    if (!(context_gl = heap_alloc_zero(sizeof(*context_gl))))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(wined3d_context_gl_init(context_gl, swapchain)))
+    {
+        WARN("Failed to initialise context.\n");
+        heap_free(context_gl);
+        return E_FAIL;
+    }
+
+    TRACE("Created context %p.\n", context_gl);
+    *context = &context_gl->c;
+
+    return WINED3D_OK;
+}
+
+static void adapter_gl_destroy_context(struct wined3d_context *context)
+{
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+
+    if (context_gl->c.current && context_gl->c.tid != GetCurrentThreadId())
+    {
+        struct wined3d_gl_info *gl_info;
+
+        /* Make a copy of gl_info for wined3d_context_gl_cleanup() use, the
+         * one in wined3d_adapter may go away in the meantime. */
+        gl_info = heap_alloc(sizeof(*gl_info));
+        *gl_info = *context_gl->c.gl_info;
+        context_gl->c.gl_info = gl_info;
+        context_gl->c.destroyed = 1;
+
+        return;
+    }
+
+    wined3d_context_gl_cleanup(context_gl);
+    TlsSetValue(context_get_tls_idx(), NULL);
+    heap_free(context_gl);
+}
+
 static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, struct wined3d_caps *caps)
 {
     const struct wined3d_d3d_info *d3d_info = &adapter->d3d_info;
@@ -4559,7 +4604,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
     adapter_gl_destroy,
     adapter_gl_create_device,
     adapter_gl_destroy_device,
-    wined3d_adapter_gl_create_context,
+    adapter_gl_create_context,
+    adapter_gl_destroy_context,
     adapter_gl_get_wined3d_caps,
     adapter_gl_check_format,
     adapter_gl_init_3d,

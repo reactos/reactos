@@ -2258,9 +2258,32 @@ static void adapter_no3d_destroy_device(struct wined3d_device *device)
     heap_free(device);
 }
 
-static BOOL wined3d_adapter_no3d_create_context(struct wined3d_context *context)
+static HRESULT adapter_no3d_create_context(struct wined3d_swapchain *swapchain, struct wined3d_context **context)
 {
-    return TRUE;
+    struct wined3d_context *context_no3d;
+
+    TRACE("swapchain %p, context %p.\n", swapchain, context);
+
+    if (!(context_no3d = heap_alloc_zero(sizeof(*context_no3d))))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(wined3d_context_no3d_init(context_no3d, swapchain)))
+    {
+        WARN("Failed to initialise context.\n");
+        heap_free(context_no3d);
+        return E_FAIL;
+    }
+
+    TRACE("Created context %p.\n", context_no3d);
+    *context = context_no3d;
+
+    return WINED3D_OK;
+}
+
+static void adapter_no3d_destroy_context(struct wined3d_context *context)
+{
+    wined3d_context_cleanup(context);
+    heap_free(context);
 }
 
 static void adapter_no3d_get_wined3d_caps(const struct wined3d_adapter *adapter, struct wined3d_caps *caps)
@@ -2299,7 +2322,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
     adapter_no3d_destroy,
     adapter_no3d_create_device,
     adapter_no3d_destroy_device,
-    wined3d_adapter_no3d_create_context,
+    adapter_no3d_create_context,
+    adapter_no3d_destroy_context,
     adapter_no3d_get_wined3d_caps,
     adapter_no3d_check_format,
     adapter_no3d_init_3d,

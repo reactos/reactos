@@ -288,9 +288,32 @@ static void adapter_vk_destroy_device(struct wined3d_device *device)
     heap_free(device_vk);
 }
 
-static BOOL adapter_vk_create_context(struct wined3d_context *context)
+static HRESULT adapter_vk_create_context(struct wined3d_swapchain *swapchain, struct wined3d_context **context)
 {
-    return TRUE;
+    struct wined3d_context *context_vk;
+
+    TRACE("swapchain %p, context %p.\n", swapchain, context);
+
+    if (!(context_vk = heap_alloc_zero(sizeof(*context_vk))))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(wined3d_context_vk_init(context_vk, swapchain)))
+    {
+        WARN("Failed to initialise context.\n");
+        heap_free(context_vk);
+        return E_FAIL;
+    }
+
+    TRACE("Created context %p.\n", context_vk);
+    *context = context_vk;
+
+    return WINED3D_OK;
+}
+
+static void adapter_vk_destroy_context(struct wined3d_context *context)
+{
+    wined3d_context_cleanup(context);
+    heap_free(context);
 }
 
 static void adapter_vk_get_wined3d_caps(const struct wined3d_adapter *adapter, struct wined3d_caps *caps)
@@ -416,6 +439,7 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
     adapter_vk_create_device,
     adapter_vk_destroy_device,
     adapter_vk_create_context,
+    adapter_vk_destroy_context,
     adapter_vk_get_wined3d_caps,
     adapter_vk_check_format,
     adapter_vk_init_3d,

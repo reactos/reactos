@@ -2038,6 +2038,11 @@ struct wined3d_context
     unsigned int scissor_rect_count;
 };
 
+void wined3d_context_cleanup(struct wined3d_context *context) DECLSPEC_HIDDEN;
+
+HRESULT wined3d_context_no3d_init(struct wined3d_context *context_no3d,
+        struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
+
 struct wined3d_context_gl
 {
     struct wined3d_context c;
@@ -2048,11 +2053,18 @@ static inline struct wined3d_context_gl *wined3d_context_gl(struct wined3d_conte
     return CONTAINING_RECORD(context, struct wined3d_context_gl, c);
 }
 
+void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
+HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl,
+        struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
+
 struct wined3d_fb_state
 {
     struct wined3d_rendertarget_view *render_targets[MAX_RENDER_TARGET_VIEWS];
     struct wined3d_rendertarget_view *depth_stencil;
 };
+
+HRESULT wined3d_context_vk_init(struct wined3d_context *context_vk,
+        struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 
 typedef void (*APPLYSTATEFUNC)(struct wined3d_context *ctx, const struct wined3d_state *state, DWORD state_id);
 
@@ -2721,7 +2733,8 @@ struct wined3d_adapter_ops
             BYTE surface_alignment, const enum wined3d_feature_level *levels, unsigned int level_count,
             struct wined3d_device_parent *device_parent, struct wined3d_device **device);
     void (*adapter_destroy_device)(struct wined3d_device *device);
-    BOOL (*adapter_create_context)(struct wined3d_context *context);
+    HRESULT (*adapter_create_context)(struct wined3d_swapchain *swapchain, struct wined3d_context **context);
+    void (*adapter_destroy_context)(struct wined3d_context *context);
     void (*adapter_get_wined3d_caps)(const struct wined3d_adapter *adapter, struct wined3d_caps *caps);
     BOOL (*adapter_check_format)(const struct wined3d_adapter *adapter,
             const struct wined3d_format *adapter_format, const struct wined3d_format *rt_format,
@@ -2780,7 +2793,6 @@ static inline const struct wined3d_adapter_gl *wined3d_adapter_gl_const(const st
 
 struct wined3d_adapter *wined3d_adapter_gl_create(unsigned int ordinal,
         unsigned int wined3d_creation_flags) DECLSPEC_HIDDEN;
-BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context) DECLSPEC_HIDDEN;
 
 struct wined3d_adapter_vk
 {
