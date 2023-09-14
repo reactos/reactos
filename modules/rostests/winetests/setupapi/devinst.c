@@ -2462,14 +2462,7 @@ static void test_driver_list(void)
     ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, idx++, &driver);
     ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
     ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
-    todo_wine ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
-    if (strcmp(driver.Description, "desc1"))
-    {
-        ret = SetupDiEnumDriverInfoA(set, &device, SPDIT_COMPATDRIVER, idx++, &driver);
-        ok(ret, "Failed to enumerate drivers, error %#x.\n", GetLastError());
-        ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
-        ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
-    }
+    ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
     ok(!strcmp(driver.MfgName, wow64 ? "mfg1_wow" : "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
     ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
 
