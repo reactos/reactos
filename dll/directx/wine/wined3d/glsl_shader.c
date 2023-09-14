@@ -9615,65 +9615,34 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *
         switch (settings->op[stage].tex_type)
         {
             case WINED3D_GL_RES_TYPE_TEX_1D:
-                if (proj)
-                {
-                    texture_function = "texture1DProj";
-                    coord_mask = "xw";
-                }
-                else
-                {
-                    texture_function = "texture1D";
-                    coord_mask = "x";
-                }
+                texture_function = "texture1D";
+                coord_mask = "x";
                 break;
             case WINED3D_GL_RES_TYPE_TEX_2D:
-                if (proj)
-                {
-                    texture_function = "texture2DProj";
-                    coord_mask = "xyw";
-                }
-                else
-                {
-                    texture_function = "texture2D";
-                    coord_mask = "xy";
-                }
+                texture_function = "texture2D";
+                coord_mask = "xy";
                 break;
             case WINED3D_GL_RES_TYPE_TEX_3D:
-                if (proj)
-                {
-                    texture_function = "texture3DProj";
-                    coord_mask = "xyzw";
-                }
-                else
-                {
-                    texture_function = "texture3D";
-                    coord_mask = "xyz";
-                }
+                texture_function = "texture3D";
+                coord_mask = "xyz";
                 break;
             case WINED3D_GL_RES_TYPE_TEX_CUBE:
                 texture_function = "textureCube";
                 coord_mask = "xyz";
                 break;
             case WINED3D_GL_RES_TYPE_TEX_RECT:
-                if (proj)
-                {
-                    texture_function = "texture2DRectProj";
-                    coord_mask = "xyw";
-                }
-                else
-                {
-                    texture_function = "texture2DRect";
-                    coord_mask = "xy";
-                }
+                texture_function = "texture2DRect";
+                coord_mask = "xy";
                 break;
             default:
                 FIXME("Unhandled texture type %#x.\n", settings->op[stage].tex_type);
                 texture_function = "";
                 coord_mask = "xyzw";
+                proj = FALSE;
                 break;
         }
         if (!legacy_syntax)
-            texture_function = proj ? "textureProj" : "texture";
+            texture_function = "texture";
 
         if (stage > 0
                 && (settings->op[stage - 1].cop == WINED3D_TOP_BUMPENVMAP
@@ -9705,8 +9674,8 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *
                 shader_addline(buffer, "ret = ffp_texcoord[%u] + ret.xyxy;\n", stage);
             }
 
-            shader_addline(buffer, "tex%u = %s(ps_sampler%u, ret.%s);\n",
-                    stage, texture_function, stage, coord_mask);
+            shader_addline(buffer, "tex%u = %s%s(ps_sampler%u, ret.%s%s);\n",
+                    stage, texture_function, proj ? "Proj" : "", stage, coord_mask, proj ? "w" : "");
 
             if (settings->op[stage - 1].cop == WINED3D_TOP_BUMPENVMAP_LUMINANCE)
                 shader_addline(buffer, "tex%u *= clamp(tex%u.z * bumpenv_lum_scale%u + bumpenv_lum_offset%u, 0.0, 1.0);\n",
@@ -9714,13 +9683,13 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *
         }
         else if (settings->op[stage].projected == WINED3D_PROJECTION_COUNT3)
         {
-            shader_addline(buffer, "tex%u = %s(ps_sampler%u, ffp_texcoord[%u].xyz);\n",
-                    stage, texture_function, stage, stage);
+            shader_addline(buffer, "tex%u = %s%s(ps_sampler%u, ffp_texcoord[%u].xyz);\n",
+                    stage, texture_function, proj ? "Proj" : "", stage, stage);
         }
         else
         {
-            shader_addline(buffer, "tex%u = %s(ps_sampler%u, ffp_texcoord[%u].%s);\n",
-                    stage, texture_function, stage, stage, coord_mask);
+            shader_addline(buffer, "tex%u = %s%s(ps_sampler%u, ffp_texcoord[%u].%s%s);\n",
+                    stage, texture_function, proj ? "Proj" : "", stage, stage, coord_mask, proj ? "w" : "");
         }
 
         string_buffer_sprintf(tex_reg_name, "tex%u", stage);
