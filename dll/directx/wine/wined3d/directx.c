@@ -189,6 +189,9 @@ static const struct driver_version_information driver_version_table[] =
 
     /* VMware */
     {DRIVER_VMWARE,             DRIVER_MODEL_NT5X,  "vm3dum.dll",   14, 1,  1134},
+
+    /* Wine */
+    {DRIVER_WINE,               DRIVER_MODEL_GENERIC, "wined3d.dll", 0, 0,     0},
 };
 
 /* The amount of video memory stored in the gpu description table is the minimum amount of video memory
@@ -562,6 +565,13 @@ void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
     driver_info->description = gpu_desc->description;
     driver_info->vram_bytes = vram_bytes ? vram_bytes : (UINT64)gpu_desc->vidmem * 1024 * 1024;
     driver = gpu_desc->driver;
+
+    if (wined3d_settings.emulated_textureram)
+    {
+        driver_info->vram_bytes = wined3d_settings.emulated_textureram;
+        TRACE("Overriding amount of video memory with 0x%s bytes.\n",
+                wine_dbgstr_longlong(driver_info->vram_bytes));
+    }
 
     /**
      * Diablo 2 crashes when the amount of video memory is greater than 0x7fffffff.
@@ -2473,14 +2483,17 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
 
 static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter)
 {
+    static const struct wined3d_gpu_description gpu_description =
+    {
+        HW_VENDOR_SOFTWARE, CARD_WINE, "WineD3D DirectDraw Emulation", DRIVER_WINE, 128,
+    };
+
     TRACE("adapter %p.\n", adapter);
 
-    adapter->driver_info.name = "Display";
-    adapter->driver_info.description = "WineD3D DirectDraw Emulation";
-    if (wined3d_settings.emulated_textureram)
-        adapter->vram_bytes = wined3d_settings.emulated_textureram;
-    else
-        adapter->vram_bytes = 128 * 1024 * 1024;
+    wined3d_driver_info_init(&adapter->driver_info, &gpu_description, 0);
+    adapter->vram_bytes = adapter->driver_info.vram_bytes;
+    adapter->vram_bytes_used = 0;
+    TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->vram_bytes));
 
     if (!wined3d_adapter_init_format_info(adapter, NULL))
         return FALSE;

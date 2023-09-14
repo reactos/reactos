@@ -1015,13 +1015,6 @@ static const struct wined3d_gpu_description *query_gpu_description(const struct 
         TRACE("Overriding device PCI ID with 0x%04x.\n", device);
     }
 
-    if (wined3d_settings.emulated_textureram)
-    {
-        *vram_bytes = wined3d_settings.emulated_textureram;
-        TRACE("Overriding amount of video memory with 0x%s bytes.\n",
-                wine_dbgstr_longlong(*vram_bytes));
-    }
-
     if (!(gpu_description = wined3d_get_gpu_description(vendor, device))
             && (wined3d_settings.pci_vendor_id != PCI_VENDOR_NONE
             || wined3d_settings.pci_device_id != PCI_DEVICE_NONE) && !once++)
@@ -3816,6 +3809,10 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     TRACE("Reporting (fake) driver version 0x%08x-0x%08x.\n",
             driver_info->version_high, driver_info->version_low);
 
+    adapter->vram_bytes = driver_info->vram_bytes;
+    adapter->vram_bytes_used = 0;
+    TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->vram_bytes));
+
     gl_ext_emul_mask = adapter->vertex_pipe->vp_get_emul_mask(gl_info)
             | adapter->fragment_pipe->get_emul_mask(gl_info);
     if (gl_ext_emul_mask & GL_EXT_EMUL_ARB_MULTITEXTURE)
@@ -4285,10 +4282,6 @@ BOOL wined3d_adapter_opengl_init(struct wined3d_adapter *adapter, DWORD wined3d_
         heap_free(adapter->cfgs);
         return FALSE;
     }
-
-    adapter->vram_bytes = adapter->driver_info.vram_bytes;
-    adapter->vram_bytes_used = 0;
-    TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->vram_bytes));
 
     wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
 
