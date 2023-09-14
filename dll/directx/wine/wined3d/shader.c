@@ -767,6 +767,8 @@ static BOOL shader_record_register_usage(struct wined3d_shader *shader, struct w
                 }
                 else
                 {
+                    if (reg->idx[0].offset >= reg_maps->constant_float_count)
+                        reg_maps->constant_float_count = reg->idx[0].offset + 1;
                     wined3d_insert_bits(reg_maps->constf, reg->idx[0].offset, 1, 0x1);
                 }
             }
