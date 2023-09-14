@@ -2720,6 +2720,9 @@ HRESULT __cdecl wined3d_swapchain_set_gamma_ramp(const struct wined3d_swapchain 
 void __cdecl wined3d_swapchain_set_palette(struct wined3d_swapchain *swapchain, struct wined3d_palette *palette);
 void __cdecl wined3d_swapchain_set_window(struct wined3d_swapchain *swapchain, HWND window);
 
+HRESULT __cdecl wined3d_swapchain_state_create(const struct wined3d_swapchain_desc *desc,
+        HWND window, struct wined3d_swapchain_state **state);
+void __cdecl wined3d_swapchain_state_destroy(struct wined3d_swapchain_state *state);
 HRESULT __cdecl wined3d_swapchain_state_resize_target(struct wined3d_swapchain_state *state,
         struct wined3d *wined3d, unsigned int adapter_idx, const struct wined3d_display_mode *mode);
 

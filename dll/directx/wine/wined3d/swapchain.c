@@ -1597,3 +1597,26 @@ HRESULT CDECL wined3d_swapchain_set_fullscreen(struct wined3d_swapchain *swapcha
 
     return WINED3D_OK;
 }
+
+void CDECL wined3d_swapchain_state_destroy(struct wined3d_swapchain_state *state)
+{
+    heap_free(state);
+}
+
+HRESULT CDECL wined3d_swapchain_state_create(const struct wined3d_swapchain_desc *desc,
+        HWND window, struct wined3d_swapchain_state **state)
+{
+    struct wined3d_swapchain_state *s;
+
+    TRACE("desc %p, window %p, state %p.\n", desc, window, state);
+
+    if (!(s = heap_alloc_zero(sizeof(*s))))
+        return E_OUTOFMEMORY;
+
+    s->desc = *desc;
+    s->device_window = window;
+
+    *state = s;
+
+    return WINED3D_OK;
+}
