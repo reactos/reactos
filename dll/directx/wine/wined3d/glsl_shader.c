@@ -10043,10 +10043,9 @@ static HRESULT shader_glsl_compile_compute_shader(struct shader_glsl_priv *priv,
     return WINED3D_OK;
 }
 
-static GLuint find_glsl_compute_shader(const struct wined3d_context *context,
+static GLuint find_glsl_compute_shader(const struct wined3d_context_gl *context_gl,
         struct shader_glsl_priv *priv, struct wined3d_shader *shader)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_shader_private *shader_data;
 
     if (!shader->backend_data)
@@ -10066,6 +10065,7 @@ static GLuint find_glsl_compute_shader(const struct wined3d_context *context,
 static void set_glsl_compute_shader_program(const struct wined3d_context *context,
         const struct wined3d_state *state, struct shader_glsl_priv *priv, struct glsl_context_data *ctx_data)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_shader_prog_link *entry;
     struct wined3d_shader *shader;
     struct glsl_program_key key;
@@ -10081,7 +10081,7 @@ static void set_glsl_compute_shader_program(const struct wined3d_context *contex
         return;
     }
 
-    cs_id = find_glsl_compute_shader(context, priv, shader);
+    cs_id = find_glsl_compute_shader(context_gl, priv, shader);
     memset(&key, 0, sizeof(key));
     key.cs_id = cs_id;
     if (!(entry = get_glsl_program_entry(priv, &key)))
