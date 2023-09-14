@@ -1962,7 +1962,6 @@ struct wined3d_context
     UINT                    blit_w, blit_h;
     enum fogsource          fog_source;
     DWORD active_texture;
-    DWORD *texture_type;
 
     UINT instance_count;
 
@@ -2046,6 +2045,8 @@ HRESULT wined3d_context_no3d_init(struct wined3d_context *context_no3d,
 struct wined3d_context_gl
 {
     struct wined3d_context c;
+
+    GLenum *texture_type;
 };
 
 static inline struct wined3d_context_gl *wined3d_context_gl(struct wined3d_context *context)

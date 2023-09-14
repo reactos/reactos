@@ -1478,12 +1478,12 @@ void wined3d_context_cleanup(struct wined3d_context *context)
         DWORD err = GetLastError();
         ERR("wglDeleteContext(%p) failed, last error %#x.\n", context->glCtx, err);
     }
-
-    heap_free(context->texture_type);
 }
 
 void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
 {
+    heap_free(context_gl->texture_type);
+
     wined3d_context_cleanup(&context_gl->c);
 }
 
@@ -2009,8 +2009,8 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
         }
     }
 
-    if (!(context->texture_type = heap_calloc(gl_info->limits.combined_samplers,
-            sizeof(*context->texture_type))))
+    if (!(context_gl->texture_type = heap_calloc(gl_info->limits.combined_samplers,
+            sizeof(*context_gl->texture_type))))
         return E_FAIL;
 
     target = &context->current_rt.texture->resource;
@@ -2093,7 +2093,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
     {
         ERR("Failed to set pixel format %d on device context %p.\n", context->pixel_format, context->hdc);
         context_release(context);
-        heap_free(context->texture_type);
+        heap_free(context_gl->texture_type);
         return E_FAIL;
     }
 
@@ -2103,7 +2103,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
         if (!(ctx = context_create_wgl_attribs(gl_info, context->hdc, share_ctx)))
         {
             context_release(context);
-            heap_free(context->texture_type);
+            heap_free(context_gl->texture_type);
             return E_FAIL;
         }
     }
@@ -2113,7 +2113,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
         {
             ERR("Failed to create a WGL context.\n");
             context_release(context);
-            heap_free(context->texture_type);
+            heap_free(context_gl->texture_type);
             return E_FAIL;
         }
 
@@ -2123,7 +2123,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
             context_release(context);
             if (!wglDeleteContext(ctx))
                 ERR("wglDeleteContext(%p) failed, last error %#x.\n", ctx, GetLastError());
-            heap_free(context->texture_type);
+            heap_free(context_gl->texture_type);
             return E_FAIL;
         }
     }
@@ -2143,7 +2143,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
         context_release(context);
         if (!wglDeleteContext(ctx))
             ERR("wglDeleteContext(%p) failed, last error %#x.\n", ctx, GetLastError());
-        heap_free(context->texture_type);
+        heap_free(context_gl->texture_type);
         return E_FAIL;
     }
 
@@ -2541,7 +2541,7 @@ void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl, GLen
         target = GL_NONE;
 
     unit = context_gl->c.active_texture;
-    old_texture_type = context_gl->c.texture_type[unit];
+    old_texture_type = context_gl->texture_type[unit];
     if (old_texture_type != target)
     {
         switch (old_texture_type)
@@ -2586,7 +2586,7 @@ void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl, GLen
                 ERR("Unexpected texture target %#x.\n", old_texture_type);
         }
 
-        context_gl->c.texture_type[unit] = target;
+        context_gl->texture_type[unit] = target;
     }
 
     checkGLcall("bind texture");
