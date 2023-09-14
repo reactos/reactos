@@ -1370,7 +1370,7 @@ HRESULT CDECL wined3d_swapchain_resize_target(struct wined3d_swapchain *swapchai
                 &actual_mode, NULL)))
         {
             ERR("Failed to get display mode, hr %#x.\n", hr);
-            return WINED3DERR_INVALIDCALL;
+            return hr;
         }
 
         SetRect(&window_rect, 0, 0, actual_mode.width, actual_mode.height);
