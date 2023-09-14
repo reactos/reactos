@@ -5644,7 +5644,14 @@ static HRESULT d3d_device7_BeginStateBlock(IDirect3DDevice7 *iface)
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    hr = wined3d_device_begin_stateblock(device->wined3d_device);
+    if (device->recording)
+    {
+        wined3d_mutex_unlock();
+        WARN("Trying to begin a stateblock while recording, returning D3DERR_INBEGINSTATEBLOCK.\n");
+        return D3DERR_INBEGINSTATEBLOCK;
+    }
+    if (SUCCEEDED(hr = wined3d_device_begin_stateblock(device->wined3d_device)))
+        device->recording = TRUE;
     wined3d_mutex_unlock();
 
     return hr_ddraw_from_wined3d(hr);
@@ -5705,6 +5712,7 @@ static HRESULT d3d_device7_EndStateBlock(IDirect3DDevice7 *iface, DWORD *statebl
         *stateblock = 0;
         return hr_ddraw_from_wined3d(hr);
     }
+    device->recording = FALSE;
 
     h = ddraw_allocate_handle(&device->handle_table, wined3d_sb, DDRAW_HANDLE_STATEBLOCK);
     if (h == DDRAW_INVALID_HANDLE)

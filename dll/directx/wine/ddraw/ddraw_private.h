@@ -348,6 +348,8 @@ struct d3d_device
     D3DMATRIXHANDLE          world, proj, view;
 
     struct wined3d_vec4 user_clip_planes[D3DMAXUSERCLIPPLANES];
+
+    BOOL recording;
 };
 
 HRESULT d3d_device_create(struct ddraw *ddraw, const GUID *guid, struct ddraw_surface *target, IUnknown *rt_iface,
