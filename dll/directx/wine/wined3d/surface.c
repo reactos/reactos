@@ -2168,7 +2168,7 @@ static BOOL ffp_blit_supported(enum wined3d_blit_op blit_op, const struct wined3
                 }
             }
 
-            if (!(dst_resource->usage & WINED3DUSAGE_RENDERTARGET))
+            if (!(dst_resource->bind_flags & WINED3D_BIND_RENDER_TARGET))
             {
                 TRACE("Can only blit to render targets.\n");
                 return FALSE;
