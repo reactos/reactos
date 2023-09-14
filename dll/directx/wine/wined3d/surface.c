@@ -173,12 +173,14 @@ void draw_textured_quad(struct wined3d_texture *texture, unsigned int sub_resour
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct blt_info info;
+    unsigned int level;
 
     texture2d_get_blt_info(texture, sub_resource_idx, src_rect, &info);
 
     gl_info->gl_ops.gl.p_glEnable(info.bind_target);
     checkGLcall("glEnable(bind_target)");
 
+    level = sub_resource_idx % texture->level_count;
     context_bind_texture(context, info.bind_target, texture->texture_rgb.name);
 
     /* Filtering for StretchRect */
@@ -191,6 +193,8 @@ void draw_textured_quad(struct wined3d_texture *texture, unsigned int sub_resour
     gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     if (context->gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
         gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT);
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_BASE_LEVEL, level);
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, level);
     gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     checkGLcall("glTexEnvi");
 
@@ -209,6 +213,8 @@ void draw_textured_quad(struct wined3d_texture *texture, unsigned int sub_resour
     gl_info->gl_ops.gl.p_glVertex2i(dst_rect->right, dst_rect->bottom);
     gl_info->gl_ops.gl.p_glEnd();
 
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, texture->level_count - 1);
+
     /* Unbind the texture */
     context_bind_texture(context, info.bind_target, 0);
 
@@ -218,6 +224,7 @@ void draw_textured_quad(struct wined3d_texture *texture, unsigned int sub_resour
     texture->texture_rgb.sampler_desc.min_filter = WINED3D_TEXF_POINT;
     texture->texture_rgb.sampler_desc.mip_filter = WINED3D_TEXF_NONE;
     texture->texture_rgb.sampler_desc.srgb_decode = FALSE;
+    texture->texture_rgb.base_level = level;
 }
 
 /* Works correctly only for <= 4 bpp formats. */
