@@ -593,31 +593,9 @@ static void buffer_conversion_upload(struct wined3d_buffer *buffer, struct wined
 }
 
 static BOOL wined3d_buffer_prepare_location(struct wined3d_buffer *buffer,
-        struct wined3d_context *context, DWORD location)
+        struct wined3d_context *context, unsigned int location)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    struct wined3d_buffer_gl *buffer_gl = wined3d_buffer_gl(buffer);
-
-    switch (location)
-    {
-        case WINED3D_LOCATION_SYSMEM:
-            return wined3d_resource_prepare_sysmem(&buffer->resource);
-
-        case WINED3D_LOCATION_BUFFER:
-            if (buffer_gl->buffer_object)
-                return TRUE;
-
-            if (!(buffer->flags & WINED3D_BUFFER_USE_BO))
-            {
-                WARN("Trying to create BO for buffer %p with no WINED3D_BUFFER_USE_BO.\n", buffer);
-                return FALSE;
-            }
-            return wined3d_buffer_gl_create_buffer_object(buffer_gl, context_gl);
-
-        default:
-            ERR("Invalid location %s.\n", wined3d_debug_location(location));
-            return FALSE;
-    }
+    return buffer->buffer_ops->buffer_prepare_location(buffer, context, location);
 }
 
 BOOL wined3d_buffer_load_location(struct wined3d_buffer *buffer,
@@ -1453,6 +1431,17 @@ static HRESULT wined3d_buffer_init(struct wined3d_buffer *buffer, struct wined3d
     return WINED3D_OK;
 }
 
+static BOOL wined3d_buffer_no3d_prepare_location(struct wined3d_buffer *buffer,
+        struct wined3d_context *context, unsigned int location)
+{
+    if (location == WINED3D_LOCATION_SYSMEM)
+        return wined3d_resource_prepare_sysmem(&buffer->resource);
+
+    FIXME("Unhandled location %s.\n", wined3d_debug_location(location));
+
+    return FALSE;
+}
+
 static void wined3d_buffer_no3d_upload_ranges(struct wined3d_buffer *buffer, struct wined3d_context *context,
         const void *data, unsigned int data_offset, unsigned int range_count, const struct wined3d_map_range *ranges)
 {
@@ -1467,6 +1456,7 @@ static void wined3d_buffer_no3d_download_ranges(struct wined3d_buffer *buffer, s
 
 static const struct wined3d_buffer_ops wined3d_buffer_no3d_ops =
 {
+    wined3d_buffer_no3d_prepare_location,
     wined3d_buffer_no3d_upload_ranges,
     wined3d_buffer_no3d_download_ranges,
 };
@@ -1479,6 +1469,34 @@ HRESULT wined3d_buffer_no3d_init(struct wined3d_buffer *buffer_no3d, struct wine
             buffer_no3d, device, desc, data, parent, parent_ops);
 
     return wined3d_buffer_init(buffer_no3d, device, desc, data, parent, parent_ops, &wined3d_buffer_no3d_ops);
+}
+
+static BOOL wined3d_buffer_gl_prepare_location(struct wined3d_buffer *buffer,
+        struct wined3d_context *context, unsigned int location)
+{
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    struct wined3d_buffer_gl *buffer_gl = wined3d_buffer_gl(buffer);
+
+    switch (location)
+    {
+        case WINED3D_LOCATION_SYSMEM:
+            return wined3d_resource_prepare_sysmem(&buffer->resource);
+
+        case WINED3D_LOCATION_BUFFER:
+            if (buffer_gl->buffer_object)
+                return TRUE;
+
+            if (!(buffer->flags & WINED3D_BUFFER_USE_BO))
+            {
+                WARN("Trying to create BO for buffer %p with no WINED3D_BUFFER_USE_BO.\n", buffer);
+                return FALSE;
+            }
+            return wined3d_buffer_gl_create_buffer_object(buffer_gl, context_gl);
+
+        default:
+            ERR("Invalid location %s.\n", wined3d_debug_location(location));
+            return FALSE;
+    }
 }
 
 /* Context activation is done by the caller. */
@@ -1523,6 +1541,7 @@ static void wined3d_buffer_gl_download_ranges(struct wined3d_buffer *buffer, str
 
 static const struct wined3d_buffer_ops wined3d_buffer_gl_ops =
 {
+    wined3d_buffer_gl_prepare_location,
     wined3d_buffer_gl_upload_ranges,
     wined3d_buffer_gl_download_ranges,
 };
@@ -1541,6 +1560,24 @@ HRESULT wined3d_buffer_gl_init(struct wined3d_buffer_gl *buffer_gl, struct wined
     return wined3d_buffer_init(&buffer_gl->b, device, desc, data, parent, parent_ops, &wined3d_buffer_gl_ops);
 }
 
+static BOOL wined3d_buffer_vk_prepare_location(struct wined3d_buffer *buffer,
+        struct wined3d_context *context, unsigned int location)
+{
+    switch (location)
+    {
+        case WINED3D_LOCATION_SYSMEM:
+            return wined3d_resource_prepare_sysmem(&buffer->resource);
+
+        case WINED3D_LOCATION_BUFFER:
+            /* The Vulkan buffer is created during resource creation. */
+            return TRUE;
+
+        default:
+            FIXME("Unhandled location %s.\n", wined3d_debug_location(location));
+            return FALSE;
+    }
+}
+
 static void wined3d_buffer_vk_upload_ranges(struct wined3d_buffer *buffer, struct wined3d_context *context,
         const void *data, unsigned int data_offset, unsigned int range_count, const struct wined3d_map_range *ranges)
 {
@@ -1555,6 +1592,7 @@ static void wined3d_buffer_vk_download_ranges(struct wined3d_buffer *buffer, str
 
 static const struct wined3d_buffer_ops wined3d_buffer_vk_ops =
 {
+    wined3d_buffer_vk_prepare_location,
     wined3d_buffer_vk_upload_ranges,
     wined3d_buffer_vk_download_ranges,
 };
