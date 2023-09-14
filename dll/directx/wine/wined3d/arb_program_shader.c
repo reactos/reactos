@@ -4862,8 +4862,10 @@ static void shader_arb_free_context_data(struct wined3d_context *context)
 
 static void shader_arb_init_context_state(struct wined3d_context *context) {}
 
-static void shader_arb_get_caps(const struct wined3d_gl_info *gl_info, struct shader_caps *caps)
+static void shader_arb_get_caps(const struct wined3d_adapter *adapter, struct shader_caps *caps)
 {
+    const struct wined3d_gl_info *gl_info = &adapter->gl_info;
+
     if (gl_info->supported[ARB_VERTEX_PROGRAM])
     {
         DWORD vs_consts;

@@ -1967,7 +1967,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, unsigned in
                                                 WINED3DPTFILTERCAPS_MAGFLINEAR;
     caps->VertexTextureFilterCaps             = 0;
 
-    adapter->shader_backend->shader_get_caps(gl_info, &shader_caps);
+    adapter->shader_backend->shader_get_caps(adapter, &shader_caps);
     adapter->fragment_pipe->get_caps(gl_info, &fragment_caps);
     adapter->vertex_pipe->vp_get_caps(gl_info, &vertex_caps);
 
