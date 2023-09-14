@@ -12133,8 +12133,9 @@ static void glsl_blitter_generate_p8_shader(struct wined3d_string_buffer *buffer
     shader_addline(buffer, "uniform sampler1D sampler_palette;\n");
     shader_addline(buffer, "\nvoid main()\n{\n");
     /* The alpha-component contains the palette index. */
-    shader_addline(buffer, "    float index = texture%s(sampler, out_texcoord.%s).w;\n",
-            needs_legacy_glsl_syntax(gl_info) ? tex_type : "", swizzle);
+    shader_addline(buffer, "    float index = texture%s(sampler, out_texcoord.%s).%c;\n",
+            needs_legacy_glsl_syntax(gl_info) ? tex_type : "", swizzle,
+            gl_info->supported[WINED3D_GL_LEGACY_CONTEXT] ? 'w' : 'x');
     /* Scale the index by 255/256 and add a bias of 0.5 in order to sample in
      * the middle. */
     shader_addline(buffer, "    index = (index * 255.0 + 0.5) / 256.0;\n");
