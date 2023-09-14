@@ -4092,9 +4092,16 @@ struct wined3d_map_range
     UINT size;
 };
 
+struct wined3d_buffer_ops
+{
+    void (*buffer_upload_ranges)(struct wined3d_buffer *buffer, struct wined3d_context *context, const void *data,
+            unsigned int data_offset, unsigned int range_count, const struct wined3d_map_range *ranges);
+};
+
 struct wined3d_buffer
 {
     struct wined3d_resource resource;
+    const struct wined3d_buffer_ops *buffer_ops;
 
     unsigned int structure_byte_stride;
     DWORD flags;
