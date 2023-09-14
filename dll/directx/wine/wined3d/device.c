@@ -5420,7 +5420,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
     struct wined3d_rendertarget_view *view;
     struct wined3d_swapchain *swapchain;
     struct wined3d_view_desc view_desc;
-    BOOL backbuffer_resized;
+    BOOL backbuffer_resized, windowed;
     HRESULT hr = WINED3D_OK;
     unsigned int i;
 
@@ -5511,13 +5511,30 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
 
     backbuffer_resized = swapchain_desc->backbuffer_width != swapchain->desc.backbuffer_width
             || swapchain_desc->backbuffer_height != swapchain->desc.backbuffer_height;
+    windowed = swapchain->desc.windowed;
 
-    if (!swapchain_desc->windowed != !swapchain->desc.windowed
-            || swapchain->reapply_mode || mode
-            || (!swapchain_desc->windowed && backbuffer_resized))
+    if (!swapchain_desc->windowed != !windowed || swapchain->reapply_mode
+            || mode || (!swapchain_desc->windowed && backbuffer_resized))
     {
+        /* Switch from windowed to fullscreen. */
+        if (windowed && !swapchain_desc->windowed)
+        {
+            HWND focus_window = device->create_parms.focus_window;
+
+            if (!focus_window)
+                focus_window = swapchain->device_window;
+            if (FAILED(hr = wined3d_device_acquire_focus_window(device, focus_window)))
+            {
+                ERR("Failed to acquire focus window, hr %#x.\n", hr);
+                return hr;
+            }
+        }
         if (FAILED(hr = wined3d_swapchain_set_fullscreen(swapchain, swapchain_desc, mode)))
             return hr;
+
+        /* Switch from fullscreen to windowed. */
+        if (!windowed && swapchain_desc->windowed)
+            wined3d_device_release_focus_window(device);
     }
     else if (!swapchain_desc->windowed)
     {
