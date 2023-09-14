@@ -3797,7 +3797,8 @@ static void wined3d_context_gl_bind_shader_resources(struct wined3d_context_gl *
             sampler = device->default_sampler;
         else if (!(sampler = state->sampler[shader_type][entry->sampler_idx]))
             sampler = device->null_sampler;
-        wined3d_shader_resource_view_gl_bind(wined3d_shader_resource_view_gl(view), bind_idx, sampler, context_gl);
+        wined3d_shader_resource_view_gl_bind(wined3d_shader_resource_view_gl(view),
+                bind_idx, wined3d_sampler_gl(sampler), context_gl);
     }
 }
 

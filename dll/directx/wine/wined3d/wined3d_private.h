@@ -3835,17 +3835,27 @@ struct wined3d_sampler
 {
     struct wine_rb_entry entry;
     LONG refcount;
-    GLuint name;
     struct wined3d_device *device;
     void *parent;
     const struct wined3d_parent_ops *parent_ops;
     struct wined3d_sampler_desc desc;
 };
 
-void wined3d_sampler_bind(struct wined3d_sampler *sampler, unsigned int unit,
-        struct wined3d_texture_gl *texture_gl, const struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
+struct wined3d_sampler_gl
+{
+    struct wined3d_sampler s;
 
-void wined3d_sampler_gl_init(struct wined3d_sampler *sampler_gl,
+    GLuint name;
+};
+
+static inline struct wined3d_sampler_gl *wined3d_sampler_gl(struct wined3d_sampler *sampler)
+{
+    return CONTAINING_RECORD(sampler, struct wined3d_sampler_gl, s);
+}
+
+void wined3d_sampler_gl_bind(struct wined3d_sampler_gl *sampler_gl, unsigned int unit,
+        struct wined3d_texture_gl *texture_gl, const struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
+void wined3d_sampler_gl_init(struct wined3d_sampler_gl *sampler_gl,
         struct wined3d_device *device, const struct wined3d_sampler_desc *desc,
         void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
@@ -4340,7 +4350,7 @@ static inline struct wined3d_shader_resource_view_gl *wined3d_shader_resource_vi
 }
 
 void wined3d_shader_resource_view_gl_bind(struct wined3d_shader_resource_view_gl *view_gl, unsigned int unit,
-        struct wined3d_sampler *sampler, struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
+        struct wined3d_sampler_gl *sampler_gl, struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
 HRESULT wined3d_shader_resource_view_gl_init(struct wined3d_shader_resource_view_gl *view_gl,
         const struct wined3d_view_desc *desc, struct wined3d_resource *resource,
         void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;

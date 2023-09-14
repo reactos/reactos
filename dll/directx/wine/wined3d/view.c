@@ -831,7 +831,7 @@ HRESULT CDECL wined3d_shader_resource_view_create(const struct wined3d_view_desc
 }
 
 void wined3d_shader_resource_view_gl_bind(struct wined3d_shader_resource_view_gl *view_gl,
-        unsigned int unit, struct wined3d_sampler *sampler, struct wined3d_context_gl *context_gl)
+        unsigned int unit, struct wined3d_sampler_gl *sampler_gl, struct wined3d_context_gl *context_gl)
 {
     const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_texture_gl *texture_gl;
@@ -841,7 +841,7 @@ void wined3d_shader_resource_view_gl_bind(struct wined3d_shader_resource_view_gl
     if (view_gl->gl_view.name)
     {
         wined3d_context_gl_bind_texture(context_gl, view_gl->gl_view.target, view_gl->gl_view.name);
-        wined3d_sampler_bind(sampler, unit, NULL, context_gl);
+        wined3d_sampler_gl_bind(sampler_gl, unit, NULL, context_gl);
         return;
     }
 
@@ -853,7 +853,7 @@ void wined3d_shader_resource_view_gl_bind(struct wined3d_shader_resource_view_gl
 
     texture_gl = wined3d_texture_gl(wined3d_texture_from_resource(view_gl->v.resource));
     wined3d_texture_gl_bind(texture_gl, context_gl, FALSE);
-    wined3d_sampler_bind(sampler, unit, texture_gl, context_gl);
+    wined3d_sampler_gl_bind(sampler_gl, unit, texture_gl, context_gl);
 }
 
 /* Context activation is done by the caller. */

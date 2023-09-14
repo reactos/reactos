@@ -70,53 +70,55 @@ static void wined3d_sampler_init(struct wined3d_sampler *sampler, struct wined3d
 
 static void wined3d_sampler_gl_cs_init(void *object)
 {
-    struct wined3d_sampler *sampler = object;
+    struct wined3d_sampler_gl *sampler_gl = object;
     const struct wined3d_sampler_desc *desc;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
+    GLuint name;
 
-    context = context_acquire(sampler->device, NULL, 0);
+    context = context_acquire(sampler_gl->s.device, NULL, 0);
     gl_info = wined3d_context_gl(context)->gl_info;
 
-    desc = &sampler->desc;
-    GL_EXTCALL(glGenSamplers(1, &sampler->name));
-    GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_WRAP_S,
+    desc = &sampler_gl->s.desc;
+    GL_EXTCALL(glGenSamplers(1, &name));
+    GL_EXTCALL(glSamplerParameteri(name, GL_TEXTURE_WRAP_S,
             gl_info->wrap_lookup[desc->address_u - WINED3D_TADDRESS_WRAP]));
-    GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_WRAP_T,
+    GL_EXTCALL(glSamplerParameteri(name, GL_TEXTURE_WRAP_T,
             gl_info->wrap_lookup[desc->address_v - WINED3D_TADDRESS_WRAP]));
-    GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_WRAP_R,
+    GL_EXTCALL(glSamplerParameteri(name, GL_TEXTURE_WRAP_R,
             gl_info->wrap_lookup[desc->address_w - WINED3D_TADDRESS_WRAP]));
-    GL_EXTCALL(glSamplerParameterfv(sampler->name, GL_TEXTURE_BORDER_COLOR, &desc->border_color[0]));
-    GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_MAG_FILTER,
+    GL_EXTCALL(glSamplerParameterfv(name, GL_TEXTURE_BORDER_COLOR, &desc->border_color[0]));
+    GL_EXTCALL(glSamplerParameteri(name, GL_TEXTURE_MAG_FILTER,
             wined3d_gl_mag_filter(desc->mag_filter)));
-    GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_MIN_FILTER,
+    GL_EXTCALL(glSamplerParameteri(name, GL_TEXTURE_MIN_FILTER,
             wined3d_gl_min_mip_filter(desc->min_filter, desc->mip_filter)));
-    GL_EXTCALL(glSamplerParameterf(sampler->name, GL_TEXTURE_LOD_BIAS, desc->lod_bias));
-    GL_EXTCALL(glSamplerParameterf(sampler->name, GL_TEXTURE_MIN_LOD, desc->min_lod));
-    GL_EXTCALL(glSamplerParameterf(sampler->name, GL_TEXTURE_MAX_LOD, desc->max_lod));
+    GL_EXTCALL(glSamplerParameterf(name, GL_TEXTURE_LOD_BIAS, desc->lod_bias));
+    GL_EXTCALL(glSamplerParameterf(name, GL_TEXTURE_MIN_LOD, desc->min_lod));
+    GL_EXTCALL(glSamplerParameterf(name, GL_TEXTURE_MAX_LOD, desc->max_lod));
     if (gl_info->supported[ARB_TEXTURE_FILTER_ANISOTROPIC])
-        GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_MAX_ANISOTROPY, desc->max_anisotropy));
+        GL_EXTCALL(glSamplerParameteri(name, GL_TEXTURE_MAX_ANISOTROPY, desc->max_anisotropy));
     if (desc->compare)
-        GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE));
-    GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_COMPARE_FUNC,
+        GL_EXTCALL(glSamplerParameteri(name, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE));
+    GL_EXTCALL(glSamplerParameteri(name, GL_TEXTURE_COMPARE_FUNC,
             wined3d_gl_compare_func(desc->comparison_func)));
     if ((context->d3d_info->wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL)
             && gl_info->supported[EXT_TEXTURE_SRGB_DECODE] && !desc->srgb_decode)
-        GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT));
+        GL_EXTCALL(glSamplerParameteri(name, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT));
     checkGLcall("sampler creation");
 
-    TRACE("Created sampler %u.\n", sampler->name);
+    TRACE("Created sampler %u.\n", name);
+    sampler_gl->name = name;
 
     context_release(context);
 }
 
-void wined3d_sampler_gl_init(struct wined3d_sampler *sampler_gl, struct wined3d_device *device,
+void wined3d_sampler_gl_init(struct wined3d_sampler_gl *sampler_gl, struct wined3d_device *device,
         const struct wined3d_sampler_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     TRACE("sampler_gl %p, device %p, desc %p, parent %p, parent_ops %p.\n",
             sampler_gl, device, desc, parent, parent_ops);
 
-    wined3d_sampler_init(sampler_gl, device, desc, parent, parent_ops);
+    wined3d_sampler_init(&sampler_gl->s, device, desc, parent, parent_ops);
 
     if (device->adapter->gl_info.supported[ARB_SAMPLER_OBJECTS])
         wined3d_cs_init_object(device->cs, wined3d_sampler_gl_cs_init, sampler_gl);
@@ -176,19 +178,19 @@ static void texture_gl_apply_base_level(struct wined3d_texture_gl *texture_gl,
 }
 
 /* This function relies on the correct texture being bound and loaded. */
-void wined3d_sampler_bind(struct wined3d_sampler *sampler, unsigned int unit,
+void wined3d_sampler_gl_bind(struct wined3d_sampler_gl *sampler_gl, unsigned int unit,
         struct wined3d_texture_gl *texture_gl, const struct wined3d_context_gl *context_gl)
 {
     const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
     if (gl_info->supported[ARB_SAMPLER_OBJECTS])
     {
-        GL_EXTCALL(glBindSampler(unit, sampler->name));
+        GL_EXTCALL(glBindSampler(unit, sampler_gl->name));
         checkGLcall("bind sampler");
     }
     else if (texture_gl)
     {
-        wined3d_texture_gl_apply_sampler_desc(texture_gl, &sampler->desc, context_gl);
+        wined3d_texture_gl_apply_sampler_desc(texture_gl, &sampler_gl->s.desc, context_gl);
     }
     else
     {
@@ -196,5 +198,5 @@ void wined3d_sampler_bind(struct wined3d_sampler *sampler, unsigned int unit,
     }
 
     if (texture_gl)
-        texture_gl_apply_base_level(texture_gl, &sampler->desc, gl_info);
+        texture_gl_apply_base_level(texture_gl, &sampler_gl->s.desc, gl_info);
 }

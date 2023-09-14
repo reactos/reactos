@@ -3639,7 +3639,7 @@ static void sampler(struct wined3d_context *context, const struct wined3d_state 
             }
         }
 
-        wined3d_sampler_bind(sampler, mapped_stage, texture_gl, context_gl);
+        wined3d_sampler_gl_bind(wined3d_sampler_gl(sampler), mapped_stage, texture_gl, context_gl);
 
         /* Trigger shader constant reloading (for NP2 texcoord fixup) */
         if (!(texture_gl->t.flags & WINED3D_TEXTURE_POW2_MAT_IDENT))

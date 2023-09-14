@@ -5027,7 +5027,7 @@ static void adapter_gl_destroy_unordered_access_view(struct wined3d_unordered_ac
 static HRESULT adapter_gl_create_sampler(struct wined3d_device *device, const struct wined3d_sampler_desc *desc,
         void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_sampler **sampler)
 {
-    struct wined3d_sampler *sampler_gl;
+    struct wined3d_sampler_gl *sampler_gl;
 
     TRACE("device %p, desc %p, parent %p, parent_ops %p, sampler %p.\n",
             device, desc, parent, parent_ops, sampler);
@@ -5038,20 +5038,20 @@ static HRESULT adapter_gl_create_sampler(struct wined3d_device *device, const st
     wined3d_sampler_gl_init(sampler_gl, device, desc, parent, parent_ops);
 
     TRACE("Created sampler %p.\n", sampler_gl);
-    *sampler = sampler_gl;
+    *sampler = &sampler_gl->s;
 
     return WINED3D_OK;
 }
 
 static void wined3d_sampler_gl_destroy_object(void *object)
 {
-    struct wined3d_sampler *sampler_gl = object;
+    struct wined3d_sampler_gl *sampler_gl = object;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
 
     if (sampler_gl->name)
     {
-        context = context_acquire(sampler_gl->device, NULL, 0);
+        context = context_acquire(sampler_gl->s.device, NULL, 0);
         gl_info = wined3d_context_gl(context)->gl_info;
         GL_EXTCALL(glDeleteSamplers(1, &sampler_gl->name));
         context_release(context);
@@ -5062,9 +5062,11 @@ static void wined3d_sampler_gl_destroy_object(void *object)
 
 static void adapter_gl_destroy_sampler(struct wined3d_sampler *sampler)
 {
-    TRACE("sampler %p.\n", sampler);
+    struct wined3d_sampler_gl *sampler_gl = wined3d_sampler_gl(sampler);
 
-    wined3d_cs_destroy_object(sampler->device->cs, wined3d_sampler_gl_destroy_object, sampler);
+    TRACE("sampler_gl %p.\n", sampler_gl);
+
+    wined3d_cs_destroy_object(sampler->device->cs, wined3d_sampler_gl_destroy_object, sampler_gl);
 }
 
 static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
