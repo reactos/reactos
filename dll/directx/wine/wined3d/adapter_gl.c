@@ -200,6 +200,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_EXT_texture_integer",              EXT_TEXTURE_INTEGER           },
     {"GL_EXT_texture_lod_bias",             EXT_TEXTURE_LOD_BIAS          },
     {"GL_EXT_texture_mirror_clamp",         EXT_TEXTURE_MIRROR_CLAMP      },
+    {"GL_EXT_texture_shadow_lod",           EXT_TEXTURE_SHADOW_LOD        },
     {"GL_EXT_texture_shared_exponent",      EXT_TEXTURE_SHARED_EXPONENT   },
     {"GL_EXT_texture_snorm",                EXT_TEXTURE_SNORM             },
     {"GL_EXT_texture_sRGB",                 EXT_TEXTURE_SRGB              },

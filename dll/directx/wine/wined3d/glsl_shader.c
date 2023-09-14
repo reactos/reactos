@@ -6007,7 +6007,7 @@ static void shader_glsl_sample(const struct wined3d_shader_instruction *ins)
  * comparison for array textures and cube textures. We use textureGrad*()
  * to implement sample_c_lz.
  */
-static void shader_glsl_gen_sample_c_lz(const struct wined3d_shader_instruction *ins,
+static void shader_glsl_gen_sample_c_lz_emulation(const struct wined3d_shader_instruction *ins,
         unsigned int sampler_bind_idx, const struct glsl_sample_function *sample_function,
         unsigned int coord_size, const char *coord_param, const char *ref_param)
 {
@@ -6036,6 +6036,7 @@ static void shader_glsl_gen_sample_c_lz(const struct wined3d_shader_instruction 
 
 static void shader_glsl_sample_c(const struct wined3d_shader_instruction *ins)
 {
+    const struct wined3d_gl_info *gl_info = ins->ctx->gl_info;
     unsigned int resource_idx, sampler_idx, sampler_bind_idx;
     const struct wined3d_shader_resource_info *resource_info;
     struct glsl_src_param coord_param, compare_param;
@@ -6064,10 +6065,11 @@ static void shader_glsl_sample_c(const struct wined3d_shader_instruction *ins)
     shader_glsl_add_src_param(ins, &ins->src[3], WINED3DSP_WRITEMASK_0, &compare_param);
     sampler_bind_idx = shader_glsl_find_sampler(&ins->ctx->reg_maps->sampler_map, resource_idx, sampler_idx);
     if (ins->handler_idx == WINED3DSIH_SAMPLE_C_LZ
+            && !gl_info->supported[EXT_TEXTURE_SHADOW_LOD]
             && (resource_info->type == WINED3D_SHADER_RESOURCE_TEXTURE_2DARRAY
             || resource_info->type == WINED3D_SHADER_RESOURCE_TEXTURE_CUBE))
     {
-        shader_glsl_gen_sample_c_lz(ins, sampler_bind_idx, &sample_function,
+        shader_glsl_gen_sample_c_lz_emulation(ins, sampler_bind_idx, &sample_function,
                 coord_size, coord_param.param_str, compare_param.param_str);
     }
     else
@@ -7453,6 +7455,8 @@ static void shader_glsl_enable_extensions(struct wined3d_string_buffer *buffer,
         shader_addline(buffer, "#extension GL_EXT_gpu_shader4 : enable\n");
     if (gl_info->supported[EXT_TEXTURE_ARRAY])
         shader_addline(buffer, "#extension GL_EXT_texture_array : enable\n");
+    if (gl_info->supported[EXT_TEXTURE_SHADOW_LOD])
+        shader_addline(buffer, "#extension GL_EXT_texture_shadow_lod : enable\n");
 }
 
 static void shader_glsl_generate_color_output(struct wined3d_string_buffer *buffer,
