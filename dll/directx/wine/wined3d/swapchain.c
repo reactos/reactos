@@ -439,7 +439,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
     struct wined3d_context *context;
     BOOL render_to_fbo;
 
-    context = context_acquire(swapchain->device, back_buffer, 0);
+    context = context_acquire(swapchain->device, swapchain->front_buffer, 0);
     context_gl = wined3d_context_gl(context);
     if (!context_gl->valid)
     {
