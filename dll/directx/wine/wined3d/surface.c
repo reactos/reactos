@@ -2239,11 +2239,7 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     /* Don't use PBOs for converted surfaces. During PBO conversion we look at
      * WINED3D_TEXTURE_CONVERTED but it isn't set (yet) in all cases it is
      * getting called. */
-#if !defined(STAGING_CSMT)
-    if ((format.conv_byte_count || conversion) && texture->sub_resources[sub_resource_idx].buffer_object)
-#else  /* STAGING_CSMT */
-    if ((format.conv_byte_count || conversion) && texture->sub_resources[sub_resource_idx].buffer)
-#endif /* STAGING_CSMT */
+    if (conversion && sub_resource->buffer_object)
     {
         TRACE("Removing the pbo attached to surface %p.\n", surface);
 
