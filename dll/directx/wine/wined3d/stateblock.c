@@ -721,9 +721,9 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     {
         unsigned int idx = stateblock->contained_vs_consts_i[i];
 
-        TRACE("Setting vs_consts[%u] to %s.\n", idx, debug_ivec4(&src_state->vs_consts_i[idx]));
+        TRACE("Setting vs_consts_i[%u] to %s.\n", idx, debug_ivec4(&state->vs_consts_i[idx]));
 
-        stateblock->state.vs_consts_i[idx] = src_state->vs_consts_i[idx];
+        stateblock->stateblock_state.vs_consts_i[idx] = state->vs_consts_i[idx];
     }
 
     /* Vertex shader boolean constants. */
@@ -1019,8 +1019,9 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     }
     for (i = 0; i < stateblock->num_contained_vs_consts_i; ++i)
     {
+        state->vs_consts_i[i] = stateblock->stateblock_state.vs_consts_i[i];
         wined3d_device_set_vs_consts_i(device, stateblock->contained_vs_consts_i[i],
-                1, &stateblock->state.vs_consts_i[stateblock->contained_vs_consts_i[i]]);
+                1, &stateblock->stateblock_state.vs_consts_i[stateblock->contained_vs_consts_i[i]]);
     }
     for (i = 0; i < stateblock->num_contained_vs_consts_b; ++i)
     {
