@@ -3182,8 +3182,8 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
 void resource_unload(struct wined3d_resource *resource) DECLSPEC_HIDDEN;
 BOOL wined3d_resource_allocate_sysmem(struct wined3d_resource *resource) DECLSPEC_HIDDEN;
 void wined3d_resource_free_sysmem(struct wined3d_resource *resource) DECLSPEC_HIDDEN;
-const struct wined3d_format *wined3d_resource_get_decompress_format(struct wined3d_resource *resource,
-        const struct wined3d_context *context) DECLSPEC_HIDDEN;
+const struct wined3d_format *wined3d_resource_get_decompress_format(
+        struct wined3d_resource *resource) DECLSPEC_HIDDEN;
 GLbitfield wined3d_resource_gl_map_flags(DWORD d3d_flags) DECLSPEC_HIDDEN;
 GLenum wined3d_resource_gl_legacy_map_flags(DWORD d3d_flags) DECLSPEC_HIDDEN;
 BOOL wined3d_resource_is_offscreen(struct wined3d_resource *resource) DECLSPEC_HIDDEN;
@@ -4431,7 +4431,7 @@ struct wined3d_format
     GLenum gl_view_class;
 };
 
-const struct wined3d_format *wined3d_get_format(const struct wined3d_gl_info *gl_info,
+const struct wined3d_format *wined3d_get_format(const struct wined3d_adapter *adapter,
         enum wined3d_format_id format_id, unsigned int resource_usage) DECLSPEC_HIDDEN;
 void wined3d_format_calculate_pitch(const struct wined3d_format *format, unsigned int alignment,
         unsigned int width, unsigned int height, unsigned int *row_pitch, unsigned int *slice_pitch) DECLSPEC_HIDDEN;

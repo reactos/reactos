@@ -89,10 +89,10 @@ static GLenum get_texture_view_target(const struct wined3d_gl_info *gl_info,
 static const struct wined3d_format *validate_resource_view(const struct wined3d_view_desc *desc,
         struct wined3d_resource *resource, BOOL mip_slice, BOOL allow_srgb_toggle)
 {
-    const struct wined3d_gl_info *gl_info = &resource->device->adapter->gl_info;
+    const struct wined3d_adapter *adapter = resource->device->adapter;
     const struct wined3d_format *format;
 
-    format = wined3d_get_format(gl_info, desc->format_id, resource->usage);
+    format = wined3d_get_format(adapter, desc->format_id, resource->usage);
     if (resource->type == WINED3D_RTYPE_BUFFER && (desc->flags & WINED3D_VIEW_BUFFER_RAW))
     {
         if (format->id != WINED3DFMT_R32_TYPELESS)
@@ -101,7 +101,7 @@ static const struct wined3d_format *validate_resource_view(const struct wined3d_
             return NULL;
         }
 
-        format = wined3d_get_format(gl_info, WINED3DFMT_R32_UINT, resource->usage);
+        format = wined3d_get_format(adapter, WINED3DFMT_R32_UINT, resource->usage);
     }
 
     if (wined3d_format_is_typeless(format))
@@ -123,7 +123,7 @@ static const struct wined3d_format *validate_resource_view(const struct wined3d_
                 return NULL;
             }
 
-            format = wined3d_get_format(gl_info, WINED3DFMT_R32_UINT, resource->usage);
+            format = wined3d_get_format(adapter, WINED3DFMT_R32_UINT, resource->usage);
             element_size = buffer->desc.structure_byte_stride;
         }
         else

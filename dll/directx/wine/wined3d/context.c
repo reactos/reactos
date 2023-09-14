@@ -2063,9 +2063,9 @@ BOOL wined3d_adapter_opengl_create_context(struct wined3d_context *context,
         aux_buffers = TRUE;
 
         if (color_format->id == WINED3DFMT_B4G4R4X4_UNORM)
-            color_format = wined3d_get_format(gl_info, WINED3DFMT_B4G4R4A4_UNORM, target_usage);
+            color_format = wined3d_get_format(device->adapter, WINED3DFMT_B4G4R4A4_UNORM, target_usage);
         else if (color_format->id == WINED3DFMT_B8G8R8X8_UNORM)
-            color_format = wined3d_get_format(gl_info, WINED3DFMT_B8G8R8A8_UNORM, target_usage);
+            color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_usage);
     }
 
     /* DirectDraw supports 8bit paletted render targets and these are used by
@@ -2075,7 +2075,7 @@ BOOL wined3d_adapter_opengl_create_context(struct wined3d_context *context,
      * For this reason we require a format with 8bit alpha, so request
      * A8R8G8B8. */
     if (color_format->id == WINED3DFMT_P8_UINT)
-        color_format = wined3d_get_format(gl_info, WINED3DFMT_B8G8R8A8_UNORM, target_usage);
+        color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_usage);
 
     /* When using FBOs for off-screen rendering, we only use the drawable for
      * presentation blits, and don't do any rendering to it. That means we
@@ -2087,8 +2087,8 @@ BOOL wined3d_adapter_opengl_create_context(struct wined3d_context *context,
      * conflicting pixel formats. */
     if (wined3d_settings.offscreen_rendering_mode != ORM_BACKBUFFER)
     {
-        color_format = wined3d_get_format(gl_info, WINED3DFMT_B8G8R8A8_UNORM, target_usage);
-        ds_format = wined3d_get_format(gl_info, WINED3DFMT_UNKNOWN, WINED3DUSAGE_DEPTHSTENCIL);
+        color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_usage);
+        ds_format = wined3d_get_format(device->adapter, WINED3DFMT_UNKNOWN, WINED3DUSAGE_DEPTHSTENCIL);
     }
 
     /* Try to find a pixel format which matches our requirements. */

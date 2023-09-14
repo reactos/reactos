@@ -4011,9 +4011,10 @@ fail:
     return FALSE;
 }
 
-const struct wined3d_format *wined3d_get_format(const struct wined3d_gl_info *gl_info,
+const struct wined3d_format *wined3d_get_format(const struct wined3d_adapter *adapter,
         enum wined3d_format_id format_id, unsigned int resource_usage)
 {
+    const struct wined3d_gl_info *gl_info = &adapter->gl_info;
     const struct wined3d_format *format;
     int idx = get_format_idx(format_id);
     unsigned int i;

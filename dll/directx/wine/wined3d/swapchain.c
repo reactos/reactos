@@ -671,6 +671,7 @@ static void swapchain_update_render_to_fbo(struct wined3d_swapchain *swapchain)
 static void wined3d_swapchain_apply_sample_count_override(const struct wined3d_swapchain *swapchain,
         enum wined3d_format_id format_id, enum wined3d_multisample_type *type, DWORD *quality)
 {
+    const struct wined3d_adapter *adapter;
     const struct wined3d_gl_info *gl_info;
     const struct wined3d_format *format;
     enum wined3d_multisample_type t;
@@ -678,8 +679,9 @@ static void wined3d_swapchain_apply_sample_count_override(const struct wined3d_s
     if (wined3d_settings.sample_count == ~0u)
         return;
 
-    gl_info = &swapchain->device->adapter->gl_info;
-    if (!(format = wined3d_get_format(gl_info, format_id, WINED3DUSAGE_RENDERTARGET)))
+    adapter = swapchain->device->adapter;
+    gl_info = &adapter->gl_info;
+    if (!(format = wined3d_get_format(adapter, format_id, WINED3DUSAGE_RENDERTARGET)))
         return;
 
     if ((t = min(wined3d_settings.sample_count, gl_info->limits.samples)))
@@ -718,7 +720,7 @@ void wined3d_swapchain_set_swap_interval(struct wined3d_swapchain *swapchain,
 static void wined3d_swapchain_cs_init(void *object)
 {
     struct wined3d_swapchain *swapchain = object;
-    const struct wined3d_gl_info *gl_info;
+    const struct wined3d_adapter *adapter;
     unsigned int i;
 
     static const enum wined3d_format_id formats[] =
@@ -730,13 +732,13 @@ static void wined3d_swapchain_cs_init(void *object)
         WINED3DFMT_S1_UINT_D15_UNORM,
     };
 
-    gl_info = &swapchain->device->adapter->gl_info;
+    adapter = swapchain->device->adapter;
 
     /* Without ORM_FBO, switching the depth/stencil format is hard. Always
      * request a depth/stencil buffer in the likely case it's needed later. */
     for (i = 0; i < ARRAY_SIZE(formats); ++i)
     {
-        swapchain->ds_format = wined3d_get_format(gl_info, formats[i], WINED3DUSAGE_DEPTHSTENCIL);
+        swapchain->ds_format = wined3d_get_format(adapter, formats[i], WINED3DUSAGE_DEPTHSTENCIL);
         if ((swapchain->context[0] = context_create(swapchain, swapchain->front_buffer, swapchain->ds_format)))
             break;
         TRACE("Depth stencil format %s is not supported, trying next format.\n", debug_d3dformat(formats[i]));
