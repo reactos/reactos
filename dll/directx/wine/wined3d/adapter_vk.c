@@ -186,6 +186,61 @@ fail:
     return FALSE;
 }
 
+static VkPhysicalDevice get_vulkan_physical_device(struct wined3d_vk_info *vk_info)
+{
+    VkPhysicalDevice physical_devices[1];
+    uint32_t count;
+    VkResult vr;
+
+    if ((vr = VK_CALL(vkEnumeratePhysicalDevices(vk_info->instance, &count, NULL))) < 0)
+    {
+        WARN("Failed to enumerate physical devices, vr %d.\n", vr);
+        return VK_NULL_HANDLE;
+    }
+    if (!count)
+    {
+        WARN("No physical device.\n");
+        return VK_NULL_HANDLE;
+    }
+    if (count > 1)
+    {
+        /* TODO: Create wined3d_adapter for each device. */
+        FIXME("Multiple physical devices available.\n");
+        count = 1;
+    }
+
+    if ((vr = VK_CALL(vkEnumeratePhysicalDevices(vk_info->instance, &count, physical_devices))) < 0)
+    {
+        WARN("Failed to get physical devices, vr %d.\n", vr);
+        return VK_NULL_HANDLE;
+    }
+
+    return physical_devices[0];
+}
+
+const struct wined3d_gpu_description *get_vulkan_gpu_description(const struct wined3d_vk_info *vk_info,
+        VkPhysicalDevice physical_device)
+{
+    const struct wined3d_gpu_description *description;
+    VkPhysicalDeviceProperties properties;
+
+    VK_CALL(vkGetPhysicalDeviceProperties(physical_device, &properties));
+
+    TRACE("Device name: %s.\n", debugstr_a(properties.deviceName));
+    TRACE("Vendor ID: 0x%04x, Device ID: 0x%04x.\n", properties.vendorID, properties.deviceID);
+    TRACE("Driver version: %#x.\n", properties.driverVersion);
+    TRACE("API version: %u.%u.%u.\n", VK_VERSION_MAJOR(properties.apiVersion),
+            VK_VERSION_MINOR(properties.apiVersion), VK_VERSION_PATCH(properties.apiVersion));
+
+    if ((description = wined3d_get_gpu_description(properties.vendorID, properties.deviceID)))
+        return description;
+
+    FIXME("Failed to retrieve GPU description for device %s %04x:%04x.\n",
+            debugstr_a(properties.deviceName), properties.vendorID, properties.deviceID);
+
+    return wined3d_get_gpu_description(HW_VENDOR_AMD, CARD_AMD_RADEON_RX_VEGA);
+}
+
 static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
         unsigned int ordinal, unsigned int wined3d_creation_flags)
 {
@@ -205,7 +260,10 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
         goto fail;
     }
 
-    if (!(gpu_description = wined3d_get_gpu_description(HW_VENDOR_AMD, CARD_AMD_RADEON_RX_VEGA)))
+    if (!(adapter_vk->physical_device = get_vulkan_physical_device(vk_info)))
+        goto fail_vulkan;
+
+    if (!(gpu_description = get_vulkan_gpu_description(vk_info, adapter_vk->physical_device)))
     {
         ERR("Failed to get GPU description.\n");
         goto fail_vulkan;
