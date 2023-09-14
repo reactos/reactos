@@ -3738,6 +3738,11 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
 
     d3d_info->draw_base_vertex_offset = !!gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX];
 
+    if (gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
+        d3d_info->multisample_draw_location = WINED3D_LOCATION_TEXTURE_RGB;
+    else
+        d3d_info->multisample_draw_location = WINED3D_LOCATION_RB_MULTISAMPLE;
+
     TRACE("Max texture stages: %u.\n", d3d_info->limits.ffp_blend_stages);
 
     if (!d3d_info->shader_color_key)

@@ -207,6 +207,8 @@ struct wined3d_d3d_info
     unsigned int texture_npot_conditional : 1;
     unsigned int draw_base_vertex_offset : 1;
     enum wined3d_feature_level feature_level;
+
+    DWORD multisample_draw_location;
 };
 
 static const struct color_fixup_desc COLOR_FIXUP_IDENTITY =
