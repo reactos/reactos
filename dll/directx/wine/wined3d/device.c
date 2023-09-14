@@ -4909,6 +4909,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
             wined3d_texture_decref(device->cursor_texture);
             device->cursor_texture = NULL;
         }
+        wined3d_stateblock_state_cleanup(&device->stateblock_state);
         state_unbind_resources(&device->state);
     }
 
@@ -5097,7 +5098,6 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         }
         wined3d_cs_emit_reset_state(device->cs);
         state_cleanup(&device->state);
-        wined3d_stateblock_state_cleanup(&device->stateblock_state);
 
         if (device->d3d_initialized)
             wined3d_device_delete_opengl_contexts(device);
