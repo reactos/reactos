@@ -1120,7 +1120,7 @@ static void test_install_files_queue(void)
     ok(ret, "Failed to delete INF file, error %u.\n", GetLastError());
 }
 
-static unsigned int got_need_media, got_copy_error;
+static unsigned int got_need_media, got_copy_error, got_start_copy;
 static unsigned int testmode;
 
 static UINT WINAPI need_media_cb(void *context, UINT message, UINT_PTR param1, UINT_PTR param2)
@@ -1332,6 +1332,7 @@ static UINT WINAPI need_media_newpath_cb(void *context, UINT message, UINT_PTR p
         else
             return FILEOP_SKIP;
     }
+    else if (message == SPFILENOTIFY_STARTCOPY) got_start_copy++;
 
     return SetupDefaultQueueCallbackA(context, message, param1, param2);
 }
@@ -1901,7 +1902,7 @@ static void test_need_media(void)
     ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
 
     testmode = 6;
-    got_need_media = got_copy_error = 0;
+    got_need_media = got_copy_error = got_start_copy = 0;
     queue = SetupOpenFileQueue();
     ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
     copy_params.QueueHandle = queue;
@@ -1915,9 +1916,10 @@ static void test_need_media(void)
     run_queue(queue, need_media_newpath_cb);
     ok(got_need_media == 1, "Got %u callbacks.\n", got_need_media);
     ok(!got_copy_error, "Got %u copy errors.\n", got_copy_error);
-    ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+    if (got_start_copy) ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+    else ok(!file_exists("dst/one.txt"), "Destination file should not exist.\n");
 
-    got_need_media = got_copy_error = 0;
+    got_need_media = got_copy_error = got_start_copy = 0;
     queue = SetupOpenFileQueue();
     ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
     copy_params.LayoutInf = hinf;
@@ -1928,7 +1930,8 @@ static void test_need_media(void)
         run_queue(queue, need_media_newpath_cb);
         ok(got_need_media == 1, "Got %u callbacks.\n", got_need_media);
         ok(!got_copy_error, "Got %u copy errors.\n", got_copy_error);
-        ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+        if (got_start_copy) ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+        else ok(!file_exists("dst/one.txt"), "Destination file should not exist.\n");
     }
     else
         SetupCloseFileQueue(queue);
@@ -1963,7 +1966,7 @@ static void test_close_queue(void)
     SetupTermDefaultQueueCallback(context);
 }
 
-static unsigned int got_start_copy, start_copy_ret;
+static unsigned int start_copy_ret;
 
 static UINT WINAPI start_copy_cb(void *context, UINT message, UINT_PTR param1, UINT_PTR param2)
 {
