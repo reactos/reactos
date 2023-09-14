@@ -110,11 +110,28 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
     adapter_vk_check_format,
 };
 
+static unsigned int wined3d_get_wine_vk_version(void)
+{
+    const char *ptr = PACKAGE_VERSION;
+    int major, minor;
+
+    major = atoi(ptr);
+
+    while (isdigit(*ptr) || *ptr == '.')
+        ++ptr;
+
+    minor = atoi(ptr);
+
+    return VK_MAKE_VERSION(major, minor, 0);
+}
+
 static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
 {
     struct vulkan_ops *vk_ops = &vk_info->vk_ops;
     VkInstance instance = VK_NULL_HANDLE;
     VkInstanceCreateInfo instance_info;
+    VkApplicationInfo app_info;
+    char app_name[MAX_PATH];
     VkResult vr;
 
     if (!wined3d_load_vulkan(vk_info))
@@ -126,8 +143,17 @@ static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
         goto fail;
     }
 
+    memset(&app_info, 0, sizeof(app_info));
+    app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    if (wined3d_get_app_name(app_name, ARRAY_SIZE(app_name)))
+        app_info.pApplicationName = app_name;
+    app_info.pEngineName = "Damavand";
+    app_info.engineVersion = wined3d_get_wine_vk_version();
+    app_info.apiVersion = VK_API_VERSION_1_0;
+
     memset(&instance_info, 0, sizeof(instance_info));
     instance_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    instance_info.pApplicationInfo = &app_info;
     if ((vr = VK_CALL(vkCreateInstance(&instance_info, NULL, &instance))) < 0)
     {
         WARN("Failed to create Vulkan instance, vr %d.\n", vr);

@@ -142,6 +142,30 @@ success:
     return 0;
 }
 
+BOOL wined3d_get_app_name(char *app_name, unsigned int app_name_size)
+{
+    char buffer[MAX_PATH];
+    unsigned int len;
+    char *p, *name;
+
+    len = GetModuleFileNameA(0, buffer, ARRAY_SIZE(buffer));
+    if (!(len && len < MAX_PATH))
+        return FALSE;
+
+    name = buffer;
+    if ((p = strrchr(name, '/' )))
+        name = p + 1;
+    if ((p = strrchr(name, '\\')))
+        name = p + 1;
+
+    len = strlen(name) + 1;
+    if (app_name_size < len)
+        return FALSE;
+
+    memcpy(app_name, name, len);
+    return TRUE;
+}
+
 static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
 {
     DWORD wined3d_context_tls_idx;
@@ -149,7 +173,7 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
     DWORD size = sizeof(buffer);
     HKEY hkey = 0;
     HKEY appkey = 0;
-    DWORD len, tmpvalue;
+    DWORD tmpvalue;
     WNDCLASSA wc;
 
     wined3d_context_tls_idx = TlsAlloc();
@@ -191,20 +215,16 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
     /* @@ Wine registry key: HKCU\Software\Wine\Direct3D */
     if ( RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\Direct3D", &hkey ) ) hkey = 0;
 
-    len = GetModuleFileNameA( 0, buffer, MAX_PATH );
-    if (len && len < MAX_PATH)
+    if (wined3d_get_app_name(buffer, ARRAY_SIZE(buffer)))
     {
         HKEY tmpkey;
         /* @@ Wine registry key: HKCU\Software\Wine\AppDefaults\app.exe\Direct3D */
-        if (!RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\AppDefaults", &tmpkey ))
+        if (!RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\AppDefaults", &tmpkey))
         {
-            char *p, *appname = buffer;
-            if ((p = strrchr( appname, '/' ))) appname = p + 1;
-            if ((p = strrchr( appname, '\\' ))) appname = p + 1;
-            strcat( appname, "\\Direct3D" );
-            TRACE("appname = [%s]\n", appname);
-            if (RegOpenKeyA( tmpkey, appname, &appkey )) appkey = 0;
-            RegCloseKey( tmpkey );
+            strcat(buffer, "\\Direct3D");
+            TRACE("Application name %s.\n", buffer);
+            if (RegOpenKeyA(tmpkey, buffer, &appkey)) appkey = 0;
+            RegCloseKey(tmpkey);
         }
     }
 
