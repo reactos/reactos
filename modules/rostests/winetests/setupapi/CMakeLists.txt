@@ -8,7 +8,6 @@ remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 
 list(APPEND SOURCE
     devinst.c
-    dialog.c
     diskspace.c
     install.c
     misc.c
