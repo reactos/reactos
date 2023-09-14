@@ -204,7 +204,8 @@ static void test_install_class(void)
     ret = SetupDiInstallClassA(NULL, tmpfile, 0, NULL);
     ok(ret, "Failed to install class, error %#x.\n", GetLastError());
 
-    ok(!RegDeleteKeyW(HKEY_LOCAL_MACHINE, classKey), "Failed to delete class key, error %u.\n", GetLastError());
+    ret = RegDeleteKeyW(HKEY_LOCAL_MACHINE, classKey);
+    ok(!ret, "Failed to delete class key, error %u.\n", GetLastError());
     DeleteFileA(tmpfile);
 }
 
