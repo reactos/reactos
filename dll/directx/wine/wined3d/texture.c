@@ -1535,6 +1535,14 @@ void wined3d_texture_gl_set_compatible_renderbuffer(struct wined3d_texture_gl *t
     checkGLcall("set compatible renderbuffer");
 }
 
+static BOOL wined3d_texture_prepare_sysmem(struct wined3d_texture *texture)
+{
+    if (texture->resource.heap_memory)
+        return TRUE;
+
+    return wined3d_resource_allocate_sysmem(&texture->resource);
+}
+
 HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT width, UINT height,
         enum wined3d_format_id format_id, enum wined3d_multisample_type multisample_type,
         UINT multisample_quality, void *mem, UINT pitch)
@@ -1657,7 +1665,7 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     }
     else
     {
-        wined3d_texture_prepare_location(texture, 0, NULL, WINED3D_LOCATION_SYSMEM);
+        wined3d_texture_prepare_sysmem(texture);
         valid_location = WINED3D_LOCATION_SYSMEM;
     }
 
@@ -1832,12 +1840,7 @@ BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned 
     switch (location)
     {
         case WINED3D_LOCATION_SYSMEM:
-            if (texture->resource.heap_memory)
-                return TRUE;
-
-            if (!wined3d_resource_allocate_sysmem(&texture->resource))
-                return FALSE;
-            return TRUE;
+            return wined3d_texture_prepare_sysmem(texture);
 
         case WINED3D_LOCATION_USER_MEMORY:
             if (!texture->user_memory)
