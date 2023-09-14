@@ -2475,6 +2475,21 @@ static void adapter_no3d_destroy_rendertarget_view(struct wined3d_rendertarget_v
         wined3d_device_decref(device);
 }
 
+static HRESULT adapter_no3d_create_shader_resource_view(const struct wined3d_view_desc *desc,
+        struct wined3d_resource *resource, void *parent, const struct wined3d_parent_ops *parent_ops,
+        struct wined3d_shader_resource_view **view)
+{
+    TRACE("desc %s, resource %p, parent %p, parent_ops %p, view %p.\n",
+            wined3d_debug_view_desc(desc, resource), resource, parent, parent_ops, view);
+
+    return E_NOTIMPL;
+}
+
+static void adapter_no3d_destroy_shader_resource_view(struct wined3d_shader_resource_view *view)
+{
+    TRACE("view %p.\n", view);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
 {
     adapter_no3d_destroy,
@@ -2492,6 +2507,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
     adapter_no3d_destroy_buffer,
     adapter_no3d_create_rendertarget_view,
     adapter_no3d_destroy_rendertarget_view,
+    adapter_no3d_create_shader_resource_view,
+    adapter_no3d_destroy_shader_resource_view,
 };
 
 static void wined3d_adapter_no3d_init_d3d_info(struct wined3d_adapter *adapter, unsigned int wined3d_creation_flags)
