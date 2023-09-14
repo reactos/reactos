@@ -521,7 +521,7 @@ ULONG CDECL wined3d_device_decref(struct wined3d_device *device)
 
         wined3d_decref(device->wined3d);
         device->wined3d = NULL;
-        heap_free(device);
+        heap_free(wined3d_device_gl(device));
         TRACE("Freed device %p.\n", device);
     }
 
@@ -608,7 +608,7 @@ out:
 /* Context activation is done by the caller. */
 static void create_dummy_textures(struct wined3d_device *device, struct wined3d_context *context)
 {
-    struct wined3d_dummy_textures *textures = &device->dummy_textures;
+    struct wined3d_dummy_textures *textures = &wined3d_device_gl(device)->dummy_textures;
     const struct wined3d_d3d_info *d3d_info = context->d3d_info;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     unsigned int i;
@@ -743,7 +743,7 @@ static void create_dummy_textures(struct wined3d_device *device, struct wined3d_
 /* Context activation is done by the caller. */
 static void destroy_dummy_textures(struct wined3d_device *device, struct wined3d_context *context)
 {
-    struct wined3d_dummy_textures *dummy_textures = &device->dummy_textures;
+    struct wined3d_dummy_textures *dummy_textures = &wined3d_device_gl(device)->dummy_textures;
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
     if (gl_info->supported[ARB_TEXTURE_MULTISAMPLE])

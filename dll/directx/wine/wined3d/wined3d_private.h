@@ -3065,9 +3065,6 @@ struct wined3d_device
     /* The Wine logo texture */
     struct wined3d_texture *logo_texture;
 
-    /* Textures for when no other textures are mapped */
-    struct wined3d_dummy_textures dummy_textures;
-
     /* Default sampler used to emulate the direct resource access without using wined3d_sampler */
     struct wined3d_sampler *default_sampler;
     struct wined3d_sampler *null_sampler;
@@ -3100,6 +3097,19 @@ struct wined3d_gl_bo *wined3d_device_get_bo(struct wined3d_device *device, UINT 
 void wined3d_device_release_bo(struct wined3d_device *device, struct wined3d_gl_bo *bo,
         const struct wined3d_context *context) DECLSPEC_HIDDEN;
 #endif /* STAGING_CSMT */
+
+struct wined3d_device_gl
+{
+    struct wined3d_device d;
+
+    /* Textures for when no other textures are bound. */
+    struct wined3d_dummy_textures dummy_textures;
+};
+
+static inline struct wined3d_device_gl *wined3d_device_gl(struct wined3d_device *device)
+{
+    return CONTAINING_RECORD(device, struct wined3d_device_gl, d);
+}
 
 static inline BOOL isStateDirty(const struct wined3d_context *context, DWORD state)
 {

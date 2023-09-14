@@ -1749,7 +1749,7 @@ static int context_choose_pixel_format(const struct wined3d_device *device, HDC 
 /* Context activation is done by the caller. */
 void context_bind_dummy_textures(const struct wined3d_context *context)
 {
-    const struct wined3d_dummy_textures *textures = &context->device->dummy_textures;
+    const struct wined3d_dummy_textures *textures = &wined3d_device_gl(context->device)->dummy_textures;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     unsigned int i;
 
@@ -2289,7 +2289,7 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
     /* If this happens to be the first context for the device, dummy textures
      * are not created yet. In that case, they will be created (and bound) by
      * create_dummy_textures right after this context is initialized. */
-    if (device->dummy_textures.tex_2d)
+    if (wined3d_device_gl(device)->dummy_textures.tex_2d)
         context_bind_dummy_textures(context);
 
     /* Initialise all rectangles to avoid resetting unused ones later. */
@@ -2523,7 +2523,7 @@ void context_bind_bo(struct wined3d_context *context, GLenum binding, GLuint nam
 
 void context_bind_texture(struct wined3d_context *context, GLenum target, GLuint name)
 {
-    const struct wined3d_dummy_textures *textures = &context->device->dummy_textures;
+    const struct wined3d_dummy_textures *textures = &wined3d_device_gl(context->device)->dummy_textures;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     DWORD unit = context->active_texture;
     DWORD old_texture_type = context->texture_type[unit];
