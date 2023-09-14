@@ -4211,23 +4211,21 @@ static void context_setup_target(struct wined3d_context *context,
     context_set_render_offscreen(context, render_offscreen);
 }
 
-static void context_activate(struct wined3d_context *context,
+static void wined3d_context_gl_activate(struct wined3d_context_gl *context_gl,
         struct wined3d_texture *texture, unsigned int sub_resource_idx)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-
     wined3d_context_gl_enter(context_gl);
     wined3d_context_gl_update_window(context_gl);
-    context_setup_target(context, texture, sub_resource_idx);
-    if (!context->valid)
+    context_setup_target(&context_gl->c, texture, sub_resource_idx);
+    if (!context_gl->c.valid)
         return;
 
-    if (context != context_get_current())
+    if (&context_gl->c != context_get_current())
     {
-        if (!context_set_current(context))
+        if (!context_set_current(&context_gl->c))
             ERR("Failed to activate the new context.\n");
     }
-    else if (context->needs_set)
+    else if (context_gl->c.needs_set)
     {
         wined3d_context_gl_set_gl_context(context_gl);
     }
@@ -4292,7 +4290,7 @@ struct wined3d_context *context_acquire(const struct wined3d_device *device,
             return NULL;
     }
 
-    context_activate(context, texture, sub_resource_idx);
+    wined3d_context_gl_activate(wined3d_context_gl(context), texture, sub_resource_idx);
 
     return context;
 }
@@ -4309,7 +4307,8 @@ struct wined3d_context *context_reacquire(const struct wined3d_device *device,
 
     if (context->current_rt.texture)
     {
-        context_activate(context, context->current_rt.texture, context->current_rt.sub_resource_idx);
+        wined3d_context_gl_activate(wined3d_context_gl(context),
+                context->current_rt.texture, context->current_rt.sub_resource_idx);
         return context;
     }
 
