@@ -8533,10 +8533,9 @@ static GLuint find_glsl_vertex_shader(const struct wined3d_context_gl *context_g
     return ret;
 }
 
-static GLuint find_glsl_hull_shader(const struct wined3d_context *context,
+static GLuint find_glsl_hull_shader(const struct wined3d_context_gl *context_gl,
         struct shader_glsl_priv *priv, struct wined3d_shader *shader)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_hs_compiled_shader *gl_shaders, *new_array;
     struct glsl_shader_private *shader_data;
     unsigned int new_size;
@@ -10151,7 +10150,7 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
     if (!(context->shader_update_mask & (1u << WINED3D_SHADER_TYPE_HULL)) && ctx_data->glsl_program)
         hs_id = ctx_data->glsl_program->hs.id;
     else if (hshader)
-        hs_id = find_glsl_hull_shader(context, priv, hshader);
+        hs_id = find_glsl_hull_shader(context_gl, priv, hshader);
 
     dshader = state->shader[WINED3D_SHADER_TYPE_DOMAIN];
     if (!(context->shader_update_mask & (1u << WINED3D_SHADER_TYPE_DOMAIN)) && ctx_data->glsl_program)
