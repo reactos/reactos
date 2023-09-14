@@ -54,9 +54,9 @@ static void wined3d_query_create_buffer_object(struct wined3d_context_gl *contex
     query->buffer_object = buffer_object;
 }
 
-static void wined3d_query_destroy_buffer_object(struct wined3d_context *context, struct wined3d_query *query)
+static void wined3d_query_destroy_buffer_object(struct wined3d_context_gl *context_gl, struct wined3d_query *query)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     GL_EXTCALL(glDeleteBuffers(1, &query->buffer_object));
     checkGLcall("query buffer object destruction");
@@ -93,7 +93,7 @@ static BOOL wined3d_query_buffer_queue_result(struct wined3d_context *context, s
         if (wined3d_query_buffer_is_valid(query))
             wined3d_query_buffer_invalidate(query);
         else
-            wined3d_query_destroy_buffer_object(context, query);
+            wined3d_query_destroy_buffer_object(context_gl, query);
     }
 
     if (!query->buffer_object)
@@ -434,8 +434,9 @@ static void wined3d_query_destroy_object(void *object)
     if (query->buffer_object)
     {
         struct wined3d_context *context;
+
         context = context_acquire(query->device, NULL, 0);
-        wined3d_query_destroy_buffer_object(context, query);
+        wined3d_query_destroy_buffer_object(wined3d_context_gl(context), query);
         context_release(context);
     }
 
