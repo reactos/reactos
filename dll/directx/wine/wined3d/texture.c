@@ -3052,6 +3052,36 @@ static HRESULT texture_resource_sub_resource_map(struct wined3d_resource *resour
     return WINED3D_OK;
 }
 
+static HRESULT texture_resource_sub_resource_map_info(struct wined3d_resource *resource, unsigned int sub_resource_idx,
+        struct wined3d_map_info *info, DWORD flags)
+{
+    const struct wined3d_format *format = resource->format;
+    struct wined3d_texture_sub_resource *sub_resource;
+    unsigned int fmt_flags = resource->format_flags;
+    struct wined3d_texture *texture;
+    unsigned int texture_level;
+
+    texture = texture_from_resource(resource);
+    if (!(sub_resource = wined3d_texture_get_sub_resource(texture, sub_resource_idx)))
+        return E_INVALIDARG;
+
+    texture_level = sub_resource_idx % texture->level_count;
+
+    if (fmt_flags & WINED3DFMT_FLAG_BROKEN_PITCH)
+    {
+        info->row_pitch = wined3d_texture_get_level_width(texture, texture_level) * format->byte_count;
+        info->slice_pitch = wined3d_texture_get_level_height(texture, texture_level) * info->row_pitch;
+    }
+    else
+    {
+        wined3d_texture_get_pitch(texture, texture_level, &info->row_pitch, &info->slice_pitch);
+    }
+
+    info->size = info->slice_pitch * wined3d_texture_get_level_depth(texture, texture_level);
+
+    return WINED3D_OK;
+}
+
 static HRESULT texture_resource_sub_resource_unmap(struct wined3d_resource *resource, unsigned int sub_resource_idx)
 {
     struct wined3d_texture_sub_resource *sub_resource;
@@ -3104,6 +3134,7 @@ static const struct wined3d_resource_ops texture_resource_ops =
     texture_resource_preload,
     wined3d_texture_gl_unload,
     texture_resource_sub_resource_map,
+    texture_resource_sub_resource_map_info,
     texture_resource_sub_resource_unmap,
 };
 

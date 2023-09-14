@@ -1108,6 +1108,24 @@ static HRESULT buffer_resource_sub_resource_map(struct wined3d_resource *resourc
     return WINED3D_OK;
 }
 
+static HRESULT buffer_resource_sub_resource_map_info(struct wined3d_resource *resource, unsigned int sub_resource_idx,
+        struct wined3d_map_info *info, DWORD flags)
+{
+    struct wined3d_buffer *buffer = buffer_from_resource(resource);
+
+    if (sub_resource_idx)
+    {
+        WARN("Invalid sub_resource_idx %u.\n", sub_resource_idx);
+        return E_INVALIDARG;
+    }
+
+    info->row_pitch   = resource->size;
+    info->slice_pitch = resource->size;
+    info->size        = buffer->resource.size;
+
+    return WINED3D_OK;
+}
+
 static HRESULT buffer_resource_sub_resource_unmap(struct wined3d_resource *resource, unsigned int sub_resource_idx)
 {
     struct wined3d_buffer *buffer = buffer_from_resource(resource);
