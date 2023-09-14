@@ -3774,12 +3774,11 @@ static void context_load_shader_resources(struct wined3d_context *context, const
     }
 }
 
-static void context_bind_shader_resources(struct wined3d_context *context,
+static void wined3d_context_gl_bind_shader_resources(struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state, enum wined3d_shader_type shader_type)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     unsigned int bind_idx, shader_sampler_count, base, count, i;
-    const struct wined3d_device *device = context->device;
+    const struct wined3d_device *device = context_gl->c.device;
     struct wined3d_shader_sampler_map_entry *entry;
     struct wined3d_shader_resource_view *view;
     const struct wined3d_shader *shader;
@@ -3815,7 +3814,7 @@ static void context_bind_shader_resources(struct wined3d_context *context,
             sampler = device->default_sampler;
         else if (!(sampler = state->sampler[shader_type][entry->sampler_idx]))
             sampler = device->null_sampler;
-        wined3d_shader_resource_view_gl_bind(wined3d_shader_resource_view_gl(view), bind_idx, sampler, context);
+        wined3d_shader_resource_view_gl_bind(wined3d_shader_resource_view_gl(view), bind_idx, sampler, &context_gl->c);
     }
 }
 
@@ -3927,6 +3926,7 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
         const struct wined3d_device *device, const struct wined3d_state *state)
 {
     const struct wined3d_state_entry *state_table = context->state_table;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_fb_state *fb = state->fb;
     unsigned int i;
@@ -4005,7 +4005,7 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
     if (context->update_shader_resource_bindings)
     {
         for (i = 0; i < WINED3D_SHADER_TYPE_GRAPHICS_COUNT; ++i)
-            context_bind_shader_resources(context, state, i);
+            wined3d_context_gl_bind_shader_resources(context_gl, state, i);
         context->update_shader_resource_bindings = 0;
         if (gl_info->limits.combined_samplers == gl_info->limits.graphics_samplers)
             context->update_compute_shader_resource_bindings = 1;
@@ -4063,7 +4063,7 @@ static void context_apply_compute_state(struct wined3d_context *context,
 
     if (context->update_compute_shader_resource_bindings)
     {
-        context_bind_shader_resources(context, state, WINED3D_SHADER_TYPE_COMPUTE);
+        wined3d_context_gl_bind_shader_resources(wined3d_context_gl(context), state, WINED3D_SHADER_TYPE_COMPUTE);
         context->update_compute_shader_resource_bindings = 0;
         if (gl_info->limits.combined_samplers == gl_info->limits.graphics_samplers)
             context->update_shader_resource_bindings = 1;
