@@ -1078,8 +1078,6 @@ HRESULT CDECL wined3d_device_init_3d(struct wined3d_device *device,
 
     if (device->d3d_initialized)
         return WINED3DERR_INVALIDCALL;
-    if (device->wined3d->flags & WINED3D_NO3D)
-        return WINED3DERR_INVALIDCALL;
 
     memset(device->fb.render_targets, 0, sizeof(device->fb.render_targets));
 
@@ -1119,26 +1117,40 @@ HRESULT CDECL wined3d_device_init_3d(struct wined3d_device *device,
     }
     device->swapchains[0] = swapchain;
 
-    if (FAILED(hr = wined3d_device_create_primary_opengl_context(device)))
-        goto err_out;
-    device_init_swapchain_state(device, swapchain);
+    if (device->wined3d->flags & WINED3D_NO3D)
+    {
+        if (!(device->blitter = wined3d_cpu_blitter_create()))
+        {
+            ERR("Failed to create CPU blitter.\n");
+            heap_free(device->swapchains);
+            device->swapchain_count = 0;
+            goto err_out;
+        }
+    }
+    else
+    {
+        if (FAILED(hr = wined3d_device_create_primary_opengl_context(device)))
+            goto err_out;
+        device_init_swapchain_state(device, swapchain);
 
-    device->contexts[0]->last_was_rhw = 0;
+        device->contexts[0]->last_was_rhw = 0;
 
-    TRACE("All defaults now set up.\n");
+        TRACE("All defaults now set up.\n");
 
-    /* Clear the screen */
-    if (device->back_buffer_view)
-        clear_flags |= WINED3DCLEAR_TARGET;
-    if (swapchain_desc->enable_auto_depth_stencil)
-        clear_flags |= WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL;
-    if (clear_flags)
-        wined3d_device_clear(device, 0, NULL, clear_flags, &black, 1.0f, 0);
+        /* Clear the screen */
+        if (device->back_buffer_view)
+            clear_flags |= WINED3DCLEAR_TARGET;
+        if (swapchain_desc->enable_auto_depth_stencil)
+            clear_flags |= WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL;
+        if (clear_flags)
+            wined3d_device_clear(device, 0, NULL, clear_flags, &black, 1.0f, 0);
 
-    device->d3d_initialized = TRUE;
+        device->d3d_initialized = TRUE;
 
-    if (wined3d_settings.logo)
-        device_load_logo(device, wined3d_settings.logo);
+        if (wined3d_settings.logo)
+            device_load_logo(device, wined3d_settings.logo);
+    }
+
     return WINED3D_OK;
 
 err_out:
@@ -1149,47 +1161,6 @@ err_out:
     if (swapchain)
         wined3d_swapchain_decref(swapchain);
 
-    return hr;
-}
-
-HRESULT CDECL wined3d_device_init_gdi(struct wined3d_device *device,
-        struct wined3d_swapchain_desc *swapchain_desc)
-{
-    struct wined3d_swapchain *swapchain = NULL;
-    HRESULT hr;
-
-    TRACE("device %p, swapchain_desc %p.\n", device, swapchain_desc);
-
-    /* Setup the implicit swapchain */
-    TRACE("Creating implicit swapchain\n");
-    hr = device->device_parent->ops->create_swapchain(device->device_parent,
-            swapchain_desc, &swapchain);
-    if (FAILED(hr))
-    {
-        WARN("Failed to create implicit swapchain\n");
-        goto err_out;
-    }
-
-    device->swapchain_count = 1;
-    if (!(device->swapchains = heap_calloc(device->swapchain_count, sizeof(*device->swapchains))))
-    {
-        ERR("Out of memory!\n");
-        goto err_out;
-    }
-    device->swapchains[0] = swapchain;
-
-    if (!(device->blitter = wined3d_cpu_blitter_create()))
-    {
-        ERR("Failed to create CPU blitter.\n");
-        heap_free(device->swapchains);
-        device->swapchain_count = 0;
-        goto err_out;
-    }
-
-    return WINED3D_OK;
-
-err_out:
-    wined3d_swapchain_decref(swapchain);
     return hr;
 }
 
