@@ -3927,14 +3927,26 @@ struct wined3d_shader_resource_view
     void *parent;
     const struct wined3d_parent_ops *parent_ops;
 
-    struct wined3d_gl_view gl_view;
     const struct wined3d_format *format;
 
     struct wined3d_view_desc desc;
 };
 
 void shader_resource_view_generate_mipmaps(struct wined3d_shader_resource_view *view) DECLSPEC_HIDDEN;
-void wined3d_shader_resource_view_bind(struct wined3d_shader_resource_view *view, unsigned int unit,
+
+struct wined3d_shader_resource_view_gl
+{
+    struct wined3d_shader_resource_view v;
+    struct wined3d_gl_view gl_view;
+};
+
+static inline struct wined3d_shader_resource_view_gl *wined3d_shader_resource_view_gl(
+        struct wined3d_shader_resource_view *view)
+{
+    return CONTAINING_RECORD(view, struct wined3d_shader_resource_view_gl, v);
+}
+
+void wined3d_shader_resource_view_gl_bind(struct wined3d_shader_resource_view_gl *view_gl, unsigned int unit,
         struct wined3d_sampler *sampler, struct wined3d_context *context) DECLSPEC_HIDDEN;
 
 struct wined3d_unordered_access_view
