@@ -348,7 +348,7 @@ static void ok_registry(BOOL expectsuccess)
 static void test_cmdline(void)
 {
     static const char infwithspaces[] = "test file.inf";
-    char path[MAX_PATH];
+    char path[MAX_PATH + 16];
     BOOL ret;
 
     create_inf_file(inffile, cmdline_inf);
@@ -384,7 +384,7 @@ static void test_registry(void)
 {
     HKEY key;
     LONG res;
-    char path[MAX_PATH];
+    char path[MAX_PATH + 9];
     BOOL ret;
 
     /* First create a registry structure we would like to be deleted */
@@ -414,7 +414,7 @@ static void test_registry(void)
 
 static void test_install_from(void)
 {
-    char path[MAX_PATH];
+    char path[MAX_PATH + 9];
     HINF infhandle;
     HKEY key;
     LONG res;
@@ -454,7 +454,7 @@ static void test_install_from(void)
 static void test_install_svc_from(void)
 {
     char inf[2048];
-    char path[MAX_PATH];
+    char path[MAX_PATH + 9];
     HINF infhandle;
     BOOL ret;
     SC_HANDLE scm_handle, svc_handle;
@@ -614,7 +614,7 @@ static void test_driver_install(void)
     HANDLE handle;
     SC_HANDLE scm_handle, svc_handle;
     BOOL ret;
-    char path[MAX_PATH], windir[MAX_PATH], driver[MAX_PATH];
+    char path[MAX_PATH + 9], windir[MAX_PATH], driver[MAX_PATH];
     DWORD attrs;
     /* Minimal stuff needed */
     static const char *inf =
@@ -683,7 +683,7 @@ static void test_driver_install(void)
 
 static void test_profile_items(void)
 {
-    char path[MAX_PATH], commonprogs[MAX_PATH];
+    char path[MAX_PATH + 22], commonprogs[MAX_PATH];
 
     static const char *inf =
         "[Version]\n"
@@ -965,7 +965,7 @@ static const char dirid_inf[] = "[Version]\n"
 static void check_dirid(int dirid, LPCSTR expected)
 {
     char buffer[sizeof(dirid_inf)+11];
-    char path[MAX_PATH], actual[MAX_PATH];
+    char path[MAX_PATH + 9], actual[MAX_PATH];
     LONG ret;
     DWORD size, type;
     HKEY key;
@@ -1045,7 +1045,7 @@ static void test_install_files_queue(void)
             "[DestinationDirs]\n"
             "files_section=40000,dst\n";
 
-    char path[MAX_PATH];
+    char path[MAX_PATH + 9];
     HSPFILEQ queue;
     void *context;
     HINF hinf;
@@ -1367,7 +1367,7 @@ static void test_install_file(void)
             "[DestinationDirs]\n"
             "DefaultDestDir=40000,dst\n";
 
-    char path[MAX_PATH];
+    char path[MAX_PATH + 9];
     INFCONTEXT infctx;
     HINF hinf;
     BOOL ret;
@@ -1466,7 +1466,7 @@ static void test_need_media(void)
             "DefaultDestDir=40000,dst\n";
 
     SP_FILE_COPY_PARAMS_A copy_params = {sizeof(copy_params)};
-    char path[MAX_PATH];
+    char path[MAX_PATH + 9];
     HSPFILEQ queue;
     HINF hinf;
     BOOL ret;
