@@ -2078,7 +2078,6 @@ static void test_get_actual_section(void)
     ok(!strcasecmp(section, "section7"), "Got unexpected section %s.\n", section);
     ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
 
-todo_wine {
     extptr = section;
     ret = SetupDiGetActualSectionToInstallA(hinf, "section8", section, ARRAY_SIZE(section), NULL, &extptr);
     ok(ret, "Failed to get section, error %#x.\n", GetLastError());
@@ -2090,7 +2089,6 @@ todo_wine {
     ok(ret, "Failed to get section, error %#x.\n", GetLastError());
     ok(!strcasecmp(section, "nonexistent"), "Got unexpected section %s.\n", section);
     ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
-}
 
     extptr = section;
     ret = SetupDiGetActualSectionToInstallA(hinf, "section9", section, ARRAY_SIZE(section), NULL, &extptr);
@@ -2098,7 +2096,6 @@ todo_wine {
     ok(!strcasecmp(section, "section9.NT" MYEXT), "Got unexpected section %s.\n", section);
     ok(extptr == section + 8, "Got extension %s.\n", extptr);
 
-todo_wine {
     if (0)
     {
         /* For some reason, this call hangs on Windows 10 1809. */
@@ -2108,7 +2105,6 @@ todo_wine {
         ok(!strcasecmp(section, "section10"), "Got unexpected section %s.\n", section);
         ok(!extptr, "Got extension %s.\n", extptr);
     }
-}
 
     SetupCloseInfFile(hinf);
     ret = DeleteFileA(inf_path);
