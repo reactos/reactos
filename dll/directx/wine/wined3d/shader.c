@@ -3390,6 +3390,8 @@ static HRESULT shader_set_function(struct wined3d_shader *shader,
         return WINED3DERR_INVALIDCALL;
     }
 
+    shader->load_local_constsF = shader->lconst_inf_or_nan;
+
     return WINED3D_OK;
 }
 
@@ -3786,8 +3788,6 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
             return hr;
         }
     }
-
-    shader->load_local_constsF = shader->lconst_inf_or_nan;
 
     return hr;
 }
