@@ -274,7 +274,6 @@ static HRESULT WINAPI d3d_viewport_GetViewport(IDirect3DViewport3 *iface, D3DVIE
     wined3d_mutex_lock();
 
     size = vp->dwSize;
-    memset(vp, 0, size);
     if (viewport->version == DDRAW_VIEWPORT_VERSION_1)
     {
         memcpy(vp, &viewport->viewports.vp1, size);
@@ -927,7 +926,6 @@ static HRESULT WINAPI d3d_viewport_GetViewport2(IDirect3DViewport3 *iface, D3DVI
 
     wined3d_mutex_lock();
     size = vp->dwSize;
-    memset(vp, 0, size);
     if (viewport->version == DDRAW_VIEWPORT_VERSION_2)
     {
         memcpy(vp, &viewport->viewports.vp2, size);
