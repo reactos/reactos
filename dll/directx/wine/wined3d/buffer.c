@@ -196,10 +196,10 @@ static void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *bu
 }
 
 /* Context activation is done by the caller. */
-static BOOL wined3d_buffer_gl_create_buffer_object(struct wined3d_buffer_gl *buffer_gl, struct wined3d_context *context)
+static BOOL wined3d_buffer_gl_create_buffer_object(struct wined3d_buffer_gl *buffer_gl,
+        struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     GLenum gl_usage = GL_STATIC_DRAW;
     GLenum error;
 
@@ -269,7 +269,7 @@ fail:
     /* Clean up all BO init, but continue because we can work without a BO :-) */
     ERR("Failed to create a buffer object. Continuing, but performance issues may occur.\n");
     buffer_gl->b.flags &= ~WINED3D_BUFFER_USE_BO;
-    wined3d_buffer_gl_destroy_buffer_object(buffer_gl, context);
+    wined3d_buffer_gl_destroy_buffer_object(buffer_gl, &context_gl->c);
     buffer_clear_dirty_areas(&buffer_gl->b);
     return FALSE;
 }
@@ -615,6 +615,9 @@ static void buffer_conversion_upload(struct wined3d_buffer *buffer, struct wined
 static BOOL wined3d_buffer_prepare_location(struct wined3d_buffer *buffer,
         struct wined3d_context *context, DWORD location)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    struct wined3d_buffer_gl *buffer_gl = wined3d_buffer_gl(buffer);
+
     switch (location)
     {
         case WINED3D_LOCATION_SYSMEM:
@@ -626,7 +629,7 @@ static BOOL wined3d_buffer_prepare_location(struct wined3d_buffer *buffer,
             return TRUE;
 
         case WINED3D_LOCATION_BUFFER:
-            if (wined3d_buffer_gl(buffer)->buffer_object)
+            if (buffer_gl->buffer_object)
                 return TRUE;
 
             if (!(buffer->flags & WINED3D_BUFFER_USE_BO))
@@ -634,7 +637,7 @@ static BOOL wined3d_buffer_prepare_location(struct wined3d_buffer *buffer,
                 WARN("Trying to create BO for buffer %p with no WINED3D_BUFFER_USE_BO.\n", buffer);
                 return FALSE;
             }
-            return wined3d_buffer_gl_create_buffer_object(wined3d_buffer_gl(buffer), context);
+            return wined3d_buffer_gl_create_buffer_object(buffer_gl, context_gl);
 
         default:
             ERR("Invalid location %s.\n", wined3d_debug_location(location));
