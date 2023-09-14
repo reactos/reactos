@@ -1478,6 +1478,8 @@ static void wined3d_context_cleanup(struct wined3d_context *context)
         DWORD err = GetLastError();
         ERR("wglDeleteContext(%p) failed, last error %#x.\n", context->glCtx, err);
     }
+
+    heap_free(context->texture_type);
 }
 
 DWORD context_get_tls_idx(void)
@@ -2321,7 +2323,6 @@ void wined3d_context_destroy(struct wined3d_context *context)
 
     device->shader_backend->shader_free_context_data(context);
     device->adapter->fragment_pipe->free_context_data(context);
-    heap_free(context->texture_type);
     device_context_remove(device, context);
 
     if (context->current && context->tid != GetCurrentThreadId())
