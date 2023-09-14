@@ -2440,7 +2440,9 @@ static DWORD cpu_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
     {
         case WINED3D_BLIT_OP_COLOR_BLIT:
         case WINED3D_BLIT_OP_DEPTH_BLIT:
+            break;
         case WINED3D_BLIT_OP_RAW_BLIT:
+            flags |= WINED3D_BLT_RAW;
             break;
         case WINED3D_BLIT_OP_COLOR_BLIT_ALPHATEST:
             flags |= WINED3D_BLT_ALPHA_TEST;
