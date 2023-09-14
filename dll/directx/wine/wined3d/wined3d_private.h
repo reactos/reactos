@@ -4276,8 +4276,8 @@ struct wined3d_rational
 struct wined3d_color_key_conversion
 {
     enum wined3d_format_id dst_format;
-    void (*convert)(const BYTE *src, unsigned int src_pitch, BYTE *dst, unsigned int dst_pitch, unsigned int width,
-            unsigned int height, const struct wined3d_palette *palette, const struct wined3d_color_key *color_key);
+    void (*convert)(const BYTE *src, unsigned int src_pitch, BYTE *dst, unsigned int dst_pitch,
+            unsigned int width, unsigned int height, const struct wined3d_color_key *colour_key);
 };
 
 struct wined3d_format

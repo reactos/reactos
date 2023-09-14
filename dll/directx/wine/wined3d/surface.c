@@ -2243,9 +2243,6 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, sub_resource->locations);
     if (conversion)
     {
-        /* This code is only entered for color keying fixups */
-        struct wined3d_palette *palette = NULL;
-
         wined3d_format_calculate_pitch(format, device->surface_alignment,
                 width, height, &dst_row_pitch, &dst_slice_pitch);
 
@@ -2257,10 +2254,8 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
             context_release(context);
             return FALSE;
         }
-        if (texture->swapchain && texture->swapchain->palette)
-            palette = texture->swapchain->palette;
         conversion->convert(src_mem, src_row_pitch, dst_mem, dst_row_pitch,
-                width, height, palette, &texture->async.gl_color_key);
+                width, height, &texture->async.gl_color_key);
         src_row_pitch = dst_row_pitch;
         src_slice_pitch = dst_slice_pitch;
         context_unmap_bo_address(context, &data, GL_PIXEL_UNPACK_BUFFER);

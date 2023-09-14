@@ -895,45 +895,9 @@ static BOOL color_in_range(const struct wined3d_color_key *color_key, DWORD colo
             && color <= color_key->color_space_high_value;
 }
 
-static void convert_p8_uint_b8g8r8a8_unorm(const BYTE *src, unsigned int src_pitch,
-        BYTE *dst, unsigned int dst_pitch, unsigned int width, unsigned int height,
-        const struct wined3d_palette *palette, const struct wined3d_color_key *color_key)
-{
-    const BYTE *src_row;
-    unsigned int x, y;
-    DWORD *dst_row;
-
-    if (!palette)
-    {
-        /* FIXME: This should probably use the system palette. */
-        FIXME("P8 surface loaded without a palette.\n");
-
-        for (y = 0; y < height; ++y)
-        {
-            memset(&dst[dst_pitch * y], 0, width * 4);
-        }
-
-        return;
-    }
-
-    for (y = 0; y < height; ++y)
-    {
-        src_row = &src[src_pitch * y];
-        dst_row = (DWORD *)&dst[dst_pitch * y];
-        for (x = 0; x < width; ++x)
-        {
-            BYTE src_color = src_row[x];
-            dst_row[x] = 0xff000000
-                    | (palette->colors[src_color].rgbRed << 16)
-                    | (palette->colors[src_color].rgbGreen << 8)
-                    | palette->colors[src_color].rgbBlue;
-        }
-    }
-}
-
 static void convert_b5g6r5_unorm_b5g5r5a1_unorm_color_key(const BYTE *src, unsigned int src_pitch,
         BYTE *dst, unsigned int dst_pitch, unsigned int width, unsigned int height,
-        const struct wined3d_palette *palette, const struct wined3d_color_key *color_key)
+        const struct wined3d_color_key *color_key)
 {
     const WORD *src_row;
     unsigned int x, y;
@@ -956,7 +920,7 @@ static void convert_b5g6r5_unorm_b5g5r5a1_unorm_color_key(const BYTE *src, unsig
 
 static void convert_b5g5r5x1_unorm_b5g5r5a1_unorm_color_key(const BYTE *src, unsigned int src_pitch,
         BYTE *dst, unsigned int dst_pitch, unsigned int width, unsigned int height,
-        const struct wined3d_palette *palette, const struct wined3d_color_key *color_key)
+        const struct wined3d_color_key *color_key)
 {
     const WORD *src_row;
     unsigned int x, y;
@@ -979,7 +943,7 @@ static void convert_b5g5r5x1_unorm_b5g5r5a1_unorm_color_key(const BYTE *src, uns
 
 static void convert_b8g8r8_unorm_b8g8r8a8_unorm_color_key(const BYTE *src, unsigned int src_pitch,
         BYTE *dst, unsigned int dst_pitch, unsigned int width, unsigned int height,
-        const struct wined3d_palette *palette, const struct wined3d_color_key *color_key)
+        const struct wined3d_color_key *color_key)
 {
     const BYTE *src_row;
     unsigned int x, y;
@@ -1000,7 +964,7 @@ static void convert_b8g8r8_unorm_b8g8r8a8_unorm_color_key(const BYTE *src, unsig
 
 static void convert_b8g8r8x8_unorm_b8g8r8a8_unorm_color_key(const BYTE *src, unsigned int src_pitch,
         BYTE *dst, unsigned int dst_pitch, unsigned int width, unsigned int height,
-        const struct wined3d_palette *palette, const struct wined3d_color_key *color_key)
+        const struct wined3d_color_key *color_key)
 {
     const DWORD *src_row;
     unsigned int x, y;
@@ -1023,7 +987,7 @@ static void convert_b8g8r8x8_unorm_b8g8r8a8_unorm_color_key(const BYTE *src, uns
 
 static void convert_b8g8r8a8_unorm_b8g8r8a8_unorm_color_key(const BYTE *src, unsigned int src_pitch,
         BYTE *dst, unsigned int dst_pitch, unsigned int width, unsigned int height,
-        const struct wined3d_palette *palette, const struct wined3d_color_key *color_key)
+        const struct wined3d_color_key *color_key)
 {
     const DWORD *src_row;
     unsigned int x, y;
@@ -1062,10 +1026,6 @@ const struct wined3d_color_key_conversion * wined3d_format_get_color_key_convers
         {WINED3DFMT_B8G8R8X8_UNORM, {WINED3DFMT_B8G8R8A8_UNORM, convert_b8g8r8x8_unorm_b8g8r8a8_unorm_color_key }},
         {WINED3DFMT_B8G8R8A8_UNORM, {WINED3DFMT_B8G8R8A8_UNORM, convert_b8g8r8a8_unorm_b8g8r8a8_unorm_color_key }},
     };
-    static const struct wined3d_color_key_conversion convert_p8 =
-    {
-        WINED3DFMT_B8G8R8A8_UNORM,  convert_p8_uint_b8g8r8a8_unorm
-    };
 
     if (need_alpha_ck && (texture->async.flags & WINED3D_TEXTURE_ASYNC_COLOR_KEY))
     {
@@ -1077,13 +1037,6 @@ const struct wined3d_color_key_conversion * wined3d_format_get_color_key_convers
 
         FIXME("Color-keying not supported with format %s.\n", debug_d3dformat(format->id));
     }
-
-    /* FIXME: This should check if the blitter backend can do P8 conversion,
-     * instead of checking for ARB_fragment_program. */
-    if (format->id == WINED3DFMT_P8_UINT
-            && !(texture->resource.device->adapter->gl_info.supported[ARB_FRAGMENT_PROGRAM]
-            && texture->swapchain && texture == texture->swapchain->front_buffer))
-        return &convert_p8;
 
     return NULL;
 }
