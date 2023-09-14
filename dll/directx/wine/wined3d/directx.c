@@ -617,49 +617,52 @@ void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
 enum wined3d_pci_device wined3d_gpu_from_feature_level(enum wined3d_pci_vendor *vendor,
         enum wined3d_feature_level feature_level)
 {
-    unsigned int i;
-
-    static const enum wined3d_pci_device card_fallback_nvidia[] =
+    static const struct wined3d_fallback_card
     {
-        CARD_NVIDIA_RIVA_128,           /* D3D5 */
-        CARD_NVIDIA_RIVA_TNT,           /* D3D6 */
-        CARD_NVIDIA_GEFORCE,            /* D3D7 */
-        CARD_NVIDIA_GEFORCE3,           /* D3D8 */
-        CARD_NVIDIA_GEFORCEFX_5800,     /* D3D9_SM2 */
-        CARD_NVIDIA_GEFORCE_6800,       /* D3D9_SM3 */
-        CARD_NVIDIA_GEFORCE_8800GTX,    /* D3D10 */
-        CARD_NVIDIA_GEFORCE_GTX470,     /* D3D11 */
+        enum wined3d_feature_level feature_level;
+        enum wined3d_pci_device device_id;
+    }
+    card_fallback_nvidia[] =
+    {
+        {WINED3D_FEATURE_LEVEL_5,     CARD_NVIDIA_RIVA_128},
+        {WINED3D_FEATURE_LEVEL_6,     CARD_NVIDIA_RIVA_TNT},
+        {WINED3D_FEATURE_LEVEL_7,     CARD_NVIDIA_GEFORCE},
+        {WINED3D_FEATURE_LEVEL_8,     CARD_NVIDIA_GEFORCE3},
+        {WINED3D_FEATURE_LEVEL_9_SM2, CARD_NVIDIA_GEFORCEFX_5800},
+        {WINED3D_FEATURE_LEVEL_9_SM3, CARD_NVIDIA_GEFORCE_6800},
+        {WINED3D_FEATURE_LEVEL_10,    CARD_NVIDIA_GEFORCE_8800GTX},
+        {WINED3D_FEATURE_LEVEL_11,    CARD_NVIDIA_GEFORCE_GTX470},
+        {WINED3D_FEATURE_LEVEL_NONE},
     },
     card_fallback_amd[] =
     {
-        CARD_AMD_RAGE_128PRO,           /* D3D5 */
-        CARD_AMD_RAGE_128PRO,           /* D3D6 */
-        CARD_AMD_RADEON_7200,           /* D3D7 */
-        CARD_AMD_RADEON_8500,           /* D3D8 */
-        CARD_AMD_RADEON_9500,           /* D3D9_SM2 */
-        CARD_AMD_RADEON_X1600,          /* D3D9_SM3 */
-        CARD_AMD_RADEON_HD2900,         /* D3D10 */
-        CARD_AMD_RADEON_HD5600,         /* D3D11 */
+        {WINED3D_FEATURE_LEVEL_5,     CARD_AMD_RAGE_128PRO},
+        {WINED3D_FEATURE_LEVEL_6,     CARD_AMD_RAGE_128PRO},
+        {WINED3D_FEATURE_LEVEL_7,     CARD_AMD_RADEON_7200},
+        {WINED3D_FEATURE_LEVEL_8,     CARD_AMD_RADEON_8500},
+        {WINED3D_FEATURE_LEVEL_9_SM2, CARD_AMD_RADEON_9500},
+        {WINED3D_FEATURE_LEVEL_9_SM3, CARD_AMD_RADEON_X1600},
+        {WINED3D_FEATURE_LEVEL_10,    CARD_AMD_RADEON_HD2900},
+        {WINED3D_FEATURE_LEVEL_11,    CARD_AMD_RADEON_HD5600},
+        {WINED3D_FEATURE_LEVEL_NONE},
     },
     card_fallback_intel[] =
     {
-        CARD_INTEL_845G,                /* D3D5 */
-        CARD_INTEL_845G,                /* D3D6 */
-        CARD_INTEL_845G,                /* D3D7 */
-        CARD_INTEL_915G,                /* D3D8 */
-        CARD_INTEL_915G,                /* D3D9_SM2 */
-        CARD_INTEL_945G,                /* D3D9_SM3 */
-        CARD_INTEL_G45,                 /* D3D10 */
-        CARD_INTEL_IVBD,                /* D3D11 */
+        {WINED3D_FEATURE_LEVEL_5,     CARD_INTEL_845G},
+        {WINED3D_FEATURE_LEVEL_6,     CARD_INTEL_845G},
+        {WINED3D_FEATURE_LEVEL_7,     CARD_INTEL_845G},
+        {WINED3D_FEATURE_LEVEL_8,     CARD_INTEL_915G},
+        {WINED3D_FEATURE_LEVEL_9_SM2, CARD_INTEL_915G},
+        {WINED3D_FEATURE_LEVEL_9_SM3, CARD_INTEL_945G},
+        {WINED3D_FEATURE_LEVEL_10,    CARD_INTEL_G45},
+        {WINED3D_FEATURE_LEVEL_11,    CARD_INTEL_IVBD},
+        {WINED3D_FEATURE_LEVEL_NONE},
     };
-    C_ASSERT(ARRAY_SIZE(card_fallback_nvidia)  == WINED3D_FEATURE_LEVEL_COUNT);
-    C_ASSERT(ARRAY_SIZE(card_fallback_amd)     == WINED3D_FEATURE_LEVEL_COUNT);
-    C_ASSERT(ARRAY_SIZE(card_fallback_intel)   == WINED3D_FEATURE_LEVEL_COUNT);
 
     static const struct
     {
         enum wined3d_pci_vendor vendor;
-        const enum wined3d_pci_device *device;
+        const struct wined3d_fallback_card *cards;
     }
     fallbacks[] =
     {
@@ -669,15 +672,29 @@ enum wined3d_pci_device wined3d_gpu_from_feature_level(enum wined3d_pci_vendor *
         {HW_VENDOR_INTEL,  card_fallback_intel},
     };
 
+    const struct wined3d_fallback_card *cards;
+    enum wined3d_pci_device device_id;
+    unsigned int i;
+
+    cards = NULL;
     for (i = 0; i < ARRAY_SIZE(fallbacks); ++i)
     {
         if (*vendor == fallbacks[i].vendor)
-            return fallbacks[i].device[feature_level];
+            cards = fallbacks[i].cards;
+    }
+    if (!cards)
+    {
+        *vendor = HW_VENDOR_NVIDIA;
+        cards = card_fallback_nvidia;
     }
 
-    *vendor = HW_VENDOR_NVIDIA;
-
-    return card_fallback_nvidia[feature_level];
+    device_id = cards->device_id;
+    for (i = 0; cards[i].feature_level; ++i)
+    {
+        if (feature_level >= cards[i].feature_level)
+            device_id = cards[i].device_id;
+    }
+    return device_id;
 }
 
 UINT CDECL wined3d_get_adapter_count(const struct wined3d *wined3d)
