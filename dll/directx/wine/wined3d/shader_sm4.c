@@ -1218,6 +1218,43 @@ static enum wined3d_data_type map_data_type(char t)
     }
 }
 
+enum wined3d_shader_type wined3d_get_sm4_shader_type(const DWORD *byte_code, size_t byte_code_size)
+{
+    DWORD shader_type;
+
+    if (byte_code_size / sizeof(*byte_code) < 1)
+    {
+        WARN("Invalid byte code size %lu.\n", (long)byte_code_size);
+        return WINED3D_SHADER_TYPE_INVALID;
+    }
+
+    shader_type = byte_code[0] >> 16;
+    switch (shader_type)
+    {
+        case WINED3D_SM4_PS:
+            return WINED3D_SHADER_TYPE_PIXEL;
+            break;
+        case WINED3D_SM4_VS:
+            return WINED3D_SHADER_TYPE_VERTEX;
+            break;
+        case WINED3D_SM4_GS:
+            return WINED3D_SHADER_TYPE_GEOMETRY;
+            break;
+        case WINED3D_SM5_HS:
+            return WINED3D_SHADER_TYPE_HULL;
+            break;
+        case WINED3D_SM5_DS:
+            return WINED3D_SHADER_TYPE_DOMAIN;
+            break;
+        case WINED3D_SM5_CS:
+            return WINED3D_SHADER_TYPE_COMPUTE;
+            break;
+        default:
+            FIXME("Unrecognised shader type %#x.\n", shader_type);
+            return WINED3D_SHADER_TYPE_INVALID;
+    }
+}
+
 static void *shader_sm4_init(const DWORD *byte_code, size_t byte_code_size,
         const struct wined3d_shader_signature *output_signature)
 {
@@ -1251,35 +1288,13 @@ static void *shader_sm4_init(const DWORD *byte_code, size_t byte_code_size,
     priv->start = &byte_code[2];
     priv->end = &byte_code[token_count];
 
-    switch (version_token >> 16)
+    priv->shader_version.type = wined3d_get_sm4_shader_type(byte_code, byte_code_size);
+    if (priv->shader_version.type == WINED3D_SHADER_TYPE_INVALID)
     {
-        case WINED3D_SM4_PS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_PIXEL;
-            break;
-
-        case WINED3D_SM4_VS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_VERTEX;
-            break;
-
-        case WINED3D_SM4_GS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_GEOMETRY;
-            break;
-
-        case WINED3D_SM5_HS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_HULL;
-            break;
-
-        case WINED3D_SM5_DS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_DOMAIN;
-            break;
-
-        case WINED3D_SM5_CS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_COMPUTE;
-            break;
-
-        default:
-            FIXME("Unrecognised shader type %#x.\n", version_token >> 16);
+        heap_free(priv);
+        return NULL;
     }
+
     priv->shader_version.major = WINED3D_SM4_VERSION_MAJOR(version_token);
     priv->shader_version.minor = WINED3D_SM4_VERSION_MINOR(version_token);
 

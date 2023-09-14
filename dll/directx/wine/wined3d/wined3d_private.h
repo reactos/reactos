@@ -937,6 +937,7 @@ enum wined3d_shader_type
 
     WINED3D_SHADER_TYPE_COMPUTE = WINED3D_SHADER_TYPE_GRAPHICS_COUNT,
     WINED3D_SHADER_TYPE_COUNT,
+    WINED3D_SHADER_TYPE_INVALID = WINED3D_SHADER_TYPE_COUNT,
 };
 
 struct wined3d_shader_version
@@ -1272,6 +1273,9 @@ struct wined3d_shader_frontend
 
 extern const struct wined3d_shader_frontend sm1_shader_frontend DECLSPEC_HIDDEN;
 extern const struct wined3d_shader_frontend sm4_shader_frontend DECLSPEC_HIDDEN;
+
+enum wined3d_shader_type wined3d_get_sm4_shader_type(const DWORD *byte_code,
+        size_t byte_code_size) DECLSPEC_HIDDEN;
 
 typedef void (*SHADER_HANDLER)(const struct wined3d_shader_instruction *);
 

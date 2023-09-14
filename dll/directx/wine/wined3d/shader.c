@@ -419,6 +419,15 @@ static const struct wined3d_shader_frontend *shader_select_frontend(enum wined3d
     }
 }
 
+static enum wined3d_shader_type shader_get_shader_type(const struct wined3d_shader_desc *desc)
+{
+    if (desc->format == WINED3D_SHADER_BYTE_CODE_FORMAT_SM4)
+        return wined3d_get_sm4_shader_type(desc->byte_code, desc->byte_code_size);
+
+    FIXME("Could not get shader type for byte code format %#x.\n", desc->format);
+    return WINED3D_SHADER_TYPE_INVALID;
+}
+
 void string_buffer_clear(struct wined3d_string_buffer *buffer)
 {
     buffer->buffer[0] = '\0';
@@ -3722,7 +3731,22 @@ static HRESULT geometry_shader_init(struct wined3d_shader *shader, struct wined3
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     struct wined3d_stream_output_element *elements = NULL;
+    enum wined3d_shader_type shader_type;
     HRESULT hr;
+
+    if (so_desc)
+    {
+        shader_type = shader_get_shader_type(desc);
+        switch (shader_type)
+        {
+            case WINED3D_SHADER_TYPE_VERTEX:
+            case WINED3D_SHADER_TYPE_DOMAIN:
+                FIXME("Stream output not supported for %s.\n", debug_shader_type(shader_type));
+                return E_NOTIMPL;
+            default:
+                break;
+        }
+    }
 
     if (so_desc && !(elements = heap_calloc(so_desc->element_count, sizeof(*elements))))
         return E_OUTOFMEMORY;
