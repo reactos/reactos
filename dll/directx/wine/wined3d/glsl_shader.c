@@ -938,11 +938,11 @@ static BOOL shader_glsl_generate_transform_feedback_varyings(struct wined3d_stri
     return have_varyings_to_record;
 }
 
-static void shader_glsl_init_transform_feedback(const struct wined3d_context *context,
+static void shader_glsl_init_transform_feedback(const struct wined3d_context_gl *context_gl,
         struct shader_glsl_priv *priv, GLuint program_id, struct wined3d_shader *shader)
 {
     const struct wined3d_stream_output_desc *so_desc = &shader->u.gs.so_desc;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_string_buffer *buffer;
     unsigned int i, count, length;
     const char **varyings;
@@ -10342,7 +10342,7 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
         GL_EXTCALL(glAttachShader(program_id, gs_id));
         checkGLcall("glAttachShader");
 
-        shader_glsl_init_transform_feedback(context, priv, program_id, gshader);
+        shader_glsl_init_transform_feedback(context_gl, priv, program_id, gshader);
 
         list_add_head(&gshader->linked_programs, &entry->gs.shader_entry);
     }
