@@ -5092,7 +5092,7 @@ void wined3d_context_gl_load_tex_coords(const struct wined3d_context_gl *context
     checkGLcall("loadTexCoords");
 }
 
-/* This should match any arrays loaded in context_load_vertex_data(). */
+/* This should match any arrays loaded in wined3d_context_gl_load_vertex_data(). */
 static void wined3d_context_gl_unload_vertex_data(struct wined3d_context_gl *context_gl)
 {
     const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
@@ -5108,20 +5108,19 @@ static void wined3d_context_gl_unload_vertex_data(struct wined3d_context_gl *con
     context_gl->c.namedArraysLoaded = FALSE;
 }
 
-static void context_load_vertex_data(struct wined3d_context *context,
+static void wined3d_context_gl_load_vertex_data(struct wined3d_context_gl *context_gl,
         const struct wined3d_stream_info *si, const struct wined3d_state *state)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     const struct wined3d_stream_info_element *e;
     const struct wined3d_format_gl *format_gl;
     GLuint current_bo;
 
-    TRACE("context %p, si %p, state %p.\n", context, si, state);
+    TRACE("context_gl %p, si %p, state %p.\n", context_gl, si, state);
 
     /* This is used for the fixed-function pipeline only, and the
      * fixed-function pipeline doesn't do instancing. */
-    context->instance_count = 0;
+    context_gl->c.instance_count = 0;
     current_bo = gl_info->supported[ARB_VERTEX_BUFFER_OBJECT] ? ~0u : 0;
 
     /* Blend data */
@@ -5556,7 +5555,7 @@ void wined3d_context_gl_update_stream_sources(struct wined3d_context_gl *context
 
     TRACE("Loading named arrays.\n");
     context_unload_numbered_arrays(&context_gl->c);
-    context_load_vertex_data(&context_gl->c, &context_gl->c.stream_info, state);
+    wined3d_context_gl_load_vertex_data(context_gl, &context_gl->c.stream_info, state);
     context_gl->c.namedArraysLoaded = TRUE;
 }
 
