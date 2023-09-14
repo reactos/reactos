@@ -5296,31 +5296,35 @@ static HRESULT WINAPI d3d_device7_Clear_FPUPreserve(IDirect3DDevice7 *iface, DWO
     return hr;
 }
 
-/*****************************************************************************
- * IDirect3DDevice7::SetViewport
- *
- * Sets the current viewport.
- *
- * Version 7 only, but IDirect3DViewport uses this call for older
- * versions
- *
- * Params:
- *  Data: The new viewport to set
- *
- * Returns:
- *  D3D_OK on success
- *  DDERR_INVALIDPARAMS if Data is NULL
- *
- *****************************************************************************/
 static HRESULT d3d_device7_SetViewport(IDirect3DDevice7 *iface, D3DVIEWPORT7 *viewport)
 {
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
+    struct wined3d_sub_resource_desc rt_desc;
+    struct wined3d_rendertarget_view *rtv;
+    struct ddraw_surface *surface;
     struct wined3d_viewport vp;
 
     TRACE("iface %p, viewport %p.\n", iface, viewport);
 
     if (!viewport)
         return DDERR_INVALIDPARAMS;
+
+    wined3d_mutex_lock();
+    if (!(rtv = wined3d_device_get_rendertarget_view(device->wined3d_device, 0)))
+    {
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDCAPS;
+    }
+    surface = wined3d_rendertarget_view_get_sub_resource_parent(rtv);
+    wined3d_texture_get_sub_resource_desc(surface->wined3d_texture, surface->sub_resource_idx, &rt_desc);
+
+    if (viewport->dwX > rt_desc.width || viewport->dwWidth > rt_desc.width - viewport->dwX
+            || viewport->dwY > rt_desc.height || viewport->dwHeight > rt_desc.height - viewport->dwY)
+    {
+        WARN("Invalid viewport, returning E_INVALIDARG.\n");
+        wined3d_mutex_unlock();
+        return E_INVALIDARG;
+    }
 
     vp.x = viewport->dwX;
     vp.y = viewport->dwY;
@@ -5329,7 +5333,6 @@ static HRESULT d3d_device7_SetViewport(IDirect3DDevice7 *iface, D3DVIEWPORT7 *vi
     vp.min_z = viewport->dvMinZ;
     vp.max_z = viewport->dvMaxZ;
 
-    wined3d_mutex_lock();
     wined3d_device_set_viewport(device->wined3d_device, &vp);
     wined3d_mutex_unlock();
 
@@ -5353,21 +5356,6 @@ static HRESULT WINAPI d3d_device7_SetViewport_FPUPreserve(IDirect3DDevice7 *ifac
     return hr;
 }
 
-/*****************************************************************************
- * IDirect3DDevice::GetViewport
- *
- * Returns the current viewport
- *
- * Version 7
- *
- * Params:
- *  Data: D3D7Viewport structure to write the viewport information to
- *
- * Returns:
- *  D3D_OK on success
- *  DDERR_INVALIDPARAMS if Data is NULL
- *
- *****************************************************************************/
 static HRESULT d3d_device7_GetViewport(IDirect3DDevice7 *iface, D3DVIEWPORT7 *viewport)
 {
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
