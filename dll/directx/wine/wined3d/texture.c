@@ -749,8 +749,7 @@ static void wined3d_texture_create_dc(void *object)
         if (!context)
             context = context_acquire(device, NULL, 0);
         desc.pMemory = wined3d_context_map_bo_address(context, &data,
-                texture->sub_resources[sub_resource_idx].size,
-                GL_PIXEL_UNPACK_BUFFER, WINED3D_MAP_READ | WINED3D_MAP_WRITE);
+                texture->sub_resources[sub_resource_idx].size, 0, WINED3D_MAP_READ | WINED3D_MAP_WRITE);
     }
     else
     {
@@ -818,7 +817,7 @@ static void wined3d_texture_destroy_dc(void *object)
     if (data.buffer_object)
     {
         context = context_acquire(device, NULL, 0);
-        wined3d_context_unmap_bo_address(context, &data, GL_PIXEL_UNPACK_BUFFER);
+        wined3d_context_unmap_bo_address(context, &data, 0);
         context_release(context);
     }
 }
@@ -2962,8 +2961,7 @@ static HRESULT texture_resource_sub_resource_map(struct wined3d_resource *resour
         wined3d_texture_invalidate_location(texture, sub_resource_idx, ~resource->map_binding);
 
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, resource->map_binding);
-    base_memory = wined3d_context_map_bo_address(context, &data,
-            sub_resource->size, GL_PIXEL_UNPACK_BUFFER, flags);
+    base_memory = wined3d_context_map_bo_address(context, &data, sub_resource->size, 0, flags);
     TRACE("Base memory pointer %p.\n", base_memory);
 
     context_release(context);
@@ -3047,7 +3045,7 @@ static HRESULT texture_resource_sub_resource_unmap(struct wined3d_resource *reso
     context = context_acquire(device, NULL, 0);
 
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, texture->resource.map_binding);
-    wined3d_context_unmap_bo_address(context, &data, GL_PIXEL_UNPACK_BUFFER);
+    wined3d_context_unmap_bo_address(context, &data, 0);
 
     context_release(context);
 

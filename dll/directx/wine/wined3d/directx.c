@@ -2354,7 +2354,7 @@ static void adapter_no3d_uninit_3d(struct wined3d_device *device)
 }
 
 static void *adapter_no3d_map_bo_address(struct wined3d_context *context,
-        const struct wined3d_bo_address *data, size_t size, GLenum binding, uint32_t flags)
+        const struct wined3d_bo_address *data, size_t size, uint32_t bind_flags, uint32_t map_flags)
 {
     if (data->buffer_object)
     {
@@ -2366,7 +2366,7 @@ static void *adapter_no3d_map_bo_address(struct wined3d_context *context,
 }
 
 static void adapter_no3d_unmap_bo_address(struct wined3d_context *context,
-        const struct wined3d_bo_address *data, GLenum binding)
+        const struct wined3d_bo_address *data, uint32_t bind_flags)
 {
     if (data->buffer_object)
         ERR("Unsupported buffer object %#lx.\n", data->buffer_object);

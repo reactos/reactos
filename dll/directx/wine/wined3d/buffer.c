@@ -1307,9 +1307,11 @@ static const struct wined3d_resource_ops buffer_resource_ops =
     buffer_resource_sub_resource_unmap,
 };
 
-static GLenum buffer_type_hint_from_bind_flags(const struct wined3d_gl_info *gl_info,
-        unsigned int bind_flags)
+GLenum wined3d_buffer_gl_binding_from_bind_flags(const struct wined3d_gl_info *gl_info, uint32_t bind_flags)
 {
+    if (!bind_flags)
+        return GL_PIXEL_UNPACK_BUFFER;
+
     if (bind_flags == WINED3D_BIND_INDEX_BUFFER)
         return GL_ELEMENT_ARRAY_BUFFER;
 
@@ -1555,7 +1557,7 @@ HRESULT wined3d_buffer_gl_init(struct wined3d_buffer_gl *buffer_gl, struct wined
     TRACE("buffer_gl %p, device %p, desc %p, data %p, parent %p, parent_ops %p.\n",
             buffer_gl, device, desc, data, parent, parent_ops);
 
-    buffer_gl->buffer_type_hint = buffer_type_hint_from_bind_flags(gl_info, desc->bind_flags);
+    buffer_gl->buffer_type_hint = wined3d_buffer_gl_binding_from_bind_flags(gl_info, desc->bind_flags);
 
     return wined3d_buffer_init(&buffer_gl->b, device, desc, data, parent, parent_ops, &wined3d_buffer_gl_ops);
 }
