@@ -1625,7 +1625,7 @@ BOOL texture2d_load_drawable(struct wined3d_texture *texture,
     unsigned int level;
     RECT r;
 
-    if (texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL)
+    if (texture->resource.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
     {
         DWORD current = texture->sub_resources[sub_resource_idx].locations;
         FIXME("Unimplemented copy from %s for depth/stencil buffers.\n",
