@@ -7379,7 +7379,7 @@ static void arbfp_blitter_upload_palette(struct wined3d_arbfp_blitter *blitter,
     }
 
     /* Switch back to unit 0 in which the 2D texture will be stored. */
-    context_active_texture(&context_gl->c, gl_info, 0);
+    wined3d_context_gl_active_texture(context_gl, gl_info, 0);
 }
 
 /* Context activation is done by the caller. */

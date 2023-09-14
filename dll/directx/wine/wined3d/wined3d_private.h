@@ -2063,6 +2063,8 @@ static inline const struct wined3d_context_gl *wined3d_context_gl_const(const st
     return CONTAINING_RECORD(context, struct wined3d_context_gl, c);
 }
 
+void wined3d_context_gl_active_texture(struct wined3d_context_gl *context_gl,
+        const struct wined3d_gl_info *gl_info, unsigned int unit) DECLSPEC_HIDDEN;
 void wined3d_context_gl_alloc_fence(struct wined3d_context_gl *context_gl,
         struct wined3d_fence *fence) DECLSPEC_HIDDEN;
 void wined3d_context_gl_alloc_occlusion_query(struct wined3d_context_gl *context_gl,
@@ -2238,8 +2240,6 @@ BOOL wined3d_clip_blit(const RECT *clip_rect, RECT *clipped, RECT *other) DECLSP
 
 struct wined3d_context *context_acquire(const struct wined3d_device *device,
         struct wined3d_texture *texture, unsigned int sub_resource_idx) DECLSPEC_HIDDEN;
-void context_active_texture(struct wined3d_context *context, const struct wined3d_gl_info *gl_info,
-        unsigned int unit) DECLSPEC_HIDDEN;
 void context_bind_bo(struct wined3d_context *context, GLenum binding, GLuint name) DECLSPEC_HIDDEN;
 void context_bind_dummy_textures(const struct wined3d_context *context) DECLSPEC_HIDDEN;
 void context_copy_bo_address(struct wined3d_context *context,

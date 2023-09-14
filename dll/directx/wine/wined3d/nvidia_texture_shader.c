@@ -501,7 +501,7 @@ static void nvrc_colorop(struct wined3d_context *context, const struct wined3d_s
             FIXME("Attempt to enable unsupported stage!\n");
             return;
         }
-        context_active_texture(context, gl_info, mapped_stage);
+        wined3d_context_gl_active_texture(context_gl, gl_info, mapped_stage);
     }
 
     if (context->lowest_disabled_stage > 0)
@@ -579,9 +579,9 @@ static void nvrc_colorop(struct wined3d_context *context, const struct wined3d_s
         BOOL usedBump = !!(context->texShaderBumpMap & 1u << (stage + 1));
         if (usesBump != usedBump)
         {
-            context_active_texture(context, gl_info, mapped_stage + 1);
+            wined3d_context_gl_active_texture(context_gl, gl_info, mapped_stage + 1);
             nvts_activate_dimensions(state, stage + 1, context);
-            context_active_texture(context, gl_info, mapped_stage);
+            wined3d_context_gl_active_texture(context_gl, gl_info, mapped_stage);
         }
     }
 }
@@ -639,7 +639,7 @@ static void nvts_bumpenvmat(struct wined3d_context *context, const struct wined3
      */
     if (mapped_stage < gl_info->limits.textures)
     {
-        context_active_texture(context, gl_info, mapped_stage);
+        wined3d_context_gl_active_texture(context_gl, gl_info, mapped_stage);
 
         /* We can't just pass a pointer to the state to GL due to the
          * different matrix format (column major vs row major). */

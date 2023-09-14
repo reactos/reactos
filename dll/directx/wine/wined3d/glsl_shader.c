@@ -12779,7 +12779,7 @@ static void glsl_blitter_upload_palette(struct wined3d_glsl_blitter *blitter,
     if (!blitter->palette_texture)
         gl_info->gl_ops.gl.p_glGenTextures(1, &blitter->palette_texture);
 
-    context_active_texture(&context_gl->c, gl_info, 1);
+    wined3d_context_gl_active_texture(context_gl, gl_info, 1);
     gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_1D, blitter->palette_texture);
     gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -12799,7 +12799,7 @@ static void glsl_blitter_upload_palette(struct wined3d_glsl_blitter *blitter,
                 GL_UNSIGNED_INT_8_8_8_8_REV, &black);
     }
 
-    context_active_texture(&context_gl->c, gl_info, 0);
+    wined3d_context_gl_active_texture(context_gl, gl_info, 0);
 }
 
 /* Context activation is done by the caller. */

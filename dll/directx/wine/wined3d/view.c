@@ -847,7 +847,7 @@ void wined3d_shader_resource_view_gl_bind(struct wined3d_shader_resource_view_gl
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture_gl *texture_gl;
 
-    context_active_texture(context, gl_info, unit);
+    wined3d_context_gl_active_texture(context_gl, gl_info, unit);
 
     if (view_gl->gl_view.name)
     {

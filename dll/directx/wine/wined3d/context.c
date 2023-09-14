@@ -2209,7 +2209,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
          */
         for (i = 1; i < gl_info->limits.textures; ++i)
         {
-            context_active_texture(context, gl_info, i);
+            wined3d_context_gl_active_texture(context_gl, gl_info, i);
             gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_SHADER_NV,
                     GL_PREVIOUS_TEXTURE_INPUT_NV, GL_TEXTURE0_ARB + i - 1);
             checkGLcall("glTexEnvi(GL_TEXTURE_SHADER_NV, GL_PREVIOUS_TEXTURE_INPUT_NV, ...");
@@ -2240,7 +2240,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
     {
         for (i = 0; i < gl_info->limits.textures; ++i)
         {
-            context_active_texture(context, gl_info, i);
+            wined3d_context_gl_active_texture(context_gl, gl_info, i);
             gl_info->gl_ops.gl.p_glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
             checkGLcall("glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE)");
         }
@@ -2515,11 +2515,12 @@ void wined3d_context_gl_set_draw_buffer(struct wined3d_context_gl *context_gl, G
 }
 
 /* Context activation is done by the caller. */
-void context_active_texture(struct wined3d_context *context, const struct wined3d_gl_info *gl_info, unsigned int unit)
+void wined3d_context_gl_active_texture(struct wined3d_context_gl *context_gl,
+        const struct wined3d_gl_info *gl_info, unsigned int unit)
 {
     GL_EXTCALL(glActiveTexture(GL_TEXTURE0 + unit));
     checkGLcall("glActiveTexture");
-    context->active_texture = unit;
+    context_gl->c.active_texture = unit;
 }
 
 void context_bind_bo(struct wined3d_context *context, GLenum binding, GLuint name)
@@ -2808,7 +2809,7 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
 
     if (gl_info->supported[ARB_SAMPLER_OBJECTS])
         GL_EXTCALL(glBindSampler(0, 0));
-    context_active_texture(context, gl_info, 0);
+    wined3d_context_gl_active_texture(context_gl, gl_info, 0);
 
     sampler = context_gl->rev_tex_unit_map[0];
     if (sampler != WINED3D_UNMAPPED_STAGE)
@@ -2923,7 +2924,7 @@ void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_
      * from. */
     for (i = gl_info->limits.textures - 1; i > 0 ; --i)
     {
-        context_active_texture(context, gl_info, i);
+        wined3d_context_gl_active_texture(context_gl, gl_info, i);
 
         if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
             gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_CUBE_MAP_ARB);
@@ -2943,7 +2944,7 @@ void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_
         }
     }
 
-    context_active_texture(context, gl_info, 0);
+    wined3d_context_gl_active_texture(context_gl, gl_info, 0);
 
     if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
         gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_CUBE_MAP_ARB);

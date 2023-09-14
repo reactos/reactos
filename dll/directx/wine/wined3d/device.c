@@ -688,7 +688,7 @@ static void wined3d_device_gl_create_dummy_textures(struct wined3d_device_gl *de
      * OpenGL will only allow that when a valid texture is bound.
      * We emulate this by creating dummy textures and binding them
      * to each texture stage when the currently set D3D texture is NULL. */
-    context_active_texture(&context_gl->c, gl_info, 0);
+    wined3d_context_gl_active_texture(context_gl, gl_info, 0);
 
     gl_info->gl_ops.gl.p_glGenTextures(1, &textures->tex_1d);
     TRACE("Dummy 1D texture given name %u.\n", textures->tex_1d);
