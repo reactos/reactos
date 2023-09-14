@@ -2188,6 +2188,8 @@ void context_gl_resource_released(struct wined3d_device *device,
         GLuint name, BOOL rb_namespace) DECLSPEC_HIDDEN;
 void context_invalidate_compute_state(struct wined3d_context *context, DWORD state_id) DECLSPEC_HIDDEN;
 void context_invalidate_state(struct wined3d_context *context, DWORD state_id) DECLSPEC_HIDDEN;
+void context_load_tex_coords(const struct wined3d_context *context, const struct wined3d_stream_info *si,
+        GLuint *current_bo, const struct wined3d_state *state) DECLSPEC_HIDDEN;
 void *context_map_bo_address(struct wined3d_context *context, const struct wined3d_bo_address *data,
         size_t size, GLenum binding, DWORD flags) DECLSPEC_HIDDEN;
 struct wined3d_context *context_reacquire(const struct wined3d_device *device,
@@ -2204,8 +2206,11 @@ void context_state_drawbuf(struct wined3d_context *context,
 void context_state_fb(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id) DECLSPEC_HIDDEN;
 void context_texture_update(struct wined3d_context *context, const struct wined3d_texture *texture) DECLSPEC_HIDDEN;
+void context_unload_tex_coords(const struct wined3d_context *context) DECLSPEC_HIDDEN;
 void context_unmap_bo_address(struct wined3d_context *context,
         const struct wined3d_bo_address *data, GLenum binding) DECLSPEC_HIDDEN;
+void context_update_stream_sources(struct wined3d_context *context,
+        const struct wined3d_state *state) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * Internal representation of a light

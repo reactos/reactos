@@ -5100,6 +5100,527 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
     context_release(context);
 }
 
+void context_unload_tex_coords(const struct wined3d_context *context)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    unsigned int texture_idx;
+
+    for (texture_idx = 0; texture_idx < gl_info->limits.texture_coords; ++texture_idx)
+    {
+        gl_info->gl_ops.ext.p_glClientActiveTextureARB(GL_TEXTURE0_ARB + texture_idx);
+        gl_info->gl_ops.gl.p_glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    }
+}
+
+void context_load_tex_coords(const struct wined3d_context *context, const struct wined3d_stream_info *si,
+        GLuint *current_bo, const struct wined3d_state *state)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    unsigned int mapped_stage = 0;
+    unsigned int texture_idx;
+
+    for (texture_idx = 0; texture_idx < context->d3d_info->limits.ffp_blend_stages; ++texture_idx)
+    {
+        unsigned int coord_idx = state->texture_states[texture_idx][WINED3D_TSS_TEXCOORD_INDEX];
+
+        if ((mapped_stage = context->tex_unit_map[texture_idx]) == WINED3D_UNMAPPED_STAGE)
+            continue;
+
+        if (mapped_stage >= gl_info->limits.texture_coords)
+        {
+            FIXME("Attempted to load unsupported texture coordinate %u.\n", mapped_stage);
+            continue;
+        }
+
+        if (coord_idx < MAX_TEXTURES && (si->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx))))
+        {
+            const struct wined3d_stream_info_element *e = &si->elements[WINED3D_FFP_TEXCOORD0 + coord_idx];
+
+            TRACE("Setting up texture %u, idx %d, coord_idx %u, data {%#x:%p}.\n",
+                    texture_idx, mapped_stage, coord_idx, e->data.buffer_object, e->data.addr);
+
+            if (*current_bo != e->data.buffer_object)
+            {
+                GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, e->data.buffer_object));
+                checkGLcall("glBindBuffer");
+                *current_bo = e->data.buffer_object;
+            }
+
+            GL_EXTCALL(glClientActiveTextureARB(GL_TEXTURE0_ARB + mapped_stage));
+            checkGLcall("glClientActiveTextureARB");
+
+            /* The coords to supply depend completely on the fvf/vertex shader. */
+            gl_info->gl_ops.gl.p_glTexCoordPointer(e->format->gl_vtx_format, e->format->gl_vtx_type, e->stride,
+                    e->data.addr + state->load_base_vertex_index * e->stride);
+            gl_info->gl_ops.gl.p_glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        }
+        else
+        {
+            GL_EXTCALL(glMultiTexCoord4fARB(GL_TEXTURE0_ARB + mapped_stage, 0, 0, 0, 1));
+        }
+    }
+    if (gl_info->supported[NV_REGISTER_COMBINERS])
+    {
+        /* The number of the mapped stages increases monotonically, so it's fine to use the last used one. */
+        for (texture_idx = mapped_stage + 1; texture_idx < gl_info->limits.textures; ++texture_idx)
+        {
+            GL_EXTCALL(glMultiTexCoord4fARB(GL_TEXTURE0_ARB + texture_idx, 0, 0, 0, 1));
+        }
+    }
+
+    checkGLcall("loadTexCoords");
+}
+
+/* This should match any arrays loaded in context_load_vertex_data().
+ * TODO: Only load/unload arrays if we have to. */
+static void context_unload_vertex_data(const struct wined3d_context *context)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
+    gl_info->gl_ops.gl.p_glDisableClientState(GL_VERTEX_ARRAY);
+    gl_info->gl_ops.gl.p_glDisableClientState(GL_NORMAL_ARRAY);
+    gl_info->gl_ops.gl.p_glDisableClientState(GL_COLOR_ARRAY);
+    if (gl_info->supported[EXT_SECONDARY_COLOR])
+        gl_info->gl_ops.gl.p_glDisableClientState(GL_SECONDARY_COLOR_ARRAY_EXT);
+    context_unload_tex_coords(context);
+}
+
+static void context_load_vertex_data(struct wined3d_context *context,
+        const struct wined3d_stream_info *si, const struct wined3d_state *state)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_stream_info_element *e;
+    GLuint current_bo;
+
+    TRACE("context %p, si %p, state %p.\n", context, si, state);
+
+    /* This is used for the fixed-function pipeline only, and the
+     * fixed-function pipeline doesn't do instancing. */
+    context->instance_count = 0;
+    current_bo = gl_info->supported[ARB_VERTEX_BUFFER_OBJECT] ? ~0u : 0;
+
+    /* Blend data */
+    if ((si->use_map & (1u << WINED3D_FFP_BLENDWEIGHT))
+            || si->use_map & (1u << WINED3D_FFP_BLENDINDICES))
+    {
+        /* TODO: Support vertex blending in immediate mode draws. No need to
+         * write a FIXME here, this is done after the general vertex
+         * declaration decoding. */
+        WARN("Vertex blending not supported.\n");
+    }
+
+    /* Point Size */
+    if (si->use_map & (1u << WINED3D_FFP_PSIZE))
+    {
+        /* No such functionality in the fixed-function GL pipeline. */
+        WARN("Per-vertex point size not supported.\n");
+    }
+
+    /* Position */
+    if (si->use_map & (1u << WINED3D_FFP_POSITION))
+    {
+        e = &si->elements[WINED3D_FFP_POSITION];
+
+        if (current_bo != e->data.buffer_object)
+        {
+            GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, e->data.buffer_object));
+            checkGLcall("glBindBuffer");
+            current_bo = e->data.buffer_object;
+        }
+
+        TRACE("glVertexPointer(%#x, %#x, %#x, %p);\n",
+                e->format->gl_vtx_format, e->format->gl_vtx_type, e->stride,
+                e->data.addr + state->load_base_vertex_index * e->stride);
+        gl_info->gl_ops.gl.p_glVertexPointer(e->format->gl_vtx_format, e->format->gl_vtx_type, e->stride,
+                e->data.addr + state->load_base_vertex_index * e->stride);
+        checkGLcall("glVertexPointer(...)");
+        gl_info->gl_ops.gl.p_glEnableClientState(GL_VERTEX_ARRAY);
+        checkGLcall("glEnableClientState(GL_VERTEX_ARRAY)");
+    }
+
+    /* Normals */
+    if (si->use_map & (1u << WINED3D_FFP_NORMAL))
+    {
+        e = &si->elements[WINED3D_FFP_NORMAL];
+
+        if (current_bo != e->data.buffer_object)
+        {
+            GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, e->data.buffer_object));
+            checkGLcall("glBindBuffer");
+            current_bo = e->data.buffer_object;
+        }
+
+        TRACE("glNormalPointer(%#x, %#x, %p);\n", e->format->gl_vtx_type, e->stride,
+                e->data.addr + state->load_base_vertex_index * e->stride);
+        gl_info->gl_ops.gl.p_glNormalPointer(e->format->gl_vtx_type, e->stride,
+                e->data.addr + state->load_base_vertex_index * e->stride);
+        checkGLcall("glNormalPointer(...)");
+        gl_info->gl_ops.gl.p_glEnableClientState(GL_NORMAL_ARRAY);
+        checkGLcall("glEnableClientState(GL_NORMAL_ARRAY)");
+
+    }
+    else
+    {
+        gl_info->gl_ops.gl.p_glNormal3f(0, 0, 0);
+        checkGLcall("glNormal3f(0, 0, 0)");
+    }
+
+    /* Diffuse colour */
+    if (si->use_map & (1u << WINED3D_FFP_DIFFUSE))
+    {
+        e = &si->elements[WINED3D_FFP_DIFFUSE];
+
+        if (current_bo != e->data.buffer_object)
+        {
+            GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, e->data.buffer_object));
+            checkGLcall("glBindBuffer");
+            current_bo = e->data.buffer_object;
+        }
+
+        TRACE("glColorPointer(%#x, %#x %#x, %p);\n",
+                e->format->gl_vtx_format, e->format->gl_vtx_type, e->stride,
+                e->data.addr + state->load_base_vertex_index * e->stride);
+        gl_info->gl_ops.gl.p_glColorPointer(e->format->gl_vtx_format, e->format->gl_vtx_type, e->stride,
+                e->data.addr + state->load_base_vertex_index * e->stride);
+        checkGLcall("glColorPointer(4, GL_UNSIGNED_BYTE, ...)");
+        gl_info->gl_ops.gl.p_glEnableClientState(GL_COLOR_ARRAY);
+        checkGLcall("glEnableClientState(GL_COLOR_ARRAY)");
+
+    }
+    else
+    {
+        gl_info->gl_ops.gl.p_glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        checkGLcall("glColor4f(1, 1, 1, 1)");
+    }
+
+    /* Specular colour */
+    if (si->use_map & (1u << WINED3D_FFP_SPECULAR))
+    {
+        TRACE("Setting specular colour.\n");
+
+        e = &si->elements[WINED3D_FFP_SPECULAR];
+
+        if (gl_info->supported[EXT_SECONDARY_COLOR])
+        {
+            GLenum type = e->format->gl_vtx_type;
+            GLint format = e->format->gl_vtx_format;
+
+            if (current_bo != e->data.buffer_object)
+            {
+                GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, e->data.buffer_object));
+                checkGLcall("glBindBuffer");
+                current_bo = e->data.buffer_object;
+            }
+
+            if (format != 4 || (gl_info->quirks & WINED3D_QUIRK_ALLOWS_SPECULAR_ALPHA))
+            {
+                /* Usually specular colors only allow 3 components, since they have no alpha. In D3D, the specular alpha
+                 * contains the fog coordinate, which is passed to GL with GL_EXT_fog_coord. However, the fixed function
+                 * vertex pipeline can pass the specular alpha through, and pixel shaders can read it. So it GL accepts
+                 * 4 component secondary colors use it
+                 */
+                TRACE("glSecondaryColorPointer(%#x, %#x, %#x, %p);\n", format, type, e->stride,
+                        e->data.addr + state->load_base_vertex_index * e->stride);
+                GL_EXTCALL(glSecondaryColorPointerEXT(format, type, e->stride,
+                        e->data.addr + state->load_base_vertex_index * e->stride));
+                checkGLcall("glSecondaryColorPointerEXT(format, type, ...)");
+            }
+            else
+            {
+                switch (type)
+                {
+                    case GL_UNSIGNED_BYTE:
+                        TRACE("glSecondaryColorPointer(3, GL_UNSIGNED_BYTE, %#x, %p);\n", e->stride,
+                                e->data.addr + state->load_base_vertex_index * e->stride);
+                        GL_EXTCALL(glSecondaryColorPointerEXT(3, GL_UNSIGNED_BYTE, e->stride,
+                                e->data.addr + state->load_base_vertex_index * e->stride));
+                        checkGLcall("glSecondaryColorPointerEXT(3, GL_UNSIGNED_BYTE, ...)");
+                        break;
+
+                    default:
+                        FIXME("Add 4 component specular colour pointers for type %#x.\n", type);
+                        /* Make sure that the right colour component is dropped. */
+                        TRACE("glSecondaryColorPointer(3, %#x, %#x, %p);\n", type, e->stride,
+                                e->data.addr + state->load_base_vertex_index * e->stride);
+                        GL_EXTCALL(glSecondaryColorPointerEXT(3, type, e->stride,
+                                e->data.addr + state->load_base_vertex_index * e->stride));
+                        checkGLcall("glSecondaryColorPointerEXT(3, type, ...)");
+                }
+            }
+            gl_info->gl_ops.gl.p_glEnableClientState(GL_SECONDARY_COLOR_ARRAY_EXT);
+            checkGLcall("glEnableClientState(GL_SECONDARY_COLOR_ARRAY_EXT)");
+        }
+        else
+        {
+            WARN("Specular colour is not supported in this GL implementation.\n");
+        }
+    }
+    else
+    {
+        if (gl_info->supported[EXT_SECONDARY_COLOR])
+        {
+            GL_EXTCALL(glSecondaryColor3fEXT)(0, 0, 0);
+            checkGLcall("glSecondaryColor3fEXT(0, 0, 0)");
+        }
+        else
+        {
+            WARN("Specular colour is not supported in this GL implementation.\n");
+        }
+    }
+
+    /* Texture coordinates */
+    context_load_tex_coords(context, si, &current_bo, state);
+}
+
+static void context_unload_numbered_array(struct wined3d_context *context, unsigned int i)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
+    GL_EXTCALL(glDisableVertexAttribArray(i));
+    checkGLcall("glDisableVertexAttribArray");
+    if (gl_info->supported[ARB_INSTANCED_ARRAYS])
+        GL_EXTCALL(glVertexAttribDivisor(i, 0));
+
+    context->numbered_array_mask &= ~(1u << i);
+}
+
+/* This should match any arrays loaded in loadNumberedArrays.
+ * TODO: Only load / unload arrays if we have to. */
+static void context_unload_numbered_arrays(struct wined3d_context *context)
+{
+    unsigned int i;
+
+    /* Disable any attributes. */
+    for (i = 0; i < context->gl_info->limits.vertex_attribs; ++i)
+    {
+        context_unload_numbered_array(context, i);
+    }
+}
+
+static void context_load_numbered_arrays(struct wined3d_context *context,
+        const struct wined3d_stream_info *stream_info, const struct wined3d_state *state)
+{
+    const struct wined3d_shader *vs = state->shader[WINED3D_SHADER_TYPE_VERTEX];
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    GLuint current_bo;
+    unsigned int i;
+
+    /* Default to no instancing. */
+    context->instance_count = 0;
+    current_bo = gl_info->supported[ARB_VERTEX_BUFFER_OBJECT] ? ~0u : 0;
+
+    for (i = 0; i < MAX_ATTRIBS; ++i)
+    {
+        const struct wined3d_stream_info_element *element = &stream_info->elements[i];
+        const struct wined3d_stream_state *stream;
+
+        if (!(stream_info->use_map & (1u << i)))
+        {
+            if (context->numbered_array_mask & (1u << i))
+                context_unload_numbered_array(context, i);
+            if (!use_vs(state) && i == WINED3D_FFP_DIFFUSE)
+                GL_EXTCALL(glVertexAttrib4f(i, 1.0f, 1.0f, 1.0f, 1.0f));
+            else
+                GL_EXTCALL(glVertexAttrib4f(i, 0.0f, 0.0f, 0.0f, 0.0f));
+            continue;
+        }
+
+        stream = &state->streams[element->stream_idx];
+
+        if ((stream->flags & WINED3DSTREAMSOURCE_INSTANCEDATA) && !context->instance_count)
+            context->instance_count = state->streams[0].frequency ? state->streams[0].frequency : 1;
+
+        if (gl_info->supported[ARB_INSTANCED_ARRAYS])
+        {
+            GL_EXTCALL(glVertexAttribDivisor(i, element->divisor));
+        }
+        else if (element->divisor)
+        {
+            /* Unload instanced arrays, they will be loaded using immediate
+             * mode instead. */
+            if (context->numbered_array_mask & (1u << i))
+                context_unload_numbered_array(context, i);
+            continue;
+        }
+
+        TRACE("Loading array %u [VBO=%u].\n", i, element->data.buffer_object);
+
+        if (element->stride)
+        {
+            if (current_bo != element->data.buffer_object)
+            {
+                GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, element->data.buffer_object));
+                checkGLcall("glBindBuffer");
+                current_bo = element->data.buffer_object;
+            }
+            /* Use the VBO to find out if a vertex buffer exists, not the vb
+             * pointer. vb can point to a user pointer data blob. In that case
+             * current_bo will be 0. If there is a vertex buffer but no vbo we
+             * won't be load converted attributes anyway. */
+            if (vs && vs->reg_maps.shader_version.major >= 4
+                    && (element->format->flags[WINED3D_GL_RES_TYPE_BUFFER] & WINED3DFMT_FLAG_INTEGER))
+            {
+                GL_EXTCALL(glVertexAttribIPointer(i, element->format->gl_vtx_format, element->format->gl_vtx_type,
+                        element->stride, element->data.addr + state->load_base_vertex_index * element->stride));
+            }
+            else
+            {
+                GL_EXTCALL(glVertexAttribPointer(i, element->format->gl_vtx_format, element->format->gl_vtx_type,
+                        element->format->gl_normalized, element->stride,
+                        element->data.addr + state->load_base_vertex_index * element->stride));
+            }
+
+            if (!(context->numbered_array_mask & (1u << i)))
+            {
+                GL_EXTCALL(glEnableVertexAttribArray(i));
+                context->numbered_array_mask |= (1u << i);
+            }
+        }
+        else
+        {
+            /* Stride = 0 means always the same values.
+             * glVertexAttribPointer() doesn't do that. Instead disable the
+             * pointer and set up the attribute statically. But we have to
+             * figure out the system memory address. */
+            const BYTE *ptr = element->data.addr;
+            if (element->data.buffer_object)
+                ptr += (ULONG_PTR)wined3d_buffer_load_sysmem(stream->buffer, context);
+
+            if (context->numbered_array_mask & (1u << i))
+                context_unload_numbered_array(context, i);
+
+            switch (element->format->id)
+            {
+                case WINED3DFMT_R32_FLOAT:
+                    GL_EXTCALL(glVertexAttrib1fv(i, (const GLfloat *)ptr));
+                    break;
+                case WINED3DFMT_R32G32_FLOAT:
+                    GL_EXTCALL(glVertexAttrib2fv(i, (const GLfloat *)ptr));
+                    break;
+                case WINED3DFMT_R32G32B32_FLOAT:
+                    GL_EXTCALL(glVertexAttrib3fv(i, (const GLfloat *)ptr));
+                    break;
+                case WINED3DFMT_R32G32B32A32_FLOAT:
+                    GL_EXTCALL(glVertexAttrib4fv(i, (const GLfloat *)ptr));
+                    break;
+                case WINED3DFMT_R8G8B8A8_UINT:
+                    GL_EXTCALL(glVertexAttrib4ubv(i, ptr));
+                    break;
+                case WINED3DFMT_B8G8R8A8_UNORM:
+                    if (gl_info->supported[ARB_VERTEX_ARRAY_BGRA])
+                    {
+                        const DWORD *src = (const DWORD *)ptr;
+                        DWORD c = *src & 0xff00ff00u;
+                        c |= (*src & 0xff0000u) >> 16;
+                        c |= (*src & 0xffu) << 16;
+                        GL_EXTCALL(glVertexAttrib4Nubv(i, (GLubyte *)&c));
+                        break;
+                    }
+                    /* else fallthrough */
+                case WINED3DFMT_R8G8B8A8_UNORM:
+                    GL_EXTCALL(glVertexAttrib4Nubv(i, ptr));
+                    break;
+                case WINED3DFMT_R16G16_SINT:
+                    GL_EXTCALL(glVertexAttrib2sv(i, (const GLshort *)ptr));
+                    break;
+                case WINED3DFMT_R16G16B16A16_SINT:
+                    GL_EXTCALL(glVertexAttrib4sv(i, (const GLshort *)ptr));
+                    break;
+                case WINED3DFMT_R16G16_SNORM:
+                {
+                    const GLshort s[4] = {((const GLshort *)ptr)[0], ((const GLshort *)ptr)[1], 0, 1};
+                    GL_EXTCALL(glVertexAttrib4Nsv(i, s));
+                    break;
+                }
+                case WINED3DFMT_R16G16_UNORM:
+                {
+                    const GLushort s[4] = {((const GLushort *)ptr)[0], ((const GLushort *)ptr)[1], 0, 1};
+                    GL_EXTCALL(glVertexAttrib4Nusv(i, s));
+                    break;
+                }
+                case WINED3DFMT_R16G16B16A16_SNORM:
+                    GL_EXTCALL(glVertexAttrib4Nsv(i, (const GLshort *)ptr));
+                    break;
+                case WINED3DFMT_R16G16B16A16_UNORM:
+                    GL_EXTCALL(glVertexAttrib4Nusv(i, (const GLushort *)ptr));
+                    break;
+                case WINED3DFMT_R10G10B10X2_UINT:
+                    FIXME("Unsure about WINED3DDECLTYPE_UDEC3.\n");
+                    /*glVertexAttrib3usvARB(i, (const GLushort *)ptr); Does not exist */
+                    break;
+                case WINED3DFMT_R10G10B10X2_SNORM:
+                    FIXME("Unsure about WINED3DDECLTYPE_DEC3N.\n");
+                    /*glVertexAttrib3NusvARB(i, (const GLushort *)ptr); Does not exist */
+                    break;
+                case WINED3DFMT_R16G16_FLOAT:
+                    if (gl_info->supported[NV_HALF_FLOAT] && gl_info->supported[NV_VERTEX_PROGRAM])
+                    {
+                        /* Not supported by GL_ARB_half_float_vertex. */
+                        GL_EXTCALL(glVertexAttrib2hvNV(i, (const GLhalfNV *)ptr));
+                    }
+                    else
+                    {
+                        float x = float_16_to_32(((const unsigned short *)ptr) + 0);
+                        float y = float_16_to_32(((const unsigned short *)ptr) + 1);
+                        GL_EXTCALL(glVertexAttrib2f(i, x, y));
+                    }
+                    break;
+                case WINED3DFMT_R16G16B16A16_FLOAT:
+                    if (gl_info->supported[NV_HALF_FLOAT] && gl_info->supported[NV_VERTEX_PROGRAM])
+                    {
+                        /* Not supported by GL_ARB_half_float_vertex. */
+                        GL_EXTCALL(glVertexAttrib4hvNV(i, (const GLhalfNV *)ptr));
+                    }
+                    else
+                    {
+                        float x = float_16_to_32(((const unsigned short *)ptr) + 0);
+                        float y = float_16_to_32(((const unsigned short *)ptr) + 1);
+                        float z = float_16_to_32(((const unsigned short *)ptr) + 2);
+                        float w = float_16_to_32(((const unsigned short *)ptr) + 3);
+                        GL_EXTCALL(glVertexAttrib4f(i, x, y, z, w));
+                    }
+                    break;
+                default:
+                    ERR("Unexpected declaration in stride 0 attributes.\n");
+                    break;
+
+            }
+        }
+    }
+    checkGLcall("Loading numbered arrays");
+}
+
+void context_update_stream_sources(struct wined3d_context *context, const struct wined3d_state *state)
+{
+    BOOL load_numbered = context->d3d_info->ffp_generic_attributes
+            || (use_vs(state) && !context->use_immediate_mode_draw);
+    BOOL load_named = !context->d3d_info->ffp_generic_attributes
+            && !use_vs(state) && !context->use_immediate_mode_draw;
+
+    if (context->numbered_array_mask && !load_numbered)
+    {
+        context_unload_numbered_arrays(context);
+        context->numbered_array_mask = 0;
+    }
+    else if (context->namedArraysLoaded)
+    {
+        context_unload_vertex_data(context);
+        context->namedArraysLoaded = FALSE;
+    }
+
+    if (load_numbered)
+    {
+        TRACE("Loading numbered arrays.\n");
+        context_load_numbered_arrays(context, &context->stream_info, state);
+    }
+    else if (load_named)
+    {
+        TRACE("Loading vertex data.\n");
+        context_load_vertex_data(context, &context->stream_info, state);
+        context->namedArraysLoaded = TRUE;
+    }
+}
+
 static void apply_texture_blit_state(const struct wined3d_gl_info *gl_info, struct gl_texture *texture,
         GLenum target, unsigned int level, enum wined3d_texture_filter_type filter)
 {
