@@ -4114,14 +4114,6 @@ HRESULT CDECL wined3d_device_copy_sub_resource_region(struct wined3d_device *dev
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (src_resource->type != dst_resource->type)
-    {
-        WARN("Resource types (%s / %s) don't match.\n",
-                debug_d3dresourcetype(dst_resource->type),
-                debug_d3dresourcetype(src_resource->type));
-        return WINED3DERR_INVALIDCALL;
-    }
-
     if (src_resource->format->typeless_id != dst_resource->format->typeless_id
             || (!src_resource->format->typeless_id && src_resource->format->id != dst_resource->format->id))
     {
@@ -4133,6 +4125,14 @@ HRESULT CDECL wined3d_device_copy_sub_resource_region(struct wined3d_device *dev
 
     if (dst_resource->type == WINED3D_RTYPE_BUFFER)
     {
+        if (src_resource->type != WINED3D_RTYPE_BUFFER)
+        {
+            WARN("Resource types (%s / %s) don't match.\n",
+                    debug_d3dresourcetype(dst_resource->type),
+                    debug_d3dresourcetype(src_resource->type));
+            return WINED3DERR_INVALIDCALL;
+        }
+
         if (dst_sub_resource_idx)
         {
             WARN("Invalid dst_sub_resource_idx %u.\n", dst_sub_resource_idx);
