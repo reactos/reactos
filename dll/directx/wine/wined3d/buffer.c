@@ -1390,7 +1390,7 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
         /* SWvp and managed buffers always return the same pointer in buffer
          * maps and retain data in DISCARD maps. Keep a system memory copy of
          * the buffer to provide the same behavior to the application. */
-        TRACE("Using doublebuffer mode.\n");
+        TRACE("Pinning system memory.\n");
         buffer->flags |= WINED3D_BUFFER_PIN_SYSMEM;
     }
 
