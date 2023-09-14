@@ -3145,7 +3145,6 @@ static void shader_cleanup(struct wined3d_shader *shader)
     else if (shader->reg_maps.shader_version.type == WINED3D_SHADER_TYPE_GEOMETRY)
     {
         heap_free((void *)shader->u.gs.so_desc.elements);
-        heap_free(shader->u.gs.output_register_idx);
     }
 
     heap_free(shader->patch_constant_signature.elements);
@@ -3729,7 +3728,7 @@ static HRESULT vertex_shader_init(struct wined3d_shader *shader, struct wined3d_
     return WINED3D_OK;
 }
 
-static struct wined3d_shader_signature_element *shader_find_signature_element(const struct wined3d_shader_signature *s,
+struct wined3d_shader_signature_element *shader_find_signature_element(const struct wined3d_shader_signature *s,
         unsigned int stream_idx, const char *semantic_name, unsigned int semantic_idx)
 {
     struct wined3d_shader_signature_element *e = s->elements;
@@ -3753,7 +3752,7 @@ static HRESULT geometry_shader_init_stream_output(struct wined3d_shader *shader,
     const struct wined3d_shader_signature_element *output;
     struct wined3d_stream_output_element *elements;
     struct wined3d_shader_version shader_version;
-    unsigned int i, j, mask;
+    unsigned int i, component_idx, mask;
     const DWORD *ptr;
     void *fe_data;
     HRESULT hr;
@@ -3792,9 +3791,6 @@ static HRESULT geometry_shader_init_stream_output(struct wined3d_shader *shader,
             return hr;
     }
 
-    if (!(shader->u.gs.output_register_idx = heap_calloc(so_desc->element_count, sizeof(*shader->u.gs.output_register_idx))))
-        return E_OUTOFMEMORY;
-
     if (!(elements = heap_calloc(so_desc->element_count, sizeof(*elements))))
         return E_OUTOFMEMORY;
 
@@ -3816,16 +3812,14 @@ static HRESULT geometry_shader_init_stream_output(struct wined3d_shader *shader,
         }
 
         e->semantic_name = output->semantic_name;
-        shader->u.gs.output_register_idx[i] = output->register_idx;
 
-        for (j = 0; j < 4; ++j)
+        for (component_idx = 0; component_idx < 4; ++component_idx)
         {
-            if ((1u << j) & output->mask)
+            if ((1u << component_idx) & output->mask)
                 break;
         }
-        e->component_idx += j;
-
-        mask = ((1u << e->component_count) - 1) << e->component_idx;
+        component_idx += e->component_idx;
+        mask = ((1u << e->component_count) - 1) << component_idx;
         if ((output->mask & 0xff & mask) != mask)
         {
             WARN("Invalid component range %u-%u (mask %#x), output mask %#x.\n",

@@ -1273,7 +1273,9 @@ extern const struct wined3d_shader_frontend sm1_shader_frontend DECLSPEC_HIDDEN;
 extern const struct wined3d_shader_frontend sm4_shader_frontend DECLSPEC_HIDDEN;
 
 HRESULT shader_extract_from_dxbc(struct wined3d_shader *shader,
-        unsigned int max_shader_version, enum wined3d_shader_byte_code_format *format);
+        unsigned int max_shader_version, enum wined3d_shader_byte_code_format *format) DECLSPEC_HIDDEN;
+struct wined3d_shader_signature_element *shader_find_signature_element(const struct wined3d_shader_signature *s,
+        unsigned int stream_idx, const char *semantic_name, unsigned int semantic_idx) DECLSPEC_HIDDEN;
 
 typedef void (*SHADER_HANDLER)(const struct wined3d_shader_instruction *);
 
@@ -4256,7 +4258,6 @@ struct wined3d_geometry_shader
     unsigned int instance_count;
 
     struct wined3d_stream_output_desc so_desc;
-    unsigned int *output_register_idx;
 };
 
 struct wined3d_pixel_shader
