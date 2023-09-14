@@ -613,3 +613,35 @@ const struct wined3d_format *wined3d_resource_get_decompress_format(const struct
         return wined3d_get_format(adapter, WINED3DFMT_B8G8R8A8_UNORM_SRGB, resource->bind_flags);
     return wined3d_get_format(adapter, WINED3DFMT_B8G8R8A8_UNORM, resource->bind_flags);
 }
+
+unsigned int wined3d_resource_get_sample_count(const struct wined3d_resource *resource)
+{
+    const struct wined3d_format *format = resource->format;
+
+    /* TODO: NVIDIA expose their Coverage Sample Anti-Aliasing (CSAA)
+     * feature through type == MULTISAMPLE_XX and quality != 0. This could
+     * be mapped to GL_NV_framebuffer_multisample_coverage.
+     *
+     * AMD have a similar feature called Enhanced Quality Anti-Aliasing
+     * (EQAA), but it does not have an equivalent OpenGL extension. */
+
+    /* We advertise as many WINED3D_MULTISAMPLE_NON_MASKABLE quality
+     * levels as the count of advertised multisample types for the texture
+     * format. */
+    if (resource->multisample_type == WINED3D_MULTISAMPLE_NON_MASKABLE)
+    {
+        unsigned int i, count = 0;
+
+        for (i = 0; i < sizeof(format->multisample_types) * CHAR_BIT; ++i)
+        {
+            if (format->multisample_types & 1u << i)
+            {
+                if (resource->multisample_quality == count++)
+                    break;
+            }
+        }
+        return i + 1;
+    }
+
+    return resource->multisample_type;
+}

@@ -530,38 +530,6 @@ static void gltexture_delete(struct wined3d_device *device, const struct wined3d
     tex->name = 0;
 }
 
-static unsigned int wined3d_texture_get_gl_sample_count(const struct wined3d_texture *texture)
-{
-    const struct wined3d_format *format = texture->resource.format;
-
-    /* TODO: NVIDIA expose their Coverage Sample Anti-Aliasing (CSAA)
-     * feature through type == MULTISAMPLE_XX and quality != 0. This could
-     * be mapped to GL_NV_framebuffer_multisample_coverage.
-     *
-     * AMD have a similar feature called Enhanced Quality Anti-Aliasing
-     * (EQAA), but it does not have an equivalent OpenGL extension. */
-
-    /* We advertise as many WINED3D_MULTISAMPLE_NON_MASKABLE quality
-     * levels as the count of advertised multisample types for the texture
-     * format. */
-    if (texture->resource.multisample_type == WINED3D_MULTISAMPLE_NON_MASKABLE)
-    {
-        unsigned int i, count = 0;
-
-        for (i = 0; i < sizeof(format->multisample_types) * CHAR_BIT; ++i)
-        {
-            if (format->multisample_types & 1u << i)
-            {
-                if (texture->resource.multisample_quality == count++)
-                    break;
-            }
-        }
-        return i + 1;
-    }
-
-    return texture->resource.multisample_type;
-}
-
 /* Context activation is done by the caller. */
 /* The caller is responsible for binding the correct texture. */
 static void wined3d_texture_gl_allocate_mutable_storage(struct wined3d_texture_gl *texture_gl,
@@ -624,7 +592,7 @@ static void wined3d_texture_gl_allocate_mutable_storage(struct wined3d_texture_g
 static void wined3d_texture_gl_allocate_immutable_storage(struct wined3d_texture_gl *texture_gl,
         GLenum gl_internal_format, const struct wined3d_gl_info *gl_info)
 {
-    unsigned int samples = wined3d_texture_get_gl_sample_count(&texture_gl->t);
+    unsigned int samples = wined3d_resource_get_sample_count(&texture_gl->t.resource);
     GLsizei height = wined3d_texture_get_level_pow2_height(&texture_gl->t, 0);
     GLsizei width = wined3d_texture_get_level_pow2_width(&texture_gl->t, 0);
     GLboolean standard_pattern = texture_gl->t.resource.multisample_type != WINED3D_MULTISAMPLE_NON_MASKABLE
@@ -1813,7 +1781,7 @@ static void wined3d_texture_gl_prepare_rb(struct wined3d_texture_gl *texture_gl,
         if (texture_gl->rb_multisample)
             return;
 
-        samples = wined3d_texture_get_gl_sample_count(&texture_gl->t);
+        samples = wined3d_resource_get_sample_count(&texture_gl->t.resource);
 
         gl_info->fbo_ops.glGenRenderbuffers(1, &texture_gl->rb_multisample);
         gl_info->fbo_ops.glBindRenderbuffer(GL_RENDERBUFFER, texture_gl->rb_multisample);
