@@ -527,7 +527,16 @@ static void ddraw_surface_cleanup(struct ddraw_surface *surface)
         surf = surface->complex_array[i];
         surface->complex_array[i] = NULL;
         if (!surf->is_complex_root)
+        {
+            struct ddraw_texture *texture = wined3d_texture_get_parent(surf->wined3d_texture);
+            struct wined3d_device *wined3d_device = texture->wined3d_device;
+            struct ddraw_surface *root = texture->root;
+
             ddraw_surface_cleanup(surf);
+
+            if (surf == root)
+                wined3d_device_decref(wined3d_device);
+        }
     }
 
     if (surface->device1)
