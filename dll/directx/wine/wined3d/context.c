@@ -1038,27 +1038,27 @@ void wined3d_context_gl_free_pipeline_statistics_query(struct wined3d_pipeline_s
     context_gl->free_pipeline_statistics_queries[context_gl->free_pipeline_statistics_query_count++] = query->u;
 }
 
-typedef void (context_fbo_entry_func_t)(struct wined3d_context *context, struct fbo_entry *entry);
+typedef void (context_fbo_entry_func_t)(struct wined3d_context_gl *context_gl, struct fbo_entry *entry);
 
-static void context_enum_fbo_entries(const struct wined3d_device *device,
+static void wined3d_context_gl_enum_fbo_entries(const struct wined3d_device *device,
         GLuint name, BOOL rb_namespace, context_fbo_entry_func_t *callback)
 {
     unsigned int i, j;
 
     for (i = 0; i < device->context_count; ++i)
     {
-        struct wined3d_context *context = device->contexts[i];
-        const struct wined3d_gl_info *gl_info = context->gl_info;
+        struct wined3d_context_gl *context_gl = wined3d_context_gl(device->contexts[i]);
+        const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
         struct fbo_entry *entry, *entry2;
 
-        LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &context->fbo_list, struct fbo_entry, entry)
+        LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &context_gl->c.fbo_list, struct fbo_entry, entry)
         {
             for (j = 0; j < gl_info->limits.buffers + 1; ++j)
             {
                 if (entry->key.objects[j].object == name
                         && !(entry->key.rb_namespace & (1 << j)) == !rb_namespace)
                 {
-                    callback(context, entry);
+                    callback(context_gl, entry);
                     break;
                 }
             }
@@ -1066,10 +1066,11 @@ static void context_enum_fbo_entries(const struct wined3d_device *device,
     }
 }
 
-static void context_queue_fbo_entry_destruction(struct wined3d_context *context, struct fbo_entry *entry)
+static void wined3d_context_gl_queue_fbo_entry_destruction(struct wined3d_context_gl *context_gl,
+        struct fbo_entry *entry)
 {
     list_remove(&entry->entry);
-    list_add_head(&context->fbo_destroy_list, &entry->entry);
+    list_add_head(&context_gl->c.fbo_destroy_list, &entry->entry);
 }
 
 void context_resource_released(const struct wined3d_device *device, struct wined3d_resource *resource)
@@ -1091,10 +1092,10 @@ void context_resource_released(const struct wined3d_device *device, struct wined
     }
 }
 
-void context_gl_resource_released(struct wined3d_device *device,
-        GLuint name, BOOL rb_namespace)
+void context_gl_resource_released(struct wined3d_device *device, GLuint name, BOOL rb_namespace)
 {
-    context_enum_fbo_entries(device, name, rb_namespace, context_queue_fbo_entry_destruction);
+    wined3d_context_gl_enum_fbo_entries(device, name, rb_namespace,
+            wined3d_context_gl_queue_fbo_entry_destruction);
 }
 
 void wined3d_context_gl_texture_update(struct wined3d_context_gl *context_gl,
