@@ -926,12 +926,19 @@ static LONG fullscreen_exstyle(LONG exstyle)
     return exstyle;
 }
 
-void CDECL wined3d_device_setup_fullscreen_window(struct wined3d_device *device, HWND window, UINT w, UINT h)
+HRESULT CDECL wined3d_device_setup_fullscreen_window(struct wined3d_device *device,
+        HWND window, unsigned int w, unsigned int h)
 {
     BOOL filter_messages;
     LONG style, exstyle;
 
     TRACE("Setting up window %p for fullscreen mode.\n", window);
+
+    if (!IsWindow(window))
+    {
+        WARN("%p is not a valid window.\n", window);
+        return WINED3DERR_NOTAVAILABLE;
+    }
 
     if (device->style || device->exStyle)
     {
@@ -956,6 +963,8 @@ void CDECL wined3d_device_setup_fullscreen_window(struct wined3d_device *device,
     SetWindowPos(window, HWND_TOPMOST, 0, 0, w, h, SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOACTIVATE);
 
     device->filter_messages = filter_messages;
+
+    return WINED3D_OK;
 }
 
 void CDECL wined3d_device_restore_fullscreen_window(struct wined3d_device *device, HWND window,

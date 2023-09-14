@@ -1487,7 +1487,9 @@ HRESULT CDECL wined3d_swapchain_set_fullscreen(struct wined3d_swapchain *swapcha
         if (swapchain->desc.windowed)
         {
             /* Switch from windowed to fullscreen */
-            wined3d_device_setup_fullscreen_window(device, swapchain->device_window, width, height);
+            if (FAILED(hr = wined3d_device_setup_fullscreen_window(device,
+                    swapchain->device_window, width, height)))
+                return hr;
         }
         else
         {
