@@ -3523,7 +3523,7 @@ static void sampler_texmatrix(struct wined3d_context *context, const struct wine
      * wined3d_texture_apply_state_changes() multiplies the set matrix with a fixup matrix. Before the
      * scaling is reapplied or removed, the texture matrix has to be reapplied.
      */
-    if (sampler < MAX_TEXTURES)
+    if (sampler < WINED3D_MAX_TEXTURES)
     {
         const BOOL tex_is_pow2 = !(texture->flags & WINED3D_TEXTURE_POW2_MAT_IDENT);
 
@@ -4015,7 +4015,7 @@ static void vertexdeclaration(struct wined3d_context *context, const struct wine
     {
         unsigned int i;
 
-        for (i = 0; i < MAX_TEXTURES; ++i)
+        for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
         {
             if (!isStateDirty(context, STATE_TRANSFORM(WINED3D_TS_TEXTURE0 + i)))
                 transform_texture(context, state, STATE_TEXTURESTAGE(i, WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS));
@@ -5425,7 +5425,7 @@ static void prune_invalid_states(struct StateEntry *state_table, const struct wi
     unsigned int start, last, i;
 
     start = STATE_TEXTURESTAGE(d3d_info->limits.ffp_blend_stages, 0);
-    last = STATE_TEXTURESTAGE(MAX_TEXTURES - 1, WINED3D_HIGHEST_TEXTURE_STATE);
+    last = STATE_TEXTURESTAGE(WINED3D_MAX_TEXTURES - 1, WINED3D_HIGHEST_TEXTURE_STATE);
     for (i = start; i <= last; ++i)
     {
         state_table[i].representative = 0;
@@ -5433,7 +5433,7 @@ static void prune_invalid_states(struct StateEntry *state_table, const struct wi
     }
 
     start = STATE_TRANSFORM(WINED3D_TS_TEXTURE0 + d3d_info->limits.ffp_blend_stages);
-    last = STATE_TRANSFORM(WINED3D_TS_TEXTURE0 + MAX_TEXTURES - 1);
+    last = STATE_TRANSFORM(WINED3D_TS_TEXTURE0 + WINED3D_MAX_TEXTURES - 1);
     for (i = start; i <= last; ++i)
     {
         state_table[i].representative = 0;

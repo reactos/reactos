@@ -4098,7 +4098,7 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
         const struct wined3d_shader *vs = state->shader[WINED3D_SHADER_TYPE_VERTEX];
 
         args->texcoords_initialized = 0;
-        for (i = 0; i < MAX_TEXTURES; ++i)
+        for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
         {
             if (vs)
             {
@@ -4112,14 +4112,14 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
 
                 if ((state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX] >> WINED3D_FFP_TCI_SHIFT)
                         & WINED3D_FFP_TCI_MASK
-                        || (coord_idx < MAX_TEXTURES && (si->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx)))))
+                        || (coord_idx < WINED3D_MAX_TEXTURES && (si->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx)))))
                     args->texcoords_initialized |= 1u << i;
             }
         }
     }
     else
     {
-        args->texcoords_initialized = (1u << MAX_TEXTURES) - 1;
+        args->texcoords_initialized = (1u << WINED3D_MAX_TEXTURES) - 1;
     }
 
     args->pointsprite = state->render_states[WINED3D_RS_POINTSPRITEENABLE]

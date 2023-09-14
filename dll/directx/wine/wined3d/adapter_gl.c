@@ -2915,13 +2915,13 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct 
         if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
         {
             gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &gl_max);
-            gl_info->limits.textures = min(MAX_TEXTURES, gl_max);
+            gl_info->limits.textures = min(WINED3D_MAX_TEXTURES, gl_max);
             TRACE("Max textures: %d.\n", gl_info->limits.textures);
 
             if (gl_info->supported[ARB_FRAGMENT_PROGRAM])
             {
                 gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_TEXTURE_COORDS_ARB, &gl_max);
-                gl_info->limits.texture_coords = min(MAX_TEXTURES, gl_max);
+                gl_info->limits.texture_coords = min(WINED3D_MAX_TEXTURES, gl_max);
             }
             else
             {
@@ -2961,7 +2961,7 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct 
              * use any samplers. If fixed-function fragment processing is used
              * we have to make sure that all vertex sampler setups are valid
              * together with all possible fixed-function fragment processing
-             * setups. This is true if vsamplers + MAX_TEXTURES <= max_samplers.
+             * setups. This is true if vsamplers + WINED3D_MAX_TEXTURES <= max_samplers.
              * This is true on all Direct3D 9 cards that support vertex
              * texture fetch (GeForce 6 and GeForce 7 cards). Direct3D 9
              * Radeon cards do not support vertex texture fetch. Direct3D 10
@@ -2973,13 +2973,13 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct 
              * true. If not, write a warning and reduce the number of vertex
              * samplers or probably disable vertex texture fetch. */
             if (vertex_sampler_count && gl_info->limits.combined_samplers < 12
-                    && MAX_TEXTURES + vertex_sampler_count > gl_info->limits.combined_samplers)
+                    && WINED3D_MAX_TEXTURES + vertex_sampler_count > gl_info->limits.combined_samplers)
             {
                 FIXME("OpenGL implementation supports %u vertex samplers and %u total samplers.\n",
                         vertex_sampler_count, gl_info->limits.combined_samplers);
-                FIXME("Expected vertex samplers + MAX_TEXTURES(=8) > combined_samplers.\n");
-                if (gl_info->limits.combined_samplers > MAX_TEXTURES)
-                    vertex_sampler_count = gl_info->limits.combined_samplers - MAX_TEXTURES;
+                FIXME("Expected vertex samplers + WINED3D_MAX_TEXTURES(=8) > combined_samplers.\n");
+                if (gl_info->limits.combined_samplers > WINED3D_MAX_TEXTURES)
+                    vertex_sampler_count = gl_info->limits.combined_samplers - WINED3D_MAX_TEXTURES;
                 else
                     vertex_sampler_count = 0;
                 gl_info->limits.samplers[WINED3D_SHADER_TYPE_VERTEX] = vertex_sampler_count;

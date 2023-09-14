@@ -216,7 +216,7 @@ static void stateblock_savedstates_set_all(struct wined3d_saved_states *states, 
     states->textures = 0xfffff;
     stateblock_set_bits(states->transform, HIGHEST_TRANSFORMSTATE + 1);
     stateblock_set_bits(states->renderState, WINEHIGHEST_RENDER_STATE + 1);
-    for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = 0x3ffff;
+    for (i = 0; i < WINED3D_MAX_TEXTURES; ++i) states->textureState[i] = 0x3ffff;
     for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = 0x3ffe;
     states->clipplane = (1u << MAX_CLIP_DISTANCES) - 1;
     states->pixelShaderConstantsB = 0xffff;
@@ -246,7 +246,7 @@ static void stateblock_savedstates_set_pixel(struct wined3d_saved_states *states
 
     for (i = 0; i < ARRAY_SIZE(pixel_states_texture); ++i)
         texture_mask |= 1u << pixel_states_texture[i];
-    for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = texture_mask;
+    for (i = 0; i < WINED3D_MAX_TEXTURES; ++i) states->textureState[i] = texture_mask;
     for (i = 0; i < ARRAY_SIZE(pixel_states_sampler); ++i)
         sampler_mask |= 1u << pixel_states_sampler[i];
     for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = sampler_mask;
@@ -273,7 +273,7 @@ static void stateblock_savedstates_set_vertex(struct wined3d_saved_states *state
 
     for (i = 0; i < ARRAY_SIZE(vertex_states_texture); ++i)
         texture_mask |= 1u << vertex_states_texture[i];
-    for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = texture_mask;
+    for (i = 0; i < WINED3D_MAX_TEXTURES; ++i) states->textureState[i] = texture_mask;
     for (i = 0; i < ARRAY_SIZE(vertex_states_sampler); ++i)
         sampler_mask |= 1u << vertex_states_sampler[i];
     for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = sampler_mask;
@@ -366,7 +366,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
         }
     }
 
-    for (i = 0; i < MAX_TEXTURES; ++i)
+    for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
     {
         DWORD map = stateblock->changed.textureState[i];
 
@@ -1466,7 +1466,7 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
     init_default_render_states(state->render_states, d3d_info);
 
     /* Texture Stage States - Put directly into state block, we will call function below */
-    for (i = 0; i < MAX_TEXTURES; ++i)
+    for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
     {
         TRACE("Setting up default texture states for texture Stage %u.\n", i);
         state->transforms[WINED3D_TS_TEXTURE0 + i] = identity;
@@ -1518,7 +1518,7 @@ static void stateblock_state_init_default(struct wined3d_stateblock_state *state
 
     init_default_render_states(state->rs, d3d_info);
 
-    for (i = 0; i < MAX_TEXTURES; ++i)
+    for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
     {
         state->transforms[WINED3D_TS_TEXTURE0 + i] = identity;
         init_default_texture_state(i, state->texture_states[i]);

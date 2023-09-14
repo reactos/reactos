@@ -5410,7 +5410,7 @@ void get_texture_matrix(const struct wined3d_context *context, const struct wine
     BOOL generated = (state->texture_states[tex][WINED3D_TSS_TEXCOORD_INDEX] & 0xffff0000)
             != WINED3DTSS_TCI_PASSTHRU;
     unsigned int coord_idx = min(state->texture_states[tex][WINED3D_TSS_TEXCOORD_INDEX & 0x0000ffff],
-            MAX_TEXTURES - 1);
+            WINED3D_MAX_TEXTURES - 1);
 
     compute_texture_matrix(gl_info, &state->transforms[WINED3D_TS_TEXTURE0 + tex],
             state->texture_states[tex][WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS],
@@ -6028,7 +6028,7 @@ unsigned int wined3d_max_compat_varyings(const struct wined3d_gl_info *gl_info)
 {
     /* On core profile we have to also count diffuse and specular colors and the
      * fog coordinate. */
-    return gl_info->supported[WINED3D_GL_LEGACY_CONTEXT] ? MAX_TEXTURES * 4 : (MAX_TEXTURES + 2) * 4 + 1;
+    return gl_info->supported[WINED3D_GL_LEGACY_CONTEXT] ? WINED3D_MAX_TEXTURES * 4 : (WINED3D_MAX_TEXTURES + 2) * 4 + 1;
 }
 
 void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d_state *state,
@@ -6236,7 +6236,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
     }
 
     /* Clear unsupported stages */
-    for(; i < MAX_TEXTURES; i++) {
+    for(; i < WINED3D_MAX_TEXTURES; i++) {
         memset(&settings->op[i], 0xff, sizeof(settings->op[i]));
     }
 
@@ -6313,7 +6313,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
             && d3d_info->limits.varying_count < wined3d_max_compat_varyings(gl_info))
     {
         settings->texcoords_initialized = 0;
-        for (i = 0; i < MAX_TEXTURES; ++i)
+        for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
         {
             if (use_vs(state))
             {
@@ -6326,14 +6326,14 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
                 unsigned int coord_idx = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
                 if ((state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX] >> WINED3D_FFP_TCI_SHIFT)
                         & WINED3D_FFP_TCI_MASK
-                        || (coord_idx < MAX_TEXTURES && (si->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx)))))
+                        || (coord_idx < WINED3D_MAX_TEXTURES && (si->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx)))))
                     settings->texcoords_initialized |= 1u << i;
             }
         }
     }
     else
     {
-        settings->texcoords_initialized = (1u << MAX_TEXTURES) - 1;
+        settings->texcoords_initialized = (1u << WINED3D_MAX_TEXTURES) - 1;
     }
 
     settings->pointsprite = state->render_states[WINED3D_RS_POINTSPRITEENABLE]
@@ -6546,15 +6546,15 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
         else
             settings->fog_mode = WINED3D_FFP_VS_FOG_FOGCOORD;
 
-        for (i = 0; i < MAX_TEXTURES; ++i)
+        for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
         {
             coord_idx = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
-            if (coord_idx < MAX_TEXTURES && (si->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx))))
+            if (coord_idx < WINED3D_MAX_TEXTURES && (si->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx))))
                 settings->texcoords |= 1u << i;
             settings->texgen[i] = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
         }
         if (d3d_info->limits.varying_count >= wined3d_max_compat_varyings(gl_info))
-            settings->texcoords = (1u << MAX_TEXTURES) - 1;
+            settings->texcoords = (1u << WINED3D_MAX_TEXTURES) - 1;
 
         if (d3d_info->emulated_flatshading)
             settings->flatshading = state->render_states[WINED3D_RS_SHADEMODE] == WINED3D_SHADE_FLAT;
@@ -6615,15 +6615,15 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
         settings->specular_source = WINED3D_MCS_MATERIAL;
     }
 
-    for (i = 0; i < MAX_TEXTURES; ++i)
+    for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
     {
         coord_idx = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
-        if (coord_idx < MAX_TEXTURES && (si->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx))))
+        if (coord_idx < WINED3D_MAX_TEXTURES && (si->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx))))
             settings->texcoords |= 1u << i;
         settings->texgen[i] = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
     }
     if (d3d_info->limits.varying_count >= wined3d_max_compat_varyings(gl_info))
-        settings->texcoords = (1u << MAX_TEXTURES) - 1;
+        settings->texcoords = (1u << WINED3D_MAX_TEXTURES) - 1;
 
     for (i = 0; i < MAX_ACTIVE_LIGHTS; ++i)
     {
