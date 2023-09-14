@@ -4372,9 +4372,14 @@ static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, s
     const struct wined3d_gl_info *gl_info = &adapter->gl_info;
 
     caps->ddraw_caps.dds_caps |= WINEDDSCAPS_BACKBUFFER
+            | WINEDDSCAPS_COMPLEX
             | WINEDDSCAPS_FRONTBUFFER
             | WINEDDSCAPS_3DDEVICE
-            | WINEDDSCAPS_VIDEOMEMORY;
+            | WINEDDSCAPS_VIDEOMEMORY
+            | WINEDDSCAPS_OWNDC
+            | WINEDDSCAPS_LOCALVIDMEM
+            | WINEDDSCAPS_NONLOCALVIDMEM;
+
     caps->ddraw_caps.caps |= WINEDDCAPS_3D;
 
     if (gl_info->supported[ARB_FRAMEBUFFER_OBJECT] || gl_info->supported[EXT_FRAMEBUFFER_OBJECT])
