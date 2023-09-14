@@ -182,7 +182,7 @@ static HRESULT WINAPI d3d_light_SetLight(IDirect3DLight *iface, D3DLIGHT *data)
         light7->dcvSpecular = zero_value;
     else
         light7->dcvSpecular = data->dcvColor;
-    light7->dcvAmbient = data->dcvColor;
+    light7->dcvAmbient = zero_value;
     light7->dvPosition = data->dvPosition;
     light7->dvDirection = data->dvDirection;
     light7->dvRange = data->dvRange;
