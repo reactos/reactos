@@ -20,7 +20,9 @@
 @ cdecl wined3d_get_output_desc(ptr long ptr)
 @ cdecl wined3d_incref(ptr)
 @ cdecl wined3d_register_software_device(ptr ptr)
+@ cdecl wined3d_register_window(ptr ptr ptr long)
 @ cdecl wined3d_set_adapter_display_mode(ptr long ptr)
+@ cdecl wined3d_unregister_windows(ptr)
 
 @ cdecl wined3d_blend_state_create(ptr ptr ptr ptr ptr)
 @ cdecl wined3d_blend_state_decref(ptr)

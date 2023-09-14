@@ -919,6 +919,7 @@ enum wined3d_shader_type
 #define WINED3D_SWAPCHAIN_RESTORE_WINDOW_RECT                   0x00004000u
 #define WINED3D_SWAPCHAIN_GDI_COMPATIBLE                        0x00008000u
 #define WINED3D_SWAPCHAIN_IMPLICIT                              0x00010000u
+#define WINED3D_SWAPCHAIN_HOOK                                  0x00020000u
 
 #define WINED3DDP_MAXTEXCOORD                                   8
 
@@ -1602,6 +1603,10 @@ enum wined3d_shader_type
 
 #define WINED3D_MAX_VIEWPORTS                                   16
 
+#define WINED3D_REGISTER_WINDOW_NO_WINDOW_CHANGES               0x00000001u
+#define WINED3D_REGISTER_WINDOW_NO_ALT_ENTER                    0x00000002u
+#define WINED3D_REGISTER_WINDOW_NO_PRINT_SCREEN                 0x00000004u
+
 struct wined3d_display_mode
 {
     UINT width;
@@ -2235,8 +2240,11 @@ HRESULT __cdecl wined3d_get_output_desc(const struct wined3d *wined3d, unsigned 
         struct wined3d_output_desc *desc);
 ULONG __cdecl wined3d_incref(struct wined3d *wined3d);
 HRESULT __cdecl wined3d_register_software_device(struct wined3d *wined3d, void *init_function);
+BOOL __cdecl wined3d_register_window(struct wined3d *wined3d, HWND window,
+        struct wined3d_device *device, unsigned int flags);
 HRESULT __cdecl wined3d_set_adapter_display_mode(struct wined3d *wined3d,
         UINT adapter_idx, const struct wined3d_display_mode *mode);
+void __cdecl wined3d_unregister_windows(struct wined3d *wined3d);
 
 HRESULT __cdecl wined3d_buffer_create(struct wined3d_device *device, const struct wined3d_buffer_desc *desc,
         const struct wined3d_sub_resource_data *data, void *parent, const struct wined3d_parent_ops *parent_ops,

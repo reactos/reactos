@@ -1014,7 +1014,7 @@ HRESULT CDECL wined3d_device_acquire_focus_window(struct wined3d_device *device,
 {
     TRACE("device %p, window %p.\n", device, window);
 
-    if (!wined3d_register_window(window, device))
+    if (!wined3d_register_window(NULL, window, device, 0))
     {
         ERR("Failed to register window %p.\n", window);
         return E_FAIL;

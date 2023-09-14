@@ -125,6 +125,7 @@ ULONG CDECL wined3d_swapchain_decref(struct wined3d_swapchain *swapchain)
         device = swapchain->device;
         if (device->swapchain_count && device->swapchains[0] == swapchain)
             wined3d_device_uninit_3d(device);
+        wined3d_unhook_swapchain(swapchain);
         wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
         swapchain_cleanup(swapchain);
@@ -1045,6 +1046,9 @@ HRESULT CDECL wined3d_swapchain_create(struct wined3d_device *device, struct win
         heap_free(object);
         return hr;
     }
+
+    if (desc->flags & WINED3D_SWAPCHAIN_HOOK)
+        wined3d_hook_swapchain(object);
 
     if (desc->flags & WINED3D_SWAPCHAIN_IMPLICIT)
     {
