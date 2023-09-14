@@ -189,15 +189,15 @@ static enum wined3d_fence_result wined3d_fence_test(const struct wined3d_fence *
 
     TRACE("fence %p, device %p, flags %#x.\n", fence, device, flags);
 
-    if (!fence->context)
+    if (!fence->context_gl)
     {
         TRACE("Fence not issued.\n");
         return WINED3D_FENCE_NOT_STARTED;
     }
 
-    if (!(context = context_reacquire(device, fence->context)))
+    if (!(context = context_reacquire(device, &fence->context_gl->c)))
     {
-        if (!fence->context->gl_info->supported[ARB_SYNC])
+        if (!fence->context_gl->c.gl_info->supported[ARB_SYNC])
         {
             WARN("Fence tested from wrong thread.\n");
             return WINED3D_FENCE_WRONG_THREAD;
@@ -266,14 +266,14 @@ enum wined3d_fence_result wined3d_fence_wait(const struct wined3d_fence *fence,
 
     TRACE("fence %p, device %p.\n", fence, device);
 
-    if (!fence->context)
+    if (!fence->context_gl)
     {
         TRACE("Fence not issued.\n");
         return WINED3D_FENCE_NOT_STARTED;
     }
-    gl_info = fence->context->gl_info;
+    gl_info = fence->context_gl->c.gl_info;
 
-    if (!(context = context_reacquire(device, fence->context)))
+    if (!(context = context_reacquire(device, &fence->context_gl->c)))
     {
         /* A glFinish does not reliably wait for draws in other contexts. The caller has
          * to find its own way to cope with the thread switch
@@ -337,14 +337,14 @@ void wined3d_fence_issue(struct wined3d_fence *fence, const struct wined3d_devic
     struct wined3d_context *context = NULL;
     const struct wined3d_gl_info *gl_info;
 
-    if (fence->context && !(context = context_reacquire(device, fence->context))
-            && !fence->context->gl_info->supported[ARB_SYNC])
-        context_free_fence(fence);
+    if (fence->context_gl && !(context = context_reacquire(device, &fence->context_gl->c))
+            && !fence->context_gl->c.gl_info->supported[ARB_SYNC])
+        wined3d_context_gl_free_fence(fence);
     if (!context)
         context = context_acquire(device, NULL, 0);
     gl_info = context->gl_info;
-    if (!fence->context)
-        context_alloc_fence(context, fence);
+    if (!fence->context_gl)
+        wined3d_context_gl_alloc_fence(wined3d_context_gl(context), fence);
 
     if (gl_info->supported[ARB_SYNC])
     {
@@ -370,8 +370,8 @@ void wined3d_fence_issue(struct wined3d_fence *fence, const struct wined3d_devic
 
 static void wined3d_fence_free(struct wined3d_fence *fence)
 {
-    if (fence->context)
-        context_free_fence(fence);
+    if (fence->context_gl)
+        wined3d_context_gl_free_fence(fence);
 }
 
 void wined3d_fence_destroy(struct wined3d_fence *fence)

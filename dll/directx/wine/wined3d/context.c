@@ -856,13 +856,13 @@ void wined3d_context_gl_free_occlusion_query(struct wined3d_occlusion_query *que
 }
 
 /* Context activation is done by the caller. */
-void context_alloc_fence(struct wined3d_context *context, struct wined3d_fence *fence)
+void wined3d_context_gl_alloc_fence(struct wined3d_context_gl *context_gl, struct wined3d_fence *fence)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
-    if (context->free_fence_count)
+    if (context_gl->free_fence_count)
     {
-        fence->object = context->free_fences[--context->free_fence_count];
+        fence->object = context_gl->free_fences[--context_gl->free_fence_count];
     }
     else
     {
@@ -870,21 +870,21 @@ void context_alloc_fence(struct wined3d_context *context, struct wined3d_fence *
         {
             /* Using ARB_sync, not much to do here. */
             fence->object.sync = NULL;
-            TRACE("Allocated sync object in context %p.\n", context);
+            TRACE("Allocated sync object in context %p.\n", context_gl);
         }
         else if (gl_info->supported[APPLE_FENCE])
         {
             GL_EXTCALL(glGenFencesAPPLE(1, &fence->object.id));
             checkGLcall("glGenFencesAPPLE");
 
-            TRACE("Allocated fence %u in context %p.\n", fence->object.id, context);
+            TRACE("Allocated fence %u in context %p.\n", fence->object.id, context_gl);
         }
         else if(gl_info->supported[NV_FENCE])
         {
             GL_EXTCALL(glGenFencesNV(1, &fence->object.id));
             checkGLcall("glGenFencesNV");
 
-            TRACE("Allocated fence %u in context %p.\n", fence->object.id, context);
+            TRACE("Allocated fence %u in context %p.\n", fence->object.id, context_gl);
         }
         else
         {
@@ -893,26 +893,26 @@ void context_alloc_fence(struct wined3d_context *context, struct wined3d_fence *
         }
     }
 
-    fence->context = context;
-    list_add_head(&context->fences, &fence->entry);
+    fence->context_gl = context_gl;
+    list_add_head(&context_gl->fences, &fence->entry);
 }
 
-void context_free_fence(struct wined3d_fence *fence)
+void wined3d_context_gl_free_fence(struct wined3d_fence *fence)
 {
-    struct wined3d_context *context = fence->context;
+    struct wined3d_context_gl *context_gl = fence->context_gl;
 
     list_remove(&fence->entry);
-    fence->context = NULL;
+    fence->context_gl = NULL;
 
-    if (!wined3d_array_reserve((void **)&context->free_fences,
-            &context->free_fence_size, context->free_fence_count + 1,
-            sizeof(*context->free_fences)))
+    if (!wined3d_array_reserve((void **)&context_gl->free_fences,
+            &context_gl->free_fence_size, context_gl->free_fence_count + 1,
+            sizeof(*context_gl->free_fences)))
     {
-        ERR("Failed to grow free list, leaking fence %u in context %p.\n", fence->object.id, context);
+        ERR("Failed to grow free list, leaking fence %u in context %p.\n", fence->object.id, context_gl);
         return;
     }
 
-    context->free_fences[context->free_fence_count++] = fence->object;
+    context_gl->free_fences[context_gl->free_fence_count++] = fence->object;
 }
 
 /* Context activation is done by the caller. */
@@ -1320,7 +1320,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
     struct wined3d_so_statistics_query *so_statistics_query;
     struct wined3d_timestamp_query *timestamp_query;
     struct fbo_entry *entry, *entry2;
-    struct wined3d_fence *fence;
     HGLRC restore_ctx;
     HDC restore_dc;
     unsigned int i;
@@ -1354,27 +1353,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
         if (context->valid)
             GL_EXTCALL(glDeleteQueries(1, &timestamp_query->id));
         timestamp_query->context = NULL;
-    }
-
-    LIST_FOR_EACH_ENTRY(fence, &context->fences, struct wined3d_fence, entry)
-    {
-        if (context->valid)
-        {
-            if (gl_info->supported[ARB_SYNC])
-            {
-                if (fence->object.sync)
-                    GL_EXTCALL(glDeleteSync(fence->object.sync));
-            }
-            else if (gl_info->supported[APPLE_FENCE])
-            {
-                GL_EXTCALL(glDeleteFencesAPPLE(1, &fence->object.id));
-            }
-            else if (gl_info->supported[NV_FENCE])
-            {
-                GL_EXTCALL(glDeleteFencesNV(1, &fence->object.id));
-            }
-        }
-        fence->context = NULL;
     }
 
     LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &context->fbo_destroy_list, struct fbo_entry, entry)
@@ -1412,35 +1390,12 @@ void wined3d_context_cleanup(struct wined3d_context *context)
         if (gl_info->supported[ARB_TIMER_QUERY])
             GL_EXTCALL(glDeleteQueries(context->free_timestamp_query_count, context->free_timestamp_queries));
 
-        if (gl_info->supported[ARB_SYNC])
-        {
-            for (i = 0; i < context->free_fence_count; ++i)
-            {
-                GL_EXTCALL(glDeleteSync(context->free_fences[i].sync));
-            }
-        }
-        else if (gl_info->supported[APPLE_FENCE])
-        {
-            for (i = 0; i < context->free_fence_count; ++i)
-            {
-                GL_EXTCALL(glDeleteFencesAPPLE(1, &context->free_fences[i].id));
-            }
-        }
-        else if (gl_info->supported[NV_FENCE])
-        {
-            for (i = 0; i < context->free_fence_count; ++i)
-            {
-                GL_EXTCALL(glDeleteFencesNV(1, &context->free_fences[i].id));
-            }
-        }
-
         checkGLcall("context cleanup");
     }
 
     heap_free(context->free_so_statistics_queries);
     heap_free(context->free_pipeline_statistics_queries);
     heap_free(context->free_timestamp_queries);
-    heap_free(context->free_fences);
 
     context_restore_pixel_format(context);
     if (restore_ctx)
@@ -1465,8 +1420,10 @@ void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
 {
     const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_occlusion_query *occlusion_query;
+    struct wined3d_fence *fence;
     HGLRC restore_ctx;
     HDC restore_dc;
+    unsigned int i;
 
     restore_ctx = wglGetCurrentContext();
     restore_dc = wglGetCurrentDC();
@@ -1484,12 +1441,56 @@ void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
         if (context_gl->blit_vbo)
             GL_EXTCALL(glDeleteBuffers(1, &context_gl->blit_vbo));
 
+        if (gl_info->supported[ARB_SYNC])
+        {
+            for (i = 0; i < context_gl->free_fence_count; ++i)
+            {
+                GL_EXTCALL(glDeleteSync(context_gl->free_fences[i].sync));
+            }
+        }
+        else if (gl_info->supported[APPLE_FENCE])
+        {
+            for (i = 0; i < context_gl->free_fence_count; ++i)
+            {
+                GL_EXTCALL(glDeleteFencesAPPLE(1, &context_gl->free_fences[i].id));
+            }
+        }
+        else if (gl_info->supported[NV_FENCE])
+        {
+            for (i = 0; i < context_gl->free_fence_count; ++i)
+            {
+                GL_EXTCALL(glDeleteFencesNV(1, &context_gl->free_fences[i].id));
+            }
+        }
+
         if (context_gl->free_occlusion_query_count)
             GL_EXTCALL(glDeleteQueries(context_gl->free_occlusion_query_count, context_gl->free_occlusion_queries));
 
         checkGLcall("context cleanup");
     }
+    heap_free(context_gl->free_fences);
     heap_free(context_gl->free_occlusion_queries);
+
+    LIST_FOR_EACH_ENTRY(fence, &context_gl->fences, struct wined3d_fence, entry)
+    {
+        if (context_gl->c.valid)
+        {
+            if (gl_info->supported[ARB_SYNC])
+            {
+                if (fence->object.sync)
+                    GL_EXTCALL(glDeleteSync(fence->object.sync));
+            }
+            else if (gl_info->supported[APPLE_FENCE])
+            {
+                GL_EXTCALL(glDeleteFencesAPPLE(1, &fence->object.id));
+            }
+            else if (gl_info->supported[NV_FENCE])
+            {
+                GL_EXTCALL(glDeleteFencesNV(1, &fence->object.id));
+            }
+        }
+        fence->context_gl = NULL;
+    }
 
     LIST_FOR_EACH_ENTRY(occlusion_query, &context_gl->occlusion_queries, struct wined3d_occlusion_query, entry)
     {
@@ -1915,7 +1916,6 @@ static BOOL wined3d_context_init(struct wined3d_context *context, struct wined3d
     DWORD state;
 
     list_init(&context->timestamp_queries);
-    list_init(&context->fences);
     list_init(&context->so_statistics_queries);
     list_init(&context->pipeline_statistics_queries);
 
@@ -1995,6 +1995,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
     d3d_info = context->d3d_info;
 
     list_init(&context_gl->occlusion_queries);
+    list_init(&context_gl->fences);
 
     for (i = 0; i < ARRAY_SIZE(context_gl->tex_unit_map); ++i)
         context_gl->tex_unit_map[i] = WINED3D_UNMAPPED_STAGE;
