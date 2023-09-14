@@ -260,11 +260,6 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
             heap_free(declaration->elements);
             return E_FAIL;
         }
-
-        if (elements[i].format == WINED3DFMT_R16G16_FLOAT || elements[i].format == WINED3DFMT_R16G16B16A16_FLOAT)
-        {
-            declaration->have_half_floats = TRUE;
-        }
     }
 
     return WINED3D_OK;

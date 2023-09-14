@@ -3786,7 +3786,6 @@ struct wined3d_vertex_declaration
     unsigned int element_count;
 
     BOOL position_transformed;
-    BOOL have_half_floats;
 };
 
 struct wined3d_saved_states

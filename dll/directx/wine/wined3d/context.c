@@ -3601,7 +3601,6 @@ static void context_update_stream_info(struct wined3d_context *context, const st
 {
     struct wined3d_stream_info *stream_info = &context->stream_info;
     const struct wined3d_d3d_info *d3d_info = context->d3d_info;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     DWORD prev_all_vbo = stream_info->all_vbo;
     unsigned int i;
     WORD map;
@@ -3664,15 +3663,7 @@ static void context_update_stream_info(struct wined3d_context *context, const st
     if (stream_info->all_vbo)
         return;
 
-    if (use_vs(state))
-    {
-        if (state->vertex_declaration->have_half_floats && !gl_info->supported[ARB_HALF_FLOAT_VERTEX])
-        {
-            TRACE("Using immediate mode draw with vertex shaders for FLOAT16 conversion.\n");
-            context->use_immediate_mode_draw = TRUE;
-        }
-    }
-    else
+    if (!use_vs(state))
     {
         WORD slow_mask = -!d3d_info->ffp_generic_attributes & (1u << WINED3D_FFP_PSIZE);
         slow_mask |= -(!d3d_info->vertex_bgra && !d3d_info->ffp_generic_attributes)
