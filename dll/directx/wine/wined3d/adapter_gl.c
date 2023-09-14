@@ -3989,7 +3989,7 @@ static void WINE_GLAPI invalid_generic_attrib_func(GLuint idx, const void *data)
  * draw_primitive_immediate_mode(). */
 static void WINE_GLAPI position_d3dcolor(const void *data)
 {
-    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->gl_info;
     DWORD pos = *((const DWORD *)data);
 
     FIXME("Add a test for fixed function position from d3dcolor type.\n");
@@ -4001,7 +4001,7 @@ static void WINE_GLAPI position_d3dcolor(const void *data)
 
 static void WINE_GLAPI position_float4(const void *data)
 {
-    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->gl_info;
     const GLfloat *pos = data;
 
     if (pos[3] != 0.0f && pos[3] != 1.0f)
@@ -4018,7 +4018,7 @@ static void WINE_GLAPI position_float4(const void *data)
 
 static void WINE_GLAPI diffuse_d3dcolor(const void *data)
 {
-    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->gl_info;
     DWORD diffuseColor = *((const DWORD *)data);
 
     gl_info->gl_ops.gl.p_glColor4ub(D3DCOLOR_B_R(diffuseColor),
@@ -4029,7 +4029,7 @@ static void WINE_GLAPI diffuse_d3dcolor(const void *data)
 
 static void WINE_GLAPI specular_d3dcolor(const void *data)
 {
-    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->gl_info;
     DWORD specularColor = *((const DWORD *)data);
     GLubyte d[] =
     {
@@ -4048,7 +4048,7 @@ static void WINE_GLAPI warn_no_specular_func(const void *data)
 
 static void WINE_GLAPI generic_d3dcolor(GLuint idx, const void *data)
 {
-    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->gl_info;
     DWORD color = *((const DWORD *)data);
 
     gl_info->gl_ops.ext.p_glVertexAttrib4Nub(idx,
@@ -4058,7 +4058,7 @@ static void WINE_GLAPI generic_d3dcolor(GLuint idx, const void *data)
 
 static void WINE_GLAPI generic_short2n(GLuint idx, const void *data)
 {
-    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->gl_info;
     const GLshort s[] = {((const GLshort *)data)[0], ((const GLshort *)data)[1], 0, 1};
 
     gl_info->gl_ops.ext.p_glVertexAttrib4Nsv(idx, s);
@@ -4067,14 +4067,14 @@ static void WINE_GLAPI generic_short2n(GLuint idx, const void *data)
 static void WINE_GLAPI generic_ushort2n(GLuint idx, const void *data)
 {
     const GLushort s[] = {((const GLushort *)data)[0], ((const GLushort *)data)[1], 0, 1};
-    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->gl_info;
 
     gl_info->gl_ops.ext.p_glVertexAttrib4Nusv(idx, s);
 }
 
 static void WINE_GLAPI generic_float16_2(GLuint idx, const void *data)
 {
-    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->gl_info;
     float x = float_16_to_32(((const unsigned short *)data) + 0);
     float y = float_16_to_32(((const unsigned short *)data) + 1);
 
@@ -4083,7 +4083,7 @@ static void WINE_GLAPI generic_float16_2(GLuint idx, const void *data)
 
 static void WINE_GLAPI generic_float16_4(GLuint idx, const void *data)
 {
-    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->gl_info;
     float x = float_16_to_32(((const unsigned short *)data) + 0);
     float y = float_16_to_32(((const unsigned short *)data) + 1);
     float z = float_16_to_32(((const unsigned short *)data) + 2);

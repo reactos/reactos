@@ -542,7 +542,7 @@ static void shader_arb_load_np2fixup_constants(const struct arb_ps_np2fixup_info
 static void shader_arb_ps_local_constants(const struct arb_ps_compiled_shader *gl_shader,
         const struct wined3d_context_gl *context_gl, const struct wined3d_state *state, unsigned int rt_height)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     unsigned char i;
 
     for(i = 0; i < gl_shader->numbumpenvmatconsts; i++)
@@ -606,7 +606,7 @@ static void shader_arb_ps_local_constants(const struct arb_ps_compiled_shader *g
 static void shader_arb_vs_local_constants(const struct arb_vs_compiled_shader *gl_shader,
         const struct wined3d_context_gl *context_gl, const struct wined3d_state *state)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     float position_fixup[4];
     unsigned char i;
 
@@ -646,7 +646,7 @@ static void shader_arb_load_constants_internal(struct shader_arb_priv *priv, str
         const struct wined3d_state *state, BOOL use_ps, BOOL use_vs, BOOL from_shader_select)
 {
     const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
     if (!from_shader_select)
     {
@@ -4242,7 +4242,7 @@ static struct arb_ps_compiled_shader *find_arb_pshader(struct wined3d_context_gl
         struct wined3d_shader *shader, const struct arb_ps_compile_args *args)
 {
     const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_device *device = shader->device;
     UINT i;
     DWORD new_size;
@@ -4427,7 +4427,7 @@ static void find_arb_ps_compile_args(const struct wined3d_state *state,
         struct arb_ps_compile_args *args)
 {
     const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     int i;
     WORD int_skip;
 
@@ -4483,7 +4483,7 @@ static void find_arb_vs_compile_args(const struct wined3d_state *state,
         struct arb_vs_compile_args *args)
 {
     const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     const struct wined3d_device *device = shader->device;
     const struct wined3d_adapter *adapter = device->adapter;
     int i;
@@ -4560,7 +4560,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
         const struct wined3d_state *state)
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct shader_arb_priv *priv = shader_priv;
     int i;
 
@@ -4650,7 +4650,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
         else
             ps_input_sig = &state->shader[WINED3D_SHADER_TYPE_PIXEL]->input_signature;
 
-        compiled = find_arb_vshader(vs, context->gl_info, context->stream_info.use_map,
+        compiled = find_arb_vshader(vs, gl_info, context->stream_info.use_map,
                 &compile_args, ps_input_sig);
         priv->current_vprogram_id = compiled->prgId;
         priv->compiled_vprog = compiled;
@@ -4703,7 +4703,8 @@ static void shader_arb_select_compute(void *shader_priv, struct wined3d_context 
 /* Context activation is done by the caller. */
 static void shader_arb_disable(void *shader_priv, struct wined3d_context *context)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct shader_arb_priv *priv = shader_priv;
 
     if (gl_info->supported[ARB_FRAGMENT_PROGRAM])
@@ -4749,7 +4750,7 @@ static void shader_arb_destroy(struct wined3d_shader *shader)
         return;
 
     context = context_acquire(device, NULL, 0);
-    gl_info = context->gl_info;
+    gl_info = wined3d_context_gl(context)->gl_info;
 
     if (shader_is_pshader_version(shader->reg_maps.shader_version.type))
     {
@@ -5688,7 +5689,7 @@ struct arbfp_ffp_desc
 /* Context activation is done by the caller. */
 static void arbfp_enable(const struct wined3d_context *context, BOOL enable)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_const(context)->gl_info;
 
     if (enable)
     {
@@ -5728,7 +5729,7 @@ static void arbfp_free_ffpshader(struct wine_rb_entry *entry, void *param)
     struct wined3d_context_gl *context_gl = param;
     const struct wined3d_gl_info *gl_info;
 
-    gl_info = context_gl->c.gl_info;
+    gl_info = context_gl->gl_info;
     GL_EXTCALL(glDeleteProgramsARB(1, &entry_arb->shader));
     checkGLcall("delete ffp program");
     heap_free(entry_arb);
@@ -5795,7 +5796,8 @@ static DWORD arbfp_get_emul_mask(const struct wined3d_gl_info *gl_info)
 static void state_texfactor_arbfp(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_device *device = context->device;
     struct wined3d_color color;
 
@@ -5822,7 +5824,8 @@ static void state_tss_constant_arbfp(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id)
 {
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_device *device = context->device;
     struct wined3d_color color;
 
@@ -5849,7 +5852,8 @@ static void state_tss_constant_arbfp(struct wined3d_context *context,
 static void state_arb_specularenable(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_device *device = context->device;
     float col[4];
 
@@ -5884,7 +5888,8 @@ static void state_arb_specularenable(struct wined3d_context *context,
 static void set_bumpmat_arbfp(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_device *device = context->device;
     float mat[2][2];
 
@@ -5915,7 +5920,8 @@ static void tex_bumpenvlum_arbfp(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id)
 {
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_device *device = context->device;
     float param[4];
 
@@ -5944,7 +5950,8 @@ static void tex_bumpenvlum_arbfp(struct wined3d_context *context,
 
 static void alpha_test_arbfp(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     int glParm;
     float ref;
 
@@ -5974,8 +5981,9 @@ static void alpha_test_arbfp(struct wined3d_context *context, const struct wined
 
 static void color_key_arbfp(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     const struct wined3d_texture *texture = state->textures[0];
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_device *device = context->device;
     struct wined3d_color float_key[2];
 
@@ -6549,7 +6557,8 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
 
 static void fragment_prog_arbfp(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     const struct wined3d_device *device = context->device;
     struct shader_arb_priv *priv = device->fragment_priv;
     BOOL use_pshader = use_ps(state);
@@ -6913,7 +6922,7 @@ static void arbfp_free_blit_shader(struct wine_rb_entry *entry, void *ctx)
     struct wined3d_context_gl *context_gl;
 
     context_gl = ctx;
-    gl_info = context_gl->c.gl_info;
+    gl_info = context_gl->gl_info;
 
     GL_EXTCALL(glDeleteProgramsARB(1, &entry_arb->shader));
     checkGLcall("glDeleteProgramsARB(1, &entry_arb->shader)");
@@ -6924,12 +6933,12 @@ static void arbfp_free_blit_shader(struct wine_rb_entry *entry, void *ctx)
 static void arbfp_blitter_destroy(struct wined3d_blitter *blitter, struct wined3d_context *context)
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_arbfp_blitter *arbfp_blitter;
     struct wined3d_blitter *next;
 
     if ((next = blitter->next))
-        next->ops->blitter_destroy(next, context);
+        next->ops->blitter_destroy(next, &context_gl->c);
 
     arbfp_blitter = CONTAINING_RECORD(blitter, struct wined3d_arbfp_blitter, blitter);
 
@@ -7362,7 +7371,7 @@ static void arbfp_blitter_upload_palette(struct wined3d_arbfp_blitter *blitter,
         const struct wined3d_texture_gl *texture_gl, struct wined3d_context_gl *context_gl)
 {
     const struct wined3d_palette *palette = texture_gl->t.swapchain ? texture_gl->t.swapchain->palette : NULL;
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
     if (!blitter->palette_texture)
         gl_info->gl_ops.gl.p_glGenTextures(1, &blitter->palette_texture);
@@ -7564,7 +7573,7 @@ static HRESULT arbfp_blit_set(struct wined3d_arbfp_blitter *blitter, struct wine
         const struct wined3d_texture_gl *texture_gl, unsigned int sub_resource_idx,
         const struct wined3d_color_key *color_key)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     enum complex_fixup fixup;
     struct wine_rb_entry *entry;
     struct arbfp_blit_type type;
@@ -7931,10 +7940,10 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
             src_sub_resource_idx, src_rect, dst_rect, filter);
 
     /* Leave the opengl state valid for blitting */
-    arbfp_blit_unset(context->gl_info);
+    arbfp_blit_unset(context_gl->gl_info);
 
     if (dst_texture->swapchain && (dst_texture->swapchain->front_buffer == dst_texture))
-        context->gl_info->gl_ops.gl.p_glFlush();
+        context_gl->gl_info->gl_ops.gl.p_glFlush();
 
     if (staging_texture)
         wined3d_texture_decref(staging_texture);

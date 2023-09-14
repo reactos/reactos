@@ -374,7 +374,7 @@ static void swapchain_blit(const struct wined3d_swapchain *swapchain,
 static void swapchain_gl_set_swap_interval(struct wined3d_swapchain *swapchain,
         struct wined3d_context_gl *context_gl, unsigned int swap_interval)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
     swap_interval = swap_interval <= 4 ? swap_interval : 1;
     if (swapchain->swap_interval == swap_interval)
@@ -461,7 +461,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
         return;
     }
 
-    gl_info = context->gl_info;
+    gl_info = context_gl->gl_info;
 
     swapchain_gl_set_swap_interval(swapchain, context_gl, swap_interval);
 

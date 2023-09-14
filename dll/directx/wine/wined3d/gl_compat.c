@@ -39,7 +39,7 @@ static void WINE_GLAPI wine_glMultiTexCoord1fARB(GLenum target, GLfloat s)
         ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord1f(s);
+    wined3d_context_gl_get_current()->gl_info->gl_ops.gl.p_glTexCoord1f(s);
 }
 
 static void WINE_GLAPI wine_glMultiTexCoord1fvARB(GLenum target, const GLfloat *v)
@@ -49,7 +49,7 @@ static void WINE_GLAPI wine_glMultiTexCoord1fvARB(GLenum target, const GLfloat *
         ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord1fv(v);
+    wined3d_context_gl_get_current()->gl_info->gl_ops.gl.p_glTexCoord1fv(v);
 }
 
 static void WINE_GLAPI wine_glMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t)
@@ -59,7 +59,7 @@ static void WINE_GLAPI wine_glMultiTexCoord2fARB(GLenum target, GLfloat s, GLflo
         ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord2f(s, t);
+    wined3d_context_gl_get_current()->gl_info->gl_ops.gl.p_glTexCoord2f(s, t);
 }
 
 static void WINE_GLAPI wine_glMultiTexCoord2fvARB(GLenum target, const GLfloat *v)
@@ -69,7 +69,7 @@ static void WINE_GLAPI wine_glMultiTexCoord2fvARB(GLenum target, const GLfloat *
         ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord2fv(v);
+    wined3d_context_gl_get_current()->gl_info->gl_ops.gl.p_glTexCoord2fv(v);
 }
 
 static void WINE_GLAPI wine_glMultiTexCoord3fARB(GLenum target, GLfloat s, GLfloat t, GLfloat r)
@@ -79,7 +79,7 @@ static void WINE_GLAPI wine_glMultiTexCoord3fARB(GLenum target, GLfloat s, GLflo
         ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord3f(s, t, r);
+    wined3d_context_gl_get_current()->gl_info->gl_ops.gl.p_glTexCoord3f(s, t, r);
 }
 
 static void WINE_GLAPI wine_glMultiTexCoord3fvARB(GLenum target, const GLfloat *v)
@@ -89,7 +89,7 @@ static void WINE_GLAPI wine_glMultiTexCoord3fvARB(GLenum target, const GLfloat *
         ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord3fv(v);
+    wined3d_context_gl_get_current()->gl_info->gl_ops.gl.p_glTexCoord3fv(v);
 }
 
 static void WINE_GLAPI wine_glMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q)
@@ -99,7 +99,7 @@ static void WINE_GLAPI wine_glMultiTexCoord4fARB(GLenum target, GLfloat s, GLflo
         ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord4f(s, t, r, q);
+    wined3d_context_gl_get_current()->gl_info->gl_ops.gl.p_glTexCoord4f(s, t, r, q);
 }
 
 static void WINE_GLAPI wine_glMultiTexCoord4fvARB(GLenum target, const GLfloat *v)
@@ -109,7 +109,7 @@ static void WINE_GLAPI wine_glMultiTexCoord4fvARB(GLenum target, const GLfloat *
         ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord4fv(v);
+    wined3d_context_gl_get_current()->gl_info->gl_ops.gl.p_glTexCoord4fv(v);
 }
 
 static void WINE_GLAPI wine_glMultiTexCoord2svARB(GLenum target, const GLshort *v)
@@ -119,7 +119,7 @@ static void WINE_GLAPI wine_glMultiTexCoord2svARB(GLenum target, const GLshort *
         ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord2sv(v);
+    wined3d_context_gl_get_current()->gl_info->gl_ops.gl.p_glTexCoord2sv(v);
 }
 
 static void WINE_GLAPI wine_glMultiTexCoord4svARB(GLenum target, const GLshort *v)
@@ -129,7 +129,7 @@ static void WINE_GLAPI wine_glMultiTexCoord4svARB(GLenum target, const GLshort *
         ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord4sv(v);
+    wined3d_context_gl_get_current()->gl_info->gl_ops.gl.p_glTexCoord4sv(v);
 }
 
 static void WINE_GLAPI wine_glActiveTexture(GLenum texture)

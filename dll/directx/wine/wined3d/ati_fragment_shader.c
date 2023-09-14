@@ -950,8 +950,9 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[WINED3D_MAX_TEXTUR
 
 static void atifs_tfactor(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct atifs_context_private_data *ctx_priv = context->fragment_pipe_data;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_color color;
 
     if (!ctx_priv->last_shader
@@ -966,7 +967,8 @@ static void atifs_tfactor(struct wined3d_context *context, const struct wined3d_
 static void set_bumpmat(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     float mat[2][2];
     struct atifs_context_private_data *ctx_priv = context->fragment_pipe_data;
 
@@ -995,8 +997,9 @@ static void set_bumpmat(struct wined3d_context *context, const struct wined3d_st
 static void atifs_stage_constant(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct atifs_context_private_data *ctx_priv = context->fragment_pipe_data;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_color color;
 
     if (!ctx_priv->last_shader
@@ -1014,7 +1017,7 @@ static void set_tex_op_atifs(struct wined3d_context *context, const struct wined
     const struct atifs_ffp_desc *desc, *last_shader = ctx_priv->last_shader;
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_d3d_info *d3d_info = context->d3d_info;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     const struct wined3d_device *device = context->device;
     struct atifs_private_data *priv = device->fragment_priv;
     struct ffp_frag_settings settings;
@@ -1252,7 +1255,7 @@ static const struct wined3d_state_entry_template atifs_fragmentstate_template[] 
 /* Context activation is done by the caller. */
 static void atifs_enable(const struct wined3d_context *context, BOOL enable)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_const(context)->gl_info;
 
     if (enable)
     {
@@ -1338,7 +1341,7 @@ static void atifs_free_ffpshader(struct wine_rb_entry *entry, void *param)
     struct wined3d_context_gl *context_gl = param;
     const struct wined3d_gl_info *gl_info;
 
-    gl_info = context_gl->c.gl_info;
+    gl_info = context_gl->gl_info;
     GL_EXTCALL(glDeleteFragmentShaderATI(entry_ati->shader));
     checkGLcall("glDeleteFragmentShaderATI(entry->shader)");
     heap_free(entry_ati);

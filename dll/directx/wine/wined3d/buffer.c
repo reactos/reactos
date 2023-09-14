@@ -142,7 +142,7 @@ static void wined3d_buffer_gl_bind(struct wined3d_buffer_gl *buffer_gl, struct w
 static void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *buffer_gl,
         struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_resource *resource = &buffer_gl->b.resource;
 
     if (!buffer_gl->buffer_object)
@@ -198,7 +198,7 @@ static void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *bu
 static BOOL wined3d_buffer_gl_create_buffer_object(struct wined3d_buffer_gl *buffer_gl,
         struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     GLenum gl_usage = GL_STATIC_DRAW;
     GLenum error;
 
@@ -540,7 +540,7 @@ static void wined3d_buffer_gl_upload_ranges(struct wined3d_buffer_gl *buffer_gl,
         const void *data, unsigned int data_offset, unsigned int range_count, const struct wined3d_map_range *ranges)
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     const struct wined3d_map_range *range;
 
     wined3d_buffer_gl_bind(buffer_gl, context_gl);
@@ -649,7 +649,7 @@ BOOL wined3d_buffer_load_location(struct wined3d_buffer *buffer,
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct wined3d_buffer_gl *buffer_gl = wined3d_buffer_gl(buffer);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
     TRACE("buffer %p, context %p, location %s.\n",
             buffer, context, wined3d_debug_location(location));
@@ -1057,7 +1057,7 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
 
             context = context_acquire(device, NULL, 0);
             context_gl = wined3d_context_gl(context);
-            gl_info = context->gl_info;
+            gl_info = context_gl->gl_info;
 
             if (flags & WINED3D_MAP_DISCARD)
                 wined3d_buffer_validate_location(&buffer_gl->b, WINED3D_LOCATION_BUFFER);
@@ -1178,7 +1178,7 @@ static void wined3d_buffer_gl_unmap(struct wined3d_buffer_gl *buffer_gl)
 
         context = context_acquire(device, NULL, 0);
         context_gl = wined3d_context_gl(context);
-        gl_info = context->gl_info;
+        gl_info = context_gl->gl_info;
 
         wined3d_buffer_gl_bind(buffer_gl, context_gl);
 

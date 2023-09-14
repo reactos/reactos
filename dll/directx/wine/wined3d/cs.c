@@ -1015,7 +1015,7 @@ static void wined3d_cs_exec_flush(struct wined3d_cs *cs, const void *data)
 
     context_gl = wined3d_context_gl(context_acquire(cs->device, NULL, 0));
     if (context_gl->valid)
-        context_gl->c.gl_info->gl_ops.gl.p_glFlush();
+        context_gl->gl_info->gl_ops.gl.p_glFlush();
     context_release(&context_gl->c);
 }
 

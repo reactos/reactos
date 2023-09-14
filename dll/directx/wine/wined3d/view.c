@@ -186,7 +186,7 @@ static void create_texture_view(struct wined3d_gl_view *view, GLenum view_target
 
     context = context_acquire(texture_gl->t.resource.device, NULL, 0);
     context_gl = wined3d_context_gl(context);
-    gl_info = context->gl_info;
+    gl_info = context_gl->gl_info;
 
     if (!gl_info->supported[ARB_TEXTURE_VIEW])
     {
@@ -254,7 +254,7 @@ static void create_buffer_texture(struct wined3d_gl_view *view, struct wined3d_c
         unsigned int offset, unsigned int size)
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     const struct wined3d_format_gl *view_format_gl;
 
     if (!gl_info->supported[ARB_TEXTURE_BUFFER_OBJECT])
@@ -361,7 +361,7 @@ static void wined3d_rendertarget_view_gl_destroy_object(void *object)
         struct wined3d_context *context;
 
         context = context_acquire(device, NULL, 0);
-        gl_info = context->gl_info;
+        gl_info = wined3d_context_gl(context)->gl_info;
         context_gl_resource_released(device, view_gl->gl_view.name, FALSE);
         gl_info->gl_ops.gl.p_glDeleteTextures(1, &view_gl->gl_view.name);
         checkGLcall("glDeleteTextures");
@@ -690,7 +690,7 @@ static void wined3d_shader_resource_view_gl_destroy_object(void *object)
         struct wined3d_context *context;
 
         context = context_acquire(view_gl->v.resource->device, NULL, 0);
-        gl_info = context->gl_info;
+        gl_info = wined3d_context_gl(context)->gl_info;
         gl_info->gl_ops.gl.p_glDeleteTextures(1, &view_gl->gl_view.name);
         checkGLcall("glDeleteTextures");
         context_release(context);
@@ -843,7 +843,7 @@ HRESULT CDECL wined3d_shader_resource_view_create(const struct wined3d_view_desc
 void wined3d_shader_resource_view_gl_bind(struct wined3d_shader_resource_view_gl *view_gl,
         unsigned int unit, struct wined3d_sampler *sampler, struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_texture_gl *texture_gl;
 
     wined3d_context_gl_active_texture(context_gl, gl_info, unit);
@@ -900,7 +900,7 @@ void shader_resource_view_generate_mipmaps(struct wined3d_shader_resource_view *
 
     context = context_acquire(view_gl->v.resource->device, NULL, 0);
     context_gl = wined3d_context_gl(context);
-    gl_info = context->gl_info;
+    gl_info = context_gl->gl_info;
     layer_count = view_gl->v.desc.u.texture.layer_count;
     level_count = view_gl->v.desc.u.texture.level_count;
     base_level = view_gl->v.desc.u.texture.level_idx;
@@ -996,7 +996,7 @@ static void wined3d_unordered_access_view_gl_destroy_object(void *object)
         struct wined3d_context *context;
 
         context = context_acquire(view_gl->v.resource->device, NULL, 0);
-        gl_info = context->gl_info;
+        gl_info = wined3d_context_gl(context)->gl_info;
         if (view_gl->gl_view.name)
             gl_info->gl_ops.gl.p_glDeleteTextures(1, &view_gl->gl_view.name);
         if (view_gl->counter_bo)
@@ -1047,7 +1047,7 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
         const struct wined3d_uvec4 *clear_value, struct wined3d_context *context)
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     const struct wined3d_format_gl *format;
     struct wined3d_buffer_gl *buffer_gl;
     struct wined3d_resource *resource;
@@ -1097,7 +1097,7 @@ void wined3d_unordered_access_view_set_counter(struct wined3d_unordered_access_v
         return;
 
     context = context_acquire(view_gl->v.resource->device, NULL, 0);
-    gl_info = context->gl_info;
+    gl_info = wined3d_context_gl(context)->gl_info;
     GL_EXTCALL(glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, view_gl->counter_bo));
     GL_EXTCALL(glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(value), &value));
     checkGLcall("set atomic counter");
@@ -1142,7 +1142,7 @@ static void wined3d_unordered_access_view_gl_cs_init(void *object)
         struct wined3d_context *context;
 
         context = context_acquire(resource->device, NULL, 0);
-        gl_info = context->gl_info;
+        gl_info = wined3d_context_gl(context)->gl_info;
         create_buffer_view(&view_gl->gl_view, context, desc, buffer, view_gl->v.format);
         if (desc->flags & (WINED3D_VIEW_BUFFER_COUNTER | WINED3D_VIEW_BUFFER_APPEND))
         {

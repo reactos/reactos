@@ -33,7 +33,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 static void nvts_activate_dimensions(const struct wined3d_state *state,
         unsigned int stage, struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_texture *texture;
     BOOL bumpmap = FALSE;
 
@@ -485,8 +485,8 @@ static void nvrc_colorop(struct wined3d_context *context, const struct wined3d_s
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     BOOL tex_used = context->fixed_function_usage_map & (1u << stage);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     unsigned int mapped_stage = context_gl->tex_unit_map[stage];
-    const struct wined3d_gl_info *gl_info = context->gl_info;
 
     TRACE("Setting color op for stage %u.\n", stage);
 
@@ -610,7 +610,7 @@ static void nvts_texdim(struct wined3d_context *context, const struct wined3d_st
     /* No need to enable / disable anything here for unused samplers. The tex_colorop
     * handler takes care. Also no action is needed with pixel shaders, or if tex_colorop
     * will take care of this business. */
-    if (mapped_stage == WINED3D_UNMAPPED_STAGE || mapped_stage >= context->gl_info->limits.textures)
+    if (mapped_stage == WINED3D_UNMAPPED_STAGE || mapped_stage >= context_gl->gl_info->limits.textures)
         return;
     if (sampler >= context->lowest_disabled_stage)
         return;
@@ -625,7 +625,7 @@ static void nvts_bumpenvmat(struct wined3d_context *context, const struct wined3
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     unsigned int mapped_stage = context_gl->tex_unit_map[stage + 1];
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     float mat[2][2];
 
     /* Direct3D sets the matrix in the stage reading the perturbation map. The result is used to
@@ -651,7 +651,8 @@ static void nvts_bumpenvmat(struct wined3d_context *context, const struct wined3
 
 static void nvrc_texfactor(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_color color;
 
     wined3d_color_from_d3dcolor(&color, state->render_states[WINED3D_RS_TEXTUREFACTOR]);
@@ -661,7 +662,7 @@ static void nvrc_texfactor(struct wined3d_context *context, const struct wined3d
 /* Context activation is done by the caller. */
 static void nvrc_enable(const struct wined3d_context *context, BOOL enable)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_const(context)->gl_info;
 
     if (enable)
     {
@@ -678,7 +679,7 @@ static void nvrc_enable(const struct wined3d_context *context, BOOL enable)
 /* Context activation is done by the caller. */
 static void nvts_enable(const struct wined3d_context *context, BOOL enable)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_const(context)->gl_info;
 
     nvrc_enable(context, enable);
     if (enable)

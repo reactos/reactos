@@ -3896,8 +3896,8 @@ void find_gs_compile_args(const struct wined3d_state *state, const struct wined3
 void find_ps_compile_args(const struct wined3d_state *state, const struct wined3d_shader *shader,
         BOOL position_transformed, struct ps_compile_args *args, const struct wined3d_context *context)
 {
+    const struct wined3d_gl_info *gl_info = &context->device->adapter->gl_info;
     const struct wined3d_d3d_info *d3d_info = context->d3d_info;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture *texture;
     unsigned int i;
 

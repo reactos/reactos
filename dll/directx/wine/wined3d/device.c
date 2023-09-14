@@ -317,7 +317,7 @@ void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, c
         WARN("Invalid context, skipping clear.\n");
         return;
     }
-    gl_info = context->gl_info;
+    gl_info = context_gl->gl_info;
 
     /* When we're clearing parts of the drawable, make sure that the target surface is well up to date in the
      * drawable. After the clear we'll mark the drawable up to date, so we have to make sure that this is true
@@ -680,7 +680,7 @@ static void wined3d_device_gl_create_dummy_textures(struct wined3d_device_gl *de
 {
     struct wined3d_dummy_textures *textures = &device_gl->dummy_textures;
     const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     unsigned int i;
     DWORD color;
 
@@ -815,7 +815,7 @@ static void wined3d_device_gl_destroy_dummy_textures(struct wined3d_device_gl *d
         struct wined3d_context_gl *context_gl)
 {
     struct wined3d_dummy_textures *dummy_textures = &device_gl->dummy_textures;
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
     if (gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
     {

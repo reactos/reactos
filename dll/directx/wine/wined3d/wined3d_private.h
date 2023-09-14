@@ -1896,7 +1896,6 @@ struct wined3d_fb_state
 
 struct wined3d_context
 {
-    const struct wined3d_gl_info *gl_info;
     const struct wined3d_d3d_info *d3d_info;
     const struct wined3d_state_entry *state_table;
     /* State dirtification
@@ -1982,6 +1981,8 @@ HRESULT wined3d_context_no3d_init(struct wined3d_context *context_no3d,
 struct wined3d_context_gl
 {
     struct wined3d_context c;
+
+    const struct wined3d_gl_info *gl_info;
 
     DWORD tid; /* Thread ID which owns this context at the moment. */
 

@@ -63,7 +63,7 @@ static void texture2d_depth_blt_fbo(const struct wined3d_device *device, struct 
         DWORD dst_location, const RECT *dst_rect)
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     DWORD src_mask, dst_mask;
     GLbitfield gl_mask;
 
@@ -121,7 +121,7 @@ static void texture2d_depth_blt_fbo(const struct wined3d_device *device, struct 
     }
     if (gl_mask & GL_STENCIL_BUFFER_BIT)
     {
-        if (context->gl_info->supported[EXT_STENCIL_TWO_SIDE])
+        if (gl_info->supported[EXT_STENCIL_TWO_SIDE])
         {
             gl_info->gl_ops.gl.p_glDisable(GL_STENCIL_TEST_TWO_SIDE_EXT);
             context_invalidate_state(context, STATE_RENDER(WINED3D_RS_TWOSIDEDSTENCILMODE));
@@ -219,7 +219,7 @@ void texture2d_blt_fbo(struct wined3d_device *device, struct wined3d_context *co
         return;
     }
 
-    gl_info = context->gl_info;
+    gl_info = context_gl->gl_info;
 
     if (src_location == WINED3D_LOCATION_DRAWABLE)
     {
@@ -873,7 +873,7 @@ void texture2d_read_from_framebuffer(struct wined3d_texture *texture, unsigned i
     else
         restore_texture = NULL;
     context_gl = wined3d_context_gl(context);
-    gl_info = context->gl_info;
+    gl_info = context_gl->gl_info;
 
     if (src_location != resource->draw_binding)
     {
@@ -1003,7 +1003,7 @@ void texture2d_load_fb_texture(struct wined3d_texture_gl *texture_gl,
         restore_texture = NULL;
     context_gl = wined3d_context_gl(context);
 
-    gl_info = context->gl_info;
+    gl_info = context_gl->gl_info;
     device_invalidate_state(device, STATE_FRAMEBUFFER);
 
     wined3d_texture_gl_prepare_texture(texture_gl, context_gl, srgb);
@@ -1056,7 +1056,7 @@ static void fb_copy_to_texture_direct(struct wined3d_texture_gl *dst_texture, un
 
     context = context_acquire(device, &src_texture->t, src_sub_resource_idx);
     context_gl = wined3d_context_gl(context);
-    gl_info = context->gl_info;
+    gl_info = context_gl->gl_info;
     wined3d_context_gl_apply_blit_state(context_gl, device);
     wined3d_texture_load(&dst_texture->t, context, FALSE);
 
@@ -1176,7 +1176,7 @@ static void fb_copy_to_texture_hwstretch(struct wined3d_texture_gl *dst_texture,
     /* Activate the Proper context for reading from the source surface, set it up for blitting */
     context = context_acquire(device, &src_texture->t, src_sub_resource_idx);
     context_gl = wined3d_context_gl(context);
-    gl_info = context->gl_info;
+    gl_info = context_gl->gl_info;
     wined3d_context_gl_apply_ffp_blit_state(context_gl, device);
     wined3d_texture_load(&dst_texture->t, context, FALSE);
 
@@ -1597,6 +1597,7 @@ static DWORD fbo_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
         unsigned int dst_sub_resource_idx, DWORD dst_location, const RECT *dst_rect,
         const struct wined3d_color_key *colour_key, enum wined3d_texture_filter_type filter)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct wined3d_resource *src_resource, *dst_resource;
     enum wined3d_blit_op blit_op = op;
     struct wined3d_device *device;
@@ -1621,7 +1622,7 @@ static DWORD fbo_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
             blit_op = WINED3D_BLIT_OP_COLOR_BLIT;
     }
 
-    if (!fbo_blitter_supported(blit_op, context->gl_info,
+    if (!fbo_blitter_supported(blit_op, context_gl->gl_info,
             src_resource, src_location, dst_resource, dst_location))
     {
         if (!(next = blitter->next))
@@ -1717,7 +1718,8 @@ static DWORD raw_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
 {
     struct wined3d_texture_gl *src_texture_gl = wined3d_texture_gl(src_texture);
     struct wined3d_texture_gl *dst_texture_gl = wined3d_texture_gl(dst_texture);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     unsigned int src_level, src_layer, dst_level, dst_layer;
     struct wined3d_blitter *next;
     GLuint src_name, dst_name;
@@ -1862,7 +1864,7 @@ static BOOL ffp_blit_supported(enum wined3d_blit_op blit_op, const struct wined3
             }
         case WINED3D_BLIT_OP_COLOR_BLIT:
         case WINED3D_BLIT_OP_COLOR_BLIT_ALPHATEST:
-            if (!context->gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+            if (!wined3d_context_gl_const(context)->gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
                 return FALSE;
 
             if (TRACE_ON(d3d))
@@ -2025,7 +2027,7 @@ static DWORD ffp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
 {
     struct wined3d_texture_gl *src_texture_gl = wined3d_texture_gl(src_texture);
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     struct wined3d_resource *src_resource, *dst_resource;
     struct wined3d_texture *staging_texture = NULL;
     struct wined3d_color_key old_blt_key;

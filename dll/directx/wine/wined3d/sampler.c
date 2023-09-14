@@ -42,7 +42,7 @@ static void wined3d_sampler_destroy_object(void *object)
     if (sampler->name)
     {
         context = context_acquire(sampler->device, NULL, 0);
-        gl_info = context->gl_info;
+        gl_info = wined3d_context_gl(context)->gl_info;
         GL_EXTCALL(glDeleteSamplers(1, &sampler->name));
         context_release(context);
     }
@@ -80,7 +80,7 @@ static void wined3d_sampler_cs_init(void *object)
     struct wined3d_context *context;
 
     context = context_acquire(sampler->device, NULL, 0);
-    gl_info = context->gl_info;
+    gl_info = wined3d_context_gl(context)->gl_info;
 
     desc = &sampler->desc;
     GL_EXTCALL(glGenSamplers(1, &sampler->name));
@@ -184,7 +184,7 @@ static void texture_gl_apply_base_level(struct wined3d_texture_gl *texture_gl,
 void wined3d_sampler_bind(struct wined3d_sampler *sampler, unsigned int unit,
         struct wined3d_texture_gl *texture_gl, const struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
     if (gl_info->supported[ARB_SAMPLER_OBJECTS])
     {

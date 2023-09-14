@@ -6678,20 +6678,22 @@ void texture_activate_dimensions(const struct wined3d_texture *texture, const st
 /* Context activation is done by the caller (state handler). */
 void sampler_texdim(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     unsigned int sampler = state_id - STATE_SAMPLER(0);
-    unsigned int mapped_stage = wined3d_context_gl(context)->tex_unit_map[sampler];
+    unsigned int mapped_stage;
 
     /* No need to enable / disable anything here for unused samplers. The
      * tex_colorop handler takes care. Also no action is needed with pixel
      * shaders, or if tex_colorop will take care of this business. */
-    if (mapped_stage == WINED3D_UNMAPPED_STAGE || mapped_stage >= context->gl_info->limits.textures)
+    mapped_stage = context_gl->tex_unit_map[sampler];
+    if (mapped_stage == WINED3D_UNMAPPED_STAGE || mapped_stage >= context_gl->gl_info->limits.textures)
         return;
     if (sampler >= context->lowest_disabled_stage)
         return;
     if (isStateDirty(context, STATE_TEXTURESTAGE(sampler, WINED3D_TSS_COLOR_OP)))
         return;
 
-    texture_activate_dimensions(state->textures[sampler], context->gl_info);
+    texture_activate_dimensions(state->textures[sampler], context_gl->gl_info);
 }
 
 int wined3d_ffp_frag_program_key_compare(const void *key, const struct wine_rb_entry *entry)

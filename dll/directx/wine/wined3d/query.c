@@ -40,7 +40,7 @@ static BOOL wined3d_query_buffer_is_valid(struct wined3d_query *query)
 static void wined3d_query_create_buffer_object(struct wined3d_context_gl *context_gl, struct wined3d_query *query)
 {
     const GLuint map_flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     GLuint buffer_object;
 
     GL_EXTCALL(glGenBuffers(1, &buffer_object));
@@ -56,7 +56,7 @@ static void wined3d_query_create_buffer_object(struct wined3d_context_gl *contex
 
 static void wined3d_query_destroy_buffer_object(struct wined3d_context_gl *context_gl, struct wined3d_query *query)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
     GL_EXTCALL(glDeleteBuffers(1, &query->buffer_object));
     checkGLcall("query buffer object destruction");
@@ -76,7 +76,7 @@ static void wined3d_query_destroy_buffer_object(struct wined3d_context_gl *conte
 static BOOL wined3d_query_buffer_queue_result(struct wined3d_context_gl *context_gl,
         struct wined3d_query *query, GLuint id)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     GLsync tmp_sync;
 
     if (!gl_info->supported[ARB_QUERY_BUFFER_OBJECT] || !gl_info->supported[ARB_BUFFER_STORAGE])
@@ -198,14 +198,14 @@ static enum wined3d_fence_result wined3d_fence_test(const struct wined3d_fence *
 
     if (!(context_gl = wined3d_context_gl_reacquire(fence->context_gl)))
     {
-        if (!fence->context_gl->c.gl_info->supported[ARB_SYNC])
+        if (!fence->context_gl->gl_info->supported[ARB_SYNC])
         {
             WARN("Fence tested from wrong thread.\n");
             return WINED3D_FENCE_WRONG_THREAD;
         }
         context_gl = wined3d_context_gl(context_acquire(device, NULL, 0));
     }
-    gl_info = context_gl->c.gl_info;
+    gl_info = context_gl->gl_info;
 
     if (gl_info->supported[ARB_SYNC])
     {
@@ -272,7 +272,7 @@ enum wined3d_fence_result wined3d_fence_wait(const struct wined3d_fence *fence,
         TRACE("Fence not issued.\n");
         return WINED3D_FENCE_NOT_STARTED;
     }
-    gl_info = fence->context_gl->c.gl_info;
+    gl_info = fence->context_gl->gl_info;
 
     if (!(context_gl = wined3d_context_gl_reacquire(fence->context_gl)))
     {
@@ -286,7 +286,7 @@ enum wined3d_fence_result wined3d_fence_wait(const struct wined3d_fence *fence,
         }
         context_gl = wined3d_context_gl(context_acquire(device, NULL, 0));
     }
-    gl_info = context_gl->c.gl_info;
+    gl_info = context_gl->gl_info;
 
     if (gl_info->supported[ARB_SYNC])
     {
@@ -339,11 +339,11 @@ void wined3d_fence_issue(struct wined3d_fence *fence, struct wined3d_device *dev
     const struct wined3d_gl_info *gl_info;
 
     if (fence->context_gl && !(context_gl = wined3d_context_gl_reacquire(fence->context_gl))
-            && !fence->context_gl->c.gl_info->supported[ARB_SYNC])
+            && !fence->context_gl->gl_info->supported[ARB_SYNC])
         wined3d_context_gl_free_fence(fence);
     if (!context_gl)
         context_gl = wined3d_context_gl(context_acquire(device, NULL, 0));
-    gl_info = context_gl->c.gl_info;
+    gl_info = context_gl->gl_info;
     if (!fence->context_gl)
         wined3d_context_gl_alloc_fence(context_gl, fence);
 
@@ -545,7 +545,7 @@ static BOOL wined3d_occlusion_query_ops_poll(struct wined3d_query *query, DWORD 
         oq->samples = 1;
         return TRUE;
     }
-    gl_info = context_gl->c.gl_info;
+    gl_info = context_gl->gl_info;
 
     GL_EXTCALL(glGetQueryObjectuiv(oq->id, GL_QUERY_RESULT_AVAILABLE, &available));
     TRACE("Available %#x.\n", available);
@@ -645,7 +645,7 @@ static BOOL wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DWORD
         {
             if ((context_gl = wined3d_context_gl_reacquire(oq->context_gl)))
             {
-                gl_info = context_gl->c.gl_info;
+                gl_info = context_gl->gl_info;
                 GL_EXTCALL(glEndQuery(GL_SAMPLES_PASSED));
                 checkGLcall("glEndQuery()");
             }
@@ -664,7 +664,7 @@ static BOOL wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DWORD
             context_gl = wined3d_context_gl(context_acquire(device, NULL, 0));
             wined3d_context_gl_alloc_occlusion_query(context_gl, oq);
         }
-        gl_info = context_gl->c.gl_info;
+        gl_info = context_gl->gl_info;
 
         GL_EXTCALL(glBeginQuery(GL_SAMPLES_PASSED, oq->id));
         checkGLcall("glBeginQuery()");
@@ -681,7 +681,7 @@ static BOOL wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DWORD
         {
             if ((context_gl = wined3d_context_gl_reacquire(oq->context_gl)))
             {
-                gl_info = context_gl->c.gl_info;
+                gl_info = context_gl->gl_info;
                 GL_EXTCALL(glEndQuery(GL_SAMPLES_PASSED));
                 checkGLcall("glEndQuery()");
                 wined3d_query_buffer_queue_result(context_gl, query, oq->id);
@@ -716,7 +716,7 @@ static BOOL wined3d_timestamp_query_ops_poll(struct wined3d_query *query, DWORD 
         tq->timestamp = 1;
         return TRUE;
     }
-    gl_info = context_gl->c.gl_info;
+    gl_info = context_gl->gl_info;
 
     GL_EXTCALL(glGetQueryObjectuiv(tq->id, GL_QUERY_RESULT_AVAILABLE, &available));
     checkGLcall("glGetQueryObjectuiv(GL_QUERY_RESULT_AVAILABLE)");
@@ -739,7 +739,7 @@ static BOOL wined3d_timestamp_query_ops_issue(struct wined3d_query *query, DWORD
 {
     struct wined3d_timestamp_query *tq = wined3d_timestamp_query_from_query(query);
     const struct wined3d_gl_info *gl_info;
-    struct wined3d_context *context;
+    struct wined3d_context_gl *context_gl;
 
     TRACE("query %p, flags %#x.\n", query, flags);
 
@@ -751,12 +751,12 @@ static BOOL wined3d_timestamp_query_ops_issue(struct wined3d_query *query, DWORD
     {
         if (tq->context_gl)
             wined3d_context_gl_free_timestamp_query(tq);
-        context = context_acquire(query->device, NULL, 0);
-        gl_info = context->gl_info;
-        wined3d_context_gl_alloc_timestamp_query(wined3d_context_gl(context), tq);
+        context_gl = wined3d_context_gl(context_acquire(query->device, NULL, 0));
+        gl_info = context_gl->gl_info;
+        wined3d_context_gl_alloc_timestamp_query(context_gl, tq);
         GL_EXTCALL(glQueryCounter(tq->id, GL_TIMESTAMP));
         checkGLcall("glQueryCounter()");
-        context_release(context);
+        context_release(&context_gl->c);
 
         return TRUE;
     }
@@ -793,7 +793,7 @@ static BOOL wined3d_so_statistics_query_ops_poll(struct wined3d_query *query, DW
         memset(&pq->statistics, 0, sizeof(pq->statistics));
         return TRUE;
     }
-    gl_info = context_gl->c.gl_info;
+    gl_info = context_gl->gl_info;
 
     GL_EXTCALL(glGetQueryObjectuiv(pq->u.query.written,
             GL_QUERY_RESULT_AVAILABLE, &written_available));
@@ -819,7 +819,7 @@ static BOOL wined3d_so_statistics_query_ops_poll(struct wined3d_query *query, DW
 static void wined3d_so_statistics_query_end(struct wined3d_so_statistics_query *query,
         struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
     if (gl_info->supported[ARB_TRANSFORM_FEEDBACK3])
     {
@@ -867,7 +867,7 @@ static BOOL wined3d_so_statistics_query_ops_issue(struct wined3d_query *query, D
             context_gl = wined3d_context_gl(context_acquire(device, NULL, 0));
             wined3d_context_gl_alloc_so_statistics_query(context_gl, pq);
         }
-        gl_info = context_gl->c.gl_info;
+        gl_info = context_gl->gl_info;
 
         if (gl_info->supported[ARB_TRANSFORM_FEEDBACK3])
         {
@@ -926,7 +926,7 @@ static BOOL wined3d_pipeline_query_ops_poll(struct wined3d_query *query, DWORD f
         memset(&pq->statistics, 0, sizeof(pq->statistics));
         return TRUE;
     }
-    gl_info = context_gl->c.gl_info;
+    gl_info = context_gl->gl_info;
 
     for (i = 0; i < ARRAY_SIZE(pq->u.id); ++i)
     {
@@ -958,7 +958,7 @@ static BOOL wined3d_pipeline_query_ops_poll(struct wined3d_query *query, DWORD f
 static void wined3d_pipeline_statistics_query_end(struct wined3d_pipeline_statistics_query *query,
         struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
 
     GL_EXTCALL(glEndQuery(GL_VERTICES_SUBMITTED_ARB));
     GL_EXTCALL(glEndQuery(GL_PRIMITIVES_SUBMITTED_ARB));
@@ -1007,7 +1007,7 @@ static BOOL wined3d_pipeline_query_ops_issue(struct wined3d_query *query, DWORD 
             context_gl = wined3d_context_gl(context_acquire(device, NULL, 0));
             wined3d_context_gl_alloc_pipeline_statistics_query(context_gl, pq);
         }
-        gl_info = context_gl->c.gl_info;
+        gl_info = context_gl->gl_info;
 
         GL_EXTCALL(glBeginQuery(GL_VERTICES_SUBMITTED_ARB, pq->u.query.vertices));
         GL_EXTCALL(glBeginQuery(GL_PRIMITIVES_SUBMITTED_ARB, pq->u.query.primitives));
