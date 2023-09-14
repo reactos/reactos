@@ -1899,7 +1899,7 @@ struct wined3d_ddraw_caps
     DWORD dds_caps;
 };
 
-typedef struct _WINED3DCAPS
+struct wined3d_caps
 {
     enum wined3d_device_type DeviceType;
     UINT AdapterOrdinal;
@@ -1990,7 +1990,7 @@ typedef struct _WINED3DCAPS
     struct wined3d_ddraw_caps ddraw_caps;
 
     BOOL shader_double_precision;
-} WINED3DCAPS;
+};
 
 struct wined3d_color_key
 {
@@ -2223,7 +2223,7 @@ UINT __cdecl wined3d_get_adapter_mode_count(const struct wined3d *wined3d, UINT 
 HRESULT __cdecl wined3d_get_adapter_raster_status(const struct wined3d *wined3d, UINT adapter_idx,
         struct wined3d_raster_status *raster_status);
 HRESULT __cdecl wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapter_idx,
-        enum wined3d_device_type device_type, WINED3DCAPS *caps);
+        enum wined3d_device_type device_type, struct wined3d_caps *caps);
 HRESULT __cdecl wined3d_get_output_desc(const struct wined3d *wined3d, unsigned int adapter_idx,
         struct wined3d_output_desc *desc);
 ULONG __cdecl wined3d_incref(struct wined3d *wined3d);
@@ -2296,7 +2296,7 @@ struct wined3d_sampler * __cdecl wined3d_device_get_cs_sampler(const struct wine
 struct wined3d_unordered_access_view * __cdecl wined3d_device_get_cs_uav(const struct wined3d_device *device,
         unsigned int idx);
 struct wined3d_rendertarget_view * __cdecl wined3d_device_get_depth_stencil_view(const struct wined3d_device *device);
-HRESULT __cdecl wined3d_device_get_device_caps(const struct wined3d_device *device, WINED3DCAPS *caps);
+HRESULT __cdecl wined3d_device_get_device_caps(const struct wined3d_device *device, struct wined3d_caps *caps);
 HRESULT __cdecl wined3d_device_get_display_mode(const struct wined3d_device *device, UINT swapchain_idx,
         struct wined3d_display_mode *mode, enum wined3d_display_rotation *rotation);
 struct wined3d_shader * __cdecl wined3d_device_get_domain_shader(const struct wined3d_device *device);
