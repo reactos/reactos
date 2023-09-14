@@ -524,8 +524,15 @@ void state_unbind_resources(struct wined3d_state *state)
 void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state)
 {
     struct wined3d_texture *texture;
+    struct wined3d_buffer *buffer;
     struct wined3d_shader *shader;
     unsigned int i;
+
+    if ((buffer = state->index_buffer))
+    {
+        state->index_buffer = NULL;
+        wined3d_buffer_decref(buffer);
+    }
 
     if ((shader = state->vs))
     {
@@ -791,22 +798,20 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     }
 
     if (stateblock->changed.indices
-            && ((stateblock->state.index_buffer != src_state->index_buffer)
-                || (stateblock->state.base_vertex_index != src_state->base_vertex_index)
-                || (stateblock->state.index_format != src_state->index_format)
-                || (stateblock->state.index_offset != src_state->index_offset)))
+            && ((stateblock->stateblock_state.index_buffer != state->index_buffer)
+                || (stateblock->stateblock_state.base_vertex_index != state->base_vertex_index)
+                || (stateblock->stateblock_state.index_format != state->index_format)))
     {
         TRACE("Updating index buffer to %p, base vertex index to %d.\n",
-                src_state->index_buffer, src_state->base_vertex_index);
+                state->index_buffer, state->base_vertex_index);
 
-        if (src_state->index_buffer)
-            wined3d_buffer_incref(src_state->index_buffer);
-        if (stateblock->state.index_buffer)
-            wined3d_buffer_decref(stateblock->state.index_buffer);
-        stateblock->state.index_buffer = src_state->index_buffer;
-        stateblock->state.base_vertex_index = src_state->base_vertex_index;
-        stateblock->state.index_format = src_state->index_format;
-        stateblock->state.index_offset = src_state->index_offset;
+        if (state->index_buffer)
+            wined3d_buffer_incref(state->index_buffer);
+        if (stateblock->stateblock_state.index_buffer)
+            wined3d_buffer_decref(stateblock->stateblock_state.index_buffer);
+        stateblock->stateblock_state.index_buffer = state->index_buffer;
+        stateblock->stateblock_state.base_vertex_index = state->base_vertex_index;
+        stateblock->stateblock_state.index_format = state->index_format;
     }
 
     if (stateblock->changed.vertexDecl && stateblock->state.vertex_declaration != src_state->vertex_declaration)
@@ -1106,9 +1111,17 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
 
     if (stateblock->changed.indices)
     {
-        wined3d_device_set_index_buffer(device, stateblock->state.index_buffer,
-                stateblock->state.index_format, stateblock->state.index_offset);
-        wined3d_device_set_base_vertex_index(device, stateblock->state.base_vertex_index);
+        if (stateblock->stateblock_state.index_buffer)
+            wined3d_buffer_incref(stateblock->stateblock_state.index_buffer);
+        if (state->index_buffer)
+            wined3d_buffer_decref(state->index_buffer);
+        state->index_buffer = stateblock->stateblock_state.index_buffer;
+        state->index_format = stateblock->stateblock_state.index_format;
+        state->base_vertex_index = stateblock->stateblock_state.base_vertex_index;
+
+        wined3d_device_set_index_buffer(device, stateblock->stateblock_state.index_buffer,
+                stateblock->stateblock_state.index_format, 0);
+        wined3d_device_set_base_vertex_index(device, stateblock->stateblock_state.base_vertex_index);
     }
 
     if (stateblock->changed.vertexDecl && stateblock->state.vertex_declaration)

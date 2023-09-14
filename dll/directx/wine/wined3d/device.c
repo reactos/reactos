@@ -1867,24 +1867,32 @@ void CDECL wined3d_device_set_index_buffer(struct wined3d_device *device,
     TRACE("device %p, buffer %p, format %s, offset %u.\n",
             device, buffer, debug_d3dformat(format_id), offset);
 
-    prev_buffer = device->update_state->index_buffer;
-    prev_format = device->update_state->index_format;
-    prev_offset = device->update_state->index_offset;
+    prev_buffer = device->state.index_buffer;
+    prev_format = device->state.index_format;
+    prev_offset = device->state.index_offset;
 
-    device->update_state->index_buffer = buffer;
-    device->update_state->index_format = format_id;
-    device->update_state->index_offset = offset;
+    if (buffer)
+        wined3d_buffer_incref(buffer);
+    if (device->update_stateblock_state->index_buffer)
+        wined3d_buffer_decref(device->update_stateblock_state->index_buffer);
+    device->update_stateblock_state->index_buffer = buffer;
+    device->update_stateblock_state->index_format = format_id;
 
     if (device->recording)
+    {
         device->recording->changed.indices = TRUE;
+        return;
+    }
 
     if (prev_buffer == buffer && prev_format == format_id && prev_offset == offset)
         return;
 
     if (buffer)
         wined3d_buffer_incref(buffer);
-    if (!device->recording)
-        wined3d_cs_emit_set_index_buffer(device->cs, buffer, format_id, offset);
+    device->state.index_buffer = buffer;
+    device->state.index_format = format_id;
+    device->state.index_offset = offset;
+    wined3d_cs_emit_set_index_buffer(device->cs, buffer, format_id, offset);
     if (prev_buffer)
         wined3d_buffer_decref(prev_buffer);
 }
@@ -1904,7 +1912,9 @@ void CDECL wined3d_device_set_base_vertex_index(struct wined3d_device *device, I
 {
     TRACE("device %p, base_index %d.\n", device, base_index);
 
-    device->update_state->base_vertex_index = base_index;
+    device->update_stateblock_state->base_vertex_index = base_index;
+    if (!device->recording)
+        device->state.base_vertex_index = base_index;
 }
 
 INT CDECL wined3d_device_get_base_vertex_index(const struct wined3d_device *device)
@@ -5247,11 +5257,11 @@ void device_resource_released(struct wined3d_device *device, struct wined3d_reso
                 device->state.index_buffer =  NULL;
             }
 
-            if (device->recording && &device->update_state->index_buffer->resource == resource)
+            if (device->recording && &device->update_stateblock_state->index_buffer->resource == resource)
             {
                 ERR("Buffer resource %p is still in use by stateblock %p as index buffer.\n",
                         resource, device->recording);
-                device->update_state->index_buffer =  NULL;
+                device->update_stateblock_state->index_buffer =  NULL;
             }
             break;
 

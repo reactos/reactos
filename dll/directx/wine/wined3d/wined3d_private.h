@@ -3006,6 +3006,10 @@ struct wined3d_gl_bo
 
 struct wined3d_stateblock_state
 {
+    struct wined3d_buffer *index_buffer;
+    enum wined3d_format_id index_format;
+    int base_vertex_index;
+
     struct wined3d_shader *vs;
     struct wined3d_vec4 vs_consts_f[WINED3D_MAX_VS_CONSTS_F];
     struct wined3d_ivec4 vs_consts_i[WINED3D_MAX_CONSTS_I];
