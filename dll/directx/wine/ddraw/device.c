@@ -4275,8 +4275,11 @@ static HRESULT d3d_device7_DrawPrimitiveVB(IDirect3DDevice7 *iface, D3DPRIMITIVE
 {
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
     struct d3d_vertex_buffer *vb_impl = unsafe_impl_from_IDirect3DVertexBuffer7(vb);
-    HRESULT hr;
+    struct wined3d_resource *wined3d_resource;
+    struct wined3d_map_desc wined3d_map_desc;
+    struct wined3d_box wined3d_box = {0};
     DWORD stride;
+    HRESULT hr;
 
     TRACE("iface %p, primitive_type %#x, vb %p, start_vertex %u, vertex_count %u, flags %#x.\n",
             iface, primitive_type, vb, start_vertex, vertex_count, flags);
@@ -4288,6 +4291,26 @@ static HRESULT d3d_device7_DrawPrimitiveVB(IDirect3DDevice7 *iface, D3DPRIMITIVE
     }
 
     stride = get_flexible_vertex_size(vb_impl->fvf);
+
+    if (vb_impl->Caps & D3DVBCAPS_SYSTEMMEMORY)
+    {
+        TRACE("Drawing from D3DVBCAPS_SYSTEMMEMORY vertex buffer, forwarding to DrawPrimitive().\n");
+        wined3d_mutex_lock();
+        wined3d_resource = wined3d_buffer_get_resource(vb_impl->wined3d_buffer);
+        wined3d_box.left = start_vertex * stride;
+        wined3d_box.right = wined3d_box.left + vertex_count * stride;
+        if (FAILED(hr = wined3d_resource_map(wined3d_resource, 0, &wined3d_map_desc,
+                &wined3d_box, WINED3D_MAP_READ)))
+        {
+            wined3d_mutex_unlock();
+            return D3DERR_VERTEXBUFFERLOCKED;
+        }
+        hr = d3d_device7_DrawPrimitive(iface, primitive_type, vb_impl->fvf, wined3d_map_desc.data,
+                vertex_count, flags);
+        wined3d_resource_unmap(wined3d_resource, 0);
+        wined3d_mutex_unlock();
+        return hr;
+    }
 
     wined3d_mutex_lock();
     wined3d_device_set_vertex_declaration(device->wined3d_device, vb_impl->wined3d_declaration);
@@ -4366,6 +4389,7 @@ static HRESULT d3d_device7_DrawIndexedPrimitiveVB(IDirect3DDevice7 *iface,
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
     struct d3d_vertex_buffer *vb_impl = unsafe_impl_from_IDirect3DVertexBuffer7(vb);
     DWORD stride = get_flexible_vertex_size(vb_impl->fvf);
+    struct wined3d_resource *wined3d_resource;
     struct wined3d_map_desc wined3d_map_desc;
     struct wined3d_box wined3d_box = {0};
     struct wined3d_resource *ib;
@@ -4380,6 +4404,24 @@ static HRESULT d3d_device7_DrawIndexedPrimitiveVB(IDirect3DDevice7 *iface,
     {
         WARN("0 vertex or index count.\n");
         return D3D_OK;
+    }
+
+    if (vb_impl->Caps & D3DVBCAPS_SYSTEMMEMORY)
+    {
+        TRACE("Drawing from D3DVBCAPS_SYSTEMMEMORY vertex buffer, forwarding to DrawIndexedPrimitive().\n");
+        wined3d_mutex_lock();
+        wined3d_resource = wined3d_buffer_get_resource(vb_impl->wined3d_buffer);
+        if (FAILED(hr = wined3d_resource_map(wined3d_resource, 0, &wined3d_map_desc,
+                &wined3d_box, WINED3D_MAP_READ)))
+        {
+            wined3d_mutex_unlock();
+            return D3DERR_VERTEXBUFFERLOCKED;
+        }
+        hr = d3d_device7_DrawIndexedPrimitive(iface, primitive_type, vb_impl->fvf, wined3d_map_desc.data,
+                start_vertex + vertex_count, indices, index_count, flags);
+        wined3d_resource_unmap(wined3d_resource, 0);
+        wined3d_mutex_unlock();
+        return hr;
     }
 
     /* Steps:
