@@ -499,9 +499,8 @@ void wined3d_cs_emit_present(struct wined3d_cs *cs, struct wined3d_swapchain *sw
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
 
     /* Limit input latency by limiting the number of presents that we can get
-     * ahead of the worker thread. We have a constant limit here, but
-     * IDXGIDevice1 allows tuning this. */
-    while (pending > 1)
+     * ahead of the worker thread. */
+    while (pending >= swapchain->max_frame_latency)
     {
         wined3d_pause();
         pending = InterlockedCompareExchange(&cs->pending_presents, 0, 0);

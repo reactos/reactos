@@ -752,6 +752,12 @@ static void wined3d_swapchain_cs_init(void *object)
     context_release(swapchain->context[0]);
 }
 
+void swapchain_set_max_frame_latency(struct wined3d_swapchain *swapchain, const struct wined3d_device *device)
+{
+    /* Subtract 1 for the implicit OpenGL latency. */
+    swapchain->max_frame_latency = device->max_frame_latency >= 2 ? device->max_frame_latency - 1 : 1;
+}
+
 static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3d_device *device,
         struct wined3d_swapchain_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
@@ -789,6 +795,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     swapchain->win_handle = window;
     swapchain->device_window = window;
     swapchain->swap_interval = WINED3D_SWAP_INTERVAL_DEFAULT;
+    swapchain_set_max_frame_latency(swapchain, device);
 
     if (FAILED(hr = wined3d_get_adapter_display_mode(device->wined3d,
             adapter->ordinal, &swapchain->original_mode, NULL)))

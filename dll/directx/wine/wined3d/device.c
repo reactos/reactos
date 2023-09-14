@@ -3108,6 +3108,23 @@ struct wined3d_unordered_access_view * CDECL wined3d_device_get_unordered_access
     return wined3d_device_get_pipeline_unordered_access_view(device, WINED3D_PIPELINE_GRAPHICS, idx);
 }
 
+void CDECL wined3d_device_set_max_frame_latency(struct wined3d_device *device, unsigned int latency)
+{
+    unsigned int i;
+
+    if (!latency)
+        latency = 3;
+
+    device->max_frame_latency = latency;
+    for (i = 0; i < device->swapchain_count; ++i)
+        swapchain_set_max_frame_latency(device->swapchains[i], device);
+}
+
+unsigned int CDECL wined3d_device_get_max_frame_latency(const struct wined3d_device *device)
+{
+    return device->max_frame_latency;
+}
+
 /* Context activation is done by the caller. */
 #define copy_and_next(dest, src, size) memcpy(dest, src, size); dest += (size)
 static HRESULT process_vertices_strided(const struct wined3d_device *device, DWORD dwDestIndex, DWORD dwCount,
@@ -5264,6 +5281,8 @@ HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
     state_init(&device->state, &device->fb, &adapter->gl_info,
             &adapter->d3d_info, WINED3D_STATE_INIT_DEFAULT);
     device->update_state = &device->state;
+
+    device->max_frame_latency = 3;
 
     if (!(device->cs = wined3d_cs_create(device)))
     {

@@ -2995,6 +2995,7 @@ struct wined3d_device
     struct wined3d_rendertarget_view *back_buffer_view;
     struct wined3d_swapchain **swapchains;
     UINT swapchain_count;
+    unsigned int max_frame_latency;
 
     struct list             resources; /* a linked list to track resources created by the device */
     struct list             shaders;   /* a linked list to track shaders (pixel and vertex)      */
@@ -3878,6 +3879,7 @@ struct wined3d_swapchain
     struct wined3d_palette *palette;
     RECT front_buffer_update;
     unsigned int swap_interval;
+    unsigned int max_frame_latency;
 
     LONG prev_time, frames;   /* Performance tracking */
 
@@ -3898,6 +3900,8 @@ struct wined3d_context *swapchain_get_context(struct wined3d_swapchain *swapchai
 void swapchain_destroy_contexts(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 HDC swapchain_get_backup_dc(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 void swapchain_update_draw_bindings(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
+void swapchain_set_max_frame_latency(struct wined3d_swapchain *swapchain,
+        const struct wined3d_device *device) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * Utility function prototypes
