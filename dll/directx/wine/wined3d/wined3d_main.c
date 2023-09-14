@@ -74,7 +74,7 @@ struct wined3d_settings wined3d_settings =
 {
     TRUE,           /* Multithreaded CS by default. */
     FALSE,          /* explicit_gl_version */
-    MAKEDWORD_VERSION(1, 0), /* Default to legacy OpenGL */
+    MAKEDWORD_VERSION(4, 4), /* Default to OpenGL 4.4 */
     TRUE,           /* Use of GLSL enabled by default */
     ORM_FBO,        /* Use FBOs to do offscreen rendering */
     PCI_VENDOR_NONE,/* PCI Vendor ID */

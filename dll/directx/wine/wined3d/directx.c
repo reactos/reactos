@@ -6615,16 +6615,16 @@ static DWORD get_max_gl_version(const struct wined3d_gl_info *gl_info, DWORD fla
 {
     const char *gl_vendor, *gl_renderer;
 
-    if (wined3d_settings.explicit_gl_version || (flags & WINED3D_PIXEL_CENTER_INTEGER))
+    if (wined3d_settings.explicit_gl_version)
         return wined3d_settings.max_gl_version;
 
     gl_vendor = (const char *)gl_info->gl_ops.gl.p_glGetString(GL_VENDOR);
     gl_renderer = (const char *)gl_info->gl_ops.gl.p_glGetString(GL_RENDERER);
     if (!gl_vendor || !gl_renderer
             || wined3d_guess_card_vendor(gl_vendor, gl_renderer) == HW_VENDOR_NVIDIA)
-        return wined3d_settings.max_gl_version;
+        return MAKEDWORD_VERSION(1, 0);
 
-    return MAKEDWORD_VERSION(4, 4);
+    return wined3d_settings.max_gl_version;
 }
 
 static BOOL has_extension(const char *list, const char *ext)
