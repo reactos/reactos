@@ -845,7 +845,6 @@ void wined3d_cs_emit_dispatch_indirect(struct wined3d_cs *cs,
 static void wined3d_cs_exec_draw(struct wined3d_cs *cs, const void *data)
 {
     const struct wined3d_d3d_info *d3d_info = &cs->device->adapter->d3d_info;
-    const struct wined3d_gl_info *gl_info = &cs->device->adapter->gl_info;
     const struct wined3d_shader *geometry_shader;
     struct wined3d_device *device = cs->device;
     int base_vertex_idx, load_base_vertex_idx;
@@ -858,14 +857,14 @@ static void wined3d_cs_exec_draw(struct wined3d_cs *cs, const void *data)
     {
         const struct wined3d_direct_draw_parameters *direct = &op->parameters.u.direct;
 
-        if (op->parameters.indexed && gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX])
+        if (op->parameters.indexed && d3d_info->draw_base_vertex_offset)
             base_vertex_idx = direct->base_vertex_idx;
         else if (!op->parameters.indexed)
             base_vertex_idx = direct->start_idx;
     }
 
     /* ARB_draw_indirect always supports a base vertex offset. */
-    if (!op->parameters.indirect && !gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX])
+    if (!op->parameters.indirect && !d3d_info->draw_base_vertex_offset)
         load_base_vertex_idx = op->parameters.u.direct.base_vertex_idx;
     else
         load_base_vertex_idx = 0;

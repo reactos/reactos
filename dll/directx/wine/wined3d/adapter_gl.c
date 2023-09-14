@@ -3736,6 +3736,8 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     d3d_info->texture_npot_conditional = gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT]
             || gl_info->supported[ARB_TEXTURE_RECTANGLE];
 
+    d3d_info->draw_base_vertex_offset = !!gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX];
+
     TRACE("Max texture stages: %u.\n", d3d_info->limits.ffp_blend_stages);
 
     if (!d3d_info->shader_color_key)

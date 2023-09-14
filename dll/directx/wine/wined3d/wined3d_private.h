@@ -205,6 +205,7 @@ struct wined3d_d3d_info
     unsigned int viewport_array_index_any_shader : 1;
     unsigned int texture_npot : 1;
     unsigned int texture_npot_conditional : 1;
+    unsigned int draw_base_vertex_offset : 1;
     enum wined3d_feature_level feature_level;
 };
 
