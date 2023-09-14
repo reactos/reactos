@@ -47,7 +47,7 @@ DWORD WINAPI class_default(DI_FUNCTION function, HDEVINFO set, SP_DEVINFO_DATA *
 
 DWORD WINAPI class_error(DI_FUNCTION function, HDEVINFO set, SP_DEVINFO_DATA *device)
 {
-    return 0xdeadbeef;
+    return 0xdeadc0de;
 }
 
 DWORD WINAPI co_success(DI_FUNCTION function, HDEVINFO set, SP_DEVINFO_DATA *device,
@@ -67,5 +67,5 @@ DWORD WINAPI CoDeviceInstall(DI_FUNCTION function, HDEVINFO set, SP_DEVINFO_DATA
 DWORD WINAPI co_error(DI_FUNCTION function, HDEVINFO set, SP_DEVINFO_DATA *device,
         COINSTALLER_CONTEXT_DATA *context)
 {
-    return 0xdeadbeef;
+    return 0xdeadc0de;
 }
