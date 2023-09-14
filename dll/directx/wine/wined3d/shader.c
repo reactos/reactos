@@ -3600,9 +3600,6 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
     TRACE("byte_code %p, byte_code_size %#lx, format %#x, max_version %#x.\n",
             desc->byte_code, (long)desc->byte_code_size, desc->format, desc->max_version);
 
-    if (!desc->byte_code)
-        return WINED3DERR_INVALIDCALL;
-
     if (!(shader->frontend = shader_select_frontend(desc->format)))
     {
         FIXME("Unable to find frontend for shader.\n");
@@ -3677,19 +3674,29 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
         byte_code_size = (ptr - desc->byte_code) * sizeof(*ptr);
     }
 
-    if (!(shader->function = heap_alloc(byte_code_size)))
+    if (desc->byte_code && byte_code_size)
     {
-        shader_cleanup(shader);
-        return E_OUTOFMEMORY;
-    }
-    memcpy(shader->function, desc->byte_code, byte_code_size);
-    shader->functionLength = byte_code_size;
+        if (!(shader->function = heap_alloc(byte_code_size)))
+        {
+            shader_cleanup(shader);
+            return E_OUTOFMEMORY;
+        }
+        memcpy(shader->function, desc->byte_code, byte_code_size);
+        shader->functionLength = byte_code_size;
 
-    if (FAILED(hr = shader_set_function(shader, float_const_count, type, desc->max_version)))
+        if (FAILED(hr = shader_set_function(shader, float_const_count, type, desc->max_version)))
+        {
+            WARN("Failed to set function, hr %#x.\n", hr);
+            shader_cleanup(shader);
+            return hr;
+        }
+    }
+    else
     {
-        WARN("Failed to set function, hr %#x.\n", hr);
-        shader_cleanup(shader);
-        return hr;
+        shader->reg_maps.shader_version.type = type;
+        shader->reg_maps.shader_version.major = 4;
+        shader->reg_maps.shader_version.minor = 0;
+        shader_set_limits(shader);
     }
 
     shader->load_local_constsF = shader->lconst_inf_or_nan;
@@ -3730,6 +3737,7 @@ static HRESULT geometry_shader_init(struct wined3d_shader *shader, struct wined3
         const struct wined3d_shader_desc *desc, const struct wined3d_stream_output_desc *so_desc,
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
+    struct wined3d_shader_desc shader_desc = *desc;
     struct wined3d_stream_output_element *elements;
     enum wined3d_shader_type shader_type;
     HRESULT hr;
@@ -3740,6 +3748,9 @@ static HRESULT geometry_shader_init(struct wined3d_shader *shader, struct wined3
         switch (shader_type)
         {
             case WINED3D_SHADER_TYPE_VERTEX:
+                shader_desc.byte_code = NULL;
+                shader_desc.byte_code_size = 0;
+                break;
             case WINED3D_SHADER_TYPE_DOMAIN:
                 FIXME("Stream output not supported for %s.\n", debug_shader_type(shader_type));
                 return E_NOTIMPL;
@@ -3748,7 +3759,8 @@ static HRESULT geometry_shader_init(struct wined3d_shader *shader, struct wined3
         }
     }
 
-    if (FAILED(hr = shader_init(shader, device, desc, 0, WINED3D_SHADER_TYPE_GEOMETRY, parent, parent_ops)))
+    if (FAILED(hr = shader_init(shader, device, &shader_desc, 0,
+            WINED3D_SHADER_TYPE_GEOMETRY, parent, parent_ops)))
         return hr;
 
     if (so_desc)
@@ -3797,6 +3809,9 @@ void find_gs_compile_args(const struct wined3d_state *state, const struct wined3
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
     args->output_count = pixel_shader ? pixel_shader->limits->packed_input : shader->limits->packed_output;
+
+    if (!(args->primitive_type = shader->u.gs.input_type))
+        args->primitive_type = d3d_primitive_type_from_gl(state->gl_primitive_type);
 
     init_interpolation_compile_args(args->interpolation_mode, pixel_shader, gl_info);
 }
@@ -4131,6 +4146,9 @@ HRESULT CDECL wined3d_shader_create_cs(struct wined3d_device *device, const stru
     TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, parent, parent_ops, shader);
 
+    if (!desc->byte_code)
+        return WINED3DERR_INVALIDCALL;
+
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
@@ -4157,6 +4175,9 @@ HRESULT CDECL wined3d_shader_create_ds(struct wined3d_device *device, const stru
 
     TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, parent, parent_ops, shader);
+
+    if (!desc->byte_code)
+        return WINED3DERR_INVALIDCALL;
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
@@ -4186,6 +4207,9 @@ HRESULT CDECL wined3d_shader_create_gs(struct wined3d_device *device, const stru
     TRACE("device %p, desc %p, so_desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, so_desc, parent, parent_ops, shader);
 
+    if (!desc->byte_code)
+        return WINED3DERR_INVALIDCALL;
+
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
@@ -4212,6 +4236,9 @@ HRESULT CDECL wined3d_shader_create_hs(struct wined3d_device *device, const stru
 
     TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, parent, parent_ops, shader);
+
+    if (!desc->byte_code)
+        return WINED3DERR_INVALIDCALL;
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
@@ -4240,6 +4267,9 @@ HRESULT CDECL wined3d_shader_create_ps(struct wined3d_device *device, const stru
     TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, parent, parent_ops, shader);
 
+    if (!desc->byte_code)
+        return WINED3DERR_INVALIDCALL;
+
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
@@ -4266,6 +4296,9 @@ HRESULT CDECL wined3d_shader_create_vs(struct wined3d_device *device, const stru
 
     TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
             device, desc, parent, parent_ops, shader);
+
+    if (!desc->byte_code)
+        return WINED3DERR_INVALIDCALL;
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;

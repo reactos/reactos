@@ -5049,7 +5049,9 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
         }
         else if (!context->transform_feedback_active)
         {
-            GLenum mode = gl_tfb_primitive_type_from_d3d(shader->u.gs.output_type);
+            enum wined3d_primitive_type primitive_type = shader->u.gs.output_type
+                    ? shader->u.gs.output_type : d3d_primitive_type_from_gl(state->gl_primitive_type);
+            GLenum mode = gl_tfb_primitive_type_from_d3d(primitive_type);
             GL_EXTCALL(glBeginTransformFeedback(mode));
             checkGLcall("glBeginTransformFeedback");
             context->transform_feedback_active = 1;

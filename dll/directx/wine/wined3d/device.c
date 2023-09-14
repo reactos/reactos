@@ -99,7 +99,7 @@ GLenum gl_primitive_type_from_d3d(enum wined3d_primitive_type primitive_type)
     }
 }
 
-static enum wined3d_primitive_type d3d_primitive_type_from_gl(GLenum primitive_type)
+enum wined3d_primitive_type d3d_primitive_type_from_gl(GLenum primitive_type)
 {
     switch (primitive_type)
     {

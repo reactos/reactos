@@ -782,6 +782,7 @@ void wined3d_cs_emit_dispatch_indirect(struct wined3d_cs *cs,
 static void wined3d_cs_exec_draw(struct wined3d_cs *cs, const void *data)
 {
     const struct wined3d_gl_info *gl_info = &cs->device->adapter->gl_info;
+    const struct wined3d_shader *geometry_shader;
     struct wined3d_state *state = &cs->state;
     const struct wined3d_cs_draw *op = data;
     int load_base_vertex_idx;
@@ -801,6 +802,8 @@ static void wined3d_cs_exec_draw(struct wined3d_cs *cs, const void *data)
 
     if (state->gl_primitive_type != op->primitive_type)
     {
+        if ((geometry_shader = state->shader[WINED3D_SHADER_TYPE_GEOMETRY]) && !geometry_shader->function)
+            device_invalidate_state(cs->device, STATE_SHADER(WINED3D_SHADER_TYPE_GEOMETRY));
         if (state->gl_primitive_type == GL_POINTS || op->primitive_type == GL_POINTS)
             device_invalidate_state(cs->device, STATE_POINT_ENABLE);
         state->gl_primitive_type = op->primitive_type;

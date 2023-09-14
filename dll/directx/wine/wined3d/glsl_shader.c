@@ -7972,7 +7972,11 @@ static GLuint shader_glsl_generate_geometry_shader(const struct wined3d_context 
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     struct wined3d_string_buffer *buffer = &priv->shader_buffer;
     const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_shader_signature_element *output;
+    enum wined3d_primitive_type primitive_type;
     struct shader_glsl_ctx_priv priv_ctx;
+    unsigned int max_vertices;
+    unsigned int i, j;
     GLuint shader_id;
 
     memset(&priv_ctx, 0, sizeof(priv_ctx));
@@ -7984,12 +7988,33 @@ static GLuint shader_glsl_generate_geometry_shader(const struct wined3d_context 
 
     shader_generate_glsl_declarations(context, buffer, shader, reg_maps, &priv_ctx);
 
-    shader_addline(buffer, "layout(%s", glsl_primitive_type_from_d3d(shader->u.gs.input_type));
+    primitive_type = shader->u.gs.input_type ? shader->u.gs.input_type : args->primitive_type;
+    shader_addline(buffer, "layout(%s", glsl_primitive_type_from_d3d(primitive_type));
     if (shader->u.gs.instance_count > 1)
         shader_addline(buffer, ", invocations = %u", shader->u.gs.instance_count);
     shader_addline(buffer, ") in;\n");
+
+    primitive_type = shader->u.gs.output_type ? shader->u.gs.output_type : args->primitive_type;
+    if (!(max_vertices = shader->u.gs.vertices_out))
+    {
+        switch (args->primitive_type)
+        {
+            case WINED3D_PT_POINTLIST:
+                max_vertices = 1;
+                break;
+            case WINED3D_PT_LINELIST:
+                max_vertices = 2;
+                break;
+            case WINED3D_PT_TRIANGLELIST:
+                max_vertices = 3;
+                break;
+            default:
+                FIXME("Unhandled primitive type %s.\n", debug_d3dprimitivetype(args->primitive_type));
+                break;
+        }
+    }
     shader_addline(buffer, "layout(%s, max_vertices = %u) out;\n",
-            glsl_primitive_type_from_d3d(shader->u.gs.output_type), shader->u.gs.vertices_out);
+            glsl_primitive_type_from_d3d(primitive_type), max_vertices);
     shader_addline(buffer, "in shader_in_out { vec4 reg[%u]; } shader_in[];\n", shader->limits->packed_input);
 
     if (!gl_info->supported[ARB_CLIP_CONTROL])
@@ -8004,9 +8029,32 @@ static GLuint shader_glsl_generate_geometry_shader(const struct wined3d_context 
         shader_glsl_generate_sm4_output_setup(priv, shader, args->output_count,
                 gl_info, TRUE, args->interpolation_mode);
     }
+
     shader_addline(buffer, "void main()\n{\n");
-    if (FAILED(shader_generate_code(shader, buffer, reg_maps, &priv_ctx, NULL, NULL)))
-        return 0;
+    if (shader->function)
+    {
+        if (FAILED(shader_generate_code(shader, buffer, reg_maps, &priv_ctx, NULL, NULL)))
+            return 0;
+    }
+    else
+    {
+        for (i = 0; i < max_vertices; ++i)
+        {
+            for (j = 0; j < shader->output_signature.element_count; ++j)
+            {
+                output = &shader->output_signature.elements[j];
+                shader_addline(buffer, "gs_out[%u] = shader_in[%u].reg[%u];\n",
+                        output->register_idx, i, output->register_idx);
+            }
+            shader_addline(buffer, "setup_gs_output(gs_out);\n");
+            if (!gl_info->supported[ARB_CLIP_CONTROL])
+            {
+                shader_addline(buffer, "gl_ViewportIndex = 0;\n");
+                shader_glsl_fixup_position(buffer, TRUE);
+            }
+            shader_addline(buffer, "EmitVertex();\n");
+        }
+    }
     shader_addline(buffer, "}\n");
 
     shader_id = GL_EXTCALL(glCreateShader(GL_GEOMETRY_SHADER));

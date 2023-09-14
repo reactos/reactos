@@ -1404,6 +1404,7 @@ struct ds_compile_args
 struct gs_compile_args
 {
     unsigned int output_count;
+    enum wined3d_primitive_type primitive_type;
     DWORD interpolation_mode[WINED3D_PACKED_INTERPOLATION_SIZE];
 };
 
@@ -3962,6 +3963,7 @@ void state_shademode(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id) DECLSPEC_HIDDEN;
 
 GLenum gl_primitive_type_from_d3d(enum wined3d_primitive_type primitive_type) DECLSPEC_HIDDEN;
+enum wined3d_primitive_type d3d_primitive_type_from_gl(GLenum primitive_type) DECLSPEC_HIDDEN;
 
 /* Math utils */
 void multiply_matrix(struct wined3d_matrix *dest, const struct wined3d_matrix *src1,
