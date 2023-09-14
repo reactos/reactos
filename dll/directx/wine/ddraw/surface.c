@@ -6133,8 +6133,9 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
             else if (desc->ddsCaps.dwCaps & DDSCAPS_3DDEVICE)
                 usage = WINED3DUSAGE_RENDERTARGET;
 
-            if (SUCCEEDED(hr = wined3d_check_device_format(ddraw->wined3d, WINED3DADAPTER_DEFAULT,
-                    WINED3D_DEVICE_TYPE_HAL, mode.format_id, usage, WINED3D_RTYPE_TEXTURE_2D, wined3d_desc.format)))
+            if (!(ddraw->flags & DDRAW_NO3D) && SUCCEEDED(hr = wined3d_check_device_format(ddraw->wined3d,
+                    WINED3DADAPTER_DEFAULT, WINED3D_DEVICE_TYPE_HAL, mode.format_id,
+                    usage, WINED3D_RTYPE_TEXTURE_2D, wined3d_desc.format)))
                 desc->ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY;
             else
                 desc->ddsCaps.dwCaps |= DDSCAPS_SYSTEMMEMORY;
@@ -6283,6 +6284,13 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
         WARN("Range color keys not supported, returning DDERR_NOCOLORKEYHW.\n");
         heap_free(texture);
         return DDERR_NOCOLORKEYHW;
+    }
+
+    if ((ddraw->flags & DDRAW_NO3D) && (desc->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    {
+        WARN("Video memory surfaces not supported without 3D support.\n");
+        heap_free(texture);
+        return DDERR_NODIRECTDRAWHW;
     }
 
     if (desc->ddsCaps.dwCaps & (DDSCAPS_OVERLAY))
