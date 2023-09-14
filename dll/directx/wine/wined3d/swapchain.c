@@ -846,6 +846,8 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     texture_desc.multisample_type = swapchain->desc.multisample_type;
     texture_desc.multisample_quality = swapchain->desc.multisample_quality;
     texture_desc.usage = 0;
+    if (device->wined3d->flags & WINED3D_NO3D)
+        texture_desc.usage |= WINED3DUSAGE_OWNDC;
     texture_desc.access = WINED3D_RESOURCE_ACCESS_GPU;
     texture_desc.width = swapchain->desc.backbuffer_width;
     texture_desc.height = swapchain->desc.backbuffer_height;
@@ -927,6 +929,8 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
         }
 
         texture_desc.usage = swapchain->desc.backbuffer_usage;
+        if (device->wined3d->flags & WINED3D_NO3D)
+            texture_desc.usage |= WINED3DUSAGE_OWNDC;
         for (i = 0; i < swapchain->desc.backbuffer_count; ++i)
         {
             TRACE("Creating back buffer %u.\n", i);

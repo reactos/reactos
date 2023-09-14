@@ -3092,7 +3092,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
         TRACE("Created sub-resource %u (level %u, layer %u).\n",
                 i, i % texture->level_count, i / texture->level_count);
 
-        if ((desc->usage & WINED3DUSAGE_OWNDC) || (device->wined3d->flags & WINED3D_NO3D))
+        if (desc->usage & WINED3DUSAGE_OWNDC)
         {
             struct wined3d_texture_idx texture_idx = {texture, i};
 
@@ -3733,7 +3733,7 @@ HRESULT CDECL wined3d_texture_release_dc(struct wined3d_texture *texture, unsign
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (!(texture->resource.usage & WINED3DUSAGE_OWNDC) && !(device->wined3d->flags & WINED3D_NO3D))
+    if (!(texture->resource.usage & WINED3DUSAGE_OWNDC))
     {
         struct wined3d_texture_idx texture_idx = {texture, sub_resource_idx};
 
