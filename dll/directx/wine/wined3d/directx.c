@@ -1626,13 +1626,6 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
                 allowed_bind_flags &= ~WINED3D_BIND_DEPTH_STENCIL;
                 gl_type = gl_type_end = WINED3D_GL_RES_TYPE_TEX_CUBE;
             }
-            else if ((bind_flags & WINED3D_BIND_DEPTH_STENCIL)
-                    && (format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_SHADOW)
-                    && !adapter->gl_info.supported[ARB_SHADOW])
-            {
-                TRACE("[FAILED] - No shadow sampler support.\n");
-                return WINED3DERR_NOTAVAILABLE;
-            }
             break;
 
         case WINED3D_RTYPE_TEXTURE_3D:
