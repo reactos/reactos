@@ -3302,6 +3302,10 @@ static void init_transformed_lights(struct lights_settings *ls,
                     ++ls->spot_light_count;
                     break;
 
+                case WINED3D_LIGHT_PARALLELPOINT:
+                    ++ls->parallel_point_light_count;
+                    break;
+
                 default:
                     FIXME("Unhandled light type %#x.\n", light_info->OriginalParms.type);
                     continue;
@@ -3370,6 +3374,23 @@ static void init_transformed_lights(struct lights_settings *ls,
         light->cos_htheta = cosf(light_info->OriginalParms.theta / 2.0f);
         light->cos_hphi = cosf(light_info->OriginalParms.phi / 2.0f);
 
+        light->diffuse = light_info->OriginalParms.diffuse;
+        light->ambient = light_info->OriginalParms.ambient;
+        light->specular = light_info->OriginalParms.specular;
+        ++index;
+    }
+
+    for (i = 0; i < light_count; ++i)
+    {
+        light_info = lights[i];
+        if (light_info->OriginalParms.type != WINED3D_LIGHT_PARALLELPOINT)
+            continue;
+
+        light = &ls->lights[index];
+
+        wined3d_vec4_transform(&vec4, &light_info->position, &state->transforms[WINED3D_TS_VIEW]);
+        *(struct wined3d_vec3 *)&light->position = *(struct wined3d_vec3 *)&vec4;
+        wined3d_vec3_normalise((struct wined3d_vec3 *)&light->position);
         light->diffuse = light_info->OriginalParms.diffuse;
         light->ambient = light_info->OriginalParms.ambient;
         light->specular = light_info->OriginalParms.specular;
@@ -3521,6 +3542,16 @@ static void compute_light(struct wined3d_color *ambient, struct wined3d_color *d
         if (normal)
             update_light_diffuse_specular(diffuse, specular, &dir, att, material_shininess,
                     &normal_transformed, &position_transformed_normalised, light, ls);
+    }
+
+    for (i = 0; i < ls->parallel_point_light_count; ++i, ++index)
+    {
+        light = &ls->lights[index];
+
+        wined3d_color_rgb_mul_add(ambient, &light->ambient, 1.0f);
+        if (normal)
+            update_light_diffuse_specular(diffuse, specular, (const struct wined3d_vec3 *)&light->position,
+                    1.0f, material_shininess, &normal_transformed, &position_transformed_normalised, light, ls);
     }
 }
 
