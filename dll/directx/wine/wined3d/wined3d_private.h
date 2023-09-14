@@ -2829,6 +2829,9 @@ struct wined3d_adapter_ops
             const struct wined3d_bo_address *data, size_t size, uint32_t bind_flags, uint32_t map_flags);
     void (*adapter_unmap_bo_address)(struct wined3d_context *context, const struct wined3d_bo_address *data,
             uint32_t bind_flags, unsigned int range_count, const struct wined3d_map_range *ranges);
+    void (*adapter_copy_bo_address)(struct wined3d_context *context,
+            const struct wined3d_bo_address *dst, uint32_t dst_bind_flags,
+            const struct wined3d_bo_address *src, uint32_t src_bind_flags, size_t size);
     HRESULT (*adapter_create_swapchain)(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
             void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_swapchain **swapchain);
     void (*adapter_destroy_swapchain)(struct wined3d_swapchain *swapchain);
@@ -5348,6 +5351,14 @@ static inline void wined3d_context_unmap_bo_address(struct wined3d_context *cont
         unsigned int range_count, const struct wined3d_map_range *ranges)
 {
     context->device->adapter->adapter_ops->adapter_unmap_bo_address(context, data, bind_flags, range_count, ranges);
+}
+
+static inline void wined3d_context_copy_bo_address(struct wined3d_context *context,
+        const struct wined3d_bo_address *dst, uint32_t dst_bind_flags,
+        const struct wined3d_bo_address *src, uint32_t src_bind_flags, size_t size)
+{
+    context->device->adapter->adapter_ops->adapter_copy_bo_address(context,
+            dst, dst_bind_flags, src, src_bind_flags, size);
 }
 
 /* The WNDCLASS-Name for the fake window which we use to retrieve the GL capabilities */

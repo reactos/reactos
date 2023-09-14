@@ -490,6 +490,24 @@ static void adapter_vk_unmap_bo_address(struct wined3d_context *context, const s
         ERR("Unsupported buffer object %#lx.\n", data->buffer_object);
 }
 
+static void adapter_vk_copy_bo_address(struct wined3d_context *context,
+        const struct wined3d_bo_address *dst, uint32_t dst_bind_flags,
+        const struct wined3d_bo_address *src, uint32_t src_bind_flags, size_t size)
+{
+    struct wined3d_map_range range;
+    void *dst_ptr, *src_ptr;
+
+    src_ptr = adapter_vk_map_bo_address(context, src, size, src_bind_flags, WINED3D_MAP_READ);
+    dst_ptr = adapter_vk_map_bo_address(context, dst, size, dst_bind_flags, WINED3D_MAP_WRITE);
+
+    memcpy(dst_ptr, src_ptr, size);
+
+    range.offset = 0;
+    range.size = size;
+    adapter_vk_unmap_bo_address(context, dst, dst_bind_flags, 1, &range);
+    adapter_vk_unmap_bo_address(context, src, src_bind_flags, 0, NULL);
+}
+
 static HRESULT adapter_vk_create_swapchain(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
         void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_swapchain **swapchain)
 {
@@ -821,6 +839,7 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
     adapter_vk_uninit_3d,
     adapter_vk_map_bo_address,
     adapter_vk_unmap_bo_address,
+    adapter_vk_copy_bo_address,
     adapter_vk_create_swapchain,
     adapter_vk_destroy_swapchain,
     adapter_vk_create_buffer,

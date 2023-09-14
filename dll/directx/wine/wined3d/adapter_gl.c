@@ -4611,6 +4611,20 @@ static void adapter_gl_unmap_bo_address(struct wined3d_context *context, const s
     wined3d_context_gl_unmap_bo_address(context_gl, data, binding, range_count, ranges);
 }
 
+static void adapter_gl_copy_bo_address(struct wined3d_context *context,
+        const struct wined3d_bo_address *dst, uint32_t dst_bind_flags,
+        const struct wined3d_bo_address *src, uint32_t src_bind_flags, size_t size)
+{
+    struct wined3d_context_gl *context_gl;
+    GLenum dst_binding, src_binding;
+
+    context_gl = wined3d_context_gl(context);
+    dst_binding = wined3d_buffer_gl_binding_from_bind_flags(context_gl->gl_info, dst_bind_flags);
+    src_binding = wined3d_buffer_gl_binding_from_bind_flags(context_gl->gl_info, src_bind_flags);
+
+    wined3d_context_gl_copy_bo_address(context_gl, dst, dst_binding, src, src_binding, size);
+}
+
 static HRESULT adapter_gl_create_swapchain(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
         void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_swapchain **swapchain)
 {
@@ -5095,6 +5109,7 @@ static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
     adapter_gl_uninit_3d,
     adapter_gl_map_bo_address,
     adapter_gl_unmap_bo_address,
+    adapter_gl_copy_bo_address,
     adapter_gl_create_swapchain,
     adapter_gl_destroy_swapchain,
     adapter_gl_create_buffer,

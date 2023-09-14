@@ -1188,9 +1188,8 @@ void wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_off
     src.addr += src_offset;
 
     context = context_acquire(dst_buffer->resource.device, NULL, 0);
-    wined3d_context_gl_copy_bo_address(wined3d_context_gl(context),
-            &dst, wined3d_buffer_gl(dst_buffer)->buffer_type_hint,
-            &src, wined3d_buffer_gl(src_buffer)->buffer_type_hint, size);
+    wined3d_context_copy_bo_address(context, &dst, dst_buffer->resource.bind_flags,
+            &src, src_buffer->resource.bind_flags, size);
     context_release(context);
 
     wined3d_buffer_invalidate_range(dst_buffer, ~dst_location, dst_offset, size);
