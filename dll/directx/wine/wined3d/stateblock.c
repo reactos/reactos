@@ -1274,6 +1274,18 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     TRACE("Applied stateblock %p.\n", stateblock);
 }
 
+void CDECL wined3d_stateblock_set_vertex_shader(struct wined3d_stateblock *stateblock, struct wined3d_shader *shader)
+{
+    TRACE("stateblock %p, shader %p.\n", stateblock, shader);
+
+    if (shader)
+        wined3d_shader_incref(shader);
+    if (stateblock->stateblock_state.vs)
+        wined3d_shader_decref(stateblock->stateblock_state.vs);
+    stateblock->stateblock_state.vs = shader;
+    stateblock->changed.vertexShader = TRUE;
+}
+
 HRESULT CDECL wined3d_stateblock_set_vs_consts_f(struct wined3d_stateblock *stateblock,
         unsigned int start_idx, unsigned int count, const struct wined3d_vec4 *constants)
 {
