@@ -2710,18 +2710,22 @@ HRESULT CDECL wined3d_device_set_ps_consts_f(struct wined3d_device *device,
             || count > d3d_info->limits.ps_uniform_count - start_idx)
         return WINED3DERR_INVALIDCALL;
 
-    memcpy(&device->update_state->ps_consts_f[start_idx], constants, count * sizeof(*constants));
+    memcpy(&device->update_stateblock_state->ps_consts_f[start_idx], constants, count * sizeof(*constants));
+    if (device->recording)
+    {
+        memset(&device->recording->changed.ps_consts_f[start_idx], 1,
+                count * sizeof(*device->recording->changed.ps_consts_f));
+        return WINED3D_OK;
+    }
+
+    memcpy(&device->state.ps_consts_f[start_idx], constants, count * sizeof(*constants));
     if (TRACE_ON(d3d))
     {
         for (i = 0; i < count; ++i)
             TRACE("Set vec4 constant %u to %s.\n", start_idx + i, debug_vec4(&constants[i]));
     }
 
-    if (device->recording)
-        memset(&device->recording->changed.ps_consts_f[start_idx], 1,
-                count * sizeof(*device->recording->changed.ps_consts_f));
-    else
-        wined3d_cs_push_constants(device->cs, WINED3D_PUSH_CONSTANTS_PS_F, start_idx, count, constants);
+    wined3d_cs_push_constants(device->cs, WINED3D_PUSH_CONSTANTS_PS_F, start_idx, count, constants);
 
     return WINED3D_OK;
 }

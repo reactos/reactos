@@ -748,9 +748,9 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     {
         unsigned int idx = stateblock->contained_ps_consts_f[i];
 
-        TRACE("Setting ps_consts_f[%u] to %s.\n", idx, debug_vec4(&src_state->ps_consts_f[idx]));
+        TRACE("Setting ps_consts_f[%u] to %s.\n", idx, debug_vec4(&state->ps_consts_f[idx]));
 
-        stateblock->state.ps_consts_f[idx] = src_state->ps_consts_f[idx];
+        stateblock->stateblock_state.ps_consts_f[idx] = state->ps_consts_f[idx];
     }
 
     /* Pixel shader integer constants. */
@@ -1050,8 +1050,9 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     /* Pixel Shader Constants. */
     for (i = 0; i < stateblock->num_contained_ps_consts_f; ++i)
     {
+        state->ps_consts_f[i] = stateblock->stateblock_state.ps_consts_f[i];
         wined3d_device_set_ps_consts_f(device, stateblock->contained_ps_consts_f[i],
-                1, &stateblock->state.ps_consts_f[stateblock->contained_ps_consts_f[i]]);
+                1, &stateblock->stateblock_state.ps_consts_f[stateblock->contained_ps_consts_f[i]]);
     }
     for (i = 0; i < stateblock->num_contained_ps_consts_i; ++i)
     {
