@@ -14,6 +14,7 @@ add_importlibs(coinst msvcrt kernel32)
 
 list(APPEND SOURCE
     devinst.c
+    dialog.c
     diskspace.c
     install.c
     misc.c
