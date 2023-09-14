@@ -3800,6 +3800,7 @@ static HRESULT geometry_shader_init_stream_output(struct wined3d_shader *shader,
     struct wined3d_shader_version shader_version;
     const DWORD *ptr;
     void *fe_data;
+    HRESULT hr;
 
     if (!so_desc)
         return WINED3D_OK;
@@ -3827,6 +3828,15 @@ static HRESULT geometry_shader_init_stream_output(struct wined3d_shader *shader,
             return E_INVALIDARG;
     }
 
+    if (!shader->function)
+    {
+        shader->reg_maps.shader_version = shader_version;
+        shader->reg_maps.shader_version.type = WINED3D_SHADER_TYPE_GEOMETRY;
+        shader_set_limits(shader);
+        if (FAILED(hr = shader_scan_output_signature(shader)))
+            return hr;
+    }
+
     if (!(elements = heap_calloc(so_desc->element_count, sizeof(*elements))))
         return E_OUTOFMEMORY;
 
@@ -3849,21 +3859,9 @@ static HRESULT geometry_shader_init(struct wined3d_shader *shader, struct wined3
     if (FAILED(hr = geometry_shader_init_stream_output(shader, so_desc)))
         goto fail;
 
-    if (shader->function)
-    {
-        if (FAILED(hr = shader_set_function(shader, device, WINED3D_SHADER_TYPE_GEOMETRY, 0)))
-            goto fail;
-    }
-    else
-    {
-        shader->reg_maps.shader_version.type = WINED3D_SHADER_TYPE_GEOMETRY;
-        shader->reg_maps.shader_version.major = 4;
-        shader->reg_maps.shader_version.minor = 0;
-        shader_set_limits(shader);
-
-        if (FAILED(hr = shader_scan_output_signature(shader)))
-            goto fail;
-    }
+    if (shader->function
+            && FAILED(hr = shader_set_function(shader, device, WINED3D_SHADER_TYPE_GEOMETRY, 0)))
+        goto fail;
 
     return WINED3D_OK;
 
