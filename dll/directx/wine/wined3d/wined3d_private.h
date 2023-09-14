@@ -1804,12 +1804,9 @@ struct wined3d_timestamp_query
 
     struct list entry;
     GLuint id;
-    struct wined3d_context *context;
+    struct wined3d_context_gl *context_gl;
     UINT64 timestamp;
 };
-
-void context_alloc_timestamp_query(struct wined3d_context *context, struct wined3d_timestamp_query *query) DECLSPEC_HIDDEN;
-void context_free_timestamp_query(struct wined3d_timestamp_query *query) DECLSPEC_HIDDEN;
 
 union wined3d_gl_so_statistics_query
 {
@@ -1989,11 +1986,6 @@ struct wined3d_context
     DWORD draw_buffers_mask; /* Enabled draw buffers, 31 max. */
 
     /* Queries */
-    GLuint *free_timestamp_queries;
-    SIZE_T free_timestamp_query_size;
-    unsigned int free_timestamp_query_count;
-    struct list timestamp_queries;
-
     union wined3d_gl_so_statistics_query *free_so_statistics_queries;
     SIZE_T free_so_statistics_query_size;
     unsigned int free_so_statistics_query_count;
@@ -2031,6 +2023,7 @@ struct wined3d_context_gl
     /* Queries. */
     struct list occlusion_queries;
     struct list fences;
+    struct list timestamp_queries;
 
     GLuint *free_occlusion_queries;
     SIZE_T free_occlusion_query_size;
@@ -2039,6 +2032,10 @@ struct wined3d_context_gl
     union wined3d_gl_fence_object *free_fences;
     SIZE_T free_fence_size;
     unsigned int free_fence_count;
+
+    GLuint *free_timestamp_queries;
+    SIZE_T free_timestamp_query_size;
+    unsigned int free_timestamp_query_count;
 
     GLuint blit_vbo;
 
@@ -2067,6 +2064,8 @@ void wined3d_context_gl_alloc_fence(struct wined3d_context_gl *context_gl,
         struct wined3d_fence *fence) DECLSPEC_HIDDEN;
 void wined3d_context_gl_alloc_occlusion_query(struct wined3d_context_gl *context_gl,
         struct wined3d_occlusion_query *query) DECLSPEC_HIDDEN;
+void wined3d_context_gl_alloc_timestamp_query(struct wined3d_context_gl *context_gl,
+        struct wined3d_timestamp_query *query) DECLSPEC_HIDDEN;
 void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl,
         const struct wined3d_device *device) DECLSPEC_HIDDEN;
 void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_gl,
@@ -2076,6 +2075,7 @@ void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl,
 void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
 void wined3d_context_gl_free_fence(struct wined3d_fence *fence) DECLSPEC_HIDDEN;
 void wined3d_context_gl_free_occlusion_query(struct wined3d_occlusion_query *query) DECLSPEC_HIDDEN;
+void wined3d_context_gl_free_timestamp_query(struct wined3d_timestamp_query *query) DECLSPEC_HIDDEN;
 const unsigned int *wined3d_context_gl_get_tex_unit_mapping(const struct wined3d_context_gl *context_gl,
         const struct wined3d_shader_version *shader_version, unsigned int *base, unsigned int *count) DECLSPEC_HIDDEN;
 HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl,
