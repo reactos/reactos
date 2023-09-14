@@ -391,7 +391,7 @@ static void build_dxtn_colour_table(WORD colour0, WORD colour1,
     }
 }
 
-static void build_dxtn_alpha_table(BYTE alpha0, BYTE alpha1, BYTE alpha_table[8])
+static void build_bc3_alpha_table(BYTE alpha0, BYTE alpha1, BYTE alpha_table[8])
 {
     unsigned int i;
 
@@ -449,7 +449,7 @@ static void decompress_dxtn_block(const BYTE *src, BYTE *dst, unsigned int width
         alpha_bits = s[0];
         if (format_id == WINED3DFMT_BC3_UNORM)
         {
-            build_dxtn_alpha_table(alpha_bits & 0xff, (alpha_bits >> 8) & 0xff, alpha_table);
+            build_bc3_alpha_table(alpha_bits & 0xff, (alpha_bits >> 8) & 0xff, alpha_table);
             alpha_bits >>= 16;
         }
 
