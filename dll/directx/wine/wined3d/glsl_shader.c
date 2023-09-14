@@ -1887,9 +1887,9 @@ static const char *shader_glsl_interpolation_qualifiers(enum wined3d_shader_inte
     switch (mode)
     {
         case WINED3DSIM_CONSTANT:
-            return "flat";
+            return "flat ";
         case WINED3DSIM_LINEAR_NOPERSPECTIVE:
-            return "noperspective";
+            return "noperspective ";
         default:
             FIXME("Unhandled interpolation mode %#x.\n", mode);
         case WINED3DSIM_NONE:
@@ -1920,7 +1920,7 @@ static void shader_glsl_declare_shader_inputs(const struct wined3d_gl_info *gl_i
             for (i = 0; i < element_count; ++i)
             {
                 mode = wined3d_extract_interpolation_mode(interpolation_mode, i);
-                shader_addline(buffer, "%s vec4 reg%u;\n", shader_glsl_interpolation_qualifiers(mode), i);
+                shader_addline(buffer, "    %svec4 reg%u;\n", shader_glsl_interpolation_qualifiers(mode), i);
             }
             shader_addline(buffer, "} shader_in;\n");
         }
@@ -1955,7 +1955,7 @@ static void shader_glsl_declare_shader_outputs(const struct wined3d_gl_info *gl_
                     mode = wined3d_extract_interpolation_mode(interpolation_mode, i);
                     interpolation_qualifiers = shader_glsl_interpolation_qualifiers(mode);
                 }
-                shader_addline(buffer, "%s vec4 reg%u;\n", interpolation_qualifiers, i);
+                shader_addline(buffer, "    %svec4 reg%u;\n", interpolation_qualifiers, i);
             }
             shader_addline(buffer, "} shader_out;\n");
         }
