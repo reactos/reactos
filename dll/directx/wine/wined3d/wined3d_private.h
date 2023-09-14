@@ -264,7 +264,7 @@ static inline enum complex_fixup get_complex_fixup(struct color_fixup_desc fixup
 #define WINED3D_MAX_VERTEX_SAMPLERS 4
 #define WINED3D_MAX_COMBINED_SAMPLERS (WINED3D_MAX_FRAGMENT_SAMPLERS + WINED3D_MAX_VERTEX_SAMPLERS)
 #define WINED3D_MAX_ACTIVE_LIGHTS   8
-#define MAX_CLIP_DISTANCES          8
+#define WINED3D_MAX_CLIP_DISTANCES  8
 #define MAX_CONSTANT_BUFFERS        15
 #define MAX_SAMPLER_OBJECTS         16
 #define MAX_SHADER_RESOURCE_VIEWS   128
@@ -1016,8 +1016,8 @@ struct wined3d_shader_reg_maps
     DWORD uav_read_mask : 8;                        /* MAX_UNORDERED_ACCESS_VIEWS, 8 */
     DWORD uav_counter_mask : 8;                     /* MAX_UNORDERED_ACCESS_VIEWS, 8 */
 
-    DWORD clip_distance_mask : 8;                   /* MAX_CLIP_DISTANCES, 8 */
-    DWORD cull_distance_mask : 8;                   /* MAX_CLIP_DISTANCES, 8 */
+    DWORD clip_distance_mask : 8;                   /* WINED3D_MAX_CLIP_DISTANCES, 8 */
+    DWORD cull_distance_mask : 8;                   /* WINED3D_MAX_CLIP_DISTANCES, 8 */
     DWORD usesnrm        : 1;
     DWORD vpos           : 1;
     DWORD usesdsx        : 1;
@@ -1628,9 +1628,9 @@ enum wined3d_pipeline
 #define STATE_IS_SCISSORRECT(a) ((a) == STATE_SCISSORRECT)
 
 #define STATE_CLIPPLANE(a) (STATE_SCISSORRECT + 1 + (a))
-#define STATE_IS_CLIPPLANE(a) ((a) >= STATE_CLIPPLANE(0) && (a) <= STATE_CLIPPLANE(MAX_CLIP_DISTANCES - 1))
+#define STATE_IS_CLIPPLANE(a) ((a) >= STATE_CLIPPLANE(0) && (a) <= STATE_CLIPPLANE(WINED3D_MAX_CLIP_DISTANCES - 1))
 
-#define STATE_MATERIAL (STATE_CLIPPLANE(MAX_CLIP_DISTANCES))
+#define STATE_MATERIAL (STATE_CLIPPLANE(WINED3D_MAX_CLIP_DISTANCES))
 #define STATE_IS_MATERIAL(a) ((a) == STATE_MATERIAL)
 
 #define STATE_RASTERIZER (STATE_MATERIAL + 1)
@@ -1928,7 +1928,7 @@ struct wined3d_context
     DWORD transform_feedback_active : 1;
     DWORD transform_feedback_paused : 1;
     DWORD shader_update_mask : 6; /* WINED3D_SHADER_TYPE_COUNT, 6 */
-    DWORD clip_distance_mask : 8; /* MAX_CLIP_DISTANCES, 8 */
+    DWORD clip_distance_mask : 8; /* WINED3D_MAX_CLIP_DISTANCES, 8 */
     DWORD last_was_dual_blend : 1;
     DWORD num_untracked_materials : 2;  /* Max value 2 */
     DWORD padding : 7;
@@ -2949,7 +2949,7 @@ struct wined3d_state
     DWORD texture_states[WINED3D_MAX_TEXTURES][WINED3D_HIGHEST_TEXTURE_STATE + 1];
 
     struct wined3d_matrix transforms[HIGHEST_TRANSFORMSTATE + 1];
-    struct wined3d_vec4 clip_planes[MAX_CLIP_DISTANCES];
+    struct wined3d_vec4 clip_planes[WINED3D_MAX_CLIP_DISTANCES];
     struct wined3d_material material;
     struct wined3d_viewport viewports[WINED3D_MAX_VIEWPORTS];
     unsigned int viewport_count;
@@ -3037,7 +3037,7 @@ struct wined3d_stateblock_state
     DWORD texture_states[WINED3D_MAX_TEXTURES][WINED3D_HIGHEST_TEXTURE_STATE + 1];
 
     struct wined3d_matrix transforms[HIGHEST_TRANSFORMSTATE + 1];
-    struct wined3d_vec4 clip_planes[MAX_CLIP_DISTANCES];
+    struct wined3d_vec4 clip_planes[WINED3D_MAX_CLIP_DISTANCES];
     struct wined3d_material material;
     struct wined3d_viewport viewport;
     RECT scissor_rect;

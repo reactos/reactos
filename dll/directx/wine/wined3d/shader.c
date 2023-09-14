@@ -966,7 +966,7 @@ static HRESULT shader_calculate_clip_or_cull_distance_mask(
     /* Clip and cull distances are packed in 4 component registers. 0 and 1 are
      * the only allowed semantic indices.
      */
-    if (e->semantic_idx >= MAX_CLIP_DISTANCES / 4)
+    if (e->semantic_idx >= WINED3D_MAX_CLIP_DISTANCES / 4)
     {
         *mask = 0;
         WARN("Invalid clip/cull distance index %u.\n", e->semantic_idx);

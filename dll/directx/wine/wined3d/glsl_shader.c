@@ -257,7 +257,7 @@ struct glsl_shader_prog_link
     DWORD constant_update_mask;
     unsigned int constant_version;
     DWORD shader_controlled_clip_distances : 1;
-    DWORD clip_distance_mask : 8; /* MAX_CLIP_DISTANCES, 8 */
+    DWORD clip_distance_mask : 8; /* WINED3D_MAX_CLIP_DISTANCES, 8 */
     DWORD padding : 23;
 };
 

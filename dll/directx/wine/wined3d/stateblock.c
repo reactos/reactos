@@ -218,7 +218,7 @@ static void stateblock_savedstates_set_all(struct wined3d_saved_states *states, 
     stateblock_set_bits(states->renderState, WINEHIGHEST_RENDER_STATE + 1);
     for (i = 0; i < WINED3D_MAX_TEXTURES; ++i) states->textureState[i] = 0x3ffff;
     for (i = 0; i < WINED3D_MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = 0x3ffe;
-    states->clipplane = (1u << MAX_CLIP_DISTANCES) - 1;
+    states->clipplane = (1u << WINED3D_MAX_CLIP_DISTANCES) - 1;
     states->pixelShaderConstantsB = 0xffff;
     states->pixelShaderConstantsI = 0xffff;
     states->vertexShaderConstantsB = 0xffff;
