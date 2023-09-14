@@ -199,6 +199,7 @@ struct wined3d_d3d_info
 {
     struct wined3d_d3d_limits limits;
     struct wined3d_ffp_attrib_ops ffp_attrib_ops;
+    DWORD valid_dual_rt_mask;
     uint32_t wined3d_creation_flags;
     uint32_t xyzrhw : 1;
     uint32_t emulated_flatshading : 1;
@@ -1404,7 +1405,8 @@ struct ps_compile_args
     DWORD alpha_test_func : 3;
     DWORD render_offscreen : 1;
     DWORD rt_alpha_swizzle : 8; /* MAX_RENDER_TARGET_VIEWS, 8 */
-    DWORD padding : 18;
+    DWORD dual_source_blend : 1;
+    DWORD padding : 17;
 };
 
 enum fog_src_type
@@ -1976,7 +1978,8 @@ struct wined3d_context
     DWORD destroyed : 1;
     DWORD destroy_delayed : 1;
     DWORD clip_distance_mask : 8; /* WINED3D_MAX_CLIP_DISTANCES, 8 */
-    DWORD padding : 15;
+    DWORD last_was_dual_blend : 1;
+    DWORD padding : 14;
 
     DWORD constant_update_mask;
     DWORD numbered_array_mask;
