@@ -404,7 +404,7 @@ static void ddraw_destroy_swapchain(struct ddraw *ddraw)
     }
     else
     {
-        wined3d_device_uninit_gdi(ddraw->wined3d_device);
+        wined3d_device_uninit_3d(ddraw->wined3d_device);
     }
 
     ddraw_set_swapchain_window(ddraw, NULL);
