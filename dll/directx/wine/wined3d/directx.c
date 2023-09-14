@@ -565,6 +565,8 @@ void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
         TRACE("OS version %u.%u.\n", os_version.dwMajorVersion, os_version.dwMinorVersion);
         switch (os_version.dwMajorVersion)
         {
+            case 2:
+            case 3:
             case 4:
                 /* If needed we could distinguish between 9x and NT4, but this code won't make
                  * sense for NT4 since it had no way to obtain this info through DirectDraw 3.0.
