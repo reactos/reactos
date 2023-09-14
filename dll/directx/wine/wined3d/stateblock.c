@@ -1308,6 +1308,26 @@ HRESULT CDECL wined3d_stateblock_set_vs_consts_i(struct wined3d_stateblock *stat
     return WINED3D_OK;
 }
 
+HRESULT CDECL wined3d_stateblock_set_vs_consts_b(struct wined3d_stateblock *stateblock,
+        unsigned int start_idx, unsigned int count, const BOOL *constants)
+{
+    unsigned int i;
+
+    TRACE("stateblock %p, start_idx %u, count %u, constants %p.\n",
+            stateblock, start_idx, count, constants);
+
+    if (!constants || start_idx >= WINED3D_MAX_CONSTS_B)
+        return WINED3DERR_INVALIDCALL;
+
+    if (count > WINED3D_MAX_CONSTS_B - start_idx)
+        count = WINED3D_MAX_CONSTS_B - start_idx;
+
+    memcpy(&stateblock->stateblock_state.vs_consts_b[start_idx], constants, count * sizeof(*constants));
+    for (i = start_idx; i < count + start_idx; ++i)
+        stateblock->changed.vertexShaderConstantsB |= (1u << i);
+    return WINED3D_OK;
+}
+
 static void init_default_render_states(DWORD rs[WINEHIGHEST_RENDER_STATE + 1], const struct wined3d_d3d_info *d3d_info)
 {
     union
