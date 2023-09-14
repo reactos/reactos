@@ -1360,25 +1360,25 @@ static GLenum buffer_type_hint_from_bind_flags(const struct wined3d_gl_info *gl_
     return GL_ARRAY_BUFFER;
 }
 
-static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device *device, UINT size,
-        DWORD usage, unsigned int access, unsigned int bind_flags, const struct wined3d_sub_resource_data *data,
+static HRESULT wined3d_buffer_init(struct wined3d_buffer *buffer, struct wined3d_device *device,
+        const struct wined3d_buffer_desc *desc, const struct wined3d_sub_resource_data *data,
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
-    const struct wined3d_format *format = wined3d_get_format(device->adapter, WINED3DFMT_UNKNOWN, usage);
+    const struct wined3d_format *format = wined3d_get_format(device->adapter, WINED3DFMT_UNKNOWN, desc->usage);
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     struct wined3d_resource *resource = &buffer->resource;
     BOOL dynamic_buffer_ok;
     HRESULT hr;
 
-    if (!size)
+    if (!desc->byte_width)
     {
         WARN("Size 0 requested, returning E_INVALIDARG.\n");
         return E_INVALIDARG;
     }
 
-    if (bind_flags & WINED3D_BIND_CONSTANT_BUFFER && size & (WINED3D_CONSTANT_BUFFER_ALIGNMENT - 1))
+    if (desc->bind_flags & WINED3D_BIND_CONSTANT_BUFFER && desc->byte_width & (WINED3D_CONSTANT_BUFFER_ALIGNMENT - 1))
     {
-        WARN("Size %#x is not suitably aligned for constant buffers.\n", size);
+        WARN("Size %#x is not suitably aligned for constant buffers.\n", desc->byte_width);
         return E_INVALIDARG;
     }
 
@@ -1388,14 +1388,16 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
         return E_INVALIDARG;
     }
 
-    if (FAILED(hr = resource_init(resource, device, WINED3D_RTYPE_BUFFER, format, WINED3D_MULTISAMPLE_NONE,
-            0, usage, access, size, 1, 1, size, parent, parent_ops, &buffer_resource_ops)))
+    if (FAILED(hr = resource_init(resource, device, WINED3D_RTYPE_BUFFER, format,
+            WINED3D_MULTISAMPLE_NONE, 0, desc->usage, desc->access, desc->byte_width, 1, 1,
+            desc->byte_width, parent, parent_ops, &buffer_resource_ops)))
     {
         WARN("Failed to initialize resource, hr %#x.\n", hr);
         return hr;
     }
-    buffer->buffer_type_hint = buffer_type_hint_from_bind_flags(gl_info, bind_flags);
-    buffer->bind_flags = bind_flags;
+    buffer->desc = *desc;
+    buffer->buffer_type_hint = buffer_type_hint_from_bind_flags(gl_info, desc->bind_flags);
+    buffer->bind_flags = desc->bind_flags;
     buffer->locations = data ? WINED3D_LOCATION_DISCARDED : WINED3D_LOCATION_SYSMEM;
 
     TRACE("buffer %p, size %#x, usage %#x, format %s, memory @ %p.\n",
@@ -1403,7 +1405,7 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
             debug_d3dformat(buffer->resource.format->id), buffer->resource.heap_memory);
 
     if (device->create_parms.flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING
-            || wined3d_resource_access_is_managed(access))
+            || wined3d_resource_access_is_managed(desc->access))
     {
         /* SWvp and managed buffers always return the same pointer in buffer
          * maps and retain data in DISCARD maps. Keep a system memory copy of
@@ -1422,7 +1424,7 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
     {
         TRACE("Not creating a BO because GL_ARB_vertex_buffer is not supported.\n");
     }
-    else if (!(access & WINED3D_RESOURCE_ACCESS_GPU))
+    else if (!(desc->access & WINED3D_RESOURCE_ACCESS_GPU))
     {
         TRACE("Not creating a BO because the buffer is not GPU accessible.\n");
     }
@@ -1473,14 +1475,12 @@ HRESULT CDECL wined3d_buffer_create(struct wined3d_device *device, const struct 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = buffer_init(object, device, desc->byte_width, desc->usage,
-            desc->access, desc->bind_flags, data, parent, parent_ops)))
+    if (FAILED(hr = wined3d_buffer_init(object, device, desc, data, parent, parent_ops)))
     {
         WARN("Failed to initialize buffer, hr %#x.\n", hr);
         heap_free(object);
         return hr;
     }
-    object->desc = *desc;
 
     TRACE("Created buffer %p.\n", object);
 
