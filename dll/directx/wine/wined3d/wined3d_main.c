@@ -240,17 +240,17 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
         }
         if (!get_config_key(hkey, appkey, "shader_backend", buffer, size))
         {
-            if (!strcasecmp(buffer, "glsl"))
+            if (!_strnicmp(buffer, "glsl", -1))
             {
                 ERR_(winediag)("Using the GLSL shader backend.\n");
                 wined3d_settings.shader_backend = WINED3D_SHADER_BACKEND_GLSL;
             }
-            else if (!strcasecmp(buffer, "arb"))
+            else if (!_strnicmp(buffer, "arb", -1))
             {
                 ERR_(winediag)("Using the ARB shader backend.\n");
                 wined3d_settings.shader_backend = WINED3D_SHADER_BACKEND_ARB;
             }
-            else if (!strcasecmp(buffer, "none"))
+            else if (!_strnicmp(buffer, "none", -1))
             {
                 ERR_(winediag)("Disabling shader backends.\n");
                 wined3d_settings.shader_backend = WINED3D_SHADER_BACKEND_NONE;
