@@ -1029,6 +1029,18 @@ static void test_register_device_info(void)
     SetupDiDestroyDeviceInfoList(set);
 }
 
+static void check_all_lower_case(int line, const char* str)
+{
+    const char *cur;
+
+    for (cur = str; *cur; cur++)
+    {
+        BOOL is_lower = (tolower(*cur) == *cur);
+        ok_(__FILE__, line)(is_lower, "Expected device path to be all lowercase but got %s.\n", str);
+        if (!is_lower) break;
+    }
+}
+
 static void check_device_iface_(int line, HDEVINFO set, SP_DEVINFO_DATA *device,
         const GUID *class, int index, DWORD flags, const char *path)
 {
@@ -1050,6 +1062,7 @@ static void check_device_iface_(int line, HDEVINFO set, SP_DEVINFO_DATA *device,
         ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, sizeof(buffer), NULL, NULL);
         ok_(__FILE__, line)(ret, "Failed to get interface detail, error %#x.\n", GetLastError());
         ok_(__FILE__, line)(!strcasecmp(detail->DevicePath, path), "Got unexpected path %s.\n", detail->DevicePath);
+        check_all_lower_case(line, detail->DevicePath);
     }
     else
     {
