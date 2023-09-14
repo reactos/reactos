@@ -628,9 +628,7 @@ static BOOL wined3d_buffer_prepare_location(struct wined3d_buffer *buffer,
 BOOL wined3d_buffer_load_location(struct wined3d_buffer *buffer,
         struct wined3d_context *context, DWORD location)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    struct wined3d_buffer_gl *buffer_gl = wined3d_buffer_gl(buffer);
-    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
+    struct wined3d_map_range range;
 
     TRACE("buffer %p, context %p, location %s.\n",
             buffer, context, wined3d_debug_location(location));
@@ -664,10 +662,10 @@ BOOL wined3d_buffer_load_location(struct wined3d_buffer *buffer,
     switch (location)
     {
         case WINED3D_LOCATION_SYSMEM:
-            wined3d_buffer_gl_bind(buffer_gl, context_gl);
-            GL_EXTCALL(glGetBufferSubData(buffer_gl->buffer_type_hint, 0, buffer->resource.size,
-                    buffer->resource.heap_memory));
-            checkGLcall("buffer download");
+            range.offset = 0;
+            range.size = buffer->resource.size;
+            buffer->buffer_ops->buffer_download_ranges(buffer, context,
+                    buffer->resource.heap_memory, 0, 1, &range);
             break;
 
         case WINED3D_LOCATION_BUFFER:
@@ -1482,9 +1480,30 @@ static void wined3d_buffer_gl_upload_ranges(struct wined3d_buffer *buffer, struc
     checkGLcall("buffer upload");
 }
 
+/* Context activation is done by the caller. */
+static void wined3d_buffer_gl_download_ranges(struct wined3d_buffer *buffer, struct wined3d_context *context,
+        void *data, unsigned int data_offset, unsigned int range_count, const struct wined3d_map_range *ranges)
+{
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    struct wined3d_buffer_gl *buffer_gl = wined3d_buffer_gl(buffer);
+    const struct wined3d_gl_info *gl_info = context_gl->gl_info;
+    const struct wined3d_map_range *range;
+
+    wined3d_buffer_gl_bind(buffer_gl, context_gl);
+
+    while (range_count--)
+    {
+        range = &ranges[range_count];
+        GL_EXTCALL(glGetBufferSubData(buffer_gl->buffer_type_hint,
+                range->offset, range->size, (BYTE *)data + range->offset - data_offset));
+    }
+    checkGLcall("buffer download");
+}
+
 static const struct wined3d_buffer_ops wined3d_buffer_gl_ops =
 {
     wined3d_buffer_gl_upload_ranges,
+    wined3d_buffer_gl_download_ranges,
 };
 
 HRESULT CDECL wined3d_buffer_create(struct wined3d_device *device, const struct wined3d_buffer_desc *desc,

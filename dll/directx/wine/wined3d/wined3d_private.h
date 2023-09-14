@@ -4096,6 +4096,8 @@ struct wined3d_buffer_ops
 {
     void (*buffer_upload_ranges)(struct wined3d_buffer *buffer, struct wined3d_context *context, const void *data,
             unsigned int data_offset, unsigned int range_count, const struct wined3d_map_range *ranges);
+    void (*buffer_download_ranges)(struct wined3d_buffer *buffer, struct wined3d_context *context, void *data,
+            unsigned int data_offset, unsigned int range_count, const struct wined3d_map_range *ranges);
 };
 
 struct wined3d_buffer
