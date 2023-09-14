@@ -4471,7 +4471,18 @@ HRESULT wined3d_swapchain_no3d_init(struct wined3d_swapchain *swapchain_no3d,
         struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
         void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
-HRESULT wined3d_swapchain_gl_init(struct wined3d_swapchain *swapchain_gl,
+struct wined3d_swapchain_gl
+{
+    struct wined3d_swapchain s;
+};
+
+static inline struct wined3d_swapchain_gl *wined3d_swapchain_gl(struct wined3d_swapchain *swapchain)
+{
+    return CONTAINING_RECORD(swapchain, struct wined3d_swapchain_gl, s);
+}
+
+void wined3d_swapchain_gl_cleanup(struct wined3d_swapchain_gl *swapchain_gl) DECLSPEC_HIDDEN;
+HRESULT wined3d_swapchain_gl_init(struct wined3d_swapchain_gl *swapchain_gl,
         struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
         void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 

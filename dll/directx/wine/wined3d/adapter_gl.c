@@ -4656,7 +4656,7 @@ static void adapter_gl_uninit_3d(struct wined3d_device *device)
 static HRESULT adapter_gl_create_swapchain(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
         void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_swapchain **swapchain)
 {
-    struct wined3d_swapchain *swapchain_gl;
+    struct wined3d_swapchain_gl *swapchain_gl;
     HRESULT hr;
 
     TRACE("device %p, desc %p, parent %p, parent_ops %p, swapchain %p.\n",
@@ -4673,15 +4673,17 @@ static HRESULT adapter_gl_create_swapchain(struct wined3d_device *device, struct
     }
 
     TRACE("Created swapchain %p.\n", swapchain_gl);
-    *swapchain = swapchain_gl;
+    *swapchain = &swapchain_gl->s;
 
     return hr;
 }
 
 static void adapter_gl_destroy_swapchain(struct wined3d_swapchain *swapchain)
 {
-    wined3d_swapchain_cleanup(swapchain);
-    heap_free(swapchain);
+    struct wined3d_swapchain_gl *swapchain_gl = wined3d_swapchain_gl(swapchain);
+
+    wined3d_swapchain_gl_cleanup(swapchain_gl);
+    heap_free(swapchain_gl);
 }
 
 static HRESULT adapter_gl_create_buffer(struct wined3d_device *device,

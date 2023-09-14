@@ -109,6 +109,11 @@ void wined3d_swapchain_cleanup(struct wined3d_swapchain *swapchain)
     }
 }
 
+void wined3d_swapchain_gl_cleanup(struct wined3d_swapchain_gl *swapchain_gl)
+{
+    wined3d_swapchain_cleanup(&swapchain_gl->s);
+}
+
 ULONG CDECL wined3d_swapchain_incref(struct wined3d_swapchain *swapchain)
 {
     ULONG refcount = InterlockedIncrement(&swapchain->ref);
@@ -1040,13 +1045,13 @@ HRESULT wined3d_swapchain_no3d_init(struct wined3d_swapchain *swapchain_no3d, st
     return wined3d_swapchain_init(swapchain_no3d, device, desc, parent, parent_ops, &swapchain_no3d_ops);
 }
 
-HRESULT wined3d_swapchain_gl_init(struct wined3d_swapchain *swapchain_gl, struct wined3d_device *device,
+HRESULT wined3d_swapchain_gl_init(struct wined3d_swapchain_gl *swapchain_gl, struct wined3d_device *device,
         struct wined3d_swapchain_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     TRACE("swapchain_gl %p, device %p, desc %p, parent %p, parent_ops %p.\n",
             swapchain_gl, device, desc, parent, parent_ops);
 
-    return wined3d_swapchain_init(swapchain_gl, device, desc, parent, parent_ops, &swapchain_gl_ops);
+    return wined3d_swapchain_init(&swapchain_gl->s, device, desc, parent, parent_ops, &swapchain_gl_ops);
 }
 
 HRESULT wined3d_swapchain_vk_init(struct wined3d_swapchain *swapchain_vk, struct wined3d_device *device,
