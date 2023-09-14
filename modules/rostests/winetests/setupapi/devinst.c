@@ -2438,6 +2438,20 @@ static void test_driver_list(void)
     ok(!ret, "Expected failure.\n");
     ok(GetLastError() == ERROR_NO_MORE_ITEMS, "Got unexpected error %#x.\n", GetLastError());
 
+    ret = SetupDiGetSelectedDriverA(set, &device, &driver);
+    ok(ret /* Win10 1809 */ || GetLastError() == ERROR_NO_DRIVER_SELECTED,
+            "Got unexpected error %#x.\n", GetLastError());
+
+    ret = SetupDiSelectBestCompatDrv(set, &device);
+    ok(ret, "Failed to select driver, error %#x.\n", GetLastError());
+
+    ret = SetupDiGetSelectedDriverA(set, &device, &driver);
+    ok(ret, "Failed to get selected driver, error %#x.\n", GetLastError());
+    ok(driver.DriverType == SPDIT_COMPATDRIVER, "Got wrong type %#x.\n", driver.DriverType);
+    ok(!strcmp(driver.Description, "desc1"), "Got wrong description '%s'.\n", driver.Description);
+    ok(!strcmp(driver.MfgName, wow64 ? "mfg1_wow" : "mfg1"), "Got wrong manufacturer '%s'.\n", driver.MfgName);
+    ok(!strcmp(driver.ProviderName, ""), "Got wrong provider '%s'.\n", driver.ProviderName);
+
     SetupDiDestroyDeviceInfoList(set);
     ret = DeleteFileA(inf_path);
     ok(ret, "Failed to delete %s, error %u.\n", inf_path, GetLastError());
