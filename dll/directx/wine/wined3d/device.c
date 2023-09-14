@@ -1770,19 +1770,23 @@ HRESULT CDECL wined3d_device_set_clip_plane(struct wined3d_device *device,
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (device->recording)
-        device->recording->changed.clipplane |= 1u << plane_idx;
+    device->update_stateblock_state->clip_planes[plane_idx] = *plane;
 
-    if (!memcmp(&device->update_state->clip_planes[plane_idx], plane, sizeof(*plane)))
+    if (device->recording)
+    {
+        device->recording->changed.clipplane |= 1u << plane_idx;
+        return WINED3D_OK;
+    }
+
+    if (!memcmp(&device->state.clip_planes[plane_idx], plane, sizeof(*plane)))
     {
         TRACE("Application is setting old values over, nothing to do.\n");
         return WINED3D_OK;
     }
 
-    device->update_state->clip_planes[plane_idx] = *plane;
+    device->state.clip_planes[plane_idx] = *plane;
 
-    if (!device->recording)
-        wined3d_cs_emit_set_clip_plane(device->cs, plane_idx, plane);
+    wined3d_cs_emit_set_clip_plane(device->cs, plane_idx, plane);
 
     return WINED3D_OK;
 }

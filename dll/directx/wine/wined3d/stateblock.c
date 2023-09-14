@@ -915,10 +915,10 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     {
         if (!(map & 1)) continue;
 
-        if (memcmp(&stateblock->state.clip_planes[i], &src_state->clip_planes[i], sizeof(src_state->clip_planes[i])))
+        if (memcmp(&stateblock->stateblock_state.clip_planes[i], &state->clip_planes[i], sizeof(state->clip_planes[i])))
         {
             TRACE("Updating clipplane %u.\n", i);
-            stateblock->state.clip_planes[i] = src_state->clip_planes[i];
+            stateblock->stateblock_state.clip_planes[i] = state->clip_planes[i];
         }
     }
 
@@ -1177,7 +1177,8 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     {
         if (!(map & 1)) continue;
 
-        wined3d_device_set_clip_plane(device, i, &stateblock->state.clip_planes[i]);
+        state->clip_planes[i] = stateblock->stateblock_state.clip_planes[i];
+        wined3d_device_set_clip_plane(device, i, &stateblock->stateblock_state.clip_planes[i]);
     }
 
     TRACE("Applied stateblock %p.\n", stateblock);

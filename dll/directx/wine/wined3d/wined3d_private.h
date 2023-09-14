@@ -3023,6 +3023,7 @@ struct wined3d_stateblock_state
     DWORD texture_states[MAX_TEXTURES][WINED3D_HIGHEST_TEXTURE_STATE + 1];
 
     struct wined3d_matrix transforms[HIGHEST_TRANSFORMSTATE + 1];
+    struct wined3d_vec4 clip_planes[MAX_CLIP_DISTANCES];
 };
 
 struct wined3d_device
