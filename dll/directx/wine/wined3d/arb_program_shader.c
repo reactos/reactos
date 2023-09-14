@@ -5722,10 +5722,10 @@ static void *arbfp_alloc(const struct wined3d_shader_backend_ops *shader_backend
 static void arbfp_free_ffpshader(struct wine_rb_entry *entry, void *param)
 {
     struct arbfp_ffp_desc *entry_arb = WINE_RB_ENTRY_VALUE(entry, struct arbfp_ffp_desc, parent.entry);
-    struct wined3d_context *context = param;
+    struct wined3d_context_gl *context_gl = param;
     const struct wined3d_gl_info *gl_info;
 
-    gl_info = context->gl_info;
+    gl_info = context_gl->c.gl_info;
     GL_EXTCALL(glDeleteProgramsARB(1, &entry_arb->shader));
     checkGLcall("delete ffp program");
     heap_free(entry_arb);
@@ -5734,9 +5734,10 @@ static void arbfp_free_ffpshader(struct wine_rb_entry *entry, void *param)
 /* Context activation is done by the caller. */
 static void arbfp_free(struct wined3d_device *device, struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct shader_arb_priv *priv = device->fragment_priv;
 
-    wine_rb_destroy(&priv->fragment_shaders, arbfp_free_ffpshader, context);
+    wine_rb_destroy(&priv->fragment_shaders, arbfp_free_ffpshader, context_gl);
     priv->use_arbfp_fixed_func = FALSE;
 
     if (device->shader_backend != &arb_program_shader_backend)
