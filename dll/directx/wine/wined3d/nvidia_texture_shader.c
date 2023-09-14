@@ -30,9 +30,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 /* Context activation for state handlers is done by the caller. */
 
-static void nvts_activate_dimensions(const struct wined3d_state *state, DWORD stage, struct wined3d_context *context)
+static void nvts_activate_dimensions(const struct wined3d_state *state,
+        unsigned int stage, struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_texture *texture;
     BOOL bumpmap = FALSE;
 
@@ -41,11 +42,11 @@ static void nvts_activate_dimensions(const struct wined3d_state *state, DWORD st
             || state->texture_states[stage - 1][WINED3D_TSS_COLOR_OP] == WINED3D_TOP_BUMPENVMAP))
     {
         bumpmap = TRUE;
-        context->texShaderBumpMap |= (1u << stage);
+        context_gl->c.texShaderBumpMap |= (1u << stage);
     }
     else
     {
-        context->texShaderBumpMap &= ~(1u << stage);
+        context_gl->c.texShaderBumpMap &= ~(1u << stage);
     }
 
     if ((texture = state->textures[stage]))
@@ -550,13 +551,9 @@ static void nvrc_colorop(struct wined3d_context *context, const struct wined3d_s
         if (tex_used)
         {
             if (gl_info->supported[NV_TEXTURE_SHADER2])
-            {
-                nvts_activate_dimensions(state, stage, context);
-            }
+                nvts_activate_dimensions(state, stage, context_gl);
             else
-            {
                 texture_activate_dimensions(state->textures[stage], gl_info);
-            }
         }
     }
 
@@ -580,7 +577,7 @@ static void nvrc_colorop(struct wined3d_context *context, const struct wined3d_s
         if (usesBump != usedBump)
         {
             wined3d_context_gl_active_texture(context_gl, gl_info, mapped_stage + 1);
-            nvts_activate_dimensions(state, stage + 1, context);
+            nvts_activate_dimensions(state, stage + 1, context_gl);
             wined3d_context_gl_active_texture(context_gl, gl_info, mapped_stage);
         }
     }
@@ -620,7 +617,7 @@ static void nvts_texdim(struct wined3d_context *context, const struct wined3d_st
     if (isStateDirty(context, STATE_TEXTURESTAGE(sampler, WINED3D_TSS_COLOR_OP)))
         return;
 
-    nvts_activate_dimensions(state, sampler, context);
+    nvts_activate_dimensions(state, sampler, context_gl);
 }
 
 static void nvts_bumpenvmat(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
