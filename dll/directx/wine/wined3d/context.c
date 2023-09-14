@@ -3141,18 +3141,17 @@ BOOL wined3d_context_gl_apply_clear_state(struct wined3d_context_gl *context_gl,
     return TRUE;
 }
 
-static unsigned int find_draw_buffers_mask(const struct wined3d_context *context, const struct wined3d_state *state)
+static uint32_t find_draw_buffers_mask(const struct wined3d_context_gl *context_gl, const struct wined3d_state *state)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct wined3d_rendertarget_view * const *rts = state->fb->render_targets;
     struct wined3d_shader *ps = state->shader[WINED3D_SHADER_TYPE_PIXEL];
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     unsigned int rt_mask, mask;
     unsigned int i;
 
     if (wined3d_settings.offscreen_rendering_mode != ORM_FBO)
         return wined3d_context_gl_generate_rt_mask_no_fbo(context_gl, rts[0]->resource);
-    else if (!context->render_offscreen)
+    else if (!context_gl->c.render_offscreen)
         return context_generate_rt_mask_from_resource(rts[0]->resource);
 
     rt_mask = ps ? ps->reg_maps.rt_mask : 1;
@@ -3173,7 +3172,7 @@ static unsigned int find_draw_buffers_mask(const struct wined3d_context *context
 void context_state_fb(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    unsigned int rt_mask = find_draw_buffers_mask(context, state);
+    uint32_t rt_mask = find_draw_buffers_mask(context_gl, state);
     const struct wined3d_fb_state *fb = state->fb;
     DWORD color_location = 0;
     DWORD *cur_mask;
@@ -3473,12 +3472,12 @@ static void wined3d_context_gl_update_tex_unit_map(struct wined3d_context_gl *co
 void context_state_drawbuf(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    DWORD rt_mask, *cur_mask;
+    uint32_t rt_mask, *cur_mask;
 
     if (isStateDirty(context, STATE_FRAMEBUFFER)) return;
 
     cur_mask = context_gl->current_fbo ? &context_gl->current_fbo->rt_mask : &context_gl->draw_buffers_mask;
-    rt_mask = find_draw_buffers_mask(context, state);
+    rt_mask = find_draw_buffers_mask(context_gl, state);
     if (rt_mask != *cur_mask)
     {
         context_apply_draw_buffers(context, rt_mask);
