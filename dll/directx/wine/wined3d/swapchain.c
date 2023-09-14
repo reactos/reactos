@@ -118,9 +118,14 @@ ULONG CDECL wined3d_swapchain_decref(struct wined3d_swapchain *swapchain)
 
     if (!refcount)
     {
+        struct wined3d_device *device;
+
         wined3d_mutex_lock();
 
-        wined3d_cs_finish(swapchain->device->cs, WINED3D_CS_QUEUE_DEFAULT);
+        device = swapchain->device;
+        if (device->swapchain_count && device->swapchains[0] == swapchain)
+            wined3d_device_uninit_3d(device);
+        wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
         swapchain_cleanup(swapchain);
         swapchain->parent_ops->wined3d_object_destroyed(swapchain->parent);
@@ -1060,6 +1065,20 @@ HRESULT CDECL wined3d_swapchain_create(struct wined3d_device *device, struct win
         WARN("Failed to initialize swapchain, hr %#x.\n", hr);
         heap_free(object);
         return hr;
+    }
+
+    if (desc->flags & WINED3D_SWAPCHAIN_IMPLICIT)
+    {
+        wined3d_mutex_lock();
+        if (FAILED(hr = wined3d_device_set_implicit_swapchain(device, object)))
+        {
+            wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+            swapchain_cleanup(object);
+            wined3d_mutex_unlock();
+            heap_free(swapchain);
+            return hr;
+        }
+        wined3d_mutex_unlock();
     }
 
     TRACE("Created swapchain %p.\n", object);

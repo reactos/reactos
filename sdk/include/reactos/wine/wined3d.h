@@ -918,6 +918,7 @@ enum wined3d_shader_type
 #define WINED3D_SWAPCHAIN_USE_CLOSEST_MATCHING_MODE             0x00002000u
 #define WINED3D_SWAPCHAIN_RESTORE_WINDOW_RECT                   0x00004000u
 #define WINED3D_SWAPCHAIN_GDI_COMPATIBLE                        0x00008000u
+#define WINED3D_SWAPCHAIN_IMPLICIT                              0x00010000u
 
 #define WINED3DDP_MAXTEXCOORD                                   8
 
@@ -2170,8 +2171,6 @@ struct wined3d_device_parent_ops
             void **parent, const struct wined3d_parent_ops **parent_ops);
     HRESULT (__cdecl *create_swapchain_texture)(struct wined3d_device_parent *device_parent, void *parent,
             const struct wined3d_resource_desc *desc, DWORD texture_flags, struct wined3d_texture **texture);
-    HRESULT (__cdecl *create_swapchain)(struct wined3d_device_parent *device_parent,
-            struct wined3d_swapchain_desc *desc, struct wined3d_swapchain **swapchain);
 };
 
 struct wined3d_private_store
@@ -2388,7 +2387,6 @@ struct wined3d_shader_resource_view * __cdecl wined3d_device_get_vs_resource_vie
 struct wined3d_sampler * __cdecl wined3d_device_get_vs_sampler(const struct wined3d_device *device, UINT idx);
 struct wined3d * __cdecl wined3d_device_get_wined3d(const struct wined3d_device *device);
 ULONG __cdecl wined3d_device_incref(struct wined3d_device *device);
-HRESULT __cdecl wined3d_device_init_3d(struct wined3d_device *device, struct wined3d_swapchain_desc *swapchain_desc);
 void __cdecl wined3d_device_multiply_transform(struct wined3d_device *device,
         enum wined3d_transform_state state, const struct wined3d_matrix *matrix);
 HRESULT __cdecl wined3d_device_process_vertices(struct wined3d_device *device,
@@ -2505,7 +2503,6 @@ void __cdecl wined3d_device_set_vs_resource_view(struct wined3d_device *device,
 void __cdecl wined3d_device_set_vs_sampler(struct wined3d_device *device, UINT idx, struct wined3d_sampler *sampler);
 void __cdecl wined3d_device_setup_fullscreen_window(struct wined3d_device *device, HWND window, UINT w, UINT h);
 BOOL __cdecl wined3d_device_show_cursor(struct wined3d_device *device, BOOL show);
-HRESULT __cdecl wined3d_device_uninit_3d(struct wined3d_device *device);
 void __cdecl wined3d_device_update_sub_resource(struct wined3d_device *device, struct wined3d_resource *resource,
         unsigned int sub_resource_idx, const struct wined3d_box *box, const void *data, unsigned int row_pitch,
         unsigned int depth_pitch, unsigned int flags);
