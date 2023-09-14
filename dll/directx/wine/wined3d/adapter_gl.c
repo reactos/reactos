@@ -1880,7 +1880,7 @@ card_vendor_table[] =
 };
 
 static enum wined3d_pci_device wined3d_guess_card(enum wined3d_feature_level feature_level,
-        DWORD glsl_version, const char *gl_renderer, enum wined3d_gl_vendor *gl_vendor,
+        const char *gl_renderer, enum wined3d_gl_vendor *gl_vendor,
         enum wined3d_pci_vendor *card_vendor)
 {
     /* A Direct3D device object contains the PCI id (vendor + device) of the
@@ -3857,8 +3857,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         vendor = wined3d_guess_card_vendor(gl_vendor_str, gl_renderer_str);
         TRACE("Guessed vendor PCI ID 0x%04x.\n", vendor);
 
-        device = wined3d_guess_card(d3d_info->feature_level, gl_info->glsl_version,
-                gl_renderer_str, &gl_vendor, &vendor);
+        device = wined3d_guess_card(d3d_info->feature_level, gl_renderer_str, &gl_vendor, &vendor);
         TRACE("Guessed device PCI ID 0x%04x.\n", device);
 
         if (!(gpu_description = wined3d_get_gpu_description(vendor, device)))
