@@ -3569,9 +3569,13 @@ HRESULT texture2d_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_
         else
             dst_location = dst_texture->resource.map_binding;
 
+        if ((flags & WINED3D_BLT_RAW) || (!scale && !convert && !resolve))
+            blit_op = WINED3D_BLIT_OP_RAW_BLIT;
+        else
+            blit_op = WINED3D_BLIT_OP_DEPTH_BLIT;
+
         context = context_acquire(device, dst_texture, dst_sub_resource_idx);
-        valid_locations = device->blitter->ops->blitter_blit(device->blitter,
-                WINED3D_BLIT_OP_DEPTH_BLIT, context,
+        valid_locations = device->blitter->ops->blitter_blit(device->blitter, blit_op, context,
                 src_texture, src_sub_resource_idx, src_texture->resource.draw_binding, &src_rect,
                 dst_texture, dst_sub_resource_idx, dst_location, &dst_rect, NULL, filter);
         context_release(context);
