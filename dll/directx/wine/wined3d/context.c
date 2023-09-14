@@ -1297,30 +1297,30 @@ static void context_restore_gl_context(const struct wined3d_gl_info *gl_info, HD
     }
 }
 
-static void context_update_window(struct wined3d_context *context)
+static void wined3d_context_gl_update_window(struct wined3d_context_gl *context_gl)
 {
-    if (!context->swapchain)
+    if (!context_gl->c.swapchain)
         return;
 
-    if (context->win_handle == context->swapchain->win_handle)
+    if (context_gl->c.win_handle == context_gl->c.swapchain->win_handle)
         return;
 
     TRACE("Updating context %p window from %p to %p.\n",
-            context, context->win_handle, context->swapchain->win_handle);
+            context_gl, context_gl->c.win_handle, context_gl->c.swapchain->win_handle);
 
-    if (context->hdc)
-        wined3d_release_dc(context->win_handle, context->hdc);
+    if (context_gl->c.hdc)
+        wined3d_release_dc(context_gl->c.win_handle, context_gl->c.hdc);
 
-    context->win_handle = context->swapchain->win_handle;
-    context->hdc_is_private = FALSE;
-    context->hdc_has_format = FALSE;
-    context->needs_set = 1;
-    context->valid = 1;
+    context_gl->c.win_handle = context_gl->c.swapchain->win_handle;
+    context_gl->c.hdc_is_private = FALSE;
+    context_gl->c.hdc_has_format = FALSE;
+    context_gl->c.needs_set = 1;
+    context_gl->c.valid = 1;
 
-    if (!(context->hdc = GetDCEx(context->win_handle, 0, DCX_USESTYLE | DCX_CACHE)))
+    if (!(context_gl->c.hdc = GetDCEx(context_gl->c.win_handle, 0, DCX_USESTYLE | DCX_CACHE)))
     {
-        ERR("Failed to get a device context for window %p.\n", context->win_handle);
-        context->valid = 0;
+        ERR("Failed to get a device context for window %p.\n", context_gl->c.win_handle);
+        context_gl->c.valid = 0;
     }
 }
 
@@ -4218,7 +4218,7 @@ static void context_activate(struct wined3d_context *context,
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
 
     context_enter(context);
-    context_update_window(context);
+    wined3d_context_gl_update_window(context_gl);
     context_setup_target(context, texture, sub_resource_idx);
     if (!context->valid)
         return;
