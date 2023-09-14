@@ -937,7 +937,6 @@ static HRESULT ddraw_set_cooperative_level(struct ddraw *ddraw, HWND window,
                 goto done;
             }
 
-            wined3d_stateblock_capture(stateblock);
             rtv = wined3d_device_get_rendertarget_view(ddraw->wined3d_device, 0);
             /* Rendering to ddraw->wined3d_frontbuffer. */
             if (rtv && !wined3d_rendertarget_view_get_sub_resource_parent(rtv))
