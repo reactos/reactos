@@ -3639,7 +3639,7 @@ static void sampler(struct wined3d_context *context, const struct wined3d_state 
 
         wined3d_sampler_desc_from_sampler_states(&desc, context, sampler_states, texture_gl);
 
-        wined3d_texture_gl_bind(texture_gl, context, srgb);
+        wined3d_texture_gl_bind(texture_gl, context_gl, srgb);
 
         if ((entry = wine_rb_get(&device->samplers, &desc)))
         {

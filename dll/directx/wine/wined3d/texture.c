@@ -934,18 +934,17 @@ void wined3d_gl_texture_swizzle_from_color_fixup(GLint swizzle[4], struct color_
 
 /* Context activation is done by the caller. */
 void wined3d_texture_gl_bind(struct wined3d_texture_gl *texture_gl,
-        struct wined3d_context *context, BOOL srgb)
+        struct wined3d_context_gl *context_gl, BOOL srgb)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_format *format = texture_gl->t.resource.format;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     const struct color_fixup_desc fixup = format->color_fixup;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct gl_texture *gl_tex;
     GLenum target;
 
-    TRACE("texture_gl %p, context %p, srgb %#x.\n", texture_gl, context, srgb);
+    TRACE("texture_gl %p, context_gl %p, srgb %#x.\n", texture_gl, context_gl, srgb);
 
-    if (!needs_separate_srgb_gl_texture(context, &texture_gl->t))
+    if (!needs_separate_srgb_gl_texture(&context_gl->c, &texture_gl->t))
         srgb = FALSE;
 
     /* sRGB mode cache for preload() calls outside drawprim. */
@@ -988,7 +987,7 @@ void wined3d_texture_gl_bind(struct wined3d_texture_gl *texture_gl,
     gl_tex->sampler_desc.max_anisotropy = 1;
     gl_tex->sampler_desc.compare = FALSE;
     gl_tex->sampler_desc.comparison_func = WINED3D_CMP_LESSEQUAL;
-    if (context->gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
+    if (gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
         gl_tex->sampler_desc.srgb_decode = TRUE;
     else
         gl_tex->sampler_desc.srgb_decode = srgb;
@@ -1046,7 +1045,7 @@ void wined3d_texture_gl_bind(struct wined3d_texture_gl *texture_gl,
         checkGLcall("glTexParameteri(GL_DEPTH_TEXTURE_MODE_ARB, GL_INTENSITY)");
     }
 
-    if (!is_identity_fixup(fixup) && can_use_texture_swizzle(context->d3d_info, format))
+    if (!is_identity_fixup(fixup) && can_use_texture_swizzle(context_gl->c.d3d_info, format))
     {
         GLint swizzle[4];
 
@@ -1080,7 +1079,7 @@ void wined3d_texture_gl_bind_and_dirtify(struct wined3d_texture_gl *texture_gl,
     context_invalidate_compute_state(&context_gl->c, STATE_COMPUTE_SHADER_RESOURCE_BINDING);
     context_invalidate_state(&context_gl->c, STATE_GRAPHICS_SHADER_RESOURCE_BINDING);
 
-    wined3d_texture_gl_bind(texture_gl, &context_gl->c, srgb);
+    wined3d_texture_gl_bind(texture_gl, context_gl, srgb);
 }
 
 /* Context activation is done by the caller (state handler). */
