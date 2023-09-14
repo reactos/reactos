@@ -574,13 +574,12 @@ static void wined3d_context_gl_destroy_fbo_entry(struct wined3d_context_gl *cont
 }
 
 /* Context activation is done by the caller. */
-static struct fbo_entry *context_find_fbo_entry(struct wined3d_context *context, GLenum target,
+static struct fbo_entry *wined3d_context_gl_find_fbo_entry(struct wined3d_context_gl *context_gl, GLenum target,
         const struct wined3d_rendertarget_info *render_targets, const struct wined3d_rendertarget_info *depth_stencil,
         DWORD color_location, DWORD ds_location)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     static const struct wined3d_rendertarget_info ds_null = {{0}};
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_texture *rt_texture, *ds_texture;
     struct wined3d_fbo_entry_key fbo_key;
     unsigned int i, ds_level, rt_level;
@@ -614,11 +613,11 @@ static struct fbo_entry *context_find_fbo_entry(struct wined3d_context *context,
         else if (depth_stencil->resource->type == WINED3D_RTYPE_TEXTURE_2D)
         {
             wined3d_texture_gl_set_compatible_renderbuffer(wined3d_texture_gl(ds_texture),
-                    context, ds_level, &render_targets[0]);
+                    &context_gl->c, ds_level, &render_targets[0]);
         }
     }
 
-    context_generate_fbo_key(context, &fbo_key, render_targets, depth_stencil, color_location, ds_location);
+    context_generate_fbo_key(&context_gl->c, &fbo_key, render_targets, depth_stencil, color_location, ds_location);
 
     if (TRACE_ON(d3d))
     {
@@ -676,29 +675,29 @@ static struct fbo_entry *context_find_fbo_entry(struct wined3d_context *context,
         }
     }
 
-    LIST_FOR_EACH_ENTRY(entry, &context->fbo_list, struct fbo_entry, entry)
+    LIST_FOR_EACH_ENTRY(entry, &context_gl->c.fbo_list, struct fbo_entry, entry)
     {
         if (memcmp(&fbo_key, &entry->key, sizeof(fbo_key)))
             continue;
 
         list_remove(&entry->entry);
-        list_add_head(&context->fbo_list, &entry->entry);
+        list_add_head(&context_gl->c.fbo_list, &entry->entry);
         return entry;
     }
 
-    if (context->fbo_entry_count < WINED3D_MAX_FBO_ENTRIES)
+    if (context_gl->c.fbo_entry_count < WINED3D_MAX_FBO_ENTRIES)
     {
-        entry = context_create_fbo_entry(context, render_targets, depth_stencil, color_location, ds_location);
-        list_add_head(&context->fbo_list, &entry->entry);
-        ++context->fbo_entry_count;
+        entry = context_create_fbo_entry(&context_gl->c, render_targets, depth_stencil, color_location, ds_location);
+        list_add_head(&context_gl->c.fbo_list, &entry->entry);
+        ++context_gl->c.fbo_entry_count;
     }
     else
     {
-        entry = LIST_ENTRY(list_tail(&context->fbo_list), struct fbo_entry, entry);
+        entry = LIST_ENTRY(list_tail(&context_gl->c.fbo_list), struct fbo_entry, entry);
         wined3d_context_gl_reuse_fbo_entry(context_gl, target, render_targets,
                 depth_stencil, color_location, ds_location, entry);
         list_remove(&entry->entry);
-        list_add_head(&context->fbo_list, &entry->entry);
+        list_add_head(&context_gl->c.fbo_list, &entry->entry);
     }
 
     return entry;
@@ -783,7 +782,7 @@ static void context_apply_fbo_state(struct wined3d_context *context, GLenum targ
     }
     else
     {
-        context->current_fbo = context_find_fbo_entry(context, target,
+        context->current_fbo = wined3d_context_gl_find_fbo_entry(context_gl, target,
                 render_targets, depth_stencil, color_location, ds_location);
         context_apply_fbo_entry(context, target, context->current_fbo);
     }
