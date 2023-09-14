@@ -2376,8 +2376,8 @@ static void test_append_reg(void)
 
     ret = SetupInstallFromInfSectionA(NULL, hinf, "DefaultInstall", SPINST_REGISTRY,
             NULL, "C:\\", 0, SetupDefaultQueueCallbackA, context, NULL, NULL);
-    todo_wine ok(!ret, "Expected failure.\n");
-    todo_wine ok(GetLastError() == ERROR_INVALID_DATA, "Got error %#lx.\n", GetLastError());
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_DATA, "Got error %#lx.\n", GetLastError());
 
     size = sizeof(value);
     l = RegQueryValueExA(key, "value", NULL, &type, (BYTE *)value, &size);
