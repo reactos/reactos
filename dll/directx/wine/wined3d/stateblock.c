@@ -1340,6 +1340,31 @@ static void init_default_texture_state(unsigned int i, DWORD stage[WINED3D_HIGHE
     stage[WINED3D_TSS_RESULT_ARG] = WINED3DTA_CURRENT;
 }
 
+static void init_default_sampler_states(DWORD states[MAX_COMBINED_SAMPLERS][WINED3D_HIGHEST_SAMPLER_STATE + 1])
+{
+    unsigned int i;
+
+    for (i = 0 ; i < MAX_COMBINED_SAMPLERS; ++i)
+    {
+        TRACE("Setting up default samplers states for sampler %u.\n", i);
+        states[i][WINED3D_SAMP_ADDRESS_U] = WINED3D_TADDRESS_WRAP;
+        states[i][WINED3D_SAMP_ADDRESS_V] = WINED3D_TADDRESS_WRAP;
+        states[i][WINED3D_SAMP_ADDRESS_W] = WINED3D_TADDRESS_WRAP;
+        states[i][WINED3D_SAMP_BORDER_COLOR] = 0;
+        states[i][WINED3D_SAMP_MAG_FILTER] = WINED3D_TEXF_POINT;
+        states[i][WINED3D_SAMP_MIN_FILTER] = WINED3D_TEXF_POINT;
+        states[i][WINED3D_SAMP_MIP_FILTER] = WINED3D_TEXF_NONE;
+        states[i][WINED3D_SAMP_MIPMAP_LOD_BIAS] = 0;
+        states[i][WINED3D_SAMP_MAX_MIP_LEVEL] = 0;
+        states[i][WINED3D_SAMP_MAX_ANISOTROPY] = 1;
+        states[i][WINED3D_SAMP_SRGB_TEXTURE] = 0;
+        /* TODO: Indicates which element of a multielement texture to use. */
+        states[i][WINED3D_SAMP_ELEMENT_INDEX] = 0;
+        /* TODO: Vertex offset in the presampled displacement map. */
+        states[i][WINED3D_SAMP_DMAP_OFFSET] = 0;
+    }
+}
+
 static void state_init_default(struct wined3d_state *state, const struct wined3d_d3d_info *d3d_info)
 {
     unsigned int i;
@@ -1369,25 +1394,7 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
         init_default_texture_state(i, state->texture_states[i]);
     }
 
-    for (i = 0 ; i <  MAX_COMBINED_SAMPLERS; ++i)
-    {
-        TRACE("Setting up default samplers states for sampler %u.\n", i);
-        state->sampler_states[i][WINED3D_SAMP_ADDRESS_U] = WINED3D_TADDRESS_WRAP;
-        state->sampler_states[i][WINED3D_SAMP_ADDRESS_V] = WINED3D_TADDRESS_WRAP;
-        state->sampler_states[i][WINED3D_SAMP_ADDRESS_W] = WINED3D_TADDRESS_WRAP;
-        state->sampler_states[i][WINED3D_SAMP_BORDER_COLOR] = 0;
-        state->sampler_states[i][WINED3D_SAMP_MAG_FILTER] = WINED3D_TEXF_POINT;
-        state->sampler_states[i][WINED3D_SAMP_MIN_FILTER] = WINED3D_TEXF_POINT;
-        state->sampler_states[i][WINED3D_SAMP_MIP_FILTER] = WINED3D_TEXF_NONE;
-        state->sampler_states[i][WINED3D_SAMP_MIPMAP_LOD_BIAS] = 0;
-        state->sampler_states[i][WINED3D_SAMP_MAX_MIP_LEVEL] = 0;
-        state->sampler_states[i][WINED3D_SAMP_MAX_ANISOTROPY] = 1;
-        state->sampler_states[i][WINED3D_SAMP_SRGB_TEXTURE] = 0;
-        /* TODO: Indicates which element of a multielement texture to use. */
-        state->sampler_states[i][WINED3D_SAMP_ELEMENT_INDEX] = 0;
-        /* TODO: Vertex offset in the presampled displacement map. */
-        state->sampler_states[i][WINED3D_SAMP_DMAP_OFFSET] = 0;
-    }
+    init_default_sampler_states(state->sampler_states);
 
     state->blend_factor.r = 1.0f;
     state->blend_factor.g = 1.0f;
