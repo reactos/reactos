@@ -3983,10 +3983,11 @@ static void WINE_GLAPI invalid_generic_attrib_func(GLuint idx, const void *data)
  * draw_primitive_immediate_mode(). */
 static void WINE_GLAPI position_d3dcolor(const void *data)
 {
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
     DWORD pos = *((const DWORD *)data);
 
     FIXME("Add a test for fixed function position from d3dcolor type.\n");
-    context_get_current()->gl_info->gl_ops.gl.p_glVertex4s(D3DCOLOR_B_R(pos),
+    gl_info->gl_ops.gl.p_glVertex4s(D3DCOLOR_B_R(pos),
             D3DCOLOR_B_G(pos),
             D3DCOLOR_B_B(pos),
             D3DCOLOR_B_A(pos));
@@ -3994,25 +3995,27 @@ static void WINE_GLAPI position_d3dcolor(const void *data)
 
 static void WINE_GLAPI position_float4(const void *data)
 {
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
     const GLfloat *pos = data;
 
     if (pos[3] != 0.0f && pos[3] != 1.0f)
     {
         float w = 1.0f / pos[3];
 
-        context_get_current()->gl_info->gl_ops.gl.p_glVertex4f(pos[0] * w, pos[1] * w, pos[2] * w, w);
+        gl_info->gl_ops.gl.p_glVertex4f(pos[0] * w, pos[1] * w, pos[2] * w, w);
     }
     else
     {
-        context_get_current()->gl_info->gl_ops.gl.p_glVertex3fv(pos);
+        gl_info->gl_ops.gl.p_glVertex3fv(pos);
     }
 }
 
 static void WINE_GLAPI diffuse_d3dcolor(const void *data)
 {
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
     DWORD diffuseColor = *((const DWORD *)data);
 
-    context_get_current()->gl_info->gl_ops.gl.p_glColor4ub(D3DCOLOR_B_R(diffuseColor),
+    gl_info->gl_ops.gl.p_glColor4ub(D3DCOLOR_B_R(diffuseColor),
             D3DCOLOR_B_G(diffuseColor),
             D3DCOLOR_B_B(diffuseColor),
             D3DCOLOR_B_A(diffuseColor));
@@ -4020,6 +4023,7 @@ static void WINE_GLAPI diffuse_d3dcolor(const void *data)
 
 static void WINE_GLAPI specular_d3dcolor(const void *data)
 {
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
     DWORD specularColor = *((const DWORD *)data);
     GLubyte d[] =
     {
@@ -4028,7 +4032,7 @@ static void WINE_GLAPI specular_d3dcolor(const void *data)
         D3DCOLOR_B_B(specularColor)
     };
 
-    context_get_current()->gl_info->gl_ops.ext.p_glSecondaryColor3ubvEXT(d);
+    gl_info->gl_ops.ext.p_glSecondaryColor3ubvEXT(d);
 }
 
 static void WINE_GLAPI warn_no_specular_func(const void *data)
@@ -4038,43 +4042,48 @@ static void WINE_GLAPI warn_no_specular_func(const void *data)
 
 static void WINE_GLAPI generic_d3dcolor(GLuint idx, const void *data)
 {
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
     DWORD color = *((const DWORD *)data);
 
-    context_get_current()->gl_info->gl_ops.ext.p_glVertexAttrib4Nub(idx,
+    gl_info->gl_ops.ext.p_glVertexAttrib4Nub(idx,
             D3DCOLOR_B_R(color), D3DCOLOR_B_G(color),
             D3DCOLOR_B_B(color), D3DCOLOR_B_A(color));
 }
 
 static void WINE_GLAPI generic_short2n(GLuint idx, const void *data)
 {
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
     const GLshort s[] = {((const GLshort *)data)[0], ((const GLshort *)data)[1], 0, 1};
 
-    context_get_current()->gl_info->gl_ops.ext.p_glVertexAttrib4Nsv(idx, s);
+    gl_info->gl_ops.ext.p_glVertexAttrib4Nsv(idx, s);
 }
 
 static void WINE_GLAPI generic_ushort2n(GLuint idx, const void *data)
 {
     const GLushort s[] = {((const GLushort *)data)[0], ((const GLushort *)data)[1], 0, 1};
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
 
-    context_get_current()->gl_info->gl_ops.ext.p_glVertexAttrib4Nusv(idx, s);
+    gl_info->gl_ops.ext.p_glVertexAttrib4Nusv(idx, s);
 }
 
 static void WINE_GLAPI generic_float16_2(GLuint idx, const void *data)
 {
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
     float x = float_16_to_32(((const unsigned short *)data) + 0);
     float y = float_16_to_32(((const unsigned short *)data) + 1);
 
-    context_get_current()->gl_info->gl_ops.ext.p_glVertexAttrib2f(idx, x, y);
+    gl_info->gl_ops.ext.p_glVertexAttrib2f(idx, x, y);
 }
 
 static void WINE_GLAPI generic_float16_4(GLuint idx, const void *data)
 {
+    const struct wined3d_gl_info *gl_info = wined3d_context_gl_get_current()->c.gl_info;
     float x = float_16_to_32(((const unsigned short *)data) + 0);
     float y = float_16_to_32(((const unsigned short *)data) + 1);
     float z = float_16_to_32(((const unsigned short *)data) + 2);
     float w = float_16_to_32(((const unsigned short *)data) + 3);
 
-    context_get_current()->gl_info->gl_ops.ext.p_glVertexAttrib4f(idx, x, y, z, w);
+    gl_info->gl_ops.ext.p_glVertexAttrib4f(idx, x, y, z, w);
 }
 
 static void wined3d_adapter_init_ffp_attrib_ops(struct wined3d_adapter *adapter)

@@ -720,12 +720,12 @@ static void shader_arb_load_constants(void *shader_priv, struct wined3d_context 
 
 static void shader_arb_update_float_vertex_constants(struct wined3d_device *device, UINT start, UINT count)
 {
-    struct wined3d_context *context = context_get_current();
+    struct wined3d_context_gl *context_gl = wined3d_context_gl_get_current();
     struct shader_arb_priv *priv = device->shader_priv;
 
     /* We don't want shader constant dirtification to be an O(contexts), so just dirtify the active
      * context. On a context switch the old context will be fully dirtified */
-    if (!context || context->device != device)
+    if (!context_gl || context_gl->c.device != device)
         return;
 
     memset(priv->vshader_const_dirty + start, 1, sizeof(*priv->vshader_const_dirty) * count);
@@ -734,12 +734,12 @@ static void shader_arb_update_float_vertex_constants(struct wined3d_device *devi
 
 static void shader_arb_update_float_pixel_constants(struct wined3d_device *device, UINT start, UINT count)
 {
-    struct wined3d_context *context = context_get_current();
+    struct wined3d_context_gl *context_gl = wined3d_context_gl_get_current();
     struct shader_arb_priv *priv = device->shader_priv;
 
     /* We don't want shader constant dirtification to be an O(contexts), so just dirtify the active
      * context. On a context switch the old context will be fully dirtified */
-    if (!context || context->device != device)
+    if (!context_gl || context_gl->c.device != device)
         return;
 
     memset(priv->pshader_const_dirty + start, 1, sizeof(*priv->pshader_const_dirty) * count);

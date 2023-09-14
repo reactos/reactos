@@ -32,84 +32,104 @@ WINE_DEFAULT_DEBUG_CHANNEL(gl_compat);
 WINE_DECLARE_DEBUG_CHANNEL(d3d_perf);
 
 /* Start GL_ARB_multitexture emulation */
-static void WINE_GLAPI wine_glMultiTexCoord1fARB(GLenum target, GLfloat s) {
-    if(target != GL_TEXTURE0) {
-        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported\n");
+static void WINE_GLAPI wine_glMultiTexCoord1fARB(GLenum target, GLfloat s)
+{
+    if (target != GL_TEXTURE0)
+    {
+        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    context_get_current()->gl_info->gl_ops.gl.p_glTexCoord1f(s);
+    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord1f(s);
 }
 
-static void WINE_GLAPI wine_glMultiTexCoord1fvARB(GLenum target, const GLfloat *v) {
-    if(target != GL_TEXTURE0) {
-        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported\n");
+static void WINE_GLAPI wine_glMultiTexCoord1fvARB(GLenum target, const GLfloat *v)
+{
+    if (target != GL_TEXTURE0)
+    {
+        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    context_get_current()->gl_info->gl_ops.gl.p_glTexCoord1fv(v);
+    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord1fv(v);
 }
 
-static void WINE_GLAPI wine_glMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t) {
-    if(target != GL_TEXTURE0) {
-        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported\n");
+static void WINE_GLAPI wine_glMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t)
+{
+    if (target != GL_TEXTURE0)
+    {
+        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    context_get_current()->gl_info->gl_ops.gl.p_glTexCoord2f(s, t);
+    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord2f(s, t);
 }
 
-static void WINE_GLAPI wine_glMultiTexCoord2fvARB(GLenum target, const GLfloat *v) {
-    if(target != GL_TEXTURE0) {
-        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported\n");
+static void WINE_GLAPI wine_glMultiTexCoord2fvARB(GLenum target, const GLfloat *v)
+{
+    if (target != GL_TEXTURE0)
+    {
+        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    context_get_current()->gl_info->gl_ops.gl.p_glTexCoord2fv(v);
+    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord2fv(v);
 }
 
-static void WINE_GLAPI wine_glMultiTexCoord3fARB(GLenum target, GLfloat s, GLfloat t, GLfloat r) {
-    if(target != GL_TEXTURE0) {
-        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported\n");
+static void WINE_GLAPI wine_glMultiTexCoord3fARB(GLenum target, GLfloat s, GLfloat t, GLfloat r)
+{
+    if (target != GL_TEXTURE0)
+    {
+        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    context_get_current()->gl_info->gl_ops.gl.p_glTexCoord3f(s, t, r);
+    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord3f(s, t, r);
 }
 
-static void WINE_GLAPI wine_glMultiTexCoord3fvARB(GLenum target, const GLfloat *v) {
-    if(target != GL_TEXTURE0) {
-        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported\n");
+static void WINE_GLAPI wine_glMultiTexCoord3fvARB(GLenum target, const GLfloat *v)
+{
+    if (target != GL_TEXTURE0)
+    {
+        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    context_get_current()->gl_info->gl_ops.gl.p_glTexCoord3fv(v);
+    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord3fv(v);
 }
 
-static void WINE_GLAPI wine_glMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q) {
-    if(target != GL_TEXTURE0) {
-        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported\n");
+static void WINE_GLAPI wine_glMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q)
+{
+    if (target != GL_TEXTURE0)
+    {
+        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    context_get_current()->gl_info->gl_ops.gl.p_glTexCoord4f(s, t, r, q);
+    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord4f(s, t, r, q);
 }
 
-static void WINE_GLAPI wine_glMultiTexCoord4fvARB(GLenum target, const GLfloat *v) {
-    if(target != GL_TEXTURE0) {
-        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported\n");
+static void WINE_GLAPI wine_glMultiTexCoord4fvARB(GLenum target, const GLfloat *v)
+{
+    if (target != GL_TEXTURE0)
+    {
+        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    context_get_current()->gl_info->gl_ops.gl.p_glTexCoord4fv(v);
+    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord4fv(v);
 }
 
-static void WINE_GLAPI wine_glMultiTexCoord2svARB(GLenum target, const GLshort *v) {
-    if(target != GL_TEXTURE0) {
-        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported\n");
+static void WINE_GLAPI wine_glMultiTexCoord2svARB(GLenum target, const GLshort *v)
+{
+    if (target != GL_TEXTURE0)
+    {
+        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    context_get_current()->gl_info->gl_ops.gl.p_glTexCoord2sv(v);
+    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord2sv(v);
 }
 
-static void WINE_GLAPI wine_glMultiTexCoord4svARB(GLenum target, const GLshort *v) {
-    if(target != GL_TEXTURE0) {
-        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported\n");
+static void WINE_GLAPI wine_glMultiTexCoord4svARB(GLenum target, const GLshort *v)
+{
+    if (target != GL_TEXTURE0)
+    {
+        ERR("Texture unit > 0 used, but GL_ARB_multitexture is not supported.\n");
         return;
     }
-    context_get_current()->gl_info->gl_ops.gl.p_glTexCoord4sv(v);
+    wined3d_context_gl_get_current()->c.gl_info->gl_ops.gl.p_glTexCoord4sv(v);
 }
 
 static void WINE_GLAPI wine_glActiveTexture(GLenum texture)
@@ -154,7 +174,7 @@ static void WINE_GLAPI wine_glEnable(GLenum cap)
 {
     if (cap == GL_FOG)
     {
-        struct wined3d_context_gl *ctx = wined3d_context_gl(context_get_current());
+        struct wined3d_context_gl *ctx = wined3d_context_gl_get_current();
 
         ctx->fog_enabled = 1;
         if (ctx->gl_fog_source != GL_FRAGMENT_DEPTH_EXT)
@@ -168,7 +188,7 @@ static void WINE_GLAPI wine_glDisable(GLenum cap)
 {
     if (cap == GL_FOG)
     {
-        struct wined3d_context_gl *ctx = wined3d_context_gl(context_get_current());
+        struct wined3d_context_gl *ctx = wined3d_context_gl_get_current();
 
         ctx->fog_enabled = 0;
         if (ctx->gl_fog_source != GL_FRAGMENT_DEPTH_EXT)
@@ -180,7 +200,7 @@ static void WINE_GLAPI wine_glDisable(GLenum cap)
 static void (WINE_GLAPI *old_fogcoord_glFogi)(GLenum pname, GLint param);
 static void WINE_GLAPI wine_glFogi(GLenum pname, GLint param)
 {
-    struct wined3d_context_gl *ctx = wined3d_context_gl(context_get_current());
+    struct wined3d_context_gl *ctx = wined3d_context_gl_get_current();
 
     if (pname == GL_FOG_COORDINATE_SOURCE_EXT)
     {
@@ -209,7 +229,7 @@ static void WINE_GLAPI wine_glFogi(GLenum pname, GLint param)
 static void (WINE_GLAPI *old_fogcoord_glFogiv)(GLenum pname, const GLint *param);
 static void WINE_GLAPI wine_glFogiv(GLenum pname, const GLint *param)
 {
-    struct wined3d_context_gl *ctx = wined3d_context_gl(context_get_current());
+    struct wined3d_context_gl *ctx = wined3d_context_gl_get_current();
 
     if (pname == GL_FOG_COORDINATE_SOURCE_EXT)
     {
@@ -238,7 +258,7 @@ static void WINE_GLAPI wine_glFogiv(GLenum pname, const GLint *param)
 static void (WINE_GLAPI *old_fogcoord_glFogf)(GLenum pname, GLfloat param);
 static void WINE_GLAPI wine_glFogf(GLenum pname, GLfloat param)
 {
-    struct wined3d_context_gl *ctx = wined3d_context_gl(context_get_current());
+    struct wined3d_context_gl *ctx = wined3d_context_gl_get_current();
 
     if (pname == GL_FOG_COORDINATE_SOURCE_EXT)
     {
@@ -267,7 +287,7 @@ static void WINE_GLAPI wine_glFogf(GLenum pname, GLfloat param)
 static void (WINE_GLAPI *old_fogcoord_glFogfv)(GLenum pname, const GLfloat *param);
 static void WINE_GLAPI wine_glFogfv(GLenum pname, const GLfloat *param)
 {
-    struct wined3d_context_gl *ctx = wined3d_context_gl(context_get_current());
+    struct wined3d_context_gl *ctx = wined3d_context_gl_get_current();
 
     if (pname == GL_FOG_COORDINATE_SOURCE_EXT)
     {
@@ -309,18 +329,16 @@ static void (WINE_GLAPI *old_fogcoord_glColor4f)(GLfloat r, GLfloat g, GLfloat b
 
 static void WINE_GLAPI wine_glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
-    struct wined3d_context *ctx = context_get_current();
-    struct wined3d_context_gl *ctx_gl;
+    const struct wined3d_context_gl *ctx_gl = wined3d_context_gl_get_current();
 
     /* This can be called from draw_test_quad() and at that point there is no
      * wined3d_context current. */
-    if (!ctx)
+    if (!ctx_gl)
     {
         old_fogcoord_glVertex4f(x, y, z, w);
         return;
     }
 
-    ctx_gl = wined3d_context_gl(ctx);
     if (ctx_gl->gl_fog_source == GL_FOG_COORDINATE_EXT && ctx_gl->fog_enabled)
     {
         GLfloat c[4] = {ctx_gl->colour[0], ctx_gl->colour[1], ctx_gl->colour[2], ctx_gl->colour[3]};
@@ -354,18 +372,16 @@ static void WINE_GLAPI wine_glVertex3fv(const GLfloat *pos) {
 
 static void WINE_GLAPI wine_glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 {
-    struct wined3d_context *ctx = context_get_current();
-    struct wined3d_context_gl *ctx_gl;
+    struct wined3d_context_gl *ctx_gl = wined3d_context_gl_get_current();
 
     /* This can be called from draw_test_quad() and at that point there is no
      * wined3d_context current. */
-    if (!ctx)
+    if (!ctx_gl)
     {
         old_fogcoord_glColor4f(r, g, b, a);
         return;
     }
 
-    ctx_gl = wined3d_context_gl(ctx);
     ctx_gl->colour[0] = r;
     ctx_gl->colour[1] = g;
     ctx_gl->colour[2] = b;
@@ -393,7 +409,7 @@ static void WINE_GLAPI wine_glColor4ub(GLubyte r, GLubyte g, GLubyte b, GLubyte 
  * single precision function. */
 static void WINE_GLAPI wine_glFogCoordfEXT(GLfloat f)
 {
-    struct wined3d_context_gl *ctx = wined3d_context_gl(context_get_current());
+    struct wined3d_context_gl *ctx = wined3d_context_gl_get_current();
 
     ctx->fog_coord_value = f;
 }

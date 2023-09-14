@@ -1503,17 +1503,16 @@ void context_set_tls_idx(DWORD idx)
     wined3d_context_tls_idx = idx;
 }
 
-struct wined3d_context *context_get_current(void)
+struct wined3d_context_gl *wined3d_context_gl_get_current(void)
 {
     return TlsGetValue(wined3d_context_tls_idx);
 }
 
 BOOL wined3d_context_gl_set_current(struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_context *ctx = context_gl ? &context_gl->c : NULL;
-    struct wined3d_context *old = context_get_current();
+    struct wined3d_context_gl *old = wined3d_context_gl_get_current();
 
-    if (old == ctx)
+    if (old == context_gl)
     {
         TRACE("Already using D3D context %p.\n", context_gl);
         return TRUE;
@@ -1521,22 +1520,22 @@ BOOL wined3d_context_gl_set_current(struct wined3d_context_gl *context_gl)
 
     if (old)
     {
-        if (old->destroyed)
+        if (old->c.destroyed)
         {
             TRACE("Switching away from destroyed context %p.\n", old);
-            wined3d_context_gl_cleanup(wined3d_context_gl(old));
-            heap_free((void *)old->gl_info);
+            wined3d_context_gl_cleanup(old);
+            heap_free((void *)old->c.gl_info);
             heap_free(old);
         }
         else
         {
             if (wglGetCurrentContext())
             {
-                const struct wined3d_gl_info *gl_info = old->gl_info;
+                const struct wined3d_gl_info *gl_info = old->c.gl_info;
                 TRACE("Flushing context %p before switching to %p.\n", old, context_gl);
                 gl_info->gl_ops.gl.p_glFlush();
             }
-            old->current = 0;
+            old->c.current = 0;
         }
     }
 
@@ -1566,7 +1565,7 @@ BOOL wined3d_context_gl_set_current(struct wined3d_context_gl *context_gl)
         }
     }
 
-    return TlsSetValue(wined3d_context_tls_idx, ctx);
+    return TlsSetValue(wined3d_context_tls_idx, context_gl);
 }
 
 void wined3d_context_gl_release(struct wined3d_context_gl *context_gl)
@@ -1579,7 +1578,7 @@ void wined3d_context_gl_release(struct wined3d_context_gl *context_gl)
     {
         if (!context->level)
             WARN("Context %p is not active.\n", context);
-        else if (context != context_get_current())
+        else if (context_gl != wined3d_context_gl_get_current())
             WARN("Context %p is not the current context.\n", context);
     }
 
@@ -1623,10 +1622,10 @@ static void wined3d_context_gl_enter(struct wined3d_context_gl *context_gl)
 
     if (!context_gl->c.level++)
     {
-        const struct wined3d_context *current_context = context_get_current();
+        const struct wined3d_context_gl *current_context = wined3d_context_gl_get_current();
         HGLRC current_gl = wglGetCurrentContext();
 
-        if (current_gl && (!current_context || wined3d_context_gl_const(current_context)->gl_ctx != current_gl))
+        if (current_gl && (!current_context || current_context->gl_ctx != current_gl))
         {
             TRACE("Another GL context (%p on device context %p) is already current.\n",
                     current_gl, wglGetCurrentDC());
@@ -4198,7 +4197,7 @@ static void wined3d_context_gl_activate(struct wined3d_context_gl *context_gl,
     if (!context_gl->valid)
         return;
 
-    if (&context_gl->c != context_get_current())
+    if (context_gl != wined3d_context_gl_get_current())
     {
         if (!wined3d_context_gl_set_current(context_gl))
             ERR("Failed to activate the new context.\n");
@@ -4212,22 +4211,22 @@ static void wined3d_context_gl_activate(struct wined3d_context_gl *context_gl,
 struct wined3d_context *wined3d_context_gl_acquire(const struct wined3d_device *device,
         struct wined3d_texture *texture, unsigned int sub_resource_idx)
 {
-    struct wined3d_context *current_context = context_get_current();
-    struct wined3d_context *context;
+    struct wined3d_context_gl *current_context = wined3d_context_gl_get_current();
+    struct wined3d_context_gl *context_gl;
 
     TRACE("device %p, texture %p, sub_resource_idx %u.\n", device, texture, sub_resource_idx);
 
-    if (current_context && current_context->destroyed)
+    if (current_context && current_context->c.destroyed)
         current_context = NULL;
 
     if (!texture)
     {
         if (current_context
-                && current_context->current_rt.texture
-                && current_context->device == device)
+                && current_context->c.current_rt.texture
+                && current_context->c.device == device)
         {
-            texture = current_context->current_rt.texture;
-            sub_resource_idx = current_context->current_rt.sub_resource_idx;
+            texture = current_context->c.current_rt.texture;
+            sub_resource_idx = current_context->c.current_rt.sub_resource_idx;
         }
         else
         {
@@ -4241,15 +4240,15 @@ struct wined3d_context *wined3d_context_gl_acquire(const struct wined3d_device *
         }
     }
 
-    if (current_context && current_context->current_rt.texture == texture)
+    if (current_context && current_context->c.current_rt.texture == texture)
     {
-        context = current_context;
+        context_gl = current_context;
     }
     else if (texture && !wined3d_resource_is_offscreen(&texture->resource))
     {
         TRACE("Rendering onscreen.\n");
 
-        if (!(context = swapchain_get_context(texture->swapchain)))
+        if (!(context_gl = wined3d_context_gl(swapchain_get_context(texture->swapchain))))
             return NULL;
     }
     else
@@ -4258,15 +4257,15 @@ struct wined3d_context *wined3d_context_gl_acquire(const struct wined3d_device *
 
         /* Stay with the current context if possible. Otherwise use the
          * context for the primary swapchain. */
-        if (current_context && current_context->device == device)
-            context = current_context;
-        else if (!(context = swapchain_get_context(device->swapchains[0])))
+        if (current_context && current_context->c.device == device)
+            context_gl = current_context;
+        else if (!(context_gl = wined3d_context_gl(swapchain_get_context(device->swapchains[0]))))
             return NULL;
     }
 
-    wined3d_context_gl_activate(wined3d_context_gl(context), texture, sub_resource_idx);
+    wined3d_context_gl_activate(context_gl, texture, sub_resource_idx);
 
-    return context;
+    return &context_gl->c;
 }
 
 struct wined3d_context_gl *wined3d_context_gl_reacquire(struct wined3d_context_gl *context_gl)
