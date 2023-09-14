@@ -2908,12 +2908,14 @@ static void context_apply_blit_projection(const struct wined3d_context *context,
 
 /* Setup OpenGL states for fixed-function blitting. */
 /* Context activation is done by the caller. */
-void context_apply_ffp_blit_state(struct wined3d_context *context, const struct wined3d_device *device)
+void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_gl,
+        const struct wined3d_device *device)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context *context = &context_gl->c;
+    const struct wined3d_gl_info *gl_info;
     unsigned int i, sampler;
 
+    gl_info = context->gl_info;
     if (!gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
         ERR("Applying fixed-function state without legacy context support.\n");
 
