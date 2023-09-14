@@ -428,7 +428,7 @@ static inline DWORD context_generate_rt_mask_from_resource(struct wined3d_resour
     return (1u << 31) | wined3d_texture_get_gl_buffer(texture_from_resource(resource));
 }
 
-static inline void context_set_fbo_key_for_render_target(const struct wined3d_context *context,
+static inline void wined3d_context_gl_set_fbo_key_for_render_target(const struct wined3d_context_gl *context_gl,
         struct wined3d_fbo_entry_key *key, unsigned int idx, const struct wined3d_rendertarget_info *render_target,
         DWORD location)
 {
@@ -475,11 +475,11 @@ static inline void context_set_fbo_key_for_render_target(const struct wined3d_co
     switch (location)
     {
         case WINED3D_LOCATION_TEXTURE_RGB:
-            key->objects[idx].object = wined3d_texture_gl_get_texture_name(texture_gl, context, FALSE);
+            key->objects[idx].object = wined3d_texture_gl_get_texture_name(texture_gl, &context_gl->c, FALSE);
             break;
 
         case WINED3D_LOCATION_TEXTURE_SRGB:
-            key->objects[idx].object = wined3d_texture_gl_get_texture_name(texture_gl, context, TRUE);
+            key->objects[idx].object = wined3d_texture_gl_get_texture_name(texture_gl, &context_gl->c, TRUE);
             break;
 
         case WINED3D_LOCATION_RB_MULTISAMPLE:
@@ -502,14 +502,15 @@ static void context_generate_fbo_key(const struct wined3d_context *context,
         struct wined3d_fbo_entry_key *key, const struct wined3d_rendertarget_info *render_targets,
         const struct wined3d_rendertarget_info *depth_stencil, DWORD color_location, DWORD ds_location)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     unsigned int buffers = context->gl_info->limits.buffers;
     unsigned int i;
 
     key->rb_namespace = 0;
-    context_set_fbo_key_for_render_target(context, key, 0, depth_stencil, ds_location);
+    wined3d_context_gl_set_fbo_key_for_render_target(context_gl, key, 0, depth_stencil, ds_location);
 
     for (i = 0; i < buffers; ++i)
-        context_set_fbo_key_for_render_target(context, key, i + 1, &render_targets[i], color_location);
+        wined3d_context_gl_set_fbo_key_for_render_target(context_gl, key, i + 1, &render_targets[i], color_location);
 
     memset(&key->objects[buffers + 1], 0, (ARRAY_SIZE(key->objects) - buffers - 1) * sizeof(*key->objects));
 }
