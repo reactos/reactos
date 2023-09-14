@@ -2184,12 +2184,17 @@ void CDECL wined3d_device_set_scissor_rects(struct wined3d_device *device, unsig
     wined3d_cs_emit_set_scissor_rects(device->cs, rect_count, rects);
 }
 
-void CDECL wined3d_device_get_scissor_rect(const struct wined3d_device *device, RECT *rect)
+void CDECL wined3d_device_get_scissor_rects(const struct wined3d_device *device, unsigned int *rect_count, RECT *rects)
 {
-    TRACE("device %p, rect %p.\n", device, rect);
+    unsigned int count;
 
-    *rect = device->state.scissor_rects[0];
-    TRACE("Returning rect %s.\n", wine_dbgstr_rect(rect));
+    TRACE("device %p, rect_count %p, rects %p.\n", device, rect_count, rects);
+
+    count = rect_count ? min(*rect_count, device->state.scissor_rect_count) : 1;
+    if (count && rects)
+        memcpy(rects, device->state.scissor_rects, count * sizeof(*rects));
+    if (rect_count)
+        *rect_count = device->state.scissor_rect_count;
 }
 
 void CDECL wined3d_device_set_vertex_declaration(struct wined3d_device *device,

@@ -101,7 +101,7 @@
 @ cdecl wined3d_device_get_render_state(ptr long)
 @ cdecl wined3d_device_get_rendertarget_view(ptr long)
 @ cdecl wined3d_device_get_sampler_state(ptr long long)
-@ cdecl wined3d_device_get_scissor_rect(ptr ptr)
+@ cdecl wined3d_device_get_scissor_rects(ptr ptr ptr)
 @ cdecl wined3d_device_get_software_vertex_processing(ptr)
 @ cdecl wined3d_device_get_stream_output(ptr long ptr)
 @ cdecl wined3d_device_get_stream_source(ptr long ptr ptr ptr)
