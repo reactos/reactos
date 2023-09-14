@@ -1374,12 +1374,12 @@ static void shader_glsl_ffp_vertex_lightambient_uniform(const struct wined3d_con
     checkGLcall("glUniform3fv");
 }
 
-static void shader_glsl_ffp_vertex_light_uniform(const struct wined3d_context *context,
+static void shader_glsl_ffp_vertex_light_uniform(const struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state, unsigned int light, const struct wined3d_light_info *light_info,
         struct glsl_shader_prog_link *prog)
 {
     const struct wined3d_matrix *view = &state->transforms[WINED3D_TS_VIEW];
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_vec4 vec4;
 
     GL_EXTCALL(glUniform4fv(prog->vs.light_location[light].diffuse, 1, &light_info->OriginalParms.diffuse.r));
@@ -1681,7 +1681,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
                     FIXME("Unhandled light type %#x.\n", light_info->OriginalParms.type);
                     continue;
             }
-            shader_glsl_ffp_vertex_light_uniform(context, state, idx, light_info, prog);
+            shader_glsl_ffp_vertex_light_uniform(context_gl, state, idx, light_info, prog);
         }
     }
 
