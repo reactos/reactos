@@ -1945,6 +1945,101 @@ static void test_close_queue(void)
     SetupTermDefaultQueueCallback(context);
 }
 
+static unsigned int got_start_copy, start_copy_ret;
+
+static UINT WINAPI start_copy_cb(void *context, UINT message, UINT_PTR param1, UINT_PTR param2)
+{
+    if (winetest_debug > 1) trace("%p, %#x, %#lx, %#lx\n", context, message, param1, param2);
+
+    if (message == SPFILENOTIFY_STARTCOPY)
+    {
+        const FILEPATHS_A *paths = (const FILEPATHS_A *)param1;
+
+        ++got_start_copy;
+
+        if (strstr(paths->Source, "two.txt"))
+        {
+            SetLastError(0xdeadf00d);
+            return start_copy_ret;
+        }
+    }
+
+    return SetupDefaultQueueCallbackA(context, message, param1, param2);
+}
+
+static void test_start_copy(void)
+{
+    HSPFILEQ queue;
+    void *context;
+    BOOL ret;
+
+    ret = CreateDirectoryA("src", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+    create_file("src/one.txt");
+    create_file("src/two.txt");
+    create_file("src/three.txt");
+
+    start_copy_ret = FILEOP_DOIT;
+    got_start_copy = 0;
+    queue = SetupOpenFileQueue();
+    ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "one.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "two.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "three.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    run_queue(queue, start_copy_cb);
+    ok(got_start_copy == 3, "Got %u callbacks.\n", got_start_copy);
+    ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+    ok(delete_file("dst/two.txt"), "Destination file should exist.\n");
+    ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
+
+    start_copy_ret = FILEOP_SKIP;
+    got_start_copy = 0;
+    queue = SetupOpenFileQueue();
+    ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "one.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "two.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "three.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    run_queue(queue, start_copy_cb);
+    todo_wine ok(got_start_copy == 3, "Got %u callbacks.\n", got_start_copy);
+    ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+    ok(!file_exists("dst/two.txt"), "Destination file should not exist.\n");
+    todo_wine ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
+
+    start_copy_ret = FILEOP_ABORT;
+    got_start_copy = 0;
+    queue = SetupOpenFileQueue();
+    ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "one.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "two.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "three.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    context = SetupInitDefaultQueueCallbackEx(NULL, INVALID_HANDLE_VALUE, 0, 0, 0);
+    SetLastError(0xdeadbeef);
+    ret = SetupCommitFileQueueA(NULL, queue, start_copy_cb, context);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == 0xdeadf00d, "Got unexpected error %u.\n", GetLastError());
+    SetupTermDefaultQueueCallback(context);
+    SetupCloseFileQueue(queue);
+    ok(got_start_copy == 2, "Got %u callbacks.\n", got_start_copy);
+    ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+    ok(!file_exists("dst/two.txt"), "Destination file should not exist.\n");
+    ok(!file_exists("dst/three.txt"), "Destination file should not exist.\n");
+
+    delete_file("src/one.txt");
+    delete_file("src/two.txt");
+    delete_file("src/three.txt");
+    delete_file("src/");
+    delete_file("dst/");
+}
+
 START_TEST(install)
 {
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
@@ -1973,6 +2068,7 @@ START_TEST(install)
     test_need_media();
     test_close_queue();
     test_install_file();
+    test_start_copy();
 
     UnhookWindowsHookEx(hhook);
 
