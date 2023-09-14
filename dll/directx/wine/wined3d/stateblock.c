@@ -1340,6 +1340,19 @@ HRESULT CDECL wined3d_stateblock_set_vs_consts_b(struct wined3d_stateblock *stat
     return WINED3D_OK;
 }
 
+void CDECL wined3d_stateblock_set_vertex_declaration(struct wined3d_stateblock *stateblock,
+        struct wined3d_vertex_declaration *declaration)
+{
+    TRACE("stateblock %p, declaration %p.\n", stateblock, declaration);
+
+    if (declaration)
+        wined3d_vertex_declaration_incref(declaration);
+    if (stateblock->stateblock_state.vertex_declaration)
+        wined3d_vertex_declaration_decref(stateblock->stateblock_state.vertex_declaration);
+    stateblock->stateblock_state.vertex_declaration = declaration;
+    stateblock->changed.vertexDecl = TRUE;
+}
+
 static void init_default_render_states(DWORD rs[WINEHIGHEST_RENDER_STATE + 1], const struct wined3d_d3d_info *d3d_info)
 {
     union
