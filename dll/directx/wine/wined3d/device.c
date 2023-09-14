@@ -1546,7 +1546,7 @@ void CDECL wined3d_device_multiply_transform(struct wined3d_device *device,
      * into the primary stateblock. */
     mat = &device->state.transforms[state];
     multiply_matrix(mat, mat, matrix);
-    wined3d_cs_emit_set_transform(device->cs, state, matrix);
+    wined3d_cs_emit_set_transform(device->cs, state, mat);
 }
 
 /* Note lights are real special cases. Although the device caps state only
