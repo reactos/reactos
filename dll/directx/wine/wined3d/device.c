@@ -37,6 +37,39 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(winediag);
 
+struct wined3d_matrix_3x3
+{
+    float _11, _12, _13;
+    float _21, _22, _23;
+    float _31, _32, _33;
+};
+
+struct light_transformed
+{
+    struct wined3d_color diffuse, specular, ambient;
+    struct wined3d_vec4 position;
+    struct wined3d_vec3 direction;
+    float range, falloff, c_att, l_att, q_att, cos_htheta, cos_hphi;
+};
+
+struct lights_settings
+{
+    struct light_transformed lights[WINED3D_MAX_SOFTWARE_ACTIVE_LIGHTS];
+    struct wined3d_color ambient_light;
+    struct wined3d_matrix modelview_matrix;
+    struct wined3d_matrix_3x3 normal_matrix;
+
+    uint32_t point_light_count          : 8;
+    uint32_t spot_light_count           : 8;
+    uint32_t directional_light_count    : 8;
+    uint32_t parallel_point_light_count : 8;
+
+    uint32_t legacy_lighting            : 1;
+    uint32_t normalise                  : 1;
+    uint32_t localviewer                : 1;
+    uint32_t padding                    : 29;
+};
+
 /* Define the default light parameters as specified by MSDN. */
 const struct wined3d_light WINED3D_default_light =
 {
@@ -3172,6 +3205,45 @@ static float wined3d_clamp(float value, float min_value, float max_value)
     return value < min_value ? min_value : value > max_value ? max_value : value;
 }
 
+static float wined3d_vec3_dot(const struct wined3d_vec3 *v0, const struct wined3d_vec3 *v1)
+{
+    return v0->x * v1->x + v0->y * v1->y + v0->z * v1->z;
+}
+
+static void wined3d_vec3_subtract(struct wined3d_vec3 *v0, const struct wined3d_vec3 *v1)
+{
+    v0->x -= v1->x;
+    v0->y -= v1->y;
+    v0->z -= v1->z;
+}
+
+static void wined3d_vec3_scale(struct wined3d_vec3 *v, float s)
+{
+    v->x *= s;
+    v->y *= s;
+    v->z *= s;
+}
+
+static void wined3d_vec3_normalise(struct wined3d_vec3 *v)
+{
+    float rnorm = 1.0f / sqrtf(wined3d_vec3_dot(v, v));
+
+    if (isfinite(rnorm))
+        wined3d_vec3_scale(v, rnorm);
+}
+
+static void wined3d_vec3_transform(struct wined3d_vec3 *dst,
+        const struct wined3d_vec3 *v, const struct wined3d_matrix_3x3 *m)
+{
+    struct wined3d_vec3 tmp;
+
+    tmp.x = v->x * m->_11 + v->y * m->_21 + v->z * m->_31;
+    tmp.y = v->x * m->_12 + v->y * m->_22 + v->z * m->_32;
+    tmp.z = v->x * m->_13 + v->y * m->_23 + v->z * m->_33;
+
+    *dst = tmp;
+}
+
 static void wined3d_color_clamp(struct wined3d_color *dst, const struct wined3d_color *src,
         float min_value, float max_value)
 {
@@ -3179,6 +3251,138 @@ static void wined3d_color_clamp(struct wined3d_color *dst, const struct wined3d_
     dst->g = wined3d_clamp(src->g, min_value, max_value);
     dst->b = wined3d_clamp(src->b, min_value, max_value);
     dst->a = wined3d_clamp(src->a, min_value, max_value);
+}
+
+static void wined3d_color_rgb_mul_add(struct wined3d_color *dst, const struct wined3d_color *src, float c)
+{
+    dst->r += src->r * c;
+    dst->g += src->g * c;
+    dst->b += src->b * c;
+}
+
+static void init_transformed_lights(struct lights_settings *ls,
+        const struct wined3d_state *state, BOOL legacy_lighting)
+{
+    const struct wined3d_light_info *lights[WINED3D_MAX_SOFTWARE_ACTIVE_LIGHTS];
+    const struct wined3d_light_info *light_info;
+    struct light_transformed *light;
+    struct wined3d_vec4 vec4;
+    unsigned int light_count;
+    unsigned int i, index;
+
+    memset(ls, 0, sizeof(*ls));
+
+    wined3d_color_from_d3dcolor(&ls->ambient_light, state->render_states[WINED3D_RS_AMBIENT]);
+    ls->legacy_lighting = !!legacy_lighting;
+    ls->normalise = !!state->render_states[WINED3D_RS_NORMALIZENORMALS];
+    ls->localviewer = !!state->render_states[WINED3D_RS_LOCALVIEWER];
+
+    multiply_matrix(&ls->modelview_matrix, &state->transforms[WINED3D_TS_VIEW],
+            &state->transforms[WINED3D_TS_WORLD_MATRIX(0)]);
+    compute_normal_matrix(&ls->normal_matrix._11, legacy_lighting, &ls->modelview_matrix);
+
+    for (i = 0, index = 0; i < LIGHTMAP_SIZE && index < ARRAY_SIZE(lights); ++i)
+    {
+        LIST_FOR_EACH_ENTRY(light_info, &state->light_state.light_map[i], struct wined3d_light_info, entry)
+        {
+            if (!light_info->enabled)
+                continue;
+
+            switch (light_info->OriginalParms.type)
+            {
+                case WINED3D_LIGHT_DIRECTIONAL:
+                    ++ls->directional_light_count;
+                    break;
+
+                default:
+                    FIXME("Unhandled light type %#x.\n", light_info->OriginalParms.type);
+                    continue;
+            }
+            lights[index++] = light_info;
+            if (index == WINED3D_MAX_SOFTWARE_ACTIVE_LIGHTS)
+                break;
+        }
+    }
+
+    light_count = index;
+    for (i = 0, index = 0; i < light_count; ++i)
+    {
+        light_info = lights[i];
+        if (light_info->OriginalParms.type != WINED3D_LIGHT_DIRECTIONAL)
+            continue;
+
+        light = &ls->lights[index];
+        wined3d_vec4_transform(&vec4, &light_info->direction, &state->transforms[WINED3D_TS_VIEW]);
+        light->direction = *(struct wined3d_vec3 *)&vec4;
+        wined3d_vec3_normalise(&light->direction);
+
+        light->diffuse = light_info->OriginalParms.diffuse;
+        light->ambient = light_info->OriginalParms.ambient;
+        light->specular = light_info->OriginalParms.specular;
+        ++index;
+    }
+}
+
+static void update_light_diffuse_specular(struct wined3d_color *diffuse, struct wined3d_color *specular,
+        const struct wined3d_vec3 *dir, float att, float material_shininess,
+        const struct wined3d_vec3 *normal_transformed,
+        const struct wined3d_vec3 *position_transformed_normalised,
+        const struct light_transformed *light, const struct lights_settings *ls)
+{
+    struct wined3d_vec3 vec3;
+    float t, c;
+
+    c = wined3d_clamp(wined3d_vec3_dot(dir, normal_transformed), 0.0f, 1.0f);
+    wined3d_color_rgb_mul_add(diffuse, &light->diffuse, c * att);
+
+    vec3 = *dir;
+    if (ls->localviewer)
+        wined3d_vec3_subtract(&vec3, position_transformed_normalised);
+    else
+        vec3.z -= 1.0f;
+    wined3d_vec3_normalise(&vec3);
+    t = wined3d_vec3_dot(normal_transformed, &vec3);
+    if (t > 0.0f && (!ls->legacy_lighting || material_shininess > 0.0f)
+            && wined3d_vec3_dot(dir, normal_transformed) > 0.0f)
+        wined3d_color_rgb_mul_add(specular, &light->specular, att * powf(t, material_shininess));
+}
+
+static void compute_light(struct wined3d_color *ambient, struct wined3d_color *diffuse,
+        struct wined3d_color *specular, const struct lights_settings *ls, const struct wined3d_vec3 *normal,
+        const struct wined3d_vec4 *position, float material_shininess)
+{
+    struct wined3d_vec3 position_transformed_normalised;
+    struct wined3d_vec3 normal_transformed = {0.0f};
+    struct wined3d_vec4 position_transformed;
+    const struct light_transformed *light;
+    unsigned int i, index;
+
+    wined3d_vec4_transform(&position_transformed, position, &ls->modelview_matrix);
+    position_transformed_normalised = *(const struct wined3d_vec3 *)&position_transformed;
+    wined3d_vec3_scale(&position_transformed_normalised, 1.0f / position_transformed.w);
+    wined3d_vec3_normalise(&position_transformed_normalised);
+
+    if (normal)
+    {
+        wined3d_vec3_transform(&normal_transformed, normal, &ls->normal_matrix);
+        if (ls->normalise)
+            wined3d_vec3_normalise(&normal_transformed);
+    }
+
+    diffuse->r = diffuse->g = diffuse->b = diffuse->a = 0.0f;
+    *specular = *diffuse;
+    *ambient = ls->ambient_light;
+
+    index = 0;
+    for (i = 0; i < ls->directional_light_count; ++i, ++index)
+    {
+        light = &ls->lights[index];
+
+        wined3d_color_rgb_mul_add(ambient, &light->ambient, 1.0f);
+        if (normal)
+            update_light_diffuse_specular(diffuse, specular, &light->direction, 1.0f, material_shininess,
+                    &normal_transformed, &position_transformed_normalised, light, ls);
+    }
 }
 
 /* Context activation is done by the caller. */
@@ -3196,16 +3400,12 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
     struct wined3d_box box = {0};
     struct wined3d_viewport vp;
     unsigned int texture_count;
+    struct lights_settings ls;
     unsigned int vertex_size;
+    BOOL do_clip, lighting;
     unsigned int i;
     BYTE *dest_ptr;
-    BOOL doClip;
     HRESULT hr;
-
-    if (stream_info->use_map & (1u << WINED3D_FFP_NORMAL))
-    {
-        WARN(" lighting state not saved yet... Some strange stuff may happen !\n");
-    }
 
     if (!(stream_info->use_map & (1u << WINED3D_FFP_POSITION)))
     {
@@ -3222,16 +3422,17 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
          * so disable clipping for now.
          * (The graphics in Half-Life are broken, and my processvertices
          *  test crashes with IDirect3DDevice3)
-        doClip = TRUE;
+        do_clip = TRUE;
          */
-        doClip = FALSE;
-        if(!warned) {
+        do_clip = FALSE;
+        if (!warned)
+        {
            warned = TRUE;
            FIXME("Clipping is broken and disabled for now\n");
         }
     }
     else
-        doClip = FALSE;
+        do_clip = FALSE;
 
     vertex_size = wined3d_get_flexible_vertex_size(dst_fvf);
     box.left = dwDestIndex * vertex_size;
@@ -3275,21 +3476,27 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
 
     texture_count = (dst_fvf & WINED3DFVF_TEXCOUNT_MASK) >> WINED3DFVF_TEXCOUNT_SHIFT;
 
+    lighting = state->render_states[WINED3D_RS_LIGHTING]
+            && (dst_fvf & (WINED3DFVF_DIFFUSE | WINED3DFVF_SPECULAR));
     wined3d_get_material_colour_source(&diffuse_source, &emissive_source,
             &ambient_source, &specular_source, state, stream_info);
-
     output_colour_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, 0);
     material_specular_state_colour = state->render_states[WINED3D_RS_SPECULARENABLE]
             ? &state->material.specular : &black;
+    if (lighting)
+        init_transformed_lights(&ls, state,
+                device->adapter->d3d_info.wined3d_creation_flags & WINED3D_LEGACY_FFP_LIGHTING);
 
-    for (i = 0; i < dwCount; i+= 1) {
+    for (i = 0; i < dwCount; ++i)
+    {
+        const struct wined3d_stream_info_element *position_element = &stream_info->elements[WINED3D_FFP_POSITION];
+        const float *p = (const float *)&position_element->data.addr[i * position_element->stride];
+        struct wined3d_color ambient, diffuse, specular;
         unsigned int tex_index;
 
         if ( ((dst_fvf & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZ ) ||
              ((dst_fvf & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZRHW ) ) {
             /* The position first */
-            const struct wined3d_stream_info_element *element = &stream_info->elements[WINED3D_FFP_POSITION];
-            const float *p = (const float *)(element->data.addr + i * element->stride);
             float x, y, z, rhw;
             TRACE("In: ( %06.2f %06.2f %06.2f )\n", p[0], p[1], p[2]);
 
@@ -3318,11 +3525,9 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
              *
              */
 
-            if( !doClip ||
-                ( (-rhw -eps < x) && (-rhw -eps < y) && ( -eps < z) &&
-                  (x <= rhw + eps) && (y <= rhw + eps ) && (z <= rhw + eps) &&
-                  ( rhw > eps ) ) ) {
-
+            if (!do_clip || (-rhw - eps < x && -rhw - eps < y && -eps < z && x <= rhw + eps
+                    && y <= rhw + eps && z <= rhw + eps && rhw > eps))
+            {
                 /* "Normal" viewport transformation (not clipped)
                  * 1) The values are divided by rhw
                  * 2) The y axis is negative, so multiply it with -1
@@ -3397,25 +3602,81 @@ static HRESULT process_vertices_strided(const struct wined3d_device *device, DWO
             copy_and_next(dest_ptr, normal, 3 * sizeof(float));
         }
 
+        if (lighting)
+        {
+            const struct wined3d_stream_info_element *element;
+            struct wined3d_vec4 position;
+            struct wined3d_vec3 *normal;
+
+            position.x = p[0];
+            position.y = p[1];
+            position.z = p[2];
+            position.w = 1.0f;
+
+            if (stream_info->use_map & (1u << WINED3D_FFP_NORMAL))
+            {
+                element = &stream_info->elements[WINED3D_FFP_NORMAL];
+                normal = (struct wined3d_vec3 *)&element->data.addr[i * element->stride];
+            }
+            else
+            {
+                normal = NULL;
+            }
+            compute_light(&ambient, &diffuse, &specular, &ls, normal, &position,
+                    state->render_states[WINED3D_RS_SPECULARENABLE] ? state->material.power : 0.0f);
+        }
+
         if (dst_fvf & WINED3DFVF_DIFFUSE)
         {
-            struct wined3d_color material_diffuse;
+            struct wined3d_color material_diffuse, material_ambient, material_emissive, diffuse_colour;
 
             wined3d_colour_from_mcs(&material_diffuse, diffuse_source,
                     &state->material.diffuse, i, stream_info);
-            wined3d_color_clamp(&material_diffuse, &material_diffuse, 0.0f, 1.0f);
-            *(DWORD *)dest_ptr = wined3d_format_convert_from_float(output_colour_format, &material_diffuse);
+
+            if (lighting)
+            {
+                wined3d_colour_from_mcs(&material_ambient, ambient_source,
+                        &state->material.ambient, i, stream_info);
+                wined3d_colour_from_mcs(&material_emissive, emissive_source,
+                        &state->material.emissive, i, stream_info);
+
+                diffuse_colour.r = ambient.r * material_ambient.r
+                        + diffuse.r * material_diffuse.r + material_emissive.r;
+                diffuse_colour.g = ambient.g * material_ambient.g
+                        + diffuse.g * material_diffuse.g + material_emissive.g;
+                diffuse_colour.b = ambient.b * material_ambient.b
+                        + diffuse.b * material_diffuse.b + material_emissive.b;
+                diffuse_colour.a = material_diffuse.a;
+            }
+            else
+            {
+                diffuse_colour = material_diffuse;
+            }
+            wined3d_color_clamp(&diffuse_colour, &diffuse_colour, 0.0f, 1.0f);
+            *((DWORD *)dest_ptr) = wined3d_format_convert_from_float(output_colour_format, &diffuse_colour);
             dest_ptr += sizeof(DWORD);
         }
 
         if (dst_fvf & WINED3DFVF_SPECULAR)
         {
-            struct wined3d_color material_specular;
+            struct wined3d_color material_specular, specular_colour;
 
             wined3d_colour_from_mcs(&material_specular, specular_source,
                     material_specular_state_colour, i, stream_info);
-            wined3d_color_clamp(&material_specular, &material_specular, 0.0f, 1.0f);
-            *((DWORD *)dest_ptr) = wined3d_format_convert_from_float(output_colour_format, &material_specular);
+
+            if (lighting)
+            {
+                specular_colour.r = specular.r * material_specular.r;
+                specular_colour.g = specular.g * material_specular.g;
+                specular_colour.b = specular.b * material_specular.b;
+                specular_colour.a = 1.0f;
+            }
+            else
+            {
+                specular_colour = material_specular;
+            }
+            wined3d_color_clamp(&specular_colour, &specular_colour, 0.0f, 1.0f);
+            *((DWORD *)dest_ptr) = wined3d_format_convert_from_float(output_colour_format, &specular_colour);
             dest_ptr += sizeof(DWORD);
         }
 
