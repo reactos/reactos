@@ -6601,6 +6601,14 @@ static void shader_glsl_input_pack(const struct wined3d_shader *shader, struct w
                 shader_addline(buffer, "ps_in[%u]%s = uintBitsToFloat(gl_FrontFacing ? 0xffffffffu : 0u);\n",
                         input->register_idx, reg_mask);
             }
+            else if (input->sysval_semantic == WINED3D_SV_SAMPLE_INDEX)
+            {
+                if (gl_info->supported[ARB_SAMPLE_SHADING])
+                    shader_addline(buffer, "ps_in[%u]%s = intBitsToFloat(gl_SampleID);\n",
+                            input->register_idx, reg_mask);
+                else
+                    FIXME("ARB_sample_shading is not supported.\n");
+            }
             else if (input->sysval_semantic == WINED3D_SV_RENDER_TARGET_ARRAY_INDEX && !semantic_idx)
             {
                 if (gl_info->supported[ARB_FRAGMENT_LAYER_VIEWPORT])
