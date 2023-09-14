@@ -164,7 +164,6 @@ static void context_attach_gl_texture_fbo(struct wined3d_context *context,
     {
         gl_info->fbo_ops.glFramebufferTexture1D(fbo_target, attachment,
                 resource->target, resource->object, resource->level);
-        checkGLcall("glFramebufferTexture1D()");
     }
     else
     {
@@ -253,6 +252,8 @@ static void context_dump_fbo_attachment(const struct wined3d_gl_info *gl_info, G
     }
     texture_type[] =
     {
+        {GL_TEXTURE_1D,                   GL_TEXTURE_BINDING_1D,                   "1d",          WINED3D_GL_EXT_NONE},
+        {GL_TEXTURE_1D_ARRAY,             GL_TEXTURE_BINDING_1D_ARRAY,             "1d-array",    EXT_TEXTURE_ARRAY},
         {GL_TEXTURE_2D,                   GL_TEXTURE_BINDING_2D,                   "2d",          WINED3D_GL_EXT_NONE},
         {GL_TEXTURE_RECTANGLE_ARB,        GL_TEXTURE_BINDING_RECTANGLE_ARB,        "rectangle",   ARB_TEXTURE_RECTANGLE},
         {GL_TEXTURE_2D_ARRAY,             GL_TEXTURE_BINDING_2D_ARRAY,             "2d-array" ,   EXT_TEXTURE_ARRAY},
@@ -2507,11 +2508,9 @@ void context_bind_texture(struct wined3d_context *context, GLenum target, GLuint
                 break;
             case GL_TEXTURE_1D:
                 gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_1D, textures->tex_1d);
-                checkGLcall("glBindTexture");
                 break;
             case GL_TEXTURE_1D_ARRAY:
                 gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_1D_ARRAY, textures->tex_1d_array);
-                checkGLcall("glBindTexture");
                 break;
             case GL_TEXTURE_2D:
                 gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_2D, textures->tex_2d);

@@ -3871,8 +3871,7 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
             switch (texture->target)
             {
                 /* RECT textures are distinguished from 2D textures via np2_fixup */
-                case GL_TEXTURE_RECTANGLE_ARB:
-                case GL_TEXTURE_2D:
+                default:
                     break;
 
                 case GL_TEXTURE_3D:
