@@ -3019,6 +3019,7 @@ struct wined3d_stateblock_state
     DWORD rs[WINEHIGHEST_RENDER_STATE + 1];
 
     struct wined3d_texture *textures[MAX_COMBINED_SAMPLERS];
+    DWORD sampler_states[MAX_COMBINED_SAMPLERS][WINED3D_HIGHEST_SAMPLER_STATE + 1];
     DWORD texture_states[MAX_TEXTURES][WINED3D_HIGHEST_TEXTURE_STATE + 1];
 };
 

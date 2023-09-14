@@ -2078,8 +2078,6 @@ DWORD CDECL wined3d_device_get_render_state(const struct wined3d_device *device,
 void CDECL wined3d_device_set_sampler_state(struct wined3d_device *device,
         UINT sampler_idx, enum wined3d_sampler_state state, DWORD value)
 {
-    DWORD old_value;
-
     TRACE("device %p, sampler_idx %u, state %s, value %#x.\n",
             device, sampler_idx, debug_d3dsamplerstate(state), value);
 
@@ -2092,8 +2090,7 @@ void CDECL wined3d_device_set_sampler_state(struct wined3d_device *device,
         return; /* Windows accepts overflowing this array ... we do not. */
     }
 
-    old_value = device->state.sampler_states[sampler_idx][state];
-    device->update_state->sampler_states[sampler_idx][state] = value;
+    device->update_stateblock_state->sampler_states[sampler_idx][state] = value;
 
     /* Handle recording of state blocks. */
     if (device->recording)
@@ -2103,12 +2100,13 @@ void CDECL wined3d_device_set_sampler_state(struct wined3d_device *device,
         return;
     }
 
-    if (old_value == value)
+    if (value == device->state.sampler_states[sampler_idx][state])
     {
         TRACE("Application is setting the old value over, nothing to do.\n");
         return;
     }
 
+    device->state.sampler_states[sampler_idx][state] = value;
     wined3d_cs_emit_set_sampler_state(device->cs, sampler_idx, state, value);
 }
 

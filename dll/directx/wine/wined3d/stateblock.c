@@ -964,12 +964,13 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     for (i = 0; i < stateblock->num_contained_sampler_states; ++i)
     {
         DWORD stage = stateblock->contained_sampler_states[i].stage;
-        DWORD state = stateblock->contained_sampler_states[i].state;
+        DWORD sampler_state = stateblock->contained_sampler_states[i].state;
 
-        TRACE("Updating sampler state %u, %u to %#x (was %#x).\n", stage, state,
-                src_state->sampler_states[stage][state], stateblock->state.sampler_states[stage][state]);
+        TRACE("Updating sampler state %u, %u to %#x (was %#x).\n", stage, sampler_state,
+                state->sampler_states[stage][sampler_state],
+                stateblock->stateblock_state.sampler_states[stage][sampler_state]);
 
-        stateblock->state.sampler_states[stage][state] = src_state->sampler_states[stage][state];
+        stateblock->stateblock_state.sampler_states[stage][sampler_state] = state->sampler_states[stage][sampler_state];
     }
 
     if (stateblock->changed.pixelShader && stateblock->stateblock_state.ps != state->ps)
@@ -1098,11 +1099,12 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     for (i = 0; i < stateblock->num_contained_sampler_states; ++i)
     {
         DWORD stage = stateblock->contained_sampler_states[i].stage;
-        DWORD state = stateblock->contained_sampler_states[i].state;
-        DWORD value = stateblock->state.sampler_states[stage][state];
+        DWORD sampler_state = stateblock->contained_sampler_states[i].state;
+        DWORD value = stateblock->stateblock_state.sampler_states[stage][sampler_state];
 
+        state->sampler_states[stage][sampler_state] = value;
         if (stage >= MAX_FRAGMENT_SAMPLERS) stage += WINED3DVERTEXTEXTURESAMPLER0 - MAX_FRAGMENT_SAMPLERS;
-        wined3d_device_set_sampler_state(device, stage, state, value);
+        wined3d_device_set_sampler_state(device, stage, sampler_state, value);
     }
 
     /* Transform states. */
@@ -1430,6 +1432,8 @@ static void stateblock_state_init_default(struct wined3d_stateblock_state *state
     {
         init_default_texture_state(i, state->texture_states[i]);
     }
+
+    init_default_sampler_states(state->sampler_states);
 }
 
 void wined3d_stateblock_state_init(struct wined3d_stateblock_state *state,
