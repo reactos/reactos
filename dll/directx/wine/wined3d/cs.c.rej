@@ -1,0 +1,19 @@
+diff a/dll/directx/wine/wined3d/cs.c b/dll/directx/wine/wined3d/cs.c	(rejected hunks)
+@@ -2376,7 +2381,7 @@ void wined3d_cs_emit_update_sub_resource(struct wined3d_cs *cs, struct wined3d_r
+ 
+     wined3d_resource_acquire(resource);
+ 
+-    cs->ops->submit(cs, WINED3D_CS_QUEUE_MAP);
++    wined3d_cs_submit(cs, WINED3D_CS_QUEUE_MAP);
+     /* The data pointer may go away, so we need to wait until it is read.
+      * Copying the data may be faster if it's small. */
+     wined3d_cs_finish(cs, WINED3D_CS_QUEUE_MAP);
+@@ -2472,7 +2477,7 @@ void wined3d_cs_emit_copy_uav_counter(struct wined3d_cs *cs, struct wined3d_buff
+ 
+     wined3d_resource_acquire(&dst_buffer->resource);
+ 
+-    cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
++    wined3d_cs_submit(cs, WINED3D_CS_QUEUE_DEFAULT);
+ }
+ 
+ static void wined3d_cs_exec_generate_mipmaps(struct wined3d_cs *cs, const void *data)
