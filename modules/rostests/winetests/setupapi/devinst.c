@@ -2424,8 +2424,8 @@ static void test_class_installer(void)
 
     SetupDiDestroyDeviceInfoList(set);
 
-    todo_wine ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
-    todo_wine ok(*coinst_last_message == DIF_DESTROYPRIVATEDATA, "Got unexpected message %#x.\n", *coinst_last_message);
+    ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
+    ok(*coinst_last_message == DIF_DESTROYPRIVATEDATA, "Got unexpected message %#x.\n", *coinst_last_message);
     *coinst_callback_count = 0;
 
     /* Test returning an error. */
@@ -2502,8 +2502,8 @@ static void test_class_installer(void)
 
     SetupDiDestroyDeviceInfoList(set);
 
-    todo_wine ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
-    todo_wine ok(*coinst_last_message == DIF_DESTROYPRIVATEDATA, "Got unexpected message %#x.\n", *coinst_last_message);
+    ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
+    ok(*coinst_last_message == DIF_DESTROYPRIVATEDATA, "Got unexpected message %#x.\n", *coinst_last_message);
     *coinst_callback_count = 0;
 
     res = RegDeleteKeyA(class_key, "");
