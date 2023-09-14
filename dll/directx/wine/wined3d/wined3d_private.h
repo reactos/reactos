@@ -58,10 +58,6 @@
 #include "wine/rbtree.h"
 #include "wine/wgl_driver.h"
 
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
-#endif
-
 #define MAKEDWORD_VERSION(maj, min) (((maj & 0xffffu) << 16) | (min & 0xffffu))
 
 /* Driver quirks */
