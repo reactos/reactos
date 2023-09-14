@@ -2052,26 +2052,41 @@ static void wined3d_texture_gl_upload_data(struct wined3d_context *context,
     }
     else
     {
+        unsigned int y, y_count;
+
         TRACE("Uploading data, target %#x, level %u, x %u, y %u, z %u, "
                 "w %u, h %u, d %u, format %#x, type %#x, addr %p.\n",
                 target, level, dst_x, dst_y, dst_z, update_w, update_h,
                 update_d, format_gl->format, format_gl->type, bo.addr);
 
-        gl_info->gl_ops.gl.p_glPixelStorei(GL_UNPACK_ROW_LENGTH, src_row_pitch / src_format->byte_count);
-        if (target == GL_TEXTURE_2D_ARRAY || target == GL_TEXTURE_3D)
+        if (src_row_pitch)
         {
-            GL_EXTCALL(glTexSubImage3D(target, level, dst_x, dst_y, dst_z,
-                    update_w, update_h, update_d, format_gl->format, format_gl->type, bo.addr));
-        }
-        else if (target == GL_TEXTURE_1D)
-        {
-            gl_info->gl_ops.gl.p_glTexSubImage1D(target, level, dst_x,
-                    update_w, format_gl->format, format_gl->type, bo.addr);
+            gl_info->gl_ops.gl.p_glPixelStorei(GL_UNPACK_ROW_LENGTH, src_row_pitch / src_format->byte_count);
+            y_count = 1;
         }
         else
         {
-            gl_info->gl_ops.gl.p_glTexSubImage2D(target, level, dst_x, dst_y,
-                    update_w, update_h, format_gl->format, format_gl->type, bo.addr);
+            y_count = update_h;
+            update_h = 1;
+        }
+
+        for (y = 0; y < y_count; ++y)
+        {
+            if (target == GL_TEXTURE_2D_ARRAY || target == GL_TEXTURE_3D)
+            {
+                GL_EXTCALL(glTexSubImage3D(target, level, dst_x, dst_y + y, dst_z,
+                        update_w, update_h, update_d, format_gl->format, format_gl->type, bo.addr));
+            }
+            else if (target == GL_TEXTURE_1D)
+            {
+                gl_info->gl_ops.gl.p_glTexSubImage1D(target, level, dst_x,
+                        update_w, format_gl->format, format_gl->type, bo.addr);
+            }
+            else
+            {
+                gl_info->gl_ops.gl.p_glTexSubImage2D(target, level, dst_x, dst_y + y,
+                        update_w, update_h, format_gl->format, format_gl->type, bo.addr);
+            }
         }
         gl_info->gl_ops.gl.p_glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         checkGLcall("Upload texture data");
