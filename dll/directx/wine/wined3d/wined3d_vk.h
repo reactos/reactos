@@ -183,9 +183,9 @@ struct vulkan_ops
 
 struct wined3d_vk_info
 {
-    VkInstance instance;
     struct vulkan_ops vk_ops;
 
+    VkInstance instance;
     unsigned int api_version;
 
 #ifdef USE_WIN32_VULKAN

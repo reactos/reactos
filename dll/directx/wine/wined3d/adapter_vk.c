@@ -30,6 +30,8 @@ struct wined3d_device_vk
 
     VkDevice vk_device;
     VkQueue vk_queue;
+
+    struct wined3d_vk_info vk_info;
 };
 
 static inline struct wined3d_device_vk *wined3d_device_vk(struct wined3d_device *device)
@@ -220,6 +222,18 @@ static HRESULT adapter_vk_create_device(struct wined3d *wined3d, const struct wi
     device_vk->vk_device = vk_device;
     VK_CALL(vkGetDeviceQueue(vk_device, queue_family_index, 0, &device_vk->vk_queue));
 
+    device_vk->vk_info = *vk_info;
+#define LOAD_DEVICE_PFN(name) \
+    if (!(device_vk->vk_info.vk_ops.name = (void *)VK_CALL(vkGetDeviceProcAddr(vk_device, #name)))) \
+    { \
+        WARN("Could not get device proc addr for '" #name "'.\n"); \
+        hr = E_FAIL; \
+        goto fail; \
+    }
+#define VK_DEVICE_PFN LOAD_DEVICE_PFN
+    VK_DEVICE_FUNCS()
+#undef VK_DEVICE_PFN
+
     if (FAILED(hr = wined3d_device_init(&device_vk->d, wined3d, adapter->ordinal, device_type,
             focus_window, flags, surface_alignment, levels, level_count, device_parent)))
     {
@@ -237,9 +251,8 @@ fail:
 
 static void adapter_vk_destroy_device(struct wined3d_device *device)
 {
-    struct wined3d_adapter_vk *adapter_vk = wined3d_adapter_vk(device->adapter);
     struct wined3d_device_vk *device_vk = wined3d_device_vk(device);
-    const struct wined3d_vk_info *vk_info = &adapter_vk->vk_info;
+    const struct wined3d_vk_info *vk_info = &device_vk->vk_info;
 
     wined3d_device_cleanup(&device_vk->d);
     VK_CALL(vkDestroyDevice(device_vk->vk_device, NULL));
