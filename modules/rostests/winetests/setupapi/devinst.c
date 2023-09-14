@@ -67,13 +67,13 @@ static void test_create_device_list_ex(void)
             "Got unexpected error %#x.\n", GetLastError());
 
     set = SetupDiCreateDeviceInfoListExW(NULL, NULL, NULL, NULL);
-    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.", GetLastError());
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
 
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
 
     set = SetupDiCreateDeviceInfoListExW(NULL, NULL, empty, NULL);
-    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.", GetLastError());
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
 
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list, error %#x.\n", GetLastError());
