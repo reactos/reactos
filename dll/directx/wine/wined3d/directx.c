@@ -1434,6 +1434,8 @@ static BOOL wined3d_check_depth_stencil_format(const struct wined3d_adapter *ada
 {
     if (!ds_format->depth_size && !ds_format->stencil_size)
         return FALSE;
+    if (!(ds_format->flags[gl_type] & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL)))
+        return FALSE;
 
     /* Blacklist formats not supported on Windows */
     if (ds_format->id == WINED3DFMT_S1_UINT_D15_UNORM /* Breaks the shadowvol2 dx7 sdk sample */
@@ -1443,13 +1445,7 @@ static BOOL wined3d_check_depth_stencil_format(const struct wined3d_adapter *ada
         return FALSE;
     }
 
-    if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
-    {
-        /* With FBOs WGL limitations do not apply, but the format needs to be FBO attachable */
-        if (ds_format->flags[gl_type] & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL))
-            return TRUE;
-    }
-    else
+    if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
     {
         unsigned int i;
 
@@ -1460,9 +1456,11 @@ static BOOL wined3d_check_depth_stencil_format(const struct wined3d_adapter *ada
                     && wined3d_check_pixel_format_depth(cfg, ds_format))
                 return TRUE;
         }
+
+        return FALSE;
     }
 
-    return FALSE;
+    return TRUE;
 }
 
 /* Check the render target capabilities of a format */
