@@ -1998,23 +1998,15 @@ static enum wined3d_channel_type map_channel_type(char t)
     }
 }
 
-static BOOL init_format_base_info(struct wined3d_adapter *adapter, size_t format_size)
+static BOOL init_format_base_info(struct wined3d_adapter *adapter)
 {
     struct wined3d_format *format;
     unsigned int i, j;
 
-    adapter->format_size = format_size;
-    if (!(adapter->formats = heap_calloc(WINED3D_FORMAT_COUNT
-            + ARRAY_SIZE(typeless_depth_stencil_formats), adapter->format_size)))
-    {
-        ERR("Failed to allocate memory.\n");
-        return FALSE;
-    }
-
     for (i = 0; i < ARRAY_SIZE(formats); ++i)
     {
         if (!(format = get_format_internal(adapter, formats[i].id)))
-            goto fail;
+            return FALSE;
 
         format->id = formats[i].id;
         format->red_size = formats[i].red_size;
@@ -2040,10 +2032,10 @@ static BOOL init_format_base_info(struct wined3d_adapter *adapter, size_t format
         DWORD flags = 0;
 
         if (!(format = get_format_internal(adapter, typed_formats[i].id)))
-            goto fail;
+            return FALSE;
 
         if (!(typeless_format = get_format_internal(adapter, typed_formats[i].typeless_id)))
-            goto fail;
+            return FALSE;
 
         format->id = typed_formats[i].id;
         format->red_size = typeless_format->red_size;
@@ -2091,7 +2083,7 @@ static BOOL init_format_base_info(struct wined3d_adapter *adapter, size_t format
     for (i = 0; i < ARRAY_SIZE(ddi_formats); ++i)
     {
         if (!(format = get_format_internal(adapter, ddi_formats[i].id)))
-            goto fail;
+            return FALSE;
 
         format->ddi_format = ddi_formats[i].ddi_format;
     }
@@ -2099,16 +2091,12 @@ static BOOL init_format_base_info(struct wined3d_adapter *adapter, size_t format
     for (i = 0; i < ARRAY_SIZE(format_base_flags); ++i)
     {
         if (!(format = get_format_internal(adapter, format_base_flags[i].id)))
-            goto fail;
+            return FALSE;
 
         format_set_flag(format, format_base_flags[i].flags);
     }
 
     return TRUE;
-
-fail:
-    heap_free(adapter->formats);
-    return FALSE;
 }
 
 static BOOL init_format_block_info(struct wined3d_adapter *adapter)
@@ -3968,9 +3956,21 @@ static void init_format_depth_bias_scale(struct wined3d_adapter *adapter,
 
 BOOL wined3d_adapter_init_format_info(struct wined3d_adapter *adapter, size_t format_size)
 {
-    if (!init_format_base_info(adapter, format_size)) return FALSE;
-    if (!init_format_block_info(adapter)) goto fail;
-    if (!init_format_decompress_info(adapter)) goto fail;
+    unsigned int count = WINED3D_FORMAT_COUNT + ARRAY_SIZE(typeless_depth_stencil_formats);
+
+    if (!(adapter->formats = heap_calloc(count, format_size)))
+    {
+        ERR("Failed to allocate memory.\n");
+        return FALSE;
+    }
+    adapter->format_size = format_size;
+
+    if (!init_format_base_info(adapter))
+        goto fail;
+    if (!init_format_block_info(adapter))
+        goto fail;
+    if (!init_format_decompress_info(adapter))
+        goto fail;
 
     return TRUE;
 
