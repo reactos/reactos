@@ -3004,16 +3004,16 @@ static BOOL have_framebuffer_attachment(unsigned int rt_count, struct wined3d_re
 }
 
 /* Context activation is done by the caller. */
-BOOL context_apply_clear_state(struct wined3d_context *context, const struct wined3d_state *state,
-        UINT rt_count, const struct wined3d_fb_state *fb)
+BOOL wined3d_context_gl_apply_clear_state(struct wined3d_context_gl *context_gl,
+        const struct wined3d_state *state, unsigned int rt_count, const struct wined3d_fb_state *fb)
 {
     struct wined3d_rendertarget_view * const *rts = fb->render_targets;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_rendertarget_view *dsv = fb->depth_stencil;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     DWORD rt_mask = 0, *cur_mask;
     unsigned int i;
 
-    if (isStateDirty(context, STATE_FRAMEBUFFER) || fb != state->fb
+    if (isStateDirty(&context_gl->c, STATE_FRAMEBUFFER) || fb != state->fb
             || rt_count != gl_info->limits.buffers)
     {
         if (!have_framebuffer_attachment(rt_count, rts, dsv))
@@ -3028,16 +3028,16 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
 
             if (!rt_count || wined3d_resource_is_offscreen(rts[0]->resource))
             {
-                memset(context->blit_targets, 0, sizeof(context->blit_targets));
+                memset(context_gl->c.blit_targets, 0, sizeof(context_gl->c.blit_targets));
                 for (i = 0; i < rt_count; ++i)
                 {
                     if (rts[i])
                     {
                         struct wined3d_rendertarget_view_gl *rtv_gl = wined3d_rendertarget_view_gl(rts[i]);
-                        context->blit_targets[i].gl_view = rtv_gl->gl_view;
-                        context->blit_targets[i].resource = rtv_gl->v.resource;
-                        context->blit_targets[i].sub_resource_idx = rtv_gl->v.sub_resource_idx;
-                        context->blit_targets[i].layer_count = rtv_gl->v.layer_count;
+                        context_gl->c.blit_targets[i].gl_view = rtv_gl->gl_view;
+                        context_gl->c.blit_targets[i].resource = rtv_gl->v.resource;
+                        context_gl->c.blit_targets[i].sub_resource_idx = rtv_gl->v.sub_resource_idx;
+                        context_gl->c.blit_targets[i].layer_count = rtv_gl->v.layer_count;
                     }
                     if (rts[i] && rts[i]->format->id != WINED3DFMT_NULL)
                         rt_mask |= (1u << i);
@@ -3052,13 +3052,13 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
                     ds_info.layer_count = dsv_gl->v.layer_count;
                 }
 
-                context_apply_fbo_state(context, GL_FRAMEBUFFER, context->blit_targets, &ds_info,
+                context_apply_fbo_state(&context_gl->c, GL_FRAMEBUFFER, context_gl->c.blit_targets, &ds_info,
                         rt_count ? rts[0]->resource->draw_binding : 0,
                         dsv ? dsv->resource->draw_binding : 0);
             }
             else
             {
-                context_apply_fbo_state(context, GL_FRAMEBUFFER, NULL, &ds_info,
+                context_apply_fbo_state(&context_gl->c, GL_FRAMEBUFFER, NULL, &ds_info,
                         WINED3D_LOCATION_DRAWABLE, WINED3D_LOCATION_DRAWABLE);
                 rt_mask = context_generate_rt_mask_from_resource(rts[0]->resource);
             }
@@ -3066,11 +3066,11 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
             /* If the framebuffer is not the device's fb the device's fb has to be reapplied
              * next draw. Otherwise we could mark the framebuffer state clean here, once the
              * state management allows this */
-            context_invalidate_state(context, STATE_FRAMEBUFFER);
+            context_invalidate_state(&context_gl->c, STATE_FRAMEBUFFER);
         }
         else
         {
-            rt_mask = context_generate_rt_mask_no_fbo(context, rt_count ? rts[0]->resource : NULL);
+            rt_mask = context_generate_rt_mask_no_fbo(&context_gl->c, rt_count ? rts[0]->resource : NULL);
         }
     }
     else if (wined3d_settings.offscreen_rendering_mode == ORM_FBO
@@ -3084,25 +3084,25 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
     }
     else
     {
-        rt_mask = context_generate_rt_mask_no_fbo(context, rt_count ? rts[0]->resource : NULL);
+        rt_mask = context_generate_rt_mask_no_fbo(&context_gl->c, rt_count ? rts[0]->resource : NULL);
     }
 
-    cur_mask = context->current_fbo ? &context->current_fbo->rt_mask : &context->draw_buffers_mask;
+    cur_mask = context_gl->c.current_fbo ? &context_gl->c.current_fbo->rt_mask : &context_gl->c.draw_buffers_mask;
 
     if (rt_mask != *cur_mask)
     {
-        context_apply_draw_buffers(context, rt_mask);
+        context_apply_draw_buffers(&context_gl->c, rt_mask);
         *cur_mask = rt_mask;
-        context_invalidate_state(context, STATE_FRAMEBUFFER);
+        context_invalidate_state(&context_gl->c, STATE_FRAMEBUFFER);
     }
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
     {
-        context_check_fbo_status(context, GL_FRAMEBUFFER);
+        context_check_fbo_status(&context_gl->c, GL_FRAMEBUFFER);
     }
 
-    context->last_was_blit = FALSE;
-    context->last_was_ffp_blit = FALSE;
+    context_gl->c.last_was_blit = FALSE;
+    context_gl->c.last_was_ffp_blit = FALSE;
 
     /* Blending and clearing should be orthogonal, but tests on the nvidia
      * driver show that disabling blending when clearing improves the clearing
@@ -3111,17 +3111,17 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
     gl_info->gl_ops.gl.p_glEnable(GL_SCISSOR_TEST);
     if (rt_count && gl_info->supported[ARB_FRAMEBUFFER_SRGB])
     {
-        if (needs_srgb_write(context, state, fb))
+        if (needs_srgb_write(&context_gl->c, state, fb))
             gl_info->gl_ops.gl.p_glEnable(GL_FRAMEBUFFER_SRGB);
         else
             gl_info->gl_ops.gl.p_glDisable(GL_FRAMEBUFFER_SRGB);
-        context_invalidate_state(context, STATE_RENDER(WINED3D_RS_SRGBWRITEENABLE));
+        context_invalidate_state(&context_gl->c, STATE_RENDER(WINED3D_RS_SRGBWRITEENABLE));
     }
     checkGLcall("setting up state for clear");
 
-    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE));
-    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_SCISSORTESTENABLE));
-    context_invalidate_state(context, STATE_SCISSORRECT);
+    context_invalidate_state(&context_gl->c, STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE));
+    context_invalidate_state(&context_gl->c, STATE_RENDER(WINED3D_RS_SCISSORTESTENABLE));
+    context_invalidate_state(&context_gl->c, STATE_SCISSORRECT);
 
     return TRUE;
 }

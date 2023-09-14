@@ -1874,6 +1874,12 @@ struct wined3d_rendertarget_info
     unsigned int layer_count;
 };
 
+struct wined3d_fb_state
+{
+    struct wined3d_rendertarget_view *render_targets[MAX_RENDER_TARGET_VIEWS];
+    struct wined3d_rendertarget_view *depth_stencil;
+};
+
 #define MAX_GL_FRAGMENT_SAMPLERS 32
 
 struct wined3d_context
@@ -2063,6 +2069,8 @@ void wined3d_context_gl_alloc_timestamp_query(struct wined3d_context_gl *context
         struct wined3d_timestamp_query *query) DECLSPEC_HIDDEN;
 void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl,
         const struct wined3d_device *device) DECLSPEC_HIDDEN;
+BOOL wined3d_context_gl_apply_clear_state(struct wined3d_context_gl *context_gl, const struct wined3d_state *state,
+        unsigned int rt_count, const struct wined3d_fb_state *fb) DECLSPEC_HIDDEN;
 void wined3d_context_gl_apply_ffp_blit_state(struct wined3d_context_gl *context_gl,
         const struct wined3d_device *device) DECLSPEC_HIDDEN;
 void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl,
@@ -2079,12 +2087,6 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 void wined3d_context_gl_load_tex_coords(const struct wined3d_context_gl *context_gl,
         const struct wined3d_stream_info *si, GLuint *current_bo, const struct wined3d_state *state) DECLSPEC_HIDDEN;
-
-struct wined3d_fb_state
-{
-    struct wined3d_rendertarget_view *render_targets[MAX_RENDER_TARGET_VIEWS];
-    struct wined3d_rendertarget_view *depth_stencil;
-};
 
 HRESULT wined3d_context_vk_init(struct wined3d_context *context_vk,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
@@ -2220,8 +2222,6 @@ BOOL wined3d_clip_blit(const RECT *clip_rect, RECT *clipped, RECT *other) DECLSP
 
 struct wined3d_context *context_acquire(const struct wined3d_device *device,
         struct wined3d_texture *texture, unsigned int sub_resource_idx) DECLSPEC_HIDDEN;
-BOOL context_apply_clear_state(struct wined3d_context *context, const struct wined3d_state *state,
-        UINT rt_count, const struct wined3d_fb_state *fb) DECLSPEC_HIDDEN;
 void context_apply_fbo_state_blit(struct wined3d_context *context, GLenum target,
         struct wined3d_resource *rt, unsigned int rt_sub_resource_idx,
         struct wined3d_resource *ds, unsigned int ds_sub_resource_idx, DWORD location) DECLSPEC_HIDDEN;

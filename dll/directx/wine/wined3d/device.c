@@ -250,6 +250,7 @@ void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, c
     const struct wined3d_state *state = &device->cs->state;
     struct wined3d_texture *depth_stencil = NULL;
     const struct wined3d_gl_info *gl_info;
+    struct wined3d_context_gl *context_gl;
     struct wined3d_texture *target = NULL;
     UINT drawable_width, drawable_height;
     struct wined3d_color corrected_color;
@@ -267,6 +268,7 @@ void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, c
     {
         context = context_acquire(device, NULL, 0);
     }
+    context_gl = wined3d_context_gl(context);
 
     if (dsv && dsv->resource->type != WINED3D_RTYPE_BUFFER)
         depth_stencil = texture_from_resource(dsv->resource);
@@ -335,7 +337,7 @@ void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, c
         }
     }
 
-    if (!context_apply_clear_state(context, state, rt_count, fb))
+    if (!wined3d_context_gl_apply_clear_state(context_gl, state, rt_count, fb))
     {
         context_release(context);
         WARN("Failed to apply clear state, skipping clear.\n");
