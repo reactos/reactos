@@ -1602,7 +1602,7 @@ BOOL texture2d_load_sysmem(struct wined3d_texture *texture, unsigned int sub_res
         return TRUE;
     }
 
-    if (!(texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL)
+    if (!(texture->resource.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
             && (sub_resource->locations & WINED3D_LOCATION_DRAWABLE))
     {
         texture2d_read_from_framebuffer(texture, sub_resource_idx, context,
