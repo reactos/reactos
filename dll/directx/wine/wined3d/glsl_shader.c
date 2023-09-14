@@ -13085,7 +13085,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         location = GL_EXTCALL(glGetUniformLocation(program->id, "colour_key.high"));
         GL_EXTCALL(glUniform4fv(location, 1, &float_key[1].r));
     }
-    context_draw_shaded_quad(context, src_texture_gl, src_sub_resource_idx, src_rect, dst_rect, filter);
+    wined3d_context_gl_draw_shaded_quad(context_gl, src_texture_gl, src_sub_resource_idx, src_rect, dst_rect, filter);
     GL_EXTCALL(glUseProgram(0));
 
     if (dst_texture->swapchain && (dst_texture->swapchain->front_buffer == dst_texture))
