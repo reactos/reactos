@@ -5416,7 +5416,8 @@ static void prune_invalid_states(struct wined3d_state_entry *state_table, const 
         state_table[i].apply = state_undefined;
     }
 
-    start = STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(d3d_info->limits.ffp_vertex_blend_matrices));
+    start = STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(max(d3d_info->limits.ffp_vertex_blend_matrices,
+            d3d_info->limits.ffp_max_vertex_blend_matrix_index + 1)));
     last = STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(255));
     for (i = start; i <= last; ++i)
     {

@@ -4101,6 +4101,11 @@ HRESULT CDECL wined3d_device_get_device_caps(const struct wined3d_device *device
     adapter->vertex_pipe->vp_get_caps(adapter, &vertex_caps);
     if (device->create_parms.flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING)
         caps->MaxVertexShaderConst = adapter->d3d_info.limits.vs_uniform_count_swvp;
+    caps->MaxVertexBlendMatrixIndex = vertex_caps.max_vertex_blend_matrix_index;
+    if (!((device->create_parms.flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING)
+            || ((device->create_parms.flags & WINED3DCREATE_MIXED_VERTEXPROCESSING)
+            && device->softwareVertexProcessing)))
+        caps->MaxVertexBlendMatrixIndex = min(caps->MaxVertexBlendMatrixIndex, 8);
     return hr;
 #else
     return wined3d_get_device_caps(device->wined3d, device->adapter->ordinal,
@@ -4530,7 +4535,14 @@ HRESULT CDECL wined3d_device_validate_device(const struct wined3d_device *device
 void CDECL wined3d_device_set_software_vertex_processing(struct wined3d_device *device, BOOL software)
 {
     TRACE("device %p, software %#x.\n", device, software);
+    wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+    if (!device->softwareVertexProcessing != !software)
+    {
+        unsigned int i;
 
+        for (i = 0; i < device->context_count; ++i)
+            device->contexts[i]->constant_update_mask |= WINED3D_SHADER_CONST_VS_F;
+    }
     device->softwareVertexProcessing = software;
 }
 

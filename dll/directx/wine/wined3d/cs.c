@@ -1674,7 +1674,8 @@ static void wined3d_cs_exec_set_transform(struct wined3d_cs *cs, const void *dat
     const struct wined3d_cs_set_transform *op = data;
 
     cs->state.transforms[op->state] = op->matrix;
-    if (op->state < WINED3D_TS_WORLD_MATRIX(cs->device->adapter->d3d_info.limits.ffp_vertex_blend_matrices))
+    if (op->state < WINED3D_TS_WORLD_MATRIX(max(cs->device->adapter->d3d_info.limits.ffp_vertex_blend_matrices,
+            cs->device->adapter->d3d_info.limits.ffp_max_vertex_blend_matrix_index + 1)))
         device_invalidate_state(cs->device, STATE_TRANSFORM(op->state));
 }
 

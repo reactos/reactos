@@ -5180,6 +5180,7 @@ static void wined3d_adapter_gl_init_d3d_info(struct wined3d_adapter_gl *adapter_
     TRACE("Max texture stages: %u.\n", d3d_info->limits.ffp_blend_stages);
     d3d_info->limits.ffp_vertex_blend_matrices = vertex_caps.max_vertex_blend_matrices;
     d3d_info->limits.active_light_count = vertex_caps.max_active_lights;
+    d3d_info->limits.ffp_max_vertex_blend_matrix_index = vertex_caps.max_vertex_blend_matrix_index;
 
     d3d_info->valid_dual_rt_mask = 0;
     for (i = 0; i < gl_info->limits.dual_buffers; ++i)

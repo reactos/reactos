@@ -174,6 +174,7 @@ struct wined3d_d3d_limits
     unsigned int ffp_blend_stages;
     unsigned int ffp_vertex_blend_matrices;
     unsigned int active_light_count;
+    unsigned int ffp_max_vertex_blend_matrix_index;
 
     unsigned int max_rt_count;
     unsigned int max_clip_distances;
