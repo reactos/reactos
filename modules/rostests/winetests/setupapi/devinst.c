@@ -1236,7 +1236,7 @@ static void test_device_iface_detail(void)
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Got unexpected error %#lx.\n", GetLastError());
 
     expected_size = FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_A, DevicePath[strlen(path) + 1]);
-    todo_wine ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
+    ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
     detail = heap_alloc(size * 2);
 
     detail->cbSize = 0;
@@ -1259,9 +1259,8 @@ static void test_device_iface_detail(void)
     SetLastError(0xdeadbeef);
     size = 0xdeadbeef;
     ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, expected_size, &size, NULL);
-    todo_wine ok(ret, "Failed to get interface detail, error %#lx.\n", GetLastError());
-    if (ret)
-        ok(!strcasecmp(path, detail->DevicePath), "Got unexpected path %s.\n", detail->DevicePath);
+    ok(ret, "Failed to get interface detail, error %#lx.\n", GetLastError());
+    ok(!strcasecmp(path, detail->DevicePath), "Got unexpected path %s.\n", detail->DevicePath);
     todo_wine ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
 
     SetLastError(0xdeadbeef);
