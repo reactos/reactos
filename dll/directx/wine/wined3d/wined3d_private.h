@@ -2045,7 +2045,7 @@ struct StateEntryTemplate
 {
     DWORD state;
     struct StateEntry content;
-    enum wined3d_gl_extension extension;
+    unsigned int extension;
 };
 
 #define WINED3D_FRAGMENT_CAP_PROJ_CONTROL   0x00000001
@@ -2116,7 +2116,7 @@ extern const struct wined3d_vertex_pipe_ops glsl_vertex_pipe DECLSPEC_HIDDEN;
 
 /* "Base" state table */
 HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_multistate_funcs,
-        const struct wined3d_gl_info *gl_info, const struct wined3d_d3d_info *d3d_info,
+        const struct wined3d_d3d_info *d3d_info, const BOOL *supported_extensions,
         const struct wined3d_vertex_pipe_ops *vertex, const struct fragment_pipeline *fragment,
         const struct StateEntryTemplate *misc) DECLSPEC_HIDDEN;
 

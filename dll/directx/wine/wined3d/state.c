@@ -5553,7 +5553,7 @@ static void validate_state_table(struct StateEntry *state_table)
 }
 
 HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_multistate_funcs,
-        const struct wined3d_gl_info *gl_info, const struct wined3d_d3d_info *d3d_info,
+        const struct wined3d_d3d_info *d3d_info, const BOOL *supported_extensions,
         const struct wined3d_vertex_pipe_ops *vertex, const struct fragment_pipeline *fragment,
         const struct StateEntryTemplate *misc)
 {
@@ -5596,7 +5596,7 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
              */
             if(set[cur[i].state]) continue;
             /* Skip state lines depending on unsupported extensions */
-            if (!gl_info->supported[cur[i].extension]) continue;
+            if (!supported_extensions[cur[i].extension]) continue;
             set[cur[i].state] = TRUE;
             /* In some cases having an extension means that nothing has to be
              * done for a state, e.g. if GL_ARB_texture_non_power_of_two is
