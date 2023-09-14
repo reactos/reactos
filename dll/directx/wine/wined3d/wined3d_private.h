@@ -2901,6 +2901,16 @@ struct wined3d_stream_state
     UINT flags;
 };
 
+#define LIGHTMAP_SIZE 43
+#define LIGHTMAP_HASHFUNC(x) ((x) % LIGHTMAP_SIZE)
+
+struct wined3d_light_state
+{
+    /* Light hashmap. Collisions are handled using linked lists. */
+    struct list light_map[LIGHTMAP_SIZE];
+    const struct wined3d_light_info *lights[MAX_ACTIVE_LIGHTS];
+};
+
 #define WINED3D_STATE_NO_REF        0x00000001
 #define WINED3D_STATE_INIT_DEFAULT  0x00000002
 
@@ -2948,11 +2958,7 @@ struct wined3d_state
     RECT scissor_rects[WINED3D_MAX_VIEWPORTS];
     unsigned int scissor_rect_count;
 
-    /* Light hashmap. Collisions are handled using linked lists. */
-#define LIGHTMAP_SIZE 43
-#define LIGHTMAP_HASHFUNC(x) ((x) % LIGHTMAP_SIZE)
-    struct list light_map[LIGHTMAP_SIZE];
-    const struct wined3d_light_info *lights[MAX_ACTIVE_LIGHTS];
+    struct wined3d_light_state light_state;
 
     DWORD render_states[WINEHIGHEST_RENDER_STATE + 1];
     struct wined3d_blend_state *blend_state;
@@ -3677,11 +3683,12 @@ void wined3d_stateblock_state_init(struct wined3d_stateblock_state *state,
         const struct wined3d_device *device, DWORD flags) DECLSPEC_HIDDEN;
 void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state) DECLSPEC_HIDDEN;
 
-void state_cleanup(struct wined3d_state *state) DECLSPEC_HIDDEN;
-void wined3d_state_enable_light(struct wined3d_state *state, const struct wined3d_d3d_info *d3d_info,
+void wined3d_light_state_enable_light(struct wined3d_light_state *state, const struct wined3d_d3d_info *d3d_info,
         struct wined3d_light_info *light_info, BOOL enable) DECLSPEC_HIDDEN;
-struct wined3d_light_info *wined3d_state_get_light(const struct wined3d_state *state,
+struct wined3d_light_info *wined3d_light_state_get_light(const struct wined3d_light_state *state,
         unsigned int idx) DECLSPEC_HIDDEN;
+
+void state_cleanup(struct wined3d_state *state) DECLSPEC_HIDDEN;
 void state_init(struct wined3d_state *state, struct wined3d_fb_state *fb,
         const struct wined3d_d3d_info *d3d_info, DWORD flags) DECLSPEC_HIDDEN;
 void state_unbind_resources(struct wined3d_state *state) DECLSPEC_HIDDEN;

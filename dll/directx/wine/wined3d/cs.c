@@ -1822,7 +1822,7 @@ static void wined3d_cs_exec_set_light(struct wined3d_cs *cs, const void *data)
 
     light_idx = op->light.OriginalIndex;
 
-    if (!(light_info = wined3d_state_get_light(&cs->state, light_idx)))
+    if (!(light_info = wined3d_light_state_get_light(&cs->state.light_state, light_idx)))
     {
         TRACE("Adding new light.\n");
         if (!(light_info = heap_alloc_zero(sizeof(*light_info))))
@@ -1832,7 +1832,7 @@ static void wined3d_cs_exec_set_light(struct wined3d_cs *cs, const void *data)
         }
 
         hash_idx = LIGHTMAP_HASHFUNC(light_idx);
-        list_add_head(&cs->state.light_map[hash_idx], &light_info->entry);
+        list_add_head(&cs->state.light_state.light_map[hash_idx], &light_info->entry);
         light_info->glIndex = -1;
         light_info->OriginalIndex = light_idx;
     }
@@ -1869,14 +1869,14 @@ static void wined3d_cs_exec_set_light_enable(struct wined3d_cs *cs, const void *
     struct wined3d_light_info *light_info;
     int prev_idx;
 
-    if (!(light_info = wined3d_state_get_light(&cs->state, op->idx)))
+    if (!(light_info = wined3d_light_state_get_light(&cs->state.light_state, op->idx)))
     {
         ERR("Light doesn't exist.\n");
         return;
     }
 
     prev_idx = light_info->glIndex;
-    wined3d_state_enable_light(&cs->state, &device->adapter->d3d_info, light_info, op->enable);
+    wined3d_light_state_enable_light(&cs->state.light_state, &device->adapter->d3d_info, light_info, op->enable);
     if (light_info->glIndex != prev_idx)
     {
         device_invalidate_state(device, STATE_LIGHT_TYPE);

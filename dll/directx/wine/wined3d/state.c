@@ -3833,7 +3833,7 @@ static void transform_view(struct wined3d_context *context, const struct wined3d
     /* Reset lights. TODO: Call light apply func */
     for (k = 0; k < gl_info->limits.lights; ++k)
     {
-        if (!(light = state->lights[k]))
+        if (!(light = state->light_state.lights[k]))
             continue;
         if (light->OriginalParms.type == WINED3D_LIGHT_DIRECTIONAL)
             gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0 + light->glIndex, GL_POSITION, &light->direction.x);
@@ -4164,7 +4164,7 @@ static void light(struct wined3d_context *context, const struct wined3d_state *s
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     UINT Index = state_id - STATE_ACTIVELIGHT(0);
-    const struct wined3d_light_info *lightInfo = state->lights[Index];
+    const struct wined3d_light_info *lightInfo = state->light_state.lights[Index];
 
     if (!lightInfo)
     {

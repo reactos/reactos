@@ -6627,10 +6627,10 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
 
     for (i = 0; i < MAX_ACTIVE_LIGHTS; ++i)
     {
-        if (!state->lights[i])
+        if (!state->light_state.lights[i])
             continue;
 
-        switch (state->lights[i]->OriginalParms.type)
+        switch (state->light_state.lights[i]->OriginalParms.type)
         {
             case WINED3D_LIGHT_POINT:
                 ++settings->point_light_count;
@@ -6645,7 +6645,7 @@ void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
                 ++settings->parallel_point_light_count;
                 break;
             default:
-                FIXME("Unhandled light type %#x.\n", state->lights[i]->OriginalParms.type);
+                FIXME("Unhandled light type %#x.\n", state->light_state.lights[i]->OriginalParms.type);
                 break;
         }
     }
