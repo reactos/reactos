@@ -194,12 +194,7 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
     resource->parent_ops = parent_ops;
     resource->resource_ops = resource_ops;
     resource->map_binding = WINED3D_LOCATION_SYSMEM;
-
-    if (!wined3d_resource_allocate_sysmem(resource))
-    {
-        ERR("Failed to allocate system memory.\n");
-        return E_OUTOFMEMORY;
-    }
+    resource->heap_memory = NULL;
 
     if (!(usage & WINED3DUSAGE_PRIVATE))
     {
@@ -208,8 +203,7 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
         {
             if (size > wined3d_device_get_available_texture_mem(device))
             {
-                ERR("Out of adapter memory\n");
-                wined3d_resource_free_sysmem(resource);
+                ERR("Out of adapter memory.\n");
                 return WINED3DERR_OUTOFVIDEOMEMORY;
             }
             adapter_adjust_memory(device->adapter, size);
@@ -487,7 +481,10 @@ BOOL wined3d_resource_allocate_sysmem(struct wined3d_resource *resource)
     void *mem;
 
     if (!(mem = heap_alloc_zero(resource->size + align)))
+    {
+        ERR("Failed to allocate system memory.\n");
         return FALSE;
+    }
 
     p = (void **)(((ULONG_PTR)mem + align) & ~(RESOURCE_ALIGNMENT - 1)) - 1;
     *p = mem;

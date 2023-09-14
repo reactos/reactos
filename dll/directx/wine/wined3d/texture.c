@@ -1834,10 +1834,7 @@ BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned 
                 return TRUE;
 
             if (!wined3d_resource_allocate_sysmem(&texture->resource))
-            {
-                ERR("Failed to allocate system memory.\n");
                 return FALSE;
-            }
             return TRUE;
 
         case WINED3D_LOCATION_USER_MEMORY:
@@ -2865,11 +2862,17 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
     TRACE("x scale %.8e, y scale %.8e.\n", texture->pow2_matrix[0], texture->pow2_matrix[5]);
 
     if (wined3d_texture_use_pbo(texture, gl_info))
-    {
-        if (desc->resource_type == WINED3D_RTYPE_TEXTURE_3D
-                || (texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL))
-            wined3d_resource_free_sysmem(&texture->resource);
         texture->resource.map_binding = WINED3D_LOCATION_BUFFER;
+
+    if ((desc->resource_type != WINED3D_RTYPE_TEXTURE_3D
+            && !(texture->resource.usage & WINED3DUSAGE_DEPTHSTENCIL))
+            || !wined3d_texture_use_pbo(texture, gl_info))
+    {
+        if (!wined3d_resource_allocate_sysmem(&texture->resource))
+        {
+            wined3d_texture_cleanup_sync(texture);
+            return E_OUTOFMEMORY;
+        }
     }
 
     sub_count = level_count * layer_count;
