@@ -841,10 +841,9 @@ HRESULT CDECL wined3d_shader_resource_view_create(const struct wined3d_view_desc
 }
 
 void wined3d_shader_resource_view_gl_bind(struct wined3d_shader_resource_view_gl *view_gl,
-        unsigned int unit, struct wined3d_sampler *sampler, struct wined3d_context *context)
+        unsigned int unit, struct wined3d_sampler *sampler, struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_texture_gl *texture_gl;
 
     wined3d_context_gl_active_texture(context_gl, gl_info, unit);
