@@ -1531,26 +1531,21 @@ void CDECL wined3d_device_get_transform(const struct wined3d_device *device,
 void CDECL wined3d_device_multiply_transform(struct wined3d_device *device,
         enum wined3d_transform_state state, const struct wined3d_matrix *matrix)
 {
-    const struct wined3d_matrix *mat;
-    struct wined3d_matrix temp;
+    struct wined3d_matrix *mat;
 
     TRACE("device %p, state %s, matrix %p.\n", device, debug_d3dtstype(state), matrix);
 
-    /* Note: Using 'updateStateBlock' rather than 'stateblock' in the code
-     * below means it will be recorded in a state block change, but it
-     * works regardless where it is recorded.
-     * If this is found to be wrong, change to StateBlock. */
     if (state > HIGHEST_TRANSFORMSTATE)
     {
         WARN("Unhandled transform state %#x.\n", state);
         return;
     }
 
-    mat = &device->update_state->transforms[state];
-    multiply_matrix(&temp, mat, matrix);
-
-    /* Apply change via set transform - will reapply to eg. lights this way. */
-    wined3d_device_set_transform(device, state, &temp);
+    /* Tests show that stateblock recording is ignored; the change goes directly
+     * into the primary stateblock. */
+    mat = &device->state.transforms[state];
+    multiply_matrix(mat, mat, matrix);
+    wined3d_cs_emit_set_transform(device->cs, state, matrix);
 }
 
 /* Note lights are real special cases. Although the device caps state only
