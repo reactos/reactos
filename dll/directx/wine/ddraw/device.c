@@ -2461,62 +2461,7 @@ static HRESULT WINAPI d3d_device3_GetRenderState(IDirect3DDevice3 *iface,
 
         case D3DRENDERSTATE_TEXTUREMAPBLEND:
         {
-            /* D3DRENDERSTATE_TEXTUREMAPBLEND is mapped to texture state stages in SetRenderState; reverse
-               the mapping to get the value. */
-            DWORD colorop, colorarg1, colorarg2;
-            DWORD alphaop, alphaarg1, alphaarg2;
-
-            wined3d_mutex_lock();
-
-            device->legacyTextureBlending = TRUE;
-
-            colorop = wined3d_device_get_texture_stage_state(device->wined3d_device, 0, WINED3D_TSS_COLOR_OP);
-            colorarg1 = wined3d_device_get_texture_stage_state(device->wined3d_device, 0, WINED3D_TSS_COLOR_ARG1);
-            colorarg2 = wined3d_device_get_texture_stage_state(device->wined3d_device, 0, WINED3D_TSS_COLOR_ARG2);
-            alphaop = wined3d_device_get_texture_stage_state(device->wined3d_device, 0, WINED3D_TSS_ALPHA_OP);
-            alphaarg1 = wined3d_device_get_texture_stage_state(device->wined3d_device, 0, WINED3D_TSS_ALPHA_ARG1);
-            alphaarg2 = wined3d_device_get_texture_stage_state(device->wined3d_device, 0, WINED3D_TSS_ALPHA_ARG2);
-
-            if (colorop == WINED3D_TOP_SELECT_ARG1 && colorarg1 == WINED3DTA_TEXTURE
-                    && alphaop == WINED3D_TOP_SELECT_ARG1 && alphaarg1 == WINED3DTA_TEXTURE)
-                *value = D3DTBLEND_DECAL;
-            else if (colorop == WINED3D_TOP_SELECT_ARG1 && colorarg1 == WINED3DTA_TEXTURE
-                    && alphaop == WINED3D_TOP_MODULATE
-                    && alphaarg1 == WINED3DTA_TEXTURE && alphaarg2 == WINED3DTA_CURRENT)
-                *value = D3DTBLEND_DECALALPHA;
-            else if (colorop == WINED3D_TOP_MODULATE
-                    && colorarg1 == WINED3DTA_TEXTURE && colorarg2 == WINED3DTA_CURRENT
-                    && alphaop == WINED3D_TOP_MODULATE
-                    && alphaarg1 == WINED3DTA_TEXTURE && alphaarg2 == WINED3DTA_CURRENT)
-                *value = D3DTBLEND_MODULATEALPHA;
-            else
-            {
-                struct wined3d_texture *tex = NULL;
-                BOOL tex_alpha = FALSE;
-                DDPIXELFORMAT ddfmt;
-
-                if ((tex = wined3d_device_get_texture(device->wined3d_device, 0)))
-                {
-                    struct wined3d_resource_desc desc;
-
-                    wined3d_resource_get_desc(wined3d_texture_get_resource(tex), &desc);
-                    ddfmt.dwSize = sizeof(ddfmt);
-                    ddrawformat_from_wined3dformat(&ddfmt, desc.format);
-                    if (ddfmt.u5.dwRGBAlphaBitMask)
-                        tex_alpha = TRUE;
-                }
-
-                if (!(colorop == WINED3D_TOP_MODULATE
-                        && colorarg1 == WINED3DTA_TEXTURE && colorarg2 == WINED3DTA_CURRENT
-                        && alphaop == (tex_alpha ? WINED3D_TOP_SELECT_ARG1 : WINED3D_TOP_SELECT_ARG2)
-                        && alphaarg1 == WINED3DTA_TEXTURE && alphaarg2 == WINED3DTA_CURRENT))
-                    ERR("Unexpected texture stage state setup, returning D3DTBLEND_MODULATE - likely erroneous.\n");
-
-                *value = D3DTBLEND_MODULATE;
-            }
-
-            wined3d_mutex_unlock();
-
+            *value = device->texture_map_blend;
             return D3D_OK;
         }
 
@@ -2736,8 +2681,7 @@ static HRESULT WINAPI d3d_device3_SetRenderState(IDirect3DDevice3 *iface,
     in device - TRUE if the app is using TEXTUREMAPBLEND.
 
     Tests show that setting TEXTUREMAPBLEND on native doesn't seem to change values returned by
-    GetTextureStageState and vice versa. Not so on Wine, but it is 'undefined' anyway so, probably, ok,
-    unless some broken game will be found that cares. */
+    GetTextureStageState and vice versa. */
 
     struct d3d_device *device = impl_from_IDirect3DDevice3(iface);
     HRESULT hr;
@@ -2875,7 +2819,7 @@ static HRESULT WINAPI d3d_device3_SetRenderState(IDirect3DDevice3 *iface,
                 default:
                     FIXME("Unhandled texture environment %#x.\n", value);
             }
-
+            device->texture_map_blend = value;
             hr = D3D_OK;
             break;
         }
@@ -4870,19 +4814,15 @@ static HRESULT WINAPI d3d_device3_SetTexture(IDirect3DDevice3 *iface,
 {
     struct d3d_device *device = impl_from_IDirect3DDevice3(iface);
     struct ddraw_surface *tex = unsafe_impl_from_IDirect3DTexture2(texture);
-    DWORD texmapblend;
     HRESULT hr;
 
     TRACE("iface %p, stage %u, texture %p.\n", iface, stage, texture);
 
     wined3d_mutex_lock();
 
-    if (device->legacyTextureBlending)
-        IDirect3DDevice3_GetRenderState(iface, D3DRENDERSTATE_TEXTUREMAPBLEND, &texmapblend);
-
     hr = IDirect3DDevice7_SetTexture(&device->IDirect3DDevice7_iface, stage, &tex->IDirectDrawSurface7_iface);
 
-    if (device->legacyTextureBlending && texmapblend == D3DTBLEND_MODULATE)
+    if (device->legacyTextureBlending && device->texture_map_blend == D3DTBLEND_MODULATE)
     {
         /* This fixup is required by the way D3DTBLEND_MODULATE maps to texture stage states.
            See d3d_device3_SetRenderState() for details. */
@@ -7054,8 +6994,11 @@ static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw, B
     else if (version == 2)
         wined3d_device_set_render_state(ddraw->wined3d_device, WINED3D_RS_SPECULARENABLE, TRUE);
     if (version < 7)
+    {
         wined3d_device_set_render_state(ddraw->wined3d_device, WINED3D_RS_NORMALIZENORMALS, TRUE);
-
+        IDirect3DDevice3_SetRenderState(&device->IDirect3DDevice3_iface,
+                D3DRENDERSTATE_TEXTUREMAPBLEND, D3DTBLEND_MODULATE);
+    }
     return D3D_OK;
 }
 
