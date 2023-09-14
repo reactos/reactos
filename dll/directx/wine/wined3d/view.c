@@ -869,20 +869,18 @@ void wined3d_shader_resource_view_gl_bind(struct wined3d_shader_resource_view_gl
 
 /* Context activation is done by the caller. */
 static void shader_resource_view_gl_bind_and_dirtify(struct wined3d_shader_resource_view_gl *view_gl,
-        struct wined3d_context *context)
+        struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-
-    if (context->active_texture < ARRAY_SIZE(context_gl->rev_tex_unit_map))
+    if (context_gl->c.active_texture < ARRAY_SIZE(context_gl->rev_tex_unit_map))
     {
-        unsigned int active_sampler = context_gl->rev_tex_unit_map[context->active_texture];
+        unsigned int active_sampler = context_gl->rev_tex_unit_map[context_gl->c.active_texture];
         if (active_sampler != WINED3D_UNMAPPED_STAGE)
-            context_invalidate_state(context, STATE_SAMPLER(active_sampler));
+            context_invalidate_state(&context_gl->c, STATE_SAMPLER(active_sampler));
     }
     /* FIXME: Ideally we'd only do this when touching a binding that's used by
      * a shader. */
-    context_invalidate_compute_state(context, STATE_COMPUTE_SHADER_RESOURCE_BINDING);
-    context_invalidate_state(context, STATE_GRAPHICS_SHADER_RESOURCE_BINDING);
+    context_invalidate_compute_state(&context_gl->c, STATE_COMPUTE_SHADER_RESOURCE_BINDING);
+    context_invalidate_state(&context_gl->c, STATE_GRAPHICS_SHADER_RESOURCE_BINDING);
 
     wined3d_context_gl_bind_texture(context_gl, view_gl->gl_view.target, view_gl->gl_view.name);
 }
@@ -893,6 +891,7 @@ void shader_resource_view_generate_mipmaps(struct wined3d_shader_resource_view *
     unsigned int i, j, layer_count, level_count, base_level, max_level;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_texture_gl *texture_gl;
+    struct wined3d_context_gl *context_gl;
     struct wined3d_context *context;
     struct gl_texture *gl_tex;
     DWORD location;
@@ -901,6 +900,7 @@ void shader_resource_view_generate_mipmaps(struct wined3d_shader_resource_view *
     TRACE("view %p.\n", view);
 
     context = context_acquire(view_gl->v.resource->device, NULL, 0);
+    context_gl = wined3d_context_gl(context);
     gl_info = context->gl_info;
     layer_count = view_gl->v.desc.u.texture.layer_count;
     level_count = view_gl->v.desc.u.texture.level_count;
@@ -915,11 +915,11 @@ void shader_resource_view_generate_mipmaps(struct wined3d_shader_resource_view *
 
     if (view_gl->gl_view.name)
     {
-        shader_resource_view_gl_bind_and_dirtify(view_gl, context);
+        shader_resource_view_gl_bind_and_dirtify(view_gl, context_gl);
     }
     else
     {
-        wined3d_texture_gl_bind_and_dirtify(texture_gl, wined3d_context_gl(context), srgb);
+        wined3d_texture_gl_bind_and_dirtify(texture_gl, context_gl, srgb);
         gl_info->gl_ops.gl.p_glTexParameteri(texture_gl->target, GL_TEXTURE_BASE_LEVEL, base_level);
         gl_info->gl_ops.gl.p_glTexParameteri(texture_gl->target, GL_TEXTURE_MAX_LEVEL, max_level);
     }
