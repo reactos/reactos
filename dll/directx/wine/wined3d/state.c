@@ -4068,13 +4068,21 @@ static void viewport_miscpart(struct wined3d_context *context, const struct wine
 
     if (gl_info->supported[ARB_VIEWPORT_ARRAY])
     {
+        GLdouble depth_ranges[2 * WINED3D_MAX_VIEWPORTS];
+        GLfloat viewports[4 * WINED3D_MAX_VIEWPORTS];
+
         unsigned int i, reset_count = 0;
 
         get_viewports(context, state, state->viewport_count, vp);
         for (i = 0; i < state->viewport_count; ++i)
         {
-            GL_EXTCALL(glDepthRangeIndexed(i, vp[i].min_z, vp[i].max_z));
-            GL_EXTCALL(glViewportIndexedf(i, vp[i].x, vp[i].y, vp[i].width, vp[i].height));
+            depth_ranges[i * 2]     = vp[i].min_z;
+            depth_ranges[i * 2 + 1] = vp[i].max_z;
+
+            viewports[i * 4]     = vp[i].x;
+            viewports[i * 4 + 1] = vp[i].y;
+            viewports[i * 4 + 2] = vp[i].width;
+            viewports[i * 4 + 3] = vp[i].height;
         }
 
         if (context->viewport_count > state->viewport_count)
@@ -4082,12 +4090,12 @@ static void viewport_miscpart(struct wined3d_context *context, const struct wine
 
         if (reset_count)
         {
-            static const GLfloat reset[4 * WINED3D_MAX_VIEWPORTS];
-            static const GLdouble resetd[2 * WINED3D_MAX_VIEWPORTS];
-
-            GL_EXTCALL(glDepthRangeArrayv(state->viewport_count, reset_count, resetd));
-            GL_EXTCALL(glViewportArrayv(state->viewport_count, reset_count, reset));
+            memset(&depth_ranges[state->viewport_count * 2], 0, reset_count * 2 * sizeof(*depth_ranges));
+            memset(&viewports[state->viewport_count * 4], 0, reset_count * 4 * sizeof(*viewports));
         }
+
+        GL_EXTCALL(glDepthRangeArrayv(0, state->viewport_count + reset_count, depth_ranges));
+        GL_EXTCALL(glViewportArrayv(0, state->viewport_count + reset_count, viewports));
         context->viewport_count = state->viewport_count;
     }
     else
@@ -4107,6 +4115,8 @@ static void viewport_miscpart_cc(struct wined3d_context *context,
             & WINED3D_PIXEL_CENTER_INTEGER ? 63.0f / 128.0f : -1.0f / 128.0f;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_viewport vp[WINED3D_MAX_VIEWPORTS];
+    GLdouble depth_ranges[2 * WINED3D_MAX_VIEWPORTS];
+    GLfloat viewports[4 * WINED3D_MAX_VIEWPORTS];
     unsigned int i, reset_count = 0;
 
     get_viewports(context, state, state->viewport_count, vp);
@@ -4117,8 +4127,14 @@ static void viewport_miscpart_cc(struct wined3d_context *context,
     {
         vp[i].x += pixel_center_offset;
         vp[i].y += pixel_center_offset;
-        GL_EXTCALL(glDepthRangeIndexed(i, vp[i].min_z, vp[i].max_z));
-        GL_EXTCALL(glViewportIndexedf(i, vp[i].x, vp[i].y, vp[i].width, vp[i].height));
+
+        depth_ranges[i * 2]     = vp[i].min_z;
+        depth_ranges[i * 2 + 1] = vp[i].max_z;
+
+        viewports[i * 4    ] = vp[i].x + pixel_center_offset;
+        viewports[i * 4 + 1] = vp[i].y + pixel_center_offset;
+        viewports[i * 4 + 2] = vp[i].width;
+        viewports[i * 4 + 3] = vp[i].height;
     }
 
     if (context->viewport_count > state->viewport_count)
@@ -4126,12 +4142,12 @@ static void viewport_miscpart_cc(struct wined3d_context *context,
 
     if (reset_count)
     {
-        static const GLfloat reset[4 * WINED3D_MAX_VIEWPORTS];
-        static const GLdouble resetd[2 * WINED3D_MAX_VIEWPORTS];
-
-        GL_EXTCALL(glDepthRangeArrayv(state->viewport_count, reset_count, resetd));
-        GL_EXTCALL(glViewportArrayv(state->viewport_count, reset_count, reset));
+        memset(&depth_ranges[state->viewport_count * 2], 0, reset_count * 2 * sizeof(*depth_ranges));
+        memset(&viewports[state->viewport_count * 4], 0, reset_count * 4 * sizeof(*viewports));
     }
+
+    GL_EXTCALL(glDepthRangeArrayv(0, state->viewport_count + reset_count, depth_ranges));
+    GL_EXTCALL(glViewportArrayv(0, state->viewport_count + reset_count, viewports));
     context->viewport_count = state->viewport_count;
 
     checkGLcall("setting clip space and viewport");
