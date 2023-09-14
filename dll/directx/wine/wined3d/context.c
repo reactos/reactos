@@ -1282,7 +1282,7 @@ static BOOL wined3d_context_gl_set_gl_context(struct wined3d_context_gl *context
 
         context_gl->c.valid = 1;
     }
-    context_gl->c.needs_set = 0;
+    context_gl->needs_set = 0;
 
     return TRUE;
 }
@@ -1314,7 +1314,7 @@ static void wined3d_context_gl_update_window(struct wined3d_context_gl *context_
     context_gl->window = context_gl->c.swapchain->win_handle;
     context_gl->dc_is_private = FALSE;
     context_gl->dc_has_format = FALSE;
-    context_gl->c.needs_set = 1;
+    context_gl->needs_set = 1;
     context_gl->c.valid = 1;
 
     if (!(context_gl->dc = GetDCEx(context_gl->window, 0, DCX_USESTYLE | DCX_CACHE)))
@@ -1583,7 +1583,7 @@ void wined3d_context_gl_release(struct wined3d_context_gl *context_gl)
     if (!--context->level)
     {
         if (wined3d_context_gl_restore_pixel_format(context_gl))
-            context->needs_set = 1;
+            context_gl->needs_set = 1;
         if (context_gl->restore_ctx)
         {
             TRACE("Restoring GL context %p on device context %p.\n", context_gl->restore_ctx, context_gl->restore_dc);
@@ -1629,11 +1629,11 @@ static void wined3d_context_gl_enter(struct wined3d_context_gl *context_gl)
                     current_gl, wglGetCurrentDC());
             context_gl->restore_ctx = current_gl;
             context_gl->restore_dc = wglGetCurrentDC();
-            context_gl->c.needs_set = 1;
+            context_gl->needs_set = 1;
         }
-        else if (!context_gl->c.needs_set && !(context_gl->dc_is_private && context_gl->dc_has_format)
+        else if (!context_gl->needs_set && !(context_gl->dc_is_private && context_gl->dc_has_format)
                 && context_gl->pixel_format != context_gl->c.gl_info->gl_ops.wgl.p_wglGetPixelFormat(context_gl->dc))
-            context_gl->c.needs_set = 1;
+            context_gl->needs_set = 1;
     }
 }
 
@@ -2133,7 +2133,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
 
     context_gl->gl_ctx = ctx;
     context_gl->dc_has_format = TRUE;
-    context->needs_set = 1;
+    context_gl->needs_set = 1;
 
     /* Set up the context defaults */
     if (!context_set_current(context))
@@ -4191,7 +4191,7 @@ static void wined3d_context_gl_activate(struct wined3d_context_gl *context_gl,
         if (!context_set_current(&context_gl->c))
             ERR("Failed to activate the new context.\n");
     }
-    else if (context_gl->c.needs_set)
+    else if (context_gl->needs_set)
     {
         wined3d_context_gl_set_gl_context(context_gl);
     }
