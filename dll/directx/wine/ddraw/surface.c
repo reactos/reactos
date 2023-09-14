@@ -51,6 +51,12 @@ HRESULT ddraw_surface_update_frontbuffer(struct ddraw_surface *surface,
     BOOL ret;
     RECT r;
 
+    if (surface->ddraw->flags & DDRAW_SWAPPED && !read)
+    {
+        surface->ddraw->flags &= ~DDRAW_SWAPPED;
+        rect = NULL;
+    }
+
     if (!rect)
     {
         SetRect(&r, 0, 0, surface->surface_desc.dwWidth, surface->surface_desc.dwHeight);
@@ -78,7 +84,10 @@ HRESULT ddraw_surface_update_frontbuffer(struct ddraw_surface *surface,
 
         if (SUCCEEDED(hr = wined3d_texture_blt(dst_texture, 0, rect, surface->wined3d_texture,
                 surface->sub_resource_idx, rect, 0, NULL, WINED3D_TEXF_POINT)) && swap_interval)
+        {
             hr = wined3d_swapchain_present(surface->ddraw->wined3d_swapchain, rect, rect, NULL, swap_interval, 0);
+            surface->ddraw->flags |= DDRAW_SWAPPED;
+        }
         return hr;
     }
 
