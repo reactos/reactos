@@ -2288,15 +2288,14 @@ static void wined3d_device_set_shader_resource_view(struct wined3d_device *devic
         return;
     }
 
-    prev = device->update_state->shader_resource_view[type][idx];
+    prev = device->state.shader_resource_view[type][idx];
     if (view == prev)
         return;
 
     if (view)
         wined3d_shader_resource_view_incref(view);
-    device->update_state->shader_resource_view[type][idx] = view;
-    if (!device->recording)
-        wined3d_cs_emit_set_shader_resource_view(device->cs, type, idx, view);
+    device->state.shader_resource_view[type][idx] = view;
+    wined3d_cs_emit_set_shader_resource_view(device->cs, type, idx, view);
     if (prev)
         wined3d_shader_resource_view_decref(prev);
 }
