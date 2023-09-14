@@ -1287,6 +1287,8 @@ static HRESULT wined3d_so_statistics_query_create(struct wined3d_device *device,
 
     if (WINED3D_QUERY_TYPE_SO_STATISTICS_STREAM0 <= type && type <= WINED3D_QUERY_TYPE_SO_STATISTICS_STREAM3)
         stream_idx = type - WINED3D_QUERY_TYPE_SO_STATISTICS_STREAM0;
+    else if (type == WINED3D_QUERY_TYPE_SO_STATISTICS)
+        stream_idx = 0;
     else
         return WINED3DERR_NOTAVAILABLE;
 
@@ -1447,6 +1449,7 @@ HRESULT CDECL wined3d_query_create(struct wined3d_device *device, enum wined3d_q
         case WINED3D_QUERY_TYPE_TIMESTAMP_FREQ:
             return wined3d_timestamp_disjoint_query_create(device, type, parent, parent_ops, query);
 
+        case WINED3D_QUERY_TYPE_SO_STATISTICS:
         case WINED3D_QUERY_TYPE_SO_STATISTICS_STREAM0:
         case WINED3D_QUERY_TYPE_SO_STATISTICS_STREAM1:
         case WINED3D_QUERY_TYPE_SO_STATISTICS_STREAM2:
