@@ -3926,16 +3926,16 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
     if (shader->reg_maps.shader_version.major >= 3)
     {
         if (position_transformed)
-            args->vp_mode = pretransformed;
+            args->vp_mode = WINED3D_VP_MODE_NONE;
         else if (use_vs(state))
-            args->vp_mode = vertexshader;
+            args->vp_mode = WINED3D_VP_MODE_SHADER;
         else
-            args->vp_mode = fixedfunction;
+            args->vp_mode = WINED3D_VP_MODE_FF;
         args->fog = WINED3D_FFP_PS_FOG_OFF;
     }
     else
     {
-        args->vp_mode = vertexshader;
+        args->vp_mode = WINED3D_VP_MODE_SHADER;
         if (state->render_states[WINED3D_RS_FOGENABLE])
         {
             switch (state->render_states[WINED3D_RS_FOGTABLEMODE])

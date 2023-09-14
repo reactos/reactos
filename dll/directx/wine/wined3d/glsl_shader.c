@@ -6498,7 +6498,7 @@ static void shader_glsl_input_pack(const struct wined3d_shader *shader, struct w
         semantic_idx = input->semantic_idx;
         shader_glsl_write_mask_to_str(input->mask, reg_mask);
 
-        if (args->vp_mode == vertexshader)
+        if (args->vp_mode == WINED3D_VP_MODE_SHADER)
         {
             if (input->sysval_semantic == WINED3D_SV_POSITION && !semantic_idx)
             {
@@ -6537,7 +6537,7 @@ static void shader_glsl_input_pack(const struct wined3d_shader *shader, struct w
             if (args->pointsprite)
                 shader_addline(buffer, "ps_in[%u] = vec4(gl_PointCoord.xy, 0.0, 0.0);\n",
                         shader->u.ps.input_reg_map[input->register_idx]);
-            else if (args->vp_mode == pretransformed && args->texcoords_initialized & (1u << semantic_idx))
+            else if (args->vp_mode == WINED3D_VP_MODE_NONE && args->texcoords_initialized & (1u << semantic_idx))
                 shader_addline(buffer, "ps_in[%u]%s = %s[%u]%s;\n",
                         shader->u.ps.input_reg_map[input->register_idx], reg_mask,
                         needs_legacy_glsl_syntax(gl_info)
@@ -7362,7 +7362,7 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
         shader_addline(buffer, "uniform vec4 %s_samplerNP2Fixup[%u];\n", prefix, fixup->num_consts);
     }
 
-    if (version->major < 3 || args->vp_mode != vertexshader)
+    if (version->major < 3 || args->vp_mode != WINED3D_VP_MODE_SHADER)
     {
         shader_addline(buffer, "uniform struct\n{\n");
         shader_addline(buffer, "    vec4 color;\n");
@@ -7396,7 +7396,7 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
     {
         unsigned int in_count = min(vec4_varyings(version->major, gl_info), shader->limits->packed_input);
 
-        if (args->vp_mode == vertexshader && reg_maps->input_registers)
+        if (args->vp_mode == WINED3D_VP_MODE_SHADER && reg_maps->input_registers)
             shader_glsl_declare_shader_inputs(gl_info, buffer, in_count,
                     shader->u.ps.interpolation_mode, version->major >= 4);
         shader_addline(buffer, "vec4 %s_in[%u];\n", prefix, in_count);
@@ -7510,7 +7510,7 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
                     "vpos = vec4(0, ycorrection[0], 0, 0) + gl_FragCoord * vec4(1, ycorrection[1], 1, 1);\n");
     }
 
-    if (reg_maps->shader_version.major < 3 || args->vp_mode != vertexshader)
+    if (reg_maps->shader_version.major < 3 || args->vp_mode != WINED3D_VP_MODE_SHADER)
     {
         unsigned int i;
         WORD map = reg_maps->texcoord;

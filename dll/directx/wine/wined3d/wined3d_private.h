@@ -1308,10 +1308,11 @@ enum wined3d_gl_resource_type
     WINED3D_GL_RES_TYPE_COUNT           = 7,
 };
 
-enum vertexprocessing_mode {
-    fixedfunction,
-    vertexshader,
-    pretransformed
+enum wined3d_vertex_processing_mode
+{
+    WINED3D_VP_MODE_FF,
+    WINED3D_VP_MODE_SHADER,
+    WINED3D_VP_MODE_NONE,
 };
 
 #define WINED3D_CONST_NUM_UNUSED ~0U
@@ -1346,7 +1347,7 @@ enum wined3d_shader_tex_types
 struct ps_compile_args
 {
     struct color_fixup_desc     color_fixup[MAX_FRAGMENT_SAMPLERS];
-    enum vertexprocessing_mode  vp_mode;
+    enum wined3d_vertex_processing_mode vp_mode;
     enum wined3d_ffp_ps_fog_mode fog;
     WORD                        tex_transform; /* ps 1.0-1.3, 4 textures */
     WORD                        tex_types; /* ps 1.0 - 1.4, 6 textures */

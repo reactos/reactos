@@ -1061,7 +1061,7 @@ static void shader_arb_get_register_name(const struct wined3d_shader_instruction
                             /* This is better than nothing for now */
                             sprintf(register_name, "fragment.texcoord[%s + %u]", rel_reg, reg->idx[0].offset);
                         }
-                        else if(ctx->cur_ps_args->super.vp_mode != vertexshader)
+                        else if(ctx->cur_ps_args->super.vp_mode != WINED3D_VP_MODE_SHADER)
                         {
                             /* This is problematic because we'd have to consult the ctx->ps_input strings
                              * for where to find the varying. Some may be "0.0", others can be texcoords or
@@ -3415,73 +3415,68 @@ static void init_ps_input(const struct wined3d_shader *shader,
     const char *semantic_name;
     DWORD semantic_idx;
 
-    switch(args->super.vp_mode)
+    if (args->super.vp_mode == WINED3D_VP_MODE_SHADER)
     {
-        case pretransformed:
-        case fixedfunction:
-            /* The pixelshader has to collect the varyings on its own. In any case properly load
-             * color0 and color1. In the case of pretransformed vertices also load texcoords. Set
-             * other attribs to 0.0.
-             *
-             * For fixedfunction this behavior is correct, according to the tests. For pretransformed
-             * we'd either need a replacement shader that can load other attribs like BINORMAL, or
-             * load the texcoord attrib pointers to match the pixel shader signature
-             */
-            for (i = 0; i < shader->input_signature.element_count; ++i)
-            {
-                input = &shader->input_signature.elements[i];
-                if (!(semantic_name = input->semantic_name))
-                    continue;
-                semantic_idx = input->semantic_idx;
+        /* That one is easy. The vertex shaders provide v0-v7 in
+         * fragment.texcoord and v8 and v9 in fragment.color. */
+        for (i = 0; i < 8; ++i)
+        {
+            priv->ps_input[i] = texcoords[i];
+        }
+        priv->ps_input[8] = "fragment.color.primary";
+        priv->ps_input[9] = "fragment.color.secondary";
+        return;
+    }
 
-                if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_COLOR))
-                {
-                    if (!semantic_idx)
-                        priv->ps_input[input->register_idx] = "fragment.color.primary";
-                    else if (semantic_idx == 1)
-                        priv->ps_input[input->register_idx] = "fragment.color.secondary";
-                    else
-                        priv->ps_input[input->register_idx] = "0.0";
-                }
-                else if (args->super.vp_mode == fixedfunction)
-                {
-                    priv->ps_input[input->register_idx] = "0.0";
-                }
-                else if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_TEXCOORD))
-                {
-                    if (semantic_idx < 8)
-                        priv->ps_input[input->register_idx] = texcoords[semantic_idx];
-                    else
-                        priv->ps_input[input->register_idx] = "0.0";
-                }
-                else if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_FOG))
-                {
-                    if (!semantic_idx)
-                        priv->ps_input[input->register_idx] = "fragment.fogcoord";
-                    else
-                        priv->ps_input[input->register_idx] = "0.0";
-                }
-                else
-                {
-                    priv->ps_input[input->register_idx] = "0.0";
-                }
+    /* The fragment shader has to collect the varyings on its own. In any case
+     * properly load color0 and color1. In the case of pre-transformed
+     * vertices also load texture coordinates. Set other attributes to 0.0.
+     *
+     * For fixed-function this behavior is correct, according to the tests.
+     * For pre-transformed we'd either need a replacement shader that can load
+     * other attributes like BINORMAL, or load the texture coordinate
+     * attribute pointers to match the fragment shader signature. */
+    for (i = 0; i < shader->input_signature.element_count; ++i)
+    {
+        input = &shader->input_signature.elements[i];
+        if (!(semantic_name = input->semantic_name))
+            continue;
+        semantic_idx = input->semantic_idx;
 
-                TRACE("v%u, semantic %s%u is %s\n", input->register_idx,
-                        semantic_name, semantic_idx, priv->ps_input[input->register_idx]);
-            }
-            break;
+        if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_COLOR))
+        {
+            if (!semantic_idx)
+                priv->ps_input[input->register_idx] = "fragment.color.primary";
+            else if (semantic_idx == 1)
+                priv->ps_input[input->register_idx] = "fragment.color.secondary";
+            else
+                priv->ps_input[input->register_idx] = "0.0";
+        }
+        else if (args->super.vp_mode == WINED3D_VP_MODE_FF)
+        {
+            priv->ps_input[input->register_idx] = "0.0";
+        }
+        else if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_TEXCOORD))
+        {
+            if (semantic_idx < 8)
+                priv->ps_input[input->register_idx] = texcoords[semantic_idx];
+            else
+                priv->ps_input[input->register_idx] = "0.0";
+        }
+        else if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_FOG))
+        {
+            if (!semantic_idx)
+                priv->ps_input[input->register_idx] = "fragment.fogcoord";
+            else
+                priv->ps_input[input->register_idx] = "0.0";
+        }
+        else
+        {
+            priv->ps_input[input->register_idx] = "0.0";
+        }
 
-        case vertexshader:
-            /* That one is easy. The vertex shaders provide v0-v7 in fragment.texcoord and v8 and v9 in
-             * fragment.color
-             */
-            for(i = 0; i < 8; i++)
-            {
-                priv->ps_input[i] = texcoords[i];
-            }
-            priv->ps_input[8] = "fragment.color.primary";
-            priv->ps_input[9] = "fragment.color.secondary";
-            break;
+        TRACE("v%u, semantic %s%u is %s\n", input->register_idx,
+                semantic_name, semantic_idx, priv->ps_input[input->register_idx]);
     }
 }
 
