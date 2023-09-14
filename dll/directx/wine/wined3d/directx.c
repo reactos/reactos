@@ -2201,7 +2201,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
     caps->AdapterOrdinalInGroup             = 0;
     caps->NumberOfAdaptersInGroup           = 1;
 
-    caps->NumSimultaneousRTs = gl_info->limits.buffers;
+    caps->NumSimultaneousRTs = d3d_info->limits.max_rt_count;
 
     caps->StretchRectFilterCaps               = WINED3DPTFILTERCAPS_MINFPOINT  |
                                                 WINED3DPTFILTERCAPS_MAGFPOINT  |

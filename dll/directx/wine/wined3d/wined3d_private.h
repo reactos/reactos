@@ -164,6 +164,7 @@ struct wined3d_d3d_limits
     unsigned int ffp_vertex_blend_matrices;
     unsigned int active_light_count;
 
+    unsigned int max_rt_count;
     float pointsize_max;
 };
 
