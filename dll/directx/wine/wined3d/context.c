@@ -99,10 +99,9 @@ static void context_clean_fbo_attachments(const struct wined3d_gl_info *gl_info,
 }
 
 /* Context activation is done by the caller. */
-static void context_destroy_fbo(struct wined3d_context *context, GLuint fbo)
+static void wined3d_context_gl_destroy_fbo(struct wined3d_context_gl *context_gl, GLuint fbo)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     wined3d_context_gl_bind_fbo(context_gl, GL_FRAMEBUFFER, fbo);
     context_clean_fbo_attachments(gl_info, GL_FRAMEBUFFER);
@@ -568,7 +567,7 @@ static void context_destroy_fbo_entry(struct wined3d_context *context, struct fb
     if (entry->id)
     {
         TRACE("Destroy FBO %u.\n", entry->id);
-        context_destroy_fbo(context, entry->id);
+        wined3d_context_gl_destroy_fbo(wined3d_context_gl(context), entry->id);
     }
     --context->fbo_entry_count;
     list_remove(&entry->entry);
