@@ -239,6 +239,9 @@ static void create_texture_view(struct wined3d_gl_view *view, GLenum view_target
         wined3d_gl_texture_swizzle_from_color_fixup(swizzle, view_format->color_fixup);
         gl_info->gl_ops.gl.p_glTexParameteriv(view->target, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
         checkGLcall("set format swizzle");
+
+        context_invalidate_compute_state(context, STATE_COMPUTE_SHADER_RESOURCE_BINDING);
+        context_invalidate_state(context, STATE_GRAPHICS_SHADER_RESOURCE_BINDING);
     }
 
     context_release(context);
