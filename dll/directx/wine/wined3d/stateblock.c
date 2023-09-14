@@ -925,12 +925,13 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     for (i = 0; i < stateblock->num_contained_tss_states; ++i)
     {
         DWORD stage = stateblock->contained_tss_states[i].stage;
-        DWORD state = stateblock->contained_tss_states[i].state;
+        DWORD texture_state = stateblock->contained_tss_states[i].state;
 
-        TRACE("Updating texturestage state %u, %u to %#x (was %#x).\n", stage, state,
-                src_state->texture_states[stage][state], stateblock->state.texture_states[stage][state]);
+        TRACE("Updating texturestage state %u, %u to %#x (was %#x).\n", stage, texture_state,
+                state->texture_states[stage][texture_state],
+                stateblock->stateblock_state.texture_states[stage][texture_state]);
 
-        stateblock->state.texture_states[stage][state] = src_state->texture_states[stage][state];
+        stateblock->stateblock_state.texture_states[stage][texture_state] = state->texture_states[stage][texture_state];
     }
 
     /* Samplers */
@@ -1075,9 +1076,11 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     for (i = 0; i < stateblock->num_contained_tss_states; ++i)
     {
         DWORD stage = stateblock->contained_tss_states[i].stage;
-        DWORD state = stateblock->contained_tss_states[i].state;
+        DWORD texture_state = stateblock->contained_tss_states[i].state;
 
-        wined3d_device_set_texture_stage_state(device, stage, state, stateblock->state.texture_states[stage][state]);
+        state->texture_states[stage][texture_state] = stateblock->stateblock_state.texture_states[stage][texture_state];
+        wined3d_device_set_texture_stage_state(device, stage, texture_state,
+                stateblock->stateblock_state.texture_states[stage][texture_state]);
     }
 
     /* Sampler states. */
@@ -1396,7 +1399,14 @@ void state_init(struct wined3d_state *state, struct wined3d_fb_state *fb,
 static void stateblock_state_init_default(struct wined3d_stateblock_state *state,
         const struct wined3d_d3d_info *d3d_info)
 {
+    unsigned int i;
+
     init_default_render_states(state->rs, d3d_info);
+
+    for (i = 0; i < MAX_TEXTURES; ++i)
+    {
+        init_default_texture_state(i, state->texture_states[i]);
+    }
 }
 
 void wined3d_stateblock_state_init(struct wined3d_stateblock_state *state,

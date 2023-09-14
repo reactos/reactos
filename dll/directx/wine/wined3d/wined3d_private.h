@@ -3017,6 +3017,8 @@ struct wined3d_stateblock_state
     BOOL ps_consts_b[WINED3D_MAX_CONSTS_B];
 
     DWORD rs[WINEHIGHEST_RENDER_STATE + 1];
+
+    DWORD texture_states[MAX_TEXTURES][WINED3D_HIGHEST_TEXTURE_STATE + 1];
 };
 
 struct wined3d_device

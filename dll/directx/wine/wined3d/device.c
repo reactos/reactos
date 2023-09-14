@@ -3433,7 +3433,6 @@ void CDECL wined3d_device_set_texture_stage_state(struct wined3d_device *device,
         UINT stage, enum wined3d_texture_stage_state state, DWORD value)
 {
     const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
-    DWORD old_value;
 
     TRACE("device %p, stage %u, state %s, value %#x.\n",
             device, stage, debug_d3dtexturestate(state), value);
@@ -3451,8 +3450,7 @@ void CDECL wined3d_device_set_texture_stage_state(struct wined3d_device *device,
         return;
     }
 
-    old_value = device->update_state->texture_states[stage][state];
-    device->update_state->texture_states[stage][state] = value;
+    device->update_stateblock_state->texture_states[stage][state] = value;
 
     if (device->recording)
     {
@@ -3461,12 +3459,13 @@ void CDECL wined3d_device_set_texture_stage_state(struct wined3d_device *device,
         return;
     }
 
-    /* Checked after the assignments to allow proper stateblock recording. */
-    if (old_value == value)
+    if (value == device->state.texture_states[stage][state])
     {
         TRACE("Application is setting the old value over, nothing to do.\n");
         return;
     }
+
+    device->state.texture_states[stage][state] = value;
 
     wined3d_cs_emit_set_texture_state(device->cs, stage, state, value);
 }
