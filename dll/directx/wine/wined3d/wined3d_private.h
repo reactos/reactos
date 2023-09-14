@@ -5157,12 +5157,20 @@ static inline BOOL is_srgb_enabled(const DWORD *sampler_states)
 static inline BOOL needs_separate_srgb_gl_texture(const struct wined3d_context *context,
         const struct wined3d_texture *texture)
 {
-    unsigned int flags = texture->resource.format_flags
-            & (WINED3DFMT_FLAG_SRGB_READ | WINED3DFMT_FLAG_SRGB_WRITE);
+    if (!(context->d3d_info->wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL))
+        return FALSE;
 
-    return (!context->d3d_info->srgb_read_control
-            || (flags && flags != (WINED3DFMT_FLAG_SRGB_READ | WINED3DFMT_FLAG_SRGB_WRITE)))
-            && context->d3d_info->wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL;
+    if (!context->d3d_info->srgb_read_control
+            && (texture->resource.bind_flags & WINED3D_BIND_SHADER_RESOURCE)
+            && (texture->resource.format_flags & WINED3DFMT_FLAG_SRGB_READ))
+        return TRUE;
+
+    if (!context->d3d_info->srgb_write_control
+            && (texture->resource.bind_flags & WINED3D_BIND_RENDER_TARGET)
+            && (texture->resource.format_flags & WINED3DFMT_FLAG_SRGB_WRITE))
+        return TRUE;
+
+    return FALSE;
 }
 
 static inline BOOL needs_srgb_write(const struct wined3d_context *context,
