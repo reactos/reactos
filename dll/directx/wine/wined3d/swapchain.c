@@ -113,7 +113,6 @@ ULONG CDECL wined3d_swapchain_incref(struct wined3d_swapchain *swapchain)
 ULONG CDECL wined3d_swapchain_decref(struct wined3d_swapchain *swapchain)
 {
     ULONG refcount = InterlockedDecrement(&swapchain->ref);
-    struct wined3d_device *device;
 
     TRACE("%p decreasing refcount to %u.\n", swapchain, refcount);
 
@@ -121,8 +120,7 @@ ULONG CDECL wined3d_swapchain_decref(struct wined3d_swapchain *swapchain)
     {
         wined3d_mutex_lock();
 
-        device = swapchain->device;
-        device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+        wined3d_cs_finish(swapchain->device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
         swapchain_cleanup(swapchain);
         swapchain->parent_ops->wined3d_object_destroyed(swapchain->parent);
@@ -144,8 +142,6 @@ void * CDECL wined3d_swapchain_get_parent(const struct wined3d_swapchain *swapch
 
 void CDECL wined3d_swapchain_set_window(struct wined3d_swapchain *swapchain, HWND window)
 {
-    struct wined3d_device *device = swapchain->device;
-
     if (!window)
         window = swapchain->device_window;
     if (window == swapchain->win_handle)
@@ -154,7 +150,7 @@ void CDECL wined3d_swapchain_set_window(struct wined3d_swapchain *swapchain, HWN
     TRACE("Setting swapchain %p window from %p to %p.\n",
             swapchain, swapchain->win_handle, window);
 
-    device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+    wined3d_cs_finish(swapchain->device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
     swapchain->win_handle = window;
 }
@@ -917,7 +913,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
         }
 
         wined3d_cs_init_object(device->cs, wined3d_swapchain_cs_init, swapchain);
-        device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+        wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
         if (!swapchain->context[0])
         {
@@ -1018,8 +1014,8 @@ err:
         heap_free(swapchain->back_buffers);
     }
 
-    wined3d_cs_destroy_object(swapchain->device->cs, wined3d_swapchain_destroy_object, swapchain);
-    swapchain->device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+    wined3d_cs_destroy_object(device->cs, wined3d_swapchain_destroy_object, swapchain);
+    wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
     if (swapchain->front_buffer)
     {
@@ -1225,7 +1221,6 @@ HRESULT CDECL wined3d_swapchain_resize_buffers(struct wined3d_swapchain *swapcha
         unsigned int width, unsigned int height, enum wined3d_format_id format_id,
         enum wined3d_multisample_type multisample_type, unsigned int multisample_quality)
 {
-    struct wined3d_device *device = swapchain->device;
     BOOL update_desc = FALSE;
 
     TRACE("swapchain %p, buffer_count %u, width %u, height %u, format %s, "
@@ -1238,7 +1233,7 @@ HRESULT CDECL wined3d_swapchain_resize_buffers(struct wined3d_swapchain *swapcha
     if (buffer_count && buffer_count != swapchain->desc.backbuffer_count)
         FIXME("Cannot change the back buffer count yet.\n");
 
-    device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+    wined3d_cs_finish(swapchain->device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
     if (!width || !height)
     {

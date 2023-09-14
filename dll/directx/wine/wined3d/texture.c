@@ -1622,7 +1622,7 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
         struct wined3d_texture_idx texture_idx = {texture, 0};
 
         wined3d_cs_destroy_object(device->cs, wined3d_texture_destroy_dc, &texture_idx);
-        device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+        wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
         create_dib = TRUE;
     }
 
@@ -1692,7 +1692,7 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
         struct wined3d_texture_idx texture_idx = {texture, 0};
 
         wined3d_cs_init_object(device->cs, wined3d_texture_create_dc, &texture_idx);
-        device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+        wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
     }
 
     return WINED3D_OK;
@@ -3117,7 +3117,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
             struct wined3d_texture_idx texture_idx = {texture, i};
 
             wined3d_cs_init_object(device->cs, wined3d_texture_create_dc, &texture_idx);
-            device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+            wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
             if (!texture->dc_info || !texture->dc_info[i].dc)
             {
                 wined3d_texture_cleanup_sync(texture);
@@ -3737,7 +3737,7 @@ HRESULT CDECL wined3d_texture_get_dc(struct wined3d_texture *texture, unsigned i
         struct wined3d_texture_idx texture_idx = {texture, sub_resource_idx};
 
         wined3d_cs_init_object(device->cs, wined3d_texture_create_dc, &texture_idx);
-        device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+        wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
         if (!(dc_info = texture->dc_info) || !dc_info[sub_resource_idx].dc)
             return WINED3DERR_INVALIDCALL;
     }
@@ -3785,7 +3785,7 @@ HRESULT CDECL wined3d_texture_release_dc(struct wined3d_texture *texture, unsign
         struct wined3d_texture_idx texture_idx = {texture, sub_resource_idx};
 
         wined3d_cs_destroy_object(device->cs, wined3d_texture_destroy_dc, &texture_idx);
-        device->cs->ops->finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+        wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
     }
 
     --sub_resource->map_count;

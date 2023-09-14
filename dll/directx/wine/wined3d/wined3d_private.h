@@ -3794,6 +3794,11 @@ HRESULT wined3d_cs_map(struct wined3d_cs *cs, struct wined3d_resource *resource,
 HRESULT wined3d_cs_unmap(struct wined3d_cs *cs, struct wined3d_resource *resource,
         unsigned int sub_resource_idx) DECLSPEC_HIDDEN;
 
+static inline void wined3d_cs_finish(struct wined3d_cs *cs, enum wined3d_cs_queue_id queue_id)
+{
+    cs->ops->finish(cs, queue_id);
+}
+
 static inline void wined3d_cs_push_constants(struct wined3d_cs *cs, enum wined3d_push_constants p,
         unsigned int start_idx, unsigned int count, const void *constants)
 {

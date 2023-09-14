@@ -676,7 +676,7 @@ void wined3d_cs_emit_clear_rendertarget_view(struct wined3d_cs *cs, struct wined
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
     if (flags & WINED3DCLEAR_SYNCHRONOUS)
-        cs->ops->finish(cs, WINED3D_CS_QUEUE_DEFAULT);
+        wined3d_cs_finish(cs, WINED3D_CS_QUEUE_DEFAULT);
 }
 
 static void acquire_shader_resources(const struct wined3d_state *state, unsigned int shader_mask)
@@ -2141,7 +2141,7 @@ HRESULT wined3d_cs_map(struct wined3d_cs *cs, struct wined3d_resource *resource,
     op->hr = &hr;
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_MAP);
-    cs->ops->finish(cs, WINED3D_CS_QUEUE_MAP);
+    wined3d_cs_finish(cs, WINED3D_CS_QUEUE_MAP);
 
     return hr;
 }
@@ -2168,7 +2168,7 @@ HRESULT wined3d_cs_unmap(struct wined3d_cs *cs, struct wined3d_resource *resourc
     op->hr = &hr;
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_MAP);
-    cs->ops->finish(cs, WINED3D_CS_QUEUE_MAP);
+    wined3d_cs_finish(cs, WINED3D_CS_QUEUE_MAP);
 
     return hr;
 }
@@ -2301,7 +2301,7 @@ void wined3d_cs_emit_blt_sub_resource(struct wined3d_cs *cs, struct wined3d_reso
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
     if (flags & WINED3D_BLT_SYNCHRONOUS)
-        cs->ops->finish(cs, WINED3D_CS_QUEUE_DEFAULT);
+        wined3d_cs_finish(cs, WINED3D_CS_QUEUE_DEFAULT);
 }
 
 static void wined3d_cs_exec_update_sub_resource(struct wined3d_cs *cs, const void *data)
@@ -2432,7 +2432,7 @@ no_async:
     /* The data pointer may go away, so we need to wait until it is read.
      * Copying the data may be faster if it's small. */
 #endif /* STAGING_CSMT */
-    cs->ops->finish(cs, WINED3D_CS_QUEUE_MAP);
+    wined3d_cs_finish(cs, WINED3D_CS_QUEUE_MAP);
 }
 
 static void wined3d_cs_exec_add_dirty_texture_region(struct wined3d_cs *cs, const void *data)
@@ -2560,7 +2560,7 @@ static void wined3d_cs_emit_stop(struct wined3d_cs *cs)
     op->opcode = WINED3D_CS_OP_STOP;
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
-    cs->ops->finish(cs, WINED3D_CS_QUEUE_DEFAULT);
+    wined3d_cs_finish(cs, WINED3D_CS_QUEUE_DEFAULT);
 }
 
 static void (* const wined3d_cs_op_handlers[])(struct wined3d_cs *cs, const void *data) =
