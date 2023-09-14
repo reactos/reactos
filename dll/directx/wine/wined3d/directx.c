@@ -2179,7 +2179,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
 
     caps->MaxTextureRepeat = 32768;
     caps->MaxTextureAspectRatio = d3d_info->limits.texture_size;
-    caps->MaxVertexW = 1.0f;
+    caps->MaxVertexW = 1e10f;
 
     caps->GuardBandLeft = 0.0f;
     caps->GuardBandTop = 0.0f;
