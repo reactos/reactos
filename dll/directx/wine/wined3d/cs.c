@@ -860,6 +860,8 @@ static void wined3d_cs_exec_draw(struct wined3d_cs *cs, const void *data)
 
         if (op->parameters.indexed && gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX])
             base_vertex_idx = direct->base_vertex_idx;
+        else if (!op->parameters.indexed)
+            base_vertex_idx = direct->start_idx;
     }
 
     /* ARB_draw_indirect always supports a base vertex offset. */
