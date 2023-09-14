@@ -2134,7 +2134,13 @@ void wined3d_context_gl_unmap_bo_address(struct wined3d_context_gl *context_gl,
 void wined3d_context_gl_update_stream_sources(struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state) DECLSPEC_HIDDEN;
 
-HRESULT wined3d_context_vk_init(struct wined3d_context *context_vk,
+struct wined3d_context_vk
+{
+    struct wined3d_context c;
+};
+
+void wined3d_context_vk_cleanup(struct wined3d_context_vk *context_vk) DECLSPEC_HIDDEN;
+HRESULT wined3d_context_vk_init(struct wined3d_context_vk *context_vk,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 
 typedef void (*APPLYSTATEFUNC)(struct wined3d_context *ctx, const struct wined3d_state *state, DWORD state_id);
@@ -3321,6 +3327,23 @@ struct wined3d_device_gl
 static inline struct wined3d_device_gl *wined3d_device_gl(struct wined3d_device *device)
 {
     return CONTAINING_RECORD(device, struct wined3d_device_gl, d);
+}
+
+struct wined3d_device_vk
+{
+    struct wined3d_device d;
+
+    struct wined3d_context_vk context_vk;
+
+    VkDevice vk_device;
+    VkQueue vk_queue;
+
+    struct wined3d_vk_info vk_info;
+};
+
+static inline struct wined3d_device_vk *wined3d_device_vk(struct wined3d_device *device)
+{
+    return CONTAINING_RECORD(device, struct wined3d_device_vk, d);
 }
 
 static inline BOOL isStateDirty(const struct wined3d_context *context, unsigned int state_id)

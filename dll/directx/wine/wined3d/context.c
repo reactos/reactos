@@ -1493,6 +1493,11 @@ static void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
     wined3d_context_cleanup(&context_gl->c);
 }
 
+void wined3d_context_vk_cleanup(struct wined3d_context_vk *context_vk)
+{
+    wined3d_context_cleanup(&context_vk->c);
+}
+
 DWORD context_get_tls_idx(void)
 {
     return wined3d_context_tls_idx;
@@ -2295,11 +2300,11 @@ fail:
     return E_FAIL;
 }
 
-HRESULT wined3d_context_vk_init(struct wined3d_context *context_vk, struct wined3d_swapchain *swapchain)
+HRESULT wined3d_context_vk_init(struct wined3d_context_vk *context_vk, struct wined3d_swapchain *swapchain)
 {
     TRACE("context_vk %p, swapchain %p.\n", context_vk, swapchain);
 
-    wined3d_context_init(context_vk, swapchain);
+    wined3d_context_init(&context_vk->c, swapchain);
 
     return WINED3D_OK;
 }
