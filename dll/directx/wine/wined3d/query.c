@@ -922,7 +922,7 @@ static BOOL wined3d_pipeline_query_ops_poll(struct wined3d_query *query, DWORD f
 
     TRACE("query %p, flags %#x.\n", query, flags);
 
-    if (!(context = context_reacquire(device, pq->context)))
+    if (!(context = context_reacquire(device, &pq->context_gl->c)))
     {
         FIXME("%p Wrong thread.\n", query);
         memset(&pq->statistics, 0, sizeof(pq->statistics));
@@ -990,24 +990,24 @@ static BOOL wined3d_pipeline_query_ops_issue(struct wined3d_query *query, DWORD 
     {
         if (pq->started)
         {
-            if ((context = context_reacquire(device, pq->context)))
+            if ((context = context_reacquire(device, &pq->context_gl->c)))
             {
                 wined3d_pipeline_statistics_query_end(pq, context);
             }
             else
             {
                 FIXME("Wrong thread, can't restart query.\n");
-                context_free_pipeline_statistics_query(pq);
+                wined3d_context_gl_free_pipeline_statistics_query(pq);
                 context = context_acquire(device, NULL, 0);
-                context_alloc_pipeline_statistics_query(context, pq);
+                wined3d_context_gl_alloc_pipeline_statistics_query(wined3d_context_gl(context), pq);
             }
         }
         else
         {
-            if (pq->context)
-                context_free_pipeline_statistics_query(pq);
+            if (pq->context_gl)
+                wined3d_context_gl_free_pipeline_statistics_query(pq);
             context = context_acquire(device, NULL, 0);
-            context_alloc_pipeline_statistics_query(context, pq);
+            wined3d_context_gl_alloc_pipeline_statistics_query(wined3d_context_gl(context), pq);
         }
         gl_info = context->gl_info;
 
@@ -1031,7 +1031,7 @@ static BOOL wined3d_pipeline_query_ops_issue(struct wined3d_query *query, DWORD 
     {
         if (pq->started)
         {
-            if ((context = context_reacquire(device, pq->context)))
+            if ((context = context_reacquire(device, &pq->context_gl->c)))
             {
                 wined3d_pipeline_statistics_query_end(pq, context);
                 context_release(context);
@@ -1322,8 +1322,8 @@ static HRESULT wined3d_so_statistics_query_create(struct wined3d_device *device,
 static void wined3d_pipeline_query_ops_destroy(struct wined3d_query *query)
 {
     struct wined3d_pipeline_statistics_query *pq = wined3d_pipeline_statistics_query_from_query(query);
-    if (pq->context)
-        context_free_pipeline_statistics_query(pq);
+    if (pq->context_gl)
+        wined3d_context_gl_free_pipeline_statistics_query(pq);
     heap_free(pq);
 }
 
