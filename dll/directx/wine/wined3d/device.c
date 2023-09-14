@@ -1008,7 +1008,7 @@ static void device_init_swapchain_state(struct wined3d_device *device, struct wi
     wined3d_device_set_depth_stencil_view(device, ds_enable ? device->auto_depth_stencil_view : NULL);
 }
 
-static void wined3d_device_delete_opengl_contexts_cs(void *object)
+void wined3d_device_delete_opengl_contexts_cs(void *object)
 {
     struct wined3d_resource *resource, *cursor;
     struct wined3d_device *device = object;
@@ -1042,13 +1042,7 @@ static void wined3d_device_delete_opengl_contexts_cs(void *object)
     }
 }
 
-static void wined3d_device_delete_opengl_contexts(struct wined3d_device *device)
-{
-    wined3d_cs_destroy_object(device->cs, wined3d_device_delete_opengl_contexts_cs, device);
-    wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
-}
-
-static void wined3d_device_create_primary_opengl_context_cs(void *object)
+void wined3d_device_create_primary_opengl_context_cs(void *object)
 {
     struct wined3d_device *device = object;
     struct wined3d_swapchain *swapchain;
@@ -1081,16 +1075,6 @@ static void wined3d_device_create_primary_opengl_context_cs(void *object)
     create_dummy_textures(device, context);
     create_default_samplers(device, context);
     context_release(context);
-}
-
-static HRESULT wined3d_device_create_primary_opengl_context(struct wined3d_device *device)
-{
-    wined3d_cs_init_object(device->cs, wined3d_device_create_primary_opengl_context_cs, device);
-    wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
-    if (!device->swapchains[0]->num_contexts)
-        return E_FAIL;
-
-    return WINED3D_OK;
 }
 
 HRESULT wined3d_device_set_implicit_swapchain(struct wined3d_device *device, struct wined3d_swapchain *swapchain)
@@ -1135,24 +1119,8 @@ HRESULT wined3d_device_set_implicit_swapchain(struct wined3d_device *device, str
     device->swapchains[0] = swapchain;
 
     memset(device->fb.render_targets, 0, sizeof(device->fb.render_targets));
-    if (device->wined3d->flags & WINED3D_NO3D)
-    {
-        if (!(device->blitter = wined3d_cpu_blitter_create()))
-        {
-            ERR("Failed to create CPU blitter.\n");
-            heap_free(device->swapchains);
-            device->swapchain_count = 0;
-            hr = E_FAIL;
-            goto err_out;
-        }
-    }
-    else
-    {
-        if (FAILED(hr = wined3d_device_create_primary_opengl_context(device)))
-            goto err_out;
-
-        device->d3d_initialized = TRUE;
-    }
+    if (FAILED(hr = device->adapter->adapter_ops->adapter_init_3d(device)))
+        goto err_out;
 
     device_init_swapchain_state(device, swapchain);
 
@@ -1233,10 +1201,7 @@ void wined3d_device_uninit_3d(struct wined3d_device *device)
 #if defined(STAGING_CSMT)
     context_set_current(NULL);
 #endif /* STAGING_CSMT */
-    if (no3d)
-        device->blitter->ops->blitter_destroy(device->blitter, NULL);
-    else
-        wined3d_device_delete_opengl_contexts(device);
+    device->adapter->adapter_ops->adapter_uninit_3d(device);
 
     if ((view = device->fb.depth_stencil))
     {
@@ -5081,7 +5046,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         state_cleanup(&device->state);
 
         if (device->d3d_initialized)
-            wined3d_device_delete_opengl_contexts(device);
+            device->adapter->adapter_ops->adapter_uninit_3d(device);
 
         memset(&device->state, 0, sizeof(device->state));
         state_init(&device->state, &device->fb, &device->adapter->d3d_info, WINED3D_STATE_INIT_DEFAULT);
@@ -5112,11 +5077,8 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         wined3d_cs_emit_set_scissor_rects(device->cs, 1, state->scissor_rects);
     }
 
-    if (device->d3d_initialized)
-    {
-        if (reset_state)
-            hr = wined3d_device_create_primary_opengl_context(device);
-    }
+    if (device->d3d_initialized && reset_state)
+        hr = device->adapter->adapter_ops->adapter_init_3d(device);
 
     /* All done. There is no need to reload resources or shaders, this will happen automatically on the
      * first use

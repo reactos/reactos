@@ -2727,6 +2727,8 @@ struct wined3d_adapter_ops
     BOOL (*adapter_check_format)(const struct wined3d_adapter *adapter,
             const struct wined3d_format *adapter_format, const struct wined3d_format *rt_format,
             const struct wined3d_format *ds_format);
+    HRESULT (*adapter_init_3d)(struct wined3d_device *device);
+    void (*adapter_uninit_3d)(struct wined3d_device *device);
 };
 
 /* The adapter structure */
@@ -3228,6 +3230,8 @@ void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, c
         const struct wined3d_color *color, float depth, DWORD stencil) DECLSPEC_HIDDEN;
 BOOL device_context_add(struct wined3d_device *device, struct wined3d_context *context) DECLSPEC_HIDDEN;
 void device_context_remove(struct wined3d_device *device, struct wined3d_context *context) DECLSPEC_HIDDEN;
+void wined3d_device_create_primary_opengl_context_cs(void *object) DECLSPEC_HIDDEN;
+void wined3d_device_delete_opengl_contexts_cs(void *object) DECLSPEC_HIDDEN;
 HRESULT wined3d_device_init(struct wined3d_device *device, struct wined3d *wined3d,
         unsigned int adapter_idx, enum wined3d_device_type device_type, HWND focus_window, unsigned int flags,
         BYTE surface_alignment, const enum wined3d_feature_level *levels, unsigned int level_count,

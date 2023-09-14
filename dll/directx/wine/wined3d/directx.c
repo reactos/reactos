@@ -2275,6 +2275,26 @@ static BOOL adapter_no3d_check_format(const struct wined3d_adapter *adapter,
     return TRUE;
 }
 
+static HRESULT adapter_no3d_init_3d(struct wined3d_device *device)
+{
+    TRACE("device %p.\n", device);
+
+    if (!(device->blitter = wined3d_cpu_blitter_create()))
+    {
+        ERR("Failed to create CPU blitter.\n");
+        return E_FAIL;
+    }
+
+    return WINED3D_OK;
+}
+
+static void adapter_no3d_uninit_3d(struct wined3d_device *device)
+{
+    TRACE("device %p.\n", device);
+
+    device->blitter->ops->blitter_destroy(device->blitter, NULL);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
 {
     adapter_no3d_destroy,
@@ -2283,6 +2303,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
     wined3d_adapter_no3d_create_context,
     adapter_no3d_get_wined3d_caps,
     adapter_no3d_check_format,
+    adapter_no3d_init_3d,
+    adapter_no3d_uninit_3d,
 };
 
 static void wined3d_adapter_no3d_init_d3d_info(struct wined3d_adapter *adapter, unsigned int wined3d_creation_flags)

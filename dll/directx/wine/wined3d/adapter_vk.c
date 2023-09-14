@@ -398,6 +398,18 @@ static BOOL adapter_vk_check_format(const struct wined3d_adapter *adapter,
     return TRUE;
 }
 
+static HRESULT adapter_vk_init_3d(struct wined3d_device *device)
+{
+    TRACE("device %p.\n", device);
+
+    return WINED3D_OK;
+}
+
+static void adapter_vk_uninit_3d(struct wined3d_device *device)
+{
+    TRACE("device %p.\n", device);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
 {
     adapter_vk_destroy,
@@ -406,6 +418,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
     adapter_vk_create_context,
     adapter_vk_get_wined3d_caps,
     adapter_vk_check_format,
+    adapter_vk_init_3d,
+    adapter_vk_uninit_3d,
 };
 
 static unsigned int wined3d_get_wine_vk_version(void)

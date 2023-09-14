@@ -4234,6 +4234,15 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter_gl *adapter_gl, 
     }
 }
 
+static void adapter_gl_destroy(struct wined3d_adapter *adapter)
+{
+    struct wined3d_adapter_gl *adapter_gl = wined3d_adapter_gl(adapter);
+
+    heap_free(adapter_gl->pixel_formats);
+    wined3d_adapter_cleanup(adapter);
+    heap_free(adapter_gl);
+}
+
 static HRESULT adapter_gl_create_device(struct wined3d *wined3d, const struct wined3d_adapter *adapter,
         enum wined3d_device_type device_type, HWND focus_window, unsigned int flags, BYTE surface_alignment,
         const enum wined3d_feature_level *levels, unsigned int level_count,
@@ -4523,13 +4532,26 @@ static BOOL adapter_gl_check_format(const struct wined3d_adapter *adapter,
     return FALSE;
 }
 
-static void adapter_gl_destroy(struct wined3d_adapter *adapter)
+static HRESULT adapter_gl_init_3d(struct wined3d_device *device)
 {
-    struct wined3d_adapter_gl *adapter_gl = wined3d_adapter_gl(adapter);
+    TRACE("device %p.\n", device);
 
-    heap_free(adapter_gl->pixel_formats);
-    wined3d_adapter_cleanup(adapter);
-    heap_free(adapter_gl);
+    wined3d_cs_init_object(device->cs, wined3d_device_create_primary_opengl_context_cs, device);
+    wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
+    if (!device->swapchains[0]->num_contexts)
+        return E_FAIL;
+
+    device->d3d_initialized = TRUE;
+
+    return WINED3D_OK;
+}
+
+static void adapter_gl_uninit_3d(struct wined3d_device *device)
+{
+    TRACE("device %p.\n", device);
+
+    wined3d_cs_destroy_object(device->cs, wined3d_device_delete_opengl_contexts_cs, device);
+    wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
 }
 
 static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
@@ -4540,6 +4562,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
     wined3d_adapter_gl_create_context,
     adapter_gl_get_wined3d_caps,
     adapter_gl_check_format,
+    adapter_gl_init_3d,
+    adapter_gl_uninit_3d,
 };
 
 static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,
