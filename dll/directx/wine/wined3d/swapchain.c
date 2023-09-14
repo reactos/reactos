@@ -808,15 +808,16 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     GetClientRect(window, &client_rect);
     if (desc->windowed)
     {
+        TRACE("Client rect %s.\n", wine_dbgstr_rect(&client_rect));
+
         if (!desc->backbuffer_width)
         {
-            desc->backbuffer_width = client_rect.right;
+            desc->backbuffer_width = client_rect.right ? client_rect.right : 8;
             TRACE("Updating width to %u.\n", desc->backbuffer_width);
         }
-
         if (!desc->backbuffer_height)
         {
-            desc->backbuffer_height = client_rect.bottom;
+            desc->backbuffer_height = client_rect.bottom ? client_rect.bottom : 8;
             TRACE("Updating height to %u.\n", desc->backbuffer_height);
         }
 
