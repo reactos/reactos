@@ -4037,51 +4037,51 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
     return TRUE;
 }
 
-static void context_apply_compute_state(struct wined3d_context *context,
+static void wined3d_context_gl_apply_compute_state(struct wined3d_context_gl *context_gl,
         const struct wined3d_device *device, const struct wined3d_state *state)
 {
-    const struct wined3d_state_entry *state_table = context->state_table;
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_state_entry *state_table = context_gl->c.state_table;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     unsigned int state_id, i;
 
-    context_load_shader_resources(context, state, 1u << WINED3D_SHADER_TYPE_COMPUTE);
-    context_load_unordered_access_resources(context, state->shader[WINED3D_SHADER_TYPE_COMPUTE],
+    context_load_shader_resources(&context_gl->c, state, 1u << WINED3D_SHADER_TYPE_COMPUTE);
+    context_load_unordered_access_resources(&context_gl->c, state->shader[WINED3D_SHADER_TYPE_COMPUTE],
             state->unordered_access_view[WINED3D_PIPELINE_COMPUTE]);
 
-    for (i = 0, state_id = STATE_COMPUTE_OFFSET; i < ARRAY_SIZE(context->dirty_compute_states); ++i)
+    for (i = 0, state_id = STATE_COMPUTE_OFFSET; i < ARRAY_SIZE(context_gl->c.dirty_compute_states); ++i)
     {
-        unsigned int dirty_mask = context->dirty_compute_states[i];
+        unsigned int dirty_mask = context_gl->c.dirty_compute_states[i];
+
         while (dirty_mask)
         {
             unsigned int current_state_id = state_id + wined3d_bit_scan(&dirty_mask);
-            state_table[current_state_id].apply(context, state, current_state_id);
+            state_table[current_state_id].apply(&context_gl->c, state, current_state_id);
         }
-        state_id += sizeof(*context->dirty_compute_states) * CHAR_BIT;
+        state_id += sizeof(*context_gl->c.dirty_compute_states) * CHAR_BIT;
     }
-    memset(context->dirty_compute_states, 0, sizeof(*context->dirty_compute_states));
+    memset(context_gl->c.dirty_compute_states, 0, sizeof(*context_gl->c.dirty_compute_states));
 
-    if (context->shader_update_mask & (1u << WINED3D_SHADER_TYPE_COMPUTE))
+    if (context_gl->c.shader_update_mask & (1u << WINED3D_SHADER_TYPE_COMPUTE))
     {
-        device->shader_backend->shader_select_compute(device->shader_priv, context, state);
-        context->shader_update_mask &= ~(1u << WINED3D_SHADER_TYPE_COMPUTE);
+        device->shader_backend->shader_select_compute(device->shader_priv, &context_gl->c, state);
+        context_gl->c.shader_update_mask &= ~(1u << WINED3D_SHADER_TYPE_COMPUTE);
     }
 
-    if (context->update_compute_shader_resource_bindings)
+    if (context_gl->c.update_compute_shader_resource_bindings)
     {
-        wined3d_context_gl_bind_shader_resources(wined3d_context_gl(context), state, WINED3D_SHADER_TYPE_COMPUTE);
-        context->update_compute_shader_resource_bindings = 0;
+        wined3d_context_gl_bind_shader_resources(context_gl, state, WINED3D_SHADER_TYPE_COMPUTE);
+        context_gl->c.update_compute_shader_resource_bindings = 0;
         if (gl_info->limits.combined_samplers == gl_info->limits.graphics_samplers)
-            context->update_shader_resource_bindings = 1;
+            context_gl->c.update_shader_resource_bindings = 1;
     }
 
-    if (context->update_compute_unordered_access_view_bindings)
+    if (context_gl->c.update_compute_unordered_access_view_bindings)
     {
-        context_bind_unordered_access_views(context,
+        context_bind_unordered_access_views(&context_gl->c,
                 state->shader[WINED3D_SHADER_TYPE_COMPUTE],
                 state->unordered_access_view[WINED3D_PIPELINE_COMPUTE]);
-        context->update_compute_unordered_access_view_bindings = 0;
-        context->update_unordered_access_view_bindings = 1;
+        context_gl->c.update_compute_unordered_access_view_bindings = 0;
+        context_gl->c.update_unordered_access_view_bindings = 1;
     }
 
     /* Updates to currently bound render targets aren't necessarily coherent
@@ -4092,10 +4092,10 @@ static void context_apply_compute_state(struct wined3d_context *context,
      * Without this, the bloom effect in Nier:Automata is too bright on the
      * Mesa radeonsi driver, and presumably on other Mesa based drivers. */
     wined3d_context_gl_bind_fbo(context_gl, GL_FRAMEBUFFER, 0);
-    context_invalidate_state(context, STATE_FRAMEBUFFER);
+    context_invalidate_state(&context_gl->c, STATE_FRAMEBUFFER);
 
-    context->last_was_blit = FALSE;
-    context->last_was_ffp_blit = FALSE;
+    context_gl->c.last_was_blit = FALSE;
+    context_gl->c.last_was_ffp_blit = FALSE;
 }
 
 static BOOL use_transform_feedback(const struct wined3d_state *state)
@@ -4311,6 +4311,7 @@ void dispatch_compute(struct wined3d_device *device, const struct wined3d_state 
         const struct wined3d_dispatch_parameters *parameters)
 {
     const struct wined3d_gl_info *gl_info;
+    struct wined3d_context_gl *context_gl;
     struct wined3d_context *context;
 
     context = context_acquire(device, NULL, 0);
@@ -4320,6 +4321,7 @@ void dispatch_compute(struct wined3d_device *device, const struct wined3d_state 
         WARN("Invalid context, skipping dispatch.\n");
         return;
     }
+    context_gl = wined3d_context_gl(context);
     gl_info = context->gl_info;
 
     if (!gl_info->supported[ARB_COMPUTE_SHADER])
@@ -4332,7 +4334,7 @@ void dispatch_compute(struct wined3d_device *device, const struct wined3d_state 
     if (parameters->indirect)
         wined3d_buffer_load(parameters->u.indirect.buffer, context, state);
 
-    context_apply_compute_state(context, device, state);
+    wined3d_context_gl_apply_compute_state(context_gl, device, state);
 
     if (!state->shader[WINED3D_SHADER_TYPE_COMPUTE])
     {
