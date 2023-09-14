@@ -2114,6 +2114,9 @@ static void shader_generate_glsl_declarations(const struct wined3d_context *cont
     unsigned int i;
     DWORD map;
 
+    if (wined3d_settings.strict_shader_math)
+        shader_addline(buffer, "#pragma optionNV(fastmath off)\n");
+
     prefix = shader_glsl_get_prefix(version->type);
 
     /* Prototype the subroutines */
