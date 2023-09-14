@@ -2057,13 +2057,13 @@ void CDECL wined3d_device_set_rasterizer_state(struct wined3d_device *device,
 
     TRACE("device %p, rasterizer_state %p.\n", device, rasterizer_state);
 
-    prev = device->update_state->rasterizer_state;
+    prev = device->state.rasterizer_state;
     if (prev == rasterizer_state)
         return;
 
     if (rasterizer_state)
         wined3d_rasterizer_state_incref(rasterizer_state);
-    device->update_state->rasterizer_state = rasterizer_state;
+    device->state.rasterizer_state = rasterizer_state;
     wined3d_cs_emit_set_rasterizer_state(device->cs, rasterizer_state);
     if (prev)
         wined3d_rasterizer_state_decref(prev);
@@ -2804,12 +2804,12 @@ void CDECL wined3d_device_set_hull_shader(struct wined3d_device *device, struct 
 
     TRACE("device %p, shader %p.\n", device, shader);
 
-    prev = device->update_state->shader[WINED3D_SHADER_TYPE_HULL];
+    prev = device->state.shader[WINED3D_SHADER_TYPE_HULL];
     if (shader == prev)
         return;
     if (shader)
         wined3d_shader_incref(shader);
-    device->update_state->shader[WINED3D_SHADER_TYPE_HULL] = shader;
+    device->state.shader[WINED3D_SHADER_TYPE_HULL] = shader;
     wined3d_cs_emit_set_shader(device->cs, WINED3D_SHADER_TYPE_HULL, shader);
     if (prev)
         wined3d_shader_decref(prev);
@@ -2859,12 +2859,12 @@ void CDECL wined3d_device_set_domain_shader(struct wined3d_device *device, struc
 
     TRACE("device %p, shader %p.\n", device, shader);
 
-    prev = device->update_state->shader[WINED3D_SHADER_TYPE_DOMAIN];
+    prev = device->state.shader[WINED3D_SHADER_TYPE_DOMAIN];
     if (shader == prev)
         return;
     if (shader)
         wined3d_shader_incref(shader);
-    device->update_state->shader[WINED3D_SHADER_TYPE_DOMAIN] = shader;
+    device->state.shader[WINED3D_SHADER_TYPE_DOMAIN] = shader;
     wined3d_cs_emit_set_shader(device->cs, WINED3D_SHADER_TYPE_DOMAIN, shader);
     if (prev)
         wined3d_shader_decref(prev);
@@ -3645,7 +3645,6 @@ HRESULT CDECL wined3d_device_begin_stateblock(struct wined3d_device *device)
         return hr;
 
     device->recording = stateblock;
-    device->update_state = &stateblock->state;
     device->update_stateblock_state = &stateblock->stateblock_state;
 
     TRACE("Recording stateblock %p.\n", stateblock);
@@ -3671,7 +3670,6 @@ HRESULT CDECL wined3d_device_end_stateblock(struct wined3d_device *device,
 
     *stateblock = object;
     device->recording = NULL;
-    device->update_state = &device->state;
     device->update_stateblock_state = &device->stateblock_state;
 
     TRACE("Returning stateblock %p.\n", *stateblock);
@@ -5109,7 +5107,6 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
 
         memset(&device->state, 0, sizeof(device->state));
         state_init(&device->state, &device->fb, &device->adapter->d3d_info, WINED3D_STATE_INIT_DEFAULT);
-        device->update_state = &device->state;
         memset(&device->stateblock_state, 0, sizeof(device->stateblock_state));
         wined3d_stateblock_state_init(&device->stateblock_state, device, WINED3D_STATE_INIT_DEFAULT);
         device->update_stateblock_state = &device->stateblock_state;
@@ -5386,7 +5383,6 @@ HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
     }
 
     state_init(&device->state, &device->fb, &adapter->d3d_info, WINED3D_STATE_INIT_DEFAULT);
-    device->update_state = &device->state;
     wined3d_stateblock_state_init(&device->stateblock_state, device, WINED3D_STATE_INIT_DEFAULT);
     device->update_stateblock_state = &device->stateblock_state;
 

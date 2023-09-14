@@ -3083,7 +3083,6 @@ struct wined3d_device
     enum wined3d_feature_level feature_level;
 
     struct wined3d_state state;
-    struct wined3d_state *update_state;
     struct wined3d_stateblock *recording;
     struct wined3d_stateblock_state stateblock_state;
     struct wined3d_stateblock_state *update_stateblock_state;
