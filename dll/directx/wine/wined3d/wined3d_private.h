@@ -2612,6 +2612,44 @@ struct wined3d_gl_info
     unsigned int format_count;
 };
 
+/* The driver names reflect the lowest GPU supported
+ * by a certain driver, so DRIVER_AMD_R300 supports
+ * R3xx, R4xx and R5xx GPUs. */
+enum wined3d_display_driver
+{
+    DRIVER_AMD_RAGE_128PRO,
+    DRIVER_AMD_R100,
+    DRIVER_AMD_R300,
+    DRIVER_AMD_R600,
+    DRIVER_AMD_RX,
+    DRIVER_INTEL_GMA800,
+    DRIVER_INTEL_GMA900,
+    DRIVER_INTEL_GMA950,
+    DRIVER_INTEL_GMA3000,
+    DRIVER_INTEL_HD4000,
+    DRIVER_NVIDIA_TNT,
+    DRIVER_NVIDIA_GEFORCE2MX,
+    DRIVER_NVIDIA_GEFORCEFX,
+    DRIVER_NVIDIA_GEFORCE6,
+    DRIVER_NVIDIA_GEFORCE8,
+    DRIVER_VMWARE,
+    DRIVER_UNKNOWN,
+};
+
+struct wined3d_gpu_description
+{
+    enum wined3d_pci_vendor vendor;
+    enum wined3d_pci_device device;
+    const char *description;
+    enum wined3d_display_driver driver;
+    unsigned int vidmem;
+};
+
+const struct wined3d_gpu_description *wined3d_get_gpu_description(enum wined3d_pci_vendor vendor,
+        enum wined3d_pci_device device) DECLSPEC_HIDDEN;
+enum wined3d_pci_device wined3d_gpu_from_feature_level(enum wined3d_pci_vendor *vendor,
+        enum wined3d_feature_level feature_level) DECLSPEC_HIDDEN;
+
 struct wined3d_driver_info
 {
     enum wined3d_pci_vendor vendor;
@@ -2622,6 +2660,9 @@ struct wined3d_driver_info
     DWORD version_high;
     DWORD version_low;
 };
+
+void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
+        const struct wined3d_gpu_description *gpu_description, UINT64 vram_bytes) DECLSPEC_HIDDEN;
 
 /* The adapter structure */
 struct wined3d_adapter
@@ -2644,6 +2685,8 @@ struct wined3d_adapter
     const struct fragment_pipeline *fragment_pipe;
     const struct wined3d_shader_backend_ops *shader_backend;
 };
+
+BOOL wined3d_adapter_opengl_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags) DECLSPEC_HIDDEN;
 
 struct wined3d_caps_gl_ctx
 {
