@@ -98,6 +98,7 @@ struct ddraw
     struct ddraw_surface *primary;
     RECT primary_lock;
     struct wined3d_texture *wined3d_frontbuffer;
+    struct wined3d_texture *gdi_surface;
     struct wined3d_swapchain *wined3d_swapchain;
     HWND swapchain_window;
 

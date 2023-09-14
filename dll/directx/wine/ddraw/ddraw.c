@@ -2296,21 +2296,24 @@ static HRESULT WINAPI ddraw4_TestCooperativeLevel(IDirectDraw4 *iface)
  *  DDERR_NOTFOUND if the GDI surface wasn't found
  *
  *****************************************************************************/
-static HRESULT WINAPI ddraw7_GetGDISurface(IDirectDraw7 *iface, IDirectDrawSurface7 **GDISurface)
+static HRESULT WINAPI ddraw7_GetGDISurface(IDirectDraw7 *iface, IDirectDrawSurface7 **surface)
 {
     struct ddraw *ddraw = impl_from_IDirectDraw7(iface);
+    struct ddraw_surface *ddraw_surface;
 
-    TRACE("iface %p, surface %p.\n", iface, GDISurface);
+    TRACE("iface %p, surface %p.\n", iface, surface);
 
     wined3d_mutex_lock();
 
-    if (!(*GDISurface = &ddraw->primary->IDirectDrawSurface7_iface))
+    if (!ddraw->gdi_surface || !(ddraw_surface = wined3d_texture_get_sub_resource_parent(ddraw->gdi_surface, 0)))
     {
-        WARN("Primary not created yet.\n");
+        WARN("GDI surface not available.\n");
+        *surface = NULL;
         wined3d_mutex_unlock();
         return DDERR_NOTFOUND;
     }
-    IDirectDrawSurface7_AddRef(*GDISurface);
+    *surface = &ddraw_surface->IDirectDrawSurface7_iface;
+    IDirectDrawSurface7_AddRef(*surface);
 
     wined3d_mutex_unlock();
 
