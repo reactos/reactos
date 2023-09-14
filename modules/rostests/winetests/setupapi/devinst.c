@@ -2340,6 +2340,53 @@ static void test_driver_list(void)
     DeleteFileA("C:/windows/inf/wine_test2.pnf");
 }
 
+static BOOL device_is_registered(HDEVINFO set, SP_DEVINFO_DATA *device)
+{
+    HKEY key = SetupDiOpenDevRegKey(set, device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, 0);
+    ok(key == INVALID_HANDLE_VALUE, "Expected failure.\n");
+    RegCloseKey(key);
+    return GetLastError() == ERROR_KEY_DOES_NOT_EXIST;
+}
+
+static void test_call_class_installer(void)
+{
+    SP_DEVINFO_DATA device = {sizeof(device)};
+    HDEVINFO set;
+    BOOL ret;
+
+    if (wow64)
+    {
+        skip("SetupDiCallClassInstaller() does not work on WoW64.\n");
+        return;
+    }
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
+    ret = SetupDiCallClassInstaller(DIF_REGISTERDEVICE, set, &device);
+    ok(ret, "Failed to call class installer, error %#x.\n", GetLastError());
+    ok(device_is_registered(set, &device), "Expected device to be registered.\n");
+
+    /* This is probably not failure per se, but rather an indication that no
+     * class installer was called and no default handler exists. */
+    ret = SetupDiCallClassInstaller(DIF_ALLOW_INSTALL, set, &device);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_DI_DO_DEFAULT, "Got unexpected error %#x.\n", GetLastError());
+
+    ret = SetupDiCallClassInstaller(0xdeadbeef, set, &device);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_DI_DO_DEFAULT, "Got unexpected error %#x.\n", GetLastError());
+
+    ret = SetupDiCallClassInstaller(DIF_REMOVE, set, &device);
+    ok(ret, "Failed to call class installer, error %#x.\n", GetLastError());
+    ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
+
+    SetupDiDestroyDeviceInfoList(set);
+}
+
 START_TEST(devinst)
 {
     static BOOL (WINAPI *pIsWow64Process)(HANDLE, BOOL *);
@@ -2376,4 +2423,5 @@ START_TEST(devinst)
     test_device_interface_key();
     test_device_install_params();
     test_driver_list();
+    test_call_class_installer();
 }
