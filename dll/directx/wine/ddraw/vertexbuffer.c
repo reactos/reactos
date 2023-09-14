@@ -119,8 +119,6 @@ static HRESULT d3d_vertex_buffer_create_wined3d_buffer(struct d3d_vertex_buffer 
 
     desc.byte_width = buffer->size;
     desc.usage = WINED3DUSAGE_STATICDECL;
-    if (buffer->Caps & D3DVBCAPS_WRITEONLY)
-        desc.usage |= WINED3DUSAGE_WRITEONLY;
     if (dynamic)
         desc.usage |= WINED3DUSAGE_DYNAMIC;
     desc.bind_flags = WINED3D_BIND_VERTEX_BUFFER;
