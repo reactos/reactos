@@ -8633,10 +8633,9 @@ static GLuint find_glsl_domain_shader(const struct wined3d_context_gl *context_g
     return ret;
 }
 
-static GLuint find_glsl_geometry_shader(const struct wined3d_context *context,
+static GLuint find_glsl_geometry_shader(const struct wined3d_context_gl *context_gl,
         struct shader_glsl_priv *priv, struct wined3d_shader *shader, const struct gs_compile_args *args)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_gs_compiled_shader *gl_shaders, *new_array;
     struct glsl_shader_private *shader_data;
     unsigned int i, new_size;
@@ -10174,7 +10173,7 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
         struct gs_compile_args args;
 
         find_gs_compile_args(state, gshader, &args, context);
-        gs_id = find_glsl_geometry_shader(context, priv, gshader, &args);
+        gs_id = find_glsl_geometry_shader(context_gl, priv, gshader, &args);
     }
 
     /* A pixel shader is not used when rasterization is disabled. */
