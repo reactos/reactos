@@ -815,9 +815,12 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
         stateblock->state.material = src_state->material;
     }
 
+    assert(src_state->viewport_count <= 1);
+
     if (stateblock->changed.viewport
             && (src_state->viewport_count != stateblock->state.viewport_count
-            || memcmp(src_state->viewports, stateblock->state.viewports, src_state->viewport_count * sizeof(stateblock->state.viewports))))
+            || memcmp(src_state->viewports, stateblock->state.viewports,
+            src_state->viewport_count * sizeof(*stateblock->state.viewports))))
     {
         TRACE("Updating viewports.\n");
 
