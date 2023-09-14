@@ -33,7 +33,7 @@ static inline struct ddraw_clipper *impl_from_IDirectDrawClipper(IDirectDrawClip
     return CONTAINING_RECORD(iface, struct ddraw_clipper, IDirectDrawClipper_iface);
 }
 
-static BOOL ddraw_clipper_is_valid(const struct ddraw_clipper *clipper)
+BOOL ddraw_clipper_is_valid(const struct ddraw_clipper *clipper)
 {
     /* Native is very lenient when you invoke the clipper methods with a clipper pointer that
      * points to something that is either not accessible or not a clipper, or if you break
