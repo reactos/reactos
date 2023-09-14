@@ -811,10 +811,11 @@ static void wined3d_device_gl_create_dummy_textures(struct wined3d_device_gl *de
 }
 
 /* Context activation is done by the caller. */
-static void destroy_dummy_textures(struct wined3d_device *device, struct wined3d_context *context)
+static void wined3d_device_gl_destroy_dummy_textures(struct wined3d_device_gl *device_gl,
+        struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_dummy_textures *dummy_textures = &wined3d_device_gl(device)->dummy_textures;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_dummy_textures *dummy_textures = &device_gl->dummy_textures;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     if (gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
     {
@@ -1053,8 +1054,12 @@ void wined3d_device_delete_opengl_contexts_cs(void *object)
 {
     struct wined3d_resource *resource, *cursor;
     struct wined3d_device *device = object;
+    struct wined3d_context_gl *context_gl;
+    struct wined3d_device_gl *device_gl;
     struct wined3d_context *context;
     struct wined3d_shader *shader;
+
+    device_gl = wined3d_device_gl(device);
 
     LIST_FOR_EACH_ENTRY_SAFE(resource, cursor, &device->resources, struct wined3d_resource, resource_list_entry)
     {
@@ -1068,9 +1073,10 @@ void wined3d_device_delete_opengl_contexts_cs(void *object)
     }
 
     context = context_acquire(device, NULL, 0);
+    context_gl = wined3d_context_gl(context);
     device->blitter->ops->blitter_destroy(device->blitter, context);
     device->shader_backend->shader_free_private(device, context);
-    destroy_dummy_textures(device, context);
+    wined3d_device_gl_destroy_dummy_textures(device_gl, context_gl);
     destroy_default_samplers(device, context);
     context_release(context);
 
