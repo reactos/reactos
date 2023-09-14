@@ -3321,8 +3321,8 @@ const struct wined3d_shader_backend_ops none_shader_backend =
     shader_none_has_ffp_proj_control,
 };
 
-static HRESULT shader_set_function(struct wined3d_shader *shader, DWORD float_const_count,
-        enum wined3d_shader_type type, unsigned int max_version)
+static HRESULT shader_set_function(struct wined3d_shader *shader,
+        unsigned int float_const_count, enum wined3d_shader_type type, unsigned int max_version)
 {
     const struct wined3d_d3d_info *d3d_info = &shader->device->adapter->d3d_info;
     struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
@@ -3351,12 +3351,12 @@ static HRESULT shader_set_function(struct wined3d_shader *shader, DWORD float_co
 
     if (reg_maps->shader_version.type != type)
     {
-        WARN("Wrong shader type %d.\n", reg_maps->shader_version.type);
+        WARN("Wrong shader type %#x.\n", reg_maps->shader_version.type);
         return WINED3DERR_INVALIDCALL;
     }
     if (reg_maps->shader_version.major > max_version)
     {
-        WARN("Shader version %d not supported by this D3D API version.\n", reg_maps->shader_version.major);
+        WARN("Shader version %u not supported by this device.\n", reg_maps->shader_version.major);
         return WINED3DERR_INVALIDCALL;
     }
     switch (type)
@@ -3636,17 +3636,40 @@ static HRESULT shader_signature_copy(struct wined3d_shader_signature *dst,
     return WINED3D_OK;
 }
 
+static unsigned int shader_max_version_from_feature_level(enum wined3d_feature_level level)
+{
+    switch (level)
+    {
+        case WINED3D_FEATURE_LEVEL_11_1:
+        case WINED3D_FEATURE_LEVEL_11:
+            return 5;
+        case WINED3D_FEATURE_LEVEL_10_1:
+        case WINED3D_FEATURE_LEVEL_10:
+            return 4;
+        case WINED3D_FEATURE_LEVEL_9_SM3:
+            return 3;
+        case WINED3D_FEATURE_LEVEL_9_SM2:
+        case WINED3D_FEATURE_LEVEL_9_1:
+            return 2;
+        default:
+            return 1;
+    }
+}
+
 static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device *device,
         const struct wined3d_shader_desc *desc, DWORD float_const_count, enum wined3d_shader_type type,
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
+    unsigned int max_version;
     size_t byte_code_size;
     SIZE_T total;
     HRESULT hr;
     char *ptr;
 
-    TRACE("byte_code %p, byte_code_size %#lx, format %#x, max_version %#x.\n",
-            desc->byte_code, (long)desc->byte_code_size, desc->format, desc->max_version);
+    TRACE("byte_code %p, byte_code_size %#lx, format %#x.\n",
+            desc->byte_code, (long)desc->byte_code_size, desc->format);
+
+    max_version = shader_max_version_from_feature_level(device->feature_level);
 
     if (!(shader->frontend = shader_select_frontend(desc->format)))
     {
@@ -3732,7 +3755,7 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
         memcpy(shader->function, desc->byte_code, byte_code_size);
         shader->functionLength = byte_code_size;
 
-        if (FAILED(hr = shader_set_function(shader, float_const_count, type, desc->max_version)))
+        if (FAILED(hr = shader_set_function(shader, float_const_count, type, max_version)))
         {
             WARN("Failed to set function, hr %#x.\n", hr);
             shader_cleanup(shader);
