@@ -1089,7 +1089,7 @@ static HRESULT d3d_device7_EnumTextureFormats(IDirect3DDevice7 *iface,
     for (i = 0; i < ARRAY_SIZE(FormatList); ++i)
     {
         if (wined3d_check_device_format(device->ddraw->wined3d, WINED3DADAPTER_DEFAULT, WINED3D_DEVICE_TYPE_HAL,
-                mode.format_id, WINED3DUSAGE_TEXTURE, WINED3D_RTYPE_TEXTURE_2D, FormatList[i]) == D3D_OK)
+                mode.format_id, 0, WINED3D_BIND_SHADER_RESOURCE, WINED3D_RTYPE_TEXTURE_2D, FormatList[i]) == D3D_OK)
         {
             DDPIXELFORMAT pformat;
 
@@ -1111,8 +1111,8 @@ static HRESULT d3d_device7_EnumTextureFormats(IDirect3DDevice7 *iface,
     for (i = 0; i < ARRAY_SIZE(BumpFormatList); ++i)
     {
         if (wined3d_check_device_format(device->ddraw->wined3d, WINED3DADAPTER_DEFAULT,
-                WINED3D_DEVICE_TYPE_HAL, mode.format_id, WINED3DUSAGE_TEXTURE | WINED3DUSAGE_QUERY_LEGACYBUMPMAP,
-                WINED3D_RTYPE_TEXTURE_2D, BumpFormatList[i]) == D3D_OK)
+                WINED3D_DEVICE_TYPE_HAL, mode.format_id, WINED3DUSAGE_QUERY_LEGACYBUMPMAP,
+                WINED3D_BIND_SHADER_RESOURCE, WINED3D_RTYPE_TEXTURE_2D, BumpFormatList[i]) == D3D_OK)
         {
             DDPIXELFORMAT pformat;
 
@@ -1216,8 +1216,8 @@ static HRESULT WINAPI d3d_device2_EnumTextureFormats(IDirect3DDevice2 *iface,
 
     for (i = 0; i < ARRAY_SIZE(FormatList); ++i)
     {
-        if (wined3d_check_device_format(device->ddraw->wined3d, 0, WINED3D_DEVICE_TYPE_HAL,
-                mode.format_id, WINED3DUSAGE_TEXTURE, WINED3D_RTYPE_TEXTURE_2D, FormatList[i]) == D3D_OK)
+        if (wined3d_check_device_format(device->ddraw->wined3d, WINED3DADAPTER_DEFAULT, WINED3D_DEVICE_TYPE_HAL,
+                mode.format_id, 0, WINED3D_BIND_SHADER_RESOURCE, WINED3D_RTYPE_TEXTURE_2D, FormatList[i]) == D3D_OK)
         {
             DDSURFACEDESC sdesc;
 
