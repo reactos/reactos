@@ -2692,6 +2692,8 @@ ULONG __cdecl wined3d_stateblock_incref(struct wined3d_stateblock *stateblock);
 void __cdecl wined3d_stateblock_set_pixel_shader(struct wined3d_stateblock *stateblock, struct wined3d_shader *shader);
 HRESULT __cdecl wined3d_stateblock_set_ps_consts_f(struct wined3d_stateblock *stateblock,
         unsigned int start_idx, unsigned int count, const struct wined3d_vec4 *constants);
+HRESULT __cdecl wined3d_stateblock_set_ps_consts_i(struct wined3d_stateblock *stateblock,
+        unsigned int start_idx, unsigned int count, const struct wined3d_ivec4 *constants);
 void __cdecl wined3d_stateblock_set_vertex_declaration(struct wined3d_stateblock *stateblock,
         struct wined3d_vertex_declaration *declaration);
 void __cdecl wined3d_stateblock_set_vertex_shader(struct wined3d_stateblock *stateblock, struct wined3d_shader *shader);
