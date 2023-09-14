@@ -3301,29 +3301,28 @@ static void context_update_fixed_function_usage_map(struct wined3d_context *cont
     }
 }
 
-static void context_map_fixed_function_samplers(struct wined3d_context *context,
+static void wined3d_context_gl_map_fixed_function_samplers(struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
+    const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
     unsigned int i, tex;
     WORD ffu_map;
 
-    ffu_map = context->fixed_function_usage_map;
+    ffu_map = context_gl->c.fixed_function_usage_map;
 
     if (d3d_info->limits.ffp_textures == d3d_info->limits.ffp_blend_stages
-            || context->lowest_disabled_stage <= d3d_info->limits.ffp_textures)
+            || context_gl->c.lowest_disabled_stage <= d3d_info->limits.ffp_textures)
     {
         for (i = 0; ffu_map; ffu_map >>= 1, ++i)
         {
             if (!(ffu_map & 1))
                 continue;
 
-            if (context->tex_unit_map[i] != i)
+            if (context_gl->c.tex_unit_map[i] != i)
             {
                 wined3d_context_gl_map_stage(context_gl, i, i);
-                context_invalidate_state(context, STATE_SAMPLER(i));
-                context_invalidate_texture_stage(context, i);
+                context_invalidate_state(&context_gl->c, STATE_SAMPLER(i));
+                context_invalidate_texture_stage(&context_gl->c, i);
             }
         }
         return;
@@ -3336,11 +3335,11 @@ static void context_map_fixed_function_samplers(struct wined3d_context *context,
         if (!(ffu_map & 1))
             continue;
 
-        if (context->tex_unit_map[i] != tex)
+        if (context_gl->c.tex_unit_map[i] != tex)
         {
             wined3d_context_gl_map_stage(context_gl, i, tex);
-            context_invalidate_state(context, STATE_SAMPLER(i));
-            context_invalidate_texture_stage(context, i);
+            context_invalidate_state(&context_gl->c, STATE_SAMPLER(i));
+            context_invalidate_texture_stage(&context_gl->c, i);
         }
 
         ++tex;
@@ -3438,6 +3437,7 @@ static void context_map_vsamplers(struct wined3d_context *context, BOOL ps, cons
 
 static void context_update_tex_unit_map(struct wined3d_context *context, const struct wined3d_state *state)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     BOOL vs = use_vs(state);
     BOOL ps = use_ps(state);
@@ -3456,7 +3456,7 @@ static void context_update_tex_unit_map(struct wined3d_context *context, const s
     if (ps)
         context_map_psamplers(context, state);
     else
-        context_map_fixed_function_samplers(context, state);
+        wined3d_context_gl_map_fixed_function_samplers(context_gl, state);
 
     if (vs)
         context_map_vsamplers(context, ps, state);
