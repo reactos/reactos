@@ -1265,15 +1265,15 @@ static enum wined3d_feature_level feature_level_from_caps(const struct wined3d_g
                 && gl_info->supported[ARB_TEXTURE_COMPRESSION_BPTC])
             return WINED3D_FEATURE_LEVEL_11;
 
-        if (shader_model == 4)
+        if (shader_model >= 4)
             return WINED3D_FEATURE_LEVEL_10;
     }
 
-    if (shader_model == 3)
+    if (shader_model >= 3)
         return WINED3D_FEATURE_LEVEL_9_SM3;
-    if (shader_model == 2)
+    if (shader_model >= 2)
         return WINED3D_FEATURE_LEVEL_9_SM2;
-    if (shader_model == 1)
+    if (shader_model >= 1)
         return WINED3D_FEATURE_LEVEL_8;
 
     if (fragment_caps->TextureOpCaps & WINED3DTEXOPCAPS_DOTPRODUCT3)
