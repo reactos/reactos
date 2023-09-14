@@ -256,62 +256,52 @@ HRESULT WINAPI GetSurfaceFromDC(HDC dc, IDirectDrawSurface4 **surface, HDC *devi
  *  E_OUTOFMEMORY if some allocation failed
  *
  ***********************************************************************/
-static HRESULT
-DDRAW_Create(const GUID *guid,
-             void **DD,
-             IUnknown *UnkOuter,
-             REFIID iid)
+static HRESULT DDRAW_Create(const GUID *guid, void **out, IUnknown *outer_unknown, REFIID iid)
 {
     enum wined3d_device_type device_type;
     struct ddraw *ddraw;
-    HRESULT hr;
     DWORD flags = 0;
+    HRESULT hr;
 
     TRACE("driver_guid %s, ddraw %p, outer_unknown %p, interface_iid %s.\n",
-            debugstr_guid(guid), DD, UnkOuter, debugstr_guid(iid));
+            debugstr_guid(guid), out, outer_unknown, debugstr_guid(iid));
 
-    *DD = NULL;
+    *out = NULL;
 
     if (guid == (GUID *) DDCREATE_EMULATIONONLY)
     {
-        /* Use the reference device id. This doesn't actually change anything,
-         * WineD3D always uses OpenGL for D3D rendering. One could make it request
-         * indirect rendering
-         */
         device_type = WINED3D_DEVICE_TYPE_REF;
     }
-    else if(guid == (GUID *) DDCREATE_HARDWAREONLY)
+    else if (guid == (GUID *) DDCREATE_HARDWAREONLY)
     {
         device_type = WINED3D_DEVICE_TYPE_HAL;
     }
     else
     {
-        device_type = 0;
+        device_type = WINED3D_DEVICE_TYPE_HAL;
     }
 
     /* DDraw doesn't support aggregation, according to msdn */
-    if (UnkOuter != NULL)
+    if (outer_unknown != NULL)
         return CLASS_E_NOAGGREGATION;
 
     if (!IsEqualGUID(iid, &IID_IDirectDraw7))
         flags = WINED3D_LEGACY_FFP_LIGHTING;
 
-    /* DirectDraw creation comes here */
     if (!(ddraw = heap_alloc_zero(sizeof(*ddraw))))
     {
-        ERR("Out of memory when creating DirectDraw\n");
+        ERR("Out of memory when creating DirectDraw.\n");
         return E_OUTOFMEMORY;
     }
 
-    hr = ddraw_init(ddraw, flags, device_type);
-    if (FAILED(hr))
+    if (FAILED(hr = ddraw_init(ddraw, flags, device_type)))
     {
         WARN("Failed to initialize ddraw object, hr %#x.\n", hr);
         heap_free(ddraw);
         return hr;
     }
 
-    hr = IDirectDraw7_QueryInterface(&ddraw->IDirectDraw7_iface, iid, DD);
+    hr = IDirectDraw7_QueryInterface(&ddraw->IDirectDraw7_iface, iid, out);
     IDirectDraw7_Release(&ddraw->IDirectDraw7_iface);
     if (SUCCEEDED(hr))
         list_add_head(&global_ddraw_list, &ddraw->ddraw_list_entry);
