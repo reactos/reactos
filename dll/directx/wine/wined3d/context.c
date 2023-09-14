@@ -1852,8 +1852,6 @@ HGLRC context_create_wgl_attribs(const struct wined3d_gl_info *gl_info, HDC hdc,
     ctx_attribs[ctx_attrib_idx++] = gl_info->selected_gl_version >> 16;
     ctx_attribs[ctx_attrib_idx++] = WGL_CONTEXT_MINOR_VERSION_ARB;
     ctx_attribs[ctx_attrib_idx++] = gl_info->selected_gl_version & 0xffff;
-    if (gl_info->selected_gl_version >= MAKEDWORD_VERSION(3, 2))
-        ctx_flags |= WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
     if (ctx_flags)
     {
         ctx_attribs[ctx_attrib_idx++] = WGL_CONTEXT_FLAGS_ARB;
@@ -1863,9 +1861,20 @@ HGLRC context_create_wgl_attribs(const struct wined3d_gl_info *gl_info, HDC hdc,
 
     if (!(ctx = gl_info->p_wglCreateContextAttribsARB(hdc, share_ctx, ctx_attribs)))
     {
-        if (ctx_flags & WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB)
+        if (gl_info->selected_gl_version >= MAKEDWORD_VERSION(3, 2))
         {
-            ctx_attribs[ctx_attrib_idx - 1] &= ~WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
+            if (ctx_flags)
+            {
+                ctx_flags |= WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
+                ctx_attribs[ctx_attrib_idx - 1] = ctx_flags;
+            }
+            else
+            {
+                ctx_flags = WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
+                ctx_attribs[ctx_attrib_idx++] = WGL_CONTEXT_FLAGS_ARB;
+                ctx_attribs[ctx_attrib_idx++] = ctx_flags;
+                ctx_attribs[ctx_attrib_idx] = 0;
+            }
             if (!(ctx = gl_info->p_wglCreateContextAttribsARB(hdc, share_ctx, ctx_attribs)))
                 WARN("Failed to create a WGL context with wglCreateContextAttribsARB, last error %#x.\n",
                         GetLastError());
