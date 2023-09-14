@@ -38,7 +38,9 @@
     VK_INSTANCE_PFN(vkGetPhysicalDeviceMemoryProperties) \
     VK_INSTANCE_PFN(vkGetPhysicalDeviceProperties) \
     VK_INSTANCE_PFN(vkGetPhysicalDeviceQueueFamilyProperties) \
-    VK_INSTANCE_PFN(vkGetPhysicalDeviceSparseImageFormatProperties)
+    VK_INSTANCE_PFN(vkGetPhysicalDeviceSparseImageFormatProperties) \
+    /* Vulkan 1.1 */ \
+    VK_INSTANCE_EXT_PFN(vkGetPhysicalDeviceProperties2)
 
 #define VK_DEVICE_FUNCS() \
     VK_DEVICE_PFN(vkAllocateCommandBuffers) \
@@ -167,10 +169,12 @@
 struct vulkan_ops
 {
 #define VK_INSTANCE_PFN     DECLARE_VK_PFN
+#define VK_INSTANCE_EXT_PFN DECLARE_VK_PFN
 #define VK_DEVICE_PFN       DECLARE_VK_PFN
     VK_DEVICE_FUNCS()
     VK_INSTANCE_FUNCS()
 #undef VK_INSTANCE_PFN
+#undef VK_INSTANCE_EXT_PFN
 #undef VK_DEVICE_PFN
 
     PFN_vkCreateInstance vkCreateInstance;
@@ -181,6 +185,8 @@ struct wined3d_vk_info
 {
     VkInstance instance;
     struct vulkan_ops vk_ops;
+
+    unsigned int api_version;
 
 #ifdef USE_WIN32_VULKAN
     HMODULE vulkan_lib;

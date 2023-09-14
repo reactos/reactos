@@ -29,6 +29,12 @@ static inline const struct wined3d_adapter_vk *wined3d_adapter_vk_const(const st
     return CONTAINING_RECORD(adapter, struct wined3d_adapter_vk, a);
 }
 
+static const char *debug_vk_version(uint32_t version)
+{
+    return wine_dbg_sprintf("%u.%u.%u",
+            VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
+}
+
 #ifdef USE_WIN32_VULKAN
 static BOOL wined3d_load_vulkan(struct wined3d_vk_info *vk_info)
 {
@@ -226,10 +232,12 @@ static unsigned int wined3d_get_wine_vk_version(void)
 
 static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
 {
+    PFN_vkEnumerateInstanceVersion pfn_vkEnumerateInstanceVersion;
     struct vulkan_ops *vk_ops = &vk_info->vk_ops;
     VkInstance instance = VK_NULL_HANDLE;
     VkInstanceCreateInfo instance_info;
     VkApplicationInfo app_info;
+    uint32_t api_version = 0;
     char app_name[MAX_PATH];
     VkResult vr;
 
@@ -242,13 +250,23 @@ static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
         goto fail;
     }
 
+    vk_info->api_version = VK_API_VERSION_1_0;
+    if ((pfn_vkEnumerateInstanceVersion = (void *)VK_CALL(vkGetInstanceProcAddr(NULL, "vkEnumerateInstanceVersion")))
+            && pfn_vkEnumerateInstanceVersion(&api_version) == VK_SUCCESS)
+    {
+        TRACE("Vulkan instance API version %s.\n", debug_vk_version(api_version));
+
+        if (api_version >= VK_API_VERSION_1_1)
+            vk_info->api_version = VK_API_VERSION_1_1;
+    }
+
     memset(&app_info, 0, sizeof(app_info));
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     if (wined3d_get_app_name(app_name, ARRAY_SIZE(app_name)))
         app_info.pApplicationName = app_name;
     app_info.pEngineName = "Damavand";
     app_info.engineVersion = wined3d_get_wine_vk_version();
-    app_info.apiVersion = VK_API_VERSION_1_0;
+    app_info.apiVersion = vk_info->api_version;
 
     memset(&instance_info, 0, sizeof(instance_info));
     instance_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -267,11 +285,15 @@ static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
         WARN("Could not get instance proc addr for '" #name "'.\n"); \
         goto fail; \
     }
+#define LOAD_INSTANCE_OPT_PFN(name) \
+    vk_ops->name = (void *)VK_CALL(vkGetInstanceProcAddr(instance, #name));
 #define VK_INSTANCE_PFN     LOAD_INSTANCE_PFN
+#define VK_INSTANCE_EXT_PFN LOAD_INSTANCE_OPT_PFN
 #define VK_DEVICE_PFN       LOAD_INSTANCE_PFN
     VK_INSTANCE_FUNCS()
     VK_DEVICE_FUNCS()
 #undef VK_INSTANCE_PFN
+#undef VK_INSTANCE_EXT_PFN
 #undef VK_DEVICE_PFN
 
     vk_info->instance = instance;
@@ -324,8 +346,7 @@ const struct wined3d_gpu_description *get_vulkan_gpu_description(const VkPhysica
     TRACE("Device name: %s.\n", debugstr_a(properties->deviceName));
     TRACE("Vendor ID: 0x%04x, Device ID: 0x%04x.\n", properties->vendorID, properties->deviceID);
     TRACE("Driver version: %#x.\n", properties->driverVersion);
-    TRACE("API version: %u.%u.%u.\n", VK_VERSION_MAJOR(properties->apiVersion),
-            VK_VERSION_MINOR(properties->apiVersion), VK_VERSION_PATCH(properties->apiVersion));
+    TRACE("API version: %s.\n", debug_vk_version(properties->apiVersion));
 
     if ((description = wined3d_get_gpu_description(properties->vendorID, properties->deviceID)))
         return description;
@@ -342,7 +363,8 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     struct wined3d_vk_info *vk_info = &adapter_vk->vk_info;
     const struct wined3d_gpu_description *gpu_description;
     struct wined3d_adapter *adapter = &adapter_vk->a;
-    VkPhysicalDeviceProperties properties;
+    VkPhysicalDeviceIDProperties id_properties;
+    VkPhysicalDeviceProperties2 properties2;
 
     TRACE("adapter_vk %p, ordinal %u, wined3d_creation_flags %#x.\n",
             adapter_vk, ordinal, wined3d_creation_flags);
@@ -359,15 +381,26 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     if (!(adapter_vk->physical_device = get_vulkan_physical_device(vk_info)))
         goto fail_vulkan;
 
-    VK_CALL(vkGetPhysicalDeviceProperties(adapter_vk->physical_device, &properties));
-    adapter_vk->device_limits = properties.limits;
+    memset(&id_properties, 0, sizeof(id_properties));
+    id_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES;
+    properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+    properties2.pNext = &id_properties;
 
-    if (!(gpu_description = get_vulkan_gpu_description(&properties)))
+    if (vk_info->api_version >= VK_API_VERSION_1_1)
+        VK_CALL(vkGetPhysicalDeviceProperties2(adapter_vk->physical_device, &properties2));
+    else
+        VK_CALL(vkGetPhysicalDeviceProperties(adapter_vk->physical_device, &properties2.properties));
+    adapter_vk->device_limits = properties2.properties.limits;
+
+    if (!(gpu_description = get_vulkan_gpu_description(&properties2.properties)))
     {
         ERR("Failed to get GPU description.\n");
         goto fail_vulkan;
     }
     wined3d_driver_info_init(&adapter->driver_info, gpu_description, wined3d_settings.emulated_textureram);
+
+    memcpy(&adapter->driver_uuid, id_properties.driverUUID, sizeof(adapter->driver_uuid));
+    memcpy(&adapter->device_uuid, id_properties.deviceUUID, sizeof(adapter->device_uuid));
 
     if (!wined3d_adapter_vk_init_format_info(adapter_vk, vk_info))
         goto fail_vulkan;
