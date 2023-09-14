@@ -521,6 +521,7 @@ struct d3d_viewport *unsafe_impl_from_IDirect3DViewport(IDirect3DViewport *iface
 
 /* Helper functions */
 void viewport_activate(struct d3d_viewport *viewport, BOOL ignore_lights) DECLSPEC_HIDDEN;
+void viewport_deactivate(struct d3d_viewport *viewport) DECLSPEC_HIDDEN;
 void d3d_viewport_init(struct d3d_viewport *viewport, struct ddraw *ddraw) DECLSPEC_HIDDEN;
 
 /*****************************************************************************

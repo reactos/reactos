@@ -112,6 +112,16 @@ void viewport_activate(struct d3d_viewport *This, BOOL ignore_lights)
     IDirect3DDevice7_SetViewport(&This->active_device->IDirect3DDevice7_iface, &vp);
 }
 
+void viewport_deactivate(struct d3d_viewport *viewport)
+{
+    struct d3d_light *light;
+
+    LIST_FOR_EACH_ENTRY(light, &viewport->light_list, struct d3d_light, entry)
+    {
+        light_deactivate(light);
+    }
+}
+
 /*****************************************************************************
  * _dump_D3DVIEWPORT, _dump_D3DVIEWPORT2
  *
@@ -783,14 +793,7 @@ static HRESULT WINAPI d3d_viewport_AddLight(IDirect3DViewport3 *iface, IDirect3D
 
     /* Attach the light to the viewport */
     light_impl->active_viewport = This;
-
-    /* If active, activate the light */
-    if (This->active_device && light_impl->light.dwFlags & D3DLIGHT_ACTIVE)
-    {
-        /* Disable the flag so that light_activate actually does its job. */
-        light_impl->light.dwFlags &= ~D3DLIGHT_ACTIVE;
-        light_activate(light_impl);
-    }
+    light_activate(light_impl);
 
     wined3d_mutex_unlock();
 

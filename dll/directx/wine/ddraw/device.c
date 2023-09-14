@@ -819,7 +819,9 @@ static HRESULT WINAPI d3d_device3_DeleteViewport(IDirect3DDevice3 *iface, IDirec
 
     if (device->current_viewport == vp)
     {
-        TRACE("Deleting current viewport, unsetting and releasing\n");
+        TRACE("Deleting current viewport, unsetting and releasing.\n");
+
+        viewport_deactivate(vp);
         IDirect3DViewport3_Release(viewport);
         device->current_viewport = NULL;
     }
@@ -1689,48 +1691,42 @@ static HRESULT WINAPI d3d_device1_GetDirect3D(IDirect3DDevice *iface, IDirect3D 
  *  (Is a NULL viewport valid?)
  *
  *****************************************************************************/
-static HRESULT WINAPI d3d_device3_SetCurrentViewport(IDirect3DDevice3 *iface, IDirect3DViewport3 *Direct3DViewport3)
+static HRESULT WINAPI d3d_device3_SetCurrentViewport(IDirect3DDevice3 *iface, IDirect3DViewport3 *viewport)
 {
-    struct d3d_device *This = impl_from_IDirect3DDevice3(iface);
-    struct d3d_viewport *vp = unsafe_impl_from_IDirect3DViewport3(Direct3DViewport3);
+    struct d3d_viewport *vp = unsafe_impl_from_IDirect3DViewport3(viewport);
+    struct d3d_device *device = impl_from_IDirect3DDevice3(iface);
 
-    TRACE("iface %p, viewport %p.\n", iface, Direct3DViewport3);
+    TRACE("iface %p, viewport %p, current_viewport %p.\n", iface, viewport, device->current_viewport);
 
     if (!vp)
     {
-        WARN("Direct3DViewport3 is NULL, returning DDERR_INVALIDPARAMS\n");
+        WARN("Direct3DViewport3 is NULL.\n");
         return DDERR_INVALIDPARAMS;
     }
 
     wined3d_mutex_lock();
     /* Do nothing if the specified viewport is the same as the current one */
-    if (This->current_viewport == vp)
+    if (device->current_viewport == vp)
     {
         wined3d_mutex_unlock();
         return D3D_OK;
     }
 
-    if (vp->active_device != This)
+    if (vp->active_device != device)
     {
-        WARN("Viewport %p active device is %p.\n", vp, vp->active_device);
+        WARN("Viewport %p, active device %p.\n", vp, vp->active_device);
         wined3d_mutex_unlock();
         return DDERR_INVALIDPARAMS;
     }
 
-    /* Release previous viewport and AddRef the new one */
-    if (This->current_viewport)
+    IDirect3DViewport3_AddRef(viewport);
+    if (device->current_viewport)
     {
-        TRACE("ViewportImpl is at %p, interface is at %p\n", This->current_viewport,
-                &This->current_viewport->IDirect3DViewport3_iface);
-        IDirect3DViewport3_Release(&This->current_viewport->IDirect3DViewport3_iface);
+        viewport_deactivate(device->current_viewport);
+        IDirect3DViewport3_Release(&device->current_viewport->IDirect3DViewport3_iface);
     }
-    IDirect3DViewport3_AddRef(Direct3DViewport3);
-
-    /* Set this viewport as the current viewport */
-    This->current_viewport = vp;
-
-    /* Activate this viewport */
-    viewport_activate(This->current_viewport, FALSE);
+    device->current_viewport = vp;
+    viewport_activate(device->current_viewport, FALSE);
 
     wined3d_mutex_unlock();
 

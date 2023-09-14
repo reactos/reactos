@@ -54,15 +54,14 @@ void light_activate(struct d3d_light *light)
 
     TRACE("light %p.\n", light);
 
-    if (!light->active_viewport || !light->active_viewport->active_device) return;
+    if (!light->active_viewport || !light->active_viewport->active_device
+            || light->active_viewport->active_device->current_viewport != light->active_viewport)
+        return;
     device = light->active_viewport->active_device;
 
     light_update(light);
-    if (!(light->light.dwFlags & D3DLIGHT_ACTIVE))
-    {
+    if (light->light.dwFlags & D3DLIGHT_ACTIVE)
         IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->dwLightIndex, TRUE);
-        light->light.dwFlags |= D3DLIGHT_ACTIVE;
-    }
 }
 
 /*****************************************************************************
@@ -78,14 +77,13 @@ void light_deactivate(struct d3d_light *light)
 
     TRACE("light %p.\n", light);
 
-    if (!light->active_viewport || !light->active_viewport->active_device) return;
-    device = light->active_viewport->active_device;
+    if (!light->active_viewport || !light->active_viewport->active_device
+            || light->active_viewport->active_device->current_viewport != light->active_viewport)
+        return;
 
+    device = light->active_viewport->active_device;
     if (light->light.dwFlags & D3DLIGHT_ACTIVE)
-    {
         IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->dwLightIndex, FALSE);
-        light->light.dwFlags &= ~D3DLIGHT_ACTIVE;
-    }
 }
 
 static inline struct d3d_light *impl_from_IDirect3DLight(IDirect3DLight *iface)
@@ -195,13 +193,12 @@ static HRESULT WINAPI d3d_light_SetLight(IDirect3DLight *iface, D3DLIGHT *data)
 
     wined3d_mutex_lock();
     memcpy(&light->light, data, sizeof(*data));
-    if (!(light->light.dwFlags & D3DLIGHT_ACTIVE) && flags & D3DLIGHT_ACTIVE)
-        light_activate(light);
-    else if (light->light.dwFlags & D3DLIGHT_ACTIVE && !(flags & D3DLIGHT_ACTIVE))
+
+    if (!(flags & D3DLIGHT_ACTIVE))
         light_deactivate(light);
-    else if (flags & D3DLIGHT_ACTIVE)
-        light_update(light);
+
     light->light.dwFlags = flags;
+    light_activate(light);
     wined3d_mutex_unlock();
 
     return D3D_OK;
