@@ -1196,7 +1196,7 @@ static void test_device_iface_detail(void)
     SP_DEVICE_INTERFACE_DETAIL_DATA_A *detail;
     SP_DEVICE_INTERFACE_DATA iface = {sizeof(iface)};
     SP_DEVINFO_DATA device = {sizeof(device)};
-    DWORD size = 0, expectedsize;
+    DWORD size = 0, expected_size;
     HDEVINFO set;
     BOOL ret;
 
@@ -1235,37 +1235,57 @@ static void test_device_iface_detail(void)
     ok(!ret, "Expected failure.\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Got unexpected error %#lx.\n", GetLastError());
 
-    detail = heap_alloc(size);
-    expectedsize = FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_W, DevicePath[strlen(path) + 1]);
+    expected_size = FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_A, DevicePath[strlen(path) + 1]);
+    todo_wine ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
+    detail = heap_alloc(size * 2);
 
     detail->cbSize = 0;
     SetLastError(0xdeadbeef);
-    ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, size, &size, NULL);
+    size = 0xdeadbeef;
+    ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, expected_size * 2, &size, NULL);
     ok(!ret, "Expected failure.\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "Got unexpected error %#lx.\n", GetLastError());
+    ok(size == 0xdeadbeef, "Expected size %lu, got %lu.\n", expected_size, size);
 
     detail->cbSize = size;
     SetLastError(0xdeadbeef);
-    ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, size, &size, NULL);
+    size = 0xdeadbeef;
+    ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, expected_size * 2, &size, NULL);
     ok(!ret, "Expected failure.\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "Got unexpected error %#lx.\n", GetLastError());
+    ok(size == 0xdeadbeef, "Expected size %lu, got %lu.\n", expected_size, size);
 
     detail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_A);
     SetLastError(0xdeadbeef);
-    ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, size, &size, NULL);
+    size = 0xdeadbeef;
+    ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, expected_size, &size, NULL);
+    todo_wine ok(ret, "Failed to get interface detail, error %#lx.\n", GetLastError());
+    if (ret)
+        ok(!strcasecmp(path, detail->DevicePath), "Got unexpected path %s.\n", detail->DevicePath);
+    todo_wine ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
+
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, expected_size * 2, &size, NULL);
     ok(ret, "Failed to get interface detail, error %#lx.\n", GetLastError());
     ok(!strcasecmp(path, detail->DevicePath), "Got unexpected path %s.\n", detail->DevicePath);
+    todo_wine ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
 
+    expected_size = FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_W, DevicePath[strlen(path) + 1]);
+
+    size = 0xdeadbeef;
     ret = SetupDiGetDeviceInterfaceDetailW(set, &iface, NULL, 0, &size, NULL);
     ok(!ret, "Expected failure.\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Got unexpected error %#lx.\n", GetLastError());
-    ok(size == expectedsize, "Got unexpected size %ld.\n", size);
+    ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
 
     memset(&device, 0, sizeof(device));
     device.cbSize = sizeof(device);
+    size = 0xdeadbeef;
     ret = SetupDiGetDeviceInterfaceDetailW(set, &iface, NULL, 0, &size, &device);
     ok(!ret, "Expected failure.\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Got unexpected error %#lx.\n", GetLastError());
+    ok(size == expected_size, "Expected size %lu, got %lu.\n", expected_size, size);
     ok(IsEqualGUID(&device.ClassGuid, &guid), "Got unexpected class %s.\n", wine_dbgstr_guid(&device.ClassGuid));
 
     heap_free(detail);
