@@ -369,43 +369,33 @@ static ULONG WINAPI d3d1_AddRef(IDirect3D *iface)
 
 static void ddraw_destroy_swapchain(struct ddraw *ddraw)
 {
+    unsigned int i;
+    HRESULT hr;
+
     TRACE("Destroying the swapchain.\n");
 
     wined3d_swapchain_decref(ddraw->wined3d_swapchain);
     ddraw->wined3d_swapchain = NULL;
 
-    if (!(ddraw->flags & DDRAW_NO3D))
+    for (i = 0; i < ddraw->numConvertedDecls; ++i)
     {
-        UINT i;
-
-        for (i = 0; i < ddraw->numConvertedDecls; ++i)
-        {
-            wined3d_vertex_declaration_decref(ddraw->decls[i].decl);
-        }
-        heap_free(ddraw->decls);
-        ddraw->numConvertedDecls = 0;
-
-        if (FAILED(wined3d_device_uninit_3d(ddraw->wined3d_device)))
-        {
-            ERR("Failed to uninit 3D.\n");
-        }
-        else
-        {
-            /* Free the d3d window if one was created. */
-            if (ddraw->d3d_window && ddraw->d3d_window != ddraw->dest_window)
-            {
-                TRACE("Destroying the hidden render window %p.\n", ddraw->d3d_window);
-                DestroyWindow(ddraw->d3d_window);
-                ddraw->d3d_window = 0;
-            }
-        }
-
-        ddraw->flags &= ~DDRAW_D3D_INITIALIZED;
+        wined3d_vertex_declaration_decref(ddraw->decls[i].decl);
     }
-    else
+    heap_free(ddraw->decls);
+    ddraw->numConvertedDecls = 0;
+
+    if (FAILED(hr = wined3d_device_uninit_3d(ddraw->wined3d_device)))
+        ERR("Failed to uninit 3D, hr %#x.\n", hr);
+
+    /* Free the d3d window if one was created. */
+    if (ddraw->d3d_window && ddraw->d3d_window != ddraw->dest_window)
     {
-        wined3d_device_uninit_3d(ddraw->wined3d_device);
+        TRACE("Destroying the hidden render window %p.\n", ddraw->d3d_window);
+        DestroyWindow(ddraw->d3d_window);
+        ddraw->d3d_window = 0;
     }
+
+    ddraw->flags &= ~DDRAW_D3D_INITIALIZED;
 
     ddraw_set_swapchain_window(ddraw, NULL);
 
