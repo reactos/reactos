@@ -1930,11 +1930,10 @@ struct wined3d_context
     DWORD fixed_function_usage_map : 8; /* WINED3D_MAX_TEXTURES, 8 */
     DWORD lowest_disabled_stage : 4;    /* Max WINED3D_MAX_TEXTURES, 8 */
     DWORD use_immediate_mode_draw : 1;
-    DWORD rebind_fbo : 1;
     DWORD needs_set : 1;
     DWORD hdc_is_private : 1;
-
     DWORD hdc_has_format : 1;           /* only meaningful if hdc_is_private */
+
     DWORD update_shader_resource_bindings : 1;
     DWORD update_compute_shader_resource_bindings : 1;
     DWORD update_unordered_access_view_bindings : 1;
@@ -1946,7 +1945,7 @@ struct wined3d_context
     DWORD shader_update_mask : 6; /* WINED3D_SHADER_TYPE_COUNT, 6 */
     DWORD clip_distance_mask : 8; /* WINED3D_MAX_CLIP_DISTANCES, 8 */
     DWORD num_untracked_materials : 2;  /* Max value 2 */
-    DWORD padding : 8;
+    DWORD padding : 9;
 
     DWORD constant_update_mask;
     DWORD numbered_array_mask;
@@ -1973,16 +1972,6 @@ struct wined3d_context
     void *shader_backend_data;
     void *fragment_pipe_data;
 
-    /* FBOs */
-    UINT                    fbo_entry_count;
-    struct list             fbo_list;
-    struct list             fbo_destroy_list;
-    struct fbo_entry        *current_fbo;
-    GLuint                  fbo_read_binding;
-    GLuint                  fbo_draw_binding;
-    struct wined3d_rendertarget_info blit_targets[MAX_RENDER_TARGET_VIEWS];
-    DWORD draw_buffers_mask; /* Enabled draw buffers, 31 max. */
-
     struct wined3d_stream_info stream_info;
 
     /* Fences for GL_APPLE_flush_buffer_range */
@@ -2004,11 +1993,22 @@ struct wined3d_context_gl
 
     uint32_t fog_enabled : 1;
     uint32_t diffuse_attrib_to_1 : 1;
-    uint32_t padding : 30;
+    uint32_t rebind_fbo : 1;
+    uint32_t padding : 29;
 
     uint32_t default_attrib_value_set;
 
     GLenum *texture_type;
+
+    /* FBOs. */
+    unsigned int fbo_entry_count;
+    struct list fbo_list;
+    struct list fbo_destroy_list;
+    struct fbo_entry *current_fbo;
+    GLuint fbo_read_binding;
+    GLuint fbo_draw_binding;
+    struct wined3d_rendertarget_info blit_targets[MAX_RENDER_TARGET_VIEWS];
+    uint32_t draw_buffers_mask; /* Enabled draw buffers, 31 max. */
 
     /* Queries. */
     struct list occlusion_queries;
