@@ -1398,11 +1398,6 @@ void wined3d_context_cleanup(struct wined3d_context *context)
 
     if (context->valid)
     {
-        if (context->dummy_arbfp_prog)
-        {
-            GL_EXTCALL(glDeleteProgramsARB(1, &context->dummy_arbfp_prog));
-        }
-
         if (gl_info->supported[WINED3D_GL_PRIMITIVE_QUERY])
         {
             for (i = 0; i < context->free_so_statistics_query_count; ++i)
@@ -1482,7 +1477,31 @@ void wined3d_context_cleanup(struct wined3d_context *context)
 
 void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
 {
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    HGLRC restore_ctx;
+    HDC restore_dc;
+
+    restore_ctx = wglGetCurrentContext();
+    restore_dc = wglGetCurrentDC();
+
+    if (restore_ctx == context_gl->c.glCtx)
+        restore_ctx = NULL;
+    else if (context_gl->c.valid)
+        context_set_gl_context(&context_gl->c);
+
+    if (context_gl->c.valid)
+    {
+        if (context_gl->dummy_arbfp_prog)
+            GL_EXTCALL(glDeleteProgramsARB(1, &context_gl->dummy_arbfp_prog));
+
+        checkGLcall("context cleanup");
+    }
+
     heap_free(context_gl->texture_type);
+
+    context_restore_pixel_format(&context_gl->c);
+    if (restore_ctx)
+        context_restore_gl_context(gl_info, restore_dc, restore_ctx);
 
     wined3d_context_cleanup(&context_gl->c);
 }
@@ -2232,8 +2251,8 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
                 "!!ARBfp1.0\n"
                 "MOV result.color, fragment.color.primary;\n"
                 "END\n";
-        GL_EXTCALL(glGenProgramsARB(1, &context->dummy_arbfp_prog));
-        GL_EXTCALL(glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, context->dummy_arbfp_prog));
+        GL_EXTCALL(glGenProgramsARB(1, &context_gl->dummy_arbfp_prog));
+        GL_EXTCALL(glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, context_gl->dummy_arbfp_prog));
         GL_EXTCALL(glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
                 GL_PROGRAM_FORMAT_ASCII_ARB, strlen(dummy_program), dummy_program));
     }

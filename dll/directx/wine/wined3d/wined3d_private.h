@@ -2031,7 +2031,6 @@ struct wined3d_context
     GLint                   gl_fog_source;
     GLfloat                 fog_coord_value;
     GLfloat                 color[4], fogstart, fogend, fogcolor[4];
-    GLuint                  dummy_arbfp_prog;
 
     unsigned int viewport_count;
     unsigned int scissor_rect_count;
@@ -2047,6 +2046,8 @@ struct wined3d_context_gl
     struct wined3d_context c;
 
     GLenum *texture_type;
+
+    GLuint dummy_arbfp_prog;
 };
 
 static inline struct wined3d_context_gl *wined3d_context_gl(struct wined3d_context *context)
