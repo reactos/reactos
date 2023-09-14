@@ -11976,3 +11976,419 @@ const struct fragment_pipeline glsl_fragment_pipe =
     shader_glsl_color_fixup_supported,
     glsl_fragment_pipe_state_template,
 };
+
+struct glsl_blitter_args
+{
+    GLenum texture_type;
+    struct color_fixup_desc fixup;
+    unsigned short padding;
+};
+
+struct glsl_blitter_program
+{
+    struct wine_rb_entry entry;
+    struct glsl_blitter_args args;
+    GLuint id;
+};
+
+struct wined3d_glsl_blitter
+{
+    struct wined3d_blitter blitter;
+    struct wined3d_string_buffer_list string_buffers;
+    struct wine_rb_tree programs;
+};
+
+static int glsl_blitter_args_compare(const void *key, const struct wine_rb_entry *entry)
+{
+    const struct glsl_blitter_args *a = key;
+    const struct glsl_blitter_args *b = &WINE_RB_ENTRY_VALUE(entry, const struct glsl_blitter_program, entry)->args;
+
+    return memcmp(a, b, sizeof(*a));
+}
+
+/* Context activation is done by the caller. */
+static void glsl_free_blitter_program(struct wine_rb_entry *entry, void *ctx)
+{
+    struct glsl_blitter_program *program = WINE_RB_ENTRY_VALUE(entry, struct glsl_blitter_program, entry);
+    struct wined3d_context *context = ctx;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
+    GL_EXTCALL(glDeleteProgram(program->id));
+    checkGLcall("glDeleteProgram()");
+    heap_free(program);
+}
+
+/* Context activation is done by the caller. */
+static void glsl_blitter_destroy(struct wined3d_blitter *blitter, struct wined3d_context *context)
+{
+    struct wined3d_glsl_blitter *glsl_blitter;
+    struct wined3d_blitter *next;
+
+    if ((next = blitter->next))
+        next->ops->blitter_destroy(next, context);
+
+    glsl_blitter = CONTAINING_RECORD(blitter, struct wined3d_glsl_blitter, blitter);
+
+    wine_rb_destroy(&glsl_blitter->programs, glsl_free_blitter_program, context);
+    string_buffer_list_cleanup(&glsl_blitter->string_buffers);
+
+    heap_free(glsl_blitter);
+}
+
+static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter,
+        const struct wined3d_gl_info *gl_info, struct glsl_blitter_args *args)
+{
+    static const struct
+    {
+        GLenum texture_target;
+        const char texture_type[7];
+        const char texcoord_swizzle[4];
+    }
+    texture_data[] =
+    {
+        {GL_TEXTURE_2D, "2D", "xy"},
+        {GL_TEXTURE_CUBE_MAP, "Cube", "xyz"},
+        {GL_TEXTURE_RECTANGLE_ARB, "2DRect", "xy"},
+    };
+    static const char vshader_main[] =
+        "\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(pos, 0.0, 1.0);\n"
+        "    out_texcoord = texcoord;\n"
+        "}\n";
+    static const char fshader_header[] =
+        "\n"
+        "void main()\n"
+        "{\n";
+    GLuint program, vshader_id, fshader_id;
+    struct wined3d_string_buffer *buffer;
+    const char *tex_type, *swizzle, *ptr;
+    unsigned int i;
+
+    for (i = 0; i < ARRAY_SIZE(texture_data); ++i)
+    {
+        if (args->texture_type == texture_data[i].texture_target)
+        {
+            tex_type = texture_data[i].texture_type;
+            swizzle = texture_data[i].texcoord_swizzle;
+            break;
+        }
+    }
+    if (i == ARRAY_SIZE(texture_data))
+    {
+        FIXME("Unsupported texture type %#x.\n", args->texture_type);
+        return 0;
+    }
+
+    program = GL_EXTCALL(glCreateProgram());
+
+    vshader_id = GL_EXTCALL(glCreateShader(GL_VERTEX_SHADER));
+
+    buffer = string_buffer_get(&blitter->string_buffers);
+    shader_glsl_add_version_declaration(buffer, gl_info);
+    shader_addline(buffer, "%s vec2 pos;\n", get_attribute_keyword(gl_info));
+    shader_addline(buffer, "%s vec3 texcoord;\n", get_attribute_keyword(gl_info));
+    declare_out_varying(gl_info, buffer, FALSE, "vec3 out_texcoord;\n");
+    shader_addline(buffer, vshader_main);
+
+    ptr = buffer->buffer;
+    GL_EXTCALL(glShaderSource(vshader_id, 1, &ptr, NULL));
+    GL_EXTCALL(glAttachShader(program, vshader_id));
+    GL_EXTCALL(glDeleteShader(vshader_id));
+
+    fshader_id = GL_EXTCALL(glCreateShader(GL_FRAGMENT_SHADER));
+
+    string_buffer_clear(buffer);
+    shader_glsl_add_version_declaration(buffer, gl_info);
+    shader_addline(buffer, "uniform sampler%s sampler;\n", tex_type);
+    declare_in_varying(gl_info, buffer, FALSE, "vec3 out_texcoord;\n");
+    if (!needs_legacy_glsl_syntax(gl_info))
+        shader_addline(buffer, "out vec4 ps_out[1];\n");
+    shader_addline(buffer, fshader_header);
+    shader_addline(buffer, "    %s[0] = texture%s(sampler, out_texcoord.%s);\n",
+            get_fragment_output(gl_info), needs_legacy_glsl_syntax(gl_info) ? tex_type : "", swizzle);
+    shader_addline(buffer, "}\n");
+
+    ptr = buffer->buffer;
+    GL_EXTCALL(glShaderSource(fshader_id, 1, &ptr, NULL));
+    string_buffer_release(&blitter->string_buffers, buffer);
+    GL_EXTCALL(glAttachShader(program, fshader_id));
+    GL_EXTCALL(glDeleteShader(fshader_id));
+
+    GL_EXTCALL(glBindAttribLocation(program, 0, "pos"));
+    GL_EXTCALL(glBindAttribLocation(program, 1, "texcoord"));
+
+    if (!needs_legacy_glsl_syntax(gl_info))
+        GL_EXTCALL(glBindFragDataLocation(program, 0, "ps_out"));
+
+    GL_EXTCALL(glCompileShader(vshader_id));
+    print_glsl_info_log(gl_info, vshader_id, FALSE);
+    GL_EXTCALL(glCompileShader(fshader_id));
+    print_glsl_info_log(gl_info, fshader_id, FALSE);
+    GL_EXTCALL(glLinkProgram(program));
+    shader_glsl_validate_link(gl_info, program);
+    return program;
+}
+
+/* Context activation is done by the caller. */
+static GLuint glsl_blitter_get_program(struct wined3d_glsl_blitter *blitter,
+        struct wined3d_context *context, const struct wined3d_texture *texture)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct glsl_blitter_program *program;
+    struct glsl_blitter_args args;
+    struct wine_rb_entry *entry;
+
+    memset(&args, 0, sizeof(args));
+    args.texture_type = texture->target;
+    args.fixup = texture->resource.format->color_fixup;
+
+    if (is_complex_fixup(args.fixup))
+    {
+        FIXME("Complex fixups not supported.\n");
+        return 0;
+    }
+
+    if ((entry = wine_rb_get(&blitter->programs, &args)))
+    {
+        program = WINE_RB_ENTRY_VALUE(entry, struct glsl_blitter_program, entry);
+        return program->id;
+    }
+
+    if (!(program = heap_alloc(sizeof(*program))))
+    {
+        ERR("Failed to allocate blitter program memory.\n");
+        return 0;
+    }
+
+    program->args = args;
+    if (!(program->id = glsl_blitter_generate_program(blitter, gl_info, &args)))
+    {
+        WARN("Failed to generate blitter program.\n");
+        heap_free(program);
+        return 0;
+    }
+
+    if (wine_rb_put(&blitter->programs, &program->args, &program->entry) == -1)
+    {
+        ERR("Failed to store blitter program.\n");
+        GL_EXTCALL(glDeleteProgram(program->id));
+        heap_free(program);
+        return 0;
+    }
+
+    return program->id;
+}
+
+static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wined3d_context *context,
+        const struct wined3d_texture *src_texture, DWORD src_location,
+        const struct wined3d_texture *dst_texture, DWORD dst_location)
+{
+    const struct wined3d_resource *src_resource = &src_texture->resource;
+    const struct wined3d_resource *dst_resource = &dst_texture->resource;
+    const struct wined3d_format *src_format = src_resource->format;
+    const struct wined3d_format *dst_format = dst_resource->format;
+    BOOL decompress;
+
+    if (blit_op == WINED3D_BLIT_OP_RAW_BLIT && dst_format->id == src_format->id)
+    {
+        if (dst_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL))
+            blit_op = WINED3D_BLIT_OP_DEPTH_BLIT;
+        else
+            blit_op = WINED3D_BLIT_OP_COLOR_BLIT;
+    }
+
+    if (blit_op != WINED3D_BLIT_OP_COLOR_BLIT)
+    {
+        TRACE("Unsupported blit_op %#x.\n", blit_op);
+        return FALSE;
+    }
+
+    if (src_texture->target == GL_TEXTURE_2D_MULTISAMPLE
+            || dst_texture->target == GL_TEXTURE_2D_MULTISAMPLE
+            || src_texture->target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+            || dst_texture->target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY)
+    {
+        TRACE("Multi-sample textures not supported.\n");
+        return FALSE;
+    }
+
+    /* FIXME: We never want to blit from resources without
+     * WINED3D_RESOURCE_ACCESS_GPU, but that may be the only way to decompress
+     * compressed textures. We should probably create an explicit staging
+     * texture for this purpose instead of loading the resource into an
+     * invalid location. */
+    decompress = src_format && (src_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_COMPRESSED)
+            && !(dst_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_COMPRESSED);
+    if (!decompress && !(src_resource->access & dst_resource->access & WINED3D_RESOURCE_ACCESS_GPU))
+    {
+        TRACE("Source or destination resource does not have GPU access.\n");
+        return FALSE;
+    }
+
+    if (!is_identity_fixup(src_format->color_fixup))
+    {
+        TRACE("Source fixups are not supported.\n");
+        return FALSE;
+    }
+
+    if (!is_identity_fixup(dst_format->color_fixup))
+    {
+        TRACE("Destination fixups are not supported.\n");
+        return FALSE;
+    }
+
+    TRACE("Returning supported.\n");
+    return TRUE;
+}
+
+static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit_op op,
+        struct wined3d_context *context, struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx,
+        DWORD src_location, const RECT *src_rect, struct wined3d_texture *dst_texture,
+        unsigned int dst_sub_resource_idx, DWORD dst_location, const RECT *dst_rect,
+        const struct wined3d_color_key *colour_key, enum wined3d_texture_filter_type filter)
+{
+    struct wined3d_device *device = dst_texture->resource.device;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_glsl_blitter *glsl_blitter;
+    struct wined3d_blitter *next;
+    GLuint program_id;
+    RECT s, d;
+
+    TRACE("blitter %p, op %#x, context %p, src_texture %p, src_sub_resource_idx %u, src_location %s, src_rect %s, "
+            "dst_texture %p, dst_sub_resource_idx %u, dst_location %s, dst_rect %s, colour_key %p, filter %s.\n",
+            blitter, op, context, src_texture, src_sub_resource_idx, wined3d_debug_location(src_location),
+            wine_dbgstr_rect(src_rect), dst_texture, dst_sub_resource_idx, wined3d_debug_location(dst_location),
+            wine_dbgstr_rect(dst_rect), colour_key, debug_d3dtexturefiltertype(filter));
+
+    if (!glsl_blitter_supported(op, context, src_texture, src_location, dst_texture, dst_location))
+    {
+        if (!(next = blitter->next))
+        {
+            ERR("No blitter to handle blit op %#x.\n", op);
+            return dst_location;
+        }
+
+        TRACE("Forwarding to blitter %p.\n", next);
+        return next->ops->blitter_blit(next, op, context, src_texture, src_sub_resource_idx, src_location,
+                src_rect, dst_texture, dst_sub_resource_idx, dst_location, dst_rect, colour_key, filter);
+    }
+
+    glsl_blitter = CONTAINING_RECORD(blitter, struct wined3d_glsl_blitter, blitter);
+
+    if (wined3d_settings.offscreen_rendering_mode != ORM_FBO
+            && (src_texture->sub_resources[src_sub_resource_idx].locations
+            & (WINED3D_LOCATION_TEXTURE_RGB | WINED3D_LOCATION_DRAWABLE)) == WINED3D_LOCATION_DRAWABLE
+            && !wined3d_resource_is_offscreen(&src_texture->resource))
+    {
+        unsigned int src_level = src_sub_resource_idx % src_texture->level_count;
+
+        /* Without FBO blits transferring from the drawable to the texture is
+         * expensive, because we have to flip the data in sysmem. Since we can
+         * flip in the blitter, we don't actually need that flip anyway. So we
+         * use the surface's texture as scratch texture, and flip the source
+         * rectangle instead. */
+        texture2d_load_fb_texture(src_texture, src_sub_resource_idx, FALSE, context);
+
+        s = *src_rect;
+        s.top = wined3d_texture_get_level_height(src_texture, src_level) - s.top;
+        s.bottom = wined3d_texture_get_level_height(src_texture, src_level) - s.bottom;
+        src_rect = &s;
+    }
+    else
+    {
+        wined3d_texture_load(src_texture, context, FALSE);
+    }
+
+    context_apply_blit_state(context, device);
+
+    if (dst_location == WINED3D_LOCATION_DRAWABLE)
+    {
+        d = *dst_rect;
+        wined3d_texture_translate_drawable_coords(dst_texture, context->win_handle, &d);
+        dst_rect = &d;
+    }
+
+    if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
+    {
+        GLenum buffer;
+
+        if (dst_location == WINED3D_LOCATION_DRAWABLE)
+        {
+            TRACE("Destination texture %p is onscreen.\n", dst_texture);
+            buffer = wined3d_texture_get_gl_buffer(dst_texture);
+        }
+        else
+        {
+            TRACE("Destination texture %p is offscreen.\n", dst_texture);
+            buffer = GL_COLOR_ATTACHMENT0;
+        }
+        context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER,
+                &dst_texture->resource, dst_sub_resource_idx, NULL, 0, dst_location);
+        context_set_draw_buffer(context, buffer);
+        context_check_fbo_status(context, GL_DRAW_FRAMEBUFFER);
+        context_invalidate_state(context, STATE_FRAMEBUFFER);
+    }
+
+    if (!(program_id = glsl_blitter_get_program(glsl_blitter, context, src_texture)))
+    {
+        ERR("Failed to get blitter program.\n");
+        return dst_location;
+    }
+    GL_EXTCALL(glUseProgram(program_id));
+    context_draw_shaded_quad(context, src_texture, src_sub_resource_idx, src_rect, dst_rect, filter);
+    GL_EXTCALL(glUseProgram(0));
+
+    if (dst_texture->swapchain && (dst_texture->swapchain->front_buffer == dst_texture))
+        gl_info->gl_ops.gl.p_glFlush();
+
+    return dst_location;
+}
+
+static void glsl_blitter_clear(struct wined3d_blitter *blitter, struct wined3d_device *device,
+        unsigned int rt_count, const struct wined3d_fb_state *fb, unsigned int rect_count, const RECT *clear_rects,
+        const RECT *draw_rect, DWORD flags, const struct wined3d_color *color, float depth, DWORD stencil)
+{
+    struct wined3d_blitter *next;
+
+    if ((next = blitter->next))
+        next->ops->blitter_clear(next, device, rt_count, fb, rect_count,
+                clear_rects, draw_rect, flags, color, depth, stencil);
+}
+
+static const struct wined3d_blitter_ops glsl_blitter_ops =
+{
+    glsl_blitter_destroy,
+    glsl_blitter_clear,
+    glsl_blitter_blit,
+};
+
+void wined3d_glsl_blitter_create(struct wined3d_blitter **next, const struct wined3d_device *device)
+{
+    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    struct wined3d_glsl_blitter *blitter;
+
+    if (device->shader_backend != &glsl_shader_backend)
+        return;
+
+    if (!gl_info->supported[ARB_VERTEX_SHADER] || !gl_info->supported[ARB_FRAGMENT_SHADER])
+        return;
+
+    if (!gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+        return;
+
+    if (!(blitter = heap_alloc(sizeof(*blitter))))
+    {
+        ERR("Failed to allocate blitter.\n");
+        return;
+    }
+
+    TRACE("Created blitter %p.\n", blitter);
+
+    blitter->blitter.ops = &glsl_blitter_ops;
+    blitter->blitter.next = *next;
+    string_buffer_list_init(&blitter->string_buffers);
+    wine_rb_init(&blitter->programs, glsl_blitter_args_compare);
+    *next = &blitter->blitter;
+}

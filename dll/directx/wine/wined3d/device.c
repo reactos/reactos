@@ -1045,6 +1045,7 @@ static void wined3d_device_create_primary_opengl_context_cs(void *object)
     }
     wined3d_ffp_blitter_create(&device->blitter, &device->adapter->gl_info);
     wined3d_arbfp_blitter_create(&device->blitter, device);
+    wined3d_glsl_blitter_create(&device->blitter, device);
     wined3d_fbo_blitter_create(&device->blitter, &device->adapter->gl_info);
     wined3d_raw_blitter_create(&device->blitter, &device->adapter->gl_info);
 
