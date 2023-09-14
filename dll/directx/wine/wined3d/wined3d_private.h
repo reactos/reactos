@@ -258,7 +258,7 @@ static inline enum complex_fixup get_complex_fixup(struct color_fixup_desc fixup
 }
 
 /* Device caps */
-#define MAX_STREAMS                 16
+#define WINED3D_MAX_STREAMS         16
 #define MAX_TEXTURES                8
 #define MAX_FRAGMENT_SAMPLERS       16
 #define MAX_VERTEX_SAMPLERS         4
@@ -2919,7 +2919,7 @@ struct wined3d_state
 
     struct wined3d_vertex_declaration *vertex_declaration;
     struct wined3d_stream_output stream_output[WINED3D_MAX_STREAM_OUTPUT_BUFFERS];
-    struct wined3d_stream_state streams[MAX_STREAMS + 1 /* tesselated pseudo-stream */];
+    struct wined3d_stream_state streams[WINED3D_MAX_STREAMS + 1 /* tesselated pseudo-stream */];
     struct wined3d_buffer *index_buffer;
     enum wined3d_format_id index_format;
     unsigned int index_offset;
@@ -3014,7 +3014,7 @@ struct wined3d_gl_bo
 struct wined3d_stateblock_state
 {
     struct wined3d_vertex_declaration *vertex_declaration;
-    struct wined3d_stream_state streams[MAX_STREAMS + 1];
+    struct wined3d_stream_state streams[WINED3D_MAX_STREAMS + 1];
     struct wined3d_buffer *index_buffer;
     enum wined3d_format_id index_format;
     int base_vertex_index;
@@ -3614,8 +3614,8 @@ struct wined3d_vertex_declaration
 struct wined3d_saved_states
 {
     DWORD transform[(HIGHEST_TRANSFORMSTATE >> 5) + 1];
-    WORD streamSource;                          /* MAX_STREAMS, 16 */
-    WORD streamFreq;                            /* MAX_STREAMS, 16 */
+    WORD streamSource;                          /* WINED3D_MAX_STREAMS, 16 */
+    WORD streamFreq;                            /* WINED3D_MAX_STREAMS, 16 */
     DWORD renderState[(WINEHIGHEST_RENDER_STATE >> 5) + 1];
     DWORD textureState[MAX_TEXTURES];           /* WINED3D_HIGHEST_TEXTURE_STATE + 1, 18 */
     WORD samplerState[MAX_COMBINED_SAMPLERS];   /* WINED3D_HIGHEST_SAMPLER_STATE + 1, 14 */

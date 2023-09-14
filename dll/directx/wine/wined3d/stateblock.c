@@ -457,7 +457,7 @@ void state_unbind_resources(struct wined3d_state *state)
         }
     }
 
-    for (i = 0; i < MAX_STREAMS; ++i)
+    for (i = 0; i < WINED3D_MAX_STREAMS; ++i)
     {
         if ((buffer = state->streams[i].buffer))
         {
@@ -535,7 +535,7 @@ void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state)
         wined3d_vertex_declaration_decref(decl);
     }
 
-    for (i = 0; i < MAX_STREAMS; ++i)
+    for (i = 0; i < WINED3D_MAX_STREAMS; ++i)
     {
         if ((buffer = state->streams[i].buffer))
         {
@@ -1480,7 +1480,7 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
     state->blend_factor.b = 1.0f;
     state->blend_factor.a = 1.0f;
 
-    for (i = 0; i < MAX_STREAMS; ++i)
+    for (i = 0; i < WINED3D_MAX_STREAMS; ++i)
         state->streams[i].frequency = 1;
 }
 
@@ -1531,7 +1531,7 @@ static void stateblock_state_init_default(struct wined3d_stateblock_state *state
     state->blend_factor.b = 1.0f;
     state->blend_factor.a = 1.0f;
 
-    for (i = 0; i < MAX_STREAMS; ++i)
+    for (i = 0; i < WINED3D_MAX_STREAMS; ++i)
         state->streams[i].frequency = 1;
 }
 

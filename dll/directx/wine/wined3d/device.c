@@ -1370,7 +1370,7 @@ HRESULT CDECL wined3d_device_set_stream_source(struct wined3d_device *device, UI
     TRACE("device %p, stream_idx %u, buffer %p, offset %u, stride %u.\n",
             device, stream_idx, buffer, offset, stride);
 
-    if (stream_idx >= MAX_STREAMS)
+    if (stream_idx >= WINED3D_MAX_STREAMS)
     {
         WARN("Stream index %u out of range.\n", stream_idx);
         return WINED3DERR_INVALIDCALL;
@@ -1425,7 +1425,7 @@ HRESULT CDECL wined3d_device_get_stream_source(const struct wined3d_device *devi
     TRACE("device %p, stream_idx %u, buffer %p, offset %p, stride %p.\n",
             device, stream_idx, buffer, offset, stride);
 
-    if (stream_idx >= MAX_STREAMS)
+    if (stream_idx >= WINED3D_MAX_STREAMS)
     {
         WARN("Stream index %u out of range.\n", stream_idx);
         return WINED3DERR_INVALIDCALL;
@@ -5264,7 +5264,7 @@ void device_resource_released(struct wined3d_device *device, struct wined3d_reso
             break;
 
         case WINED3D_RTYPE_BUFFER:
-            for (i = 0; i < MAX_STREAMS; ++i)
+            for (i = 0; i < WINED3D_MAX_STREAMS; ++i)
             {
                 if (&device->state.streams[i].buffer->resource == resource)
                 {
