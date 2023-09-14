@@ -1926,7 +1926,6 @@ struct wined3d_context
     DWORD last_was_blit : 1;
     DWORD last_was_ckey : 1;
     DWORD fog_coord : 1;
-    DWORD fog_enabled : 1;
     DWORD current : 1;
     DWORD destroyed : 1;
     DWORD valid : 1;
@@ -1951,9 +1950,8 @@ struct wined3d_context
     DWORD transform_feedback_paused : 1;
     DWORD shader_update_mask : 6; /* WINED3D_SHADER_TYPE_COUNT, 6 */
     DWORD clip_distance_mask : 8; /* WINED3D_MAX_CLIP_DISTANCES, 8 */
-    DWORD last_was_dual_blend : 1;
     DWORD num_untracked_materials : 2;  /* Max value 2 */
-    DWORD padding : 7;
+    DWORD padding : 8;
 
     DWORD constant_update_mask;
     DWORD numbered_array_mask;
@@ -2027,11 +2025,6 @@ struct wined3d_context
     DWORD tex_unit_map[WINED3D_MAX_COMBINED_SAMPLERS];
     DWORD rev_tex_unit_map[MAX_GL_FRAGMENT_SAMPLERS + WINED3D_MAX_VERTEX_SAMPLERS];
 
-    /* Extension emulation */
-    GLint                   gl_fog_source;
-    GLfloat                 fog_coord_value;
-    GLfloat                 color[4], fogstart, fogend, fogcolor[4];
-
     unsigned int viewport_count;
     unsigned int scissor_rect_count;
 };
@@ -2045,7 +2038,15 @@ struct wined3d_context_gl
 {
     struct wined3d_context c;
 
+    uint32_t fog_enabled : 1;
+    uint32_t padding : 31;
+
     GLenum *texture_type;
+
+    /* Extension emulation. */
+    GLint gl_fog_source;
+    GLfloat fog_coord_value;
+    GLfloat colour[4], fog_start, fog_end, fog_colour[4];
 
     GLuint dummy_arbfp_prog;
 };
