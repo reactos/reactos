@@ -613,6 +613,12 @@ static HRESULT WINAPI d3d_execute_buffer_SetExecuteData(IDirect3DExecuteBuffer *
 
     TRACE("iface %p, data %p.\n", iface, data);
 
+    if (data->dwSize != sizeof(*data))
+    {
+        WARN("data->dwSize is %u, returning DDERR_INVALIDPARAMS.\n", data->dwSize);
+        return DDERR_INVALIDPARAMS;
+    }
+
     /* Skip past previous vertex data. */
     buffer->src_vertex_pos += buffer->data.dwVertexCount;
 
@@ -696,12 +702,11 @@ static HRESULT WINAPI d3d_execute_buffer_SetExecuteData(IDirect3DExecuteBuffer *
 static HRESULT WINAPI d3d_execute_buffer_GetExecuteData(IDirect3DExecuteBuffer *iface, D3DEXECUTEDATA *data)
 {
     struct d3d_execute_buffer *buffer = impl_from_IDirect3DExecuteBuffer(iface);
-    DWORD dwSize;
 
     TRACE("iface %p, data %p.\n", iface, data);
 
-    dwSize = data->dwSize;
-    memcpy(data, &buffer->data, dwSize);
+    /* Tests show that dwSize is ignored. */
+    memcpy(data, &buffer->data, sizeof(*data));
 
     if (TRACE_ON(ddraw))
     {
