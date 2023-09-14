@@ -6936,8 +6936,8 @@ static void arbfp_blitter_destroy(struct wined3d_blitter *blitter, struct wined3
     heap_free(arbfp_blitter);
 }
 
-static BOOL gen_planar_yuv_read(struct wined3d_string_buffer *buffer, const struct arbfp_blit_type *type,
-        char *luminance)
+static void gen_planar_yuv_read(struct wined3d_string_buffer *buffer,
+        const struct arbfp_blit_type *type, char *luminance)
 {
     char chroma;
     const char *tex, *texinstr = "TXP";
@@ -6985,13 +6985,12 @@ static BOOL gen_planar_yuv_read(struct wined3d_string_buffer *buffer, const stru
     shader_addline(buffer, "FLR texcrd.x, texcrd.x;\n");
     shader_addline(buffer, "ADD texcrd.x, texcrd.x, coef.y;\n");
 
-    /* Divide the x coordinate by 0.5 and get the fraction. This gives 0.25 and 0.75 for the
-     * even and odd pixels respectively
-     */
+    /* Multiply the x coordinate by 0.5 and get the fraction. This gives 0.25
+     * and 0.75 for the even and odd pixels respectively. */
     shader_addline(buffer, "MUL texcrd2, texcrd, coef.y;\n");
     shader_addline(buffer, "FRC texcrd2, texcrd2;\n");
 
-    /* Sample Pixel 1 */
+    /* Sample Pixel 1. */
     shader_addline(buffer, "%s luminance, texcrd, texture[0], %s;\n", texinstr, tex);
 
     /* Put the value into either of the chroma values */
@@ -7020,12 +7019,10 @@ static BOOL gen_planar_yuv_read(struct wined3d_string_buffer *buffer, const stru
 
     /* This gives the correctly filtered luminance value */
     shader_addline(buffer, "TEX luminance, fragment.texcoord[0], texture[0], %s;\n", tex);
-
-    return TRUE;
 }
 
-static BOOL gen_yv12_read(struct wined3d_string_buffer *buffer, const struct arbfp_blit_type *type,
-        char *luminance)
+static void gen_yv12_read(struct wined3d_string_buffer *buffer,
+        const struct arbfp_blit_type *type, char *luminance)
 {
     const char *tex;
     static const float yv12_coef[]
@@ -7087,7 +7084,6 @@ static BOOL gen_yv12_read(struct wined3d_string_buffer *buffer, const struct arb
      */
     if (type->res_type == WINED3D_GL_RES_TYPE_TEX_2D)
     {
-
         shader_addline(buffer, "RCP chroma.w, size.y;\n");
 
         shader_addline(buffer, "MUL texcrd2.y, texcrd.y, size.y;\n");
@@ -7095,7 +7091,7 @@ static BOOL gen_yv12_read(struct wined3d_string_buffer *buffer, const struct arb
         shader_addline(buffer, "FLR texcrd2.y, texcrd2.y;\n");
         shader_addline(buffer, "MAD texcrd.y, texcrd.y, yv12_coef.y, yv12_coef.x;\n");
 
-        /* Read odd lines from the right side(add size * 0.5 to the x coordinate */
+        /* Read odd lines from the right side (add size * 0.5 to the x coordinate). */
         shader_addline(buffer, "ADD texcrd2.x, texcrd2.y, yv12_coef.y;\n"); /* To avoid 0.5 == 0.5 comparisons */
         shader_addline(buffer, "FRC texcrd2.x, texcrd2.x;\n");
         shader_addline(buffer, "SGE texcrd2.x, texcrd2.x, coef.y;\n");
@@ -7109,11 +7105,11 @@ static BOOL gen_yv12_read(struct wined3d_string_buffer *buffer, const struct arb
     }
     else
     {
-        /* Read from [size - size+size/4] */
+        /* The y coordinate for V is in the range [size, size + size / 4). */
         shader_addline(buffer, "FLR texcrd.y, texcrd.y;\n");
         shader_addline(buffer, "MAD texcrd.y, texcrd.y, coef.w, size.y;\n");
 
-        /* Read odd lines from the right side(add size * 0.5 to the x coordinate */
+        /* Read odd lines from the right side (add size * 0.5 to the x coordinate). */
         shader_addline(buffer, "ADD texcrd2.x, texcrd.y, yv12_coef.y;\n"); /* To avoid 0.5 == 0.5 comparisons */
         shader_addline(buffer, "FRC texcrd2.x, texcrd2.x;\n");
         shader_addline(buffer, "SGE texcrd2.x, texcrd2.x, coef.y;\n");
@@ -7169,12 +7165,10 @@ static BOOL gen_yv12_read(struct wined3d_string_buffer *buffer, const struct arb
         shader_addline(buffer, "TEX luminance, texcrd, texture[0], %s;\n", tex);
     }
     *luminance = 'a';
-
-    return TRUE;
 }
 
-static BOOL gen_nv12_read(struct wined3d_string_buffer *buffer, const struct arbfp_blit_type *type,
-        char *luminance)
+static void gen_nv12_read(struct wined3d_string_buffer *buffer,
+        const struct arbfp_blit_type *type, char *luminance)
 {
     const char *tex;
     static const float nv12_coef[]
@@ -7250,7 +7244,7 @@ static BOOL gen_nv12_read(struct wined3d_string_buffer *buffer, const struct arb
     }
     else
     {
-        /* Read from [size - size+size/2] */
+        /* The y coordinate for chroma is in the range [size, size + size / 2). */
         shader_addline(buffer, "MAD texcrd.y, texcrd.y, coef.y, size.y;\n");
 
         shader_addline(buffer, "FLR texcrd.x, texcrd.x;\n");
@@ -7305,8 +7299,6 @@ static BOOL gen_nv12_read(struct wined3d_string_buffer *buffer, const struct arb
         shader_addline(buffer, "TEX luminance, texcrd, texture[0], %s;\n", tex);
     }
     *luminance = 'a';
-
-    return TRUE;
 }
 
 /* Context activation is done by the caller. */
@@ -7472,27 +7464,15 @@ static GLuint gen_yuv_shader(const struct wined3d_gl_info *gl_info, const struct
     {
         case COMPLEX_FIXUP_UYVY:
         case COMPLEX_FIXUP_YUY2:
-            if (!gen_planar_yuv_read(&buffer, type, &luminance_component))
-            {
-                string_buffer_free(&buffer);
-                return 0;
-            }
+            gen_planar_yuv_read(&buffer, type, &luminance_component);
             break;
 
         case COMPLEX_FIXUP_YV12:
-            if (!gen_yv12_read(&buffer, type, &luminance_component))
-            {
-                string_buffer_free(&buffer);
-                return 0;
-            }
+            gen_yv12_read(&buffer, type, &luminance_component);
             break;
 
         case COMPLEX_FIXUP_NV12:
-            if (!gen_nv12_read(&buffer, type, &luminance_component))
-            {
-                string_buffer_free(&buffer);
-                return 0;
-            }
+            gen_nv12_read(&buffer, type, &luminance_component);
             break;
 
         default:
