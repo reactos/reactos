@@ -561,14 +561,14 @@ static void wined3d_context_gl_reuse_fbo_entry(struct wined3d_context_gl *contex
 }
 
 /* Context activation is done by the caller. */
-static void context_destroy_fbo_entry(struct wined3d_context *context, struct fbo_entry *entry)
+static void wined3d_context_gl_destroy_fbo_entry(struct wined3d_context_gl *context_gl, struct fbo_entry *entry)
 {
     if (entry->id)
     {
         TRACE("Destroy FBO %u.\n", entry->id);
-        wined3d_context_gl_destroy_fbo(wined3d_context_gl(context), entry->id);
+        wined3d_context_gl_destroy_fbo(context_gl, entry->id);
     }
-    --context->fbo_entry_count;
+    --context_gl->c.fbo_entry_count;
     list_remove(&entry->entry);
     heap_free(entry);
 }
@@ -767,7 +767,7 @@ static void context_apply_fbo_state(struct wined3d_context *context, GLenum targ
 
     LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &context->fbo_destroy_list, struct fbo_entry, entry)
     {
-        context_destroy_fbo_entry(context, entry);
+        wined3d_context_gl_destroy_fbo_entry(context_gl, entry);
     }
 
     if (context->rebind_fbo)
@@ -1341,13 +1341,13 @@ void wined3d_context_cleanup(struct wined3d_context *context)
     LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &context->fbo_destroy_list, struct fbo_entry, entry)
     {
         if (!context->valid) entry->id = 0;
-        context_destroy_fbo_entry(context, entry);
+        wined3d_context_gl_destroy_fbo_entry(wined3d_context_gl(context), entry);
     }
 
     LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &context->fbo_list, struct fbo_entry, entry)
     {
         if (!context->valid) entry->id = 0;
-        context_destroy_fbo_entry(context, entry);
+        wined3d_context_gl_destroy_fbo_entry(wined3d_context_gl(context), entry);
     }
 
     context_restore_pixel_format(context);
