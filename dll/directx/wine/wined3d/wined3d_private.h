@@ -3261,6 +3261,7 @@ const char *wined3d_debug_resource_access(DWORD access) DECLSPEC_HIDDEN;
 const char *wined3d_debug_bind_flags(DWORD bind_flags) DECLSPEC_HIDDEN;
 const char *wined3d_debug_view_desc(const struct wined3d_view_desc *d,
         const struct wined3d_resource *resource) DECLSPEC_HIDDEN;
+const char *wined3d_debug_vkresult(VkResult vr) DECLSPEC_HIDDEN;
 
 static inline BOOL wined3d_resource_access_is_managed(unsigned int access)
 {

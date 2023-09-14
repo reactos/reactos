@@ -240,7 +240,7 @@ static HRESULT adapter_vk_create_device(struct wined3d *wined3d, const struct wi
 
     if ((vr = VK_CALL(vkCreateDevice(physical_device, &device_info, NULL, &vk_device))) < 0)
     {
-        WARN("Failed to create Vulkan device, vr %d.\n", vr);
+        WARN("Failed to create Vulkan device, vr %s.\n", wined3d_debug_vkresult(vr));
         vk_device = VK_NULL_HANDLE;
         hr = hresult_from_vk_result(vr);
         goto fail;
@@ -455,7 +455,7 @@ static BOOL enable_vulkan_instance_extensions(uint32_t *extension_count,
 
     if ((vr = pfn_vkEnumerateInstanceExtensionProperties(NULL, &count, NULL)) < 0)
     {
-        WARN("Failed to count instance extensions, vr %d.\n", vr);
+        WARN("Failed to count instance extensions, vr %s.\n", wined3d_debug_vkresult(vr));
         goto done;
     }
     if (!(extensions = heap_calloc(count, sizeof(*extensions))))
@@ -465,7 +465,7 @@ static BOOL enable_vulkan_instance_extensions(uint32_t *extension_count,
     }
     if ((vr = pfn_vkEnumerateInstanceExtensionProperties(NULL, &count, extensions)) < 0)
     {
-        WARN("Failed to enumerate extensions, vr %d.\n", vr);
+        WARN("Failed to enumerate extensions, vr %s.\n", wined3d_debug_vkresult(vr));
         goto done;
     }
 
@@ -548,7 +548,7 @@ static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
 
     if ((vr = VK_CALL(vkCreateInstance(&instance_info, NULL, &instance))) < 0)
     {
-        WARN("Failed to create Vulkan instance, vr %d.\n", vr);
+        WARN("Failed to create Vulkan instance, vr %s.\n", wined3d_debug_vkresult(vr));
         goto fail;
     }
 
@@ -596,7 +596,7 @@ static VkPhysicalDevice get_vulkan_physical_device(struct wined3d_vk_info *vk_in
 
     if ((vr = VK_CALL(vkEnumeratePhysicalDevices(vk_info->instance, &count, NULL))) < 0)
     {
-        WARN("Failed to enumerate physical devices, vr %d.\n", vr);
+        WARN("Failed to enumerate physical devices, vr %s.\n", wined3d_debug_vkresult(vr));
         return VK_NULL_HANDLE;
     }
     if (!count)
@@ -613,7 +613,7 @@ static VkPhysicalDevice get_vulkan_physical_device(struct wined3d_vk_info *vk_in
 
     if ((vr = VK_CALL(vkEnumeratePhysicalDevices(vk_info->instance, &count, physical_devices))) < 0)
     {
-        WARN("Failed to get physical devices, vr %d.\n", vr);
+        WARN("Failed to get physical devices, vr %s.\n", wined3d_debug_vkresult(vr));
         return VK_NULL_HANDLE;
     }
 
