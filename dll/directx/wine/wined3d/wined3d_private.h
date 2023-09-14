@@ -2792,6 +2792,10 @@ struct wined3d_adapter_ops
     HRESULT (*adapter_create_swapchain)(struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
             void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_swapchain **swapchain);
     void (*adapter_destroy_swapchain)(struct wined3d_swapchain *swapchain);
+    HRESULT (*adapter_create_buffer)(struct wined3d_device *device, const struct wined3d_buffer_desc *desc,
+            const struct wined3d_sub_resource_data *data, void *parent, const struct wined3d_parent_ops *parent_ops,
+            struct wined3d_buffer **buffer);
+    void (*adapter_destroy_buffer)(struct wined3d_buffer *buffer);
 };
 
 /* The adapter structure */
@@ -4127,6 +4131,7 @@ static inline struct wined3d_buffer *buffer_from_resource(struct wined3d_resourc
     return CONTAINING_RECORD(resource, struct wined3d_buffer, resource);
 }
 
+void wined3d_buffer_cleanup(struct wined3d_buffer *buffer) DECLSPEC_HIDDEN;
 DWORD wined3d_buffer_get_memory(struct wined3d_buffer *buffer,
         struct wined3d_bo_address *data, DWORD locations) DECLSPEC_HIDDEN;
 void wined3d_buffer_invalidate_location(struct wined3d_buffer *buffer, DWORD location) DECLSPEC_HIDDEN;
@@ -4139,6 +4144,10 @@ void wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_off
         struct wined3d_buffer *src_buffer, unsigned int src_offset, unsigned int size) DECLSPEC_HIDDEN;
 void wined3d_buffer_upload_data(struct wined3d_buffer *buffer, struct wined3d_context *context,
         const struct wined3d_box *box, const void *data) DECLSPEC_HIDDEN;
+
+HRESULT wined3d_buffer_no3d_init(struct wined3d_buffer *buffer_no3d, struct wined3d_device *device,
+        const struct wined3d_buffer_desc *desc, const struct wined3d_sub_resource_data *data,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
 struct wined3d_buffer_gl
 {
@@ -4153,6 +4162,26 @@ static inline struct wined3d_buffer_gl *wined3d_buffer_gl(struct wined3d_buffer 
 {
     return CONTAINING_RECORD(buffer, struct wined3d_buffer_gl, b);
 }
+
+void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *buffer_gl,
+        struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
+HRESULT wined3d_buffer_gl_init(struct wined3d_buffer_gl *buffer_gl, struct wined3d_device *device,
+        const struct wined3d_buffer_desc *desc, const struct wined3d_sub_resource_data *data,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
+
+struct wined3d_buffer_vk
+{
+    struct wined3d_buffer b;
+};
+
+static inline struct wined3d_buffer_vk *wined3d_buffer_vk(struct wined3d_buffer *buffer)
+{
+    return CONTAINING_RECORD(buffer, struct wined3d_buffer_vk, b);
+}
+
+HRESULT wined3d_buffer_vk_init(struct wined3d_buffer_vk *buffer_vk, struct wined3d_device *device,
+        const struct wined3d_buffer_desc *desc, const struct wined3d_sub_resource_data *data,
+        void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
 struct wined3d_rendertarget_view
 {

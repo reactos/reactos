@@ -4680,6 +4680,67 @@ static void adapter_gl_destroy_swapchain(struct wined3d_swapchain *swapchain)
     heap_free(swapchain);
 }
 
+static HRESULT adapter_gl_create_buffer(struct wined3d_device *device,
+        const struct wined3d_buffer_desc *desc, const struct wined3d_sub_resource_data *data,
+        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_buffer **buffer)
+{
+    struct wined3d_buffer_gl *buffer_gl;
+    HRESULT hr;
+
+    TRACE("device %p, desc %p, data %p, parent %p, parent_ops %p, buffer %p.\n",
+            device, desc, data, parent, parent_ops, buffer);
+
+    if (!(buffer_gl = heap_alloc_zero(sizeof(*buffer_gl))))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(hr = wined3d_buffer_gl_init(buffer_gl, device, desc, data, parent, parent_ops)))
+    {
+        WARN("Failed to initialise buffer, hr %#x.\n", hr);
+        heap_free(buffer_gl);
+        return hr;
+    }
+
+    TRACE("Created buffer %p.\n", buffer_gl);
+    *buffer = &buffer_gl->b;
+
+    return hr;
+}
+
+static void wined3d_buffer_gl_destroy_object(void *object)
+{
+    struct wined3d_buffer_gl *buffer_gl = object;
+    struct wined3d_context *context;
+
+    if (buffer_gl->buffer_object)
+    {
+        context = context_acquire(buffer_gl->b.resource.device, NULL, 0);
+        wined3d_buffer_gl_destroy_buffer_object(buffer_gl, wined3d_context_gl(context));
+        context_release(context);
+    }
+
+    heap_free(buffer_gl);
+}
+
+static void adapter_gl_destroy_buffer(struct wined3d_buffer *buffer)
+{
+    struct wined3d_buffer_gl *buffer_gl = wined3d_buffer_gl(buffer);
+    struct wined3d_device *device = buffer_gl->b.resource.device;
+    unsigned int swapchain_count = device->swapchain_count;
+
+    TRACE("buffer_gl %p.\n", buffer_gl);
+
+    /* Take a reference to the device, in case releasing the buffer would
+     * cause the device to be destroyed. However, swapchain resources don't
+     * take a reference to the device, and we wouldn't want to increment the
+     * refcount on a device that's in the process of being destroyed. */
+    if (swapchain_count)
+        wined3d_device_incref(device);
+    wined3d_buffer_cleanup(&buffer_gl->b);
+    wined3d_cs_destroy_object(device->cs, wined3d_buffer_gl_destroy_object, buffer_gl);
+    if (swapchain_count)
+        wined3d_device_decref(device);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
 {
     adapter_gl_destroy,
@@ -4693,6 +4754,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
     adapter_gl_uninit_3d,
     adapter_gl_create_swapchain,
     adapter_gl_destroy_swapchain,
+    adapter_gl_create_buffer,
+    adapter_gl_destroy_buffer,
 };
 
 static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,
