@@ -3885,7 +3885,6 @@ struct wined3d_rendertarget_view
     void *parent;
     const struct wined3d_parent_ops *parent_ops;
 
-    struct wined3d_gl_view gl_view;
     const struct wined3d_format *format;
     unsigned int format_flags;
     unsigned int sub_resource_idx;
@@ -3907,6 +3906,18 @@ void wined3d_rendertarget_view_prepare_location(struct wined3d_rendertarget_view
         struct wined3d_context *context, DWORD location) DECLSPEC_HIDDEN;
 void wined3d_rendertarget_view_validate_location(struct wined3d_rendertarget_view *view,
         DWORD location) DECLSPEC_HIDDEN;
+
+struct wined3d_rendertarget_view_gl
+{
+    struct wined3d_rendertarget_view v;
+    struct wined3d_gl_view gl_view;
+};
+
+static inline struct wined3d_rendertarget_view_gl *wined3d_rendertarget_view_gl(
+        struct wined3d_rendertarget_view *view)
+{
+    return CONTAINING_RECORD(view, struct wined3d_rendertarget_view_gl, v);
+}
 
 struct wined3d_shader_resource_view
 {

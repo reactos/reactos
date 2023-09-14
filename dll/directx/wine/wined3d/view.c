@@ -347,25 +347,25 @@ ULONG CDECL wined3d_rendertarget_view_incref(struct wined3d_rendertarget_view *v
     return refcount;
 }
 
-static void wined3d_rendertarget_view_destroy_object(void *object)
+static void wined3d_rendertarget_view_gl_destroy_object(void *object)
 {
-    struct wined3d_rendertarget_view *view = object;
-    struct wined3d_device *device = view->resource->device;
+    struct wined3d_rendertarget_view_gl *view_gl = object;
+    struct wined3d_device *device = view_gl->v.resource->device;
 
-    if (view->gl_view.name)
+    if (view_gl->gl_view.name)
     {
         const struct wined3d_gl_info *gl_info;
         struct wined3d_context *context;
 
         context = context_acquire(device, NULL, 0);
         gl_info = context->gl_info;
-        context_gl_resource_released(device, view->gl_view.name, FALSE);
-        gl_info->gl_ops.gl.p_glDeleteTextures(1, &view->gl_view.name);
+        context_gl_resource_released(device, view_gl->gl_view.name, FALSE);
+        gl_info->gl_ops.gl.p_glDeleteTextures(1, &view_gl->gl_view.name);
         checkGLcall("glDeleteTextures");
         context_release(context);
     }
 
-    heap_free(view);
+    heap_free(view_gl);
 }
 
 ULONG CDECL wined3d_rendertarget_view_decref(struct wined3d_rendertarget_view *view)
@@ -382,7 +382,8 @@ ULONG CDECL wined3d_rendertarget_view_decref(struct wined3d_rendertarget_view *v
         /* Call wined3d_object_destroyed() before releasing the resource,
          * since releasing the resource may end up destroying the parent. */
         view->parent_ops->wined3d_object_destroyed(view->parent);
-        wined3d_cs_destroy_object(device->cs, wined3d_rendertarget_view_destroy_object, view);
+        wined3d_cs_destroy_object(device->cs, wined3d_rendertarget_view_gl_destroy_object,
+                wined3d_rendertarget_view_gl(view));
         wined3d_resource_decref(resource);
     }
 
@@ -530,11 +531,11 @@ void wined3d_rendertarget_view_invalidate_location(struct wined3d_rendertarget_v
     wined3d_view_invalidate_location(view->resource, &view->desc, location);
 }
 
-static void wined3d_render_target_view_cs_init(void *object)
+static void wined3d_render_target_view_gl_cs_init(void *object)
 {
-    struct wined3d_rendertarget_view *view = object;
-    struct wined3d_resource *resource = view->resource;
-    const struct wined3d_view_desc *desc = &view->desc;
+    struct wined3d_rendertarget_view_gl *view_gl = object;
+    struct wined3d_resource *resource = view_gl->v.resource;
+    const struct wined3d_view_desc *desc = &view_gl->v.desc;
 
     if (resource->type == WINED3D_RTYPE_BUFFER)
     {
@@ -550,17 +551,17 @@ static void wined3d_render_target_view_cs_init(void *object)
         else
             depth_or_layer_count = texture_gl->t.layer_count;
 
-        if (resource->format->id != view->format->id
-                || (view->layer_count != 1 && view->layer_count != depth_or_layer_count))
+        if (resource->format->id != view_gl->v.format->id
+                || (view_gl->v.layer_count != 1 && view_gl->v.layer_count != depth_or_layer_count))
         {
             GLenum resource_class, view_class;
 
             resource_class = wined3d_format_gl(resource->format)->view_class;
-            view_class = wined3d_format_gl(view->format)->view_class;
+            view_class = wined3d_format_gl(view_gl->v.format)->view_class;
             if (resource_class != view_class)
             {
                 FIXME("Render target view not supported, resource format %s, view format %s.\n",
-                        debug_d3dformat(resource->format->id), debug_d3dformat(view->format->id));
+                        debug_d3dformat(resource->format->id), debug_d3dformat(view_gl->v.format->id));
                 return;
             }
             if (texture_gl->t.swapchain && texture_gl->t.swapchain->desc.backbuffer_count > 1)
@@ -569,7 +570,7 @@ static void wined3d_render_target_view_cs_init(void *object)
                 return;
             }
 
-            create_texture_view(&view->gl_view, texture_gl->target, desc, texture_gl, view->format);
+            create_texture_view(&view_gl->gl_view, texture_gl->target, desc, texture_gl, view_gl->v.format);
         }
     }
 }
@@ -617,8 +618,6 @@ static HRESULT wined3d_rendertarget_view_init(struct wined3d_rendertarget_view *
 
     wined3d_resource_incref(view->resource = resource);
 
-    wined3d_cs_init_object(resource->device->cs, wined3d_render_target_view_cs_init, view);
-
     return WINED3D_OK;
 }
 
@@ -626,7 +625,7 @@ HRESULT CDECL wined3d_rendertarget_view_create(const struct wined3d_view_desc *d
         struct wined3d_resource *resource, void *parent, const struct wined3d_parent_ops *parent_ops,
         struct wined3d_rendertarget_view **view)
 {
-    struct wined3d_rendertarget_view *object;
+    struct wined3d_rendertarget_view_gl *object;
     HRESULT hr;
 
     TRACE("desc %s, resource %p, parent %p, parent_ops %p, view %p.\n",
@@ -635,15 +634,17 @@ HRESULT CDECL wined3d_rendertarget_view_create(const struct wined3d_view_desc *d
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = wined3d_rendertarget_view_init(object, desc, resource, parent, parent_ops)))
+    if (FAILED(hr = wined3d_rendertarget_view_init(&object->v, desc, resource, parent, parent_ops)))
     {
         heap_free(object);
         WARN("Failed to initialise view, hr %#x.\n", hr);
         return hr;
     }
 
+    wined3d_cs_init_object(resource->device->cs, wined3d_render_target_view_gl_cs_init, object);
+
     TRACE("Created render target view %p.\n", object);
-    *view = object;
+    *view = &object->v;
 
     return hr;
 }

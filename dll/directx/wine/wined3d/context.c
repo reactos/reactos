@@ -3056,10 +3056,11 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
                 {
                     if (rts[i])
                     {
-                        context->blit_targets[i].gl_view = rts[i]->gl_view;
-                        context->blit_targets[i].resource = rts[i]->resource;
-                        context->blit_targets[i].sub_resource_idx = rts[i]->sub_resource_idx;
-                        context->blit_targets[i].layer_count = rts[i]->layer_count;
+                        struct wined3d_rendertarget_view_gl *rtv_gl = wined3d_rendertarget_view_gl(rts[i]);
+                        context->blit_targets[i].gl_view = rtv_gl->gl_view;
+                        context->blit_targets[i].resource = rtv_gl->v.resource;
+                        context->blit_targets[i].sub_resource_idx = rtv_gl->v.sub_resource_idx;
+                        context->blit_targets[i].layer_count = rtv_gl->v.layer_count;
                     }
                     if (rts[i] && rts[i]->format->id != WINED3DFMT_NULL)
                         rt_mask |= (1u << i);
@@ -3067,10 +3068,11 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
 
                 if (dsv)
                 {
-                    ds_info.gl_view = dsv->gl_view;
-                    ds_info.resource = dsv->resource;
-                    ds_info.sub_resource_idx = dsv->sub_resource_idx;
-                    ds_info.layer_count = dsv->layer_count;
+                    struct wined3d_rendertarget_view_gl *dsv_gl = wined3d_rendertarget_view_gl(dsv);
+                    ds_info.gl_view = dsv_gl->gl_view;
+                    ds_info.resource = dsv_gl->v.resource;
+                    ds_info.sub_resource_idx = dsv_gl->v.sub_resource_idx;
+                    ds_info.layer_count = dsv_gl->v.layer_count;
                 }
 
                 context_apply_fbo_state(context, GL_FRAMEBUFFER, context->blit_targets, &ds_info,
@@ -3201,6 +3203,7 @@ void context_state_fb(struct wined3d_context *context, const struct wined3d_stat
         }
         else
         {
+            const struct wined3d_rendertarget_view_gl *view_gl;
             unsigned int i;
 
             memset(context->blit_targets, 0, sizeof(context->blit_targets));
@@ -3209,21 +3212,23 @@ void context_state_fb(struct wined3d_context *context, const struct wined3d_stat
                 if (!fb->render_targets[i])
                     continue;
 
-                context->blit_targets[i].gl_view = fb->render_targets[i]->gl_view;
-                context->blit_targets[i].resource = fb->render_targets[i]->resource;
-                context->blit_targets[i].sub_resource_idx = fb->render_targets[i]->sub_resource_idx;
-                context->blit_targets[i].layer_count = fb->render_targets[i]->layer_count;
+                view_gl = wined3d_rendertarget_view_gl(fb->render_targets[i]);
+                context->blit_targets[i].gl_view = view_gl->gl_view;
+                context->blit_targets[i].resource = view_gl->v.resource;
+                context->blit_targets[i].sub_resource_idx = view_gl->v.sub_resource_idx;
+                context->blit_targets[i].layer_count = view_gl->v.layer_count;
 
                 if (!color_location)
-                    color_location = fb->render_targets[i]->resource->draw_binding;
+                    color_location = view_gl->v.resource->draw_binding;
             }
 
             if (fb->depth_stencil)
             {
-                ds_info.gl_view = fb->depth_stencil->gl_view;
-                ds_info.resource = fb->depth_stencil->resource;
-                ds_info.sub_resource_idx = fb->depth_stencil->sub_resource_idx;
-                ds_info.layer_count = fb->depth_stencil->layer_count;
+                view_gl = wined3d_rendertarget_view_gl(fb->depth_stencil);
+                ds_info.gl_view = view_gl->gl_view;
+                ds_info.resource = view_gl->v.resource;
+                ds_info.sub_resource_idx = view_gl->v.sub_resource_idx;
+                ds_info.layer_count = view_gl->v.layer_count;
             }
 
             context_apply_fbo_state(context, GL_FRAMEBUFFER, context->blit_targets, &ds_info,
