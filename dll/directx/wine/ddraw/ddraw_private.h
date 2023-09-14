@@ -21,6 +21,7 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <math.h>
 #define COBJMACROS
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION

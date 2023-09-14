@@ -27,9 +27,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "ddraw_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
