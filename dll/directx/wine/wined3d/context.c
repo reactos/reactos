@@ -4259,27 +4259,28 @@ struct wined3d_context *wined3d_context_gl_acquire(const struct wined3d_device *
     return context;
 }
 
-struct wined3d_context *context_reacquire(struct wined3d_device *device,
-        struct wined3d_context *context)
+struct wined3d_context_gl *wined3d_context_gl_reacquire(struct wined3d_context_gl *context_gl)
 {
     struct wined3d_context *acquired_context;
+    struct wined3d_device *device;
 
-    wined3d_from_cs(device->cs);
-
-    if (!context || context->tid != GetCurrentThreadId())
+    if (!context_gl || context_gl->c.tid != GetCurrentThreadId())
         return NULL;
 
-    if (context->current_rt.texture)
+    device = context_gl->c.device;
+    wined3d_from_cs(device->cs);
+
+    if (context_gl->c.current_rt.texture)
     {
-        wined3d_context_gl_activate(wined3d_context_gl(context),
-                context->current_rt.texture, context->current_rt.sub_resource_idx);
-        return context;
+        wined3d_context_gl_activate(context_gl, context_gl->c.current_rt.texture,
+                context_gl->c.current_rt.sub_resource_idx);
+        return context_gl;
     }
 
     acquired_context = context_acquire(device, NULL, 0);
-    if (acquired_context != context)
-        ERR("Acquired context %p instead of %p.\n", acquired_context, context);
-    return acquired_context;
+    if (acquired_context != &context_gl->c)
+        ERR("Acquired context %p instead of %p.\n", acquired_context, &context_gl->c);
+    return wined3d_context_gl(acquired_context);
 }
 
 void dispatch_compute(struct wined3d_device *device, const struct wined3d_state *state,
