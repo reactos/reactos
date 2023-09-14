@@ -4470,18 +4470,17 @@ static void find_arb_ps_compile_args(const struct wined3d_state *state,
 }
 
 static void find_arb_vs_compile_args(const struct wined3d_state *state,
-        const struct wined3d_context *context, const struct wined3d_shader *shader,
+        const struct wined3d_context_gl *context_gl, const struct wined3d_shader *shader,
         struct arb_vs_compile_args *args)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
+    const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     const struct wined3d_device *device = shader->device;
     const struct wined3d_adapter *adapter = device->adapter;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
     int i;
     WORD int_skip;
 
-    find_vs_compile_args(state, shader, context->stream_info.swizzle_map, &args->super, context);
+    find_vs_compile_args(state, shader, context_gl->c.stream_info.swizzle_map, &args->super, &context_gl->c);
 
     args->clip.boolclip_compare = 0;
     if (use_ps(state))
@@ -4496,7 +4495,7 @@ static void find_arb_vs_compile_args(const struct wined3d_state *state,
     {
         args->ps_signature = ~0;
         if (!d3d_info->vs_clipping && adapter->fragment_pipe == &arbfp_fragment_pipeline)
-            args->clip.boolclip.clip_texcoord = ffp_clip_emul(context) ? d3d_info->limits.ffp_blend_stages : 0;
+            args->clip.boolclip.clip_texcoord = ffp_clip_emul(&context_gl->c) ? d3d_info->limits.ffp_blend_stages : 0;
         /* Otherwise: Setting boolclip_compare set clip_texcoord to 0 */
     }
 
@@ -4632,7 +4631,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
         const struct wined3d_shader_signature *ps_input_sig;
 
         TRACE("Using vertex shader %p\n", vs);
-        find_arb_vs_compile_args(state, context, vs, &compile_args);
+        find_arb_vs_compile_args(state, context_gl, vs, &compile_args);
 
         /* Instead of searching for the signature in the signature list, read the one from the
          * current pixel shader. It's maybe not the shader where the signature came from, but it
