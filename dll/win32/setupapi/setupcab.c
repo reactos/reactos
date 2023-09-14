@@ -40,12 +40,12 @@ typedef struct
 
 static void * CDECL sc_cb_alloc(ULONG cb)
 {
-  return HeapAlloc(GetProcessHeap(), 0, cb);
+  return malloc(cb);
 }
 
 static void CDECL sc_cb_free(void *pv)
 {
-  HeapFree(GetProcessHeap(), 0, pv);
+  free(pv);
 }
 
 static INT_PTR CDECL sc_cb_open(char *pszFile, int oflag, int pmode)
