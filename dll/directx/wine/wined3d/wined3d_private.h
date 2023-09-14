@@ -2061,6 +2061,8 @@ static inline const struct wined3d_context_gl *wined3d_context_gl_const(const st
     return CONTAINING_RECORD(context, struct wined3d_context_gl, c);
 }
 
+void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl,
+        const struct wined3d_device *device) DECLSPEC_HIDDEN;
 void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl,
         GLenum target, GLuint name) DECLSPEC_HIDDEN;
 void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
@@ -2214,7 +2216,6 @@ struct wined3d_context *context_acquire(const struct wined3d_device *device,
 void context_alloc_fence(struct wined3d_context *context, struct wined3d_fence *fence) DECLSPEC_HIDDEN;
 void context_alloc_occlusion_query(struct wined3d_context *context,
         struct wined3d_occlusion_query *query) DECLSPEC_HIDDEN;
-void context_apply_blit_state(struct wined3d_context *context, const struct wined3d_device *device) DECLSPEC_HIDDEN;
 BOOL context_apply_clear_state(struct wined3d_context *context, const struct wined3d_state *state,
         UINT rt_count, const struct wined3d_fb_state *fb) DECLSPEC_HIDDEN;
 void context_apply_fbo_state_blit(struct wined3d_context *context, GLenum target,

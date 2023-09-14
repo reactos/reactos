@@ -889,7 +889,7 @@ static void texture2d_read_from_framebuffer(struct wined3d_texture *texture, uns
     }
     else
     {
-        context_apply_blit_state(context, device);
+        wined3d_context_gl_apply_blit_state(wined3d_context_gl(context), device);
     }
 
     /* Select the correct read buffer, and give some debug output.
@@ -1060,7 +1060,7 @@ static void fb_copy_to_texture_direct(struct wined3d_texture_gl *dst_texture, un
     context = context_acquire(device, &src_texture->t, src_sub_resource_idx);
     context_gl = wined3d_context_gl(context);
     gl_info = context->gl_info;
-    context_apply_blit_state(context, device);
+    wined3d_context_gl_apply_blit_state(context_gl, device);
     wined3d_texture_load(&dst_texture->t, context, FALSE);
 
     /* Bind the target texture */

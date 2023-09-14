@@ -13075,7 +13075,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         wined3d_texture_load(src_texture, context, FALSE);
     }
 
-    context_apply_blit_state(context, device);
+    wined3d_context_gl_apply_blit_state(wined3d_context_gl(context), device);
 
     if (dst_location == WINED3D_LOCATION_DRAWABLE)
     {

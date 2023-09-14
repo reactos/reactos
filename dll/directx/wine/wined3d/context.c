@@ -2749,15 +2749,19 @@ static DWORD context_generate_rt_mask_no_fbo(const struct wined3d_context *conte
 }
 
 /* Context activation is done by the caller. */
-void context_apply_blit_state(struct wined3d_context *context, const struct wined3d_device *device)
+void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, const struct wined3d_device *device)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_texture *rt = context->current_rt.texture;
+    struct wined3d_context *context = &context_gl->c;
+    const struct wined3d_gl_info *gl_info;
+    struct wined3d_texture *rt;
     DWORD rt_mask, *cur_mask;
     unsigned int sampler;
     SIZE rt_size;
 
     TRACE("Setting up context %p for blitting.\n", context);
+
+    gl_info = context->gl_info;
+    rt = context->current_rt.texture;
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
     {
@@ -2906,6 +2910,7 @@ static void context_apply_blit_projection(const struct wined3d_context *context,
 /* Context activation is done by the caller. */
 void context_apply_ffp_blit_state(struct wined3d_context *context, const struct wined3d_device *device)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     unsigned int i, sampler;
 
@@ -2919,14 +2924,14 @@ void context_apply_ffp_blit_state(struct wined3d_context *context, const struct 
         context_get_rt_size(context, &rt_size);
         if (context->blit_w != rt_size.cx || context->blit_h != rt_size.cy)
             context_apply_blit_projection(context, rt_size.cx, rt_size.cy);
-        context_apply_blit_state(context, device);
+        wined3d_context_gl_apply_blit_state(context_gl, device);
 
         checkGLcall("ffp blit state application");
         return;
     }
     context->last_was_ffp_blit = TRUE;
 
-    context_apply_blit_state(context, device);
+    wined3d_context_gl_apply_blit_state(context_gl, device);
 
     /* Disable all textures. The caller can then bind a texture it wants to blit
      * from. */
