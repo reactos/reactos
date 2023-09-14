@@ -4508,14 +4508,14 @@ static unsigned int get_stride_idx(const void *idx_data, unsigned int idx_size,
 }
 
 /* Context activation is done by the caller. */
-static void draw_primitive_immediate_mode(struct wined3d_context *context, const struct wined3d_state *state,
+static void draw_primitive_immediate_mode(struct wined3d_context_gl *context_gl, const struct wined3d_state *state,
         const struct wined3d_stream_info *si, const void *idx_data, unsigned int idx_size,
         int base_vertex_idx, unsigned int start_idx, unsigned int vertex_count, unsigned int instance_count)
 {
     const BYTE *position = NULL, *normal = NULL, *diffuse = NULL, *specular = NULL;
-    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
+    const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     unsigned int coord_idx, stride_idx, texture_idx, vertex_idx;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_stream_info_element *element;
     const BYTE *tex_coords[WINED3DDP_MAXTEXCOORD];
     unsigned int texture_unit, texture_stages;
@@ -4542,7 +4542,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context *context, const
     /* Immediate mode drawing can't make use of indices in a VBO - get the
      * data from the index buffer. */
     if (idx_size)
-        idx_data = wined3d_buffer_load_sysmem(state->index_buffer, context) + state->index_offset;
+        idx_data = wined3d_buffer_load_sysmem(state->index_buffer, &context_gl->c) + state->index_offset;
 
     ops = &d3d_info->ffp_attrib_ops;
 
@@ -4578,7 +4578,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context *context, const
     else
         gl_info->gl_ops.gl.p_glNormal3f(0.0f, 0.0f, 0.0f);
 
-    untracked_material_count = context->num_untracked_materials;
+    untracked_material_count = context_gl->c.num_untracked_materials;
     if (si->use_map & (1u << WINED3D_FFP_DIFFUSE))
     {
         element = &si->elements[WINED3D_FFP_DIFFUSE];
@@ -4636,7 +4636,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context *context, const
         if (!ps && !state->textures[texture_idx])
             continue;
 
-        texture_unit = context->tex_unit_map[texture_idx];
+        texture_unit = context_gl->c.tex_unit_map[texture_idx];
         if (texture_unit == WINED3D_UNMAPPED_STAGE)
             continue;
 
@@ -4690,7 +4690,8 @@ static void draw_primitive_immediate_mode(struct wined3d_context *context, const
                 wined3d_color_from_d3dcolor(&color, *(const DWORD *)ptr);
                 for (i = 0; i < untracked_material_count; ++i)
                 {
-                    gl_info->gl_ops.gl.p_glMaterialfv(GL_FRONT_AND_BACK, context->untracked_materials[i], &color.r);
+                    gl_info->gl_ops.gl.p_glMaterialfv(GL_FRONT_AND_BACK,
+                            context_gl->c.untracked_materials[i], &color.r);
                 }
             }
         }
@@ -4713,7 +4714,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context *context, const
             coord_idx = state->texture_states[texture_idx][WINED3D_TSS_TEXCOORD_INDEX];
             ptr = tex_coords[coord_idx] + (stride_idx * si->elements[WINED3D_FFP_TEXCOORD0 + coord_idx].stride);
             ops->texcoord[si->elements[WINED3D_FFP_TEXCOORD0 + coord_idx].format->emit_idx](
-                    GL_TEXTURE0_ARB + context->tex_unit_map[texture_idx], ptr);
+                    GL_TEXTURE0_ARB + context_gl->c.tex_unit_map[texture_idx], ptr);
         }
 
         if (position)
@@ -5004,7 +5005,7 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
             instance_count = context->instance_count;
 
         if (context->use_immediate_mode_draw || emulation)
-            draw_primitive_immediate_mode(context, state, stream_info, idx_data,
+            draw_primitive_immediate_mode(wined3d_context_gl(context), state, stream_info, idx_data,
                     idx_size, parameters->u.direct.base_vertex_idx,
                     parameters->u.direct.start_idx, parameters->u.direct.index_count, instance_count);
         else
