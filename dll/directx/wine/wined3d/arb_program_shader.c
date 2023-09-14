@@ -642,13 +642,11 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
  * worry about the Integers or Booleans
  */
 /* Context activation is done by the caller (state handler). */
-static void shader_arb_load_constants_internal(struct shader_arb_priv *priv,
-        struct wined3d_context *context, const struct wined3d_state *state,
-        BOOL usePixelShader, BOOL useVertexShader, BOOL from_shader_select)
+static void shader_arb_load_constants_internal(struct shader_arb_priv *priv, struct wined3d_context_gl *context_gl,
+        const struct wined3d_state *state, BOOL use_ps, BOOL use_vs, BOOL from_shader_select)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     if (!from_shader_select)
     {
@@ -661,7 +659,7 @@ static void shader_arb_load_constants_internal(struct shader_arb_priv *priv,
                 && (vshader->reg_maps.integer_constants & ~vshader->reg_maps.local_int_consts))))
         {
             TRACE("bool/integer vertex shader constants potentially modified, forcing shader reselection.\n");
-            shader_arb_select(priv, context, state);
+            shader_arb_select(priv, &context_gl->c, state);
         }
         else if (pshader
                 && (pshader->reg_maps.boolean_constants
@@ -669,11 +667,11 @@ static void shader_arb_load_constants_internal(struct shader_arb_priv *priv,
                 && (pshader->reg_maps.integer_constants & ~pshader->reg_maps.local_int_consts))))
         {
             TRACE("bool/integer pixel shader constants potentially modified, forcing shader reselection.\n");
-            shader_arb_select(priv, context, state);
+            shader_arb_select(priv, &context_gl->c, state);
         }
     }
 
-    if (context != priv->last_context)
+    if (&context_gl->c != priv->last_context)
     {
         memset(priv->vshader_const_dirty, 1,
                 sizeof(*priv->vshader_const_dirty) * d3d_info->limits.vs_uniform_count);
@@ -683,10 +681,10 @@ static void shader_arb_load_constants_internal(struct shader_arb_priv *priv,
                 sizeof(*priv->pshader_const_dirty) * d3d_info->limits.ps_uniform_count);
         priv->highest_dirty_ps_const = d3d_info->limits.ps_uniform_count;
 
-        priv->last_context = context;
+        priv->last_context = &context_gl->c;
     }
 
-    if (useVertexShader)
+    if (use_vs)
     {
         const struct wined3d_shader *vshader = state->shader[WINED3D_SHADER_TYPE_VERTEX];
         const struct arb_vs_compiled_shader *gl_shader = priv->compiled_vprog;
@@ -697,7 +695,7 @@ static void shader_arb_load_constants_internal(struct shader_arb_priv *priv,
         shader_arb_vs_local_constants(gl_shader, context_gl, state);
     }
 
-    if (usePixelShader)
+    if (use_ps)
     {
         const struct wined3d_shader *pshader = state->shader[WINED3D_SHADER_TYPE_PIXEL];
         const struct arb_ps_compiled_shader *gl_shader = priv->compiled_fprog;
@@ -708,7 +706,7 @@ static void shader_arb_load_constants_internal(struct shader_arb_priv *priv,
                 priv->highest_dirty_ps_const, state->ps_consts_f, priv->pshader_const_dirty);
         shader_arb_ps_local_constants(gl_shader, context_gl, state, rt_height);
 
-        if (context->constant_update_mask & WINED3D_SHADER_CONST_PS_NP2_FIXUP)
+        if (context_gl->c.constant_update_mask & WINED3D_SHADER_CONST_PS_NP2_FIXUP)
             shader_arb_load_np2fixup_constants(&gl_shader->np2fixup_info, gl_info, state);
     }
 }
@@ -716,10 +714,8 @@ static void shader_arb_load_constants_internal(struct shader_arb_priv *priv,
 static void shader_arb_load_constants(void *shader_priv, struct wined3d_context *context,
         const struct wined3d_state *state)
 {
-    BOOL vs = use_vs(state);
-    BOOL ps = use_ps(state);
-
-    shader_arb_load_constants_internal(shader_priv, context, state, ps, vs, FALSE);
+    shader_arb_load_constants_internal(shader_priv, wined3d_context_gl(context),
+            state, use_ps(state), use_vs(state), FALSE);
 }
 
 static void shader_arb_update_float_vertex_constants(struct wined3d_device *device, UINT start, UINT count)
@@ -4598,7 +4594,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
                 priv->pshader_const_dirty[i] = 1;
             }
             /* Also takes care of loading local constants */
-            shader_arb_load_constants_internal(shader_priv, context, state, TRUE, FALSE, TRUE);
+            shader_arb_load_constants_internal(shader_priv, context_gl, state, TRUE, FALSE, TRUE);
         }
         else
         {
