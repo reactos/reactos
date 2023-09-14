@@ -523,6 +523,7 @@ void state_unbind_resources(struct wined3d_state *state)
 
 void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state)
 {
+    struct wined3d_light_info *light, *cursor;
     struct wined3d_vertex_declaration *decl;
     struct wined3d_texture *texture;
     struct wined3d_buffer *buffer;
@@ -568,6 +569,15 @@ void wined3d_stateblock_state_cleanup(struct wined3d_stateblock_state *state)
         {
             state->textures[i] = NULL;
             wined3d_texture_decref(texture);
+        }
+    }
+
+    for (i = 0; i < LIGHTMAP_SIZE; ++i)
+    {
+        LIST_FOR_EACH_ENTRY_SAFE(light, cursor, &state->light_state.light_map[i], struct wined3d_light_info, entry)
+        {
+            list_remove(&light->entry);
+            heap_free(light);
         }
     }
 }
