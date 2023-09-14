@@ -3079,9 +3079,18 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct 
         gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS_ARB, &gl_max);
         gl_info->limits.glsl_ps_float_constants = gl_max / 4;
         TRACE("Max ARB_FRAGMENT_SHADER float constants: %u.\n", gl_info->limits.glsl_ps_float_constants);
-        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_VARYING_FLOATS_ARB, &gl_max);
-        gl_info->limits.glsl_varyings = gl_max;
-        TRACE("Max GLSL varyings: %u (%u 4 component varyings).\n", gl_max, gl_max / 4);
+        if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+        {
+            gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_VARYING_FLOATS_ARB, &gl_max);
+            gl_info->limits.glsl_varyings = gl_max;
+        }
+        else
+        {
+            gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_FRAGMENT_INPUT_COMPONENTS, &gl_max);
+            gl_info->limits.glsl_varyings = gl_max - 4;
+        }
+        TRACE("Max GLSL varyings: %u (%u 4 component varyings).\n", gl_info->limits.glsl_varyings,
+                gl_info->limits.glsl_varyings / 4);
 
         if (gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT])
         {
