@@ -2000,7 +2000,7 @@ out:
     return NULL;
 }
 
-BOOL wined3d_adapter_opengl_create_context(struct wined3d_context *context,
+BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
         struct wined3d_texture *target, const struct wined3d_format *ds_format)
 {
     struct wined3d_device *device = context->device;

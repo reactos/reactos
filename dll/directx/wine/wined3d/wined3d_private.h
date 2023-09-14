@@ -2657,7 +2657,7 @@ struct wined3d_adapter_ops
             struct wined3d_texture *target, const struct wined3d_format *ds_format);
 };
 
-BOOL wined3d_adapter_opengl_create_context(struct wined3d_context *context,
+BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
         struct wined3d_texture *target, const struct wined3d_format *ds_format) DECLSPEC_HIDDEN;
 
 /* The adapter structure */
@@ -2685,7 +2685,7 @@ struct wined3d_adapter
     const struct wined3d_adapter_ops *adapter_ops;
 };
 
-BOOL wined3d_adapter_opengl_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags) DECLSPEC_HIDDEN;
+BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags) DECLSPEC_HIDDEN;
 
 struct wined3d_caps_gl_ctx
 {

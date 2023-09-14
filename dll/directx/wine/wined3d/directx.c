@@ -2525,7 +2525,7 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int o
 
     if (wined3d_creation_flags & WINED3D_NO3D)
         return wined3d_adapter_no3d_init(adapter);
-    return wined3d_adapter_opengl_init(adapter, wined3d_creation_flags);
+    return wined3d_adapter_gl_init(adapter, wined3d_creation_flags);
 }
 
 static void STDMETHODCALLTYPE wined3d_null_wined3d_object_destroyed(void *parent) {}
