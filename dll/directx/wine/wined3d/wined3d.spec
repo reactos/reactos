@@ -37,7 +37,7 @@
 
 @ cdecl wined3d_device_acquire_focus_window(ptr ptr)
 @ cdecl wined3d_device_begin_scene(ptr)
-@ cdecl wined3d_device_begin_stateblock(ptr)
+@ cdecl wined3d_device_begin_stateblock(ptr ptr)
 @ cdecl wined3d_device_clear(ptr long ptr long ptr float long)
 @ cdecl wined3d_device_clear_rendertarget_view(ptr ptr ptr long ptr float long)
 @ cdecl wined3d_device_clear_unordered_access_view_uint(ptr ptr ptr)
@@ -55,7 +55,7 @@
 @ cdecl wined3d_device_draw_primitive_instanced(ptr long long long long)
 @ cdecl wined3d_device_draw_primitive_instanced_indirect(ptr ptr long)
 @ cdecl wined3d_device_end_scene(ptr)
-@ cdecl wined3d_device_end_stateblock(ptr ptr)
+@ cdecl wined3d_device_end_stateblock(ptr)
 @ cdecl wined3d_device_evict_managed_resources(ptr)
 @ cdecl wined3d_device_get_available_texture_mem(ptr)
 @ cdecl wined3d_device_get_base_vertex_index(ptr)

@@ -2253,7 +2253,7 @@ ULONG __cdecl wined3d_buffer_incref(struct wined3d_buffer *buffer);
 
 HRESULT __cdecl wined3d_device_acquire_focus_window(struct wined3d_device *device, HWND window);
 HRESULT __cdecl wined3d_device_begin_scene(struct wined3d_device *device);
-HRESULT __cdecl wined3d_device_begin_stateblock(struct wined3d_device *device);
+HRESULT __cdecl wined3d_device_begin_stateblock(struct wined3d_device *device, struct wined3d_stateblock **stateblock);
 HRESULT __cdecl wined3d_device_clear(struct wined3d_device *device, DWORD rect_count, const RECT *rects, DWORD flags,
         const struct wined3d_color *color, float z, DWORD stencil);
 HRESULT __cdecl wined3d_device_clear_rendertarget_view(struct wined3d_device *device,
@@ -2289,7 +2289,7 @@ void __cdecl wined3d_device_draw_primitive_instanced(struct wined3d_device *devi
 void __cdecl wined3d_device_draw_primitive_instanced_indirect(struct wined3d_device *device,
         struct wined3d_buffer *buffer, unsigned int offset);
 HRESULT __cdecl wined3d_device_end_scene(struct wined3d_device *device);
-HRESULT __cdecl wined3d_device_end_stateblock(struct wined3d_device *device, struct wined3d_stateblock **stateblock);
+HRESULT __cdecl wined3d_device_end_stateblock(struct wined3d_device *device);
 void __cdecl wined3d_device_evict_managed_resources(struct wined3d_device *device);
 UINT __cdecl wined3d_device_get_available_texture_mem(const struct wined3d_device *device);
 INT __cdecl wined3d_device_get_base_vertex_index(const struct wined3d_device *device);
