@@ -956,9 +956,9 @@ static BOOL wined3d_pipeline_query_ops_poll(struct wined3d_query *query, DWORD f
 }
 
 static void wined3d_pipeline_statistics_query_end(struct wined3d_pipeline_statistics_query *query,
-        struct wined3d_context *context)
+        struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     GL_EXTCALL(glEndQuery(GL_VERTICES_SUBMITTED_ARB));
     GL_EXTCALL(glEndQuery(GL_PRIMITIVES_SUBMITTED_ARB));
@@ -990,7 +990,7 @@ static BOOL wined3d_pipeline_query_ops_issue(struct wined3d_query *query, DWORD 
         {
             if ((context_gl = wined3d_context_gl_reacquire(pq->context_gl)))
             {
-                wined3d_pipeline_statistics_query_end(pq, &context_gl->c);
+                wined3d_pipeline_statistics_query_end(pq, context_gl);
             }
             else
             {
@@ -1031,7 +1031,7 @@ static BOOL wined3d_pipeline_query_ops_issue(struct wined3d_query *query, DWORD 
         {
             if ((context_gl = wined3d_context_gl_reacquire(pq->context_gl)))
             {
-                wined3d_pipeline_statistics_query_end(pq, &context_gl->c);
+                wined3d_pipeline_statistics_query_end(pq, context_gl);
                 context_release(&context_gl->c);
                 poll = TRUE;
             }
