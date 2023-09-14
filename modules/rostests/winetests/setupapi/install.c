@@ -1317,6 +1317,96 @@ static void run_queue_(unsigned int line, HSPFILEQ queue, PSP_FILE_CALLBACK_A cb
     ok_(__FILE__,line)(ret, "Failed to close queue, error %#x.\n", GetLastError());
 }
 
+static void test_install_file(void)
+{
+    static const char inf_data[] = "[Version]\n"
+            "Signature=\"$Chicago$\"\n"
+            "[section1]\n"
+            "one.txt\n"
+            "two.txt\n"
+            "three.txt\n"
+            "[SourceDisksNames]\n"
+            "1=heis\n"
+            "2=duo,,,alpha\n"
+            "[SourceDisksFiles]\n"
+            "one.txt=1\n"
+            "two.txt=1,beta\n"
+            "three.txt=2\n"
+            "[DestinationDirs]\n"
+            "DefaultDestDir=40000,dst\n";
+
+    char path[MAX_PATH];
+    INFCONTEXT infctx;
+    HINF hinf;
+    BOOL ret;
+
+    create_inf_file(inffile, inf_data);
+
+    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    hinf = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
+    ok(hinf != INVALID_HANDLE_VALUE, "Failed to open INF file, error %#x.\n", GetLastError());
+
+    ret = CreateDirectoryA("src", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+    ret = CreateDirectoryA("src/alpha", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+    ret = CreateDirectoryA("src/beta", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+    ret = CreateDirectoryA("dst", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+    create_file("src/one.txt");
+    create_file("src/beta/two.txt");
+    create_file("src/alpha/three.txt");
+
+    ret = SetupFindFirstLineA(hinf, "section1", "one.txt", &infctx);
+    ok(ret, "Failed to find line.\n");
+    SetLastError(0xdeadbeef);
+    ret = SetupInstallFileA(hinf, &infctx, "one.txt", "src", "one.txt", 0, NULL, NULL);
+    ok(ret, "Expected success.\n");
+    ok(GetLastError() == ERROR_SUCCESS, "Got unexpected error %#x.\n", GetLastError());
+    todo_wine ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+
+    SetLastError(0xdeadbeef);
+    ret = SetupInstallFileA(hinf, &infctx, "one.txt", "src", "one.txt", SP_COPY_REPLACEONLY, NULL, NULL);
+    todo_wine ok(!ret, "Expected failure.\n");
+    todo_wine ok(GetLastError() == ERROR_SUCCESS, "Got unexpected error %#x.\n", GetLastError());
+    ok(!file_exists("dst/one.txt"), "Destination file should not exist.\n");
+
+    ret = SetupFindFirstLineA(hinf, "section1", "two.txt", &infctx);
+    ok(ret, "Failed to find line.\n");
+    SetLastError(0xdeadbeef);
+    ret = SetupInstallFileA(hinf, &infctx, "two.txt", "src", "two.txt", 0, NULL, NULL);
+    todo_wine ok(ret, "Expected success.\n");
+    todo_wine ok(GetLastError() == ERROR_SUCCESS, "Got unexpected error %#x.\n", GetLastError());
+    todo_wine ok(delete_file("dst/two.txt"), "Destination file should exist.\n");
+
+    ret = SetupFindFirstLineA(hinf, "section1", "three.txt", &infctx);
+    ok(ret, "Failed to find line.\n");
+    SetLastError(0xdeadbeef);
+    ret = SetupInstallFileA(hinf, &infctx, "three.txt", "src", "three.txt", 0, NULL, NULL);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Got unexpected error %#x.\n", GetLastError());
+    ok(!file_exists("dst/three.txt"), "Destination file should not exist.\n");
+
+    ret = SetupFindFirstLineA(hinf, "section1", "three.txt", &infctx);
+    ok(ret, "Failed to find line.\n");
+    SetLastError(0xdeadbeef);
+    ret = SetupInstallFileA(hinf, &infctx, "three.txt", "src/alpha", "three.txt", 0, NULL, NULL);
+    ok(ret, "Expected success.\n");
+    ok(GetLastError() == ERROR_SUCCESS, "Got unexpected error %#x.\n", GetLastError());
+    todo_wine ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
+
+    SetupCloseInfFile(hinf);
+    delete_file("src/one.txt");
+    delete_file("src/beta/two.txt");
+    delete_file("src/beta/");
+    delete_file("src/alpha/three.txt");
+    delete_file("src/alpha/");
+    delete_file("src/");
+    delete_file("dst/");
+    ok(delete_file(inffile), "Failed to delete INF file.\n");
+}
+
 static void test_need_media(void)
 {
     static const char inf_data[] = "[Version]\n"
@@ -1857,6 +1947,7 @@ START_TEST(install)
     test_install_files_queue();
     test_need_media();
     test_close_queue();
+    test_install_file();
 
     UnhookWindowsHookEx(hhook);
 
