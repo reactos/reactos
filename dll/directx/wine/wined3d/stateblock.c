@@ -214,7 +214,7 @@ static void stateblock_savedstates_set_all(struct wined3d_saved_states *states, 
     states->streamSource = 0xffff;
     states->streamFreq = 0xffff;
     states->textures = 0xfffff;
-    stateblock_set_bits(states->transform, HIGHEST_TRANSFORMSTATE + 1);
+    stateblock_set_bits(states->transform, WINED3D_HIGHEST_TRANSFORM_STATE + 1);
     stateblock_set_bits(states->renderState, WINEHIGHEST_RENDER_STATE + 1);
     for (i = 0; i < WINED3D_MAX_TEXTURES; ++i) states->textureState[i] = 0x3ffff;
     for (i = 0; i < WINED3D_MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = 0x3ffe;
@@ -300,7 +300,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
         }
     }
 
-    for (i = 0; i <= HIGHEST_TRANSFORMSTATE >> 5; ++i)
+    for (i = 0; i <= WINED3D_HIGHEST_TRANSFORM_STATE >> 5; ++i)
     {
         DWORD map = stateblock->changed.transform[i];
         for (j = 0; map; map >>= 1, ++j)

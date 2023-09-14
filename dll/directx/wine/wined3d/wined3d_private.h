@@ -1453,7 +1453,7 @@ static inline void wined3d_color_from_d3dcolor(struct wined3d_color *wined3d_col
     wined3d_color->a = D3DCOLOR_B_A(d3d_color) / 255.0f;
 }
 
-#define HIGHEST_TRANSFORMSTATE WINED3D_TS_WORLD_MATRIX(255) /* Highest value in wined3d_transform_state. */
+#define WINED3D_HIGHEST_TRANSFORM_STATE WINED3D_TS_WORLD_MATRIX(255) /* Highest value in wined3d_transform_state. */
 
 void wined3d_check_gl_call(const struct wined3d_gl_info *gl_info,
         const char *file, unsigned int line, const char *name) DECLSPEC_HIDDEN;
@@ -2948,7 +2948,7 @@ struct wined3d_state
     DWORD sampler_states[WINED3D_MAX_COMBINED_SAMPLERS][WINED3D_HIGHEST_SAMPLER_STATE + 1];
     DWORD texture_states[WINED3D_MAX_TEXTURES][WINED3D_HIGHEST_TEXTURE_STATE + 1];
 
-    struct wined3d_matrix transforms[HIGHEST_TRANSFORMSTATE + 1];
+    struct wined3d_matrix transforms[WINED3D_HIGHEST_TRANSFORM_STATE + 1];
     struct wined3d_vec4 clip_planes[WINED3D_MAX_CLIP_DISTANCES];
     struct wined3d_material material;
     struct wined3d_viewport viewports[WINED3D_MAX_VIEWPORTS];
@@ -3036,7 +3036,7 @@ struct wined3d_stateblock_state
     DWORD sampler_states[WINED3D_MAX_COMBINED_SAMPLERS][WINED3D_HIGHEST_SAMPLER_STATE + 1];
     DWORD texture_states[WINED3D_MAX_TEXTURES][WINED3D_HIGHEST_TEXTURE_STATE + 1];
 
-    struct wined3d_matrix transforms[HIGHEST_TRANSFORMSTATE + 1];
+    struct wined3d_matrix transforms[WINED3D_HIGHEST_TRANSFORM_STATE + 1];
     struct wined3d_vec4 clip_planes[WINED3D_MAX_CLIP_DISTANCES];
     struct wined3d_material material;
     struct wined3d_viewport viewport;
@@ -3613,7 +3613,7 @@ struct wined3d_vertex_declaration
 
 struct wined3d_saved_states
 {
-    DWORD transform[(HIGHEST_TRANSFORMSTATE >> 5) + 1];
+    DWORD transform[(WINED3D_HIGHEST_TRANSFORM_STATE >> 5) + 1];
     WORD streamSource;                          /* WINED3D_MAX_STREAMS, 16 */
     WORD streamFreq;                            /* WINED3D_MAX_STREAMS, 16 */
     DWORD renderState[(WINEHIGHEST_RENDER_STATE >> 5) + 1];
@@ -3655,7 +3655,7 @@ struct wined3d_stateblock
     /* Contained state management */
     DWORD                     contained_render_states[WINEHIGHEST_RENDER_STATE + 1];
     unsigned int              num_contained_render_states;
-    DWORD                     contained_transform_states[HIGHEST_TRANSFORMSTATE + 1];
+    DWORD                     contained_transform_states[WINED3D_HIGHEST_TRANSFORM_STATE + 1];
     unsigned int              num_contained_transform_states;
     DWORD                     contained_vs_consts_i[WINED3D_MAX_CONSTS_I];
     unsigned int              num_contained_vs_consts_i;

@@ -1552,7 +1552,7 @@ void CDECL wined3d_device_multiply_transform(struct wined3d_device *device,
 
     TRACE("device %p, state %s, matrix %p.\n", device, debug_d3dtstype(state), matrix);
 
-    if (state > HIGHEST_TRANSFORMSTATE)
+    if (state > WINED3D_HIGHEST_TRANSFORM_STATE)
     {
         WARN("Unhandled transform state %#x.\n", state);
         return;
