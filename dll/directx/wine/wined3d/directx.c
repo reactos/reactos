@@ -2205,9 +2205,9 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                                                 WINED3DPTFILTERCAPS_MAGFLINEAR;
     caps->VertexTextureFilterCaps             = 0;
 
-    adapter->shader_backend->shader_get_caps(&adapter->gl_info, &shader_caps);
-    adapter->fragment_pipe->get_caps(&adapter->gl_info, &fragment_caps);
-    adapter->vertex_pipe->vp_get_caps(&adapter->gl_info, &vertex_caps);
+    adapter->shader_backend->shader_get_caps(gl_info, &shader_caps);
+    adapter->fragment_pipe->get_caps(gl_info, &fragment_caps);
+    adapter->vertex_pipe->vp_get_caps(gl_info, &vertex_caps);
 
     /* Add shader misc caps. Only some of them belong to the shader parts of the pipeline */
     caps->PrimitiveMiscCaps |= fragment_caps.PrimitiveMiscCaps;
@@ -2243,19 +2243,19 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
         caps->VS20Caps.caps = WINED3DVS20CAPS_PREDICATION;
         /* VS 3.0 requires MAX_DYNAMICFLOWCONTROLDEPTH (24) */
         caps->VS20Caps.dynamic_flow_control_depth = WINED3DVS20_MAX_DYNAMICFLOWCONTROLDEPTH;
-        caps->VS20Caps.temp_count = max(32, adapter->gl_info.limits.arb_vs_temps);
+        caps->VS20Caps.temp_count = max(32, gl_info->limits.arb_vs_temps);
         /* level of nesting in loops / if-statements; VS 3.0 requires MAX (4) */
         caps->VS20Caps.static_flow_control_depth = WINED3DVS20_MAX_STATICFLOWCONTROLDEPTH;
 
         caps->MaxVShaderInstructionsExecuted    = 65535; /* VS 3.0 needs at least 65535, some cards even use 2^32-1 */
-        caps->MaxVertexShader30InstructionSlots = max(512, adapter->gl_info.limits.arb_vs_instructions);
+        caps->MaxVertexShader30InstructionSlots = max(512, gl_info->limits.arb_vs_instructions);
         caps->VertexTextureFilterCaps = WINED3DPTFILTERCAPS_MINFPOINT | WINED3DPTFILTERCAPS_MAGFPOINT;
     }
     else if (caps->VertexShaderVersion == 2)
     {
         caps->VS20Caps.caps = 0;
         caps->VS20Caps.dynamic_flow_control_depth = WINED3DVS20_MIN_DYNAMICFLOWCONTROLDEPTH;
-        caps->VS20Caps.temp_count = max(12, adapter->gl_info.limits.arb_vs_temps);
+        caps->VS20Caps.temp_count = max(12, gl_info->limits.arb_vs_temps);
         caps->VS20Caps.static_flow_control_depth = 1;
 
         caps->MaxVShaderInstructionsExecuted    = 65535;
@@ -2289,7 +2289,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                 WINED3DPS20CAPS_NOTEXINSTRUCTIONLIMIT;
         /* PS 3.0 requires MAX_DYNAMICFLOWCONTROLDEPTH (24) */
         caps->PS20Caps.dynamic_flow_control_depth = WINED3DPS20_MAX_DYNAMICFLOWCONTROLDEPTH;
-        caps->PS20Caps.temp_count = max(32, adapter->gl_info.limits.arb_ps_temps);
+        caps->PS20Caps.temp_count = max(32, gl_info->limits.arb_ps_temps);
         /* PS 3.0 requires MAX_STATICFLOWCONTROLDEPTH (4) */
         caps->PS20Caps.static_flow_control_depth = WINED3DPS20_MAX_STATICFLOWCONTROLDEPTH;
         /* PS 3.0 requires MAX_NUMINSTRUCTIONSLOTS (512) */
@@ -2297,14 +2297,14 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
 
         caps->MaxPShaderInstructionsExecuted = 65535;
         caps->MaxPixelShader30InstructionSlots = max(WINED3DMIN30SHADERINSTRUCTIONS,
-                adapter->gl_info.limits.arb_ps_instructions);
+                gl_info->limits.arb_ps_instructions);
     }
     else if(caps->PixelShaderVersion == 2)
     {
         /* Below we assume PS2.0 specs, not extended 2.0a(GeforceFX)/2.0b(Radeon R3xx) ones */
         caps->PS20Caps.caps = 0;
         caps->PS20Caps.dynamic_flow_control_depth = 0; /* WINED3DVS20_MIN_DYNAMICFLOWCONTROLDEPTH = 0 */
-        caps->PS20Caps.temp_count = max(12, adapter->gl_info.limits.arb_ps_temps);
+        caps->PS20Caps.temp_count = max(12, gl_info->limits.arb_ps_temps);
         caps->PS20Caps.static_flow_control_depth = WINED3DPS20_MIN_STATICFLOWCONTROLDEPTH; /* Minimum: 1 */
         /* Minimum number (64 ALU + 32 Texture), a GeforceFX uses 512 */
         caps->PS20Caps.instruction_slot_count = WINED3DPS20_MIN_NUMINSTRUCTIONSLOTS;
