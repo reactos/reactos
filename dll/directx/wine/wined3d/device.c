@@ -839,7 +839,7 @@ static void wined3d_device_gl_destroy_dummy_textures(struct wined3d_device_gl *d
 }
 
 /* Context activation is done by the caller. */
-static void create_default_samplers(struct wined3d_device *device, struct wined3d_context *context)
+void wined3d_device_create_default_samplers(struct wined3d_device *device, struct wined3d_context *context)
 {
     struct wined3d_sampler_desc desc;
     HRESULT hr;
@@ -887,7 +887,7 @@ static void create_default_samplers(struct wined3d_device *device, struct wined3
 }
 
 /* Context activation is done by the caller. */
-static void destroy_default_samplers(struct wined3d_device *device, struct wined3d_context *context)
+void wined3d_device_destroy_default_samplers(struct wined3d_device *device, struct wined3d_context *context)
 {
     wined3d_sampler_decref(device->default_sampler);
     device->default_sampler = NULL;
@@ -972,7 +972,7 @@ void wined3d_device_delete_opengl_contexts_cs(void *object)
     device->blitter->ops->blitter_destroy(device->blitter, context);
     device->shader_backend->shader_free_private(device, context);
     wined3d_device_gl_destroy_dummy_textures(device_gl, context_gl);
-    destroy_default_samplers(device, context);
+    wined3d_device_destroy_default_samplers(device, context);
     context_release(context);
 
     while (device->context_count)
@@ -1024,7 +1024,7 @@ void wined3d_device_create_primary_opengl_context_cs(void *object)
 
     context_gl = wined3d_context_gl(context);
     wined3d_device_gl_create_dummy_textures(wined3d_device_gl(device), context_gl);
-    create_default_samplers(device, context);
+    wined3d_device_create_default_samplers(device, context);
     context_release(context);
 }
 
