@@ -844,7 +844,7 @@ BOOL WINAPI SetupQueueRenameA( HSPFILEQ handle, PCSTR SourcePath, PCSTR SourceFi
     if (!(op = heap_alloc_zero( sizeof(*op) ))) return FALSE;
     op->src_path = strdupAtoW( SourcePath );
     op->src_file = strdupAtoW( SourceFilename );
-    op->dst_path = strdupAtoW( TargetPath );
+    op->dst_path = strdupAtoW( TargetPath ? TargetPath : SourcePath );
     op->dst_file = strdupAtoW( TargetFilename );
     queue_file_op( &queue->rename_queue, op );
     return TRUE;
@@ -863,7 +863,7 @@ BOOL WINAPI SetupQueueRenameW( HSPFILEQ handle, PCWSTR SourcePath, PCWSTR Source
     if (!(op = heap_alloc_zero( sizeof(*op) ))) return FALSE;
     op->src_path = strdupW( SourcePath );
     op->src_file = strdupW( SourceFilename );
-    op->dst_path = strdupW( TargetPath );
+    op->dst_path = strdupW( TargetPath ? TargetPath : SourcePath );
     op->dst_file = strdupW( TargetFilename );
     queue_file_op( &queue->rename_queue, op );
     return TRUE;
@@ -1531,7 +1531,7 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
 {
     BOOL ret, absolute = (root && *root && !(style & SP_COPY_SOURCE_ABSOLUTE));
     WCHAR *buffer, *p, *inf_source = NULL, dest_path[MAX_PATH];
-    unsigned int len;
+    DWORD len;
 
     TRACE("%p %p %s %s %s %x %p %p %p\n", hinf, inf_context, debugstr_w(source), debugstr_w(root),
           debugstr_w(dest), style, handler, context, in_use);
