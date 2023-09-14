@@ -574,6 +574,20 @@ static void test_install_svc_from(void)
     SetupCloseInfFile(infhandle);
     DeleteFileA(inffile);
 
+    strcpy(inf, "[Version]\nSignature=\"$Chicago$\"\n");
+    strcat(inf, "[Winetest.Services]\n");
+    strcat(inf, "AddService=,2\n");
+    create_inf_file(inffile, inf);
+    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    infhandle = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
+
+    SetLastError(0xdeadbeef);
+    ret = SetupInstallServicesFromInfSectionA(infhandle, "Winetest.Services", 0);
+    ok(ret, "Expected success\n");
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+    SetupCloseInfFile(infhandle);
+    DeleteFileA(inffile);
+
     /* TODO: Test the Flags */
 }
 
