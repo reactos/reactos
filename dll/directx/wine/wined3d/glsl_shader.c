@@ -12085,8 +12085,8 @@ static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter
         "\n"
         "void main()\n"
         "{\n";
+    struct wined3d_string_buffer *buffer, *string;
     GLuint program, vshader_id, fshader_id;
-    struct wined3d_string_buffer *buffer;
     const char *tex_type, *swizzle, *ptr;
     unsigned int i;
 
@@ -12129,9 +12129,14 @@ static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter
     declare_in_varying(gl_info, buffer, FALSE, "vec3 out_texcoord;\n");
     if (!needs_legacy_glsl_syntax(gl_info))
         shader_addline(buffer, "out vec4 ps_out[1];\n");
+
     shader_addline(buffer, fshader_header);
-    shader_addline(buffer, "    %s[0] = texture%s(sampler, out_texcoord.%s);\n",
-            get_fragment_output(gl_info), needs_legacy_glsl_syntax(gl_info) ? tex_type : "", swizzle);
+    string = string_buffer_get(&blitter->string_buffers);
+    string_buffer_sprintf(string, "%s[0]", get_fragment_output(gl_info));
+    shader_addline(buffer, "    %s = texture%s(sampler, out_texcoord.%s);\n",
+            string->buffer, needs_legacy_glsl_syntax(gl_info) ? tex_type : "", swizzle);
+    shader_glsl_color_correction_ext(buffer, string->buffer, WINED3DSP_WRITEMASK_ALL, args->fixup);
+    string_buffer_release(&blitter->string_buffers, string);
     shader_addline(buffer, "}\n");
 
     ptr = buffer->buffer;
@@ -12251,9 +12256,9 @@ static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wi
         return FALSE;
     }
 
-    if (!is_identity_fixup(src_format->color_fixup))
+    if (is_complex_fixup(src_format->color_fixup))
     {
-        TRACE("Source fixups are not supported.\n");
+        TRACE("Complex source fixups are not supported.\n");
         return FALSE;
     }
 
