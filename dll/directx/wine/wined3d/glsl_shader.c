@@ -4887,20 +4887,20 @@ static void shader_glsl_default(const struct wined3d_shader_instruction *ins)
     shader_addline(ins->ctx->buffer, "default:\n");
 }
 
-static void shader_glsl_generate_conditional_op(const struct wined3d_shader_instruction *ins,
-        const char *op)
+static void shader_glsl_generate_condition(const struct wined3d_shader_instruction *ins)
 {
     struct glsl_src_param src_param;
     const char *condition;
 
     condition = ins->flags == WINED3D_SHADER_CONDITIONAL_OP_NZ ? "bool" : "!bool";
     shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src_param);
-    shader_addline(ins->ctx->buffer, "if (%s(%s)) %s\n", condition, src_param.param_str, op);
+    shader_addline(ins->ctx->buffer, "if (%s(%s))\n", condition, src_param.param_str);
 }
 
 static void shader_glsl_if(const struct wined3d_shader_instruction *ins)
 {
-    shader_glsl_generate_conditional_op(ins, "{");
+    shader_glsl_generate_condition(ins);
+    shader_addline(ins->ctx->buffer, "{\n");
 }
 
 static void shader_glsl_ifc(const struct wined3d_shader_instruction *ins)
@@ -4959,15 +4959,29 @@ static void shader_glsl_conditional_op(const struct wined3d_shader_instruction *
 
     switch (ins->handler_idx)
     {
-        case WINED3DSIH_BREAKP: op = "break;"; break;
-        case WINED3DSIH_CONTINUEP: op = "continue;"; break;
-        case WINED3DSIH_RETP: op = "return;"; break;
+        case WINED3DSIH_BREAKP:
+            op = "break;";
+            break;
+        case WINED3DSIH_CONTINUEP:
+            op = "continue;";
+            break;
+        case WINED3DSIH_RETP:
+            op = "return;";
+            break;
         default:
             ERR("Unhandled opcode %#x.\n", ins->handler_idx);
             return;
     }
 
-    shader_glsl_generate_conditional_op(ins, op);
+    shader_glsl_generate_condition(ins);
+    if (ins->handler_idx == WINED3DSIH_RETP)
+    {
+        shader_addline(ins->ctx->buffer, "{\n");
+        shader_glsl_generate_shader_epilogue(ins->ctx);
+    }
+    shader_addline(ins->ctx->buffer, "    %s\n", op);
+    if (ins->handler_idx == WINED3DSIH_RETP)
+        shader_addline(ins->ctx->buffer, "}\n");
 }
 
 static void shader_glsl_continue(const struct wined3d_shader_instruction *ins)
@@ -6520,7 +6534,8 @@ static void shader_glsl_texkill(const struct wined3d_shader_instruction *ins)
 {
     if (ins->ctx->reg_maps->shader_version.major >= 4)
     {
-        shader_glsl_generate_conditional_op(ins, "discard;");
+        shader_glsl_generate_condition(ins);
+        shader_addline(ins->ctx->buffer, "    discard;\n");
     }
     else
     {
