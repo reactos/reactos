@@ -624,8 +624,11 @@ static const struct wined3d_format_vertex_info format_vertex_info[] =
     {WINED3DFMT_R10G10B10X2_SNORM,  WINED3D_FFP_EMIT_DEC3N,     GL_SHORT},
     {WINED3DFMT_R10G10B10A2_UNORM,  WINED3D_FFP_EMIT_INVALID,   GL_UNSIGNED_INT_2_10_10_10_REV,
             ARB_VERTEX_TYPE_2_10_10_10_REV},
-    {WINED3DFMT_R16G16_FLOAT,       WINED3D_FFP_EMIT_FLOAT16_2, GL_HALF_FLOAT},
-    {WINED3DFMT_R16G16B16A16_FLOAT, WINED3D_FFP_EMIT_FLOAT16_4, GL_HALF_FLOAT},
+    /* Without ARB_half_float_vertex we convert these on upload. */
+    {WINED3DFMT_R16G16_FLOAT,       WINED3D_FFP_EMIT_FLOAT16_2, GL_FLOAT},
+    {WINED3DFMT_R16G16_FLOAT,       WINED3D_FFP_EMIT_FLOAT16_2, GL_HALF_FLOAT, ARB_HALF_FLOAT_VERTEX},
+    {WINED3DFMT_R16G16B16A16_FLOAT, WINED3D_FFP_EMIT_FLOAT16_4, GL_FLOAT},
+    {WINED3DFMT_R16G16B16A16_FLOAT, WINED3D_FFP_EMIT_FLOAT16_4, GL_HALF_FLOAT, ARB_HALF_FLOAT_VERTEX},
     {WINED3DFMT_R8G8B8A8_SNORM,     WINED3D_FFP_EMIT_INVALID,   GL_BYTE},
     {WINED3DFMT_R8G8B8A8_SINT,      WINED3D_FFP_EMIT_INVALID,   GL_BYTE},
     {WINED3DFMT_R16G16B16A16_UINT,  WINED3D_FFP_EMIT_INVALID,   GL_UNSIGNED_SHORT},
@@ -3571,17 +3574,6 @@ static void apply_format_fixups(struct wined3d_adapter *adapter, struct wined3d_
     {
         format = get_format_internal(adapter, WINED3DFMT_P8_UINT);
         format->color_fixup = create_complex_fixup_desc(COMPLEX_FIXUP_P8);
-    }
-
-    if (!gl_info->supported[ARB_HALF_FLOAT_VERTEX])
-    {
-        /* Do not change the size of the type, it is CPU side. We have to change the GPU-side information though.
-         * It is the job of the vertex buffer code to make sure that the vbos have the right format */
-        format = get_format_internal(adapter, WINED3DFMT_R16G16_FLOAT);
-        format->gl_vtx_type = GL_FLOAT;
-
-        format = get_format_internal(adapter, WINED3DFMT_R16G16B16A16_FLOAT);
-        format->gl_vtx_type = GL_FLOAT;
     }
 
     if (!gl_info->supported[ARB_HALF_FLOAT_PIXEL])
