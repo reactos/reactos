@@ -4003,6 +4003,39 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
             }
         }
     }
+    else if (shader->reg_maps.shader_version.major <= 3)
+    {
+        for (i = 0; i < shader->limits->sampler; ++i)
+        {
+            enum wined3d_shader_resource_type resource_type;
+            enum wined3d_shader_tex_types tex_type;
+
+            if (!(resource_type = shader->reg_maps.resource_info[i].type))
+                continue;
+
+            switch (resource_type)
+            {
+                case WINED3D_SHADER_RESOURCE_TEXTURE_3D:
+                    tex_type = WINED3D_SHADER_TEX_3D;
+                    break;
+                case WINED3D_SHADER_RESOURCE_TEXTURE_CUBE:
+                    tex_type = WINED3D_SHADER_TEX_CUBE;
+                    break;
+                default:
+                    tex_type = WINED3D_SHADER_TEX_2D;
+                    break;
+            }
+
+            if ((texture = state->textures[i]))
+            {
+                if (texture->resource.type == WINED3D_RTYPE_TEXTURE_2D
+                        && resource_type == WINED3D_SHADER_RESOURCE_TEXTURE_3D
+                        && !(texture->resource.usage & WINED3DUSAGE_LEGACY_CUBEMAP))
+                    tex_type = WINED3D_SHADER_TEX_2D;
+            }
+            args->tex_types |= tex_type << i * WINED3D_PSARGS_TEXTYPE_SHIFT;
+        }
+    }
 
     if (shader->reg_maps.shader_version.major >= 4)
     {
@@ -4203,7 +4236,7 @@ static HRESULT pixel_shader_init(struct wined3d_shader *shader, struct wined3d_d
 }
 
 enum wined3d_shader_resource_type pixelshader_get_resource_type(const struct wined3d_shader_reg_maps *reg_maps,
-        unsigned int resource_idx, WORD tex_types)
+        unsigned int resource_idx, DWORD tex_types)
 {
     static enum wined3d_shader_resource_type shader_resource_type_from_shader_tex_types[] =
     {
@@ -4214,7 +4247,7 @@ enum wined3d_shader_resource_type pixelshader_get_resource_type(const struct win
 
     unsigned int idx;
 
-    if (reg_maps->shader_version.major != 1)
+    if (reg_maps->shader_version.major > 3)
         return reg_maps->resource_info[resource_idx].type;
 
     if (!reg_maps->resource_info[resource_idx].type)

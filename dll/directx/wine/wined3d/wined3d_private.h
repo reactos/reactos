@@ -1372,6 +1372,7 @@ enum wined3d_shader_tex_types
     WINED3D_SHADER_TEX_2D   = 0,
     WINED3D_SHADER_TEX_3D   = 1,
     WINED3D_SHADER_TEX_CUBE = 2,
+    WINED3D_SHADER_TEX_ERR  = 3,
 };
 
 struct ps_compile_args
@@ -1379,8 +1380,8 @@ struct ps_compile_args
     struct color_fixup_desc     color_fixup[WINED3D_MAX_FRAGMENT_SAMPLERS];
     enum wined3d_vertex_processing_mode vp_mode;
     enum wined3d_ffp_ps_fog_mode fog;
+    DWORD                       tex_types; /* ps 1 - 3, 16 textures */
     WORD                        tex_transform; /* ps 1.0-1.3, 4 textures */
-    WORD                        tex_types; /* ps 1.0 - 1.4, 6 textures */
     WORD                        srgb_correction;
     /* Bitmap for NP2 texcoord fixups (16 samplers max currently).
        D3D9 has a limit of 16 samplers and the fixup is superfluous
@@ -1388,6 +1389,7 @@ struct ps_compile_args
     WORD                        np2_fixup;
     WORD shadow; /* WINED3D_MAX_FRAGMENT_SAMPLERS, 16 */
     WORD texcoords_initialized; /* WINED3D_MAX_TEXTURES, 8 */
+    WORD padding_to_dword;
     DWORD pointsprite : 1;
     DWORD flatshading : 1;
     DWORD alpha_test_func : 3;
@@ -4500,7 +4502,7 @@ struct wined3d_shader
 };
 
 enum wined3d_shader_resource_type pixelshader_get_resource_type(const struct wined3d_shader_reg_maps *reg_maps,
-        unsigned int resource_idx, WORD tex_types) DECLSPEC_HIDDEN;
+        unsigned int resource_idx, DWORD tex_types) DECLSPEC_HIDDEN;
 void find_ps_compile_args(const struct wined3d_state *state, const struct wined3d_shader *shader,
         BOOL position_transformed, struct ps_compile_args *args,
         const struct wined3d_context *context) DECLSPEC_HIDDEN;
