@@ -848,10 +848,19 @@ static void wined3d_cs_exec_draw(struct wined3d_cs *cs, const void *data)
     const struct wined3d_d3d_info *d3d_info = &cs->device->adapter->d3d_info;
     const struct wined3d_gl_info *gl_info = &cs->device->adapter->gl_info;
     const struct wined3d_shader *geometry_shader;
+    int base_vertex_idx, load_base_vertex_idx;
     struct wined3d_state *state = &cs->state;
     const struct wined3d_cs_draw *op = data;
-    int load_base_vertex_idx;
     unsigned int i;
+
+    base_vertex_idx = 0;
+    if (!op->parameters.indirect)
+    {
+        const struct wined3d_direct_draw_parameters *direct = &op->parameters.u.direct;
+
+        if (op->parameters.indexed && gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX])
+            base_vertex_idx = direct->base_vertex_idx;
+    }
 
     /* ARB_draw_indirect always supports a base vertex offset. */
     if (!op->parameters.indirect && !gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX])
@@ -859,6 +868,7 @@ static void wined3d_cs_exec_draw(struct wined3d_cs *cs, const void *data)
     else
         load_base_vertex_idx = 0;
 
+    state->base_vertex_index = base_vertex_idx;
     if (state->load_base_vertex_index != load_base_vertex_idx)
     {
         state->load_base_vertex_index = load_base_vertex_idx;
