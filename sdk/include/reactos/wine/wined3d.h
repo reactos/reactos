@@ -1754,6 +1754,7 @@ struct wined3d_adapter_identifier
     DWORD whql_level;
     LUID adapter_luid;
     SIZE_T video_memory;
+    SIZE_T shared_system_memory;
 };
 
 struct wined3d_swapchain_desc

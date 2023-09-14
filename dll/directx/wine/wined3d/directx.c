@@ -492,11 +492,12 @@ const struct wined3d_gpu_description *wined3d_get_gpu_description(enum wined3d_p
 void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
         const struct wined3d_gpu_description *gpu_desc, UINT64 vram_bytes)
 {
+    const struct driver_version_information *version_info;
+    enum wined3d_driver_model driver_model;
+    enum wined3d_display_driver driver;
+    MEMORYSTATUSEX memory_status;
     OSVERSIONINFOW os_version;
     WORD driver_os_version;
-    enum wined3d_display_driver driver;
-    enum wined3d_driver_model driver_model;
-    const struct driver_version_information *version_info;
 
     memset(&os_version, 0, sizeof(os_version));
     os_version.dwOSVersionInfoSize = sizeof(os_version);
@@ -584,6 +585,13 @@ void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
         TRACE("Limiting amount of video memory to %#lx bytes for OS version older than Vista.\n", LONG_MAX);
         driver_info->vram_bytes = LONG_MAX;
     }
+
+    driver_info->sysmem_bytes = 64 * 1024 * 1024;
+    memory_status.dwLength = sizeof(memory_status);
+    if (GlobalMemoryStatusEx(&memory_status))
+        driver_info->sysmem_bytes = max(memory_status.ullTotalPhys / 2, driver_info->sysmem_bytes);
+    else
+        ERR("Failed to get global memory status.\n");
 
     /* Try to obtain driver version information for the current Windows version. This fails in
      * some cases:
@@ -1200,6 +1208,7 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
     identifier->whql_level = (flags & WINED3DENUM_NO_WHQL_LEVEL) ? 0 : 1;
     memcpy(&identifier->adapter_luid, &adapter->luid, sizeof(identifier->adapter_luid));
     identifier->video_memory = min(~(SIZE_T)0, adapter->driver_info.vram_bytes);
+    identifier->shared_system_memory = min(~(SIZE_T)0, adapter->driver_info.sysmem_bytes);
 
     return WINED3D_OK;
 }

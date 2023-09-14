@@ -2657,6 +2657,7 @@ struct wined3d_driver_info
     const char *name;
     const char *description;
     UINT64 vram_bytes;
+    UINT64 sysmem_bytes;
     DWORD version_high;
     DWORD version_low;
 };
