@@ -1497,11 +1497,11 @@ void CDECL wined3d_device_set_transform(struct wined3d_device *device,
     TRACE("%.8e %.8e %.8e %.8e\n", matrix->_41, matrix->_42, matrix->_43, matrix->_44);
 
     /* Handle recording of state blocks. */
+    device->update_stateblock_state->transforms[d3dts] = *matrix;
     if (device->recording)
     {
         TRACE("Recording... not performing anything.\n");
         device->recording->changed.transform[d3dts >> 5] |= 1u << (d3dts & 0x1f);
-        device->update_state->transforms[d3dts] = *matrix;
         return;
     }
 

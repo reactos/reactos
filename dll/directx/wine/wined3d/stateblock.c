@@ -787,7 +787,7 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
 
         TRACE("Updating transform %#x.\n", transform);
 
-        stateblock->state.transforms[transform] = src_state->transforms[transform];
+        stateblock->stateblock_state.transforms[transform] = state->transforms[transform];
     }
 
     if (stateblock->changed.indices
@@ -1110,8 +1110,10 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     /* Transform states. */
     for (i = 0; i < stateblock->num_contained_transform_states; ++i)
     {
-        wined3d_device_set_transform(device, stateblock->contained_transform_states[i],
-                &stateblock->state.transforms[stateblock->contained_transform_states[i]]);
+        enum wined3d_transform_state transform = stateblock->contained_transform_states[i];
+
+        state->transforms[transform] = stateblock->stateblock_state.transforms[transform];
+        wined3d_device_set_transform(device, transform, &stateblock->stateblock_state.transforms[transform]);
     }
 
     if (stateblock->changed.indices)
@@ -1424,12 +1426,23 @@ void state_init(struct wined3d_state *state, struct wined3d_fb_state *fb,
 static void stateblock_state_init_default(struct wined3d_stateblock_state *state,
         const struct wined3d_d3d_info *d3d_info)
 {
+    struct wined3d_matrix identity;
     unsigned int i;
+
+    get_identity_matrix(&identity);
+
+    state->transforms[WINED3D_TS_PROJECTION] = identity;
+    state->transforms[WINED3D_TS_VIEW] = identity;
+    for (i = 0; i < 256; ++i)
+    {
+        state->transforms[WINED3D_TS_WORLD_MATRIX(i)] = identity;
+    }
 
     init_default_render_states(state->rs, d3d_info);
 
     for (i = 0; i < MAX_TEXTURES; ++i)
     {
+        state->transforms[WINED3D_TS_TEXTURE0 + i] = identity;
         init_default_texture_state(i, state->texture_states[i]);
     }
 
