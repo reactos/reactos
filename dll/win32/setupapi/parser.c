@@ -764,7 +764,7 @@ static const WCHAR *value_name_state( struct parser *parser, const WCHAR *pos )
             set_state( parser, EOL_BACKSLASH );
             return p;
         default:
-            if (!iswspace(*p)) token_end = p + 1;
+            if (*p && !iswspace(*p)) token_end = p + 1;
             else
             {
                 push_token( parser, p );
@@ -878,7 +878,7 @@ static const WCHAR *trailing_spaces_state( struct parser *parser, const WCHAR *p
             set_state( parser, EOL_BACKSLASH );
             return p;
         }
-        if (!iswspace(*p)) break;
+        if (*p && !iswspace(*p)) break;
     }
     pop_state( parser );
     return p;
