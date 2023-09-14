@@ -961,7 +961,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
             texture_desc.bind_flags = WINED3D_BIND_DEPTH_STENCIL;
 
             if (FAILED(hr = device->device_parent->ops->create_swapchain_texture(device->device_parent,
-                    device->device_parent, &texture_desc, texture_flags, &ds)))
+                    device->device_parent, &texture_desc, 0, &ds)))
             {
                 WARN("Failed to create the auto depth/stencil surface, hr %#x.\n", hr);
                 goto err;

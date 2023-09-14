@@ -4930,7 +4930,6 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
     {
         struct wined3d_resource_desc texture_desc;
         struct wined3d_texture *texture;
-        DWORD flags = 0;
 
         TRACE("Creating the depth stencil buffer.\n");
 
@@ -4946,11 +4945,8 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         texture_desc.depth = 1;
         texture_desc.size = 0;
 
-        if (swapchain_desc->flags & WINED3D_SWAPCHAIN_GDI_COMPATIBLE)
-            flags |= WINED3D_TEXTURE_CREATE_GET_DC;
-
         if (FAILED(hr = device->device_parent->ops->create_swapchain_texture(device->device_parent,
-                device->device_parent, &texture_desc, flags, &texture)))
+                device->device_parent, &texture_desc, 0, &texture)))
         {
             ERR("Failed to create the auto depth/stencil surface, hr %#x.\n", hr);
             return WINED3DERR_INVALIDCALL;
