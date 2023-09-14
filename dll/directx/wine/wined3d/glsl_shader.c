@@ -1325,10 +1325,10 @@ static void shader_glsl_ffp_vertex_normalmatrix_uniform(const struct wined3d_con
     checkGLcall("glUniformMatrix3fv");
 }
 
-static void shader_glsl_ffp_vertex_texmatrix_uniform(const struct wined3d_context *context,
+static void shader_glsl_ffp_vertex_texmatrix_uniform(const struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state, unsigned int tex, struct glsl_shader_prog_link *prog)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_matrix mat;
 
     if (tex >= WINED3D_MAX_TEXTURES)
@@ -1336,7 +1336,7 @@ static void shader_glsl_ffp_vertex_texmatrix_uniform(const struct wined3d_contex
     if (prog->vs.texture_matrix_location[tex] == -1)
         return;
 
-    get_texture_matrix(context, state, tex, &mat);
+    get_texture_matrix(&context_gl->c, state, tex, &mat);
     GL_EXTCALL(glUniformMatrix4fv(prog->vs.texture_matrix_location[tex], 1, FALSE, &mat._11));
     checkGLcall("glUniformMatrix4fv");
 }
@@ -1611,7 +1611,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
     if (update_mask & WINED3D_SHADER_CONST_FFP_TEXMATRIX)
     {
         for (i = 0; i < WINED3D_MAX_TEXTURES; ++i)
-            shader_glsl_ffp_vertex_texmatrix_uniform(context, state, i, prog);
+            shader_glsl_ffp_vertex_texmatrix_uniform(context_gl, state, i, prog);
     }
 
     if (update_mask & WINED3D_SHADER_CONST_FFP_MATERIAL)
