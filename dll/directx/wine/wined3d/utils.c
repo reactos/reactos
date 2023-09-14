@@ -6716,16 +6716,6 @@ int wined3d_ffp_frag_program_key_compare(const void *key, const struct wine_rb_e
     return memcmp(ka, kb, sizeof(*ka));
 }
 
-static enum wined3d_material_color_source validate_material_colour_source(WORD use_map,
-        enum wined3d_material_color_source source)
-{
-    if (source == WINED3D_MCS_COLOR1 && use_map & (1u << WINED3D_FFP_DIFFUSE))
-        return source;
-    if (source == WINED3D_MCS_COLOR2 && use_map & (1u << WINED3D_FFP_SPECULAR))
-        return source;
-    return WINED3D_MCS_MATERIAL;
-}
-
 void wined3d_ffp_get_vs_settings(const struct wined3d_context *context,
         const struct wined3d_state *state, struct wined3d_ffp_vs_settings *settings)
 {

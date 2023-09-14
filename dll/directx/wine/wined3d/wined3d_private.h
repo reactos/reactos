@@ -4925,6 +4925,16 @@ static inline void wined3d_not_from_cs(struct wined3d_cs *cs)
 BOOL wined3d_dxtn_init(void) DECLSPEC_HIDDEN;
 void wined3d_dxtn_free(void) DECLSPEC_HIDDEN;
 
+static inline enum wined3d_material_color_source validate_material_colour_source(WORD use_map,
+        enum wined3d_material_color_source source)
+{
+    if (source == WINED3D_MCS_COLOR1 && use_map & (1u << WINED3D_FFP_DIFFUSE))
+        return source;
+    if (source == WINED3D_MCS_COLOR2 && use_map & (1u << WINED3D_FFP_SPECULAR))
+        return source;
+    return WINED3D_MCS_MATERIAL;
+}
+
 /* The WNDCLASS-Name for the fake window which we use to retrieve the GL capabilities */
 #define WINED3D_OPENGL_WINDOW_CLASS_NAME "WineD3D_OpenGL"
 
