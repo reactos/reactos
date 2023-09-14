@@ -7346,11 +7346,11 @@ static GLuint gen_p8_shader(const struct wined3d_gl_info *gl_info, const struct 
 }
 
 /* Context activation is done by the caller. */
-static void upload_palette(struct wined3d_arbfp_blitter *blitter,
-        const struct wined3d_texture *texture, struct wined3d_context *context)
+static void arbfp_blitter_upload_palette(struct wined3d_arbfp_blitter *blitter,
+        const struct wined3d_texture_gl *texture_gl, struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_palette *palette = texture->swapchain ? texture->swapchain->palette : NULL;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_palette *palette = texture_gl->t.swapchain ? texture_gl->t.swapchain->palette : NULL;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     if (!blitter->palette_texture)
         gl_info->gl_ops.gl.p_glGenTextures(1, &blitter->palette_texture);
@@ -7379,7 +7379,7 @@ static void upload_palette(struct wined3d_arbfp_blitter *blitter,
     }
 
     /* Switch back to unit 0 in which the 2D texture will be stored. */
-    context_active_texture(context, gl_info, 0);
+    context_active_texture(&context_gl->c, gl_info, 0);
 }
 
 /* Context activation is done by the caller. */
@@ -7552,8 +7552,9 @@ static HRESULT arbfp_blit_set(struct wined3d_arbfp_blitter *blitter, struct wine
         const struct wined3d_texture_gl *texture_gl, unsigned int sub_resource_idx,
         const struct wined3d_color_key *color_key)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     enum complex_fixup fixup;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wine_rb_entry *entry;
     struct arbfp_blit_type type;
     struct arbfp_blit_desc *desc;
@@ -7655,7 +7656,7 @@ err_out:
     }
 
     if (fixup == COMPLEX_FIXUP_P8)
-        upload_palette(blitter, &texture_gl->t, context);
+        arbfp_blitter_upload_palette(blitter, texture_gl, context_gl);
 
     gl_info->gl_ops.gl.p_glEnable(GL_FRAGMENT_PROGRAM_ARB);
     checkGLcall("glEnable(GL_FRAGMENT_PROGRAM_ARB)");
