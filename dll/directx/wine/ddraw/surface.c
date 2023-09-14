@@ -6203,14 +6203,9 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
                 wined3d_desc.bind_flags |= WINED3D_BIND_SHADER_RESOURCE;
             }
             if (desc->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
-            {
-                wined3d_desc.usage |= WINED3DUSAGE_DEPTHSTENCIL;
                 wined3d_desc.bind_flags |= WINED3D_BIND_DEPTH_STENCIL;
-            }
             else if (desc->ddsCaps.dwCaps & DDSCAPS_3DDEVICE)
-            {
                 wined3d_desc.bind_flags |= WINED3D_BIND_RENDER_TARGET;
-            }
         }
 
         if (desc->ddsCaps.dwCaps2 & (DDSCAPS2_TEXTUREMANAGE | DDSCAPS2_D3DTEXTUREMANAGE))
