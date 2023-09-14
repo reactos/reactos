@@ -5419,8 +5419,7 @@ static void multistate_apply_3(struct wined3d_context *context, const struct win
     context->device->multistate_funcs[state_id][2](context, state, state_id);
 }
 
-static void prune_invalid_states(struct StateEntry *state_table, const struct wined3d_gl_info *gl_info,
-        const struct wined3d_d3d_info *d3d_info)
+static void prune_invalid_states(struct StateEntry *state_table, const struct wined3d_d3d_info *d3d_info)
 {
     unsigned int start, last, i;
 
@@ -5646,7 +5645,7 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
         }
     }
 
-    prune_invalid_states(StateTable, gl_info, d3d_info);
+    prune_invalid_states(StateTable, d3d_info);
     validate_state_table(StateTable);
 
     return WINED3D_OK;
