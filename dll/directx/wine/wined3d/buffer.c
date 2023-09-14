@@ -1045,7 +1045,7 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
                     if (buffer_gl->b.flags & WINED3D_BUFFER_APPLESYNC)
                         wined3d_buffer_gl_sync_apple(buffer_gl, flags, gl_info);
                     buffer_gl->b.map_ptr = GL_EXTCALL(glMapBuffer(buffer_gl->buffer_type_hint,
-                            GL_READ_WRITE));
+                            wined3d_resource_gl_legacy_map_flags(flags)));
                     checkGLcall("glMapBuffer");
                 }
 
