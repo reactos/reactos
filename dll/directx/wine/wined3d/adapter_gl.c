@@ -3777,6 +3777,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     adapter->vertex_pipe->vp_get_caps(adapter, &vertex_caps);
     d3d_info->xyzrhw = vertex_caps.xyzrhw;
     d3d_info->ffp_generic_attributes = vertex_caps.ffp_generic_attributes;
+    d3d_info->ffp_alpha_test = !!gl_info->supported[WINED3D_GL_LEGACY_CONTEXT];
     d3d_info->limits.ffp_vertex_blend_matrices = vertex_caps.max_vertex_blend_matrices;
     d3d_info->limits.active_light_count = vertex_caps.max_active_lights;
     d3d_info->emulated_flatshading = vertex_caps.emulated_flatshading;

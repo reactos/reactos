@@ -6536,7 +6536,7 @@ void gen_ffp_frag_op(const struct wined3d_context *context, const struct wined3d
     settings->pointsprite = state->render_states[WINED3D_RS_POINTSPRITEENABLE]
             && state->gl_primitive_type == GL_POINTS;
 
-    if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+    if (d3d_info->ffp_alpha_test)
         settings->alpha_test_func = WINED3D_CMP_ALWAYS - 1;
     else
         settings->alpha_test_func = (state->render_states[WINED3D_RS_ALPHATESTENABLE]

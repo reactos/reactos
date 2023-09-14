@@ -202,6 +202,7 @@ struct wined3d_d3d_info
     uint32_t xyzrhw : 1;
     uint32_t emulated_flatshading : 1;
     uint32_t ffp_generic_attributes : 1;
+    uint32_t ffp_alpha_test : 1;
     uint32_t vs_clipping : 1;
     uint32_t shader_color_key : 1;
     uint32_t shader_double_precision : 1;

@@ -4146,7 +4146,7 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
     args->pointsprite = state->render_states[WINED3D_RS_POINTSPRITEENABLE]
             && state->gl_primitive_type == GL_POINTS;
 
-    if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+    if (d3d_info->ffp_alpha_test)
         args->alpha_test_func = WINED3D_CMP_ALWAYS - 1;
     else
         args->alpha_test_func = (state->render_states[WINED3D_RS_ALPHATESTENABLE]
