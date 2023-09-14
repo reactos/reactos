@@ -173,12 +173,11 @@ static void wined3d_context_gl_attach_gl_texture_fbo(struct wined3d_context_gl *
 }
 
 /* Context activation is done by the caller. */
-static void context_attach_depth_stencil_fbo(struct wined3d_context *context,
+static void wined3d_context_gl_attach_depth_stencil_fbo(struct wined3d_context_gl *context_gl,
         GLenum fbo_target, const struct wined3d_fbo_resource *resource, BOOL rb_namespace,
-        DWORD flags)
+        uint32_t flags)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     if (resource->object)
     {
@@ -740,8 +739,8 @@ static void wined3d_context_gl_apply_fbo_entry(struct wined3d_context_gl *contex
                 entry->key.rb_namespace & (1 << (i + 1)));
     }
 
-    context_attach_depth_stencil_fbo(&context_gl->c, target, &entry->key.objects[0],
-            entry->key.rb_namespace & 0x1, entry->flags);
+    wined3d_context_gl_attach_depth_stencil_fbo(context_gl, target,
+            &entry->key.objects[0], entry->key.rb_namespace & 0x1, entry->flags);
 
     /* Set valid read and draw buffer bindings to satisfy pedantic pre-ES2_compatibility
      * GL contexts requirements. */
