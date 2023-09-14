@@ -122,7 +122,6 @@ static const struct wined3d_format_channels formats[] =
     /* Bump mapping stuff */
     {WINED3DFMT_R5G5_SNORM_L6_UNORM,        5,  5,  0,  0,   0,  5,  0,  0,    2,   0,     0},
     {WINED3DFMT_R8G8_SNORM_L8X8_UNORM,      8,  8,  0,  0,   0,  8,  0,  0,    4,   0,     0},
-    {WINED3DFMT_R8G8B8A8_SNORM,             8,  8,  8,  8,   0,  8, 16, 24,    4,   0,     0},
     {WINED3DFMT_R10G11B11_SNORM,           10, 11, 11,  0,   0, 10, 21,  0,    4,   0,     0},
     {WINED3DFMT_R10G10B10X2_UINT,          10, 10, 10,  0,   0, 10, 20,  0,    4,   0,     0},
     {WINED3DFMT_R10G10B10X2_SNORM,         10, 10, 10,  0,   0, 10, 20,  0,    4,   0,     0},
@@ -133,8 +132,6 @@ static const struct wined3d_format_channels formats[] =
     {WINED3DFMT_S1_UINT_D15_UNORM,          0,  0,  0,  0,   0,  0,  0,  0,    2,  15,     1},
     {WINED3DFMT_X8D24_UNORM,                0,  0,  0,  0,   0,  0,  0,  0,    4,  24,     0},
     {WINED3DFMT_S4X4_UINT_D24_UNORM,        0,  0,  0,  0,   0,  0,  0,  0,    4,  24,     4},
-    {WINED3DFMT_D16_UNORM,                  0,  0,  0,  0,   0,  0,  0,  0,    2,  16,     0},
-    {WINED3DFMT_D32_FLOAT,                  0,  0,  0,  0,   0,  0,  0,  0,    4,  32,     0},
     {WINED3DFMT_S8_UINT_D24_FLOAT,          0,  0,  0,  0,   0,  0,  0,  0,    4,  24,     8},
     /* Vendor-specific formats */
     {WINED3DFMT_ATI1N,                      0,  0,  0,  0,   0,  0,  0,  0,    1,   0,     0},
