@@ -3012,7 +3012,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
         return hr;
     }
     wined3d_resource_update_draw_binding(&texture->resource);
-    if ((flags & WINED3D_TEXTURE_CREATE_MAPPABLE) || desc->format == WINED3DFMT_D16_LOCKABLE)
+    if (flags & WINED3D_TEXTURE_CREATE_MAPPABLE)
         texture->resource.access |= WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
 
     texture->texture_ops = texture_ops;
