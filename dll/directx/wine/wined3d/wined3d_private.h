@@ -4963,6 +4963,19 @@ static inline void wined3d_get_material_colour_source(enum wined3d_material_colo
     *specular = validate_material_colour_source(si->use_map, state->render_states[WINED3D_RS_SPECULARMATERIALSOURCE]);
 }
 
+static inline void wined3d_vec4_transform(struct wined3d_vec4 *dst,
+        const struct wined3d_vec4 *v, const struct wined3d_matrix *m)
+{
+    struct wined3d_vec4 tmp;
+
+    tmp.x = v->x * m->_11 + v->y * m->_21 + v->z * m->_31 + v->w * m->_41;
+    tmp.y = v->x * m->_12 + v->y * m->_22 + v->z * m->_32 + v->w * m->_42;
+    tmp.z = v->x * m->_13 + v->y * m->_23 + v->z * m->_33 + v->w * m->_43;
+    tmp.w = v->x * m->_14 + v->y * m->_24 + v->z * m->_34 + v->w * m->_44;
+
+    *dst = tmp;
+}
+
 BOOL invert_matrix(struct wined3d_matrix *out, const struct wined3d_matrix *m) DECLSPEC_HIDDEN;
 
 void compute_normal_matrix(float *normal_matrix, BOOL legacy_lighting,
