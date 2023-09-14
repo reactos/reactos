@@ -3880,6 +3880,7 @@ static void context_bind_unordered_access_views(struct wined3d_context *context,
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_unordered_access_view *view;
+    const struct wined3d_format_gl *format_gl;
     GLuint texture_name;
     unsigned int i;
     GLint level;
@@ -3915,8 +3916,9 @@ static void context_bind_unordered_access_views(struct wined3d_context *context,
             continue;
         }
 
+        format_gl = wined3d_format_gl(view->format);
         GL_EXTCALL(glBindImageTexture(i, texture_name, level, GL_TRUE, 0, GL_READ_WRITE,
-                view->format->glInternal));
+                format_gl->internal));
 
         if (view->counter_bo)
             GL_EXTCALL(glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, i, view->counter_bo));

@@ -174,11 +174,13 @@ static void create_texture_view(struct wined3d_gl_view *view, GLenum view_target
         const struct wined3d_view_desc *desc, struct wined3d_texture *texture,
         const struct wined3d_format *view_format)
 {
+    const struct wined3d_format_gl *view_format_gl;
     unsigned int level_idx, layer_idx, layer_count;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
     GLuint texture_name;
 
+    view_format_gl = wined3d_format_gl(view_format);
     view->target = view_target;
 
     context = context_acquire(texture->resource.device, NULL, 0);
@@ -206,11 +208,11 @@ static void create_texture_view(struct wined3d_gl_view *view, GLenum view_target
     }
 
     gl_info->gl_ops.gl.p_glGenTextures(1, &view->name);
-    GL_EXTCALL(glTextureView(view->name, view->target, texture_name, view_format->glInternal,
+    GL_EXTCALL(glTextureView(view->name, view->target, texture_name, view_format_gl->internal,
             level_idx, desc->u.texture.level_count, layer_idx, layer_count));
     checkGLcall("create texture view");
 
-    if (is_stencil_view_format(view_format))
+    if (is_stencil_view_format(&view_format_gl->f))
     {
         static const GLint swizzle[] = {GL_ZERO, GL_RED, GL_ZERO, GL_ZERO};
 
@@ -238,6 +240,7 @@ static void create_buffer_texture(struct wined3d_gl_view *view, struct wined3d_c
         unsigned int offset, unsigned int size)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_format_gl *view_format_gl;
 
     if (!gl_info->supported[ARB_TEXTURE_BUFFER_OBJECT])
     {
@@ -252,6 +255,7 @@ static void create_buffer_texture(struct wined3d_gl_view *view, struct wined3d_c
         return;
     }
 
+    view_format_gl = wined3d_format_gl(view_format);
     wined3d_buffer_load_location(buffer, context, WINED3D_LOCATION_BUFFER);
 
     view->target = GL_TEXTURE_BUFFER;
@@ -260,14 +264,14 @@ static void create_buffer_texture(struct wined3d_gl_view *view, struct wined3d_c
     context_bind_texture(context, GL_TEXTURE_BUFFER, view->name);
     if (gl_info->supported[ARB_TEXTURE_BUFFER_RANGE])
     {
-        GL_EXTCALL(glTexBufferRange(GL_TEXTURE_BUFFER, view_format->glInternal,
+        GL_EXTCALL(glTexBufferRange(GL_TEXTURE_BUFFER, view_format_gl->internal,
                 buffer->buffer_object, offset, size));
     }
     else
     {
         if (offset || size != buffer->resource.size)
             FIXME("OpenGL implementation does not support ARB_texture_buffer_range.\n");
-        GL_EXTCALL(glTexBuffer(GL_TEXTURE_BUFFER, view_format->glInternal, buffer->buffer_object));
+        GL_EXTCALL(glTexBuffer(GL_TEXTURE_BUFFER, view_format_gl->internal, buffer->buffer_object));
     }
     checkGLcall("Create buffer texture");
 
@@ -1018,7 +1022,7 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
         const struct wined3d_uvec4 *clear_value, struct wined3d_context *context)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    const struct wined3d_format *format;
+    const struct wined3d_format_gl *format;
     struct wined3d_resource *resource;
     struct wined3d_buffer *buffer;
     unsigned int offset, size;
@@ -1036,12 +1040,12 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
         return;
     }
 
-    format = view->format;
-    if (format->id != WINED3DFMT_R32_UINT && format->id != WINED3DFMT_R32_SINT
-            && format->id != WINED3DFMT_R32G32B32A32_UINT
-            && format->id != WINED3DFMT_R32G32B32A32_SINT)
+    format = wined3d_format_gl(view->format);
+    if (format->f.id != WINED3DFMT_R32_UINT && format->f.id != WINED3DFMT_R32_SINT
+            && format->f.id != WINED3DFMT_R32G32B32A32_UINT
+            && format->f.id != WINED3DFMT_R32G32B32A32_SINT)
     {
-        FIXME("Not implemented for format %s.\n", debug_d3dformat(format->id));
+        FIXME("Not implemented for format %s.\n", debug_d3dformat(format->f.id));
         return;
     }
 
@@ -1049,10 +1053,10 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
     wined3d_buffer_load_location(buffer, context, WINED3D_LOCATION_BUFFER);
     wined3d_unordered_access_view_invalidate_location(view, ~WINED3D_LOCATION_BUFFER);
 
-    get_buffer_view_range(buffer, &view->desc, format, &offset, &size);
+    get_buffer_view_range(buffer, &view->desc, &format->f, &offset, &size);
     context_bind_bo(context, buffer->buffer_type_hint, buffer->buffer_object);
-    GL_EXTCALL(glClearBufferSubData(buffer->buffer_type_hint, format->glInternal,
-            offset, size, format->glFormat, format->glType, clear_value));
+    GL_EXTCALL(glClearBufferSubData(buffer->buffer_type_hint, format->internal,
+            offset, size, format->format, format->type, clear_value));
     checkGLcall("clear unordered access view");
 }
 

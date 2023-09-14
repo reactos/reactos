@@ -4398,11 +4398,6 @@ struct wined3d_format
 
     enum wined3d_ffp_emit_idx emit_idx;
 
-    GLint glInternal;
-    GLint glGammaInternal;
-    GLint rtInternal;
-    GLint glFormat;
-    GLint glType;
     UINT  conv_byte_count;
     DWORD multisample_types;
     unsigned int flags[WINED3D_GL_RES_TYPE_COUNT];
@@ -4445,6 +4440,12 @@ struct wined3d_format_gl
 
     GLenum vtx_type;
     GLint vtx_format;
+
+    GLint internal;
+    GLint srgb_internal;
+    GLint rt_internal;
+    GLint format;
+    GLint type;
 
     GLenum view_class;
 };

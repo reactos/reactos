@@ -347,22 +347,24 @@ static BOOL fbo_blitter_supported(enum wined3d_blit_op blit_op, const struct win
 static void texture2d_download_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         const struct wined3d_context *context, DWORD dst_location)
 {
-    const struct wined3d_format *format = texture->resource.format;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture_sub_resource *sub_resource;
     unsigned int dst_row_pitch, dst_slice_pitch;
     unsigned int src_row_pitch, src_slice_pitch;
+    const struct wined3d_format_gl *format_gl;
     struct wined3d_bo_address data;
     BYTE *temporary_mem = NULL;
     unsigned int level;
     GLenum target;
     void *mem;
 
+    format_gl = wined3d_format_gl(texture->resource.format);
+
     /* Only support read back of converted P8 textures. */
-    if (texture->flags & WINED3D_TEXTURE_CONVERTED && format->id != WINED3DFMT_P8_UINT && !format->download)
+    if (texture->flags & WINED3D_TEXTURE_CONVERTED && format_gl->f.id != WINED3DFMT_P8_UINT && !format_gl->f.download)
     {
         ERR("Trying to read back converted texture %p, %u with format %s.\n",
-                texture, sub_resource_idx, debug_d3dformat(format->id));
+                texture, sub_resource_idx, debug_d3dformat(format_gl->f.id));
         return;
     }
 
@@ -372,7 +374,7 @@ static void texture2d_download_data(struct wined3d_texture *texture, unsigned in
 
     if (target == GL_TEXTURE_2D_ARRAY)
     {
-        if (format->download)
+        if (format_gl->f.download)
         {
             FIXME("Reading back converted array texture %p is not supported.\n", texture);
             return;
@@ -395,14 +397,14 @@ static void texture2d_download_data(struct wined3d_texture *texture, unsigned in
 
     if (texture->flags & WINED3D_TEXTURE_COND_NP2_EMULATED)
     {
-        if (format->download)
+        if (format_gl->f.download)
         {
             FIXME("Reading back converted texture %p with NP2 emulation is not supported.\n", texture);
             return;
         }
 
         wined3d_texture_get_pitch(texture, level, &dst_row_pitch, &dst_slice_pitch);
-        wined3d_format_calculate_pitch(format, texture->resource.device->surface_alignment,
+        wined3d_format_calculate_pitch(&format_gl->f, texture->resource.device->surface_alignment,
                 wined3d_texture_get_level_pow2_width(texture, level),
                 wined3d_texture_get_level_pow2_height(texture, level),
                 &src_row_pitch, &src_slice_pitch);
@@ -418,7 +420,7 @@ static void texture2d_download_data(struct wined3d_texture *texture, unsigned in
             ERR("Unexpected compressed format for NP2 emulated texture.\n");
     }
 
-    if (format->download)
+    if (format_gl->f.download)
     {
         struct wined3d_format f;
 
@@ -426,10 +428,10 @@ static void texture2d_download_data(struct wined3d_texture *texture, unsigned in
             ERR("Converted texture %p uses PBO unexpectedly.\n", texture);
 
         WARN_(d3d_perf)("Downloading converted texture %p, %u with format %s.\n",
-                texture, sub_resource_idx, debug_d3dformat(format->id));
+                texture, sub_resource_idx, debug_d3dformat(format_gl->f.id));
 
-        f = *format;
-        f.byte_count = format->conv_byte_count;
+        f = format_gl->f;
+        f.byte_count = format_gl->f.conv_byte_count;
         wined3d_texture_get_pitch(texture, level, &dst_row_pitch, &dst_slice_pitch);
         wined3d_format_calculate_pitch(&f, texture->resource.device->surface_alignment,
                 wined3d_texture_get_level_width(texture, level),
@@ -461,7 +463,7 @@ static void texture2d_download_data(struct wined3d_texture *texture, unsigned in
     if (texture->resource.format_flags & WINED3DFMT_FLAG_COMPRESSED)
     {
         TRACE("Downloading compressed texture %p, %u, level %u, format %#x, type %#x, data %p.\n",
-                texture, sub_resource_idx, level, format->glFormat, format->glType, mem);
+                texture, sub_resource_idx, level, format_gl->format, format_gl->type, mem);
 
         GL_EXTCALL(glGetCompressedTexImage(target, level, mem));
         checkGLcall("glGetCompressedTexImage");
@@ -469,15 +471,15 @@ static void texture2d_download_data(struct wined3d_texture *texture, unsigned in
     else
     {
         TRACE("Downloading texture %p, %u, level %u, format %#x, type %#x, data %p.\n",
-                texture, sub_resource_idx, level, format->glFormat, format->glType, mem);
+                texture, sub_resource_idx, level, format_gl->format, format_gl->type, mem);
 
-        gl_info->gl_ops.gl.p_glGetTexImage(target, level, format->glFormat, format->glType, mem);
+        gl_info->gl_ops.gl.p_glGetTexImage(target, level, format_gl->format, format_gl->type, mem);
         checkGLcall("glGetTexImage");
     }
 
-    if (format->download)
+    if (format_gl->f.download)
     {
-        format->download(mem, data.addr, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch,
+        format_gl->f.download(mem, data.addr, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch,
                 wined3d_texture_get_level_width(texture, level),
                 wined3d_texture_get_level_height(texture, level), 1);
     }
@@ -1083,7 +1085,9 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
 static void texture2d_read_from_framebuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD src_location, DWORD dst_location)
 {
-    struct wined3d_device *device = texture->resource.device;
+    struct wined3d_resource *resource = &texture->resource;
+    struct wined3d_device *device = resource->device;
+    const struct wined3d_format_gl *format_gl;
     struct wined3d_texture *restore_texture;
     const struct wined3d_gl_info *gl_info;
     unsigned int row_pitch, slice_pitch;
@@ -1105,10 +1109,10 @@ static void texture2d_read_from_framebuffer(struct wined3d_texture *texture, uns
         restore_texture = NULL;
     gl_info = context->gl_info;
 
-    if (src_location != texture->resource.draw_binding)
+    if (src_location != resource->draw_binding)
     {
         context_apply_fbo_state_blit(context, GL_READ_FRAMEBUFFER,
-                &texture->resource, sub_resource_idx, NULL, 0, src_location);
+                resource, sub_resource_idx, NULL, 0, src_location);
         context_check_fbo_status(context, GL_READ_FRAMEBUFFER);
         context_invalidate_state(context, STATE_FRAMEBUFFER);
     }
@@ -1121,7 +1125,7 @@ static void texture2d_read_from_framebuffer(struct wined3d_texture *texture, uns
      * There is no need to keep track of the current read buffer or reset it,
      * every part of the code that reads sets the read buffer as desired.
      */
-    if (src_location != WINED3D_LOCATION_DRAWABLE || wined3d_resource_is_offscreen(&texture->resource))
+    if (src_location != WINED3D_LOCATION_DRAWABLE || wined3d_resource_is_offscreen(resource))
     {
         /* Mapping the primary render target which is not on a swapchain.
          * Read from the back buffer. */
@@ -1147,16 +1151,16 @@ static void texture2d_read_from_framebuffer(struct wined3d_texture *texture, uns
 
     level = sub_resource_idx % texture->level_count;
     wined3d_texture_get_pitch(texture, level, &row_pitch, &slice_pitch);
+    format_gl = wined3d_format_gl(resource->format);
 
     /* Setup pixel store pack state -- to glReadPixels into the correct place */
-    gl_info->gl_ops.gl.p_glPixelStorei(GL_PACK_ROW_LENGTH, row_pitch / texture->resource.format->byte_count);
+    gl_info->gl_ops.gl.p_glPixelStorei(GL_PACK_ROW_LENGTH, row_pitch / format_gl->f.byte_count);
     checkGLcall("glPixelStorei");
 
     width = wined3d_texture_get_level_width(texture, level);
     height = wined3d_texture_get_level_height(texture, level);
     gl_info->gl_ops.gl.p_glReadPixels(0, 0, width, height,
-            texture->resource.format->glFormat,
-            texture->resource.format->glType, data.addr);
+            format_gl->format, format_gl->type, data.addr);
     checkGLcall("glReadPixels");
 
     /* Reset previous pixel store pack state */
