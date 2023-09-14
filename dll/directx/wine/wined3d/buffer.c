@@ -1057,7 +1057,10 @@ static HRESULT wined3d_buffer_gl_map(struct wined3d_buffer_gl *buffer_gl,
                 wined3d_buffer_load_location(&buffer_gl->b, context, WINED3D_LOCATION_BUFFER);
 
             if (flags & WINED3D_MAP_WRITE)
+            {
+                wined3d_buffer_invalidate_location(&buffer_gl->b, WINED3D_LOCATION_SYSMEM);
                 buffer_invalidate_bo_range(&buffer_gl->b, dirty_offset, dirty_size);
+            }
 
             if ((flags & WINED3D_MAP_DISCARD) && buffer_gl->b.resource.heap_memory)
                 wined3d_buffer_evict_sysmem(&buffer_gl->b);
