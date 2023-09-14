@@ -54,6 +54,24 @@ static char CURR_DIR[MAX_PATH];
  * Helpers
  */
 
+static void load_resource(const char *name, const char *filename)
+{
+    DWORD written;
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+
+    file = CreateFileA(filename, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE, "file creation failed, at %s, error %d\n", filename, GetLastError());
+
+    res = FindResourceA(NULL, name, "TESTDLL");
+    ok( res != 0, "couldn't find resource\n" );
+    ptr = LockResource( LoadResource( GetModuleHandleA(NULL), res ));
+    WriteFile( file, ptr, SizeofResource( GetModuleHandleA(NULL), res ), &written, NULL );
+    ok( written == SizeofResource( GetModuleHandleA(NULL), res ), "couldn't write resource\n" );
+    CloseHandle( file );
+}
+
 static void create_inf_file(LPCSTR filename, const char *data)
 {
     DWORD res;
@@ -2040,6 +2058,77 @@ static void test_start_copy(void)
     delete_file("dst/");
 }
 
+static void test_register_dlls(void)
+{
+    static const char inf_data[] = "[Version]\n"
+            "Signature=\"$Chicago$\"\n"
+            "[DefaultInstall]\n"
+            "RegisterDlls=register_section\n"
+            "UnregisterDlls=register_section\n"
+            "[register_section]\n"
+            "40000,,winetest_selfreg.dll,1\n";
+
+    void *context = SetupInitDefaultQueueCallbackEx(NULL, INVALID_HANDLE_VALUE, 0, 0, 0);
+    char path[MAX_PATH];
+    HRESULT hr;
+    HINF hinf;
+    BOOL ret;
+    HKEY key;
+    LONG l;
+
+    create_inf_file("test.inf", inf_data);
+    sprintf(path, "%s\\test.inf", CURR_DIR);
+    hinf = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
+    ok(hinf != INVALID_HANDLE_VALUE, "Failed to open INF file, error %#x.\n", GetLastError());
+
+    load_resource("selfreg.dll", "winetest_selfreg.dll");
+    ret = SetupSetDirectoryIdA(hinf, 40000, CURR_DIR);
+    ok(ret, "Failed to set directory ID, error %u.\n", GetLastError());
+
+    RegDeleteKeyA(HKEY_CURRENT_USER, "winetest_setupapi_selfreg");
+
+    ret = SetupInstallFromInfSectionA(NULL, hinf, "DefaultInstall", SPINST_REGSVR,
+            NULL, "C:\\", 0, SetupDefaultQueueCallbackA, context, NULL, NULL);
+    ok(ret, "Failed to install, error %#x.\n", GetLastError());
+
+    l = RegOpenKeyA(HKEY_CURRENT_USER, "winetest_setupapi_selfreg", &key);
+    todo_wine ok(!l, "Got error %u.\n", l);
+    RegCloseKey(key);
+
+    ret = SetupInstallFromInfSectionA(NULL, hinf, "DefaultInstall", SPINST_UNREGSVR,
+            NULL, "C:\\", 0, SetupDefaultQueueCallbackA, context, NULL, NULL);
+    ok(ret, "Failed to install, error %#x.\n", GetLastError());
+
+    l = RegOpenKeyA(HKEY_CURRENT_USER, "winetest_setupapi_selfreg", &key);
+    ok(l == ERROR_FILE_NOT_FOUND, "Got error %u.\n", l);
+
+    hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+    ret = SetupInstallFromInfSectionA(NULL, hinf, "DefaultInstall", SPINST_REGSVR,
+            NULL, "C:\\", 0, SetupDefaultQueueCallbackA, context, NULL, NULL);
+    ok(ret, "Failed to install, error %#x.\n", GetLastError());
+
+    l = RegOpenKeyA(HKEY_CURRENT_USER, "winetest_setupapi_selfreg", &key);
+    ok(!l, "Got error %u.\n", l);
+    RegCloseKey(key);
+
+    ret = SetupInstallFromInfSectionA(NULL, hinf, "DefaultInstall", SPINST_UNREGSVR,
+            NULL, "C:\\", 0, SetupDefaultQueueCallbackA, context, NULL, NULL);
+    ok(ret, "Failed to install, error %#x.\n", GetLastError());
+
+    l = RegOpenKeyA(HKEY_CURRENT_USER, "winetest_setupapi_selfreg", &key);
+    ok(l == ERROR_FILE_NOT_FOUND, "Got error %u.\n", l);
+
+    CoUninitialize();
+
+    SetupCloseInfFile(hinf);
+    ret = DeleteFileA("test.inf");
+    ok(ret, "Failed to delete INF file, error %u.\n", GetLastError());
+    ret = DeleteFileA("winetest_selfreg.dll");
+    ok(ret, "Failed to delete test DLL, error %u.\n", GetLastError());
+}
+
 START_TEST(install)
 {
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
@@ -2069,6 +2158,7 @@ START_TEST(install)
     test_close_queue();
     test_install_file();
     test_start_copy();
+    test_register_dlls();
 
     UnhookWindowsHookEx(hhook);
 
