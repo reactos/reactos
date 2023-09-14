@@ -2677,7 +2677,8 @@ struct wined3d_adapter
     UINT64 vram_bytes_used;
     LUID luid;
 
-    struct wined3d_format *formats;
+    void *formats;
+    size_t format_size;
 
     const struct wined3d_vertex_pipe_ops *vertex_pipe;
     const struct fragment_pipeline *fragment_pipe;
@@ -2700,7 +2701,7 @@ struct wined3d_caps_gl_ctx
     GLuint test_program_id;
 };
 
-BOOL wined3d_adapter_init_format_info(struct wined3d_adapter *adapter) DECLSPEC_HIDDEN;
+BOOL wined3d_adapter_init_format_info(struct wined3d_adapter *adapter, size_t format_size) DECLSPEC_HIDDEN;
 BOOL wined3d_adapter_gl_init_format_info(struct wined3d_adapter *adapter,
         struct wined3d_caps_gl_ctx *ctx) DECLSPEC_HIDDEN;
 UINT64 adapter_adjust_memory(struct wined3d_adapter *adapter, INT64 amount) DECLSPEC_HIDDEN;

@@ -2490,7 +2490,7 @@ static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter)
     adapter->vram_bytes_used = 0;
     TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->vram_bytes));
 
-    if (!wined3d_adapter_init_format_info(adapter))
+    if (!wined3d_adapter_init_format_info(adapter, sizeof(struct wined3d_format)))
         return FALSE;
 
     adapter->vertex_pipe = &none_vertex_pipe;
