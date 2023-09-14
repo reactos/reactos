@@ -844,7 +844,7 @@ BOOL WINAPI SetupQueueRenameA( HSPFILEQ handle, PCSTR SourcePath, PCSTR SourceFi
     if (!(op = heap_alloc_zero( sizeof(*op) ))) return FALSE;
     op->src_path = strdupAtoW( SourcePath );
     op->src_file = strdupAtoW( SourceFilename );
-    op->dst_path = strdupAtoW( TargetPath );
+    op->dst_path = strdupAtoW( TargetPath ? TargetPath : SourcePath );
     op->dst_file = strdupAtoW( TargetFilename );
     queue_file_op( &queue->rename_queue, op );
     return TRUE;
@@ -863,7 +863,7 @@ BOOL WINAPI SetupQueueRenameW( HSPFILEQ handle, PCWSTR SourcePath, PCWSTR Source
     if (!(op = heap_alloc_zero( sizeof(*op) ))) return FALSE;
     op->src_path = strdupW( SourcePath );
     op->src_file = strdupW( SourceFilename );
-    op->dst_path = strdupW( TargetPath );
+    op->dst_path = strdupW( TargetPath ? TargetPath : SourcePath );
     op->dst_file = strdupW( TargetFilename );
     queue_file_op( &queue->rename_queue, op );
     return TRUE;
