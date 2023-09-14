@@ -12895,11 +12895,9 @@ static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wi
         return FALSE;
 
     if (src_texture->target == GL_TEXTURE_2D_MULTISAMPLE
-            || dst_texture->target == GL_TEXTURE_2D_MULTISAMPLE
-            || src_texture->target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY
-            || dst_texture->target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY)
+            || src_texture->target == GL_TEXTURE_2D_MULTISAMPLE_ARRAY)
     {
-        TRACE("Multi-sample textures not supported.\n");
+        TRACE("Multi-sample source textures not supported.\n");
         return FALSE;
     }
 
