@@ -44,6 +44,10 @@ static const DWORD pixel_states_render[] =
     WINED3D_RS_COLORWRITEENABLE1,
     WINED3D_RS_COLORWRITEENABLE2,
     WINED3D_RS_COLORWRITEENABLE3,
+    WINED3D_RS_COLORWRITEENABLE4,
+    WINED3D_RS_COLORWRITEENABLE5,
+    WINED3D_RS_COLORWRITEENABLE6,
+    WINED3D_RS_COLORWRITEENABLE7,
     WINED3D_RS_DEPTHBIAS,
     WINED3D_RS_DESTBLEND,
     WINED3D_RS_DESTBLENDALPHA,
@@ -1452,6 +1456,7 @@ void CDECL wined3d_stateblock_set_blend_factor(struct wined3d_stateblock *stateb
 
 static void init_default_render_states(DWORD rs[WINEHIGHEST_RENDER_STATE + 1], const struct wined3d_d3d_info *d3d_info)
 {
+    unsigned int i;
     union
     {
         struct wined3d_line_pattern lp;
@@ -1545,7 +1550,6 @@ static void init_default_render_states(DWORD rs[WINEHIGHEST_RENDER_STATE + 1], c
     tmpfloat.f = d3d_info->limits.pointsize_max;
     rs[WINED3D_RS_POINTSIZE_MAX] = tmpfloat.d;
     rs[WINED3D_RS_INDEXEDVERTEXBLENDENABLE] = FALSE;
-    rs[WINED3D_RS_COLORWRITEENABLE] = 0x0000000f;
     tmpfloat.f = 0.0f;
     rs[WINED3D_RS_TWEENFACTOR] = tmpfloat.d;
     rs[WINED3D_RS_BLENDOP] = WINED3D_BLEND_OP_ADD;
@@ -1571,9 +1575,6 @@ static void init_default_render_states(DWORD rs[WINEHIGHEST_RENDER_STATE + 1], c
     rs[WINED3D_RS_BACK_STENCILZFAIL] = WINED3D_STENCIL_OP_KEEP;
     rs[WINED3D_RS_BACK_STENCILPASS] = WINED3D_STENCIL_OP_KEEP;
     rs[WINED3D_RS_BACK_STENCILFUNC] = WINED3D_CMP_ALWAYS;
-    rs[WINED3D_RS_COLORWRITEENABLE1] = 0x0000000f;
-    rs[WINED3D_RS_COLORWRITEENABLE2] = 0x0000000f;
-    rs[WINED3D_RS_COLORWRITEENABLE3] = 0x0000000f;
     rs[WINED3D_RS_SRGBWRITEENABLE] = 0;
     rs[WINED3D_RS_DEPTHBIAS] = 0;
     rs[WINED3D_RS_WRAP8] = 0;
@@ -1588,6 +1589,8 @@ static void init_default_render_states(DWORD rs[WINEHIGHEST_RENDER_STATE + 1], c
     rs[WINED3D_RS_SRCBLENDALPHA] = WINED3D_BLEND_ONE;
     rs[WINED3D_RS_DESTBLENDALPHA] = WINED3D_BLEND_ZERO;
     rs[WINED3D_RS_BLENDOPALPHA] = WINED3D_BLEND_OP_ADD;
+    for (i = 0; i < MAX_RENDER_TARGETS; ++i)
+        rs[WINED3D_RS_COLORWRITE(i)] = 0x0000000f;
 }
 
 static void init_default_texture_state(unsigned int i, DWORD stage[WINED3D_HIGHEST_TEXTURE_STATE + 1])

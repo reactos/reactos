@@ -5276,6 +5276,13 @@ static inline void wined3d_not_from_cs(struct wined3d_cs *cs)
 BOOL wined3d_dxtn_init(void) DECLSPEC_HIDDEN;
 void wined3d_dxtn_free(void) DECLSPEC_HIDDEN;
 
+static inline BOOL is_indexed_vertex_blending(const struct wined3d_context *context,
+        const struct wined3d_state *state)
+{
+    return state->render_states[WINED3D_RS_INDEXEDVERTEXBLENDENABLE]
+            && (context->stream_info.use_map & (1 << WINED3D_FFP_BLENDINDICES));
+}
+
 static inline enum wined3d_material_color_source validate_material_colour_source(WORD use_map,
         enum wined3d_material_color_source source)
 {
