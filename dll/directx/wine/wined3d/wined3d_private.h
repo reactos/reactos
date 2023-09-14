@@ -206,6 +206,7 @@ struct wined3d_d3d_info
     unsigned int texture_npot : 1;
     unsigned int texture_npot_conditional : 1;
     unsigned int draw_base_vertex_offset : 1;
+    unsigned int vertex_bgra : 1;
     enum wined3d_feature_level feature_level;
 
     DWORD multisample_draw_location;
@@ -1518,8 +1519,7 @@ struct wined3d_stream_info
 };
 
 void wined3d_stream_info_from_declaration(struct wined3d_stream_info *stream_info,
-        const struct wined3d_state *state, const struct wined3d_gl_info *gl_info,
-        const struct wined3d_d3d_info *d3d_info) DECLSPEC_HIDDEN;
+        const struct wined3d_state *state, const struct wined3d_d3d_info *d3d_info) DECLSPEC_HIDDEN;
 
 struct wined3d_direct_dispatch_parameters
 {

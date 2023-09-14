@@ -3516,8 +3516,7 @@ static BOOL fixed_get_input(BYTE usage, BYTE usage_idx, unsigned int *regnum)
 
 /* Context activation is done by the caller. */
 void wined3d_stream_info_from_declaration(struct wined3d_stream_info *stream_info,
-        const struct wined3d_state *state, const struct wined3d_gl_info *gl_info,
-        const struct wined3d_d3d_info *d3d_info)
+        const struct wined3d_state *state, const struct wined3d_d3d_info *d3d_info)
 {
     /* We need to deal with frequency data! */
     struct wined3d_vertex_declaration *declaration = state->vertex_declaration;
@@ -3613,8 +3612,7 @@ void wined3d_stream_info_from_declaration(struct wined3d_stream_info *stream_inf
                 stream_info->elements[idx].divisor = 0;
             }
 
-            if (!gl_info->supported[ARB_VERTEX_ARRAY_BGRA]
-                    && element->format->id == WINED3DFMT_B8G8R8A8_UNORM)
+            if (!d3d_info->vertex_bgra && element->format->id == WINED3DFMT_B8G8R8A8_UNORM)
             {
                 stream_info->swizzle_map |= 1u << idx;
             }
@@ -3633,7 +3631,7 @@ static void context_update_stream_info(struct wined3d_context *context, const st
     unsigned int i;
     WORD map;
 
-    wined3d_stream_info_from_declaration(stream_info, state, gl_info, d3d_info);
+    wined3d_stream_info_from_declaration(stream_info, state, d3d_info);
 
     stream_info->all_vbo = 1;
     context->buffer_fence_count = 0;

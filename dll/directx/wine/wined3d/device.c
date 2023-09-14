@@ -3424,7 +3424,7 @@ HRESULT CDECL wined3d_device_process_vertices(struct wined3d_device *device,
 
     vs = state->shader[WINED3D_SHADER_TYPE_VERTEX];
     state->shader[WINED3D_SHADER_TYPE_VERTEX] = NULL;
-    wined3d_stream_info_from_declaration(&stream_info, state, &device->adapter->gl_info, &device->adapter->d3d_info);
+    wined3d_stream_info_from_declaration(&stream_info, state, &device->adapter->d3d_info);
     state->shader[WINED3D_SHADER_TYPE_VERTEX] = vs;
 
     /* We can't convert FROM a VBO, and vertex buffers used to source into
