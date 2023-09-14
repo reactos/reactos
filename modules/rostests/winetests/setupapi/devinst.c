@@ -60,6 +60,24 @@ static void create_file(const char *name, const char *data)
     CloseHandle(file);
 }
 
+static void load_resource(const char *name, const char *filename)
+{
+    DWORD written;
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+
+    file = CreateFileA(filename, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE, "file creation failed, at %s, error %d\n", filename, GetLastError());
+
+    res = FindResourceA(NULL, name, "TESTDLL");
+    ok( res != 0, "couldn't find resource\n" );
+    ptr = LockResource( LoadResource( GetModuleHandleA(NULL), res ));
+    WriteFile( file, ptr, SizeofResource( GetModuleHandleA(NULL), res ), &written, NULL );
+    ok( written == SizeofResource( GetModuleHandleA(NULL), res ), "couldn't write resource\n" );
+    CloseHandle( file );
+}
+
 static void test_create_device_list_ex(void)
 {
     static const WCHAR machine[] = { 'd','u','m','m','y',0 };
@@ -2348,9 +2366,155 @@ static BOOL device_is_registered(HDEVINFO set, SP_DEVINFO_DATA *device)
     return GetLastError() == ERROR_KEY_DOES_NOT_EXIST;
 }
 
+static unsigned int *coinst_callback_count;
+static DI_FUNCTION *coinst_last_message;
+
+static void test_class_installer(void)
+{
+    SP_DEVINFO_DATA device = {sizeof(device)};
+    char regdata[200];
+    HKEY class_key;
+    HDEVINFO set;
+    BOOL ret;
+    LONG res;
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Control\\Class"
+            "\\{6a55b5a4-3f65-11db-b704-0011955c2bdb}", &class_key);
+    ok(!res, "Failed to create class key, error %u.\n", res);
+
+    strcpy(regdata, "winetest_coinst.dll,class_success");
+    res = RegSetValueExA(class_key, "Installer32", 0, REG_SZ, (BYTE *)regdata, strlen(regdata)+1);
+    ok(!res, "Failed to set registry value, error %u.\n", res);
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    ret = SetupDiCallClassInstaller(DIF_ALLOW_INSTALL, set, &device);
+    ok(ret, "Failed to call class installer, error %#x.\n", GetLastError());
+
+    ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
+    ok(*coinst_last_message == DIF_ALLOW_INSTALL, "Got unexpected message %#x.\n", *coinst_last_message);
+    *coinst_callback_count = 0;
+
+    ret = SetupDiCallClassInstaller(0xdeadbeef, set, &device);
+    ok(ret, "Failed to call class installer, error %#x.\n", GetLastError());
+
+    ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
+    ok(*coinst_last_message == 0xdeadbeef, "Got unexpected message %#x.\n", *coinst_last_message);
+    *coinst_callback_count = 0;
+
+    ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
+    ret = SetupDiCallClassInstaller(DIF_REGISTERDEVICE, set, &device);
+    ok(ret, "Failed to call class installer, error %#x.\n", GetLastError());
+    ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
+
+    ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
+    ok(*coinst_last_message == DIF_REGISTERDEVICE, "Got unexpected message %#x.\n", *coinst_last_message);
+    *coinst_callback_count = 0;
+
+    ret = SetupDiCallClassInstaller(DIF_REMOVE, set, &device);
+    ok(ret, "Failed to call class installer, error %#x.\n", GetLastError());
+    ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
+
+    ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
+    ok(*coinst_last_message == DIF_REMOVE, "Got unexpected message %#x.\n", *coinst_last_message);
+    *coinst_callback_count = 0;
+
+    SetupDiDestroyDeviceInfoList(set);
+
+    todo_wine ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
+    todo_wine ok(*coinst_last_message == DIF_DESTROYPRIVATEDATA, "Got unexpected message %#x.\n", *coinst_last_message);
+    *coinst_callback_count = 0;
+
+    /* Test returning an error. */
+
+    strcpy(regdata, "winetest_coinst.dll,class_error");
+    res = RegSetValueExA(class_key, "Installer32", 0, REG_SZ, (BYTE *)regdata, strlen(regdata)+1);
+    ok(!res, "Failed to set registry value, error %u.\n", res);
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    ret = SetupDiCallClassInstaller(DIF_ALLOW_INSTALL, set, &device);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == 0xdeadbeef, "Got unexpected error %#x.\n", GetLastError());
+
+    ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
+    ret = SetupDiCallClassInstaller(DIF_REGISTERDEVICE, set, &device);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == 0xdeadbeef, "Got unexpected error %#x.\n", GetLastError());
+    ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
+
+    ret = SetupDiCallClassInstaller(DIF_REMOVE, set, &device);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == 0xdeadbeef, "Got unexpected error %#x.\n", GetLastError());
+    ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
+
+    SetupDiDestroyDeviceInfoList(set);
+
+    /* Test returning ERROR_DI_DO_DEFAULT. */
+
+    strcpy(regdata, "winetest_coinst.dll,class_default");
+    res = RegSetValueExA(class_key, "Installer32", 0, REG_SZ, (BYTE *)regdata, strlen(regdata)+1);
+    ok(!res, "Failed to set registry value, error %u.\n", res);
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    ret = SetupDiCallClassInstaller(DIF_ALLOW_INSTALL, set, &device);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_DI_DO_DEFAULT, "Got unexpected error %#x.\n", GetLastError());
+
+    ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
+    ret = SetupDiCallClassInstaller(DIF_REGISTERDEVICE, set, &device);
+    ok(ret, "Failed to call class installer, error %#x.\n", GetLastError());
+    ok(device_is_registered(set, &device), "Expected device to be registered.\n");
+
+    ret = SetupDiCallClassInstaller(DIF_REMOVE, set, &device);
+    ok(ret, "Failed to call class installer, error %#x.\n", GetLastError());
+    ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
+
+    SetupDiDestroyDeviceInfoList(set);
+
+    /* The default entry point is ClassInstall(). */
+
+    strcpy(regdata, "winetest_coinst.dll");
+    res = RegSetValueExA(class_key, "Installer32", 0, REG_SZ, (BYTE *)regdata, strlen(regdata)+1);
+    ok(!res, "Failed to set registry value, error %u.\n", res);
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    ret = SetupDiCallClassInstaller(DIF_ALLOW_INSTALL, set, &device);
+    ok(ret, "Failed to call class installer, error %#x.\n", GetLastError());
+
+    ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
+    ok(*coinst_last_message == DIF_ALLOW_INSTALL, "Got unexpected message %#x.\n", *coinst_last_message);
+    *coinst_callback_count = 0;
+
+    SetupDiDestroyDeviceInfoList(set);
+
+    todo_wine ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
+    todo_wine ok(*coinst_last_message == DIF_DESTROYPRIVATEDATA, "Got unexpected message %#x.\n", *coinst_last_message);
+    *coinst_callback_count = 0;
+
+    res = RegDeleteKeyA(class_key, "");
+    ok(!res, "Failed to delete class key, error %u.\n", res);
+    RegCloseKey(class_key);
+}
+
 static void test_call_class_installer(void)
 {
     SP_DEVINFO_DATA device = {sizeof(device)};
+    HMODULE coinst;
     HDEVINFO set;
     BOOL ret;
 
@@ -2385,6 +2549,19 @@ static void test_call_class_installer(void)
     ok(!device_is_registered(set, &device), "Expected device not to be registered.\n");
 
     SetupDiDestroyDeviceInfoList(set);
+
+    load_resource("coinst.dll", "C:\\windows\\system32\\winetest_coinst.dll");
+
+    coinst = LoadLibraryA("winetest_coinst.dll");
+    coinst_callback_count = (void *)GetProcAddress(coinst, "callback_count");
+    coinst_last_message = (void *)GetProcAddress(coinst, "last_message");
+
+    test_class_installer();
+
+    FreeLibrary(coinst);
+
+    ret = DeleteFileA("C:\\windows\\system32\\winetest_coinst.dll");
+    ok(ret, "Failed to delete file, error %u.\n", GetLastError());
 }
 
 START_TEST(devinst)
