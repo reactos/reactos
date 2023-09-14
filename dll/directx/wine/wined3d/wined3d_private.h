@@ -3652,7 +3652,6 @@ struct wined3d_stateblock
 
     /* Array indicating whether things have been set or changed */
     struct wined3d_saved_states changed;
-    struct wined3d_state state;
     struct wined3d_stateblock_state stateblock_state;
 
     /* Contained state management */

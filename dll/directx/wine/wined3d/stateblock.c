@@ -604,7 +604,6 @@ ULONG CDECL wined3d_stateblock_decref(struct wined3d_stateblock *stateblock)
 
     if (!refcount)
     {
-        state_cleanup(&stateblock->state);
         wined3d_stateblock_state_cleanup(&stateblock->stateblock_state);
         heap_free(stateblock);
     }
@@ -1557,7 +1556,6 @@ static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
 
     stateblock->ref = 1;
     stateblock->device = device;
-    state_init(&stateblock->state, NULL, d3d_info, 0);
     wined3d_stateblock_state_init(&stateblock->stateblock_state, device, 0);
 
     if (type == WINED3D_SBT_RECORDED)
