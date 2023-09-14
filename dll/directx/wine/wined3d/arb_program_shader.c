@@ -604,14 +604,14 @@ static void shader_arb_ps_local_constants(const struct arb_ps_compiled_shader *g
 
 /* Context activation is done by the caller. */
 static void shader_arb_vs_local_constants(const struct arb_vs_compiled_shader *gl_shader,
-        const struct wined3d_context *context, const struct wined3d_state *state)
+        const struct wined3d_context_gl *context_gl, const struct wined3d_state *state)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     float position_fixup[4];
     unsigned char i;
 
     /* Upload the position fixup */
-    shader_get_position_fixup(context, state, 1, position_fixup);
+    shader_get_position_fixup(&context_gl->c, state, 1, position_fixup);
     GL_EXTCALL(glProgramLocalParameter4fvARB(GL_VERTEX_PROGRAM_ARB, gl_shader->pos_fixup, position_fixup));
 
     if (!gl_shader->num_int_consts) return;
@@ -694,7 +694,7 @@ static void shader_arb_load_constants_internal(struct shader_arb_priv *priv,
         /* Load DirectX 9 float constants for vertex shader */
         priv->highest_dirty_vs_const = shader_arb_load_constants_f(vshader, gl_info, GL_VERTEX_PROGRAM_ARB,
                 priv->highest_dirty_vs_const, state->vs_consts_f, priv->vshader_const_dirty);
-        shader_arb_vs_local_constants(gl_shader, context, state);
+        shader_arb_vs_local_constants(gl_shader, context_gl, state);
     }
 
     if (usePixelShader)
@@ -4661,7 +4661,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
         gl_info->gl_ops.gl.p_glEnable(GL_VERTEX_PROGRAM_ARB);
         checkGLcall("glEnable(GL_VERTEX_PROGRAM_ARB);");
         TRACE("Bound vertex program %u and enabled GL_VERTEX_PROGRAM_ARB\n", priv->current_vprogram_id);
-        shader_arb_vs_local_constants(compiled, context, state);
+        shader_arb_vs_local_constants(compiled, context_gl, state);
 
         if(priv->last_vs_color_unclamp != compiled->need_color_unclamp) {
             priv->last_vs_color_unclamp = compiled->need_color_unclamp;
