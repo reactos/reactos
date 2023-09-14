@@ -4227,11 +4227,11 @@ static GLuint shader_arb_generate_vshader(const struct wined3d_shader *shader,
 }
 
 /* Context activation is done by the caller. */
-static struct arb_ps_compiled_shader *find_arb_pshader(struct wined3d_context *context,
+static struct arb_ps_compiled_shader *find_arb_pshader(struct wined3d_context_gl *context_gl,
         struct wined3d_shader *shader, const struct arb_ps_compile_args *args)
 {
-    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_d3d_info *d3d_info = context_gl->c.d3d_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_device *device = shader->device;
     UINT i;
     DWORD new_size;
@@ -4565,7 +4565,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
 
         TRACE("Using pixel shader %p.\n", ps);
         find_arb_ps_compile_args(state, context, ps, &compile_args);
-        compiled = find_arb_pshader(context, ps, &compile_args);
+        compiled = find_arb_pshader(context_gl, ps, &compile_args);
         priv->current_fprogram_id = compiled->prgId;
         priv->compiled_fprog = compiled;
 
