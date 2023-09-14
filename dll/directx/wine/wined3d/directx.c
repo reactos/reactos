@@ -156,6 +156,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_ARB_point_parameters",             ARB_POINT_PARAMETERS          },
     {"GL_ARB_point_sprite",                 ARB_POINT_SPRITE              },
     {"GL_ARB_provoking_vertex",             ARB_PROVOKING_VERTEX          },
+    {"GL_ARB_sample_shading",               ARB_SAMPLE_SHADING            },
     {"GL_ARB_sampler_objects",              ARB_SAMPLER_OBJECTS           },
     {"GL_ARB_seamless_cube_map",            ARB_SEAMLESS_CUBE_MAP         },
     {"GL_ARB_shader_atomic_counters",       ARB_SHADER_ATOMIC_COUNTERS    },
@@ -2828,6 +2829,8 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     USE_GL_FUNC(glPointParameterfvARB)
     /* GL_ARB_provoking_vertex */
     USE_GL_FUNC(glProvokingVertex)
+    /* GL_ARB_sample_shading */
+    USE_GL_FUNC(glMinSampleShadingARB)
     /* GL_ARB_sampler_objects */
     USE_GL_FUNC(glGenSamplers)
     USE_GL_FUNC(glDeleteSamplers)
@@ -3921,6 +3924,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
 
         {ARB_DRAW_INDIRECT,                MAKEDWORD_VERSION(4, 0)},
         {ARB_GPU_SHADER5,                  MAKEDWORD_VERSION(4, 0)},
+        {ARB_SAMPLE_SHADING,               MAKEDWORD_VERSION(4, 0)},
         {ARB_TESSELLATION_SHADER,          MAKEDWORD_VERSION(4, 0)},
         {ARB_TEXTURE_CUBE_MAP_ARRAY,       MAKEDWORD_VERSION(4, 0)},
         {ARB_TEXTURE_GATHER,               MAKEDWORD_VERSION(4, 0)},

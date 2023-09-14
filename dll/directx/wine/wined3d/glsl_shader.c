@@ -7388,6 +7388,8 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
         shader_addline(buffer, "#extension GL_ARB_fragment_coord_conventions : enable\n");
     if (gl_info->supported[ARB_FRAGMENT_LAYER_VIEWPORT])
         shader_addline(buffer, "#extension GL_ARB_fragment_layer_viewport : enable\n");
+    if (gl_info->supported[ARB_SAMPLE_SHADING])
+        shader_addline(buffer, "#extension GL_ARB_sample_shading : enable\n");
     if (gl_info->supported[ARB_SHADER_TEXTURE_LOD])
         shader_addline(buffer, "#extension GL_ARB_shader_texture_lod : enable\n");
     /* The spec says that it doesn't have to be explicitly enabled, but the
