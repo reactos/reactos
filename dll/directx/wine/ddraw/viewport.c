@@ -68,6 +68,12 @@ void viewport_activate(struct d3d_viewport *This, BOOL ignore_lights)
         }
     }
 
+    if (This->version == DDRAW_VIEWPORT_VERSION_NONE)
+    {
+        TRACE("Viewport data was not set.\n");
+        return;
+    }
+
     /* And copy the values in the structure used by the device */
     if (This->version == DDRAW_VIEWPORT_VERSION_2)
     {
