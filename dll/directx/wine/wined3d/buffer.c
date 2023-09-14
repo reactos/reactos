@@ -1344,6 +1344,8 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     const struct wined3d_format *format = wined3d_get_format(gl_info, format_id, usage);
+    struct wined3d_resource *resource = &buffer->resource;
+    struct wined3d_box box;
     BOOL dynamic_buffer_ok;
     HRESULT hr;
 
@@ -1365,7 +1367,7 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
         return E_INVALIDARG;
     }
 
-    if (FAILED(hr = resource_init(&buffer->resource, device, WINED3D_RTYPE_BUFFER, format, WINED3D_MULTISAMPLE_NONE,
+    if (FAILED(hr = resource_init(resource, device, WINED3D_RTYPE_BUFFER, format, WINED3D_MULTISAMPLE_NONE,
             0, usage, access, size, 1, 1, size, parent, parent_ops, &buffer_resource_ops)))
     {
         WARN("Failed to initialize resource, hr %#x.\n", hr);
@@ -1405,7 +1407,7 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
     {
         TRACE("Not creating a BO because the buffer is not GPU accessible.\n");
     }
-    else if (!dynamic_buffer_ok && (buffer->resource.usage & WINED3DUSAGE_DYNAMIC))
+    else if (!dynamic_buffer_ok && (resource->usage & WINED3DUSAGE_DYNAMIC))
     {
         TRACE("Not creating a BO because the buffer has dynamic usage and no GL support.\n");
     }
@@ -1417,16 +1419,19 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
     if (!(buffer->maps = heap_alloc(sizeof(*buffer->maps))))
     {
         ERR("Out of memory.\n");
-        buffer_unload(&buffer->resource);
-        resource_cleanup(&buffer->resource);
-        wined3d_resource_wait_idle(&buffer->resource);
+        buffer_unload(resource);
+        resource_cleanup(resource);
+        wined3d_resource_wait_idle(resource);
         return E_OUTOFMEMORY;
     }
     buffer->maps_size = 1;
 
     if (data)
-        wined3d_device_update_sub_resource(device, &buffer->resource,
-                0, NULL, data->data, data->row_pitch, data->slice_pitch, 0);
+    {
+        wined3d_box_set(&box, 0, 0, resource->size, 1, 0, 1);
+        wined3d_cs_emit_update_sub_resource(device->cs, resource,
+                0, &box, data->data, data->row_pitch, data->slice_pitch);
+    }
 
     return WINED3D_OK;
 }
