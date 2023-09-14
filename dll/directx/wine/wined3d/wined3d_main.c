@@ -830,7 +830,7 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
             break;
 
         case DLL_THREAD_DETACH:
-            if (!context_set_current(NULL))
+            if (!wined3d_context_gl_set_current(NULL))
             {
                 ERR("Failed to clear current context.\n");
             }

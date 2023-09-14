@@ -1255,13 +1255,13 @@ static BOOL wined3d_context_gl_set_gl_context(struct wined3d_context_gl *context
         if (context_gl->c.destroyed || !swapchain)
         {
             FIXME("Unable to get backup dc for destroyed context %p.\n", context_gl);
-            context_set_current(NULL);
+            wined3d_context_gl_set_current(NULL);
             return FALSE;
         }
 
         if (!(context_gl->dc = swapchain_get_backup_dc(swapchain)))
         {
-            context_set_current(NULL);
+            wined3d_context_gl_set_current(NULL);
             return FALSE;
         }
 
@@ -1272,7 +1272,7 @@ static BOOL wined3d_context_gl_set_gl_context(struct wined3d_context_gl *context
         {
             ERR("Failed to set pixel format %d on device context %p.\n",
                     context_gl->pixel_format, context_gl->dc);
-            context_set_current(NULL);
+            wined3d_context_gl_set_current(NULL);
             return FALSE;
         }
 
@@ -1280,7 +1280,7 @@ static BOOL wined3d_context_gl_set_gl_context(struct wined3d_context_gl *context
         {
             ERR("Fallback to backup window (dc %p) failed too, last error %#x.\n",
                     context_gl->dc, GetLastError());
-            context_set_current(NULL);
+            wined3d_context_gl_set_current(NULL);
             return FALSE;
         }
 
@@ -1297,7 +1297,7 @@ static void context_restore_gl_context(const struct wined3d_gl_info *gl_info, HD
     {
         ERR("Failed to restore GL context %p on device context %p, last error %#x.\n",
                 gl_ctx, dc, GetLastError());
-        context_set_current(NULL);
+        wined3d_context_gl_set_current(NULL);
     }
 }
 
@@ -1508,13 +1508,14 @@ struct wined3d_context *context_get_current(void)
     return TlsGetValue(wined3d_context_tls_idx);
 }
 
-BOOL context_set_current(struct wined3d_context *ctx)
+BOOL wined3d_context_gl_set_current(struct wined3d_context_gl *context_gl)
 {
+    struct wined3d_context *ctx = context_gl ? &context_gl->c : NULL;
     struct wined3d_context *old = context_get_current();
 
     if (old == ctx)
     {
-        TRACE("Already using D3D context %p.\n", ctx);
+        TRACE("Already using D3D context %p.\n", context_gl);
         return TRUE;
     }
 
@@ -1532,20 +1533,18 @@ BOOL context_set_current(struct wined3d_context *ctx)
             if (wglGetCurrentContext())
             {
                 const struct wined3d_gl_info *gl_info = old->gl_info;
-                TRACE("Flushing context %p before switching to %p.\n", old, ctx);
+                TRACE("Flushing context %p before switching to %p.\n", old, context_gl);
                 gl_info->gl_ops.gl.p_glFlush();
             }
             old->current = 0;
         }
     }
 
-    if (ctx)
+    if (context_gl)
     {
-        struct wined3d_context_gl *context_gl = wined3d_context_gl(ctx);
-
         if (!context_gl->valid)
         {
-            ERR("Trying to make invalid context %p current\n", ctx);
+            ERR("Trying to make invalid context %p current.\n", context_gl);
             return FALSE;
         }
 
@@ -1553,7 +1552,7 @@ BOOL context_set_current(struct wined3d_context *ctx)
                 context_gl, context_gl->gl_ctx, context_gl->dc);
         if (!wined3d_context_gl_set_gl_context(context_gl))
             return FALSE;
-        ctx->current = 1;
+        context_gl->c.current = 1;
     }
     else if (wglGetCurrentContext())
     {
@@ -2146,7 +2145,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
     context_gl->needs_set = 1;
 
     /* Set up the context defaults */
-    if (!context_set_current(context))
+    if (!wined3d_context_gl_set_current(context_gl))
     {
         ERR("Cannot activate context to set up defaults.\n");
         context_release(context);
@@ -4201,7 +4200,7 @@ static void wined3d_context_gl_activate(struct wined3d_context_gl *context_gl,
 
     if (&context_gl->c != context_get_current())
     {
-        if (!context_set_current(&context_gl->c))
+        if (!wined3d_context_gl_set_current(context_gl))
             ERR("Failed to activate the new context.\n");
     }
     else if (context_gl->needs_set)
