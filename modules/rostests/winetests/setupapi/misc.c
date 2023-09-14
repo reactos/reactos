@@ -28,6 +28,15 @@
 #include "winnls.h"
 #include "winuser.h"
 #include "winreg.h"
+#include "devguid.h"
+#include "initguid.h"
+
+#pragma push_macro("NTDDI_VERSION")
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_VISTA
+#include "ntddvdeo.h"
+#pragma pop_macro("NTDDI_VERSION")
+
 #include "setupapi.h"
 #include "cfgmgr32.h"
 
@@ -819,6 +828,87 @@ static void test_CM_Get_Version(void)
     ok(ret == 0x0400, "got version %#x\n", ret);
 }
 
+#define check_device_interface(a, b) _check_device_interface(__LINE__, a, b)
+static void _check_device_interface(int line, const char *instance_id, const GUID *guid)
+{
+    SP_DEVICE_INTERFACE_DATA iface_data = {sizeof(iface_data)};
+    SP_DEVINFO_DATA device_data = {sizeof(device_data)};
+    HDEVINFO devinfo;
+    BOOL ret;
+
+    devinfo = SetupDiGetClassDevsA(guid, instance_id, NULL, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
+    ret = SetupDiEnumDeviceInfo(devinfo, 0, &device_data);
+    ok_(__FILE__, line)(ret || broken(!ret) /* <= Win7 */,
+                        "SetupDiEnumDeviceInfo failed, error %u.\n", GetLastError());
+    if (!ret)
+    {
+        SetupDiDestroyDeviceInfoList(devinfo);
+        return;
+    }
+    ret = SetupDiEnumDeviceInterfaces(devinfo, &device_data, guid, 0, &iface_data);
+    ok_(__FILE__, line)(ret, "SetupDiEnumDeviceInterfaces failed, error %u.\n", GetLastError());
+    ok_(__FILE__, line)(IsEqualGUID(&iface_data.InterfaceClassGuid, guid),
+                        "Expected guid %s, got %s.\n", wine_dbgstr_guid(guid),
+                        wine_dbgstr_guid(&iface_data.InterfaceClassGuid));
+
+    SetupDiDestroyDeviceInfoList(devinfo);
+}
+
+static void test_device_interfaces(void)
+{
+    SP_DEVICE_INTERFACE_DATA iface_data = {sizeof(iface_data)};
+    SP_DEVINFO_DATA device_data = {sizeof(device_data)};
+    char instance_id[MAX_DEVICE_ID_LEN];
+    DWORD device_idx = 0, size, error;
+    HDEVINFO devinfo;
+    BOOL ret;
+
+    /* GPUs */
+    devinfo = SetupDiGetClassDevsW(&GUID_DEVCLASS_DISPLAY, NULL, NULL, DIGCF_PRESENT);
+    ok(devinfo != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsW failed, error %u.\n", GetLastError());
+    while ((ret = SetupDiEnumDeviceInfo(devinfo, device_idx, &device_data)))
+    {
+        ret = SetupDiGetDeviceInstanceIdA(devinfo, &device_data, instance_id,
+                                          ARRAY_SIZE(instance_id), &size);
+        ok(ret, "SetupDiGetDeviceInstanceIdA failed, error %u.\n", GetLastError());
+
+        winetest_push_context("GPU %d", device_idx);
+
+        check_device_interface(instance_id, &GUID_DEVINTERFACE_DISPLAY_ADAPTER);
+        check_device_interface(instance_id, &GUID_DISPLAY_DEVICE_ARRIVAL);
+
+        winetest_pop_context();
+        ++device_idx;
+    }
+    error = GetLastError();
+    ok(error == ERROR_NO_MORE_ITEMS, "Expected error %u, got %u.\n", ERROR_NO_MORE_ITEMS, error);
+    ok(device_idx > 0, "Expected at least one GPU.\n");
+    SetupDiDestroyDeviceInfoList(devinfo);
+
+    /* Monitors */
+    device_idx = 0;
+    devinfo = SetupDiGetClassDevsW(&GUID_DEVCLASS_MONITOR, L"DISPLAY", NULL, DIGCF_PRESENT);
+    ok(devinfo != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsW failed, error %u.\n", GetLastError());
+    while ((ret = SetupDiEnumDeviceInfo(devinfo, device_idx, &device_data)))
+    {
+        ret = SetupDiGetDeviceInstanceIdA(devinfo, &device_data, instance_id,
+                                          ARRAY_SIZE(instance_id), &size);
+        ok(ret, "SetupDiGetDeviceInstanceIdA failed, error %u.\n", GetLastError());
+
+        winetest_push_context("Monitor %d", device_idx);
+
+        check_device_interface(instance_id, &GUID_DEVINTERFACE_MONITOR);
+
+        winetest_pop_context();
+        ++device_idx;
+    }
+    error = GetLastError();
+    ok(error == ERROR_NO_MORE_ITEMS, "Expected error %u, got %u.\n", ERROR_NO_MORE_ITEMS, error);
+    ok(device_idx > 0 || broken(device_idx == 0) /* w7u_2qxl TestBot */,
+       "Expected at least one monitor.\n");
+    SetupDiDestroyDeviceInfoList(devinfo);
+}
+
 START_TEST(misc)
 {
     HMODULE hsetupapi = GetModuleHandleA("setupapi.dll");
@@ -841,4 +931,5 @@ START_TEST(misc)
     test_defaultcallback();
     test_SetupLogError();
     test_CM_Get_Version();
+    test_device_interfaces();
 }
