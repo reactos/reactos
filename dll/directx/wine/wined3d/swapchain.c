@@ -433,9 +433,9 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
     struct wined3d_texture *back_buffer = swapchain->back_buffers[0];
     const struct wined3d_fb_state *fb = &swapchain->device->cs->fb;
     struct wined3d_rendertarget_view *dsv = fb->depth_stencil;
+    struct wined3d_texture *logo_texture, *cursor_texture;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context_gl *context_gl;
-    struct wined3d_texture *logo_texture;
     struct wined3d_context *context;
     BOOL render_to_fbo;
 
@@ -461,8 +461,8 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
                 WINED3D_BLT_SRC_CKEY, NULL, WINED3D_TEXF_POINT);
     }
 
-    if (swapchain->device->bCursorVisible && swapchain->device->cursor_texture
-            && !swapchain->device->hardwareCursor)
+    if ((cursor_texture = swapchain->device->cursor_texture)
+            && swapchain->device->bCursorVisible && !swapchain->device->hardwareCursor)
     {
         RECT dst_rect =
         {
@@ -473,9 +473,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
         };
         RECT src_rect =
         {
-            0, 0,
-            swapchain->device->cursor_texture->resource.width,
-            swapchain->device->cursor_texture->resource.height
+            0, 0, cursor_texture->resource.width, cursor_texture->resource.height
         };
         const RECT clip_rect = {0, 0, back_buffer->resource.width, back_buffer->resource.height};
 
@@ -484,9 +482,8 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
         if (swapchain->desc.windowed)
             MapWindowPoints(NULL, swapchain->win_handle, (POINT *)&dst_rect, 2);
         if (wined3d_clip_blit(&clip_rect, &dst_rect, &src_rect))
-            wined3d_texture_blt(back_buffer, 0, &dst_rect,
-                    swapchain->device->cursor_texture, 0, &src_rect,
-                    WINED3D_BLT_ALPHA_TEST, NULL, WINED3D_TEXF_POINT);
+            wined3d_texture_blt(back_buffer, 0, &dst_rect, cursor_texture, 0,
+                    &src_rect, WINED3D_BLT_ALPHA_TEST, NULL, WINED3D_TEXF_POINT);
     }
 
     TRACE("Presenting DC %p.\n", context_gl->dc);
