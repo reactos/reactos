@@ -6618,203 +6618,179 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
         }
     }
 }
-
 static DWORD get_max_gl_version(const struct wined3d_gl_info *gl_info, DWORD flags)
-{
-    const char *gl_vendor, *gl_renderer;
+ {
+     const char *gl_vendor, *gl_renderer;
 
-    if (wined3d_settings.explicit_gl_version)
-        return wined3d_settings.max_gl_version;
+     if (wined3d_settings.explicit_gl_version)
+         return wined3d_settings.max_gl_version;
 
-    gl_vendor = (const char *)gl_info->gl_ops.gl.p_glGetString(GL_VENDOR);
-    gl_renderer = (const char *)gl_info->gl_ops.gl.p_glGetString(GL_RENDERER);
-    if (!gl_vendor || !gl_renderer
-            || wined3d_guess_card_vendor(gl_vendor, gl_renderer) == HW_VENDOR_NVIDIA)
-        return MAKEDWORD_VERSION(1, 0);
+     gl_vendor = (const char *)gl_info->gl_ops.gl.p_glGetString(GL_VENDOR);
+     gl_renderer = (const char *)gl_info->gl_ops.gl.p_glGetString(GL_RENDERER);
+     if (!gl_vendor || !gl_renderer
+             || wined3d_guess_card_vendor(gl_vendor, gl_renderer) == HW_VENDOR_NVIDIA)
+         return MAKEDWORD_VERSION(1, 0);
 
-    return wined3d_settings.max_gl_version;
-}
+     return wined3d_settings.max_gl_version;
+ }
 
-static BOOL has_extension(const char *list, const char *ext)
-{
-    size_t len = strlen(ext);
-    while (list)
-    {
-        while (*list == ' ') list++;
-        if (!strncmp(list, ext, len) && (!list[len] || list[len] == ' ')) return TRUE;
-        list = strchr(list, ' ');
-    }
-    return FALSE;
-}
+ static BOOL wined3d_adapter_opengl_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags)
+ {
+     static const DWORD supported_gl_versions[] =
+     {
+         MAKEDWORD_VERSION(4, 4),
+         MAKEDWORD_VERSION(3, 2),
+         MAKEDWORD_VERSION(1, 0),
+     };
+     struct wined3d_gl_info *gl_info = &adapter->gl_info;
+     struct wined3d_caps_gl_ctx caps_gl_ctx = {0};
+     DWORD max_gl_version;
+     unsigned int i;
 
-static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal, DWORD wined3d_creation_flags)
-{
-    static const DWORD supported_gl_versions[] =
-    {
-        MAKEDWORD_VERSION(4, 4),
-        MAKEDWORD_VERSION(3, 2),
-        MAKEDWORD_VERSION(1, 0),
-    };
-    struct wined3d_gl_info *gl_info = &adapter->gl_info;
-    struct wined3d_caps_gl_ctx caps_gl_ctx = {0};
-    unsigned int i;
-    DISPLAY_DEVICEW display_device;
-    DWORD max_gl_version;
+     TRACE("adapter %p, wined3d_creation_flags %#x.\n", adapter, wined3d_creation_flags);
 
-    TRACE("adapter %p, ordinal %u.\n", adapter, ordinal);
+ /* Dynamically load all GL core functions */
+ #ifdef USE_WIN32_OPENGL
+     {
+         HMODULE mod_gl = GetModuleHandleA("opengl32.dll");
+ #define USE_GL_FUNC(f) gl_info->gl_ops.gl.p_##f = (void *)GetProcAddress(mod_gl, #f);
+         ALL_WGL_FUNCS
+ #undef USE_GL_FUNC
+         gl_info->gl_ops.wgl.p_wglSwapBuffers = (void *)GetProcAddress(mod_gl, "wglSwapBuffers");
+         gl_info->gl_ops.wgl.p_wglGetPixelFormat = (void *)GetProcAddress(mod_gl, "wglGetPixelFormat");
+     }
+ #else
+     /* To bypass the opengl32 thunks retrieve functions from the WGL driver instead of opengl32 */
+     {
+         HDC hdc = GetDC( 0 );
+         const struct opengl_funcs *wgl_driver = __wine_get_wgl_driver( hdc, WINE_WGL_DRIVER_VERSION );
+         ReleaseDC( 0, hdc );
+         if (!wgl_driver || wgl_driver == (void *)-1) return FALSE;
+         gl_info->gl_ops.wgl = wgl_driver->wgl;
+         gl_info->gl_ops.gl = wgl_driver->gl;
+     }
+ #endif
 
-    adapter->ordinal = ordinal;
+     glEnableWINE = gl_info->gl_ops.gl.p_glEnable;
+     glDisableWINE = gl_info->gl_ops.gl.p_glDisable;
 
-/* Dynamically load all GL core functions */
-#ifdef USE_WIN32_OPENGL
-    {
-        HMODULE mod_gl = GetModuleHandleA("opengl32.dll");
-#define USE_GL_FUNC(f) gl_info->gl_ops.gl.p_##f = (void *)GetProcAddress(mod_gl, #f);
-        ALL_WGL_FUNCS
-#undef USE_GL_FUNC
-        gl_info->gl_ops.wgl.p_wglSwapBuffers = (void *)GetProcAddress(mod_gl, "wglSwapBuffers");
-        gl_info->gl_ops.wgl.p_wglGetPixelFormat = (void *)GetProcAddress(mod_gl, "wglGetPixelFormat");
-    }
-#else
-    /* To bypass the opengl32 thunks retrieve functions from the WGL driver instead of opengl32 */
-    {
-        HDC hdc = GetDC( 0 );
-        const struct opengl_funcs *wgl_driver = __wine_get_wgl_driver( hdc, WINE_WGL_DRIVER_VERSION );
-        ReleaseDC( 0, hdc );
-        if (!wgl_driver || wgl_driver == (void *)-1) return FALSE;
-        gl_info->gl_ops.wgl = wgl_driver->wgl;
-        gl_info->gl_ops.gl = wgl_driver->gl;
-    }
-#endif
+     if (!AllocateLocallyUniqueId(&adapter->luid))
+     {
+         ERR("Failed to set adapter LUID (%#x).\n", GetLastError());
+         return FALSE;
+     }
+     TRACE("Allocated LUID %08x:%08x for adapter %p.\n",
+             adapter->luid.HighPart, adapter->luid.LowPart, adapter);
 
-    glEnableWINE = gl_info->gl_ops.gl.p_glEnable;
-    glDisableWINE = gl_info->gl_ops.gl.p_glDisable;
+     if (!wined3d_caps_gl_ctx_create(adapter, &caps_gl_ctx))
+     {
+         ERR("Failed to get a GL context for adapter %p.\n", adapter);
+         return FALSE;
+     }
 
-    if (!AllocateLocallyUniqueId(&adapter->luid))
-    {
-        ERR("Failed to set adapter LUID (%#x).\n", GetLastError());
-        return FALSE;
-    }
-    TRACE("Allocated LUID %08x:%08x for adapter %p.\n",
-            adapter->luid.HighPart, adapter->luid.LowPart, adapter);
+     max_gl_version = get_max_gl_version(gl_info, wined3d_creation_flags);
+     for (i = 0; i < ARRAY_SIZE(supported_gl_versions); ++i)
+     {
+         if (supported_gl_versions[i] <= max_gl_version)
+             break;
+     }
+     if (i == ARRAY_SIZE(supported_gl_versions))
+     {
+         ERR_(winediag)("Requested invalid GL version %u.%u.\n",
+                 max_gl_version >> 16, max_gl_version & 0xffff);
+         i = ARRAY_SIZE(supported_gl_versions) - 1;
+     }
 
-    if (!wined3d_caps_gl_ctx_create(adapter, &caps_gl_ctx))
-    {
-        ERR("Failed to get a GL context for adapter %p.\n", adapter);
-        return FALSE;
-    }
+     for (; i < ARRAY_SIZE(supported_gl_versions); ++i)
+     {
+         gl_info->selected_gl_version = supported_gl_versions[i];
 
-    max_gl_version = get_max_gl_version(gl_info, wined3d_creation_flags);
+         if (wined3d_caps_gl_ctx_create_attribs(&caps_gl_ctx, gl_info))
+             break;
 
-    if (wined3d_creation_flags & WINED3D_REQUEST_D3D10)
-    {
-        const char *gl_extensions = (const char *)gl_info->gl_ops.gl.p_glGetString(GL_EXTENSIONS);
-        if (!has_extension(gl_extensions, "GL_ARB_compatibility"))
-        {
-            ERR_(winediag)("GL_ARB_compatibility not supported, requesting context with GL version 3.2.\n");
-            max_gl_version = MAKEDWORD_VERSION(3, 2);
-        }
-    }
+         WARN("Couldn't create an OpenGL %u.%u context, trying fallback to a lower version.\n",
+                 supported_gl_versions[i] >> 16, supported_gl_versions[i] & 0xffff);
+     }
 
-    for (i = 0; i < ARRAY_SIZE(supported_gl_versions); ++i)
-    {
-        if (supported_gl_versions[i] <= max_gl_version)
-            break;
-    }
-    if (i == ARRAY_SIZE(supported_gl_versions))
-    {
-        ERR_(winediag)("Requested invalid GL version %u.%u.\n",
-                max_gl_version >> 16, max_gl_version & 0xffff);
-        i = ARRAY_SIZE(supported_gl_versions) - 1;
-    }
+     if (!wined3d_adapter_init_gl_caps(adapter, &caps_gl_ctx, wined3d_creation_flags))
+     {
+         ERR("Failed to initialize GL caps for adapter %p.\n", adapter);
+         wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
+         return FALSE;
+     }
 
-    for (; i < ARRAY_SIZE(supported_gl_versions); ++i)
-    {
-        gl_info->selected_gl_version = supported_gl_versions[i];
+     if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
+         ERR_(winediag)("You are using the backbuffer for offscreen rendering. "
+                 "This is unsupported, and will be removed in a future version.\n");
 
-        if (wined3d_caps_gl_ctx_create_attribs(&caps_gl_ctx, gl_info))
-            break;
+     wined3d_adapter_init_fb_cfgs(adapter, caps_gl_ctx.dc);
+     /* We haven't found any suitable formats. This should only happen in
+      * case of GDI software rendering, which is pretty useless anyway. */
+     if (!adapter->cfg_count)
+     {
+         WARN("No suitable pixel formats found.\n");
+         wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
+         heap_free(adapter->cfgs);
+         return FALSE;
+     }
 
-        WARN("Couldn't create an OpenGL %u.%u context, trying fallback to a lower version.\n",
-                supported_gl_versions[i] >> 16, supported_gl_versions[i] & 0xffff);
-    }
+     if (!wined3d_adapter_init_format_info(adapter, &caps_gl_ctx))
+     {
+         ERR("Failed to initialize GL format info.\n");
+         wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
+         heap_free(adapter->cfgs);
+         return FALSE;
+     }
 
-    if (!wined3d_adapter_init_gl_caps(adapter, &caps_gl_ctx, wined3d_creation_flags))
-    {
-        ERR("Failed to initialize GL caps for adapter %p.\n", adapter);
-        wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
-        return FALSE;
-    }
+     adapter->vram_bytes = adapter->driver_info.vram_bytes;
+     adapter->vram_bytes_used = 0;
+     TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->vram_bytes));
 
-    if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
-        ERR_(winediag)("You are using the backbuffer for offscreen rendering. "
-                "This is unsupported, and will be removed in a future version.\n");
+     wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
 
-    wined3d_adapter_init_fb_cfgs(adapter, caps_gl_ctx.dc);
-    /* We haven't found any suitable formats. This should only happen in
-     * case of GDI software rendering, which is pretty useless anyway. */
-    if (!adapter->cfg_count)
-    {
-        WARN("No suitable pixel formats found.\n");
-        wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
-        heap_free(adapter->cfgs);
-        return FALSE;
-    }
+     wined3d_adapter_init_ffp_attrib_ops(adapter);
 
-    if (!wined3d_adapter_init_format_info(adapter, &caps_gl_ctx))
-    {
-        ERR("Failed to initialize GL format info.\n");
-        wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
-        heap_free(adapter->cfgs);
-        return FALSE;
-    }
+     return TRUE;
+ }
 
-    adapter->vram_bytes = adapter->driver_info.vram_bytes;
-    adapter->vram_bytes_used = 0;
-    TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->vram_bytes));
+ static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter)
+ {
+     TRACE("adapter %p.\n", adapter);
 
-    display_device.cb = sizeof(display_device);
-    EnumDisplayDevicesW(NULL, ordinal, &display_device, 0);
-    TRACE("DeviceName: %s\n", debugstr_w(display_device.DeviceName));
-    strcpyW(adapter->DeviceName, display_device.DeviceName);
+     adapter->driver_info.name = "Display";
+     adapter->driver_info.description = "WineD3D DirectDraw Emulation";
+     if (wined3d_settings.emulated_textureram)
+         adapter->vram_bytes = wined3d_settings.emulated_textureram;
+     else
+         adapter->vram_bytes = 128 * 1024 * 1024;
 
-    wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
+     if (!wined3d_adapter_init_format_info(adapter, NULL))
+         return FALSE;
 
-    wined3d_adapter_init_ffp_attrib_ops(adapter);
+     adapter->vertex_pipe = &none_vertex_pipe;
+     adapter->fragment_pipe = &none_fragment_pipe;
+     adapter->shader_backend = &none_shader_backend;
 
-    return TRUE;
-}
+     return TRUE;
+ }
 
-static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter, UINT ordinal)
-{
-    DISPLAY_DEVICEW display_device;
+ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int ordinal, DWORD wined3d_creation_flags)
+ {
+     DISPLAY_DEVICEW display_device;
 
-    memset(adapter, 0, sizeof(*adapter));
-    adapter->ordinal = ordinal;
+     adapter->ordinal = ordinal;
 
-    adapter->driver_info.name = "Display";
-    adapter->driver_info.description = "WineD3D DirectDraw Emulation";
-    if (wined3d_settings.emulated_textureram)
-        adapter->vram_bytes = wined3d_settings.emulated_textureram;
-    else
-        adapter->vram_bytes = 128 * 1024 * 1024;
+     display_device.cb = sizeof(display_device);
+     EnumDisplayDevicesW(NULL, ordinal, &display_device, 0);
+     TRACE("Display device: %s\n", debugstr_w(display_device.DeviceName));
+     strcpyW(adapter->DeviceName, display_device.DeviceName);
 
-    if (!wined3d_adapter_init_format_info(adapter, NULL))
-        return FALSE;
+     if (wined3d_creation_flags & WINED3D_NO3D)
+         return wined3d_adapter_no3d_init(adapter);
+     return wined3d_adapter_opengl_init(adapter, wined3d_creation_flags);
+ }
 
-    adapter->vertex_pipe = &none_vertex_pipe;
-    adapter->fragment_pipe = &none_fragment_pipe;
-    adapter->shader_backend = &none_shader_backend;
-
-    display_device.cb = sizeof(display_device);
-    EnumDisplayDevicesW(NULL, ordinal, &display_device, 0);
-    TRACE("DeviceName: %s\n", debugstr_w(display_device.DeviceName));
-    strcpyW(adapter->DeviceName, display_device.DeviceName);
-
-    return TRUE;
-}
-
-static void STDMETHODCALLTYPE wined3d_null_wined3d_object_destroyed(void *parent) {}
+ static void STDMETHODCALLTYPE wined3d_null_wined3d_object_destroyed(void *parent) {}
 
 const struct wined3d_parent_ops wined3d_null_parent_ops =
 {
@@ -6823,20 +6799,14 @@ const struct wined3d_parent_ops wined3d_null_parent_ops =
 
 HRESULT wined3d_init(struct wined3d *wined3d, DWORD flags)
 {
-    BOOL ret;
-
     wined3d->ref = 1;
     wined3d->flags = flags;
 
-    TRACE("Initializing adapters.\n");
+    TRACE("Initialising adapters.\n");
 
-    if (flags & WINED3D_NO3D)
-        ret = wined3d_adapter_no3d_init(&wined3d->adapters[0], 0);
-    else
-        ret = wined3d_adapter_init(&wined3d->adapters[0], 0, flags);
-    if (!ret)
+    if (!wined3d_adapter_init(&wined3d->adapters[0], 0, flags))
     {
-        WARN("Failed to initialize adapter.\n");
+        WARN("Failed to initialise adapter.\n");
         return E_FAIL;
     }
     wined3d->adapter_count = 1;
