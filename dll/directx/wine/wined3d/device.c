@@ -1091,7 +1091,7 @@ HRESULT CDECL wined3d_device_init_3d(struct wined3d_device *device,
         goto err_out;
     }
 
-    if (swapchain_desc->backbuffer_count && swapchain_desc->backbuffer_usage & WINED3DUSAGE_RENDERTARGET)
+    if (swapchain_desc->backbuffer_count && swapchain_desc->backbuffer_bind_flags & WINED3D_BIND_RENDER_TARGET)
     {
         struct wined3d_resource *back_buffer = &swapchain->back_buffers[0]->resource;
         struct wined3d_view_desc view_desc;
@@ -4863,8 +4863,8 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
     TRACE("refresh_rate %u\n", swapchain_desc->refresh_rate);
     TRACE("auto_restore_display_mode %#x\n", swapchain_desc->auto_restore_display_mode);
 
-    if (swapchain_desc->backbuffer_usage && swapchain_desc->backbuffer_usage != WINED3DUSAGE_RENDERTARGET)
-        FIXME("Got unexpected backbuffer usage %#x.\n", swapchain_desc->backbuffer_usage);
+    if (swapchain_desc->backbuffer_bind_flags && swapchain_desc->backbuffer_bind_flags != WINED3D_BIND_RENDER_TARGET)
+        FIXME("Got unexpected backbuffer bind flags %#x.\n", swapchain_desc->backbuffer_bind_flags);
 
     if (swapchain_desc->swap_effect != WINED3D_SWAP_EFFECT_DISCARD
             && swapchain_desc->swap_effect != WINED3D_SWAP_EFFECT_SEQUENTIAL
@@ -4979,7 +4979,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         wined3d_rendertarget_view_decref(device->back_buffer_view);
         device->back_buffer_view = NULL;
     }
-    if (swapchain->desc.backbuffer_count && swapchain->desc.backbuffer_usage & WINED3DUSAGE_RENDERTARGET)
+    if (swapchain->desc.backbuffer_count && swapchain->desc.backbuffer_bind_flags & WINED3D_BIND_RENDER_TARGET)
     {
         struct wined3d_resource *back_buffer = &swapchain->back_buffers[0]->resource;
 

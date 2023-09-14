@@ -1765,7 +1765,7 @@ struct wined3d_swapchain_desc
     unsigned int backbuffer_height;
     enum wined3d_format_id backbuffer_format;
     unsigned int backbuffer_count;
-    DWORD backbuffer_usage;
+    unsigned int backbuffer_bind_flags;
     enum wined3d_multisample_type multisample_type;
     DWORD multisample_quality;
     enum wined3d_swap_effect swap_effect;

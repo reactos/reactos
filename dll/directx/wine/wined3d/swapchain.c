@@ -929,14 +929,14 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
             goto err;
         }
 
-        texture_desc.usage = swapchain->desc.backbuffer_usage;
+        texture_desc.bind_flags = swapchain->desc.backbuffer_bind_flags;
+        texture_desc.usage = 0;
         if (device->wined3d->flags & WINED3D_NO3D)
             texture_desc.usage |= WINED3DUSAGE_OWNDC;
-        texture_desc.bind_flags = 0;
-        if (texture_desc.usage & WINED3DUSAGE_RENDERTARGET)
-            texture_desc.bind_flags |= WINED3D_BIND_RENDER_TARGET;
-        if (texture_desc.usage & WINED3DUSAGE_TEXTURE)
-            texture_desc.bind_flags |= WINED3D_BIND_SHADER_RESOURCE;
+        if (texture_desc.bind_flags & WINED3D_BIND_RENDER_TARGET)
+            texture_desc.usage |= WINED3DUSAGE_RENDERTARGET;
+        if (texture_desc.bind_flags & WINED3D_BIND_SHADER_RESOURCE)
+            texture_desc.usage |= WINED3DUSAGE_TEXTURE;
         for (i = 0; i < swapchain->desc.backbuffer_count; ++i)
         {
             TRACE("Creating back buffer %u.\n", i);
