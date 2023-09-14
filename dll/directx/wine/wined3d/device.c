@@ -3982,7 +3982,7 @@ HRESULT CDECL wined3d_device_validate_device(const struct wined3d_device *device
 
     TRACE("device %p, num_passes %p.\n", device, num_passes);
 
-    for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i)
+    for (i = 0; i < WINED3D_MAX_COMBINED_SAMPLERS; ++i)
     {
         if (state->sampler_states[i][WINED3D_SAMP_MIN_FILTER] == WINED3D_TEXF_NONE)
         {
@@ -5246,7 +5246,7 @@ void device_resource_released(struct wined3d_device *device, struct wined3d_reso
         case WINED3D_RTYPE_TEXTURE_1D:
         case WINED3D_RTYPE_TEXTURE_2D:
         case WINED3D_RTYPE_TEXTURE_3D:
-            for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i)
+            for (i = 0; i < WINED3D_MAX_COMBINED_SAMPLERS; ++i)
             {
                 if (&device->state.textures[i]->resource == resource)
                 {

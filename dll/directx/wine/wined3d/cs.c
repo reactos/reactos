@@ -1401,7 +1401,7 @@ static void wined3d_cs_exec_set_texture(struct wined3d_cs *cs, const void *data)
             /* Search for other stages the texture is bound to. Shouldn't
              * happen if applications bind textures to a single stage only. */
             TRACE("Searching for other stages the texture is bound to.\n");
-            for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i)
+            for (i = 0; i < WINED3D_MAX_COMBINED_SAMPLERS; ++i)
             {
                 if (cs->state.textures[i] == prev)
                 {
