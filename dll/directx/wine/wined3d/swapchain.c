@@ -913,7 +913,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
         wined3d_cs_init_object(device->cs, wined3d_swapchain_cs_init, swapchain);
         wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
-        if (!swapchain->context[0])
+        if (!swapchain->num_contexts)
         {
             hr = WINED3DERR_NOTAVAILABLE;
             goto err;
