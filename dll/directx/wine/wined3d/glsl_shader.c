@@ -9964,12 +9964,11 @@ static void shader_glsl_init_ps_uniform_locations(const struct wined3d_gl_info *
 }
 
 static HRESULT shader_glsl_compile_compute_shader(struct shader_glsl_priv *priv,
-        const struct wined3d_context *context, struct wined3d_shader *shader)
+        const struct wined3d_context_gl *context_gl, struct wined3d_shader *shader)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
-    struct glsl_context_data *ctx_data = context->shader_backend_data;
+    struct glsl_context_data *ctx_data = context_gl->c.shader_backend_data;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_string_buffer *buffer = &priv->shader_buffer;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct glsl_cs_compiled_shader *gl_shaders;
     struct glsl_shader_private *shader_data;
     struct glsl_shader_prog_link *entry;
@@ -10047,12 +10046,13 @@ static HRESULT shader_glsl_compile_compute_shader(struct shader_glsl_priv *priv,
 static GLuint find_glsl_compute_shader(const struct wined3d_context *context,
         struct shader_glsl_priv *priv, struct wined3d_shader *shader)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_shader_private *shader_data;
 
     if (!shader->backend_data)
     {
         WARN("Failed to find GLSL program for compute shader %p.\n", shader);
-        if (FAILED(shader_glsl_compile_compute_shader(priv, context, shader)))
+        if (FAILED(shader_glsl_compile_compute_shader(priv, context_gl, shader)))
         {
             ERR("Failed to compile compute shader %p.\n", shader);
             return 0;
@@ -10522,7 +10522,7 @@ static void shader_glsl_precompile(void *shader_priv, struct wined3d_shader *sha
     if (shader->reg_maps.shader_version.type == WINED3D_SHADER_TYPE_COMPUTE)
     {
         context = context_acquire(device, NULL, 0);
-        shader_glsl_compile_compute_shader(shader_priv, context, shader);
+        shader_glsl_compile_compute_shader(shader_priv, wined3d_context_gl(context), shader);
         context_release(context);
     }
 }
