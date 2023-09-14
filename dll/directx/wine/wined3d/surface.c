@@ -147,9 +147,9 @@ void texture2d_blt_fbo(struct wined3d_device *device, struct wined3d_context *co
         const RECT *dst_rect)
 {
     struct wined3d_texture *required_texture, *restore_texture;
-    unsigned int required_idx, restore_idx;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context_gl *context_gl;
+    unsigned int restore_idx;
     GLenum gl_filter;
     GLenum buffer;
     int i;
@@ -193,26 +193,21 @@ void texture2d_blt_fbo(struct wined3d_device *device, struct wined3d_context *co
     else
         wined3d_texture_prepare_location(dst_texture, dst_sub_resource_idx, context, dst_location);
 
+    /* Acquire a context for the front-buffer, even though we may be blitting
+     * to/from a back-buffer. Since context_acquire() doesn't take the
+     * resource location into account, it may consider the back-buffer to be
+     * offscreen. */
     if (src_location == WINED3D_LOCATION_DRAWABLE)
-    {
-        required_texture = src_texture;
-        required_idx = src_sub_resource_idx;
-    }
+        required_texture = src_texture->swapchain->front_buffer;
     else if (dst_location == WINED3D_LOCATION_DRAWABLE)
-    {
-        required_texture = dst_texture;
-        required_idx = dst_sub_resource_idx;
-    }
+        required_texture = dst_texture->swapchain->front_buffer;
     else
-    {
         required_texture = NULL;
-        required_idx = 0;
-    }
 
     restore_texture = context->current_rt.texture;
     restore_idx = context->current_rt.sub_resource_idx;
-    if (restore_texture != required_texture || restore_idx != required_idx)
-        context = context_acquire(device, required_texture, required_idx);
+    if (restore_texture != required_texture)
+        context = context_acquire(device, required_texture, 0);
     else
         restore_texture = NULL;
 
