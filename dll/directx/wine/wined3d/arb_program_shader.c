@@ -4733,56 +4733,42 @@ static void shader_arb_disable(void *shader_priv, struct wined3d_context *contex
 static void shader_arb_destroy(struct wined3d_shader *shader)
 {
     struct wined3d_device *device = shader->device;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    const struct wined3d_gl_info *gl_info;
+    struct wined3d_context *context;
+    unsigned int i;
+
+    /* This can happen if a shader was never compiled */
+    if (!shader->backend_data)
+        return;
+
+    context = context_acquire(device, NULL, 0);
+    gl_info = context->gl_info;
 
     if (shader_is_pshader_version(shader->reg_maps.shader_version.type))
     {
         struct arb_pshader_private *shader_data = shader->backend_data;
-        UINT i;
 
-        if(!shader_data) return; /* This can happen if a shader was never compiled */
-
-        if (shader_data->num_gl_shaders)
-        {
-            struct wined3d_context *context = context_acquire(device, NULL, 0);
-
-            for (i = 0; i < shader_data->num_gl_shaders; ++i)
-            {
-                GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId));
-                checkGLcall("GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId))");
-            }
-
-            context_release(context);
-        }
+        for (i = 0; i < shader_data->num_gl_shaders; ++i)
+            GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId));
 
         heap_free(shader_data->gl_shaders);
-        heap_free(shader_data);
-        shader->backend_data = NULL;
     }
     else
     {
         struct arb_vshader_private *shader_data = shader->backend_data;
-        UINT i;
 
-        if(!shader_data) return; /* This can happen if a shader was never compiled */
-
-        if (shader_data->num_gl_shaders)
-        {
-            struct wined3d_context *context = context_acquire(device, NULL, 0);
-
-            for (i = 0; i < shader_data->num_gl_shaders; ++i)
-            {
-                GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId));
-                checkGLcall("GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId))");
-            }
-
-            context_release(context);
-        }
+        for (i = 0; i < shader_data->num_gl_shaders; ++i)
+            GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId));
 
         heap_free(shader_data->gl_shaders);
-        heap_free(shader_data);
-        shader->backend_data = NULL;
     }
+
+    checkGLcall("delete programs");
+
+    context_release(context);
+
+    heap_free(shader->backend_data);
+    shader->backend_data = NULL;
 }
 
 static int sig_tree_compare(const void *key, const struct wine_rb_entry *entry)
