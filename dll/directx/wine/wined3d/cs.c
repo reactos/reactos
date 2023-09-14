@@ -534,7 +534,9 @@ void wined3d_cs_emit_clear(struct wined3d_cs *cs, DWORD rect_count, const RECT *
     unsigned int rt_count = cs->device->adapter->gl_info.limits.buffers;
     const struct wined3d_state *state = &cs->device->state;
     const struct wined3d_viewport *vp = &state->viewport;
+    struct wined3d_rendertarget_view *view;
     struct wined3d_cs_clear *op;
+    RECT view_rect;
     unsigned int i;
 
     op = cs->ops->require_space(cs, FIELD_OFFSET(struct wined3d_cs_clear, rects[rect_count]),
@@ -556,12 +558,21 @@ void wined3d_cs_emit_clear(struct wined3d_cs *cs, DWORD rect_count, const RECT *
     {
         for (i = 0; i < rt_count; ++i)
         {
-            if (state->fb->render_targets[i])
-                wined3d_resource_acquire(state->fb->render_targets[i]->resource);
+            if ((view = state->fb->render_targets[i]))
+            {
+                SetRect(&view_rect, 0, 0, view->width, view->height);
+                IntersectRect(&op->draw_rect, &op->draw_rect, &view_rect);
+                wined3d_resource_acquire(view->resource);
+            }
         }
     }
     if (flags & (WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL))
-        wined3d_resource_acquire(state->fb->depth_stencil->resource);
+    {
+        view = state->fb->depth_stencil;
+        SetRect(&view_rect, 0, 0, view->width, view->height);
+        IntersectRect(&op->draw_rect, &op->draw_rect, &view_rect);
+        wined3d_resource_acquire(view->resource);
+    }
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
 }
