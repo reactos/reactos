@@ -685,17 +685,17 @@ static void wined3d_swapchain_apply_sample_count_override(const struct wined3d_s
     *quality = 0;
 }
 
-static void wined3d_swapchain_update_swap_interval_cs(void *object)
+void wined3d_swapchain_set_swap_interval(struct wined3d_swapchain *swapchain,
+        unsigned int swap_interval)
 {
-    struct wined3d_swapchain *swapchain = object;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
-    int swap_interval;
 
     context = context_acquire(swapchain->device, swapchain->front_buffer, 0);
     gl_info = context->gl_info;
 
-    swap_interval = swapchain->desc.swap_interval > 4 ? 1 : swapchain->desc.swap_interval;
+    swap_interval = swap_interval <= 4 ? swap_interval : 1;
+    swapchain->swap_interval = swap_interval;
 
     if (gl_info->supported[WGL_EXT_SWAP_CONTROL])
     {
@@ -748,7 +748,7 @@ static void wined3d_swapchain_cs_init(void *object)
 
     context_release(swapchain->context[0]);
 
-    wined3d_swapchain_update_swap_interval_cs(swapchain);
+    wined3d_swapchain_set_swap_interval(swapchain, WINED3D_SWAP_INTERVAL_DEFAULT);
 }
 
 static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3d_device *device,
@@ -1117,11 +1117,6 @@ void swapchain_update_draw_bindings(struct wined3d_swapchain *swapchain)
     {
         wined3d_resource_update_draw_binding(&swapchain->back_buffers[i]->resource);
     }
-}
-
-void swapchain_update_swap_interval(struct wined3d_swapchain *swapchain)
-{
-    wined3d_cs_init_object(swapchain->device->cs, wined3d_swapchain_update_swap_interval_cs, swapchain);
 }
 
 void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activate)

@@ -1732,10 +1732,10 @@ struct wined3d_adapter_identifier
 
 struct wined3d_swapchain_desc
 {
-    UINT backbuffer_width;
-    UINT backbuffer_height;
+    unsigned int backbuffer_width;
+    unsigned int backbuffer_height;
     enum wined3d_format_id backbuffer_format;
-    UINT backbuffer_count;
+    unsigned int backbuffer_count;
     DWORD backbuffer_usage;
     enum wined3d_multisample_type multisample_type;
     DWORD multisample_quality;
@@ -1745,8 +1745,7 @@ struct wined3d_swapchain_desc
     BOOL enable_auto_depth_stencil;
     enum wined3d_format_id auto_depth_stencil_format;
     DWORD flags;
-    UINT refresh_rate;
-    enum wined3d_swap_interval swap_interval;
+    unsigned int refresh_rate;
     BOOL auto_restore_display_mode;
 };
 

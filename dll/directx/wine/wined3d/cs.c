@@ -457,11 +457,8 @@ static void wined3d_cs_exec_present(struct wined3d_cs *cs, const void *data)
     swapchain = op->swapchain;
     wined3d_swapchain_set_window(swapchain, op->dst_window_override);
 
-    if (swapchain->desc.swap_interval != op->swap_interval)
-    {
-        swapchain->desc.swap_interval = op->swap_interval;
-        swapchain_update_swap_interval(swapchain);
-    }
+    if (swapchain->swap_interval != op->swap_interval)
+        wined3d_swapchain_set_swap_interval(swapchain, op->swap_interval);
 
     swapchain->swapchain_ops->swapchain_present(swapchain, &op->src_rect, &op->dst_rect, op->flags);
 
