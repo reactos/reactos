@@ -2506,7 +2506,6 @@ void __cdecl wined3d_device_set_vs_sampler(struct wined3d_device *device, UINT i
 void __cdecl wined3d_device_setup_fullscreen_window(struct wined3d_device *device, HWND window, UINT w, UINT h);
 BOOL __cdecl wined3d_device_show_cursor(struct wined3d_device *device, BOOL show);
 HRESULT __cdecl wined3d_device_uninit_3d(struct wined3d_device *device);
-HRESULT __cdecl wined3d_device_uninit_gdi(struct wined3d_device *device);
 void __cdecl wined3d_device_update_sub_resource(struct wined3d_device *device, struct wined3d_resource *resource,
         unsigned int sub_resource_idx, const struct wined3d_box *box, const void *data, unsigned int row_pitch,
         unsigned int depth_pitch, unsigned int flags);

@@ -1173,11 +1173,12 @@ static void device_free_sampler(struct wine_rb_entry *entry, void *context)
 
 HRESULT CDECL wined3d_device_uninit_3d(struct wined3d_device *device)
 {
+    BOOL no3d = device->wined3d->flags & WINED3D_NO3D;
     unsigned int i;
 
     TRACE("device %p.\n", device);
 
-    if (!device->d3d_initialized)
+    if (!device->d3d_initialized && !no3d)
         return WINED3DERR_INVALIDCALL;
 
     wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
@@ -1194,7 +1195,10 @@ HRESULT CDECL wined3d_device_uninit_3d(struct wined3d_device *device)
 #if defined(STAGING_CSMT)
     context_set_current(NULL);
 #endif /* STAGING_CSMT */
-    wined3d_device_delete_opengl_contexts(device);
+    if (no3d)
+        device->blitter->ops->blitter_destroy(device->blitter, NULL);
+    else
+        wined3d_device_delete_opengl_contexts(device);
 
     if (device->fb.depth_stencil)
     {
@@ -1238,25 +1242,6 @@ HRESULT CDECL wined3d_device_uninit_3d(struct wined3d_device *device)
 
     device->d3d_initialized = FALSE;
 
-    return WINED3D_OK;
-}
-
-HRESULT CDECL wined3d_device_uninit_gdi(struct wined3d_device *device)
-{
-    unsigned int i;
-
-    device->blitter->ops->blitter_destroy(device->blitter, NULL);
-
-    for (i = 0; i < device->swapchain_count; ++i)
-    {
-        TRACE("Releasing the implicit swapchain %u.\n", i);
-        if (wined3d_swapchain_decref(device->swapchains[i]))
-            FIXME("Something's still holding the implicit swapchain.\n");
-    }
-
-    heap_free(device->swapchains);
-    device->swapchains = NULL;
-    device->swapchain_count = 0;
     return WINED3D_OK;
 }
 
