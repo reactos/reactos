@@ -12884,7 +12884,8 @@ static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wi
             blit_op = WINED3D_BLIT_OP_COLOR_BLIT;
     }
 
-    if (blit_op != WINED3D_BLIT_OP_COLOR_BLIT && blit_op != WINED3D_BLIT_OP_COLOR_BLIT_CKEY)
+    if (blit_op != WINED3D_BLIT_OP_COLOR_BLIT && blit_op != WINED3D_BLIT_OP_COLOR_BLIT_CKEY
+            && blit_op != WINED3D_BLIT_OP_COLOR_BLIT_ALPHATEST)
     {
         TRACE("Unsupported blit_op %#x.\n", blit_op);
         return FALSE;
@@ -12936,6 +12937,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture *staging_texture = NULL;
     struct wined3d_glsl_blitter *glsl_blitter;
+    struct wined3d_color_key alpha_test_key;
     struct glsl_blitter_program *program;
     struct wined3d_blitter *next;
     unsigned int src_level;
@@ -13052,8 +13054,20 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         context_invalidate_state(context, STATE_FRAMEBUFFER);
     }
 
-    if (!(program = glsl_blitter_get_program(glsl_blitter, context, src_texture_gl,
-            op == WINED3D_BLIT_OP_COLOR_BLIT_CKEY)))
+    if (op == WINED3D_BLIT_OP_COLOR_BLIT_ALPHATEST)
+    {
+        const struct wined3d_format *f = src_texture->resource.format;
+
+        alpha_test_key.color_space_low_value = 0;
+        alpha_test_key.color_space_high_value = ~(((1u << f->alpha_size) - 1) << f->alpha_offset);
+        colour_key = &alpha_test_key;
+    }
+    else if (op != WINED3D_BLIT_OP_COLOR_BLIT_CKEY)
+    {
+        colour_key = NULL;
+    }
+
+    if (!(program = glsl_blitter_get_program(glsl_blitter, context, src_texture_gl, !!colour_key)))
     {
         ERR("Failed to get blitter program.\n");
         return dst_location;
@@ -13078,7 +13092,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         default:
             break;
     }
-    if (op == WINED3D_BLIT_OP_COLOR_BLIT_CKEY)
+    if (colour_key)
     {
         struct wined3d_color float_key[2];
 
