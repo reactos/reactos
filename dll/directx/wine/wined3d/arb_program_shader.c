@@ -7901,7 +7901,7 @@ static DWORD arbfp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bl
     arbfp_blit_set(arbfp_blitter, context, src_texture, src_sub_resource_idx, color_key);
 
     /* Draw a textured quad */
-    draw_textured_quad(src_texture, src_sub_resource_idx, context, src_rect, dst_rect, filter);
+    context_draw_textured_quad(context, src_texture, src_sub_resource_idx, src_rect, dst_rect, filter);
 
     /* Leave the opengl state valid for blitting */
     arbfp_blit_unset(context->gl_info);

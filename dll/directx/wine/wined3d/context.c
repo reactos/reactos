@@ -5099,3 +5099,63 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
 
     context_release(context);
 }
+
+/* Context activation is done by the caller. */
+void context_draw_textured_quad(struct wined3d_context *context, struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, const RECT *src_rect, const RECT *dst_rect,
+        enum wined3d_texture_filter_type filter)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_blt_info info;
+    unsigned int level;
+
+    texture2d_get_blt_info(texture, sub_resource_idx, src_rect, &info);
+
+    gl_info->gl_ops.gl.p_glEnable(info.bind_target);
+    checkGLcall("glEnable(bind_target)");
+
+    level = sub_resource_idx % texture->level_count;
+    context_bind_texture(context, info.bind_target, texture->texture_rgb.name);
+
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAG_FILTER, wined3d_gl_mag_filter(filter));
+    checkGLcall("glTexParameteri");
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MIN_FILTER,
+            wined3d_gl_min_mip_filter(filter, WINED3D_TEXF_NONE));
+    checkGLcall("glTexParameteri");
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    if (gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
+        gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT);
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_BASE_LEVEL, level);
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, level);
+    gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    checkGLcall("glTexEnvi");
+
+    /* Draw a quad. */
+    gl_info->gl_ops.gl.p_glBegin(GL_TRIANGLE_STRIP);
+    gl_info->gl_ops.gl.p_glTexCoord3fv(&info.texcoords[0].x);
+    gl_info->gl_ops.gl.p_glVertex2i(dst_rect->left, dst_rect->top);
+
+    gl_info->gl_ops.gl.p_glTexCoord3fv(&info.texcoords[1].x);
+    gl_info->gl_ops.gl.p_glVertex2i(dst_rect->right, dst_rect->top);
+
+    gl_info->gl_ops.gl.p_glTexCoord3fv(&info.texcoords[2].x);
+    gl_info->gl_ops.gl.p_glVertex2i(dst_rect->left, dst_rect->bottom);
+
+    gl_info->gl_ops.gl.p_glTexCoord3fv(&info.texcoords[3].x);
+    gl_info->gl_ops.gl.p_glVertex2i(dst_rect->right, dst_rect->bottom);
+    gl_info->gl_ops.gl.p_glEnd();
+
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, texture->level_count - 1);
+    context_bind_texture(context, info.bind_target, 0);
+
+    /* We changed the filtering settings on the texture. Make sure they get
+     * reset on subsequent draws. */
+    texture->texture_rgb.sampler_desc.mag_filter = WINED3D_TEXF_POINT;
+    texture->texture_rgb.sampler_desc.min_filter = WINED3D_TEXF_POINT;
+    texture->texture_rgb.sampler_desc.mip_filter = WINED3D_TEXF_NONE;
+    texture->texture_rgb.sampler_desc.address_u = WINED3D_TADDRESS_CLAMP;
+    texture->texture_rgb.sampler_desc.address_v = WINED3D_TADDRESS_CLAMP;
+    texture->texture_rgb.sampler_desc.srgb_decode = FALSE;
+    texture->texture_rgb.base_level = level;
+}
