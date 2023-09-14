@@ -4122,27 +4122,26 @@ static void wined3d_context_gl_pause_transform_feedback(struct wined3d_context_g
         wined3d_context_gl_end_transform_feedback(context_gl);
 }
 
-static void context_setup_target(struct wined3d_context *context,
+static void wined3d_context_gl_setup_target(struct wined3d_context_gl *context_gl,
         struct wined3d_texture *texture, unsigned int sub_resource_idx)
 {
-    BOOL old_render_offscreen = context->render_offscreen, render_offscreen;
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    BOOL old_render_offscreen = context_gl->c.render_offscreen, render_offscreen;
 
     render_offscreen = wined3d_resource_is_offscreen(&texture->resource);
-    if (context->current_rt.texture == texture
-            && context->current_rt.sub_resource_idx == sub_resource_idx
+    if (context_gl->c.current_rt.texture == texture
+            && context_gl->c.current_rt.sub_resource_idx == sub_resource_idx
             && render_offscreen == old_render_offscreen)
         return;
 
     /* To compensate the lack of format switching with some offscreen rendering methods and on onscreen buffers
      * the alpha blend state changes with different render target formats. */
-    if (!context->current_rt.texture)
+    if (!context_gl->c.current_rt.texture)
     {
-        context_invalidate_state(context, STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE));
+        context_invalidate_state(&context_gl->c, STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE));
     }
     else
     {
-        const struct wined3d_format *old = context->current_rt.texture->resource.format;
+        const struct wined3d_format *old = context_gl->c.current_rt.texture->resource.format;
         const struct wined3d_format *new = texture->resource.format;
 
         if (old->id != new->id)
@@ -4150,12 +4149,12 @@ static void context_setup_target(struct wined3d_context *context,
             /* Disable blending when the alpha mask has changed and when a format doesn't support blending. */
             if ((old->alpha_size && !new->alpha_size) || (!old->alpha_size && new->alpha_size)
                     || !(texture->resource.format_flags & WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING))
-                context_invalidate_state(context, STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE));
+                context_invalidate_state(&context_gl->c, STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE));
 
             /* Update sRGB writing when switching between formats that do/do not support sRGB writing */
-            if ((context->current_rt.texture->resource.format_flags & WINED3DFMT_FLAG_SRGB_WRITE)
+            if ((context_gl->c.current_rt.texture->resource.format_flags & WINED3DFMT_FLAG_SRGB_WRITE)
                     != (texture->resource.format_flags & WINED3DFMT_FLAG_SRGB_WRITE))
-                context_invalidate_state(context, STATE_RENDER(WINED3D_RS_SRGBWRITEENABLE));
+                context_invalidate_state(&context_gl->c, STATE_RENDER(WINED3D_RS_SRGBWRITEENABLE));
         }
 
         /* When switching away from an offscreen render target, and we're not
@@ -4166,22 +4165,22 @@ static void context_setup_target(struct wined3d_context *context,
          * has to be called with the old rendertarget active, otherwise a
          * wrong drawable is read. */
         if (wined3d_settings.offscreen_rendering_mode != ORM_FBO
-                && old_render_offscreen && (context->current_rt.texture != texture
-                || context->current_rt.sub_resource_idx != sub_resource_idx))
+                && old_render_offscreen && (context_gl->c.current_rt.texture != texture
+                || context_gl->c.current_rt.sub_resource_idx != sub_resource_idx))
         {
-            struct wined3d_texture_gl *prev_texture = wined3d_texture_gl(context->current_rt.texture);
-            unsigned int prev_sub_resource_idx = context->current_rt.sub_resource_idx;
+            struct wined3d_texture_gl *prev_texture = wined3d_texture_gl(context_gl->c.current_rt.texture);
+            unsigned int prev_sub_resource_idx = context_gl->c.current_rt.sub_resource_idx;
 
             /* Read the back buffer of the old drawable into the destination texture. */
             if (prev_texture->texture_srgb.name)
-                wined3d_texture_load(&prev_texture->t, context, TRUE);
-            wined3d_texture_load(&prev_texture->t, context, FALSE);
+                wined3d_texture_load(&prev_texture->t, &context_gl->c, TRUE);
+            wined3d_texture_load(&prev_texture->t, &context_gl->c, FALSE);
             wined3d_texture_invalidate_location(&prev_texture->t, prev_sub_resource_idx, WINED3D_LOCATION_DRAWABLE);
         }
     }
 
-    context->current_rt.texture = texture;
-    context->current_rt.sub_resource_idx = sub_resource_idx;
+    context_gl->c.current_rt.texture = texture;
+    context_gl->c.current_rt.sub_resource_idx = sub_resource_idx;
     wined3d_context_gl_set_render_offscreen(context_gl, render_offscreen);
 }
 
@@ -4190,7 +4189,7 @@ static void wined3d_context_gl_activate(struct wined3d_context_gl *context_gl,
 {
     wined3d_context_gl_enter(context_gl);
     wined3d_context_gl_update_window(context_gl);
-    context_setup_target(&context_gl->c, texture, sub_resource_idx);
+    wined3d_context_gl_setup_target(context_gl, texture, sub_resource_idx);
     if (!context_gl->valid)
         return;
 
