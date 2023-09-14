@@ -2054,12 +2054,14 @@ static void test_start_copy(void)
     ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
     ret = SetupQueueCopyA(queue, "src", NULL, "one.txt", NULL, NULL, "dst", NULL, 0);
     ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "one.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
     ret = SetupQueueCopyA(queue, "src", NULL, "two.txt", NULL, NULL, "dst", NULL, 0);
     ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
     ret = SetupQueueCopyA(queue, "src", NULL, "three.txt", NULL, NULL, "dst", NULL, 0);
     ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
     run_queue(queue, start_copy_cb);
-    ok(got_start_copy == 3, "Got %u callbacks.\n", got_start_copy);
+    todo_wine ok(got_start_copy == 3, "Got %u callbacks.\n", got_start_copy);
     ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
     ok(delete_file("dst/two.txt"), "Destination file should exist.\n");
     ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
