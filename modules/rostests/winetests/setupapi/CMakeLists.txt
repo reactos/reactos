@@ -2,6 +2,7 @@
 add_definitions(
     -D__WINESRC__
     -Dstrcasecmp=_stricmp
+    -Dstrncasecmp=_strnicmp
 )
 
 remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
