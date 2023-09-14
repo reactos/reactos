@@ -3311,9 +3311,9 @@ static unsigned int shader_max_version_from_feature_level(enum wined3d_feature_l
         case WINED3D_FEATURE_LEVEL_10_1:
         case WINED3D_FEATURE_LEVEL_10:
             return 4;
-        case WINED3D_FEATURE_LEVEL_9_SM3:
+        case WINED3D_FEATURE_LEVEL_9_3:
             return 3;
-        case WINED3D_FEATURE_LEVEL_9_SM2:
+        case WINED3D_FEATURE_LEVEL_9_2:
         case WINED3D_FEATURE_LEVEL_9_1:
             return 2;
         default:

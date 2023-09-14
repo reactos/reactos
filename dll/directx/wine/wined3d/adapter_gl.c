@@ -1241,7 +1241,8 @@ static enum wined3d_pci_vendor wined3d_guess_card_vendor(const char *gl_vendor_s
 }
 
 static enum wined3d_feature_level feature_level_from_caps(const struct wined3d_gl_info *gl_info,
-        const struct shader_caps *shader_caps, const struct fragment_caps *fragment_caps)
+        const struct wined3d_d3d_limits *d3d_limits, const struct shader_caps *shader_caps,
+        const struct fragment_caps *fragment_caps)
 {
     unsigned int shader_model;
 
@@ -1267,10 +1268,18 @@ static enum wined3d_feature_level feature_level_from_caps(const struct wined3d_g
         }
     }
 
-    if (shader_model >= 3)
-        return WINED3D_FEATURE_LEVEL_9_SM3;
+    if (shader_model >= 3 && d3d_limits->texture_size >= 4096 && d3d_limits->max_rt_count >= 4)
+        return WINED3D_FEATURE_LEVEL_9_3;
     if (shader_model >= 2)
-        return WINED3D_FEATURE_LEVEL_9_SM2;
+    {
+        if (gl_info->supported[ARB_OCCLUSION_QUERY]
+                && gl_info->supported[ARB_TEXTURE_MIRROR_CLAMP_TO_EDGE]
+                && gl_info->supported[EXT_BLEND_EQUATION_SEPARATE]
+                && gl_info->supported[EXT_BLEND_FUNC_SEPARATE])
+            return WINED3D_FEATURE_LEVEL_9_2;
+
+        return WINED3D_FEATURE_LEVEL_9_1;
+    }
     if (shader_model >= 1)
         return WINED3D_FEATURE_LEVEL_8;
 
@@ -3722,7 +3731,6 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     d3d_info->limits.ffp_textures = fragment_caps.MaxSimultaneousTextures;
     d3d_info->shader_color_key = !!(fragment_caps.wined3d_caps & WINED3D_FRAGMENT_CAP_COLOR_KEY);
     d3d_info->wined3d_creation_flags = wined3d_creation_flags;
-    d3d_info->feature_level = feature_level_from_caps(gl_info, &shader_caps, &fragment_caps);
 
     d3d_info->texture_npot = !!gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO];
     d3d_info->texture_npot_conditional = gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT]
@@ -3736,6 +3744,8 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         d3d_info->multisample_draw_location = WINED3D_LOCATION_TEXTURE_RGB;
     else
         d3d_info->multisample_draw_location = WINED3D_LOCATION_RB_MULTISAMPLE;
+
+    d3d_info->feature_level = feature_level_from_caps(gl_info, &d3d_info->limits, &shader_caps, &fragment_caps);
 
     TRACE("Max texture stages: %u.\n", d3d_info->limits.ffp_blend_stages);
 
