@@ -260,6 +260,7 @@
 @ cdecl wined3d_stateblock_create(ptr long ptr)
 @ cdecl wined3d_stateblock_decref(ptr)
 @ cdecl wined3d_stateblock_incref(ptr)
+@ cdecl wined3d_stateblock_set_blend_factor(ptr ptr)
 @ cdecl wined3d_stateblock_set_pixel_shader(ptr ptr)
 @ cdecl wined3d_stateblock_set_ps_consts_b(ptr long long ptr)
 @ cdecl wined3d_stateblock_set_ps_consts_f(ptr long long ptr)

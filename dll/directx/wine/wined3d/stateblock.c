@@ -1434,6 +1434,15 @@ void CDECL wined3d_stateblock_set_render_state(struct wined3d_stateblock *stateb
     stateblock->changed.renderState[state >> 5] |= 1u << (state & 0x1f);
 }
 
+void CDECL wined3d_stateblock_set_blend_factor(struct wined3d_stateblock *stateblock,
+        const struct wined3d_color *blend_factor)
+{
+    TRACE("stateblock %p, blend_factor %p.\n", stateblock, blend_factor);
+
+    stateblock->stateblock_state.blend_factor = *blend_factor;
+    stateblock->changed.blend_state = TRUE;
+}
+
 static void init_default_render_states(DWORD rs[WINEHIGHEST_RENDER_STATE + 1], const struct wined3d_d3d_info *d3d_info)
 {
     union
