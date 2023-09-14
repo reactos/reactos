@@ -72,6 +72,7 @@
 #define WINED3D_QUIRK_INFO_LOG_SPAM             0x00000080
 #define WINED3D_QUIRK_LIMITED_TEX_FILTERING     0x00000100
 #define WINED3D_QUIRK_BROKEN_ARB_FOG            0x00000200
+#define WINED3D_QUIRK_NO_INDEPENDENT_BIT_DEPTHS 0x00000400
 
 struct fragment_pipeline;
 struct wined3d_adapter;

@@ -834,6 +834,49 @@ static BOOL match_broken_viewport_subpixel_bits(const struct wined3d_gl_info *gl
     return !wined3d_caps_gl_ctx_test_viewport_subpixel_bits(ctx);
 }
 
+static BOOL match_no_independent_bit_depths(const struct wined3d_gl_info *gl_info,
+        struct wined3d_caps_gl_ctx *ctx, const char *gl_renderer, enum wined3d_gl_vendor gl_vendor,
+        enum wined3d_pci_vendor card_vendor, enum wined3d_pci_device device)
+{
+    GLuint tex[2], fbo;
+    GLenum status;
+
+    /* ARB_framebuffer_object allows implementation-dependent internal format
+     * restrictions. The EXT extension explicitly calls out an error in the
+     * relevant case. */
+    if (!gl_info->supported[ARB_FRAMEBUFFER_OBJECT])
+        return TRUE;
+    if (wined3d_settings.offscreen_rendering_mode != ORM_FBO)
+        return TRUE;
+
+    gl_info->gl_ops.gl.p_glGenTextures(2, tex);
+
+    gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_2D, tex[0]);
+    gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    gl_info->gl_ops.gl.p_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 4, 1, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, NULL);
+
+    gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_2D, tex[1]);
+    gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    gl_info->gl_ops.gl.p_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB5, 4, 1, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
+    gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_2D, 0);
+
+    gl_info->fbo_ops.glGenFramebuffers(1, &fbo);
+    gl_info->fbo_ops.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+    gl_info->fbo_ops.glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex[0], 0);
+    gl_info->fbo_ops.glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, tex[1], 0);
+
+    status = gl_info->fbo_ops.glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+
+    gl_info->fbo_ops.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    gl_info->fbo_ops.glDeleteFramebuffers(1, &fbo);
+    gl_info->gl_ops.gl.p_glDeleteTextures(2, tex);
+    checkGLcall("testing multiple framebuffer attachments with different bit depths");
+
+    return status != GL_FRAMEBUFFER_COMPLETE;
+}
+
 static void quirk_apple_glsl_constants(struct wined3d_gl_info *gl_info)
 {
     /* MacOS needs uniforms for relative addressing offsets. This can
@@ -988,6 +1031,11 @@ static void quirk_broken_viewport_subpixel_bits(struct wined3d_gl_info *gl_info)
     }
 }
 
+static void quirk_no_independent_bit_depths(struct wined3d_gl_info *gl_info)
+{
+    gl_info->quirks |= WINED3D_QUIRK_NO_INDEPENDENT_BIT_DEPTHS;
+}
+
 static const struct wined3d_gpu_description *query_gpu_description(const struct wined3d_gl_info *gl_info,
         UINT64 *vram_bytes)
 {
@@ -1118,6 +1166,11 @@ static void fixup_extensions(struct wined3d_gl_info *gl_info, struct wined3d_cap
             match_broken_viewport_subpixel_bits,
             quirk_broken_viewport_subpixel_bits,
             "NVIDIA viewport subpixel bits bug"
+        },
+        {
+            match_no_independent_bit_depths,
+            quirk_no_independent_bit_depths,
+            "No support for MRT with independent bit depths"
         },
     };
 
@@ -4354,6 +4407,8 @@ static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, s
         caps->PrimitiveMiscCaps |= WINED3DPMISCCAPS_INDEPENDENTWRITEMASKS;
     if (gl_info->supported[ARB_FRAMEBUFFER_SRGB])
         caps->PrimitiveMiscCaps |= WINED3DPMISCCAPS_POSTBLENDSRGBCONVERT;
+    if (~gl_info->quirks & WINED3D_QUIRK_NO_INDEPENDENT_BIT_DEPTHS)
+        caps->PrimitiveMiscCaps |= WINED3DPMISCCAPS_MRTINDEPENDENTBITDEPTHS;
 
     if (gl_info->supported[ARB_SAMPLER_OBJECTS] || gl_info->supported[EXT_TEXTURE_LOD_BIAS])
         caps->RasterCaps |= WINED3DPRASTERCAPS_MIPMAPLODBIAS;

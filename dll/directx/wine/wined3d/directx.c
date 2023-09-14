@@ -1826,7 +1826,6 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, unsigned in
                                     /* TODO:
                                         WINED3DPMISCCAPS_NULLREFERENCE
                                         WINED3DPMISCCAPS_FOGANDSPECULARALPHA
-                                        WINED3DPMISCCAPS_MRTINDEPENDENTBITDEPTHS
                                         WINED3DPMISCCAPS_FOGVERTEXCLAMPED */
 
     caps->RasterCaps               = WINED3DPRASTERCAPS_DITHER    |
