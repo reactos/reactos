@@ -12298,9 +12298,10 @@ static int glsl_blitter_args_compare(const void *key, const struct wine_rb_entry
 static void glsl_free_blitter_program(struct wine_rb_entry *entry, void *ctx)
 {
     struct glsl_blitter_program *program = WINE_RB_ENTRY_VALUE(entry, struct glsl_blitter_program, entry);
-    struct wined3d_context *context = ctx;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_context_gl *context_gl = ctx;
+    const struct wined3d_gl_info *gl_info;
 
+    gl_info = context_gl->c.gl_info;
     GL_EXTCALL(glDeleteProgram(program->id));
     checkGLcall("glDeleteProgram()");
     heap_free(program);
@@ -12309,6 +12310,7 @@ static void glsl_free_blitter_program(struct wine_rb_entry *entry, void *ctx)
 /* Context activation is done by the caller. */
 static void glsl_blitter_destroy(struct wined3d_blitter *blitter, struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_glsl_blitter *glsl_blitter;
     struct wined3d_blitter *next;
@@ -12321,7 +12323,7 @@ static void glsl_blitter_destroy(struct wined3d_blitter *blitter, struct wined3d
     if (glsl_blitter->palette_texture)
         gl_info->gl_ops.gl.p_glDeleteTextures(1, &glsl_blitter->palette_texture);
 
-    wine_rb_destroy(&glsl_blitter->programs, glsl_free_blitter_program, context);
+    wine_rb_destroy(&glsl_blitter->programs, glsl_free_blitter_program, context_gl);
     string_buffer_list_cleanup(&glsl_blitter->string_buffers);
 
     heap_free(glsl_blitter);
