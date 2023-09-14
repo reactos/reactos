@@ -2715,7 +2715,7 @@ static void test_class_installer(void)
     SetLastError(0xdeadbeef);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list.\n");
-    todo_wine ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
+    ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
 
     ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
     ok(*coinst_last_message == DIF_DESTROYPRIVATEDATA, "Got unexpected message %#x.\n", *coinst_last_message);
@@ -2750,7 +2750,7 @@ static void test_class_installer(void)
     SetLastError(0xdeadbeef);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list.\n");
-    todo_wine ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
+    ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
 
     /* Test returning ERROR_DI_DO_DEFAULT. */
 
@@ -2779,7 +2779,7 @@ static void test_class_installer(void)
     SetLastError(0xdeadbeef);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list.\n");
-    todo_wine ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
+    ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
 
     /* The default entry point is ClassInstall(). */
 
@@ -2802,7 +2802,7 @@ static void test_class_installer(void)
     SetLastError(0xdeadbeef);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list.\n");
-    todo_wine ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
+    ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
 
     ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
     ok(*coinst_last_message == DIF_DESTROYPRIVATEDATA, "Got unexpected message %#x.\n", *coinst_last_message);
@@ -2873,7 +2873,7 @@ static void test_class_coinstaller(void)
     SetLastError(0xdeadbeef);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list.\n");
-    todo_wine ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
+    ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
 
     todo_wine ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
     todo_wine ok(*coinst_last_message == DIF_DESTROYPRIVATEDATA, "Got unexpected message %#x.\n", *coinst_last_message);
@@ -2905,7 +2905,7 @@ static void test_class_coinstaller(void)
     SetLastError(0xdeadbeef);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list.\n");
-    todo_wine ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
+    ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
 
     /* The default entry point is CoDeviceInstall(). */
 
@@ -2931,7 +2931,7 @@ static void test_class_coinstaller(void)
     SetLastError(0xdeadbeef);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list.\n");
-    todo_wine ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
+    ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
 
     ok(*coinst_callback_count == 1, "Got %d callbacks.\n", *coinst_callback_count);
     ok(*coinst_last_message == DIF_DESTROYPRIVATEDATA, "Got unexpected message %#x.\n", *coinst_last_message);
@@ -2982,7 +2982,7 @@ static void test_call_class_installer(void)
     SetLastError(0xdeadbeef);
     ret = SetupDiDestroyDeviceInfoList(set);
     ok(ret, "Failed to destroy device list.\n");
-    todo_wine ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
+    ok(!GetLastError(), "Got unexpected error %#x.\n", GetLastError());
 
     load_resource("coinst.dll", "C:\\windows\\system32\\winetest_coinst.dll");
 
