@@ -168,6 +168,9 @@ void device_context_remove(struct wined3d_device *device, struct wined3d_context
 
     TRACE("Removing context %p.\n", context);
 
+    device->adapter->fragment_pipe->free_context_data(context);
+    device->shader_backend->shader_free_context_data(context);
+
     for (i = 0; i < device->context_count; ++i)
     {
         if (device->contexts[i] == context)

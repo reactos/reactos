@@ -2347,8 +2347,6 @@ void wined3d_context_destroy(struct wined3d_context *context)
         return;
     }
 
-    device->shader_backend->shader_free_context_data(context);
-    device->adapter->fragment_pipe->free_context_data(context);
     device_context_remove(device, context);
 
     wined3d_context_gl_destroy(wined3d_context_gl(context));
