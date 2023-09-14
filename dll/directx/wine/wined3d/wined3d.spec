@@ -114,7 +114,7 @@
 @ cdecl wined3d_device_get_unordered_access_view(ptr long)
 @ cdecl wined3d_device_get_vertex_declaration(ptr)
 @ cdecl wined3d_device_get_vertex_shader(ptr)
-@ cdecl wined3d_device_get_viewport(ptr ptr)
+@ cdecl wined3d_device_get_viewports(ptr ptr ptr)
 @ cdecl wined3d_device_get_vs_cb(ptr long)
 @ cdecl wined3d_device_get_vs_consts_b(ptr long long ptr)
 @ cdecl wined3d_device_get_vs_consts_f(ptr long long ptr)
