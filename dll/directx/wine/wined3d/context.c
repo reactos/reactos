@@ -2247,6 +2247,10 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     if (device->dummy_textures.tex_2d)
         context_bind_dummy_textures(device, ret);
 
+    /* Initialise all rectangles to avoid resetting unused ones later. */
+    gl_info->gl_ops.gl.p_glScissor(0, 0, 0, 0);
+    checkGLcall("glScissor");
+
     TRACE("Created context %p.\n", ret);
 
     return ret;

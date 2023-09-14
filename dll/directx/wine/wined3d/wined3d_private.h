@@ -2005,6 +2005,7 @@ struct wined3d_context
     GLuint                  dummy_arbfp_prog;
 
     unsigned int viewport_count;
+    unsigned int scissor_rect_count;
 };
 
 struct wined3d_fb_state
@@ -2875,7 +2876,8 @@ struct wined3d_state
     struct wined3d_material material;
     struct wined3d_viewport viewports[WINED3D_MAX_VIEWPORTS];
     unsigned int viewport_count;
-    RECT scissor_rect;
+    RECT scissor_rects[WINED3D_MAX_VIEWPORTS];
+    unsigned int scissor_rect_count;
 
     /* Light hashmap. Collisions are handled using linked lists. */
 #define LIGHTMAP_SIZE 43
@@ -3656,7 +3658,7 @@ void wined3d_cs_emit_set_sampler(struct wined3d_cs *cs, enum wined3d_shader_type
         UINT sampler_idx, struct wined3d_sampler *sampler) DECLSPEC_HIDDEN;
 void wined3d_cs_emit_set_sampler_state(struct wined3d_cs *cs, UINT sampler_idx,
         enum wined3d_sampler_state state, DWORD value) DECLSPEC_HIDDEN;
-void wined3d_cs_emit_set_scissor_rect(struct wined3d_cs *cs, const RECT *rect) DECLSPEC_HIDDEN;
+void wined3d_cs_emit_set_scissor_rects(struct wined3d_cs *cs, unsigned int rect_count, const RECT *rects) DECLSPEC_HIDDEN;
 void wined3d_cs_emit_set_shader(struct wined3d_cs *cs, enum wined3d_shader_type type,
         struct wined3d_shader *shader) DECLSPEC_HIDDEN;
 void wined3d_cs_emit_set_stream_output(struct wined3d_cs *cs, UINT stream_idx,

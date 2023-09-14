@@ -4286,27 +4286,53 @@ static void light(struct wined3d_context *context, const struct wined3d_state *s
 static void scissorrect(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    const RECT *r = &state->scissor_rect;
+    unsigned int height = 0;
+    const RECT *r;
 
     /* Warning: glScissor uses window coordinates, not viewport coordinates,
      * so our viewport correction does not apply. Warning2: Even in windowed
      * mode the coords are relative to the window, not the screen. */
-    TRACE("Setting new scissor rect to %s.\n", wine_dbgstr_rect(r));
 
-    if (context->render_offscreen)
+    if (!context->render_offscreen)
     {
-        gl_info->gl_ops.gl.p_glScissor(r->left, r->top, r->right - r->left, r->bottom - r->top);
+        const struct wined3d_rendertarget_view *target = state->fb->render_targets[0];
+        unsigned int width;
+
+        wined3d_rendertarget_view_get_drawable_size(target, context, &width, &height);
+    }
+
+    if (gl_info->supported[ARB_VIEWPORT_ARRAY])
+    {
+        GLint sr[4 * WINED3D_MAX_VIEWPORTS];
+        unsigned int i, reset_count = 0;
+
+        for (i = 0; i < state->scissor_rect_count; ++i)
+        {
+            r = &state->scissor_rects[i];
+
+            sr[i * 4] = r->left;
+            sr[i * 4 + 1] = height ? height - r->top : r->top;
+            sr[i * 4 + 2] = r->right - r->left;
+            sr[i * 4 + 3] = r->bottom - r->top;
+        }
+
+        if (context->scissor_rect_count > state->scissor_rect_count)
+            reset_count = context->scissor_rect_count - state->scissor_rect_count;
+
+        if (reset_count)
+            memset(&sr[state->scissor_rect_count * 4], 0, reset_count * 4 * sizeof(GLint));
+
+        GL_EXTCALL(glScissorArrayv(0, state->scissor_rect_count + reset_count, sr));
+        checkGLcall("glScissorArrayv");
+        context->scissor_rect_count = state->scissor_rect_count;
     }
     else
     {
-        const struct wined3d_rendertarget_view *target = state->fb->render_targets[0];
-        UINT height;
-        UINT width;
-
-        wined3d_rendertarget_view_get_drawable_size(target, context, &width, &height);
-        gl_info->gl_ops.gl.p_glScissor(r->left, height - r->bottom, r->right - r->left, r->bottom - r->top);
+        r = &state->scissor_rects[0];
+        gl_info->gl_ops.gl.p_glScissor(r->left, height ? height - r->top : r->top,
+                r->right - r->left, r->bottom - r->top);
+        checkGLcall("glScissor");
     }
-    checkGLcall("glScissor");
 }
 
 static void indexbuffer(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)

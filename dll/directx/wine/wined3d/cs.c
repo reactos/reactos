@@ -34,7 +34,7 @@ enum wined3d_cs_op
     WINED3D_CS_OP_FLUSH,
     WINED3D_CS_OP_SET_PREDICATION,
     WINED3D_CS_OP_SET_VIEWPORTS,
-    WINED3D_CS_OP_SET_SCISSOR_RECT,
+    WINED3D_CS_OP_SET_SCISSOR_RECTS,
     WINED3D_CS_OP_SET_RENDERTARGET_VIEW,
     WINED3D_CS_OP_SET_DEPTH_STENCIL_VIEW,
     WINED3D_CS_OP_SET_VERTEX_DECLARATION,
@@ -145,10 +145,11 @@ struct wined3d_cs_set_viewports
     struct wined3d_viewport viewports[1];
 };
 
-struct wined3d_cs_set_scissor_rect
+struct wined3d_cs_set_scissor_rects
 {
     enum wined3d_cs_op opcode;
-    RECT rect;
+    unsigned int rect_count;
+    RECT rects[1];
 };
 
 struct wined3d_cs_set_rendertarget_view
@@ -548,7 +549,7 @@ void wined3d_cs_emit_clear(struct wined3d_cs *cs, DWORD rect_count, const RECT *
     op->fb = &cs->fb;
     SetRect(&op->draw_rect, vp->x, vp->y, vp->x + vp->width, vp->y + vp->height);
     if (state->render_states[WINED3D_RS_SCISSORTESTENABLE])
-        IntersectRect(&op->draw_rect, &op->draw_rect, &state->scissor_rect);
+        IntersectRect(&op->draw_rect, &op->draw_rect, &state->scissor_rects[0]);
     op->color = *color;
     op->depth = depth;
     op->stencil = stencil;
@@ -992,21 +993,28 @@ void wined3d_cs_emit_set_viewports(struct wined3d_cs *cs, unsigned int viewport_
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
 }
 
-static void wined3d_cs_exec_set_scissor_rect(struct wined3d_cs *cs, const void *data)
+static void wined3d_cs_exec_set_scissor_rects(struct wined3d_cs *cs, const void *data)
 {
-    const struct wined3d_cs_set_scissor_rect *op = data;
+    const struct wined3d_cs_set_scissor_rects *op = data;
 
-    cs->state.scissor_rect = op->rect;
+    if (op->rect_count)
+        memcpy(cs->state.scissor_rects, op->rects, op->rect_count * sizeof(*op->rects));
+    else
+        SetRectEmpty(cs->state.scissor_rects);
+    cs->state.scissor_rect_count = op->rect_count;
     device_invalidate_state(cs->device, STATE_SCISSORRECT);
 }
 
-void wined3d_cs_emit_set_scissor_rect(struct wined3d_cs *cs, const RECT *rect)
+void wined3d_cs_emit_set_scissor_rects(struct wined3d_cs *cs, unsigned int rect_count, const RECT *rects)
 {
-    struct wined3d_cs_set_scissor_rect *op;
+    struct wined3d_cs_set_scissor_rects *op;
 
-    op = cs->ops->require_space(cs, sizeof(*op), WINED3D_CS_QUEUE_DEFAULT);
-    op->opcode = WINED3D_CS_OP_SET_SCISSOR_RECT;
-    op->rect = *rect;
+    op = cs->ops->require_space(cs, FIELD_OFFSET(struct wined3d_cs_set_scissor_rects, rects[rect_count]),
+            WINED3D_CS_QUEUE_DEFAULT);
+    op->opcode = WINED3D_CS_OP_SET_SCISSOR_RECTS;
+    if (rect_count)
+        memcpy(op->rects, rects, rect_count * sizeof(*rects));
+    op->rect_count = rect_count;
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
 }
@@ -2466,7 +2474,7 @@ static void (* const wined3d_cs_op_handlers[])(struct wined3d_cs *cs, const void
     /* WINED3D_CS_OP_FLUSH                       */ wined3d_cs_exec_flush,
     /* WINED3D_CS_OP_SET_PREDICATION             */ wined3d_cs_exec_set_predication,
     /* WINED3D_CS_OP_SET_VIEWPORTS               */ wined3d_cs_exec_set_viewports,
-    /* WINED3D_CS_OP_SET_SCISSOR_RECT            */ wined3d_cs_exec_set_scissor_rect,
+    /* WINED3D_CS_OP_SET_SCISSOR_RECTS           */ wined3d_cs_exec_set_scissor_rects,
     /* WINED3D_CS_OP_SET_RENDERTARGET_VIEW       */ wined3d_cs_exec_set_rendertarget_view,
     /* WINED3D_CS_OP_SET_DEPTH_STENCIL_VIEW      */ wined3d_cs_exec_set_depth_stencil_view,
     /* WINED3D_CS_OP_SET_VERTEX_DECLARATION      */ wined3d_cs_exec_set_vertex_declaration,

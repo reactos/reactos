@@ -2451,7 +2451,8 @@ HRESULT __cdecl wined3d_device_set_rendertarget_view(struct wined3d_device *devi
         unsigned int view_idx, struct wined3d_rendertarget_view *view, BOOL set_viewport);
 void __cdecl wined3d_device_set_sampler_state(struct wined3d_device *device,
         UINT sampler_idx, enum wined3d_sampler_state state, DWORD value);
-void __cdecl wined3d_device_set_scissor_rect(struct wined3d_device *device, const RECT *rect);
+void __cdecl wined3d_device_set_scissor_rects(struct wined3d_device *device,
+        unsigned int rect_count, const RECT *rect);
 void __cdecl wined3d_device_set_software_vertex_processing(struct wined3d_device *device, BOOL software);
 void __cdecl wined3d_device_set_stream_output(struct wined3d_device *device, UINT idx,
         struct wined3d_buffer *buffer, UINT offset);
