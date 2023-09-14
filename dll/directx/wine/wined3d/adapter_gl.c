@@ -4383,6 +4383,29 @@ static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, s
     }
 
     caps->MaxAnisotropy = gl_info->limits.anisotropy;
+
+    if (caps->VertexShaderVersion >= 3)
+    {
+        caps->MaxVertexShader30InstructionSlots
+                = max(caps->MaxVertexShader30InstructionSlots, gl_info->limits.arb_vs_instructions);
+    }
+    if (caps->VertexShaderVersion >= 2)
+    {
+        caps->VS20Caps.temp_count = max(caps->VS20Caps.temp_count, gl_info->limits.arb_vs_temps);
+
+        if (gl_info->supported[ARB_HALF_FLOAT_VERTEX])
+            caps->DeclTypes |= WINED3DDTCAPS_FLOAT16_2 | WINED3DDTCAPS_FLOAT16_4;
+    }
+
+    if (caps->PixelShaderVersion >= 3)
+    {
+        caps->MaxPixelShader30InstructionSlots
+                = max(caps->MaxPixelShader30InstructionSlots, gl_info->limits.arb_ps_instructions);
+    }
+    if (caps->PixelShaderVersion >= 2)
+    {
+        caps->PS20Caps.temp_count = max(caps->PS20Caps.temp_count, gl_info->limits.arb_ps_temps);
+    }
 }
 
 static BOOL wined3d_check_pixel_format_color(const struct wined3d_pixel_format *cfg,
