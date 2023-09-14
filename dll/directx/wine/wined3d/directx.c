@@ -677,7 +677,7 @@ static BOOL match_allows_spec_alpha(const struct wined3d_gl_info *gl_info, struc
     GLenum error;
     DWORD data[16];
 
-    if (!gl_info->supported[EXT_SECONDARY_COLOR])
+    if (!gl_info->supported[EXT_SECONDARY_COLOR] || !gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
         return FALSE;
 
     while (gl_info->gl_ops.gl.p_glGetError());
