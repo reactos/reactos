@@ -2087,6 +2087,8 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 void wined3d_context_gl_load_tex_coords(const struct wined3d_context_gl *context_gl,
         const struct wined3d_stream_info *si, GLuint *current_bo, const struct wined3d_state *state) DECLSPEC_HIDDEN;
+void wined3d_context_gl_update_stream_sources(struct wined3d_context_gl *context_gl,
+        const struct wined3d_state *state) DECLSPEC_HIDDEN;
 
 HRESULT wined3d_context_vk_init(struct wined3d_context *context_vk,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
@@ -2271,8 +2273,6 @@ void context_texture_update(struct wined3d_context *context,
 void context_unload_tex_coords(const struct wined3d_context *context) DECLSPEC_HIDDEN;
 void context_unmap_bo_address(struct wined3d_context *context,
         const struct wined3d_bo_address *data, GLenum binding) DECLSPEC_HIDDEN;
-void context_update_stream_sources(struct wined3d_context *context,
-        const struct wined3d_state *state) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * Internal representation of a light

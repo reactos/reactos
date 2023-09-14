@@ -3885,14 +3885,14 @@ static void streamsrc(struct wined3d_context *context, const struct wined3d_stat
 {
     if (isStateDirty(context, STATE_VDECL))
         return;
-    context_update_stream_sources(context, state);
+    wined3d_context_gl_update_stream_sources(wined3d_context_gl(context), state);
 }
 
 static void vdecl_miscpart(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     if (isStateDirty(context, STATE_STREAMSRC))
         return;
-    context_update_stream_sources(context, state);
+    wined3d_context_gl_update_stream_sources(wined3d_context_gl(context), state);
 }
 
 static void vertexdeclaration(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)

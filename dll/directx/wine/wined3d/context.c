@@ -5531,24 +5531,24 @@ static void wined3d_context_gl_load_numbered_arrays(struct wined3d_context_gl *c
     checkGLcall("Loading numbered arrays");
 }
 
-void context_update_stream_sources(struct wined3d_context *context, const struct wined3d_state *state)
+void wined3d_context_gl_update_stream_sources(struct wined3d_context_gl *context_gl,
+        const struct wined3d_state *state)
 {
-
-    if (context->use_immediate_mode_draw)
+    if (context_gl->c.use_immediate_mode_draw)
         return;
 
-    context_unload_vertex_data(context);
-    if (context->d3d_info->ffp_generic_attributes || use_vs(state))
+    context_unload_vertex_data(&context_gl->c);
+    if (context_gl->c.d3d_info->ffp_generic_attributes || use_vs(state))
     {
         TRACE("Loading numbered arrays.\n");
-        wined3d_context_gl_load_numbered_arrays(wined3d_context_gl(context), &context->stream_info, state);
+        wined3d_context_gl_load_numbered_arrays(context_gl, &context_gl->c.stream_info, state);
         return;
     }
 
     TRACE("Loading named arrays.\n");
-    context_unload_numbered_arrays(context);
-    context_load_vertex_data(context, &context->stream_info, state);
-    context->namedArraysLoaded = TRUE;
+    context_unload_numbered_arrays(&context_gl->c);
+    context_load_vertex_data(&context_gl->c, &context_gl->c.stream_info, state);
+    context_gl->c.namedArraysLoaded = TRUE;
 }
 
 static void apply_texture_blit_state(const struct wined3d_gl_info *gl_info, struct gl_texture *texture,
