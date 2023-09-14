@@ -5100,6 +5100,88 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
     context_release(context);
 }
 
+static void apply_texture_blit_state(const struct wined3d_gl_info *gl_info, struct gl_texture *texture,
+        GLenum target, unsigned int level, enum wined3d_texture_filter_type filter)
+{
+    gl_info->gl_ops.gl.p_glTexParameteri(target, GL_TEXTURE_MAG_FILTER, wined3d_gl_mag_filter(filter));
+    gl_info->gl_ops.gl.p_glTexParameteri(target, GL_TEXTURE_MIN_FILTER,
+            wined3d_gl_min_mip_filter(filter, WINED3D_TEXF_NONE));
+    gl_info->gl_ops.gl.p_glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl_info->gl_ops.gl.p_glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    if (gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
+        gl_info->gl_ops.gl.p_glTexParameteri(target, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT);
+    gl_info->gl_ops.gl.p_glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, level);
+
+    /* We changed the filtering settings on the texture. Make sure they get
+     * reset on subsequent draws. */
+    texture->sampler_desc.mag_filter = WINED3D_TEXF_POINT;
+    texture->sampler_desc.min_filter = WINED3D_TEXF_POINT;
+    texture->sampler_desc.mip_filter = WINED3D_TEXF_NONE;
+    texture->sampler_desc.address_u = WINED3D_TADDRESS_CLAMP;
+    texture->sampler_desc.address_v = WINED3D_TADDRESS_CLAMP;
+    texture->sampler_desc.srgb_decode = FALSE;
+    texture->base_level = level;
+}
+
+/* Context activation is done by the caller. */
+void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, const RECT *src_rect, const RECT *dst_rect,
+        enum wined3d_texture_filter_type filter)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_blt_info info;
+    unsigned int level, w, h, i;
+    SIZE dst_size;
+    struct blit_vertex
+    {
+        float x, y;
+        struct wined3d_vec3 texcoord;
+    }
+    quad[4];
+
+    texture2d_get_blt_info(texture, sub_resource_idx, src_rect, &info);
+
+    level = sub_resource_idx % texture->level_count;
+    context_bind_texture(context, info.bind_target, texture->texture_rgb.name);
+    apply_texture_blit_state(gl_info, &texture->texture_rgb, info.bind_target, level, filter);
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, level);
+
+    context_get_rt_size(context, &dst_size);
+    w = dst_size.cx;
+    h = dst_size.cy;
+
+    quad[0].x = dst_rect->left * 2.0f / w - 1.0f;
+    quad[0].y = dst_rect->top * 2.0f / h - 1.0f;
+    quad[0].texcoord = info.texcoords[0];
+
+    quad[1].x = dst_rect->right * 2.0f / w - 1.0f;
+    quad[1].y = dst_rect->top * 2.0f / h - 1.0f;
+    quad[1].texcoord = info.texcoords[1];
+
+    quad[2].x = dst_rect->left * 2.0f / w - 1.0f;
+    quad[2].y = dst_rect->bottom * 2.0f / h - 1.0f;
+    quad[2].texcoord = info.texcoords[2];
+
+    quad[3].x = dst_rect->right * 2.0f / w - 1.0f;
+    quad[3].y = dst_rect->bottom * 2.0f / h - 1.0f;
+    quad[3].texcoord = info.texcoords[3];
+
+    /* Draw a quad. */
+    gl_info->gl_ops.gl.p_glBegin(GL_TRIANGLE_STRIP);
+
+    for (i = 0; i < ARRAY_SIZE(quad); ++i)
+    {
+        GL_EXTCALL(glVertexAttrib3fv(1, &quad[i].texcoord.x));
+        GL_EXTCALL(glVertexAttrib2fv(0, &quad[i].x));
+    }
+
+    gl_info->gl_ops.gl.p_glEnd();
+    checkGLcall("draw");
+
+    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, texture->level_count - 1);
+    context_bind_texture(context, info.bind_target, 0);
+}
+
 /* Context activation is done by the caller. */
 void context_draw_textured_quad(struct wined3d_context *context, struct wined3d_texture *texture,
         unsigned int sub_resource_idx, const RECT *src_rect, const RECT *dst_rect,
@@ -5116,17 +5198,7 @@ void context_draw_textured_quad(struct wined3d_context *context, struct wined3d_
 
     level = sub_resource_idx % texture->level_count;
     context_bind_texture(context, info.bind_target, texture->texture_rgb.name);
-
-    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAG_FILTER, wined3d_gl_mag_filter(filter));
-    checkGLcall("glTexParameteri");
-    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MIN_FILTER,
-            wined3d_gl_min_mip_filter(filter, WINED3D_TEXF_NONE));
-    checkGLcall("glTexParameteri");
-    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    if (gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
-        gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT);
-    gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_BASE_LEVEL, level);
+    apply_texture_blit_state(gl_info, &texture->texture_rgb, info.bind_target, level, filter);
     gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, level);
     gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     checkGLcall("glTexEnvi");
@@ -5148,14 +5220,4 @@ void context_draw_textured_quad(struct wined3d_context *context, struct wined3d_
 
     gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, texture->level_count - 1);
     context_bind_texture(context, info.bind_target, 0);
-
-    /* We changed the filtering settings on the texture. Make sure they get
-     * reset on subsequent draws. */
-    texture->texture_rgb.sampler_desc.mag_filter = WINED3D_TEXF_POINT;
-    texture->texture_rgb.sampler_desc.min_filter = WINED3D_TEXF_POINT;
-    texture->texture_rgb.sampler_desc.mip_filter = WINED3D_TEXF_NONE;
-    texture->texture_rgb.sampler_desc.address_u = WINED3D_TADDRESS_CLAMP;
-    texture->texture_rgb.sampler_desc.address_v = WINED3D_TADDRESS_CLAMP;
-    texture->texture_rgb.sampler_desc.srgb_decode = FALSE;
-    texture->texture_rgb.base_level = level;
 }
