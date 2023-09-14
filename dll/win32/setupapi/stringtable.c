@@ -57,19 +57,21 @@ typedef struct _STRING_TABLE
 
 
 /**************************************************************************
- * StringTableInitialize [SETUPAPI.@]
+ * StringTableInitializeEx [SETUPAPI.@]
  *
  * Creates a new string table and initializes it.
  *
  * PARAMS
- *     None
+ *     dwMaxExtraDataSize [I] Maximum extra data size
+ *     dwReserved         [I] Unused
  *
  * RETURNS
  *     Success: Handle to the string table
  *     Failure: NULL
  */
 HSTRING_TABLE WINAPI
-StringTableInitialize(VOID)
+StringTableInitializeEx(DWORD dwMaxExtraDataSize,
+                        DWORD dwReserved)
 {
     PSTRING_TABLE pStringTable;
 
@@ -95,7 +97,7 @@ StringTableInitialize(VOID)
 
     pStringTable->dwUsedSlots = 0;
     pStringTable->dwMaxSlots = TABLE_DEFAULT_SIZE;
-    pStringTable->dwMaxDataSize = 0;
+    pStringTable->dwMaxDataSize = dwMaxExtraDataSize;
 
     TRACE("Done\n");
 
@@ -103,47 +105,21 @@ StringTableInitialize(VOID)
 }
 
 /**************************************************************************
- * StringTableInitializeEx [SETUPAPI.@]
+ * StringTableInitialize [SETUPAPI.@]
  *
  * Creates a new string table and initializes it.
  *
  * PARAMS
- *     dwMaxExtraDataSize [I] Maximum extra data size
- *     dwReserved         [I] Unused
+ *     None
  *
  * RETURNS
  *     Success: Handle to the string table
  *     Failure: NULL
  */
 HSTRING_TABLE WINAPI
-StringTableInitializeEx(DWORD dwMaxExtraDataSize,
-                        DWORD dwReserved)
+StringTableInitialize(VOID)
 {
-    PSTRING_TABLE pStringTable;
-
-    TRACE("\n");
-
-    pStringTable = MyMalloc(sizeof(STRING_TABLE));
-    if (pStringTable == NULL) return NULL;
-
-    memset(pStringTable, 0, sizeof(STRING_TABLE));
-
-    pStringTable->pSlots = MyMalloc(sizeof(TABLE_SLOT) * TABLE_DEFAULT_SIZE);
-    if (pStringTable->pSlots == NULL)
-    {
-        MyFree(pStringTable);
-        return NULL;
-    }
-
-    memset(pStringTable->pSlots, 0, sizeof(TABLE_SLOT) * TABLE_DEFAULT_SIZE);
-
-    pStringTable->dwUsedSlots = 0;
-    pStringTable->dwMaxSlots = TABLE_DEFAULT_SIZE;
-    pStringTable->dwMaxDataSize = dwMaxExtraDataSize;
-
-    TRACE("Done\n");
-
-    return (HSTRING_TABLE)pStringTable;
+    return StringTableInitializeEx(0, 0);
 }
 
 /**************************************************************************
@@ -466,7 +442,7 @@ StringTableGetExtraData(HSTRING_TABLE hStringTable,
 
     memcpy(lpExtraData,
            pStringTable->pSlots[dwId - 1].pData,
-           dwExtraDataSize);
+           pStringTable->pSlots[dwId - 1].dwSize);
 
     return TRUE;
 }
