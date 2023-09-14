@@ -1795,53 +1795,10 @@ static void wined3d_texture_gl_prepare_rb(struct wined3d_texture_gl *texture_gl,
     }
 }
 
-/* Context activation is done by the caller. Context may be NULL in
- * WINED3D_NO3D mode. */
-BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-        struct wined3d_context *context, DWORD location)
+BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, struct wined3d_context *context, unsigned int location)
 {
-    struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(texture);
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-
-    switch (location)
-    {
-        case WINED3D_LOCATION_SYSMEM:
-            return wined3d_resource_prepare_sysmem(&texture->resource);
-
-        case WINED3D_LOCATION_USER_MEMORY:
-            if (!texture->user_memory)
-                ERR("Map binding is set to WINED3D_LOCATION_USER_MEMORY but surface->user_memory is NULL.\n");
-            return TRUE;
-
-        case WINED3D_LOCATION_BUFFER:
-            wined3d_texture_prepare_buffer_object(texture, sub_resource_idx, context_gl->gl_info);
-            return TRUE;
-
-        case WINED3D_LOCATION_TEXTURE_RGB:
-            wined3d_texture_gl_prepare_texture(texture_gl, context_gl, FALSE);
-            return TRUE;
-
-        case WINED3D_LOCATION_TEXTURE_SRGB:
-            wined3d_texture_gl_prepare_texture(texture_gl, context_gl, TRUE);
-            return TRUE;
-
-        case WINED3D_LOCATION_DRAWABLE:
-            if (!texture->swapchain && wined3d_settings.offscreen_rendering_mode != ORM_BACKBUFFER)
-                ERR("Texture %p does not have a drawable.\n", texture);
-            return TRUE;
-
-        case WINED3D_LOCATION_RB_MULTISAMPLE:
-            wined3d_texture_gl_prepare_rb(texture_gl, context_gl->gl_info, TRUE);
-            return TRUE;
-
-        case WINED3D_LOCATION_RB_RESOLVED:
-            wined3d_texture_gl_prepare_rb(texture_gl, context_gl->gl_info, FALSE);
-            return TRUE;
-
-        default:
-            ERR("Invalid location %s.\n", wined3d_debug_location(location));
-            return FALSE;
-    }
+    return texture->texture_ops->texture_prepare_location(texture, sub_resource_idx, context, location);
 }
 
 static struct wined3d_texture_sub_resource *wined3d_texture_get_sub_resource(struct wined3d_texture *texture,
@@ -2468,7 +2425,6 @@ static BOOL wined3d_texture_gl_load_sysmem(struct wined3d_texture_gl *texture_gl
     struct wined3d_texture_sub_resource *sub_resource;
 
     sub_resource = &texture_gl->t.sub_resources[sub_resource_idx];
-    wined3d_texture_prepare_location(&texture_gl->t, sub_resource_idx, &context_gl->c, dst_location);
 
     /* We cannot download data from multisample textures directly. */
     if (wined3d_texture_gl_is_multisample_location(texture_gl, WINED3D_LOCATION_TEXTURE_RGB))
@@ -2687,7 +2643,6 @@ static BOOL wined3d_texture_gl_load_texture(struct wined3d_texture_gl *texture_g
         wined3d_texture_load_location(&texture_gl->t, sub_resource_idx, &context_gl->c, WINED3D_LOCATION_SYSMEM);
     }
 
-    wined3d_texture_gl_prepare_texture(texture_gl, context_gl, srgb);
     wined3d_texture_gl_bind_and_dirtify(texture_gl, context_gl, srgb);
     wined3d_texture_get_pitch(&texture_gl->t, level, &src_row_pitch, &src_slice_pitch);
 
@@ -2739,6 +2694,53 @@ static BOOL wined3d_texture_gl_load_texture(struct wined3d_texture_gl *texture_g
     return TRUE;
 }
 
+static BOOL wined3d_texture_gl_prepare_location(struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, struct wined3d_context *context, unsigned int location)
+{
+    struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(texture);
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+
+    switch (location)
+    {
+        case WINED3D_LOCATION_SYSMEM:
+            return wined3d_resource_prepare_sysmem(&texture->resource);
+
+        case WINED3D_LOCATION_USER_MEMORY:
+            if (!texture->user_memory)
+                ERR("Preparing WINED3D_LOCATION_USER_MEMORY, but texture->user_memory is NULL.\n");
+            return TRUE;
+
+        case WINED3D_LOCATION_BUFFER:
+            wined3d_texture_prepare_buffer_object(texture, sub_resource_idx, context_gl->gl_info);
+            return TRUE;
+
+        case WINED3D_LOCATION_TEXTURE_RGB:
+            wined3d_texture_gl_prepare_texture(texture_gl, context_gl, FALSE);
+            return TRUE;
+
+        case WINED3D_LOCATION_TEXTURE_SRGB:
+            wined3d_texture_gl_prepare_texture(texture_gl, context_gl, TRUE);
+            return TRUE;
+
+        case WINED3D_LOCATION_DRAWABLE:
+            if (!texture->swapchain && wined3d_settings.offscreen_rendering_mode != ORM_BACKBUFFER)
+                ERR("Texture %p does not have a drawable.\n", texture);
+            return TRUE;
+
+        case WINED3D_LOCATION_RB_MULTISAMPLE:
+            wined3d_texture_gl_prepare_rb(texture_gl, context_gl->gl_info, TRUE);
+            return TRUE;
+
+        case WINED3D_LOCATION_RB_RESOLVED:
+            wined3d_texture_gl_prepare_rb(texture_gl, context_gl->gl_info, FALSE);
+            return TRUE;
+
+        default:
+            ERR("Invalid location %s.\n", wined3d_debug_location(location));
+            return FALSE;
+    }
+}
+
 /* Context activation is done by the caller. */
 static BOOL wined3d_texture_gl_load_location(struct wined3d_texture *texture,
         unsigned int sub_resource_idx, struct wined3d_context *context, DWORD location)
@@ -2749,7 +2751,7 @@ static BOOL wined3d_texture_gl_load_location(struct wined3d_texture *texture,
     TRACE("texture %p, sub_resource_idx %u, context %p, location %s.\n",
             texture, sub_resource_idx, context, wined3d_debug_location(location));
 
-    if (!wined3d_texture_prepare_location(texture, sub_resource_idx, context, location))
+    if (!wined3d_texture_gl_prepare_location(texture, sub_resource_idx, context, location))
         return FALSE;
 
     switch (location)
@@ -2809,6 +2811,7 @@ static void wined3d_texture_gl_upload_data(struct wined3d_context *context,
 
 static const struct wined3d_texture_ops texture_gl_ops =
 {
+    wined3d_texture_gl_prepare_location,
     wined3d_texture_gl_load_location,
     wined3d_texture_gl_upload_data,
     wined3d_texture_gl_download_data,
@@ -3959,6 +3962,25 @@ static void wined3d_texture_no3d_download_data(struct wined3d_context *context,
     FIXME("Not implemented.\n");
 }
 
+static BOOL wined3d_texture_no3d_prepare_location(struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, struct wined3d_context *context, unsigned int location)
+{
+    switch (location)
+    {
+        case WINED3D_LOCATION_SYSMEM:
+            return wined3d_resource_prepare_sysmem(&texture->resource);
+
+        case WINED3D_LOCATION_USER_MEMORY:
+            if (!texture->user_memory)
+                ERR("Preparing WINED3D_LOCATION_USER_MEMORY, but texture->user_memory is NULL.\n");
+            return TRUE;
+
+        default:
+            FIXME("Unhandled location %s.\n", wined3d_debug_location(location));
+            return FALSE;
+    }
+}
+
 static BOOL wined3d_texture_no3d_load_location(struct wined3d_texture *texture,
         unsigned int sub_resource_idx, struct wined3d_context *context, DWORD location)
 {
@@ -3975,6 +3997,7 @@ static BOOL wined3d_texture_no3d_load_location(struct wined3d_texture *texture,
 
 static const struct wined3d_texture_ops wined3d_texture_no3d_ops =
 {
+    wined3d_texture_no3d_prepare_location,
     wined3d_texture_no3d_load_location,
     wined3d_texture_no3d_upload_data,
     wined3d_texture_no3d_download_data,
@@ -4011,6 +4034,29 @@ static void wined3d_texture_vk_download_data(struct wined3d_context *context,
     FIXME("Not implemented.\n");
 }
 
+static BOOL wined3d_texture_vk_prepare_location(struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, struct wined3d_context *context, unsigned int location)
+{
+    switch (location)
+    {
+        case WINED3D_LOCATION_SYSMEM:
+            return wined3d_resource_prepare_sysmem(&texture->resource);
+
+        case WINED3D_LOCATION_USER_MEMORY:
+            if (!texture->user_memory)
+                ERR("Preparing WINED3D_LOCATION_USER_MEMORY, but texture->user_memory is NULL.\n");
+            return TRUE;
+
+        case WINED3D_LOCATION_TEXTURE_RGB:
+            /* The Vulkan image is created during resource creation. */
+            return TRUE;
+
+        default:
+            FIXME("Unhandled location %s.\n", wined3d_debug_location(location));
+            return FALSE;
+    }
+}
+
 static BOOL wined3d_texture_vk_load_location(struct wined3d_texture *texture,
         unsigned int sub_resource_idx, struct wined3d_context *context, DWORD location)
 {
@@ -4021,6 +4067,7 @@ static BOOL wined3d_texture_vk_load_location(struct wined3d_texture *texture,
 
 static const struct wined3d_texture_ops wined3d_texture_vk_ops =
 {
+    wined3d_texture_vk_prepare_location,
     wined3d_texture_vk_load_location,
     wined3d_texture_vk_upload_data,
     wined3d_texture_vk_download_data,

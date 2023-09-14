@@ -3509,8 +3509,10 @@ struct wined3d_blt_info
 
 struct wined3d_texture_ops
 {
+    BOOL (*texture_prepare_location)(struct wined3d_texture *texture, unsigned int sub_resource_idx,
+            struct wined3d_context *context, unsigned int location);
     BOOL (*texture_load_location)(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-            struct wined3d_context *context, DWORD location);
+            struct wined3d_context *context, unsigned int location);
     void (*texture_upload_data)(struct wined3d_context *context, const struct wined3d_const_bo_address *src_bo_addr,
             const struct wined3d_format *src_format, const struct wined3d_box *src_box, unsigned int src_row_pitch,
             unsigned int src_slice_pitch, struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
