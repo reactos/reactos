@@ -198,21 +198,22 @@ struct wined3d_d3d_info
 {
     struct wined3d_d3d_limits limits;
     struct wined3d_ffp_attrib_ops ffp_attrib_ops;
-    unsigned int wined3d_creation_flags;
-    unsigned int xyzrhw : 1;
-    unsigned int emulated_flatshading : 1;
-    unsigned int ffp_generic_attributes : 1;
-    unsigned int vs_clipping : 1;
-    unsigned int shader_color_key : 1;
-    unsigned int shader_double_precision : 1;
-    unsigned int shader_output_interpolation : 1;
-    unsigned int viewport_array_index_any_shader : 1;
-    unsigned int texture_npot : 1;
-    unsigned int texture_npot_conditional : 1;
-    unsigned int draw_base_vertex_offset : 1;
-    unsigned int vertex_bgra : 1;
-    unsigned int texture_swizzle : 1;
-    unsigned int srgb_read_control : 1;
+    uint32_t wined3d_creation_flags;
+    uint32_t xyzrhw : 1;
+    uint32_t emulated_flatshading : 1;
+    uint32_t ffp_generic_attributes : 1;
+    uint32_t vs_clipping : 1;
+    uint32_t shader_color_key : 1;
+    uint32_t shader_double_precision : 1;
+    uint32_t shader_output_interpolation : 1;
+    uint32_t viewport_array_index_any_shader : 1;
+    uint32_t texture_npot : 1;
+    uint32_t texture_npot_conditional : 1;
+    uint32_t draw_base_vertex_offset : 1;
+    uint32_t vertex_bgra : 1;
+    uint32_t texture_swizzle : 1;
+    uint32_t srgb_read_control : 1;
+    uint32_t srgb_write_control : 1;
     enum wined3d_feature_level feature_level;
 
     DWORD multisample_draw_location;

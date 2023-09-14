@@ -3902,7 +3902,7 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
     unsigned int i;
 
     memset(args, 0, sizeof(*args)); /* FIXME: Make sure all bits are set. */
-    if (!gl_info->supported[ARB_FRAMEBUFFER_SRGB] && needs_srgb_write(context, state, state->fb))
+    if (!d3d_info->srgb_write_control && needs_srgb_write(context, state, state->fb))
     {
         static unsigned int warned = 0;
 
