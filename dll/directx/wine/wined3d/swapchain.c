@@ -729,31 +729,8 @@ static void wined3d_swapchain_apply_sample_count_override(const struct wined3d_s
 static void wined3d_swapchain_cs_init(void *object)
 {
     struct wined3d_swapchain *swapchain = object;
-    const struct wined3d_adapter *adapter;
-    unsigned int i;
 
-    static const enum wined3d_format_id formats[] =
-    {
-        WINED3DFMT_D24_UNORM_S8_UINT,
-        WINED3DFMT_D32_UNORM,
-        WINED3DFMT_R24_UNORM_X8_TYPELESS,
-        WINED3DFMT_D16_UNORM,
-        WINED3DFMT_S1_UINT_D15_UNORM,
-    };
-
-    adapter = swapchain->device->adapter;
-
-    /* Without ORM_FBO, switching the depth/stencil format is hard. Always
-     * request a depth/stencil buffer in the likely case it's needed later. */
-    for (i = 0; i < ARRAY_SIZE(formats); ++i)
-    {
-        swapchain->ds_format = wined3d_get_format(adapter, formats[i], WINED3D_BIND_DEPTH_STENCIL);
-        if ((swapchain->context[0] = context_create(swapchain, swapchain->ds_format)))
-            break;
-        TRACE("Depth stencil format %s is not supported, trying next format.\n", debug_d3dformat(formats[i]));
-    }
-
-    if (!swapchain->context[0])
+    if (!(swapchain->context[0] = context_create(swapchain)))
     {
         WARN("Failed to create context.\n");
         return;
@@ -1094,7 +1071,7 @@ static struct wined3d_context *swapchain_create_context(struct wined3d_swapchain
 
     TRACE("Creating a new context for swapchain %p, thread %u.\n", swapchain, GetCurrentThreadId());
 
-    if (!(ctx = context_create(swapchain, swapchain->ds_format)))
+    if (!(ctx = context_create(swapchain)))
     {
         ERR("Failed to create a new context for the swapchain\n");
         return NULL;

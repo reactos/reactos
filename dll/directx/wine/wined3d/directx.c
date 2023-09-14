@@ -2258,8 +2258,7 @@ static void adapter_no3d_destroy_device(struct wined3d_device *device)
     heap_free(device);
 }
 
-static BOOL wined3d_adapter_no3d_create_context(struct wined3d_context *context,
-        const struct wined3d_format *ds_format)
+static BOOL wined3d_adapter_no3d_create_context(struct wined3d_context *context)
 {
     return TRUE;
 }

@@ -1965,7 +1965,7 @@ static BOOL wined3d_context_init(struct wined3d_context *context, struct wined3d
     return TRUE;
 }
 
-struct wined3d_context *context_create(struct wined3d_swapchain *swapchain, const struct wined3d_format *ds_format)
+struct wined3d_context *context_create(struct wined3d_swapchain *swapchain)
 {
     struct wined3d_device *device = swapchain->device;
     struct wined3d_context_gl *context_gl;
@@ -1984,7 +1984,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain, cons
         heap_free(context_gl);
         return NULL;
     }
-    if (!(device->adapter->adapter_ops->adapter_create_context(context, ds_format)))
+    if (!(device->adapter->adapter_ops->adapter_create_context(context)))
     {
         wined3d_release_dc(context->win_handle, context->hdc);
         heap_free(context_gl);
@@ -2003,15 +2003,15 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain, cons
     return context;
 }
 
-BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context, const struct wined3d_format *ds_format)
+BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context)
 {
+    struct wined3d_swapchain *swapchain = context->swapchain;
+    const struct wined3d_format *color_format, *ds_format;
     struct wined3d_device *device = context->device;
-    const struct wined3d_format *color_format;
     const struct wined3d_d3d_info *d3d_info;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_resource *target;
     unsigned int target_bind_flags;
-    BOOL aux_buffers = FALSE;
     HGLRC ctx, share_ctx;
     unsigned int i;
 
@@ -2057,47 +2057,77 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context, const st
         return FALSE;
 
     target = &context->current_rt.texture->resource;
-    color_format = target->format;
     target_bind_flags = target->bind_flags;
 
-    /* In case of ORM_BACKBUFFER, make sure to request an alpha component for
-     * X4R4G4B4/X8R8G8B8 as we might need it for the backbuffer. */
     if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
     {
-        aux_buffers = TRUE;
+        static const enum wined3d_format_id ds_formats[] =
+        {
+            WINED3DFMT_D24_UNORM_S8_UINT,
+            WINED3DFMT_D32_UNORM,
+            WINED3DFMT_R24_UNORM_X8_TYPELESS,
+            WINED3DFMT_D16_UNORM,
+            WINED3DFMT_S1_UINT_D15_UNORM,
+        };
 
+        color_format = target->format;
+
+        /* In case of ORM_BACKBUFFER, make sure to request an alpha component for
+         * X4R4G4B4/X8R8G8B8 as we might need it for the backbuffer. */
         if (color_format->id == WINED3DFMT_B4G4R4X4_UNORM)
             color_format = wined3d_get_format(device->adapter, WINED3DFMT_B4G4R4A4_UNORM, target_bind_flags);
         else if (color_format->id == WINED3DFMT_B8G8R8X8_UNORM)
             color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_bind_flags);
+
+        /* DirectDraw supports 8bit paletted render targets and these are used by
+         * old games like StarCraft and C&C. Most modern hardware doesn't support
+         * 8bit natively so we perform some form of 8bit -> 32bit conversion. The
+         * conversion (ab)uses the alpha component for storing the palette index.
+         * For this reason we require a format with 8bit alpha, so request
+         * A8R8G8B8. */
+        if (color_format->id == WINED3DFMT_P8_UINT)
+            color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_bind_flags);
+
+        /* Try to find a pixel format which matches our requirements. */
+        if (!swapchain->ds_format)
+        {
+            for (i = 0; i < ARRAY_SIZE(ds_formats); ++i)
+            {
+                ds_format = wined3d_get_format(device->adapter, ds_formats[i], WINED3D_BIND_DEPTH_STENCIL);
+                if ((context->pixel_format = context_choose_pixel_format(device,
+                        context->hdc, color_format, ds_format, TRUE)))
+                {
+                    swapchain->ds_format = ds_format;
+                    break;
+                }
+
+                TRACE("Depth stencil format %s is not supported, trying next format.\n",
+                        debug_d3dformat(ds_format->id));
+            }
+        }
+        else
+        {
+            context->pixel_format = context_choose_pixel_format(device,
+                    context->hdc, color_format, swapchain->ds_format, TRUE);
+        }
     }
-
-    /* DirectDraw supports 8bit paletted render targets and these are used by
-     * old games like StarCraft and C&C. Most modern hardware doesn't support
-     * 8bit natively so we perform some form of 8bit -> 32bit conversion. The
-     * conversion (ab)uses the alpha component for storing the palette index.
-     * For this reason we require a format with 8bit alpha, so request
-     * A8R8G8B8. */
-    if (color_format->id == WINED3DFMT_P8_UINT)
-        color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_bind_flags);
-
-    /* When using FBOs for off-screen rendering, we only use the drawable for
-     * presentation blits, and don't do any rendering to it. That means we
-     * don't need depth or stencil buffers, and can mostly ignore the render
-     * target format. This wouldn't necessarily be quite correct for 10bpc
-     * display modes, but we don't currently support those.
-     * Using the same format regardless of the color/depth/stencil targets
-     * makes it much less likely that different wined3d instances will set
-     * conflicting pixel formats. */
-    if (wined3d_settings.offscreen_rendering_mode != ORM_BACKBUFFER)
+    else
     {
+        /* When using FBOs for off-screen rendering, we only use the drawable for
+         * presentation blits, and don't do any rendering to it. That means we
+         * don't need depth or stencil buffers, and can mostly ignore the render
+         * target format. This wouldn't necessarily be quite correct for 10bpc
+         * display modes, but we don't currently support those.
+         * Using the same format regardless of the color/depth/stencil targets
+         * makes it much less likely that different wined3d instances will set
+         * conflicting pixel formats. */
         color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_bind_flags);
         ds_format = wined3d_get_format(device->adapter, WINED3DFMT_UNKNOWN, WINED3D_BIND_DEPTH_STENCIL);
+        context->pixel_format = context_choose_pixel_format(device,
+                context->hdc, color_format, ds_format, FALSE);
     }
 
-    /* Try to find a pixel format which matches our requirements. */
-    if (!(context->pixel_format = context_choose_pixel_format(device,
-            context->hdc, color_format, ds_format, aux_buffers)))
+    if (!context->pixel_format)
         return FALSE;
 
     context_enter(context);
