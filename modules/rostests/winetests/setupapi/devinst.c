@@ -572,7 +572,7 @@ static void test_device_property(void)
     ok(!ret, "Expect failure\n");
     ok(err == ERROR_INSUFFICIENT_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INSUFFICIENT_BUFFER, err);
     ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
-    ok(size == sizeof(valueW), "Expect size %d, got %d\n", sizeof(valueW), size);
+    ok(size == sizeof(valueW), "Got size %d\n", size);
 
     /* #7 Zero buffer size */
     SetLastError(0xdeadbeef);
@@ -583,7 +583,7 @@ static void test_device_property(void)
     ok(!ret, "Expect failure\n");
     ok(err == ERROR_INSUFFICIENT_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INSUFFICIENT_BUFFER, err);
     ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
-    ok(size == sizeof(valueW), "Expect size %d, got %d\n", sizeof(valueW), size);
+    ok(size == sizeof(valueW), "Got size %d\n", size);
 
     /* #8 Null required size */
     SetLastError(0xdeadbeef);
@@ -625,7 +625,7 @@ static void test_device_property(void)
     ok(ret, "Expect success\n");
     ok(err == NO_ERROR, "Expect last error %#x, got %#x\n", NO_ERROR, err);
     ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
-    ok(size == sizeof(valueW), "Expect size %d, got %d\n", sizeof(valueW), size);
+    ok(size == sizeof(valueW), "Got size %d\n", size);
     ok(!lstrcmpW((WCHAR *)buffer, valueW), "Expect buffer %s, got %s\n", wine_dbgstr_w(valueW), wine_dbgstr_w((WCHAR *)buffer));
 
     /* #12 Get null property value */
@@ -653,7 +653,7 @@ static void test_device_property(void)
     ok(!ret, "Expect failure\n");
     ok(err == ERROR_INSUFFICIENT_BUFFER, "Expect last error %#x, got %#x\n", ERROR_INSUFFICIENT_BUFFER, err);
     ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
-    ok(size == sizeof(valueW), "Expect size %d, got %d\n", sizeof(valueW), size);
+    ok(size == sizeof(valueW), "Got size %d\n", size);
 
     /* #14 Normal */
     ret = pSetupDiSetDevicePropertyW(set, &device_data, &DEVPKEY_Device_FriendlyName, DEVPROP_TYPE_STRING, (const BYTE *)valueW, sizeof(valueW), 0);
@@ -667,7 +667,7 @@ static void test_device_property(void)
     ok(ret, "Expect success\n");
     ok(err == NO_ERROR, "Expect last error %#x, got %#x\n", NO_ERROR, err);
     ok(type == DEVPROP_TYPE_STRING, "Expect type %#x, got %#x\n", DEVPROP_TYPE_STRING, type);
-    ok(size == sizeof(valueW), "Expect size %d, got %d\n", sizeof(valueW), size);
+    ok(size == sizeof(valueW), "Got size %d\n", size);
     ok(!lstrcmpW((WCHAR *)buffer, valueW), "Expect buffer %s, got %s\n", wine_dbgstr_w(valueW), wine_dbgstr_w((WCHAR *)buffer));
 
     ret = SetupDiRemoveDevice(set, &device_data);
