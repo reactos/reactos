@@ -2029,7 +2029,7 @@ static BOOL init_format_base_info(struct wined3d_adapter *adapter)
 
     for (i = 0; i < ARRAY_SIZE(typed_formats); ++i)
     {
-        const struct wined3d_format *typeless_format;
+        struct wined3d_format *typeless_format;
         unsigned int component_count = 0;
         DWORD flags = 0;
 
@@ -2055,6 +2055,8 @@ static BOOL init_format_base_info(struct wined3d_adapter *adapter)
         format->block_height = typeless_format->block_height;
         format->block_byte_count = typeless_format->block_byte_count;
         format->typeless_id = typeless_format->id;
+
+        typeless_format->typeless_id = typeless_format->id;
 
         for (j = 0; j < strlen(typed_formats[i].channels); ++j)
         {
