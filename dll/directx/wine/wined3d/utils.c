@@ -3214,6 +3214,9 @@ static BOOL init_format_texture_info(struct wined3d_adapter *adapter, struct win
             format_clear_flag(&format->f, WINED3DFMT_FLAG_SRGB_READ | WINED3DFMT_FLAG_SRGB_WRITE);
         }
 
+        if (!gl_info->supported[ARB_SHADOW] && (format->f.flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_SHADOW))
+            format_clear_flag(&format->f, WINED3DFMT_FLAG_TEXTURE);
+
         query_internal_format(adapter, format, &format_texture_info[i], gl_info, srgb_write, FALSE);
 
         /* Texture conversion stuff */
