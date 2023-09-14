@@ -4085,20 +4085,22 @@ static BOOL use_transform_feedback(const struct wined3d_state *state)
     return shader->u.gs.so_desc.element_count;
 }
 
-void context_end_transform_feedback(struct wined3d_context *context)
+void wined3d_context_gl_end_transform_feedback(struct wined3d_context_gl *context_gl)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    if (context->transform_feedback_active)
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+
+    if (context_gl->c.transform_feedback_active)
     {
         GL_EXTCALL(glEndTransformFeedback());
         checkGLcall("glEndTransformFeedback");
-        context->transform_feedback_active = 0;
-        context->transform_feedback_paused = 0;
+        context_gl->c.transform_feedback_active = 0;
+        context_gl->c.transform_feedback_paused = 0;
     }
 }
 
 static void context_pause_transform_feedback(struct wined3d_context *context, BOOL force)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
     if (!context->transform_feedback_active || context->transform_feedback_paused)
@@ -4115,7 +4117,7 @@ static void context_pause_transform_feedback(struct wined3d_context *context, BO
     WARN("Cannot pause transform feedback operations.\n");
 
     if (force)
-        context_end_transform_feedback(context);
+        wined3d_context_gl_end_transform_feedback(context_gl);
 }
 
 static void context_setup_target(struct wined3d_context *context,

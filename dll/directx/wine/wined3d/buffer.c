@@ -144,6 +144,7 @@ static void wined3d_buffer_gl_bind(struct wined3d_buffer_gl *buffer_gl, struct w
 static void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *buffer_gl,
         struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct wined3d_resource *resource = &buffer_gl->b.resource;
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
@@ -179,7 +180,7 @@ static void wined3d_buffer_gl_destroy_buffer_object(struct wined3d_buffer_gl *bu
                  * when deleting a potentially bound transform feedback buffer.
                  * This may happen when the device is being destroyed. */
                 WARN("Deleting buffer object for buffer %p, disabling transform feedback.\n", buffer_gl);
-                context_end_transform_feedback(context);
+                wined3d_context_gl_end_transform_feedback(context_gl);
             }
         }
     }

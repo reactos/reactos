@@ -4470,13 +4470,14 @@ static void state_uav_warn(struct wined3d_context *context, const struct wined3d
 
 static void state_so(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_buffer *buffer;
     unsigned int offset, size, i;
 
     TRACE("context %p, state %p, state_id %#x.\n", context, state, state_id);
 
-    context_end_transform_feedback(context);
+    wined3d_context_gl_end_transform_feedback(context_gl);
 
     for (i = 0; i < ARRAY_SIZE(state->stream_output); ++i)
     {
