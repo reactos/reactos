@@ -392,7 +392,7 @@ struct wined3d_settings
     unsigned int cs_multithreaded;
     BOOL explicit_gl_version;
     DWORD max_gl_version;
-    BOOL glslRequested;
+    BOOL use_glsl;
     int offscreen_rendering_mode;
     unsigned short pci_vendor_id;
     unsigned short pci_device_id;

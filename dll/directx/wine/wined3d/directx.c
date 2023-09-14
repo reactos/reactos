@@ -2622,7 +2622,14 @@ static const struct fragment_pipeline *select_fragment_implementation(const stru
 
 static const struct wined3d_shader_backend_ops *select_shader_backend(const struct wined3d_gl_info *gl_info)
 {
-    BOOL glsl = wined3d_settings.glslRequested && gl_info->glsl_version >= MAKEDWORD_VERSION(1, 20);
+    BOOL glsl = wined3d_settings.use_glsl && gl_info->glsl_version >= MAKEDWORD_VERSION(1, 20);
+    if (!gl_info->supported[WINED3D_GL_LEGACY_CONTEXT] && !wined3d_settings.use_glsl)
+    {
+        ERR_(winediag)("Ignoring the UseGLSL registry key. "
+                "GLSL is the only shader backend available on core profile contexts. "
+                "You need to explicitly set GL version to use legacy contexts.\n");
+        glsl = TRUE;
+    }
 
     if (glsl && gl_info->supported[ARB_VERTEX_SHADER] && gl_info->supported[ARB_FRAGMENT_SHADER])
         return &glsl_shader_backend;
