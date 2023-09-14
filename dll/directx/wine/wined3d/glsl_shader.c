@@ -10533,6 +10533,7 @@ static void shader_glsl_precompile(void *shader_priv, struct wined3d_shader *sha
 static void shader_glsl_select(void *shader_priv, struct wined3d_context *context,
         const struct wined3d_state *state)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct glsl_context_data *ctx_data = context->shader_backend_data;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct shader_glsl_priv *priv = shader_priv;
@@ -10552,7 +10553,7 @@ static void shader_glsl_select(void *shader_priv, struct wined3d_context *contex
         program_id = glsl_program->id;
         current_vertex_color_clamp = glsl_program->vs.vertex_color_clamp;
         if (glsl_program->shader_controlled_clip_distances)
-            context_enable_clip_distances(context, glsl_program->clip_distance_mask);
+            wined3d_context_gl_enable_clip_distances(context_gl, glsl_program->clip_distance_mask);
     }
     else
     {

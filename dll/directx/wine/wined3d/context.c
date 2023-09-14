@@ -2401,17 +2401,18 @@ static void wined3d_context_gl_get_rt_size(const struct wined3d_context_gl *cont
     size->cy = wined3d_texture_get_level_height(rt, level);
 }
 
-void context_enable_clip_distances(struct wined3d_context *context, unsigned int enable_mask)
+void wined3d_context_gl_enable_clip_distances(struct wined3d_context_gl *context_gl, uint32_t enable_mask)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    unsigned int clip_distance_count = gl_info->limits.user_clip_distances;
-    unsigned int i, disable_mask, current_mask;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    unsigned int clip_distance_count, i;
+    uint32_t disable_mask, current_mask;
 
+    clip_distance_count = gl_info->limits.user_clip_distances;
     disable_mask = ~enable_mask;
     enable_mask &= (1u << clip_distance_count) - 1;
     disable_mask &= (1u << clip_distance_count) - 1;
-    current_mask = context->clip_distance_mask;
-    context->clip_distance_mask = enable_mask;
+    current_mask = context_gl->c.clip_distance_mask;
+    context_gl->c.clip_distance_mask = enable_mask;
 
     enable_mask &= ~current_mask;
     while (enable_mask)
@@ -2850,7 +2851,7 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
     context->last_was_rhw = TRUE;
     context_invalidate_state(context, STATE_VDECL); /* because of last_was_rhw = TRUE */
 
-    context_enable_clip_distances(context, 0);
+    wined3d_context_gl_enable_clip_distances(context_gl, 0);
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_CLIPPING));
 
     /* FIXME: Make draw_textured_quad() able to work with a upper left origin. */

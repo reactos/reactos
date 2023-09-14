@@ -706,7 +706,8 @@ void state_alpha_test(struct wined3d_context *context, const struct wined3d_stat
 
 void state_clipping(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    unsigned int enable_mask;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    uint32_t enable_mask;
 
     if (use_vs(state) && !context->d3d_info->vs_clipping)
     {
@@ -734,7 +735,7 @@ void state_clipping(struct wined3d_context *context, const struct wined3d_state 
      */
     enable_mask = state->render_states[WINED3D_RS_CLIPPING] ?
             state->render_states[WINED3D_RS_CLIPPLANEENABLE] : 0;
-    context_enable_clip_distances(context, enable_mask);
+    wined3d_context_gl_enable_clip_distances(context_gl, enable_mask);
 }
 
 static void state_specularenable(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -3886,6 +3887,7 @@ static void vdecl_miscpart(struct wined3d_context *context, const struct wined3d
 
 static void vertexdeclaration(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     BOOL useVertexShaderFunction = use_vs(state);
     BOOL updateFog = FALSE;
@@ -3962,7 +3964,7 @@ static void vertexdeclaration(struct wined3d_context *context, const struct wine
                 /* Disable all clip planes to get defined results on all drivers. See comment in the
                  * state_clipping state handler
                  */
-                context_enable_clip_distances(context, 0);
+                wined3d_context_gl_enable_clip_distances(context_gl, 0);
 
                 if (!warned && state->render_states[WINED3D_RS_CLIPPLANEENABLE])
                 {
