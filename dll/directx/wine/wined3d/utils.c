@@ -3064,8 +3064,7 @@ static void query_internal_format(struct wined3d_adapter *adapter,
             if (!(format->f.flags[WINED3D_GL_RES_TYPE_TEX_2D]
                     & (WINED3DFMT_FLAG_SRGB_READ | WINED3DFMT_FLAG_SRGB_WRITE)))
                 format->srgb_internal = format->internal;
-            else if (wined3d_settings.offscreen_rendering_mode != ORM_FBO
-                    && gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
+            else if (gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
                 format->internal = format->srgb_internal;
         }
     }
@@ -3087,8 +3086,7 @@ static void query_internal_format(struct wined3d_adapter *adapter,
                 format->srgb_internal = format->internal;
                 format_clear_flag(&format->f, WINED3DFMT_FLAG_SRGB_READ | WINED3DFMT_FLAG_SRGB_WRITE);
             }
-            else if (wined3d_settings.offscreen_rendering_mode != ORM_FBO
-                    && gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
+            else if (gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
             {
                 format->internal = format->srgb_internal;
             }
