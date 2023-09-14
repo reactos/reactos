@@ -135,7 +135,9 @@ void wined3d_buffer_invalidate_location(struct wined3d_buffer *buffer, DWORD loc
 /* Context activation is done by the caller. */
 static void wined3d_buffer_gl_bind(struct wined3d_buffer_gl *buffer_gl, struct wined3d_context *context)
 {
-    context_bind_bo(context, buffer_gl->buffer_type_hint, buffer_gl->buffer_object);
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+
+    wined3d_context_gl_bind_bo(context_gl, buffer_gl->buffer_type_hint, buffer_gl->buffer_object);
 }
 
 /* Context activation is done by the caller. */

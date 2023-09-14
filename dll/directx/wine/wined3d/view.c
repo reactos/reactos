@@ -1047,6 +1047,7 @@ void wined3d_unordered_access_view_invalidate_location(struct wined3d_unordered_
 void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_view *view,
         const struct wined3d_uvec4 *clear_value, struct wined3d_context *context)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_format_gl *format;
     struct wined3d_buffer_gl *buffer_gl;
@@ -1080,7 +1081,7 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
     wined3d_unordered_access_view_invalidate_location(view, ~WINED3D_LOCATION_BUFFER);
 
     get_buffer_view_range(&buffer_gl->b, &view->desc, &format->f, &offset, &size);
-    context_bind_bo(context, buffer_gl->buffer_type_hint, buffer_gl->buffer_object);
+    wined3d_context_gl_bind_bo(context_gl, buffer_gl->buffer_type_hint, buffer_gl->buffer_object);
     GL_EXTCALL(glClearBufferSubData(buffer_gl->buffer_type_hint, format->internal,
             offset, size, format->format, format->type, clear_value));
     checkGLcall("clear unordered access view");

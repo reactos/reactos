@@ -2514,12 +2514,12 @@ void wined3d_context_gl_active_texture(struct wined3d_context_gl *context_gl,
     context_gl->active_texture = unit;
 }
 
-void context_bind_bo(struct wined3d_context *context, GLenum binding, GLuint name)
+void wined3d_context_gl_bind_bo(struct wined3d_context_gl *context_gl, GLenum binding, GLuint name)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     if (binding == GL_ELEMENT_ARRAY_BUFFER)
-        context_invalidate_state(context, STATE_INDEXBUFFER);
+        context_invalidate_state(&context_gl->c, STATE_INDEXBUFFER);
 
     GL_EXTCALL(glBindBuffer(binding, name));
 }
@@ -2591,6 +2591,7 @@ void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl, GLen
 void *context_map_bo_address(struct wined3d_context *context,
         const struct wined3d_bo_address *data, size_t size, GLenum binding, DWORD flags)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info;
     BYTE *memory;
 
@@ -2598,7 +2599,7 @@ void *context_map_bo_address(struct wined3d_context *context,
         return data->addr;
 
     gl_info = context->gl_info;
-    context_bind_bo(context, binding, data->buffer_object);
+    wined3d_context_gl_bind_bo(context_gl, binding, data->buffer_object);
 
     if (gl_info->supported[ARB_MAP_BUFFER_RANGE])
     {
@@ -2611,7 +2612,7 @@ void *context_map_bo_address(struct wined3d_context *context,
         memory += (INT_PTR)data->addr;
     }
 
-    context_bind_bo(context, binding, 0);
+    wined3d_context_gl_bind_bo(context_gl, binding, 0);
     checkGLcall("Map buffer object");
 
     return memory;
@@ -2620,15 +2621,16 @@ void *context_map_bo_address(struct wined3d_context *context,
 void context_unmap_bo_address(struct wined3d_context *context,
         const struct wined3d_bo_address *data, GLenum binding)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info;
 
     if (!data->buffer_object)
         return;
 
     gl_info = context->gl_info;
-    context_bind_bo(context, binding, data->buffer_object);
+    wined3d_context_gl_bind_bo(context_gl, binding, data->buffer_object);
     GL_EXTCALL(glUnmapBuffer(binding));
-    context_bind_bo(context, binding, 0);
+    wined3d_context_gl_bind_bo(context_gl, binding, 0);
     checkGLcall("Unmap buffer object");
 }
 
@@ -2636,6 +2638,7 @@ void context_copy_bo_address(struct wined3d_context *context,
         const struct wined3d_bo_address *dst, GLenum dst_binding,
         const struct wined3d_bo_address *src, GLenum src_binding, size_t size)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info;
     BYTE *dst_ptr, *src_ptr;
 
@@ -2664,13 +2667,13 @@ void context_copy_bo_address(struct wined3d_context *context,
     }
     else if (!dst->buffer_object && src->buffer_object)
     {
-        context_bind_bo(context, src_binding, src->buffer_object);
+        wined3d_context_gl_bind_bo(context_gl, src_binding, src->buffer_object);
         GL_EXTCALL(glGetBufferSubData(src_binding, (GLintptr)src->addr, size, dst->addr));
         checkGLcall("buffer download");
     }
     else if (dst->buffer_object && !src->buffer_object)
     {
-        context_bind_bo(context, dst_binding, dst->buffer_object);
+        wined3d_context_gl_bind_bo(context_gl, dst_binding, dst->buffer_object);
         GL_EXTCALL(glBufferSubData(dst_binding, (GLintptr)dst->addr, size, src->addr));
         checkGLcall("buffer upload");
     }
