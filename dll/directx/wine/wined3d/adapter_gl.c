@@ -103,6 +103,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_ARB_pixel_buffer_object",          ARB_PIXEL_BUFFER_OBJECT       },
     {"GL_ARB_point_parameters",             ARB_POINT_PARAMETERS          },
     {"GL_ARB_point_sprite",                 ARB_POINT_SPRITE              },
+    {"GL_ARB_polygon_offset_clamp",         ARB_POLYGON_OFFSET_CLAMP      },
     {"GL_ARB_provoking_vertex",             ARB_PROVOKING_VERTEX          },
     {"GL_ARB_query_buffer_object",          ARB_QUERY_BUFFER_OBJECT       },
     {"GL_ARB_sample_shading",               ARB_SAMPLE_SHADING            },
@@ -1254,7 +1255,9 @@ static enum wined3d_feature_level feature_level_from_caps(const struct wined3d_g
     shader_model = min(shader_model, max(shader_caps->hs_version, 4));
     shader_model = min(shader_model, max(shader_caps->ds_version, 4));
 
-    if (gl_info->supported[WINED3D_GL_VERSION_3_2] && gl_info->supported[ARB_SAMPLER_OBJECTS])
+    if (gl_info->supported[WINED3D_GL_VERSION_3_2]
+            && gl_info->supported[ARB_POLYGON_OFFSET_CLAMP]
+            && gl_info->supported[ARB_SAMPLER_OBJECTS])
     {
         if (shader_model >= 5
                 && gl_info->supported[ARB_DRAW_INDIRECT]
@@ -2172,6 +2175,8 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     /* GL_ARB_point_parameters */
     USE_GL_FUNC(glPointParameterfARB)
     USE_GL_FUNC(glPointParameterfvARB)
+    /* GL_ARB_polgyon_offset_clamp */
+    USE_GL_FUNC(glPolygonOffsetClamp)
     /* GL_ARB_provoking_vertex */
     USE_GL_FUNC(glProvokingVertex)
     /* GL_ARB_sample_shading */
@@ -3316,6 +3321,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         {ARB_SHADER_TEXTURE_IMAGE_SAMPLES, MAKEDWORD_VERSION(4, 5)},
 
         {ARB_PIPELINE_STATISTICS_QUERY,    MAKEDWORD_VERSION(4, 6)},
+        {ARB_POLYGON_OFFSET_CLAMP,         MAKEDWORD_VERSION(4, 6)},
         {ARB_TEXTURE_FILTER_ANISOTROPIC,   MAKEDWORD_VERSION(4, 6)},
     };
     struct wined3d_driver_info *driver_info = &adapter->driver_info;
