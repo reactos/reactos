@@ -304,6 +304,9 @@ HRESULT CDECL wined3d_swapchain_set_gamma_ramp(const struct wined3d_swapchain *s
 void CDECL wined3d_swapchain_set_palette(struct wined3d_swapchain *swapchain, struct wined3d_palette *palette)
 {
     TRACE("swapchain %p, palette %p.\n", swapchain, palette);
+
+    wined3d_cs_finish(swapchain->device->cs, WINED3D_CS_QUEUE_DEFAULT);
+
     swapchain->palette = palette;
 }
 
