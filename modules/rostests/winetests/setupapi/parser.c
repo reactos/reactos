@@ -71,13 +71,13 @@ static const char tmpfilename[] = ".\\tmp.inf";
                     "verybig=" A1200 "\n"
 
 /* create a new file with specified contents and open it */
-static HINF test_file_contents( const char *data, UINT *err_line )
+static HINF test_file_contents( const char *data, int size, UINT *err_line )
 {
     DWORD res;
     HANDLE handle = CreateFileA( tmpfilename, GENERIC_READ|GENERIC_WRITE,
                                  FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, 0 );
     if (handle == INVALID_HANDLE_VALUE) return 0;
-    if (!WriteFile( handle, data, strlen(data), &res, NULL )) trace( "write error\n" );
+    if (!WriteFile( handle, data, size, &res, NULL )) trace( "write error\n" );
     CloseHandle( handle );
     return SetupOpenInfFileA( tmpfilename, 0, INF_STYLE_WIN4, err_line );
 }
@@ -102,50 +102,53 @@ static const char *get_line_text( INFCONTEXT *context )
 static const struct
 {
     const char *data;
+    int data_size;
     DWORD error;
     UINT err_line;
     BOOL todo;
 } invalid_files[] =
 {
-    /* file contents                                         expected error (or 0)     errline  todo */
-    { "\r\n",                                                ERROR_WRONG_INF_STYLE,       0,    FALSE },
-    { "abcd\r\n",                                            ERROR_WRONG_INF_STYLE,       0,    TRUE },
-    { "[Version]\r\n",                                       ERROR_WRONG_INF_STYLE,       0,    FALSE },
-    { "[Version]\nSignature=",                               ERROR_WRONG_INF_STYLE,       0,    FALSE },
-    { "[Version]\nSignature=foo",                            ERROR_WRONG_INF_STYLE,       0,    FALSE },
-    { "[version]\nsignature=$chicago$",                      0,                           0,    FALSE },
-    { "[VERSION]\nSIGNATURE=$CHICAGO$",                      0,                           0,    FALSE },
-    { "[Version]\nSignature=$chicago$,abcd",                 0,                           0,    FALSE },
-    { "[Version]\nabc=def\nSignature=$chicago$",             0,                           0,    FALSE },
-    { "[Version]\nabc=def\n[Version]\nSignature=$chicago$",  0,                           0,    FALSE },
-    { STD_HEADER,                                            0,                           0,    FALSE },
-    { STD_HEADER "[]\r\n",                                   0,                           0,    FALSE },
-    { STD_HEADER "]\r\n",                                    0,                           0,    FALSE },
-    { STD_HEADER "[" A255 "]\r\n",                           0,                           0,    FALSE },
-    { STD_HEADER "[ab\r\n",                                  ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
-    { STD_HEADER "\n\n[ab\x1a]\n",                           ERROR_BAD_SECTION_NAME_LINE, 5,    FALSE },
-    { STD_HEADER "[" A256 "]\r\n",                           ERROR_SECTION_NAME_TOO_LONG, 3,    FALSE },
-    { "[abc]\n" STD_HEADER,                                  0,                           0,    FALSE },
-    { "abc\r\n" STD_HEADER,                                  ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
-    { ";\n;\nabc\r\n" STD_HEADER,                            ERROR_EXPECTED_SECTION_NAME, 3,    FALSE },
-    { ";\n;\nab\nab\n" STD_HEADER,                           ERROR_EXPECTED_SECTION_NAME, 3,    FALSE },
-    { ";aa\n;bb\n" STD_HEADER,                               0,                           0,    FALSE },
-    { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
-    { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
-    { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
-    { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
-    { "garbage1\ngarbage2\n[abc]\n" STD_HEADER,              ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
-    { "garbage1\ngarbage2\n[Strings]\n" STD_HEADER,          0,                           0,    FALSE },
-    { ";comment\ngarbage1\ngarbage2\n[abc]\n" STD_HEADER,    ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
-    { ";comment\ngarbage1\ngarbage2\n[Strings]\n" STD_HEADER, 0,                          0,    FALSE },
-    { " \t\ngarbage1\ngarbage2\n[abc]\n" STD_HEADER,         ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
-    { " \t\ngarbage1\ngarbage2\n[Strings]\n" STD_HEADER,     0,                           0,    FALSE },
-    { "garbage1\ngarbage2\n" STD_HEADER "[abc]\n",           ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
-    { "garbage1\ngarbage2\n" STD_HEADER "[Strings]\n",       0,                           0,    FALSE },
-    { ";comment\ngarbage1\ngarbage2\n" STD_HEADER "[abc]\n", ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
-    { ";comment\ngarbage1\ngarbage2\n" STD_HEADER "[Strings]\n", 0,                       0,    FALSE },
-    { " \t\ngarbage1\ngarbage2\n" STD_HEADER "[abc]\n",      ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
-    { " \t\ngarbage1\ngarbage2\n" STD_HEADER "[Strings]\n",  0,                           0,    FALSE },
+#define C(s) s, sizeof(s)-1
+    /* file contents                                            expected error (or 0)     errline  todo */
+    { C("\r\n"),                                                ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { C("abcd\r\n"),                                            ERROR_WRONG_INF_STYLE,       0,    TRUE },
+    { C("[Version]\r\n"),                                       ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { C("[Version]\nSignature="),                               ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { C("[Version]\nSignature=foo"),                            ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { C("[version]\nsignature=$chicago$"),                      0,                           0,    FALSE },
+    { C("[VERSION]\nSIGNATURE=$CHICAGO$"),                      0,                           0,    FALSE },
+    { C("[Version]\nSignature=$chicago$,abcd"),                 0,                           0,    FALSE },
+    { C("[Version]\nabc=def\nSignature=$chicago$"),             0,                           0,    FALSE },
+    { C("[Version]\nabc=def\n[Version]\nSignature=$chicago$"),  0,                           0,    FALSE },
+    { C(STD_HEADER),                                            0,                           0,    FALSE },
+    { C(STD_HEADER "[]\r\n"),                                   0,                           0,    FALSE },
+    { C(STD_HEADER "]\r\n"),                                    0,                           0,    FALSE },
+    { C(STD_HEADER "[" A255 "]\r\n"),                           0,                           0,    FALSE },
+    { C(STD_HEADER "[ab\r\n"),                                  ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
+    { C(STD_HEADER "\n\n[ab\x1a]\n"),                           ERROR_BAD_SECTION_NAME_LINE, 5,    FALSE },
+    { C(STD_HEADER "[" A256 "]\r\n"),                           ERROR_SECTION_NAME_TOO_LONG, 3,    FALSE },
+    { C("[abc]\n" STD_HEADER),                                  0,                           0,    FALSE },
+    { C("abc\r\n" STD_HEADER),                                  ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
+    { C(";\n;\nabc\r\n" STD_HEADER),                            ERROR_EXPECTED_SECTION_NAME, 3,    FALSE },
+    { C(";\n;\nab\nab\n" STD_HEADER),                           ERROR_EXPECTED_SECTION_NAME, 3,    FALSE },
+    { C(";aa\n;bb\n" STD_HEADER),                               0,                           0,    FALSE },
+    { C(STD_HEADER " [TestSection\x00]\n"),                     0,                           0,    TRUE },
+    { C(STD_HEADER " [Test\x00Section]\n"),                     0,                           0,    TRUE },
+    { C(STD_HEADER " [TestSection\x00]\n"),                     0,                           0,    TRUE },
+    { C(STD_HEADER " [Test\x00Section]\n"),                     0,                           0,    TRUE },
+    { C("garbage1\ngarbage2\n[abc]\n" STD_HEADER),              ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
+    { C("garbage1\ngarbage2\n[Strings]\n" STD_HEADER),          0,                           0,    FALSE },
+    { C(";comment\ngarbage1\ngarbage2\n[abc]\n" STD_HEADER),    ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { C(";comment\ngarbage1\ngarbage2\n[Strings]\n" STD_HEADER), 0,                          0,    FALSE },
+    { C(" \t\ngarbage1\ngarbage2\n[abc]\n" STD_HEADER),         ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { C(" \t\ngarbage1\ngarbage2\n[Strings]\n" STD_HEADER),     0,                           0,    FALSE },
+    { C("garbage1\ngarbage2\n" STD_HEADER "[abc]\n"),           ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
+    { C("garbage1\ngarbage2\n" STD_HEADER "[Strings]\n"),       0,                           0,    FALSE },
+    { C(";comment\ngarbage1\ngarbage2\n" STD_HEADER "[abc]\n"), ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { C(";comment\ngarbage1\ngarbage2\n" STD_HEADER "[Strings]\n"), 0,                       0,    FALSE },
+    { C(" \t\ngarbage1\ngarbage2\n" STD_HEADER "[abc]\n"),      ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { C(" \t\ngarbage1\ngarbage2\n" STD_HEADER "[Strings]\n"),  0,                           0,    FALSE },
+#undef C
 };
 
 static void test_invalid_files(void)
@@ -159,7 +162,7 @@ static void test_invalid_files(void)
     {
         SetLastError( 0xdeadbeef );
         err_line = 0xdeadbeef;
-        hinf = test_file_contents( invalid_files[i].data, &err_line );
+        hinf = test_file_contents( invalid_files[i].data, invalid_files[i].data_size, &err_line );
         err = GetLastError();
         trace( "hinf=%p err=0x%x line=%d\n", hinf, err, err_line );
         if (invalid_files[i].error)  /* should fail */
@@ -175,8 +178,11 @@ static void test_invalid_files(void)
         }
         else  /* should succeed */
         {
-            ok( hinf != INVALID_HANDLE_VALUE, "file %u: Open failed\n", i );
-            ok( err == 0, "file %u: Error code set to %u\n", i, err );
+            todo_wine_if (invalid_files[i].todo)
+            {
+                ok( hinf != INVALID_HANDLE_VALUE, "file %u: Open failed\n", i );
+                ok( err == 0, "file %u: Error code set to %u\n", i, err );
+            }
         }
         SetupCloseInfFile( hinf );
     }
@@ -233,7 +239,7 @@ static void test_section_names(void)
     for (i = 0; i < ARRAY_SIZE(section_names); i++)
     {
         SetLastError( 0xdeadbeef );
-        hinf = test_file_contents( section_names[i].data, &err_line );
+        hinf = test_file_contents( section_names[i].data, strlen(section_names[i].data), &err_line );
         ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %u\n", i, GetLastError() );
         if (hinf == INVALID_HANDLE_VALUE) continue;
 
@@ -273,7 +279,7 @@ static void test_enum_sections(void)
         return;
     }
 
-    hinf = test_file_contents( contents, &err );
+    hinf = test_file_contents( contents, strlen(contents), &err );
     ok( hinf != NULL, "Expected valid INF file\n" );
 
     for (index = 0; ; index++)
@@ -309,84 +315,86 @@ static void test_enum_sections(void)
 static const struct
 {
     const char *data;
+    int data_size;
     const char *key;
     const char *fields[10];
 } key_names[] =
 {
-/* file contents          expected key       expected fields */
- { "ab=cd",                "ab",            { "cd" } },
- { "ab=cd,ef,gh,ij",       "ab",            { "cd", "ef", "gh", "ij" } },
- { "ab",                   "ab",            { "ab" } },
- { "ab,cd",                NULL,            { "ab", "cd" } },
- { "ab,cd=ef",             NULL,            { "ab", "cd=ef" } },
- { "=abcd,ef",             "",              { "abcd", "ef" } },
+#define C(s) s, sizeof(s)-1
+/* file contents            expected key       expected fields */
+ { C("ab=cd"),                "ab",            { "cd" } },
+ { C("ab=cd,ef,gh,ij"),       "ab",            { "cd", "ef", "gh", "ij" } },
+ { C("ab"),                   "ab",            { "ab" } },
+ { C("ab,cd"),                NULL,            { "ab", "cd" } },
+ { C("ab,cd=ef"),             NULL,            { "ab", "cd=ef" } },
+ { C("=abcd,ef"),             "",              { "abcd", "ef" } },
  /* backslashes */
- { "ba\\\ncd=ef",          "bacd",          { "ef" } },
- { "ab  \\  \ncd=ef",      "abcd",          { "ef" } },
- { "ab\\\ncd,ef",          NULL,            { "abcd", "ef" } },
- { "ab  \\ ;cc\ncd=ef",    "abcd",          { "ef" } },
- { "ab \\ \\ \ncd=ef",     "abcd",          { "ef" } },
- { "ba \\ dc=xx",          "ba \\ dc",      { "xx" } },
- { "ba \\\\ \nc=d",        "bac",           { "d" } },
- { "a=b\\\\c",             "a",             { "b\\\\c" } },
- { "ab=cd \\ ",            "ab",            { "cd" } },
- { "ba=c \\ \n \\ \n a",   "ba",            { "ca" } },
- { "ba=c \\ \n \\ a",      "ba",            { "c\\ a" } },
- { "  \\ a= \\ b",         "\\ a",          { "\\ b" } },
+ { C("ba\\\ncd=ef"),          "bacd",          { "ef" } },
+ { C("ab  \\  \ncd=ef"),      "abcd",          { "ef" } },
+ { C("ab\\\ncd,ef"),          NULL,            { "abcd", "ef" } },
+ { C("ab  \\ ;cc\ncd=ef"),    "abcd",          { "ef" } },
+ { C("ab \\ \\ \ncd=ef"),     "abcd",          { "ef" } },
+ { C("ba \\ dc=xx"),          "ba \\ dc",      { "xx" } },
+ { C("ba \\\\ \nc=d"),        "bac",           { "d" } },
+ { C("a=b\\\\c"),             "a",             { "b\\\\c" } },
+ { C("ab=cd \\ "),            "ab",            { "cd" } },
+ { C("ba=c \\ \n \\ \n a"),   "ba",            { "ca" } },
+ { C("ba=c \\ \n \\ a"),      "ba",            { "c\\ a" } },
+ { C("  \\ a= \\ b"),         "\\ a",          { "\\ b" } },
  /* quotes */
- { "Ab\"Cd\"=Ef",          "AbCd",          { "Ef" } },
- { "Ab\"Cd=Ef\"",          "AbCd=Ef",       { "AbCd=Ef" } },
- { "ab\"\"\"cd,ef=gh\"",   "ab\"cd,ef=gh",  { "ab\"cd,ef=gh" } },
- { "ab\"\"cd=ef",          "abcd",          { "ef" } },
- { "ab\"\"cd=ef,gh",       "abcd",          { "ef", "gh" } },
- { "ab=cd\"\"ef",          "ab",            { "cdef" } },
- { "ab=cd\",\"ef",         "ab",            { "cd,ef" } },
- { "ab=cd\",ef",           "ab",            { "cd,ef" } },
- { "ab=cd\",ef\\\nab",     "ab",            { "cd,ef\\" } },
+ { C("Ab\"Cd\"=Ef"),          "AbCd",          { "Ef" } },
+ { C("Ab\"Cd=Ef\""),          "AbCd=Ef",       { "AbCd=Ef" } },
+ { C("ab\"\"\"cd,ef=gh\""),   "ab\"cd,ef=gh",  { "ab\"cd,ef=gh" } },
+ { C("ab\"\"cd=ef"),          "abcd",          { "ef" } },
+ { C("ab\"\"cd=ef,gh"),       "abcd",          { "ef", "gh" } },
+ { C("ab=cd\"\"ef"),          "ab",            { "cdef" } },
+ { C("ab=cd\",\"ef"),         "ab",            { "cd,ef" } },
+ { C("ab=cd\",ef"),           "ab",            { "cd,ef" } },
+ { C("ab=cd\",ef\\\nab"),     "ab",            { "cd,ef\\" } },
 
  /* single quotes (unhandled)*/
- { "HKLM,A,B,'C',D",       NULL,            { "HKLM", "A","B","'C'","D" } },
+ { C("HKLM,A,B,'C',D"),       NULL,            { "HKLM", "A","B","'C'","D" } },
  /* spaces */
- { " a b = c , d \n",      "a b",           { "c", "d" } },
- { " a b = c ,\" d\" \n",  "a b",           { "c", " d" } },
- { " a b\r = c\r\n",       "a b",           { "c" } },
+ { C(" a b = c , d \n"),      "a b",           { "c", "d" } },
+ { C(" a b = c ,\" d\" \n"),  "a b",           { "c", " d" } },
+ { C(" a b\r = c\r\n"),       "a b",           { "c" } },
  /* empty fields */
- { "a=b,,,c,,,d",          "a",             { "b", "", "", "c", "", "", "d" } },
- { "a=b,\"\",c,\" \",d",   "a",             { "b", "", "c", " ", "d" } },
- { "=,,b",                 "",              { "", "", "b" } },
- { ",=,,b",                NULL,            { "", "=", "", "b" } },
- { "a=\n",                 "a",             { "" } },
- { "=",                    "",              { "" } },
+ { C("a=b,,,c,,,d"),          "a",             { "b", "", "", "c", "", "", "d" } },
+ { C("a=b,\"\",c,\" \",d"),   "a",             { "b", "", "c", " ", "d" } },
+ { C("=,,b"),                 "",              { "", "", "b" } },
+ { C(",=,,b"),                NULL,            { "", "=", "", "b" } },
+ { C("a=\n"),                 "a",             { "" } },
+ { C("="),                    "",              { "" } },
  /* eof */
- { "ab=c\032d",            "ab",            { "c" } },
- { "ab\032=cd",            "ab",            { "ab" } },
+ { C("ab=c\032d"),            "ab",            { "c" } },
+ { C("ab\032=cd"),            "ab",            { "ab" } },
  /* nulls */
- { "abcd=ef\x0gh",         "abcd",          { "ef" } },
+ { C("abcd=ef\x0gh"),         "abcd",          { "ef gh" } },
  /* multiple sections with same name */
- { "[Test2]\nab\n[Test]\nee=ff\n",  "ee",    { "ff" } },
+ { C("[Test2]\nab\n[Test]\nee=ff\n"),  "ee",    { "ff" } },
  /* string substitution */
- { "%foo%=%bar%\n" STR_SECTION,     "aaa",   { "bbb" } },
- { "%foo%xx=%bar%yy\n" STR_SECTION, "aaaxx", { "bbbyy" } },
- { "%% %foo%=%bar%\n" STR_SECTION,  "% aaa", { "bbb" } },
- { "%f\"o\"o%=ccc\n" STR_SECTION,   "aaa",   { "ccc" } },
- { "abc=%bar;bla%\n" STR_SECTION,   "abc",   { "%bar" } },
- { "loop=%loop%\n" STR_SECTION,     "loop",  { "%loop2%" } },
- { "%per%%cent%=100\n" STR_SECTION, "12",    { "100" } },
- { "a=%big%\n" STR_SECTION,         "a",     { A400 } },
- { "a=%verybig%\n" STR_SECTION,     "a",     { A511 } },  /* truncated to 511, not on Vista/W2K8 */
- { "a=%big%%big%%big%%big%\n" STR_SECTION,   "a", { A400 A400 A400 A400 } },
- { "a=%big%%big%%big%%big%%big%%big%%big%%big%%big%\n" STR_SECTION,   "a", { A400 A400 A400 A400 A400 A400 A400 A400 A400 } },
- { "a=%big%%big%%big%%big%%big%%big%%big%%big%%big%%big%%big%\n" STR_SECTION,   "a", { A4097 /*MAX_INF_STRING_LENGTH+1*/ } },
+ { C("%foo%=%bar%\n" STR_SECTION),     "aaa",   { "bbb" } },
+ { C("%foo%xx=%bar%yy\n" STR_SECTION), "aaaxx", { "bbbyy" } },
+ { C("%% %foo%=%bar%\n" STR_SECTION),  "% aaa", { "bbb" } },
+ { C("%f\"o\"o%=ccc\n" STR_SECTION),   "aaa",   { "ccc" } },
+ { C("abc=%bar;bla%\n" STR_SECTION),   "abc",   { "%bar" } },
+ { C("loop=%loop%\n" STR_SECTION),     "loop",  { "%loop2%" } },
+ { C("%per%%cent%=100\n" STR_SECTION), "12",    { "100" } },
+ { C("a=%big%\n" STR_SECTION),         "a",     { A400 } },
+ { C("a=%verybig%\n" STR_SECTION),     "a",     { A511 } },  /* truncated to 511, not on Vista/W2K8 */
+ { C("a=%big%%big%%big%%big%\n" STR_SECTION),   "a", { A400 A400 A400 A400 } },
+ { C("a=%big%%big%%big%%big%%big%%big%%big%%big%%big%\n" STR_SECTION),   "a", { A400 A400 A400 A400 A400 A400 A400 A400 A400 } },
+ { C("a=%big%%big%%big%%big%%big%%big%%big%%big%%big%%big%%big%\n" STR_SECTION),   "a", { A4097 /*MAX_INF_STRING_LENGTH+1*/ } },
 
  /* Prove expansion of system entries removes extra \'s and string
     replacements doesn't                                            */
- { "ab=\"%24%\"\n" STR_SECTION,           "ab", { "C:\\" } },
- { "ab=\"%mydrive%\"\n" STR_SECTION,      "ab", { "C:\\" } },
- { "ab=\"%24%\\fred\"\n" STR_SECTION,     "ab", { "C:\\fred" } },
- { "ab=\"%mydrive%\\fred\"\n" STR_SECTION,"ab", { "C:\\\\fred" } },
+ { C("ab=\"%24%\"\n" STR_SECTION),           "ab", { "C:\\" } },
+ { C("ab=\"%mydrive%\"\n" STR_SECTION),      "ab", { "C:\\" } },
+ { C("ab=\"%24%\\fred\"\n" STR_SECTION),     "ab", { "C:\\fred" } },
+ { C("ab=\"%mydrive%\\fred\"\n" STR_SECTION),"ab", { "C:\\\\fred" } },
  /* Confirm duplicate \'s kept */
- { "ab=\"%24%\\\\fred\"",      "ab",            { "C:\\\\fred" } },
- { "ab=C:\\\\FRED",            "ab",            { "C:\\\\FRED" } },
+ { C("ab=\"%24%\\\\fred\""),      "ab",            { "C:\\\\fred" } },
+ { C("ab=C:\\\\FRED"),            "ab",            { "C:\\\\FRED" } },
 };
 
 /* check the key of a certain line */
@@ -421,10 +429,14 @@ static void test_key_names(void)
 
     for (i = 0; i < ARRAY_SIZE(key_names); i++)
     {
+        int data_size;
+
         strcpy( buffer, STD_HEADER "[Test]\n" );
-        strcat( buffer, key_names[i].data );
+        data_size = strlen(buffer);
+        memcpy( buffer + data_size, key_names[i].data, key_names[i].data_size );
+        data_size += key_names[i].data_size;
         SetLastError( 0xdeadbeef );
-        hinf = test_file_contents( buffer, &err_line );
+        hinf = test_file_contents( buffer, data_size, &err_line );
         ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %u\n", i, GetLastError() );
         if (hinf == INVALID_HANDLE_VALUE) continue;
 
@@ -560,7 +572,7 @@ static void test_pSetupGetField(void)
         unicode = FALSE;
     }
 
-    hinf = test_file_contents( contents, &err );
+    hinf = test_file_contents( contents, strlen(contents), &err );
     ok( hinf != NULL, "Expected valid INF file\n" );
 
     ret = SetupFindFirstLineA( hinf, "FileBranchInfo", NULL, &context );
@@ -651,7 +663,7 @@ static void test_SetupGetIntField(void)
         strcat( buffer, keys[i].key );
         strcat( buffer, "=" );
         strcat( buffer, keys[i].fields );
-        hinf = test_file_contents( buffer, &err);
+        hinf = test_file_contents( buffer, strlen(buffer), &err);
         ok( hinf != NULL, "Expected valid INF file\n" );
 
         SetupFindFirstLineA( hinf, "TestSection", keys[i].key, &context );
@@ -695,7 +707,7 @@ static void test_GLE(void)
     int bufsize = MAX_INF_STRING_LENGTH;
     DWORD retsize;
 
-    hinf = test_file_contents( inf, &err );
+    hinf = test_file_contents( inf, strlen(inf), &err );
     ok( hinf != NULL, "Expected valid INF file\n" );
 
     SetLastError(0xdeadbeef);
