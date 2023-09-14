@@ -639,6 +639,9 @@ static void wined3d_texture_gl_unload_texture(struct wined3d_texture_gl *texture
     const struct wined3d_gl_info *gl_info = NULL;
     struct wined3d_context *context = NULL;
 
+    if (texture_gl->t.resource.bind_count)
+        device_invalidate_state(device, STATE_SAMPLER(texture_gl->t.sampler));
+
     if (texture_gl->texture_rgb.name || texture_gl->texture_srgb.name
             || texture_gl->rb_multisample || texture_gl->rb_resolved)
     {
