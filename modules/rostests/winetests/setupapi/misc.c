@@ -312,7 +312,7 @@ static void test_SetupCopyOEMInf(void)
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     ok(is_in_inf_dir(dest), "Got unexpected path '%s'.\n", dest);
-    ok(strcmp(dest, orig_dest), "Expected INF files to be copied to differnet paths.\n");
+    ok(strcmp(dest, orig_dest), "Expected INF files to be copied to different paths.\n");
 
     res = SetupUninstallOEMInfA(strrchr(dest, '\\') + 1, 0, NULL);
     ok(res, "Failed to uninstall '%s', error %u.\n", dest, GetLastError());

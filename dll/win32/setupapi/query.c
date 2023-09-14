@@ -32,6 +32,16 @@ static const WCHAR source_disks_names_platform[] =
     {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s','.','a','m','d','6','4',0};
 static const WCHAR source_disks_files_platform[] =
     {'S','o','u','r','c','e','D','i','s','k','s','F','i','l','e','s','.','a','m','d','6','4',0};
+#elif defined(__arm__)
+static const WCHAR source_disks_names_platform[] =
+    {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s','.','a','r','m',0};
+static const WCHAR source_disks_files_platform[] =
+    {'S','o','u','r','c','e','D','i','s','k','s','F','i','l','e','s','.','a','r','m',0};
+#elif defined(__aarch64__)
+static const WCHAR source_disks_names_platform[] =
+    {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s','.','a','r','m','6','4',0};
+static const WCHAR source_disks_files_platform[] =
+    {'S','o','u','r','c','e','D','i','s','k','s','F','i','l','e','s','.','a','r','m','6','4',0};
 #else  /* FIXME: other platforms */
 static const WCHAR source_disks_names_platform[] =
     {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s',0};
@@ -732,3 +742,21 @@ BOOL WINAPI SetupQueryInfOriginalFileInformationW(
 
     return TRUE;
 }
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+
+/***********************************************************************
+ *      SetupGetInfDriverStoreLocationW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupGetInfDriverStoreLocationW(
+    PCWSTR FileName, PSP_ALTPLATFORM_INFO AlternativePlatformInfo,
+    PCWSTR LocaleName, PWSTR ReturnBuffer, DWORD ReturnBufferSize,
+    PDWORD RequiredSize)
+{
+    FIXME("stub: %s %p %s %p %u %p\n", debugstr_w(FileName), AlternativePlatformInfo, debugstr_w(LocaleName), ReturnBuffer, ReturnBufferSize, RequiredSize);
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+#endif // (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
