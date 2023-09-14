@@ -12082,6 +12082,7 @@ struct wined3d_glsl_blitter
     struct wined3d_blitter blitter;
     struct wined3d_string_buffer_list string_buffers;
     struct wine_rb_tree programs;
+    GLuint palette_texture;
 };
 
 static int glsl_blitter_args_compare(const void *key, const struct wine_rb_entry *entry)
@@ -12107,6 +12108,7 @@ static void glsl_free_blitter_program(struct wine_rb_entry *entry, void *ctx)
 /* Context activation is done by the caller. */
 static void glsl_blitter_destroy(struct wined3d_blitter *blitter, struct wined3d_context *context)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_glsl_blitter *glsl_blitter;
     struct wined3d_blitter *next;
 
@@ -12115,12 +12117,44 @@ static void glsl_blitter_destroy(struct wined3d_blitter *blitter, struct wined3d
 
     glsl_blitter = CONTAINING_RECORD(blitter, struct wined3d_glsl_blitter, blitter);
 
+    if (glsl_blitter->palette_texture)
+        gl_info->gl_ops.gl.p_glDeleteTextures(1, &glsl_blitter->palette_texture);
+
     wine_rb_destroy(&glsl_blitter->programs, glsl_free_blitter_program, context);
     string_buffer_list_cleanup(&glsl_blitter->string_buffers);
 
     heap_free(glsl_blitter);
 }
 
+static void glsl_blitter_generate_p8_shader(struct wined3d_string_buffer *buffer,
+        const struct wined3d_gl_info *gl_info, const struct glsl_blitter_args *args,
+        const char *output, const char *tex_type, const char *swizzle)
+{
+    shader_addline(buffer, "uniform sampler1D sampler_palette;\n");
+    shader_addline(buffer, "\nvoid main()\n{\n");
+    /* The alpha-component contains the palette index. */
+    shader_addline(buffer, "    float index = texture%s(sampler, out_texcoord.%s).w;\n",
+            needs_legacy_glsl_syntax(gl_info) ? tex_type : "", swizzle);
+    /* Scale the index by 255/256 and add a bias of 0.5 in order to sample in
+     * the middle. */
+    shader_addline(buffer, "    index = (index * 255.0 + 0.5) / 256.0;\n");
+    shader_addline(buffer, "    %s = texture%s(sampler_palette, index);\n",
+            output, needs_legacy_glsl_syntax(gl_info) ? "1D" : "");
+    shader_addline(buffer, "}\n");
+}
+
+static void glsl_blitter_generate_plain_shader(struct wined3d_string_buffer *buffer,
+        const struct wined3d_gl_info *gl_info, const struct glsl_blitter_args *args,
+        const char *output, const char *tex_type, const char *swizzle)
+{
+    shader_addline(buffer, "\nvoid main()\n{\n");
+    shader_addline(buffer, "    %s = texture%s(sampler, out_texcoord.%s);\n",
+            output, needs_legacy_glsl_syntax(gl_info) ? tex_type : "", swizzle);
+    shader_glsl_color_correction_ext(buffer, output, WINED3DSP_WRITEMASK_ALL, args->fixup);
+    shader_addline(buffer, "}\n");
+}
+
+/* Context activation is done by the caller. */
 static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter,
         const struct wined3d_gl_info *gl_info, const struct glsl_blitter_args *args)
 {
@@ -12143,14 +12177,12 @@ static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter
         "    gl_Position = vec4(pos, 0.0, 1.0);\n"
         "    out_texcoord = texcoord;\n"
         "}\n";
-    static const char fshader_header[] =
-        "\n"
-        "void main()\n"
-        "{\n";
-    struct wined3d_string_buffer *buffer, *string;
+    enum complex_fixup complex_fixup = get_complex_fixup(args->fixup);
+    struct wined3d_string_buffer *buffer, *output;
     GLuint program, vshader_id, fshader_id;
     const char *tex_type, *swizzle, *ptr;
     unsigned int i;
+    GLint loc;
 
     for (i = 0; i < ARRAY_SIZE(texture_data); ++i)
     {
@@ -12192,14 +12224,15 @@ static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter
     if (!needs_legacy_glsl_syntax(gl_info))
         shader_addline(buffer, "out vec4 ps_out[1];\n");
 
-    shader_addline(buffer, fshader_header);
-    string = string_buffer_get(&blitter->string_buffers);
-    string_buffer_sprintf(string, "%s[0]", get_fragment_output(gl_info));
-    shader_addline(buffer, "    %s = texture%s(sampler, out_texcoord.%s);\n",
-            string->buffer, needs_legacy_glsl_syntax(gl_info) ? tex_type : "", swizzle);
-    shader_glsl_color_correction_ext(buffer, string->buffer, WINED3DSP_WRITEMASK_ALL, args->fixup);
-    string_buffer_release(&blitter->string_buffers, string);
-    shader_addline(buffer, "}\n");
+    output = string_buffer_get(&blitter->string_buffers);
+    string_buffer_sprintf(output, "%s[0]", get_fragment_output(gl_info));
+
+    if (complex_fixup == COMPLEX_FIXUP_P8)
+        glsl_blitter_generate_p8_shader(buffer, gl_info, args, output->buffer, tex_type, swizzle);
+    else
+        glsl_blitter_generate_plain_shader(buffer, gl_info, args, output->buffer, tex_type, swizzle);
+
+    string_buffer_release(&blitter->string_buffers, output);
 
     ptr = buffer->buffer;
     GL_EXTCALL(glShaderSource(fshader_id, 1, &ptr, NULL));
@@ -12219,15 +12252,61 @@ static GLuint glsl_blitter_generate_program(struct wined3d_glsl_blitter *blitter
     print_glsl_info_log(gl_info, fshader_id, FALSE);
     GL_EXTCALL(glLinkProgram(program));
     shader_glsl_validate_link(gl_info, program);
+
+    GL_EXTCALL(glUseProgram(program));
+    loc = GL_EXTCALL(glGetUniformLocation(program, "sampler"));
+    GL_EXTCALL(glUniform1i(loc, 0));
+    if (complex_fixup == COMPLEX_FIXUP_P8)
+    {
+        loc = GL_EXTCALL(glGetUniformLocation(program, "sampler_palette"));
+        GL_EXTCALL(glUniform1i(loc, 1));
+    }
+
     return program;
 }
 
 /* Context activation is done by the caller. */
-static GLuint glsl_blitter_get_program(struct wined3d_glsl_blitter *blitter,
+static void glsl_blitter_upload_palette(struct wined3d_glsl_blitter *blitter,
+        struct wined3d_context *context, const struct wined3d_texture *texture)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_palette *palette;
+
+    palette = texture->swapchain ? texture->swapchain->palette : NULL;
+
+    if (!blitter->palette_texture)
+        gl_info->gl_ops.gl.p_glGenTextures(1, &blitter->palette_texture);
+
+    context_active_texture(context, gl_info, 1);
+    gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_1D, blitter->palette_texture);
+    gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    gl_info->gl_ops.gl.p_glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+
+    if (palette)
+    {
+        gl_info->gl_ops.gl.p_glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 256, 0, GL_BGRA,
+                GL_UNSIGNED_INT_8_8_8_8_REV, palette->colors);
+    }
+    else
+    {
+        static const DWORD black;
+
+        FIXME("P8 texture loaded without a palette.\n");
+        gl_info->gl_ops.gl.p_glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 1, 0, GL_BGRA,
+                GL_UNSIGNED_INT_8_8_8_8_REV, &black);
+    }
+
+    context_active_texture(context, gl_info, 0);
+}
+
+/* Context activation is done by the caller. */
+static struct glsl_blitter_program *glsl_blitter_get_program(struct wined3d_glsl_blitter *blitter,
         struct wined3d_context *context, const struct wined3d_texture *texture)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct glsl_blitter_program *program;
+    enum complex_fixup complex_fixup;
     struct glsl_blitter_args args;
     struct wine_rb_entry *entry;
 
@@ -12235,22 +12314,20 @@ static GLuint glsl_blitter_get_program(struct wined3d_glsl_blitter *blitter,
     args.texture_type = texture->target;
     args.fixup = texture->resource.format->color_fixup;
 
-    if (is_complex_fixup(args.fixup))
+    complex_fixup = get_complex_fixup(args.fixup);
+    if (complex_fixup && complex_fixup != COMPLEX_FIXUP_P8)
     {
-        FIXME("Complex fixups not supported.\n");
-        return 0;
+        FIXME("Complex fixup %#x not supported.\n", complex_fixup);
+        return NULL;
     }
 
     if ((entry = wine_rb_get(&blitter->programs, &args)))
-    {
-        program = WINE_RB_ENTRY_VALUE(entry, struct glsl_blitter_program, entry);
-        return program->id;
-    }
+        return WINE_RB_ENTRY_VALUE(entry, struct glsl_blitter_program, entry);
 
     if (!(program = heap_alloc(sizeof(*program))))
     {
         ERR("Failed to allocate blitter program memory.\n");
-        return 0;
+        return NULL;
     }
 
     program->args = args;
@@ -12258,7 +12335,7 @@ static GLuint glsl_blitter_get_program(struct wined3d_glsl_blitter *blitter,
     {
         WARN("Failed to generate blitter program.\n");
         heap_free(program);
-        return 0;
+        return NULL;
     }
 
     if (wine_rb_put(&blitter->programs, &program->args, &program->entry) == -1)
@@ -12266,10 +12343,10 @@ static GLuint glsl_blitter_get_program(struct wined3d_glsl_blitter *blitter,
         ERR("Failed to store blitter program.\n");
         GL_EXTCALL(glDeleteProgram(program->id));
         heap_free(program);
-        return 0;
+        return NULL;
     }
 
-    return program->id;
+    return program;
 }
 
 static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wined3d_context *context,
@@ -12280,6 +12357,7 @@ static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wi
     const struct wined3d_resource *dst_resource = &dst_texture->resource;
     const struct wined3d_format *src_format = src_resource->format;
     const struct wined3d_format *dst_format = dst_resource->format;
+    enum complex_fixup complex_fixup = COMPLEX_FIXUP_NONE;
     BOOL decompress;
 
     if (blit_op == WINED3D_BLIT_OP_RAW_BLIT && dst_format->id == src_format->id)
@@ -12321,11 +12399,16 @@ static BOOL glsl_blitter_supported(enum wined3d_blit_op blit_op, const struct wi
 
     if (is_complex_fixup(src_format->color_fixup))
     {
-        TRACE("Complex source fixups are not supported.\n");
-        return FALSE;
+        complex_fixup = get_complex_fixup(src_format->color_fixup);
+        if (complex_fixup != COMPLEX_FIXUP_P8)
+        {
+            TRACE("Complex source fixup %#x not supported.\n", complex_fixup);
+            return FALSE;
+        }
     }
 
-    if (!is_identity_fixup(dst_format->color_fixup))
+    if (!is_identity_fixup(dst_format->color_fixup)
+            && (dst_format->id != src_format->id || dst_location != WINED3D_LOCATION_DRAWABLE))
     {
         TRACE("Destination fixups are not supported.\n");
         return FALSE;
@@ -12345,9 +12428,9 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture *staging_texture = NULL;
     struct wined3d_glsl_blitter *glsl_blitter;
+    struct glsl_blitter_program *program;
     struct wined3d_blitter *next;
     unsigned int src_level;
-    GLuint program_id;
     RECT s, d;
 
     TRACE("blitter %p, op %#x, context %p, src_texture %p, src_sub_resource_idx %u, src_location %s, src_rect %s, "
@@ -12459,12 +12542,14 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         context_invalidate_state(context, STATE_FRAMEBUFFER);
     }
 
-    if (!(program_id = glsl_blitter_get_program(glsl_blitter, context, src_texture)))
+    if (!(program = glsl_blitter_get_program(glsl_blitter, context, src_texture)))
     {
         ERR("Failed to get blitter program.\n");
         return dst_location;
     }
-    GL_EXTCALL(glUseProgram(program_id));
+    GL_EXTCALL(glUseProgram(program->id));
+    if (get_complex_fixup(program->args.fixup) == COMPLEX_FIXUP_P8)
+        glsl_blitter_upload_palette(glsl_blitter, context, src_texture);
     context_draw_shaded_quad(context, src_texture, src_sub_resource_idx, src_rect, dst_rect, filter);
     GL_EXTCALL(glUseProgram(0));
 
@@ -12518,5 +12603,6 @@ void wined3d_glsl_blitter_create(struct wined3d_blitter **next, const struct win
     blitter->blitter.next = *next;
     string_buffer_list_init(&blitter->string_buffers);
     wine_rb_init(&blitter->programs, glsl_blitter_args_compare);
+    blitter->palette_texture = 0;
     *next = &blitter->blitter;
 }

@@ -3302,7 +3302,7 @@ static void apply_format_fixups(struct wined3d_adapter *adapter, struct wined3d_
                 0, CHANNEL_SOURCE_X, 0, CHANNEL_SOURCE_X, 0, CHANNEL_SOURCE_X, 0, CHANNEL_SOURCE_ONE);
     }
 
-    if (gl_info->supported[ARB_FRAGMENT_PROGRAM])
+    if (gl_info->supported[ARB_FRAGMENT_PROGRAM] || gl_info->supported[ARB_FRAGMENT_SHADER])
     {
         idx = get_format_idx(WINED3DFMT_P8_UINT);
         gl_info->formats[idx].color_fixup = create_complex_fixup_desc(COMPLEX_FIXUP_P8);
