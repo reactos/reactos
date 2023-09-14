@@ -2547,9 +2547,7 @@ static BOOL wined3d_texture_gl_load_sysmem(struct wined3d_texture_gl *texture_gl
 static BOOL wined3d_texture_load_drawable(struct wined3d_texture *texture,
         unsigned int sub_resource_idx, struct wined3d_context *context)
 {
-    struct wined3d_texture *restore_texture;
     struct wined3d_device *device;
-    unsigned int restore_idx;
     unsigned int level;
     RECT r;
 
@@ -2569,13 +2567,6 @@ static BOOL wined3d_texture_load_drawable(struct wined3d_texture *texture,
     }
 
     device = texture->resource.device;
-    restore_texture = context->current_rt.texture;
-    restore_idx = context->current_rt.sub_resource_idx;
-    if (restore_texture != texture || restore_idx != sub_resource_idx)
-        context = context_acquire(device, texture, sub_resource_idx);
-    else
-        restore_texture = NULL;
-
     level = sub_resource_idx % texture->level_count;
     SetRect(&r, 0, 0, wined3d_texture_get_level_width(texture, level),
             wined3d_texture_get_level_height(texture, level));
@@ -2584,9 +2575,6 @@ static BOOL wined3d_texture_load_drawable(struct wined3d_texture *texture,
             texture, sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB, &r,
             texture, sub_resource_idx, WINED3D_LOCATION_DRAWABLE, &r,
             NULL, WINED3D_TEXF_POINT);
-
-    if (restore_texture)
-        context_restore(context, restore_texture, restore_idx);
 
     return TRUE;
 }
