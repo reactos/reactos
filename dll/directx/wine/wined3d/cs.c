@@ -615,7 +615,7 @@ void wined3d_cs_emit_clear(struct wined3d_cs *cs, DWORD rect_count, const RECT *
     op = wined3d_cs_require_space(cs, FIELD_OFFSET(struct wined3d_cs_clear, rects[rect_count]),
             WINED3D_CS_QUEUE_DEFAULT);
     op->opcode = WINED3D_CS_OP_CLEAR;
-    op->flags = flags;
+    op->flags = flags & (WINED3DCLEAR_TARGET | WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL);
     op->rt_count = rt_count;
     op->fb = &cs->fb;
     SetRect(&op->draw_rect, vp->x, vp->y, vp->x + vp->width, vp->y + vp->height);
@@ -658,7 +658,7 @@ void wined3d_cs_emit_clear_rendertarget_view(struct wined3d_cs *cs, struct wined
     op->fb = (void *)&op->rects[1];
 
     op->opcode = WINED3D_CS_OP_CLEAR;
-    op->flags = flags;
+    op->flags = flags & (WINED3DCLEAR_TARGET | WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL);
     if (flags & WINED3DCLEAR_TARGET)
     {
         op->rt_count = 1;
