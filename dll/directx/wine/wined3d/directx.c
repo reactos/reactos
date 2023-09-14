@@ -1155,8 +1155,6 @@ HRESULT CDECL wined3d_set_adapter_display_mode(struct wined3d *wined3d,
     return WINED3D_OK;
 }
 
-/* NOTE: due to structure differences between dx8 and dx9 D3DADAPTER_IDENTIFIER,
-   and fields being inserted in the middle, a new structure is used in place    */
 HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
         UINT adapter_idx, DWORD flags, struct wined3d_adapter_identifier *identifier)
 {
@@ -1166,8 +1164,10 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
     TRACE("wined3d %p, adapter_idx %u, flags %#x, identifier %p.\n",
             wined3d, adapter_idx, flags, identifier);
 
+    wined3d_mutex_lock();
+
     if (adapter_idx >= wined3d->adapter_count)
-        return WINED3DERR_INVALIDCALL;
+        goto fail;
 
     adapter = &wined3d->adapters[adapter_idx];
 
@@ -1194,7 +1194,7 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
                 identifier->device_name_size, NULL, NULL))
         {
             ERR("Failed to convert device name, last error %#x.\n", GetLastError());
-            return WINED3DERR_INVALIDCALL;
+            goto fail;
         }
     }
 
@@ -1206,11 +1206,17 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
     identifier->revision = 0;
     memcpy(&identifier->device_identifier, &IID_D3DDEVICE_D3DUID, sizeof(identifier->device_identifier));
     identifier->whql_level = (flags & WINED3DENUM_NO_WHQL_LEVEL) ? 0 : 1;
-    memcpy(&identifier->adapter_luid, &adapter->luid, sizeof(identifier->adapter_luid));
+    identifier->adapter_luid = adapter->luid;
     identifier->video_memory = min(~(SIZE_T)0, adapter->driver_info.vram_bytes);
     identifier->shared_system_memory = min(~(SIZE_T)0, adapter->driver_info.sysmem_bytes);
 
+    wined3d_mutex_unlock();
+
     return WINED3D_OK;
+
+fail:
+    wined3d_mutex_unlock();
+    return WINED3DERR_INVALIDCALL;
 }
 
 HRESULT CDECL wined3d_get_adapter_raster_status(const struct wined3d *wined3d, UINT adapter_idx,
