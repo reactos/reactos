@@ -782,7 +782,7 @@ static void wined3d_buffer_destroy_object(void *object)
     }
 
     heap_free(buffer->maps);
-    heap_free(buffer);
+    heap_free(wined3d_buffer_gl(buffer));
 }
 
 ULONG CDECL wined3d_buffer_decref(struct wined3d_buffer *buffer)
@@ -1463,7 +1463,7 @@ HRESULT CDECL wined3d_buffer_create(struct wined3d_device *device, const struct 
         const struct wined3d_sub_resource_data *data, void *parent, const struct wined3d_parent_ops *parent_ops,
         struct wined3d_buffer **buffer)
 {
-    struct wined3d_buffer *object;
+    struct wined3d_buffer_gl *object;
     HRESULT hr;
 
     TRACE("device %p, desc byte_width %u, usage %s, bind_flags %s, access %s, data %p, parent %p, "
@@ -1475,7 +1475,7 @@ HRESULT CDECL wined3d_buffer_create(struct wined3d_device *device, const struct 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = wined3d_buffer_init(object, device, desc, data, parent, parent_ops)))
+    if (FAILED(hr = wined3d_buffer_init(&object->b, device, desc, data, parent, parent_ops)))
     {
         WARN("Failed to initialize buffer, hr %#x.\n", hr);
         heap_free(object);
@@ -1484,7 +1484,7 @@ HRESULT CDECL wined3d_buffer_create(struct wined3d_device *device, const struct 
 
     TRACE("Created buffer %p.\n", object);
 
-    *buffer = object;
+    *buffer = &object->b;
 
     return WINED3D_OK;
 }
