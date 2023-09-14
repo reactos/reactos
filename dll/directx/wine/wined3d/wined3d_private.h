@@ -54,6 +54,7 @@
 #include "objbase.h"
 #include "wine/wined3d.h"
 #include "wined3d_gl.h"
+#include "wined3d_vk.h"
 #include "wine/list.h"
 #include "wine/rbtree.h"
 #include "wine/wgl_driver.h"
@@ -2761,6 +2762,8 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
 struct wined3d_adapter_vk
 {
     struct wined3d_adapter a;
+
+    struct wined3d_vk_info vk_info;
 };
 
 static inline struct wined3d_adapter_vk *wined3d_adapter_vk(struct wined3d_adapter *adapter)
