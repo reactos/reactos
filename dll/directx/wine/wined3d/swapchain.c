@@ -681,7 +681,7 @@ static void wined3d_swapchain_apply_sample_count_override(const struct wined3d_s
 
     adapter = swapchain->device->adapter;
     gl_info = &adapter->gl_info;
-    if (!(format = wined3d_get_format(adapter, format_id, WINED3DUSAGE_RENDERTARGET)))
+    if (!(format = wined3d_get_format(adapter, format_id, WINED3D_BIND_RENDER_TARGET)))
         return;
 
     if ((t = min(wined3d_settings.sample_count, gl_info->limits.samples)))
@@ -738,7 +738,7 @@ static void wined3d_swapchain_cs_init(void *object)
      * request a depth/stencil buffer in the likely case it's needed later. */
     for (i = 0; i < ARRAY_SIZE(formats); ++i)
     {
-        swapchain->ds_format = wined3d_get_format(adapter, formats[i], WINED3DUSAGE_DEPTHSTENCIL);
+        swapchain->ds_format = wined3d_get_format(adapter, formats[i], WINED3D_BIND_DEPTH_STENCIL);
         if ((swapchain->context[0] = context_create(swapchain, swapchain->front_buffer, swapchain->ds_format)))
             break;
         TRACE("Depth stencil format %s is not supported, trying next format.\n", debug_d3dformat(formats[i]));

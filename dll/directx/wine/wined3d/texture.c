@@ -1575,7 +1575,7 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     device = texture->resource.device;
     gl_info = &device->adapter->gl_info;
     d3d_info = &device->adapter->d3d_info;
-    format = wined3d_get_format(device->adapter, format_id, texture->resource.usage);
+    format = wined3d_get_format(device->adapter, format_id, texture->resource.bind_flags);
     resource_size = wined3d_format_calculate_size(format, device->surface_alignment, width, height, 1);
 
     if (!resource_size)
@@ -1774,7 +1774,7 @@ void wined3d_texture_prepare_texture(struct wined3d_texture *texture, struct win
     else if ((conversion = wined3d_format_get_color_key_conversion(texture, TRUE)))
     {
         texture->flags |= WINED3D_TEXTURE_CONVERTED;
-        format = wined3d_get_format(device->adapter, conversion->dst_format, resource->usage);
+        format = wined3d_get_format(device->adapter, conversion->dst_format, resource->bind_flags);
         TRACE("Using format %s for color key conversion.\n", debug_d3dformat(format->id));
     }
     format_gl = wined3d_format_gl(format);
@@ -2896,7 +2896,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
         WARN("Texture cannot be created with a format of WINED3DFMT_UNKNOWN.\n");
         return WINED3DERR_INVALIDCALL;
     }
-    format = wined3d_get_format(device->adapter, desc->format, desc->usage);
+    format = wined3d_get_format(device->adapter, desc->format, desc->bind_flags);
 
     if (desc->usage & WINED3DUSAGE_DYNAMIC && (wined3d_resource_access_is_managed(desc->access)
             || desc->usage & WINED3DUSAGE_SCRATCH))
@@ -3645,7 +3645,7 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
 
     if (desc->multisample_type != WINED3D_MULTISAMPLE_NONE)
     {
-        const struct wined3d_format *format = wined3d_get_format(device->adapter, desc->format, desc->usage);
+        const struct wined3d_format *format = wined3d_get_format(device->adapter, desc->format, desc->bind_flags);
 
         if (desc->multisample_type == WINED3D_MULTISAMPLE_NON_MASKABLE
                 && desc->multisample_quality >= wined3d_popcount(format->multisample_types))

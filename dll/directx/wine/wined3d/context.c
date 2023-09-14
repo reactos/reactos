@@ -2008,9 +2008,9 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
     const struct wined3d_format *color_format;
     const struct wined3d_d3d_info *d3d_info;
     const struct wined3d_gl_info *gl_info;
+    unsigned int target_bind_flags;
     BOOL aux_buffers = FALSE;
     HGLRC ctx, share_ctx;
-    DWORD target_usage;
     unsigned int i;
 
     gl_info = context->gl_info;
@@ -2055,7 +2055,7 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
         return FALSE;
 
     color_format = target->resource.format;
-    target_usage = target->resource.usage;
+    target_bind_flags = target->resource.bind_flags;
 
     /* In case of ORM_BACKBUFFER, make sure to request an alpha component for
      * X4R4G4B4/X8R8G8B8 as we might need it for the backbuffer. */
@@ -2064,9 +2064,9 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
         aux_buffers = TRUE;
 
         if (color_format->id == WINED3DFMT_B4G4R4X4_UNORM)
-            color_format = wined3d_get_format(device->adapter, WINED3DFMT_B4G4R4A4_UNORM, target_usage);
+            color_format = wined3d_get_format(device->adapter, WINED3DFMT_B4G4R4A4_UNORM, target_bind_flags);
         else if (color_format->id == WINED3DFMT_B8G8R8X8_UNORM)
-            color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_usage);
+            color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_bind_flags);
     }
 
     /* DirectDraw supports 8bit paletted render targets and these are used by
@@ -2076,7 +2076,7 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
      * For this reason we require a format with 8bit alpha, so request
      * A8R8G8B8. */
     if (color_format->id == WINED3DFMT_P8_UINT)
-        color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_usage);
+        color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_bind_flags);
 
     /* When using FBOs for off-screen rendering, we only use the drawable for
      * presentation blits, and don't do any rendering to it. That means we
@@ -2088,8 +2088,8 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
      * conflicting pixel formats. */
     if (wined3d_settings.offscreen_rendering_mode != ORM_BACKBUFFER)
     {
-        color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_usage);
-        ds_format = wined3d_get_format(device->adapter, WINED3DFMT_UNKNOWN, WINED3DUSAGE_DEPTHSTENCIL);
+        color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_bind_flags);
+        ds_format = wined3d_get_format(device->adapter, WINED3DFMT_UNKNOWN, WINED3D_BIND_DEPTH_STENCIL);
     }
 
     /* Try to find a pixel format which matches our requirements. */

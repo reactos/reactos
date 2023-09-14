@@ -763,7 +763,7 @@ UINT CDECL wined3d_get_adapter_mode_count(const struct wined3d *wined3d, UINT ad
         return 0;
 
     adapter = &wined3d->adapters[adapter_idx];
-    format = wined3d_get_format(adapter, format_id, WINED3DUSAGE_RENDERTARGET);
+    format = wined3d_get_format(adapter, format_id, WINED3D_BIND_RENDER_TARGET);
     format_bits = format->byte_count * CHAR_BIT;
 
     memset(&mode, 0, sizeof(mode));
@@ -817,7 +817,7 @@ HRESULT CDECL wined3d_enum_adapter_modes(const struct wined3d *wined3d, UINT ada
         return WINED3DERR_INVALIDCALL;
 
     adapter = &wined3d->adapters[adapter_idx];
-    format = wined3d_get_format(adapter, format_id, WINED3DUSAGE_RENDERTARGET);
+    format = wined3d_get_format(adapter, format_id, WINED3D_BIND_RENDER_TARGET);
     format_bits = format->byte_count * CHAR_BIT;
 
     memset(&m, 0, sizeof(m));
@@ -1076,7 +1076,7 @@ HRESULT CDECL wined3d_set_adapter_display_mode(struct wined3d *wined3d,
         TRACE("mode %ux%u@%u %s %#x.\n", mode->width, mode->height, mode->refresh_rate,
                 debug_d3dformat(mode->format_id), mode->scanline_ordering);
 
-        format = wined3d_get_format(adapter, mode->format_id, WINED3DUSAGE_RENDERTARGET);
+        format = wined3d_get_format(adapter, mode->format_id, WINED3D_BIND_RENDER_TARGET);
 
         new_mode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
         new_mode.dmBitsPerPel = format->byte_count * CHAR_BIT;
@@ -1318,8 +1318,8 @@ HRESULT CDECL wined3d_check_depth_stencil_match(const struct wined3d *wined3d,
         return WINED3DERR_INVALIDCALL;
 
     adapter = &wined3d->adapters[adapter_idx];
-    rt_format = wined3d_get_format(adapter, render_target_format_id, WINED3DUSAGE_RENDERTARGET);
-    ds_format = wined3d_get_format(adapter, depth_stencil_format_id, WINED3DUSAGE_DEPTHSTENCIL);
+    rt_format = wined3d_get_format(adapter, render_target_format_id, WINED3D_BIND_RENDER_TARGET);
+    ds_format = wined3d_get_format(adapter, depth_stencil_format_id, WINED3D_BIND_DEPTH_STENCIL);
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
     {
         if ((rt_format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_RENDERTARGET)
@@ -1538,8 +1538,8 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
         return WINED3DERR_INVALIDCALL;
 
     adapter = &wined3d->adapters[adapter_idx];
-    adapter_format = wined3d_get_format(adapter, adapter_format_id, WINED3DUSAGE_RENDERTARGET);
-    format = wined3d_get_format(adapter, check_format_id, usage);
+    adapter_format = wined3d_get_format(adapter, adapter_format_id, WINED3D_BIND_RENDER_TARGET);
+    format = wined3d_get_format(adapter, check_format_id, bind_flags);
 
     if (usage & WINED3DUSAGE_RENDERTARGET)
         bind_flags |= WINED3D_BIND_RENDER_TARGET;

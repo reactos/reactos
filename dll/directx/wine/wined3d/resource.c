@@ -591,6 +591,6 @@ const struct wined3d_format *wined3d_resource_get_decompress_format(const struct
     const struct wined3d_adapter *adapter = resource->device->adapter;
     if (resource->format_flags & (WINED3DFMT_FLAG_SRGB_READ | WINED3DFMT_FLAG_SRGB_WRITE)
             && !(adapter->d3d_info.wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL))
-        return wined3d_get_format(adapter, WINED3DFMT_B8G8R8A8_UNORM_SRGB, resource->usage);
-    return wined3d_get_format(adapter, WINED3DFMT_B8G8R8A8_UNORM, resource->usage);
+        return wined3d_get_format(adapter, WINED3DFMT_B8G8R8A8_UNORM_SRGB, resource->bind_flags);
+    return wined3d_get_format(adapter, WINED3DFMT_B8G8R8A8_UNORM, resource->bind_flags);
 }

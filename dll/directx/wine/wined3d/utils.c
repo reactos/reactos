@@ -4077,7 +4077,7 @@ fail:
 }
 
 const struct wined3d_format *wined3d_get_format(const struct wined3d_adapter *adapter,
-        enum wined3d_format_id format_id, unsigned int resource_usage)
+        enum wined3d_format_id format_id, unsigned int bind_flags)
 {
     const struct wined3d_format *format;
     int idx = get_format_idx(format_id);
@@ -4092,7 +4092,7 @@ const struct wined3d_format *wined3d_get_format(const struct wined3d_adapter *ad
 
     format = get_format_by_idx(adapter, idx);
 
-    if (resource_usage & WINED3DUSAGE_DEPTHSTENCIL && wined3d_format_is_typeless(format))
+    if (bind_flags & WINED3D_BIND_DEPTH_STENCIL && wined3d_format_is_typeless(format))
     {
         for (i = 0; i < ARRAY_SIZE(typeless_depth_stencil_formats); ++i)
         {

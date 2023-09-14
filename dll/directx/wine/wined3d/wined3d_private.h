@@ -4483,7 +4483,7 @@ struct wined3d_format
 };
 
 const struct wined3d_format *wined3d_get_format(const struct wined3d_adapter *adapter,
-        enum wined3d_format_id format_id, unsigned int resource_usage) DECLSPEC_HIDDEN;
+        enum wined3d_format_id format_id, unsigned int bind_flags) DECLSPEC_HIDDEN;
 void wined3d_format_calculate_pitch(const struct wined3d_format *format, unsigned int alignment,
         unsigned int width, unsigned int height, unsigned int *row_pitch, unsigned int *slice_pitch) DECLSPEC_HIDDEN;
 UINT wined3d_format_calculate_size(const struct wined3d_format *format,
