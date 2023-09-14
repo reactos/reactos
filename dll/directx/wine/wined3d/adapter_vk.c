@@ -413,9 +413,18 @@ static HRESULT adapter_vk_init_3d(struct wined3d_device *device)
         return hr;
     }
 
+    if (FAILED(hr = device->shader_backend->shader_alloc_private(device,
+            device->adapter->vertex_pipe, device->adapter->fragment_pipe)))
+    {
+        ERR("Failed to allocate shader private data, hr %#x.\n", hr);
+        wined3d_context_vk_cleanup(context_vk);
+        return hr;
+    }
+
     if (!device_context_add(device, &context_vk->c))
     {
         ERR("Failed to add the newly created context to the context list.\n");
+        device->shader_backend->shader_free_private(device, NULL);
         wined3d_context_vk_cleanup(context_vk);
         return E_FAIL;
     }
@@ -426,6 +435,7 @@ static HRESULT adapter_vk_init_3d(struct wined3d_device *device)
     {
         ERR("Failed to create CPU blitter.\n");
         device_context_remove(device, &context_vk->c);
+        device->shader_backend->shader_free_private(device, NULL);
         wined3d_context_vk_cleanup(context_vk);
         return E_FAIL;
     }
@@ -436,13 +446,20 @@ static HRESULT adapter_vk_init_3d(struct wined3d_device *device)
 static void adapter_vk_uninit_3d(struct wined3d_device *device)
 {
     struct wined3d_context_vk *context_vk;
+    struct wined3d_shader *shader;
 
     TRACE("device %p.\n", device);
+
+    LIST_FOR_EACH_ENTRY(shader, &device->shaders, struct wined3d_shader, shader_list_entry)
+    {
+        device->shader_backend->shader_destroy(shader);
+    }
 
     device->blitter->ops->blitter_destroy(device->blitter, NULL);
 
     context_vk = &wined3d_device_vk(device)->context_vk;
     device_context_remove(device, &context_vk->c);
+    device->shader_backend->shader_free_private(device, NULL);
     wined3d_context_vk_cleanup(context_vk);
 }
 
