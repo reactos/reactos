@@ -2427,6 +2427,7 @@ no_async:
     wined3d_resource_acquire(resource);
 
     wined3d_cs_submit(cs, WINED3D_CS_QUEUE_MAP);
+
     /* The data pointer may go away, so we need to wait until it is read.
      * Copying the data may be faster if it's small. */
     wined3d_cs_finish(cs, WINED3D_CS_QUEUE_MAP);
