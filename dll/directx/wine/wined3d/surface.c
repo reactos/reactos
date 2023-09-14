@@ -1575,54 +1575,6 @@ static HRESULT wined3d_texture_blt_special(struct wined3d_texture *dst_texture, 
 }
 
 /* Context activation is done by the caller. */
-BOOL texture2d_load_drawable(struct wined3d_texture *texture,
-        unsigned int sub_resource_idx, struct wined3d_context *context)
-{
-    struct wined3d_texture *restore_texture;
-    struct wined3d_device *device;
-    unsigned int restore_idx;
-    unsigned int level;
-    RECT r;
-
-    if (texture->resource.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
-    {
-        DWORD current = texture->sub_resources[sub_resource_idx].locations;
-        FIXME("Unimplemented copy from %s for depth/stencil buffers.\n",
-                wined3d_debug_location(current));
-        return FALSE;
-    }
-
-    if (wined3d_settings.offscreen_rendering_mode == ORM_FBO
-            && wined3d_resource_is_offscreen(&texture->resource))
-    {
-        ERR("Trying to load offscreen texture into WINED3D_LOCATION_DRAWABLE.\n");
-        return FALSE;
-    }
-
-    device = texture->resource.device;
-    restore_texture = context->current_rt.texture;
-    restore_idx = context->current_rt.sub_resource_idx;
-    if (restore_texture != texture || restore_idx != sub_resource_idx)
-        context = context_acquire(device, texture, sub_resource_idx);
-    else
-        restore_texture = NULL;
-
-    level = sub_resource_idx % texture->level_count;
-    SetRect(&r, 0, 0, wined3d_texture_get_level_width(texture, level),
-            wined3d_texture_get_level_height(texture, level));
-    wined3d_texture_load_location(texture, sub_resource_idx, context, WINED3D_LOCATION_TEXTURE_RGB);
-    device->blitter->ops->blitter_blit(device->blitter, WINED3D_BLIT_OP_COLOR_BLIT, context,
-            texture, sub_resource_idx, WINED3D_LOCATION_TEXTURE_RGB, &r,
-            texture, sub_resource_idx, WINED3D_LOCATION_DRAWABLE, &r,
-            NULL, WINED3D_TEXF_POINT);
-
-    if (restore_texture)
-        context_restore(context, restore_texture, restore_idx);
-
-    return TRUE;
-}
-
-/* Context activation is done by the caller. */
 BOOL texture2d_load_renderbuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
         struct wined3d_context *context, DWORD dst_location)
 {

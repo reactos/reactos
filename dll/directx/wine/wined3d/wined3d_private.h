@@ -3594,8 +3594,6 @@ void texture2d_blt_fbo(struct wined3d_device *device, struct wined3d_context *co
         const RECT *dst_rect) DECLSPEC_HIDDEN;
 void texture2d_get_blt_info(const struct wined3d_texture_gl *texture_gl, unsigned int sub_resource_idx,
         const RECT *rect, struct wined3d_blt_info *info) DECLSPEC_HIDDEN;
-BOOL texture2d_load_drawable(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-        struct wined3d_context *context) DECLSPEC_HIDDEN;
 void texture2d_load_fb_texture(struct wined3d_texture_gl *texture_gl, unsigned int sub_resource_idx,
         BOOL srgb, struct wined3d_context *context) DECLSPEC_HIDDEN;
 BOOL texture2d_load_renderbuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
